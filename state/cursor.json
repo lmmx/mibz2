@@ -1677,7 +1677,11 @@
     "6848610020": {
       "status": "completed_own_monitor_log",
       "comment_updated_at": null,
-      "source_comment_id": 6848513930
+      "source_comment_id": 6848513930,
+      "delivery_id": "e700db10-df40-11f1-910a-964f81fdb766",
+      "reason": "Own attributed LOG and saved own-ID checkpoint; no new actionable external message. Fresh master/policies and373/376 head/CI unchanged. No repeated dispatch or LOG.",
+      "ready_job_queued": false,
+      "ready_job_reason": "Cells integration/base correction, actual preflight/bindings and final admission still required; onecore deferred."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1801,8 +1805,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6848513930,
-    "delivery_id": "4705a7d0-df40-11f1-929e-be8e22c97daa",
+    "comment_id": 6848610020,
+    "delivery_id": "e700db10-df40-11f1-910a-964f81fdb766",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
