@@ -172,9 +172,10 @@
     6852069758,
     6852337017,
     6853304419,
-    6857053711
+    6857053711,
+    6857336623
   ],
-  "last_processed_comment_id": 6857053711,
+  "last_processed_comment_id": 6857336623,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2014,9 +2015,15 @@
     },
     {
       "trigger_comment_id": 6857336623,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
-      "report_path": "state/reports/selective-h1-6857336623/report.md"
+      "report_path": "state/reports/selective-h1-6857336623/report.md",
+      "repository": "lmmx/mibz2",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
+      "corresponding_successor": "a8a23c11607864cb431f87fff38169e10c41685f",
+      "report_commit": "e1500ba4539924e0e8407f11a90f3d93c4217318",
+      "disposition": "PROCEED scoped native path; H1 resolved by exact-source baseline/three compiled assertion kills and one-comment reconstruction of initial source. Six inputs unchanged at successor; no harness/performance/integration clearance."
     }
   ],
   "active_delegations": [],
