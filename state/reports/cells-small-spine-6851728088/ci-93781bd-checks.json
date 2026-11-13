@@ -1,0 +1,216 @@
+{
+  "head": "93781bd9578eae95c599583e387180d673659180",
+  "observed_utc": "2026-11-13T12:25:00Z",
+  "checks": [
+    {
+      "name": "deploy-branch",
+      "id": 131876326214,
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422309/job/131876326214"
+    },
+    {
+      "name": "preview",
+      "id": 131876324263,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422309/job/131876324263"
+    },
+    {
+      "name": "look",
+      "id": 131876323952,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422309/job/131876323952"
+    },
+    {
+      "name": "Release",
+      "id": 131876273115,
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422428/job/131876273115"
+    },
+    {
+      "name": "miri",
+      "id": 131875524408,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422200/job/131875524408"
+    },
+    {
+      "name": "python (3.15)",
+      "id": 131875479806,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875479806"
+    },
+    {
+      "name": "python (3.14)",
+      "id": 131875479804,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875479804"
+    },
+    {
+      "name": "python (3.13)",
+      "id": 131875479797,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875479797"
+    },
+    {
+      "name": "python (3.10)",
+      "id": 131875479774,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875479774"
+    },
+    {
+      "name": "python (3.12)",
+      "id": 131875479770,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875479770"
+    },
+    {
+      "name": "python (3.11)",
+      "id": 131875479747,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875479747"
+    },
+    {
+      "name": "Publish crate",
+      "id": 131875458025,
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422428/job/131875458025"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "id": 131875455776,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422428/job/131875455776"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "id": 131875455768,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422428/job/131875455768"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "id": 131875455755,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422428/job/131875455755"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "id": 131875455713,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422428/job/131875455713"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "id": 131875455670,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422428/job/131875455670"
+    },
+    {
+      "name": "sdist",
+      "id": 131875455658,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422428/job/131875455658"
+    },
+    {
+      "name": "build",
+      "id": 131875412672,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422309/job/131875412672"
+    },
+    {
+      "name": "fuzz-smoke",
+      "id": 131875412564,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875412564"
+    },
+    {
+      "name": "get-python-versions",
+      "id": 131875412399,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875412399"
+    },
+    {
+      "name": "check-commit",
+      "id": 131875412391,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422428/job/131875412391"
+    },
+    {
+      "name": "rust",
+      "id": 131875412369,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875412369"
+    },
+    {
+      "name": "typing",
+      "id": 131875412321,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875412321"
+    },
+    {
+      "name": "pages",
+      "id": 131875412214,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422309/job/131875412214"
+    },
+    {
+      "name": "bench",
+      "id": 131875412092,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422187/job/131875412092"
+    },
+    {
+      "name": "submit",
+      "id": 131875411892,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422195/job/131875411892"
+    },
+    {
+      "name": "walk-stats",
+      "id": 131875411459,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422067/job/131875411459"
+    },
+    {
+      "name": "occupancy",
+      "id": 131875411092,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/43422422013/job/131875411092"
+    }
+  ],
+  "legacy": [
+    {
+      "context": "pre-commit.ci - pr",
+      "state": "success",
+      "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794571601.oZ_XzId9SaC_6NPaqdhWLg"
+    }
+  ]
+}
