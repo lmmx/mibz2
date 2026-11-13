@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6856205921,
+  "last_examined_comment_id": 6856485171,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2610,6 +2610,22 @@
       "wake_disposition": "observed_self_generated_noop",
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6856423064": {
+      "status": "observed_recipient_active_not_completed",
+      "delivery_id": "8875dc40-df71-11f1-8c0c-d38688e76a3f",
+      "comment_updated_at": "2026-11-13T14:50:12Z",
+      "disposition": "Actual Codex pickup cites6856176834; current cursor5639346f86019ac01ad15b713998143c2fd49656 records active implementation. No completion or new dispatch. Common base parents and exact365 cells blob verified.",
+      "response_comments": 0,
+      "dispatches": 0
+    },
+    "6856485171": {
+      "status": "observed_predata_plan_not_completion",
+      "comment_updated_at": "2026-11-13T14:52:28Z",
+      "plan_pin": "2a27255d7069f430acb4f995a6f368d7fd0ebef8",
+      "disposition": "Read full frozen plan: exact common base/original365 writer; bounded differential and safety tests then ordinary CI210 measured decodes, three readers/seven families. Whole-reader result decisive; no separate kernel timing. Plan publication is not test/CI execution or B5 clearance.",
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2770,9 +2786,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6856205921,
-    "delivery_id": "6ec85530-df70-11f1-858d-a366ab59f581",
-    "disposition": "Own recorded LOG; no new actionable external message. Current master/policies unchanged; audit passes. No new ready job: candidate, safety and frozen recipe evidence remain pending."
+    "comment_id": 6856423064,
+    "delivery_id": "8875dc40-df71-11f1-8c0c-d38688e76a3f",
+    "disposition": "Actual pickup and later pre-data plan reconciled; no duplicate assignment or receipt-only LOG."
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -5280,16 +5296,23 @@
   "selective_materialisation": {
     "source_request": 6856026045,
     "assignment": 6856176834,
-    "status": "queued_verified_not_delivered",
+    "status": "recipient_active_not_completed",
     "baseline": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
     "master": "3e7e294cc10f29495e9828181345d74233c549d4",
-    "recipient_execution_observed": false,
+    "recipient_execution_observed": true,
     "independent_B5": "Required on actual changed head; not yet assigned",
     "ready_job_queued": false,
-    "ready_job_reason": "Implementation, safety evidence, frozen recipe/dry-run and exact-head checks not yet available",
-    "next_actor": "Codex actual pickup; comments do not start session",
+    "ready_job_reason": "Active candidate and tests not completed; no workstation-ready recipe/checks",
+    "next_actor": "Codex implementation/validation; then Coordinator routes independent B5 on actual head",
     "onecore6848164049": "deferred, not completed",
     "math_owner": "MONODROMY",
-    "architecture_owner": "Pathfinder"
+    "architecture_owner": "Pathfinder",
+    "pickup_review": 6856423064,
+    "recipient_cursor": "5639346f86019ac01ad15b713998143c2fd49656",
+    "common_base": "be25366f46458e2f1dbb0bdac1f5fbc3366d0648",
+    "baseline_cells_blob": "6e08c72b83e8940bf3cae98b9639397ab7482943",
+    "plan_pin": "2a27255d7069f430acb4f995a6f368d7fd0ebef8",
+    "plan_comment": 6856485171,
+    "completion_observed": false
   }
 }
