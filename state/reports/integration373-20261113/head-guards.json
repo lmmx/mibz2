@@ -1,0 +1,15 @@
+{
+  "pre": {
+    "pr": 373,
+    "head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+    "given": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+    "ok": true
+  },
+  "post": {
+    "pr": 373,
+    "head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+    "given": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+    "merged": true,
+    "ok": true
+  }
+}

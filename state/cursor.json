@@ -509,7 +509,7 @@
     "integration_record": "integration375"
   },
   "owner_cells_measurement_priority": {
-    "status": "ACTIVE: awaiting explicit integration authority and actual-i9 preflight access/facts; performance objective not complete",
+    "status": "ACTIVE:373 integrated;376 retargeted but needs genuine branch synchronization and changed-head CI; actual i9 facts pending",
     "supersedes_priority_of_inbox": 6848164049,
     "inbox_marked_complete": false,
     "pr373_head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
@@ -535,6 +535,32 @@
     "review_comment_id": 6848513930,
     "receipt_readback_verified": true,
     "receipt_routing_check": "misrouted false; connector exact-body readback; no automatic session wakeup",
-    "evidence_commit": "e653ba727be197f11cde1430c0b8e6cde72c9bc0"
+    "evidence_commit": "e653ba727be197f11cde1430c0b8e6cde72c9bc0",
+    "onecore_deferral": {
+      "inbox": 6848164049,
+      "coordinator_comment": 6848610020,
+      "status": "DEFERRED; not executed or completed"
+    }
+  },
+  "integration373": {
+    "status": "373 MERGED and tree verified;376 RETARGETED ONLY, changed-base CI absent",
+    "owner_authorised": true,
+    "expected_head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+    "prior_master": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+    "merge_commit": "4df9651b84d0a01143b601a05dd7748720008fdd",
+    "tree": "05e2a56c3381600ef975cbd351b19d973cb0f123",
+    "head_guard_pre_post": true,
+    "tested_tree_equal": true,
+    "pr376_head": "5f9b4fade9e2bfaa061b625a0a55f7b3f8d9d34a",
+    "pr376_base": "master",
+    "pr376_merged": false,
+    "pr376_new_base_ci": "no new runs; existing statuses predate base edit",
+    "local_combined_tree_tests": "14 pass, no skips",
+    "next_action": "Coordinator authorise ordinary master integration into376 to trigger real changed-head checks; no empty commit or duplicate375 fix",
+    "report": "state/reports/integration373-20261113/report.md",
+    "measurements": 0,
+    "queue_run_signal": false,
+    "workstation_ready": false,
+    "postmerge_checks": "Documentation and Benchmark links pass; Test and automatic Benchmark running; packaging skipped by non-release condition"
   }
 }

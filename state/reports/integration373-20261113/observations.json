@@ -1,0 +1,288 @@
+{
+  "expected_head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+  "previous_master": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+  "merge_result": {
+    "sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
+    "merged": true,
+    "message": "Pull Request successfully merged"
+  },
+  "tested_merge": "078f37a5ef27240ee9161cfc70c134a95110939a",
+  "verified_tree": "05e2a56c3381600ef975cbd351b19d973cb0f123",
+  "premerge_runs": [
+    {
+      "id": 43393348524,
+      "name": "Benchmark",
+      "head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+      "conclusion": "success"
+    },
+    {
+      "id": 43393348575,
+      "name": "Cells live-path preparation",
+      "head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+      "conclusion": "success"
+    },
+    {
+      "id": 43393348433,
+      "name": "CI",
+      "head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+      "conclusion": "success"
+    },
+    {
+      "id": 43393348451,
+      "name": "Test",
+      "head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+      "conclusion": "success"
+    },
+    {
+      "id": 43393349525,
+      "name": "Occupancy",
+      "head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+      "conclusion": "success"
+    }
+  ],
+  "premerge_checks": [
+    {
+      "id": 131779165783,
+      "name": "Release",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 131778376201,
+      "name": "python (3.14)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778376180,
+      "name": "python (3.10)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778376178,
+      "name": "python (3.11)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778376154,
+      "name": "python (3.15)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778376146,
+      "name": "python (3.13)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778376100,
+      "name": "python (3.12)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778323689,
+      "name": "Publish crate",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 131778321437,
+      "name": "macos (macos-15, aarch64)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778321357,
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778321330,
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778321286,
+      "name": "macos (macos-15, x86_64)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778321271,
+      "name": "windows (windows-latest, x64)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778321268,
+      "name": "sdist",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778292549,
+      "name": "occupancy",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778290565,
+      "name": "fuzz-smoke",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778290561,
+      "name": "submit",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778290420,
+      "name": "rust",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778290380,
+      "name": "get-python-versions",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778290058,
+      "name": "typing",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778289728,
+      "name": "untimed",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778289711,
+      "name": "bench",
+      "conclusion": "success"
+    },
+    {
+      "id": 131778289578,
+      "name": "check-commit",
+      "conclusion": "success"
+    }
+  ],
+  "premerge_legacy": [
+    {
+      "url": "https://api.github.com/repos/lmmx/mibz2/statuses/8329f0c702a1c5598e39e7f2413db55a12ce8884",
+      "avatar_url": "https://avatars.githubusercontent.com/in/68672?v=4",
+      "id": 58819668560,
+      "node_id": "SC_kwDOVZCza88AAAANsezqUA",
+      "state": "success",
+      "description": "checks completed successfully",
+      "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794558438.dZzzsTpVR12DA6C9_jbU1g",
+      "context": "pre-commit.ci - pr",
+      "created_at": "2026-11-13T08:27:29Z",
+      "updated_at": "2026-11-13T08:27:29Z"
+    }
+  ],
+  "retarget": {
+    "url": "https://github.com/lmmx/mibz2/pull/376",
+    "number": 376,
+    "state": "open",
+    "merged": false,
+    "mergeable": false,
+    "draft": false,
+    "title": "fix(diagnostic): submit Cells bundles after success and failure",
+    "base": "master",
+    "base_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
+    "head": "fix/cells-live-submit-bundle",
+    "head_sha": "5f9b4fade9e2bfaa061b625a0a55f7b3f8d9d34a",
+    "head_repo_id": 1435546475,
+    "head_repo_full_name": "lmmx/mibz2",
+    "merge_commit_sha": "6fb3be52e3af18604bf56ea0d544b08b6e2db583",
+    "user": {
+      "login": "lmmx",
+      "name": "lmmx",
+      "email": null,
+      "avatar_url": "https://avatars.githubusercontent.com/u/2979452?v=4",
+      "id": 2979452
+    },
+    "requested_reviewers": null,
+    "requested_team_reviewers": null,
+    "diff": null,
+    "comments": null,
+    "created_at": "2026-11-13T08:49:51Z",
+    "updated_at": "2026-11-13T09:07:32Z",
+    "closed_at": null,
+    "merged_at": null,
+    "commits": 1,
+    "changed_files": 2,
+    "additions": 68,
+    "deletions": 1,
+    "display_url": "https://github.com/lmmx/mibz2/pull/376",
+    "display_title": "fix(diagnostic): submit Cells bundles after success and failure"
+  },
+  "postmerge_runs": [
+    {
+      "id": 43398652640,
+      "name": "Benchmark",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 43398652731,
+      "name": "Documentation site",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 43398652808,
+      "name": "CI",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 43398652622,
+      "name": "Test",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 43398652710,
+      "name": "Benchmark links",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "retarget_runs": [
+    {
+      "id": 43396306200,
+      "name": "Cells live-path preparation",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T08:49:55Z"
+    },
+    {
+      "id": 43396306222,
+      "name": "CI",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T08:49:55Z"
+    },
+    {
+      "id": 43396306206,
+      "name": "Test",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-13T08:49:55Z"
+    },
+    {
+      "id": 43396306235,
+      "name": "Benchmark",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T08:49:55Z"
+    }
+  ],
+  "retarget_legacy": [
+    {
+      "url": "https://api.github.com/repos/lmmx/mibz2/statuses/5f9b4fade9e2bfaa061b625a0a55f7b3f8d9d34a",
+      "avatar_url": "https://avatars.githubusercontent.com/in/68672?v=4",
+      "id": 58821009185,
+      "node_id": "SC_kwDOVZCza88AAAANsgFfIQ",
+      "state": "success",
+      "description": "checks completed successfully",
+      "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794559794.A2hwDSzTQjKiD7cCuM3i4A",
+      "context": "pre-commit.ci - pr",
+      "created_at": "2026-11-13T08:50:05Z",
+      "updated_at": "2026-11-13T08:50:05Z"
+    }
+  ],
+  "prospective376_tree": "afd43a466f4d9ee7f5dbc7acb41c310285b00bfe"
+}
