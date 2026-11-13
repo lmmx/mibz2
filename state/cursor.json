@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6848026007,
+  "last_examined_comment_id": 6848184897,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1640,7 +1640,8 @@
       "scope": "Reconcile actual373 correction and all-green CI; route bounded existing-recipe readiness dossier",
       "ready_job_queued": false,
       "action_links": [
-        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6848164049"
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6848164049",
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6848184897"
       ],
       "assignment_comment_id": 6839520708,
       "recipient_cursor_sha": "9faca2e56e43c2e1054d7e690e254bb1e0ee18a2",
@@ -1648,6 +1649,11 @@
       "head_sha": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
       "next_assignment_comment_id": 6848164049,
       "reason": "Two-key reorder correction complete; Actions and legacy all pass, no performance adoption claim. Separate deliberate integration required. No ready queue: actual bindings and final PROTOCOL9 readiness outstanding; bounded onecore admission dossier routed."
+    },
+    "6848184897": {
+      "status": "completed_own_monitor_log",
+      "comment_updated_at": null,
+      "source_comment_id": 6848026007
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1762,7 +1768,8 @@
     6838210087,
     6839520708,
     6839541837,
-    6848164049
+    6848164049,
+    6848184897
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1965,8 +1972,10 @@
   },
   "checkpoint": {
     "key": "373-correction-complete-6848026007",
-    "status": "in_progress_before_post",
-    "event_dispositions_persisted": true
+    "status": "published_readback_verified",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6848184897,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6848184897"
   },
   "dispatch_history": [
     {
