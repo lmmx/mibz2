@@ -1960,12 +1960,14 @@
     },
     {
       "trigger_comment_id": 6852069758,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "source_commit": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
       "report_path": "state/reports/small-spine-6852069758/report.md",
-      "report_commit": "d579e159763f465e1e14dbf9b9caeed4600b8c8a",
-      "disposition": "Source omission proof accepted at835984e; B5 evidence closure pending Miri/mutation records. CI Cells native/differential/fuzz corroborated; service fixture failures and skipped harness steps retained."
+      "report_commit": "dc4337ad2368982f61df176d925e3155b8ded54c",
+      "disposition": "Source omission proof accepted at835984e; B5 evidence closure pending Miri/mutation records. CI Cells native/differential/fuzz corroborated; service fixture failures and skipped harness steps retained.",
+      "review_comment_id": 6852258044,
+      "publication_verification": "Exact body, author lmmx, PR145 and role-aware routing verified; pinned verify rejects researcher FROM under its coordinator-only assumption, with no other problem."
     }
   ],
   "active_delegations": [],
