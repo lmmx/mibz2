@@ -8,7 +8,8 @@ if [ "$#" -ne 2 ]; then
 fi
 CPU=$1
 CORPUS=$(realpath "$2")
-DIR="cells-live-$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p target/cells-live-path
+DIR="target/cells-live-path/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir "$DIR"
 exec > >(tee -a "$DIR/console.log") 2>&1
 finish() {
