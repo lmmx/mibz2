@@ -703,5 +703,14 @@
     "receipt_readback_verified": true,
     "receipt_routing": "misrouted false; verify has known coordinator-only FROM assumption, not claimed passed",
     "automatic_github_wakeup_assumed": false
+  },
+  "cells_selective": {
+    "queue_comment_id": 6856176834,
+    "status": "IN_PROGRESS: actual isolated native implementation pickup",
+    "branch": "perf/cells-selective",
+    "base": "be25366f46458e2f1dbb0bdac1f5fbc3366d0648",
+    "baseline": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+    "pickup_review": 6856423064,
+    "next_action": "Implement exact retained representation and validate before independent B5/ordinary matched CI. No379 guard or equal-unit deferral."
   }
 }
