@@ -1,0 +1,15 @@
+{
+  "inbox_comment": 6850318070,
+  "review_comment": 6850572409,
+  "report_commit": "247ef9a2f4d53795364c7fc697a7859c06864e82",
+  "exact_body_verified": true,
+  "author": "lmmx",
+  "destination": 145,
+  "pinned_verify": {
+    "ok": false,
+    "problems": [
+      "FROM is 'optimizer', not coordinator"
+    ]
+  },
+  "route_check_passed": true
+}

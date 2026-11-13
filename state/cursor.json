@@ -1186,10 +1186,10 @@
     {
       "comment_id": 6850318070,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Completed report/replay/ledger committed; awaiting the single REVIEW on #145.",
+      "progress": "Completed report/replay/ledger published; exact REVIEW body, lmmx author and #145 destination independently verified. No further work on this inbox item.",
       "report_path": "state/records/reviews/inbox-6850318070/report.md",
       "report_commit": "247ef9a2f4d53795364c7fc697a7859c06864e82",
       "disposition": "conditional_writer_preparation_recommended_no_execution",
@@ -1204,7 +1204,9 @@
         "new_timing": false,
         "oracle_decompression": false,
         "safety_certification": false
-      }
+      },
+      "reply_id": 6850572409,
+      "routing_verification": "route/check passed. Pinned verify rejects FROM optimizer because it hardcodes coordinator; exact GitHub body/author/destination readback verified, no verify-pass claimed."
     }
   ],
   "migrated_from": {
