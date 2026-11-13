@@ -648,3 +648,13 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 - One next preparation: CI-first seven-input identity/byte-correctness/routes plus conditional all-small-spine writer eligibility. MONODROMY6850491677 retains proof, Pathfinder architecture; no parallel implementation.
 - Prospective two-arm Segmented/currentCells programme:140 measured+21untimed+2memorycontrols=163 executions, ten balanced pairs per family, fixed settle/schedule/deadlines, simultaneous14wall/CPU intervals, <=1.02 per-corpus upper bounds. RSS nativeVmHWM/exactPIDwait4 controls; uniform41168KiB not parity. All proposed/unadmitted, exact future recipe commit still needed.
 - Supersedes unadmitted60+9 as next coverage preparation; unchanged120+9, Wikidata0.881643 gain, quantitativeWikidata/onebyteSTOP,365DEFER, warm20+20unadmitted, independentB5. No compiler/decoder/generator/timing/census/workstation/queue/default/gate execution or change.
+
+
+## Guarded writer next decision: inbox6852341904
+
+[Report](records/reviews/inbox-6852341904/report.md). Audited835984e source/PLAN and first experimental job131868260723 log; seven families, ten pairs, same-bytes yes. Wikidata wall1.099[1.041,1.160], CPU1.098; pattern1.782[1.599,1.986], CPU1.721; logged RSS26/34MB and16/18MB. Artifact digest remains producer-verified, not independently downloaded in this delta.
+- Select exactly one disposition: park Cells integration/new dispatcher, preserve exact Segmented everywhere, await existing6851728088 final receipt and specific reopening evidence. Not a closure of the Cells line.
+- Point parity requires9.01%/43.88% reduction of candidate wall on Wikidata/pattern, before added dispatch costs. No matched old-Cells arm: no guard-effect claim or cross-host subtraction. Originali9 Wikidata0.881643 remains intact for originalbuild only.
+-64r<n spares pattern but retains all admittedWikidata; cannot cure AMD loss by corpus separation alone. No vendor/model whitelist inferred from confounded hosts/builds. Charge descriptor/branch/fallback/misclassification/capacity; no proven qualified target.
+- Screen378 fills seven route/correctness identities; candidate AMD covers seven performance rows, not changedwriteri9. Adjacent emitter overlaps alreadyremovedpatternwork; representationselective32U+16S stores remainsunpriced. ReuseMONODROMY6850491677/Pathfinder, no new implementation/reviewer/recipe.
+- Reopen on exact-final-build matched target netwin with sevenfamily whole-reader wall/CPU/RSS, validroute/correctness, independentB5. Fixture/cache repairs and skippedsteps preserve firstnegative; no rerun-to-pass. No execution/admission/default/merge/release changes.

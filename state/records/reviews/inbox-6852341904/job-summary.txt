@@ -1,0 +1,50 @@
+2026-11-13T11:56:33.0944712Z r9 wikidata     t=1 mibz2@bin/ab     wall   0.326 cpu   0.328 rss    26MB others 0.04 steal 0.0% 
+2026-11-13T11:56:33.0989506Z 
+2026-11-13T11:56:33.0990078Z ### onebyte, 1 thread (20 MB out; ratios: arm / mibz2@bin/ab, paired by round)
+2026-11-13T11:56:33.0990305Z 
+2026-11-13T11:56:33.0990549Z | arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+2026-11-13T11:56:33.0991096Z |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+2026-11-13T11:56:33.0991432Z | mibz2@bin/ab | 10 | 0.015 | 0.016 | 0.017 | 0.017 | 33 MB | 1 | 1 | 0.06 | yes |
+2026-11-13T11:56:33.0991999Z | mibz2-cells | 10 | 0.016 | 0.017 | 0.018 | 0.019 | 36 MB | 1.044 [0.967, 1.128] | 1.032 [0.953, 1.117] | 0.08 | yes |
+2026-11-13T11:56:33.0992284Z 
+2026-11-13T11:56:33.0992711Z ### pattern, 1 thread (20 MB out; ratios: arm / mibz2@bin/ab, paired by round)
+2026-11-13T11:56:33.0992947Z 
+2026-11-13T11:56:33.0993404Z | arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+2026-11-13T11:56:33.0993850Z |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+2026-11-13T11:56:33.0994148Z | mibz2@bin/ab | 10 | 0.020 | 0.020 | 0.021 | 0.022 | 16 MB | 1 | 1 | 0.14 | yes |
+2026-11-13T11:56:33.0994561Z | mibz2-cells | 10 | 0.034 | 0.035 | 0.035 | 0.036 | 18 MB | 1.782 [1.599, 1.986] | 1.721 [1.553, 1.907] | 0.09 | yes |
+2026-11-13T11:56:33.0994844Z 
+2026-11-13T11:56:33.1003593Z ### random, 1 thread (8 MB out; ratios: arm / mibz2@bin/ab, paired by round)
+2026-11-13T11:56:33.1003961Z 
+2026-11-13T11:56:33.1004294Z | arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+2026-11-13T11:56:33.1004775Z |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+2026-11-13T11:56:33.1005117Z | mibz2@bin/ab | 10 | 0.083 | 0.090 | 0.085 | 0.091 | 23 MB | 1 | 1 | 0.00 | yes |
+2026-11-13T11:56:33.1005569Z | mibz2-cells | 10 | 0.087 | 0.089 | 0.088 | 0.091 | 23 MB | 1.001 [0.984, 1.018] | 1.001 [0.984, 1.018] | 0.01 | yes |
+2026-11-13T11:56:33.1005891Z 
+2026-11-13T11:56:33.1006077Z ### records, 1 thread (10 MB out; ratios: arm / mibz2@bin/ab, paired by round)
+2026-11-13T11:56:33.1006331Z 
+2026-11-13T11:56:33.1006618Z | arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+2026-11-13T11:56:33.1007088Z |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+2026-11-13T11:56:33.1007405Z | mibz2@bin/ab | 10 | 0.089 | 0.094 | 0.091 | 0.095 | 23 MB | 1 | 1 | 0.04 | yes |
+2026-11-13T11:56:33.1007843Z | mibz2-cells | 10 | 0.089 | 0.094 | 0.091 | 0.096 | 23 MB | 0.993 [0.979, 1.007] | 0.993 [0.979, 1.007] | 0.02 | yes |
+2026-11-13T11:56:33.1008137Z 
+2026-11-13T11:56:33.1008301Z ### runs, 1 thread (10 MB out; ratios: arm / mibz2@bin/ab, paired by round)
+2026-11-13T11:56:33.1008555Z 
+2026-11-13T11:56:33.1008865Z | arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+2026-11-13T11:56:33.1009329Z |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+2026-11-13T11:56:33.1009669Z | mibz2@bin/ab | 10 | 0.010 | 0.010 | 0.012 | 0.012 | 23 MB | 1 | 1 | 0.00 | yes |
+2026-11-13T11:56:33.1010103Z | mibz2-cells | 10 | 0.010 | 0.010 | 0.012 | 0.012 | 23 MB | 0.936 [0.800, 1.095] | 0.940 [0.818, 1.081] | 0.00 | yes |
+2026-11-13T11:56:33.1010394Z 
+2026-11-13T11:56:33.1010550Z ### text, 1 thread (13 MB out; ratios: arm / mibz2@bin/ab, paired by round)
+2026-11-13T11:56:33.1010832Z 
+2026-11-13T11:56:33.1011124Z | arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+2026-11-13T11:56:33.1011576Z |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+2026-11-13T11:56:33.1012209Z | mibz2@bin/ab | 10 | 0.046 | 0.051 | 0.048 | 0.053 | 19 MB | 1 | 1 | 0.07 | yes |
+2026-11-13T11:56:33.1012653Z | mibz2-cells | 10 | 0.047 | 0.049 | 0.049 | 0.051 | 19 MB | 0.978 [0.935, 1.024] | 0.978 [0.937, 1.022] | 0.00 | yes |
+2026-11-13T11:56:33.1012948Z 
+2026-11-13T11:56:33.1013130Z ### wikidata, 1 thread (210 MB out; ratios: arm / mibz2@bin/ab, paired by round)
+2026-11-13T11:56:33.1013387Z 
+2026-11-13T11:56:33.1013701Z | arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |
+2026-11-13T11:56:33.1014175Z |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|
+2026-11-13T11:56:33.1014504Z | mibz2@bin/ab | 10 | 0.317 | 0.334 | 0.319 | 0.335 | 26 MB | 1 | 1 | 0.04 | yes |
+2026-11-13T11:56:33.1014948Z | mibz2-cells | 10 | 0.349 | 0.361 | 0.351 | 0.363 | 34 MB | 1.099 [1.041, 1.160] | 1.098 [1.041, 1.159] | 0.01 | yes |
