@@ -2349,6 +2349,12 @@
       "log_omission": "Current batch explicitly prohibits additional source-app message; substantive disposition recorded in dedicated durable cursor.",
       "ready_job_queued": false,
       "ready_job_reason": "No qualified target or selected concrete recipe; finish existing exact-head CI first. Completed runs and unadmitted programmes not duplicated."
+    },
+    "6852738556": {
+      "status": "in_progress",
+      "delivery_id": "c75e5730-df5c-11f1-9e96-40319f1a91dd",
+      "comment_updated_at": "2026-11-13T12:21:38Z",
+      "planned_action": "Record final-head negative performance evidence separately; maintain parked integration/new dispatcher and current same-executor final Miri receipt pending. Publish one substantive combined disposition, no new assignment."
     }
   },
   "automatic_github_wakeup_assumed": false,
