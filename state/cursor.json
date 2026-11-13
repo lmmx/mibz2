@@ -2540,12 +2540,20 @@
     "6855132749": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T14:01:17Z",
-      "disposition": "Own staged same-executor feasibility reconciliation; ignore self wake; not recipient delivery."
+      "disposition": "Own staged same-executor feasibility reconciliation; ignore self wake; not recipient delivery.",
+      "delivery_id": "b2e02f00-df6a-11f1-8191-ed9222eda728",
+      "wake_disposition": "observed_self_generated_noop",
+      "response_comments": 0,
+      "dispatches": 0
     },
     "6855158914": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T14:02:19Z",
-      "disposition": "Own ownership reconciliation LOG; ignore self wake."
+      "disposition": "Own ownership reconciliation LOG; ignore self wake.",
+      "delivery_id": "d7abbd40-df6a-11f1-86dd-f86aee194b64",
+      "wake_disposition": "observed_self_generated_noop",
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2703,9 +2711,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6854993878,
-    "delivery_id": "ee275030-df69-11f1-96d7-bdbed4c9f1e7",
-    "disposition": "Ownership reconciled; finite feasibility result pending"
+    "comment_id": 6855158914,
+    "delivery_id": "d7abbd40-df6a-11f1-86dd-f86aee194b64",
+    "disposition": "Both own checkpoint/LOG wakes deduplicated; no new external message. Codex cursor reports Phase1 in progress, no completion REVIEW."
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -5195,6 +5203,14 @@
     "native_build_authorised_by_monitor": false,
     "execution_observed": false,
     "completion_observed": false,
-    "source_master": "3e7e294cc10f29495e9828181345d74233c549d4"
+    "source_master": "3e7e294cc10f29495e9828181345d74233c549d4",
+    "progress_cursor_observation": {
+      "blob_sha": "c74e2012a8f114c5f51ade36901b2ac0bdb27ff4",
+      "status": "IN_PROGRESS Phase1 executed:9621 all-origin cases plus3 budget checks pass; native feasibility ledger NO-BUILD in preparation",
+      "completion_observed": false,
+      "validation": "Recipient cursor report only; finite artifacts not assessed in this wake; no completion REVIEW. Existing result pending and no native authorisation.",
+      "ready_job_queued": false,
+      "ready_job_reason": "No completed qualifying ledger, native candidate or frozen recipe."
+    }
   }
 }
