@@ -141,7 +141,7 @@
     "6857529647": 6857619789,
     "6857749401": 6857807617
   },
-  "last_rebuilt_from": 6857735998,
+  "last_rebuilt_from": 6862129816,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -614,9 +614,10 @@
     },
     "6862205856": {
       "comment_id": 6862205856,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling i9 recipe pickup."
+      "status": "complete",
+      "progress": "Record committed through channel 6862129816; REVIEW pending.",
+      "work_commit": "2306a6f0d196d19e903997f8e533cfa7c738dbc3"
     }
   },
-  "last_record_commit": "e44a581dd050f8bf3414ee154a5f5780be55d8c7"
+  "last_record_commit": "2306a6f0d196d19e903997f8e533cfa7c738dbc3"
 }
