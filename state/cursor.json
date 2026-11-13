@@ -2268,7 +2268,14 @@
     "6852388781": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T12:07:07Z",
-      "disposition": "Own first-result/evidence-closure checkpoint verified; ignore self wake."
+      "disposition": "Own first-result/evidence-closure checkpoint verified; ignore self wake.",
+      "delivery_id": "bf819fb0-df5a-11f1-9371-6a211a6b458a"
+    },
+    "6852379143": {
+      "status": "in_progress",
+      "delivery_id": "b1c7d470-df5a-11f1-9fe9-36eb47bdf8f2",
+      "comment_updated_at": "2026-11-13T12:06:43Z",
+      "planned_action": "Record observed generator-only successor and current CI; preserve active existing assignments. This batch prohibits source-app messages, and no duplicate routing is needed."
     }
   },
   "automatic_github_wakeup_assumed": false,
