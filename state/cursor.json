@@ -2794,7 +2794,11 @@
     "6857768408": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T15:44:06Z",
-      "disposition": "Own grouped completion/disposition LOG; ignore future self-trigger."
+      "disposition": "Own grouped completion/disposition LOG; ignore future self-trigger.",
+      "delivery_id": "0ff38350-df79-11f1-86dd-a9a8cbf51d11",
+      "wake_disposition": "observed_self_generated_noop",
+      "dispatches": 0,
+      "response_comments": 0
     },
     "6857807617": {
       "status": "completed",
@@ -2977,8 +2981,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6857807617,
-    "delivery_id": "4dc837c0-df79-11f1-8872-4f92f74da4e9"
+    "comment_id": 6857768408,
+    "delivery_id": "0ff38350-df79-11f1-86dd-a9a8cbf51d11"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
