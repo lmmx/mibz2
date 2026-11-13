@@ -145,7 +145,7 @@
     "6862205856": 6862262401,
     "6862410701": 6862464014
   },
-  "last_rebuilt_from": 6862371184,
+  "last_rebuilt_from": 6862613562,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -632,9 +632,10 @@
     },
     "6862622329": {
       "comment_id": 6862622329,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling PR381 executable evidence and conditional handoff."
+      "status": "complete",
+      "progress": "Record committed through channel 6862613562; REVIEW pending.",
+      "work_commit": "e4cff824c9838a37e1e62ff4bb3c6d9b530fb20f"
     }
   },
-  "last_record_commit": "e84bc61c10b42deddc6f5bb1e82382fdf77e6db4"
+  "last_record_commit": "e4cff824c9838a37e1e62ff4bb3c6d9b530fb20f"
 }
