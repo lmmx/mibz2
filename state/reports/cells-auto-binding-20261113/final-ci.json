@@ -1,0 +1,131 @@
+{
+  "head": "cb73bf909397e2fff8c90f0a00437061ad06478e",
+  "checks": [
+    {
+      "name": "Release",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "python (3.10)",
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.12)",
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.15)",
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.13)",
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.11)",
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.14)",
+      "conclusion": "success"
+    },
+    {
+      "name": "fuzz-smoke",
+      "conclusion": "success"
+    },
+    {
+      "name": "typing",
+      "conclusion": "success"
+    },
+    {
+      "name": "get-python-versions",
+      "conclusion": "success"
+    },
+    {
+      "name": "rust",
+      "conclusion": "success"
+    },
+    {
+      "name": "submit",
+      "conclusion": "success"
+    },
+    {
+      "name": "bench",
+      "conclusion": "success"
+    },
+    {
+      "name": "Publish crate",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "conclusion": "success"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "conclusion": "success"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "conclusion": "success"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "conclusion": "success"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "conclusion": "success"
+    },
+    {
+      "name": "sdist",
+      "conclusion": "success"
+    },
+    {
+      "name": "occupancy",
+      "conclusion": "success"
+    },
+    {
+      "name": "untimed",
+      "conclusion": "success"
+    },
+    {
+      "name": "check-commit",
+      "conclusion": "success"
+    }
+  ],
+  "legacy": [
+    {
+      "state": "success",
+      "url": "https://results.pre-commit.ci/run/github/1435546475/1794563574.kX-Lk3IcSDyFVysVyzHrbg"
+    }
+  ],
+  "runs": [
+    {
+      "id": 43404843666,
+      "name": "Test",
+      "conclusion": "success"
+    },
+    {
+      "id": 43404843455,
+      "name": "Occupancy",
+      "conclusion": "success"
+    },
+    {
+      "id": 43404843493,
+      "name": "Cells live-path preparation",
+      "conclusion": "success"
+    },
+    {
+      "id": 43404843443,
+      "name": "Benchmark",
+      "conclusion": "success"
+    },
+    {
+      "id": 43404843484,
+      "name": "CI",
+      "conclusion": "success"
+    }
+  ],
+  "source_tree": "7521261b755e5ac1fda6d7bd3ef06e88b7fec9ae"
+}

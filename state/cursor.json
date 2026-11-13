@@ -568,7 +568,7 @@
     "evidence_commit": "27a459ca0d2bf6b89ef3d9283b7d5963de1abe5a"
   },
   "cells_queue_admission": {
-    "status": "ACTIVE:noninteractive binding377 implemented; exact-head CI/review and existing Run-signal dispatch pending",
+    "status": "ACTIVE:377 binding implemented and exact-head CI green; awaiting Coordinator frozen-recipe check and capable Run-signal dispatch",
     "owner_authorised": [
       "master_into376",
       "guarded376_merge",
@@ -587,7 +587,7 @@
     "measurements": 0,
     "in_progress_review_comment_id": 6849208142,
     "report": "state/reports/cells-auto-binding-20261113/checkpoint.md",
-    "next_action": "Finish377 gates and Coordinator recipe check; integrate, dispatch existing ready workflow through capable connection, verify tag, add queue. No manual desktop facts or renewed authority needed.",
+    "next_action": "Coordinator check frozen recipe and dispatch existing ready signal at cb73bf9 through capable connection; then verify tag and append queue entry to master. No new permission or desktop facts needed.",
     "review_comment_id": 6849382358,
     "pr_receipt_comment_id": 6849372228,
     "receipt_readback_verified": true,
@@ -597,6 +597,12 @@
     "desktop_preflight_reply_required": false,
     "cpu_rule": "lowest currently allowed logical CPU; record before build",
     "local_tests": 18,
-    "real_staged_hashes_verified": true
+    "real_staged_hashes_verified": true,
+    "pr377_all_checks_success": true,
+    "source_branch": "bench/cells-live-workstation",
+    "source_tree": "7521261b755e5ac1fda6d7bd3ef06e88b7fec9ae",
+    "recipe": "bench-cells-live-path-i9",
+    "frozen_review_request": 6849678574,
+    "dispatch_transport": "no connector workflow-dispatch tool; shell GitHub API Forbidden; no browser tool"
   }
 }

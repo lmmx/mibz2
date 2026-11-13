@@ -12,4 +12,13 @@ Fresh CI running: Test43404843666, packaging43404843484, Occupancy43404843455, p
 
 One transport limitation: available GitHub connector has no workflow-dispatch tool; `gh api repos/lmmx/mibz2/actions/workflows/run-signal.yml` returns Forbidden. gh auth status reports failed token authentication, but the rejecting API transport prevents establishing a credential root cause. No browser/computer-use execution tool is available either. Do not bypass standard run-signal.yml by direct tag writes or a new infrastructure workflow. Ask Coordinator for the existing dispatch through a capable connection once exact source is green/reviewed, then verify ready tag and add the authorised queue entry. This is not missing workstation facts or another permission request.
 
-Ready/queue still unset. Duplicate evidence screen remains historical live-not-run and must be refreshed before admission. This checkpoint is active, not completion. GitHub comments do not restart Codex; preserve manual/live session requirement.
+All five Actions and hosted legacy now pass on exact cb73bf909397e2fff8c90f0a00437061ad06478e (final-ci.json). CI ordinary decoder output hashes agree and all wall intervals include zero. Preserve adverse memory assessment: Wikidata4t RSS+2.1% labelled more, records2t RSS point+3.3%; no optimisation claim, inferred cause or rerun. Source tree7521261b755e5ac1fda6d7bd3ef06e88b7fec9ae equals a conflict-free merge with current master. Full benchmark report retained.
+
+PROTOCOL9 can queue this green source branch directly; merging377 is not an extra prerequisite. Proposed queue line (not yet admitted):
+`bench-cells-live-path-i9 bench/cells-live-workstation Cells live readers: ten pairs, three corpora, four arms;120+9`
+
+After Coordinator frozen-recipe check, the exact existing-workflow dispatch is:
+`gh workflow run run-signal.yml --repo lmmx/mibz2 --ref master -f signal=ready -f recipe=bench-cells-live-path-i9 -f sha=cb73bf909397e2fff8c90f0a00437061ad06478e`
+No unapproved experiment is executed by that tag operation. Verify ready tag equals cb73bf9, no hold, correct source branch ancestry and no prior live submission, then append the queue line on master under existing owner authority and record admission. This session cannot dispatch with its currently exposed tools/API transport; Coordinator capable connection is requested, not another user permission. Review decision is still pending.
+
+Ready/queue still unset. Fresh evidence fetch still d85b207, only historical cells-vs-prod; no live-path queue history or tags. Refresh again before admission. This checkpoint is active, not completion. GitHub comments do not restart Codex; preserve manual/live session requirement.
