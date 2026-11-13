@@ -62,6 +62,7 @@ jobs:
           grep -q '^cells::tests::miri_cells_admission_and_invalid_records' miri-list.txt
           grep -q '^cells::tests::miri_cells_slots_mark_and_links' miri-list.txt
           grep -q '^cells::tests::miri_cells_long_writer:' miri-list.txt
+          grep -q '^cells::tests::miri_cells_selective_boundaries_reuse:' miri-list.txt
           grep -q '^cells::tests::miri_cells_long_writer_production_admission:' miri-list.txt
           grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
           grep -q '^parallel::service_tests::miri_every_retirement_returns_its_buffers' miri-list.txt

@@ -175,7 +175,9 @@ fn one_block_and_none() {
 /// delivered
 #[test]
 fn a_block_crc_in_the_middle() {
-    let corp = corpora(1);
+    // Source text can cross the generator's repeat threshold as code grows.
+    // Leave enough room after RLE1 for the four blocks this fixture requires.
+    let corp = corpora(2);
     let text = &corp[0].1[..];
     let z = compress(text, 9);
     let starts = block_starts(&z);
@@ -258,7 +260,8 @@ fn an_mtf_error() {
 
 /// A stream of several full blocks, and the default's bytes of its first `at` blocks
 fn full_blocks() -> (Vec<u8>, Vec<u64>) {
-    let corp = corpora(1);
+    // Keep the four-block reach assertion independent of the source-copy count.
+    let corp = corpora(2);
     let z = compress(&corp[0].1, 9);
     let starts = block_starts(&z);
     assert!(starts.len() >= 4);

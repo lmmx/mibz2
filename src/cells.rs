@@ -42,7 +42,19 @@ struct Kernel {
     pos: Vec<u32>,
     #[cfg(test)]
     writer_reach: WriterReach,
+    #[cfg(test)]
+    materialization: Option<Vec<Materialization>>,
 }
+#[cfg(test)]
+#[derive(Debug, PartialEq, Eq)]
+struct Materialization {
+    state: [u64; 16],
+    payload: Vec<u8>,
+    slots: Vec<u8>,
+}
+#[cfg(test)]
+include!("cells_original_test.rs");
+
 /// Per-call reach, compiled out of production. Counts the actual writer branches,
 /// not column lengths or inferred grammar properties.
 #[cfg(test)]
@@ -257,6 +269,38 @@ unsafe fn copy_long(dst: *mut u8, src: *const u8, len: usize) {
 }
 
 impl Kernel {
+    #[cfg(test)]
+    fn record_materialization(&mut self, state: [u64; 16]) {
+        if let Some(log) = &mut self.materialization {
+            let cw = state[4];
+            assert_eq!(
+                cw as u32 <= SMALL,
+                (cw >> 32) < self.lay.rules as u64,
+                "selected representation"
+            );
+            let size = if cw as u32 <= SMALL {
+                cw as u32 as usize
+            } else {
+                16
+            };
+            let at = (cw >> 32) as usize;
+            log.push(Materialization {
+                state,
+                payload: self.buf[at..at + size].to_vec(),
+                slots: Vec::new(),
+            });
+        }
+    }
+
+    #[cfg(test)]
+    fn record_selected_slots(&mut self, ts: usize, bs: usize) {
+        if let Some(log) = &mut self.materialization {
+            let slot = log.last_mut().unwrap();
+            slot.slots.extend_from_slice(&self.buf[ts..ts + SLOT]);
+            slot.slots.extend_from_slice(&self.buf[bs..bs + SLOT]);
+        }
+    }
+
     fn check_canaries(&self) {
         #[cfg(any(miri, debug_assertions))]
         if !self.buf.is_empty() {
@@ -555,21 +599,44 @@ impl Kernel {
                         return Err(Refusal::Budget);
                     }
                     cells += 1;
-                    // the cell's word, A's then B's: as bytes, and as a rule; one is kept
+                    // The cell word is A then B; materialise only its retained representation.
                     let (la, lb) = (aw & M, bw & M);
                     let len = la + lb;
-                    copy16(base.add(top), base.add((aw >> 32) as usize));
-                    copy16(
-                        base.add(top + la.min(16) as usize),
-                        base.add((bw >> 32) as usize),
-                    );
-                    wr64(base, rp, aw);
-                    wr64(base, rp + 8, bw);
+                    // MARK remains in len: even a short marked word must be a rule.
                     let small = len <= SMALL as u64;
+                    if small {
+                        copy16(base.add(top), base.add((aw >> 32) as usize));
+                        copy16(
+                            base.add(top + la.min(16) as usize),
+                            base.add((bw >> 32) as usize),
+                        );
+                    } else {
+                        wr64(base, rp, aw);
+                        wr64(base, rp + 8, bw);
+                    }
                     let word = if small { top } else { rp };
                     top += if small { len as usize } else { 0 };
                     rp += if small { 0 } else { 16 };
                     let cw = len | (word as u64) << 32;
+                    #[cfg(test)]
+                    self.record_materialization([
+                        ra,
+                        rb,
+                        aw,
+                        bw,
+                        cw,
+                        top as u64,
+                        rp as u64,
+                        ft as u64,
+                        fb as u64,
+                        na as u64,
+                        nb as u64,
+                        bs as u64,
+                        ts as u64,
+                        sa as u64,
+                        sb as u64,
+                        cells as u64,
+                    ]);
                     if ra == rb {
                         // both letters end: the cell is the last cut from each
                         wr32(base, ts + 4, ra as u32);
@@ -578,6 +645,8 @@ impl Kernel {
                         wr32(base, bs + 4, ra as u32);
                         wr64(base, bs + 8, cw);
                         wr64(base, bs + 16, ts as u64);
+                        #[cfg(test)]
+                        self.record_selected_slots(ts, bs);
                         (sa, sb) = (na, nb);
                         continue 'fresh;
                     } else if ra > rb {
@@ -590,6 +659,8 @@ impl Kernel {
                         wr32(base, bs + 4, rb as u32);
                         wr64(base, bs + 8, cw);
                         wr64(base, bs + 16, ts as u64);
+                        #[cfg(test)]
+                        self.record_selected_slots(ts, bs);
                         bs = fb;
                         fb += SLOT;
                         ra -= rb;
@@ -610,6 +681,8 @@ impl Kernel {
                         wr32(base, ts + 4, ra as u32);
                         wr64(base, ts + 8, cw);
                         wr64(base, ts + 16, bs as u64);
+                        #[cfg(test)]
+                        self.record_selected_slots(ts, bs);
                         ts = ft;
                         ft += SLOT;
                         rb -= ra;
@@ -1128,4 +1201,5 @@ mod tests {
                 && cells.counts().admitted > 0
         );
     }
+    include!("cells_selective_test.rs");
 }

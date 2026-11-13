@@ -236,6 +236,18 @@ jobs:
           python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2
           ls -l corpora
 
+      - name: Selective materialisation pinned inputs and exact byte checks
+        if: env.MODE == 'pr'
+        run: |
+          python3 bench/cells-selective/verify.py > selective-source.json
+          python3 bench/cells-selective/pin_inputs.py
+          CELLS_PINNED_INPUTS="$PWD/cells-corpora" RUSTFLAGS="--cfg mibz2_cells_bench" timeout 300 cargo test --release --example ab cells_pinned_readers_byte_parity -- --ignored --nocapture > selective-parity.log 2>&1
+          python3 bench/cells-selective/build_original.py
+          python3 bench/cells-selective/codegen.py
+          cc -O2 -Wall -Wextra -Werror bench/cells-selective/launcher.c -o bin/rss-launcher
+          cc -O2 -Wall -Wextra -Werror bench/cells-selective/rss_control.c -o bin/rss-control
+          python3 bench/cells-selective/rss_check.py
+
       # The runner as the runs see it (cores, quota, the run-queue counter's check)
       - name: Environment
         run: bin/ab env | tee env.json
@@ -245,13 +257,14 @@ jobs:
           threads=$([ "$(nproc)" -gt 2 ] && echo "1,2,$(nproc)" || echo "1,$(nproc)")
           bin/ab run runs.jsonl --arms "$ARMS" --threads "$threads" --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
 
-      # Slice one: a third arm, measured separately to preserve the existing paired
-      # schedule and gate. Its one-thread wall/RSS figures are reported, never judged.
+      # Experimental three-arm comparison has its own frozen decision rule.
+      # The default head/base schedule and acceptance gate above remain unchanged.
       - name: Experimental cells arm
         if: env.MODE == 'pr'
         run: |
-          bin/cells-ab run cells.jsonl --arms mibz2@bin/ab,mibz2-cells --threads 1 --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
-          bin/cells-ab summary cells.jsonl --ref mibz2@bin/ab > cells-summary.md
+          bin/cells-ab run cells.jsonl --arms mibz2@bin/ab,mibz2-cells@bin/original-cells-ab,mibz2-cells --threads 1 --spread --rounds "$ROUNDS" --settle "$SETTLE" cells-corpora/*.bz2
+          bin/cells-ab summary cells.jsonl --ref mibz2-cells@bin/original-cells-ab > cells-summary.md
+          bin/cells-ab summary cells.jsonl --ref mibz2@bin/ab > cells-segmented-summary.md
           tee -a "$GITHUB_STEP_SUMMARY" < cells-summary.md
 
       # Each stage on its own, on one thread: a diagnostic beside the decoder's figures
@@ -318,6 +331,13 @@ jobs:
             cells.jsonl
             cells-summary.md
             codegen.txt
+            cells-segmented-summary.md
+            cells-inputs.json
+            original-source.json
+            selective-source.json
+            *-parity.log
+            selective-codegen/
+            rss-controls/
           if-no-files-found: ignore
 
       # master only: the commit's result appended to the bench-results branch, and the

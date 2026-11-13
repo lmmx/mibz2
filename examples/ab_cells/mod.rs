@@ -137,6 +137,46 @@ fn read_full<R: Read>(r: &mut R, buf: &mut [u8]) -> io::Result<usize> {
 mod tests {
     use super::*;
     #[test]
+    #[ignore = "requires the seven hash-verified inputs; explicit untimed pre-benchmark check"]
+    fn cells_pinned_readers_byte_parity() {
+        fn verify(reader: &mut dyn Read, expected: &[u8], name: &str) {
+            let mut offset = 0;
+            let mut buffer = vec![0; 4 << 20];
+            loop {
+                let count = reader.read(&mut buffer).unwrap();
+                if count == 0 {
+                    break;
+                }
+                assert_eq!(
+                    &buffer[..count],
+                    &expected[offset..offset + count],
+                    "{name} at {offset}"
+                );
+                offset += count;
+            }
+            assert_eq!(offset, expected.len(), "{name}");
+        }
+        let root = std::path::PathBuf::from(std::env::var_os("CELLS_PINNED_INPUTS").unwrap());
+        for name in [
+            "wikidata", "onebyte", "pattern", "random", "records", "runs", "text",
+        ] {
+            let path = root.join(format!("{name}.bz2"));
+            let mut expected = Vec::new();
+            bzip2::read::MultiBzDecoder::new(std::fs::File::open(&path).unwrap())
+                .read_to_end(&mut expected)
+                .unwrap();
+            verify(
+                &mut mibz2::BzReader::new(std::fs::File::open(&path).unwrap()),
+                &expected,
+                name,
+            );
+            let mut cells = CellsReader::new(std::fs::File::open(&path).unwrap());
+            verify(&mut cells, &expected, name);
+            eprintln!("CELLS_ROUTE {name} {:?}", cells.scratch.cells_counts());
+        }
+    }
+
+    #[test]
     fn cells_arm_matches_reader_bytes_and_errors() {
         use crate::common::{compress, craft, Spec};
         let mut bad = Spec::of(vec![1; 101], 1);
