@@ -1,0 +1,18 @@
+{
+  "source_head": "94e089f253d830befc528b7714095bed0722b2f5",
+  "equal_slot_write_bytes": 40,
+  "word_destination_bytes": 48,
+  "native_runs": 0,
+  "corpus_runs": 0,
+  "performance_runs": 0,
+  "finite_case_count": 9621,
+  "budget_checks": 3,
+  "oracle_state_invariants": "pass",
+  "direct_inverse_lf_bytes": "pass",
+  "initial_counts_preserved_after_observational_extension": true,
+  "ruff_check": "pass after main docstring correction",
+  "ruff_format": "pass",
+  "py_compile": "pass",
+  "repeat_result_cmp": "identical",
+  "git_diff_check": "pass"
+}
