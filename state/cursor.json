@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6849678574,
+  "last_examined_comment_id": 6849815173,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1776,6 +1776,15 @@
       "log_publication": "published",
       "log_comment_id": 6849815173,
       "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849815173"
+    },
+    "6849815173": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "6898d850-df49-11f1-958e-5a47f3f00713",
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849815173",
+      "comment_updated_at": null,
+      "response_comments": 0,
+      "dispatches": 0,
+      "disposition": "Own checkpoint read back exactly; no additional external messages. Same exact master/policy snapshot remains applicable."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1903,8 +1912,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6849678574,
-    "delivery_id": "5117f540-df48-11f1-9c90-f651d4a09ef4"
+    "comment_id": 6849815173,
+    "delivery_id": "6898d850-df49-11f1-958e-5a47f3f00713"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -2102,7 +2111,7 @@
   },
   "checkpoint": {
     "key": "cells-auto-binding-377-6849678574",
-    "status": "published_pending_readback",
+    "status": "published_readback_verified",
     "event_dispositions_persisted": true,
     "log_comment_id": 6849815173,
     "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849815173"
