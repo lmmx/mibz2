@@ -1241,6 +1241,14 @@
       "reply_id": 6852468714,
       "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6852468714",
       "routing_verification": "route/check passed; pinned helper verify rejects FROM optimizer with coordinator-only check; exact publication readback verified."
+    },
+    {
+      "comment_id": 6867986711,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt: bounded desk/source next-decision pricing after matched i9; no implementation/timing."
     }
   ],
   "migrated_from": {
