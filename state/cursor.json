@@ -69,7 +69,9 @@
     6857344645,
     6857529647
   ],
-  "in_progress": [],
+  "in_progress": [
+    6857749401
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -600,6 +602,11 @@
       "progress": "Record committed; REVIEW 6857619789 published and read back.",
       "work_commit": "6a6d579b498b8615a03d59eeaca381c4f3b89f1f",
       "review_id": 6857619789
+    },
+    "6857749401": {
+      "comment_id": 6857749401,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling selective completion and queued attribution."
     }
   },
   "last_record_commit": "6a6d579b498b8615a03d59eeaca381c4f3b89f1f"
