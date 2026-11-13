@@ -48,7 +48,11 @@
     "merged": false,
     "workstation_ready": false,
     "automatic_github_wakeup_assumed": false,
-    "completion_utc": "2026-11-13T08:30:06.993806+00:00"
+    "completion_utc": "2026-11-13T08:30:06.993806+00:00",
+    "completion_review_comment_id": 6848026007,
+    "pr_evidence_comment_id": 6848028423,
+    "evidence_commit": "b3bcaa42e934db1344ab0164f80f456487e8ffe7",
+    "receipt_readback_verified": true
   },
   "automatic_github_wakeup_assumed": false,
   "prior_f01": {
