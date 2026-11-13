@@ -2811,6 +2811,13 @@
       "response_comments": 0,
       "ready_job_queued": false,
       "ready_job_reason": "Existing untimed attribution remains queued; no newly eligible frozen workstation recipe."
+    },
+    "6862129816": {
+      "status": "in_progress",
+      "delivery_id": "e62ecf50-df93-11f1-93ae-fd1bcb1078c7",
+      "comment_updated_at": "2026-11-13T18:56:12Z",
+      "action": "Reconcile actual Codex preparation pickup within existing standing owner-authorised recipe scope; preserve attribution as separate finding within same lane, no duplicate implementation; Observer checkpoint and grouped LOG.",
+      "action_links": []
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -5577,7 +5584,7 @@
       "head": "a8a23c11607864cb431f87fff38169e10c41685f"
     },
     "default_path_attribution": {
-      "status": "queued_not_launched",
+      "status": "reconciled_into_existing_codex_preparation_lane_pending_finding",
       "route": "145 QUEUED",
       "blocking_inbox": 6848164049,
       "scope": "one source/build attribution report, no production edits or timings",
@@ -5585,7 +5592,9 @@
       "comment_id": 6857735998,
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6857735998",
       "route_verified": true,
-      "readback_verified": true
+      "readback_verified": true,
+      "pickup_review": 6862129816,
+      "meaning": "No duplicate dispatch; bounded untimed finding remains required separately for integration, not prerequisite to recipe preparation."
     },
     "observer_completion": {
       "assignment": 6857529647,
@@ -5600,5 +5609,19 @@
       "cursor": "5d4dc6bb85f12bdd601d1bbe7254ff7eeb317b6b",
       "record": "e44a581dd050f8bf3414ee154a5f5780be55d8c7"
     }
+  },
+  "cells_i9_preparation": {
+    "status": "in_progress_not_ready",
+    "pickup_review": 6862129816,
+    "recipient_cursor": "f017a897c788fbf18ad39025e00348016bf5fe7d",
+    "intake_commit": "6100e6600a757839b992c119a504f90a8f901b38",
+    "branch": "bench/cells-selective-i9",
+    "master": "3e7e294cc10f29495e9828181345d74233c549d4",
+    "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
+    "execution_observed": "preparation pickup only; no completed recipe or workstation run",
+    "ready_job_queued": false,
+    "ready_job_reason": "Concrete frozen PLAN, executable recipe, dry run, exact-head CI and approval not yet supplied.",
+    "workflow_dispatch_capability": "No available GitHub workflow-dispatch tool; existing executor needed after recipe approval. Prior limitation remains; no bypass.",
+    "attribution": 6857735998
   }
 }
