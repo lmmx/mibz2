@@ -1,0 +1,10 @@
+{
+  "audit_since": 6857053711,
+  "findings": [],
+  "route": {
+    "issue": 145,
+    "type": "REVIEW",
+    "why": "a publication: the channel PR"
+  },
+  "duplicate_reviews": []
+}

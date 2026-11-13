@@ -1,0 +1,85 @@
+{
+  "source_identities": [
+    {
+      "path": "src/cells.rs",
+      "sha256": "3bbc63745068713b75bd6cbaac4217d374fbca6d1318a55c27bf9e788858aeee",
+      "equal": true
+    },
+    {
+      "path": "src/cells_original_test.rs",
+      "sha256": "ae3846d6d9cc90b43027fb8d14b10988b394062f417dd3126eb0c471559c11a8",
+      "equal": true
+    },
+    {
+      "path": "src/cells_selective_test.rs",
+      "sha256": "75ca00313357b5c11d677acbbf2cfbceb6d17c38c8f0c2494450d5c33743dd9f",
+      "equal": true
+    },
+    {
+      "path": "bench/cells-selective/mutations.py",
+      "sha256": "e62d04c7a3fb04fd815b2609601a003ec78b27e7b98e42c5fb3c6e5aada8121a",
+      "equal": true
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "f5a0cc481d75a0cff0ed1cda91ffeada9c32335667618d6aea935f1b94fb6027",
+      "equal": true
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "b4ad5647e3d33f309cbde5d366e22cb2bfb7a99ddafdcf6cf0cd48c407635acf",
+      "equal": true
+    }
+  ],
+  "initial_sha256": "ca1b9116309fcb140d3aa27917cbfe68ff8581bae7eb1d4553a7c954bb6406aa",
+  "initial_to_reviewed_diff": [
+    "--- initial.rs\n",
+    "+++ f2dc198ee22ad13b69a72d42744fb1a0d135b95f/src/cells.rs\n",
+    "@@ -599,7 +599,7 @@\n",
+    "                         return Err(Refusal::Budget);\n",
+    "                     }\n",
+    "                     cells += 1;\n",
+    "-                    // the cell's word, A's then B's: as bytes, and as a rule; one is kept\n",
+    "+                    // The cell word is A then B; materialise only its retained representation.\n",
+    "                     let (la, lb) = (aw & M, bw & M);\n",
+    "                     let len = la + lb;\n",
+    "                     // MARK remains in len: even a short marked word must be a rule.\n"
+  ],
+  "verified_manifest_files": [
+    "cells-selective-mutations-100/baseline.log",
+    "cells-selective-mutations-100/missing-short.log",
+    "cells-selective-mutations-100/masked-mark.log",
+    "cells-selective-mutations-100/missing-rule.log",
+    "cells-selective-mutations-100/results.json",
+    "cells-selective-mutations-100.log"
+  ],
+  "results": {
+    "source_sha256": "3bbc63745068713b75bd6cbaac4217d374fbca6d1318a55c27bf9e788858aeee",
+    "mutants": [
+      {
+        "name": "baseline",
+        "compiled": true,
+        "exit": 0,
+        "failure_kind": null
+      },
+      {
+        "name": "missing-short",
+        "compiled": true,
+        "exit": 101,
+        "failure_kind": "selected state/payload"
+      },
+      {
+        "name": "missing-rule",
+        "compiled": true,
+        "exit": 101,
+        "failure_kind": "selected state/payload"
+      },
+      {
+        "name": "masked-mark",
+        "compiled": true,
+        "exit": 101,
+        "failure_kind": "descriptor classification"
+      }
+    ]
+  }
+}
