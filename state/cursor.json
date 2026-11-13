@@ -1700,7 +1700,11 @@
     "6848920917": {
       "status": "completed_own_monitor_log",
       "comment_updated_at": null,
-      "source_comment_id": 6848858947
+      "source_comment_id": 6848858947,
+      "delivery_id": "acce68c0-df42-11f1-9316-89a9526a978c",
+      "reason": "Own attributed LOG and saved checkpoint; exact readback shows no new external message. Current master/policies,373/376 CI unchanged; postmerge benchmark still running. No duplicate dispatch or LOG.",
+      "ready_job_queued": false,
+      "ready_job_reason": "376 changed-base validation/integration and actual i9 bindings/final admission remain."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1825,8 +1829,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6848858947,
-    "delivery_id": "4c7222a0-df42-11f1-93ed-d2c17cf60565",
+    "comment_id": 6848920917,
+    "delivery_id": "acce68c0-df42-11f1-9316-89a9526a978c",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
