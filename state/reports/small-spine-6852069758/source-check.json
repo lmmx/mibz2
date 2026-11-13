@@ -1,0 +1,18 @@
+{
+  "position_reset": true,
+  "short_emit_seed_marked_byte": true,
+  "descending_and_ascending": true,
+  "repetition_truncation": true,
+  "F01_recopy": true,
+  "production_before_writer": true,
+  "tools": {
+    "rustc": null,
+    "cargo": null,
+    "just": null
+  },
+  "sha256": {
+    "base.rs": "571f5f375a64b7a38bae095ecd952fe8f4c6b21775ab2f68926a944324bbcc1f",
+    "head.rs": "80e0b5f40fbf97c09a72cd800a145322f5fe417be142cedd15676ebff8ca8f5b",
+    "coord.py": "3cdd217179d0ef39d66f4ab06e17fcf8c8d75f130efae6aef9d577e9f5d8ef68"
+  }
+}
