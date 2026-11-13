@@ -1658,6 +1658,15 @@
       "reason": "Own ACTOR-attributed LOG and saved own ID/checkpoint; no new external actionable message. Fresh master/policies/373 head/Actions/legacy and recipient cursors unchanged; audit exit0. No duplicate dispatch or LOG.",
       "ready_job_queued": false,
       "ready_job_reason": "Existing6848164049 readiness dossier has no completion receipt; final queue admission and373 integration/machine bindings remain."
+    },
+    "6848513930": {
+      "status": "in_progress",
+      "delivery_id": "4705a7d0-df40-11f1-929e-be8e22c97daa",
+      "comment_updated_at": null,
+      "master_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+      "scope": "Defer unexecuted onecore dossier; reconcile376 submission prerequisite and inherited CI failure",
+      "action_links": [],
+      "ready_job_queued": false
     }
   },
   "automatic_github_wakeup_assumed": false,
