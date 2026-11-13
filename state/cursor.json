@@ -736,6 +736,9 @@
     "default_changed": false,
     "workstation_executed": false,
     "merged": false,
-    "automatic_github_wakeup_assumed": false
+    "automatic_github_wakeup_assumed": false,
+    "completion_review_comment_id": 6857643047,
+    "completion_evidence_commit": "634133df131d6d99b336f8e0d0feff6c77baba0c",
+    "receipt_readback_verified": true
   }
 }
