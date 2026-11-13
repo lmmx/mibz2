@@ -1,4 +1,4 @@
-Version 0.2.9 remains the released decoder. A separate change that avoids building discarded Cells data made the experimental whole reader faster than its previous Cells version on Wikidata, but the same pull request fails the ordinary decoder's unchanged performance rule and is not cleared for integration. The independent reviewer has resolved a narrow safety-evidence hold; the team is deciding how to use an experimental gain that still carries default-path losses and costs against the production decoder.
+Version 0.2.9 remains the released decoder. A separate change that avoids building discarded Cells data made the experimental whole reader faster than its previous Cells version on Wikidata, but the same pull request fails the ordinary decoder's unchanged performance rule and is not cleared for integration. The independent reviewer has resolved a narrow safety-evidence hold, and Codex has completed the experimental work; the Coordinator has deferred integration and queued a short source/build comparison to understand the default-path losses.
 
 ## What did the workstation diagnostic find?
 
@@ -22,7 +22,9 @@ The original Researcher [resolved the source-identity hold](https://github.com/l
 
 ## What happens next?
 
-The Coordinator must decide how to retain or revise this useful experimental variant alongside the failed default-path rule and the remaining costs against the ordinary decoder. Codex's existing assignment is still finishing its evidence and handoff; no second implementation or reviewer has been dispatched. Nothing needs to be run on Louis's workstation now, and the ready queue is empty. The earlier guarded writer remains deferred, while the mathematical owner's bounded output-order falsifier, the Optimiser's saved-evidence pricing and Pathfinder's architecture work stay separate. Nothing is needed from Louis at this point.
+The Coordinator has [retained the useful experimental result but deferred integration](https://github.com/lmmx/mibz2/pull/145#issuecomment-6857567712). It [queued one bounded comparison](https://github.com/lmmx/mibz2/pull/145#issuecomment-6857735998) of the released source, the earlier Cells source and the selective candidate's source and build outputs, to find the smallest credible explanation or correction for the default-path losses. It allows a report and, only if the evidence supports it, a proposed narrow patch and separately admitted test. It does not authorise new timing or production changes. The comparison is staged behind an older incomplete assignment, and no Codex execution of it has been observed.
+
+Codex has [finished the selective implementation and evidence handoff](https://github.com/lmmx/mibz2/pull/145#issuecomment-6857643047); its earlier in-progress status is closed. Nothing needs to be run on Louis's workstation now, and the ready queue is empty. The guarded writer remains deferred, while the mathematical owner's bounded output-order falsifier, the Optimiser's saved-evidence pricing and Pathfinder's architecture work stay separate. Nothing is needed from Louis at this point.
 
 ## What else remains separate?
 
