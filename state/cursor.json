@@ -1567,6 +1567,17 @@
       "status": "finished",
       "disposition": "Machine/activity question PROCEED; no post-run exclusion threshold. All rows retained, #380 DEFER unaffected.",
       "comment": 6867956361
+    },
+    {
+      "id": "D105",
+      "decision": "G1",
+      "incoming_comment": 6868538108,
+      "pr": 161,
+      "sha": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
+      "evidence_digest": "source:1221a9a5f0993daee73d8352fc559b11557ebd4929f16de72bf8eeb50e5f0b58;fuzz-job:132260143096",
+      "commit": "13b01b9905f732821c0db3e5efaaa3f20e468d2a",
+      "status": "complete",
+      "disposition": "Scoped source integration PROCEED; native/Miri completion not established; adoption restrictions preserved."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1919,7 +1930,9 @@
     "ca976259ba93460964bf066a53a9c2d3f443ee40",
     "170110ef5a2a479a94eb41925f422914d1a7abcd",
     "d5ee317ad73962e35d6dbdd1804a372a6b92abbb",
-    "c835d2e00115b2340219eebeb742b3ac8b57ea2c"
+    "c835d2e00115b2340219eebeb742b3ac8b57ea2c",
+    "baf6be1181e9bffa5a369e6ef33828ac9c8c6eea",
+    "13b01b9905f732821c0db3e5efaaa3f20e468d2a"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2024,7 +2037,8 @@
     6782662288,
     6790511955,
     6790746386,
-    6867883717
+    6867883717,
+    6868538108
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2104,7 +2118,7 @@
   },
   "current_execution": {
     "active_comment": 6868538108,
-    "status": "in progress",
+    "status": "complete",
     "decision": "D105"
   },
   "duplicate_events": [
@@ -2916,6 +2930,17 @@
       "commit": "d5ee317ad73962e35d6dbdd1804a372a6b92abbb",
       "status": "complete",
       "disposition": "Machine/activity question PROCEED; no post-run exclusion threshold. All rows retained, #380 DEFER unaffected."
+    },
+    {
+      "id": "D105",
+      "decision": "G1",
+      "incoming_comment": 6868538108,
+      "pr": 161,
+      "sha": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
+      "evidence_digest": "source:1221a9a5f0993daee73d8352fc559b11557ebd4929f16de72bf8eeb50e5f0b58;fuzz-job:132260143096",
+      "commit": "13b01b9905f732821c0db3e5efaaa3f20e468d2a",
+      "status": "complete",
+      "disposition": "Scoped source integration PROCEED; native/Miri completion not established; adoption restrictions preserved."
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3761,9 +3786,11 @@
     {
       "comment_id": 6868538108,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D105",
-      "progress": "Migration verified. Exact-head public-path integration review; preserve kernel closure and adoption restrictions."
+      "progress": "Source integration review complete; execution evidence partial; awaiting REVIEW.",
+      "receipt_commit": "baf6be1181e9bffa5a369e6ef33828ac9c8c6eea",
+      "work_commit": "13b01b9905f732821c0db3e5efaaa3f20e468d2a"
     }
   ],
   "migrated_from": {
