@@ -1302,6 +1302,14 @@
       "reply_id": 6881070503,
       "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6881070503",
       "routing_verification": "Exact comment readback: author lmmx, issue #145, inbox ID and TYPE: REVIEW present."
+    },
+    {
+      "comment_id": 6881331204,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt: steelman paper analysis pending source audit; no build or timing."
     }
   ],
   "migrated_from": {
