@@ -1415,3 +1415,68 @@ bench-cells-scaling OLD="6dec95ba6aaf59d5134e5ab119fd52433e2032ee" ROUNDS="10" T
       "$B/wikidata.bz2" "$B/gen/text.bz2" "$B/gen/pattern.bz2"
     "$NEWAB" summary "$O/runs.jsonl" --ref "mibz2@$OLDAB" | tee "$O/summary.txt"
     bash bench/bundle.sh "$O"
+
+# The Cells memory-dose experiment (#145, LOG 6879466310, its design and rule registered
+# before any data): does memory traffic cause the Workers + Cells plateau? Three builds of
+# this commit's `ab` with the research feature `dose` (src/dose.rs), at MIBZ2_DOSE_MB = 0, 8
+# and 16, each in its own target directory: each block Cells admits also streams through P MB
+# of per-worker scratch (one read and one write of every 64-byte line), decoding nothing
+# more, its output byte-identical. Run as the arms mibz2-workers@<P's ab> (forced Workers +
+# Cells) on Wikidata, paired by round, with the held spinner as bench-cells-scaling holds it.
+# bench/dose.py reads the raw runs: c(t) = wall(P=16)/wall(P=0), c(10)/c(1) with its 95%
+# interval, the same for P=8, the validity, and the verdict (LEVER, NOT THE LEVER or
+# INCONCLUSIVE) by the LOG's rule. A C5 workstation run (the i9), about 25 minutes.
+#   just submit bench-cells-dose
+bench-cells-dose ROUNDS="10" THREADS="1,4,6,8,10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    B=$PWD/target/cells-dose
+    mkdir -p "$B"
+    O=$B/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-cells-dose: $(git rev-parse HEAD), rounds {{ROUNDS}}, threads {{THREADS}}"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-cells-dose: the checkout has local changes"; exit 1; }
+    git rev-parse HEAD > "$O/commit.txt"
+    # (the three arms: one commit, the dose fixed at compile time, each in its own target dir)
+    arms=()
+    for p in 0 8 16; do
+      MIBZ2_DOSE_MB=$p CARGO_TARGET_DIR="$B/target-p$p" \
+        cargo build -q --release --features dose --example ab
+      arms+=("mibz2-workers@$B/target-p$p/release/examples/ab")
+    done
+    cargo build -q --release --example windows
+    AB0=$B/target-p0/release/examples/ab
+    sha256sum "$B"/target-p{0,8,16}/release/examples/ab | tee "$O/binaries.sha256"
+    [ "$(cut -d' ' -f1 "$O/binaries.sha256" | sort -u | wc -l)" = 3 ] \
+      || { echo "bench-cells-dose: the three builds are not three binaries"; exit 1; }
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    [ -f "$B/wikidata.bz2" ] || python3 bench/wikidata.py build bench/wikidata.json "$dir" \
+      target/release/examples/windows "$B/wikidata.bz2"
+    sha256sum "$B/wikidata.bz2" | tee "$O/inputs.sha256"
+    # (each build checked to be its dose, and the dose seen engaging, before the timed runs)
+    for p in 0 8 16; do
+      line=$("$B/target-p$p/release/examples/ab" child mibz2-workers 1 "$B/wikidata.bz2")
+      echo "preflight P=$p: $(echo "$line" | python3 -c 'import json,sys; r=json.load(sys.stdin); print("dose_mb", r.get("dose_mb"), "dose_blocks", r.get("dose_blocks"), "wall", r.get("wall"), "hash", r.get("hash"))')"
+      echo "$line" | python3 -c "import json,sys; r=json.load(sys.stdin); sys.exit(int(r.get('dose_mb') != $p or bool(r.get('err'))))" \
+        || { echo "bench-cells-dose: the P=$p build is not at its dose, or failed"; exit 1; }
+    done
+    "$AB0" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    if [ "$hold_cpu" != off ]; then hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10); fi
+    arm_list=$(IFS=,; echo "${arms[*]}")
+    "$AB0" run "$O/runs.jsonl" --arms "$arm_list" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$B/wikidata.bz2"
+    "$AB0" summary "$O/runs.jsonl" --ref "${arms[0]}" | tee "$O/summary.txt" \
+      || echo "bench-cells-dose: ab summary failed"
+    python3 bench/dose.py "$O/runs.jsonl" --arms "$arm_list" --threads "{{THREADS}}" \
+      --rounds {{ROUNDS}} --out "$O/dose" \
+      || echo "bench-cells-dose: the runs are not valid (dose.md lists why)"
+    bash bench/bundle.sh "$O"

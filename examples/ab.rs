@@ -1395,6 +1395,13 @@ fn child(arm: &str, threads: usize, path: &str, hold: Option<Hold>) {
             s,
         )
     });
+    // (research only, the `dose` feature: the build's dose and the blocks it dosed)
+    #[cfg(feature = "dose")]
+    let held = format!(
+        "{held},\"dose_mb\":{},\"dose_blocks\":{}",
+        mibz2::dose::DOSE_MB,
+        mibz2::dose::blocks()
+    );
     println!(
         "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf}{held}{},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler - held_s,

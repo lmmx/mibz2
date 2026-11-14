@@ -84,6 +84,10 @@ mod cells;
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;
+// (research only: the Cells memory-dose experiment's scratch, with the `dose` feature)
+#[cfg(feature = "dose")]
+#[doc(hidden)]
+pub mod dose;
 pub mod mtf;
 pub mod parallel;
 mod read;

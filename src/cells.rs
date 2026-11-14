@@ -35,6 +35,9 @@ struct State {
     counts: Counts,
     /// the last successful run-route inversion was Cells' own (the ledger's route)
     took: bool,
+    /// research only (`dose`): the memory dose streamed per admitted block
+    #[cfg(feature = "dose")]
+    pad: crate::dose::Pad,
 }
 #[derive(Default)]
 struct Kernel {
@@ -153,6 +156,8 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
     ) -> bool {
         self.state.took = self.attempt(r.records(), n, p, out);
         if self.state.took {
+            #[cfg(feature = "dose")]
+            self.state.pad.apply();
             return true;
         }
         // Exactly the shipped body, including its tiling failure. Admission refusal itself
