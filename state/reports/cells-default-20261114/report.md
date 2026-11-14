@@ -135,3 +135,47 @@ periodic reach; forced refusals zero. Mixed/default fuzz:6,152 cases/30s seed42,
 zero failures, including public decode and parallel candidate/error comparisons.
 No new decoder defect found. Remaining CI: full Miri; independent Guardian
 integration review still pending at this checkpoint.
+
+## Independent review and Coordinator disposition
+
+Guardian D1056868606509 / report13b01b9905f732821c0db3e5efaaa3f20e468d2a independently
+PROCEEDs on caller/lifetime/error/fallback design and carries exact native B5.
+No concrete new safety or decoding defect. Execution snapshot was PARTIAL; the
+local completed ignored-corpus, public-route Miri and fuzz logs supplied above
+resolve the author-side missing evidence. Coordinator can reconcile the raw logs
+without a second full review. The exact-head CI merge tree739e56f99c9190aea515065d5f03ab45826b0fab
+is byte-identical to source head (treef617d63498e248c39e133ef19da5ca3221b6e594).
+
+Coordinator6868667961 accepts D105 source review and deliberately DEFERs adoption
+of this current head under unchanged policy. No further implementation/review
+project is commissioned while it fails adoption; D105's nonblocking range-error
+and wrapper-selection test suggestions are explicitly retained for a later
+targeted revision. The author does not silently fix/rebenchmark them now.
+
+The narrow prospective decision must explicitly cover: pattern59.6%CI/43.5%i9
+secondary loss; onebyte8.0%CI without the required twice-as-large1t primary gain;
+WikiRSS30.9%CI/31.1%i9 and patternRSS14.1%CI/15.1%i9; and whether target-machine
+actual-default qualification may supersede the existing universal/default rule.
+It must preserve correctness, independent B5 and no-primary-loss requirements,
+and cannot relabel either old380 or current382 gate failure as a historical pass.
+The current owner instruction does not grant that exception. No claim of actual
+public-default i9 gain before a separately registered/authorised confirmation.
+
+All63 existing paired wall/CPU/RSS intervals independently re-evaluated with the
+unchanged report helper and equal the archived result exactly; no rows filtered.
+
+## Delivery checkpoint
+
+Requested implementation and reviewable PR are complete at unchanged
+a9c7716aaf664a7898f3d8f37c955e09d5204a23. No merge/release/workstation execution.
+Coordinator6868667961's adoption DEFER remains. At the final snapshot, six
+Actions workflows complete successfully, hosted legacy succeeds, full Miri
+43534513415 remains running. Its unfinished log endpoint returned404; that is
+not classified as an infrastructure/test failure. All7 scoped local Miri tests
+passed. Do not call the full exact-head CI suite green before this final job ends.
+
+Native/Python/platform/occupancy/benchmark/doc/walk checks and raw GitHub check
+snapshots are archived in ci/. No repeats or new code head. The live PR body gives
+both actual-default CI and historical i9 tradeoffs. Remaining work is deliberate
+adoption disposition and final hosted-check reconciliation, not another automatic
+implementation assignment. Future Codex work still requires a manual launch.

@@ -775,7 +775,7 @@
     "queue_removed_master": "6dec95ba6aaf59d5134e5ab119fd52433e2032ee"
   },
   "cells_default": {
-    "status": "IN PROGRESS: minimal production PR382 opened; validation and scoped independent review pending",
+    "status": "IMPLEMENTATION AND REVIEWABLE PR COMPLETE; adoption DEFER; hosted full Miri still running at checkpoint",
     "owner_direct_instruction": true,
     "pickup_review": 6868355345,
     "coordinator_reconciliation": 6868441092,
@@ -785,12 +785,34 @@
     "head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
     "pr": 382,
     "implementation_complete": true,
-    "completed": false,
+    "completed": true,
     "scoped_independent_review": "requested through Coordinator",
     "policy_change": false,
     "merged": false,
     "workstation_measurements": 0,
     "report": "state/reports/cells-default-20261114",
-    "next_action": "Complete actual public-default parity/Miri/fuzz/mutations and standard CI. Coordinator arrange scoped independent review, then owner adoption decision under unchanged rules. No duplicate attribution project."
+    "next_action": "Coordinator reconcile final hosted Miri and author evidence under D105; owner/Coordinator deliberate prospective adoption exception for exact actual-default tradeoffs. No new implementation, rerun, merge or workstation job. Current code source remains a9c7716; old6848164049 deferred unchanged.",
+    "finished": true,
+    "ci_complete": false,
+    "qualification": "DEFER under unchanged gate, Coordinator6868667961",
+    "independent_review": {
+      "checkpoint": 6868538108,
+      "review": 6868606509,
+      "report_commit": "13b01b9905f732821c0db3e5efaaa3f20e468d2a",
+      "source_verdict": "scoped PROCEED",
+      "execution_snapshot": "partial; completed author logs supplied for reconciliation"
+    },
+    "validation": {
+      "native": "109lib+70integration+1doc;27harness;all7pinnedcorpora full byte parity",
+      "local_miri": "7 pass, including actual public path and F01",
+      "mutants": "3compiled,3killed,positivebaselinepass",
+      "fuzz": "28369forcedCells+6152mixed/default,seed42/30s each,0failures",
+      "exact_head_ci": "all completed jobs success/appropriate skip; Miri43534513415 running; hosted legacy success",
+      "benchmark": "43534513477, first/only,420rows allretained,63intervals recomputed; Wiki1t level,pattern+59.6%,onebyte+8.0%,WikiRSS+30.9%"
+    },
+    "adoption_qualified": false,
+    "coordinator_disposition": 6868667961,
+    "ci_verdict_review": 6868687049,
+    "completion_utc": "2026-11-14T00:48:08.343246+00:00"
   }
 }
