@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6868028392,
+  "last_examined_comment_id": 6868132662,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -3017,12 +3017,20 @@
       "response_comments": 0
     },
     "6868102448": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "e030a260-dfbe-11f1-9bf0-024e63f501e9",
       "comment_updated_at": "2026-11-14T00:03:51Z",
       "report": "72e86fc8e91817c356f1be3ae4752b8d66c4e29a",
       "recipient_cursor": "c002a055bcd058e86caa12f3b86d471bf4641511",
-      "planned_action": "Accept completed Optimiser recommendation, queue bounded untimed executable correspondence preparation per router; no overlapping Codex dispatch or timing. Persist outcome then LOG."
+      "planned_action": "Accept completed Optimiser recommendation, queue bounded untimed executable correspondence preparation per router; no overlapping Codex dispatch or timing. Persist outcome then LOG.",
+      "disposition": "Accepted desk recommendation; untimed executable correspondence staged once as priority1 QUEUED6868132662 because actual router busy6848164049. No dispatch/launch or timing admitted.",
+      "queue_comment_id": 6868132662,
+      "log_status": "in_progress"
+    },
+    "6868132662": {
+      "status": "completed",
+      "comment_updated_at": "2026-11-14T00:05:44Z",
+      "disposition": "Own priority1 QUEUED publication; ignore self wake."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3196,15 +3204,16 @@
     6862638701,
     6867627975,
     6867899861,
-    6867998245
+    6867998245,
+    6868132662
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6868028392,
-    "delivery_id": "3e812f70-dfbe-11f1-873a-92800df4ac94"
+    "comment_id": 6868102448,
+    "delivery_id": "e030a260-dfbe-11f1-9bf0-024e63f501e9"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -5927,8 +5936,19 @@
     },
     "next_decision_pricing": {
       "assignment": 6867986711,
-      "status": "posted_verified_awaiting_recipient",
-      "scope": "desk/source-only ranking of smallest default integration attribution discriminator; no run admission"
+      "status": "completed",
+      "scope": "desk/source-only ranking of smallest default integration attribution discriminator; no run admission",
+      "review": 6868102448,
+      "report": "72e86fc8e91817c356f1be3ae4752b8d66c4e29a",
+      "cursor": "c002a055bcd058e86caa12f3b86d471bf4641511"
     }
+  },
+  "default_executable_correspondence": {
+    "status": "queued_not_dispatched",
+    "queue_comment_id": 6868132662,
+    "blocked_by_incomplete_cursor": 6848164049,
+    "source_report": "72e86fc8e91817c356f1be3ae4752b8d66c4e29a",
+    "scope": "retained artifact inventory; at most3untimed builds60min plus90min inspection; no decodes/timing/retries; fixed mechanism-or-stop rule",
+    "execution_observed": false
   }
 }
