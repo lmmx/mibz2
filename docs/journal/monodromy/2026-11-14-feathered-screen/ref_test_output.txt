@@ -1,0 +1,25 @@
+== primitive words over 2 letters to length 12 (8032 words, 6 policies each): 48192 runs, 265224 rounds verified by the oracle
+   finished and text equal to the walk: 48192
+   T(D) ∩ D nonempty: 0 points   example: None
+   return depth in old steps, rounds by maximum: {2: 265224}   max 2   example > 2: None
+   r_new - r before coalescing: <= m in 265224 rounds, > m in 0, > 4m in 0; equal to m in 3686; max (r_new - r)/m = 1.000
+   example r_new > r + m: None   example > r + 4m: None
+   coalescing joins: 503; rounds with r_after - r > m: 0
+   columns with several cycles: 0; letters left at the end (5 = 5 or more): {1: 48192}; most rounds in a run: 11
+== primitive words over 3 letters to length 8 (9705 words, 6 policies each): 58230 runs, 249982 rounds verified by the oracle
+   finished and text equal to the walk: 58230
+   T(D) ∩ D nonempty: 0 points   example: None
+   return depth in old steps, rounds by maximum: {2: 249982}   max 2   example > 2: None
+   r_new - r before coalescing: <= m in 249982 rounds, > m in 0, > 4m in 0; equal to m in 2201; max (r_new - r)/m = 1.000
+   example r_new > r + m: None   example > r + 4m: None
+   coalescing joins: 118; rounds with r_after - r > m: 0
+   columns with several cycles: 0; letters left at the end (5 = 5 or more): {1: 58230}; most rounds in a run: 7
+== 20,000 random columns (length 1 to 40, 1 to 16 letters, any row; policy by turn): 20000 runs, 81030 rounds verified by the oracle
+   finished and text equal to the walk: 20000
+   T(D) ∩ D nonempty: 0 points   example: None
+   return depth in old steps, rounds by maximum: {2: 81030}   max 2   example > 2: None
+   r_new - r before coalescing: <= m in 81030 rounds, > m in 0, > 4m in 0; equal to m in 260; max (r_new - r)/m = 1.000
+   example r_new > r + m: None   example > r + 4m: None
+   coalescing joins: 166; rounds with r_after - r > m: 0
+   columns with several cycles: 18166; letters left at the end (5 = 5 or more): {2: 4010, 1: 4619, 3: 4819, 4: 3719, 5: 2833}; most rounds in a run: 17
+ALL ASSERTIONS PASSED

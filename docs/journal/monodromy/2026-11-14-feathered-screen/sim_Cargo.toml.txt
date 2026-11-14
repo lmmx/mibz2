@@ -1,0 +1,12 @@
+[package]
+name = "feather-sim"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+mibz2 = { path = "../mibz2-master" }
+
+[profile.release]
+debug-assertions = false
+overflow-checks = true

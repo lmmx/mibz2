@@ -1,0 +1,740 @@
+//! Feathered (matching-driven) first-return induction of LF: an UNTIMED counting simulator.
+//! Words are not materialised: a letter carries its length, its word's node, the word's
+//! length and a rolling hash of the word (for the end check only).
+//!
+//!   feather-sim blocks CORPUS.bz2 CENSUS.jsonl POLICY OUT_PREFIX [EVERY] [MAX_ROUNDS]
+//!   feather-sim trace FILE          (lines "HEXCOLUMN ROW": per-round counts, three policies)
+
+use mibz2::bwt::{build, walk, TVector};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+use std::io::Write;
+
+const NIL: u32 = u32::MAX;
+const P61: u64 = (1 << 61) - 1;
+const BASE: u64 = 0x1F3D_5B79_9A7C_E5A3 % P61;
+
+#[inline(always)]
+fn mulm(a: u64, b: u64) -> u64 {
+    ((a as u128 * b as u128) % P61 as u128) as u64
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Policy {
+    P1,
+    P2,
+    P3,
+    P3L,
+}
+
+#[derive(Clone, Copy)]
+struct Cell {
+    len: u32,
+    a: u32,
+    b: u32,
+    sa: u32,
+    sb: u32,
+}
+
+/// The exchange: the letter at top position i has length lam[i], word node wid[i] of wlen[i]
+/// bytes with hash h[i] and BASE^wlen = pw[i]; bot lists the top positions in bottom order.
+#[derive(Default)]
+struct Ex {
+    lam: Vec<u32>,
+    wid: Vec<u32>,
+    wlen: Vec<u32>,
+    h: Vec<u64>,
+    pw: Vec<u64>,
+    bot: Vec<u32>,
+    points: u64,
+    next_wid: u32,
+    nodes: u64,
+    /// the walk's row: orig = pi^tv(the point at offset `to` of letter `tl`)
+    tl: u32,
+    to: u32,
+    tv: u64,
+}
+
+#[derive(Default)]
+struct Scratch {
+    cells: Vec<Cell>,
+    sel_a: Vec<u32>,
+    sel_b: Vec<u32>,
+    order: Vec<u32>,
+    pl: Vec<u32>,
+    pm: Vec<u32>,
+    pr: Vec<u32>,
+    bpos: Vec<u32>,
+    idx: Vec<u32>,
+    n: Ex,
+}
+
+impl Ex {
+    fn from_column(l: &[u8], p: u32) -> Ex {
+        let mut e = Ex::default();
+        let n = l.len();
+        let mut i = 0;
+        let mut byte = Vec::new();
+        while i < n {
+            let c = l[i];
+            let mut j = i + 1;
+            while j < n && l[j] == c {
+                j += 1;
+            }
+            if (i..j).contains(&(p as usize)) {
+                e.tl = e.lam.len() as u32;
+                e.to = p - i as u32;
+            }
+            e.wid.push(e.lam.len() as u32);
+            e.lam.push((j - i) as u32);
+            e.wlen.push(1);
+            e.h.push(c as u64 + 1);
+            e.pw.push(BASE);
+            byte.push(c);
+            i = j;
+        }
+        let r = e.lam.len();
+        let mut cnt = [0u32; 257];
+        for &b in &byte {
+            cnt[b as usize + 1] += 1;
+        }
+        for k in 0..256 {
+            cnt[k + 1] += cnt[k];
+        }
+        e.bot = vec![0; r];
+        for (i, &b) in byte.iter().enumerate() {
+            e.bot[cnt[b as usize] as usize] = i as u32;
+            cnt[b as usize] += 1;
+        }
+        e.points = n as u64;
+        e.next_wid = r as u32;
+        e
+    }
+
+    /// The nonempty cells I_a ∩ J_b in row order: a two-pointer merge of the tilings
+    fn cells(&self, out: &mut Vec<Cell>) {
+        out.clear();
+        let r = self.lam.len();
+        let (mut ti, mut bk) = (0usize, 0usize);
+        let (mut ts, mut bs, mut pos) = (0u64, 0u64, 0u64);
+        while ti < r {
+            let a = ti as u32;
+            let b = self.bot[bk];
+            let te = ts + self.lam[ti] as u64;
+            let be = bs + self.lam[b as usize] as u64;
+            let end = te.min(be);
+            out.push(Cell {
+                len: (end - pos) as u32,
+                a,
+                b,
+                sa: (pos - ts) as u32,
+                sb: (pos - bs) as u32,
+            });
+            pos = end;
+            if te == end {
+                ti += 1;
+                ts = te;
+            }
+            if be == end {
+                bk += 1;
+                bs = be;
+            }
+        }
+        assert!(pos == self.points && bk == r);
+    }
+
+    /// The predicted change of the letter count if this cell alone is removed, plus 1 (0, 1, 2)
+    #[inline(always)]
+    fn class(&self, c: &Cell) -> u32 {
+        let (la, lb) = (self.lam[c.a as usize], self.lam[c.b as usize]);
+        let pa = (c.sa > 0) as u32 + (c.sa + c.len < la) as u32;
+        let pb = (c.sb > 0) as u32 + 1 + (c.sb + c.len < lb) as u32;
+        pa + pb - 1
+    }
+}
+
+/// One round's counts
+#[derive(Clone, Copy, Default)]
+struct Round {
+    r: u32,
+    cells: u32,
+    cand: u32,
+    m: u32,
+    removed: u32,
+    rb: u32,
+    ra: u32,
+    /// the selected cells by predicted change of the letter count (-1, 0, +1)
+    cls: [u32; 3],
+}
+
+/// Select a matching and remove its cells. None when no cell with a != b remains.
+fn round(e: &mut Ex, s: &mut Scratch, pol: Policy, n_block: u64) -> Option<Round> {
+    e.cells(&mut s.cells);
+    let r = e.lam.len();
+    let mut rd = Round {
+        r: r as u32,
+        cells: s.cells.len() as u32,
+        ..Default::default()
+    };
+    s.sel_a.clear();
+    s.sel_a.resize(r, NIL);
+    s.sel_b.clear();
+    s.sel_b.resize(r, NIL);
+    // the matching: a label is used once, as a or as b
+    let mut m = 0u32;
+    let mut removed = 0u64;
+    {
+        let (sel_a, sel_b) = (&mut s.sel_a, &mut s.sel_b);
+        let cells = &s.cells;
+        let mut take = |k: usize, c: &Cell| {
+            let (a, b) = (c.a as usize, c.b as usize);
+            if sel_a[a] == NIL && sel_b[a] == NIL && sel_a[b] == NIL && sel_b[b] == NIL {
+                sel_a[a] = k as u32;
+                sel_b[b] = k as u32;
+                m += 1;
+                removed += c.len as u64;
+                true
+            } else {
+                false
+            }
+        };
+        match pol {
+            Policy::P1 => {
+                for (k, c) in cells.iter().enumerate() {
+                    if c.a != c.b {
+                        rd.cand += 1;
+                        if take(k, c) {
+                            rd.cls[e.class(c) as usize] += 1;
+                        }
+                    }
+                }
+            }
+            Policy::P2 => {
+                s.order.clear();
+                for (k, c) in cells.iter().enumerate() {
+                    if c.a != c.b {
+                        s.order.push(k as u32);
+                    }
+                }
+                rd.cand = s.order.len() as u32;
+                s.order
+                    .sort_unstable_by_key(|&k| (std::cmp::Reverse(cells[k as usize].len), k));
+                for &k in &s.order {
+                    let c = &cells[k as usize];
+                    if take(k as usize, c) {
+                        rd.cls[e.class(c) as usize] += 1;
+                    }
+                }
+            }
+            Policy::P3L => {
+                s.order.clear();
+                for (k, c) in cells.iter().enumerate() {
+                    if c.a != c.b {
+                        s.order.push(k as u32);
+                    }
+                }
+                rd.cand = s.order.len() as u32;
+                s.order.sort_unstable_by_key(|&k| {
+                    let c = &cells[k as usize];
+                    (e.class(c), std::cmp::Reverse(c.len), k)
+                });
+                for &k in &s.order {
+                    let c = &cells[k as usize];
+                    if take(k as usize, c) {
+                        rd.cls[e.class(c) as usize] += 1;
+                    }
+                }
+            }
+            Policy::P3 => {
+                for want in 0..3u32 {
+                    for (k, c) in cells.iter().enumerate() {
+                        if c.a != c.b && e.class(c) == want {
+                            rd.cand += 1;
+                            if take(k, c) {
+                                rd.cls[want as usize] += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if m == 0 {
+        assert!(rd.cand == 0);
+        return None;
+    }
+    rd.m = m;
+    rd.removed = removed as u32;
+    // the first-return exchange on K, in top order
+    let nx = &mut s.n;
+    for v in [&mut nx.lam, &mut nx.wid, &mut nx.wlen, &mut nx.bot] {
+        v.clear();
+    }
+    nx.h.clear();
+    nx.pw.clear();
+    for v in [&mut s.pl, &mut s.pm, &mut s.pr] {
+        v.clear();
+        v.resize(r, NIL);
+    }
+    let (mut tl, mut to, mut tv) = (NIL, 0u32, e.tv);
+    let mut mid_of = NIL; // the tracked point fell in a hole: it moves to this letter's middle
+    macro_rules! emit {
+        ($lam:expr, $wid:expr, $wlen:expr, $h:expr, $pw:expr) => {{
+            nx.lam.push($lam);
+            nx.wid.push($wid);
+            nx.wlen.push($wlen);
+            nx.h.push($h);
+            nx.pw.push($pw);
+            (nx.lam.len() - 1) as u32
+        }};
+    }
+    for x in 0..r {
+        let (lam, wid, wlen, h, pw) = (e.lam[x], e.wid[x], e.wlen[x], e.h[x], e.pw[x]);
+        let tracked = e.tl as usize == x;
+        if s.sel_a[x] != NIL {
+            let c = s.cells[s.sel_a[x] as usize];
+            let (st, en) = (c.sa, c.sa + c.len);
+            if st > 0 {
+                s.pl[x] = emit!(st, wid, wlen, h, pw);
+            }
+            if en < lam {
+                s.pr[x] = emit!(lam - en, wid, wlen, h, pw);
+            }
+            if tracked {
+                if e.to < st {
+                    (tl, to) = (s.pl[x], e.to);
+                } else if e.to >= en {
+                    (tl, to) = (s.pr[x], e.to - en);
+                } else {
+                    mid_of = c.b;
+                    to = e.to - st;
+                    tv += e.wlen[c.b as usize] as u64;
+                }
+            }
+        } else if s.sel_b[x] != NIL {
+            let c = s.cells[s.sel_b[x] as usize];
+            let (st, en) = (c.sb, c.sb + c.len);
+            let a = c.a as usize;
+            if st > 0 {
+                s.pl[x] = emit!(st, wid, wlen, h, pw);
+            }
+            // the rows of I_b sent into the cell go on through a: word (w_a)(w_b)
+            let id = e.next_wid;
+            e.next_wid += 1;
+            e.nodes += 1;
+            let hh = (mulm(e.h[a], pw) + h) % P61;
+            s.pm[x] = emit!(c.len, id, e.wlen[a] + wlen, hh, mulm(e.pw[a], pw));
+            if en < lam {
+                s.pr[x] = emit!(lam - en, wid, wlen, h, pw);
+            }
+            if tracked {
+                if e.to < st {
+                    (tl, to) = (s.pl[x], e.to);
+                } else if e.to >= en {
+                    (tl, to) = (s.pr[x], e.to - en);
+                } else {
+                    (tl, to) = (s.pm[x], e.to - st);
+                }
+            }
+        } else {
+            s.pm[x] = emit!(lam, wid, wlen, h, pw);
+            if tracked {
+                (tl, to) = (s.pm[x], e.to);
+            }
+        }
+    }
+    if mid_of != NIL {
+        tl = s.pm[mid_of as usize];
+    }
+    assert!(tl != NIL);
+    for &y in &e.bot {
+        let y = y as usize;
+        if s.sel_a[y] != NIL {
+            let b = s.cells[s.sel_a[y] as usize].b as usize;
+            for q in [s.pl[y], s.pm[b], s.pr[y]] {
+                if q != NIL {
+                    nx.bot.push(q);
+                }
+            }
+        } else if s.sel_b[y] != NIL {
+            for q in [s.pl[y], s.pr[y]] {
+                if q != NIL {
+                    nx.bot.push(q);
+                }
+            }
+        } else {
+            nx.bot.push(s.pm[y]);
+        }
+    }
+    let rb = nx.lam.len();
+    assert!(nx.bot.len() == rb);
+    rd.rb = rb as u32;
+    // coalescing: top neighbours that are bottom neighbours in the same order with one word
+    s.bpos.clear();
+    s.bpos.resize(rb, 0);
+    for (k, &x) in nx.bot.iter().enumerate() {
+        s.bpos[x as usize] = k as u32;
+    }
+    s.idx.clear();
+    s.idx.resize(rb, NIL);
+    for v in [&mut e.lam, &mut e.wid, &mut e.wlen, &mut e.bot] {
+        v.clear();
+    }
+    e.h.clear();
+    e.pw.clear();
+    let mut kac = 0u64;
+    for x in 0..rb {
+        if x > 0 && nx.wid[x] == nx.wid[x - 1] && s.bpos[x] == s.bpos[x - 1] + 1 {
+            let last = e.lam.len() - 1;
+            if tl as usize == x {
+                e.tl = last as u32;
+                e.to = e.lam[last] + to;
+            }
+            e.lam[last] += nx.lam[x];
+        } else {
+            s.idx[x] = e.lam.len() as u32;
+            if tl as usize == x {
+                e.tl = e.lam.len() as u32;
+                e.to = to;
+            }
+            e.lam.push(nx.lam[x]);
+            e.wid.push(nx.wid[x]);
+            e.wlen.push(nx.wlen[x]);
+            e.h.push(nx.h[x]);
+            e.pw.push(nx.pw[x]);
+        }
+        kac += nx.lam[x] as u64 * nx.wlen[x] as u64;
+    }
+    for &x in &nx.bot {
+        if s.idx[x as usize] != NIL {
+            e.bot.push(s.idx[x as usize]);
+        }
+    }
+    e.tv = tv;
+    e.points -= removed;
+    rd.ra = e.lam.len() as u32;
+    // Kac: the letters' towers hold every row once
+    assert!(kac == n_block, "Kac sum {kac} != {n_block}");
+    assert!(e.lam.iter().map(|&v| v as u64).sum::<u64>() == e.points || r > 4096);
+    Some(rd)
+}
+
+/// The right-end (Rauzy-Veech) induction's step count, as `induce` of examples/rauzy.rs takes
+/// them: (steps, equal steps, letters dropped)
+fn serial_steps(l: &[u8], p: u32) -> (u64, u64, u64) {
+    let e = Ex::from_column(l, p);
+    let r = e.lam.len();
+    let mut lam = e.lam.clone();
+    let order = &e.bot;
+    let mut tprev: Vec<u32> = (0..r as u32).map(|i| if i == 0 { NIL } else { i - 1 }).collect();
+    let mut tnext: Vec<u32> = (0..r as u32).map(|i| if i + 1 == r as u32 { NIL } else { i + 1 }).collect();
+    let mut bprev = vec![NIL; r];
+    let mut bnext = vec![NIL; r];
+    for k in 0..r {
+        if k > 0 {
+            bprev[order[k] as usize] = order[k - 1];
+        }
+        if k + 1 < r {
+            bnext[order[k] as usize] = order[k + 1];
+        }
+    }
+    let (mut tlast, mut blast) = (r as u32 - 1, order[r - 1]);
+    let (mut trk, mut off) = (e.tl, e.to);
+    let (mut steps, mut equal, mut dropped) = (0u64, 0u64, 0u64);
+    loop {
+        let (a, b) = (tlast, blast);
+        let (ai, bi) = (a as usize, b as usize);
+        if a == b {
+            if trk == a {
+                return (steps, equal, dropped);
+            }
+            dropped += 1;
+            tlast = tprev[ai];
+            tnext[tlast as usize] = NIL;
+            blast = bprev[bi];
+            bnext[blast as usize] = NIL;
+            continue;
+        }
+        steps += 1;
+        let (la, lb) = (lam[ai], lam[bi]);
+        if la > lb {
+            if trk == a && off >= la - lb {
+                trk = b;
+                off -= la - lb;
+            }
+            lam[ai] = la - lb;
+            let p = bprev[bi];
+            if p != a {
+                blast = p;
+                bnext[p as usize] = NIL;
+                let nx = bnext[ai];
+                bnext[ai] = b;
+                bprev[bi] = a;
+                bnext[bi] = nx;
+                bprev[nx as usize] = b;
+            }
+        } else if la < lb {
+            if trk == b && off >= lb - la {
+                trk = a;
+                off -= lb - la;
+            }
+            lam[bi] = lb - la;
+            let p = tprev[ai];
+            if p != b {
+                tlast = p;
+                tnext[p as usize] = NIL;
+                let nx = tnext[bi];
+                tnext[bi] = a;
+                tprev[ai] = b;
+                tnext[ai] = nx;
+                tprev[nx as usize] = a;
+            }
+        } else {
+            equal += 1;
+            if trk == a {
+                trk = b;
+            }
+            let p = tprev[ai];
+            tlast = p;
+            tnext[p as usize] = NIL;
+            let q = bprev[bi];
+            if q == a {
+                let pa = bprev[ai];
+                bprev[bi] = pa;
+                if pa != NIL {
+                    bnext[pa as usize] = b;
+                }
+            } else {
+                blast = q;
+                bnext[q as usize] = NIL;
+                let (pa, na) = (bprev[ai], bnext[ai]);
+                bprev[bi] = pa;
+                bnext[bi] = na;
+                if pa != NIL {
+                    bnext[pa as usize] = b;
+                }
+                bprev[na as usize] = b;
+            }
+        }
+    }
+}
+
+struct Outcome {
+    rounds: Vec<Round>,
+    finished: bool,
+    letters_left: usize,
+    points_left: u64,
+    nodes: u64,
+    /// the tracked letter's word: its hash, its length, and t0
+    hash: u64,
+    period: u32,
+    t0: u64,
+}
+
+fn run(l: &[u8], p: u32, pol: Policy, max_rounds: usize) -> Outcome {
+    let mut e = Ex::from_column(l, p);
+    let mut s = Scratch::default();
+    let n = l.len() as u64;
+    let mut rounds = Vec::new();
+    let mut finished = false;
+    while rounds.len() < max_rounds {
+        match round(&mut e, &mut s, pol, n) {
+            Some(rd) => rounds.push(rd),
+            None => {
+                finished = true;
+                break;
+            }
+        }
+    }
+    let t = e.tl as usize;
+    Outcome {
+        rounds,
+        finished,
+        letters_left: e.lam.len(),
+        points_left: e.points,
+        nodes: e.nodes,
+        hash: e.h[t],
+        period: e.wlen[t],
+        t0: e.tv,
+    }
+}
+
+/// The hash of E, E[j] = text[(j + t0) mod period], j < period
+fn want_hash(text: &[u8], period: usize, t0: u64) -> u64 {
+    let mut h = 0u64;
+    let t0 = (t0 % period as u64) as usize;
+    for j in 0..period {
+        let c = text[(j + t0) % period];
+        h = (mulm(h, BASE) + c as u64 + 1) % P61;
+    }
+    h
+}
+
+fn policy(s: &str) -> Policy {
+    match s {
+        "P1" => Policy::P1,
+        "P2" => Policy::P2,
+        "P3" => Policy::P3,
+        "P3L" => Policy::P3L,
+        _ => panic!("policy"),
+    }
+}
+
+fn trace(path: &str) {
+    let text = std::fs::read_to_string(path).unwrap();
+    for line in text.lines() {
+        let mut it = line.split_whitespace();
+        let hx = it.next().unwrap();
+        let orig: u32 = it.next().unwrap().parse().unwrap();
+        let l: Vec<u8> = (0..hx.len() / 2)
+            .map(|i| u8::from_str_radix(&hx[2 * i..2 * i + 2], 16).unwrap())
+            .collect();
+        let n = l.len();
+        // LF by brute force, and the walk: T[k] = L[pi^-(k+1)(orig)]
+        let mut order: Vec<usize> = (0..n).collect();
+        order.sort_by_key(|&i| (l[i], i));
+        let mut walked = Vec::new();
+        let mut x = orig as usize;
+        for _ in 0..n {
+            x = order[x];
+            walked.push(l[x]);
+        }
+        for (name, pol) in [("P1", Policy::P1), ("P2", Policy::P2), ("P3", Policy::P3), ("P3L", Policy::P3L)] {
+            let o = run(&l, orig, pol, usize::MAX);
+            assert!(o.finished);
+            assert!(o.hash == want_hash(&walked, o.period as usize, o.t0), "hash {hx} {orig} {name}");
+            let tr: Vec<String> = o
+                .rounds
+                .iter()
+                .map(|r| format!("{},{},{},{},{},{}", r.r, r.cells, r.m, r.removed, r.rb, r.ra))
+                .collect();
+            println!(
+                "{hx} {orig} {name} {} {} {} {} {}",
+                o.rounds.len(),
+                o.letters_left,
+                o.points_left,
+                o.nodes,
+                tr.join(";")
+            );
+        }
+        let _ = serial_steps(&l, orig);
+    }
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args[1] == "trace" {
+        return trace(&args[2]);
+    }
+    assert!(args[1] == "blocks");
+    let data = std::fs::read(&args[2]).expect("read");
+    // the census's admitted blocks: block index -> (n, cells)
+    let census = std::fs::read_to_string(&args[3]).unwrap();
+    let field = |line: &str, key: &str| -> Option<u64> {
+        let k = format!("\"{key}\":");
+        let at = line.find(&k)? + k.len();
+        let rest = &line[at..];
+        let end = rest.find(|c: char| !c.is_ascii_digit()).unwrap_or(rest.len());
+        rest[..end].parse().ok()
+    };
+    let mut admitted = std::collections::HashMap::new();
+    for line in census.lines() {
+        if line.contains("\"outcome\":\"admitted\"") {
+            admitted.insert(
+                field(line, "block").unwrap(),
+                (field(line, "n").unwrap(), field(line, "cells").unwrap(), field(line, "letters").unwrap()),
+            );
+        }
+    }
+    let pol = policy(&args[4]);
+    let every: usize = args.get(6).map_or(1, |s| s.parse().unwrap());
+    let max_rounds: usize = args.get(7).map_or(50_000, |s| s.parse().unwrap());
+    let mut out = std::fs::File::create(format!("{}-blocks.jsonl", args[5])).unwrap();
+    let mut out_r = std::fs::File::create(format!("{}-rounds.jsonl", args[5])).unwrap();
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts, mut tt) = (Vec::new(), [0u32; 256], TVector::new());
+    let mut syms = Vec::new();
+    let mut walked = Vec::new();
+    let mut i = 0u64;
+    let mut taken = 0usize;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        let idx = i;
+        i += 1;
+        let Some(&(cn, ccells, cletters)) = admitted.get(&idx) else {
+            syms = b.syms;
+            continue;
+        };
+        taken += 1;
+        if (taken - 1) % every != 0 {
+            syms = b.syms;
+            continue;
+        }
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        let n = ll.len();
+        assert!(n as u64 == cn, "block {idx}: n {n} is not the census's {cn}");
+        build(&ll, &counts, &mut tt);
+        walk(&tt, b.orig_ptr, &mut walked);
+        let (steps, equal, dropped) = serial_steps(&ll, b.orig_ptr);
+        let o = run(&ll, b.orig_ptr, pol, max_rounds);
+        let r0 = o.rounds[0].r as u64;
+        let hash_ok = o.finished
+            && o.period as usize == n
+            && o.hash == want_hash(&walked, n, o.t0);
+        let rs = &o.rounds;
+        let sum = |f: &dyn Fn(&Round) -> u64| rs.iter().map(f).sum::<u64>();
+        let cells = sum(&|r| r.cells as u64);
+        let cand = sum(&|r| r.cand as u64);
+        let m = sum(&|r| r.m as u64);
+        let removed = sum(&|r| r.removed as u64);
+        let wb = sum(&|r| r.rb as u64);
+        let wa = sum(&|r| r.ra as u64);
+        let empty_m = rs.iter().filter(|r| r.m == 0).count();
+        let empty_rows = rs.iter().filter(|r| r.removed == 0).count();
+        let max_ratio = rs.iter().map(|r| (r.rb as f64 - r.r as f64) / r.m as f64).fold(f64::MIN, f64::max);
+        let min_ratio = rs.iter().map(|r| (r.rb as f64 - r.r as f64) / r.m as f64).fold(f64::MAX, f64::min);
+        let grow = rs.iter().filter(|r| r.rb > r.r).count();
+        let grow_after = rs.iter().filter(|r| r.ra > r.r).count();
+        let joins = sum(&|r| (r.rb - r.ra) as u64);
+        let max_rb = rs.iter().map(|r| r.rb).max().unwrap();
+        let max_ra = rs.iter().map(|r| r.ra).max().unwrap();
+        let first = |q: usize| rs.iter().take(q).map(|r| r.removed as u64).sum::<u64>();
+        let until = |share: f64| {
+            let mut acc = 0u64;
+            for (j, r) in rs.iter().enumerate() {
+                acc += r.removed as u64;
+                if acc as f64 >= share * n as f64 {
+                    return j + 1;
+                }
+            }
+            0
+        };
+        // rounds whose letter count is at most 1/2, 1/10, 1/100 of the block's runs
+        let r_below = |d: u64| rs.iter().position(|r| (r.ra as u64) * d <= r0).map_or(0, |j| j + 1);
+        // the work up to the round where the letters are r/100 or fewer
+        let cls = [sum(&|r| r.cls[0] as u64), sum(&|r| r.cls[1] as u64), sum(&|r| r.cls[2] as u64)];
+        writeln!(
+            out,
+            "{{\"block\":{idx},\"policy\":\"{}\",\"n\":{n},\"r\":{r0},\"S\":{steps},\"S_equal\":{equal},\"S_dropped\":{dropped},\"census_cells\":{ccells},\"census_letters\":{cletters},\"finished\":{},\"hash_ok\":{hash_ok},\"rounds\":{},\"empty_m0\":{empty_m},\"empty_no_row\":{empty_rows},\"letters_left\":{},\"points_left\":{},\"rows_removed\":{removed},\"cells_scanned\":{cells},\"candidates\":{cand},\"sum_m\":{m},\"nodes\":{},\"frag_written_before\":{wb},\"frag_written_after\":{wa},\"joins\":{joins},\"sel_class\":[{},{},{}],\"max_ratio\":{max_ratio:.6},\"min_ratio\":{min_ratio:.6},\"rounds_growing_before\":{grow},\"rounds_growing_after\":{grow_after},\"max_r_before\":{max_rb},\"max_r_after\":{max_ra},\"removed_first\":[{},{},{}],\"rounds_to_rows\":[{},{},{}],\"rounds_to_r\":[{},{},{}],\"max_depth\":{}}}",
+            args[4],
+            o.finished,
+            rs.len(),
+            o.letters_left,
+            o.points_left,
+            o.nodes,
+            cls[0], cls[1], cls[2],
+            first(1), first(4), first(16),
+            until(0.5), until(0.9), until(0.99),
+            r_below(2), r_below(10), r_below(100),
+            if m > 0 { 2 } else { 1 },
+        )
+        .unwrap();
+        let tr: Vec<String> = rs
+            .iter()
+            .map(|r| format!("[{},{},{},{},{},{},{}]", r.r, r.cells, r.cand, r.m, r.removed, r.rb, r.ra))
+            .collect();
+        writeln!(out_r, "{{\"block\":{idx},\"policy\":\"{}\",\"fields\":\"r,cells,candidates,m,rows_removed,r_new_before,r_new_after\",\"rounds\":[{}]}}", args[4], tr.join(",")).unwrap();
+        eprintln!("block {idx} {} n {n} r {r0} S {steps} (census cells {ccells}) rounds {} finished {} hash {hash_ok} work {:.3} S", args[4], rs.len(), o.finished, (cells + wb) as f64 / steps as f64);
+        syms = Vec::new();
+    }
+}
