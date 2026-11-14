@@ -1,0 +1,6 @@
+Exhaustive binary BWT-column checks: 40960, with batching: 6927
+Random four-character checks: 17000, with batching: 1246
+Exhaustive one-/two-run arithmetic checks: 2030
+(ab)^10a: n=21, steps=11, batches=1, loops avoided=8, max q=9
+(ab)^100a: n=201, steps=101, batches=1, loops avoided=98, max q=99
+(ab)^1000a: n=2001, steps=1001, batches=1, loops avoided=998, max q=999

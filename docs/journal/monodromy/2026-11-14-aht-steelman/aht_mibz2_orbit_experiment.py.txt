@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+"""Standalone verification model for AHT-inspired, quotient-batched IET induction.
+
+This is NOT production mibz2 code, nor a benchmark. It explicitly constructs words
+as Python strings, deliberately making it unsuitable for large input blocks.
+It verifies mathematical equivalence of the quotiented and ordinary *linked-order*
+Rauzy induction and a 1/2-run LF arithmetic shortcut for arbitrary BWT columns.
+
+No third-party packages are required.
+"""
+
+from collections import Counter
+from itertools import groupby, product
+from random import Random
+
+
+def inverse_lf_oracle(last_column: str, primary: int) -> str:
+    """Equivalent to the forward inverse-BWT traversal from the original row."""
+    n = len(last_column)
+    assert 0 <= primary < n
+    C = {}
+    total = 0
+    counts = Counter(last_column)
+    for c in sorted(counts):
+        C[c], total = total, total + counts[c]
+    seen = Counter()
+    inverse = [0] * n
+    for i, c in enumerate(last_column):
+        lf = C[c] + seen[c]
+        inverse[lf] = i
+        seen[c] += 1
+    p, out = primary, []
+    for _ in range(n):
+        p = inverse[p]
+        out.append(last_column[p])
+    return ''.join(out)
+
+
+def run_exchange(last_column: str, primary: int):
+    """Split the primary row into a singleton in the run-interval exchange."""
+    pieces = []
+    at, marked = 0, None
+    while at < len(last_column):
+        end = at + 1
+        while end < len(last_column) and last_column[end] == last_column[at]:
+            end += 1
+        c = last_column[at]
+        if at <= primary < end:
+            if primary > at:
+                pieces.append((c, primary - at))
+            marked = len(pieces)
+            pieces.append((c, 1))
+            if primary + 1 < end:
+                pieces.append((c, end - primary - 1))
+        else:
+            pieces.append((c, end - at))
+        at = end
+    top = list(range(len(pieces)))
+    bottom = sorted(top, key=lambda i: pieces[i][0])  # stable, by BWT byte
+    lengths = {i: pieces[i][1] for i in top}
+    labels = {i: pieces[i][0] for i in top}
+    assert marked is not None and lengths[marked] == 1
+    return top, bottom, lengths, labels, marked
+
+
+def induce(top, bottom, lengths, labels, marked, quotient=False):
+    """Reference right-end Rauzy induction (not Cells' physical slot machinery).
+
+    Each interval carries a word in text order. The unique '@' marks orig_ptr's
+    character and remains in a width-one interval throughout the induction.
+    """
+    top, bottom, lengths = list(top), list(bottom), dict(lengths)
+    word = {i: ('@' if i == marked else '') + labels[i] for i in top}
+    logical_steps = batches = eliminated_loops = max_q = 0
+    while top:
+        a, b = top[-1], bottom[-1]
+        if a == b:
+            if '@' in word[a]:
+                return (word[a], lengths[a], logical_steps, batches,
+                        eliminated_loops, max_q)
+            top.pop()
+            bottom.pop()
+            continue
+        la, lb = lengths[a], lengths[b]
+
+        # An identical strict winner pair remains at both ends only if the
+        # loser was already adjacent to the winner in the relevant order.
+        if quotient and la > lb and bottom.index(b) == bottom.index(a) + 1:
+            q = (la - 1) // lb  # leave equality to the standard step
+            if q > 1:
+                assert '@' not in word[a]  # strict winner has width > 1
+                lengths[a] -= q * lb
+                word[b] = word[a] * q + word[b]
+                logical_steps += q
+                batches += 1
+                eliminated_loops += q - 1
+                max_q = max(max_q, q)
+                continue
+        if quotient and lb > la and top.index(a) == top.index(b) + 1:
+            q = (lb - 1) // la
+            if q > 1:
+                assert '@' not in word[b]
+                lengths[b] -= q * la
+                word[a] = word[a] + word[b] * q
+                logical_steps += q
+                batches += 1
+                eliminated_loops += q - 1
+                max_q = max(max_q, q)
+                continue
+
+        logical_steps += 1
+        combined = word[a] + word[b]
+        if la > lb:
+            lengths[a] -= lb
+            word[b] = combined
+            bottom.remove(b)
+            bottom.insert(bottom.index(a) + 1, b)
+        elif lb > la:
+            lengths[b] -= la
+            word[a] = combined
+            top.remove(a)
+            top.insert(top.index(b) + 1, a)
+        else:
+            word[b] = combined
+            top.remove(a)
+            bottom.remove(b)
+            bottom[bottom.index(a)] = b
+    raise AssertionError('The tracked singleton must remain until closure')
+
+
+def decode_marked_word(marked_word: str, n: int) -> str:
+    assert marked_word.count('@') == 1
+    position = marked_word.index('@')
+    cycle = marked_word.replace('@', '')
+    # The decoded text begins immediately after orig_ptr's byte in the
+    # selected cycle's text-order word, and repeats if that cycle is short.
+    return ''.join(cycle[(position + 1 + j) % len(cycle)] for j in range(n))
+
+
+def invert_one_or_two_runs(last_column: str, primary: int):
+    """A two-run LF rotation / one-run LF identity, independent of induction.
+
+    Returns None when there are more than two maximal runs.
+    """
+    runs = [(c, sum(1 for _ in group)) for c, group in groupby(last_column)]
+    if len(runs) == 1:
+        return last_column[primary] * len(last_column)
+    if len(runs) != 2:
+        return None
+    (first, nfirst), (second, nsecond) = runs
+    n = nfirst + nsecond
+    if first < second:
+        return last_column[primary] * n  # LF is the identity
+    p, out = primary, []
+    for _ in range(n):
+        p = (p - nsecond) % n             # inverse of LF's rotation
+        out.append(first if p < nfirst else second)
+    return ''.join(out)
+
+
+def check_case(last_column: str, primary: int):
+    top, bottom, lengths, labels, mark = run_exchange(last_column, primary)
+    original = induce(top, bottom, lengths, labels, mark, quotient=False)
+    batched = induce(top, bottom, lengths, labels, mark, quotient=True)
+    assert original[:2] == batched[:2], (last_column, primary, original, batched)
+    expected = inverse_lf_oracle(last_column, primary)
+    result = decode_marked_word(batched[0], len(last_column))
+    assert expected == result, (last_column, primary, expected, result)
+    if (shortcut := invert_one_or_two_runs(last_column, primary)) is not None:
+        assert shortcut == expected, (last_column, primary, shortcut, expected)
+    return batched
+
+
+def main():
+    total, batched = 0, 0
+    for n in range(2, 12):
+        for letters in product('ab', repeat=n):
+            last_column = ''.join(letters)
+            for primary in range(n):
+                result = check_case(last_column, primary)
+                total += 1
+                batched += (result[3] > 0)
+    print(f'Exhaustive binary BWT-column checks: {total}, with batching: {batched}')
+
+    random = Random(55671)
+    total, batched = 0, 0
+    for _ in range(17000):
+        n = random.randint(2, 95)
+        last_column = ''.join(random.choices('abcd', k=n))
+        result = check_case(last_column, random.randrange(n))
+        total += 1
+        batched += (result[3] > 0)
+    print(f'Random four-character checks: {total}, with batching: {batched}')
+
+    # Separately verify the 1/2-run shortcut exhaustively for 1 <= n <= 14.
+    shortcuts = 0
+    for n in range(1, 15):
+        for seq in product('ab', repeat=n):
+            last_column = ''.join(seq)
+            for primary in range(n):
+                if (got := invert_one_or_two_runs(last_column, primary)) is not None:
+                    assert got == inverse_lf_oracle(last_column, primary)
+                    shortcuts += 1
+    print(f'Exhaustive one-/two-run arithmetic checks: {shortcuts}')
+
+    for k in (10, 100, 1000):
+        # The rotation-sort BWT of (ab)^k a is exactly b^k a^(k+1),
+        # with original row k.
+        last_column = 'b' * k + 'a' * (k + 1)
+        top, bottom, lens, labels, mark = run_exchange(last_column, k)
+        slow = induce(top, bottom, lens, labels, mark, quotient=False)
+        fast = induce(top, bottom, lens, labels, mark, quotient=True)
+        assert slow[:2] == fast[:2]
+        assert decode_marked_word(fast[0], 2*k + 1) == 'ab'*k + 'a'
+        print(f'(ab)^{k}a: n={2*k+1}, steps={slow[2]}, '
+              f'batches={fast[3]}, loops avoided={fast[4]}, max q={fast[5]}')
+
+
+if __name__ == '__main__':
+    main()
