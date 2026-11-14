@@ -3149,7 +3149,13 @@
       "planned_action": "Accept completed preparation from REVIEW plus finished Codex cursor. Reconcile final hosted Miri success and local evidence without repeating tests or B5. Adoption DEFER unchanged. One bounded Observer record update, then substantive LOG; no new implementation/timing/queue/signal.",
       "disposition": "Accepted actual Codex preparation completion (REVIEW + finished cursor); full hosted Miri and all exact-head Actions/legacy checks successful or appropriate skip. Author local raw evidence reconciled; adoption remains DEFER. Observer record update routed/readback/verified; recipient work pending. No new scientific assignment or workstation job.",
       "observer_assignment": 6868831037,
-      "log_status": "in_progress"
+      "log_status": "published_readback_verified",
+      "log_comment_id": 6868842170
+    },
+    "6868842170": {
+      "status": "completed",
+      "comment_updated_at": "2026-11-14T00:52:25Z",
+      "disposition": "Own grouped substantive LOG; ignore self-triggered wake."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3333,7 +3339,8 @@
     6868553543,
     6868650998,
     6868667961,
-    6868831037
+    6868831037,
+    6868842170
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -6100,7 +6107,7 @@
     "observer_assignment": 6868831037,
     "ready_job_queued": false,
     "ready_job_reason": "No frozen prospective decision/qualifying workstation recipe; no speculative repeat measurement.",
-    "log_comment_id": 6868667961,
+    "log_comment_id": 6868842170,
     "observer_status": "posted_readback_verified_completion_pending",
     "observer_review": 6868691042,
     "observer_record_commit": "6c8385800bba5fe85536ef91c5bb977261c97f08",
