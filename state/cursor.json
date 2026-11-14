@@ -1594,6 +1594,20 @@
       "status": "finished",
       "disposition": "HOLD B5 qualification: malformed Test workflow; completed exact-source Miri/fuzz/differential and reproducible mutant outcomes absent.",
       "comment": 6881720827
+    },
+    {
+      "id": "D107",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6882196843,
+      "pr": 161,
+      "sha": "24ff5f72cec50f441a9a95a5927f640c00fbe721",
+      "evidence_digest": "sha256:b32a36e1e76116abd1a835058e01573de97a5505e2f23b78f3a9efb4c1814226",
+      "commit": "063bc9ad9e9cb618c106d5139fe1e8676af0cce9",
+      "status": "complete",
+      "disposition": "PASS B5 closure; lift D106 scoped evidence HOLD."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1954,7 +1968,9 @@
     "c9fe5d24d7bd3d76bf3be4732a95731e1835f531",
     "9a26afd19bae255b62cfe773a6507f5530d85dce",
     "410c046b546ad029adee130e930565444f4274fb",
-    "65d3e29523927d81b276a09d72eb2bf8fc8cc8fb"
+    "65d3e29523927d81b276a09d72eb2bf8fc8cc8fb",
+    "24d2a81bc62fd767c418e8b664f1b00d96753771",
+    "063bc9ad9e9cb618c106d5139fe1e8676af0cce9"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2141,7 +2157,7 @@
   },
   "current_execution": {
     "active_comment": 6882196843,
-    "status": "in progress",
+    "status": "complete",
     "decision": "D107"
   },
   "duplicate_events": [
@@ -2965,7 +2981,8 @@
       "status": "complete",
       "disposition": "Scoped source integration PROCEED; native/Miri completion not established; adoption restrictions preserved."
     },
-    "391|c915a95eb7288843ea25707bffc87c9d252f4bde|sha256:7059dc54dbd7912a0150373230510f32a63d37d8cc24558ad055283a179c7f68"
+    "391|c915a95eb7288843ea25707bffc87c9d252f4bde|sha256:7059dc54dbd7912a0150373230510f32a63d37d8cc24558ad055283a179c7f68",
+    "391|24ff5f72cec50f441a9a95a5927f640c00fbe721|sha256:b32a36e1e76116abd1a835058e01573de97a5505e2f23b78f3a9efb4c1814226"
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
   "inbox_comments": [
@@ -3832,10 +3849,11 @@
     {
       "comment_id": 6882196843,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D107",
-      "progress": "Verified source identity, successful raw test/fuzz/Miri logs and bounded mutation record; publishing B5 closure.",
-      "receipt_commit": "24d2a81bc62fd767c418e8b664f1b00d96753771"
+      "progress": "D107 completed and read back; awaiting REVIEW.",
+      "receipt_commit": "24d2a81bc62fd767c418e8b664f1b00d96753771",
+      "work_commit": "063bc9ad9e9cb618c106d5139fe1e8676af0cce9"
     }
   ],
   "migrated_from": {
