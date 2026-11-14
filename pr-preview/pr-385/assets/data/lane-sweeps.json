@@ -1,0 +1,65 @@
+{
+  "format": 1,
+  "about": "Measured walk timings by number of lanes (independent chains), drawn by the 'Why 32 couriers beat one' page (assets/javascripts/couriers.js), one chart a panel, each on its own axes. Only measured points go here, each panel naming its source. Panels are never compared with each other: they differ in machine, corpus, clock and implementation. To add a sweep, append a panel; nothing else changes.",
+  "panels": [
+    {
+      "id": "bz2k-walkm",
+      "title": "K chains through one block, unjoined",
+      "what": "The prototype's latency test (bz2k walkm): K independent chains walked in lockstep through one freshly built T-vector, with no segment bookkeeping and no join. A ceiling for the joined walk, not a decoder.",
+      "measured": "Local, one thread: an Intel Xeon VM at 2.1 GHz (TSC cycles), the wikidata-pq bench slice's blocks.",
+      "source": {
+        "label": "compute-frontier journal, section 2",
+        "url": "https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-27-compute-frontier.md#2-the-bz2-decode-phases-scaling-and-the-prototype"
+      },
+      "x": { "label": "chains" },
+      "y": { "label": "cycles a byte of output", "unit": "c/B" },
+      "series": [
+        {
+          "label": "unjoined chains",
+          "points": [
+            { "x": 1, "y": 28.5 },
+            { "x": 2, "y": 17.6 },
+            { "x": 4, "y": 10.9 },
+            { "x": 8, "y": 6.8 },
+            { "x": 16, "y": 4.4 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pr21-flagged",
+      "title": "The flagged walk by lane count, with and without the prefetch",
+      "what": "walk_segments_flagged_with::<LANES, PREFETCH> at 512 segments: the joined walk as the decoder runs it, before the shared-offset walk (#37). PR #21 also gives 256 and 1,024 segments.",
+      "measured": "Local, one thread, pinned: the walk alone on half of the 431 Wikidata dump blocks in CI's corpus, best of 3, cycles at a nominal 2.8 GHz on a shared VM. Exploratory: it picked candidates, CI's bench decided.",
+      "source": {
+        "label": "PR #21, exploratory figures",
+        "url": "https://github.com/lmmx/mibz2/pull/21"
+      },
+      "x": { "label": "lanes" },
+      "y": { "label": "cycles a byte of output", "unit": "c/B" },
+      "series": [
+        {
+          "label": "no prefetch",
+          "points": [
+            { "x": 8, "y": 16.42 },
+            { "x": 12, "y": 15.41 },
+            { "x": 16, "y": 15.31 },
+            { "x": 24, "y": 16.24 },
+            { "x": 32, "y": 16.39 }
+          ]
+        },
+        {
+          "label": "prefetch",
+          "points": [
+            { "x": 8, "y": 14.63 },
+            { "x": 12, "y": 11.97 },
+            { "x": 16, "y": 11.17 },
+            { "x": 20, "y": 11.17 },
+            { "x": 24, "y": 11.22 },
+            { "x": 32, "y": 11.51 }
+          ]
+        }
+      ]
+    }
+  ]
+}
