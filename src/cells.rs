@@ -35,6 +35,9 @@ struct State {
     counts: Counts,
     /// the last successful run-route inversion was Cells' own (the ledger's route)
     took: bool,
+    /// the last attempt's census record (examples/cells_census.rs)
+    #[cfg(feature = "census")]
+    census: Option<Census>,
 }
 #[derive(Default)]
 struct Kernel {
@@ -43,6 +46,9 @@ struct Kernel {
     rule_end: usize,
     letters: usize,
     pos: Vec<u32>,
+    /// the cycle's word and marked length the last admitted block was written from
+    #[cfg(feature = "census")]
+    census_word: (u32, u32),
     #[cfg(test)]
     writer_reach: WriterReach,
     #[cfg(test)]
@@ -85,9 +91,18 @@ impl<const F: bool> CellsKernel<F> {
     pub fn counts(&self) -> Counts {
         self.state.counts
     }
+    /// The last attempt's census record, taken (None: no attempt since the last take).
+    #[cfg(feature = "census")]
+    pub fn take_census(&mut self) -> Option<Census> {
+        self.state.census.take()
+    }
     fn attempt(&mut self, recs: &[u16], n: usize, p: u32, out: &mut Vec<u8>) -> bool {
         let budget = if F { n } else { n / 25 * 4 + n % 25 * 4 / 25 };
         let result = self.state.kernel.try_invert(recs, n, p, budget, F, out);
+        #[cfg(feature = "census")]
+        {
+            self.state.census = Some(self.state.kernel.census(recs.len(), n, &result));
+        }
         let counts = &mut self.state.counts;
         match result {
             Ok((cells, period)) => {
@@ -345,6 +360,10 @@ impl Kernel {
         let period = (len & !MARK) as usize;
         if len & MARK == 0 || period == 0 || period > n {
             return Err(Refusal::Invalid);
+        }
+        #[cfg(feature = "census")]
+        {
+            self.census_word = (word, len);
         }
         self.write_cells(word, len, n, out);
         self.check_canaries();
@@ -906,6 +925,160 @@ impl Kernel {
             have += more;
         }
         out.truncate(n);
+    }
+}
+
+/// One attempt's census (examples/cells_census.rs), read off the kernel's state after it:
+/// the grammar and what the writer did, replayed without writing. Positions are the
+/// output's (after the rotation), within the cycle's period.
+#[cfg(feature = "census")]
+#[derive(Clone, Debug, Default)]
+pub struct Census {
+    pub n: usize,
+    /// run records given
+    pub records: usize,
+    /// letters `slots` made (0 when refused before counting them)
+    pub letters: usize,
+    /// "admitted", or the refusal: "density", "sparse", "floor", "budget", "invalid"
+    pub outcome: &'static str,
+    pub cells: usize,
+    pub period: usize,
+    /// rules written (including the marked spine)
+    pub rules: usize,
+    /// rules the writer expanded at a first place
+    pub rules_expanded: usize,
+    /// the deepest rule's depth (a word kept as bytes is depth 0)
+    pub max_depth: u32,
+    /// marked rules from the cycle's word down to the row
+    pub spine: usize,
+    /// the top word's factors: (output position, length), sorted, the row's byte included
+    pub top: Vec<(u32, u32)>,
+    /// bytes written from the byte arena (short factors and the row's byte)
+    pub small_bytes: usize,
+    /// long copies of earlier output: (destination, source, length)
+    pub copies: Vec<(u32, u32, u32)>,
+}
+
+#[cfg(feature = "census")]
+impl Kernel {
+    fn census(&self, records: usize, n: usize, result: &Result<(usize, usize), Refusal>) -> Census {
+        let mut c = Census {
+            n,
+            records,
+            letters: self.letters,
+            ..Census::default()
+        };
+        let (cells, period) = match result {
+            Ok(v) => *v,
+            Err(r) => {
+                c.outcome = match r {
+                    Refusal::Density => "density",
+                    Refusal::Sparse => "sparse",
+                    Refusal::Floor => "floor",
+                    Refusal::Budget => "budget",
+                    Refusal::Invalid => "invalid",
+                };
+                if matches!(r, Refusal::Density | Refusal::Sparse) {
+                    c.letters = 0;
+                }
+                return c;
+            }
+        };
+        c.outcome = "admitted";
+        c.cells = cells;
+        c.period = period;
+        let (word, len) = self.census_word;
+        let p = (len & !MARK) as usize;
+        let buf = &self.buf;
+        let ro = self.lay.rules;
+        let rd = |at: usize| u64::from_le_bytes(buf[at..at + 8].try_into().unwrap());
+        let rule = |w: usize| (rd(w), rd(w + 8));
+        let nr = (self.rule_end - ro) / 16;
+        let idx = |f: u64| ((f >> 32) as usize - ro) / 16;
+        c.rules = nr;
+        // depths: a rule's factors were written before it
+        let mut depth = vec![0u32; nr];
+        for j in 0..nr {
+            let (a, b) = rule(ro + 16 * j);
+            let da = if (a >> 32) as usize >= ro {
+                depth[idx(a)]
+            } else {
+                0
+            };
+            let db = if (b >> 32) as usize >= ro {
+                depth[idx(b)]
+            } else {
+                0
+            };
+            depth[j] = 1 + da.max(db);
+        }
+        c.max_depth = depth.iter().copied().max().unwrap_or(0);
+        let pos = &self.pos;
+        // the row's place, as write_cells finds it
+        let (mut w, mut j) = (word as usize, 0usize);
+        while w >= ro {
+            let (a, b) = rule(w);
+            if a as u32 & MARK != 0 {
+                w = (a >> 32) as usize;
+            } else {
+                j += a as u32 as usize;
+                w = (b >> 32) as usize;
+            }
+        }
+        let start = (j + SHIFT) % p;
+        // the spine: its plain factors are the top word's factors
+        let (mut w, mut q) = (word as usize, 0usize);
+        while w >= ro {
+            c.spine += 1;
+            let (a, b) = rule(w);
+            let la = (a as u32 & !MARK) as usize;
+            let (plain, at, next) = if a as u32 & MARK != 0 {
+                (b, q + la, a)
+            } else {
+                (a, q, b)
+            };
+            let d = (at + p - start) % p;
+            let lx = plain as u32 as usize;
+            c.top.push((d as u32, lx as u32));
+            if lx <= SMALL as usize {
+                c.small_bytes += lx;
+            } else {
+                let f = pos[idx(plain)];
+                if f as usize != d {
+                    c.copies.push((d as u32, f, lx as u32));
+                }
+            }
+            if a as u32 & MARK == 0 {
+                q += la;
+            }
+            w = (next >> 32) as usize;
+        }
+        c.top.push((((q + p - start) % p) as u32, 1));
+        c.small_bytes += 1;
+        c.top.sort_unstable();
+        // the rules expanded at their first places
+        for j in 0..nr {
+            let q = pos[j];
+            if q == NIL {
+                continue;
+            }
+            c.rules_expanded += 1;
+            let (a, b) = rule(ro + 16 * j);
+            let mut d = q;
+            for x in [a, b] {
+                let lx = x as u32;
+                if lx <= SMALL {
+                    c.small_bytes += lx as usize;
+                } else {
+                    let f = pos[idx(x)];
+                    if f != d {
+                        c.copies.push((d, f, lx));
+                    }
+                }
+                d += lx;
+            }
+        }
+        c
     }
 }
 

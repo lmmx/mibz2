@@ -1,0 +1,6 @@
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  target/census/wikidata.bz2
+03b3ac53be8c0041055146146bf55eee31d953ea0522925691a8f7b763fb89e6  target/census/gen/text.bz2
+22a1c845a5e768d8f8025a0bbaea0334f82a9ce77da98660bbd2c27bbcc5eb25  target/census/gen/pattern.bz2
+caf9adbf2c156aa70e05714223b715e0aa292c5b52819d98d0a19f9605d56590  target/release/examples/cells_census (measured; built before rustfmt)
+83ddbd7c5ac8e038114011ef261a3504bd38411c5e6be9aba800a2c77b6c9857  target/release/examples/bzcat
+43f6d5067d1a75c479496c59dbfd9fecc2960c82d67b295c55cf22cd11bedd38  target/release/examples/cells_census (rebuilt from the committed source; same records)

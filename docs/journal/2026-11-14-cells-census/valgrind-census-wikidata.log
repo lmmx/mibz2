@@ -1,0 +1,15 @@
+==16799== Callgrind, a call-graph generating cache profiler
+==16799== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==16799== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==16799== Command: ../../release/examples/cells_census wikidata ../wikidata.bz2 --quiet
+==16799== 
+==16799== For interactive control, run 'callgrind_control -h'.
+==16799== brk segment overflow in thread #1: can't grow to 0x4849000
+==16799== (see section Limitations in user manual)
+==16799== NOTE: further instances of this message will not be shown
+cells_census wikidata: 383 Cells attempts
+==16799== 
+==16799== Events    : Ir
+==16799== Collected : 5251452356
+==16799== 
+==16799== I   refs:      5,251,452,356

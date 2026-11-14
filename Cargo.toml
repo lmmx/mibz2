@@ -49,6 +49,9 @@ wait-stats = []
 # engagement diagnostic (docs/journal/2026-11-10-staged-engagement-diagnostic-draft.md); off
 # by default, and without it every count compiles away
 walk-stats = []
+# examples/cells_census.rs: each Cells attempt's grammar and writer, replayed after it
+# (src/cells.rs); off by default, and without it nothing is recorded
+census = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -93,3 +96,7 @@ required-features = ["trace"]
 [[example]]
 name = "wait_audit"
 required-features = ["wait-stats"]
+
+[[example]]
+name = "cells_census"
+required-features = ["census"]

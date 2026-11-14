@@ -1,0 +1,60 @@
+--------------------------------------------------------------------------------
+Profile data file 'target/census/cg-prod/cg.out' (creator: callgrind-3.22.0)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 1002901815
+Trigger: Program termination
+Profiled target:  ../../release/examples/bzcat 1 (PID 17023, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       99
+Include dirs:     
+User annotated:   
+Auto-annotation:  on
+
+--------------------------------------------------------------------------------
+Ir                     
+--------------------------------------------------------------------------------
+4,904,446,456 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+Ir                      file:function
+--------------------------------------------------------------------------------
+4,687,545,225 (95.58%)  ./nptl/./nptl/pthread_create.c:start_thread [/usr/lib/x86_64-linux-gnu/libc.so.6]
+4,687,528,275 (95.58%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/std/src/sys/thread/unix.rs:<std::sys::thread::unix::Thread>::new::thread_start [target/release/examples/bzcat]
+4,687,516,589 (95.58%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/alloc/src/boxed.rs:<std::sys::thread::unix::Thread>::new::thread_start
+3,972,864,932 (81.01%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/ops/function.rs:<std::thread::lifecycle::spawn_unchecked<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::cells::CellsKernel<false>>::{closure#0}>::{closure#0}, ()>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0} [target/release/examples/bzcat]
+3,972,864,906 (81.01%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/std/src/thread/lifecycle.rs:<std::thread::lifecycle::spawn_unchecked<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::cells::CellsKernel<false>>::{closure#0}>::{closure#0}, ()>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}
+3,972,864,353 (81.01%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/std/src/sys/backtrace.rs:std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::cells::CellsKernel<false>>::{closure#0}>::{closure#0}, ()> [target/release/examples/bzcat]
+2,643,418,926 (53.90%)  src/cells.rs:std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::cells::CellsKernel<false>>::{closure#0}>::{closure#0}, ()>
+1,171,848,660 (23.89%)  src/cells.rs:<mibz2::cells::Kernel>::induce_cells [target/release/examples/bzcat]
+  801,782,677 (16.35%)  src/cells.rs:<mibz2::cells::Kernel>::slots [target/release/examples/bzcat]
+  714,524,785 (14.57%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/ops/function.rs:<std::thread::lifecycle::spawn_unchecked<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::bwt::Cooperative<2>>::{closure#0}>::{closure#1}, ()>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0} [target/release/examples/bzcat]
+  714,524,754 (14.57%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/std/src/thread/lifecycle.rs:<std::thread::lifecycle::spawn_unchecked<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::bwt::Cooperative<2>>::{closure#0}>::{closure#1}, ()>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}
+  714,524,198 (14.57%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/std/src/sys/backtrace.rs:std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::bwt::Cooperative<2>>::{closure#0}>::{closure#1}, ()> [target/release/examples/bzcat]
+  714,524,187 (14.57%)  src/parallel.rs:std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::bwt::Cooperative<2>>::{closure#0}>::{closure#1}, ()>
+  714,524,181 (14.57%)  src/parallel.rs:mibz2::parallel::scanner [target/release/examples/bzcat]
+  669,769,658 (13.66%)  src/cells.rs:<mibz2::cells::Kernel>::write_cells [target/release/examples/bzcat]
+  574,893,373 (11.72%)  src/lib.rs:std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::cells::CellsKernel<false>>::{closure#0}>::{closure#0}, ()>
+  548,052,969 (11.17%)  src/bwt.rs:std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::cells::CellsKernel<false>>::{closure#0}>::{closure#0}, ()>
+  529,528,206 (10.80%)  src/block.rs:mibz2::parallel::scanner
+  505,802,609 (10.31%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/ptr/mod.rs:<mibz2::cells::Kernel>::induce_cells
+  473,217,065 ( 9.65%)  src/runs.rs:mibz2::runs::front
+  473,212,469 ( 9.65%)  src/runs.rs:mibz2::runs::front [target/release/examples/bzcat]
+  473,200,596 ( 9.65%)  src/runs.rs:mibz2::runs::front_avx2 [target/release/examples/bzcat]
+  340,810,739 ( 6.95%)  src/bwt.rs:mibz2::bwt::room_segments::<32, 1, true> [target/release/examples/bzcat]
+  325,763,419 ( 6.64%)  ./string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:__memcpy_avx_unaligned_erms [/usr/lib/x86_64-linux-gnu/libc.so.6]
+  324,539,469 ( 6.62%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/ptr/mod.rs:<mibz2::cells::Kernel>::write_cells
+  216,901,210 ( 4.42%)  ???:0x000000000001f540 [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+  216,590,796 ( 4.42%)  ???:(below main) [target/release/examples/bzcat]
+  216,590,784 ( 4.42%)  ./csu/../csu/libc-start.c:__libc_start_main@@GLIBC_2.34 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+  216,590,601 ( 4.42%)  ./csu/../sysdeps/nptl/libc_start_call_main.h:(below main) [/usr/lib/x86_64-linux-gnu/libc.so.6]
+  216,590,537 ( 4.42%)  ???:main [target/release/examples/bzcat]
+  216,488,859 ( 4.41%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/std/src/sys/backtrace.rs:std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()> [target/release/examples/bzcat]
+  216,488,858 ( 4.41%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/ops/function.rs:std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  216,488,857 ( 4.41%)  examples/bzcat.rs:bzcat::main
+  209,699,144 ( 4.28%)  /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/ptr/mod.rs:bzcat::main
+  201,925,783 ( 4.12%)  src/rle.rs:std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::cells::CellsKernel<false>>::{closure#0}>::{closure#0}, ()>

@@ -1,0 +1,383 @@
+{"attempt": 0, "block": 0, "part": 2, "n": 13, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 1, "block": 1, "part": 3, "n": 899931, "outcome": "admitted", "slots": 3665883, "induce": 5230151, "write": 3269376, "s": 0.7312564064836286}
+{"attempt": 2, "block": 2, "part": 4, "n": 899992, "outcome": "admitted", "slots": 3787167, "induce": 5584787, "write": 2542772, "s": 0.7865857762906172}
+{"attempt": 3, "block": 3, "part": 5, "n": 900000, "outcome": "admitted", "slots": 3884670, "induce": 5764023, "write": 2542650, "s": 0.791438072081148}
+{"attempt": 4, "block": 4, "part": 6, "n": 62, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 5, "block": 5, "part": 7, "n": 900000, "outcome": "admitted", "slots": 4039900, "induce": 6031503, "write": 3565928, "s": 0.7385171629257954}
+{"attempt": 6, "block": 6, "part": 8, "n": 30, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 7, "block": 7, "part": 9, "n": 900000, "outcome": "admitted", "slots": 3728221, "induce": 5445447, "write": 3308427, "s": 0.734946176903797}
+{"attempt": 8, "block": 9, "part": 10, "n": 900000, "outcome": "admitted", "slots": 3772278, "induce": 5492723, "write": 3391398, "s": 0.7320408435290322}
+{"attempt": 9, "block": 10, "part": 11, "n": 34, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 10, "block": 11, "part": 12, "n": 899903, "outcome": "admitted", "slots": 3721778, "induce": 5302985, "write": 3290816, "s": 0.7327924249440485}
+{"attempt": 11, "block": 12, "part": 13, "n": 899936, "outcome": "admitted", "slots": 3845097, "induce": 5632571, "write": 2587899, "s": 0.7855136853493914}
+{"attempt": 12, "block": 13, "part": 14, "n": 900000, "outcome": "admitted", "slots": 4060519, "induce": 5910807, "write": 2665099, "s": 0.7890939090763408}
+{"attempt": 13, "block": 15, "part": 15, "n": 900000, "outcome": "admitted", "slots": 3647537, "induce": 5293063, "write": 3345704, "s": 0.7276883267742683}
+{"attempt": 14, "block": 16, "part": 16, "n": 35, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 15, "block": 17, "part": 17, "n": 900000, "outcome": "admitted", "slots": 3749879, "induce": 5307509, "write": 3271620, "s": 0.7346404512025623}
+{"attempt": 16, "block": 18, "part": 18, "n": 41, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 17, "block": 19, "part": 19, "n": 899925, "outcome": "admitted", "slots": 3614446, "induce": 5259959, "write": 3333315, "s": 0.726950241322704}
+{"attempt": 18, "block": 20, "part": 20, "n": 900000, "outcome": "admitted", "slots": 3785391, "induce": 5535877, "write": 2518704, "s": 0.7872711185465642}
+{"attempt": 19, "block": 21, "part": 21, "n": 31, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 20, "block": 22, "part": 22, "n": 900000, "outcome": "admitted", "slots": 3659490, "induce": 5261337, "write": 3251641, "s": 0.7328692094323025}
+{"attempt": 21, "block": 23, "part": 23, "n": 270, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 22, "block": 24, "part": 24, "n": 900000, "outcome": "admitted", "slots": 3857337, "induce": 5676633, "write": 3530793, "s": 0.7297468771534547}
+{"attempt": 23, "block": 25, "part": 25, "n": 39, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 24, "block": 26, "part": 26, "n": 899939, "outcome": "admitted", "slots": 3809145, "induce": 5644553, "write": 3479979, "s": 0.7309366083597109}
+{"attempt": 25, "block": 27, "part": 27, "n": 900000, "outcome": "admitted", "slots": 3708764, "induce": 5240885, "write": 2327133, "s": 0.7936350104134318}
+{"attempt": 26, "block": 28, "part": 28, "n": 76, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 27, "block": 29, "part": 29, "n": 899999, "outcome": "admitted", "slots": 3710180, "induce": 5089187, "write": 3138488, "s": 0.7370978287137848}
+{"attempt": 28, "block": 30, "part": 30, "n": 900000, "outcome": "admitted", "slots": 3790534, "induce": 5673221, "write": 2673300, "s": 0.7797406372468445}
+{"attempt": 29, "block": 31, "part": 31, "n": 66, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 30, "block": 32, "part": 32, "n": 900000, "outcome": "admitted", "slots": 3890614, "induce": 5787057, "write": 3562486, "s": 0.7309332510180959}
+{"attempt": 31, "block": 33, "part": 33, "n": 92, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 32, "block": 34, "part": 34, "n": 899976, "outcome": "admitted", "slots": 3990691, "induce": 5963101, "write": 3521648, "s": 0.7386617431415968}
+{"attempt": 33, "block": 35, "part": 35, "n": 900000, "outcome": "admitted", "slots": 4582140, "induce": 6560233, "write": 2756956, "s": 0.8016482666177627}
+{"attempt": 34, "block": 36, "part": 36, "n": 14, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 35, "block": 37, "part": 37, "n": 17, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 36, "block": 38, "part": 38, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 37, "block": 39, "part": 39, "n": 25, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 38, "block": 40, "part": 40, "n": 899982, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 39, "block": 41, "part": 41, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 40, "block": 42, "part": 42, "n": 29, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 41, "block": 43, "part": 43, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 42, "block": 44, "part": 44, "n": 79, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 43, "block": 45, "part": 45, "n": 900000, "outcome": "admitted", "slots": 3744181, "induce": 5023221, "write": 3019702, "s": 0.7438130689268543}
+{"attempt": 44, "block": 46, "part": 46, "n": 20, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 45, "block": 47, "part": 47, "n": 900000, "outcome": "admitted", "slots": 3686178, "induce": 4949421, "write": 2974387, "s": 0.7438078736701319}
+{"attempt": 46, "block": 49, "part": 48, "n": 900000, "outcome": "admitted", "slots": 4174708, "induce": 5699659, "write": 3234020, "s": 0.7532861976076843}
+{"attempt": 47, "block": 50, "part": 49, "n": 17, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 48, "block": 51, "part": 50, "n": 899979, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 49, "block": 52, "part": 51, "n": 899809, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 50, "block": 53, "part": 52, "n": 899931, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 51, "block": 54, "part": 53, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 52, "block": 55, "part": 54, "n": 43, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 53, "block": 56, "part": 55, "n": 899996, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 54, "block": 57, "part": 56, "n": 900000, "outcome": "admitted", "slots": 4478965, "induce": 6636891, "write": 2603034, "s": 0.8102591390411323}
+{"attempt": 55, "block": 58, "part": 57, "n": 149, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 56, "block": 59, "part": 58, "n": 900000, "outcome": "admitted", "slots": 3825878, "induce": 5255425, "write": 3063665, "s": 0.7477420278093775}
+{"attempt": 57, "block": 60, "part": 59, "n": 124, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 58, "block": 61, "part": 60, "n": 900000, "outcome": "admitted", "slots": 3904302, "induce": 5267135, "write": 3093095, "s": 0.7478016283050997}
+{"attempt": 59, "block": 62, "part": 61, "n": 23, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 60, "block": 63, "part": 62, "n": 900000, "outcome": "admitted", "slots": 4391368, "induce": 6469007, "write": 3683165, "s": 0.7467490720966147}
+{"attempt": 61, "block": 64, "part": 63, "n": 48, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 62, "block": 65, "part": 64, "n": 900000, "outcome": "admitted", "slots": 4420773, "induce": 6632667, "write": 3765891, "s": 0.7458798241297128}
+{"attempt": 63, "block": 66, "part": 65, "n": 139, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 64, "block": 67, "part": 66, "n": 900000, "outcome": "admitted", "slots": 4457119, "induce": 6654449, "write": 3789588, "s": 0.7456849656496449}
+{"attempt": 65, "block": 69, "part": 67, "n": 900000, "outcome": "admitted", "slots": 4927994, "induce": 7544717, "write": 4048030, "s": 0.7549728550311393}
+{"attempt": 66, "block": 70, "part": 68, "n": 4, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 67, "block": 71, "part": 69, "n": 900000, "outcome": "admitted", "slots": 4114852, "induce": 6211179, "write": 3634303, "s": 0.739669337424162}
+{"attempt": 68, "block": 73, "part": 70, "n": 900000, "outcome": "admitted", "slots": 4576755, "induce": 6953341, "write": 3848413, "s": 0.7497538285408553}
+{"attempt": 69, "block": 74, "part": 71, "n": 1, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 70, "block": 75, "part": 72, "n": 900000, "outcome": "admitted", "slots": 4395871, "induce": 6665145, "write": 3761564, "s": 0.7462274448847637}
+{"attempt": 71, "block": 77, "part": 73, "n": 900000, "outcome": "admitted", "slots": 4606681, "induce": 6941635, "write": 3828386, "s": 0.7510268456786117}
+{"attempt": 72, "block": 79, "part": 74, "n": 900000, "outcome": "admitted", "slots": 4366602, "induce": 6642071, "write": 3776865, "s": 0.7445568094985789}
+{"attempt": 73, "block": 80, "part": 75, "n": 14, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 74, "block": 81, "part": 76, "n": 900000, "outcome": "admitted", "slots": 4582743, "induce": 6930673, "write": 3806474, "s": 0.7515338556608435}
+{"attempt": 75, "block": 83, "part": 77, "n": 900000, "outcome": "admitted", "slots": 4320352, "induce": 6537479, "write": 3703083, "s": 0.7456833410320258}
+{"attempt": 76, "block": 84, "part": 78, "n": 7, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 77, "block": 85, "part": 79, "n": 900000, "outcome": "admitted", "slots": 4432234, "induce": 6680985, "write": 3759980, "s": 0.747197627087488}
+{"attempt": 78, "block": 86, "part": 80, "n": 12, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 79, "block": 87, "part": 81, "n": 900000, "outcome": "admitted", "slots": 4655530, "induce": 7024079, "write": 3831095, "s": 0.7530031518878834}
+{"attempt": 80, "block": 88, "part": 82, "n": 9, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 81, "block": 89, "part": 83, "n": 900000, "outcome": "admitted", "slots": 4260361, "induce": 6509721, "write": 3778263, "s": 0.7402960267989246}
+{"attempt": 82, "block": 90, "part": 84, "n": 7, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 83, "block": 91, "part": 85, "n": 900000, "outcome": "admitted", "slots": 4950983, "induce": 7442399, "write": 3941426, "s": 0.7587099891226148}
+{"attempt": 84, "block": 92, "part": 86, "n": 25, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 85, "block": 93, "part": 87, "n": 900000, "outcome": "admitted", "slots": 4327187, "induce": 6520629, "write": 3744372, "s": 0.743398865201024}
+{"attempt": 86, "block": 94, "part": 88, "n": 12, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 87, "block": 95, "part": 89, "n": 900000, "outcome": "admitted", "slots": 4595966, "induce": 6953657, "write": 3855064, "s": 0.7497473333927525}
+{"attempt": 88, "block": 96, "part": 90, "n": 24, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 89, "block": 97, "part": 91, "n": 900000, "outcome": "admitted", "slots": 4242232, "induce": 6445273, "write": 3739085, "s": 0.7408199026935679}
+{"attempt": 90, "block": 99, "part": 92, "n": 900000, "outcome": "admitted", "slots": 4914083, "induce": 7424215, "write": 3963371, "s": 0.7568732992922381}
+{"attempt": 91, "block": 100, "part": 93, "n": 24, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 92, "block": 101, "part": 94, "n": 900000, "outcome": "admitted", "slots": 4618911, "induce": 6994195, "write": 3869817, "s": 0.7500590166340038}
+{"attempt": 93, "block": 102, "part": 95, "n": 8, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 94, "block": 103, "part": 96, "n": 900000, "outcome": "admitted", "slots": 4894876, "induce": 7365497, "write": 3932929, "s": 0.7571261871111895}
+{"attempt": 95, "block": 106, "part": 97, "n": 900000, "outcome": "admitted", "slots": 3840996, "induce": 5653893, "write": 3511663, "s": 0.7300081528140586}
+{"attempt": 96, "block": 107, "part": 98, "n": 20, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 97, "block": 108, "part": 99, "n": 900000, "outcome": "admitted", "slots": 3741199, "induce": 5363255, "write": 3319437, "s": 0.7328182451053378}
+{"attempt": 98, "block": 109, "part": 100, "n": 20, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 99, "block": 110, "part": 101, "n": 900000, "outcome": "admitted", "slots": 3775534, "induce": 5441787, "write": 3392566, "s": 0.730959841273756}
+{"attempt": 100, "block": 111, "part": 102, "n": 40, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 101, "block": 112, "part": 103, "n": 900000, "outcome": "admitted", "slots": 3932395, "induce": 5836375, "write": 3625444, "s": 0.7293276036951478}
+{"attempt": 102, "block": 114, "part": 104, "n": 900000, "outcome": "admitted", "slots": 3775157, "induce": 5455611, "write": 3402733, "s": 0.7306579545923176}
+{"attempt": 103, "block": 115, "part": 105, "n": 33, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 104, "block": 116, "part": 106, "n": 900000, "outcome": "admitted", "slots": 3845285, "induce": 5595087, "write": 3437558, "s": 0.7330659508166297}
+{"attempt": 105, "block": 117, "part": 107, "n": 234, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 106, "block": 118, "part": 108, "n": 900000, "outcome": "admitted", "slots": 4066358, "induce": 5935083, "write": 3576607, "s": 0.736589014856922}
+{"attempt": 107, "block": 119, "part": 109, "n": 44, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 108, "block": 120, "part": 110, "n": 900000, "outcome": "admitted", "slots": 3792213, "induce": 5438985, "write": 3359168, "s": 0.7331953654087577}
+{"attempt": 109, "block": 121, "part": 111, "n": 37, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 110, "block": 122, "part": 112, "n": 900000, "outcome": "admitted", "slots": 3856039, "induce": 5575341, "write": 3436206, "s": 0.7329564379830062}
+{"attempt": 111, "block": 123, "part": 113, "n": 116, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 112, "block": 124, "part": 114, "n": 900000, "outcome": "admitted", "slots": 3740019, "induce": 5330783, "write": 3336568, "s": 0.7310817683360776}
+{"attempt": 113, "block": 125, "part": 115, "n": 68, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 114, "block": 126, "part": 116, "n": 900000, "outcome": "admitted", "slots": 3957947, "induce": 5740027, "write": 3493712, "s": 0.7351580381764696}
+{"attempt": 115, "block": 127, "part": 117, "n": 124, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 116, "block": 128, "part": 118, "n": 900000, "outcome": "admitted", "slots": 3844823, "induce": 5552353, "write": 3428974, "s": 0.7326575784627499}
+{"attempt": 117, "block": 129, "part": 119, "n": 22, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 118, "block": 130, "part": 120, "n": 900000, "outcome": "admitted", "slots": 3458809, "induce": 4829525, "write": 3128289, "s": 0.7259882366265401}
+{"attempt": 119, "block": 131, "part": 121, "n": 42, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 120, "block": 132, "part": 122, "n": 900000, "outcome": "admitted", "slots": 3885584, "induce": 5645747, "write": 3498339, "s": 0.7315097773005763}
+{"attempt": 121, "block": 133, "part": 123, "n": 27, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 122, "block": 134, "part": 124, "n": 900000, "outcome": "admitted", "slots": 3910609, "induce": 5649045, "write": 3472034, "s": 0.7335698951663054}
+{"attempt": 123, "block": 135, "part": 125, "n": 27, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 124, "block": 136, "part": 126, "n": 899979, "outcome": "admitted", "slots": 4097784, "induce": 5905351, "write": 3505998, "s": 0.7404720199290361}
+{"attempt": 125, "block": 137, "part": 127, "n": 900000, "outcome": "admitted", "slots": 3817563, "induce": 5428637, "write": 2440398, "s": 0.7911797770403328}
+{"attempt": 126, "block": 138, "part": 128, "n": 79, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 127, "block": 139, "part": 129, "n": 900000, "outcome": "admitted", "slots": 3666504, "induce": 5230405, "write": 3305986, "s": 0.7290818285333112}
+{"attempt": 128, "block": 140, "part": 130, "n": 40, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 129, "block": 141, "part": 131, "n": 900000, "outcome": "admitted", "slots": 3894992, "induce": 5624285, "write": 3458882, "s": 0.7334843871153066}
+{"attempt": 130, "block": 142, "part": 132, "n": 9, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 131, "block": 143, "part": 133, "n": 900000, "outcome": "admitted", "slots": 3928028, "induce": 5555951, "write": 3362222, "s": 0.7382711044300179}
+{"attempt": 132, "block": 145, "part": 134, "n": 900000, "outcome": "admitted", "slots": 3980379, "induce": 5680237, "write": 3458959, "s": 0.7363512918673052}
+{"attempt": 133, "block": 147, "part": 135, "n": 899993, "outcome": "admitted", "slots": 3726834, "induce": 5273875, "write": 3260317, "s": 0.7340910132643059}
+{"attempt": 134, "block": 148, "part": 136, "n": 900000, "outcome": "admitted", "slots": 3750886, "induce": 5406121, "write": 2483535, "s": 0.7866478210378863}
+{"attempt": 135, "block": 149, "part": 137, "n": 33, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 136, "block": 150, "part": 138, "n": 900000, "outcome": "admitted", "slots": 3761414, "induce": 5449987, "write": 3404934, "s": 0.7301170268544708}
+{"attempt": 137, "block": 152, "part": 139, "n": 36, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 138, "block": 153, "part": 140, "n": 900000, "outcome": "admitted", "slots": 4801016, "induce": 6816705, "write": 3861217, "s": 0.7505502638488506}
+{"attempt": 139, "block": 154, "part": 141, "n": 52, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 140, "block": 155, "part": 142, "n": 900000, "outcome": "admitted", "slots": 4899591, "induce": 7116175, "write": 3972251, "s": 0.7515482376582412}
+{"attempt": 141, "block": 156, "part": 143, "n": 139, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 142, "block": 157, "part": 144, "n": 899948, "outcome": "admitted", "slots": 4813068, "induce": 6876855, "write": 3966783, "s": 0.7466400020540719}
+{"attempt": 143, "block": 158, "part": 145, "n": 899935, "outcome": "admitted", "slots": 5585893, "induce": 7987291, "write": 3257703, "s": 0.8064449603874115}
+{"attempt": 144, "block": 159, "part": 146, "n": 899929, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 145, "block": 160, "part": 147, "n": 900000, "outcome": "admitted", "slots": 5057198, "induce": 7229201, "write": 3028205, "s": 0.8022668428122595}
+{"attempt": 146, "block": 162, "part": 148, "n": 900000, "outcome": "admitted", "slots": 4971432, "induce": 7146753, "write": 3943352, "s": 0.7544847669310851}
+{"attempt": 147, "block": 163, "part": 149, "n": 12, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 148, "block": 164, "part": 150, "n": 899828, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 149, "block": 165, "part": 151, "n": 899934, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 150, "block": 166, "part": 152, "n": 900000, "outcome": "admitted", "slots": 5130018, "induce": 7330903, "write": 2954419, "s": 0.8083455181656714}
+{"attempt": 151, "block": 167, "part": 153, "n": 1185, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 152, "block": 168, "part": 154, "n": 900000, "outcome": "admitted", "slots": 4913720, "induce": 7038339, "write": 3913118, "s": 0.7533517590128367}
+{"attempt": 153, "block": 169, "part": 155, "n": 185, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 154, "block": 170, "part": 156, "n": 899973, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 155, "block": 171, "part": 157, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 156, "block": 172, "part": 158, "n": 11, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 157, "block": 173, "part": 159, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 158, "block": 174, "part": 160, "n": 32, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 159, "block": 175, "part": 161, "n": 10, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 160, "block": 176, "part": 162, "n": 900000, "outcome": "admitted", "slots": 4063815, "induce": 5792411, "write": 3536761, "s": 0.7359244058102946}
+{"attempt": 161, "block": 178, "part": 163, "n": 900000, "outcome": "admitted", "slots": 4153786, "induce": 5939741, "write": 3565170, "s": 0.7389816905668235}
+{"attempt": 162, "block": 179, "part": 164, "n": 15, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 163, "block": 180, "part": 165, "n": 900000, "outcome": "admitted", "slots": 4124212, "induce": 5855575, "write": 3532548, "s": 0.7385686485718419}
+{"attempt": 164, "block": 181, "part": 166, "n": 7, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 165, "block": 182, "part": 167, "n": 900000, "outcome": "admitted", "slots": 4188735, "induce": 5998719, "write": 3608714, "s": 0.7384263514332385}
+{"attempt": 166, "block": 183, "part": 168, "n": 20, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 167, "block": 184, "part": 169, "n": 900000, "outcome": "admitted", "slots": 4138039, "induce": 5851663, "write": 3542024, "s": 0.7382430001908108}
+{"attempt": 168, "block": 185, "part": 170, "n": 15, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 169, "block": 186, "part": 171, "n": 900000, "outcome": "admitted", "slots": 4339991, "induce": 6164481, "write": 3617711, "s": 0.7438277779009095}
+{"attempt": 170, "block": 188, "part": 172, "n": 900000, "outcome": "admitted", "slots": 4322236, "induce": 6177295, "write": 3647299, "s": 0.7421825949700392}
+{"attempt": 171, "block": 190, "part": 173, "n": 900000, "outcome": "admitted", "slots": 4057428, "induce": 5791509, "write": 3525390, "s": 0.7364061758023414}
+{"attempt": 172, "block": 192, "part": 174, "n": 900000, "outcome": "admitted", "slots": 4257976, "induce": 6106821, "write": 3653536, "s": 0.7393744320383886}
+{"attempt": 173, "block": 193, "part": 175, "n": 11, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 174, "block": 194, "part": 176, "n": 900000, "outcome": "admitted", "slots": 4261509, "induce": 6056615, "write": 3608948, "s": 0.740868145149246}
+{"attempt": 175, "block": 195, "part": 177, "n": 14, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 176, "block": 196, "part": 178, "n": 900000, "outcome": "admitted", "slots": 4027550, "induce": 5748785, "write": 3542238, "s": 0.7340377231104264}
+{"attempt": 177, "block": 198, "part": 179, "n": 900000, "outcome": "admitted", "slots": 4151169, "induce": 5925703, "write": 3592215, "s": 0.737201540966123}
+{"attempt": 178, "block": 199, "part": 180, "n": 15, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 179, "block": 200, "part": 181, "n": 900000, "outcome": "admitted", "slots": 3981464, "induce": 5637623, "write": 3484885, "s": 0.7340588792466894}
+{"attempt": 180, "block": 201, "part": 182, "n": 22, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 181, "block": 202, "part": 183, "n": 900000, "outcome": "admitted", "slots": 3997123, "induce": 5706093, "write": 3526679, "s": 0.7334310665352975}
+{"attempt": 182, "block": 203, "part": 184, "n": 29, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 183, "block": 204, "part": 185, "n": 900000, "outcome": "admitted", "slots": 4263914, "induce": 6091155, "write": 3646033, "s": 0.7395895694496047}
+{"attempt": 184, "block": 205, "part": 186, "n": 33, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 185, "block": 206, "part": 187, "n": 900000, "outcome": "admitted", "slots": 4092661, "induce": 5875933, "write": 3532205, "s": 0.738370669765545}
+{"attempt": 186, "block": 207, "part": 188, "n": 24, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 187, "block": 208, "part": 189, "n": 900000, "outcome": "admitted", "slots": 4309885, "induce": 6171677, "write": 3653111, "s": 0.7415496630166117}
+{"attempt": 188, "block": 209, "part": 190, "n": 12, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 189, "block": 210, "part": 191, "n": 900000, "outcome": "admitted", "slots": 4173694, "induce": 6019483, "write": 3624995, "s": 0.7376646491301454}
+{"attempt": 190, "block": 211, "part": 192, "n": 23, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 191, "block": 212, "part": 193, "n": 900000, "outcome": "admitted", "slots": 4260427, "induce": 6077025, "write": 3593362, "s": 0.7420565661130786}
+{"attempt": 192, "block": 213, "part": 194, "n": 9, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 193, "block": 214, "part": 195, "n": 900000, "outcome": "admitted", "slots": 4092352, "induce": 5842133, "write": 3530417, "s": 0.7378059639795373}
+{"attempt": 194, "block": 216, "part": 196, "n": 900000, "outcome": "admitted", "slots": 4093829, "induce": 5836967, "write": 3549145, "s": 0.7367091591869727}
+{"attempt": 195, "block": 218, "part": 197, "n": 900000, "outcome": "admitted", "slots": 4696028, "induce": 6906795, "write": 3943040, "s": 0.7463608163792516}
+{"attempt": 196, "block": 221, "part": 198, "n": 900000, "outcome": "admitted", "slots": 3949289, "induce": 5798219, "write": 3542029, "s": 0.7334723549812157}
+{"attempt": 197, "block": 222, "part": 199, "n": 55, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 198, "block": 223, "part": 200, "n": 900000, "outcome": "admitted", "slots": 3978096, "induce": 6097469, "write": 3819473, "s": 0.7251196434295466}
+{"attempt": 199, "block": 224, "part": 201, "n": 57, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 200, "block": 225, "part": 202, "n": 900000, "outcome": "admitted", "slots": 3534672, "induce": 5237843, "write": 3330762, "s": 0.7248049433223746}
+{"attempt": 201, "block": 227, "part": 203, "n": 900000, "outcome": "admitted", "slots": 3610708, "induce": 5498293, "write": 3604840, "s": 0.7164633410155121}
+{"attempt": 202, "block": 228, "part": 204, "n": 23, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 203, "block": 229, "part": 205, "n": 900000, "outcome": "admitted", "slots": 3601631, "induce": 5539423, "write": 3651726, "s": 0.7145478934211329}
+{"attempt": 204, "block": 230, "part": 206, "n": 41, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 205, "block": 231, "part": 207, "n": 900000, "outcome": "admitted", "slots": 3603685, "induce": 5517785, "write": 3619964, "s": 0.715890377802059}
+{"attempt": 206, "block": 232, "part": 208, "n": 18, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 207, "block": 233, "part": 209, "n": 900000, "outcome": "admitted", "slots": 3621340, "induce": 5440609, "write": 3500013, "s": 0.7213800678588265}
+{"attempt": 208, "block": 235, "part": 210, "n": 900000, "outcome": "admitted", "slots": 3731128, "induce": 5436787, "write": 3355947, "s": 0.7320357729907915}
+{"attempt": 209, "block": 236, "part": 211, "n": 128, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 210, "block": 237, "part": 212, "n": 900000, "outcome": "admitted", "slots": 3641160, "induce": 5341663, "write": 3420875, "s": 0.7242052329877751}
+{"attempt": 211, "block": 238, "part": 213, "n": 122, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 212, "block": 239, "part": 214, "n": 899987, "outcome": "admitted", "slots": 3668396, "induce": 5617667, "write": 3632536, "s": 0.7188134719562083}
+{"attempt": 213, "block": 240, "part": 215, "n": 900000, "outcome": "admitted", "slots": 3587541, "induce": 5405839, "write": 2625871, "s": 0.7740068615438292}
+{"attempt": 214, "block": 241, "part": 216, "n": 23, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 215, "block": 242, "part": 217, "n": 900000, "outcome": "admitted", "slots": 3696917, "induce": 5446297, "write": 3466699, "s": 0.7250814498085753}
+{"attempt": 216, "block": 243, "part": 218, "n": 146, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 217, "block": 244, "part": 219, "n": 900000, "outcome": "admitted", "slots": 3742939, "induce": 5624487, "write": 3574435, "s": 0.723808268378095}
+{"attempt": 218, "block": 245, "part": 220, "n": 39, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 219, "block": 246, "part": 221, "n": 900000, "outcome": "admitted", "slots": 3756216, "induce": 5513295, "write": 3468134, "s": 0.7277256510131975}
+{"attempt": 220, "block": 248, "part": 222, "n": 899967, "outcome": "admitted", "slots": 3724477, "induce": 5521539, "write": 3491334, "s": 0.7258979301032005}
+{"attempt": 221, "block": 249, "part": 223, "n": 900000, "outcome": "admitted", "slots": 3659198, "induce": 5409413, "write": 2568842, "s": 0.7792608056075501}
+{"attempt": 222, "block": 250, "part": 224, "n": 47, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 223, "block": 251, "part": 225, "n": 899867, "outcome": "admitted", "slots": 3658430, "induce": 5547359, "write": 3616352, "s": 0.717960362469887}
+{"attempt": 224, "block": 252, "part": 226, "n": 900000, "outcome": "admitted", "slots": 3681247, "induce": 5313153, "write": 2469188, "s": 0.7846060064266092}
+{"attempt": 225, "block": 253, "part": 227, "n": 61, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 226, "block": 254, "part": 228, "n": 899982, "outcome": "admitted", "slots": 3857726, "induce": 5640759, "write": 3458878, "s": 0.7330569499364956}
+{"attempt": 227, "block": 255, "part": 229, "n": 900000, "outcome": "admitted", "slots": 3668187, "induce": 5209289, "write": 2424941, "s": 0.7854493423840229}
+{"attempt": 228, "block": 256, "part": 230, "n": 91, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 229, "block": 257, "part": 231, "n": 900000, "outcome": "admitted", "slots": 3666104, "induce": 5169969, "write": 3230176, "s": 0.7322965902659558}
+{"attempt": 230, "block": 259, "part": 232, "n": 900000, "outcome": "admitted", "slots": 3769317, "induce": 5434083, "write": 3399603, "s": 0.7302545274328666}
+{"attempt": 231, "block": 260, "part": 233, "n": 25, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 232, "block": 261, "part": 234, "n": 900000, "outcome": "admitted", "slots": 3787399, "induce": 5560973, "write": 3528549, "s": 0.7259788267707785}
+{"attempt": 233, "block": 262, "part": 235, "n": 14, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 234, "block": 263, "part": 236, "n": 900000, "outcome": "admitted", "slots": 3723416, "induce": 5465231, "write": 3415861, "s": 0.7289968795291335}
+{"attempt": 235, "block": 264, "part": 237, "n": 54, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 236, "block": 265, "part": 238, "n": 21, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 237, "block": 266, "part": 239, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 238, "block": 267, "part": 240, "n": 16, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 239, "block": 268, "part": 241, "n": 899869, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 240, "block": 269, "part": 242, "n": 899984, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 241, "block": 270, "part": 243, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 242, "block": 271, "part": 244, "n": 19, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 243, "block": 272, "part": 245, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 244, "block": 274, "part": 246, "n": 899991, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 245, "block": 275, "part": 247, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 246, "block": 277, "part": 248, "n": 899890, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 247, "block": 278, "part": 249, "n": 899938, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 248, "block": 279, "part": 250, "n": 899997, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 249, "block": 280, "part": 251, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 250, "block": 281, "part": 252, "n": 13, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 251, "block": 282, "part": 253, "n": 900000, "outcome": "admitted", "slots": 4510506, "induce": 6121459, "write": 3540485, "s": 0.7501853949034923}
+{"attempt": 252, "block": 283, "part": 254, "n": 36, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 253, "block": 284, "part": 255, "n": 24, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 254, "block": 285, "part": 256, "n": 900000, "outcome": "admitted", "slots": 3855842, "induce": 5775309, "write": 3682814, "s": 0.7233871352373241}
+{"attempt": 255, "block": 286, "part": 257, "n": 19, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 256, "block": 287, "part": 258, "n": 900000, "outcome": "admitted", "slots": 3768315, "induce": 5604545, "write": 3608979, "s": 0.7219978617821404}
+{"attempt": 257, "block": 288, "part": 259, "n": 14, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 258, "block": 289, "part": 260, "n": 900000, "outcome": "admitted", "slots": 3891165, "induce": 5853125, "write": 3677005, "s": 0.7260320259706683}
+{"attempt": 259, "block": 291, "part": 261, "n": 900000, "outcome": "admitted", "slots": 3782710, "induce": 5537033, "write": 3588005, "s": 0.7220270336855042}
+{"attempt": 260, "block": 292, "part": 262, "n": 64, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 261, "block": 293, "part": 263, "n": 900000, "outcome": "admitted", "slots": 3790992, "induce": 5767095, "write": 3634639, "s": 0.7244967416135225}
+{"attempt": 262, "block": 294, "part": 264, "n": 86, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 263, "block": 295, "part": 265, "n": 900000, "outcome": "admitted", "slots": 3828218, "induce": 5682197, "write": 3536574, "s": 0.7289356187852998}
+{"attempt": 264, "block": 296, "part": 266, "n": 21, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 265, "block": 297, "part": 267, "n": 900000, "outcome": "admitted", "slots": 3798247, "induce": 5732807, "write": 3579058, "s": 0.7270001964895494}
+{"attempt": 266, "block": 298, "part": 268, "n": 24, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 267, "block": 299, "part": 269, "n": 900000, "outcome": "admitted", "slots": 4017040, "induce": 6041423, "write": 3678224, "s": 0.7322335436484795}
+{"attempt": 268, "block": 300, "part": 270, "n": 45, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 269, "block": 301, "part": 271, "n": 900000, "outcome": "admitted", "slots": 4276699, "induce": 6346227, "write": 3750982, "s": 0.7390422980305704}
+{"attempt": 270, "block": 303, "part": 272, "n": 900000, "outcome": "admitted", "slots": 3640423, "induce": 5348705, "write": 3444178, "s": 0.7229877556299186}
+{"attempt": 271, "block": 304, "part": 273, "n": 14, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 272, "block": 305, "part": 274, "n": 900000, "outcome": "admitted", "slots": 3789493, "induce": 5746699, "write": 3605981, "s": 0.7256175976377727}
+{"attempt": 273, "block": 307, "part": 275, "n": 900000, "outcome": "admitted", "slots": 3854940, "induce": 5788851, "write": 3610157, "s": 0.7276164807648257}
+{"attempt": 274, "block": 308, "part": 276, "n": 9, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 275, "block": 309, "part": 277, "n": 900000, "outcome": "admitted", "slots": 3821902, "induce": 5861447, "write": 3710759, "s": 0.7229558698496383}
+{"attempt": 276, "block": 310, "part": 278, "n": 12, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 277, "block": 311, "part": 279, "n": 900000, "outcome": "admitted", "slots": 3835319, "induce": 5803669, "write": 3677547, "s": 0.7238360429345922}
+{"attempt": 278, "block": 312, "part": 280, "n": 54, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 279, "block": 313, "part": 281, "n": 900000, "outcome": "admitted", "slots": 3708127, "induce": 5518269, "write": 3495917, "s": 0.7252137248942075}
+{"attempt": 280, "block": 314, "part": 282, "n": 25, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 281, "block": 315, "part": 283, "n": 900000, "outcome": "admitted", "slots": 3701823, "induce": 5562595, "write": 3588680, "s": 0.7207926057982286}
+{"attempt": 282, "block": 316, "part": 284, "n": 274, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 283, "block": 317, "part": 285, "n": 900000, "outcome": "admitted", "slots": 4004293, "induce": 6057583, "write": 3730692, "s": 0.7295143297462807}
+{"attempt": 284, "block": 318, "part": 286, "n": 24, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 285, "block": 319, "part": 287, "n": 900000, "outcome": "admitted", "slots": 3855922, "induce": 5851715, "write": 3654507, "s": 0.7265029474311907}
+{"attempt": 286, "block": 321, "part": 288, "n": 900000, "outcome": "admitted", "slots": 3904583, "induce": 5639775, "write": 3533881, "s": 0.729789232327074}
+{"attempt": 287, "block": 323, "part": 289, "n": 900000, "outcome": "admitted", "slots": 3913893, "induce": 5857741, "write": 3627568, "s": 0.7292698475625639}
+{"attempt": 288, "block": 325, "part": 290, "n": 900000, "outcome": "admitted", "slots": 3860136, "induce": 5733027, "write": 3607788, "s": 0.7267024171213119}
+{"attempt": 289, "block": 326, "part": 291, "n": 22, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 290, "block": 327, "part": 292, "n": 900000, "outcome": "admitted", "slots": 3754206, "induce": 5581287, "write": 3506465, "s": 0.7269524631679998}
+{"attempt": 291, "block": 329, "part": 293, "n": 900000, "outcome": "admitted", "slots": 3706043, "induce": 5568435, "write": 3574894, "s": 0.7217845354621222}
+{"attempt": 292, "block": 330, "part": 294, "n": 110, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 293, "block": 331, "part": 295, "n": 20, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 294, "block": 332, "part": 296, "n": 899876, "outcome": "admitted", "slots": 3801837, "induce": 5663851, "write": 3425468, "s": 0.734277670675927}
+{"attempt": 295, "block": 333, "part": 297, "n": 900000, "outcome": "admitted", "slots": 3796111, "induce": 5548381, "write": 2548710, "s": 0.7857002681027363}
+{"attempt": 296, "block": 335, "part": 298, "n": 900000, "outcome": "admitted", "slots": 3700201, "induce": 5420345, "write": 3406365, "s": 0.7280762192690601}
+{"attempt": 297, "block": 337, "part": 299, "n": 900000, "outcome": "admitted", "slots": 3794611, "induce": 5497445, "write": 3375170, "s": 0.7335509763542547}
+{"attempt": 298, "block": 338, "part": 300, "n": 4, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 299, "block": 339, "part": 301, "n": 900000, "outcome": "admitted", "slots": 3627011, "induce": 5099711, "write": 3172098, "s": 0.7334107079525533}
+{"attempt": 300, "block": 340, "part": 302, "n": 7, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 301, "block": 341, "part": 303, "n": 899890, "outcome": "admitted", "slots": 3766808, "induce": 5486985, "write": 3441785, "s": 0.7288989126765241}
+{"attempt": 302, "block": 342, "part": 304, "n": 900000, "outcome": "admitted", "slots": 3717704, "induce": 5514405, "write": 2548084, "s": 0.78369760155882}
+{"attempt": 303, "block": 343, "part": 305, "n": 115, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 304, "block": 344, "part": 306, "n": 900000, "outcome": "admitted", "slots": 3860851, "induce": 5611947, "write": 3421524, "s": 0.7346487857213431}
+{"attempt": 305, "block": 345, "part": 307, "n": 232, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 306, "block": 346, "part": 308, "n": 900000, "outcome": "admitted", "slots": 3585277, "induce": 5313381, "write": 3386169, "s": 0.7243616861678231}
+{"attempt": 307, "block": 347, "part": 309, "n": 80, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 308, "block": 348, "part": 310, "n": 900000, "outcome": "admitted", "slots": 3799895, "induce": 5531693, "write": 3344572, "s": 0.7361525887966072}
+{"attempt": 309, "block": 349, "part": 311, "n": 58, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 310, "block": 350, "part": 312, "n": 899952, "outcome": "admitted", "slots": 3444363, "induce": 4937435, "write": 3221463, "s": 0.7223657211537343}
+{"attempt": 311, "block": 351, "part": 313, "n": 900000, "outcome": "admitted", "slots": 3667366, "induce": 5285657, "write": 2361525, "s": 0.7912841944724615}
+{"attempt": 312, "block": 353, "part": 314, "n": 900000, "outcome": "admitted", "slots": 3576313, "induce": 5162071, "write": 3249355, "s": 0.7289434646516745}
+{"attempt": 313, "block": 354, "part": 315, "n": 53, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 314, "block": 355, "part": 316, "n": 900000, "outcome": "admitted", "slots": 3590004, "induce": 5262339, "write": 3330193, "s": 0.7266420554800741}
+{"attempt": 315, "block": 356, "part": 317, "n": 66, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 316, "block": 357, "part": 318, "n": 900000, "outcome": "admitted", "slots": 3623444, "induce": 5387131, "write": 3446822, "s": 0.723311218226408}
+{"attempt": 317, "block": 358, "part": 319, "n": 105, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 318, "block": 359, "part": 320, "n": 900000, "outcome": "admitted", "slots": 3523853, "induce": 4987827, "write": 3160690, "s": 0.7292160889348093}
+{"attempt": 319, "block": 360, "part": 321, "n": 39, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 320, "block": 361, "part": 322, "n": 900000, "outcome": "admitted", "slots": 3590865, "induce": 5158513, "write": 3263395, "s": 0.7283395765490616}
+{"attempt": 321, "block": 363, "part": 323, "n": 900000, "outcome": "admitted", "slots": 3583597, "induce": 5279543, "write": 3374357, "s": 0.7242608517084825}
+{"attempt": 322, "block": 364, "part": 324, "n": 31, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 323, "block": 365, "part": 325, "n": 900000, "outcome": "admitted", "slots": 3745775, "induce": 5561641, "write": 3503055, "s": 0.7265475250675795}
+{"attempt": 324, "block": 366, "part": 326, "n": 58, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 325, "block": 367, "part": 327, "n": 900000, "outcome": "admitted", "slots": 3687696, "induce": 5387725, "write": 3377144, "s": 0.7287993276887131}
+{"attempt": 326, "block": 369, "part": 328, "n": 900000, "outcome": "admitted", "slots": 3690974, "induce": 5142599, "write": 3150187, "s": 0.7371286641254498}
+{"attempt": 327, "block": 370, "part": 329, "n": 37, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 328, "block": 371, "part": 330, "n": 900000, "outcome": "admitted", "slots": 3890864, "induce": 5661995, "write": 3472424, "s": 0.733408940135888}
+{"attempt": 329, "block": 372, "part": 331, "n": 37, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 330, "block": 373, "part": 332, "n": 899999, "outcome": "admitted", "slots": 3762844, "induce": 5404555, "write": 3384595, "s": 0.7303539979384949}
+{"attempt": 331, "block": 374, "part": 333, "n": 24, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 332, "block": 375, "part": 334, "n": 899912, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 333, "block": 376, "part": 335, "n": 899909, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 334, "block": 377, "part": 336, "n": 900000, "outcome": "budget", "slots": 5887870, "induce": 8252094, "write": 0}
+{"attempt": 335, "block": 378, "part": 337, "n": 23, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 336, "block": 379, "part": 338, "n": 899975, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 337, "block": 380, "part": 339, "n": 899971, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 338, "block": 381, "part": 340, "n": 900000, "outcome": "admitted", "slots": 5224787, "induce": 7544957, "write": 2940323, "s": 0.812838290250449}
+{"attempt": 339, "block": 383, "part": 341, "n": 899975, "outcome": "budget", "slots": 5787279, "induce": 8394360, "write": 0}
+{"attempt": 340, "block": 384, "part": 342, "n": 899998, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 341, "block": 385, "part": 343, "n": 900000, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 342, "block": 386, "part": 344, "n": 899989, "outcome": "admitted", "slots": 5134859, "induce": 7419217, "write": 2984200, "s": 0.8079452315044474}
+{"attempt": 343, "block": 387, "part": 345, "n": 899959, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 344, "block": 388, "part": 346, "n": 899972, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 345, "block": 389, "part": 347, "n": 899996, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 346, "block": 391, "part": 348, "n": 900000, "outcome": "admitted", "slots": 4463569, "induce": 6579265, "write": 3824344, "s": 0.7427659775109977}
+{"attempt": 347, "block": 392, "part": 349, "n": 59, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 348, "block": 393, "part": 350, "n": 900000, "outcome": "admitted", "slots": 4234351, "induce": 6317751, "write": 3755413, "s": 0.737521645093505}
+{"attempt": 349, "block": 394, "part": 351, "n": 48, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 350, "block": 395, "part": 352, "n": 900000, "outcome": "admitted", "slots": 4194664, "induce": 6179403, "write": 3708537, "s": 0.7366582913216903}
+{"attempt": 351, "block": 396, "part": 353, "n": 21, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 352, "block": 397, "part": 354, "n": 900000, "outcome": "admitted", "slots": 4160799, "induce": 6092829, "write": 3689191, "s": 0.7354056593576952}
+{"attempt": 353, "block": 398, "part": 355, "n": 63, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 354, "block": 399, "part": 356, "n": 900000, "outcome": "admitted", "slots": 4698809, "induce": 6878469, "write": 3951066, "s": 0.7455578006257461}
+{"attempt": 355, "block": 400, "part": 357, "n": 9, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 356, "block": 401, "part": 358, "n": 900000, "outcome": "admitted", "slots": 4482789, "induce": 6630313, "write": 3866186, "s": 0.7418978792583466}
+{"attempt": 357, "block": 403, "part": 359, "n": 900000, "outcome": "admitted", "slots": 4542575, "induce": 6493773, "write": 3712914, "s": 0.7482644216368249}
+{"attempt": 358, "block": 404, "part": 360, "n": 112, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 359, "block": 405, "part": 361, "n": 900000, "outcome": "admitted", "slots": 4844481, "induce": 7132843, "write": 4029201, "s": 0.7482775930440867}
+{"attempt": 360, "block": 406, "part": 362, "n": 17, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 361, "block": 407, "part": 363, "n": 900000, "outcome": "admitted", "slots": 4670065, "induce": 6918037, "write": 3969067, "s": 0.7448721550816861}
+{"attempt": 362, "block": 408, "part": 364, "n": 44, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 363, "block": 409, "part": 365, "n": 900000, "outcome": "admitted", "slots": 4934028, "induce": 7174293, "write": 3959074, "s": 0.7535957757931513}
+{"attempt": 364, "block": 410, "part": 366, "n": 190, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 365, "block": 411, "part": 367, "n": 900000, "outcome": "admitted", "slots": 4235605, "induce": 6284717, "write": 3801023, "s": 0.7345903614499895}
+{"attempt": 366, "block": 412, "part": 368, "n": 11, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 367, "block": 413, "part": 369, "n": 900000, "outcome": "admitted", "slots": 3753870, "induce": 5535505, "write": 3566513, "s": 0.7225774680053217}
+{"attempt": 368, "block": 414, "part": 370, "n": 44, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 369, "block": 415, "part": 371, "n": 900000, "outcome": "admitted", "slots": 3925032, "induce": 5859829, "write": 3682555, "s": 0.7265581608231304}
+{"attempt": 370, "block": 417, "part": 372, "n": 900000, "outcome": "admitted", "slots": 4055232, "induce": 5950251, "write": 3660391, "s": 0.7321509769517851}
+{"attempt": 371, "block": 418, "part": 373, "n": 73, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 372, "block": 419, "part": 374, "n": 900000, "outcome": "admitted", "slots": 4085591, "induce": 6006517, "write": 3679843, "s": 0.7328016197559808}
+{"attempt": 373, "block": 421, "part": 375, "n": 900000, "outcome": "admitted", "slots": 3842478, "induce": 5612697, "write": 3588078, "s": 0.7249092691830787}
+{"attempt": 374, "block": 422, "part": 376, "n": 6, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 375, "block": 423, "part": 377, "n": 900000, "outcome": "admitted", "slots": 4202890, "induce": 6174715, "write": 3758065, "s": 0.7341431286949964}
+{"attempt": 376, "block": 424, "part": 378, "n": 17, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 377, "block": 425, "part": 379, "n": 900000, "outcome": "admitted", "slots": 3757939, "induce": 5552033, "write": 3525169, "s": 0.7253501928806236}
+{"attempt": 378, "block": 426, "part": 380, "n": 181, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 379, "block": 427, "part": 381, "n": 900000, "outcome": "admitted", "slots": 4117131, "induce": 6020705, "write": 3675993, "s": 0.733890364503571}
+{"attempt": 380, "block": 428, "part": 382, "n": 7, "outcome": "density", "slots": 24, "induce": 0, "write": 0}
+{"attempt": 381, "block": 429, "part": 383, "n": 900000, "outcome": "admitted", "slots": 4486618, "induce": 6591903, "write": 3816226, "s": 0.7437871217282174}
+{"attempt": 382, "block": 430, "part": 384, "n": 60, "outcome": "density", "slots": 24, "induce": 0, "write": 0}

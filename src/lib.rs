@@ -607,4 +607,10 @@ impl<const F: bool> Scratch<bwt::CellsKernel<F>> {
     pub fn cells_counts(&self) -> bwt::CellsCounts {
         self.inverse.counts()
     }
+    /// The last Cells attempt's census record, taken (examples/cells_census.rs).
+    #[cfg(feature = "census")]
+    #[doc(hidden)]
+    pub fn take_cells_census(&mut self) -> Option<bwt::CellsCensus> {
+        self.inverse.take_census()
+    }
 }

@@ -17,6 +17,8 @@
 //! out), so another (an LF^2 walk: a pair table, with a flag for an intermediate row that
 //! is a segment start) can be put in without touching the stream, CRC or thread code.
 
+#[cfg(feature = "census")]
+pub use crate::cells::Census as CellsCensus;
 pub use crate::cells::{Cells, CellsKernel, Counts as CellsCounts, ForcedCells};
 
 /// An inverse-BWT kernel: a block's RLE1-coded text from its last column `ll` (whose

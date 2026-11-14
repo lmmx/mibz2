@@ -1,0 +1,54 @@
+{
+ "attempts": 383,
+ "admitted": 196,
+ "admitted_n": 176398965,
+ "ir_admitted": {
+  "slots": 790102938,
+  "induce": 1155202206,
+  "write": 676350531
+ },
+ "ir_refused_slots": 11679589,
+ "ir_all_attempts": {
+  "slots": 801782527,
+  "induce": 1171848660,
+  "write": 676350531
+ },
+ "s_weighted_n": 0.7416322548168676,
+ "s_pooled": 0.7420139732880825,
+ "s_slots_only_pooled": 0.3013755564982804,
+ "s_min": 0.7145478934211329,
+ "s_max": 0.812838290250449,
+ "ir_per_row": {
+  "slots": 4.479067878884663,
+  "induce": 6.548803764239773,
+  "write": 3.834209180308966
+ },
+ "s_quartiles": [
+  0.7289434646516745,
+  0.7346487857213431,
+  0.7462274448847637
+ ],
+ "k2": {
+  "blocks_within_10pct": 51,
+  "of": 196,
+  "n_share_within_10pct": 0.2602045539212773,
+  "max_dev_median": 0.19642,
+  "cross_span_copy_bytes_share_of_later_spans": 0.5289683942626243
+ },
+ "k3": {
+  "blocks_within_10pct": 8,
+  "of": 196,
+  "n_share_within_10pct": 0.04081617485680826,
+  "max_dev_median": 0.51613,
+  "cross_span_copy_bytes_share_of_later_spans": 0.5122054162378958
+ },
+ "k4": {
+  "blocks_within_10pct": 2,
+  "of": 196,
+  "n_share_within_10pct": 0.010204141503891477,
+  "max_dev_median": 0.83665,
+  "cross_span_copy_bytes_share_of_later_spans": 0.4680849842556151
+ },
+ "largest_top_factor_share_median": 0.4490633333333333,
+ "blocks_largest_top_factor_over_0.4333n": 146
+}
