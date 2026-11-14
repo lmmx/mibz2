@@ -30,8 +30,17 @@ decode at once. The output, the API, the supported inputs and the plans are unch
     and flatter.
   - The next step of the diet, a 16-byte slot (#398), was built and rejected: it showed no
     primary gain on CI and +4.4% CPU at 4 threads, from one more dependent load per letter.
-- **Release scaling** on the i9 (0.3.1 against 0.3.0) is queued, and its figures will be added
-  here.
+- **Release scaling, the i9-10900K** (`release-scaling/run-20261114T231702Z`, sha256 914653a3,
+  10 paired rounds, every arm the same bytes), `wikidata`, 0.3.0 ÷ 0.3.1 wall:
+
+  | threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+  |---|--:|--:|--:|--:|--:|--:|--:|--:|
+  | 0.3.0 ÷ 0.3.1 | 1.051 | **1.034** | **1.042** | 1.006 | 1.000 | 1.024 | 1.017 | 0.987 |
+  | 95% interval | 0.990–1.116 | 1.010–1.059 | 1.022–1.062 | 0.997–1.016 | 0.986–1.013 | 0.996–1.053 | 0.995–1.039 | 0.945–1.031 |
+
+  That is 3.3% and 4.0% less wall time at 2 and 4 threads, beyond noise. 1 thread is 4.9% in
+  point estimate, but its interval includes no change. From 8 threads it is level, where the plan
+  is the unchanged teams.
 
 ### <!-- 4 -->Documentation
 
