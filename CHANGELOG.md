@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/lmmx/mibz2/compare/v0.3.0...v0.3.1) - 2026-11-14
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.3.0's notes from the i9 release scaling, the paired run against 0.2.9 and wikidata-pq#225 ([#384](https://github.com/lmmx/mibz2/pull/384))
+
+### <!-- 9 -->Other
+
+- the 20-byte slot (buffer diet step 1), and bench-cells-diet ([#391](https://github.com/lmmx/mibz2/pull/391))
+- Cells memory-dose experiment: dose feature, recipe and analysis ([#387](https://github.com/lmmx/mibz2/pull/387))
+
 ## [0.3.0](https://github.com/lmmx/mibz2/compare/v0.2.9...v0.3.0) - 2026-11-14
 
 A speed release for Wikidata-like data on up to 4 decoding threads. When the plan is plain workers
