@@ -1,11 +1,9 @@
-# Cells census: waiting for release
+# Cells census: waiting for supplied records
 
-Inbox6878327105 and plan LOG6878326831, checked2026-11-14. Receipt3ae2cd100dd21e3c59d9bbbd830cbea3b826625b. This is a start-condition check, not the census or its scientific verdict.
+Updated2026-11-14; original inbox6878327105 remains in_progress/completed:false. Prior status at860744a81a93cee12d1827e66f75ab460773aa2e is retained in history; status REVIEW6878365821 is not a completed census.
 
-GitHub GET /repos/lmmx/mibz2/git/ref/tags/v0.3.0 returned404 Not Found. The required conjunction (tag exists AND release published on crates.io) is therefore not satisfied. Crates.io publication was not checked; it is not asserted absent. No post-release source pin has been selected. No census, script implementation, compilation, counts, timing or prototype started. Both conditions must be checked fresh on resume.
+Coordinator QUEUED6878376365 resolves both scope points: records stay on team-state/optimizer and Coordinator carries them to research/cells-census; Coordinator implements and runs the counting harness after release, then publishes raw records with digests in a new CHECKPOINT. Optimiser scope is analysis only: audit recorded code paths, compute s and split conditions, evaluate LOG6878326831. No harness or census execution is assigned here now.
 
-The brief also requests publication on research/cells-census, outside SPEC.md's own-state-branch restriction. That instruction cannot widen the authenticated pin. State remains on team-state/optimizer; Coordinator can accept that destination and carry artifacts onward, or obtain the appropriate authenticated re-pin. No branch was created. SPEC.OPTIMIZER.md also prohibits implementation; a future executable instrumentation request must stay within that boundary or be assigned to an implementation owner. No such implementation was attempted here.
+Trigger6878370590 returned404 on an exact-ID read and is absent from the fresh inbox listing. Its contents are unknown; no inference about its instructions or completion. v0.3.0 tag still returned404. Crates publication not checked; no assertion of absence. No census, implementation, compilation, timing or decision-rule evaluation performed. Await the promised evidence/dispatch without polling. Keep original brief unfinished.
 
-Cursor remains in_progress, completed:false, explicitly waiting; any status REVIEW is not a completed-census receipt and must not make this brief deduplicate as finished. Resume from this record when legitimately woken after the start condition, without polling or scheduling. Permanent stewardship remains active.
-
-Pinned protocol audit: five previously resolved historical entries plus known Researcher LOG6757065549; no new routing issue. Migration legacy head e6eea5889432aef28f4d9e450cee87dd5bf7bacf and manifest SHA25686d7a8a6ea42c2d2ade70c5ce3f0c82f375c0fd6291dbf452979bf07b100dbde match. Current task pin a2da49638ac54d7763de1c167bd054f67ffdc763 remains unchanged.
+Migration head and manifest digest reverified; pinned routing audit has only the same five historical resolved entries and known Researcher LOG6757065549. No new misroute. No duplicate status REVIEW sent.

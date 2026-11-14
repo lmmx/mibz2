@@ -673,3 +673,5 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 ## Cells phase-split census: inbox6878327105 awaiting release
 
 [Status](records/reviews/inbox-6878327105/status.md). v0.3.0 tag GET returned404 on2026-11-14; required tag-plus-crates.io condition not met. Crates publication not checked, not claimed absent. Census has not started; no measurements or implementation. Cursor remains in_progress/completed:false. Requested research/cells-census publication conflicts with pinned own-state-branch scope; Coordinator reconciliation needed before that write. No scientific result or decision-rule evaluation asserted.
+
+- Scope resolution6878376365: Coordinator accepts own-state destination and owns counting harness/execution. Optimiser now waits for post-release raw records/new CHECKPOINT, then audits/analyzes only. Original6878327105 unfinished; triggering6878370590 unavailable404 and absent from inbox, not marked processed. No census or new scientific verdict.

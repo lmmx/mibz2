@@ -1270,17 +1270,20 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Release condition unmet; status REVIEW published and exact body/author/destination verified. Census remains unfinished, resumable. No polling.",
+      "progress": "Waiting for post-release raw records and a new CHECKPOINT per Coordinator QUEUED6878376365. Scope resolved: state destination accepted, Coordinator owns harness/execution; Optimiser analyses records only. Trigger6878370590 unavailable404, not treated as a completed or executable brief.",
       "hold": {
         "start_condition": "v0.3.0 tag exists AND crates.io release published",
         "tag_observed": false,
         "crates_publication": "not checked; conjunction already false",
-        "destination_conflict": "Brief requests research/cells-census; pinned SPEC permits writes only to team-state/optimizer plus REVIEWs on145."
+        "destination_conflict": "Resolved by Coordinator6878376365: team-state/optimizer accepted; Coordinator carries artifacts onward.",
+        "instrumentation": "Coordinator owns harness and execution; Optimiser only audits supplied records and evaluates decision rule.",
+        "awaiting_records": true
       },
       "status_path": "state/records/reviews/inbox-6878327105/status.md",
       "hold_review_id": 6878365821,
       "hold_review_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6878365821",
-      "routing_verification": "route/check passed; pinned verify rejects FROM optimizer due coordinator-only check. Exact readback passed."
+      "routing_verification": "route/check passed; pinned verify rejects FROM optimizer due coordinator-only check. Exact readback passed.",
+      "scope_resolution_comment_id": 6878376365
     }
   ],
   "migrated_from": {
