@@ -173,9 +173,10 @@
     6852337017,
     6853304419,
     6857053711,
-    6857336623
+    6857336623,
+    6877415766
   ],
-  "last_processed_comment_id": 6857336623,
+  "last_processed_comment_id": 6877415766,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2030,9 +2031,15 @@
     },
     {
       "trigger_comment_id": 6877415766,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
-      "report_path": "state/reports/adoption-6877415766/report.md"
+      "report_path": "state/reports/adoption-6877415766/report.md",
+      "repository": "lmmx/mibz2",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "16b750523a8714695e15352ce0ce4c7c29d8ee78",
+      "report_commit": "0259d572c428c0fb65223cbac562b33c959d0d53",
+      "review_comment_pr": 145,
+      "disposition": "One targeted correction: I2/I3 must use upper-bound acceptance to exclude noisy primary losses; recipe collects gating contrast but requires raw validity checks; x8 preserves production-admission witness. No timing or B5 re-review."
     }
   ],
   "active_delegations": [],
