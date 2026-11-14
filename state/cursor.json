@@ -78,7 +78,9 @@
     6868650998,
     6868831037
   ],
-  "in_progress": [],
+  "in_progress": [
+    6877420411
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -681,6 +683,11 @@
       "progress": "Account and levels published; REVIEW read back with Observer routing/header/citation verified.",
       "work_commit": "392ca141f383ff5ddfc19fcf9da859d80be4e6e9",
       "review_id": 6868898487
+    },
+    "6877420411": {
+      "comment_id": 6877420411,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling gated Cells registration and coordinator handback."
     }
   },
   "last_record_commit": "392ca141f383ff5ddfc19fcf9da859d80be4e6e9"
