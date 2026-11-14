@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6868583432,
+  "last_examined_comment_id": 6868606509,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -3103,12 +3103,15 @@
       "ready_job_reason": "No new frozen qualifying recipe; current work is pending integration validation/review."
     },
     "6868606509": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "76673c90-dfc3-11f1-809c-9ecf1e34a531",
       "comment_updated_at": "2026-11-14T00:36:41Z",
       "review_report": "13b01b9905f732821c0db3e5efaaa3f20e468d2a",
       "recipient_cursor": "036b2d9107b0a09d46112d6efdc57babf98a0d13",
-      "planned_action": "Accept D105 scoped source review, retain execution-evidence limits; reconcile newly completed public-default benchmark and DEFER current adoption under unchanged gate. One batched Observer update, no new Codex/reviewer/timing task; persist outcome then LOG."
+      "planned_action": "Accept D105 scoped source review, retain execution-evidence limits; reconcile newly completed public-default benchmark and DEFER current adoption under unchanged gate. One batched Observer update, no new Codex/reviewer/timing task; persist outcome then LOG.",
+      "disposition": "Accepted D105 scoped source PROCEED, validation still partial. Actual public-default benchmark fails unchanged adoption gate; DEFER current head, no retry/waiver/new implementation. Observer record update posted/readback/verify; completion pending.",
+      "observer_assignment": 6868650998,
+      "log_status": "pending_publication"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3289,7 +3292,8 @@
     6868441092,
     6868538108,
     6868541986,
-    6868553543
+    6868553543,
+    6868650998
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -4947,7 +4951,7 @@
     "adopted_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "all_nine_policy_blobs_match_adopted_pin": true,
     "current_router_matches": true,
-    "audit": "Exact current router audit exit0 with fresh channel/Guardian/Observer cursors, inbox snapshots retained from preceding run. Six resolved historical misroutes. No dispatch. Master/policy/handoff bytes unchanged; setup364 merge reconfirmed, activation reused and no return of control observed.",
+    "audit": "Current exact router audit exit0, fresh all-seven inboxes/role cursors/channel, six resolved historical misroutes; Observer free route and verify passed. Policies/master unchanged; setup merge reconfirmed, sole activation reused.",
     "activation_reused": 6782075529,
     "return_of_control_observed": false,
     "policy_blob_shas": {
@@ -4961,7 +4965,7 @@
       "docs/team/COORDINATOR-FAILOVER.md": "b9aa2d1349cc942caa64551cafd842eb1d9c7a9d",
       "CLAUDE.md": "ea12fe507c7a451bc14d2e9aeab3d25ce6227965"
     },
-    "last_event_comment_id": 6868583432
+    "last_event_comment_id": 6868606509
   },
   "operator_evidence_373": {
     "status": "correction_complete_current_head_green_historical_discrepancies_retained",
@@ -6040,7 +6044,7 @@
   },
   "sequential_default_integration_notice": {
     "review": 6868355345,
-    "status": "pr_prepared_validation_review_pending",
+    "status": "DEFER_adoption_current_head",
     "reported_owner_instruction": true,
     "owner_instruction_independently_verified": false,
     "monitor_authority_expanded": false,
@@ -6052,12 +6056,12 @@
     "completion_observed": false,
     "default_change_approved": false,
     "merge_approved": false,
-    "next_actor": "Guardian scoped integration review; existing Codex completes validations; deliberate authorised Coordinator resolves adoption/merge separately.",
-    "observer_assignment": 6868541986,
+    "next_actor": "Existing Codex completes exact-head validation evidence; deliberate authorised Coordinator/Louis separately resolves adoption constraints, no automatic retry or implementation.",
+    "observer_assignment": 6868650998,
     "ready_job_queued": false,
-    "ready_job_reason": "No new frozen qualifying workstation recipe; consumed queue empty.",
+    "ready_job_reason": "No frozen prospective decision/qualifying workstation recipe; no speculative repeat measurement.",
     "log_comment_id": 6868553543,
-    "observer_status": "completed",
+    "observer_status": "posted_verified_recipient_action_pending",
     "observer_review": 6868583432,
     "observer_record_commit": "30359db608f81c450bc67972d9b25ca8d6c20493",
     "observer_cursor": "1204550f4243cccba5729b072fa6ed50fb4cabdf",
@@ -6065,13 +6069,55 @@
     "head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
     "review_requested": 6868508410,
     "guardian_assignment": 6868538108,
-    "guardian_status": "recipient_cursor_in_progress_no_completion_REVIEW",
+    "guardian_status": "completed_source_PROCEED_validation_PARTIAL",
     "ci": {
       "head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
-      "actions": "bench/Miri in progress; remaining checks success/skip",
+      "native": "job132260143069 success; public default native test passes; seven-corpus test ignored in CI",
+      "miri": "pending at snapshot",
       "legacy": "success",
-      "performance_verdict": "not available"
+      "benchmark_run": 43534513477,
+      "benchmark_report_comment": 6868503439,
+      "artifact": 14089133218,
+      "artifact_digest": "sha256:61eef22374fb9218bb4aedba3bfbc630957e1d2abb7d27b4e4f5a5921a3a6302",
+      "artifact_digest_source": "GitHub artifact metadata and upload log; not independently downloaded",
+      "performance_verdict": "DEFER under current adoption gate",
+      "wall_changes_percent": {
+        "wikidata1": [
+          -0.8,
+          -3.1,
+          1.7
+        ],
+        "text1": [
+          -1,
+          -3.3,
+          1.4
+        ],
+        "pattern1": [
+          59.6,
+          57.9,
+          61.3
+        ],
+        "onebyte1": [
+          8,
+          7.2,
+          8.9
+        ],
+        "text4": [
+          -3.9,
+          -7,
+          -0.6
+        ]
+      },
+      "rss_changes_percent": {
+        "wikidata1": 30.9,
+        "pattern1": 14.1
+      },
+      "all_output_hashes_match": true
     },
-    "guardian_cursor": "481a6f060c591ebe5d4fa8f9d54df00ad06fff00"
+    "guardian_cursor": "036b2d9107b0a09d46112d6efdc57babf98a0d13",
+    "guardian_review": 6868606509,
+    "guardian_report": "13b01b9905f732821c0db3e5efaaa3f20e468d2a",
+    "coverage_recommendation": "Nonblocking decode_blocks malformed/range rollback/mixed reuse and default-selection assertion gaps retained; no second review or new implementation commissioned.",
+    "memory_accounting": "max prior arena requests +4*max prior positions +coexisting fallback/outer/output; ~16.42MB release Cells request bound per scratch, not RSS/process cap"
   }
 }
