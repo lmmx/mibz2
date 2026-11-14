@@ -1248,7 +1248,8 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: bounded desk/source next-decision pricing after matched i9; no implementation/timing."
+      "progress": "Source/workflow assessment complete; committing recommendation and ledger before publication.",
+      "report_path": "state/records/reviews/inbox-6867986711/report.md"
     }
   ],
   "migrated_from": {

@@ -658,3 +658,13 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 -64r<n spares pattern but retains all admittedWikidata; cannot cure AMD loss by corpus separation alone. No vendor/model whitelist inferred from confounded hosts/builds. Charge descriptor/branch/fallback/misclassification/capacity; no proven qualified target.
 - Screen378 fills seven route/correctness identities; candidate AMD covers seven performance rows, not changedwriteri9. Adjacent emitter overlaps alreadyremovedpatternwork; representationselective32U+16S stores remainsunpriced. ReuseMONODROMY6850491677/Pathfinder, no new implementation/reviewer/recipe.
 - Reopen on exact-final-build matched target netwin with sevenfamily whole-reader wall/CPU/RSS, validroute/correctness, independentB5. Fixture/cache repairs and skippedsteps preserve firstnegative; no rerun-to-pass. No execution/admission/default/merge/release changes.
+
+
+## Default integration attribution after matched i9: inbox6867986711
+
+[Report](records/reviews/inbox-6867986711/report.md). Matched i9 now demonstrates selective/original Wikidata0.9256 [0.8823,0.9711], selective/Segmented0.8630 [0.8319,0.8952]; D104 closes only pre-start machine/activity hold. All252 rows retained; pattern1.4352/RSS1.3107 costs remain. PR380 default gate failure and consumed rerun history unchanged.
+- Independent source-diff review agrees with completed3c61b203 attribution: no newly executed default operation or justified patch. Default4t random/text/Wikidata first losses2.79/3.87/2.30% remain.
+- New archive gap: exact workflow uploads default .text hashes, not default binaries/raw sections; selective-codegen captures experimental induction only. No saved default hot-code witness inferred from904→827bytes.
+- Rank1: one bounded untimed default-executable correspondence preparation, if Coordinator commissions it; inventory first, at most3clean builds/60min job plus90min inspection,0decodes/0samples. Three-source timing can localise whole-source effects, cannot alone establish layout/codegen causality. Corrects earlier “decisive” wording; no new admission.
+- Fixed stop: absent correspondence/named relevant difference/isolating intervention => no sound causal discriminator, no more samples. Equal accounted default code/data/placement rejects that machine-change explanation only in compared context. Differences are leads, not causal proof. Historical digest mismatch means reconstruction only.
+- Conditional parity recovery budgets2.71/3.73/2.25% current candidate wall; not hard bounds or production benefit. Preserve Cells line, completed B5, MONODROMY/Pathfinder, all default/team/cap policy and integration DEFER. No implementation, build, timing, registration, rerun or merge executed.
