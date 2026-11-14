@@ -1,0 +1,6 @@
+rauzy-veech.md[:20000]: n=20000 sha256=d92a55334fac4525 pieces=10537 primary=4048
+  logical steps=16803  batches=1  logical steps inside batches=2  loops avoided=1 (0.006% of steps)  operations executed=16802  max q=2
+  wall: bwt 0.09s, induce(quotient=False) 1.34s, induce(quotient=True) 1.79s
+json-like 20000 (seed 20000): n=20000 sha256=80aff1059fcae39d pieces=4228 primary=19778
+  logical steps=9354  batches=0  logical steps inside batches=0  loops avoided=0 (0.000% of steps)  operations executed=9354  max q=0
+  wall: bwt 0.05s, induce(quotient=False) 0.32s, induce(quotient=True) 0.39s
