@@ -153,7 +153,7 @@
     "6868427669": 6868464871,
     "6868541986": 6868583432
   },
-  "last_rebuilt_from": 6868553543,
+  "last_rebuilt_from": 6868606509,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -668,9 +668,10 @@
     },
     "6868650998": {
       "comment_id": 6868650998,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling D105 and public-default benchmark."
+      "status": "complete",
+      "progress": "Record committed through channel 6868606509; REVIEW pending.",
+      "work_commit": "6c8385800bba5fe85536ef91c5bb977261c97f08"
     }
   },
-  "last_record_commit": "30359db608f81c450bc67972d9b25ca8d6c20493"
+  "last_record_commit": "6c8385800bba5fe85536ef91c5bb977261c97f08"
 }
