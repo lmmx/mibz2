@@ -6,4 +6,3 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-release-scaling        master                    v0.3.0 against v0.2.9 on the i9 (docs/RELEASING.md §5)
