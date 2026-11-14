@@ -149,7 +149,7 @@
     "6862622329": 6862685593,
     "6867986946": 6868028392
   },
-  "last_rebuilt_from": 6867956361,
+  "last_rebuilt_from": 6868355345,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -650,9 +650,10 @@
     },
     "6868427669": {
       "comment_id": 6868427669,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling owner-direct integration pickup and parked attribution."
+      "status": "complete",
+      "progress": "Record committed through channel 6868355345; REVIEW pending.",
+      "work_commit": "ce8bd1bb8499aa590b7db8cb21e56902fbcf756e"
     }
   },
-  "last_record_commit": "f115ded521ba80f3aa1393bab0b8c13f3b02740a"
+  "last_record_commit": "ce8bd1bb8499aa590b7db8cb21e56902fbcf756e"
 }
