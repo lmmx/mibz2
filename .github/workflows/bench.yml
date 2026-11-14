@@ -44,6 +44,7 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "examples/ab.rs"
+      - "examples/ab_cells/**"
       - "examples/windows.rs"
       - "examples/phases.rs"
       - "tests/common/**" # (the corpora's recipe)
@@ -56,6 +57,7 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "examples/ab.rs"
+      - "examples/ab_cells/**"
       - "examples/windows.rs"
       - "examples/phases.rs"
       - "tests/common/**"
@@ -143,6 +145,14 @@ jobs:
           cargo build --release --example ab --example windows --example phases
           mkdir -p bin && cp target/release/examples/ab bin/ab && cp target/release/examples/phases bin/phases
 
+      # A separate executable keeps cells monomorphizations out of the default arm's
+      # LTO unit. The public library type remains compiled without any feature flag.
+      - name: Build the experimental cells harness
+        if: env.MODE == 'pr'
+        run: |
+          cargo rustc --release --example ab -- --cfg mibz2_cells_bench
+          cp target/release/examples/ab bin/cells-ab
+
       # The alternatives (master and the Actions tab only): bench/alternatives' build of the
       # harness, and indexed_bzip2 in a virtualenv of its own
       - name: Build the alternatives
@@ -186,6 +196,23 @@ jobs:
             echo "base arm: AB_SAMPLE_MS=$BASE_SAMPLE_MS"
           fi
 
+      # Diagnostic only: no equality requirement for ordinary PRs which change code.
+      # For the cells slice this checks that experimental linking cannot move default code.
+      - name: Executable code digests
+        if: env.MODE == 'pr'
+        run: |
+          mkdir -p .codegen
+          objcopy --dump-section .text=.codegen/head.text bin/ab /dev/null
+          objcopy --dump-section .text=.codegen/base.text base/ab /dev/null
+          objcopy --dump-section .text=.codegen/cells.text bin/cells-ab /dev/null
+          sha256sum .codegen/*.text > codegen.txt
+          if cmp -s .codegen/head.text .codegen/base.text; then
+            echo 'Default head/base .text: identical' >> codegen.txt
+          else
+            echo 'Default head/base .text: different (diagnostic, not a gate)' >> codegen.txt
+          fi
+          cat codegen.txt
+
       - name: Corpora
         run: bin/ab gen corpora "$SCALE"
 
@@ -217,6 +244,21 @@ jobs:
         run: |
           threads=$([ "$(nproc)" -gt 2 ] && echo "1,2,$(nproc)" || echo "1,$(nproc)")
           bin/ab run runs.jsonl --arms "$ARMS" --threads "$threads" --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
+
+      # Slice one: a third arm, measured separately to preserve the existing paired
+      # schedule and gate. Its one-thread wall/RSS figures are reported, never judged.
+      - name: Pin the experimental Cells corpus identities
+        if: env.MODE == 'pr'
+        run: |
+          python3 bench/cells-small-spine/pin_inputs.py
+          CELLS_PINNED_INPUTS="$PWD/cells-corpora" RUSTFLAGS="--cfg mibz2_cells_bench" timeout 300 cargo test --example ab cells_pinned_readers_byte_parity -- --ignored
+
+      - name: Experimental cells arm
+        if: env.MODE == 'pr'
+        run: |
+          bin/cells-ab run cells.jsonl --arms mibz2@bin/ab,mibz2-cells --threads 1 --spread --rounds "$ROUNDS" --settle "$SETTLE" cells-corpora/*.bz2
+          bin/cells-ab summary cells.jsonl --ref mibz2@bin/ab > cells-summary.md
+          tee -a "$GITHUB_STEP_SUMMARY" < cells-summary.md
 
       # Each stage on its own, on one thread: a diagnostic beside the decoder's figures
       - name: Stages
@@ -279,6 +321,10 @@ jobs:
             result.json
             comment.md
             ab-summary.md
+            cells.jsonl
+            cells-summary.md
+            cells-inputs.json
+            codegen.txt
           if-no-files-found: ignore
 
       # master only: the commit's result appended to the bench-results branch, and the

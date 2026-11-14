@@ -2,6 +2,8 @@
 //! decoders under test, a block writer for streams no encoder writes, and test data.
 #![allow(dead_code)]
 
+pub mod cells;
+
 use mibz2::{Error, Kernels};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 

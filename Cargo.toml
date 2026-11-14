@@ -81,9 +81,13 @@ debug-assertions = true
 inherits = "release"
 overflow-checks = true
 
-# examples/ab.rs's arms built by bench/alternatives only (its build.rs sets the cfg)
+# Benchmark-only cfgs: alternatives (build.rs) and the isolated cells harness
+# (cargo rustc --example ab -- --cfg mibz2_cells_bench). Neither selects library defaults.
 [lints.rust]
-unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
+unexpected_cfgs = { check-cfg = [
+  "cfg(mibz2_alternatives)",
+  "cfg(mibz2_cells_bench)",
+], level = "warn" }
 
 # The occupancy instrument (#39) needs the decoder's timeline
 [[example]]

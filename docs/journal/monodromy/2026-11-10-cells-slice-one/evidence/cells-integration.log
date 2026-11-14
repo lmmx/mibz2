@@ -1,0 +1,12 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2)
+    Finished `test` profile [optimized + debuginfo] target(s) in 2.38s
+     Running tests/cells.rs (target/debug/deps/cells-c46f96bde86ee8d6)
+
+running 4 tests
+test cells_real_decoder_admission_reach ... ok
+test cells_arbitrary_columns_and_corruption ... ok
+test cells_keeps_text_random_and_records_on_shipped_route ... ok
+test cells_corpora_and_structured_words ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.99s
+

@@ -1,0 +1,5 @@
+Found 11 mutants to test
+ok       Unmutated baseline in 70s build + 0s test
+MISSED   src/cells.rs:442:24: replace > with >= in Kernel::slots in 14s build + 0s test
+MISSED   src/cells.rs:442:20: replace - with / in Kernel::slots in 4s build + 0s test
+11 mutants tested in 3m: 2 missed, 9 caught
