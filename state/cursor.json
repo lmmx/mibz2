@@ -75,7 +75,9 @@
     6867986946,
     6868427669
   ],
-  "in_progress": [],
+  "in_progress": [
+    6868541986
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -654,6 +656,11 @@
       "progress": "Record committed; REVIEW 6868464871 published and read back.",
       "work_commit": "ce8bd1bb8499aa590b7db8cb21e56902fbcf756e",
       "review_id": 6868464871
+    },
+    "6868541986": {
+      "comment_id": 6868541986,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling PR382 and scoped review."
     }
   },
   "last_record_commit": "ce8bd1bb8499aa590b7db8cb21e56902fbcf756e"
