@@ -1417,15 +1417,17 @@ bench-cells-scaling OLD="6dec95ba6aaf59d5134e5ab119fd52433e2032ee" ROUNDS="10" T
     bash bench/bundle.sh "$O"
 
 # The Cells memory-dose experiment (#145, LOG 6879466310, its design and rule registered
-# before any data): does memory traffic cause the Workers + Cells plateau? Three builds of
-# this commit's `ab` with the research feature `dose` (src/dose.rs), at MIBZ2_DOSE_MB = 0, 8
-# and 16, each in its own target directory: each block Cells admits also streams through P MB
-# of per-worker scratch (one read and one write of every 64-byte line), decoding nothing
-# more, its output byte-identical. Run as the arms mibz2-workers@<P's ab> (forced Workers +
-# Cells) on Wikidata, paired by round, with the held spinner as bench-cells-scaling holds it.
-# bench/dose.py reads the raw runs: c(t) = wall(P=16)/wall(P=0), c(10)/c(1) with its 95%
-# interval, the same for P=8, the validity, and the verdict (LEVER, NOT THE LEVER or
-# INCONCLUSIVE) by the LOG's rule. A C5 workstation run (the i9), about 25 minutes.
+# before any data, and its amendment adding C16): does memory traffic cause the Workers +
+# Cells plateau? Four builds of this commit's `ab` with the research feature `dose`
+# (src/dose.rs), each in its own target directory: P0, P8 and P16 stream through 0, 8 and
+# 16 MB of per-worker scratch for each block Cells admits (one read and one write of every
+# 64-byte line); C16 instead chases a random single cycle through 16 MB, one dependent load
+# a line (MIBZ2_DOSE_KIND=chase). Each decodes nothing more, its output byte-identical. Run
+# as the arms mibz2-workers@<each ab> (forced Workers + Cells) on Wikidata, paired by round,
+# with the held spinner as bench-cells-scaling holds it. bench/dose.py reads the raw runs:
+# c(t) = wall(P16)/wall(P0), c(10)/c(1) with its 95% interval, the verdict (LEVER, NOT THE
+# LEVER or INCONCLUSIVE) by the LOG's rule on it, and P8 and C16 the same way, reported and
+# not gating; and the validity. A C5 workstation run (the i9), about 35 minutes.
 #   just submit bench-cells-dose
 bench-cells-dose ROUNDS="10" THREADS="1,4,6,8,10":
     #!/usr/bin/env bash
@@ -1439,18 +1441,21 @@ bench-cells-dose ROUNDS="10" THREADS="1,4,6,8,10":
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-cells-dose: the checkout has local changes"; exit 1; }
     git rev-parse HEAD > "$O/commit.txt"
-    # (the three arms: one commit, the dose fixed at compile time, each in its own target dir)
+    # (the four arms, P0, P8, P16 and C16, in bench/dose.py's order: one commit, the dose
+    # fixed at compile time, each in its own target dir)
+    specs=(p0:stream:0 p8:stream:8 p16:stream:16 c16:chase:16)
     arms=()
-    for p in 0 8 16; do
-      MIBZ2_DOSE_MB=$p CARGO_TARGET_DIR="$B/target-p$p" \
+    for spec in "${specs[@]}"; do
+      IFS=: read -r name kind mb <<< "$spec"
+      MIBZ2_DOSE_KIND=$kind MIBZ2_DOSE_MB=$mb CARGO_TARGET_DIR="$B/target-$name" \
         cargo build -q --release --features dose --example ab
-      arms+=("mibz2-workers@$B/target-p$p/release/examples/ab")
+      arms+=("mibz2-workers@$B/target-$name/release/examples/ab")
     done
     cargo build -q --release --example windows
     AB0=$B/target-p0/release/examples/ab
-    sha256sum "$B"/target-p{0,8,16}/release/examples/ab | tee "$O/binaries.sha256"
-    [ "$(cut -d' ' -f1 "$O/binaries.sha256" | sort -u | wc -l)" = 3 ] \
-      || { echo "bench-cells-dose: the three builds are not three binaries"; exit 1; }
+    sha256sum "$B"/target-{p0,p8,p16,c16}/release/examples/ab | tee "$O/binaries.sha256"
+    [ "$(cut -d' ' -f1 "$O/binaries.sha256" | sort -u | wc -l)" = 4 ] \
+      || { echo "bench-cells-dose: the four builds are not four binaries"; exit 1; }
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
     if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
       git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
@@ -1461,11 +1466,12 @@ bench-cells-dose ROUNDS="10" THREADS="1,4,6,8,10":
       target/release/examples/windows "$B/wikidata.bz2"
     sha256sum "$B/wikidata.bz2" | tee "$O/inputs.sha256"
     # (each build checked to be its dose, and the dose seen engaging, before the timed runs)
-    for p in 0 8 16; do
-      line=$("$B/target-p$p/release/examples/ab" child mibz2-workers 1 "$B/wikidata.bz2")
-      echo "preflight P=$p: $(echo "$line" | python3 -c 'import json,sys; r=json.load(sys.stdin); print("dose_mb", r.get("dose_mb"), "dose_blocks", r.get("dose_blocks"), "wall", r.get("wall"), "hash", r.get("hash"))')"
-      echo "$line" | python3 -c "import json,sys; r=json.load(sys.stdin); sys.exit(int(r.get('dose_mb') != $p or bool(r.get('err'))))" \
-        || { echo "bench-cells-dose: the P=$p build is not at its dose, or failed"; exit 1; }
+    for spec in "${specs[@]}"; do
+      IFS=: read -r name kind mb <<< "$spec"
+      line=$("$B/target-$name/release/examples/ab" child mibz2-workers 1 "$B/wikidata.bz2")
+      echo "preflight $name: $(echo "$line" | python3 -c 'import json,sys; r=json.load(sys.stdin); print("dose", r.get("dose_kind"), r.get("dose_mb"), "MB, dose_blocks", r.get("dose_blocks"), "wall", r.get("wall"), "hash", r.get("hash"))')"
+      echo "$line" | python3 -c "import json,sys; r=json.load(sys.stdin); sys.exit(int(r.get('dose_mb') != $mb or r.get('dose_kind') != '$kind' or bool(r.get('err'))))" \
+        || { echo "bench-cells-dose: the $name build is not at its dose, or failed"; exit 1; }
     done
     "$AB0" env > "$O/env.json"
     lscpu > "$O/lscpu.txt"

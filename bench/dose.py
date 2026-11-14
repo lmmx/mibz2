@@ -1,20 +1,24 @@
 """The Cells memory-dose experiment's statistic and verdict (#145, LOG 6879466310, registered
 before any data): does memory traffic cause the Workers + Cells plateau?
 
-Three builds of `examples/ab.rs` with the research feature `dose`, at MIBZ2_DOSE_MB = 0, 8
-and 16: each block Cells admits also streams through P MB of per-worker scratch (one read
-and one write of every 64-byte line; src/dose.rs). `just bench-cells-dose` runs them as the
-arms `mibz2-workers@<P=0's ab>`, `@<P=8's>` and `@<P=16's>` (forced Workers + Cells), on
-Wikidata, paired by round. This reads its raw `runs.jsonl`:
+Four builds of `examples/ab.rs` with the research feature `dose` (src/dose.rs):
+- P0, P8, P16: MIBZ2_DOSE_MB = 0, 8 and 16, streaming: each block Cells admits also streams
+  through P MB of per-worker scratch (one read and one write of every 64-byte line);
+- C16 (the LOG's amendment, registered before any data): MIBZ2_DOSE_KIND=chase at 16 MB, a
+  dependent pointer chase, one hop a line along a random single cycle through 16 MB.
 
-    python3 bench/dose.py RUNS.jsonl --arms P0ARM,P8ARM,P16ARM [--threads 1,4,6,8,10]
+`just bench-cells-dose` runs them as the arms `mibz2-workers@<each build's ab>` (forced
+Workers + Cells), on Wikidata, paired by round. This reads its raw `runs.jsonl`:
+
+    python3 bench/dose.py RUNS.jsonl --arms P0ARM,P8ARM,P16ARM,C16ARM [--threads 1,4,6,8,10]
         [--rounds 10] [--out STEM]
 
 **Statistic.** c(t) = wall(P=16) / wall(P=0) at t threads, a paired log-t ratio within
 round (the geometric mean over rounds and its 95% t-interval). The key ratio is
 c(hi) / c(lo), hi and lo the most and fewest threads (10 and 1 on the registered grid),
-each round's log c(hi) - log c(lo) its pair, with its 95% t-interval. The same for P=8,
-reported and not gating.
+each round's log c(hi) - log c(lo) its pair, with its 95% t-interval. The same for P=8, and
+for C16 (c_chase(t) = wall(C16) / wall(P=0), with the rule's outcome on its own ratio),
+both reported and not gating: only P=16, the streaming arm, decides the verdict.
 
 **Rule** (the LOG's, on P=16's c(10)/c(1)):
 - LEVER: the ratio >= 1.10 and its interval excludes 1;
@@ -25,7 +29,7 @@ reported and not gating.
 every arm at every thread count in every round, on the one corpus, and nothing else), no
 duplicates, every child successful (termination success, no error, a record that parsed),
 the same output hash (and size, and SHA-256 where recorded) across every run, and each
-arm's build the dose it is named for (its records' `dose_mb`). Whether the dose engaged
+arm's build the dose it is named for (its records' `dose_mb` and `dose_kind`). Whether the dose engaged
 (`dose_blocks`, the blocks Cells admitted and dosed in each run) is reported beside it.
 
 A grid other than the registered one (threads 1,4,6,8,10, 10 rounds) still gets its
@@ -44,7 +48,10 @@ T975 = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2
         2.160, 2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064,
         2.060, 2.056, 2.052, 2.048, 2.045, 2.042]  # fmt: skip
 
-DOSES = (0, 8, 16)
+# the arms, in --arms order: label -> (dose_kind, dose_mb)
+DOSES = {"P0": ("stream", 0), "P8": ("stream", 8), "P16": ("stream", 16), "C16": ("chase", 16)}
+GATING = "P16"
+REPORTED = ("P8", "C16")
 REGISTERED_THREADS = [1, 4, 6, 8, 10]
 REGISTERED_ROUNDS = 10
 CORPUS = "wikidata"
@@ -108,21 +115,24 @@ def validate(recs, bad, arms, threads, rounds):
             for rnd in range(rounds):
                 n = len(cells.get((arm, t, rnd), []))
                 if n == 0:
-                    problems.append(f"missing: P={arms[arm]} t={t} round {rnd}")
+                    problems.append(f"missing: {arms[arm]} t={t} round {rnd}")
                 elif n > 1:
-                    problems.append(f"duplicated ({n}): P={arms[arm]} t={t} round {rnd}")
+                    problems.append(f"duplicated ({n}): {arms[arm]} t={t} round {rnd}")
     hashes = set()
     for (arm, t, rnd), rs in cells.items():
         for r in rs:
-            where = f"P={arms[arm]} t={t} round {rnd}"
+            where = f"{arms[arm]} t={t} round {rnd}"
             if r.get("termination") != "success" or r.get("err") or "broken" in r:
                 problems.append(
                     f"not successful: {where} ({r.get('termination')}, err {r.get('err')!r})"
                 )
             if not isinstance(r.get("wall"), (int, float)) or not r["wall"] > 0:
                 problems.append(f"no wall: {where}")
-            if r.get("dose_mb") != arms[arm]:
-                problems.append(f"the build's dose is {r.get('dose_mb')} MB: {where}")
+            kind, mb = DOSES[arms[arm]]
+            if r.get("dose_mb") != mb or r.get("dose_kind") != kind:
+                problems.append(
+                    f"the build's dose is {r.get('dose_kind')} {r.get('dose_mb')} MB: {where}"
+                )
             hashes.add((r.get("hash"), r.get("out"), r.get("sha256")))
     if len(hashes) > 1:
         problems.append(
@@ -134,12 +144,13 @@ def validate(recs, bad, arms, threads, rounds):
 
 
 def analyse(runs, arms, threads, rounds):
-    """c(t) for P=8 and P=16, c(hi)/c(lo) with its interval, and the rule's verdict on P=16's"""
+    """c(t) for P8, P16 and C16 against P0, c(hi)/c(lo) with its interval and the rule's
+    outcome on each, and the verdict: P16's"""
     by_dose = {p: a for a, p in arms.items()}
-    ref = by_dose[0]
+    ref = by_dose["P0"]
     lo_t, hi_t = min(threads), max(threads)
     out = {"lo": lo_t, "hi": hi_t, "doses": {}}
-    for p in (8, 16):
+    for p in (GATING, *REPORTED):
         arm = by_dose[p]
         logs = {
             t: [
@@ -160,9 +171,9 @@ def analyse(runs, arms, threads, rounds):
             ):
                 cpu[t] = mean_ci([math.log(a / b) for a, b in pairs])
         key = mean_ci([logs[hi_t][r] - logs[lo_t][r] for r in range(rounds)])
-        out["doses"][p] = {"c": c, "cpu": cpu, "key": key}
-    out["verdict"] = verdict(*out["doses"][16]["key"])
-    k8, k16 = out["doses"][8]["key"][0], out["doses"][16]["key"][0]
+        out["doses"][p] = {"c": c, "cpu": cpu, "key": key, "rule": verdict(*key)}
+    out["verdict"] = out["doses"][GATING]["rule"]
+    k8, k16 = out["doses"]["P8"]["key"][0], out["doses"]["P16"]["key"][0]
     out["monotone"] = (1.0 <= k8 <= k16) or (k16 <= k8 <= 1.0)
     return out
 
@@ -189,15 +200,15 @@ def main(argv=None):
     ap.add_argument(
         "--arms",
         required=True,
-        help="the arms at P=0, 8 and 16 MB, as in runs.jsonl, comma-separated",
+        help="the arms P0, P8, P16 and C16, as in runs.jsonl, comma-separated",
     )
     ap.add_argument("--threads", default=",".join(map(str, REGISTERED_THREADS)))
     ap.add_argument("--rounds", type=int, default=REGISTERED_ROUNDS)
     ap.add_argument("--out", help="write STEM.md and STEM.json")
     a = ap.parse_args(argv)
     names = a.arms.split(",")
-    if len(names) != 3 or len(set(names)) != 3:
-        ap.error("--arms takes three distinct arms: P=0, P=8, P=16")
+    if len(names) != len(DOSES) or len(set(names)) != len(DOSES):
+        ap.error("--arms takes four distinct arms: P0, P8, P16, C16")
     arms = dict(zip(names, DOSES))
     threads = sorted({int(t) for t in a.threads.split(",")})
     if len(threads) < 2:
@@ -211,13 +222,13 @@ def main(argv=None):
         f"- runs: {a.runs} ({len(recs)} records)",
         f"- grid: threads {','.join(map(str, threads))}, {a.rounds} rounds, {CORPUS}"
         + ("" if registered else " (NOT the registered grid: threads 1,4,6,8,10, 10 rounds)"),
-    ] + [f"- P={p} MB: `{arm}`" for arm, p in arms.items()]
+    ] + [f"- {p} ({DOSES[p][0]} {DOSES[p][1]} MB): `{arm}`" for arm, p in arms.items()]
     result = {
         "runs": a.runs,
         "threads": threads,
         "rounds": a.rounds,
         "registered": registered,
-        "arms": {str(p): arm for arm, p in arms.items()},
+        "arms": {p: arm for arm, p in arms.items()},
         "problems": problems,
     }
     tag = "" if registered else " [not the registered grid: no verdict for the record]"
@@ -241,7 +252,7 @@ def main(argv=None):
             "",
             "## Engagement: blocks Cells admitted and dosed a run (fewest..most)",
             "",
-            "| P \\ t | " + " | ".join(map(str, threads)) + " |",
+            "| arm \\ t | " + " | ".join(map(str, threads)) + " |",
             "|---|" + "---|" * len(threads),
         ]
         for p in DOSES:
@@ -250,26 +261,29 @@ def main(argv=None):
                 + " | ".join(f"{eng[(p, t)][0]}..{eng[(p, t)][1]}" for t in threads)
                 + " |"
             )
-        for p in (16, 8):
+        for p in (GATING, "C16", "P8"):
             d = r["doses"][p]
+            kind, mb = DOSES[p]
             lines += [
                 "",
-                f"## P={p} MB against P=0"
-                + (" (gating)" if p == 16 else " (reported, not gating)"),
+                f"## {p} ({kind} {mb} MB) against P0"
+                + (" (gating)" if p == GATING else " (reported, not gating)"),
                 "",
-                "| t | c(t) = wall(P)/wall(0) [95% CI] | CPU(P)/CPU(0) [95% CI] |",
+                f"| t | c(t) = wall({p})/wall(P0) [95% CI] | CPU({p})/CPU(P0) [95% CI] |",
                 "|---|---|---|",
             ]
             for t in threads:
                 cpu = fmt(d["cpu"][t]) if t in d["cpu"] else "n/a"
                 lines.append(f"| {t} | {fmt(d['c'][t])} | {cpu} |")
             lines += ["", f"c({hi_t})/c({lo_t}) = {fmt(d['key'])}"]
+            if p != GATING:
+                lines.append(f"the rule on it (reported, not gating): {d['rule']}")
         lines += [
             "",
             f"dose response monotone (c({hi_t})/c({lo_t}) at P=8 between 1 and "
             f"P=16's): {'yes' if r['monotone'] else 'no'}",
         ]
-        m, lo, hi = r["doses"][16]["key"]
+        m, lo, hi = r["doses"][GATING]["key"]
         verdict_line = (
             f"VERDICT: {r['verdict']}: c({hi_t})/c({lo_t}) at P=16 = {m:.4f} "
             f"[{lo:.4f}, {hi:.4f}]{tag}"
@@ -279,10 +293,11 @@ def main(argv=None):
             monotone=r["monotone"],
             engagement={f"{p}@{t}": v for (p, t), v in eng.items()},
             doses={
-                str(p): {
+                p: {
                     "c": {str(t): v for t, v in d["c"].items()},
                     "cpu": {str(t): v for t, v in d["cpu"].items()},
                     "key": d["key"],
+                    "rule": d["rule"],
                 }
                 for p, d in r["doses"].items()
             },

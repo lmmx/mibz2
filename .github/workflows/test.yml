@@ -29,9 +29,11 @@ jobs:
       - name: Harness tests
         run: cargo test --example ab
       # the Cells memory-dose experiment's research build (src/dose.rs, #145 LOG 6879466310):
-      # with a nonzero dose, byte-identical through the Workers plan, and the dose engaging
+      # with a nonzero dose of each kind, byte-identical through the Workers plan, and engaging
       - name: The dose build (research feature)
-        run: MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
+        run: |
+          MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
+          MIBZ2_DOSE_MB=1 MIBZ2_DOSE_KIND=chase cargo test --features dose --test dose
       # the guarded service A/B's judge, with its producer driven for real: `ab run` with
       # stand-in children that succeed, exit 17, are killed or write nothing, each record judged
       - name: The guarded service A/B's producer and judge (stand-in children, untimed)

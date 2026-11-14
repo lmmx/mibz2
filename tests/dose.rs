@@ -1,6 +1,7 @@
 //! Research only (`dose`): the Cells memory-dose build decodes byte-identically, through
 //! the Workers plan the experiment forces, and its dose engages (Cells admits blocks there).
-//! Run with `MIBZ2_DOSE_MB=1 cargo test --features dose --test dose` for a nonzero dose.
+//! Run with `MIBZ2_DOSE_MB=1 cargo test --features dose --test dose` for a nonzero dose
+//! (and `MIBZ2_DOSE_KIND=chase` for the chase).
 #![cfg(feature = "dose")]
 mod common;
 use common::{cells, compress, corpora, craft, oracle, Spec};

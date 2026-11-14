@@ -1398,8 +1398,9 @@ fn child(arm: &str, threads: usize, path: &str, hold: Option<Hold>) {
     // (research only, the `dose` feature: the build's dose and the blocks it dosed)
     #[cfg(feature = "dose")]
     let held = format!(
-        "{held},\"dose_mb\":{},\"dose_blocks\":{}",
+        "{held},\"dose_mb\":{},\"dose_kind\":\"{}\",\"dose_blocks\":{}",
         mibz2::dose::DOSE_MB,
+        mibz2::dose::DOSE_KIND.name(),
         mibz2::dose::blocks()
     );
     println!(

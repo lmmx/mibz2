@@ -18,18 +18,23 @@ import dose  # noqa: E402
 ARMS = [f"mibz2-workers@/w/dose-{p}/target/release/examples/ab" for p in dose.DOSES]
 
 
-def grid(growth=1.0, base=1.0, case=None, seed=3, noise=0.003):
-    """The registered grid: P=16's wall over P=0's is `base` at 1 thread, rising in log to
-    `base * growth` at 10 threads; P=8's half that in log; noise of `noise` a run"""
+def grid(growth=1.0, base=1.0, case=None, seed=3, noise=0.003, chase=1.0):
+    """The registered grid: P16's wall over P0's is `base` at 1 thread, rising in log to
+    `base * growth` at 10 threads; P8's half that in log; C16's rising to `chase` at 10
+    threads; noise of `noise` a run"""
     rng = random.Random(seed)
     rows = []
     for rnd in range(dose.REGISTERED_ROUNDS):
         for t in dose.REGISTERED_THREADS:
             frac = (t - 1) / 9
-            for arm, p in zip(ARMS, dose.DOSES):
-                if case == "missing" and (p, t, rnd) == (16, 10, 4):
+            for arm, label in zip(ARMS, dose.DOSES):
+                kind, p = dose.DOSES[label]
+                if case == "missing" and (label, t, rnd) == ("P16", 10, 4):
                     continue
-                c = math.exp(p / 16 * (math.log(base) + frac * math.log(growth)))
+                if kind == "chase":
+                    c = math.exp(frac * math.log(chase))
+                else:
+                    c = math.exp(p / 16 * (math.log(base) + frac * math.log(growth)))
                 rec = {
                     "round": rnd,
                     "corpus": "wikidata",
@@ -43,16 +48,19 @@ def grid(growth=1.0, base=1.0, case=None, seed=3, noise=0.003):
                     "wall": 2.0 / t * c * rng.gauss(1, noise),
                     "cpu": 2.0 * c,
                     "dose_mb": p,
+                    "dose_kind": kind,
                     "dose_blocks": 40,
                 }
-                if case == "failed" and (p, t, rnd) == (8, 4, 2):
+                if case == "failed" and (label, t, rnd) == ("P8", 4, 2):
                     rec["termination"] = "exit 101"
-                if case == "hash" and (p, t, rnd) == (0, 6, 1):
+                if case == "hash" and (label, t, rnd) == ("P0", 6, 1):
                     rec["hash"] = "fedcba9876543210"
-                if case == "dose" and p == 8:
+                if case == "dose" and label == "P8":
                     rec["dose_mb"] = 16
+                if case == "kind" and label == "C16":
+                    rec["dose_kind"] = "stream"
                 rows.append(rec)
-                if case == "duplicate" and (p, t, rnd) == (0, 1, 0):
+                if case == "duplicate" and (label, t, rnd) == ("P0", 1, 0):
                     rows.append(dict(rec))
     if case == "extra":
         rows.append(dict(rows[0], corpus="text"))
@@ -84,15 +92,25 @@ def test_verdicts():
     # (a constant cost of the dose, not one that grows with the threads: not the lever)
     code, r = run(grid(growth=1.0, base=1.08))
     assert code == 0 and r["verdict"] == "NOT THE LEVER", r["verdict_line"]
-    assert abs(r["doses"]["16"]["c"]["1"][0] - 1.08) < 0.01
+    assert abs(r["doses"]["P16"]["c"]["1"][0] - 1.08) < 0.01
     code, r = run(grid(growth=1.06))
     assert r["verdict"] == "INCONCLUSIVE", r["verdict_line"]
     code, r = run(grid(growth=1.0, noise=0.1))
     assert r["verdict"] == "INCONCLUSIVE", r["verdict_line"]
 
 
+def test_chase_is_reported_not_gating():
+    # (a chase that grows with the threads, a stream that doesn't: the verdict is the stream's)
+    code, r = run(grid(growth=1.0, chase=1.25))
+    assert code == 0 and r["verdict"] == "NOT THE LEVER", r["verdict_line"]
+    assert r["doses"]["C16"]["rule"] == "LEVER"
+    assert abs(r["doses"]["C16"]["key"][0] - 1.25) < 0.01
+    code, r = run(grid(growth=1.2, chase=1.0))
+    assert r["verdict"] == "LEVER" and r["doses"]["C16"]["rule"] == "NOT THE LEVER"
+
+
 def test_validity():
-    for case in ("missing", "failed", "hash", "dose", "duplicate", "extra"):
+    for case in ("missing", "failed", "hash", "dose", "kind", "duplicate", "extra"):
         code, r = run(grid(growth=1.2, case=case))
         assert code == 1 and r["verdict"] == "INVALID", (case, r["verdict_line"])
         assert r["problems"], case
