@@ -1306,10 +1306,12 @@
     {
       "comment_id": 6881331204,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: steelman paper analysis pending source audit; no build or timing."
+      "progress": "Steelman and ledger committed; awaiting one REVIEW on #145.",
+      "report_path": "state/records/reviews/inbox-6881331204/steelman.md",
+      "report_commit": "97f9191d1f971e5109b620d93b4fd12e3c2c1e3c"
     }
   ],
   "migrated_from": {
