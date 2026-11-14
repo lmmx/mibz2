@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6868355345,
+  "last_examined_comment_id": 6868441092,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -3057,7 +3057,8 @@
     "6868441092": {
       "status": "completed",
       "comment_updated_at": "2026-11-14T00:25:28Z",
-      "disposition": "Own substantive LOG; ignore self-triggered wake."
+      "disposition": "Own LOG readback and self-event reconciled; silent no-op.",
+      "delivery_id": "e4e52260-dfc1-11f1-8ebf-294b0a416d65"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3242,8 +3243,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6868355345,
-    "delivery_id": "23a0d0e0-dfc1-11f1-847a-0e66c915dbb4"
+    "comment_id": 6868441092,
+    "delivery_id": "e4e52260-dfc1-11f1-8ebf-294b0a416d65"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
