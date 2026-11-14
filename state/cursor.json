@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6868667961,
+  "last_examined_comment_id": 6868691042,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -3119,6 +3119,26 @@
       "comment_updated_at": "2026-11-14T00:40:22Z",
       "disposition": "Own substantive LOG and self-triggered webhook reconciled; silent no-op.",
       "delivery_id": "fa7bcc30-dfc3-11f1-8ea4-e33de0382440"
+    },
+    "6868687049": {
+      "status": "completed",
+      "delivery_id": "27e2b8f0-dfc4-11f1-8845-cae03d899719",
+      "comment_updated_at": "2026-11-14T00:41:39Z",
+      "recipient_cursor": "258a0c64255654eca084e2f9d24319af83ee2c95",
+      "report_commit": "aa9d2cbaaba2e555d7eadc9f5855c107cf062595",
+      "disposition": "Reconciled immutable local public-route Miri, six kernel Miri, seven pinned corpus parity, forced/mixed fuzz and mutation summary/head provenance. No executions repeated. Codex task still IN PROGRESS; full CI Miri pending. Current gate FAIL/adoption DEFER unchanged. No source-app message per this run instruction.",
+      "completion_observed": false,
+      "ready_job_queued": false,
+      "ready_job_reason": "No authorised qualifying recipe/prospective decision; no repeat run."
+    },
+    "6868691042": {
+      "status": "completed",
+      "delivery_id": "3206da50-dfc4-11f1-9e6e-16da7a41510f",
+      "comment_updated_at": "2026-11-14T00:41:55Z",
+      "assignment_comment_id": 6868650998,
+      "recipient_cursor": "a932394e19ecff36d6ef147e6e8f6cfdb2748d14",
+      "record_commit": "6c8385800bba5fe85536ef91c5bb977261c97f08",
+      "disposition": "Observer REVIEW plus finished cursor and immutable L1 accurately record D105 scope and adoption DEFER; no correction or follow-up."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3308,8 +3328,14 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6868667961,
-    "delivery_id": "fa7bcc30-dfc3-11f1-8ea4-e33de0382440"
+    "comment_ids": [
+      6868687049,
+      6868691042
+    ],
+    "delivery_ids": [
+      "27e2b8f0-dfc4-11f1-8845-cae03d899719",
+      "3206da50-dfc4-11f1-9e6e-16da7a41510f"
+    ]
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -4959,7 +4985,7 @@
     "adopted_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "all_nine_policy_blobs_match_adopted_pin": true,
     "current_router_matches": true,
-    "audit": "Current exact router audit exit0, fresh all-seven inboxes/role cursors/channel, six resolved historical misroutes; Observer free route and verify passed. Policies/master unchanged; setup merge reconfirmed, sole activation reused.",
+    "audit": "Exact current router audit exit0 with fresh channel/Observer/Codex cursors, prior fresh inbox snapshot retained; six resolved historical misroutes. No dispatch. Master/policy/handoff bytes unchanged; setup364 merged and empty queue verified; no return of control.",
     "activation_reused": 6782075529,
     "return_of_control_observed": false,
     "policy_blob_shas": {
@@ -4973,7 +4999,7 @@
       "docs/team/COORDINATOR-FAILOVER.md": "b9aa2d1349cc942caa64551cafd842eb1d9c7a9d",
       "CLAUDE.md": "ea12fe507c7a451bc14d2e9aeab3d25ce6227965"
     },
-    "last_event_comment_id": 6868606509
+    "last_event_comment_id": 6868691042
   },
   "operator_evidence_373": {
     "status": "correction_complete_current_head_green_historical_discrepancies_retained",
@@ -6069,10 +6095,10 @@
     "ready_job_queued": false,
     "ready_job_reason": "No frozen prospective decision/qualifying workstation recipe; no speculative repeat measurement.",
     "log_comment_id": 6868667961,
-    "observer_status": "posted_verified_recipient_action_pending",
-    "observer_review": 6868583432,
-    "observer_record_commit": "30359db608f81c450bc67972d9b25ca8d6c20493",
-    "observer_cursor": "1204550f4243cccba5729b072fa6ed50fb4cabdf",
+    "observer_status": "completed",
+    "observer_review": 6868691042,
+    "observer_record_commit": "6c8385800bba5fe85536ef91c5bb977261c97f08",
+    "observer_cursor": "a932394e19ecff36d6ef147e6e8f6cfdb2748d14",
     "pr": 382,
     "head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
     "review_requested": 6868508410,
@@ -6081,7 +6107,7 @@
     "ci": {
       "head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
       "native": "job132260143069 success; public default native test passes; seven-corpus test ignored in CI",
-      "miri": "pending at snapshot",
+      "miri": "still in_progress at fresh snapshot",
       "legacy": "success",
       "benchmark_run": 43534513477,
       "benchmark_report_comment": 6868503439,
@@ -6126,6 +6152,20 @@
     "guardian_review": 6868606509,
     "guardian_report": "13b01b9905f732821c0db3e5efaaa3f20e468d2a",
     "coverage_recommendation": "Nonblocking decode_blocks malformed/range rollback/mixed reuse and default-selection assertion gaps retained; no second review or new implementation commissioned.",
-    "memory_accounting": "max prior arena requests +4*max prior positions +coexisting fallback/outer/output; ~16.42MB release Cells request bound per scratch, not RSS/process cap"
+    "memory_accounting": "max prior arena requests +4*max prior positions +coexisting fallback/outer/output; ~16.42MB release Cells request bound per scratch, not RSS/process cap",
+    "validation_review": 6868687049,
+    "validation_report": "aa9d2cbaaba2e555d7eadc9f5855c107cf062595",
+    "local_validation_evidence": {
+      "source_head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
+      "raw_logs_read": true,
+      "public_route_miri": "1 pass",
+      "kernel_miri": "6 pass",
+      "pinned_corpus_parity": "7 families pass; text identity f0031809 differs from standing CI acb5f8a2",
+      "forced_cells_fuzz_cases": 28369,
+      "mixed_fuzz_cases": 6152,
+      "mixed_failures": 0,
+      "mutations": "baseline exit0; three compiled exit101 per result manifest; live-state/payload/classification kills, not output-oracle claims",
+      "independently_executed": false
+    }
   }
 }
