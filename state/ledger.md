@@ -680,3 +680,8 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 ## Cells phase-split census verdict: inbox6878327105
 
 [Verdict](records/reviews/inbox-6878327105/verdict.md). Coordinator records b5617a8, 431 Wikidata blocks (196 admitted), 49 text/88 pattern (none admitted). Admitted n-weighted serial Ir share s=0.741632 vs registered≤0.40; k3 top-factor balance passes8/196,4.0816% of admitted n. **PARK specified Cooperative Cells top-level writer split.** Three-worker Amdahl1.208x and infinite1.348x only if Ir share equalled time share; no runtime claim. 51.22% of later-span bytes copy from earlier spans at best cuts. Source labels and phase joins checked; raw callgrind dumps not retained/replayed. Feathered induction better aligned with measured serial Ir, but research ownership unchanged. No implementation/timing/admission.
+
+
+## Cells buffer diet pre-data forecast: inbox 6881024820
+
+[Prediction](records/reviews/inbox-6881024820/prediction.md) for frozen 24→20 B slot step 1: Q=A20(10)/A24(10) **0.96 [0.91,1.01]**; four-thread wall ratio **0.97 [0.94,1.02]**; one-thread wall ratio **0.99 [0.97,1.02]**. Brackets are judgment ranges, not confidence intervals. The memory census estimates ~11% fewer distinct lines, while the dose shows ten-thread streaming sensitivity; neither measures the candidate's actual gain. No predicted one-thread loss at the point, but range allows it. Frozen paired bench and safety/CI gates decide; no candidate built, run, admitted, or merged here.
