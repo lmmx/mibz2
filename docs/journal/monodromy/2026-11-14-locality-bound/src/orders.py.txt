@@ -1,0 +1,408 @@
+#!/usr/bin/env python3
+"""Step 1: the set of legal right-handed orders that keep R's derivation tree.
+
+For every primitive word over 2 letters (length 2..10) and 3 letters (length 2..7):
+  - bzip2 BWT column L and orig_ptr p; letters = maximal runs of L, with p's run cut so that
+    row p is a letter of its own (the kernel's `slots`), its word marked;
+  - Section-2 engine: a right-handed step at ANY coincidence c (top letter A and bottom letter
+    B both ending at c, A != B), cutting the last min(lA, lB) points at c;
+  - R = always the largest coincidence (the right end);
+  - DAG(R): step j depends on the last earlier R-step that touched A_j or B_j (letter
+    identity as in Section 2: the winner keeps its id, the loser keeps its id with the new
+    word; on an equal step A is deleted and B goes on);
+  - enumerate ALL legal schedules (to the end: one letter left, A == B, the marked one);
+    a schedule's steps are labelled (A id, B id, occurrence of that pair);
+  - compare {schedules whose derivation tree == R's} with {linear extensions of DAG(R)}.
+Also ports the cells form (src/cells.rs induce_cells) at slot-field granularity and checks
+that its data-dependency DAG (chain + read-after-write on the slot read for a fresh letter)
+has the same transitive closure as DAG(R), step by step aligned with R.
+"""
+import itertools, sys
+from functools import lru_cache
+
+
+def primitive(w):
+    n = len(w)
+    return all(w != w[k:] + w[:k] for k in range(1, n))
+
+
+def bwt(w):
+    n = len(w)
+    rots = sorted(range(n), key=lambda i: w[i:] + w[:i])
+    L = [w[(i - 1) % n] for i in rots]
+    p = rots.index(0)
+    return L, p
+
+
+def letters_of(L, p):
+    """kernel letters: (byte, length, marked) in top order; bottom = stable sort by byte"""
+    n = len(L)
+    runs = []
+    i = 0
+    while i < n:
+        j = i
+        while j < n and L[j] == L[i]:
+            j += 1
+        runs.append((i, j))
+        i = j
+    lets = []
+    for (a, b) in runs:
+        c = L[a]
+        if a <= p < b:
+            if p > a:
+                lets.append((c, p - a, False))
+            lets.append((c, 1, True))
+            if b - p - 1 > 0:
+                lets.append((c, b - p - 1, False))
+        else:
+            lets.append((c, b - a, False))
+    return lets
+
+
+# ---------------------------------------------------------------- Section-2 engine
+class St:
+    __slots__ = ("top", "bot", "lam", "word", "mark")
+
+    def __init__(self, top, bot, lam, word, mark):
+        self.top, self.bot, self.lam, self.word, self.mark = top, bot, lam, word, mark
+
+    def copy(self):
+        return St(list(self.top), list(self.bot), dict(self.lam), dict(self.word), dict(self.mark))
+
+
+def init_state(lets):
+    top = list(range(len(lets)))
+    bot = sorted(top, key=lambda i: lets[i][0])  # stable by byte
+    lam = {i: lets[i][1] for i in top}
+    word = {i: lets[i][0] for i in top}  # a byte (str) or a tuple (left, right)
+    mark = {i: lets[i][2] for i in top}
+    return St(top, bot, lam, word, mark)
+
+
+def coincidences(s):
+    """[(i, j)] : top index i, bottom index j whose letters end at one point"""
+    out = []
+    pt = 0
+    tpos = {}
+    for i, a in enumerate(s.top):
+        pt += s.lam[a]
+        tpos[pt] = i
+    pb = 0
+    for j, b in enumerate(s.bot):
+        pb += s.lam[b]
+        if pb in tpos:
+            out.append((tpos[pb], j))
+    return out  # increasing; last is the right end
+
+
+def step(s, i, j):
+    """step at coincidence (i, j) in place; returns label (A, B)"""
+    A, B = s.top[i], s.bot[j]
+    assert A != B
+    la, lb = s.lam[A], s.lam[B]
+    N = (s.word[A], s.word[B])
+    mk = s.mark[A] or s.mark[B]
+    if la > lb:
+        s.lam[A] = la - lb
+        s.word[B] = N
+        s.mark[B] = mk
+        del s.bot[j]
+        ka = s.bot.index(A)
+        s.bot.insert(ka + 1, B)
+    elif la < lb:
+        s.lam[B] = lb - la
+        s.word[A] = N
+        s.mark[A] = mk
+        del s.top[i]
+        kb = s.top.index(B)
+        s.top.insert(kb + 1, A)
+    else:
+        s.word[B] = N
+        s.mark[B] = mk
+        del s.top[i]
+        del s.bot[j]
+        ka = s.bot.index(A)
+        s.bot[ka] = B
+        del s.lam[A], s.word[A], s.mark[A]
+    return (A, B, min(la, lb), N)
+
+
+def finished(s):
+    if len(s.top) == 1:
+        assert s.top == s.bot and s.mark[s.top[0]]
+        return True
+    return False
+
+
+def run_R(lets):
+    s = init_state(lets)
+    labels, cells = [], []
+    while not finished(s):
+        co = coincidences(s)
+        i, j = co[-1]
+        A, B = s.top[i], s.bot[j]
+        assert A != B, "closed letter before the end (word not primitive?)"
+        A, B, k, N = step(s, i, j)
+        labels.append((A, B))
+        cells.append((k, N))
+    return s.word[s.top[0]], labels, cells
+
+
+def occ_labels(pairs):
+    seen = {}
+    out = []
+    for p in pairs:
+        c = seen.get(p, 0)
+        seen[p] = c + 1
+        out.append((p[0], p[1], c))
+    return out
+
+
+def dag_R(labels):
+    last = {}
+    deps = []
+    for j, (A, B) in enumerate(labels):
+        d = set()
+        for x in (A, B):
+            if x in last:
+                d.add(last[x])
+        deps.append(d)
+        last[A] = j
+        last[B] = j
+    return deps
+
+
+def linear_extensions(deps):
+    S = len(deps)
+    succ = [[] for _ in range(S)]
+    indeg = [0] * S
+    for j, d in enumerate(deps):
+        for k in d:
+            succ[k].append(j)
+            indeg[j] += 1
+    out = []
+    seq = []
+
+    def rec():
+        if len(seq) == S:
+            out.append(tuple(seq))
+            return
+        for v in range(S):
+            if indeg[v] == 0 and v not in done:
+                done.add(v)
+                seq.append(v)
+                for w in succ[v]:
+                    indeg[w] -= 1
+                rec()
+                for w in succ[v]:
+                    indeg[w] += 1
+                seq.pop()
+                done.discard(v)
+
+    done = set()
+    rec()
+    return out
+
+
+def subtrees(t, acc):
+    acc.add(t)
+    if isinstance(t, tuple):
+        subtrees(t[0], acc)
+        subtrees(t[1], acc)
+    return acc
+
+
+def key(s):
+    return (tuple(s.top), tuple(s.bot), tuple(sorted(s.lam.items())), tuple(sorted(s.word.items())))
+
+
+def count_schedules(lets):
+    """the number of all legal schedules to the end (memoised on the state)"""
+    memo = {}
+
+    def rec(s):
+        if finished(s):
+            return 1
+        k = key(s)
+        if k in memo:
+            return memo[k]
+        tot = 0
+        for (i, j) in coincidences(s):
+            if s.top[i] == s.bot[j]:
+                raise AssertionError("interior closed letter")
+            t = s.copy()
+            step(t, i, j)
+            tot += rec(t)
+        memo[k] = tot
+        return tot
+
+    return rec(init_state(lets))
+
+
+def tree_schedules(lets, tree):
+    """every legal schedule ending in `tree`, as label sequences. Exact pruning: a step's new
+    word persists as a subtree of the final root's derivation, so a step whose word is no
+    subtree of `tree` cannot end in it."""
+    sub = subtrees(tree, set())
+    res = []
+
+    def rec(s, pairs):
+        if finished(s):
+            if s.word[s.top[0]] == tree:
+                res.append(tuple(occ_labels(pairs)))
+            return
+        for (i, j) in coincidences(s):
+            A, B = s.top[i], s.bot[j]
+            if A == B:
+                raise AssertionError("interior closed letter")
+            if (s.word[A], s.word[B]) not in sub:
+                continue
+            t = s.copy()
+            step(t, i, j)
+            rec(t, pairs + [(A, B)])
+
+    rec(init_state(lets), [])
+    return res
+
+
+# ---------------------------------------------------------------- the cells form (port)
+def cells_R(lets):
+    """port of induce_cells on abstract slot ids. Returns per step (k, (wa, wb)) and deps.
+    Slots: ('t', idx) / ('b', idx); a slot holds fields prev, lam, word, mark, other."""
+    r = len(lets)
+    mem = {}
+    writer = {}  # slot -> last step that wrote any field of it
+    order = sorted(range(r), key=lambda i: lets[i][0])
+    bslot = {}
+    for pos, i in enumerate(order):
+        bslot[i] = ("b", pos)
+    for i in range(r):
+        c, lam, mk = lets[i]
+        t = ("t", i)
+        b = bslot[i]
+        mem[t] = dict(prev=("t", i - 1), lam=lam, word=c, mark=mk, other=b)
+        mem[b] = dict(prev=("b", b[1] - 1), lam=lam, word=c, mark=mk, other=t)
+    ft, fb = r, r
+    sa, sb = ("t", r - 1), ("b", r - 1)
+    steps, deps = [], []
+    cur = -1  # step index
+    while True:
+        # fresh both
+        fa = mem[sa]
+        fbb = mem[sb]
+        na, ra, aw, am, bs = fa["prev"], fa["lam"], fa["word"], fa["mark"], fa["other"]
+        nb, rb, bw, bm, ts = fbb["prev"], fbb["lam"], fbb["word"], fbb["mark"], fbb["other"]
+        depA = {writer[sa]} if sa in writer else set()
+        depB = {writer[sb]} if sb in writer else set()
+        if bs == sb:
+            if am:
+                return steps, deps, aw
+            sa, sb = na, nb  # drop
+            continue
+        while True:
+            cur += 1
+            k = min(ra, rb)
+            cw, cm = (aw, bw), am or bm
+            steps.append((k, cw))
+            deps.append(depA | depB)
+            if ra == rb:
+                mem[ts] = dict(prev=mem[ts]["prev"], lam=ra, word=cw, mark=cm, other=bs)
+                mem[bs] = dict(prev=mem[bs]["prev"], lam=ra, word=cw, mark=cm, other=ts)
+                writer[ts] = cur
+                writer[bs] = cur
+                sa, sb = na, nb
+                break
+            elif ra > rb:
+                mem[ts] = dict(prev=mem[ts]["prev"], lam=rb, word=cw, mark=cm, other=bs)
+                fslot = ("b", fb)
+                mem[fslot] = dict(prev=mem[bs]["prev"], lam=None, word=None, mark=None, other=None)
+                mem[bs] = dict(prev=fslot, lam=rb, word=cw, mark=cm, other=ts)
+                writer[ts] = cur
+                writer[bs] = cur
+                writer[fslot] = cur
+                bs = fslot
+                fb += 1
+                ra -= rb
+                s = nb
+                f = mem[s]
+                nb, rb, bw, bm, ts = f["prev"], f["lam"], f["word"], f["mark"], f["other"]
+                depA = {cur}  # A goes on
+                depB = {writer[s]} if s in writer else set()
+            else:
+                mem[bs] = dict(prev=mem[bs]["prev"], lam=ra, word=cw, mark=cm, other=ts)
+                fslot = ("t", ft)
+                mem[fslot] = dict(prev=mem[ts]["prev"], lam=None, word=None, mark=None, other=None)
+                mem[ts] = dict(prev=fslot, lam=ra, word=cw, mark=cm, other=bs)
+                writer[ts] = cur
+                writer[bs] = cur
+                writer[fslot] = cur
+                ts = fslot
+                ft += 1
+                rb -= ra
+                s = na
+                f = mem[s]
+                na, ra, aw, am, bs = f["prev"], f["lam"], f["word"], f["mark"], f["other"]
+                depB = {cur}
+                depA = {writer[s]} if s in writer else set()
+
+
+def closure(deps):
+    cl = []
+    for j, d in enumerate(deps):
+        c = set(d)
+        for k in d:
+            c |= cl[k]
+        cl.append(c)
+    return cl
+
+
+def main():
+    tot = dict(words=0, schedules=0, tree_R=0, linext=0, mismatch=0, cells_dag_mismatch=0,
+               cells_seq_mismatch=0, steps=0, same_tree_not_ext=0, ext_not_same_tree=0)
+    examples = []
+    lim = [int(x) for x in sys.argv[1:3]] if len(sys.argv) > 2 else [10, 7]
+    for (sigma, maxn) in ((2, lim[0]), (3, lim[1])):
+        for k in tot:
+            tot[k] = 0
+        alpha = "abc"[:sigma]
+        for n in range(2, maxn + 1):
+            for w in itertools.product(alpha, repeat=n):
+                w = "".join(w)
+                if len(set(w)) < 2 or not primitive(w):
+                    continue
+                L, p = bwt(w)
+                lets = letters_of(L, p)
+                tree, labels, cellsR = run_R(lets)
+                deps = dag_R(labels)
+                labR = occ_labels(labels)
+                exts = {tuple(labR[v] for v in e) for e in linear_extensions(deps)}
+                nsched = count_schedules(lets)
+                same = set(tree_schedules(lets, tree))
+                tot["words"] += 1
+                tot["schedules"] += nsched
+                tot["tree_R"] += len(same)
+                tot["linext"] += len(exts)
+                tot["steps"] += len(labels)
+                if same != exts:
+                    tot["mismatch"] += 1
+                    a, b = same - exts, exts - same
+                    tot["same_tree_not_ext"] += len(a)
+                    tot["ext_not_same_tree"] += len(b)
+                    if len(examples) < 5:
+                        examples.append((w, L, p, sorted(a)[:2], sorted(b)[:2]))
+                # the cells form: same steps, same DAG closure
+                csteps, cdeps, cword = cells_R(lets)
+                if [(k, N) for k, N in cellsR] != csteps or cword != tree:
+                    tot["cells_seq_mismatch"] += 1
+                elif closure(cdeps) != closure(deps):
+                    tot["cells_dag_mismatch"] += 1
+                    if len(examples) < 8:
+                        examples.append(("cellsdag", w, deps, cdeps))
+        print(sigma, maxn, dict(tot), flush=True)
+    print("TOTAL", tot)
+    for e in examples:
+        print("EXAMPLE", e)
+
+
+if __name__ == "__main__":
+    main()

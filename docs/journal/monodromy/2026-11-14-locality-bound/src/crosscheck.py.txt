@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Cross-check the port's R trace (SLOT=24, the census's layout) against the memtrace census
+(origin/research/cells-memory 95b98eda trace-cells.jsonl), phase induce_cells (20), heap
+regions buf.tops/bots/arena/rules (3..6), per admitted block and pooled.
+usage: crosscheck.py memtrace-trace-cells.jsonl out/slot24-R.jsonl"""
+import json, sys
+
+HEAP = {3, 4, 5, 6}
+mt = {}
+for line in open(sys.argv[1]):
+    a = json.loads(line)
+    if a["cells"] == 0:
+        continue
+    ld = st = bl = bs = 0
+    miss2 = 0
+    for s in a["stats"]:
+        if s["phase"] != 20 or s["region"] not in HEAP:
+            continue
+        if s["rw"] == "r":
+            ld += s["accesses"]; bl += s["bytes"]
+        else:
+            st += s["accesses"]; bs += s["bytes"]
+        miss2 += s["reuse"][25] + sum(s["reuse"][15:25])
+    lines = 0
+    for reg, v in a["region_lines"].items():
+        if int(reg) not in HEAP:
+            continue
+        for pat, c in v["patterns"].items():
+            w, r = pat.split("|")
+            ph = {x for x in (w[1:] + "+" + r[1:]).split("+") if x}
+            if "20" in ph:
+                lines += c
+    mt[a["block"]] = dict(n=a["n"], cells=a["cells"], loads=ld, stores=st, bytes_read=bl,
+                          bytes_written=bs, lines=lines, miss2=miss2)
+
+tot = {k: [0, 0] for k in ("cells", "loads", "stores", "bytes_read", "bytes_written", "lines", "miss2")}
+worst = {k: 0.0 for k in tot}
+nb = 0
+for line in open(sys.argv[2]):
+    d = json.loads(line)
+    m = mt[d["block"]]
+    mine = dict(cells=d["cells"], loads=d["loads"], stores=d["stores"], bytes_read=d["bytes_read"],
+                bytes_written=d["bytes_written"], lines=d["R_kernel"]["cold"],
+                miss2=d["R_kernel_prefix"]["misses"][2] - d["pre_only"]["misses"][2])
+    nb += 1
+    for k in tot:
+        tot[k][0] += mine[k]
+        tot[k][1] += m[k]
+        if m[k]:
+            worst[k] = max(worst[k], abs(mine[k] / m[k] - 1))
+print(f"blocks compared: {nb}")
+print(f"{'quantity':<16}{'port (SLOT 24)':>16}{'memtrace':>16}{'ratio':>9}{'worst block |dev|':>19}")
+for k, (a, b) in tot.items():
+    print(f"{k:<16}{a:>16,}{b:>16,}{a / b:>9.4f}{worst[k]:>19.4f}")
