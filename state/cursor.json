@@ -1245,10 +1245,10 @@
     {
       "comment_id": 6867986711,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Report and canonical ledger complete; awaiting deduplicated REVIEW publication.",
+      "progress": "Completed source/evidence recommendation and ledger; REVIEW exact author/body/#145 verified. No execution or admission. Persistent objective remains active.",
       "report_path": "state/records/reviews/inbox-6867986711/report.md",
       "report_commit": "72e86fc8e91817c356f1be3ae4752b8d66c4e29a",
       "audit_scope": {
@@ -1259,7 +1259,10 @@
         "compilation": false,
         "new_timing": false,
         "admission": false
-      }
+      },
+      "reply_id": 6868102448,
+      "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6868102448",
+      "routing_verification": "route/check passed. Pinned verify reports FROM is 'optimizer', not coordinator; exact author/body/destination readback verified separately."
     }
   ],
   "migrated_from": {
