@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6868132662,
+  "last_examined_comment_id": 6868144797,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -3025,12 +3025,20 @@
       "planned_action": "Accept completed Optimiser recommendation, queue bounded untimed executable correspondence preparation per router; no overlapping Codex dispatch or timing. Persist outcome then LOG.",
       "disposition": "Accepted desk recommendation; untimed executable correspondence staged once as priority1 QUEUED6868132662 because actual router busy6848164049. No dispatch/launch or timing admitted.",
       "queue_comment_id": 6868132662,
-      "log_status": "in_progress"
+      "log_status": "published_readback_verified",
+      "log_comment_id": 6868144797
     },
     "6868132662": {
       "status": "completed",
       "comment_updated_at": "2026-11-14T00:05:44Z",
-      "disposition": "Own priority1 QUEUED publication; ignore self wake."
+      "disposition": "Own priority1 QUEUED publication; ignore self wake.",
+      "delivery_id": "23f40be0-dfbf-11f1-9493-5af332635ad6"
+    },
+    "6868144797": {
+      "status": "completed",
+      "delivery_id": "3e869130-dfbf-11f1-8757-d1175aa12a4a",
+      "comment_updated_at": "2026-11-14T00:06:29Z",
+      "disposition": "Own LOG read back/verified; self wake ignored without replay."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3205,7 +3213,8 @@
     6867627975,
     6867899861,
     6867998245,
-    6868132662
+    6868132662,
+    6868144797
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
