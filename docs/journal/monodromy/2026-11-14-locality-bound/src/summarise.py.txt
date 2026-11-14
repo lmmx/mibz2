@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""Pool the per-block results: n-weighted misses per output byte, G, lower bounds.
+usage: summarise.py RESULTS.jsonl [RESULTS.jsonl ...]  (blocks are keyed by index; a later
+file adds keys for the blocks it has)"""
+import json, sys
+from collections import defaultdict
+
+CAPN = ["1.25MiB", "5MiB", "2MiB"]
+blocks = {}
+for f in sys.argv[1:]:
+    for line in open(f):
+        d = json.loads(line)
+        blocks.setdefault(d["block"], {}).update(d)
+
+def pool(keys, sel):
+    """sum over blocks having every key"""
+    bs = [b for b in blocks.values() if all(k in b for k in keys)]
+    return bs, sum(b["n"] for b in bs)
+
+def out(*a):
+    print(*a)
+
+bad = [b["block"] for b in blocks.values() if (b["cells"], b["letters"], b["r"]) != (b["census_cells"], b["census_letters"], b["census_r"])]
+out(f"blocks: {len(blocks)}; census mismatches (cells, letters, records): {bad}")
+val = []
+for b in blocks.values():
+    for k, v in b.items():
+        if k.startswith("B_") and not (v["linext"] and v["hazards_ok"]):
+            val.append((b["block"], k))
+    if not (b["R_linext"] and b["R_hazards_ok"]):
+        val.append((b["block"], "R"))
+out(f"validity failures (B not a linear extension or a byte hazard of R broken): {val}")
+
+bkeys = sorted({k for b in blocks.values() for k in b if k.startswith("B_")})
+groups = [("all blocks", ["R"])] + [(k, [k]) for k in bkeys]
+for name, keys in groups:
+    bs, N = pool(keys, None)
+    if not bs:
+        continue
+    out(f"\n== {name}: {len(bs)} blocks, n = {N:,}")
+    R = [sum(b["R"]["misses"][i] for b in bs) for i in range(3)]
+    cold = sum(b["R"]["cold"] for b in bs)
+    Rk = [sum(b["R_kernel"]["misses"][i] for b in bs) for i in range(3)]
+    Rp = [sum(b["R_prefix"]["misses"][i] for b in bs) for i in range(3)]
+    out(f"{'misses / output byte':<34}" + "".join(f"{c:>12}" for c in CAPN))
+    out(f"{'R (induction, no fetch-ahead)':<34}" + "".join(f"{R[i]/N:>12.5f}" for i in range(3)))
+    out(f"{'R compulsory (distinct lines)':<34}" + "".join(f"{cold/N:>12.5f}" for i in range(3)))
+    out(f"{'R compulsory share of misses':<34}" + "".join(f"{cold/R[i]:>12.4f}" for i in range(3)))
+    out(f"{'G lower bound, any order (cold/R)':<34}" + "".join(f"{cold/R[i]:>12.4f}" for i in range(3)))
+    out(f"{'R with fetch-ahead loads':<34}" + "".join(f"{Rk[i]/N:>12.5f}" for i in range(3)))
+    out(f"{'R after the order stage (prefix)':<34}" + "".join(f"{Rp[i]/N:>12.5f}" for i in range(3)))
+    blocks_at_floor = sum(1 for b in bs if b["R"]["misses"][1] == b["R"]["cold"])
+    out(f"blocks where R's 5 MiB misses == compulsory: {blocks_at_floor} of {len(bs)}")
+    for k in keys:
+        if k == "R":
+            continue
+        for m in ("m1", "m2", "m1_prefix"):
+            Bm = [sum(b[k][m]["misses"][i] for b in bs) for i in range(3)]
+            ref = Rp if m == "m1_prefix" else R
+            out(f"{'B ' + m:<34}" + "".join(f"{Bm[i]/N:>12.5f}" for i in range(3)))
+            out(f"{'G = B/R (' + m + ')':<34}" + "".join(f"{Bm[i]/ref[i]:>12.4f}" for i in range(3)))
+        Bc = sum(b[k]["m2"]["cold"] for b in bs)
+        out(f"{'B m2 compulsory':<34}{Bc/N:>12.5f}")
+
+# reuse-distance histograms, pooled, log2 buckets (last = cold)
+out("\n== reuse distance (LRU stack distance, distinct lines), pooled, share of line accesses")
+def hist(sel):
+    h = [0] * 26
+    for b in blocks.values():
+        v = sel(b)
+        if v is None:
+            continue
+        for i, x in enumerate(v["hist"]):
+            h[i] += x
+    return h
+hs = {"R": hist(lambda b: b["R"])}
+for k in bkeys:
+    hs[k + " m1"] = hist(lambda b, k=k: b[k]["m1"] if k in b else None)
+lab = ["0"] + [f"[2^{i-1},2^{i})" for i in range(1, 25)] + ["cold"]
+lab[24] = ">=2^23"
+names = list(hs)
+out(f"{'bucket':<16}" + "".join(f"{n:>18}" for n in names))
+for i in range(26):
+    if all(hs[n][i] == 0 for n in names):
+        continue
+    out(f"{lab[i]:<16}" + "".join(f"{hs[n][i]/max(1,sum(hs[n])):>18.5f}" for n in names))

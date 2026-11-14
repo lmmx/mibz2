@@ -1,0 +1,119 @@
+blocks: 196; census mismatches (cells, letters, records): []
+validity failures (B not a linear extension or a byte hazard of R broken): []
+
+== all blocks: 196 blocks, n = 176,398,965
+misses / output byte                   1.25MiB        5MiB        2MiB
+R (induction, no fetch-ahead)          0.08326     0.07124     0.07477
+R compulsory (distinct lines)          0.07124     0.07124     0.07124
+R compulsory share of misses            0.8557      1.0000      0.9528
+G lower bound, any order (cold/R)       0.8557      1.0000      0.9528
+R with fetch-ahead loads               0.08384     0.07125     0.07497
+R after the order stage (prefix)       0.11188     0.07125     0.08977
+blocks where R's 5 MiB misses == compulsory: 195 of 196
+
+== B_k4096_c0: 25 blocks, n = 22,499,897
+misses / output byte                   1.25MiB        5MiB        2MiB
+R (induction, no fetch-ahead)          0.08473     0.07220     0.07587
+R compulsory (distinct lines)          0.07220     0.07220     0.07220
+R compulsory share of misses            0.8521      1.0000      0.9517
+G lower bound, any order (cold/R)       0.8521      1.0000      0.9517
+R with fetch-ahead loads               0.08535     0.07221     0.07606
+R after the order stage (prefix)       0.11397     0.07220     0.09185
+blocks where R's 5 MiB misses == compulsory: 25 of 25
+B m1                                   0.09335     0.07220     0.07869
+G = B/R (m1)                            1.1018      1.0000      1.0373
+B m2                                   0.09097     0.07220     0.07785
+G = B/R (m2)                            1.0737      1.0000      1.0262
+B m1_prefix                            0.12322     0.07220     0.09596
+G = B/R (m1_prefix)                     1.0812      1.0000      1.0448
+B m2 compulsory                        0.07220
+
+== B_k4096_c2: 25 blocks, n = 22,499,897
+misses / output byte                   1.25MiB        5MiB        2MiB
+R (induction, no fetch-ahead)          0.08473     0.07220     0.07587
+R compulsory (distinct lines)          0.07220     0.07220     0.07220
+R compulsory share of misses            0.8521      1.0000      0.9517
+G lower bound, any order (cold/R)       0.8521      1.0000      0.9517
+R with fetch-ahead loads               0.08535     0.07221     0.07606
+R after the order stage (prefix)       0.11397     0.07220     0.09185
+blocks where R's 5 MiB misses == compulsory: 25 of 25
+B m1                                   0.09376     0.07220     0.07770
+G = B/R (m1)                            1.1066      1.0000      1.0242
+B m2                                   0.09129     0.07220     0.07713
+G = B/R (m2)                            1.0775      1.0000      1.0167
+B m1_prefix                            0.12362     0.07220     0.09497
+G = B/R (m1_prefix)                     1.0847      1.0000      1.0340
+B m2 compulsory                        0.07220
+
+== B_k64_c0: 196 blocks, n = 176,398,965
+misses / output byte                   1.25MiB        5MiB        2MiB
+R (induction, no fetch-ahead)          0.08326     0.07124     0.07477
+R compulsory (distinct lines)          0.07124     0.07124     0.07124
+R compulsory share of misses            0.8557      1.0000      0.9528
+G lower bound, any order (cold/R)       0.8557      1.0000      0.9528
+R with fetch-ahead loads               0.08384     0.07125     0.07497
+R after the order stage (prefix)       0.11188     0.07125     0.08977
+blocks where R's 5 MiB misses == compulsory: 195 of 196
+B m1                                   0.08266     0.07124     0.07453
+G = B/R (m1)                            0.9928      1.0000      0.9968
+B m2                                   0.08258     0.07124     0.07452
+G = B/R (m2)                            0.9918      1.0000      0.9967
+B m1_prefix                            0.11091     0.07124     0.08912
+G = B/R (m1_prefix)                     0.9913      1.0000      0.9929
+B m2 compulsory                        0.07124
+
+== B_k64_c1: 196 blocks, n = 176,398,965
+misses / output byte                   1.25MiB        5MiB        2MiB
+R (induction, no fetch-ahead)          0.08326     0.07124     0.07477
+R compulsory (distinct lines)          0.07124     0.07124     0.07124
+R compulsory share of misses            0.8557      1.0000      0.9528
+G lower bound, any order (cold/R)       0.8557      1.0000      0.9528
+R with fetch-ahead loads               0.08384     0.07125     0.07497
+R after the order stage (prefix)       0.11188     0.07125     0.08977
+blocks where R's 5 MiB misses == compulsory: 195 of 196
+B m1                                   0.08261     0.07124     0.07430
+G = B/R (m1)                            0.9922      1.0000      0.9937
+B m2                                   0.08257     0.07124     0.07432
+G = B/R (m2)                            0.9917      1.0000      0.9939
+B m1_prefix                            0.11086     0.07124     0.08887
+G = B/R (m1_prefix)                     0.9909      1.0000      0.9900
+B m2 compulsory                        0.07124
+
+== B_k64_c2: 196 blocks, n = 176,398,965
+misses / output byte                   1.25MiB        5MiB        2MiB
+R (induction, no fetch-ahead)          0.08326     0.07124     0.07477
+R compulsory (distinct lines)          0.07124     0.07124     0.07124
+R compulsory share of misses            0.8557      1.0000      0.9528
+G lower bound, any order (cold/R)       0.8557      1.0000      0.9528
+R with fetch-ahead loads               0.08384     0.07125     0.07497
+R after the order stage (prefix)       0.11188     0.07125     0.08977
+blocks where R's 5 MiB misses == compulsory: 195 of 196
+B m1                                   0.08232     0.07124     0.07432
+G = B/R (m1)                            0.9886      1.0000      0.9940
+B m2                                   0.08232     0.07124     0.07434
+G = B/R (m2)                            0.9887      1.0000      0.9943
+B m1_prefix                            0.11057     0.07124     0.08889
+G = B/R (m1_prefix)                     0.9882      1.0000      0.9902
+B m2 compulsory                        0.07124
+
+== reuse distance (LRU stack distance, distinct lines), pooled, share of line accesses
+bucket                           R     B_k4096_c0 m1     B_k4096_c2 m1       B_k64_c0 m1       B_k64_c1 m1       B_k64_c2 m1
+0                          0.52205           0.52261           0.52248           0.52278           0.52269           0.52271
+[2^0,2^1)                  0.04802           0.05422           0.05436           0.04978           0.04970           0.04969
+[2^1,2^2)                  0.04064           0.04505           0.04555           0.04003           0.04005           0.04009
+[2^2,2^3)                  0.15270           0.11832           0.11899           0.13079           0.13071           0.13135
+[2^3,2^4)                  0.06480           0.06191           0.06106           0.06386           0.06399           0.06369
+[2^4,2^5)                  0.01267           0.02395           0.02448           0.02262           0.02316           0.02276
+[2^5,2^6)                  0.01024           0.01493           0.01520           0.01581           0.01626           0.01606
+[2^6,2^7)                  0.00914           0.01105           0.01093           0.01201           0.01214           0.01203
+[2^7,2^8)                  0.00802           0.00964           0.00947           0.00965           0.00954           0.00956
+[2^8,2^9)                  0.00819           0.00947           0.00928           0.00897           0.00871           0.00880
+[2^9,2^10)                 0.00942           0.01037           0.01016           0.01014           0.00987           0.00995
+[2^10,2^11)                0.01190           0.01242           0.01226           0.01224           0.01206           0.01204
+[2^11,2^12)                0.01673           0.01602           0.01589           0.01649           0.01636           0.01640
+[2^12,2^13)                0.02132           0.02083           0.02054           0.02065           0.02056           0.02071
+[2^13,2^14)                0.01982           0.01983           0.01964           0.01990           0.01994           0.02010
+[2^14,2^15)                0.00810           0.01175           0.01256           0.00816           0.00824           0.00804
+[2^15,2^16)                0.00170           0.00310           0.00263           0.00159           0.00148           0.00149
+[2^16,2^17)                0.00001           0.00000           0.00000           0.00000           0.00000           0.00000
+cold                       0.03452           0.03452           0.03452           0.03452           0.03452           0.03452
