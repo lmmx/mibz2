@@ -2103,11 +2103,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D104",
-    "incoming_comment": 6867883717,
-    "review_comment_id": 6867956361
+    "active_comment": 6868538108,
+    "status": "in progress",
+    "decision": "D105"
   },
   "duplicate_events": [
     {
@@ -3759,6 +3757,13 @@
       "work_commit": "d5ee317ad73962e35d6dbdd1804a372a6b92abbb",
       "review_comment_id": 6867956361,
       "complete_cursor_commit": "c835d2e00115b2340219eebeb742b3ac8b57ea2c"
+    },
+    {
+      "comment_id": 6868538108,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D105",
+      "progress": "Migration verified. Exact-head public-path integration review; preserve kernel closure and adoption restrictions."
     }
   ],
   "migrated_from": {
