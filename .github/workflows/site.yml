@@ -93,6 +93,7 @@ jobs:
           git fetch -q origin bench-results:refs/remotes/origin/bench-results || echo "no bench-results branch yet"
           python3 docs/scripts/bench_history.py
           python3 docs/scripts/bench_release_scaling.py
+          python3 docs/scripts/test_bench_release_scaling.py
       - uses: astral-sh/setup-uv@v8.1.0
       - name: Version the site's own assets
         run: sed -i "s|?v=dev\"|?v=${GITHUB_SHA::12}\"|" zensical.toml

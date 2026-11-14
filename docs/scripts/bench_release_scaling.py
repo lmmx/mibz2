@@ -14,6 +14,14 @@ Writes, for each run, newest first:
   median wall and, against the reference arm, the geometric mean of the rounds' paired wall
   ratios with its 95% interval. Arms whose outputs differ from the reference's are named.
   With no runs, it says none is recorded yet.
+
+The asset's `lineage` section is every release against every other, inferred from the
+pairwise runs without re-running old releases (lineage()): lbzip2 is the same in every run,
+so it is a fixed anchor. Per thread count, each release's log wall time relative to lbzip2 is
+the inverse-variance weighted mean of its paired log ratios over the runs it appears in, and
+any two releases compare as the difference of their figures. The chain of each run's direct
+pair is kept as a cross-check, and a release measured in two runs gives a closure residual
+(its two log ratios against lbzip2) as a drift diagnostic.
 """
 
 import json
@@ -135,10 +143,126 @@ def run_data(d: Path) -> dict:
     }
 
 
+def _version(v: str) -> tuple[int, ...] | None:
+    parts = v.split(".")
+    return tuple(int(x) for x in parts) if len(parts) == 3 and all(x.isdigit() for x in parts) else None
+
+
+def _mean_var(logs: list[float]) -> tuple[float, float] | None:
+    """A paired log ratio's mean over the rounds, and that mean's variance (var/rounds)."""
+    if len(logs) < 2:
+        return None
+    return statistics.fmean(logs), statistics.variance(logs) / len(logs)
+
+
+def lineage(dirs: list[Path]) -> list[dict]:
+    """Every release against every other, from the pairwise runs, per machine and corpus.
+
+    A run has three arms: the new release (the reference arm), the release before it, and an
+    anchor that is not a release (lbzip2), the same in every run of a group. Per thread count
+    and run, each release gives the mean over the rounds of its paired log(wall/anchor wall)
+    and that mean's variance. A release's fitted figure x is the inverse-variance weighted
+    mean of its observations (two for a release measured in two runs), with variance v, one
+    over the summed weights. Two releases a and b compare as exp(x_a - x_b) with variance
+    v_a + v_b: conservative where both come from one run, whose shared anchor rounds make
+    their errors positively correlated. The interval uses Student's t on one run's rounds.
+
+    The cross-check is the chain: per thread, the cumulative sum of each run's direct mean
+    log(old wall/new wall) from the oldest release, with its summed variances. The drift
+    diagnostic is the closure residual: a release measured in two runs, its log ratio
+    against the anchor in the later run minus that in the earlier one, with its standard
+    error. Runs on different machines, corpora or anchors are never combined.
+    """
+    groups = defaultdict(list)  # (cpu, corpus, anchor) -> [run]
+    for d in sorted(dirs):
+        meta = json.loads((d / "meta.json").read_text())
+        labels, ref = meta["arms"], meta["ref"]
+        new = labels[ref]
+        olds = [a for a in labels if a != ref and _version(labels[a])]
+        anchors = [a for a in labels if a != ref and not _version(labels[a])]
+        if not _version(new) or len(olds) != 1 or len(anchors) != 1:
+            continue
+        old, anchor = olds[0], anchors[0]
+        rows = [json.loads(line) for line in (d / "runs.jsonl").read_text().splitlines() if line.strip()]
+        rows = [r for r in rows if not r.get("err")]
+        cells = defaultdict(dict)  # (corpus, threads, round) -> arm -> row
+        for r in rows:
+            cells[(r["corpus"], r["threads"], r["round"])][r["arm"]] = r
+        cpu = meta.get("cpu") or meta.get("machine") or d.name
+        for corpus in sorted({k[0] for k in cells}):
+            per_t = {}
+            for t in sorted({k[1] for k in cells if k[0] == corpus}):
+                rounds = [c for k, c in cells.items() if k[0] == corpus and k[1] == t and {ref, old, anchor} <= c.keys()]
+                lw = lambda a, b: [math.log(c[a]["wall"] / c[b]["wall"]) for c in rounds]  # noqa: E731
+                obs = {"new": _mean_var(lw(ref, anchor)), "old": _mean_var(lw(old, anchor)), "link": _mean_var(lw(old, ref))}
+                if None in obs.values():
+                    continue
+                obs["anchor_mbps"] = math.exp(statistics.fmean(math.log(c[anchor]["out"] / c[anchor]["wall"] / 1e6) for c in rounds))
+                per_t[t] = obs
+            if per_t:
+                groups[(cpu, corpus, labels[anchor])].append(
+                    {"id": d.name, "date": meta["date"], "new": new, "old": labels[old], "rounds": meta["rounds"], "t": per_t})
+    out = []
+    for (cpu, corpus, anchor), runs in groups.items():
+        releases = sorted({r["new"] for r in runs} | {r["old"] for r in runs}, key=_version)
+        if len(releases) < 3:
+            continue
+        runs.sort(key=lambda r: (_version(r["new"]), r["date"]))
+        newest = runs[-1]
+        tc = t975(min(r["rounds"] for r in runs) - 1)
+        threads = sorted({t for r in runs for t in r["t"]})
+        per = {}
+        for t in threads:
+            obs = defaultdict(list)  # release -> [(run, mean, var)]
+            for r in runs:
+                if t in r["t"]:
+                    obs[r["new"]].append((r["id"], *r["t"][t]["new"]))
+                    obs[r["old"]].append((r["id"], *r["t"][t]["old"]))
+            x, v = [], []
+            for rel in releases:
+                o = obs.get(rel)
+                if not o:
+                    x.append(None), v.append(None)
+                    continue
+                w = sum(1 / ov for _, _, ov in o)
+                x.append(round(sum(m / ov for _, m, ov in o) / w, 6))
+                v.append(round(1 / w, 9))
+            # the chain from the oldest release, through each run's direct pair
+            chain, cv, acc, accv = [0.0], [0.0], 0.0, 0.0
+            for a, b in zip(releases, releases[1:]):
+                link = next((r["t"][t]["link"] for r in runs if r["old"] == a and r["new"] == b and t in r["t"]), None)
+                if link is None or acc is None:
+                    acc = accv = None
+                else:
+                    acc, accv = acc + link[0], accv + link[1]
+                chain.append(None if acc is None else round(acc, 6))
+                cv.append(None if accv is None else round(accv, 9))
+            closure = []
+            for rel in releases:
+                o = sorted(obs.get(rel, []), key=lambda ob: next(i for i, r in enumerate(runs) if r["id"] == ob[0]))
+                if len(o) == 2:
+                    d, se = o[1][1] - o[0][1], math.sqrt(o[0][2] + o[1][2])
+                    closure.append({"release": rel, "runs": [o[0][0], o[1][0]], "d": round(d, 6), "se": round(se, 6)})
+            per[str(t)] = {
+                "x": x, "v": v, "n": [len(obs.get(rel, [])) for rel in releases],
+                "chain": chain, "chain_v": cv, "closure": closure,
+                "anchor_mbps": round(newest["t"][t]["anchor_mbps"], 1) if t in newest["t"] else None,
+            }
+        out.append({
+            "cpu": cpu, "corpus": corpus, "anchor": anchor, "releases": releases, "threads": threads,
+            "t975": tc, "newest_run": newest["id"],
+            "runs": [{"id": r["id"], "date": r["date"], "new": r["new"], "old": r["old"]} for r in runs],
+            "per_thread": per,
+        })
+    # the newest run's machine first
+    out.sort(key=lambda g: max(r["date"] for r in g["runs"]), reverse=True)
+    return out
+
+
 def main() -> None:
     dirs = sorted((p for p in RUNS.glob("*/") if (p / "meta.json").exists()), reverse=True) if RUNS.exists() else []
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    ASSET.write_text(json.dumps({"runs": [run_data(d) for d in dirs]}, separators=(",", ":"), allow_nan=False))
+    ASSET.write_text(json.dumps({"runs": [run_data(d) for d in dirs], "lineage": lineage(dirs)}, separators=(",", ":"), allow_nan=False))
     if not dirs:
         OUT.write_text("No release-scaling run is recorded yet.\n")
     else:
