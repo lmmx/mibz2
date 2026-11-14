@@ -1319,12 +1319,15 @@
     {
       "comment_id": 6882129734,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Reassessment and ledger committed; awaiting one REVIEW on #145.",
+      "progress": "Reassessment and ledger committed; one REVIEW exact author/body/#145 readback verified. No execution.",
       "report_path": "state/records/reviews/inbox-6882129734/report.md",
-      "report_commit": "f9dcc0ac5e6e831a9805c2cb1c02fe6f7fdb9a77"
+      "report_commit": "f9dcc0ac5e6e831a9805c2cb1c02fe6f7fdb9a77",
+      "reply_id": 6882177776,
+      "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6882177776",
+      "routing_verification": "Exact readback: #145, author lmmx, inbox ID, terminal UNPARK FOR A STEELMAN."
     }
   ],
   "migrated_from": {
