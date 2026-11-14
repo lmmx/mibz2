@@ -1,0 +1,33 @@
+# Cooperative Cells re-read against measured concurrency traffic
+
+Inbox [6882129734](https://github.com/lmmx/mibz2/pull/160#issuecomment-6882129734). Evidence: Coordinator [PREMISE HOLDS LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6882123681), bundle `evidence:fcb4627e cells-imc/run-20261114T180428Z.tar.gz` SHA-256 `2661310a…f2cb`; original [PARK review](https://github.com/lmmx/mibz2/pull/145#issuecomment-6879252259); [census](https://github.com/lmmx/mibz2/blob/b5617a8/docs/journal/2026-11-14-cells-census/README.md). I used the published validated curve; raw IMC readings were not independently reprocessed here. No build or timing.
+
+## What the measurement changes
+
+The i9's idle-subtracted DRAM traffic rises from b(1)=1.25 to b(2)=5.81, b(3)=11.51, b(4)=15.54 and b(10)=24.19 bytes/output byte; wall is .450, .252, .193, .162 and .180 s respectively. Registered b(10)/b(3)=2.1018 [2.0910,2.1127] passes its premise rule. On this machine more simultaneous Cells sets sharply raise traffic. It does **not** measure a shared-block team: b(t/k) for a team with t/k blocks is a hypothesis, and sharing may add metadata, cache interference and synchronization. The working-set estimate that three sets fit L3 was falsified by b(2).
+
+Take N=176,398,965 admitted output bytes as the approximate numerator used for a first-pass traffic scale. The complete decoder's traffic denominator may differ; all GB/s below are approximate and inherit that choice. b(4)N/.162 ≈ **16.9 GB/s** and b(10)N/.180 ≈ **23.7 GB/s**. These are inferred effective rates, not a measured fixed bandwidth constant; b(3)N/.193 ≈ **10.5 GB/s**. Hence pricing with one 24 GB/s roof alone would be optimistic. The sensitivity model is `T_team ≥ max(T_compute, b(m)N/B)`, m simultaneous blocks, B in 17–24 GB/s when enough cores can issue traffic. At m=3, observed independent effective B is only 10.5 GB/s, so the model must show that case too.
+
+## Throughput arithmetic, including the serial bottleneck
+
+The pinned census has admitted **s=0.741632** n-weighted Ir in slots+induction, and only 8/196 blocks allow three balanced top-level writer spans. Treating this Ir fraction as the *whole-decoder cycle* serial fraction, and assuming perfect balance, no team overhead and every block eligible, gives `g(k)=1/[s+(1-s)/k]`: g(2)=1.148, g(3)=1.208, g(4)=1.240, g(5)=1.260. This is an **optimistic model**, not a measured team speedup. The 1-thread full wall .450 s gives a compute floor `.450/(m g(k))` for m equal teams; it omits scheduling tails and unchanged decoder phases. A k-person team uses k cores for only g(k)<1.3 blocks' work rate.
+
+| Total cores, fixed team | Live blocks, b(m) | Ideal compute floor | Traffic floor at B=24–17 GB/s | Observed independent wall |
+|---|---:|---:|---:|---:|
+| t=4, k=2 | 2, 5.81 | **.196 s** | .043–.060 s | **.162 s** |
+| t=4, k=4 | 1, 1.25 | **.363 s** | .009–.013 s | **.162 s** |
+| t=10, k=2 | 5, b(5)≈17.98 interpolated | **.078 s** | **.132–.187 s** | **.180 s** |
+| t=10, k=3 (three teams, one core idle) | 3, 11.51 | **.124 s** | **.085–.119 s** | **.180 s** |
+| t=10, k=5 | 2, 5.81 | **.179 s** | .043–.060 s | **.180 s** |
+
+At **four cores**, even the k=2 *ideal compute floor* exceeds measured independent wall by .034 s (21%); k=3 cannot repair this under the same s. Thus the existing writer-only team has no priced four-core case. At **ten**, k=2 can beat independent blocks only if effective B exceeds b(5)N/.180≈**17.6 GB/s**, *and* synchronization/metadata/tails fit the remaining wall margin. k=3 could reach .124 s under the 17–24 GB/s scenario, but at the **observed three-independent-set** effective B≈10.5 GB/s its traffic time is ≈.193 s: no win. Its break-even B is ≈**11.3 GB/s**. Whether nine workers cooperatively serving three blocks can sustain that rate is unmeasured. k=5 has no meaningful headroom before overhead. At k=3 the factor-boundary balance test passes only 8/196, so the existing top-level writer split cannot realise the optimistic g(3) on most admitted blocks. k=2 passes 51/196. Cross-span copies further bind the writer. A different within-block induction schedule is needed for the ten-core opportunity.
+
+The b(t) curve is per *independent* Workers run, not a universal function of m. Replacing b(10) by b(3) without demonstrating a team's cache behaviour would silently assume the conclusion. Likewise s is Ir, not cycles, and excludes non-Cells whole-reader work. The table is a boundary on a possibility, not an estimate of actual performance. At ten threads the critical-worker distribution, block-length tail and the 196 admitted/other-block mix must enter any steelman.
+
+## Diet and elision interaction
+
+The 20 B slot diet's ~11% fewer *distinct modelled lines* is not an 11% reduction in b(t). If it merges and lowers b(10), independent-block wall may fall, shrinking the team's ten-core margin; if it makes two or three sets fit cache better, b(2–3) may fall too. Re-measure the curve for the final layout before claiming either effect. The [elision steelman](https://github.com/lmmx/mibz2/pull/145#issuecomment-6881405112) has uncounted eligible z on the current cohort and an estimated gross 0.0312 lines/output byte before link/visit debit. [Coordinator 6881408836](https://github.com/lmmx/mibz2/pull/145#issuecomment-6881408836) requires exact z, starts and a full ledger before registration. Elision could reduce independent sets' working-set pressure and serial fraction, or its links could add traffic. No multiplication of the diet and elision estimates is licensed. Those cheaper per-block cuts take priority.
+
+## Decision and steelman boundary
+
+**UNPARK FOR A STEELMAN** of a *ten-core shared-block schedule*, not of the already rejected top-level writer-only split. The measured 2.10× traffic ratio opens a conditional ten-core benefit, while the four-core case remains economically inferior under the stated s. The steelman must specify k=2 or k=3 and show: a within-block induction frontier or other work partition that actually reaches its claimed g(k); exact per-block balance and cross-span dependencies; shared versus duplicated slot/rule/out buffers; extra bytes/output byte (for k=2 the savings budget is only b(10)-b(5)≈6.2 B before the diet); barriers, queue wakes and tail time; origin/CRC/output correctness; and an end-to-end wall/CPU/RSS comparison on the same i9. It must test the asserted B at three or five live sets, not borrow the 24 GB/s roof. If the only mechanism remains top-level writer splitting, **the original PARK stands**. This verdict authorises writing the steelman only; no screen, build, registration, run, merge or default change.
