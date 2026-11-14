@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.1](https://github.com/lmmx/mibz2/compare/v0.3.0...v0.3.1) - 2026-11-14
 
+A memory-traffic release for Cells. Each letter's slot in Cells' two orders shrinks from 24 to
+20 bytes (#391): the link to the letter's slot in the other order is now a 4-byte offset, since a
+block's buffer is far below 4 GiB. Fewer slot bytes means less DRAM traffic once several blocks
+decode at once. The output, the API, the supported inputs and the plans are unchanged.
+
+- **The paired runbook bench, CI** (run 43646276187, AMD EPYC 9V45, 4 vCPU), v0.3.0 → master:
+  `wikidata` −4.3% (−7.5, −1.0), −3.1% (−5.4, −0.6) and −4.0% (−6.0, −2.0) at 1, 2 and 4 threads;
+  peak RSS −4.5%, −3.0% and −12.7%. No corpus slower in wall time. `text` at 1 thread is +2.6%
+  in CPU, at the edge of its interval. The assessment: better, and no measure worse.
+- **The i9-10900K, forced Workers + Cells** (`cells-diet/run-20261114T195323Z`, sha256 52275b76,
+  10 paired rounds, #145 LOG 6883380160): 20 B ÷ 24 B wall 0.980 at 1 thread, **0.957** at 4,
+  0.926 at 6 and **0.911** at 10. The gain grows with the thread count, as a bandwidth lever
+  should. CPU amplification at 10 threads against 1 fell by about 10% (Q = 0.904, 0.851–0.962).
+- **Why:** the memory-dose and working-set tests (#387, #390) showed that Workers + Cells is
+  bound by DRAM traffic at 4 threads and up: 1.25 DRAM bytes per output byte with one block in
+  flight, 15.5 at 4, 24.2 at 10 (#145 LOG 6882123681).
+- **Caveats.**
+  - The knee does not move: the best wall is still at 6 threads, and only the plateau is lower
+    and flatter.
+  - The next step of the diet, a 16-byte slot (#398), was built and rejected: it showed no
+    primary gain on CI and +4.4% CPU at 4 threads, from one more dependent load per letter.
+- **Release scaling** on the i9 (0.3.1 against 0.3.0) is queued, and its figures will be added
+  here.
+
 ### <!-- 4 -->Documentation
 
 - *(changelog)* 0.3.0's notes from the i9 release scaling, the paired run against 0.2.9 and wikidata-pq#225 ([#384](https://github.com/lmmx/mibz2/pull/384))
