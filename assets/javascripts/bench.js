@@ -15,7 +15,7 @@
     ["rss_mb", "Peak RSS", "MB", (v) => v.toFixed(1)],
   ];
   const SLOTS = 4; // categorical slots (bench.css: --bh-s1..s4), then muted
-  let state = { metric: "mb_s", threads: "all", cpu: null, tCorpus: "wikidata", tThreads: "4", tFig: "wall", tView: "ci", wsRun: null, wsCorpus: "wikidata" };
+  let state = { metric: "mb_s", threads: "all", cpu: null, tCorpus: "wikidata", tThreads: "4", tFig: "wall", tView: "ci", wsRun: null, wsCorpus: "wikidata", wsLinT: null };
   try {
     state = { ...state, ...JSON.parse(localStorage.getItem("mibz2-bench") || "{}") };
   } catch (e) { /* (no storage: the defaults) */ }
@@ -124,7 +124,10 @@
     ["rss", "Peak RSS", 1],
   ];
   const pct = (L, sign) => 100 * (Math.exp(sign * L) - 1);
-  const fmtPct = (v) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(Math.abs(v) < 10 ? 1 : 0)}%`;
+  const fmtPct = (v) => {
+    const a = Math.abs(v).toFixed(Math.abs(v) < 10 ? 1 : 0);
+    return `${+a === 0 ? "" : v >= 0 ? "+" : "−"}${a}%`; // no sign on a change that rounds to zero
+  };
   function trajectory(data, root) {
     const host = document.getElementById("bench-hero") || el("div", {}, root);
     host.textContent = "";
@@ -151,7 +154,7 @@
     // A release-scaling run (bench/release-scaling/, docs/scripts/bench_release_scaling.py): offered only
     // when one is recorded, so the page needs none
     if (ws.length) seg("View", [["ci", "CI, merge by merge"], ["ws", "Release scaling"]], state.tView, (v) => (state.tView = v));
-    if (state.tView === "ws") { releaseScaling(ws, box, seg); return; }
+    if (state.tView === "ws") { releaseScaling(ws, box, seg, (data.scaling && data.scaling.lineage) || []); return; }
     if (start === null || start === undefined || !data.links || !data.links.length) {
       el("p", { class: "bh-hero-note", text: "No merged pull request's benchmark is linked yet (bench/links.py)." }, box);
       return;
@@ -352,21 +355,25 @@
   // The hero's Release scaling view: one recorded run, each arm's throughput (the median of its
   // rounds) against threads, and its paired wall change against the reference arm. A run is
   // one machine's: runs are never combined, and they inform rather than decide.
-  function releaseScaling(ws, box, seg) {
+  function releaseScaling(ws, box, seg, lin) {
     // A newly recorded run (ws[0], the newest) is shown first, whatever run a reader last
     // picked: a remembered choice only holds until a newer release's run arrives.
     if (state.wsNewest !== ws[0].id) {
       state.wsNewest = ws[0].id;
       state.wsRun = ws[0].id;
     }
-    if (!ws.some((r) => r.id === state.wsRun)) state.wsRun = ws[0].id;
-    const run = ws.find((r) => r.id === state.wsRun);
+    // "all": every release against every other, inferred from the runs (lineage)
+    if (!(state.wsRun === "all" && lin.length) && !ws.some((r) => r.id === state.wsRun)) state.wsRun = ws[0].id;
     // Each run is named by its releases, so runs on one day and machine can be told apart
     const name = (r) => {
       const older = r.arms.filter((a) => a !== r.ref && /^\d+\.\d+\.\d+$/.test(a));
       return `${r.ref}${older.length ? " against " + older.join(", ") : ""} · ${r.date} · ${r.cpu}`;
     };
-    if (ws.length > 1) seg("Run", ws.map((r) => [r.id, name(r)]), state.wsRun, (v) => (state.wsRun = v));
+    const runOpts = ws.map((r) => [r.id, name(r)]);
+    if (lin.length) runOpts.unshift(["all", `All releases (${lin[0].releases[0]} to ${lin[0].releases[lin[0].releases.length - 1]}, inferred)`]);
+    if (runOpts.length > 1) seg("Run", runOpts, state.wsRun, (v) => (state.wsRun = v));
+    if (state.wsRun === "all") { releaseLineage(ws, lin, box, seg); return; }
+    const run = ws.find((r) => r.id === state.wsRun);
     const corpora = Object.keys(run.corpora).sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
     if (!corpora.includes(state.wsCorpus)) state.wsCorpus = corpora[0];
     if (corpora.length > 1) seg("Corpus", corpora.map((c) => [c, c]), state.wsCorpus, (v) => (state.wsCorpus = v));
@@ -419,6 +426,125 @@
     });
     const cores = run.cores ? `${run.cores} cores, ${run.cpus} CPUs` : `${run.cpus} CPUs`;
     note.textContent = `${run.date} · ${cores} · ${run.rounds} paired rounds · ${c.same_bytes ? "every arm gave the same bytes" : "the arms' outputs differ"}. A local run informs; it doesn't decide (the tables below).` + (run.note ? ` ${run.note}` : "");
+  }
+
+  // The hero's All releases view: every release against every other, inferred from the
+  // pairwise runs (bench_release_scaling.py, lineage()). Per thread count, each release's log
+  // wall time relative to lbzip2 (in every run, the fixed anchor) is pooled over the runs it
+  // appears in; two releases compare as the difference of their figures. The curves put each
+  // release on the newest run's measured lbzip2 throughput: the shape is measured, each
+  // release's level relative to lbzip2 is modelled. The matrix is release against release at
+  // one thread count.
+  function releaseLineage(ws, lin, box, seg) {
+    const corpora = [...new Set(lin.map((g) => g.corpus))].sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
+    if (!corpora.includes(state.wsCorpus)) state.wsCorpus = corpora[0];
+    if (corpora.length > 1) seg("Corpus", corpora.map((c) => [c, c]), state.wsCorpus, (v) => (state.wsCorpus = v));
+    const g = lin.find((l) => l.corpus === state.wsCorpus);
+    const R = g.releases, ts = g.threads.map(String), n = R.length;
+    if (!ts.includes(state.wsLinT)) state.wsLinT = ts[ts.length - 1];
+    seg("Matrix at", ts.map((t) => [t, `${t} thread${t === "1" ? "" : "s"}`]), state.wsLinT, (v) => (state.wsLinT = v));
+    const P = g.per_thread, k = g.t975;
+    const ok = (t, i) => P[t].x[i] !== null && P[t].x[i] !== undefined;
+    // modelled MB/s: lbzip2's measured MB/s in the newest run over the release's fitted wall ratio
+    const mb = (t, i, z = 0) => P[t].anchor_mbps / Math.exp(P[t].x[i] - z * Math.sqrt(P[t].v[i]));
+    const T = state.wsLinT, oi = 0, ni = n - 1;
+    const lead = el("p", { class: "bh-hero-focus" }, box);
+    const body = el("div", { class: "bh-hero-chart" }, box);
+    const legend = el("p", { class: "bh-hero-commit" }, box);
+    const note = el("p", { class: "bh-hero-commit" }, box);
+    // the headline: the newest release against the oldest, both ways, at the chosen threads
+    const p = P[T];
+    const dx = p.x[oi] - p.x[ni], hw = k * Math.sqrt(p.v[oi] + p.v[ni]);
+    const ch = p.chain[ni] !== null ? p.chain[ni] - p.chain[oi] : null;
+    el("strong", { text: `${R[ni]} against ${R[oi]}, ${state.wsCorpus} on ${g.cpu} at ${T} thread${T === "1" ? "" : "s"}: ${fmtPct(100 * (Math.exp(dx) - 1))} throughput` }, lead);
+    lead.append(` (95%: ${fmtPct(100 * (Math.exp(dx - hw) - 1))} to ${fmtPct(100 * (Math.exp(dx + hw) - 1))}), through ${g.anchor} as the anchor` +
+      (ch !== null ? `; ${fmtPct(100 * (Math.exp(ch) - 1))} through the chain of the ${g.runs.length} runs' direct pairs.` : "."));
+    // the curves
+    const W = Math.max(300, Math.round(body.clientWidth) || 700);
+    const narrow = W < 560;
+    const H = narrow ? 260 : 320, M = { l: 52, r: 14, t: 16, b: 36 };
+    const vals = [];
+    for (const t of ts) {
+      if (P[t].anchor_mbps) vals.push(P[t].anchor_mbps);
+      R.forEach((_, i) => { if (ok(t, i) && P[t].anchor_mbps) vals.push(mb(t, i, k)); });
+    }
+    const yt = ticks(0, Math.max(...vals), narrow ? 4 : 5);
+    while (yt[yt.length - 1] < Math.max(...vals)) yt.push(+(yt[yt.length - 1] + (yt[1] - yt[0])).toFixed(10));
+    const y = (v) => M.t + (H - M.t - M.b) * (1 - v / yt[yt.length - 1]);
+    const x = (i) => M.l + (ts.length === 1 ? (W - M.l - M.r) / 2 : (i * (W - M.l - M.r)) / (ts.length - 1));
+    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `Modelled throughput of ${state.wsCorpus} on ${g.cpu} against threads, for releases ${R.join(", ")}, and ${g.anchor} as measured` }, body);
+    for (const v of yt) {
+      svg("line", { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), class: "bh-grid" }, s);
+      svg("text", { x: M.l - 6, y: y(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = v.toLocaleString();
+    }
+    svg("text", { x: M.l, y: M.t - 4, class: "bh-unit" }, s).textContent = `MB/s of output, on ${g.anchor}'s scale in the newest run`;
+    ts.forEach((t, i) => {
+      svg("text", { x: x(i), y: H - M.b + 16, class: "bh-tick", "text-anchor": "middle" }, s).textContent = t;
+    });
+    svg("text", { x: (M.l + W - M.r) / 2, y: H - 4, class: "bh-tick", "text-anchor": "middle" }, s).textContent = "threads";
+    // the matrix's thread count
+    svg("line", { x1: x(ts.indexOf(T)), x2: x(ts.indexOf(T)), y1: M.t, y2: H - M.b, class: "bh-grid bh-guide" }, s);
+    // lbzip2, measured: dashed and muted
+    const lp = ts.map((t, i) => [x(i), P[t].anchor_mbps]).filter(([, v]) => v);
+    svg("polyline", { points: lp.map(([px, v]) => `${px},${y(v)}`).join(" "), class: "bh-line bh-anchor", stroke: "var(--bh-old)", fill: "none" }, s);
+    // newest first in the slots, so the newest release has the first colour, as in a run's view
+    const order = R.map((_, i) => n - 1 - i);
+    order.forEach((i, kk) => {
+      const col = kk < 8 ? `var(--bh-s${kk + 1})` : "var(--bh-old)";
+      const pts = ts.map((t, j) => [j, t]).filter(([, t]) => ok(t, i) && P[t].anchor_mbps);
+      svg("polyline", { points: pts.map(([j, t]) => `${x(j)},${y(mb(t, i))}`).join(" "), class: "bh-line", stroke: col, fill: "none" }, s);
+      for (const [j, t] of pts) {
+        const a = svg("g", {}, s);
+        svg("line", { x1: x(j), x2: x(j), y1: y(mb(t, i, k)), y2: y(mb(t, i, -k)), class: "bh-whisker", stroke: col }, a);
+        svg("circle", { cx: x(j), cy: y(mb(t, i)), r: 3, class: "bh-dot", fill: col }, a);
+        svg("title", {}, a).textContent =
+          `${R[i]} at ${t} thread${t === "1" ? "" : "s"}: ${mb(t, i).toFixed(0)} MB/s modelled (95%: ${mb(t, i, -k).toFixed(0)} to ${mb(t, i, k).toFixed(0)}), ` +
+          `wall ${Math.exp(P[t].x[i]).toFixed(3)}× ${g.anchor}'s, from ${P[t].n[i]} run${P[t].n[i] === 1 ? "" : "s"}`;
+      }
+      const item = el("span", { class: "bh-ws-key" }, legend);
+      el("span", { class: "bh-swatch", style: `background:${col}` }, item);
+      item.append(` ${R[i]}  `);
+    });
+    const item = el("span", { class: "bh-ws-key" }, legend);
+    el("span", { class: "bh-swatch is-dashed", style: "background:var(--bh-old)" }, item);
+    item.append(` ${g.anchor} (measured)`);
+    // the drift diagnostic, at the chosen threads and over every thread count
+    const worst = (cl) => cl.reduce((b, c) => (!b || Math.abs(c.d) > Math.abs(b.d) ? c : b), null);
+    const wT = worst(p.closure);
+    const wAll = worst(ts.flatMap((t) => P[t].closure.map((c) => ({ ...c, t }))));
+    const drift = (c) => `${c.release} ${fmtPct(100 * (Math.exp(c.d) - 1))} (${(Math.abs(c.d) / c.se).toFixed(1)} standard errors)`;
+    note.textContent =
+      `Modelled from ${g.runs.length} paired runs on one machine (${g.runs[0].date} to ${g.runs[g.runs.length - 1].date}), not one run of every release. ` +
+      `Measured: ${g.anchor}'s MB/s in the newest run (dashed), and each release's wall time against ${g.anchor} in the runs it was in. ` +
+      `Modelled: each release's curve, its pooled ratio to ${g.anchor} applied to that MB/s; whiskers are 95% intervals of the ratio alone. ` +
+      (wT ? `Drift, a release against itself in its two runs (the later less the earlier): largest at ${T} thread${T === "1" ? "" : "s"} ${drift(wT)}` +
+        (wAll && wAll.t !== T ? `; largest at any thread count ${drift(wAll)} at ${wAll.t} thread${wAll.t === "1" ? "" : "s"}.` : ", the largest at any thread count.") : "");
+    // the matrix: row against column, throughput change, at the chosen threads
+    el("p", { class: "bh-hero-commit", text: `Throughput of the row's release against the column's at ${T} thread${T === "1" ? "" : "s"}, with its 95% interval. Coloured where the interval excludes zero: blue faster, orange slower; a ring marks a pair measured directly in one run.` }, box);
+    const tbl = el("table", { class: "bh-matrix" }, el("div", { class: "bh-scroll" }, box));
+    const hr = el("tr", {}, el("thead", {}, tbl));
+    el("th", { text: "row ÷ column", scope: "col" }, hr);
+    for (const j of order) el("th", { text: R[j], scope: "col" }, hr);
+    const tb = el("tbody", {}, tbl);
+    const direct = new Set(g.runs.map((r) => `${r.new}|${r.old}`));
+    const maxL = Math.max(1e-9, ...R.flatMap((_, i) => R.map((_, j) => (ok(T, i) && ok(T, j) ? Math.abs(p.x[i] - p.x[j]) : 0))));
+    for (const i of order) {
+      const tr = el("tr", {}, tb);
+      el("th", { text: R[i], scope: "row" }, tr);
+      for (const j of order) {
+        const td = el("td", {}, tr);
+        if (i === j) { td.textContent = "·"; td.className = "is-self"; continue; }
+        if (!ok(T, i) || !ok(T, j)) { td.textContent = "–"; continue; }
+        const d = p.x[j] - p.x[i], h = k * Math.sqrt(p.v[i] + p.v[j]);
+        const sig = d - h > 0 || d + h < 0;
+        const share = Math.round(12 + 48 * Math.min(1, Math.abs(d) / maxL));
+        if (sig) td.style.background = `color-mix(in srgb, var(${d > 0 ? "--bh-s1" : "--bh-s2"}) ${share}%, transparent)`;
+        if (direct.has(`${R[i]}|${R[j]}`) || direct.has(`${R[j]}|${R[i]}`)) td.classList.add("is-direct");
+        el("span", { text: fmtPct(100 * (Math.exp(d) - 1)) }, td);
+        el("small", { text: `${fmtPct(100 * (Math.exp(d - h) - 1))} to ${fmtPct(100 * (Math.exp(d + h) - 1))}` }, td);
+        td.title = `${R[i]} against ${R[j]} at ${T} threads: wall ${Math.exp(-d).toFixed(3)}× (modelled through ${g.anchor})`;
+      }
+    }
   }
 
   function render(root, data) {

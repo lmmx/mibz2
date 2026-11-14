@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=87520ce15412">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=7410e2a5340d">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=87520ce15412">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=7410e2a5340d">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=87520ce15412">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=7410e2a5340d">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=87520ce15412">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=7410e2a5340d">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=87520ce15412">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=7410e2a5340d">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=87520ce15412">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=7410e2a5340d">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2375,6 +2375,24 @@ figure: pull requests are measured on CI, and pass without any run here. Each ru
 it was recorded, with its machine, its date and its raw records, in
 <a href="https://github.com/lmmx/mibz2/tree/master/bench/release-scaling"><code>bench/release-scaling/</code></a>.
 Runs on different machines are never compared or combined.</p>
+<p><strong>All releases</strong>, the view's first choice, puts every release against every other without
+re-running the old ones. It is inferred from one machine's pairwise runs; no single run had
+every release in it. lbzip2, the same build in every run, is a fixed anchor:</p>
+<ul>
+<li><strong>Pooling.</strong> At each thread count, each release's figure is its wall time relative to
+  lbzip2's. That is the mean over a run's rounds of the paired log ratio. A release measured
+  in two runs, once as the new release and once as the old, gets the inverse-variance
+  weighted mean of the two.</li>
+<li><strong>Any pair</strong> is the ratio of the two figures. Its interval adds their variances, which
+  is cautious for two releases from the same run, since their rounds share lbzip2's.</li>
+<li><strong>The curves</strong> apply each release's figure to lbzip2's measured throughput in the newest
+  run, so all of them are on one scale. Only lbzip2's curve is measured as drawn.</li>
+<li><strong>The cross-check</strong> is the chain, the product of each run's direct comparison of its two
+  releases. It needs no anchor, but its errors add up along the chain.</li>
+<li><strong>The drift diagnostic</strong> compares a release with itself: its ratio to lbzip2 in its two
+  runs, made days apart. A difference beyond noise means the machine, or lbzip2's figure on
+  it, moved between the runs.</li>
+</ul>
 <p>Each table gives an arm's median wall time. It also gives the geometric mean of the rounds'
 paired wall ratios against the reference arm, with its 95% interval: a minus sign is
 faster. Up to the machine's physical core count, each thread runs on a core of its own
@@ -3128,19 +3146,19 @@ and commits its record.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=87520ce15412"></script>
+        <script src="../../assets/javascripts/bench.js?v=7410e2a5340d"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=87520ce15412"></script>
+        <script src="../../assets/javascripts/couriers.js?v=7410e2a5340d"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=87520ce15412"></script>
+        <script src="../../assets/javascripts/blog.js?v=7410e2a5340d"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=87520ce15412"></script>
+        <script src="../../assets/javascripts/frontier.js?v=7410e2a5340d"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=87520ce15412"></script>
+        <script src="../../assets/javascripts/observatory.js?v=7410e2a5340d"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=87520ce15412"></script>
+        <script src="../../assets/javascripts/katex.js?v=7410e2a5340d"></script>
       
     
   </body>

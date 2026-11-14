@@ -389,3 +389,53 @@
   overflow-x: auto;
   max-width: 100%;
 }
+/* The hero's All releases view: lbzip2 measured (dashed), and the release-by-release matrix */
+.bh-root .bh-line.bh-anchor {
+  stroke-dasharray: 5 4;
+}
+.bh-root .bh-swatch.is-dashed {
+  height: 0;
+  border-top: 2px dashed var(--bh-old);
+  background: transparent !important;
+  vertical-align: middle;
+}
+.md-typeset .bh-hero table.bh-matrix {
+  display: table;
+  border-collapse: collapse;
+  font-size: 0.66rem;
+  margin: 0.4rem 0 0.6rem;
+}
+.md-typeset .bh-hero table.bh-matrix tbody th {
+  position: sticky;
+  left: 0;
+  background: var(--md-default-bg-color);
+}
+.md-typeset .bh-hero table.bh-matrix th,
+.md-typeset .bh-hero table.bh-matrix td {
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--bh-grid);
+  text-align: right;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.md-typeset .bh-hero table.bh-matrix td span {
+  display: block;
+  font-weight: 600;
+}
+.md-typeset .bh-hero table.bh-matrix td small {
+  display: block;
+  color: var(--bh-ink-2);
+  font-size: 0.85em;
+}
+.md-typeset .bh-hero table.bh-matrix td.is-self {
+  text-align: center;
+  color: var(--bh-ink-2);
+}
+.md-typeset .bh-hero table.bh-matrix td.is-direct {
+  box-shadow: inset 0 0 0 2px var(--bh-ink-2);
+}
+.bh-root .bh-guide {
+  stroke-dasharray: 2 3;
+  stroke: var(--bh-ink-2);
+  opacity: 0.5;
+}

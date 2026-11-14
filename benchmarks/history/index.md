@@ -29,6 +29,14 @@ CI's runners have 4 vCPUs on 2 physical cores, so the charts above stop at 4 thr
 
 These runs inform; they don't decide. Nothing merges or releases on a release-scaling figure: pull requests are measured on CI, and pass without any run here. Each run is kept as it was recorded, with its machine, its date and its raw records, in [`bench/release-scaling/`](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling>). Runs on different machines are never compared or combined.
 
+**All releases**, the view's first choice, puts every release against every other without re-running the old ones. It is inferred from one machine's pairwise runs; no single run had every release in it. lbzip2, the same build in every run, is a fixed anchor:
+
+- **Pooling.** At each thread count, each release's figure is its wall time relative to lbzip2's. That is the mean over a run's rounds of the paired log ratio. A release measured in two runs, once as the new release and once as the old, gets the inverse-variance weighted mean of the two.
+- **Any pair** is the ratio of the two figures. Its interval adds their variances, which is cautious for two releases from the same run, since their rounds share lbzip2's.
+- **The curves** apply each release's figure to lbzip2's measured throughput in the newest run, so all of them are on one scale. Only lbzip2's curve is measured as drawn.
+- **The cross-check** is the chain, the product of each run's direct comparison of its two releases. It needs no anchor, but its errors add up along the chain.
+- **The drift diagnostic** compares a release with itself: its ratio to lbzip2 in its two runs, made days apart. A difference beyond noise means the machine, or lbzip2's figure on it, moved between the runs.
+
 Each table gives an arm's median wall time. It also gives the geometric mean of the rounds' paired wall ratios against the reference arm, with its 95% interval: a minus sign is faster. Up to the machine's physical core count, each thread runs on a core of its own (`--spread`); above it, threads share cores.
 
 ### 2026-11-14: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
