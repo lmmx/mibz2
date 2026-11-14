@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""Count logical steps vs batches with the relayed program's own induce()."""
+import importlib.util, sys, time, json, hashlib
+from random import Random
+here = sys.argv[1]
+spec = importlib.util.spec_from_file_location('aht', here + '/aht_mibz2_orbit_experiment.py')
+aht = importlib.util.module_from_spec(spec); spec.loader.exec_module(aht)
+
+def bwt_bytes(data: bytes):
+    # rotation-sort BWT via prefix doubling on cyclic ranks
+    n = len(data); rank = list(data); k = 1
+    sa = list(range(n))
+    while True:
+        key = [(rank[i], rank[(i + k) % n]) for i in range(n)]
+        sa.sort(key=key.__getitem__)
+        new = [0] * n
+        for j in range(1, n):
+            new[sa[j]] = new[sa[j-1]] + (key[sa[j]] != key[sa[j-1]])
+        rank = new
+        if rank[sa[-1]] == n - 1 or k >= n: break
+        k *= 2
+    assert len(set(rank)) == n, 'rotations not distinct'
+    last = bytes(data[(i - 1) % n] for i in sa)
+    return last, sa.index(0)
+
+def to_str(b):  # order-preserving, avoids the '@' marker the program uses
+    return ''.join(chr(256 + x) for x in b)
+
+def json_like(nbytes, seed=20000):
+    r = Random(seed); words = ['alpha','beta','gamma','delta','id','name','value','tags','count','url','type','ok']
+    out = []
+    while sum(map(len, out)) < nbytes:
+        rec = {'id': r.randint(1, 10**6), 'name': r.choice(words) + str(r.randint(0, 999)),
+               'type': r.choice(words), 'ok': r.random() < .5,
+               'value': round(r.uniform(-1000, 1000), 3),
+               'tags': r.sample(words, r.randint(0, 4)),
+               'url': 'https://example.org/' + r.choice(words) + '/' + str(r.randint(0, 99999))}
+        out.append(json.dumps(rec) + '\n')
+    return ''.join(out).encode()[:nbytes]
+
+inputs = {
+  'rauzy-veech.md[:20000]': open('/home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md', 'rb').read()[:20000],
+  'json-like 20000 (seed 20000)': json_like(20000),
+}
+for name, data in inputs.items():
+    t0 = time.time(); last, primary = bwt_bytes(data); tb = time.time() - t0
+    L = to_str(last)
+    assert aht.inverse_lf_oracle(L, primary) == to_str(data)
+    top, bottom, lengths, labels, mark = aht.run_exchange(L, primary)
+    t0 = time.time(); slow = aht.induce(top, bottom, lengths, labels, mark, quotient=False); ts = time.time() - t0
+    t0 = time.time(); fast = aht.induce(top, bottom, lengths, labels, mark, quotient=True); tf = time.time() - t0
+    assert slow[:2] == fast[:2] and slow[2] == fast[2]
+    assert aht.decode_marked_word(fast[0], len(L)) == to_str(data)
+    steps, batches, avoided, maxq = fast[2], fast[3], fast[4], fast[5]
+    batched_steps = avoided + batches          # logical steps covered by batches
+    ops = steps - avoided                       # operations actually executed
+    runs = len(top) - 1                         # marked run split adds up to 2 pieces
+    print(f'{name}: n={len(data)} sha256={hashlib.sha256(data).hexdigest()[:16]} pieces={len(top)} primary={primary}')
+    print(f'  logical steps={steps}  batches={batches}  logical steps inside batches={batched_steps}'
+          f'  loops avoided={avoided} ({100*avoided/steps:.3f}% of steps)  operations executed={ops}  max q={maxq}')
+    print(f'  wall: bwt {tb:.2f}s, induce(quotient=False) {ts:.2f}s, induce(quotient=True) {tf:.2f}s')
