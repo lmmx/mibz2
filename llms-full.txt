@@ -88,6 +88,25 @@ These runs inform; they don't decide. Nothing merges or releases on a release-sc
 
 Each table gives an arm's median wall time. It also gives the geometric mean of the rounds' paired wall ratios against the reference arm, with its 95% interval: a minus sign is faster. Up to the machine's physical core count, each thread runs on a core of its own (`--spread`); above it, threads share cores.
 
+### 2026-11-14: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.3.0** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-14-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.3.0>)
+
+**`wikidata`**
+
+| threads | 0.3.0 wall (median) | lbzip2 2.5 wall (median) | 0.2.9 wall (median) | lbzip2 2.5 against 0.3.0 | 0.2.9 against 0.3.0 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.392 s | 2.514 s | 0.468 s | \+523.9% (+499.2, +549.6) **slower** | \+16.1% (+12.0, +20.4) **slower** |
+| 2 | 0.266 s | 1.339 s | 0.274 s | \+405.2% (+399.1, +411.5) **slower** | \+3.4% (+2.2, +4.6) **slower** |
+| 4 | 0.173 s | 0.714 s | 0.187 s | \+315.6% (+308.5, +322.9) **slower** | \+9.2% (+7.6, +10.7) **slower** |
+| 8 | 0.135 s | 0.514 s | 0.135 s | \+280.9% (+277.3, +284.5) **slower** | −0.2% (−1.2, +0.9) |
+| 10 | 0.122 s | 0.506 s | 0.122 s | \+317.1% (+312.6, +321.7) **slower** | −0.4% (−2.1, +1.4) |
+| 12 | 0.130 s | 0.508 s | 0.127 s | \+291.4% (+285.6, +297.3) **slower** | −1.7% (−3.4, −0.0) **faster** |
+| 16 | 0.131 s | 0.501 s | 0.129 s | \+283.0% (+276.3, +289.9) **slower** | −0.2% (−2.6, +2.2) |
+| 20 | 0.129 s | 0.493 s | 0.127 s | \+280.2% (+269.9, +290.7) **slower** | −1.6% (−4.2, +1.1) |
+
+Every arm's output was the same bytes as the reference's.
+
 ### 2026-11-10: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.2.9** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-10-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.2.9>)

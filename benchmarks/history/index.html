@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=ca6f2366aa26">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=006ec9577566">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=ca6f2366aa26">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=006ec9577566">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=ca6f2366aa26">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=006ec9577566">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=ca6f2366aa26">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=006ec9577566">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=ca6f2366aa26">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=006ec9577566">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=ca6f2366aa26">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=006ec9577566">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -748,6 +748,17 @@
   
     <nav class="md-nav" aria-label="Release scaling, past 4 threads">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-14-intelr-coretm-i9-10900k-cpu-370ghz" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2026-11-14: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+      </span>
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#2026-11-10-intelr-coretm-i9-10900k-cpu-370ghz" class="md-nav__link">
@@ -2196,6 +2207,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#2026-11-14-intelr-coretm-i9-10900k-cpu-370ghz" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2026-11-14: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2026-11-10-intelr-coretm-i9-10900k-cpu-370ghz" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2357,6 +2379,88 @@ Runs on different machines are never compared or combined.</p>
 paired wall ratios against the reference arm, with its 95% interval: a minus sign is
 faster. Up to the machine's physical core count, each thread runs on a core of its own
 (<code>--spread</code>); above it, threads share cores.</p>
+<h3 id="2026-11-14-intelr-coretm-i9-10900k-cpu-370ghz">2026-11-14: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz<a class="headerlink" href="#2026-11-14-intelr-coretm-i9-10900k-cpu-370ghz" title="Permanent link">&para;</a></h3>
+<p>10 cores, 20 threads · 10 paired rounds · the reference arm is <strong>0.3.0</strong> · <a href="https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-14-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.3.0">the records</a></p>
+<p><strong><code>wikidata</code></strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">threads</th>
+<th style="text-align: right;">0.3.0 wall (median)</th>
+<th style="text-align: right;">lbzip2 2.5 wall (median)</th>
+<th style="text-align: right;">0.2.9 wall (median)</th>
+<th style="text-align: right;">lbzip2 2.5 against 0.3.0</th>
+<th style="text-align: right;">0.2.9 against 0.3.0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.392 s</td>
+<td style="text-align: right;">2.514 s</td>
+<td style="text-align: right;">0.468 s</td>
+<td style="text-align: right;">+523.9% (+499.2, +549.6) <strong>slower</strong></td>
+<td style="text-align: right;">+16.1% (+12.0, +20.4) <strong>slower</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.266 s</td>
+<td style="text-align: right;">1.339 s</td>
+<td style="text-align: right;">0.274 s</td>
+<td style="text-align: right;">+405.2% (+399.1, +411.5) <strong>slower</strong></td>
+<td style="text-align: right;">+3.4% (+2.2, +4.6) <strong>slower</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.173 s</td>
+<td style="text-align: right;">0.714 s</td>
+<td style="text-align: right;">0.187 s</td>
+<td style="text-align: right;">+315.6% (+308.5, +322.9) <strong>slower</strong></td>
+<td style="text-align: right;">+9.2% (+7.6, +10.7) <strong>slower</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.135 s</td>
+<td style="text-align: right;">0.514 s</td>
+<td style="text-align: right;">0.135 s</td>
+<td style="text-align: right;">+280.9% (+277.3, +284.5) <strong>slower</strong></td>
+<td style="text-align: right;">−0.2% (−1.2, +0.9)</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.122 s</td>
+<td style="text-align: right;">0.506 s</td>
+<td style="text-align: right;">0.122 s</td>
+<td style="text-align: right;">+317.1% (+312.6, +321.7) <strong>slower</strong></td>
+<td style="text-align: right;">−0.4% (−2.1, +1.4)</td>
+</tr>
+<tr>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">0.130 s</td>
+<td style="text-align: right;">0.508 s</td>
+<td style="text-align: right;">0.127 s</td>
+<td style="text-align: right;">+291.4% (+285.6, +297.3) <strong>slower</strong></td>
+<td style="text-align: right;">−1.7% (−3.4, −0.0) <strong>faster</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">0.131 s</td>
+<td style="text-align: right;">0.501 s</td>
+<td style="text-align: right;">0.129 s</td>
+<td style="text-align: right;">+283.0% (+276.3, +289.9) <strong>slower</strong></td>
+<td style="text-align: right;">−0.2% (−2.6, +2.2)</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.129 s</td>
+<td style="text-align: right;">0.493 s</td>
+<td style="text-align: right;">0.127 s</td>
+<td style="text-align: right;">+280.2% (+269.9, +290.7) <strong>slower</strong></td>
+<td style="text-align: right;">−1.6% (−4.2, +1.1)</td>
+</tr>
+</tbody>
+</table>
+<p>Every arm's output was the same bytes as the reference's.</p>
 <h3 id="2026-11-10-intelr-coretm-i9-10900k-cpu-370ghz">2026-11-10: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz<a class="headerlink" href="#2026-11-10-intelr-coretm-i9-10900k-cpu-370ghz" title="Permanent link">&para;</a></h3>
 <p>10 cores, 20 threads · 10 paired rounds · the reference arm is <strong>0.2.9</strong> · <a href="https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-10-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.2.9">the records</a></p>
 <p><strong><code>wikidata</code></strong></p>
@@ -3024,19 +3128,19 @@ and commits its record.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=ca6f2366aa26"></script>
+        <script src="../../assets/javascripts/bench.js?v=006ec9577566"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=ca6f2366aa26"></script>
+        <script src="../../assets/javascripts/couriers.js?v=006ec9577566"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=ca6f2366aa26"></script>
+        <script src="../../assets/javascripts/blog.js?v=006ec9577566"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=ca6f2366aa26"></script>
+        <script src="../../assets/javascripts/frontier.js?v=006ec9577566"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=ca6f2366aa26"></script>
+        <script src="../../assets/javascripts/observatory.js?v=006ec9577566"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=ca6f2366aa26"></script>
+        <script src="../../assets/javascripts/katex.js?v=006ec9577566"></script>
       
     
   </body>
