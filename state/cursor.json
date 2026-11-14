@@ -3834,7 +3834,8 @@
       "pr": 161,
       "status": "in progress",
       "decision": "D107",
-      "progress": "Receipt; migration verified; assess D106 closure at 24ff5f72cec50f441a9a95a5927f640c00fbe721."
+      "progress": "Verified source identity, successful raw test/fuzz/Miri logs and bounded mutation record; publishing B5 closure.",
+      "receipt_commit": "24d2a81bc62fd767c418e8b664f1b00d96753771"
     }
   ],
   "migrated_from": {

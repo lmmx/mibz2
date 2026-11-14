@@ -4706,3 +4706,10 @@ Checkpoint6868538108, PR382 head a9c7716aaf664a7898f3d8f37c955e09d5204a23. G1 sc
 2026-11-14. Exact head `c915a95eb7288843ea25707bffc87c9d252f4bde`, PR #391. Source-level adversarial review found no new unsafe-access defect; complete B5 qualification is disputed. HOLD integrating this layout until the malformed Test YAML is repaired and exact-source Rust/differential/fuzz/Miri and reproducible mutation outcomes are supplied. Test workflow failed with zero jobs; local parser reproduced line 34 column 55. M5's manually stopped hang is not a verified bounded kill. No B6 missed-target conclusion, no line-level STOP, no implementation or authority widening.
 
 [Full decision and proof](reports/D106-cells-slot20.md); [evidence](reports/D106-evidence.json). Incoming [6881612485](https://github.com/lmmx/mibz2/pull/161#issuecomment-6881612485). Evidence SHA-256: `7059dc54dbd7912a0150373230510f32a63d37d8cc24558ad055283a179c7f68`. Preserve the first bench's text-4t primary regression separately; no merge or timing authorization.
+
+
+## D107 — 6882196843 — G1 PASS; G2 lift D106 slot20 evidence HOLD
+
+2026-11-14. PR #391 head `24ff5f72cec50f441a9a95a5927f640c00fbe721`. Source trees match D106, mutation baseline and CI merge checkout. YAML repaired; Rust/differential/slot24, 28,202 seed-42 fuzz cases and 41 Miri tests completed successfully. Mutation record distinguishes M5 timeout witnesses from deterministic targeted failures, records restoration and reproduced SIGSEGV. D106's scoped B5 HOLD is closed; historical verdict preserved. Performance and workstation decisions remain separate.
+
+[Full decision](reports/D107-slot20-closure.md); [evidence](reports/D107-evidence.json). Incoming [6882196843](https://github.com/lmmx/mibz2/pull/161#issuecomment-6882196843). Evidence SHA-256 `b32a36e1e76116abd1a835058e01573de97a5505e2f23b78f3a9efb4c1814226`.

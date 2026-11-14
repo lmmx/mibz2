@@ -1,0 +1,220 @@
+{
+  "incoming": 6882196843,
+  "head": "24ff5f72cec50f441a9a95a5927f640c00fbe721",
+  "ci_checkout": "18fd473dd08eac5b7e90af8b56f9bb8ee104b082",
+  "source_identity": {
+    "src": [
+      "bd7586ebdccd645d091923e6f53b9769ca6719be",
+      "bd7586ebdccd645d091923e6f53b9769ca6719be",
+      "bd7586ebdccd645d091923e6f53b9769ca6719be",
+      "bd7586ebdccd645d091923e6f53b9769ca6719be"
+    ],
+    "tests": [
+      "a0b23a6f015c1cab555d03905217511d36452374",
+      "a0b23a6f015c1cab555d03905217511d36452374",
+      "a0b23a6f015c1cab555d03905217511d36452374",
+      "a0b23a6f015c1cab555d03905217511d36452374"
+    ],
+    "examples": [
+      "043b475a31fb2efee469d2f7f05c042339f880b2",
+      "043b475a31fb2efee469d2f7f05c042339f880b2",
+      "043b475a31fb2efee469d2f7f05c042339f880b2",
+      "043b475a31fb2efee469d2f7f05c042339f880b2"
+    ],
+    "Cargo.toml": [
+      "47be64728c2896f87dd94d3e70e240c1bfd9c0ea",
+      "47be64728c2896f87dd94d3e70e240c1bfd9c0ea",
+      "47be64728c2896f87dd94d3e70e240c1bfd9c0ea",
+      "47be64728c2896f87dd94d3e70e240c1bfd9c0ea"
+    ],
+    "Cargo.lock": [
+      "3f0e6c76d9856f5cc835e58fbd3f3f3f38e960cf",
+      "3f0e6c76d9856f5cc835e58fbd3f3f3f38e960cf",
+      "3f0e6c76d9856f5cc835e58fbd3f3f3f38e960cf",
+      "3f0e6c76d9856f5cc835e58fbd3f3f3f38e960cf"
+    ]
+  },
+  "yaml_parse": "PASS",
+  "mutants": "# Cells 20-byte slot (#391): the mutation record of its offset arithmetic\n\nThis is the B5 mutation evidence for #391, Guardian D106's closure item. It was taken on\nbranch `perf/cells-slot20` at `ee84010861700647aa3bac62f131dd524e4fcbd0` (`src/` identical\nto `c915a95e`), on a 4-core x86-64 VM, with debug test builds. Results:\n\n- 5 of the 6 mutants are killed by a test failure (exit 101), and the SIGSEGV mutant\n  reproduces.\n- M5 (`SLOT` 20 → 16) times out under both full-suite commands (exit 124): that is recorded\n  as a timeout witness, not a kill. Two focused tests then fail on it deterministically (§M5).\n- The baseline passes before and after the mutants, and the restored source is\n  byte-identical to the committed one.\n\n## Method\n\nEach mutant is one textual substitution in `src/cells.rs`, applied to the committed file,\nthen reverted. Every mutant runs both commands, each bounded by `timeout 300`:\n\n    timeout 300 cargo test -q --lib cells::     # the 9 Cells unit tests, Miri witnesses included\n    timeout 300 cargo test -q --test cells      # tests/cells.rs: decoder parity, corruption, corpora\n\nAn exit of 0 means the mutant survived. An exit of 101 means a test failed or the test binary\ndied (a signal is reported by cargo as 101 with the signal named). An exit of 124 means the\ntimeout fired.\n\n## Results\n\n| # | mutant (diff in `src/cells.rs`) | `--lib cells::` | `--test cells` | outcome |\n|---|---|---|---|---|\n| — | baseline (no change) | 0 (9 passed) | 0 (5 passed) | passes |\n| M1 | `wr_other`: `wr32(base, slot + 16, other as u32)` → `wr64(base, slot + 16, other as u64)` | 101 | 101 (0 of 5 passed) | killed (assertions) |\n| M2 | `rd_other`: `rd32(base, slot + 16) as usize` → `rd64(base, slot + 16) as usize` | 101 (SIGSEGV) | 101 (SIGSEGV) | killed (signal 11) |\n| M3 | both: `slot + 16` → `slot + 12` (read and write) | 101 | 101 (0 of 5 passed) | killed (assertions) |\n| M4 | both: `slot + 16` → `slot + 17` (read and write) | 101 (SIGSEGV) | 101 (SIGSEGV) | killed (signal 11) |\n| M5 | `const SLOT: usize = 20;` → `const SLOT: usize = 16;` | **124 (timeout, 300 s)** | **124 (timeout, 300 s)** | timeout witness; deterministic failures below |\n| M6 | write only: `wr32(base, slot + 16, …)` → `wr32(base, slot + 12, …)` | 101 (SIGSEGV) | 101 (1 of 5 passed) | killed |\n| M2′ | M2 again, to reproduce the SIGSEGV | 101 (SIGSEGV) | 101 (SIGSEGV) | reproduces |\n| — | baseline restored | 0 (9 passed) | 0 (5 passed) | passes; the source is byte-identical |\n\n### First failures (as the runs printed them)\n\n- **M1:**\n  - `cells_selective_exhaustive_state` panicked at `src/cells_original_test.rs:51`.\n  - `cells_exhaustive_arbitrary_columns` panicked at `src/cells.rs:645` (`ahead!`).\n  - `miri_cells_admission_and_invalid_records` panicked at `src/cells.rs:738`.\n  - All 5 of `tests/cells.rs` failed.\n- **M2, M2′, M4:** the process died: `signal: 11, SIGSEGV: invalid memory reference`, in both\n  the lib and the integration test binaries.\n- **M3:**\n  - `cells_selective_exhaustive_state` panicked at `src/cells_selective_test.rs:39`.\n  - `miri_cells_exact_fit_and_reuse` failed its output check (`src/cells.rs:986`).\n  - All 5 of `tests/cells.rs` failed at `tests/common/cells.rs:51`.\n- **M6:**\n  - The lib binary died with SIGSEGV.\n  - `cells_long_writer_decoder_parity` failed at `tests/cells.rs:40`, and\n    `cells_real_decoder_admission_reach` at `tests/common/cells.rs:76`.\n\n### M5: the timeout, then deterministic failures\n\nUnder both full-suite commands, M5 ran until `timeout 300` stopped it (exit 124). An\nearlier, unbounded run of the same mutant was stopped by hand after several minutes. The\noverlapping slots corrupt the induction's links, and some tests loop. So, with the same\nmutant, the focused tests were run one at a time, each under `timeout 120`:\n\n    timeout 120 cargo test -q --lib cells::tests::miri_cells_slots_mark_and_links -- --exact\n        exit 101: panicked at src/cells.rs:1236, the partner-slot bound\n        (`partner >= other && partner < other + kernel.letters * SLOT`)\n    timeout 120 cargo test -q --lib cells::tests::miri_cells_exact_fit_and_reuse -- --exact\n        exit 101: panicked at src/cells.rs:985 (`try_invert(..).unwrap()`: the forced\n        inversion refused)\n    timeout 120 cargo test -q --lib cells::tests::miri_cells_admission_and_invalid_records -- --exact\n        exit 0 (this one does not see it)\n\nSo M5 is killed deterministically by `miri_cells_slots_mark_and_links` and\n`miri_cells_exact_fit_and_reuse`, both of which are in the Miri job's required list. Its\nfull-suite outcome is a timeout witness.\n",
+  "logs": {
+    "132536816064": "2026-11-14T18:02:41.5635563Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +18fd473dd08eac5b7e90af8b56f9bb8ee104b082:refs/remotes/pull/391/merge\n2026-11-14T18:02:42.2395419Z  * [new ref]         18fd473dd08eac5b7e90af8b56f9bb8ee104b082 -> pull/391/merge\n2026-11-14T18:02:42.3923238Z HEAD is now at 18fd473 Merge 24ff5f72cec50f441a9a95a5927f640c00fbe721 into 7c9084d6c07f1cb39ca25088999e8d20eb0f7aa4\n2026-11-14T18:02:42.3990107Z 18fd473dd08eac5b7e90af8b56f9bb8ee104b082\n2026-11-14T18:03:37.0189387Z test cells::tests::miri_cells_admission_and_invalid_records ... ok\n2026-11-14T18:03:37.0219360Z test cells::tests::miri_cells_exact_fit_and_reuse ... ok\n2026-11-14T18:03:37.0249293Z test cells::tests::miri_cells_long_writer ... ok\n2026-11-14T18:03:37.0279316Z test cells::tests::miri_cells_long_writer_production_admission ... ok\n2026-11-14T18:03:37.0309301Z test cells::tests::miri_cells_selective_boundaries_reuse ... ok\n2026-11-14T18:03:37.0339306Z test cells::tests::miri_cells_slots_mark_and_links ... ok\n2026-11-14T18:03:40.0969649Z test read::tests::miri_sequential_default_cells_route ... ok\n2026-11-14T18:05:26.9365024Z test result: ok. 110 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 110.40s\n2026-11-14T18:05:28.3449598Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.39s\n2026-11-14T18:05:28.3500023Z test cells_long_writer_decoder_parity ... ok\n2026-11-14T18:05:28.3500477Z test cells_arbitrary_columns_and_corruption ... ok\n2026-11-14T18:05:28.3506958Z test cells_real_decoder_admission_reach ... ok\n2026-11-14T18:05:29.5847013Z test cells_keeps_text_random_and_records_on_shipped_route ... ok\n2026-11-14T18:05:30.4073188Z test cells_corpora_and_structured_words ... ok\n2026-11-14T18:05:30.4073826Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.06s\n2026-11-14T18:05:30.4553853Z test result: ok. 1 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.04s\n2026-11-14T18:05:39.8939901Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.44s\n2026-11-14T18:05:45.4027579Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.49s\n2026-11-14T18:05:58.8488356Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.44s\n2026-11-14T18:05:58.8629076Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n2026-11-14T18:06:01.2477077Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.38s\n2026-11-14T18:06:03.6651974Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.41s\n2026-11-14T18:06:07.5893405Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.92s\n2026-11-14T18:06:18.9879637Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.40s\n2026-11-14T18:06:19.7827352Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.77s\n2026-11-14T18:06:24.9009343Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.11s\n2026-11-14T18:06:26.0204947Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s\n2026-11-14T18:06:26.1459716Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s\n2026-11-14T18:06:52.0903042Z test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.08s\n2026-11-14T18:06:52.0952893Z ##[group]Run cargo test --features slot24 --lib cells::\n2026-11-14T18:06:52.0953225Z \u001b[36;1mcargo test --features slot24 --lib cells::\u001b[0m\n2026-11-14T18:07:03.6579778Z test cells::tests::miri_cells_admission_and_invalid_records ... ok\n2026-11-14T18:07:03.6589384Z test cells::tests::miri_cells_exact_fit_and_reuse ... ok\n2026-11-14T18:07:03.6590075Z test cells::tests::miri_cells_long_writer ... ok\n2026-11-14T18:07:03.6592875Z test cells::tests::miri_cells_long_writer_production_admission ... ok\n2026-11-14T18:07:03.6594001Z test cells::tests::miri_cells_selective_boundaries_reuse ... ok\n2026-11-14T18:07:03.6594797Z test cells::tests::miri_cells_slots_mark_and_links ... ok\n2026-11-14T18:07:03.6877006Z test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 102 filtered out; finished in 0.03s\n2026-11-14T18:07:18.0914175Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 111 filtered out; finished in 0.00s\n2026-11-14T18:07:18.0923714Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n2026-11-14T18:07:23.9368073Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.51s\n2026-11-14T18:07:29.8247979Z test tests::fuzz_finder_differential ... ok\n2026-11-14T18:07:30.9352526Z test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.16s",
+    "132536816180": "2026-11-14T18:02:41.4610792Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +18fd473dd08eac5b7e90af8b56f9bb8ee104b082:refs/remotes/pull/391/merge\n2026-11-14T18:02:41.8322350Z  * [new ref]         18fd473dd08eac5b7e90af8b56f9bb8ee104b082 -> pull/391/merge\n2026-11-14T18:02:42.0102231Z HEAD is now at 18fd473 Merge 24ff5f72cec50f441a9a95a5927f640c00fbe721 into 7c9084d6c07f1cb39ca25088999e8d20eb0f7aa4\n2026-11-14T18:02:42.0181309Z 18fd473dd08eac5b7e90af8b56f9bb8ee104b082\n2026-11-14T18:05:14.1219714Z 28202 cells cases, seed 42, production Counts { admitted: 730, density: 4101, sparse: 2735, floor: 687, budget: 1366, invalid: 0, short_cycles: 729, cells: 2624 }, forced Counts { admitted: 14872, density: 0, sparse: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 10463, cells: 241400178 }",
+    "132536884401": "2026-11-14T18:03:00.9944524Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +18fd473dd08eac5b7e90af8b56f9bb8ee104b082:refs/remotes/pull/391/merge\n2026-11-14T18:03:01.4720899Z  * [new ref]         18fd473dd08eac5b7e90af8b56f9bb8ee104b082 -> pull/391/merge\n2026-11-14T18:03:01.6181559Z HEAD is now at 18fd473 Merge 24ff5f72cec50f441a9a95a5927f640c00fbe721 into 7c9084d6c07f1cb39ca25088999e8d20eb0f7aa4\n2026-11-14T18:03:01.7247441Z 18fd473dd08eac5b7e90af8b56f9bb8ee104b082\n2026-11-14T18:03:26.2492692Z \u001b[36;1mgrep -q '^read::tests::miri_sequential_default_cells_route:' miri-list.txt\u001b[0m\n2026-11-14T18:03:26.2493100Z \u001b[36;1mgrep -q '^cells::tests::miri_cells_exact_fit_and_reuse' miri-list.txt\u001b[0m\n2026-11-14T18:03:26.2493496Z \u001b[36;1mgrep -q '^cells::tests::miri_cells_admission_and_invalid_records' miri-list.txt\u001b[0m\n2026-11-14T18:03:26.2493905Z \u001b[36;1mgrep -q '^cells::tests::miri_cells_slots_mark_and_links' miri-list.txt\u001b[0m\n2026-11-14T18:03:26.2494299Z \u001b[36;1mgrep -q '^cells::tests::miri_cells_long_writer:' miri-list.txt\u001b[0m\n2026-11-14T18:03:26.2494680Z \u001b[36;1mgrep -q '^cells::tests::miri_cells_selective_boundaries_reuse:' miri-list.txt\u001b[0m\n2026-11-14T18:03:26.2495107Z \u001b[36;1mgrep -q '^cells::tests::miri_cells_long_writer_production_admission:' miri-list.txt\u001b[0m\n2026-11-14T18:03:28.0748458Z cells::tests::miri_cells_admission_and_invalid_records: test\n2026-11-14T18:03:28.0822269Z cells::tests::miri_cells_exact_fit_and_reuse: test\n2026-11-14T18:03:28.0901926Z cells::tests::miri_cells_long_writer: test\n2026-11-14T18:03:28.0973599Z cells::tests::miri_cells_long_writer_production_admission: test\n2026-11-14T18:03:28.1044835Z cells::tests::miri_cells_selective_boundaries_reuse: test\n2026-11-14T18:03:28.1115441Z cells::tests::miri_cells_slots_mark_and_links: test\n2026-11-14T18:03:28.2855783Z read::tests::miri_sequential_default_cells_route: test\n2026-11-14T18:04:17.8981004Z test cells::tests::miri_cells_admission_and_invalid_records ... ok\n2026-11-14T18:04:22.4203626Z test cells::tests::miri_cells_exact_fit_and_reuse ... ok\n2026-11-14T18:04:30.3330291Z test cells::tests::miri_cells_long_writer ... ok\n2026-11-14T18:04:37.9017039Z test cells::tests::miri_cells_long_writer_production_admission ... ok\n2026-11-14T18:05:28.8540762Z test cells::tests::miri_cells_selective_boundaries_reuse ... ok\n2026-11-14T18:05:29.0148178Z test cells::tests::miri_cells_slots_mark_and_links ... ok\n2026-11-14T18:16:12.2212391Z test read::tests::miri_sequential_default_cells_route ... ok\n2026-11-14T18:20:19.8374790Z test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 61 filtered out; finished in 1601.44s"
+  },
+  "checks": [
+    {
+      "id": 132537449147,
+      "name": "deploy-branch",
+      "conclusion": "skipped",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367906/job/132537449147"
+    },
+    {
+      "id": 132537447368,
+      "name": "preview",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367906/job/132537447368"
+    },
+    {
+      "id": 132537447276,
+      "name": "look",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367906/job/132537447276"
+    },
+    {
+      "id": 132537315307,
+      "name": "Release",
+      "conclusion": "skipped",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367881/job/132537315307"
+    },
+    {
+      "id": 132536884401,
+      "name": "miri",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367867/job/132536884401"
+    },
+    {
+      "id": 132536854732,
+      "name": "python (3.13)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536854732"
+    },
+    {
+      "id": 132536854723,
+      "name": "python (3.12)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536854723"
+    },
+    {
+      "id": 132536854718,
+      "name": "python (3.10)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536854718"
+    },
+    {
+      "id": 132536854715,
+      "name": "python (3.14)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536854715"
+    },
+    {
+      "id": 132536854709,
+      "name": "python (3.15)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536854709"
+    },
+    {
+      "id": 132536854687,
+      "name": "python (3.11)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536854687"
+    },
+    {
+      "id": 132536843081,
+      "name": "Publish crate",
+      "conclusion": "skipped",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367881/job/132536843081"
+    },
+    {
+      "id": 132536842306,
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367881/job/132536842306"
+    },
+    {
+      "id": 132536842006,
+      "name": "macos (macos-15, aarch64)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367881/job/132536842006"
+    },
+    {
+      "id": 132536842002,
+      "name": "windows (windows-latest, x64)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367881/job/132536842002"
+    },
+    {
+      "id": 132536841987,
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367881/job/132536841987"
+    },
+    {
+      "id": 132536841977,
+      "name": "macos (macos-15, x86_64)",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367881/job/132536841977"
+    },
+    {
+      "id": 132536841952,
+      "name": "sdist",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367881/job/132536841952"
+    },
+    {
+      "id": 132536816180,
+      "name": "fuzz-smoke",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536816180"
+    },
+    {
+      "id": 132536816138,
+      "name": "typing",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536816138"
+    },
+    {
+      "id": 132536816107,
+      "name": "submit",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536816107"
+    },
+    {
+      "id": 132536816064,
+      "name": "rust",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536816064"
+    },
+    {
+      "id": 132536815935,
+      "name": "walk-stats",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367902/job/132536815935"
+    },
+    {
+      "id": 132536815907,
+      "name": "get-python-versions",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367883/job/132536815907"
+    },
+    {
+      "id": 132536815870,
+      "name": "check-commit",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367881/job/132536815870"
+    },
+    {
+      "id": 132536815795,
+      "name": "bench",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367849/job/132536815795"
+    },
+    {
+      "id": 132536815782,
+      "name": "pages",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367906/job/132536815782"
+    },
+    {
+      "id": 132536815642,
+      "name": "build",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367906/job/132536815642"
+    },
+    {
+      "id": 132536815449,
+      "name": "occupancy",
+      "conclusion": "success",
+      "details_url": "https://github.com/lmmx/mibz2/actions/runs/43624367900/job/132536815449"
+    }
+  ]
+}
