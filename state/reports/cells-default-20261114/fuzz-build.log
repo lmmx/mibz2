@@ -1,0 +1,20 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling libm v0.2.16
+   Compiling cc v1.10.0
+   Compiling syn v3.0.9
+   Compiling thiserror v2.0.21
+   Compiling pkg-config v0.3.34
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling thiserror-impl v2.0.21
+   Compiling libc v0.2.191
+   Compiling fearless_simd v1.2.0
+   Compiling bytemuck v1.25.2
+   Compiling bzip2 v0.4.4
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-cells-default)
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `fuzz` profile [optimized + debuginfo] target(s) in 25.79s

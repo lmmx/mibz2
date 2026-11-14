@@ -1,0 +1,15 @@
+{
+  "head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
+  "base": "6dec95ba6aaf59d5134e5ab119fd52433e2032ee",
+  "artifact_id": 14089133218,
+  "sha256": "61eef22374fb9218bb4aedba3bfbc630957e1d2abb7d27b4e4f5a5921a3a6302",
+  "rows": 420,
+  "unique": true,
+  "all_success": true,
+  "pair_order": "matches existing rotate/reverse arm_order; initial assumption of strict alternation rejected against source, no input changed",
+  "hash_parity": true,
+  "text_ci_sha256": "acb5f8a27b49b265cd251fe3ea55f09c6229b991d55d655ee456178d386b6f5a",
+  "text_i9_sha256": "f0031809969382478252695d4b219eee69da60f8ef45e845c247362bb4710d75",
+  "excluded_rows": 0,
+  "reruns": 0
+}

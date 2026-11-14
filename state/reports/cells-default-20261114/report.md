@@ -82,3 +82,56 @@ misroutes, none unresolved. REVIEW6868508410 readback exact, misrouted=None.
 coord.py verify hard-codes FROM coordinator and flags Codex publications; this
 limitation is recorded, not reported as a passing verify or used to impersonate
 Coordinator. GitHub comments do not launch a manually activated Codex session.
+
+## Actual proposed-default CI result (first and only run)
+
+Benchmark43534513477, artifact14089133218 (SHA-256
+`61eef22374fb9218bb4aedba3bfbc630957e1d2abb7d27b4e4f5a5921a3a6302`).
+Exact head/base above, Rust1.100.0, AMD EPYC7763 hosted runner,4CPUs/2physical
+cores. All420 observations retained;10rounds ×7corpora ×3thread counts ×2builds.
+Compressed identities and decoded hash/length parity checked. Existing arm_order
+rotate/reverse schedule checked against source; initial local audit assumption
+of strict alternation was rejected, not the data. Full raw artifact is archived.
+
+| Corpus, one thread | Wall ratio [95% CI] | CPU ratio [95% CI] | Peak RSS ratio [95% CI] |
+|---|---|---|---|
+| wikidata | 0.9924 [0.9686, 1.0168] | 0.9923 [0.9687, 1.0165] | 1.3091 [1.3052, 1.3130] |
+| text | 0.9899 [0.9669, 1.0135] | 0.9903 [0.9672, 1.0140] | 1.0001 [0.9965, 1.0037] |
+| pattern | 1.5962 [1.5795, 1.6131] | 1.5601 [1.5444, 1.5760] | 1.1412 [1.1356, 1.1469] |
+| onebyte | 1.0804 [1.0717, 1.0892] | 1.0735 [1.0625, 1.0846] | 1.0726 [1.0707, 1.0744] |
+| random | 1.0014 [0.9964, 1.0064] | 1.0017 [0.9969, 1.0066] | 0.9996 [0.9978, 1.0014] |
+| records | 0.9990 [0.9867, 1.0114] | 0.9988 [0.9871, 1.0107] | 0.9989 [0.9957, 1.0021] |
+| runs | 1.0008 [0.9903, 1.0114] | 1.0033 [0.9903, 1.0164] | 0.9988 [0.9971, 1.0005] |
+
+No primary wall regression established at any thread count. No parallel wall loss
+excludes zero; text4t is −3.9% [−7.0,−0.6]. Its source is unchanged, so do not
+attribute that gain to Cells induction. Prior380 failed4t result remains failed;
+this new-head comparison is neutral there and does not explain the old cause.
+
+Actual-default Wikidata1t is level (−0.8% [−3.1,+1.7]), not the earlier i9
+−13.7% target result. Pattern1t+59.6% and onebyte1t+8.0% are additional current
+costs. WikiRSS+30.9% and patternRSS+14.1% remain substantial. All other1t wall
+intervals include zero. Full21cell table in ci/comment.md, raw numbers in result.json.
+
+Text here has the standing CI source-derived identity acb5f8a27b49b265cd251fe3ea55f09c6229b991d55d655ee456178d386b6f5a,
+shared by both measured builds. It is not the pinned i9 f0031809… text identity.
+No corpus recipe was changed and the separate untimed pinned-i9 test passed.
+Do not combine these studies or call their environments interchangeable.
+
+The unchanged standard CI phases executable still exercises Segmented, not the
+new calling-thread Cells route. Only whole-reader rows are used for the verdict.
+
+Additional adoption blocker: onebyte lies in the5–10% secondary tier, but there
+is no ≥16% primary gain at1t on this CI runner. Rule2.3 is not satisfied. Pattern
+exceeds10%; the specific default gate also lacks Wikidata1t gain and violates
+other-corpora-level and+10%RSS. No rerun requested: no primary regression needs
+confirmation, and secondary retries are prohibited. Green execution is not a
+performance PASS. A prospective adoption disposition must explicitly cover
+these current results, not only the historical i9 pattern/RSS costs.
+
+New public-route Miri passed (358.82s); all7 relevant local Miri tests now pass.
+Forced Cells fuzz:28,369 cases/30s seed42, all production refusals and admitted/
+periodic reach; forced refusals zero. Mixed/default fuzz:6,152 cases/30s seed42,
+zero failures, including public decode and parallel candidate/error comparisons.
+No new decoder defect found. Remaining CI: full Miri; independent Guardian
+integration review still pending at this checkpoint.
