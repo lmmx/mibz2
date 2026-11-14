@@ -1591,8 +1591,9 @@
       "sha": "c915a95eb7288843ea25707bffc87c9d252f4bde",
       "evidence_digest": "sha256:7059dc54dbd7912a0150373230510f32a63d37d8cc24558ad055283a179c7f68",
       "commit": "410c046b546ad029adee130e930565444f4274fb",
-      "status": "complete",
-      "disposition": "HOLD B5 qualification: malformed Test workflow; completed exact-source Miri/fuzz/differential and reproducible mutant outcomes absent."
+      "status": "finished",
+      "disposition": "HOLD B5 qualification: malformed Test workflow; completed exact-source Miri/fuzz/differential and reproducible mutant outcomes absent.",
+      "comment": 6881720827
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1696,7 +1697,8 @@
     6790710467,
     6790889882,
     6867956361,
-    6868606509
+    6868606509,
+    6881720827
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1951,7 +1953,8 @@
     "13b01b9905f732821c0db3e5efaaa3f20e468d2a",
     "c9fe5d24d7bd3d76bf3be4732a95731e1835f531",
     "9a26afd19bae255b62cfe773a6507f5530d85dce",
-    "410c046b546ad029adee130e930565444f4274fb"
+    "410c046b546ad029adee130e930565444f4274fb",
+    "65d3e29523927d81b276a09d72eb2bf8fc8cc8fb"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2057,7 +2060,8 @@
     6790511955,
     6790746386,
     6867883717,
-    6868538108
+    6868538108,
+    6881612485
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2136,10 +2140,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6881612485,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D106",
-    "incoming_comment": 6881612485
+    "incoming_comment": 6881612485,
+    "review_comment_id": 6881720827
   },
   "duplicate_events": [
     {
@@ -3818,11 +3823,13 @@
     {
       "comment_id": 6881612485,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D106",
-      "progress": "D106 work published and read back; awaiting one REVIEW on #145.",
+      "progress": "Exact REVIEW body/destination read back; pinned verifier only coordinator-FROM limitation; independent Guardian header/routing checks pass.",
       "receipt_commit": "9a26afd19bae255b62cfe773a6507f5530d85dce",
-      "work_commit": "410c046b546ad029adee130e930565444f4274fb"
+      "work_commit": "410c046b546ad029adee130e930565444f4274fb",
+      "review_comment_id": 6881720827,
+      "complete_cursor_commit": "65d3e29523927d81b276a09d72eb2bf8fc8cc8fb"
     }
   ],
   "migrated_from": {
