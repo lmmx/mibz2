@@ -12,8 +12,9 @@ impl Kernel {
         // slot or a fresh one below the region's end; a word's offset is in the arena or
         // the rules, with 16 bytes after it inside the buffer.
         unsafe {
-            let mut top = lay.arena + BYTES as usize + 256 + 16;
+            let mut top = lay.arena + BYTES as usize + SINGLES + 16;
             let mut rp = lay.rules;
+            let ro = lay.rules;
             // fresh slots: one a cell at most, on each side
             let (ft0, fb0) = (lay.tops + rr * SLOT, lay.bots + rr * SLOT);
             let (mut ft, mut fb) = (ft0, fb0);
@@ -32,19 +33,19 @@ impl Kernel {
             macro_rules! ahead {
                 ($s:expr) => {{
                     let far = $s - FAR * SLOT;
-                    prefetch(base.wrapping_add(rd32(base, far + 16) as usize));
-                    prefetch(base.wrapping_add(rd32(base, far + 12) as usize));
+                    prefetch(base.wrapping_add(rd32(base, far + OTHER_AT) as usize));
+                    prefetch(base.wrapping_add(rd32(base, far + WORD_AT) as usize));
                 }};
             }
             'fresh: loop {
                 // both letters whole
                 na = rd32(base, sa) as usize;
                 ra = rd32(base, sa + 4) as u64;
-                aw = rd64(base, sa + 8);
+                aw = rd_word(base, sa, ro);
                 bs = rd_other(base, sa);
                 nb = rd32(base, sb) as usize;
                 rb = rd32(base, sb + 4) as u64;
-                bw = rd64(base, sb + 8);
+                bw = rd_word(base, sb, ro);
                 ts = rd_other(base, sb);
 
                 ahead!(sa);
@@ -56,7 +57,7 @@ impl Kernel {
                         // a write from one region into the next inside the one allocation
                         if ft > lay.ends[0]
                             || fb > lay.ends[1]
-                            || top + 32 > lay.ends[2]
+                            || top + 32 + HDR > lay.ends[2]
                             || rp + 16 > lay.ends[3]
                         {
                             debug_assert!(false, "cells region exhausted");
@@ -77,16 +78,18 @@ impl Kernel {
                     // the cell's word, A's then B's: as bytes, and as a rule; one is kept
                     let (la, lb) = (aw & M, bw & M);
                     let len = la + lb;
-                    copy16(base.add(top), base.add((aw >> 32) as usize));
+                    copy16(base.add(top + HDR), base.add((aw >> 32) as usize));
                     copy16(
-                        base.add(top + la.min(16) as usize),
+                        base.add(top + HDR + la.min(16) as usize),
                         base.add((bw >> 32) as usize),
                     );
+                    #[cfg(not(feature = "slot20"))]
+                    wr32(base, top, len as u32);
                     wr64(base, rp, aw);
                     wr64(base, rp + 8, bw);
                     let small = len <= SMALL as u64;
-                    let word = if small { top } else { rp };
-                    top += if small { len as usize } else { 0 };
+                    let word = if small { top + HDR } else { rp };
+                    top += if small { HDR + len as usize } else { 0 };
                     rp += if small { 0 } else { 16 };
                     let cw = len | (word as u64) << 32;
                     #[cfg(test)]
@@ -111,10 +114,10 @@ impl Kernel {
                     if ra == rb {
                         // both letters end: the cell is the last cut from each
                         wr32(base, ts + 4, ra as u32);
-                        wr64(base, ts + 8, cw);
+                        wr_word(base, ts, cw);
                         wr_other(base, ts, bs);
                         wr32(base, bs + 4, ra as u32);
-                        wr64(base, bs + 8, cw);
+                        wr_word(base, bs, cw);
                         wr_other(base, bs, ts);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
@@ -123,12 +126,12 @@ impl Kernel {
                     } else if ra > rb {
                         // B ends; A goes on, and its next cell is promised a fresh slot
                         wr32(base, ts + 4, rb as u32);
-                        wr64(base, ts + 8, cw);
+                        wr_word(base, ts, cw);
                         wr_other(base, ts, bs);
                         wr32(base, fb, rd32(base, bs));
                         wr32(base, bs, fb as u32);
                         wr32(base, bs + 4, rb as u32);
-                        wr64(base, bs + 8, cw);
+                        wr_word(base, bs, cw);
                         wr_other(base, bs, ts);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
@@ -140,17 +143,17 @@ impl Kernel {
                         ahead!(s);
                         nb = rd32(base, s) as usize;
                         rb = rd32(base, s + 4) as u64;
-                        bw = rd64(base, s + 8);
+                        bw = rd_word(base, s, ro);
                         ts = rd_other(base, s);
                     } else {
                         // A ends; B goes on
                         wr32(base, bs + 4, ra as u32);
-                        wr64(base, bs + 8, cw);
+                        wr_word(base, bs, cw);
                         wr_other(base, bs, ts);
                         wr32(base, ft, rd32(base, ts));
                         wr32(base, ts, ft as u32);
                         wr32(base, ts + 4, ra as u32);
-                        wr64(base, ts + 8, cw);
+                        wr_word(base, ts, cw);
                         wr_other(base, ts, bs);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
@@ -161,7 +164,7 @@ impl Kernel {
                         ahead!(s);
                         na = rd32(base, s) as usize;
                         ra = rd32(base, s + 4) as u64;
-                        aw = rd64(base, s + 8);
+                        aw = rd_word(base, s, ro);
                         bs = rd_other(base, s);
                     }
                 }

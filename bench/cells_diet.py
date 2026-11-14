@@ -1,11 +1,22 @@
-"""The Cells buffer diet's scaling question (#145, LOG 6881022819, its verdict amended by LOG
-6881074255, both before any data): does the 20-byte slot move the Workers + Cells plateau?
+"""The Cells buffer diet's scaling questions, registered before any data: does the smaller
+slot move the Workers + Cells plateau?
+- step 1 (`--step 1`, the default; #145 LOG 6881022819, its verdict amended by LOG
+  6881074255): the 20-byte slot against the 24-byte one, Q = A20(10) / A24(10);
+- step 2 (`--step 2`; LOG 6883380160, amended by LOG 6883412763): the 16-byte slot against
+  the 20-byte one, Q2 = A16(10) / A20(10), by the same rule, grid and validity.
+
+Step 1, as its recipe `just bench-cells-diet` built it:
 
 Two builds of `examples/ab.rs` from one commit, each with the research feature `dose` at
 MIBZ2_DOSE_MB=0 (src/dose.rs: no dose, only its `dose_blocks` counter, the blocks Cells
 admitted, which shows Cells engaged), in their own target directories:
-- A20: the production layout, Cells' 20-byte slot;
-- A24: the research feature `slot24` too, the parent's 24-byte slot.
+- A20: Cells' 20-byte slot (production then; the research feature `slot20` since step 2);
+- A24: the research feature `slot24`, the 24-byte slot before it.
+
+Step 2's builds, as `just bench-cells-diet2` builds them: A16, the production layout, the
+16-byte slot with the word's length kept at the word; A20, with the research feature
+`slot20`. The rest of this description holds for both steps, with A16 and A20 in place of A20
+and A24.
 
 `just bench-cells-diet` runs them as the arms `mibz2-workers@<each build's ab>` (forced
 Workers + Cells) on Wikidata, paired by round, with --spread and the held spinner as
@@ -48,7 +59,12 @@ from collections import defaultdict
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dose import load, mean_ci  # noqa: E402
 
-BUILDS = ("A20", "A24")
+# a step's (new build, old build), its registration, and its statistic's name
+STEPS = {
+    1: ("A20", "A24", "LOG 6881022819, amended 6881074255", "Q"),
+    2: ("A16", "A20", "LOG 6883380160, amended 6883412763", "Q2"),
+}
+BUILDS = STEPS[1][:2]
 REGISTERED_THREADS = [1, 4, 6, 10]
 REGISTERED_ROUNDS = 10
 CORPUS = "wikidata"
@@ -123,7 +139,8 @@ def validate(recs, bad, arms, threads, rounds):
 
 def analyse(runs, arms, threads, rounds):
     by = {b: a for a, b in arms.items()}
-    a20, a24 = by["A20"], by["A24"]
+    new_b, old_b = list(arms.values())
+    a20, a24 = by[new_b], by[old_b]
     lo_t, hi_t = min(threads), max(threads)
 
     def lg(arm, t, r, k):
@@ -144,7 +161,7 @@ def analyse(runs, arms, threads, rounds):
                 [lg(a20, t, r, "cpu") - lg(a24, t, r, "cpu") for r in range(rounds)]
             ),
         }
-        for b, arm in (("A20", a20), ("A24", a24)):
+        for b, arm in ((new_b, a20), (old_b, a24)):
             row[f"wall_{b}"] = mean_ci([lg(arm, t, r, "wall") for r in range(rounds)])
             row[f"amp_{b}"] = mean_ci(
                 [lg(arm, t, r, "cpu") - lg(arm, lo_t, r, "cpu") for r in range(rounds)]
@@ -161,15 +178,22 @@ def fmt(x):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("runs")
-    ap.add_argument("--arms", required=True, help="the arms A20 and A24, as in runs.jsonl")
+    ap.add_argument(
+        "--arms",
+        required=True,
+        help="the arms, the new build then the old (A20,A24; with --step 2 A16,A20)",
+    )
+    ap.add_argument("--step", type=int, choices=sorted(STEPS), default=1)
     ap.add_argument("--threads", default=",".join(map(str, REGISTERED_THREADS)))
     ap.add_argument("--rounds", type=int, default=REGISTERED_ROUNDS)
     ap.add_argument("--out", help="write STEM.md and STEM.json")
     a = ap.parse_args(argv)
+    new_b, old_b, log, stat = STEPS[a.step]
+    nb, ob = new_b[1:], old_b[1:]
     names = a.arms.split(",")
     if len(names) != 2 or len(set(names)) != 2:
-        ap.error("--arms takes two distinct arms: A20, A24")
-    arms = dict(zip(names, BUILDS))
+        ap.error(f"--arms takes two distinct arms: {new_b}, {old_b}")
+    arms = dict(zip(names, (new_b, old_b)))
     threads = sorted({int(t) for t in a.threads.split(",")})
     if len(threads) < 2:
         ap.error("--threads takes at least two thread counts")
@@ -177,7 +201,7 @@ def main(argv=None):
     recs, bad = load(a.runs)
     problems, runs = validate(recs, bad, arms, threads, a.rounds)
     lines = [
-        "# The Cells buffer diet's scaling question (#145, LOG 6881022819, amended 6881074255)",
+        f"# The Cells buffer diet's scaling question, step {a.step} (#145, {log})",
         "",
         f"- runs: {a.runs} ({len(recs)} records)",
         f"- grid: threads {','.join(map(str, threads))}, {a.rounds} rounds, {CORPUS}"
@@ -188,6 +212,7 @@ def main(argv=None):
         "threads": threads,
         "rounds": a.rounds,
         "registered": registered,
+        "step": a.step,
         "arms": {b: arm for arm, b in arms.items()},
         "problems": problems,
     }
@@ -211,23 +236,26 @@ def main(argv=None):
             "",
             "## Reported, not gating",
             "",
-            "| t | wall A20 s | wall A24 s | wall 20/24 [95% CI] | CPU 20/24 [95% CI] "
-            f"| A20(t) = CPU(t)/CPU({lo_t}) | A24(t) |",
+            f"| t | wall {new_b} s | wall {old_b} s | wall {nb}/{ob} [95% CI] "
+            f"| CPU {nb}/{ob} [95% CI] | {new_b}(t) = CPU(t)/CPU({lo_t}) | {old_b}(t) |",
             "|---|---|---|---|---|---|---|",
         ]
         for t in threads:
             x = r["t"][t]
             lines.append(
-                f"| {t}{' (cap)' if t == CAP_T else ''} | {fmt(x['wall_A20'])} "
-                f"| {fmt(x['wall_A24'])} | {fmt(x['wall_ratio'])} | {fmt(x['cpu_ratio'])} "
-                f"| {fmt(x['amp_A20'])} | {fmt(x['amp_A24'])} |"
+                f"| {t}{' (cap)' if t == CAP_T else ''} | {fmt(x['wall_' + new_b])} "
+                f"| {fmt(x['wall_' + old_b])} | {fmt(x['wall_ratio'])} | {fmt(x['cpu_ratio'])} "
+                f"| {fmt(x['amp_' + new_b])} | {fmt(x['amp_' + old_b])} |"
             )
         if CAP_T in threads:
-            lines += ["", f"4-thread wall ratio 20 B / 24 B: {fmt(r['t'][CAP_T]['wall_ratio'])}"]
+            lines += [
+                "",
+                f"4-thread wall ratio {nb} B / {ob} B: {fmt(r['t'][CAP_T]['wall_ratio'])}",
+            ]
         m, lo, hi = r["key"]
         note = f" ({r['note']})" if r["note"] else ""
         verdict_line = (
-            f"VERDICT: {r['verdict']}: Q = A20({hi_t})/A24({hi_t}) = {m:.4f} "
+            f"VERDICT: {r['verdict']}: {stat} = {new_b}({hi_t})/{old_b}({hi_t}) = {m:.4f} "
             f"[{lo:.4f}, {hi:.4f}]{note}{tag}"
         )
         result.update(

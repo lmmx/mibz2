@@ -22,7 +22,7 @@ ARMS = [
 ]
 
 
-def grid(q=1.0, case=None, seed=7, noise=0.003, threads=None, rounds=None):
+def grid(q=1.0, case=None, seed=7, noise=0.003, threads=None, rounds=None, builds=None):
     """A24's CPU amplification rising to 2.0 at the most threads; A20's to 2.0 * q, the log
     linear in t; noise `noise` a run"""
     threads = threads or cd.REGISTERED_THREADS
@@ -33,7 +33,9 @@ def grid(q=1.0, case=None, seed=7, noise=0.003, threads=None, rounds=None):
     for rnd in range(rounds):
         for t in threads:
             frac = (t - lo) / (hi - lo)
-            for arm, b in zip(ARMS, cd.BUILDS):
+            for arm, b in zip(ARMS, builds or cd.BUILDS):
+                # (the step's builds, named by step 1's: A20 the new, A24 the old)
+                b = {0: "A20", 1: "A24"}[(builds or cd.BUILDS).index(b)]
                 key = (b, t, rnd)
                 if case == "missing" and key == ("A20", 10, 4):
                     continue
@@ -150,6 +152,34 @@ def test_other_grid_is_marked():
     code, r = run(rows, "--threads", "1,2", "--rounds", "2")
     assert code == 0 and not r["registered"] and (r["lo"], r["hi"]) == (1, 2)
     assert "not the registered grid" in r["verdict_line"]
+
+
+STEP2 = cd.STEPS[2][:2]
+
+
+def test_step2():
+    # (Q2 = A16(10)/A20(10), by the same rule: each side of each boundary)
+    code, r = run(grid(q=0.90, builds=STEP2), "--step", "2")
+    assert code == 0 and r["step"] == 2 and r["verdict"] == "MOVES THE PLATEAU", r["verdict_line"]
+    assert "Q2 = A16(10)/A20(10)" in r["verdict_line"] and set(r["arms"]) == {"A16", "A20"}
+    assert abs(r["key"][0] - 0.90) < 0.005
+    assert "wall_A16" in r["t"]["10"] and "4-thread wall ratio 16 B / 20 B" in r["_md"]
+    code, r = run(grid(q=0.95, noise=0.0005, builds=STEP2), "--step", "2")
+    assert abs(r["key"][0] - 0.95) < 0.001 and r["key"][2] < 1, r["verdict_line"]
+    assert r["verdict"] == ("MOVES THE PLATEAU" if r["key"][0] <= 0.95 else "NO SCALING EFFECT")
+    code, r = run(grid(q=0.96, builds=STEP2), "--step", "2")
+    assert r["verdict"] == "NO SCALING EFFECT", r["verdict_line"]
+    assert r["key"][2] < 1 and r["note"] == "smaller effect, below threshold", r["verdict_line"]
+    code, r = run(grid(q=0.90, noise=0.15, builds=STEP2), "--step", "2")
+    assert r["verdict"] == "NO SCALING EFFECT" and r["key"][2] >= 1, r["verdict_line"]
+    code, r = run(grid(q=1.02, builds=STEP2), "--step", "2")
+    assert r["verdict"] == "NO SCALING EFFECT" and r["note"] == "", r["verdict_line"]
+    for case in ("missing", "failed", "hash", "engaged20", "engaged24", "duplicate", "extra"):
+        code, r = run(grid(q=0.9, case=case, builds=STEP2), "--step", "2")
+        assert code == 1 and r["verdict"] == "INVALID" and len(r["problems"]) == 1, case
+    # (step 1's arms read as step 2's: the labels are the step's, the roster the same)
+    code, r = run(grid(q=0.9), "--step", "2")
+    assert r["step"] == 2 and r["verdict"] == "MOVES THE PLATEAU"
 
 
 if __name__ == "__main__":

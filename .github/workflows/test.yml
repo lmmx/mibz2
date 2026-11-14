@@ -28,8 +28,11 @@ jobs:
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
-      # the buffer diet's comparison build (`slot24`, #145 LOG 6881022819): Cells' previous
-      # 24-byte slot, kept only for bench-cells-diet, still byte-identical and exact
+      # the buffer diet's comparison builds (`slot20`, #145 LOG 6883380160; `slot24`, LOG
+      # 6881022819): Cells' previous 20- and 24-byte slots, kept only for bench-cells-diet2 and
+      # bench-cells-diet, still byte-identical and exact
+      - name: The 20-byte slot build (research feature)
+        run: "cargo test --features slot20 --lib cells:: && cargo test --features slot20 --test cells"
       - name: The 24-byte slot build (research feature)
         run: "cargo test --features slot24 --lib cells::"
       # the Cells memory-dose experiment's research build (src/dose.rs, #145 LOG 6879466310):

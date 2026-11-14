@@ -178,7 +178,7 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
         v
     }
 }
-/// A letter's place in one order, for the induction by cells: 20 bytes. The two orders are
+/// A letter's place in one order, for the induction by cells: 16 bytes. The two orders are
 /// two regions of these in one buffer; a letter has one slot in each. The orders are only
 /// ever read from their ends, so a slot is read once, when the induction's front reaches it.
 ///
@@ -186,19 +186,47 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
 /// |---|---|
 /// | 0..4 | the slot before it in its order (an offset in the buffer) |
 /// | 4..8 | the letter's length |
-/// | 8..12 | its word's length |
-/// | 12..16 | its word: an offset in the buffer, of bytes if the length is at most SMALL, else of a rule |
-/// | 16..20 | the letter's slot in the other order (an offset in the buffer) |
+/// | 8..12 | its word: an offset in the buffer, of bytes if the word's length is at most SMALL, else of a rule |
+/// | 12..16 | the letter's slot in the other order (an offset in the buffer) |
+///
+/// The word's length (with the mark) is kept at the word, not in the slot (`word_len`): a
+/// word kept as bytes has it in the 4 bytes before them (`HDR`), and a rule's is the sum of
+/// its two factors' lengths, the first 4 bytes of each of its two halves. The walk's row's
+/// letter has a word of its own, its byte with a marked length (`marked`), apart from the
+/// 256 single bytes every other first letter shares.
 ///
 /// Every field is a 4-byte offset or length: the layout refuses a buffer whose total would
 /// reach `u32::MAX` (`slots`), and Cells then declines the block. The research feature
-/// `slot24` keeps the previous layout, 24 bytes with bytes 16..24 an 8-byte offset, only so
-/// that one commit can build both (bench-cells-diet, #145 LOG 6881022819).
-#[cfg(not(feature = "slot24"))]
+/// `slot20` keeps the previous layout (20 bytes: 8..12 the word's length, 12..16 the word,
+/// 16..20 the other order's slot; no length at the word), and `slot24` the one before it
+/// (24 bytes, 16..24 an 8-byte offset), only so that one commit can build each pair
+/// (bench-cells-diet2, #145 LOG 6883380160; bench-cells-diet, LOG 6881022819).
+#[cfg(not(feature = "slot20"))]
+const SLOT: usize = 16;
+/// (research only, `slot20`: the previous 20-byte slot)
+#[cfg(all(feature = "slot20", not(feature = "slot24")))]
 const SLOT: usize = 20;
-/// (research only, `slot24`: the previous 24-byte slot)
+/// (research only, `slot24`: the 24-byte slot before it)
 #[cfg(feature = "slot24")]
 const SLOT: usize = 24;
+/// Where a slot holds the letter's slot in the other order
+#[cfg(not(feature = "slot20"))]
+const OTHER_AT: usize = 12;
+#[cfg(feature = "slot20")]
+const OTHER_AT: usize = 16;
+/// Where a slot holds its word (its offset)
+#[cfg(not(feature = "slot20"))]
+const WORD_AT: usize = 8;
+#[cfg(feature = "slot20")]
+const WORD_AT: usize = 12;
+/// The length header before a word kept as bytes (none with `slot20`: the slot holds it)
+#[cfg(not(feature = "slot20"))]
+const HDR: usize = 4;
+#[cfg(feature = "slot20")]
+const HDR: usize = 0;
+/// The 256 single bytes' entries, a header and a byte each, and the walk's row's own entry
+/// after them (`slot20`: the bytes alone, and no entry of the row's own)
+const SINGLES: usize = if HDR == 0 { 256 } else { 257 * (HDR + 1) };
 /// How many slots on from an order's last letter the induction by cells fetches for
 const FAR: usize = 12;
 /// The buffer's first bytes, unused: a read `FAR` slots before an order's first stays inside
@@ -246,13 +274,13 @@ unsafe fn wr32(base: *mut u8, at: usize, v: u32) {
     unsafe { (base.add(at) as *mut u32).write_unaligned(v) }
 }
 
-/// A slot's bytes 16..: the letter's slot in the other order (4 bytes; 8 with `slot24`)
+/// A slot's bytes `OTHER_AT`..: the letter's slot in the other order (4 bytes; 8 with `slot24`)
 #[inline(always)]
 unsafe fn rd_other(base: *const u8, slot: usize) -> usize {
     // SAFETY: caller supplies an initialized in-bounds slot; alignment is not required.
     #[cfg(not(feature = "slot24"))]
     unsafe {
-        rd32(base, slot + 16) as usize
+        rd32(base, slot + OTHER_AT) as usize
     }
     // SAFETY: as above
     #[cfg(feature = "slot24")]
@@ -261,15 +289,15 @@ unsafe fn rd_other(base: *const u8, slot: usize) -> usize {
     }
 }
 
-/// Sets a slot's bytes 16..: the letter's slot in the other order, `other`, an offset in
-/// the buffer below `u32::MAX` (the layout's total is)
+/// Sets a slot's bytes `OTHER_AT`..: the letter's slot in the other order, `other`, an
+/// offset in the buffer below `u32::MAX` (the layout's total is)
 #[inline(always)]
 unsafe fn wr_other(base: *mut u8, slot: usize, other: usize) {
     debug_assert!(other < u32::MAX as usize);
     // SAFETY: caller supplies an in-bounds slot; alignment is not required.
     #[cfg(not(feature = "slot24"))]
     unsafe {
-        wr32(base, slot + 16, other as u32)
+        wr32(base, slot + OTHER_AT, other as u32)
     }
     // SAFETY: as above
     #[cfg(feature = "slot24")]
@@ -278,9 +306,71 @@ unsafe fn wr_other(base: *mut u8, slot: usize, other: usize) {
     }
 }
 
+/// A word's length, with the mark, kept at the word `w`: a rule's (`w` at or past `ro`, the
+/// rules' region) is its two factors' lengths summed, a word kept as bytes has it in the
+/// `HDR` bytes before them. (Only one factor of a rule can carry the mark, so the sum keeps
+/// it, and no sum reaches 2^32: a length is below 2^24.)
+#[cfg(not(feature = "slot20"))]
+#[inline(always)]
+unsafe fn word_len(base: *const u8, w: usize, ro: usize) -> u32 {
+    // SAFETY: caller supplies a word's offset: a rule's 16 bytes, or a word kept as bytes
+    // with its header written before it, all in the buffer
+    unsafe {
+        if w >= ro {
+            rd32(base, w).wrapping_add(rd32(base, w + 8))
+        } else {
+            rd32(base, w - HDR)
+        }
+    }
+}
+
+/// A slot's word as the induction holds it: its length (with the mark) | its offset << 32.
+/// The slot holds the offset; the length is read at the word (`word_len`). With `slot20`
+/// the slot holds both, 8 bytes at 8.
+#[inline(always)]
+unsafe fn rd_word(base: *const u8, slot: usize, ro: usize) -> u64 {
+    // SAFETY: caller supplies an initialized in-bounds slot whose word field holds a word's
+    // offset (`word_len`'s contract); alignment is not required
+    #[cfg(not(feature = "slot20"))]
+    unsafe {
+        let w = rd32(base, slot + WORD_AT) as usize;
+        word_len(base, w, ro) as u64 | (w as u64) << 32
+    }
+    // SAFETY: as above
+    #[cfg(feature = "slot20")]
+    unsafe {
+        let _ = ro;
+        rd64(base, slot + 8)
+    }
+}
+
+/// Sets a slot's word from `cw` (length | offset << 32): its offset (and with `slot20` its
+/// length too). The length lives at the word, written when the word was.
+#[inline(always)]
+unsafe fn wr_word(base: *mut u8, slot: usize, cw: u64) {
+    // SAFETY: caller supplies an in-bounds slot; alignment is not required
+    #[cfg(not(feature = "slot20"))]
+    unsafe {
+        wr32(base, slot + WORD_AT, (cw >> 32) as u32)
+    }
+    // SAFETY: as above
+    #[cfg(feature = "slot20")]
+    unsafe {
+        wr64(base, slot + 8, cw)
+    }
+}
+
 const SMALL: u32 = 16;
 const BYTES: u32 = 16;
 const NIL: u32 = u32::MAX;
+
+/// Test only: the byte census of the induction's successful runs in this process, summed
+/// (`cells_slot16_byte_census`): blocks, initial letters r0 (the walk's row's split
+/// included), unequal steps U (each takes one fresh slot), words kept as bytes (each given
+/// a header with the 16-byte slot), cells
+#[cfg(test)]
+static CENSUS: [std::sync::atomic::AtomicUsize; 5] =
+    [const { std::sync::atomic::AtomicUsize::new(0) }; 5];
 const GAP: usize = if cfg!(any(miri, debug_assertions)) {
     64
 } else {
@@ -473,7 +563,9 @@ impl Kernel {
         let tops = PAD;
         let bots = tops + cap + GAP;
         let arena = bots + cap + GAP;
-        let rules = arena + BYTES as usize + 256 + 16 + 16 * budget + 32 + GAP;
+        // (a word kept as bytes takes its header and at most SMALL bytes; its two 16-byte
+        // copies reach HDR + 32 bytes past its start)
+        let rules = arena + BYTES as usize + SINGLES + 16 + (16 + HDR) * budget + 32 + HDR + GAP;
         let allocation = rules + 16 * budget + 16 + GAP;
         // (every offset a slot holds is 4 bytes, the other order's included: a layout whose
         // total would reach u32::MAX is refused here, and Cells declines the block)
@@ -499,9 +591,21 @@ impl Kernel {
         }
         self.lay = lay;
         self.letters = letters;
+        // the single bytes, each after its header (with `slot20` the bytes alone)
+        let first = arena + BYTES as usize + HDR;
         for b in 0..256 {
-            self.buf[arena + BYTES as usize + b] = b as u8;
+            let at = first + b * (HDR + 1);
+            self.buf[at] = b as u8;
+            self.buf[at - HDR..at].copy_from_slice(&1u32.to_ne_bytes()[..HDR]);
         }
+        // the walk's row's own word: its byte, its length 1 with the mark
+        #[cfg(not(feature = "slot20"))]
+        let marked = {
+            let at = first + 256 * (HDR + 1);
+            self.buf[at] = cz as u8;
+            self.buf[at - HDR..at].copy_from_slice(&(1 | MARK).to_ne_bytes());
+            at
+        };
         for end in lay.ends {
             self.buf[end..end + GAP].fill(0xA5);
         }
@@ -512,7 +616,6 @@ impl Kernel {
         }
         debug_assert_eq!(self.letters, cnt[256] as usize);
         let base = self.buf.as_mut_ptr();
-        let first = lay.arena as u64 + BYTES as u64;
         let mut t = PAD;
         // SAFETY: the letters number at most the records and two, and a record is a row at
         // least: their slots lie inside each order's region
@@ -522,13 +625,13 @@ impl Kernel {
                     let (lam, c): (u64, usize) = ($lam as u64, $c);
                     let k = *cnt.get_unchecked(c) as usize;
                     *cnt.get_unchecked_mut(c) = (k + SLOT) as u32;
-                    let lw = 1 | (first + c as u64) << 32;
+                    let lw = 1 | ((first + c * (HDR + 1)) as u64) << 32;
                     // (the slot before each order's first is set after the pass)
                     wr64(base, t, t.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
-                    wr64(base, t + 8, lw);
+                    wr_word(base, t, lw);
                     wr_other(base, t, k);
                     wr64(base, k, k.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
-                    wr64(base, k + 8, lw);
+                    wr_word(base, k, lw);
                     wr_other(base, k, t);
                     t += SLOT;
                 }};
@@ -544,8 +647,17 @@ impl Kernel {
                     let tz = t;
                     letter!(1u32, cz);
                     let kz = rd_other(base, tz);
-                    wr32(base, tz + 8, 1 | MARK);
-                    wr32(base, kz + 8, 1 | MARK);
+                    // (the row's letter: the mark rides in its word's length, at the word)
+                    #[cfg(not(feature = "slot20"))]
+                    {
+                        wr32(base, tz + WORD_AT, marked as u32);
+                        wr32(base, kz + WORD_AT, marked as u32);
+                    }
+                    #[cfg(feature = "slot20")]
+                    {
+                        wr32(base, tz + 8, 1 | MARK);
+                        wr32(base, kz + 8, 1 | MARK);
+                    }
                     if total - off > 1 {
                         letter!(total - off - 1, cz);
                     }
@@ -606,13 +718,16 @@ impl Kernel {
         // slot or a fresh one below the region's end; a word's offset is in the arena or
         // the rules, with 16 bytes after it inside the buffer.
         unsafe {
-            let mut top = lay.arena + BYTES as usize + 256 + 16;
+            let mut top = lay.arena + BYTES as usize + SINGLES + 16;
             let mut rp = lay.rules;
+            let ro = lay.rules;
             // fresh slots: one a cell at most, on each side
             let (ft0, fb0) = (lay.tops + rr * SLOT, lay.bots + rr * SLOT);
             let (mut ft, mut fb) = (ft0, fb0);
             // Count every cell, including equal-length steps which allocate no slot.
             let mut cells = 0usize;
+            #[cfg(test)]
+            let mut smalls = 0usize;
             // the slot before each letter in its order; what is left of the letter; its
             // (length, word); the slot the next cell cut from it takes in the other order
             let (mut na, mut nb);
@@ -626,19 +741,19 @@ impl Kernel {
             macro_rules! ahead {
                 ($s:expr) => {{
                     let far = $s - FAR * SLOT;
-                    prefetch(base.wrapping_add(rd32(base, far + 16) as usize));
-                    prefetch(base.wrapping_add(rd32(base, far + 12) as usize));
+                    prefetch(base.wrapping_add(rd32(base, far + OTHER_AT) as usize));
+                    prefetch(base.wrapping_add(rd32(base, far + WORD_AT) as usize));
                 }};
             }
             'fresh: loop {
                 // both letters whole
                 na = rd32(base, sa) as usize;
                 ra = rd32(base, sa + 4) as u64;
-                aw = rd64(base, sa + 8);
+                aw = rd_word(base, sa, ro);
                 bs = rd_other(base, sa);
                 nb = rd32(base, sb) as usize;
                 rb = rd32(base, sb + 4) as u64;
-                bw = rd64(base, sb + 8);
+                bw = rd_word(base, sb, ro);
                 ts = rd_other(base, sb);
 
                 ahead!(sa);
@@ -650,13 +765,20 @@ impl Kernel {
                         // a write from one region into the next inside the one allocation
                         if ft > lay.ends[0]
                             || fb > lay.ends[1]
-                            || top + 32 > lay.ends[2]
+                            || top + 32 + HDR > lay.ends[2]
                             || rp + 16 > lay.ends[3]
                         {
                             debug_assert!(false, "cells region exhausted");
                             return Err(Refusal::Invalid);
                         }
                         self.rule_end = rp;
+                        #[cfg(test)]
+                        for (k, v) in [1, rr, (ft - ft0 + fb - fb0) / SLOT, smalls, cells]
+                            .into_iter()
+                            .enumerate()
+                        {
+                            CENSUS[k].fetch_add(v, std::sync::atomic::Ordering::Relaxed);
+                        }
                         return Ok(((aw >> 32) as u32, aw as u32, cells));
                     }
 
@@ -673,18 +795,25 @@ impl Kernel {
                     let len = la + lb;
                     // MARK remains in len: even a short marked word must be a rule.
                     let small = len <= SMALL as u64;
+                    #[cfg(test)]
+                    {
+                        smalls += usize::from(small);
+                    }
                     if small {
-                        copy16(base.add(top), base.add((aw >> 32) as usize));
+                        copy16(base.add(top + HDR), base.add((aw >> 32) as usize));
                         copy16(
-                            base.add(top + la.min(16) as usize),
+                            base.add(top + HDR + la.min(16) as usize),
                             base.add((bw >> 32) as usize),
                         );
+                        // (its length, with no mark: a marked word is a rule)
+                        #[cfg(not(feature = "slot20"))]
+                        wr32(base, top, len as u32);
                     } else {
                         wr64(base, rp, aw);
                         wr64(base, rp + 8, bw);
                     }
-                    let word = if small { top } else { rp };
-                    top += if small { len as usize } else { 0 };
+                    let word = if small { top + HDR } else { rp };
+                    top += if small { HDR + len as usize } else { 0 };
                     rp += if small { 0 } else { 16 };
                     let cw = len | (word as u64) << 32;
                     #[cfg(test)]
@@ -709,10 +838,10 @@ impl Kernel {
                     if ra == rb {
                         // both letters end: the cell is the last cut from each
                         wr32(base, ts + 4, ra as u32);
-                        wr64(base, ts + 8, cw);
+                        wr_word(base, ts, cw);
                         wr_other(base, ts, bs);
                         wr32(base, bs + 4, ra as u32);
-                        wr64(base, bs + 8, cw);
+                        wr_word(base, bs, cw);
                         wr_other(base, bs, ts);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
@@ -721,12 +850,12 @@ impl Kernel {
                     } else if ra > rb {
                         // B ends; A goes on, and its next cell is promised a fresh slot
                         wr32(base, ts + 4, rb as u32);
-                        wr64(base, ts + 8, cw);
+                        wr_word(base, ts, cw);
                         wr_other(base, ts, bs);
                         wr32(base, fb, rd32(base, bs));
                         wr32(base, bs, fb as u32);
                         wr32(base, bs + 4, rb as u32);
-                        wr64(base, bs + 8, cw);
+                        wr_word(base, bs, cw);
                         wr_other(base, bs, ts);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
@@ -738,17 +867,17 @@ impl Kernel {
                         ahead!(s);
                         nb = rd32(base, s) as usize;
                         rb = rd32(base, s + 4) as u64;
-                        bw = rd64(base, s + 8);
+                        bw = rd_word(base, s, ro);
                         ts = rd_other(base, s);
                     } else {
                         // A ends; B goes on
                         wr32(base, bs + 4, ra as u32);
-                        wr64(base, bs + 8, cw);
+                        wr_word(base, bs, cw);
                         wr_other(base, bs, ts);
                         wr32(base, ft, rd32(base, ts));
                         wr32(base, ts, ft as u32);
                         wr32(base, ts + 4, ra as u32);
-                        wr64(base, ts + 8, cw);
+                        wr_word(base, ts, cw);
                         wr_other(base, ts, bs);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
@@ -759,7 +888,7 @@ impl Kernel {
                         ahead!(s);
                         na = rd32(base, s) as usize;
                         ra = rd32(base, s + 4) as u64;
-                        aw = rd64(base, s + 8);
+                        aw = rd_word(base, s, ro);
                         bs = rd_other(base, s);
                     }
                 }
@@ -1230,11 +1359,20 @@ mod tests {
             let (mut marks, mut rows) = (0, 0);
             for i in 0..kernel.letters {
                 let at = start + i * SLOT;
-                marks += usize::from(read(at + 8) & MARK != 0);
+                // (the word's length as the induction reads it: at the word, or with
+                // `slot20` in the slot; every first word is one byte long)
+                // SAFETY: `slots` wrote this slot and its word
+                let cw = unsafe { rd_word(kernel.buf.as_ptr(), at, kernel.lay.rules) };
+                assert_eq!(cw as u32 & !MARK, 1);
+                if cw as u32 & MARK != 0 {
+                    marks += 1;
+                    // the marked word is the walk's row's byte
+                    assert_eq!(kernel.buf[(cw >> 32) as usize], ll[17]);
+                }
                 rows += read(at + 4) as usize;
-                let partner = read(at + 16) as usize;
+                let partner = read(at + OTHER_AT) as usize;
                 assert!(partner >= other && partner < other + kernel.letters * SLOT);
-                assert_eq!(read(partner + 16) as usize, at);
+                assert_eq!(read(partner + OTHER_AT) as usize, at);
             }
             assert_eq!(marks, 1);
             assert_eq!(rows, ll.len());
@@ -1277,4 +1415,36 @@ mod tests {
         );
     }
     include!("cells_selective_test.rs");
+
+    /// The 16-byte slot's net bytes on a real stream (#145 LOG 6883380160, amended): run
+    /// alone, on the corpus the census used, with
+    /// `MIBZ2_CENSUS_BZ2=PATH cargo test --lib cells::tests::cells_slot16_byte_census -- --ignored --exact --nocapture`
+    /// (production admission, the calling thread's Cells). Slot bytes saved, 4 x (2 r0 + U);
+    /// header bytes added, 4 x the words kept as bytes; the 257 single-byte entries' headers
+    /// are fixed per block and reported apart.
+    #[test]
+    #[ignore]
+    fn cells_slot16_byte_census() {
+        use std::sync::atomic::Ordering::Relaxed;
+        let path = std::env::var("MIBZ2_CENSUS_BZ2").expect("MIBZ2_CENSUS_BZ2");
+        let data = std::fs::read(path).unwrap();
+        for c in &CENSUS {
+            c.store(0, Relaxed);
+        }
+        let out = crate::decode_with::<crate::bwt::Cells>(&data, crate::Kernels::scalar()).unwrap();
+        let [blocks, r0, u, smalls, cells] = CENSUS.each_ref().map(|c| c.load(Relaxed));
+        let saved = 4 * (2 * r0 + u);
+        let added = 4 * smalls;
+        let fixed = blocks * 257 * 4;
+        println!(
+            "census: {} bytes out; blocks admitted {blocks}; r0 {r0}; U {u}; words kept as bytes \
+             (headers) {smalls}; cells {cells}; slot bytes saved 4(2r0+U) = {saved}; header bytes \
+             added 4 x headers = {added}; net {} ({:.3} B per cell); fixed single-byte headers \
+             {fixed} (257 x 4 a block)",
+            out.len(),
+            saved as i64 - added as i64,
+            (saved as f64 - added as f64) / cells as f64
+        );
+        assert!(blocks > 0);
+    }
 }

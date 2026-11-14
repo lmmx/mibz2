@@ -53,10 +53,13 @@ walk-stats = []
 # block Cells admits in invert_runs also streams through MIBZ2_DOSE_MB MB (set at compile
 # time, default 0) of per-kernel scratch; off by default, and without it nothing changes
 dose = []
-# Research only: the Cells buffer diet's comparison build (#145, LOG 6881022819). Cells'
-# previous 24-byte slot, bytes 16..24 an 8-byte offset, instead of the 20-byte slot, so that
-# bench-cells-diet builds both layouts from one commit; off by default, never shipped
-slot24 = []
+# Research only: the Cells buffer diet's comparison builds. `slot20`: Cells' previous 20-byte
+# slot, the word's length in the slot (#145, LOG 6883380160, bench-cells-diet2); `slot24`:
+# the 24-byte slot before it, bytes 16..24 an 8-byte offset (LOG 6881022819,
+# bench-cells-diet). Each only so that one commit builds both of a pair; off by default,
+# never shipped
+slot20 = []
+slot24 = ["slot20"]
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
