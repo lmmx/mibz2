@@ -1365,3 +1365,53 @@ bench-onecore-inline-i9:
 [positional-arguments]
 bench-cells-live-path cpu corpora:
     bash bench/cells-gap/live/run.sh "$1" "$2"
+
+# The 0.3.0 candidate (Cells on the calling thread and in workers, behind the 64r < n gate)
+# against master on the i9 at every thread count, with production's plan (mibz2) and with
+# forced workers (mibz2-workers) in both builds: is the candidate faster where it changes
+# the decoder (below 6 threads), level where it does not (teams, from 6), and do workers
+# running Cells beat teams at 10 and 20 threads? Rule, written before the data: LOG on #145
+# (cells scaling). Wikidata, text and pattern, paired by round. About 15 minutes.
+#   just submit bench-cells-scaling
+bench-cells-scaling OLD="6dec95ba6aaf59d5134e5ab119fd52433e2032ee" ROUNDS="10" THREADS="1,2,4,6,8,10,20":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    B=$PWD/target/cells-scaling
+    mkdir -p "$B"
+    O=$B/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-cells-scaling: $(git rev-parse HEAD) against {{OLD}}"
+    git rev-parse HEAD > "$O/new.txt"
+    echo "{{OLD}}" > "$O/old.txt"
+    cargo build -q --release --example ab --example windows
+    NEWAB=$PWD/target/release/examples/ab
+    [ -d "$B/build-{{OLD}}" ] || git worktree add -q --detach "$B/build-{{OLD}}" "{{OLD}}"
+    (cd "$B/build-{{OLD}}" && cargo build -q --release --example ab)
+    OLDAB=$B/build-{{OLD}}/target/release/examples/ab
+    # the identities measured, checked rather than assumed from a reused directory
+    [ "$(git -C "$B/build-{{OLD}}" rev-parse HEAD)" = "{{OLD}}" ] \
+      || { echo "bench-cells-scaling: build-{{OLD}} is not at {{OLD}}"; exit 1; }
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-cells-scaling: the checkout has local changes"; exit 1; }
+    sha256sum "$NEWAB" "$OLDAB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    [ -f "$B/wikidata.bz2" ] || python3 bench/wikidata.py build bench/wikidata.json "$dir" \
+      target/release/examples/windows "$B/wikidata.bz2"
+    [ -f "$B/gen/text.bz2" ] || "$NEWAB" gen "$B/gen" 16
+    sha256sum "$B/wikidata.bz2" "$B/gen/text.bz2" "$B/gen/pattern.bz2" | tee "$O/inputs.sha256"
+    "$NEWAB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    if [ "$hold_cpu" != off ]; then hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10); fi
+    "$NEWAB" run "$O/runs.jsonl" \
+      --arms "mibz2,mibz2@$OLDAB,mibz2-workers,mibz2-workers@$OLDAB" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" \
+      "$B/wikidata.bz2" "$B/gen/text.bz2" "$B/gen/pattern.bz2"
+    "$NEWAB" summary "$O/runs.jsonl" --ref "mibz2@$OLDAB" | tee "$O/summary.txt"
+    bash bench/bundle.sh "$O"

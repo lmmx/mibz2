@@ -178,6 +178,9 @@ pub struct ThreadTrace {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OutputRoute {
     Runs,
+    /// a run-route block Cells inverted in its own buffers: it writes `ll` for n output
+    /// rows, as the run route does, and requests nothing of the fallback's `tt`
+    Cells,
     ColumnInPlace,
     ColumnSeparate,
 }
@@ -202,6 +205,9 @@ pub struct WorkerNeeds {
     pub ll: usize,
     pub rle: usize,
     pub tt: usize,
+    /// the largest block the fallback's T-vector itself served (no slack): Cells' own
+    /// blocks request nothing of it
+    pub tt_rows: usize,
 }
 
 impl WorkerNeeds {
@@ -212,11 +218,15 @@ impl WorkerNeeds {
         } else {
             0
         };
-        self.tt = self.tt.max(s.rows + slack);
-        self.ll = self.ll.max(if s.route == OutputRoute::Runs {
-            s.rows
-        } else {
-            s.block_bound
+        if s.route != OutputRoute::Cells {
+            self.tt = self.tt.max(s.rows + slack);
+            self.tt_rows = self.tt_rows.max(s.rows);
+        }
+        self.ll = self.ll.max(match s.route {
+            OutputRoute::Runs => s.rows,
+            // Cells writes its output with 32 bytes of slack (src/cells.rs, `out.resize`)
+            OutputRoute::Cells => s.rows + 32,
+            _ => s.block_bound,
         });
         if s.route == OutputRoute::ColumnSeparate {
             self.rle = self.rle.max(s.rows);
@@ -690,6 +700,7 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
     let needs = s.worker.unwrap_or(WorkerNeeds {
         rows,
         tt: rows,
+        tt_rows: rows,
         ll: max_rows,
         rle: if s.in_place { 0 } else { rows },
     });
@@ -711,7 +722,7 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
             name: "tt",
             count: t,
             per: "threads",
-            alloc: TT_ROW * rows,
+            alloc: TT_ROW * needs.tt_rows,
             alloc_max: Some(if needs.tt == 0 { 0 } else { TT_ROW * 4.max((2 * needs.tt).saturating_sub(1)) }),
             live: TT_ROW * rows,
             hot: TT_ROW * rows,
@@ -1226,6 +1237,44 @@ mod tests {
                     kernels,
                 );
             }
+        }
+    }
+
+    /// A block Cells admits is recorded as its own route: it writes `ll` (with Cells'
+    /// 32 bytes of slack) and requests nothing of the fallback's `tt`; the per-worker
+    /// ledger holds across Cells and fallback blocks in one Scratch, and a fabricated
+    /// capacity still fails it
+    #[test]
+    fn ledger_cells_route() {
+        // tokens from a vocabulary of 1000: r/n inside Cells' window (Cells admits it)
+        let records: Vec<u8> = (0..150_000u32)
+            .flat_map(|i| format!("Q{} ", i.wrapping_mul(2_654_435_761) % 1000).into_bytes())
+            .collect();
+        let periodic = b"ab".repeat(300_000);
+        let mut scratch = Scratch::<crate::bwt::Cells>::default();
+        let mut out = Vec::new();
+        let mut routes = Vec::new();
+        for bytes in [&records[..], &periodic[..], &records[..]] {
+            let compressed = compress(bytes, 9);
+            let mut scanner = Scanner::new(SliceSource(&compressed));
+            while let Event::Block { symbols, .. } = scanner.next(Vec::new()).unwrap() {
+                out.clear();
+                decode_block(&symbols, Kernels::detect(), &mut scratch, &mut out).unwrap();
+                routes.push(scratch.allocation_history().last().unwrap().route);
+            }
+        }
+        assert!(routes.contains(&OutputRoute::Cells), "{routes:?}");
+        assert!(
+            routes.contains(&OutputRoute::Runs),
+            "the sparse gate's fallback: {routes:?}"
+        );
+        let samples = scratch.allocation_history();
+        let errors = validate_worker(samples, &scratch.buffers(), true);
+        assert!(errors.is_empty(), "{errors:?}");
+        for buffer in ["ll", "tt"] {
+            let mut bad = scratch.buffers();
+            bad.iter_mut().find(|b| b.name == buffer).unwrap().cap = usize::MAX;
+            assert!(!validate_worker(samples, &bad, true).is_empty(), "{buffer}");
         }
     }
 

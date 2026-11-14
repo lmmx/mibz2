@@ -17,6 +17,8 @@
 //! out), so another (an LF^2 walk: a pair table, with a flag for an intermediate row that
 //! is a segment start) can be put in without touching the stream, CRC or thread code.
 
+pub use crate::cells::{Cells, CellsKernel, Counts as CellsCounts, ForcedCells};
+
 /// An inverse-BWT kernel: a block's RLE1-coded text from its last column `ll` (whose
 /// bytes `counts` counts) and its primary index (below `ll.len()`: the caller checks),
 /// into `out` (cleared). Its buffers are its own, kept from block to block.
@@ -77,6 +79,14 @@ pub trait InverseBwt: Default + Send {
     /// (`runs::takes_runs`) instead of the column's. A kernel answers the same for every
     /// block.
     fn reads_runs(&self) -> bool {
+        false
+    }
+
+    /// Whether the last `invert_runs` that returned true was done by Cells, in its own
+    /// buffers, rather than by the fallback's table: the footprint ledger's route only
+    /// (src/trace.rs), so that a Cells block is not charged the fallback's T-vector
+    #[cfg(any(test, feature = "trace"))]
+    fn took_cells(&self) -> bool {
         false
     }
 

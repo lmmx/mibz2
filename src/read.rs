@@ -16,7 +16,8 @@ const COMPACT: usize = 4 << 20;
 
 /// A .bz2 stream (or several, one after another) read from `R`, decoded.
 ///
-/// - `BzReader::new(r)` decodes on the calling thread, a block at a time.
+/// - `BzReader::new(r)` decodes on the calling thread, a block at a time, using
+///   Cells inversion with bounded admission and Segmented fallback.
 /// - `BzReader::parallel(r, threads)` decodes `threads` blocks at once on worker threads
 ///   (plus one reading the stream in order and one reading `r`), in order.
 ///
@@ -42,7 +43,7 @@ enum Inner<R> {
 struct Seq<R> {
     scanner: Scanner<ReadSource<R>>,
     kernels: Kernels,
-    scratch: Scratch,
+    scratch: Scratch<crate::bwt::Cells>,
     syms: Vec<u16>,
     out: Vec<u8>,
     at: usize,
@@ -437,5 +438,39 @@ impl Iterator for Scan<'_> {
                 Some(Err(e))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn miri_sequential_default_cells_route() {
+        // libbzip2-generated periodic block: 128 bytes, two-symbol BWT.
+        // Assert actual public reader admission, not just identical output.
+        let encoded: &[u8] = &[
+            66, 90, 104, 57, 49, 65, 89, 38, 83, 89, 35, 29, 169, 162, 0, 0, 31, 129, 0, 48, 0, 32,
+            0, 48, 128, 42, 105, 1, 1, 197, 220, 145, 78, 20, 36, 8, 199, 106, 104, 128,
+        ];
+        let expected = b"ab".repeat(64);
+        assert_eq!(crate::decode(encoded).unwrap(), expected);
+        let mut reader = BzReader::with_kernels(encoded, Kernels::scalar());
+        let mut out = Vec::new();
+        let mut buf = [0; 7];
+        loop {
+            let n = reader.read(&mut buf).unwrap();
+            if n == 0 {
+                break;
+            }
+            out.extend_from_slice(&buf[..n]);
+        }
+        assert_eq!(out, expected);
+        let Inner::Seq(seq) = &reader.inner else {
+            panic!("sequential reader")
+        };
+        let counts = seq.scratch.cells_counts();
+        assert_eq!(counts.admitted, 1, "{counts:?}");
+        assert_eq!(counts.short_cycles, 1, "{counts:?}");
     }
 }
