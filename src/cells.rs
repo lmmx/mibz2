@@ -15,6 +15,7 @@ pub type ForcedCells = CellsKernel<true>;
 pub struct Counts {
     pub admitted: usize,
     pub density: usize,
+    pub sparse: usize,
     pub floor: usize,
     pub budget: usize,
     pub invalid: usize,
@@ -72,6 +73,7 @@ struct WriterReach {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Refusal {
     Density,
+    Sparse,
     Floor,
     Budget,
     Invalid,
@@ -95,6 +97,7 @@ impl<const F: bool> CellsKernel<F> {
             Err(reason) => {
                 match reason {
                     Refusal::Density => counts.density += 1,
+                    Refusal::Sparse => counts.sparse += 1,
                     Refusal::Floor => counts.floor += 1,
                     Refusal::Budget => counts.budget += 1,
                     Refusal::Invalid => counts.invalid += 1,
@@ -370,6 +373,13 @@ impl Kernel {
         // This first gate reads only the record count, before validation or allocation.
         if !forced && recs.len() * 10 >= n {
             return Err(Refusal::Density);
+        }
+        // The second reads it too: a column of very long runs (fewer than one record per 64
+        // rows: periodic or one-byte blocks) keeps Segmented, whose walk is already cheap
+        // there and which Cells loses to. Admitted Wikidata blocks lie at r/n 0.059..0.094,
+        // the synthetic pattern's at 0.0079 (Optimiser 98b553c3, the 64r < n screen).
+        if !forced && recs.len() * 64 < n {
+            return Err(Refusal::Sparse);
         }
         // a byte's letters; the record that holds the walk's row, and its run's first row
         let mut cnt = [0u32; 257];
@@ -974,6 +984,12 @@ mod tests {
             Err(Refusal::Density)
         );
         assert!(kernel.buf.is_empty(), "density gate allocates nothing");
+        let sparse = Runs::of_column(&[vec![0; 500], vec![1; 500]].concat());
+        assert_eq!(
+            kernel.try_invert(sparse.records(), 1000, 0, 1000, false, &mut out),
+            Err(Refusal::Sparse)
+        );
+        assert!(kernel.buf.is_empty(), "sparse gate allocates nothing");
         let floor = Runs::of_column(&[0; 11]);
         assert_eq!(
             kernel.try_invert(floor.records(), 11, 1, 1, false, &mut out),
@@ -1086,12 +1102,12 @@ mod tests {
     fn miri_cells_long_writer_production_admission() {
         let ll: Vec<_> = long_writer_column()
             .into_iter()
-            .flat_map(|b| [b; 10])
+            .flat_map(|b| [b; 8])
             .collect();
         let r = Runs::of_column(&ll);
         assert_eq!(
             (ll.len(), r.records().len(), ll.len() * 4 / 25),
-            (550, 8, 88)
+            (440, 8, 70)
         );
         let mut cells = Cells::default();
         let want = oracle(&ll, 0);
@@ -1110,7 +1126,7 @@ mod tests {
         assert_eq!(cells.state.kernel.letters, 7);
         let reach = cells.state.kernel.writer_reach;
         assert_eq!(reach.period, 55);
-        eprintln!("production long writer n=550 p=0: {reach:?}");
+        eprintln!("production long writer n=440 p=0: {reach:?}");
         assert_long_passes(reach);
         assert!(
             reach.spine_recopies > 0 && reach.repetitions > 0,

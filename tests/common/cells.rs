@@ -33,6 +33,7 @@ pub fn decode<I: InverseBwt>(data: &[u8], k: Kernels) -> (Vec<u8>, Result<(), Er
 pub fn add(a: &mut CellsCounts, b: CellsCounts) {
     a.admitted += b.admitted;
     a.density += b.density;
+    a.sparse += b.sparse;
     a.floor += b.floor;
     a.budget += b.budget;
     a.invalid += b.invalid;

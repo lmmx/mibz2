@@ -31,7 +31,9 @@ fn cells_long_writer_decoder_parity() {
             common::oracle(&z).unwrap();
             cells::check(&z, k);
         }
-        let large: Vec<_> = column.iter().flat_map(|&b| [b; 10]).collect();
+        // eight copies a byte: n = 440 with 8 records, inside the 64r < n gate (ten would be
+        // refused as sparse, and only forced Cells would reach the writer)
+        let large: Vec<_> = column.iter().flat_map(|&b| [b; 8]).collect();
         let z = craft(9, &[Spec::of(large, 0)], None);
         common::oracle(&z).unwrap();
         let (prod, forced) = cells::check(&z, k);

@@ -213,9 +213,11 @@ impl StreamDecoder {
     /// the plan's workers or teams). The team size is 2, 3 or 4; another runs as that many
     /// production workers.
     pub fn planned(plan: Plan, slots: usize, k: Kernels) -> StreamDecoder {
-        use super::bwt::{Cooperative, Segmented};
+        use super::bwt::{Cells, Cooperative, Segmented};
         let mut dec = match plan {
-            Plan::Workers(n) => Self::with_inverse::<Segmented>(n, slots, k),
+            // a worker inverts whole blocks, as the calling thread does: Cells, with its
+            // admission gates and Segmented fallback
+            Plan::Workers(n) => Self::with_inverse::<Cells>(n, slots, k),
             Plan::Teams { teams, k: 2 } => Self::with_inverse::<Cooperative<2>>(teams, slots, k),
             Plan::Teams { teams, k: 3 } => Self::with_inverse::<Cooperative<3>>(teams, slots, k),
             Plan::Teams { teams, k: 4 } => Self::with_inverse::<Cooperative<4>>(teams, slots, k),
