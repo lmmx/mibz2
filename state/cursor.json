@@ -742,7 +742,7 @@
     "receipt_readback_verified": true
   },
   "cells_i9": {
-    "status": "PREPARATION COMPLETE; NOT READY \u2014 existing Run Signal executor capability required before Coordinator queue admission",
+    "status": "COMPLETE: prepared, admitted and owner-executed; all252 reconciled and D104 accepted",
     "branch": "bench/cells-selective-i9",
     "master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
@@ -760,14 +760,37 @@
     "attribution": "bounded source finding complete, causality unresolved; see ATTRIBUTION.md",
     "design_review": 6862425749,
     "preparation_complete": true,
-    "completed": false,
+    "completed": true,
     "exact_head_checks": "Test43489092176, CI43489092042, Benchmark43489732975, hosted legacy all SUCCESS; superseded43489092104 retained CANCELLED",
     "coordinator_conditional_approval": 6862613562,
     "readiness_review": 6862561316,
-    "remaining_blocker": "Workflow dispatch tool unavailable; direct API CONNECT403; desktop control tool unavailable. Existing authorised executor must send Run Signal, then Coordinator queue admission and readback.",
-    "next_action": "Coordinator reconcile final green evidence and activate existing authorised Run Signal executor for cf1a36ed; no new Codex implementation needed",
+    "remaining_blocker": "None for completed preparation. Consumed tag cleanup remains assigned to existing executor; no replay.",
+    "next_action": "Closed; public default integration is a separate owner-directed task. No agent workstation execution.",
     "checked_utc": "2026-11-13T19:20:41.159644+00:00",
     "completion_review": 6862654606,
-    "preparation_evidence_commit": "4b5063748fc3090d46c832fa81957648a787eecb"
+    "preparation_evidence_commit": "4b5063748fc3090d46c832fa81957648a787eecb",
+    "owner_execution_submission": 6867819559,
+    "coordinator_validation": 6867899861,
+    "guardian_acceptance": 6867998245,
+    "queue_removed_master": "6dec95ba6aaf59d5134e5ab119fd52433e2032ee"
+  },
+  "cells_default": {
+    "status": "IN PROGRESS: minimal production PR382 opened; validation and scoped independent review pending",
+    "owner_direct_instruction": true,
+    "pickup_review": 6868355345,
+    "coordinator_reconciliation": 6868441092,
+    "branch": "feat/cells-sequential-default",
+    "base": "6dec95ba6aaf59d5134e5ab119fd52433e2032ee",
+    "kernel_source": "a8a23c11607864cb431f87fff38169e10c41685f",
+    "head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
+    "pr": 382,
+    "implementation_complete": true,
+    "completed": false,
+    "scoped_independent_review": "requested through Coordinator",
+    "policy_change": false,
+    "merged": false,
+    "workstation_measurements": 0,
+    "report": "state/reports/cells-default-20261114",
+    "next_action": "Complete actual public-default parity/Miri/fuzz/mutations and standard CI. Coordinator arrange scoped independent review, then owner adoption decision under unchanged rules. No duplicate attribution project."
   }
 }
