@@ -386,7 +386,16 @@ pub fn decode_block<I: bwt::InverseBwt>(
         trace::mark(trace::Kind::InvertEnd, trace::NONE);
         if done {
             #[cfg(any(test, feature = "trace"))]
-            s.record_allocation(trace::OutputRoute::Runs, n, b.max_len, k);
+            s.record_allocation(
+                if s.inverse.took_cells() {
+                    trace::OutputRoute::Cells
+                } else {
+                    trace::OutputRoute::Runs
+                },
+                n,
+                b.max_len,
+                k,
+            );
             return finish(&s.ll, b.crc, k, out);
         }
         // a broken tiling is a bug in `runs::front` (a debug build stops here): the column's

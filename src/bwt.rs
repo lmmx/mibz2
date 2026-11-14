@@ -82,6 +82,14 @@ pub trait InverseBwt: Default + Send {
         false
     }
 
+    /// Whether the last `invert_runs` that returned true was done by Cells, in its own
+    /// buffers, rather than by the fallback's table: the footprint ledger's route only
+    /// (src/trace.rs), so that a Cells block is not charged the fallback's T-vector
+    #[cfg(any(test, feature = "trace"))]
+    fn took_cells(&self) -> bool {
+        false
+    }
+
     /// `invert` for the block of `n` rows whose run records `runs::front` left in `r`: the
     /// LF table `runs::fill` builds from them, walked backward, its bytes into `out`
     /// (cleared): exactly what `invert` gives for the block's column. `orig_ptr` is below

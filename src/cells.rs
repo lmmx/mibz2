@@ -33,6 +33,8 @@ struct State {
     fallback: Segmented,
     kernel: Kernel,
     counts: Counts,
+    /// the last successful run-route inversion was Cells' own (the ledger's route)
+    took: bool,
 }
 #[derive(Default)]
 struct Kernel {
@@ -137,6 +139,10 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
     fn reads_runs(&self) -> bool {
         true
     }
+    #[cfg(any(test, feature = "trace"))]
+    fn took_cells(&self) -> bool {
+        self.state.took
+    }
     fn invert_runs(
         &mut self,
         r: &crate::runs::Runs,
@@ -145,7 +151,8 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
         out: &mut Vec<u8>,
         k: crate::Kernels,
     ) -> bool {
-        if self.attempt(r.records(), n, p, out) {
+        self.state.took = self.attempt(r.records(), n, p, out);
+        if self.state.took {
             return true;
         }
         // Exactly the shipped body, including its tiling failure. Admission refusal itself
