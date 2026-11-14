@@ -3051,7 +3051,13 @@
         "https://github.com/lmmx/mibz2/pull/145#issuecomment-6868132662",
         "https://github.com/lmmx/mibz2/pull/222#issuecomment-6868427669"
       ],
-      "log_status": "pending_publication"
+      "log_status": "published_readback_verified",
+      "log_comment_id": 6868441092
+    },
+    "6868441092": {
+      "status": "completed",
+      "comment_updated_at": "2026-11-14T00:25:28Z",
+      "disposition": "Own substantive LOG; ignore self-triggered wake."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3228,7 +3234,8 @@
     6867998245,
     6868132662,
     6868144797,
-    6868427669
+    6868427669,
+    6868441092
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -5994,6 +6001,7 @@
     "next_actor": "Existing Codex session returns exact PR/head, validation and independent-review request; deliberate authorised Coordinator resolves adoption/merge separately.",
     "observer_assignment": 6868427669,
     "ready_job_queued": false,
-    "ready_job_reason": "No new frozen qualifying workstation recipe; consumed queue empty."
+    "ready_job_reason": "No new frozen qualifying workstation recipe; consumed queue empty.",
+    "log_comment_id": 6868441092
   }
 }
