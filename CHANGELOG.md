@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.0](https://github.com/lmmx/mibz2/compare/v0.2.9...v0.3.0) - 2026-11-14
 
+A speed release for Wikidata-like data on up to 4 decoding threads. When the plan is plain workers
+(fewer than 6 threads), each block is inverted by **Cells**, a Rauzy–Veech induction over the
+block's run records that builds a small grammar and expands it, instead of walking the 3.6 MB
+T-vector (#383). Blocks whose runs are too dense (10·r ≥ n) or too sparse (64·r < n) are refused
+before any allocation and take 0.2.9's path. The team plans (6 threads and up) are unchanged.
+The output, the API and the supported inputs are unchanged.
+
+- **Release scaling, the i9-10900K** (`release-scaling/run-20261114T143213Z`, sha256 802fc690,
+  10 paired rounds, every arm the same bytes), `wikidata`, 0.2.9 ÷ 0.3.0 wall:
+
+  | threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+  |---|--:|--:|--:|--:|--:|--:|--:|--:|
+  | 0.2.9 ÷ 0.3.0 | **1.161** | **1.034** | **1.092** | 0.998 | 0.996 | 0.983 | 0.998 | 0.984 |
+  | 95% interval | 1.120–1.204 | 1.022–1.046 | 1.076–1.107 | 0.988–1.009 | 0.979–1.014 | 0.966–1.000 | 0.974–1.022 | 0.958–1.011 |
+
+  That is 13.9%, 3.3% and 8.4% less wall time at 1, 2 and 4 threads, and level from 8 threads,
+  where the plan is the unchanged teams. 0.3.0 is 3.8–6.2× faster than lbzip2 2.5 at every
+  thread count.
+- **The paired runbook bench, CI** (run 43604267716, Intel Xeon Platinum 8573C, 4 vCPU), v0.2.9 →
+  master: `wikidata` −11.9% (−13.6, −10.2), −10.1% (−11.1, −9.0) and −10.3% (−11.9, −8.8) at 1, 2
+  and 4 threads; no other corpus slower in any cell.
+- **The gate it merged under** (#145 LOGs 6877415527, 6877775115, 6878643235): Wikidata decided.
+  It passed I1 at 1, 2 and 4 threads (i9 run 2: 0.858, 0.977, 0.927 new ÷ old). It failed I2, the
+  no-loss bound of 1.02, only on interval width at 10 and 20 threads (point estimates 0.999, on
+  the unchanged team kernel), and the owner excepted those two cells (6878656114).
+- **The cost: memory.** Cells' buffer is about 12.8n + 48r bytes, roughly 15 MB per decoding
+  thread: CI's peak RSS 26 → 34 MB at 1 thread, 51 → 76 MB at 2, 78 → 126 MB at 4 (over C3's 50%
+  ceiling, excepted by the owner, 6877546534).
+- **Downstream:** wikidata-pq#225 (`BZ2_THREADS_CAP` 4, so the split's decoder runs Cells): the
+  split's release ETA 1h20m56s → 1h16m46s (−5.3% ±1.9%), parity passed.
+- **Caveats.** The gain depends on the CPU: on CI's AMD EPYC runners #383's bench was level at 1
+  and 2 threads and −2.9% at 4. Cells does not yet reach the team plans; a phase-split census and
+  then a cooperative Cells are next (#145 LOG 6878326831).
+
 ### <!-- 2 -->Bug Fixes
 
 - *(examples)* initialise every MTF base with Rust 1.100 Clippy
