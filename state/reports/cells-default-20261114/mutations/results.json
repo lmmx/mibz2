@@ -1,0 +1,29 @@
+{
+  "source_sha256": "1221a9a5f0993daee73d8352fc559b11557ebd4929f16de72bf8eeb50e5f0b58",
+  "mutants": [
+    {
+      "name": "baseline",
+      "compiled": true,
+      "exit": 0,
+      "failure_kind": null
+    },
+    {
+      "name": "missing-short",
+      "compiled": true,
+      "exit": 101,
+      "failure_kind": "selected state/payload"
+    },
+    {
+      "name": "missing-rule",
+      "compiled": true,
+      "exit": 101,
+      "failure_kind": "selected state/payload"
+    },
+    {
+      "name": "masked-mark",
+      "compiled": true,
+      "exit": 101,
+      "failure_kind": "descriptor classification"
+    }
+  ]
+}

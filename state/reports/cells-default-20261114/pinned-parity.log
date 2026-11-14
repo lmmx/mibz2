@@ -1,0 +1,16 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-cells-default)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.27s
+     Running tests/cells_default.rs (target/debug/build/mibz2/a27be66bc5b4dd39/out/cells_default-a27be66bc5b4dd39)
+
+running 1 test
+PUBLIC_DEFAULT_PARITY wikidata 209700196 bytes
+PUBLIC_DEFAULT_PARITY onebyte 20000000 bytes
+PUBLIC_DEFAULT_PARITY pattern 19600000 bytes
+PUBLIC_DEFAULT_PARITY random 8000000 bytes
+PUBLIC_DEFAULT_PARITY records 9600000 bytes
+PUBLIC_DEFAULT_PARITY runs 10000235 bytes
+PUBLIC_DEFAULT_PARITY text 13238014 bytes
+test public_defaults_pinned_corpus_parity ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 10.46s
+

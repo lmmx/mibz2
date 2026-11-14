@@ -1,0 +1,8 @@
+{
+  "audit": "no unresolved misroutes; six historical resolved",
+  "connector_transport": true,
+  "review": 6868508410,
+  "readback_exact": true,
+  "misrouted": null,
+  "coord_verify_limitation": "verify assumes FROM coordinator and reports FROM codex; not reported as a pass"
+}
