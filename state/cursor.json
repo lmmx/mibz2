@@ -2027,6 +2027,12 @@
       "review_comment_id": 6857443323,
       "review_comment_pr": 145,
       "publication_verification": "Exact body, author lmmx, issue145 and role-aware routing verified. Pinned verify retains only its hardcoded coordinator-only FROM rejection."
+    },
+    {
+      "trigger_comment_id": 6877415766,
+      "status": "in progress",
+      "pr": 162,
+      "report_path": "state/reports/adoption-6877415766/report.md"
     }
   ],
   "active_delegations": [],
