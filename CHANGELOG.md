@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/lmmx/mibz2/compare/v0.2.9...v0.3.0) - 2026-11-14
+
+### <!-- 2 -->Bug Fixes
+
+- *(examples)* initialise every MTF base with Rust 1.100 Clippy
+- *(examples)* iterate checked packet path for Rust 1.100 Clippy
+- *(trace)* account for AVX2 run fill slack in retained tables
+- *(trace)* validate retained allocations by worker route history
+
+### <!-- 4 -->Documentation
+
+- focus companion on reconstruction and align interval arrowheads
+- *(blog)* add detailed Rauzy–Veech technical companion
+- *(team)* register Codex delegate and acting Coordinator failover
+- *(changelog)* 0.2.9's notes from #359's workstation run and the paired run against 0.2.8 ([#360](https://github.com/lmmx/mibz2/pull/360))
+
+### <!-- 9 -->Other
+
+- Cells (Rauzy–Veech induction) as the Workers plan's inverse, with a sparse admission gate ([#383](https://github.com/lmmx/mibz2/pull/383))
+- Release scaling: 0.2.9 against 0.2.8 on the i9 (release-scaling/run-20261110T170952Z, sha256 33469444): wikidata 10-15% faster at 8-20 threads, 0.9% slower at 1; CHANGELOG figures
+
 ## [0.2.9](https://github.com/lmmx/mibz2/compare/v0.2.8...v0.2.9) - 2026-11-10
 
 A speed release for many-core machines. On the i9-10900K the decoder's team path, which it
