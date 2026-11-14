@@ -1,0 +1,38 @@
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/c365e741c3e008ce/out/mibz2-c365e741c3e008ce)
+warning: constant `ALL` is never used
+  --> src/parallel/service_unwind_tests.rs:44:7
+   |
+44 | const ALL: [OuterAt; 9] = [
+   |       ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `wrote` and `pooled` are never read
+   --> src/parallel/service_unwind_tests.rs:106:5
+    |
+103 | struct Ran {
+    |        --- fields in this struct
+...
+106 |     wrote: Result<(), Stopped>,
+    |     ^^^^^
+...
+114 |     pooled: u64,
+    |     ^^^^^^
+
+warning: function `every_point` is never used
+   --> src/parallel/service_unwind_tests.rs:259:4
+    |
+259 | fn every_point(input: (Vec<u8>, Vec<u8>)) -> u64 {
+    |    ^^^^^^^^^^^
+
+warning: function `parked` is never used
+   --> src/parallel/service_unwind_tests.rs:296:4
+    |
+296 | fn parked(z: &[u8], want: &[u8], last: u64) {
+    |    ^^^^^^
+
+warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
+
+warning: 5 warnings emitted
+

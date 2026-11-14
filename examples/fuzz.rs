@@ -36,7 +36,7 @@
 //!
 //! Usage: fuzz SECONDS [SEED] [OUT_DIR for the inputs of any failure, or -] [MODE]
 //! MODE: mixed (the default: every 8th case a pipeline case), classic, pipeline, service or
-//! teams
+//! teams, or cells (forced cells plus production admission; reach is asserted).
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -51,6 +51,10 @@ fn main() {
     let seed: u64 = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(1);
     let out_dir = args.get(3).cloned().filter(|d| d != "-");
     let mode = args.get(4).map_or("mixed", |s| s.as_str());
+    if mode == "cells" {
+        cells_fuzz(secs, seed, out_dir);
+        return;
+    }
     let every = match mode {
         "mixed" => 8,
         "classic" => 0,
@@ -708,4 +712,55 @@ fn report(dir: &Option<String>, t: &[u8], case: u64, why: &str) {
         let _ = std::fs::create_dir_all(d);
         let _ = std::fs::write(format!("{d}/case-{case}.bz2"), t);
     }
+}
+
+fn cells_fuzz(secs: u64, seed: u64, out_dir: Option<String>) {
+    use mibz2::bwt::CellsCounts;
+    let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1);
+    let mut corpus = cells::witnesses();
+    for (_, bytes) in samples(&mut rng) {
+        corpus.push(compress(&bytes[..bytes.len().min(150_000)], 9));
+    }
+    let (mut prod, mut forced) = (CellsCounts::default(), CellsCounts::default());
+    let mut cases = 0;
+    // Mandatory witnesses run even for a zero-second smoke check.
+    for z in &corpus {
+        let (p, f) = cells::check(z, mibz2::Kernels::detect());
+        cells::add(&mut prod, p);
+        cells::add(&mut forced, f);
+        cases += 1;
+    }
+    cells::assert_reach(prod, forced);
+    let deadline = Instant::now() + Duration::from_secs(secs);
+    while Instant::now() < deadline {
+        let mut z = if cases % 3 == 0 {
+            let n = 1 + rng.below(1000) as usize;
+            let alphabet = 1 + rng.below(256);
+            let ll = (0..n).map(|_| rng.below(alphabet) as u8).collect();
+            craft(9, &[Spec::of(ll, rng.below(n as u64) as u32)], None)
+        } else {
+            corpus[rng.below(corpus.len() as u64) as usize].clone()
+        };
+        if cases % 4 != 0 {
+            mutate(&mut z, &corpus, &mut rng, &near_start);
+        }
+        cases += 1;
+        let k = if cases % 2 == 0 {
+            mibz2::Kernels::scalar()
+        } else {
+            mibz2::Kernels::detect()
+        };
+        match std::panic::catch_unwind(|| cells::check(&z, k)) {
+            Ok((p, f)) => {
+                cells::add(&mut prod, p);
+                cells::add(&mut forced, f);
+            }
+            Err(_) => {
+                report(&out_dir, &z, cases, "cells differential failure");
+                panic!("cells case {cases}, seed {seed}");
+            }
+        }
+    }
+    cells::assert_reach(prod, forced);
+    println!("{cases} cells cases, seed {seed}, production {prod:?}, forced {forced:?}");
 }

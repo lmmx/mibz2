@@ -1,0 +1,13 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2)
+    Finished `test` profile [optimized + debuginfo] target(s) in 7.96s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-af1a8f02cbfe6ddd)
+
+running 5 tests
+test cells::tests::miri_cells_exact_fit_and_reuse ... ok
+test cells::tests::miri_cells_admission_and_invalid_records ... ok
+test cells::tests::miri_cells_slots_mark_and_links ... ok
+test cells::tests::cells_fallback_and_bound ... ok
+test cells::tests::cells_exhaustive_arbitrary_columns ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 99 filtered out; finished in 0.04s
+

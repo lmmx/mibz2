@@ -1,0 +1,24 @@
+   Compiling target-lexicon v0.13.5
+   Compiling syn v2.0.119
+   Compiling heck v0.5.0
+    Checking once_cell v1.21.4
+    Checking pbz2-core v0.2.0
+   Compiling pyo3-build-config v0.29.3
+    Checking pbz2 v0.2.0
+   Compiling pyo3-ffi v0.29.3
+   Compiling pyo3 v0.29.3
+   Compiling pyo3-macros-backend v0.29.3
+   Compiling pyo3-macros v0.29.3
+    Checking mibz2 v0.2.9 (/workspace/mibz2/work/master-check)
+error: `assert!(true)` will be optimized out by the compiler
+  --> examples/wait_audit.rs:70:13
+   |
+70 |     const { assert!(wait_stats::ENABLED, "build with --features wait-stats") };
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: remove it
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#assertions_on_constants
+   = note: `-D clippy::assertions-on-constants` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::assertions_on_constants)]`
+
+error: could not compile `mibz2` (example "wait_audit") due to 1 previous error

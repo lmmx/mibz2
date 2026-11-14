@@ -1,0 +1,31 @@
+   Compiling libm v0.2.16
+   Compiling thiserror v2.0.21
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+   Compiling mibz2 v0.2.9 (/workspace/mibz2/work/master-check)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1m 20s
+     Running unittests src/lib.rs (work/master-check/target/debug/deps/mibz2-af1a8f02cbfe6ddd)
+
+running 1 test
+test parallel::plan_tests::the_policy_here ... FAILED
+
+failures:
+
+---- parallel::plan_tests::the_policy_here stdout ----
+
+thread 'parallel::plan_tests::the_policy_here' panicked at src/parallel.rs:4379:13:
+5 cores of 4 CPUs
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    parallel::plan_tests::the_policy_here
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 98 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

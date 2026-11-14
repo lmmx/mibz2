@@ -1,0 +1,26 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2/work/unsafe-mutants-final/tree)
+    Finished `test` profile [optimized + debuginfo] target(s) in 13.97s
+  Executable unittests src/lib.rs (/workspace/mibz2/work/unsafe-mutants-final/target/debug/deps/mibz2-af1a8f02cbfe6ddd)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.07s
+     Running unittests src/lib.rs (/workspace/mibz2/work/unsafe-mutants-final/target/debug/deps/mibz2-af1a8f02cbfe6ddd)
+
+running 1 test
+test cells::tests::miri_cells_slots_mark_and_links ... FAILED
+
+failures:
+
+---- cells::tests::miri_cells_slots_mark_and_links stdout ----
+
+thread 'cells::tests::miri_cells_slots_mark_and_links' panicked at src/cells.rs:902:13:
+assertion `left == right` failed
+  left: 0
+ right: 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    cells::tests::miri_cells_slots_mark_and_links
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 103 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`
