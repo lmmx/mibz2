@@ -3044,7 +3044,7 @@
       "status": "in_progress",
       "delivery_id": "23a0d0e0-dfc1-11f1-847a-0e66c915dbb4",
       "comment_updated_at": "2026-11-14T00:20:03Z",
-      "planned_action": "Park undispatched6868132662 to avoid overlap with reported manually active Codex lane; record notice, not completion or owner-authority expansion; bounded Observer record update then disposition LOG.",
+      "planned_action": "Park undispatched6868132662 to avoid overlap with reported manually active Codex lane; record notice, not completion or owner-authority expansion; bounded Observer record update then disposition LOG. Mark own queued comment TYPE:LOG/PARKED with original body preserved so router cannot later redispatch it.",
       "recipient_cursor": "0f053f617f05f869312afbaaf0b49def0930050d"
     }
   },
