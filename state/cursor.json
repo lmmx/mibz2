@@ -813,6 +813,9 @@
     "adoption_qualified": false,
     "coordinator_disposition": 6868667961,
     "ci_verdict_review": 6868687049,
-    "completion_utc": "2026-11-14T00:48:08.343246+00:00"
+    "completion_utc": "2026-11-14T00:48:08.343246+00:00",
+    "completion_review": 6868794260,
+    "completion_evidence_commit": "931efa6e2f60ac5a4cd36592d186732f79425d3e",
+    "receipt_readback_verified": true
   }
 }
