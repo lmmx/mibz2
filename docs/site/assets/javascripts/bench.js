@@ -462,7 +462,7 @@
     // the curves
     const W = Math.max(300, Math.round(body.clientWidth) || 700);
     const narrow = W < 560;
-    const H = narrow ? 260 : 320, M = { l: 52, r: 14, t: 16, b: 36 };
+    const H = narrow ? 260 : 320, M = { l: 52, r: 46, t: 16, b: 36 };
     const vals = [];
     for (const t of ts) {
       if (P[t].anchor_mbps) vals.push(P[t].anchor_mbps);
@@ -487,10 +487,12 @@
     // lbzip2, measured: dashed and muted
     const lp = ts.map((t, i) => [x(i), P[t].anchor_mbps]).filter(([, v]) => v);
     svg("polyline", { points: lp.map(([px, v]) => `${px},${y(v)}`).join(" "), class: "bh-line bh-anchor", stroke: "var(--bh-old)", fill: "none" }, s);
-    // newest first in the slots, so the newest release has the first colour, as in a run's view
+    // one ordinal ramp, oldest to newest: the newest release is the strongest step (darkest
+    // on the light scheme, lightest on the dark), so the progression reads at a glance
+    const ramp = (i) => (n < 2 ? "var(--bh-rel-new)" : `color-mix(in oklch, var(--bh-rel-new) ${((100 * i) / (n - 1)).toFixed(1)}%, var(--bh-rel-old))`);
     const order = R.map((_, i) => n - 1 - i);
-    order.forEach((i, kk) => {
-      const col = kk < 8 ? `var(--bh-s${kk + 1})` : "var(--bh-old)";
+    order.forEach((i) => {
+      const col = ramp(i);
       const pts = ts.map((t, j) => [j, t]).filter(([, t]) => ok(t, i) && P[t].anchor_mbps);
       svg("polyline", { points: pts.map(([j, t]) => `${x(j)},${y(mb(t, i))}`).join(" "), class: "bh-line", stroke: col, fill: "none" }, s);
       for (const [j, t] of pts) {
@@ -501,9 +503,29 @@
           `${R[i]} at ${t} thread${t === "1" ? "" : "s"}: ${mb(t, i).toFixed(0)} MB/s modelled (95%: ${mb(t, i, -k).toFixed(0)} to ${mb(t, i, k).toFixed(0)}), ` +
           `wall ${Math.exp(P[t].x[i]).toFixed(3)}× ${g.anchor}'s, from ${P[t].n[i]} run${P[t].n[i] === 1 ? "" : "s"}`;
       }
+    });
+    // direct labels at the right-hand end, nudged apart so neighbours never collide; a leader
+    // in the release's colour ties each label to its line
+    const ends = R.map((r, i) => {
+      const pts = ts.map((t, j) => [j, t]).filter(([, t]) => ok(t, i) && P[t].anchor_mbps);
+      if (!pts.length) return null;
+      const [j, t] = pts[pts.length - 1];
+      return { r, i, x0: x(j), y0: y(mb(t, i)), y: y(mb(t, i)) };
+    }).filter(Boolean).sort((a, b) => a.y0 - b.y0);
+    const gap = 11;
+    for (let q = 1; q < ends.length; q++) ends[q].y = Math.max(ends[q].y, ends[q - 1].y + gap);
+    const over = ends.length ? ends[ends.length - 1].y - (H - M.b) : 0;
+    if (over > 0) for (const e of ends) e.y -= over;
+    for (let q = ends.length - 2; q >= 0; q--) ends[q].y = Math.min(ends[q].y, ends[q + 1].y - gap);
+    for (const e of ends) {
+      svg("line", { x1: e.x0 + 4, x2: e.x0 + 12, y1: e.y0, y2: e.y, stroke: ramp(e.i), class: "bh-leader" }, s);
+      svg("text", { x: e.x0 + 14, y: e.y + 4, class: "bh-tick bh-end-label" }, s).textContent = e.r;
+    }
+    // the key in version order, oldest first, as the ramp runs
+    R.forEach((r, i) => {
       const item = el("span", { class: "bh-ws-key" }, legend);
-      el("span", { class: "bh-swatch", style: `background:${col}` }, item);
-      item.append(` ${R[i]}  `);
+      el("span", { class: "bh-swatch", style: `background:${ramp(i)}` }, item);
+      item.append(` ${r}  `);
     });
     const item = el("span", { class: "bh-ws-key" }, legend);
     el("span", { class: "bh-swatch is-dashed", style: "background:var(--bh-old)" }, item);

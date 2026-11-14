@@ -13,6 +13,9 @@
   --bh-s7: #6250d6;
   --bh-s8: #e34948;
   --bh-old: #a3a29b;
+  /* the releases' ordinal ramp (one hue, OKLCH L 0.30 to 0.74, validated --ordinal) */
+  --bh-rel-new: #002b64;
+  --bh-rel-old: #7caeee;
   font-variant-numeric: tabular-nums;
 }
 [data-md-color-scheme="slate"] .bh-root {
@@ -27,6 +30,8 @@
   --bh-s7: #9085e9;
   --bh-s8: #e66767;
   --bh-old: #6d6c67;
+  --bh-rel-new: #cfe9ff;
+  --bh-rel-old: #275b9b;
 }
 .bh-root .bh-controls {
   display: flex;
@@ -438,4 +443,12 @@
   stroke-dasharray: 2 3;
   stroke: var(--bh-ink-2);
   opacity: 0.5;
+}
+
+.bh-root .bh-leader {
+  stroke-width: 1.5;
+  fill: none;
+}
+.bh-root .bh-end-label {
+  fill: var(--bh-ink-2);
 }
