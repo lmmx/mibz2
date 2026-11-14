@@ -1285,7 +1285,8 @@
       "routing_verification": "route/check passed; pinned verify rejects FROM optimizer due coordinator-only check. Exact readback passed.",
       "scope_resolution_comment_id": 6878376365,
       "report_path": "state/records/reviews/inbox-6878327105/verdict.md",
-      "evidence_commit": "b5617a8efdd12256bfdc89e35232e05e4dbb6d32"
+      "evidence_commit": "b5617a8efdd12256bfdc89e35232e05e4dbb6d32",
+      "report_commit": "99d7d0f8c6cdeb6ccb11204125a05b1f2072900a"
     }
   ],
   "migrated_from": {
