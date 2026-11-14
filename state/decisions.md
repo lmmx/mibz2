@@ -4694,3 +4694,8 @@ Checkpoint6790746386; PR368 headbfd5d322651974f9803f4c03942cf3ba3b5161d2, base26
 Checkpoint 6867883717; recipe cf1a36ed429f361839fab6748383187104d8ab27; archive SHA256330ff61ce5e2659c8f0a86837d26eab274d0eb1fbe4e5563d3f3824f92912fa7.
 
 G1 PROCEED on the machine/activity question: pre-start total and individual idle requirements supported; post-start others_busy1.65 is not a registered exclusion threshold. Keep all observations and uncertainty. Scoped qualification hold resolved; no production/B5 certification, no #380 DEFER/default-gate reversal or rerun. See [full independent findings](reports/D104-i9-machine-qualification.md).
+
+
+## D105 — scoped public Cells caller integration
+
+Checkpoint6868538108, PR382 head a9c7716aaf664a7898f3d8f37c955e09d5204a23. G1 scoped PROCEED on source caller/lifetime/error/fallback design; no new concrete safety defect. Validation remains partial: native/Miri/bench in progress at snapshot; successful forced Cells fuzz is not all-wrapper coverage. Preserve adoption/default restrictions. [Independent findings](reports/D105-public-cells-integration.md).
