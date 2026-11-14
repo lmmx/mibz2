@@ -2120,11 +2120,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D105",
-    "incoming_comment": 6868538108,
-    "review_comment_id": 6868606509
+    "active_comment": 6881612485,
+    "status": "in progress",
+    "decision": "D106"
   },
   "duplicate_events": [
     {
@@ -3798,6 +3796,13 @@
       "work_commit": "13b01b9905f732821c0db3e5efaaa3f20e468d2a",
       "review_comment_id": 6868606509,
       "complete_cursor_commit": "c9fe5d24d7bd3d76bf3be4732a95731e1835f531"
+    },
+    {
+      "comment_id": 6881612485,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D106",
+      "progress": "Receipt; migration digest/head verified; review 20-byte Cells unsafe layout at c915a95eb7288843ea25707bffc87c9d252f4bde."
     }
   ],
   "migrated_from": {
