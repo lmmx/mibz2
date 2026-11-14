@@ -80,7 +80,9 @@
     6877420411,
     6878877205
   ],
-  "in_progress": [],
+  "in_progress": [
+    6882131477
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -699,6 +701,11 @@
       "progress": "Account and levels published; REVIEW read back with Observer routing/header/citation verified.",
       "work_commit": "294b5e27e0e767ac87659011b71c66c41be6ce11",
       "review_id": 6878948909
+    },
+    "6882131477": {
+      "comment_id": 6882131477,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling dose, working-set premise and diet status."
     }
   },
   "last_record_commit": "294b5e27e0e767ac87659011b71c66c41be6ce11"
