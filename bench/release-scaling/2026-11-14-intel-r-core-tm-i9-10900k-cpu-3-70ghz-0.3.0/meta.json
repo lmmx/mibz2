@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-14",
+  "machine": null,
+  "cpu": "Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz",
+  "cpus": 20,
+  "cores": 10,
+  "threads_per_core": 2,
+  "max_mhz": "5300.0000",
+  "os": null,
+  "ref": "mibz2",
+  "arms": {
+    "lbzip2": "lbzip2 2.5",
+    "mibz2": "0.3.0",
+    "mibz2@/home/louis/dev/mibz2/target/release-scaling/build-v0.2.9/target/release/examples/ab": "0.2.9"
+  },
+  "files": {
+    "wikidata": {
+      "bytes": 11854933,
+      "sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+    }
+  },
+  "rounds": 10,
+  "threads": [
+    1,
+    2,
+    4,
+    8,
+    10,
+    12,
+    16,
+    20
+  ],
+  "note": null
+}
