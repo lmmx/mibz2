@@ -4,6 +4,17 @@
 
 use crate::bwt::{InverseBwt, Segmented};
 
+/// A phase marker for the memory census (feature `memtrace`, src/memtrace.rs); nothing
+/// without it
+macro_rules! mt_phase {
+    ($p:ident) => {
+        #[cfg(feature = "memtrace")]
+        if crate::memtrace::active(crate::memtrace::CELLS) {
+            crate::memtrace::phase(crate::memtrace::phase::$p);
+        }
+    };
+}
+
 /// Calling-thread default cells kernel, also selected with `decode_with::<bwt::Cells>`.
 pub type Cells = CellsKernel<false>;
 /// Test/fuzz route: open admission (including all-singleton columns), budget n.
@@ -96,9 +107,66 @@ impl<const F: bool> CellsKernel<F> {
     pub fn take_census(&mut self) -> Option<Census> {
         self.state.census.take()
     }
+    /// The memory census's regions and end marker for the attempt just made
+    #[cfg(feature = "memtrace")]
+    fn memtrace_regions(
+        &self,
+        recs: &[u16],
+        out: &Vec<u8>,
+        result: &Result<(usize, usize), Refusal>,
+    ) {
+        use crate::memtrace::{end, region, region as r};
+        let k = &self.state.kernel;
+        region(r::RECS, recs.as_ptr(), recs.len() * 2, recs.len() * 2);
+        let b = k.buf.as_ptr();
+        let len = k.buf.len();
+        if len > 0 {
+            let l = k.lay;
+            let alloc = l.ends[3] + GAP;
+            let parts = [
+                (r::BUF_PAD, 0, l.tops),
+                (r::BUF_TOPS, l.tops, l.bots),
+                (r::BUF_BOTS, l.bots, l.arena),
+                (r::BUF_ARENA, l.arena, l.rules),
+                (r::BUF_RULES, l.rules, alloc),
+                (r::BUF_SPARE, alloc, len),
+            ];
+            for (id, x, y) in parts {
+                if y >= x && x <= len {
+                    region(id, b.wrapping_add(x), y - x, y.min(len) - x);
+                }
+            }
+        }
+        region(
+            r::POS,
+            k.pos.as_ptr(),
+            k.pos.len() * 4,
+            k.pos.capacity() * 4,
+        );
+        // (the output's capacity: `out` is the Scratch's `ll`, kept from block to block)
+        region(r::OUT, out.as_ptr(), out.len(), out.capacity());
+        let fb = self.state.fallback.memtrace_capacity();
+        region(r::FALLBACK_TT, std::ptr::null::<u8>(), 0, fb.0);
+        region(r::FALLBACK_SEG, std::ptr::null::<u8>(), 0, fb.1);
+        match result {
+            Ok((cells, period)) => end(0, *period, *cells),
+            Err(e) => end(1 + *e as usize, 0, 0),
+        }
+    }
     fn attempt(&mut self, recs: &[u16], n: usize, p: u32, out: &mut Vec<u8>) -> bool {
         let budget = if F { n } else { n / 25 * 4 + n % 25 * 4 / 25 };
+        #[cfg(feature = "memtrace")]
+        let traced = crate::memtrace::active(crate::memtrace::CELLS);
+        #[cfg(feature = "memtrace")]
+        if traced {
+            crate::memtrace::begin(crate::memtrace::CELLS, n, recs.len());
+        }
         let result = self.state.kernel.try_invert(recs, n, p, budget, F, out);
+        #[cfg(feature = "memtrace")]
+        if traced {
+            crate::memtrace::off();
+            self.memtrace_regions(recs, out, &result);
+        }
         #[cfg(feature = "census")]
         {
             self.state.census = Some(self.state.kernel.census(recs.len(), n, &result));
@@ -396,6 +464,7 @@ impl Kernel {
         if n == 0 || n >= 1 << 24 || p as usize >= n {
             return Err(Refusal::Invalid);
         }
+        mt_phase!(SLOTS_COUNT);
         // This first gate reads only the record count, before validation or allocation.
         if !forced && recs.len() * 10 >= n {
             return Err(Refusal::Density);
@@ -458,6 +527,7 @@ impl Kernel {
             rules,
             ends: [tops + cap, bots + cap, rules - GAP, allocation - GAP],
         };
+        mt_phase!(SLOTS_ALLOC);
         // Reuse the high-water allocation, but never geometrically over-allocate. Release
         // the old buffer before growing so both large allocations are not live at once.
         if self.buf.len() < allocation {
@@ -472,6 +542,7 @@ impl Kernel {
         for end in lay.ends {
             self.buf[end..end + GAP].fill(0xA5);
         }
+        mt_phase!(SLOTS_LETTERS);
         // a byte's next bottom slot, as its offset in the buffer
         for k in 0..256 {
             cnt[k + 1] += cnt[k];
@@ -563,6 +634,7 @@ impl Kernel {
     #[inline(never)]
     fn induce_cells(&mut self, budget: usize) -> Result<(u32, u32, usize), Refusal> {
         const M: u64 = 0xFFFF_FFFF;
+        mt_phase!(INDUCE);
         let rr = self.letters;
         let lay = self.lay;
         if rr == 0 || self.buf.len() < lay.rules + 16 {
@@ -755,6 +827,7 @@ impl Kernel {
         {
             self.writer_reach.period = p;
         }
+        mt_phase!(WRITE_FILL);
         // (kept at its length from block to block: only the slack is written here)
         out.resize(n + 32, 0);
         let dst = out.as_mut_ptr();
@@ -774,6 +847,7 @@ impl Kernel {
                 self.pos.fill(NIL);
             }
             let pos = self.pos.as_mut_ptr();
+            mt_phase!(WRITE_PLACE);
             // the row's place in the word
             let (mut w, mut j) = (word as usize, 0usize);
             while w >= ro {
@@ -786,6 +860,7 @@ impl Kernel {
                 }
             }
             let start = (j + SHIFT) % p;
+            mt_phase!(WRITE_SPINE);
             // the marked rules, from the word down to the row
             let (mut w, mut q) = (word as usize, 0usize);
             while w >= ro {
@@ -814,6 +889,7 @@ impl Kernel {
                 w = (next >> 32) as usize;
             }
             *dst.add((q + p - start) % p) = *base.add(w);
+            mt_phase!(WRITE_DESCEND);
             // where each rule first lies: a rule's factors lie no later than inside it
             for j in (0..nr).rev() {
                 let q = *pos.add(j);
@@ -842,6 +918,7 @@ impl Kernel {
                     }
                 }
             }
+            mt_phase!(WRITE_EXPAND);
             // its bytes: each factor's from the arena, or from where the factor first lies
             for j in 0..nr {
                 let q = *pos.add(j);
@@ -886,6 +963,7 @@ impl Kernel {
             // marked rule has no place of its own, so the passes above never copy for it).
             // The first place is the least and occurrences of one word are apart, so the
             // source is whole and does not reach the place written.
+            mt_phase!(WRITE_RESPINE);
             let (mut w, mut q) = (word as usize, 0usize);
             while w >= ro {
                 let (a, b) = rule(w);
@@ -913,6 +991,7 @@ impl Kernel {
                 w = (next >> 32) as usize;
             }
         }
+        mt_phase!(WRITE_REPEAT);
         // a cycle shorter than the block: the block is its copies
         let mut have = p.min(n);
         while have < n {

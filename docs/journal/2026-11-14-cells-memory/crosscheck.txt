@@ -1,0 +1,7 @@
+events: Dr D1mr DLmr Dw D1mw DLmw (cachegrind self) | loads stores (memtrace)
+slots: cachegrind Dr=69,671,642 D1mr=782,365 DLmr=115,161 Dw=78,901,763 D1mw=8,536,619 DLmw=8,458,665 | memtrace loads=69,672,996 stores=90,166,929
+induce: cachegrind Dr=272,874,422 D1mr=19,019,174 DLmr=2,764,046 Dw=242,532,917 D1mw=30,703,139 DLmw=9,631,685 | memtrace loads=272,875,600 stores=242,533,689
+write: cachegrind Dr=103,797,976 D1mr=4,716,740 DLmr=572,617 Dw=14,806,907 D1mw=1,915 DLmw=569 | memtrace loads=125,848,979 stores=211,534,755
+__memcpy_avx_unaligned_erms (whole program): Dr=27,188,428 Dw=19,378,213 DLmr=594,538 DLmw=1,011,487
+__memset_avx2_unaligned_erms (whole program): Dr=13,505 Dw=214,849,404 DLmr=196 DLmw=3,250,088
+cells_memory::main (whole program): Dr=131,256,557 Dw=29,558,234 DLmr=440,903 DLmw=1,195,946

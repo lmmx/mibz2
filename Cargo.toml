@@ -52,6 +52,9 @@ walk-stats = []
 # examples/cells_census.rs: each Cells attempt's grammar and writer, replayed after it
 # (src/cells.rs); off by default, and without it nothing is recorded
 census = []
+# examples/cells_memory.rs: valgrind markers around the Cells and Segmented kernels
+# (src/memtrace.rs) for the memory census; off by default
+memtrace = ["census"]
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -100,3 +103,7 @@ required-features = ["wait-stats"]
 [[example]]
 name = "cells_census"
 required-features = ["census"]
+
+[[example]]
+name = "cells_memory"
+required-features = ["memtrace"]

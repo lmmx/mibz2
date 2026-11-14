@@ -1,0 +1,5 @@
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  target/census/wikidata.bz2
+8d12f59d4167069fa96faa4d846e3f32f50a4c50959529057accac8d9006fc24  target/release/examples/cells_memory
+c4f760be47a9c18fa1b47c7442670db986667d26db56576e892619af2b2e9aed  WORK/lib/memtrace-amd64-linux
+2e8d98699e6a442a5ccfffe58d6faf1eb146ef0a4ce16e5de5e439e20220ca55  WORK/consumer
+# rustc 1.99.1, gcc 13, valgrind 3.22.0, base commit b5617a8ef

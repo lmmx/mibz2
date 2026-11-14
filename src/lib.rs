@@ -81,6 +81,10 @@ pub mod bits;
 pub mod block;
 pub mod bwt;
 mod cells;
+// (the memory census's valgrind markers: research only, docs/journal/2026-11-14-cells-memory/)
+#[cfg(feature = "memtrace")]
+#[doc(hidden)]
+pub mod memtrace;
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;

@@ -137,6 +137,23 @@ pub struct Segmented {
     seg: SegScratch,
 }
 
+#[cfg(feature = "memtrace")]
+impl Segmented {
+    /// The memory census's report of this kernel's capacity: (table, segment scratch) bytes
+    #[cfg(feature = "memtrace")]
+    pub(crate) fn memtrace_capacity(&self) -> (usize, usize) {
+        let s = &self.seg;
+        let bufs: usize = s.bufs.iter().map(Vec::capacity).sum();
+        (
+            self.tt.0.capacity() * 4,
+            bufs + s.bufs.capacity() * 24
+                + s.starts.capacity() * 4
+                + s.bitmap.capacity() * 8
+                + s.next.capacity() * 8,
+        )
+    }
+}
+
 impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         build(ll, counts, &mut self.tt);
@@ -169,10 +186,56 @@ impl InverseBwt for Segmented {
         out: &mut Vec<u8>,
         k: crate::Kernels,
     ) -> bool {
+        #[cfg(feature = "memtrace")]
+        let traced = crate::memtrace::active(crate::memtrace::SEGMENTED);
+        #[cfg(feature = "memtrace")]
+        if traced {
+            crate::memtrace::begin(crate::memtrace::SEGMENTED, n, r.records().len());
+            crate::memtrace::phase(crate::memtrace::phase::SEG_FILL);
+        }
         if !crate::runs::fill(r, n, &mut self.tt, k) {
             return false;
         }
         walk_back_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+        #[cfg(feature = "memtrace")]
+        if traced {
+            use crate::memtrace::{region, region as g};
+            crate::memtrace::off();
+            let recs = r.records();
+            region(g::RECS, recs.as_ptr(), recs.len() * 2, recs.len() * 2);
+            let t = &self.tt.0;
+            region(g::TT, t.as_ptr(), t.len() * 4, t.capacity() * 4);
+            let s = &self.seg;
+            region(
+                g::SEG_STARTS,
+                s.starts.as_ptr(),
+                s.starts.len() * 4,
+                s.starts.capacity() * 4,
+            );
+            region(
+                g::SEG_BITMAP,
+                s.bitmap.as_ptr(),
+                s.bitmap.len() * 8,
+                s.bitmap.capacity() * 8,
+            );
+            region(
+                g::SEG_NEXT,
+                s.next.as_ptr(),
+                s.next.len() * 8,
+                s.next.capacity() * 8,
+            );
+            region(
+                g::SEG_BUFS_OUTER,
+                s.bufs.as_ptr(),
+                s.bufs.len() * 24,
+                s.bufs.capacity() * 24,
+            );
+            for b in &s.bufs {
+                region(g::SEG_BUFS, b.as_ptr(), b.len(), b.capacity());
+            }
+            region(g::OUT, out.as_ptr(), out.len(), out.capacity());
+            crate::memtrace::end(0, 0, 0);
+        }
         true
     }
 
@@ -815,9 +878,21 @@ pub fn walk_back(tt: &TVector, orig_ptr: u32, out: &mut Vec<u8>) {
 /// T-vector; the plain backward walk for a block too short to segment
 pub fn walk_back_room(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mut SegScratch) {
     if tt.len() < MIN_SEGMENTED {
+        #[cfg(feature = "memtrace")]
+        if crate::memtrace::active(crate::memtrace::SEGMENTED) {
+            crate::memtrace::phase(crate::memtrace::phase::SEG_WALK);
+        }
         return walk_back(tt, orig_ptr, out);
     }
+    #[cfg(feature = "memtrace")]
+    if crate::memtrace::active(crate::memtrace::SEGMENTED) {
+        crate::memtrace::phase(crate::memtrace::phase::SEG_WALK);
+    }
     room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    #[cfg(feature = "memtrace")]
+    if crate::memtrace::active(crate::memtrace::SEGMENTED) {
+        crate::memtrace::phase(crate::memtrace::phase::SEG_ASSEMBLE);
+    }
     s.assemble_reversed(out);
 }
 
