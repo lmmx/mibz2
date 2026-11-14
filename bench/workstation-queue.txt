@@ -6,3 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-cells-dose             research/cells-dose       Cells memory-dose: P0/P8/P16 streaming + C16 chase, Workers 1-10t on the i9 (LOG 6879466310, amendment 6880229350; PR #387)
