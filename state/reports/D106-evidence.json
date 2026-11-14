@@ -1,0 +1,250 @@
+{
+  "decision": "D106",
+  "incoming": 6881612485,
+  "pr": 391,
+  "head": "c915a95eb7288843ea25707bffc87c9d252f4bde",
+  "base": "2a12e39f69ef7c0f17be860138701b14df82b713",
+  "operating_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "source_hashes": {
+    "src/cells.rs": "e7c3278c79286c36378dfa59e79695d9d46e4d6d6c93f195ba5e9f80503ea2c0",
+    "src/cells_original_test.rs": "ebed56e70ebe5d44ccd86f181740993b4818560777781e8be7973545a065e55d",
+    ".github/workflows/test.yml": "c4169265d6442d9b5bc6da05aa10aa33a23211c33d33b71059fa3b913bf573b2"
+  },
+  "test_workflow": {
+    "run": 43622250866,
+    "conclusion": "failure",
+    "jobs": [],
+    "local_yaml_error": "mapping values are not allowed here: line 34, column 55",
+    "base_parses": true,
+    "quoted_command_parses": true
+  },
+  "miri_snapshot": {
+    "run": 43622262431,
+    "job": 132530336939,
+    "status": "in_progress",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-14T17:39:12Z",
+        "completed_at": "2026-11-14T17:39:13Z"
+      },
+      {
+        "name": "Run actions/checkout@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-14T17:39:13Z",
+        "completed_at": "2026-11-14T17:39:15Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@nightly",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-14T17:39:15Z",
+        "completed_at": "2026-11-14T17:39:26Z"
+      },
+      {
+        "name": "Run Swatinem/rust-cache@v2",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-14T17:39:26Z",
+        "completed_at": "2026-11-14T17:39:28Z"
+      },
+      {
+        "name": "Miri setup",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-14T17:39:28Z",
+        "completed_at": "2026-11-14T17:39:44Z"
+      },
+      {
+        "name": "The worker recovery tests are selected",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-14T17:39:44Z",
+        "completed_at": "2026-11-14T17:39:47Z"
+      },
+      {
+        "name": "Miri",
+        "status": "in_progress",
+        "conclusion": null,
+        "number": 7,
+        "started_at": "2026-11-14T17:39:47Z",
+        "completed_at": null
+      },
+      {
+        "name": "Post Run Swatinem/rust-cache@v2",
+        "status": "pending",
+        "conclusion": null,
+        "number": 13,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Post Run actions/checkout@v6",
+        "status": "pending",
+        "conclusion": null,
+        "number": 14,
+        "started_at": null,
+        "completed_at": null
+      }
+    ]
+  },
+  "mutation_claim": "| mutant | result |\n|---|---|\n| M1 `wr_other` writes 8 bytes (`wr64`) | killed: exhaustive state, admission, arbitrary columns; decoder parity panics |\n| M2 `rd_other` reads 8 bytes (`rd64`) | killed: SIGSEGV (the next slot's bytes 0..4 read as the high half) |\n| M3 field offset 16 → 12, read and write | killed: selective comparison, exhaustive arbitrary columns, exact fit |\n| M4 field offset 16 → 17, read and write | killed: `miri_cells_slots_mark_and_links` panics; the lib and integration tests fail |\n| M5 `SLOT` 20 → 16 (overlapping slots) | killed: the tests never finish (hung for minutes and were stopped) |\n| M6 write offset only 16 → 12 | killed: long-writer parity, admission reach, corpora |\n\n",
+  "checks": [
+    {
+      "name": "deploy-branch",
+      "id": 132530889279,
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "preview",
+      "id": 132530888130,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "look",
+      "id": 132530887903,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Release",
+      "id": 132530814234,
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Publish crate",
+      "id": 132530363481,
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "id": 132530362417,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "id": 132530362414,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "id": 132530362405,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "id": 132530362376,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "id": 132530362361,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "sdist",
+      "id": 132530362359,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "pages",
+      "id": 132530337359,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "bench",
+      "id": 132530337157,
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "name": "build",
+      "id": 132530337065,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "walk-stats",
+      "id": 132530337041,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "miri",
+      "id": 132530336939,
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "name": "check-commit",
+      "id": 132530336730,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "occupancy",
+      "id": 132530336473,
+      "status": "in_progress",
+      "conclusion": null
+    }
+  ],
+  "repro": {
+    "native_rust_available": false,
+    "production_other_calls": 13,
+    "reference_other_calls": 10,
+    "max_allocation": {
+      "slot20": 1879052848,
+      "slot24": 2147488304
+    },
+    "max_n": 16777215,
+    "min_ahead_read": {
+      "slot20": 3868,
+      "slot24": 3820
+    },
+    "arena_formula": "2*S*(R+2+B)+32*B+4432+4*G",
+    "production_n900000": {
+      "R": 89999,
+      "B": 144000,
+      "slot20": 13972472,
+      "slot24": 15844480,
+      "save": 1872008,
+      "pos": 576000
+    }
+  },
+  "scope": "Independent source/proof/YAML/arithmetic review; no native Rust, Miri, fuzz or mutation executions by Guardian.",
+  "audit": {
+    "since": 6868538108,
+    "misroutes": [],
+    "inbox_unfinished": [
+      6881612485
+    ],
+    "destination": 145
+  },
+  "migration": {
+    "branch": "review/compact30-guardian-shadow",
+    "sha": "f9dab3d2b40739d89d613f86e8c2d67bec3159e4",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488",
+    "date": "2026-11-06"
+  }
+}

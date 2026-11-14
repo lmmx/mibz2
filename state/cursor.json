@@ -3802,7 +3802,8 @@
       "pr": 161,
       "status": "in progress",
       "decision": "D106",
-      "progress": "Receipt; migration digest/head verified; review 20-byte Cells unsafe layout at c915a95eb7288843ea25707bffc87c9d252f4bde."
+      "progress": "Source argument complete; reproduced test.yml line34 YAML parse failure; B5 evidence HOLD, assembling immutable findings.",
+      "receipt_commit": "9a26afd19bae255b62cfe773a6507f5530d85dce"
     }
   ],
   "migrated_from": {

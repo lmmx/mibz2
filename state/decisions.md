@@ -4699,3 +4699,10 @@ G1 PROCEED on the machine/activity question: pre-start total and individual idle
 ## D105 — scoped public Cells caller integration
 
 Checkpoint6868538108, PR382 head a9c7716aaf664a7898f3d8f37c955e09d5204a23. G1 scoped PROCEED on source caller/lifetime/error/fallback design; no new concrete safety defect. Validation remains partial: native/Miri/bench in progress at snapshot; successful forced Cells fuzz is not all-wrapper coverage. Preserve adoption/default restrictions. [Independent findings](reports/D105-public-cells-integration.md).
+
+
+## D106 — 6881612485 — G1/G2: Cells 20-byte slots, B5 evidence HOLD
+
+2026-11-14. Exact head `c915a95eb7288843ea25707bffc87c9d252f4bde`, PR #391. Source-level adversarial review found no new unsafe-access defect; complete B5 qualification is disputed. HOLD integrating this layout until the malformed Test YAML is repaired and exact-source Rust/differential/fuzz/Miri and reproducible mutation outcomes are supplied. Test workflow failed with zero jobs; local parser reproduced line 34 column 55. M5's manually stopped hang is not a verified bounded kill. No B6 missed-target conclusion, no line-level STOP, no implementation or authority widening.
+
+[Full decision and proof](reports/D106-cells-slot20.md); [evidence](reports/D106-evidence.json). Incoming [6881612485](https://github.com/lmmx/mibz2/pull/161#issuecomment-6881612485). Evidence SHA-256: `7059dc54dbd7912a0150373230510f32a63d37d8cc24558ad055283a179c7f68`. Preserve the first bench's text-4t primary regression separately; no merge or timing authorization.
