@@ -6,3 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-cells-scaling          perf/cells-gated-default  #383 vs master on the i9, 1-20 threads, plan and workers (registration 6877415527)
