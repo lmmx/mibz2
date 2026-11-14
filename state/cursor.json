@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6868464871,
+  "last_examined_comment_id": 6868508410,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -3072,13 +3072,17 @@
       "ready_job_reason": "Record-only completion supplies no new qualifying recipe; existing integration evidence pending."
     },
     "6868508410": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "8a0c2fe0-dfc2-11f1-9d9a-f0834c1b5be8",
       "comment_updated_at": "2026-11-14T00:30:05Z",
       "pr": 382,
       "head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
       "recipient_cursor": "258a0c64255654eca084e2f9d24319af83ee2c95",
-      "planned_action": "Route one scoped independent Guardian integration review at exact head; carry native B5 without repeating completed kernel review; batched Observer record update. No new implementation, benchmark, adoption approval or workstation job."
+      "planned_action": "Route one scoped independent Guardian integration review at exact head; carry native B5 without repeating completed kernel review; batched Observer record update. No new implementation, benchmark, adoption approval or workstation job.",
+      "disposition": "Concrete PR/head and IN PROGRESS Codex cursor reconciled; one independent scoped Guardian integration review and batched Observer record update routed/readback/verified. Recipient completion pending; no adoption/default/merge/workstation authorisation.",
+      "guardian_assignment": 6868538108,
+      "observer_assignment": 6868541986,
+      "log_status": "pending_publication"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3256,7 +3260,9 @@
     6868132662,
     6868144797,
     6868427669,
-    6868441092
+    6868441092,
+    6868538108,
+    6868541986
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -4914,7 +4920,7 @@
     "adopted_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "all_nine_policy_blobs_match_adopted_pin": true,
     "current_router_matches": true,
-    "audit": "Current router audit exit0 with fresh channel/Observer cursor and inbox snapshots retained from preceding run; six resolved historical misroutes. No dispatch this run. Required current policy and handoff bytes unchanged; setup364 merge reconfirmed; no return of control.",
+    "audit": "Current exact router audit exit0 with fresh all-seven inboxes/cursors and channel; six resolved historical misroutes. Guardian and Observer free routes, both new assignments verify passed. Required policy/handoff bytes unchanged at master6dec95ba.",
     "activation_reused": 6782075529,
     "return_of_control_observed": false,
     "policy_blob_shas": {
@@ -4928,7 +4934,7 @@
       "docs/team/COORDINATOR-FAILOVER.md": "b9aa2d1349cc942caa64551cafd842eb1d9c7a9d",
       "CLAUDE.md": "ea12fe507c7a451bc14d2e9aeab3d25ce6227965"
     },
-    "last_event_comment_id": 6868464871
+    "last_event_comment_id": 6868508410
   },
   "operator_evidence_373": {
     "status": "correction_complete_current_head_green_historical_discrepancies_retained",
@@ -6007,26 +6013,36 @@
   },
   "sequential_default_integration_notice": {
     "review": 6868355345,
-    "status": "manual_pickup_reported_not_complete",
+    "status": "pr_prepared_validation_review_pending",
     "reported_owner_instruction": true,
     "owner_instruction_independently_verified": false,
     "monitor_authority_expanded": false,
     "reported_branch": "feat/cells-sequential-default",
     "base": "6dec95ba6aaf59d5134e5ab119fd52433e2032ee",
     "kernel": "a8a23c11607864cb431f87fff38169e10c41685f",
-    "recipient_cursor": "0f053f617f05f869312afbaaf0b49def0930050d",
-    "corresponding_open_pr_observed": false,
+    "recipient_cursor": "258a0c64255654eca084e2f9d24319af83ee2c95",
+    "corresponding_open_pr_observed": true,
     "completion_observed": false,
     "default_change_approved": false,
     "merge_approved": false,
-    "next_actor": "Existing Codex session returns exact PR/head, validation and independent-review request; deliberate authorised Coordinator resolves adoption/merge separately.",
-    "observer_assignment": 6868427669,
+    "next_actor": "Guardian scoped integration review; existing Codex completes validations; deliberate authorised Coordinator resolves adoption/merge separately.",
+    "observer_assignment": 6868541986,
     "ready_job_queued": false,
     "ready_job_reason": "No new frozen qualifying workstation recipe; consumed queue empty.",
     "log_comment_id": 6868441092,
-    "observer_status": "completed",
+    "observer_status": "posted_verified_recipient_action_pending",
     "observer_review": 6868464871,
     "observer_record_commit": "ce8bd1bb8499aa590b7db8cb21e56902fbcf756e",
-    "observer_cursor": "1c17164fbe6beafed02373c829d4942fe49787aa"
+    "observer_cursor": "1c17164fbe6beafed02373c829d4942fe49787aa",
+    "pr": 382,
+    "head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
+    "review_requested": 6868508410,
+    "guardian_assignment": 6868538108,
+    "guardian_status": "posted_verified_recipient_action_pending",
+    "ci": {
+      "head": "a9c7716aaf664a7898f3d8f37c955e09d5204a23",
+      "actions": "in_progress; no observed failures",
+      "legacy": "success"
+    }
   }
 }
