@@ -619,9 +619,15 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
         };
         out.clear();
         mark!(DecodeStart, place);
+        // (research only, `phase-counters`: the worker's whole-decode scope, the block's
+        // decode_block)
+        #[cfg(feature = "phase-counters")]
+        crate::phase::whole_begin();
         let res = catch_unwind(AssertUnwindSafe(|| {
             decode_block(&symbols, k, &mut scratch, &mut out)
         }));
+        #[cfg(feature = "phase-counters")]
+        crate::phase::whole_end();
         mark!(DecodeEnd, place, out.len(), out.capacity());
         let res = match res {
             Ok(Ok(_)) => Ok(out),

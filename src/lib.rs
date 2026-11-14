@@ -88,8 +88,12 @@ pub mod crc;
 #[cfg(feature = "dose")]
 #[doc(hidden)]
 pub mod dose;
+// (research only: the phase attribution's per-thread counters, with `phase-counters`)
 pub mod mtf;
 pub mod parallel;
+#[cfg(feature = "phase-counters")]
+#[doc(hidden)]
+pub mod phase;
 mod read;
 pub mod rle;
 pub mod runs;

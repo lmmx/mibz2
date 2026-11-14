@@ -34,6 +34,14 @@ jobs:
         run: "cargo test --features slot24 --lib cells::"
       # the Cells memory-dose experiment's research build (src/dose.rs, #145 LOG 6879466310):
       # with a nonzero dose of each kind, byte-identical through the Workers plan, and engaging
+      # the phase attribution's research build (src/phase.rs, #145 LOG 6884716103, amended
+      # 6884895257 and 6884975709): its counter paths driven with software events in the
+      # registered passes' place (the runner has no PMU), byte-identical, and with no pass
+      # counting nothing
+      - name: The phase-counter build (research feature)
+        run: |
+          cargo test --features phase-counters --lib phase::
+          cargo test --features phase-counters --test phase --test phase_off
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
@@ -103,6 +111,9 @@ jobs:
       # readings, and its collection driven end to end with stand-ins for ab and perf
       - name: The working-set premise test's verdict
         run: python3 bench/test_cells_imc.py
+      # bench-cells-phase's ledgers, statistics, verdict and validity (bench/cells_phase.py)
+      - name: The phase attribution's verdict
+        run: python3 bench/test_cells_phase.py
       # bench-par-scan's reporter, input anchoring and step supervisor (docs/journal/2026-11-10-parallel-scan.md)
       - name: The scan diagnostic's reporter, inputs and supervisor
         run: pipx run pytest -p no:cacheprovider bench/test_par_scan_knee.py bench/test_par_scan_inputs.py bench/test_bounded.py bench/test_par_scan_finish.py

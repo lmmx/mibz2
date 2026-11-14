@@ -1115,6 +1115,24 @@ fn decode(
         ),
         // the cooperative decoder (bwt::Cooperative): THREADS cores as THREADS / K teams of
         // K, or as the policy plans THREADS (`Plan::for_threads`)
+        // (research only, `phase-counters`: the phase attribution's baseline arm, #145 LOG
+        // 6884975709. THREADS workers of a block each, as mibz2-workers, inverting with
+        // Segmented, the T-vector walk, never Cells: a team of one runs so,
+        // `StreamDecoder::planned`; the window mibz2-workers keeps, 2 blocks a worker)
+        #[cfg(feature = "phase-counters")]
+        "mibz2-workers-segmented" => drain(
+            mibz2::BzReader::parallel_planned(
+                open()?,
+                mibz2::parallel::Plan::Teams {
+                    teams: threads,
+                    k: 1,
+                },
+                2 * threads,
+                mibz2::Kernels::detect(),
+            ),
+            h,
+            last,
+        ),
         "mibz2-coop2" | "mibz2-coop3" | "mibz2-coop4" | "mibz2-team2" | "mibz2-team3"
         | "mibz2-team4" | "mibz2-auto" | "mibz2-workers" => {
             use mibz2::parallel::Plan;
@@ -1403,6 +1421,10 @@ fn child(arm: &str, threads: usize, path: &str, hold: Option<Hold>) {
         mibz2::dose::DOSE_KIND.name(),
         mibz2::dose::blocks()
     );
+    // (research only, the `phase-counters` feature: the pass's per-phase sums, or null
+    // where no pass was set)
+    #[cfg(feature = "phase-counters")]
+    let held = format!("{held},\"phase\":{}", mibz2::phase::report());
     println!(
         "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf}{held}{},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler - held_s,
