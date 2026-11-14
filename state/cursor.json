@@ -155,7 +155,7 @@
     "6868541986": 6868583432,
     "6868650998": 6868691042
   },
-  "last_rebuilt_from": 6868606509,
+  "last_rebuilt_from": 6868794260,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -677,9 +677,10 @@
     },
     "6868831037": {
       "comment_id": 6868831037,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling PR382 completion and hosted Miri."
+      "status": "complete",
+      "progress": "Observer record rebuilt through channel 6868794260; REVIEW pending.",
+      "work_commit": "392ca141f383ff5ddfc19fcf9da859d80be4e6e9"
     }
   },
-  "last_record_commit": "6c8385800bba5fe85536ef91c5bb977261c97f08"
+  "last_record_commit": "392ca141f383ff5ddfc19fcf9da859d80be4e6e9"
 }
