@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6868144797,
+  "last_examined_comment_id": 6868355345,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -3030,8 +3030,8 @@
     },
     "6868132662": {
       "status": "completed",
-      "comment_updated_at": "2026-11-14T00:05:44Z",
-      "disposition": "Own priority1 QUEUED publication; ignore self wake.",
+      "comment_updated_at": "2026-11-14T00:24:33Z",
+      "disposition": "Own staged queue parked before dispatch, TYPE LOG preserves original content; router verified no longer queued.",
       "delivery_id": "23f40be0-dfbf-11f1-9493-5af332635ad6"
     },
     "6868144797": {
@@ -3041,11 +3041,17 @@
       "disposition": "Own LOG read back/verified; self wake ignored without replay."
     },
     "6868355345": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "23a0d0e0-dfc1-11f1-847a-0e66c915dbb4",
       "comment_updated_at": "2026-11-14T00:20:03Z",
       "planned_action": "Park undispatched6868132662 to avoid overlap with reported manually active Codex lane; record notice, not completion or owner-authority expansion; bounded Observer record update then disposition LOG. Mark own queued comment TYPE:LOG/PARKED with original body preserved so router cannot later redispatch it.",
-      "recipient_cursor": "0f053f617f05f869312afbaaf0b49def0930050d"
+      "recipient_cursor": "0f053f617f05f869312afbaaf0b49def0930050d",
+      "disposition": "Parked undispatched attribution queue to prevent overlap; notice tracked without new authority or completion claim. Observer record assignment posted/readback/verify; no Codex dispatch, default change, timing, signal or merge.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6868132662",
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6868427669"
+      ],
+      "log_status": "pending_publication"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3221,7 +3227,8 @@
     6867899861,
     6867998245,
     6868132662,
-    6868144797
+    6868144797,
+    6868427669
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -5960,11 +5967,33 @@
     }
   },
   "default_executable_correspondence": {
-    "status": "queued_not_dispatched",
+    "status": "parked_not_dispatched",
     "queue_comment_id": 6868132662,
     "blocked_by_incomplete_cursor": 6848164049,
     "source_report": "72e86fc8e91817c356f1be3ae4752b8d66c4e29a",
     "scope": "retained artifact inventory; at most3untimed builds60min plus90min inspection; no decodes/timing/retries; fixed mechanism-or-stop rule",
-    "execution_observed": false
+    "execution_observed": false,
+    "parked_by_review": 6868355345,
+    "parked_comment_updated_at": "2026-11-14T00:24:33Z",
+    "reason": "Avoid duplicate attribution work alongside reported manually active integration; original scope preserved under TYPE LOG; router no longer queues it."
+  },
+  "sequential_default_integration_notice": {
+    "review": 6868355345,
+    "status": "manual_pickup_reported_not_complete",
+    "reported_owner_instruction": true,
+    "owner_instruction_independently_verified": false,
+    "monitor_authority_expanded": false,
+    "reported_branch": "feat/cells-sequential-default",
+    "base": "6dec95ba6aaf59d5134e5ab119fd52433e2032ee",
+    "kernel": "a8a23c11607864cb431f87fff38169e10c41685f",
+    "recipient_cursor": "0f053f617f05f869312afbaaf0b49def0930050d",
+    "corresponding_open_pr_observed": false,
+    "completion_observed": false,
+    "default_change_approved": false,
+    "merge_approved": false,
+    "next_actor": "Existing Codex session returns exact PR/head, validation and independent-review request; deliberate authorised Coordinator resolves adoption/merge separately.",
+    "observer_assignment": 6868427669,
+    "ready_job_queued": false,
+    "ready_job_reason": "No new frozen qualifying workstation recipe; consumed queue empty."
   }
 }
