@@ -74,7 +74,9 @@
     6862622329,
     6867986946
   ],
-  "in_progress": [],
+  "in_progress": [
+    6868427669
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -645,6 +647,11 @@
       "progress": "Record committed; REVIEW 6868028392 published and read back.",
       "work_commit": "f115ded521ba80f3aa1393bab0b8c13f3b02740a",
       "review_id": 6868028392
+    },
+    "6868427669": {
+      "comment_id": 6868427669,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling owner-direct integration pickup and parked attribution."
     }
   },
   "last_record_commit": "f115ded521ba80f3aa1393bab0b8c13f3b02740a"
