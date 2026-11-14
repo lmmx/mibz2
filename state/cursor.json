@@ -1270,14 +1270,17 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt only; waiting for v0.3.0 tag and crates.io publication. Tag endpoint returned404 on 2026-11-14; census not started.",
+      "progress": "Release condition unmet; status REVIEW published and exact body/author/destination verified. Census remains unfinished, resumable. No polling.",
       "hold": {
         "start_condition": "v0.3.0 tag exists AND crates.io release published",
         "tag_observed": false,
         "crates_publication": "not checked; conjunction already false",
         "destination_conflict": "Brief requests research/cells-census; pinned SPEC permits writes only to team-state/optimizer plus REVIEWs on145."
       },
-      "status_path": "state/records/reviews/inbox-6878327105/status.md"
+      "status_path": "state/records/reviews/inbox-6878327105/status.md",
+      "hold_review_id": 6878365821,
+      "hold_review_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6878365821",
+      "routing_verification": "route/check passed; pinned verify rejects FROM optimizer due coordinator-only check. Exact readback passed."
     }
   ],
   "migrated_from": {
