@@ -1579,6 +1579,20 @@
       "status": "finished",
       "disposition": "Scoped source integration PROCEED; native/Miri completion not established; adoption restrictions preserved.",
       "comment": 6868606509
+    },
+    {
+      "id": "D106",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6881612485,
+      "pr": 161,
+      "sha": "c915a95eb7288843ea25707bffc87c9d252f4bde",
+      "evidence_digest": "sha256:7059dc54dbd7912a0150373230510f32a63d37d8cc24558ad055283a179c7f68",
+      "commit": "410c046b546ad029adee130e930565444f4274fb",
+      "status": "complete",
+      "disposition": "HOLD B5 qualification: malformed Test workflow; completed exact-source Miri/fuzz/differential and reproducible mutant outcomes absent."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1935,7 +1949,9 @@
     "c835d2e00115b2340219eebeb742b3ac8b57ea2c",
     "baf6be1181e9bffa5a369e6ef33828ac9c8c6eea",
     "13b01b9905f732821c0db3e5efaaa3f20e468d2a",
-    "c9fe5d24d7bd3d76bf3be4732a95731e1835f531"
+    "c9fe5d24d7bd3d76bf3be4732a95731e1835f531",
+    "9a26afd19bae255b62cfe773a6507f5530d85dce",
+    "410c046b546ad029adee130e930565444f4274fb"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2121,8 +2137,9 @@
   },
   "current_execution": {
     "active_comment": 6881612485,
-    "status": "in progress",
-    "decision": "D106"
+    "status": "complete",
+    "decision": "D106",
+    "incoming_comment": 6881612485
   },
   "duplicate_events": [
     {
@@ -2944,7 +2961,8 @@
       "commit": "13b01b9905f732821c0db3e5efaaa3f20e468d2a",
       "status": "complete",
       "disposition": "Scoped source integration PROCEED; native/Miri completion not established; adoption restrictions preserved."
-    }
+    },
+    "391|c915a95eb7288843ea25707bffc87c9d252f4bde|sha256:7059dc54dbd7912a0150373230510f32a63d37d8cc24558ad055283a179c7f68"
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
   "inbox_comments": [
@@ -3800,10 +3818,11 @@
     {
       "comment_id": 6881612485,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D106",
-      "progress": "Source argument complete; reproduced test.yml line34 YAML parse failure; B5 evidence HOLD, assembling immutable findings.",
-      "receipt_commit": "9a26afd19bae255b62cfe773a6507f5530d85dce"
+      "progress": "D106 work published and read back; awaiting one REVIEW on #145.",
+      "receipt_commit": "9a26afd19bae255b62cfe773a6507f5530d85dce",
+      "work_commit": "410c046b546ad029adee130e930565444f4274fb"
     }
   ],
   "migrated_from": {
