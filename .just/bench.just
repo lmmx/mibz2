@@ -1486,3 +1486,65 @@ bench-cells-dose ROUNDS="10" THREADS="1,4,6,8,10":
       --rounds {{ROUNDS}} --out "$O/dose" \
       || echo "bench-cells-dose: the runs are not valid (dose.md lists why)"
     bash bench/bundle.sh "$O"
+
+# The working-set premise test (#145, LOG 6880984644, registered before any data): does
+# Cells' DRAM traffic per output byte grow with the number of Cells working sets live at
+# once? The dose run's P0 build of this commit's `ab` (the research feature `dose`,
+# MIBZ2_DOSE_MB=0, stream: its dose_blocks counter shows Cells engaged at no added traffic),
+# forced Workers + Cells (`ab child mibz2-workers <t>`) on the Wikidata corpus
+# bench-cells-dose builds, at each thread count in a rotated order for each repetition.
+# bench/cells_imc.py takes the readings with bench/imc.py's paired-idle curve: the memory
+# controller's uncore_imc/data_reads and data_writes under `sudo perf stat -a`, each
+# reading (LOOPS decodes in one process chain; auto: the fastest reading at least 2.5 s)
+# paired with an idle reading of PAIR seconds just before it; then, reported only, the same
+# roster's process-scoped mem_load_retired.l3_miss. It reads them: b(t), R = b(10)/b(3)
+# with its paired log-t 95% interval, the verdict (PREMISE HOLDS, PREMISE FAILS or
+# INCONCLUSIVE) by the LOG's rule, and the LOG's validity (INVALID on any failure). It
+# stops first, and clearly, where the counters cannot count (a VM, no perf, no sudo). It
+# asks for sudo's password once at the start (sudo -v), and refreshes it each repetition.
+# A C5 workstation run (the i9), about 20 minutes.
+#   just submit bench-cells-imc
+bench-cells-imc REPS="10" THREADS="1,2,3,4,6,8,10" LOOPS="auto" PAIR="3":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    B=$PWD/target/cells-imc
+    mkdir -p "$B"
+    O=$B/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-cells-imc: $(git rev-parse HEAD), reps {{REPS}}, threads {{THREADS}}, loops {{LOOPS}}, idle pairs {{PAIR}} s"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-cells-imc: the checkout has local changes"; exit 1; }
+    git rev-parse HEAD > "$O/commit.txt"
+    # (the counters first: nothing is built or run where they cannot count)
+    python3 bench/cells_imc.py probe \
+      || { echo "bench-cells-imc: the memory controller's counters are not available here; no readings taken"; exit 1; }
+    # (the dose run's P0 build, in its own target dir)
+    MIBZ2_DOSE_KIND=stream MIBZ2_DOSE_MB=0 CARGO_TARGET_DIR="$B/target-p0" \
+      cargo build -q --release --features dose --example ab
+    cargo build -q --release --example windows
+    AB=$B/target-p0/release/examples/ab
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    [ -f "$B/wikidata.bz2" ] || python3 bench/wikidata.py build bench/wikidata.json "$dir" \
+      target/release/examples/windows "$B/wikidata.bz2"
+    sha256sum "$B/wikidata.bz2" | tee "$O/inputs.sha256"
+    # (the build checked to be P0, and Cells seen engaging on all 196 blocks, before the readings)
+    line=$("$AB" child mibz2-workers 1 "$B/wikidata.bz2")
+    echo "preflight: $line"
+    echo "$line" | python3 -c "import json,sys; r=json.load(sys.stdin); sys.exit(int(r.get('dose_mb') != 0 or r.get('dose_kind') != 'stream' or r.get('dose_blocks') != 196 or bool(r.get('err'))))" \
+      || { echo "bench-cells-imc: the build is not P0, Cells did not engage on all 196 blocks, or the decode failed"; exit 1; }
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    python3 bench/cells_imc.py collect --ab "$AB" --corpus "$B/wikidata.bz2" \
+      --threads "{{THREADS}}" --reps {{REPS}} --loops {{LOOPS}} --pair {{PAIR}} \
+      --out "$O/readings.jsonl" || echo "bench-cells-imc: the readings stopped early"
+    python3 bench/cells_imc.py analyse "$O/readings.jsonl" --threads "{{THREADS}}" \
+      --reps {{REPS}} --out "$O/cells-imc" \
+      || echo "bench-cells-imc: the readings are not valid (cells-imc.md lists why)"
+    bash bench/bundle.sh "$O"
