@@ -80,6 +80,7 @@
 pub mod bits;
 pub mod block;
 pub mod bwt;
+mod cells;
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;
@@ -274,7 +275,8 @@ impl From<Error> for std::io::Error {
     }
 }
 
-/// A worker's buffers, kept from block to block (about 6 MB at the 900 kB block size)
+/// A worker's buffers, kept from block to block (about 6 MB for Segmented at 900 kB).
+/// The low-level default remains Segmented; calling-thread convenience APIs use Cells.
 pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     /// the MTF stage's output, the BWT's last column; for a kernel that inverts in place
     /// (`InverseBwt::invert_in_place`), then the inverse BWT's output too
@@ -449,9 +451,10 @@ fn finish(inverted: &[u8], stored: u32, k: Kernels, out: &mut Vec<u8>) -> Result
 }
 
 /// A whole .bz2 (its streams one after another) decoded on this thread, every block's and
-/// stream's CRC checked, with the fastest kernels this CPU has
+/// stream's CRC checked, with the fastest kernels this CPU has. Inversion uses Cells
+/// with its bounded admission and Segmented fallback.
 pub fn decode(data: &[u8]) -> Result<Vec<u8>, Error> {
-    decode_with::<bwt::Segmented>(data, Kernels::detect())
+    decode_with::<bwt::Cells>(data, Kernels::detect())
 }
 
 /// A whole .bz2 decoded on `threads` threads (at least 1), in order, spent as
@@ -486,8 +489,9 @@ pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
     Ok(out)
 }
 
-/// `decode` with the kernels `k` and the inverse-BWT kernel `I` (`bwt::Segmented`, the
-/// default; `bwt::Plain`, the plain walk, to test or time it against)
+/// `decode` with the kernels `k` and the inverse-BWT kernel `I`: `bwt::Cells` is
+/// the calling-thread default; `bwt::Segmented` is its fallback and reference,
+/// and `bwt::Plain` is the plain walk.
 pub fn decode_with<I: bwt::InverseBwt>(data: &[u8], k: Kernels) -> Result<Vec<u8>, Error> {
     let mut sc = stream::Scanner::new(stream::SliceSource(data));
     let mut out = Vec::new();
@@ -532,6 +536,7 @@ pub struct Range {
 /// stops there. For a reader that finds block boundaries itself and decodes ranges of
 /// blocks in parallel (the sweep reader's block-aligned segments, which today take
 /// `lbzip2 -n1` each): it can combine the returned CRCs (`combine`) to check its stream's.
+/// This calling-thread range API uses Cells with Segmented fallback.
 pub fn decode_blocks(
     data: &[u8],
     start_bit: u64,
@@ -540,7 +545,7 @@ pub fn decode_blocks(
     k: Kernels,
     out: &mut Vec<u8>,
 ) -> Result<Range, Error> {
-    let mut s = Scratch::<bwt::Segmented>::default();
+    let mut s = Scratch::<bwt::Cells>::default();
     let mut syms = Vec::new();
     let mut range = Range {
         end: start_bit,
@@ -585,4 +590,12 @@ pub fn decode_blocks(
 /// A stream's combined CRC from its blocks' CRCs, in order
 pub fn combine(crcs: impl IntoIterator<Item = u32>) -> u32 {
     crcs.into_iter().fold(0, |c, b| c.rotate_left(1) ^ b)
+}
+
+impl<const F: bool> Scratch<bwt::CellsKernel<F>> {
+    /// Experimental route coverage, used by the forced-route fuzzer.
+    #[doc(hidden)]
+    pub fn cells_counts(&self) -> bwt::CellsCounts {
+        self.inverse.counts()
+    }
 }
