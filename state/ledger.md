@@ -675,3 +675,8 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 [Status](records/reviews/inbox-6878327105/status.md). v0.3.0 tag GET returned404 on2026-11-14; required tag-plus-crates.io condition not met. Crates publication not checked, not claimed absent. Census has not started; no measurements or implementation. Cursor remains in_progress/completed:false. Requested research/cells-census publication conflicts with pinned own-state-branch scope; Coordinator reconciliation needed before that write. No scientific result or decision-rule evaluation asserted.
 
 - Scope resolution6878376365: Coordinator accepts own-state destination and owns counting harness/execution. Optimiser now waits for post-release raw records/new CHECKPOINT, then audits/analyzes only. Original6878327105 unfinished; triggering6878370590 unavailable404 and absent from inbox, not marked processed. No census or new scientific verdict.
+
+
+## Cells phase-split census verdict: inbox6878327105
+
+[Verdict](records/reviews/inbox-6878327105/verdict.md). Coordinator records b5617a8, 431 Wikidata blocks (196 admitted), 49 text/88 pattern (none admitted). Admitted n-weighted serial Ir share s=0.741632 vs registered≤0.40; k3 top-factor balance passes8/196,4.0816% of admitted n. **PARK specified Cooperative Cells top-level writer split.** Three-worker Amdahl1.208x and infinite1.348x only if Ir share equalled time share; no runtime claim. 51.22% of later-span bytes copy from earlier spans at best cuts. Source labels and phase joins checked; raw callgrind dumps not retained/replayed. Feathered induction better aligned with measured serial Ir, but research ownership unchanged. No implementation/timing/admission.

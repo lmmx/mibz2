@@ -1267,10 +1267,10 @@
     {
       "comment_id": 6878327105,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Waiting for post-release raw records and a new CHECKPOINT per Coordinator QUEUED6878376365. Scope resolved: state destination accepted, Coordinator owns harness/execution; Optimiser analyses records only. Trigger6878370590 unavailable404, not treated as a completed or executable brief.",
+      "progress": "Independent record arithmetic and source-label audit complete; PARK under predeclared rule. Await REVIEW publication.",
       "hold": {
         "start_condition": "v0.3.0 tag exists AND crates.io release published",
         "tag_observed": false,
@@ -1283,7 +1283,9 @@
       "hold_review_id": 6878365821,
       "hold_review_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6878365821",
       "routing_verification": "route/check passed; pinned verify rejects FROM optimizer due coordinator-only check. Exact readback passed.",
-      "scope_resolution_comment_id": 6878376365
+      "scope_resolution_comment_id": 6878376365,
+      "report_path": "state/records/reviews/inbox-6878327105/verdict.md",
+      "evidence_commit": "b5617a8efdd12256bfdc89e35232e05e4dbb6d32"
     }
   ],
   "migrated_from": {
