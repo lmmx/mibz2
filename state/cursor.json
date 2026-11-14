@@ -1276,7 +1276,8 @@
         "tag_observed": false,
         "crates_publication": "not checked; conjunction already false",
         "destination_conflict": "Brief requests research/cells-census; pinned SPEC permits writes only to team-state/optimizer plus REVIEWs on145."
-      }
+      },
+      "status_path": "state/records/reviews/inbox-6878327105/status.md"
     }
   ],
   "migrated_from": {

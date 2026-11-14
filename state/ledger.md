@@ -668,3 +668,8 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 - Rank1: one bounded untimed default-executable correspondence preparation, if Coordinator commissions it; inventory first, at most3clean builds/60min job plus90min inspection,0decodes/0samples. Three-source timing can localise whole-source effects, cannot alone establish layout/codegen causality. Corrects earlier “decisive” wording; no new admission.
 - Fixed stop: absent correspondence/named relevant difference/isolating intervention => no sound causal discriminator, no more samples. Equal accounted default code/data/placement rejects that machine-change explanation only in compared context. Differences are leads, not causal proof. Historical digest mismatch means reconstruction only.
 - Conditional parity recovery budgets2.71/3.73/2.25% current candidate wall; not hard bounds or production benefit. Preserve Cells line, completed B5, MONODROMY/Pathfinder, all default/team/cap policy and integration DEFER. No implementation, build, timing, registration, rerun or merge executed.
+
+
+## Cells phase-split census: inbox6878327105 awaiting release
+
+[Status](records/reviews/inbox-6878327105/status.md). v0.3.0 tag GET returned404 on2026-11-14; required tag-plus-crates.io condition not met. Crates publication not checked, not claimed absent. Census has not started; no measurements or implementation. Cursor remains in_progress/completed:false. Requested research/cells-census publication conflicts with pinned own-state-branch scope; Coordinator reconciliation needed before that write. No scientific result or decision-rule evaluation asserted.
