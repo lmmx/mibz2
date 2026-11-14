@@ -1,0 +1,29 @@
+{
+  "cases": 7172,
+  "successful_origin_annotations": 6168,
+  "correct_no_anchor_fallbacks": 1004,
+  "mismatches": 0,
+  "anchor_augmentation_counterexample": {
+    "text": "bab",
+    "bwt": "bba",
+    "original_row": 1,
+    "delimiter": "a",
+    "augmented_section": [
+      1,
+      2
+    ],
+    "forward_text_tokens": [
+      "b",
+      "ba"
+    ],
+    "induced_map": [
+      1,
+      0
+    ],
+    "token_lf": [
+      0,
+      1
+    ]
+  },
+  "scope": "All binary columns lengths 1..8, every origin and both delimiters. Correctness only; no constructor optimisation, real corpus, timing or decoder integration."
+}

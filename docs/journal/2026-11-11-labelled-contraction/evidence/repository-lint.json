@@ -1,0 +1,203 @@
+{
+  "command": "ruff check .",
+  "exit_code": 1,
+  "violations": 264,
+  "rule_counts": {
+    "D100": 15,
+    "D101": 10,
+    "D102": 62,
+    "D103": 117,
+    "D204": 1,
+    "D205": 22,
+    "D209": 11,
+    "D400": 19,
+    "D403": 7
+  },
+  "all_finding_files_byte_identical_to_base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+  "files": [
+    {
+      "path": ".github/coordination/coord.py",
+      "sha256": "f1a9dfb1fdad00df57b4445a3ce1babfaa8fcde9cbbb6a3cd05070b6b10ce938"
+    },
+    {
+      "path": ".github/coordination/test_coord.py",
+      "sha256": "98f8ff4277a5483a394ff8aa697492c112b2e2f683b3d7de20401ab191778a9a"
+    },
+    {
+      "path": "docs/journal/2026-10-27-bz2-bakeoff/harness/ib.py",
+      "sha256": "8632b2390bc4ac63524a1d45200a5cf4b3b3ad10d4b997eedd919bdd9e2af722"
+    },
+    {
+      "path": "docs/journal/2026-10-27-bz2-bakeoff/harness/mkstream.py",
+      "sha256": "2ba293516ab74f1f89d5bad07c0a703a089f10d737947e95f82c22956ed3d660"
+    },
+    {
+      "path": "docs/journal/2026-10-27-bz2-bakeoff/harness/paired.py",
+      "sha256": "16cb38b0fd48ee99d45d060a5cfa65f6cfea8429b795304acaa5747633226362"
+    },
+    {
+      "path": "docs/journal/2026-10-27-bz2-bakeoff/harness/robust.py",
+      "sha256": "1396834974115bd7dd6e59ca594c162c8c28a4ce32fcb5b91695189112ebbe03"
+    },
+    {
+      "path": "docs/journal/2026-10-27-bz2-bakeoff/harness/run.py",
+      "sha256": "62d0b53af6a8ffd05340e91d8f7e8b13f8ecfd6cfa2a817cf0a701b2534ee345"
+    },
+    {
+      "path": "docs/journal/2026-10-27-bz2-bakeoff/harness/summarize.py",
+      "sha256": "69103daec20158fbb4e8e123515c1d36224217caa7be9d4b8efb41be0bde9579"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/c1-stagespec/final.py",
+      "sha256": "b0feaff91d5af8949e953c00dd93827ff558ecddbf124fb5063dd4d58ae88433"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/c1-stagespec/grid.py",
+      "sha256": "604a3f2298442695a0ce1bd580c6dfebbd3600e2d677598d7c996681f32f7906"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/c1-stagespec/out0.py",
+      "sha256": "d063bf7304ff4689fb88b9bb4bdc6ed246a969dcc563c6ce9ee3899bfd39435d"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/c1-stagespec/sim.py",
+      "sha256": "efac83f21109f267eea6787e0004af2afdb26d6e343587aa9a1052fb23c64f7d"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/c1-stagespec/variants.py",
+      "sha256": "28f2d89a0438041c4d1a3bb26d26aee062d231027545b7c063bfba1e64116a4a"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/c1-stagespec/variants2.py",
+      "sha256": "fb0f8745e0d34248919549da0fae1176de73706ec54f542ad3b5b982b1c2f12b"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/c1-stagespec/xkernel.py",
+      "sha256": "f4a4a44aa89d167be15ca8af596048f1fad9c27ecc13a4c5b1c25ed9227ac7b2"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/c2-token/des.py",
+      "sha256": "34041a01a08331ebcb4e0760d43adb3a37ff10abe25c8833ae59713d4cb94ff7"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/c2-token/extra.py",
+      "sha256": "7594a2200d9c557d5cb9bcc1c289a71f8b813d0e7917496b283a5d5078a1e3a9"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/c2-token/grid.py",
+      "sha256": "1edaf659935c3b808e4648d2a83f9e222c36bc3831dff68fbd6bd61f569f5e41"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/collide/probe_des.py",
+      "sha256": "d78c517ef346001fc00a684c78d7a7fc531fb640e3009f8570c1eb169db44859"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/collide/probe_repair.py",
+      "sha256": "1043d365cdc9ba5c08ddb178b742333d6c3873503f8a3029e3ab76ce5e34451b"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/collide/probe_today.py",
+      "sha256": "ea829d7f62506dddf79a1ad1d6281699f26be16f8f89ff80ad1e3c6d28008527"
+    },
+    {
+      "path": "docs/journal/2026-11-05-corun-placement/phases/factors.py",
+      "sha256": "0a3717131c1a549eb0b06e081409e484541c1c7260f8a5e6097b3cb2db96cee5"
+    },
+    {
+      "path": "docs/journal/2026-11-05-partitioned-walk/route-a/model.py",
+      "sha256": "8130f7fbef6c41179534f43930c859c2febbaee9985a2f0ba3a736ea85e2d348"
+    },
+    {
+      "path": "docs/journal/2026-11-05-partitioned-walk/route-a/model2.py",
+      "sha256": "09c15ed01d5ffc345409115a6df3482c95c70096e5c99a9418777f4ad2c466bb"
+    },
+    {
+      "path": "docs/journal/2026-11-05-segment-cost/anat.py",
+      "sha256": "74f42f7aab7be1eccb65e28a6b71dee89ac984501ba1c37baa32df4ae1a65491"
+    },
+    {
+      "path": "docs/journal/2026-11-05-segment-cost/anat2.py",
+      "sha256": "325ca4878414bc7d4dc2aef7837edaa55d5c575af769ff8fc3774672e7397cb6"
+    },
+    {
+      "path": "docs/journal/2026-11-05-segment-cost/cgparse.py",
+      "sha256": "ec5498e3c01a53b5ec18f49695356e294de951c1d3396089141c3d55bb579032"
+    },
+    {
+      "path": "docs/journal/2026-11-05-segment-cost/gate.py",
+      "sha256": "b376e63e6067c097400420fdc797285cfd9b170a2115d051f366488e042fd716"
+    },
+    {
+      "path": "docs/journal/2026-11-05-segment-cost/tailsim.py",
+      "sha256": "f1953e7c927c4b7eb6f5c67b1e31787752507164e2bc9da610f9c6ad61b83b72"
+    },
+    {
+      "path": "docs/journal/2026-11-07-general-plan-policy/plan_tables.py",
+      "sha256": "b52faf380406de3d0c554da037ba8dd9107aded2cafebbdb929ade28a325e67d"
+    },
+    {
+      "path": "docs/journal/2026-11-09-build-window-runs-v2/corpora_gen.py",
+      "sha256": "d3cc4ac2a234cc9e63a4de9ef8b26a7805f213332fc03e62410add9fcaeb41e2"
+    },
+    {
+      "path": "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/mutants.py",
+      "sha256": "c545643354b5ad922bb6fa0931392fc975bc6565811866a2b2b3f230083fb129"
+    },
+    {
+      "path": "docs/journal/2026-11-09-service-guarded-scope/mutants.py",
+      "sha256": "4e98b3326fed93b394d2c6b44be3ce051ac93116ad100ccf3bd407244bd79c34"
+    },
+    {
+      "path": "docs/journal/2026-11-10-run-front-production/table.py",
+      "sha256": "01068a60a39413bc949657b5671cb2fb2bdbc06b368d1b373629f07641a2683d"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/calib2.py",
+      "sha256": "bb59b60149f9b59184bc6f2bbb7a322cdb2f53673ee7e737fd2a42a4e2d4a558"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/calibrate.py",
+      "sha256": "091004b4953f5b66fdbdae7a970ef333d2d311a1893d4ae92ab5f81331970e8b"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/hetero.py",
+      "sha256": "6bf7ff67f64ec2899bb82dc4047bd32c3e508fc56f104868998146a9953e6b5d"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/residual.py",
+      "sha256": "692930d181ba82f0a80f6f14ef0591d2069bafcea8571de532f7935f55277569"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/s5.py",
+      "sha256": "f0a412177aa58ded07837c3e35736a609d043371da937a012fe4f077bb4021ea"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-replicated/mixture.py",
+      "sha256": "22d22a45952da03c6bb3ad3880172fa59d2c423e1692aaf317618d9466b4c1ba"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-replicated/plan.py",
+      "sha256": "f1b518e683a5f562bc262ec54e38431aa4a64477750617f70eb13ec4c4419785"
+    },
+    {
+      "path": "docs/scripts/bench_release_scaling.py",
+      "sha256": "591cc02b076695965191cc37fa87a2f35222ddb432a6ce3dacd88b41ee7aa266"
+    },
+    {
+      "path": "docs/scripts/check_prose.py",
+      "sha256": "49172889da3bdd70a0c7f8e205efd1f9e6b29bb744ab6684fddc902833faccb6"
+    },
+    {
+      "path": "docs/scripts/check_render.py",
+      "sha256": "351517b31e8cfdaa44cf4e93f50c2b092d22b0acfe173c59b51c5f5f2b42c48e"
+    },
+    {
+      "path": "docs/scripts/hero.py",
+      "sha256": "20d188d20a9d312351228aa86dccfd93c7bb38e346f21c36347f9710501fe245"
+    },
+    {
+      "path": "docs/scripts/look_pages.py",
+      "sha256": "37169b5b92f4da71dda041772e19902301c6811c5e56749aa1f13a104d667d79"
+    }
+  ]
+}
