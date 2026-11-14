@@ -1606,8 +1606,9 @@
       "sha": "24ff5f72cec50f441a9a95a5927f640c00fbe721",
       "evidence_digest": "sha256:b32a36e1e76116abd1a835058e01573de97a5505e2f23b78f3a9efb4c1814226",
       "commit": "063bc9ad9e9cb618c106d5139fe1e8676af0cce9",
-      "status": "complete",
-      "disposition": "PASS B5 closure; lift D106 scoped evidence HOLD."
+      "status": "finished",
+      "disposition": "PASS B5 closure; lift D106 scoped evidence HOLD.",
+      "comment": 6882247244
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1712,7 +1713,8 @@
     6790889882,
     6867956361,
     6868606509,
-    6881720827
+    6881720827,
+    6882247244
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1970,7 +1972,8 @@
     "410c046b546ad029adee130e930565444f4274fb",
     "65d3e29523927d81b276a09d72eb2bf8fc8cc8fb",
     "24d2a81bc62fd767c418e8b664f1b00d96753771",
-    "063bc9ad9e9cb618c106d5139fe1e8676af0cce9"
+    "063bc9ad9e9cb618c106d5139fe1e8676af0cce9",
+    "0ec8fb297de458bf845d1b9fda557b955b01dfba"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2077,7 +2080,8 @@
     6790746386,
     6867883717,
     6868538108,
-    6881612485
+    6881612485,
+    6882196843
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2156,9 +2160,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6882196843,
-    "status": "complete",
-    "decision": "D107"
+    "active_comment": null,
+    "status": "finished",
+    "decision": "D107",
+    "incoming_comment": 6882196843,
+    "review_comment_id": 6882247244
   },
   "duplicate_events": [
     {
@@ -3849,11 +3855,13 @@
     {
       "comment_id": 6882196843,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D107",
-      "progress": "D107 completed and read back; awaiting REVIEW.",
+      "progress": "Exact REVIEW body/destination verified; pinned verifier coordinator-FROM limitation independently resolved by Guardian header/routing checks.",
       "receipt_commit": "24d2a81bc62fd767c418e8b664f1b00d96753771",
-      "work_commit": "063bc9ad9e9cb618c106d5139fe1e8676af0cce9"
+      "work_commit": "063bc9ad9e9cb618c106d5139fe1e8676af0cce9",
+      "review_comment_id": 6882247244,
+      "complete_cursor_commit": "0ec8fb297de458bf845d1b9fda557b955b01dfba"
     }
   ],
   "migrated_from": {
