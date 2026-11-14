@@ -1245,11 +1245,21 @@
     {
       "comment_id": 6867986711,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Source/workflow assessment complete; committing recommendation and ledger before publication.",
-      "report_path": "state/records/reviews/inbox-6867986711/report.md"
+      "progress": "Report and canonical ledger complete; awaiting deduplicated REVIEW publication.",
+      "report_path": "state/records/reviews/inbox-6867986711/report.md",
+      "report_commit": "72e86fc8e91817c356f1be3ae4752b8d66c4e29a",
+      "audit_scope": {
+        "source_comparisons": true,
+        "workflow_codegen_inspection": true,
+        "raw_i9_replay": false,
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "admission": false
+      }
     }
   ],
   "migrated_from": {
