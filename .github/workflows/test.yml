@@ -92,6 +92,8 @@ jobs:
         uses: taiki-e/install-action@64adfd9e935fa438859b9e080fd026720b2ba070 # tag=just
         with:
           tool: just@1.38.0
+      - name: Selective Cells i9 queue preparation (untimed)
+        run: python3 bench/test_cells_selective_i9.py
       - name: One-core i9 recipe (untimed)
         run: ONECORE_REQUIRE_JUST=1 python3 bench/test_onecore_recipe.py
       - name: The recorder check's exit through the bundle and submission (stand-ins, untimed)
