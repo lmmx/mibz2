@@ -1389,6 +1389,12 @@ bench-cells-scaling OLD="6dec95ba6aaf59d5134e5ab119fd52433e2032ee" ROUNDS="10" T
     [ -d "$B/build-{{OLD}}" ] || git worktree add -q --detach "$B/build-{{OLD}}" "{{OLD}}"
     (cd "$B/build-{{OLD}}" && cargo build -q --release --example ab)
     OLDAB=$B/build-{{OLD}}/target/release/examples/ab
+    # the identities measured, checked rather than assumed from a reused directory
+    [ "$(git -C "$B/build-{{OLD}}" rev-parse HEAD)" = "{{OLD}}" ] \
+      || { echo "bench-cells-scaling: build-{{OLD}} is not at {{OLD}}"; exit 1; }
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-cells-scaling: the checkout has local changes"; exit 1; }
+    sha256sum "$NEWAB" "$OLDAB" | tee "$O/binaries.sha256"
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
     if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
       git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
