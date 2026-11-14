@@ -6,4 +6,3 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-cells-imc              research/cells-imc        Cells working-set premise: DRAM bytes per output byte vs blocks in flight, Workers 1-10t, needs sudo perf (LOG 6880984644; PR #390)
