@@ -6,4 +6,3 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-cells-diet             master                    Cells 20 B vs 24 B slot: CPU amplification Q = A20(10)/A24(10), Workers 1/4/6/10t (LOG 6881022819, amended 6881074255; #391)
