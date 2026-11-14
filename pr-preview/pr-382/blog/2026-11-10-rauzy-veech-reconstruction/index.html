@@ -1,0 +1,2702 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that form the block's Lyndon tree.">
+      
+      
+        <meta name="author" content="Louis Maddox">
+      
+      
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-382/blog/2026-11-10-rauzy-veech-reconstruction/">
+      
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
+      
+      
+        <link rel="prev" href="../2026-11-12-rauzy-technical-companion/">
+      
+      
+        <link rel="next" href="../2026-11-09-pit-crew-service-threads/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="zensical-0.0.71">
+    
+    
+      
+        <title>A new way back from the BWT - mibz2</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,500,500i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=739e56f99c91">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=739e56f99c91">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=739e56f99c91">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=739e56f99c91">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=739e56f99c91">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=739e56f99c91">
+    
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    <meta name="format-detection" content="telephone=no">
+  
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="mibz2">
+  <meta property="og:title" content="A new way back from the BWT">
+  <meta property="og:description" content="An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that form the block's Lyndon tree.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-382/blog/2026-11-10-rauzy-veech-reconstruction/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-382/assets/social/blog-2026-11-10-rauzy-veech-reconstruction.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A new way back from the BWT">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="A new way back from the BWT">
+  <meta name="twitter:description" content="An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that form the block's Lyndon tree.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-382/assets/social/blog-2026-11-10-rauzy-veech-reconstruction.png">
+  <meta name="twitter:image:alt" content="A new way back from the BWT">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="mibz2" class="md-header__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            mibz2
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              A new way back from the BWT
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="mibz2" class="md-nav__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    mibz2
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Get started
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Get started
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Installation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quickstart
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Concepts
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Concepts
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/couriers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why 32 couriers beat one
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What is checked, and when
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/prior-work/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Prior work
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../benchmarks/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Benchmarks
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Benchmarks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Alternatives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/frontier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Throughput–memory frontier
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/mibz2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Python)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Rust)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Background
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Background
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Status
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/journals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Journals
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/behind-the-scenes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Behind the scenes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Blog
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Blog
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-12-rauzy-technical-companion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reconstructing text from compact programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A new way back from the BWT
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A new way back from the BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-rebuilding-aab-in-two-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. Rebuilding <code>aab</code> in two steps
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-the-timings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. The timings
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-why-the-cells-kernel-is-cheaper" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Why the cells kernel is cheaper
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-the-lyndon-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. The Lyndon tree
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-fewer-steps-by-a-different-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. Fewer steps by a different order
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-before-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. Before production
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-09-pit-crew-service-threads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 gets a pit crew
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-bwt-runs-from-mtf-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the BWT's runs off the MTF codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_6" id="__nav_7_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT navigation: the mathematics
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Inverse-BWT navigation: the mathematics
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  One shift per run
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-pipelined-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pipelined teams in mibz2 0.2.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-why-mibz2-stops-scaling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why mibz2 stops scaling at eight threads
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-05-huffman-bit-buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Huffman decoding: the bit buffer in a register
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-autonomous-agent-team/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  An autonomous agent team
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_11" id="__nav_7_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a smaller bzip2 decoding table
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_11_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_11">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Building a smaller bzip2 decoding table
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  From 49 instructions to 12
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  BWT space–time tradeoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_13" id="__nav_7_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Memory-level parallelism in mibz2
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_13_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_13">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Memory-level parallelism in mibz2
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Instructions, overlap and evidence
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-inverse-bwt-memory-interference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT memory interference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-block-dispatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Block dispatch in mibz2
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-31-room-walk-overlap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  32 lanes, 8.6 chains
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-29-compact-navigation-tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Compact navigation tables for the inverse BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Maintainers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_8">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Maintainers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Releasing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-rebuilding-aab-in-two-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. Rebuilding <code>aab</code> in two steps
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-the-timings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. The timings
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-why-the-cells-kernel-is-cheaper" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Why the cells kernel is cheaper
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-the-lyndon-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. The Lyndon tree
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-fewer-steps-by-a-different-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. Fewer steps by a different order
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-before-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. Before production
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+  <button type="button" title="Copy as Markdown" aria-label="Copy as Markdown" class="md-content__button md-icon" data-md-copy-url="./index.md">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>
+  </button>
+
+
+  
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-10-rauzy-veech-reconstruction.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<div class="post-hero">
+<div class="post-hero-text">
+<p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
+<h1 id="a-new-way-back-from-the-bwt">A new way back from the BWT<a class="headerlink" href="#a-new-way-back-from-the-bwt" title="Permanent link">&para;</a></h1>
+<p class="post-dek">An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that form the block's Lyndon tree.</p>
+<p class="post-meta">10 November 2026 · 17 min read · <a href="#6-before-production">Research in progress</a></p>
+</div>
+<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
+</div>
+<p>mibz2 is our bzip2 decoder, written in Rust. This post follows <a href="../2026-11-08-inverse-bwt-navigation/">The mathematical structure of inverse-BWT navigation</a>, from 8 November. That post showed that the table mibz2 walks to decode each block has a simple structure, and left open whether anything built on it could beat the table. This post reports the first experiment that does, for one stage of the decoder on one thread.</p>
+<p><strong>The walk.</strong> bzip2 stores each block as the last column of the block's sorted rotations: the Burrows–Wheeler transform (BWT). <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/">An earlier post</a> works through the transform and its inverse on <code>banana</code>. To undo it, mibz2 builds a table with one entry per row and walks it. The step from one row to the next is a map called <strong>LF</strong>, for last-to-first. Each entry gives one byte and the address of the next row, so the walk makes one dependent memory lookup per byte. Walking the table takes about 53–60% of a decode (<a href="../../concepts/couriers/">the concepts page on memory-level parallelism</a>), and building it adds more.</p>
+<figure class="bf-fig" id="mv79-01-hidden-address">
+<p class="bf-title">The walk is a trail of sealed addresses</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 592" role="img" aria-labelledby="mv79-01-hidden-address-title mv79-01-hidden-address-desc">
+<title id="mv79-01-hidden-address-title">The walk is a trail of sealed addresses</title>
+<desc id="mv79-01-hidden-address-desc">A sealed envelope for row p must arrive and open before the next address q is available. If p misses in cache, this dependency can expose its memory latency. This is not a claim that every lookup misses.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">The next address is inside</text><text x="20" y="68" class="bf-tm" text-anchor="start" style="font-size:24px">You cannot order it yet.</text><text x="28" y="116" class="bf-t-strong" text-anchor="start" style="font-size:24px">1  Request this row</text><rect x="38" y="160" width="150" height="86" rx="3" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M38 160L113.0 206.44L188 160" fill="none" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="113" y="229" class="bf-t-strong" text-anchor="middle" style="font-size:25px">row p</text><path d="M224 172H292L270 203L292 234H224L246 203Z" fill="none" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="327" y="186" class="bf-t" text-anchor="start" style="font-size:24px">if it misses,</text><text x="327" y="220" class="bf-t" text-anchor="start" style="font-size:24px">wait for data</text><path d="M112 265L112 313" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M107.2 304.2L112 313L116.8 304.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="151" y="295" class="bf-tm" text-anchor="start" style="font-size:24px">The answer arrives.</text><rect x="38" y="371" width="150" height="86" rx="3" class="bf-card-hi"/><path d="M38 371L113.0 331L188 371" fill="none" stroke="var(--bf-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="57" y="334" width="112" height="86" rx="2" class="bf-card-hi"/><text x="113" y="364" class="bf-t" text-anchor="middle" style="font-size:23px">byte</text><text x="113" y="400" class="bf-t-strong" text-anchor="middle" style="font-size:23px">next: q</text><path d="M208 405L331 405" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M322.2 409.8L331 405L322.2 400.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="356" y="365" width="150" height="86" rx="3" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M356 365L431.0 411.44L506 365" fill="none" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="431" y="434" class="bf-t-strong" text-anchor="middle" style="font-size:25px">row q</text><text x="28" y="502" class="bf-t-strong" text-anchor="start" style="font-size:24px">2  Only now is q known</text><path d="M20 529H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="568" class="bf-t" text-anchor="start" style="font-size:24px">One chain reveals one address at a time.</text>
+</svg>
+<figcaption>The envelope is one row lookup; its contents are the byte and the next row address. The wait lies <em>before</em> that next address is known. The analogy breaks at the postman: cache hits can be quick and other work can overlap a miss; neither every load nor every decoder thread must stall.</figcaption>
+</figure>
+
+<p><strong>One shift per run.</strong> A <strong>run</strong> is a maximal stretch of equal bytes in the last column. Within a run, LF sends consecutive rows to consecutive rows, so it moves each run's rows as one block. The whole map is therefore one interval per run, each shifted to a new place, instead of one entry per row. That is the structure the 8 November post set out. On mibz2's main benchmark, an 11.9 MB extract of a Wikidata dump that decompresses to 210 MB, a run averages about 14 rows.</p>
+<figure class="bf-fig" id="mv79-02-sliding-tray">
+<p class="bf-title">One instruction moves the whole tray</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 600" role="img" aria-labelledby="mv79-02-sliding-tray-title mv79-02-sliding-tray-desc">
+<title id="mv79-02-sliding-tray-title">One instruction moves the whole tray</title>
+<desc id="mv79-02-sliding-tray-desc">Four equal bytes at rows 10 through 13 map to rows 14 through 17. A tray preserves spacing and order under the common translation +4. The example is illustrative, not a block measurement.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">Slide the tray. Keep the spacing.</text><text x="20" y="70" class="bf-tm" text-anchor="start" style="font-size:24px">A toy run of four equal bytes</text><path d="M32 123V203H360V123" fill="none" stroke="var(--bf-green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="44" y="135" width="64" height="53" rx="3" class="bf-card-hi"/><text x="76" y="171" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="76" y="239" class="bf-tm" text-anchor="middle" style="font-size:23px">10</text><rect x="122" y="135" width="64" height="53" rx="3" class="bf-card-hi"/><text x="154" y="171" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="154" y="239" class="bf-tm" text-anchor="middle" style="font-size:23px">11</text><rect x="200" y="135" width="64" height="53" rx="3" class="bf-card-hi"/><text x="232" y="171" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="232" y="239" class="bf-tm" text-anchor="middle" style="font-size:23px">12</text><rect x="278" y="135" width="64" height="53" rx="3" class="bf-card-hi"/><text x="310" y="171" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="310" y="239" class="bf-tm" text-anchor="middle" style="font-size:23px">13</text><path d="M128 308V388H456V308" fill="none" stroke="var(--bf-green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="140" y="320" width="64" height="53" rx="3" class="bf-card-hi"/><text x="172" y="356" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="172" y="424" class="bf-tm" text-anchor="middle" style="font-size:23px">14</text><rect x="218" y="320" width="64" height="53" rx="3" class="bf-card-hi"/><text x="250" y="356" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="250" y="424" class="bf-tm" text-anchor="middle" style="font-size:23px">15</text><rect x="296" y="320" width="64" height="53" rx="3" class="bf-card-hi"/><text x="328" y="356" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="328" y="424" class="bf-tm" text-anchor="middle" style="font-size:23px">16</text><rect x="374" y="320" width="64" height="53" rx="3" class="bf-card-hi"/><text x="406" y="356" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="406" y="424" class="bf-tm" text-anchor="middle" style="font-size:23px">17</text><path d="M118 255L214 292" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M204.1 293.3L214 292L207.5 284.4" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="300" y="271" class="bf-t-strong" text-anchor="start" style="font-size:24px">all rows +4</text><path d="M20 455H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="494" class="bf-t-strong" text-anchor="start" style="font-size:25px">LF(10) = 14      LF(11) = 15</text><text x="20" y="535" class="bf-t" text-anchor="start" style="font-size:24px">One start, one length, one shift.</text><text x="20" y="573" class="bf-t" text-anchor="start" style="font-size:24px">r run intervals describe n row mappings.</text>
+</svg>
+<figcaption>Each compartment is a row in one equal-byte run; the tray is that run’s interval, and sliding it is LF’s constant offset. The unchanged spacing explains why one interval describes all four mappings. The analogy breaks at physical movement: this describes a map; the kernel does not move the stored bytes in a tray, and the shift can also be negative.</figcaption>
+</figure>
+
+<p><strong>Working on intervals instead of rows.</strong> The walk needs one lookup per byte because it only ever knows a row's next move. The trays allow a shortcut. Look at the last rows of the block, and say they belong to a tray A of 6 rows. Say also that LF sends another tray, B, of 4 rows, onto exactly the last 4 of them. Then every path through B's rows makes two moves we can predict together: B's shift, then A's. The 4 rows where B lands tell us nothing more, and nothing else lands there, so they can be deleted from the map. A shrinks to 2 rows. B now jumps straight to where A would have sent it, and carries a two-byte word for its two moves. The step read two tray lengths and two shifts, and no rows. (When the two trays are the same length, B lands on all of A, and A disappears.)</p>
+<p>Our experimental <strong>kernel</strong>, a self-contained routine for this one stage of the decoder, repeats that step at the right-hand end of the map. Each step deletes a tray's worth of rows and records the new word as one rule, such as <code>X → AB</code>. When one tray is left, its word is the whole block, and expanding the rules writes out the bytes. Shrinking a map this way is a classical idea in dynamics, <strong>Rauzy–Veech induction</strong>. <a href="#1-rebuilding-aab-in-two-steps">Section 1</a> states it formally, line by line, and runs it by hand on a three-byte block.</p>
+<p>The kernel's work therefore grows with its steps, not with its bytes. Wikidata's blocks need 1.812 steps per run, and a run averages about 14 rows, so there is one step for about every 7.6 bytes (0.1309 per byte). A step costs about 7.7 ns in the faster kernel, so the steps cost about 1 ns per byte. The decoder's shipped inversion stage, building the table and walking it, takes about 2.05.</p>
+<p><strong>The result.</strong> After a bug fix (<a href="#2-the-timings">§2</a>), the kernel took <strong>0.82 to 0.86 times as long as the inversion stage mibz2 ships</strong>, on the Wikidata blocks, on one thread. The first three runs gave 1.677 against 2.049 ns per byte. Nine runs 34 to 48 minutes later, on the same machine in a slower state, gave 0.84 to 0.86. Where runs are short, steps per byte rise and the kernel is slower: after the fix, it took about 4 times as long as the shipped stage on prose and 9 times on uniform random bytes. These are indicative timings from one cloud machine, not CI measurements. <strong>The whole decoder has not been compared</strong>, and nothing is in production.</p>
+<p><strong>Two structural results.</strong> A <strong>Lyndon word</strong> is one that comes before each of its other rotations in dictionary order, as <code>aab</code> comes before <code>aba</code> and <code>baa</code>. Its <strong>Lyndon tree</strong> splits it just before its smallest proper suffix, then splits each part the same way: <code>aab</code> splits as <code>a | ab</code>, then <code>ab</code> as <code>a | b</code>. So the tree is the record of a word cut again and again before its smallest ending, and that cut is the one that leaves both pieces Lyndon words themselves. The rules the kernel builds are exactly the Lyndon tree of the block's smallest rotation (<a href="#4-the-lyndon-tree">§4</a>). Second, the order of steps changes how many there are: from 1.812 per run down to 1.279. No order of these steps can take fewer than 1.220. The cheaper order is not expected to be faster yet: by a count, finding each step would cost more than the fewer steps save (<a href="#5-fewer-steps-by-a-different-order">§5</a>). The steps could also be shared among threads, but no multi-threaded run has been timed.</p>
+<p><a href="#1-rebuilding-aab-in-two-steps">Section 1</a> runs the induction by hand on a three-byte block. <a href="#2-the-timings">Section 2</a> gives the timings and the bug, and <a href="#3-why-the-cells-kernel-is-cheaper">section 3</a> why this kernel is cheaper than our first one. <a href="#4-the-lyndon-tree">Section 4</a> shows where the Lyndon tree comes from, and <a href="#5-fewer-steps-by-a-different-order">section 5</a> how the order of steps changes their number. <a href="#6-before-production">Section 6</a> lists what stands before any of this reaches the decoder. The work is in pull request <a href="https://github.com/lmmx/mibz2/pull/351">#351</a>, with its <a href="https://github.com/lmmx/mibz2/blob/d022139b3ba41117aa7d0291e806a4ed39d032cc/docs/journal/monodromy/2026-11-10-rauzy-veech.md">research journal</a> and <a href="https://github.com/lmmx/mibz2/blob/d022139b3ba41117aa7d0291e806a4ed39d032cc/examples/rauzy.rs">code</a>, as merged.</p>
+<h2 id="1-rebuilding-aab-in-two-steps">1. Rebuilding <code>aab</code> in two steps<a class="headerlink" href="#1-rebuilding-aab-in-two-steps" title="Permanent link">&para;</a></h2>
+<p>For a small example, sort the rotations of <code>aab</code>: <code>aab</code>, <code>aba</code>, <code>baa</code>. The last column is <code>baa</code>; the first is <code>aab</code>. Matching equal letters in occurrence order gives LF mappings 0→2, 1→0 and 2→1.</p>
+<p>Name the one-byte run of <code>b</code> B and the two-byte run of <code>a</code> A. In the last column the runs come in the order B, A: call this the <strong>original order</strong>. LF sends their rows to the first column, where they come in the order A, B: the <strong>image order</strong>. The two orders cut the same three rows into intervals in different places. Together, the intervals and where LF sends them form an <strong>interval exchange</strong>: each interval is moved, whole, to a new place.</p>
+<p>Interval exchanges are a classical object of dynamics, and shrinking one step by step is <strong>Rauzy–Veech induction</strong>. The panel states it formally, line by line, with what each line means in a bzip2 block beside it in colour. The hand-run after the panel is the same induction on <code>aab</code>.</p>
+<figure class="bf-fig bf-formal" id="formal-frame">
+<p class="bf-title">Rauzy–Veech induction, stated formally and read in a bzip2 block</p>
+<div class="bf-fstep">
+<div class="bf-fbody">
+<p><strong>1. Interval exchange.</strong> Cut an interval <span class="arithmatex">\(I\)</span> into pieces <span class="arithmatex">\(I_\alpha\)</span>, one for each symbol <span class="arithmatex">\(\alpha\)</span> of an alphabet <span class="arithmatex">\(\mathcal{A}\)</span> of <span class="arithmatex">\(d\)</span> symbols, with lengths <span class="arithmatex">\(\lambda_\alpha &gt; 0\)</span>. An <span class="bf-fterm bf-c-blue">interval exchange map</span> <span class="arithmatex">\(f : I \to I\)</span> moves each piece by a translation, so pieces keep their length and direction and are laid out again in a new order. Two bijections <span class="arithmatex">\(\pi_0, \pi_1 : \mathcal{A} \to \{1, \dots, d\}\)</span> give each piece's place <span class="bf-fterm bf-c-blue">before</span> (<span class="arithmatex">\(\pi_0\)</span>) and <span class="bf-fterm bf-c-blue">after</span> (<span class="arithmatex">\(\pi_1\)</span>).</p>
+</div>
+<div class="bf-fnote bf-c-blue">
+<p><span class="bf-fnote-h">In a block</span>
+<span class="arithmatex">\(I\)</span> is the block's <span class="arithmatex">\(n\)</span> rows. A piece is a run of equal bytes in the last column, <span class="arithmatex">\(\lambda_\alpha\)</span> its length, and <span class="arithmatex">\(f\)</span> is LF. <span class="arithmatex">\(\pi_0\)</span> is the runs' order in the last column, <span class="arithmatex">\(\pi_1\)</span> their images' order in the first. For <code>baa</code>: <span class="arithmatex">\(\pi_0\)</span> is B, A and <span class="arithmatex">\(\pi_1\)</span> is A, B.</p>
+</div>
+</div>
+<div class="bf-fstep">
+<div class="bf-fbody">
+<p><strong>2. Monodromy invariant.</strong> The permutation</p>
+<div class="arithmatex">\[p = \pi_1 \circ \pi_0^{-1} : \{1, \dots, d\} \to \{1, \dots, d\}\]</div>
+<p>sends each place in the old order to the same piece's place in the new.</p>
+</div>
+<div class="bf-fnote bf-c-green">
+<p><span class="bf-fnote-h">The shape, without names</span>
+<span class="arithmatex">\(p\)</span> does not depend on how the pieces are named. For <code>baa</code> it swaps places 1 and 2.</p>
+</div>
+</div>
+<div class="bf-fstep">
+<div class="bf-fbody">
+<p><strong>3. One step.</strong> Let <span class="arithmatex">\(\alpha(\varepsilon) = \pi_\varepsilon^{-1}(d)\)</span> be the last piece of each order. The step has <span class="bf-fterm bf-c-amber">type 0</span> if <span class="arithmatex">\(\lambda_{\alpha(0)} &gt; \lambda_{\alpha(1)}\)</span> and <span class="bf-fterm bf-c-amber">type 1</span> if <span class="arithmatex">\(\lambda_{\alpha(0)} &lt; \lambda_{\alpha(1)}\)</span>. The longer piece is the <span class="bf-fterm bf-c-amber">winner</span>, the shorter the <span class="bf-fterm bf-c-amber">loser</span>. The classical theory excludes equal lengths.</p>
+</div>
+<div class="bf-fnote bf-c-amber">
+<p><span class="bf-fnote-h">The two right-hand ends</span>
+For <code>baa</code>: <span class="arithmatex">\(\alpha(0)\)</span> is A (2 rows), <span class="arithmatex">\(\alpha(1)\)</span> is B (1 row), so type 0 and A wins. A finite block does reach equal lengths, and there the kernel joins the two pieces: the step <code>a + ab</code> below.</p>
+</div>
+</div>
+<div class="bf-fstep">
+<div class="bf-fbody">
+<p><strong>4. The induced map.</strong> Remove the loser's end: <span class="arithmatex">\(J = I \setminus f(I_{\alpha(1)})\)</span> in type 0, <span class="arithmatex">\(J = I \setminus I_{\alpha(0)}\)</span> in type 1. The <span class="bf-fterm bf-c-ultra">first-return map</span> sends each point of <span class="arithmatex">\(J\)</span> to where its path first comes back:</p>
+<div class="arithmatex">\[\hat{R}(f)(x) = f^{\,r(x)}(x),\]</div>
+<div class="arithmatex">\[r(x) = \min\{\, n \ge 1 : f^{\,n}(x) \in J \,\}.\]</div>
+<p>In type 0, <span class="arithmatex">\(r(x) = 1\)</span> everywhere except on the loser's piece, where <span class="arithmatex">\(r(x) = 2\)</span>.</p>
+</div>
+<div class="bf-fnote bf-c-ultra">
+<p><span class="bf-fnote-h">Fewer rows, longer words</span>
+A row of the loser now stands for two LF steps, and its word records both bytes: B's <code>ab</code> in the hand-run below. Each step removes the loser's length in rows from the map.</p>
+</div>
+</div>
+<div class="bf-fstep">
+<div class="bf-fbody">
+<p><strong>5. Proposition.</strong> <span class="arithmatex">\(\hat{R}(f)\)</span> is again an interval exchange on the same alphabet, with a new pair <span class="arithmatex">\(\pi'\)</span> and the lengths</p>
+<div class="arithmatex">\[\lambda'_{\text{winner}} = \lambda_{\text{winner}} - \lambda_{\text{loser}},\]</div>
+<div class="arithmatex">\[\lambda'_\alpha = \lambda_\alpha \text{ otherwise.}\]</div>
+</div>
+<div class="bf-fnote bf-c-claude">
+<p><span class="bf-fnote-h">Why it repeats</span>
+The result is the same kind of object, so the step applies again. For <code>baa</code> the lengths go from A 2, B 1 to A 1, B 1, and the equal ends then join.</p>
+</div>
+</div>
+<div class="bf-fstep">
+<div class="bf-fbody">
+<p><strong>6. Iteration.</strong> Repeated steps give <span class="arithmatex">\((\pi^{(n)}, \lambda^{(n)})\)</span> and a product <span class="arithmatex">\(\Theta^{(n)}\)</span> of elementary matrices, with</p>
+<div class="arithmatex">\[\lambda^{(n)} = \big(\Theta^{(n)}\big)^{-\mathsf{T}} \lambda, \qquad w^{(n)} = \Theta^{(n)} w,\]</div>
+<p>where <span class="arithmatex">\(w\)</span> is the vector of the pieces' translations. For <span class="arithmatex">\(d = 2\)</span> the lengths follow the subtractive Euclidean algorithm.</p>
+</div>
+<div class="bf-fnote bf-c-steel">
+<p><span class="bf-fnote-h">Counts and rules</span>
+An entry of <span class="arithmatex">\(\Theta^{(n)}\)</span> counts how often one new piece's path visits one original piece before it returns: the letters in its word. The kernel's rules keep the words themselves, not just the counts.</p>
+</div>
+</div>
+<div class="bf-fstep">
+<div class="bf-fbody">
+<p><strong>7. Inverting the BWT.</strong> Decoding iterates LF one row at a time, <span class="arithmatex">\(x \mapsto \mathrm{LF}(x)\)</span>. Since LF is an interval exchange on the runs, induction can replace that iteration: each step shrinks the map and records a rule, and at the end the rules spell the block. Whether this is faster depends on what a step costs.</p>
+</div>
+<div class="bf-fnote bf-c-blue">
+<p><span class="bf-fnote-h">The rest of this post</span>
+What a step costs, <a href="#2-the-timings">§2</a> and <a href="#3-why-the-cells-kernel-is-cheaper">§3</a>. The tree the rules form, <a href="#4-the-lyndon-tree">§4</a>. How the order of steps changes their number, <a href="#5-fewer-steps-by-a-different-order">§5</a>.</p>
+</div>
+</div>
+<figcaption>Black: the standard definitions (after M. Viana, <em>Ergodic theory of interval exchange maps</em>, Rev. Mat. Complut. 19, 2006). Colour: what each line means in a bzip2 block, with the example <code>aab</code>, whose last column is <code>baa</code>. A block's map is on whole rows, so it is a discrete interval exchange, and it ends in equal lengths, which the classical theory sets aside.</figcaption>
+</figure>
+<p>Step through the same block below: first the walk, which visits every row, then the induction, which deletes the rows a path can only pass through.</p>
+<figure class="bf-fig bf-stepper" data-model="induction" id="induction-stepper">
+<p class="bf-title">Step through it: the walk visits every row; the induction deletes rows</p>
+<svg class="bf-step-svg" viewBox="0 0 540 380" role="img" aria-label="An animation of the block aab: first the walk visits rows 0, 2 and 1, one lookup each; then Rauzy–Veech induction deletes row 2, so row 0 returns straight to row 1 with the word ab; then the two remaining rows join into one with the word aab." hidden></svg>
+<p class="bf-step-text" aria-live="polite" hidden></p>
+<div class="bf-step-controls" hidden><button type="button" class="bf-btn" data-act="prev">← Back</button><button type="button" class="bf-btn bf-step-main" data-act="play">Play</button><button type="button" class="bf-btn" data-act="next">Next →</button><input type="range" min="0" max="0" value="0" data-act="slider" aria-label="Step"></div>
+<div class="bf-step-static" markdown>
+
+1. **The walk:** start at row 0 and read b; LF sends it to row 2 (read a), then to row 1 (read a), then back to row 0. It visits all three rows, one lookup each, and reads the block backwards.
+2. **The right-hand end:** A (rows 1–2) is the last piece; B's row lands on row 2, the last row any arrow lands on. B is shorter.
+3. **Delete row 2:** only B lands there, and the path always continues to row 1. So B's row returns straight to row 1, with the word ab.
+4. **Join:** B now lands on all of A, at equal length. A's row goes too, and B's row returns to itself in one jump with the word aab, the whole block.
+
+</div>
+<figcaption>Use Next and Back, or Play. Rows are the block's three rows, with their last-column bytes. Arrows are LF. The green box is the row the path is on, and the green arrow is the one just taken. A path's <em>visit</em> is a row it passes through, and its <em>return</em> is the next row of the shrunken map it reaches. The induction deletes the rows a path can only pass through, and keeps their bytes in the word it carries.</figcaption>
+</figure>
+
+<figure class="bf-fig" id="mv79-03-return-tickets">
+<p class="bf-title">A ticket can remember a longer journey</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 775" role="img" aria-labelledby="mv79-03-return-tickets-title mv79-03-return-tickets-desc">
+<title id="mv79-03-return-tickets-title">A ticket can remember a longer journey</title>
+<desc id="mv79-03-return-tickets-desc">For aab, A has two row tickets labelled a and B has one labelled b. A loses one ticket, while B keeps one ticket now labelled ab. The next equal-length step joins a and ab. A separate generic stack shows that one rule represents every occurrence of a selected digram.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">Fewer tickets. A longer itinerary.</text><text x="20" y="70" class="bf-tm" text-anchor="start" style="font-size:24px">The two right-end intervals of aab</text><text x="25" y="117" class="bf-t-strong" text-anchor="start" style="font-size:24px">A: two row tickets</text><text x="332" y="117" class="bf-t-strong" text-anchor="start" style="font-size:24px">B: one</text><rect x="30" y="142" width="110" height="72" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M46 149V207" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="91.0" y="187.0" class="bf-t-strong" text-anchor="middle" style="font-size:28px">a</text><rect x="140" y="142" width="110" height="72" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M156 149V207" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="201.0" y="187.0" class="bf-t-strong" text-anchor="middle" style="font-size:28px">a</text><rect x="346" y="142" width="110" height="72" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M362 149V207" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="407.0" y="187.0" class="bf-t-strong" text-anchor="middle" style="font-size:28px">b</text><path d="M140 135V225" fill="none" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 6"/><circle cx="121" cy="247" r="8" fill="none" stroke="var(--bf-amber)" stroke-width="3"/><circle cx="145" cy="257" r="8" fill="none" stroke="var(--bf-amber)" stroke-width="3"/><path d="M127 242L158 220M146 248L141 221" fill="none" stroke="var(--bf-amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="299" class="bf-t" text-anchor="start" style="font-size:24px">2 &gt; 1: remove one row from A.</text><path d="M490 234L490 330" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M485.2 321.2L490 330L494.8 321.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="30" y="342" width="110" height="72" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M46 349V407" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="91.0" y="387.0" class="bf-t-strong" text-anchor="middle" style="font-size:28px">a</text><rect x="346" y="342" width="110" height="72" rx="2" class="bf-card-hi"/><path d="M362 349V407" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="407.0" y="387.0" class="bf-t-strong" text-anchor="middle" style="font-size:28px">ab</text><text x="25" y="452" class="bf-tm" text-anchor="start" style="font-size:24px">one row</text><text x="333" y="452" class="bf-tm" text-anchor="start" style="font-size:24px">one row</text><text x="20" y="500" class="bf-t-strong" text-anchor="start" style="font-size:24px">B’s ticket now records both bytes.</text><text x="20" y="537" class="bf-t" text-anchor="start" style="font-size:24px">Equal lengths next: a + ab → aab.</text><path d="M20 562H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="602" class="bf-t" text-anchor="start" style="font-size:24px">A larger batch uses the same one rule:</text><rect x="37" y="633" width="134" height="65" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M53 640V691" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="110.0" y="674.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">AB</text><rect x="29" y="641" width="134" height="65" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M45 648V699" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="102.0" y="682.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">AB</text><rect x="21" y="649" width="134" height="65" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M37 656V707" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="94.0" y="690.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">AB</text><path d="M177 678L310 678" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M301.2 682.8L310 678L301.2 673.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="337" y="633" width="134" height="65" rx="2" class="bf-card-hi"/><path d="M353 640V691" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="410.0" y="674.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">X</text><rect x="329" y="641" width="134" height="65" rx="2" class="bf-card-hi"/><path d="M345 648V699" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="402.0" y="682.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">X</text><rect x="321" y="649" width="134" height="65" rx="2" class="bf-card-hi"/><path d="M337 656V707" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="394.0" y="690.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">X</text><text x="270" y="748" class="bf-t-strong" text-anchor="middle" style="font-size:28px">X → AB</text>
+</svg>
+<figcaption>The number of tickets is an interval’s remaining row count; the stamp is its return word, in reconstruction order. Shortening the longer interval leaves the shorter one representing a longer journey. The lower stack is a separate, generic batch: all occurrences of the chosen pair occupy one cell and share one rule. Counted steps per byte: Wikidata 0.1309, prose 0.6761, uniform random bytes about 1; short runs leave less to batch. The analogy breaks at the stamp: the implementation records that rule once, not once per ticket; expanding it still has to emit the bytes.</figcaption>
+</figure>
+
+<p>Each step looks at the right-hand end of both orders. The last interval of the original order is A, two rows long; the last of the image order is B, one row long. The longer one, A, loses as many rows as B has, one. B's word grows to cover the row A lost: A's <code>a</code> followed by B's own <code>b</code>, giving <code>ab</code>. Both intervals now cover one row. When the two end intervals are the same length, the step joins them: A's <code>a</code> and B's <code>ab</code> give <code>aab</code>, and one interval is left.</p>
+<p>After the first step, B holds a two-byte word on a one-row interval. Its one remaining row stands for two rows of the original map, and the word records both bytes. This is the idea behind Rauzy–Veech induction: keep only the rows where the path returns, and record the bytes of the path skipped in between.</p>
+<p>Larger inputs repeat this operation and share word rules. If <code>X → ab</code> is reused in <code>Y → XX</code>, Y represents <code>abab</code> without duplicating X's stored definition. That second rule only illustrates sharing; it is not a step in the <code>aab</code> example.</p>
+<p>The walk does one lookup per byte. The induction does one step per pair of end intervals, and writes the bytes out from its rules at the end.</p>
+<h2 id="2-the-timings">2. The timings<a class="headerlink" href="#2-the-timings" title="Permanent link">&para;</a></h2>
+<p><strong>Against the shipped decoder.</strong> Since mibz2's 0.2.8 release, the shipped decoder builds its table from a list of the block's runs, its <strong>run records</strong>, instead of reading the last column (<a href="https://github.com/lmmx/mibz2/pull/324">#324</a>). After the bug fix below, we gave that path and the kernel the same run records. We timed both on the 233 blocks of the Wikidata file that have at least 65,536 bytes. The kernel took 1.677 ns per byte against 2.049, 0.818 times as long, and three repeats within four minutes gave 0.817, 0.820 and 0.818. Nine runs 34 to 48 minutes later read 0.836 to 0.858. Every arm was then 6 to 19% slower, and the kernel lost more than the reference. Running the old and new binaries back to back gave the same spread, so the change is in the machine, not the build; its cause on the host is not known. The result is therefore 0.82 to 0.86, not 0.818 with a spread of 0.2%. Over those twelve runs the kernel was faster on 185 to 197 of the 233 blocks. One more run, six minutes before the first three, overlapped a build that used every core: it took 89 s instead of 41 and read 0.90. It was set aside at the time as disturbed, and no figure here counts it. The 0.818 is higher than the 0.738 in the table below for two reasons of similar size. This reference is faster, 2.049 ns per byte against the column-based path's 2.172, which accounts for slightly more than half of the change. And the kernel's own time rose from 1.604 to 1.677, almost all in its first stage. That stage now reads the run records itself, taking 0.367 ns per byte against 0.29 to 0.31 when it was handed them. The bug fix changed the writer's time only from 0.344 to 0.347.</p>
+<figure class="bf-fig">
+<p class="bf-title">The cells kernel against the inversion stage mibz2 ships</p>
+<svg viewBox="0 0 540 402" role="img" aria-label="On the 233 Wikidata blocks, one thread: the shipped inversion stage takes 2.049 ns per byte; the cells kernel takes 1.677, made of order 0.367, induce 0.937 and write 0.347. That is 0.818 in the first three runs and 0.84 to 0.86 in nine later runs."><text x="0" y="26" class="bf-tm" style="font-size: 21px">ns per byte, 233 Wikidata blocks, one thread</text><text x="0" y="72" class="bf-ts" style="font-size: 23px">Shipped inversion stage (run records)</text><rect x="0" y="86" width="409.8" height="40" rx="3" class="bf-bar-est"/><text x="419.8" y="114" class="bf-t-strong" style="font-size: 23px">2.049</text><text x="0" y="184" class="bf-ts" style="font-size: 23px">Cells kernel, by stage</text><rect x="0.0" y="198" width="71.4" height="40" rx="3" class="bf-steel"/><text x="36.7" y="262" class="bf-tm" text-anchor="middle" style="font-size: 23px">order</text><text x="36.7" y="292" class="bf-tm" text-anchor="middle" style="font-size: 23px">0.367</text><rect x="73.4" y="198" width="185.4" height="40" rx="3" class="bf-bar"/><text x="167.10000000000002" y="262" class="bf-tm" text-anchor="middle" style="font-size: 23px">induce</text><text x="167.10000000000002" y="292" class="bf-tm" text-anchor="middle" style="font-size: 23px">0.937</text><rect x="260.8" y="198" width="67.4" height="40" rx="3" class="bf-green"/><text x="295.5" y="262" class="bf-tm" text-anchor="middle" style="font-size: 23px">write</text><text x="295.5" y="292" class="bf-tm" text-anchor="middle" style="font-size: 23px">0.347</text><text x="340.2" y="226" class="bf-t-strong" style="font-size: 23px">1.677</text><path d="M0 310H540" class="bf-rule"/><text x="0" y="344" class="bf-t" style="font-size: 21px">1.677 ÷ 2.049 = 0.818 in the first three runs;</text><text x="0" y="372" class="bf-t" style="font-size: 21px">0.84 to 0.86 in nine later runs</text></svg>
+<figcaption>Both sides start from the same run records, after the writer fix. Fastest of five rounds per block, pooled, on one cloud machine; not CI, and only the inversion stage, not the whole decoder. The induction is the largest stage: about 0.13 steps per byte at about 7.7 ns a step. The nine later runs found the machine in a slower state, which widened the result to 0.82 to 0.86.</figcaption>
+</figure>
+
+<p><strong>The bug.</strong> Our review of the research record found that the kernel's writer left 126,658 bytes unwritten over 178 of the blocks. The kernel's byte check could not see this, because the output buffer already held the right bytes from another kernel. The fix, and a check that now catches the fault, are in <a href="https://github.com/lmmx/mibz2/pull/351">#351</a>. Everything below was timed before the fix.</p>
+<p><strong>The history.</strong> Our first kernel stored the two orders as linked lists and was slower than mibz2's earlier reference: the table build that reads the last column, plus the walk. The second, the <strong>cells kernel</strong>, named for the cells it writes (<a href="#3-why-the-cells-kernel-is-cheaper">§3</a>), records completed steps without moving anything through linked lists. Each <strong>census</strong> below is one timed pass over the 233 blocks.</p>
+<p>Each census timed its own reference, so each row compares the kernel only with the reference from the same pass. The unit is nanoseconds per row of the BWT, which is one byte of the block, pooled over the 233 blocks.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Census</th>
+<th style="text-align: right;">Table build + walk</th>
+<th style="text-align: right;">Kernel</th>
+<th style="text-align: right;">Kernel ÷ reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">First kernel (linked lists)</td>
+<td style="text-align: right;">2.172</td>
+<td style="text-align: right;">2.770</td>
+<td style="text-align: right;">1.276</td>
+</tr>
+<tr>
+<td style="text-align: left;">Cells kernel, first census</td>
+<td style="text-align: right;">2.244</td>
+<td style="text-align: right;">1.697</td>
+<td style="text-align: right;">0.756</td>
+</tr>
+<tr>
+<td style="text-align: left;">Cells kernel, second census</td>
+<td style="text-align: right;">2.172</td>
+<td style="text-align: right;">1.604</td>
+<td style="text-align: right;">0.738</td>
+</tr>
+</tbody>
+</table>
+<p>The cells kernel recorded lower times on 202 blocks in the first census and 204 in the second. Other work ran on other cores during the first; the second pinned the process to one core with the others idle.</p>
+<p>The kernel has three stages: it orders the run records, runs the induction, and writes the bytes. The first kernel's 2.770 adds up each stage's fastest round separately, while the cells kernel's figures time the three together. So the 42% drop from 2.770 to 1.604 compares different passes and different timing methods; it is not a paired measurement.</p>
+<p>The two sides of this table also start from different inputs. The reference reads the last column; the kernel receives run records. Turning the column into run records costs 0.484 ns per byte, which the table leaves out. Adding it back gives 2.088 against 2.172 for the second census, a 4% reduction where the table shows 26%. The run-records comparison above has no such gap.</p>
+<p>On other inputs the cells kernel is slower, because short runs mean more steps per byte. After the fix, against the shipped decoder's inversion stage, it took 4.03 times as long on prose and 8.94 times on uniform random bytes. On a block of <code>ab</code> repeated, which needs one step per two bytes, it took 11.2 times as long.</p>
+<h2 id="3-why-the-cells-kernel-is-cheaper">3. Why the cells kernel is cheaper<a class="headerlink" href="#3-why-the-cells-kernel-is-cheaper" title="Permanent link">&para;</a></h2>
+<p>Three changes made the cells kernel cheaper than the first one. They did not all pay at once: an earlier version of the cells kernel was still 1.225 times as slow as the column-based reference.</p>
+<p>A cell is the overlap of an interval in the original order with one in the image order. It holds the rows that read the same pair of run letters in succession. The kernel writes each cell once, when its step is done, and records where later work goes. This replaces most of the first kernel's shortening and relinking of list nodes.</p>
+<figure class="bf-fig" id="mv79-04-filed-receipts">
+<p class="bf-title">Keep finished work still</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 675" role="img" aria-labelledby="mv79-04-filed-receipts-title mv79-04-filed-receipts-desc">
+<title id="mv79-04-filed-receipts-title">Keep finished work still</title>
+<desc id="mv79-04-filed-receipts-desc">The linked-list kernel rehangs a letter card and repairs neighbouring links. The cells kernel files a completed cell in its assigned slots without patching old neighbours; a separate clipboard holds the pending remainder and promised slot. Looking ahead permits prefetch of scattered destinations.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">Rehang the cards …</text><text x="20" y="72" class="bf-tm" text-anchor="start" style="font-size:24px">Linked lists: the old neighbours change.</text><path d="M35 114H505" fill="none" stroke="var(--bf-muted)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="99" cy="114" r="5" fill="none" stroke="var(--bf-muted)" stroke-width="3"/><path d="M99 120V149" fill="none" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="50" y="150" width="98" height="67" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M66 157V210" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="105.0" y="192.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">A</text><circle cx="260" cy="114" r="5" fill="none" stroke="var(--bf-muted)" stroke-width="3"/><path d="M260 120V149" fill="none" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="211" y="150" width="98" height="67" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M227 157V210" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="266.0" y="192.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">B</text><circle cx="421" cy="114" r="5" fill="none" stroke="var(--bf-muted)" stroke-width="3"/><path d="M421 120V149" fill="none" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="372" y="150" width="98" height="67" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M388 157V210" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="427.0" y="192.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">C</text><path d="M100 240Q260 300 422 240" fill="none" stroke="var(--bf-amber)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M398 254L422 240" fill="none" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M416.8 248.6L422 240L412.0 240.3" fill="none" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M260 147Q337 90 422 147" fill="none" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 6"/><text x="20" y="307" class="bf-t" text-anchor="start" style="font-size:24px">Re-seat a letter; repair 5–6 links.</text><path d="M20 335H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="380" class="bf-t-strong" text-anchor="start" style="font-size:26px">… or file a finished receipt</text><path d="M24 460L62 416H259L297 460V563H24Z" fill="var(--bf-green-tint)" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="48" y="440" width="225" height="67" rx="2" class="bf-card-hi"/><path d="M64 447V500" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="166.5" y="482.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">completed cell</text><path d="M24 488H297" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="160" y="547" class="bf-t-strong" text-anchor="middle" style="font-size:26px">stays put</text><rect x="345" y="424" width="167" height="139" rx="3" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M376 414H481V434H376Z" fill="var(--bf-surface)" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="429" y="474" class="bf-t" text-anchor="middle" style="font-size:24px">pending</text><text x="429" y="509" class="bf-t" text-anchor="middle" style="font-size:24px">remainder</text><text x="429" y="544" class="bf-t" text-anchor="middle" style="font-size:23px">+ next slot</text><text x="20" y="610" class="bf-t" text-anchor="start" style="font-size:24px">Two cell slots written; no relinking.</text><text x="20" y="648" class="bf-tm" text-anchor="start" style="font-size:24px">Look ahead to future write addresses.</text>
+</svg>
+<figcaption>Hanging cards are letters in the two linked orders; their strings are links that must be patched. A filed receipt is a completed cell, while the clipboard is the live remainder and promised next slot. Keeping completed work still removes the relinking work, and known future addresses permit prefetch. The analogy breaks at the filing cabinet: two slots are written for a cell, destinations can be scattered, and word/output processing still writes memory; this is not a claim that the decoder writes each byte only once.</figcaption>
+</figure>
+
+<p>A second change removes position tracking from the induction loop. The row where the text starts is marked in the rules, and the output stage finds the starting position from that mark afterwards. So the induction no longer updates a position at every step.</p>
+<p>Third, the kernel prefetches the addresses of its scattered writes before it makes them. The journal times the changes in sequence on ten blocks. Replacing the linked lists with one buffer took a cell from 13.4 ns to 12.5. Marking the start row instead of following it took it to 9.8 ns, and fetching ahead to 7.2 to 7.7 ns.</p>
+<p>The cells kernel uses more memory than the table, but it misses the cache less. These counts come from callgrind on single blocks, before the fix, against the column-based table build and walk; the misses are of a simulated 2 MiB cache, this machine's L2. The most favourable block has about 17 bytes per run. There the kernel executes 186 instructions per run against 268, with 2.1 misses against 9.1. At the file's average of about 14 bytes per run it is 180 against 217, with 2.3 misses against 7.9. On a block with about 8 bytes per run it executes more than the table, 164 against 129. It still misses less there, 2.6 against 4.0. The table's work is per byte, so its cost per run falls as runs get shorter.</p>
+<h2 id="4-the-lyndon-tree">4. The Lyndon tree<a class="headerlink" href="#4-the-lyndon-tree" title="Permanent link">&para;</a></h2>
+<p>Each rule joins two words into one, so the rules form a tree: its leaves are bytes, and each internal node joins its children's words. Shared rules are shared subtrees, and the whole set of rules is a <strong>grammar</strong> for the block.</p>
+<p>A <strong>primitive</strong> word is not an exact repetition of a shorter word. The smallest of its rotations, in dictionary order, is a Lyndon word. This is the definition the opening used; for a Lyndon word it is equivalent to coming before each of its proper suffixes. For example, <code>aab</code> is smaller than <code>aba</code> and <code>baa</code>, and its Lyndon tree splits it as <code>a | ab</code>, then <code>a | b</code>.</p>
+<p>The journal identifies the right-end induction's expanded derivation tree with the Lyndon tree of that smallest rotation. It first relates the construction to a <strong>Cartesian tree</strong>: a hierarchy formed by repeatedly splitting a sequence at its minimum. Here the sequence contains ranks of rotations beginning at the word's internal boundaries. For <code>aab</code>, the rotations at positions zero, one and two have ranks zero, one and two. The internal sequence is therefore [1,2]. Its minimum splits after the first <code>a</code>, giving <code>a | ab</code>; the remaining split gives <code>a | b</code>. This agrees with the two rules above. In general, the standard split of a Lyndon word cuts it just before its smallest proper suffix. That a Lyndon tree has the shape of the Cartesian tree of the word's suffix ranks is a 2003 result of Hohlweg and Reutenauer; Crochemore and Russo set it out in §4 of <a href="https://arxiv.org/abs/1712.08749"><em>Cartesian trees and Lyndon trees</em></a>.</p>
+<figure class="bf-fig" id="mv79-06-nested-book">
+<p class="bf-title">The rules are a book’s nested bindings</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 707" role="img" aria-labelledby="mv79-06-nested-book-title mv79-06-nested-book-desc">
+<title id="mv79-06-nested-book-title">The rules are a book’s nested bindings</title>
+<desc id="mv79-06-nested-book-desc">An open book aab has left part a and right part ab; opening the ab part reveals a and b. The first split is before ab, the lexicographically smallest proper suffix; the recursive splits are the standard Lyndon tree. This is a structural analogy, not an extra sorting pass.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">Bind the parts; keep the seams</text><text x="20" y="73" class="bf-tm" text-anchor="start" style="font-size:24px">aab is its own smallest rotation.</text><path d="M55 124Q130.25 109 205.5 126Q345.25 109 485 124V240Q345.25 226 205.5 242Q130.25 226 55 240Z" fill="var(--bf-green-tint)" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M205.5 126V242" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="130.25" y="191.36" class="bf-t-strong" text-anchor="middle" style="font-size:38px">a</text><text x="345.25" y="191.36" class="bf-t-strong" text-anchor="middle" style="font-size:38px">ab</text><path d="M206 115V92H226V121L216 110Z" fill="var(--bf-amber-tint)" stroke="var(--bf-amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="290" class="bf-t-strong" text-anchor="start" style="font-size:27px">First seam: a | ab</text><text x="20" y="328" class="bf-t" text-anchor="start" style="font-size:24px">ab is smaller than the other suffix, b.</text><path d="M377 350L377 375" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M372.2 366.2L377 375L381.8 366.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M260 397Q299.375 382 338.75 399Q411.875 382 485 397V500Q411.875 486 338.75 502Q299.375 486 260 500Z" fill="var(--bf-green-tint)" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M338.75 399V502" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="299.375" y="456.3" class="bf-t-strong" text-anchor="middle" style="font-size:38px">a</text><text x="411.875" y="456.3" class="bf-t-strong" text-anchor="middle" style="font-size:38px">b</text><text x="20" y="443" class="bf-t-strong" text-anchor="start" style="font-size:24px">Open ab:</text><text x="20" y="482" class="bf-t-strong" text-anchor="start" style="font-size:30px">a | b</text><path d="M20 546H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="589" class="bf-t-strong" text-anchor="start" style="font-size:24px">Join a and b to make ab.</text><text x="20" y="630" class="bf-t-strong" text-anchor="start" style="font-size:24px">Join a and ab to make aab.</text><text x="20" y="679" class="bf-t" text-anchor="start" style="font-size:24px">Those nested joins are the Lyndon tree.</text>
+</svg>
+<figcaption>Each bound part is a word; its binding seam is the standard Lyndon split, before its smallest proper suffix. Reading the joins from the smaller book upward gives the rules ab = a·b and aab = a·ab. The analogy breaks at the bookbinder: the kernel does not first sort suffixes or build a separate book tree, and shared equal rules form a grammar rather than a physically duplicated tree. The stated identity concerns right-end induction’s expanded tree for a primitive block’s smallest rotation.</figcaption>
+</figure>
+
+<p>A longer word shows the rule at work. Dictionary order puts <code>a</code> before <code>b</code>, and puts a word before any longer word it begins, so <code>ab</code> comes before <code>aba</code>. A Lyndon word is cut just before its smallest proper suffix, and each part is cut the same way, until single letters are left. The cut goes there because both pieces stay Lyndon words. The right piece, the smallest proper suffix, is one because each of its own suffixes is also a suffix of the whole word, so comes after it; the left piece is one too (Crochemore and Russo, §3). Each cut is a fork in the tree: the part above it, its two pieces below. Here is that cut, by hand, on <code>aab</code> and on the eight-letter word <code>aababbab</code>.</p>
+<figure class="bf-fig" id="lyndon-rule">
+<p class="bf-title">One rule makes the tree</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 736" role="img" aria-labelledby="lyndon-rule-title lyndon-rule-desc"><title id="lyndon-rule-title">One rule makes the tree</title><desc id="lyndon-rule-desc">For aab, the proper suffixes are ab and b; ab is smallest, so aab splits as a | ab, then ab as a | b. For aababbab the seven proper suffixes, sorted, are ab, ababbab, abbab, b, bab, babbab, bbab; the smallest, ab, starts at position 11, so the word splits as aababb | ab.</desc><text x="20.0" y="34.0" class="bf-t-strong" text-anchor="start" style="font-size:24px">Cut before the smallest proper suffix</text><text x="20.0" y="66.0" class="bf-tm" text-anchor="start" style="font-size:17px">Order: a before b; a word before any longer word it begins.</text><text x="20.0" y="112.0" class="bf-t-strong" text-anchor="start" style="font-size:24px">aab</text><text x="90.0" y="112.0" class="bf-t" text-anchor="start" style="font-size:20px">suffixes  ab, b   smallest  ab</text><text x="90.0" y="144.0" class="bf-t-strong" text-anchor="start" style="font-size:20px">aab → a | ab,   then  ab → a | b</text><path d="M20 170H520" fill="none" stroke="var(--bf-frame)" stroke-width="2"/><text x="20.0" y="206.0" class="bf-t-strong" text-anchor="start" style="font-size:22px">aababbab, the green word below</text><text x="20.0" y="238.0" class="bf-tm" text-anchor="start" style="font-size:18px">Its seven proper suffixes, sorted:</text><rect x="14" y="250" width="512" height="36" rx="6" fill="var(--bf-amber-tint)" stroke="var(--bf-amber)" stroke-width="2"/><text x="34.0" y="276.0" class="bf-tm" text-anchor="middle" style="font-size:18px">1</text><text x="64.0" y="276.0" class="bf-t-strong" text-anchor="start" style="font-size:22px;font-family:var(--md-code-font-family,monospace)">ab</text><text x="500.0" y="276.0" class="bf-tm" text-anchor="end" style="font-size:17px">starts at 11</text><text x="34.0" y="316.0" class="bf-tm" text-anchor="middle" style="font-size:18px">2</text><text x="64.0" y="316.0" class="bf-t" text-anchor="start" style="font-size:22px;font-family:var(--md-code-font-family,monospace)">ababbab</text><text x="500.0" y="316.0" class="bf-tm" text-anchor="end" style="font-size:17px">starts at 6</text><text x="34.0" y="356.0" class="bf-tm" text-anchor="middle" style="font-size:18px">3</text><text x="64.0" y="356.0" class="bf-t" text-anchor="start" style="font-size:22px;font-family:var(--md-code-font-family,monospace)">abbab</text><text x="500.0" y="356.0" class="bf-tm" text-anchor="end" style="font-size:17px">starts at 8</text><text x="34.0" y="396.0" class="bf-tm" text-anchor="middle" style="font-size:18px">4</text><text x="64.0" y="396.0" class="bf-t" text-anchor="start" style="font-size:22px;font-family:var(--md-code-font-family,monospace)">b</text><text x="500.0" y="396.0" class="bf-tm" text-anchor="end" style="font-size:17px">starts at 12</text><text x="34.0" y="436.0" class="bf-tm" text-anchor="middle" style="font-size:18px">5</text><text x="64.0" y="436.0" class="bf-t" text-anchor="start" style="font-size:22px;font-family:var(--md-code-font-family,monospace)">bab</text><text x="500.0" y="436.0" class="bf-tm" text-anchor="end" style="font-size:17px">starts at 10</text><text x="34.0" y="476.0" class="bf-tm" text-anchor="middle" style="font-size:18px">6</text><text x="64.0" y="476.0" class="bf-t" text-anchor="start" style="font-size:22px;font-family:var(--md-code-font-family,monospace)">babbab</text><text x="500.0" y="476.0" class="bf-tm" text-anchor="end" style="font-size:17px">starts at 7</text><text x="34.0" y="516.0" class="bf-tm" text-anchor="middle" style="font-size:18px">7</text><text x="64.0" y="516.0" class="bf-t" text-anchor="start" style="font-size:22px;font-family:var(--md-code-font-family,monospace)">bbab</text><text x="500.0" y="516.0" class="bf-tm" text-anchor="end" style="font-size:17px">starts at 9</text><text x="20.0" y="562.0" class="bf-t" text-anchor="start" style="font-size:20px">ab is smallest: it begins the other ab… words.</text><text x="20.0" y="596.0" class="bf-t" text-anchor="start" style="font-size:20px">So cut before position 11:</text><rect x="41" y="616" width="28" height="38" rx="4" class="bf-pill-hi" style="stroke:var(--bf-frame);stroke-width:1"/><text x="55.0" y="644.0" class="bf-t-strong" text-anchor="middle" style="font-size:22px">a</text><text x="55.0" y="674.0" class="bf-tm" text-anchor="middle" style="font-size:14px">5</text><rect x="71" y="616" width="28" height="38" rx="4" class="bf-pill-hi" style="stroke:var(--bf-frame);stroke-width:1"/><text x="85.0" y="644.0" class="bf-t-strong" text-anchor="middle" style="font-size:22px">a</text><text x="85.0" y="674.0" class="bf-tm" text-anchor="middle" style="font-size:14px">6</text><rect x="101" y="616" width="28" height="38" rx="4" class="bf-pill-hi" style="stroke:var(--bf-frame);stroke-width:1"/><text x="115.0" y="644.0" class="bf-t-strong" text-anchor="middle" style="font-size:22px">b</text><text x="115.0" y="674.0" class="bf-tm" text-anchor="middle" style="font-size:14px">7</text><rect x="131" y="616" width="28" height="38" rx="4" class="bf-pill-hi" style="stroke:var(--bf-frame);stroke-width:1"/><text x="145.0" y="644.0" class="bf-t-strong" text-anchor="middle" style="font-size:22px">a</text><text x="145.0" y="674.0" class="bf-tm" text-anchor="middle" style="font-size:14px">8</text><rect x="161" y="616" width="28" height="38" rx="4" class="bf-pill-hi" style="stroke:var(--bf-frame);stroke-width:1"/><text x="175.0" y="644.0" class="bf-t-strong" text-anchor="middle" style="font-size:22px">b</text><text x="175.0" y="674.0" class="bf-tm" text-anchor="middle" style="font-size:14px">9</text><rect x="191" y="616" width="28" height="38" rx="4" class="bf-pill-hi" style="stroke:var(--bf-frame);stroke-width:1"/><text x="205.0" y="644.0" class="bf-t-strong" text-anchor="middle" style="font-size:22px">b</text><text x="205.0" y="674.0" class="bf-tm" text-anchor="middle" style="font-size:14px">10</text><rect x="221" y="616" width="28" height="38" rx="4" class="bf-pill-hi" style="stroke:var(--bf-frame);stroke-width:1"/><text x="235.0" y="644.0" class="bf-t-strong" text-anchor="middle" style="font-size:22px">a</text><text x="235.0" y="674.0" class="bf-tm" text-anchor="middle" style="font-size:14px">11</text><rect x="251" y="616" width="28" height="38" rx="4" class="bf-pill-hi" style="stroke:var(--bf-frame);stroke-width:1"/><text x="265.0" y="644.0" class="bf-t-strong" text-anchor="middle" style="font-size:22px">b</text><text x="265.0" y="674.0" class="bf-tm" text-anchor="middle" style="font-size:14px">12</text><path d="M220 608V662" fill="none" stroke="var(--bf-amber)" stroke-width="4" stroke-linecap="round"/><text x="298.0" y="644.0" class="bf-t-strong" text-anchor="start" style="font-size:22px">aababb | ab</text><text x="20.0" y="716.0" class="bf-t" text-anchor="start" style="font-size:19px">Each part is again a Lyndon word, and is cut the same way.</text></svg>
+<figcaption>The whole of the Lyndon tree is this one step, repeated on each part until single letters are left. Positions count the letters of <code>abbabaababbabaab</code> from 0, as in the next two figures.</figcaption>
+</figure>
+
+<p>The cuts happen in an order: a part is cut, then its left half, then its right half, and the cursor returns up when a part is finished. That motion is a recursion, the order in which a program visits the parts. It is not the induction's visiting and returning of §1, which follows rows through a shrinking map. The two journeys are different, and they end in the same tree. Step through them for <code>aab</code>, then for the green word, then for the whole word.</p>
+<figure class="bf-fig bf-stepper" data-model="lyndon" id="lyndon-stepper">
+<p class="bf-title">Step through the cuts, one part at a time</p>
+<div class="bf-step-stages" role="group" aria-label="Word" hidden><button type="button" class="bf-btn" data-word="aab" aria-pressed="true">aab</button><button type="button" class="bf-btn" data-word="aababbab" aria-pressed="false">aababbab</button><button type="button" class="bf-btn" data-word="#abbabaababbabaab" aria-pressed="false">#abbabaababbabaab</button></div>
+<svg class="bf-step-svg" viewBox="0 0 540 300" role="img" aria-label="An animation of the Lyndon tree being built: the green box marks the part being looked at, its lowest suffix rank is circled, an amber line cuts the part there, and the cursor moves to the left part, then the right part, and returns up when a part is finished." hidden></svg>
+<p class="bf-step-text" aria-live="polite" hidden></p>
+<div class="bf-step-controls" hidden><button type="button" class="bf-btn" data-act="prev">← Back</button><button type="button" class="bf-btn bf-step-main" data-act="play">Play</button><button type="button" class="bf-btn" data-act="next">Next →</button><input type="range" min="0" max="0" value="0" data-act="slider" aria-label="Step"></div>
+<div class="bf-step-static" markdown>
+
+The cuts of `aab`, in order: look at `aab`; its smallest proper suffix is `ab`, so cut `a | ab`. The left part is one letter. Look at `ab`; cut `a | b`. Every part is now one letter: two cuts, two joins. The figures below show the same for the 17-letter word.
+
+</div>
+<figcaption>Choose a word, then use Next and Back, or Play. Green box: the part being looked at. Circled rank: the lowest inside it, which is its smallest proper suffix. Amber line: the cut. When both halves of a part are finished, the cursor returns up to the part above it.</figcaption>
+</figure>
+
+<p>Repeating the cut on every part of a longer word gives its whole tree. Crochemore and Russo draw it for <code>#abbabaababbabaab</code>, where <code>#</code> is a letter placed before <code>a</code> and <code>b</code> so that the whole word is a Lyndon word. The word <code>aababbab</code> from the last figure is one of its parts, in green.</p>
+<figure class="bf-fig" id="lyndon-tree">
+<p class="bf-title">The Lyndon tree of #abbabaababbabaab</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 658" role="img" aria-labelledby="lyndon-tree-title lyndon-tree-desc"><title id="lyndon-tree-title">The Lyndon tree of #abbabaababbabaab</title><desc id="lyndon-tree-desc">Nested bars with their letters inside, root at the top. The root is cut before aab, the whole word's smallest proper suffix, giving #abbabaababbab and aab. Each row cuts each part again before its smallest proper suffix, down to single letters at the bottom. The green bar, aababbab at positions 5 to 12, is cut before position 11.</desc><text x="20.0" y="34.0" class="bf-t-strong" text-anchor="start" style="font-size:24px">The same cut, repeated on every part</text><text x="20.0" y="64.0" class="bf-tm" text-anchor="start" style="font-size:17px"># sorts before a and b, so the whole word is Lyndon.</text><text x="92.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">0</text><text x="120.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">1</text><text x="148.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">2</text><text x="176.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">3</text><text x="204.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">4</text><text x="232.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">5</text><text x="260.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">6</text><text x="288.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">7</text><text x="316.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">8</text><text x="344.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">9</text><text x="372.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">10</text><text x="400.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">11</text><text x="428.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">12</text><text x="456.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">13</text><text x="484.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">14</text><text x="512.0" y="100.0" class="bf-tm" text-anchor="middle" style="font-size:14px">15</text><rect x="52" y="112" width="472" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="64.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">#</text><text x="92.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="120.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="148.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="176.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="204.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="232.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="260.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="288.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="316.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="344.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="372.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="400.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="428.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="456.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="484.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="512.0" y="136.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M442 108V150" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="52" y="156" width="388" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="64.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">#</text><text x="92.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="120.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="148.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="176.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="204.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="232.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="260.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="288.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="316.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="344.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="372.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="400.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="428.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M218 152V194" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="52" y="200" width="164" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="64.0" y="224.0" class="bf-t" text-anchor="middle" style="font-size:18px">#</text><text x="92.0" y="224.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="120.0" y="224.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="148.0" y="224.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="176.0" y="224.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="204.0" y="224.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M162 196V238" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="52" y="244" width="108" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="64.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">#</text><text x="92.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="120.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="148.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M78 240V282" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="80" y="288" width="80" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="92.0" y="312.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="120.0" y="312.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="148.0" y="312.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M134 284V326" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="80" y="332" width="52" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="92.0" y="356.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="120.0" y="356.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M106 328V370" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="164" y="244" width="52" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="176.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="204.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M190 240V282" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="220" y="200" width="220" height="34" rx="6" class="bf-pill-hi" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="232.0" y="224.0" class="bf-t-strong" text-anchor="middle" style="font-size:18px">a</text><text x="260.0" y="224.0" class="bf-t-strong" text-anchor="middle" style="font-size:18px">a</text><text x="288.0" y="224.0" class="bf-t-strong" text-anchor="middle" style="font-size:18px">b</text><text x="316.0" y="224.0" class="bf-t-strong" text-anchor="middle" style="font-size:18px">a</text><text x="344.0" y="224.0" class="bf-t-strong" text-anchor="middle" style="font-size:18px">b</text><text x="372.0" y="224.0" class="bf-t-strong" text-anchor="middle" style="font-size:18px">b</text><text x="400.0" y="224.0" class="bf-t-strong" text-anchor="middle" style="font-size:18px">a</text><text x="428.0" y="224.0" class="bf-t-strong" text-anchor="middle" style="font-size:18px">b</text><path d="M386 196V238" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="220" y="244" width="164" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="232.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="260.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="288.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="316.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="344.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="372.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M246 240V282" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="248" y="288" width="136" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="260.0" y="312.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="288.0" y="312.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="316.0" y="312.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="344.0" y="312.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="372.0" y="312.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M302 284V326" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="248" y="332" width="52" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="260.0" y="356.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="288.0" y="356.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M274 328V370" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="304" y="332" width="80" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="316.0" y="356.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="344.0" y="356.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="372.0" y="356.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M358 328V370" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="304" y="376" width="52" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="316.0" y="400.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="344.0" y="400.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M330 372V414" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="388" y="244" width="52" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="400.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="428.0" y="268.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M414 240V282" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="444" y="156" width="80" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="456.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="484.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="512.0" y="180.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M470 152V194" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="472" y="200" width="52" height="34" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="484.0" y="224.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><text x="512.0" y="224.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><path d="M498 196V238" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="53" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="64.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">#</text><rect x="81" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="92.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><rect x="109" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="120.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><rect x="137" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="148.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><rect x="165" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="176.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><rect x="193" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="204.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><rect x="221" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="232.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><rect x="249" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="260.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><rect x="277" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="288.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><rect x="305" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="316.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><rect x="333" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="344.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><rect x="361" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="372.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><rect x="389" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="400.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><rect x="417" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="428.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><rect x="445" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="456.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><rect x="473" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="484.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">a</text><rect x="501" y="420" width="22" height="34" rx="5" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1"/><text x="512.0" y="444.0" class="bf-t" text-anchor="middle" style="font-size:18px">b</text><text x="20.0" y="500.0" class="bf-t-strong" text-anchor="start" style="font-size:20px">Top: #abbabaababbab | aab.</text><text x="20.0" y="534.0" class="bf-t" text-anchor="start" style="font-size:20px">aab is the smallest proper suffix of the whole word.</text><text x="20.0" y="568.0" class="bf-t" text-anchor="start" style="font-size:20px;fill:var(--bf-amber)">Each row below cuts each part again (amber).</text><text x="20.0" y="602.0" class="bf-t" text-anchor="start" style="font-size:20px;fill:var(--bf-green-ink)">Green: aababbab, cut as aababb | ab.</text><text x="20.0" y="636.0" class="bf-t" text-anchor="start" style="font-size:20px">16 cuts make 16 joins: the tree's 16 inner nodes.</text></svg>
+<figcaption>Redrawn from Crochemore and Russo, <a href="https://arxiv.org/abs/1712.08749"><em>Cartesian trees and Lyndon trees</em></a>, p. 7, and recomputed here. Each bar is a node; read down, the bars are ever finer cuts of the word. The # is the paper's device for making any word a Lyndon word; it plays no part in a bzip2 block.</figcaption>
+</figure>
+
+<p>Sorting the suffixes of every part to find its cut is slow. Ranking the suffixes of the whole word once, in dictionary order, gives every cut at a glance: inside each part, skip its first letter, and the cut is at the lowest rank. The ranks are computed once, from the whole word, and never change as it is cut. The ranks belong to the whole word, not to the part, so it is not obvious that they pick the right cut inside each part. That they always do is the theorem that ties Lyndon trees to the Cartesian trees of the ranks. The paper's Lyndon table is a separate row, which answers a different question.</p>
+<figure class="bf-fig" id="lyndon-shortcuts">
+<p class="bf-title">Ranks find the cuts; the Lyndon table reads the widths</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 578" role="img" aria-labelledby="lyndon-shortcuts-title lyndon-shortcuts-desc"><title id="lyndon-shortcuts-title">Ranks find the cuts; the Lyndon table reads the widths</title><desc id="lyndon-shortcuts-desc">The letters of #abbabaababbabaab with each position's suffix rank among all suffixes of the whole word. Inside the green word aababbab, skipping its first position, the ranks are 6, 14, 7, 15, 12, 4 and 10; the lowest, 4, is at position 11, the cut found by hand. Below, the Lyndon table: Lyn[i] is the length of the longest Lyndon word starting at i, 3 1 1 2 1 8 5 1 3 1 1 2 1 3 2 1; Lyn[5] = 8 is the green word.</desc><text x="20.0" y="34.0" class="bf-t-strong" text-anchor="start" style="font-size:24px">Two rows that read the same tree</text><text x="20.0" y="66.0" class="bf-tm" text-anchor="start" style="font-size:17px">Rank every suffix of the whole word once, 0 smallest.</text><text x="20.0" y="108.0" class="bf-tm" text-anchor="start" style="font-size:16px">i</text><text x="92.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">0</text><text x="120.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">1</text><text x="148.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">2</text><text x="176.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">3</text><text x="204.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">4</text><text x="232.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">5</text><text x="260.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">6</text><text x="288.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">7</text><text x="316.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">8</text><text x="344.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">9</text><text x="372.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">10</text><text x="400.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">11</text><text x="428.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">12</text><text x="456.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">13</text><text x="484.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">14</text><text x="512.0" y="108.0" class="bf-tm" text-anchor="middle" style="font-size:14px">15</text><text x="64.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">#</text><text x="92.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">a</text><text x="120.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">b</text><text x="148.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">b</text><text x="176.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">a</text><text x="204.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">b</text><text x="232.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">a</text><text x="260.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">a</text><text x="288.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">b</text><text x="316.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">a</text><text x="344.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">b</text><text x="372.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">b</text><text x="400.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">a</text><text x="428.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">b</text><text x="456.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">a</text><text x="484.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">a</text><text x="512.0" y="140.0" class="bf-t-strong" text-anchor="middle" style="font-size:21px">b</text><rect x="220" y="116" width="220" height="34" rx="6" fill="none" stroke="var(--bf-green)" stroke-width="3"/><text x="20.0" y="184.0" class="bf-tm" text-anchor="start" style="font-size:16px">rank</text><text x="64.0" y="184.0" class="bf-tm" text-anchor="middle" style="font-size:16px">0</text><text x="92.0" y="184.0" class="bf-tm" text-anchor="middle" style="font-size:16px">8</text><text x="120.0" y="184.0" class="bf-tm" text-anchor="middle" style="font-size:16px">16</text><text x="148.0" y="184.0" class="bf-tm" text-anchor="middle" style="font-size:16px">13</text><text x="176.0" y="184.0" class="bf-tm" text-anchor="middle" style="font-size:16px">5</text><text x="204.0" y="184.0" class="bf-tm" text-anchor="middle" style="font-size:16px">11</text><text x="232.0" y="184.0" class="bf-tm" text-anchor="middle" style="font-size:16px">2</text><text x="260.0" y="184.0" class="bf-t" text-anchor="middle" style="font-size:16px">6</text><text x="288.0" y="184.0" class="bf-t" text-anchor="middle" style="font-size:16px">14</text><text x="316.0" y="184.0" class="bf-t" text-anchor="middle" style="font-size:16px">7</text><text x="344.0" y="184.0" class="bf-t" text-anchor="middle" style="font-size:16px">15</text><text x="372.0" y="184.0" class="bf-t" text-anchor="middle" style="font-size:16px">12</text><text x="400.0" y="184.0" class="bf-t-strong" text-anchor="middle" style="font-size:18px;fill:var(--bf-amber)">4</text><text x="428.0" y="184.0" class="bf-t" text-anchor="middle" style="font-size:16px">10</text><text x="456.0" y="184.0" class="bf-tm" text-anchor="middle" style="font-size:16px">1</text><text x="484.0" y="184.0" class="bf-tm" text-anchor="middle" style="font-size:16px">3</text><text x="512.0" y="184.0" class="bf-tm" text-anchor="middle" style="font-size:16px">9</text><circle cx="400.0" cy="178" r="15" fill="none" stroke="var(--bf-amber)" stroke-width="2.5"/><text x="20.0" y="230.0" class="bf-t" text-anchor="start" style="font-size:20px">Inside the green word, skip its first letter:</text><text x="20.0" y="262.0" class="bf-t" text-anchor="start" style="font-size:20px">ranks 6 14 7 15 12 4 10. The lowest, 4,</text><text x="20.0" y="294.0" class="bf-t" text-anchor="start" style="font-size:20px;fill:var(--bf-amber)">is at position 11: the cut found by hand.</text><path d="M20 322H520" fill="none" stroke="var(--bf-frame)" stroke-width="2"/><text x="20.0" y="364.0" class="bf-tm" text-anchor="start" style="font-size:16px">Lyn</text><text x="92.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">3</text><text x="120.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">1</text><text x="148.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">1</text><text x="176.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">2</text><text x="204.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">1</text><text x="232.0" y="364.0" class="bf-t-green" text-anchor="middle" style="font-size:19px">8</text><text x="260.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">5</text><text x="288.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">1</text><text x="316.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">3</text><text x="344.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">1</text><text x="372.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">1</text><text x="400.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">2</text><text x="428.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">1</text><text x="456.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">3</text><text x="484.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">2</text><text x="512.0" y="364.0" class="bf-t" text-anchor="middle" style="font-size:16px">1</text><path d="M222 378H438" fill="none" stroke="var(--bf-green)" stroke-width="4" stroke-linecap="round"/><path d="M222 370V386M438 370V386" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round"/><text x="20.0" y="428.0" class="bf-t" text-anchor="start" style="font-size:20px">Lyn[i]: the longest Lyndon word starting at i.</text><text x="20.0" y="460.0" class="bf-t" text-anchor="start" style="font-size:20px;fill:var(--bf-green-ink)">Lyn[5] = 8 is aababbab, the green bar.</text><text x="20.0" y="492.0" class="bf-t" text-anchor="start" style="font-size:20px">Lyn[0] = 3 is abb; Lyn[13] = 3 is aab.</text><text x="20.0" y="524.0" class="bf-t" text-anchor="start" style="font-size:20px">Each is the widest bar starting at i.</text><text x="20.0" y="556.0" class="bf-t-strong" text-anchor="start" style="font-size:20px">Ranks give the cuts; Lyn gives the widths.</text></svg>
+<figcaption>The ranks are of suffixes of the <em>whole</em> word, not of the green part, yet the lowest one inside each bar is always where that bar is cut: all 16 cuts here, and in general (Hohlweg and Reutenauer, 2003). That is the Cartesian-tree reading of §4. The Lyndon table answers a different question, how far a Lyndon word can run from each position, and its entries are the widest bars of the tree.</figcaption>
+</figure>
+
+<p>For the kernel, this means that each rule <code>X → AB</code> it records is one join of such a tree: the tree of the block's smallest rotation. The kernel never sorts suffixes or computes these ranks. They are here to show what its rules are.</p>
+<p>Lyndon trees, and their link to Cartesian trees, are long established. #351 gives a way to reach one from the BWT's runs without rebuilding the text first.</p>
+<p>The journal gives a proof and checks it with independent simulators, node by node, on every block. This post has checked that record, not the proof itself. The proof needs the word to be primitive: <code>aab</code> is, while an exact repetition such as <code>abab</code> needs separate treatment.</p>
+<h2 id="5-fewer-steps-by-a-different-order">5. Fewer steps by a different order<a class="headerlink" href="#5-fewer-steps-by-a-different-order" title="Permanent link">&para;</a></h2>
+<p>The induction can take its step at either end of the two orders, or in between. The cells kernel always takes it at the right-hand end; taking it at the left-hand end needs more steps, and other orders need fewer. Whether they save time is not yet known.</p>
+<p>Counts here are steps divided by <code>r</code>, the number of runs, so blocks with different run counts can be compared. To see what a step removes, follow LF from row to row and write down, for each row, the letter of the run it lies in. The block becomes a cyclic word of run letters, one per row. A step then replaces every occurrence of one adjacent pair of letters, a <strong>digram</strong>, with a new letter, which is how the compressor RePair works too. A digram's occurrences fill one cell, so a step handles them all at once. Each cell's edges are <strong>boundaries</strong>. A “free” step here means that its bookkeeping creates no new boundary; it still costs processor work.</p>
+<p>The favourable order takes available free steps first, then chooses the largest cell. Its count is 1.279 steps per run, compared with 1.812 for the right-end sweep.</p>
+<figure class="bf-fig" id="mv79-05-route-planning">
+<p class="bf-title">The planner is on the clock too</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 762" role="img" aria-labelledby="mv79-05-route-planning-title mv79-05-route-planning-desc">
+<title id="mv79-05-route-planning-title">The planner is on the clock too</title>
+<desc id="mv79-05-route-planning-desc">Two schematic warehouse routes compare a fixed sweep with a schedule that seeks free steps and otherwise the largest cell. Wikidata counts are 1.812 and 1.279 cell steps per run, with a model-specific floor of 1.220. Magnifying glasses show extra choice work. Route geometry and drawn stops are not a numeric scale.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">A shorter route can take longer</text><text x="20" y="70" class="bf-tm" text-anchor="start" style="font-size:24px">Count the stops. Also price the planning.</text><text x="20" y="119" class="bf-t-strong" text-anchor="start" style="font-size:24px">Fixed sweep</text><text x="20" y="155" class="bf-t-strong" text-anchor="start" style="font-size:30px">1.812 steps / run</text><path d="M40 207H490V259H40V311H490" fill="none" stroke="var(--bf-steel)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="90" cy="207" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="235" cy="207" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="400" cy="207" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="445" cy="259" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="290" cy="259" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="135" cy="259" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="90" cy="311" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="270" cy="311" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="450" cy="311" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><text x="20" y="359" class="bf-tm" text-anchor="start" style="font-size:24px">The next end is already chosen.</text><path d="M20 386H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="431" class="bf-t-strong" text-anchor="start" style="font-size:24px">No-new-boundary steps first</text><text x="20" y="469" class="bf-t-strong" text-anchor="start" style="font-size:30px">1.279 steps / run</text><path d="M40 522H240V578H420" fill="none" stroke="var(--bf-green)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="70" cy="522" r="6" fill="var(--bf-surface)" stroke="var(--bf-green)" stroke-width="3"/><circle cx="165" cy="522" r="6" fill="var(--bf-surface)" stroke="var(--bf-green)" stroke-width="3"/><circle cx="240" cy="560" r="6" fill="var(--bf-surface)" stroke="var(--bf-green)" stroke-width="3"/><circle cx="330" cy="578" r="6" fill="var(--bf-surface)" stroke="var(--bf-green)" stroke-width="3"/><circle cx="410" cy="578" r="6" fill="var(--bf-surface)" stroke="var(--bf-green)" stroke-width="3"/><circle cx="330" cy="517" r="18" fill="none" stroke="var(--bf-amber)" stroke-width="3"/><path d="M343 530l18 18" fill="none" stroke="var(--bf-amber)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="460" cy="518" r="18" fill="none" stroke="var(--bf-amber)" stroke-width="3"/><path d="M473 531l18 18" fill="none" stroke="var(--bf-amber)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="624" class="bf-tm" text-anchor="start" style="font-size:24px">Finding the next end has a cost.</text><path d="M20 652H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="694" class="bf-t-strong" text-anchor="start" style="font-size:25px">1.220 steps / run: the model’s floor</text><text x="20" y="735" class="bf-t-strong" text-anchor="start" style="font-size:27px">Fewer steps ≠ less elapsed time.</text>
+</svg>
+<figcaption>A stop is a cell step; the route is their order, and the magnifying glasses are the search for the next eligible step. The second order takes steps that create no new boundary first, otherwise the largest cell. These “free” steps still cost CPU work. The analogy breaks at distance: routes and drawn stops are schematic, not a scale of counts, memory distance or time; 1.220 is a lower bound for this cell-step model, not every inversion algorithm. A different worklist variant was priced higher from counts and estimated costs; it was not a timed comparison of these two orders.</figcaption>
+</figure>
+
+<p>The journal proves that <code>steps = initial cells − 1 + newly introduced boundaries</code>, where the initial cells number r₂, one per distinct digram. In the toy example, the union of both orders' cuts gives three initial cells. Two steps leave one, with no new boundary introduced. A step can also move an interval into the middle of another, which adds a cut that a later step must remove.</p>
+<p>So every order needs at least r₂ − 1 steps: (r₂ − 1)/r = 1.220 per run on Wikidata. The favourable order is about 29.4% below the right-end count and 4.8% above that floor.</p>
+<p>The floor applies only to this kind of step. The journal describes another operation outside it, fusion, which joins two letters that sit next to each other in both orders. On eight blocks it brings the best orders found to 1.223 steps per run pooled, and one of the eight ends 0.16% below its floor. So the floor is not a lower bound on inverse BWT itself.</p>
+<p>The fast cells kernel relies on sweeping the ends of its orders. In the version this post links to, an out-of-order step as built costs 152 instructions, against 64 for a step at the end. So an order with fewer steps is slower unless its steps can be found and taken cheaply. We have since counted, on ten blocks, a worklist: a queue of the steps that are ready, taking free steps wherever they occur. Its order takes 1.458 steps per run, not 1.279. To find each step it tests 2.25 ends of segments, the stretches of the orders it tracks, and two steps in three are in a different segment from the one before. Priced at the cells kernel's 64 instructions a cell, with the costs of a test and a move estimated, that comes to about 150 instructions per run against the right-end sweep's 115. This is a count and an estimate, not a timing.</p>
+<p>The same applies to parallel work. The steps can be grouped into rounds of steps that do not depend on each other, but within a round each merge's steps form a chain, a median 3,861 steps deep per block. So sixteen workers would need between 10.6 and 16 times fewer turns than one, before counting what it costs to hand work between them. Run sequentially, the round-based implementation's order and induction alone, without writing the bytes, took about 1.99 times as long as the column-based table build and walk, and no multi-worker run has been timed.</p>
+<h2 id="6-before-production">6. Before production<a class="headerlink" href="#6-before-production" title="Permanent link">&para;</a></h2>
+<p>The next comparison is the whole decoder, with the kernel in place of the shipped inversion stage. The kernel uses Rust's <code>unsafe</code> code and still needs an independent safety review, which the journal's tests do not replace. Inputs with short runs need a fallback to the walk, or a different reduction.</p>
+<p>The review of the research record has five parts: memory safety, citations, numbers, proofs, and a referee's reading for contradictions. The memory-safety part found the writer bug in §2. All five parts have reported and their corrections are in #351; a last check of those corrections is still running.</p>
+<p>Knowing that the grammar is the Lyndon tree suggests building the tree directly. Computing every rotation's rank first, though, could cost as much as the reconstruction this approach avoids.</p>
+<p>The open question is whether the Lyndon tree can be built more cheaply than by running the induction step by step. The order with fewer steps would help only if the kernel could find each step cheaply, which it cannot yet.</p>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../2026-11-12-rauzy-technical-companion/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Reconstructing text from compact programs">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Reconstructing text from compact programs
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../2026-11-09-pit-crew-service-threads/" class="md-footer__link md-footer__link--next" aria-label="Next: mibz2 gets a pit crew">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                mibz2 gets a pit crew
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      mibz2 is licensed under MIT OR Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    
+    <a href="https://github.com/lmmx/mibz2" target="_blank" rel="noopener" title="mibz2 on GitHub" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://pypi.org/project/mibz2/" target="_blank" rel="noopener" title="mibz2 on PyPI" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://crates.io/crates/mibz2" target="_blank" rel="noopener" title="mibz2 on crates.io" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="m508.5 249.8-21.8-13.5c-.2-2-.3-3.9-.5-5.9l18.7-17.5c.9-.9 1.6-1.9 2-3.1s.5-2.5.2-3.7-.8-2.4-1.6-3.3-1.8-1.7-3-2.1l-24-9c-.5-1.9-1.1-3.8-1.7-5.6l15-20.8c.7-1 1.2-2.2 1.3-3.4s0-2.5-.5-3.7-1.2-2.2-2.2-2.9-2.1-1.3-3.4-1.5l-25.4-4.2c-.9-1.7-1.8-3.4-2.7-5.2l10.7-23.4c.5-1.1.7-2.4.6-3.6s-.5-2.4-1.2-3.5-1.6-1.9-2.8-2.5-2.4-.8-3.6-.8l-25.8.9c-1.2-1.5-2.4-2.9-3.6-4.4l5.8-25.3c.3-1.2.3-2.5-.1-3.7s-1-2.3-1.9-3.2-2-1.5-3.2-1.9-2.5-.4-3.7-.1l-25.1 6c-1.4-1.2-2.9-2.4-4.4-3.6l.9-25.8c.1-1.3-.2-2.5-.8-3.6s-1.4-2.1-2.5-2.8-2.2-1.1-3.5-1.2-2.5.1-3.7.6l-23.3 10.7-5.1-2.7-4.2-25.4c-.2-1.2-.7-2.4-1.5-3.4s-1.8-1.7-2.9-2.2-2.4-.7-3.7-.5-2.4.6-3.4 1.3l-20.9 15c-1.9-.6-3.8-1.1-5.6-1.7l-9-24c-.4-1.2-1.2-2.2-2.1-3S307.2 5.2 306 5s-2.5-.2-3.7.2-2.3 1.1-3.1 2l-17.6 18.7c-2-.2-3.9-.4-5.9-.5L262.3 3.5c-.7-1.1-1.6-1.9-2.7-2.6S257.3 0 256 0s-2.5.3-3.6.9-2 1.5-2.7 2.6l-13.5 21.8c-2 .2-3.9.3-5.9.6L212.9 7.1c-.9-.9-1.9-1.6-3.1-2s-2.5-.5-3.7-.2-2.4.8-3.3 1.6-1.7 1.8-2.1 3l-9 24c-1.9.6-3.8 1.1-5.7 1.7l-20.8-15c-1-.7-2.2-1.2-3.4-1.3s-2.5 0-3.7.5-2.2 1.2-2.9 2.2-1.3 2.1-1.5 3.4l-4.2 25.4c-1.7.9-3.4 1.8-5.2 2.7l-23.4-10.5c-1.1-.5-2.4-.7-3.7-.6s-2.5.5-3.5 1.2-1.9 1.7-2.5 2.8-.8 2.4-.8 3.6l.9 25.8c-1.5 1.2-3 2.4-4.4 3.6l-25.1-6c-1.2-.3-2.5-.3-3.7.1s-2.3 1-3.2 1.9-1.5 2-1.9 3.2-.4 2.5-.1 3.7l6 25.1c-1.2 1.4-2.4 2.9-3.6 4.4l-25.8-.9c-1.3 0-2.5.2-3.6.8s-2.1 1.4-2.8 2.4-1.1 2.2-1.2 3.5.1 2.5.6 3.6l10.7 23.4c-.9 1.7-1.8 3.4-2.7 5.2l-25.4 4.1c-1.2.2-2.4.7-3.4 1.5s-1.7 1.8-2.2 2.9-.7 2.4-.5 3.7.6 2.4 1.3 3.4l15 20.8c-.6 1.9-1.1 3.8-1.7 5.7l-24 9c-1.2.4-2.2 1.2-3 2.1s-1.4 2.1-1.6 3.3-.2 2.5.2 3.7 1.1 2.3 2 3.1l18.7 17.5c-.2 2-.4 3.9-.6 5.9L3.5 249.8c-1.1.7-1.9 1.6-2.6 2.7s-.9 2.3-.9 3.6.3 2.5.9 3.6 1.5 2 2.6 2.7l21.8 13.5c.2 2 .3 3.9.6 5.9L7.1 299.1c-.9.9-1.6 1.9-2 3.1s-.5 2.5-.2 3.7.8 2.4 1.6 3.3 1.8 1.7 3 2.1l24 9c.6 1.9 1.1 3.8 1.7 5.6l-15 20.8c-.7 1-1.2 2.2-1.3 3.4s0 2.5.5 3.7 1.2 2.2 2.2 2.9 2.1 1.3 3.4 1.5l25.4 4.2 2.7 5.1-10.5 23.6c-.5 1.1-.7 2.4-.6 3.6s.5 2.5 1.2 3.5c.7 1.1 1.6 1.9 2.7 2.5s2.4.8 3.6.8l25.8-.9c1.2 1.5 2.4 2.9 3.6 4.4L73 430.2c-.3 1.2-.3 2.5.1 3.7s1 2.3 1.9 3.2 2 1.5 3.2 1.9 2.5.4 3.7.1l25.2-5.9c1.5 1.2 2.9 2.4 4.4 3.6l-.9 25.8c0 1.3.2 2.5.8 3.6s1.4 2.1 2.5 2.8 2.2 1.1 3.5 1.2 2.5-.1 3.6-.6l23.4-10.7 5.1 2.7 4.2 25.4c.2 1.2.7 2.4 1.5 3.4s1.8 1.8 2.9 2.2 2.4.7 3.7.5 2.4-.6 3.4-1.3l20.8-15c1.9.6 3.8 1.1 5.6 1.7l9 24c.4 1.2 1.2 2.2 2.1 3s2.1 1.4 3.3 1.6 2.5.2 3.7-.2 2.3-1.1 3.1-2l17.5-18.7c2 .2 3.9.4 5.9.6l13.5 21.8c.7 1.1 1.6 1.9 2.7 2.6s2.3.9 3.6.9 2.5-.3 3.6-.9 2-1.5 2.7-2.6l13.5-21.8c2-.2 3.9-.3 5.9-.6l17.5 18.7c.9.9 1.9 1.6 3.1 2s2.5.5 3.7.2 2.4-.8 3.3-1.6 1.7-1.8 2.1-3l9-24c1.9-.6 3.8-1.1 5.6-1.7l20.8 15c1 .7 2.2 1.2 3.4 1.3s2.5 0 3.7-.5 2.2-1.2 2.9-2.2 1.3-2.1 1.5-3.4l4.2-25.4 5.1-2.7 23.4 10.7c1.1.5 2.4.7 3.6.6s2.4-.5 3.5-1.2 1.9-1.6 2.5-2.8.8-2.4.8-3.6l-.9-25.8c1.5-1.2 2.9-2.4 4.4-3.6l25.2 5.9c1.2.3 2.5.3 3.7-.1s2.3-1 3.2-1.9 1.5-2 1.9-3.2.4-2.5.1-3.7l-5.9-25.2c1.2-1.4 2.4-2.9 3.6-4.4l25.8.9c1.3.1 2.5-.2 3.6-.8s2.1-1.4 2.8-2.5c.7-1 1.1-2.2 1.2-3.5s-.1-2.5-.6-3.6l-10.7-23.4 2.7-5.1 25.4-4.2c1.2-.2 2.4-.7 3.4-1.5s1.8-1.8 2.2-2.9.7-2.4.5-3.7-.6-2.4-1.3-3.4l-15-20.8c.6-1.9 1.1-3.8 1.7-5.6l24-9c1.2-.4 2.2-1.2 3-2.1s1.4-2.1 1.6-3.3.2-2.5-.2-3.7-1.1-2.3-2-3.1l-18.7-17.5c.2-1.9.4-3.9.6-5.9l21.8-13.5c1.1-.7 1.9-1.6 2.6-2.7s.9-2.3.9-3.6-.3-2.5-.9-3.6-1.5-2-2.6-2.7m-151 129.1c-3.6-.8-7.4-.1-10.5 1.9s-5.3 5.2-6 8.8l-7.6 35.7c-24.6 11.1-51.3 16.8-78.3 16.7s-53.6-6.1-78.1-17.4l-7.6-35.7c-.4-1.8-1.1-3.5-2.1-5s-2.4-2.8-3.9-3.8-3.2-1.7-5-2-3.6-.3-5.4.1l-31.5 6.8c-5.8-6-11.3-12.5-16.3-19.2h153.2c1.7 0 2.9-.3 2.9-1.9v-54.2c0-1.6-1.2-1.9-2.9-1.9h-44.8v-34.4h48.5c4.4 0 23.7 1.3 29.8 25.9 1.9 7.5 6.2 32.1 9.1 40 2.9 8.8 14.6 26.5 27.1 26.5h79c-5.3 7.1-11.1 13.8-17.3 20.1l-32.1-6.9zm25.8 34.5c0 3-.9 6-2.6 8.5s-4 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .8-8.8 3.1-5.2 5.6-6.9 5.4-2.6 8.5-2.6h.4c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zm-225.6-.7c0 3-.9 6-2.6 8.5s-4.1 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .9-8.8 3.1-5.2 5.6-6.8 5.4-2.6 8.5-2.6h.5c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zM69.6 234.2l32.8-14.6c1.7-.7 3.2-1.8 4.4-3.1s2.2-2.9 2.9-4.6 1-3.5.9-5.3-.5-3.6-1.2-5.3l-6.8-15.2h26.6v119.7H75.6c-6.6-23.2-8.7-47.6-6.1-71.6zm-11.3-36.1c0-2 .4-4 1.2-5.8s1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.5c3 .1 5.9 1 8.3 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4.1-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zm155.2 24.5v-35.3h63.3c3.3 0 23.1 3.8 23.1 18.6 0 12.3-15.2 16.7-27.7 16.7zM399 306.7c-9.8 1.1-20.6-4.1-22-10.1-5.8-32.5-15.4-39.4-30.6-51.4 18.9-12 38.5-29.6 38.5-53.3 0-25.5-17.5-41.6-29.4-49.5-16.8-11-35.3-13.2-40.3-13.2H116.3c27.5-30.7 64.4-51.5 104.9-59.2l23.5 24.6c1.3 1.3 2.8 2.4 4.4 3.1s3.5 1.1 5.3 1.2 3.6-.3 5.3-.9 3.2-1.7 4.6-2.9l26.3-25c26.8 5 52.1 15.8 74.3 31.6s40.6 36.2 54.1 59.9l-18 40.6c-1.5 3.4-1.5 7.2-.2 10.6s3.9 6.2 7.3 7.7l34.6 15.3c1.1 10.8 1.2 21.7.4 32.5h-19.3c-1.9 0-2.7 1.3-2.7 3.1v8.8c0 20.8-11.7 25.3-22 26.5zM240 60.2c0-4 1.6-7.9 4.5-10.7s6.7-4.5 10.7-4.5h.4c3 .1 5.9 1 8.4 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zM436.8 214c-2 0-4-.4-5.8-1.2s-3.5-1.9-4.9-3.3-2.5-3.1-3.3-4.9-1.2-3.8-1.2-5.8.4-4 1.2-5.8 1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.4c4 .1 7.9 1.7 10.7 4.6s4.4 6.8 4.3 10.8-1.7 7.9-4.6 10.7-6.8 4.4-10.8 4.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://lmmx.github.io/mibz2/background/behind-the-scenes/" target="_blank" rel="noopener" title="Behind the scenes" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-telescope" viewBox="0 0 24 24"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44M13.56 11.747l4.332-.924M16 21l-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455zM6.158 8.633l1.114 4.456M8 21l3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.copy","content.action.edit","content.code.copy","content.tabs.link","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.top","search.highlight","search.suggest","toc.follow"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+        <script src="../../assets/javascripts/bench.js?v=739e56f99c91"></script>
+      
+        <script src="../../assets/javascripts/couriers.js?v=739e56f99c91"></script>
+      
+        <script src="../../assets/javascripts/blog.js?v=739e56f99c91"></script>
+      
+        <script src="../../assets/javascripts/frontier.js?v=739e56f99c91"></script>
+      
+        <script src="../../assets/javascripts/observatory.js?v=739e56f99c91"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      
+        <script src="../../assets/javascripts/katex.js?v=739e56f99c91"></script>
+      
+    
+  </body>
+</html>
