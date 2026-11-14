@@ -3039,6 +3039,13 @@
       "delivery_id": "3e869130-dfbf-11f1-8757-d1175aa12a4a",
       "comment_updated_at": "2026-11-14T00:06:29Z",
       "disposition": "Own LOG read back/verified; self wake ignored without replay."
+    },
+    "6868355345": {
+      "status": "in_progress",
+      "delivery_id": "23a0d0e0-dfc1-11f1-847a-0e66c915dbb4",
+      "comment_updated_at": "2026-11-14T00:20:03Z",
+      "planned_action": "Park undispatched6868132662 to avoid overlap with reported manually active Codex lane; record notice, not completion or owner-authority expansion; bounded Observer record update then disposition LOG.",
+      "recipient_cursor": "0f053f617f05f869312afbaaf0b49def0930050d"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3221,8 +3228,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6868102448,
-    "delivery_id": "e030a260-dfbe-11f1-9bf0-024e63f501e9"
+    "comment_id": 6868355345,
+    "delivery_id": "23a0d0e0-dfc1-11f1-847a-0e66c915dbb4"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -4868,11 +4875,11 @@
     "postmerge_packaging": "skipped43323058112 existing condition; source-head packaging pass"
   },
   "monitor_policy_verification": {
-    "observed_master_sha": "3e7e294cc10f29495e9828181345d74233c549d4",
+    "observed_master_sha": "6dec95ba6aaf59d5134e5ab119fd52433e2032ee",
     "adopted_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "all_nine_policy_blobs_match_adopted_pin": true,
     "current_router_matches": true,
-    "audit": "Current coord.py audit exit0 with fresh channel, Codex/Observer cursors and previous unchanged inbox snapshot; six resolved historical misroutes. No dispatch this run.",
+    "audit": "Current exact router992ea5ae audit exit0; fresh channel, all seven inboxes and role cursors; six resolved historical misroutes. Codex still routes QUEUED on6848164049. No return of control observed.",
     "activation_reused": 6782075529,
     "return_of_control_observed": false,
     "policy_blob_shas": {
@@ -4886,7 +4893,7 @@
       "docs/team/COORDINATOR-FAILOVER.md": "b9aa2d1349cc942caa64551cafd842eb1d9c7a9d",
       "CLAUDE.md": "ea12fe507c7a451bc14d2e9aeab3d25ce6227965"
     },
-    "last_event_comment_id": 6862685593
+    "last_event_comment_id": 6868355345
   },
   "operator_evidence_373": {
     "status": "correction_complete_current_head_green_historical_discrepancies_retained",
