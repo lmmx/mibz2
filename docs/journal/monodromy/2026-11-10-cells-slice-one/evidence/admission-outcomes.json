@@ -1,0 +1,783 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 102.506679731,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.154834987,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:311:20: replace && with || in Kernel::slots",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::slots",
+            "return_type": "-> Result<(), Refusal>",
+            "span": {
+              "start": {
+                "line": 283,
+                "column": 5
+              },
+              "end": {
+                "line": 446,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 311,
+              "column": 20
+            },
+            "end": {
+              "line": 311,
+              "column": 22
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_311_col_20.log",
+      "diff_path": "diff/src__cells.rs_line_311_col_20.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 15.768589222,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.124314755,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:311:12: delete ! in Kernel::slots",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::slots",
+            "return_type": "-> Result<(), Refusal>",
+            "span": {
+              "start": {
+                "line": 283,
+                "column": 5
+              },
+              "end": {
+                "line": 446,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 311,
+              "column": 12
+            },
+            "end": {
+              "line": 311,
+              "column": 13
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_311_col_12.log",
+      "diff_path": "diff/src__cells.rs_line_311_col_12.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 14.811164742,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.050988998,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:311:39: replace >= with < in Kernel::slots",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::slots",
+            "return_type": "-> Result<(), Refusal>",
+            "span": {
+              "start": {
+                "line": 283,
+                "column": 5
+              },
+              "end": {
+                "line": 446,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 311,
+              "column": 39
+            },
+            "end": {
+              "line": 311,
+              "column": 41
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_311_col_39.log",
+      "diff_path": "diff/src__cells.rs_line_311_col_39.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 10.212275797,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.104164477,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:311:34: replace * with + in Kernel::slots",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::slots",
+            "return_type": "-> Result<(), Refusal>",
+            "span": {
+              "start": {
+                "line": 283,
+                "column": 5
+              },
+              "end": {
+                "line": 446,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 311,
+              "column": 34
+            },
+            "end": {
+              "line": 311,
+              "column": 35
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_311_col_34.log",
+      "diff_path": "diff/src__cells.rs_line_311_col_34.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 10.833983209,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.100946635,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:311:34: replace * with / in Kernel::slots",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::slots",
+            "return_type": "-> Result<(), Refusal>",
+            "span": {
+              "start": {
+                "line": 283,
+                "column": 5
+              },
+              "end": {
+                "line": 446,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 311,
+              "column": 34
+            },
+            "end": {
+              "line": 311,
+              "column": 35
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_311_col_34_001.log",
+      "diff_path": "diff/src__cells.rs_line_311_col_34_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.066779663,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.103879534,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:442:24: replace > with == in Kernel::slots",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::slots",
+            "return_type": "-> Result<(), Refusal>",
+            "span": {
+              "start": {
+                "line": 283,
+                "column": 5
+              },
+              "end": {
+                "line": 446,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 442,
+              "column": 24
+            },
+            "end": {
+              "line": 442,
+              "column": 25
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_442_col_24.log",
+      "diff_path": "diff/src__cells.rs_line_442_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 7.99096951,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.101264228,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:442:24: replace > with < in Kernel::slots",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::slots",
+            "return_type": "-> Result<(), Refusal>",
+            "span": {
+              "start": {
+                "line": 283,
+                "column": 5
+              },
+              "end": {
+                "line": 446,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 442,
+              "column": 24
+            },
+            "end": {
+              "line": 442,
+              "column": 25
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_442_col_24_001.log",
+      "diff_path": "diff/src__cells.rs_line_442_col_24_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 8.633833255,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.050980351,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:442:24: replace > with >= in Kernel::slots",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::slots",
+            "return_type": "-> Result<(), Refusal>",
+            "span": {
+              "start": {
+                "line": 283,
+                "column": 5
+              },
+              "end": {
+                "line": 446,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 442,
+              "column": 24
+            },
+            "end": {
+              "line": 442,
+              "column": 25
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_442_col_24_002.log",
+      "diff_path": "diff/src__cells.rs_line_442_col_24_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 8.046020826,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.101298254,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:442:20: replace - with + in Kernel::slots",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::slots",
+            "return_type": "-> Result<(), Refusal>",
+            "span": {
+              "start": {
+                "line": 283,
+                "column": 5
+              },
+              "end": {
+                "line": 446,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 442,
+              "column": 20
+            },
+            "end": {
+              "line": 442,
+              "column": 21
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_442_col_20.log",
+      "diff_path": "diff/src__cells.rs_line_442_col_20.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 10.051044922,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051061939,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:442:20: replace - with / in Kernel::slots",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::slots",
+            "return_type": "-> Result<(), Refusal>",
+            "span": {
+              "start": {
+                "line": 283,
+                "column": 5
+              },
+              "end": {
+                "line": 446,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 442,
+              "column": 20
+            },
+            "end": {
+              "line": 442,
+              "column": 21
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_442_col_20_001.log",
+      "diff_path": "diff/src__cells.rs_line_442_col_20_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.505886864,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.201370352,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/cells.rs:538:30: replace == with != in Kernel::induce_cells",
+          "package": "mibz2",
+          "file": "src/cells.rs",
+          "function": {
+            "function_name": "Kernel::induce_cells",
+            "return_type": "-> Result<(u32, u32, usize), Refusal>",
+            "span": {
+              "start": {
+                "line": 448,
+                "column": 5
+              },
+              "end": {
+                "line": 610,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 538,
+              "column": 30
+            },
+            "end": {
+              "line": 538,
+              "column": 32
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__cells.rs_line_538_col_30.log",
+      "diff_path": "diff/src__cells.rs_line_538_col_30.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 8.697014409,
+          "process_status": "Success",
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=mibz2@0.2.9"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051411541,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/workspace/.mibz2-tools/rustup/toolchains/1.90.0-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=mibz2@0.2.9",
+            "--lib",
+            "cells::tests"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 11,
+  "missed": 0,
+  "caught": 11,
+  "timeout": 0,
+  "unviable": 0,
+  "success": 0,
+  "start_time": "2026-11-10T19:03:28.311874965Z",
+  "end_time": "2026-11-10T19:06:56.081960083Z",
+  "cargo_mutants_version": "27.1.0"
+}

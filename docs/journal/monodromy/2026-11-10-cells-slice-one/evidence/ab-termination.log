@@ -1,0 +1,12 @@
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+     Running unittests examples/ab.rs (target/debug/examples/ab-b216c51d610e8729)
+
+running 1 test
+r0 c            t=2 ok@/tmp/ab-term-91073/ok wall   0.500 cpu   0.500 rss     0MB others 0.00 steal 0.0% 
+r0 c            t=2 seventeen@/tmp/ab-term-91073/seventeen wall   0.500 cpu   0.500 rss     0MB others 0.00 steal 0.0% 
+r0 c            t=2 killed@/tmp/ab-term-91073/killed wall   0.500 cpu   0.500 rss     0MB others 0.00 steal 0.0% 
+r0 c            t=2 empty@/tmp/ab-term-91073/empty wall     NaN cpu     NaN rss   NaNMB others 0.00 steal 0.0% 
+test tests::the_run_records_each_childs_termination ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.83s
+

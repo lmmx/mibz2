@@ -1,0 +1,3 @@
+Found 11 mutants to test
+ok       Unmutated baseline in 102s build + 0s test
+11 mutants tested in 3m: 11 caught

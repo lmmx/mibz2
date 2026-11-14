@@ -1,0 +1,24 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2/work/f01/mutations/tree)
+    Finished `test` profile [optimized + debuginfo] target(s) in 5.06s
+  Executable unittests src/lib.rs (/workspace/mibz2/work/f01/mutations/target/debug/deps/mibz2-1352189059084a74)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (/workspace/mibz2/work/f01/mutations/target/debug/deps/mibz2-1352189059084a74)
+
+running 1 test
+test cells::tests::cells_exhaustive_arbitrary_columns ... FAILED
+
+failures:
+
+---- cells::tests::cells_exhaustive_arbitrary_columns stdout ----
+
+thread 'cells::tests::cells_exhaustive_arbitrary_columns' (3795) panicked at src/cells.rs:843:14:
+called `Result::unwrap()` on an `Err` value: Budget
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    cells::tests::cells_exhaustive_arbitrary_columns
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 105 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`
