@@ -2,12 +2,10 @@
 # Prepared recipe only. Execution requires the Coordinator's separate PROTOCOL9 steps.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
-if [ "$#" -ne 2 ]; then
-  echo "usage: run.sh CPU CORPUS_DIRECTORY" >&2
+if [ "$#" -ne 0 ] && [ "$#" -ne 2 ]; then
+  echo "usage: run.sh [CPU CORPUS_DIRECTORY]" >&2
   exit 2
 fi
-CPU=$1
-CORPUS=$(realpath "$2")
 mkdir -p target/cells-live-path
 DIR="target/cells-live-path/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir "$DIR"
@@ -19,7 +17,16 @@ finish() {
   exit "$result"
 }
 trap finish EXIT
-# Input/source/build failures are preserved; no retry or automatic fetch/corpus replay.
+if [ "$#" -eq 0 ]; then
+  # Preparation only: no measured decode, extra warmup or changed driver schedule.
+  python3 bench/cells-gap/live/workstation.py "$DIR"
+  CPU=$(cat "$DIR/cpu")
+  CORPUS=$(realpath "$DIR/inputs")
+else
+  CPU=$1
+  CORPUS=$(realpath "$2")
+fi
+# All preparation/build/driver failures retain one submit-compatible evidence bundle.
 if [ ! -d bench/cells-gap/live/.source ]; then
   python3 bench/cells-gap/live/prepare.py
 fi

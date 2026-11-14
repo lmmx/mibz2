@@ -13,10 +13,85 @@ from pathlib import Path
 from unittest import mock
 
 import driver
+import workstation
 import build as builder
 
 
 class DriverTests(unittest.TestCase):
+    def test_workstation_installs_only_missing_frozen_toolchain(self):
+        for missing in (False, True):
+            with mock.patch.object(workstation.subprocess, "run") as run:
+                run.return_value.returncode = int(missing)
+                workstation.ensure_toolchain()
+                self.assertEqual(run.call_count, 3 if missing else 2)
+                if missing:
+                    self.assertEqual(
+                        run.call_args_list[1].args[0],
+                        ["rustup", "toolchain", "install", "1.99.1", "--profile", "minimal"],
+                    )
+                self.assertEqual(run.call_args.args[0], ["rustup", "run", "1.99.1", "rustc", "-Vv"])
+                self.assertTrue(run.call_args.kwargs["check"])
+
+    def test_workstation_cpu_selection_is_noninteractive_and_allowed(self):
+        with (
+            mock.patch.object(workstation.os, "sched_getaffinity", return_value={9, 7}),
+            mock.patch.object(workstation.Path, "read_text", return_value="fixture"),
+            mock.patch.object(workstation.subprocess, "check_output", return_value="fixture"),
+        ):
+            record = workstation.machine()
+        self.assertEqual(record["selected_cpu"], 7)
+        self.assertEqual(record["allowed_cpus"], [7, 9])
+        self.assertIn("thread_siblings_list", record["topology"])
+        with mock.patch.object(workstation.os, "sched_getaffinity", return_value=set()):
+            with self.assertRaisesRegex(ValueError, "no allowed"):
+                workstation.machine()
+
+    def test_workstation_staging_validates_copies_and_never_overwrites_attempt(self):
+        import hashlib
+
+        fixture = {name: name.encode() for name in driver.DIGESTS}
+        identities = {name: hashlib.sha256(data).hexdigest() for name, data in fixture.items()}
+
+        def generate(path):
+            path.mkdir()
+            for name in ("pattern", "onebyte"):
+                (path / f"{name}.bz2").write_bytes(fixture[name])
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "corpora").mkdir()
+            canonical = root / "corpora/wikidata.bz2"
+            canonical.write_bytes(fixture["wikidata"])
+            with (
+                mock.patch.object(workstation, "DIGESTS", identities),
+                mock.patch.object(workstation, "generate", side_effect=generate),
+                mock.patch.object(
+                    workstation, "ensure_object", side_effect=AssertionError("cache")
+                ),
+            ):
+                result = workstation.stage_inputs(root / "staged", root)
+                self.assertEqual(result["sha256"], identities)
+                self.assertEqual(
+                    (root / "staged/wikidata.bz2").read_bytes(), canonical.read_bytes()
+                )
+                with self.assertRaises(FileExistsError):
+                    workstation.stage_inputs(root / "staged", root)
+                fixture["pattern"] = b"corrupt"
+                with self.assertRaisesRegex(ValueError, "staged corpus"):
+                    workstation.stage_inputs(root / "bad", root)
+
+    def test_workstation_preflight_retained_on_staging_failure(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            with (
+                mock.patch.object(workstation, "machine", return_value={"selected_cpu": 7}),
+                mock.patch.object(workstation, "stage_inputs", side_effect=ValueError("input")),
+                self.assertRaisesRegex(ValueError, "input"),
+            ):
+                workstation.prepare(root)
+            self.assertEqual(json.loads((root / "preflight.json").read_text())["selected_cpu"], 7)
+            self.assertFalse((root / "cpu").exists())
+
     def test_submit_discovers_success_and_failure_bundles(self):
         just = shutil.which("just")
         if just is None:
@@ -24,8 +99,17 @@ class DriverTests(unittest.TestCase):
                 self.fail("real Just required")
             self.skipTest("real Just unavailable")
         source = driver.HERE.parents[2]
-        for child_exit in (0, 19):
-            with self.subTest(child_exit=child_exit), tempfile.TemporaryDirectory() as d:
+        for queued, prep_exit, child_exit in (
+            (False, 0, 0),
+            (False, 0, 19),
+            (True, 0, 0),
+            (True, 0, 19),
+            (True, 23, 0),
+        ):
+            with (
+                self.subTest(queued=queued, prep_exit=prep_exit, child_exit=child_exit),
+                tempfile.TemporaryDirectory() as d,
+            ):
                 root = Path(d)
                 subprocess.run(["git", "init", "-q", str(root)], check=True)
                 shutil.copy2(source / "Justfile", root / "Justfile")
@@ -51,6 +135,14 @@ class DriverTests(unittest.TestCase):
                     "    path.mkdir()\n"
                     "    (path / 'stand-in.txt').write_text('no decoder executed')\n"
                     "    sys.exit(int(os.environ['CHILD_EXIT']))\n"
+                    "elif sys.argv[1].endswith('workstation.py'):\n"
+                    "    assert os.environ['RUSTUP_TOOLCHAIN'] == '1.99.1'\n"
+                    "    path = pathlib.Path(sys.argv[2])\n"
+                    "    (path / 'preflight.json').write_text('retained preparation')\n"
+                    "    if int(os.environ['PREP_EXIT']):\n"
+                    "        sys.exit(int(os.environ['PREP_EXIT']))\n"
+                    "    (path / 'inputs').mkdir()\n"
+                    "    (path / 'cpu').write_text('7')\n"
                     "else:\n"
                     "    raise AssertionError(sys.argv)\n"
                 )
@@ -59,17 +151,21 @@ class DriverTests(unittest.TestCase):
                 corpus = root / "corpus"
                 corpus.mkdir()
                 result = subprocess.run(
-                    [just, "submit", "bench-cells-live-path", "7", str(corpus)],
+                    [just, "submit", "bench-cells-live-path-i9"]
+                    if queued
+                    else [just, "submit", "bench-cells-live-path", "7", str(corpus)],
                     cwd=root,
                     env=dict(
                         os.environ,
                         PATH=str(tools) + os.pathsep + os.environ["PATH"],
                         CHILD_EXIT=str(child_exit),
+                        PREP_EXIT=str(prep_exit),
                     ),
                     capture_output=True,
                     text=True,
                 )
-                self.assertEqual(result.returncode == 0, child_exit == 0, result.stderr)
+                expected_exit = prep_exit or child_exit
+                self.assertEqual(result.returncode == 0, expected_exit == 0, result.stderr)
                 bundles = list(root.glob("target/*/*.tar.gz"))
                 self.assertEqual(len(bundles), 1, result.stdout + result.stderr)
                 self.assertEqual(
@@ -78,9 +174,14 @@ class DriverTests(unittest.TestCase):
                 with tarfile.open(bundles[0]) as bundle:
                     stamp = bundles[0].name.removesuffix(".tar.gz")
                     self.assertEqual(
-                        bundle.extractfile(stamp + "/exit").read().strip(), str(child_exit).encode()
+                        bundle.extractfile(stamp + "/exit").read().strip(),
+                        str(expected_exit).encode(),
                     )
-                    self.assertIn(stamp + "/attempt/stand-in.txt", bundle.getnames())
+                    if prep_exit:
+                        self.assertNotIn(stamp + "/attempt/stand-in.txt", bundle.getnames())
+                        self.assertIn(stamp + "/preflight.json", bundle.getnames())
+                    else:
+                        self.assertIn(stamp + "/attempt/stand-in.txt", bundle.getnames())
 
     def test_missing_build_parent_and_no_overwrite(self):
         with (

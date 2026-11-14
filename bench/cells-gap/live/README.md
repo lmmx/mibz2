@@ -5,6 +5,29 @@ Dispatch [363/6819644553](https://github.com/lmmx/mibz2/issues/363#issuecomment-
 [validation, safety scope and dependencies](../../../docs/journal/2026-11-12-cells-live/HANDOFF.md).
 This is a diagnostic preparation, not a ready workstation job or production qualification.
 
+## Noninteractive workstation binding
+
+`bench-cells-live-path-i9` is the argument-free queue recipe. It selects Rust1.99.1
+and stages all three hash-checked inputs under the new attempt's `inputs/` directory.
+The existing generator creates pattern and onebyte. A verified canonical
+`corpora/wikidata.bz2` is copied; otherwise the existing `../corpus.py` reconstructs
+it from windows pinned at `a0692452b67ec3a8833e1fc4adf58a4f09cd9e6a`, validating
+their hashes and streams. This input construction is outside the diagnostic's
+unchanged nine oracle/check jobs and 120 measured children; it adds no warmup.
+
+The fixed CPU rule is the lowest logical CPU in the process's current allowed
+affinity set. Selection is noninteractive and read-only: `preflight.json` records
+the allowed set, selected CPU, core/socket/sibling topology, lscpu output, input
+identities and preparation-source hashes. The driver rechecks affinity and pins
+every child to that CPU. No archived CPU ID or corpus path is used. Missing pinned
+Git objects are fetched by exact SHA before building; a missing Rust1.99.1 toolchain
+is installed without changing the user's default. Compiler/source checks stay
+unchanged. Preparation failures retain the usual single submission bundle.
+
+This binding requires exact-head green CI, Coordinator recipe review and the normal
+PROTOCOL9 ready tag/queue admission before the owner runs `just workstation-queue`.
+The parameterised recipe remains available with its existing two arguments.
+
 This subcrate extends #367 without replacing its source or evidence. `prepare.py`
 materializes corrected #365 **d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2** from Git,
 then inserts feature-gated safe hooks into that private source tree. The generator
