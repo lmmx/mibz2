@@ -28,6 +28,12 @@ jobs:
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
+      # the Cells memory-dose experiment's research build (src/dose.rs, #145 LOG 6879466310):
+      # with a nonzero dose of each kind, byte-identical through the Workers plan, and engaging
+      - name: The dose build (research feature)
+        run: |
+          MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
+          MIBZ2_DOSE_MB=1 MIBZ2_DOSE_KIND=chase cargo test --features dose --test dose
       # the guarded service A/B's judge, with its producer driven for real: `ab run` with
       # stand-in children that succeed, exit 17, are killed or write nothing, each record judged
       - name: The guarded service A/B's producer and judge (stand-in children, untimed)
@@ -83,6 +89,9 @@ jobs:
       - uses: actions/checkout@v6
       - name: Submission tests
         run: python3 bench/test_submit.py
+      # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
+      - name: The dose experiment's verdict
+        run: python3 bench/test_dose.py
       # bench-par-scan's reporter, input anchoring and step supervisor (docs/journal/2026-11-10-parallel-scan.md)
       - name: The scan diagnostic's reporter, inputs and supervisor
         run: pipx run pytest -p no:cacheprovider bench/test_par_scan_knee.py bench/test_par_scan_inputs.py bench/test_bounded.py bench/test_par_scan_finish.py

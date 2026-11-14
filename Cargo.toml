@@ -49,6 +49,10 @@ wait-stats = []
 # engagement diagnostic (docs/journal/2026-11-10-staged-engagement-diagnostic-draft.md); off
 # by default, and without it every count compiles away
 walk-stats = []
+# Research only: the Cells memory-dose experiment (src/dose.rs; #145, LOG 6879466310). Each
+# block Cells admits in invert_runs also streams through MIBZ2_DOSE_MB MB (set at compile
+# time, default 0) of per-kernel scratch; off by default, and without it nothing changes
+dose = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
