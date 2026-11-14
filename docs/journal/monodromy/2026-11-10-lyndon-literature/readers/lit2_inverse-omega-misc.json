@@ -1,0 +1,391 @@
+{
+ "bibliography": [
+  {
+   "key": "BDZZ18",
+   "authors": "Paola Bonizzoni; Clelia De Felice; Rocco Zaccagnino; Rosalba Zizza",
+   "title": "Inverse Lyndon words and inverse Lyndon factorizations of words",
+   "venue": "Advances in Applied Mathematics 101, pp. 281-319",
+   "year": "2018",
+   "doi": "10.1016/j.aam.2018.08.005",
+   "arxiv": "1705.10277 (v7 read)",
+   "url": "https://arxiv.org/abs/1705.10277",
+   "locator": "Journal: Adv. Appl. Math. 101 (Oct 2018) 281-319 (Crossref). Preprint: arXiv:1705.10277v7 [cs.FL], submitted 29 May 2017, v7 17 Dec 2017 (arXiv API; its record carries the journal reference and DOI). All theorem numbers below are those of arXiv v7.",
+   "scholar_entries": "\"[HTML] Inverse Lyndon words and inverse Lyndon factorizations of words\" (P Bonizzoni, C De Felice, R Zaccagnino... - Advances in Applied ..., 2018 - Elsevier)",
+   "source_of_record": "Crossref API record of the DOI (authors, volume, pages, date); arXiv API record and the arXiv v7 PDF (read: abstract, sections 1-4, 6.1, 7).",
+   "one_line": "Defines inverse Lyndon words (greater than every proper suffix), shows they are the sesquipowers of anti-Lyndon words (Lyndon words for the inverse alphabet order), and defines the canonical inverse Lyndon factorization ICFL(w): unique, linear time, a grouping of the Lyndon factorization for the inverse order.",
+   "unverified": "The Elsevier page was not fetched (403); the journal's own theorem numbering was not checked against arXiv v7."
+  },
+  {
+   "key": "BDZZ20",
+   "authors": "Paola Bonizzoni; Clelia De Felice; Rocco Zaccagnino; Rosalba Zizza",
+   "title": "Lyndon words versus inverse Lyndon words: queries on suffixes and bordered words (conference, arXiv) = On the longest common prefix of suffixes in an inverse Lyndon factorization and other properties (journal)",
+   "venue": "LATA 2020, LNCS 12038, pp. 385-396; journal version Theoretical Computer Science 862, pp. 24-41",
+   "year": "2020 (conference), 2021 (journal)",
+   "doi": "10.1007/978-3-030-40608-0_27 (LATA); 10.1016/j.tcs.2020.10.034 (TCS)",
+   "arxiv": "1911.01851 (v1 read)",
+   "url": "https://arxiv.org/abs/1911.01851",
+   "locator": "Conference: Language and Automata Theory and Applications (LATA 2020), eds. Leporati, Martin-Vide, Shapira, Zandron, LNCS vol. 12038, Springer, pp. 385-396, first online 25 Feb 2020 (Springer chapter page). Journal: Theor. Comput. Sci. 862 (Mar 2021) 24-41 (Crossref). Preprint: arXiv:1911.01851v1, 2 Nov 2019, titled as the LATA paper; the arXiv record gives journal-ref 'Theoretical Computer Science, 2020' and the TCS DOI, which is why the two Scholar lines are merged as one work. Numbers below are arXiv v1's (the Springer page shows the bound as 'Proposition 6', Section 6, in the LATA text).",
+   "scholar_entries": "\"Lyndon words versus inverse Lyndon words: Queries on suffixes and bordered words\" (... Conference on Language ..., 2020 - Springer) AND \"[HTML] On the longest common prefix of suffixes in an inverse Lyndon factorization and other properties\" (Theoretical Computer Science, 2021 - Elsevier)",
+   "source_of_record": "Springer chapter page (LATA volume, pages, editors, abstract, section list); Crossref record of the TCS DOI; arXiv API record and arXiv v1 PDF (read: abstract, sections 1, 3, 7, 8, 9).",
+   "one_line": "Proves that in ICFL(w) a nonempty border of a factor is never a prefix of the next factor, and that the longest common prefix of any two factors of w is at most M = max |m_i m_{i+1}| over consecutive ICFL factors; also how the Lyndon factorization of a factor of w reuses that of w.",
+   "unverified": "The TCS text was not readable (ScienceDirect 403): that it is the journal version of the LATA paper rests on the arXiv record's journal-ref/DOI, not on the TCS page. LATA conference dates and place not shown on the page fetched."
+  },
+  {
+   "key": "BDZZ26",
+   "authors": "Paola Bonizzoni; Clelia De Felice; Rocco Zaccagnino; Rosalba Zizza",
+   "title": "From the Lyndon factorization to the canonical inverse Lyndon factorization: back and forth",
+   "venue": "Computability 15(1-2), pp. 152-176",
+   "year": "2026",
+   "doi": "10.1177/22113568251406824",
+   "arxiv": "2404.17969 (v1 read)",
+   "url": "https://arxiv.org/abs/2404.17969",
+   "locator": "Journal: Computability vol. 15, issue 1-2, pp. 152-176, issue dated May 2026, published online 5 Aug 2026, SAGE (Crossref). Preprint: arXiv:2404.17969v1, 27 Apr 2024. Numbers below are arXiv v1's.",
+   "scholar_entries": "\"From the Lyndon factorization to the canonical inverse Lyndon factorization: Back and forth\" (P Bonizzoni, C De Felice, R Zaccagnino... - Computability, 2026 - journals.sagepub.com)",
+   "source_of_record": "Crossref record of the DOI; arXiv API record and arXiv v1 PDF (read: abstract, sections 1, 8, 9 statements, 10).",
+   "one_line": "Gives both directions between CFL_in(w) (Lyndon factorization for the inverse order) and ICFL(w): CFL_in(w) is the concatenation of the 'unbordered border' decompositions NB(m_i) of the ICFL factors, and ICFL is computed locally inside the maximal prefix-chains of CFL_in; closes by naming BWT variants built on inverse Lyndon words as open.",
+   "unverified": "SAGE page not fetched (403); journal numbering not checked. The arXiv record does not itself carry the journal reference: the link arXiv <-> Computability is by identical title and authors only."
+  },
+  {
+   "key": "BDRZZ24",
+   "authors": "Paola Bonizzoni; Clelia De Felice; Brian Riccardi; Rocco Zaccagnino; Rosalba Zizza",
+   "title": "Unveiling the Connection Between the Lyndon Factorization and the Canonical Inverse Lyndon Factorization via a Border Property",
+   "venue": "MFCS 2024, LIPIcs 306, 31:1-31:14",
+   "year": "2024",
+   "doi": "10.4230/LIPIcs.MFCS.2024.31",
+   "arxiv": "2406.18473",
+   "url": "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.MFCS.2024.31",
+   "locator": "49th International Symposium on Mathematical Foundations of Computer Science (MFCS 2024), LIPIcs vol. 306, article 31, pp. 31:1-31:14, published 23 Aug 2024 (DROPS page). arXiv:2406.18473v2.",
+   "scholar_entries": "none (not in the pasted Scholar list; found through the arXiv listing of the same authors; a companion of BDZZ26, different author list)",
+   "source_of_record": "DROPS document page; arXiv API record. Abstract only.",
+   "one_line": "ICFL is the unique inverse Lyndon factorization with the border property, and is obtained in linear time by compacting factors of CFL_in (abstract only).",
+   "unverified": "Body not read."
+  },
+  {
+   "key": "LZJ22",
+   "authors": "Ruixi Luo; Taikun Zhu; Kai Jin",
+   "title": "String Rearrangement Inequalities and a Total Order Between Primitive Words (conference); extended journal version: Simple linear time algorithm for sorting strings in omega-order with applications",
+   "venue": "IJTCS-FAW 2022 (Frontiers of Algorithmic Wisdom), LNCS 13461, pp. 206-218; Acta Informatica 63, article 17",
+   "year": "2022 (conference; first online 1 Jan 2023), 2026 (journal)",
+   "doi": "10.1007/978-3-031-20796-9_15 (FAW); 10.1007/s00236-026-00530-5 (Acta Informatica)",
+   "arxiv": "2204.11213 (v1, the conference text; read in full). No arXiv record of the journal version was found (arXiv API searches by each author, 10 Nov 2026).",
+   "url": "https://arxiv.org/abs/2204.11213",
+   "locator": "Conference: Frontiers of Algorithmic Wisdom, IJTCS-FAW 2022, eds. Minming Li, Xiaoming Sun, LNCS vol. 13461, Springer, pp. 206-218, copyright 2022, first online 01 Jan 2023 (Springer chapter page; Crossref). Preprint: arXiv:2204.11213v1, 24 Apr 2022. Journal: Acta Informatica vol. 63, issue 2, article 17, published 15 Apr 2026, open access CC BY-NC-ND (Springer article page; issue number from Crossref); its publisher's note says it is an extended version of the IJTCS-FAW 2022 paper, which is why the lines are merged.",
+   "scholar_entries": "\"String Rearrangement Inequalities and a Total Order Between Primitive Words\" (... International Workshop on Frontiers in Algorithmics, 2022 - Springer); \"String Rearrangement Inequalities\" (... Joint Conference, IJTCS-FAW 2022, Hong ..., 2023 - books.google.com: the proceedings copy of the same chapter); \"Simple linear time algorithm for sorting strings in omega-order with applications\" (Acta Informatica, 2026 - Springer)",
+   "source_of_record": "Springer chapter page and Crossref (FAW); arXiv PDF v1 read in full; Springer article page of the Acta version, read through a fetch tool that returns a model's rendering of the page (three passes, with short verbatim quotes on the eBWT section); Crossref record.",
+   "one_line": "Sorts n words by their infinite powers (omega-order) in O(L), L the total length, by reducing to an ordinary sort of the powers M_i = A_i^(deg+2); smallest/largest concatenation of n words is the omega-sorted order; the journal version adds O(L+sigma) and O(L+n log n) variants and a section saying the extended BWT sorts all conjugates, which this algorithm does not.",
+   "unverified": "Acta received/accepted dates not shown; the Acta lemma numbers are as relayed by the fetch tool, not read in the raw PDF (direct download met a browser check and was not forced). FAW conference dates/place not fetched. The books.google page itself was not opened; it is matched by title, authors and venue string."
+  },
+  {
+   "key": "BIKKP22",
+   "authors": "Hideo Bannai; Tomohiro I; Tomasz Kociumaka; Dominik Koeppl; Simon J. Puglisi",
+   "title": "Computing Longest Lyndon Subsequences and Longest Common Lyndon Subsequences (journal); conference title: Computing Longest (Common) Lyndon Subsequences",
+   "venue": "Algorithmica 86(3), pp. 735-756; conference IWOCA 2022, LNCS 13270, pp. 128-142",
+   "year": "2022 (conference), 2024 (journal issue; online 6 May 2023)",
+   "doi": "10.1007/s00453-023-01125-z (Algorithmica); 10.1007/978-3-031-06678-8_10 (IWOCA)",
+   "arxiv": "2201.06773 (v1 read: abstract, sections 1-3)",
+   "url": "https://arxiv.org/abs/2201.06773",
+   "locator": "Conference: Combinatorial Algorithms (IWOCA 2022), LNCS, pp. 128-142, online 29 May 2022 (Crossref; volume 13270 as given on the Algorithmica page). Preprint: arXiv:2201.06773v1, 18 Jan 2022; also Research Square preprint DOI 10.21203/rs.3.rs-2118135/v1 (2022, Crossref). Journal: Algorithmica vol. 86, issue 3, pp. 735-756, published online 6 May 2023, print March 2024, open access (Springer page, Crossref).",
+   "scholar_entries": "\"Computing longest Lyndon subsequences and longest common Lyndon subsequences\" (H Bannai, TI, T Kociumaka, D Koppl, SJ Puglisi - Algorithmica, 2024 - Springer)",
+   "source_of_record": "Crossref records of both DOIs; arXiv API and PDF v1; Springer article page (abstract, extension note) through the fetch tool.",
+   "one_line": "Dynamic programming for the longest subsequence of T that is a Lyndon word: O(n^3) time and O(n) space offline, O(n^3) time and space online in the journal version, O(n^4 sigma) for the common variant; no BWT, no Lyndon tree. Nothing for the mission.",
+   "unverified": "IWOCA LNCS volume number is second-hand (Algorithmica page's reference)."
+  },
+  {
+   "key": "Wols26",
+   "authors": "Richard Wols",
+   "title": "Synchronous Combinatorial Games",
+   "venue": "Master thesis, Utrecht University (Mathematical Sciences); advisor W. Kets",
+   "year": "2026",
+   "url": "https://studenttheses.uu.nl/handle/20.500.12932/51048",
+   "locator": "Utrecht University student theses repository, handle 20.500.12932/51048, deposited 12 Feb 2026, open access CC-BY-NC-ND (repository API record). Chapter 7 'Absolute-Lyndon words', section 7.1, pp. 85-86 of the PDF.",
+   "scholar_entries": "\"Synchronous Combinatorial Games\" (R Wols - 2026 - studenttheses.uu.nl)",
+   "source_of_record": "Repository API record (metadata) and the thesis PDF (abstract and chapter 7 read).",
+   "one_line": "A game-theory thesis; it cites Dolce-Restivo-Reutenauer's generalized Lyndon words once, in a survey paragraph of Lyndon-word variants said to have no direct connection with its own 'absolute-Lyndon words' (binary words whose rotations pair with complemented Lyndon words), and conjectures, without construction, a bijective-BWT variant from those. Nothing for the mission.",
+   "unverified": ""
+  },
+  {
+   "key": "DNSZZ26",
+   "authors": "Clelia De Felice; Pietro Negri; Manuel Sica; Rocco Zaccagnino; Rosalba Zizza (arXiv:2609.23401); earlier version by Pietro Negri; Manuel Sica; Rocco Zaccagnino; Rosalba Zizza (arXiv:2603.17537)",
+   "title": "The Inverse Lyndon Array (2609.23401); The Inverse Lyndon Array: Definition, Properties, and Linear-Time Construction (2603.17537)",
+   "venue": "arXiv preprints (comment on 2609.23401: 'SOFSEM conference')",
+   "year": "2026",
+   "arxiv": "2609.23401v1 (20 Sep 2026); 2603.17537v1 (18 Mar 2026)",
+   "url": "https://arxiv.org/abs/2609.23401",
+   "locator": "arXiv:2609.23401v1, sections 1-3 read (Lemmas 2, 6, 7, 8, Corollary 1); arXiv:2603.17537v1 skimmed (Lemma 7, Lemma 10).",
+   "scholar_entries": "none (not in the pasted Scholar list; found in the arXiv search for 'inverse Lyndon'). Included because it is the nearest thing in print to question (a).",
+   "source_of_record": "arXiv API records and PDFs.",
+   "one_line": "For the inverse setting, the Lyndon array for the inverse order equals the distance to the next GREATER suffix, the next/previous-greater-suffix edges are non-crossing, and the inverse Lyndon array is that distance plus an LCE (border) term; O(n) on general ordered alphabets; ICFL from it in O(n). No tree is named.",
+   "unverified": "Whether the two arXiv records are versions of one paper (author lists differ) is my reading of titles and abstracts; no proceedings record fetched."
+  }
+ ],
+ "findings": [
+  {
+   "statement": "An anti-Lyndon word is a Lyndon word for the inverse alphabet order; equivalently a primitive word strictly greater than each of its conjugates, equivalently an unbordered word greater than each proper suffix. So the greatest rotation of a primitive word is, in print, its anti-Lyndon conjugate.",
+   "source_key": "BDZZ18",
+   "locator": "arXiv v7: Definition 2.3 (p. 5); Proposition 7.2 (p. 26); Proposition 7.3 (p. 27)",
+   "label": "K",
+   "bears_on": "H2; entry 5.6 (left end); question (a)"
+  },
+  {
+   "statement": "None of the four Bonizzoni et al. works builds or mentions a tree of an anti-Lyndon word, a standard factorization of one, a Cartesian tree, or the greatest rotation as a root: the word 'tree' occurs only in reference titles (Bannai et al., Hohlweg-Reutenauer); Hohlweg-Reutenauer is cited only for getting the Lyndon factorization from the suffix array.",
+   "source_key": "BDZZ18",
+   "locator": "arXiv v7 p. 2 (citation [17]); text search of arXiv 1705.10277v7, 1911.01851v1, 2404.17969v1, 2406.18473v2 for tree/Cartesian/standard factori/rotation",
+   "label": "K",
+   "bears_on": "H2; question (a)"
+  },
+  {
+   "statement": "Inverse Lyndon words (greater than every nonempty proper suffix) are exactly the strict sesquipowers (uv)^n u of anti-Lyndon words uv, i.e. the nonempty prefixes of powers of anti-Lyndon words; unlike Lyndon words they may be bordered and need not be primitive, so they are not a complete factorization of the free monoid and a word can have several inverse Lyndon factorizations.",
+   "source_key": "BDZZ18",
+   "locator": "arXiv v7: Definition 3.1 (p. 7); Section 4.1, Example 4.1 and the remark after it (p. 9); Propositions 7.15-7.21 (pp. 34-36)",
+   "label": "K",
+   "bears_on": "H2, H5 (no Hall-set structure on the inverse side); entry section 2 (powers)"
+  },
+  {
+   "statement": "ICFL(w) is defined recursively from the unique pair (p, p-bar) with p p-bar the shortest prefix of w that is no inverse Lyndon word; it is unique, an inverse Lyndon factorization m_1 << m_2 << ... << m_k, computable in O(n), and each m_i is a product of consecutive factors of CFL_in(w), the Lyndon factorization for the inverse order, that form a chain for the prefix order.",
+   "source_key": "BDZZ18",
+   "locator": "arXiv v7: Definition 4.2-4.3 (pp. 10, 14); Proposition 4.2, Lemma 4.9 (p. 15); Section 6.1 (p. 25); Proposition 7.13 (p. 32)",
+   "label": "K",
+   "bears_on": "question (b); H2 (what the left end's closed words are, in this vocabulary)"
+  },
+  {
+   "statement": "Compatibility: for u a product of consecutive ICFL factors (more generally of a grouping of CFL_in), the order for the inverse lexicographic order of the suffixes of u equals that of the corresponding suffixes of w. It fails for the ordinary order even for ICFL.",
+   "source_key": "BDZZ18",
+   "locator": "arXiv v7: Theorem 7.1, Corollary 7.2 (pp. 36-37); Example 7.5 (p. 37)",
+   "label": "K",
+   "bears_on": "entry section 8 item 7 (cutting work into independent parts): a text-side cut, not a cut of rows"
+  },
+  {
+   "statement": "Border property: if z is a nonempty border of the ICFL factor m_i, z is not a prefix of m_{i+1}. Bound: for w not an inverse Lyndon word and M = max |m_i m_{i+1}|, the longest common prefix of any two nonempty proper factors of w has length at most M; for two suffixes starting in one factor m_{i-1} the lcp does not pass the common prefix r of m_{i-1} and m_i.",
+   "source_key": "BDZZ20",
+   "locator": "arXiv v1: Proposition 7.5 (p. 14); Lemma 9.6 (p. 19); Propositions 9.1-9.2 (p. 21). LATA text: Section 6 'A Bound on the Length of the Longest Common Prefix', Proposition 6 (Springer page)",
+   "label": "K",
+   "bears_on": "question (b)"
+  },
+  {
+   "statement": "The ICFL bound is checked and is far from tight: ICFL computed from its definition reproduces 6 examples of the papers; on all 7,373 words (binary to length 11, ternary to 7) it is a grouping of CFL_in, and on the 5,602 with at least two factors max lcp <= M always, with equality on none.",
+   "source_key": "tested:tests.py (T4)",
+   "locator": "python3 -I /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/inverse-omega-misc/tests.py -> 'T4 ... (6, 7373, 7373, 5602, 0)'",
+   "label": "tested",
+   "bears_on": "question (b)"
+  },
+  {
+   "statement": "On block-like words M is of the order of n. Since every ICFL factor contains whole CFL_in factors, M >= the longest CFL_in factor: for the least rotation V of a 20,000-byte text sample that is 12,966 (0.648 n) against a longest repeat of 34 bytes; uniform 4 letters: 13,104 against 14; Fibonacci word n = 28,657: 10,946 (longest repeat 17,710); period 37 repeated: 42, but the longest repeat is 19,907, so M >= 19,907 there by the theorem. CFL_in(V) has 16 to 22 factors on the first three.",
+   "source_key": "tested:t6_icfl_bound.py",
+   "locator": "python3 -I .../inverse-omega-misc/t6_icfl_bound.py /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md 20000",
+   "label": "tested",
+   "bears_on": "question (b); entry 8 item 7"
+  },
+  {
+   "statement": "Answer to (b), plainly: no. An induction step compares two integers (lambda_A, lambda_B); no string is compared, so no lcp bound can shorten it. A merge's chain (entry 5.4) is a merge of two prefix sums of lengths; its depth is a count of letters, which a bound on word lengths does not touch. The only contact is that a letter with two or more rows has a word no longer than the longest repeat, which the lcp itself gives and M does not improve.",
+   "source_key": "BDZZ20",
+   "locator": "my inference from arXiv v1 Proposition 9.2 and the entry's sections 2, 5.2, 5.4",
+   "label": "Conj",
+   "bears_on": "question (b); entry 5.4, 8 item 7"
+  },
+  {
+   "statement": "CFL of a factor x of w reuses CFL(w): CFL(x) = (CFL(l''_i), l_{i+1}, ..., l_{j-1}, CFL(l'_j)), where x begins in a suffix l''_i of the factor l_i and ends in a prefix l'_j of l_j.",
+   "source_key": "BDZZ20",
+   "locator": "arXiv v1: Lemma 3.2 (p. 6), Lemma 3.3 (p. 7)",
+   "label": "K",
+   "bears_on": "H1 (how the bijective BWT's cycles for the emitted text T relate to those of a rotation); not used further"
+  },
+  {
+   "statement": "CFL_in(w) from ICFL(w): CFL_in(w) = (NB(m_1), ..., NB(m_k)) where NB(x) peels off the unique nonempty unbordered border repeatedly. ICFL from CFL_in: computed separately in each maximal chain for the prefix order; a chain whose product is an inverse Lyndon word is one factor, otherwise the canonical pair is read off the chain (equal leading factors, then the first factor that is no prefix of l_1).",
+   "source_key": "BDZZ26",
+   "locator": "arXiv v1: Proposition 8.2, Definition 8.1, Corollary 8.2 (pp. 9-11); Proposition 9.1 (p. 12); Propositions 9.7-9.8 (pp. 15-16)",
+   "label": "K",
+   "bears_on": "H2 vocabulary only"
+  },
+  {
+   "statement": "The authors name as open 'new bijective variants of the Burrows Wheeler Transform, based on multisets of inverse words instead of multisets of Lyndon words'. So an inverse/anti-Lyndon bijective BWT, and any inversion of one, is not in these papers.",
+   "source_key": "BDZZ26",
+   "locator": "arXiv v1: Section 10 Conclusions (p. 17); abstract",
+   "label": "K",
+   "bears_on": "H1, H2"
+  },
+  {
+   "statement": "Omega-order facts: A^w < B^w iff AB < BA (journal version credits this to Dolce-Restivo-Reutenauer, Corollary 11); if A^w != B^w the two differ within |A|+|B| letters (journal Lemma 4, called a relaxation of Proposition 5 of Mantaci et al.); on Lyndon words the omega-order is the lexicographic order; the Lyndon factorization is non-increasing for it too. The conference text said the order 'has not been reported in literature'; the journal text attributes it to Dolce et al. and names its use in the extended BWT.",
+   "source_key": "LZJ22",
+   "locator": "arXiv 2204.11213v1: Lemma 3 (p. 4), Lemma 7 (pp. 8-9), Section 1 and 1.1 (p. 2). Acta Informatica 63:17, Section 1.1, Lemma 3, Lemma 4 (as relayed by the fetch of the Springer page)",
+   "label": "K",
+   "bears_on": "H1 (the order in which cycles close)"
+  },
+  {
+   "statement": "Algorithm: replace each word by its primitive root (KMP failure function), drop duplicates, N_i = the largest power of A_i that is a path of the trie of all words, M_i = N_i A_i^2; the omega-order of the A_i is the lexicographic order of the M_i, and sum |N_i| = O(L). Time O(L) for a fixed alphabet (tries; O(sigma L) in general), O(L + sigma) for integer alphabets by radix sort and a Paige-Tarjan style refinement on shortest distinguishing prefixes, O(L + n log n) in the comparison model. Open: O(N), N the nodes of the given trie.",
+   "source_key": "LZJ22",
+   "locator": "arXiv v1: Definition 3, Lemmas 4-5, Theorems 1-2 (pp. 4-7), Section 6 (p. 9). Acta: Section 2 Lemmas 5-6, Theorem 1; Section 2.1 Theorem 2; Section 2.2 Theorem 3; Section 5 (relayed)",
+   "label": "K",
+   "bears_on": "question (c)"
+  },
+  {
+   "statement": "Answer to (c): no. The journal version says the extended BWT 'sorts all conjugates of the given words' in omega-order and returns a generalized suffix array, while its own algorithm sorts only the given words ('only the omega-order of the given words are needed, not the omega-order of all conjugates'); it does not claim to build an eBWT. Its cost is in the total length L in every model (the n log n term is additive); there is no bound in the number of words alone. Fed all L conjugates as words it would cost the sum of squares of the lengths. For conjugate sorting it points to Hon et al. (O(L log L)), Boucher et al. and Bannai et al. (O(L), induced sorting).",
+   "source_key": "LZJ22",
+   "locator": "Acta Informatica 63:17, Section 1.1 and Section 2.3 'Comparison with extended Burrows-Wheeler Transform' (two short quotes relayed verbatim by the fetch)",
+   "label": "K",
+   "bears_on": "question (c); H1"
+  },
+  {
+   "statement": "Applications named by Luo-Zhu-Jin: smallest and largest concatenation of n words (the omega-sorted order and its reverse; O(L)), the concatenation whose least rotation is smallest (O(L) with LCE queries, after Shiloach), choosing k of n words for the smallest concatenation (O(n k^2 + L) dynamic programme). No Lyndon factorization, no bijective BWT, no inversion.",
+   "source_key": "LZJ22",
+   "locator": "arXiv v1: Lemma 6, Corollary 1 (pp. 7-8). Acta: Theorem 4, Corollary 1 (Section 3); Section 4.1 Theorem 5; Section 4.2 (relayed)",
+   "label": "K",
+   "bears_on": "question (c)"
+  },
+  {
+   "statement": "Omega-order checks: AB<BA iff A^w<B^w on 20,000 random pairs; equal to lexicographic order on the 1,879 pairs of Lyndon words among them; sorting the M_i equals the omega-sort on 2,000 random sets; for 1,978 random texts T is the lexicographically largest concatenation of its own Lyndon factors (the rearrangement inequality applied to CFL).",
+   "source_key": "tested:tests.py (T5)",
+   "locator": "python3 -I .../inverse-omega-misc/tests.py -> 'T5 ... (20000, 1879, 2000, 1978)'",
+   "label": "tested",
+   "bears_on": "H1"
+  },
+  {
+   "statement": "H1 holds on every case tried. Right-end induction with the entry's drop rule on 4,000 random columns (binary and ternary, length 1 to 24; 3,453 with several cycles of LF, 3,310 with more than one closed letter): the closed words, with multiplicities, are the Lyndon conjugates of LF's cycles in decreasing order of least row, lexicographically non-increasing, and each closed letter's tree is the Lyndon tree of its word. On the bijective BWT of 4,000 random texts (Duval, all conjugates omega-sorted) the closed words in closing order are exactly the Lyndon factorization of T.",
+   "source_key": "tested:tests.py (T3)",
+   "locator": "python3 -I .../inverse-omega-misc/tests.py -> 'T3 ... (4000, 3453, 3310, 4000)'",
+   "label": "tested",
+   "bears_on": "H1; entry section 2 (a column that is no BWT)"
+  },
+  {
+   "statement": "Why the order of closing is forced: a letter closes when the first return to [0, m) fixes its rows, so each of its rows is the least row of its cycle; cycles therefore close by decreasing least row, the least row of a cycle is its Lyndon conjugate's row in the omega-sorted list, and on Lyndon words omega-order is lexicographic order (LZJ22 Lemma 7).",
+   "source_key": "LZJ22",
+   "locator": "my inference from the entry's section 2 (Termination) and arXiv 2204.11213v1 Lemma 7",
+   "label": "Conj",
+   "bears_on": "H1"
+  },
+  {
+   "statement": "H2 holds on every case tried, and is the entry's Theorems 1-2 read through a mirror. For 5,866 random primitive words (2, 3 or 5 letters, length 2 to 40) the left-end induction's tree spells the greatest rotation W and equals (i) the Lyndon tree of W for the inverse alphabet order and (ii) the Cartesian tree, maximum at the root, of the ordinary rotation ranks over W. For 5,881 words the column of T for the inverse order is the column reversed, and the left-end induction on BWT(T) has the same step count and the same tree as the right-end induction on the BWT of T with the alphabet order reversed.",
+   "source_key": "tested:tests.py (T2), mirror.py",
+   "locator": "python3 -I .../inverse-omega-misc/tests.py -> 'T1/T2 ... (5866, 5866, 5866, 112938, 113160)'; python3 .../inverse-omega-misc/mirror.py -> 'words 5881 | ... 5881 | 5881 | 5881'",
+   "label": "tested",
+   "bears_on": "H2; entry 5.5, 5.6, section 8 item 9"
+  },
+  {
+   "statement": "On random words the two ends cost the same (112,938 right-end steps against 113,160 left-end over the 5,866 words), as the mirror predicts for data with no preferred byte order. So the entry's 2.137 r against 1.812 r on Wikidata would be a property of the data's byte order (more maxima-so-far than minima-so-far inside the stretches), not of the induction: on the byte-complemented text the two ends swap.",
+   "source_key": "tested:tests.py (T1/T2)",
+   "locator": "same run; the Wikidata reading is an inference, not run",
+   "label": "Conj",
+   "bears_on": "entry section 8 item 9 ('why the right end', 'another order of the alphabet')"
+  },
+  {
+   "statement": "Nearest thing in print to 'inverse-order Lyndon tree = Cartesian tree with the maximum at the root': with sentinels, the Lyndon array for the inverse lexicographic order satisfies next^-1[i] = i + lambda_A[i], next^-1 the next GREATER suffix; next/previous greater suffix edges never cross; the inverse Lyndon array (longest inverse Lyndon factor at i) is next^-1[i] - i + lce(i, next^-1[i]). This is the array-and-edges form of a max-Cartesian tree on suffix ranks; the paper names no tree.",
+   "source_key": "DNSZZ26",
+   "locator": "arXiv:2609.23401v1: Lemma 2 (p. 4), Lemma 6 and its proof (p. 6), Lemma 7, Corollary 1 (p. 7), Lemma 8 (p. 8); arXiv:2603.17537v1 Lemma 7, Lemma 10",
+   "label": "K",
+   "bears_on": "H2; question (a)"
+  },
+  {
+   "statement": "The same preprint's introduction says that Louza, Smyth, Manzini, Telles (JDA 50, 2018, 'Lyndon array construction during Burrows-Wheeler inversion') compute the Lyndon array 'as a byproduct of the inversion of the bijective Burrows-Wheeler Transform'. The entry cites that paper for the ordinary walk; if the description is right, a Lyndon structure out of a bijective-BWT inversion (by walking LF) is in print.",
+   "source_key": "DNSZZ26",
+   "locator": "arXiv:2609.23401v1, Introduction p. 1, reference [23] (second-hand: Louza et al. not opened here)",
+   "label": "K",
+   "bears_on": "H1; entry section 10 (Louza et al. line)"
+  },
+  {
+   "statement": "H3, tried by exhaustion: over all 417 primitive necklaces with two or more letters (binary to length 10, ternary to 6), enumerating every order of steps taken at any coincidence, the right Lyndon tree of V is always among the final trees (417), the left-end tree is always among them once left-type steps are allowed (417), and the LEFT Lyndon tree of V is among them for 300 words with right-type steps only and 374 with both types. Smallest failures: aababb (right-type only; column babbaa) and aaababb (both types; column baabbaa). In an earlier run with right-type steps only: 1,248 of 2,048 necklaces (binary to 12, ternary to 8; 12 more over the state budget). Fusion and split steps of the entry were not in the move set.",
+   "source_key": "tested:h3_left_tree.py",
+   "locator": "python3 .../inverse-omega-misc/h3_left_tree.py 10 6 -> lines '(a) necklaces: 417 ...'",
+   "label": "tested",
+   "bears_on": "H3"
+  },
+  {
+   "statement": "H3, node count over the hinges (internal nodes with a hinge leaf below; equal to the right-end step count on every word, as the entry's Theorem 3 says): the left Lyndon tree has more, not fewer. Random words of length 300, 40 each: 1.809 r against 1.787 r (2 letters; fewer on 6 words, more on 30), 1.319 r against 1.305 r (4 letters), 1.062 r against 1.060 r (16 letters). Four 6,000-byte text samples (r/n 0.57 to 0.60): 1.66 to 1.76 r against 1.44 to 1.51 r, the left tree having 5,973 to 5,987 of its 5,999 nodes over a hinge.",
+   "source_key": "tested:h3_left_tree.py, h3_text.py",
+   "locator": "python3 .../h3_left_tree.py 10 6 -> lines '(b) ...'; python3 .../h3_text.py /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md 0 6000",
+   "label": "tested",
+   "bears_on": "H3; entry Theorem 3"
+  },
+  {
+   "statement": "Bannai, I, Kociumaka, Koeppl, Puglisi: the longest Lyndon subsequence of T in O(n^3) time and O(n) space, online in O(n^3) time and space (journal; O(n^3 sigma) in the conference text), the longest common Lyndon subsequence of two strings in O(n^4 sigma). Subsequences, by dynamic programming; the page mentions neither the BWT nor Lyndon or Cartesian trees.",
+   "source_key": "BIKKP22",
+   "locator": "arXiv:2201.06773v1 abstract and Sections 1-3; Algorithmica 86:735-756 abstract and extension note (Springer page)",
+   "label": "K",
+   "bears_on": "none"
+  },
+  {
+   "statement": "Wols cites 'On generalized Lyndon words' (Dolce, Restivo, Reutenauer) in one background sentence: a generalized lexicographic order chooses a total order of the alphabet at each position, its Lyndon words form a Hall set and factorize every word uniquely; the paragraph opens by saying none of the listed variants 'turns out to have a direct connection' with the thesis's absolute-Lyndon words. The thesis conjectures, without a construction, a bijective-BWT variant from absolute-Lyndon words.",
+   "source_key": "Wols26",
+   "locator": "thesis PDF, Section 7.1 (pp. 85-86), reference [16]; abstract; Chapter 7 opening",
+   "label": "K",
+   "bears_on": "H4, H5 (pointer only)"
+  }
+ ],
+ "hypotheses": [
+  {
+   "h": "H1. Right-end induction on ANY column inverts the extended BWT: closed words are the Lyndon conjugates of the necklaces, cycles close in non-increasing order, and on the bijective BWT of T the closed words in order are the Lyndon factorization of T with its Lyndon trees.",
+   "verdict": "not addressed by this cluster's papers (nothing states it, nothing contradicts it); tested here and it held on every case; one ingredient may be in print elsewhere",
+   "evidence": "K: the extended BWT's rows are all conjugates of the words in omega-order (LZJ22, Acta Informatica 63:17, Section 2.3); on Lyndon words omega-order is lexicographic order and the Lyndon factorization is non-increasing for it (LZJ22, arXiv 2204.11213v1 Lemma 7 and Section 1.1). Bonizzoni et al. only point to Gessel-Reutenauer as the base of the BWT variants (BDZZ18 intro p. 1; BDZZ26 intro) and name inverse-Lyndon BWT variants as open (BDZZ26 Section 10); none inverts anything. K, second-hand: Louza et al. 2018 are described as computing the Lyndon array during bijective-BWT inversion (DNSZZ26 intro, ref. [23]); that would be a Lyndon structure from a walk, not an induction. Tested (tests.py T3): 4,000 random columns (3,453 with several cycles) and the bijective BWT of 4,000 random texts: closed words = Lyndon conjugates by decreasing least row, non-increasing, trees = Lyndon trees, and = CFL(T) on the bijective BWT. Conj: the order of closing follows from 'a closed row is the least row of its cycle'."
+  },
+  {
+   "h": "H2. Left-end induction yields the Lyndon tree, for the inverse alphabet order, of the greatest rotation (an anti-Lyndon tree).",
+   "verdict": "partly in print (the word, and the array form of the tree; not the tree, not the induction); tested here and it held; it is a corollary of the entry's Theorems 1-2 by a mirror",
+   "evidence": "K: anti-Lyndon word = Lyndon word for the inverse order = the primitive word greater than all its conjugates (BDZZ18 arXiv v7 Def. 2.3, Prop. 7.2, 7.3). K: no tree, standard factorization or Cartesian tree of such a word in any of the four Bonizzoni et al. works (text search). K: the Lyndon array for the inverse order is the distance to the next greater suffix, and next/previous-greater-suffix edges do not cross (DNSZZ26 Lemma 6 with its proof, Lemma 8): the array form of a max-Cartesian tree, never called one. Tested (tests.py T2, mirror.py): on 5,866 primitive words the left-end tree = Lyndon tree of the greatest rotation for the inverse order = max-Cartesian tree of the ordinary rotation ranks; on 5,881 words left end on BWT(T) = right end on the BWT for the reversed alphabet order (the column reversed), same steps, same tree. Only primitive words were tried."
+  },
+  {
+   "h": "H3. The LEFT Lyndon tree is, or is not, the tree of some order of Rauzy steps; and whether its node count over the hinges is smaller than the right tree's.",
+   "verdict": "not addressed by this cluster's papers; tested here: it is NOT in general, and its count is larger, not smaller",
+   "evidence": "No paper of this cluster treats left standard factorization (Luo et al. list Crochemore-Russo, 'Cartesian and Lyndon trees', as a reference only). Tested (h3_left_tree.py): of 417 primitive necklaces, the left Lyndon tree of V is the tree of some schedule for 300 (steps on intervals ending at a coincidence) and 374 (those and their mirrors); failures from aababb and aaababb; fusion and split steps not tried. Nodes over the hinges: 1.809 r against the right tree's 1.787 r on random binary words, and 1.66 to 1.76 r against 1.44 to 1.51 r on four 6,000-byte text samples (h3_text.py). Small inputs; not a Wikidata count."
+  },
+  {
+   "h": "H4. For the alternating BWT, LF is an interval exchange with flips, Rauzy induction with flips inverts it, and its grammar is the standard-factorization tree for the alternating order.",
+   "verdict": "not addressed",
+   "evidence": "No paper of this cluster mentions the alternating BWT, Galois words, or flips. Luo et al. only say their order differs from the 'alternative order' of Dolce-Restivo-Reutenauer (arXiv 2204.11213v1 Section 1, p. 2); Wols restates in one sentence that a per-position order gives generalized Lyndon words (Section 7.1)."
+  },
+  {
+   "h": "H5. A right-end step is a context-refined Lazard elimination of the largest letter, and the grammar is the standard bracketing of the Lyndon word in the free Lie algebra.",
+   "verdict": "not addressed",
+   "evidence": "Lazard elimination, Hall sets as such and bracketings do not occur in the papers read. Pointers only: BDZZ18 recalls that Lyndon words are a complete factorization of the free monoid in Schutzenberger's sense (arXiv v7 Section 2.3) and that inverse Lyndon words are not one (Section 4.1); Wols repeats that generalized Lyndon words form a Hall set, citing Reutenauer (Section 7.1)."
+  }
+ ],
+ "ideas": [
+  {
+   "idea": "Record the mirror: the left-end induction on a column is the right-end induction for the inverse alphabet order on the reversed column; its grammar is the Lyndon tree, for the inverse order, of the greatest rotation (the anti-Lyndon conjugate, Bonizzoni et al.'s word), which is the Cartesian tree with the maximum at the root of the ordinary rotation ranks. Then say in section 8 item 9 that 'another order of the alphabet' already has one answered case (the inverse order is the left end: 2.137 r against 1.812 r), and that a decoder cannot choose the alphabet order of a column it is handed, only the end.",
+   "kind": "related approach to record",
+   "why": "Closes H2 without new machinery and removes half of open item 9: the right end's advantage on Wikidata would be the data's byte order (minima-so-far against maxima-so-far inside the stretches), not a property of the induction; on random words the two ends cost the same here (112,938 against 113,160 steps). It also gives the left end a name the literature knows. No clock gain: the left end loses on every block of the entry.",
+   "falsifier": "On the 233 blocks: the mirrored closed form of 5.5 (maxima-so-far, cycle cut after every run end) must equal the sweep's left-end count on each block, and the right-end count on the byte-complemented text's column must equal the left-end count on the original. One block that differs kills it.",
+   "cost": "About an hour with the example's `admissible` and a complemented corpus copy; no kernel change. A Python reference is in inverse-omega-misc/tests.py and mirror.py."
+  },
+  {
+   "idea": "State what the kernel computes on a column that is no BWT in the literature's terms, and check it: with every closed letter emitted (not only the marked one), the right end with the drop rule returns the Lyndon conjugates of the column's necklaces, largest first, i.e. it inverts the extended BWT, and on a bijective-BWT column it returns the Lyndon factorization of the text with each factor's Lyndon tree.",
+   "kind": "new idea to try",
+   "why": "It is the precise content of 'the transfer to an arbitrary column' in section 10, and what any claim of novelty will be read against (eBWT and bijective-BWT inverters walk LF; Louza et al. are said to get the Lyndon array from such a walk). Nothing for bzip2's speed: bzip2 emits one cycle.",
+   "falsifier": "Reference bijective BWT (Duval, all conjugates omega-sorted) of the 233 blocks' texts; the kernel's closed words in closing order must equal Duval's factors, with powers closing as one letter of multiplicity k. Passed here on 4,000 random texts of at most 24 letters and 4,000 random columns.",
+   "cost": "Done in Python at toy sizes; about a day to emit all closed letters in the example and run the corpus."
+  },
+  {
+   "idea": "Do not build a schedule aimed at the left Lyndon tree (Badkobeh-Crochemore's tree): record that it is not a schedule's tree in general and that it has more nodes over the hinges than the right tree.",
+   "kind": "related approach to record",
+   "why": "Narrows open item 2 (orders of steps): one named candidate order is out before any kernel work.",
+   "falsifier": "One Wikidata block: count the left Lyndon tree's internal nodes with a hinge below against S. If it is below S on real blocks the count half of this record is wrong (the reachability half stands on the two small counterexamples, aababb and aaababb, unless fusion or split steps reach them).",
+   "cost": "An hour offline; the O(n x depth) recursion in inverse-omega-misc/h3_left_tree.py is enough for one block, or the linear algorithm of the left-Lyndon-tree paper."
+  },
+  {
+   "idea": "Use nearest-smaller and nearest-greater values on the inverse suffix array as a linear-time oracle for both trees on whole blocks: next[i] = i + lambda[i] (Lyndon array) for the right end, the next greater suffix for the left end.",
+   "kind": "known algorithm to implement",
+   "why": "The committed check covers 33,903 words; this checks every node of every block for both ends in O(n) from ISA, and is the published form (Franek et al.; Ellert; De Felice et al. 2026 for the inverse order) of what Theorems 1-2 and the mirror assert.",
+   "falsifier": "Any node of any block whose span differs from the kernel's rule length.",
+   "cost": "Small: a stack pass over ISA, twice."
+  },
+  {
+   "idea": "Close question (b) in the record: the ICFL bound on longest common prefixes has no use in the induction.",
+   "kind": "related approach to record",
+   "why": "A step compares two integers, a merge's chain is a merge of prefix sums; and the bound itself is vacuous on block-like data (M >= 0.65 n against a longest repeat of 34 bytes on a 20,000-byte sample). ICFL does not give balanced pieces for a block either: CFL_in of a least rotation had 16 to 22 factors, one of them 0.38 to 0.65 of the word.",
+   "falsifier": "None needed; it would be reopened only by a step that compares strings.",
+   "cost": "One line."
+  },
+  {
+   "idea": "Do not implement Luo-Zhu-Jin's omega-order sort for this work.",
+   "kind": "known algorithm to implement",
+   "why": "It orders the n words of a multiset in O(L), not the conjugates, so it is not an extended-BWT construction, and a decoder never needs it: the column already gives the cycles in omega-order (least row). It would only matter to an encoder of a multiset, where the conjugate sorters it cites (Boucher et al.; Bannai et al.) are the tools.",
+   "falsifier": "A use on the decode side that needs the order of whole words without their rows.",
+   "cost": "None."
+  },
+  {
+   "idea": "Nothing to take from the longest-Lyndon-subsequence paper (Bannai et al.) or from Wols's thesis.",
+   "kind": "related approach to record",
+   "why": "The first is cubic dynamic programming on subsequences; the second cites generalized Lyndon words as background and conjectures an unbuilt BWT variant.",
+   "falsifier": "n/a",
+   "cost": "None."
+  }
+ ],
+ "notes": "Prior art against the entry's claims: in this cluster I found nothing in print that the entry claims as new. No paper here uses interval exchanges, induction, or builds a grammar from a column. What narrows the hypotheses rather than the entry: (1) 'anti-Lyndon word' = greatest rotation is standard (Bonizzoni et al. 2018); (2) the inverse-order Lyndon array as next-greater-suffix distances is in a 2026 preprint (De Felice et al.), without a tree; (3) a Lyndon array out of bijective-BWT inversion is attributed to Louza et al. 2018 by that preprint (second-hand; the entry already cites Louza et al.).\n\nWorks and merges. The task named four Bonizzoni et al. works; the sources give three: arXiv:1911.01851 carries the LATA title and the TCS DOI, so the LATA 2020 chapter and the TCS 2021 article are one work. Luo-Zhu-Jin's Acta Informatica paper states it is the extended version of the FAW 2022 paper, so those three Scholar lines are one work; only the conference text is on arXiv. Two works outside the pasted list are included because findings rest on them: the MFCS 2024 companion (abstract only) and 'The Inverse Lyndon Array' (two arXiv records).\n\nWhat was and was not read. Read as PDF text: arXiv 1705.10277v7, 1911.01851v1, 2404.17969v1, 2204.11213v1 (in full), 2201.06773v1 (sections 1-3), 2609.23401v1 (sections 1-3), Wols's thesis chapter 7. Read only through the fetch tool's model rendering of the publisher page: the Acta Informatica article (open access) and the Algorithmica abstract; lemma numbers of the Acta version are as relayed. Not readable: ScienceDirect (403) and SAGE (403), so the AAM, TCS and Computability journal texts were not compared with their preprints, and theorem numbers are the preprints'. DBLP answered with a bot wall and was not used; a direct Springer PDF download was refused by the session's permission check and not forced. Bibliographic fields come from Crossref, the arXiv API, Springer chapter pages, DROPS and the Utrecht repository API.\n\nTests (light Python, nothing timed), all in /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/inverse-omega-misc/: tests.py (T1-T5), mirror.py, t6_icfl_bound.py, h3_left_tree.py, h3_text.py; downloads under dl/. The induction there is a reference implementation written from the entry's section 2 table, not the example's code. Limits: random words of at most 40 letters and alphabets of at most 5 letters for H1/H2; primitive words only for H2; the H3 schedule search covers steps on intervals that end or begin at a coincidence, not fusion or split steps, and words of at most 10 letters; the H3 text samples have r/n near 0.58, far from Wikidata's 0.07. The H3 work is outside this cluster's papers and should be weighed against whatever the left-Lyndon-tree cluster returns. Nothing in /home/user/mibz2 was created or changed (the journal entry was read, and used as a byte sample)."
+}
