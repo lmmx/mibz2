@@ -1,0 +1,473 @@
+#!/usr/bin/env python3
+"""Feathered (matching-driven) first-return induction of LF: a reference with a brute-force oracle.
+
+State (journal 2026-11-10-rauzy-veech.md, section 2): letters with a TOP order (domain intervals
+I_a tiling X = [0, N)), a BOTTOM order (image intervals J_a), a length and a word (text order).
+Invariant I: x in I_a returns to X after |w_a| steps of pi = LF, and L[x], L[pi x], ... is w_a
+reversed.
+
+One round: cells E_ab = I_a ∩ J_b (two-pointer merge); a matching M (no label in two selected
+cells, a != b); D = union of the selected cells; K = X \\ D; the first-return map to K as a new
+exchange; then coalescing.
+
+Usage:
+  feather_ref.py test            the exhaustive and random verification (prints counts)
+  feather_ref.py trace FILE      per-round counts for the columns of FILE (for the Rust cross-check)
+"""
+import sys, random, itertools, collections
+
+POLICIES = ("P1", "P2", "P3", "P3L")
+
+
+def lf(L):
+    n = len(L)
+    order = sorted(range(n), key=lambda i: (L[i], i))
+    pi = [0] * n
+    for rank, i in enumerate(order):
+        pi[i] = rank
+    return pi
+
+
+def walk(L, pi, orig):
+    """T[k] = L[pi^-(k+1)(orig)], n bytes (the journal's definition, any column)."""
+    n = len(L)
+    inv = [0] * n
+    for x, y in enumerate(pi):
+        inv[y] = x
+    out = []
+    x = orig
+    for _ in range(n):
+        x = inv[x]
+        out.append(L[x])
+    return bytes(out)
+
+
+class State:
+    """lam[i], word[i], wid[i] for the letter at top position i; bot = top positions in bottom
+    order; rows = the surviving original rows, ascending; trk = (letter, offset, v) with
+    orig = pi^v(row of that point)."""
+
+    def __init__(self, L, orig):
+        self.L = L
+        self.lam, self.word, self.wid = [], [], []
+        n = len(L)
+        i = 0
+        while i < n:
+            j = i + 1
+            while j < n and L[j] == L[i]:
+                j += 1
+            if i <= orig < j:
+                self.trk = (len(self.lam), orig - i, 0)
+            self.wid.append(len(self.lam))
+            self.lam.append(j - i)
+            self.word.append(bytes([L[i]]))
+            i = j
+        r = len(self.lam)
+        self.bot = sorted(range(r), key=lambda k: (self.word[k], k))
+        self.rows = list(range(n))
+        self.next_wid = r
+        self.nodes = 0  # word compositions
+
+    def r(self):
+        return len(self.lam)
+
+    def cells(self):
+        """The nonempty cells in row order: (pos, length, a, b, sa, sb): a the top letter, b the
+        bottom letter, sa / sb the cell's offset inside I_a / J_b."""
+        out = []
+        lam, bot = self.lam, self.bot
+        r = len(lam)
+        ti = bk = 0
+        ts = bs = 0  # starts of the current top and bottom intervals
+        pos = 0
+        N = len(self.rows)
+        while pos < N:
+            a, b = ti, bot[bk]
+            te, be = ts + lam[a], bs + lam[b]
+            end = min(te, be)
+            out.append((pos, end - pos, a, b, pos - ts, pos - bs))
+            pos = end
+            if te == end:
+                ti += 1
+                ts = te
+            if be == end:
+                bk += 1
+                bs = be
+        return out
+
+    def delta(self, c):
+        """Predicted change of the letter count if the cell alone is removed."""
+        pos, ln, a, b, sa, sb = c
+        pa = (sa > 0) + (sa + ln < self.lam[a])
+        pb = (sb > 0) + 1 + (sb + ln < self.lam[b])
+        return pa + pb - 2
+
+    def matching(self, cells, policy, rng=None):
+        cand = [c for c in cells if c[2] != c[3]]
+        if policy == "P1":
+            pass  # row order
+        elif policy == "P2":
+            cand.sort(key=lambda c: (-c[1], c[0]))
+        elif policy == "P3":
+            cand.sort(key=lambda c: (self.delta(c), c[0]))
+        elif policy == "P3L":
+            cand.sort(key=lambda c: (self.delta(c), -c[1], c[0]))
+        elif policy == "R":
+            rng.shuffle(cand)
+        elif policy == "RS":
+            rng.shuffle(cand)
+            cand = cand[: max(1, rng.randrange(len(cand) + 1))] if cand else cand
+        used = set()
+        M = []
+        for c in cand:
+            if c[2] in used or c[3] in used:
+                continue
+            used.add(c[2])
+            used.add(c[3])
+            M.append(c)
+        return M
+
+    def contract(self, M):
+        """Remove the cells of M: the first-return exchange on K, before coalescing.
+        Returns the set of removed coordinates (old)."""
+        lam, word, wid, bot = self.lam, self.word, self.wid, self.bot
+        r = len(lam)
+        sel_a = {c[2]: c for c in M}
+        sel_b = {c[3]: c for c in M}
+        nl, nw, ni = [], [], []
+        piece = [None] * r  # [left, mid, right] new top positions
+        tl, to, tv = self.trk
+        ntrk = None
+
+        def emit(l, w, i):
+            nl.append(l)
+            nw.append(w)
+            ni.append(i)
+            return len(nl) - 1
+
+        for x in range(r):
+            p = [None, None, None]
+            if x in sel_a:
+                _, ln, a, b, sa, sb = sel_a[x]
+                s, e = sa, sa + ln
+                if s > 0:
+                    p[0] = emit(s, word[x], wid[x])
+                if e < lam[x]:
+                    p[2] = emit(lam[x] - e, word[x], wid[x])
+                if tl == x:
+                    if to < s:
+                        ntrk = (p[0], to, tv)
+                    elif to >= e:
+                        ntrk = (p[2], to - e, tv)
+                    else:
+                        ntrk = ("mid", b, to - s, tv + len(word[b]))
+            elif x in sel_b:
+                _, ln, a, b, sa, sb = sel_b[x]
+                s, e = sb, sb + ln
+                if s > 0:
+                    p[0] = emit(s, word[x], wid[x])
+                # the rows of I_b sent into E_ab: they go on through a; word (w_a)(w_b)
+                p[1] = emit(ln, word[a] + word[x], self.next_wid)
+                self.next_wid += 1
+                self.nodes += 1
+                if e < lam[x]:
+                    p[2] = emit(lam[x] - e, word[x], wid[x])
+                if tl == x:
+                    if to < s:
+                        ntrk = (p[0], to, tv)
+                    elif to >= e:
+                        ntrk = (p[2], to - e, tv)
+                    else:
+                        ntrk = (p[1], to - s, tv)
+            else:
+                p[1] = emit(lam[x], word[x], wid[x])
+                if tl == x:
+                    ntrk = (p[1], to, tv)
+            piece[x] = p
+        if ntrk[0] == "mid":
+            ntrk = (piece[ntrk[1]][1], ntrk[2], ntrk[3])
+        nb = []
+        for y in bot:
+            p = piece[y]
+            if y in sel_a:
+                b = sel_a[y][3]
+                seq = [p[0], piece[b][1], p[2]]
+            elif y in sel_b:
+                seq = [p[0], p[2]]
+            else:
+                seq = [p[1]]
+            nb.extend(q for q in seq if q is not None)
+        removed = set()
+        for c in M:
+            removed.update(range(c[0], c[0] + c[1]))
+        self.rows = [row for k, row in enumerate(self.rows) if k not in removed]
+        self.lam, self.word, self.wid, self.bot, self.trk = nl, nw, ni, nb, ntrk
+        return removed
+
+    def coalesce(self):
+        """Join top-adjacent letters that are bottom-adjacent in the same order and carry the
+        same word node. Returns the number of joins."""
+        r = len(self.lam)
+        bpos = [0] * r
+        for k, x in enumerate(self.bot):
+            bpos[x] = k
+        new_index = [0] * r
+        nl, nw, ni = [], [], []
+        tl, to, tv = self.trk
+        ntrk = None
+        for x in range(r):
+            if x > 0 and self.wid[x] == self.wid[x - 1] and bpos[x] == bpos[x - 1] + 1:
+                if tl == x:
+                    ntrk = (len(nl) - 1, nl[-1] + to, tv)
+                nl[-1] += self.lam[x]
+                new_index[x] = -1
+            else:
+                new_index[x] = len(nl)
+                if tl == x:
+                    ntrk = (len(nl), to, tv)
+                nl.append(self.lam[x])
+                nw.append(self.word[x])
+                ni.append(self.wid[x])
+        nb = [new_index[x] for x in self.bot if new_index[x] >= 0]
+        joins = r - len(nl)
+        self.lam, self.word, self.wid, self.bot, self.trk = nl, nw, ni, nb, ntrk
+        return joins
+
+    def tables(self):
+        """letter and offset of each coordinate (top), and the image coordinate of each."""
+        N = len(self.rows)
+        jstart = [0] * len(self.lam)
+        s = 0
+        for x in self.bot:
+            jstart[x] = s
+            s += self.lam[x]
+        assert s == N, (s, N)
+        let, img = [], []
+        for x, l in enumerate(self.lam):
+            for o in range(l):
+                let.append(x)
+                img.append(jstart[x] + o)
+        assert len(let) == N
+        return let, img
+
+
+class Oracle:
+    """Brute force on rows: nothing here reads the exchange's construction."""
+
+    def __init__(self, L, pi):
+        self.L, self.pi = L, pi
+
+    def first_return(self, K, Kold):
+        """For each row x of K: (image row, word in text order, visits to Kold on the way)."""
+        L, pi = self.L, self.pi
+        inK = set(K)
+        inOld = set(Kold)
+        res = {}
+        for x in K:
+            y = x
+            read = []
+            depth = 0
+            while True:
+                read.append(L[y])
+                y = pi[y]
+                if y in inOld:
+                    depth += 1
+                if y in inK:
+                    break
+            res[x] = (y, bytes(reversed(read)), depth)
+        return res
+
+    def check(self, st, Kold, what):
+        """The state is exactly the first-return map of pi to st.rows, with its words. Returns
+        the greatest number of old steps in a return."""
+        fr = self.first_return(st.rows, Kold)
+        let, img = st.tables()
+        mx = 0
+        for k, x in enumerate(st.rows):
+            y, w, d = fr[x]
+            assert st.rows[img[k]] == y, (what, "map", k, x)
+            assert st.word[let[k]] == w, (what, "word", k, x, st.word[let[k]], w)
+            mx = max(mx, d)
+        return mx
+
+
+def run(L, orig, policy, rng=None, oracle=True, stats=None, trace=None):
+    """Run the rounds to the end. Returns the n bytes of the text. `trace` collects per round
+    (r, cells, m, removed, r_before, r_after)."""
+    n = len(L)
+    pi = lf(L)
+    st = State(L, orig)
+    orc = Oracle(L, pi)
+    if oracle:
+        d = orc.check(st, st.rows, "start")
+        assert d == 1
+    rounds = 0
+    while True:
+        cells = st.cells()
+        M = st.matching(cells, policy, rng)
+        if not M:
+            assert all(c[2] == c[3] for c in cells)
+            break
+        rounds += 1
+        r0, N0 = st.r(), len(st.rows)
+        m = len(M)
+        Kold = list(st.rows)
+        let0, img0 = st.tables() if oracle else (None, None)
+        lam0 = list(st.lam)
+        removed = st.contract(M)
+        rb = st.r()
+        if oracle:
+            # T(D) ∩ D = ∅, on coordinates of the old exchange
+            hit = sum(1 for k in removed if img0[k] in removed)
+            stats["TD_meets_D"] += hit
+            if hit and stats.get("TD_example") is None:
+                stats["TD_example"] = (bytes(L), orig, policy)
+            # the proposal's partition, counted from coordinates alone: classes (old letter,
+            # image in D?, side of the hole in its own letter)
+            keys = []
+            for k in range(N0):
+                if k in removed:
+                    continue
+                side = sum(1 for q in removed if let0[q] == let0[k] and q < k) > 0
+                keys.append((let0[k], img0[k] in removed, side))
+            brute = 1 + sum(1 for i in range(1, len(keys)) if keys[i] != keys[i - 1]) if keys else 0
+            assert brute == rb, ("fragment count", brute, rb, bytes(L), orig, policy)
+            d = orc.check(st, Kold, "round")
+            stats["max_depth"] = max(stats["max_depth"], d)
+            stats["depth_hist"][d] += 1
+            if d > 2 and stats.get("depth_example") is None:
+                stats["depth_example"] = (bytes(L), orig, policy)
+            stats["rounds"] += 1
+            g = rb - r0
+            stats["growth_hist"][(g > m) * 2 + (g > 4 * m)] += 1
+            if g > m and (stats.get("m_example") is None or n < len(stats["m_example"][0])):
+                stats["m_example"] = (bytes(L), orig, policy, r0, m, rb)
+            if g > 4 * m and (stats.get("m4_example") is None or n < len(stats["m4_example"][0])):
+                stats["m4_example"] = (bytes(L), orig, policy, r0, m, rb)
+            if g == m:
+                stats["growth_eq_m"] += 1
+            stats["max_ratio"] = max(stats["max_ratio"], g / m)
+            assert len(st.rows) == N0 - sum(c[1] for c in M)
+            assert len(st.rows) < N0
+        joins = st.coalesce()
+        ra = st.r()
+        if oracle:
+            orc.check(st, Kold, "coalesced")
+            stats["joins"] += joins
+            if ra - r0 > m:
+                stats["after_gt_m"] += 1
+            # Kac: the letters' towers tile the cycles
+            assert sum(l * len(w) for l, w in zip(st.lam, st.word)) == n
+        if trace is not None:
+            trace.append((r0, len(cells), m, N0 - len(st.rows), rb, ra))
+    # the end: every letter is sent to itself
+    tl, to, tv = st.trk
+    E = st.word[tl]
+    p = len(E)
+    text = bytes(E[(k - tv) % p] for k in range(n))
+    if stats is not None:
+        stats["finished"] += 1
+        stats["left_letters"][min(st.r(), 5)] += 1
+        # the points left are one a cycle of pi
+        seen = [False] * n
+        cyc = 0
+        for x in range(n):
+            if not seen[x]:
+                cyc += 1
+                while not seen[x]:
+                    seen[x] = True
+                    x = pi[x]
+        assert len(st.rows) == cyc, (len(st.rows), cyc)
+        if cyc > 1:
+            stats["several_cycles"] += 1
+        stats["rounds_max"] = max(stats["rounds_max"], rounds)
+    return text, rounds, st
+
+
+def new_stats():
+    s = collections.defaultdict(int)
+    s["depth_hist"] = collections.Counter()
+    s["growth_hist"] = collections.Counter()
+    s["left_letters"] = collections.Counter()
+    s["max_ratio"] = -9.0
+    return s
+
+
+def primitive(w):
+    n = len(w)
+    return not any(n % d == 0 and w == w[:d] * (n // d) for d in range(1, n))
+
+
+def bwt(w):
+    n = len(w)
+    rots = sorted(range(n), key=lambda i: w[i:] + w[:i])
+    L = bytes(w[(i - 1) % n] for i in rots)
+    return L, rots.index(0)
+
+
+def report(name, s, cases):
+    print(f"== {name}: {cases} runs, {s['rounds']} rounds verified by the oracle")
+    print(f"   finished and text equal to the walk: {s['finished']}")
+    print(f"   T(D) ∩ D nonempty: {s['TD_meets_D']} points   example: {s.get('TD_example')}")
+    print(f"   return depth in old steps, rounds by maximum: {dict(s['depth_hist'])}   max {s['max_depth']}   example > 2: {s.get('depth_example')}")
+    gh = s["growth_hist"]
+    print(f"   r_new - r before coalescing: <= m in {gh[0]} rounds, > m in {gh[2] + gh[3]}, > 4m in {gh[3]}; equal to m in {s['growth_eq_m']}; max (r_new - r)/m = {s['max_ratio']:.3f}")
+    print(f"   example r_new > r + m: {s.get('m_example')}   example > r + 4m: {s.get('m4_example')}")
+    print(f"   coalescing joins: {s['joins']}; rounds with r_after - r > m: {s['after_gt_m']}")
+    print(f"   columns with several cycles: {s['several_cycles']}; letters left at the end (5 = 5 or more): {dict(s['left_letters'])}; most rounds in a run: {s['rounds_max']}")
+
+
+def test():
+    rng = random.Random(20261114)
+    pols = POLICIES + ("R", "RS")
+    for sigma, maxlen in ((2, 12), (3, 8)):
+        s = new_stats()
+        cases = words = 0
+        for n in range(1, maxlen + 1):
+            for t in itertools.product(range(sigma), repeat=n):
+                w = bytes(97 + c for c in t)
+                if not primitive(w):
+                    continue
+                words += 1
+                L, orig = bwt(w)
+                pi = lf(L)
+                assert walk(L, pi, orig) == w
+                for pol in pols:
+                    text, _, st = run(L, orig, pol, rng, True, s)
+                    assert text == w, (w, pol, text)
+                    assert st.r() == 1 and len(st.rows) == 1
+                    cases += 1
+        report(f"primitive words over {sigma} letters to length {maxlen} ({words} words, 6 policies each)", s, cases)
+    s = new_stats()
+    cases = 0
+    for i in range(20000):
+        n = rng.randrange(1, 41)
+        sigma = rng.choice((1, 2, 2, 3, 3, 4, 6, 16))
+        L = bytes(97 + rng.randrange(sigma) for _ in range(n))
+        orig = rng.randrange(n)
+        pi = lf(L)
+        want = walk(L, pi, orig)
+        pol = pols[i % len(pols)]
+        text, _, st = run(L, orig, pol, rng, True, s)
+        assert text == want, (L, orig, pol, text, want)
+        cases += 1
+    report("20,000 random columns (length 1 to 40, 1 to 16 letters, any row; policy by turn)", s, cases)
+    print("ALL ASSERTIONS PASSED")
+
+
+def trace_file(path):
+    for line in open(path):
+        hx, orig = line.split()
+        L = bytes.fromhex(hx)
+        for pol in POLICIES:
+            tr = []
+            text, rounds, st = run(L, int(orig), pol, None, False, None, tr)
+            print(hx, orig, pol, rounds, st.r(), len(st.rows), st.nodes,
+                  ";".join(",".join(map(str, t)) for t in tr))
+
+
+if __name__ == "__main__":
+    if sys.argv[1] == "test":
+        test()
+    else:
+        trace_file(sys.argv[2])

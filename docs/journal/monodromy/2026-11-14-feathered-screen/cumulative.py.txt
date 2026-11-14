@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""Cumulative work and letters left after k rounds, medians over blocks, from results/<POLICY>-rounds.jsonl."""
+import json, sys, statistics, os
+D = os.path.dirname(os.path.abspath(__file__))
+for pol in sys.argv[1:]:
+    S = {}
+    for l in open(f"{D}/results/{pol}-blocks.jsonl"):
+        b = json.loads(l); S[b["block"]] = b
+    ks = [1, 2, 4, 8, 16, 32, 64, 128, 256, 1024, 4096]
+    acc = {k: [] for k in ks}
+    for l in open(f"{D}/results/{pol}-rounds.jsonl"):
+        d = json.loads(l); b = S[d["block"]]; rs = d["rounds"]
+        w = rows = m = 0
+        for j, (r, cells, cand, mm, rem, rb, ra) in enumerate(rs, 1):
+            w += cells + rb; rows += rem; m += mm
+            if j in acc:
+                acc[j].append((w / b["S"], rows / b["n"], ra / b["r"], m / b["S"], mm))
+    print(f"\n### {pol}: after k rounds, median over the blocks still running (blocks)\n")
+    print("| k | blocks | work / S | rows removed / n | letters left / r | compositions / S | m in round k |\n|---|---|---|---|---|---|---|")
+    for k in ks:
+        v = acc[k]
+        if not v: continue
+        med = [statistics.median(x[i] for x in v) for i in range(5)]
+        print(f"| {k} | {len(v)} | {med[0]:.2f} | {med[1]:.4f} | {med[2]:.4f} | {med[3]:.3f} | {med[4]:.0f} |")
