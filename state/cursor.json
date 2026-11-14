@@ -1263,6 +1263,20 @@
       "reply_id": 6868102448,
       "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6868102448",
       "routing_verification": "route/check passed. Pinned verify reports FROM is 'optimizer', not coordinator; exact author/body/destination readback verified separately."
+    },
+    {
+      "comment_id": 6878327105,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt only; waiting for v0.3.0 tag and crates.io publication. Tag endpoint returned404 on 2026-11-14; census not started.",
+      "hold": {
+        "start_condition": "v0.3.0 tag exists AND crates.io release published",
+        "tag_observed": false,
+        "crates_publication": "not checked; conjunction already false",
+        "destination_conflict": "Brief requests research/cells-census; pinned SPEC permits writes only to team-state/optimizer plus REVIEWs on145."
+      }
     }
   ],
   "migrated_from": {
