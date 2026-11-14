@@ -178,7 +178,7 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
         v
     }
 }
-/// A letter's place in one order, for the induction by cells: 24 bytes. The two orders are
+/// A letter's place in one order, for the induction by cells: 20 bytes. The two orders are
 /// two regions of these in one buffer; a letter has one slot in each. The orders are only
 /// ever read from their ends, so a slot is read once, when the induction's front reaches it.
 ///
@@ -188,7 +188,16 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
 /// | 4..8 | the letter's length |
 /// | 8..12 | its word's length |
 /// | 12..16 | its word: an offset in the buffer, of bytes if the length is at most SMALL, else of a rule |
-/// | 16..24 | the letter's slot in the other order |
+/// | 16..20 | the letter's slot in the other order (an offset in the buffer) |
+///
+/// Every field is a 4-byte offset or length: the layout refuses a buffer whose total would
+/// reach `u32::MAX` (`slots`), and Cells then declines the block. The research feature
+/// `slot24` keeps the previous layout, 24 bytes with bytes 16..24 an 8-byte offset, only so
+/// that one commit can build both (bench-cells-diet, #145 LOG 6881022819).
+#[cfg(not(feature = "slot24"))]
+const SLOT: usize = 20;
+/// (research only, `slot24`: the previous 24-byte slot)
+#[cfg(feature = "slot24")]
 const SLOT: usize = 24;
 /// How many slots on from an order's last letter the induction by cells fetches for
 const FAR: usize = 12;
@@ -235,6 +244,38 @@ unsafe fn wr64(base: *mut u8, at: usize, v: u64) {
 unsafe fn wr32(base: *mut u8, at: usize, v: u32) {
     // SAFETY: caller supplies an initialized in-bounds integer field; alignment is not required.
     unsafe { (base.add(at) as *mut u32).write_unaligned(v) }
+}
+
+/// A slot's bytes 16..: the letter's slot in the other order (4 bytes; 8 with `slot24`)
+#[inline(always)]
+unsafe fn rd_other(base: *const u8, slot: usize) -> usize {
+    // SAFETY: caller supplies an initialized in-bounds slot; alignment is not required.
+    #[cfg(not(feature = "slot24"))]
+    unsafe {
+        rd32(base, slot + 16) as usize
+    }
+    // SAFETY: as above
+    #[cfg(feature = "slot24")]
+    unsafe {
+        rd64(base, slot + 16) as usize
+    }
+}
+
+/// Sets a slot's bytes 16..: the letter's slot in the other order, `other`, an offset in
+/// the buffer below `u32::MAX` (the layout's total is)
+#[inline(always)]
+unsafe fn wr_other(base: *mut u8, slot: usize, other: usize) {
+    debug_assert!(other < u32::MAX as usize);
+    // SAFETY: caller supplies an in-bounds slot; alignment is not required.
+    #[cfg(not(feature = "slot24"))]
+    unsafe {
+        wr32(base, slot + 16, other as u32)
+    }
+    // SAFETY: as above
+    #[cfg(feature = "slot24")]
+    unsafe {
+        wr64(base, slot + 16, other as u64)
+    }
 }
 
 const SMALL: u32 = 16;
@@ -434,9 +475,15 @@ impl Kernel {
         let arena = bots + cap + GAP;
         let rules = arena + BYTES as usize + 256 + 16 + 16 * budget + 32 + GAP;
         let allocation = rules + 16 * budget + 16 + GAP;
+        // (every offset a slot holds is 4 bytes, the other order's included: a layout whose
+        // total would reach u32::MAX is refused here, and Cells declines the block)
         if allocation >= u32::MAX as usize {
             return Err(Refusal::Invalid);
         }
+        debug_assert!(
+            allocation < u32::MAX as usize,
+            "the layout fits 4-byte offsets"
+        );
         let lay = Layout {
             tops,
             bots,
@@ -479,10 +526,10 @@ impl Kernel {
                     // (the slot before each order's first is set after the pass)
                     wr64(base, t, t.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
                     wr64(base, t + 8, lw);
-                    wr64(base, t + 16, k as u64);
+                    wr_other(base, t, k);
                     wr64(base, k, k.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
                     wr64(base, k + 8, lw);
-                    wr64(base, k + 16, t as u64);
+                    wr_other(base, k, t);
                     t += SLOT;
                 }};
             }
@@ -496,7 +543,7 @@ impl Kernel {
                     }
                     let tz = t;
                     letter!(1u32, cz);
-                    let kz = rd64(base, tz + 16) as usize;
+                    let kz = rd_other(base, tz);
                     wr32(base, tz + 8, 1 | MARK);
                     wr32(base, kz + 8, 1 | MARK);
                     if total - off > 1 {
@@ -588,11 +635,11 @@ impl Kernel {
                 na = rd32(base, sa) as usize;
                 ra = rd32(base, sa + 4) as u64;
                 aw = rd64(base, sa + 8);
-                bs = rd64(base, sa + 16) as usize;
+                bs = rd_other(base, sa);
                 nb = rd32(base, sb) as usize;
                 rb = rd32(base, sb + 4) as u64;
                 bw = rd64(base, sb + 8);
-                ts = rd64(base, sb + 16) as usize;
+                ts = rd_other(base, sb);
 
                 ahead!(sa);
                 ahead!(sb);
@@ -663,10 +710,10 @@ impl Kernel {
                         // both letters end: the cell is the last cut from each
                         wr32(base, ts + 4, ra as u32);
                         wr64(base, ts + 8, cw);
-                        wr64(base, ts + 16, bs as u64);
+                        wr_other(base, ts, bs);
                         wr32(base, bs + 4, ra as u32);
                         wr64(base, bs + 8, cw);
-                        wr64(base, bs + 16, ts as u64);
+                        wr_other(base, bs, ts);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
                         (sa, sb) = (na, nb);
@@ -675,12 +722,12 @@ impl Kernel {
                         // B ends; A goes on, and its next cell is promised a fresh slot
                         wr32(base, ts + 4, rb as u32);
                         wr64(base, ts + 8, cw);
-                        wr64(base, ts + 16, bs as u64);
+                        wr_other(base, ts, bs);
                         wr32(base, fb, rd32(base, bs));
                         wr32(base, bs, fb as u32);
                         wr32(base, bs + 4, rb as u32);
                         wr64(base, bs + 8, cw);
-                        wr64(base, bs + 16, ts as u64);
+                        wr_other(base, bs, ts);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
                         bs = fb;
@@ -692,17 +739,17 @@ impl Kernel {
                         nb = rd32(base, s) as usize;
                         rb = rd32(base, s + 4) as u64;
                         bw = rd64(base, s + 8);
-                        ts = rd64(base, s + 16) as usize;
+                        ts = rd_other(base, s);
                     } else {
                         // A ends; B goes on
                         wr32(base, bs + 4, ra as u32);
                         wr64(base, bs + 8, cw);
-                        wr64(base, bs + 16, ts as u64);
+                        wr_other(base, bs, ts);
                         wr32(base, ft, rd32(base, ts));
                         wr32(base, ts, ft as u32);
                         wr32(base, ts + 4, ra as u32);
                         wr64(base, ts + 8, cw);
-                        wr64(base, ts + 16, bs as u64);
+                        wr_other(base, ts, bs);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
                         ts = ft;
@@ -713,7 +760,7 @@ impl Kernel {
                         na = rd32(base, s) as usize;
                         ra = rd32(base, s + 4) as u64;
                         aw = rd64(base, s + 8);
-                        bs = rd64(base, s + 16) as usize;
+                        bs = rd_other(base, s);
                     }
                 }
             }
