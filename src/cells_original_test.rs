@@ -41,11 +41,11 @@ impl Kernel {
                 na = rd32(base, sa) as usize;
                 ra = rd32(base, sa + 4) as u64;
                 aw = rd64(base, sa + 8);
-                bs = rd64(base, sa + 16) as usize;
+                bs = rd_other(base, sa);
                 nb = rd32(base, sb) as usize;
                 rb = rd32(base, sb + 4) as u64;
                 bw = rd64(base, sb + 8);
-                ts = rd64(base, sb + 16) as usize;
+                ts = rd_other(base, sb);
 
                 ahead!(sa);
                 ahead!(sb);
@@ -112,10 +112,10 @@ impl Kernel {
                         // both letters end: the cell is the last cut from each
                         wr32(base, ts + 4, ra as u32);
                         wr64(base, ts + 8, cw);
-                        wr64(base, ts + 16, bs as u64);
+                        wr_other(base, ts, bs);
                         wr32(base, bs + 4, ra as u32);
                         wr64(base, bs + 8, cw);
-                        wr64(base, bs + 16, ts as u64);
+                        wr_other(base, bs, ts);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
                         (sa, sb) = (na, nb);
@@ -124,12 +124,12 @@ impl Kernel {
                         // B ends; A goes on, and its next cell is promised a fresh slot
                         wr32(base, ts + 4, rb as u32);
                         wr64(base, ts + 8, cw);
-                        wr64(base, ts + 16, bs as u64);
+                        wr_other(base, ts, bs);
                         wr32(base, fb, rd32(base, bs));
                         wr32(base, bs, fb as u32);
                         wr32(base, bs + 4, rb as u32);
                         wr64(base, bs + 8, cw);
-                        wr64(base, bs + 16, ts as u64);
+                        wr_other(base, bs, ts);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
                         bs = fb;
@@ -141,17 +141,17 @@ impl Kernel {
                         nb = rd32(base, s) as usize;
                         rb = rd32(base, s + 4) as u64;
                         bw = rd64(base, s + 8);
-                        ts = rd64(base, s + 16) as usize;
+                        ts = rd_other(base, s);
                     } else {
                         // A ends; B goes on
                         wr32(base, bs + 4, ra as u32);
                         wr64(base, bs + 8, cw);
-                        wr64(base, bs + 16, ts as u64);
+                        wr_other(base, bs, ts);
                         wr32(base, ft, rd32(base, ts));
                         wr32(base, ts, ft as u32);
                         wr32(base, ts + 4, ra as u32);
                         wr64(base, ts + 8, cw);
-                        wr64(base, ts + 16, bs as u64);
+                        wr_other(base, ts, bs);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
                         ts = ft;
@@ -162,7 +162,7 @@ impl Kernel {
                         na = rd32(base, s) as usize;
                         ra = rd32(base, s + 4) as u64;
                         aw = rd64(base, s + 8);
-                        bs = rd64(base, s + 16) as usize;
+                        bs = rd_other(base, s);
                     }
                 }
             }
