@@ -1319,10 +1319,12 @@
     {
       "comment_id": 6882129734,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: pricing Cooperative Cells against measured DRAM concurrency curve; no build or timing."
+      "progress": "Reassessment and ledger committed; awaiting one REVIEW on #145.",
+      "report_path": "state/records/reviews/inbox-6882129734/report.md",
+      "report_commit": "f9dcc0ac5e6e831a9805c2cb1c02fe6f7fdb9a77"
     }
   ],
   "migrated_from": {
