@@ -1,0 +1,12 @@
+{
+  "child_peak_rss_kib": 87540,
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/mibz2-first-return/docs/journal/2026-11-11-first-return-block/probe.py",
+    "work/export",
+    "/workspace/mibz2-first-return/docs/journal/2026-11-11-first-return-block/evidence/identities.json",
+    "work/attempt-1/result.json"
+  ],
+  "retries": 0,
+  "returncode": 0
+}
