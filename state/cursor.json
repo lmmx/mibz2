@@ -2140,11 +2140,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D106",
-    "incoming_comment": 6881612485,
-    "review_comment_id": 6881720827
+    "active_comment": 6882196843,
+    "status": "in progress",
+    "decision": "D107"
   },
   "duplicate_events": [
     {
@@ -3830,6 +3828,13 @@
       "work_commit": "410c046b546ad029adee130e930565444f4274fb",
       "review_comment_id": 6881720827,
       "complete_cursor_commit": "65d3e29523927d81b276a09d72eb2bf8fc8cc8fb"
+    },
+    {
+      "comment_id": 6882196843,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D107",
+      "progress": "Receipt; migration verified; assess D106 closure at 24ff5f72cec50f441a9a95a5927f640c00fbe721."
     }
   ],
   "migrated_from": {
