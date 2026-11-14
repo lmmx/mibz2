@@ -157,7 +157,7 @@
     "6868650998": 6868691042,
     "6868831037": 6868898487
   },
-  "last_rebuilt_from": 6868794260,
+  "last_rebuilt_from": 6877415527,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -686,9 +686,10 @@
     },
     "6877420411": {
       "comment_id": 6877420411,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling gated Cells registration and coordinator handback."
+      "status": "complete",
+      "progress": "Record rebuilt through channel 6877415527; REVIEW pending.",
+      "work_commit": "bd175422bf8093bcf028d0a7f77c5bb8a04f9b40"
     }
   },
-  "last_record_commit": "392ca141f383ff5ddfc19fcf9da859d80be4e6e9"
+  "last_record_commit": "bd175422bf8093bcf028d0a7f77c5bb8a04f9b40"
 }
