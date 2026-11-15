@@ -1332,12 +1332,15 @@
     {
       "comment_id": 6893001194,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Priced phase screen with Louis addendum and ledger; awaiting one REVIEW on #145.",
+      "progress": "Pricing and ledger committed; REVIEW verified on #145.",
       "report_path": "state/records/reviews/inbox-6893001194/report.md",
-      "report_commit": "acc5229e6f120f9dcfa50815386029b2b01a9604"
+      "report_commit": "acc5229e6f120f9dcfa50815386029b2b01a9604",
+      "reply_id": 6893060396,
+      "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6893060396",
+      "routing_verification": "Exact readback: #145, author lmmx, inbox ID, TYPE: REVIEW."
     },
     {
       "comment_id": 6893034788,
