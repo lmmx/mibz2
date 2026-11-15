@@ -70,7 +70,23 @@ are unchanged.
   Level, as expected on a 2-core runner, which runs the same plan in both builds: every
   interval includes no change. Best wall against best wall +0.3% (−1.8, +2.4). Every corpus
   gave the same bytes in every run. The assessment: no change detected.
-- **Release scaling, the i9-10900K** (RELEASING.md §5), 0.3.3 against 0.3.4: queued, to follow.
+- **Release scaling, the i9-10900K** (`release-scaling/run-20261115T193005Z`, sha256 f07387d2,
+  10 paired rounds, every arm the same bytes), `wikidata`, 0.3.3 ÷ 0.3.4 wall:
+
+  | threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+  |---|--:|--:|--:|--:|--:|--:|--:|--:|
+  | 0.3.3 ÷ 0.3.4 | 1.014 | 1.016 | 1.013 | **1.078** | 0.993 | 1.010 | 1.004 | 0.993 |
+  | 95% interval | 0.980–1.048 | 0.986–1.048 | 0.993–1.034 | 1.057–1.100 | 0.976–1.011 | 0.986–1.035 | 0.980–1.028 | 0.964–1.023 |
+  | peak RSS, MB | 28 → 28 | 58 → 58 | 99 → 93 | 80 → 173 | 73 → 72 | 71 → 72 | 71 → 72 | 72 → 72 |
+
+  At 8 threads, where the plan changed from teams to workers, 0.3.4 takes 7.2% less wall time
+  and 3.4% less CPU (1.035, 1.015–1.054), for about twice the peak RSS. Elsewhere it is level,
+  as expected: the plan is unchanged at 1–4 threads and from 10.
+  - The head was built at master `06aa5858`: 0.3.4 plus the then-unreleased #431–#433. #433's
+    Cells memory change shows no wall change beyond noise at 1–4 threads here.
+  - The same commit's `bench-crossover` (`crossover/run-20261115T191448Z`, #145 LOG
+    6900029992) leaves the threshold at 10. Workers at 10 threads now take 1.040× the teams'
+    wall, down from 1.153× before #433.
 - **Caveats.**
   - One machine: the i9-10900K (10 cores, 20 threads) is the only evidence. Other 6–9-core
     machines take the same plan without having been measured.
