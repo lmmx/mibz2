@@ -1,0 +1,6 @@
+R1: slots 88,726,936 (0.2000 of slots) | induction 0 (0.0000 of induction) | all 0.0514 | of which live (read) bytes 88,725,368
+R2: slots 177,455,440 (0.4000 of slots) | induction 0 (0.0000 of induction) | all 0.1028 | of which live (read) bytes 88,726,936
+R3: slots 62,653,240 (0.1412 of slots) | induction 127,913,392 (0.0997 of induction) | all 0.1104 | of which live (read) bytes 95,282,532
+R4: slots 133,090,404 (0.3000 of slots) | induction 245,475,588 (0.1914 of induction) | all 0.2193 | of which live (read) bytes 203,169,728
+dead: slots 177,490,842 (0.4000 of slots) | induction 327,302,044 (0.2552 of induction) | all 0.2924 | of which live (read) bytes 0
+{'slots': 443687992, 'ind': 1282701936}

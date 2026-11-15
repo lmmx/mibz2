@@ -1,0 +1,936 @@
+//! Field-level liveness and derivability of the Cells induction's stores (untimed counting).
+//!
+//! elision CORPUS.bz2 CENSUS.jsonl [ONLY_BLOCK]
+//! One JSON line per admitted block on stdout.
+//!
+//! A port of `Kernel::slots`, `Kernel::induce_cells` and the read pattern of
+//! `Kernel::write_cells` (src/cells.rs at origin/master 55a58b18, SLOT = 20, GAP = 0 as in
+//! release) on a byte buffer laid out as the kernel lays it out. Every store creates one
+//! "byte event" per byte; every load is attributed to the byte events it reads. A load is
+//! *semantic* if its value is used (copy16's slack beyond a word, the closing/drop branch's
+//! unused fields and the fetch-ahead are not), *physical* otherwise.
+//! Derivation rules are checked at every semantic read: the derived value is compared with
+//! the stored one, and a read is "covered" by a rule only if the rule applies and agrees.
+
+use mibz2::bwt::{InverseBwt, Segmented};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{decode_block, Kernels, Scratch};
+use std::cell::RefCell;
+use std::collections::HashMap;
+
+thread_local! {
+    static CAP: RefCell<Option<(Vec<u8>, u32)>> = const { RefCell::new(None) };
+}
+#[derive(Default)]
+struct Capture(Segmented);
+impl InverseBwt for Capture {
+    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], p: u32, out: &mut Vec<u8>) {
+        CAP.with(|c| *c.borrow_mut() = Some((ll.to_vec(), p)));
+        self.0.invert(ll, counts, p, out)
+    }
+}
+
+const SLOT: usize = 20;
+const PAD: usize = 4096;
+const MARK: u32 = 1 << 31;
+const SMALL: u64 = 16;
+const BYTES: usize = 16;
+
+// fields
+const F_PREV: u8 = 0;
+const F_LAM: u8 = 1;
+const F_WL: u8 = 2;
+const F_WP: u8 = 3;
+const F_OTH: u8 = 4;
+const F_ARENA: u8 = 5;
+const F_RULE: u8 = 6;
+const F_TABLE: u8 = 7;
+const NF: usize = 8;
+// sites
+const S_SL_TOP: u8 = 0;
+const S_SL_BOT: u8 = 1;
+const S_SL_MARK: u8 = 2;
+const S_SL_FIRST: u8 = 3;
+const S_SL_TABLE: u8 = 4;
+// 5 + 4*k + 2*onerow + fresh; k: 0 eq_ts, 1 eq_bs, 2 gt_ts, 3 gt_bs, 4 lt_bs, 5 lt_ts
+const S_CELL: u8 = 5;
+const S_PR_FRESH: u8 = 29;
+const S_PR_LINK: u8 = 30;
+const S_COPY1: u8 = 31;
+const S_COPY2: u8 = 32;
+const S_RULE: u8 = 33;
+// the original letters' slots with lambda = 1 (R3 extended: flag in `other`'s spare high bit)
+const S_SL_TOP1: u8 = 34;
+const S_SL_BOT1: u8 = 35;
+const NS: usize = 36;
+// derivation rules (bits)
+const R1: u8 = 1; // prev = this - SLOT at a non-fresh, unlinked slot
+const R2: u8 = 2; // (|w|, w) of an original letter = (1 [|MARK], first + byte(bottom slot))
+const R3: u8 = 4; // lambda = 1 of a cell-written slot, flagged in |w|
+const NR: usize = 3;
+// rule sets (bits of ev_uncov / ev_thru): 0 = C {R1,R2,R3}; 1 = A {C + R4: bottom (λ,w) read
+// through `other` from the top slot}; 2 = B {C + R5: top (λ,w) read through from the bottom}
+const NSET: usize = 3;
+
+struct Block {
+    n: usize,
+    recs: Vec<u16>,
+    p: u32,
+}
+
+fn records(ll: &[u8]) -> Vec<u16> {
+    let mut v = Vec::new();
+    let mut i = 0;
+    while i < ll.len() {
+        let c = ll[i];
+        let mut j = i;
+        while j < ll.len() && ll[j] == c {
+            j += 1;
+        }
+        let mut left = j - i;
+        while left > 0 {
+            let l = left.min(127);
+            v.push((c as u16) << 8 | l as u16);
+            left -= l;
+        }
+        i = j;
+    }
+    v
+}
+
+#[derive(Default)]
+struct St {
+    buf: Vec<u8>,
+    sh: Vec<u32>, // byte event + 1, 0 = never stored
+    ev_at: Vec<u32>,
+    ev_site: Vec<u8>,
+    ev_field: Vec<u8>,
+    ev_sem: Vec<u8>,
+    ev_phys: Vec<u8>,
+    ev_notcov: Vec<u8>,
+    ev_uncov: Vec<u8>,
+    ev_thru: Vec<u8>,
+    ev_store: Vec<u32>,
+    st_first: Vec<u32>,
+    st_w: Vec<u8>,
+    st_site: Vec<u8>,
+    // lines (64 B)
+    ln_ind: Vec<bool>,    // touched by the induction (load or store, no fetch-ahead)
+    ln_a8: Vec<bool>,     // the same under layout A8: bottom slots of 8 B (prev, other), (λ, w) read through
+    ln_slots: Vec<bool>,  // stored by `slots`
+    ln_read: Vec<bool>,   // any physical load (slots, induction or writer)
+    ln_uncov: Vec<u8>,    // per rule set: a load not covered (or physical only)
+    phase: u8,            // 0 slots, 1 induction, 2 writer
+    tops: usize,
+    bots: usize,
+    cap: usize,
+    unwritten_reads: u64,
+    thru_lam_a: u64,
+    slot_lam_reads: u64,
+}
+
+impl St {
+    fn rd32(&self, at: usize) -> u32 {
+        u32::from_le_bytes(self.buf[at..at + 4].try_into().unwrap())
+    }
+    fn rd64(&self, at: usize) -> u64 {
+        u64::from_le_bytes(self.buf[at..at + 8].try_into().unwrap())
+    }
+    /// layout A8: a bottom slot keeps bytes 0..4 and 16..20 only, at 8 B a slot
+    fn line_a8(&self, a: usize) -> Option<usize> {
+        if a >= self.bots && a < self.bots + self.cap {
+            let (i, o) = ((a - self.bots) / SLOT, (a - self.bots) % SLOT);
+            if (4..16).contains(&o) {
+                return None;
+            }
+            let o2 = if o < 4 { o } else { o - 12 };
+            return Some((self.bots + 8 * i + o2) >> 6);
+        }
+        Some(a >> 6)
+    }
+    fn mark_a8(&mut self, a: usize) {
+        if self.phase == 1 {
+            if let Some(l) = self.line_a8(a) {
+                self.ln_a8[l] = true;
+            }
+        }
+    }
+    fn field_of(&self, a: usize) -> u8 {
+        let base = if a >= self.bots { self.bots } else { self.tops };
+        (((a - base) % SLOT) / 4) as u8
+    }
+    /// a store of `bytes` at `at`, by `site`; `field` None = slot field by offset
+    fn st(&mut self, at: usize, bytes: &[u8], site: u8, field: Option<u8>) {
+        let id = self.st_first.len() as u32;
+        self.st_first.push(self.ev_at.len() as u32);
+        self.st_w.push(bytes.len() as u8);
+        self.st_site.push(site);
+        for (i, &b) in bytes.iter().enumerate() {
+            let a = at + i;
+            self.buf[a] = b;
+            self.ev_at.push(a as u32);
+            self.ev_site.push(site);
+            self.ev_field.push(field.unwrap_or_else(|| self.field_of(a)));
+            self.ev_sem.push(0);
+            self.ev_phys.push(0);
+            self.ev_notcov.push(0);
+            self.ev_uncov.push(0);
+            self.ev_thru.push(0);
+            self.ev_store.push(id);
+            self.sh[a] = self.ev_at.len() as u32;
+            let l = a >> 6;
+            self.mark_a8(a);
+            if self.phase == 1 {
+                self.ln_ind[l] = true;
+            } else if self.phase == 0 {
+                self.ln_slots[l] = true;
+            }
+        }
+    }
+    fn wr32(&mut self, at: usize, v: u32, site: u8) {
+        self.st(at, &v.to_le_bytes(), site, None)
+    }
+    fn wr64(&mut self, at: usize, v: u64, site: u8) {
+        self.st(at, &v.to_le_bytes(), site, None)
+    }
+    fn rd(&mut self, at: usize, w: usize, sem: bool, cov: u8) {
+        self.rdx(at, w, sem, cov, if cov & (R1 | R2 | R3) != 0 { 0 } else { 7 })
+    }
+    /// mark the bytes a read-through would load under rule set `set`
+    fn thru(&mut self, at: usize, w: usize, set: usize) {
+        for a in at..at + w {
+            if set == 1 {
+                self.mark_a8(a);
+                if w == 4 && a == at {
+                    self.thru_lam_a += 1;
+                }
+            }
+            let e = self.sh[a];
+            if e > 0 {
+                self.ev_thru[(e - 1) as usize] |= 1 << set;
+            }
+            self.ln_uncov[a >> 6] |= 1 << set;
+        }
+    }
+    /// a load of w bytes; sem: its value is used; cov: rules covering it (semantic only);
+    /// unc: bit s set = not covered under rule set s
+    fn rdx(&mut self, at: usize, w: usize, sem: bool, cov: u8, unc: u8) {
+        for a in at..at + w {
+            let l = a >> 6;
+            self.mark_a8(a);
+            if self.phase == 1 {
+                self.ln_ind[l] = true;
+            }
+            self.ln_read[l] = true;
+            if !sem {
+                self.ln_uncov[l] = 7;
+            } else {
+                self.ln_uncov[l] |= unc;
+            }
+            let e = self.sh[a];
+            if e == 0 {
+                self.unwritten_reads += 1;
+                continue;
+            }
+            let e = (e - 1) as usize;
+            self.ev_phys[e] = self.ev_phys[e].saturating_add(1);
+            if sem {
+                self.ev_sem[e] = self.ev_sem[e].saturating_add(1);
+                self.ev_notcov[e] |= !cov;
+                self.ev_uncov[e] |= unc;
+            }
+        }
+    }
+}
+
+#[derive(Default)]
+struct Stats {
+    cells: usize,
+    drops: usize,
+    letters: usize,
+    case: [usize; 3],       // eq, gt (ra>rb), lt
+    onerow: [usize; 3],     // cells of one row by case (z = onerow[0])
+    // derivation probes on semantic slot reads
+    prev_reads: usize,
+    prev_adj: usize,        // value == x - SLOT
+    prev_r1: usize,         // R1 applies (non-fresh, unlinked)
+    prev_r1_bad: usize,     // R1 applies but disagrees
+    prev_fresh: usize,
+    prev_linked: usize,
+    lam_reads: usize,
+    lam_one: usize,
+    lam_r3: usize,
+    lam_eq_partner: usize,  // the step it enters is equal
+    lam_orig: usize,
+    w_reads: usize,
+    w_r2: usize,
+    w_r2_bad: usize,
+    oth_reads: usize,
+    oth_sameidx: usize,
+    oth_fresh_target: usize,
+    oth_orig: usize,
+    oth_eq_partner_slot: usize,
+    thru_bad: usize,
+}
+
+fn run(b: &Block, budget: usize, st: &mut St, sx: &mut Stats) -> Option<(u32, u32)> {
+    let n = b.n;
+    let recs = &b.recs;
+    let p = b.p;
+    if recs.len() * 10 >= n || recs.len() * 64 < n {
+        return None;
+    }
+    let mut cnt = [0u32; 257];
+    let (mut prev, mut row, mut start) = (256usize, 0u32, 0u32);
+    let (mut at, mut at_start) = (0usize, 0u32);
+    for (i, &rec) in recs.iter().enumerate() {
+        let (c, len) = ((rec >> 8) as usize, (rec & 0xFF) as u32);
+        if c != prev {
+            cnt[c + 1] += 1;
+            start = row;
+        }
+        prev = c;
+        if p.wrapping_sub(row) < len {
+            (at, at_start) = (i, start);
+        }
+        row += len;
+    }
+    assert_eq!(row as usize, n);
+    let cz = (recs[at] >> 8) as usize;
+    let (mut ia, mut ib) = (at, at + 1);
+    while ia > 0 && (recs[ia - 1] >> 8) as usize == cz {
+        ia -= 1;
+    }
+    while ib < recs.len() && (recs[ib] >> 8) as usize == cz {
+        ib += 1;
+    }
+    let total: u32 = recs[ia..ib].iter().map(|&x| (x & 0xFF) as u32).sum();
+    let off = p - at_start;
+    cnt[cz + 1] += (off > 0) as u32 + (total - off > 1) as u32;
+    let letters = cnt.iter().map(|&v| v as usize).sum::<usize>();
+    let cap = (recs.len() + 2 + budget) * SLOT;
+    let tops = PAD;
+    let bots = tops + cap;
+    let arena = bots + cap;
+    let rules = arena + BYTES + 256 + 16 + 16 * budget + 32;
+    let allocation = rules + 16 * budget + 16;
+    *st = St::default();
+    st.buf = vec![0u8; allocation];
+    st.sh = vec![0u32; allocation];
+    let nl = allocation / 64 + 2;
+    st.ln_ind = vec![false; nl];
+    st.ln_a8 = vec![false; nl];
+    st.ln_slots = vec![false; nl];
+    st.ln_read = vec![false; nl];
+    st.ln_uncov = vec![0u8; nl];
+    st.tops = tops;
+    st.bots = bots;
+    st.cap = cap;
+    st.phase = 0;
+    let table: Vec<u8> = (0..=255u8).collect();
+    st.st(arena + BYTES, &table, S_SL_TABLE, Some(F_TABLE));
+    // byte bucket bounds of the bottom order (for R2's derivation: byte of a bottom slot)
+    let mut bucket = [0usize; 257];
+    for k in 0..256 {
+        cnt[k + 1] += cnt[k];
+        bucket[k] = bots + cnt[k] as usize * SLOT;
+        cnt[k] = (bots + cnt[k] as usize * SLOT) as u32;
+    }
+    bucket[256] = bots + cnt[256] as usize * SLOT;
+    let byte_of = |k: usize| -> usize {
+        // the bucket holding bottom slot k (binary search over 257 bounds)
+        let mut lo = 0usize;
+        let mut hi = 256usize;
+        while lo + 1 < hi {
+            let mid = (lo + hi) / 2;
+            if bucket[mid] <= k {
+                lo = mid
+            } else {
+                hi = mid
+            }
+        }
+        // skip empty buckets: the last bucket whose start <= k and that is non-empty
+        let mut c = lo;
+        while c < 255 && bucket[c + 1] <= k {
+            c += 1;
+        }
+        c
+    };
+    let first = arena as u64 + BYTES as u64;
+    let mut t = PAD;
+    let mut zslots = (0usize, 0usize);
+    {
+        let mut letter = |st: &mut St, lam: u32, c: usize, t: &mut usize| -> usize {
+            let k = cnt[c] as usize;
+            cnt[c] = (k + SLOT) as u32;
+            let lw = 1 | (first + c as u64) << 32;
+            let (stp, sbt) = if lam == 1 { (S_SL_TOP1, S_SL_BOT1) } else { (S_SL_TOP, S_SL_BOT) };
+            st.wr64(*t, t.wrapping_sub(SLOT) as u32 as u64 | (lam as u64) << 32, stp);
+            st.wr64(*t + 8, lw, stp);
+            st.wr32(*t + 16, k as u32, stp);
+            st.wr64(k, k.wrapping_sub(SLOT) as u32 as u64 | (lam as u64) << 32, sbt);
+            st.wr64(k + 8, lw, sbt);
+            st.wr32(k + 16, *t as u32, sbt);
+            let tt = *t;
+            *t += SLOT;
+            tt
+        };
+        let nrec = recs.len();
+        let mut i = 0;
+        while i < nrec {
+            if i == ia {
+                if off > 0 {
+                    letter(st, off, cz, &mut t);
+                }
+                let tz = letter(st, 1, cz, &mut t);
+                st.rd(tz + 16, 4, true, 0);
+                let kz = st.rd32(tz + 16) as usize;
+                st.wr32(tz + 8, 1 | MARK, S_SL_MARK);
+                st.wr32(kz + 8, 1 | MARK, S_SL_MARK);
+                zslots = (tz, kz);
+                if total - off > 1 {
+                    letter(st, total - off - 1, cz, &mut t);
+                }
+                i = ib;
+                continue;
+            }
+            let rec = recs[i];
+            let c = (rec >> 8) as usize;
+            let mut lam = (rec & 0xFF) as u32;
+            i += 1;
+            while i < nrec && (recs[i] >> 8) as usize == c {
+                lam += (recs[i] & 0xFF) as u32;
+                i += 1;
+            }
+            letter(st, lam, c, &mut t);
+        }
+    }
+    st.wr32(PAD, PAD as u32, S_SL_FIRST);
+    st.wr32(bots, bots as u32, S_SL_FIRST);
+    if letters - 1 > budget {
+        return None;
+    }
+    sx.letters = letters;
+    // ---- induce_cells
+    st.phase = 1;
+    const M: u64 = 0xFFFF_FFFF;
+    let rr = letters;
+    let mut top = arena + BYTES + 256 + 16;
+    let mut rp = rules;
+    let (ft0, fb0) = (tops + rr * SLOT, bots + rr * SLOT);
+    let (mut ft, mut fb) = (ft0, fb0);
+    let nsl = 2 * cap / SLOT + 4;
+    let sidx = |a: usize| -> usize {
+        if a >= bots {
+            cap / SLOT + 2 + (a - bots) / SLOT
+        } else {
+            (a - tops) / SLOT
+        }
+    };
+    let is_fresh = |a: usize| -> bool { if a >= bots { a >= fb0 } else { a >= ft0 } };
+    // the flags a kernel would carry in spare bits (other's low 2 bits; |w| bit 30)
+    let mut celled = vec![false; nsl];
+    let mut linked = vec![false; nsl];
+    let mut cells = 0usize;
+    let (mut na, mut nb);
+    let (mut ra, mut rb);
+    let (mut aw, mut bw);
+    let (mut bs, mut ts);
+    let (mut sa, mut sb) = (ft0 - SLOT, fb0 - SLOT);
+    // semantic read of slot x's fields (mask: bit f = field f used); `partner_r`: the
+    // remainder it will be compared with, for the probe
+    macro_rules! rdslot {
+        ($x:expr, $mask:expr, $partner:expr) => {{
+            let x: usize = $x;
+            let mask: u8 = $mask;
+            let v = (st.rd32(x) as usize, st.rd32(x + 4) as u64, st.rd64(x + 8), st.rd32(x + 16) as usize);
+            let si = sidx(x);
+            if mask & 1 != 0 {
+                sx.prev_reads += 1;
+                let adj = v.0 == x.wrapping_sub(SLOT);
+                sx.prev_adj += adj as usize;
+                sx.prev_fresh += is_fresh(x) as usize;
+                sx.prev_linked += linked[si] as usize;
+                let mut cov = 0u8;
+                if !is_fresh(x) && !linked[si] {
+                    sx.prev_r1 += 1;
+                    if adj { cov |= R1 } else { sx.prev_r1_bad += 1 }
+                }
+                st.rd(x, 4, true, cov);
+            } else {
+                st.rd(x, 4, false, 0);
+            }
+            if mask & 2 != 0 {
+                sx.lam_reads += 1;
+                sx.lam_one += (v.1 == 1) as usize;
+                sx.lam_orig += (!celled[si]) as usize;
+                if let Some(pr) = $partner { sx.lam_eq_partner += (v.1 == pr) as usize; }
+                let mut cov = 0u8;
+                if v.1 == 1 {
+                    sx.lam_r3 += 1;
+                    cov |= R3;
+                }
+                st.slot_lam_reads += 1;
+                let bot = x >= bots;
+                let y = v.3;
+                let tok = st.rd32(y + 4) as u64 == v.1;
+                if !tok { sx.thru_bad += 1; }
+                let mut unc = 0u8;
+                if cov == 0 { unc |= 1; }
+                // set A: bottom read through; top by R3
+                if bot { if tok { st.thru(y + 4, 4, 1) } else { unc |= 2 } } else if cov == 0 { unc |= 2 }
+                // set B: top read through; bottom by R3
+                if !bot { if tok { st.thru(y + 4, 4, 2) } else { unc |= 4 } } else if cov == 0 { unc |= 4 }
+                st.rdx(x + 4, 4, true, cov, unc);
+            } else {
+                st.rd(x + 4, 4, false, 0);
+            }
+            if mask & 12 != 0 {
+                sx.w_reads += 1;
+                let mut cov = 0u8;
+                if !celled[si] {
+                    // original letter: (1 | mark, first + byte of its bottom slot)
+                    let k = if x >= bots { x } else { v.3 };
+                    let c = byte_of(k);
+                    let mk = if x == zslots.0 || x == zslots.1 { MARK } else { 0 };
+                    let want = (1u32 | mk) as u64 | (first + c as u64) << 32;
+                    sx.w_r2 += 1;
+                    if want == v.2 { cov |= R2 } else { sx.w_r2_bad += 1 }
+                }
+                let bot = x >= bots;
+                let y = v.3;
+                let tok = st.rd64(y + 8) == v.2;
+                if !tok { sx.thru_bad += 1; }
+                let mut unc = 0u8;
+                if cov == 0 {
+                    unc |= 1;
+                    if bot { if tok { st.thru(y + 8, 8, 1) } else { unc |= 2 } } else { unc |= 2 }
+                    if !bot { if tok { st.thru(y + 8, 8, 2) } else { unc |= 4 } } else { unc |= 4 }
+                }
+                // a use of the MARK bit only (drop) still needs |w|: count both halves
+                st.rdx(x + 8, 4, mask & 4 != 0, cov, unc);
+                st.rdx(x + 12, 4, mask & 8 != 0, cov, unc);
+            } else {
+                st.rd(x + 8, 8, false, 0);
+            }
+            if mask & 16 != 0 {
+                sx.oth_reads += 1;
+                let same = if x >= bots { x - bots + tops } else { x - tops + bots };
+                sx.oth_sameidx += (v.3 == same) as usize;
+                sx.oth_fresh_target += is_fresh(v.3) as usize;
+                sx.oth_orig += (!celled[si]) as usize;
+                st.rd(x + 16, 4, true, 0);
+            } else {
+                st.rd(x + 16, 4, false, 0);
+            }
+            v
+        }};
+    }
+    'fresh: loop {
+        // read both whole, as the kernel does; which fields are used depends on the branch
+        let va = (st.rd32(sa) as usize, st.rd32(sa + 4) as u64, st.rd64(sa + 8), st.rd32(sa + 16) as usize);
+        let vb_bs = va.3;
+        let closing = vb_bs == sb;
+        let (ma, mb) = if closing {
+            if va.2 as u32 & MARK != 0 { (4 | 8 | 16, 0) } else { (1 | 4 | 16, 1) }
+        } else {
+            (31, 31)
+        };
+        let vb = (st.rd32(sb) as usize, st.rd32(sb + 4) as u64);
+        (na, ra, aw, bs) = rdslot!(sa, ma, if closing { None } else { Some(vb.1) });
+        (nb, rb, bw, ts) = rdslot!(sb, mb, None::<u64>);
+        if bs == sb {
+            if aw as u32 & MARK != 0 {
+                sx.cells = cells;
+                return Some(((aw >> 32) as u32, aw as u32));
+            }
+            sx.drops += 1;
+            (sa, sb) = (na, nb);
+            continue 'fresh;
+        }
+        loop {
+            if cells == budget {
+                return None;
+            }
+            cells += 1;
+            let (la, lb) = (aw & M, bw & M);
+            let len = la + lb;
+            let small = len <= SMALL;
+            if small {
+                let (wa, wb) = ((aw >> 32) as usize, (bw >> 32) as usize);
+                st.rd(wa, la as usize, true, 0);
+                st.rd(wa + la as usize, 16 - la as usize, false, 0);
+                let tmp: Vec<u8> = st.buf[wa..wa + 16].to_vec();
+                st.st(top, &tmp, S_COPY1, Some(F_ARENA));
+                st.rd(wb, lb as usize, true, 0);
+                st.rd(wb + lb as usize, 16 - lb as usize, false, 0);
+                let tmp: Vec<u8> = st.buf[wb..wb + 16].to_vec();
+                st.st(top + la.min(16) as usize, &tmp, S_COPY2, Some(F_ARENA));
+            } else {
+                st.st(rp, &aw.to_le_bytes(), S_RULE, Some(F_RULE));
+                st.st(rp + 8, &bw.to_le_bytes(), S_RULE, Some(F_RULE));
+            }
+            let word = if small { top } else { rp };
+            top += if small { len as usize } else { 0 };
+            rp += if small { 0 } else { 16 };
+            let cw = len | (word as u64) << 32;
+            let mr = ra.min(rb);
+            let ci = if ra == rb { 0 } else if ra > rb { 1 } else { 2 };
+            sx.case[ci] += 1;
+            sx.onerow[ci] += (mr == 1) as usize;
+            let one = (mr == 1) as u8;
+            let site = |k: u8, a: usize| -> u8 { S_CELL + 4 * k + 2 * one + is_fresh(a) as u8 };
+            macro_rules! cell {
+                ($x:expr, $lam:expr, $oth:expr, $k:expr) => {{
+                    let x: usize = $x;
+                    let s = site($k, x);
+                    st.wr32(x + 4, $lam as u32, s);
+                    st.wr64(x + 8, cw, s);
+                    st.wr32(x + 16, $oth as u32, s);
+                    celled[sidx(x)] = true;
+                }};
+            }
+            if ra == rb {
+                cell!(ts, ra, bs, 0);
+                cell!(bs, ra, ts, 1);
+                (sa, sb) = (na, nb);
+                continue 'fresh;
+            } else if ra > rb {
+                cell!(ts, rb, bs, 2);
+                // promise: the prev of bs moves to fb
+                let cov = if !is_fresh(bs) && !linked[sidx(bs)] {
+                    sx.prev_reads += 1;
+                    sx.prev_r1 += 1;
+                    let v = st.rd32(bs) as usize;
+                    sx.prev_adj += (v == bs - SLOT) as usize;
+                    if v == bs - SLOT { R1 } else { sx.prev_r1_bad += 1; 0 }
+                } else {
+                    sx.prev_reads += 1;
+                    0
+                };
+                st.rd(bs, 4, true, cov);
+                let v = st.rd32(bs);
+                st.wr32(fb, v, S_PR_FRESH);
+                st.wr32(bs, fb as u32, S_PR_LINK);
+                linked[sidx(bs)] = true;
+                cell!(bs, rb, ts, 3);
+                bs = fb;
+                fb += SLOT;
+                ra -= rb;
+                let s = nb;
+                (nb, rb, bw, ts) = rdslot!(s, 31, Some(ra));
+            } else {
+                cell!(bs, ra, ts, 4);
+                let cov = if !is_fresh(ts) && !linked[sidx(ts)] {
+                    sx.prev_reads += 1;
+                    sx.prev_r1 += 1;
+                    let v = st.rd32(ts) as usize;
+                    sx.prev_adj += (v == ts - SLOT) as usize;
+                    if v == ts - SLOT { R1 } else { sx.prev_r1_bad += 1; 0 }
+                } else {
+                    sx.prev_reads += 1;
+                    0
+                };
+                st.rd(ts, 4, true, cov);
+                let v = st.rd32(ts);
+                st.wr32(ft, v, S_PR_FRESH);
+                st.wr32(ts, ft as u32, S_PR_LINK);
+                linked[sidx(ts)] = true;
+                cell!(ts, ra, bs, 5);
+                ts = ft;
+                ft += SLOT;
+                rb -= ra;
+                let s = na;
+                (na, ra, aw, bs) = rdslot!(s, 31, Some(rb));
+            }
+        }
+    }
+}
+
+/// The writer's loads from the buffer (`write_cells`), as semantic reads.
+fn writer_reads(st: &mut St, word: u32, len: u32, rules: usize, rule_end: usize) {
+    st.phase = 2;
+    let p = (len & !MARK) as usize;
+    let ro = rules;
+    let nr = (rule_end - ro) / 16;
+    const NIL: u32 = u32::MAX;
+    let mut pos = vec![NIL; nr];
+    let rule = |st: &mut St, w: usize| -> (u64, u64) {
+        st.rd(w, 16, true, 0);
+        (st.rd64(w), st.rd64(w + 8))
+    };
+    let (mut w, mut j) = (word as usize, 0usize);
+    while w >= ro {
+        let (a, b) = rule(st, w);
+        if a as u32 & MARK != 0 {
+            w = (a >> 32) as usize;
+        } else {
+            j += a as u32 as usize;
+            w = (b >> 32) as usize;
+        }
+    }
+    let start = (j + 1) % p;
+    let (mut w, mut q) = (word as usize, 0usize);
+    while w >= ro {
+        let (a, b) = rule(st, w);
+        let la = (a as u32 & !MARK) as usize;
+        let (plain, at, next) = if a as u32 & MARK != 0 { (b, q + la, a) } else { (a, q, b) };
+        let d = (at + p - start) % p;
+        let lx = plain as u32 as usize;
+        if lx <= SMALL as usize {
+            st.rd((plain >> 32) as usize, lx, true, 0);
+        } else {
+            let x = ((plain >> 32) as usize - ro) / 16;
+            pos[x] = pos[x].min(d as u32);
+        }
+        if a as u32 & MARK == 0 {
+            q += la;
+        }
+        w = (next >> 32) as usize;
+    }
+    st.rd(w, 1, true, 0);
+    for j in (0..nr).rev() {
+        let q = pos[j];
+        if q == NIL {
+            continue;
+        }
+        let (a, b) = rule(st, ro + 16 * j);
+        if a as u32 > SMALL as u32 {
+            let x = ((a >> 32) as usize - ro) / 16;
+            pos[x] = pos[x].min(q);
+        }
+        if b as u32 > SMALL as u32 {
+            let x = ((b >> 32) as usize - ro) / 16;
+            pos[x] = pos[x].min(q + a as u32);
+        }
+    }
+    for j in 0..nr {
+        if pos[j] == NIL {
+            continue;
+        }
+        let (a, b) = rule(st, ro + 16 * j);
+        let (ll, rr) = (a as u32 as usize, b as u32 as usize);
+        if ll <= SMALL as usize {
+            st.rd((a >> 32) as usize, ll, true, 0);
+        }
+        if rr <= SMALL as usize {
+            st.rd((b >> 32) as usize, rr, true, 0);
+        }
+    }
+    // the third walk reloads the spine's rules
+    let mut w = word as usize;
+    while w >= ro {
+        let (a, b) = rule(st, w);
+        w = if a as u32 & MARK != 0 { (a >> 32) as usize } else { (b >> 32) as usize };
+    }
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&args[1]).expect("corpus");
+    let census = std::fs::read_to_string(&args[2]).expect("census");
+    let only: Option<u64> = args.get(3).map(|x| x.parse().unwrap());
+    let mut adm: HashMap<u64, (usize, usize, usize, usize)> = HashMap::new();
+    for line in census.lines() {
+        if !line.contains("\"outcome\":\"admitted\"") {
+            continue;
+        }
+        let g = |key: &str| -> usize {
+            let k = format!("\"{key}\":");
+            let i = line.find(&k).unwrap() + k.len();
+            line[i..].split(|c: char| !c.is_ascii_digit()).next().unwrap().parse().unwrap()
+        };
+        adm.insert(g("block") as u64, (g("n"), g("r"), g("letters"), g("cells")));
+    }
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let mut scr = Scratch::<Capture>::default();
+    let mut out = Vec::new();
+    let mut syms = Vec::new();
+    let mut st = St::default();
+    loop {
+        match sc.next(syms).expect("scan") {
+            Event::Block { index, symbols, .. } => {
+                if adm.contains_key(&index) && only.map_or(true, |o| o == index) {
+                    out.clear();
+                    decode_block(&symbols, k, &mut scr, &mut out).expect("decode");
+                    let (ll, p) = CAP.with(|c| c.borrow_mut().take()).expect("captured");
+                    let (cn, cr, cl, ccells) = adm[&index];
+                    let n = ll.len();
+                    let recs = records(&ll);
+                    let budget = n / 25 * 4 + n % 25 * 4 / 25;
+                    let blk = Block { n, recs, p };
+                    let mut sx = Stats::default();
+                    let (word, len) = run(&blk, budget, &mut st, &mut sx).expect("admitted");
+                    // rules region end: the last rule store + 16
+                    let cap = st.cap;
+                    let arena = st.bots + cap;
+                    let rules = arena + BYTES + 256 + 16 + 16 * budget + 32;
+                    let mut rule_end = rules;
+                    for (i, &s) in st.st_site.iter().enumerate() {
+                        if s == S_RULE {
+                            let a = st.ev_at[st.st_first[i] as usize] as usize;
+                            rule_end = rule_end.max(a + 8);
+                        }
+                    }
+                    writer_reads(&mut st, word, len, rules, rule_end);
+                    println!("{}", report(index, n, cn, cr, cl, ccells, &blk, &sx, &st));
+                }
+                syms = symbols.syms;
+            }
+            Event::Done => break,
+        }
+    }
+}
+
+/// Byte classes a kernel could stop storing outright under rule set `set` (decided at the
+/// store, every instance): 0 = C {R1, R2, R3}, 1 = A {C + R4}, 2 = B {C + R5}.
+fn static_class(site: u8, field: u8, set: usize) -> bool {
+    if site == S_SL_TOP || site == S_SL_BOT || site == S_SL_TOP1 || site == S_SL_BOT1 {
+        if field == F_PREV || field == F_WL || field == F_WP {
+            return true; // R1, R2
+        }
+        if field == F_LAM {
+            let bot = site == S_SL_BOT || site == S_SL_BOT1;
+            let one = site == S_SL_TOP1 || site == S_SL_BOT1;
+            return one || (set == 1 && bot) || (set == 2 && !bot);
+        }
+        return false;
+    }
+    if site == S_SL_MARK {
+        return true; // R2 (the mark: the walk's row's slots, held in registers)
+    }
+    if (S_CELL..S_PR_FRESH).contains(&site) {
+        let k = (site - S_CELL) / 4;
+        let one = (site - S_CELL) / 2 % 2 == 1;
+        let bottom = k == 1 || k == 3 || k == 4;
+        let elided_side = (set == 1 && bottom) || (set == 2 && !bottom);
+        return match field {
+            F_LAM => one || elided_side,
+            F_WL | F_WP => elided_side,
+            _ => false,
+        };
+    }
+    false
+}
+
+fn report(index: u64, n: usize, cn: usize, cr: usize, cl: usize, ccells: usize, blk: &Block, sx: &Stats, st: &St) -> String {
+    // per site x field: [bytes, dead_sem, once, many, dead_phys, cov_R1, cov_R2, cov_R3, elid_C, elid_A, elid_B]
+    let mut t = vec![[0u64; 5 + NR + 3 * NSET + 1]; NS * NF];
+    let mut viol = [0u64; NSET];
+    let elid = |e: usize, set: usize| -> bool {
+        st.ev_thru[e] & (1 << set) == 0 && (st.ev_sem[e] == 0 || st.ev_uncov[e] & (1 << set) == 0)
+    };
+    for e in 0..st.ev_at.len() {
+        let i = st.ev_site[e] as usize * NF + st.ev_field[e] as usize;
+        let s = st.ev_sem[e];
+        t[i][0] += 1;
+        t[i][1 + (s.min(2)) as usize] += 1;
+        t[i][4] += (st.ev_phys[e] == 0) as u64;
+        if s > 0 {
+            for r in 0..NR {
+                t[i][5 + r] += (st.ev_notcov[e] & (1 << r) == 0) as u64;
+            }
+        }
+        for set in 0..NSET {
+            t[i][5 + NR + set] += elid(e, set) as u64;
+            let sc = static_class(st.ev_site[e], st.ev_field[e], set);
+            t[i][5 + NR + NSET + set] += sc as u64;
+            let dead_ok = s == 0 && st.ev_thru[e] & (1 << set) == 0;
+            t[i][5 + NR + 2 * NSET + set] += (sc || dead_ok) as u64;
+            // store-level dead only (copy16 slack is not a droppable store)
+            if sc && s > 0 && st.ev_uncov[e] & (1 << set) != 0 {
+                viol[set] += 1;
+            }
+        }
+        let f = st.st_first[st.ev_store[e] as usize] as usize;
+        let w = st.st_w[st.ev_store[e] as usize] as usize;
+        t[i][5 + NR + 3 * NSET] += (f..f + w).all(|x| st.ev_sem[x] == 0) as u64;
+    }
+    // store-level: [stores, bytes of stores all of whose bytes are dead, ... elidable under set C, A, B]
+    let mut sd = vec![[0u64; 2 + NSET]; NS];
+    for s in 0..st.st_first.len() {
+        let f = st.st_first[s] as usize;
+        let w = st.st_w[s] as usize;
+        let site = st.st_site[s] as usize;
+        sd[site][0] += 1;
+        if (f..f + w).all(|e| st.ev_sem[e] == 0) {
+            sd[site][1] += w as u64;
+        }
+        for set in 0..NSET {
+            if (f..f + w).all(|e| elid(e, set)) {
+                sd[site][2 + set] += w as u64;
+            }
+        }
+    }
+    // lines: [footprint, L-elidable, U_C, U_A, U_B] for the induction footprint and slots+induction
+    let nl = st.ln_ind.len();
+    let mut live = vec![false; nl];
+    let mut ulive = vec![0u8; nl];
+    for e in 0..st.ev_at.len() {
+        let l = st.ev_at[e] as usize >> 6;
+        if st.ev_sem[e] > 0 {
+            live[l] = true;
+        }
+        for set in 0..NSET {
+            if !elid(e, set) {
+                ulive[l] |= 1 << set;
+            }
+        }
+    }
+    let mut lines = [[0u64; 2 + NSET]; 2];
+    for l in 0..nl {
+        for (k, touched) in [st.ln_ind[l], st.ln_ind[l] || st.ln_slots[l]].into_iter().enumerate() {
+            if !touched {
+                continue;
+            }
+            lines[k][0] += 1;
+            if !live[l] && !st.ln_read[l] {
+                lines[k][1] += 1;
+            }
+            for set in 0..NSET {
+                if (ulive[l] | st.ln_uncov[l]) & (1 << set) == 0 {
+                    lines[k][2 + set] += 1;
+                }
+            }
+        }
+    }
+    let mut s = format!(
+        "{{\"block\":{index},\"n\":{n},\"census_n\":{cn},\"r\":{},\"census_r\":{cr},\"letters\":{},\"census_letters\":{cl},\"cells\":{},\"census_cells\":{ccells},\"drops\":{},\"case\":{:?},\"onerow\":{:?},\"unwritten_reads\":{}",
+        blk.recs.len(), sx.letters, sx.cells, sx.drops, sx.case, sx.onerow, st.unwritten_reads
+    );
+    s += &format!(
+        ",\"probe\":{{\"prev_reads\":{},\"prev_adj\":{},\"prev_r1\":{},\"prev_r1_bad\":{},\"prev_fresh\":{},\"prev_linked\":{},\"lam_reads\":{},\"lam_one\":{},\"lam_r3\":{},\"lam_eq_partner\":{},\"lam_orig\":{},\"w_reads\":{},\"w_r2\":{},\"w_r2_bad\":{},\"oth_reads\":{},\"oth_sameidx\":{},\"oth_fresh_target\":{},\"oth_orig\":{},\"thru_bad\":{}}}",
+        sx.prev_reads, sx.prev_adj, sx.prev_r1, sx.prev_r1_bad, sx.prev_fresh, sx.prev_linked,
+        sx.lam_reads, sx.lam_one, sx.lam_r3, sx.lam_eq_partner, sx.lam_orig,
+        sx.w_reads, sx.w_r2, sx.w_r2_bad, sx.oth_reads, sx.oth_sameidx, sx.oth_fresh_target, sx.oth_orig, sx.thru_bad
+    );
+    s += &format!(",\"viol\":{:?}", viol);
+    s += ",\"t\":{";
+    let mut first = true;
+    for i in 0..NS * NF {
+        if t[i][0] == 0 {
+            continue;
+        }
+        if !first {
+            s.push(',');
+        }
+        first = false;
+        s += &format!("\"{}.{}\":{:?}", i / NF, i % NF, t[i]);
+    }
+    s += "},\"stores\":{";
+    let mut first = true;
+    for i in 0..NS {
+        if sd[i][0] == 0 {
+            continue;
+        }
+        if !first {
+            s.push(',');
+        }
+        first = false;
+        s += &format!("\"{i}\":{:?}", sd[i]);
+    }
+    let a8 = st.ln_a8.iter().filter(|&&x| x).count();
+    s += &format!("}},\"lines_ind\":{:?},\"lines_all\":{:?},\"lines_a8\":{a8},\"thru_lam_a\":{},\"slot_lam_reads\":{}}}", lines[0], lines[1], st.thru_lam_a, st.slot_lam_reads);
+    s
+}

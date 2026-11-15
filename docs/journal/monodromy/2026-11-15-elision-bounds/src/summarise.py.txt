@@ -1,0 +1,132 @@
+"""Pooled and per-block tables from out/blocks.jsonl (elision tracer)."""
+import json, sys, statistics as S
+B = [json.loads(l) for l in open(sys.argv[1])]
+NR, NSET = 3, 3
+# column indices in t[site.field]
+BY, DEAD, ONCE, MANY, DPHYS = 0, 1, 2, 3, 4
+COV = 5                      # R1 R2 R3
+ELID = COV + NR              # C A B (rule-set elidable, conservative read-through)
+STAT = ELID + NSET           # static class C A B
+CEIL = STAT + NSET           # static or dead C A B
+SDEAD = CEIL + NSET          # byte in an all-dead store
+COPY = (31, 32)
+FN = ['prev', 'lam', '|w|', 'w', 'other', 'arena', 'rule', 'table']
+KN = ['eq_ts', 'eq_bs', 'gt_ts', 'gt_bs', 'lt_bs', 'lt_ts']
+
+def region(site, field):
+    if site <= 4 or site >= 34:
+        side = {0: 'top λ>1', 1: 'bot λ>1', 34: 'top λ=1', 35: 'bot λ=1'}.get(site, 'misc')
+        return f'slots {side} {FN[field]}'
+    if site < 29:
+        k = (site - 5) // 4; one = (site - 5) // 2 % 2
+        side = 'bot' if k in (1, 3, 4) else 'top'
+        return f'cell {side} {"1-row" if one else ">1-row"} {FN[field]}'
+    return {29: 'promise: fresh slot prev', 30: 'promise: link prev', 31: 'arena copy16 #1',
+            32: 'arena copy16 #2', 33: 'rules'}[site]
+
+def tally(b):
+    r = {}
+    for key, v in b['t'].items():
+        site, field = map(int, key.split('.'))
+        v = list(v)
+        if site in COPY:  # dead = store-level only; slack kept apart
+            v.append(v[DEAD] - v[SDEAD])
+            v[DEAD] = v[SDEAD]
+            for s in range(NSET):
+                v[CEIL + s] = v[SDEAD]
+        else:
+            v.append(0)
+        r[(site, field)] = v
+    return r
+
+def block_metrics(b):
+    t = tally(b)
+    ind = [v for (s, f), v in t.items() if 5 <= s < 34]
+    slo = [v for (s, f), v in t.items() if not 5 <= s < 34]
+    m = {}
+    for name, rows in (('ind', ind), ('slots', slo), ('all', ind + slo)):
+        by = sum(v[BY] for v in rows)
+        m[name + '_bytes'] = by
+        m[name + '_L'] = sum(v[DEAD] for v in rows) / by
+        m[name + '_slack'] = sum(v[-1] for v in rows) / by
+        for s, sn in enumerate('CAB'):
+            m[f'{name}_Ustatic_{sn}'] = sum(v[STAT + s] for v in rows) / by
+            m[f'{name}_U_{sn}'] = sum(v[CEIL + s] for v in rows) / by
+    li = b['lines_ind']; la = b['lines_all']
+    m['lines_fp'] = li[0]; m['lines_L'] = li[1] / li[0]; m['lines_U'] = max(li[2:]) / li[0]
+    m['lines_all_fp'] = la[0]; m['lines_all_L'] = la[1] / la[0]; m['lines_all_U'] = max(la[2:]) / la[0]
+    return m, t
+
+M = []; pooled = {}
+for b in B:
+    m, t = block_metrics(b)
+    M.append(m)
+    for k, v in t.items():
+        g = region(*k)
+        if g not in pooled:
+            pooled[g] = [0] * len(v)
+        pooled[g] = [a + c for a, c in zip(pooled[g], v)]
+
+def mmm(key):
+    xs = [m[key] for m in M]
+    return f'{min(xs):.4f} / {S.median(xs):.4f} / {max(xs):.4f}'
+
+def pool(name, col):
+    rows = [(region(*k), v) for b in B for k, v in tally(b).items()
+            if (name == 'all') or (name == 'ind') == (5 <= k[0] < 34)]
+    return sum(v[col] for _, v in rows) / sum(v[BY] for _, v in rows)
+
+print(f'blocks {len(B)}; cells {sum(b["cells"] for b in B)}; letters {sum(b["letters"] for b in B)}; r {sum(b["r"] for b in B)}')
+print('\n## Fractions of bytes stored (pooled | per-block min / median / max)')
+for name in ('ind', 'slots', 'all'):
+    print(f'\n### {name}: {sum(m[name + "_bytes"] for m in M):,} bytes')
+    print(f'L (dead, field-level; copy16 at store level) | {pool(name, DEAD):.4f} | {mmm(name + "_L")}')
+    for s, sn in enumerate('CAB'):
+        print(f'U_static_{sn} (decided at the store) | {pool(name, STAT + s):.4f} | {mmm(f"{name}_Ustatic_{sn}")}')
+    for s, sn in enumerate('CAB'):
+        print(f'U_{sn} = static or dead | {pool(name, CEIL + s):.4f} | {mmm(f"{name}_U_{sn}")}')
+    print(f'copy16 slack (dead bytes inside live 16-B stores, not in L) | {pool(name, -1):.4f} | {mmm(name + "_slack")}')
+print('\n## Lines (64 B)')
+print(f'induction footprint lines: pooled {sum(m["lines_fp"] for m in M):,}; L lines pooled {sum(b["lines_ind"][1] for b in B)}; U lines pooled {sum(max(b["lines_ind"][2:]) for b in B)} | per block L {mmm("lines_L")} U {mmm("lines_U")}')
+print(f'slots+induction lines: pooled {sum(m["lines_all_fp"] for m in M):,}; L {sum(b["lines_all"][1] for b in B)}; U {sum(max(b["lines_all"][2:]) for b in B)}')
+print('\n## By region/field, pooled bytes')
+print('| region field | bytes | share of its stage | dead | read once | read >1 | R1 cov | R2 cov | R3 cov | static A | U_A | static B | U_B |')
+print('|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|')
+tot_ind = sum(v[BY] for g, v in pooled.items() if not g.startswith('slots'))
+tot_sl = sum(v[BY] for g, v in pooled.items() if g.startswith('slots'))
+for g in sorted(pooled, key=lambda g: (not g.startswith('slots'), g)):
+    v = pooled[g]; by = v[BY]
+    tot = tot_sl if g.startswith('slots') else tot_ind
+    f = lambda c: f'{v[c] / by:.3f}'
+    print(f'| {g} | {by:,} | {by / tot:.3f} | {f(DEAD)} | {f(ONCE)} | {f(MANY)} | {f(COV)} | {f(COV+1)} | {f(COV+2)} | {f(STAT+1)} | {f(CEIL+1)} | {f(STAT+2)} | {f(CEIL+2)} |')
+# z and probes
+z = sum(b['onerow'][0] for b in B); r = sum(b['r'] for b in B); L = sum(b['letters'] for b in B); C = sum(b['cells'] for b in B)
+case = [sum(b['case'][i] for b in B) for i in range(3)]; one = [sum(b['onerow'][i] for b in B) for i in range(3)]
+print(f'\n## z (equal one-row cells): {z:,} = {z / r:.4f} r = {z / L:.4f} letters = {z / C:.4f} cells')
+print(f'cases eq/gt/lt: {case}; one-row by case: {one}; one-row all = {sum(one) / r:.4f} r, {sum(one) / C:.4f} cells')
+P = {k: sum(b['probe'][k] for b in B) for k in B[0]['probe']}
+print('probes:', json.dumps(P))
+print('violations (static class byte read uncovered) C/A/B:', [sum(b['viol'][i] for b in B) for i in range(3)])
+print('drops', sum(b['drops'] for b in B))
+
+# z: the equal one-row cells' slot stores (sites 7, 8 = eq_ts one-row; 11, 12 = eq_bs one-row)
+zr = {}
+for b in B:
+    for key, v in b['t'].items():
+        site, field = map(int, key.split('.'))
+        if site in (7, 8, 11, 12):
+            a = zr.setdefault(FN[field], [0, 0, 0, 0])
+            a[0] += v[BY]; a[1] += v[DEAD]; a[2] += v[ONCE] + v[MANY]; a[3] += v[COV + 2]
+print('z slot stores by field: bytes, dead, read, read covered by R3:', zr)
+# per-block file
+with open(sys.argv[1].replace('blocks.jsonl', 'per-block.jsonl'), 'w') as f:
+    for b, m in zip(B, M):
+        m = {k: (round(v, 6) if isinstance(v, float) else v) for k, v in m.items()}
+        f.write(json.dumps({'block': b['block'], 'n': b['n'], 'r': b['r'], 'letters': b['letters'],
+                            'cells': b['cells'], 'z': b['onerow'][0], **m,
+                            'lines_a8': b['lines_a8'], 'lines_a8_frac': round(b['lines_a8'] / b['lines_ind'][0], 6),
+                            'thru_reads': b['thru_lam_a'], 'slot_reads': b['slot_lam_reads']}) + '\n')
+xs = [b['onerow'][0] / b['r'] for b in B]
+print(f'z/r per block min/median/max {min(xs):.4f} / {S.median(xs):.4f} / {max(xs):.4f}')
+a8 = [b['lines_a8'] / b['lines_ind'][0] for b in B]
+print(f'layout A8 lines / current lines: pooled {sum(b["lines_a8"] for b in B) / sum(b["lines_ind"][0] for b in B):.4f}; per block {min(a8):.4f} / {S.median(a8):.4f} / {max(a8):.4f}; read-through loads / slot reads {sum(b["thru_lam_a"] for b in B) / sum(b["slot_lam_reads"] for b in B):.4f}')

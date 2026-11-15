@@ -1,0 +1,11 @@
+[package]
+name = "elision"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mibz2 = { path = "../../locality/mibz2-master" }
+
+[profile.release]
+debug = false
+opt-level = 3
