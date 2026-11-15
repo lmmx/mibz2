@@ -53,6 +53,11 @@ walk-stats = []
 # block Cells admits in invert_runs also streams through MIBZ2_DOSE_MB MB (set at compile
 # time, default 0) of per-kernel scratch; off by default, and without it nothing changes
 dose = []
+# Research only: the phase attribution of Cells' memory traffic (src/phase.rs; #145, LOG
+# 6884716103, amended 6884895257 and 6884975709). Per worker thread, perf_event_open groups
+# of the pass MIBZ2_PHASE_PASS names, around decode_block, induce_cells and write_cells;
+# off by default, and without it nothing changes
+phase-counters = []
 # Research only: the Cells buffer diet's comparison build (#145, LOG 6881022819). Cells'
 # previous 24-byte slot, bytes 16..24 an 8-byte offset, instead of the 20-byte slot, so that
 # bench-cells-diet builds both layouts from one commit; off by default, never shipped

@@ -383,16 +383,24 @@ impl Kernel {
         if budget > n || n >= 1 << 24 || recs.len() > n {
             return Err(Refusal::Invalid);
         }
-        let result = self
-            .slots(n, recs, p, budget, forced)
-            .and_then(|()| self.induce_cells(budget));
+        let result = self.slots(n, recs, p, budget, forced).and_then(|()| {
+            // (research only, `phase-counters`: the induction's scope)
+            #[cfg(feature = "phase-counters")]
+            let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
+            self.induce_cells(budget)
+        });
         self.check_canaries();
         let (word, len, cells) = result?;
         let period = (len & !MARK) as usize;
         if len & MARK == 0 || period == 0 || period > n {
             return Err(Refusal::Invalid);
         }
-        self.write_cells(word, len, n, out);
+        {
+            // (research only, `phase-counters`: the writer's scope)
+            #[cfg(feature = "phase-counters")]
+            let _scope = crate::phase::Scope::new(crate::phase::Phase::Writer);
+            self.write_cells(word, len, n, out);
+        }
         self.check_canaries();
         Ok((cells, period))
     }

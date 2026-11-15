@@ -1618,3 +1618,70 @@ bench-cells-diet ROUNDS="10" THREADS="1,4,6,10":
       --rounds {{ROUNDS}} --out "$O/diet" \
       || echo "bench-cells-diet: the runs are not valid (diet.md lists why)"
     bash bench/bundle.sh "$O"
+
+# The phase attribution of Cells' memory traffic (#145, LOG 6884716103, amended before any
+# data by LOGs 6884895257 and 6884975709): of the DRAM traffic per output byte at 1 and 4
+# workers, how much is Cells' induction's, its writer's and the rest of the block's decode's,
+# and how much of each is co-running uplift? The dose run's P0 build of this commit's `ab`
+# with the research feature `phase-counters` (src/phase.rs: per worker thread, a whole-decode
+# group and a phase group of one counter pass, counting together, around decode_block,
+# induce_cells and write_cells), forced Workers + Cells (`ab child mibz2-workers <t>`) on the
+# premise test's Wikidata corpus, pinned as `ab --spread` places it (distinct physical cores,
+# their SMT siblings left idle). bench/cells_phase.py takes, for each repetition, the thread
+# counts in a rotated order and at each the four matched passes A1, A2, B1, B2 and the
+# baseline arm (mibz2-workers-segmented, IMC only) in a rotated order, each reading paired
+# with an idle reading as bench-cells-imc's (whose code it reuses), under `sudo perf stat -a`
+# on the memory controller. It reads them: the IMC and core ledgers, the unattributed
+# residual, U_p and s_p with their intervals, the verdict by the amended rule, every
+# validity rule (INVALID on any failure), and the reported figures. It stops first, listing
+# what it found, where any registered event cannot be counted (a VM, no perf, no sudo), and
+# again if the build's own counters cannot count as registered. It asks for sudo's password
+# once at the start (sudo -v), and refreshes it each repetition. A C5 workstation run (the
+# i9), about 15 minutes.
+#   just submit bench-cells-phase
+bench-cells-phase REPS="10" THREADS="1,4" LOOPS="auto" PAIR="3":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    B=$PWD/target/cells-phase
+    mkdir -p "$B"
+    O=$B/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-cells-phase: $(git rev-parse HEAD), reps {{REPS}}, threads {{THREADS}}, loops {{LOOPS}}, idle pairs {{PAIR}} s"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-cells-phase: the checkout has local changes"; exit 1; }
+    git rev-parse HEAD > "$O/commit.txt"
+    # (the events first: nothing is built or run where a registered one cannot count)
+    python3 bench/cells_phase.py probe \
+      || { echo "bench-cells-phase: a registered event is not available here; no readings taken"; exit 1; }
+    # (the dose run's P0 build, with the phase counters, in its own target dir)
+    MIBZ2_DOSE_KIND=stream MIBZ2_DOSE_MB=0 CARGO_TARGET_DIR="$B/target-p0" \
+      cargo build -q --release --features dose,phase-counters --example ab
+    cargo build -q --release --example windows
+    AB=$B/target-p0/release/examples/ab
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    [ -f "$B/wikidata.bz2" ] || python3 bench/wikidata.py build bench/wikidata.json "$dir" \
+      target/release/examples/windows "$B/wikidata.bz2"
+    sha256sum "$B/wikidata.bz2" | tee "$O/inputs.sha256"
+    # (the build checked to be P0 with Cells engaged on all 196 blocks, then its counters)
+    line=$("$AB" child mibz2-workers 1 "$B/wikidata.bz2")
+    echo "preflight: $line"
+    echo "$line" | python3 -c "import json,sys; r=json.load(sys.stdin); sys.exit(int(r.get('dose_mb') != 0 or r.get('dose_kind') != 'stream' or r.get('dose_blocks') != 196 or bool(r.get('err')) or r.get('phase', 0) is not None))" \
+      || { echo "bench-cells-phase: the build is not P0 with the phase counters, Cells did not engage on all 196 blocks, or the decode failed"; exit 1; }
+    python3 bench/cells_phase.py instrument --ab "$AB" --corpus "$B/wikidata.bz2" \
+      || { echo "bench-cells-phase: the build's counters cannot count as registered; no readings taken"; exit 1; }
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    python3 bench/cells_phase.py collect --ab "$AB" --corpus "$B/wikidata.bz2" \
+      --threads "{{THREADS}}" --reps {{REPS}} --loops {{LOOPS}} --pair {{PAIR}} \
+      --out "$O/readings.jsonl" || echo "bench-cells-phase: the readings stopped early"
+    python3 bench/cells_phase.py analyse "$O/readings.jsonl" --threads "{{THREADS}}" \
+      --reps {{REPS}} --out "$O/cells-phase" \
+      || echo "bench-cells-phase: the readings are not valid (cells-phase.md lists why)"
+    bash bench/bundle.sh "$O"
