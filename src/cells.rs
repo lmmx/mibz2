@@ -50,6 +50,10 @@ struct Kernel {
     writer_reach: WriterReach,
     #[cfg(test)]
     materialization: Option<Vec<Materialization>>,
+    /// (test only) room for `budget` fresh slots after each order's letters, the layout the
+    /// original induction (`induce_cells_original`) needs, for comparisons against it
+    #[cfg(test)]
+    fresh_room: bool,
 }
 #[cfg(test)]
 #[derive(Debug, PartialEq, Eq)]
@@ -476,8 +480,14 @@ impl Kernel {
         let off = p - at_start;
         cnt[cz + 1] += (off > 0) as u32 + (total - off > 1) as u32;
         let letters = cnt.iter().map(|&v| v as usize).sum::<usize>();
-        // Layout uses records + two splits, even when adjoining records coalesce.
-        let cap = (recs.len() + 2 + budget) * SLOT;
+        // Each order's region holds its letters' slots and nothing more: the induction takes
+        // no fresh slot, since a cell that needs one takes the slot the front just read and
+        // let go (`induce_cells`). Before, a region also had room for a fresh slot a cell.
+        #[cfg(test)]
+        let room = letters + if self.fresh_room { budget } else { 0 };
+        #[cfg(not(test))]
+        let room = letters;
+        let cap = room * SLOT;
         let tops = PAD;
         let bots = tops + cap + GAP;
         let arena = bots + cap + GAP;
@@ -591,9 +601,17 @@ impl Kernel {
     /// lies inside B's place, on the bottom inside A's image, each time to the left of the
     /// cells already cut from the same letter. The first cell cut from a letter takes that
     /// letter's slot (so whatever pointed at the letter now points at its rightmost cell);
-    /// each later one takes a fresh slot, and the slot before the letter moves along with
-    /// the promise of that fresh slot. Nothing is shortened in memory and no letter is
-    /// moved: a step writes two slots and one word, and reads one or two.
+    /// each later one takes a slot promised to it, and the slot before the letter moves
+    /// along with the promise. Nothing is shortened in memory and no letter is moved: a
+    /// step writes two slots and one word, and reads one or two.
+    ///
+    /// The promised slot is not a fresh one: it is the slot the cell's other letter was
+    /// read from at the front, in the same order. A letter promises a slot only when the
+    /// other letter ends, and an ended letter's front slot is dead: it is the last of its
+    /// order, so no slot before it links to it, and its slot in the other order has just
+    /// taken the cell, which links elsewhere. Only its fields were in registers, read when
+    /// it reached the front. So the orders' regions hold the letters' slots and no more,
+    /// and the lines a fresh slot would first touch are never touched.
     ///
     /// Every offset is a byte offset in the one buffer: a slot, a word kept as bytes, a
     /// word kept as a rule. A rule is its two factors as their slots held them: (length,
@@ -610,15 +628,16 @@ impl Kernel {
             return Err(Refusal::Invalid);
         }
         let base = self.buf.as_mut_ptr();
-        // SAFETY: `slots` sized every region for budget cells; the counter is checked before each cell; a slot's offset is a letter's
-        // slot or a fresh one below the region's end; a word's offset is in the arena or
-        // the rules, with 16 bytes after it inside the buffer.
+        // SAFETY: `slots` sized the words' regions for budget cells, and the counter is
+        // checked before each cell; a slot's offset is a letter's slot, written by `slots`
+        // inside its order's region (a promised slot is one of them, let go at the front);
+        // a word's offset is in the arena or the rules, with 16 bytes after it inside the
+        // buffer.
         unsafe {
             let mut top = lay.arena + BYTES as usize + 256 + 16;
             let mut rp = lay.rules;
-            // fresh slots: one a cell at most, on each side
+            // each order's last letter's slot
             let (ft0, fb0) = (lay.tops + rr * SLOT, lay.bots + rr * SLOT);
-            let (mut ft, mut fb) = (ft0, fb0);
             // Count every cell, including equal-length steps which allocate no slot.
             let mut cells = 0usize;
             // the slot before each letter in its order; what is left of the letter; its
@@ -628,6 +647,9 @@ impl Kernel {
             let (mut aw, mut bw);
             let (mut bs, mut ts);
             let (mut sa, mut sb) = (ft0 - SLOT, fb0 - SLOT);
+            // the slots A and B were read from at the fronts: when one of them ends, its
+            // slot is the one its partner's next cell is promised
+            let (mut fa, mut fb);
             // the letter `FAR` slots on in an order, as memory has it now: its slot in
             // the other order is where its cells will be written, and its word is read then
             // (what is read there may be a slot not yet written: the address is only hinted)
@@ -648,19 +670,17 @@ impl Kernel {
                 rb = rd32(base, sb + 4) as u64;
                 bw = rd64(base, sb + 8);
                 ts = rd_other(base, sb);
+                (fa, fb) = (sa, sb);
 
                 ahead!(sa);
                 ahead!(sb);
                 if bs == sb {
                     // one letter, last in both orders: its points' cycles are closed
                     if aw as u32 & MARK != 0 {
-                        // the four regions' ends: unchecked above, and valgrind cannot see
-                        // a write from one region into the next inside the one allocation
-                        if ft > lay.ends[0]
-                            || fb > lay.ends[1]
-                            || top + 32 > lay.ends[2]
-                            || rp + 16 > lay.ends[3]
-                        {
+                        // the words' regions' ends: unchecked above, and valgrind cannot
+                        // see a write from one region into the next inside the one
+                        // allocation (the slots' regions take no slot after `slots`)
+                        if top + 32 > lay.ends[2] || rp + 16 > lay.ends[3] {
                             debug_assert!(false, "cells region exhausted");
                             return Err(Refusal::Invalid);
                         }
@@ -704,7 +724,7 @@ impl Kernel {
                         cw,
                         top as u64,
                         rp as u64,
-                        ft as u64,
+                        fa as u64,
                         fb as u64,
                         na as u64,
                         nb as u64,
@@ -727,7 +747,9 @@ impl Kernel {
                         (sa, sb) = (na, nb);
                         continue 'fresh;
                     } else if ra > rb {
-                        // B ends; A goes on, and its next cell is promised a fresh slot
+                        // B ends; A goes on, and its next cell is promised B's front slot
+                        // (B's fields, its slot before included, are in registers)
+                        debug_assert!(fb != bs && fb != ts && fb != nb);
                         wr32(base, ts + 4, rb as u32);
                         wr64(base, ts + 8, cw);
                         wr_other(base, ts, bs);
@@ -739,31 +761,32 @@ impl Kernel {
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
                         bs = fb;
-                        fb += SLOT;
                         ra -= rb;
                         // (read after the cell is written: it may be that cell)
                         let s = nb;
+                        fb = s;
                         ahead!(s);
                         nb = rd32(base, s) as usize;
                         rb = rd32(base, s + 4) as u64;
                         bw = rd64(base, s + 8);
                         ts = rd_other(base, s);
                     } else {
-                        // A ends; B goes on
+                        // A ends; B goes on, and is promised A's front slot
+                        debug_assert!(fa != ts && fa != bs && fa != na);
                         wr32(base, bs + 4, ra as u32);
                         wr64(base, bs + 8, cw);
                         wr_other(base, bs, ts);
-                        wr32(base, ft, rd32(base, ts));
-                        wr32(base, ts, ft as u32);
+                        wr32(base, fa, rd32(base, ts));
+                        wr32(base, ts, fa as u32);
                         wr32(base, ts + 4, ra as u32);
                         wr64(base, ts + 8, cw);
                         wr_other(base, ts, bs);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
-                        ts = ft;
-                        ft += SLOT;
+                        ts = fa;
                         rb -= ra;
                         let s = na;
+                        fa = s;
                         ahead!(s);
                         na = rd32(base, s) as usize;
                         ra = rd32(base, s + 4) as u64;
@@ -1247,6 +1270,56 @@ mod tests {
             assert_eq!(marks, 1);
             assert_eq!(rows, ll.len());
         }
+    }
+
+    /// A cell that leaves a letter going on is promised the slot its other letter was read
+    /// from at the front: both unequal branches take one, every slot the induction touches
+    /// lies among the letters' (the regions end there, canaries after them in debug and
+    /// Miri), the output is exact, and a refusal on the budget leaves `out` as it was.
+    #[test]
+    fn miri_cells_promised_slots_exact_fit() {
+        let mut kernel = Kernel::default();
+        let (mut less, mut greater) = (0, 0);
+        for ll in [
+            b"bbaaa".to_vec(),
+            b"abababa".to_vec(),
+            [vec![1; 31], vec![0; 34]].concat(),
+            (0..65).map(|i| (i % 3) as u8).collect(),
+            long_writer_column(),
+        ] {
+            for p in [0, ll.len() / 2, ll.len() - 1] {
+                kernel.materialization = Some(Vec::new());
+                let cells = check(&mut kernel, &ll, p as u32);
+                let lay = kernel.lay;
+                let room = kernel.letters * SLOT;
+                assert_eq!(lay.ends[0], lay.tops + room);
+                assert_eq!(lay.ends[1], lay.bots + room);
+                for m in kernel.materialization.take().unwrap() {
+                    let (fa, fb) = (m.state[7] as usize, m.state[8] as usize);
+                    assert!(fa >= lay.tops && fa + SLOT <= lay.ends[0]);
+                    assert!(fb >= lay.bots && fb + SLOT <= lay.ends[1]);
+                    less += usize::from(m.state[0] < m.state[1]);
+                    greater += usize::from(m.state[0] > m.state[1]);
+                }
+                if cells > 0 && kernel.letters - 1 < cells {
+                    let r = Runs::of_column(&ll);
+                    let mut out = vec![0xCC; ll.len()];
+                    assert_eq!(
+                        kernel.try_invert(
+                            r.records(),
+                            ll.len(),
+                            p as u32,
+                            cells - 1,
+                            true,
+                            &mut out
+                        ),
+                        Err(Refusal::Budget)
+                    );
+                    assert_eq!(out, vec![0xCC; ll.len()]);
+                }
+            }
+        }
+        assert!(less > 0 && greater > 0, "{less} {greater}");
     }
 
     #[test]
