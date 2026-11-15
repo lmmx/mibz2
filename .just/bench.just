@@ -1706,7 +1706,7 @@ bench-crossover ROUNDS="10" THREADS="4,5,6,7,8,9,10,12,16,20":
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-crossover: mibz2 (shipped plan) against mibz2-workers-w (one block a thread, the default window) at $(git rev-parse HEAD)"
+    echo "bench-crossover (the team threshold, RELEASING.md 5a): mibz2 (shipped plan) against mibz2-workers-w (one block a thread), mibz2-team2 and mibz2-team3 (teams), each with the default window, at $(git rev-parse HEAD)"
     cargo build -q --release --example ab --example windows
     AB=$PWD/target/release/examples/ab
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
@@ -1720,7 +1720,7 @@ bench-crossover ROUNDS="10" THREADS="4,5,6,7,8,9,10,12,16,20":
     lscpu > "$O/lscpu.txt"
     hold=(); hold_cpu=${HOLD_CPU:-auto}
     [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
-    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers-w" \
+    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers-w,mibz2-team2,mibz2-team3" \
       --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
     "$AB" summary "$O/runs.jsonl" --ref mibz2 | tee "$O/summary.txt"
     git rev-parse HEAD > "$O/commit.txt"
