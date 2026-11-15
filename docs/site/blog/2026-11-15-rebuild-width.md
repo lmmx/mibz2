@@ -35,7 +35,7 @@ Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while
 
 - **Cells' order** always takes its step at the right-hand end of the map. At its busiest it holds about **0.32 r** letters with long words. That is the median over the 233 large blocks of the benchmark's Wikidata corpus, an extract of a Wikidata dump.
 - **Taking the free steps first** brings that peak down to about **0.08 to 0.12 r**, depending on what is done when no free step is ready. It is **0.11 r** if the rest follows Cells' own order. A *free* step is one whose bookkeeping creates no new boundary between intervals ([section 3](#3-does-the-order-of-steps-matter) shows one). The same order also takes about 20% fewer steps: 1.46 r instead of 1.84 r.
-- **The free steps have a fixed end point.** Taken in any order until none is left, they always reach the same state, in the same number of steps. That is now proved ([#438](https://github.com/lmmx/mibz2/pull/438)). On Wikidata the state has about 0.19 r letters, and no free-first order's peak exceeded it on any block.
+- **The free steps have a fixed end point.** Taken in any order until none is left, they always reach the same state, in the same number of steps. That is now proved ([#438](https://github.com/lmmx/mibz2/pull/438)). It follows that a kernel could take free steps in whichever order suits it, or share independent ones among threads. On Wikidata the end state has about 0.19 r letters, and no free-first order's peak exceeded it on any block.
 
 <figure class="bf-fig">
 <p class="bf-title">How many letters the rebuild holds, per 100 runs of a Wikidata block</p>
@@ -43,13 +43,13 @@ Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while
 <figcaption>Counted, not timed: medians over the 233 blocks of at least 65,536 rows in the Wikidata corpus. Amber and green are the peaks of letters whose word is longer than one byte, under Cells’ right-end order and under free steps first. Grey is the number of letters, long words or not, left once the free steps run out.</figcaption>
 </figure>
 
-**What is classical and what is new.** The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as *cutwidth*: line a graph's vertices up, cut the line between any two, and count the edges that cross. [Section 2](#2-why-are-only-the-long-words-state) says where the line between old and new falls.
+**What is classical and what is new.** The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as *cutwidth*: line a graph's vertices up, cut the line between any two, and count the edges that cross. [Section 2](#2-why-do-only-the-long-words-count) says where the line between old and new falls.
 
 **What this is not.** These are counts, not timings. They come from one family of text, Wikidata's JSON, with four blocks of prose beside it. Prose gains less: the right end peaks at 0.37 r and free-first orders at 0.21 r. The link to cutwidth is a conjecture. Above all, no decoder that takes free steps first has been built or timed. Finding the free steps needs a worklist, which an earlier count priced at about 150 instructions a run against the right-end sweep's 115. Whether the smaller state pays for that is the next question, not an answer here.
 
 **Why mibz2 cares.** mibz2 decodes blocks in parallel in one of two ways: each thread takes a block of its own, or threads form teams that share one block. On a 10-core Intel desktop at ten threads, a block per thread took 1.040 times the teams' wall time in the latest run ([the run's report](https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992)). Its 95% interval is 1.019 to 1.061. In a run earlier the same day, before the latest memory cut to Cells ([#433](https://github.com/lmmx/mibz2/pull/433)), it took 1.153 times. Those are two runs on one machine, so the change is indicative. When every thread runs its own block, each thread's working memory competes for the shared cache. Each cut to Cells' memory so far has narrowed the gap. A third of the live state is therefore a reason to look further, not a forecast of a speed-up.
 
-[Section 1](#1-what-does-the-rebuild-hold-on-a-nine-byte-word) works a nine-byte word by hand and draws its width. [Section 2](#2-why-are-only-the-long-words-state) says why only the long words count, and what is classical. [Section 3](#3-does-the-order-of-steps-matter) compares twelve orders of steps, and [section 4](#4-how-narrow-can-a-free-first-order-be) gives the bound and the theorem. [Section 5](#5-what-would-it-mean-for-mibz2) says what is open, and [section 6](#6-where-to-read-more) lists the reading.
+[Section 1](#1-what-does-the-rebuild-hold-on-a-nine-byte-word) works a nine-byte word by hand and draws its width. [Section 2](#2-why-do-only-the-long-words-count) says why only the long words count, and what is classical. [Section 3](#3-does-the-order-of-steps-matter) compares twelve orders of steps, and [section 4](#4-how-narrow-can-a-free-first-order-be) gives the bound and the theorem. [Section 5](#5-what-would-it-mean-for-mibz2) says what is open, and [section 6](#6-where-to-read-more) lists the reading.
 
 ## 1. What does the rebuild hold, on a nine-byte word?
 
@@ -81,7 +81,7 @@ The lower panel takes the free steps first, and section 3 explains what makes a 
 
 Each long word can be checked in `possesses`: `ess`, `oss` and `es` occur in it, and so do `se` and `po`. The steps themselves are animated, on the three-byte word `aab`, in [the post that introduced Cells](2026-11-10-rauzy-veech-reconstruction.md#1-rebuilding-aab-in-two-steps).
 
-## 2. Why are only the long words state?
+## 2. Why do only the long words count?
 
 A letter whose word is one byte is a row, or a few adjacent rows, that LF sends straight to another kept row. It is a piece of an original run, cut shorter. Its first row, its length and the row it goes to all follow from the run it lies in. A decoder could leave it implicit and compute it when needed. A letter with a long word is different: where it jumps, and what it reads on the way, are the result of the steps taken so far.
 
