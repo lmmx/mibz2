@@ -1,7 +1,7 @@
 ---
 title: "The width of an induction: how much it must hold at once"
 image: assets/social/blog-2026-11-15-induction-width.png
-description: "Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps."
+description: "Taking the steps that cost no bookkeeping first would let mibz2 rebuild a block while keeping about a third as much in memory at its busiest moment."
 ---
 
 <div class="post-hero" markdown>
@@ -13,7 +13,7 @@ description: "Taking the steps that cost no bookkeeping first lets mibz2 rebuild
 
 # The width of an induction: how much it must hold at once
 
-Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps.
+Taking the steps that cost no bookkeeping first would let mibz2 rebuild a block while keeping about a third as much in memory at its busiest moment.
 {: .post-dek }
 
 15 November 2026 · 14 min read · [Research in progress](#5-what-would-it-mean-for-mibz2)
@@ -47,7 +47,7 @@ Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while
 
 **What this is not.** These are counts, not timings. They come from one family of text, Wikidata's JSON, with four blocks of prose beside it. Prose gains less: the right end peaks at 0.37 r and free-first orders at 0.21 r. The link to cutwidth is a conjecture. Above all, no decoder that takes free steps first has been built or timed. Finding the free steps needs a worklist, which an earlier count priced at about 150 instructions a run against the right-end sweep's 115. Whether the smaller state pays for that is the next question, not an answer here.
 
-**Why mibz2 cares.** mibz2 decodes blocks in parallel in one of two ways: each thread takes a block of its own, or threads form teams that share one block. On a 10-core Intel desktop at ten threads, a block per thread took 1.040 times the teams' wall time in the latest run ([the run's report](https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992)). Its 95% interval is 1.019 to 1.061. In a run earlier the same day, before the latest memory cut to Cells ([#433](https://github.com/lmmx/mibz2/pull/433)), it took 1.153 times. Those are two runs on one machine, so the change is indicative. When every thread runs its own block, each thread's working memory competes for the shared cache. Each cut to Cells' memory so far has narrowed the gap. A third of the live state is therefore a reason to look further, not a forecast of a speed-up.
+**Why mibz2 cares.** Width is how much state the rebuild keeps in memory. When every thread decodes a block of its own, those states share the processor's cache, and the threads contend for it. Less state per block leaves less for the cache to hold. At ten threads on a 10-core Intel desktop, a block per thread takes 1.040 times the wall time of threads working in teams (95% interval 1.019 to 1.061; [the run's report](https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992)), so the margin is small. Whether a narrower induction closes it has not been tested.
 
 [Section 1](#1-what-does-the-rebuild-hold-on-a-nine-byte-word) works a nine-byte word by hand and draws its width. [Section 2](#2-why-do-only-the-long-words-count) says why only the long words count, and what is classical. [Section 3](#3-does-the-order-of-steps-matter) compares twelve orders of steps, and [section 4](#4-how-narrow-can-a-free-first-order-be) gives the bound and the theorem. [Section 5](#5-what-would-it-mean-for-mibz2) says what is open, and [section 6](#6-where-to-read-more) lists the reading.
 

@@ -102,7 +102,7 @@
     "title": "Removing duplicated interval lengths and text references"
   },
   "assets/social/blog-2026-11-15-induction-width.png": {
-    "description": "Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps.",
+    "description": "Taking the steps that cost no bookkeeping first would let mibz2 rebuild a block while keeping about a third as much in memory at its busiest moment.",
     "foot": "lmmx.github.io/mibz2 · 15 November 2026",
     "section": " · Research blog",
     "title": "The width of an induction: how much it must hold at once"
