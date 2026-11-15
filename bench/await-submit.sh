@@ -17,14 +17,13 @@
 # Base Directory spec puts state, under ${XDG_STATE_HOME:-~/.local/state}/mibz2/workstation/:
 #   logs/await-submit-<recipe>-<stamp>.log   everything this waiter prints;
 #   ran/<recipe>-<sha>                       the once-per-commit markers.
-# (Until 15 November 2026 these were ~/await-submit-*.log and ~/.cache/await-submit/. A marker
-# left in ~/.cache/await-submit/ still counts as a run, read only, so moving them is safe at any
-# time: docs/team/PROTOCOL.md §9 gives the one-time move. That fallback can go once moved.)
+# (Until 15 November 2026 these were ~/await-submit-*.log and ~/.cache/await-submit/; they have
+# been moved, and markers in the old place are no longer read.)
 #
 # Guarantees:
 # - a run happens at most once per recipe and commit on this machine: a marker directory
 #   under ran/ is made atomically just before the run, so a restarted or second watcher
-#   refuses (as does a marker under the old ~/.cache/await-submit/);
+#   refuses;
 # - HOLD is checked once more just before the run;
 # - an annotated ready tag is resolved to its commit;
 # - a failed check of origin is logged, and retried at the next poll;
@@ -62,7 +61,6 @@ done
 state_home=${XDG_STATE_HOME:-}
 [[ $state_home == /* ]] || state_home=$HOME/.local/state
 state=$state_home/mibz2/workstation
-legacy_ran=$HOME/.cache/await-submit  # the markers' old place: read, never written
 mkdir -p "$state/logs" "$state/ran" || { echo "could not make $state"; exit 2; }
 log=$state/logs/await-submit-${recipe}-$(date -u +%Y%m%dT%H%M%SZ).log
 exec > >(tee -a "$log") 2>&1
@@ -146,9 +144,6 @@ if refs=$(query) && grep -q "refs/tags/hold/$recipe\$" <<<"$refs"; then
 fi
 # At most once per recipe and commit on this machine (mkdir is atomic).
 mark=$state/ran/$recipe-$ready
-if [[ -e $legacy_ran/$recipe-$ready ]]; then
-  finish "REFUSED: $recipe at $ready already ran on this machine ($legacy_ran/$recipe-$ready, the old place); nothing was run" 5
-fi
 if ! mkdir "$mark" 2>/dev/null; then
   finish "REFUSED: $recipe at $ready already ran on this machine ($mark); nothing was run" 5
 fi
