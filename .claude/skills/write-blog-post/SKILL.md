@@ -176,6 +176,17 @@ style, not a description of the method.
   plain labels. In prose, the mannered-prose rule still holds.
 - **Truth still binds.** The joy is in the telling, never in the claim. Each figure in the dek
   is a registered result, and the body carries the scope.
+- **Approachable cold, or it is clickbait** (Louis, 15 November 2026). A reader who has
+  studied neither the code nor the blog must understand the title and the dek in full.
+  - Name things by what they do or hold, not by our names for them: no internal shorthand,
+    codenames or field names ("mibz2's Cells", "induction", "a promised slot") and no
+    specialist terms the reader must already know ("Rauzy–Veech").
+  - A title that makes sense only after reading the post is clickbait by construction.
+  - **Before:** "Reduce, reuse, recycle: slot recycling in mibz2's Cells". **After:** "Reduce,
+    reuse, recycle: mibz2 reuses the slots that track each fragment of text". It names what
+    a slot is for.
+  - Internal terms are introduced in the body, after the opening has said in plain words
+    what they stand for.
 
 ## The dek, and the sentences
 
