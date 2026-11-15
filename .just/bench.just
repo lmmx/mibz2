@@ -1694,8 +1694,8 @@ bench-cells-phase REPS="10" THREADS="1,4" LOOPS="auto" PAIR="3":
     bash bench/bundle.sh "$O"
 
 # The crossover (COOP_MIN_CORES = 6, src/parallel.rs): the shipped decoder (`mibz2`, teams from
-# 6 physical cores) against one block a thread forced at every count (`mibz2-workers`,
-# `Plan::Workers`, Cells inverting), on this machine, at master. Set on 28 October from the
+# 6 physical cores) against one block a thread forced at every count (`mibz2-workers-w`,
+# `Plan::Workers`, Cells inverting, with the default's window of 4 blocks a thread), on this machine, at master. Set on 28 October from the
 # workstation scaling (Workers at its peak at 4); the Workers path has since gained Cells and
 # two slot layouts. Decision rule: #145 LOG on the queue entry, posted before the data.
 bench-crossover ROUNDS="10" THREADS="4,5,6,7,8,9,10,12,16,20":
@@ -1706,7 +1706,7 @@ bench-crossover ROUNDS="10" THREADS="4,5,6,7,8,9,10,12,16,20":
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-crossover: mibz2 (shipped plan) against mibz2-workers (one block a thread) at $(git rev-parse HEAD)"
+    echo "bench-crossover: mibz2 (shipped plan) against mibz2-workers-w (one block a thread, the default window) at $(git rev-parse HEAD)"
     cargo build -q --release --example ab --example windows
     AB=$PWD/target/release/examples/ab
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
@@ -1720,7 +1720,7 @@ bench-crossover ROUNDS="10" THREADS="4,5,6,7,8,9,10,12,16,20":
     lscpu > "$O/lscpu.txt"
     hold=(); hold_cpu=${HOLD_CPU:-auto}
     [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
-    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers" \
+    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers-w" \
       --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
     "$AB" summary "$O/runs.jsonl" --ref mibz2 | tee "$O/summary.txt"
     git rev-parse HEAD > "$O/commit.txt"

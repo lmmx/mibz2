@@ -96,7 +96,9 @@
 //! - `mibz2` (this build: `BzReader::new`, or `BzReader::parallel`, the cooperative
 //!   policy's plan since it became the default), `mibz2-scalar` (the portable kernels),
 //!   `mibz2-workers` (THREADS workers of a block each, `Plan::Workers`: the decoder before
-//!   the policy);
+//!   the policy, 2 blocks in flight a worker), `mibz2-workers-w` (the same plan with the
+//!   default's window, `parallel::SLOTS_PER_THREAD` blocks a worker: below 6 physical
+//!   cores, exactly what `mibz2` runs);
 //! - `mibz2-coop2`, `-coop3`, `-coop4` (the cooperative decoder, `bwt::Cooperative`:
 //!   THREADS cores as THREADS / K teams of K, `BzReader::parallel_planned`, 2 blocks in
 //!   flight a team), `mibz2-team2`, `-team3`, `-team4` (the same plans with the default's
@@ -1134,11 +1136,11 @@ fn decode(
             last,
         ),
         "mibz2-coop2" | "mibz2-coop3" | "mibz2-coop4" | "mibz2-team2" | "mibz2-team3"
-        | "mibz2-team4" | "mibz2-auto" | "mibz2-workers" => {
+        | "mibz2-team4" | "mibz2-auto" | "mibz2-workers" | "mibz2-workers-w" => {
             use mibz2::parallel::Plan;
             let plan = match arm {
                 "mibz2-auto" => Plan::for_threads(threads),
-                "mibz2-workers" => Plan::Workers(threads),
+                "mibz2-workers" | "mibz2-workers-w" => Plan::Workers(threads),
                 _ => {
                     let k = (arm.as_bytes()[arm.len() - 1] - b'0') as usize;
                     Plan::Teams {
@@ -1151,7 +1153,7 @@ fn decode(
             // arms keep the default's window, SLOTS_PER_THREAD a team (what
             // `BzReader::parallel` gives the policy's plan), so a teamK arm differs from
             // `mibz2` in its plan alone
-            let slots = if arm.starts_with("mibz2-team") {
+            let slots = if arm.starts_with("mibz2-team") || arm == "mibz2-workers-w" {
                 mibz2::parallel::SLOTS_PER_THREAD * plan.workers()
             } else {
                 2 * plan.workers()
