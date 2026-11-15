@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Proving that a fragment's details are read only once lets mibz2 store them once, cutting its bookkeeping by 30% and its four-thread decoding time by up to 7%.">
+        <meta name="description" content="mibz2 tracks each run of equal bytes in two orders, and a run's entry in the second shrinks from 20 bytes to 8 by pointing to the first.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -35,7 +35,7 @@
     
     
       
-        <title>Read once, stored once: one copy of each fragment's details, not two - mibz2</title>
+        <title>Removing duplicated interval lengths and text references - mibz2</title>
       
     
     
@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=e40cc2c147b5">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1d979c51d70a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=e40cc2c147b5">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1d979c51d70a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=e40cc2c147b5">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1d979c51d70a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=e40cc2c147b5">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1d979c51d70a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=e40cc2c147b5">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=1d979c51d70a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=e40cc2c147b5">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=1d979c51d70a">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -89,19 +89,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="Read once, stored once: one copy of each fragment's details, not two">
-  <meta property="og:description" content="Proving that a fragment's details are read only once lets mibz2 store them once, cutting its bookkeeping by 30% and its four-thread decoding time by up to 7%.">
+  <meta property="og:title" content="Removing duplicated interval lengths and text references">
+  <meta property="og:description" content="mibz2 tracks each run of equal bytes in two orders, and a run's entry in the second shrinks from 20 bytes to 8 by pointing to the first.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-427/blog/2026-11-15-bottom-slots/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-427/assets/social/blog-2026-11-15-bottom-slots.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Read once, stored once: one copy of each fragment's details, not two">
+  <meta property="og:image:alt" content="Removing duplicated interval lengths and text references">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Read once, stored once: one copy of each fragment's details, not two">
-  <meta name="twitter:description" content="Proving that a fragment's details are read only once lets mibz2 store them once, cutting its bookkeeping by 30% and its four-thread decoding time by up to 7%.">
+  <meta name="twitter:title" content="Removing duplicated interval lengths and text references">
+  <meta name="twitter:description" content="mibz2 tracks each run of equal bytes in two orders, and a run's entry in the second shrinks from 20 bytes to 8 by pointing to the first.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-427/assets/social/blog-2026-11-15-bottom-slots.png">
-  <meta name="twitter:image:alt" content="Read once, stored once: one copy of each fragment's details, not two">
+  <meta name="twitter:image:alt" content="Removing duplicated interval lengths and text references">
 
   </head>
   
@@ -154,7 +154,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Read once, stored once: one copy of each fragment's details, not two
+              Removing duplicated interval lengths and text references
             
           </span>
         </div>
@@ -1167,7 +1167,7 @@
   <span class="md-ellipsis">
     
   
-  Read once, stored once
+  Removing duplicated interval lengths and text references
 
     
   </span>
@@ -1184,7 +1184,7 @@
   <span class="md-ellipsis">
     
   
-  Read once, stored once
+  Removing duplicated interval lengths and text references
 
     
   </span>
@@ -2363,16 +2363,17 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="read-once-stored-once-one-copy-of-each-fragments-details-not-two">Read once, stored once: one copy of each fragment's details, not two<a class="headerlink" href="#read-once-stored-once-one-copy-of-each-fragments-details-not-two" title="Permanent link">&para;</a></h1>
-<p class="post-dek">Proving that a fragment's details are read only once lets mibz2 store them once, cutting its bookkeeping by 30% and its four-thread decoding time by up to 7%.</p>
+<h1 id="removing-duplicated-interval-lengths-and-text-references">Removing duplicated interval lengths and text references<a class="headerlink" href="#removing-duplicated-interval-lengths-and-text-references" title="Permanent link">&para;</a></h1>
+<p class="post-dek">mibz2 tracks each run of equal bytes in two orders, and a run's entry in the second shrinks from 20 bytes to 8 by pointing to the first.</p>
 <p class="post-meta">15 November 2026 · 12 min read · <a href="#6-how-much-faster-is-the-decoder">Research result</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p><a href="../2026-11-15-slot-recycling/">The last post</a> followed Cells, one of mibz2's ways of rebuilding a block of bzip2 text. Cells cuts the block into fragments and keeps a small record for each one, saying how long the fragment is, where its text is kept and how to reach its neighbours. The code calls a fragment a <em>letter</em> and a record a <em>slot</em>, and this post uses those names from here on. Cells keeps every letter in two different orders at once, so each letter has two slots. Until now, both slots held the same length and the same text. This post shows why the second copy was never needed, and what mibz2 0.3.3 gained by dropping it.</p>
+<p><a href="../2026-11-15-slot-recycling/">The last post</a> followed Cells, one of mibz2's ways of undoing the Burrows–Wheeler transform (BWT) that bzip2 applies to each block of text. Cells does not decode one position at a time. It works on <em>intervals</em>: at the start, each interval is a run of equal bytes in the BWT's output, which the decoding moves as a whole to a new place. In the block <code>aab</code>, for example, the BWT's output is <code>baa</code>, and its intervals are one <code>b</code> and two <code>a</code>s. As the decoding goes on, intervals shrink and join.</p>
+<p>Cells tracks every interval in two orders at once: where it lies, and where it is moved to. The code calls an interval a <em>letter</em>, and keeps a small record for it, a <em>slot</em>, in each of the two orders. Until now, both slots held the same two pieces of information: the interval's length, and a reference to the text it stands for. This post shows why the second copy was never needed, and what mibz2 0.3.3 gained by removing it.</p>
 <h2 id="the-idea-in-brief">The idea in brief<a class="headerlink" href="#the-idea-in-brief" title="Permanent link">&para;</a></h2>
 <p>Cells works through each of its two orders from one end, the order's <em>front</em>, so each front reaches every letter once. That gives every letter two visits, one per order.</p>
-<p><strong>A letter's details are read only at the first of its two visits, and a short proof shows that the top order's slot always holds them at that moment.</strong> Call the two orders top and bottom. If the top front reaches the letter first, the details are read from the top slot, and the bottom slot's copy is never used. If the bottom front reaches it first, the top front has not got there yet, so the top slot has not been touched and still holds the details. Either way, the top slot is enough.</p>
+<p><strong>A letter's length and text reference are read only at the first of its two visits, and a short proof shows that the top order's slot always holds them at that moment.</strong> Call the two orders top and bottom. If the top front reaches the letter first, the details are read from the top slot, and the bottom slot's copy is never used. If the bottom front reaches it first, the top front has not got there yet, so the top slot has not been touched and still holds the details. Either way, the top slot is enough.</p>
 <p>So 0.3.3 keeps the details in the top slot only. The bottom slot shrinks from 20 bytes to 8: it keeps its link to its neighbour, and a pointer to the letter's top slot. Here is what that gives, and what it costs:</p>
 <ul>
 <li><strong>30% less memory for the slots</strong>, counted on the benchmark's Wikidata corpus, and about a fifth less for the rebuild's whole working area, which also holds the text itself.</li>
@@ -2391,7 +2392,7 @@
 <figcaption>Worked by hand: the BWT’s output <code>baa</code> above, the same bytes sorted below. Each band joins a run to the rows LF sends it to. The bands cross because the runs swap places: B, A on top; A, B below.</figcaption>
 </figure>
 
-<p>Each run is a letter. The code calls the runs as they lie in the output the <strong>top order</strong>, and the same runs where LF sends them the <strong>bottom order</strong>. There are still only two letters, A and B; each has a place in both orders. Each letter has a <em>length</em>, the number of rows it covers, and a <em>word</em>, the text those rows stand for. At the start, A covers two rows and its word is <code>a</code>; B covers one row and its word is <code>b</code>.</p>
+<p>Each run is one of the intervals, a letter. The code calls the runs as they lie in the output the <strong>top order</strong>, and the same runs where LF sends them the <strong>bottom order</strong>. There are still only two letters, A and B; each has a place in both orders. Each letter has a <em>length</em>, the number of rows it covers, and a <em>word</em>, the text those rows stand for. At the start, A covers two rows and its word is <code>a</code>; B covers one row and its word is <code>b</code>.</p>
 <p>Cells rebuilds the text by shrinking this picture rather than walking it. Each step compares the letters at the two fronts, the right-hand ends of the orders: here, A on top and B below.</p>
 <figure class="bf-fig">
 <p class="bf-title">Rebuilding <code>aab</code> in two steps</p>
@@ -2419,7 +2420,7 @@
 </tr>
 <tr>
 <td>Word length and word offset</td>
-<td>how many bytes of text the word has, and where they, or its rule, are kept</td>
+<td>the letter's text reference: how many bytes of text its word has, and where they, or its rule, are kept</td>
 </tr>
 <tr>
 <td>Partner</td>
@@ -2656,19 +2657,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=e40cc2c147b5"></script>
+        <script src="../../assets/javascripts/bench.js?v=1d979c51d70a"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=e40cc2c147b5"></script>
+        <script src="../../assets/javascripts/couriers.js?v=1d979c51d70a"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=e40cc2c147b5"></script>
+        <script src="../../assets/javascripts/blog.js?v=1d979c51d70a"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=e40cc2c147b5"></script>
+        <script src="../../assets/javascripts/frontier.js?v=1d979c51d70a"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=e40cc2c147b5"></script>
+        <script src="../../assets/javascripts/observatory.js?v=1d979c51d70a"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=e40cc2c147b5"></script>
+        <script src="../../assets/javascripts/katex.js?v=1d979c51d70a"></script>
       
     
   </body>
