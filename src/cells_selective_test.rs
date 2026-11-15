@@ -20,8 +20,8 @@ fn compare_materialization(
     // are 8 bytes, the slot before and the letter's top slot.
     original.wide_bottom = true;
     candidate.wide_bottom = false;
-    let a = original.slots(column.len(), recs.records(), origin, budget, true);
-    let b = candidate.slots(column.len(), recs.records(), origin, budget, true);
+    let a = original.slots(column.len(), recs.records(), origin, budget, true, &mut Vec::new());
+    let b = candidate.slots(column.len(), recs.records(), origin, budget, true, &mut Vec::new());
     assert_eq!(a, b);
     if a.is_err() {
         return Vec::new();
@@ -48,7 +48,7 @@ fn compare_materialization(
         }
     }
     let a = original.induce_cells_original(budget);
-    let b = candidate.induce_cells(budget);
+    let b = candidate.induce_cells(budget, &mut Vec::new());
     assert_eq!(a, b, "column {column:?}, origin {origin}, budget {budget}");
     // The slots a cell is written to differ (a promised slot is the one let go at the
     // front, not a fresh one), so the slots' offsets are left out: the state's 7..15 and a
@@ -68,8 +68,8 @@ fn compare_materialization(
             .collect::<Vec<_>>()
     };
     assert_eq!(placed(original), placed(candidate));
-    original.check_canaries();
-    candidate.check_canaries();
+    original.check_canaries(None);
+    candidate.check_canaries(None);
     if let Ok((word, len, _)) = a {
         assert_eq!(original.rule_end, candidate.rule_end);
         let want = oracle(column, origin);
@@ -79,7 +79,7 @@ fn compare_materialization(
         candidate.write_cells(word, len, column.len(), &mut new_out);
         assert_eq!(old_out, want);
         assert_eq!(new_out, want);
-        assert_eq!(original.pos, candidate.pos);
+        assert_eq!(original.positions(), candidate.positions());
     }
     candidate
         .materialization
