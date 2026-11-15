@@ -1624,6 +1624,20 @@
       "status": "finished",
       "disposition": "HOLD adoption/integration: required ordering mutation target survives; source geometry and guard placement supported.",
       "comment": 6901989525
+    },
+    {
+      "id": "D109",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6902547995,
+      "pr": 161,
+      "sha": "81aa4b1dfa3333754c77baca975948c3cd0121b8",
+      "evidence_digest": "sha256:0fcb872956d17cf1b178a092c9f5870e8125de1b34c76b7fc8ca3eb09d9a3801",
+      "commit": "df88688fc3b3292466d55ff9f52474bcd67ab6ff",
+      "status": "complete",
+      "disposition": "HOLD exact-source validation; D108 argument/check design accepted but evidence closure incomplete."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1992,7 +2006,9 @@
     "0ec8fb297de458bf845d1b9fda557b955b01dfba",
     "bc384f4b1c4a1fb5054d9d307035cea247c8290e",
     "04bdd5092080148714e3fa79f297beffeb88c471",
-    "bab9d1b8c05b5879ad5cb98a9b5499023d6a881a"
+    "bab9d1b8c05b5879ad5cb98a9b5499023d6a881a",
+    "4ceef83dfde689f06fa8b14cfb291b1d2661c836",
+    "df88688fc3b3292466d55ff9f52474bcd67ab6ff"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2101,7 +2117,8 @@
     6868538108,
     6881612485,
     6882196843,
-    6901903478
+    6901903478,
+    6902547995
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2181,8 +2198,9 @@
   },
   "current_execution": {
     "active_comment": 6902547995,
-    "status": "in progress",
-    "decision": "D109"
+    "status": "complete",
+    "decision": "D109",
+    "work_commit": "df88688fc3b3292466d55ff9f52474bcd67ab6ff"
   },
   "duplicate_events": [
     {
@@ -3013,6 +3031,13 @@
       "evidence_digest": "sha256:1fdb0fa0114694512b7239a6c894a1e0872b62684b1f00d3a054ed63312fc642",
       "incoming_comment": 6901903478,
       "decision": "D108"
+    },
+    {
+      "pr": 447,
+      "sha": "81aa4b1dfa3333754c77baca975948c3cd0121b8",
+      "evidence_digest": "sha256:0fcb872956d17cf1b178a092c9f5870e8125de1b34c76b7fc8ca3eb09d9a3801",
+      "incoming_comment": 6902547995,
+      "decision": "D109"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3902,9 +3927,11 @@
     {
       "comment_id": 6902547995,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D109",
-      "progress": "Migration verified; reviewing #447 and D108 closure."
+      "progress": "Source review complete; scoped validation evidence HOLD; REVIEW pending.",
+      "receipt_commit": "4ceef83dfde689f06fa8b14cfb291b1d2661c836",
+      "work_commit": "df88688fc3b3292466d55ff9f52474bcd67ab6ff"
     }
   ],
   "migrated_from": {
