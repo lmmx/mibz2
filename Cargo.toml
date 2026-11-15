@@ -116,3 +116,7 @@ required-features = ["trace"]
 [[example]]
 name = "wait_audit"
 required-features = ["wait-stats"]
+
+[[example]]
+name = "lever_counts"
+required-features = ["memory-lever"]

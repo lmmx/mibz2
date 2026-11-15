@@ -149,6 +149,16 @@ fn miri_cells_lever_exact_fit_and_reuse() {
                 kernel.materialization = Some(Vec::new());
                 let cells = check(&mut kernel, &ll, p as u32);
                 let lay = kernel.lay;
+                // slots are given back and taken again: a block of many letters never has
+                // half of them in slots at once (these columns peak near a quarter)
+                if variant == LAZY && kernel.letters >= 60 {
+                    assert!(
+                        kernel.lz.peak * 2 < kernel.letters,
+                        "{} slots of {} letters",
+                        kernel.lz.peak,
+                        kernel.letters
+                    );
+                }
                 for m in kernel.materialization.take().unwrap() {
                     let (fa, fb) = (m.state[7] as usize, m.state[8] as usize);
                     let (bs, ts) = (m.state[11] as usize, m.state[12] as usize);
@@ -200,32 +210,36 @@ fn miri_cells_staged_fence_covers_every_exit() {
     };
     let fences = || FENCES.with(|f| f.get());
     let pending = || PENDING.with(|p| p.get());
+    // how many fences found the mark set: where rules are staged, each exit below comes
+    // after a send, so its fence must have found it
+    let cleared = || CLEARED.with(|c| c.get());
+    let found = usize::from(STAGED);
     // a word returned, after several sends (the writer's own assertion ran too)
-    let before = fences();
+    let (before, marked) = (fences(), cleared());
     let cells = check(&mut kernel, &column, 3);
     assert!(!STAGED || kernel.rule_sends >= 3, "{}", kernel.rule_sends);
     assert!(!pending());
-    assert_eq!(fences(), before + 1);
+    assert_eq!((fences(), cleared()), (before + 1, marked + found));
     // a refusal on the budget, after the sends
-    let before = fences();
+    let (before, marked) = (fences(), cleared());
     let mut out = vec![0xCC; n];
     assert_eq!(
         kernel.try_invert(r.records(), n, 3, cells - 1, true, &mut out),
         Err(Refusal::Budget)
     );
     assert!(!pending());
-    assert_eq!(fences(), before + 1);
-    // an unwinding panic, right after a send
+    assert_eq!((fences(), cleared()), (before + 1, marked + found));
+    // an unwinding panic, right after the first send of whole lines
     if STAGED {
-        let before = fences();
+        let (before, marked) = (fences(), cleared());
         kernel.panic_after_send = true;
         let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             let _ = kernel.try_invert(r.records(), n, 3, n, true, &mut out);
         }));
         kernel.panic_after_send = false;
-        assert!(caught.is_err(), "the induction panicked after its first send");
+        assert!(caught.is_err(), "the induction panicked after a send of whole lines");
         assert!(!pending());
-        assert_eq!(fences(), before + 1);
+        assert_eq!((fences(), cleared()), (before + 1, marked + 1));
     }
     // and the kernel is whole afterwards
     check(&mut kernel, &column, 3);
@@ -266,4 +280,60 @@ fn cells_lever_route_and_fallback() {
     }
     assert_eq!(lazy.cells, staged.cells);
     assert!(pool > 0, "an admitted block's lazy induction took slots");
+}
+
+/// A lazy entry holds a letter's length in `LEN_BITS` bits: a block of more rows is refused
+/// before anything is laid out, and Cells' fallback takes it (no bzip2 block is that long).
+#[test]
+fn cells_lazy_refuses_a_block_past_its_entries() {
+    let n = 1usize << LEN_BITS;
+    // one run of `n` rows, as records of at most 127
+    let mut recs = vec![127u16; n / 127];
+    recs.push((n % 127) as u16);
+    let mut out = vec![7, 7];
+    let mut kernel = Kernel {
+        variant: LAZY,
+        ..Default::default()
+    };
+    assert_eq!(
+        kernel.try_invert(&recs, n, 0, n, true, &mut out),
+        Err(Refusal::Invalid)
+    );
+    assert!(kernel.buf.is_empty(), "nothing was allocated");
+    assert_eq!(out, [7, 7]);
+    // one row fewer is taken
+    recs[0] -= 1;
+    assert!(kernel.try_invert(&recs, n - 1, 0, n - 1, true, &mut out).is_ok());
+    assert!(out.iter().all(|&b| b == 0) && out.len() == n - 1);
+}
+
+/// A closed letter that is not the walk's row's gives its two slots back. A column of
+/// swapped pairs is a hundred cycles of two rows: each is cut into one cell, which closes.
+/// Whatever the walk's row, the lazy induction never holds more than a few pairs of slots.
+#[test]
+fn miri_cells_lazy_closed_letters_give_their_slots_back() {
+    let ll: Vec<u8> = (0..200u8).map(|i| i ^ 1).collect();
+    let mut kernel = Kernel {
+        variant: LAZY,
+        ..Default::default()
+    };
+    for p in [0, 77, 199] {
+        check(&mut kernel, &ll, p);
+        assert_eq!(kernel.letters, 200);
+        assert!(kernel.lz.peak <= 4, "{} pairs of slots", kernel.lz.peak);
+    }
+}
+
+/// A letter longer than 2^21 rows, cut by a short one: its length is read whole from its
+/// entry (`LEN_BITS` bits), on the lazy route.
+#[test]
+fn cells_lazy_long_letter() {
+    let ll = [vec![1u8; 3], vec![0u8; (1 << (LEN_BITS - 1)) + 5]].concat();
+    let mut kernel = Kernel {
+        variant: LAZY,
+        ..Default::default()
+    };
+    for p in [1, ll.len() as u32 - 2] {
+        check(&mut kernel, &ll, p);
+    }
 }

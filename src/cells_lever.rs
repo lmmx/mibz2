@@ -239,9 +239,10 @@ unsafe fn send_rules(base: *mut u8, stage: *const u8, from: usize, to: usize) {
         }
         core::ptr::copy_nonoverlapping(src.add(i), dst.add(i), n - i);
         // (test only: the model. Whole lines were sent past the cache, or would have been
-        // outside Miri)
+        // outside Miri. From 127 bytes on there is a whole line wherever the buffer lies, so
+        // a full stage's send is marked whatever the allocator did)
         #[cfg(test)]
-        if n - head >= 64 {
+        if n - head >= 64 || n >= 127 {
             PENDING.with(|p| p.set(true));
         }
     }
@@ -255,6 +256,8 @@ thread_local! {
     static PENDING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
     /// (test only) how many fences have run on this thread
     static FENCES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    /// (test only) how many of them found the mark set, and cleared it
+    static CLEARED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 /// Runs `sfence` when dropped: on every way out of the staged induction, an unwinding one
@@ -272,7 +275,9 @@ impl Drop for Fence {
         }
         #[cfg(test)]
         {
-            PENDING.with(|p| p.set(false));
+            if PENDING.with(|p| p.replace(false)) {
+                CLEARED.with(|c| c.set(c.get() + 1));
+            }
             FENCES.with(|f| f.set(f.get() + 1));
         }
     }
@@ -1012,7 +1017,9 @@ impl Kernel {
                                 #[cfg(test)]
                                 {
                                     sends += 1;
-                                    if self.panic_after_send {
+                                    // (the first send the model marked: a first, short
+                                    // send may hold no whole line)
+                                    if self.panic_after_send && PENDING.with(|p| p.get()) {
                                         panic!("test: unwinding after a send");
                                     }
                                 }

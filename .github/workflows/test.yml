@@ -43,11 +43,15 @@ jobs:
           MIBZ2_DOSE_MB=1 MIBZ2_DOSE_KIND=chase cargo test --features dose --test dose
       # the memory-lever experiment's two opt-in Cells kernels (#145 QUEUED 6901989466): each
       # against the original induction state by state, the store fence's model, the public
-      # route, the harness's two arms built, and the sign reading on a made-up run
+      # route, the harness's two arms built, the store fence read in the compiled library
+      # (and the experiment's code absent without the feature), and the sign reading on a
+      # made-up run
       - name: The memory-lever build (research feature)
         run: |
           cargo test --features memory-lever --lib cells::
           cargo test --features memory-lever --example ab
+          cargo build --features memory-lever --example lever_counts
+          bash bench/memory_lever_fence.sh
           python3 bench/memory_lever.py bench/memory_lever_example.jsonl | tee lever.txt
           grep -q 'below the ratio at 4 in 10 of 10 rounds' lever.txt
           grep -q 'below the ratio at 4 in 5 of 10 rounds' lever.txt

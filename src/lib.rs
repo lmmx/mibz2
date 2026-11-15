@@ -671,4 +671,10 @@ impl<const V: u8, const F: bool> Scratch<bwt::LeverCells<V, F>> {
     pub fn cells_counts(&self) -> bwt::CellsCounts {
         self.inverse.counts()
     }
+    /// Research (`memory-lever`): the most slots the last lazy induction took from each
+    /// pool, and that block's letters.
+    #[doc(hidden)]
+    pub fn lazy_pool(&self) -> (usize, usize) {
+        self.inverse.pool()
+    }
 }

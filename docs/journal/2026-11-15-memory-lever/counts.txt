@@ -1,0 +1,37 @@
+callgrind, one thread, inclusive of callees; Wikidata (corpora/wikidata.bz2, SHA-256 82f65ace...c29915); 11,090,867 letters in the 196 admitted blocks
+
+== lever_counts corpora/wikidata.bz2 cells
+Counts { admitted: 196, density: 185, sparse: 0, floor: 0, budget: 2, invalid: 0, short_cycles: 0, cells: 20456299 }
+  45,033,329  0.95%)  (4.06 a letter)
+  63,976,704  1.34%)  (5.77 a letter)
+  72,674,563  1.53%)  (6.55 a letter)
+  272,976,180  5.74%)  (24.61 a letter)
+  1,280,552,604  induce_cells  (115.46 a letter)
+  845,664,550  slots  (76.25 a letter)
+  4,758,054,918  whole program
+  597,763,199  write_cells  (53.90 a letter)
+
+== lever_counts corpora/wikidata.bz2 lazy
+Counts { admitted: 196, density: 185, sparse: 0, floor: 0, budget: 2, invalid: 0, short_cycles: 0, cells: 20456299 }
+pool's peak over letters, min median max: 0.295 0.318 0.337
+  49,149,464  0.92%)  (4.43 a letter)
+  139,626,019  2.61%)  (12.59 a letter)
+  224,283,984  4.20%)  (20.22 a letter)
+  530,083,253  9.93%)  (47.79 a letter)
+  2,007,610,416  induce_lazy  (181.01 a letter)
+  748,910,932  slots_lazy  (67.53 a letter)
+  5,339,685,842  whole program
+  549,070,573  write_cells  (49.51 a letter)
+
+== lever_counts corpora/wikidata.bz2 nt
+Counts { admitted: 196, density: 185, sparse: 0, floor: 0, budget: 2, invalid: 0, short_cycles: 0, cells: 20456299 }
+  45,033,329  0.91%)  (4.06 a letter)
+  63,976,902  1.29%)  (5.77 a letter)
+  72,674,563  1.46%)  (6.55 a letter)
+  272,976,180  5.50%)  (24.61 a letter)
+  483,845,360  9.75%)  (43.63 a letter)
+  1,485,033,768  induce_cells_staged  (133.90 a letter)
+  845,664,550  slots  (76.25 a letter)
+  4,962,535,868  whole program
+  597,763,199  write_cells  (53.90 a letter)
+

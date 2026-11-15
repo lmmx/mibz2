@@ -85,9 +85,10 @@ jobs:
       # their unsafe regions against the original induction, and the store fence's model
       - name: The memory-lever kernels' tests are selected
         run: |
-          cargo miri test --features memory-lever --lib -- miri_cells_lever miri_cells_staged --list 2>/dev/null | tee lever-list.txt
+          cargo miri test --features memory-lever --lib -- miri_cells_lever miri_cells_staged miri_cells_lazy --list 2>/dev/null | tee lever-list.txt
           grep -q '^cells::tests::miri_cells_lever_boundaries_reuse:' lever-list.txt
           grep -q '^cells::tests::miri_cells_lever_exact_fit_and_reuse:' lever-list.txt
           grep -q '^cells::tests::miri_cells_staged_fence_covers_every_exit:' lever-list.txt
+          grep -q '^cells::tests::miri_cells_lazy_closed_letters_give_their_slots_back:' lever-list.txt
       - name: Miri, the memory-lever kernels
-        run: cargo miri test --features memory-lever --lib -- miri_cells_lever miri_cells_staged
+        run: cargo miri test --features memory-lever --lib -- miri_cells_lever miri_cells_staged miri_cells_lazy

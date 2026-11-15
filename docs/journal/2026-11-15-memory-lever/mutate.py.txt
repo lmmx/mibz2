@@ -1,0 +1,88 @@
+"""Mutation pass for the memory-lever experiment's two kernels (src/cells_lever.rs).
+
+Each mutant is one replacement. A mutant is killed if the Cells unit tests fail on it in the
+debug profile with the feature on (canaries and debug assertions are on there), or, for the
+store fence, if bench/memory_lever_fence.sh fails on it. The tree is left as it was.
+
+    mutate.py WORKTREE
+"""
+import os
+import subprocess
+import sys
+
+wt = sys.argv[1]
+p = os.path.join(wt, "src/cells_lever.rs")
+orig = open(p).read()
+# (kernel, what the mutant does, the text, its replacement, also run the fence check)
+M = [
+    # --- rules staged and stored past the cache
+    ("staged", "ring index over half the stage", "let q = rp % STAGE;", "let q = rp % (STAGE / 2);", False),
+    ("staged", "stage sent one rule early", "if q == STAGE - 16 {", "if q == STAGE - 32 {", False),
+    ("staged", "stage never sent when full", "if q == STAGE - 16 {", "if false && q == STAGE - 16 {", False),
+    ("staged", "full send not clamped to the region's start", "send_rules(base, sp, (rp + 16 - STAGE).max(lay.rules), rp + 16);", "send_rules(base, sp, rp + 16 - STAGE, rp + 16);", False),
+    ("staged", "full send stops one rule short", "send_rules(base, sp, (rp + 16 - STAGE).max(lay.rules), rp + 16);", "send_rules(base, sp, (rp + 16 - STAGE).max(lay.rules), rp);", False),
+    ("staged", "last send dropped", "send_rules(base, sp, (rp - rp % STAGE).max(lay.rules), rp);", "send_rules(base, sp, rp, rp);", False),
+    ("staged", "last send not clamped to the region's start", "send_rules(base, sp, (rp - rp % STAGE).max(lay.rules), rp);", "send_rules(base, sp, rp - rp % STAGE, rp);", False),
+    ("staged", "second half of a rule not staged", "wr64(sp, q + 8, bw);", "", False),
+    ("staged", "send reads the stage from its start", "let src = stage.add(from % STAGE);", "let src = stage;", False),
+    ("staged", "send skips the bytes before the first line", "core::ptr::copy_nonoverlapping(src, dst, head);", "", False),
+    ("staged", "send skips what is left of a line", "core::ptr::copy_nonoverlapping(src.add(i), dst.add(i), n - i);", "", False),
+    ("staged", "a whole line's third quarter sent to its second", "_mm_stream_si128(d.add(2), _mm_loadu_si128(s.add(2)));", "_mm_stream_si128(d.add(1), _mm_loadu_si128(s.add(2)));", False),
+    ("staged", "lines advance by half", "            i += 64;\n        }\n        core::ptr::copy_nonoverlapping(src.add(i)", "            i += 32;\n        }\n        core::ptr::copy_nonoverlapping(src.add(i)", False),
+    ("staged", "the induction does not check the rules' offset", "            || lay.rules % 16 != 0\n", "", False),
+    # --- the store fence
+    ("fence", "no fence object in the induction", "            let _fence = Fence;\n", "", True),
+    ("fence", "the fence dropped where it is made", "            let _fence = Fence;\n", "            let _ = Fence;\n", True),
+    ("fence", "the fence object runs no sfence", "            core::arch::x86_64::_mm_sfence();", "", True),
+    ("fence", "the model's mark never set", "            PENDING.with(|p| p.set(true));", "", False),
+    # --- lazy letters
+    ("lazy", "a pair taken from the pool stays on it", "                        free = rd32(base, t) as usize;\n", "", False),
+    ("lazy", "a pair given back without its bottom slot", "                    wr32(base, t + 4, b as u32);\n", "", False),
+    ("lazy", "no pair given back at an equal step", "                        debug_assert!(fa != ts && fb != bs && fa != na && fb != nb);\n                        give!(fa, fb);\n", "", False),
+    ("lazy", "no pair given back for a closed letter", "                    if bs & ENTRY == 0 {\n                        give!(fa, fb);\n                    }\n", "", False),
+    ("lazy", "a closed letter read from its entry gives a pair back", "                    if bs & ENTRY == 0 {\n                        give!(fa, fb);", "                    if true {\n                        give!(fa, fb);", False),
+    ("lazy", "the one-letter test never fires", "                if bs == fb {\n                    // one letter, last in both orders", "                if false {\n                    // one letter, last in both orders", False),
+    ("lazy", "the top front's entry not tagged (in the step)", "                                (fa, bs) = take!();\n                                wr32(bb, bs, 0);\n                                wr32(bb, BPAD + 4 * k, TAG | bs as u32);", "                                (fa, bs) = take!();\n                                wr32(bb, bs, 0);\n                                wr32(bb, BPAD + 4 * k, bs as u32);", False),
+    ("lazy", "the bottom front's entry not tagged (in the step)", "                                (ts, fb) = take!();\n                                wr32(base, ts, 0);\n                                wr32(bb, BPAD + 4 * kb, TAG | ts as u32);", "                                (ts, fb) = take!();\n                                wr32(base, ts, 0);\n                                wr32(bb, BPAD + 4 * kb, ts as u32);", False),
+    ("lazy", "a new bottom slot not linked to the stream (in the step)", "                                (fa, bs) = take!();\n                                wr32(bb, bs, 0);\n", "                                (fa, bs) = take!();\n", False),
+    ("lazy", "a new top slot not linked to the stream (in the step)", "                                (ts, fb) = take!();\n                                wr32(base, ts, 0);\n", "                                (ts, fb) = take!();\n", False),
+    ("lazy", "a new bottom slot not linked to the stream (two letters read together)", "                        (fa, bs) = take!();\n                        wr32(bb, bs, 0);\n", "                        (fa, bs) = take!();\n", False),
+    ("lazy", "a new top slot not linked to the stream (two letters read together)", "                        (ts, fb) = take!();\n                        wr32(base, ts, 0);\n", "                        (ts, fb) = take!();\n", False),
+    ("lazy", "a byte's last entry not moved on", "                        *nt.get_unchecked_mut(c) = (k as u32).wrapping_sub(1);\n", "", False),
+    ("lazy", "the walk's row not marked in its entry", "letter!(1u32, cz, ROW);", "letter!(1u32, cz, 0);", False),
+    ("lazy", "an entry without its byte", "wr32(bb, BPAD + 4 * k, lam | (c as u32) << LEN_BITS | $row);", "wr32(bb, BPAD + 4 * k, lam | $row);", False),
+    ("lazy", "the top order's bytes not written", "                    *bb.add(tby + t) = c as u8;\n", "", False),
+    ("lazy", "a letter's length read one bit short", "                            ra = (e & ((1 << LEN_BITS) - 1)) as u64;", "                            ra = (e & ((1 << (LEN_BITS - 1)) - 1)) as u64;", False),
+    ("lazy", "a block past the entries' length not refused", "        if n >= 1 << LEN_BITS {\n            return Err(Refusal::Invalid);\n        }\n", "", False),
+    ("lazy", "the pools' bound not checked", "                        if tnew + SLOT > tend || bnew + BSLOT > bend {", "                        if false {", False),
+    ("lazy", "the top stream's end not checked", "                        if ti == 0 {\n                            return Err(Refusal::Invalid);\n                        }\n", "", False),
+]
+env = dict(os.environ, CARGO_TARGET_DIR=os.path.join(wt, "target"))
+survivors = 0
+for kernel, name, a, b, fence in M:
+    if orig.count(a) != 1:
+        print(f"{kernel}\t{name}\tNOT APPLIED: the text occurs {orig.count(a)} times", flush=True)
+        survivors += 1
+        continue
+    open(p, "w").write(orig.replace(a, b))
+    r = subprocess.run(
+        ["cargo", "test", "--features", "memory-lever", "--lib", "cells"],
+        cwd=wt, env=env, capture_output=True, text=True,
+    )
+    out = r.stdout + r.stderr
+    if "could not compile" in out:
+        verdict = "does not build"
+    elif r.returncode != 0:
+        failed = sorted({l.split()[1].split("::")[-1] for l in out.splitlines() if l.startswith("test ") and l.rstrip().endswith("FAILED")})
+        verdict = "killed by the tests: " + (", ".join(failed) if failed else "the test binary died")
+    else:
+        verdict = "survives the tests"
+    if fence:
+        f = subprocess.run(["bash", "bench/memory_lever_fence.sh"], cwd=wt, env=env, capture_output=True, text=True)
+        verdict += "; " + ("killed by the fence check" if f.returncode != 0 else "survives the fence check")
+    if "killed" not in verdict:
+        survivors += 1
+        verdict = "SURVIVED: " + verdict
+    print(f"{kernel}\t{name}\t{verdict}", flush=True)
+open(p, "w").write(orig)
+print(f"# {len(M)} mutants, {survivors} not killed", flush=True)
