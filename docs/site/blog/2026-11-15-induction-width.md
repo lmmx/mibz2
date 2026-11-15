@@ -1,5 +1,5 @@
 ---
-title: "The width of an induction, and how taking free steps first cuts it to a third"
+title: "The width of an induction is how much it must hold at once"
 image: assets/social/blog-2026-11-15-induction-width.png
 description: "Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps."
 ---
@@ -11,7 +11,7 @@ description: "Taking the steps that cost no bookkeeping first lets mibz2 rebuild
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# The width of an induction, and how taking free steps first cuts it to a third
+# The width of an induction is how much it must hold at once
 
 Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps.
 {: .post-dek }
