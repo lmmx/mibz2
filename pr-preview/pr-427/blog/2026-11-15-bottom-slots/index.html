@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1d979c51d70a">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=4bb4bf7fe3d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1d979c51d70a">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=4bb4bf7fe3d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1d979c51d70a">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=4bb4bf7fe3d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1d979c51d70a">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=4bb4bf7fe3d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=1d979c51d70a">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=4bb4bf7fe3d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=1d979c51d70a">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=4bb4bf7fe3d8">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2379,7 +2379,7 @@
 <li><strong>30% less memory for the slots</strong>, counted on the benchmark's Wikidata corpus, and about a fifth less for the rebuild's whole working area, which also holds the text itself.</li>
 <li><strong>A faster decoder at four threads on both test machines, and at one and two threads on one of them.</strong> On a 10-core Intel desktop, 0.3.3 took 6.5% less wall time than 0.3.2 at four threads, and about 4% less at one and two. On the project's 2-core CI runner it took 4.2% less at four threads; at one and two threads the change was within noise.</li>
 <li><strong>The price is an extra memory read.</strong> On 53.7% of slot reads, the processor must read the bottom slot to learn where the top slot is before it can read the details. That could have cost more than it saved; on these measurements it did not.</li>
-<li><strong>More threads can now usefully decode a block each.</strong> mibz2 switches from giving each thread a block of its own to having threads share blocks at a fixed thread count, the <em>team threshold</em>. After 0.3.3, a block per thread was faster up to nine threads on the desktop, and a change moving the threshold is under review. That shift is the work of every improvement to Cells so far, not of this change alone.</li>
+<li><strong>More threads can now usefully decode a block each.</strong> mibz2 switches from giving each thread a block of its own to having threads share blocks at a fixed thread count, the <em>team threshold</em>. After 0.3.3, a block per thread was faster up to nine threads on the desktop, and a change moving the threshold to ten threads is now merged, for the next release. That shift is the work of every improvement to Cells so far, not of this change alone.</li>
 </ul>
 <p><a href="#1-why-does-every-letter-need-two-slots">Section 1</a> builds the two orders from a three-byte example, and shows why each letter needs a slot in both. Sections 2 to 4 show the new layout, why it is safe, and what the extra read costs. Sections 5 to 7 give the measurements: memory, speed, and the team threshold.</p>
 <h2 id="1-why-does-every-letter-need-two-slots">1. Why does every letter need two slots?<a class="headerlink" href="#1-why-does-every-letter-need-two-slots" title="Permanent link">&para;</a></h2>
@@ -2490,7 +2490,7 @@
 <figcaption>Measured: 10 paired rounds on the i9-10900K, the shipped decoder (teams from six threads; at ten, three teams of three) against a block per thread. Below 1 the workers are faster; green where the 95% interval is wholly below 1. The record gives no interval at ten threads. CPU is the same ratio for processor time; the last column is peak memory, teams → workers.</figcaption>
 </figure>
 
-<p>Workers were faster at every count from six to nine threads, taking 13.9% less wall time at six and 3.6% less at nine. At ten threads the shipped decoder runs three teams of three, so nine threads decode blocks, and it stays ahead: workers took 15.3% longer. Workers also use more memory, since more blocks are in flight: 133 to 188 MB at six to nine threads, against 65 to 81 MB for the teams. At nine threads they used 12.4% more processor time. That is over the project's 10% limit on extra processor time for such a move, so the choice went to the maintainer. He chose workers below ten threads, where each thread has a core of its own, and <a href="https://github.com/lmmx/mibz2/pull/425">the change</a> is now a pull request under review.</p>
+<p>Workers were faster at every count from six to nine threads, taking 13.9% less wall time at six and 3.6% less at nine. At ten threads the shipped decoder runs three teams of three, so nine threads decode blocks, and it stays ahead: workers took 15.3% longer. Workers also use more memory, since more blocks are in flight: 133 to 188 MB at six to nine threads, against 65 to 81 MB for the teams. At nine threads they used 12.4% more processor time. That is over the project's 10% limit on extra processor time for such a move, so the choice went to the maintainer. He chose workers below ten threads, where each thread has a physical core of its own, and teams from ten. <a href="https://github.com/lmmx/mibz2/pull/425">The change</a> is merged, and in the next release.</p>
 <p>This run measures Cells as it is now, after every improvement since 0.3.0, including <a href="../2026-11-15-slot-recycling/">slot recycling</a> in 0.3.2 and the smaller bottom slots in 0.3.3. It shows that today's Cells beats the teams up to nine threads on this machine. It does not show how much of the shift is due to the bottom slots alone: no run compared the two layouts at six to nine threads.</p>
 <h2 id="what-it-teaches">What it teaches<a class="headerlink" href="#what-it-teaches" title="Permanent link">&para;</a></h2>
 <p>The change began from a question about the algorithm, not the machine: when is each stored value actually read? Once the answer was "exactly once, at the first front to arrive", the layout followed. It is not ordinary deduplication, because the slots are rewritten all the time. What makes it safe is that the one remaining copy is guaranteed to be intact at the one moment it is read.</p>
@@ -2657,19 +2657,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=1d979c51d70a"></script>
+        <script src="../../assets/javascripts/bench.js?v=4bb4bf7fe3d8"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=1d979c51d70a"></script>
+        <script src="../../assets/javascripts/couriers.js?v=4bb4bf7fe3d8"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=1d979c51d70a"></script>
+        <script src="../../assets/javascripts/blog.js?v=4bb4bf7fe3d8"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=1d979c51d70a"></script>
+        <script src="../../assets/javascripts/frontier.js?v=4bb4bf7fe3d8"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=1d979c51d70a"></script>
+        <script src="../../assets/javascripts/observatory.js?v=4bb4bf7fe3d8"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=1d979c51d70a"></script>
+        <script src="../../assets/javascripts/katex.js?v=4bb4bf7fe3d8"></script>
       
     
   </body>
