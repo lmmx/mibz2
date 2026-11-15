@@ -1117,24 +1117,6 @@ fn decode(
         ),
         // the cooperative decoder (bwt::Cooperative): THREADS cores as THREADS / K teams of
         // K, or as the policy plans THREADS (`Plan::for_threads`)
-        // (research only, `phase-counters`: the phase attribution's baseline arm, #145 LOG
-        // 6884975709. THREADS workers of a block each, as mibz2-workers, inverting with
-        // Segmented, the T-vector walk, never Cells: a team of one runs so,
-        // `StreamDecoder::planned`; the window mibz2-workers keeps, 2 blocks a worker)
-        #[cfg(feature = "phase-counters")]
-        "mibz2-workers-segmented" => drain(
-            mibz2::BzReader::parallel_planned(
-                open()?,
-                mibz2::parallel::Plan::Teams {
-                    teams: threads,
-                    k: 1,
-                },
-                2 * threads,
-                mibz2::Kernels::detect(),
-            ),
-            h,
-            last,
-        ),
         "mibz2-coop2" | "mibz2-coop3" | "mibz2-coop4" | "mibz2-team2" | "mibz2-team3"
         | "mibz2-team4" | "mibz2-auto" | "mibz2-workers" | "mibz2-workers-w" => {
             use mibz2::parallel::Plan;

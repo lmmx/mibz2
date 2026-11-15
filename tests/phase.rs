@@ -1,10 +1,10 @@
-//! Research only (`phase-counters`): the phase attribution's counter paths, driven for real
-//! on a machine with no PMU by the test-only pass `SW` (software events: task clock, page
-//! faults) in the registered passes' place. Through the Workers plan the instrument opens
-//! its groups on each worker, counts each block's decode_block, the induction's and the
-//! writer's windows and their empty scopes, and the output stays byte-identical. Where even
-//! software events cannot be opened (a locked-down perf_event_paranoid), the failure is
-//! recorded and nothing is counted, and the output is still byte-identical.
+//! Research only (`phase-counters`): the phase counters' paths, driven for real on a machine
+//! with no PMU by the software pass `SW` (task clock, page faults). Through the Workers plan
+//! the instrument opens its groups on each worker, counts each block's decode_block, the
+//! induction's and the writer's windows and their empty scopes, and the output stays
+//! byte-identical. Where even software events cannot be opened (a locked-down
+//! perf_event_paranoid), the failure is recorded and nothing is counted, and the output is
+//! still byte-identical.
 //!
 //!     cargo test --features phase-counters --test phase
 #![cfg(feature = "phase-counters")]

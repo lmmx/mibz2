@@ -206,14 +206,8 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
 /// never needed (MONODROMY, 2026-11-15, rule R4 and layout A8).
 ///
 /// Every field is a 4-byte offset or length: the layout refuses a buffer whose total would
-/// reach `u32::MAX` (`slots`), and Cells then declines the block. The research feature
-/// `slot24` keeps the previous top slot, 24 bytes with bytes 16..24 an 8-byte offset, only so
-/// that one commit can build both (bench-cells-diet, #145 LOG 6881022819).
-#[cfg(not(feature = "slot24"))]
+/// reach `u32::MAX` (`slots`), and Cells then declines the block.
 const SLOT: usize = 20;
-/// (research only, `slot24`: the previous 24-byte slot)
-#[cfg(feature = "slot24")]
-const SLOT: usize = 24;
 /// A bottom slot: the slot before it in the bottom order, and the letter's top slot
 const BSLOT: usize = 8;
 /// How many slots on from an order's last letter the induction by cells fetches for
@@ -266,19 +260,11 @@ unsafe fn wr32(base: *mut u8, at: usize, v: u32) {
     unsafe { (base.add(at) as *mut u32).write_unaligned(v) }
 }
 
-/// A slot's bytes 16..: the letter's slot in the other order (4 bytes; 8 with `slot24`)
+/// A slot's bytes 16..: the letter's slot in the other order (4 bytes)
 #[inline(always)]
 unsafe fn rd_other(base: *const u8, slot: usize) -> usize {
     // SAFETY: caller supplies an initialized in-bounds slot; alignment is not required.
-    #[cfg(not(feature = "slot24"))]
-    unsafe {
-        rd32(base, slot + 16) as usize
-    }
-    // SAFETY: as above
-    #[cfg(feature = "slot24")]
-    unsafe {
-        rd64(base, slot + 16) as usize
-    }
+    unsafe { rd32(base, slot + 16) as usize }
 }
 
 /// Sets a slot's bytes 16..: the letter's slot in the other order, `other`, an offset in
@@ -287,15 +273,7 @@ unsafe fn rd_other(base: *const u8, slot: usize) -> usize {
 unsafe fn wr_other(base: *mut u8, slot: usize, other: usize) {
     debug_assert!(other < u32::MAX as usize);
     // SAFETY: caller supplies an in-bounds slot; alignment is not required.
-    #[cfg(not(feature = "slot24"))]
-    unsafe {
-        wr32(base, slot + 16, other as u32)
-    }
-    // SAFETY: as above
-    #[cfg(feature = "slot24")]
-    unsafe {
-        wr64(base, slot + 16, other as u64)
-    }
+    unsafe { wr32(base, slot + 16, other as u32) }
 }
 
 /// A bottom slot: (the slot before it in the bottom order, the letter's top slot)

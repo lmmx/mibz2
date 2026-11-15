@@ -36,6 +36,11 @@ Docs, journal, bench-harness or blog changes alone are not.
    tag name.
    - It checks that nothing got worse. It is not a gate to re-run until the result looks good.
    - Name its CPU. It is in the run's `env.json` artifact and in its step summary.
+3. **Review the research features' retention notes** (the comments above each entry of
+   `Cargo.toml`'s `[features]`; #145, LOG 6893084445). A feature stays while it has a specific
+   purpose and a removal condition that hasn't been met. Remove any whose reason has lapsed in
+   its own PR, never in the release's. The review never delays the release, and a removal is
+   never automatic: list what was reviewed, and what is to go, in the release's report.
 
 ## 4. The release
 

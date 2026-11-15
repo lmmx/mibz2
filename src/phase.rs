@@ -1,33 +1,31 @@
-//! Research only, behind the `phase-counters` feature (off by default): the phase attribution
-//! of Cells' memory traffic (#145, LOG 6884716103, amended by LOGs 6884895257 and
-//! 6884975709, all before any data). Without the feature this module is not compiled and
-//! nothing in the decoder refers to it.
+//! Research only, behind the `phase-counters` feature (off by default): per-phase counts of
+//! Cells' induction and writer, per worker thread. Built for the phase attribution of Cells'
+//! memory traffic (#145, LOG 6884716103; verdict LOG 6886389292, at e3cfd694, whose recipe
+//! and hardware passes it still holds) and trimmed since to the scopes and the software pass
+//! (#145, LOG 6893084445). Without the feature this module is not compiled and nothing in
+//! the decoder refers to it.
 //!
 //! **What it counts.** One counter pass a process, chosen by `MIBZ2_PHASE_PASS` when the
-//! process first asks (`pass`): A1, A2, B1 or B2, the registration's events (`PASSES`), or
-//! unset, which counts nothing. Each pass's events are Intel's Skylake-client encodings (the
-//! i9-10900K's map, 06_A5), opened raw: the event and umask in `config`, an offcore-response
-//! filter in `config1`. Every event counts user and kernel mode both (CML070), never the
-//! hypervisor, and only the thread that opened it (pid 0, any CPU, not inherited).
+//! process first asks (`pass`): `SW`, software events (the task clock and page faults), or
+//! unset, which counts nothing. Every event counts user and kernel mode both, never the
+//! hypervisor, and only the thread that opened it (pid 0, any CPU, not inherited). Opening
+//! even software events can need a permissive `perf_event_paranoid` (or sudo).
 //!
 //! **The scopes, per worker thread.** Each thread that decodes a block in the parallel
 //! decoder's `worker` (`whole_begin` / `whole_end`, around `decode_block`) opens, the first
 //! time, three groups of the pass's events:
 //! - **whole**, enabled for each block's `decode_block`;
 //! - **phase**, enabled only inside `induce_cells` (the induction) and `write_cells` (the
-//!   writer), one at a time (`Scope`), counting beside whole: so the pass's events are
-//!   scheduled twice at most, which the PMU fits (at most 4 general counters and 2
-//!   offcore-response filters a logical CPU with SMT on);
+//!   writer), one at a time (`Scope`), counting beside whole;
 //! - **empty**, enabled and at once disabled after each block, once for each phase scope the
 //!   block had: the counts an empty scope takes, its overhead.
 //!
 //! At each phase scope's edges the whole group is read too, so that its own counts inside
-//! the induction and writer windows are known: rest = whole less those, and the registered
-//! check, B_ind + B_wr + B_rest = whole within 1%, compares the phase group's counts with the
-//! whole group's over the same windows: two counters of one event, independently scheduled.
-//! Requests in flight cross a window's edges: the phases are approximate, and the report says
-//! so. Each window's time enabled and time running are summed, and a window that ran less than
-//! it was enabled is counted as multiplexed (`mux`), which the analysis treats as invalid.
+//! the induction and writer windows are known: rest = whole less those, and the phase
+//! group's counts can be checked against the whole group's over the same windows: two
+//! counters of one event, independently scheduled. Each window's time enabled and time
+//! running are summed, and a window that ran less than it was enabled is counted as
+//! multiplexed (`mux`).
 //!
 //! `report` gives the process's sums as one JSON object, for `examples/ab.rs`'s child record.
 
@@ -37,60 +35,19 @@ use std::sync::{Mutex, OnceLock};
 /// The most events a pass counts
 const MAX: usize = 2;
 
-/// One event: perf's type, its config, its config1 (the offcore-response filter), its name
+/// One event: perf's type, its config, its config1, its name
 pub type Event = (u32, u64, u64, &'static str);
 
-const RAW: u32 = 4;
 const SOFTWARE: u32 = 1;
 
-/// The registered passes (LOG 6884975709), and `SW`, software events in their place for the
-/// tests where there is no PMU (never registered, never a recipe's)
-pub const PASSES: [(&str, &[Event]); 5] = [
-    (
-        "A1",
-        &[
-            (
-                RAW,
-                0x01b7,
-                0x3fc4000001,
-                "OFFCORE_RESPONSE.DEMAND_DATA_RD.L3_MISS_LOCAL_DRAM.ANY_SNOOP (0xb7/0x01, offcore_rsp=0x3fc4000001)",
-            ),
-            (
-                RAW,
-                0x10b0,
-                0,
-                "OFFCORE_REQUESTS.L3_MISS_DEMAND_DATA_RD (0xb0/0x10)",
-            ),
-        ],
-    ),
-    (
-        "A2",
-        &[(
-            RAW,
-            0x01bb,
-            0x3fc4000002,
-            "OFFCORE_RESPONSE.DEMAND_RFO.L3_MISS_LOCAL_DRAM.ANY_SNOOP (0xbb/0x01, offcore_rsp=0x3fc4000002; CML058)",
-        )],
-    ),
-    (
-        "B1",
-        &[
-            (RAW, 0x3824, 0, "L2_RQSTS.PF_MISS (0x24/0x38)"),
-            (RAW, 0x08b0, 0, "OFFCORE_REQUESTS.ALL_DATA_RD (0xb0/0x08)"),
-        ],
-    ),
-    (
-        "B2",
-        &[(RAW, 0x01b0, 0, "OFFCORE_REQUESTS.DEMAND_DATA_RD (0xb0/0x01)")],
-    ),
-    (
-        "SW",
-        &[
-            (SOFTWARE, 1, 0, "task-clock (software, tests only)"),
-            (SOFTWARE, 2, 0, "page-faults (software, tests only)"),
-        ],
-    ),
-];
+/// The passes: `SW`, software events, which count on any machine perf_event_open allows
+pub const PASSES: [(&str, &[Event]); 1] = [(
+    "SW",
+    &[
+        (SOFTWARE, 1, 0, "task-clock (software)"),
+        (SOFTWARE, 2, 0, "page-faults (software)"),
+    ],
+)];
 
 /// The phases a scope can be
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -110,10 +67,7 @@ pub fn pass() -> Option<(&'static str, &'static [Event])> {
             return None;
         }
         let p = PASSES.iter().find(|(n, _)| *n == name);
-        assert!(
-            p.is_some(),
-            "MIBZ2_PHASE_PASS is one of A1, A2, B1, B2 (or SW)"
-        );
+        assert!(p.is_some(), "MIBZ2_PHASE_PASS is SW (or unset)");
         p.copied()
     })
 }
@@ -566,23 +520,11 @@ mod tests {
     }
 
     #[test]
-    fn the_registered_passes() {
-        let p = |n| PASSES.iter().find(|(m, _)| *m == n).unwrap().1;
-        assert_eq!(
-            p("A1").iter().map(|e| (e.0, e.1, e.2)).collect::<Vec<_>>(),
-            [(4, 0x01b7, 0x3fc4000001), (4, 0x10b0, 0)]
-        );
-        assert_eq!(p("A2")[0].1..p("A2")[0].2, 0x01bb..0x3fc4000002);
-        assert_eq!(
-            p("B1").iter().map(|e| e.1).collect::<Vec<_>>(),
-            [0x3824, 0x08b0]
-        );
-        assert_eq!(p("B2")[0].1, 0x01b0);
-        // (at most two events a pass: whole and phase together fit 4 counters and the 2
-        // offcore-response filters)
+    fn the_software_pass() {
+        assert_eq!(PASSES.map(|p| p.0), ["SW"]);
         for (_, evs) in PASSES {
             assert!(evs.len() <= MAX);
-            assert!(evs.iter().filter(|e| e.2 != 0).count() <= 1);
+            assert!(evs.iter().all(|e| e.0 == SOFTWARE && e.2 == 0));
         }
     }
 }
