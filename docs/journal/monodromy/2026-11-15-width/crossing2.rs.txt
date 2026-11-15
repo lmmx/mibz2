@@ -1,0 +1,63 @@
+//! scratch census (not committed): exact count of letters of the first-return map pi_m of LF to
+//! [0, m) whose return word has length > 1 (they are what a lazily materialised induction must
+//! store), against the crossing proxy, at 32 cuts m per block, every 8th block.
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let every: usize = a.get(2).map_or(8, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts, mut syms) = (Vec::new(), [0u32; 256], Vec::new());
+    let mut bi = 0usize;
+    let (mut peak_ratio, mut peak_letters_ratio) = (Vec::new(), Vec::new());
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        let n = ll.len();
+        if n < 65536 { continue; }
+        bi += 1;
+        if bi % every != 0 { continue; }
+        // LF and Psi
+        let mut cc = [0usize; 257];
+        for &c in ll.iter() { cc[c as usize + 1] += 1; }
+        for x in 0..256 { cc[x + 1] += cc[x]; }
+        let mut lf = vec![0u32; n];
+        let mut psi = vec![0u32; n];
+        let mut cur = cc;
+        for x in 0..n { let c = ll[x] as usize; lf[x] = cur[c] as u32; psi[cur[c]] = x as u32; cur[c] += 1; }
+        let starts: Vec<usize> = (0..n).filter(|&x| x == 0 || ll[x] != ll[x - 1]).collect();
+        let r = starts.len();
+        let mut best = (0usize, 0usize, 0usize, 0usize); // (nontrivial, letters, m, proxy)
+        let mut mark = vec![false; n];
+        for q in 1..32 {
+            let m = n * q / 32;
+            // top boundaries of pi_m: from each run start t, follow Psi while >= m
+            let mut bnd = Vec::with_capacity(r + 2);
+            for &t in &starts {
+                let mut y = t;
+                while y >= m { y = psi[y] as usize; }
+                if !mark[y] { mark[y] = true; bnd.push(y); }
+            }
+            if !mark[0] { mark[0] = true; bnd.push(0); }
+            bnd.sort_unstable();
+            let letters = bnd.len();
+            let nontriv = bnd.iter().filter(|&&y| lf[y] as usize >= m).count();
+            for &y in &bnd { mark[y] = false; }
+            // proxy: original runs with part below m whose image reaches above m
+            let mut proxy = 0;
+            for (j, &s) in starts.iter().enumerate() {
+                let e = if j + 1 < r { starts[j + 1] } else { n };
+                let bimg = lf[s] as usize; let l = e - s;
+                if s < bimg && s < m && m < bimg + l { proxy += 1; }
+            }
+            if nontriv > best.0 { best = (nontriv, letters, m, proxy); }
+        }
+        println!("block {bi} n {n} r {r}: peak nontrivial {} = {:.3} r at m = {:.2} n (letters of pi_m there {} = {:.3} r; proxy {:.3} r)",
+            best.0, best.0 as f64 / r as f64, best.2 as f64 / n as f64, best.1, best.1 as f64 / r as f64, best.3 as f64 / r as f64);
+        peak_ratio.push(best.0 as f64 / r as f64);
+        peak_letters_ratio.push(best.1 as f64 / r as f64);
+    }
+    peak_ratio.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    println!("peak nontrivial/r min/med/max {:.3} {:.3} {:.3} over {} blocks", peak_ratio[0], peak_ratio[peak_ratio.len()/2], peak_ratio[peak_ratio.len()-1], peak_ratio.len());
+}
