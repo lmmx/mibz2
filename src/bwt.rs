@@ -18,6 +18,8 @@
 //! is a segment start) can be put in without touching the stream, CRC or thread code.
 
 pub use crate::cells::{Cells, CellsKernel, Counts as CellsCounts, ForcedCells};
+#[cfg(feature = "memory-lever")]
+pub use crate::cells::{LazyCells, LeverCells, StagedCells};
 
 /// An inverse-BWT kernel: a block's RLE1-coded text from its last column `ll` (whose
 /// bytes `counts` counts) and its primary index (below `ll.len()`: the caller checks),
