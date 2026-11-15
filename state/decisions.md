@@ -4727,3 +4727,10 @@ Checkpoint6868538108, PR382 head a9c7716aaf664a7898f3d8f37c955e09d5204a23. G1 sc
 2026-11-15. PR447 head `81aa4b1dfa3333754c77baca975948c3cd0121b8`. Corrected D108 ordering argument and complementary exit-model/compiled-fence checks accepted at source level; lazy pool/stream bounds and feature-off source isolation reviewed without a new unsafe defect. **D108 not fully closed; HOLD integration/run pending completed exact-source B5 validation and diagnostic-specific fence mutation receipts.** Relevant CI jobs were pending and logs unavailable, not failed. Binary identity is stronger than the supplied count/symbol checks. No line STOP or production/workstation authorization.
 
 [Full review](reports/D109-memory-lever.md); [evidence snapshot](reports/D109-evidence.json). Evidence SHA-256 `0fcb872956d17cf1b178a092c9f5870e8125de1b34c76b7fc8ca3eb09d9a3801`.
+
+
+## D110 — 6903067177 — PROCEED: close D108/D109 evidence HOLD
+
+2026-11-15. #447 head `8de6ce01bcbf8aa79fc9d4392c46bda14d77e6a7`. **G1 PROCEED; G2 lift the scoped B5 evidence HOLD and record B6 resumption for the resolved fence mutation target.** Source/test/bench trees match D109 and CI checkout. Completed native feature tests, compiled fence check, 13,817 feature fuzz cases and four feature Miri tests inspected. Mutation baseline and diagnostic-specific negative checks resolve the ambiguity; 35/38 kills, three explained survivors. Feature-off claim narrowed; no whole-file binary identity asserted. Historical verdicts and #444 rejection preserved; no production/default/workstation authorization.
+
+[Full closure](reports/D110-memory-lever-closure.md); [evidence](reports/D110-evidence.json). Evidence SHA-256 `3af9b48fbeb427ad9c2cefed14beba0bb00289ea136cc7de53144311251292f9`.
