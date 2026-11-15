@@ -1,0 +1,10 @@
+import json, sys, statistics as st
+rows=[json.loads(l) for l in open(sys.argv[1])]
+pols=[k for k in rows[0] if isinstance(rows[0][k],list) and not k.endswith('_width')]
+print(f"{len(rows)} blocks")
+print(f"{'order':30} {'S/r med':>8} {'U/r med':>8} {'W/r min/med/max':>22} {'touched/r med':>14} {'letters@peak/r':>14} {'pooled W/r':>10}")
+for p in pols:
+    S=[x[p][0]/x['runs'] for x in rows]; U=[x[p][1]/x['runs'] for x in rows]
+    W=[x[p+'_width'][0]/x['runs'] for x in rows]; D=[x[p+'_width'][1]/x['runs'] for x in rows]; L=[x[p+'_width'][2]/x['runs'] for x in rows]
+    pw=sum(x[p+'_width'][0] for x in rows)/sum(x['runs'] for x in rows)
+    print(f"{p:30} {st.median(S):8.3f} {st.median(U):8.3f} {min(W):6.3f} {st.median(W):6.3f} {max(W):6.3f} {st.median(D):14.3f} {st.median(L):14.3f} {pw:10.3f}")
