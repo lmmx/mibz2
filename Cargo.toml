@@ -58,6 +58,8 @@ dose = []
 # of the pass MIBZ2_PHASE_PASS names, around decode_block, induce_cells and write_cells;
 # off by default, and without it nothing changes
 phase-counters = []
+# Research only (#145, registration LOG 6893071988): the phase-concurrency screen's gates (src/gates.rs); remove when this screen's verdict is recorded
+phase-gates = []
 # Research only: the Cells buffer diet's comparison build (#145, LOG 6881022819). Cells'
 # previous 24-byte slot, bytes 16..24 an 8-byte offset, instead of the 20-byte slot, so that
 # bench-cells-diet builds both layouts from one commit; off by default, never shipped

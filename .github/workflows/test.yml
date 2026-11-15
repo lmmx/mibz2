@@ -42,6 +42,11 @@ jobs:
         run: |
           cargo test --features phase-counters --lib phase::
           cargo test --features phase-counters --test phase --test phase_off
+      # the phase-concurrency screen's research build (src/gates.rs, #145 LOG 6893071988): the
+      # gates' semaphore alone, byte-identical output through the Workers plan at every capacity,
+      # sane counts, no deadlock at caps of 1, the capacities read from the environment
+      - name: The phase-gate build (research feature)
+        run: cargo test --features phase-gates,phase-counters --test phase_gates --test phase_gates_env --test phase
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
@@ -114,6 +119,10 @@ jobs:
       # bench-cells-phase's ledgers, statistics, verdict and validity (bench/cells_phase.py)
       - name: The phase attribution's verdict
         run: python3 bench/test_cells_phase.py
+      # bench-phase-gates's figures, validity, exposure and readouts (bench/phase_gates.py), and
+      # its collection driven end to end with stand-ins for ab and perf
+      - name: The phase-concurrency screen's readouts
+        run: python3 bench/test_phase_gates.py
       # bench-par-scan's reporter, input anchoring and step supervisor (docs/journal/2026-11-10-parallel-scan.md)
       - name: The scan diagnostic's reporter, inputs and supervisor
         run: pipx run pytest -p no:cacheprovider bench/test_par_scan_knee.py bench/test_par_scan_inputs.py bench/test_bounded.py bench/test_par_scan_finish.py

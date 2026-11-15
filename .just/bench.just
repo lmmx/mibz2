@@ -1685,3 +1685,70 @@ bench-cells-phase REPS="10" THREADS="1,4" LOOPS="auto" PAIR="3":
       --reps {{REPS}} --out "$O/cells-phase" \
       || echo "bench-cells-phase: the readings are not valid (cells-phase.md lists why)"
     bash bench/bundle.sh "$O"
+
+# The four-worker phase-concurrency screen (#145, registration LOG 6893071988, adopting the
+# Optimiser's pricing, REVIEW 6893060396): at 4 workers on the shipped Workers + Cells path,
+# does capping how many workers are in Cells' induction, in its writer, or decoding a block
+# at once lower the active worker CPU per output byte and the memory traffic? Two builds of
+# this commit's `ab`: ungated (`phase-counters` only) and gated (`phase-gates,phase-counters`:
+# src/gates.rs's sleeping counting gates before induce_cells and write_cells, outside the
+# phase scopes, and a whole-block lease before each worker's decode_block). Every reading is
+# forced Workers + Cells at 4 workers (`ab child mibz2-workers 4`) on the premise test's
+# Wikidata corpus, pinned as bench-cells-phase pins it (the first CPU of each of the first 4
+# physical cores, their SMT siblings idle), with the phase-counters software pass SW (each
+# worker's task clock in decode_block, and inside the induction and the writer: active CPU,
+# a sleeping wait excluded). The arms, in a rotated order each repetition: U (ungated), K
+# (every gate at 4: the calibration arm and the reference, E4), B (induction 1), C (writer
+# 1), D (both 1), E2 and E3 (2 and 3 blocks in flight inside the workers). Each reading is
+# paired with an idle reading as bench-cells-imc's (whose code it reuses), under `sudo perf
+# stat -a` on the memory controller. bench/phase_gates.py reads them: validity (INVALID on
+# any failure, K's active CPU within 1% of U's among it), each cap's exposure (NOT EXPOSED
+# below 10% of its entries delayed), Δ against K with paired 95% intervals, and the
+# registration's readouts. It stops first, saying why, where the memory controller cannot be
+# counted (a VM, no perf, no sudo), and again if either build is not as the screen needs. It
+# asks for sudo's password once at the start (sudo -v), and refreshes it each repetition. A
+# C5 workstation run (the i9), about 10 minutes.
+#   just submit bench-phase-gates
+bench-phase-gates REPS="10" LOOPS="auto" PAIR="3":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    B=$PWD/target/phase-gates
+    mkdir -p "$B"
+    O=$B/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-phase-gates: $(git rev-parse HEAD), reps {{REPS}}, loops {{LOOPS}}, idle pairs {{PAIR}} s"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-phase-gates: the checkout has local changes"; exit 1; }
+    git rev-parse HEAD > "$O/commit.txt"
+    # (the memory controller first: nothing is built or run where it cannot count)
+    python3 bench/phase_gates.py probe \
+      || { echo "bench-phase-gates: the memory controller cannot be counted here; no readings taken"; exit 1; }
+    # (the two builds, each in its own target dir)
+    CARGO_TARGET_DIR="$B/target-ungated" cargo build -q --release --features phase-counters --example ab
+    CARGO_TARGET_DIR="$B/target-gated" cargo build -q --release --features phase-gates,phase-counters --example ab
+    cargo build -q --release --example windows
+    AB0=$B/target-ungated/release/examples/ab
+    AB=$B/target-gated/release/examples/ab
+    sha256sum "$AB0" "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    [ -f "$B/wikidata.bz2" ] || python3 bench/wikidata.py build bench/wikidata.json "$dir" \
+      target/release/examples/windows "$B/wikidata.bz2"
+    sha256sum "$B/wikidata.bz2" | tee "$O/inputs.sha256"
+    # (each build checked on one decode: Cells engaged on all 196 blocks, the software pass
+    # counting, no gates in the ungated build, every gate at 4 in K, the same bytes)
+    python3 bench/phase_gates.py preflight --ungated "$AB0" --gated "$AB" --corpus "$B/wikidata.bz2" \
+      || { echo "bench-phase-gates: the builds are not as the screen needs; no readings taken"; exit 1; }
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    python3 bench/phase_gates.py collect --ungated "$AB0" --gated "$AB" --corpus "$B/wikidata.bz2" \
+      --reps {{REPS}} --loops {{LOOPS}} --pair {{PAIR}} \
+      --out "$O/readings.jsonl" || echo "bench-phase-gates: the readings stopped early"
+    python3 bench/phase_gates.py analyse "$O/readings.jsonl" --reps {{REPS}} --out "$O/phase-gates" \
+      || echo "bench-phase-gates: the readings are not valid (phase-gates.md lists why)"
+    bash bench/bundle.sh "$O"

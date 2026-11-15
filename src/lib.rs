@@ -94,6 +94,10 @@ pub mod parallel;
 #[cfg(feature = "phase-counters")]
 #[doc(hidden)]
 pub mod phase;
+// (research only: the phase-concurrency screen's gates, with `phase-gates`)
+#[cfg(feature = "phase-gates")]
+#[doc(hidden)]
+pub mod gates;
 mod read;
 pub mod rle;
 pub mod runs;

@@ -618,6 +618,11 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             st.free_out.pop().unwrap_or_default()
         };
         out.clear();
+        // (research only, `phase-gates`: the whole-block lease, the blocks in flight inside
+        // the workers, taken with the job in hand and outside the whole-decode scope, and
+        // left before the result is published)
+        #[cfg(feature = "phase-gates")]
+        let lease = crate::gates::enter(crate::gates::Gate::Blocks);
         mark!(DecodeStart, place);
         // (research only, `phase-counters`: the worker's whole-decode scope, the block's
         // decode_block)
@@ -628,6 +633,8 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
         }));
         #[cfg(feature = "phase-counters")]
         crate::phase::whole_end();
+        #[cfg(feature = "phase-gates")]
+        drop(lease);
         mark!(DecodeEnd, place, out.len(), out.capacity());
         let res = match res {
             Ok(Ok(_)) => Ok(out),

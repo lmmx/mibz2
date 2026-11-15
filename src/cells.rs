@@ -384,6 +384,11 @@ impl Kernel {
             return Err(Refusal::Invalid);
         }
         let result = self.slots(n, recs, p, budget, forced).and_then(|()| {
+            // (research only, `phase-gates`: the induction's gate, entered before its scope
+            // and left after it, so no wait is inside the phase window; left before the
+            // writer's gate is entered)
+            #[cfg(feature = "phase-gates")]
+            let _permit = crate::gates::enter(crate::gates::Gate::Induction);
             // (research only, `phase-counters`: the induction's scope)
             #[cfg(feature = "phase-counters")]
             let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
@@ -396,6 +401,9 @@ impl Kernel {
             return Err(Refusal::Invalid);
         }
         {
+            // (research only, `phase-gates`: the writer's gate, outside its scope as above)
+            #[cfg(feature = "phase-gates")]
+            let _permit = crate::gates::enter(crate::gates::Gate::Writer);
             // (research only, `phase-counters`: the writer's scope)
             #[cfg(feature = "phase-counters")]
             let _scope = crate::phase::Scope::new(crate::phase::Phase::Writer);

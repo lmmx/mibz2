@@ -1425,6 +1425,10 @@ fn child(arm: &str, threads: usize, path: &str, hold: Option<Hold>) {
     // where no pass was set)
     #[cfg(feature = "phase-counters")]
     let held = format!("{held},\"phase\":{}", mibz2::phase::report());
+    // (research only, the `phase-gates` feature: the gates' counts, or null where no gate
+    // was set; #145 LOG 6893071988)
+    #[cfg(feature = "phase-gates")]
+    let held = format!("{held},\"gates\":{}", mibz2::gates::report());
     println!(
         "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf}{held}{},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler - held_s,
