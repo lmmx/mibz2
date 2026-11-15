@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0](https://github.com/lmmx/mibz2/compare/v0.3.4...v0.4.0) - 2026-11-15
 
+A soundness and memory release.
+- **The breaking change:** `Kernels` can no longer claim a CPU feature from safe code (#431,
+  below).
+- **Less memory per block:** Cells holds 22% less memory per block than 0.3.4 (#433), with
+  output, plan and speed unchanged.
+- **Research features trimmed:** #432 removes `slot24` and trims `phase-counters`.
+
+- **Cells memory** (#433). Two pieces of Cells' short-lived state now live where memory is dead
+  while they are live:
+  - the 8-byte bottom slots in the block's output buffer, during the induction;
+  - the writer's position table in the top slots, after the induction.
+
+  Per block, the memory Cells touches besides the output falls from 2.07 / 2.39 / 3.37 MiB to
+  1.60 / 1.86 / 2.61 MiB (min / median / max over the 196 Wikidata blocks), 0.776× on every
+  block. CI's bench (run 43747945487) shows `wikidata` at 1 thread 0.5% faster (−0.8%,
+  −0.2%), and peak RSS 5.1% lower at 2 threads and 7.5% lower at 4.
+  - **The contract change:** a Cells budget refusal now leaves the output buffer holding
+    scratch, not untouched. Every fallback clears it before writing.
+- **Release scaling, the i9-10900K:** the run recorded under 0.3.4 below
+  (`release-scaling/run-20261115T193005Z`) built its head at master `06aa5858`, which is 0.4.0's
+  code. Against 0.3.3 it is 7.2% faster at 8 threads and level elsewhere.
+- **The team threshold** (RELEASING.md §5a; `crossover/run-20261115T191448Z`, #145 LOG
+  6900029992) stays at 10.
+  - At 10 threads, workers now take 1.040× the teams' wall (1.019–1.061), against 1.153×
+    before #433.
+- **The paired runbook bench, CI:** v0.3.4 against v0.4.0 (run 43754741304), to follow.
+
 ### <!-- 9 -->Other
 
 - Release scaling: 0.3.4 against 0.3.3 on the i9 ([#434](https://github.com/lmmx/mibz2/pull/434))
