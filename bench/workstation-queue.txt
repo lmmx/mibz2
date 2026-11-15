@@ -6,3 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-cells-phase            research/cells-phase      Cells phase attribution: demand-DRAM reads by induction/writer/rest at 1 and 4 workers, IMC ledger, T-vector baseline; needs sudo perf (LOG 6884716103, amended 6884895257, 6884975709; PR #399)

@@ -84,8 +84,16 @@ class Lineage(unittest.TestCase):
         self.assertAlmostEqual(p2["anchor_mbps"], 1e8 / 0.5 / 1e6, places=0)
 
     def test_recorded_runs(self):
-        """The recorded i9 runs reproduce the coordinator's figures for 0.2.1 over 0.3.0."""
-        dirs = sorted(p for p in brs.RUNS.glob("*/") if (p / "meta.json").exists())
+        """The recorded i9 runs reproduce the coordinator's figures for 0.2.1 over 0.3.0.
+
+        The figures come from the runs up to and including 0.3.0's. A later run pools further
+        readings of the same releases and so moves the estimates; it is left out, so that this
+        stays a reproduction of those exact figures.
+        """
+        upto = "2026-11-14-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.3.0"
+        dirs = sorted(
+            p for p in brs.RUNS.glob("*/") if (p / "meta.json").exists() and p.name <= upto
+        )
         g = next((g for g in brs.lineage(dirs) if "i9-10900K" in g["cpu"] and g["corpus"] == "wikidata"), None)
         if g is None or not {"0.2.1", "0.3.0"} <= set(g["releases"]):
             self.skipTest("the i9 runs are not recorded here")

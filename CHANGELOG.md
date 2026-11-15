@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/lmmx/mibz2/compare/v0.3.0...v0.3.1) - 2026-11-14
+
+A memory-traffic release for Cells. Each letter's slot in Cells' two orders shrinks from 24 to
+20 bytes (#391): the link to the letter's slot in the other order is now a 4-byte offset, since a
+block's buffer is far below 4 GiB. Fewer slot bytes means less DRAM traffic once several blocks
+decode at once. The output, the API, the supported inputs and the plans are unchanged.
+
+- **The paired runbook bench, CI** (run 43646276187, AMD EPYC 9V45, 4 vCPU), v0.3.0 → master:
+  `wikidata` −4.3% (−7.5, −1.0), −3.1% (−5.4, −0.6) and −4.0% (−6.0, −2.0) at 1, 2 and 4 threads;
+  peak RSS −4.5%, −3.0% and −12.7%. No corpus slower in wall time. `text` at 1 thread is +2.6%
+  in CPU, at the edge of its interval. The assessment: better, and no measure worse.
+- **The i9-10900K, forced Workers + Cells** (`cells-diet/run-20261114T195323Z`, sha256 52275b76,
+  10 paired rounds, #145 LOG 6883380160): 20 B ÷ 24 B wall 0.980 at 1 thread, **0.957** at 4,
+  0.926 at 6 and **0.911** at 10. The gain grows with the thread count, as a bandwidth lever
+  should. CPU amplification at 10 threads against 1 fell by about 10% (Q = 0.904, 0.851–0.962).
+- **Why:** the memory-dose and working-set tests (#387, #390) showed that Workers + Cells is
+  bound by DRAM traffic at 4 threads and up: 1.25 DRAM bytes per output byte with one block in
+  flight, 15.5 at 4, 24.2 at 10 (#145 LOG 6882123681).
+- **Caveats.**
+  - The knee does not move: the best wall is still at 6 threads, and only the plateau is lower
+    and flatter.
+  - The next step of the diet, a 16-byte slot (#398), was built and rejected: it showed no
+    primary gain on CI and +4.4% CPU at 4 threads, from one more dependent load per letter.
+- **Release scaling, the i9-10900K** (`release-scaling/run-20261114T231702Z`, sha256 914653a3,
+  10 paired rounds, every arm the same bytes), `wikidata`, 0.3.0 ÷ 0.3.1 wall:
+
+  | threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+  |---|--:|--:|--:|--:|--:|--:|--:|--:|
+  | 0.3.0 ÷ 0.3.1 | 1.051 | **1.034** | **1.042** | 1.006 | 1.000 | 1.024 | 1.017 | 0.987 |
+  | 95% interval | 0.990–1.116 | 1.010–1.059 | 1.022–1.062 | 0.997–1.016 | 0.986–1.013 | 0.996–1.053 | 0.995–1.039 | 0.945–1.031 |
+
+  That is 3.3% and 4.0% less wall time at 2 and 4 threads, beyond noise. 1 thread is 4.9% in
+  point estimate, but its interval includes no change. From 8 threads it is level, where the plan
+  is the unchanged teams.
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.3.0's notes from the i9 release scaling, the paired run against 0.2.9 and wikidata-pq#225 ([#384](https://github.com/lmmx/mibz2/pull/384))
+
+### <!-- 9 -->Other
+
+- the 20-byte slot (buffer diet step 1), and bench-cells-diet ([#391](https://github.com/lmmx/mibz2/pull/391))
+- Cells memory-dose experiment: dose feature, recipe and analysis ([#387](https://github.com/lmmx/mibz2/pull/387))
+
 ## [0.3.0](https://github.com/lmmx/mibz2/compare/v0.2.9...v0.3.0) - 2026-11-14
 
 A speed release for Wikidata-like data on up to 4 decoding threads. When the plan is plain workers
