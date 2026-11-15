@@ -1146,6 +1146,22 @@ fn decode(
                 last,
             )
         }
+        // the memory-lever experiment's two arms (research, `memory-lever` feature; #145
+        // QUEUED 6901989466): `mibz2-workers-w` with Cells' lazy letters, or with its rules
+        // staged and stored past the cache. The plan and the window are `mibz2-workers-w`'s,
+        // so an arm differs from it in the kernel alone
+        #[cfg(feature = "memory-lever")]
+        "mibz2-workers-w-lazy" | "mibz2-workers-w-nt" => drain(
+            mibz2::BzReader::parallel_lever(
+                open()?,
+                threads,
+                mibz2::parallel::SLOTS_PER_THREAD * threads,
+                mibz2::Kernels::detect(),
+                arm == "mibz2-workers-w-lazy",
+            ),
+            h,
+            last,
+        ),
         // the pipelined team (research, `StreamDecoder::pipelined`): THREADS cores as
         // THREADS / K teams of K, as the teamK arms, and their window (SLOTS_PER_THREAD a
         // team), so a pipeK arm differs from its teamK arm in the pipeline alone

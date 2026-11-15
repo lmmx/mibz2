@@ -1588,3 +1588,43 @@ bench-crossover ROUNDS="10" THREADS="4,5,6,7,8,9,10,12,16,20":
     "$AB" summary "$O/runs.jsonl" --ref mibz2 | tee "$O/summary.txt"
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
+
+# The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
+# data): is memory per core what holds one block a thread back at 10 threads? The shipped
+# decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,
+# against one block a thread with each of the experiment's two opt-in Cells kernels
+# (`memory-lever` feature, src/cells_lever.rs): lazy letters (`mibz2-workers-w-lazy`), and
+# rules staged and stored past the cache (`mibz2-workers-w-nt`). Each memory arm is read
+# against `mibz2-workers-w`. On this machine, at the commit checked out.
+bench-memory-lever ROUNDS="10" THREADS="4,6,8,9,10,12":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/memory-lever
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-memory-lever (#145 QUEUED 6901989466, rule LOG 6902022809): mibz2 (shipped plan) and mibz2-workers-w (one block a thread) against mibz2-workers-w-lazy and mibz2-workers-w-nt (one block a thread with Cells' lazy letters, or its rules stored past the cache), at {{THREADS}} threads, {{ROUNDS}} paired rounds, on Wikidata"
+    cargo build -q --release --features memory-lever --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers-w,mibz2-workers-w-lazy,mibz2-workers-w-nt" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
+    # the rule's readings: the sanity case against the shipped plan, each memory arm against
+    # one block a thread, and the sign count of its case 3
+    "$AB" summary "$O/runs.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-w | tee "$O/summary-workers.txt"
+    python3 bench/memory_lever.py "$O/runs.jsonl" | tee "$O/lever.txt" \
+      || echo "bench-memory-lever: the sign reading is not valid (lever.txt says why)"
+    git rev-parse HEAD > "$O/commit.txt"
+    bash bench/bundle.sh "$O"

@@ -48,6 +48,12 @@ python = ["dep:pyo3"]
 # bench-team-size, bench-team-pipeline and bench-pipeline-levers recipes, bench/corpus.sh
 # and CI's occupancy workflow. Retain while those recipes run; remove with the last of them
 trace = []
+# The memory-lever experiment's two opt-in Cells kernels (src/cells_lever.rs: lazy letters,
+# and rules staged and stored past the cache), for examples/ab.rs's `mibz2-workers-w-lazy` and
+# `mibz2-workers-w-nt` arms and the bench-memory-lever recipe (#145 QUEUED 6901989466). Never a
+# default. Retain until that run is read; then remove, or promote an arm under its own
+# registration
+memory-lever = []
 # The cooperative waits' counts (coop::wait_stats), for examples/wait_audit.rs, the spin
 # audit (docs/journal/2026-11-09-spin-audit/). Retain while the cooperative teams' waits are
 # tuned; remove when the coop wait sites are no longer changed, or with the teams
@@ -110,3 +116,7 @@ required-features = ["trace"]
 [[example]]
 name = "wait_audit"
 required-features = ["wait-stats"]
+
+[[example]]
+name = "lever_counts"
+required-features = ["memory-lever"]

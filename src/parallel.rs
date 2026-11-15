@@ -229,6 +229,22 @@ impl StreamDecoder {
         dec
     }
 
+    /// Research, opt-in (`memory-lever`): production's workers, `threads` of them, each
+    /// inverting with one of the experiment's two Cells kernels: lazy letters (`lazy`), or
+    /// rules staged and stored past the cache. Otherwise as `planned(Plan::Workers(threads))`.
+    #[cfg(feature = "memory-lever")]
+    #[doc(hidden)]
+    pub fn lever(threads: usize, slots: usize, k: Kernels, lazy: bool) -> StreamDecoder {
+        use super::bwt::{LazyCells, StagedCells};
+        let mut dec = if lazy {
+            Self::with_inverse::<LazyCells>(threads, slots, k)
+        } else {
+            Self::with_inverse::<StagedCells>(threads, slots, k)
+        };
+        dec.threads = Plan::Workers(threads).threads();
+        dec
+    }
+
     /// `new` with the inverse-BWT kernel `I` (bwt::InverseBwt), so the whole decoder can
     /// be timed with each
     pub fn with_inverse<I: super::bwt::InverseBwt + 'static>(
