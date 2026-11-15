@@ -2200,11 +2200,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D109",
-    "incoming_comment": 6902547995,
-    "review_comment_id": 6902605296
+    "active_comment": 6903067177,
+    "status": "in progress",
+    "decision": "D110"
   },
   "duplicate_events": [
     {
@@ -3938,6 +3936,13 @@
       "work_commit": "df88688fc3b3292466d55ff9f52474bcd67ab6ff",
       "review_comment_id": 6902605296,
       "complete_cursor_commit": "c94692410c3703b2545e1a9afdb3fc2b485f5437"
+    },
+    {
+      "comment_id": 6903067177,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D110",
+      "progress": "Migration verified; reviewing D109 closure evidence."
     }
   ],
   "migrated_from": {
