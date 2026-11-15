@@ -9,14 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.2](https://github.com/lmmx/mibz2/compare/v0.3.1...v0.3.2) - 2026-11-15
 
+A memory release for Cells. Slot recycling (#408): when Cells' induction places a letter, it
+takes over the dead slot at the front of its order instead of a fresh one, so every slot it
+touches is one of the letters' own and each order's region is sized to exactly `letters × SLOT`.
+The output, the API, the supported inputs and the plans are unchanged.
+
+- **The census** (#408, the bench corpus `wikidata`, 431 blocks, 196 admitted by Cells): slots
+  touched 31.5 M → 22.2 M (−29.7%). The lines the fresh slots used to touch first are never
+  touched, and the reused slot was read a step earlier, so it is in cache.
+- **The paired runbook bench, CI** (run 43717843002, Intel Xeon Platinum 8573C, 4 vCPU on 2
+  cores, 10 paired rounds), v0.3.1 → master: `wikidata` peak RSS 33 → 30 MB, 75 → 62 MB and
+  118 → 97 MB at 1, 2 and 4 threads (−9.6%, −14.6% and −14.5%); wall −0.2%, +0.5% and −0.4%,
+  each interval including no change. Best wall against best wall −0.4% (−1.5, +0.7). Every
+  corpus gave the same bytes in every run, and no corpus is slower in wall time. The
+  assessment: better (memory), and no measure worse.
+- **The i9-10900K** (`release-scaling/run-20261115T123513Z`, sha256 ea04423b, #408's head
+  against its base, 10 paired rounds, every block CRC identical, #145 LOG 6894519106), base ÷
+  head, so above 1 is faster:
+
+  | threads | 1 | 2 | 3 | 4 | 5 | 6 | 8 |
+  |---|--:|--:|--:|--:|--:|--:|--:|
+  | wall | 0.975 | 0.987 | 1.019 | 1.015 | **1.054** | 0.992 | 1.005 |
+  | 95% interval | 0.936–1.015 | 0.952–1.022 | 0.994–1.045 | 0.993–1.037 | 1.047–1.061 | 0.976–1.007 | 0.994–1.017 |
+  | peak RSS, MB | 32 → 29 | 75 → 63 | 93 → 84 | 120 → 99 | 149 → 117 | 66 → 66 | 81 → 80 |
+
+  The gain grows with the number of co-running Cells workers: none at 1–2 threads, 4.0% less
+  CPU at 4 (1.040, 1.025–1.055) and 5.4% less wall at 5. At 6 and 8 threads, where the plan is
+  the teams path and Cells isn't used, nothing changes.
+- **Caveat.** The wall gain is modest: beyond noise only at 5 threads on the i9, and not on CI's
+  2-core runner. The memory reduction is the clear effect.
+
 ### <!-- 9 -->Other
 
-- Blog skills: open the PR first; titles and deks approachable cold ([#413](https://github.com/lmmx/mibz2/pull/413))
-- Reduce, reuse, recycle: hand-me-down slots for every fragment of text ([#412](https://github.com/lmmx/mibz2/pull/412))
 - Cells induction: recycle the dead front slot instead of taking a fresh one ([#408](https://github.com/lmmx/mibz2/pull/408))
-- Phase attribution of Cells' memory traffic: phase-counters, bench-cells-phase and its analysis (LOG 6884716103) ([#399](https://github.com/lmmx/mibz2/pull/399))
-- record 0.3.1's release scaling on the i9; changelog: its figures ([#402](https://github.com/lmmx/mibz2/pull/402))
-- 0.3.1's notes; journal: the 16-byte slot rejected ([#401](https://github.com/lmmx/mibz2/pull/401))
+- Research, record, docs and blog changes: the phase attribution of Cells' memory traffic ([#399](https://github.com/lmmx/mibz2/pull/399)), 0.3.1's notes and release-scaling record ([#401](https://github.com/lmmx/mibz2/pull/401), [#402](https://github.com/lmmx/mibz2/pull/402)), a blog post on slot recycling ([#412](https://github.com/lmmx/mibz2/pull/412)) and the blog skills ([#413](https://github.com/lmmx/mibz2/pull/413))
 
 ## [0.3.1](https://github.com/lmmx/mibz2/compare/v0.3.0...v0.3.1) - 2026-11-14
 
