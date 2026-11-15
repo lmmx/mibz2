@@ -6,5 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-crossover              master                    The crossover: shipped plan vs one block a thread forced, 4-20 threads (#145 LOG)
-bench-release-scaling        master                    Release scaling: v0.3.4 against v0.3.3 (RELEASING.md §5)
+bench-memory-lever           master                    Is memory per core the lever at 10 threads? Lazy letters and rules past the cache as opt-in arms, 4-12 threads (#447; rule LOG 6902022809)
