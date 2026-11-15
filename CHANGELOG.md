@@ -33,8 +33,8 @@ The output, the API, the supported inputs and the plans are unchanged.
   | 95% interval | 0.936–1.015 | 0.952–1.022 | 0.994–1.045 | 0.993–1.037 | 1.047–1.061 | 0.976–1.007 | 0.994–1.017 |
   | peak RSS, MB | 32 → 29 | 75 → 63 | 93 → 84 | 120 → 99 | 149 → 117 | 66 → 66 | 81 → 80 |
 
-  The gain grows with the number of co-running Cells workers: none at 1–2 threads, 4.0% less
-  CPU at 4 (1.040, 1.025–1.055) and 5.4% less wall at 5. At 6 and 8 threads, where the plan is
+  The gain grows with the number of co-running Cells workers: none at 1–2 threads, 3.8% less
+  CPU at 4 (1.040, 1.025–1.055) and 5.1% less wall at 5. At 6 and 8 threads, where the plan is
   the teams path and Cells isn't used, nothing changes.
 - **Release scaling, the i9-10900K** (`release-scaling/run-20261115T134325Z`, sha256 3eafdc28,
   10 paired rounds, every arm the same bytes, #417), `wikidata`, 0.3.1 ÷ 0.3.2 wall:
@@ -44,8 +44,8 @@ The output, the API, the supported inputs and the plans are unchanged.
   | 0.3.1 ÷ 0.3.2 | **0.955** | 1.015 | **1.027** | 0.998 | 0.995 | 0.994 | **0.960** | **0.958** |
   | 95% interval | 0.923–0.987 | 0.987–1.044 | 1.009–1.046 | 0.988–1.007 | 0.981–1.010 | 0.977–1.012 | 0.929–0.992 | 0.933–0.984 |
 
-  At 4 threads, 2.7% less wall time and 3.3% less CPU (1.033, 1.018–1.048), beyond noise. At
-  1 thread this run is 4.5% slower, beyond noise, while the earlier i9 run of #408 (0.975,
+  At 4 threads, 2.6% less wall time and 3.2% less CPU (1.033, 1.018–1.048), beyond noise. At
+  1 thread this run is 4.7% slower, beyond noise, while the earlier i9 run of #408 (0.975,
   0.936–1.015) and CI (−0.2%, −2.6 to +2.3) were within noise. 16 and 20 threads are also slower,
   but they use the teams path, which #408 does not change, so their slowdown points to drift
   within the run; read the 1-thread figure with that in mind.
