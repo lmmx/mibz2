@@ -1,0 +1,40 @@
+"""Mutation pass for the staged rules: each mutant is one replacement in src/cells.rs; the
+Cells unit tests must fail on it, in the debug profile (canaries and debug assertions on).
+mutate_nt.py WORKTREE"""
+import subprocess, sys, os
+wt = sys.argv[1]
+p = os.path.join(wt, "src/cells.rs")
+orig = open(p).read()
+M = [
+ ("ring index over half the stage", "let q = rp % STAGE;", "let q = rp % (STAGE / 2);"),
+ ("stage sent one rule early", "if q == STAGE - 16 {", "if q == STAGE - 32 {"),
+ ("stage never sent when full", "if q == STAGE - 16 {", "if false && q == STAGE - 16 {"),
+ ("full send not clamped to the region's start", "send_rules(base, sp, (rp + 16 - STAGE).max(lay.rules), rp + 16);", "send_rules(base, sp, rp + 16 - STAGE, rp + 16);"),
+ ("full send stops one rule short", "send_rules(base, sp, (rp + 16 - STAGE).max(lay.rules), rp + 16);", "send_rules(base, sp, (rp + 16 - STAGE).max(lay.rules), rp);"),
+ ("last send dropped", "send_rules(base, sp, (rp - rp % STAGE).max(lay.rules), rp);", "send_rules(base, sp, rp, rp);"),
+ ("last send not clamped to the region's start", "send_rules(base, sp, (rp - rp % STAGE).max(lay.rules), rp);", "send_rules(base, sp, rp - rp % STAGE, rp);"),
+ ("second half of a rule not staged", "wr64(sp, q + 8, bw);", ""),
+ ("send reads the stage from its start", "let src = stage.add(from % STAGE);", "let src = stage;"),
+ ("send skips the bytes before the first line", "core::ptr::copy_nonoverlapping(src, dst, head);", ""),
+ ("send skips what is left of a line", "core::ptr::copy_nonoverlapping(src.add(i), dst.add(i), n - i);", ""),
+ ("a whole line's third quarter sent to its second", "_mm_stream_si128(d.add(2), _mm_loadu_si128(s.add(2)));", "_mm_stream_si128(d.add(1), _mm_loadu_si128(s.add(2)));"),
+ ("lines advance by half", "            i += 64;\n        }\n        core::ptr::copy_nonoverlapping(src.add(i)", "            i += 32;\n        }\n        core::ptr::copy_nonoverlapping(src.add(i)"),
+ ("rules' offset not rounded to 16", "+ 32 + GAP + 15) & !15;", "+ 32 + GAP + 15);"),
+ ("the induction does not check the rules' offset", "            || lay.rules % 16 != 0\n", ""),
+ ("no store fence", "            core::arch::x86_64::_mm_sfence();", ""),
+]
+env = dict(os.environ, CARGO_TARGET_DIR=os.path.join(wt, "target"))
+for name, a, b in M:
+    assert orig.count(a) == 1, (name, orig.count(a))
+    open(p, "w").write(orig.replace(a, b))
+    r = subprocess.run(["cargo", "test", "--lib", "cells"], cwd=wt, env=env, capture_output=True, text=True)
+    out = r.stdout + r.stderr
+    if "could not compile" in out:
+        verdict = "does not build"
+    elif r.returncode != 0:
+        failed = sorted(set(l.split()[1] for l in out.splitlines() if l.startswith("test ") and l.rstrip().endswith("FAILED")))
+        verdict = "killed: " + (", ".join(f.split("::")[-1] for f in failed) if failed else "the test binary died")
+    else:
+        verdict = "SURVIVED"
+    print(f"{name}\t{verdict}", flush=True)
+open(p, "w").write(orig)

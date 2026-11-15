@@ -72,6 +72,11 @@ fn compare_materialization(
     candidate.check_canaries(None);
     if let Ok((word, len, _)) = a {
         assert_eq!(original.rule_end, candidate.rule_end);
+        // the candidate stages its rules and sends them on a few lines at a time: once the
+        // induction is over its rules' region is the original's, byte for byte
+        let rules = original.lay.rules..original.rule_end;
+        assert_eq!(candidate.lay.rules, rules.start);
+        assert_eq!(original.buf[rules.clone()], candidate.buf[rules]);
         let want = oracle(column, origin);
         let mut old_out: Vec<_> = want.iter().map(|x| !x).collect();
         let mut new_out = old_out.clone();
@@ -134,6 +139,8 @@ fn miri_cells_selective_boundaries_reuse() {
         b"abababa".to_vec(),
         long_writer_column(),
     ];
+    // the most times one induction sent whole lines of rules on from its stage
+    let mut sends = 0;
     for column in cases {
         for origin in [0, 1, column.len() / 2, column.len() - 1] {
             reached.extend(compare_materialization(
@@ -143,8 +150,13 @@ fn miri_cells_selective_boundaries_reuse() {
                 origin as u32,
                 column.len(),
             ));
+            sends = sends.max(new.rule_sends);
         }
     }
+    assert!(
+        !STAGED || sends >= 3,
+        "one induction sends its rules on several times: {sends}"
+    );
     for len in [15, 16, 17] {
         assert!(
             reached.iter().any(|&(n, marked, _)| n == len && !marked),

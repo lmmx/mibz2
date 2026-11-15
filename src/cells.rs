@@ -51,6 +51,9 @@ struct Kernel {
     #[cfg(test)]
     pos_in_tops: bool,
     pos: Vec<u32>,
+    /// (test only) how many times the last induction sent whole lines of rules on
+    #[cfg(test)]
+    rule_sends: usize,
     #[cfg(test)]
     writer_reach: WriterReach,
     #[cfg(test)]
@@ -345,6 +348,81 @@ unsafe fn copy_long(dst: *mut u8, src: *const u8, len: usize) {
     }
 }
 
+/// How many bytes of rules the induction stages before it sends them on: a power of two, and
+/// a multiple of a rule's 16 bytes (fewer in tests, so that short columns send too)
+const STAGE: usize = if cfg!(any(test, miri)) { 128 } else { 1024 };
+/// Whether the induction stages its rules: only where staged rules can then be stored past
+/// the cache. Elsewhere it writes each rule to its place, as before.
+const STAGED: bool = cfg!(target_arch = "x86_64");
+
+/// The rules the induction by cells has made and not yet sent to their region.
+///
+/// The induction writes a rule once and never reads one; the writer reads them all
+/// afterwards. So the rules are kept out of the cache while the induction runs: they are
+/// written here, in a buffer small enough to stay in the first-level cache, and sent on
+/// when it is full, as whole 64-byte lines with stores that go past the cache (x86-64;
+/// elsewhere, and under Miri, with plain copies). Sent one rule at a time, such a store
+/// would share the core's fill buffers with the induction's cache misses, and a line would
+/// be written out in pieces.
+///
+/// The stage is a ring: the rule at offset `rp` of the kernel's buffer lies at
+/// `rp % STAGE`. A rule's offset is a multiple of 16 (`slots`), so no rule wraps, and the
+/// stage is full when a rule ends on a multiple of `STAGE`.
+#[repr(C, align(64))]
+struct Stage([u8; STAGE]);
+
+/// Sends the staged rules at offsets `from..to` of the kernel's buffer on to it: plain
+/// stores up to the first line boundary, whole lines past the cache, plain stores for what
+/// is left of a line.
+///
+/// # Safety
+/// `base` is the kernel's buffer and `from..to` lies in its rules' region; `stage` is the
+/// `Stage`'s bytes; `from..to` does not cross a multiple of `STAGE` (so it is contiguous
+/// in the ring) and holds rules the induction staged.
+#[cold]
+#[inline(never)]
+unsafe fn send_rules(base: *mut u8, stage: *const u8, from: usize, to: usize) {
+    debug_assert!(from <= to && to - from <= STAGE - from % STAGE);
+    let n = to - from;
+    // SAFETY: `n` bytes are readable at `src`, inside the stage, and writable at `dst`,
+    // inside the buffer; the two are distinct allocations
+    unsafe {
+        let src = stage.add(from % STAGE);
+        let dst = base.add(from);
+        let head = dst.align_offset(64).min(n);
+        core::ptr::copy_nonoverlapping(src, dst, head);
+        #[allow(unused_mut)]
+        let mut i = head;
+        #[cfg(all(target_arch = "x86_64", not(miri)))]
+        while i + 64 <= n {
+            use core::arch::x86_64::{__m128i, _mm_loadu_si128, _mm_stream_si128};
+            // (`dst + i` is 64-aligned; the stage's bytes are read unaligned)
+            debug_assert_eq!(dst.add(i) as usize % 64, 0, "a whole line");
+            let (s, d) = (src.add(i).cast::<__m128i>(), dst.add(i).cast::<__m128i>());
+            _mm_stream_si128(d, _mm_loadu_si128(s));
+            _mm_stream_si128(d.add(1), _mm_loadu_si128(s.add(1)));
+            _mm_stream_si128(d.add(2), _mm_loadu_si128(s.add(2)));
+            _mm_stream_si128(d.add(3), _mm_loadu_si128(s.add(3)));
+            i += 64;
+        }
+        core::ptr::copy_nonoverlapping(src.add(i), dst.add(i), n - i);
+    }
+}
+
+/// Orders the stores that went past the cache before whatever follows the induction, on
+/// every way out of it (an unwinding one included).
+struct Fence;
+
+impl Drop for Fence {
+    fn drop(&mut self) {
+        #[cfg(all(target_arch = "x86_64", not(miri)))]
+        // SAFETY: sfence is in every x86-64's instruction set and touches no memory
+        unsafe {
+            core::arch::x86_64::_mm_sfence();
+        }
+    }
+}
+
 impl Kernel {
     /// A bottom slot's size: `BSLOT`, or (test only) `SLOT` for the original induction
     #[inline(always)]
@@ -371,9 +449,17 @@ impl Kernel {
                 16
             };
             let at = (cw >> 32) as usize;
+            // a rule is its two factors (state 2 and 3): it may be staged still, so it is
+            // not read from the buffer here; `compare_materialization` compares the
+            // rules' region once the induction is over
+            let payload = if cw as u32 <= SMALL {
+                self.buf[at..at + size].to_vec()
+            } else {
+                [state[2].to_ne_bytes(), state[3].to_ne_bytes()].concat()
+            };
             log.push(Materialization {
                 state,
-                payload: self.buf[at..at + size].to_vec(),
+                payload,
                 slots: Vec::new(),
             });
         }
@@ -581,7 +667,9 @@ impl Kernel {
         } else {
             (tops + cap + GAP, tops + cap + GAP + bcap + GAP)
         };
-        let rules = arena + BYTES as usize + 256 + 16 + 16 * budget + 32 + GAP;
+        // (a multiple of 16, so that every rule's offset is: the induction stages its rules
+        // in a ring of 16-byte places, `Stage`)
+        let rules = (arena + BYTES as usize + 256 + 16 + 16 * budget + 32 + GAP + 15) & !15;
         let allocation = rules + 16 * budget + 16 + GAP;
         // (every offset a slot holds is 4 bytes, the other order's included: a layout whose
         // total would reach u32::MAX is refused here, and Cells declines the block)
@@ -735,6 +823,11 @@ impl Kernel {
     /// which no one reads or writes until the writer overwrites it. A rule is its two factors
     /// as their slots held them: (length, word) twice.
     ///
+    /// A rule is not written to its place as it is made. It is staged (`Stage`), and the
+    /// staged rules are sent on to the rules' region a stage at a time, past the cache where
+    /// that can be done. The region holds every rule by the time this returns a word; nothing
+    /// here reads a rule.
+    ///
     /// Returns (the cycle's word, its length with the mark, cells). `slots` has run on this
     /// kernel for the block, and nothing has changed since.
     #[inline(never)]
@@ -746,7 +839,12 @@ impl Kernel {
         const M: u64 = 0xFFFF_FFFF;
         let rr = self.letters;
         let lay = self.lay;
-        if rr == 0 || self.buf.len() < lay.rules + 16 || self.bslot() != BSLOT {
+        // (a rule's offset is a multiple of 16: the stage's ring relies on it)
+        if rr == 0
+            || self.buf.len() < lay.rules + 16
+            || lay.rules % 16 != 0
+            || self.bslot() != BSLOT
+        {
             return Err(Refusal::Invalid);
         }
         if lay.bout && out.len() < lay.ends[1] + GAP {
@@ -760,14 +858,25 @@ impl Kernel {
         // inside its order's region (a promised slot is one of them, let go at the front);
         // a bottom slot's second field is a top slot, so a letter read through it is read
         // inside the top region; a word's offset is in the arena or the rules, with 16
-        // bytes after it inside the buffer.
+        // bytes after it inside the buffer. A rule's offset is a multiple of 16 (the region's
+        // start is, checked above, and a rule is 16 bytes), so its place in the stage, the
+        // offset modulo `STAGE`, has its 16 bytes inside the stage; `send_rules` is given
+        // offsets from the region's start to the end of the last rule made, within one
+        // multiple of `STAGE`, where the stage holds those rules.
         unsafe {
             let mut top = lay.arena + BYTES as usize + 256 + 16;
             let mut rp = lay.rules;
+            // the rules made and not yet sent to their region
+            let mut stage = Stage([0; STAGE]);
+            let sp = stage.0.as_mut_ptr();
+            let _fence = Fence;
+            #[cfg(test)]
+            let mut sends = 0usize;
             // each order's last letter's slot
             let (ft0, fb0) = (lay.tops + rr * SLOT, lay.bots + rr * BSLOT);
-            // Count every cell, including equal-length steps which allocate no slot.
-            let mut cells = 0usize;
+            // The cells still allowed: every cell is counted, including equal-length steps
+            // which allocate no slot.
+            let mut left = budget;
             // the slot before each letter in its order; what is left of the letter; its
             // (length, word); the slot the next cell cut from it takes in the other order
             let (mut na, mut nb);
@@ -778,6 +887,21 @@ impl Kernel {
             // the slots A and B were read from at the fronts: when one of them ends, its
             // slot is the one its partner's next cell is promised
             let (mut fa, mut fb);
+            // The word of the letter in top slot `$t`, fetched: only a word kept as bytes.
+            // A word kept as a rule is never read here, and where rules are staged its line
+            // is being kept out of the cache: the single bytes' line is hinted in its place.
+            let bytes = lay.arena + BYTES as usize;
+            macro_rules! word_ahead {
+                ($t:expr) => {{
+                    let w = rd64(base, $t + 8);
+                    let at = if !STAGED || w as u32 <= SMALL {
+                        (w >> 32) as usize
+                    } else {
+                        bytes
+                    };
+                    prefetch(base.wrapping_add(at));
+                }};
+            }
             // the letter `FAR` slots on in an order, as memory has it now: its slot in
             // the other order is where its cells will be written, and its word is read then
             // (what is read there may be a slot not yet written: the address is only hinted)
@@ -785,7 +909,7 @@ impl Kernel {
                 ($s:expr) => {{
                     let far = $s - FAR * SLOT;
                     prefetch(bb.wrapping_add(rd32(base, far + 16) as usize));
-                    prefetch(base.wrapping_add(rd32(base, far + 12) as usize));
+                    word_ahead!(far);
                 }};
             }
             // the last top slot: a hinted read through a bottom slot goes no further
@@ -799,7 +923,7 @@ impl Kernel {
                     let far = $s - FAR * BSLOT;
                     prefetch(base.wrapping_add(rd32(bb, far + 4) as usize));
                     let near = (rd32(bb, $s - NEAR * BSLOT + 4) as usize).min(last_top);
-                    prefetch(base.wrapping_add(rd32(base, near + 12) as usize));
+                    word_ahead!(near);
                 }};
             }
             'fresh: loop {
@@ -825,18 +949,27 @@ impl Kernel {
                             debug_assert!(false, "cells region exhausted");
                             return Err(Refusal::Invalid);
                         }
+                        // what is staged still: the rules from the last multiple of
+                        // `STAGE`, or from the region's start
+                        if STAGED {
+                            send_rules(base, sp, (rp - rp % STAGE).max(lay.rules), rp);
+                        }
+                        #[cfg(test)]
+                        {
+                            self.rule_sends = sends;
+                        }
                         self.rule_end = rp;
-                        return Ok(((aw >> 32) as u32, aw as u32, cells));
+                        return Ok(((aw >> 32) as u32, aw as u32, budget - left));
                     }
 
                     (sa, sb) = (na, nb);
                     continue 'fresh;
                 }
                 loop {
-                    if cells == budget {
+                    if left == 0 {
                         return Err(Refusal::Budget);
                     }
-                    cells += 1;
+                    left -= 1;
                     // The cell word is A then B; materialise only its retained representation.
                     let (la, lb) = (aw & M, bw & M);
                     let len = la + lb;
@@ -849,8 +982,25 @@ impl Kernel {
                             base.add((bw >> 32) as usize),
                         );
                     } else {
-                        wr64(base, rp, aw);
-                        wr64(base, rp + 8, bw);
+                        if STAGED {
+                            // the rule, staged: its offset is a multiple of 16, so its 16
+                            // bytes lie inside the ring
+                            let q = rp % STAGE;
+                            wr64(sp, q, aw);
+                            wr64(sp, q + 8, bw);
+                            if q == STAGE - 16 {
+                                // the stage is full: all of it but what lay before the
+                                // region
+                                send_rules(base, sp, (rp + 16 - STAGE).max(lay.rules), rp + 16);
+                                #[cfg(test)]
+                                {
+                                    sends += 1;
+                                }
+                            }
+                        } else {
+                            wr64(base, rp, aw);
+                            wr64(base, rp + 8, bw);
+                        }
                     }
                     let word = if small { top } else { rp };
                     top += if small { len as usize } else { 0 };
@@ -873,7 +1023,7 @@ impl Kernel {
                         ts as u64,
                         sa as u64,
                         sb as u64,
-                        cells as u64,
+                        (budget - left) as u64,
                     ]);
                     if ra == rb {
                         // both letters end: the cell is the last cut from each

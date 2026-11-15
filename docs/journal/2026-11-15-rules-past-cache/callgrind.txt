@@ -1,0 +1,15 @@
+== master 8a5e4601 (source as f03b0fdc)
+5,035,915,568 (100.0%)  PROGRAM TOTALS
+1,280,552,604 (25.43%)  src/cells.rs:<mibz2::cells::Kernel>::induce_cells 
+  897,994,908 (17.83%)  src/cells.rs:<mibz2::cells::Kernel>::slots 
+  598,664,251 (11.89%)  src/cells.rs:<mibz2::cells::Kernel>::write_cells 
+== rules staged, the fetch-ahead as before (not the code here)
+5,068,549,124 (100.0%)  PROGRAM TOTALS
+1,345,909,512 (26.55%)  src/cells.rs:<mibz2::cells::Kernel>::induce_cells 
+  864,320,972 (17.05%)  src/cells.rs:<mibz2::cells::Kernel>::slots 
+  598,664,251 (11.81%)  src/cells.rs:<mibz2::cells::Kernel>::write_cells 
+== rules staged, the fetch-ahead kept off rules (the code here)
+5,206,514,005 (100.0%)  PROGRAM TOTALS
+1,485,067,402 (28.52%)  src/cells.rs:<mibz2::cells::Kernel>::induce_cells 
+  864,220,887 (16.60%)  src/cells.rs:<mibz2::cells::Kernel>::slots 
+  598,664,251 (11.50%)  src/cells.rs:<mibz2::cells::Kernel>::write_cells 
