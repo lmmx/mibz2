@@ -24,6 +24,11 @@
 # - a failed check of origin is logged, and retried at the next poll;
 # - the exit status is 0 only when the run ran and passed: 1 when it failed, 3 on HOLD,
 #   4 on timeout, 5 on a refusal.
+# Notices: when a run starts, and when one fails, a LOG is posted on #145 (the run's
+# success is posted there by `just submit` with its bundle), so the coordinator sees the
+# workstation pick work up without waiting for the bundle. A notice is best effort: one that
+# can't be posted (gh signed out, no network) is logged and the run goes on.
+# AWAIT_SUBMIT_NOTICES=0 turns them off.
 set -uo pipefail
 
 # Run from a copy, so that checking out another branch can't change this script mid-run.
@@ -50,6 +55,20 @@ done
 log=~/await-submit-${recipe}-$(date -u +%Y%m%dT%H%M%SZ).log
 exec > >(tee -a "$log") 2>&1
 say() { echo "[$(date -u +%H:%M:%S)] $*"; }
+
+# Post a LOG on #145 (best effort, at most 60 s: a notice never stops or fails the run)
+notice() {
+  [[ ${AWAIT_SUBMIT_NOTICES:-1} == 1 ]] || return 0
+  local gh=${GH:-gh} repo=${EVIDENCE_REPO:-lmmx/mibz2} body url
+  body=$(printf 'FROM: louis via workstation\nTO: coordinator\nRE: %s\nTYPE: LOG\n\n%s\n' \
+    "$recipe at ${ready:-?}" "$1")
+  if url=$(timeout 60 "$gh" api "repos/$repo/issues/145/comments" -f "body=$body" --jq .html_url 2>/dev/null); then
+    say "notice posted: $url"
+  else
+    say "notice not posted (gh failed or timed out); the run goes on"
+  fi
+  return 0
+}
 
 finish() {
   say "outcome: $1"
@@ -121,9 +140,12 @@ if ! mkdir "$mark" 2>/dev/null; then
 fi
 
 say "running: just submit $recipe"
+started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+notice "**Started:** \`just submit $recipe\` at \`$ready\` ($branch), $started, on $(lscpu 2>/dev/null | sed -n 's/^Model name: *//p' | head -1). Its bundle is posted here when it ends; a failure is posted too."
 if just submit "$recipe"; then
   finish "RUN DONE: just submit $recipe exited 0" 0
 else
   rc=$?
+  notice "**Failed:** \`just submit $recipe\` at \`$ready\` exited $rc, started $started, ended $(date -u +%Y-%m-%dT%H:%M:%SZ). The waiter's log on the workstation: \`$log\`. A bundle, if the recipe made one, is posted separately."
   finish "RUN FAILED: just submit $recipe exited $rc" 1
 fi
