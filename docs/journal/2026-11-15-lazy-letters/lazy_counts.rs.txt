@@ -1,0 +1,39 @@
+//! scratch: per admitted block, the letters and the most slots the lazy induction took from
+//! each pool (the two pools are handed out as pairs). lazy_counts FILE.bz2
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{bwt, decode_block, Kernels, Scratch};
+
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let mut s = Scratch::<bwt::Cells>::default();
+    let (mut out, mut syms) = (Vec::new(), Vec::new());
+    let mut prev = s.cells_counts();
+    let mut rows = Vec::new();
+    let mut blocks = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        out.clear();
+        decode_block(&b, k, &mut s, &mut out).unwrap();
+        blocks += 1;
+        let c = s.cells_counts();
+        if c.admitted > prev.admitted {
+            let l = (c.letters - prev.letters) as f64;
+            rows.push((
+                (c.slots - prev.slots) as f64 / l,
+                (c.cells - prev.cells) as f64 / l,
+            ));
+        }
+        prev = c;
+        syms = b.syms;
+    }
+    let q = |f: &dyn Fn(&(f64, f64)) -> f64| {
+        let mut v: Vec<f64> = rows.iter().map(f).collect();
+        v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        (v[0], v[v.len() / 2], v[v.len() - 1])
+    };
+    println!("{blocks} blocks, {} admitted; {:?}", rows.len(), prev);
+    println!("slots of each pool / letters, min median max: {:.3?}", q(&|r| r.0));
+    println!("cells / letters: {:.3?}", q(&|r| r.1));
+}

@@ -1,0 +1,15 @@
+== master f03b0fdc (the shipped kernel)
+5,023,726,336 (100.0%)  PROGRAM TOTALS
+1,267,566,306 (25.23%)  src/cells.rs:<mibz2::cells::Kernel>::induce_cells 
+  897,994,811 (17.88%)  src/cells.rs:<mibz2::cells::Kernel>::slots 
+  598,664,251 (11.92%)  src/cells.rs:<mibz2::cells::Kernel>::write_cells 
+== lazy letters, first build
+5,965,446,754 (100.0%)  PROGRAM TOTALS
+2,401,946,491 (40.26%)  src/cells.rs:<mibz2::cells::Kernel>::induce_lazy 
+  746,024,189 (12.51%)  src/cells.rs:<mibz2::cells::Kernel>::slots_lazy 
+  558,762,254 ( 9.37%)  src/cells.rs:<mibz2::cells::Kernel>::write_cells 
+== lazy letters, second build (the diff here)
+5,764,617,075 (100.0%)  PROGRAM TOTALS
+2,165,954,247 (37.57%)  src/cells.rs:<mibz2::cells::Kernel>::induce_lazy 
+  790,880,374 (13.72%)  src/cells.rs:<mibz2::cells::Kernel>::slots_lazy 
+  549,071,011 ( 9.52%)  src/cells.rs:<mibz2::cells::Kernel>::write_cells 
