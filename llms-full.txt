@@ -98,6 +98,25 @@ Each table gives an arm's median wall time. It also gives the geometric mean of 
 
 ### 2026-11-15: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.3.3** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-15-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.3.3>)
+
+**`wikidata`**
+
+| threads | 0.3.3 wall (median) | lbzip2 2.5 wall (median) | 0.3.2 wall (median) | lbzip2 2.5 against 0.3.3 | 0.3.2 against 0.3.3 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.384 s | 2.521 s | 0.398 s | \+553.2% (+543.6, +563.0) **slower** | \+4.3% (+1.3, +7.4) **slower** |
+| 2 | 0.242 s | 1.339 s | 0.253 s | \+454.0% (+446.9, +461.2) **slower** | \+4.0% (+1.7, +6.4) **slower** |
+| 4 | 0.151 s | 0.713 s | 0.160 s | \+377.5% (+370.1, +385.0) **slower** | \+7.0% (+5.0, +9.0) **slower** |
+| 8 | 0.136 s | 0.514 s | 0.135 s | \+280.0% (+277.6, +282.4) **slower** | −0.0% (−1.0, +0.9) |
+| 10 | 0.121 s | 0.505 s | 0.121 s | \+316.0% (+312.9, +319.0) **slower** | −0.3% (−1.1, +0.4) |
+| 12 | 0.128 s | 0.508 s | 0.129 s | \+298.9% (+288.8, +309.3) **slower** | \+0.5% (−3.5, +4.6) |
+| 16 | 0.129 s | 0.501 s | 0.129 s | \+284.7% (+276.5, +293.1) **slower** | −0.4% (−2.3, +1.5) |
+| 20 | 0.129 s | 0.494 s | 0.130 s | \+280.3% (+273.1, +287.5) **slower** | −0.0% (−3.0, +3.0) |
+
+Every arm's output was the same bytes as the reference's.
+
+### 2026-11-15: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.3.2** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-15-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.3.2>)
 
 **`wikidata`**
