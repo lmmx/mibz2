@@ -9,10 +9,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.3](https://github.com/lmmx/mibz2/compare/v0.3.2...v0.3.3) - 2026-11-15
 
+A memory-traffic release for Cells. Bottom slots shrink from 20 to 8 bytes (#414): a letter's
+length and word are now read through its top slot, and the bottom slot keeps only the link and
+the partner. A letter's fields are read once, on the side the fronts reach first, and the side
+reached second is overwritten unread (rule R4 in MONODROMY's elision bounds, #410), so the
+bottom copy was never needed when the top front got there first. The output, the API, the
+supported inputs and the plans are unchanged.
+
+- **The census** (#414, the bench corpus `wikidata`, 431 blocks, 196 admitted by Cells, counts
+  and no timing): slot bytes in both orders 443.6 → 310.5 MB (0.700), 0.63 B less per output
+  byte; the induction's buffer lines (slots, arena words and rules used) 9.64 M → 7.56 M
+  (0.784). The price is one dependent load, from the bottom slot to its top slot, on 53.7% of
+  slot reads. The load is off the link chain, unlike #407's pointer chase.
+- **The PR's own CI bench** (run 43719302600, AMD EPYC 9V45, 4 vCPU on 2 cores, 10 paired
+  rounds), #414's head against its base: `wikidata` CPU −3.3% (−5.8, −0.8) at 4 threads, and
+  amplification at 4 threads −3.2% (−5.6, −0.8); wall −0.1%, −0.2% and −1.8% at 1, 2 and 4
+  threads, each interval including no change. The assessment: better (CPU cost, contention
+  sensitivity), and no measure worse.
+- **The release's CI bench** (run 43723600944, AMD EPYC 9V45, 4 vCPU on 2 cores, 10 paired
+  rounds), v0.3.2 (42c2aa6e) → master 898535524, which differs from the v0.3.3 tag only in the
+  version bump. It finished after the release, so it is a check after the fact:
+
+  | `wikidata` | 1 thread | 2 threads | 4 threads |
+  |---|--:|--:|--:|
+  | wall | −1.4% (−5.0, +2.4) | −1.2% (−4.5, +2.1) | **−4.2% (−4.9, −3.4)** |
+  | CPU | −1.4% (−5.0, +2.4) | −0.7% (−2.9, +1.5) | **−4.0% (−5.3, −2.8)** |
+  | peak RSS, MB | 30 → 28 (−4.8%) | 65 → 62 (−4.0%) | 102 → 98 (−5.2%) |
+
+  At 4 threads, 4.2% less wall time and 4.0% less CPU, beyond noise; at 1 and 2 threads each
+  interval includes no change. Best wall against best wall −4.2% (−4.9, −3.4). Every corpus
+  gave the same bytes in every run. The assessment: better (speed, CPU cost), and no measure
+  worse.
+- **Release scaling, the i9-10900K** (`release-scaling/run-20261115T143048Z`, sha256 86b3e01a,
+  10 paired rounds, every arm the same bytes, #420), `wikidata`, 0.3.2 ÷ 0.3.3 wall:
+
+  | threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+  |---|--:|--:|--:|--:|--:|--:|--:|--:|
+  | 0.3.2 ÷ 0.3.3 | **1.043** | **1.040** | **1.070** | 1.000 | 0.997 | 1.005 | 0.996 | 1.000 |
+  | 95% interval | 1.013–1.074 | 1.017–1.064 | 1.050–1.090 | 0.990–1.009 | 0.989–1.004 | 0.965–1.046 | 0.977–1.015 | 0.970–1.030 |
+  | peak RSS, MB | 29 → 28 | 64 → 58 | 106 → 97 | 80 → 80 | 73 → 73 | 72 → 73 | 72 → 72 | 72 → 71 |
+
+  That is 4.1%, 3.9% and 6.5% less wall time at 1, 2 and 4 threads, beyond noise, and 7.3% less
+  CPU at 4 (1.078, 1.067–1.090). From 8 threads it is level: the plan there is the teams path,
+  which 0.3.3 does not change. That the teams path is level here also suggests that 0.3.2's
+  slowdowns at 16 and 20 threads were drift within that run.
+- **Caveats.**
+  - On CI's 2-core runner the gain is beyond noise only at 4 threads, with co-running workers;
+    at 1–2 threads neither CI run shows a change beyond noise. The i9 shows gains at 1 and 2
+    threads too (4.1% and 3.9%), with intervals that reach down to 1.3% and 1.7%.
+  - #414's bench had two watch items, neither beyond noise: `text` at 2 threads +5.7% wall
+    (−2.0, +14.1) and `pattern` at 4 threads +3.9% (−4.3, +12.8). Neither recurs in the
+    release's bench: `text` at 2 threads −0.3% (−7.7, +7.6), `pattern` at 4 threads
+    +0.3% (−5.0, +5.9).
+  - The Cells induction campaign stops here for now. The other candidate built alongside it,
+    equal one-row cell elision (#418), was 8–12% slower in wall time and closed unmerged
+    (`docs/journal/2026-11-15-equal-cell-elision.md`).
+
 ### <!-- 9 -->Other
 
-- 0.3.2's notes ([#416](https://github.com/lmmx/mibz2/pull/416))
 - Cells induction: 8-byte bottom slots, a letter's length and word read through its top slot ([#414](https://github.com/lmmx/mibz2/pull/414))
+- Queue, record and docs changes: 0.3.2's release-scaling queue entry and record ([#415](https://github.com/lmmx/mibz2/pull/415), [#417](https://github.com/lmmx/mibz2/pull/417)), 0.3.2's notes ([#416](https://github.com/lmmx/mibz2/pull/416)) and, after the tag, 0.3.3's release-scaling queue entry and record ([#419](https://github.com/lmmx/mibz2/pull/419), [#420](https://github.com/lmmx/mibz2/pull/420))
 
 ## [0.3.2](https://github.com/lmmx/mibz2/compare/v0.3.1...v0.3.2) - 2026-11-15
 
