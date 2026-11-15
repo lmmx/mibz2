@@ -1,0 +1,82 @@
+//! scratch: iterate "absorb non-branching pieces" (first return to the rest) to a fixpoint,
+//! three variants, and print the fixpoint's letters against the free closure's.
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+
+fn mix(h: u64, x: u64) -> u64 { (h.rotate_left(17) ^ x).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ (h >> 29) }
+
+/// pieces: maximal runs of consecutive points with sigma(x+1) = sigma(x) + 1 and equal word hash
+fn pieces(sigma: &[u32], h: &[u64]) -> Vec<u32> {
+    let m = sigma.len();
+    let mut p = vec![0u32; m];
+    for x in 1..m { p[x] = p[x - 1] + !(sigma[x] == sigma[x - 1] + 1 && h[x] == h[x - 1]) as u32; }
+    p
+}
+
+/// variant 0: remove pieces with a unique successor piece; 1: with a unique predecessor; 2: either
+fn fixpoint(mut sigma: Vec<u32>, mut h: Vec<u64>, variant: u8) -> (usize, usize) {
+    let mut rounds = 0;
+    loop {
+        let m = sigma.len();
+        let p = pieces(&sigma, &h);
+        let np = p[m - 1] as usize + 1;
+        let mut inv = vec![0u32; m];
+        for x in 0..m { inv[sigma[x] as usize] = x as u32; }
+        // per piece: the pieces its images fall in (succ) and its points come from (pred)
+        let (mut succ, mut pred) = (vec![u32::MAX; np], vec![u32::MAX; np]);
+        let (mut usucc, mut upred) = (vec![true; np], vec![true; np]);
+        for x in 0..m {
+            let (a, s) = (p[x] as usize, p[sigma[x] as usize]);
+            if succ[a] == u32::MAX { succ[a] = s } else if succ[a] != s { usucc[a] = false }
+            let q = p[inv[x] as usize];
+            if pred[a] == u32::MAX { pred[a] = q } else if pred[a] != q { upred[a] = false }
+        }
+        let remove: Vec<bool> = (0..np).map(|a| match variant { 0 => usucc[a], 1 => upred[a], _ => usucc[a] || upred[a] } && np > 1).collect();
+        let keep: Vec<bool> = (0..m).map(|x| !remove[p[x] as usize]).collect();
+        let kept = keep.iter().filter(|&&b| b).count();
+        if kept == m || kept == 0 { return (np, rounds); }
+        let mut rank = vec![0u32; m];
+        let mut c = 0u32;
+        for x in 0..m { rank[x] = c; c += keep[x] as u32; }
+        let (mut s2, mut h2) = (Vec::with_capacity(kept), Vec::with_capacity(kept));
+        for x in 0..m {
+            if !keep[x] { continue; }
+            let mut hh = h[x];
+            let mut y = sigma[x] as usize;
+            while !keep[y] { hh = mix(hh, h[y]); y = sigma[y] as usize; }
+            s2.push(rank[y]);
+            h2.push(hh);
+        }
+        sigma = s2; h = h2; rounds += 1;
+    }
+}
+
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let every: usize = a.get(2).map_or(8, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts, mut syms) = (Vec::new(), [0u32; 256], Vec::new());
+    let mut i = 0usize;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        let n = ll.len();
+        if n >= 65536 {
+            if i % every == 0 {
+                let mut cc = [0usize; 257];
+                for &c in ll.iter() { cc[c as usize + 1] += 1; }
+                for x in 0..256 { cc[x + 1] += cc[x]; }
+                let mut lf = vec![0u32; n];
+                let mut cur = cc;
+                for x in 0..n { let c = ll[x] as usize; lf[x] = cur[c] as u32; cur[c] += 1; }
+                let h: Vec<u64> = ll.iter().map(|&c| mix(0x1234_5678, c as u64 + 1)).collect();
+                let r = 1 + (1..n).filter(|&x| ll[x] != ll[x - 1]).count();
+                let mut out = format!("{{\"block\":{i},\"n\":{n},\"runs\":{r}");
+                for v in 0..3u8 { let (np, rounds) = fixpoint(lf.clone(), h.clone(), v); out += &format!(",\"v{v}\":[{np},{rounds}]"); }
+                println!("{out}}}");
+            }
+            i += 1;
+        }
+    }
+}

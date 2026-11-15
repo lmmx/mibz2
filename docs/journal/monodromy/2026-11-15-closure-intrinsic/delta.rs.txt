@@ -1,0 +1,57 @@
+//! scratch: per block, delta = max_k d_k / k (d_k: distinct cyclic factors of length k), from
+//! the rotations' LCP array (Kasai over the cycle), with r; every EVERY-th block.
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let every: usize = a.get(2).map_or(8, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts, mut syms) = (Vec::new(), [0u32; 256], Vec::new());
+    let mut i = 0usize;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        let n = ll.len();
+        if n >= 65536 {
+            if i % every == 0 {
+                let mut cc = [0usize; 257];
+                for &c in ll.iter() { cc[c as usize + 1] += 1; }
+                for x in 0..256 { cc[x + 1] += cc[x]; }
+                let mut lf = vec![0u32; n];
+                let mut cur = cc;
+                for x in 0..n { let c = ll[x] as usize; lf[x] = cur[c] as u32; cur[c] += 1; }
+                // rotations: s(x) the start of row x's rotation; T[s(x) - 1] = L[x]
+                let mut s = vec![u32::MAX; n];
+                let mut t = vec![0u8; n];
+                let (mut x, mut pos) = (0usize, 0usize);
+                for _ in 0..n {
+                    s[x] = pos as u32;
+                    let p = (pos + n - 1) % n;
+                    t[p] = ll[x];
+                    x = lf[x] as usize;
+                    pos = p;
+                }
+                assert!(s.iter().all(|&v| v != u32::MAX), "one cycle");
+                let mut rank = vec![0u32; n];
+                for x in 0..n { rank[s[x] as usize] = x as u32; }
+                let mut hist = vec![0u64; n + 2];
+                let mut h = 0usize;
+                for p in 0..n {
+                    let x = rank[p] as usize;
+                    if x == 0 { h = 0; continue; }
+                    let q = s[x - 1] as usize;
+                    while h < n && t[(p + h) % n] == t[(q + h) % n] { h += 1; }
+                    hist[h] += 1;
+                    if h > 0 { h -= 1; }
+                }
+                // d_k = 1 + #{x > 0 : lcp < k}
+                let (mut below, mut delta, mut kbest) = (0u64, 0f64, 0usize);
+                for k in 1..=n { below += hist[k - 1]; let d = (1 + below) as f64; if d / k as f64 > delta { delta = d / k as f64; kbest = k; } }
+                let r = 1 + (1..n).filter(|&x| ll[x] != ll[x - 1]).count();
+                println!("{{\"block\":{i},\"n\":{n},\"runs\":{r},\"delta\":{delta:.1},\"k\":{kbest}}}");
+            }
+            i += 1;
+        }
+    }
+}

@@ -1,0 +1,73 @@
+//! scratch: letters of LF's first return to the union of the top intervals of the
+//! "branching" runs, for three meanings of branching, against the free closure's letters.
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+
+/// letters of the first return of LF (as a permutation of rows) to the rows `inr`:
+/// maximal stretches of consecutive rows of R (in row order) with the same itinerary
+/// (the sequence of runs visited before the return) whose returns are consecutive in R
+fn induced_letters(n: usize, lf: &[u32], run_of: &[u32], inr: &[bool]) -> usize {
+    let rank: Vec<u32> = { let mut c = 0u32; inr.iter().map(|&b| { let r = c; c += b as u32; r }).collect() };
+    let mut prev: Option<(u32, u64, u32)> = None; // (rank of return, itinerary hash, length)
+    let mut letters = 0usize;
+    for x in 0..n {
+        if !inr[x] { continue; }
+        let (mut y, mut h, mut len) = (x, 0xcbf29ce484222325u64, 0u32);
+        loop {
+            h = (h ^ run_of[y] as u64).wrapping_mul(0x100000001b3);
+            len += 1;
+            y = lf[y] as usize;
+            if inr[y] { break; }
+        }
+        let cur = (rank[y], h, len);
+        let same = matches!(prev, Some((pr, ph, pl)) if ph == h && pl == len && pr + 1 == rank[y]);
+        if !same { letters += 1; }
+        prev = Some(cur);
+    }
+    letters
+}
+
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let every: usize = a.get(2).map_or(8, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts, mut syms) = (Vec::new(), [0u32; 256], Vec::new());
+    let mut i = 0usize;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        let n = ll.len();
+        if n >= 65536 {
+            if i % every == 0 {
+                let mut cc = [0usize; 257];
+                for &c in ll.iter() { cc[c as usize + 1] += 1; }
+                for x in 0..256 { cc[x + 1] += cc[x]; }
+                let mut lf = vec![0u32; n];
+                let mut cur = cc;
+                for x in 0..n { let c = ll[x] as usize; lf[x] = cur[c] as u32; cur[c] += 1; }
+                let mut run_of = vec![0u32; n];
+                let mut starts = Vec::new();
+                for x in 0..n { if x == 0 || ll[x] != ll[x - 1] { starts.push(x); } run_of[x] = (starts.len() - 1) as u32; }
+                let r = starts.len();
+                let end = |j: usize| if j + 1 < r { starts[j + 1] } else { n };
+                // forward-branching: the run's image is not inside one run's top interval
+                // backward-branching: the run's top interval is not inside one run's image
+                // (the image tiling's pieces: images of runs)
+                let mut img_of = vec![0u32; n]; // which run's image covers row y
+                for j in 0..r { let s = starts[j]; let b0 = lf[s] as usize; for y in b0..b0 + (end(j) - s) { img_of[y] = j as u32; } }
+                let fwd: Vec<bool> = (0..r).map(|j| { let b0 = lf[starts[j]] as usize; let l = end(j) - starts[j]; run_of[b0] != run_of[b0 + l - 1] }).collect();
+                let bwd: Vec<bool> = (0..r).map(|j| { let s = starts[j]; img_of[s] != img_of[end(j) - 1] }).collect();
+                let mut out = format!("{{\"block\":{i},\"n\":{n},\"runs\":{r}");
+                for (name, set) in [("fwd", fwd.clone()), ("bwd", bwd.clone()), ("either", (0..r).map(|j| fwd[j] || bwd[j]).collect::<Vec<_>>())] {
+                    let roots = set.iter().filter(|&&b| b).count();
+                    let inr: Vec<bool> = (0..n).map(|x| set[run_of[x] as usize]).collect();
+                    let le = induced_letters(n, &lf, &run_of, &inr);
+                    out += &format!(",\"{name}\":[{roots},{le}]");
+                }
+                println!("{out}}}");
+            }
+            i += 1;
+        }
+    }
+}
