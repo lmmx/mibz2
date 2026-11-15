@@ -54,6 +54,10 @@ struct Kernel {
     /// original induction (`induce_cells_original`) needs, for comparisons against it
     #[cfg(test)]
     fresh_room: bool,
+    /// (test only) bottom slots of `SLOT` bytes holding every field, as the top slots do:
+    /// the layout the original induction (`induce_cells_original`) reads
+    #[cfg(test)]
+    wide_bottom: bool,
 }
 #[cfg(test)]
 #[derive(Debug, PartialEq, Eq)]
@@ -182,8 +186,8 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
         v
     }
 }
-/// A letter's place in one order, for the induction by cells: 20 bytes. The two orders are
-/// two regions of these in one buffer; a letter has one slot in each. The orders are only
+/// A letter's place in the top order, for the induction by cells: 20 bytes. The two orders
+/// are two regions of slots in one buffer; a letter has one slot in each. The orders are only
 /// ever read from their ends, so a slot is read once, when the induction's front reaches it.
 ///
 /// | bytes | |
@@ -192,19 +196,31 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
 /// | 4..8 | the letter's length |
 /// | 8..12 | its word's length |
 /// | 12..16 | its word: an offset in the buffer, of bytes if the length is at most SMALL, else of a rule |
-/// | 16..20 | the letter's slot in the other order (an offset in the buffer) |
+/// | 16..20 | the letter's slot in the bottom order (an offset in the buffer) |
+///
+/// A bottom slot is 8 bytes (`BSLOT`): the slot before it, and the letter's top slot. The
+/// letter's length and word are read through the second, from its top slot: a letter's
+/// fields are read once, on the side the fronts reach first, and the side reached second is
+/// overwritten unread by the letter's own first cell. So when the bottom front reaches a
+/// letter first, its top slot still holds it; when the top front does, the bottom copy was
+/// never needed (MONODROMY, 2026-11-15, rule R4 and layout A8).
 ///
 /// Every field is a 4-byte offset or length: the layout refuses a buffer whose total would
 /// reach `u32::MAX` (`slots`), and Cells then declines the block. The research feature
-/// `slot24` keeps the previous layout, 24 bytes with bytes 16..24 an 8-byte offset, only so
+/// `slot24` keeps the previous top slot, 24 bytes with bytes 16..24 an 8-byte offset, only so
 /// that one commit can build both (bench-cells-diet, #145 LOG 6881022819).
 #[cfg(not(feature = "slot24"))]
 const SLOT: usize = 20;
 /// (research only, `slot24`: the previous 24-byte slot)
 #[cfg(feature = "slot24")]
 const SLOT: usize = 24;
+/// A bottom slot: the slot before it in the bottom order, and the letter's top slot
+const BSLOT: usize = 8;
 /// How many slots on from an order's last letter the induction by cells fetches for
 const FAR: usize = 12;
+/// How many slots on from the bottom order's last letter it fetches the word for, read
+/// from the top slot fetched `FAR - NEAR` steps before
+const NEAR: usize = 6;
 /// The buffer's first bytes, unused: a read `FAR` slots before an order's first stays inside
 const PAD: usize = 4096;
 /// The mark, in a word's length: the word holds the walk's row
@@ -282,6 +298,14 @@ unsafe fn wr_other(base: *mut u8, slot: usize, other: usize) {
     }
 }
 
+/// A bottom slot: (the slot before it in the bottom order, the letter's top slot)
+#[inline(always)]
+unsafe fn rd_bottom(base: *const u8, slot: usize) -> (usize, usize) {
+    // SAFETY: caller supplies an initialized in-bounds bottom slot; alignment is not required.
+    let v = unsafe { rd64(base, slot) };
+    (v as u32 as usize, (v >> 32) as usize)
+}
+
 const SMALL: u32 = 16;
 const BYTES: u32 = 16;
 const NIL: u32 = u32::MAX;
@@ -329,6 +353,16 @@ unsafe fn copy_long(dst: *mut u8, src: *const u8, len: usize) {
 }
 
 impl Kernel {
+    /// A bottom slot's size: `BSLOT`, or (test only) `SLOT` for the original induction
+    #[inline(always)]
+    fn bslot(&self) -> usize {
+        #[cfg(test)]
+        if self.wide_bottom {
+            return SLOT;
+        }
+        BSLOT
+    }
+
     #[cfg(test)]
     fn record_materialization(&mut self, state: [u64; 16]) {
         if let Some(log) = &mut self.materialization {
@@ -352,12 +386,22 @@ impl Kernel {
         }
     }
 
+    /// The cell's (length, word) as its top slot holds them, after checking that the two
+    /// slots name each other (and, in the wide layout, that the bottom slot holds the same)
     #[cfg(test)]
     fn record_selected_slots(&mut self, ts: usize, bs: usize) {
+        let wide = self.bslot() == SLOT;
         if let Some(log) = &mut self.materialization {
-            let slot = log.last_mut().unwrap();
-            slot.slots.extend_from_slice(&self.buf[ts..ts + SLOT]);
-            slot.slots.extend_from_slice(&self.buf[bs..bs + SLOT]);
+            let read = |at: usize| u32::from_ne_bytes(self.buf[at..at + 4].try_into().unwrap());
+            let fields = &self.buf[ts + 4..ts + 16];
+            if wide {
+                assert_eq!(&self.buf[bs + 4..bs + 16], fields);
+                assert_eq!(read(bs + 16) as usize, ts);
+            } else {
+                assert_eq!(read(bs + 4) as usize, ts);
+            }
+            assert_eq!(read(ts + 16) as usize, bs);
+            log.last_mut().unwrap().slots.extend_from_slice(fields);
         }
     }
 
@@ -487,10 +531,19 @@ impl Kernel {
         let room = letters + if self.fresh_room { budget } else { 0 };
         #[cfg(not(test))]
         let room = letters;
+        // the bottom order's slots are `BSLOT` bytes (`SLOT` in the original's wide layout);
+        // a test kernel with `fresh_room` keeps room for wide ones, so that the arena and the
+        // rules lie at the same offsets for the original and the candidate
+        let bslot = self.bslot();
+        let wide = bslot == SLOT;
         let cap = room * SLOT;
+        #[cfg(test)]
+        let bcap = room * if self.fresh_room { SLOT } else { bslot };
+        #[cfg(not(test))]
+        let bcap = room * bslot;
         let tops = PAD;
         let bots = tops + cap + GAP;
-        let arena = bots + cap + GAP;
+        let arena = bots + bcap + GAP;
         let rules = arena + BYTES as usize + 256 + 16 + 16 * budget + 32 + GAP;
         let allocation = rules + 16 * budget + 16 + GAP;
         // (every offset a slot holds is 4 bytes, the other order's included: a layout whose
@@ -507,7 +560,7 @@ impl Kernel {
             bots,
             arena,
             rules,
-            ends: [tops + cap, bots + cap, rules - GAP, allocation - GAP],
+            ends: [tops + cap, bots + bcap, rules - GAP, allocation - GAP],
         };
         // Reuse the high-water allocation, but never geometrically over-allocate. Release
         // the old buffer before growing so both large allocations are not live at once.
@@ -526,7 +579,7 @@ impl Kernel {
         // a byte's next bottom slot, as its offset in the buffer
         for k in 0..256 {
             cnt[k + 1] += cnt[k];
-            cnt[k] = (lay.bots + cnt[k] as usize * SLOT) as u32;
+            cnt[k] = (lay.bots + cnt[k] as usize * bslot) as u32;
         }
         debug_assert_eq!(self.letters, cnt[256] as usize);
         let base = self.buf.as_mut_ptr();
@@ -539,15 +592,24 @@ impl Kernel {
                 ($lam:expr, $c:expr) => {{
                     let (lam, c): (u64, usize) = ($lam as u64, $c);
                     let k = *cnt.get_unchecked(c) as usize;
-                    *cnt.get_unchecked_mut(c) = (k + SLOT) as u32;
+                    *cnt.get_unchecked_mut(c) = (k + bslot) as u32;
                     let lw = 1 | (first + c as u64) << 32;
                     // (the slot before each order's first is set after the pass)
                     wr64(base, t, t.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
                     wr64(base, t + 8, lw);
                     wr_other(base, t, k);
-                    wr64(base, k, k.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
-                    wr64(base, k + 8, lw);
-                    wr_other(base, k, t);
+                    if wide {
+                        wr64(base, k, k.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
+                        wr64(base, k + 8, lw);
+                        wr_other(base, k, t);
+                    } else {
+                        // the bottom slot: the slot before it, and the letter's top slot
+                        wr64(
+                            base,
+                            k,
+                            k.wrapping_sub(BSLOT) as u32 as u64 | (t as u64) << 32,
+                        );
+                    }
                     t += SLOT;
                 }};
             }
@@ -561,9 +623,10 @@ impl Kernel {
                     }
                     let tz = t;
                     letter!(1u32, cz);
-                    let kz = rd_other(base, tz);
                     wr32(base, tz + 8, 1 | MARK);
-                    wr32(base, kz + 8, 1 | MARK);
+                    if wide {
+                        wr32(base, rd_other(base, tz) + 8, 1 | MARK);
+                    }
                     if total - off > 1 {
                         letter!(total - off - 1, cz);
                     }
@@ -613,6 +676,12 @@ impl Kernel {
     /// it reached the front. So the orders' regions hold the letters' slots and no more,
     /// and the lines a fresh slot would first touch are never touched.
     ///
+    /// A bottom slot holds only the slot before it and the letter's top slot (`BSLOT`): a
+    /// letter read at the bottom front is read through its top slot, which holds it, since
+    /// a letter's fields are read only on the side reached first, and the cells cut from it
+    /// are written over its top slot only after it is read. A cell's length and word are
+    /// written to its top slot only.
+    ///
     /// Every offset is a byte offset in the one buffer: a slot, a word kept as bytes, a
     /// word kept as a rule. A rule is its two factors as their slots held them: (length,
     /// word) twice.
@@ -624,20 +693,21 @@ impl Kernel {
         const M: u64 = 0xFFFF_FFFF;
         let rr = self.letters;
         let lay = self.lay;
-        if rr == 0 || self.buf.len() < lay.rules + 16 {
+        if rr == 0 || self.buf.len() < lay.rules + 16 || self.bslot() != BSLOT {
             return Err(Refusal::Invalid);
         }
         let base = self.buf.as_mut_ptr();
         // SAFETY: `slots` sized the words' regions for budget cells, and the counter is
         // checked before each cell; a slot's offset is a letter's slot, written by `slots`
         // inside its order's region (a promised slot is one of them, let go at the front);
-        // a word's offset is in the arena or the rules, with 16 bytes after it inside the
-        // buffer.
+        // a bottom slot's second field is a top slot, so a letter read through it is read
+        // inside the top region; a word's offset is in the arena or the rules, with 16
+        // bytes after it inside the buffer.
         unsafe {
             let mut top = lay.arena + BYTES as usize + 256 + 16;
             let mut rp = lay.rules;
             // each order's last letter's slot
-            let (ft0, fb0) = (lay.tops + rr * SLOT, lay.bots + rr * SLOT);
+            let (ft0, fb0) = (lay.tops + rr * SLOT, lay.bots + rr * BSLOT);
             // Count every cell, including equal-length steps which allocate no slot.
             let mut cells = 0usize;
             // the slot before each letter in its order; what is left of the letter; its
@@ -646,7 +716,7 @@ impl Kernel {
             let (mut ra, mut rb);
             let (mut aw, mut bw);
             let (mut bs, mut ts);
-            let (mut sa, mut sb) = (ft0 - SLOT, fb0 - SLOT);
+            let (mut sa, mut sb) = (ft0 - SLOT, fb0 - BSLOT);
             // the slots A and B were read from at the fronts: when one of them ends, its
             // slot is the one its partner's next cell is promised
             let (mut fa, mut fb);
@@ -660,20 +730,33 @@ impl Kernel {
                     prefetch(base.wrapping_add(rd32(base, far + 12) as usize));
                 }};
             }
+            // the last top slot: a hinted read through a bottom slot goes no further
+            let last_top = ft0 - SLOT;
+            // The same on the bottom, whose letter's word is in its top slot: that slot is
+            // fetched `FAR` slots on, and the word `NEAR` slots on, read from the top slot
+            // fetched `FAR - NEAR` steps before. (A slot not yet written may name any
+            // offset: it is kept to a top slot, so that the read stays inside the buffer.)
+            macro_rules! ahead_bottom {
+                ($s:expr) => {{
+                    let far = $s - FAR * BSLOT;
+                    prefetch(base.wrapping_add(rd32(base, far + 4) as usize));
+                    let near = (rd32(base, $s - NEAR * BSLOT + 4) as usize).min(last_top);
+                    prefetch(base.wrapping_add(rd32(base, near + 12) as usize));
+                }};
+            }
             'fresh: loop {
-                // both letters whole
+                // both letters whole (B's length and word through its top slot)
                 na = rd32(base, sa) as usize;
                 ra = rd32(base, sa + 4) as u64;
                 aw = rd64(base, sa + 8);
                 bs = rd_other(base, sa);
-                nb = rd32(base, sb) as usize;
-                rb = rd32(base, sb + 4) as u64;
-                bw = rd64(base, sb + 8);
-                ts = rd_other(base, sb);
+                (nb, ts) = rd_bottom(base, sb);
+                rb = rd32(base, ts + 4) as u64;
+                bw = rd64(base, ts + 8);
                 (fa, fb) = (sa, sb);
 
                 ahead!(sa);
-                ahead!(sb);
+                ahead_bottom!(sb);
                 if bs == sb {
                     // one letter, last in both orders: its points' cycles are closed
                     if aw as u32 & MARK != 0 {
@@ -739,9 +822,7 @@ impl Kernel {
                         wr32(base, ts + 4, ra as u32);
                         wr64(base, ts + 8, cw);
                         wr_other(base, ts, bs);
-                        wr32(base, bs + 4, ra as u32);
-                        wr64(base, bs + 8, cw);
-                        wr_other(base, bs, ts);
+                        wr32(base, bs + 4, ts as u32);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
                         (sa, sb) = (na, nb);
@@ -754,10 +835,7 @@ impl Kernel {
                         wr64(base, ts + 8, cw);
                         wr_other(base, ts, bs);
                         wr32(base, fb, rd32(base, bs));
-                        wr32(base, bs, fb as u32);
-                        wr32(base, bs + 4, rb as u32);
-                        wr64(base, bs + 8, cw);
-                        wr_other(base, bs, ts);
+                        wr64(base, bs, fb as u64 | (ts as u64) << 32);
                         #[cfg(test)]
                         self.record_selected_slots(ts, bs);
                         bs = fb;
@@ -765,17 +843,14 @@ impl Kernel {
                         // (read after the cell is written: it may be that cell)
                         let s = nb;
                         fb = s;
-                        ahead!(s);
-                        nb = rd32(base, s) as usize;
-                        rb = rd32(base, s + 4) as u64;
-                        bw = rd64(base, s + 8);
-                        ts = rd_other(base, s);
+                        ahead_bottom!(s);
+                        (nb, ts) = rd_bottom(base, s);
+                        rb = rd32(base, ts + 4) as u64;
+                        bw = rd64(base, ts + 8);
                     } else {
                         // A ends; B goes on, and is promised A's front slot
                         debug_assert!(fa != ts && fa != bs && fa != na);
-                        wr32(base, bs + 4, ra as u32);
-                        wr64(base, bs + 8, cw);
-                        wr_other(base, bs, ts);
+                        wr32(base, bs + 4, ts as u32);
                         wr32(base, fa, rd32(base, ts));
                         wr32(base, ts, fa as u32);
                         wr32(base, ts + 4, ra as u32);
@@ -1259,13 +1334,33 @@ mod tests {
             (kernel.lay.bots, kernel.lay.tops),
         ] {
             let (mut marks, mut rows) = (0, 0);
+            let (size, osize) = if start == kernel.lay.tops {
+                (SLOT, BSLOT)
+            } else {
+                (BSLOT, SLOT)
+            };
             for i in 0..kernel.letters {
-                let at = start + i * SLOT;
-                marks += usize::from(read(at + 8) & MARK != 0);
-                rows += read(at + 4) as usize;
-                let partner = read(at + 16) as usize;
-                assert!(partner >= other && partner < other + kernel.letters * SLOT);
-                assert_eq!(read(partner + 16) as usize, at);
+                let at = start + i * size;
+                // a bottom slot holds the slot before it and its top slot, which the letter's
+                // length and word are read from
+                let (partner, fields) = if size == SLOT {
+                    (read(at + 16) as usize, at)
+                } else {
+                    (read(at + 4) as usize, read(at + 4) as usize)
+                };
+                if i > 0 {
+                    assert_eq!(read(at) as usize, at - size);
+                }
+                marks += usize::from(read(fields + 8) & MARK != 0);
+                rows += read(fields + 4) as usize;
+                assert!(partner >= other && partner < other + kernel.letters * osize);
+                assert_eq!((partner - other) % osize, 0);
+                let back = if osize == SLOT {
+                    read(partner + 16)
+                } else {
+                    read(partner + 4)
+                };
+                assert_eq!(back as usize, at);
             }
             assert_eq!(marks, 1);
             assert_eq!(rows, ll.len());
@@ -1291,13 +1386,12 @@ mod tests {
                 kernel.materialization = Some(Vec::new());
                 let cells = check(&mut kernel, &ll, p as u32);
                 let lay = kernel.lay;
-                let room = kernel.letters * SLOT;
-                assert_eq!(lay.ends[0], lay.tops + room);
-                assert_eq!(lay.ends[1], lay.bots + room);
+                assert_eq!(lay.ends[0], lay.tops + kernel.letters * SLOT);
+                assert_eq!(lay.ends[1], lay.bots + kernel.letters * BSLOT);
                 for m in kernel.materialization.take().unwrap() {
                     let (fa, fb) = (m.state[7] as usize, m.state[8] as usize);
                     assert!(fa >= lay.tops && fa + SLOT <= lay.ends[0]);
-                    assert!(fb >= lay.bots && fb + SLOT <= lay.ends[1]);
+                    assert!(fb >= lay.bots && fb + BSLOT <= lay.ends[1]);
                     less += usize::from(m.state[0] < m.state[1]);
                     greater += usize::from(m.state[0] > m.state[1]);
                 }
@@ -1320,6 +1414,37 @@ mod tests {
             }
         }
         assert!(less > 0 && greater > 0, "{less} {greater}");
+    }
+
+    /// The 8-byte bottom slot: a letter read at the bottom front is read through its top
+    /// slot, and the word's fetch-ahead reads a top slot through a bottom slot that may not
+    /// be written yet. With every byte the induction did not write left stale (the canaries'
+    /// byte, which names no offset inside the buffer), the reads stay inside the buffer (Miri),
+    /// every cell's two slots name each other (`record_selected_slots`), the bottom region is
+    /// the letters' 8-byte slots and no more, and the output is exact.
+    #[test]
+    fn miri_cells_bottom_slots_read_through_top() {
+        let mut kernel = Kernel::default();
+        let mut cells = 0;
+        for ll in [
+            vec![1, 0],
+            b"bbaaa".to_vec(),
+            b"abababa".to_vec(),
+            [vec![1; 31], vec![0; 34]].concat(),
+            (0..65).map(|i| (i % 3) as u8).collect(),
+            long_writer_column(),
+        ] {
+            for p in [0, ll.len() / 2, ll.len() - 1] {
+                kernel.buf.fill(0xA5);
+                kernel.materialization = Some(Vec::new());
+                check(&mut kernel, &ll, p as u32);
+                let lay = kernel.lay;
+                assert_eq!(lay.ends[1], lay.bots + kernel.letters * BSLOT);
+                assert_eq!(lay.arena, lay.ends[1] + GAP);
+                cells += kernel.materialization.take().unwrap().len();
+            }
+        }
+        assert!(cells > 0);
     }
 
     #[test]

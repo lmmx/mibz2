@@ -16,23 +16,45 @@ fn compare_materialization(
     // the same room, so that every offset outside the slots' regions is the same in both.
     original.fresh_room = true;
     candidate.fresh_room = true;
+    // The original reads every field from both orders' slots; the candidate's bottom slots
+    // are 8 bytes, the slot before and the letter's top slot.
+    original.wide_bottom = true;
+    candidate.wide_bottom = false;
     let a = original.slots(column.len(), recs.records(), origin, budget, true);
     let b = candidate.slots(column.len(), recs.records(), origin, budget, true);
     assert_eq!(a, b);
     if a.is_err() {
         return Vec::new();
     }
-    // Only padding/dead fields differ, never the initialized initial letter slots.
-    for at in [original.lay.tops, original.lay.bots] {
-        let end = at + original.letters * SLOT;
-        assert_eq!(original.buf[at..end], candidate.buf[at..end]);
+    // Only padding/dead fields differ, never the initialized initial letter slots: the top
+    // slots are equal but for the partner (a bottom slot, whose size differs), and each
+    // bottom slot names the same top slot, which names it back, and the slot before it; the
+    // original's wide bottom slot repeats its top slot's fields.
+    let (tops, bots) = (original.lay.tops, original.lay.bots);
+    assert_eq!((candidate.lay.tops, candidate.lay.bots), (tops, bots));
+    let read = |k: &Kernel, at: usize| u32::from_ne_bytes(k.buf[at..at + 4].try_into().unwrap());
+    for i in 0..original.letters {
+        let t = tops + i * SLOT;
+        assert_eq!(original.buf[t..t + 16], candidate.buf[t..t + 16]);
+        let (wide, narrow) = (bots + i * SLOT, bots + i * BSLOT);
+        let top = read(original, wide + 16) as usize;
+        assert_eq!(read(candidate, narrow + 4) as usize, top);
+        assert_eq!(read(original, top + 16) as usize, wide);
+        assert_eq!(read(candidate, top + 16) as usize, narrow);
+        assert_eq!(original.buf[wide + 4..wide + 16], original.buf[top + 4..top + 16]);
+        if i > 0 {
+            assert_eq!(read(original, wide) as usize, wide - SLOT);
+            assert_eq!(read(candidate, narrow) as usize, narrow - BSLOT);
+        }
     }
     let a = original.induce_cells_original(budget);
     let b = candidate.induce_cells(budget);
     assert_eq!(a, b, "column {column:?}, origin {origin}, budget {budget}");
     // The slots a cell is written to differ (a promised slot is the one let go at the
     // front, not a fresh one), so the slots' offsets are left out: the state's 7..15 and a
-    // slot's link and partner. The rest, words and their offsets included, is equal.
+    // slot's link and partner. The rest, words and their offsets included, is equal: the
+    // selected slots are recorded as the cell's top slot's (length, word), once checked
+    // that the two slots name each other (and, for the original, hold the same fields).
     let placed = |k: &Kernel| {
         k.materialization
             .as_ref()
@@ -41,12 +63,7 @@ fn compare_materialization(
             .map(|m| {
                 let mut state = m.state;
                 state[7..15].fill(0);
-                let slots: Vec<u8> = m
-                    .slots
-                    .chunks(SLOT)
-                    .flat_map(|slot| slot[4..16].to_vec())
-                    .collect();
-                (state, m.payload.clone(), slots)
+                (state, m.payload.clone(), m.slots.clone())
             })
             .collect::<Vec<_>>()
     };
