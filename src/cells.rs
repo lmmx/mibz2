@@ -45,6 +45,18 @@ struct Kernel {
     lay: Layout,
     rule_end: usize,
     letters: usize,
+    /// (research only, `memory-lever`) which induction runs: 0 the shipped one, else one of
+    /// the experiment's two (`cells_lever.rs`), and the lazy letters' state
+    #[cfg(feature = "memory-lever")]
+    variant: u8,
+    #[cfg(feature = "memory-lever")]
+    lz: Lazy,
+    /// (test only) how many times the last staged induction sent rules on; whether it is
+    /// to panic right after its first send (the fence's unwinding exit)
+    #[cfg(all(test, feature = "memory-lever"))]
+    rule_sends: usize,
+    #[cfg(all(test, feature = "memory-lever"))]
+    panic_after_send: bool,
     /// this call laid the bottom slots out in its output buffer (their canary is there)
     bottom_laid: bool,
     /// (test only) the writer kept the rules' first places in the dead top slots
@@ -73,6 +85,9 @@ struct Materialization {
 }
 #[cfg(test)]
 include!("cells_original_test.rs");
+// (research only: the memory-lever experiment's two kernels)
+#[cfg(feature = "memory-lever")]
+include!("cells_lever.rs");
 
 /// Per-call reach, compiled out of production. Counts the actual writer branches,
 /// not column lengths or inferred grammar properties.
@@ -371,9 +386,17 @@ impl Kernel {
                 16
             };
             let at = (cw >> 32) as usize;
+            // a rule is its two factors (state 2 and 3): a staged rule is not in the buffer
+            // yet (`memory-lever`), so no rule is read from it here; the comparison tests
+            // compare the rules' region once the induction is over
+            let payload = if cw as u32 <= SMALL {
+                self.buf[at..at + size].to_vec()
+            } else {
+                [state[2].to_ne_bytes(), state[3].to_ne_bytes()].concat()
+            };
             log.push(Materialization {
                 state,
-                payload: self.buf[at..at + size].to_vec(),
+                payload,
                 slots: Vec::new(),
             });
         }
@@ -438,6 +461,14 @@ impl Kernel {
                     "cells canary"
                 );
             }
+            #[cfg(feature = "memory-lever")]
+            if let (Some(out), true) = (out, self.bottom_laid && self.variant == LAZY) {
+                let end = self.lz.bend;
+                assert!(
+                    out[end..end + GAP].iter().all(|&x| x == 0xA5),
+                    "cells canary"
+                );
+            }
         }
         let _ = out;
     }
@@ -458,12 +489,22 @@ impl Kernel {
         if budget > n || n >= 1 << 24 || recs.len() > n {
             return Err(Refusal::Invalid);
         }
+        #[cfg(not(feature = "memory-lever"))]
         let result = self.slots(n, recs, p, budget, forced, out).and_then(|()| {
             // (research only, `phase-counters`: the induction's scope)
             #[cfg(feature = "phase-counters")]
             let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
             self.induce_cells(budget, out)
         });
+        // (research only, `memory-lever`: the same, or one of the experiment's inductions)
+        #[cfg(feature = "memory-lever")]
+        let result = self
+            .first_stage(n, recs, p, budget, forced, out)
+            .and_then(|()| {
+                #[cfg(feature = "phase-counters")]
+                let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
+                self.induce_variant(budget, out)
+            });
         self.check_canaries(Some(out));
         let (word, len, cells) = result?;
         let period = (len & !MARK) as usize;
@@ -582,6 +623,14 @@ impl Kernel {
             (tops + cap + GAP, tops + cap + GAP + bcap + GAP)
         };
         let rules = arena + BYTES as usize + 256 + 16 + 16 * budget + 32 + GAP;
+        // (research only, `memory-lever`: the staged kernel's rules start at a multiple of
+        // 16, so that every rule's offset is one, `Stage`)
+        #[cfg(feature = "memory-lever")]
+        let rules = if self.variant == STAGED_RULES {
+            (rules + 15) & !15
+        } else {
+            rules
+        };
         let allocation = rules + 16 * budget + 16 + GAP;
         // (every offset a slot holds is 4 bytes, the other order's included: a layout whose
         // total would reach u32::MAX is refused here, and Cells declines the block)
@@ -945,6 +994,13 @@ impl Kernel {
     /// `word` and `len` are what `induce_cells` returned for the block `slots` was given.
     #[inline(never)]
     fn write_cells(&mut self, word: u32, len: u32, n: usize, out: &mut Vec<u8>) {
+        // (test only, `memory-lever`: the writer reads the rules, so no store that went past
+        // the cache may still be waiting for its fence; `cells_lever.rs`'s model)
+        #[cfg(all(test, feature = "memory-lever"))]
+        assert!(
+            !PENDING.with(|p| p.get()),
+            "rules stored past the cache are read before a fence"
+        );
         #[cfg(test)]
         {
             self.writer_reach = WriterReach::default();
@@ -1621,4 +1677,6 @@ mod tests {
         );
     }
     include!("cells_selective_test.rs");
+    #[cfg(feature = "memory-lever")]
+    include!("cells_lever_test.rs");
 }

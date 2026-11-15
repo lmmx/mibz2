@@ -127,6 +127,20 @@ impl<R: Read + Send + 'static> BzReader<R> {
         Self::on(r, StreamDecoder::planned(plan, slots, kernels))
     }
 
+    /// Research, opt-in (`memory-lever`): workers with one of the experiment's two Cells
+    /// kernels (`StreamDecoder::lever`), with `slots` blocks in flight and the kernels given
+    #[cfg(feature = "memory-lever")]
+    #[doc(hidden)]
+    pub fn parallel_lever(
+        r: R,
+        threads: usize,
+        slots: usize,
+        kernels: Kernels,
+        lazy: bool,
+    ) -> Self {
+        Self::on(r, StreamDecoder::lever(threads, slots, kernels, lazy))
+    }
+
     /// Research, opt-in: `teams` pipelined teams of `k` (`StreamDecoder::pipelined`),
     /// with `slots` blocks in flight and the kernels given
     #[doc(hidden)]

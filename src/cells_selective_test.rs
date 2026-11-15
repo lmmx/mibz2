@@ -20,8 +20,28 @@ fn compare_materialization(
     // are 8 bytes, the slot before and the letter's top slot.
     original.wide_bottom = true;
     candidate.wide_bottom = false;
+    // (research only, `memory-lever`: the candidate may be one of the experiment's kernels.
+    // The staged one's rules start at a multiple of 16, so the original is laid out the same
+    // way; the lazy one has no letters' slots to compare.)
+    #[cfg(feature = "memory-lever")]
+    let lazy = candidate.variant == LAZY;
+    #[cfg(not(feature = "memory-lever"))]
+    let lazy = false;
+    #[cfg(feature = "memory-lever")]
+    {
+        original.variant = if candidate.variant == STAGED_RULES {
+            STAGED_RULES
+        } else {
+            0
+        };
+    }
+    // the candidate's output buffer: the lazy kernel keeps its entries and bottom slots there
+    let mut cout = Vec::new();
     let a = original.slots(column.len(), recs.records(), origin, budget, true, &mut Vec::new());
-    let b = candidate.slots(column.len(), recs.records(), origin, budget, true, &mut Vec::new());
+    #[cfg(not(feature = "memory-lever"))]
+    let b = candidate.slots(column.len(), recs.records(), origin, budget, true, &mut cout);
+    #[cfg(feature = "memory-lever")]
+    let b = candidate.first_stage(column.len(), recs.records(), origin, budget, true, &mut cout);
     assert_eq!(a, b);
     if a.is_err() {
         return Vec::new();
@@ -31,9 +51,11 @@ fn compare_materialization(
     // bottom slot names the same top slot, which names it back, and the slot before it; the
     // original's wide bottom slot repeats its top slot's fields.
     let (tops, bots) = (original.lay.tops, original.lay.bots);
-    assert_eq!((candidate.lay.tops, candidate.lay.bots), (tops, bots));
+    assert_eq!(candidate.lay.tops, tops);
+    assert!(lazy || candidate.lay.bots == bots);
+    assert_eq!(candidate.letters, original.letters);
     let read = |k: &Kernel, at: usize| u32::from_ne_bytes(k.buf[at..at + 4].try_into().unwrap());
-    for i in 0..original.letters {
+    for i in 0..if lazy { 0 } else { original.letters } {
         let t = tops + i * SLOT;
         assert_eq!(original.buf[t..t + 16], candidate.buf[t..t + 16]);
         let (wide, narrow) = (bots + i * SLOT, bots + i * BSLOT);
@@ -48,7 +70,10 @@ fn compare_materialization(
         }
     }
     let a = original.induce_cells_original(budget);
-    let b = candidate.induce_cells(budget, &mut Vec::new());
+    #[cfg(not(feature = "memory-lever"))]
+    let b = candidate.induce_cells(budget, &mut cout);
+    #[cfg(feature = "memory-lever")]
+    let b = candidate.induce_variant(budget, &mut cout);
     assert_eq!(a, b, "column {column:?}, origin {origin}, budget {budget}");
     // The slots a cell is written to differ (a promised slot is the one let go at the
     // front, not a fresh one), so the slots' offsets are left out: the state's 7..15 and a
@@ -69,9 +94,14 @@ fn compare_materialization(
     };
     assert_eq!(placed(original), placed(candidate));
     original.check_canaries(None);
-    candidate.check_canaries(None);
+    candidate.check_canaries(if lazy { Some(&cout) } else { None });
     if let Ok((word, len, _)) = a {
         assert_eq!(original.rule_end, candidate.rule_end);
+        // once the induction is over, the candidate's rules' region is the original's, byte
+        // for byte (a staged kernel's rules were sent on a stage at a time)
+        let rules = original.lay.rules..original.rule_end;
+        assert_eq!(candidate.lay.rules, rules.start);
+        assert_eq!(original.buf[rules.clone()], candidate.buf[rules]);
         let want = oracle(column, origin);
         let mut old_out: Vec<_> = want.iter().map(|x| !x).collect();
         let mut new_out = old_out.clone();

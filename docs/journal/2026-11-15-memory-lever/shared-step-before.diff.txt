@@ -1,0 +1,35 @@
+diff --git a/src/cells.rs b/src/cells.rs
+index f058e801a..406faedb2 100644
+--- a/src/cells.rs
++++ b/src/cells.rs
+@@ -775,6 +775,9 @@ impl Kernel {
+             let (mut aw, mut bw);
+             let (mut bs, mut ts);
+             let (mut sa, mut sb) = (ft0 - SLOT, fb0 - BSLOT);
++            // the step before's two factors and its word: a cell of the same two factors is
++            // the same word, and takes it
++            let (mut paw, mut pbw, mut pword) = (0u64, 0u64, 0usize);
+             // the slots A and B were read from at the fronts: when one of them ends, its
+             // slot is the one its partner's next cell is promised
+             let (mut fa, mut fb);
+@@ -852,9 +855,17 @@ impl Kernel {
+                         wr64(base, rp, aw);
+                         wr64(base, rp + 8, bw);
+                     }
+-                    let word = if small { top } else { rp };
+-                    top += if small { len as usize } else { 0 };
+-                    rp += if small { 0 } else { 16 };
++                    let same = aw == paw && bw == pbw;
++                    let word = if same {
++                        pword
++                    } else if small {
++                        top
++                    } else {
++                        rp
++                    };
++                    top += if small && !same { len as usize } else { 0 };
++                    rp += if small || same { 0 } else { 16 };
++                    (paw, pbw, pword) = (aw, bw, word);
+                     let cw = len | (word as u64) << 32;
+                     #[cfg(test)]
+                     self.record_materialization([
