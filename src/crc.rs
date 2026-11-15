@@ -44,6 +44,7 @@ pub fn crc32(data: &[u8], k: Kernels) -> u32 {
     {
         if k.clmul && data.len() >= 128 {
             // SAFETY: `k.clmul` is set only when PCLMULQDQ, SSE4.1 and SSSE3 were detected
+            // (a `Kernels` invariant)
             return !unsafe { clmul_update(!0, data) };
         }
     }

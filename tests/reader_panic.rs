@@ -80,8 +80,8 @@ fn a_panicking_source() {
                             with_machine(Machine::service_target(), || BzReader::parallel(src, 10));
                         let dec = r.parallel_decoder().unwrap();
                         let on_target = cfg!(all(target_os = "linux", target_arch = "x86_64"))
-                            && k.avx2
-                            && k.clmul;
+                            && k.avx2()
+                            && k.clmul();
                         assert_eq!(dec.is_service(), on_target, "{reader}");
                         r
                     }
