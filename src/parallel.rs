@@ -2224,6 +2224,14 @@ pub enum Plan {
 /// cores
 pub const COOP_MIN_CORES: usize = 6;
 
+/// Below this many threads, each with a physical core of its own, the default stays on
+/// workers of a block each even from `COOP_MIN_CORES` cores: after Cells (0.3.0) and the
+/// slot layouts (0.3.2, 0.3.3), workers beat teams of 2 at 6 to 9 threads on the i9-10900K
+/// (14%, 11%, 8% and 4% faster; three teams of three still win at 10), the crossover's
+/// second run (#145; `just bench-crossover`). More threads than physical cores keep the
+/// teams: one block a thread on SMT siblings was 28-49% slower there.
+pub const WORKERS_BELOW_THREADS: usize = 10;
+
 /// A full block's T-vector: 900,000 rows × 4 bytes
 const FULL_TABLE: f64 = 3.6e6;
 
@@ -2274,8 +2282,9 @@ impl Plan {
     /// validated by the decoder A/B (bench/coop_decoder.py; on the i9,
     /// docs/journal/2026-10-29-cooperative-decoder.md):
     /// - where the machine's topology can't be read (only Linux's is, so far), or fewer
-    ///   than `COOP_MIN_CORES` physical cores serve the threads, production's `threads`
-    ///   workers, as today;
+    ///   than `COOP_MIN_CORES` physical cores serve the threads, or fewer than
+    ///   `WORKERS_BELOW_THREADS` threads each have a physical core of their own,
+    ///   production's `threads` workers;
     /// - else teams of 2 on the physical cores the threads can use (never SMT siblings), as
     ///   many as keep the live tables near 0.7 of the L3: the knee measured on the i9 at
     ///   two block sizes (workstation journal §9), 4 teams there;
@@ -2608,7 +2617,7 @@ pub(crate) fn plan_with(threads: usize, phys: Option<usize>, l3: Option<u64>) ->
         return Plan::Workers(threads);
     };
     let cores = threads.min(phys);
-    if cores < COOP_MIN_CORES {
+    if cores < COOP_MIN_CORES || (threads < WORKERS_BELOW_THREADS && threads <= phys) {
         return Plan::Workers(threads);
     }
     if phys == TEN_CORES.0 && l3 == Some(TEN_CORES.1) && threads >= TEN_CORES_MIN_THREADS {
@@ -3589,10 +3598,17 @@ mod plan_tests {
         assert_eq!(plan_with(5, i9.0, i9.1), Plan::Workers(5));
         assert_eq!(plan_with(8, None, i9.1), Plan::Workers(8));
         assert_eq!(plan_with(20, Some(4), i9.1), Plan::Workers(20));
-        // the i9: teams of 2, at most 4 (0.7 × 20 MiB over a full table)
-        assert_eq!(plan_with(6, i9.0, i9.1), Plan::Teams { teams: 3, k: 2 });
-        assert_eq!(plan_with(8, i9.0, i9.1), Plan::Teams { teams: 4, k: 2 });
-        assert_eq!(plan_with(9, i9.0, i9.1), Plan::Teams { teams: 4, k: 2 });
+        // the i9 below 10 threads, each on its own core: workers (the crossover's run 2)
+        for t in 6..=9 {
+            assert_eq!(plan_with(t, i9.0, i9.1), Plan::Workers(t), "{t}");
+        }
+        // more threads than physical cores, from 6 cores: teams of 2, at most 4 (0.7 × 20
+        // MiB over a full table), as before
+        assert_eq!(plan_with(8, Some(6), i9.1), Plan::Teams { teams: 3, k: 2 });
+        assert_eq!(plan_with(9, Some(8), i9.1), Plan::Teams { teams: 4, k: 2 });
+        assert_eq!(plan_with(16, Some(8), i9.1), Plan::Teams { teams: 4, k: 2 });
+        // a bigger machine below 10 threads: workers
+        assert_eq!(plan_with(8, Some(16), Some(32 << 20)), Plan::Workers(8));
         // the i9 at 10 threads or more: three teams of three (docs/journal/2026-11-06-three-tables.md)
         for t in [10, 11, 12, 16, 20, 64, usize::MAX] {
             assert_eq!(
