@@ -1,0 +1,3 @@
+431 blocks, 196 admitted; Counts { admitted: 196, density: 185, sparse: 0, floor: 0, budget: 2, invalid: 0, short_cycles: 0, cells: 20456299, letters: 11090867, slots: 3522639, slots_most: 337 }
+slots of each pool / letters, min median max: (0.295, 0.318, 0.337)
+cells / letters: (1.698, 1.848, 1.969)
