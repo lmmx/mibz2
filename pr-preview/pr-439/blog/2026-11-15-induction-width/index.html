@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps.">
+        <meta name="description" content="Taking the steps that cost no bookkeeping first would let mibz2 rebuild a block while keeping about a third as much in memory at its busiest moment.">
       
       
         <meta name="author" content="Louis Maddox">
       
       
-        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-439/blog/2026-11-15-rebuild-width/">
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-439/blog/2026-11-15-induction-width/">
       
       
         <link rel="describedby" href="../../llms.txt">
@@ -35,7 +35,7 @@
     
     
       
-        <title>The width of a rebuild: a third as much held at once, by reordering its steps - mibz2</title>
+        <title>The width of an induction: how much it must hold at once - mibz2</title>
       
     
     
@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=b6184259281e">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=0c31d198bb6b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=b6184259281e">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=0c31d198bb6b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=b6184259281e">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=0c31d198bb6b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=b6184259281e">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=0c31d198bb6b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=b6184259281e">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=0c31d198bb6b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=b6184259281e">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=0c31d198bb6b">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -89,19 +89,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="The width of a rebuild: a third as much held at once, by reordering its steps">
-  <meta property="og:description" content="Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps.">
-  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-439/blog/2026-11-15-rebuild-width/">
-  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-439/assets/social/blog-2026-11-15-rebuild-width.png">
+  <meta property="og:title" content="The width of an induction: how much it must hold at once">
+  <meta property="og:description" content="Taking the steps that cost no bookkeeping first would let mibz2 rebuild a block while keeping about a third as much in memory at its busiest moment.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-439/blog/2026-11-15-induction-width/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-439/assets/social/blog-2026-11-15-induction-width.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="The width of a rebuild: a third as much held at once, by reordering its steps">
+  <meta property="og:image:alt" content="The width of an induction: how much it must hold at once">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="The width of a rebuild: a third as much held at once, by reordering its steps">
-  <meta name="twitter:description" content="Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps.">
-  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-439/assets/social/blog-2026-11-15-rebuild-width.png">
-  <meta name="twitter:image:alt" content="The width of a rebuild: a third as much held at once, by reordering its steps">
+  <meta name="twitter:title" content="The width of an induction: how much it must hold at once">
+  <meta name="twitter:description" content="Taking the steps that cost no bookkeeping first would let mibz2 rebuild a block while keeping about a third as much in memory at its busiest moment.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-439/assets/social/blog-2026-11-15-induction-width.png">
+  <meta name="twitter:image:alt" content="The width of an induction: how much it must hold at once">
 
   </head>
   
@@ -154,7 +154,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The width of a rebuild: a third as much held at once, by reordering its steps
+              The width of an induction: how much it must hold at once
             
           </span>
         </div>
@@ -1169,7 +1169,7 @@
   <span class="md-ellipsis">
     
   
-  The width of a rebuild
+  The width of an induction
 
     
   </span>
@@ -1186,7 +1186,7 @@
   <span class="md-ellipsis">
     
   
-  The width of a rebuild
+  The width of an induction
 
     
   </span>
@@ -1223,10 +1223,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-why-are-only-the-long-words-state" class="md-nav__link">
+  <a href="#2-why-do-only-the-long-words-count" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Why are only the long words state?
+        2. Why do only the long words count?
       </span>
     </span>
   </a>
@@ -2239,10 +2239,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-why-are-only-the-long-words-state" class="md-nav__link">
+  <a href="#2-why-do-only-the-long-words-count" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Why are only the long words state?
+        2. Why do only the long words count?
       </span>
     </span>
   </a>
@@ -2315,7 +2315,7 @@
 
 
   
-    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-15-rebuild-width.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-15-induction-width.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
     </a>
@@ -2326,20 +2326,20 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="the-width-of-a-rebuild-a-third-as-much-held-at-once-by-reordering-its-steps">The width of a rebuild: a third as much held at once, by reordering its steps<a class="headerlink" href="#the-width-of-a-rebuild-a-third-as-much-held-at-once-by-reordering-its-steps" title="Permanent link">&para;</a></h1>
-<p class="post-dek">Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps.</p>
+<h1 id="the-width-of-an-induction-how-much-it-must-hold-at-once">The width of an induction: how much it must hold at once<a class="headerlink" href="#the-width-of-an-induction-how-much-it-must-hold-at-once" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Taking the steps that cost no bookkeeping first would let mibz2 rebuild a block while keeping about a third as much in memory at its busiest moment.</p>
 <p class="post-meta">15 November 2026 · 14 min read · <a href="#5-what-would-it-mean-for-mibz2">Research in progress</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
 <p><a href="../2026-11-10-rauzy-veech-reconstruction/">A new way back from the BWT</a> introduced Cells, mibz2's experimental way of undoing the Burrows–Wheeler transform (BWT) that bzip2 applies to every block. Two posts this week cut the memory Cells uses: <a href="../2026-11-15-slot-recycling/">hand-me-down slots</a> and <a href="../2026-11-15-bottom-slots/">one copy of each interval's details instead of two</a>. This post asks a different question about the same memory: how much of it does the mathematics actually need at any one moment?</p>
 <p><strong>The recap.</strong> bzip2 sorts the rotations of a block and stores the last byte of each, the <em>last column</em>; each sorted rotation is a <em>row</em>. To decode, mibz2 follows a map called LF from row to row, reading one byte per step, which spells out the block backwards. A <em>run</em> is a stretch of equal bytes in the last column, and LF moves each run's rows as one shifted interval. Cells works on those intervals instead of on rows. Each step deletes some rows from the map and lets one interval jump straight over them. That interval now stands for more than one byte of text. When one interval is left, it stands for the whole block. The code calls each interval a <em>letter</em>, and the text it stands for its <em>word</em>. At the start there is one letter per run, and every word is one byte long.</p>
-<p><strong>What width is.</strong> At any moment of the rebuild, some letters still have a one-byte word. Each of those is an untouched piece of an original run. Its length, place and byte can be read off the list of runs, so in principle it needs no record of its own. Only the letters whose word has grown longer than one byte are new information. Call the most of those alive at once the rebuild's <strong>width</strong>, W. It is counted, like everything here, as a share of r, the number of runs in the block. Cells today writes a slot for every one of the r letters before its first step, and keeps r slots throughout.</p>
+<p><strong>What width is.</strong> At any moment of the rebuild, some letters still have a one-byte word. Each of those is an untouched piece of an original run. Its length, place and byte can be read off the list of runs, so in principle it needs no record of its own. Only the letters whose word has grown longer than one byte are new information. Call the most of those alive at once the <strong>width</strong> of the induction (the rebuild's sequence of steps), W. It is counted, like everything here, as a share of r, the number of runs in the block. Cells today writes a slot for every one of the r letters before its first step, and keeps r slots throughout.</p>
 <p><strong>What was found.</strong> Width depends on the order in which the steps are taken, by about three times.</p>
 <ul>
 <li><strong>Cells' order</strong> always takes its step at the right-hand end of the map. At its busiest it holds about <strong>0.32 r</strong> letters with long words. That is the median over the 233 large blocks of the benchmark's Wikidata corpus, an extract of a Wikidata dump.</li>
 <li><strong>Taking the free steps first</strong> brings that peak down to about <strong>0.08 to 0.12 r</strong>, depending on what is done when no free step is ready. It is <strong>0.11 r</strong> if the rest follows Cells' own order. A <em>free</em> step is one whose bookkeeping creates no new boundary between intervals (<a href="#3-does-the-order-of-steps-matter">section 3</a> shows one). The same order also takes about 20% fewer steps: 1.46 r instead of 1.84 r.</li>
-<li><strong>The free steps have a fixed end point.</strong> Taken in any order until none is left, they always reach the same state, in the same number of steps. That is now proved (<a href="https://github.com/lmmx/mibz2/pull/438">#438</a>). On Wikidata the state has about 0.19 r letters, and no free-first order's peak exceeded it on any block.</li>
+<li><strong>The free steps have a fixed end point.</strong> Taken in any order until none is left, they always reach the same state, in the same number of steps. That is now proved (<a href="https://github.com/lmmx/mibz2/pull/438">#438</a>). It follows that a kernel could take free steps in whichever order suits it, or share independent ones among threads. On Wikidata the end state has about 0.19 r letters, and no free-first order's peak exceeded it on any block.</li>
 </ul>
 <figure class="bf-fig">
 <p class="bf-title">How many letters the rebuild holds, per 100 runs of a Wikidata block</p>
@@ -2347,10 +2347,10 @@
 <figcaption>Counted, not timed: medians over the 233 blocks of at least 65,536 rows in the Wikidata corpus. Amber and green are the peaks of letters whose word is longer than one byte, under Cells’ right-end order and under free steps first. Grey is the number of letters, long words or not, left once the free steps run out.</figcaption>
 </figure>
 
-<p><strong>What is classical and what is new.</strong> The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as <em>cutwidth</em>: line a graph's vertices up, cut the line between any two, and count the edges that cross. <a href="#2-why-are-only-the-long-words-state">Section 2</a> says where the line between old and new falls.</p>
+<p><strong>What is classical and what is new.</strong> The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as <em>cutwidth</em>: line a graph's vertices up, cut the line between any two, and count the edges that cross. <a href="#2-why-do-only-the-long-words-count">Section 2</a> says where the line between old and new falls.</p>
 <p><strong>What this is not.</strong> These are counts, not timings. They come from one family of text, Wikidata's JSON, with four blocks of prose beside it. Prose gains less: the right end peaks at 0.37 r and free-first orders at 0.21 r. The link to cutwidth is a conjecture. Above all, no decoder that takes free steps first has been built or timed. Finding the free steps needs a worklist, which an earlier count priced at about 150 instructions a run against the right-end sweep's 115. Whether the smaller state pays for that is the next question, not an answer here.</p>
-<p><strong>Why mibz2 cares.</strong> mibz2 decodes blocks in parallel in one of two ways: each thread takes a block of its own, or threads form teams that share one block. On a 10-core Intel desktop at ten threads, a block per thread took 1.040 times the teams' wall time in the latest run (<a href="https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992">the run's report</a>). Its 95% interval is 1.019 to 1.061. In a run earlier the same day, before the latest memory cut to Cells (<a href="https://github.com/lmmx/mibz2/pull/433">#433</a>), it took 1.153 times. Those are two runs on one machine, so the change is indicative. When every thread runs its own block, each thread's working memory competes for the shared cache. Each cut to Cells' memory so far has narrowed the gap. A third of the live state is therefore a reason to look further, not a forecast of a speed-up.</p>
-<p><a href="#1-what-does-the-rebuild-hold-on-a-nine-byte-word">Section 1</a> works a nine-byte word by hand and draws its width. <a href="#2-why-are-only-the-long-words-state">Section 2</a> says why only the long words count, and what is classical. <a href="#3-does-the-order-of-steps-matter">Section 3</a> compares twelve orders of steps, and <a href="#4-how-narrow-can-a-free-first-order-be">section 4</a> gives the bound and the theorem. <a href="#5-what-would-it-mean-for-mibz2">Section 5</a> says what is open, and <a href="#6-where-to-read-more">section 6</a> lists the reading.</p>
+<p><strong>Why mibz2 cares.</strong> Width is how much state the rebuild keeps in memory. When every thread decodes a block of its own, those states share the processor's cache, and the threads contend for it. Less state per block leaves less for the cache to hold. At ten threads on a 10-core Intel desktop, a block per thread takes 1.040 times the wall time of threads working in teams (95% interval 1.019 to 1.061; <a href="https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992">the run's report</a>), so the margin is small. Whether a narrower induction closes it has not been tested.</p>
+<p><a href="#1-what-does-the-rebuild-hold-on-a-nine-byte-word">Section 1</a> works a nine-byte word by hand and draws its width. <a href="#2-why-do-only-the-long-words-count">Section 2</a> says why only the long words count, and what is classical. <a href="#3-does-the-order-of-steps-matter">Section 3</a> compares twelve orders of steps, and <a href="#4-how-narrow-can-a-free-first-order-be">section 4</a> gives the bound and the theorem. <a href="#5-what-would-it-mean-for-mibz2">Section 5</a> says what is open, and <a href="#6-where-to-read-more">section 6</a> lists the reading.</p>
 <h2 id="1-what-does-the-rebuild-hold-on-a-nine-byte-word">1. What does the rebuild hold, on a nine-byte word?<a class="headerlink" href="#1-what-does-the-rebuild-hold-on-a-nine-byte-word" title="Permanent link">&para;</a></h2>
 <p>Suppose you want to compress the word <code>possesses</code>. Its nine rotations, sorted, are its nine rows, and the last byte of each gives the last column <code>sspssseeo</code>. LF sends each row to the row of the rotation one byte earlier in the text:</p>
 <table>
@@ -2430,7 +2430,7 @@
 </tbody>
 </table>
 <p>Each long word can be checked in <code>possesses</code>: <code>ess</code>, <code>oss</code> and <code>es</code> occur in it, and so do <code>se</code> and <code>po</code>. The steps themselves are animated, on the three-byte word <code>aab</code>, in <a href="../2026-11-10-rauzy-veech-reconstruction/#1-rebuilding-aab-in-two-steps">the post that introduced Cells</a>.</p>
-<h2 id="2-why-are-only-the-long-words-state">2. Why are only the long words state?<a class="headerlink" href="#2-why-are-only-the-long-words-state" title="Permanent link">&para;</a></h2>
+<h2 id="2-why-do-only-the-long-words-count">2. Why do only the long words count?<a class="headerlink" href="#2-why-do-only-the-long-words-count" title="Permanent link">&para;</a></h2>
 <p>A letter whose word is one byte is a row, or a few adjacent rows, that LF sends straight to another kept row. It is a piece of an original run, cut shorter. Its first row, its length and the row it goes to all follow from the run it lies in. A decoder could leave it implicit and compute it when needed. A letter with a long word is different: where it jumps, and what it reads on the way, are the result of the steps taken so far.</p>
 <p>The long words can be read from the arcs. A kept row has a long word exactly when its LF link crosses into the removed rows. Under Cells' order, the research record proves where each long-word letter begins (<a href="https://github.com/lmmx/mibz2/blob/f03b0fdca71abf45133d0720802ff3d3255a567a/docs/journal/monodromy/2026-11-15-width.md">the census entry</a>). It begins either at a run's first row whose link crosses the cut, or at the kept row whose path through the removed rows passes a run's first row. So the width counts crossings of the cut, bundled by runs.</p>
 <figure class="bf-fig bf-formal">
@@ -2673,19 +2673,19 @@ Right end: <span class="arithmatex">\(W = 3\)</span>, <span class="arithmatex">\
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=b6184259281e"></script>
+        <script src="../../assets/javascripts/bench.js?v=0c31d198bb6b"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=b6184259281e"></script>
+        <script src="../../assets/javascripts/couriers.js?v=0c31d198bb6b"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=b6184259281e"></script>
+        <script src="../../assets/javascripts/blog.js?v=0c31d198bb6b"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=b6184259281e"></script>
+        <script src="../../assets/javascripts/frontier.js?v=0c31d198bb6b"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=b6184259281e"></script>
+        <script src="../../assets/javascripts/observatory.js?v=0c31d198bb6b"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=b6184259281e"></script>
+        <script src="../../assets/javascripts/katex.js?v=0c31d198bb6b"></script>
       
     
   </body>
