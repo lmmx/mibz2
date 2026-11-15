@@ -1609,6 +1609,20 @@
       "status": "finished",
       "disposition": "PASS B5 closure; lift D106 scoped evidence HOLD.",
       "comment": 6882247244
+    },
+    {
+      "id": "D108",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6901903478,
+      "pr": 161,
+      "sha": "12ae88b03d2f7ce2114b71e98dffc69455a2c51c",
+      "evidence_digest": "sha256:1fdb0fa0114694512b7239a6c894a1e0872b62684b1f00d3a054ed63312fc642",
+      "commit": "04bdd5092080148714e3fa79f297beffeb88c471",
+      "status": "complete",
+      "disposition": "HOLD adoption/integration: required ordering mutation target survives; source geometry and guard placement supported."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1973,7 +1987,9 @@
     "65d3e29523927d81b276a09d72eb2bf8fc8cc8fb",
     "24d2a81bc62fd767c418e8b664f1b00d96753771",
     "063bc9ad9e9cb618c106d5139fe1e8676af0cce9",
-    "0ec8fb297de458bf845d1b9fda557b955b01dfba"
+    "0ec8fb297de458bf845d1b9fda557b955b01dfba",
+    "bc384f4b1c4a1fb5054d9d307035cea247c8290e",
+    "04bdd5092080148714e3fa79f297beffeb88c471"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2081,7 +2097,8 @@
     6867883717,
     6868538108,
     6881612485,
-    6882196843
+    6882196843,
+    6901903478
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2161,8 +2178,9 @@
   },
   "current_execution": {
     "active_comment": 6901903478,
-    "status": "in progress",
-    "decision": "D108"
+    "status": "complete",
+    "decision": "D108",
+    "work_commit": "04bdd5092080148714e3fa79f297beffeb88c471"
   },
   "duplicate_events": [
     {
@@ -2986,7 +3004,14 @@
       "disposition": "Scoped source integration PROCEED; native/Miri completion not established; adoption restrictions preserved."
     },
     "391|c915a95eb7288843ea25707bffc87c9d252f4bde|sha256:7059dc54dbd7912a0150373230510f32a63d37d8cc24558ad055283a179c7f68",
-    "391|24ff5f72cec50f441a9a95a5927f640c00fbe721|sha256:b32a36e1e76116abd1a835058e01573de97a5505e2f23b78f3a9efb4c1814226"
+    "391|24ff5f72cec50f441a9a95a5927f640c00fbe721|sha256:b32a36e1e76116abd1a835058e01573de97a5505e2f23b78f3a9efb4c1814226",
+    {
+      "pr": 444,
+      "sha": "12ae88b03d2f7ce2114b71e98dffc69455a2c51c",
+      "evidence_digest": "sha256:1fdb0fa0114694512b7239a6c894a1e0872b62684b1f00d3a054ed63312fc642",
+      "incoming_comment": 6901903478,
+      "decision": "D108"
+    }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
   "inbox_comments": [
@@ -3864,9 +3889,11 @@
     {
       "comment_id": 6901903478,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D108",
-      "progress": "Receipt; migration branch and manifest verified. Reviewing PR444 staged rules at 12ae88b03d2f7ce2114b71e98dffc69455a2c51c."
+      "progress": "Review committed; scoped B5/B6 ordering-mutation evidence HOLD. Ready to publish REVIEW145.",
+      "receipt_commit": "bc384f4b1c4a1fb5054d9d307035cea247c8290e",
+      "work_commit": "04bdd5092080148714e3fa79f297beffeb88c471"
     }
   ],
   "migrated_from": {
