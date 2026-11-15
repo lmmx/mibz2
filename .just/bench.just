@@ -292,6 +292,12 @@ bench-release-scaling NEW="" OLD="" ROUNDS="10" THREADS="" *FILES="":
     mv "$rec/$(ls "$rec")" "$O/recorded" && rmdir "$rec"
     bash bench/bundle.sh "$O"
 
+# The Cells induction elision (#408) against its merge base on this machine, at the thread
+# counts where the shipped decoder uses Cells (below 6 physical cores) and two above as a
+# no-change check (#145 LOG on the queue entry). The release-scaling recipe, pinned to two commits.
+bench-elision-scaling:
+    just bench-release-scaling 2bb8e5d406fa57efe78c992349523ca0e25f5e85 55a58b18b1a40d7ee0ba01ea47a48bf60f8ce2ca 10 "1,2,3,4,5,6,8"
+
 # Team size against live tables (docs/journal/2026-11-06-team-size.md, registered before any
 # run): what holds the decoder at its 8-thread ceiling. The cooperative decoder at teams × k
 # with the default's window (mibz2-team2/3/4 at T threads run T // k teams of k; mibz2, the
