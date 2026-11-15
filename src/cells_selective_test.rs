@@ -52,9 +52,11 @@ fn compare_materialization(
     assert_eq!(a, b, "column {column:?}, origin {origin}, budget {budget}");
     // The slots a cell is written to differ (a promised slot is the one let go at the
     // front, not a fresh one), so the slots' offsets are left out: the state's 7..15 and a
-    // slot's link and partner. The rest, words and their offsets included, is equal: the
-    // selected slots are recorded as the cell's top slot's (length, word), once checked
-    // that the two slots name each other (and, for the original, hold the same fields).
+    // slot's link and partner. A word's offset differs too once an equal one-row cell's
+    // word is linked (the arena holds fewer bytes after it), so the words are compared as
+    // their lengths (marks included) and their bytes: A's, B's and the cell's in the
+    // state, the cell's in the payload, and the top slot's (length, word) in the slots. The
+    // rules' end is the same: a linked word would have been kept as bytes.
     let placed = |k: &Kernel| {
         k.materialization
             .as_ref()
@@ -63,7 +65,12 @@ fn compare_materialization(
             .map(|m| {
                 let mut state = m.state;
                 state[7..15].fill(0);
-                (state, m.payload.clone(), m.slots.clone())
+                let words = [2, 3].map(|i| k.word_bytes(state[i]));
+                for i in [2, 3, 4] {
+                    state[i] &= 0xFFFF_FFFF;
+                }
+                state[5] = 0;
+                (state, words, m.payload.clone(), m.slots.clone())
             })
             .collect::<Vec<_>>()
     };
@@ -96,6 +103,8 @@ fn compare_materialization(
 #[test]
 fn cells_selective_exhaustive_state() {
     let (mut old, mut new) = (Kernel::default(), Kernel::default());
+    // equal one-row cells' words linked by the candidate, which the original copies
+    let mut links = 0;
     for (alphabet, max_n) in [(2usize, 8u32), (3, 6)] {
         for n in 1..=max_n {
             for mut digits in 0..alphabet.pow(n) {
@@ -108,10 +117,12 @@ fn cells_selective_exhaustive_state() {
                     .collect();
                 for origin in 0..n {
                     compare_materialization(&mut old, &mut new, &column, origin, n as usize);
+                    links += new.links;
                 }
             }
         }
     }
+    assert!(links > 0);
 }
 
 #[test]

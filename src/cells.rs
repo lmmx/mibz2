@@ -58,6 +58,12 @@ struct Kernel {
     /// the layout the original induction (`induce_cells_original`) reads
     #[cfg(test)]
     wide_bottom: bool,
+    /// (test only) the equal one-row cells whose words were linked, not copied
+    #[cfg(test)]
+    links: usize,
+    /// (test only) the linked words copied by the induction, as factors of a small word
+    #[cfg(test)]
+    links_read: usize,
 }
 #[cfg(test)]
 #[derive(Debug, PartialEq, Eq)]
@@ -82,6 +88,8 @@ struct WriterReach {
     long_copies: usize,
     spine_recopies: usize,
     repetitions: usize,
+    /// linked words written as factors of a rule, from their two factors
+    linked: usize,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Refusal {
@@ -352,6 +360,45 @@ unsafe fn copy_long(dst: *mut u8, src: *const u8, len: usize) {
     }
 }
 
+/// A small word's bytes, `len` of them, to `dst`, read as 16-byte moves (`copy16`): from
+/// the arena; or, for a linked word (its offset below `bots`, in the top slots' region),
+/// from its two factors' places, its first factor's (length, word) at `at + 8` and its
+/// second's at `at`. A linked word is an equal one-row cell's (`induce_cells`): its
+/// factors are never linked, so this reads one node at most, never a chain.
+#[inline(always)]
+unsafe fn copy16_word(dst: *mut u8, base: *const u8, w: u64, bots: usize) {
+    let at = (w >> 32) as usize;
+    // SAFETY: caller provides a small word made by the induction and 32 writable bytes at
+    // dst; a linked word's node is a top slot, its factors arena words with 16 bytes after
+    // them inside the buffer, of lengths summing to the word's (at most SMALL)
+    unsafe {
+        if at < bots {
+            let (a, b) = (rd64(base, at + 8), rd64(base, at));
+            copy16(dst, base.add((a >> 32) as usize));
+            copy16(dst.add(a as u32 as usize), base.add((b >> 32) as usize));
+        } else {
+            copy16(dst, base.add(at));
+        }
+    }
+}
+
+/// The writer's form of `copy16_word`: exactly the word's `len` bytes to `dst`
+#[inline(always)]
+unsafe fn copy_small_word(dst: *mut u8, base: *const u8, w: u64, len: usize, bots: usize) {
+    let at = (w >> 32) as usize;
+    // SAFETY: as copy16_word, with `len` bytes writable at dst
+    unsafe {
+        if at < bots {
+            let (a, b) = (rd64(base, at + 8), rd64(base, at));
+            let la = a as u32 as usize;
+            copy_small(dst, base.add((a >> 32) as usize), la);
+            copy_small(dst.add(la), base.add((b >> 32) as usize), b as u32 as usize);
+        } else {
+            copy_small(dst, base.add(at), len);
+        }
+    }
+}
+
 impl Kernel {
     /// A bottom slot's size: `BSLOT`, or (test only) `SLOT` for the original induction
     #[inline(always)]
@@ -365,25 +412,41 @@ impl Kernel {
 
     #[cfg(test)]
     fn record_materialization(&mut self, state: [u64; 16]) {
-        if let Some(log) = &mut self.materialization {
+        if self.materialization.is_some() {
             let cw = state[4];
             assert_eq!(
                 cw as u32 <= SMALL,
                 (cw >> 32) < self.lay.rules as u64,
                 "selected representation"
             );
-            let size = if cw as u32 <= SMALL {
-                cw as u32 as usize
-            } else {
-                16
-            };
-            let at = (cw >> 32) as usize;
-            log.push(Materialization {
-                state,
-                payload: self.buf[at..at + size].to_vec(),
-                slots: Vec::new(),
-            });
+            let payload = self.word_bytes(cw);
+            if let Some(log) = self.materialization.as_mut() {
+                log.push(Materialization {
+                    state,
+                    payload,
+                    slots: Vec::new(),
+                });
+            }
         }
+    }
+
+    /// (test only) a word's bytes, as the writer would write them: a rule's factors', a
+    /// linked word's two factors', or the arena's (the mark left out of its length)
+    #[cfg(test)]
+    fn word_bytes(&self, w: u64) -> Vec<u8> {
+        let (len, at) = ((w as u32 & !MARK) as usize, (w >> 32) as usize);
+        let read = |at: usize| u64::from_ne_bytes(self.buf[at..at + 8].try_into().unwrap());
+        let bytes = if at >= self.lay.rules {
+            [self.word_bytes(read(at)), self.word_bytes(read(at + 8))].concat()
+        } else if at < self.lay.bots {
+            let (a, b) = (read(at + 8), read(at));
+            assert!(a >> 32 >= self.lay.bots as u64 && b >> 32 >= self.lay.bots as u64);
+            [self.word_bytes(a), self.word_bytes(b)].concat()
+        } else {
+            self.buf[at..at + len].to_vec()
+        };
+        assert_eq!(bytes.len(), len);
+        bytes
     }
 
     /// The cell's (length, word) as its top slot holds them, after checking that the two
@@ -391,7 +454,7 @@ impl Kernel {
     #[cfg(test)]
     fn record_selected_slots(&mut self, ts: usize, bs: usize) {
         let wide = self.bslot() == SLOT;
-        if let Some(log) = &mut self.materialization {
+        if self.materialization.is_some() {
             let read = |at: usize| u32::from_ne_bytes(self.buf[at..at + 4].try_into().unwrap());
             let fields = &self.buf[ts + 4..ts + 16];
             if wide {
@@ -401,7 +464,14 @@ impl Kernel {
                 assert_eq!(read(bs + 4) as usize, ts);
             }
             assert_eq!(read(ts + 16) as usize, bs);
-            log.last_mut().unwrap().slots.extend_from_slice(fields);
+            // the length and the word's length as stored; the word as its bytes (its offset
+            // differs once a word is linked: the arena then holds fewer bytes)
+            let mut fields = self.buf[ts + 4..ts + 12].to_vec();
+            let cw = u64::from_ne_bytes(self.buf[ts + 8..ts + 16].try_into().unwrap());
+            fields.extend(self.word_bytes(cw));
+            if let Some(log) = &mut self.materialization {
+                log.last_mut().unwrap().slots.extend(fields);
+            }
         }
     }
 
@@ -686,6 +756,14 @@ impl Kernel {
     /// word kept as a rule. A rule is its two factors as their slots held them: (length,
     /// word) twice.
     ///
+    /// An equal one-row cell (both letters have one point left) whose word is small and
+    /// whose two factors are not linked is linked instead of copied: its word's offset is
+    /// the top slot A was read from, which the cell lets go (A ends, and the equal cell
+    /// promises no slot) and which already holds A's (length, word) at 8; B's is written at
+    /// 0. That slot is never written again. The cell is one point, so its word is a factor
+    /// of exactly one later word: its bytes are copied once, by that reader (`copy16_word`
+    /// in the induction, `copy_small_word` in the writer), from its two factors' places.
+    ///
     /// Returns (the cycle's word, its length with the mark, cells). `slots` has run on this
     /// kernel for the block, and nothing has changed since.
     #[inline(never)]
@@ -696,13 +774,18 @@ impl Kernel {
         if rr == 0 || self.buf.len() < lay.rules + 16 || self.bslot() != BSLOT {
             return Err(Refusal::Invalid);
         }
+        #[cfg(test)]
+        {
+            (self.links, self.links_read) = (0, 0);
+        }
         let base = self.buf.as_mut_ptr();
         // SAFETY: `slots` sized the words' regions for budget cells, and the counter is
         // checked before each cell; a slot's offset is a letter's slot, written by `slots`
         // inside its order's region (a promised slot is one of them, let go at the front);
         // a bottom slot's second field is a top slot, so a letter read through it is read
         // inside the top region; a word's offset is in the arena or the rules, with 16
-        // bytes after it inside the buffer.
+        // bytes after it inside the buffer, or a linked word's node, a top slot whose two
+        // (length, word) fields name arena words.
         unsafe {
             let mut top = lay.arena + BYTES as usize + 256 + 16;
             let mut rp = lay.rules;
@@ -784,19 +867,44 @@ impl Kernel {
                     let len = la + lb;
                     // MARK remains in len: even a short marked word must be a rule.
                     let small = len <= SMALL as u64;
-                    if small {
-                        copy16(base.add(top), base.add((aw >> 32) as usize));
-                        copy16(
-                            base.add(top + la.min(16) as usize),
-                            base.add((bw >> 32) as usize),
-                        );
+                    // An equal one-row cell's small word, of two words neither linked, is
+                    // linked, not copied: A's slot at the front is let go by this cell and
+                    // already holds A's (length, word) at 8, so B's goes at 0, and the
+                    // node is the cell's word. Its one reader copies its bytes (the cell is
+                    // one point, so its word is a factor once).
+                    let link = small
+                        && ra == 1
+                        && rb == 1
+                        && (aw >> 32) as usize >= lay.bots
+                        && (bw >> 32) as usize >= lay.bots;
+                    if link {
+                        debug_assert_eq!(rd64(base, fa + 8), aw);
+                        wr64(base, fa, bw);
+                    } else if small {
+                        #[cfg(test)]
+                        {
+                            self.links_read += usize::from((aw >> 32) < lay.bots as u64)
+                                + usize::from((bw >> 32) < lay.bots as u64);
+                        }
+                        copy16_word(base.add(top), base, aw, lay.bots);
+                        copy16_word(base.add(top + la as usize), base, bw, lay.bots);
                     } else {
                         wr64(base, rp, aw);
                         wr64(base, rp + 8, bw);
                     }
-                    let word = if small { top } else { rp };
-                    top += if small { len as usize } else { 0 };
+                    let word = if link {
+                        fa
+                    } else if small {
+                        top
+                    } else {
+                        rp
+                    };
+                    top += if small && !link { len as usize } else { 0 };
                     rp += if small { 0 } else { 16 };
+                    #[cfg(test)]
+                    {
+                        self.links += usize::from(link);
+                    }
                     let cw = len | (word as u64) << 32;
                     #[cfg(test)]
                     self.record_materialization([
@@ -899,8 +1007,9 @@ impl Kernel {
         let dst = out.as_mut_ptr();
         let base = self.buf.as_ptr();
         let ro = self.lay.rules;
+        let bots = self.lay.bots;
         // SAFETY: a rule's factors are words written before it; a word kept as bytes has
-        // 16 bytes at its offset; a position is below the period; `out` has 16 bytes past
+        // 16 bytes at its offset, and a linked one's node names two such words; a position is below the period; `out` has 16 bytes past
         // the period
         unsafe {
             let rule = |w: usize| (rd64(base, w), rd64(base, w + 8));
@@ -938,7 +1047,11 @@ impl Kernel {
                 let d = (at + p - start) % p;
                 let lx = plain as u32 as usize;
                 if lx <= SMALL as usize {
-                    copy_small(dst.add(d), base.add((plain >> 32) as usize), lx);
+                    #[cfg(test)]
+                    {
+                        self.writer_reach.linked += usize::from((plain >> 32) < bots as u64);
+                    }
+                    copy_small_word(dst.add(d), base, plain, lx, bots);
                 } else {
                     let x = pos.add(((plain >> 32) as usize - ro) / 16);
                     *x = (*x).min(d as u32);
@@ -995,7 +1108,11 @@ impl Kernel {
                 }
                 let d = dst.add(q as usize);
                 if ll <= SMALL as usize {
-                    copy_small(d, base.add((a >> 32) as usize), ll);
+                    #[cfg(test)]
+                    {
+                        self.writer_reach.linked += usize::from((a >> 32) < bots as u64);
+                    }
+                    copy_small_word(d, base, a, ll, bots);
                 } else {
                     let f = *pos.add(((a >> 32) as usize - ro) / 16);
                     if f != q {
@@ -1008,7 +1125,11 @@ impl Kernel {
                 }
                 let d = d.add(ll);
                 if rr <= SMALL as usize {
-                    copy_small(d, base.add((b >> 32) as usize), rr);
+                    #[cfg(test)]
+                    {
+                        self.writer_reach.linked += usize::from((b >> 32) < bots as u64);
+                    }
+                    copy_small_word(d, base, b, rr, bots);
                 } else {
                     let f = *pos.add(((b >> 32) as usize - ro) / 16);
                     if f != q + ll as u32 {
@@ -1482,5 +1603,39 @@ mod tests {
                 && cells.counts().admitted > 0
         );
     }
+    /// An equal one-row cell's small word is linked, not copied: the node is the slot its
+    /// top letter was read from, let go by the cell, and the word's one reader copies its
+    /// two factors' bytes, in the induction (a small word made with it) or in the writer (a
+    /// rule's factor, on the marked path or not). Every byte the induction did not write is
+    /// left stale (the canaries' byte), the output is exact, and each of the three readers
+    /// is reached; under Miri, every read and write stays inside the buffer.
+    #[test]
+    fn miri_cells_linked_equal_cells() {
+        let mut kernel = Kernel::default();
+        let (mut links, mut read, mut written) = (0, 0, 0);
+        for ll in [
+            b"abcabd".to_vec(),
+            b"abababa".to_vec(),
+            (0..65).map(|i| (i % 3) as u8).collect(),
+            (0..64).map(|i| (i * 7 % 5) as u8).collect(),
+            [vec![1; 31], vec![0; 34]].concat(),
+            long_writer_column(),
+            b"mississippi".to_vec(),
+        ] {
+            for p in [0, ll.len() / 2, ll.len() - 1] {
+                kernel.buf.fill(0xA5);
+                check(&mut kernel, &ll, p as u32);
+                links += kernel.links;
+                read += kernel.links_read;
+                written += kernel.writer_reach.linked;
+                assert!(kernel.links_read + kernel.writer_reach.linked <= kernel.links);
+            }
+        }
+        assert!(
+            links > 0 && read > 0 && written > 0,
+            "{links} {read} {written}"
+        );
+    }
+
     include!("cells_selective_test.rs");
 }
