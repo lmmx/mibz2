@@ -34,11 +34,21 @@ Everything is behind the cargo feature `memory-lever`, which is off by default.
 | the sign reading of the rule's case 3 | `bench/memory_lever.py` |
 | the store fence read in the compiled library | `bench/memory_lever_fence.sh` |
 
-**Without the feature the shipped decoder is unchanged.**
-- The kernel's three functions count the same instructions as master's, to the instruction
+**Without the feature the experiment is source-isolated, and the library's machine code is
+master's.** What was checked, and no more than this:
+- **Source.** Everything the experiment adds to the library is under
+  `#[cfg(feature = "memory-lever")]`, but for one test-only change (the hook that records a
+  rule's payload).
+- **A matched build.** The release library built from this branch without the feature and
+  the one built from master `9d0fb49c` have the same disassembly, function for function,
+  instruction bytes included: 435 functions, 114,949 lines of `objdump -d` with the address
+  column dropped (SHA-256 of that text `bade06ee…9c332951` for both). This compares the
+  code of `libmibz2.rlib`; it is not a claim that the two files are equal byte for byte
+  (their debug information names different paths).
+- **Counts.** The kernel's three functions count the same instructions as master's
   (induction 1,280,552,604; callgrind, Wikidata, one thread).
-- The library holds no `sfence` and none of the experiment's functions
-  (`bench/memory_lever_fence.sh`, run in CI).
+- **In CI:** the library holds no `sfence` and none of the experiment's functions
+  (`bench/memory_lever_fence.sh`).
 
 **With the feature the shipped kernel is still the shipped kernel.** `induce_cells` is not
 edited: the staged kernel is a copy of it, `induce_cells_staged`. In the feature build its
@@ -154,9 +164,12 @@ its shell, the two summaries, the sign reading and the bundle. Its readings were
 looked at as timing.
 
 **Mutation pass** (`2026-11-15-memory-lever/mutants.tsv`, script `mutate.py.txt`; debug
-profile with the feature): 38 mutants, 35 killed. Of the four on the fence, three are
-killed by the model's test and the fourth, the fence object running no `sfence`, by the
-disassembly check. The survivors:
+profile with the feature): 38 mutants, 35 killed. Each row gives its reason: the tests that
+failed and the first panic, and the fence check's own line. A mutant that does not build,
+or a check that does not run, is not counted as a kill, and the table's first row is the
+unmutated tree passing both checks (Guardian D109). Of the four mutants on the fence, three
+are killed by the model's test and the fourth, the fence object running no `sfence`, by the
+disassembly check's own FAIL line. The survivors:
 
 | survivor | why |
 |---|---|
@@ -190,6 +203,40 @@ at 1 to 4 threads, and the one re-run the policy allows:
 first run. (The first run's 4-thread `text` row was cut off in the notification I read, and
 the re-run replaced the bot's comment.) Every arm gave the same bytes. By rule 3 of that
 LOG the change is closed as a shipping candidate. Its code is the `-nt` arm here.
+
+## Shared rules, priced and not built
+
+MONODROMY showed that about half the words the induction makes are already carried by a
+live letter, and where the twin is (`monodromy/2026-11-15-equal-words.md`). The Coordinator
+asked for the cheapest check to be priced as a third arm. Counts only; no timing.
+
+**What was built to price it:** the step-before check in the shipped `induce_cells`, 11
+lines (`2026-11-15-memory-lever/shared-step-before.diff.txt`, SHA-256 `1c9b6665…08c9ee4f`,
+against master `9d0fb49c`). A cell whose two factors are the step before's takes that
+step's word and writes nothing. Wikidata decodes to the same bytes at 1 and 4 threads.
+
+| per letter, Wikidata's 196 admitted blocks | shipped | step-before sharing |
+|---|--:|--:|
+| word store (arena + rules) | 15.64 B | 14.28 B (−8.7%) |
+| induction, instructions | 115.5 | 163.2 (+41%) |
+| writer, instructions | 54.0 | 52.2 |
+| whole decoder, whole file | 5.036 G | 5.546 G (+10%) |
+
+- **It saves 8.7%, not the census's 20%.** The census compares words; the kernel can only
+  compare pointers, and two equal words have equal pointers only if their factors were
+  already shared. 13.2% of cells repeat the step before's two factors, against 22% that
+  repeat its word.
+- **It costs 48 instructions a letter.** The induction's loop holds about 19 live values and
+  is at its register limit. Three more push others to the stack, and the reloads land on
+  lines that have nothing to do with the check. The same showed on #444. In this loop a
+  value carried from step to step costs roughly 10 to 15 instructions a letter.
+- **Against the two arms,** in bytes of the induction's memory per added instruction: the
+  rule stores 0.5, lazy letters 0.24, step-before sharing 0.03. A third arm would be
+  dominated by both.
+
+Accepted as priced by the Coordinator: no PR and no third arm. It becomes worth building if
+the i9 run shows the lever and a way is found to share words without carrying state through
+the loop.
 
 ## How to run
 

@@ -2,7 +2,10 @@
 
 Each mutant is one replacement. A mutant is killed if the Cells unit tests fail on it in the
 debug profile with the feature on (canaries and debug assertions are on there), or, for the
-store fence, if bench/memory_lever_fence.sh fails on it. The tree is left as it was.
+store fence, if bench/memory_lever_fence.sh says FAIL on it. A mutant that does not build, or
+a check that does not run, is not a kill. Each row gives the reason: the tests that failed
+and the first panic, and the fence check's own line. The first row is the tree as it is.
+The tree is left as it was.
 
     mutate.py WORKTREE
 """
@@ -58,31 +61,66 @@ M = [
     ("lazy", "the top stream's end not checked", "                        if ti == 0 {\n                            return Err(Refusal::Invalid);\n                        }\n", "", False),
 ]
 env = dict(os.environ, CARGO_TARGET_DIR=os.path.join(wt, "target"))
-survivors = 0
-for kernel, name, a, b, fence in M:
-    if orig.count(a) != 1:
-        print(f"{kernel}\t{name}\tNOT APPLIED: the text occurs {orig.count(a)} times", flush=True)
-        survivors += 1
-        continue
-    open(p, "w").write(orig.replace(a, b))
+
+
+def tests():
+    """(verdict, why): the Cells unit tests with the feature, in the debug profile."""
     r = subprocess.run(
         ["cargo", "test", "--features", "memory-lever", "--lib", "cells"],
         cwd=wt, env=env, capture_output=True, text=True,
     )
-    out = r.stdout + r.stderr
-    if "could not compile" in out:
-        verdict = "does not build"
-    elif r.returncode != 0:
-        failed = sorted({l.split()[1].split("::")[-1] for l in out.splitlines() if l.startswith("test ") and l.rstrip().endswith("FAILED")})
-        verdict = "killed by the tests: " + (", ".join(failed) if failed else "the test binary died")
-    else:
-        verdict = "survives the tests"
-    if fence:
-        f = subprocess.run(["bash", "bench/memory_lever_fence.sh"], cwd=wt, env=env, capture_output=True, text=True)
-        verdict += "; " + ("killed by the fence check" if f.returncode != 0 else "survives the fence check")
-    if "killed" not in verdict:
+    out = (r.stdout + r.stderr).splitlines()
+    if any("could not compile" in l for l in out):
+        return "does not build", next((l.strip() for l in out if l.startswith("error")), "")
+    if r.returncode == 0:
+        return "pass", next((l.strip() for l in out if l.startswith("test result")), "")
+    failed = sorted({l.split()[1].split("::")[-1] for l in out if l.startswith("test ") and l.rstrip().endswith("FAILED")})
+    # the first panic's place and message, or the signal the test binary died of
+    why = ""
+    for i, l in enumerate(out):
+        if "panicked at" in l:
+            why = l.split("panicked at", 1)[1].strip() + " " + (out[i + 1].strip() if i + 1 < len(out) else "")
+            break
+    if not why:
+        why = next((l.strip() for l in out if "signal:" in l), "no panic message")
+    return "fail", (", ".join(failed) if failed else "the test binary died") + " | " + why[:160]
+
+
+def fence():
+    """(verdict, why): bench/memory_lever_fence.sh. A kill is its own FAIL line, not a
+    build or tool failure."""
+    r = subprocess.run(["bash", "bench/memory_lever_fence.sh"], cwd=wt, env=env, capture_output=True, text=True)
+    lines = (r.stdout + r.stderr).splitlines()
+    said = next((l.strip() for l in lines if "memory_lever_fence: FAIL" in l), "")
+    if r.returncode == 0:
+        return "pass", next((l.strip() for l in reversed(lines) if l.strip()), "")
+    if said:
+        return "fail", said
+    return "did not run", next((l.strip() for l in lines if l.startswith("error")), "exit %d" % r.returncode)
+
+
+print("# kernel\tmutant\tverdict\tthe tests\tthe fence check", flush=True)
+t, tw = tests()
+f, fw = fence()
+print(f"baseline\tthe tree as it is\t{'ok' if (t, f) == ('pass', 'pass') else 'BASELINE BROKEN'}\ttests {t}: {tw}\tfence check {f}: {fw}", flush=True)
+survivors = 0
+for kernel, name, a, b, with_fence in M:
+    if orig.count(a) != 1:
+        print(f"{kernel}\t{name}\tNOT APPLIED: the text occurs {orig.count(a)} times\t\t", flush=True)
         survivors += 1
-        verdict = "SURVIVED: " + verdict
-    print(f"{kernel}\t{name}\t{verdict}", flush=True)
+        continue
+    open(p, "w").write(orig.replace(a, b))
+    t, tw = tests()
+    f, fw = fence() if with_fence else ("not run", "")
+    if t == "fail" and f == "fail":
+        verdict = "killed by the tests and by the fence check"
+    elif t == "fail":
+        verdict = "killed by the tests"
+    elif f == "fail":
+        verdict = "killed by the fence check"
+    else:
+        verdict = "SURVIVED"
+        survivors += 1
+    print(f"{kernel}\t{name}\t{verdict}\ttests {t}: {tw}\tfence check {f}: {fw}", flush=True)
 open(p, "w").write(orig)
 print(f"# {len(M)} mutants, {survivors} not killed", flush=True)
