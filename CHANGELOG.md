@@ -36,8 +36,23 @@ The output, the API, the supported inputs and the plans are unchanged.
   The gain grows with the number of co-running Cells workers: none at 1–2 threads, 4.0% less
   CPU at 4 (1.040, 1.025–1.055) and 5.4% less wall at 5. At 6 and 8 threads, where the plan is
   the teams path and Cells isn't used, nothing changes.
-- **Caveat.** The wall gain is modest: beyond noise only at 5 threads on the i9, and not on CI's
-  2-core runner. The memory reduction is the clear effect.
+- **Release scaling, the i9-10900K** (`release-scaling/run-20261115T134325Z`, sha256 3eafdc28,
+  10 paired rounds, every arm the same bytes, #417), `wikidata`, 0.3.1 ÷ 0.3.2 wall:
+
+  | threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+  |---|--:|--:|--:|--:|--:|--:|--:|--:|
+  | 0.3.1 ÷ 0.3.2 | **0.955** | 1.015 | **1.027** | 0.998 | 0.995 | 0.994 | **0.960** | **0.958** |
+  | 95% interval | 0.923–0.987 | 0.987–1.044 | 1.009–1.046 | 0.988–1.007 | 0.981–1.010 | 0.977–1.012 | 0.929–0.992 | 0.933–0.984 |
+
+  At 4 threads, 2.7% less wall time and 3.3% less CPU (1.033, 1.018–1.048), beyond noise. At
+  1 thread this run is 4.5% slower, beyond noise, while the earlier i9 run of #408 (0.975,
+  0.936–1.015) and CI (−0.2%, −2.6 to +2.3) were within noise. 16 and 20 threads are also slower,
+  but they use the teams path, which #408 does not change, so their slowdown points to drift
+  within the run; read the 1-thread figure with that in mind.
+- **Caveats.**
+  - The wall gain is modest: beyond noise only at 4 and 5 threads on the i9, and not on CI's
+    2-core runner. The memory reduction is the clear effect.
+  - The release-scaling run's 1-thread slowdown is not seen elsewhere, and is not hidden here.
 
 ### <!-- 9 -->Other
 
