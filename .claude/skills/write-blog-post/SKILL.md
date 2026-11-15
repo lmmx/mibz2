@@ -183,8 +183,12 @@ style, not a description of the method.
     specialist terms the reader must already know ("Rauzy–Veech").
   - A title that makes sense only after reading the post is clickbait by construction.
   - **Before:** "Reduce, reuse, recycle: slot recycling in mibz2's Cells". **After:** "Reduce,
-    reuse, recycle: mibz2 reuses the slots that track each fragment of text". It names what
-    a slot is for.
+    reuse, recycle: hand-me-down slots for every fragment of text". It names what a slot is
+    for.
+- **The title is a phrase, the dek is the statement** (Louis, 15 November 2026). The title
+  takes the headline's phrasal form, not a full sentence: "hand-me-down slots for every
+  fragment of text", not "mibz2 reuses the slots that track each fragment of text". The dek
+  states the news. Two statements in a row read flat, and the title loses its punch.
   - Internal terms are introduced in the body, after the opening has said in plain words
     what they stand for.
 
