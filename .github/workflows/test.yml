@@ -28,16 +28,11 @@ jobs:
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
-      # the buffer diet's comparison build (`slot24`, #145 LOG 6881022819): Cells' previous
-      # 24-byte slot, kept only for bench-cells-diet, still byte-identical and exact
-      - name: The 24-byte slot build (research feature)
-        run: "cargo test --features slot24 --lib cells::"
       # the Cells memory-dose experiment's research build (src/dose.rs, #145 LOG 6879466310):
       # with a nonzero dose of each kind, byte-identical through the Workers plan, and engaging
-      # the phase attribution's research build (src/phase.rs, #145 LOG 6884716103, amended
-      # 6884895257 and 6884975709): its counter paths driven with software events in the
-      # registered passes' place (the runner has no PMU), byte-identical, and with no pass
-      # counting nothing
+      # the phase counters' research build (src/phase.rs, #145 LOG 6884716103, trimmed by
+      # LOG 6893084445): its counter paths driven with the software pass (the runner has no
+      # PMU), byte-identical, and with no pass counting nothing
       - name: The phase-counter build (research feature)
         run: |
           cargo test --features phase-counters --lib phase::
@@ -109,16 +104,10 @@ jobs:
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py
-      # bench-cells-diet's statistic, amended rule and validity (bench/cells_diet.py) on synthetic grids
-      - name: The buffer diet's scaling verdict
-        run: python3 bench/test_cells_diet.py
       # bench-cells-imc's statistic, rule and validity (bench/cells_imc.py) on synthetic
       # readings, and its collection driven end to end with stand-ins for ab and perf
       - name: The working-set premise test's verdict
         run: python3 bench/test_cells_imc.py
-      # bench-cells-phase's ledgers, statistics, verdict and validity (bench/cells_phase.py)
-      - name: The phase attribution's verdict
-        run: python3 bench/test_cells_phase.py
       # bench-par-scan's reporter, input anchoring and step supervisor (docs/journal/2026-11-10-parallel-scan.md)
       - name: The scan diagnostic's reporter, inputs and supervisor
         run: pipx run pytest -p no:cacheprovider bench/test_par_scan_knee.py bench/test_par_scan_inputs.py bench/test_bounded.py bench/test_par_scan_finish.py

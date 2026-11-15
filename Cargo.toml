@@ -36,32 +36,36 @@ name = "mibz2"
 [dependencies]
 pyo3 = { features = ["abi3-py310"], optional = true, version = "0.29" }
 
+# Every non-default feature but `python` is research: off by default, and without it the
+# decoder compiles exactly as shipped. Each carries a retention note: what it serves, and when
+# it can go. They are reviewed at each release (docs/RELEASING.md §3); one whose reason has
+# lapsed is removed in its own PR (#145, LOG 6893084445).
 [features]
 default = []
+# The Python bindings (pyproject.toml's maturin build): shipped, not research
 python = ["dep:pyo3"]
-# The parallel decoder's own timeline (src/trace.rs), for examples/occupancy.rs (#39); off
-# by default, and each mark a relaxed load when compiled in and not turned on
+# The parallel decoder's timeline (src/trace.rs), for examples/occupancy.rs (#39): the
+# bench-team-size, bench-team-pipeline and bench-pipeline-levers recipes, bench/corpus.sh
+# and CI's occupancy workflow. Retain while those recipes run; remove with the last of them
 trace = []
-# The cooperative waits' counts (coop::wait_stats), for examples/wait_audit.rs: off by
-# default, and without it the waits are exactly as before
+# The cooperative waits' counts (coop::wait_stats), for examples/wait_audit.rs, the spin
+# audit (docs/journal/2026-11-09-spin-audit/). Retain while the cooperative teams' waits are
+# tuned; remove when the coop wait sites are no longer changed, or with the teams
 wait-stats = []
-# The walks' per-call records (coop::walk_stats): for the team screen's probes and the native
-# engagement diagnostic (docs/journal/2026-11-10-staged-engagement-diagnostic-draft.md); off
-# by default, and without it every count compiles away
+# The walks' per-call records (coop::walk_stats), for the team screen's probes and the native
+# engagement diagnostic (docs/journal/2026-11-10-staged-engagement-diagnostic-draft.md), and
+# CI's walk-stats workflow. Retain while the cooperative walks are being changed; remove with
+# that workflow once those diagnostics are closed
 walk-stats = []
-# Research only: the Cells memory-dose experiment (src/dose.rs; #145, LOG 6879466310). Each
-# block Cells admits in invert_runs also streams through MIBZ2_DOSE_MB MB (set at compile
-# time, default 0) of per-kernel scratch; off by default, and without it nothing changes
+# Research: the Cells memory-dose scratch (src/dose.rs; #145, LOG 6879466310), built by
+# bench-cells-dose and bench-cells-imc (at MIBZ2_DOSE_MB=0, its dose_blocks counter checks
+# Cells engaged). Retain while either recipe may be re-run; remove with both
 dose = []
-# Research only: the phase attribution of Cells' memory traffic (src/phase.rs; #145, LOG
-# 6884716103, amended 6884895257 and 6884975709). Per worker thread, perf_event_open groups
-# of the pass MIBZ2_PHASE_PASS names, around decode_block, induce_cells and write_cells;
-# off by default, and without it nothing changes
+# Research: per-phase software counts (task clock, page faults) of Cells' induction and
+# writer per worker (src/phase.rs), from the phase attribution (#145, LOG 6884716103),
+# trimmed to the scopes and the software pass (LOG 6893084445). Retain while a Cells phase
+# study is open; remove at the first release review with none
 phase-counters = []
-# Research only: the Cells buffer diet's comparison build (#145, LOG 6881022819). Cells'
-# previous 24-byte slot, bytes 16..24 an 8-byte offset, instead of the 20-byte slot, so that
-# bench-cells-diet builds both layouts from one commit; off by default, never shipped
-slot24 = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
