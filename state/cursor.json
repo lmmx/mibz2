@@ -2042,6 +2042,12 @@
       "disposition": "One targeted correction: I2/I3 must use upper-bound acceptance to exclude noisy primary losses; recipe collects gating contrast but requires raw validity checks; x8 preserves production-admission witness. No timing or B5 re-review.",
       "review_comment_id": 6877499197,
       "publication_verification": "Exact body, author lmmx, issue145 and role-aware routing verified. Pinned verify retains only its hardcoded coordinator-only FROM rejection."
+    },
+    {
+      "trigger_comment_id": 6886868279,
+      "status": "in progress",
+      "pr": 162,
+      "report_path": "state/reports/residual-6886868279/report.md"
     }
   ],
   "active_delegations": [],
