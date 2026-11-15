@@ -1301,7 +1301,7 @@ mod tests {
                     less += usize::from(m.state[0] < m.state[1]);
                     greater += usize::from(m.state[0] > m.state[1]);
                 }
-                if cells > 0 && kernel.letters - 1 <= cells - 1 {
+                if cells > 0 && kernel.letters - 1 < cells {
                     let r = Runs::of_column(&ll);
                     let mut out = vec![0xCC; ll.len()];
                     assert_eq!(
