@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3](https://github.com/lmmx/mibz2/compare/v0.3.2...v0.3.3) - 2026-11-15
+
+### <!-- 9 -->Other
+
+- 0.3.2's notes ([#416](https://github.com/lmmx/mibz2/pull/416))
+- Cells induction: 8-byte bottom slots, a letter's length and word read through its top slot ([#414](https://github.com/lmmx/mibz2/pull/414))
+
 ## [0.3.2](https://github.com/lmmx/mibz2/compare/v0.3.1...v0.3.2) - 2026-11-15
 
 A memory release for Cells. Slot recycling (#408): when Cells' induction places a letter, it
