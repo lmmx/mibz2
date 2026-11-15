@@ -1,0 +1,39 @@
+staged	ring index over half the stage	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse, miri_cells_staged_fence_covers_every_exit
+staged	stage sent one rule early	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback
+staged	stage never sent when full	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state
+staged	full send not clamped to the region's start	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse, miri_cells_staged_fence_covers_every_exit
+staged	full send stops one rule short	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state
+staged	last send dropped	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse, miri_cells_staged_fence_covers_every_exit
+staged	last send not clamped to the region's start	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse
+staged	second half of a rule not staged	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse, miri_cells_staged_fence_covers_every_exit
+staged	send reads the stage from its start	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse, miri_cells_staged_fence_covers_every_exit
+staged	send skips the bytes before the first line	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse, miri_cells_staged_fence_covers_every_exit
+staged	send skips what is left of a line	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state
+staged	a whole line's third quarter sent to its second	killed by the tests: cells_lever_exhaustive_state
+staged	lines advance by half	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse
+staged	the induction does not check the rules' offset	SURVIVED: survives the tests
+fence	no fence object in the induction	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse, miri_cells_staged_fence_covers_every_exit; killed by the fence check
+fence	the fence dropped where it is made	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse, miri_cells_staged_fence_covers_every_exit; survives the fence check
+fence	the fence object runs no sfence	survives the tests; killed by the fence check
+fence	the model's mark never set	killed by the tests: miri_cells_staged_fence_covers_every_exit
+lazy	a pair taken from the pool stays on it	killed by the tests: cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lazy_closed_letters_give_their_slots_back, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse
+lazy	a pair given back without its bottom slot	killed by the tests: the test binary died
+lazy	no pair given back at an equal step	killed by the tests: miri_cells_lazy_closed_letters_give_their_slots_back, miri_cells_lever_exact_fit_and_reuse
+lazy	no pair given back for a closed letter	killed by the tests: miri_cells_lazy_closed_letters_give_their_slots_back
+lazy	a closed letter read from its entry gives a pair back	killed by the tests: the test binary died
+lazy	the one-letter test never fires	killed by the tests: cells_lazy_long_letter, cells_lazy_refuses_a_block_past_its_entries, cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lazy_closed_letters_give_their_slots_back, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse
+lazy	the top front's entry not tagged (in the step)	killed by the tests: cells_lazy_long_letter, cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse
+lazy	the bottom front's entry not tagged (in the step)	killed by the tests: cells_lazy_long_letter, cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse
+lazy	a new bottom slot not linked to the stream (in the step)	killed by the tests: cells_lever_exhaustive_arbitrary_columns
+lazy	a new top slot not linked to the stream (in the step)	killed by the tests: the test binary died
+lazy	a new bottom slot not linked to the stream (two letters read together)	killed by the tests: the test binary died
+lazy	a new top slot not linked to the stream (two letters read together)	killed by the tests: the test binary died
+lazy	a byte's last entry not moved on	killed by the tests: cells_lazy_long_letter, cells_lazy_refuses_a_block_past_its_entries, cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse
+lazy	the walk's row not marked in its entry	killed by the tests: cells_lazy_long_letter, cells_lazy_refuses_a_block_past_its_entries, cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lazy_closed_letters_give_their_slots_back, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse
+lazy	an entry without its byte	killed by the tests: cells_lazy_long_letter, cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, miri_cells_lazy_closed_letters_give_their_slots_back, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse
+lazy	the top order's bytes not written	killed by the tests: cells_lazy_long_letter, cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lazy_closed_letters_give_their_slots_back, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse
+lazy	a letter's length read one bit short	killed by the tests: cells_lazy_long_letter
+lazy	a block past the entries' length not refused	killed by the tests: cells_lazy_refuses_a_block_past_its_entries
+lazy	the pools' bound not checked	SURVIVED: survives the tests
+lazy	the top stream's end not checked	SURVIVED: survives the tests
+# 38 mutants, 3 not killed

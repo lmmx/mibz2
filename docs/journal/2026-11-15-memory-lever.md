@@ -154,7 +154,9 @@ its shell, the two summaries, the sign reading and the bundle. Its readings were
 looked at as timing.
 
 **Mutation pass** (`2026-11-15-memory-lever/mutants.tsv`, script `mutate.py.txt`; debug
-profile with the feature): see the table's last line for the count. The survivors:
+profile with the feature): 38 mutants, 35 killed. Of the four on the fence, three are
+killed by the model's test and the fourth, the fence object running no `sfence`, by the
+disassembly check. The survivors:
 
 | survivor | why |
 |---|---|
