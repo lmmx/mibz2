@@ -19,7 +19,7 @@
 
 pub use crate::cells::{Cells, CellsKernel, Counts as CellsCounts, ForcedCells};
 #[cfg(feature = "memory-lever")]
-pub use crate::cells::{LazyCells, LeverCells, StagedCells};
+pub use crate::cells::{ForcedLazyCells, ForcedStagedCells, LazyCells, LeverCells, StagedCells};
 
 /// An inverse-BWT kernel: a block's RLE1-coded text from its last column `ll` (whose
 /// bytes `counts` counts) and its primary index (below `ll.len()`: the caller checks),

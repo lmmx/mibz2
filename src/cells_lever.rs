@@ -7,25 +7,31 @@ pub(crate) const LAZY: u8 = 1;
 pub(crate) const STAGED_RULES: u8 = 2;
 
 /// Research, opt-in (`memory-lever`): the Cells kernel with one of the experiment's two
-/// changes, `LAZY` or `STAGED_RULES`. Admission, budget, fallback and writer are Cells'.
+/// changes, `LAZY` or `STAGED_RULES`. Admission, budget, fallback and writer are Cells'
+/// (`FORCED`: `ForcedCells`', for tests and fuzzing only).
 #[doc(hidden)]
-pub struct LeverCells<const V: u8>(Cells);
+pub struct LeverCells<const V: u8, const FORCED: bool = false>(CellsKernel<FORCED>);
 /// Cells with lazy letters: a slot only for a cell (`Kernel::induce_lazy`)
 #[doc(hidden)]
 pub type LazyCells = LeverCells<LAZY>;
 /// Cells with its rules staged and stored past the cache (`Kernel::induce_cells_staged`)
 #[doc(hidden)]
 pub type StagedCells = LeverCells<STAGED_RULES>;
+/// Test/fuzz routes: the two kernels with `ForcedCells`' open admission
+#[doc(hidden)]
+pub type ForcedLazyCells = LeverCells<LAZY, true>;
+#[doc(hidden)]
+pub type ForcedStagedCells = LeverCells<STAGED_RULES, true>;
 
-impl<const V: u8> Default for LeverCells<V> {
+impl<const V: u8, const F: bool> Default for LeverCells<V, F> {
     fn default() -> Self {
-        let mut cells = Cells::default();
+        let mut cells = CellsKernel::<F>::default();
         cells.state.kernel.variant = V;
         LeverCells(cells)
     }
 }
 
-impl<const V: u8> LeverCells<V> {
+impl<const V: u8, const F: bool> LeverCells<V, F> {
     pub fn counts(&self) -> Counts {
         self.0.counts()
     }
@@ -35,7 +41,7 @@ impl<const V: u8> LeverCells<V> {
     }
 }
 
-impl<const V: u8> InverseBwt for LeverCells<V> {
+impl<const V: u8, const F: bool> InverseBwt for LeverCells<V, F> {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], p: u32, out: &mut Vec<u8>) {
         self.0.invert(ll, counts, p, out)
     }
@@ -43,7 +49,7 @@ impl<const V: u8> InverseBwt for LeverCells<V> {
         self.0.invert_in_place(ll, counts, p)
     }
     fn reads_runs(&self) -> bool {
-        true
+        self.0.reads_runs()
     }
     #[cfg(any(test, feature = "trace"))]
     fn took_cells(&self) -> bool {

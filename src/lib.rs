@@ -663,3 +663,12 @@ impl<const F: bool> Scratch<bwt::CellsKernel<F>> {
         self.inverse.counts()
     }
 }
+
+#[cfg(feature = "memory-lever")]
+impl<const V: u8, const F: bool> Scratch<bwt::LeverCells<V, F>> {
+    /// Research (`memory-lever`): the experiment's kernels' route coverage, for the fuzzer.
+    #[doc(hidden)]
+    pub fn cells_counts(&self) -> bwt::CellsCounts {
+        self.inverse.counts()
+    }
+}
