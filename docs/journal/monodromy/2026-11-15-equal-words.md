@@ -1,4 +1,4 @@
-# 2026-11-15 · MONODROMY 14 · Equal words are neighbours: a duplicate's live twin is always the next letter in the bottom order. One O(1) comparison catches 99.85% of duplicates, with no false positives, and would cut the word store by 38%
+# 2026-11-15 · MONODROMY 14 · Equal words are neighbours: a duplicate's live twin is always the next letter in the bottom order. One O(1) comparison catches 99.85% of duplicates, with no false positives, and would cut the word store by 38%; a ring of the last 8 words, with no link, cuts 32%
 
 Assignment: QUEUED 6901872654. Can letters with equal words be recognised from the induction's
 structure, when the second is created, in O(1) and without a table?
@@ -123,12 +123,52 @@ the full check saves about 6 B a letter, and the step-before check alone about 3
   workers is for the Pathfinder to measure. With lazy letters the layout changes again, and
   the next link would go where the lazy design puts bottom slots.
 
+## 4. Without a next link: a ring of recent words (C)
+
+The twin's word is usually recent. `dupage.rs.txt`, here, records for each duplicate how many
+steps ago its word was first made.
+
+**By count of duplicates** (every 4th Wikidata block, 59 blocks):
+
+| made at most k steps ago | k = 1 | 2 | 4 | 8 | 16 | 64 |
+|---|--:|--:|--:|--:|--:|--:|
+| share of duplicates | 0.425 | 0.542 | 0.624 | 0.712 | 0.804 | 0.935 |
+
+**By bytes of the word store saved** (all 233 blocks; prose 4):
+
+| ring of the last k words | 1 | 2 | 4 | 8 | 16 | 32 | 64 | every duplicate |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| Wikidata | 0.205 | 0.259 | 0.289 | **0.315** | 0.337 | 0.355 | 0.366 | 0.381 |
+| prose | 0.199 | 0.251 | 0.288 | 0.318 | 0.344 | 0.365 | 0.382 | 0.436 |
+
+**These are lower bounds.** Age is counted from a word's first making. A ring that takes in
+every step's word, shared or new, holds it more recently than that.
+
+**What a ring of 8 needs (Conj, not built).**
+- *Contents:* the (A word, B word) child-pointer pairs of the last 8 words, 64 bytes.
+- *Per step:* one compare of the new pair against all 8, two 256-bit compares on x86.
+- *What it does not need:* a next link or a table.
+- *What it catches:* 0.315 of the word store on Wikidata, 83% of the neighbour check's 0.381.
+- *False positives:* none, by the same child-pointer argument.
+
+**So the cheapest structural form is three steps.**
+1. Share the word made by the step before: 2 registers, 20%.
+2. Widen that to a ring of 8: 32%.
+3. Only if the last 6% of the store matters, keep the bottom order's next link: 38%.
+
 ## Reproduce
 
 ```
 cp docs/journal/monodromy/2026-11-15-equal-words/dup.rs.txt examples/dup.rs
 cargo run --release --example dup -- corpora/wikidata.bz2 1   # under a minute; also corpora/prose.bz2
+cp docs/journal/monodromy/2026-11-15-equal-words/dupage.rs.txt examples/dupage.rs
+cargo run --release --example dupage -- corpora/wikidata.bz2 1 > /dev/null 2> ages.txt
 ```
+
+`dupage` prints, per block on stderr: the duplicate counts by age bucket (1, 2, 3–4, 5–8,
+9–16, 17–64, 65–1024, more); then the bytes saved by rings of 1, 2, 4, 8, 16, 32 and 64, and
+by all, followed by the total word bytes. The outputs are `dupage_wikidata.txt` and
+`dupage_prose.txt`.
 
 **The outputs.** Per block, in `dup_wikidata.jsonl` and `dup_prose.jsonl`:
 - `census`: [steps, duplicates, step-before, top-previous, top-next, bottom-previous,
