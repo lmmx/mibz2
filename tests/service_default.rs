@@ -165,7 +165,7 @@ fn custom_windows_scale_to_the_teams() {
 }
 
 /// The existing plan everywhere else, by the same dispatch: 9 and 11 threads on the target
-/// (the plan policy's teams of two, and the pipelined three teams of three), 10 threads off
+/// (workers below the team threshold, and the pipelined three teams of three), 10 threads off
 /// it (a CPU of the same shape but another model: the existing 10-core rule's pipelined
 /// teams; a smaller machine: workers), and a plan forced on the target
 #[test]
@@ -190,7 +190,7 @@ fn the_existing_plan_otherwise() {
     };
     // (machine, threads, pipelined, decoding threads)
     let cases = [
-        (i9.clone(), 9, false, 8),
+        (i9.clone(), 9, false, 9),
         (i9.clone(), 11, true, 9),
         (i9.clone(), 20, true, 9),
         (same_shape, 10, true, 9),
