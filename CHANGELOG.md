@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/lmmx/mibz2/compare/v0.3.4...v0.4.0) - 2026-11-15
+
+### <!-- 9 -->Other
+
+- Release scaling: 0.3.4 against 0.3.3 on the i9 ([#434](https://github.com/lmmx/mibz2/pull/434))
+- bottom slots in the dead output buffer, rule positions in the dead top slots ([#433](https://github.com/lmmx/mibz2/pull/433))
+- Research features: remove slot24, trim phase-counters, retention notes ([#432](https://github.com/lmmx/mibz2/pull/432))
+- private fields, so safe code can't claim a CPU feature ([#340](https://github.com/lmmx/mibz2/pull/340)) ([#431](https://github.com/lmmx/mibz2/pull/431))
+- Removing duplicated interval lengths and text references ([#427](https://github.com/lmmx/mibz2/pull/427))
+- 0.3.4's notes; queue: bench-release-scaling for 0.3.4 ([#429](https://github.com/lmmx/mibz2/pull/429))
+
 ### Breaking
 
 - **`Kernels` can no longer claim a feature the CPU lacks from safe code** (#340). Its fields
