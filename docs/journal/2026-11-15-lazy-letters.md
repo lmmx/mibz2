@@ -125,6 +125,32 @@ stores they would not pass through the cache at all, at no instruction cost. The
 reads them back in order afterwards. Whether that pays is also a clock question, and a
 ten-line patch.
 
+## Addendum, the same day: the lean build (step 2 of the Coordinator's queue)
+
+Rule: LOG 6901919943 on #145, posted before the count. The question was whether the design
+reaches its floor: at most +10% over clean master for first stage plus induction.
+
+**What was changed** (`2026-11-15-lazy-letters/lazy-letters-lean.diff.txt`, against master
+`8a5e4601`; it replaces the first patch):
+- a letter read from its entry inside the step takes its slots in that branch, so the slot
+  test after every read is gone; only the two letters read together are still tested;
+- an original letter's word is built with two additions.
+
+**The count** (as above; clean master is a build with no counting line in it):
+
+| per letter | clean master | lazy, second build | lazy, lean build |
+|---|--:|--:|--:|
+| first stage | 81.0 | 71.3 | 71.2 |
+| induction | 115.5 | 195.3 | 181.0 |
+| **first stage + induction** | **196.4** | **266.6 (+36%)** | **252.2 (+28%)** |
+
+- The pool's peak is unchanged: 0.318 of the letters, 0.337 at most.
+- Wikidata's output is identical at 1, 4 and 12 threads.
+
+**The rule's line was 216.0. The lean build is at 252.2,** so lazy letters stay a recorded
+result. The two levers gave 14 instructions a letter; the line is 36 further on. What is left
+is the design's own work: two stream visits and one pair of slots for every letter.
+
 ## Reproduce
 
 ```
