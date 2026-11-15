@@ -44,8 +44,19 @@ are unchanged.
   the same plan and the bench cannot see the change. It was flat: `wikidata` wall +0.0%
   (−7.7, +8.5), −0.1% (−2.3, +2.3) and −2.5% (−7.6, +2.8) at 1, 2 and 4 threads, CPU −0.0%,
   +0.4% and −2.8%, each interval including no change. The assessment: no change detected.
-- **The release's CI bench,** v0.3.3 (1244d1a9) → master, dispatched after the release: to
-  follow, as a check after the fact.
+- **The release's CI bench** (run 43737282330, Intel Xeon Platinum 8573C, 4 vCPU on 2 cores,
+  10 paired rounds), v0.3.3 (1244d1a9) → master e18ccafc, the v0.3.4 tag commit. It finished
+  after the release, so it is a check after the fact:
+
+  | `wikidata` | 1 thread | 2 threads | 4 threads |
+  |---|--:|--:|--:|
+  | wall | −0.3% (−1.9, +1.4) | −1.3% (−4.7, +2.2) | +0.3% (−1.8, +2.4) |
+  | CPU | −0.3% (−1.9, +1.3) | −1.5% (−4.0, +1.1) | −0.0% (−1.8, +1.8) |
+  | peak RSS, MB | 28 → 28 (−0.0%) | 59 → 58 (−1.1%) | 90 → 93 (+0.5%) |
+
+  Level, as expected on a 2-core runner, which runs the same plan in both builds: every
+  interval includes no change. Best wall against best wall +0.3% (−1.8, +2.4). Every corpus
+  gave the same bytes in every run. The assessment: no change detected.
 - **Release scaling, the i9-10900K** (RELEASING.md §5), 0.3.3 against 0.3.4: queued, to follow.
 - **Caveats.**
   - One machine: the i9-10900K (10 cores, 20 threads) is the only evidence. Other 6–9-core
