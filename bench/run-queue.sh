@@ -21,7 +21,7 @@
 # The run's log is logs/workstation-queue-<stamp>.log, beside each entry's own log, under
 # ${XDG_STATE_HOME:-~/.local/state}/mibz2/workstation/ (the XDG Base Directory spec's state
 # directory; nothing is written to the home directory itself). bench/await-submit.sh keeps
-# its once-per-commit markers in ran/ there, and still honours one in ~/.cache/await-submit/.
+# its once-per-commit markers in ran/ there.
 # Only one workstation queue runs at a time on a machine: stop wikidata-pq's before this one.
 set -uo pipefail
 
@@ -48,7 +48,6 @@ wait_secs=$(awk -v h="$wait" 'BEGIN { if (h !~ /^[0-9]*\.?[0-9]+$/) exit 1; prin
 state_home=${XDG_STATE_HOME:-}
 [[ $state_home == /* ]] || state_home=$HOME/.local/state
 state=$state_home/mibz2/workstation
-legacy_ran=$HOME/.cache/await-submit  # the markers' old place: read, never written
 mkdir -p "$state/logs" || { echo "could not make $state/logs"; exit 2; }
 log=$state/logs/workstation-queue-$(date -u +%Y%m%dT%H%M%SZ).log
 exec > >(tee -a "$log") 2>&1
@@ -67,9 +66,8 @@ read_queue() {
   entries=$( { grep -v '^[[:space:]]*#' <<<"$queue" || true; } | awk 'NF>=2 {print $1, $2}')
 }
 # The entries whose ready tag is set, with no hold, at a commit not yet run on this machine
-# (no marker in $state/ran, which the waiter makes just before a run, nor in the old
-# ~/.cache/await-submit), and not
-# already tried at that commit by this queue run.
+# (no marker in $state/ran, which the waiter makes just before a run), and not already tried
+# at that commit by this queue run.
 # The commit ready/<recipe> names, or nothing when it is unset or hold/<recipe> is set.
 ready_of() {
   local refs
@@ -84,7 +82,7 @@ new_entries() {
   while read -r recipe branch; do
     [[ -z "$recipe" ]] && continue
     ready=$(ready_of "$recipe")
-    [[ -n "$ready" && ! -e $state/ran/$recipe-$ready && ! -e $legacy_ran/$recipe-$ready ]] || continue
+    [[ -n "$ready" && ! -e $state/ran/$recipe-$ready ]] || continue
     [[ -n "${tried[$recipe-$ready]:-}" ]] && continue
     echo "$recipe $branch $ready"
   done <<<"$entries"

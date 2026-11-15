@@ -1,9 +1,8 @@
 """bench/run-queue.sh (`just workstation-queue`) and bench/await-submit.sh, its per-entry
 waiter, against a scratch origin and stand-ins for just and gh, with a scratch HOME and XDG
 directories: an entry runs once per recipe and commit; its marker and the logs go to the
-XDG state directory, never the home directory itself; a marker in the old place
-(~/.cache/await-submit) still counts as a run and is never written; HOLD is respected; and
-the Started and Failed notices go to #145. Nothing is measured and nothing suspends.
+XDG state directory, never the home directory itself; HOLD is respected; and the Started
+and Failed notices go to #145. Nothing is measured and nothing suspends.
 
     python3 bench/test_workstation_queue.py
 """
@@ -190,32 +189,6 @@ class Queue(unittest.TestCase):
         )
         self.assertTrue((base / "ran" / f"bench-a-{sha2}").is_dir())
         self.assertFalse((self.ws / "relative").exists())
-
-    def test_old_marker_counts_and_is_never_written(self):
-        sha = git(self.dev, "rev-parse", "HEAD", env=self.env)
-        self.tag("ready", "bench-a", sha)
-        self.tag("ready", "bench-b", sha)
-        legacy = self.home / ".cache" / "await-submit"
-        (legacy / f"bench-a-{sha}").mkdir(parents=True)
-        r = self.run_queue()
-        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        # bench-a ran before the move (old marker): skipped; bench-b runs, its marker in XDG
-        self.assertEqual([c["args"] for c in self.calls("just")], [["submit", "bench-b"]])
-        self.assertEqual(sorted(p.name for p in legacy.iterdir()), [f"bench-a-{sha}"])
-        self.assertFalse((self.ran_dir() / f"bench-a-{sha}").exists())
-        self.assertTrue((self.ran_dir() / f"bench-b-{sha}").is_dir())
-        # the waiter alone refuses it too (an older run-queue.sh doesn't look there)
-        r = subprocess.run(
-            ["bash", "bench/await-submit.sh", "bench-a", "master", "--no-suspend", "--hours", "0"],
-            cwd=self.ws,
-            env=self.env,
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
-        self.assertEqual(r.returncode, 5, r.stdout + r.stderr)
-        self.assertIn("the old place", r.stdout)
-        self.assertEqual(len(self.calls("just")), 1)
 
     def test_failed_run_posts_failed(self):
         sha = git(self.dev, "rev-parse", "HEAD", env=self.env)

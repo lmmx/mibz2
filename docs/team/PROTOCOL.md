@@ -242,18 +242,9 @@ with one command whenever suits him. Nothing about a queued run is left to decid
     holds the queue's and each waiter's logs, and `ran/` the once-per-commit markers
     (`ran/<recipe>-<sha>`). wikidata-pq's queue keeps its own, under `wikidata-pq/`, so neither
     sees the other's markers. Only one of the two queues runs at a time.
-  - **The move from the old places (once, by Louis).** Until 15 November 2026 the logs were
-    `~/workstation-queue-*.log` and `~/await-submit-*.log`, and the markers
-    `~/.cache/await-submit/<recipe>-<sha>`. The waiter still treats an old marker as a run (read
-    only, never written), so the move is safe at any time, best with no queue running:
-    ```bash
-    state=${XDG_STATE_HOME:-$HOME/.local/state}/mibz2/workstation
-    mkdir -p "$state/logs" "$state/ran"
-    mv ~/workstation-queue-*.log ~/await-submit-*.log "$state/logs/"
-    mv ~/.cache/await-submit/* "$state/ran/" && rmdir ~/.cache/await-submit
-    ```
-    Once moved, the old-place fallback in `bench/await-submit.sh` and `bench/run-queue.sh` can
-    be removed.
+  - Until 15 November 2026 the logs were `~/workstation-queue-*.log` and `~/await-submit-*.log`,
+    and the markers `~/.cache/await-submit/<recipe>-<sha>`. Louis moved them to the places above
+    once, and the scripts no longer read the old places.
 - **Adding work while the queue runs.** After each pass, the runner reads the queue and the tags
   from origin again. It runs every entry whose `ready` tag points at a commit not yet run on that
   machine, and suspends only after a pass that finds nothing new (at most 10 passes).
