@@ -1,0 +1,5 @@
+hand trace W A, R B, R C, W B, R A, R C at 1, 2, 3 lines
+fills [6, 5, 3] (hand [6, 5, 3]); dirty evictions [2, 2, 0] (hand [2, 2, 0]); dirty at end [0, 0, 2] (hand [0, 0, 2])
+boundary after W A, R B, R C at 2 lines: order-stage dirty evictions [1] (hand [1]); resident 2 (hand B, C); resident dirty 0 (hand none)
+then W B, R A, R C: fills [2] (hand [2]); dirty evictions [1] (hand [1]); dirty at end [0] (hand [0])
+random traces: 60000 accesses (one in three a write): fills, dirty evictions and dirty-at-end equal to a naive write-back LRU list at 1, 3, 8 lines

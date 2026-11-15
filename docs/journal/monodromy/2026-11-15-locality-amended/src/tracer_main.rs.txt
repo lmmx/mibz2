@@ -1,0 +1,1332 @@
+//! Untimed locality study of the Cells induction's step orders (C1a registration).
+//!
+//! locality CORPUS.bz2 CENSUS.jsonl SLOT KLIST EVERY [OPTS]
+//!   SLOT   20 (master) or 24 (the memtrace census's layout, for the cross-check)
+//!   KLIST  comma list of greedy windows, e.g. 64 or 64,4096 (0 = none)
+//!   EVERY  take every EVERY-th admitted block (1 = all 196)
+//! Output: one JSON line per admitted block on stdout.
+//!
+//! The induction is a port of `Kernel::slots` and `Kernel::induce_cells` (src/cells.rs at
+//! origin/master) on a byte buffer laid out exactly as the kernel lays it out; every load and
+//! store of the induction is recorded with its offset and width (not the stack, not the
+//! writer).
+
+use mibz2::bwt::{InverseBwt, Segmented};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{decode_block, Kernels, Scratch};
+use std::cell::RefCell;
+use std::collections::{BTreeSet, HashMap};
+
+thread_local! {
+    static CAP: RefCell<Option<(Vec<u8>, u32)>> = const { RefCell::new(None) };
+}
+
+#[derive(Default)]
+struct Capture(Segmented);
+impl InverseBwt for Capture {
+    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], p: u32, out: &mut Vec<u8>) {
+        CAP.with(|c| *c.borrow_mut() = Some((ll.to_vec(), p)));
+        self.0.invert(ll, counts, p, out)
+    }
+}
+
+const PAD: usize = 4096;
+const FAR: usize = 12;
+const MARK: u32 = 1 << 31;
+const SMALL: u64 = 16;
+const BYTES: usize = 16;
+
+// access flags
+const W: u8 = 1; // store
+const AHEAD: u8 = 2; // the fetch-ahead's two loads (`ahead!`)
+const REC: u8 = 4; // a record read by `slots` (records live in their own allocation)
+
+#[derive(Clone, Copy)]
+struct Acc {
+    at: u32,
+    w: u8,
+    f: u8,
+}
+
+#[derive(Default)]
+struct Trace {
+    // per step: accesses (kernel widths), semantic accesses (for hazards), deps
+    acc: Vec<Acc>,
+    acc_off: Vec<u32>,
+    sem: Vec<Acc>,
+    sem_off: Vec<u32>,
+    deps: Vec<Vec<u32>>,
+    /// accesses after the last step (the closing read), fixed at the end in every order
+    epi: Vec<Acc>,
+    /// the order stage's (slots) stores, in order: the optional prefix
+    pre: Vec<Acc>,
+    /// allocations by step, for the second address model: (region, start, step)
+    allocs: Vec<(u8, u32, u32, u32)>,
+    bots: usize,
+    arena: usize,
+    // layout
+    ft0: usize,
+    fb0: usize,
+    dyn0: usize,
+    rules: usize,
+    buf_len: usize,
+    letters: usize,
+    drops: usize,
+}
+
+const NONE: u32 = u32::MAX;
+
+struct Block {
+    n: usize,
+    recs: Vec<u16>,
+    p: u32,
+}
+
+fn records(ll: &[u8]) -> Vec<u16> {
+    let mut v = Vec::new();
+    let mut i = 0;
+    while i < ll.len() {
+        let c = ll[i];
+        let mut j = i;
+        while j < ll.len() && ll[j] == c {
+            j += 1;
+        }
+        let mut left = j - i;
+        while left > 0 {
+            let l = left.min(127);
+            v.push((c as u16) << 8 | l as u16);
+            left -= l;
+        }
+        i = j;
+    }
+    v
+}
+
+struct Sim {
+    buf: Vec<u8>,
+    slot: usize,
+}
+impl Sim {
+    fn rd32(&self, at: usize) -> u32 {
+        u32::from_le_bytes(self.buf[at..at + 4].try_into().unwrap())
+    }
+    fn rd64(&self, at: usize) -> u64 {
+        u64::from_le_bytes(self.buf[at..at + 8].try_into().unwrap())
+    }
+    fn wr32(&mut self, at: usize, v: u32) {
+        self.buf[at..at + 4].copy_from_slice(&v.to_le_bytes())
+    }
+    fn wr64(&mut self, at: usize, v: u64) {
+        self.buf[at..at + 8].copy_from_slice(&v.to_le_bytes())
+    }
+}
+
+/// `slots` + `induce_cells`, traced. Returns the trace and the cell count, or None if refused.
+fn run(b: &Block, slot: usize, budget: usize) -> Option<(Trace, usize)> {
+    let n = b.n;
+    let recs = &b.recs;
+    let p = b.p;
+    let mut tr = Trace::default();
+    // ---- slots (gates as the kernel's, not forced)
+    if recs.len() * 10 >= n || recs.len() * 64 < n {
+        return None;
+    }
+    let mut cnt = [0u32; 257];
+    let (mut prev, mut row, mut start) = (256usize, 0u32, 0u32);
+    let (mut at, mut at_start) = (0usize, 0u32);
+    for (i, &rec) in recs.iter().enumerate() {
+        tr.pre.push(Acc { at: 2 * i as u32, w: 2, f: REC });
+        let (c, len) = ((rec >> 8) as usize, (rec & 0xFF) as u32);
+        if c != prev {
+            cnt[c + 1] += 1;
+            start = row;
+        }
+        prev = c;
+        if p.wrapping_sub(row) < len {
+            (at, at_start) = (i, start);
+        }
+        row += len;
+    }
+    assert_eq!(row as usize, n);
+    let cz = (recs[at] >> 8) as usize;
+    let (mut ia, mut ib) = (at, at + 1);
+    while ia > 0 && (recs[ia - 1] >> 8) as usize == cz {
+        ia -= 1;
+    }
+    while ib < recs.len() && (recs[ib] >> 8) as usize == cz {
+        ib += 1;
+    }
+    let total: u32 = recs[ia..ib].iter().map(|&x| (x & 0xFF) as u32).sum();
+    for i in ia..ib {
+        tr.pre.push(Acc { at: 2 * i as u32, w: 2, f: REC });
+    }
+    let off = p - at_start;
+    cnt[cz + 1] += (off > 0) as u32 + (total - off > 1) as u32;
+    let letters = cnt.iter().map(|&v| v as usize).sum::<usize>();
+    let cap = (recs.len() + 2 + budget) * slot;
+    let tops = PAD;
+    let bots = tops + cap;
+    let arena = bots + cap;
+    let rules = arena + BYTES + 256 + 16 + 16 * budget + 32;
+    let allocation = rules + 16 * budget + 16;
+    let mut s = Sim { buf: vec![0u8; allocation], slot };
+    for c in 0..256 {
+        s.buf[arena + BYTES + c] = c as u8;
+        tr.pre.push(Acc { at: (arena + BYTES + c) as u32, w: 1, f: W });
+    }
+    for k in 0..256 {
+        cnt[k + 1] += cnt[k];
+        cnt[k] = (bots + cnt[k] as usize * slot) as u32;
+    }
+    let first = arena as u64 + BYTES as u64;
+    let mut t = PAD;
+    {
+        let mut letter = |s: &mut Sim, tr: &mut Trace, lam: u32, c: usize, t: &mut usize| -> usize {
+            let k = cnt[c] as usize;
+            cnt[c] = (k + slot) as u32;
+            let lw = 1 | (first + c as u64) << 32;
+            s.wr64(*t, t.wrapping_sub(slot) as u32 as u64 | (lam as u64) << 32);
+            s.wr64(*t + 8, lw);
+            s.wr32(*t + 16, k as u32);
+            s.wr64(k, k.wrapping_sub(slot) as u32 as u64 | (lam as u64) << 32);
+            s.wr64(k + 8, lw);
+            s.wr32(k + 16, *t as u32);
+            tr.pre.push(Acc { at: *t as u32, w: 20, f: W });
+            tr.pre.push(Acc { at: k as u32, w: 20, f: W });
+            let tt = *t;
+            *t += slot;
+            tt
+        };
+        let nrec = recs.len();
+        let mut i = 0;
+        while i < nrec {
+            if i == ia {
+                if off > 0 {
+                    letter(&mut s, &mut tr, off, cz, &mut t);
+                }
+                let tz = letter(&mut s, &mut tr, 1, cz, &mut t);
+                let kz = s.rd32(tz + 16) as usize;
+                s.wr32(tz + 8, 1 | MARK);
+                s.wr32(kz + 8, 1 | MARK);
+                tr.pre.push(Acc { at: (tz + 16) as u32, w: 4, f: 0 });
+                tr.pre.push(Acc { at: (tz + 8) as u32, w: 4, f: W });
+                tr.pre.push(Acc { at: (kz + 8) as u32, w: 4, f: W });
+                if total - off > 1 {
+                    letter(&mut s, &mut tr, total - off - 1, cz, &mut t);
+                }
+                i = ib;
+                continue;
+            }
+            let rec = recs[i];
+            tr.pre.push(Acc { at: 2 * i as u32, w: 2, f: REC });
+            let c = (rec >> 8) as usize;
+            let mut lam = (rec & 0xFF) as u32;
+            i += 1;
+            while i < nrec && (recs[i] >> 8) as usize == c {
+                tr.pre.push(Acc { at: 2 * i as u32, w: 2, f: REC });
+                lam += (recs[i] & 0xFF) as u32;
+                i += 1;
+            }
+            letter(&mut s, &mut tr, lam, c, &mut t);
+        }
+    }
+    s.wr32(PAD, PAD as u32);
+    s.wr32(bots, bots as u32);
+    tr.pre.push(Acc { at: PAD as u32, w: 4, f: W });
+    tr.pre.push(Acc { at: bots as u32, w: 4, f: W });
+    // records: a separate allocation, placed after the buffer (64-aligned, disjoint)
+    let rec0 = ((allocation + 4096 + 63) / 64 * 64) as u32;
+    for a in tr.pre.iter_mut() {
+        if a.f & REC != 0 {
+            a.at += rec0;
+        }
+    }
+    if letters - 1 > budget {
+        return None;
+    }
+    // ---- induce_cells, traced
+    const M: u64 = 0xFFFF_FFFF;
+    let rr = letters;
+    let mut top = arena + BYTES + 256 + 16;
+    let mut rp = rules;
+    let (ft0, fb0) = (tops + rr * slot, bots + rr * slot);
+    let (mut ft, mut fb) = (ft0, fb0);
+    tr.ft0 = ft0;
+    tr.fb0 = fb0;
+    tr.dyn0 = top;
+    tr.rules = rules;
+    tr.buf_len = allocation;
+    tr.bots = bots;
+    tr.arena = arena;
+    tr.letters = letters;
+    let mut cells = 0usize;
+    // writer step of each slot (by slot index, both regions), for the data DAG
+    let nslots = 2 * cap / slot + 4;
+    let mut writer = vec![NONE; nslots];
+    let sidx = |a: usize| -> usize {
+        if a >= bots {
+            cap / slot + 2 + (a - bots) / slot
+        } else {
+            (a - tops) / slot
+        }
+    };
+    // pending accesses for the next step
+    let mut pacc: Vec<Acc> = Vec::new();
+    let mut psem: Vec<Acc> = Vec::new();
+    let mut pdeps: Vec<u32> = Vec::new();
+    let (mut na, mut nb);
+    let (mut ra, mut rb);
+    let (mut aw, mut bw);
+    let (mut bs, mut ts);
+    let (mut sa, mut sb) = (ft0 - slot, fb0 - slot);
+    // a slot read whole (fields 0..20 as the kernel's rd32 / rd32 / rd64 / rd_other)
+    macro_rules! rdslot {
+        ($s:expr) => {{
+            let x = $s;
+            pacc.push(Acc { at: x as u32, w: 4, f: 0 });
+            pacc.push(Acc { at: (x + 4) as u32, w: 4, f: 0 });
+            pacc.push(Acc { at: (x + 8) as u32, w: 8, f: 0 });
+            pacc.push(Acc { at: (x + 16) as u32, w: 4, f: 0 });
+            psem.push(Acc { at: x as u32, w: 20, f: 0 });
+            let wi = writer[sidx(x)];
+            if wi != NONE {
+                pdeps.push(wi);
+            }
+            (s.rd32(x) as usize, s.rd32(x + 4) as u64, s.rd64(x + 8), s.rd32(x + 16) as usize)
+        }};
+    }
+    macro_rules! ahead {
+        ($s:expr) => {{
+            let far = $s - FAR * slot;
+            pacc.push(Acc { at: (far + 16) as u32, w: 4, f: AHEAD });
+            pacc.push(Acc { at: (far + 12) as u32, w: 4, f: AHEAD });
+        }};
+    }
+    // the step being recorded: its own accesses go after the pending ones
+    let mut cur: usize;
+    let mut acc: Vec<Acc> = Vec::new();
+    let mut sem: Vec<Acc> = Vec::new();
+    macro_rules! own {
+        ($at:expr, $w:expr, $f:expr) => {{
+            acc.push(Acc { at: ($at) as u32, w: $w as u8, f: $f });
+        }};
+    }
+    macro_rules! osem {
+        ($at:expr, $w:expr, $f:expr) => {{
+            if $w > 0 {
+                sem.push(Acc { at: ($at) as u32, w: $w as u8, f: $f });
+            }
+        }};
+    }
+    macro_rules! close_step {
+        ($chain:expr) => {{
+            let mut all: Vec<u32> = pdeps.drain(..).collect();
+            if let Some(c) = $chain {
+                all.push(c);
+            }
+            all.sort_unstable();
+            all.dedup();
+            tr.deps.push(all);
+            tr.acc.extend(pacc.drain(..));
+            tr.acc.extend(acc.drain(..));
+            tr.acc_off.push(tr.acc.len() as u32);
+            tr.sem.extend(psem.drain(..));
+            tr.sem.extend(sem.drain(..));
+            tr.sem_off.push(tr.sem.len() as u32);
+        }};
+    }
+    tr.acc_off.push(0);
+    tr.sem_off.push(0);
+    let mut chain: Option<u32>;
+    'fresh: loop {
+        (na, ra, aw, bs) = rdslot!(sa);
+        (nb, rb, bw, ts) = rdslot!(sb);
+        ahead!(sa);
+        ahead!(sb);
+        chain = None;
+        if bs == sb {
+            if aw as u32 & MARK != 0 {
+                tr.epi.extend(pacc.drain(..));
+                psem.clear();
+                pdeps.clear();
+                return Some((tr, cells));
+            }
+            tr.drops += 1;
+            (sa, sb) = (na, nb);
+            continue 'fresh;
+        }
+        loop {
+            if cells == budget {
+                return None;
+            }
+            cur = cells;
+            cells += 1;
+            let (la, lb) = (aw & M, bw & M);
+            let len = la + lb;
+            let small = len <= SMALL;
+            if small {
+                // copy16 twice: 16-byte loads and stores (semantic: the words' own bytes)
+                let (wa, wb) = ((aw >> 32) as usize, (bw >> 32) as usize);
+                own!(wa, 16, 0);
+                own!(top, 16, W);
+                own!(wb, 16, 0);
+                own!(top + la.min(16) as usize, 16, W);
+                osem!(wa, la, 0);
+                osem!(wb, lb, 0);
+                osem!(top, len, W);
+                let tmp: Vec<u8> = s.buf[wa..wa + 16].to_vec();
+                s.buf[top..top + 16].copy_from_slice(&tmp);
+                let tmp: Vec<u8> = s.buf[wb..wb + 16].to_vec();
+                let d = top + la.min(16) as usize;
+                s.buf[d..d + 16].copy_from_slice(&tmp);
+                tr.allocs.push((0, top as u32, cur as u32, len as u32));
+            } else {
+                own!(rp, 8, W);
+                own!(rp + 8, 8, W);
+                osem!(rp, 16, W);
+                s.wr64(rp, aw);
+                s.wr64(rp + 8, bw);
+                tr.allocs.push((1, rp as u32, cur as u32, 16));
+            }
+            let word = if small { top } else { rp };
+            top += if small { len as usize } else { 0 };
+            rp += if small { 0 } else { 16 };
+            let cw = len | (word as u64) << 32;
+            if ra == rb {
+                s.wr32(ts + 4, ra as u32);
+                s.wr64(ts + 8, cw);
+                s.wr32(ts + 16, bs as u32);
+                s.wr32(bs + 4, ra as u32);
+                s.wr64(bs + 8, cw);
+                s.wr32(bs + 16, ts as u32);
+                own!(ts + 4, 4, W);
+                own!(ts + 8, 8, W);
+                own!(ts + 16, 4, W);
+                own!(bs + 4, 4, W);
+                own!(bs + 8, 8, W);
+                own!(bs + 16, 4, W);
+                osem!(ts + 4, 16, W);
+                osem!(bs + 4, 16, W);
+                writer[sidx(ts)] = cur as u32;
+                writer[sidx(bs)] = cur as u32;
+                close_step!(chain);
+                (sa, sb) = (na, nb);
+                continue 'fresh;
+            } else if ra > rb {
+                s.wr32(ts + 4, rb as u32);
+                s.wr64(ts + 8, cw);
+                s.wr32(ts + 16, bs as u32);
+                let v = s.rd32(bs);
+                s.wr32(fb, v);
+                s.wr32(bs, fb as u32);
+                s.wr32(bs + 4, rb as u32);
+                s.wr64(bs + 8, cw);
+                s.wr32(bs + 16, ts as u32);
+                own!(ts + 4, 4, W);
+                own!(ts + 8, 8, W);
+                own!(ts + 16, 4, W);
+                own!(bs, 4, 0);
+                own!(fb, 4, W);
+                own!(bs, 4, W);
+                own!(bs + 4, 4, W);
+                own!(bs + 8, 8, W);
+                own!(bs + 16, 4, W);
+                osem!(ts + 4, 16, W);
+                osem!(bs, 4, 0);
+                osem!(fb, 4, W);
+                osem!(bs, 20, W);
+                writer[sidx(ts)] = cur as u32;
+                writer[sidx(bs)] = cur as u32;
+                writer[sidx(fb)] = cur as u32;
+                tr.allocs.push((3, fb as u32, cur as u32, slot as u32));
+                close_step!(chain);
+                chain = Some(cur as u32);
+                bs = fb;
+                fb += slot;
+                ra -= rb;
+                let sn = nb;
+                ahead!(sn);
+                (nb, rb, bw, ts) = rdslot!(sn);
+            } else {
+                s.wr32(bs + 4, ra as u32);
+                s.wr64(bs + 8, cw);
+                s.wr32(bs + 16, ts as u32);
+                let v = s.rd32(ts);
+                s.wr32(ft, v);
+                s.wr32(ts, ft as u32);
+                s.wr32(ts + 4, ra as u32);
+                s.wr64(ts + 8, cw);
+                s.wr32(ts + 16, bs as u32);
+                own!(bs + 4, 4, W);
+                own!(bs + 8, 8, W);
+                own!(bs + 16, 4, W);
+                own!(ts, 4, 0);
+                own!(ft, 4, W);
+                own!(ts, 4, W);
+                own!(ts + 4, 4, W);
+                own!(ts + 8, 8, W);
+                own!(ts + 16, 4, W);
+                osem!(bs + 4, 16, W);
+                osem!(ts, 4, 0);
+                osem!(ft, 4, W);
+                osem!(ts, 20, W);
+                writer[sidx(ts)] = cur as u32;
+                writer[sidx(bs)] = cur as u32;
+                writer[sidx(ft)] = cur as u32;
+                tr.allocs.push((2, ft as u32, cur as u32, slot as u32));
+                close_step!(chain);
+                chain = Some(cur as u32);
+                ts = ft;
+                ft += slot;
+                rb -= ra;
+                let sn = na;
+                ahead!(sn);
+                (na, ra, aw, bs) = rdslot!(sn);
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ LRU (exact stack distance)
+struct Fen {
+    t: Vec<i32>,
+}
+impl Fen {
+    fn new(n: usize) -> Self {
+        Fen { t: vec![0; n + 1] }
+    }
+    fn add(&mut self, mut i: usize, v: i32) {
+        i += 1;
+        while i < self.t.len() {
+            self.t[i] += v;
+            i += i & i.wrapping_neg();
+        }
+    }
+    fn sum(&self, mut i: usize) -> i64 {
+        // sum of [0, i)
+        let mut s = 0i64;
+        while i > 0 {
+            s += self.t[i] as i64;
+            i -= i & i.wrapping_neg();
+        }
+        s
+    }
+    /// smallest index i with sum(0..=i) >= k (k >= 1)
+    fn kth(&self, mut k: i64) -> usize {
+        let mut pos = 0usize;
+        let mut step = self.t.len().next_power_of_two();
+        while step > 0 {
+            if pos + step < self.t.len() && (self.t[pos + step] as i64) < k {
+                pos += step;
+                k -= self.t[pos] as i64;
+            }
+            step >>= 1;
+        }
+        pos
+    }
+}
+
+const CAPS: [usize; 3] = [20480, 81920, 32768]; // (old Lru only; the greedy takes its capacity)
+/// the amended capacities, in 64-byte lines: 256 KiB (L2), 5 MiB, 2 MiB, 1.25 MiB (sensitivity)
+const WCAPS: [usize; 4] = [4096, 81920, 32768, 20480];
+
+#[derive(Default, Clone)]
+struct Eval {
+    accesses: u64,
+    misses: [u64; 3],
+    last_d: usize,
+    cold: u64,
+    hist: Vec<u64>, // log2 buckets of stack distance; last bucket = cold
+}
+
+struct Lru {
+    caps: Vec<usize>,
+    last: HashMap<u32, usize>,
+    fen: Fen,
+    now: usize,
+    ev: Eval,
+}
+impl Lru {
+    fn new(tmax: usize) -> Self {
+        Lru {
+            caps: CAPS.to_vec(),
+            last: HashMap::new(),
+            fen: Fen::new(tmax + 1),
+            now: 0,
+            ev: Eval { hist: vec![0; 26], ..Default::default() },
+        }
+    }
+    fn touch(&mut self, line: u32) {
+        let t = self.now;
+        self.now += 1;
+        self.ev.accesses += 1;
+        match self.last.insert(line, t) {
+            None => {
+                self.ev.last_d = usize::MAX;
+                self.ev.cold += 1;
+                for m in self.ev.misses.iter_mut() {
+                    *m += 1;
+                }
+                self.ev.hist[25] += 1;
+            }
+            Some(p) => {
+                let d = (self.fen.sum(t) - self.fen.sum(p + 1)) as usize; // distinct since
+                self.ev.last_d = d;
+                self.fen.add(p, -1);
+                for (i, &c) in self.caps.iter().enumerate() {
+                    if d >= c {
+                        self.ev.misses[i] += 1;
+                    }
+                }
+                let b = if d == 0 { 0 } else { (usize::BITS - d.leading_zeros()) as usize };
+                self.ev.hist[b.min(24)] += 1;
+            }
+        }
+        self.fen.add(t, 1);
+    }
+    /// time threshold: a line is resident at capacity c iff its last access >= thr
+    fn thr(&self, c: usize) -> usize {
+        let total = self.last.len() as i64;
+        if total <= c as i64 {
+            return 0;
+        }
+        self.fen.kth(total - c as i64) + 1
+    }
+}
+
+fn lines_of(a: Acc, out: &mut Vec<u32>) {
+    let s = a.at as usize / 64;
+    let e = (a.at as usize + a.w as usize - 1) / 64;
+    for l in s..=e {
+        out.push(l as u32);
+    }
+}
+
+/// address remap for model 2 (allocation in execution order); identity for model 1
+struct Remap {
+    // per region: sorted starts (R addresses) and new starts
+    starts: [Vec<u32>; 4],
+    news: [Vec<u32>; 4],
+    lo: [u32; 4],
+    hi: [u32; 4],
+}
+impl Remap {
+    fn map(&self, a: u32) -> u32 {
+        for r in 0..4 {
+            if a >= self.lo[r] && a < self.hi[r] {
+                let v = &self.starts[r];
+                let i = match v.binary_search(&a) {
+                    Ok(i) => i,
+                    Err(0) => return a,
+                    Err(i) => i - 1,
+                };
+                return self.news[r][i] + (a - v[i]);
+            }
+        }
+        a
+    }
+}
+
+fn build_remap(tr: &Trace, order: &[u32]) -> Remap {
+    // regions: 0 arena (dynamic words), 1 rules, 2 fresh top slots, 3 fresh bottom slots
+    let mut by_step: Vec<Vec<usize>> = vec![Vec::new(); tr.deps.len()];
+    for (i, &(_, _, st, _)) in tr.allocs.iter().enumerate() {
+        by_step[st as usize].push(i);
+    }
+    let mut bump = [tr.dyn0 as u32, tr.rules as u32, tr.ft0 as u32, tr.fb0 as u32];
+    let mut newa = vec![0u32; tr.allocs.len()];
+    for &st in order {
+        for &i in &by_step[st as usize] {
+            let (r, _, _, sz) = tr.allocs[i];
+            newa[i] = bump[r as usize];
+            bump[r as usize] += sz;
+        }
+    }
+    let mut starts: [Vec<u32>; 4] = Default::default();
+    let mut news: [Vec<u32>; 4] = Default::default();
+    let mut idx: Vec<usize> = (0..tr.allocs.len()).collect();
+    idx.sort_by_key(|&i| (tr.allocs[i].0, tr.allocs[i].1));
+    for i in idx {
+        let (r, a, _, _) = tr.allocs[i];
+        starts[r as usize].push(a);
+        news[r as usize].push(newa[i]);
+    }
+    let lo = [tr.dyn0 as u32, tr.rules as u32, tr.ft0 as u32, tr.fb0 as u32];
+    let hi = [tr.rules as u32, tr.buf_len as u32, tr.bots as u32, tr.arena as u32];
+    Remap { starts, news, lo, hi }
+}
+
+fn evaluate(tr: &Trace, order: &[u32], ahead: bool, prefix: bool, remap: Option<&Remap>) -> Eval {
+    let tmax = tr.acc.len() * 3 + tr.pre.len() * 2 + tr.epi.len() * 2 + 16;
+    let mut lru = Lru::new(tmax);
+    let mut ls = Vec::new();
+    let mut feed = |lru: &mut Lru, a: Acc| {
+        if !ahead && a.f & AHEAD != 0 {
+            return;
+        }
+        let a = match remap {
+            Some(m) => Acc { at: m.map(a.at), ..a },
+            None => a,
+        };
+        ls.clear();
+        lines_of(a, &mut ls);
+        for &l in ls.iter() {
+            lru.touch(l);
+        }
+    };
+    if prefix {
+        for &a in &tr.pre {
+            feed(&mut lru, a);
+        }
+    }
+    for &st in order {
+        let (s, e) = (tr.acc_off[st as usize] as usize, tr.acc_off[st as usize + 1] as usize);
+        for &a in &tr.acc[s..e] {
+            feed(&mut lru, a);
+        }
+    }
+    if !order.is_empty() {
+        for &a in &tr.epi {
+            feed(&mut lru, a);
+        }
+    }
+    lru.ev
+}
+
+// ------------------------------------------------------------------ validity
+/// every dep before its step
+fn is_linext(tr: &Trace, order: &[u32]) -> bool {
+    let s = tr.deps.len();
+    if order.len() != s {
+        return false;
+    }
+    let mut pos = vec![NONE; s];
+    for (i, &st) in order.iter().enumerate() {
+        if pos[st as usize] != NONE {
+            return false;
+        }
+        pos[st as usize] = i as u32;
+    }
+    for st in 0..s {
+        for &d in &tr.deps[st] {
+            if pos[d as usize] >= pos[st] {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+/// every read/write/write hazard of R's semantic accesses (byte-exact) kept by the order:
+/// then every step reads exactly the values it read in R, and writes the same, so the rules,
+/// the arena and the slots end as in R: the same grammar and derivation tree, the same writer
+fn hazards_ok(tr: &Trace, order: &[u32]) -> (bool, u64) {
+    let s = tr.deps.len();
+    let mut pos = vec![0u32; s];
+    for (i, &st) in order.iter().enumerate() {
+        pos[st as usize] = i as u32 + 1;
+    }
+    let mut lastw = vec![0u32; tr.buf_len];
+    let mut maxall = vec![0u32; tr.buf_len];
+    let mut bad = 0u64;
+    for st in 0..s {
+        let p = pos[st];
+        let (a0, a1) = (tr.sem_off[st] as usize, tr.sem_off[st + 1] as usize);
+        for a in &tr.sem[a0..a1] {
+            for x in a.at as usize..a.at as usize + a.w as usize {
+                if a.f & W != 0 {
+                    if p < maxall[x] {
+                        bad += 1;
+                    }
+                    lastw[x] = p;
+                } else if p < lastw[x] {
+                    bad += 1;
+                }
+                maxall[x] = maxall[x].max(p);
+            }
+        }
+    }
+    (bad == 0, bad)
+}
+
+// ------------------------------------------------------------------ greedy
+fn greedy(tr: &Trace, k: usize, cap: usize, ahead: bool) -> Vec<u32> {
+    let s = tr.deps.len();
+    let mut succ_off = vec![0u32; s + 1];
+    let mut indeg = vec![0u8; s];
+    for st in 0..s {
+        for &d in &tr.deps[st] {
+            succ_off[d as usize + 1] += 1;
+            indeg[st] += 1;
+        }
+    }
+    for i in 0..s {
+        succ_off[i + 1] += succ_off[i];
+    }
+    let mut succ = vec![0u32; succ_off[s] as usize];
+    let mut fill = succ_off.clone();
+    for st in 0..s {
+        for &d in &tr.deps[st] {
+            succ[fill[d as usize] as usize] = st as u32;
+            fill[d as usize] += 1;
+        }
+    }
+    // per step: its distinct lines (model 1)
+    let mut sl: Vec<Vec<u32>> = Vec::with_capacity(s);
+    let mut ls = Vec::new();
+    for st in 0..s {
+        ls.clear();
+        for a in &tr.acc[tr.acc_off[st] as usize..tr.acc_off[st + 1] as usize] {
+            if !ahead && a.f & AHEAD != 0 {
+                continue;
+            }
+            lines_of(*a, &mut ls);
+        }
+        ls.sort_unstable();
+        ls.dedup();
+        sl.push(ls.clone());
+    }
+    let tmax = tr.acc.len() * 3 + tr.pre.len() * 2 + 16;
+    let mut lru = Lru::new(tmax);
+    // seeded with the order stage (`slots`): the greedy starts from the stated initial state
+    for a in &tr.pre {
+        ls.clear();
+        lines_of(*a, &mut ls);
+        for &l in &ls {
+            lru.touch(l);
+        }
+    }
+    let mut ready: BTreeSet<u32> = BTreeSet::new();
+    for st in 0..s {
+        if indeg[st] == 0 {
+            ready.insert(st as u32);
+        }
+    }
+    let mut order = Vec::with_capacity(s);
+    while let Some(_) = ready.first() {
+        let thr = lru.thr(cap);
+        let mut best = (u64::MAX, u64::MAX, u32::MAX);
+        for &c in ready.iter().take(k) {
+            let mut miss = 0u64;
+            let mut age = 0u64;
+            for &l in &sl[c as usize] {
+                match lru.last.get(&l) {
+                    Some(&t) if t >= thr => age += (lru.now - t) as u64,
+                    _ => {
+                        miss += 1;
+                        age += lru.now as u64;
+                    }
+                }
+            }
+            let key = (miss, age, c);
+            if key < best {
+                best = key;
+            }
+        }
+        let c = best.2;
+        ready.remove(&c);
+        order.push(c);
+        for a in &tr.acc[tr.acc_off[c as usize] as usize..tr.acc_off[c as usize + 1] as usize] {
+            if !ahead && a.f & AHEAD != 0 {
+                continue;
+            }
+            ls.clear();
+            lines_of(*a, &mut ls);
+            for &l in &ls {
+                lru.touch(l);
+            }
+        }
+        for &x in &succ[succ_off[c as usize] as usize..succ_off[c as usize + 1] as usize] {
+            indeg[x as usize] -= 1;
+            if indeg[x as usize] == 0 {
+                ready.insert(x);
+            }
+        }
+    }
+    order
+}
+
+// ------------------------------------------------------------------ write-back LRU (amended model)
+/// A fully associative LRU on 64-byte lines, write-allocate and write-back, at several
+/// capacities at once (exact stack distances). Per line and capacity, one dirty bit for the
+/// line's current residency. A miss (read or write) is a fill; a residency that ends by
+/// eviction while dirty is a dirty eviction (counted when it is discovered: at the line's next
+/// fill, or at `finish`/`boundary` if the line is no longer resident).
+struct WbLru {
+    caps: Vec<usize>,
+    last: HashMap<u32, (usize, u8)>, // last access time, dirty mask by capacity index
+    fen: Fen,
+    now: usize,
+    fills: Vec<u64>,
+    devict: Vec<u64>,
+    enddirty: Vec<u64>,
+    accesses: u64,
+}
+impl WbLru {
+    fn new(tmax: usize, caps: &[usize]) -> Self {
+        let k = caps.len();
+        WbLru {
+            caps: caps.to_vec(),
+            last: HashMap::new(),
+            fen: Fen::new(tmax + 1),
+            now: 0,
+            fills: vec![0; k],
+            devict: vec![0; k],
+            enddirty: vec![0; k],
+            accesses: 0,
+        }
+    }
+    fn touch(&mut self, line: u32, write: bool) {
+        let t = self.now;
+        self.now += 1;
+        self.accesses += 1;
+        let wm: u8 = if write { 0xFF } else { 0 };
+        match self.last.get(&line).copied() {
+            None => {
+                for i in 0..self.caps.len() {
+                    self.fills[i] += 1;
+                }
+                self.last.insert(line, (t, wm));
+            }
+            Some((p, mut dm)) => {
+                let d = (self.fen.sum(t) - self.fen.sum(p + 1)) as usize;
+                self.fen.add(p, -1);
+                for (i, &c) in self.caps.iter().enumerate() {
+                    let bit = 1u8 << i;
+                    if d >= c {
+                        self.fills[i] += 1;
+                        if dm & bit != 0 {
+                            self.devict[i] += 1;
+                        }
+                        dm = (dm & !bit) | (wm & bit);
+                    } else {
+                        dm |= wm & bit;
+                    }
+                }
+                self.last.insert(line, (t, dm));
+            }
+        }
+        self.fen.add(t, 1);
+    }
+    fn thr(&self, c: usize) -> usize {
+        let total = self.last.len() as i64;
+        if total <= c as i64 {
+            return 0;
+        }
+        self.fen.kth(total - c as i64) + 1
+    }
+    /// End of a phase: lines no longer resident but still marked dirty were evicted dirty in
+    /// this phase (counted, bit cleared). Returns per capacity (resident set, resident dirty).
+    fn boundary(&mut self) -> Vec<(Vec<u32>, Vec<u32>)> {
+        let thrs: Vec<usize> = self.caps.iter().map(|&c| self.thr(c)).collect();
+        let mut out = vec![(Vec::new(), Vec::new()); self.caps.len()];
+        for (&l, v) in self.last.iter_mut() {
+            for i in 0..thrs.len() {
+                let bit = 1u8 << i;
+                if v.0 >= thrs[i] {
+                    out[i].0.push(l);
+                    if v.1 & bit != 0 {
+                        out[i].1.push(l);
+                    }
+                } else if v.1 & bit != 0 {
+                    self.devict[i] += 1;
+                    v.1 &= !bit;
+                }
+            }
+        }
+        out
+    }
+    fn reset_counts(&mut self) {
+        for i in 0..self.caps.len() {
+            self.fills[i] = 0;
+            self.devict[i] = 0;
+            self.enddirty[i] = 0;
+        }
+        self.accesses = 0;
+    }
+    /// End of the induction: resident dirty lines are counted in `enddirty`.
+    fn finish(&mut self) {
+        let res = self.boundary();
+        for i in 0..self.caps.len() {
+            self.enddirty[i] = res[i].1.len() as u64;
+        }
+    }
+}
+
+#[derive(Clone, Default)]
+struct WbEval {
+    fills: Vec<u64>,
+    devict: Vec<u64>,
+    enddirty: Vec<u64>,
+    lines: u64, // distinct lines the induction touched
+    /// per capacity: resident and resident-dirty line sets at the start of the induction
+    start: Vec<(Vec<u32>, Vec<u32>)>,
+    pre_fills: Vec<u64>,
+    pre_devict: Vec<u64>,
+    sg_missing: u64, // lines of S_g this order did not touch (must be 0)
+}
+
+fn evaluate_wb(tr: &Trace, order: &[u32], prefix: bool, remap: Option<&Remap>, keep_start: bool, sg: &[u32]) -> WbEval {
+    let tmax = tr.acc.len() * 3 + tr.pre.len() * 2 + tr.epi.len() * 2 + 16;
+    let mut lru = WbLru::new(tmax, &WCAPS);
+    let mut ls = Vec::new();
+    let mut seen: std::collections::HashSet<u32> = std::collections::HashSet::new();
+    let mut ev = WbEval::default();
+    if prefix {
+        for &a in &tr.pre {
+            ls.clear();
+            lines_of(a, &mut ls);
+            for &l in &ls {
+                lru.touch(l, a.f & W != 0);
+            }
+        }
+    }
+    let st = lru.boundary();
+    ev.pre_fills = lru.fills.clone();
+    ev.pre_devict = lru.devict.clone();
+    if keep_start {
+        ev.start = st;
+    }
+    lru.reset_counts();
+    let mut feed = |lru: &mut WbLru, a: Acc| {
+        if a.f & AHEAD != 0 {
+            return;
+        }
+        let a = match remap {
+            Some(m) => Acc { at: m.map(a.at), ..a },
+            None => a,
+        };
+        ls.clear();
+        lines_of(a, &mut ls);
+        for &l in ls.iter() {
+            lru.touch(l, a.f & W != 0);
+            seen.insert(l);
+        }
+    };
+    for &s in order {
+        let (s0, e0) = (tr.acc_off[s as usize] as usize, tr.acc_off[s as usize + 1] as usize);
+        for &a in &tr.acc[s0..e0] {
+            feed(&mut lru, a);
+        }
+    }
+    for &a in &tr.epi {
+        feed(&mut lru, a);
+    }
+    lru.finish();
+    ev.fills = lru.fills.clone();
+    ev.devict = lru.devict.clone();
+    ev.enddirty = lru.enddirty.clone();
+    ev.lines = seen.len() as u64;
+    ev.sg_missing = sg.iter().filter(|l| !seen.contains(l)).count() as u64;
+    ev
+}
+
+/// Lines every realizable order touches (S_g) and writes (D_g), under master's layout with
+/// either R's addresses (model 1) or the kernel's bump cursors in execution order (model 2):
+/// - an access whose address lies outside the three bump-allocated regions (original slots,
+///   the identity table, the closing read) has the same address in every order;
+/// - each bump region's objects tile one contiguous range from the region's start in every
+///   order (same objects, same sizes), and the bytes guaranteed written are: the arena words'
+///   own bytes (all of [dyn0, dyn0 + sum len)), the rules (all of [rules, rules + 16 m)), and
+///   offset 0..4 of every fresh slot (written when it is cut); a 64-byte line between the
+///   first and last fresh slot's start always holds a slot start (SLOT = 20 < 64).
+/// Copy16 slack and fields written later are not counted (order-dependent position).
+fn guaranteed(tr: &Trace) -> (Vec<u32>, Vec<u32>, Vec<u32>) {
+    let regions = [(tr.dyn0, tr.rules), (tr.rules, tr.buf_len), (tr.ft0, tr.bots), (tr.fb0, tr.arena)];
+    let inb = |a: usize| regions.iter().any(|&(lo, hi)| a >= lo && a < hi);
+    let mut s1 = Vec::new();
+    let mut d1 = Vec::new();
+    let mut ls = Vec::new();
+    for a in tr.acc.iter().chain(tr.epi.iter()) {
+        if a.f & AHEAD != 0 || inb(a.at as usize) {
+            continue;
+        }
+        ls.clear();
+        lines_of(*a, &mut ls);
+        s1.extend_from_slice(&ls);
+        if a.f & W != 0 {
+            d1.extend_from_slice(&ls);
+        }
+    }
+    let mut sum = [0usize; 4];
+    for &(r, _, _, sz) in &tr.allocs {
+        sum[r as usize] += sz as usize;
+    }
+    let slot = (tr.ft0 - PAD) / tr.letters; // SLOT
+    let mut bump = Vec::new();
+    let ranges = [
+        (tr.dyn0, sum[0]),
+        (tr.rules, sum[1]),
+        (tr.ft0, if sum[2] > 0 { sum[2] - slot + 4 } else { 0 }),
+        (tr.fb0, if sum[3] > 0 { sum[3] - slot + 4 } else { 0 }),
+    ];
+    for &(st, len) in &ranges {
+        if len > 0 {
+            for l in st / 64..=(st + len - 1) / 64 {
+                bump.push(l as u32);
+            }
+        }
+    }
+    s1.extend_from_slice(&bump);
+    d1.extend_from_slice(&bump);
+    s1.sort_unstable();
+    s1.dedup();
+    d1.sort_unstable();
+    d1.dedup();
+    // model 1's whole line set, for the footprint
+    let mut all = Vec::new();
+    for a in tr.acc.iter().chain(tr.epi.iter()) {
+        if a.f & AHEAD == 0 {
+            lines_of(*a, &mut all);
+        }
+    }
+    all.sort_unstable();
+    all.dedup();
+    (s1, d1, all)
+}
+
+/// Full-width version check at R's addresses (model 1): every byte a step reads with the
+/// kernel's widths (copy16 slack included; fetch-ahead loads excluded, their values only
+/// steer prefetch) has the same last writer as in R, and every byte ends with the same last
+/// writer. Then every load returns R's value and the buffer ends byte-identical.
+fn hazards_full(tr: &Trace, order: &[u32]) -> (bool, u64) {
+    let s = tr.deps.len();
+    let mut lastw = vec![NONE; tr.buf_len + 64];
+    let mut exp: Vec<u32> = Vec::new();
+    let mut eoff = vec![0usize; s + 1];
+    for st in 0..s {
+        for a in &tr.acc[tr.acc_off[st] as usize..tr.acc_off[st + 1] as usize] {
+            if a.f & AHEAD != 0 {
+                continue;
+            }
+            for x in a.at as usize..a.at as usize + a.w as usize {
+                if a.f & W != 0 {
+                    lastw[x] = st as u32;
+                } else {
+                    exp.push(lastw[x]);
+                }
+            }
+        }
+        eoff[st + 1] = exp.len();
+    }
+    let fin = lastw.clone();
+    lastw.iter_mut().for_each(|v| *v = NONE);
+    let mut bad = 0u64;
+    for &st in order {
+        let mut k = eoff[st as usize];
+        for a in &tr.acc[tr.acc_off[st as usize] as usize..tr.acc_off[st as usize + 1] as usize] {
+            if a.f & AHEAD != 0 {
+                continue;
+            }
+            for x in a.at as usize..a.at as usize + a.w as usize {
+                if a.f & W != 0 {
+                    lastw[x] = st;
+                } else {
+                    if lastw[x] != exp[k] {
+                        bad += 1;
+                    }
+                    k += 1;
+                }
+            }
+        }
+    }
+    // the closing read and the end state
+    bad += lastw.iter().zip(fin.iter()).filter(|(a, b)| a != b).count() as u64;
+    (bad == 0, bad)
+}
+
+fn v(x: &[u64]) -> String {
+    format!("{x:?}").replace(' ', "")
+}
+fn wb_json(e: &WbEval) -> String {
+    format!(
+        "{{\"fills\":{},\"devict\":{},\"enddirty\":{},\"lines\":{},\"sg_missing\":{}}}",
+        v(&e.fills), v(&e.devict), v(&e.enddirty), e.lines, e.sg_missing
+    )
+}
+
+/// the write-back LRU against hand-computed traces with writes, and a naive list model
+fn selftest_wb() {
+    // trace: W A, R B, R C, W B, R A, R C
+    let tr: [(u32, bool); 6] = [(0, true), (1, false), (2, false), (1, true), (0, false), (2, false)];
+    let mut l = WbLru::new(64, &[1, 2, 3]);
+    for &(x, w) in &tr {
+        l.touch(x, w);
+    }
+    l.finish();
+    println!("hand trace W A, R B, R C, W B, R A, R C at 1, 2, 3 lines");
+    println!("fills {:?} (hand [6, 5, 3]); dirty evictions {:?} (hand [2, 2, 0]); dirty at end {:?} (hand [0, 0, 2])", l.fills, l.devict, l.enddirty);
+    assert_eq!((l.fills.clone(), l.devict.clone(), l.enddirty.clone()), (vec![6, 5, 3], vec![2, 2, 0], vec![0, 0, 2]));
+    // phase boundary after the first three accesses
+    let mut l = WbLru::new(64, &[2]);
+    for &(x, w) in &tr[..3] {
+        l.touch(x, w);
+    }
+    let st = l.boundary();
+    println!("boundary after W A, R B, R C at 2 lines: order-stage dirty evictions {:?} (hand [1]); resident {:?} (hand B, C); resident dirty {:?} (hand none)", l.devict, st[0].0.len(), st[0].1.len());
+    assert_eq!(l.devict, vec![1]);
+    assert_eq!(st[0].0.len(), 2);
+    assert_eq!(st[0].1.len(), 0);
+    l.reset_counts();
+    for &(x, w) in &tr[3..] {
+        l.touch(x, w);
+    }
+    l.finish();
+    println!("then W B, R A, R C: fills {:?} (hand [2]); dirty evictions {:?} (hand [1]); dirty at end {:?} (hand [0])", l.fills, l.devict, l.enddirty);
+    assert_eq!((l.fills.clone(), l.devict.clone(), l.enddirty.clone()), (vec![2], vec![1], vec![0]));
+    // random traces against a naive write-back LRU list
+    let mut x = 987654321u64;
+    let caps = [1usize, 3, 8];
+    let mut n = 0;
+    for _ in 0..300 {
+        let len = 200;
+        let mut l = WbLru::new(len + 1, &caps);
+        let mut naive: Vec<Vec<(u32, bool)>> = vec![Vec::new(); 3];
+        let (mut nf, mut nd) = ([0u64; 3], [0u64; 3]);
+        for _ in 0..len {
+            x ^= x << 13; x ^= x >> 7; x ^= x << 17;
+            let line = (x % 12) as u32;
+            let w = (x >> 20) % 3 == 0;
+            l.touch(line, w);
+            for (i, &c) in caps.iter().enumerate() {
+                let q = &mut naive[i];
+                let mut d = w;
+                if let Some(p) = q.iter().position(|y| y.0 == line) {
+                    d |= q[p].1;
+                    q.remove(p);
+                } else {
+                    nf[i] += 1;
+                    if q.len() == c {
+                        if q.pop().unwrap().1 {
+                            nd[i] += 1;
+                        }
+                    }
+                }
+                q.insert(0, (line, d));
+            }
+            n += 1;
+        }
+        l.finish();
+        for i in 0..3 {
+            let ed = naive[i].iter().filter(|y| y.1).count() as u64;
+            assert_eq!((l.fills[i], l.devict[i], l.enddirty[i]), (nf[i], nd[i], ed));
+        }
+    }
+    println!("random traces: {n} accesses (one in three a write): fills, dirty evictions and dirty-at-end equal to a naive write-back LRU list at 1, 3, 8 lines");
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args.get(1).map(|s| s.as_str()) == Some("--selftest") {
+        selftest_wb();
+        return;
+    }
+    let data = std::fs::read(&args[1]).expect("corpus");
+    let census = std::fs::read_to_string(&args[2]).expect("census");
+    let kk: usize = args[3].parse().unwrap();
+    let every: usize = args[4].parse().unwrap();
+    let only: Option<u64> = args.get(5).map(|x| x.parse().unwrap());
+    let slot = 20usize;
+    let mut adm: HashMap<u64, (usize, usize, usize, usize)> = HashMap::new();
+    let mut adm_list = Vec::new();
+    for line in census.lines() {
+        if !line.contains("\"outcome\":\"admitted\"") {
+            continue;
+        }
+        let g = |key: &str| -> usize {
+            let k = format!("\"{key}\":");
+            let i = line.find(&k).unwrap() + k.len();
+            line[i..].split(|c: char| !c.is_ascii_digit()).next().unwrap().parse().unwrap()
+        };
+        let b = g("block") as u64;
+        adm.insert(b, (g("n"), g("r"), g("letters"), g("cells")));
+        adm_list.push(b);
+    }
+    let take: std::collections::HashSet<u64> = adm_list
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| i % every == 0)
+        .map(|(_, &b)| b)
+        .filter(|&b| only.map_or(true, |o| o == b))
+        .collect();
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let mut scr = Scratch::<Capture>::default();
+    let mut out = Vec::new();
+    let mut syms = Vec::new();
+    loop {
+        match sc.next(syms).expect("scan") {
+            Event::Block { index, symbols, .. } => {
+                if take.contains(&index) {
+                    out.clear();
+                    decode_block(&symbols, k, &mut scr, &mut out).expect("decode");
+                    let (ll, p) = CAP.with(|c| c.borrow_mut().take()).expect("captured");
+                    let (cn, cr, cl, ccells) = adm[&index];
+                    let n = ll.len();
+                    let recs = records(&ll);
+                    let budget = n / 25 * 4 + n % 25 * 4 / 25;
+                    let blk = Block { n, recs, p };
+                    let (tr, cells) = run(&blk, slot, budget).expect("admitted by the port");
+                    let census_ok = n == cn && blk.recs.len() == cr && tr.letters == cl && cells == ccells;
+                    let order_r: Vec<u32> = (0..tr.deps.len() as u32).collect();
+                    let (sg, dg, s1) = guaranteed(&tr);
+                    let mut line = format!(
+                        "{{\"block\":{index},\"n\":{n},\"census_ok\":{census_ok},\"cells\":{cells},\"footprint_lines\":{},\"Sg\":{},\"Dg\":{},\"pre_accesses\":{}",
+                        s1.len(), sg.len(), dg.len(), tr.pre.len()
+                    );
+                    // R, with the order stage first (primary) and cold (sensitivity)
+                    let r_pre = evaluate_wb(&tr, &order_r, true, None, true, &sg);
+                    let r_cold = evaluate_wb(&tr, &order_r, false, None, false, &sg);
+                    line += &format!(
+                        ",\"R\":{},\"R_cold\":{},\"slots_fills\":{},\"slots_devict\":{}",
+                        wb_json(&r_pre), wb_json(&r_cold), v(&r_pre.pre_fills), v(&r_pre.pre_devict)
+                    );
+                    // lower-bound ingredients per capacity
+                    let sgset: std::collections::HashSet<u32> = sg.iter().copied().collect();
+                    let mut fill_lb = Vec::new();
+                    let mut x_dirty = Vec::new();
+                    let mut startres = Vec::new();
+                    for i in 0..WCAPS.len() {
+                        let res: std::collections::HashSet<u32> = r_pre.start[i].0.iter().copied().collect();
+                        fill_lb.push(sg.iter().filter(|l| !res.contains(l)).count() as u64);
+                        let mut xd: Vec<u32> = dg.clone();
+                        xd.extend_from_slice(&r_pre.start[i].1);
+                        xd.sort_unstable();
+                        xd.dedup();
+                        x_dirty.push(xd.len() as u64);
+                        startres.push(r_pre.start[i].0.len() as u64);
+                    }
+                    let _ = &sgset;
+                    line += &format!(
+                        ",\"fill_lb\":{},\"X_dirty\":{},\"start_resident\":{},\"start_dirty\":{}",
+                        v(&fill_lb), v(&x_dirty), v(&startres),
+                        v(&r_pre.start.iter().map(|s| s.1.len() as u64).collect::<Vec<_>>())
+                    );
+                    let (rl, rh) = (is_linext(&tr, &order_r), hazards_ok(&tr, &order_r).0);
+                    line += &format!(",\"R_linext\":{rl},\"R_hazards_ok\":{rh},\"R_full_ok\":{}", hazards_full(&tr, &order_r).0);
+                    if kk > 0 {
+                        for (ci, &cap) in WCAPS.iter().enumerate() {
+                            let ob = greedy(&tr, kk, cap, false);
+                            let lin = is_linext(&tr, &ob);
+                            let (hz, nbad) = hazards_ok(&tr, &ob);
+                            let (hf, nf) = hazards_full(&tr, &ob);
+                            let rm = build_remap(&tr, &ob);
+                            let m1 = evaluate_wb(&tr, &ob, true, None, false, &sg);
+                            let m2 = evaluate_wb(&tr, &ob, true, Some(&rm), false, &sg);
+                            let m2c = evaluate_wb(&tr, &ob, false, Some(&rm), false, &sg);
+                            let moved = ob.iter().enumerate().filter(|(i, &x)| *i as u32 != x).count();
+                            line += &format!(
+                                ",\"H{ci}\":{{\"cap\":{cap},\"linext\":{lin},\"hazards_ok\":{hz},\"hazard_violations\":{nbad},\"full_m1_ok\":{hf},\"full_m1_violations\":{nf},\"moved\":{moved},\"m1\":{},\"m2\":{},\"m2_cold\":{}}}",
+                                wb_json(&m1), wb_json(&m2), wb_json(&m2c)
+                            );
+                        }
+                    }
+                    line.push('}');
+                    println!("{line}");
+                }
+                syms = symbols.syms;
+            }
+            Event::Done => break,
+        }
+    }
+}

@@ -14,6 +14,13 @@ G ≤ 0.70; CLOSED if G ≥ 0.85; PARKED between.
 
 ## Result: G = 0.9999986. CLOSED, and no order could do otherwise
 
+> **Corrected 15 November** (`2026-11-15-locality-amended.md`). This entry answered the original
+> registration; the amended one (LOG 6883444614) is answered there, and stays CLOSED at 5 MiB on
+> a certified bound (L/R = 0.999985). Two statements below are withdrawn: the fixed-layout
+> reorders B were **not realizable** (a full-width check that includes copy16's slack bytes
+> fails on all 784 of them, while R passes), so they are not valid H; and the 1.25 MiB column
+> stands in for an L2 that is 256 KiB on the i9.
+
 | misses per output byte (64 B lines, LRU, cold per block) | 1.25 MiB | 5 MiB | 2 MiB |
 |---|--:|--:|--:|
 | R, as shipped | 0.08326 | 0.07124 | 0.07477 |

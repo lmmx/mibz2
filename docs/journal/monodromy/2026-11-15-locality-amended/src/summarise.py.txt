@@ -1,0 +1,62 @@
+"""Pool out/wb-k64.jsonl (n-weighted: sums over blocks) into the amended-rule tables."""
+import json, sys
+rows = [json.loads(l) for l in open(sys.argv[1])]
+CAPS = [4096, 81920, 32768, 20480]
+NAME = ["256 KiB", "5 MiB", "2 MiB", "1.25 MiB (sens.)"]
+SHOW = [0, 2, 1, 3]
+N = sum(r["n"] for r in rows)
+print(f"blocks {len(rows)}, n = {N:,}; census_ok on {sum(r['census_ok'] for r in rows)}")
+chk = dict(R_linext=all(r["R_linext"] for r in rows), R_hazards_ok=all(r["R_hazards_ok"] for r in rows),
+           R_full_ok=all(r["R_full_ok"] for r in rows))
+for i in range(4):
+    h = [r[f"H{i}"] for r in rows]
+    chk[f"H{i} linext"] = sum(x["linext"] for x in h)
+    chk[f"H{i} hazards_ok"] = sum(x["hazards_ok"] for x in h)
+    chk[f"H{i} full_m1_ok"] = sum(x["full_m1_ok"] for x in h)
+    chk[f"H{i} sg_missing (m1,m2,m2cold)"] = sum(x["m1"]["sg_missing"] + x["m2"]["sg_missing"] + x["m2_cold"]["sg_missing"] for x in h)
+chk["R sg_missing"] = sum(r["R"]["sg_missing"] + r["R_cold"]["sg_missing"] for r in rows)
+for k, v in chk.items():
+    print(f"  {k}: {v}")
+
+def q(e, i, rule):
+    return e["fills"][i] + e["devict"][i] + (e["enddirty"][i] if rule == "A" else 0)
+
+def S(f):
+    return sum(f(r) for r in rows)
+
+out = {}
+for rule in ("A", "B"):
+    for start in ("slots", "cold"):
+        print(f"\n== rule {rule} ({'end-dirty lines counted as one write-back each' if rule=='A' else 'end-dirty lines not counted'}), initial state: {'after slots' if start=='slots' else 'cold (sensitivity)'}")
+        print("capacity | R fills | R dirty ev. | R end-dirty | Q(R) | H fills | H dirty ev. | Q(H aimed) | Q(H best of 4) | L fill LB | L wb LB | Q(L) | L/R | H/R | H best/R | blocks fp > C")
+        for i in SHOW:
+            C = CAPS[i]
+            Rk = "R" if start == "slots" else "R_cold"
+            Hk = "m2" if start == "slots" else "m2_cold"
+            rf, rd, re = S(lambda r: r[Rk]["fills"][i]), S(lambda r: r[Rk]["devict"][i]), S(lambda r: r[Rk]["enddirty"][i])
+            QR = S(lambda r: q(r[Rk], i, rule))
+            hf, hd = S(lambda r: r[f"H{i}"][Hk]["fills"][i]), S(lambda r: r[f"H{i}"][Hk]["devict"][i])
+            QH = S(lambda r: q(r[f"H{i}"][Hk], i, rule))
+            QHb = S(lambda r: min(q(r[f"H{j}"][Hk], i, rule) for j in range(4)))
+            if start == "slots":
+                fl = S(lambda r: r["fill_lb"][i])
+                X = lambda r: r["X_dirty"][i]
+            else:
+                fl = S(lambda r: r["Sg"])
+                X = lambda r: r["Dg"]
+            wl = S(lambda r: X(r) if rule == "A" else max(0, X(r) - C))
+            QL = fl + wl
+            fp = sum(r["footprint_lines"] > C for r in rows)
+            out[(rule, start, i)] = dict(QR=QR, QH=QH, QHb=QHb, QL=QL)
+            print(f"{NAME[i]} | {rf:,} | {rd:,} | {re:,} | {QR:,} | {hf:,} | {hd:,} | {QH:,} | {QHb:,} | {fl:,} | {wl:,} | {QL:,} | {QL/QR:.4f} | {QH/QR:.4f} | {QHb/QR:.4f} | {fp}")
+        print("modelled bytes per output byte (64 x lines / n): " + "; ".join(
+            f"{NAME[i]}: R {64*out[(rule,start,i)]['QR']/N:.4f}, H {64*out[(rule,start,i)]['QH']/N:.4f}, L {64*out[(rule,start,i)]['QL']/N:.4f}" for i in SHOW))
+print("\nVerdict at 5 MiB (rule A, after slots, H = greedy aimed at 5 MiB, model 2):")
+o = out[("A", "slots", 1)]
+lr, hr = o["QL"] / o["QR"], o["QH"] / o["QR"]
+v = "WORTH" if hr <= 0.70 else ("CLOSED" if lr >= 0.85 else f"NOT SETTLED: {lr:.4f} <= O/R <= {hr:.4f}")
+print(f"  L/R = {lr:.6f}, H/R = {hr:.6f} -> {v}")
+fpm = [r["footprint_lines"] * 64 / 2**20 for r in rows]
+fpm.sort()
+print(f"footprint (model-1 distinct lines x 64 B), MiB: min {fpm[0]:.2f}, median {fpm[len(fpm)//2]:.2f}, max {fpm[-1]:.2f}")
+print(f"S_g vs model-1 footprint: {S(lambda r: r['Sg']):,} of {S(lambda r: r['footprint_lines']):,} lines")
