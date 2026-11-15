@@ -150,7 +150,7 @@ Everything in this section is a consequence of the theorem, not a measurement.
 
 **A bound fixed by the block.** After the closure, no step adds a letter. So from the closure on, a decoder that takes free steps first never needs more live letters than the closure has. That is about 0.19 r on Wikidata, against the r slots Cells reserves today. Before the closure, the bound held on every block counted.
 
-None of this has been built. The next step is to price a decoder that keeps the untouched one-byte letters implicit, and writes a letter only when its word first grows. It will be priced in two forms: with Cells' right-end order, and with free steps first. Building one comes after the price.
+No free-first decoder has been built. A first decoder that keeps the untouched one-byte letters implicit, and writes a letter only when its word first grows, has been built with Cells' right-end order and is being measured. None of it has been timed yet.
 
 ## 7. What is still open?
 
@@ -160,7 +160,7 @@ None of this has been built. The next step is to price a decoder that keeps the 
 
 **Is width a cutwidth?** The width post links width to the *cutwidth* of a graph: line up its vertices, cut between any two, and count the edges that cross. Whether the width of a rebuild is exactly a cutwidth of the block's cycle of rows, bundled by runs, is a conjecture.
 
-The record of the rounds count is in review as [#440](https://github.com/lmmx/mibz2/pull/440).
+The record of the rounds count is [#440](https://github.com/lmmx/mibz2/pull/440).
 
 ---
 
@@ -168,7 +168,7 @@ The record of the rounds count is in review as [#440](https://github.com/lmmx/mi
 
 - The confluence proof, its checker and the checker's output: [`2026-11-15-free-closure-confluence.md`](https://github.com/lmmx/mibz2/blob/c33d327cafedcdaf027cf73a953a7ea3647f50f2/docs/journal/monodromy/2026-11-15-free-closure-confluence.md), [`square.rs.txt`](https://github.com/lmmx/mibz2/blob/c33d327cafedcdaf027cf73a953a7ea3647f50f2/docs/journal/monodromy/2026-11-15-free-closure-confluence/square.rs.txt), [`square_output.txt`](https://github.com/lmmx/mibz2/blob/c33d327cafedcdaf027cf73a953a7ea3647f50f2/docs/journal/monodromy/2026-11-15-free-closure-confluence/square_output.txt) (#438).
 - Width by order, the free closure's size and the confluence count: [`2026-11-15-width-orders.md`](https://github.com/lmmx/mibz2/blob/c33d327cafedcdaf027cf73a953a7ea3647f50f2/docs/journal/monodromy/2026-11-15-width-orders.md), with the per-block closures in [`confluence_wikidata.jsonl`](https://github.com/lmmx/mibz2/blob/c33d327cafedcdaf027cf73a953a7ea3647f50f2/docs/journal/monodromy/2026-11-15-width-orders/confluence_wikidata.jsonl) (#437).
-- The equal steps behind the closure's size, and the rounds count: [`2026-11-15-closure-intrinsic.md`](https://github.com/lmmx/mibz2/blob/6030df4e2a7322c697a61bb6a7df3e3640dae2b3/docs/journal/monodromy/2026-11-15-closure-intrinsic.md) (#440, in review).
+- The equal steps behind the closure's size, and the rounds count: [`2026-11-15-closure-intrinsic.md`](https://github.com/lmmx/mibz2/blob/master/docs/journal/monodromy/2026-11-15-closure-intrinsic.md) (#440).
 - The width census: [`2026-11-15-width.md`](https://github.com/lmmx/mibz2/blob/c33d327cafedcdaf027cf73a953a7ea3647f50f2/docs/journal/monodromy/2026-11-15-width.md) (#435).
 - The run of a block per thread against teams at ten threads: [the team channel, 15 November](https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992).
 - Newman's lemma: M. H. A. Newman, [On theories with a combinatorial definition of "equivalence"](https://doi.org/10.2307/1968867), *Annals of Mathematics* 43 (1942), 223–243.
