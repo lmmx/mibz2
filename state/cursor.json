@@ -1328,6 +1328,14 @@
       "reply_id": 6882177776,
       "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6882177776",
       "routing_verification": "Exact readback: #145, author lmmx, inbox ID, terminal UNPARK FOR A STEELMAN."
+    },
+    {
+      "comment_id": 6893001194,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt: pricing proposed phase-concurrency screen, no build or data."
     }
   ],
   "migrated_from": {
