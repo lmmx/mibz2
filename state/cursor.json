@@ -1639,6 +1639,20 @@
       "status": "finished",
       "disposition": "HOLD exact-source validation; D108 argument/check design accepted but evidence closure incomplete.",
       "comment": 6902605296
+    },
+    {
+      "id": "D110",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6903067177,
+      "pr": 161,
+      "sha": "8de6ce01bcbf8aa79fc9d4392c46bda14d77e6a7",
+      "evidence_digest": "sha256:3af9b48fbeb427ad9c2cefed14beba0bb00289ea136cc7de53144311251292f9",
+      "commit": "2f0b68ed263800f868db0ba2e3c1a070ab1cf9a2",
+      "status": "complete",
+      "disposition": "PROCEED scoped B5 closure; lift D108/D109 HOLD; record B6 resumption."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -2011,7 +2025,9 @@
     "bab9d1b8c05b5879ad5cb98a9b5499023d6a881a",
     "4ceef83dfde689f06fa8b14cfb291b1d2661c836",
     "df88688fc3b3292466d55ff9f52474bcd67ab6ff",
-    "c94692410c3703b2545e1a9afdb3fc2b485f5437"
+    "c94692410c3703b2545e1a9afdb3fc2b485f5437",
+    "a045610f3b2c664c66be69c97b08ed047d0f1782",
+    "2f0b68ed263800f868db0ba2e3c1a070ab1cf9a2"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2121,7 +2137,8 @@
     6881612485,
     6882196843,
     6901903478,
-    6902547995
+    6902547995,
+    6903067177
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2201,8 +2218,9 @@
   },
   "current_execution": {
     "active_comment": 6903067177,
-    "status": "in progress",
-    "decision": "D110"
+    "status": "complete",
+    "decision": "D110",
+    "work_commit": "2f0b68ed263800f868db0ba2e3c1a070ab1cf9a2"
   },
   "duplicate_events": [
     {
@@ -3040,6 +3058,13 @@
       "evidence_digest": "sha256:0fcb872956d17cf1b178a092c9f5870e8125de1b34c76b7fc8ca3eb09d9a3801",
       "incoming_comment": 6902547995,
       "decision": "D109"
+    },
+    {
+      "pr": 447,
+      "sha": "8de6ce01bcbf8aa79fc9d4392c46bda14d77e6a7",
+      "evidence_digest": "sha256:3af9b48fbeb427ad9c2cefed14beba0bb00289ea136cc7de53144311251292f9",
+      "incoming_comment": 6903067177,
+      "decision": "D110"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3940,9 +3965,11 @@
     {
       "comment_id": 6903067177,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D110",
-      "progress": "Migration verified; reviewing D109 closure evidence."
+      "progress": "B5 closure committed; D108/D109 scoped HOLD lifted; REVIEW pending.",
+      "receipt_commit": "a045610f3b2c664c66be69c97b08ed047d0f1782",
+      "work_commit": "2f0b68ed263800f868db0ba2e3c1a070ab1cf9a2"
     }
   ],
   "migrated_from": {
