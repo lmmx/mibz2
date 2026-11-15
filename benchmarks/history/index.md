@@ -39,6 +39,25 @@ These runs inform; they don't decide. Nothing merges or releases on a release-sc
 
 Each table gives an arm's median wall time. It also gives the geometric mean of the rounds' paired wall ratios against the reference arm, with its 95% interval: a minus sign is faster. Up to the machine's physical core count, each thread runs on a core of its own (`--spread`); above it, threads share cores.
 
+### 2026-11-15: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.3.2** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-15-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.3.2>)
+
+**`wikidata`**
+
+| threads | 0.3.2 wall (median) | lbzip2 2.5 wall (median) | 0.3.1 wall (median) | lbzip2 2.5 against 0.3.2 | 0.3.1 against 0.3.2 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.403 s | 2.520 s | 0.386 s | \+519.6% (+500.3, +539.6) **slower** | −4.5% (−7.7, −1.3) **faster** |
+| 2 | 0.253 s | 1.331 s | 0.256 s | \+426.3% (+414.0, +439.0) **slower** | \+1.5% (−1.3, +4.4) |
+| 4 | 0.160 s | 0.713 s | 0.163 s | \+348.0% (+340.6, +355.5) **slower** | \+2.7% (+0.9, +4.6) **slower** |
+| 8 | 0.136 s | 0.513 s | 0.136 s | \+278.7% (+275.8, +281.6) **slower** | −0.2% (−1.2, +0.7) |
+| 10 | 0.121 s | 0.505 s | 0.120 s | \+321.0% (+316.2, +325.9) **slower** | −0.5% (−1.9, +1.0) |
+| 12 | 0.128 s | 0.514 s | 0.128 s | \+299.5% (+291.9, +307.4) **slower** | −0.6% (−2.3, +1.2) |
+| 16 | 0.131 s | 0.501 s | 0.127 s | \+279.4% (+273.3, +285.5) **slower** | −4.0% (−7.1, −0.8) **faster** |
+| 20 | 0.133 s | 0.493 s | 0.128 s | \+274.7% (+265.8, +283.9) **slower** | −4.2% (−6.7, −1.6) **faster** |
+
+Every arm's output was the same bytes as the reference's.
+
 ### 2026-11-14: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.3.1** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-14-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.3.1>)
