@@ -436,7 +436,11 @@ pub fn decode_block<I: bwt::InverseBwt>(
             n as u64,
             trace::UNREAD,
         );
-        let done = s.inverse.invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k);
+        // (the output's spare capacity is dead until `finish` appends this block there: a
+        // kernel may keep short-lived state in it, as Cells does its bottom slots and rules)
+        let done = s
+            .inverse
+            .invert_runs_tail(&s.runs, n, b.orig_ptr, &mut s.ll, out, k);
         #[cfg(feature = "trace")]
         trace::mark(trace::Kind::InvertEnd, trace::NONE);
         if done {
@@ -661,5 +665,11 @@ impl<const F: bool> Scratch<bwt::CellsKernel<F>> {
     #[doc(hidden)]
     pub fn cells_counts(&self) -> bwt::CellsCounts {
         self.inverse.counts()
+    }
+    /// (test only) the capacity of the Cells kernel's own tail: 0 where `decode_block` lent
+    /// it the output's spare capacity for every block
+    #[cfg(test)]
+    pub(crate) fn cells_own_tail(&self) -> usize {
+        self.inverse.own_tail_capacity()
     }
 }

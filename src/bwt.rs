@@ -107,6 +107,23 @@ pub trait InverseBwt: Default + Send {
         let _ = (r, n, orig_ptr, out, k);
         unreachable!("invert_runs on a kernel that doesn't read runs");
     }
+
+    /// `invert_runs`, given also `tail`: a buffer whose spare capacity nothing reads or
+    /// writes until after this returns (the block's final output, which RLE1 appends to
+    /// next). A kernel may keep short-lived state there; `tail`'s length and its bytes
+    /// below its length are left as they were. The default ignores it.
+    fn invert_runs_tail(
+        &mut self,
+        r: &crate::runs::Runs,
+        n: usize,
+        orig_ptr: u32,
+        out: &mut Vec<u8>,
+        tail: &mut Vec<u8>,
+        k: crate::Kernels,
+    ) -> bool {
+        let _ = tail;
+        self.invert_runs(r, n, orig_ptr, out, k)
+    }
 }
 
 /// The plain walk: one chain of dependent loads (lbzip2's and libbzip2's)

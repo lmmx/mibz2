@@ -72,11 +72,16 @@ fn compare_materialization(
     candidate.check_canaries(None);
     if let Ok((word, len, _)) = a {
         assert_eq!(original.rule_end, candidate.rule_end);
+        // (in these layouts the rules lie in the kernel's buffer: the candidate's rules'
+        // region is the original's, byte for byte)
+        let rules = original.lay.rules..original.rule_end;
+        assert_eq!(candidate.lay.rules, rules.start);
+        assert_eq!(original.buf[rules.clone()], candidate.buf[rules]);
         let want = oracle(column, origin);
         let mut old_out: Vec<_> = want.iter().map(|x| !x).collect();
         let mut new_out = old_out.clone();
-        original.write_cells(word, len, column.len(), &mut old_out);
-        candidate.write_cells(word, len, column.len(), &mut new_out);
+        original.write_cells(word, len, column.len(), &mut old_out, &Vec::new());
+        candidate.write_cells(word, len, column.len(), &mut new_out, &Vec::new());
         assert_eq!(old_out, want);
         assert_eq!(new_out, want);
         assert_eq!(original.positions(), candidate.positions());

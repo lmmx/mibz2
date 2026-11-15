@@ -472,5 +472,8 @@ mod tests {
         let counts = seq.scratch.cells_counts();
         assert_eq!(counts.admitted, 1, "{counts:?}");
         assert_eq!(counts.short_cycles, 1, "{counts:?}");
+        // the block's bottom slots and rules lay in the output's spare capacity
+        // (`decode_block` lends it), not in a buffer of the kernel's own
+        assert_eq!(seq.scratch.cells_own_tail(), 0);
     }
 }

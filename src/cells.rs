@@ -45,8 +45,12 @@ struct Kernel {
     lay: Layout,
     rule_end: usize,
     letters: usize,
-    /// this call laid the bottom slots out in its output buffer (their canary is there)
+    /// this call laid the bottom slots and the rules out in the tail (their canaries are
+    /// there)
     bottom_laid: bool,
+    /// the kernel's own tail, for a caller that gives none (`try_invert`): the bottom slots
+    /// and the rules lie in its spare capacity then
+    tail: Vec<u8>,
     /// (test only) the writer kept the rules' first places in the dead top slots
     #[cfg(test)]
     pos_in_tops: bool,
@@ -101,9 +105,28 @@ impl<const F: bool> CellsKernel<F> {
     pub fn counts(&self) -> Counts {
         self.state.counts
     }
-    fn attempt(&mut self, recs: &[u16], n: usize, p: u32, out: &mut Vec<u8>) -> bool {
+    /// (test only) how much the kernel's own tail holds: nothing, where every caller lent one
+    #[cfg(test)]
+    pub(crate) fn own_tail_capacity(&self) -> usize {
+        self.state.kernel.tail.capacity()
+    }
+    /// `tail`: the buffer whose spare capacity is dead until after this returns (the block's
+    /// final output, which RLE1 appends to next), for the bottom slots and the rules; none,
+    /// and the kernel uses a buffer of its own.
+    fn attempt(
+        &mut self,
+        recs: &[u16],
+        n: usize,
+        p: u32,
+        out: &mut Vec<u8>,
+        tail: Option<&mut Vec<u8>>,
+    ) -> bool {
         let budget = if F { n } else { n / 25 * 4 + n % 25 * 4 / 25 };
-        let result = self.state.kernel.try_invert(recs, n, p, budget, F, out);
+        let kernel = &mut self.state.kernel;
+        let result = match tail {
+            Some(tail) => kernel.try_invert_tail(recs, n, p, budget, F, out, tail),
+            None => kernel.try_invert(recs, n, p, budget, F, out),
+        };
         let counts = &mut self.state.counts;
         match result {
             Ok((cells, period)) => {
@@ -139,7 +162,7 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
                 }
                 recs.push((c as u16) << 8 | 1);
             }
-            if self.attempt(&recs, ll.len(), p, out) {
+            if self.attempt(&recs, ll.len(), p, out, None) {
                 return;
             }
         }
@@ -167,7 +190,7 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
         out: &mut Vec<u8>,
         k: crate::Kernels,
     ) -> bool {
-        self.state.took = self.attempt(r.records(), n, p, out);
+        self.state.took = self.attempt(r.records(), n, p, out, None);
         if self.state.took {
             #[cfg(feature = "dose")]
             self.state.pad.apply();
@@ -175,6 +198,26 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
         }
         // Exactly the shipped body, including its tiling failure. Admission refusal itself
         // never escapes as false to decode_block's front-invariant assertion.
+        self.state.fallback.invert_runs(r, n, p, out, k)
+    }
+    // The same, with the bottom slots and the rules in `tail`'s spare capacity: memory that
+    // is dead until RLE1 appends the block there, right after this returns. A refusal
+    // leaves `out` and `tail` as they were, and the fallback runs as above.
+    fn invert_runs_tail(
+        &mut self,
+        r: &crate::runs::Runs,
+        n: usize,
+        p: u32,
+        out: &mut Vec<u8>,
+        tail: &mut Vec<u8>,
+        k: crate::Kernels,
+    ) -> bool {
+        self.state.took = self.attempt(r.records(), n, p, out, Some(tail));
+        if self.state.took {
+            #[cfg(feature = "dose")]
+            self.state.pad.apply();
+            return true;
+        }
         self.state.fallback.invert_runs(r, n, p, out, k)
     }
     #[cfg(any(test, feature = "trace"))]
@@ -188,22 +231,26 @@ impl<const F: bool> InverseBwt for CellsKernel<F> {
             "cells.pos",
             &self.state.kernel.pos,
         ));
+        v.push(crate::trace::Buffer::of(
+            "cells.tail",
+            &self.state.kernel.tail,
+        ));
         v
     }
 }
 /// A letter's place in the top order, for the induction by cells: 20 bytes. The two orders
 /// are two regions of slots, the top one in the kernel's buffer and the bottom one in the
-/// block's output buffer, dead until the writer; a letter has one slot in each. The orders
-/// are only ever read from their ends, so a slot is read once, when the induction's front
-/// reaches it.
+/// tail: the spare capacity of the block's final output, dead until RLE1 appends the block
+/// there after the kernel has returned. A letter has one slot in each. The orders are only
+/// ever read from their ends, so a slot is read once, when the induction's front reaches it.
 ///
 /// | bytes | |
 /// |---|---|
 /// | 0..4 | the slot before it in its order (an offset in the buffer) |
 /// | 4..8 | the letter's length |
 /// | 8..12 | its word's length |
-/// | 12..16 | its word: an offset in the buffer, of bytes if the length is at most SMALL, else of a rule |
-/// | 16..20 | the letter's slot in the bottom order (an offset in the output buffer) |
+/// | 12..16 | its word: an offset in the buffer, of bytes, if the length is at most SMALL, else in the tail, of a rule |
+/// | 16..20 | the letter's slot in the bottom order (an offset in the tail) |
 ///
 /// A bottom slot is 8 bytes (`BSLOT`): the slot before it, and the letter's top slot. The
 /// letter's length and word are read through the second, from its top slot: a letter's
@@ -224,55 +271,66 @@ const FAR: usize = 12;
 const NEAR: usize = 6;
 /// The buffer's first bytes, unused: a read `FAR` slots before an order's first stays inside
 const PAD: usize = 4096;
-/// The output buffer's first bytes before the bottom slots, when they lie there: a read
-/// `FAR` bottom slots before the bottom order's first stays inside
+/// The tail's first bytes before the bottom slots, when they lie there: a read `FAR` bottom
+/// slots before the bottom order's first stays inside, and reads bytes `slots` has set
 const BPAD: usize = 128;
 /// The mark, in a word's length: the word holds the walk's row
 const MARK: u32 = 1 << 31;
 /// Where the block begins in the cycle's word, from the walk's row's place
 const SHIFT: usize = 1;
 
-/// The regions of the induction by cells' one buffer, as offsets in it.
+/// The regions of the induction by cells' two buffers, as offsets in them: the kernel's own
+/// (the top slots, the arena), and the tail (the bottom slots, the rules).
 #[derive(Clone, Copy, Default)]
 struct Layout {
     /// the top order's slots
     tops: usize,
-    /// the bottom order's slots: an offset in the block's output buffer (`bout`), else in
-    /// this one
+    /// the bottom order's slots: an offset in the tail (`bout`), else in this buffer
     bots: usize,
-    /// the bottom order's slots lie in the output buffer, which nothing reads or writes
-    /// until the writer, and which the writer then overwrites: always, but for the test
-    /// layouts that compare against the original induction (`fresh_room`, `wide_bottom`)
+    /// the bottom order's slots and the rules lie in the tail's spare capacity, which
+    /// nothing else reads or writes until the kernel returns (`bots` and `rules` are offsets
+    /// from the tail's length): always, but for the test layouts that compare against the
+    /// original induction (`fresh_room`, `wide_bottom`), where they lie in this buffer
     bout: bool,
+    /// how many bytes of the tail's spare capacity the layout uses (0: none)
+    tail: usize,
+    /// The tail's regions' offsets are counted from this far before the tail's length: more
+    /// than this buffer's size. So a rule's offset is above every offset of a word kept as
+    /// bytes, as it is where both lie in this buffer, and the writer tells the two apart by
+    /// the offset alone. (0 where nothing lies in the tail.)
+    shift: usize,
     /// the words kept as bytes: 16 bytes of slack, the 256 single bytes, 16 more, the rest
     arena: usize,
-    /// the words kept as rules, 16 bytes each
+    /// the words kept as rules, 16 bytes each: an offset in the bottom slots' buffer
     rules: usize,
+    /// where each region ends (its canary follows): the top slots, the bottom slots, the
+    /// arena, the rules
     ends: [usize; 4],
 }
 
 #[inline(always)]
 unsafe fn rd64(base: *const u8, at: usize) -> u64 {
     // SAFETY: caller supplies an initialized in-bounds integer field; alignment is not required.
-    unsafe { (base.add(at) as *const u64).read_unaligned() }
+    // (`base` itself may lie before its buffer, `Layout::shift`: the sum is inside it)
+    unsafe { (base.wrapping_add(at) as *const u64).read_unaligned() }
 }
 
 #[inline(always)]
 unsafe fn rd32(base: *const u8, at: usize) -> u32 {
     // SAFETY: caller supplies an initialized in-bounds integer field; alignment is not required.
-    unsafe { (base.add(at) as *const u32).read_unaligned() }
+    unsafe { (base.wrapping_add(at) as *const u32).read_unaligned() }
 }
 
 #[inline(always)]
 unsafe fn wr64(base: *mut u8, at: usize, v: u64) {
-    // SAFETY: caller supplies an initialized in-bounds integer field; alignment is not required.
-    unsafe { (base.add(at) as *mut u64).write_unaligned(v) }
+    // SAFETY: caller supplies an in-bounds integer field; alignment is not required.
+    unsafe { (base.wrapping_add(at) as *mut u64).write_unaligned(v) }
 }
 
 #[inline(always)]
 unsafe fn wr32(base: *mut u8, at: usize, v: u32) {
-    // SAFETY: caller supplies an initialized in-bounds integer field; alignment is not required.
-    unsafe { (base.add(at) as *mut u32).write_unaligned(v) }
+    // SAFETY: caller supplies an in-bounds integer field; alignment is not required.
+    unsafe { (base.wrapping_add(at) as *mut u32).write_unaligned(v) }
 }
 
 /// A slot's bytes 16..: the letter's slot in the other order (4 bytes)
@@ -345,6 +403,15 @@ unsafe fn copy_long(dst: *mut u8, src: *const u8, len: usize) {
     }
 }
 
+/// The tail's spare capacity, addressed from `shift` bytes before its start (`Layout::shift`):
+/// a pointer only ever used with the offset of something in the tail's regions added, which
+/// brings it back inside the spare capacity.
+#[inline(always)]
+fn tail_from(tail: &mut Vec<u8>, shift: usize) -> *mut u8 {
+    // SAFETY: the tail's length is inside its allocation
+    unsafe { tail.as_mut_ptr().add(tail.len()) }.wrapping_sub(shift)
+}
+
 impl Kernel {
     /// A bottom slot's size: `BSLOT`, or (test only) `SLOT` for the original induction
     #[inline(always)]
@@ -371,9 +438,17 @@ impl Kernel {
                 16
             };
             let at = (cw >> 32) as usize;
+            // a rule is its two factors (state 2 and 3), and lies in the bottom slots'
+            // buffer: it is not read back here; the comparison tests compare the rules'
+            // region once the induction is over
+            let payload = if cw as u32 <= SMALL {
+                self.buf[at..at + size].to_vec()
+            } else {
+                [state[2].to_ne_bytes(), state[3].to_ne_bytes()].concat()
+            };
             log.push(Materialization {
                 state,
-                payload: self.buf[at..at + size].to_vec(),
+                payload,
                 slots: Vec::new(),
             });
         }
@@ -422,29 +497,32 @@ impl Kernel {
         }
     }
 
-    /// The canaries after each region; the bottom region's, when it lies in the output
-    /// buffer, only while `out` is given (the writer overwrites it)
-    fn check_canaries(&self, out: Option<&[u8]>) {
+    /// The canaries after each region; the bottom slots' and the rules', when they lie in
+    /// the tail, only where the tail is given
+    fn check_canaries(&self, tail: Option<&Vec<u8>>) {
         #[cfg(any(miri, debug_assertions))]
         if !self.buf.is_empty() {
             for (i, end) in self.lay.ends.into_iter().enumerate() {
-                let region = match (i == 1 && self.lay.bout, out) {
-                    (false, _) => &self.buf[..],
-                    (true, Some(out)) if self.bottom_laid => out,
+                // the bottom slots' and the rules' regions lie in the tail's spare capacity
+                let in_tail = self.lay.bout && (i == 1 || i == 3);
+                let region = match (in_tail, tail) {
+                    (false, _) => &self.buf[end..end + GAP],
+                    // SAFETY: `slots` reserved `lay.tail` bytes of spare capacity for this
+                    // block and wrote the canaries; nothing has changed the tail since
+                    (true, Some(tail)) if self.bottom_laid => unsafe {
+                        debug_assert!(tail.capacity() - tail.len() >= self.lay.tail);
+                        let at = tail.len() + end - self.lay.shift;
+                        std::slice::from_raw_parts(tail.as_ptr().add(at), GAP)
+                    },
                     (true, _) => continue,
                 };
-                assert!(
-                    region[end..end + GAP].iter().all(|&x| x == 0xA5),
-                    "cells canary"
-                );
+                assert!(region.iter().all(|&x| x == 0xA5), "cells canary");
             }
         }
-        let _ = out;
+        let _ = tail;
     }
-    // Safe boundary: validates record tiling and primary row before raw memory access.
-    // A refusal before the slots are laid out (every gate but the budget and a malformed
-    // word) leaves out byte-for-byte untouched; after it, out holds the bottom slots, and
-    // every fallback rewrites it whole (it clears it first).
+    /// `try_invert_tail` with the kernel's own tail: for a caller with no dead buffer to
+    /// lend.
     fn try_invert(
         &mut self,
         recs: &[u16],
@@ -454,17 +532,37 @@ impl Kernel {
         forced: bool,
         out: &mut Vec<u8>,
     ) -> Result<(usize, usize), Refusal> {
+        let mut tail = std::mem::take(&mut self.tail);
+        let result = self.try_invert_tail(recs, n, p, budget, forced, out, &mut tail);
+        self.tail = tail;
+        result
+    }
+    // Safe boundary: validates record tiling and primary row before raw memory access.
+    // `out` is not touched until the writer: a refusal leaves it byte-for-byte as it was.
+    // `tail` keeps its length and its bytes below it; the bottom slots and the rules lie in
+    // its spare capacity, which the caller has no use for until this returns.
+    #[allow(clippy::too_many_arguments)]
+    fn try_invert_tail(
+        &mut self,
+        recs: &[u16],
+        n: usize,
+        p: u32,
+        budget: usize,
+        forced: bool,
+        out: &mut Vec<u8>,
+        tail: &mut Vec<u8>,
+    ) -> Result<(usize, usize), Refusal> {
         // Bound all sizing arithmetic, including callers in unit tests.
         if budget > n || n >= 1 << 24 || recs.len() > n {
             return Err(Refusal::Invalid);
         }
-        let result = self.slots(n, recs, p, budget, forced, out).and_then(|()| {
+        let result = self.slots(n, recs, p, budget, forced, tail).and_then(|()| {
             // (research only, `phase-counters`: the induction's scope)
             #[cfg(feature = "phase-counters")]
             let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
-            self.induce_cells(budget, out)
+            self.induce_cells(budget, tail)
         });
-        self.check_canaries(Some(out));
+        self.check_canaries(Some(tail));
         let (word, len, cells) = result?;
         let period = (len & !MARK) as usize;
         if len & MARK == 0 || period == 0 || period > n {
@@ -474,9 +572,9 @@ impl Kernel {
             // (research only, `phase-counters`: the writer's scope)
             #[cfg(feature = "phase-counters")]
             let _scope = crate::phase::Scope::new(crate::phase::Phase::Writer);
-            self.write_cells(word, len, n, out);
+            self.write_cells(word, len, n, out, tail);
         }
-        self.check_canaries(None);
+        self.check_canaries(Some(tail));
         Ok((cells, period))
     }
     /// The cells kernel's first stage, from the front's run records (`byte << 8 | length`,
@@ -494,6 +592,11 @@ impl Kernel {
     ///
     /// Regions are bounded by the records and cell budget; one counter limits growth
     /// of both slot regions, the byte arena and the rules.
+    ///
+    /// The bottom slots and the rules lie in `tail`'s spare capacity, which is reserved here
+    /// and never made part of the tail: its length and its bytes stay as they were. Only the
+    /// bytes before the bottom slots, the letters' bottom slots and (in debug and Miri) the
+    /// canaries are written there by this stage.
     #[inline(never)]
     fn slots(
         &mut self,
@@ -502,7 +605,7 @@ impl Kernel {
         p: u32,
         budget: usize,
         forced: bool,
-        out: &mut Vec<u8>,
+        tail: &mut Vec<u8>,
     ) -> Result<(), Refusal> {
         self.bottom_laid = false;
         if n == 0 || n >= 1 << 24 || p as usize >= n {
@@ -570,28 +673,41 @@ impl Kernel {
         let bcap = room * if self.fresh_room { SLOT } else { bslot };
         #[cfg(not(test))]
         let bcap = room * bslot;
-        // the bottom slots lie in the output buffer, but in the original's layouts
+        // the bottom slots and the rules lie in the tail, but in the original's layouts
         #[cfg(test)]
         let bout = !(self.fresh_room || wide);
         #[cfg(not(test))]
         let bout = true;
         let tops = PAD;
-        let (bots, arena) = if bout {
-            (BPAD, tops + cap + GAP)
+        // the arena's and the rules' sizes: room for a word a cell, each
+        let (words, ruled) = (
+            BYTES as usize + 256 + 16 + 16 * budget + 32,
+            16 * budget + 16,
+        );
+        // In the tail (offsets from its length): the bottom slots, then the rules. This
+        // buffer then holds the top slots and the arena. In the original's layouts, all
+        // four regions lie in this buffer, in that order.
+        let (bots, arena, rules, allocation, in_tail, shift);
+        if bout {
+            arena = tops + cap + GAP;
+            allocation = arena + words + GAP;
+            // (the tail's offsets start above this buffer's: `Layout::shift`)
+            shift = allocation;
+            bots = shift + BPAD;
+            rules = bots + bcap + GAP;
+            in_tail = rules + ruled + GAP - shift;
         } else {
-            (tops + cap + GAP, tops + cap + GAP + bcap + GAP)
-        };
-        let rules = arena + BYTES as usize + 256 + 16 + 16 * budget + 32 + GAP;
-        let allocation = rules + 16 * budget + 16 + GAP;
-        // (every offset a slot holds is 4 bytes, the other order's included: a layout whose
-        // total would reach u32::MAX is refused here, and Cells declines the block)
-        if allocation >= u32::MAX as usize {
+            bots = tops + cap + GAP;
+            arena = bots + bcap + GAP;
+            rules = arena + words + GAP;
+            allocation = rules + ruled + GAP;
+            (in_tail, shift) = (0, 0);
+        }
+        // (every offset a slot or a rule holds is 4 bytes: a layout whose offsets would
+        // reach u32::MAX is refused here, and Cells declines the block)
+        if allocation >= u32::MAX as usize || shift + in_tail >= u32::MAX as usize {
             return Err(Refusal::Invalid);
         }
-        debug_assert!(
-            allocation < u32::MAX as usize,
-            "the layout fits 4-byte offsets"
-        );
         if letters - 1 > budget {
             return Err(Refusal::Floor);
         }
@@ -599,9 +715,11 @@ impl Kernel {
             tops,
             bots,
             bout,
+            tail: in_tail,
+            shift,
             arena,
             rules,
-            ends: [tops + cap, bots + bcap, rules - GAP, allocation - GAP],
+            ends: [tops + cap, bots + bcap, arena + words, rules + ruled],
         };
         // Reuse the high-water allocation, but never geometrically over-allocate. Release
         // the old buffer before growing so both large allocations are not live at once.
@@ -609,9 +727,9 @@ impl Kernel {
             self.buf = Vec::new();
             self.buf = vec![0; allocation];
         }
-        if bout && out.len() < bots + bcap + GAP {
-            out.resize(bots + bcap + GAP, 0);
-        }
+        // The tail's spare capacity, sized and not touched: only the bottom slots and the
+        // rules the induction makes are written there.
+        tail.reserve(in_tail);
         self.bottom_laid = bout;
         self.lay = lay;
         self.letters = letters;
@@ -619,10 +737,26 @@ impl Kernel {
             self.buf[arena + BYTES as usize + b] = b as u8;
         }
         for (i, end) in lay.ends.into_iter().enumerate() {
-            if i == 1 && bout {
-                out[end..end + GAP].fill(0xA5);
-            } else {
+            if !(bout && (i == 1 || i == 3)) {
                 self.buf[end..end + GAP].fill(0xA5);
+            }
+        }
+        let base = self.buf.as_mut_ptr();
+        // the bottom slots' and the rules' buffer: the tail's spare capacity, addressed from
+        // `shift` bytes before its start (never read or written there: `bb` plus a region's
+        // offset is inside the spare capacity)
+        let bb = if bout { tail_from(tail, shift) } else { base };
+        if bout {
+            // SAFETY: `in_tail` bytes of spare capacity were reserved above, and each of
+            // these ranges lies inside them
+            unsafe {
+                for end in [lay.ends[1], lay.ends[3]] {
+                    core::ptr::write_bytes(bb.wrapping_add(end), 0xA5, GAP);
+                }
+                // The bytes before the bottom slots: the induction's fetch-ahead reads a
+                // slot's place up to `FAR` slots before the first, and spare capacity holds
+                // nothing until it is written.
+                core::ptr::write_bytes(bb.wrapping_add(shift), 0, BPAD);
             }
         }
         // a byte's next bottom slot, as its offset in the buffer
@@ -631,9 +765,6 @@ impl Kernel {
             cnt[k] = (lay.bots + cnt[k] as usize * bslot) as u32;
         }
         debug_assert_eq!(self.letters, cnt[256] as usize);
-        let base = self.buf.as_mut_ptr();
-        // the bottom slots' buffer
-        let bb = if bout { out.as_mut_ptr() } else { base };
         let first = lay.arena as u64 + BYTES as u64;
         let mut t = PAD;
         // SAFETY: the letters number at most the records and two, and a record is a row at
@@ -730,10 +861,11 @@ impl Kernel {
     /// are written over its top slot only after it is read. A cell's length and word are
     /// written to its top slot only.
     ///
-    /// Every offset is a byte offset in one of two buffers: a top slot, a word kept as bytes
-    /// or a word kept as a rule in the kernel's; a bottom slot in the output buffer (`out`),
-    /// which no one reads or writes until the writer overwrites it. A rule is its two factors
-    /// as their slots held them: (length, word) twice.
+    /// Every offset is a byte offset in one of two buffers: a top slot or a word kept as
+    /// bytes in the kernel's; a bottom slot or a word kept as a rule in the tail's spare
+    /// capacity, which no one else reads or writes until the kernel has returned. A rule is
+    /// its two factors as their slots held them: (length, word) twice. The induction writes
+    /// a rule and never reads one.
     ///
     /// Returns (the cycle's word, its length with the mark, cells). `slots` has run on this
     /// kernel for the block, and nothing has changed since.
@@ -741,33 +873,44 @@ impl Kernel {
     fn induce_cells(
         &mut self,
         budget: usize,
-        out: &mut Vec<u8>,
+        tail: &mut Vec<u8>,
     ) -> Result<(u32, u32, usize), Refusal> {
         const M: u64 = 0xFFFF_FFFF;
         let rr = self.letters;
         let lay = self.lay;
-        if rr == 0 || self.buf.len() < lay.rules + 16 || self.bslot() != BSLOT {
+        if rr == 0 || self.bslot() != BSLOT {
             return Err(Refusal::Invalid);
         }
-        if lay.bout && out.len() < lay.ends[1] + GAP {
+        // each buffer holds the layout's regions: this one, and the tail's spare capacity
+        if self.buf.len() < lay.ends[if lay.bout { 2 } else { 3 }] + GAP
+            || tail.capacity() - tail.len() < lay.tail
+        {
             return Err(Refusal::Invalid);
         }
         let base = self.buf.as_mut_ptr();
-        // the bottom slots' buffer: the output's, which `slots` sized for them
-        let bb = if lay.bout { out.as_mut_ptr() } else { base };
+        // the bottom slots' and the rules' buffer: the tail's spare capacity, which `slots`
+        // sized for them
+        let bb = if lay.bout {
+            tail_from(tail, lay.shift)
+        } else {
+            base
+        };
         // SAFETY: `slots` sized the words' regions for budget cells, and the counter is
         // checked before each cell; a slot's offset is a letter's slot, written by `slots`
         // inside its order's region (a promised slot is one of them, let go at the front);
         // a bottom slot's second field is a top slot, so a letter read through it is read
-        // inside the top region; a word's offset is in the arena or the rules, with 16
-        // bytes after it inside the buffer.
+        // inside the top region; a word's offset is in the arena, with 16 bytes after it
+        // inside the buffer, or in the rules, in the bottom slots' buffer, where only the
+        // writer reads it. In the tail's spare capacity, only what `slots` and this have
+        // written is read: the letters' bottom slots and the bytes before them.
         unsafe {
             let mut top = lay.arena + BYTES as usize + 256 + 16;
             let mut rp = lay.rules;
             // each order's last letter's slot
             let (ft0, fb0) = (lay.tops + rr * SLOT, lay.bots + rr * BSLOT);
-            // Count every cell, including equal-length steps which allocate no slot.
-            let mut cells = 0usize;
+            // The cells still allowed: every cell is counted, including equal-length steps
+            // which allocate no slot. (Counted down: one value in the loop, not two.)
+            let mut left = budget;
             // the slot before each letter in its order; what is left of the letter; its
             // (length, word); the slot the next cell cut from it takes in the other order
             let (mut na, mut nb);
@@ -826,17 +969,17 @@ impl Kernel {
                             return Err(Refusal::Invalid);
                         }
                         self.rule_end = rp;
-                        return Ok(((aw >> 32) as u32, aw as u32, cells));
+                        return Ok(((aw >> 32) as u32, aw as u32, budget - left));
                     }
 
                     (sa, sb) = (na, nb);
                     continue 'fresh;
                 }
                 loop {
-                    if cells == budget {
+                    if left == 0 {
                         return Err(Refusal::Budget);
                     }
-                    cells += 1;
+                    left -= 1;
                     // The cell word is A then B; materialise only its retained representation.
                     let (la, lb) = (aw & M, bw & M);
                     let len = la + lb;
@@ -849,8 +992,9 @@ impl Kernel {
                             base.add((bw >> 32) as usize),
                         );
                     } else {
-                        wr64(base, rp, aw);
-                        wr64(base, rp + 8, bw);
+                        // (a rule lies in the bottom slots' buffer)
+                        wr64(bb, rp, aw);
+                        wr64(bb, rp + 8, bw);
                     }
                     let word = if small { top } else { rp };
                     top += if small { len as usize } else { 0 };
@@ -873,7 +1017,7 @@ impl Kernel {
                         ts as u64,
                         sa as u64,
                         sb as u64,
-                        cells as u64,
+                        (budget - left) as u64,
                     ]);
                     if ra == rb {
                         // both letters end: the cell is the last cut from each
@@ -944,7 +1088,7 @@ impl Kernel {
     ///
     /// `word` and `len` are what `induce_cells` returned for the block `slots` was given.
     #[inline(never)]
-    fn write_cells(&mut self, word: u32, len: u32, n: usize, out: &mut Vec<u8>) {
+    fn write_cells(&mut self, word: u32, len: u32, n: usize, out: &mut Vec<u8>, tail: &Vec<u8>) {
         #[cfg(test)]
         {
             self.writer_reach = WriterReach::default();
@@ -959,11 +1103,20 @@ impl Kernel {
         let dst = out.as_mut_ptr();
         let base = self.buf.as_mut_ptr();
         let ro = self.lay.rules;
-        // SAFETY: a rule's factors are words written before it; a word kept as bytes has
-        // 16 bytes at its offset; a position is below the period; `out` has 16 bytes past
-        // the period
+        debug_assert!(tail.capacity() - tail.len() >= self.lay.tail);
+        // the rules' buffer: the bottom slots', the tail's spare capacity as `slots` laid it
+        let rb: *const u8 = if self.lay.bout {
+            // SAFETY: the tail's length is inside its allocation
+            unsafe { tail.as_ptr().add(tail.len()) }.wrapping_sub(self.lay.shift)
+        } else {
+            base
+        };
+        // SAFETY: a rule's factors are words written before it, and the rules read are the
+        // ones `induce_cells` wrote, below `rule_end` in the rules' buffer; a word kept as
+        // bytes has 16 bytes at its offset; a position is below the period; `out` has 16
+        // bytes past the period
         unsafe {
-            let rule = |w: usize| (rd64(base, w), rd64(base, w + 8));
+            let rule = |w: usize| (rd64(rb, w), rd64(rb, w + 8));
             let nr = (self.rule_end - ro) / 16;
             // Each rule's first place, in the top slots: the induction is over, so they are
             // dead, and their lines were the induction's last. Only if they hold too few (a
@@ -1220,11 +1373,12 @@ mod tests {
                         .is_ok());
                     assert_eq!(out, oracle(&ll, p as u32));
                     if cells > 0 {
-                        // (a refusal on the budget comes after the bottom slots were laid
-                        // in out: its bytes are the fallback's to rewrite)
+                        // (a refusal on the budget leaves `out` as it was: nothing of the
+                        // kernel's lies there before the writer)
                         assert!(kernel
                             .try_invert(r.records(), ll.len(), p as u32, cells - 1, true, &mut out)
                             .is_err());
+                        assert_eq!(out, oracle(&ll, p as u32));
                     }
                 }
             }
@@ -1257,11 +1411,9 @@ mod tests {
         // A cyclic two-run exchange with almost equal lengths needs many subtractions.
         let ll = [vec![1; 51], vec![0; 50]].concat();
         let r = Runs::of_column(&ll);
-        // (a refusal on the budget leaves out holding the bottom slots: the fallback clears
-        // and rewrites it; the other gates leave it as it was)
-        let mut scratch = out.clone();
+        // (a refusal on the budget leaves out as it was too, as every gate does)
         assert_eq!(
-            kernel.try_invert(r.records(), 101, 0, 16, false, &mut scratch),
+            kernel.try_invert(r.records(), 101, 0, 16, false, &mut out),
             Err(Refusal::Budget)
         );
         assert_eq!(out, before);
@@ -1421,14 +1573,27 @@ mod tests {
         let ll = [vec![1; 31], vec![0; 34]].concat();
         let r = Runs::of_column(&ll);
         let mut kernel = Kernel::default();
-        let mut out = Vec::new();
+        // a tail with bytes of its own: they and its length are left as they were
+        let mut tail = vec![9u8; 5];
         kernel
-            .slots(ll.len(), r.records(), 17, ll.len(), true, &mut out)
+            .slots(ll.len(), r.records(), 17, ll.len(), true, &mut tail)
             .unwrap();
-        // the top slots lie in the kernel's buffer, the bottom ones in the output buffer
-        assert!(kernel.lay.bout);
+        assert_eq!(tail, [9u8; 5]);
+        // the top slots lie in the kernel's buffer, the bottom ones in the tail's spare
+        // capacity, at offsets counted from `shift` bytes before it
+        let lay = kernel.lay;
+        assert!(lay.bout && lay.shift >= lay.ends[2] && lay.bots == lay.shift + BPAD);
         let rd = |b: &[u8], at: usize| u32::from_ne_bytes(b[at..at + 4].try_into().unwrap());
-        let (tb, bb) = (&kernel.buf[..], &out[..]);
+        // (the bytes `slots` wrote there, behind `shift` bytes of padding so that the
+        // slots' own offsets index them)
+        let written = lay.bots - lay.shift + kernel.letters * BSLOT;
+        let mut bview = vec![0u8; lay.shift];
+        // SAFETY: `slots` reserved the spare capacity and wrote these bytes: the ones before
+        // the bottom slots, and each letter's bottom slot
+        bview.extend_from_slice(unsafe {
+            std::slice::from_raw_parts(tail.as_ptr().add(tail.len()), written)
+        });
+        let (tb, bb) = (&kernel.buf[..], &bview[..]);
         for top in [true, false] {
             let (start, other) = if top {
                 (kernel.lay.tops, kernel.lay.bots)
@@ -1464,13 +1629,19 @@ mod tests {
             assert_eq!(marks, 1);
             assert_eq!(rows, ll.len());
         }
+        // the induction is given the tail `slots` laid out: another, without its room, is
+        // refused before anything is read
+        assert_eq!(
+            kernel.induce_cells(ll.len(), &mut Vec::new()),
+            Err(Refusal::Invalid)
+        );
+        assert!(kernel.induce_cells(ll.len(), &mut tail).is_ok());
     }
 
     /// A cell that leaves a letter going on is promised the slot its other letter was read
     /// from at the front: both unequal branches take one, every slot the induction touches
     /// lies among the letters' (the regions end there, canaries after them in debug and
-    /// Miri), the output is exact, and a refusal on the budget leaves `out` holding the
-    /// bottom slots.
+    /// Miri), the output is exact, and a refusal on the budget leaves `out` untouched.
     #[test]
     fn miri_cells_promised_slots_exact_fit() {
         let mut kernel = Kernel::default();
@@ -1509,8 +1680,8 @@ mod tests {
                         ),
                         Err(Refusal::Budget)
                     );
-                    // out held the bottom slots (from `BPAD` on); the fallback rewrites it
-                    assert!(out.len() >= BPAD + kernel.letters * BSLOT);
+                    // a refusal leaves `out` as it was: the bottom slots lie in the tail
+                    assert_eq!(out, vec![0xCC; ll.len()]);
                 }
             }
         }
@@ -1540,24 +1711,28 @@ mod tests {
                 kernel.materialization = Some(Vec::new());
                 check(&mut kernel, &ll, p as u32);
                 let lay = kernel.lay;
-                // the bottom slots in the output buffer, the arena right after the top ones
+                // the bottom slots in the tail, the rules right after them; the arena right
+                // after the top slots, and nothing after it in the kernel's buffer
                 assert!(lay.bout);
                 assert_eq!(
                     (lay.bots, lay.ends[1]),
-                    (BPAD, BPAD + kernel.letters * BSLOT)
+                    (lay.shift + BPAD, lay.shift + BPAD + kernel.letters * BSLOT)
                 );
+                assert_eq!(lay.rules, lay.ends[1] + GAP);
                 assert_eq!(lay.arena, lay.ends[0] + GAP);
+                assert_eq!(lay.shift, lay.ends[2] + GAP);
                 cells += kernel.materialization.take().unwrap().len();
             }
         }
         assert!(cells > 0);
     }
 
-    /// The short-lived state in dead regions: the bottom slots in the output buffer, from
-    /// `BPAD` on, which the writer then overwrites, and the rules' first places in the top
-    /// slots, which the induction has let go (or, with more rules than five a letter, in a
-    /// vector of their own). Over stale bytes in both buffers, every read stays inside its
-    /// buffer (Miri), the output is exact, and both places for the first places are reached.
+    /// The short-lived state in dead regions: the bottom slots and the rules in the tail's
+    /// spare capacity, and the rules' first places in the top slots, which the induction has
+    /// let go (or, with more rules than five a letter, in a vector of their own). Over stale
+    /// bytes in the kernel's buffer, every read stays inside its buffer and reads only what
+    /// was written (Miri), the output is exact, and both places for the first places are
+    /// reached.
     #[test]
     fn miri_cells_dead_regions() {
         let mut kernel = Kernel::default();
@@ -1576,13 +1751,68 @@ mod tests {
                 assert!(lay.bout && kernel.bottom_laid);
                 assert_eq!(
                     (lay.bots, lay.ends[1]),
-                    (BPAD, BPAD + kernel.letters * BSLOT)
+                    (lay.shift + BPAD, lay.shift + BPAD + kernel.letters * BSLOT)
                 );
+                assert_eq!(lay.rules, lay.ends[1] + GAP);
                 assert_eq!(lay.arena, lay.ends[0] + GAP);
                 kept[usize::from(kernel.pos_in_tops)] += 1;
             }
         }
         assert!(kept[0] > 0 && kept[1] > 0, "{kept:?}");
+    }
+
+    /// The caller's tail (`invert_runs_tail`): the bottom slots and the rules lie in its
+    /// spare capacity, which is never set and holds nothing until the kernel writes it (Miri
+    /// sees any read of what was not written). The tail keeps its length and its bytes, the
+    /// kernel's own tail stays unallocated, and the output is the fallback's. Without a
+    /// tail given (`invert_runs`), the kernel uses its own.
+    #[test]
+    fn miri_cells_tail_is_the_callers() {
+        // 40 runs of 16 rows over five bytes: inside both of admission's gates
+        let ll: Vec<u8> = (0..40usize).flat_map(|i| [(i * 7 % 5) as u8; 16]).collect();
+        let r = Runs::of_column(&ll);
+        let k = crate::Kernels::scalar();
+        let mut want = Vec::new();
+        assert!(Segmented::default().invert_runs(&r, ll.len(), 3, &mut want, k));
+        let mut cells = Cells::default();
+        let mut tail = Vec::with_capacity(16);
+        tail.extend_from_slice(&[3u8; 7]);
+        // twice: the second block finds the tail's capacity already there
+        for _ in 0..2 {
+            let mut got = vec![42; 5];
+            assert!(cells.invert_runs_tail(&r, ll.len(), 3, &mut got, &mut tail, k));
+            assert_eq!(got, want);
+            assert_eq!(tail, [3u8; 7], "the tail's own bytes");
+            let lay = cells.state.kernel.lay;
+            assert!(lay.bout && tail.capacity() - tail.len() >= lay.tail && lay.tail > 0);
+            assert_eq!(
+                cells.state.kernel.tail.capacity(),
+                0,
+                "the kernel's own tail"
+            );
+        }
+        assert_eq!(cells.counts().admitted, 2, "{:?}", cells.counts());
+        // a refusal on the budget, at the kernel (two runs of almost equal lengths need many
+        // cells): `out` and the tail's bytes as they were
+        let hard = Runs::of_column(&[vec![1; 51], vec![0; 50]].concat());
+        let mut got = vec![42; 5];
+        let refused = cells.state.kernel.try_invert_tail(
+            hard.records(),
+            101,
+            0,
+            16,
+            false,
+            &mut got,
+            &mut tail,
+        );
+        assert_eq!(refused, Err(Refusal::Budget));
+        assert_eq!((got, &tail[..]), (vec![42; 5], &[3u8; 7][..]));
+        // no tail given: the kernel's own
+        let mut got = Vec::new();
+        assert!(cells.invert_runs(&r, ll.len(), 3, &mut got, k));
+        assert_eq!(got, want);
+        assert!(cells.state.kernel.tail.capacity() >= cells.state.kernel.lay.tail);
+        assert!(cells.state.kernel.tail.is_empty());
     }
 
     #[test]
