@@ -55,6 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Read once, stored once" = "blog/2026-11-15-bottom-slots.md" },
     { "Reduce, reuse, recycle" = "blog/2026-11-15-slot-recycling.md" },
     { "Reconstructing text from compact programs" = "blog/2026-11-12-rauzy-technical-companion.md" },
     { "A new way back from the BWT" = "blog/2026-11-10-rauzy-veech-reconstruction.md" },
