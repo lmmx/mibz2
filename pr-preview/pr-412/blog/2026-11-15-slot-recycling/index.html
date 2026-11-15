@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="mibz2's Cells induction now reuses the slot a finished letter leaves behind, touching 29.7% fewer slots and trimming peak memory by up to 14.6%.">
+        <meta name="description" content="Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -35,7 +35,7 @@
     
     
       
-        <title>Slot recycling: how mibz2 gets faster by reusing memory it no longer needs - mibz2</title>
+        <title>Reduce, reuse, recycle: hand-me-down slots for every fragment of text - mibz2</title>
       
     
     
@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=9436456f49fa">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c72532e81b97">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=9436456f49fa">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c72532e81b97">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=9436456f49fa">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c72532e81b97">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=9436456f49fa">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c72532e81b97">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=9436456f49fa">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c72532e81b97">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=9436456f49fa">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=c72532e81b97">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -89,19 +89,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="Slot recycling: how mibz2 gets faster by reusing memory it no longer needs">
-  <meta property="og:description" content="mibz2's Cells induction now reuses the slot a finished letter leaves behind, touching 29.7% fewer slots and trimming peak memory by up to 14.6%.">
+  <meta property="og:title" content="Reduce, reuse, recycle: hand-me-down slots for every fragment of text">
+  <meta property="og:description" content="Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-412/blog/2026-11-15-slot-recycling/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-412/assets/social/blog-2026-11-15-slot-recycling.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Slot recycling: how mibz2 gets faster by reusing memory it no longer needs">
+  <meta property="og:image:alt" content="Reduce, reuse, recycle: hand-me-down slots for every fragment of text">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Slot recycling: how mibz2 gets faster by reusing memory it no longer needs">
-  <meta name="twitter:description" content="mibz2's Cells induction now reuses the slot a finished letter leaves behind, touching 29.7% fewer slots and trimming peak memory by up to 14.6%.">
+  <meta name="twitter:title" content="Reduce, reuse, recycle: hand-me-down slots for every fragment of text">
+  <meta name="twitter:description" content="Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-412/assets/social/blog-2026-11-15-slot-recycling.png">
-  <meta name="twitter:image:alt" content="Slot recycling: how mibz2 gets faster by reusing memory it no longer needs">
+  <meta name="twitter:image:alt" content="Reduce, reuse, recycle: hand-me-down slots for every fragment of text">
 
   </head>
   
@@ -154,7 +154,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Slot recycling: how mibz2 gets faster by reusing memory it no longer needs
+              Reduce, reuse, recycle: hand-me-down slots for every fragment of text
             
           </span>
         </div>
@@ -1165,7 +1165,7 @@
   <span class="md-ellipsis">
     
   
-  Slot recycling
+  Reduce, reuse, recycle
 
     
   </span>
@@ -1182,7 +1182,7 @@
   <span class="md-ellipsis">
     
   
-  Slot recycling
+  Reduce, reuse, recycle
 
     
   </span>
@@ -2434,12 +2434,13 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="slot-recycling-how-mibz2-gets-faster-by-reusing-memory-it-no-longer-needs">Slot recycling: how mibz2 gets faster by reusing memory it no longer needs<a class="headerlink" href="#slot-recycling-how-mibz2-gets-faster-by-reusing-memory-it-no-longer-needs" title="Permanent link">&para;</a></h1>
-<p class="post-dek">mibz2's Cells induction now reuses the slot a finished letter leaves behind, touching 29.7% fewer slots and trimming peak memory by up to 14.6%.</p>
+<h1 id="reduce-reuse-recycle-hand-me-down-slots-for-every-fragment-of-text">Reduce, reuse, recycle: hand-me-down slots for every fragment of text<a class="headerlink" href="#reduce-reuse-recycle-hand-me-down-slots-for-every-fragment-of-text" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory.</p>
 <p class="post-meta">15 November 2026 · 13 min read · <a href="#7-what-the-benchmarks-tell-us">Research result</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
+<p>One of mibz2's ways of rebuilding a block of bzip2 text works on fragments of it: pieces of the output, each standing for a stretch of the block. It keeps the bookkeeping for every fragment in a small record called a slot, 20 bytes holding the fragment's length, where its text is kept, the slot before it, and its partner slot in a second arrangement of the same fragments. When one fragment is finished, its slot is free just as the next fragment needs one, and mibz2 now hands it over instead of taking fresh memory.</p>
 <h2 id="the-idea-in-a-nutshell">The idea in a nutshell<a class="headerlink" href="#the-idea-in-a-nutshell" title="Permanent link">&para;</a></h2>
 <p><strong>Slot recycling makes mibz2 faster by recognising that, whenever its <a href="../2026-11-10-rauzy-veech-reconstruction/">Cells algorithm</a> needs somewhere to put a new piece of information, another piece of information has just finished using its space.</strong></p>
 <p>Previously, the algorithm reserved a fresh memory slot for the new piece, leaving the old slot behind. Now, it reuses the old slot immediately.</p>
@@ -2477,6 +2478,7 @@
 </ul>
 <p>These aren't two complete copies of the decompressed text. They're two linked arrangements of the same mathematical pieces.</p>
 <p>Each letter has a slot in each order.</p>
+<p>Here are both orders for a handful of letters, with each letter's two slots joined:</p>
 <figure class="bf-fig">
 <p class="bf-title">Two linked orders of the same letters</p>
 <svg viewBox="0 0 720 312" role="img" aria-label="The top order holds the letters in one arrangement and the bottom order in another. Each letter has one slot in each order, and a dashed partner link joins the two. Each slot links to the slot before it, and the induction reads both orders from their fronts: A on top, B on the bottom."><text x="0" y="66" class="bf-ts">Top order</text><text x="0" y="84" class="bf-tm">A is at its front</text><text x="0" y="184" class="bf-ts">Bottom order</text><text x="0" y="202" class="bf-tm">B is at its front</text><text x="612.0" y="24" class="bf-tm" text-anchor="middle">front: read first</text><path d="M612.0 30V40" class="bf-arrow"/><text x="612.0" y="246" class="bf-tm" text-anchor="middle">front: read first</text><path d="M612.0 236V226" class="bf-arrow"/><path d="M282.0 92L502.0 166" class="bf-arrow" stroke-dasharray="4 4"/><path d="M392.0 92L282.0 166" class="bf-arrow" stroke-dasharray="4 4"/><path d="M502.0 92L612.0 166" class="bf-arrow" stroke-dasharray="4 4"/><path d="M612.0 92L392.0 166" class="bf-arrow" stroke-dasharray="4 4"/><text x="172.0" y="75" class="bf-tl" text-anchor="middle">…</text><rect x="240" y="46" width="84" height="44" rx="6" class="bf-slot"/><text x="282.0" y="74" class="bf-ts" text-anchor="middle">D</text><rect x="350" y="46" width="84" height="44" rx="6" class="bf-slot"/><text x="392.0" y="74" class="bf-ts" text-anchor="middle">C</text><rect x="460" y="46" width="84" height="44" rx="6" class="bf-slot"/><text x="502.0" y="74" class="bf-ts" text-anchor="middle">B</text><rect x="570" y="46" width="84" height="44" rx="6" class="bf-slot"/><text x="612.0" y="74" class="bf-ts" text-anchor="middle">A</text><path d="M237 68H217m5-5-5 5 5 5" class="bf-arrow"/><path d="M347 68H327m5-5-5 5 5 5" class="bf-arrow"/><path d="M457 68H437m5-5-5 5 5 5" class="bf-arrow"/><path d="M567 68H547m5-5-5 5 5 5" class="bf-arrow"/><text x="172.0" y="197" class="bf-tl" text-anchor="middle">…</text><rect x="240" y="168" width="84" height="44" rx="6" class="bf-slot"/><text x="282.0" y="196" class="bf-ts" text-anchor="middle">C</text><rect x="350" y="168" width="84" height="44" rx="6" class="bf-slot"/><text x="392.0" y="196" class="bf-ts" text-anchor="middle">A</text><rect x="460" y="168" width="84" height="44" rx="6" class="bf-slot"/><text x="502.0" y="196" class="bf-ts" text-anchor="middle">D</text><rect x="570" y="168" width="84" height="44" rx="6" class="bf-slot"/><text x="612.0" y="196" class="bf-ts" text-anchor="middle">B</text><path d="M237 190H217m5-5-5 5 5 5" class="bf-arrow"/><path d="M347 190H327m5-5-5 5 5 5" class="bf-arrow"/><path d="M457 190H437m5-5-5 5 5 5" class="bf-arrow"/><path d="M567 190H547m5-5-5 5 5 5" class="bf-arrow"/><path d="M0 278H704" class="bf-rule"/><path d="M26 300H4m5-5-5 5 5 5" class="bf-arrow"/><text x="34" y="304" class="bf-tm">each slot links to the slot before it in its order</text><path d="M366 300H392" class="bf-arrow" stroke-dasharray="4 4"/><text x="400" y="304" class="bf-tm">partner: the same letter’s slot in the other order</text></svg>
@@ -2510,9 +2512,10 @@
 </tr>
 </tbody>
 </table>
+<p>The slot's five fields, as the code lays them out:</p>
 <figure class="bf-fig">
 <p class="bf-title">A slot is 20 bytes: five 4-byte fields</p>
-<svg viewBox="0 0 720 250" role="img" aria-label="A slot of 20 bytes, five fields of 4 bytes each: bytes 0 to 4 the slot before it in its order; 4 to 8 the letter's length; 8 to 12 its word's length; 12 to 16 its word's offset; 16 to 20 the letter's slot in the other order. Bytes 8 to 16 are read as one 8-byte load. A 64-byte cache line holds 3.2 slots."><text x="40" y="22" class="bf-ttiny" text-anchor="middle">0</text><text x="168" y="22" class="bf-ttiny" text-anchor="middle">4</text><text x="296" y="22" class="bf-ttiny" text-anchor="middle">8</text><text x="424" y="22" class="bf-ttiny" text-anchor="middle">12</text><text x="552" y="22" class="bf-ttiny" text-anchor="middle">16</text><text x="680" y="22" class="bf-ttiny" text-anchor="middle">20</text><text x="32" y="22" class="bf-ttiny" text-anchor="end">byte</text><rect x="41" y="30" width="126" height="58" rx="5" class="bf-slot"/><text x="104" y="55" class="bf-ts" text-anchor="middle">slot before</text><text x="104" y="74" class="bf-tm" text-anchor="middle">4 B · link in its order</text><rect x="169" y="30" width="126" height="58" rx="5" class="bf-slot"/><text x="232" y="55" class="bf-ts" text-anchor="middle">letter’s length</text><text x="232" y="74" class="bf-tm" text-anchor="middle">4 B · positions left</text><rect x="297" y="30" width="126" height="58" rx="5" class="bf-slot"/><text x="360" y="55" class="bf-ts" text-anchor="middle">word’s length</text><text x="360" y="74" class="bf-tm" text-anchor="middle">4 B · in bytes</text><rect x="425" y="30" width="126" height="58" rx="5" class="bf-slot"/><text x="488" y="55" class="bf-ts" text-anchor="middle">word’s offset</text><text x="488" y="74" class="bf-tm" text-anchor="middle">4 B · bytes or a rule</text><rect x="553" y="30" width="126" height="58" rx="5" class="bf-slot"/><text x="616" y="55" class="bf-ts" text-anchor="middle">partner slot</text><text x="616" y="74" class="bf-tm" text-anchor="middle">4 B · in the other order</text><path d="M298 96V104H550V96M424.0 104V110" class="bf-arrow"/><text x="424.0" y="126" class="bf-tm" text-anchor="middle">the word: read as one 8-byte load</text><text x="360" y="150" class="bf-t-strong" text-anchor="middle">20 bytes, five 4-byte fields</text><path d="M0 172H720" class="bf-rule"/><text x="0" y="196" class="bf-ts">A 64-byte cache line</text><text x="0" y="214" class="bf-tm">holds 3.2 slots, so slots straddle lines</text><rect x="271" y="182" width="138" height="30" rx="4" class="bf-slot"/><text x="340" y="201" class="bf-tm" text-anchor="middle">slot 1</text><rect x="411" y="182" width="138" height="30" rx="4" class="bf-slot"/><text x="480" y="201" class="bf-tm" text-anchor="middle">slot 2</text><rect x="551" y="182" width="138" height="30" rx="4" class="bf-slot"/><text x="620" y="201" class="bf-tm" text-anchor="middle">slot 3</text><rect x="691" y="182" width="26" height="30" rx="4" class="bf-slot"/><rect x="717" y="182" width="84" height="30" rx="4" class="bf-track"/><path d="M270 218V224H718V218" class="bf-arrow"/><text x="494" y="240" class="bf-tm" text-anchor="middle">64 bytes</text><text x="760" y="201" class="bf-ttiny" text-anchor="middle">next line</text></svg>
+<svg viewBox="0 0 720 250" role="img" aria-label="A slot of 20 bytes, five fields of 4 bytes each: bytes 0 to 4 the slot before it in its order; 4 to 8 the letter's length; 8 to 12 its word's length; 12 to 16 its word's offset; 16 to 20 the letter's slot in the other order. Bytes 8 to 16 are read as one 8-byte load. A 64-byte cache line holds 3.2 slots."><text x="40" y="22" class="bf-ttiny" text-anchor="middle">0</text><text x="168" y="22" class="bf-ttiny" text-anchor="middle">4</text><text x="296" y="22" class="bf-ttiny" text-anchor="middle">8</text><text x="424" y="22" class="bf-ttiny" text-anchor="middle">12</text><text x="552" y="22" class="bf-ttiny" text-anchor="middle">16</text><text x="680" y="22" class="bf-ttiny" text-anchor="middle">20</text><text x="32" y="22" class="bf-ttiny" text-anchor="end">byte</text><rect x="41" y="30" width="126" height="58" rx="5" class="bf-slot"/><text x="104" y="55" class="bf-ts" text-anchor="middle">slot before</text><text x="104" y="74" class="bf-tm" text-anchor="middle">4 B · link in its order</text><rect x="169" y="30" width="126" height="58" rx="5" class="bf-slot"/><text x="232" y="55" class="bf-ts" text-anchor="middle">letter’s length</text><text x="232" y="74" class="bf-tm" text-anchor="middle">4 B · positions left</text><rect x="297" y="30" width="126" height="58" rx="5" class="bf-slot"/><text x="360" y="55" class="bf-ts" text-anchor="middle">word’s length</text><text x="360" y="74" class="bf-tm" text-anchor="middle">4 B · in bytes</text><rect x="425" y="30" width="126" height="58" rx="5" class="bf-slot"/><text x="488" y="55" class="bf-ts" text-anchor="middle">word’s offset</text><text x="488" y="74" class="bf-tm" text-anchor="middle">4 B · bytes or a rule</text><rect x="553" y="30" width="126" height="58" rx="5" class="bf-slot"/><text x="616" y="55" class="bf-ts" text-anchor="middle">partner slot</text><text x="616" y="74" class="bf-tm" text-anchor="middle">4 B · in the other order</text><path d="M298 96V104H550V96M424.0 104V110" class="bf-arrow"/><text x="424.0" y="126" class="bf-tm" text-anchor="middle">the word: read as one 8-byte load</text><text x="360" y="150" class="bf-t-strong" text-anchor="middle">20 bytes, five 4-byte fields</text><path d="M0 172H720" class="bf-rule"/><text x="0" y="196" class="bf-ts">A 64-byte cache line</text><text x="0" y="214" class="bf-tm">holds 3.2 slots, so slots straddle lines</text><rect x="251" y="182" width="118" height="30" rx="4" class="bf-slot"/><text x="310" y="201" class="bf-tm" text-anchor="middle">slot 1</text><rect x="371" y="182" width="118" height="30" rx="4" class="bf-slot"/><text x="430" y="201" class="bf-tm" text-anchor="middle">slot 2</text><rect x="491" y="182" width="118" height="30" rx="4" class="bf-slot"/><text x="550" y="201" class="bf-tm" text-anchor="middle">slot 3</text><rect x="611" y="182" width="22" height="30" rx="4" class="bf-slot"/><rect x="633" y="182" width="72" height="30" rx="4" class="bf-track"/><path d="M250 218V224H634V218" class="bf-arrow"/><text x="442" y="240" class="bf-tm" text-anchor="middle">64 bytes</text><text x="670" y="201" class="bf-ttiny" text-anchor="middle">next</text></svg>
 <figcaption>The layout as <code>src/cells.rs</code> documents it, unchanged by #408. Every field is a 4-byte offset or length. The table above lists the word’s length and offset as one row, since the induction reads them together. Below, to scale: 64 bytes hold three whole slots and part of a fourth.</figcaption>
 </figure>
 
@@ -2558,9 +2561,10 @@
 <p>Returning to our example, B has just finished and A continues.</p>
 <p>Previously, the next cell cut from A would receive a fresh slot in the bottom order.</p>
 <p>Now it receives <strong>B's former front slot in that same order</strong>.</p>
+<p>Here is the bottom order after B ends, before and after the change:</p>
 <figure class="bf-fig">
 <p class="bf-title">The bottom order after B ends: where A’s next cell goes</p>
-<svg viewBox="0 0 720 346" role="img" aria-label="The bottom order's slots in memory, after the step where B ends and A goes on. A's slot now holds the cell. Before #408, A's next cell was promised a fresh slot past the end of the letters' slots, in memory never touched before, and B's dead front slot was left. With #408, A's next cell is promised B's old front slot, which was just read, and the region ends at the letters' slots."><text x="0" y="14" class="bf-ts">Before #408: a fresh slot past the letters</text><text x="40.0" y="95" class="bf-tl" text-anchor="middle">…</text><rect x="84" y="66" width="80" height="46" rx="6" class="bf-slot"/><text x="124.0" y="86" class="bf-ts" text-anchor="middle">D</text><rect x="168" y="66" width="80" height="46" rx="6" class="bf-slot"/><text x="208.0" y="86" class="bf-ts" text-anchor="middle">A</text><text x="208.0" y="103" class="bf-tm" text-anchor="middle">now the cell</text><rect x="252" y="66" width="80" height="46" rx="6" class="bf-slot"/><text x="292.0" y="86" class="bf-ts" text-anchor="middle">C</text><rect x="336" y="66" width="80" height="46" rx="6" class="bf-track"/><text x="376.0" y="86" class="bf-ts" text-anchor="middle">B</text><text x="376.0" y="103" class="bf-tm" text-anchor="middle">dead, left</text><text x="376.0" y="130" class="bf-tm" text-anchor="middle">the front</text><text x="376.0" y="145" class="bf-tm" text-anchor="middle">just read</text><path d="M418.0 56V122" class="bf-tick"/><text x="426.0" y="130" class="bf-tm">end of the letters’ slots</text><rect x="426.0" y="62" width="286.0" height="54" rx="8" class="bf-lane"/><rect x="436.0" y="66" width="96" height="46" rx="6" class="bf-pill-ready"/><text x="484.0" y="86" class="bf-pill-ready-t" text-anchor="middle">A’s next</text><text x="484.0" y="103" class="bf-tm" text-anchor="middle">fresh slot</text><text x="544.0" y="86" class="bf-tm">room for one fresh</text><text x="544.0" y="103" class="bf-tm">slot per cell</text><path d="M208.0 62C208.0 26 484.0 26 484.0 60m-5-6 5 6 5-6" class="bf-arrow"/><text x="346.0" y="38" class="bf-tm" text-anchor="middle">A’s next cell is promised a slot never touched before</text><path d="M0 166H720" class="bf-rule"/><text x="0" y="192" class="bf-ts">With #408: the dead front slot is recycled</text><text x="40.0" y="273" class="bf-tl" text-anchor="middle">…</text><rect x="84" y="244" width="80" height="46" rx="6" class="bf-slot"/><text x="124.0" y="264" class="bf-ts" text-anchor="middle">D</text><rect x="168" y="244" width="80" height="46" rx="6" class="bf-slot"/><text x="208.0" y="264" class="bf-ts" text-anchor="middle">A</text><text x="208.0" y="281" class="bf-tm" text-anchor="middle">now the cell</text><rect x="252" y="244" width="80" height="46" rx="6" class="bf-slot"/><text x="292.0" y="264" class="bf-ts" text-anchor="middle">C</text><rect x="336" y="244" width="80" height="46" rx="6" class="bf-card-hi"/><text x="376.0" y="264" class="bf-t-green" text-anchor="middle">A’s next</text><text x="376.0" y="281" class="bf-tm" text-anchor="middle">was B’s</text><text x="376.0" y="308" class="bf-tm" text-anchor="middle">the front</text><text x="376.0" y="323" class="bf-tm" text-anchor="middle">just read</text><path d="M418.0 234V300" class="bf-tick"/><text x="426.0" y="308" class="bf-tm">end of the letters’ slots</text><path d="M208.0 240C208.0 204 376.0 204 376.0 238m-5-6 5 6 5-6" class="bf-act"/><text x="292.0" y="216" class="bf-t-green" text-anchor="middle">promised B’s old slot</text><text x="426.0" y="264" class="bf-t">no slot past here</text><text x="426.0" y="281" class="bf-tm">the region is letters × 20 B</text></svg>
+<svg viewBox="0 0 720 384" role="img" aria-label="The bottom order's slots in memory, after the step where B ends and A goes on. A's slot now holds the cell. Before #408, A's next cell was promised a fresh slot past the end of the letters' slots, in memory never touched before, and B's dead front slot was left. With #408, A's next cell is promised B's old front slot, which was just read, and the region ends at the letters' slots."><text x="0" y="14" class="bf-ts">Before #408: a fresh slot past the letters</text><text x="40.0" y="113" class="bf-tl" text-anchor="middle">…</text><rect x="84" y="84" width="80" height="46" rx="6" class="bf-slot"/><text x="124.0" y="104" class="bf-ts" text-anchor="middle">D</text><rect x="168" y="84" width="80" height="46" rx="6" class="bf-slot"/><text x="208.0" y="104" class="bf-ts" text-anchor="middle">A</text><text x="208.0" y="121" class="bf-tm" text-anchor="middle">now the cell</text><rect x="252" y="84" width="80" height="46" rx="6" class="bf-slot"/><text x="292.0" y="104" class="bf-ts" text-anchor="middle">C</text><rect x="336" y="84" width="80" height="46" rx="6" class="bf-track"/><text x="376.0" y="104" class="bf-ts" text-anchor="middle">B</text><text x="376.0" y="121" class="bf-tm" text-anchor="middle">dead, left</text><text x="376.0" y="148" class="bf-tm" text-anchor="middle">the front</text><text x="376.0" y="163" class="bf-tm" text-anchor="middle">just read</text><path d="M418.0 74V140" class="bf-tick"/><text x="426.0" y="148" class="bf-tm">end of the letters’ slots</text><rect x="426.0" y="80" width="286.0" height="54" rx="8" class="bf-lane"/><rect x="436.0" y="84" width="96" height="46" rx="6" class="bf-pill-ready"/><text x="484.0" y="104" class="bf-pill-ready-t" text-anchor="middle">A’s next</text><text x="484.0" y="121" class="bf-tm" text-anchor="middle">fresh slot</text><text x="544.0" y="104" class="bf-tm">room for one fresh</text><text x="544.0" y="121" class="bf-tm">slot per cell</text><path d="M208.0 80C208.0 50 484.0 50 484.0 78m-5-6 5 6 5-6" class="bf-arrow"/><text x="346.0" y="36" class="bf-tm" text-anchor="middle">A’s next cell is promised a slot never touched before</text><path d="M0 186H720" class="bf-rule"/><text x="0" y="212" class="bf-ts">With #408: the dead front slot is recycled</text><text x="40.0" y="311" class="bf-tl" text-anchor="middle">…</text><rect x="84" y="282" width="80" height="46" rx="6" class="bf-slot"/><text x="124.0" y="302" class="bf-ts" text-anchor="middle">D</text><rect x="168" y="282" width="80" height="46" rx="6" class="bf-slot"/><text x="208.0" y="302" class="bf-ts" text-anchor="middle">A</text><text x="208.0" y="319" class="bf-tm" text-anchor="middle">now the cell</text><rect x="252" y="282" width="80" height="46" rx="6" class="bf-slot"/><text x="292.0" y="302" class="bf-ts" text-anchor="middle">C</text><rect x="336" y="282" width="80" height="46" rx="6" class="bf-card-hi"/><text x="376.0" y="302" class="bf-t-green" text-anchor="middle">A’s next</text><text x="376.0" y="319" class="bf-tm" text-anchor="middle">was B’s</text><text x="376.0" y="346" class="bf-tm" text-anchor="middle">the front</text><text x="376.0" y="361" class="bf-tm" text-anchor="middle">just read</text><path d="M418.0 272V338" class="bf-tick"/><text x="426.0" y="346" class="bf-tm">end of the letters’ slots</text><path d="M208.0 278C208.0 248 376.0 248 376.0 276m-5-6 5 6 5-6" class="bf-act"/><text x="292.0" y="234" class="bf-t-green" text-anchor="middle">promised B’s old slot</text><text x="426.0" y="302" class="bf-t">no slot past here</text><text x="426.0" y="319" class="bf-tm">the region is letters × 20 B</text></svg>
 <figcaption>Conceptual, after the step in the last figure. Slots are in memory order; the front is the slot the induction reads next, and it moves left as the induction goes on. The promised slot is linked in as the slot before A’s cell, so A’s next cell will be read there. The cell is also written to B’s slot in the top order (not drawn). When A ends instead, the same happens in the top order, with A’s front slot.</figcaption>
 </figure>
 
@@ -2576,7 +2580,7 @@
 <p>The difference is that its slots are <strong>reused rather than continually extended</strong>.</p>
 <p>That is why the name <em>slot recycling</em> is so precise.</p>
 <h2 id="6-how-much-does-this-save">6. How much does this save?<a class="headerlink" href="#6-how-much-does-this-save" title="Permanent link">&para;</a></h2>
-<p>The builder <a href="https://github.com/lmmx/mibz2/pull/408">counted</a> what happened across the 196 Wikidata blocks admitted by Cells in the benchmark corpus.</p>
+<p>The builder, the agent that implemented #408, <a href="https://github.com/lmmx/mibz2/pull/408">counted</a> what happened across the 196 Wikidata blocks admitted by Cells in the benchmark corpus.</p>
 <p>The result was substantial:</p>
 <table>
 <thead>
@@ -2604,6 +2608,7 @@
 </tr>
 </tbody>
 </table>
+<p>The same counts, drawn to scale:</p>
 <figure class="bf-fig">
 <p class="bf-title">Slots the induction touches, over the 196 Wikidata blocks</p>
 <svg viewBox="0 0 720 148" role="img" aria-label="A stacked bar: before, 22,181,734 letters' slots plus 9,365,628 fresh slots, 31,547,362 in all. After, the 22,181,734 letters' slots alone, 29.7% fewer, with no fresh slot. 9,365,628 slots of 20 bytes are 187.3 MB no longer touched."><text x="0" y="40" class="bf-ts">Before</text><rect x="92" y="22" width="421.9" height="30" rx="3" class="bf-slot"/><rect x="515.9" y="22" width="176.1" height="30" rx="3" class="bf-pill-ready"/><text x="100" y="42" class="bf-t">letters’ slots 22,181,734</text><text x="523.9" y="42" class="bf-pill-ready-t">fresh 9,365,628</text><text x="692" y="16" class="bf-t-strong" text-anchor="end">31,547,362</text><text x="0" y="90" class="bf-ts">After</text><rect x="92" y="72" width="421.9" height="30" rx="3" class="bf-slot"/><text x="100" y="92" class="bf-t">letters’ slots 22,181,734</text><text x="523.9" y="92" class="bf-t-green">−29.7%, no fresh slot</text><path d="M0 118H720" class="bf-rule"/><text x="0" y="140" class="bf-tm">9,365,628 slots × 20 B = 187.3 MB no longer touched, 0.89 B per output byte, over the 196 blocks</text></svg>
@@ -2654,6 +2659,7 @@
 </tr>
 </tbody>
 </table>
+<p>The same run with its intervals, and the memory in megabytes:</p>
 <figure class="bf-fig">
 <p class="bf-title">The decoder on Wikidata, with and without slot recycling</p>
 <svg viewBox="0 0 720 220" role="img" aria-label="Left: wall-time change with 95% intervals. At 1 thread +0.5% (−0.2%, +1.3%); at 2 threads −0.2% (−1.7%, +1.4%); at 4 threads −1.7% (−3.3%, −0.1%), the only interval that excludes zero. Right: peak memory from base to head, 33 to 30 MB (−9.7%), 71 to 62 MB (−12.5%) and 109 to 96 MB (−14.6%) at 1, 2 and 4 threads."><text x="0" y="14" class="bf-ts">Wall time, head against base</text><text x="380" y="14" class="bf-ts">Peak memory, base → head</text><text x="0" y="56" class="bf-t">1 thread</text><path d="M260.0 52H335.0M260.0 47v10M335.0 47v10" class="bf-quiet-ink"/><circle cx="295.0" cy="52" r="5" class="bf-head-ink"/><text x="295.0" y="41" class="bf-t-strong" text-anchor="middle">+0.5%</text><text x="380" y="56" class="bf-t">1 thread</text><rect x="460" y="39" width="55.0" height="11" rx="2" class="bf-track"/><rect x="460" y="53" width="50.0" height="11" rx="2" class="bf-green"/><text x="521.0" y="49" class="bf-tm">33 MB</text><text x="516.0" y="63" class="bf-t-green">30 MB, −9.7%</text><text x="0" y="100" class="bf-t">2 threads</text><path d="M185.0 96H340.0M185.0 91v10M340.0 91v10" class="bf-quiet-ink"/><circle cx="260.0" cy="96" r="5" class="bf-head-ink"/><text x="260.0" y="85" class="bf-t-strong" text-anchor="middle">−0.2%</text><text x="380" y="100" class="bf-t">2 threads</text><rect x="460" y="83" width="118.3" height="11" rx="2" class="bf-track"/><rect x="460" y="97" width="103.3" height="11" rx="2" class="bf-green"/><text x="584.3" y="93" class="bf-tm">71 MB</text><text x="569.3" y="107" class="bf-t-green">62 MB, −12.5%</text><text x="0" y="144" class="bf-t">4 threads</text><path d="M105.0 140H265.0M105.0 135v10M265.0 135v10" class="bf-act"/><circle cx="185.0" cy="140" r="5" class="bf-green"/><text x="185.0" y="129" class="bf-t-green" text-anchor="middle">−1.7%</text><text x="380" y="144" class="bf-t">4 threads</text><rect x="460" y="127" width="181.7" height="11" rx="2" class="bf-track"/><rect x="460" y="141" width="160.0" height="11" rx="2" class="bf-green"/><text x="647.7" y="137" class="bf-tm">109 MB</text><text x="626.0" y="151" class="bf-t-green">96 MB, −14.6%</text><path d="M270 30V162" class="bf-axis"/><path d="M70 162H370" class="bf-axis"/><path d="M70 162v4" class="bf-axis"/><text x="70" y="179" class="bf-ttiny" text-anchor="middle">−4%</text><path d="M120 162v4" class="bf-axis"/><text x="120" y="179" class="bf-ttiny" text-anchor="middle">−3%</text><path d="M170 162v4" class="bf-axis"/><text x="170" y="179" class="bf-ttiny" text-anchor="middle">−2%</text><path d="M220 162v4" class="bf-axis"/><text x="220" y="179" class="bf-ttiny" text-anchor="middle">−1%</text><path d="M270 162v4" class="bf-axis"/><text x="270" y="179" class="bf-ttiny" text-anchor="middle">0%</text><path d="M320 162v4" class="bf-axis"/><text x="320" y="179" class="bf-ttiny" text-anchor="middle">+1%</text><path d="M370 162v4" class="bf-axis"/><text x="370" y="179" class="bf-ttiny" text-anchor="middle">+2%</text><text x="220" y="195" class="bf-tm" text-anchor="middle">← faster · slower →</text><rect x="460" y="168" width="12" height="8" rx="2" class="bf-track"/><text x="478" y="176" class="bf-tm">base</text><rect x="520" y="168" width="12" height="8" rx="2" class="bf-green"/><text x="538" y="176" class="bf-tm">head, with #408</text></svg>
@@ -2665,11 +2671,12 @@
 <p>The memory reductions are much larger.</p>
 <p>This pattern is consistent with the intended mechanism: reducing the working set matters more as concurrency increases.</p>
 <p>But we should be precise about what has been established. The CI runner isn't the i9 workstation. It has a different cache hierarchy and different core-sharing conditions. The benchmark demonstrates a benefit on the tested machine, but it doesn't yet establish how much slot recycling helps the i9's known <a href="../2026-11-07-why-mibz2-stops-scaling/">concurrency plateau</a>.</p>
+<p><a href="https://github.com/lmmx/mibz2/pull/145#issuecomment-6894519106">A later paired run on the i9</a>, a 10-core desktop, shows the gain growing with the number of Cells workers: no change at one or two threads, 4% less CPU at four, and 5% faster wall time at five (interval 4.7% to 6.1%). Peak memory was lower at every thread count from one to five, and nothing changed at six or more threads, where mibz2 uses its team path instead of Cells.</p>
 <p>There's also a secondary-workload caveat: the <code>records</code> corpus showed a four-thread regression in the same CI run. Correctness was preserved, but the change is not a universal speedup.</p>
 <p>The valuable thing is that <strong>the memory reduction is substantial without requiring additional expensive computation</strong>. The extra bookkeeping is minimal, with the front positions already available to the induction.</p>
 <h2 id="8-why-this-is-different-from-field-elision">8. Why this is different from field elision<a class="headerlink" href="#8-why-this-is-different-from-field-elision" title="Permanent link">&para;</a></h2>
 <p>The terminology initially caused some confusion because two related research ideas both used the word <em>elision</em>.</p>
-<p><a href="https://github.com/lmmx/mibz2/pull/410">MONODROMY</a> investigated whether individual fields inside existing slots could be left unwritten or reconstructed from other information.</p>
+<p><a href="https://github.com/lmmx/mibz2/pull/410">MONODROMY</a>, the team's mathematics agent, investigated whether individual fields inside existing slots could be left unwritten or reconstructed from other information.</p>
 <p>It found that approximately 25.5% of the induction's stored bytes were never subsequently read, and that certain mathematical identities could account for an even larger fraction.</p>
 <p>That sounds promising, but almost every redundant field shares its 64-byte cache line with live information.</p>
 <p>If you stop writing a redundant field while leaving the surrounding record layout unchanged, the processor may still need the same cache line.</p>
@@ -2706,7 +2713,7 @@
 <p>Recognising that relationship removes a whole category of unnecessary memory use.</p>
 <p>The successful change therefore sits at the intersection of mathematics and systems programming: a proof about object lifetimes becomes a more efficient memory layout, which becomes a measurable improvement in the complete decoder.</p>
 <p>It also points towards the next questions.</p>
-<p>MONODROMY has identified a possible asymmetric layout with 20-byte top slots and 8-byte bottom slots. That could reduce the induction's modelled cache-line footprint by another 25%, although it introduces an additional dependent load on many accesses. It remains unmeasured, and the earlier <a href="https://github.com/lmmx/mibz2/pull/398">failed 16-byte layout</a> is a warning that compactness isn't automatically speed.</p>
+<p>MONODROMY has identified a possible asymmetric layout with 20-byte top slots and 8-byte bottom slots. That could mean up to 25% fewer induction lines (an estimate made before recycling), although it introduces an additional dependent load on many accesses. It remains unmeasured, and the earlier <a href="https://github.com/lmmx/mibz2/pull/398">failed 16-byte layout</a> is a warning that compactness isn't automatically speed.</p>
 <p>Meanwhile, measuring how memory traffic scales after slot recycling can help determine whether Cells is becoming competitive at higher thread counts.</p>
 <p>Those are separate experiments. Slot recycling has already justified itself on its own evidence.</p>
 <h2 id="the-essential-insight">The essential insight<a class="headerlink" href="#the-essential-insight" title="Permanent link">&para;</a></h2>
@@ -2876,19 +2883,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=9436456f49fa"></script>
+        <script src="../../assets/javascripts/bench.js?v=c72532e81b97"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=9436456f49fa"></script>
+        <script src="../../assets/javascripts/couriers.js?v=c72532e81b97"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=9436456f49fa"></script>
+        <script src="../../assets/javascripts/blog.js?v=c72532e81b97"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=9436456f49fa"></script>
+        <script src="../../assets/javascripts/frontier.js?v=c72532e81b97"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=9436456f49fa"></script>
+        <script src="../../assets/javascripts/observatory.js?v=c72532e81b97"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=9436456f49fa"></script>
+        <script src="../../assets/javascripts/katex.js?v=c72532e81b97"></script>
       
     
   </body>

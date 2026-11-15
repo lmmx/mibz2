@@ -888,11 +888,13 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-412/blog/index.md>)
 
-# Slot recycling: how mibz2 gets faster by reusing memory it no longer needs
+# Reduce, reuse, recycle: hand-me-down slots for every fragment of text
 
-mibz2's Cells induction now reuses the slot a finished letter leaves behind, touching 29.7% fewer slots and trimming peak memory by up to 14.6%.
+Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory.
 
 15 November 2026 · 13 min read · [Research result](<#7-what-the-benchmarks-tell-us>)
+
+One of mibz2's ways of rebuilding a block of bzip2 text works on fragments of it: pieces of the output, each standing for a stretch of the block. It keeps the bookkeeping for every fragment in a small record called a slot, 20 bytes holding the fragment's length, where its text is kept, the slot before it, and its partner slot in a second arrangement of the same fragments. When one fragment is finished, its slot is free just as the next fragment needs one, and mibz2 now hands it over instead of taking fresh memory.
 
 ## The idea in a nutshell
 
@@ -957,6 +959,8 @@ These aren't two complete copies of the decompressed text. They're two linked ar
 
 Each letter has a slot in each order.
 
+Here are both orders for a handful of letters, with each letter's two slots joined:
+
 Two linked orders of the same letters
 
 Conceptual: five slots of each order. Each letter has a slot in both orders, in a different arrangement, so the partner links cross. The induction reads each order from its front, where A and B are, and follows the links to the slots before them.
@@ -969,6 +973,8 @@ A slot is a small record in memory. In the implementation shipped before this ch
 | Interval length | Describes how many positions the piece covers |
 | Word reference and length | Identifies the text represented by the piece |
 | Partner-slot reference | Connects its position in one order to the corresponding position in the other |
+
+The slot's five fields, as the code lays them out:
 
 A slot is 20 bytes: five 4-byte fields
 
@@ -1045,6 +1051,8 @@ Previously, the next cell cut from A would receive a fresh slot in the bottom or
 
 Now it receives **B's former front slot in that same order**.
 
+Here is the bottom order after B ends, before and after the change:
+
 The bottom order after B ends: where A’s next cell goes
 
 Conceptual, after the step in the last figure. Slots are in memory order; the front is the slot the induction reads next, and it moves left as the induction goes on. The promised slot is linked in as the slot before A’s cell, so A’s next cell will be read there. The cell is also written to B’s slot in the top order (not drawn). When A ends instead, the same happens in the top order, with A’s front slot.
@@ -1073,7 +1081,7 @@ That is why the name *slot recycling* is so precise.
 
 ## 6\. How much does this save?
 
-The builder [counted](<https://github.com/lmmx/mibz2/pull/408>) what happened across the 196 Wikidata blocks admitted by Cells in the benchmark corpus.
+The builder, the agent that implemented \#408, [counted](<https://github.com/lmmx/mibz2/pull/408>) what happened across the 196 Wikidata blocks admitted by Cells in the benchmark corpus.
 
 The result was substantial:
 
@@ -1082,6 +1090,8 @@ The result was substantial:
 | Slots touched | 31,547,362 | 22,181,734 |
 | Fresh slots required | 9,365,628 | 0 |
 | Reduction in touched slots | — | **29.7%** |
+
+The same counts, drawn to scale:
 
 Slots the induction touches, over the 196 Wikidata blocks
 
@@ -1129,6 +1139,8 @@ For Wikidata:
 | 2 | −0.2% | −12.5% |
 | 4 | **−1.7%** | **−14.6%** |
 
+The same run with its intervals, and the memory in megabytes:
+
 The decoder on Wikidata, with and without slot recycling
 
 Measured: \#408’s paired CI bench, 10 rounds on one runner (Intel Xeon Platinum 8573C, 4 CPUs on 2 cores), the whole decoder on the Wikidata corpus. Left: the change in median wall time with its 95% interval across the rounds; green where the interval excludes no change. Right: peak resident memory, each a reduction the bench reports as beyond noise. The `records` corpus was 3.4% slower at 4 threads in the same run.
@@ -1143,6 +1155,8 @@ This pattern is consistent with the intended mechanism: reducing the working set
 
 But we should be precise about what has been established. The CI runner isn't the i9 workstation. It has a different cache hierarchy and different core-sharing conditions. The benchmark demonstrates a benefit on the tested machine, but it doesn't yet establish how much slot recycling helps the i9's known [concurrency plateau](<https://lmmx.github.io/mibz2/pr-preview/pr-412/blog/2026-11-07-why-mibz2-stops-scaling/index.md>).
 
+[A later paired run on the i9](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6894519106>), a 10-core desktop, shows the gain growing with the number of Cells workers: no change at one or two threads, 4% less CPU at four, and 5% faster wall time at five (interval 4.7% to 6.1%). Peak memory was lower at every thread count from one to five, and nothing changed at six or more threads, where mibz2 uses its team path instead of Cells.
+
 There's also a secondary-workload caveat: the `records` corpus showed a four-thread regression in the same CI run. Correctness was preserved, but the change is not a universal speedup.
 
 The valuable thing is that **the memory reduction is substantial without requiring additional expensive computation**. The extra bookkeeping is minimal, with the front positions already available to the induction.
@@ -1151,7 +1165,7 @@ The valuable thing is that **the memory reduction is substantial without requiri
 
 The terminology initially caused some confusion because two related research ideas both used the word *elision*.
 
-[MONODROMY](<https://github.com/lmmx/mibz2/pull/410>) investigated whether individual fields inside existing slots could be left unwritten or reconstructed from other information.
+[MONODROMY](<https://github.com/lmmx/mibz2/pull/410>), the team's mathematics agent, investigated whether individual fields inside existing slots could be left unwritten or reconstructed from other information.
 
 It found that approximately 25.5% of the induction's stored bytes were never subsequently read, and that certain mathematical identities could account for an even larger fraction.
 
@@ -1219,7 +1233,7 @@ The successful change therefore sits at the intersection of mathematics and syst
 
 It also points towards the next questions.
 
-MONODROMY has identified a possible asymmetric layout with 20-byte top slots and 8-byte bottom slots. That could reduce the induction's modelled cache-line footprint by another 25%, although it introduces an additional dependent load on many accesses. It remains unmeasured, and the earlier [failed 16-byte layout](<https://github.com/lmmx/mibz2/pull/398>) is a warning that compactness isn't automatically speed.
+MONODROMY has identified a possible asymmetric layout with 20-byte top slots and 8-byte bottom slots. That could mean up to 25% fewer induction lines (an estimate made before recycling), although it introduces an additional dependent load on many accesses. It remains unmeasured, and the earlier [failed 16-byte layout](<https://github.com/lmmx/mibz2/pull/398>) is a warning that compactness isn't automatically speed.
 
 Meanwhile, measuring how memory traffic scales after slot recycling can help determine whether Cells is becoming competitive at higher thread counts.
 
