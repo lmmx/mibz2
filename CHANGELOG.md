@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4](https://github.com/lmmx/mibz2/compare/v0.3.3...v0.3.4) - 2026-11-15
+
+### <!-- 9 -->Other
+
+- workers below 10 threads on their own cores; teams from 10 ([#425](https://github.com/lmmx/mibz2/pull/425))
+- workstation logs and run markers in the XDG state directory, not the home directory ([#428](https://github.com/lmmx/mibz2/pull/428))
+- the crossover's forced arm gets the default window ([#424](https://github.com/lmmx/mibz2/pull/424))
+- 0.3.3's notes; journal: equal one-row cell elision ([#421](https://github.com/lmmx/mibz2/pull/421))
+
 ## [0.3.3](https://github.com/lmmx/mibz2/compare/v0.3.2...v0.3.3) - 2026-11-15
 
 A memory-traffic release for Cells. Bottom slots shrink from 20 to 8 bytes (#414): a letter's
