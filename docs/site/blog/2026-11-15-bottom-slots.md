@@ -1,7 +1,7 @@
 ---
-title: "Read once, stored once: one copy of each fragment's details, not two"
+title: "Removing duplicated interval lengths and text references"
 image: assets/social/blog-2026-11-15-bottom-slots.png
-description: "Proving that a fragment's details are read only once lets mibz2 store them once, cutting its bookkeeping by 30% and its four-thread decoding time by up to 7%."
+description: "mibz2 tracks each run of equal bytes in two orders, and a run's entry in the second shrinks from 20 bytes to 8 by pointing to the first."
 ---
 
 <div class="post-hero" markdown>
@@ -11,9 +11,9 @@ description: "Proving that a fragment's details are read only once lets mibz2 st
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Read once, stored once: one copy of each fragment's details, not two
+# Removing duplicated interval lengths and text references
 
-Proving that a fragment's details are read only once lets mibz2 store them once, cutting its bookkeeping by 30% and its four-thread decoding time by up to 7%.
+mibz2 tracks each run of equal bytes in two orders, and a run's entry in the second shrinks from 20 bytes to 8 by pointing to the first.
 {: .post-dek }
 
 15 November 2026 · 12 min read · [Research result](#6-how-much-faster-is-the-decoder)
@@ -25,13 +25,15 @@ Proving that a fragment's details are read only once lets mibz2 store them once,
 
 </div>
 
-[The last post](2026-11-15-slot-recycling.md) followed Cells, one of mibz2's ways of rebuilding a block of bzip2 text. Cells cuts the block into fragments and keeps a small record for each one, saying how long the fragment is, where its text is kept and how to reach its neighbours. The code calls a fragment a *letter* and a record a *slot*, and this post uses those names from here on. Cells keeps every letter in two different orders at once, so each letter has two slots. Until now, both slots held the same length and the same text. This post shows why the second copy was never needed, and what mibz2 0.3.3 gained by dropping it.
+[The last post](2026-11-15-slot-recycling.md) followed Cells, one of mibz2's ways of undoing the Burrows–Wheeler transform (BWT) that bzip2 applies to each block of text. Cells does not decode one position at a time. It works on *intervals*: at the start, each interval is a run of equal bytes in the BWT's output, which the decoding moves as a whole to a new place. In the block `aab`, for example, the BWT's output is `baa`, and its intervals are one `b` and two `a`s. As the decoding goes on, intervals shrink and join.
+
+Cells tracks every interval in two orders at once: where it lies, and where it is moved to. The code calls an interval a *letter*, and keeps a small record for it, a *slot*, in each of the two orders. Until now, both slots held the same two pieces of information: the interval's length, and a reference to the text it stands for. This post shows why the second copy was never needed, and what mibz2 0.3.3 gained by removing it.
 
 ## The idea in brief
 
 Cells works through each of its two orders from one end, the order's *front*, so each front reaches every letter once. That gives every letter two visits, one per order.
 
-**A letter's details are read only at the first of its two visits, and a short proof shows that the top order's slot always holds them at that moment.** Call the two orders top and bottom. If the top front reaches the letter first, the details are read from the top slot, and the bottom slot's copy is never used. If the bottom front reaches it first, the top front has not got there yet, so the top slot has not been touched and still holds the details. Either way, the top slot is enough.
+**A letter's length and text reference are read only at the first of its two visits, and a short proof shows that the top order's slot always holds them at that moment.** Call the two orders top and bottom. If the top front reaches the letter first, the details are read from the top slot, and the bottom slot's copy is never used. If the bottom front reaches it first, the top front has not got there yet, so the top slot has not been touched and still holds the details. Either way, the top slot is enough.
 
 So 0.3.3 keeps the details in the top slot only. The bottom slot shrinks from 20 bytes to 8: it keeps its link to its neighbour, and a pointer to the letter's top slot. Here is what that gives, and what it costs:
 
@@ -56,7 +58,7 @@ LF has a pattern that Cells uses. The output `baa` falls into *runs* of equal by
 <figcaption>Worked by hand: the BWT’s output <code>baa</code> above, the same bytes sorted below. Each band joins a run to the rows LF sends it to. The bands cross because the runs swap places: B, A on top; A, B below.</figcaption>
 </figure>
 
-Each run is a letter. The code calls the runs as they lie in the output the **top order**, and the same runs where LF sends them the **bottom order**. There are still only two letters, A and B; each has a place in both orders. Each letter has a *length*, the number of rows it covers, and a *word*, the text those rows stand for. At the start, A covers two rows and its word is `a`; B covers one row and its word is `b`.
+Each run is one of the intervals, a letter. The code calls the runs as they lie in the output the **top order**, and the same runs where LF sends them the **bottom order**. There are still only two letters, A and B; each has a place in both orders. Each letter has a *length*, the number of rows it covers, and a *word*, the text those rows stand for. At the start, A covers two rows and its word is `a`; B covers one row and its word is `b`.
 
 Cells rebuilds the text by shrinking this picture rather than walking it. Each step compares the letters at the two fronts, the right-hand ends of the orders: here, A on top and B below.
 
@@ -74,7 +76,7 @@ To find the letter at each front, and a letter's place in the other order, Cells
 |---|---|
 | Previous slot | the slot before this one in its order |
 | Length | how many rows the letter covers |
-| Word length and word offset | how many bytes of text the word has, and where they, or its rule, are kept |
+| Word length and word offset | the letter's text reference: how many bytes of text its word has, and where they, or its rule, are kept |
 | Partner | the same letter's slot in the other order |
 
 The letter's length and its word's length are different things: in the example, B's length is one row after step 1, while its word is two bytes long. The previous-slot link and the partner say where a slot sits: next to which slot in its own order, and opposite which slot in the other. The length and the word describe the letter itself, and they were stored in both slots.

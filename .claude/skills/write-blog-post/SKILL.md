@@ -194,6 +194,19 @@ style, not a description of the method.
   body and its figures.
   - Internal terms are introduced in the body, after the opening has said in plain words
     what they stand for.
+- **Every word of the title earns its place** (Louis, 15 November 2026, settling #427's title).
+  - Substance first: the change and its object come in the first words, and each later word
+    adds concrete information. No vague tail, and no restating the same idea at more length.
+  - No in-medias-res jargon: no internal names (Cells, bottom slots, letter).
+  - No vague substitutes for jargon either. "Read once", "record", "fragment" and "two orders"
+    mean nothing without a referent, and "fragment" wrongly suggests arbitrary chunks of text.
+    Name the real object (here, intervals) and let the body define it from first principles.
+  - Don't reintroduce the project's setting in every title ("from bzip2's inverse
+    Burrows–Wheeler transform"); the blog has already established it.
+  - No slogans or mystery hooks.
+  - **Before:** "Read once, stored once: one copy of each fragment's details, not two".
+    **After:** "Removing duplicated interval lengths and text references". The dek can then
+    explain the setting in everyday words without restating the title.
 
 ## The dek, and the sentences
 
