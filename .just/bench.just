@@ -296,6 +296,7 @@ bench-release-scaling NEW="" OLD="" ROUNDS="10" THREADS="" *FILES="":
 # counts where the shipped decoder uses Cells (below 6 physical cores) and two above as a
 # no-change check (#145 LOG on the queue entry). The release-scaling recipe, pinned to two commits.
 bench-elision-scaling:
+    git fetch -q origin perf/cells-elision
     just bench-release-scaling 2bb8e5d406fa57efe78c992349523ca0e25f5e85 55a58b18b1a40d7ee0ba01ea47a48bf60f8ce2ca 10 "1,2,3,4,5,6,8"
 
 # Team size against live tables (docs/journal/2026-11-06-team-size.md, registered before any
