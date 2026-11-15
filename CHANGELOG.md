@@ -34,7 +34,7 @@ A soundness and memory release.
   6900029992) stays at 10.
   - At 10 threads, workers now take 1.040× the teams' wall (1.019–1.061), against 1.153×
     before #433.
-- **The paired runbook bench, CI:** v0.3.4 against v0.4.0 (run 43754741303), to follow.
+- **The paired runbook bench, CI:** v0.3.4 against v0.4.0 (run 43754741304), to follow.
 
 ### <!-- 9 -->Other
 
