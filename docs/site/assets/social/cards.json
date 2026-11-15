@@ -96,10 +96,10 @@
     "title": "Reconstructing text from compact programs"
   },
   "assets/social/blog-2026-11-15-slot-recycling.png": {
-    "description": "mibz2's Cells induction now reuses the slot a finished letter leaves behind, touching 29.7% fewer slots and trimming peak memory by up to 14.6%.",
+    "description": "Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory.",
     "foot": "lmmx.github.io/mibz2 · 15 November 2026",
     "section": " · Research blog",
-    "title": "Slot recycling: how mibz2 gets faster by reusing memory it no longer needs"
+    "title": "Reduce, reuse, recycle: mibz2 reuses the slots that track each fragment of text"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
