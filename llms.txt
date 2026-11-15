@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Removing duplicated interval lengths and text references](<https://lmmx.github.io/mibz2/blog/2026-11-15-bottom-slots/index.md>): mibz2 tracks each run of equal bytes in two orders, and a run's entry in the second shrinks from 20 bytes to 8 by pointing to the first.
 - [Reduce, reuse, recycle](<https://lmmx.github.io/mibz2/blog/2026-11-15-slot-recycling/index.md>): Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory.
 - [Reconstructing text from compact programs](<https://lmmx.github.io/mibz2/blog/2026-11-12-rauzy-technical-companion/index.md>): This technical companion traces how compact word programs reconstruct text from the BWT, including the costs and limits of building and expanding them.
 - [A new way back from the BWT](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>): An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that form the block's Lyndon tree.
