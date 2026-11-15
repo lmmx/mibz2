@@ -6,3 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-phase-gates            research/phase-gates      Four-worker phase-concurrency screen: induction/writer/blocks caps K,B,C,D,E2,E3 on the i9; needs sudo perf (LOG 6893071988; PR #405)
