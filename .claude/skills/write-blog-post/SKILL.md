@@ -189,6 +189,9 @@ style, not a description of the method.
   takes the headline's phrasal form, not a full sentence: "hand-me-down slots for every
   fragment of text", not "mibz2 reuses the slots that track each fragment of text". The dek
   states the news. Two statements in a row read flat, and the title loses its punch.
+- **The dek's figures are round** (Louis, 15 November 2026): "30% fewer slots", "up to 15%
+  less memory", not 29.7% and 14.6%. The exact figures, with their intervals, live in the
+  body and its figures.
   - Internal terms are introduced in the body, after the opening has said in plain words
     what they stand for.
 
