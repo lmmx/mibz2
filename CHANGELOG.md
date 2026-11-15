@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2](https://github.com/lmmx/mibz2/compare/v0.3.1...v0.3.2) - 2026-11-15
+
+### <!-- 9 -->Other
+
+- Blog skills: open the PR first; titles and deks approachable cold ([#413](https://github.com/lmmx/mibz2/pull/413))
+- Reduce, reuse, recycle: hand-me-down slots for every fragment of text ([#412](https://github.com/lmmx/mibz2/pull/412))
+- Cells induction: recycle the dead front slot instead of taking a fresh one ([#408](https://github.com/lmmx/mibz2/pull/408))
+- Phase attribution of Cells' memory traffic: phase-counters, bench-cells-phase and its analysis (LOG 6884716103) ([#399](https://github.com/lmmx/mibz2/pull/399))
+- record 0.3.1's release scaling on the i9; changelog: its figures ([#402](https://github.com/lmmx/mibz2/pull/402))
+- 0.3.1's notes; journal: the 16-byte slot rejected ([#401](https://github.com/lmmx/mibz2/pull/401))
+
 ## [0.3.1](https://github.com/lmmx/mibz2/compare/v0.3.0...v0.3.1) - 2026-11-14
 
 A memory-traffic release for Cells. Each letter's slot in Cells' two orders shrinks from 24 to
