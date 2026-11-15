@@ -25,15 +25,15 @@ Proving that each fragment's details are read only once lets mibz2 store them on
 
 </div>
 
-[The last post](2026-11-15-slot-recycling.md) followed one of mibz2's ways of rebuilding a block of bzip2 text, called Cells, as it cut the block into fragments and kept a small record of bookkeeping for each one: how long the fragment is, where its text is kept, and how to reach its neighbours. Cells has to see every fragment in two different arrangements at once, so each fragment had two records, and until now both held the same length and the same text. This post shows why the second copy was never needed, and what mibz2 0.3.3 gained by dropping it.
+[The last post](2026-11-15-slot-recycling.md) followed Cells, one of mibz2's ways of rebuilding a block of bzip2 text. Cells cuts the block into fragments and keeps a small record for each one. The record says how long the fragment is, where its text is kept and how to reach its neighbours. Cells sees every fragment in two different arrangements at once, so each fragment had two records. Until now, both held the same length and the same text. This post shows why the second copy was never needed, and what mibz2 0.3.3 gained by dropping it.
 
 ## The idea in brief
 
-**A fragment's details are read exactly once, and a short proof shows that one stored copy is always there when they are.** Cells works through both arrangements from one end, and reaches each fragment in each of them at some point. The details are read only at the first of those two visits. If the first visit is in the arrangement that keeps the details, they are read there and the other copy is never used. If it is in the other arrangement, the first arrangement has not reached the fragment yet, so its copy is still intact, and the decoder can read it from there.
+**A fragment's details are read exactly once, and a short proof shows that one stored copy is always there when they are.** Cells works through both arrangements from one end, and reaches each fragment in each of them at some point. The details are read only at the first of those two visits. If the first visit is in the arrangement that keeps the details, they are read there and the other copy is never used. If it is in the other arrangement, the first has not reached the fragment yet. Its copy is still intact, and the decoder can read it from there.
 
 So 0.3.3 keeps the details in one record only. The other record shrinks from 20 bytes to 8: it keeps its link to its neighbour, and a pointer to the full record. Here is what that gives, and what it costs:
 
-- **30% less memory for the records**, counted on the benchmark's Wikidata corpus (443.6 MB become 310.5 MB), and about a fifth less for the whole working area of the rebuild.
+- **30% less memory for the records**, counted on the benchmark's Wikidata corpus, and about a fifth less for the rebuild's whole working area.
 - **A faster decoder at one to four threads.** On a 10-core Intel desktop, 0.3.3 took 4.1%, 3.9% and 6.5% less wall time than 0.3.2 at one, two and four threads. On the project's 2-core CI runner, only the four-thread gain (4.2%) is beyond noise.
 - **The price is an extra memory read.** On 53.7% of record reads, the processor must read the small record to learn where the full one is before it can read the details. That could have cost more than it saved; on these measurements it did not.
 - **More threads can now usefully decode a block each.** mibz2 switches from giving each thread a block of its own to having threads share blocks at a fixed thread count, the *team threshold*. After 0.3.3, a block per thread was faster up to nine threads on the desktop, and a change moving the threshold is under review. That shift is the work of every improvement to Cells so far, not of this change alone.
@@ -44,7 +44,7 @@ So 0.3.3 keeps the details in one record only. The other record shrinks from 20 
 
 bzip2 compresses each block of text after rearranging it with the Burrows–Wheeler transform (BWT). The BWT sorts all the rotations of the block and keeps the last byte of each, which tends to put equal bytes next to each other. To decompress, the decoder must undo that rearrangement.
 
-Take the block `aab`. Its rotations, sorted, are `aab`, `aba` and `baa`, so the BWT's output, their last bytes, is `baa`. Sorting the output gives `aab`, the first bytes of the same rotations. The decoder knows which byte of the output goes with which byte of the sorted list: equal bytes keep their order, so the output's first `a` is the sorted list's first `a`, its second `a` the second, and `b` is `b`. This pairing is called LF, and following it from row to row spells out the block, one byte per step. That is the usual way to decode, one position at a time.
+Take the block `aab`. Sorted, its rotations are `aab`, `aba` and `baa`. The BWT's output is their last bytes: `baa`. Sorting the output gives `aab`, the first bytes of the same rotations. The decoder knows which byte of the output goes with which byte of the sorted list, because equal bytes keep their order. The output's first `a` is the sorted list's first `a`, its second `a` is the second, and `b` is `b`. This pairing is called LF, and following it from row to row spells out the block, one byte per step. That is the usual way to decode, one position at a time.
 
 LF has a pattern that Cells uses. The output `baa` falls into *runs* of equal bytes: one `b`, then two `a`s. Within a run, consecutive rows go to consecutive rows, so each run moves as a whole. Name the runs B and A. In the output they lie in the order B, A. Where LF sends them, in the sorted list, they lie in the order A, B.
 
@@ -54,11 +54,11 @@ LF has a pattern that Cells uses. The output `baa` falls into *runs* of equal by
 <figcaption>Worked by hand: the BWT’s output <code>baa</code> above, the same bytes sorted below. Each band joins a run to the rows LF sends it to. The bands cross because the runs swap places: B, A on top; A, B below.</figcaption>
 </figure>
 
-These are the two arrangements, which the code calls the **top order** (the runs as they lie in the output) and the **bottom order** (the same runs where LF sends them). There are still only two intervals, A and B; each has a place in both orders. Cells calls each such interval a *letter*. A letter has a length, the number of rows it covers, and a *word*, the text those rows stand for: at the start, A's word is `a` and B's is `b`.
+These are the two arrangements. The code calls the runs as they lie in the output the **top order**, and the same runs where LF sends them the **bottom order**. There are still only two intervals, A and B; each has a place in both orders. Cells calls each such interval a *letter*. Each letter has a length, the number of rows it covers. It also has a *word*, the text those rows stand for: at the start, A's word is `a` and B's is `b`.
 
-Cells rebuilds the text by shrinking this picture rather than walking it. Each step looks at the letters at the right-hand end of both orders, the *fronts*. Here they are A on top, two rows long, and B below, one row long. The longer letter, A, gives up as many rows as the shorter one has, and B's word grows to cover the row A lost: `ab`. The next step joins the two remaining one-row letters, and the word `aab` is the whole block. [The earlier post on Cells](2026-11-10-rauzy-veech-reconstruction.md) works this through in full. On a real block, a letter that covers one row can have a word thousands of bytes long, and a step's result, a *cell*, takes the place of the letters it was made from.
+Cells rebuilds the text by shrinking this picture rather than walking it. Each step looks at the letters at the right-hand end of both orders, the *fronts*. Here they are A on top, two rows long, and B below, one row long. The longer letter, A, gives up as many rows as the shorter one has, and B's word grows to cover the row A lost: `ab`. The next step joins the two remaining one-row letters, and the word `aab` is the whole block. [The earlier post on Cells](2026-11-10-rauzy-veech-reconstruction.md) works this through in full. On a real block, a letter that covers one row can have a word thousands of bytes long. A step's result is called a *cell*, and it takes the place of the letters it was made from.
 
-To find the next letter at each front, and to find a letter's place in the other order, Cells keeps each order as a chain of small records called *slots*, one per letter in each order. Before 0.3.3, both of a letter's slots had the same five 4-byte fields:
+Cells keeps each order as a chain of small records called *slots*, one per letter in each order. The chain leads to the next letter at each front, and a link between a letter's two slots leads to its place in the other order. Before 0.3.3, both of a letter's slots had the same five 4-byte fields:
 
 | Field | What it holds |
 |---|---|
@@ -101,7 +101,7 @@ In the first case, the top front reaches the letter first. The details are read 
 
 In the second case, the bottom front reaches the letter first. The top front has not reached the letter yet, so nothing has overwritten its top slot. Cells follows the bottom slot's partner field, reads the length and word from the top slot, and goes on.
 
-Neither case depends on which front arrives first, so the details can always live on the same side. The bottom slot cannot go altogether, though: the bottom order still needs its own chain of links, and each letter still needs a way to its place in the other order. Those two fields are the slot's own state, not copies.
+Neither case depends on which front arrives first, so the details can always live on the same side. The bottom slot cannot go altogether, though. The bottom order still needs its own chain of links, and each letter still needs a way to its place in the other order. Those two fields are the slot's own state, not copies.
 
 ## 4. What does the saving cost?
 
@@ -119,7 +119,7 @@ The extra read is also off the chain that finds the next slot: the next bottom s
 
 ## 5. How much memory does it remove?
 
-The count is from [the change's pull request](https://github.com/lmmx/mibz2/pull/414), on the benchmark's Wikidata corpus: 431 blocks, of which Cells takes 196 (the others go to mibz2's ordinary decoder).
+The count is from [the change's pull request](https://github.com/lmmx/mibz2/pull/414), on the benchmark's Wikidata corpus. Of its 431 blocks, Cells takes 196; the others go to mibz2's ordinary decoder.
 
 <figure class="bf-fig">
 <p class="bf-title">The rebuild’s memory, before and after, on the Wikidata corpus</p>
@@ -127,7 +127,7 @@ The count is from [the change's pull request](https://github.com/lmmx/mibz2/pull
 <figcaption>Counted, not timed: #414’s count over the 196 blocks Cells decodes, at one thread. The working area is the slots, the words’ text and the rules; only the slots shrink.</figcaption>
 </figure>
 
-The slots shrink by exactly the 40-to-28 ratio. The whole working area also holds the words' text and the rules that build long words from shorter ones, which are unchanged, so it shrinks by less: 21.6% fewer cache lines, and from 2.90 MiB to 2.27 MiB for the median block.
+The slots shrink by exactly the 40-to-28 ratio. The whole working area also holds the words' text and the rules that build long words from shorter ones, and those are unchanged. So the working area shrinks by less: it takes 21.6% fewer cache lines, and the median block's goes from 2.90 MiB to 2.27 MiB.
 
 ## 6. How much faster is the decoder?
 
@@ -136,10 +136,10 @@ Two measurements compare 0.3.3 with 0.3.2, decoding the same Wikidata corpus. Bo
 <figure class="bf-fig">
 <p class="bf-title">Wall time, 0.3.3 against 0.3.2, decoding the Wikidata corpus</p>
 <svg viewBox="0 0 360 316" role="img" aria-label="Change in wall time from 0.3.2 to 0.3.3 on the Wikidata corpus, with 95% intervals. CI runner: −1.4% (−5.0, +2.4) at 1 thread, −1.2% (−4.5, +2.1) at 2, −4.2% (−4.9, −3.4) at 4. Intel desktop: −4.1% (−6.9, −1.3) at 1, −3.9% (−6.0, −1.7) at 2, −6.5% (−8.3, −4.8) at 4."><text x="0" y="18" class="bf-ts">CI runner, 2 cores</text><text x="0" y="44" class="bf-t">1 thread</text><path d="M189.3 40H321.4M189.3 35v10M321.4 35v10" class="bf-quiet-ink"/><circle cx="253.6" cy="40" r="5" class="bf-head-ink"/><text x="253.571" y="31" class="bf-t-strong" text-anchor="middle">−1.4%</text><text x="0" y="80" class="bf-t">2 threads</text><path d="M198.2 76H316.1M198.2 71v10M316.1 71v10" class="bf-quiet-ink"/><circle cx="257.1" cy="76" r="5" class="bf-head-ink"/><text x="257.143" y="67" class="bf-t-strong" text-anchor="middle">−1.2%</text><text x="0" y="116" class="bf-t">4 threads</text><path d="M191.1 112H217.9M191.1 107v10M217.9 107v10" class="bf-act"/><circle cx="203.6" cy="112" r="5" class="bf-green"/><text x="203.571" y="103" class="bf-t-green" text-anchor="middle">−4.2%</text><text x="0" y="154" class="bf-ts">Intel desktop, 10 cores</text><text x="0" y="180" class="bf-t">1 thread</text><path d="M155.4 176H255.4M155.4 171v10M255.4 171v10" class="bf-act"/><circle cx="205.4" cy="176" r="5" class="bf-green"/><text x="205.357" y="167" class="bf-t-green" text-anchor="middle">−4.1%</text><text x="0" y="216" class="bf-t">2 threads</text><path d="M171.4 212H248.2M171.4 207v10M248.2 207v10" class="bf-act"/><circle cx="208.9" cy="212" r="5" class="bf-green"/><text x="208.929" y="203" class="bf-t-green" text-anchor="middle">−3.9%</text><text x="0" y="252" class="bf-t">4 threads</text><path d="M130.4 248H192.9M130.4 243v10M192.9 243v10" class="bf-act"/><circle cx="162.5" cy="248" r="5" class="bf-green"/><text x="162.5" y="239" class="bf-t-green" text-anchor="middle">−6.5%</text><path d="M278.6 28V276" class="bf-axis"/><path d="M100 276H350" class="bf-axis"/><path d="M100.0 276v4" class="bf-axis"/><text x="100" y="293" class="bf-ttiny" text-anchor="middle">−10%</text><path d="M135.7 276v4" class="bf-axis"/><text x="135.714" y="293" class="bf-ttiny" text-anchor="middle">−8%</text><path d="M171.4 276v4" class="bf-axis"/><text x="171.429" y="293" class="bf-ttiny" text-anchor="middle">−6%</text><path d="M207.1 276v4" class="bf-axis"/><text x="207.143" y="293" class="bf-ttiny" text-anchor="middle">−4%</text><path d="M242.9 276v4" class="bf-axis"/><text x="242.857" y="293" class="bf-ttiny" text-anchor="middle">−2%</text><path d="M278.6 276v4" class="bf-axis"/><text x="278.571" y="293" class="bf-ttiny" text-anchor="middle">0%</text><path d="M314.3 276v4" class="bf-axis"/><text x="314.286" y="293" class="bf-ttiny" text-anchor="middle">+2%</text><path d="M350.0 276v4" class="bf-axis"/><text x="350" y="293" class="bf-ttiny" text-anchor="middle">+4%</text><text x="100" y="310" class="bf-tm">← less wall time with 0.3.3</text></svg>
-<figcaption>Measured: 10 paired rounds on each machine. The CI runner is an AMD EPYC 9V45 with 4 virtual CPUs on 2 cores; the desktop is an Intel i9-10900K with 10 cores. Each mark is the change in wall time with its 95% interval; green where the interval excludes no change.</figcaption>
+<figcaption>Measured: 10 paired rounds on each machine. The CI runner is an AMD EPYC 9V45 with 4 virtual CPUs on 2 cores; the desktop is an Intel i9-10900K with 10 cores. Each mark is the change in wall time with its 95% interval; green where the interval excludes no change. The desktop’s record gives ratios, 0.3.2 ÷ 0.3.3: 1.043, 1.040 and 1.070 at one, two and four threads; the chart shows each as the share of wall time saved, 1 − 1/ratio.</figcaption>
 </figure>
 
-The desktop's figures are recorded as wall-time ratios, 0.3.2 ÷ 0.3.3: 1.043, 1.040 and 1.070 at one, two and four threads. The chart converts them to the project's usual form, the share of wall time saved. At four threads the desktop also used about 7% less processor time. At 8 to 20 threads nothing changed, because there mibz2 0.3.3 did not use Cells at all: it shared each block between a team of threads.
+The desktop's record gives ratios of wall times, which the chart converts to the project's usual form, the share of wall time saved. At four threads the desktop also used about 7% less processor time. At 8 to 20 threads nothing changed, because there mibz2 0.3.3 did not use Cells at all: it shared each block between a team of threads.
 
 As expected, the gain is clearest with several blocks decoding at once. The desktop shows a gain at one and two threads too; the CI runner does not.
 
@@ -155,7 +155,7 @@ Every saving in a worker's memory makes it cheaper to run more workers side by s
 <figcaption>Measured: 10 paired rounds on the i9-10900K, the shipped decoder (teams from six threads) against a block per thread. Below 1 the workers are faster; green where the 95% interval is wholly below 1. The record gives no interval at ten threads. CPU is the same ratio for processor time; the last column is peak memory, teams → workers.</figcaption>
 </figure>
 
-Workers were faster at every count from six to nine threads: 13.9%, 11.1%, 7.7% and 3.6% less wall time. At ten threads they took 15.3% longer, and three teams of three keep the lead. Workers also use more memory, since more blocks are in flight: roughly double, though under 200 MB. At nine threads they used 12.4% more processor time, over the 10% the project allows itself to trade without asking, so the choice went to the maintainer. He chose workers below ten threads, and [the change](https://github.com/lmmx/mibz2/pull/425) is now a pull request under review.
+Workers were faster at every count from six to nine threads, taking 13.9% less wall time at six and 3.6% less at nine. At ten threads they took 15.3% longer, and three teams of three keep the lead. Workers also use more memory, since more blocks are in flight: roughly double, though under 200 MB. At nine threads they used 12.4% more processor time. That is over the 10% the project trades without asking, so the choice went to the maintainer. He chose workers below ten threads, and [the change](https://github.com/lmmx/mibz2/pull/425) is now a pull request under review.
 
 This run measures Cells as it is now, after every improvement since 0.3.0, including slot recycling in 0.3.2 and the smaller bottom slots in 0.3.3. It shows that today's Cells beats the teams up to nine threads on this machine. It does not show how much of the shift is due to the bottom slots alone: no run compared the two layouts at six to nine threads.
 
@@ -167,4 +167,4 @@ The same question applies wherever a structure keeps two views of the same item.
 
 ---
 
-*Implementation and evidence: [mibz2 PR #414](https://github.com/lmmx/mibz2/pull/414) (the change and its count), the [0.3.3 release notes](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md) (the CI and desktop measurements; the desktop run is [#420](https://github.com/lmmx/mibz2/pull/420)), and [PR #425](https://github.com/lmmx/mibz2/pull/425) (the team threshold).*
+*The change and its count are in [mibz2 PR #414](https://github.com/lmmx/mibz2/pull/414). The CI and desktop measurements are in the [0.3.3 release notes](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md), and the desktop run's record is [#420](https://github.com/lmmx/mibz2/pull/420). The team threshold's change is [PR #425](https://github.com/lmmx/mibz2/pull/425).*
