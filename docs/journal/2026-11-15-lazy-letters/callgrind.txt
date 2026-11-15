@@ -13,3 +13,15 @@
 2,165,954,247 (37.57%)  src/cells.rs:<mibz2::cells::Kernel>::induce_lazy 
   790,880,374 (13.72%)  src/cells.rs:<mibz2::cells::Kernel>::slots_lazy 
   549,071,011 ( 9.52%)  src/cells.rs:<mibz2::cells::Kernel>::write_cells 
+
+== lazy letters, lean build (lazy-letters-lean.diff.txt)
+5,605,369,164 (100.0%)  PROGRAM TOTALS
+2,007,610,416 (35.82%)  src/cells.rs:<mibz2::cells::Kernel>::induce_lazy 
+  789,979,287 (14.09%)  src/cells.rs:<mibz2::cells::Kernel>::slots_lazy 
+  549,071,011 ( 9.80%)  src/cells.rs:<mibz2::cells::Kernel>::write_cells 
+
+== clean master 8a5e4601 (no counting line in the build)
+5,035,915,568 (100.0%)  PROGRAM TOTALS
+1,280,552,604 (25.43%)  src/cells.rs:<mibz2::cells::Kernel>::induce_cells 
+  897,994,908 (17.83%)  src/cells.rs:<mibz2::cells::Kernel>::slots 
+  598,664,251 (11.89%)  src/cells.rs:<mibz2::cells::Kernel>::write_cells 
