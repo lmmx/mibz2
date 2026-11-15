@@ -943,7 +943,7 @@ pub fn service_candidates() -> Vec<Serviced> {
     .filter(|shape| {
         let k = Kernels::detect();
         matches!(shape, SvcShape::Explicit { .. })
-            || (cfg!(all(target_os = "linux", target_arch = "x86_64")) && k.avx2 && k.clmul)
+            || (cfg!(all(target_os = "linux", target_arch = "x86_64")) && k.avx2() && k.clmul())
     })
     .map(|shape| Serviced { shape })
     .collect()

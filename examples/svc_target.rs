@@ -157,8 +157,8 @@ fn main() {
     println!(
         "{{\"schema\":\"mibz2.svc_target/2\",\"ok\":{ok},\"why\":[{}],\"kernels\":{{\"avx2\":{},\"clmul\":{}}},\"machine\":{{\"phys\":{},\"l3\":{},\"target\":{target},\"quota\":{quota}}},\"service_plan\":{{\"teams\":{},\"k\":{},\"services\":{}}},\"input_bytes\":{},\"at\":[{}]}}",
         why.iter().map(|w| js(w)).collect::<Vec<_>>().join(","),
-        k.avx2,
-        k.clmul,
+        k.avx2(),
+        k.clmul(),
         opt(m.phys.map(|v| v.to_string())),
         opt(m.l3.map(|v| v.to_string())),
         SERVICE_PLAN.teams,

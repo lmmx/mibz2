@@ -18,7 +18,7 @@ pub fn mtf(
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
-            // SAFETY: `k.avx2` is set only when AVX2 was detected
+            // SAFETY: `k.avx2` is set only when AVX2 was detected (a `Kernels` invariant)
             return unsafe { mtf_avx2(b, ll, counts) };
         }
     }
@@ -305,7 +305,7 @@ pub fn mtf_checkpoints(
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
-            // SAFETY: `k.avx2` is set only when AVX2 was detected
+            // SAFETY: `k.avx2` is set only when AVX2 was detected (a `Kernels` invariant)
             return unsafe { mtf_checkpoints_avx2(b, ll, counts, checkpoints) };
         }
     }

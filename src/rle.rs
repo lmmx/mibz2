@@ -10,7 +10,7 @@ pub fn unrle(rle: &[u8], out: &mut Vec<u8>, k: Kernels) -> Result<(), ErrorKind>
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
-            // SAFETY: `k.avx2` is set only when AVX2 was detected
+            // SAFETY: `k.avx2` is set only when AVX2 was detected (a `Kernels` invariant)
             return unsafe { unrle_avx2(rle, out) };
         }
     }

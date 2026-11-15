@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking
+
+- **`Kernels` can no longer claim a feature the CPU lacks from safe code** (#340). Its fields
+  `avx2` and `clmul` were public, so safe code could build `Kernels { avx2: true, .. }` on a
+  CPU without AVX2 and reach `#[target_feature]` code through the public decoders: undefined
+  behaviour. The fields are now private. `Kernels::detect()` and `Kernels::scalar()` are
+  unchanged; new are `restrict(avx2, clmul)` (safe: it only turns kernels off),
+  `unsafe new_unchecked(avx2, clmul)` (the caller vouches for the CPU) and the read-only
+  accessors `avx2()` and `clmul()`. Migrate `k.avx2` → `k.avx2()`, `k.clmul` → `k.clmul()`,
+  and a struct literal → `Kernels::detect().restrict(..)` or `unsafe { Kernels::new_unchecked(..) }`.
+  Breaking while the crate is 0.x, so the next release is 0.4.0. The decoder's own paths,
+  and its speed, are unchanged.
+
 ## [0.3.4](https://github.com/lmmx/mibz2/compare/v0.3.3...v0.3.4) - 2026-11-15
 
 A plan release: the **team threshold** moves (#425, docs/RELEASING.md §5a, #426). The default

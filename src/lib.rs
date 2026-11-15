@@ -123,12 +123,25 @@ pub use read::{scan, BlockSpan, BzReader, Scan};
 use std::fmt;
 
 /// The SIMD kernels to use, detected once at run time (or forced to the scalar ones)
+///
+/// A `Kernels` that claims a feature is a promise that the CPU has it: the decoder calls
+/// `#[target_feature]` code on that promise alone. So the fields are private, and safe
+/// code gets a `Kernels` only from [`Kernels::detect`], [`Kernels::scalar`] or
+/// [`Kernels::restrict`], none of which can claim a feature the CPU lacks. A caller who
+/// has checked the features some other way can assert them with the `unsafe`
+/// [`Kernels::new_unchecked`].
+///
+/// Safe code cannot forge one:
+///
+/// ```compile_fail,E0451
+/// let k = mibz2::Kernels { avx2: true, clmul: true };
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Kernels {
-    /// AVX2: the move-to-front and RLE1
-    pub avx2: bool,
+    /// AVX2 (with BMI1): the move-to-front and RLE1
+    avx2: bool,
     /// PCLMULQDQ (with SSE4.1 and SSSE3): the CRC
-    pub clmul: bool,
+    clmul: bool,
 }
 
 impl Kernels {
@@ -156,6 +169,40 @@ impl Kernels {
         {
             Kernels::scalar()
         }
+    }
+
+    /// These kernels with some turned off: each one kept only where both `self` has it and
+    /// its argument is `true`. It can only take features away, so it is safe (for example
+    /// `Kernels::detect().restrict(true, false)`, the SIMD MTF with the table CRC).
+    #[must_use]
+    pub const fn restrict(self, avx2: bool, clmul: bool) -> Self {
+        Kernels {
+            avx2: self.avx2 && avx2,
+            clmul: self.clmul && clmul,
+        }
+    }
+
+    /// The kernels named, whatever this CPU has
+    ///
+    /// # Safety
+    ///
+    /// On x86_64, `avx2` may be `true` only if the CPU running every decode that uses these
+    /// kernels has AVX2 and BMI1, and `clmul` only if it has PCLMULQDQ, SSE4.1 and SSSE3
+    /// (that is, only where [`Kernels::detect`] would set them). Off x86_64 no SIMD kernel
+    /// is compiled and any value is sound. Claiming a feature the CPU lacks is undefined
+    /// behaviour: the decoder executes instructions the CPU does not have.
+    pub const unsafe fn new_unchecked(avx2: bool, clmul: bool) -> Self {
+        Kernels { avx2, clmul }
+    }
+
+    /// Whether the AVX2 kernels (move-to-front, RLE1, the run records) are used
+    pub const fn avx2(self) -> bool {
+        self.avx2
+    }
+
+    /// Whether the PCLMULQDQ CRC is used
+    pub const fn clmul(self) -> bool {
+        self.clmul
     }
 }
 

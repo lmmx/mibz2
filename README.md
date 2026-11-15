@@ -97,7 +97,7 @@ for span in mibz2::scan(&data) {
 | `scan(data)` → `BlockSpan { index, start_bit, end_bit, crc, stream, level }` | block boundaries, without decoding |
 | `decode_blocks(data, start_bit, end_bit, level, kernels, out)` → `Range` | a range of whole blocks, each CRC checked |
 | `Error { kind: ErrorKind, block, bit }` | what is wrong with the input, and where |
-| `Kernels::detect()`, `Kernels::scalar()` | the SIMD kernels, or the portable ones |
+| `Kernels::detect()`, `Kernels::scalar()`, `restrict(avx2, clmul)`, `unsafe new_unchecked(avx2, clmul)`; `avx2()`, `clmul()` | the SIMD kernels, or the portable ones, or fewer; safe code cannot claim a feature the CPU lacks |
 | `bwt::InverseBwt` (`Segmented`, the default; `Plain`), `decode_with::<I>`, `StreamDecoder::with_inverse::<I>` | the inverse-BWT kernel, swappable and timeable as part of the whole decoder |
 
 **How the threads are spent** (`Plan::for_threads`, the default for `decode_parallel`,

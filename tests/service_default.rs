@@ -30,8 +30,8 @@ fn watchdog<T: Send + 'static>(what: &str, f: impl FnOnce() -> T + Send + 'stati
 /// Where the predicate can hold at all (it asks for x86-64 Linux)
 fn supported() -> bool {
     cfg!(all(target_os = "linux", target_arch = "x86_64"))
-        && Kernels::detect().avx2
-        && Kernels::detect().clmul
+        && Kernels::detect().avx2()
+        && Kernels::detect().clmul()
 }
 
 /// The default entry points, each driven to its end: its output, or the error as the

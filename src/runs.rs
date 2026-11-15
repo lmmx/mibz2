@@ -679,7 +679,7 @@ pub fn fill(r: &Runs, n: usize, tt: &mut TVector, k: Kernels) -> bool {
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
-            // SAFETY: `k.avx2` is set only when AVX2 was detected
+            // SAFETY: `k.avx2` is set only when AVX2 was detected (a `Kernels` invariant)
             return unsafe { fill_avx2(&r.runs, n as u32, next, &lim, &mut tt.0) };
         }
     }
