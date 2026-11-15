@@ -1,0 +1,50 @@
+//! scratch: per block, the stretches of LF's cycle (cut after every run start) with their
+//! length and record counts p (minima-so-far forward) and s (backward), tallied by shape.
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts, mut syms) = (Vec::new(), [0u32; 256], Vec::new());
+    let mut i = 0usize;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        let n = ll.len();
+        if n >= 65536 {
+            let mut cc = [0usize; 257];
+            for &c in ll.iter() { cc[c as usize + 1] += 1; }
+            for x in 0..256 { cc[x + 1] += cc[x]; }
+            let mut lf = vec![0u32; n];
+            let mut cur = cc;
+            for x in 0..n { let c = ll[x] as usize; lf[x] = cur[c] as u32; cur[c] += 1; }
+            let start: Vec<bool> = (0..n).map(|x| x == 0 || ll[x] != ll[x - 1]).collect();
+            let r = start.iter().filter(|&&b| b).count();
+            // walk the cycle from a run start; a stretch is (x, lf x, ..., t], t a run start
+            let t0 = 0usize; // row 0 is a run start
+            let mut y = lf[t0] as usize;
+            let mut cur_s: Vec<u32> = Vec::new();
+            let (mut n1, mut mono, mut two, mut longer, mut steps) = (0u64, 0u64, 0u64, 0u64, 0u64);
+            let mut shapes = std::collections::BTreeMap::<(u32, u32), u64>::new();
+            for _ in 0..n {
+                cur_s.push(y as u32);
+                if start[y] {
+                    let l = cur_s.len();
+                    let (mut p, mut mn) = (0u32, u32::MAX);
+                    for &v in &cur_s { if v < mn { mn = v; p += 1; } }
+                    let (mut s, mut mn2) = (0u32, u32::MAX);
+                    for &v in cur_s.iter().rev() { if v < mn2 { mn2 = v; s += 1; } }
+                    steps += (p + s - 1) as u64;
+                    if l == 1 { n1 += 1 } else if p == 1 || s == 1 { mono += 1 } else if l == 2 { two += 1 } else { longer += 1 }
+                    *shapes.entry((p.min(4), s.min(4))).or_default() += 1;
+                    cur_s.clear();
+                }
+                y = lf[y] as usize;
+            }
+            let shp: Vec<String> = shapes.iter().map(|((p, s), c)| format!("\"{p}{s}\":{c}")).collect();
+            println!("{{\"block\":{i},\"n\":{n},\"runs\":{r},\"single\":{n1},\"monotone\":{mono},\"len2\":{two},\"longer\":{longer},\"S\":{},\"shapes\":{{{}}}}}", steps - 1, shp.join(","));
+            i += 1;
+        }
+    }
+}
