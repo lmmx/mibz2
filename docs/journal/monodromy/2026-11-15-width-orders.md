@@ -1,4 +1,4 @@
-# 2026-11-15 · MONODROMY 7 · Width depends on the order of steps: eager free steps hold a third of the right end's live state, on the same Lyndon tree
+# 2026-11-15 · MONODROMY 7 · Width depends on the order of steps: eager free steps hold a third of the right end's live state, on the same Lyndon tree, bounded by the free closure, which looks like a normal form
 
 Follows `2026-11-15-width.md`: the question there, its registered falsifier, and QUEUED
 6900246233's hand-off condition.
@@ -99,10 +99,38 @@ non-trivial ones and W so far. The output is `closure_wikidata.jsonl`, all 233 b
 - **So, on this corpus, W(free first) ≤ the closure's letters.** That is 0.186 r median,
   matching §5.6's 0.176 r on 8 blocks. The second half of the conjecture is proved; the first
   half is counted.
-- **Open (Conj):** is the free closure confluent? That is, do all orders of free steps reach
-  the same exchange, as a rewriting system would by Church–Rosser? The two exact rules here
-  give the same median, 0.186 r. The links-only test sees fewer free steps and stops at
-  0.191 r.
+- **Confluence of the free closure: no counterexample (C), proof open (Conj).** Free steps
+  (equal steps, and steps whose loser lands on a boundary, tested exactly) were run to
+  exhaustion under several disciplines. Exhaustion was then checked by brute force over every
+  coincidence.
+  - **The disciplines:** LIFO, FIFO and seeded random choices of the next ready coincidence.
+  - **The program:** `free_closure.rs.txt`, here.
+  - **The resulting exchanges are compared exactly:** every live letter's top start, length,
+    bottom start, word hash and word length.
+  - **The one exception is a closed letter.** That is a cycle of the exchange closed whole,
+    whose top interval is its own image. It is compared up to rotation, by its length and word
+    length only: which of its symmetric cuts goes last moves its place and its word's starting
+    point. `[1, 0]` is the smallest case: the closure ends at `ab` or `ba`.
+
+  | input | disciplines | different closures |
+  |---|---|--:|
+  | all 233 Wikidata blocks, 4 prose blocks | 6 (LIFO, FIFO, 4 random) | 0 (equal exactly: no cycle closes) |
+  | every column over 2 letters to length 16, 3 to 10, 4 to 8, 5 to 7: 404,677 columns | 10 (LIFO, FIFO, 8 random) | 0 |
+
+  The step count to the closure is the same under every discipline too: 0.896 r median on
+  Wikidata. The closure leaves 0.185 r letters (0.075 / 0.185 / 0.281 r, min / median / max).
+  - **So, conjecturally, the free closure is a normal form of the block:** the exchange with
+    every tunnel contracted. Its size and its step count are block invariants, whatever order
+    a kernel takes its free steps in.
+  - **Proof route (Conj).** Free steps terminate: each removes a boundary of the common
+    refinement (§5.6, Theorem 4). By Newman's lemma, local confluence then suffices.
+  - **Commuting pairs.** Two free steps on disjoint letters commute (§5.3).
+  - **What must still be shown:**
+    - the other step stays free afterwards: no boundary but the merged one ceases, so the
+      only case is a step whose landing row is the other's coincidence;
+    - the shared-letter cases join.
+
+  Not done here.
 
 **Which orders were not counted.**
 - Left-end induction proper, with left-handed steps. §5.6 says it is the right end under the
@@ -164,6 +192,9 @@ python3 docs/journal/monodromy/2026-11-15-width-orders/summary.py.txt wikidata.j
   and `prose.jsonl` were made before the closure fields were added: their `_width` arrays have
   three entries.
 - `closure_wikidata.jsonl`: orders 0, 1 and 10, with the closure fields.
+- `free_closure.rs.txt`: the confluence test (`--small SIGMA MAX` for every short column;
+  `FILE.bz2 EVERY` for the blocks; `--show 1,0` prints one column's closures).
+  `confluence_wikidata.jsonl`, `confluence_prose.jsonl`, `confluence_small.txt`: its outputs.
 
 **Corpora** (SHA-256 as in `2026-11-15-width.md`): `wikidata.bz2` `82f65ace…c29915`,
 `prose.bz2` `c8f4299a…1833`.

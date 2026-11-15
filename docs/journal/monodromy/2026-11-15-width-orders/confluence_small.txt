@@ -1,0 +1,4 @@
+small sigma 2 up to 16: 131070 columns, 0 with different closures
+small sigma 3 up to 10: 88572 columns, 0 with different closures
+small sigma 4 up to 8: 87380 columns, 0 with different closures
+small sigma 5 up to 7: 97655 columns, 0 with different closures

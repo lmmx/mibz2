@@ -1,0 +1,357 @@
+//! Beside docs/journal/monodromy/2026-11-10-rauzy-veech.md (sections 5.6 and 8, 2). Written
+//! by a sub-agent; the policies "weak_*" (a step told free from links alone: the far end of
+//! its landing place must be a coincidence) and the counters were added after. Not built by
+//! the crate. To run (EVERY = 24: the entry's ten blocks; 1: all 233):
+//!   cp THIS examples/geo.rs
+//!   cargo run --release --example geo -- corpora/wikidata.bz2 24 65536 [POLICIES]
+//! POLICIES: comma-separated numbers (0 reducing_then_right, 1 reducing_then_largest_cell,
+//! 4 largest_cell, 6 right_end, 10 weak_then_right, 11 weak_then_largest_cell, ...); all if
+//! absent. A policy's line is [steps, steps that were not free, ends of segments tested,
+//! tests that found a free step, ends set aside to wait, steps taken where the step before
+//! left off, paid steps].
+//!
+//! Route "cartesian", schedules with geometry: one-cell right-handed Rauzy steps at any
+//! coincidence, the letters kept by fixed row coordinates (rows are never renumbered: a
+//! removed cell is a hole in both tilings), so every coincidence is known, also the ones a
+//! re-seated loser creates. A step lowers the number of boundaries of the common refinement by
+//! one iff it is an equal step or its loser lands on a boundary of the other tiling
+//! ("reducing"); the total is floor + (steps that are not reducing).
+//!
+//! Policies: reducing steps first, wherever they are; else (A) the rightmost coincidence,
+//! (B) the largest cell, (C) the smallest cell, (D) the leftmost coincidence.
+//! The final word is checked (61-bit hash) to be a rotation of the block.
+//!
+//!   geo FILE.bz2 [EVERY] [MIN_ROWS]
+
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+use std::collections::HashMap;
+
+const M61: u64 = (1 << 61) - 1;
+#[inline]
+fn mulmod(a: u64, b: u64) -> u64 {
+    let p = a as u128 * b as u128;
+    let x = (p & M61 as u128) as u64 + (p >> 61) as u64;
+    if x >= M61 {
+        x - M61
+    } else {
+        x
+    }
+}
+#[inline]
+fn addmod(a: u64, b: u64) -> u64 {
+    let x = a + b;
+    if x >= M61 {
+        x - M61
+    } else {
+        x
+    }
+}
+const BASE: u64 = 0x1F3D_5B79_2468_ACE1 % M61;
+
+struct Geo<'a> {
+    ts: Vec<u32>,
+    bs: Vec<u32>,
+    lam: Vec<u32>,
+    len: Vec<u32>,
+    hash: Vec<u64>,
+    /// the letter whose top interval ends at a row; whose image ends at a row
+    top_end: HashMap<u32, u32>,
+    bot_end: HashMap<u32, u32>,
+    left: usize,
+    steps: u64,
+    not_reducing: u64,
+    weak: bool,
+    pw: &'a [u64],
+    /// rows that became a boundary of one tiling or a coincidence in the last step
+    fresh: Vec<u32>,
+    /// width census: a letter touched (its length, place or word changed); live counts and peaks
+    dirty: Vec<bool>,
+    live_word: usize,
+    live_dirty: usize,
+    peak_word: usize,
+    peak_dirty: usize,
+    letters_at_peak: usize,
+}
+
+impl<'a> Geo<'a> {
+    fn new(lam: &[u32], byte: &[u8], pw: &'a [u64]) -> Geo<'a> {
+        let r = lam.len();
+        let mut cnt = [0u32; 257];
+        for (i, &b) in byte.iter().enumerate() {
+            cnt[b as usize + 1] += lam[i];
+        }
+        for k in 0..256 {
+            cnt[k + 1] += cnt[k];
+        }
+        let mut g = Geo {
+            ts: vec![0; r],
+            bs: vec![0; r],
+            lam: lam.to_vec(),
+            len: vec![1; r],
+            hash: byte.iter().map(|&b| b as u64 + 1).collect(),
+            top_end: HashMap::with_capacity(2 * r),
+            bot_end: HashMap::with_capacity(2 * r),
+            left: r,
+            steps: 0,
+            not_reducing: 0,
+            weak: false,
+            pw,
+            fresh: Vec::new(),
+            dirty: vec![false; r],
+            live_word: 0,
+            live_dirty: 0,
+            peak_word: 0,
+            peak_dirty: 0,
+            letters_at_peak: r,
+        };
+        let mut x = 0u32;
+        for i in 0..r {
+            g.ts[i] = x;
+            x += lam[i];
+            g.top_end.insert(x, i as u32);
+            let c = byte[i] as usize;
+            g.bs[i] = cnt[c];
+            cnt[c] += lam[i];
+            g.bot_end.insert(cnt[c], i as u32);
+        }
+        g
+    }
+
+    /// (top letter, bottom letter) ending at row c, if both do and they differ
+    fn at(&self, c: u32) -> Option<(u32, u32)> {
+        match (self.top_end.get(&c), self.bot_end.get(&c)) {
+            (Some(&a), Some(&b)) if a != b => Some((a, b)),
+            _ => None,
+        }
+    }
+
+    /// Would the step at c lower the boundary count; its cell
+    fn reducing(&self, c: u32) -> Option<(bool, u32)> {
+        let (a, b) = self.at(c)?;
+        let (ai, bi) = (a as usize, b as usize);
+        let (la, lb) = (self.lam[ai], self.lam[bi]);
+        Some(if la > lb {
+            (self.top_end.contains_key(&(self.bs[ai] + la - lb)) && (!self.weak || self.top_end.contains_key(&(self.bs[ai] + la))), lb)
+        } else if la < lb {
+            (self.bot_end.contains_key(&(self.ts[bi] + lb - la)) && (!self.weak || self.bot_end.contains_key(&(self.ts[bi] + lb))), la)
+        } else {
+            (true, la)
+        })
+    }
+
+    /// Where the loser of the step at c would land (a row that, once a boundary of the other
+    /// tiling, makes the step reducing)
+    fn landing(&self, c: u32) -> Option<u32> {
+        let (a, b) = self.at(c)?;
+        let (ai, bi) = (a as usize, b as usize);
+        let (la, lb) = (self.lam[ai], self.lam[bi]);
+        if la > lb {
+            Some(self.bs[ai] + la - lb)
+        } else if la < lb {
+            Some(self.ts[bi] + lb - la)
+        } else {
+            None
+        }
+    }
+
+    fn touch(&mut self, x: usize) {
+        if !self.dirty[x] {
+            self.dirty[x] = true;
+            self.live_dirty += 1;
+        }
+    }
+    fn word(&mut self, x: usize, ln: u32) {
+        if self.len[x] == 1 && ln > 1 {
+            self.live_word += 1;
+        }
+        self.touch(x);
+    }
+    fn peaks(&mut self) {
+        if self.live_word > self.peak_word {
+            self.peak_word = self.live_word;
+            self.letters_at_peak = self.left;
+        }
+        self.peak_dirty = self.peak_dirty.max(self.live_dirty);
+    }
+
+    fn step(&mut self, c: u32) {
+        let (a, b) = self.at(c).unwrap();
+        let (ai, bi) = (a as usize, b as usize);
+        let (la, lb) = (self.lam[ai], self.lam[bi]);
+        let h = addmod(mulmod(self.hash[ai], self.pw[self.len[bi] as usize]), self.hash[bi]);
+        let ln = self.len[ai] + self.len[bi];
+        self.steps += 1;
+        self.fresh.clear();
+        if la > lb {
+            self.word(bi, ln);
+            self.touch(ai);
+            self.hash[bi] = h;
+            self.len[bi] = ln;
+            // the cell [c - lb, c) goes; A ends at c - lb; B's image is the tail of A's
+            self.top_end.remove(&c);
+            self.bot_end.remove(&c);
+            self.top_end.insert(c - lb, a);
+            let p = self.bs[ai] + la - lb;
+            self.not_reducing += !self.top_end.contains_key(&p) as u64;
+            self.lam[ai] = la - lb;
+            self.bs[bi] = p;
+            self.bot_end.insert(p + lb, b);
+            self.bot_end.insert(p, a);
+            self.fresh.extend_from_slice(&[c - lb, p, p + lb]);
+        } else if la < lb {
+            self.word(ai, ln);
+            self.touch(bi);
+            self.hash[ai] = h;
+            self.len[ai] = ln;
+            self.top_end.remove(&c);
+            self.bot_end.remove(&c);
+            self.bot_end.insert(c - la, b);
+            let p = self.ts[bi] + lb - la;
+            self.not_reducing += !self.bot_end.contains_key(&p) as u64;
+            self.lam[bi] = lb - la;
+            self.ts[ai] = p;
+            self.top_end.insert(p + la, a);
+            self.top_end.insert(p, b);
+            self.fresh.extend_from_slice(&[c - la, p, p + la]);
+        } else {
+            self.word(bi, ln);
+            // A is deleted
+            if self.len[ai] > 1 {
+                self.live_word -= 1;
+            }
+            if self.dirty[ai] {
+                self.live_dirty -= 1;
+            }
+            self.hash[bi] = h;
+            self.len[bi] = ln;
+            self.left -= 1;
+            self.top_end.remove(&c);
+            self.bot_end.remove(&c);
+            self.bs[bi] = self.bs[ai];
+            self.bot_end.insert(self.bs[ai] + la, b);
+            self.fresh.extend_from_slice(&[c - la, self.bs[ai] + la]);
+        }
+        self.peaks();
+    }
+}
+
+
+/// Free (reducing) steps to exhaustion; `disc` 0 LIFO, 1 FIFO, 2 random. Exhaustion is checked
+/// by brute force over every coincidence. Returns the exchange left, canonically: each live
+/// letter's (top start, length, bottom start, word hash, word length), sorted.
+fn closure(disc: u32, lam: &[u32], byte: &[u8], pw: &[u64]) -> (Vec<(u32, u32, u32, u64, u32)>, u64) {
+    let mut g = Geo::new(lam, byte, pw);
+    let mut rng: u64 = 0x2545_F491_4F6C_DD1D ^ (disc as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+    loop {
+        let mut q: std::collections::VecDeque<u32> = g.top_end.keys().copied().filter(|&c| g.at(c).is_some()).collect();
+        let mut took = false;
+        while !q.is_empty() {
+            let c = match disc {
+                0 => q.pop_back().unwrap(),
+                1 => q.pop_front().unwrap(),
+                _ => {
+                    rng ^= rng << 13; rng ^= rng >> 7; rng ^= rng << 17;
+                    let k = (rng % q.len() as u64) as usize;
+                    q.swap_remove_back(k).unwrap()
+                }
+            };
+            if let Some((true, _)) = g.reducing(c) {
+                g.step(c);
+                took = true;
+                let fresh = g.fresh.clone();
+                for p in fresh {
+                    if g.at(p).is_some() { q.push_back(p); }
+                }
+                // a step changes A's and B's lengths and places: recheck every coincidence
+                // whose letters it touched, cheaply by requeueing their ends
+                let (a, b) = (g.top_end.get(&g.fresh[0]).copied(), None::<u32>);
+                let _ = (a, b);
+            }
+        }
+        // brute force: any free step left anywhere?
+        let rest: Vec<u32> = g.top_end.keys().copied().filter(|&c| matches!(g.reducing(c), Some((true, _)))).collect();
+        if rest.is_empty() { break; }
+        if !took && rest.is_empty() { break; }
+    }
+    // A closed letter (its top interval its own image: a cycle of the exchange closed by free
+    // steps) is kept up to rotation: its place and its word's starting point depend on which
+    // of its symmetric cuts went last. It is recorded as (length, word length) only.
+    let mut v: Vec<_> = g.top_end.iter().map(|(&e, &a)| {
+        let a = a as usize;
+        let t = e - g.lam[a];
+        if t == g.bs[a] { (u32::MAX, g.lam[a], u32::MAX, 0, g.len[a]) } else { (t, g.lam[a], g.bs[a], g.hash[a], g.len[a]) }
+    }).collect();
+    v.sort_unstable();
+    (v, g.steps)
+}
+
+/// every column over `sigma` letters of length up to `max`: the closure under LIFO, FIFO and
+/// eight random disciplines must agree
+fn small(sigma: usize, max: usize) {
+    let mut pw: Vec<u64> = vec![1];
+    while pw.len() <= max + 1 { pw.push(mulmod(*pw.last().unwrap(), BASE)); }
+    let (mut cases, mut bad) = (0u64, 0u64);
+    for n in 1..=max {
+        for mut d in 0..sigma.pow(n as u32) {
+            let col: Vec<u8> = (0..n).map(|_| { let b = (d % sigma) as u8; d /= sigma; b }).collect();
+            let (mut lam, mut byte) = (Vec::new(), Vec::new());
+            let mut x = 0;
+            while x < n { let mut y = x + 1; while y < n && col[y] == col[x] { y += 1; } lam.push((y - x) as u32); byte.push(col[x]); x = y; }
+            let (a, _) = closure(0, &lam, &byte, &pw);
+            cases += 1;
+            for disc in 1..10 {
+                let (b, _) = closure(disc, &lam, &byte, &pw);
+                if a != b { bad += 1; if bad <= 5 { eprintln!("counterexample: column {col:?} discipline {disc}"); } break; }
+            }
+        }
+    }
+    eprintln!("small sigma {sigma} up to {max}: {cases} columns, {bad} with different closures");
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args[1] == "--show" {
+        let col: Vec<u8> = args[2].split(',').map(|x| x.parse().unwrap()).collect();
+        let n = col.len();
+        let mut pw: Vec<u64> = vec![1];
+        while pw.len() <= n + 1 { pw.push(mulmod(*pw.last().unwrap(), BASE)); }
+        let (mut lam, mut byte) = (Vec::new(), Vec::new());
+        let mut x = 0;
+        while x < n { let mut y = x + 1; while y < n && col[y] == col[x] { y += 1; } lam.push((y - x) as u32); byte.push(col[x]); x = y; }
+        for disc in 0..4 { let (v, st) = closure(disc, &lam, &byte, &pw); println!("disc {disc}: steps {st} {v:?}"); }
+        return;
+    }
+    if args[1] == "--small" { small(args[2].parse().unwrap(), args[3].parse().unwrap()); return; }
+    let data = std::fs::read(&args[1]).expect("read");
+    let every: usize = args.get(2).map_or(1, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+    let mut syms = Vec::new();
+    let mut pw: Vec<u64> = vec![1];
+    let (mut i, mut same, mut diff) = (0, 0, 0);
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        let n = ll.len();
+        if n >= 65536 {
+            if i % every == 0 {
+                while pw.len() <= n { pw.push(mulmod(*pw.last().unwrap(), BASE)); }
+                let (mut lam, mut byte) = (Vec::new(), Vec::new());
+                let mut x = 0;
+                while x < n { let mut y = x + 1; while y < n && ll[y] == ll[x] { y += 1; } lam.push((y - x) as u32); byte.push(ll[x]); x = y; }
+                let r = lam.len();
+                let (a, sa) = closure(0, &lam, &byte, &pw);
+                let (b2, sb) = closure(1, &lam, &byte, &pw);
+                let (c, sc2) = closure(2, &lam, &byte, &pw);
+                let mut ok = a == b2 && a == c;
+                for disc in 3..6 { ok &= closure(disc, &lam, &byte, &pw).0 == a; }
+                if ok { same += 1 } else { diff += 1 }
+                println!("{{\"block\":{i},\"n\":{n},\"runs\":{r},\"letters\":[{},{},{}],\"steps\":[{sa},{sb},{sc2}],\"equal\":{ok}}}", a.len(), b2.len(), c.len());
+            }
+            i += 1;
+        }
+        syms = b.syms;
+    }
+    eprintln!("closures equal on {same} blocks, different on {diff}");
+}
