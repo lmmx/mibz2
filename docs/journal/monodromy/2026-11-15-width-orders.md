@@ -132,6 +132,43 @@ non-trivial ones and W so far. The output is `closure_wikidata.jsonl`, all 233 b
 
   Not done here.
 
+- **Lemma, the disjoint case (P).** Let the steps at c₁ ≠ c₂ both be free, on letters
+  {A₁, B₁} and {A₂, B₂} with no letter in common. Then after either step the other is still a
+  free step, and the two orders give the same state.
+
+  *Proof.*
+  1. **What a step changes.** A step changes the fields of its own two letters only. Its word
+     A·B is read from those two letters.
+  2. **Boundary rows.** A free step deletes exactly one boundary row, its own coincidence c₁,
+     and creates none (§5.6, Theorem 4). On the top, A₁'s end moves from c₁ to c₁ − λ, a row
+     that was already the bottom boundary where B₁'s image begins. On the bottom, B₁'s end
+     moves to A₁'s old bottom end, and A₁'s new bottom end is the landing row, already a top
+     boundary because the step is free. Equal steps likewise.
+  3. **c₂ is still a coincidence.** A₂ still ends on the top at c₂, and B₂ still ends on the
+     bottom at c₂. The only bottom end that step 1 sets is B₁'s, now A₁'s old bottom end. That
+     row is not c₂, since c₂ is B₂'s bottom end and B₂ ≠ A₁.
+  4. **Step 2 is still free.** If step 2 is a top win, its landing row p₂ = b_{A₂} + λ_{A₂} −
+     λ_{B₂} lies strictly inside J_{A₂}, so it is no bottom boundary. c₁ is a bottom boundary
+     (B₁'s end), so p₂ ≠ c₁. p₂ was a top end, and the top ends lost only c₁, so it still is
+     one. A bottom win is the mirror. An equal step is free whatever happens.
+  5. **The two orders agree.** Each step's effect is a function of its own two letters' fields,
+     which the other step does not touch. ∎
+
+- **What remains for Newman's lemma (Conj).** The steps that share a letter: X ending on the
+  top at c₁ and on the bottom at c₂, or the reverse, or both at once. Steps that share a
+  letter need not commute: the first changes the letter's length or place, and so the
+  second's cell. The census says they join, whatever order the free steps take.
+
+- **A candidate intrinsic description (Conj).** An equal step at c says I_A = J_B: every point
+  of B goes next to A, and A's points all come from B. That is a forced adjacency, a tunnel
+  edge. Contracting every edge u → v with one successor at u and one predecessor at v is
+  unitig compaction in assembly graphs, and it is order-free by construction.
+  - **The conjecture:** the free closure is that compaction, carried out on the exchange's
+    letters, where the unequal free steps (a loser landing on a boundary) compact the partial
+    tunnels.
+  - **Why it matters:** if true, it is the proof of confluence, and it gives the closure
+    without simulating any step.
+
 **Which orders were not counted.**
 - Left-end induction proper, with left-handed steps. §5.6 says it is the right end under the
   reversed alphabet order.
