@@ -673,3 +673,18 @@ impl<const F: bool> Scratch<bwt::CellsKernel<F>> {
         self.inverse.own_tail_capacity()
     }
 }
+
+#[cfg(feature = "memory-lever")]
+impl<const V: u8, const F: bool> Scratch<bwt::LeverCells<V, F>> {
+    /// Research (`memory-lever`): the experiment's kernels' route coverage, for the fuzzer.
+    #[doc(hidden)]
+    pub fn cells_counts(&self) -> bwt::CellsCounts {
+        self.inverse.counts()
+    }
+    /// Research (`memory-lever`): the most slots the last lazy induction took from each
+    /// pool, and that block's letters.
+    #[doc(hidden)]
+    pub fn lazy_pool(&self) -> (usize, usize) {
+        self.inverse.pool()
+    }
+}

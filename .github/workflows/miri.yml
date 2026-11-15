@@ -16,6 +16,9 @@ on:
     paths:
       - "src/bwt.rs"
       - "src/cells.rs"
+      - "src/cells_lever.rs"
+      - "src/cells_lever_test.rs"
+      - "src/cells_selective_test.rs"
       - "src/coop.rs"
       - "src/parallel.rs"
       - "src/parallel/**"
@@ -28,6 +31,9 @@ on:
     paths:
       - "src/bwt.rs"
       - "src/cells.rs"
+      - "src/cells_lever.rs"
+      - "src/cells_lever_test.rs"
+      - "src/cells_selective_test.rs"
       - "src/coop.rs"
       - "src/parallel.rs"
       - "src/parallel/**"
@@ -76,3 +82,14 @@ jobs:
           grep -q '^parallel::service_unwind_tests::miri_outer_parked' miri-list.txt
       - name: Miri
         run: cargo miri test --lib -- miri_
+      # the memory-lever experiment's two opt-in Cells kernels (`memory-lever`, research):
+      # their unsafe regions against the original induction, and the store fence's model
+      - name: The memory-lever kernels' tests are selected
+        run: |
+          cargo miri test --features memory-lever --lib -- miri_cells_lever miri_cells_staged miri_cells_lazy --list 2>/dev/null | tee lever-list.txt
+          grep -q '^cells::tests::miri_cells_lever_boundaries_reuse:' lever-list.txt
+          grep -q '^cells::tests::miri_cells_lever_exact_fit_and_reuse:' lever-list.txt
+          grep -q '^cells::tests::miri_cells_staged_fence_covers_every_exit:' lever-list.txt
+          grep -q '^cells::tests::miri_cells_lazy_closed_letters_give_their_slots_back:' lever-list.txt
+      - name: Miri, the memory-lever kernels
+        run: cargo miri test --features memory-lever --lib -- miri_cells_lever miri_cells_staged miri_cells_lazy

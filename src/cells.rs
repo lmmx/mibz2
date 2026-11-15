@@ -45,6 +45,18 @@ struct Kernel {
     lay: Layout,
     rule_end: usize,
     letters: usize,
+    /// (research only, `memory-lever`) which induction runs: 0 the shipped one, else one of
+    /// the experiment's two (`cells_lever.rs`), and the lazy letters' state
+    #[cfg(feature = "memory-lever")]
+    variant: u8,
+    #[cfg(feature = "memory-lever")]
+    lz: Lazy,
+    /// (test only) how many times the last staged induction sent rules on; whether it is
+    /// to panic right after its first send (the fence's unwinding exit)
+    #[cfg(all(test, feature = "memory-lever"))]
+    rule_sends: usize,
+    #[cfg(all(test, feature = "memory-lever"))]
+    panic_after_send: bool,
     /// this call laid the bottom slots and the rules out in the tail (their canaries are
     /// there)
     bottom_laid: bool,
@@ -77,6 +89,9 @@ struct Materialization {
 }
 #[cfg(test)]
 include!("cells_original_test.rs");
+// (research only: the memory-lever experiment's two kernels)
+#[cfg(feature = "memory-lever")]
+include!("cells_lever.rs");
 
 /// Per-call reach, compiled out of production. Counts the actual writer branches,
 /// not column lengths or inferred grammar properties.
@@ -413,6 +428,18 @@ fn tail_from(tail: &mut Vec<u8>, shift: usize) -> *mut u8 {
 }
 
 impl Kernel {
+    /// Where the rules begin, after the region before them ends at `at`: there, but for the
+    /// experiment's staged kernel (research only, `memory-lever`), whose rules start at a
+    /// multiple of 16 so that every rule's offset is one (`Stage`).
+    #[inline(always)]
+    fn rules_at(&self, at: usize) -> usize {
+        #[cfg(feature = "memory-lever")]
+        if self.variant == STAGED_RULES {
+            return (at + 15) & !15;
+        }
+        at
+    }
+
     /// A bottom slot's size: `BSLOT`, or (test only) `SLOT` for the original induction
     #[inline(always)]
     fn bslot(&self) -> usize {
@@ -439,8 +466,8 @@ impl Kernel {
             };
             let at = (cw >> 32) as usize;
             // a rule is its two factors (state 2 and 3), and lies in the bottom slots'
-            // buffer: it is not read back here; the comparison tests compare the rules'
-            // region once the induction is over
+            // buffer (or, staged, `memory-lever`, not in any buffer yet): it is not read back
+            // here; the comparison tests compare the rules' region once the induction is over
             let payload = if cw as u32 <= SMALL {
                 self.buf[at..at + size].to_vec()
             } else {
@@ -518,6 +545,20 @@ impl Kernel {
                 };
                 assert!(region.iter().all(|&x| x == 0xA5), "cells canary");
             }
+            // (research only, `memory-lever`: the lazy kernel's two regions in the tail, its
+            // streams and its bottom slots' pool)
+            #[cfg(feature = "memory-lever")]
+            if let (Some(tail), true) = (tail, self.bottom_laid && self.variant == LAZY) {
+                for end in [self.lz.streams, self.lz.bend] {
+                    // SAFETY: `slots_lazy` reserved the spare capacity for this block and
+                    // wrote the canaries; nothing has changed the tail since
+                    let region = unsafe {
+                        debug_assert!(tail.capacity() - tail.len() >= self.lay.tail);
+                        std::slice::from_raw_parts(tail.as_ptr().add(tail.len() + end), GAP)
+                    };
+                    assert!(region.iter().all(|&x| x == 0xA5), "cells canary");
+                }
+            }
         }
         let _ = tail;
     }
@@ -556,12 +597,22 @@ impl Kernel {
         if budget > n || n >= 1 << 24 || recs.len() > n {
             return Err(Refusal::Invalid);
         }
+        #[cfg(not(feature = "memory-lever"))]
         let result = self.slots(n, recs, p, budget, forced, tail).and_then(|()| {
             // (research only, `phase-counters`: the induction's scope)
             #[cfg(feature = "phase-counters")]
             let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
             self.induce_cells(budget, tail)
         });
+        // (research only, `memory-lever`: the same, or one of the experiment's inductions)
+        #[cfg(feature = "memory-lever")]
+        let result = self
+            .first_stage(n, recs, p, budget, forced, tail)
+            .and_then(|()| {
+                #[cfg(feature = "phase-counters")]
+                let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
+                self.induce_variant(budget, tail)
+            });
         self.check_canaries(Some(tail));
         let (word, len, cells) = result?;
         let period = (len & !MARK) as usize;
@@ -694,12 +745,12 @@ impl Kernel {
             // (the tail's offsets start above this buffer's: `Layout::shift`)
             shift = allocation;
             bots = shift + BPAD;
-            rules = bots + bcap + GAP;
+            rules = self.rules_at(bots + bcap + GAP);
             in_tail = rules + ruled + GAP - shift;
         } else {
             bots = tops + cap + GAP;
             arena = bots + bcap + GAP;
-            rules = arena + words + GAP;
+            rules = self.rules_at(arena + words + GAP);
             allocation = rules + ruled + GAP;
             (in_tail, shift) = (0, 0);
         }
@@ -1089,6 +1140,13 @@ impl Kernel {
     /// `word` and `len` are what `induce_cells` returned for the block `slots` was given.
     #[inline(never)]
     fn write_cells(&mut self, word: u32, len: u32, n: usize, out: &mut Vec<u8>, tail: &Vec<u8>) {
+        // (test only, `memory-lever`: the writer reads the rules, so no store that went past
+        // the cache may still be waiting for its fence; `cells_lever.rs`'s model)
+        #[cfg(all(test, feature = "memory-lever"))]
+        assert!(
+            !PENDING.with(|p| p.get()),
+            "rules stored past the cache are read before a fence"
+        );
         #[cfg(test)]
         {
             self.writer_reach = WriterReach::default();
@@ -1103,7 +1161,8 @@ impl Kernel {
         let dst = out.as_mut_ptr();
         let base = self.buf.as_mut_ptr();
         let ro = self.lay.rules;
-        debug_assert!(tail.capacity() - tail.len() >= self.lay.tail);
+        // (the writer reads the tail only where the rules lie there)
+        debug_assert!(!self.lay.bout || tail.capacity() - tail.len() >= self.lay.tail);
         // the rules' buffer: the bottom slots', the tail's spare capacity as `slots` laid it
         let rb: *const u8 = if self.lay.bout {
             // SAFETY: the tail's length is inside its allocation
@@ -1851,4 +1910,6 @@ mod tests {
         );
     }
     include!("cells_selective_test.rs");
+    #[cfg(feature = "memory-lever")]
+    include!("cells_lever_test.rs");
 }
