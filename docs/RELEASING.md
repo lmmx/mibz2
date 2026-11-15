@@ -76,6 +76,36 @@ three-team policy came from it). Every release gets one.
 3. **If the run can't be had** (the i9 is away, or Louis declines), say so in the report. The release
    doesn't wait for it.
 
+## 5a. The team threshold: when it may have moved
+
+The **team threshold** is the thread count at which the default decoder stops giving each
+thread a block of its own (workers, Cells inverting) and has threads share blocks in teams
+(`Plan::for_threads` in `src/parallel.rs`: `COOP_MIN_CORES`, `WORKERS_BELOW_THREADS`). It
+was set once on 28 October and not checked again until 15 November, by which time Cells had
+made workers 4–14% faster than the teams at 6–9 threads (#425).
+
+1. **When:** a release whose changes since the last tag touch either side of the threshold:
+   - the workers path: `src/cells.rs`, the T-vector build or walk, MTF, the scanner, or
+     anything else a worker runs on its block;
+   - the team path: `src/coop.rs`, the cooperative inverse, the pool, or the pipelined teams;
+   - the plan policy itself, or the window (`SLOTS_PER_THREAD`).
+
+   Not for docs, bench or packaging releases. When unsure, run it: it takes about 15 minutes.
+2. **The run:** queue `bench-crossover` (`bench/workstation-queue.txt`, its ready tag at the
+   release's tag commit) beside the release scaling. It runs the shipped decoder against one
+   block a thread (`mibz2-workers-w`) and teams of 2 and 3 (`mibz2-team2`, `mibz2-team3`) at
+   4 to 10, 12, 16 and 20 threads, every arm with the default window.
+3. **The rule** (the one judged on 15 November, #145 LOG 6896455773, kept for every run):
+   - **sanity:** where an arm runs the same plan as the shipped decoder, their interval must
+     span 1, or the run decides nothing;
+   - **move the threshold** to where a forced arm is faster than the shipped decoder (its
+     interval wholly below 1) at every count it would change, in a PR measured by the next
+     release scaling;
+   - **a move that costs more than 10% CPU** at any count it changes goes to Louis, not merged
+     by the coordinator;
+   - counts above the physical cores (SMT siblings) are reported only.
+4. **Record** the bundle and the verdict in the release's CHANGELOG section, moved or not.
+
 ## 6. After
 
 1. **A CHANGELOG PR** with the release's notes. #210 is the model. It gives:
