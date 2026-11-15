@@ -99,7 +99,7 @@
     "description": "Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory.",
     "foot": "lmmx.github.io/mibz2 · 15 November 2026",
     "section": " · Research blog",
-    "title": "Reduce, reuse, recycle: mibz2 reuses the slots that track each fragment of text"
+    "title": "Reduce, reuse, recycle: hand-me-down slots for every fragment of text"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",

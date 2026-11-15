@@ -1,5 +1,5 @@
 ---
-title: "Reduce, reuse, recycle: mibz2 reuses the slots that track each fragment of text"
+title: "Reduce, reuse, recycle: hand-me-down slots for every fragment of text"
 image: assets/social/blog-2026-11-15-slot-recycling.png
 description: "Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory."
 ---
@@ -11,7 +11,7 @@ description: "Each new text fragment takes over the slot its finished neighbour 
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Reduce, reuse, recycle: mibz2 reuses the slots that track each fragment of text
+# Reduce, reuse, recycle: hand-me-down slots for every fragment of text
 
 Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory.
 {: .post-dek }
