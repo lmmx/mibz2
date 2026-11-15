@@ -12,6 +12,10 @@ fn compare_materialization(
     candidate.buf.fill(0xC6);
     original.materialization = Some(Vec::new());
     candidate.materialization = Some(Vec::new());
+    // The original takes fresh slots after the letters'; the candidate takes none, but has
+    // the same room, so that every offset outside the slots' regions is the same in both.
+    original.fresh_room = true;
+    candidate.fresh_room = true;
     let a = original.slots(column.len(), recs.records(), origin, budget, true);
     let b = candidate.slots(column.len(), recs.records(), origin, budget, true);
     assert_eq!(a, b);
@@ -26,7 +30,27 @@ fn compare_materialization(
     let a = original.induce_cells_original(budget);
     let b = candidate.induce_cells(budget);
     assert_eq!(a, b, "column {column:?}, origin {origin}, budget {budget}");
-    assert_eq!(original.materialization, candidate.materialization);
+    // The slots a cell is written to differ (a promised slot is the one let go at the
+    // front, not a fresh one), so the slots' offsets are left out: the state's 7..15 and a
+    // slot's link and partner. The rest, words and their offsets included, is equal.
+    let placed = |k: &Kernel| {
+        k.materialization
+            .as_ref()
+            .unwrap()
+            .iter()
+            .map(|m| {
+                let mut state = m.state;
+                state[7..15].fill(0);
+                let slots: Vec<u8> = m
+                    .slots
+                    .chunks(SLOT)
+                    .flat_map(|slot| slot[4..16].to_vec())
+                    .collect();
+                (state, m.payload.clone(), slots)
+            })
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(placed(original), placed(candidate));
     original.check_canaries();
     candidate.check_canaries();
     if let Ok((word, len, _)) = a {
