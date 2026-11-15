@@ -237,7 +237,7 @@ impl<'a> Geo<'a> {
     }
 }
 
-fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n: usize) -> (u64, u64, u64, [u64; 5], [usize; 3]) {
+fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n: usize) -> (u64, u64, u64, [u64; 5], [usize; 6]) {
     let mut g = Geo::new(lam, byte, pw);
     g.weak = policy >= 10;
     let policy = policy % 10;
@@ -246,6 +246,8 @@ fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n
     let mut cnt = [0u64; 5];
     let mut last_q = u32::MAX;
     let mut rng: u64 = 0x9E37_79B9_7F4A_7C15;
+    // at the first paid step: (letters alive, non-trivial alive, W so far)
+    let mut closure = (0usize, 0usize, 0usize);
     // the coincidences
     let mut coin: BTreeSet<u32> = BTreeSet::new();
     let mut bounds: HashSet<u32> = HashSet::new();
@@ -308,6 +310,9 @@ fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n
             }
         }
         if pick.is_none() {
+            if cnt[4] == 0 {
+                closure = (g.left, g.live_word, g.peak_word);
+            }
             cnt[4] += 1;
         }
         let c = match pick {
@@ -360,7 +365,7 @@ fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n
     let a = *g.top_end.values().next().unwrap() as usize;
     assert!(g.top_end.len() == 1 && g.len[a] as usize == n && rots.contains(&g.hash[a]), "policy {policy}: not a rotation of the block");
     assert!(g.steps == floor + g.not_reducing);
-    (g.steps, g.not_reducing, floor, cnt, [g.peak_word, g.peak_dirty, g.letters_at_peak])
+    (g.steps, g.not_reducing, floor, cnt, [g.peak_word, g.peak_dirty, g.letters_at_peak, closure.0, closure.1, closure.2])
 }
 
 fn main() {
@@ -417,7 +422,7 @@ fn main() {
                     if !out.contains("floor") {
                         out += &format!(",\"floor\":{floor}");
                     }
-                    out += &format!(",\"{name}\":[{steps},{bad},{},{},{},{},{}],\"{name}_width\":[{},{},{}]", cnt[0], cnt[1], cnt[2], cnt[3], cnt[4], w[0], w[1], w[2]);
+                    out += &format!(",\"{name}\":[{steps},{bad},{},{},{},{},{}],\"{name}_width\":[{},{},{},{},{},{}]", cnt[0], cnt[1], cnt[2], cnt[3], cnt[4], w[0], w[1], w[2], w[3], w[4], w[5]);
                 }
                 println!("{out}}}");
             }

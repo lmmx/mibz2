@@ -80,6 +80,30 @@ it goes.
 The conjecture is W(free first) ≤ letters(after free closure) + O(paid transient). Its
 falsifier is a block where the eager W exceeds the closure's letter count.
 
+**The conjecture checked (P + C, added the same day).** The program now also records, at the
+first paid step (when no free step is ready: the free closure), the letters alive, the
+non-trivial ones and W so far. The output is `closure_wikidata.jsonl`, all 233 blocks, orders
+0, 1 and 10.
+
+| order | letters at the closure, ÷ r, median | W ÷ those letters, min / median / max | blocks with W above them |
+|---|--:|--:|--:|
+| free first, else the right end | 0.186 | 0.518 / 0.571 / 0.741 | 0 |
+| free first, else the largest cell | 0.186 | 0.394 / 0.445 / 0.741 | 0 |
+| free first, told from links, else the right end | 0.191 | 0.498 / 0.560 / 0.712 | 0 |
+
+- **P, after the closure.** No step adds a letter: unequal steps keep the count, and equal
+  steps remove one. So from the closure on, the live non-trivial letters are at most the
+  letters alive at the closure.
+- **C, before the closure.** The non-trivial letters never exceed that count either, on any
+  block. W is reached before the closure on only 1 or 2 blocks.
+- **So, on this corpus, W(free first) ≤ the closure's letters.** That is 0.186 r median,
+  matching §5.6's 0.176 r on 8 blocks. The second half of the conjecture is proved; the first
+  half is counted.
+- **Open (Conj):** is the free closure confluent? That is, do all orders of free steps reach
+  the same exchange, as a rewriting system would by Church–Rosser? The two exact rules here
+  give the same median, 0.186 r. The links-only test sees fewer free steps and stops at
+  0.191 r.
+
 **Which orders were not counted.**
 - Left-end induction proper, with left-handed steps. §5.6 says it is the right end under the
   reversed alphabet order.
@@ -134,9 +158,12 @@ python3 docs/journal/monodromy/2026-11-15-width-orders/summary.py.txt wikidata.j
 **What is beside this entry.**
 - `wikidata.jsonl`, `prose.jsonl`: the outputs.
 - `summary.txt`: the summaries.
-- `width_orders.rs.txt`: the program, a 69-line diff from `schedules_geo.rs.txt`. It adds the
-  counters and three policies: 7 leftmost, 8 rightmost and leftmost in turn, 9 a pseudo-random
-  row (xorshift, fixed seed).
+- `width_orders.rs.txt`: the program, diffed from `schedules_geo.rs.txt`. It adds the counters
+  (with the closure fields as the last three of `_width`) and three policies: 7 leftmost, 8
+  rightmost and leftmost in turn, 9 a pseudo-random row (xorshift, fixed seed). `wikidata.jsonl`
+  and `prose.jsonl` were made before the closure fields were added: their `_width` arrays have
+  three entries.
+- `closure_wikidata.jsonl`: orders 0, 1 and 10, with the closure fields.
 
 **Corpora** (SHA-256 as in `2026-11-15-width.md`): `wikidata.bz2` `82f65ace…c29915`,
 `prose.bz2` `c8f4299a…1833`.
