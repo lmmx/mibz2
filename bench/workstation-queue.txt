@@ -7,3 +7,4 @@
 #
 # recipe                       branch                    what it measures
 bench-crossover              master                    The crossover: shipped plan vs one block a thread forced, 4-20 threads (#145 LOG)
+bench-release-scaling        master                    Release scaling: v0.3.4 against v0.3.3 (RELEASING.md §5)

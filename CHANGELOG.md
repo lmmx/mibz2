@@ -9,12 +9,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.4](https://github.com/lmmx/mibz2/compare/v0.3.3...v0.3.4) - 2026-11-15
 
+A plan release: the **team threshold** moves (#425, docs/RELEASING.md §5a, #426). The default
+decoder now gives each thread a block of its own (workers, Cells inverting) whenever fewer
+than 10 threads each have a physical core of their own (`WORKERS_BELOW_THREADS = 10` in
+`src/parallel.rs`). On the i9-10900K that is 6 to 9 threads, which ran teams of 2 until now.
+From 10 threads the teams stay (the i9's three teams of three), and so do more threads than
+physical cores: on the i9, one block a thread on SMT siblings was 28–49% slower than the teams
+(12–20 threads). Below 6 cores nothing changes. The output, the API and the supported inputs
+are unchanged.
+
+- **The crossover, the i9-10900K** (`bench-crossover` run 2, `crossover/run-20261115T151452Z`
+  on the `evidence` branch at c7db45c2, sha256 15a2b7b7…51e5, master 1c961aa2, 10 paired
+  rounds, every arm the same bytes; judged under the rule posted before the data, #145 LOG
+  6896455773, result LOG 6896798131), `wikidata`, workers ÷ teams:
+
+  | threads | 6 | 7 | 8 | 9 | 10 |
+  |---|--:|--:|--:|--:|--:|
+  | wall | **0.861** | **0.889** | **0.923** | **0.964** | **1.153** |
+  | 95% interval | 0.852–0.871 | 0.871–0.908 | 0.915–0.930 | 0.956–0.972 | 1.131–1.174 |
+  | CPU | **0.884** | 0.997 | **0.967** | **1.124** | **1.341** |
+  | peak RSS, MB, teams → workers | 67 → 133 | 65 → 149 | 81 → 168 | 80 → 188 | 73 → 205 |
+
+  That is 13.9%, 11.1%, 7.7% and 3.6% less wall time at 6, 7, 8 and 9 threads, beyond noise,
+  and at 10 threads 15.3% more: the teams keep 10. CPU is 11.6% and 3.3% less at 6 and 8
+  threads, level at 7, and 12.4% more at 9 (1.112–1.135). The sanity check passed: at 4 and 5
+  threads, where both arms run the same decoder, 0.993 and 0.979, each interval spanning 1.
+  Run 1 of the same recipe was invalid: its forced arm kept a smaller window than the default
+  decoder's and failed that sanity check (fixed by #424).
+- **The decision.** The 9-thread CPU cost was over the rule's 10%, so the move went to Louis,
+  who chose teams from 10. Peak RSS roughly doubles at 6–9 threads, under 200 MB, weighed for
+  a 16 GB laptop as acceptable.
+- **The PR's own CI bench** (run 43732867824, AMD EPYC 9V45, 4 vCPU on 2 cores, 10 paired
+  rounds), #425's head against its base: CI's runners have 2 physical cores, so both arms run
+  the same plan and the bench cannot see the change. It was flat: `wikidata` wall +0.0%
+  (−7.7, +8.5), −0.1% (−2.3, +2.3) and −2.5% (−7.6, +2.8) at 1, 2 and 4 threads, CPU −0.0%,
+  +0.4% and −2.8%, each interval including no change. The assessment: no change detected.
+- **The release's CI bench** (run 43737282330, Intel Xeon Platinum 8573C, 4 vCPU on 2 cores,
+  10 paired rounds), v0.3.3 (1244d1a9) → master e18ccafc, the v0.3.4 tag commit. It finished
+  after the release, so it is a check after the fact:
+
+  | `wikidata` | 1 thread | 2 threads | 4 threads |
+  |---|--:|--:|--:|
+  | wall | −0.3% (−1.9, +1.4) | −1.3% (−4.7, +2.2) | +0.3% (−1.8, +2.4) |
+  | CPU | −0.3% (−1.9, +1.3) | −1.5% (−4.0, +1.1) | −0.0% (−1.8, +1.8) |
+  | peak RSS, MB | 28 → 28 (−0.0%) | 59 → 58 (−1.1%) | 90 → 93 (+0.5%) |
+
+  Level, as expected on a 2-core runner, which runs the same plan in both builds: every
+  interval includes no change. Best wall against best wall +0.3% (−1.8, +2.4). Every corpus
+  gave the same bytes in every run. The assessment: no change detected.
+- **Release scaling, the i9-10900K** (RELEASING.md §5), 0.3.3 against 0.3.4: queued, to follow.
+- **Caveats.**
+  - One machine: the i9-10900K (10 cores, 20 threads) is the only evidence. Other 6–9-core
+    machines take the same plan without having been measured.
+  - Peak RSS roughly doubles at 6–9 threads (65–81 → 133–188 MB).
+
 ### <!-- 9 -->Other
 
-- workers below 10 threads on their own cores; teams from 10 ([#425](https://github.com/lmmx/mibz2/pull/425))
-- workstation logs and run markers in the XDG state directory, not the home directory ([#428](https://github.com/lmmx/mibz2/pull/428))
-- the crossover's forced arm gets the default window ([#424](https://github.com/lmmx/mibz2/pull/424))
-- 0.3.3's notes; journal: equal one-row cell elision ([#421](https://github.com/lmmx/mibz2/pull/421))
+- Parallel plan: workers below 10 threads on their own cores; teams from 10 ([#425](https://github.com/lmmx/mibz2/pull/425))
+- Bench, tooling and runbook changes: the crossover recipe, queued ([#422](https://github.com/lmmx/mibz2/pull/422)), and its forced arm with the default window ([#424](https://github.com/lmmx/mibz2/pull/424)); the workstation waiter posts when a run starts and when one fails ([#423](https://github.com/lmmx/mibz2/pull/423)), and the workstation queue keeps its logs and markers in the XDG state directory ([#428](https://github.com/lmmx/mibz2/pull/428)); the release runbook re-checks the team threshold when a release could move it ([#426](https://github.com/lmmx/mibz2/pull/426)); 0.3.3's notes ([#421](https://github.com/lmmx/mibz2/pull/421))
 
 ## [0.3.3](https://github.com/lmmx/mibz2/compare/v0.3.2...v0.3.3) - 2026-11-15
 
