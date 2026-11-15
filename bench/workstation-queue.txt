@@ -7,3 +7,4 @@
 #
 # recipe                       branch                    what it measures
 bench-phase-gates            research/phase-gates      Four-worker phase-concurrency screen: induction/writer/blocks caps K,B,C,D,E2,E3 on the i9; needs sudo perf (LOG 6893071988; PR #405)
+bench-elision-scaling        master                    Cells induction elision (#408) vs its merge base, 1-5 threads (+6,8 no-change check), release-scaling recipe
