@@ -4713,3 +4713,10 @@ Checkpoint6868538108, PR382 head a9c7716aaf664a7898f3d8f37c955e09d5204a23. G1 sc
 2026-11-14. PR #391 head `24ff5f72cec50f441a9a95a5927f640c00fbe721`. Source trees match D106, mutation baseline and CI merge checkout. YAML repaired; Rust/differential/slot24, 28,202 seed-42 fuzz cases and 41 Miri tests completed successfully. Mutation record distinguishes M5 timeout witnesses from deterministic targeted failures, records restoration and reproduced SIGSEGV. D106's scoped B5 HOLD is closed; historical verdict preserved. Performance and workstation decisions remain separate.
 
 [Full decision](reports/D107-slot20-closure.md); [evidence](reports/D107-evidence.json). Incoming [6882196843](https://github.com/lmmx/mibz2/pull/161#issuecomment-6882196843). Evidence SHA-256 `b32a36e1e76116abd1a835058e01573de97a5505e2f23b78f3a9efb4c1814226`.
+
+
+## D108 — 6901903478 — G1/G2: PR444 ordering evidence HOLD
+
+2026-11-15. Head `12ae88b03d2f7ce2114b71e98dffc69455a2c51c`. Source bounds, flush partition and guard control flow supported; 807,936 independent arithmetic cases pass and exact-source native fuzz evidence is inspected. **HOLD adoption/integration of the NT-store candidate under B5/B6:** the fence-deletion mutant removes required synchronization and survives. The redundant alignment-check survivor is distinct. Correct the same-thread ordering argument and supply a reproducible targeted negative check; completed Miri/native logs remain unverified at snapshot. No demonstrated unmutated-code UB, no Cells line STOP, no new count gate or performance verdict.
+
+[Full independent review](reports/D108-staged-rules.md); [evidence](reports/D108-evidence.json); [arithmetic reproduction](reports/D108-geometry.py). Incoming [6901903478](https://github.com/lmmx/mibz2/pull/161#issuecomment-6901903478). Evidence SHA-256 `1fdb0fa0114694512b7239a6c894a1e0872b62684b1f00d3a054ed63312fc642`.
