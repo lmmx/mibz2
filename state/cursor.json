@@ -2046,13 +2046,15 @@
     },
     {
       "trigger_comment_id": 6886868279,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/residual-6886868279/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "3b68dec8fe95e87b3ceb6e2f679ff62cf4090f3e",
       "disposition": "REVISE one decision-architecture correction: Arm B independent of Arm I; P3 no unconditional IMC-write upper bound or phase-origin attribution; mapped Intel table does not enumerate proposed P1/P2.",
-      "review_comment_pr": 145
+      "review_comment_pr": 145,
+      "review_comment_id": 6886939287,
+      "publication_verification": "Exact body/author/PR145 and role-aware routing verified. Pinned helper has only its known coordinator-only FROM rejection."
     }
   ],
   "active_delegations": [],
