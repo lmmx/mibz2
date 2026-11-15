@@ -2160,11 +2160,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D107",
-    "incoming_comment": 6882196843,
-    "review_comment_id": 6882247244
+    "active_comment": 6901903478,
+    "status": "in progress",
+    "decision": "D108"
   },
   "duplicate_events": [
     {
@@ -3862,6 +3860,13 @@
       "work_commit": "063bc9ad9e9cb618c106d5139fe1e8676af0cce9",
       "review_comment_id": 6882247244,
       "complete_cursor_commit": "0ec8fb297de458bf845d1b9fda557b955b01dfba"
+    },
+    {
+      "comment_id": 6901903478,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D108",
+      "progress": "Receipt; migration branch and manifest verified. Reviewing PR444 staged rules at 12ae88b03d2f7ce2114b71e98dffc69455a2c51c."
     }
   ],
   "migrated_from": {
