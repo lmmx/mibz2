@@ -13,12 +13,18 @@
 #   hold/<recipe>   stop without running anything.
 # It polls every 5 minutes, for at most --hours (default 8; 0 looks once and doesn't wait). Whatever the outcome (run passed,
 # run failed, hold, timeout or a refusal), it suspends afterwards, unless --no-suspend.
-# Everything is logged to ~/await-submit-<recipe>-<stamp>.log.
+# Nothing is written to the home directory itself. The waiter's state goes where the XDG
+# Base Directory spec puts state, under ${XDG_STATE_HOME:-~/.local/state}/mibz2/workstation/:
+#   logs/await-submit-<recipe>-<stamp>.log   everything this waiter prints;
+#   ran/<recipe>-<sha>                       the once-per-commit markers.
+# (Until 15 November 2026 these were ~/await-submit-*.log and ~/.cache/await-submit/. A marker
+# left in ~/.cache/await-submit/ still counts as a run, read only, so moving them is safe at any
+# time: docs/team/PROTOCOL.md §9 gives the one-time move. That fallback can go once moved.)
 #
 # Guarantees:
 # - a run happens at most once per recipe and commit on this machine: a marker directory
-#   under ~/.cache/await-submit is made atomically just before the run, so a restarted or
-#   second watcher refuses;
+#   under ran/ is made atomically just before the run, so a restarted or second watcher
+#   refuses (as does a marker under the old ~/.cache/await-submit/);
 # - HOLD is checked once more just before the run;
 # - an annotated ready tag is resolved to its commit;
 # - a failed check of origin is logged, and retried at the next poll;
@@ -52,7 +58,13 @@ while (($#)); do
   shift
 done
 
-log=~/await-submit-${recipe}-$(date -u +%Y%m%dT%H%M%SZ).log
+# State, per the XDG Base Directory spec (a relative XDG_STATE_HOME is ignored, as it says)
+state_home=${XDG_STATE_HOME:-}
+[[ $state_home == /* ]] || state_home=$HOME/.local/state
+state=$state_home/mibz2/workstation
+legacy_ran=$HOME/.cache/await-submit  # the markers' old place: read, never written
+mkdir -p "$state/logs" "$state/ran" || { echo "could not make $state"; exit 2; }
+log=$state/logs/await-submit-${recipe}-$(date -u +%Y%m%dT%H%M%SZ).log
 exec > >(tee -a "$log") 2>&1
 say() { echo "[$(date -u +%H:%M:%S)] $*"; }
 
@@ -133,8 +145,10 @@ if refs=$(query) && grep -q "refs/tags/hold/$recipe\$" <<<"$refs"; then
   finish "HOLD: the coordinator put the run on hold before it started; nothing was run" 3
 fi
 # At most once per recipe and commit on this machine (mkdir is atomic).
-mark=~/.cache/await-submit/$recipe-$ready
-mkdir -p ~/.cache/await-submit
+mark=$state/ran/$recipe-$ready
+if [[ -e $legacy_ran/$recipe-$ready ]]; then
+  finish "REFUSED: $recipe at $ready already ran on this machine ($legacy_ran/$recipe-$ready, the old place); nothing was run" 5
+fi
 if ! mkdir "$mark" 2>/dev/null; then
   finish "REFUSED: $recipe at $ready already ran on this machine ($mark); nothing was run" 5
 fi

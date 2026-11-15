@@ -101,6 +101,11 @@ jobs:
       - uses: actions/checkout@v6
       - name: Submission tests
         run: python3 bench/test_submit.py
+      # bench/run-queue.sh and bench/await-submit.sh (`just workstation-queue`) against a
+      # scratch origin, stand-ins for just and gh, and a scratch HOME: once per recipe and
+      # commit, state in the XDG state directory, the old markers honoured, HOLD, notices
+      - name: The workstation queue
+        run: python3 bench/test_workstation_queue.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py

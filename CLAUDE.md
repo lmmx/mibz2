@@ -58,6 +58,10 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
   `mkdir -p`, on a timestamped path), its own console log included:
   `exec > >(tee -a "$DIR/console.log") 2>&1` right after the directory is made. The
   maintainer runs the bare `just` command, with no `| tee`.
+- **Writes nothing to the maintainer's home directory itself.** Results go in the checkout
+  (`target/`). The workstation queue's logs and once-per-commit markers are state, under
+  `${XDG_STATE_HOME:-~/.local/state}/mibz2/workstation/` (`logs/`, `ran/`; PROTOCOL.md §9);
+  anything disposable is cache, under `${XDG_CACHE_HOME:-~/.cache}/mibz2/`.
 - **Ends with `bash bench/bundle.sh "$DIR"`.** It packs the directory into one `DIR.tar.gz`
   beside it, leaving out symbolic links (a shared corpus) and files over 50 MB, and prints the
   path. The maintainer uploads that one file: the chat takes at most 5 files a message.

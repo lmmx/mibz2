@@ -18,7 +18,11 @@
 # (H may be fractional, such as 1.5). Each run restarts that clock. An empty queue waits too,
 # so it can be started before an entry is admitted. An entry refused at one commit (a dirty
 # checkout, say) is not retried at that commit. Without --wait, nothing waits.
-# The run's log is ~/workstation-queue-<stamp>.log; each entry also keeps its own log.
+# The run's log is logs/workstation-queue-<stamp>.log, beside each entry's own log, under
+# ${XDG_STATE_HOME:-~/.local/state}/mibz2/workstation/ (the XDG Base Directory spec's state
+# directory; nothing is written to the home directory itself). bench/await-submit.sh keeps
+# its once-per-commit markers in ran/ there, and still honours one in ~/.cache/await-submit/.
+# Only one workstation queue runs at a time on a machine: stop wikidata-pq's before this one.
 set -uo pipefail
 
 if [[ "${RUN_QUEUE_COPY:-}" != 1 ]]; then
@@ -40,7 +44,13 @@ done
 wait_secs=$(awk -v h="$wait" 'BEGIN { if (h !~ /^[0-9]*\.?[0-9]+$/) exit 1; printf "%d", h * 3600 }') \
   || { echo "--wait takes a number of hours, such as 2 or 1.5"; exit 2; }
 
-log=~/workstation-queue-$(date -u +%Y%m%dT%H%M%SZ).log
+# State, per the XDG Base Directory spec (a relative XDG_STATE_HOME is ignored, as it says)
+state_home=${XDG_STATE_HOME:-}
+[[ $state_home == /* ]] || state_home=$HOME/.local/state
+state=$state_home/mibz2/workstation
+legacy_ran=$HOME/.cache/await-submit  # the markers' old place: read, never written
+mkdir -p "$state/logs" || { echo "could not make $state/logs"; exit 2; }
+log=$state/logs/workstation-queue-$(date -u +%Y%m%dT%H%M%SZ).log
 exec > >(tee -a "$log") 2>&1
 say() { echo "[$(date -u +%H:%M:%S)] $*"; }
 
@@ -57,7 +67,8 @@ read_queue() {
   entries=$( { grep -v '^[[:space:]]*#' <<<"$queue" || true; } | awk 'NF>=2 {print $1, $2}')
 }
 # The entries whose ready tag is set, with no hold, at a commit not yet run on this machine
-# (no marker under ~/.cache/await-submit, which the waiter makes just before a run), and not
+# (no marker in $state/ran, which the waiter makes just before a run, nor in the old
+# ~/.cache/await-submit), and not
 # already tried at that commit by this queue run.
 # The commit ready/<recipe> names, or nothing when it is unset or hold/<recipe> is set.
 ready_of() {
@@ -73,7 +84,7 @@ new_entries() {
   while read -r recipe branch; do
     [[ -z "$recipe" ]] && continue
     ready=$(ready_of "$recipe")
-    [[ -n "$ready" && ! -e ~/.cache/await-submit/$recipe-$ready ]] || continue
+    [[ -n "$ready" && ! -e $state/ran/$recipe-$ready && ! -e $legacy_ran/$recipe-$ready ]] || continue
     [[ -n "${tried[$recipe-$ready]:-}" ]] && continue
     echo "$recipe $branch $ready"
   done <<<"$entries"
