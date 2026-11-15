@@ -189,6 +189,12 @@ style, not a description of the method.
   takes the headline's phrasal form, not a full sentence: "hand-me-down slots for every
   fragment of text", not "mibz2 reuses the slots that track each fragment of text". The dek
   states the news. Two statements in a row read flat, and the title loses its punch.
+- **A post that introduces a concept is titled by the concept** (Louis, 15 November 2026,
+  settling #439). The title is a headline about the notion itself. It may carry a short nod
+  to why it matters, but the results that came from studying it go in the dek and the
+  opening, never in the title.
+  - **Before:** "The width of an induction, and how taking free steps first cuts it to a
+    third". **After:** "The width of an induction: how much it must hold at once".
 - **The dek's figures are round** (Louis, 15 November 2026): "30% fewer slots", "up to 15%
   less memory", not 29.7% and 14.6%. The exact figures, with their intervals, live in the
   body and its figures.
