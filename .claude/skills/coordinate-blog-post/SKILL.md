@@ -17,6 +17,18 @@ finalisation)"). The post is published as soon as its facts are checked against 
 `publish-page` passes and CI is green. The two review rounds then run on the live post, and
 their revisions land as follow-up PRs.
 
+**The PR opens first, within minutes** (Louis, 15 November 2026). When the text already exists,
+because it was relayed or drafted elsewhere, a PR carrying it must be open within minutes of
+the hand-over.
+- **The order:** commit the text, push, open the PR. Then redraw the figures, run
+  `publish-page` and fix the render, all as further commits on the open PR.
+- **The PR body** lists what is still unfinished: figures to redraw, checks to run.
+- **Never** spend a long local session (figures, render checks, screenshots) before anything
+  is pushed. On 15 November an agent worked 20+ minutes locally on a relayed, already-written
+  post, and Louis was left asking where the PR was.
+- **Every brief to a drafting or publishing agent says this:** "Push and open the PR first,
+  then iterate on it."
+
 ## 1. Brief the drafting agent
 
 The drafting agent works in its own worktree, on a `docs/blog-…` branch from master. Its
