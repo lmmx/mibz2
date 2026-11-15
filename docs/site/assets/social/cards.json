@@ -96,7 +96,7 @@
     "title": "Reconstructing text from compact programs"
   },
   "assets/social/blog-2026-11-15-bottom-slots.png": {
-    "description": "Proving that each fragment's details are read only once lets mibz2 store them once, trimming its bookkeeping by 30% and its decoding time by up to 6%.",
+    "description": "Proving that a fragment's details are read only once lets mibz2 store them once, cutting its bookkeeping by 30% and its four-thread decoding time by up to 7%.",
     "foot": "lmmx.github.io/mibz2 · 15 November 2026",
     "section": " · Research blog",
     "title": "Read once, stored once: one copy of each fragment's details, not two"
