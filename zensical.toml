@@ -55,6 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "The free closure of an induction" = "blog/2026-11-15-free-closure.md" },
     { "The width of an induction" = "blog/2026-11-15-induction-width.md" },
     { "Removing duplicated interval lengths and text references" = "blog/2026-11-15-bottom-slots.md" },
     { "Reduce, reuse, recycle" = "blog/2026-11-15-slot-recycling.md" },
@@ -251,6 +252,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-15-free-closure.md" = "The steps that cost mibz2 no bookkeeping can be taken in any order and still meet at one end point, now proved to belong to the block itself." },
   { "blog/2026-11-15-induction-width.md" = "Taking the steps that cost no bookkeeping first would let mibz2 rebuild a block while keeping about a third as much in memory at its busiest moment." },
   { "blog/2026-11-15-bottom-slots.md" = "mibz2 tracks each run of equal bytes in two orders, and a run's entry in the second shrinks from 20 bytes to 8 by pointing to the first." },
   { "blog/2026-11-15-slot-recycling.md" = "Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory." },
