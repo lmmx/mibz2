@@ -6,4 +6,3 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-release-scaling        master                    Release scaling: v0.3.2 against v0.3.1 (RELEASING.md §5)
