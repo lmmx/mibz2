@@ -1,6 +1,6 @@
 ---
-title: "The width of a rebuild: a third as much held at once, by reordering its steps"
-image: assets/social/blog-2026-11-15-rebuild-width.png
+title: "The width of an induction, and how taking free steps first cuts it to a third"
+image: assets/social/blog-2026-11-15-induction-width.png
 description: "Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps."
 ---
 
@@ -11,7 +11,7 @@ description: "Taking the steps that cost no bookkeeping first lets mibz2 rebuild
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# The width of a rebuild: a third as much held at once, by reordering its steps
+# The width of an induction, and how taking free steps first cuts it to a third
 
 Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps.
 {: .post-dek }
@@ -29,7 +29,7 @@ Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while
 
 **The recap.** bzip2 sorts the rotations of a block and stores the last byte of each, the *last column*; each sorted rotation is a *row*. To decode, mibz2 follows a map called LF from row to row, reading one byte per step, which spells out the block backwards. A *run* is a stretch of equal bytes in the last column, and LF moves each run's rows as one shifted interval. Cells works on those intervals instead of on rows. Each step deletes some rows from the map and lets one interval jump straight over them. That interval now stands for more than one byte of text. When one interval is left, it stands for the whole block. The code calls each interval a *letter*, and the text it stands for its *word*. At the start there is one letter per run, and every word is one byte long.
 
-**What width is.** At any moment of the rebuild, some letters still have a one-byte word. Each of those is an untouched piece of an original run. Its length, place and byte can be read off the list of runs, so in principle it needs no record of its own. Only the letters whose word has grown longer than one byte are new information. Call the most of those alive at once the rebuild's **width**, W. It is counted, like everything here, as a share of r, the number of runs in the block. Cells today writes a slot for every one of the r letters before its first step, and keeps r slots throughout.
+**What width is.** At any moment of the rebuild, some letters still have a one-byte word. Each of those is an untouched piece of an original run. Its length, place and byte can be read off the list of runs, so in principle it needs no record of its own. Only the letters whose word has grown longer than one byte are new information. Call the most of those alive at once the **width** of the induction (the rebuild's sequence of steps), W. It is counted, like everything here, as a share of r, the number of runs in the block. Cells today writes a slot for every one of the r letters before its first step, and keeps r slots throughout.
 
 **What was found.** Width depends on the order in which the steps are taken, by about three times.
 

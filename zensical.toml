@@ -55,7 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "The width of a rebuild" = "blog/2026-11-15-rebuild-width.md" },
+    { "The width of an induction" = "blog/2026-11-15-induction-width.md" },
     { "Removing duplicated interval lengths and text references" = "blog/2026-11-15-bottom-slots.md" },
     { "Reduce, reuse, recycle" = "blog/2026-11-15-slot-recycling.md" },
     { "Reconstructing text from compact programs" = "blog/2026-11-12-rauzy-technical-companion.md" },
@@ -251,7 +251,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-15-rebuild-width.md" = "Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps." },
+  { "blog/2026-11-15-induction-width.md" = "Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps." },
   { "blog/2026-11-15-bottom-slots.md" = "mibz2 tracks each run of equal bytes in two orders, and a run's entry in the second shrinks from 20 bytes to 8 by pointing to the first." },
   { "blog/2026-11-15-slot-recycling.md" = "Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory." },
   { "blog/2026-11-12-rauzy-technical-companion.md" = "This technical companion traces how compact word programs reconstruct text from the BWT, including the costs and limits of building and expanding them." },

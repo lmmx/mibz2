@@ -101,11 +101,11 @@
     "section": " · Research blog",
     "title": "Removing duplicated interval lengths and text references"
   },
-  "assets/social/blog-2026-11-15-rebuild-width.png": {
+  "assets/social/blog-2026-11-15-induction-width.png": {
     "description": "Taking the steps that cost no bookkeeping first lets mibz2 rebuild a block while holding a third as much at its busiest moment, and in fewer steps.",
     "foot": "lmmx.github.io/mibz2 · 15 November 2026",
     "section": " · Research blog",
-    "title": "The width of a rebuild: a third as much held at once, by reordering its steps"
+    "title": "The width of an induction, and how taking free steps first cuts it to a third"
   },
   "assets/social/blog-2026-11-15-slot-recycling.png": {
     "description": "Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory.",
