@@ -1332,18 +1332,22 @@
     {
       "comment_id": 6893001194,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: pricing proposed phase-concurrency screen, no build or data."
+      "progress": "Priced phase screen with Louis addendum and ledger; awaiting one REVIEW on #145.",
+      "report_path": "state/records/reviews/inbox-6893001194/report.md",
+      "report_commit": "acc5229e6f120f9dcfa50815386029b2b01a9604"
     },
     {
       "comment_id": 6893034788,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: apply Louis's addendum to phase-concurrency pricing; no separate screen."
+      "progress": "Priced phase screen with Louis addendum and ledger; awaiting one REVIEW on #145.",
+      "report_path": "state/records/reviews/inbox-6893001194/report.md",
+      "report_commit": "acc5229e6f120f9dcfa50815386029b2b01a9604"
     }
   ],
   "migrated_from": {
