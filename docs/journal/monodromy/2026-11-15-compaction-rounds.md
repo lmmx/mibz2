@@ -1,4 +1,4 @@
-# 2026-11-15 · MONODROMY 10 · Iterated forest compaction on pieces: 1.75 r pieces and 0.76 r cells of work in 9 to 15 parallel rounds; and the free closure is not a per-stretch property
+# 2026-11-15 · MONODROMY 10 · Iterated forest compaction on pieces: 1.75 r pieces and 0.76 r cells of work in 9 to 15 parallel rounds, built correct and closed as priced (5 to 8 times Cells' induction on one thread); and the free closure is not a per-stretch property
 
 Follows `2026-11-15-closure-intrinsic.md`, whose side finding was that iterated compaction
 collapses a block in 5 to 18 rounds. As counted there, a round walked every row it removed:
@@ -88,6 +88,53 @@ it, which Cooperative Cells' closure did not have: about 11 rounds of depth and 
 - *Its context:* it matters only where a block lacks a core of its own, that is above 10
   threads on the i9, which is where the teams take over.
 
+## 2a. Built as a prototype: correct; on one thread, 3 to 5 times Cells (M, indicative). Closed as priced for one block on a few cores
+
+`rounds.rs.txt`, here, is the inverse BWT done by variant-0 rounds on pieces.
+- **How the rounds run.** Each round radix-sorts the pieces by image start and sweeps the two
+  tilings in O(pieces). It resolves each removed piece's chain once, with a memo. It then
+  splits the kept pieces by their cells.
+- **The walk's row** is a one-point piece that is never removed. So the text's start is known
+  at the fixpoint, where every piece is one point.
+- **Words** are the rules of a straight-line program. The orbit word read from the walk's row is
+  the block reversed. It is expanded naively, byte by byte, with none of Cells' copies from
+  first places.
+
+**Correctness (C).** All 233 Wikidata blocks are byte-equal to `bwt::walk`, asserted in the
+program. Every fixpoint piece is one point, also asserted. Rounds 10 / 12 / 16 (min, median,
+max); rules 1.51 / 1.94 / 2.24 r. Per block in `rounds_wikidata.jsonl`.
+
+**Clock (M; this container, one thread, best of 3 a block, indicative).**
+- *Whole block, against `ForcedCells`* (the Cells kernel at budget n, from the same column,
+  writer included): 2.92 / 3.17 / 4.72×.
+- *Where the rounds spend it,* over the 233 blocks, one pass:
+
+  | section | ms |
+  |---|--:|
+  | chain resolution | 484 |
+  | the sweep for successors | 217 |
+  | splitting | 202 |
+  | the radix sort | 127 |
+  | kept starts | 41 |
+  | naive expansion | about 955 |
+
+- *Against Cells' own induction:* the rounds proper take about 4.6 ms a block. The decoder's
+  Cells path profiled earlier today at about 0.55 ms a block of induction (0.78 ms with its slot
+  stage). So the rounds are 5 to 8 times the induction they would replace.
+- *Why:* the chain step is a dependent load across piece indices, as Cells' step is, but it
+  carries more state a piece.
+
+**Verdict (Conj from these prices).**
+- *What a round can win:* a round parallelises, but it carries about 6 times the induction's
+  work.
+- *What it would need:* to tie Cells on one block it needs about 6 cores a block. The teams
+  give a block 2 or 3 above 10 threads.
+- **So, as built, one block on a few cores does not pay. Closed as priced.**
+
+What stands is the structure, which none of this alters:
+- depth of about 11 rounds against the induction's chains, 3,861 deep;
+- work linear in r (§§1 and 2).
+
 ## 3. The free closure is not a per-stretch property (C)
 
 `2026-11-15-closure-intrinsic.md` §2 put the closure's size at 1 + (the equal steps that need a
@@ -125,6 +172,9 @@ cargo run --release --example fixwork   -- corpora/wikidata.bz2 1   # also corpo
 cargo run --release --example stretches -- corpora/wikidata.bz2
 ```
 
-The outputs are beside this entry: `fixwork_wikidata.jsonl`, `fixwork_prose.jsonl` and
+The prototype: `cp …/rounds.rs.txt examples/rounds.rs; cargo run --release --example rounds --
+corpora/wikidata.bz2 1` (bytes asserted; per-section times on stderr).
+
+The outputs are beside this entry: `rounds_wikidata.jsonl`, `fixwork_wikidata.jsonl`, `fixwork_prose.jsonl` and
 `stretches_wikidata.jsonl`. Per variant, `fixwork` prints [letters left, rounds, pieces summed];
 per round, the pieces; and, for variant 0, the cells bound's check and the summed cells.

@@ -1,0 +1,346 @@
+//! MONODROMY prototype (research, not built into the decoder): the inverse BWT by iterated
+//! forest compaction on pieces (docs/journal/monodromy/2026-11-15-compaction-rounds.md).
+//!
+//! The state is LF's first return to what is kept, in compressed coordinates: pieces (start,
+//! length, image start, word). A round removes every piece whose image lies inside one piece
+//! (the walk's row, a piece of its own, is never removed). It resolves each removed piece's
+//! chain once (memoised), and splits each kept piece by the pieces its image meets. At the
+//! fixpoint every piece is one point, and the cycle is read off them. Words are symbols of a
+//! straight-line program: a byte below 256, else a rule (left, right). The orbit word read
+//! from the walk's row is the block reversed.
+//!
+//! ```text
+//! rounds FILE.bz2 [EVERY]   bytes checked against bwt::walk; one JSON line a block
+//! ```
+use mibz2::bwt::{build, walk, ForcedCells, InverseBwt, TVector};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+use std::time::Instant;
+
+const NONE: u32 = u32::MAX;
+
+#[derive(Default)]
+struct Grammar {
+    rules: Vec<(u32, u32)>,
+}
+impl Grammar {
+    fn cat(&mut self, a: u32, b: u32) -> u32 {
+        if b == NONE {
+            return a;
+        }
+        if a == NONE {
+            return b;
+        }
+        self.rules.push((a, b));
+        255 + self.rules.len() as u32
+    }
+    fn expand(&self, s: u32, out: &mut Vec<u8>, stack: &mut Vec<u32>) {
+        stack.push(s);
+        while let Some(x) = stack.pop() {
+            if x < 256 {
+                out.push(x as u8);
+            } else {
+                let (a, b) = self.rules[(x - 256) as usize];
+                stack.push(b);
+                stack.push(a);
+            }
+        }
+    }
+}
+
+#[derive(Default, Clone)]
+struct Pieces {
+    start: Vec<u32>,
+    len: Vec<u32>,
+    img: Vec<u32>,
+    word: Vec<u32>,
+    forced: Vec<bool>,
+}
+impl Pieces {
+    fn find(&self, y: u32) -> usize {
+        self.start.partition_point(|&s| s <= y) - 1
+    }
+    fn push(&mut self, s: u32, l: u32, i: u32, w: u32, f: bool) {
+        // merge with the previous piece if it continues it exactly
+        if let Some(k) = self.start.len().checked_sub(1) {
+            if !f
+                && !self.forced[k]
+                && self.start[k] + self.len[k] == s
+                && self.img[k] + self.len[k] == i
+                && self.word[k] == w
+            {
+                self.len[k] += l;
+                return;
+            }
+        }
+        self.start.push(s);
+        self.len.push(l);
+        self.img.push(i);
+        self.word.push(w);
+        self.forced.push(f);
+    }
+}
+
+struct Stats {
+    rounds: usize,
+    pieces_summed: usize,
+    cells_summed: usize,
+    rules: usize,
+}
+
+/// one block: ll's LF as pieces, rounds to the fixpoint, the text into `out`
+fn invert(ll: &[u8], p: usize, out: &mut Vec<u8>, g: &mut Grammar) -> Stats {
+    let n = ll.len();
+    let mut cc = [0u32; 257];
+    for &c in ll {
+        cc[c as usize + 1] += 1;
+    }
+    for x in 0..256 {
+        cc[x + 1] += cc[x];
+    }
+    // the runs, with the walk's row cut out as a forced one-point piece
+    let mut ps = Pieces::default();
+    let mut x = 0usize;
+    let mut cur = cc;
+    while x < n {
+        let c = ll[x] as usize;
+        let mut y = x + 1;
+        while y < n && ll[y] as usize == c {
+            y += 1;
+        }
+        let b = cur[c];
+        cur[c] += (y - x) as u32;
+        for (s, e, f) in [(x, p.clamp(x, y), false), (p.max(x).min(y), (p + 1).clamp(x, y), true), ((p + 1).clamp(x, y), y, false)] {
+            if s < e {
+                ps.start.push(s as u32);
+                ps.len.push((e - s) as u32);
+                ps.img.push(b + (s - x) as u32);
+                ps.word.push(c as u32);
+                ps.forced.push(f);
+            }
+        }
+        x = y;
+    }
+    g.rules.clear();
+    let mut st = Stats { rounds: 0, pieces_summed: 0, cells_summed: 0, rules: 0 };
+    let (mut dk, mut doff, mut dw) = (Vec::new(), Vec::new(), Vec::new());
+    let (mut q1, mut q2, mut removed) = (Vec::new(), Vec::new(), Vec::new());
+    let mut kstart = Vec::new();
+    let mut stack: Vec<usize> = Vec::new();
+    let (mut order, mut tmp, mut cnt): (Vec<u32>, Vec<u32>, Vec<u32>) = (Vec::new(), Vec::new(), Vec::new());
+    let mut nx = Pieces::default();
+    loop {
+        let np = ps.start.len();
+        st.pieces_summed += np;
+        q1.clear();
+        q1.resize(np, 0);
+        q2.clear();
+        q2.resize(np, 0);
+        removed.clear();
+        // the pieces in image order (the images tile the points too): an LSD radix sort on
+        // the image start, then one sweep against the start tiling finds every piece's first
+        // and last successor
+        let t0 = Instant::now();
+        order.clear();
+        order.extend(0..np as u32);
+        // (n < 2^24: 10-bit digits, as many passes as the largest image needs)
+        let top = ps.img.iter().copied().max().unwrap_or(0);
+        let mut shift = 0u32;
+        while shift == 0 || top >> shift != 0 {
+            cnt.clear();
+            cnt.resize(1 << 10 | 1, 0u32);
+            for &o in order.iter() {
+                cnt[((ps.img[o as usize] >> shift) & 0x3FF) as usize + 1] += 1;
+            }
+            for d in 0..1 << 10 {
+                cnt[d + 1] += cnt[d];
+            }
+            tmp.clear();
+            tmp.resize(np, 0);
+            for &o in order.iter() {
+                let d = ((ps.img[o as usize] >> shift) & 0x3FF) as usize;
+                tmp[cnt[d] as usize] = o;
+                cnt[d] += 1;
+            }
+            std::mem::swap(&mut order, &mut tmp);
+            shift += 10;
+        }
+        let t1 = Instant::now();
+        let mut j = 0usize;
+        for &o in order.iter() {
+            let i = o as usize;
+            while j + 1 < np && ps.start[j + 1] <= ps.img[i] {
+                j += 1;
+            }
+            q1[i] = j;
+            let last = ps.img[i] + ps.len[i] - 1;
+            let mut k = j;
+            while k + 1 < np && ps.start[k + 1] <= last {
+                k += 1;
+            }
+            q2[i] = k;
+        }
+        let mut any = false;
+        for i in 0..np {
+            let r = q1[i] == q2[i] && !ps.forced[i] && np > 1;
+            removed.push(r);
+            any |= r;
+        }
+        let t2 = Instant::now();
+        SEC.with(|e| { let mut e = e.borrow_mut(); e[0] += (t1 - t0).as_secs_f64(); e[1] += (t2 - t1).as_secs_f64(); });
+        if !any {
+            break;
+        }
+        st.rounds += 1;
+        // compressed starts of the kept pieces
+        kstart.clear();
+        let mut c = 0u32;
+        for i in 0..np {
+            kstart.push(c);
+            if !removed[i] {
+                c += ps.len[i];
+            }
+        }
+        let t3 = Instant::now();
+        // each removed piece's destination: (kept piece, offset in it, word on the way)
+        dk.clear();
+        dk.resize(np, NONE as usize);
+        doff.clear();
+        doff.resize(np, 0u32);
+        dw.clear();
+        dw.resize(np, NONE);
+        for i0 in 0..np {
+            if !removed[i0] || dk[i0] != NONE as usize {
+                continue;
+            }
+            // follow the chain to a resolved or kept piece, then unwind
+            stack.clear();
+            let mut i = i0;
+            while removed[i] && dk[i] == NONE as usize {
+                stack.push(i);
+                i = q1[i];
+            }
+            while let Some(j) = stack.pop() {
+                let y = q1[j];
+                let o = ps.img[j] - ps.start[y];
+                if !removed[y] {
+                    dk[j] = y;
+                    doff[j] = o;
+                    dw[j] = ps.word[j];
+                } else {
+                    dk[j] = dk[y];
+                    doff[j] = doff[y] + o;
+                    dw[j] = g.cat(ps.word[j], dw[y]);
+                }
+            }
+        }
+        // the kept pieces, split by the pieces their images meet
+        let t4 = Instant::now();
+        nx.start.clear();
+        nx.len.clear();
+        nx.img.clear();
+        nx.word.clear();
+        nx.forced.clear();
+        for i in 0..np {
+            if removed[i] {
+                continue;
+            }
+            let (lo, hi) = (ps.img[i], ps.img[i] + ps.len[i]);
+            for q in q1[i]..=q2[i] {
+                st.cells_summed += 1;
+                let a = lo.max(ps.start[q]);
+                let b = hi.min(ps.start[q] + ps.len[q]);
+                let s = kstart[i] + (a - lo);
+                let (img, w) = if !removed[q] {
+                    (kstart[q] + (a - ps.start[q]), ps.word[i])
+                } else {
+                    (kstart[dk[q]] + doff[q] + (a - ps.start[q]), g.cat(ps.word[i], dw[q]))
+                };
+                nx.push(s, b - a, img, w, ps.forced[i]);
+            }
+        }
+        let t5 = Instant::now();
+        SEC.with(|e| { let mut e = e.borrow_mut(); e[2] += (t3 - t2).as_secs_f64(); e[3] += (t4 - t3).as_secs_f64(); e[4] += (t5 - t4).as_secs_f64(); });
+        std::mem::swap(&mut ps, &mut nx);
+    }
+    let t_exp = Instant::now();
+    // the fixpoint: every piece one point; read the cycle from the forced one
+    assert!(ps.len.iter().all(|&l| l == 1), "fixpoint pieces are points");
+    let f = ps.forced.iter().position(|&b| b).unwrap();
+    let mut syms = Vec::new();
+    let mut i = f;
+    loop {
+        syms.push(ps.word[i]);
+        i = ps.find(ps.img[i]);
+        if i == f {
+            break;
+        }
+    }
+    out.clear();
+    let mut stk = Vec::new();
+    for &s in &syms {
+        g.expand(s, out, &mut stk);
+    }
+    // a cycle shorter than the block: repeat it (the walk's convention)
+    let per = out.len();
+    while out.len() < n {
+        let k = (n - out.len()).min(per);
+        out.extend_from_within(..k);
+    }
+    out.truncate(n);
+    out.reverse();
+    st.rules = g.rules.len();
+    EXP.with(|e| *e.borrow_mut() += t_exp.elapsed().as_secs_f64());
+    st
+}
+thread_local! { static SEC: std::cell::RefCell<[f64; 5]> = const { std::cell::RefCell::new([0.0; 5]) }; }
+thread_local! { static EXP: std::cell::RefCell<f64> = const { std::cell::RefCell::new(0.0) }; }
+
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let every: usize = a.get(2).map_or(1, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts, mut syms) = (Vec::new(), [0u32; 256], Vec::new());
+    let (mut tt, mut want, mut got, mut cells_out) = (TVector::default(), Vec::new(), Vec::new(), Vec::new());
+    let mut g = Grammar::default();
+    let mut cells = ForcedCells::default();
+    let mut i = 0usize;
+    let (mut t_rounds, mut t_cells) = (0f64, 0f64);
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        let n = ll.len();
+        if n >= 65536 {
+            if i % every == 0 {
+                build(&ll, &counts, &mut tt);
+                want.clear();
+                walk(&tt, b.orig_ptr, &mut want);
+                let mut best = (f64::MAX, f64::MAX);
+                let mut st = None;
+                for _ in 0..3 {
+                    let t = Instant::now();
+                    st = Some(invert(&ll, b.orig_ptr as usize, &mut got, &mut g));
+                    best.0 = best.0.min(t.elapsed().as_secs_f64());
+                    let t = Instant::now();
+                    cells.invert(&ll, &counts, b.orig_ptr, &mut cells_out);
+                    best.1 = best.1.min(t.elapsed().as_secs_f64());
+                }
+                assert!(got == want, "block {i}: the rounds' bytes differ from the walk's");
+                assert!(cells_out == want);
+                let st = st.unwrap();
+                let r = 1 + (1..n).filter(|&x| ll[x] != ll[x - 1]).count();
+                t_rounds += best.0;
+                t_cells += best.1;
+                println!(
+                    "{{\"block\":{i},\"n\":{n},\"runs\":{r},\"rounds\":{},\"pieces\":{},\"cells\":{},\"rules\":{},\"ms_rounds\":{:.3},\"ms_forced_cells\":{:.3}}}",
+                    st.rounds, st.pieces_summed, st.cells_summed, st.rules, best.0 * 1e3, best.1 * 1e3
+                );
+            }
+            i += 1;
+        }
+        syms = b.syms;
+    }
+    eprintln!("sections, all repeats, ms: sort {:.1} sweep {:.1} kstart {:.1} chains {:.1} split {:.1}", SEC.with(|e| e.borrow()[0])*1e3, SEC.with(|e| e.borrow()[1])*1e3, SEC.with(|e| e.borrow()[2])*1e3, SEC.with(|e| e.borrow()[3])*1e3, SEC.with(|e| e.borrow()[4])*1e3);
+    eprintln!("total ms: rounds {:.1} (of which the expansion, all 3 repeats summed {:.1}), forced cells {:.1}", t_rounds * 1e3, EXP.with(|e| *e.borrow()) * 1e3, t_cells * 1e3);
+}
