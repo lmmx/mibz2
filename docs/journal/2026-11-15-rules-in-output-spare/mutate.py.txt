@@ -23,7 +23,7 @@ M = [
     ("src/cells.rs", "a rule's second factor written to the kernel's buffer", "                        wr64(bb, rp + 8, bw);\n", "                        wr64(base, rp + 8, bw);\n"),
     ("src/cells.rs", "the writer reads rules from the kernel's buffer", "            unsafe { tail.as_ptr().add(tail.len()) }.wrapping_sub(self.lay.shift)\n", "            base as *const u8\n"),
     ("src/cells.rs", "the writer reads rules without the shift", "            unsafe { tail.as_ptr().add(tail.len()) }.wrapping_sub(self.lay.shift)\n", "            unsafe { tail.as_ptr().add(tail.len()) }\n"),
-    ("src/cells.rs", "the rules laid over the bottom slots", "            rules = bots + bcap + GAP;\n            in_tail", "            rules = bots + GAP;\n            in_tail"),
+    ("src/cells.rs", "the rules laid over the bottom slots", "            rules = self.rules_at(bots + bcap + GAP);\n", "            rules = self.rules_at(bots + GAP);\n"),
     ("src/cells.rs", "the tail's size without the rules", "            in_tail = rules + ruled + GAP - shift;\n", "            in_tail = rules + GAP - shift;\n"),
     ("src/cells.rs", "the induction does not check the tail's capacity", "            || tail.capacity() - tail.len() < lay.tail\n", ""),
     ("src/cells.rs", "the kernel's own tail not kept", "        self.tail = tail;\n", ""),

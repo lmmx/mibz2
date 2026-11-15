@@ -90,8 +90,10 @@ The new unsafe is the tail: a pointer into a `Vec`'s spare capacity.
   the output and the kernel's own tail is never allocated;
 - the layout tests, updated; three of them now assert that a refusal leaves `ll` untouched.
 
-**Miri:** the ten `cells::tests::miri_cells_*` tests pass. The tail test starts from a `Vec`
-with capacity and no bytes, so a read of anything not written would be reported.
+**Miri** (run again after the merge of #447): the ten `cells::tests::miri_cells_*` tests and
+`miri_sequential_default_cells_route` pass. The tail test starts from a `Vec` with capacity
+and no bytes, so a read of anything not written would be reported. With the feature, the
+four Miri-listed tests of the experiment's kernels pass too.
 
 **Fuzz:** the Cells mode, 60 seconds, seed 42: 49,661 cases, 26,200 blocks through the
 forced route, 425.8 M cells.
@@ -100,7 +102,8 @@ forced route, 425.8 M cells.
 and Wikidata's output equals master's.
 
 **Mutation pass** (`2026-11-15-rules-in-output-spare/mutants.tsv`, script `mutate.py.txt`;
-debug profile): 16 mutants, 16 killed. The first row is the unmutated tree passing. Fifteen
+debug profile; run again after the merge of #447): 16 mutants, 16 killed. The first row is
+the unmutated tree passing. Fifteen
 are killed by the tests. The sixteenth, the bytes before the bottom slots not zeroed, reads
 memory that was never written: the native tests pass, and Miri reports the read as
 undefined behaviour.
@@ -123,6 +126,41 @@ undefined behaviour.
 - **The induction** uses its second pointer in one more place. Counting cells down took it
   from +4.4% to +2.8%.
 - **The first stage** no longer sizes or zero-fills anything in `ll`.
+
+## The memory-lever experiment's two kernels, on the new layout
+
+#447 merged while this was being built, so its two opt-in kernels (`src/cells_lever.rs`) are
+moved onto the new layout here. Neither is a default; both stay behind `memory-lever`.
+
+- **The staged kernel** is regenerated from the new `induce_cells`, with the same three
+  differences as before (the stage, the fence, the guarded fetch-ahead). Its bottom slots and
+  rules lie in the tail too, and it sends its staged rules there.
+- **The lazy kernel** keeps its entries, its bytes and its bottom slots' pool in the tail's
+  spare capacity, where it kept them in `ll`. Its rules stay in the kernel's buffer.
+- **Their tests** pass unchanged but for one layout assertion: both against the original
+  induction state by state, the fence model, the pool's tests. The fence check passes, and
+  the feature's fuzz ran 24,387 cases in 60 seconds.
+- **The four bench arms** give one output hash on Wikidata at 1, 4 and 12 threads.
+- **Their mutation table** was run again on this code
+  (`2026-11-15-memory-lever/mutants.tsv`, regenerated here; the script's texts were updated
+  to the regenerated staged induction): 38 mutants, 35 killed, the same three survivors as
+  on master, for the reasons `2026-11-15-memory-lever.md` gives.
+
+**The arms' counts on this layout** (`examples/lever_counts.rs` under callgrind, per letter):
+
+| arm | first stage | induction | writer | whole program |
+|---|--:|--:|--:|--:|
+| `mibz2-workers-w` (Cells as shipped, this layout) | 71.2 | 118.7 | 60.1 | 4.807 G |
+| `-lazy` | 56.0 | 176.3 | 60.1 | 5.276 G |
+| `-nt` | 71.2 | 137.2 | 60.1 | 5.012 G |
+
+On master's layout the same harness counted 4.758 G, 5.340 G and 4.963 G.
+
+**What it does to the experiment.** If this merges before the i9 run, every arm's baseline
+has the rules in the output's spare capacity. The `-nt` arm then stores its rules past the
+cache into memory that `unrle` is about to write, which is a weaker version of its
+question: the bypass avoids reading the lines in, and `unrle` still has to. The `-lazy` arm
+is unaffected in what it asks.
 
 ## Reproduce
 
