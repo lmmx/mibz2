@@ -36,6 +36,12 @@ impl<const V: u8, const F: bool> CellsVariant<V, F> {
     pub fn pool(&self) -> (usize, usize) {
         (self.0.state.kernel.lz.peak, self.0.state.kernel.letters)
     }
+    /// (the stop-and-walk arms) the blocks whose rest was walked, and those decoded again by
+    /// the lazy induction because the walk did not apply
+    pub fn stops(&self) -> (usize, usize) {
+        let k = &self.0.state.kernel;
+        (k.stopped, k.stop_fallbacks)
+    }
 }
 
 impl<const V: u8, const F: bool> InverseBwt for CellsVariant<V, F> {
@@ -188,7 +194,7 @@ impl Kernel {
         forced: bool,
         out: &mut Vec<u8>,
     ) -> Result<(), Refusal> {
-        if self.variant == LAZY {
+        if lazy_first(self.variant) {
             self.slots_lazy(n, recs, p, budget, forced, out)
         } else {
             self.slots(n, recs, p, budget, forced, out)
@@ -202,7 +208,10 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Result<(u32, u32, usize), Refusal> {
         match self.variant {
-            LAZY => self.induce_lazy(budget, out),
+            LAZY => self.induce_lazy::<0>(budget, out),
+            LAZY_STOP16 => self.induce_lazy::<4>(budget, out),
+            LAZY_STOP32 => self.induce_lazy::<5>(budget, out),
+            LAZY_STOP64 => self.induce_lazy::<6>(budget, out),
             #[cfg(feature = "memory-lever")]
             STAGED_RULES => self.induce_cells_staged(budget, out),
             _ => self.induce_cells(budget, out),
@@ -407,8 +416,12 @@ impl Kernel {
     ///
     /// Returns (the cycle's word, its length with the mark, cells). `slots_lazy` has run on
     /// this kernel for the block, and nothing has changed since.
+    ///
+    /// `STOP` 0 is the shipped induction. Above 0 (the stop-and-walk arms, `cells_stop.rs`), it
+    /// stops at the first moment both fronts' letters are whole with the domain at most
+    /// n >> `STOP`: `self.stop` then says where, and the result's word and length are 0.
     #[inline(never)]
-    fn induce_lazy(
+    fn induce_lazy<const STOP: u32>(
         &mut self,
         budget: usize,
         out: &mut Vec<u8>,
@@ -464,6 +477,11 @@ impl Kernel {
             let (mut aw, mut bw) = (0u64, 0u64);
             let (mut bs, mut ts) = (0usize, 0usize);
             let (mut fa, mut fb) = (0usize, 0usize);
+            // (the stop-and-walk arms) the domain's points removed: the top front takes each
+            // letter it reads to its end (cell by cell, or closing it), so at a moment both
+            // letters are whole, the points removed are the top letters read so far, all of
+            // them. Kept in `self`, not in the loop's registers
+            self.stop.consumed = 0;
             // A pair of slots: (top, bottom)
             macro_rules! take {
                 () => {{
@@ -514,6 +532,9 @@ impl Kernel {
                         } else {
                             na = 0;
                             ra = (e & ((1 << LEN_BITS) - 1)) as u64;
+                            if STOP != 0 {
+                                self.stop.consumed += ra as usize;
+                            }
                             aw = first1 + ((c as u64) << 32) + (((e & ROW) as u64) << 1);
                             if $settle {
                                 (fa, bs) = take!();
@@ -527,6 +548,9 @@ impl Kernel {
                     if s != 0 {
                         na = rd32(base, s) as usize;
                         ra = rd32(base, s + 4) as u64;
+                        if STOP != 0 {
+                            self.stop.consumed += ra as usize;
+                        }
                         aw = rd64(base, s + 8);
                         bs = rd_other(base, s);
                         fa = s;
@@ -594,6 +618,19 @@ impl Kernel {
                 }};
             }
             'fresh: loop {
+                // (the stop-and-walk arms) both fronts' letters whole and the domain small:
+                // stop, before reading them
+                if STOP != 0 && self.stop.n - self.stop.consumed <= self.stop.n >> STOP {
+                    self.stop.active = true;
+                    (self.stop.na, self.stop.nb) = (na, nb);
+                    (self.stop.ti, self.stop.kb) = (ti, kb);
+                    self.stop.nt.clear();
+                    self.stop.nt.extend_from_slice(&nt);
+                    self.stop.m = self.stop.n - self.stop.consumed;
+                    self.rule_end = rp;
+                    self.lz.peak = (tnew - lay.tops) / SLOT;
+                    return Ok((0, 0, budget - left));
+                }
                 // both letters whole
                 read_top!(na, false);
                 read_bottom!(nb, false);

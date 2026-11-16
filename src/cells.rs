@@ -50,6 +50,12 @@ struct Kernel {
     variant: u8,
     /// the lazy letters' state
     lz: Lazy,
+    /// (the stop-and-walk arms) where the last induction stopped, and the walk's tables;
+    /// the blocks walked, and those decoded again because the walk did not apply
+    stop: Stop,
+    walk: Walk,
+    stopped: usize,
+    stop_fallbacks: usize,
     /// (test only) how many times the last staged induction sent rules on; whether it is
     /// to panic right after its first send (the fence's unwinding exit)
     #[cfg(all(test, feature = "memory-lever"))]
@@ -86,6 +92,8 @@ struct Materialization {
 include!("cells_original_test.rs");
 // Cells with lazy letters, the workers' kernel on many threads
 include!("cells_lazy.rs");
+// (bench arms: the lazy induction stopped, the rest of the block walked)
+include!("cells_stop.rs");
 // (research only: the memory-lever experiment's staged kernel)
 #[cfg(feature = "memory-lever")]
 include!("cells_lever.rs");
@@ -463,7 +471,7 @@ impl Kernel {
                 );
             }
             // (the lazy kernel's bottom slots' pool, in the output buffer)
-            if let (Some(out), true) = (out, self.bottom_laid && self.variant == LAZY) {
+            if let (Some(out), true) = (out, self.bottom_laid && lazy_first(self.variant)) {
                 let end = self.lz.bend;
                 assert!(
                     out[end..end + GAP].iter().all(|&x| x == 0xA5),
@@ -491,6 +499,7 @@ impl Kernel {
             return Err(Refusal::Invalid);
         }
         // the kernel's first stage and induction: the shipped ones, or the lazy letters'
+        (self.stop.n, self.stop.active) = (n, false);
         let result = self
             .first_stage(n, recs, p, budget, forced, out)
             .and_then(|()| {
@@ -500,7 +509,20 @@ impl Kernel {
                 self.induce_variant(budget, out)
             });
         self.check_canaries(Some(out));
-        let (word, len, cells) = result?;
+        let (mut word, mut len, mut cells) = result?;
+        // (the stop-and-walk arms) the induction stopped: the rest walked, else the block
+        // decoded again by the lazy induction and the shipped writer
+        if self.stop.active {
+            if self.walk_stopped(out).is_ok() {
+                self.stopped += 1;
+                self.check_canaries(None);
+                return Ok((cells, n));
+            }
+            self.stop_fallbacks += 1;
+            self.slots_lazy(n, recs, p, budget, forced, out)?;
+            (word, len, cells) = self.induce_lazy::<0>(budget, out)?;
+            self.check_canaries(Some(out));
+        }
         let period = (len & !MARK) as usize;
         if len & MARK == 0 || period == 0 || period > n {
             return Err(Refusal::Invalid);
