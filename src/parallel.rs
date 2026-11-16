@@ -159,6 +159,7 @@ impl StreamDecoder {
         // (the cheap conditions first: the machine is read only at the target's budget)
         let dec = if !forced
             && threads == SERVICE_THREADS
+            && !matches!(Plan::for_threads(threads), Plan::Workers(_))
             && k.avx2
             && k.clmul
             && service_target(threads, k, &Machine::here())
@@ -4324,10 +4325,9 @@ mod plan_tests {
         assert_eq!((t.logical, t.phys), (10, 10));
     }
 
-    /// `StreamDecoder::new`'s own dispatch on the target machine (`with_machine`): the
-    /// service core at exactly 10 threads, its window scaled to its two teams, and the
-    /// existing plan at every other budget, on the scalar kernels, off the target, and with
-    /// a plan forced
+    /// `StreamDecoder::new`'s own dispatch on the target machine (`with_machine`): lazy
+    /// workers at 10 threads (the service core is no longer the default there), the plan at
+    /// every other budget, on the scalar kernels, off the target, and with a plan forced
     #[test]
     fn the_service_default() {
         if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
@@ -4348,28 +4348,11 @@ mod plan_tests {
             );
             dec
         };
-        // the target: the service core, 8 decoding threads, a window of 8 at 4 a thread
+        // the target at 10 threads: lazy workers of a block each, which beat the service
+        // core there (#145, LOG 6905312941); the service core is no longer the default
         let dec = build(&i9, 10, 40, both);
-        assert!(dec.is_service() && !dec.is_pipelined());
-        assert_eq!((dec.threads(), dec.window()), (8, 8));
-        assert_eq!(dec.service_counts(), Some(ServiceCounts::default()));
-        // custom windows scale as a plan's do (`window`), at least a block a team
-        for (slots, want) in [
-            (1, 2),
-            (2, 2),
-            (10, 2),
-            (20, 4),
-            (40, 8),
-            (41, 8),
-            (60, 12),
-            (80, 16),
-        ] {
-            assert_eq!(build(&i9, 10, slots, both).window(), want, "{slots} slots");
-        }
-        assert_eq!(
-            build(&i9, 10, usize::MAX, both).window(),
-            (usize::MAX / 10) as u64
-        );
+        assert!(!dec.is_service() && !dec.is_pipelined());
+        assert_eq!(dec.threads(), 10);
         // every other budget: what the plan policy says on this machine, as before
         for t in [1, 4, 8, 9, 11, 12, 16, 20] {
             let dec = build(&i9, t, 4 * t, both);
@@ -4379,14 +4362,13 @@ mod plan_tests {
             assert_eq!(dec.is_pipelined(), plan == PIPELINED_PLAN, "{t}");
             assert_eq!(dec.window(), window(plan, t, 4 * t) as u64, "{t}");
         }
-        // 10 threads on the scalar kernels, or off the target: the three pipelined teams
-        // of three (the existing 10-core rule), or the plan for that machine
+        // 10 threads on the scalar kernels, or off the target: workers too (10 cores)
         let dec = build(&i9, 10, 40, Kernels::scalar());
-        assert!(!dec.is_service() && dec.is_pipelined() && dec.threads() == 9);
+        assert!(!dec.is_service() && !dec.is_pipelined() && dec.threads() == 10);
         let mut amd = i9.clone();
         amd.target.as_mut().unwrap().cpu = ("AuthenticAMD".into(), 25, 33);
         let dec = build(&amd, 10, 40, both);
-        assert!(!dec.is_service() && dec.is_pipelined() && dec.window() == 12);
+        assert!(!dec.is_service() && !dec.is_pipelined() && dec.threads() == 10);
         let small = Machine {
             phys: Some(4),
             target: None,
@@ -4404,7 +4386,7 @@ mod plan_tests {
             assert!(!dec.is_service(), "{plan:?}");
             assert_eq!(dec.threads(), plan.threads(), "{plan:?}");
         }
-        // and it decodes: four streams, through the service core's own threads
+        // and it decodes: four streams
         let dec = build(&i9, 10, 40, both);
         dec.write(service_tests::Z.to_vec()).unwrap();
         dec.close();
@@ -4418,15 +4400,8 @@ mod plan_tests {
             }
         }
         assert_eq!(out, service_tests::want());
-        // (EOF is not the workers' end: the last block is read once published, before its
-        // finisher retires it, D067; join is the fence, and `ended` its witness)
         dec.join();
-        let c = dec.service_counts().unwrap();
-        assert!(c.ended, "{c:?}");
-        assert_eq!((c.prepared, c.finished), (4, 4));
-        // (none of these blocks is big enough for a team's pool: tests/service_default.rs
-        // reaches it, on full blocks)
-        assert_eq!(c.pooled, 0);
+        assert_eq!(dec.service_counts(), None);
     }
 
     /// The target-gated route's condition 1 (docs/STEWARDSHIP.md;
