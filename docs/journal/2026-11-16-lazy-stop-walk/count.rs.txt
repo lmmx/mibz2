@@ -1,0 +1,47 @@
+use mibz2::bwt::{InverseBwt, LazyCells, StopLazyCells16, StopLazyCells32, StopLazyCells64};
+use mibz2::runs::{front, Runs};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::Kernels;
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[2]).unwrap();
+    let k = Kernels::detect();
+    match a[1].as_str() {
+        "letters" => {
+            let mut sc = Scanner::new(SliceSource(&data));
+            let mut syms = Vec::new();
+            let mut runs = Runs::default();
+            let mut lazy = LazyCells::default();
+            let (mut letters, mut all, mut blocks, mut adm) = (0u64, 0u64, 0, 0);
+            while let Ok(Event::Block { symbols, .. }) = sc.next(std::mem::take(&mut syms)) {
+                let n = front(&symbols, &mut runs, k).unwrap();
+                let before = lazy.counts().admitted;
+                let mut o = Vec::new();
+                lazy.invert_runs(&runs, n, symbols.orig_ptr, &mut o, k);
+                let (_, r) = lazy.pool();
+                all += r as u64;
+                if lazy.counts().admitted > before {
+                    letters += r as u64;
+                    adm += 1;
+                }
+                blocks += 1;
+                syms = symbols.syms;
+            }
+            println!("blocks {blocks} admitted {adm} letters(admitted) {letters} letters(all touched) {all}");
+        }
+        v => {
+            let out = match v {
+                "lazy" => mibz2::decode_with::<LazyCells>(&data, k),
+                "stop16" => mibz2::decode_with::<StopLazyCells16>(&data, k),
+                "stop32" => mibz2::decode_with::<StopLazyCells32>(&data, k),
+                "stop64" => mibz2::decode_with::<StopLazyCells64>(&data, k),
+                _ => panic!("kernel"),
+            }
+            .unwrap();
+            let h = out
+                .iter()
+                .fold(0u64, |h, &b| h.wrapping_mul(1099511628211) ^ b as u64);
+            println!("{v} {} {h:x}", out.len());
+        }
+    }
+}
