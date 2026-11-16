@@ -2055,6 +2055,12 @@
       "review_comment_pr": 145,
       "review_comment_id": 6886939287,
       "publication_verification": "Exact body/author/PR145 and role-aware routing verified. Pinned helper has only its known coordinator-only FROM rejection."
+    },
+    {
+      "trigger_comment_id": 6920377932,
+      "status": "in progress",
+      "pr": 162,
+      "report_path": "state/reports/stop-walk-adoption-6920377932/report.md"
     }
   ],
   "active_delegations": [],
