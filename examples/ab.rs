@@ -106,8 +106,9 @@
 //!   `mibz2-auto` (the cooperative policy's plan for THREADS, `Plan::for_threads`: today's
 //!   workers below 6 physical cores, else teams of 2 capped by the L3);
 //! - `mibz2-occ-N-S` (the occupancy arms: production's decoder with N lazy workers and S
-//!   blocks in flight whatever THREADS, `BzReader::parallel_planned(Plan::Workers(N), S)`;
-//!   `just bench-workers-window`);
+//!   blocks in flight whatever THREADS, `BzReader::parallel_workers(N, S, lazy)`: from
+//!   `LAZY_FROM_THREADS` workers the very call `parallel_planned(Plan::Workers(N), S)` makes,
+//!   and below it the lazy letters held; `just bench-workers-window`, `bench-workers-low`);
 //! - `mibz2-pipe2`, `-pipe3`, `-pipe4` (research: the pipelined team,
 //!   `BzReader::parallel_pipelined`, its leader's RLE1, CRC and next move-to-front overlapped
 //!   with its helpers' build and walk: THREADS / K teams of K in the teamK arms' window);
@@ -838,6 +839,8 @@ mod occ_arm_tests {
         assert_eq!(occ_arm("mibz2-occ-8-32"), Some((8, 32)));
         assert_eq!(occ_arm("mibz2-occ-9-72"), Some((9, 72)));
         assert_eq!(occ_arm("mibz2-occ-9-18"), Some((9, 18)));
+        assert_eq!(occ_arm("mibz2-occ-7-28"), Some((7, 28)));
+        assert_eq!(occ_arm("mibz2-occ-6-24"), Some((6, 24)));
         for bad in [
             "mibz2-occ-9",
             "mibz2-occ-0-36",
@@ -1315,17 +1318,15 @@ fn decode(
         // built with N lazy workers and S blocks in flight, whatever the threads asked
         // (`BzReader::parallel_planned(Plan::Workers(N), S)`, the call production makes for
         // its own plan). Against `mibz2` on the i9 past its cores (nine workers, 36 blocks), an
-        // arm differs in the worker count or the window alone
+        // arm differs in the worker count or the window alone. Lazy letters whatever N
+        // (`parallel_workers(.., true)`, which `parallel_planned` calls from
+        // `LAZY_FROM_THREADS` workers): below 8 workers (`bench-workers-low`'s 7 and 6) the
+        // plan would switch to a slot for every letter, and the arm would differ in its kernel too
         a if a.starts_with("mibz2-occ-") => {
             let (n, s) =
                 occ_arm(a).ok_or_else(|| format!("unknown arm {a} (mibz2-occ-WORKERS-SLOTS)"))?;
             drain(
-                mibz2::BzReader::parallel_planned(
-                    open()?,
-                    mibz2::parallel::Plan::Workers(n),
-                    s,
-                    mibz2::Kernels::detect(),
-                ),
+                mibz2::BzReader::parallel_workers(open()?, n, s, mibz2::Kernels::detect(), true),
                 h,
                 last,
             )

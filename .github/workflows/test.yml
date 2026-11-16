@@ -76,6 +76,11 @@ jobs:
       # from incomplete or malformed records, the Researcher's fabricated bundle among them
       - name: The two-arm adoption reading (synthetic runs)
         run: python3 bench/test_two_arm.py
+      # the counters' reader (`bench/counters.py`, #506's; `just bench-workers-low`'s occupancy
+      # diagnostic, its named groups and several candidates), driven with a stub perf and
+      # child: a complete run read, and every defect leaves no report
+      - name: The counters reader (stub perf)
+        run: python3 bench/test_counters.py
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the

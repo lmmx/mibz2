@@ -264,6 +264,89 @@ def main():
     results.append(expect_occ("several: one candidate's records missing", occ({"mibz2-occ-9-18": 0.96},
                               drop="mibz2-occ-9-72"), 1, ["VOID", "roster keys missing"]))
 
+    # another arm as the reference, and a context arm (`just bench-workers-low`): 8 workers with
+    # 32 in flight the reference, 7/28 and 6/24 the candidates, production's `mibz2` (9/36) run
+    # and checked with them, its steps reported, not judged
+    low_ref, low_cands, low_ctx = "mibz2-occ-8-32", ["mibz2-occ-7-28", "mibz2-occ-6-24"], "mibz2"
+
+    def low(steps=None, guard=None, mem=None, drop=None, ctx=True):
+        """bench-workers-low-shaped runs: `steps`, `guard` and `mem` map an arm (a candidate or
+        the context arm) to its main-corpus step, its text step and its peak memory over the
+        reference's (default level); `drop` an arm left out of the records"""
+        import random
+        steps, guard, mem = steps or {}, guard or {}, mem or {}
+        rng = random.Random(13)
+        rows = []
+        for i in range(R):
+            for corpus, out in (("wikidata-x4", (838800784, "aa")), ("text", (49067679, "bb"))):
+                for t in (12, 16, 20):
+                    base = 0.5 * (1 + 0.02 * rng.uniform(-1, 1))
+                    wig = 1 + 0.01 * (1 if i % 2 else -1)
+                    for arm in [low_ref, *low_cands, *([low_ctx] if ctx else [])]:
+                        if arm == drop:
+                            continue
+                        f = (steps if corpus == "wikidata-x4" else guard).get(arm, 1.0)
+                        wall = base * (f * wig if arm != low_ref else 1.0)
+                        rows.append({"round": i, "corpus": corpus, "threads": t, "arm": arm,
+                                     "termination": "success", "wall": wall, "cpu": wall * t * 0.9,
+                                     "rss_kb": 100000 * t * mem.get(arm, 1.0), "out": out[0], "hash": out[1],
+                                     "cpus": "all"})
+        return rows
+
+    def low_args(context=(low_ctx,)):
+        return ["--ref", low_ref, *sum((["--cand", c] for c in low_cands), []),
+                *sum((["--context", c] for c in context), []), "--main", "wikidata-x4", "--guard", "text",
+                "--judged", "12,16,20", "--controls", "", "--hold-max-threads", "0"]
+
+    def expect_low(name, rows, code, phrases, args=None, absent=()):
+        d = Path(tempfile.mkdtemp())
+        try:
+            with open(d / "judged.jsonl", "w") as f:
+                for r in rows:
+                    f.write(json.dumps(r) + "\n")
+            (d / "env.json").write_text(json.dumps(ENV))
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                got = ta.main(["two_arm.py", str(d / "judged.jsonl"), *(low_args() if args is None else args),
+                               "--env", str(d / "env.json")])
+            out = buf.getvalue()
+        finally:
+            shutil.rmtree(d)
+        ok = got == code and all(p in out for p in phrases) and not any(p in out for p in absent)
+        print(f"{'ok  ' if ok else 'FAIL'} {name}: exit {got}, "
+              + ", ".join([f"{'found' if p in out else 'missing'} {p!r}" for p in phrases]
+                          + [f"{'present' if p in out else 'absent'} {p!r}" for p in absent]))
+        if not ok:
+            print(out)
+        return ok
+
+    results.append(expect_low("another reference: one adopts, the context arm reported",
+                              low({"mibz2-occ-7-28": 0.96, "mibz2": 1.05}), 0, [
+        "Context, reported and not judged: mibz2 over mibz2-occ-8-32",
+        "VERDICT for mibz2-occ-7-28: ADOPTS", "VERDICT for mibz2-occ-6-24: NOT ADOPTED",
+        "THE CHOICE: mibz2-occ-7-28", "over the 6 main-corpus cells"],
+        absent=["VERDICT for mibz2:", "mibz2 at 12 p"]))
+    results.append(expect_low("another reference: none adopts, the reference stays",
+                              low({"mibz2-occ-6-24": 1.08}), 0, [
+        "VERDICT for mibz2-occ-6-24: NOT ADOPTED", "THE CHOICE: none; the reference stays"]))
+    results.append(expect_low("a context arm SLOWER and over the memory gate judges nothing",
+                              low({"mibz2-occ-6-24": 0.96}, guard={"mibz2": 1.05}, mem={"mibz2": 1.3}), 0, [
+        "VERDICT for mibz2-occ-6-24: ADOPTS", "THE CHOICE: mibz2-occ-6-24", "SLOWER; memory 1.300"]))
+    results.append(expect_low("a candidate over the memory gate against the new reference",
+                              low({"mibz2-occ-7-28": 0.96}, mem={"mibz2-occ-7-28": 1.2}), 0, [
+        "VERDICT for mibz2-occ-7-28: HELD ON MEMORY", "THE CHOICE: none"]))
+    results.append(expect_low("the context arm's records missing", low({"mibz2-occ-7-28": 0.96}, drop="mibz2"), 1,
+                              ["VOID", "roster keys missing", "'mibz2'"]))
+    results.append(expect_low("a context arm run but not named", low({"mibz2-occ-7-28": 0.96}), 1,
+                              ["VOID", "not in the roster"], args=low_args(context=())))
+    results.append(expect_low("the context arm the reference", low(ctx=False), 1,
+                              ["VOID", "two arms are one"], args=low_args(context=(low_ref,))))
+    results.append(expect_low("the context arm a candidate", low(ctx=False), 1,
+                              ["VOID", "two arms are one"], args=low_args(context=("mibz2-occ-7-28",))))
+    results.append(expect_low("the context arm's pinning checked", [
+        {**r, "cpus": "0,1,2"} if r["arm"] == "mibz2" and r["threads"] == 16 and r["round"] == 3 else r
+        for r in low()], 1, ["VOID", "not unpinned"]))
+
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

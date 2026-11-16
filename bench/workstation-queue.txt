@@ -9,3 +9,4 @@
 bench-release-scaling        master                    0.5.2 against 0.5.1 on the i9 (RELEASING §5), at the v0.5.2 tag commit ad0fcd33
 bench-w12                    perf/w12-rules            12-byte rules (W12) against master's build, rustc 1.99.1, with the L2 diagnostic at 10 threads (#506; registration 6928288705, run ahead of the Researcher's review at Louis's instruction)
 bench-workers-window         bench/occupancy           Eight vs nine workers and the window at 2x and 1/2 past the cores (#510; registration 6930443845, run ahead of review at Louis's instruction)
+bench-workers-low            bench/workers-low         Seven and six lazy workers at 4 a worker against eight (8/32, the reference after #510), production's 9/36 as context, with the LLC/L2 counters at 12 threads (registration docs/journal/2026-11-16-workers-low.md; stacked on #510)

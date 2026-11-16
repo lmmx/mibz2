@@ -3822,7 +3822,7 @@ mod plan_tests {
     /// The trim past the cores (#481) holds on the measured i9 alone: past its 10 cores, with
     /// its kernels, unlimited. Not at 10 threads or fewer, not on another CPU of its shape,
     /// another core count, the scalar kernels or under a quota
-    /// The occupancy arms (`ab`'s `mibz2-occ-N-S`, `just bench-workers-window`) build production's
+    /// The occupancy arms (`ab`'s `mibz2-occ-N-S`, `just bench-workers-window` and `-low`) build production's
     /// decoder but for what they name: on the i9 past its cores, `planned(Workers(9), 36)` is
     /// what `new` builds at 12, 16 and 20 threads asked (the kernel, the threads, the window),
     /// and each other arm differs from it in its worker count or its window alone
@@ -3845,6 +3845,25 @@ mod plan_tests {
             assert!(prod.is_lazy(), "{t}");
             let eight = StreamDecoder::planned(Plan::Workers(8), 32, both);
             assert_eq!(shape(&eight), (prod.kernel, 8, 32), "{t}");
+            // `ab` builds the arms as `workers(N, S, .., true)`: from `LAZY_FROM_THREADS`
+            // workers the very decoder `planned(Workers(N), S)` is
+            for (n, s) in [(9, 36), (8, 32), (9, 72), (9, 18)] {
+                let arm = StreamDecoder::workers(n, s, both, true);
+                let plan = StreamDecoder::planned(Plan::Workers(n), s, both);
+                assert_eq!(shape(&arm), shape(&plan), "{t} {n} {s}");
+                arm.close();
+                plan.close();
+            }
+            // `just bench-workers-low`: seven and six workers, 4 blocks a worker, the lazy
+            // letters held (the plan would choose a slot for every letter below 8 workers):
+            // each differs from eight in the worker count alone
+            for n in [7, 6] {
+                let fewer = StreamDecoder::workers(n, 4 * n, both, true);
+                assert_eq!(shape(&fewer), (prod.kernel, n, 4 * n as u64), "{t} {n}");
+                assert!(fewer.is_lazy() && eight.is_lazy(), "{t} {n}");
+                assert!(!StreamDecoder::planned(Plan::Workers(n), 4 * n, both).is_lazy());
+                fewer.close();
+            }
             for w in [72, 18] {
                 let win = StreamDecoder::planned(Plan::Workers(9), w, both);
                 assert_eq!(shape(&win), (prod.kernel, prod.threads, w as u64), "{t}");

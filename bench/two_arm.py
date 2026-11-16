@@ -7,12 +7,22 @@ correction, #145 REVIEW 6921090225), for `just bench-cores-less-one` (#481) and 
 
     two_arm.py RUNS.jsonl --ref ARM --cand ARM [--cand ARM ...] --main CORPUS --guard CORPUS
                --judged 12,16,20 --controls 9,10 --env ENV.json [--rounds 10]
-               [--cores 10 --cpus 20] [--hold-max-threads 9]
+               [--cores 10 --cpus 20] [--hold-max-threads 9] [--context ARM ...]
 
 **Several candidates** (`--cand` repeated; `just bench-workers-window`): each is read against the one
 reference as below, but Holm's family is every candidate's main-corpus judged cells together, and
 each candidate gets its own verdict. Where more than one ADOPTS, the one named is the one with the
 lowest geometric mean of its main-corpus steps. With one candidate, all of this is as before.
+
+**The reference** is whichever arm `--ref` names: production's `mibz2` in `bench-workers-window`,
+an occupancy arm (`mibz2-occ-8-32`) in `just bench-workers-low`. Every ratio, the memory gate and
+the choice are against it; where none ADOPTS, it is the reference that stays.
+
+**Context arms** (`--context`, repeated; none by default, and then nothing here changes): arms
+run beside the others and checked with them (the roster, the records, the pinning, the
+spinner), whose steps over the reference are reported but not judged. They enter no Holm family,
+no loss screen, no memory gate, no verdict and no choice (`bench-workers-low`'s production
+`mibz2`, after #510 no longer the reference).
 
 **Arms.** A record's arm is canonical: `NAME` for this build's harness, and `NAME@build-X`
 for another build's (`ab run`'s `NAME@EXE` arm, EXE under a directory `build-X`).
@@ -293,20 +303,24 @@ def main(argv):
     ap.add_argument("--cpus", type=int, default=20)
     ap.add_argument("--hold-max-threads", type=int, default=9,
                     help="the spinner's limit as the run had it; 0 for a run without one")
+    ap.add_argument("--context", action="append", default=[],
+                    help="an arm checked with the run and reported over the reference, not judged")
     a = ap.parse_args(argv[1:])
     judged = [int(t) for t in a.judged.split(",")]
     controls = [int(t) for t in a.controls.split(",") if t]
-    R, ref, cands = a.rounds, a.ref, a.cand
+    R, ref, cands, context = a.rounds, a.ref, a.cand, a.context
     errors = []
     if R < 2:
         errors.append(f"--rounds {R}: at least 2")
-    if set(judged) & set(controls) or ref in cands or len(set(cands)) != len(cands):
+    arms = [ref, *cands, *context]
+    if set(judged) & set(controls) or len(set(arms)) != len(arms):
         errors.append("the judged and control counts overlap, or two arms are one")
     corpora = [a.main, a.guard]
-    roster = {(c, arm, t, i) for c in corpora for arm in (ref, *cands) for t in judged + controls for i in range(R)}
+    roster = {(c, arm, t, i) for c in corpora for arm in arms for t in judged + controls for i in range(R)}
     core_of = topology(a.env, a.cores, a.cpus, errors)
     rows = load(a.runs, roster, errors, None if core_of is None else (core_of, a.cores, a.hold_max_threads))
-    print(f"records {len(rows)}; roster {len(roster)} ({ref} and {' and '.join(cands)}; {a.main} and {a.guard}; "
+    print(f"records {len(rows)}; roster {len(roster)} ({ref} and {' and '.join(cands)}"
+          + (f"; context {', '.join(context)}" if context else "") + f"; {a.main} and {a.guard}; "
           f"judged {judged}, controls {controls}; {R} rounds)")
 
     def cell(corpus, t, cand):
@@ -350,6 +364,15 @@ def main(argv):
                     gm.setdefault(cand, []).append(math.log(g))
                 print(f"  {t:>2} threads: {g:.4f} [{lo:.4f}, {hi:.4f}] {steps[(cand, corpus, t)]}"
                       + (f"; p {p:.2e}" if corpus == a.main else "") + f"; memory {mem[(cand, corpus, t)]:.3f}")
+    for arm in context:
+        print(f"\nContext, reported and not judged: {arm} over {ref}, the paired rounds' wall ratios: geometric "
+              f"mean [95% interval]; peak memory over {ref}'s")
+        for corpus in corpora:
+            print(f"\n{corpus}")
+            for t in judged:
+                g, lo, hi, _ = step(cell(corpus, t, arm))
+                print(f"  {t:>2} threads: {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; "
+                      f"memory {peak(corpus, arm, t) / peak(corpus, ref, t):.3f}")
     rejected = holm(ps, ALPHA)
     single = len(cands) == 1
 
