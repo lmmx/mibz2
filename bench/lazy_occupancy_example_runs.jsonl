@@ -1,0 +1,8 @@
+{"round": 0, "corpus": "made-up", "threads": 2, "arm": "mibz2", "wall": 0.1, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "mibz2-0=0.06 mibz2-1=0.07 mibz2-scan=0.05 main=0.02", "err": ""}
+{"round": 0, "corpus": "made-up", "threads": 2, "arm": "mibz2-workers-lazy-cap", "wall": 0.08, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "mibz2-0=0.05 mibz2-1=0.06 mibz2-scan=0.05 main=0.02", "err": ""}
+{"round": 0, "corpus": "made-up-x8", "threads": 2, "arm": "mibz2", "wall": 0.52, "out": 8000, "hash": "0000000000001f40", "thread_cpu": "mibz2-0=0.40 mibz2-1=0.44 mibz2-scan=0.39 main=0.13", "err": ""}
+{"round": 0, "corpus": "made-up-x8", "threads": 2, "arm": "mibz2-workers-lazy-cap", "wall": 0.4, "out": 8000, "hash": "0000000000001f40", "thread_cpu": "mibz2-0=0.26 mibz2-1=0.30 mibz2-scan=0.38 main=0.10", "err": ""}
+{"round": 1, "corpus": "made-up", "threads": 2, "arm": "mibz2", "wall": 0.1, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "mibz2-0=0.06 mibz2-1=0.07 mibz2-scan=0.05 main=0.02", "err": ""}
+{"round": 1, "corpus": "made-up", "threads": 2, "arm": "mibz2-workers-lazy-cap", "wall": 0.08, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "mibz2-0=0.05 mibz2-1=0.06 mibz2-scan=0.05 main=0.02", "err": ""}
+{"round": 1, "corpus": "made-up-x8", "threads": 2, "arm": "mibz2", "wall": 0.52, "out": 8000, "hash": "0000000000001f40", "thread_cpu": "mibz2-0=0.40 mibz2-1=0.44 mibz2-scan=0.39 main=0.13", "err": ""}
+{"round": 1, "corpus": "made-up-x8", "threads": 2, "arm": "mibz2-workers-lazy-cap", "wall": 0.4, "out": 8000, "hash": "0000000000001f40", "thread_cpu": "mibz2-0=0.26 mibz2-1=0.30 mibz2-scan=0.38 main=0.10", "err": ""}

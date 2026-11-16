@@ -48,6 +48,17 @@ jobs:
           python3 bench/lazy_crossover.py bench/lazy_crossover_example_runs.jsonl bench/lazy_crossover_example_dose.jsonl | tee dose.txt
           grep -q '59.8% with a slot for every letter, 20.0% with lazy letters' dose.txt
           grep -q 'mibz2-workers-lazy *110 *170' dose.txt
+      # the occupancy reading (`just bench-lazy-occupancy`), on a made-up run: each thread's
+      # CPU over the wall, and a run's fixed cost from one copy and eight
+      - name: The occupancy reading (made-up run)
+        run: |
+          python3 bench/lazy_occupancy.py bench/lazy_occupancy_example_runs.jsonl | tee occupancy.txt
+          grep -q 'made-up-x8 *mibz2-workers-lazy-cap *2 *0.4000 *95% *70% *75% *2 *25% *0%' occupancy.txt
+          grep -q 'mibz2 *2 *0.1000 *0.5200 *8 *0.0600 *0.0400 *40%' occupancy.txt
+          # a run whose arms' outputs differ is not read
+          sed 's/"out": 8000, "hash": "0000000000001f40", "thread_cpu": "mibz2-0=0.26/"out": 8001, "hash": "0000000000001f41", "thread_cpu": "mibz2-0=0.26/' \
+            bench/lazy_occupancy_example_runs.jsonl > differ.jsonl
+          ! python3 bench/lazy_occupancy.py differ.jsonl
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the
