@@ -116,7 +116,7 @@ jobs:
         run: uv run --no-project -p 3.13 python docs/scripts/check_site.py
       - name: Check for Markdown that rendered as something else
         run: uv run --no-project -p 3.13 python docs/scripts/check_render.py
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.99.1
       - uses: Swatinem/rust-cache@v2
       - name: Run the examples in the pages
         run: uv run -p 3.13 --group test pytest docs/site

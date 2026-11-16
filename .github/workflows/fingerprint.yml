@@ -58,7 +58,7 @@ jobs:
       - name: lbzip2
         run: sudo apt-get install -y -qq lbzip2 > /dev/null
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.99.1
       - uses: Swatinem/rust-cache@v2
 
       # The release profile (Cargo.toml's), as published

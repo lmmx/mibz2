@@ -16,6 +16,7 @@ exclude = [
   "pyproject.toml",
   "python/",
   "release-plz.toml",
+  "rust-toolchain.toml",
   "taplo.toml",
 ]
 homepage = "https://lmmx.github.io/mibz2/"
