@@ -1126,6 +1126,11 @@ fn run_census(t: &Inverse, m: u64, n: usize) -> String {
                 }
             }
             if l >= 2 {
+                // the lemma, on the real walk: equal letters, translated points, and the resume point
+                let k0 = first[al] as usize;
+                let delta = p[k] as i64 - p[k0] as i64;
+                for j in 0..l { assert!(a[k + j] == a[k0 + j] && p[k + j] as i64 == p[k0 + j] as i64 + delta, "run lemma"); }
+                if k + l < mm { assert!(p[k + l] as i64 == p[k0 + l] as i64 + delta, "resume point"); }
                 runs += 1; cov += l as u64; maxl = maxl.max(l);
                 let b = if l <= 2 {0} else if l <= 4 {1} else if l <= 8 {2} else if l <= 16 {3} else if l <= 64 {4} else {5};
                 hist[b] += l as u64;
