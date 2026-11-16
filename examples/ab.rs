@@ -99,6 +99,11 @@
 //!   the policy, 2 blocks in flight a worker), `mibz2-workers-w` (the same plan with the
 //!   default's window, `parallel::SLOTS_PER_THREAD` blocks a worker: below 6 physical
 //!   cores, exactly what `mibz2` runs);
+//! - `mibz2-workers-lazy-cores`, `-cores1`, `-cores-pin`, `-cores1-pin` (research, #145
+//!   QUEUED 6906630511: lazy workers past the cores. THREADS asked, min(THREADS, cores)
+//!   workers, or min(THREADS, cores - 1) for `-cores1`; a window of
+//!   `parallel::SLOTS_PER_THREAD` blocks a worker run, not a thread asked; `-pin` narrows
+//!   the run's CPUs to one a core before the decoder starts, its threads inheriting it);
 //! - `mibz2-coop2`, `-coop3`, `-coop4` (the cooperative decoder, `bwt::Cooperative`:
 //!   THREADS cores as THREADS / K teams of K, `BzReader::parallel_planned`, 2 blocks in
 //!   flight a team), `mibz2-team2`, `-team3`, `-team4` (the same plans with the default's
@@ -1161,6 +1166,33 @@ fn decode(
             h,
             last,
         ),
+        // lazy workers past the cores (#145 QUEUED 6906630511): how many, their window, and
+        // where they run. The plan past the cores is min(THREADS, cores) lazy workers with a
+        // window of SLOTS_PER_THREAD a thread asked, so 80 blocks for 10 workers at 20
+        // threads. Here the window is SLOTS_PER_THREAD a worker run (`-cores`), one worker
+        // fewer than the cores (`-cores1`), and the run's CPUs one a core (`-pin`: no two
+        // of the decoder's threads on one core's two hardware threads). Arms, not a default
+        "mibz2-workers-lazy-cores"
+        | "mibz2-workers-lazy-cores1"
+        | "mibz2-workers-lazy-cores-pin"
+        | "mibz2-workers-lazy-cores1-pin" => {
+            let spare = usize::from(arm.contains("-cores1"));
+            let n = workers_past_cores(threads, mibz2::parallel::Machine::here().phys, spare);
+            if arm.ends_with("-pin") {
+                one_cpu_a_core()?;
+            }
+            drain(
+                mibz2::BzReader::parallel_workers(
+                    open()?,
+                    n,
+                    mibz2::parallel::SLOTS_PER_THREAD * n,
+                    mibz2::Kernels::detect(),
+                    true,
+                ),
+                h,
+                last,
+            )
+        }
         // the memory-lever experiment's two arms (research, `memory-lever` feature; #145
         // QUEUED 6901989466): `mibz2-workers-w` with Cells' lazy letters, or with its rules
         // staged and stored past the cache. The plan and the window are `mibz2-workers-w`'s,
@@ -1599,6 +1631,43 @@ fn group(allowed: &[usize], siblings: impl Fn(usize) -> Option<Vec<usize>>) -> V
     }
     out.sort();
     out
+}
+
+/// The workers the `mibz2-workers-lazy-cores` arms run when `threads` are asked for on a
+/// machine of `phys` physical cores, keeping `spare` cores free of workers: no more than
+/// the cores less the spare, at least one, and `threads` where the cores are not known
+fn workers_past_cores(threads: usize, phys: Option<usize>, spare: usize) -> usize {
+    threads
+        .min(phys.map_or(threads, |p| p.saturating_sub(spare).max(1)))
+        .max(1)
+}
+
+/// The `-pin` arms' placement: this process's CPUs narrowed to the first CPU of each core
+/// it may run on (`cores`, its allowed CPUs grouped by core), so that the threads it starts
+/// afterwards, which inherit the mask, never share a core's two hardware threads. Where the
+/// process already has one CPU a core (a `--spread` run), nothing changes. An error where
+/// the kernel refuses the mask, so that a run never passes as pinned when it isn't
+fn one_cpu_a_core() -> Result<(), String> {
+    let firsts: Vec<usize> = cores().iter().filter_map(|c| c.first().copied()).collect();
+    if firsts.is_empty() || firsts.iter().any(|&c| c >= 1024) {
+        return Err(format!("one CPU a core: no usable CPUs ({firsts:?})"));
+    }
+    let mut mask = [0u64; 16];
+    for &c in &firsts {
+        mask[c / 64] |= 1 << (c % 64);
+    }
+    // SAFETY: a cpu_set_t of 1024 bits, read by the kernel; pid 0 is the calling thread,
+    // whose mask the decoder's threads, started after this, inherit
+    if unsafe { sched_setaffinity(0, std::mem::size_of_val(&mask), mask.as_ptr()) } != 0 {
+        return Err(format!(
+            "one CPU a core: sched_setaffinity to {firsts:?}: {}",
+            std::io::Error::last_os_error()
+        ));
+    }
+    // (the run's console: the CPUs the decoder was given, the record of the pinning)
+    let list: Vec<String> = firsts.iter().map(|c| c.to_string()).collect();
+    eprintln!("ab child: one CPU a core: {}", list.join(","));
+    Ok(())
 }
 
 /// `--spread`'s CPUs for `t` threads: the first CPU of each of the first `t` cores, where
@@ -5405,6 +5474,28 @@ mod tests {
         assert_eq!(cpu_list("0-3,6\n"), vec![0, 1, 2, 3, 6]);
         assert_eq!(cpu_list("5"), vec![5]);
         assert_eq!(cpu_list(""), Vec::<usize>::new());
+    }
+
+    #[test]
+    fn workers_past_the_cores() {
+        for (threads, phys, spare, want) in [
+            (4, Some(10), 0, 4),
+            (10, Some(10), 0, 10),
+            (20, Some(10), 0, 10),
+            (4, Some(10), 1, 4),
+            (9, Some(10), 1, 9),
+            (10, Some(10), 1, 9),
+            (20, Some(10), 1, 9),
+            (20, None, 1, 20),
+            (0, Some(10), 0, 1),
+            (8, Some(1), 1, 1),
+        ] {
+            assert_eq!(
+                super::workers_past_cores(threads, phys, spare),
+                want,
+                "{threads} on {phys:?} keeping {spare}"
+            );
+        }
     }
 
     #[test]

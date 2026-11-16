@@ -48,6 +48,16 @@ jobs:
           python3 bench/lazy_crossover.py bench/lazy_crossover_example_runs.jsonl bench/lazy_crossover_example_dose.jsonl | tee dose.txt
           grep -q '59.8% with a slot for every letter, 20.0% with lazy letters' dose.txt
           grep -q 'mibz2-workers-lazy *110 *170' dose.txt
+      # the placement run's dose reading (`just bench-lazy-place`), on a made-up run: each
+      # arm's CPU at 10 and 20 threads over its own at 1; a run whose outputs differ is not read
+      - name: The placement dose reading (made-up run)
+        run: |
+          python3 bench/lazy_place.py bench/lazy_place_example_dose.jsonl | tee place.txt
+          grep -q 'mibz2 *20 *2.708 *2.667 *2.750 *2' place.txt
+          grep -q 'mibz2-workers-lazy-cores1-pin *10 *1.976 *1.952 *2.000 *2' place.txt
+          sed '0,/"out": 1000, "hash": "00000000000003e8"/s//"out": 1001, "hash": "00000000000003e9"/' \
+            bench/lazy_place_example_dose.jsonl > place-differ.jsonl
+          ! python3 bench/lazy_place.py place-differ.jsonl
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the

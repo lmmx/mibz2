@@ -1,0 +1,12 @@
+{"round": 0, "corpus": "made-up", "threads": 1, "arm": "mibz2", "wall": 0.4, "cpu": 0.4, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 0, "corpus": "made-up", "threads": 10, "arm": "mibz2", "wall": 0.09, "cpu": 0.9, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 0, "corpus": "made-up", "threads": 20, "arm": "mibz2", "wall": 0.05500000000000001, "cpu": 1.1, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 0, "corpus": "made-up", "threads": 1, "arm": "mibz2-workers-lazy-cores1-pin", "wall": 0.4, "cpu": 0.4, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 0, "corpus": "made-up", "threads": 10, "arm": "mibz2-workers-lazy-cores1-pin", "wall": 0.08, "cpu": 0.8, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 0, "corpus": "made-up", "threads": 20, "arm": "mibz2-workers-lazy-cores1-pin", "wall": 0.0405, "cpu": 0.81, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 1, "corpus": "made-up", "threads": 1, "arm": "mibz2", "wall": 0.42000000000000004, "cpu": 0.42000000000000004, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 1, "corpus": "made-up", "threads": 10, "arm": "mibz2", "wall": 0.092, "cpu": 0.92, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 1, "corpus": "made-up", "threads": 20, "arm": "mibz2", "wall": 0.05600000000000001, "cpu": 1.12, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 1, "corpus": "made-up", "threads": 1, "arm": "mibz2-workers-lazy-cores1-pin", "wall": 0.42000000000000004, "cpu": 0.42000000000000004, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 1, "corpus": "made-up", "threads": 10, "arm": "mibz2-workers-lazy-cores1-pin", "wall": 0.082, "cpu": 0.8200000000000001, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}
+{"round": 1, "corpus": "made-up", "threads": 20, "arm": "mibz2-workers-lazy-cores1-pin", "wall": 0.0415, "cpu": 0.8300000000000001, "out": 1000, "hash": "00000000000003e8", "thread_cpu": "", "err": ""}

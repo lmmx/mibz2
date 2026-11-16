@@ -1636,6 +1636,57 @@ bench-lazy-crossover ROUNDS="10" THREADS="4,6,7,8,9,10,12,14,16,20":
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
+# Lazy workers past the cores (#145 QUEUED 6906630511; the rule is posted there before the
+# data): how many, their window, and where they run. The shipped plan (`mibz2`: past the
+# cores, one lazy worker a core and a window of SLOTS_PER_THREAD a thread asked) against
+# lazy workers with a window of SLOTS_PER_THREAD a worker run (`-cores`), one worker fewer
+# than the cores (`-cores1`), and each of those on one CPU a core (`-pin`), on COPIES copies
+# of the Wikidata sample end to end. Then every arm at 1 thread and at 10 and 20 on one copy:
+# each arm's memory dose (`bench/lazy_place.py`). Not at 9 threads: `--spread` pins a run of
+# 9 to 9 cores, and the arms count the cores they are given. On this machine, at the commit
+# checked out.
+bench-lazy-place COPIES="8" ROUNDS="10" THREADS="10,12,20":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/lazy-place
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    arms="mibz2,mibz2-workers-lazy-cores,mibz2-workers-lazy-cores1,mibz2-workers-lazy-cores-pin,mibz2-workers-lazy-cores1-pin"
+    echo "bench-lazy-place (#145 QUEUED 6906630511, its rule posted there before the data): $arms on {{COPIES}} copies of the Wikidata sample at {{THREADS}} threads, {{ROUNDS}} paired rounds; then at 1, 10 and 20 threads on one copy (the memory dose), at $(git rev-parse HEAD)"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    # COPIES copies end to end: bzip2 streams one after another are one valid file
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+    "$AB" run "$O/runs.jsonl" --arms "$arms" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata-x{{COPIES}}.bz2"
+    # the rule's readings: every arm against the shipped plan; the pinned arms against the
+    # same arms unpinned
+    "$AB" summary "$O/runs.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-lazy-cores > "$O/summary-cores.txt"
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-lazy-cores1 > "$O/summary-cores1.txt"
+    # the memory dose, and the one copy's walls
+    "$AB" run "$O/dose.jsonl" --arms "$arms" \
+      --threads "1,10,20" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
+    "$AB" summary "$O/dose.jsonl" --ref mibz2 > "$O/summary-one-copy.txt"
+    python3 bench/lazy_place.py "$O/dose.jsonl" | tee "$O/dose.txt" \
+      || echo "bench-lazy-place: the dose reading is not valid (dose.txt says why)"
+    git rev-parse HEAD > "$O/commit.txt"
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,
