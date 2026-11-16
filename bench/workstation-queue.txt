@@ -6,4 +6,3 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-lazy-occupancy         bench/lazy-occupancy      Where the time goes for lazy workers capped at the cores: scanner vs workers occupancy (#469; reading REVIEW 6906255284)
