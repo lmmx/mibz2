@@ -306,7 +306,32 @@ STOP, NO GAIN or INCONCLUSIVE, the Coordinator, in the same wake:
    Coordinator parks the line, with its reopening condition, and tells Louis in the LOG. Louis
    may reopen it.
 
-**Lines this applies to now:** run-fed construction of the navigation table from compressed
+### 11a. A failed gate goes back to its author, term by term
+
+Stop-and-walk, 16 November 2026:
+1. MONODROMY modelled it, and the Pathfinder built it.
+2. The build failed its gate: +97 instructions a letter against +20 (REVIEW 6916500604).
+3. The Pathfinder's report named each term where the model and the kernel differed. The
+   stop cost +18 a cell. Pass 2 cost 104 a letter, not 78.
+4. The Coordinator's LOG put exactly those two terms back to MONODROMY as the reopening
+   question (LOG 6916535874).
+5. Fifteen minutes later, MONODROMY had removed both:
+   - a stop on the budget counter the kernel already decrements;
+   - a one-lane writer that expands each word once.
+
+   Its prototype came in at about −20 a letter and 33% fewer word bytes (HANDOFF 6916839849).
+
+So, for any arm built from a model, whoever proposed it:
+1. **The builder's failed-gate report lists the divergences:** each term of the model against
+   what the build measured, the largest first. A failure without that list is not a finished
+   report.
+2. **In the same wake, the Coordinator sends that list to the arm's author** as the reopening
+   question: "which construction removes these terms?" It goes to the author first, beside
+   the Optimiser and the Researcher of §11.
+3. **The author gets one reopening round.** It returns a construction with its own count, or
+   says none exists. A reopened arm is built and gated like a new one.
+
+**Lines §11 and §11a apply to now:** stop-and-walk (#485, HANDOFF 6916839849); run-fed construction of the navigation table from compressed
 runs (the posts of 8 November, #266, #269, the run-fed leader).
 
 ## History
