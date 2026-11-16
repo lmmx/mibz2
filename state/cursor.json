@@ -1361,7 +1361,8 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "29 evidence archives SHA-256 verified; post-0.5.1 nine-worker/window findings and layout measurement limits committed; full matrix in progress."
+      "progress": "Full 29-bundle paired matrix, current-plan ranking, and layout ranking committed; no run or implementation.",
+      "report_path": "state/records/reviews/inbox-6926191785/report.md"
     }
   ],
   "migrated_from": {
