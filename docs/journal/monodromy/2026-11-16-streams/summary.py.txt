@@ -1,0 +1,10 @@
+import json,statistics as st,sys
+R=[json.loads(l) for l in open(sys.argv[1])]
+q=lambda v:"%.3f"%st.median(v)
+print(len(R), "blocks; right end W", q([x['right_end_width'][0]/x['runs'] for x in R]))
+for v,nm in [(6,'free-first'),(4,'six-stack'),(3,'change-first')]:
+    print(nm)
+    for k in ['0','64','512','4096','32768','inf']:
+        print(f"   k={k:4} W {q([x[f'v{v}_k{k}'][1]/x['runs'] for x in R])}  touched {q([x[f'v{v}_k{k}'][2]/x['runs'] for x in R])}  steps {q([x[f'v{v}_k{k}'][0]/x['runs'] for x in R])}")
+    d=[sum(x[f'v{v}_dist'][j] for x in R) for j in range(5)]; T=sum(d)
+    print("   unconstrained: original letters used at reach 0 %.3f, 1-8 %.3f, 9-64 %.3f, 65-512 %.3f, >512 %.3f"%tuple(v2/T for v2 in d))
