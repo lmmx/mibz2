@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.1](https://github.com/lmmx/mibz2/compare/v0.5.0...v0.5.1) - 2026-11-16
 
+A plan release: the decoder now uses one block a thread (workers, with lazy letters) instead of
+teams at 10 threads, and past the physical cores on machines with 8 to 10 of them. The kernels,
+the output and the speed below 10 threads are unchanged.
+
+- **Workers at 10 threads** (#462). `WORKERS_BELOW_THREADS` goes from 10 to 11. On the
+  i9-10900K, lazy workers took 0.931× and then 0.917× [0.898, 0.936] the teams' wall at 10
+  threads in two lazy-crossover runs (#145 LOGs 6905312941, 6905778670). The service core
+  stands down whenever the plan is workers.
+- **One lazy worker a core past the cores** (#468). With more threads than physical cores, on a
+  machine with 8 to 10 of them, the plan is `Workers(physical cores)`: the hyperthreads stay
+  idle, because two workers on one core share its L1 and L2. On the i9 against 0.5.0's plan
+  (teams): 0.926 / 0.934 / 0.945 / 0.950 at 12 / 14 / 16 / 20 threads (#465, LOG 6906090872),
+  and 0.942 (wikidata) and 0.935 (the 8-fold file) at 20 (occupancy run, LOG 6906620039).
+  Uncapped lazy workers took 1.21–1.22× there.
+- **So on the i9,** one block a thread now runs at every thread count from 6 to 20: eager Cells
+  at 6–7, lazy letters from 8. Teams remain the plan below 6 threads and from 11 physical cores.
+- **The paired runbook bench, CI** (4 CPUs, Xeon Platinum 8370C; run 43836782266, v0.5.0 →
+  master 3dff14b): level, as expected for changes that only act at 10 threads or more.
+  Two of 21 cells' intervals exclude zero either way (`onebyte` at 4 threads +3.5%, `records`
+  at 4 threads −3.3%), within the spread of a 21-cell table.
+- **Caveats:** one machine. Eleven threads was not measured directly (it gets the same plan as
+  12). Machines with 11 or more physical cores keep the teams, untested.
+- **Release scaling and the crossover at the tag** are queued on the workstation (#473);
+  their figures follow here.
+- **Research features reviewed** (RELEASING §3.3): `memory-lever`'s run is read and its lazy arm
+  promoted, so it is to go in its own PR; `trace`, `wait-stats`, `walk-stats`, `dose` and
+  `phase-counters` stay.
+
 ### <!-- 9 -->Other
 
 - Past the physical cores, on 8 to 10 of them: lazy workers, one a core ([#468](https://github.com/lmmx/mibz2/pull/468))
@@ -16,6 +44,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Workers with lazy letters at 10 threads; teams only past the physical cores ([#462](https://github.com/lmmx/mibz2/pull/462))
 
 ## [0.5.0](https://github.com/lmmx/mibz2/compare/v0.4.0...v0.5.0) - 2026-11-16
+
+**Lazy letters** (#452): from 8 threads, Cells' induction keeps a slot for a letter only while
+the letter is live, so the pool peaks at about 0.32 of the letters (right-end order) instead of
+all of them. Each worker touches less memory: on the i9, CPU at 10 threads over CPU at 1 is
+1.92 for lazy against 2.58 for eager (the memory dose, LOG 6905312941). Lazy against eager is
+0.965 at 8 threads, so `LAZY_FROM_THREADS` is 8. Release scaling on the i9 against 0.4.0: about
+4% faster at 8 threads, level elsewhere. The post: "Lazy letters: just-in-time memory for
+induction" (#451).
 
 ### <!-- 9 -->Other
 
