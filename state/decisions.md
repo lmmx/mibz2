@@ -4739,3 +4739,8 @@ Checkpoint6868538108, PR382 head a9c7716aaf664a7898f3d8f37c955e09d5204a23. G1 sc
 ## D111 — PR449 tail storage
 
 Incoming 6903560983; head 3071cad5cd88b4db493292a5f39c4ee583ffc4c1. G1 source separation/refusal proof accepted. G2 HOLD B5 closure pending completed Miri receipts; no unsafe defect identified. Occupancy ledger fails on retained output capacity; kernel savings are not whole-decoder savings. Full evidence, limits and exact lift condition: [D111 report](reports/D111-tail-storage.md).
+
+
+## D112 — PR452 production lazy dispatch
+
+Incoming 6904418769; head 6d97806ce32fb72db81c11a67d39140ade0caba5. G1 PROCEED for scoped B5 review: independently matched D110's lazy code and verified admission, fallback, ownership and plan isolation. No new G2 HOLD; no green-CI or adoption-policy certification. [Full review](reports/D112-production-lazy.md).
