@@ -64,6 +64,11 @@ jobs:
       # malformed records, the Researcher's fabricated bundle among them
       - name: The stop-and-walk run's reading (synthetic bundles)
         run: python3 bench/test_stop_walk.py
+      # the stop-and-walk counters' reader (`just bench-stop-walk-counters`), driven with a stub
+      # perf and a stub child: a complete run read, and every missing, unsupported, uncounted
+      # or multiplexed event, failed decode and missing run voiding it
+      - name: The counters reader (stub perf)
+        run: python3 bench/test_counters.py
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the

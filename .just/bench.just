@@ -1699,6 +1699,49 @@ bench-stop-walk COPIES="4" ROUNDS="10" THREADS="8,9,10,12,20":
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
+# Stop-and-walk's counters (a diagnostic, its rule on #145 before the data; it decides
+# nothing): where the stop-and-walk arm's single-threaded time goes against the shipped lazy
+# kernel's, which the cloud VMs cannot count. `mibz2-workers-lazy` and `mibz2-workers-stop15`
+# (this commit: the reflected reader, one-chain walk) decode the Wikidata sample once a run
+# under `perf stat`, in three groups of four events (cycles in each, so none is
+# multiplexed), at 1 thread and at THREADS, REPS reps, arms alternating. Needs
+# `kernel.perf_event_paranoid` at 1 or less (`sudo sysctl kernel.perf_event_paranoid=1`).
+# `bench/counters.py report` voids the run on any event missing, unsupported or multiplexed.
+bench-stop-walk-counters REPS="10" THREADS="10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/stop-walk-counters
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-stop-walk-counters (#145, a diagnostic): mibz2-workers-lazy and mibz2-workers-stop15 under perf stat at 1 and {{THREADS}} threads, {{REPS}} reps, on the Wikidata sample, at $(git rev-parse HEAD)"
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    command -v perf >/dev/null || { echo "bench-stop-walk-counters: no perf here"; exit 1; }
+    [ "$paranoid" -le 1 ] || { echo "bench-stop-walk-counters: kernel.perf_event_paranoid is $paranoid; it needs 1 or less (sudo sysctl kernel.perf_event_paranoid=1)"; exit 1; }
+    perf --version | tee "$O/perf_version.txt"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    sha256sum "$W/wikidata.bz2" "$AB" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    python3 bench/counters.py run --ab "$AB" --arm mibz2-workers-lazy --arm mibz2-workers-stop15 \
+      --threads "1,{{THREADS}}" --reps {{REPS}} --file "$W/wikidata.bz2" --out "$O/counters.jsonl"
+    python3 bench/counters.py report "$O/counters.jsonl" --ref mibz2-workers-lazy --cand mibz2-workers-stop15 \
+      --threads "1,{{THREADS}}" --reps {{REPS}} | tee "$O/report.txt" \
+      || echo "bench-stop-walk-counters: VOID, nothing reported (report.txt says why); the bundle is kept"
+    git rev-parse HEAD > "$O/commit.txt"
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,
