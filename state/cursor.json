@@ -177,9 +177,10 @@
     6877415766,
     6886868279,
     6920377932,
-    6924336791
+    6924336791,
+    6925048452
   ],
-  "last_processed_comment_id": 6924336791,
+  "last_processed_comment_id": 6925048452,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2086,12 +2087,15 @@
     },
     {
       "trigger_comment_id": 6925048452,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/dictionary-6925048452/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "11d75644c4d1f4c30f0997aa6664ae3a42175495",
-      "disposition": "REVISE: censored certificate share is a lower bound; explicit category composition and loop/operand incidences; general marked closure proof; supplied book edition locators unverified. Core identities and 6015 finite cases pass."
+      "disposition": "REVISE: censored certificate share is a lower bound; explicit category composition and loop/operand incidences; general marked closure proof; supplied book edition locators unverified. Core identities and 6015 finite cases pass.",
+      "review_comment_id": 6925440331,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body, author lmmx, issue145 and role-aware routing verified. Pinned helper retains only known coordinator-only FROM rejection."
     }
   ],
   "active_delegations": [],
