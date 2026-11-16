@@ -163,9 +163,10 @@ fn custom_windows_scale_to_the_teams() {
     }
 }
 
-/// The existing plan everywhere else, by the same dispatch: 9, 11 and 20 threads on the
-/// target (workers; past its 10 cores, nine lazy workers with the window scaled to them),
-/// 10 threads off it (workers), and a plan forced on the target
+/// The existing plan everywhere else, by the same dispatch: 9 threads on the target (workers),
+/// 11 and 20 (past its 10 cores: nine lazy workers, the window scaled to them, #481's trim),
+/// 10 and 20 threads off it (a CPU of the same shape but another model, an unknown quota, a
+/// smaller machine: workers, the window as asked), and a plan forced on the target
 #[test]
 fn the_existing_plan_otherwise() {
     if !supported() {
@@ -186,32 +187,34 @@ fn the_existing_plan_otherwise() {
         quota: mibz2::parallel::Quota::Unknown,
         ..i9.clone()
     };
-    // (machine, threads, pipelined, decoding threads)
+    // (machine, threads, pipelined, decoding threads, the window scaled to them)
     let cases = [
-        (i9.clone(), 9, false, 9),
-        (i9.clone(), 11, false, 9),
-        (i9.clone(), 20, false, 9),
-        (same_shape, 10, false, 10),
-        (unknown_quota, 10, false, 10),
-        (small, 10, false, 10),
+        (i9.clone(), 9, false, 9, false),
+        (i9.clone(), 11, false, 9, true),
+        (i9.clone(), 20, false, 9, true),
+        (same_shape.clone(), 10, false, 10, false),
+        (same_shape, 20, false, 10, false),
+        (unknown_quota.clone(), 10, false, 10, false),
+        (unknown_quota, 20, false, 10, false),
+        (small, 10, false, 10, false),
     ];
-    for (m, t, pipelined, threads) in cases {
+    for (m, t, pipelined, threads, scaled) in cases {
         for e in ENTRIES {
             let ((got, res), b) = on(m.clone(), e, &z, t);
             res.unwrap();
             assert!(got == data, "{m:?} {t} {e:?}");
             assert!(!b.service && b.counts.is_none(), "{m:?} {t} {e:?}: {b:?}");
             assert_eq!((b.pipelined, b.threads), (pipelined, threads), "{t} {e:?}");
-            // the window: as asked where the workers are the threads asked; past the cores,
-            // scaled to the workers (4 a thread asked is 4 a worker; a caller's 40, 40 × 9 / t)
+            // the window: as asked, but past the target's cores, scaled to the workers (4 a
+            // thread asked is 4 a worker; a caller's 40, 40 × 9 / t)
             let asked = match e {
                 Entry::New { slots } | Entry::ParallelWith { slots } => slots,
                 Entry::Parallel | Entry::Whole => mibz2::parallel::SLOTS_PER_THREAD * t,
             };
-            let window = if threads >= t {
-                asked
-            } else {
+            let window = if scaled {
                 (asked * threads / t).max(threads)
+            } else {
+                asked
             };
             assert_eq!(b.window, window as u64, "{m:?} {t} {e:?}");
         }

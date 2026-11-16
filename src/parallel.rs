@@ -165,11 +165,21 @@ impl StreamDecoder {
             && service_target(threads, k, &Machine::here())
         {
             let p = SERVICE_PLAN;
-            let slots = window(p.as_plan(), threads, slots);
+            let slots = window(p.as_plan(), threads, slots, false);
             Self::service(p.teams, p.k, p.services, slots, k)
         } else {
             let plan = Plan::for_threads(threads);
-            Self::defaulted(plan, window(plan, threads, slots), k)
+            // past the physical cores on the measured i9 alone (`trims_past_the_cores`): one
+            // worker fewer, and the window scaled to the workers. (The machine is read only
+            // where the plan is workers fewer than the threads asked.)
+            let trimmed = !forced
+                && matches!(plan, Plan::Workers(n) if n < threads)
+                && trims_past_the_cores(threads, k, &Machine::here());
+            let plan = match plan {
+                Plan::Workers(n) if trimmed => Plan::Workers(n - 1),
+                plan => plan,
+            };
+            Self::defaulted(plan, window(plan, threads, slots, trimmed), k)
         };
         record_built(&dec);
         dec
@@ -2669,16 +2679,45 @@ pub fn service_target(threads: usize, k: Kernels, m: &Machine) -> bool {
 
 /// The blocks in flight for `plan` when a caller asked for `slots` on `threads` threads:
 /// as many a worker as asked (a team counting as one worker), at least one each. Workers
-/// fewer than the threads asked (past the physical cores, `plan_with`) scale it as teams
-/// do: 36 blocks for 9 workers where 20 threads were asked with 4 a thread, not 80. On
-/// the i9-10900K the 80-block window cost 7.5% more CPU at 20 threads for the same wall
-/// (#145 LOG 6913804367, `just bench-lazy-place`)
-fn window(plan: Plan, threads: usize, slots: usize) -> usize {
+/// `trimmed` past the cores (`trims_past_the_cores`) scale it as teams do: 36 blocks for 9
+/// workers where 20 threads were asked with 4 a thread, not 80. On the i9-10900K the
+/// 80-block window cost 7.5% more CPU at 20 threads for the same wall (#145 LOG 6913804367,
+/// `just bench-lazy-place`). Every other plan of workers keeps the window asked.
+fn window(plan: Plan, threads: usize, slots: usize, trimmed: bool) -> usize {
     match plan {
-        Plan::Workers(n) if n >= threads => slots,
-        Plan::Workers(n) => (slots.saturating_mul(n) / threads.max(1)).max(n),
+        Plan::Workers(n) if trimmed => (slots.saturating_mul(n) / threads.max(1)).max(n),
+        Plan::Workers(_) => slots,
         Plan::Teams { teams, .. } => (slots.saturating_mul(teams) / threads.max(1)).max(teams),
     }
+}
+
+/// Whether the decoder past the physical cores runs one lazy worker fewer than the cores,
+/// with its window scaled to them (`StreamDecoder::new`; #481): on the profile its adoption
+/// run measured, and nowhere else. That is more threads asked than the 10 cores, on the
+/// machine `service_target` admits, read as it reads it: the i9-10900K by vendor, family,
+/// model and name, 10 physical cores and 20 CPUs in this process's affinity, a 20 MiB L3, no
+/// CPU quota, and the AVX2 and CLMUL kernels.
+///
+/// Two interventions, judged together by that run (`just bench-cores-less-one`): the
+/// workers, 10 → 9, and the window, 4 a thread asked → 4 a worker (10/48, 64 and 80 → 9/36 at
+/// 12, 16 and 20 threads). On the i9 at 12 and 20 threads, nine workers beat ten by 4.3% and
+/// 4.4% of the wall with 9% and 8% less CPU (`just bench-lazy-place`, eight copies of
+/// Wikidata; #145 LOG 6913804367): ten lazy workers beside a scanner busy about two thirds
+/// of the time oversubscribe ten cores. Any other machine, including another CPU of the same
+/// shape, keeps the plan and window it had; a wider adoption needs its own registration.
+pub fn trims_past_the_cores(threads: usize, k: Kernels, m: &Machine) -> bool {
+    threads > TEN_CORES.0
+        && k.avx2
+        && k.clmul
+        && cfg!(all(target_os = "linux", target_arch = "x86_64"))
+        && m.target.as_ref().is_some_and(|t| {
+            (t.cpu.0.as_str(), t.cpu.1, t.cpu.2) == SERVICE_CPU
+                && t.name == SERVICE_NAME
+                && t.phys == TEN_CORES.0
+                && t.logical == SERVICE_LOGICAL
+                && t.l3 == TEN_CORES.1
+        })
+        && m.quota == Quota::Unlimited
 }
 
 /// `Plan::for_threads` on a machine of `phys` physical cores and an L3 of `l3` bytes
@@ -2690,10 +2729,12 @@ pub(crate) fn plan_with(threads: usize, phys: Option<usize>, l3: Option<u64>) ->
     if cores < COOP_MIN_CORES || (threads < WORKERS_BELOW_THREADS && threads <= phys) {
         return Plan::Workers(threads);
     }
-    // more threads than physical cores, on 8 to 10 of them: lazy workers, one a core but
-    // one, the extra hardware threads left idle (`workers_past_the_cores`)
+    // more threads than physical cores, on 8 to 10 of them: lazy workers, one a core, the
+    // extra hardware threads left idle. On the i9-10900K they beat the teams by 5-7% at 12 to
+    // 20 threads (#145, `just bench-lazy-cap`), where workers on SMT siblings lose and the
+    // teams gain nothing past the cores
     if threads > phys && (LAZY_FROM_THREADS..WORKERS_BELOW_THREADS).contains(&phys) {
-        return Plan::Workers(workers_past_the_cores(phys));
+        return Plan::Workers(phys);
     }
     if phys == TEN_CORES.0 && l3 == Some(TEN_CORES.1) && threads >= TEN_CORES_MIN_THREADS {
         return Plan::Teams { teams: 3, k: 3 };
@@ -2704,24 +2745,6 @@ pub(crate) fn plan_with(threads: usize, phys: Option<usize>, l3: Option<u64>) ->
     Plan::Teams {
         teams: (cores / 2).min(cap).max(1),
         k: 2,
-    }
-}
-
-/// The lazy workers past the physical cores, on `phys` of them (8 to 10): one a core, but
-/// one core left to the scanner, the reader and the feeder where that still leaves
-/// `LAZY_FROM_THREADS` workers, so the kernel stays the one measured.
-///
-/// On the i9-10900K, at 12 and 20 threads, nine workers beat ten by 4.3% and 4.4% of the
-/// wall, with 9% and 8% less CPU (0.957 [0.949, 0.965] and 0.956 [0.952, 0.960], `just
-/// bench-lazy-place` on eight copies of Wikidata; #145 LOG 6913804367). Ten lazy workers
-/// beside a scanner busy about two thirds of the time oversubscribe ten cores, so two of
-/// the decoder's threads share a core. On 8 cores, one fewer would be 7 workers on the
-/// other kernel, a slot for every letter, which nothing has measured; they keep 8.
-fn workers_past_the_cores(phys: usize) -> usize {
-    if phys > LAZY_FROM_THREADS {
-        phys - 1
-    } else {
-        phys
     }
 }
 
@@ -3699,22 +3722,16 @@ mod plan_tests {
         // more threads than physical cores, from 6 cores: teams of 2, at most 4 (0.7 × 20
         // MiB over a full table), as before
         assert_eq!(plan_with(8, Some(6), i9.1), Plan::Teams { teams: 3, k: 2 });
-        // from 8 cores: lazy workers, one a core (`just bench-lazy-cap`); from 9, one a
-        // core but one, leaving 8 at least (`just bench-lazy-place`)
+        // from 8 cores: lazy workers, one a core (`just bench-lazy-cap`)
         assert_eq!(plan_with(9, Some(8), i9.1), Plan::Workers(8));
         assert_eq!(plan_with(16, Some(8), i9.1), Plan::Workers(8));
-        assert_eq!(plan_with(10, Some(9), i9.1), Plan::Workers(8));
-        assert_eq!(plan_with(18, Some(9), i9.1), Plan::Workers(8));
-        assert_eq!(plan_with(9, Some(9), i9.1), Plan::Workers(9));
         // a bigger machine below 10 threads: workers
         assert_eq!(plan_with(8, Some(16), Some(32 << 20)), Plan::Workers(8));
-        // the i9 past its 10 cores: nine lazy workers (ten beat three teams of three by 5-7%
-        // at 12 to 20 threads, `just bench-lazy-cap`; nine beat ten by 4%, `just
-        // bench-lazy-place`). At 10 threads, still ten
+        // the i9 past its 10 cores: ten lazy workers, one a core (they beat three teams of
+        // three by 5-7% at 12 to 20 threads, `just bench-lazy-cap`)
         for t in [11, 12, 16, 20, 64, usize::MAX] {
-            assert_eq!(plan_with(t, i9.0, i9.1), Plan::Workers(9), "{t}");
+            assert_eq!(plan_with(t, i9.0, i9.1), Plan::Workers(10), "{t}");
         }
-        assert_eq!(plan_with(10, i9.0, i9.1), Plan::Workers(10));
         // a bigger cache, more teams; no cache size read, 4
         assert_eq!(
             plan_with(16, Some(16), Some(32 << 20)),
@@ -3771,10 +3788,10 @@ mod plan_tests {
         assert_eq!((t33.workers(), t33.threads()), (3, 9));
         // its default window (`SLOTS_PER_THREAD` a thread asked for) is 12 blocks, as the
         // registered runs used; fewer slots still give a block a team; saturating at the top
-        assert_eq!(window(t33, 10, 40), 12);
-        assert_eq!(window(t33, 20, 80), 12);
-        assert_eq!(window(t33, 10, 1), 3);
-        assert_eq!(window(t33, 10, usize::MAX), usize::MAX / 10);
+        assert_eq!(window(t33, 10, 40, false), 12);
+        assert_eq!(window(t33, 20, 80, false), 12);
+        assert_eq!(window(t33, 10, 1, false), 3);
+        assert_eq!(window(t33, 10, usize::MAX, false), usize::MAX / 10);
     }
 
     /// The default's window: what the A/B ran (2 a team at 2 a thread asked), and at least
@@ -3782,19 +3799,74 @@ mod plan_tests {
     #[test]
     fn the_window() {
         let t4 = Plan::Teams { teams: 4, k: 2 };
-        assert_eq!(window(Plan::Workers(4), 4, 8), 8);
-        assert_eq!(window(Plan::Workers(4), 4, usize::MAX), usize::MAX);
-        // workers past the cores, fewer than the threads asked: scaled to them, as teams
-        // are (`just bench-lazy-place`), at least one a worker
-        assert_eq!(window(Plan::Workers(9), 20, 80), 36);
-        assert_eq!(window(Plan::Workers(9), 11, 44), 36);
-        assert_eq!(window(Plan::Workers(9), 20, 40), 18);
-        assert_eq!(window(Plan::Workers(9), 20, 1), 9);
-        assert_eq!(window(Plan::Workers(9), 20, usize::MAX), usize::MAX / 20);
-        assert_eq!(window(t4, 20, 40), 8);
-        assert_eq!(window(t4, 8, 16), 8);
-        assert_eq!(window(t4, 20, 1), 4);
-        assert_eq!(window(t4, 20, usize::MAX), usize::MAX / 20);
+        assert_eq!(window(Plan::Workers(4), 4, 8, false), 8);
+        assert_eq!(window(t4, 20, 40, false), 8);
+        assert_eq!(window(t4, 8, 16, false), 8);
+        assert_eq!(window(t4, 20, 1, false), 4);
+        assert_eq!(window(t4, 20, usize::MAX, false), usize::MAX / 20);
+        // workers past the cores keep the window asked (8/64 at 16 threads on 8 cores),
+        // but on the measured i9, trimmed: scaled to them, at least one a worker
+        assert_eq!(window(Plan::Workers(8), 16, 64, false), 64);
+        assert_eq!(window(Plan::Workers(10), 20, 80, false), 80);
+        assert_eq!(window(Plan::Workers(9), 20, 80, true), 36);
+        assert_eq!(window(Plan::Workers(9), 12, 48, true), 36);
+        assert_eq!(window(Plan::Workers(9), 16, 64, true), 36);
+        assert_eq!(window(Plan::Workers(9), 20, 40, true), 18);
+        assert_eq!(window(Plan::Workers(9), 20, 1, true), 9);
+        assert_eq!(
+            window(Plan::Workers(9), 20, usize::MAX, true),
+            usize::MAX / 20
+        );
+    }
+
+    /// The trim past the cores (#481) holds on the measured i9 alone: past its 10 cores, with
+    /// its kernels, unlimited. Not at 10 threads or fewer, not on another CPU of its shape,
+    /// another core count, the scalar kernels or under a quota
+    #[test]
+    fn the_trim_past_the_cores() {
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let i9 = Machine::service_target();
+        let on = cfg!(all(target_os = "linux", target_arch = "x86_64"));
+        for t in [11, 12, 16, 20, 64] {
+            assert_eq!(trims_past_the_cores(t, both, &i9), on, "{t}");
+        }
+        for t in [1, 8, 9, 10] {
+            assert!(!trims_past_the_cores(t, both, &i9), "{t}");
+        }
+        assert!(!trims_past_the_cores(20, Kernels::scalar(), &i9));
+        let mut same_shape = i9.clone();
+        same_shape.target.as_mut().unwrap().cpu = ("GenuineIntel".into(), 6, 151);
+        assert!(!trims_past_the_cores(20, both, &same_shape));
+        let mut renamed = i9.clone();
+        renamed.target.as_mut().unwrap().name = "another".into();
+        assert!(!trims_past_the_cores(20, both, &renamed));
+        let mut nine = i9.clone();
+        nine.target.as_mut().unwrap().phys = 9;
+        assert!(!trims_past_the_cores(20, both, &nine));
+        let mut no_smt = i9.clone();
+        no_smt.target.as_mut().unwrap().logical = 10;
+        assert!(!trims_past_the_cores(20, both, &no_smt));
+        let mut unread = i9.clone();
+        unread.target = None;
+        assert!(!trims_past_the_cores(20, both, &unread));
+        let mut limited = i9.clone();
+        limited.quota = Quota::Unknown;
+        assert!(!trims_past_the_cores(20, both, &limited));
+    }
+
+    /// What `StreamDecoder::new` builds at `t` threads on machine `m` with kernels `k`, its
+    /// service core aside: the plan, trimmed past the cores on the measured i9, and its window
+    fn planned_as_new(t: usize, slots: usize, k: Kernels, m: &Machine) -> (Plan, usize) {
+        let plan = with_machine(m.clone(), || Plan::for_threads(t));
+        let trimmed = matches!(plan, Plan::Workers(n) if n < t) && trims_past_the_cores(t, k, m);
+        let plan = match plan {
+            Plan::Workers(n) if trimmed => Plan::Workers(n - 1),
+            plan => plan,
+        };
+        (plan, window(plan, t, slots, trimmed))
     }
 
     /// Workers invert with lazy letters exactly from `LAZY_FROM_THREADS` of them: by the
@@ -3822,7 +3894,7 @@ mod plan_tests {
         }
         // on a machine whose cores are not known, the plan is workers at every count
         assert!(!plan_with(7, None, None).lazy() && plan_with(8, None, None).lazy());
-        // the i9: lazy workers from 8 threads; past its cores, nine of them
+        // the i9: lazy workers at 8 to 10 threads, teams from 11
         let i9 = (Some(TEN_CORES.0), Some(TEN_CORES.1));
         assert!(!plan_with(6, i9.0, i9.1).lazy());
         for t in [8, 9, 10, 11, 20] {
@@ -4395,11 +4467,18 @@ mod plan_tests {
         // every other budget: what the plan policy says on this machine, as before
         for t in [1, 4, 8, 9, 11, 12, 16, 20] {
             let dec = build(&i9, t, 4 * t, both);
-            let plan = with_machine(i9.clone(), || Plan::for_threads(t));
+            let (plan, window) = plan_tests::planned_as_new(t, 4 * t, both, &i9);
             assert!(!dec.is_service(), "{t}");
             assert_eq!(dec.threads(), plan.threads(), "{t}");
             assert_eq!(dec.is_pipelined(), plan == PIPELINED_PLAN, "{t}");
-            assert_eq!(dec.window(), window(plan, t, 4 * t) as u64, "{t}");
+            assert_eq!(dec.window(), window as u64, "{t}");
+        }
+        // past its cores, the trim (#481): nine workers, the window scaled to them
+        if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            for (t, w) in [(12, 36), (16, 36), (20, 36)] {
+                let dec = build(&i9, t, 4 * t, both);
+                assert_eq!((dec.threads(), dec.window()), (9, w), "{t}");
+            }
         }
         // 10 threads on the scalar kernels, or off the target: workers too (10 cores)
         let dec = build(&i9, 10, 40, Kernels::scalar());
@@ -4472,18 +4551,14 @@ mod plan_tests {
             if on {
                 continue; // (the target itself: tests/service_default.rs and the_service_default)
             }
-            let plan = Plan::for_threads(t);
-            let want = (false, plan == PIPELINED_PLAN, plan.threads());
             let slots = SLOTS_PER_THREAD * t;
+            let (plan, window) = plan_tests::planned_as_new(t, slots, k, &here);
+            let want = (false, plan == PIPELINED_PLAN, plan.threads());
             let (dec, b) = observe_builds(|| StreamDecoder::new(t, slots, k));
             assert_eq!(b.len(), 1, "{t}");
             let got = (b[0].service, b[0].pipelined, b[0].threads);
             assert_eq!(got, want, "StreamDecoder::new at {t} threads: {plan:?}");
-            assert_eq!(
-                b[0].window,
-                window(plan, t, slots) as u64,
-                "{t}: the window"
-            );
+            assert_eq!(b[0].window, window as u64, "{t}: the window");
             assert!(dec.service_counts().is_none());
             dec.close();
             let (out, b) = observe_builds(|| {
@@ -4496,11 +4571,7 @@ mod plan_tests {
             assert_eq!(b.len(), 1, "{t}");
             let got = (b[0].service, b[0].pipelined, b[0].threads);
             assert_eq!(got, want, "BzReader::parallel at {t} threads: {plan:?}");
-            assert_eq!(
-                b[0].window,
-                window(plan, t, slots) as u64,
-                "{t}: the window"
-            );
+            assert_eq!(b[0].window, window as u64, "{t}: the window");
             let (out, b) = observe_builds(|| crate::decode_parallel(service_tests::Z, t).unwrap());
             assert_eq!(out, service_tests::want(), "decode_parallel at {t}");
             assert_eq!(b.len(), 1, "{t}");

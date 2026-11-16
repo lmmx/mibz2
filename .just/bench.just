@@ -1663,6 +1663,9 @@ bench-cores-less-one MASTER="4ffe2bcbef1d4296e7d7bdf35ba3972c03edd6e3" COPIES="4
     AB=$PWD/target/release/examples/ab
     [ -d "$W/build-master" ] || git worktree add -q --detach "$W/build-master" "{{MASTER}}"
     git -C "$W/build-master" checkout -q --detach "{{MASTER}}"
+    # (the baseline is built from a clean source: a detached checkout keeps local changes)
+    [ -z "$(git -C "$W/build-master" status --porcelain)" ] \
+      || { echo "bench-cores-less-one: build-master has local changes"; git -C "$W/build-master" status --short; exit 1; }
     (cd "$W/build-master" && cargo build -q --release --example ab)
     MAB=$W/build-master/target/release/examples/ab
     # the identities measured, checked rather than assumed from a reused directory
@@ -1670,6 +1673,9 @@ bench-cores-less-one MASTER="4ffe2bcbef1d4296e7d7bdf35ba3972c03edd6e3" COPIES="4
       || { echo "bench-cores-less-one: build-master is not at {{MASTER}}"; exit 1; }
     git rev-parse HEAD > "$O/commit.txt"
     echo "{{MASTER}}" > "$O/master.txt"
+    { rustc -V; cargo -V; } | tee "$O/toolchain.txt"
+    (cd "$W/build-master" && { rustc -V; cargo -V; }) | cmp -s - "$O/toolchain.txt" \
+      || { echo "bench-cores-less-one: the two builds' toolchains differ"; exit 1; }
     sha256sum "$AB" "$MAB" | tee "$O/binaries.sha256"
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
     if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
@@ -1686,15 +1692,16 @@ bench-cores-less-one MASTER="4ffe2bcbef1d4296e7d7bdf35ba3972c03edd6e3" COPIES="4
     lscpu > "$O/lscpu.txt"
     lscpu -e > "$O/lscpu-e.txt" || true
     grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
-    free=(); hold_cpu=${HOLD_CPU:-auto}
-    [ "$hold_cpu" = off ] || free=(--hold-cpu "$hold_cpu" --hold-max-threads 9)
+    free=(); hold_cpu=${HOLD_CPU:-auto}; hold_max=0
+    [ "$hold_cpu" = off ] || { free=(--hold-cpu "$hold_cpu" --hold-max-threads 9); hold_max=9; }
     "$AB" run "$O/judged.jsonl" --arms "mibz2@$MAB,mibz2" \
       --threads "{{CONTROLS}},{{JUDGED}}" --rounds {{ROUNDS}} --spread "${free[@]}" \
       "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
     "$AB" summary "$O/judged.jsonl" --ref "mibz2@$MAB" | tee "$O/summary.txt"
     python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2@build-master --cand mibz2 \
       --main wikidata-x{{COPIES}} --guard text --judged "{{JUDGED}}" --controls "{{CONTROLS}}" \
-      --rounds {{ROUNDS}} | tee "$O/verdict.txt" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads "$hold_max" \
+      | tee "$O/verdict.txt" \
       || echo "bench-cores-less-one: VOID, no verdict (verdict.txt says why); the bundle is kept"
     bash bench/bundle.sh "$O"
 

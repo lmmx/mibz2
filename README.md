@@ -106,15 +106,18 @@ CPU the process may use):
 - **Below 6 physical cores, or where the topology can't be read:** one block a worker thread.
 - **Up to 10 threads, each with a physical core of its own:** one block a worker thread.
 - **More threads than physical cores, on 8 to 10 of them:** one block a worker, one worker a
-  core but one, leaving a core to the threads that read the input and hand out its blocks
-  (8 workers at least). The other hardware threads stay idle: on the i9-10900K, workers on a
-  core's second hardware thread were slower, not faster.
+  core. The other hardware threads stay idle: on the i9-10900K, workers on a core's second
+  hardware thread were slower, not faster.
+  - **On the i9-10900K itself, past its 10 cores:** nine workers, one a core but one, leaving
+    a core to the threads that read the input and hand out its blocks, with the window scaled
+    to them. This is the profile measured; another CPU, even one of the same shape, keeps ten.
 - **Otherwise** (11 or more threads on 11 or more cores, or more threads than cores on 6 or 7
   of them): teams of 2 threads sharing each block, as many as fit the L3.
 
 From 8 workers, each inverts with lazy letters, which keeps less memory per block for a few more
 instructions: with that many workers they contend for the cache. The window, the blocks in flight
-(`SLOTS_PER_THREAD`, 4, a thread asked for), is scaled to the workers or teams the plan runs.
+(`SLOTS_PER_THREAD`, 4, a thread asked for), is scaled to the teams the plan runs, and to the
+i9's nine workers past its cores.
 
 The output is the same on every plan: only the speed can differ. To choose another plan, pass it
 explicitly: `BzReader::parallel_planned(r, plan, slots, kernels)` or

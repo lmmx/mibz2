@@ -6,7 +6,8 @@ Standard library only. Generalised from the stop-and-walk adjudicator (the Resea
 correction, #145 REVIEW 6921090225), for `just bench-cores-less-one` (#481) and after.
 
     two_arm.py RUNS.jsonl --ref ARM --cand ARM --main CORPUS --guard CORPUS
-               --judged 12,16,20 --controls 9,10 [--rounds 10]
+               --judged 12,16,20 --controls 9,10 --env ENV.json [--rounds 10]
+               [--cores 10 --cpus 20] [--hold-max-threads 9]
 
 **Arms.** A record's arm is canonical: `NAME` for this build's harness, and `NAME@build-X`
 for another build's (`ab run`'s `NAME@EXE` arm, EXE under a directory `build-X`).
@@ -33,6 +34,16 @@ registration on #145).
   run with finite positive wall, CPU and peak memory; any key (corpus, arm, threads, round)
   duplicated, unexpected or missing from the full roster; a corpus whose outputs (size and
   hash) differ; a run beside a spinner sharing a decoder core; a control cell that moved.
+- **VOID too, on the machine's and the runs' metadata** (the Researcher's correction, #145
+  REVIEW 6924511372: an absent overlap flag is no proof of a free core):
+  - *the topology* (`ab env`'s record, `--env`): missing or malformed, or not the profile
+    registered: `--cores` physical cores and `--cpus` CPUs in the affinity, each core's CPUs
+    listed and together all of them, and no CPU quota;
+  - *the pinning:* a record's `cpus` missing or malformed; at a count up to the cores, not one
+    CPU on each of that many distinct cores (`ab run --spread`); past the cores, not `all`;
+  - *the spinner:* at a count up to `--hold-max-threads`, a record's `held_spinner` missing or
+    malformed (its `cpu`, `overlap`, `decoder_cpus` and `owner`), its `decoder_cpus` not the
+    record's own, or its CPU on a core of the decode's; past it, a spinner recorded.
 """
 import argparse
 import json
@@ -117,9 +128,98 @@ def holm(ps, alpha):
     return rejected
 
 
-def load(path, roster, errors):
+def cpu_list(s):
+    """A comma-separated list of CPU numbers, or None if it is not one"""
+    if not isinstance(s, str) or not s:
+        return None
+    try:
+        cpus = [int(x) for x in s.split(",")]
+    except ValueError:
+        return None
+    return cpus if all(c >= 0 for c in cpus) else None
+
+
+def topology(path, cores, cpus, errors):
+    """The CPU each core of `ab env`'s record holds ({cpu: core}), after checking it is the
+    registered profile; None if it is not (errors appended)"""
+    name = os.path.basename(path)
+    try:
+        env = json.load(open(path))
+    except (OSError, ValueError) as e:
+        errors.append(f"{name}: no machine record ({e})")
+        return None
+    if not isinstance(env, dict):
+        errors.append(f"{name}: not a machine record")
+        return None
+    bad = []
+    if env.get("cores") != cores or isinstance(env.get("cores"), bool):
+        bad.append(f"cores {env.get('cores')!r}, not {cores}")
+    if env.get("cpus") != cpus or isinstance(env.get("cpus"), bool):
+        bad.append(f"cpus {env.get('cpus')!r}, not {cpus}")
+    if "cpu_quota" not in env or env["cpu_quota"] is not None:
+        bad.append(f"cpu_quota {env.get('cpu_quota', 'missing')!r}, not none")
+    core_of = {}
+    cc = env.get("core_cpus")
+    if not isinstance(cc, list) or len(cc) != cores:
+        bad.append(f"core_cpus {cc!r}: not {cores} cores")
+    else:
+        for i, s in enumerate(cc):
+            lst = cpu_list(s)
+            if lst is None:
+                bad.append(f"core_cpus[{i}] {s!r} malformed")
+                continue
+            for c in lst:
+                if c in core_of:
+                    bad.append(f"CPU {c} on two cores")
+                core_of[c] = i
+        if not bad and sorted(core_of) != list(range(cpus)):
+            bad.append(f"the cores' CPUs are not CPUs 0 to {cpus - 1}")
+    if bad:
+        errors.append(f"{name}: not the registered profile: {'; '.join(bad)}")
+        return None
+    return core_of
+
+
+def check_metadata(where, key, r, core_of, cores, hold_max, errors):
+    """A record's pinning and spinner, against the machine (`core_of`) and the hold limit"""
+    t, s = key[2], r.get("cpus")
+    if t > cores:
+        if s != "all":
+            errors.append(f"{where}: {key} pinned {s!r} past the {cores} cores, not unpinned ('all')")
+    else:
+        lst = cpu_list(s)
+        if lst is None:
+            errors.append(f"{where}: {key} its CPUs {s!r} missing or malformed")
+        elif len(lst) != t or len(set(lst)) != t or any(c not in core_of for c in lst) \
+                or len({core_of[c] for c in lst}) != t:
+            errors.append(f"{where}: {key} its CPUs {s!r} are not one on each of {t} cores")
+    hs = r.get("held_spinner")
+    if t > hold_max:
+        if hs is not None:
+            errors.append(f"{where}: {key} a spinner recorded past the hold limit ({hold_max} threads)")
+        return
+    if not isinstance(hs, dict):
+        errors.append(f"{where}: {key} no spinner recorded ({hs!r})")
+        return
+    cpu, overlap, dec, owner = hs.get("cpu"), hs.get("overlap"), hs.get("decoder_cpus"), hs.get("owner")
+    if isinstance(cpu, bool) or not isinstance(cpu, int) or cpu not in core_of:
+        errors.append(f"{where}: {key} the spinner's CPU {cpu!r} malformed")
+        return
+    if not isinstance(overlap, bool):
+        errors.append(f"{where}: {key} the spinner's overlap {overlap!r} malformed")
+    if owner != "run":
+        errors.append(f"{where}: {key} the spinner's owner {owner!r}, not the run")
+    if dec != s:
+        errors.append(f"{where}: {key} the spinner's decoder CPUs {dec!r} are not the run's {s!r}")
+    lst = cpu_list(s) or []
+    if overlap is not False or any(core_of.get(c) == core_of[cpu] for c in lst):
+        errors.append(f"{where}: {key} ran beside a spinner sharing a decoder core (CPU {cpu})")
+
+
+def load(path, roster, errors, meta=None):
     """The file's records by key (corpus, canonical arm, threads, round), after checking each
-    record and the roster; errors appended"""
+    record and the roster; errors appended. `meta`: (core_of, cores, hold_max) to check each
+    record's pinning and spinner against"""
     name, rows, outputs = os.path.basename(path), {}, {}
     if not os.path.exists(path):
         errors.append(f"{name}: missing")
@@ -161,6 +261,8 @@ def load(path, roster, errors):
             hs = r.get("held_spinner")
             if isinstance(hs, dict) and hs.get("overlap"):
                 errors.append(f"{where}: {key} ran beside a spinner sharing a decoder core")
+            if meta is not None:
+                check_metadata(where, key, r, *meta, errors)
             rows[key] = r
     missing = sorted(roster - set(rows))
     if missing:
@@ -181,6 +283,11 @@ def main(argv):
     ap.add_argument("--judged", required=True)
     ap.add_argument("--controls", default="")
     ap.add_argument("--rounds", type=int, default=10)
+    ap.add_argument("--env", required=True, help="the machine as `ab env` recorded it")
+    ap.add_argument("--cores", type=int, default=10)
+    ap.add_argument("--cpus", type=int, default=20)
+    ap.add_argument("--hold-max-threads", type=int, default=9,
+                    help="the spinner's limit as the run had it; 0 for a run without one")
     a = ap.parse_args(argv[1:])
     judged = [int(t) for t in a.judged.split(",")]
     controls = [int(t) for t in a.controls.split(",") if t]
@@ -192,7 +299,8 @@ def main(argv):
         errors.append("the judged and control counts overlap, or the two arms are one")
     corpora = [a.main, a.guard]
     roster = {(c, arm, t, i) for c in corpora for arm in (ref, cand) for t in judged + controls for i in range(R)}
-    rows = load(a.runs, roster, errors)
+    core_of = topology(a.env, a.cores, a.cpus, errors)
+    rows = load(a.runs, roster, errors, None if core_of is None else (core_of, a.cores, a.hold_max_threads))
     print(f"records {len(rows)}; roster {len(roster)} ({ref} and {cand}; {a.main} and {a.guard}; "
           f"judged {judged}, controls {controls}; {R} rounds)")
 
