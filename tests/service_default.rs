@@ -190,8 +190,8 @@ fn the_existing_plan_otherwise() {
     // (machine, threads, pipelined, decoding threads)
     let cases = [
         (i9.clone(), 9, false, 9),
-        (i9.clone(), 11, true, 9),
-        (i9.clone(), 20, true, 9),
+        (i9.clone(), 11, false, 10),
+        (i9.clone(), 20, false, 10),
         (same_shape, 10, false, 10),
         (unknown_quota, 10, false, 10),
         (small, 10, false, 10),

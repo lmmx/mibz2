@@ -2685,6 +2685,13 @@ pub(crate) fn plan_with(threads: usize, phys: Option<usize>, l3: Option<u64>) ->
     if cores < COOP_MIN_CORES || (threads < WORKERS_BELOW_THREADS && threads <= phys) {
         return Plan::Workers(threads);
     }
+    // more threads than physical cores, on 8 to 10 of them: lazy workers, one a core, the
+    // extra hardware threads left idle. On the i9-10900K they beat the teams by 5-7% at 12 to
+    // 20 threads (#145, `just bench-lazy-cap`), where workers on SMT siblings lose and the
+    // teams gain nothing past the cores
+    if threads > phys && (LAZY_FROM_THREADS..WORKERS_BELOW_THREADS).contains(&phys) {
+        return Plan::Workers(phys);
+    }
     if phys == TEN_CORES.0 && l3 == Some(TEN_CORES.1) && threads >= TEN_CORES_MIN_THREADS {
         return Plan::Teams { teams: 3, k: 3 };
     }
@@ -3671,17 +3678,15 @@ mod plan_tests {
         // more threads than physical cores, from 6 cores: teams of 2, at most 4 (0.7 × 20
         // MiB over a full table), as before
         assert_eq!(plan_with(8, Some(6), i9.1), Plan::Teams { teams: 3, k: 2 });
-        assert_eq!(plan_with(9, Some(8), i9.1), Plan::Teams { teams: 4, k: 2 });
-        assert_eq!(plan_with(16, Some(8), i9.1), Plan::Teams { teams: 4, k: 2 });
+        // from 8 cores: lazy workers, one a core (`just bench-lazy-cap`)
+        assert_eq!(plan_with(9, Some(8), i9.1), Plan::Workers(8));
+        assert_eq!(plan_with(16, Some(8), i9.1), Plan::Workers(8));
         // a bigger machine below 10 threads: workers
         assert_eq!(plan_with(8, Some(16), Some(32 << 20)), Plan::Workers(8));
-        // the i9 past its 10 cores: three teams of three (docs/journal/2026-11-06-three-tables.md)
+        // the i9 past its 10 cores: ten lazy workers, one a core (they beat three teams of
+        // three by 5-7% at 12 to 20 threads, `just bench-lazy-cap`)
         for t in [11, 12, 16, 20, 64, usize::MAX] {
-            assert_eq!(
-                plan_with(t, i9.0, i9.1),
-                Plan::Teams { teams: 3, k: 3 },
-                "{t}"
-            );
+            assert_eq!(plan_with(t, i9.0, i9.1), Plan::Workers(10), "{t}");
         }
         // a bigger cache, more teams; no cache size read, 4
         assert_eq!(
@@ -3785,11 +3790,10 @@ mod plan_tests {
         // the i9: lazy workers at 8 to 10 threads, teams from 11
         let i9 = (Some(TEN_CORES.0), Some(TEN_CORES.1));
         assert!(!plan_with(6, i9.0, i9.1).lazy());
-        for t in 8..=10 {
+        for t in [8, 9, 10, 11, 20] {
             assert!(plan_with(t, i9.0, i9.1).lazy(), "{t}");
         }
         for plan in [
-            plan_with(11, i9.0, i9.1),
             PIPELINED_PLAN,
             Plan::Teams { teams: 8, k: 2 },
             Plan::Teams { teams: 3, k: 4 },
