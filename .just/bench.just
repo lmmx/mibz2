@@ -1648,7 +1648,7 @@ bench-lazy-crossover ROUNDS="10" THREADS="4,6,7,8,9,10,12,14,16,20":
 # records and the machine whole, then reads the verdict. Then a diagnostic that decides
 # nothing: L2 misses and references a byte at 10 threads, the two arms under `perf stat`
 # (`bench/counters.py --events l2`), if `kernel.perf_event_paranoid` is 1 or less.
-bench-w12 MASTER="cf5c03e61f5cd2d75f21aa2b2a58bdd13f7c2f7a" COPIES="4" ROUNDS="10" JUDGED="8,9,10,12,20" REPS="10":
+bench-w12 MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" ROUNDS="10" JUDGED="8,9,10,12,20" REPS="10":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/w12
