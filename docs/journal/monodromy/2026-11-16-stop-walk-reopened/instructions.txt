@@ -1,0 +1,16 @@
+pass2s alone (callgrind --toggle-collect=stopwalk::pass2s), every 8th Wikidata block (30 blocks),
+built with RUSTFLAGS="-C target-feature=+popcnt,+bmi1,+bmi2,+lzcnt". Per letter of all 30 blocks.
+
+stop                 points/letter  pass2s/letter  tail cells x71  writer  net saved, before reading the exchange
+cells >= 1.4 r       1.187          54.7           28.6            49.5    +22.5
+cells >= 1.5 r       0.638          38.3           21.5            49.5    +31.8
+cells >= 1.6 r       0.318          32.6           14.4            49.5    +30.4
+
+At domain stops, every 24th block (10 blocks):
+m <= n/16            0.811          39.4  (48.6 a point)
+m <= n/32            0.407          31.3  (77.0 a point)
+m <= n/64            0.204          31.5  (154.9 a point)
+streams exhausted    0.029          41.0  (1425 a point)
+
+The kernel's figures it is netted against (REVIEW 6916500604 on #145): a tail cell 71, the
+shipped writer 49.5, reading the stopped exchange and ranking 11.3 together.

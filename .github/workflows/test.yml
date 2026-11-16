@@ -37,6 +37,17 @@ jobs:
         run: |
           cargo test --features phase-counters --lib phase::
           cargo test --features phase-counters --test phase --test phase_off
+      # the induction recorder (#145, QUEUED 6915302968): the replay against the kernel on
+      # arbitrary columns, tampered logs refused, every block of the test corpora recorded
+      # and checked; then a file of the repository's Markdown recorded (MONODROMY's prose
+      # recipe) and every step replayed again by the Python reader
+      - name: The induction recorder (research feature)
+        run: |
+          cargo test --release --features induction-trace --lib itrace::
+          cargo test --release --features induction-trace --test induction_trace
+          git ls-files 'docs/**/*.md' '*.md' | sort -u | xargs cat | bzip2 -9 > prose.bz2
+          cargo run --release --features induction-trace --example induction_trace -- prose.bz2 irec 1 0
+          python3 bench/irec.py irec --check
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::

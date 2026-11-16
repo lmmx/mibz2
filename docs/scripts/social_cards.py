@@ -64,7 +64,7 @@ PAGE = """<!doctype html>
   }}
   .foot {{ margin-top: auto; font-size: 24px; color: #8a8983; }}
   .hero {{ position: absolute; right: 30px; top: 50%; width: 400px; transform: translateY(-50%); }}
-  .bar {{ position: absolute; left: 0; right: 0; bottom: 0; height: 12px; background: #0f6e74; }}
+  .bar {{ position: absolute; left: 0; right: 0; bottom: 0; height: 12px; background: {bar}; }}
 </style></head>
 <body>
   <div class="text">
@@ -110,8 +110,21 @@ def find_chrome(arg):
     sys.exit("no Chromium found: pass --chrome PATH or set CHROME")
 
 
+# a post's kind (its label: docs/scripts/check_site.py KINDS) sets the colour of the card's
+# bottom bar, the light scheme's colours in docs/site/assets/stylesheets/blog.css
+BARS = {
+    "result": "#1b7339",
+    "synthesis": "#0b6e70",
+    "progress": "#965700",
+    "question": "#6a3db3",
+    "meta": "#2155ad",
+}
+DEFAULT_BAR = "#0f6e74"
+
+
 def render(chrome, out, **fields):
-    """Render one card (section, title, description, foot) to the PNG `out`."""
+    """Render one card (section, title, description, foot, kind) to the PNG `out`."""
+    bar = BARS.get(fields.pop("kind", None), DEFAULT_BAR)
     fields = {k: html.escape(str(v)) for k, v in fields.items()}
     title = len(fields["title"])
     title_px = 66 if title <= 30 else 60 if title <= 70 else 46
@@ -121,7 +134,7 @@ def render(chrome, out, **fields):
         dek_px, dek_lines = 33, 4
     else:
         dek_px, dek_lines = 28, 3
-    page = PAGE.format(w=W, h=H, title_px=title_px, dek_px=dek_px, dek_lines=dek_lines, hero=HERO.resolve().as_uri(), **fields)
+    page = PAGE.format(w=W, h=H, bar=bar, title_px=title_px, dek_px=dek_px, dek_lines=dek_lines, hero=HERO.resolve().as_uri(), **fields)
     with tempfile.TemporaryDirectory() as tmp:
         src = Path(tmp) / "card.html"
         src.write_text(page)
@@ -151,6 +164,25 @@ DEFAULT_DESCRIPTION = (
 )
 
 
+def post_kind(post):
+    """The post's kind, from the label on its meta line (check_site.py keeps labels to KINDS)."""
+    m = re.search(r"·\s*\[([^\]]+)\]\([^)]*\)\s*\n\{: \.post-meta \}", post.read_text())
+    if not m:
+        return None
+    label = m.group(1).strip()
+    if label == "Research synthesis":
+        return "synthesis"
+    if label == "Open question":
+        return "question"
+    if label == "Meta":
+        return "meta"
+    if label.endswith("in progress"):
+        return "progress"
+    if label == "Research result":
+        return "result"
+    return None
+
+
 def cards(root=Path(".")):
     """Every card to draw: its PNG path (relative to the site) and the text it shows."""
     config = tomllib.loads((root / "zensical.toml").read_text())["project"]
@@ -177,6 +209,9 @@ def cards(root=Path(".")):
             description=meta["description"],
             foot=f"{host} · {day.day} {day:%B %Y}",
         )
+        kind = post_kind(post)
+        if kind:
+            out[image]["kind"] = kind
     return out
 
 

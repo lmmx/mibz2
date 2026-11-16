@@ -1,0 +1,35 @@
+records 500 (judged 200, forced 200, overlap 20, dose 80); roster judged 200, forced 200, overlap 20, dose 80
+
+The judged run: mibz2-stop15 over mibz2, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2's
+
+wikidata-x4 (gain family)
+   8 threads: 1.0116 [1.0039, 1.0194] SLOWER; p 9.96e-01; memory 1.010
+   9 threads: 1.0100 [1.0037, 1.0163] SLOWER; p 9.97e-01; memory 0.991
+  10 threads: 0.9914 [0.9800, 1.0029] INCONCLUSIVE; p 6.17e-02; memory 1.020
+  12 threads: 0.9973 [0.9849, 1.0099] INCONCLUSIVE; p 3.18e-01; memory 1.029
+  20 threads: 1.0148 [1.0029, 1.0269] SLOWER; p 9.90e-01; memory 1.010
+
+text (loss and memory guard)
+   8 threads: 0.9964 [0.9866, 1.0064] INCONCLUSIVE; memory 0.997
+   9 threads: 0.9999 [0.9884, 1.0116] INCONCLUSIVE; memory 0.973
+  10 threads: 1.0011 [0.9746, 1.0282] INCONCLUSIVE; memory 1.000
+  12 threads: 1.0028 [0.9904, 1.0154] INCONCLUSIVE; memory 0.994
+  20 threads: 1.0209 [0.9967, 1.0458] INCONCLUSIVE; memory 0.994
+
+Holm at family α 0.05 over the 5 main-corpus cells: 10 p 6.17e-02 does not, 12 p 3.18e-01 does not, 20 p 9.90e-01 does not, 8 p 9.96e-01 does not, 9 p 9.97e-01 does not
+
+VERDICT: NOT ADOPTED. No gain established (Holm rejects at no main-corpus cell); SLOWER at [('wikidata-x4', 8), ('wikidata-x4', 9), ('wikidata-x4', 20)]
+
+Diagnostics (decide nothing):
+  forced workers, each arm over mibz2-workers-lazy on the main corpus (12 and 20 are that many workers):
+    mibz2-workers-stop14: 8 1.030 SLOWER, 9 1.018 SLOWER, 10 1.018 SLOWER, 12 0.982 FASTER, 20 0.951 FASTER
+    mibz2-workers-stop15: 8 1.018 SLOWER, 9 1.007 INCONCLUSIVE, 10 1.004 INCONCLUSIVE, 12 0.986 FASTER, 20 0.965 FASTER
+    mibz2-workers-stop16: 8 1.017 SLOWER, 9 1.008 SLOWER, 10 1.007 INCONCLUSIVE, 12 0.994 INCONCLUSIVE, 20 0.979 FASTER
+  10 threads, the spinner sharing a decoder core (20 of 20 runs shared): 0.9992 [0.9913, 1.0072] INCONCLUSIVE
+  1 thread, mibz2-workers-stop14 over mibz2-workers-lazy: wall 1.1044 [1.0782, 1.1314]
+  1 thread, mibz2-workers-stop15 over mibz2-workers-lazy: wall 1.0638 [1.0324, 1.0962]
+  1 thread, mibz2-workers-stop16 over mibz2-workers-lazy: wall 1.0572 [1.0307, 1.0844]
+  dose, mibz2-workers-lazy: CPU at 10 over CPU at 1, 2.0935 [2.0284, 2.1606]
+  dose, mibz2-workers-stop14: CPU at 10 over CPU at 1, 1.9179 [1.8664, 1.9708]; over mibz2-workers-lazy's, round by round, 0.9161 [0.8880, 0.9452]
+  dose, mibz2-workers-stop15: CPU at 10 over CPU at 1, 1.9825 [1.9552, 2.0101]; over mibz2-workers-lazy's, round by round, 0.9470 [0.9129, 0.9823]
+  dose, mibz2-workers-stop16: CPU at 10 over CPU at 1, 1.9782 [1.9304, 2.0273]; over mibz2-workers-lazy's, round by round, 0.9450 [0.9017, 0.9902]

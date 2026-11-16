@@ -219,6 +219,48 @@ def check_posts(config, problems):
                 problems.append(f"blog/index.md: the card dek for {post.name} differs from its dek")
 
 
+# A post's label and its kind; blog.js colours each kind (keep in step with KINDS there).
+KINDS = {
+    "Research result": "result",
+    "Research synthesis": "synthesis",
+    "Research in progress": "progress",
+    "Work in progress": "progress",
+    "Investigation in progress": "progress",
+    "Open question": "question",
+    "Meta": "meta",
+}
+
+
+def check_kinds(config, problems):
+    """Every post's label, on the post and on its index card, is one of KINDS, and they agree."""
+    blog = ROOT / config["project"]["docs_dir"] / "blog"
+    cards = dict(
+        re.findall(
+            r'<a class="post-card" href="([^"]+)".*?post-card-date">[^<]*·\s*([^<]+?)\s*</span>',
+            (blog / "index.md").read_text(),
+            re.S,
+        )
+    )
+    for post in sorted(blog.glob("*.md")):
+        if post.name == "index.md":
+            continue
+        m = re.search(r"·\s*\[([^\]]+)\]\([^)]*\)\s*\n\{: \.post-meta \}", post.read_text())
+        if not m:
+            continue  # no labelled meta line, as on an appendix
+        label = m.group(1).strip()
+        if label not in KINDS:
+            problems.append(
+                f"blog/{post.name}: the label {label!r} is not a known kind "
+                f"(check_site.py KINDS: {', '.join(KINDS)})"
+            )
+        card = cards.get(post.name)
+        if card is not None and card.strip() != label:
+            problems.append(
+                f"blog/index.md: the card label for {post.name} ({card.strip()!r}) "
+                f"differs from the post's ({label!r})"
+            )
+
+
 def check_cards(config, problems):
     """Every card image exists and was drawn from the text its page has now."""
     docs = ROOT / config["project"]["docs_dir"]
@@ -312,6 +354,7 @@ def main():
         problems.append(f"no built site at {site} (zensical build)")
     check_llms(config, site, problems)
     check_posts(config, problems)
+    check_kinds(config, problems)
     check_cards(config, problems)
     if (site / "index.html").exists():
         check_api(config, site, problems)
