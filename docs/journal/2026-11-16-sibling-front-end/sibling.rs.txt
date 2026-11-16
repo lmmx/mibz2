@@ -1,0 +1,606 @@
+// DRAFT, NEVER COMPILED OR RUN. Kept with docs/journal/2026-11-16-sibling-front-end.md as the
+// design's sketch, in case the gate in §6 there passes. It would sit at src/parallel/sibling.rs
+// behind a research feature. Its `pin` must move into the one shared affinity module (§4).
+
+//! The sibling front end (research, opt-in: the `sibling` feature; never the default).
+//! docs/journal/2026-11-16-sibling-front-end.md has the design, its bound and its risks.
+//!
+//! Past the physical cores, the shipped plan runs one lazy-letters worker a core and leaves
+//! each core's second hardware thread idle (`plan_with`). Here a worker is paired with its
+//! core's SMT sibling: the sibling, the **front**, takes the next job and runs its
+//! move-to-front stage (or, for a block of few symbols, its run records: `runs::front`),
+//! while the worker, the **back**, inverts the block before it, undoes its RLE1 and checks
+//! its CRC. A compute-bound front (a 256-byte list, streamed symbols) beside a memory-bound
+//! inversion, unlike two inversions on one core, which lose (0.5.1's cap).
+//!
+//! **The hand-off** is two front sets a pair (`FrontSet`: `ll`, `counts`, the run records),
+//! circulating: the front fills one while the back inverts the other, so the front runs one
+//! block ahead and no further. The back swaps a set's buffers into its own `Scratch` (no
+//! copy), inverts there exactly as `decode_block` does, and swaps them back.
+//!
+//! **The layout** at `threads` asked for on a machine of `phys` physical cores: as the
+//! shipped plan, `min(threads, phys)` workers of a block each (lazy letters from
+//! `LAZY_FROM_THREADS`), and `min(workers, threads - workers, pairs)` of them get a front,
+//! where `pairs` are the cores whose two SMT siblings this process may both use
+//! (`sibling_pairs`). Each worker, paired or not, is pinned to one core's two CPUs (both
+//! threads of a pair to the same two: the core, not a CPU, so the scanner and the reader,
+//! which float, can still use a sibling the front leaves idle). Where the topology can't be
+//! read, no front and no pin: the shipped plan's workers exactly.
+//!
+//! **The output and the errors** are the shipped decoder's, block for block: `front_half`
+//! and `back_half` are `decode_block`'s two halves for a kernel that doesn't read
+//! checkpoints (Cells and lazy letters), and a block's result is published by its back
+//! through `publish`, as a worker's is. Not traced: the `trace` feature's marks are the
+//! workers' (examples/occupancy.rs reads one thread a block).
+
+use super::{panic_message, publish, worker, Fs, Job, RealFs, Shared, StreamDecoder};
+use crate::block::Symbols;
+use crate::bwt::{Cells, InverseBwt, LazyCells};
+use crate::{ErrorKind, Kernels, Scratch};
+use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::mpsc::{channel, sync_channel, Receiver, Sender, SyncSender};
+use std::sync::{Arc, Mutex};
+
+/// A block's front: its move-to-front stage's output (`ll`, `counts`) or its run records
+#[derive(Default)]
+pub(super) struct FrontSet {
+    ll: Vec<u8>,
+    counts: [u32; 256],
+    runs: crate::runs::Runs,
+}
+
+/// Where a block's front left it, and its rows
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Fronted {
+    Runs(usize),
+    Column(usize),
+}
+
+/// `decode_block`'s first half, for a kernel that doesn't read checkpoints: a block of few
+/// symbols by its run records where the kernel reads them (`reads_runs`), else its
+/// move-to-front stage; then its primary index checked. The same errors, in the same order.
+pub(super) fn front_half(
+    b: &Symbols,
+    k: Kernels,
+    reads_runs: bool,
+    f: &mut FrontSet,
+) -> Result<Fronted, ErrorKind> {
+    if reads_runs && crate::runs::takes_runs(b) {
+        let n = crate::runs::front(b, &mut f.runs, k)?;
+        if b.orig_ptr as usize >= n {
+            return Err(ErrorKind::BadOrigPtr);
+        }
+        return Ok(Fronted::Runs(n));
+    }
+    let n = crate::mtf::mtf(b, &mut f.ll, &mut f.counts, k)?;
+    if b.orig_ptr as usize >= n {
+        return Err(ErrorKind::BadOrigPtr);
+    }
+    Ok(Fronted::Column(n))
+}
+
+/// `decode_block`'s second half on `s`, the block's front in `f` (swapped into `s` for the
+/// call and back out after it): the inverse BWT, RLE1 into `out` and the CRC. The block's
+/// CRC, or its error.
+pub(super) fn back_half<I: InverseBwt>(
+    b: &Symbols,
+    k: Kernels,
+    s: &mut Scratch<I>,
+    f: &mut FrontSet,
+    fronted: Fronted,
+    out: &mut Vec<u8>,
+) -> Result<u32, ErrorKind> {
+    debug_assert!(!s.inverse.wants_checkpoints());
+    std::mem::swap(&mut s.ll, &mut f.ll);
+    std::mem::swap(&mut s.runs, &mut f.runs);
+    s.counts = f.counts;
+    let res = back_in(b, k, s, fronted, out);
+    std::mem::swap(&mut s.ll, &mut f.ll);
+    std::mem::swap(&mut s.runs, &mut f.runs);
+    res
+}
+
+/// `back_half` once the front is in `s`: `decode_block` from its front on
+fn back_in<I: InverseBwt>(
+    b: &Symbols,
+    k: Kernels,
+    s: &mut Scratch<I>,
+    fronted: Fronted,
+    out: &mut Vec<u8>,
+) -> Result<u32, ErrorKind> {
+    let n = match fronted {
+        Fronted::Runs(n) => {
+            if s.inverse.invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k) {
+                return crate::finish(&s.ll, b.crc, k, out);
+            }
+            // (as `decode_block`: records that don't tile the block are a bug in
+            // `runs::front`, and the column's path still gives the right bytes)
+            debug_assert!(false, "the run records don't tile the block");
+            let n = crate::mtf::mtf(b, &mut s.ll, &mut s.counts, k)?;
+            if b.orig_ptr as usize >= n {
+                return Err(ErrorKind::BadOrigPtr);
+            }
+            n
+        }
+        Fronted::Column(n) => n,
+    };
+    debug_assert_eq!(s.ll.len(), n);
+    let in_place = s.inverse.invert_in_place(&mut s.ll, &s.counts, b.orig_ptr);
+    if !in_place {
+        s.inverse.invert(&s.ll, &s.counts, b.orig_ptr, &mut s.rle);
+    }
+    let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
+    crate::finish(inverted, b.crc, k, out)
+}
+
+/// A block handed from a front to its back
+struct Item {
+    place: u64,
+    bit: u64,
+    symbols: Symbols,
+    set: FrontSet,
+    fronted: Result<Fronted, ErrorKind>,
+}
+
+/// The front sets a pair circulates: one being filled, one being inverted
+const SETS: usize = 2;
+
+/// The threads of a decoder with sibling fronts, and where each worker runs
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Layout {
+    /// workers of a block each (the shipped plan's, past the cores)
+    pub workers: usize,
+    /// of them, the first `fronts` have a front on their core's sibling
+    pub fronts: usize,
+    /// worker i's core (its two CPUs), for i below `cores.len()`; the rest unpinned
+    pub cores: Vec<[usize; 2]>,
+}
+
+impl Layout {
+    /// The layout for `threads` asked for, on `phys` physical cores whose SMT pairs this
+    /// process may use are `pairs` (None: not known; then the shipped plan's workers, no
+    /// front, no pin)
+    pub(super) fn new(threads: usize, phys: Option<usize>, pairs: Option<Vec<[usize; 2]>>) -> Self {
+        let threads = threads.max(1);
+        let workers = threads.min(phys.unwrap_or(threads)).max(1);
+        let Some(mut cores) = pairs else {
+            return Layout {
+                workers,
+                fronts: 0,
+                cores: Vec::new(),
+            };
+        };
+        cores.truncate(workers);
+        let fronts = workers.min(threads - workers).min(cores.len());
+        Layout {
+            workers,
+            fronts,
+            cores,
+        }
+    }
+
+    /// The decoder's threads (workers and fronts; not the scanner)
+    pub(super) fn threads(&self) -> usize {
+        self.workers + self.fronts
+    }
+
+    /// Whether its workers invert with lazy letters: as a plan of as many workers
+    pub(super) fn lazy(&self) -> bool {
+        super::Plan::Workers(self.workers).lazy()
+    }
+}
+
+/// The cores whose two SMT siblings this process may both use, each as its two CPUs, lower
+/// first, in order (Linux: `Cpus_allowed_list`, the online CPUs, and each one's
+/// `topology/thread_siblings_list`). A core of one CPU, or of more than two, or with a
+/// sibling not allowed or offline, is left out. None where any of it can't be read.
+pub(super) fn sibling_pairs(fs: &dyn Fs) -> Option<Vec<[usize; 2]>> {
+    if !cfg!(target_os = "linux") {
+        return None;
+    }
+    let status = fs.read("/proc/self/status").ok()?;
+    let allowed = super::cpu_list(
+        status
+            .lines()
+            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))?,
+    )?;
+    let sys = "/sys/devices/system/cpu";
+    let online = super::cpu_list(&fs.read(&format!("{sys}/online")).ok()?)?;
+    let usable: std::collections::BTreeSet<usize> =
+        allowed.intersection(&online).copied().collect();
+    let mut pairs = Vec::new();
+    for &c in &usable {
+        let path = format!("{sys}/cpu{c}/topology/thread_siblings_list");
+        let sibs: Vec<usize> = super::cpu_list(&fs.read(&path).ok()?)?.into_iter().collect();
+        if let [a, b] = sibs[..] {
+            if a == c && usable.contains(&b) {
+                pairs.push([a, b]);
+            }
+        }
+    }
+    Some(pairs)
+}
+
+/// This thread pinned to `cpus` (Linux; false elsewhere, or if the OS refuses)
+fn pin(cpus: &[usize]) -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        extern "C" {
+            fn sched_setaffinity(pid: i32, size: usize, mask: *const u64) -> i32;
+        }
+        let mut mask = [0u64; 16];
+        for &c in cpus {
+            if c >= 64 * mask.len() {
+                return false;
+            }
+            mask[c / 64] |= 1 << (c % 64);
+        }
+        // SAFETY: `mask` is a live, initialised array of exactly the size passed, which the
+        // call only reads; pid 0 is the calling thread
+        unsafe { sched_setaffinity(0, std::mem::size_of_val(&mask), mask.as_ptr()) == 0 }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = cpus;
+        false
+    }
+}
+
+/// Threads pinned by sibling decoders in this process so far (research: the bench's check
+/// that the layout took)
+static PINNED: AtomicUsize = AtomicUsize::new(0);
+
+/// Threads pinned by sibling decoders in this process so far
+#[doc(hidden)]
+pub fn pinned_threads() -> usize {
+    PINNED.load(Ordering::Relaxed)
+}
+
+fn pin_to(core: Option<[usize; 2]>) {
+    if let Some(c) = core {
+        if pin(&c) {
+            PINNED.fetch_add(1, Ordering::Relaxed);
+        }
+    }
+}
+
+impl StreamDecoder {
+    /// Research, opt-in (`sibling`), never the default: the shipped plan's workers past the
+    /// cores, each with a front on its core's SMT sibling where there is one to spare
+    /// (`Layout::new` on this machine), `slots` blocks in flight. Byte for byte the shipped
+    /// decoder's output and errors.
+    #[doc(hidden)]
+    pub fn sibling(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
+        let layout = Layout::new(threads, super::physical_cores(), sibling_pairs(&RealFs));
+        Self::sibling_layout(layout, slots, k)
+    }
+
+    /// Testing: `workers` workers, the first `fronts` of them with a front, none pinned,
+    /// with lazy letters or without, whatever the machine
+    #[doc(hidden)]
+    pub fn sibling_forced(
+        workers: usize,
+        fronts: usize,
+        slots: usize,
+        k: Kernels,
+        lazy: bool,
+    ) -> StreamDecoder {
+        let workers = workers.max(1);
+        let layout = Layout {
+            workers,
+            fronts: fronts.min(workers),
+            cores: Vec::new(),
+        };
+        if lazy {
+            Self::sibling_with::<LazyCells>(layout, slots, k)
+        } else {
+            Self::sibling_with::<Cells>(layout, slots, k)
+        }
+    }
+
+    fn sibling_layout(layout: Layout, slots: usize, k: Kernels) -> StreamDecoder {
+        if layout.lazy() {
+            Self::sibling_with::<LazyCells>(layout, slots, k)
+        } else {
+            Self::sibling_with::<Cells>(layout, slots, k)
+        }
+    }
+
+    fn sibling_with<I: InverseBwt + 'static>(
+        layout: Layout,
+        slots: usize,
+        k: Kernels,
+    ) -> StreamDecoder {
+        let next = Arc::new(AtomicUsize::new(0));
+        let threads = layout.threads();
+        let l = Arc::new(layout);
+        let mut dec = Self::launch(l.workers, slots, move |shared, jobs| {
+            let i = next.fetch_add(1, Ordering::Relaxed);
+            let core = l.cores.get(i).copied();
+            if i < l.fronts {
+                paired::<I>(shared, jobs, k, core, i);
+            } else {
+                pin_to(core);
+                worker::<I>(shared, jobs, k);
+            }
+        });
+        dec.threads = threads;
+        dec.kernel = std::any::type_name::<I>();
+        dec
+    }
+}
+
+/// A worker and its front, both on `core` (where given): the front on a thread of its own,
+/// the back on this one, until the jobs end
+fn paired<I: InverseBwt>(
+    shared: &Shared,
+    jobs: &Mutex<Receiver<Job>>,
+    k: Kernels,
+    core: Option<[usize; 2]>,
+    i: usize,
+) {
+    let (to_back, from_front) = sync_channel::<Item>(SETS);
+    let (free_tx, free_rx) = channel::<FrontSet>();
+    for _ in 0..SETS {
+        let _ = free_tx.send(FrontSet::default());
+    }
+    let reads_runs = I::default().reads_runs();
+    std::thread::scope(|s| {
+        std::thread::Builder::new()
+            .name(format!("mibz2-front-{i}"))
+            .spawn_scoped(s, move || {
+                pin_to(core);
+                front(shared, jobs, k, reads_runs, free_rx, to_back)
+            })
+            .expect("spawn a bz2 front");
+        pin_to(core);
+        back::<I>(shared, k, from_front, free_tx);
+    });
+}
+
+/// The front: a free set, then the next job, its front into the set, handed to the back.
+/// It ends when the jobs end (its back then ends once it has the blocks handed to it) or
+/// when its back has ended.
+fn front(
+    shared: &Shared,
+    jobs: &Mutex<Receiver<Job>>,
+    k: Kernels,
+    reads_runs: bool,
+    free: Receiver<FrontSet>,
+    to_back: SyncSender<Item>,
+) {
+    let mut spare = None;
+    loop {
+        let mut set = match spare.take() {
+            Some(s) => s,
+            None => match free.recv() {
+                Ok(s) => s,
+                Err(_) => return,
+            },
+        };
+        let job = {
+            let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());
+            rx.recv()
+        };
+        let Ok((place, bit, symbols)) = job else {
+            return;
+        };
+        if shared.lock().cancelled {
+            spare = Some(set); // (drain the queue, so the scanner never waits on it)
+            continue;
+        }
+        let fronted = catch_unwind(AssertUnwindSafe(|| {
+            front_half(&symbols, k, reads_runs, &mut set)
+        }))
+        .unwrap_or_else(|p| {
+            set = FrontSet::default();
+            Err(ErrorKind::Internal(panic_message(p)))
+        });
+        let item = Item {
+            place,
+            bit,
+            symbols,
+            set,
+            fronted,
+        };
+        if to_back.send(item).is_err() {
+            return;
+        }
+    }
+}
+
+/// The back: each block its front hands it inverted and finished, published as a worker
+/// publishes, its set given back
+fn back<I: InverseBwt>(shared: &Shared, k: Kernels, rx: Receiver<Item>, free: Sender<FrontSet>) {
+    let mut scratch = Scratch::<I>::default();
+    while let Ok(item) = rx.recv() {
+        let Item {
+            place,
+            bit,
+            symbols,
+            mut set,
+            fronted,
+        } = item;
+        let mut out = {
+            let mut st = shared.lock();
+            if st.cancelled {
+                drop(st);
+                let _ = free.send(set);
+                continue;
+            }
+            st.free_out.pop().unwrap_or_default()
+        };
+        out.clear();
+        let res = match fronted {
+            Err(kind) => Err(kind),
+            Ok(f) => match catch_unwind(AssertUnwindSafe(|| {
+                back_half(&symbols, k, &mut scratch, &mut set, f, &mut out)
+            })) {
+                Ok(r) => r.map(|_| ()),
+                Err(p) => {
+                    scratch = Scratch::default();
+                    set = FrontSet::default();
+                    Err(ErrorKind::Internal(panic_message(p)))
+                }
+            },
+        };
+        publish(shared, place, bit, res.map(|()| out), symbols.syms);
+        let _ = free.send(set);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::decode_block;
+
+    /// A machine's files for `sibling_pairs`
+    struct Fake(std::collections::BTreeMap<String, String>);
+
+    impl Fs for Fake {
+        fn read(&self, path: &str) -> std::io::Result<String> {
+            self.0
+                .get(path)
+                .cloned()
+                .ok_or_else(|| std::io::Error::from(std::io::ErrorKind::NotFound))
+        }
+        fn is_dir(&self, _: &str) -> bool {
+            false
+        }
+    }
+
+    /// `n` cores of two CPUs each, CPU c and c + n siblings (the i9's numbering), with
+    /// `allowed` and `online`
+    fn smt(n: usize, allowed: &str, online: &str) -> Fake {
+        let mut m = std::collections::BTreeMap::new();
+        m.insert(
+            "/proc/self/status".into(),
+            format!("Name:\tx\nCpus_allowed_list:\t{allowed}\n"),
+        );
+        m.insert("/sys/devices/system/cpu/online".into(), online.into());
+        for c in 0..2 * n {
+            let core = c % n;
+            m.insert(
+                format!("/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list"),
+                format!("{},{}\n", core, core + n),
+            );
+        }
+        Fake(m)
+    }
+
+    #[test]
+    fn the_sibling_pairs() {
+        if !cfg!(target_os = "linux") {
+            return;
+        }
+        let i9 = smt(10, "0-19", "0-19");
+        let want: Vec<[usize; 2]> = (0..10).map(|c| [c, c + 10]).collect();
+        assert_eq!(sibling_pairs(&i9), Some(want));
+        // a sibling not allowed, or offline: that core is left out
+        assert_eq!(
+            sibling_pairs(&smt(4, "0-3,5-7", "0-7")),
+            Some(vec![[0, 4], [2, 6], [3, 7]])
+        );
+        assert_eq!(
+            sibling_pairs(&smt(4, "0-7", "0-6")),
+            Some(vec![[0, 4], [1, 5], [2, 6]])
+        );
+        // no SMT: one CPU a core
+        let mut one = smt(4, "0-3", "0-3");
+        for c in 0..4 {
+            one.0.insert(
+                format!("/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list"),
+                format!("{c}\n"),
+            );
+        }
+        assert_eq!(sibling_pairs(&one), Some(vec![]));
+        // a file missing: not known
+        let mut gone = smt(4, "0-7", "0-7");
+        gone.0
+            .remove("/sys/devices/system/cpu/cpu5/topology/thread_siblings_list");
+        assert_eq!(sibling_pairs(&gone), None);
+        assert_eq!(sibling_pairs(&Fake(Default::default())), None);
+    }
+
+    #[test]
+    fn the_layout() {
+        let pairs = || Some((0..10).map(|c| [c, c + 10]).collect::<Vec<_>>());
+        // the i9: the shipped plan's ten workers past the cores, a front for each thread
+        // past them
+        for (t, workers, fronts) in [(4, 4, 0), (10, 10, 0), (12, 10, 2), (16, 10, 6), (20, 10, 10), (32, 10, 10)] {
+            let l = Layout::new(t, Some(10), pairs());
+            assert_eq!((l.workers, l.fronts, l.cores.len()), (workers, fronts, workers), "{t}");
+            assert_eq!(l.threads(), workers + fronts);
+            assert_eq!(l.lazy(), workers >= super::super::LAZY_FROM_THREADS);
+        }
+        // topology not known: the shipped plan's workers, no front, no pin
+        let l = Layout::new(20, None, None);
+        assert_eq!((l.workers, l.fronts, l.cores.len()), (20, 0, 0));
+        let l = Layout::new(20, Some(10), None);
+        assert_eq!((l.workers, l.fronts, l.cores.len()), (10, 0, 0));
+        // no SMT: no front
+        let l = Layout::new(8, Some(4), Some(vec![]));
+        assert_eq!((l.workers, l.fronts), (4, 0));
+        // fewer pairs usable than threads past the cores
+        let l = Layout::new(8, Some(4), Some(vec![[0, 4], [1, 5]]));
+        assert_eq!((l.workers, l.fronts, l.cores.len()), (4, 2, 2));
+    }
+
+    /// Every block of `z`, decoded by `decode_block` and by the two halves (each on scratch
+    /// reused from block to block, as a worker's and a back's are): one output and one
+    /// error a block
+    fn halves_agree<I: InverseBwt>(z: &[u8]) -> usize {
+        use crate::stream::{Event, Scanner, SliceSource};
+        let k = Kernels::detect();
+        let reads_runs = I::default().reads_runs();
+        let (mut whole, mut halves) = (Scratch::<I>::default(), Scratch::<I>::default());
+        let mut sets = [FrontSet::default(), FrontSet::default()];
+        let mut sc = Scanner::new(SliceSource(z));
+        let mut blocks = 0;
+        while let Ok(Event::Block { symbols: mut b, .. }) = sc.next(Vec::new()) {
+            // the block as it is, then with a wrong CRC, then with its primary index past
+            // its end: one output and one error each time
+            for spoil in 0..3 {
+                match spoil {
+                    1 => b.crc ^= 1,
+                    2 => b.orig_ptr = u32::MAX >> 4,
+                    _ => {}
+                }
+                let set = &mut sets[blocks % 2];
+                let (mut a, mut c) = (vec![7u8; 3], vec![7u8; 3]);
+                let want = decode_block(&b, k, &mut whole, &mut a);
+                let got = front_half(&b, k, reads_runs, set)
+                    .and_then(|f| back_half(&b, k, &mut halves, set, f, &mut c));
+                assert_eq!((&got, &c), (&want, &a), "block {blocks}, spoiled {spoil}");
+                assert_eq!(want.is_ok(), spoil == 0, "block {blocks}, spoiled {spoil}");
+                blocks += 1;
+            }
+        }
+        blocks
+    }
+
+    fn compress(data: &[u8], level: u32) -> Vec<u8> {
+        use std::io::Write;
+        let mut e = bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(level));
+        e.write_all(data).unwrap();
+        e.finish().unwrap()
+    }
+
+    #[test]
+    fn the_halves_are_decode_block() {
+        let text: Vec<u8> = (0..400_000u32)
+            .flat_map(|i| format!("{} {} ", i % 977, i % 13).into_bytes())
+            .collect();
+        let runs: Vec<u8> = (0..3_000_000u32).map(|i| b"xyz"[(i / 777 % 3) as usize]).collect();
+        let mut n = 0;
+        for d in [&text[..], &runs[..], b"abacaba", &[]] {
+            for level in [1, 9] {
+                let z = compress(d, level);
+                n += halves_agree::<Cells>(&z);
+                n += halves_agree::<LazyCells>(&z);
+            }
+        }
+        assert!(n > 10, "{n} blocks");
+    }
+}
