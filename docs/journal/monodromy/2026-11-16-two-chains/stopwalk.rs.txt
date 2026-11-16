@@ -101,6 +101,7 @@ fn run(blk: usize, ll: &[u8]) {
     let kseg: usize = std::env::var("KSEG").map_or(256, |v| v.parse().unwrap());
     let mut hyb = String::new();
     let mut keys: Vec<u64> = Vec::new();
+    let mut stepw: Vec<(u32, u32, u32)> = Vec::new(); // (new word id, A's word len at the step, B's word len)
     let mut wins: Vec<(u8, u32)> = Vec::new();
     loop {
         if live == 1 { break; }
@@ -112,6 +113,7 @@ fn run(blk: usize, ll: &[u8]) {
             words.push(W { len, a: wb, b: wa }); (words.len() - 1) as u32
         };
         let ty: u64 = if la > lb { 1 } else if la < lb { 2 } else { 0 };
+        let (wla, wlb) = (words[word[a] as usize].len as u32, words[word[bb] as usize].len as u32);
         keys.push(ty << 60 | (a as u64) << 30 | bb as u64);
         wins.push((ty as u8, if ty == 1 { a as u32 } else if ty == 2 { bb as u32 } else { u32::MAX }));
         let a_fresh = !touched[a];
@@ -147,6 +149,7 @@ fn run(blk: usize, ll: &[u8]) {
             alive[a] = false; live -= 1; live_touched -= 1;
         }
         steps += 1;
+        stepw.push(((words.len() - 1) as u32, wla, wlb));
         peak_touched = peak_touched.max(live_touched);
         for t in 0..3 { if crossed[t] == u64::MAX && m <= thr_list[t] { crossed[t] = steps; } }
         if let Some(pos) = betas.iter().position(|&b| b == steps) {
@@ -244,7 +247,30 @@ fn run(blk: usize, ll: &[u8]) {
         i = j;
     }
     let zh = format!("\"zhist\":{:?},\"ztype\":{:?},\"zends_eq\":{ends_eq},", hist, bytype);
-    let loopstr = format!("\"loops\":[{}],\"zorich\":[{zs},{zsteps}],{zh}", loops.join(","));
+    // streak word census: bytes of words made in streak steps; uses of each word
+    let mut uses = vec![0u32; words.len()];
+    for w in words.iter() { if w.a != NIL { uses[w.a as usize] += 1; uses[w.b as usize] += 1; } }
+    let (mut all_b, mut st_b, mut st_long_b, mut st_short_b, mut st_short_wa, mut st_first_b, mut st_once_long) = (0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+    let mut i = 0;
+    while i < wins.len() {
+        let mut j = i + 1;
+        while j < wins.len() && wins[i].0 != 0 && wins[j] == wins[i] { j += 1; }
+        for q in i..j {
+            let (w, wa, wbb) = stepw[q];
+            let len = words[w as usize].len;
+            let c = cost(len);
+            all_b += c;
+            if j - i >= 2 {
+                st_b += c;
+                if q == i { st_first_b += c; }
+                if len > 16 { st_long_b += c; if uses[w as usize] <= 1 { st_once_long += c; } }
+                else { st_short_b += c; st_short_wa += (if wins[i].0 == 1 { wa } else { wbb }) as u64; }
+            }
+        }
+        i = j;
+    }
+    let zw = format!("\"zwords\":[{all_b},{st_b},{st_first_b},{st_long_b},{st_short_b},{st_short_wa},{st_once_long}],");
+    let loopstr = format!("\"loops\":[{}],\"zorich\":[{zs},{zsteps}],{zh}{zw}", loops.join(","));
     let last = (0..r).find(|&j| alive[j]).unwrap();
     assert_eq!(words[word[last] as usize].len as usize, n, "final word not the block");
     println!("{{\"block\":{blk},\"n\":{n},\"r\":{r},\"S\":{steps},\"eq\":{eq_steps},\"alloc\":{alloc},\"peak_touched\":{peak_touched},{loopstr}\"tower\":[{tower_out}],\"two\":[{two}],\"bstop_live\":[{},{}],\"beta_stop\":[{},{},{}],\"fresh_after\":[[{},{}],[{},{}],[{},{}]],\"exhaust\":[{},{},{},{}],\"hybrid\":[{hyb}],\"curve\":[{}]}}", bstop_live.0, bstop_live.1, beta_stop.0, beta_stop.1, beta_stop.2, fresh_after[0].0, fresh_after[0].1, fresh_after[1].0, fresh_after[1].1, fresh_after[2].0, fresh_after[2].1, exhaust.0, exhaust.1, exhaust.2, exhaust.3, rows.join(","));
