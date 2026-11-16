@@ -17,7 +17,7 @@ A packed table saved memory but cost too much to read. A cheaper compact lookup 
 first positive traversal result.
 {: .post-dek }
 
-2 November 2026 · 27 min read · [Result](#7-timing-the-walk-on-one-core-and-on-four)
+2 November 2026 · 27 min read · [Research result](#7-timing-the-walk-on-one-core-and-on-four)
 {: .post-meta }
 
 </div>
