@@ -2059,13 +2059,16 @@
     },
     {
       "trigger_comment_id": 6920377932,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/stop-walk-adoption-6920377932/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "source_commit": "5870fd3a20b69821536c072e22d650149bb080b6",
       "report_commit": "35b323b7cb16ddec57de36aae5b410f2b135e282",
-      "disposition": "REVISE production-plan correspondence: forced12/20 differ from shipped capped10 workers; synthetic incomplete bundle incorrectly ADOPTS. Spinner, multiplicity and held-out text recommendations recorded."
+      "disposition": "REVISE production-plan correspondence: forced12/20 differ from shipped capped10 workers; synthetic incomplete bundle incorrectly ADOPTS. Spinner, multiplicity and held-out text recommendations recorded.",
+      "review_comment_pr": 145,
+      "review_comment_id": 6921090225,
+      "publication_verification": "Exact body/author/PR145 and role-aware routing verified; pinned helper has only known coordinator-only FROM rejection."
     }
   ],
   "active_delegations": [],
