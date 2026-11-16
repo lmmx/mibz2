@@ -5,14 +5,14 @@
 /// The kernels these tests run: the lazy one, and (research only) the staged one
 fn lever_variants() -> Vec<u8> {
     #[cfg(feature = "memory-lever")]
-    return vec![LAZY, LAZY_PLAIN, STAGED_RULES];
+    return vec![LAZY, LAZY_HINT, STAGED_RULES];
     #[cfg(not(feature = "memory-lever"))]
-    vec![LAZY, LAZY_PLAIN]
+    vec![LAZY, LAZY_HINT]
 }
 
-/// Whether the kernel is a lazy one (with its fetch-ahead, or without)
+/// Whether the kernel is a lazy one (the plan's, or the one that fetches ahead)
 fn lazy_variant(variant: u8) -> bool {
-    matches!(variant, LAZY | LAZY_PLAIN)
+    matches!(variant, LAZY | LAZY_HINT)
 }
 
 fn lever_cases() -> Vec<Vec<u8>> {
@@ -297,9 +297,9 @@ fn cells_lever_route_and_fallback() {
     }
     let (lazy, pool) = run::<LAZY>();
     assert!(lazy.admitted > 1 && lazy.density > 0, "{lazy:?}");
-    let (plain, pool_plain) = run::<LAZY_PLAIN>();
-    assert_eq!((plain.admitted, plain.cells), (lazy.admitted, lazy.cells));
-    assert_eq!(pool_plain, pool);
+    let (hint, pool_hint) = run::<LAZY_HINT>();
+    assert_eq!((hint.admitted, hint.cells), (lazy.admitted, lazy.cells));
+    assert_eq!(pool_hint, pool);
     #[cfg(feature = "memory-lever")]
     {
         let (staged, _) = run::<STAGED_RULES>();
@@ -365,13 +365,13 @@ fn cells_lazy_long_letter() {
     }
 }
 
-/// The lazy induction's fetch-ahead reads entries `FAR_PLACES` on in each stream, and a slot
+/// The fetch-ahead (the bench arm `LAZY_HINT`) reads entries `FAR_PLACES` on in each stream, and a slot
 /// through one. Here the output buffer comes in full of bytes that would read as tagged
 /// entries naming far-off slots, on columns of fewer letters than the look-ahead and of
 /// more: the first stage sets the bytes before the entries, every read stays inside the
 /// buffer (Miri sees one that does not), and the output is the oracle's. Every slot hinted
-/// is the slot then read at its place. The kernel without the fetch-ahead gives the same
-/// cells and hints nothing.
+/// is the slot then read at its place. The plan's kernel, which has no fetch-ahead, gives
+/// the same cells and hints nothing.
 #[test]
 fn miri_cells_lazy_fetch_ahead_stays_inside() {
     for ll in [
@@ -384,7 +384,7 @@ fn miri_cells_lazy_fetch_ahead_stays_inside() {
         let n = ll.len();
         let mut cells = Vec::new();
         let mut met = 0;
-        for variant in [LAZY, LAZY_PLAIN] {
+        for variant in [LAZY_HINT, LAZY] {
             let mut kernel = Kernel {
                 variant,
                 ..Default::default()
@@ -399,7 +399,7 @@ fn miri_cells_lazy_fetch_ahead_stays_inside() {
                 cells.push(made);
                 // a hinted slot is the one its place is then read from (the induction
                 // asserts each), and on a column of enough letters some are hinted
-                if variant == LAZY_PLAIN {
+                if variant == LAZY {
                     assert_eq!(kernel.hints_met, 0);
                 } else if kernel.letters > 2 * FAR_PLACES {
                     assert!(kernel.hints_met > 0, "column {ll:?}, row {p}");
@@ -410,7 +410,7 @@ fn miri_cells_lazy_fetch_ahead_stays_inside() {
                 kernel
                     .first_stage(n, r.records(), p, n, true, &mut out)
                     .unwrap();
-                assert!(out[..BPAD].iter().all(|&b| b == 0));
+                assert_eq!(out[..BPAD].iter().all(|&b| b == 0), variant == LAZY_HINT);
             }
         }
         assert_eq!(cells[..3], cells[3..]);

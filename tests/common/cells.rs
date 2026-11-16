@@ -59,23 +59,19 @@ pub fn check(data: &[u8], k: Kernels) -> (CellsCounts, CellsCounts) {
         )
     };
     {
-        use mibz2::bwt::{ForcedLazyCells, ForcedPlainLazyCells, LazyCells, PlainLazyCells};
+        use mibz2::bwt::{ForcedHintLazyCells, ForcedLazyCells, HintLazyCells, LazyCells};
         let (g, e, s) = decode::<LazyCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "lazy letters");
         same(s.cells_counts(), prod.cells_counts());
         let (g, e, s) = decode::<ForcedLazyCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "lazy letters, forced");
         same(s.cells_counts(), forced.cells_counts());
-        // (the bench arm: lazy letters without the fetch-ahead)
-        let (g, e, s) = decode::<PlainLazyCells>(data, k);
-        assert_eq!((&g, &e), (&want, &err), "lazy letters, no fetch-ahead");
+        // (the bench arm: lazy letters with the induction's fetch-ahead)
+        let (g, e, s) = decode::<HintLazyCells>(data, k);
+        assert_eq!((&g, &e), (&want, &err), "lazy letters, fetch-ahead");
         same(s.cells_counts(), prod.cells_counts());
-        let (g, e, s) = decode::<ForcedPlainLazyCells>(data, k);
-        assert_eq!(
-            (&g, &e),
-            (&want, &err),
-            "lazy letters, no fetch-ahead, forced"
-        );
+        let (g, e, s) = decode::<ForcedHintLazyCells>(data, k);
+        assert_eq!((&g, &e), (&want, &err), "lazy letters, fetch-ahead, forced");
         same(s.cells_counts(), forced.cells_counts());
     }
     // (research only, `memory-lever`: the experiment's staged kernel, the same)

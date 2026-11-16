@@ -7,9 +7,9 @@
 
 /// The kernel a `CellsVariant` runs: Cells as shipped but for this.
 pub(crate) const LAZY: u8 = 1;
-/// Lazy letters without the induction's fetch-ahead: the kernel as 0.5.0 shipped it, kept
-/// as a bench arm beside `LAZY`
-pub(crate) const LAZY_PLAIN: u8 = 3;
+/// Lazy letters with the induction's fetch-ahead (`induce_lazy`): a bench arm beside
+/// `LAZY`, until the i9 has read it
+pub(crate) const LAZY_HINT: u8 = 3;
 
 /// The Cells kernel with another first stage and induction (`V`): `LAZY`, or (research
 /// only, `memory-lever`) `STAGED_RULES`. Admission, budget, fallback and writer are Cells'
@@ -22,13 +22,13 @@ pub type LazyCells = CellsVariant<LAZY>;
 /// Test/fuzz route: lazy letters with `ForcedCells`' open admission
 #[doc(hidden)]
 pub type ForcedLazyCells = CellsVariant<LAZY, true>;
-/// Bench arm: `LazyCells` without its induction's fetch-ahead. The same output, block for
+/// Bench arm: `LazyCells` with its induction fetching ahead. The same output, block for
 /// block.
 #[doc(hidden)]
-pub type PlainLazyCells = CellsVariant<LAZY_PLAIN>;
-/// Test/fuzz route: `PlainLazyCells` with `ForcedCells`' open admission
+pub type HintLazyCells = CellsVariant<LAZY_HINT>;
+/// Test/fuzz route: `HintLazyCells` with `ForcedCells`' open admission
 #[doc(hidden)]
-pub type ForcedPlainLazyCells = CellsVariant<LAZY_PLAIN, true>;
+pub type ForcedHintLazyCells = CellsVariant<LAZY_HINT, true>;
 
 impl<const V: u8, const F: bool> Default for CellsVariant<V, F> {
     fn default() -> Self {
@@ -208,7 +208,7 @@ impl Kernel {
         forced: bool,
         out: &mut Vec<u8>,
     ) -> Result<(), Refusal> {
-        if matches!(self.variant, LAZY | LAZY_PLAIN) {
+        if matches!(self.variant, LAZY | LAZY_HINT) {
             self.slots_lazy(n, recs, p, budget, forced, out)
         } else {
             self.slots(n, recs, p, budget, forced, out)
@@ -224,8 +224,8 @@ impl Kernel {
         match self.variant {
             // (one copy of the induction with the fetch-ahead and one without: no test
             // of it in the loop)
-            LAZY => self.induce_lazy::<true>(budget, out),
-            LAZY_PLAIN => self.induce_lazy::<false>(budget, out),
+            LAZY => self.induce_lazy::<false>(budget, out),
+            LAZY_HINT => self.induce_lazy::<true>(budget, out),
             #[cfg(feature = "memory-lever")]
             STAGED_RULES => self.induce_cells_staged(budget, out),
             _ => self.induce_cells(budget, out),
@@ -314,10 +314,12 @@ impl Kernel {
         if out.len() < bend + GAP {
             out.resize(bend + GAP, 0);
         }
-        // the bytes before the entries: the induction's fetch-ahead reads them as entries
-        // of places before the bottom stream's first (`FAR_PLACES`), and as the slot such
-        // an entry names: none, so 0
-        out[..BPAD].fill(0);
+        // the bytes before the entries: the induction's fetch-ahead (`LAZY_HINT`) reads them
+        // as entries of places before the bottom stream's first (`FAR_PLACES`), and as the
+        // slot such an entry names: none, so 0
+        if self.variant == LAZY_HINT {
+            out[..BPAD].fill(0);
+        }
         self.bottom_laid = true;
         self.lay = lay;
         self.letters = letters;
@@ -483,7 +485,8 @@ impl Kernel {
             let (mut tnew, mut bnew) = (lay.tops, lay.bots);
             // the streams: the top order's bytes and the entries not yet reached
             let (mut ti, mut kb) = (rr, rr);
-            // The fetch-ahead. A front's misses are the slots it reads through an entry the
+            // The fetch-ahead (`AHEAD`: the bench arm `LAZY_HINT`; the plan's kernel has
+            // none). A front's misses are the slots it reads through an entry the
             // other front has tagged: those slots lie anywhere in the pools. So each front
             // looks `FAR_PLACES` on in its stream, and if that place's entry names a slot as
             // memory has it now, hints it. (An entry tagged later than that is not hinted.)

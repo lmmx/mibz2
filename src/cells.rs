@@ -469,7 +469,7 @@ impl Kernel {
             // (the lazy kernel's bottom slots' pool, in the output buffer)
             if let (Some(out), true) = (
                 out,
-                self.bottom_laid && matches!(self.variant, LAZY | LAZY_PLAIN),
+                self.bottom_laid && matches!(self.variant, LAZY | LAZY_HINT),
             ) {
                 let end = self.lz.bend;
                 assert!(
