@@ -1358,12 +1358,15 @@
     {
       "comment_id": 6926191785,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Analysis and ledger complete at report commit; REVIEW pending.",
+      "progress": "Full plan headroom and layout review published and verified; no new run or implementation.",
       "report_path": "state/records/reviews/inbox-6926191785/report.md",
-      "report_commit": "722b476041cf20d4d651e63218bb983ccf77d0b8"
+      "report_commit": "722b476041cf20d4d651e63218bb983ccf77d0b8",
+      "reply_id": 6926545736,
+      "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6926545736",
+      "routing_verification": "Exact readback: #145, author lmmx, inbox ID and TYPE: REVIEW present."
     }
   ],
   "migrated_from": {
