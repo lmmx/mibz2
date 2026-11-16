@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/pr-preview/pr-481/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [A mathematical dictionary](<https://lmmx.github.io/mibz2/pr-preview/pr-481/blog/2026-11-16-mathematical-dictionary/index.md>): Our BWT inversion is not the sheaf an earlier analogy suggested, yet the places of its words form one naturally.
 - [Stop and walk](<https://lmmx.github.io/mibz2/pr-preview/pr-481/blog/2026-11-16-stop-and-walk/index.md>): Halting each block's rebuild early and walking the small loop that remains spares mibz2 a third of the text pieces it stores, for two per cent more instructions.
 - [Lazy letters](<https://lmmx.github.io/mibz2/pr-preview/pr-481/blog/2026-11-16-lazy-letters/index.md>): Holding fewer letters at once leaves the cache less crowded, so eight to ten threads decode up to 11% faster despite extra instructions.
 - [The free closure of an induction](<https://lmmx.github.io/mibz2/pr-preview/pr-481/blog/2026-11-15-free-closure/index.md>): The steps that cost mibz2 no bookkeeping can be taken in any order and still meet at one end point, now proved to belong to the block itself.

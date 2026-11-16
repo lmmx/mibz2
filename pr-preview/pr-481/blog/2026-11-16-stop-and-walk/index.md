@@ -1,6 +1,6 @@
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-481/blog/index.md>)
 
-# Stop and walk: cutting a text rebuild short and walking the rest
+# Stop and walk: cutting a BWT inversion short and walking the rest
 
 Halting each block's rebuild early and walking the small loop that remains spares mibz2 a third of the text pieces it stores, for two per cent more instructions.
 
