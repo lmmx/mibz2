@@ -69,8 +69,9 @@ the worker's own and already warm. `ll` is (it is why #433 worked). The output i
 unless each worker keeps its own output buffer, which the reader's hand-off does not
 allow as it stands.
 
-**Kept from this branch:** counting the cells down (one loop value where there were two);
-the tests' assertion that a refused block leaves `ll` untouched; nothing else is proposed.
+**Worth taking from the branch into another change,** and not merged by this one: the
+cells counted down (one loop value where there were two), and the tests' assertion that a
+refused block leaves `ll` untouched.
 
 # The change as it was proposed
 
