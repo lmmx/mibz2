@@ -120,10 +120,10 @@
     "title": "Reduce, reuse, recycle: hand-me-down slots for every fragment of text"
   },
   "assets/social/blog-2026-11-16-lazy-letters.png": {
-    "description": "Giving a letter memory only while the induction needs it costs instructions but leaves the cache less crowded, so eight to ten threads run up to 11% faster.",
+    "description": "Holding fewer letters at once leaves the cache less crowded, so eight to ten threads decode up to 11% faster despite extra instructions.",
     "foot": "lmmx.github.io/mibz2 · 16 November 2026",
     "section": " · Research blog",
-    "title": "Lazy letters: holding only what the induction still needs"
+    "title": "Lazy letters: just-in-time memory for induction"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",

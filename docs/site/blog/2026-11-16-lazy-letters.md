@@ -1,7 +1,7 @@
 ---
-title: "Lazy letters: holding only what the induction still needs"
+title: "Lazy letters: just-in-time memory for induction"
 image: assets/social/blog-2026-11-16-lazy-letters.png
-description: "Giving a letter memory only while the induction needs it costs instructions but leaves the cache less crowded, so eight to ten threads run up to 11% faster."
+description: "Holding fewer letters at once leaves the cache less crowded, so eight to ten threads decode up to 11% faster despite extra instructions."
 ---
 
 <div class="post-hero" markdown>
@@ -11,9 +11,9 @@ description: "Giving a letter memory only while the induction needs it costs ins
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Lazy letters: holding only what the induction still needs
+# Lazy letters: just-in-time memory for induction
 
-Giving a letter memory only while the induction needs it costs instructions but leaves the cache less crowded, so eight to ten threads run up to 11% faster.
+Holding fewer letters at once leaves the cache less crowded, so eight to ten threads decode up to 11% faster despite extra instructions.
 {: .post-dek }
 
 16 November 2026 · 11 min read · [Research result](#5-what-comes-next)
