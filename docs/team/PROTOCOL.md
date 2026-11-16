@@ -34,6 +34,23 @@ and reads MODE.md first on every run.
   - It is written only by the Observer, by direct commit, never through a PR.
 - **Experiment PRs** go into master, and their checkpoints go to the inboxes.
 
+## 1a. Waking a Claude Code session
+
+Some roles run as Claude Code sessions, not Work tasks. Today these are the Pathfinder and MONODROMY. A post on #145 or in an inbox does **not** wake such a session: an idle session sees nothing until something arrives in its own notification queue.
+
+- **The wake is a direct message.** Use the `send_message` tool of the Claude Code Remote MCP server, addressed to the role's session id. A message to an idle session wakes it: it reads its notifications and resumes. A busy session gets the message at its next turn.
+- **The post is still the record.** The assignment, HANDOFF, REVIEW or question goes on #145 (or the inbox) first, routed and verified as in §2. The direct message only points to it: what is waiting, by comment id, and one line on why.
+- **Who wakes whom:**
+  - The Coordinator wakes any Claude session that has work waiting on it, on every wake when it sees one.
+  - A Claude role that posts something addressed to another Claude role wakes it the same way: the Pathfinder answering MONODROMY's HANDOFF, say, or MONODROMY answering the Pathfinder's format question.
+  - Nobody asks Louis to relay. He is never the notification mechanism (§5).
+- **Finding the session:** use `list_sessions` (with `mine`), and match the role by its session title. The current sessions are:
+  - the Pathfinder: `session_0187sPR5xEL3m1bFakmPHi3P` ("Agent swarm breakthrough with Fable 5.2");
+  - MONODROMY: `session_0187sPR6VfS2exgM79Mtua39` ("Burrows–Wheeler inversion mathematics").
+
+  If a role moves to a new session, the Coordinator updates this list.
+- **Not for Work tasks or Codex.** The Optimiser, Guardian, Researcher and Observer are woken by their inbox PR's webhook (§1). Codex (#363) still needs a manual launch.
+
 ## 2. Dispatch: one assignment in flight per role
 
 - **When a role is busy:** while any of its inbox comments after its offset is not marked
