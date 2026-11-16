@@ -230,7 +230,7 @@ def report(a):
         print(f"\n{t} thread{'s' if t > 1 else ''}: the median over {a.reps} reps, a byte of output; "
               f"{' and '.join(cands)} over {a.ref} as the median of the reps' paired ratios")
         print(f"  {'event':32s} {a.ref:>22s} " + " ".join(f"{c:>22s}" for c in cands) + "   "
-              + ("ratio" if len(cands) == 1 else " ".join(f"{c[-12:]:>12s}" for c in cands)))
+              + ("ratio" if len(cands) == 1 else " ".join(f"{c.removeprefix('mibz2-occ-')[-12:]:>12s}" for c in cands)))
         for e in events:
             ref = [per_byte(a.ref, t, r, e) for r in range(a.reps)]
             line, ratios = f"  {e:32s} {statistics.median(ref):22.6f} ", []
