@@ -2240,11 +2240,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D111",
-    "incoming_comment": 6903560983,
-    "review_comment_id": 6903644101
+    "active_comment": 6904418769,
+    "status": "in progress",
+    "decision": "D112"
   },
   "duplicate_events": [
     {
@@ -4014,6 +4012,13 @@
       "receipt_commit": "404ed1cae9ad2909a6dffbcd33d4e4d02d984bea",
       "review_comment_id": 6903644101,
       "complete_cursor_commit": "f15549ebf2cc4fd0c1340c9800738ef683294d74"
+    },
+    {
+      "comment_id": 6904418769,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D112",
+      "progress": "Receipt; reviewing production lazy dispatch."
     }
   ],
   "migrated_from": {
