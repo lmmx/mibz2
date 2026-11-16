@@ -1669,6 +1669,19 @@
       "status": "finished",
       "disposition": "HOLD B5 closure pending completed Miri evidence; source proof accepted.",
       "comment": 6903644101
+    },
+    {
+      "id": "D112",
+      "decision": [
+        "G1"
+      ],
+      "incoming_comment": 6904418769,
+      "pr": 161,
+      "sha": "6d97806ce32fb72db81c11a67d39140ade0caba5",
+      "evidence_digest": "sha256:24945d19a0fb1f466c4232d7af37a5c7123199a0700cfd24c0352e085ee6d301",
+      "commit": "cf618402c82219a9d6f8b6bfd56ba479583fcd72",
+      "status": "complete",
+      "disposition": "PROCEED scoped B5 review; CI and adoption obligations remain."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -2241,7 +2254,7 @@
   },
   "current_execution": {
     "active_comment": 6904418769,
-    "status": "in progress",
+    "status": "complete",
     "decision": "D112"
   },
   "duplicate_events": [
@@ -3094,6 +3107,13 @@
       "evidence_digest": "sha256:671edbc1a49a970d89e9b948ad097579b6ee4d33a23ab3581f45c3c46440f167",
       "incoming_comment": 6903560983,
       "decision": "D111"
+    },
+    {
+      "pr": 452,
+      "sha": "6d97806ce32fb72db81c11a67d39140ade0caba5",
+      "evidence_digest": "sha256:24945d19a0fb1f466c4232d7af37a5c7123199a0700cfd24c0352e085ee6d301",
+      "incoming_comment": 6904418769,
+      "decision": "D112"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -4016,9 +4036,11 @@
     {
       "comment_id": 6904418769,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D112",
-      "progress": "Receipt; reviewing production lazy dispatch."
+      "progress": "D112 review committed; awaiting publication.",
+      "receipt_commit": "a90159637947900248041211374d23aeb0312e29",
+      "work_commit": "cf618402c82219a9d6f8b6bfd56ba479583fcd72"
     }
   ],
   "migrated_from": {
