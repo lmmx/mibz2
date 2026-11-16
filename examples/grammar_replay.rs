@@ -1,6 +1,6 @@
 //! The grammar replay harness (`--features grammar-replay`; src/cells_replay.rs): every lazy
 //! Cells block of each file, its grammar written by the shipped writer (W16) and by the
-//! 12-byte (W12) and 8-byte (W8) rule writers, with the tables' fit and the §6 and §7
+//! 12-byte (W12, as #506 stores them), 10-byte (W10) and 8-byte (W8) rule writers, with the tables' fit and the §6 and §7
 //! censuses (#145, LOG 6924013198, item 1).
 //!
 //!     cargo run --release --features grammar-replay --example grammar_replay -- REPS FILE...
@@ -29,18 +29,28 @@ fn main() {
             reps
         );
         println!(
-            "rules: {:.4} a letter (G/r); stored: 16 B {:.2}, 12 B {:.2}, 8 B {:.2} bytes a letter",
+            "rules: {:.4} a letter (G/r); stored: 16 B {:.2}, 12 B {:.2}, 10 B {:.2}, 8 B {:.2} bytes a letter",
             g / r,
             16.0 * g / r,
             12.0 * g / r,
+            10.0 * g / r,
             8.0 * g / r
         );
-        let ns: Vec<f64> = (0..3).map(|i| d(s.ns[i], b.ns[i])).collect();
-        println!("writers (the fastest of the reps a block, summed): W16 {:.1} ms, W12 {:.1} ms ({:.3}), W8 {:.1} ms ({:.3})",
-                 ns[0] / 1e6, ns[1] / 1e6, ns[1] / ns[0], ns[2] / 1e6, ns[2] / ns[0]);
+        let ns: Vec<f64> = (0..4).map(|i| d(s.ns[i], b.ns[i])).collect();
         println!(
-            "bytes differing from W16's: W12 {} blocks, W8 {} blocks",
+            "writers (the fastest of the reps a block, summed): W16 {:.1} ms, W12 {:.1} ms ({:.3}), W10 {:.1} ms ({:.3}), W8 {:.1} ms ({:.3})",
+            ns[0] / 1e6,
+            ns[1] / 1e6,
+            ns[1] / ns[0],
+            ns[3] / 1e6,
+            ns[3] / ns[0],
+            ns[2] / 1e6,
+            ns[2] / ns[0]
+        );
+        println!(
+            "bytes differing from W16's: W12 {} blocks, W10 {} blocks, W8 {} blocks",
             s.differ[0] - b.differ[0],
+            s.differ[2] - b.differ[2],
             s.differ[1] - b.differ[1]
         );
         let blocks = s.blocks - b.blocks;
