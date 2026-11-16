@@ -27,8 +27,9 @@ Every interval spans 1. The rule asked for an interval wholly below 1 at 8, at 9
   count. They did not cost measurably either: the instructions are cheap ones.
 - **The slots a front reads through a tagged entry are not where the lazy kernel waits on
   memory,** or the hints do not reach them in time. The run does not tell these apart.
-  The first is the likelier: the pools are small (a third of the letters at most, 28
-  bytes a pair), and stay in the second-level cache.
+  My guess is the first: the pools are about half a megabyte a block (a third of the
+  letters at most, 28 bytes a pair) and are the same memory block after block, so a
+  worker's own caches keep most of them. That is a guess; nothing here measured it.
 - **So the memory pressure the dose shows (CPU at 10 threads over 1: 1.92 for lazy
   workers) is not in these reads.** What is left is what every worker streams through:
   the words, the streams of entries, and the output.
