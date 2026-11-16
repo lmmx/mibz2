@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/lmmx/mibz2/compare/v0.4.0...v0.5.0) - 2026-11-16
+
+### <!-- 9 -->Other
+
+- Workers invert with lazy letters from 8 threads ([#452](https://github.com/lmmx/mibz2/pull/452))
+- Lazy letters: just-in-time memory for induction ([#451](https://github.com/lmmx/mibz2/pull/451))
+- memory-lever experiment — lazy letters and rules past the cache as opt-in arms ([#447](https://github.com/lmmx/mibz2/pull/447))
+- the free closure of an induction: where free steps come to rest ([#442](https://github.com/lmmx/mibz2/pull/442))
+- 0.4.0's notes ([#436](https://github.com/lmmx/mibz2/pull/436))
+- the width of an induction: how much it must hold at once ([#439](https://github.com/lmmx/mibz2/pull/439))
+
 ## [0.4.0](https://github.com/lmmx/mibz2/compare/v0.3.4...v0.4.0) - 2026-11-15
 
 A soundness and memory release.
