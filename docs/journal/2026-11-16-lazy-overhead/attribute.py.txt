@@ -1,0 +1,131 @@
+"""attribute.py CALLGRIND_OUT BINARY FUNCTION SOURCE_FILE RANGES_JSON LETTERS
+
+The events of one function (callgrind --dump-instr=yes --branch-sim=yes --cache-sim=yes),
+instruction by instruction, each given to the line of SOURCE_FILE it was inlined into
+(addr2line -i: the outermost frame in that file), and the lines to the named ranges.
+Prints, per range: Ir, Dr, Dw, Bc, Bcm a letter.
+"""
+import json
+import re
+import subprocess
+import sys
+
+out, binary, func, srcfile, ranges_json, letters = sys.argv[1:7]
+letters = float(letters)
+ranges = json.load(open(ranges_json))  # [[name, first, last], ...]
+
+events = None
+costs = {}  # addr -> list of event counts (exclusive)
+in_fn = False
+skip_next = False
+addr = 0
+names = {}
+for line in open(out):
+    line = line.rstrip("\n")
+    if line.startswith("events:"):
+        events = line.split()[1:]
+        continue
+    if line.startswith("fn="):
+        m = re.match(r"fn=\((\d+)\)(?: (.*))?", line)
+        if m.group(2):
+            names[m.group(1)] = m.group(2)
+        in_fn = func in names.get(m.group(1), "")
+        continue
+    if line.startswith("cfn="):
+        m = re.match(r"cfn=\((\d+)\)(?: (.*))?", line)
+        if m.group(2):
+            names[m.group(1)] = m.group(2)
+        continue
+    if line.startswith("calls="):
+        skip_next = True
+        continue
+    if not line or not (line[0].isdigit() or line[0] in "+-*"):
+        continue
+    parts = line.split()
+    # subposition: address (absolute 0x.., or relative +n/-n, or * for the same), then line
+    a = parts[0]
+    if a.startswith("0x"):
+        addr = int(a, 16)
+    elif a == "*":
+        pass
+    else:
+        addr += int(a)
+    if skip_next:
+        skip_next = False
+        continue
+    if not in_fn:
+        continue
+    vals = [int(x) for x in parts[2:]]
+    c = costs.setdefault(addr, [0] * len(events))
+    for i, v in enumerate(vals):
+        c[i] += v
+
+# the load base: the function's lowest address against its symbol
+sym = None
+for l in subprocess.run(["nm", "-C", binary], capture_output=True, text=True).stdout.splitlines():
+    if l.rstrip().endswith(func):
+        sym = int(l.split()[0], 16)
+low = min(costs)
+base = (low - sym) & ~0xFFF
+assert sym is not None and low - base >= sym, (hex(low), hex(sym))
+
+addrs = sorted(costs)
+res = subprocess.run(
+    ["addr2line", "-i", "-a", "-e", binary] + [hex(a - base) for a in addrs],
+    capture_output=True, text=True,
+).stdout.splitlines()
+where = {}
+chain = {}
+cur = None
+frames = []
+def close():
+    if cur is not None:
+        # the outermost frame in the source file (the last listed)
+        ln = None
+        for f in frames:
+            m = re.match(r"(.*):(\d+)$", f)
+            if m and m.group(1).endswith(srcfile):
+                ln = int(m.group(2))
+        where[cur] = ln
+        chain[cur] = " <- ".join(f.split("/")[-1] for f in frames)
+for l in res:
+    if l.startswith("0x"):
+        close()
+        cur = int(l, 16) + base
+        frames = []
+    else:
+        frames.append(l.replace("(inlined by) ", "").strip().split(" ")[0])
+close()
+
+idx = {e: i for i, e in enumerate(events)}
+tot = {}
+for a, c in costs.items():
+    ln = where.get(a)
+    name = "elsewhere (no line in the file)"
+    if ln is not None:
+        name = f"other lines"
+        for n, lo, hi in ranges:
+            if lo <= ln <= hi:
+                name = n
+                break
+    t = tot.setdefault(name, [0] * len(events))
+    for i, v in enumerate(c):
+        t[i] += v
+cols = ["Ir", "Dr", "Dw", "Bc", "Bcm"]
+print(f"{'part':44s}" + "".join(f"{c:>9s}" for c in cols))
+order = [n for n, _, _ in ranges] + ["other lines", "elsewhere (no line in the file)"]
+allv = [0] * len(events)
+for n in order:
+    if n in tot:
+        print(f"{n:44s}" + "".join(f"{tot[n][idx[c]] / letters:9.2f}" for c in cols))
+        allv = [x + y for x, y in zip(allv, tot[n])]
+print(f"{'all (exclusive of callees)':44s}" + "".join(f"{allv[idx[c]] / letters:9.2f}" for c in cols))
+
+import collections
+el = collections.Counter(); eld = collections.Counter()
+for a, c in costs.items():
+    if where.get(a) is None:
+        el[chain.get(a, "?")] += c[idx["Ir"]]; eld[chain.get(a, "?")] += c[idx["Dr"]] + c[idx["Dw"]]
+print("\nelsewhere, by its frames (Ir, Dr+Dw a letter):")
+for k, v in el.most_common(12):
+    print(f"  {v / letters:6.2f} {eld[k] / letters:6.2f}  {k[:150]}")
