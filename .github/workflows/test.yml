@@ -41,11 +41,18 @@ jobs:
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
           MIBZ2_DOSE_MB=1 MIBZ2_DOSE_KIND=chase cargo test --features dose --test dose
-      # the memory-lever experiment's two opt-in Cells kernels (#145 QUEUED 6901989466): each
-      # against the original induction state by state, the store fence's model, the public
-      # route, the harness's two arms built, the store fence read in the compiled library
-      # (and the experiment's code absent without the feature), and the sign reading on a
-      # made-up run
+      # the lazy crossover's reported readings (`just bench-lazy-crossover`), on a made-up
+      # run: the memory dose of each workers arm, and each arm's peak memory
+      - name: The lazy crossover's reading (made-up run)
+        run: |
+          python3 bench/lazy_crossover.py bench/lazy_crossover_example_runs.jsonl bench/lazy_crossover_example_dose.jsonl | tee dose.txt
+          grep -q '59.8% with a slot for every letter, 20.0% with lazy letters' dose.txt
+          grep -q 'mibz2-workers-lazy *110 *170' dose.txt
+      # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
+      # kernel is production's now, tested above): against the original induction state by
+      # state, the store fence's model, the public route, the harness's two arms built, the
+      # store fence read in the compiled library (and the staged code absent without the
+      # feature), and the sign reading on a made-up run
       - name: The memory-lever build (research feature)
         run: |
           cargo test --features memory-lever --lib cells::

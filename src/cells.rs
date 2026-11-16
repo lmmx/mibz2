@@ -45,11 +45,10 @@ struct Kernel {
     lay: Layout,
     rule_end: usize,
     letters: usize,
-    /// (research only, `memory-lever`) which induction runs: 0 the shipped one, else one of
-    /// the experiment's two (`cells_lever.rs`), and the lazy letters' state
-    #[cfg(feature = "memory-lever")]
+    /// which first stage and induction run: 0 `slots` and `induce_cells`, `LAZY` the lazy
+    /// letters' (`cells_lazy.rs`), or (research only, `memory-lever`) `STAGED_RULES`
     variant: u8,
-    #[cfg(feature = "memory-lever")]
+    /// the lazy letters' state
     lz: Lazy,
     /// (test only) how many times the last staged induction sent rules on; whether it is
     /// to panic right after its first send (the fence's unwinding exit)
@@ -85,7 +84,9 @@ struct Materialization {
 }
 #[cfg(test)]
 include!("cells_original_test.rs");
-// (research only: the memory-lever experiment's two kernels)
+// Cells with lazy letters, the workers' kernel on many threads
+include!("cells_lazy.rs");
+// (research only: the memory-lever experiment's staged kernel)
 #[cfg(feature = "memory-lever")]
 include!("cells_lever.rs");
 
@@ -461,7 +462,7 @@ impl Kernel {
                     "cells canary"
                 );
             }
-            #[cfg(feature = "memory-lever")]
+            // (the lazy kernel's bottom slots' pool, in the output buffer)
             if let (Some(out), true) = (out, self.bottom_laid && self.variant == LAZY) {
                 let end = self.lz.bend;
                 assert!(
@@ -489,18 +490,11 @@ impl Kernel {
         if budget > n || n >= 1 << 24 || recs.len() > n {
             return Err(Refusal::Invalid);
         }
-        #[cfg(not(feature = "memory-lever"))]
-        let result = self.slots(n, recs, p, budget, forced, out).and_then(|()| {
-            // (research only, `phase-counters`: the induction's scope)
-            #[cfg(feature = "phase-counters")]
-            let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
-            self.induce_cells(budget, out)
-        });
-        // (research only, `memory-lever`: the same, or one of the experiment's inductions)
-        #[cfg(feature = "memory-lever")]
+        // the kernel's first stage and induction: the shipped ones, or the lazy letters'
         let result = self
             .first_stage(n, recs, p, budget, forced, out)
             .and_then(|()| {
+                // (research only, `phase-counters`: the induction's scope)
                 #[cfg(feature = "phase-counters")]
                 let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
                 self.induce_variant(budget, out)
@@ -1677,6 +1671,5 @@ mod tests {
         );
     }
     include!("cells_selective_test.rs");
-    #[cfg(feature = "memory-lever")]
-    include!("cells_lever_test.rs");
+    include!("cells_lazy_test.rs");
 }

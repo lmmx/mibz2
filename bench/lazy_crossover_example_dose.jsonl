@@ -1,0 +1,12 @@
+{"arm": "mibz2-workers-eager", "threads": 1, "round": 0, "wall": 10.0, "cpu": 10.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-eager", "threads": 10, "round": 0, "wall": 1.5, "cpu": 15.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-lazy", "threads": 1, "round": 0, "wall": 10.0, "cpu": 10.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-lazy", "threads": 10, "round": 0, "wall": 1.5, "cpu": 12.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-eager", "threads": 1, "round": 1, "wall": 10.0, "cpu": 10.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-eager", "threads": 10, "round": 1, "wall": 1.5, "cpu": 16.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-lazy", "threads": 1, "round": 1, "wall": 10.0, "cpu": 10.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-lazy", "threads": 10, "round": 1, "wall": 1.5, "cpu": 12.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-eager", "threads": 1, "round": 2, "wall": 10.0, "cpu": 10.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-eager", "threads": 10, "round": 2, "wall": 1.5, "cpu": 17.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-lazy", "threads": 1, "round": 2, "wall": 10.0, "cpu": 10.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}
+{"arm": "mibz2-workers-lazy", "threads": 10, "round": 2, "wall": 1.5, "cpu": 12.0, "rss_kb": 1, "out": 1, "hash": "x", "err": ""}

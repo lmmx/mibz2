@@ -120,6 +120,9 @@ pub struct StreamDecoder {
     threads: usize,
     /// its workers are pipelined teams
     pipelined: bool,
+    /// its workers' inverse-BWT kernel, by its type's name (`with_inverse`; empty for a
+    /// decoder not built by it)
+    kernel: &'static str,
     /// the service core's hub, if it is the service core (`service`, or the default at
     /// `SERVICE_PLAN`): for `is_service` and `service_counts`
     hub: Option<Arc<Hub>>,
@@ -213,11 +216,12 @@ impl StreamDecoder {
     /// the plan's workers or teams). The team size is 2, 3 or 4; another runs as that many
     /// production workers.
     pub fn planned(plan: Plan, slots: usize, k: Kernels) -> StreamDecoder {
-        use super::bwt::{Cells, Cooperative, Segmented};
+        use super::bwt::{Cooperative, Segmented};
         let mut dec = match plan {
             // a worker inverts whole blocks, as the calling thread does: Cells, with its
-            // admission gates and Segmented fallback
-            Plan::Workers(n) => Self::with_inverse::<Cells>(n, slots, k),
+            // admission gates and Segmented fallback; with lazy letters from
+            // `LAZY_FROM_THREADS` workers (`Plan::lazy`)
+            Plan::Workers(n) => Self::workers(n, slots, k, plan.lazy()),
             Plan::Teams { teams, k: 2 } => Self::with_inverse::<Cooperative<2>>(teams, slots, k),
             Plan::Teams { teams, k: 3 } => Self::with_inverse::<Cooperative<3>>(teams, slots, k),
             Plan::Teams { teams, k: 4 } => Self::with_inverse::<Cooperative<4>>(teams, slots, k),
@@ -229,18 +233,41 @@ impl StreamDecoder {
         dec
     }
 
-    /// Research, opt-in (`memory-lever`): production's workers, `threads` of them, each
-    /// inverting with one of the experiment's two Cells kernels: lazy letters (`lazy`), or
-    /// rules staged and stored past the cache. Otherwise as `planned(Plan::Workers(threads))`.
-    #[cfg(feature = "memory-lever")]
+    /// `threads` workers of a block each, inverting with Cells: with lazy letters
+    /// (`bwt::LazyCells`) if `lazy`, else with a slot for every letter (`bwt::Cells`).
+    /// `planned(Plan::Workers(threads), ..)` chooses between the two (`Plan::lazy`); this is
+    /// for a caller that must have one of them, whatever the thread count (the bench arms
+    /// that compare them). The output is the same either way.
     #[doc(hidden)]
-    pub fn lever(threads: usize, slots: usize, k: Kernels, lazy: bool) -> StreamDecoder {
-        use super::bwt::{LazyCells, StagedCells};
+    pub fn workers(threads: usize, slots: usize, k: Kernels, lazy: bool) -> StreamDecoder {
+        use super::bwt::{Cells, LazyCells};
         let mut dec = if lazy {
             Self::with_inverse::<LazyCells>(threads, slots, k)
         } else {
-            Self::with_inverse::<StagedCells>(threads, slots, k)
+            Self::with_inverse::<Cells>(threads, slots, k)
         };
+        dec.threads = Plan::Workers(threads).threads();
+        dec
+    }
+
+    /// Whether this decoder's workers invert with lazy letters (`workers`, or a plan of
+    /// `LAZY_FROM_THREADS` workers or more): read from the kernel its workers were
+    /// launched with
+    #[doc(hidden)]
+    pub fn is_lazy(&self) -> bool {
+        self.kernel == std::any::type_name::<super::bwt::LazyCells>()
+    }
+
+    /// Research, opt-in (`memory-lever`): production's workers, `threads` of them, each
+    /// inverting with Cells' rules staged and stored past the cache, or (`lazy`) with lazy
+    /// letters, as `workers` does. Otherwise as `planned(Plan::Workers(threads))`.
+    #[cfg(feature = "memory-lever")]
+    #[doc(hidden)]
+    pub fn lever(threads: usize, slots: usize, k: Kernels, lazy: bool) -> StreamDecoder {
+        if lazy {
+            return Self::workers(threads, slots, k, true);
+        }
+        let mut dec = Self::with_inverse::<super::bwt::StagedCells>(threads, slots, k);
         dec.threads = Plan::Workers(threads).threads();
         dec
     }
@@ -252,9 +279,11 @@ impl StreamDecoder {
         slots: usize,
         k: Kernels,
     ) -> StreamDecoder {
-        Self::launch(threads, slots, move |shared, jobs| {
+        let mut dec = Self::launch(threads, slots, move |shared, jobs| {
             worker::<I>(shared, jobs, k)
-        })
+        });
+        dec.kernel = std::any::type_name::<I>();
+        dec
     }
 
     /// Research, opt-in, not the default: `teams` pipelined teams of `k` threads (at least
@@ -373,6 +402,7 @@ impl StreamDecoder {
             reader: Mutex::default(),
             threads,
             pipelined: false,
+            kernel: "",
             hub: None,
         }
     }
@@ -1854,6 +1884,7 @@ impl StreamDecoder {
             reader: Mutex::default(),
             threads: teams * team_k + services,
             pipelined: false,
+            kernel: "",
             hub: Some(hub),
         }
     }
@@ -2248,6 +2279,14 @@ pub const COOP_MIN_CORES: usize = 6;
 /// teams: one block a thread on SMT siblings was 28-49% slower there.
 pub const WORKERS_BELOW_THREADS: usize = 10;
 
+/// From this many workers of a block each, a worker inverts with lazy letters
+/// (`bwt::LazyCells`): a slot only for a letter in flight, which is 38% less memory beside
+/// the output on Wikidata for a quarter more instructions in the kernel. On the i9-10900K
+/// that was 4%, 11% and 5% faster than the shipped decoder at 8, 9 and 10 threads, and 9%
+/// and 3% slower at 4 and 6 (#145 LOG 6903318530, `just bench-memory-lever`): many workers
+/// contend for the cache, few do not. Below it a worker keeps a slot for every letter.
+pub const LAZY_FROM_THREADS: usize = 8;
+
 /// A full block's T-vector: 900,000 rows × 4 bytes
 const FULL_TABLE: f64 = 3.6e6;
 
@@ -2336,6 +2375,12 @@ impl Plan {
             Plan::Workers(n) => n.max(1),
             Plan::Teams { teams, k } => teams.max(1) * k.max(1),
         }
+    }
+
+    /// Whether the plan's workers invert with lazy letters: a plan of `LAZY_FROM_THREADS`
+    /// workers or more. Teams never do: a team shares one block's table.
+    pub fn lazy(&self) -> bool {
+        matches!(*self, Plan::Workers(n) if n >= LAZY_FROM_THREADS)
     }
 }
 
@@ -3705,6 +3750,49 @@ mod plan_tests {
         assert_eq!(window(t4, 8, 16), 8);
         assert_eq!(window(t4, 20, 1), 4);
         assert_eq!(window(t4, 20, usize::MAX), usize::MAX / 20);
+    }
+
+    /// Workers invert with lazy letters exactly from `LAZY_FROM_THREADS` of them: by the
+    /// plan, by the decoder a plan builds (read from the kernel its workers run), and by
+    /// the default with the plan forced. Teams never do; `workers` gives either kernel at
+    /// any count.
+    #[test]
+    fn lazy_letters_from_their_thread_count() {
+        let k = Kernels::detect();
+        assert_eq!(LAZY_FROM_THREADS, 8);
+        for t in [1, 2, 4, 7, 8, 9, 12, 20] {
+            let lazy = t >= LAZY_FROM_THREADS;
+            assert_eq!(Plan::Workers(t).lazy(), lazy, "{t}");
+            let dec = StreamDecoder::planned(Plan::Workers(t), 2 * t, k);
+            assert_eq!((dec.is_lazy(), dec.threads()), (lazy, t), "{t}");
+            dec.close();
+            let dec = with_plan(Plan::Workers(t), || StreamDecoder::new(t, 2 * t, k));
+            assert_eq!(dec.is_lazy(), lazy, "the default at {t} workers");
+            dec.close();
+            for forced in [false, true] {
+                let dec = StreamDecoder::workers(t, 2 * t, k, forced);
+                assert_eq!((dec.is_lazy(), dec.threads()), (forced, t), "{t}");
+                dec.close();
+            }
+        }
+        // on a machine whose cores are not known, the plan is workers at every count
+        assert!(!plan_with(7, None, None).lazy() && plan_with(8, None, None).lazy());
+        // the i9: workers at 8 and 9 threads, teams from 10
+        let i9 = (Some(TEN_CORES.0), Some(TEN_CORES.1));
+        assert!(!plan_with(6, i9.0, i9.1).lazy());
+        assert!(plan_with(8, i9.0, i9.1).lazy() && plan_with(9, i9.0, i9.1).lazy());
+        for plan in [
+            plan_with(10, i9.0, i9.1),
+            PIPELINED_PLAN,
+            Plan::Teams { teams: 8, k: 2 },
+            Plan::Teams { teams: 3, k: 4 },
+            Plan::Teams { teams: 2, k: 9 },
+        ] {
+            assert!(!plan.lazy(), "{plan:?}");
+            let dec = StreamDecoder::planned(plan, 2 * plan.workers(), k);
+            assert!(!dec.is_lazy(), "{plan:?}");
+            dec.close();
+        }
     }
 
     /// The default decoder's threads are the plan's for this machine, pipelined at

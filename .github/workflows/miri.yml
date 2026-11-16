@@ -16,8 +16,9 @@ on:
     paths:
       - "src/bwt.rs"
       - "src/cells.rs"
+      - "src/cells_lazy.rs"
+      - "src/cells_lazy_test.rs"
       - "src/cells_lever.rs"
-      - "src/cells_lever_test.rs"
       - "src/cells_selective_test.rs"
       - "src/coop.rs"
       - "src/parallel.rs"
@@ -31,8 +32,9 @@ on:
     paths:
       - "src/bwt.rs"
       - "src/cells.rs"
+      - "src/cells_lazy.rs"
+      - "src/cells_lazy_test.rs"
       - "src/cells_lever.rs"
-      - "src/cells_lever_test.rs"
       - "src/cells_selective_test.rs"
       - "src/coop.rs"
       - "src/parallel.rs"
@@ -74,6 +76,9 @@ jobs:
           grep -q '^cells::tests::miri_cells_promised_slots_exact_fit:' miri-list.txt
           grep -q '^cells::tests::miri_cells_bottom_slots_read_through_top:' miri-list.txt
           grep -q '^cells::tests::miri_cells_dead_regions:' miri-list.txt
+          grep -q '^cells::tests::miri_cells_lever_boundaries_reuse:' miri-list.txt
+          grep -q '^cells::tests::miri_cells_lever_exact_fit_and_reuse:' miri-list.txt
+          grep -q '^cells::tests::miri_cells_lazy_closed_letters_give_their_slots_back:' miri-list.txt
           grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
           grep -q '^parallel::service_tests::miri_every_retirement_returns_its_buffers' miri-list.txt
           grep -q '^parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop' miri-list.txt
@@ -81,8 +86,9 @@ jobs:
           grep -q '^parallel::service_unwind_tests::miri_outer_parked' miri-list.txt
       - name: Miri
         run: cargo miri test --lib -- miri_
-      # the memory-lever experiment's two opt-in Cells kernels (`memory-lever`, research):
-      # their unsafe regions against the original induction, and the store fence's model
+      # the memory-lever experiment's staged Cells kernel (`memory-lever`, research): its
+      # unsafe regions against the original induction, and the store fence's model (the
+      # lazy kernel's tests ran above, without the feature)
       - name: The memory-lever kernels' tests are selected
         run: |
           cargo miri test --features memory-lever --lib -- miri_cells_lever miri_cells_staged miri_cells_lazy --list 2>/dev/null | tee lever-list.txt

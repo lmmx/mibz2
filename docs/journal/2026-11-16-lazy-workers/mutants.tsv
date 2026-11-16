@@ -1,0 +1,12 @@
+# file	mutant	verdict	the tests
+-	the tree as it is	ok	tests pass: unit tests pass; lazy_workers: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.84s
+src/parallel.rs	lazy letters from 9 workers, not 8	killed by the tests	tests fail: lazy_letters_from_their_thread_count | src/parallel.rs:3762:9: assertion `left == right` failed
+src/parallel.rs	lazy letters above the count, not from it	killed by the tests	tests fail: lazy_letters_from_their_thread_count | src/parallel.rs:3765:13: assertion `left == right` failed: 8
+src/parallel.rs	every plan of workers is lazy	killed by the tests	tests fail: lazy_letters_from_their_thread_count | src/parallel.rs:3765:13: assertion `left == right` failed: 1
+src/parallel.rs	a plan's decoder never takes the lazy kernel	killed by the tests	tests fail: lazy_letters_from_their_thread_count | src/parallel.rs:3767:13: assertion `left == right` failed: 8
+src/parallel.rs	`workers` takes the other kernel	killed by the tests	tests fail: lazy_letters_from_their_thread_count | src/parallel.rs:3767:13: assertion `left == right` failed: 1
+src/parallel.rs	`workers` launches Cells whatever it is asked	killed by the tests	tests fail: lazy_letters_from_their_thread_count | src/parallel.rs:3774:17: assertion `left == right` failed: 1
+src/parallel.rs	the decoder does not record its kernel	killed by the tests	tests fail: lazy_letters_from_their_thread_count | src/parallel.rs:3773:17: assertion `left == right` failed: 1
+src/cells_lazy.rs	the lazy first stage not taken	killed by the tests	tests fail: cells_lazy_long_letter, cells_lazy_refuses_a_block_past_its_entries, cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lazy_closed_letters_give_their_slots_back, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse | src/cells.rs:468:17: cells canary
+src/cells_lazy.rs	the lazy induction not taken	killed by the tests	tests fail: the test binary died | process didn't exit successfully: `mlz2/target/debug/deps/mibz2-b8f72c4dbf18
+# 9 mutants, 0 not killed
