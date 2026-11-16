@@ -162,3 +162,34 @@ valgrind --tool=callgrind ./target/release/examples/swcount b15 corpora/wikidata
 ./target/release/examples/swcount time corpora/wikidata.bz2 5         # per-block time, best of 5
 just bench-stop-walk                                                   # the i9 run (RULES C5)
 ```
+
+## After the verdict: two chains do not remove the latency (MONODROMY's HANDOFF 6922450227)
+
+MONODROMY proposed splitting the walk's serial chain into two from x_μ: down by T, up by T⁻¹ through a bottom-order rank. It also proposed profiling the reader. Both were built on the arm, byte-exact on all of Wikidata and the tests, in release and debug. Neither gains.
+- **The patch:** against `f3baa922`, `two-chains.diff.txt` (SHA-256 `1eb66259…36ab62a5`).
+- **The walk's timer:** `walk-time.rs.txt` (with a few lines of timing in `walk_stopped`).
+
+**The chains alone do overlap.** These are single-threaded on a VM, best of 5 passes over Wikidata at β = 1.5, the walk alone timed. Following the points and writing nothing:
+- one chain takes 48.8 ms;
+- two chains, a step of each a turn, take 28.4 ms.
+
+**The walk does not get faster.**
+
+| walk | ms |
+|---|--:|
+| one chain (the run's) | 88.5–93.5 |
+| two chains in lockstep, writing as they go | 106 |
+| two chains recording each point's letter, then a writing pass with no chain | 90.1–95.9 |
+| the shipped writer, for scale | 54–63 |
+
+- **Two chains in lockstep:** each chain's data-dependent branches (a word kept as bytes or a rule, the copy's length) mispredict, and every mispredict flushes both chains.
+- **Separate passes:** the single chain's latency was already hidden behind the writes. The walk is bound by producing its bytes, not by the chain.
+- **The instructions:** the two-pass version costs +31 a letter over one chain (the bottom rank, the record pass and the meeting); the lockstep version +17.
+
+**Why the writing is the cost.** The walk writes one live word a point: about 33,000 points a block at β = 1.5, 27 bytes on average. The shipped writer expands the final word's rules once and copies whole repeated sub-words. It writes the same n bytes in about two thirds of the time. So the walk's floor is the writer's work plus its own per-point overhead, which no chain split removes. Against it stand the tail cells not made, about 8 ms a pass, and the memory relief, a dose of 0.947.
+
+**The reader (HANDOFF §2).** At β = 1.5 it is about 20 instructions a letter, 160 a live letter (0.12 r), over three passes: the bottom order, the top order, and the records with their checks.
+- *Not a stream scan:* the stream steps run about 1.5 M times against 1.33 M live letters.
+- *The plain cut:* fusing the top pass with the record pass would save perhaps a third. It is not built, because it cannot close the gap above.
+
+**What would change the arithmetic** is a walk that writes in larger units than one live word: copying a run of points whose words already lie together, as the writer copies a repeated sub-word. That is MONODROMY's to say whether the stopped exchange's structure offers one.
