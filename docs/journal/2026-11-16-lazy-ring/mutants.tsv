@@ -1,0 +1,15 @@
+# file	mutant	verdict	the tests
+-	the tree as it is	ok	tests pass: test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 103 filtered out; finished in 0.19s
+src/cells_lazy.rs	a word made with the walk's row is shared	killed by the tests	tests fail: cells_lazy_ring_exhaustive_arbitrary_columns, miri_cells_lazy_ring_keeps_fewer_words | src/cells.rs:1227:9: assertion `left == right` failed: column [1, 1, 0, 0], row 0
+src/cells_lazy.rs	a word made with the walk's row is kept in the ring	killed by the tests	tests fail: cells_lazy_ring_exhaustive_arbitrary_columns, miri_cells_lazy_ring_keeps_fewer_words | src/cells.rs:1227:9: assertion `left == right` failed: column [1, 1, 0, 0, 0], row 1
+src/cells_lazy.rs	a folded match taken for the word, its key not compared	killed by the tests	tests fail: cells_lazy_ring_exhaustive_arbitrary_columns, miri_cells_lazy_ring_keeps_fewer_words | src/cells.rs:1227:9: assertion `left == right` failed: column [1, 1, 0, 0, 0], row 1
+src/cells_lazy.rs	the key is one factor's offset alone	killed by the tests	tests fail: cells_lazy_ring_exhaustive_arbitrary_columns, miri_cells_lazy_ring_keeps_fewer_words | src/cells.rs:1227:9: assertion `left == right` failed: column [1, 0, 0, 0], row 1
+src/cells_lazy.rs	a shared word's offset not taken	killed by the tests	tests fail: cells_lazy_ring_exhaustive_arbitrary_columns, miri_cells_lazy_ring_keeps_fewer_words | src/cells.rs:1227:9: assertion `left == right` failed: column [1, 0, 1, 0, 0, 0], row 1
+src/cells_lazy.rs	a shared short word still advances the bytes	killed by the tests	tests fail: miri_cells_lazy_ring_keeps_fewer_words | src/cells_lazy_test.rs:509:5: the ring kept fewer words on 0 blocks
+src/cells_lazy.rs	a shared rule still advances the rules	SURVIVED	tests pass: test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 103 filtered out; finished in 0.27s
+src/cells_lazy.rs	the ring keeps the new word's place for a shared word	killed by the tests	tests fail: cells_lazy_ring_exhaustive_arbitrary_columns, miri_cells_lazy_ring_keeps_fewer_words | src/cells.rs:1227:9: assertion `left == right` failed: column [1, 0, 1, 0, 1, 0, 0, 0], row 1
+src/cells_lazy.rs	the ring never keeps a word's key	killed by the tests	tests fail: miri_cells_lazy_ring_keeps_fewer_words | src/cells_lazy_test.rs:509:5: the ring kept fewer words on 4 blocks
+src/cells_lazy.rs	the search reads the first four only	killed by the tests	tests fail: cells_lazy_ring_folded_keys | src/cells_lazy_test.rs:528:5: assertion `left == right` failed
+src/cells_lazy.rs	the plan's kernel runs the ring	killed by the tests	tests fail: cells_lever_exhaustive_state, miri_cells_lazy_ring_keeps_fewer_words, miri_cells_lever_boundaries_reuse | src/cells_selective_test.rs:86:5: assertion `left == right` failed
+src/cells_lazy.rs	the ring's arm runs without it	killed by the tests	tests fail: miri_cells_lazy_ring_keeps_fewer_words | src/cells_lazy_test.rs:509:5: the ring kept fewer words on 0 blocks
+# 12 mutants, 1 not killed
