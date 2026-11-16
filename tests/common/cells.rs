@@ -59,7 +59,10 @@ pub fn check(data: &[u8], k: Kernels) -> (CellsCounts, CellsCounts) {
         )
     };
     {
-        use mibz2::bwt::{ForcedHintLazyCells, ForcedLazyCells, HintLazyCells, LazyCells};
+        use mibz2::bwt::{
+            ForcedHintLazyCells, ForcedLazyCells, ForcedRingLazyCells, HintLazyCells, LazyCells,
+            RingLazyCells,
+        };
         let (g, e, s) = decode::<LazyCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "lazy letters");
         same(s.cells_counts(), prod.cells_counts());
@@ -72,6 +75,13 @@ pub fn check(data: &[u8], k: Kernels) -> (CellsCounts, CellsCounts) {
         same(s.cells_counts(), prod.cells_counts());
         let (g, e, s) = decode::<ForcedHintLazyCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "lazy letters, fetch-ahead, forced");
+        same(s.cells_counts(), forced.cells_counts());
+        // (the bench arm: lazy letters with the ring of eight)
+        let (g, e, s) = decode::<RingLazyCells>(data, k);
+        assert_eq!((&g, &e), (&want, &err), "lazy letters, the ring");
+        same(s.cells_counts(), prod.cells_counts());
+        let (g, e, s) = decode::<ForcedRingLazyCells>(data, k);
+        assert_eq!((&g, &e), (&want, &err), "lazy letters, the ring, forced");
         same(s.cells_counts(), forced.cells_counts());
     }
     // (research only, `memory-lever`: the experiment's staged kernel, the same)

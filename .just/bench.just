@@ -1670,6 +1670,41 @@ bench-lazy-hint ROUNDS="10" THREADS="4,8,9,10":
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
+# The lazy kernel's ring of eight (#145; its decision rule is posted there before the data):
+# one block a thread with lazy letters (`mibz2-workers-lazy`, the plan's kernel from 8
+# threads) against the same keeping a word equal to one of its last eight once
+# (`mibz2-workers-lazy-ring`),
+# at 8, 9 and 10 threads, where the plan uses the kernel, and at 4 as a control. On this
+# machine, at the commit checked out.
+bench-lazy-ring ROUNDS="10" THREADS="4,8,9,10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/lazy-ring
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-lazy-ring (#145, its rule posted there before the data): mibz2-workers-lazy against mibz2-workers-lazy-ring (one block a thread with lazy letters; the second keeps a word equal to one of its last eight once), at {{THREADS}} threads, {{ROUNDS}} paired rounds, on Wikidata, at $(git rev-parse HEAD)"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+    "$AB" run "$O/runs.jsonl" --arms "mibz2-workers-lazy,mibz2-workers-lazy-ring" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
+    # the rule's reading: the arm with the ring against the plan's kernel
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-lazy | tee "$O/summary.txt"
+    git rev-parse HEAD > "$O/commit.txt"
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,

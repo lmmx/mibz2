@@ -417,3 +417,119 @@ fn miri_cells_lazy_fetch_ahead_stays_inside() {
         let _ = met;
     }
 }
+
+/// The ring of eight (the bench arm `LAZY_RING`) through `try_invert` against the plain
+/// walk: every binary column to length 10 at every row, and two long ones. It makes the
+/// plan's kernel's cells, one for one; only which words are kept differs.
+#[test]
+fn cells_lazy_ring_exhaustive_arbitrary_columns() {
+    let (mut ring, mut plain) = (
+        Kernel {
+            variant: LAZY_RING,
+            ..Default::default()
+        },
+        Kernel {
+            variant: LAZY,
+            ..Default::default()
+        },
+    );
+    for n in 1..=10 {
+        for bits in 0..1usize << n {
+            let ll: Vec<_> = (0..n).map(|i| ((bits >> i) & 1) as u8).collect();
+            for p in 0..n {
+                assert_eq!(
+                    check(&mut ring, &ll, p as u32),
+                    check(&mut plain, &ll, p as u32)
+                );
+                let (kept, all) = (ring.lz.words, plain.lz.words);
+                assert!(kept.0 <= all.0 && kept.1 <= all.1, "{ll:?} at {p}");
+            }
+        }
+    }
+    for ll in [
+        [vec![1], vec![0; 100]].concat(),
+        [vec![1; 3], vec![0; 200]].concat(),
+    ] {
+        for p in [0, ll.len() / 2, ll.len() - 1] {
+            assert_eq!(
+                check(&mut ring, &ll, p as u32),
+                check(&mut plain, &ll, p as u32)
+            );
+        }
+    }
+}
+
+/// The ring keeps fewer words on a column that repeats, at every row the walk may start
+/// from (a word made with the walk's row is never shared: its mark is not in its key), with
+/// both kernels' buffers reused from block to block, under Miri.
+#[test]
+fn miri_cells_lazy_ring_keeps_fewer_words() {
+    let (mut ring, mut plain) = (
+        Kernel {
+            variant: LAZY_RING,
+            ..Default::default()
+        },
+        Kernel {
+            variant: LAZY,
+            ..Default::default()
+        },
+    );
+    let mut fewer = 0;
+    for ll in [
+        // runs of five bytes in a period of five: the same two letters meet again and again
+        (0..60usize)
+            .flat_map(|i| [(i % 5) as u8; 4])
+            .collect::<Vec<u8>>(),
+        b"abababababababababab".to_vec(),
+        long_writer_column(),
+        (0..65).map(|i| (i % 3) as u8).collect(),
+    ] {
+        let n = ll.len() as u32;
+        for p in [0, 1, n / 2, n - 1] {
+            ring.buf.fill(0x5A);
+            let cells = check(&mut ring, &ll, p);
+            assert_eq!(cells, check(&mut plain, &ll, p), "column {ll:?}, row {p}");
+            let (kept, all) = (ring.lz.words, plain.lz.words);
+            assert!(kept.0 <= all.0 && kept.1 <= all.1, "{ll:?} at {p}");
+            fewer += usize::from(kept.0 + kept.1 < all.0 + all.1);
+            // a budget of exactly the cells made is accepted, and one less refused
+            let r = Runs::of_column(&ll);
+            let mut out = vec![0xCC; ll.len()];
+            if ring.letters - 1 <= cells && cells > 0 {
+                assert!(ring
+                    .try_invert(r.records(), ll.len(), p, cells, true, &mut out)
+                    .is_ok());
+                assert_eq!(out, oracle(&ll, p));
+                assert!(ring
+                    .try_invert(r.records(), ll.len(), p, cells - 1, true, &mut out)
+                    .is_err());
+            }
+        }
+    }
+    assert!(fewer > 4, "the ring kept fewer words on {fewer} blocks");
+}
+
+/// The ring's search is over folded keys; the key itself decides. Two keys that fold to one
+/// value are found at the first's place, and are not equal.
+#[test]
+fn cells_lazy_ring_folded_keys() {
+    let fold = |key: u64| key as u32 ^ ((key >> 32) as u32).rotate_left(16);
+    let mut ring = Ring::new();
+    // nothing kept: a folded 0 is found (the ring starts as zeros), and its key is no word's
+    assert_eq!(ring.find(0), 0);
+    assert_eq!(ring.keys[0], u64::MAX);
+    assert_eq!(ring.find(7), 8);
+    let (a, b) = (0x0000_0005_0000_0003u64, 0x0005_0000_0000_0003 >> 16 << 16 | 3);
+    // (two different keys of one folded value)
+    let b = if fold(a) == fold(b) { b } else { (0x0001_0000u64) << 32 | (fold(a) ^ 1) as u64 };
+    assert!(a != b && fold(a) == fold(b), "{a:x} {b:x}");
+    ring.folded[5] = fold(a);
+    ring.keys[5] = a;
+    assert_eq!(ring.find(fold(b)), 5);
+    assert_ne!(ring.keys[5], b);
+    // the first of several
+    ring.folded[2] = fold(a);
+    assert_eq!(ring.find(fold(a)), 2);
+    ring.folded[7] = 99;
+    assert_eq!(ring.find(99), 7);
+}

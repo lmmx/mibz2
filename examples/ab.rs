@@ -1162,6 +1162,18 @@ fn decode(
             h,
             last,
         ),
+        // (and lazy letters with the ring of eight, which keeps a word equal to one of the
+        // last eight once: a candidate, not a default)
+        "mibz2-workers-lazy-ring" => drain(
+            mibz2::BzReader::parallel_inverse::<mibz2::bwt::RingLazyCells>(
+                open()?,
+                threads,
+                mibz2::parallel::SLOTS_PER_THREAD * threads,
+                mibz2::Kernels::detect(),
+            ),
+            h,
+            last,
+        ),
         "mibz2-workers-eager" | "mibz2-workers-lazy" => drain(
             mibz2::BzReader::parallel_workers(
                 open()?,

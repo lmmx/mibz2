@@ -10,6 +10,9 @@ pub(crate) const LAZY: u8 = 1;
 /// Lazy letters with the induction's fetch-ahead (`induce_lazy`): a bench arm beside
 /// `LAZY`, until the i9 has read it
 pub(crate) const LAZY_HINT: u8 = 3;
+/// Lazy letters with the ring of eight (`Ring`): a word equal to one of the last eight made
+/// is not kept again. A bench arm beside `LAZY`, until the i9 has read it
+pub(crate) const LAZY_RING: u8 = 4;
 
 /// The Cells kernel with another first stage and induction (`V`): `LAZY`, or (research
 /// only, `memory-lever`) `STAGED_RULES`. Admission, budget, fallback and writer are Cells'
@@ -29,6 +32,13 @@ pub type HintLazyCells = CellsVariant<LAZY_HINT>;
 /// Test/fuzz route: `HintLazyCells` with `ForcedCells`' open admission
 #[doc(hidden)]
 pub type ForcedHintLazyCells = CellsVariant<LAZY_HINT, true>;
+/// Bench arm: `LazyCells` with the ring of eight: fewer words kept. The same output, block
+/// for block.
+#[doc(hidden)]
+pub type RingLazyCells = CellsVariant<LAZY_RING>;
+/// Test/fuzz route: `RingLazyCells` with `ForcedCells`' open admission
+#[doc(hidden)]
+pub type ForcedRingLazyCells = CellsVariant<LAZY_RING, true>;
 
 impl<const V: u8, const F: bool> Default for CellsVariant<V, F> {
     fn default() -> Self {
@@ -45,6 +55,10 @@ impl<const V: u8, const F: bool> CellsVariant<V, F> {
     /// The most slots the last lazy induction took from each pool, and the block's letters
     pub fn pool(&self) -> (usize, usize) {
         (self.0.state.kernel.lz.peak, self.0.state.kernel.letters)
+    }
+    /// The bytes of words the last lazy induction kept: (as bytes, as rules)
+    pub fn words(&self) -> (usize, usize) {
+        self.0.state.kernel.lz.words
     }
 }
 
@@ -96,6 +110,50 @@ const FAR_PLACES: usize = 12;
 const NEAR_PLACES: usize = 6;
 const _: () = assert!(NEAR_PLACES <= FAR_PLACES && 4 * FAR_PLACES <= BPAD);
 
+/// The last eight words the lazy induction made (`LAZY_RING`), each by its key: its two
+/// factors' offsets, 32 bits each. Equal keys are equal words. The search is over the keys
+/// folded to 32 bits, eight at once; the key itself is then compared, so a folded match of
+/// two different keys is no match. (A key of all ones is no word's: an offset is below
+/// 2^31.)
+#[repr(C, align(64))]
+struct Ring {
+    folded: [u32; 8],
+    words: [u32; 8],
+    keys: [u64; 8],
+}
+
+impl Ring {
+    fn new() -> Ring {
+        Ring {
+            folded: [0; 8],
+            words: [0; 8],
+            keys: [u64::MAX; 8],
+        }
+    }
+
+    /// The first of the eight whose folded key is `folded`, or 8
+    #[inline(always)]
+    fn find(&self, folded: u32) -> usize {
+        #[cfg(all(target_arch = "x86_64", not(miri)))]
+        // SAFETY: SSE2 is in every x86-64; the two loads are of this struct's first 32
+        // bytes, which its alignment makes aligned loads
+        unsafe {
+            use core::arch::x86_64::*;
+            let f = _mm_set1_epi32(folded as i32);
+            let p = self.folded.as_ptr() as *const __m128i;
+            let a = _mm_cmpeq_epi32(f, _mm_load_si128(p));
+            let b = _mm_cmpeq_epi32(f, _mm_load_si128(p.add(1)));
+            let m = _mm_movemask_ps(_mm_castsi128_ps(a))
+                | _mm_movemask_ps(_mm_castsi128_ps(b)) << 4;
+            (m as u32 | 0x100).trailing_zeros() as usize
+        }
+        #[cfg(not(all(target_arch = "x86_64", not(miri))))]
+        {
+            self.folded.iter().position(|&f| f == folded).unwrap_or(8)
+        }
+    }
+}
+
 /// What `slots_lazy` leaves for `induce_lazy`, besides the layout.
 #[derive(Clone, Copy)]
 struct Lazy {
@@ -108,6 +166,8 @@ struct Lazy {
     nt: [u32; 256],
     /// the most slots the last induction took from each pool
     peak: usize,
+    /// the bytes of words the last induction kept: (as bytes, as rules)
+    words: (usize, usize),
 }
 impl Default for Lazy {
     fn default() -> Self {
@@ -116,6 +176,7 @@ impl Default for Lazy {
             bend: 0,
             nt: [0; 256],
             peak: 0,
+            words: (0, 0),
         }
     }
 }
@@ -208,7 +269,7 @@ impl Kernel {
         forced: bool,
         out: &mut Vec<u8>,
     ) -> Result<(), Refusal> {
-        if matches!(self.variant, LAZY | LAZY_HINT) {
+        if matches!(self.variant, LAZY | LAZY_HINT | LAZY_RING) {
             self.slots_lazy(n, recs, p, budget, forced, out)
         } else {
             self.slots(n, recs, p, budget, forced, out)
@@ -224,8 +285,9 @@ impl Kernel {
         match self.variant {
             // (one copy of the induction with the fetch-ahead and one without: no test
             // of it in the loop)
-            LAZY => self.induce_lazy::<false>(budget, out),
-            LAZY_HINT => self.induce_lazy::<true>(budget, out),
+            LAZY => self.induce_lazy::<false, false>(budget, out),
+            LAZY_HINT => self.induce_lazy::<true, false>(budget, out),
+            LAZY_RING => self.induce_lazy::<false, true>(budget, out),
             #[cfg(feature = "memory-lever")]
             STAGED_RULES => self.induce_cells_staged(budget, out),
             _ => self.induce_cells(budget, out),
@@ -395,6 +457,7 @@ impl Kernel {
             bend,
             nt,
             peak: 0,
+            words: (0, 0),
         };
         Ok(())
     }
@@ -437,7 +500,7 @@ impl Kernel {
     /// Returns (the cycle's word, its length with the mark, cells). `slots_lazy` has run on
     /// this kernel for the block, and nothing has changed since.
     #[inline(never)]
-    fn induce_lazy<const AHEAD: bool>(
+    fn induce_lazy<const AHEAD: bool, const RING: bool>(
         &mut self,
         budget: usize,
         out: &mut Vec<u8>,
@@ -485,6 +548,7 @@ impl Kernel {
             let (mut tnew, mut bnew) = (lay.tops, lay.bots);
             // the streams: the top order's bytes and the entries not yet reached
             let (mut ti, mut kb) = (rr, rr);
+            let mut ring = Ring::new();
             // The fetch-ahead (`AHEAD`: the bench arm `LAZY_HINT`; the plan's kernel has
             // none). A front's misses are the slots it reads through an entry the
             // other front has tagged: those slots lie anywhere in the pools. So each front
@@ -704,6 +768,10 @@ impl Kernel {
                         }
                         self.rule_end = rp;
                         self.lz.peak = (tnew - lay.tops) / SLOT;
+                        self.lz.words = (
+                            top - (lay.arena + BYTES as usize + 256 + 16),
+                            rp - lay.rules,
+                        );
                         #[cfg(test)]
                         {
                             self.hints_met = hints_met;
@@ -737,9 +805,41 @@ impl Kernel {
                         wr64(base, rp, aw);
                         wr64(base, rp + 8, bw);
                     }
-                    let word = if small { top } else { rp };
-                    top += if small { len as usize } else { 0 };
-                    rp += if small { 0 } else { 16 };
+                    // The ring (`RING`: the bench arm `LAZY_RING`; the plan's kernel has
+                    // none). A cell with the two factors of one of the last eight words is
+                    // that word again: it takes that word's offset, and the bytes or the
+                    // rule just written are written over by the next word.
+                    let (mut again, mut earlier) = (false, 0usize);
+                    if RING {
+                        // (a word's factors, as their offsets: the mark is not in them, so
+                        // a word made with the walk's row is neither looked up nor kept)
+                        let key = (aw >> 32) | (bw >> 32) << 32;
+                        let marked = (aw | bw) as u32 & MARK != 0;
+                        let folded = key as u32 ^ ((key >> 32) as u32).rotate_left(16);
+                        let i = ring.find(folded) & 7;
+                        again = ring.keys[i] == key && !marked;
+                        earlier = ring.words[i] as usize;
+                        // the oldest of the eight gives way (`left` counts the cells down)
+                        let j = left & 7;
+                        ring.folded[j] = folded;
+                        ring.keys[j] = if marked { u64::MAX } else { key };
+                        ring.words[j] = if again {
+                            earlier as u32
+                        } else if small {
+                            top as u32
+                        } else {
+                            rp as u32
+                        };
+                    }
+                    let word = if again {
+                        earlier
+                    } else if small {
+                        top
+                    } else {
+                        rp
+                    };
+                    top += if small && !again { len as usize } else { 0 };
+                    rp += if small || again { 0 } else { 16 };
                     let cw = len | (word as u64) << 32;
                     #[cfg(test)]
                     self.record_materialization([

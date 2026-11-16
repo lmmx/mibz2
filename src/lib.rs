@@ -677,4 +677,9 @@ impl<const V: u8, const F: bool> Scratch<bwt::CellsVariant<V, F>> {
     pub fn lazy_pool(&self) -> (usize, usize) {
         self.inverse.pool()
     }
+    /// The bytes of words the last lazy induction kept: (as bytes, as rules).
+    #[doc(hidden)]
+    pub fn lazy_words(&self) -> (usize, usize) {
+        self.inverse.words()
+    }
 }
