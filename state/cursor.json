@@ -2096,6 +2096,21 @@
       "review_comment_id": 6925440331,
       "review_comment_pr": 145,
       "publication_verification": "Exact body, author lmmx, issue145 and role-aware routing verified. Pinned helper retains only known coordinator-only FROM rejection."
+    },
+    {
+      "trigger_comment_id": 6926192217,
+      "status": "in progress",
+      "pr": 162,
+      "report_path": "state/reports/cap-claim-6926192217/report.md",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+    },
+    {
+      "trigger_comment_id": 6926214255,
+      "status": "in progress",
+      "pr": 162,
+      "amends": 6926192217,
+      "report_path": "state/reports/cap-claim-6926192217/report.md",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
     }
   ],
   "active_delegations": [],
