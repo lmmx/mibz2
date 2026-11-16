@@ -30,6 +30,15 @@ figures are measured on GitHub's runners ([methodology](index.md)).
 - **Before bench 3.0.0** the head ran first in every round, which favoured it by about
   1.8% at 1 thread in an A/A run. Those merges' changes are listed in the table below the
   charts, not chained.
+- **Releases past 4 threads.** On wikidata's throughput, the chart also offers 8 to 20
+  threads, from the release-scaling runs below, on one i9-10900K. Those figures exist only
+  at releases, so each is a diamond at the last merge its release tag contains, joined to
+  the next by a dotted line that is not measured. They are modelled from
+  release-against-release runs (the **All releases** inference below). They share the
+  chain's axis and its meaning, a change since the start with up faster, but start from
+  the oldest release and run on another machine. At 1, 2 and 4 threads they
+  overlay CI's chain; above 4, CI has no figure and they stand alone. **All** puts every
+  thread count side by side, on shared scales.
 - **`text`** is generated from mibz2's own sources, so its content changes from merge to
   merge, and its chain multiplies ratios measured on different files.
 
@@ -57,7 +66,7 @@ Loading the benchmark history…
 
 ## Release scaling, past 4 threads
 
-CI's runners have 4 vCPUs on 2 physical cores, so the charts above stop at 4 threads. A
+CI's runners have 4 vCPUs on 2 physical cores, so CI's figures stop at 4 threads. A
 release-scaling run (`just bench-release-scaling`) fills in the rest. It runs two releases
 and lbzip2 on one machine of a developer's, with the same harness and paired rounds, from 1
 thread to every CPU the machine has. When one is recorded, the chart at the top offers it as
@@ -83,6 +92,9 @@ every release in it. lbzip2, the same build in every run, is a fixed anchor:
   run, so all of them are on one scale. Only lbzip2's curve is measured as drawn.
 - **The cross-check** is the chain, the product of each run's direct comparison of its two
   releases. It needs no anchor, but its errors add up along the chain.
+- **The knee** is each release's thread count of highest modelled throughput, with that
+  peak against the release's own 8- and 10-thread figures. Its table, under the curves,
+  shows where the knee sits release by release, and how the roof above it moves.
 - **The drift diagnostic** compares a release with itself: its ratio to lbzip2 in its two
   runs, made days apart. A difference beyond noise means the machine, or lbzip2's figure on
   it, moved between the runs.

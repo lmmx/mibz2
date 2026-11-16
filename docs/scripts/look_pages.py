@@ -168,8 +168,12 @@ def look(browser, url, out, viewport, theme):
     out.mkdir(parents=True, exist_ok=True)
     shots = []
     for i, (start, end) in enumerate(zip(cuts, cuts[1:])):
-        for j, y in enumerate(range(start, end, SLICE)):
-            shot = out / f"{i:02d}{'abcdefghij'[j] if end - start > SLICE else ''}-{names[i][:48]}.png"
+        slices = range(start, end, SLICE)
+        for j, y in enumerate(slices):
+            # (a slice's letter, or two letters for every slice of a section past 26: aa, ab,
+            # ..., so the names sort in order however tall it is)
+            part = chr(97 + j) if len(slices) <= 26 else chr(97 + j // 26) + chr(97 + j % 26)
+            shot = out / f"{i:02d}{part if end - start > SLICE else ''}-{names[i][:48]}.png"
             page.screenshot(
                 path=shot, full_page=True,
                 clip={"x": 0, "y": y, "width": width, "height": min(SLICE, end - y)},
