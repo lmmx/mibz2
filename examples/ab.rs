@@ -1161,6 +1161,21 @@ fn decode(
             h,
             last,
         ),
+        // the stop-and-walk adoption arms (#145 REVIEW 6921090225): production's decoder,
+        // its plan and window, with the lazy kernel replaced by stop-and-walk wherever the
+        // plan runs lazy workers (`BzReader::parallel_lazy_as`). Against `mibz2` it differs in
+        // the kernel alone, at every thread count; below `LAZY_FROM_THREADS` it is `mibz2`'s
+        // parallel decoder
+        "mibz2-stop14" | "mibz2-stop15" | "mibz2-stop16" => {
+            use mibz2::bwt::{StopLazyCells14, StopLazyCells15, StopLazyCells16};
+            let r = open()?;
+            let rd = match arm {
+                "mibz2-stop14" => mibz2::BzReader::parallel_lazy_as::<StopLazyCells14>(r, threads),
+                "mibz2-stop15" => mibz2::BzReader::parallel_lazy_as::<StopLazyCells15>(r, threads),
+                _ => mibz2::BzReader::parallel_lazy_as::<StopLazyCells16>(r, threads),
+            };
+            drain(rd, h, last)
+        }
         // the stop-and-walk arms (#145 HANDOFF 6916839849): `mibz2-workers-lazy` with the
         // lazy induction stopped after ⌈β r⌉ cells, β = 1.4, 1.5 or 1.6, and the rest of the
         // block walked (`bwt::StopLazyCells15`). The plan and the window are

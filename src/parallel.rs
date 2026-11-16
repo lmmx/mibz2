@@ -263,6 +263,32 @@ impl StreamDecoder {
         dec
     }
 
+    /// `new`, with the lazy kernel replaced by `I` wherever production's decoder would
+    /// invert with lazy letters, and nothing else changed: the same plan
+    /// (`Plan::for_threads`), the same window, the same threads, so that a bench arm built
+    /// this way differs from production in the kernel alone (the stop-and-walk arms,
+    /// `bwt::StopLazyCells15`). Where production's plan is not lazy workers, this is `new`.
+    #[doc(hidden)]
+    pub fn new_lazy_as<I: super::bwt::InverseBwt + 'static>(
+        threads: usize,
+        slots: usize,
+        k: Kernels,
+    ) -> StreamDecoder {
+        let threads = threads.max(1);
+        let plan = Plan::for_threads(threads);
+        match plan {
+            // (the service core and the pipelined teams are never a plan of workers, so
+            // `new` would take `planned` here: `workers(n, slots, k, true)`)
+            Plan::Workers(n) if plan.lazy() => {
+                let mut dec = Self::workers_with::<I>(n, window(plan, threads, slots), k);
+                dec.threads = plan.threads();
+                record_built(&dec);
+                dec
+            }
+            _ => Self::new(threads, slots, k),
+        }
+    }
+
     /// Whether this decoder's workers invert with lazy letters (`workers`, or a plan of
     /// `LAZY_FROM_THREADS` workers or more): read from the kernel its workers were
     /// launched with
@@ -2767,6 +2793,53 @@ fn l3_bytes() -> Option<u64> {
 /// The service core's hub under Miri's race detector: its threads (feeder, service
 /// workers, teams), queues, buffer bounds and wake-ups, on a stream small enough to
 /// interpret (four streams of a small block each, as Python's bz2 writes them)
+#[cfg(test)]
+mod lazy_as_tests {
+    use super::*;
+
+    /// `new_lazy_as` is `new` with the lazy kernel swapped and nothing else: the same
+    /// threads, window and (where production is not lazy) kernel, at every thread count, on
+    /// this machine and on the i9's (ten cores: 12 and 20 threads asked are ten lazy workers)
+    #[test]
+    fn new_lazy_as_differs_from_new_in_the_kernel_alone() {
+        use crate::bwt::{LazyCells, StopLazyCells15};
+        let (lazy, stop) = (
+            std::any::type_name::<LazyCells>(),
+            std::any::type_name::<StopLazyCells15>(),
+        );
+        let k = Kernels::detect();
+        let compare = |t: usize| {
+            let slots = SLOTS_PER_THREAD * t;
+            let (a, b) = (
+                StreamDecoder::new(t, slots, k),
+                StreamDecoder::new_lazy_as::<StopLazyCells15>(t, slots, k),
+            );
+            assert_eq!(a.threads, b.threads, "threads at {t}");
+            assert_eq!(a.window(), b.window(), "window at {t}");
+            assert_eq!(a.kernel == lazy, b.kernel == stop, "kernel at {t}");
+            if a.kernel != lazy {
+                assert_eq!(a.kernel, b.kernel, "kernel at {t}");
+            }
+            (b.threads, b.window(), b.kernel)
+        };
+        for t in 1..=24 {
+            compare(t);
+        }
+        let i9 = with_machine(Machine::service_target(), || {
+            [8, 9, 10, 12, 20].map(|t| (t, compare(t)))
+        });
+        // (the window and the workers are production's, as `new` gives them, whatever the
+        // policy: only the kernel is checked here)
+        for (t, (threads, _, kernel)) in i9 {
+            assert_eq!(kernel, stop, "the i9 at {t}: {kernel}");
+            assert!(
+                threads <= 10,
+                "the i9 at {t}: at most one worker a core, {threads}"
+            );
+        }
+    }
+}
+
 #[cfg(test)]
 mod service_tests {
     use super::*;

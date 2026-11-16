@@ -1,184 +1,288 @@
 #!/usr/bin/env python3
-"""The stop-and-walk run (`just bench-stop-walk`; MONODROMY's HANDOFF 6916839849, Gate 2): the
-rule's verdict, read from the run's records, and its two recorded readings. Standard library only.
+"""The stop-and-walk adoption run (`just bench-stop-walk`): its verdict, read from the run's
+records only after the records are checked whole. Standard library only.
 
-    stop_walk.py RUNS.jsonl DOSE.jsonl [--judge 8,9,10,12,20] [--primary mibz2-workers-stop15]
+    stop_walk.py DIR [--rounds 10] [--threads 8,9,10,12,20] [--copies 4]
 
-**The arms.** `mibz2-workers-lazy`, the shipped kernel at 8 threads and more (lazy letters), is
-the reference. `mibz2-workers-stop14`, `-stop15` and `-stop16` are the same workers, plan and
-window with the lazy induction stopped after ⌈β r⌉ cells, β = 1.4, 1.5, 1.6, and the rest of the
-block walked (`bwt::StopLazyCells15`). An arm differs from the reference in the kernel alone.
+DIR holds the run's four record files (`ab run`'s JSON lines):
+- `judged.jsonl`: `mibz2` and `mibz2-stop15` on the main corpus (`wikidata-xC`, C the copies
+  of the Wikidata sample, `--copies`) and the text
+  corpus (`text`), at the judged thread counts, every round;
+- `forced.jsonl` (diagnostic): `mibz2-workers-lazy`, `-stop14`, `-stop15`, `-stop16` on the main
+  corpus at the judged counts;
+- `overlap.jsonl` (diagnostic): `mibz2` and `mibz2-stop15` on the main corpus at 10 threads with
+  the held spinner sharing a decoder core;
+- `dose.jsonl` (diagnostic): the forced arms on one copy (`wikidata`) at 1 and 10 threads.
 
-**The rule** (posted on #145 before the data). It decides one thing: whether stop-and-walk
-becomes *the* lazy kernel, inside lazy's existing range (`LAZY_FROM_THREADS` = 8 and up, the
-workers past the cores included). It adds no thread threshold.
-- At each thread count, an arm's step is the geometric mean of the rounds' paired wall ratios,
-  arm over reference, with its 95% interval (Student's t), as `ab summary` gives it. FASTER if
-  the interval lies below 1, SLOWER if above, else NO DIFFERENCE (PERFORMANCE-POLICY's "beyond
-  noise").
-- The judged counts are 8, 9, 10, 12 and 20 threads: the whole of lazy's range on the i9. The
-  primary arm is β = 1.5.
-- **Adopts:** the primary arm is FASTER at one judged count or more, SLOWER at none, and its
-  peak resident memory (the median over the rounds) is at most 10% above the reference's at
-  every judged count (PERFORMANCE-POLICY rule 4).
-- **Held on memory:** the wall conditions hold but the memory one does not: the Coordinator
-  weighs it under rule 4.
-- **A finding, not an adoption:** FASTER at some judged counts and SLOWER at others. The arm
-  gets no range of its own; any change would be to the lazy threshold itself, a separate
-  decision.
-- **Not adopted** otherwise. β = 1.4 and 1.6 are read the same way, but only to say which way β
-  would move: they decide nothing.
-- **Void** if any run failed, or the arms' outputs differ on a file.
-
-**Recorded, not judged** (`DOSE.jsonl`: one copy, at 1 thread and 10):
-1. *1 thread:* each arm's wall ratio against the reference. The arms run more of the time in a
-   latency-bound walk than the shipped writer; a 1-thread loss is expected.
-2. *The memory dose:* each arm's CPU at 10 threads over its CPU at 1, round by round, as
-   `bench/lazy_crossover.py` has it, and that dose over the reference's. Below 1: a block costs
-   less among nine others than the shipped kernel's does, which is what the stop is for.
+**The registration** (#145; the Researcher's correction REVIEW 6921090225, accepted in LOG
+6921203037). It decides whether stop-and-walk becomes *the* lazy kernel, where production
+runs lazy workers now, and nothing else: no thread threshold of its own.
+- *The arms:* `mibz2` is production's decoder. `mibz2-stop15` is production's decoder, plan and
+  window with the lazy kernel replaced by stop-and-walk at β = 1.5
+  (`StreamDecoder::new_lazy_as`), so the two differ in the kernel alone. On the i9, 12 and 20
+  threads asked are ten lazy workers, as production runs them. Only β = 1.5 is eligible.
+- *The judged run* has no spinner sharing a decoder core (the spinner is held only where a
+  core is free: at 8 and 9 threads). The 10-thread case with the spinner sharing core 9 is a
+  diagnostic.
+- *A cell's step:* the rounds' paired wall ratios, `mibz2-stop15` over `mibz2`, their geometric
+  mean and its 95% interval (Student's t on the logs). FASTER if the interval lies below 1,
+  SLOWER if above, else INCONCLUSIVE (not equal).
+- *Gain:* Holm's one-sided tests (the mean log ratio below 0) over the five main-corpus cells,
+  family α = 0.05. The gain is established if Holm rejects at one cell or more.
+- *Loss screen:* no judged cell, main or text, is SLOWER. (A noisy loss can still pass a
+  screen that only finds the losses its intervals resolve.)
+- *Memory gate:* at every judged cell, main and text, the median over the rounds of each run's
+  peak resident memory, `mibz2-stop15` over `mibz2`, is at most 1.10.
+- **ADOPTS:** gain established, loss screen clean, memory gate passed.
+- **HELD ON MEMORY:** gain established and loss screen clean, memory gate failed: the
+  Coordinator weighs it under PERFORMANCE-POLICY rule 4.
+- **A FINDING, NOT ADOPTED:** gain established and a cell SLOWER. No range of its own: any
+  change would be to the lazy threshold itself, a separate decision.
+- **NOT ADOPTED:** otherwise.
+- **VOID** (exit 1, no verdict): any record file missing or unreadable; any record not a
+  successful run with finite positive wall, CPU and peak memory; any key (corpus, arm, threads,
+  round) duplicated, unexpected or missing from the full roster; a corpus whose outputs (size
+  and hash) differ; a judged, forced or dose run with the spinner sharing a decoder core.
 """
 import argparse
-import collections
 import json
 import math
+import os
 import statistics
 import sys
 
-REF = "mibz2-workers-lazy"
-ARMS = ["mibz2-workers-stop14", "mibz2-workers-stop15", "mibz2-workers-stop16"]
+JUDGED_ARMS = ["mibz2", "mibz2-stop15"]
+FORCED_ARMS = ["mibz2-workers-lazy", "mibz2-workers-stop14", "mibz2-workers-stop15", "mibz2-workers-stop16"]
+MAIN, GUARD, ONE = "wikidata-x4", "text", "wikidata"
+ALPHA, RSS_GATE = 0.05, 1.10
 # Student's t, two-sided 95%, by degrees of freedom (1..30); 1.96 beyond
 T95 = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179,
        2.160, 2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060,
        2.056, 2.052, 2.048, 2.045, 2.042]
 
 
-def interval(ratios):
-    """(geometric mean, low, high) of paired ratios, with the 95% interval"""
-    logs = [math.log(r) for r in ratios]
+def betainc(a, b, x):
+    """The regularized incomplete beta function I_x(a, b) (a continued fraction, Lentz)"""
+    if x <= 0:
+        return 0.0
+    if x >= 1:
+        return 1.0
+    if x > (a + 1) / (a + b + 2):
+        return 1.0 - betainc(b, a, 1.0 - x)
+    lfront = math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log1p(-x)
+    tiny = 1e-300
+    c, d = 1.0, 1.0 - (a + b) * x / (a + 1)
+    d = 1.0 / (d if abs(d) > tiny else tiny)
+    f = d
+    for m in range(1, 400):
+        for num in (m * (b - m) * x / ((a + 2 * m - 1) * (a + 2 * m)),
+                    -(a + m) * (a + b + m) * x / ((a + 2 * m) * (a + 2 * m + 1))):
+            d = 1.0 + num * d
+            d = 1.0 / (d if abs(d) > tiny else tiny)
+            c = 1.0 + num / c
+            c = c if abs(c) > tiny else tiny
+            f *= c * d
+        if abs(c * d - 1.0) < 1e-15:
+            break
+    return math.exp(lfront) * f / a
+
+
+def t_cdf(t, df):
+    """P(T <= t), T Student's t with df degrees of freedom"""
+    if math.isinf(t):
+        return 0.0 if t < 0 else 1.0
+    tail = 0.5 * betainc(df / 2, 0.5, df / (df + t * t))
+    return tail if t < 0 else 1.0 - tail
+
+
+def step(logs):
+    """(geometric mean, 95% low, 95% high, one-sided p that the mean log is below 0)"""
     n = len(logs)
     mu = statistics.mean(logs)
-    if n < 2:
-        return math.exp(mu), float("nan"), float("nan")
-    t = T95[n - 2] if n - 1 <= len(T95) else 1.96
-    h = t * statistics.stdev(logs) / math.sqrt(n)
-    return math.exp(mu), math.exp(mu - h), math.exp(mu + h)
+    sd = statistics.stdev(logs)
+    t95 = T95[n - 2] if n - 1 <= len(T95) else 1.96
+    h = t95 * sd / math.sqrt(n)
+    if sd == 0:
+        p = 0.0 if mu < 0 else 1.0
+    else:
+        p = t_cdf(mu / (sd / math.sqrt(n)), n - 1)
+    return math.exp(mu), math.exp(mu - h), math.exp(mu + h), p
 
 
-def read(path):
-    """The records by (arm, threads, round), the runs that failed, the outputs by file"""
-    rows, errors, outputs = {}, 0, collections.defaultdict(set)
+def label(lo, hi):
+    return "FASTER" if hi < 1 else "SLOWER" if lo > 1 else "INCONCLUSIVE"
+
+
+def holm(ps, alpha):
+    """Which of `ps` (a dict) Holm's step-down procedure rejects at family `alpha`"""
+    rejected, m = set(), len(ps)
+    for i, (key, p) in enumerate(sorted(ps.items(), key=lambda kv: kv[1])):
+        if p > alpha / (m - i):
+            break
+        rejected.add(key)
+    return rejected
+
+
+def load(path, roster, errors, outputs, spinner_ok):
+    """The file's records by key, after checking each record and the roster; errors appended"""
+    name = os.path.basename(path)
+    rows = {}
+    if not os.path.exists(path):
+        errors.append(f"{name}: missing")
+        return rows
     with open(path) as f:
-        for line in f:
+        for ln, line in enumerate(f, 1):
             if not line.strip():
                 continue
-            r = json.loads(line)
-            if r.get("err") or r.get("termination", "success") != "success":
-                errors += 1
+            where = f"{name}:{ln}"
+            try:
+                r = json.loads(line)
+            except ValueError as e:
+                errors.append(f"{where}: not JSON ({e})")
                 continue
-            rows[(r["arm"], r["threads"], r["round"])] = r
-            outputs[r.get("corpus", "")].add((r.get("out"), r.get("sha256") or r.get("hash")))
-    return rows, errors, outputs
+            if not isinstance(r, dict):
+                errors.append(f"{where}: not a record")
+                continue
+            try:
+                key = (str(r["corpus"]), str(r["arm"]), int(r["threads"]), int(r["round"]))
+            except (KeyError, TypeError, ValueError):
+                errors.append(f"{where}: no corpus, arm, threads or round")
+                continue
+            if key in rows:
+                errors.append(f"{where}: {key} duplicated")
+                continue
+            if key not in roster:
+                errors.append(f"{where}: {key} not in the roster")
+            if r.get("err") or r.get("termination") != "success":
+                errors.append(f"{where}: {key} did not succeed ({r.get('termination')!r}, {r.get('err')!r})")
+            for field in ("wall", "cpu", "rss_kb"):
+                v = r.get(field)
+                if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0:
+                    errors.append(f"{where}: {key} {field} {v!r} is not a finite positive number")
+            out, digest = r.get("out"), r.get("sha256") or r.get("hash")
+            if isinstance(out, bool) or not isinstance(out, int) or out <= 0 or not isinstance(digest, str) or not digest:
+                errors.append(f"{where}: {key} output size {out!r} or hash {digest!r} missing")
+            else:
+                outputs.setdefault(key[0], set()).add((out, digest))
+            hs = r.get("held_spinner")
+            if not spinner_ok and isinstance(hs, dict) and hs.get("overlap"):
+                errors.append(f"{where}: {key} ran beside a spinner sharing a decoder core")
+            rows[key] = r
+    missing = sorted(roster - set(rows))
+    if missing:
+        errors.append(f"{name}: {len(missing)} of {len(roster)} roster keys missing, e.g. {missing[:3]}")
+    return rows
 
 
-def step(rows, arm, t, key="wall", ref=REF):
-    ratios = [r[key] / rows[(ref, t, i)][key] for (a, tt, i), r in rows.items()
-              if a == arm and tt == t and (ref, t, i) in rows]
-    return interval(ratios) + (len(ratios),) if ratios else None
+def roster(corpora, arms, threads, rounds):
+    return {(c, a, t, i) for c in corpora for a in arms for t in threads for i in range(rounds)}
 
 
-def verdict(g, lo, hi):
-    return "FASTER" if hi < 1 else "SLOWER" if lo > 1 else "NO DIFFERENCE"
+def cell(rows, corpus, arm, ref, t, rounds, key="wall"):
+    return [math.log(rows[(corpus, arm, t, i)][key] / rows[(corpus, ref, t, i)][key]) for i in range(rounds)]
+
+
+def peak(rows, corpus, arm, t, rounds):
+    return statistics.median(rows[(corpus, arm, t, i)]["rss_kb"] for i in range(rounds))
 
 
 def main(argv):
     ap = argparse.ArgumentParser()
-    ap.add_argument("runs")
-    ap.add_argument("dose")
-    ap.add_argument("--judge", default="8,9,10,12,20")
-    ap.add_argument("--primary", default="mibz2-workers-stop15")
+    ap.add_argument("dir")
+    ap.add_argument("--rounds", type=int, default=10)
+    ap.add_argument("--threads", default="8,9,10,12,20")
+    ap.add_argument("--copies", type=int, default=4)
     a = ap.parse_args(argv[1:])
-    judge = [int(t) for t in a.judge.split(",")]
-
-    rows, errors, outputs = read(a.runs)
-    drows, derrors, doutputs = read(a.dose)
-    differ = [c for o in (outputs, doutputs) for c, v in o.items() if len(v) != 1]
-    print(f"runs {len(rows)} and {len(drows)}; failed {errors + derrors}; files whose arms' outputs differ {differ}")
-    if errors or derrors or differ:
-        print("VOID: a run failed, or the arms' outputs differ")
+    global MAIN
+    MAIN = f"wikidata-x{a.copies}"
+    threads = [int(t) for t in a.threads.split(",")]
+    R = a.rounds
+    errors, outputs = [], {}
+    if R < 2:
+        errors.append(f"--rounds {R}: at least 2")
+    files = {
+        "judged": (roster([MAIN, GUARD], JUDGED_ARMS, threads, R), False),
+        "forced": (roster([MAIN], FORCED_ARMS, threads, R), False),
+        "overlap": (roster([MAIN], JUDGED_ARMS, [10], R), True),
+        "dose": (roster([ONE], FORCED_ARMS, [1, 10], R), False),
+    }
+    data = {f: load(os.path.join(a.dir, f + ".jsonl"), ros, errors, outputs, ok) for f, (ros, ok) in files.items()}
+    for corpus, outs in sorted(outputs.items()):
+        if len(outs) != 1:
+            errors.append(f"{corpus}: the runs' outputs differ: {sorted(outs)[:3]}")
+    n = sum(len(d) for d in data.values())
+    print(f"records {n} (judged {len(data['judged'])}, forced {len(data['forced'])}, "
+          f"overlap {len(data['overlap'])}, dose {len(data['dose'])}); roster "
+          + ", ".join(f"{f} {len(ros)}" for f, (ros, _) in files.items()))
+    if errors:
+        print(f"VOID: the records do not make the registered run ({len(errors)} problems); no verdict")
+        for e in errors[:25]:
+            print(f"  {e}")
+        if len(errors) > 25:
+            print(f"  ... and {len(errors) - 25} more")
         return 1
 
-    print(f"\nwall, arm over {REF}: the geometric mean of the paired rounds' ratios [95% interval];"
-          " peak resident memory, the median over the rounds, over the reference's")
-    found, rss = {}, {}
-
-    def peak(arm, t):
-        v = [r["rss_kb"] for (a, tt, _), r in rows.items() if a == arm and tt == t and r.get("rss_kb")]
-        return statistics.median(v) if v else None
-
-    for t in sorted({k[1] for k in rows}):
-        print(f"\n{t} threads{' (judged)' if t in judge else ''}")
-        ref_rss = peak(REF, t)
-        for arm in ARMS:
-            s = step(rows, arm, t)
-            if s is None:
-                print(f"  {arm}: no paired rounds")
-                continue
-            g, lo, hi, n = s
-            v = verdict(g, lo, hi)
-            found[(arm, t)] = v
-            a_rss = peak(arm, t)
-            rss[(arm, t)] = a_rss / ref_rss if a_rss and ref_rss else None
-            mem = f"; memory {rss[(arm, t)]:.3f}" if rss[(arm, t)] else "; memory not recorded"
-            print(f"  {arm}: {g:.4f} [{lo:.4f}, {hi:.4f}] over {n} rounds: {v}{mem}")
-
-    prim = [found.get((a.primary, t)) for t in judge]
-    missing = [t for t, v in zip(judge, prim) if v is None]
+    J = data["judged"]
+    print(f"\nThe judged run: mibz2-stop15 over mibz2, the paired rounds' wall ratios: geometric mean "
+          f"[95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2's")
+    steps, ps, mem = {}, {}, {}
+    for corpus in (MAIN, GUARD):
+        print(f"\n{corpus}{' (gain family)' if corpus == MAIN else ' (loss and memory guard)'}")
+        for t in threads:
+            g, lo, hi, p = step(cell(J, corpus, "mibz2-stop15", "mibz2", t, R))
+            steps[(corpus, t)] = label(lo, hi)
+            mem[(corpus, t)] = peak(J, corpus, "mibz2-stop15", t, R) / peak(J, corpus, "mibz2", t, R)
+            if corpus == MAIN:
+                ps[t] = p
+            print(f"  {t:>2} threads: {g:.4f} [{lo:.4f}, {hi:.4f}] {steps[(corpus, t)]}"
+                  + (f"; p {p:.2e}" if corpus == MAIN else "") + f"; memory {mem[(corpus, t)]:.3f}")
+    rejected = holm(ps, ALPHA)
+    print(f"\nHolm at family α {ALPHA} over the {len(ps)} main-corpus cells: "
+          + ", ".join(f"{t} p {ps[t]:.2e} {'rejects' if t in rejected else 'does not'}"
+                      for t in sorted(ps, key=ps.get)))
+    gain = bool(rejected)
+    slower = sorted(k for k, v in steps.items() if v == "SLOWER")
+    over = sorted(k for k, v in mem.items() if v > RSS_GATE)
     print()
-    if missing:
-        print(f"VOID: the primary arm has no reading at {missing} threads")
-        return 1
-    faster = [t for t, v in zip(judge, prim) if v == "FASTER"]
-    slower = [t for t, v in zip(judge, prim) if v == "SLOWER"]
-    over = [t for t in judge if rss.get((a.primary, t)) is None or rss[(a.primary, t)] > 1.10]
-    if faster and not slower and not over:
-        print(f"VERDICT: ADOPTS. {a.primary} is FASTER at {faster} threads, SLOWER at none, and its peak "
-              f"memory is within 10% of the reference's at every judged count: it becomes the lazy kernel")
-    elif faster and not slower:
-        print(f"VERDICT: HELD ON MEMORY. {a.primary} is FASTER at {faster} threads and SLOWER at none, but its "
-              f"peak memory is more than 10% above the reference's (or not recorded) at {over} threads: "
-              "PERFORMANCE-POLICY rule 4, the Coordinator's to weigh")
-    elif faster and slower:
-        print(f"VERDICT: A FINDING, NOT ADOPTED. {a.primary} is FASTER at {faster} and SLOWER at {slower} "
-              "threads. It gets no range of its own: any change would be to the lazy threshold itself, "
-              "a separate decision")
+    if gain and not slower and not over:
+        print(f"VERDICT: ADOPTS. A gain at {sorted(rejected)} threads (Holm), no judged cell SLOWER, and peak memory "
+              f"within {RSS_GATE:.2f} of production's at every judged cell: stop-and-walk at β = 1.5 becomes the lazy kernel")
+    elif gain and not slower:
+        print(f"VERDICT: HELD ON MEMORY. A gain at {sorted(rejected)} threads (Holm) and no judged cell SLOWER, but peak "
+              f"memory is above {RSS_GATE:.2f} of production's at {over}: PERFORMANCE-POLICY rule 4, the Coordinator's to weigh")
+    elif gain:
+        print(f"VERDICT: A FINDING, NOT ADOPTED. A gain at {sorted(rejected)} threads (Holm), but SLOWER at {slower}. "
+              "No range of its own: any change would be to the lazy threshold itself, a separate decision")
     else:
-        print(f"VERDICT: NOT ADOPTED. {a.primary} is FASTER at none of {judge} threads"
-              + (f" and SLOWER at {slower}" if slower else ""))
-    for arm in ARMS:
-        if arm != a.primary:
-            print(f"  ({arm}, read for direction only: "
-                  + ", ".join(f"{t} {found.get((arm, t), 'none')}" for t in judge) + ")")
+        print("VERDICT: NOT ADOPTED. No gain established (Holm rejects at no main-corpus cell)"
+              + (f"; SLOWER at {slower}" if slower else "") + (f"; memory above the gate at {over}" if over else ""))
 
-    print("\nRecorded, not judged (one copy):")
-    for arm in ARMS:
-        s = step(drows, arm, 1)
-        if s:
-            print(f"  1 thread, {arm}: wall {s[0]:.4f} [{s[1]:.4f}, {s[2]:.4f}] over {s[3]} rounds")
-    high = max((k[1] for k in drows), default=1)
-    doses = {}
-    for arm in [REF] + ARMS:
-        ratios = [drows[(arm, high, i)]["cpu"] / drows[(arm, 1, i)]["cpu"]
-                  for (aa, tt, i) in drows if aa == arm and tt == 1 and (arm, high, i) in drows]
-        if ratios:
-            doses[arm] = ratios
-            g, lo, hi = interval(ratios)
-            print(f"  dose, {arm}: CPU at {high} over CPU at 1, {g:.4f} [{lo:.4f}, {hi:.4f}] over {len(ratios)} rounds")
-    if REF in doses:
-        for arm in ARMS:
-            if arm in doses:
-                pairs = list(zip(doses[arm], doses[REF]))
-                g, lo, hi = interval([x / y for x, y in pairs])
-                print(f"  dose over the reference's, {arm}: {g:.4f} [{lo:.4f}, {hi:.4f}]")
+    print("\nDiagnostics (decide nothing):")
+    F = data["forced"]
+    print("  forced workers, each arm over mibz2-workers-lazy on the main corpus (12 and 20 are that many workers):")
+    for arm in FORCED_ARMS[1:]:
+        cells = []
+        for t in threads:
+            g, lo, hi, _ = step(cell(F, MAIN, arm, "mibz2-workers-lazy", t, R))
+            cells.append(f"{t} {g:.3f} {label(lo, hi)}")
+        print(f"    {arm}: " + ", ".join(cells))
+    O = data["overlap"]
+    g, lo, hi, _ = step(cell(O, MAIN, "mibz2-stop15", "mibz2", 10, R))
+    shared = sum(bool((r.get("held_spinner") or {}).get("overlap")) for r in O.values())
+    print(f"  10 threads, the spinner sharing a decoder core ({shared} of {len(O)} runs shared): "
+          f"{g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}")
+    D = data["dose"]
+    for arm in FORCED_ARMS[1:]:
+        g, lo, hi, _ = step(cell(D, ONE, arm, "mibz2-workers-lazy", 1, R))
+        print(f"  1 thread, {arm} over mibz2-workers-lazy: wall {g:.4f} [{lo:.4f}, {hi:.4f}]")
+    dose = {arm: {i: D[(ONE, arm, 10, i)]["cpu"] / D[(ONE, arm, 1, i)]["cpu"] for i in range(R)} for arm in FORCED_ARMS}
+    for arm in FORCED_ARMS:
+        g, lo, hi, _ = step([math.log(v) for v in dose[arm].values()])
+        line = f"  dose, {arm}: CPU at 10 over CPU at 1, {g:.4f} [{lo:.4f}, {hi:.4f}]"
+        if arm != "mibz2-workers-lazy":
+            g2, lo2, hi2, _ = step([math.log(dose[arm][i] / dose["mibz2-workers-lazy"][i]) for i in range(R)])
+            line += f"; over mibz2-workers-lazy's, round by round, {g2:.4f} [{lo2:.4f}, {hi2:.4f}]"
+        print(line)
     return 0
 
 

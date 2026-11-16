@@ -1636,15 +1636,17 @@ bench-lazy-crossover ROUNDS="10" THREADS="4,6,7,8,9,10,12,14,16,20":
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
-# Stop-and-walk, Gate 2 (MONODROMY's HANDOFF 6916839849; its rule posted on #145 before the
-# data): whether stop-and-walk becomes the lazy kernel, in lazy's own range (8 threads and up;
-# no new threshold). The shipped kernel there, lazy letters forced as `mibz2-workers-lazy`,
-# against the same workers with the lazy induction stopped after ⌈β r⌉ cells, β = 1.4, 1.5 and
-# 1.6, and the rest of each block walked (`mibz2-workers-stop14`, `-stop15`, `-stop16`). An arm
-# differs from the reference in the kernel alone. Judged at 8, 9, 10, 12 and 20 threads on
-# COPIES copies of the Wikidata sample, wall and peak memory; then every arm at 1 and 10
-# threads on one copy (the 1-thread cost and the memory dose, recorded, not judged).
-# `bench/stop_walk.py` reads the verdict.
+# Stop-and-walk, the adoption run (MONODROMY's HANDOFF 6916839849; the registration on #145,
+# re-frozen with the Researcher's correction REVIEW 6921090225, LOG 6921203037): whether
+# stop-and-walk at β = 1.5 becomes the lazy kernel, where production runs lazy workers now (no
+# threshold of its own). `bench/stop_walk.py` checks the records whole, then reads the verdict.
+# - judged: production's decoder (`mibz2`) against the same decoder, plan and window with the
+#   lazy kernel replaced (`mibz2-stop15`), on COPIES copies of the Wikidata sample and on the
+#   text corpus, at 8, 9, 10, 12 and 20 threads asked, wall and peak memory. The spinner is
+#   held only where a core is free (at most 9 threads): no judged run shares a decoder core.
+# - diagnostics: the forced workers arms (12 and 20 are that many workers), the 10-thread case
+#   with the spinner sharing core 9, and each forced arm at 1 and 10 threads on one copy (the
+#   1-thread cost and the memory dose).
 bench-stop-walk COPIES="4" ROUNDS="10" THREADS="8,9,10,12,20":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -1653,8 +1655,8 @@ bench-stop-walk COPIES="4" ROUNDS="10" THREADS="8,9,10,12,20":
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    arms="mibz2-workers-lazy,mibz2-workers-stop14,mibz2-workers-stop15,mibz2-workers-stop16"
-    echo "bench-stop-walk (MONODROMY's HANDOFF 6916839849, Gate 2; its rule posted on #145 before the data; whether stop-and-walk becomes the lazy kernel): $arms on {{COPIES}} copies of the Wikidata sample at {{THREADS}} threads, {{ROUNDS}} paired rounds; then at 1 and 10 threads on one copy (recorded), at $(git rev-parse HEAD)"
+    forced="mibz2-workers-lazy,mibz2-workers-stop14,mibz2-workers-stop15,mibz2-workers-stop16"
+    echo "bench-stop-walk (the adoption registration on #145, re-frozen after REVIEW 6921090225; whether stop-and-walk becomes the lazy kernel): mibz2 against mibz2-stop15 on {{COPIES}} copies of the Wikidata sample and on text at {{THREADS}} threads, {{ROUNDS}} paired rounds; then the diagnostics, at $(git rev-parse HEAD)"
     cargo build -q --release --example ab --example windows
     AB=$PWD/target/release/examples/ab
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
@@ -1667,19 +1669,33 @@ bench-stop-walk COPIES="4" ROUNDS="10" THREADS="8,9,10,12,20":
     # COPIES copies end to end: bzip2 streams one after another are one valid file
     : > "$W/wikidata-x{{COPIES}}.bz2"
     for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    # the text corpus: `ab gen`'s, at the CI bench's scale times four (as bench-release-scaling)
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" | tee "$O/inputs.sha256"
     "$AB" env > "$O/env.json"
     lscpu > "$O/lscpu.txt"
-    hold=(); hold_cpu=${HOLD_CPU:-auto}
-    [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
-    "$AB" run "$O/runs.jsonl" --arms "$arms" \
-      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata-x{{COPIES}}.bz2"
-    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-lazy | tee "$O/summary.txt"
-    # recorded, not judged: the 1-thread cost, and the memory dose (CPU at 10 over CPU at 1)
-    "$AB" run "$O/dose.jsonl" --arms "$arms" \
-      --threads "1,10" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
-    "$AB" summary "$O/dose.jsonl" --ref mibz2-workers-lazy > "$O/summary-one-copy.txt"
-    python3 bench/stop_walk.py "$O/runs.jsonl" "$O/dose.jsonl" | tee "$O/verdict.txt" \
-      || echo "bench-stop-walk: the run is void (verdict.txt says why)"
+    # the CPU masks: each run's are in its record (`cpus`, `held_spinner`); the machine's here
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    # the judged run, and the forced diagnostics: the spinner held only where a core is free
+    free=(); hold_cpu=${HOLD_CPU:-auto}
+    [ "$hold_cpu" = off ] || free=(--hold-cpu "$hold_cpu" --hold-max-threads 9)
+    "$AB" run "$O/judged.jsonl" --arms "mibz2,mibz2-stop15" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${free[@]}" "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    "$AB" summary "$O/judged.jsonl" --ref mibz2 | tee "$O/summary-judged.txt"
+    "$AB" run "$O/forced.jsonl" --arms "$forced" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${free[@]}" "$W/wikidata-x{{COPIES}}.bz2"
+    "$AB" summary "$O/forced.jsonl" --ref mibz2-workers-lazy > "$O/summary-forced.txt"
+    # the 10-thread case beside a spinner sharing a decoder core (diagnostic)
+    shared=(); [ "$hold_cpu" = off ] || shared=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+    "$AB" run "$O/overlap.jsonl" --arms "mibz2,mibz2-stop15" \
+      --threads 10 --rounds {{ROUNDS}} --spread "${shared[@]}" "$W/wikidata-x{{COPIES}}.bz2"
+    # the 1-thread cost and the memory dose (diagnostic)
+    "$AB" run "$O/dose.jsonl" --arms "$forced" \
+      --threads "1,10" --rounds {{ROUNDS}} --spread "${free[@]}" "$W/wikidata.bz2"
+    "$AB" summary "$O/dose.jsonl" --ref mibz2-workers-lazy > "$O/summary-dose.txt"
+    python3 bench/stop_walk.py "$O" --rounds {{ROUNDS}} --threads "{{THREADS}}" --copies {{COPIES}} | tee "$O/verdict.txt" \
+      || echo "bench-stop-walk: VOID, no verdict (verdict.txt says why); the bundle is kept"
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
