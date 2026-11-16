@@ -119,6 +119,12 @@
     "section": " · Research blog",
     "title": "Reduce, reuse, recycle: hand-me-down slots for every fragment of text"
   },
+  "assets/social/blog-2026-11-16-lazy-letters.png": {
+    "description": "Rebuilding each block with memory for only the intervals still in play costs more instructions, yet lets ten threads finish 5% sooner than mibz2's teams.",
+    "foot": "lmmx.github.io/mibz2 · 16 November 2026",
+    "section": " · Research blog",
+    "title": "Lazy letters: keeping only the intervals the rebuild still needs"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
