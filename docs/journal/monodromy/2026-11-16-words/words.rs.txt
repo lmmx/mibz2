@@ -1,0 +1,510 @@
+//! Beside docs/journal/monodromy/2026-11-10-rauzy-veech.md (sections 5.6 and 8, 2). Written
+//! by a sub-agent; the policies "weak_*" (a step told free from links alone: the far end of
+//! its landing place must be a coincidence) and the counters were added after. Not built by
+//! the crate. To run (EVERY = 24: the entry's ten blocks; 1: all 233):
+//!   cp THIS examples/geo.rs
+//!   cargo run --release --example geo -- corpora/wikidata.bz2 24 65536 [POLICIES]
+//! POLICIES: comma-separated numbers (0 reducing_then_right, 1 reducing_then_largest_cell,
+//! 4 largest_cell, 6 right_end, 10 weak_then_right, 11 weak_then_largest_cell, ...); all if
+//! absent. A policy's line is [steps, steps that were not free, ends of segments tested,
+//! tests that found a free step, ends set aside to wait, steps taken where the step before
+//! left off, paid steps].
+//!
+//! Route "cartesian", schedules with geometry: one-cell right-handed Rauzy steps at any
+//! coincidence, the letters kept by fixed row coordinates (rows are never renumbered: a
+//! removed cell is a hole in both tilings), so every coincidence is known, also the ones a
+//! re-seated loser creates. A step lowers the number of boundaries of the common refinement by
+//! one iff it is an equal step or its loser lands on a boundary of the other tiling
+//! ("reducing"); the total is floor + (steps that are not reducing).
+//!
+//! Policies: reducing steps first, wherever they are; else (A) the rightmost coincidence,
+//! (B) the largest cell, (C) the smallest cell, (D) the leftmost coincidence.
+//! The final word is checked (61-bit hash) to be a rotation of the block.
+//!
+//!   geo FILE.bz2 [EVERY] [MIN_ROWS]
+
+use mibz2::bwt::{build, walk, TVector};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet};
+
+const M61: u64 = (1 << 61) - 1;
+#[inline]
+fn mulmod(a: u64, b: u64) -> u64 {
+    let p = a as u128 * b as u128;
+    let x = (p & M61 as u128) as u64 + (p >> 61) as u64;
+    if x >= M61 {
+        x - M61
+    } else {
+        x
+    }
+}
+#[inline]
+fn addmod(a: u64, b: u64) -> u64 {
+    let x = a + b;
+    if x >= M61 {
+        x - M61
+    } else {
+        x
+    }
+}
+const BASE: u64 = 0x1F3D_5B79_2468_ACE1 % M61;
+
+struct Geo<'a> {
+    ts: Vec<u32>,
+    bs: Vec<u32>,
+    lam: Vec<u32>,
+    len: Vec<u32>,
+    hash: Vec<u64>,
+    /// the letter whose top interval ends at a row; whose image ends at a row
+    top_end: BTreeMap<u32, u32>,
+    bot_end: BTreeMap<u32, u32>,
+    left: usize,
+    steps: u64,
+    not_reducing: u64,
+    weak: bool,
+    pw: &'a [u64],
+    /// rows that became a boundary of one tiling or a coincidence in the last step
+    fresh: Vec<u32>,
+}
+
+impl<'a> Geo<'a> {
+    fn new(lam: &[u32], byte: &[u8], pw: &'a [u64]) -> Geo<'a> {
+        let r = lam.len();
+        let mut cnt = [0u32; 257];
+        for (i, &b) in byte.iter().enumerate() {
+            cnt[b as usize + 1] += lam[i];
+        }
+        for k in 0..256 {
+            cnt[k + 1] += cnt[k];
+        }
+        let mut g = Geo {
+            ts: vec![0; r],
+            bs: vec![0; r],
+            lam: lam.to_vec(),
+            len: vec![1; r],
+            hash: byte.iter().map(|&b| b as u64 + 1).collect(),
+            top_end: BTreeMap::new(),
+            bot_end: BTreeMap::new(),
+            left: r,
+            steps: 0,
+            not_reducing: 0,
+            weak: false,
+            pw,
+            fresh: Vec::new(),
+        };
+        let mut x = 0u32;
+        for i in 0..r {
+            g.ts[i] = x;
+            x += lam[i];
+            g.top_end.insert(x, i as u32);
+            let c = byte[i] as usize;
+            g.bs[i] = cnt[c];
+            cnt[c] += lam[i];
+            g.bot_end.insert(cnt[c], i as u32);
+        }
+        g
+    }
+
+    /// (top letter, bottom letter) ending at row c, if both do and they differ
+    fn at(&self, c: u32) -> Option<(u32, u32)> {
+        match (self.top_end.get(&c), self.bot_end.get(&c)) {
+            (Some(&a), Some(&b)) if a != b => Some((a, b)),
+            _ => None,
+        }
+    }
+
+    /// Would the step at c lower the boundary count; its cell
+    fn reducing(&self, c: u32) -> Option<(bool, u32)> {
+        let (a, b) = self.at(c)?;
+        let (ai, bi) = (a as usize, b as usize);
+        let (la, lb) = (self.lam[ai], self.lam[bi]);
+        Some(if la > lb {
+            (self.top_end.contains_key(&(self.bs[ai] + la - lb)) && (!self.weak || self.top_end.contains_key(&(self.bs[ai] + la))), lb)
+        } else if la < lb {
+            (self.bot_end.contains_key(&(self.ts[bi] + lb - la)) && (!self.weak || self.bot_end.contains_key(&(self.ts[bi] + lb))), la)
+        } else {
+            (true, la)
+        })
+    }
+
+    /// Where the loser of the step at c would land (a row that, once a boundary of the other
+    /// tiling, makes the step reducing)
+    fn landing(&self, c: u32) -> Option<u32> {
+        let (a, b) = self.at(c)?;
+        let (ai, bi) = (a as usize, b as usize);
+        let (la, lb) = (self.lam[ai], self.lam[bi]);
+        if la > lb {
+            Some(self.bs[ai] + la - lb)
+        } else if la < lb {
+            Some(self.ts[bi] + lb - la)
+        } else {
+            None
+        }
+    }
+
+    fn step(&mut self, c: u32) {
+        let (a, b) = self.at(c).unwrap();
+        let (ai, bi) = (a as usize, b as usize);
+        let (la, lb) = (self.lam[ai], self.lam[bi]);
+        let h = addmod(mulmod(self.hash[ai], self.pw[self.len[bi] as usize]), self.hash[bi]);
+        let ln = self.len[ai] + self.len[bi];
+        self.steps += 1;
+        self.fresh.clear();
+        if la > lb {
+            self.hash[bi] = h;
+            self.len[bi] = ln;
+            // the cell [c - lb, c) goes; A ends at c - lb; B's image is the tail of A's
+            self.top_end.remove(&c);
+            self.bot_end.remove(&c);
+            self.top_end.insert(c - lb, a);
+            let p = self.bs[ai] + la - lb;
+            self.not_reducing += !self.top_end.contains_key(&p) as u64;
+            self.lam[ai] = la - lb;
+            self.bs[bi] = p;
+            self.bot_end.insert(p + lb, b);
+            self.bot_end.insert(p, a);
+            self.fresh.extend_from_slice(&[c - lb, p, p + lb]);
+        } else if la < lb {
+            self.hash[ai] = h;
+            self.len[ai] = ln;
+            self.top_end.remove(&c);
+            self.bot_end.remove(&c);
+            self.bot_end.insert(c - la, b);
+            let p = self.ts[bi] + lb - la;
+            self.not_reducing += !self.bot_end.contains_key(&p) as u64;
+            self.lam[bi] = lb - la;
+            self.ts[ai] = p;
+            self.top_end.insert(p + la, a);
+            self.top_end.insert(p, b);
+            self.fresh.extend_from_slice(&[c - la, p, p + la]);
+        } else {
+            self.hash[bi] = h;
+            self.len[bi] = ln;
+            self.left -= 1;
+            self.top_end.remove(&c);
+            self.bot_end.remove(&c);
+            self.bs[bi] = self.bs[ai];
+            self.bot_end.insert(self.bs[ai] + la, b);
+            self.fresh.extend_from_slice(&[c - la, self.bs[ai] + la]);
+        }
+    }
+}
+
+
+/// right-end induction with every word instance tracked. Returns per block counters.
+thread_local! { static DBG: std::cell::RefCell<[u64; 7]> = const { std::cell::RefCell::new([0; 7]) }; }
+fn census_reset() { DBG.with(|d| *d.borrow_mut() = [0; 7]); }
+fn census(lam0: &[u32], byte0: &[u8], pw: &[u64], rots: &HashSet<u64>, n: usize, p: usize) -> Vec<(String, f64)> {
+    // the walk's row as a letter of its own (as Cells cuts it), its word marked
+    let (mut lam, mut byte) = (Vec::new(), Vec::new());
+    let mut zl = usize::MAX;
+    let mut x = 0usize;
+    for (i, &l) in lam0.iter().enumerate() {
+        let (s0, e0) = (x, x + l as usize);
+        if p >= s0 && p < e0 {
+            if p > s0 { lam.push((p - s0) as u32); byte.push(byte0[i]); }
+            zl = lam.len(); lam.push(1); byte.push(byte0[i]);
+            if e0 > p + 1 { lam.push((e0 - p - 1) as u32); byte.push(byte0[i]); }
+        } else { lam.push(l); byte.push(byte0[i]); }
+        x = e0;
+    }
+    let (lam, byte) = (&lam[..], &byte[..]);
+    let mut g = Geo::new(lam, byte, pw);
+    let r = lam.len();
+    // word instances: the originals are ids 0..r (single bytes, kept in the 256-byte table)
+    let mut wid: Vec<usize> = (0..r).collect();
+    let mut len: Vec<u32> = vec![1; r];
+    let mut kids: Vec<(usize, usize)> = vec![(usize::MAX, usize::MAX); r];
+    let mut uses: Vec<u32> = vec![0; r];
+    let mut born: Vec<u64> = vec![0; r];
+    let mut carry_end: Vec<u64> = vec![u64::MAX; r];
+    let mut long_parent: Vec<bool> = vec![false; r];
+    let mut marked: Vec<bool> = (0..r).map(|i| i == zl).collect();
+    let mut parents: Vec<Vec<usize>> = vec![Vec::new(); r];
+    let mut step = 0u64;
+    // a stack arena: a short word whose letter lets it go and that no rule points to is dead at
+    // once (its bytes were copied into its short parent); dead words on top are popped
+    let mut stack: Vec<(usize, u32, bool)> = Vec::new();
+    let (mut cur_arena, mut peak_arena, mut reclaimed) = (0u64, 0u64, 0u64);
+    let mut arena_pos: Vec<usize> = vec![usize::MAX; r];
+    while g.left > 1 {
+        let c = *g.top_end.iter().rev().find(|(&e, _)| g.at(e).is_some()).map(|(e, _)| e).unwrap();
+        let (a, b) = g.at(c).unwrap();
+        let (a, b) = (a as usize, b as usize);
+        let (la, lb) = (g.lam[a], g.lam[b]);
+        step += 1;
+        let (wa, wb) = (wid[a], wid[b]);
+        let id = len.len();
+        let l = len[wa] + len[wb];
+        len.push(l); kids.push((wa, wb)); uses.push(0); born.push(step); carry_end.push(u64::MAX); long_parent.push(false);
+        marked.push(marked[wa] || marked[wb]); parents.push(Vec::new()); parents[wa].push(id); parents[wb].push(id);
+        uses[wa] += 1; uses[wb] += 1;
+        if l > 16 { long_parent[wa] = true; long_parent[wb] = true; }
+        g.step(c);
+        let dead_now: Vec<usize> = if la > lb { vec![wb] } else if la < lb { vec![wa] } else { vec![wa, wb] };
+        if la > lb { carry_end[wb] = step; wid[b] = id; }
+        else if la < lb { carry_end[wa] = step; wid[a] = id; }
+        else { carry_end[wa] = step; carry_end[wb] = step; wid[b] = id; }
+        arena_pos.push(usize::MAX);
+        // the children are read first: a dead one on top is popped before the parent is written
+        for w in dead_now {
+            if w >= r && len[w] <= 16 && !long_parent[w] { let i = arena_pos[w]; DBG.with(|d| { let mut d = d.borrow_mut(); d[0] += 1; if i == usize::MAX { d[1] += 1; } else if i < stack.len() && stack[i].0 == w { d[2] += 1; let depth = stack.len() - 1 - i; if depth == 0 { d[3] += 1; } else if depth < 4 { d[4] += 1; } else { d[5] += 1; } } else { d[6] += 1; } }); if i != usize::MAX && i < stack.len() && stack[i].0 == w { stack[i].2 = true; } }
+        }
+        while let Some(&(_, bl, true)) = stack.last() { stack.pop(); cur_arena -= bl as u64; reclaimed += bl as u64; }
+        if l <= 16 { arena_pos[id] = stack.len(); stack.push((id, l, false)); cur_arena += l as u64; peak_arena = peak_arena.max(cur_arena); }
+    }
+    let z = *g.top_end.values().next().unwrap() as usize;
+    assert!(g.top_end.len() == 1 && g.len[z] as usize == n && rots.contains(&g.hash[z]));
+    let root = wid[z];
+    let s_end = step;
+    // word bytes: a rule 16 B (a word longer than 16), else its length in the arena
+    let cost = |w: usize| -> u64 { if len[w] > 16 { 16 } else { len[w] as u64 } };
+    let created = r..len.len();
+    let (mut rules, mut rules_once, mut arena, mut arena_needed, mut arena_once) = (0u64, 0u64, 0u64, 0u64, 0u64);
+    let (mut rule_b, mut arena_b, mut arena_need_b, mut arena_once_b) = (0u64, 0u64, 0u64, 0u64);
+    // live word bytes over time: a rule from its making to the end; an arena word from its
+    // making to the later of its letter letting it go and its last use, or to the end if a rule
+    // points to it
+    let mut ev: Vec<(u64, i64)> = Vec::new();
+
+    // last use of each word: the step of its last parent's making
+    let mut last_use = vec![0u64; len.len()];
+    for w in created.clone() { let (x, y) = kids[w]; last_use[x] = last_use[x].max(born[w]); last_use[y] = last_use[y].max(born[w]); }
+    for w in created.clone() {
+        let cb = cost(w) as i64;
+        let used_once = uses[w] + (w == root) as u32 == 1;
+        if len[w] > 16 {
+            rules += 1; rule_b += 16; rules_once += used_once as u64;
+            ev.push((born[w], cb)); ev.push((s_end + 1, -cb));
+        } else {
+            arena += 1; arena_b += cost(w); arena_once += used_once as u64; if used_once { arena_once_b += cost(w); }
+            if long_parent[w] || w == root { arena_needed += 1; arena_need_b += cost(w); ev.push((born[w], cb)); ev.push((s_end + 1, -cb)); }
+            else { let end = last_use[w].max(if carry_end[w] == u64::MAX { s_end } else { carry_end[w] }); ev.push((born[w], cb)); ev.push((end + 1, -cb)); }
+        }
+    }
+    ev.sort_unstable();
+    let (mut cur, mut peak) = (0i64, 0i64);
+    for (_, d) in ev { cur += d; peak = peak.max(cur); }
+    // progressive writing: a marked word is placed when made (it occurs once, around the walk's
+    // row); any other word when its first parent is written. A rule is kept until written; a
+    // short word until written, or until its letter lets it go and its last short parent is
+    // made if no rule points to it. A word with more parents keeps its place (4 B) until its
+    // last parent is written.
+    let nw = len.len();
+    let mut wt = vec![u64::MAX; nw];
+    for w in (0..nw).rev() {
+        if marked[w] && w >= r { wt[w] = born[w]; continue; }
+        for &q in &parents[w] { wt[w] = wt[w].min(wt[q]); }
+        if w == root { wt[w] = s_end; }
+    }
+    let mut pev: Vec<(u64, i64)> = Vec::new();
+    let mut at_end = 0u64;
+    for w in r..nw {
+        let cb = cost(w) as i64;
+        let tw = wt[w].min(s_end);
+        let free = if len[w] > 16 || long_parent[w] { tw } else { tw.min(last_use[w].max(if carry_end[w] == u64::MAX { s_end } else { carry_end[w] })) };
+        pev.push((born[w], cb)); pev.push((free + 1, -cb));
+        if free >= s_end { at_end += cost(w); }
+        if parents[w].len() > 1 { let last = parents[w].iter().map(|&q| wt[q].min(s_end)).max().unwrap(); if last > free { pev.push((free + 1, 4)); pev.push((last + 1, -4)); } }
+    }
+    pev.sort_unstable();
+    let (mut pcur, mut ppeak, mut peak_at) = (0i64, 0i64, 0u64);
+    for (t, d) in pev { pcur += d; if pcur > ppeak { ppeak = pcur; peak_at = t; } }
+    let total = (rule_b + arena_b) as f64;
+    let rr = r as f64;
+    // the rules' use counts
+    let mut once_long_parent_once = 0u64;
+    for w in created.clone() { if len[w] > 16 && uses[w] == 1 { once_long_parent_once += 1; } }
+    vec![
+        ("letters".into(), rr), ("steps".into(), s_end as f64),
+        ("rules/r".into(), rules as f64 / rr), ("rules used once share".into(), rules_once as f64 / rules as f64),
+        ("arena words/r".into(), arena as f64 / rr), ("arena words used once share".into(), arena_once as f64 / arena as f64),
+        ("arena bytes used-once share".into(), arena_once_b as f64 / arena_b as f64),
+        ("word bytes/letter".into(), total / rr), ("rule bytes/letter".into(), rule_b as f64 / rr), ("arena bytes/letter".into(), arena_b as f64 / rr),
+        ("arena bytes a rule points to (needed at the end) share of arena".into(), arena_need_b as f64 / arena_b as f64),
+        ("word bytes needed at the end / total".into(), (rule_b + arena_need_b) as f64 / total),
+        ("peak live word bytes / total".into(), peak as f64 / total),
+        ("progressive: peak live word bytes / total".into(), ppeak as f64 / total),
+        ("progressive: peak at step / steps".into(), peak_at as f64 / s_end as f64),
+        ("progressive: bytes still unwritten at the end / total".into(), at_end as f64 / total),
+        ("stack arena: peak bytes / arena bytes".into(), peak_arena as f64 / arena_b as f64),
+        ("stack arena: bytes reclaimed / arena bytes".into(), reclaimed as f64 / arena_b as f64),
+        ("stack arena: word bytes saved at the peak / total".into(), (arena_b - peak_arena) as f64 / total),
+        ("dead short words: share at the arena's top".into(), { let d = DBG.with(|d| *d.borrow()); d[3] as f64 / d[2].max(1) as f64 }),
+        ("dead short words: share within 4 of the top".into(), { let d = DBG.with(|d| *d.borrow()); (d[3] + d[4]) as f64 / d[2].max(1) as f64 }),
+        ("marked words / steps".into(), (r..nw).filter(|&w| marked[w]).count() as f64 / s_end as f64),
+    ]
+}
+fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n: usize) -> (u64, u64, u64, [u64; 5]) {
+    let mut g = Geo::new(lam, byte, pw);
+    g.weak = policy >= 10;
+    let policy = policy % 10;
+    // [tests of a segment end, tests that found a free step, ends parked waiting, steps taken
+    //  where the step before left off (the same segment, its surviving boundary), paid steps]
+    let mut cnt = [0u64; 5];
+    let mut last_q = u32::MAX;
+    // the coincidences
+    let mut coin: BTreeSet<u32> = BTreeSet::new();
+    let mut bounds: HashSet<u32> = HashSet::new();
+    for &c in g.top_end.keys() {
+        bounds.insert(c);
+        if g.at(c).is_some() {
+            coin.insert(c);
+        }
+    }
+    for &c in g.bot_end.keys() {
+        bounds.insert(c);
+    }
+    let floor = bounds.len() as u64 - 1;
+    let mut ready: Vec<u32> = coin.iter().copied().collect();
+    // coincidences waiting for a row to become a boundary
+    let mut waiting: HashMap<u32, Vec<u32>> = HashMap::new();
+    let mut heap: BinaryHeap<(u64, u32)> = BinaryHeap::new();
+    let key = |g: &Geo, c: u32| -> u64 {
+        let cell = g.reducing(c).unwrap().1 as u64;
+        match policy {
+            1 | 4 | 5 => cell,
+            2 => u64::MAX - cell,
+            _ => 0,
+        }
+    };
+    if matches!(policy, 1 | 2 | 4 | 5) {
+        for &c in &coin {
+            heap.push((key(&g, c), c));
+        }
+    }
+    while g.left > 1 {
+        // a reducing step, if one is ready
+        let mut pick = None;
+        while let Some(c) = ready.pop() {
+            if policy == 4 || policy == 6 {
+                continue;
+            }
+            if policy == 5 {
+                if let Some((a, b)) = g.at(c) {
+                    if g.lam[a as usize] == g.lam[b as usize] {
+                        pick = Some(c);
+                        break;
+                    }
+                }
+                continue;
+            }
+            cnt[0] += 1;
+            match g.reducing(c) {
+                Some((true, _)) => {
+                    cnt[1] += 1;
+                    pick = Some(c);
+                    break;
+                }
+                Some((false, _)) => {
+                    cnt[2] += 1;
+                    let p = g.landing(c).unwrap();
+                    waiting.entry(p).or_default().push(c);
+                }
+                None => {}
+            }
+        }
+        if pick.is_none() {
+            cnt[4] += 1;
+        }
+        let c = match pick {
+            Some(c) => c,
+            None => match policy {
+                0 | 6 => *coin.iter().next_back().unwrap(),
+                3 => *coin.iter().next().unwrap(),
+                _ => loop {
+                    let (k0, c) = heap.pop().unwrap();
+                    if g.at(c).is_none() {
+                        continue;
+                    }
+                    let k1 = key(&g, c);
+                    if k1 != k0 {
+                        heap.push((k1, c));
+                        continue;
+                    }
+                    break c;
+                },
+            },
+        };
+        cnt[3] += (c == last_q) as u64;
+        g.step(c);
+        last_q = g.fresh[0];
+        coin.remove(&c);
+        let fresh = g.fresh.clone();
+        for &p in &fresh {
+            if g.at(p).is_some() {
+                coin.insert(p);
+                ready.push(p);
+                if matches!(policy, 1 | 2 | 4 | 5) {
+                    heap.push((key(&g, p), p));
+                }
+            } else {
+                coin.remove(&p);
+            }
+            if let Some(v) = waiting.remove(&p) {
+                ready.extend(v);
+            }
+        }
+    }
+    let a = *g.top_end.values().next().unwrap() as usize;
+    assert!(g.top_end.len() == 1 && g.len[a] as usize == n && rots.contains(&g.hash[a]), "policy {policy}: not a rotation of the block");
+    assert!(g.steps == floor + g.not_reducing);
+    (g.steps, g.not_reducing, floor, cnt)
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&args[1]).expect("read");
+    let every: usize = args.get(2).map_or(1, |s| s.parse().unwrap());
+    let min: usize = args.get(3).map_or(65536, |s| s.parse().unwrap());
+    let only: Option<Vec<u32>> = args.get(4).map(|s| s.split(',').map(|x| x.parse().unwrap()).collect());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts, mut tt) = (Vec::new(), [0u32; 256], TVector::new());
+    let mut syms = Vec::new();
+    let mut walked = Vec::new();
+    let mut pw: Vec<u64> = vec![1];
+    let mut i = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        if ll.len() >= min {
+            if i % every == 0 {
+                let n = ll.len();
+                build(&ll, &counts, &mut tt);
+                walked.clear();
+                walk(&tt, b.orig_ptr, &mut walked);
+                while pw.len() <= n {
+                    pw.push(mulmod(*pw.last().unwrap(), BASE));
+                }
+                let mut pre = vec![0u64; n + 1];
+                for j in 0..n {
+                    pre[j + 1] = addmod(mulmod(pre[j], BASE), walked[j] as u64 + 1);
+                }
+                let mut rots = HashSet::with_capacity(n);
+                for s0 in 0..n {
+                    let tail = addmod(pre[n], M61 - mulmod(pre[s0], pw[n - s0]));
+                    rots.insert(addmod(mulmod(tail, pw[s0]), pre[s0]));
+                }
+                let (mut lam, mut byte) = (Vec::new(), Vec::new());
+                let mut x = 0;
+                while x < n {
+                    let mut y = x + 1;
+                    while y < n && ll[y] == ll[x] {
+                        y += 1;
+                    }
+                    lam.push((y - x) as u32);
+                    byte.push(ll[x]);
+                    x = y;
+                }
+                census_reset();
+                let c = census(&lam, &byte, &pw, &rots, n, b.orig_ptr as usize);
+                let fields: Vec<String> = c.iter().map(|(k, v)| format!("\"{k}\":{v:.4}")).collect();
+                println!("{{\"block\":{i},{}}}", fields.join(","));
+
+            }
+            i += 1;
+        }
+        syms = b.syms;
+    }
+}
