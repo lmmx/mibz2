@@ -4734,3 +4734,8 @@ Checkpoint6868538108, PR382 head a9c7716aaf664a7898f3d8f37c955e09d5204a23. G1 sc
 2026-11-15. #447 head `8de6ce01bcbf8aa79fc9d4392c46bda14d77e6a7`. **G1 PROCEED; G2 lift the scoped B5 evidence HOLD and record B6 resumption for the resolved fence mutation target.** Source/test/bench trees match D109 and CI checkout. Completed native feature tests, compiled fence check, 13,817 feature fuzz cases and four feature Miri tests inspected. Mutation baseline and diagnostic-specific negative checks resolve the ambiguity; 35/38 kills, three explained survivors. Feature-off claim narrowed; no whole-file binary identity asserted. Historical verdicts and #444 rejection preserved; no production/default/workstation authorization.
 
 [Full closure](reports/D110-memory-lever-closure.md); [evidence](reports/D110-evidence.json). Evidence SHA-256 `3af9b48fbeb427ad9c2cefed14beba0bb00289ea136cc7de53144311251292f9`.
+
+
+## D111 — PR449 tail storage
+
+Incoming 6903560983; head 3071cad5cd88b4db493292a5f39c4ee583ffc4c1. G1 source separation/refusal proof accepted. G2 HOLD B5 closure pending completed Miri receipts; no unsafe defect identified. Occupancy ledger fails on retained output capacity; kernel savings are not whole-decoder savings. Full evidence, limits and exact lift condition: [D111 report](reports/D111-tail-storage.md).
