@@ -50,6 +50,53 @@
     return out;
   };
 
+  // OKLab and OKLCH for the releases' ramp: hex in, hex out, mixing as CSS color-mix(in
+  // oklch) does (the shorter way round the hue), out-of-gamut channels clipped as Chromium
+  // renders them
+  const Ok = (() => {
+    const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    const gam = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
+    const lab = (hex) => {
+      const [r, g, b] = [1, 3, 5].map((k) => lin(parseInt(hex.trim().slice(k, k + 2), 16) / 255));
+      const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+      const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+      const q = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+      return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * q, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * q, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * q];
+    };
+    const lch = (hex) => { const [L, a, b] = lab(hex); return [L, Math.hypot(a, b), ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360]; };
+    const hex = ([L, C, h]) => {
+      const a = C * Math.cos((h * Math.PI) / 180), b = C * Math.sin((h * Math.PI) / 180);
+      const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3, m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, q = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+      const rgb = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * q, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * q, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * q];
+      return "#" + rgb.map((c) => Math.round(255 * gam(Math.min(1, Math.max(0, c)))).toString(16).padStart(2, "0")).join("");
+    };
+    const mix = (p, q, t) => {
+      let dh = q[2] - p[2];
+      if (dh > 180) dh -= 360;
+      if (dh < -180) dh += 360;
+      return [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, (p[2] + dh * t + 360) % 360];
+    };
+    const dE = (p, q) => { const a = lab(p), b = lab(q); return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); };
+    // the ramp through the stops, walked by distance: at(t) is the colour a fraction t of the
+    // way along it by OKLab arc length, so equal steps in t are equal perceived steps
+    const ramp = (stops) => {
+      const S = stops.map(lch), N = 400, pts = [], cum = [0];
+      for (let k = 0; k <= N; k++) {
+        const u = (k * (S.length - 1)) / N, a = Math.min(S.length - 2, Math.floor(u));
+        pts.push(hex(mix(S[a], S[a + 1], u - a)));
+        if (k) cum.push(cum[k - 1] + dE(pts[k - 1], pts[k]));
+      }
+      return (t) => {
+        const g = Math.max(0, Math.min(1, t)) * cum[N];
+        let k = 1;
+        while (k < N && cum[k] < g) k++;
+        const f = (g - cum[k - 1]) / (cum[k] - cum[k - 1] || 1);
+        return hex(mix(lch(pts[k - 1]), lch(pts[k]), f));
+      };
+    };
+    return { lch, hex, ramp };
+  })();
+
   function chart(data, series, metric, root) {
     const [key, , unit, fmt] = metric;
     const fig = el("figure", { class: "bh-chart" }, root);
@@ -437,6 +484,7 @@
   // one thread count.
   // the All releases view's isolated release: pinned by a click or tap, kept across redraws
   const linFocus = { pinned: null, hover: null };
+  const RECENT = 5; // the newest releases drawn at full strength; the older ones muted
   function releaseLineage(ws, lin, box, seg) {
     const corpora = [...new Set(lin.map((g) => g.corpus))].sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
     if (!corpora.includes(state.wsCorpus)) state.wsCorpus = corpora[0];
@@ -490,25 +538,33 @@
     // lbzip2, measured: dashed and muted
     const lp = ts.map((t, i) => [x(i), P[t].anchor_mbps]).filter(([, v]) => v);
     svg("polyline", { points: lp.map(([px, v]) => `${px},${y(v)}`).join(" "), class: "bh-line bh-anchor", stroke: "var(--bh-old)", fill: "none" }, s);
-    // one ordinal ramp, oldest to newest, through five stops (bench.css: --bh-rel-0..4, its
-    // own per scheme): lightness runs one way (the newest darkest on the light scheme,
-    // lightest on the dark) while the hue turns, so neighbours stay apart with many releases
-    const STOPS = 5;
-    const ramp = (i) => {
-      if (n < 2) return `var(--bh-rel-${STOPS - 1})`;
-      const u = (i * (STOPS - 1)) / (n - 1), a = Math.min(STOPS - 2, Math.floor(u));
-      return `color-mix(in oklch, var(--bh-rel-${a + 1}) ${(100 * (u - a)).toFixed(1)}%, var(--bh-rel-${a}))`;
-    };
+    // Focus and context. The newest RECENT releases take the full ramp (bench.css: the five
+    // stops --bh-rel-0..4, their own per scheme), spread over its whole length by perceived
+    // distance, so neighbours sit as far apart as the ramp allows; the older ones a muted
+    // band, still in order (lightness), thin and low in chroma. Pointing at, focusing or
+    // pinning any release shows it at full strength: an older one takes the full ramp's
+    // colour at its own place among all the releases.
+    const cs = getComputedStyle(box), cv = (k) => cs.getPropertyValue(k).trim();
+    const full = Ok.ramp([0, 1, 2, 3, 4].map((k) => cv(`--bh-rel-${k}`)));
+    const recent = Math.min(RECENT, n), old = n - recent;
+    const muteL = [+cv("--bh-rel-mute-l0"), +cv("--bh-rel-mute-l1")], muteC = +cv("--bh-rel-mute-c");
+    const strong = R.map((_, i) => (n < 2 ? full(1) : full(i / (n - 1))));
+    const base = R.map((_, i) => {
+      if (i >= old) return recent < 2 ? full(1) : full((i - old) / (recent - 1));
+      const f = old < 2 ? 1 : i / (old - 1);
+      return Ok.hex([muteL[0] + (muteL[1] - muteL[0]) * f, muteC, Ok.lch(strong[i])[2]]);
+    });
+    const hue = (i) => `--rc:${base[i]};--rf:${i >= old ? base[i] : strong[i]}`;
     // each release's marks in one group: drawn oldest first, so the newest is on top
     const tip = el("div", { class: "bh-tip", hidden: "" }, box);
-    const groups = R.map((r, i) => svg("g", { class: `bh-rel${i === ni ? " is-newest" : ""}`, "data-i": i }, s));
+    const groups = R.map((r, i) => svg("g", { class: `bh-rel ${i >= old ? "is-recent" : "is-muted"}${i === ni ? " is-newest" : ""}`, "data-i": i, style: hue(i) }, s));
     const runsOf = (i) => g.runs.filter((r) => r.new === R[i] || r.old === R[i]);
     const showTip = (i, t, px, py) => {
       tip.textContent = "";
       el("div", { class: "bh-tip-title", text: `${R[i]} · ${t} thread${t === "1" ? "" : "s"}` }, tip);
       const row = (text, on) => {
         const d = el("div", { class: `bh-tip-row${on ? " is-on" : ""}` }, tip);
-        if (on) el("span", { class: "bh-swatch", style: `background:${ramp(i)}` }, d);
+        if (on) el("span", { class: "bh-swatch", style: `background:${i >= old ? base[i] : strong[i]}` }, d);
         el("span", { text }, d);
       };
       row(`${mb(t, i).toFixed(0)} MB/s modelled (95%: ${mb(t, i, -k).toFixed(0)} to ${mb(t, i, k).toFixed(0)})`, true);
@@ -543,11 +599,11 @@
     const leave = (i) => { if (linFocus.hover === R[i]) { linFocus.hover = null; paint(); } };
     const pin = (i) => { linFocus.pinned = linFocus.pinned === R[i] ? null : R[i]; linFocus.hover = R[i]; paint(); };
     R.forEach((_, i) => {
-      const col = ramp(i), gr = groups[i];
+      const gr = groups[i];
       gr.id = `bh-rel-${i}`;
       const pts = ts.map((t, j) => [j, t]).filter(([, t]) => ok(t, i) && P[t].anchor_mbps);
       const line = pts.map(([j, t]) => `${x(j)},${y(mb(t, i))}`).join(" ");
-      svg("polyline", { points: line, class: "bh-line", stroke: col, fill: "none" }, gr);
+      svg("polyline", { points: line, class: "bh-line", fill: "none" }, gr);
       // a wide, invisible stroke along the line: pointing near it shows its nearest point
       const lh = svg("polyline", { points: line, class: "bh-line-hit", fill: "none" }, gr);
       const nearest = (ev) => {
@@ -561,8 +617,8 @@
       lh.addEventListener("click", (ev) => { pin(i); near(ev); });
       for (const [j, t] of pts) {
         const a = svg("g", { class: "bh-pt", tabindex: 0, role: "button", "aria-label": `${R[i]} at ${t} thread${t === "1" ? "" : "s"}: ${mb(t, i).toFixed(0)} MB/s modelled` }, gr);
-        svg("line", { x1: x(j), x2: x(j), y1: y(mb(t, i, k)), y2: y(mb(t, i, -k)), class: "bh-whisker", stroke: col }, a);
-        svg("circle", { cx: x(j), cy: y(mb(t, i)), r: 3, class: "bh-dot", fill: col }, a);
+        svg("line", { x1: x(j), x2: x(j), y1: y(mb(t, i, k)), y2: y(mb(t, i, -k)), class: "bh-whisker" }, a);
+        svg("circle", { cx: x(j), cy: y(mb(t, i)), r: 3, class: "bh-dot" }, a);
         svg("circle", { cx: x(j), cy: y(mb(t, i)), r: 10, class: "bh-hit" }, a);
         const show = () => { enter(i); showTip(i, t, x(j), y(mb(t, i))); };
         a.addEventListener("pointerenter", show);
@@ -594,7 +650,7 @@
     for (let q = ends.length - 2; q >= 0; q--) ends[q].y = Math.min(ends[q].y, ends[q + 1].y - gap);
     for (const e of ends) {
       const lg = svg("g", { class: "bh-end" }, groups[e.i]);
-      svg("line", { x1: e.x0 + 4, x2: e.x0 + 12, y1: e.y0, y2: e.y, stroke: ramp(e.i), class: "bh-leader" }, lg);
+      svg("line", { x1: e.x0 + 4, x2: e.x0 + 12, y1: e.y0, y2: e.y, class: "bh-leader" }, lg);
       svg("text", { x: e.x0 + 14, y: e.y + 4, class: `bh-tick bh-end-label${e.i === ni ? " is-newest" : ""}` }, lg).textContent = e.r;
       lg.addEventListener("pointerenter", () => enter(e.i));
       lg.addEventListener("pointerleave", () => leave(e.i));
@@ -603,8 +659,8 @@
     // the key in version order, oldest first, as the ramp runs: each entry a button, pointing
     // or focusing isolates its release, a click or tap keeps it (pressed)
     R.forEach((r, i) => {
-      const b = el("button", { type: "button", class: `bh-ws-key bh-ws-item${i === ni ? " is-newest" : ""}`, "aria-pressed": "false", "data-key": r }, legend);
-      el("span", { class: "bh-swatch", style: `background:${ramp(i)}` }, b);
+      const b = el("button", { type: "button", class: `bh-ws-key bh-ws-item${i >= old ? "" : " is-muted"}${i === ni ? " is-newest" : ""}`, "aria-pressed": "false", "data-key": r, style: hue(i) }, legend);
+      el("span", { class: "bh-swatch" }, b);
       el("span", { text: r }, b);
       b.addEventListener("click", () => pin(i));
       b.addEventListener("pointerenter", () => enter(i));
@@ -903,7 +959,18 @@
     }, 150);
   });
 
+  // The release ramp's colours are worked out when drawn (from the scheme's stops): a change
+  // of scheme redraws
+  let schemeWatch = false;
+  const watchScheme = () => {
+    if (schemeWatch || typeof MutationObserver === "undefined") return;
+    schemeWatch = true;
+    const mo = new MutationObserver(() => { if (drawn.hero && drawn.hero[1].isConnected) trajectory(...drawn.hero); });
+    for (const e of [document.documentElement, document.body]) mo.observe(e, { attributes: true, attributeFilter: ["data-md-color-scheme"] });
+  };
+
   function init() {
+    watchScheme();
     const root = document.getElementById("bench-history");
     if (root) {
       fetch(root.dataset.src)
