@@ -1,0 +1,36 @@
+runs 20 and 0; failed 0; files whose arms' outputs differ []
+
+wall, arm over mibz2-workers-lazy: the geometric mean of the paired rounds' ratios [95% interval]; peak resident memory, the median over the rounds, over the reference's
+
+8 threads (judged)
+  mibz2-workers-stop14: no paired rounds
+  mibz2-workers-stop15: 0.9000 [0.9000, 0.9000] over 2 rounds: FASTER; memory 1.000
+  mibz2-workers-stop16: no paired rounds
+
+9 threads (judged)
+  mibz2-workers-stop14: no paired rounds
+  mibz2-workers-stop15: 0.9000 [0.9000, 0.9000] over 2 rounds: FASTER; memory 1.000
+  mibz2-workers-stop16: no paired rounds
+
+10 threads (judged)
+  mibz2-workers-stop14: no paired rounds
+  mibz2-workers-stop15: 0.9000 [0.9000, 0.9000] over 2 rounds: FASTER; memory 1.000
+  mibz2-workers-stop16: no paired rounds
+
+12 threads (judged)
+  mibz2-workers-stop14: no paired rounds
+  mibz2-workers-stop15: 0.9000 [0.9000, 0.9000] over 2 rounds: FASTER; memory 1.000
+  mibz2-workers-stop16: no paired rounds
+
+20 threads (judged)
+  mibz2-workers-stop14: no paired rounds
+  mibz2-workers-stop15: 0.9000 [0.9000, 0.9000] over 2 rounds: FASTER; memory 1.000
+  mibz2-workers-stop16: no paired rounds
+
+VERDICT: ADOPTS. mibz2-workers-stop15 is FASTER at [8, 9, 10, 12, 20] threads, SLOWER at none, and its peak memory is within 10% of the reference's at every judged count: it becomes the lazy kernel
+  (mibz2-workers-stop14, read for direction only: 8 none, 9 none, 10 none, 12 none, 20 none)
+  (mibz2-workers-stop16, read for direction only: 8 none, 9 none, 10 none, 12 none, 20 none)
+
+Recorded, not judged (one copy):
+
+exit=0
