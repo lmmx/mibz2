@@ -82,5 +82,5 @@ fn main() {
 fn rows(b: &mibz2::block::Symbols) -> usize {
     let mut ll = Vec::new();
     let mut counts = [0u32; 256];
-    mibz2::mtf::mtf(b, &mut ll, &mut counts, Kernels::detect()).map_or(0, |n| n)
+    mibz2::mtf::mtf(b, &mut ll, &mut counts, Kernels::detect()).unwrap_or(0)
 }
