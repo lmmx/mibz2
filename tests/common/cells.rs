@@ -49,27 +49,31 @@ pub fn check(data: &[u8], k: Kernels) -> (CellsCounts, CellsCounts) {
     assert_eq!((&got, &got_err), (&want, &err));
     let (got, got_err, forced) = decode::<ForcedCells>(data, k);
     assert_eq!((&got, &got_err), (&want, &err));
-    // (research only, `memory-lever`: the experiment's two kernels, under Cells' admission
-    // and under the forced route, give the same partial output and exact error, and take
-    // the routes Cells and ForcedCells take)
-    #[cfg(feature = "memory-lever")]
+    // Cells with lazy letters (the workers' kernel on many threads), under Cells' admission
+    // and under the forced route: the same partial output and exact error, and the routes
+    // Cells and ForcedCells take
+    let same = |a: CellsCounts, b: CellsCounts| {
+        assert_eq!(
+            (a.admitted, a.density, a.sparse, a.floor, a.budget, a.invalid, a.cells),
+            (b.admitted, b.density, b.sparse, b.floor, b.budget, b.invalid, b.cells)
+        )
+    };
     {
-        use mibz2::bwt::{ForcedLazyCells, ForcedStagedCells, LazyCells, StagedCells};
-        let same = |a: CellsCounts, b: CellsCounts| {
-            assert_eq!(
-                (a.admitted, a.density, a.sparse, a.floor, a.budget, a.invalid, a.cells),
-                (b.admitted, b.density, b.sparse, b.floor, b.budget, b.invalid, b.cells)
-            )
-        };
+        use mibz2::bwt::{ForcedLazyCells, LazyCells};
         let (g, e, s) = decode::<LazyCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "lazy letters");
-        same(s.cells_counts(), prod.cells_counts());
-        let (g, e, s) = decode::<StagedCells>(data, k);
-        assert_eq!((&g, &e), (&want, &err), "staged rules");
         same(s.cells_counts(), prod.cells_counts());
         let (g, e, s) = decode::<ForcedLazyCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "lazy letters, forced");
         same(s.cells_counts(), forced.cells_counts());
+    }
+    // (research only, `memory-lever`: the experiment's staged kernel, the same)
+    #[cfg(feature = "memory-lever")]
+    {
+        use mibz2::bwt::{ForcedStagedCells, StagedCells};
+        let (g, e, s) = decode::<StagedCells>(data, k);
+        assert_eq!((&g, &e), (&want, &err), "staged rules");
+        same(s.cells_counts(), prod.cells_counts());
         let (g, e, s) = decode::<ForcedStagedCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "staged rules, forced");
         same(s.cells_counts(), forced.cells_counts());

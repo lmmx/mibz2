@@ -1589,6 +1589,53 @@ bench-crossover ROUNDS="10" THREADS="4,5,6,7,8,9,10,12,16,20":
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
+# The lazy crossover (#145 QUEUED 6903395401, whose adoption rule is frozen there before the
+# data; the memory dose is 6903426694's): from how many threads should a worker invert with
+# lazy letters, and how far up do workers with lazy letters beat the teams? The shipped
+# decoder (`mibz2`), one block a thread with a slot for every letter (`mibz2-workers-eager`)
+# and with lazy letters (`mibz2-workers-lazy`), whatever the thread count, and the plain
+# teams of two and three (`mibz2-team2`, `mibz2-team3`). Then the two workers arms at 1 and
+# 10 threads for the memory dose (reported, not a gate). On this machine, at the commit
+# checked out.
+bench-lazy-crossover ROUNDS="10" THREADS="4,6,7,8,9,10,12,14,16,20":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/lazy-crossover
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-lazy-crossover (#145 QUEUED 6903395401, its rule frozen there): mibz2 (shipped plan), mibz2-workers-eager and mibz2-workers-lazy (one block a thread, a slot for every letter or lazy letters), mibz2-team2 and mibz2-team3 (teams), at {{THREADS}} threads, {{ROUNDS}} paired rounds, on Wikidata; then the two workers arms at 1 and 10 threads (the memory dose), at $(git rev-parse HEAD)"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers-eager,mibz2-workers-lazy,mibz2-team2,mibz2-team3" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
+    # the rule's readings: the sanity case against the shipped plan; lazy letters against a
+    # slot for every letter (the kernel's switch point); lazy letters against each team arm
+    # (the team threshold)
+    "$AB" summary "$O/runs.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-eager | tee "$O/summary-eager.txt"
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-team2 | tee "$O/summary-team2.txt"
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-team3 | tee "$O/summary-team3.txt"
+    # the memory dose: a block's CPU time among nine others over its CPU time alone
+    "$AB" run "$O/dose.jsonl" --arms "mibz2-workers-eager,mibz2-workers-lazy" \
+      --threads "1,10" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
+    python3 bench/lazy_crossover.py "$O/runs.jsonl" "$O/dose.jsonl" | tee "$O/dose.txt" \
+      || echo "bench-lazy-crossover: the dose reading is not valid (dose.txt says why)"
+    git rev-parse HEAD > "$O/commit.txt"
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,
