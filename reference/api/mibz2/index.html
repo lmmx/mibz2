@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/extra.css?v=311078e92976">
+      <link rel="stylesheet" href="../../../assets/stylesheets/extra.css?v=c2ad53877b4f">
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/bench.css?v=311078e92976">
+      <link rel="stylesheet" href="../../../assets/stylesheets/bench.css?v=c2ad53877b4f">
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/couriers.css?v=311078e92976">
+      <link rel="stylesheet" href="../../../assets/stylesheets/couriers.css?v=c2ad53877b4f">
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/blog.css?v=311078e92976">
+      <link rel="stylesheet" href="../../../assets/stylesheets/blog.css?v=c2ad53877b4f">
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/frontier.css?v=311078e92976">
+      <link rel="stylesheet" href="../../../assets/stylesheets/frontier.css?v=c2ad53877b4f">
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/observatory.css?v=311078e92976">
+      <link rel="stylesheet" href="../../../assets/stylesheets/observatory.css?v=c2ad53877b4f">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2611,8 +2611,10 @@ only when a read reaches its end: until then, treat what has been read as provis
     <div class="doc doc-contents ">
 
         <p>Decode a whole .bz2 (its streams one after another), every CRC checked.</p>
-<p>It runs on every CPU this process may use, or on <code>threads</code>: a block a worker,
-or teams of 2 sharing each block on 6 or more physical cores.</p>
+<p>It runs on every CPU this process may use, or on <code>threads</code>, as the Rust crate's
+<code>Plan::for_threads</code> spends them: a block a worker (past the physical cores on 8
+to 10 of them, one a core; on the i9-10900K, one a core but one), or teams of 2
+sharing each block (from 11 threads on 11 or more cores, or past the cores on 6 or 7).</p>
 
 
 <p><span class="doc-section-title">Raises:</span></p>
@@ -2705,9 +2707,11 @@ or teams of 2 sharing each block on 6 or more physical cores.</p>
             <td>
               <div class="doc-md-description">
                 <p>Decoding threads: <code>1</code> decodes on the reading thread; more decode blocks at
-once on worker threads, a block each, or, on 6 or more physical cores, in teams
-of 2 sharing each block (as many teams as keep their tables in the CPU's last
-cache level). <code>None</code> (the default) uses every CPU this process may use.</p>
+once, as the Rust crate's <code>Plan::for_threads</code> spends them: worker threads, a
+block each (past the physical cores on 8 to 10 of them, one a core; on the
+i9-10900K, one a core but one), or teams of 2 sharing each block (from 11 threads
+on 11 or more cores, or past the cores on 6 or 7).
+<code>None</code> (the default) asks for every CPU this process may use.</p>
               </div>
             </td>
             <td>
@@ -3169,19 +3173,19 @@ stream's combined CRC has not yet been checked.</p>
     
       <script src="../../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../../assets/javascripts/bench.js?v=311078e92976"></script>
+        <script src="../../../assets/javascripts/bench.js?v=c2ad53877b4f"></script>
       
-        <script src="../../../assets/javascripts/couriers.js?v=311078e92976"></script>
+        <script src="../../../assets/javascripts/couriers.js?v=c2ad53877b4f"></script>
       
-        <script src="../../../assets/javascripts/blog.js?v=311078e92976"></script>
+        <script src="../../../assets/javascripts/blog.js?v=c2ad53877b4f"></script>
       
-        <script src="../../../assets/javascripts/frontier.js?v=311078e92976"></script>
+        <script src="../../../assets/javascripts/frontier.js?v=c2ad53877b4f"></script>
       
-        <script src="../../../assets/javascripts/observatory.js?v=311078e92976"></script>
+        <script src="../../../assets/javascripts/observatory.js?v=c2ad53877b4f"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../../assets/javascripts/katex.js?v=311078e92976"></script>
+        <script src="../../../assets/javascripts/katex.js?v=c2ad53877b4f"></script>
       
     
   </body>
