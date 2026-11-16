@@ -1,4 +1,4 @@
-# 2026-11-16 · MONODROMY 33 · How far can a tail order go? On every small column counted, free-first is step-optimal in the tail, and within 0.01 steps of optimal on whole runs. For the compact tail, whose joins cost 4 B each, steps are bytes, so record 32's tail order leaves nothing on the table
+# 2026-11-16 · MONODROMY 33 · How far can a tail order go? On small columns free-first is step-optimal in the tail on all but about 0.1% of columns, never by more than one step, and within 0.03 steps of optimal on whole runs. For the compact tail, whose joins cost 4 B each, steps are bytes, so record 32's tail order leaves almost nothing on the table
 
 Record 32's next item: bound what any tail order can save beyond free-first then the largest
 cell.
@@ -19,31 +19,41 @@ The whole run is compared too. Output: `mintail_small.txt`.
 | columns | tail: free-first, then largest cell, optimal on | tail: right end, worst gap | whole run: mean steps, right end / free-first-largest / least |
 |---|--:|--:|---|
 | σ = 2, n = 12 (4,072) | **all** | 1 | 7.460 / 7.130 / 7.121 |
+| σ = 2, n = 13 (8,166) | all but a few (the share rounds to 1.000); worst gap 1 | 2 | 8.275 / 7.859 / 7.845 |
+| σ = 2, n = 14 (16,356) | 0.999; worst gap 1 | 2 | 9.103 / 8.598 / 8.577 |
 | σ = 3, n = 9 (19,632) | **all** | 1 | 5.637 / 5.517 / 5.516 |
 | σ = 4, n = 7 (16,308) | **all** | 0 | 4.131 / 4.093 / 4.093 |
 
 **Every smaller n is the same:** free-first is optimal in the tail on every column. Free-first
 then the right end ties free-first then the largest cell in every tail counted.
 
+**The exceptions (C; added once the σ = 2, n = 13 and 14 runs finished, after the LOG).** At those
+lengths a few tails are one step above the least: 0.1% of columns at n = 14. So free-first is not
+step-optimal on every column. The first version of this record said "all", on the rows then
+finished; that was wrong.
+
 **Over whole runs,** free-first then the largest cell is within 0.009 steps of the least on
-average (σ = 2, n = 12), and equal for σ = 4.
+average at σ = 2, n = 12 and 0.021 at n = 14, and equal for σ = 4.
 
 ## 2. What it says
 
 **The conjecture (Conj, on the evidence above).**
-- *Free-first is step-optimal* in the tail after any right-end prefix, and within a fraction of a
-  step of optimal from the start.
+- *Free-first is near-optimal in steps:* in the tail after a right-end prefix it is never more
+  than one step from the least (refuted as exactly optimal; see §1), and within a fraction of a
+  step from the start.
 - *The reason it should hold:* free steps commute with every disjoint step and stay free (case 0
   of #438's confluence proof). A free step lowers the refinement's boundary count by one, and the
   step count is the floor plus the paid steps. So taking a free step first should never add a paid
   step later.
-- *Not proved:* a free step and a paid step on shared letters.
+- *Not proved, and not always true:* a free step and a paid step on shared letters. The σ = 2,
+  n = 13 and 14 exceptions are where it fails, and they are the next thing to study.
 
 **For the compact tail, steps are bytes.**
 - *Why:* every tail join costs 4 B whatever its word's length (record 27). So the step-optimal tail
   order is also the byte-optimal one.
-- *So record 32's order leaves nothing:* free-first then the largest cell, 0.311 r tail cells at a
-  1.2 r switch, leaves essentially nothing for a better tail order to take.
+- *So record 32's order leaves almost nothing:* free-first then the largest cell, 0.311 r tail
+  cells at a 1.2 r switch, leaves a better tail order at most about 0.1% of columns, one step
+  each, on the small-column evidence.
 - *What remains for memory* is the prefix before the switch, where the streams bind (record 29:
   free-first at the fronts saves 15% there, against the right end).
 
