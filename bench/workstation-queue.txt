@@ -7,3 +7,4 @@
 #
 # recipe                       branch                    what it measures
 bench-stop-walk-counters     bench/stop-walk-counters  Stop-and-walk hardware counters (cycles, cache, branches, stalls) against lazy; records only, VOID on any missing counter (#501; rule LOG 6924413955)
+bench-w12-stores             bench/w12-stores          W12's store traffic against lazy at 10 threads (l2_lines_out.non_silent, resource_stalls.sb, stores, cycles, instructions); counters only, VOID on any missing event (#506; rule on #145)

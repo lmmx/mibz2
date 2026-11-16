@@ -1724,6 +1724,114 @@ bench-w12 MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" ROUNDS="1
     fi
     bash bench/bundle.sh "$O"
 
+# W12's store-traffic diagnostic (#506; its rule posted on #145 before the data): is store
+# traffic the lever behind 12-byte rules? Counters only, nothing timed. The L2 diagnostic's
+# arms, builds and thread count: master's decoder (`mibz2@build-master`, built at MASTER in
+# bench-w12's own target/w12/build-master) against this commit's `mibz2-w12`, both by rustc
+# 1.99.1, at 10 threads (the first CPU of each of the first 10 cores), REPS reps with the arms
+# alternating, on COPIES copies of the Wikidata sample. Under `perf stat` (`bench/counters.py
+# --events stores`): l2_lines_out.non_silent, resource_stalls.sb, mem_inst_retired.all_stores,
+# cycles and instructions. Each event is checked in `perf list` first: without
+# l2_lines_out.non_silent the run counts offcore_requests.all_data_rd and l2_trans.l2_wb
+# instead (`--events stores-alt`), and without any other event it is VOID. `bench/w12_stores.py`
+# reads the ratios (geometric mean of paired ratios, 95% interval) and the rule, and prints
+# the VERDICT. Needs `kernel.perf_event_paranoid` at 1 or less (`sudo sysctl
+# kernel.perf_event_paranoid=1`). For the i9-10900K (Comet Lake, 10 cores / 20 CPUs):
+#   just submit bench-w12-stores
+
+# W12's store traffic against master's lazy kernel at 10 threads, under perf stat (counters only)
+bench-w12-stores MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" REPS="10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/w12-stores
+    O=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$O" || { echo "bench-w12-stores: $O already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$O/console.log") 2>&1
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends
+    outcome="VERDICT: VOID: stopped before the analysis (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$O/outcome.txt"
+      echo "bench-w12-stores: OUTCOME: $outcome"
+      bash bench/bundle.sh "$O"
+      case "$outcome" in
+        "VERDICT: VOID"*) [ "$status" -ne 0 ] && exit "$status"; exit 1 ;;
+        *) exit 0 ;;
+      esac
+    }
+    trap finish EXIT
+    void() { outcome="VERDICT: VOID: $*"; echo "bench-w12-stores: $*"; exit 1; }
+    echo "bench-w12-stores (#506, a diagnostic; rule on #145 before the data): mibz2-w12 at $(git rev-parse HEAD) against mibz2 at {{MASTER}} under perf stat at 10 threads, {{REPS}} paired reps, on {{COPIES}} copies of the Wikidata sample"
+    git merge-base --is-ancestor "{{MASTER}}" HEAD || void "{{MASTER}} is not merged into this commit"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] || void "the checkout has local changes"
+    # perf, its permission and every event, before anything is built
+    command -v perf >/dev/null || void "no perf here"
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    [ "$paranoid" != unknown ] && [ "$paranoid" -le 1 ] \
+      || void "kernel.perf_event_paranoid is $paranoid; it needs 1 or less (sudo sysctl kernel.perf_event_paranoid=1)"
+    perf --version | tee "$O/perf_version.txt"
+    perf list --no-desc > "$O/perf_list.txt" 2>/dev/null || perf list > "$O/perf_list.txt" 2>/dev/null || true
+    has() { grep -qFw -- "$1" "$O/perf_list.txt"; }
+    for e in cycles instructions resource_stalls.sb mem_inst_retired.all_stores; do
+      has "$e" || void "perf list has no $e on this machine"
+    done
+    if has l2_lines_out.non_silent; then
+      events=stores
+    else
+      echo "bench-w12-stores: perf list has no l2_lines_out.non_silent; counting offcore_requests.all_data_rd and l2_trans.l2_wb instead"
+      for e in offcore_requests.all_data_rd l2_trans.l2_wb; do
+        has "$e" || void "perf list has neither l2_lines_out.non_silent nor $e on this machine"
+      done
+      events=stores-alt
+    fi
+    echo "$events" | tee "$O/events.txt"
+    # both builds by the one toolchain the gates were counted with (#145: 1.99.1, the repo's pin)
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' || void "rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    # master's build where bench-w12 makes it, so the two recipes count the same baseline
+    M=$PWD/target/w12/build-master
+    mkdir -p "$PWD/target/w12"
+    [ -d "$M" ] || git worktree add -q --detach "$M" "{{MASTER}}"
+    git -C "$M" checkout -q --detach "{{MASTER}}"
+    [ -z "$(git -C "$M" status --porcelain)" ] || { git -C "$M" status --short; void "build-master has local changes"; }
+    (cd "$M" && cargo build -q --release --example ab)
+    MAB=$M/target/release/examples/ab
+    [ "$(git -C "$M" rev-parse HEAD)" = "{{MASTER}}" ] || void "build-master is not at {{MASTER}}"
+    git rev-parse HEAD > "$O/commit.txt"
+    echo "{{MASTER}}" > "$O/master.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    (cd "$M" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" || void "the two builds' toolchains differ"
+    sha256sum "$AB" "$MAB" | tee "$O/binaries.sha256"
+    W=$B/corpus
+    mkdir -p "$W"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    python3 bench/counters.py run --ab "$AB" --arm "mibz2@$MAB" --arm mibz2-w12 --events "$events" \
+      --threads 10 --reps {{REPS}} --file "$W/wikidata-x{{COPIES}}.bz2" --out "$O/counters.jsonl"
+    rc=0
+    python3 bench/w12_stores.py "$O/counters.jsonl" --ref "mibz2@$MAB" --cand mibz2-w12 --events "$events" \
+      --threads 10 --reps {{REPS}} > "$O/report.txt" || rc=$?
+    cat "$O/report.txt"
+    outcome=$(grep -m1 '^VERDICT: ' "$O/report.txt" || echo "VERDICT: VOID: the analysis printed no verdict (exit $rc)")
+    [ "$rc" -eq 0 ] || exit "$rc"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,

@@ -12,7 +12,8 @@ Standard library only.
 
 **Events.** The default: the three groups below. `--events l2`: one group, cycles, instructions,
 L2 demand-request misses and references (`l2_rqsts.miss`, `l2_rqsts.references`), for W12's L2
-diagnostic (#145, the Coordinator's ruling on #506).
+diagnostic (#145, the Coordinator's ruling on #506). `--events stores` (or `stores-alt`): W12's
+store-traffic diagnostic, read by bench/w12_stores.py, not by `report`'s derived figures.
 
 **How it counts.** Each rep runs each arm (`ab child ARM T FILE`) once per event group under
 `perf stat -x,` as this user (the workstation's `kernel.perf_event_paranoid` at 1 or less),
@@ -46,6 +47,14 @@ EVENT_SETS = {
         ["cycles", "cycle_activity.stalls_total", "cycle_activity.stalls_mem_any", "cycle_activity.stalls_l3_miss"],
     ],
     "l2": [["cycles", "instructions", "l2_rqsts.miss", "l2_rqsts.references"]],
+    # W12's store-traffic diagnostic (`just bench-w12-stores`, bench/w12_stores.py): three
+    # programmable counters beside the two fixed ones
+    "stores": [["cycles", "instructions", "l2_lines_out.non_silent", "resource_stalls.sb",
+                "mem_inst_retired.all_stores"]],
+    # its substitute where perf has no l2_lines_out.non_silent: L2 data reads sent off core
+    # and L1D write-backs into L2 (Skylake's event list), in two groups so none is multiplexed
+    "stores-alt": [["cycles", "instructions", "resource_stalls.sb", "mem_inst_retired.all_stores"],
+                   ["cycles", "offcore_requests.all_data_rd", "l2_trans.l2_wb"]],
 }
 GROUPS = EVENT_SETS["default"]
 
@@ -224,6 +233,8 @@ def report(a):
                 refs = med("l2_rqsts.references")
                 print(f"  {arm}: IPC {ins / cyc:.3f}; L2 misses {med('l2_rqsts.miss'):.5f} a byte, "
                       f"{med('l2_rqsts.miss') / refs:.1%} of L2 references")
+                continue
+            if a.events != "default":
                 continue
             stall = med("cycle_activity.stalls_total")
             print(f"  {arm}: IPC {ins / cyc:.3f}; branch misses {1000 * med('branch-misses') / ins:.2f} a thousand "

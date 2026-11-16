@@ -69,6 +69,11 @@ jobs:
       # with a stub perf and child: a complete run read, and every defect leaves no report
       - name: The counters reader (stub perf)
         run: python3 bench/test_counters.py
+      # W12's store-traffic diagnostic (`bench/w12_stores.py`; `just bench-w12-stores`): the
+      # rule's verdicts on synthetic counters, NOT ESTABLISHED at the edges, VOID on every
+      # defect, and `counters.py --events stores` read through with a stub perf
+      - name: The store-traffic diagnostic's reading (synthetic counters, stub perf)
+        run: python3 bench/test_w12_stores.py
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the
