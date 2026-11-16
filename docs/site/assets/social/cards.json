@@ -146,12 +146,19 @@
     "section": " · Research blog",
     "title": "Lazy letters: just-in-time memory for induction"
   },
+  "assets/social/blog-2026-11-16-mathematical-dictionary.png": {
+    "description": "Our BWT inversion is not the sheaf an earlier analogy suggested, yet the places of its words form one naturally.",
+    "foot": "lmmx.github.io/mibz2 · 16 November 2026",
+    "kind": "synthesis",
+    "section": " · Research blog",
+    "title": "Towers, words and loops: a mathematical dictionary for BWT inversion"
+  },
   "assets/social/blog-2026-11-16-stop-and-walk.png": {
     "description": "Halting each block's rebuild early and walking the small loop that remains spares mibz2 a third of the text pieces it stores, for two per cent more instructions.",
     "foot": "lmmx.github.io/mibz2 · 16 November 2026",
     "kind": "progress",
     "section": " · Research blog",
-    "title": "Stop and walk: cutting a text rebuild short and walking the rest"
+    "title": "Stop and walk: cutting a BWT inversion short and walking the rest"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",

@@ -1,5 +1,5 @@
 ---
-title: "Stop and walk: cutting a text rebuild short and walking the rest"
+title: "Stop and walk: cutting a BWT inversion short and walking the rest"
 image: assets/social/blog-2026-11-16-stop-and-walk.png
 description: "Halting each block's rebuild early and walking the small loop that remains spares mibz2 a third of the text pieces it stores, for two per cent more instructions."
 ---
@@ -11,7 +11,7 @@ description: "Halting each block's rebuild early and walking the small loop that
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Stop and walk: cutting a text rebuild short and walking the rest
+# Stop and walk: cutting a BWT inversion short and walking the rest
 
 Halting each block's rebuild early and walking the small loop that remains spares mibz2 a third of the text pieces it stores, for two per cent more instructions.
 {: .post-dek }
