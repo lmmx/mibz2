@@ -113,6 +113,37 @@ made workers 4–14% faster than the teams at 6–9 threads (#425).
    - counts above the physical cores (SMT siblings) are reported only.
 4. **Record** the bundle and the verdict in the release's CHANGELOG section, moved or not.
 
+## 5b. Attribution: only when a step clears the bar
+
+`docs/journal/release-attribution.md` is a ledger: the merge behind each jump in the release
+scaling. Most releases add nothing to it. Louis, 16 November 2026: interpretation only where
+there is something worth commenting on, never as a routine part of every release.
+
+1. **The bar.** A release gets a row only if its step against the release before is at least 3%,
+   with its 95% interval excluding zero, at some thread count of the release-scaling run. A
+   step below the bar gets no row and no comment anywhere, the CHANGELOG included.
+2. **The row.** One row per release that clears the bar, in the ledger's table:
+   - the thread counts that moved, with their intervals;
+   - the merge;
+   - the mechanism class from the ledger's fixed list;
+   - one line of evidence.
+
+   No prose around it.
+3. **Naming a merge.** A merge is named only:
+   - when it is the only decoder merge between the two tags;
+   - from CI's per-merge paired delta, at a thread count CI runs (1, 2 or 4);
+   - or from a run that split the candidates.
+
+   Otherwise the row lists the candidates and the class is "unexplained". A row may name the
+   run that would split them; that run is an experiment like any other, with its rule posted
+   before its data (RULES C1a).
+4. **Hypotheses.** At most one line, labelled as unconfirmed, under the ledger's *Open*, with
+   the run that would test it. A hypothesis is never put in a row, the CHANGELOG or a release
+   report.
+5. **The CHANGELOG** names the row, if there is one, and says nothing more about it.
+6. **The reading.** The ledger's *What the ledger says* section changes only when a new row
+   changes it, such as a new way the high thread counts moved.
+
 ## 6. After
 
 1. **A CHANGELOG PR** with the release's notes. #210 is the model. It gives:
