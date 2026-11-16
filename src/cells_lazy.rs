@@ -7,6 +7,9 @@
 
 /// The kernel a `CellsVariant` runs: Cells as shipped but for this.
 pub(crate) const LAZY: u8 = 1;
+/// Lazy letters with the rules in the kernel's own buffer, not the tail: the kernel the i9
+/// measured (#145 LOG 6903318530), kept as a bench arm beside `LAZY`
+pub(crate) const LAZY_BUF: u8 = 3;
 
 /// The Cells kernel with another first stage and induction (`V`): `LAZY`, or (research
 /// only, `memory-lever`) `STAGED_RULES`. Admission, budget, fallback and writer are Cells'
@@ -19,6 +22,13 @@ pub type LazyCells = CellsVariant<LAZY>;
 /// Test/fuzz route: lazy letters with `ForcedCells`' open admission
 #[doc(hidden)]
 pub type ForcedLazyCells = CellsVariant<LAZY, true>;
+/// Bench arm: `LazyCells`, but its rules lie in the kernel's own buffer, where `LazyCells`
+/// keeps them in the output's spare capacity. The same output, block for block.
+#[doc(hidden)]
+pub type LazyBufCells = CellsVariant<LAZY_BUF>;
+/// Test/fuzz route: `LazyBufCells` with `ForcedCells`' open admission
+#[doc(hidden)]
+pub type ForcedLazyBufCells = CellsVariant<LAZY_BUF, true>;
 
 impl<const V: u8, const F: bool> Default for CellsVariant<V, F> {
     fn default() -> Self {
@@ -87,18 +97,23 @@ const ROW: u32 = 1 << 30;
 /// in the eight above them
 const LEN_BITS: u32 = 22;
 
-/// Where the lazy kernel's rules lie: in the tail, at offsets counted from this far before
-/// the tail's length (`Layout::shift`). The kernel's buffer is smaller (`slots_lazy`
-/// refuses one that is not), so a rule's offset is above every offset of a word kept as
-/// bytes, and the writer tells the two apart by the offset alone. A constant, so that the
-/// induction's loop holds no value for it.
-const RSHIFT: usize = 1 << 31;
+/// The lazy kernel's regions in the tail are addressed by offsets counted from this far
+/// before the tail's length (`Layout::shift`), through one pointer (`tail_from`). The
+/// kernel's own buffer is smaller (`slots_lazy` refuses a block where it is not), so a
+/// rule's offset is above every offset of a word kept as bytes, and the writer tells the
+/// two apart by the offset alone. A constant, so that the induction's loop holds no value
+/// for it; and below 2^31 with every offset it is added to, so that a bottom slot's offset
+/// fits beside `TAG` in an entry.
+const RSHIFT: usize = 1 << 30;
+/// The bottom entries' offset in the tail (as every offset there, from `RSHIFT` before its
+/// length): 4 bytes a letter, in bottom order
+const ENT: usize = RSHIFT + BPAD;
 
 /// What `slots_lazy` leaves for `induce_lazy`, besides the layout.
 #[derive(Clone, Copy)]
 struct Lazy {
     /// the top order's bytes, one a letter: an offset in the output buffer, where the
-    /// bottom entries (4 bytes a letter in bottom order, from `BPAD`) end
+    /// bottom entries (4 bytes a letter in bottom order, from `ENT`) end
     tby: usize,
     /// where the entries and the bytes end, in the tail (their canary follows: read in
     /// debug and Miri)
@@ -211,7 +226,7 @@ impl Kernel {
         forced: bool,
         tail: &mut Vec<u8>,
     ) -> Result<(), Refusal> {
-        if self.variant == LAZY {
+        if matches!(self.variant, LAZY | LAZY_BUF) {
             self.slots_lazy(n, recs, p, budget, forced, tail)
         } else {
             self.slots(n, recs, p, budget, forced, tail)
@@ -225,7 +240,10 @@ impl Kernel {
         tail: &mut Vec<u8>,
     ) -> Result<(u32, u32, usize), Refusal> {
         match self.variant {
-            LAZY => self.induce_lazy(budget, tail),
+            // (one copy of the induction for each place the rules lie: the place is not a
+            // value its loop holds)
+            LAZY | LAZY_BUF if self.lay.bout => self.induce_lazy::<true>(budget, tail),
+            LAZY | LAZY_BUF => self.induce_lazy::<false>(budget, tail),
             #[cfg(feature = "memory-lever")]
             STAGED_RULES => self.induce_cells_staged(budget, tail),
             _ => self.induce_cells(budget, tail),
@@ -288,34 +306,36 @@ impl Kernel {
         // the words kept as bytes end here, and the rules take this many bytes
         let words = arena + BYTES as usize + 256 + 16 + 16 * budget + 32;
         let ruled = 16 * budget + 16;
-        // in the tail: the entries, the top order's bytes, the bottom slots' pool, and
-        // (always, but for the test layout that compares against the original induction,
-        // `fresh_room`, where they lie in the kernel's buffer after the words) the rules
-        let tby = BPAD + 4 * letters;
+        // in the tail, as offsets from `RSHIFT` before its length: the entries, the top
+        // order's bytes, the bottom slots' pool, and (always, but for the test layout that
+        // compares against the original induction, `fresh_room`, where they lie in the
+        // kernel's buffer after the words) the rules
+        let tby = ENT + 4 * letters;
         let streams = tby + letters;
         let bots = streams + GAP;
         let bend = bots + letters * BSLOT;
+        let bout = self.variant == LAZY;
         #[cfg(test)]
-        let bout = !self.fresh_room;
-        #[cfg(not(test))]
-        let bout = true;
-        let (allocation, need) = if bout {
-            (words + GAP, bend + GAP + ruled + GAP)
+        let bout = bout && !self.fresh_room;
+        // where the tail's regions end, the last canary included; the kernel's buffer
+        let (tail_end, allocation) = if bout {
+            (bend + GAP + ruled + GAP, words + GAP)
         } else {
-            (words + GAP + ruled + GAP, bend + GAP)
+            (bend + GAP, words + GAP + ruled + GAP)
         };
-        // (an entry holds a slot's offset beside `TAG`: 31 bits. And the kernel's buffer is
-        // smaller than `RSHIFT`, a rule's offset in the tail below it: their sum is a
-        // rule's offset as a word holds it, in 32 bits)
+        let need = tail_end - RSHIFT;
+        // (the kernel's buffer is smaller than `RSHIFT`, so that a rule's offset is above
+        // its words'; and the tail's offsets are below 2^31: an entry holds a slot's beside
+        // `TAG`, and a word's fits its 32 bits)
         if allocation >= RSHIFT || need >= RSHIFT {
             return Err(Refusal::Invalid);
         }
         if letters - 1 > budget {
             return Err(Refusal::Floor);
         }
-        // (`bots` is an offset from the tail's length, as the streams' are; the two regions
-        // the shipped layout has in the tail, `ends[1]` and `ends[3]`, are counted from
-        // `shift` before it, as `check_canaries` and the writer read them)
+        // (`ends[1]` and `ends[3]` are the two regions the shipped layout has in the tail,
+        // the bottom slots and the rules, where `check_canaries` and the writer look for
+        // them)
         let lay = if bout {
             Layout {
                 tops,
@@ -324,8 +344,8 @@ impl Kernel {
                 tail: need,
                 shift: RSHIFT,
                 arena,
-                rules: RSHIFT + bend + GAP,
-                ends: [tops + cap, RSHIFT + bend, words, RSHIFT + bend + GAP + ruled],
+                rules: bend + GAP,
+                ends: [tops + cap, bend, words, bend + GAP + ruled],
             }
         } else {
             Layout {
@@ -333,7 +353,7 @@ impl Kernel {
                 bots,
                 bout,
                 tail: need,
-                shift: 0,
+                shift: RSHIFT,
                 arena,
                 rules: words + GAP,
                 ends: [tops + cap, tops + cap, words, allocation - GAP],
@@ -358,18 +378,18 @@ impl Kernel {
         }
         // the entries', the bytes', the bottom slots' and the rules' buffer: the tail's
         // spare capacity
-        // SAFETY: the tail's length is inside its allocation, and `need` bytes of spare
-        // capacity were reserved above: the canaries lie inside them
-        let bb = unsafe {
-            let bb = tail.as_mut_ptr().add(tail.len());
+        // spare capacity, addressed from `RSHIFT` before its length
+        let bb = tail_from(tail, RSHIFT);
+        // SAFETY: `need` bytes of spare capacity were reserved above, and each canary lies
+        // inside them: its offset less `RSHIFT` is below `need - GAP`
+        unsafe {
             for end in [streams, bend] {
-                core::ptr::write_bytes(bb.add(end), 0xA5, GAP);
+                core::ptr::write_bytes(bb.wrapping_add(end), 0xA5, GAP);
             }
             if bout {
-                core::ptr::write_bytes(bb.add(lay.ends[3] - RSHIFT), 0xA5, GAP);
+                core::ptr::write_bytes(bb.wrapping_add(lay.ends[3]), 0xA5, GAP);
             }
-            bb
-        };
+        }
         // a byte's next entry, as its index
         for k in 0..256 {
             cnt[k + 1] += cnt[k];
@@ -379,7 +399,7 @@ impl Kernel {
         let mut t = 0usize;
         // SAFETY: this pass makes the letters `census` counted, from the same records: `t`
         // stays below `letters`, and a byte's entries are as many as its letters, so each
-        // index is below `letters` too. The entries are `4 * letters` bytes at `BPAD` and
+        // index is below `letters` too. The entries are `4 * letters` bytes at `ENT` and
         // the bytes `letters` at `tby`, inside the tail's reserved spare capacity.
         unsafe {
             macro_rules! letter {
@@ -388,8 +408,8 @@ impl Kernel {
                     let k = *cnt.get_unchecked(c) as usize;
                     *cnt.get_unchecked_mut(c) = k as u32 + 1;
                     debug_assert!(k < letters && t < letters && lam < 1 << LEN_BITS);
-                    wr32(bb, BPAD + 4 * k, lam | (c as u32) << LEN_BITS | $row);
-                    *bb.add(tby + t) = c as u8;
+                    wr32(bb, ENT + 4 * k, lam | (c as u32) << LEN_BITS | $row);
+                    *bb.wrapping_add(tby + t) = c as u8;
                     t += 1;
                 }};
             }
@@ -473,7 +493,7 @@ impl Kernel {
     /// Returns (the cycle's word, its length with the mark, cells). `slots_lazy` has run on
     /// this kernel for the block, and nothing has changed since.
     #[inline(never)]
-    fn induce_lazy(
+    fn induce_lazy<const TAIL: bool>(
         &mut self,
         budget: usize,
         tail: &mut Vec<u8>,
@@ -489,37 +509,27 @@ impl Kernel {
         } = self.lz;
         if rr == 0
             || !self.bottom_laid
-            || bend == 0
-            || tby != BPAD + 4 * rr
-            || lay.shift != if lay.bout { RSHIFT } else { 0 }
+            || bend <= RSHIFT
+            || tby != ENT + 4 * rr
+            || lay.shift != RSHIFT
             || self.buf.len() < lay.ends[if lay.bout { 2 } else { 3 }] + GAP
-            || lay.tail < bend + GAP + if lay.bout { lay.ends[3] - lay.rules + GAP } else { 0 }
+            || lay.tail < if lay.bout { lay.ends[3] } else { bend } + GAP - RSHIFT
             || tail.capacity() - tail.len() < lay.tail
         {
             return Err(Refusal::Invalid);
         }
-        // (the rules lie in the tail, but for the test layout that compares against the
-        // original induction)
-        #[cfg(test)]
-        let rules_in_buf = !lay.bout;
-        #[cfg(not(test))]
-        let rules_in_buf = false;
-        if !rules_in_buf && !lay.bout {
+        // (this copy of the induction is the one for where the layout has the rules)
+        if lay.bout != TAIL {
             return Err(Refusal::Invalid);
         }
         let tend = lay.ends[0];
         let base = self.buf.as_mut_ptr();
-        // the entries', the bytes' and the bottom slots' buffer: the tail's spare capacity
-        // SAFETY: the tail's length is inside its allocation
-        let bb = unsafe { tail.as_mut_ptr().add(tail.len()) };
-        // the rules' buffer, addressed by a rule's offset: the tail from `RSHIFT` before its
-        // length (the pointer itself may lie outside the tail: only its sum with a rule's
-        // offset is used, which is inside the tail's spare capacity)
-        let rw = if rules_in_buf {
-            base
-        } else {
-            bb.wrapping_sub(RSHIFT)
-        };
+        // the entries', the bytes', the bottom slots' and the rules' buffer: the tail's spare
+        // capacity, addressed from `RSHIFT` before its length (the pointer itself lies
+        // outside the tail: only its sum with an offset `slots_lazy` laid out is used)
+        let bb = tail_from(tail, RSHIFT);
+        // where a rule is written: the tail, or the kernel's buffer (`TAIL`)
+        let rw = if TAIL { bb } else { base };
         // SAFETY: `slots_lazy` sized the words' regions for budget cells, and the counter is
         // checked before each cell. A top slot's offset is one the pool handed out, below
         // `tend` in the kernel's buffer; a bottom slot's is one below `bend` in the output
@@ -589,11 +599,11 @@ impl Kernel {
                             return Err(Refusal::Invalid);
                         }
                         ti -= 1;
-                        let c = *bb.add(tby + ti) as usize;
+                        let c = *bb.wrapping_add(tby + ti) as usize;
                         let k = *nt.get_unchecked(c) as usize;
                         *nt.get_unchecked_mut(c) = (k as u32).wrapping_sub(1);
                         debug_assert!(k < rr);
-                        let e = rd32(bb, BPAD + 4 * k);
+                        let e = rd32(bb, ENT + 4 * k);
                         if e & TAG != 0 {
                             // the bottom front reached it first: its cells, from this slot
                             s = (e ^ TAG) as usize;
@@ -604,7 +614,7 @@ impl Kernel {
                             if $settle {
                                 (fa, bs) = take!();
                                 wr32(bb, bs, 0);
-                                wr32(bb, BPAD + 4 * k, TAG | bs as u32);
+                                wr32(bb, ENT + 4 * k, TAG | bs as u32);
                             } else {
                                 bs = ENTRY | k;
                             }
@@ -630,7 +640,7 @@ impl Kernel {
                             return Err(Refusal::Invalid);
                         }
                         kb -= 1;
-                        let e = rd32(bb, BPAD + 4 * kb);
+                        let e = rd32(bb, ENT + 4 * kb);
                         if e & TAG != 0 {
                             // the top front reached it first: its cells, from this slot
                             s = (e ^ TAG) as usize;
@@ -642,7 +652,7 @@ impl Kernel {
                             if $settle {
                                 (ts, fb) = take!();
                                 wr32(base, ts, 0);
-                                wr32(bb, BPAD + 4 * kb, TAG | ts as u32);
+                                wr32(bb, ENT + 4 * kb, TAG | ts as u32);
                             } else {
                                 fb = ENTRY | kb;
                             }
@@ -665,7 +675,7 @@ impl Kernel {
                         let k = bs ^ ENTRY;
                         (fa, bs) = take!();
                         wr32(bb, bs, 0);
-                        wr32(bb, BPAD + 4 * k, TAG | bs as u32);
+                        wr32(bb, ENT + 4 * k, TAG | bs as u32);
                     }
                 }};
             }
@@ -675,7 +685,7 @@ impl Kernel {
                         let k = fb ^ ENTRY;
                         (ts, fb) = take!();
                         wr32(base, ts, 0);
-                        wr32(bb, BPAD + 4 * k, TAG | ts as u32);
+                        wr32(bb, ENT + 4 * k, TAG | ts as u32);
                     }
                 }};
             }

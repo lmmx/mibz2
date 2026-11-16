@@ -5,9 +5,14 @@
 /// The kernels these tests run: the lazy one, and (research only) the staged one
 fn lever_variants() -> Vec<u8> {
     #[cfg(feature = "memory-lever")]
-    return vec![LAZY, STAGED_RULES];
+    return vec![LAZY, LAZY_BUF, STAGED_RULES];
     #[cfg(not(feature = "memory-lever"))]
-    vec![LAZY]
+    vec![LAZY, LAZY_BUF]
+}
+
+/// Whether the kernel is a lazy one (its rules in the tail, or in its buffer)
+fn lazy_variant(variant: u8) -> bool {
+    matches!(variant, LAZY | LAZY_BUF)
 }
 
 fn lever_cases() -> Vec<Vec<u8>> {
@@ -79,7 +84,7 @@ fn miri_cells_lever_boundaries_reuse() {
                 {
                     sends = sends.max(new.rule_sends);
                 }
-                if variant == LAZY {
+                if lazy_variant(variant) {
                     assert!(new.lz.peak <= new.letters, "a slot a letter at most");
                     pool = pool.max(new.lz.peak);
                 }
@@ -100,7 +105,7 @@ fn miri_cells_lever_boundaries_reuse() {
                 "one induction sends its rules on several times: {sends}"
             );
         }
-        if variant == LAZY {
+        if lazy_variant(variant) {
             assert!(pool > 1, "the lazy induction takes slots: {pool}");
         }
         // a refusal on the budget, at the same cell as the original's
@@ -167,7 +172,7 @@ fn miri_cells_lever_exact_fit_and_reuse() {
                 let lay = kernel.lay;
                 // slots are given back and taken again: a block of many letters never has
                 // half of them in slots at once (these columns peak near a quarter)
-                if variant == LAZY && kernel.letters >= 60 {
+                if lazy_variant(variant) && kernel.letters >= 60 {
                     assert!(
                         kernel.lz.peak * 2 < kernel.letters,
                         "{} slots of {} letters",
@@ -180,7 +185,9 @@ fn miri_cells_lever_exact_fit_and_reuse() {
                     let (bs, ts) = (m.state[11] as usize, m.state[12] as usize);
                     assert!(fa >= lay.tops && fa + SLOT <= lay.ends[0]);
                     assert!(ts >= lay.tops && ts + SLOT <= lay.ends[0]);
-                    if variant == LAZY {
+                    if lazy_variant(variant) {
+                        // the rules lie where the kernel keeps them
+                        assert_eq!(lay.bout, variant == LAZY);
                         // the bottom slots' pool, in the tail after the streams
                         let (lo, hi) = (lay.bots, kernel.lz.bend);
                         assert_eq!(lo, kernel.lz.streams + GAP);
@@ -292,6 +299,9 @@ fn cells_lever_route_and_fallback() {
     }
     let (lazy, pool) = run::<LAZY>();
     assert!(lazy.admitted > 1 && lazy.density > 0, "{lazy:?}");
+    let (in_buf, pool_in_buf) = run::<LAZY_BUF>();
+    assert_eq!((in_buf.admitted, in_buf.cells), (lazy.admitted, lazy.cells));
+    assert_eq!(pool_in_buf, pool);
     #[cfg(feature = "memory-lever")]
     {
         let (staged, _) = run::<STAGED_RULES>();
@@ -385,7 +395,7 @@ fn miri_cells_lazy_tail_is_the_callers() {
         let (lay, lz) = (kernel.lay, kernel.lz);
         assert!(lay.bout && tail.capacity() - tail.len() >= lay.tail);
         // the rules: in the tail after the bottom slots' pool, and some were made
-        assert_eq!((lay.shift, lay.rules), (RSHIFT, RSHIFT + lz.bend + GAP));
+        assert_eq!((lay.shift, lay.rules), (RSHIFT, lz.bend + GAP));
         assert!(kernel.rule_end > lay.rules && kernel.rule_end <= lay.ends[3]);
         assert_eq!(lay.tail, lay.ends[3] - RSHIFT + GAP);
         // the kernel's buffer ends with the words kept as bytes

@@ -548,13 +548,17 @@ impl Kernel {
             }
             // (the lazy kernel's own two regions in the tail, its streams and its bottom
             // slots' pool, counted from the tail's length)
-            if let (Some(tail), true) = (tail, self.bottom_laid && self.variant == LAZY) {
+            if let (Some(tail), true) = (
+                tail,
+                self.bottom_laid && matches!(self.variant, LAZY | LAZY_BUF),
+            ) {
                 for end in [self.lz.streams, self.lz.bend] {
                     // SAFETY: `slots_lazy` reserved the spare capacity for this block and
                     // wrote the canaries; nothing has changed the tail since
                     let region = unsafe {
                         debug_assert!(tail.capacity() - tail.len() >= self.lay.tail);
-                        std::slice::from_raw_parts(tail.as_ptr().add(tail.len() + end), GAP)
+                        let at = tail.len() + (end - self.lay.shift);
+                        std::slice::from_raw_parts(tail.as_ptr().add(at), GAP)
                     };
                     assert!(region.iter().all(|&x| x == 0xA5), "cells canary");
                 }

@@ -59,12 +59,23 @@ pub fn check(data: &[u8], k: Kernels) -> (CellsCounts, CellsCounts) {
         )
     };
     {
-        use mibz2::bwt::{ForcedLazyCells, LazyCells};
+        use mibz2::bwt::{ForcedLazyBufCells, ForcedLazyCells, LazyBufCells, LazyCells};
         let (g, e, s) = decode::<LazyCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "lazy letters");
         same(s.cells_counts(), prod.cells_counts());
         let (g, e, s) = decode::<ForcedLazyCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "lazy letters, forced");
+        same(s.cells_counts(), forced.cells_counts());
+        // (the bench arm: lazy letters with the rules in the kernel's buffer)
+        let (g, e, s) = decode::<LazyBufCells>(data, k);
+        assert_eq!((&g, &e), (&want, &err), "lazy letters, rules in the buffer");
+        same(s.cells_counts(), prod.cells_counts());
+        let (g, e, s) = decode::<ForcedLazyBufCells>(data, k);
+        assert_eq!(
+            (&g, &e),
+            (&want, &err),
+            "lazy letters, rules in the buffer, forced"
+        );
         same(s.cells_counts(), forced.cells_counts());
     }
     // (research only, `memory-lever`: the experiment's staged kernel, the same)

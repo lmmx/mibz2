@@ -1148,8 +1148,20 @@ fn decode(
         }
         // workers of a block each with one Cells kernel whatever the thread count, where
         // `mibz2-workers-w` takes the plan's choice (lazy letters from `LAZY_FROM_THREADS`):
-        // a slot for every letter (`-eager`), or lazy letters (`-lazy`). The plan and the
-        // window are `mibz2-workers-w`'s, so the two differ in the kernel alone
+        // a slot for every letter (`-eager`), lazy letters (`-lazy`), or lazy letters with
+        // the rules in the kernel's buffer and not the output's spare capacity
+        // (`-lazy-buf`, the kernel the memory-lever run measured). The plan and the window
+        // are `mibz2-workers-w`'s, so the arms differ in the kernel alone
+        "mibz2-workers-lazy-buf" => drain(
+            mibz2::BzReader::parallel_inverse::<mibz2::bwt::LazyBufCells>(
+                open()?,
+                threads,
+                mibz2::parallel::SLOTS_PER_THREAD * threads,
+                mibz2::Kernels::detect(),
+            ),
+            h,
+            last,
+        ),
         "mibz2-workers-eager" | "mibz2-workers-lazy" => drain(
             mibz2::BzReader::parallel_workers(
                 open()?,

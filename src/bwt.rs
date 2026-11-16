@@ -18,8 +18,8 @@
 //! is a segment start) can be put in without touching the stream, CRC or thread code.
 
 pub use crate::cells::{
-    Cells, CellsKernel, CellsVariant, Counts as CellsCounts, ForcedCells, ForcedLazyCells,
-    LazyCells,
+    Cells, CellsKernel, CellsVariant, Counts as CellsCounts, ForcedCells, ForcedLazyBufCells,
+    ForcedLazyCells, LazyBufCells, LazyCells,
 };
 #[cfg(feature = "memory-lever")]
 pub use crate::cells::{ForcedStagedCells, StagedCells};
