@@ -1,0 +1,90 @@
+"""Mutation pass for the choice of the workers' lazy kernel, by the plan and in the kernel.
+
+The lazy kernel's own code is the memory-lever experiment's, unchanged, and its table is
+docs/journal/2026-11-15-memory-lever/mutants.tsv.
+
+Each mutant is one replacement in one file. A mutant is killed if a test fails on it in the
+debug profile (canaries and debug assertions are on there): the Cells unit tests, the plan's
+unit test and the sequential route's, and, for the mutants marked so, the two kernels
+through the parallel decoder (tests/lazy_workers.rs). A mutant that does not build is not a
+kill. Each row gives the reason: the tests that failed and the first panic. The first row is
+the tree as it is. The tree is left as it was.
+
+    mutate.py WORKTREE
+"""
+import os
+import subprocess
+import sys
+
+wt = sys.argv[1]
+LZ, PAR = "src/cells_lazy.rs", "src/parallel.rs"
+# (file, what the mutant does, the text, its replacement, also run tests/lazy_workers.rs)
+M = [
+    # --- the plan's choice of kernel
+    (PAR, "lazy letters from 9 workers, not 8", "pub const LAZY_FROM_THREADS: usize = 8;", "pub const LAZY_FROM_THREADS: usize = 9;", False),
+    (PAR, "lazy letters above the count, not from it", "matches!(*self, Plan::Workers(n) if n >= LAZY_FROM_THREADS)", "matches!(*self, Plan::Workers(n) if n > LAZY_FROM_THREADS)", False),
+    (PAR, "every plan of workers is lazy", "matches!(*self, Plan::Workers(n) if n >= LAZY_FROM_THREADS)", "matches!(*self, Plan::Workers(_))", False),
+    (PAR, "a plan's decoder never takes the lazy kernel", "Plan::Workers(n) => Self::workers(n, slots, k, plan.lazy()),", "Plan::Workers(n) => Self::workers(n, slots, k, false),", False),
+    (PAR, "`workers` takes the other kernel", "        let mut dec = if lazy {\n            Self::with_inverse::<LazyCells>(threads, slots, k)", "        let mut dec = if !lazy {\n            Self::with_inverse::<LazyCells>(threads, slots, k)", False),
+    (PAR, "`workers` launches Cells whatever it is asked", "            Self::with_inverse::<LazyCells>(threads, slots, k)\n        } else {", "            Self::with_inverse::<Cells>(threads, slots, k)\n        } else {", False),
+    (PAR, "the decoder does not record its kernel", "        dec.kernel = std::any::type_name::<I>();\n", "", False),
+    # --- the kernel's own choice of first stage and induction
+    (LZ, "the lazy first stage not taken", "        if self.variant == LAZY {\n            self.slots_lazy(n, recs, p, budget, forced, out)", "        if false {\n            self.slots_lazy(n, recs, p, budget, forced, out)", False),
+    (LZ, "the lazy induction not taken", "            LAZY => self.induce_lazy(budget, out),\n", "", False),
+]
+env = dict(os.environ, CARGO_TARGET_DIR=os.path.join(wt, "target"))
+
+
+def run(args):
+    """(verdict, why) of one `cargo test` in the debug profile."""
+    r = subprocess.run(["cargo", "test"] + args, cwd=wt, env=env, capture_output=True, text=True)
+    out = (r.stdout + r.stderr).splitlines()
+    if any("could not compile" in l for l in out):
+        return "does not build", next((l.strip() for l in out if l.startswith("error")), "")
+    if r.returncode == 0:
+        return "pass", "; ".join(l.strip() for l in out if l.startswith("test result") and " 0 passed" not in l)
+    failed = sorted({l.split()[1].split("::")[-1] for l in out if l.startswith("test ") and l.rstrip().endswith("FAILED")})
+    # the first panic's place and message, or the signal the test binary died of
+    why = ""
+    for i, l in enumerate(out):
+        if "panicked at" in l:
+            why = l.split("panicked at", 1)[1].strip() + " " + (out[i + 1].strip() if i + 1 < len(out) else "")
+            break
+    if not why:
+        why = next((l.strip() for l in out if "signal:" in l), "no panic message")
+    return "fail", (", ".join(failed) if failed else "the test binary died") + " | " + why[:160]
+
+
+def tests(wide):
+    """The unit tests; then, if they pass and the mutant is marked, the two kernels through
+    the parallel decoder."""
+    t, why = run(["--lib", "--", "cells::", "lazy_letters_from_their_thread_count", "miri_sequential_default_cells_route"])
+    if t != "pass" or not wide:
+        return t, why
+    t2, why2 = run(["--test", "lazy_workers"])
+    return t2, ("unit tests pass; lazy_workers: " + why2)
+
+
+print("# file\tmutant\tverdict\tthe tests", flush=True)
+t, tw = tests(True)
+print(f"-\tthe tree as it is\t{'ok' if t == 'pass' else 'BASELINE BROKEN'}\ttests {t}: {tw}", flush=True)
+survivors = 0
+for path, name, a, b, wide in M:
+    p = os.path.join(wt, path)
+    orig = open(p).read()
+    if orig.count(a) != 1:
+        print(f"{path}\t{name}\tNOT APPLIED: the text occurs {orig.count(a)} times\t", flush=True)
+        survivors += 1
+        continue
+    open(p, "w").write(orig.replace(a, b))
+    try:
+        t, tw = tests(True)
+    finally:
+        open(p, "w").write(orig)
+    if t == "fail":
+        verdict = "killed by the tests"
+    else:
+        verdict = "SURVIVED" if t == "pass" else "DOES NOT BUILD"
+        survivors += 1
+    print(f"{path}\t{name}\t{verdict}\ttests {t}: {tw}", flush=True)
+print(f"# {len(M)} mutants, {survivors} not killed", flush=True)
