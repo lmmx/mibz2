@@ -86,6 +86,8 @@ struct Materialization {
 include!("cells_original_test.rs");
 // Cells with lazy letters, the workers' kernel on many threads
 include!("cells_lazy.rs");
+// (a bench arm: lazy letters with 12-byte rules)
+include!("cells_w12.rs");
 // (research only: the memory-lever experiment's staged kernel)
 #[cfg(feature = "memory-lever")]
 include!("cells_lever.rs");
@@ -463,7 +465,7 @@ impl Kernel {
                 );
             }
             // (the lazy kernel's bottom slots' pool, in the output buffer)
-            if let (Some(out), true) = (out, self.bottom_laid && self.variant == LAZY) {
+            if let (Some(out), true) = (out, self.bottom_laid && lazy_variant(self.variant)) {
                 let end = self.lz.bend;
                 assert!(
                     out[end..end + GAP].iter().all(|&x| x == 0xA5),
@@ -490,6 +492,10 @@ impl Kernel {
         if budget > n || n >= 1 << 24 || recs.len() > n {
             return Err(Refusal::Invalid);
         }
+        // (the 12-byte rules' arm: a length fits 20 bits)
+        if self.variant == LAZY_W12 && n > C12_LEN as usize {
+            return Err(Refusal::Invalid);
+        }
         // the kernel's first stage and induction: the shipped ones, or the lazy letters'
         let result = self
             .first_stage(n, recs, p, budget, forced, out)
@@ -509,7 +515,11 @@ impl Kernel {
             // (research only, `phase-counters`: the writer's scope)
             #[cfg(feature = "phase-counters")]
             let _scope = crate::phase::Scope::new(crate::phase::Phase::Writer);
-            self.write_cells(word, len, n, out);
+            if self.variant == LAZY_W12 {
+                self.write_w12(word, len, n, out);
+            } else {
+                self.write_cells(word, len, n, out);
+            }
         }
         self.check_canaries(None);
         Ok((cells, period))

@@ -188,7 +188,7 @@ impl Kernel {
         forced: bool,
         out: &mut Vec<u8>,
     ) -> Result<(), Refusal> {
-        if self.variant == LAZY {
+        if lazy_variant(self.variant) {
             self.slots_lazy(n, recs, p, budget, forced, out)
         } else {
             self.slots(n, recs, p, budget, forced, out)
@@ -202,7 +202,8 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Result<(u32, u32, usize), Refusal> {
         match self.variant {
-            LAZY => self.induce_lazy(budget, out),
+            LAZY => self.induce_lazy::<false>(budget, out),
+            LAZY_W12 => self.induce_lazy::<true>(budget, out),
             #[cfg(feature = "memory-lever")]
             STAGED_RULES => self.induce_cells_staged(budget, out),
             _ => self.induce_cells(budget, out),
@@ -407,8 +408,11 @@ impl Kernel {
     ///
     /// Returns (the cycle's word, its length with the mark, cells). `slots_lazy` has run on
     /// this kernel for the block, and nothing has changed since.
+    ///
+    /// `R12` (the 12-byte rules' arm, `cells_w12.rs`): a rule is stored in 12 bytes, its
+    /// children packed, and its word is its index.
     #[inline(never)]
-    fn induce_lazy(
+    fn induce_lazy<const R12: bool>(
         &mut self,
         budget: usize,
         out: &mut Vec<u8>,
@@ -428,6 +432,7 @@ impl Kernel {
             || tby != BPAD + 4 * rr
             || self.buf.len() < lay.rules + 16
             || out.len() < bend + GAP
+            || (R12 && lay.ends[3] + GAP >= C12_REACH)
         {
             return Err(Refusal::Invalid);
         }
@@ -648,13 +653,18 @@ impl Kernel {
                             base.add(top + la.min(16) as usize),
                             base.add((bw >> 32) as usize),
                         );
+                    } else if R12 {
+                        // (the 12-byte rules' arm) the two children packed, 48 bits each
+                        wr64(base, rp, pack12(aw));
+                        wr64(base, rp + C12_B, pack12(bw));
                     } else {
                         wr64(base, rp, aw);
                         wr64(base, rp + 8, bw);
                     }
-                    let word = if small { top } else { rp };
+                    let rule = if R12 { rule12_index(rp - lay.rules) } else { rp };
+                    let word = if small { top } else { rule };
                     top += if small { len as usize } else { 0 };
-                    rp += if small { 0 } else { 16 };
+                    rp += if small { 0 } else if R12 { RULE12 } else { 16 };
                     let cw = len | (word as u64) << 32;
                     // (research only, `induction-trace`: the cell's two letters, what was
                     // left of each and their words' lengths)
