@@ -1666,8 +1666,9 @@
       "sha": "3071cad5cd88b4db493292a5f39c4ee583ffc4c1",
       "evidence_digest": "sha256:671edbc1a49a970d89e9b948ad097579b6ee4d33a23ab3581f45c3c46440f167",
       "commit": "f35c4be2f14598dada2f4ea12fc78fcff122754f",
-      "status": "complete",
-      "disposition": "HOLD B5 closure pending completed Miri evidence; source proof accepted."
+      "status": "finished",
+      "disposition": "HOLD B5 closure pending completed Miri evidence; source proof accepted.",
+      "comment": 6903644101
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1776,7 +1777,8 @@
     6882247244,
     6901989525,
     6902605296,
-    6903106255
+    6903106255,
+    6903644101
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -2044,7 +2046,10 @@
     "c94692410c3703b2545e1a9afdb3fc2b485f5437",
     "a045610f3b2c664c66be69c97b08ed047d0f1782",
     "2f0b68ed263800f868db0ba2e3c1a070ab1cf9a2",
-    "897986ef09409278d77534dc28d9bdee00561f84"
+    "897986ef09409278d77534dc28d9bdee00561f84",
+    "404ed1cae9ad2909a6dffbcd33d4e4d02d984bea",
+    "f35c4be2f14598dada2f4ea12fc78fcff122754f",
+    "f15549ebf2cc4fd0c1340c9800738ef683294d74"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2155,7 +2160,8 @@
     6882196843,
     6901903478,
     6902547995,
-    6903067177
+    6903067177,
+    6903560983
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2234,9 +2240,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6903560983,
-    "status": "complete",
-    "decision": "D111"
+    "active_comment": null,
+    "status": "finished",
+    "decision": "D111",
+    "incoming_comment": 6903560983,
+    "review_comment_id": 6903644101
   },
   "duplicate_events": [
     {
@@ -3999,11 +4007,13 @@
     {
       "comment_id": 6903560983,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D111",
-      "progress": "D111 work committed; awaiting REVIEW publication.",
+      "progress": "Exact REVIEW body/destination read back; pinned verifier sole coordinator-FROM limitation independently checked.",
       "work_commit": "f35c4be2f14598dada2f4ea12fc78fcff122754f",
-      "receipt_commit": "404ed1cae9ad2909a6dffbcd33d4e4d02d984bea"
+      "receipt_commit": "404ed1cae9ad2909a6dffbcd33d4e4d02d984bea",
+      "review_comment_id": 6903644101,
+      "complete_cursor_commit": "f15549ebf2cc4fd0c1340c9800738ef683294d74"
     }
   ],
   "migrated_from": {
