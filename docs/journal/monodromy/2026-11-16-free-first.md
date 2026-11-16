@@ -1,4 +1,4 @@
-# 2026-11-16 · MONODROMY 35 · Free steps first is not step-optimal: on the binary column 110000111000 every free-first order takes 8 steps and the least is 7. The free closure is unique, but the least step count does not always pass through it. Free-first stays within one step on every column counted
+# 2026-11-16 · MONODROMY 35 · Free steps first is not step-optimal: on the binary column 110000111000 every free-first order takes 8 steps and the least is 7. The free closure is unique, but the least step count does not always pass through it. Free-first then the largest cell is up to 2 steps above the least on whole runs
 
 Record 33's conjecture, refined after its correction. Is some free-first order always
 step-optimal? Here every order means any coincidence; a free-first order is any choice among the
@@ -16,11 +16,11 @@ free steps, with any paid step when none is free.
 | columns | free-first, then the largest cell, above the least | **no free-first order optimal** |
 |---|--:|--:|
 | σ = 2, n ≤ 9 | 0 | 0 |
-| σ = 2, n = 10 (1,004) | 1 | 0 |
-| σ = 2, n = 11 (2,026) | 7 | 0 |
-| σ = 2, n = 12 (4,072) | 33 | **1** |
+| σ = 2, n = 10 (1,004) | 1 (worst gap 1) | 0 |
+| σ = 2, n = 11 (2,026) | 7 (worst gap **2**) | 0 |
+| σ = 2, n = 12 (4,072) | 33 (worst gap **2**) | **1** (gap 1) |
 | σ = 2, n = 13 (8,166) | 104 | **2** |
-| σ = 3, n ≤ 9 (19,632 at n = 9) | 15 at n = 9, 2 at n = 8 | 0 |
+| σ = 3, n ≤ 9 (19,632 at n = 9) | 15 at n = 9; 2 at n = 8 (worst gap 1) | 0 |
 | σ = 4, n ≤ 7 (16,308 at n = 7) | 0 | 0 |
 
 **Two different failures:**
@@ -54,17 +54,26 @@ The free closure is still unique (#438): what fails is the step-optimality of pa
 
 ## 3. What stands, and what it changes
 
-**Near-optimality stands (C).** On every column counted, free-first then the largest cell is
-within one step of the least.
+**How near (C; `worst_gap_small.txt`).**
+- *Free-first then the largest cell:* up to 2 steps above the least on whole runs (σ = 2, n = 11
+  and 12), and 1 at σ = 3, n = 8.
+- *The best free-first order:* 1 step above on the one n = 12 column where it fails. The gaps of
+  the two n = 13 failures were not recorded.
+- *Record 33's tail figures* (worst gap 1 after a right-end prefix) are a different measure and
+  stand.
+
+A first draft of this paragraph said "within one step" for free-first then the largest cell. The
+n = 11 example in this program's own output (least 7, it takes 9) refuted that; corrected before
+posting.
 
 **For the decoder, nothing changes.**
 - *The order switch:* record 32's tail order is near-optimal on this evidence. The compact tail
   that used it is parked (record 34).
 - *Where the bound applies:* on real blocks the gap between free-first then the largest cell
-  (1.28 r) and the least is unmeasured, and bounded on small columns by one step a column.
+  (1.28 r) and the least is unmeasured, and bounded on small columns by two steps a column.
 
-**Open (Conj).** Is the least step count within one step of free-first on every column, or does the
-gap grow with n? The counts so far are 0 at n ≤ 9, 1 at n = 12 and 2 at n = 13. A family showing
+**Open (Conj).** Is the least step count within a constant of free-first on every column, or does
+the gap grow with n? The counts so far are 0 at n ≤ 9, 1 at n = 12 and 2 at n = 13. A family showing
 growth would be the next refutation to look for.
 
 ## Reproduce

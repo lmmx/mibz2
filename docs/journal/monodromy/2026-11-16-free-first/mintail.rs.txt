@@ -442,7 +442,7 @@ fn main() {
     while pw.len() <= max + 1 { pw.push(mulmod(*pw.last().unwrap(), BASE)); }
     let mut shown = 0;
     for n in 3..=max {
-        let (mut cols, mut bad, mut bad_any_ff) = (0u64, 0u64, 0u64);
+        let (mut cols, mut bad, mut bad_any_ff, mut worst) = (0u64, 0u64, 0u64, 0u32);
         for mut d in 0..sigma.pow(n as u32) {
             let col: Vec<u8> = (0..n).map(|_| { let b = (d % sigma) as u8; d /= sigma; b }).collect();
             let (mut lam, mut byte) = (Vec::new(), Vec::new());
@@ -454,6 +454,7 @@ fn main() {
             let o = least(&g0, &mut memo);
             let f = steps_along(&g0, 1);
             cols += 1;
+            worst = worst.max(f - o);
             if f > o {
                 bad += 1;
                 // is there any free-first order (any choice among free steps, any fallback) that is optimal?
@@ -474,13 +475,13 @@ fn main() {
                 let mut m2 = HashMap::new();
                 let off = least_ff(&g0, &mut m2);
                 if off > o { bad_any_ff += 1; }
-                if off > o && shown < 3 {
+                if off > o && shown < 0 {
                     shown += 1;
                     let mut m3 = HashMap::new();
                     println!("n {n} column {:?}: least {o}, free-first-largest {f}, best free-first order {off}\n  optimal: {}\n  free-first-largest: {}", col, opt_path(&g0, &mut m3).join(" "), ff_path(&g0).join(" "));
                 }
             }
         }
-        println!("sigma {sigma} n {n}: columns {cols}, free-first-largest above least on {bad}, no free-first order optimal on {bad_any_ff}");
+        println!("sigma {sigma} n {n}: columns {cols}, free-first-largest above least on {bad} (worst gap {worst}), no free-first order optimal on {bad_any_ff}");
     }
 }
