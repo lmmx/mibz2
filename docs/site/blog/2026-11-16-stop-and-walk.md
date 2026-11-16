@@ -1,7 +1,7 @@
 ---
 title: "Stop and walk: cutting a text rebuild short and walking the rest"
 image: assets/social/blog-2026-11-16-stop-and-walk.png
-description: "Halting each block's rebuild early and walking the small loop that remains spares mibz2 a third of the text pieces it stores, for two per cent more instructions."
+description: "Halting each block's rebuild early spares mibz2 a third of the text pieces it stores, but on ten cores the slower walk outweighs the memory saved."
 ---
 
 <div class="post-hero" markdown>
@@ -13,10 +13,10 @@ description: "Halting each block's rebuild early and walking the small loop that
 
 # Stop and walk: cutting a text rebuild short and walking the rest
 
-Halting each block's rebuild early and walking the small loop that remains spares mibz2 a third of the text pieces it stores, for two per cent more instructions.
+Halting each block's rebuild early spares mibz2 a third of the text pieces it stores, but on ten cores the slower walk outweighs the memory saved.
 {: .post-dek }
 
-16 November 2026 · 16 min read · [Research in progress](#6-what-decides-it)
+16 November 2026 · 17 min read · [Research result](#6-what-did-the-timing-show)
 {: .post-meta }
 
 </div>
@@ -25,13 +25,13 @@ Halting each block's rebuild early and walking the small loop that remains spare
 
 </div>
 
-*Stop and walk* is a new way for mibz2 to finish rebuilding a block of text. It stops the rebuild partway, walks once round the small loop that is left, and writes the text out as it goes. The rebuild never makes the pieces of text its last steps would have built: a third of them, for about 2% more instructions.
+*Stop and walk* is a new way for mibz2 to finish rebuilding a block of text. It stops the rebuild partway, walks once round the small loop that is left, and writes the text out as it goes. The rebuild never makes the pieces of text its last steps would have built: a third of them, for about 2% more instructions. It did not ship. On our 10-core test machine it ran slightly slower, because the walk waits on one memory load after another, and those waits cost more time than the smaller memory saved.
 
 **How it works, step by step.** mibz2's Cells kernel rebuilds a block by shrinking a map of it, one step at a time. Each step builds a longer piece of the text, a *word*. The full rebuild can't put any word in the output until near its end. So it keeps every word until then. Stop and walk stops partway instead, after 1.5 steps for every run of equal bytes in the block. That leaves one small loop of points. One point on it has a known place in the output. Walking round the loop from that point puts each point's word next to the one before. So the words the last steps would have built never get made.
 
 **Why that could make mibz2 faster.** Fewer words mean less memory per block. That matters where many threads share one cache. Our test machine is an Intel i9 with 10 cores. Since mibz2 0.5.1, it decodes one block per thread at every thread count. From 8 threads up, mibz2 switches to the [lazy-letters](2026-11-16-lazy-letters.md) version of Cells. Before 0.5.1, the highest thread counts ran [teams](2026-11-07-why-mibz2-stops-scaling.md) of threads sharing one block, and memory cuts to Cells never reached them. Now a cut to the lazy kernel reaches every count from 8 to 20 ([section 5](#5-why-test-it-now)).
 
-**Where it stands.** We have built stop and walk, and it gives the same bytes as the shipped kernel. We have counted its instructions. The timing that decides whether it ships has not run yet.
+**Where it stands.** We built stop and walk, and it gives the same bytes as the shipped kernel. We counted its instructions and timed it on the i9. It did not meet the rule we set before the timing, so mibz2 keeps the shipped kernel ([section 6](#6-what-did-the-timing-show)).
 
 The rest of the opening gives the background the idea rests on.
 
@@ -47,10 +47,10 @@ The rest of the opening gives the background the idea rests on.
 
 The takeaways, each shown in a section below:
 
-- **The kernel never makes a third of the word bytes.** Stopping at 1.5 cells a run leaves 33% of the word bytes unmade. That is 5.0 bytes a letter, counted by a prototype on all 233 large Wikidata blocks. The saving comes to about a sixth of everything the lazy kernel touches. We have not yet measured any drop in memory traffic or cache misses ([section 2](#2-why-does-the-rebuild-hold-its-words-to-the-end), [section 4](#4-where-should-it-stop-and-what-does-it-cost)).
+- **The kernel never makes a third of the word bytes.** Stopping at 1.5 cells a run leaves 33% of the word bytes unmade. That is 5.0 bytes a letter, counted by a prototype on all 233 large Wikidata blocks. The saving comes to about a sixth of everything the lazy kernel touches. The timing showed the relief indirectly, as less extra processor time at 10 threads ([section 2](#2-why-does-the-rebuild-hold-its-words-to-the-end), [section 4](#4-where-should-it-stop-and-what-does-it-cost), [section 6](#6-what-did-the-timing-show)).
 - **The walk writes each word once and copies it after.** It goes once round the loop, one point at a time. The walk expands a long word where it first meets its letter, and every later point copies it from there. The built kernel gives the same bytes as the shipped one on all 431 blocks of the Wikidata extract ([section 3](#3-how-can-a-walk-place-the-words)).
 - **It costs 10 to 12 instructions a letter.** Over the whole decode, that adds about 2% to the shipped decoder's instructions. The build had to stay under +20 a letter, and it does. On one thread its kernel runs about 10% slower, because the walk waits on one memory load after another. A cloud machine took that timing, so it hints at speed and proves nothing ([section 4](#4-where-should-it-stop-and-what-does-it-cost)).
-- **A 10-core run decides whether it ships.** Until then mibz2 keeps the shipped kernel. It would replace the lazy kernel everywhere that kernel runs, from 8 threads up, or not ship at all. It never gets a thread range of its own ([section 6](#6-what-decides-it)).
+- **It did not ship.** On the 10-core i9 it ran 1% to 1.5% slower at 8, 9 and 20 threads, and we detected no difference at 10 and 12. The memory relief was real, but with one worker a core the walk's waits outweighed it. It could only have replaced the lazy kernel everywhere that kernel runs, and never had a thread range of its own ([section 6](#6-what-did-the-timing-show)).
 
 <figure class="bf-fig">
 <p class="bf-title">Run to the end, or stop at 1.5 cells a run and walk</p>
@@ -58,10 +58,7 @@ The takeaways, each shown in a section below:
 <figcaption>Above and middle: conceptual bars, with counted figures. Wikidata's blocks need about 1.8 cells a run in all; stopping at 1.5 leaves 33% of the word bytes unmade (a prototype's count over 233 blocks). Below: the analogy. Each bead is a point of the map left at the stop, its colour is the letter it belongs to, and the letter's word is the bead's piece of text. The real loop has about one point for every 22 rows. The analogy stops holding for the induction itself: it does not thread beads one at a time, but deletes whole intervals of points at each step, under one rule per letter.</figcaption>
 </figure>
 
-**Where things stand.** We built stop and walk as test variants of the lazy kernel, and mibz2's default stays as it was. A timing on the i9 from 8 threads to 20 decides it, set out in [#493](https://github.com/lmmx/mibz2/pull/493).
-
-<!-- RESULT PENDING: #493 -->
-*The result of that run will appear here once it is in.*
+**Where things stand.** We built stop and walk as test variants of the lazy kernel and timed them on the i9 from 8 threads to 20 ([#493](https://github.com/lmmx/mibz2/pull/493)). Under the rule we set before the run, stop and walk is [not adopted](https://github.com/lmmx/mibz2/issues/145#issuecomment-6922810916), and mibz2's default stays as it was. [Section 6](#6-what-did-the-timing-show) has the figures. The test variants stay on their branch.
 
 ## 1. How does Cells rebuild a block?
 
@@ -175,7 +172,7 @@ A block that takes fewer cells than β r never stops, and the kernel rebuilds it
 
 The count also shows where the prediction went wrong. At β = 1.5, on the first passing build, three costs differ. The cells never made were the cheap ones. The tail of the induction reads no new runs, so each of its cells costs about 38 instructions, not 71. Skipping them saves 13.2 a letter, not 21.5. The walk costs 52.1 instructions a letter, against the shipped writer's 49.5. The prototype's standalone walk cost 38.3. Each point takes about 31 instructions of fixed work: a rank lookup, a bit count and a read of the letter's record. Expanding each letter's first occurrence adds 14.6 a letter. And reading the stopped map into the walk's tables costs 18.9, not the 10 the model allowed. About 6,000 letters are alive in a block at the stop, and the kernel reads each twice.
 
-**Time on one thread.** On a cloud machine, with the kernel's phases timed, β = 1.5 was about 10% slower than the shipped kernel. The walk runs about the writer's instructions in about twice the writer's time. Its step from one point to the next is a load, a bit count, a second load and an add. That takes about 20 cycles, and each step needs the one before it. That machine's timings prove nothing about speed. They do say what the decisive run has to show: that when many threads share the cache, the bytes saved buy back more than the walk costs. A second lane, walking the other way round the loop, would halve the chain, but needs more tables, so it waits on the result.
+**Time on one thread.** On a cloud machine, with the kernel's phases timed, β = 1.5 was about 10% slower than the shipped kernel. The walk runs about the writer's instructions in about twice the writer's time. Its step from one point to the next is a load, a bit count, a second load and an add. That takes about 20 cycles, and each step needs the one before it. That machine's timings prove nothing about speed; the i9 later measured 6.4% ([section 6](#6-what-did-the-timing-show)). They did say what the decisive run had to show: that when many threads share the cache, the bytes saved buy back more than the walk costs. A second lane, walking the other way round the loop, would halve the chain, but needs more tables, so it waits on the result.
 
 **Why the design is this way.** An earlier version of stop and walk made the two mistakes this design avoids. It tested the map's size on every cell, which cost about as much as the stop saved. And it expanded each long word from its rules every time it appeared. Together they made it about 97 instructions a letter dearer than the shipped kernel, far over the limit. The figure sets its costs against this design's, item by item. The team now asks every failed build for that item-by-item list and sends it back to the design's author ([§11a of its protocol](https://github.com/lmmx/mibz2/blob/ea393f96dcfaed63581db6548e63795869c47a12/docs/team/PROTOCOL.md#11a-a-failed-gate-goes-back-to-its-author-term-by-term)).
 
@@ -193,7 +190,8 @@ The count also shows where the prediction went wrong. At β = 1.5, on the first 
 |---|---|
 | Proved | the stopped map keeps every path and its words; one loop with one known place gives every place; an ordered walk with first-place copies never overwrites a byte still needed |
 | Counted or tested | a third of the word bytes never made at β = 1.5 (prototype, 233 blocks); +10.8 and +12.3 instructions a letter (kernel, callgrind); the same bytes as the shipped kernel on all 431 Wikidata blocks, the test files and 4,000 random columns |
-| Modelled | how much the smaller working set helps at 8 threads and more; whether the cache's size, its misses or the bandwidth to memory limit it; what a second lane would save |
+| Measured on the i9 | slower at 8, 9 and 20 threads, level at 10 and 12; 5% less extra processor time from 1 thread to 10; 6.4% slower on one thread; faster with two workers forced onto each core |
+| Modelled | whether the cache's size, its misses or the bandwidth to memory limit it; what a second lane would save |
 | Not done yet | the Miri and fuzz runs, the mutation pass and the review of the new unsafe code, which the records list as owed before any adoption |
 
 ## 5. Why test it now?
@@ -212,16 +210,27 @@ Teams now run only on other machines. A machine with 6 or 7 physical cores gets 
 
 [The release ledger](https://github.com/lmmx/mibz2/blob/ea393f96dcfaed63581db6548e63795869c47a12/docs/journal/release-attribution.md) shows why that matters. It lists, for each release, which merge moved which thread count on the i9 by 3% or more. From 0.2.4 on, 10 to 20 threads moved in only three ways. Two changed how mibz2 grouped its threads: the teams, then pipelining them. One was an existing kernel ported to the teams. The third was 0.5.1's move onto Cells, which sped up 10 threads by 7.3%. Each of Cells' memory cuts, from the 20-byte slot to lazy letters, sped up only 8 threads or fewer, because teams ran above that. Now a cut to the lazy kernel's working set reaches every count from 8 to 20. Stop and walk trades instructions for memory, the trade lazy letters won and [a ring of shared buffers](https://github.com/lmmx/mibz2/blob/ea393f96dcfaed63581db6548e63795869c47a12/docs/journal/2026-11-16-lazy-ring.md) lost. The ring cut the lazy kernel's bytes by 15% for 13% more decoder instructions. It ran slower at 8 threads and level at 9 and 10. By the prototype's count, stop and walk would cut 5.0 of those 29.5 bytes a letter, about a sixth, for about 2% more instructions.
 
-## 6. What decides it?
+## 6. What did the timing show?
 
-A timing on the i9, [#493](https://github.com/lmmx/mibz2/pull/493), under [a rule fixed before the data](https://github.com/lmmx/mibz2/issues/145#issuecomment-6920355683). The test decoder keeps the shipped decoder's workers, thread plan and [window](2026-11-01-block-dispatch.md) of blocks in flight, and swaps only the kernel. It decodes four copies of the Wikidata extract at 8, 9, 10, 12 and 20 threads. Each of its ten paired rounds runs the shipped kernel and the three settings of β. At each count, β = 1.5 counts as faster if the 95% interval of its wall-time ratio lies wholly below 1. It counts as slower if the interval lies wholly above.
+We timed it on the i9, [#493](https://github.com/lmmx/mibz2/pull/493), under [a rule we fixed before the data](https://github.com/lmmx/mibz2/issues/145#issuecomment-6920355683). The test decoder kept the shipped decoder's workers, thread plan and [window](2026-11-01-block-dispatch.md) of blocks in flight, and swapped only the kernel. It decoded four copies of the Wikidata extract at 8, 9, 10, 12 and 20 threads. Each of its ten paired rounds ran the shipped kernel and the three settings of β. At each count, β = 1.5 counts as faster if the 95% interval of its wall-time ratio lies wholly below 1. It counts as slower if the interval lies wholly above.
 
-Stop and walk replaces the lazy kernel, everywhere lazy letters run now, if three things hold. β = 1.5 must be faster at one of those counts or more. It must be slower at none. And its peak memory must stay within 10% of the shipped kernel's at every count. Faster at some counts and slower at others is a finding, not an adoption. Stop and walk gets no thread range of its own, and moving the lazy threshold would be a separate decision. Because its verdict can change a default, the rule is itself under one review before the run. The run also records two figures without judging them. One is how much slower each setting runs on one thread. The other is how much more processor time it takes at 10 threads than at 1, where a smaller working set should show.
+Stop and walk would replace the lazy kernel, everywhere lazy letters run now, if three things held. β = 1.5 had to be faster at one of those counts or more. It had to be slower at none. And its peak memory had to stay within 10% of the shipped kernel's at every count. Faster at some counts and slower at others is a finding, not an adoption. Stop and walk gets no thread range of its own, and moving the lazy threshold would be a separate decision. Because its verdict could change a default, the rule had one review before the run. The run also recorded two figures without judging them. One is how much slower each setting runs on one thread. The other is how much more processor time it takes at 10 threads than at 1, where a smaller working set should show.
 
-<!-- RESULT PENDING: #493 -->
-*The verdict, with each thread count's ratio and interval, will appear here once the run is in.*
+**The verdict: not adopted.** [Our reading of the run](https://github.com/lmmx/mibz2/issues/145#issuecomment-6922810916) applied the rule's checker, frozen before the data, to the run's results. β = 1.5 ran slower at 8, 9 and 20 threads. At 10 and 12 we could not tell it from the shipped kernel. Its peak memory stayed within 3% of the shipped kernel's at every count, and the run's guard on a text corpus was inconclusive at every count. Wall time, stop and walk at β = 1.5 over the shipped lazy kernel, on production's plan of one worker a core:
 
-The chain, in short. The full rebuild holds its words to the end because it learns their places only in its last steps. Walking the small map left after an early stop learns the places another way. So the last fifth of the steps never run, and a third of the word bytes never get made. Putting the stop on an existing counter, and copying each word after its first expansion, keep the cost to about 11 or 12 instructions a letter. Since 0.5.1 the lazy kernel runs from 8 threads to 20 on the i9. So a memory cut to it reaches the whole range where threads contend for the cache. Only a timing there can say whether a third of the words is worth a walk that is slower on one thread. Whichever way it goes, mibz2 now has a second way to finish an induction, with a proof that it is correct and a kernel that gives the right bytes.
+| Threads | Wall time ratio | 95% interval | Reading |
+|--:|--:|--:|---|
+| 8 | 1.012 | 1.004 to 1.019 | slower |
+| 9 | 1.010 | 1.004 to 1.016 | slower |
+| 10 | 0.991 | 0.980 to 1.003 | no difference detected |
+| 12 | 0.997 | 0.985 to 1.010 | no difference detected |
+| 20 | 1.015 | 1.003 to 1.027 | slower |
+
+**What we learned.** The memory relief is real. Going from 1 thread to 10, the shipped kernel's processor time grows, because the threads compete for the cache. Stop and walk's grows 5% less: its ratio of the two is 0.947 (0.913 to 0.982) of the shipped kernel's. But with one worker a core, that relief did not repay the walk. On one thread stop and walk ran 6.4% slower (1.064, 1.032 to 1.096), because each step of the walk waits for the one before. When we forced two workers onto each core, 12 or 20 of them, stop and walk ran faster: 0.986 of the shipped kernel's time at 12 workers and 0.965 at 20. mibz2's plan never puts two workers on a core of the i9, so that gain is out of reach.
+
+**What comes next.** The cost to remove is the walk's serial wait. The open question is whether the walk can split into independent chains that overlap their waits, or whether the kernel can read the stopped map more cheaply. Until one of those exists, the test variants stay on their branch.
+
+The chain, in short. The full rebuild holds its words to the end because it learns their places only in its last steps. Walking the small map left after an early stop learns the places another way. So the last fifth of the steps never run, and a third of the word bytes never get made. Putting the stop on an existing counter, and copying each word after its first expansion, keep the cost to about 11 or 12 instructions a letter. Since 0.5.1 the lazy kernel runs from 8 threads to 20 on the i9. So a memory cut to it reaches the whole range where threads contend for the cache. The timing said no: with one worker a core, the walk's waits cost more than the memory it saves. With two workers a core the relief showed, so a walk that overlaps its waits could still change the answer. Either way, mibz2 now has a second way to finish an induction, with a proof that it is correct and a kernel that gives the right bytes.
 
 ---
 
@@ -232,7 +241,7 @@ The chain, in short. The full rebuild holds its words to the end because it lear
 - The first build and its divergences: [`2026-11-16-lazy-stop-walk.md`](https://github.com/lmmx/mibz2/blob/ea393f96dcfaed63581db6548e63795869c47a12/docs/journal/2026-11-16-lazy-stop-walk.md), and [the review on the team channel](https://github.com/lmmx/mibz2/issues/145#issuecomment-6916500604).
 - The decision to stop it and the reopening question: [the team channel, 16 November](https://github.com/lmmx/mibz2/issues/145#issuecomment-6916535874).
 - The reopened design: [`2026-11-16-stop-walk-reopened.md`](https://github.com/lmmx/mibz2/blob/ea393f96dcfaed63581db6548e63795869c47a12/docs/journal/monodromy/2026-11-16-stop-walk-reopened.md).
-- The second build's counts and divergences: [the team channel, 16 November](https://github.com/lmmx/mibz2/issues/145#issuecomment-6920005870). The rule for the i9 run, the memory fix and the current head's counts: [the team channel, 16 November](https://github.com/lmmx/mibz2/issues/145#issuecomment-6920355683). The build and the recipe: [#493](https://github.com/lmmx/mibz2/pull/493).
+- The verdict on the i9 run: [the team channel, 16 November](https://github.com/lmmx/mibz2/issues/145#issuecomment-6922810916), from the run's results bundle `stop-walk/run-20261116T162328Z` on the `evidence` branch. The second build's counts and divergences: [the team channel, 16 November](https://github.com/lmmx/mibz2/issues/145#issuecomment-6920005870). The rule for the i9 run, the memory fix and the current head's counts: [the team channel, 16 November](https://github.com/lmmx/mibz2/issues/145#issuecomment-6920355683). The build and the recipe: [#493](https://github.com/lmmx/mibz2/pull/493).
 - Stopping twice: [`2026-11-16-tower.md`](https://github.com/lmmx/mibz2/blob/806979d4402945685da22a334bde4a63db83b470/docs/journal/monodromy/2026-11-16-tower.md) ([#492](https://github.com/lmmx/mibz2/pull/492)); the loops in the induction's path: [`2026-11-16-loops.md`](https://github.com/lmmx/mibz2/blob/ea393f96dcfaed63581db6548e63795869c47a12/docs/journal/monodromy/2026-11-16-loops.md).
 - Which merge moved which thread count: [`release-attribution.md`](https://github.com/lmmx/mibz2/blob/ea393f96dcfaed63581db6548e63795869c47a12/docs/journal/release-attribution.md); the rule for a failed gate: [PROTOCOL §11a](https://github.com/lmmx/mibz2/blob/ea393f96dcfaed63581db6548e63795869c47a12/docs/team/PROTOCOL.md#11a-a-failed-gate-goes-back-to-its-author-term-by-term).
 - The thread plan: [`src/parallel.rs`](https://github.com/lmmx/mibz2/blob/ea393f96dcfaed63581db6548e63795869c47a12/src/parallel.rs#L2680-L2706).
