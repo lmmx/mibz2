@@ -2069,6 +2069,12 @@
       "review_comment_pr": 145,
       "review_comment_id": 6921090225,
       "publication_verification": "Exact body/author/PR145 and role-aware routing verified; pinned helper has only known coordinator-only FROM rejection."
+    },
+    {
+      "trigger_comment_id": 6924336791,
+      "status": "in progress",
+      "pr": 162,
+      "report_path": "state/reports/cores-less-one-6924336791/report.md"
     }
   ],
   "active_delegations": [],
