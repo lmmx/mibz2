@@ -176,9 +176,10 @@
     6857336623,
     6877415766,
     6886868279,
-    6920377932
+    6920377932,
+    6924336791
   ],
-  "last_processed_comment_id": 6920377932,
+  "last_processed_comment_id": 6924336791,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2072,9 +2073,13 @@
     },
     {
       "trigger_comment_id": 6924336791,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
-      "report_path": "state/reports/cores-less-one-6924336791/report.md"
+      "report_path": "state/reports/cores-less-one-6924336791/report.md",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "c7c11c73244dc763b7c46c0562178604161f77e0",
+      "report_commit": "55fbb1f48185d65535f806c24a634bfd07e4f6e9",
+      "disposition": "REVISE adoption scope: gate count and window changes to measured i9 profile; eight-core window and nine-core count effects unmeasured. Controls accepted as guards; 26 checks and independent t/Holm checks pass."
     }
   ],
   "active_delegations": [],
