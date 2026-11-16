@@ -408,7 +408,11 @@
   };
   const kind = (el) => {
     const label = el.textContent.split("·").pop().trim();
-    if (KINDS[label]) el.dataset.kind = KINDS[label];
+    if (!KINDS[label]) return;
+    el.dataset.kind = KINDS[label];
+    // the post's hero, or its card on the index, takes the same colour for its bottom line
+    const box = el.closest(".post-hero, .post-card");
+    if (box) box.dataset.kind = KINDS[label];
   };
 
   const init = () => {
