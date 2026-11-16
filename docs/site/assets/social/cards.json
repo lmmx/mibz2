@@ -120,7 +120,7 @@
     "title": "Reduce, reuse, recycle: hand-me-down slots for every fragment of text"
   },
   "assets/social/blog-2026-11-16-lazy-letters.png": {
-    "description": "Giving a letter memory only while the induction works on it costs more instructions, yet ten threads on their own blocks finish 5% sooner than mibz2's teams.",
+    "description": "Giving a letter memory only while the induction needs it costs instructions but leaves the cache less crowded, so eight to ten threads run up to 11% faster.",
     "foot": "lmmx.github.io/mibz2 · 16 November 2026",
     "section": " · Research blog",
     "title": "Lazy letters: holding only what the induction still needs"

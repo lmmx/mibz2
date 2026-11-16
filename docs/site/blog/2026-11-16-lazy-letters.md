@@ -1,7 +1,7 @@
 ---
 title: "Lazy letters: holding only what the induction still needs"
 image: assets/social/blog-2026-11-16-lazy-letters.png
-description: "Giving a letter memory only while the induction works on it costs more instructions, yet ten threads on their own blocks finish 5% sooner than mibz2's teams."
+description: "Giving a letter memory only while the induction needs it costs instructions but leaves the cache less crowded, so eight to ten threads run up to 11% faster."
 ---
 
 <div class="post-hero" markdown>
@@ -13,7 +13,7 @@ description: "Giving a letter memory only while the induction works on it costs 
 
 # Lazy letters: holding only what the induction still needs
 
-Giving a letter memory only while the induction works on it costs more instructions, yet ten threads on their own blocks finish 5% sooner than mibz2's teams.
+Giving a letter memory only while the induction needs it costs instructions but leaves the cache less crowded, so eight to ten threads run up to 11% faster.
 {: .post-dek }
 
 16 November 2026 · 11 min read · [Research result](#5-what-comes-next)
@@ -26,6 +26,8 @@ Giving a letter memory only while the induction works on it costs more instructi
 </div>
 
 [The width of an induction](2026-11-15-induction-width.md) counted how much of a block's rebuild must be held in memory at once, and found it was about a third of what mibz2's Cells kernel actually lays out. This post is about a kernel that keeps only that third, called *lazy letters*, and about what happened when ten threads ran it at once on a 10-core machine.
+
+On a 10-core Intel i9, with each thread decoding a block of its own, lazy letters cut the wall time against the decoder mibz2 ships by 4.2% at 8 threads, 10.8% at 9 and 5.1% at 10. At 10 threads the shipped decoder runs teams of threads that share a block, so there lazy letters make one block per thread beat the teams. At 4 and 6 threads the extra instructions outweigh the saving, and lazy letters are 3% to 9% slower.
 
 **The recap.** bzip2 compresses text in blocks of up to 900 kB. Each block goes through the Burrows–Wheeler transform (BWT), which reorders its bytes so that equal bytes sit together in runs. Undoing it means following a map from row to row of the sorted block. [Cells](2026-11-10-rauzy-veech-reconstruction.md), mibz2's kernel for most blocks of the benchmark's Wikidata text, does that on intervals instead of rows. It starts with one interval per run. Each step of the rebuild (the *induction*) shortens the map by letting one interval stand for a longer piece of text. The code calls each interval a *letter* and the text it stands for its *word*. When one letter is left, its word is the whole block. Cells keeps each letter's bookkeeping (its length, where its word is, its neighbours) in a record called a *slot*.
 
@@ -74,7 +76,7 @@ Two facts, both in [the research journal](https://github.com/lmmx/mibz2/blob/caa
 <figcaption>Above: conceptual, ten letters at one moment. Below: counted on one thread over the 196 Wikidata blocks Cells handles (11,090,867 letters), per letter, besides the output buffer. The lazy pool's bytes follow from its peak, the median over blocks.</figcaption>
 </figure>
 
-**The count.** Over Wikidata's 196 blocks, the pool peaks at a median of 0.318 of the letters, and at 0.295 to 0.337 on single blocks. That equals the width the earlier post counted for Cells' right-end order, 0.318, to three digits: the pool holds a pair for each letter the fronts have reached that is still alive. So the memory the kernel holds now follows the width, not the letter count. Per letter:
+**The count.** Over Wikidata's 196 blocks, the pool peaks at a median of 0.318 of the letters. No block goes above 0.337. That equals the width the earlier post counted for Cells' right-end order, 0.318, to three digits: the pool holds a pair for each letter the fronts have reached that is still alive. So the memory the kernel holds now follows the width, not the letter count. Per letter:
 
 | Bytes per letter, Wikidata | Shipped | Lazy letters |
 |---|--:|--:|
@@ -83,7 +85,7 @@ Two facts, both in [the research journal](https://github.com/lmmx/mibz2/blob/caa
 | **Total besides the output** | **35.6** | **22.0** |
 | Inside the output buffer, before the writer | 8.0 | 7.5 |
 
-The 6.4 bytes are the 20-byte slots of the 0.318 of letters in play at the peak, about 20 × 0.318. Inside the output buffer, lazy letters keep the 5-byte entries and, the same way, about 8 × 0.318 = 2.5 bytes of second-order slots. The pools have room for a slot for every letter, so the memory set aside is not smaller; what falls is the memory handed out and touched. Every block decodes to the same bytes as before.
+The 6.4 bytes are the 20-byte slots of the letters in play at the peak: about 20 × 0.318. Inside the output buffer, lazy letters keep the 5-byte entries. They also keep second-order slots for the letters in play, about 8 × 0.318, or 2.5 bytes a letter. The pools have room for a slot for every letter, so the memory set aside is not smaller; what falls is the memory handed out and touched. Every block decodes to the same bytes as before.
 
 ## 2. What does keeping less cost?
 
@@ -105,7 +107,7 @@ The machine is the maintainer's workstation, an Intel i9-10900K. It has 10 cores
 
 **The rule, set before the data.** [The decision rule](https://github.com/lmmx/mibz2/issues/145#issuecomment-6902022809) compared lazy letters with one block per thread on today's kernel, so that only the kernel differed. Memory would count as the cause if lazy letters were faster at 10 threads, with the interval wholly below 1, and level or slower at 4. As a sanity check, the plain one-block-per-thread arm had to match the shipped decoder at 4 to 9 threads, where they run the same plan. It did: every one of those four intervals spans 1.
 
-**The outcome.** Lazy letters were 8.4% slower at 4 threads, as their extra instructions predict. At 10 threads they were 8.1% faster: a ratio of 0.919, with an interval of 0.902 to 0.935. The rule's case is met. Against the decoder as shipped, which is what a user runs, the figures by thread count are:
+**The outcome.** Lazy letters were 8.4% slower at 4 threads, as their extra instructions predict. At 10 threads they were 8.1% faster, with an interval of 6.5% to 9.8%. The rule's case is met. Against the decoder as shipped, which is what a user runs, the figures by thread count are:
 
 | Threads | 4 | 6 | 8 | 9 | 10 | 12 |
 |---|--:|--:|--:|--:|--:|--:|
@@ -126,7 +128,7 @@ On one thread, the cache holds a block's working state comfortably, and the proc
 
 With a block per thread, each thread's state competes for the one shared cache. A rough calculation shows the scale. A Wikidata block that Cells handles has about 56,600 letters on average. At 35.6 bytes a letter, the rebuild touches about 2.0 MB besides its output. Ten threads together touch about 20 MB, the size of the i9's whole last-level cache. At 22.0 bytes a letter, it is about 1.2 MB a block and 12 MB for ten. This is arithmetic on averages, not a measurement of the cache. The output buffers and the decoder's other stages also use the cache, and not all of a block's state is in use at the same moment.
 
-The measurement that supports contention is the pattern across thread counts. If the extra instructions were the only effect, lazy letters' ratio against today's kernel would be about the same at every count. Instead it falls as threads are added, from 1.084 at 4 threads to 0.919 at 10 (the amber marks in the first figure). The rule asked whether the 10-thread ratio was below the 4-thread ratio round by round. It was in all ten paired rounds (sign test, p = 0.002). At 12 threads, where hardware threads share cores, the ratio against today's kernel falls further, to 0.852. Cache misses were not counted in this run. So this is evidence from timing that memory per core costs time at high thread counts, not a direct observation of the cache. It doesn't say which part of the memory system is the limit: the cache's capacity, the misses themselves, or the bandwidth to main memory. Hardware counters, or runs designed to separate them, would.
+The measurement that supports contention is the pattern across thread counts. If the extra instructions were the only effect, lazy letters' ratio against today's kernel would be about the same at every count. Instead it falls as threads are added, from 1.084 at 4 threads to 0.919 at 10. The amber marks in the first figure show it. The rule asked whether the 10-thread ratio was below the 4-thread ratio round by round. It was in all ten paired rounds (sign test, p = 0.002). At 12 threads, where hardware threads share cores, the ratio against today's kernel falls further, to 0.852. Cache misses were not counted in this run. So this is evidence from timing that memory per core costs time at high thread counts, not a direct observation of the cache. It doesn't say which part of the memory system is the limit: the cache's capacity, the misses themselves, or the bandwidth to main memory. Hardware counters, or runs designed to separate them, would.
 
 ## 5. What comes next?
 
