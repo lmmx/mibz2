@@ -1,71 +1,84 @@
-// Stop and walk: the lazy kernel's induction stopped once its domain is small, and the rest of
-// the block written by walking the stopped exchange from ranked starts (MONODROMY, #145 LOG
-// 6915351608 and HANDOFF 6915365756; `docs/journal/monodromy/2026-11-16-stop-and-walk.md` on
-// #482). Bench arms only: the default kernel is unchanged. Included in `cells.rs`.
+// Stop and walk: the lazy kernel's induction stopped once it has made ⌈β r⌉ cells, and the
+// rest of the block written by walking the stopped exchange with one lane (MONODROMY, #145
+// HANDOFF 6916839849; `docs/journal/monodromy/2026-11-16-stop-walk-reopened.md` on #485). Bench
+// arms only: the default kernel is unchanged. Included in `cells.rs`.
 //
-// **What is made.** The right-end induction removes w = min(λA, λB) points from its domain
-// [0, m) a step. Here it stops at the first moment both fronts' letters are whole (after an
-// equal step, which is about every other step) with m ≤ n >> K. No word past that moment is
-// made: 26% of the word bytes at K = 5 on Wikidata (the entry's §1).
+// **The stop.** `induce_lazy` counts its cells down from a budget on every cell already. The
+// arms start that counter at ⌈β r⌉ (r the block's letters) where that is below the budget, and
+// keep the rest aside. Once the counter is out, each further cell takes one from the reserve,
+// in the counter's cold path, until both fronts' letters are whole (the next fresh pair); then
+// the induction stops. No word past that moment is made: about a third of the word bytes at
+// β = 1.5 on Wikidata (the entry's §0). The test on every cell is the shipped one.
 //
 // **The stopped exchange.** At that moment no front holds part of a letter, and a front never
 // leaves a live letter, so every live letter is one no front has read: a cell, in its two
 // slots, or a letter of the block's own, at its stream place. Both orders are read from the
 // fronts' links and streams, without changing them, into tables in top order: each letter's
-// first point, the offset from its top interval to its bottom one, its word's length and its
-// word. T sends x in a letter's top interval to x + offset.
+// first point (as a bit, with a rank directory), the offset from its top interval to its
+// bottom one, its word's length and its word. T sends x in a letter's top interval to
+// x + offset. The domain [0, m) is the letters' rows, summed.
 //
-// **Places (the entry's Lemmas 1 and 2).** For a point x of a letter whose word is w,
-// place(T x) = place(x) − |w| (mod n): w lies just below x's place. K starts are chosen,
-// evenly spaced, with x_μ, the one point of the marked letter, among them. Pass 1 walks each
-// start's segment to the next start, summing the words' lengths, and the starts are ranked
-// from x_μ, whose place the marked word's rules give. Pass 2 walks each segment again from
-// its place, writing each point's word ending at the point's place. Both passes walk eight
-// segments at once.
+// **The walk (the entries' Lemmas 1 and 2).** For a point x of a letter whose word is w,
+// place(T x) = place(x) − |w| (mod n): w lies just below x's place. One lane walks T from x_μ,
+// the marked letter's one point, whose place the marked word's rules and `SHIFT` give, writing
+// each point's word ending at its place, downward. After m points it is back at x_μ, n bytes
+// lower: once round the block.
+// - *A word's 16-byte stores reach up to 15 bytes below it,* into places the walk has not
+//   reached yet, because places only fall. Only near place 0, where the walk wraps to n, and
+//   in its last 16 bytes, which lie just above where it began, is a word written exactly.
+// - *A letter's word is expanded from its rules once,* where the walk first meets the letter.
+//   Every later point copies it from there, 16 bytes a step, top down. The two occurrences are
+//   disjoint and the first lies above, and a chunk reads below the first place only where it
+//   writes below the copy, which the walk writes over later. A word kept as bytes (16 or
+//   fewer) is one store from the arena either way.
 //
-// **When it does not apply.** If the stopped exchange is not one cycle (the block is a
-// shorter cycle's copies), or anything read does not add up, the block is decoded again by
-// the shipped induction and writer. If the induction ends before its stop, the writer is the
-// shipped one.
+// **When it does not apply.** If the walk comes back to x_μ before m points or not n bytes
+// lower (the stopped exchange is several cycles: the block is a shorter cycle's copies), or
+// anything read does not add up, the block is decoded again by the shipped induction and
+// writer. If the induction ends before its stop, the writer is the shipped one.
 
-/// The kernel `CellsVariant<V>` runs for V from `LAZY_STOP`: lazy letters, stopped at
-/// n >> (V − LAZY_STOP)
-pub(crate) const LAZY_STOP: u8 = 16;
-pub(crate) const LAZY_STOP16: u8 = LAZY_STOP + 4;
-pub(crate) const LAZY_STOP32: u8 = LAZY_STOP + 5;
-pub(crate) const LAZY_STOP64: u8 = LAZY_STOP + 6;
+/// The kernel `CellsVariant<V>` runs for V from `LAZY_STOP14`: lazy letters, stopped after
+/// ⌈β r⌉ cells, β = 1.4, 1.5, 1.6
+pub(crate) const LAZY_STOP14: u8 = 20;
+pub(crate) const LAZY_STOP15: u8 = 21;
+pub(crate) const LAZY_STOP16: u8 = 22;
 
-/// Lazy letters, the induction stopped at n/16, n/32 or n/64 and the rest of the block walked
-/// (a bench arm; the same output as `LazyCells`)
+/// Lazy letters, the induction stopped after ⌈1.4 r⌉, ⌈1.5 r⌉ or ⌈1.6 r⌉ cells (r the block's
+/// letters) and the rest of the block walked (a bench arm; the same output as `LazyCells`)
+#[doc(hidden)]
+pub type StopLazyCells14 = CellsVariant<LAZY_STOP14>;
+#[doc(hidden)]
+pub type StopLazyCells15 = CellsVariant<LAZY_STOP15>;
 #[doc(hidden)]
 pub type StopLazyCells16 = CellsVariant<LAZY_STOP16>;
-#[doc(hidden)]
-pub type StopLazyCells32 = CellsVariant<LAZY_STOP32>;
-#[doc(hidden)]
-pub type StopLazyCells64 = CellsVariant<LAZY_STOP64>;
 /// The same with `ForcedCells`' open admission, for tests and fuzzing
 #[doc(hidden)]
+pub type ForcedStopLazyCells14 = CellsVariant<LAZY_STOP14, true>;
+#[doc(hidden)]
+pub type ForcedStopLazyCells15 = CellsVariant<LAZY_STOP15, true>;
+#[doc(hidden)]
 pub type ForcedStopLazyCells16 = CellsVariant<LAZY_STOP16, true>;
-#[doc(hidden)]
-pub type ForcedStopLazyCells32 = CellsVariant<LAZY_STOP32, true>;
-#[doc(hidden)]
-pub type ForcedStopLazyCells64 = CellsVariant<LAZY_STOP64, true>;
 
 /// Whether a variant's first stage is the lazy letters'
 #[inline(always)]
 fn lazy_first(v: u8) -> bool {
-    v == LAZY || (LAZY_STOP16..=LAZY_STOP64).contains(&v)
+    v == LAZY || (LAZY_STOP14..=LAZY_STOP16).contains(&v)
 }
 
-/// The starts a stopped exchange is walked from, at most (and the marked point)
-const STARTS: usize = 256;
-/// The segments walked at once
-const LANES: usize = 8;
+/// Where `induce_lazy` keeps, in the kernel's buffer, the cell counter's value below which
+/// it stops: in the padding below the top slots (`PAD`), which the lazy kernel does not use
+const STOP_AT: usize = 8;
+const _: () = assert!(STOP_AT + 8 <= PAD);
+
 /// An untouched letter's key: its bottom entry's index, beside this bit
 const KEY_ENTRY: u32 = 1 << 31;
+/// A letter whose word the walk has not written yet (`Walk::first`)
+const UNWRITTEN: u32 = u32::MAX;
+/// The low 32 bits
+const M32: u64 = 0xFFFF_FFFF;
 
 /// Where an induction stopped: both fronts' links, both streams' next places, and what the
-/// top stream's byte-to-entry map had reached; its domain [0, m) and the block's rows
+/// top stream's byte-to-entry map had reached; the block's rows
 #[derive(Default)]
 struct Stop {
     active: bool,
@@ -74,44 +87,45 @@ struct Stop {
     ti: usize,
     kb: usize,
     nt: Vec<u32>,
-    m: usize,
     n: usize,
-    /// the points the induction has removed, as it runs (`induce_lazy`)
-    consumed: usize,
+}
+
+/// A 64-point word of the rank bitmap: the letters' first points as bits, and the letters
+/// that start before it, less one (so that a point's letter is `before` plus a popcount)
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+struct Rank {
+    bits: u64,
+    before: u32,
+    _pad: u32,
+}
+
+/// A letter, in top order: its word (offset << 32 | length with the mark), the offset from
+/// its top interval to its bottom one, and where the walk first wrote its word (its end;
+/// `UNWRITTEN`: not yet, or not where it can be copied from)
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+struct Rec {
+    word: u64,
+    dl: i32,
+    first: u32,
 }
 
 /// The walk's tables and scratch, kept from block to block
 #[derive(Default)]
 struct Walk {
-    /// a letter's bottom interval's first point, by key (`KEY_ENTRY` | entry, or top slot's
-    /// index)
-    j_ent: Vec<u32>,
-    j_slot: Vec<u32>,
-    /// which block wrote each of them: (a key's value is this block's if its stamp is)
-    s_ent: Vec<u32>,
-    s_slot: Vec<u32>,
+    /// a letter's bottom interval's end, counted from the bottom order's right end, by key
+    /// (an entry's index, or a top slot's), beside the stamp of the block that wrote it:
+    /// stamp << 32 | end
+    j_ent: Vec<u64>,
+    j_slot: Vec<u64>,
     stamp: u32,
     /// the top order's letters, right to left as read: (key, λ, word)
     tops: Vec<(u32, u32, u64)>,
-    /// in top order: the letters' first points as bits over [0, m), and the ones before each
-    /// 64 of them
-    bits: Vec<u64>,
-    dir: Vec<u32>,
-    /// in top order: the offset to the letter's bottom interval, its word's length (without
-    /// the mark), its word (offset << 32 | length with the mark)
-    dl: Vec<i32>,
-    wl: Vec<u32>,
-    wh: Vec<u64>,
-    /// the starts, as bits over [0, m) with their rank directory, and in order
-    sbits: Vec<u64>,
-    sdir: Vec<u32>,
-    starts: Vec<u32>,
-    /// a segment's bytes, points, next start, and its place (where its first word ends)
-    seg_len: Vec<u64>,
-    seg_pts: Vec<u64>,
-    seg_next: Vec<u32>,
-    place: Vec<usize>,
-    /// the words being expanded: (word, end)
+    /// the rank bitmap over [0, m), and the letters in top order
+    rank: Vec<Rank>,
+    recs: Vec<Rec>,
+    /// the words being expanded past the frame's depth: (word, end)
     stack: Vec<(u64, usize)>,
     /// a word written exactly, through here
     tmp: Vec<u8>,
@@ -121,249 +135,193 @@ impl Walk {
     /// The letter whose top interval holds x (x < m)
     #[inline(always)]
     fn letter(&self, x: u32) -> usize {
-        let (w, b) = ((x >> 6) as usize, x & 63);
-        // SAFETY: x < m, and `bits`, `dir` cover [0, m) (`tables`)
-        unsafe {
-            (*self.dir.get_unchecked(w) + (*self.bits.get_unchecked(w) & (u64::MAX >> (63 - b))).count_ones())
-                as usize
-                - 1
-        }
-    }
-    /// Whether x is a start, and if so its index
-    #[inline(always)]
-    fn start(&self, x: u32) -> Option<usize> {
-        let (w, b) = ((x >> 6) as usize, x & 63);
-        // SAFETY: as `letter`
-        let v = unsafe { *self.sbits.get_unchecked(w) };
-        (v >> b & 1 != 0)
-            .then(|| (unsafe { *self.sdir.get_unchecked(w) } + (v & ((1u64 << b) - 1)).count_ones()) as usize)
+        // SAFETY: x < m, and `rank` covers [0, m) (`tables`)
+        let r = unsafe { *self.rank.get_unchecked((x >> 6) as usize) };
+        r.before.wrapping_add((r.bits & (u64::MAX >> (63 - (x & 63)))).count_ones()) as usize
     }
 }
 
 impl Kernel {
-    /// The stopped exchange read into `walk`'s tables, its starts chosen, pass 1 run and the
-    /// starts ranked; then pass 2 into `out`. Err: it does not apply (`out` untouched).
+    /// The stopped exchange read into `walk`'s tables, then walked into `out`. Err: it does
+    /// not apply (`out` may be written: the fallback rewrites it whole).
     fn walk_stopped(&mut self, out: &mut Vec<u8>) -> Result<(), ()> {
         let st = std::mem::take(&mut self.stop);
-        let (n, m) = (st.n, st.m);
+        let n = st.n;
         let mut w = std::mem::take(&mut self.walk);
-        let r = self
-            .tables(&st, out, &mut w)
-            .and_then(|(mu, xmu)| self.walk_tables(&mut w, mu, xmu, n, m, out));
+        let r = self.tables(&st, out, &mut w).and_then(|(mu, xmu, m)| {
+            // its word ends where the block's place 0 lies after the walk's row's byte and
+            // `SHIFT`
+            let (j, wmu) = self.marked_offset(w.recs[mu].word)?;
+            let p = (wmu + 2 * n - j - SHIFT) % n;
+            if out.len() < n + 32 {
+                out.resize(n + 32, 0);
+            }
+            walk(&self.buf, self.lay.rules, &mut w, xmu, p, n, m, out)?;
+            out.truncate(n);
+            Ok(())
+        });
         self.walk = w;
         self.stop = Stop { nt: st.nt, ..Stop::default() };
         r
     }
 
     /// Both orders read from where the induction stopped, into `w`'s tables in top order.
-    /// Returns the marked letter's index and its one point.
-    fn tables(&self, st: &Stop, out: &[u8], w: &mut Walk) -> Result<(usize, usize), ()> {
+    /// Returns the marked letter's index, its one point, and the domain's size m.
+    fn tables(&self, st: &Stop, out: &[u8], w: &mut Walk) -> Result<(usize, usize, usize), ()> {
         let lay = self.lay;
         let rr = self.letters;
         let Lazy { tby, .. } = self.lz;
-        let m = st.m;
-        if m == 0 || m >= u32::MAX as usize / 2 || st.nt.len() != 256 || st.ti > rr || st.kb > rr {
+        let (buf, olen) = (&self.buf[..], out.len());
+        // (the entries and the top order's bytes lie below `tby + rr`; a top slot whose key
+        // is good lies below the top pool's end, inside the buffer)
+        if rr == 0
+            || st.nt.len() != 256
+            || st.ti > rr
+            || st.kb > rr
+            || tby != BPAD + 4 * rr
+            || olen < tby + rr
+            || buf.len() < lay.ends[0] + 4
+        {
             return Err(());
         }
-        let buf = &self.buf[..];
-        let rd32 = |b: &[u8], at: usize| -> Result<u32, ()> {
-            b.get(at..at + 4).map(|s| u32::from_ne_bytes(s.try_into().unwrap())).ok_or(())
-        };
-        let rd64 = |b: &[u8], at: usize| -> Result<u64, ()> {
-            b.get(at..at + 8).map(|s| u64::from_ne_bytes(s.try_into().unwrap())).ok_or(())
-        };
-        let slot_key = |s: usize| -> Result<u32, ()> {
-            let i = s.checked_sub(lay.tops).ok_or(())?;
+        let (bb, base) = (out.as_ptr(), buf.as_ptr());
+        let slot_key = |s: usize| -> Result<usize, ()> {
+            let i = s.wrapping_sub(lay.tops);
             if i % SLOT != 0 || i / SLOT >= rr {
                 return Err(());
             }
-            Ok((i / SLOT) as u32)
+            Ok(i / SLOT)
         };
         let first1 = (lay.arena as u64 + BYTES as u64) << 32 | 1;
-        // the bottom order, right to left: each letter's bottom interval's first point
         w.stamp = w.stamp.wrapping_add(1);
         if w.stamp == 0 || w.j_ent.len() < rr {
             // (a fresh start: every stamp is old)
             w.stamp = 1;
-            for v in [&mut w.j_ent, &mut w.j_slot, &mut w.s_ent, &mut w.s_slot] {
+            for v in [&mut w.j_ent, &mut w.j_slot] {
                 v.clear();
                 v.resize(rr.max(v.capacity()), 0);
             }
         }
-        let stamp = w.stamp;
-        let (mut s, mut kb, mut end) = (st.nb, st.kb, m);
-        loop {
-            let (key, lam);
-            if s == 0 {
-                if kb == 0 {
-                    break;
-                }
-                kb -= 1;
-                let e = rd32(out, BPAD + 4 * kb)?;
-                if e & TAG != 0 {
-                    s = (e ^ TAG) as usize;
-                    continue;
-                }
-                key = KEY_ENTRY | kb as u32;
-                lam = (e & ((1 << LEN_BITS) - 1)) as usize;
-            } else {
-                let link = rd32(out, s)? as usize;
-                let ts = rd32(out, s + 4)? as usize;
-                key = slot_key(ts)?;
-                lam = rd32(buf, ts + 4)? as usize;
-                s = link;
-            }
-            end = end.checked_sub(lam).ok_or(())?;
-            let (j, sj) = if key & KEY_ENTRY != 0 {
-                (&mut w.j_ent, &mut w.s_ent)
-            } else {
-                (&mut w.j_slot, &mut w.s_slot)
-            };
-            let at = (key & !KEY_ENTRY) as usize;
-            if lam == 0 || sj[at] == stamp {
-                return Err(());
-            }
-            (j[at], sj[at]) = (end as u32, stamp);
+        if w.tops.len() < rr {
+            w.tops.resize(rr, (0, 0, 0));
+            w.recs.resize(rr, Rec::default());
         }
-        if end != 0 {
+        let stamp = (w.stamp as u64) << 32;
+        // the bottom order, right to left: each letter's bottom interval's end, from the right
+        let (mut s, mut kb, mut end) = (st.nb, st.kb, 0usize);
+        // SAFETY (this block): an entry's index is below `rr`, so it and the top order's
+        // bytes are read below `tby + rr`; a bottom slot is read only below `olen - 8`; a top
+        // slot only where its key is good; a key's tables have `rr` places
+        unsafe {
+            loop {
+                let (j, at, lam);
+                if s == 0 {
+                    if kb == 0 {
+                        break;
+                    }
+                    kb -= 1;
+                    let e = rd32(bb, BPAD + 4 * kb);
+                    if e & TAG != 0 {
+                        s = (e ^ TAG) as usize;
+                        continue;
+                    }
+                    (j, at) = (&mut w.j_ent, kb);
+                    lam = (e & ((1 << LEN_BITS) - 1)) as usize;
+                } else {
+                    if s + 8 > olen {
+                        return Err(());
+                    }
+                    let (link, ts) = rd_bottom(bb, s);
+                    (j, at) = (&mut w.j_slot, slot_key(ts)?);
+                    lam = rd32(base, ts + 4) as usize;
+                    s = link;
+                }
+                end += lam;
+                let e = j.get_unchecked_mut(at);
+                if lam == 0 || *e & !M32 == stamp || end >= M32 as usize {
+                    return Err(());
+                }
+                *e = stamp | end as u64;
+            }
+        }
+        let m = end;
+        if m == 0 {
             return Err(());
         }
         // the top order, right to left
-        w.tops.clear();
-        let (mut s, mut ti) = (st.na, st.ti);
-        let mut nt = st.nt.clone();
-        loop {
-            if s == 0 {
-                if ti == 0 {
-                    break;
-                }
-                ti -= 1;
-                let c = *out.get(tby + ti).ok_or(())? as usize;
-                let k = nt[c] as usize;
-                nt[c] = (k as u32).wrapping_sub(1);
-                if k >= rr {
+        let (mut s, mut ti, mut nl) = (st.na, st.ti, 0usize);
+        let mut nt = [0u32; 256];
+        nt.copy_from_slice(&st.nt);
+        // SAFETY: as above; a top slot is read only where its key is good, and `tops` has
+        // `rr` places, as many as there are live letters at most (a step never adds one)
+        unsafe {
+            loop {
+                if nl >= rr {
                     return Err(());
                 }
-                let e = rd32(out, BPAD + 4 * k)?;
-                if e & TAG != 0 {
-                    s = (e ^ TAG) as usize;
-                    continue;
+                if s == 0 {
+                    if ti == 0 {
+                        break;
+                    }
+                    ti -= 1;
+                    let c = *bb.add(tby + ti) as usize;
+                    let k = nt[c] as usize;
+                    nt[c] = (k as u32).wrapping_sub(1);
+                    if k >= rr {
+                        return Err(());
+                    }
+                    let e = rd32(bb, BPAD + 4 * k);
+                    if e & TAG != 0 {
+                        s = (e ^ TAG) as usize;
+                        continue;
+                    }
+                    let lam = e & ((1 << LEN_BITS) - 1);
+                    let word = first1 + ((c as u64) << 32) + (((e & ROW) as u64) << 1);
+                    *w.tops.get_unchecked_mut(nl) = (KEY_ENTRY | k as u32, lam, word);
+                } else {
+                    let key = slot_key(s)?;
+                    let link = rd32(base, s) as usize;
+                    *w.tops.get_unchecked_mut(nl) = (key as u32, rd32(base, s + 4), rd64(base, s + 8));
+                    s = link;
                 }
-                let lam = e & ((1 << LEN_BITS) - 1);
-                let word = first1 + ((c as u64) << 32) + (((e & ROW) as u64) << 1);
-                w.tops.push((KEY_ENTRY | k as u32, lam, word));
-            } else {
-                let link = rd32(buf, s)? as usize;
-                let lam = rd32(buf, s + 4)?;
-                let word = rd64(buf, s + 8)?;
-                w.tops.push((slot_key(s)?, lam, word));
-                s = link;
+                nl += 1;
             }
         }
-        // in top order: first points, offsets, words
+        // in top order: the rank bitmap, and each letter's record
         let nw = m / 64 + 1;
-        w.bits.clear();
-        w.bits.resize(nw, 0);
-        w.dl.clear();
-        w.wl.clear();
-        w.wh.clear();
+        w.rank.clear();
+        w.rank.resize(nw, Rank::default());
         let (mut x, mut mu) = (0usize, None);
-        for &(key, lam, word) in w.tops.iter().rev() {
-            let (j, sj) = if key & KEY_ENTRY != 0 { (&w.j_ent, &w.s_ent) } else { (&w.j_slot, &w.s_slot) };
-            let at = (key & !KEY_ENTRY) as usize;
-            if sj[at] != stamp || lam == 0 || x + lam as usize > m {
+        for (i, &(key, lam, word)) in w.tops[..nl].iter().rev().enumerate() {
+            let (j, at) = if key & KEY_ENTRY != 0 { (&w.j_ent, key ^ KEY_ENTRY) } else { (&w.j_slot, key) };
+            // SAFETY: a key is below `rr`, checked as it was read
+            let e = unsafe { *j.get_unchecked(at as usize) };
+            let jr = (e & M32) as usize;
+            if e & !M32 != stamp || lam == 0 || x + lam as usize > m || jr > m || jr < lam as usize || word as u32 & !MARK == 0 {
                 return Err(());
             }
-            let jx = j[at];
-            w.bits[x / 64] |= 1 << (x % 64);
+            w.rank[x / 64].bits |= 1 << (x % 64);
             if (word as u32) & MARK != 0 {
                 if lam != 1 || mu.is_some() {
                     return Err(());
                 }
-                mu = Some((w.dl.len(), x));
+                mu = Some((i, x));
             }
-            w.dl.push(jx as i32 - x as i32);
-            w.wl.push(word as u32 & !MARK);
-            w.wh.push(word);
+            // (its bottom interval [m − jr, m − jr + λ) lies in [0, m): jr ≥ λ, as the bottom
+            // order's ends are sums of the letters' rows up to and with it)
+            // SAFETY: i < nl ≤ rr
+            unsafe { *w.recs.get_unchecked_mut(i) = Rec { word, dl: (m - jr) as i32 - x as i32, first: UNWRITTEN } };
             x += lam as usize;
         }
         if x != m {
             return Err(());
         }
-        w.dir.clear();
-        w.dir.push(0);
-        for i in 0..nw {
-            let v = w.dir[i] + w.bits[i].count_ones();
-            w.dir.push(v);
+        let mut before = 0u32;
+        for r in w.rank.iter_mut() {
+            r.before = before.wrapping_sub(1);
+            before += r.bits.count_ones();
         }
-        mu.ok_or(())
-    }
-
-    /// The starts, pass 1, the ranking from the marked point (`xmu`, of letter `mu`), and
-    /// pass 2
-    fn walk_tables(
-        &self,
-        w: &mut Walk,
-        mu: usize,
-        xmu: usize,
-        n: usize,
-        m: usize,
-        out: &mut Vec<u8>,
-    ) -> Result<(), ()> {        // the starts: evenly spaced, and the marked point
-        let k0 = STARTS.min(m);
-        w.starts.clear();
-        w.starts.extend((0..k0).map(|i| (i * m / k0) as u32));
-        w.starts.push(xmu as u32);
-        w.starts.sort_unstable();
-        w.starts.dedup();
-        let k = w.starts.len();
-        w.sbits.clear();
-        w.sbits.resize(m / 64 + 1, 0);
-        for &s in &w.starts {
-            w.sbits[s as usize / 64] |= 1 << (s % 64);
-        }
-        w.sdir.clear();
-        w.sdir.push(0);
-        for i in 0..w.sbits.len() {
-            let v = w.sdir[i] + w.sbits[i].count_ones();
-            w.sdir.push(v);
-        }
-        let smu = w.start(xmu as u32).ok_or(())?;
-        // pass 1
-        w.seg_len.clear();
-        w.seg_len.resize(k, 0);
-        w.seg_pts.clear();
-        w.seg_pts.resize(k, 0);
-        w.seg_next.clear();
-        w.seg_next.resize(k, u32::MAX);
-        pass1(w, m)?;
-        // the ranking, from the marked point: its word ends where the block's place 0 lies
-        // after the walk's row's byte and `SHIFT`
-        let (j, wmu) = self.marked_offset(w.wh[mu])?;
-        let mut p = (wmu + 2 * n - j - SHIFT) % n;
-        w.place.clear();
-        w.place.resize(k, usize::MAX);
-        let (mut s, mut bytes, mut pts) = (smu, 0u64, 0u64);
-        for _ in 0..k {
-            if w.place[s] != usize::MAX {
-                return Err(());
-            }
-            w.place[s] = p;
-            bytes += w.seg_len[s];
-            pts += w.seg_pts[s];
-            p = (p + n - (w.seg_len[s] % n as u64) as usize) % n;
-            s = w.seg_next[s] as usize;
-        }
-        if s != smu || bytes != n as u64 || pts != m as u64 {
-            return Err(());
-        }
-        // pass 2: every byte of [0, n) is written (the segments' words tile it)
-        if out.len() < n + 32 {
-            out.resize(n + 32, 0);
-        }
-        pass2(&self.buf, self.lay.rules, w, n, out);
-        out.truncate(n);
-        Ok(())
+        mu.map(|(i, x)| (i, x, m)).ok_or(())
     }
 
     /// (the offset of the walk's row's byte in the marked word, the word's length)
@@ -392,168 +350,119 @@ impl Kernel {
 
 }
 
-/// Pass 2: each segment walked from its place, each point's word written ending at the
-/// point's place, right to left; eight segments at once. A word's 16-byte stores may reach
-/// 15 bytes below it, which the segment's next words write over. So a word is written
-/// exactly where fewer than 16 of its segment's bytes lie below it (the bytes below those
-/// are another segment's, maybe written already), and where it lies within 16 bytes of
-/// place 0 or across it. With the CPU's popcount where it has one (a point's letter is a
-/// popcount).
-fn pass2(buf: &[u8], rules: usize, w: &mut Walk, n: usize, out: &mut [u8]) {
+/// The walk: one lane from x_μ (`xmu`), whose word ends at place `p`, each point's word
+/// written ending at its place, downward, m points (`walk_stopped`). Err: it was not one
+/// cycle of n bytes. With the CPU's popcount where it has one (a point's letter is a popcount).
+#[allow(clippy::too_many_arguments)]
+fn walk(buf: &[u8], rules: usize, w: &mut Walk, xmu: usize, p: usize, n: usize, m: usize, out: &mut [u8]) -> Result<(), ()> {
     #[cfg(all(target_arch = "x86_64", not(miri)))]
     if std::arch::is_x86_feature_detected!("popcnt") {
         // SAFETY: the CPU has popcnt
-        return unsafe { pass2_popcnt(buf, rules, w, n, out) };
+        return unsafe { walk_popcnt(buf, rules, w, xmu, p, n, m, out) };
     }
-    pass2_body(buf, rules, w, n, out)
+    walk_body(buf, rules, w, xmu, p, n, m, out)
 }
 
 #[cfg(all(target_arch = "x86_64", not(miri)))]
 #[target_feature(enable = "popcnt")]
 #[inline(never)]
-unsafe fn pass2_popcnt(buf: &[u8], rules: usize, w: &mut Walk, n: usize, out: &mut [u8]) {
-    pass2_body(buf, rules, w, n, out)
+#[allow(clippy::too_many_arguments)]
+unsafe fn walk_popcnt(buf: &[u8], rules: usize, w: &mut Walk, xmu: usize, p: usize, n: usize, m: usize, out: &mut [u8]) -> Result<(), ()> {
+    walk_body(buf, rules, w, xmu, p, n, m, out)
 }
 
-/// (pass 2's body, `pass2`)
+/// (the walk's body, `walk`)
+///
+/// Places are counted on a line that goes once round: v from p + n down to p, the place
+/// being v − n while v > n (the first lap, down to place 0) and v after (the second, from
+/// place n down to p). A word is written with 16-byte stores where it lies at least 16 bytes
+/// above its lap's floor (0 in the first lap, p in the second), else exactly.
 #[inline(always)]
-fn pass2_body(buf: &[u8], rules: usize, w: &mut Walk, n: usize, out: &mut [u8]) {
-    {
-        let k = w.starts.len();
-        let (mut x, mut e, mut on) = ([0u32; LANES], [0usize; LANES], [false; LANES]);
-        // the segment's bytes not yet written
-        let mut left = [0usize; LANES];
-        let mut q = 0usize;
-        let mut live = 0usize;
-        for l in 0..LANES {
-            if q < k {
-                (x[l], e[l], on[l]) = (w.starts[q], w.place[q], true);
-                left[l] = w.seg_len[q] as usize;
-                q += 1;
-                live += 1;
-            }
-        }
-        let base = buf.as_ptr();
-        let o = out.as_mut_ptr();
-        let mut stack = std::mem::take(&mut w.stack);
-        let mut tmp = std::mem::take(&mut w.tmp);
-        while live > 0 {
-            for l in 0..LANES {
-                if !on[l] {
-                    continue;
-                }
-                let i = w.letter(x[l]);
-                // SAFETY: i is a letter of the tables (`letter`)
-                let (d, len, h) = unsafe { (*w.dl.get_unchecked(i), *w.wl.get_unchecked(i) as usize, *w.wh.get_unchecked(i)) };
-                let y = (x[l] as i32 + d) as u32;
-                let last = w.start(y).is_some();
-                let at = e[l];
-                if left[l] >= len + 16 && at >= len + 16 {
-                    // SAFETY: the word's bytes lie at [at − len, at), and at least 16 bytes
-                    // below it, all inside [0, n); each 16-byte store ends inside the word, so
-                    // starts 15 bytes below it at the lowest; a word kept as bytes has 16
-                    // readable bytes before its end (the arena's slack); a rule's two factors
-                    // are words written before it
-                    unsafe { emit(base, rules, h, at, o, &mut stack) };
+#[allow(clippy::too_many_arguments)]
+fn walk_body(buf: &[u8], rules: usize, w: &mut Walk, xmu: usize, p: usize, n: usize, m: usize, out: &mut [u8]) -> Result<(), ()> {
+    if p >= n || xmu >= m || out.len() < n + 32 || w.recs.is_empty() {
+        return Err(());
+    }
+    let base = buf.as_ptr();
+    let o = out.as_mut_ptr();
+    let recs = w.recs.as_mut_ptr();
+    let mut stack = std::mem::take(&mut w.stack);
+    let mut tmp = std::mem::take(&mut w.tmp);
+    let mut st: Frame = [(0, 0); DEEP];
+    let mut v = p + n;
+    // 16 above the lap's floor on the line, and the line's offset from the place
+    let (mut lim, mut lap) = if v > n { (n + 16, n) } else { (p + 16, 0) };
+    let mut x = xmu as u32;
+    let mut points = 0usize;
+    // (T sends [0, m) into itself: `tables` checked each letter's two intervals lie in it)
+    let r = loop {
+        let i = w.letter(x);
+        // SAFETY: i is a letter of the tables (`letter`)
+        let rec = unsafe { recs.add(i) };
+        let Rec { word, dl, .. } = unsafe { *rec };
+        let len = (word as u32 & !MARK) as usize;
+        if v >= lim + len {
+            let at = v - lap;
+            let off = (word >> 32) as usize;
+            if off < rules {
+                // SAFETY: [at − len − 16, at) lies in [0, n]; a word kept as bytes has 16
+                // readable bytes before its end (the arena's slack)
+                unsafe { copy16(o.add(at - 16), base.add(off + len - 16)) };
+            } else {
+                // SAFETY: as above
+                let f = unsafe { (*rec).first };
+                if f == UNWRITTEN {
+                    // SAFETY: as above, and a rule's factors are the kernel's words
+                    unsafe {
+                        (*rec).first = at as u32;
+                        emit(base, rules, word, at, o, &mut st, &mut stack);
+                    }
                 } else {
-                    emit_exact(buf, rules, h, len, at, n, out, &mut stack, &mut tmp);
-                }
-                e[l] = if at >= len { at - len } else { at + n - len };
-                left[l] = left[l].wrapping_sub(len);
-                x[l] = y;
-                if last {
-                    if q < k {
-                        (x[l], e[l]) = (w.starts[q], w.place[q]);
-                        left[l] = w.seg_len[q] as usize;
-                        q += 1;
-                    } else {
-                        on[l] = false;
-                        live -= 1;
+                    // SAFETY: the first place's word ends at f, at least len + 16 above its
+                    // lap's floor, and above this one: each chunk ends inside both words
+                    let src = f as usize;
+                    let mut k = 0;
+                    while k < len {
+                        k += 16;
+                        unsafe { copy16(o.add(at - k), o.add(src - k)) };
                     }
                 }
             }
-        }
-        w.stack = stack;
-        w.tmp = tmp;
-    }
-}
-
-/// Pass 1: eight lanes, each walking a segment from its start to the next start, summing its
-/// words' lengths and counting its points. Err: a lane walked more points than the domain has.
-/// With the CPU's popcount where it has one.
-fn pass1(w: &mut Walk, m: usize) -> Result<(), ()> {
-    #[cfg(all(target_arch = "x86_64", not(miri)))]
-    if std::arch::is_x86_feature_detected!("popcnt") {
-        // SAFETY: the CPU has popcnt
-        return unsafe { pass1_popcnt(w, m) };
-    }
-    pass1_body(w, m)
-}
-
-#[cfg(all(target_arch = "x86_64", not(miri)))]
-#[target_feature(enable = "popcnt")]
-#[inline(never)]
-unsafe fn pass1_popcnt(w: &mut Walk, m: usize) -> Result<(), ()> {
-    pass1_body(w, m)
-}
-
-/// (pass 1's body, `pass1`)
-#[inline(always)]
-fn pass1_body(w: &mut Walk, m: usize) -> Result<(), ()> {
-    let k = w.starts.len();
-    let (mut seg, mut x, mut b, mut c) = ([usize::MAX; LANES], [0u32; LANES], [0u64; LANES], [0u64; LANES]);
-    let mut q = 0usize;
-    let mut live = 0usize;
-    let mut total = 0u64;
-    for l in 0..LANES {
-        if q < k {
-            (seg[l], x[l]) = (q, w.starts[q]);
-            q += 1;
-            live += 1;
-        }
-    }
-    while live > 0 {
-        for l in 0..LANES {
-            if seg[l] == usize::MAX {
-                continue;
+        } else {
+            if v < p + len {
+                break Err(());
             }
-            let i = w.letter(x[l]);
-            // SAFETY: i is a letter of the tables
-            let (d, len) = unsafe { (*w.dl.get_unchecked(i), *w.wl.get_unchecked(i)) };
-            let y = (x[l] as i32 + d) as u32;
-            b[l] += len as u64;
-            c[l] += 1;
-            x[l] = y;
-            if let Some(s) = w.start(y) {
-                (w.seg_len[seg[l]], w.seg_pts[seg[l]], w.seg_next[seg[l]]) = (b[l], c[l], s as u32);
-                total += c[l];
-                (b[l], c[l]) = (0, 0);
-                if q < k {
-                    (seg[l], x[l]) = (q, w.starts[q]);
-                    q += 1;
-                } else {
-                    seg[l] = usize::MAX;
-                    live -= 1;
-                }
-            } else if c[l] > m as u64 {
-                return Err(());
+            let at = v - lap;
+            emit_exact(buf, rules, word, len, at, n, out, &mut st, &mut stack, &mut tmp);
+            if v - len <= n {
+                (lim, lap) = (p + 16, 0);
             }
         }
-    }
-    if total != m as u64 {
-        return Err(());
-    }
-    Ok(())
+        v -= len;
+        x = (x as i32 + dl) as u32;
+        points += 1;
+        if x as usize == xmu {
+            break if points == m && v == p { Ok(()) } else { Err(()) };
+        }
+    };
+    w.stack = stack;
+    w.tmp = tmp;
+    r
 }
+
+/// Pending factors a word's expansion keeps before it spills to the heap
+const DEEP: usize = 32;
+type Frame = [(u64, usize); DEEP];
 
 /// A word (`h`: offset << 32 | length with the mark) written ending at `at` in `o`: a word
 /// kept as bytes by one 16-byte store ending there, a rule by its factors, right to left. The
-/// stores may reach 15 bytes below the word.
+/// stores may reach 15 bytes below the word. Out of line: the walk's own loop is kept to
+/// its registers.
 ///
 /// SAFETY: [at − |word| − 16, at) lies in `o`; every word's bytes or rule lie in the buffer
 /// at `base` (words kept as bytes below `rules`, with 16 bytes before each one's end).
-#[inline(always)]
-unsafe fn emit(base: *const u8, rules: usize, h: u64, at: usize, o: *mut u8, stack: &mut Vec<(u64, usize)>) {
+#[inline(never)]
+unsafe fn emit(base: *const u8, rules: usize, h: u64, at: usize, o: *mut u8, st: &mut Frame, stack: &mut Vec<(u64, usize)>) {
     let off = (h >> 32) as usize;
     if off < rules {
         let len = (h as u32 & !MARK) as usize;
@@ -561,10 +470,8 @@ unsafe fn emit(base: *const u8, rules: usize, h: u64, at: usize, o: *mut u8, sta
         unsafe { copy16(o.add(at - 16), base.add(off + len - 16)) };
         return;
     }
-    // a rule: its factors right to left, on a stack in registers and on this frame (`DEEP`
-    // pending factors), and past that on `stack`
-    const DEEP: usize = 32;
-    let mut st = [(0u64, 0usize); DEEP];
+    // a rule: its factors right to left, on a stack in `st` (`DEEP` pending factors, the
+    // walk's, so not zeroed for each word), and past that on `stack`
     let mut sp = 0usize;
     let (mut h, mut at) = (h, at);
     loop {
@@ -595,7 +502,7 @@ unsafe fn emit(base: *const u8, rules: usize, h: u64, at: usize, o: *mut u8, sta
             } else {
                 // (deeper than the frame: the frame's pending factors, all newer than the
                 // heap's, go on top of it in order, so the order is kept; this is rare)
-                stack.extend_from_slice(&st);
+                stack.extend_from_slice(&st[..]);
                 sp = 0;
                 st[sp] = (a, at - lb);
                 sp += 1;
@@ -615,14 +522,16 @@ fn emit_exact(
     at: usize,
     n: usize,
     out: &mut [u8],
+    st: &mut Frame,
     stack: &mut Vec<(u64, usize)>,
     tmp: &mut Vec<u8>,
 ) {
-    tmp.clear();
-    tmp.resize(len + 16, 0);
+    if tmp.len() < len + 16 {
+        tmp.resize(len + 16, 0);
+    }
     // SAFETY: `tmp` is the word's length and 16 bytes before it; the words are the kernel's
-    unsafe { emit(buf.as_ptr(), rules, h, len + 16, tmp.as_mut_ptr(), stack) };
-    let start = (at + n - len) % n;
+    unsafe { emit(buf.as_ptr(), rules, h, len + 16, tmp.as_mut_ptr(), st, stack) };
+    let start = (at + 2 * n - len) % n;
     for (j, &v) in tmp[16..16 + len].iter().enumerate() {
         out[(start + j) % n] = v;
     }
@@ -659,7 +568,7 @@ mod stop_tests {
     fn arbitrary_columns_as_the_lazy_kernel() {
         let mut rng = Lcg(0x5709);
         let mut lazy = Kernel { variant: LAZY, ..Kernel::default() };
-        let mut arms: Vec<Kernel> = [LAZY_STOP16, LAZY_STOP32, LAZY_STOP64]
+        let mut arms: Vec<Kernel> = [LAZY_STOP14, LAZY_STOP15, LAZY_STOP16]
             .into_iter()
             .map(|v| Kernel { variant: v, ..Kernel::default() })
             .collect();

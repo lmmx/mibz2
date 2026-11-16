@@ -1,5 +1,5 @@
-//! The stop-and-walk arms (`bwt::ForcedStopLazyCells16`, `32`, `64`: the lazy induction
-//! stopped at n/16, n/32 or n/64 and the rest of the block walked from ranked starts) give
+//! The stop-and-walk arms (`bwt::ForcedStopLazyCells14`, `15`, `16`: the lazy induction
+//! stopped after ⌈β r⌉ cells, β = 1.4, 1.5, 1.6, and the rest of the block walked) give
 //! the shipped lazy kernel's output, block for block, on every test corpus and sample at
 //! levels 9 and 1; and libbzip2's, file for file, through the public decoder. Both paths a
 //! bzip2 block takes are taken: blocks walked, and blocks whose induction ends before the
@@ -10,7 +10,7 @@
 mod common;
 use common::*;
 use mibz2::bwt::{
-    ForcedLazyCells, ForcedStopLazyCells16, ForcedStopLazyCells32, ForcedStopLazyCells64,
+    ForcedLazyCells, ForcedStopLazyCells14, ForcedStopLazyCells15, ForcedStopLazyCells16,
     InverseBwt,
 };
 use mibz2::runs::{front, Runs};
@@ -22,9 +22,9 @@ use mibz2::Kernels;
 fn compare(
     z: &[u8],
     arms: &mut (
+        ForcedStopLazyCells14,
+        ForcedStopLazyCells15,
         ForcedStopLazyCells16,
-        ForcedStopLazyCells32,
-        ForcedStopLazyCells64,
     ),
 ) -> usize {
     let k = Kernels::detect();
@@ -39,12 +39,15 @@ fn compare(
         let mut want = Vec::new();
         lazy.invert_runs(&runs, n, p, &mut want, k);
         want.truncate(n);
-        let check = |stop: usize, got: Vec<u8>| {
-            assert!(got == want, "block {index} (n {n}), stop n/{stop}");
+        let check = |beta: usize, got: Vec<u8>| {
+            assert!(
+                got == want,
+                "block {index} (n {n}), stop at {beta}/10 r cells"
+            );
         };
-        check(16, invert(&mut arms.0, &runs, n, p, &want));
-        check(32, invert(&mut arms.1, &runs, n, p, &want));
-        check(64, invert(&mut arms.2, &runs, n, p, &want));
+        check(14, invert(&mut arms.0, &runs, n, p, &want));
+        check(15, invert(&mut arms.1, &runs, n, p, &want));
+        check(16, invert(&mut arms.2, &runs, n, p, &want));
         blocks += 1;
         syms = symbols.syms;
     }
@@ -74,14 +77,14 @@ fn every_block_as_the_lazy_kernel() {
             blocks += compare(&compress(data, level), &mut arms);
         }
     }
-    let (s16, s32, s64) = (arms.0.stops(), arms.1.stops(), arms.2.stops());
+    let (s14, s15, s16) = (arms.0.stops(), arms.1.stops(), arms.2.stops());
     let natural = |s: (usize, usize)| blocks - s.0 - s.1;
     // both paths: walked, and ended before the stop
-    for (stop, s) in [(16, s16), (32, s32), (64, s64)] {
-        assert!(s.0 > 20, "n/{stop}: {s:?} of {blocks} blocks walked");
+    for (beta, s) in [(14, s14), (15, s15), (16, s16)] {
+        assert!(s.0 > 20, "{beta}/10 r: {s:?} of {blocks} blocks walked");
         assert!(
             natural(s) > 0,
-            "n/{stop}: no block ended its induction before the stop"
+            "{beta}/10 r: no block ended its induction before the stop"
         );
     }
 }
@@ -97,9 +100,9 @@ fn files_as_libbzip2() {
         let z = compress(&data, 9);
         let k = Kernels::detect();
         for got in [
+            mibz2::decode_with::<ForcedStopLazyCells14>(&z, k),
+            mibz2::decode_with::<ForcedStopLazyCells15>(&z, k),
             mibz2::decode_with::<ForcedStopLazyCells16>(&z, k),
-            mibz2::decode_with::<ForcedStopLazyCells32>(&z, k),
-            mibz2::decode_with::<ForcedStopLazyCells64>(&z, k),
         ] {
             assert!(got.as_deref().ok() == Some(&data[..]), "{name}");
         }

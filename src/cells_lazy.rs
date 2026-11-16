@@ -209,9 +209,9 @@ impl Kernel {
     ) -> Result<(u32, u32, usize), Refusal> {
         match self.variant {
             LAZY => self.induce_lazy::<0>(budget, out),
-            LAZY_STOP16 => self.induce_lazy::<4>(budget, out),
-            LAZY_STOP32 => self.induce_lazy::<5>(budget, out),
-            LAZY_STOP64 => self.induce_lazy::<6>(budget, out),
+            LAZY_STOP14 => self.induce_lazy::<14>(budget, out),
+            LAZY_STOP15 => self.induce_lazy::<15>(budget, out),
+            LAZY_STOP16 => self.induce_lazy::<16>(budget, out),
             #[cfg(feature = "memory-lever")]
             STAGED_RULES => self.induce_cells_staged(budget, out),
             _ => self.induce_cells(budget, out),
@@ -418,8 +418,11 @@ impl Kernel {
     /// this kernel for the block, and nothing has changed since.
     ///
     /// `STOP` 0 is the shipped induction. Above 0 (the stop-and-walk arms, `cells_stop.rs`), it
-    /// stops at the first moment both fronts' letters are whole with the domain at most
-    /// n >> `STOP`: `self.stop` then says where, and the result's word and length are 0.
+    /// stops at the first moment both fronts' letters are whole once it has made ⌈`STOP` r / 10⌉
+    /// cells, if that is below the budget: `self.stop` then says where, and the result's word
+    /// and length are 0. The stop rides on the budget's counter: the test on every cell is the
+    /// shipped one, and at each fresh pair `left` is compared with the counter's value at the
+    /// stop (`STOP_AT`).
     #[inline(never)]
     fn induce_lazy<const STOP: u32>(
         &mut self,
@@ -461,8 +464,18 @@ impl Kernel {
             let first1 = (lay.arena as u64 + BYTES as u64) << 32 | 1;
             let mut top = lay.arena + BYTES as usize + 256 + 16;
             let mut rp = lay.rules;
-            // the cells still allowed
+            // the cells still allowed (the stop-and-walk arms: till the stop)
             let mut left = budget;
+            // (the stop-and-walk arms) the stop is at the first fresh pair with `left` below
+            // this: budget − ⌈β r⌉ + 1 if that is above 0, else 0 (no stop). Kept in the
+            // buffer's padding below the top slots (`STOP_AT`): the loop is at its register
+            // limit, and a live value more spills its hot state. (So does any change to the
+            // counter's own test: a cold path that let the counter go on past the stop cost
+            // 16 to 38 instructions on every cell.)
+            if STOP != 0 {
+                let cap = (rr * STOP as usize).div_ceil(10);
+                wr64(base, STOP_AT, if cap < budget { (budget - cap + 1) as u64 } else { 0 });
+            }
             // the pools: the pair given back last, and each pool's first slot never
             // handed out
             let mut free = 0usize;
@@ -477,11 +490,6 @@ impl Kernel {
             let (mut aw, mut bw) = (0u64, 0u64);
             let (mut bs, mut ts) = (0usize, 0usize);
             let (mut fa, mut fb) = (0usize, 0usize);
-            // (the stop-and-walk arms) the domain's points removed: the top front takes each
-            // letter it reads to its end (cell by cell, or closing it), so at a moment both
-            // letters are whole, the points removed are the top letters read so far, all of
-            // them. Kept in `self`, not in the loop's registers
-            self.stop.consumed = 0;
             // A pair of slots: (top, bottom)
             macro_rules! take {
                 () => {{
@@ -532,9 +540,6 @@ impl Kernel {
                         } else {
                             na = 0;
                             ra = (e & ((1 << LEN_BITS) - 1)) as u64;
-                            if STOP != 0 {
-                                self.stop.consumed += ra as usize;
-                            }
                             aw = first1 + ((c as u64) << 32) + (((e & ROW) as u64) << 1);
                             if $settle {
                                 (fa, bs) = take!();
@@ -548,9 +553,6 @@ impl Kernel {
                     if s != 0 {
                         na = rd32(base, s) as usize;
                         ra = rd32(base, s + 4) as u64;
-                        if STOP != 0 {
-                            self.stop.consumed += ra as usize;
-                        }
                         aw = rd64(base, s + 8);
                         bs = rd_other(base, s);
                         fa = s;
@@ -618,15 +620,14 @@ impl Kernel {
                 }};
             }
             'fresh: loop {
-                // (the stop-and-walk arms) both fronts' letters whole and the domain small:
-                // stop, before reading them
-                if STOP != 0 && self.stop.n - self.stop.consumed <= self.stop.n >> STOP {
+                // (the stop-and-walk arms) both fronts' letters whole and the stop's cells
+                // made: stop, before reading them
+                if STOP != 0 && (left as u64) < rd64(base, STOP_AT) {
                     self.stop.active = true;
                     (self.stop.na, self.stop.nb) = (na, nb);
                     (self.stop.ti, self.stop.kb) = (ti, kb);
                     self.stop.nt.clear();
                     self.stop.nt.extend_from_slice(&nt);
-                    self.stop.m = self.stop.n - self.stop.consumed;
                     self.rule_end = rp;
                     self.lz.peak = (tnew - lay.tops) / SLOT;
                     return Ok((0, 0, budget - left));
