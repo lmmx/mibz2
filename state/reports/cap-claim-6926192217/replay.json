@@ -1,0 +1,270 @@
+[
+  {
+    "bundle": "run-20261116T032432Z",
+    "corpus": "wikidata",
+    "threads": 20,
+    "arm": "mibz2-workers-lazy-cap",
+    "reference": "mibz2-workers-lazy",
+    "ratio": 0.7722442542452672,
+    "low": 0.7608639684591416,
+    "high": 0.7837947556151799
+  },
+  {
+    "bundle": "run-20261116T032432Z",
+    "corpus": "wikidata-x8",
+    "threads": 20,
+    "arm": "mibz2-workers-lazy-cap",
+    "reference": "mibz2-workers-lazy",
+    "ratio": 0.7756360938375018,
+    "low": 0.772848957628241,
+    "high": 0.7784332813357917
+  },
+  {
+    "bundle": "run-20261116T024424Z",
+    "corpus": "wikidata",
+    "threads": 12,
+    "arm": "mibz2-workers-lazy-cap",
+    "reference": "mibz2-workers-lazy",
+    "ratio": 0.9161417332290617,
+    "low": 0.8956247202597415,
+    "high": 0.9371287508908173
+  },
+  {
+    "bundle": "run-20261116T024424Z",
+    "corpus": "wikidata",
+    "threads": 14,
+    "arm": "mibz2-workers-lazy-cap",
+    "reference": "mibz2-workers-lazy",
+    "ratio": 0.8694198861981874,
+    "low": 0.8501593036458029,
+    "high": 0.8891168223123883
+  },
+  {
+    "bundle": "run-20261116T024424Z",
+    "corpus": "wikidata",
+    "threads": 16,
+    "arm": "mibz2-workers-lazy-cap",
+    "reference": "mibz2-workers-lazy",
+    "ratio": 0.8235712405165575,
+    "low": 0.8034407679965885,
+    "high": 0.8442060886420707
+  },
+  {
+    "bundle": "run-20261116T024424Z",
+    "corpus": "wikidata",
+    "threads": 20,
+    "arm": "mibz2-workers-lazy-cap",
+    "reference": "mibz2-workers-lazy",
+    "ratio": 0.7751797061092967,
+    "low": 0.7600037025181607,
+    "high": 0.7906587491254183
+  },
+  {
+    "bundle": "run-20261116T014443Z",
+    "corpus": "wikidata",
+    "threads": 12,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.0009177775127454,
+    "low": 0.9735481282354379,
+    "high": 1.0290568779140774
+  },
+  {
+    "bundle": "run-20261116T014443Z",
+    "corpus": "wikidata",
+    "threads": 14,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.0558595630306102,
+    "low": 1.0167157139476546,
+    "high": 1.0965104616260395
+  },
+  {
+    "bundle": "run-20261116T014443Z",
+    "corpus": "wikidata",
+    "threads": 16,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.1229342926096555,
+    "low": 1.0868066377029793,
+    "high": 1.1602629039733279
+  },
+  {
+    "bundle": "run-20261116T014443Z",
+    "corpus": "wikidata",
+    "threads": 20,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.1943430994596582,
+    "low": 1.175200642333519,
+    "high": 1.2137973617802693
+  },
+  {
+    "bundle": "run-20261116T021858Z",
+    "corpus": "wikidata",
+    "threads": 12,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.021423524905247,
+    "low": 1.0007884211980755,
+    "high": 1.0424841006662375
+  },
+  {
+    "bundle": "run-20261116T021858Z",
+    "corpus": "wikidata",
+    "threads": 14,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.1000919392308948,
+    "low": 1.060900390811496,
+    "high": 1.1407312931943514
+  },
+  {
+    "bundle": "run-20261116T021858Z",
+    "corpus": "wikidata",
+    "threads": 16,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.1309053515506904,
+    "low": 1.1087044628642917,
+    "high": 1.1535507946471908
+  },
+  {
+    "bundle": "run-20261116T021858Z",
+    "corpus": "wikidata",
+    "threads": 20,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.2135535515979559,
+    "low": 1.1924702680002026,
+    "high": 1.235009594885566
+  },
+  {
+    "bundle": "run-20261116T093528Z",
+    "corpus": "wikidata",
+    "threads": 12,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.089278530715827,
+    "low": 1.0636837036105642,
+    "high": 1.1154892318561294
+  },
+  {
+    "bundle": "run-20261116T093528Z",
+    "corpus": "wikidata",
+    "threads": 14,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.1601664709116273,
+    "low": 1.1399796971880525,
+    "high": 1.1807107122588552
+  },
+  {
+    "bundle": "run-20261116T093528Z",
+    "corpus": "wikidata",
+    "threads": 16,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.193839261777531,
+    "low": 1.1666164761422333,
+    "high": 1.2216972862191553
+  },
+  {
+    "bundle": "run-20261116T093528Z",
+    "corpus": "wikidata",
+    "threads": 20,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.2654567813496165,
+    "low": 1.2445692551358607,
+    "high": 1.286694861579977
+  },
+  {
+    "bundle": "run-20261116T162328Z",
+    "descriptive_cross_phase": true,
+    "corpus": "wikidata-x4",
+    "threads": 12,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.080598330714484,
+    "low": 1.0643193941283848,
+    "high": 1.0971262562580673
+  },
+  {
+    "bundle": "run-20261116T162328Z",
+    "descriptive_cross_phase": true,
+    "corpus": "wikidata-x4",
+    "threads": 12,
+    "arm": "mibz2-workers-stop14",
+    "reference": "mibz2",
+    "ratio": 1.0611205549585934,
+    "low": 1.0502142603184912,
+    "high": 1.0721401095945564
+  },
+  {
+    "bundle": "run-20261116T162328Z",
+    "descriptive_cross_phase": true,
+    "corpus": "wikidata-x4",
+    "threads": 12,
+    "arm": "mibz2-workers-stop15",
+    "reference": "mibz2",
+    "ratio": 1.0654318724781437,
+    "low": 1.0501817578598427,
+    "high": 1.0809034401869513
+  },
+  {
+    "bundle": "run-20261116T162328Z",
+    "descriptive_cross_phase": true,
+    "corpus": "wikidata-x4",
+    "threads": 12,
+    "arm": "mibz2-workers-stop16",
+    "reference": "mibz2",
+    "ratio": 1.0736465623860645,
+    "low": 1.0609623855037282,
+    "high": 1.0864823830452024
+  },
+  {
+    "bundle": "run-20261116T162328Z",
+    "descriptive_cross_phase": true,
+    "corpus": "wikidata-x4",
+    "threads": 20,
+    "arm": "mibz2-workers-lazy",
+    "reference": "mibz2",
+    "ratio": 1.306139219532594,
+    "low": 1.291140540669122,
+    "high": 1.3213121322308528
+  },
+  {
+    "bundle": "run-20261116T162328Z",
+    "descriptive_cross_phase": true,
+    "corpus": "wikidata-x4",
+    "threads": 20,
+    "arm": "mibz2-workers-stop14",
+    "reference": "mibz2",
+    "ratio": 1.241777089324372,
+    "low": 1.2303198349107356,
+    "high": 1.2533410384973498
+  },
+  {
+    "bundle": "run-20261116T162328Z",
+    "descriptive_cross_phase": true,
+    "corpus": "wikidata-x4",
+    "threads": 20,
+    "arm": "mibz2-workers-stop15",
+    "reference": "mibz2",
+    "ratio": 1.2603322041823,
+    "low": 1.2474787045275302,
+    "high": 1.2733181409302046
+  },
+  {
+    "bundle": "run-20261116T162328Z",
+    "descriptive_cross_phase": true,
+    "corpus": "wikidata-x4",
+    "threads": 20,
+    "arm": "mibz2-workers-stop16",
+    "reference": "mibz2",
+    "ratio": 1.2788980154072354,
+    "low": 1.268056978312325,
+    "high": 1.2898317361017815
+  }
+]
