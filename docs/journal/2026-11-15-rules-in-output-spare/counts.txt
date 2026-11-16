@@ -1,0 +1,13 @@
+callgrind, one thread, inclusive of callees; Wikidata (corpora/wikidata.bz2, SHA-256 82f65ace...c29915) through examples/bzcat 1; 11,090,867 letters in the 196 admitted blocks
+
+== master 9d0fb49c (source as 8a5e4601)
+  1,280,552,604  induce_cells  (115.46 a letter)
+  897,994,908  slots  (80.97 a letter)
+  5,035,915,568  whole program
+  598,664,251  write_cells  (53.98 a letter)
+
+== this change
+  1,317,015,239  induce_cells  (118.75 a letter)
+  823,431,954  slots  (74.24 a letter)
+  5,066,525,494  whole program
+  667,329,326  write_cells  (60.17 a letter)

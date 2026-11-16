@@ -1,0 +1,243 @@
+# 2026-11-15 · Pathfinder · Cells' bottom slots and rules in the output's spare capacity: refuted in CI, closed
+
+Assignment: QUEUED 6902723569 on #145 (Louis: memory bandwidth is the lever; build cuts now).
+Prices and decision rule: LOG 6902797865, posted before any count of the change. The change
+was PR #449, head `3071cad5cd88b4db493292a5f39c4ee583ffc4c1` (branch
+`perf/cells-rules-in-output-spare`, kept). **CI's paired bench and the occupancy ledger
+refuted it, and the Coordinator closed it** (6904270241 on #449). This entry is the record:
+the result first, then the design, the safety argument and the evidence as they stood.
+
+## The result
+
+**The paired bench** (head `3071cad` against master `caad2bd`, 10 rounds, a 4-CPU runner;
+the full table is the bench comment on #449):
+
+| `wikidata`, threads | wall | CPU | peak resident memory |
+|---|--:|--:|--:|
+| 1 | +1.7% (+1.4%, +1.9%) slower | +1.7% | 28 → 26 MB (−6.5%) |
+| 2 | +4.8% (+3.3%, +6.4%) slower | +5.3% | 57 → 74 MB (+30.1%) |
+| 4 | +5.2% (+0.4%, +10.2%) slower | +5.8% | 86 → 129 MB (+48.9%) |
+
+No other corpus moved but `text` at 2 threads (+3.4%), where Cells admits nothing. The
+bench's own assessment: worse on speed, CPU, contention and memory, and no measure better.
+
+**The occupancy ledger** (the `occupancy` check; Guardian D111, 6903644101): output buffers
+of 5.49, 5.54 and 5.64 MB of capacity against its bound of 1.80 MB.
+
+**Rule 3 of LOG 6902797865** let CI's bench decide, with one re-run for a flagged primary
+regression. No re-run was taken: the primary corpus is slower at every count, the ledger
+fails without any timing, and both have a cause in the design.
+
+## Why: the lifetime model was right and beside the point
+
+The design below rests on one sentence: the output's spare capacity is dead until `unrle`
+appends the block. That is true. It left out which buffer the output is.
+
+- **With more than one thread, a block's output buffer is not the worker's.** It comes off
+  a free list shared by all workers (`free_out`, `src/parallel.rs`), where the reader put
+  it back after consuming an earlier block. `slots` of them circulate: four a thread. So
+  the buffer a worker is handed was last touched by another thread, some blocks ago.
+- **The kernel's buffer and `ll` are the worker's own,** the same memory block after
+  block. On master the bottom slots lie in `ll` (#433) and the rules in the kernel's
+  buffer: both warm. This change moved both into the circulating buffer: 17.1 B a letter
+  of the induction's working memory, the bottom slots' random reads and writes among it,
+  now in lines the worker's core does not hold.
+- **The reservation is for the worst case, in every buffer in flight.** The rules' region
+  has room for a rule a cell at the budget, about 2.6 B a row, besides the bottom slots.
+  Every circulating buffer grows to hold it: 5.5 MB of capacity against 1.8 MB. The
+  kernel's buffer, one a thread, shrank by 9.2 B a letter, about 0.5 MB a block. So
+  retained capacity rose by about 14 MB a thread to save 0.5 MB.
+- **Why capacity became resident memory.** A buffer keeps its capacity when it goes back
+  on the free list, and a page once written stays resident. A block with many rules
+  writes further into the tail than its output is long, and each buffer keeps the furthest
+  any block has reached in it. I have not measured that directly; it is what the ledger's
+  capacities and the bench's +30% and +49% fit.
+
+**One thread is a different case, and I first read it wrong.** The 1-thread run is the
+sequential reader, which has one output buffer and no free list. There the change used
+*less* memory (−6.5%), as designed, and was still 1.7% slower. The instruction count rose
+by 0.6% over the whole decoder (below). The rest is not explained. On #449 I put the
+1-thread slowdown down to cold memory; that does not hold for a buffer that is the same
+one every block.
+
+**What I got wrong in the pricing.** I counted the kernel's buffer and the instructions,
+and not the buffers the bytes moved into. The occupancy ledger measures exactly that, runs
+without a clock, and I did not run it before opening the PR.
+
+**What would have to be true for a cut of this kind to work.** The memory taken has to be
+the worker's own and already warm. `ll` is (it is why #433 worked). The output is not,
+unless each worker keeps its own output buffer, which the reader's hand-off does not
+allow as it stands.
+
+**Worth taking from the branch into another change,** and not merged by this one: the
+cells counted down (one loop value where there were two), and the tests' assertion that a
+refused block leaves `ll` untouched.
+
+# The change as it was proposed
+
+## What changes, and why
+
+The induction writes one 16-byte rule for each cell whose word is longer than 16 bytes, and
+only the writer reads them. On Wikidata they are 9.1 bytes a letter, a quarter of the
+kernel's buffer. #433 moved the bottom slots out of that buffer into memory that was dead
+anyway. This does the same for the rules.
+
+**Where the dead memory is.** Not in `ll`: on the Cells route a block has no last column,
+`ll` is the buffer Cells writes its output into, and the writer fills it while it still
+reads the rules. The memory that is dead is the **spare capacity of the block's final
+output**: `rle::unrle` appends the block there, after the kernel has returned.
+
+**The layout now:**
+
+| region | where | per letter, Wikidata |
+|---|---|--:|
+| top slots | the kernel's buffer | 20 B |
+| arena (words kept as bytes) | the kernel's buffer | 6.4 B |
+| bottom slots | the output's spare capacity (the "tail") | 8 B |
+| rules | the tail, after the bottom slots | 9.1 B |
+
+- **The kernel's buffer falls from 35.6 to 26.4 B a letter.**
+- **The tail's 17.1 B a letter is 1.03 of a block's rows** at the median, so the slots and
+  rules land almost exactly on the bytes `unrle` writes next.
+- **`ll` is not touched until the writer.** A refused block leaves it byte for byte as it
+  was. Before, a refusal on the budget left the bottom slots in it.
+
+**No value is added to the induction's loop.** The loop already held one pointer for the
+bottom slots' buffer; a rule is now written through it. That matters: every other cut tried
+this week added state to the loop and paid for it in instructions
+(`2026-11-15-memory-lever.md`).
+
+**The offsets.** A word's offset says which kind it is: the writer treats an offset at or
+above the rules' as a rule. For that to hold with the rules in another buffer, the tail's
+offsets are counted from `shift` bytes before the tail, where `shift` is the kernel
+buffer's size. A rule's offset is then above every arena offset, and the writer is
+unchanged but for the pointer it reads rules through.
+
+**The plumbing.** `InverseBwt` gains `invert_runs_tail`, which also takes the tail; its
+default ignores it. `decode_block` passes the final output. A caller with no tail to lend
+(`invert_runs`, the forced route, the tests) gets a buffer of the kernel's own.
+
+**The cells are counted down,** not up: one value in the loop where there were two. It
+takes back part of what the changed pointer use costs (below).
+
+## Safety argument (RULES B5)
+
+The new unsafe is the tail: a pointer into a `Vec`'s spare capacity.
+
+1. **Room.** `slots` reserves the layout's bytes of spare capacity before anything is
+   written (`tail.reserve`). `induce_cells` checks the capacity again and refuses a tail
+   without it. Every access is at the tail's length plus an offset inside that room.
+2. **The shifted pointer.** The tail is addressed from `shift` bytes before its start. That
+   pointer is made with wrapping arithmetic and is never read or written as it is: every
+   use adds an offset of at least `shift`, which brings it back inside the spare capacity.
+   The pointer is derived from the tail's own, so it may access the tail's allocation.
+3. **Only what was written is read.** Spare capacity holds nothing. What is read there:
+   - the letters' bottom slots, all written by `slots`;
+   - the 128 bytes before them, which `slots` zeroes, because the induction's fetch-ahead
+     reads a slot's place up to 12 slots before the first;
+   - rules below `rule_end`, each written by the induction before the writer reads it;
+   - in debug and Miri, the canaries `slots` wrote.
+4. **The caller's bytes.** The tail's length is never changed and nothing is written below
+   it. `reserve` may move the buffer; the bytes below its length move with it.
+5. **Between the stages** the tail is not reserved again, so its buffer does not move, and
+   each stage takes its pointer afresh from the `Vec`.
+6. **No overlap with the output.** The writer writes `ll` while it reads rules from the
+   tail. They are two `&mut Vec`s, so two allocations.
+7. **When the rules die.** `decode_block` appends to the tail (`finish`) only after the
+   kernel has returned. The kernel keeps nothing in the tail between blocks.
+8. **Offsets fit.** A layout whose offsets in either buffer would reach `u32::MAX` is
+   refused.
+
+## Evidence
+
+**Tests** (114 in the library pass):
+- the comparison against the original induction, state by state, unchanged (in its layout
+  the rules lie in the kernel's buffer), and now also the rules' region byte for byte;
+- `miri_cells_tail_is_the_callers`: the caller's tail keeps its length and bytes, its spare
+  capacity is used, the kernel's own tail stays unallocated, a refusal leaves `ll` and the
+  tail as they were, and without a tail the kernel uses its own;
+- `miri_sequential_default_cells_route`: through the public reader, `decode_block` lends
+  the output and the kernel's own tail is never allocated;
+- the layout tests, updated; three of them now assert that a refusal leaves `ll` untouched.
+
+**Miri** (run again after the merge of #447): the ten `cells::tests::miri_cells_*` tests and
+`miri_sequential_default_cells_route` pass. The tail test starts from a `Vec` with capacity
+and no bytes, so a read of anything not written would be reported. With the feature, the
+four Miri-listed tests of the experiment's kernels pass too.
+
+**Fuzz:** the Cells mode, 60 seconds, seed 42: 49,661 cases, 26,200 blocks through the
+forced route, 425.8 M cells.
+
+**Corpus:** every bench corpus and Wikidata decode to the same bytes at 1, 4 and 12 threads,
+and Wikidata's output equals master's.
+
+**Mutation pass** (`2026-11-15-rules-in-output-spare/mutants.tsv`, script `mutate.py.txt`;
+debug profile; run again after the merge of #447): 16 mutants, 16 killed. The first row is
+the unmutated tree passing. Fifteen
+are killed by the tests. The sixteenth, the bytes before the bottom slots not zeroed, reads
+memory that was never written: the native tests pass, and Miri reports the read as
+undefined behaviour.
+
+**Instructions** (callgrind, Wikidata, one thread, inclusive, per letter;
+`2026-11-15-rules-in-output-spare/counts.txt`):
+
+| | master | this change |
+|---|--:|--:|
+| first stage (`slots`) | 81.0 | 74.2 (−8%) |
+| induction | 115.5 | 118.7 (+2.8%) |
+| writer | 54.0 | 60.2 (+11.5%) |
+| the three | 250.4 | 253.2 (+1.1%) |
+| whole decoder, whole file | 5.036 G | 5.067 G (+0.6%) |
+
+- **Rule 2 of LOG 6902797865** allowed 2% a stage. The induction and the writer are over it,
+  and I reported that on #145 before opening the PR.
+- **The writer** now holds two pointers, one for the arena and one for the rules, where it
+  held one. That is its 6 instructions a letter.
+- **The induction** uses its second pointer in one more place. Counting cells down took it
+  from +4.4% to +2.8%.
+- **The first stage** no longer sizes or zero-fills anything in `ll`.
+
+## The memory-lever experiment's two kernels, on the new layout
+
+#447 merged while this was being built, so its two opt-in kernels (`src/cells_lever.rs`) are
+moved onto the new layout here. Neither is a default; both stay behind `memory-lever`.
+
+- **The staged kernel** is regenerated from the new `induce_cells`, with the same three
+  differences as before (the stage, the fence, the guarded fetch-ahead). Its bottom slots and
+  rules lie in the tail too, and it sends its staged rules there.
+- **The lazy kernel** keeps its entries, its bytes and its bottom slots' pool in the tail's
+  spare capacity, where it kept them in `ll`. Its rules stay in the kernel's buffer.
+- **Their tests** pass unchanged but for one layout assertion: both against the original
+  induction state by state, the fence model, the pool's tests. The fence check passes, and
+  the feature's fuzz ran 24,387 cases in 60 seconds.
+- **The four bench arms** give one output hash on Wikidata at 1, 4 and 12 threads.
+- **Their mutation table** was run again on this code
+  (`2026-11-15-memory-lever/mutants.tsv`, regenerated here; the script's texts were updated
+  to the regenerated staged induction): 38 mutants, 35 killed, the same three survivors as
+  on master, for the reasons `2026-11-15-memory-lever.md` gives.
+
+**The arms' counts on this layout** (`examples/lever_counts.rs` under callgrind, per letter):
+
+| arm | first stage | induction | writer | whole program |
+|---|--:|--:|--:|--:|
+| `mibz2-workers-w` (Cells as shipped, this layout) | 71.2 | 118.7 | 60.1 | 4.807 G |
+| `-lazy` | 56.0 | 176.3 | 60.1 | 5.276 G |
+| `-nt` | 71.2 | 137.2 | 60.1 | 5.012 G |
+
+On master's layout the same harness counted 4.758 G, 5.340 G and 4.963 G.
+
+**What it does to the experiment.** If this merges before the i9 run, every arm's baseline
+has the rules in the output's spare capacity. The `-nt` arm then stores its rules past the
+cache into memory that `unrle` is about to write, which is a weaker version of its
+question: the bypass avoids reading the lines in, and `unrle` still has to. The `-lazy` arm
+is unaffected in what it asks.
+
+## Reproduce
+
+```
+cargo test --lib cells
+cargo +nightly miri test --lib -- miri_cells
+python3 docs/journal/2026-11-15-rules-in-output-spare/mutate.py.txt .    # leaves the tree as it was
+cargo build --release --example bzcat
+valgrind --tool=callgrind ./target/release/examples/bzcat 1 < corpora/wikidata.bz2 > /dev/null
+```

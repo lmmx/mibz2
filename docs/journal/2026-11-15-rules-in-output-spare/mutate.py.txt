@@ -1,0 +1,93 @@
+"""Mutation pass for Cells' bottom slots and rules in the output's spare capacity.
+
+Each mutant is one replacement in the named file. A mutant is killed if the Cells tests fail
+on it in the debug profile (canaries and debug assertions on); a mutant that does not build
+is not a kill. One mutant reads memory that was never written, which only Miri sees: it is
+run under Miri too, on the test named in its row, and is killed there if Miri reports
+undefined behaviour. Each row gives the reason. The first row is the tree as it is. The
+tree is left as it was.
+
+    mutate.py WORKTREE
+"""
+import os
+import subprocess
+import sys
+
+wt = sys.argv[1]
+M = [
+    ("src/cells.rs", "the tail's spare capacity not reserved", "        tail.reserve(in_tail);\n", ""),
+    ("src/cells.rs", "the tail's offsets not counted from before it", "            shift = allocation;\n", "            shift = 0;\n"),
+    ("src/cells.rs", "the tail addressed without its shift", "    unsafe { tail.as_mut_ptr().add(tail.len()) }.wrapping_sub(shift)\n", "    unsafe { tail.as_mut_ptr().add(tail.len()) }\n"),
+    ("src/cells.rs", "the tail addressed from its start, not its length", "    unsafe { tail.as_mut_ptr().add(tail.len()) }.wrapping_sub(shift)\n", "    tail.as_mut_ptr().wrapping_sub(shift)\n"),
+    ("src/cells.rs", "a rule written to the kernel's buffer", "                        wr64(bb, rp, aw);\n", "                        wr64(base, rp, aw);\n"),
+    ("src/cells.rs", "a rule's second factor written to the kernel's buffer", "                        wr64(bb, rp + 8, bw);\n", "                        wr64(base, rp + 8, bw);\n"),
+    ("src/cells.rs", "the writer reads rules from the kernel's buffer", "            unsafe { tail.as_ptr().add(tail.len()) }.wrapping_sub(self.lay.shift)\n", "            base as *const u8\n"),
+    ("src/cells.rs", "the writer reads rules without the shift", "            unsafe { tail.as_ptr().add(tail.len()) }.wrapping_sub(self.lay.shift)\n", "            unsafe { tail.as_ptr().add(tail.len()) }\n"),
+    ("src/cells.rs", "the rules laid over the bottom slots", "            rules = self.rules_at(bots + bcap + GAP);\n", "            rules = self.rules_at(bots + GAP);\n"),
+    ("src/cells.rs", "the tail's size without the rules", "            in_tail = rules + ruled + GAP - shift;\n", "            in_tail = rules + GAP - shift;\n"),
+    ("src/cells.rs", "the induction does not check the tail's capacity", "            || tail.capacity() - tail.len() < lay.tail\n", ""),
+    ("src/cells.rs", "the kernel's own tail not kept", "        self.tail = tail;\n", ""),
+    ("src/cells.rs", "the caller's tail ignored", "        self.state.took = self.attempt(r.records(), n, p, out, Some(tail));\n", "        self.state.took = self.attempt(r.records(), n, p, out, None);\n"),
+    ("src/lib.rs", "decode_block lends no tail", "            .invert_runs_tail(&s.runs, n, b.orig_ptr, &mut s.ll, out, k);", "            .invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k);"),
+    ("src/cells.rs", "the bytes before the bottom slots not set", "                core::ptr::write_bytes(bb.wrapping_add(shift), 0, BPAD);\n", "", "miri_cells_tail_is_the_callers"),
+    ("src/cells.rs", "the cells counted one short", "                    if left == 0 {\n                        return Err(Refusal::Budget);\n                    }\n", "                    if left == 0 && false {\n                        return Err(Refusal::Budget);\n                    }\n"),
+]
+env = dict(os.environ, CARGO_TARGET_DIR=os.path.join(wt, "target"))
+
+
+def tests():
+    r = subprocess.run(["cargo", "test", "--lib", "cells"], cwd=wt, env=env, capture_output=True, text=True)
+    out = (r.stdout + r.stderr).splitlines()
+    if any("could not compile" in l for l in out):
+        return "does not build", next((l.strip() for l in out if l.startswith("error")), "")
+    if r.returncode == 0:
+        return "pass", next((l.strip() for l in out if l.startswith("test result")), "")
+    failed = sorted({l.split()[1].split("::")[-1] for l in out if l.startswith("test ") and l.rstrip().endswith("FAILED")})
+    why = ""
+    for i, l in enumerate(out):
+        if "panicked at" in l:
+            why = l.split("panicked at", 1)[1].strip() + " " + (out[i + 1].strip() if i + 1 < len(out) else "")
+            break
+    if not why:
+        why = next((l.strip() for l in out if "signal:" in l), "no panic message")
+    return "fail", (", ".join(failed) if failed else "the test binary died") + " | " + why[:160]
+
+
+def miri(test):
+    r = subprocess.run(["cargo", "+nightly", "miri", "test", "--lib", test], cwd=wt, env=env, capture_output=True, text=True)
+    out = (r.stdout + r.stderr).splitlines()
+    ub = next((l.strip() for l in out if "Undefined Behavior" in l), "")
+    if r.returncode != 0 and ub:
+        return "fail", ub[:160]
+    if r.returncode == 0:
+        return "pass", next((l.strip() for l in out if l.startswith("test result")), "")
+    return "did not run", next((l.strip() for l in out if l.startswith("error")), "exit %d" % r.returncode)[:160]
+
+
+print("# file\tmutant\tverdict\tthe tests\tMiri", flush=True)
+t, tw = tests()
+m, mw = miri("miri_cells_tail_is_the_callers")
+print(f"-\tthe tree as it is\t{'ok' if (t, m) == ('pass', 'pass') else 'BASELINE BROKEN'}\ttests {t}: {tw}\tMiri {m}: {mw}", flush=True)
+survivors = 0
+for path, name, a, b, *more in M:
+    p = os.path.join(wt, path)
+    orig = open(p).read()
+    if orig.count(a) != 1:
+        print(f"{path}\t{name}\tNOT APPLIED: the text occurs {orig.count(a)} times\t", flush=True)
+        survivors += 1
+        continue
+    open(p, "w").write(orig.replace(a, b))
+    try:
+        t, tw = tests()
+        m, mw = miri(more[0]) if more else ("not run", "")
+    finally:
+        open(p, "w").write(orig)
+    if t == "fail":
+        verdict = "killed by the tests"
+    elif m == "fail":
+        verdict = "killed under Miri"
+    else:
+        verdict = "SURVIVED"
+    survivors += verdict == "SURVIVED"
+    print(f"{path}\t{name}\t{verdict}\ttests {t}: {tw}\tMiri {m}: {mw}", flush=True)
+print(f"# {len(M)} mutants, {survivors} not killed", flush=True)
