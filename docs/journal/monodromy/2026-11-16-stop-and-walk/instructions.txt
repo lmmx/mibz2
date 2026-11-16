@@ -1,0 +1,13 @@
+Instructions (callgrind, Ir), Wikidata, every 24th block (10 blocks, 690,484 letters).
+Each pass counted alone (--toggle-collect=stopwalk::pass1 / stopwalk::pass2l), built with
+RUSTFLAGS="-C target-feature=+popcnt,+bmi1,+bmi2,+lzcnt". Production on the same tool: the
+whole corpus, master's eager Cells at one thread (bzcat 1): induce_cells 1,280,552,604 Ir and
+write_cells 598,664,183 Ir over 11,090,867 letters = 115.5 and 54.0 a letter.
+
+stop k  m<=n*2^(-k/2)  points/letter  tail share of steps  word bytes kept  pass1 /pt  /letter  pass2 /pt  /letter
+ 6      n/8            1.628          0.254                0.529            26.8       43.6     77.6       126.3
+ 8      n/16           0.811          0.192                0.628            27.3       22.2     118.6      96.1
+10      n/32           0.407          0.133                0.743            28.9       11.8     191.5      78.0
+12      n/64           0.204          0.086                0.833            31.4        6.4     326.5      66.5
+
+Saved a letter = tail x 115.5 (the eager cell's cost; the lazy average 181 would add 0.254..0.086 x 65.5) + 54.0 (Cells' writer).

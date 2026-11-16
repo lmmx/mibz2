@@ -72,6 +72,12 @@ dose = []
 # trimmed to the scopes and the software pass (LOG 6893084445). Retain while a Cells phase
 # study is open; remove at the first release review with none
 phase-counters = []
+# Research: the shipped lazy Cells kernel's induction recorded block by block, steps and
+# words, checked against a safe replay and the kernel's output (src/itrace.rs,
+# examples/induction_trace.rs; #145, QUEUED 6915302968), for MONODROMY's Beyond Rauzy–Veech
+# programme. Retain while that programme reads induction records; remove at the first release
+# review after it closes
+induction-trace = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -116,6 +122,10 @@ required-features = ["trace"]
 [[example]]
 name = "wait_audit"
 required-features = ["wait-stats"]
+
+[[example]]
+name = "induction_trace"
+required-features = ["induction-trace"]
 
 [[example]]
 name = "lever_counts"

@@ -34,6 +34,23 @@ and reads MODE.md first on every run.
   - It is written only by the Observer, by direct commit, never through a PR.
 - **Experiment PRs** go into master, and their checkpoints go to the inboxes.
 
+## 1a. Waking a Claude Code session
+
+Some roles run as Claude Code sessions, not Work tasks. Today these are the Pathfinder and MONODROMY. A post on #145 or in an inbox does **not** wake such a session: an idle session sees nothing until something arrives in its own notification queue.
+
+- **The wake is a direct message.** Use the `send_message` tool of the Claude Code Remote MCP server, addressed to the role's session id. A message to an idle session wakes it: it reads its notifications and resumes. A busy session gets the message at its next turn.
+- **The post is still the record.** The assignment, HANDOFF, REVIEW or question goes on #145 (or the inbox) first, routed and verified as in §2. The direct message only points to it: what is waiting, by comment id, and one line on why.
+- **Who wakes whom:**
+  - The Coordinator wakes any Claude session that has work waiting on it, on every wake when it sees one.
+  - A Claude role that posts something addressed to another Claude role wakes it the same way: the Pathfinder answering MONODROMY's HANDOFF, say, or MONODROMY answering the Pathfinder's format question.
+  - Nobody asks Louis to relay. He is never the notification mechanism (§5).
+- **Finding the session:** use `list_sessions` (with `mine`), and match the role by its session title. The current sessions are:
+  - the Pathfinder: `session_0187sPR5xEL3m1bFakmPHi3P` ("Agent swarm breakthrough with Fable 5.2");
+  - MONODROMY: `session_0187sPR6VfS2exgM79Mtua39` ("Burrows–Wheeler inversion mathematics").
+
+  If a role moves to a new session, the Coordinator updates this list.
+- **Not for Work tasks or Codex.** The Optimiser, Guardian, Researcher and Observer are woken by their inbox PR's webhook (§1). Codex (#363) still needs a manual launch.
+
 ## 2. Dispatch: one assignment in flight per role
 
 - **When a role is busy:** while any of its inbox comments after its offset is not marked
@@ -289,7 +306,32 @@ STOP, NO GAIN or INCONCLUSIVE, the Coordinator, in the same wake:
    Coordinator parks the line, with its reopening condition, and tells Louis in the LOG. Louis
    may reopen it.
 
-**Lines this applies to now:** run-fed construction of the navigation table from compressed
+### 11a. A failed gate goes back to its author, term by term
+
+Stop-and-walk, 16 November 2026:
+1. MONODROMY modelled it, and the Pathfinder built it.
+2. The build failed its gate: +97 instructions a letter against +20 (REVIEW 6916500604).
+3. The Pathfinder's report named each term where the model and the kernel differed. The
+   stop cost +18 a cell. Pass 2 cost 104 a letter, not 78.
+4. The Coordinator's LOG put exactly those two terms back to MONODROMY as the reopening
+   question (LOG 6916535874).
+5. Fifteen minutes later, MONODROMY had removed both:
+   - a stop on the budget counter the kernel already decrements;
+   - a one-lane writer that expands each word once.
+
+   Its prototype came in at about −20 a letter and 33% fewer word bytes (HANDOFF 6916839849).
+
+So, for any arm built from a model, whoever proposed it:
+1. **The builder's failed-gate report lists the divergences:** each term of the model against
+   what the build measured, the largest first. A failure without that list is not a finished
+   report.
+2. **In the same wake, the Coordinator sends that list to the arm's author** as the reopening
+   question: "which construction removes these terms?" It goes to the author first, beside
+   the Optimiser and the Researcher of §11.
+3. **The author gets one reopening round.** It returns a construction with its own count, or
+   says none exists. A reopened arm is built and gated like a new one.
+
+**Lines §11 and §11a apply to now:** stop-and-walk (#485, HANDOFF 6916839849); run-fed construction of the navigation table from compressed
 runs (the posts of 8 November, #266, #269, the run-fed leader).
 
 ## History
