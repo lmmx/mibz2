@@ -1,0 +1,92 @@
+//! The block's square-tiled surface: n squares (the rows), r(x) = x + 1 mod n to the right,
+//! u(x) = LF(x) above. Its cone points (cycles of the commutator), genus, and cylinder
+//! decompositions in the directions of u r^k (k = -3..3) and r u^k, against the right end's S.
+//!   origami FILE.bz2 [EVERY] [MIN_ROWS]
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+
+fn cycles(n: usize, f: impl Fn(usize) -> usize) -> (usize, usize, usize) {
+    // (number of cycles, longest, number of fixed points)
+    let mut seen = vec![false; n];
+    let (mut c, mut longest, mut fixed) = (0, 0, 0);
+    for s in 0..n {
+        if seen[s] { continue; }
+        let (mut x, mut len) = (s, 0);
+        while !seen[x] { seen[x] = true; x = f(x); len += 1; }
+        c += 1; longest = longest.max(len); if len == 1 { fixed += 1; }
+    }
+    (c, longest, fixed)
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&args[1]).unwrap();
+    let every: usize = args.get(2).map_or(1, |s| s.parse().unwrap());
+    let min: usize = args.get(3).map_or(65536, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+    let mut syms = Vec::new();
+    let mut i = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        if ll.len() >= min {
+            if i % every == 0 { run(i, &ll); }
+            i += 1;
+        }
+        syms = b.syms;
+    }
+}
+
+fn run(blk: usize, ll: &[u8]) {
+    let n = ll.len();
+    let mut c = [0usize; 257];
+    for &b in ll { c[b as usize + 1] += 1; }
+    for j in 0..256 { c[j + 1] += c[j]; }
+    let mut lf = vec![0u32; n];
+    for (j, &b) in ll.iter().enumerate() { lf[j] = c[b as usize] as u32; c[b as usize] += 1; }
+    let mut inv = vec![0u32; n];
+    for j in 0..n { inv[lf[j] as usize] = j as u32; }
+    let runs = 1 + (1..n).filter(|&j| ll[j] != ll[j - 1]).count();
+    let r = |x: usize| if x + 1 == n { 0 } else { x + 1 };
+    let rinv = |x: usize| if x == 0 { n - 1 } else { x - 1 };
+    let u = |x: usize| lf[x] as usize;
+    let uinv = |x: usize| inv[x] as usize;
+    // commutator: go right, up, left, down; a square it fixes is a regular corner
+    let comm = |x: usize| uinv(rinv(u(r(x))));
+    let (cc, cl, cf) = cycles(n, comm);
+    // cone points: the commutator's cycles of length >= 2, each of angle 2 pi len; 2g - 2 = sum (len - 1)
+    let mut seen = vec![false; n];
+    let (mut excess, mut cones) = (0usize, 0usize);
+    for s in 0..n {
+        if seen[s] { continue; }
+        let (mut x, mut len) = (s, 0);
+        while !seen[x] { seen[x] = true; x = comm(x); len += 1; }
+        if len >= 2 { cones += 1; excess += len - 1; }
+    }
+    let genus = (excess + 2) / 2;
+    // sigma on runs: alpha -> the previous run with the byte of the run after alpha (or, if
+    // that run is its byte's first, the last run of the largest smaller byte); cycles of
+    // length >= 2 should be the cone points
+    let (mut rb, mut rstart) = (Vec::new(), Vec::new());
+    for j in 0..n { if j == 0 || ll[j] != ll[j - 1] { rb.push(ll[j]); rstart.push(j); } }
+    let nr = rb.len();
+    // bottom order of runs: by (byte, index); prev in that order
+    let mut ord: Vec<usize> = (0..nr).collect();
+    ord.sort_by_key(|&a| (rb[a], a));
+    let mut pos = vec![0usize; nr];
+    for (q, &a) in ord.iter().enumerate() { pos[a] = q; }
+    let sigma = |a: usize| { let b = (a + 1) % nr; ord[(pos[b] + nr - 1) % nr] };
+    let mut seen2 = vec![false; nr];
+    let mut sc = 0usize;
+    for s0 in 0..nr { if seen2[s0] { continue; } let (mut x, mut len) = (s0, 0); while !seen2[x] { seen2[x] = true; x = sigma(x); len += 1; } if len >= 2 { sc += 1; } }
+    let mut dirs = Vec::new();
+    for kk in [-3i64, -2, -1, 1, 2, 3] {
+        // direction (k, 1): one square up, k squares right: x -> u(r^k(x))
+        let sh = |x: usize| ((x as i64 + kk).rem_euclid(n as i64)) as usize;
+        let (a, b, _) = cycles(n, |x| u(sh(x)));
+        dirs.push(format!("[{kk},{a},{b}]"));
+    }
+    let (vu, vl, _) = cycles(n, u);
+    println!("{{\"block\":{blk},\"n\":{n},\"r\":{runs},\"comm_cycles\":{cc},\"comm_longest\":{cl},\"comm_fixed\":{cf},\"cones\":{cones},\"genus\":{genus},\"sigma_cycles\":{sc},\"vertical\":[{vu},{vl}],\"dirs\":[{}]}}", dirs.join(","));
+}
