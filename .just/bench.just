@@ -227,6 +227,88 @@ bench-pmu-probe *args:
 # the console says which; both arms run under the same spinner, the pairing untouched. Each
 # held run's record carries `held_spinner`. HOLD_CPU=off turns it off; HOLD_CPU=N holds CPU N.
 
+# The 0.5.1 split (#145 QUEUED 6916536279, its rule posted there before the data): which of
+# 0.5.1's two decoder merges carries its +7% at 10 to 20 threads on the i9. v0.5.0 against
+# #462 (workers with lazy letters at 10 threads, teams only past the cores) against #468
+# (lazy workers, one a core past the cores; it decodes as v0.5.1), paired and interleaved
+# as the release-scaling run is, on the Wikidata sample. Then, lower priority, v0.2.9
+# against v0.3.0 (#383, Cells) and v0.3.2 against v0.3.3 (#414) at 1 and 4 threads, where
+# the i9 saw +15% and +4% at 1 thread and CI about 0. Each build decodes with its own library
+# (`ab run`'s `mibz2@EXE` arms, this commit's harness driving them). Beside the timed runs,
+# untimed: each build's instructions and LLC load misses per output byte under perf
+# (`bench/split_051.py counters`: as this user, else `sudo -n`, else recorded as not
+# counted). The held spinner as the release-scaling run has it (runs of 10 threads or
+# fewer); the report says how the 10-thread cell is read. A diagnostic: it changes no
+# default.
+#   just bench-split-051
+bench-split-051 ROUNDS="10" THREADS="8,9,10,12,16,20" OLD_THREADS="1,4" REPS="3":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    B=$PWD/target/split-051
+    mkdir -p "$B"
+    O=$B/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-split-051 (#145 QUEUED 6916536279, its rule posted there before the data): v0.5.0, #462 and #468 at {{THREADS}} threads; then v0.2.9 against v0.3.0 and v0.3.2 against v0.3.3 at {{OLD_THREADS}}; {{ROUNDS}} paired rounds, at $(git rev-parse HEAD)"
+    git rev-parse HEAD > "$O/commit.txt"
+    # the builds, each at its exact commit, in a worktree of its own (kept between attempts)
+    builds="v0.5.0=c3ceea21b0ac449674ac7807e95c02d9bdc489c7 pr462=ae740d3d1ed9a7879d94f776125b484c21f0113a pr468=ee38d2ae71d70889aad4f777efb884f80a96e5c5 v0.2.9=b65b2aa54488f072cf005b8fe62461c32e6ef083 v0.3.0=1ae29e62002f60ecf80d0a487f2c7cf4cdcda383 v0.3.2=42c2aa6e7f7a1ab543f8453a71836f342c41f664 v0.3.3=1244d1a995efb467afcaf3202e5be370e8952936"
+    git fetch -q origin '+refs/tags/v*:refs/tags/v*' || true
+    git fetch -q origin master 2>/dev/null || true
+    for b in $builds; do
+      label=${b%%=*}; rev=$(git rev-parse "${b#*=}^{commit}")
+      d=$B/build-$label
+      if [ -d "$d" ] && [ "$(git -C "$d" rev-parse HEAD)" != "$rev" ]; then
+        git worktree remove --force "$d"
+      fi
+      [ -d "$d" ] || git worktree add -q --detach "$d" "$rev"
+      echo "build $label: $rev"
+      echo "$label $rev" >> "$O/builds.txt"
+      (cd "$d" && cargo build -q --release --example ab)
+    done
+    exe() { echo "$B/build-$1/target/release/examples/ab"; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$B/wikidata.bz2"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    if [ "$hold_cpu" = off ]; then
+      echo "bench-split-051: held spinner off (HOLD_CPU=off)"
+    else
+      hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+      echo "bench-split-051: held spinner on ($hold_cpu) around runs of 10 threads or fewer"
+    fi
+    # the split: three builds, paired and interleaved
+    "$AB" run "$O/runs.jsonl" --arms "mibz2@$(exe v0.5.0),mibz2@$(exe pr462),mibz2@$(exe pr468)" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$B/wikidata.bz2"
+    "$AB" summary "$O/runs.jsonl" --ref "mibz2@$(exe v0.5.0)" > "$O/summary-v0.5.0.txt"
+    "$AB" summary "$O/runs.jsonl" --ref "mibz2@$(exe pr462)" > "$O/summary-pr462.txt"
+    python3 bench/split_051.py counters --arm "v0.5.0=$(exe v0.5.0)" --arm "pr462=$(exe pr462)" \
+      --arm "pr468=$(exe pr468)" --threads "{{THREADS}}" --file "$B/wikidata.bz2" \
+      --reps {{REPS}} --out "$O/counters.jsonl" \
+      || echo "bench-split-051: the counters failed; the timed runs stand without them"
+    python3 bench/split_051.py report "$O/runs.jsonl" --counters "$O/counters.jsonl" \
+      --step v0.5.0:pr462 --step pr462:pr468 --total v0.5.0:pr468 --judge 10,12,16,20 \
+      | tee "$O/report.txt" || echo "bench-split-051: the report is not valid (report.txt says why)"
+    # lower priority: the CI-against-i9 gap, two older steps at few threads
+    "$AB" run "$O/older.jsonl" --arms "mibz2@$(exe v0.2.9),mibz2@$(exe v0.3.0),mibz2@$(exe v0.3.2),mibz2@$(exe v0.3.3)" \
+      --threads "{{OLD_THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$B/wikidata.bz2"
+    python3 bench/split_051.py counters --arm "v0.2.9=$(exe v0.2.9)" --arm "v0.3.0=$(exe v0.3.0)" \
+      --arm "v0.3.2=$(exe v0.3.2)" --arm "v0.3.3=$(exe v0.3.3)" --threads "{{OLD_THREADS}}" \
+      --file "$B/wikidata.bz2" --reps {{REPS}} --out "$O/older-counters.jsonl" \
+      || echo "bench-split-051: the older counters failed; the timed runs stand without them"
+    python3 bench/split_051.py report "$O/older.jsonl" --counters "$O/older-counters.jsonl" \
+      --step v0.2.9:v0.3.0 --step v0.3.2:v0.3.3 | tee "$O/older-report.txt" \
+      || echo "bench-split-051: the older report is not valid (older-report.txt says why)"
+    bash bench/bundle.sh "$O"
+
 # Two releases and lbzip2 on this machine, up to its full thread count
 bench-release-scaling NEW="" OLD="" ROUNDS="10" THREADS="" *FILES="":
     #!/usr/bin/env bash

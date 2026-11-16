@@ -37,6 +37,21 @@ jobs:
         run: |
           cargo test --features phase-counters --lib phase::
           cargo test --features phase-counters --test phase --test phase_off
+      # the 0.5.1 split's reading (`just bench-split-051`), on a made-up run: a step attributed
+      # where its paired interval excludes 1, the flag where none is at the judged counts, and
+      # a run whose builds' outputs differ not read
+      - name: The 0.5.1 split's reading (made-up run)
+        run: |
+          r=bench/split_051_example_runs.jsonl
+          python3 bench/split_051.py report $r --step v0.5.0:pr462 --step pr462:pr468 --total v0.5.0:pr468 --judge 10,20 | tee split.txt
+          grep -q 'v0.5.0 -> pr462: 0.9498 \[0.9485, 0.9511\] over 5 rounds \*' split.txt
+          grep -q 'pr462 -> pr468: 0.9298 \[0.9286, 0.9311\] over 5 rounds \*' split.txt
+          ! grep -q 'FLAG' split.txt
+          python3 bench/split_051.py report $r --step v0.5.0:pr462 --step pr462:pr468 --total v0.5.0:pr468 --judge 12 | grep -q 'No judged thread count'
+          python3 bench/split_051.py report <(grep -v '"threads": 20' $r) --step v0.5.0:pr462 --step pr462:pr468 --total v0.5.0:pr468 --judge 20,10 | grep -q 'FLAG' && exit 1 || true
+          python3 bench/split_051.py report <(grep '"threads": 20' $r | sed 's/"wall": 0.93[0-9]*/"wall": 1.0/') --step v0.5.0:pr462 --step pr462:pr468 --total v0.5.0:pr468 --judge 20 | grep -q 'FLAG: no step is attributed at \[20\]'
+          sed '0,/"hash": "00000000000003e8"/s//"hash": "00000000000003e9"/' $r > split-differ.jsonl
+          ! python3 bench/split_051.py report split-differ.jsonl --step v0.5.0:pr462
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
