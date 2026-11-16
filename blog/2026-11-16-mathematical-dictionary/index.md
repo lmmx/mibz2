@@ -10,7 +10,25 @@ mibz2, our bzip2 decoder, inverts each block's Burrows–Wheeler transform with 
 
 **The setting, in brief.** bzip2 stores a block as the last column \\(L\\) of its sorted rotations, the Burrows–Wheeler transform (BWT), together with the row that holds the original text. A map called **LF** sends each row to the row of the rotation one byte earlier. Following LF from that row reads the block backwards, one byte per step. A **run** is a stretch of equal bytes in \\(L\\), and LF shifts all of a run's rows by the same amount. So LF is an **interval exchange**: a handful of intervals, each moved whole to a new place. [The mathematical structure of inverse-BWT navigation](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation/index.md>) sets out that structure. [A new way back from the BWT](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>) shows Cells shrinking the exchange step by step on a three-byte block, and the [technical companion](<https://lmmx.github.io/mibz2/blog/2026-11-12-rauzy-technical-companion/index.md>) describes its memory layout.
 
+> [!NOTE]
+>
+> **[Wikipedia: Interval exchange transformation](<https://en.wikipedia.org/wiki/Interval_exchange_transformation>)**
+>
+> An *interval exchange transformation* cuts an interval into pieces and puts them back in a different order, each piece moved whole, without stretching it. Here, LF does exactly this to the block's rows, one piece per run. Cells repeatedly shrinks the exchange onto a smaller interval, a step known as Rauzy induction, which has no Wikipedia article of its own.
+
 **The simplest correct picture.** Cells shrinks LF's interval exchange from its right-hand end. At each stage it keeps a smaller set of rows. For each interval of kept rows it holds a **return tower**: the rows the LF path passes through before it comes back to a kept row. A tower has a **width**, the number of kept rows at its base, and a **height**, the number of LF steps from its base back to a kept row. It also has a **word**, the bytes those steps read, stored in forward text order. The towers' volumes, width times height, always add up to the block's rows. When the tower that holds bzip2's starting row closes on itself, its word is the block's text, and the starting row says where the text begins in it.
+
+> [!NOTE]
+>
+> **[Wikipedia: Rokhlin lemma](<https://en.wikipedia.org/wiki/Rokhlin_lemma>)**
+>
+> A *Kakutani–Rokhlin tower* is a base set stacked with its successive images under a map, like the floors of a building. The Rokhlin lemma says that many systems can be cut almost entirely into tall towers, with a small piece left over. Here, the return towers are exact and finite: they cover the rows they describe with nothing left over.
+
+> [!NOTE]
+>
+> **[Wikipedia: Free monoid](<https://en.wikipedia.org/wiki/Free_monoid>)**
+>
+> A *free monoid* is the set of all finite strings over an alphabet, the empty string included, combined by concatenation. Here, every word is an element of it: the bytes of one return path, in forward text order.
 
 **What we found.**
 
@@ -40,6 +58,18 @@ and the LF permutation
 
 \\\[\\pi(x)=C(L\[x\])+\\\#\\{i\<x:L\[i\]=L\[x\]\\}.\\\]
 
+> [!NOTE]
+>
+> **[Wikipedia: Alphabet (formal languages)](<https://en.wikipedia.org/wiki/Alphabet_(formal_languages)>)**
+>
+> An *alphabet* is the set of symbols that strings are written in. Here it is \\(\\Sigma\\), the 256 possible byte values.
+
+> [!NOTE]
+>
+> **[Wikipedia: Permutation](<https://en.wikipedia.org/wiki/Permutation>)**
+>
+> A *permutation* is a rearrangement of a finite set: each element is sent to exactly one place, and no place is left empty. Here, LF permutes the block's rows, and following it from one row reads the text backwards.
+
 The output the reference inversion produces is
 
 \\\[O\[k\]=L\\!\\left\[\\pi^{-(k+1)}(r\_\*)\\right\],\\qquad 0\\le k\<n.\\\]
@@ -63,6 +93,12 @@ At an intermediate stage the kept rows are
 The active permutation is the first-return map
 
 \\\[T\_m(x)=\\pi^{h\_m(x)}(x),\\qquad h\_m(x)=\\min\\{j\>0:\\pi^j(x)\\in D\_m\\}.\\\]
+
+> [!NOTE]
+>
+> **[Wikipedia: Poincaré map](<https://en.wikipedia.org/wiki/Poincaré_map>)**
+>
+> A *first-return map*, also called a Poincaré map, follows a system from a point of a chosen section until it first comes back to that section, and sends the point to where it lands; the number of steps taken is the return time. Wikipedia's article treats continuous flows. Here, the system is LF, the section is the kept rows, the return time is a tower's height, and the smaller map on the section is the *induced system*.
 
 The kept rows are cut into intervals \\(I\_\\alpha\\) on which the return path is the same. Each interval has
 
@@ -92,6 +128,12 @@ They form a finite return tower, also called a Kakutani–Rokhlin tower. Its bas
 
 \\\[X\_m=\\bigcup\_{j\\in\\mathbb Z}\\pi^j(D\_m).\\\]
 
+> [!NOTE]
+>
+> **[Wikipedia: Orbit (dynamics)](<https://en.wikipedia.org/wiki/Orbit_(dynamics)>)**
+>
+> An *orbit* is the set of states a system passes through from a starting point, by applying its map again and again. A permutation of finitely many rows has only cycles for orbits. Here, the *saturation* of the kept rows is the union of every LF cycle that meets them.
+
 Every point of \\(X\_m\\) has a unique most recent visit to \\(D\_m\\) before it, and that visit gives its base point and its level. So
 
 \\\[\\boxed{\\sum\_\\alpha \\lambda\_\\alpha h\_\\alpha=|X\_m|.}\\tag{2}\\\]
@@ -114,7 +156,19 @@ is a bijection onto \\(X\_m\\), and
 
 \\\[\\eta\\circ\\widehat T\_m=\\pi\\circ\\eta.\\tag{3}\\\]
 
+> [!NOTE]
+>
+> **[Wikipedia: Suspension (dynamical systems)](<https://en.wikipedia.org/wiki/Suspension_(dynamical_systems)>)**
+>
+> A *suspension* turns a map into a flow: each point rises for a while, set by a "roof" function, before it jumps to its image. Wikipedia describes the continuous version. The *discrete suspension* here does the same in whole steps, by stacking each kept row with the intermediate rows of its return path.
+
 The towers, expanded, are conjugate to the original permutation on its saturation. The smaller map \\(T\_m\\) on the bases is an induced system: it has fewer states and variable return times. Our [notes on itinerary certificates](<https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-certificates.md>) (§3) described each step as a conjugacy of the smaller map to the larger one. That overstated it: the conjugacy holds once the tower levels are added, as (3) states.
+
+> [!NOTE]
+>
+> **[Wikipedia: Topological conjugacy](<https://en.wikipedia.org/wiki/Topological_conjugacy>)**
+>
+> A *conjugacy* is a change of coordinates that turns one system into another step for step, so that the two are the same system described differently. Here, the expanded towers are conjugate to LF on its saturation; the smaller induced map is not, until the tower levels are put back.
 
 ### 1.4 One step
 
@@ -171,13 +225,49 @@ Each term of our working vocabulary names one of the objects above. Some name mo
 
 The code says "cell" because a finished return piece is written into the records of both orders, while what remains of each interval stays at the fronts. That is a representation of the induction above, which the [technical companion](<https://lmmx.github.io/mibz2/blog/2026-11-12-rauzy-technical-companion/#4-how-the-cells-algorithm-implements-that-mathematics>) describes in detail.
 
+> [!NOTE]
+>
+> **[Wikipedia: CW complex](<https://en.wikipedia.org/wiki/CW_complex>)**
+>
+> A *CW complex* is a space built by gluing cells together: points (0-cells), then edges (1-cells), then discs and their higher-dimensional analogues. Our "cells" are not such cells. In section 3, though, the rows are 0-cells and the LF transitions are 1-cells.
+
+> [!NOTE]
+>
+> **[Wikipedia: Formal grammar](<https://en.wikipedia.org/wiki/Formal_grammar>)**
+>
+> A *formal grammar* is a set of rewriting rules, called *productions*, each saying how a symbol may be replaced by a string of other symbols. Here, every rule has the form \\(N\\to UV\\): one symbol stands for the concatenation of two others.
+
+> [!NOTE]
+>
+> **[Wikipedia: Straight-line grammar](<https://en.wikipedia.org/wiki/Straight-line_grammar>)**
+>
+> A *straight-line grammar*, or straight-line program (SLP), is a grammar that produces exactly one string, never branching or looping. Repeated pieces are named once and reused, so the grammar can be far smaller than its string. Here, Cells' rules form one.
+
+> [!NOTE]
+>
+> **[Wikipedia: Directed acyclic graph](<https://en.wikipedia.org/wiki/Directed_acyclic_graph>)**
+>
+> A *directed acyclic graph* (DAG) is a set of nodes joined by one-way arrows, with no path that leads back to where it started. Here, each rule points to its two children, and children shared between rules make the grammar a DAG rather than a tree.
+
 ### Substitutions, cylinders and grammar nodes
 
 Three further descriptions are useful.
 
 **A finite S-adic presentation.** Each stage defines a substitution from the new alphabet of intervals into the previous one. Composed, they give a finite directive sequence of return-word substitutions. The stored object is most directly called an SLP. Versions matter: an assignment such as \\(w\_B\\leftarrow w\_Aw\_B\\) creates a new node that refers to the old values, so the grammar has no cycles.
 
+> [!NOTE]
+>
+> **[Wikipedia: Symbolic dynamics](<https://en.wikipedia.org/wiki/Symbolic_dynamics>)**
+>
+> *Symbolic dynamics* studies a system through *itineraries*: for each point, the sequence of symbols naming the regions it visits. An *S-adic presentation*, which has no article of its own, builds such sequences by composing a series of substitutions, each replacing every symbol by a word. Here, each stage of the induction is one substitution.
+
 **Cylinder sets.** A base interval lies inside a cylinder of constant return path. It need not be the largest cylinder for its byte word. Isolating the starting row deliberately cuts intervals finer, and equal byte words need not mean equal paths through the rows.
+
+> [!NOTE]
+>
+> **[Wikipedia: Cylinder set](<https://en.wikipedia.org/wiki/Cylinder_set>)**
+>
+> A *cylinder set* is the set of all sequences that agree on a fixed, finite stretch of positions, for instance all those whose first three symbols are given. Here, a cylinder is the set of rows whose return path follows a given itinerary.
 
 **Occurrence coordinates.** A grammar node can occur many times in the output. The writer's "first place" for a node is the smallest position of one of its occurrences. It is not a position that belongs to the string value itself.
 
@@ -187,15 +277,39 @@ For an unrotated expansion of the root, the first places come from a min-plus co
 
 That is why the writer passes over the rules in reverse order. Its next pass writes out factors and copies repeated occurrences, and its handling of the marked path adds the output phase (construction journal, §§3.2 and 3.5).
 
+> [!NOTE]
+>
+> **[Wikipedia: Tropical semiring](<https://en.wikipedia.org/wiki/Tropical_semiring>)**
+>
+> The *tropical semiring* replaces ordinary addition by taking the minimum, and ordinary multiplication by addition, so that a "sum of products" becomes a "smallest total". Here, rule (5) is such a *min-plus* computation: a node's first place is the smallest of the places its parents offer.
+
 ## 3\. Is the induction discrete Morse theory?
 
 ### What Ghrist states
 
 In §8.8 (pp. 205–206), a discrete vector field pairs cells \\((\\sigma,\\tau)\\), with \\(\\sigma\\) a face of \\(\\tau\\) of one dimension lower. Unpaired cells are critical. The field is a gradient when it has no periodic alternating flowline. The discrete flow is
 
+> [!NOTE]
+>
+> **[Wikipedia: Discrete Morse theory](<https://en.wikipedia.org/wiki/Discrete_Morse_theory>)**
+>
+> *Discrete Morse theory* simplifies a space built from cells by pairing cells off, each with a neighbour one dimension higher, and keeping only the unpaired, *critical* cells, without changing its homology. The pairing is a *discrete vector field*, and following it gives *gradient paths*. Here, each removed row pairs with its outgoing LF edge, and the gradient path from a kept row is its return path.
+
 \\\[\\Phi=\\operatorname{Id}+\\partial V+V\\partial,\\\]
 
 and Theorem 8.24 (p. 206) identifies the resulting Morse homology with the original cellular homology. These are constructions on chain modules, with signed or mod-two counts of paths.
+
+> [!NOTE]
+>
+> **[Wikipedia: Homology (mathematics)](<https://en.wikipedia.org/wiki/Homology_(mathematics)>)**
+>
+> *Homology* counts the holes of a space in each dimension: its connected pieces, its loops, its enclosed cavities and so on. *Cellular homology* computes it from the cells of a complex. Here, every LF cycle is a circle, one piece with one loop, and a valid reduction must keep both.
+
+> [!NOTE]
+>
+> **[Wikipedia: Chain complex](<https://en.wikipedia.org/wiki/Chain_complex>)**
+>
+> A *chain complex* is a sequence of *chain modules*, here formal sums of cells, linked by boundary maps that send each cell to its boundary; applying a boundary map twice gives zero. Homology is read off from it. Here, the *Morse boundary* in the table below is the boundary map of the reduced complex.
 
 ### The exact construction for LF
 
@@ -231,6 +345,12 @@ So it is legitimate to speak of Morse return paths decorated with word labels. "
 
 Two further qualifications. Suppressing vertices of degree two on a circle is a graph contraction, a Morse reduction. It is not literally a sequence of collapses through free faces inside the original circle, whose vertices each have two incident edges. And discarding a closed LF component without the starting row removes a whole circle, which does not preserve the homology of the full orbit graph. The Morse statement applies component by component to the components still represented.
 
+> [!NOTE]
+>
+> **[Wikipedia: Edge contraction](<https://en.wikipedia.org/wiki/Edge_contraction>)**
+>
+> An *edge contraction* removes an edge from a graph and merges its two ends into one vertex. Here, suppressing a removed row on an LF circle contracts one edge, and repeated contractions shorten the circle without breaking it.
+
 ### What the theorem adds
 
 It gives a valid statement that homology is preserved, and it forces at least one critical vertex and one critical edge on every circle: a circle cannot be reduced to a point with its homology intact. It does not establish that the bytes are right, the output phase, the grammar's size, or the best order of contraction. Those depend on the labelled return invariant (1).
@@ -245,7 +365,31 @@ In §11.9 (p. 286), a cellular sheaf is a functor
 
 \\\[\\mathcal F:\\operatorname{Face}(X)\\longrightarrow\\mathcal C.\\\]
 
+> [!NOTE]
+>
+> **[Wikipedia: Sheaf (mathematics)](<https://en.wikipedia.org/wiki/Sheaf_(mathematics)>)**
+>
+> A *sheaf* attaches data to the pieces of a space, with rules saying how the data on overlapping or adjacent pieces must agree; a *global section* is a choice of data everywhere that obeys every rule. A *cellular sheaf* does this on the cells of a complex, with a *stalk* of data on each cell and a map for each face. Here, section 4 asks which sheaf, if any, our words form.
+
+> [!NOTE]
+>
+> **[Wikipedia: Functor](<https://en.wikipedia.org/wiki/Functor>)**
+>
+> A *functor* is a map between categories that sends objects to objects and arrows to arrows, keeping identities and composition. Here, the functor that matters sends each LF path to its word, and following two paths in turn to concatenating their words.
+
 For \\(\\mathcal C=\\mathbf{Mon}\\), the category of monoids, that requires a monoid at every cell, a monoid homomorphism for every incidence of faces, and compatibility between those homomorphisms. Equation (11.3) on the same page describes the global sections as the limit of that diagram.
+
+> [!NOTE]
+>
+> **[Wikipedia: Monoid](<https://en.wikipedia.org/wiki/Monoid>)**
+>
+> A *monoid* is a set with an associative way of combining two elements and an identity element that changes nothing. Strings under concatenation, with the empty string, form one, and so do the natural numbers under addition. A *monoid homomorphism* keeps the combining and the identity: word length is one.
+
+> [!NOTE]
+>
+> **[Wikipedia: Limit (category theory)](<https://en.wikipedia.org/wiki/Limit_(category_theory)>)**
+>
+> A *limit* of a diagram is the most general object with compatible maps to every part of it: a universal way of making all the parts agree at once. Here, the global sections of a sheaf form such a limit.
 
 A stored word is an element of a monoid. It is not itself a stalk. Our notes said that words are "free-monoid sections" of such a sheaf ([the note on Ghrist's book](<https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-ghrist.md>), §0), but they never gave the stalks and incidence maps that claim needs.
 
@@ -271,6 +415,18 @@ by \\(w\_{\\alpha(x)}\\). Along paths, these labels concatenate in forward outpu
 
 where \\(B\\Sigma^\*\\) is the category with one object, whose morphisms are words and whose composition is concatenation **in traversal order**: a path that takes \\(e\\) and then \\(f\\) is sent to \\(w\_e w\_f\\). (Under the usual convention that \\(g\\circ f\\) means "\\(f\\) first", the target is the opposite monoid \\((\\Sigma^\*)^{\\mathrm{op}}\\) instead.) It uses a monoid as a one-object category, which is a different construction from a sheaf valued in the category of monoids.
 
+> [!NOTE]
+>
+> **[Wikipedia: Free category](<https://en.wikipedia.org/wiki/Free_category>)**
+>
+> A *free category*, or path category, is built from a directed graph: its arrows are the paths in the graph, and composing two arrows means following one path and then the other. Here, the path category of the return graph is where the functor (8) starts.
+
+> [!NOTE]
+>
+> **[Wikipedia: Category (mathematics)](<https://en.wikipedia.org/wiki/Category_(mathematics)>)**
+>
+> A *category* is a collection of objects and arrows between them that can be composed, with an identity arrow on each object. A monoid is exactly a category with one object: its elements are the arrows, and combining them is composition. Here, \\(B\\Sigma^\*\\) is the monoid of words seen this way.
+
 The SLP stores compressed expressions for these path labels. Length is then a monoid homomorphism,
 
 \\\[|\\cdot|:\\Sigma^\*\\longrightarrow(\\mathbb N,+).\\\]
@@ -287,6 +443,12 @@ For the grammar itself, we can build a sheaf of sets on a bipartite incidence gr
 - the maps from a production to its edges are the matching projections;
 - the maps from a symbol to its edges are identities;
 - the terminals' values are fixed.
+
+> [!NOTE]
+>
+> **[Wikipedia: Bipartite graph](<https://en.wikipedia.org/wiki/Bipartite_graph>)**
+>
+> A *bipartite graph* has two kinds of vertices, with edges only between the kinds, never within one. Here, the kinds are the grammar's symbols and its productions, and each edge records that a symbol takes part in a production.
 
 Its global sections are the consistent evaluations of the grammar. It is an exact encoding, but it is extra formal structure, and it does not turn concatenation into a monoid homomorphism. There is also a particularly natural sheaf of positions, built in [section 5.3](<#53-the-position-sheaf>).
 
@@ -308,6 +470,12 @@ On the induced graph, orient edges in the LF direction and define
 
 This is an integer 1-cocycle. On a graph every 1-cochain is a cocycle, because there are no 2-cells, so what carries the information is its period:
 
+> [!NOTE]
+>
+> **[Wikipedia: Cocycle](<https://en.wikipedia.org/wiki/Cocycle>)**
+>
+> A *cocycle* is a *cochain*, an assignment of numbers to the edges (or higher cells) of a space, that passes a closure test; on a graph every cochain passes. A *coboundary* is a cochain of the form "value at the head minus value at the tail" for some numbers on the vertices. Here, the step lengths form a cocycle that is not a coboundary, because round the cycle they add up to \\(-d\\), not zero.
+
 \\\[\\langle a,\[C\_D\]\\rangle=-d.\\tag{10}\\\]
 
 It follows that \\(a\\) is not the coboundary of an integer-valued or real-valued position function on the closed cycle. Modulo \\(d\\), though, it is exact:
@@ -316,7 +484,31 @@ It follows that \\(a\\) is not the coboundary of an integer-valued or real-value
 
 Here \\(p(x)\\) is the place in the text just after the word of \\(x\\). The scaled cocycle \\(a/d\\) is a real cocycle with integral period \\(-1\\), so it integrates to a coordinate in \\(\\mathbb R/\\mathbb Z\\), and one marked occurrence fixes the additive phase. This is the exact link to §7.13 (pp. 185–186), and in particular to the correspondence between integral first cohomology and maps to the circle on p. 186.
 
+> [!NOTE]
+>
+> **[Wikipedia: Cohomology](<https://en.wikipedia.org/wiki/Cohomology>)**
+>
+> *Cohomology* measures when local data, such as a number on every edge, fail to come from one global quantity, such as a position for every vertex. The failure shows up as a nonzero total round a loop, called a *period*. Here, *integral first cohomology* classifies the ways of wrapping a space round a circle, which is how word places become circular coordinates.
+
+> [!NOTE]
+>
+> **[Wikipedia: Modular arithmetic](<https://en.wikipedia.org/wiki/Modular_arithmetic>)**
+>
+> *Modular arithmetic* is arithmetic on a clock: modulo \\(d\\), two numbers count as equal when they differ by a multiple of \\(d\\). Here, places taken modulo the cycle length \\(d\\) come back to their start after one trip round the cycle, which places as plain integers cannot.
+
+> [!NOTE]
+>
+> **[Wikipedia: Circle group](<https://en.wikipedia.org/wiki/Circle_group>)**
+>
+> The *circle group* \\(\\mathbb R/\\mathbb Z\\) is the real numbers with only the part after the decimal point kept, so that 0.9 plus 0.2 is 0.1. A coordinate with values there wraps around instead of growing. Here, places in the text divided by \\(d\\) are such *circular coordinates*.
+
 Keep the edge increments as well as the vertex coordinates. At final closure the induced graph may have one vertex and one loop, and the vertex's coordinate alone says nothing about how far the loop winds.
+
+> [!NOTE]
+>
+> **[Wikipedia: Winding number](<https://en.wikipedia.org/wiki/Winding_number>)**
+>
+> A *winding number* counts how many times a closed loop goes round a point or a circle, with direction. Here, the edge increments record how far round the circle each step goes, which a vertex's circular coordinate alone cannot show.
 
 ### 5.2 Why modulo \\(n\\) is not always correct
 
@@ -354,11 +546,23 @@ A global section satisfies
 
 which is exactly (11). These are maps of sets, or affine maps of torsors. In general they are not group or monoid homomorphisms, since translation by a nonzero constant does not preserve the identity.
 
+> [!NOTE]
+>
+> **[Wikipedia: Principal homogeneous space](<https://en.wikipedia.org/wiki/Principal_homogeneous_space>)**
+>
+> A *torsor*, also called a principal homogeneous space, is a set where differences between elements make sense but no element is singled out as zero, like positions on a line with no chosen origin. Here, the position sheaf's stalks behave as torsors: one marked occurrence chooses the origin.
+
 Sections exist precisely when the total increment round each cycle vanishes modulo the chosen modulus. One anchor fixes the remaining additive freedom on each component. With the stalks and restriction maps that were missing, the compatibility claim becomes exact.
 
 ### 5.4 What Example 7.37 contributes
 
 Example 7.37 (p. 185) comes just before the §7.13 heading. It uses the discrete Hodge decomposition of Theorem 7.34 (p. 184) to split pairwise comparison data into a gradient ranking and cyclic inconsistencies. For Cells, the relevant lesson is the obstruction to a real-valued ranking on a closed cycle with nonzero circulation.
+
+> [!NOTE]
+>
+> **[Wikipedia: Helmholtz–Hodge decomposition](<https://en.wikipedia.org/wiki/Helmholtz–Hodge_decomposition>)**
+>
+> The *Helmholtz–Hodge decomposition* splits a flow into a part that comes from a potential and parts that circulate. On a graph of pairwise comparisons, it splits the data into a global ranking plus cyclic inconsistencies; this discrete form is the *discrete Hodge decomposition* Ghrist uses. Here, the nonzero circulation of the step lengths round an LF cycle is what rules out a real-valued ranking of positions.
 
 The harmonic smoothing in §7.13 has no evident role in exact decoding. Replacing the length cocycle by a cohomologous harmonic representative keeps the winding, but in general it moves the positions given to intermediate vertices. Decoding needs the actual return lengths, not only their cohomology class.
 
@@ -399,6 +603,18 @@ The first equation undoes the subtraction of widths; the second adds return time
 
 That is a cheap algebraic check on every update. An equal step uses the corresponding rectangular incidence matrix. Either way, it states that the towers' volume is conserved, without following individual rows.
 
+> [!NOTE]
+>
+> **[Wikipedia: Elementary matrix](<https://en.wikipedia.org/wiki/Elementary_matrix>)**
+>
+> An *elementary matrix* differs from the identity matrix by a single row operation, such as adding one row to another. Here, \\(M=I+E\_{AB}\\) records one step: adding one interval's width back onto another's.
+
+> [!NOTE]
+>
+> **[Wikipedia: Transpose](<https://en.wikipedia.org/wiki/Transpose>)**
+>
+> The *transpose* of a matrix swaps its rows and columns. When widths change by a matrix and heights by its transpose, the total of width times height stays the same, the algebra that keeps a dot product fixed. Here, that total is the towers' volume.
+
 ### 6.3 Bounds on the present schedule of steps
 
 Let \\(r\_0\\) be the number of starting intervals after the starting row is isolated, so \\(r\_0\\le r+2\\) for \\(r\\) runs. Let \\(S\\) count the ordinary concatenating steps. When LF is one \\(n\\)-cycle,
@@ -419,6 +635,12 @@ steps. After the first subtraction the widths are \\(k\\) and \\(1\\), and repea
 
 The same family shows why long words must stay compressed. Successive return words grow linearly, so storing all of them literally can take quadratic total bytes.
 
+> [!NOTE]
+>
+> **[Wikipedia: Big O notation](<https://en.wikipedia.org/wiki/Big_O_notation>)**
+>
+> *Big O notation* describes how a quantity grows while ignoring constant factors: \\(O(f)\\) means at most a constant times \\(f\\) for large inputs, and the related \\(\\Omega(f)\\) means at least. Here, it states bounds on the number of steps and on the work of producing the output.
+
 ### 6.4 Some batching identities are proved; their speed benefit is not
 
 For \\(q\\) consecutive strict top wins by the same pair,
@@ -430,6 +652,12 @@ For \\(q\\) consecutive strict bottom wins,
 \\\[\\lambda\_B'=\\lambda\_B-q\\lambda\_A,\\qquad w\_A'=w\_Aw\_B^q.\\tag{16}\\\]
 
 These identities are exact. Binary powering can represent \\(w^q\\) with \\(O(\\log q)\\) extra SLP rules. Changes of order, the boundaries of equal steps, and the transport of the marker must also be composed correctly.
+
+> [!NOTE]
+>
+> **[Wikipedia: Exponentiation by squaring](<https://en.wikipedia.org/wiki/Exponentiation_by_squaring>)**
+>
+> *Exponentiation by squaring* computes a power \\(x^q\\) with about \\(\\log\_2 q\\) multiplications, by squaring repeatedly and combining the squares that the binary digits of \\(q\\) pick out. Here, the same trick builds a word repeated \\(q\\) times with \\(O(\\log q)\\) grammar rules.
 
 **H.** Whether such acceleration speeds up the actual decoder depends on how often suitable streaks occur and what finding them costs. The identities do show that the topology does not force one operation per elementary subtraction.
 
@@ -490,3 +718,12 @@ What comes next follows from the status of each part. The two sheaves of section
 - The construction and its proof: [the construction's research journal](<https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-10-rauzy-veech.md>), and the [code](<https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/src/cells.rs>).
 - Stop and walk: [the design record](<https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-16-stop-and-walk.md>) and [its reopening](<https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-16-stop-walk-reopened.md>); [the census of word lifetimes](<https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-16-words.md>).
 - In review as research pull request [\#497](<https://github.com/lmmx/mibz2/pull/497>): [splitting the walk](<https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-two-chains.md>), [the compact tail](<https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-compact-tail.md>), [itinerary certificates](<https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-certificates.md>) and [the note on Ghrist's book](<https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-ghrist.md>).
+
+**Further reading,** in a suggested order:
+
+1. [Interval exchange transformation](<https://en.wikipedia.org/wiki/Interval_exchange_transformation>): how LF is presented, and the setting for Rauzy-style induction.
+2. [Rokhlin lemma](<https://en.wikipedia.org/wiki/Rokhlin_lemma>): the tower viewpoint, for its construction rather than its measure theory.
+3. [Free monoid](<https://en.wikipedia.org/wiki/Free_monoid>) and [straight-line grammar](<https://en.wikipedia.org/wiki/Straight-line_grammar>): how return paths become strings, and how repeats compress.
+4. [Discrete Morse theory](<https://en.wikipedia.org/wiki/Discrete_Morse_theory>): the same reduction, seen as eliminating matched cells.
+5. [Functor](<https://en.wikipedia.org/wiki/Functor>) and [sheaf](<https://en.wikipedia.org/wiki/Sheaf_(mathematics)>): path concatenation is functorial, and compatible placements are sections of a sheaf.
+6. [Cohomology](<https://en.wikipedia.org/wiki/Cohomology>) and [cocycle](<https://en.wikipedia.org/wiki/Cocycle>): why positions are circular, and why the cycle's length matters.
