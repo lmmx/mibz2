@@ -13,9 +13,15 @@
   --bh-s7: #6250d6;
   --bh-s8: #e34948;
   --bh-old: #a3a29b;
-  /* the releases' ordinal ramp (one hue, OKLCH L 0.30 to 0.74, validated --ordinal) */
-  --bh-rel-new: #002b64;
-  --bh-rel-old: #7caeee;
+  /* the releases' ordinal ramp, oldest (0) to newest (4), mixed in OKLCH between the stops
+     (bench.js): lightness falls (OKLCH L 0.77 to 0.31) while the hue turns mustard, green,
+     teal, blue, plum. The lightest step 2.05:1 on white; 13 releases' neighbours at least
+     OKLab ΔE 5.8 (×100), 3.2 under simulated protan and deutan vision */
+  --bh-rel-0: #d7b137;
+  --bh-rel-1: #5b9f00;
+  --bh-rel-2: #007b79;
+  --bh-rel-3: #180cbc;
+  --bh-rel-4: #4e005d;
   font-variant-numeric: tabular-nums;
 }
 [data-md-color-scheme="slate"] .bh-root {
@@ -30,8 +36,14 @@
   --bh-s7: #9085e9;
   --bh-s8: #e66767;
   --bh-old: #6d6c67;
-  --bh-rel-new: #cfe9ff;
-  --bh-rel-old: #275b9b;
+  /* the dark scheme's own stops: lightness rises (L 0.48 to 0.90) while the hue turns violet,
+     blue, cyan, green, pale amber. The darkest step 2.6:1 on the slate surface; 13
+     releases' neighbours at least ΔE 6.4, 3.2 under protan and deutan */
+  --bh-rel-0: #8f00b4;
+  --bh-rel-1: #6b6aff;
+  --bh-rel-2: #00b1c3;
+  --bh-rel-3: #86c128;
+  --bh-rel-4: #ffd77c;
 }
 .bh-root .bh-controls {
   display: flex;
@@ -451,4 +463,67 @@
 }
 .bh-root .bh-end-label {
   fill: var(--bh-ink-2);
+}
+
+/* The All releases view: the newest release's line the strongest; pointing at, focusing or
+   pinning a release (bench.js, releaseLineage) fades the others */
+.bh-hero .bh-rel {
+  transition: opacity 120ms ease-out;
+}
+.bh-hero .bh-rel .bh-line {
+  stroke-width: 1.5;
+}
+.bh-hero .bh-rel.is-newest .bh-line {
+  stroke-width: 2.5;
+}
+.bh-hero .bh-rel.is-on .bh-line {
+  stroke-width: 3;
+}
+.bh-hero .bh-rel.is-dim {
+  opacity: 0.25;
+}
+.bh-hero .bh-line-hit {
+  stroke: transparent;
+  stroke-width: 10;
+  stroke-linejoin: round;
+  cursor: pointer;
+}
+.bh-hero .bh-rel .bh-pt:focus-visible .bh-hit,
+.bh-hero .bh-rel .bh-pt:hover .bh-hit {
+  fill: var(--bh-grid);
+  opacity: 0.6;
+}
+.bh-hero .bh-end {
+  cursor: pointer;
+}
+.bh-hero .bh-end-label.is-newest {
+  font-weight: 600;
+  fill: var(--md-default-fg-color);
+}
+.bh-hero .bh-raise,
+.bh-hero .bh-raise * {
+  pointer-events: none;
+}
+.md-typeset .bh-hero .bh-ws-item {
+  font: inherit;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0.35rem 0.15rem 0;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+.md-typeset .bh-hero .bh-ws-item.is-newest {
+  font-weight: 600;
+}
+.md-typeset .bh-hero .bh-ws-item.is-focus {
+  color: var(--md-default-fg-color);
+  background: color-mix(in srgb, var(--bh-grid) 55%, transparent);
+}
+.md-typeset .bh-hero .bh-ws-item[aria-pressed="true"] {
+  border-color: var(--bh-ink-2);
+  color: var(--md-default-fg-color);
 }
