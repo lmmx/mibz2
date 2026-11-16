@@ -52,9 +52,13 @@ concurrency:
 jobs:
   miri:
     runs-on: ubuntu-latest
+    # Miri is nightly's: rust-toolchain.toml's pin would otherwise win over the default the
+    # action sets, so every step here names nightly
+    env:
+      RUSTUP_TOOLCHAIN: nightly
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@nightly
+      - uses: dtolnay/rust-toolchain@nightly # not the pin: Miri needs nightly (RUSTUP_TOOLCHAIN above)
         with:
           components: miri, rust-src
       - uses: Swatinem/rust-cache@v2

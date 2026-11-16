@@ -1,0 +1,11 @@
+# The one Rust toolchain for CI, the benchmark, the release wheels and workstation runs. The
+# compiler moves the decoder's figures more than many of the effects being gated (lazy Cells'
+# induction: 219 instructions a letter under 1.97, 176 under 1.99.1), so it is pinned, and
+# bumping it is its own pull request with a benchmark run (docs/site/maintainers/development.md,
+# "The toolchain"). The workflows that install Rust name the same version, which test.yml checks.
+# The published crate and sdist leave this file out (Cargo.toml's `exclude`): downstream builds
+# use their own toolchain, from rust-version up.
+[toolchain]
+channel = "1.99.1"
+components = ["clippy", "rustfmt"]
+profile = "minimal"
