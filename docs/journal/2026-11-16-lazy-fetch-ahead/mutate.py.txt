@@ -1,0 +1,72 @@
+"""Mutation pass for the lazy induction's fetch-ahead (src/cells_lazy.rs).
+
+Each mutant is one replacement. A mutant is killed if the Cells unit tests fail on it in the
+debug profile (canaries and debug assertions on). A mutant that does not build is not a kill.
+Each row gives the reason. The first row is the tree as it is. The tree is left as it was.
+
+    mutate.py WORKTREE
+"""
+import os
+import subprocess
+import sys
+
+wt = sys.argv[1]
+LZ = "src/cells_lazy.rs"
+M = [
+    (LZ, "the bytes before the entries not set", "            out[..BPAD].fill(0);\n", ""),
+    (LZ, "the look-ahead's counters not moved on at the start", "                nt_far[c] = nt_far[c].wrapping_sub(1);\n", ""),
+    (LZ, "the top look-ahead runs before the stream's first place", "                        if AHEAD && ti >= FAR_PLACES {", "                        if AHEAD {"),
+    (LZ, "the look-ahead's counter not moved on at a place", "                            *nt_far.get_unchecked_mut(c) = (k as u32).wrapping_sub(1);\n", ""),
+    (LZ, "an untagged entry read as a slot", "((e ^ TAG) & ((e as i32 >> 31) as u32)) as usize", "(e ^ TAG) as usize"),
+    (LZ, "a tagged entry's slot read with its tag", "((e ^ TAG) & ((e as i32 >> 31) as u32)) as usize", "(e & ((e as i32 >> 31) as u32)) as usize"),
+    (LZ, "the look-ahead reaches past the bytes before the entries", "const FAR_PLACES: usize = 12;", "const FAR_PLACES: usize = 40;"),
+    (LZ, "the hinted top slot not kept to the pool", "prefetch(base.wrapping_add(top.min(top_end)));", "prefetch(base.wrapping_add(top));"),
+    (LZ, "the plan's kernel runs the fetch-ahead", "            LAZY => self.induce_lazy::<false>(budget, out),", "            LAZY => self.induce_lazy::<true>(budget, out),"),
+]
+env = dict(os.environ, CARGO_TARGET_DIR=os.path.join(wt, "target"))
+
+
+def tests():
+    r = subprocess.run(["cargo", "test", "--lib", "--", "cells::"], cwd=wt, env=env, capture_output=True, text=True)
+    out = (r.stdout + r.stderr).splitlines()
+    if any("could not compile" in l for l in out):
+        return "does not build", next((l.strip() for l in out if l.startswith("error")), "")
+    if r.returncode == 0:
+        return "pass", next((l.strip() for l in out if l.startswith("test result")), "")
+    failed = sorted({l.split()[1].split("::")[-1] for l in out if l.startswith("test ") and l.rstrip().endswith("FAILED")})
+    why = ""
+    for i, l in enumerate(out):
+        if "panicked at" in l:
+            why = l.split("panicked at", 1)[1].strip() + " " + (out[i + 1].strip() if i + 1 < len(out) else "")
+            break
+    if not why:
+        why = next((l.strip() for l in out if "signal:" in l), "no panic message")
+    return "fail", (", ".join(failed) if failed else "the test binary died") + " | " + why[:160]
+
+
+print("# file\tmutant\tverdict\tthe tests", flush=True)
+t, tw = tests()
+print(f"-\tthe tree as it is\t{'ok' if t == 'pass' else 'BASELINE BROKEN'}\ttests {t}: {tw}", flush=True)
+survivors = 0
+for path, name, a, b in M:
+    p = os.path.join(wt, path)
+    orig = open(p).read()
+    if orig.count(a) != 1:
+        print(f"{path}\t{name}\tNOT APPLIED: the text occurs {orig.count(a)} times\t", flush=True)
+        survivors += 1
+        continue
+    open(p, "w").write(orig.replace(a, b))
+    try:
+        t, tw = tests()
+    finally:
+        open(p, "w").write(orig)
+    if t == "fail":
+        verdict = "killed by the tests"
+    elif t == "does not build":
+        verdict = "does not build (the constant's own assertion)" if "FAR_PLACES" in a else "DOES NOT BUILD"
+        survivors += 0 if "FAR_PLACES" in a else 1
+    else:
+        verdict = "SURVIVED"
+        survivors += 1
+    print(f"{path}\t{name}\t{verdict}\ttests {t}: {tw}", flush=True)
+print(f"# {len(M)} mutants, {survivors} not killed", flush=True)
