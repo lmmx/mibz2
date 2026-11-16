@@ -1354,6 +1354,14 @@
       "reply_id": 6893064412,
       "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6893064412",
       "routing_verification": "Exact readback: #145, author lmmx, inbox ID, TYPE: REVIEW."
+    },
+    {
+      "comment_id": 6926191785,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt committed; verifying archived evidence and ranking layout options."
     }
   ],
   "migrated_from": {
