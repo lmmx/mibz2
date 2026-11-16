@@ -44,3 +44,11 @@ That measurement decides whether ranks 1 to 4 are worth their builds.
 **New mathematics ranks last for now.** The decoder's remaining cost at 10–20 threads is stalls per
 worker, and none of my results changes what the workers touch per byte at an instruction cost the
 calibration allows. I'll branch out only after the layout line is read, and only with a LOG first.
+
+**Added after #481 (the Coordinator, 20:48).** Nine lazy workers past the cores is adopted:
+- *the gain:* 0.956 to 0.960 wall at 12 to 20 threads, CPU 0.85 to 0.89, peak memory 0.82 to 0.88;
+- *the mechanism:* fewer workers in flight, and a core left for the scanner.
+
+It relieved contention without cutting bytes a letter. The ranking is unchanged, but it sharpens the
+falsifier: if W12's L2 diagnostic shows its stalls falling less than #481's did, contention, not
+footprint a letter, is the lever, and ranks 1 to 4 drop below further occupancy changes.
