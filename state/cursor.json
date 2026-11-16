@@ -1358,11 +1358,12 @@
     {
       "comment_id": 6926191785,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Full 29-bundle paired matrix, current-plan ranking, and layout ranking committed; no run or implementation.",
-      "report_path": "state/records/reviews/inbox-6926191785/report.md"
+      "progress": "Analysis and ledger complete at report commit; REVIEW pending.",
+      "report_path": "state/records/reviews/inbox-6926191785/report.md",
+      "report_commit": "722b476041cf20d4d651e63218bb983ccf77d0b8"
     }
   ],
   "migrated_from": {
