@@ -1,0 +1,20 @@
+{
+  "trigger_comment_id": 6925048452,
+  "trigger_observed": "2026-11-16T18:16:58Z",
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "construction_pin": "4599b7633eb6b38b4994b678d8cd0e2095d1a387",
+  "records_pin": "25481a03d4fae5aa6405ffebb8a5b343efe9b8bc",
+  "migration": {
+    "old_head": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
+    "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
+    "verified": true
+  },
+  "audit": {
+    "since": 6924336791,
+    "problems": [],
+    "inbox_count": 111,
+    "only_unfinished": 6925048452
+  },
+  "book_limit": "Supplied expanded edition unavailable; primary edition1.0 indexed excerpt and author papers consulted; expanded-edition locators not certified.",
+  "timing_run": false
+}

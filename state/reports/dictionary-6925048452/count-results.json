@@ -1,0 +1,31 @@
+{
+  "stop": {
+    "blocks": 233,
+    "stopped": 232,
+    "r": 15141602,
+    "word_bytes": 228714675,
+    "saved": 75747258,
+    "bytes_per_r": 5.0025920639044665,
+    "fraction": 0.33118669801139783
+  },
+  "points_per_r_stopped": 0.6719229121425941,
+  "tail": {
+    "blocks": 233,
+    "saved": 74058616,
+    "bytes_per_r": 4.891068725753061,
+    "fraction": 0.3238035163244335,
+    "wide_id_blocks": 30
+  },
+  "certificates": {
+    "blocks": 30,
+    "start_weighted_share": 0.3335661906636923,
+    "scope": "64-step cap, no end wrap; rounded per-block inputs"
+  },
+  "original_census": {
+    "S": 27439723,
+    "r": 15141602,
+    "n": 209697662,
+    "S_per_r": 1.812207387302876,
+    "S_per_n": 0.13085373836929093
+  }
+}

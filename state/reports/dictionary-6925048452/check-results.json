@@ -1,0 +1,13 @@
+{
+  "inputs": 6015,
+  "states": 26331,
+  "steps": 16011,
+  "tower_points": 135191,
+  "certificates": 385896,
+  "result": "all assertions passed",
+  "certificate_cap_counterexample": {
+    "map": "F(x)=x+1 mod 1000; intervals [0,999),[999,1000); unit word lengths",
+    "uncapped_256_byte_share": 0.744,
+    "cap64_share": 0.0
+  }
+}
