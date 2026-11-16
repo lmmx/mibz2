@@ -6,4 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-lazy-place             bench/lazy-place          Past the cores: window per worker, cores-1, and one CPU a core pinned, at 10/12/20 threads on x8, plus a dose run (#477; rule LOG 6912912161)
+bench-stop-walk              perf/lazy-stop-walk       Stop-and-walk (beta 1.5) against shipped lazy on production's plan, 8/9/10/12/20 threads, wikidata x4 + text guard (#493; rule REVIEW 6921622210, PROCEED LOG 6922045659)
