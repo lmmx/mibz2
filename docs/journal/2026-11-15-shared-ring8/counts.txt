@@ -1,0 +1,18 @@
+callgrind, corpora/wikidata.bz2, bzcat at 1 thread, inclusive of callees.
+Both builds: RUSTFLAGS="-C target-feature=+avx2", release profile.
+Letters: 11,090,867 in the 196 blocks Cells admits; cells 20,456,299.
+
+                      master caad2bd97        with the ring of eight
+slots                   886,937,874  (79.97)     886,656,199  (79.94)
+induce_cells          1,280,552,604 (115.46)   2,248,102,939 (202.70)
+write_cells             598,664,251  (53.98)     479,248,049  (43.21)
+whole program         4,957,161,796            5,804,105,614
+
+The ring's own source lines in induce_cells (exclusive, per cell):
+key 5.0; two compares and the mask 7.1; marked 4.1; hit 3.0; index of the hit 2.0;
+ring slot 1.0; key stored 3.0; word chosen 2.0; word stored 1.0;
+`top +=` 10.1 (was 1 on master); `rp +=` 1.0.
+
+Word store, bytes a letter:   arena 6.44 -> 4.25   rules 9.14 -> 6.90   both 15.64 -> 11.15
+Ring hits, of the cells:      short words 0.262, rules 0.076, both 0.338
+Output: MD5 equal to master's at 1 and 4 threads.

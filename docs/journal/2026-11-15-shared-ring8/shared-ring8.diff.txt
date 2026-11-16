@@ -1,0 +1,59 @@
+diff --git a/src/cells.rs b/src/cells.rs
+index f78103103..353527f83 100644
+--- a/src/cells.rs
++++ b/src/cells.rs
+@@ -824,6 +824,12 @@ impl Kernel {
+             let (mut aw, mut bw);
+             let (mut bs, mut ts);
+             let (mut sa, mut sb) = (ft0 - SLOT, fb0 - BSLOT);
++            // scratch (pricing): a ring of the last eight words made, each keyed by its two
++            // factors' offsets; a cell with a key in the ring takes that word
++            #[repr(C, align(64))]
++            struct Ring([u64; 8], [u64; 8]);
++            let mut ring = Ring([u64::MAX; 8], [0; 8]);
++            let rg = &mut ring as *mut Ring;
+             // the slots A and B were read from at the fronts: when one of them ends, its
+             // slot is the one its partner's next cell is promised
+             let (mut fa, mut fb);
+@@ -901,9 +907,38 @@ impl Kernel {
+                         wr64(base, rp, aw);
+                         wr64(base, rp + 8, bw);
+                     }
+-                    let word = if small { top } else { rp };
+-                    top += if small { len as usize } else { 0 };
+-                    rp += if small { 0 } else { 16 };
++                    let hit;
++                    let hit_word;
++                    {
++                        use core::arch::x86_64::*;
++                        let key = (aw >> 32) | (bw >> 32) << 32;
++                        let kv = _mm256_set1_epi64x(key as i64);
++                        let k0 = _mm256_load_si256((*rg).0.as_ptr() as *const __m256i);
++                        let k1 = _mm256_load_si256((*rg).0.as_ptr().add(4) as *const __m256i);
++                        let m0 = _mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(kv, k0)));
++                        let m1 = _mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(kv, k1)));
++                        let m = (m0 | m1 << 4) as u32;
++                        // (a word made with the walk's row is never shared: its mark is not
++                        // in the key)
++                        let marked = (aw | bw) as u32 & MARK != 0;
++                        hit = m != 0 && !marked;
++                        let at = (m.trailing_zeros() & 7) as usize;
++                        hit_word = *(*rg).1.as_ptr().add(at) as usize;
++                        let slot = cells & 7;
++                        // (and its key is not kept: an unmarked cell of the same two
++                        // offsets is another word)
++                        *(*rg).0.as_mut_ptr().add(slot) = if marked { u64::MAX } else { key };
++                    }
++                    let word = if hit {
++                        hit_word
++                    } else if small {
++                        top
++                    } else {
++                        rp
++                    };
++                    *(*rg).1.as_mut_ptr().add(cells & 7) = word as u64;
++                    top += if small && !hit { len as usize } else { 0 };
++                    rp += if small || hit { 0 } else { 16 };
+                     let cw = len | (word as u64) << 32;
+                     #[cfg(test)]
+                     self.record_materialization([
