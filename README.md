@@ -101,42 +101,25 @@ for span in mibz2::scan(&data) {
 | `bwt::InverseBwt` (`Segmented`, the default; `Plain`), `decode_with::<I>`, `StreamDecoder::with_inverse::<I>` | the inverse-BWT kernel, swappable and timeable as part of the whole decoder |
 
 **How the threads are spent** (`Plan::for_threads`, the default for `decode_parallel`,
-`BzReader::parallel` and `StreamDecoder::new`):
+`BzReader::parallel`, `StreamDecoder::new` and Python's `threads`, whose default `None` is every
+CPU the process may use):
 - **Below 6 physical cores, or where the topology can't be read:** one block a worker thread.
-- **From 6 physical cores serving the threads:** teams of 2 threads sharing each block, as many as fit the L3.
-- **On 10 physical cores with a 20 MiB L3 (the i9-10900K), at 10 or more threads:** three
-  teams of three.
-  - **Pipelined there:** each leader's serial stages overlap its helpers' inversion of
-    another block, with park and small on. On the i9, this was 7.2% faster
-    (95% CI +5.3% to +9.1%) for about 5% more CPU and 8 MB more peak RSS (CHANGELOG).
-  - **Not pipelined elsewhere:** every other plan runs plain teams or workers.
-  - **The plain three teams of three:** `planned(Plan::Teams { teams: 3, k: 3 }, ..)`, for
-    less CPU.
+- **Up to 10 threads, each with a physical core of its own:** one block a worker thread.
+- **More threads than physical cores, on 8 to 10 of them:** one block a worker, one worker a
+  core but one, leaving a core to the threads that read the input and hand out its blocks
+  (8 workers at least). The other hardware threads stay idle: on the i9-10900K, workers on a
+  core's second hardware thread were slower, not faster.
+- **Otherwise** (11 or more threads on 11 or more cores, or more threads than cores on 6 or 7
+  of them): teams of 2 threads sharing each block, as many as fit the L3.
 
-**Unmeasured topologies.** The three teams of three are chosen by two numbers alone: the
-physical cores the process may use (10), and cpu0's L3 size as Linux reports it (20 MiB). The
-planner has no CPU model to check. So some machines that are not an i9-10900K get the plan too,
-without anyone having measured it there. They have had the three teams since 0.2.5, pipelined
-since 0.2.6:
-- **Hybrid Intel parts with 10 cores and a 20 MB L3,** such as the i5-12600K and i5-13400 (6
-  performance and 4 efficiency cores);
-- **two-socket machines** with 10 physical cores in all and 20 MiB of L3 behind cpu0;
-- **virtual machines** that report 10 cores and a 20 MiB L3.
-
-**Low compression levels.** On the ten-core topology, at 10 threads or more, 0.2.6 has about 23%
-lower throughput than 0.2.4 on files compressed at bzip2 levels 1 and 2 (`bzip2 -1`/`-2`,
-`--fast`): speed ratios of 0.763 and 0.776, so such a file takes about 29–31% longer. Their
-blocks are small, and the three teams leave six of the ten threads waiting on them. Forcing
-`Plan::Teams { teams: 4, k: 2 }` recovers all of it. At levels 3–9 the default is faster than
-0.2.4's, so Wikidata's level-9 dumps are unaffected. The fix is being registered
-(`docs/journal/2026-11-08-plan-levels-result.md` on research/general-plan-impl, #254).
+From 8 workers, each inverts with lazy letters, which keeps less memory per block for a few more
+instructions: with that many workers they contend for the cache. The window, the blocks in flight
+(`SLOTS_PER_THREAD`, 4, a thread asked for), is scaled to the workers or teams the plan runs.
 
 The output is the same on every plan: only the speed can differ. To choose another plan, pass it
 explicitly: `BzReader::parallel_planned(r, plan, slots, kernels)` or
-`StreamDecoder::planned(plan, slots, kernels)`, with `Plan::Teams { teams: 4, k: 2 }` or
-`Plan::Workers(n)`, say. Or ask for fewer than 10 threads: `BzReader::parallel(r, 8)` and
-Python's `threads=8` give four teams of two there. A topology-aware rule is being designed
-(#253).
+`StreamDecoder::planned(plan, slots, kernels)`, with `Plan::Workers(n)` or
+`Plan::Teams { teams: 4, k: 2 }`, say.
 
 **Errors** (`ErrorKind`) cover the following:
 

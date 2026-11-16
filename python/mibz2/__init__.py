@@ -34,9 +34,11 @@ class BZ2Reader(io.RawIOBase):
         A path, or a binary file object open for reading (its ``read`` is called).
     threads
         Decoding threads: ``1`` decodes on the reading thread; more decode blocks at
-        once on worker threads, a block each, or, on 6 or more physical cores, in teams
-        of 2 sharing each block (as many teams as keep their tables in the CPU's last
-        cache level). ``None`` (the default) uses every CPU this process may use.
+        once, as the Rust crate's ``Plan::for_threads`` spends them: worker threads, a
+        block each (past the physical cores on 8 to 10 of them, one a core but one), or
+        teams of 2 sharing each block (from 11 threads on 11 or more cores, or past the
+        cores on 6 or 7).
+        ``None`` (the default) asks for every CPU this process may use.
 
     Raises
     ------

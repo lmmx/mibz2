@@ -2668,10 +2668,15 @@ pub fn service_target(threads: usize, k: Kernels, m: &Machine) -> bool {
 }
 
 /// The blocks in flight for `plan` when a caller asked for `slots` on `threads` threads:
-/// as many a worker as asked (a team counting as one worker), at least one each
+/// as many a worker as asked (a team counting as one worker), at least one each. Workers
+/// fewer than the threads asked (past the physical cores, `plan_with`) scale it as teams
+/// do: 36 blocks for 9 workers where 20 threads were asked with 4 a thread, not 80. On
+/// the i9-10900K the 80-block window cost 7.5% more CPU at 20 threads for the same wall
+/// (#145 LOG 6913804367, `just bench-lazy-place`)
 fn window(plan: Plan, threads: usize, slots: usize) -> usize {
     match plan {
-        Plan::Workers(_) => slots,
+        Plan::Workers(n) if n >= threads => slots,
+        Plan::Workers(n) => (slots.saturating_mul(n) / threads.max(1)).max(n),
         Plan::Teams { teams, .. } => (slots.saturating_mul(teams) / threads.max(1)).max(teams),
     }
 }
@@ -2685,12 +2690,10 @@ pub(crate) fn plan_with(threads: usize, phys: Option<usize>, l3: Option<u64>) ->
     if cores < COOP_MIN_CORES || (threads < WORKERS_BELOW_THREADS && threads <= phys) {
         return Plan::Workers(threads);
     }
-    // more threads than physical cores, on 8 to 10 of them: lazy workers, one a core, the
-    // extra hardware threads left idle. On the i9-10900K they beat the teams by 5-7% at 12 to
-    // 20 threads (#145, `just bench-lazy-cap`), where workers on SMT siblings lose and the
-    // teams gain nothing past the cores
+    // more threads than physical cores, on 8 to 10 of them: lazy workers, one a core but
+    // one, the extra hardware threads left idle (`workers_past_the_cores`)
     if threads > phys && (LAZY_FROM_THREADS..WORKERS_BELOW_THREADS).contains(&phys) {
-        return Plan::Workers(phys);
+        return Plan::Workers(workers_past_the_cores(phys));
     }
     if phys == TEN_CORES.0 && l3 == Some(TEN_CORES.1) && threads >= TEN_CORES_MIN_THREADS {
         return Plan::Teams { teams: 3, k: 3 };
@@ -2701,6 +2704,24 @@ pub(crate) fn plan_with(threads: usize, phys: Option<usize>, l3: Option<u64>) ->
     Plan::Teams {
         teams: (cores / 2).min(cap).max(1),
         k: 2,
+    }
+}
+
+/// The lazy workers past the physical cores, on `phys` of them (8 to 10): one a core, but
+/// one core left to the scanner, the reader and the feeder where that still leaves
+/// `LAZY_FROM_THREADS` workers, so the kernel stays the one measured.
+///
+/// On the i9-10900K, at 12 and 20 threads, nine workers beat ten by 4.3% and 4.4% of the
+/// wall, with 9% and 8% less CPU (0.957 [0.949, 0.965] and 0.956 [0.952, 0.960], `just
+/// bench-lazy-place` on eight copies of Wikidata; #145 LOG 6913804367). Ten lazy workers
+/// beside a scanner busy about two thirds of the time oversubscribe ten cores, so two of
+/// the decoder's threads share a core. On 8 cores, one fewer would be 7 workers on the
+/// other kernel, a slot for every letter, which nothing has measured; they keep 8.
+fn workers_past_the_cores(phys: usize) -> usize {
+    if phys > LAZY_FROM_THREADS {
+        phys - 1
+    } else {
+        phys
     }
 }
 
@@ -3678,16 +3699,22 @@ mod plan_tests {
         // more threads than physical cores, from 6 cores: teams of 2, at most 4 (0.7 × 20
         // MiB over a full table), as before
         assert_eq!(plan_with(8, Some(6), i9.1), Plan::Teams { teams: 3, k: 2 });
-        // from 8 cores: lazy workers, one a core (`just bench-lazy-cap`)
+        // from 8 cores: lazy workers, one a core (`just bench-lazy-cap`); from 9, one a
+        // core but one, leaving 8 at least (`just bench-lazy-place`)
         assert_eq!(plan_with(9, Some(8), i9.1), Plan::Workers(8));
         assert_eq!(plan_with(16, Some(8), i9.1), Plan::Workers(8));
+        assert_eq!(plan_with(10, Some(9), i9.1), Plan::Workers(8));
+        assert_eq!(plan_with(18, Some(9), i9.1), Plan::Workers(8));
+        assert_eq!(plan_with(9, Some(9), i9.1), Plan::Workers(9));
         // a bigger machine below 10 threads: workers
         assert_eq!(plan_with(8, Some(16), Some(32 << 20)), Plan::Workers(8));
-        // the i9 past its 10 cores: ten lazy workers, one a core (they beat three teams of
-        // three by 5-7% at 12 to 20 threads, `just bench-lazy-cap`)
+        // the i9 past its 10 cores: nine lazy workers (ten beat three teams of three by 5-7%
+        // at 12 to 20 threads, `just bench-lazy-cap`; nine beat ten by 4%, `just
+        // bench-lazy-place`). At 10 threads, still ten
         for t in [11, 12, 16, 20, 64, usize::MAX] {
-            assert_eq!(plan_with(t, i9.0, i9.1), Plan::Workers(10), "{t}");
+            assert_eq!(plan_with(t, i9.0, i9.1), Plan::Workers(9), "{t}");
         }
+        assert_eq!(plan_with(10, i9.0, i9.1), Plan::Workers(10));
         // a bigger cache, more teams; no cache size read, 4
         assert_eq!(
             plan_with(16, Some(16), Some(32 << 20)),
@@ -3756,6 +3783,14 @@ mod plan_tests {
     fn the_window() {
         let t4 = Plan::Teams { teams: 4, k: 2 };
         assert_eq!(window(Plan::Workers(4), 4, 8), 8);
+        assert_eq!(window(Plan::Workers(4), 4, usize::MAX), usize::MAX);
+        // workers past the cores, fewer than the threads asked: scaled to them, as teams
+        // are (`just bench-lazy-place`), at least one a worker
+        assert_eq!(window(Plan::Workers(9), 20, 80), 36);
+        assert_eq!(window(Plan::Workers(9), 11, 44), 36);
+        assert_eq!(window(Plan::Workers(9), 20, 40), 18);
+        assert_eq!(window(Plan::Workers(9), 20, 1), 9);
+        assert_eq!(window(Plan::Workers(9), 20, usize::MAX), usize::MAX / 20);
         assert_eq!(window(t4, 20, 40), 8);
         assert_eq!(window(t4, 8, 16), 8);
         assert_eq!(window(t4, 20, 1), 4);
@@ -3787,7 +3822,7 @@ mod plan_tests {
         }
         // on a machine whose cores are not known, the plan is workers at every count
         assert!(!plan_with(7, None, None).lazy() && plan_with(8, None, None).lazy());
-        // the i9: lazy workers at 8 to 10 threads, teams from 11
+        // the i9: lazy workers from 8 threads; past its cores, nine of them
         let i9 = (Some(TEN_CORES.0), Some(TEN_CORES.1));
         assert!(!plan_with(6, i9.0, i9.1).lazy());
         for t in [8, 9, 10, 11, 20] {
