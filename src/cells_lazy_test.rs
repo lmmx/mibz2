@@ -474,12 +474,17 @@ fn miri_cells_lazy_ring_keeps_fewer_words() {
             ..Default::default()
         },
     );
-    let mut fewer = 0;
+    let (mut fewer, mut fewer_rules) = (0, 0);
     for ll in [
         // runs of five bytes in a period of five: the same two letters meet again and again
         (0..60usize)
             .flat_map(|i| [(i % 5) as u8; 4])
             .collect::<Vec<u8>>(),
+        // two bytes in runs of twenty and twenty-one rows by turns: cells whose words are
+        // rules meet again
+        (0..24usize)
+            .flat_map(|i| vec![(i % 2) as u8; 20 + i % 2])
+            .collect(),
         b"abababababababababab".to_vec(),
         long_writer_column(),
         (0..65).map(|i| (i % 3) as u8).collect(),
@@ -492,6 +497,7 @@ fn miri_cells_lazy_ring_keeps_fewer_words() {
             let (kept, all) = (ring.lz.words, plain.lz.words);
             assert!(kept.0 <= all.0 && kept.1 <= all.1, "{ll:?} at {p}");
             fewer += usize::from(kept.0 + kept.1 < all.0 + all.1);
+            fewer_rules += usize::from(kept.1 < all.1);
             // a budget of exactly the cells made is accepted, and one less refused
             let r = Runs::of_column(&ll);
             let mut out = vec![0xCC; ll.len()];
@@ -507,6 +513,7 @@ fn miri_cells_lazy_ring_keeps_fewer_words() {
         }
     }
     assert!(fewer > 4, "the ring kept fewer words on {fewer} blocks");
+    assert!(fewer_rules > 0, "and fewer rules on {fewer_rules}");
 }
 
 /// The ring's search is over folded keys; the key itself decides. Two keys that fold to one
