@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c5e28c941a3c">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=a4f3bbf3140f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c5e28c941a3c">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=a4f3bbf3140f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c5e28c941a3c">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=a4f3bbf3140f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c5e28c941a3c">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=a4f3bbf3140f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c5e28c941a3c">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=a4f3bbf3140f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=c5e28c941a3c">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=a4f3bbf3140f">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2619,6 +2619,15 @@ figures are measured on GitHub's runners (<a href="../">methodology</a>).</p>
 <li><strong>Before bench 3.0.0</strong> the head ran first in every round, which favoured it by about
   1.8% at 1 thread in an A/A run. Those merges' changes are listed in the table below the
   charts, not chained.</li>
+<li><strong>Releases past 4 threads.</strong> On wikidata's throughput, the chart also offers 8 to 20
+  threads, from the release-scaling runs below, on one i9-10900K. Those figures exist only
+  at releases, so each is a diamond at the last merge its release tag contains, joined to
+  the next by a dotted line that is not measured. They are modelled from
+  release-against-release runs (the <strong>All releases</strong> inference below). They share the
+  chain's axis and its meaning, a change since the start with up faster, but start from
+  the oldest release and run on another machine. At 1, 2 and 4 threads they
+  overlay CI's chain; above 4, CI has no figure and they stand alone. <strong>All</strong> puts every
+  thread count side by side, on shared scales.</li>
 <li><strong><code>text</code></strong> is generated from mibz2's own sources, so its content changes from merge to
   merge, and its chain multiplies ratios measured on different files.</li>
 </ul>
@@ -2642,7 +2651,7 @@ mean of its 10 rounds with its 95% interval as a whisker.</p>
 <p>Loading the benchmark history…</p>
 </div>
 <h2 id="release-scaling-past-4-threads">Release scaling, past 4 threads<a class="headerlink" href="#release-scaling-past-4-threads" title="Permanent link">&para;</a></h2>
-<p>CI's runners have 4 vCPUs on 2 physical cores, so the charts above stop at 4 threads. A
+<p>CI's runners have 4 vCPUs on 2 physical cores, so CI's figures stop at 4 threads. A
 release-scaling run (<code>just bench-release-scaling</code>) fills in the rest. It runs two releases
 and lbzip2 on one machine of a developer's, with the same harness and paired rounds, from 1
 thread to every CPU the machine has. When one is recorded, the chart at the top offers it as
@@ -2666,6 +2675,9 @@ every release in it. lbzip2, the same build in every run, is a fixed anchor:</p>
   run, so all of them are on one scale. Only lbzip2's curve is measured as drawn.</li>
 <li><strong>The cross-check</strong> is the chain, the product of each run's direct comparison of its two
   releases. It needs no anchor, but its errors add up along the chain.</li>
+<li><strong>The knee</strong> is each release's thread count of highest modelled throughput, with that
+  peak against the release's own 8- and 10-thread figures. Its table, under the curves,
+  shows where the knee sits release by release, and how the roof above it moves.</li>
 <li><strong>The drift diagnostic</strong> compares a release with itself: its ratio to lbzip2 in its two
   runs, made days apart. A difference beyond noise means the machine, or lbzip2's figure on
   it, moved between the runs.</li>
@@ -3915,19 +3927,19 @@ and commits its record.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=c5e28c941a3c"></script>
+        <script src="../../assets/javascripts/bench.js?v=a4f3bbf3140f"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=c5e28c941a3c"></script>
+        <script src="../../assets/javascripts/couriers.js?v=a4f3bbf3140f"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=c5e28c941a3c"></script>
+        <script src="../../assets/javascripts/blog.js?v=a4f3bbf3140f"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=c5e28c941a3c"></script>
+        <script src="../../assets/javascripts/frontier.js?v=a4f3bbf3140f"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=c5e28c941a3c"></script>
+        <script src="../../assets/javascripts/observatory.js?v=a4f3bbf3140f"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=c5e28c941a3c"></script>
+        <script src="../../assets/javascripts/katex.js?v=a4f3bbf3140f"></script>
       
     
   </body>
