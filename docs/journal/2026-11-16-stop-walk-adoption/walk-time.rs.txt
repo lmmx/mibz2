@@ -1,0 +1,25 @@
+use mibz2::bwt::{InverseBwt, StopLazyCells15};
+use mibz2::runs::{front, Runs};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::Kernels;
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let k = Kernels::detect();
+    let mut kern = StopLazyCells15::default();
+    let mut o = Vec::new();
+    let mut best = f64::MAX;
+    for _ in 0..5 {
+        let t0 = mibz2::walk_ns();
+        let mut sc = Scanner::new(SliceSource(&data));
+        let mut syms = Vec::new();
+        let mut runs = Runs::default();
+        while let Ok(Event::Block { symbols, .. }) = sc.next(std::mem::take(&mut syms)) {
+            let n = front(&symbols, &mut runs, k).unwrap();
+            let _ = kern.invert_runs(&runs, n, symbols.orig_ptr, &mut o, k);
+            syms = symbols.syms;
+        }
+        best = best.min((mibz2::walk_ns() - t0) as f64 / 1e6);
+    }
+    println!("walk ms, best of 5 passes: {best:.1}");
+}
