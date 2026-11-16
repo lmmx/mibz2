@@ -37,8 +37,8 @@ figures are measured on GitHub's runners ([methodology](index.md)).
   release-against-release runs (the **All releases** inference below). They share the
   chain's axis and its meaning, a change since the start with up faster, but start from
   the oldest release and run on another machine. At 1, 2 and 4 threads they
-  overlay CI's chain; above 4, CI has no figure and they stand alone. **All** puts every
-  thread count side by side, on shared scales.
+  overlay CI's chain; above 4, CI has no figure and they stand alone. **All** overlays every
+  thread count in one chart, a colour each along the releases' ramp, low to high.
 - **`text`** is generated from mibz2's own sources, so its content changes from merge to
   merge, and its chain multiplies ratios measured on different files.
 
