@@ -61,6 +61,10 @@ struct Kernel {
     /// (test only) the writer kept the rules' first places in the dead top slots
     #[cfg(test)]
     pos_in_tops: bool,
+    /// (test only) how many of the lazy induction's hinted slots were then read at the place
+    /// they were hinted for
+    #[cfg(test)]
+    hints_met: usize,
     pos: Vec<u32>,
     #[cfg(test)]
     writer_reach: WriterReach,

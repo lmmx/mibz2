@@ -504,6 +504,11 @@ impl Kernel {
             // the top slots' end: what a bottom slot not yet written names as its top slot
             // may be anything, and is kept to the pool
             let top_end = lay.ends[0];
+            // (test only) the slot hinted for each place of each stream, and how many of
+            // them the front then read there: a tagged entry is never written again, so
+            // a hinted slot is the one its place's letter is read from
+            #[cfg(test)]
+            let (mut hint_top, mut hint_bottom, mut hints_met) = (vec![0u32; rr], vec![0u32; rr], 0);
             // as in `induce_cells`: the link before each letter in its order (0: the
             // stream); what is left of the letter; its (length, word); the slot the next
             // cell cut from it takes in the other order; the letters' front slots
@@ -556,12 +561,21 @@ impl Kernel {
                         *nt.get_unchecked_mut(c) = (k as u32).wrapping_sub(1);
                         debug_assert!(k < rr);
                         let e = rd32(bb, BPAD + 4 * k);
+                        #[cfg(test)]
+                        if hint_top[ti] != 0 {
+                            assert_eq!(e, TAG | hint_top[ti], "the top place {ti}'s hint");
+                            hints_met += 1;
+                        }
                         if AHEAD && ti >= FAR_PLACES {
                             // the place `FAR_PLACES` on: its entry's top slot, if it has one
                             let c = *bb.add(tby + ti - FAR_PLACES) as usize;
                             let k = *nt_far.get_unchecked(c) as usize;
                             *nt_far.get_unchecked_mut(c) = (k as u32).wrapping_sub(1);
                             debug_assert!(k < rr);
+                            #[cfg(test)]
+                            {
+                                hint_top[ti - FAR_PLACES] = slot_or_0(rd32(bb, BPAD + 4 * k)) as u32;
+                            }
                             prefetch(base.wrapping_add(slot_or_0(rd32(bb, BPAD + 4 * k))));
                         }
                         if e & TAG != 0 {
@@ -608,8 +622,17 @@ impl Kernel {
                         // to 0: no slot. So the bottom slot read here is a slot an entry
                         // names, or the buffer's first bytes: inside the buffer either way.
                         // What it names as its top slot may not be written yet.)
+                        #[cfg(test)]
+                        if hint_bottom[kb] != 0 {
+                            assert_eq!(e, TAG | hint_bottom[kb], "the bottom place {kb}'s hint");
+                            hints_met += 1;
+                        }
                         if AHEAD {
                             let far = rd32(bb, BPAD + 4 * kb - 4 * FAR_PLACES);
+                            #[cfg(test)]
+                            if kb >= FAR_PLACES {
+                                hint_bottom[kb - FAR_PLACES] = slot_or_0(far) as u32;
+                            }
                             prefetch(bb.wrapping_add(slot_or_0(far)));
                             let near = slot_or_0(rd32(bb, BPAD + 4 * kb - 4 * NEAR_PLACES));
                             let top = rd32(bb, near + 4) as usize;
@@ -678,6 +701,10 @@ impl Kernel {
                         }
                         self.rule_end = rp;
                         self.lz.peak = (tnew - lay.tops) / SLOT;
+                        #[cfg(test)]
+                        {
+                            self.hints_met = hints_met;
+                        }
                         return Ok(((aw >> 32) as u32, aw as u32, budget - left));
                     }
                     if bs & ENTRY == 0 {

@@ -369,8 +369,9 @@ fn cells_lazy_long_letter() {
 /// through one. Here the output buffer comes in full of bytes that would read as tagged
 /// entries naming far-off slots, on columns of fewer letters than the look-ahead and of
 /// more: the first stage sets the bytes before the entries, every read stays inside the
-/// buffer (Miri sees one that does not), and the output is the oracle's. The kernel without
-/// the fetch-ahead gives the same cells.
+/// buffer (Miri sees one that does not), and the output is the oracle's. Every slot hinted
+/// is the slot then read at its place. The kernel without the fetch-ahead gives the same
+/// cells and hints nothing.
 #[test]
 fn miri_cells_lazy_fetch_ahead_stays_inside() {
     for ll in [
@@ -382,6 +383,7 @@ fn miri_cells_lazy_fetch_ahead_stays_inside() {
         let r = Runs::of_column(&ll);
         let n = ll.len();
         let mut cells = Vec::new();
+        let mut met = 0;
         for variant in [LAZY, LAZY_PLAIN] {
             let mut kernel = Kernel {
                 variant,
@@ -395,6 +397,14 @@ fn miri_cells_lazy_fetch_ahead_stays_inside() {
                     .unwrap();
                 assert_eq!(out, oracle(&ll, p), "column {ll:?}, row {p}");
                 cells.push(made);
+                // a hinted slot is the one its place is then read from (the induction
+                // asserts each), and on a column of enough letters some are hinted
+                if variant == LAZY_PLAIN {
+                    assert_eq!(kernel.hints_met, 0);
+                } else if kernel.letters > 2 * FAR_PLACES {
+                    assert!(kernel.hints_met > 0, "column {ll:?}, row {p}");
+                    met += kernel.hints_met;
+                }
                 // the first stage alone: the bytes before the entries are set
                 let mut out = vec![0xFFu8; 64 * n + 4096];
                 kernel
@@ -404,5 +414,6 @@ fn miri_cells_lazy_fetch_ahead_stays_inside() {
             }
         }
         assert_eq!(cells[..3], cells[3..]);
+        let _ = met;
     }
 }

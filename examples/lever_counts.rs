@@ -1,6 +1,6 @@
 //! scratch (memory-lever): a file's blocks decoded on one thread with one Cells kernel, for
-//! callgrind, and the kernel's route counts and lazy pool. lever_counts FILE.bz2 cells|lazy|nt
-use mibz2::bwt::{Cells, InverseBwt, LazyCells, StagedCells};
+//! callgrind, and the kernel's route counts and lazy pool. lever_counts FILE.bz2 cells|lazy|lazy-plain|nt
+use mibz2::bwt::{Cells, InverseBwt, LazyCells, PlainLazyCells, StagedCells};
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{decode_block, Kernels, Scratch};
 
@@ -24,6 +24,7 @@ fn main() {
     match a[2].as_str() {
         "cells" => println!("{:?}", run::<Cells>(&data, |_| ()).cells_counts()),
         "nt" => println!("{:?}", run::<StagedCells>(&data, |_| ()).cells_counts()),
+        "lazy-plain" => println!("{:?}", run::<PlainLazyCells>(&data, |_| ()).cells_counts()),
         "lazy" => {
             let (mut shares, mut admitted) = (Vec::new(), 0);
             let s = run::<LazyCells>(&data, |s| {
@@ -43,6 +44,6 @@ fn main() {
                 shares[shares.len() - 1]
             );
         }
-        m => panic!("the kernel is cells, lazy or nt, not {m}"),
+        m => panic!("the kernel is cells, lazy, lazy-plain or nt, not {m}"),
     }
 }
