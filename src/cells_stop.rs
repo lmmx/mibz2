@@ -73,9 +73,6 @@ fn lazy_first(v: u8) -> bool {
 /// it stops: in the padding below the top slots (`PAD`), which the lazy kernel does not use
 const STOP_AT: usize = 8;
 const _: () = assert!(STOP_AT + 8 <= PAD);
-
-/// An untouched letter's key: its bottom entry's index, beside this bit
-const KEY_ENTRY: u32 = 1 << 31;
 /// A cell's bottom slot once the bottom order's pass has read it (`tables`): no offset is this
 /// (the kernel's layouts stay below `u32::MAX`)
 const VISITED: u32 = u32::MAX;
@@ -118,9 +115,6 @@ struct Walk {
     /// counted from the bottom order's right end, by its entry's index (a cell's is kept in
     /// its bottom slot, `tables`)
     j_ent: Vec<u32>,
-    /// the top order's letters, right to left as read: (`KEY_ENTRY` | entry's index, or the
-    /// cell's bottom slot; λ; word)
-    tops: Vec<(u32, u32, u64)>,
     /// the rank bitmap over [0, m), and the letters in top order
     rank: Vec<Rank>,
     recs: Vec<Rec>,
@@ -244,21 +238,35 @@ impl Kernel {
         if m == 0 {
             return Err(());
         }
-        // the top order, right to left
+        // the top order, right to left, read straight into the walk's tables in reflected
+        // coordinates, u = m − 1 − x (the ChatGPT relay's §9, #145 LOG 6923818459): read
+        // right to left, the top intervals come in increasing u, so each letter's record is
+        // final as it is read. A letter of λ rows, E rows of letters read before it, and its
+        // bottom interval's end J from the right has top interval [E, E + λ) and bottom
+        // interval [J − λ, J), so T, conjugated, is still the translation u ↦ u + (J − λ − E)
+        // on it. The walk visits the same letters at the same places; only its coordinate
+        // is reflected
+        let nw = m / 64 + 1;
+        w.rank.clear();
+        w.rank.resize(nw, Rank::default());
         let (mut s, mut ti, mut nl) = (st.na, st.ti, 0usize);
+        let (mut e_rows, mut mu) = (0usize, None);
         let mut nt = [0u32; 256];
         nt.copy_from_slice(&st.nt);
-        // SAFETY: as above; a top slot is read only where its key is good, and `tops` has
+        // SAFETY: as above; a top slot is read only where its key is good; the records have
         // more than `nl` places (live letters are `rr` at most: a step never adds one)
         unsafe {
             loop {
-                if nl >= w.tops.len() {
+                if nl >= w.recs.len() {
                     if nl >= rr {
                         return Err(());
                     }
                     let grow = (2 * nl).max(1024).min(rr);
-                    w.tops.resize(grow, (0, 0, 0));
+                    w.recs.resize(grow, (0, 0));
+                    w.words.resize(grow, 0);
+                    w.dls.resize(grow, 0);
                 }
+                let (lam, word, jr);
                 if s == 0 {
                     if ti == 0 {
                         break;
@@ -271,82 +279,57 @@ impl Kernel {
                         return Err(());
                     }
                     let e = rd32(bb, BPAD + 4 * k);
-                    // (an entry not yet a cell's lies in the bottom stream's unread part)
-                    if e & TAG == 0 && k >= st.kb {
-                        return Err(());
-                    }
                     if e & TAG != 0 {
                         s = (e ^ TAG) as usize;
                         continue;
                     }
-                    let lam = e & ((1 << LEN_BITS) - 1);
-                    let word = first1 + ((c as u64) << 32) + (((e & ROW) as u64) << 1);
-                    *w.tops.get_unchecked_mut(nl) = (KEY_ENTRY | k as u32, lam, word);
+                    // (an entry not yet a cell's lies in the bottom stream's unread part)
+                    if k >= st.kb {
+                        return Err(());
+                    }
+                    lam = e & ((1 << LEN_BITS) - 1);
+                    word = first1 + ((c as u64) << 32) + (((e & ROW) as u64) << 1);
+                    jr = *w.j_ent.get_unchecked(k) as usize;
                 } else {
                     slot_key(s)?;
                     let link = rd32(base, s) as usize;
-                    let bs = rd_other(base, s) as u32;
-                    if bs & KEY_ENTRY != 0 {
+                    let bs = rd_other(base, s);
+                    if bs + 8 > olen {
                         return Err(());
                     }
-                    *w.tops.get_unchecked_mut(nl) = (bs, rd32(base, s + 4), rd64(base, s + 8));
+                    let (j, seen) = rd_bottom(bb, bs);
+                    if seen != VISITED as usize {
+                        return Err(());
+                    }
+                    lam = rd32(base, s + 4);
+                    word = rd64(base, s + 8);
+                    jr = j;
                     s = link;
                 }
+                let lu = lam as usize;
+                if lam == 0 || e_rows + lu > m || jr > m || jr < lu || word as u32 & !MARK == 0 {
+                    return Err(());
+                }
+                w.rank[e_rows / 64].bits |= 1 << (e_rows % 64);
+                if (word as u32) & MARK != 0 {
+                    if lam != 1 || mu.is_some() {
+                        return Err(());
+                    }
+                    mu = Some((nl, e_rows));
+                }
+                // a word kept as bytes is copied from the arena (16 readable bytes before its
+                // end, and the buffer's padding below the arena), a rule from where the walk
+                // first writes it
+                let (off, len) = ((word >> 32) as usize, word as u32 & !MARK);
+                let src = if off < lay.rules { base as usize + off + len as usize } else { 0 };
+                *w.recs.get_unchecked_mut(nl) = (src, len);
+                *w.dls.get_unchecked_mut(nl) = (jr - lu) as i32 - e_rows as i32;
+                *w.words.get_unchecked_mut(nl) = word;
+                e_rows += lu;
                 nl += 1;
             }
         }
-        // in top order: the rank bitmap, and each letter's record
-        if w.recs.len() < nl {
-            w.recs.resize(nl, (0, 0));
-            w.words.resize(nl, 0);
-            w.dls.resize(nl, 0);
-        }
-        let nw = m / 64 + 1;
-        w.rank.clear();
-        w.rank.resize(nw, Rank::default());
-        let (mut x, mut mu) = (0usize, None);
-        for (i, &(key, lam, word)) in w.tops[..nl].iter().rev().enumerate() {
-            let jr = if key & KEY_ENTRY != 0 {
-                // SAFETY: an entry's index is below `st.kb`, checked as it was read
-                (unsafe { *w.j_ent.get_unchecked((key ^ KEY_ENTRY) as usize) }) as usize
-            } else {
-                let bs = key as usize;
-                if bs + 8 > olen {
-                    return Err(());
-                }
-                // SAFETY: just checked
-                let (jr, seen) = unsafe { rd_bottom(bb, bs) };
-                if seen != VISITED as usize {
-                    return Err(());
-                }
-                jr
-            };
-            if lam == 0 || x + lam as usize > m || jr > m || jr < lam as usize || word as u32 & !MARK == 0 {
-                return Err(());
-            }
-            w.rank[x / 64].bits |= 1 << (x % 64);
-            if (word as u32) & MARK != 0 {
-                if lam != 1 || mu.is_some() {
-                    return Err(());
-                }
-                mu = Some((i, x));
-            }
-            // (its bottom interval [m − jr, m − jr + λ) lies in [0, m): jr ≥ λ, as the bottom
-            // order's ends are sums of the letters' rows up to and with it)
-            // a word kept as bytes is copied from the arena (16 readable bytes before its end,
-            // and the buffer's padding below the arena), a rule from where the walk first
-            // writes it
-            let (off, len) = ((word >> 32) as usize, word as u32 & !MARK);
-            let src = if off < lay.rules { base as usize + off + len as usize } else { 0 };
-            // SAFETY: i < nl ≤ rr
-            unsafe {
-                *w.recs.get_unchecked_mut(i) = (src, len);
-                *w.dls.get_unchecked_mut(i) = (m - jr) as i32 - x as i32;
-                *w.words.get_unchecked_mut(i) = word;
-            }
-            x += lam as usize;
-        }
-        if x != m {
+        if e_rows != m || nl == 0 {
             return Err(());
         }
         let mut before = 0u32;
