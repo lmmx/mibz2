@@ -209,9 +209,11 @@ The kernel's bytes matter only where threads compete for the cache; on one threa
 
 That changed in 0.5.1. [#462](https://github.com/lmmx/mibz2/pull/462) gave 10 threads workers with lazy letters, one block each. [#468](https://github.com/lmmx/mibz2/pull/468) did the same for machines with 8 to 10 physical cores asked for more threads than that. They run one lazy worker a core, and leave the second hardware threads idle. The thread plan in the code, [`plan_with`](https://github.com/lmmx/mibz2/blob/ea393f96dcfaed63581db6548e63795869c47a12/src/parallel.rs#L2680-L2706), now runs on the 10-core i9 as follows:
 
-| Threads asked for | 1 to 7 | 8 to 10 | 11 to 20 |
-|---|---|---|---|
-| What runs | a worker a thread, eager Cells | a worker a thread, lazy letters | 10 workers, one a core, lazy letters |
+| Threads asked for | What runs |
+|---|---|
+| 1 to 7 | a worker a thread, eager Cells |
+| 8 to 10 | a worker a thread, lazy letters |
+| 11 to 20 | 10 workers, one a core, lazy letters |
 
 Teams now run only on other machines. A machine with 6 or 7 physical cores gets teams of two when asked for more threads than it has cores. So does a machine with 11 cores or more, asked for 11 threads or more. Where the machine's topology can't be read, which includes every system other than Linux, mibz2 runs a worker a thread at every count.
 
