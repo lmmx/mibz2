@@ -1709,6 +1709,64 @@ bench-cores-less-one MASTER="4ffe2bcbef1d4296e7d7bdf35ba3972c03edd6e3" COPIES="4
       || echo "bench-cores-less-one: VOID, no verdict (verdict.txt says why); the bundle is kept"
     bash bench/bundle.sh "$O"
 
+# Workers and window past the cores (#145, the Coordinator's ruling after #481; the registration posted
+# before the data): with #481's nine lazy workers and a window sized to them as production, are
+# eight workers, or nine with the window doubled or halved, faster? Production's decoder
+# (`mibz2`: on the i9 past its cores, nine workers, 36 blocks in flight) against three arms of
+# the same build that differ from it in the worker count or the window alone (`ab`'s
+# `mibz2-occ-N-S`: N lazy workers, S blocks): eight workers at 4 a worker (32), and nine at 8
+# a worker (72) and at 2 (18). Judged at 12, 16 and 20 threads asked; COPIES copies of the
+# Wikidata sample (the gain family) and the text corpus (a loss and memory guard). Built by
+# rustc 1.99.1, its rustc -vV and cargo -vV recorded. No spinner: no judged count leaves a
+# core free. `bench/two_arm.py` checks the records and the machine whole, then reads a verdict
+# for each arm and the choice among those that adopt.
+bench-workers-window COPIES="4" ROUNDS="10" JUDGED="12,16,20":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/workers-window
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-workers-window (the registration on #145): mibz2 against mibz2-occ-8-32, mibz2-occ-9-72 and mibz2-occ-9-18 at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and on text, judged at {{JUDGED}} threads, {{ROUNDS}} paired rounds"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-workers-window: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-workers-window: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    "$AB" run "$O/judged.jsonl" --arms "mibz2,mibz2-occ-8-32,mibz2-occ-9-72,mibz2-occ-9-18" \
+      --threads "{{JUDGED}}" --rounds {{ROUNDS}} --spread \
+      "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    "$AB" summary "$O/judged.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2 \
+      --cand mibz2-occ-8-32 --cand mibz2-occ-9-72 --cand mibz2-occ-9-18 \
+      --main wikidata-x{{COPIES}} --guard text --judged "{{JUDGED}}" --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads 0 \
+      | tee "$O/verdict.txt" \
+      || echo "bench-workers-window: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,

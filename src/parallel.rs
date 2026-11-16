@@ -3822,6 +3822,39 @@ mod plan_tests {
     /// The trim past the cores (#481) holds on the measured i9 alone: past its 10 cores, with
     /// its kernels, unlimited. Not at 10 threads or fewer, not on another CPU of its shape,
     /// another core count, the scalar kernels or under a quota
+    /// The occupancy arms (`ab`'s `mibz2-occ-N-S`, `just bench-workers-window`) build production's
+    /// decoder but for what they name: on the i9 past its cores, `planned(Workers(9), 36)` is
+    /// what `new` builds at 12, 16 and 20 threads asked (the kernel, the threads, the window),
+    /// and each other arm differs from it in its worker count or its window alone
+    #[test]
+    fn the_occupancy_arms() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let shape = |d: &StreamDecoder| (d.kernel, d.threads, d.window());
+        for t in [12, 16, 20] {
+            let prod = with_machine(Machine::service_target(), || {
+                StreamDecoder::new(t, 4 * t, both)
+            });
+            let same = StreamDecoder::planned(Plan::Workers(9), 36, both);
+            assert_eq!(shape(&prod), shape(&same), "{t}");
+            assert!(prod.is_lazy(), "{t}");
+            let eight = StreamDecoder::planned(Plan::Workers(8), 32, both);
+            assert_eq!(shape(&eight), (prod.kernel, 8, 32), "{t}");
+            for w in [72, 18] {
+                let win = StreamDecoder::planned(Plan::Workers(9), w, both);
+                assert_eq!(shape(&win), (prod.kernel, prod.threads, w as u64), "{t}");
+            }
+            for d in [prod, same, eight] {
+                d.close();
+            }
+        }
+    }
+
     #[test]
     fn the_trim_past_the_cores() {
         let both = Kernels {

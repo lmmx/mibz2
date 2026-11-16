@@ -199,6 +199,71 @@ def main():
     results.append(expect("no spinner held, as registered", unheld, 0, "VERDICT: ADOPTS",
                           extra=("--hold-max-threads", "0")))
 
+    # several candidates against one reference (`just bench-workers-window`): Holm over all their
+    # main-corpus cells, a verdict each, and the choice among those that adopt
+    cands = ["mibz2-occ-8-32", "mibz2-occ-9-72", "mibz2-occ-9-18"]
+    occ_args = ["--ref", "mibz2", *sum((["--cand", c] for c in cands), []), "--main", "wikidata-x4",
+                "--guard", "text", "--judged", "12,16,20", "--controls", "", "--hold-max-threads", "9"]
+
+    def occ(steps=None, guard=None, drop=None):
+        """occupancy-shaped runs: `steps` maps a candidate to its main-corpus step at every
+        judged count (default level), `guard` a candidate to its text step"""
+        import random
+        steps, guard = steps or {}, guard or {}
+        rng = random.Random(11)
+        rows = []
+        for i in range(R):
+            for corpus, out in (("wikidata-x4", (838800784, "aa")), ("text", (49067679, "bb"))):
+                for t in (12, 16, 20):
+                    base = 0.5 * (1 + 0.02 * rng.uniform(-1, 1))
+                    wig = 1 + 0.01 * (1 if i % 2 else -1)
+                    for arm in ["mibz2", *cands]:
+                        if arm == drop:
+                            continue
+                        f = (steps if corpus == "wikidata-x4" else guard).get(arm, 1.0)
+                        wall = base * (f * wig if arm != "mibz2" else 1.0)
+                        rows.append({"round": i, "corpus": corpus, "threads": t, "arm": arm,
+                                     "termination": "success", "wall": wall, "cpu": wall * t * 0.9,
+                                     "rss_kb": 100000 * t, "out": out[0], "hash": out[1], "cpus": "all"})
+        return rows
+
+    def run_occ(rows):
+        d = Path(tempfile.mkdtemp())
+        try:
+            with open(d / "judged.jsonl", "w") as f:
+                for r in rows:
+                    f.write(json.dumps(r) + "\n")
+            (d / "env.json").write_text(json.dumps(ENV))
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = ta.main(["two_arm.py", str(d / "judged.jsonl"), *occ_args, "--env", str(d / "env.json")])
+            return code, buf.getvalue()
+        finally:
+            shutil.rmtree(d)
+
+    def expect_occ(name, rows, code, phrases):
+        got, out = run_occ(rows)
+        ok = got == code and all(p in out for p in phrases)
+        print(f"{'ok  ' if ok else 'FAIL'} {name}: exit {got}, "
+              + ", ".join(f"{'found' if p in out else 'missing'} {p!r}" for p in phrases))
+        if not ok:
+            print(out)
+        return ok
+
+    results.append(expect_occ("several: one adopts", occ({"mibz2-occ-9-18": 0.96}), 0, [
+        "VERDICT for mibz2-occ-9-18: ADOPTS", "VERDICT for mibz2-occ-8-32: NOT ADOPTED",
+        "VERDICT for mibz2-occ-9-72: NOT ADOPTED", "THE CHOICE: mibz2-occ-9-18"]))
+    results.append(expect_occ("several: two adopt, the faster chosen",
+                              occ({"mibz2-occ-8-32": 0.97, "mibz2-occ-9-72": 0.95}), 0, [
+        "VERDICT for mibz2-occ-8-32: ADOPTS", "VERDICT for mibz2-occ-9-72: ADOPTS",
+        "THE CHOICE: mibz2-occ-9-72, of those that ADOPT (mibz2-occ-8-32, mibz2-occ-9-72)"]))
+    results.append(expect_occ("several: none", occ(), 0, ["THE CHOICE: none; the reference stays"]))
+    results.append(expect_occ("several: a gain, its guard SLOWER",
+                              occ({"mibz2-occ-8-32": 0.96}, guard={"mibz2-occ-8-32": 1.05}), 0, [
+        "VERDICT for mibz2-occ-8-32: A FINDING, NOT ADOPTED", "THE CHOICE: none"]))
+    results.append(expect_occ("several: one candidate's records missing", occ({"mibz2-occ-9-18": 0.96},
+                              drop="mibz2-occ-9-72"), 1, ["VOID", "roster keys missing"]))
+
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0
