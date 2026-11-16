@@ -5566,7 +5566,7 @@ In roughly this order:
 
 A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result.
 
-2 November 2026 · 27 min read · [Result](<#7-timing-the-walk-on-one-core-and-on-four>)
+2 November 2026 · 27 min read · [Research result](<#7-timing-the-walk-on-one-core-and-on-four>)
 
 In 2001, [Julian Seward](<https://en.wikipedia.org/wiki/Julian_Seward>), the author of [bzip2](<https://en.wikipedia.org/wiki/Bzip2>) and the original designer of [Valgrind](<https://valgrind.org/info/developers.html>), was working at Microsoft Research in Cambridge. That year he presented a paper at the IEEE Data Compression Conference, *[Space-time tradeoffs in the Inverse B-W Transform](<https://doi.org/10.1109/DCC.2001.917175>)*, on what it costs to undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT) that bzip2 is built on.
 

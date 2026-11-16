@@ -281,16 +281,38 @@
   font-size: 0.68rem;
   color: var(--md-default-fg-color--light);
 }
+/* A post's kind, one colour each (blog.js sets data-kind from the label, and
+   docs/scripts/check_site.py keeps the labels to this list):
+   result (Research result): green; synthesis (Research synthesis): teal;
+   progress (Research, Work or Investigation in progress): amber, also the default;
+   question (Open question): violet; meta (Meta): blue.
+   Every pair's text-on-pill contrast is at least 4.5:1 in both schemes. */
 .md-typeset .post-meta a,
 .post-card-date {
-  --pill: #b26b00;
+  --pill: #965700;
   --pill-bg: #f8ead0;
 }
+.md-typeset .post-meta a[data-kind="result"],
+.post-card-date[data-kind="result"] { --pill: #1b7339; --pill-bg: #e1f2e5; }
+.md-typeset .post-meta a[data-kind="synthesis"],
+.post-card-date[data-kind="synthesis"] { --pill: #0b6e70; --pill-bg: #dbf0f0; }
+.md-typeset .post-meta a[data-kind="question"],
+.post-card-date[data-kind="question"] { --pill: #6a3db3; --pill-bg: #eee6f8; }
+.md-typeset .post-meta a[data-kind="meta"],
+.post-card-date[data-kind="meta"] { --pill: #2155ad; --pill-bg: #e3ebfa; }
 [data-md-color-scheme="slate"] .md-typeset .post-meta a,
 [data-md-color-scheme="slate"] .post-card-date {
   --pill: #f2b544;
   --pill-bg: #3b3020;
 }
+[data-md-color-scheme="slate"] .md-typeset .post-meta a[data-kind="result"],
+[data-md-color-scheme="slate"] .post-card-date[data-kind="result"] { --pill: #6fd08c; --pill-bg: #1d3324; }
+[data-md-color-scheme="slate"] .md-typeset .post-meta a[data-kind="synthesis"],
+[data-md-color-scheme="slate"] .post-card-date[data-kind="synthesis"] { --pill: #5ccfcd; --pill-bg: #163333; }
+[data-md-color-scheme="slate"] .md-typeset .post-meta a[data-kind="question"],
+[data-md-color-scheme="slate"] .post-card-date[data-kind="question"] { --pill: #c4a6f6; --pill-bg: #2b2340; }
+[data-md-color-scheme="slate"] .md-typeset .post-meta a[data-kind="meta"],
+[data-md-color-scheme="slate"] .post-card-date[data-kind="meta"] { --pill: #90b5f5; --pill-bg: #1e2940; }
 .md-typeset .post-hero .post-meta a {
   display: inline-block;
   padding: 0.05rem 0.55rem;
