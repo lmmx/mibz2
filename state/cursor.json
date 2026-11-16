@@ -2123,6 +2123,13 @@
       "review_comment_id": 6926375141,
       "review_comment_pr": 145,
       "publication_verification": "Exact body, author lmmx, PR145 and role-aware routing verified. Pinned verifier retains only coordinator-only FROM restriction. One review answers original assignment as narrowed by correction."
+    },
+    {
+      "trigger_comment_id": 6928304008,
+      "status": "in progress",
+      "pr": 162,
+      "report_path": "state/reports/w12-6928304008/report.md",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
     }
   ],
   "active_delegations": [],
