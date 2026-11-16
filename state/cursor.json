@@ -2220,11 +2220,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D110",
-    "incoming_comment": 6903067177,
-    "review_comment_id": 6903106255
+    "active_comment": 6903560983,
+    "status": "in progress",
+    "decision": "D111"
   },
   "duplicate_events": [
     {
@@ -3976,6 +3974,13 @@
       "work_commit": "2f0b68ed263800f868db0ba2e3c1a070ab1cf9a2",
       "review_comment_id": 6903106255,
       "complete_cursor_commit": "897986ef09409278d77534dc28d9bdee00561f84"
+    },
+    {
+      "comment_id": 6903560983,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D111",
+      "progress": "Receipt; reviewing PR449 tail storage and refusal safety."
     }
   ],
   "migrated_from": {
