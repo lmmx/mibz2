@@ -50,6 +50,53 @@
     return out;
   };
 
+  // OKLab and OKLCH for the releases' ramp: hex in, hex out, mixing as CSS color-mix(in
+  // oklch) does (the shorter way round the hue), out-of-gamut channels clipped as Chromium
+  // renders them
+  const Ok = (() => {
+    const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    const gam = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
+    const lab = (hex) => {
+      const [r, g, b] = [1, 3, 5].map((k) => lin(parseInt(hex.trim().slice(k, k + 2), 16) / 255));
+      const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+      const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+      const q = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+      return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * q, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * q, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * q];
+    };
+    const lch = (hex) => { const [L, a, b] = lab(hex); return [L, Math.hypot(a, b), ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360]; };
+    const hex = ([L, C, h]) => {
+      const a = C * Math.cos((h * Math.PI) / 180), b = C * Math.sin((h * Math.PI) / 180);
+      const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3, m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, q = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+      const rgb = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * q, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * q, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * q];
+      return "#" + rgb.map((c) => Math.round(255 * gam(Math.min(1, Math.max(0, c)))).toString(16).padStart(2, "0")).join("");
+    };
+    const mix = (p, q, t) => {
+      let dh = q[2] - p[2];
+      if (dh > 180) dh -= 360;
+      if (dh < -180) dh += 360;
+      return [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, (p[2] + dh * t + 360) % 360];
+    };
+    const dE = (p, q) => { const a = lab(p), b = lab(q); return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); };
+    // the ramp through the stops, walked by distance: at(t) is the colour a fraction t of the
+    // way along it by OKLab arc length, so equal steps in t are equal perceived steps
+    const ramp = (stops) => {
+      const S = stops.map(lch), N = 400, pts = [], cum = [0];
+      for (let k = 0; k <= N; k++) {
+        const u = (k * (S.length - 1)) / N, a = Math.min(S.length - 2, Math.floor(u));
+        pts.push(hex(mix(S[a], S[a + 1], u - a)));
+        if (k) cum.push(cum[k - 1] + dE(pts[k - 1], pts[k]));
+      }
+      return (t) => {
+        const g = Math.max(0, Math.min(1, t)) * cum[N];
+        let k = 1;
+        while (k < N && cum[k] < g) k++;
+        const f = (g - cum[k - 1]) / (cum[k] - cum[k - 1] || 1);
+        return hex(mix(lch(pts[k - 1]), lch(pts[k]), f));
+      };
+    };
+    return { lch, hex, ramp };
+  })();
+
   function chart(data, series, metric, root) {
     const [key, , unit, fmt] = metric;
     const fig = el("figure", { class: "bh-chart" }, root);
@@ -435,12 +482,16 @@
   // release on the newest run's measured lbzip2 throughput: the shape is measured, each
   // release's level relative to lbzip2 is modelled. The matrix is release against release at
   // one thread count.
+  // the All releases view's isolated release: pinned by a click or tap, kept across redraws
+  const linFocus = { pinned: null, hover: null };
+  const RECENT = 5; // the newest releases drawn at full strength; the older ones muted
   function releaseLineage(ws, lin, box, seg) {
     const corpora = [...new Set(lin.map((g) => g.corpus))].sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
     if (!corpora.includes(state.wsCorpus)) state.wsCorpus = corpora[0];
     if (corpora.length > 1) seg("Corpus", corpora.map((c) => [c, c]), state.wsCorpus, (v) => (state.wsCorpus = v));
     const g = lin.find((l) => l.corpus === state.wsCorpus);
     const R = g.releases, ts = g.threads.map(String), n = R.length;
+    linFocus.hover = null;
     if (!ts.includes(state.wsLinT)) state.wsLinT = ts[ts.length - 1];
     seg("Matrix at", ts.map((t) => [t, `${t} thread${t === "1" ? "" : "s"}`]), state.wsLinT, (v) => (state.wsLinT = v));
     const P = g.per_thread, k = g.t975;
@@ -487,23 +538,103 @@
     // lbzip2, measured: dashed and muted
     const lp = ts.map((t, i) => [x(i), P[t].anchor_mbps]).filter(([, v]) => v);
     svg("polyline", { points: lp.map(([px, v]) => `${px},${y(v)}`).join(" "), class: "bh-line bh-anchor", stroke: "var(--bh-old)", fill: "none" }, s);
-    // one ordinal ramp, oldest to newest: the newest release is the strongest step (darkest
-    // on the light scheme, lightest on the dark), so the progression reads at a glance
-    const ramp = (i) => (n < 2 ? "var(--bh-rel-new)" : `color-mix(in oklch, var(--bh-rel-new) ${((100 * i) / (n - 1)).toFixed(1)}%, var(--bh-rel-old))`);
-    const order = R.map((_, i) => n - 1 - i);
-    order.forEach((i) => {
-      const col = ramp(i);
+    // Focus and context. The newest RECENT releases take the full ramp (bench.css: the five
+    // stops --bh-rel-0..4, their own per scheme), spread over its whole length by perceived
+    // distance, so neighbours sit as far apart as the ramp allows; the older ones a muted
+    // band, still in order (lightness), thin and low in chroma. Pointing at, focusing or
+    // pinning any release shows it at full strength: an older one takes the full ramp's
+    // colour at its own place among all the releases.
+    const cs = getComputedStyle(box), cv = (k) => cs.getPropertyValue(k).trim();
+    const full = Ok.ramp([0, 1, 2, 3, 4].map((k) => cv(`--bh-rel-${k}`)));
+    const recent = Math.min(RECENT, n), old = n - recent;
+    const muteL = [+cv("--bh-rel-mute-l0"), +cv("--bh-rel-mute-l1")], muteC = +cv("--bh-rel-mute-c");
+    const strong = R.map((_, i) => (n < 2 ? full(1) : full(i / (n - 1))));
+    const base = R.map((_, i) => {
+      if (i >= old) return recent < 2 ? full(1) : full((i - old) / (recent - 1));
+      const f = old < 2 ? 1 : i / (old - 1);
+      return Ok.hex([muteL[0] + (muteL[1] - muteL[0]) * f, muteC, Ok.lch(strong[i])[2]]);
+    });
+    const hue = (i) => `--rc:${base[i]};--rf:${i >= old ? base[i] : strong[i]}`;
+    // each release's marks in one group: drawn oldest first, so the newest is on top
+    const tip = el("div", { class: "bh-tip", hidden: "" }, box);
+    const groups = R.map((r, i) => svg("g", { class: `bh-rel ${i >= old ? "is-recent" : "is-muted"}${i === ni ? " is-newest" : ""}`, "data-i": i, style: hue(i) }, s));
+    const runsOf = (i) => g.runs.filter((r) => r.new === R[i] || r.old === R[i]);
+    const showTip = (i, t, px, py) => {
+      tip.textContent = "";
+      el("div", { class: "bh-tip-title", text: `${R[i]} · ${t} thread${t === "1" ? "" : "s"}` }, tip);
+      const row = (text, on) => {
+        const d = el("div", { class: `bh-tip-row${on ? " is-on" : ""}` }, tip);
+        if (on) el("span", { class: "bh-swatch", style: `background:${i >= old ? base[i] : strong[i]}` }, d);
+        el("span", { text }, d);
+      };
+      row(`${mb(t, i).toFixed(0)} MB/s modelled (95%: ${mb(t, i, -k).toFixed(0)} to ${mb(t, i, k).toFixed(0)})`, true);
+      row(`wall ${Math.exp(P[t].x[i]).toFixed(3)}× ${g.anchor}'s`);
+      row(`from ${P[t].n[i]} run${P[t].n[i] === 1 ? "" : "s"}: ${runsOf(i).map((r) => `${r.new} against ${r.old} (${r.date})`).join("; ")}`);
+      const nr = g.runs.find((r) => r.id === g.newest_run);
+      row(`on ${g.anchor}'s ${P[t].anchor_mbps.toFixed(0)} MB/s in the newest run${nr ? ` (${nr.new} against ${nr.old}, ${nr.date})` : ""}`);
+      tip.hidden = false;
+      const r = s.getBoundingClientRect(), hb = box.getBoundingClientRect(), z = r.width / W;
+      const ax = r.left - hb.left + px * z, ay = r.top - hb.top + py * z;
+      const left = ax + 14 + tip.offsetWidth <= hb.width ? ax + 14 : ax - 14 - tip.offsetWidth;
+      tip.style.left = `${Math.max(0, Math.min(hb.width - tip.offsetWidth, left))}px`;
+      tip.style.top = `${ay + 12}px`;
+    };
+    const hideTip = () => { tip.hidden = true; };
+    // isolation: pointing at or focusing a release fades the rest; a click or tap on its
+    // legend entry or a point keeps it, until clicked again or another is
+    const paint = () => {
+      const key = linFocus.pinned !== null && R.includes(linFocus.pinned) ? linFocus.pinned : linFocus.hover;
+      groups.forEach((gr, i) => {
+        gr.classList.toggle("is-dim", key !== null && R[i] !== key);
+        gr.classList.toggle("is-on", R[i] === key);
+      });
+      if (key !== null && R.includes(key)) raise.setAttribute("href", `#bh-rel-${R.indexOf(key)}`);
+      else raise.removeAttribute("href");
+      for (const b of legend.querySelectorAll(".bh-ws-item")) {
+        b.classList.toggle("is-focus", b.dataset.key === key);
+        b.setAttribute("aria-pressed", String(b.dataset.key === linFocus.pinned));
+      }
+    };
+    const enter = (i) => { linFocus.hover = R[i]; paint(); };
+    const leave = (i) => { if (linFocus.hover === R[i]) { linFocus.hover = null; paint(); } };
+    const pin = (i) => { linFocus.pinned = linFocus.pinned === R[i] ? null : R[i]; linFocus.hover = R[i]; paint(); };
+    R.forEach((_, i) => {
+      const gr = groups[i];
+      gr.id = `bh-rel-${i}`;
       const pts = ts.map((t, j) => [j, t]).filter(([, t]) => ok(t, i) && P[t].anchor_mbps);
-      svg("polyline", { points: pts.map(([j, t]) => `${x(j)},${y(mb(t, i))}`).join(" "), class: "bh-line", stroke: col, fill: "none" }, s);
+      const line = pts.map(([j, t]) => `${x(j)},${y(mb(t, i))}`).join(" ");
+      svg("polyline", { points: line, class: "bh-line", fill: "none" }, gr);
+      // a wide, invisible stroke along the line: pointing near it shows its nearest point
+      const lh = svg("polyline", { points: line, class: "bh-line-hit", fill: "none" }, gr);
+      const nearest = (ev) => {
+        const r = s.getBoundingClientRect(), px = ((ev.clientX - r.left) * W) / r.width;
+        return pts.reduce((b, p) => (Math.abs(x(p[0]) - px) < Math.abs(x(b[0]) - px) ? p : b), pts[0]);
+      };
+      lh.addEventListener("pointerenter", () => enter(i));
+      const near = (ev) => { const [j, t] = nearest(ev); showTip(i, t, x(j), y(mb(t, i))); };
+      lh.addEventListener("pointermove", near);
+      lh.addEventListener("pointerleave", (ev) => { if (ev.pointerType !== "touch") { leave(i); hideTip(); } });
+      lh.addEventListener("click", (ev) => { pin(i); near(ev); });
       for (const [j, t] of pts) {
-        const a = svg("g", {}, s);
-        svg("line", { x1: x(j), x2: x(j), y1: y(mb(t, i, k)), y2: y(mb(t, i, -k)), class: "bh-whisker", stroke: col }, a);
-        svg("circle", { cx: x(j), cy: y(mb(t, i)), r: 3, class: "bh-dot", fill: col }, a);
-        svg("title", {}, a).textContent =
-          `${R[i]} at ${t} thread${t === "1" ? "" : "s"}: ${mb(t, i).toFixed(0)} MB/s modelled (95%: ${mb(t, i, -k).toFixed(0)} to ${mb(t, i, k).toFixed(0)}), ` +
-          `wall ${Math.exp(P[t].x[i]).toFixed(3)}× ${g.anchor}'s, from ${P[t].n[i]} run${P[t].n[i] === 1 ? "" : "s"}`;
+        const a = svg("g", { class: "bh-pt", tabindex: 0, role: "button", "aria-label": `${R[i]} at ${t} thread${t === "1" ? "" : "s"}: ${mb(t, i).toFixed(0)} MB/s modelled` }, gr);
+        svg("line", { x1: x(j), x2: x(j), y1: y(mb(t, i, k)), y2: y(mb(t, i, -k)), class: "bh-whisker" }, a);
+        svg("circle", { cx: x(j), cy: y(mb(t, i)), r: 3, class: "bh-dot" }, a);
+        svg("circle", { cx: x(j), cy: y(mb(t, i)), r: 10, class: "bh-hit" }, a);
+        const show = () => { enter(i); showTip(i, t, x(j), y(mb(t, i))); };
+        a.addEventListener("pointerenter", show);
+        a.addEventListener("focus", show);
+        // (a touch's pointerleave follows its tap at once: the tap pins, and the card stays)
+        a.addEventListener("pointerleave", (ev) => { if (ev.pointerType !== "touch") { leave(i); hideTip(); } });
+        a.addEventListener("blur", () => { leave(i); hideTip(); });
+        a.addEventListener("click", () => { pin(i); showTip(i, t, x(j), y(mb(t, i))); });
+        a.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pin(i); } });
       }
     });
+    // a tap or click away from every point puts the card away
+    s.addEventListener("click", (ev) => { if (!ev.target.closest(".bh-pt, .bh-line-hit")) hideTip(); });
+    // the release in focus, drawn again on top of the others (a copy: its marks keep their
+    // place, so focus is never lost)
+    const raise = svg("use", { class: "bh-raise", "aria-hidden": "true" }, s);
     // direct labels at the right-hand end, nudged apart so neighbours never collide; a leader
     // in the release's colour ties each label to its line
     const ends = R.map((r, i) => {
@@ -518,15 +649,26 @@
     if (over > 0) for (const e of ends) e.y -= over;
     for (let q = ends.length - 2; q >= 0; q--) ends[q].y = Math.min(ends[q].y, ends[q + 1].y - gap);
     for (const e of ends) {
-      svg("line", { x1: e.x0 + 4, x2: e.x0 + 12, y1: e.y0, y2: e.y, stroke: ramp(e.i), class: "bh-leader" }, s);
-      svg("text", { x: e.x0 + 14, y: e.y + 4, class: "bh-tick bh-end-label" }, s).textContent = e.r;
+      const lg = svg("g", { class: "bh-end" }, groups[e.i]);
+      svg("line", { x1: e.x0 + 4, x2: e.x0 + 12, y1: e.y0, y2: e.y, class: "bh-leader" }, lg);
+      svg("text", { x: e.x0 + 14, y: e.y + 4, class: `bh-tick bh-end-label${e.i === ni ? " is-newest" : ""}` }, lg).textContent = e.r;
+      lg.addEventListener("pointerenter", () => enter(e.i));
+      lg.addEventListener("pointerleave", () => leave(e.i));
+      lg.addEventListener("click", () => pin(e.i));
     }
-    // the key in version order, oldest first, as the ramp runs
+    // the key in version order, oldest first, as the ramp runs: each entry a button, pointing
+    // or focusing isolates its release, a click or tap keeps it (pressed)
     R.forEach((r, i) => {
-      const item = el("span", { class: "bh-ws-key" }, legend);
-      el("span", { class: "bh-swatch", style: `background:${ramp(i)}` }, item);
-      item.append(` ${r}  `);
+      const b = el("button", { type: "button", class: `bh-ws-key bh-ws-item${i >= old ? "" : " is-muted"}${i === ni ? " is-newest" : ""}`, "aria-pressed": "false", "data-key": r, style: hue(i) }, legend);
+      el("span", { class: "bh-swatch" }, b);
+      el("span", { text: r }, b);
+      b.addEventListener("click", () => pin(i));
+      b.addEventListener("pointerenter", () => enter(i));
+      b.addEventListener("focus", () => enter(i));
+      b.addEventListener("pointerleave", () => leave(i));
+      b.addEventListener("blur", () => leave(i));
     });
+    paint();
     const item = el("span", { class: "bh-ws-key" }, legend);
     el("span", { class: "bh-swatch is-dashed", style: "background:var(--bh-old)" }, item);
     item.append(` ${g.anchor} (measured)`);
@@ -540,9 +682,11 @@
       `Measured: ${g.anchor}'s MB/s in the newest run (dashed), and each release's wall time against ${g.anchor} in the runs it was in. ` +
       `Modelled: each release's curve, its pooled ratio to ${g.anchor} applied to that MB/s; whiskers are 95% intervals of the ratio alone. ` +
       (wT ? `Drift, a release against itself in its two runs (the later less the earlier): largest at ${T} thread${T === "1" ? "" : "s"} ${drift(wT)}` +
-        (wAll && wAll.t !== T ? `; largest at any thread count ${drift(wAll)} at ${wAll.t} thread${wAll.t === "1" ? "" : "s"}.` : ", the largest at any thread count.") : "");
-    // the matrix: row against column, throughput change, at the chosen threads
+        (wAll && wAll.t !== T ? `; largest at any thread count ${drift(wAll)} at ${wAll.t} thread${wAll.t === "1" ? "" : "s"}.` : ", the largest at any thread count.") : "") +
+      " Point at, tap or Tab to a point for its figures; point at a release (its line, end label or key entry) to pick it out, and click or tap to keep it.";
+    // the matrix: row against column, newest first, throughput change, at the chosen threads
     el("p", { class: "bh-hero-commit", text: `Throughput of the row's release against the column's at ${T} thread${T === "1" ? "" : "s"}, with its 95% interval. Coloured where the interval excludes zero: blue faster, orange slower; a ring marks a pair measured directly in one run.` }, box);
+    const order = R.map((_, i) => n - 1 - i);
     const tbl = el("table", { class: "bh-matrix" }, el("div", { class: "bh-scroll" }, box));
     const hr = el("tr", {}, el("thead", {}, tbl));
     el("th", { text: "row ÷ column", scope: "col" }, hr);
@@ -815,7 +959,18 @@
     }, 150);
   });
 
+  // The release ramp's colours are worked out when drawn (from the scheme's stops): a change
+  // of scheme redraws
+  let schemeWatch = false;
+  const watchScheme = () => {
+    if (schemeWatch || typeof MutationObserver === "undefined") return;
+    schemeWatch = true;
+    const mo = new MutationObserver(() => { if (drawn.hero && drawn.hero[1].isConnected) trajectory(...drawn.hero); });
+    for (const e of [document.documentElement, document.body]) mo.observe(e, { attributes: true, attributeFilter: ["data-md-color-scheme"] });
+  };
+
   function init() {
+    watchScheme();
     const root = document.getElementById("bench-history");
     if (root) {
       fetch(root.dataset.src)

@@ -13,9 +13,19 @@
   --bh-s7: #6250d6;
   --bh-s8: #e34948;
   --bh-old: #a3a29b;
-  /* the releases' ordinal ramp (one hue, OKLCH L 0.30 to 0.74, validated --ordinal) */
-  --bh-rel-new: #002b64;
-  --bh-rel-old: #7caeee;
+  /* the releases' ramp, oldest (0) to newest (4) (bench.js, releaseLineage): mixed in OKLCH
+     and walked by OKLab arc length. The newest five releases take it at equal perceived
+     steps: lightness falls (OKLCH L 0.77 to 0.46, nothing near black) while the hue turns
+     yellow, green, cerulean, blue, violet. The older releases are a muted band: the ramp's
+     hue at chroma 0.04, lightness 0.84 (oldest) to 0.72 */
+  --bh-rel-0: #d6b200;
+  --bh-rel-1: #569f49;
+  --bh-rel-2: #1f997c;
+  --bh-rel-3: #333feb;
+  --bh-rel-4: #8804a0;
+  --bh-rel-mute-l0: 0.84;
+  --bh-rel-mute-l1: 0.72;
+  --bh-rel-mute-c: 0.04;
   font-variant-numeric: tabular-nums;
 }
 [data-md-color-scheme="slate"] .bh-root {
@@ -30,8 +40,17 @@
   --bh-s7: #9085e9;
   --bh-s8: #e66767;
   --bh-old: #6d6c67;
-  --bh-rel-new: #cfe9ff;
-  --bh-rel-old: #275b9b;
+  /* the dark scheme's own stops: lightness rises (L 0.50 to 0.86, nothing near white) while
+     the hue turns magenta, blue, teal, green, yellow; the muted band greyish and mid
+     (chroma 0.03, L 0.44 oldest to 0.58) */
+  --bh-rel-0: #a4009f;
+  --bh-rel-1: #3b46f2;
+  --bh-rel-2: #00ab87;
+  --bh-rel-3: #57af00;
+  --bh-rel-4: #f8cd00;
+  --bh-rel-mute-l0: 0.44;
+  --bh-rel-mute-l1: 0.58;
+  --bh-rel-mute-c: 0.03;
 }
 .bh-root .bh-controls {
   display: flex;
@@ -451,4 +470,109 @@
 }
 .bh-root .bh-end-label {
   fill: var(--bh-ink-2);
+}
+
+/* The All releases view (bench.js, releaseLineage): each release's colour is --rc, and --rf
+   at full strength. The newest release's line is the strongest, the other recent ones next,
+   the older ones muted and thin; pointing at, focusing or pinning a release shows it at
+   full strength and fades the others */
+.bh-hero .bh-rel {
+  transition: opacity 120ms ease-out;
+}
+.bh-hero .bh-rel .bh-line,
+.bh-hero .bh-rel .bh-whisker,
+.bh-hero .bh-rel .bh-leader {
+  stroke: var(--rc);
+}
+.bh-hero .bh-rel .bh-dot {
+  fill: var(--rc);
+}
+.bh-hero .bh-rel .bh-line {
+  stroke-width: 1.75;
+}
+.bh-hero .bh-rel.is-muted .bh-line {
+  stroke-width: 1.25;
+  opacity: 0.9;
+}
+.bh-hero .bh-rel.is-newest .bh-line {
+  stroke-width: 2.5;
+}
+.bh-hero .bh-rel.is-on .bh-line,
+.bh-hero .bh-rel.is-on .bh-whisker,
+.bh-hero .bh-rel.is-on .bh-leader {
+  stroke: var(--rf);
+  opacity: 1;
+}
+.bh-hero .bh-rel.is-on .bh-dot {
+  fill: var(--rf);
+}
+.bh-hero .bh-rel.is-on .bh-line {
+  stroke-width: 3;
+}
+.bh-hero .bh-rel.is-dim {
+  opacity: 0.25;
+}
+.bh-hero .bh-rel.is-muted .bh-end-label {
+  opacity: 0.6;
+}
+.bh-hero .bh-rel.is-on .bh-end-label {
+  opacity: 1;
+  fill: var(--md-default-fg-color);
+}
+.bh-hero .bh-line-hit {
+  stroke: transparent;
+  stroke-width: 10;
+  stroke-linejoin: round;
+  cursor: pointer;
+}
+.bh-hero .bh-rel .bh-pt:focus-visible .bh-hit,
+.bh-hero .bh-rel .bh-pt:hover .bh-hit {
+  fill: var(--bh-grid);
+  opacity: 0.6;
+}
+.bh-hero .bh-end {
+  cursor: pointer;
+}
+.bh-hero .bh-end-label.is-newest {
+  font-weight: 600;
+  fill: var(--md-default-fg-color);
+}
+.bh-hero .bh-raise,
+.bh-hero .bh-raise * {
+  pointer-events: none;
+}
+.md-typeset .bh-hero .bh-ws-item {
+  font: inherit;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0.35rem 0.15rem 0;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+.md-typeset .bh-hero .bh-ws-item .bh-swatch {
+  background: var(--rc);
+}
+.md-typeset .bh-hero .bh-ws-item.is-muted {
+  opacity: 0.75;
+}
+.md-typeset .bh-hero .bh-ws-item.is-newest {
+  font-weight: 600;
+}
+.md-typeset .bh-hero .bh-ws-item.is-focus {
+  color: var(--md-default-fg-color);
+  opacity: 1;
+  background: color-mix(in srgb, var(--bh-grid) 55%, transparent);
+}
+.md-typeset .bh-hero .bh-ws-item[aria-pressed="true"] {
+  border-color: var(--bh-ink-2);
+  color: var(--md-default-fg-color);
+  opacity: 1;
+}
+.md-typeset .bh-hero .bh-ws-item.is-focus .bh-swatch,
+.md-typeset .bh-hero .bh-ws-item[aria-pressed="true"] .bh-swatch {
+  background: var(--rf);
 }
