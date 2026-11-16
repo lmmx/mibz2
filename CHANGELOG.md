@@ -31,8 +31,15 @@ the output and the speed below 10 threads are unchanged.
   at 4 threads −3.3%), within the spread of a 21-cell table.
 - **Caveats:** one machine. Eleven threads was not measured directly (it gets the same plan as
   12). Machines with 11 or more physical cores keep the teams, untested.
-- **Release scaling and the crossover at the tag** are queued on the workstation (#473);
-  their figures follow here.
+- **Release scaling, the i9-10900K** (`release-scaling/run-20261116T092431Z`, #475): 0.5.0's
+  wall over 0.5.1's is level from 1 to 8 threads (0.991–1.006), then 1.079 [1.068, 1.090] at
+  10, 1.066 at 12 and 1.084 at 16 and 20: 0.5.1 is 6–8% faster from 10 threads up. Its cost:
+  CPU 0.906 at 10 and 0.763–0.776 at 12–20 (10% to 31% more CPU), and peak RSS 72 → 187–193 MB
+  at 10–20 threads. Wall is fastest at 8 threads (0.109 s) on this file.
+- **The team threshold** (RELEASING.md §5a; `lazy-crossover/run-20261116T093528Z`, #145 LOG
+  6913175299): sanity passes at every count, and no forced arm beats the shipped plan anywhere,
+  so nothing moves. Against forced three teams, shipped takes 0.902× the wall at 10 threads and
+  0.638× at 20. The memory dose is 2.580 eager and 1.985 lazy.
 - **Research features reviewed** (RELEASING §3.3): `memory-lever`'s run is read and its lazy arm
   promoted, so it is to go in its own PR; `trace`, `wait-stats`, `walk-stats`, `dose` and
   `phase-counters` stay.
