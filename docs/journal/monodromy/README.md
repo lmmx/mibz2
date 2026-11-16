@@ -26,6 +26,9 @@ cargo run --release --features induction-trace --example induction_trace -- \
   `2026-11-10-rauzy-veech/synthetic.py.txt`.
 - **Size.** The 233 Wikidata blocks are 1.58 GB (5–14 MB a block), too big for git, so make
   them where you read them.
+- **The committed sample** is on the data-only branch `data/induction-records` (31 MB, xz,
+  which the reader opens as it is): every 24th Wikidata block and every prose block, with the
+  prose corpus it was made from (`git fetch origin data/induction-records`).
 
 **Read them** with `bench/irec.py` (standard library only).
 - **Load:** `irec.load(path)` gives the header and the arrays.
