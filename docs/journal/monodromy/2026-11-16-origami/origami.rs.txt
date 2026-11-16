@@ -80,6 +80,13 @@ fn run(blk: usize, ll: &[u8]) {
     let mut seen2 = vec![false; nr];
     let mut sc = 0usize;
     for s0 in 0..nr { if seen2[s0] { continue; } let (mut x, mut len) = (s0, 0); while !seen2[x] { seen2[x] = true; x = sigma(x); len += 1; } if len >= 2 { sc += 1; } }
+    // the quarter-turned surface in text coordinates: phi(p) = text position of (row of p) + 1
+    let mut tpos = vec![0u32; n]; // row -> text position (position 0 at row 0, going backward)
+    let mut rowof = vec![0u32; n];
+    { let mut x = 0usize; for t in 0..n { tpos[x] = ((n - t) % n) as u32; x = lf[x] as usize; } }
+    for x in 0..n { rowof[tpos[x] as usize] = x as u32; }
+    let phi = |p: usize| tpos[(rowof[p] as usize + 1) % n] as usize;
+    let phi_breaks = (0..n).filter(|&p| phi((p + 1) % n) != (phi(p) + 1) % n).count();
     let mut dirs = Vec::new();
     for kk in [-3i64, -2, -1, 1, 2, 3] {
         // direction (k, 1): one square up, k squares right: x -> u(r^k(x))
@@ -88,5 +95,5 @@ fn run(blk: usize, ll: &[u8]) {
         dirs.push(format!("[{kk},{a},{b}]"));
     }
     let (vu, vl, _) = cycles(n, u);
-    println!("{{\"block\":{blk},\"n\":{n},\"r\":{runs},\"comm_cycles\":{cc},\"comm_longest\":{cl},\"comm_fixed\":{cf},\"cones\":{cones},\"genus\":{genus},\"sigma_cycles\":{sc},\"vertical\":[{vu},{vl}],\"dirs\":[{}]}}", dirs.join(","));
+    println!("{{\"block\":{blk},\"n\":{n},\"r\":{runs},\"comm_cycles\":{cc},\"comm_longest\":{cl},\"comm_fixed\":{cf},\"cones\":{cones},\"genus\":{genus},\"sigma_cycles\":{sc},\"phi_breaks\":{phi_breaks},\"vertical\":[{vu},{vl}],\"dirs\":[{}]}}", dirs.join(","));
 }
