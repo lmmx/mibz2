@@ -59,6 +59,16 @@ jobs:
           python3 bench/lazy_crossover.py bench/lazy_crossover_example_runs.jsonl bench/lazy_crossover_example_dose.jsonl | tee dose.txt
           grep -q '59.8% with a slot for every letter, 20.0% with lazy letters' dose.txt
           grep -q 'mibz2-workers-lazy *110 *170' dose.txt
+      # a two-arm adoption run's reading (`bench/two_arm.py`; `just bench-w12`, as #481's
+      # `bench-cores-less-one`): each verdict on synthetic runs, Holm's arithmetic, a moved
+      # control, and no verdict from incomplete or malformed records or metadata, the
+      # Researcher's fabricated bundle among them
+      - name: The two-arm adoption reading (synthetic runs)
+        run: python3 bench/test_two_arm.py
+      # the counters' reader (`bench/counters.py`; `just bench-w12`'s L2 diagnostic), driven
+      # with a stub perf and child: a complete run read, and every defect leaves no report
+      - name: The counters reader (stub perf)
+        run: python3 bench/test_counters.py
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the
