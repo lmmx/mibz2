@@ -41,10 +41,12 @@ gcc-aarch64-linux-gnu`, then `cargo test --release --target aarch64-unknown-linu
 The Rust toolchain is pinned in `rust-toolchain.toml` (1.99.1), and rustup uses it for
 every build in the checkout: CI, the benchmark, the release wheels and the workstation
 recipes. The compiler moves the decoder's figures more than many of the effects being
-gated. Lazy Cells' induction, for one, takes 219 instructions a letter under 1.97 and 176
-under 1.99.1, and a candidate measured against it went from 37.6 instructions a letter
-fewer to 22.6 more between those two. A comparison between toolchains is not a comparison
-of the code.
+gated. Lazy Cells' induction, for one, took 219 instructions a letter under 1.97 and 176
+under 1.99.1 in one research binary, where a candidate against it swung from 37.6
+instructions a letter fewer to 22.6 more. In the benchmark binary the same candidate moved
+far less (+6.2 under 1.98.0, −7.1 under 1.99.1): codegen differs by binary as well as by
+compiler. So gates are counted on the benchmark's own arms, built with the pinned compiler.
+A comparison between toolchains is not a comparison of the code.
 
 - **The workflows name the same version** (`dtolnay/rust-toolchain@1.99.1`, maturin-action's
   `rust-toolchain`). test.yml checks that they agree with the file. A deliberate exception
