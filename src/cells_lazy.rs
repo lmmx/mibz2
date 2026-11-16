@@ -656,6 +656,9 @@ impl Kernel {
                     top += if small { len as usize } else { 0 };
                     rp += if small { 0 } else { 16 };
                     let cw = len | (word as u64) << 32;
+                    // (research only, `grammar-replay`: the word made, by length)
+                    #[cfg(feature = "grammar-replay")]
+                    replay_word(len);
                     // (research only, `induction-trace`: the cell's two letters, what was
                     // left of each and their words' lengths)
                     #[cfg(feature = "induction-trace")]
