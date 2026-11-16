@@ -34,8 +34,14 @@ cargo run --release --features induction-trace --example induction_trace -- \
 - **Words:** `rec.word(x)` expands letter x's word.
 - **Check:** `irec.py DIR --check` replays every step and checks it against the record.
 
-The format, `irec/1`, is in the module docs of `src/itrace.rs` and `bench/irec.py`. It is
-proposed on #145 (REVIEW 6915432098) and is fixed once MONODROMY confirms it.
+The format, `irec/1`, is in the module docs of `src/itrace.rs` and `bench/irec.py`. It was
+proposed on #145 (REVIEW 6915432098) and confirmed by MONODROMY (REVIEW 6915567239) with two
+arrays added:
+- `s_heir`: the classical identity of each step's cell (the loser, or B at an equal step);
+- `s_fresh`: how each step's fronts were read (stream or slot), checked against the kernel's
+  own reads.
+
+`row_letter` is the walk's one-row letter.
 
 **What a record is checked against before it is written:**
 1. the kernel's own log of its cells and closures, step for step, which is the replay that

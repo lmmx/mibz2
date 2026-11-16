@@ -3,6 +3,7 @@
 replay the two orders of letters to any step. Standard library only.
 
     irec.py FILE.irec|DIR [--check]      a line a record; --check replays every step
+                                         (also .irec.xz and .irec.gz)
 
 In Python:
 
@@ -20,6 +21,12 @@ In Python:
   - The cell lies right after B on top and right after A on the bottom.
   - A and B lose its width, and a letter at 0 leaves both orders.
   - `s_type`: 0 both end, 1 A wins (B ends), 2 B wins (A ends).
+  - `s_heir`: the letter the cell continues, as classical Rauzy-Veech keeps it: the loser,
+    or B at an equal step. Rename the cell by it to get the Rauzy-class permutation.
+  - `s_fresh`: how the step's fronts were read for it. Bit 0 (1): A from its stream, a
+    block's letter no front had reached. Bit 1 (2): B from its stream. Bit 2 (4): A from a
+    slot. Bit 3 (8): B from a slot. A letter that goes on from the step before is not read.
+- **The walk's row:** `row_letter` is the one-row letter cut out of the walk's run.
 - **Closures:** at the start of a run of steps (the first, or one after an equal step or a
   closure), a letter last in both orders closes and leaves them (`c_step`, `c_letter`).
   The last to close is the marked one, `final`, whose word is the cycle's.
@@ -29,12 +36,15 @@ In Python:
   - The step its letter was made at and the step it ended or closed at (`NONE` for neither).
 """
 import array
+import gzip
 import json
+import lzma
 import os
 import sys
 
 NONE = 0xFFFFFFFF
 EQUAL, TOP_WINS, BOTTOM_WINS = 0, 1, 2
+FRESH_A, FRESH_B, SLOT_A, SLOT_B = 1, 2, 4, 8
 BYTE, ARENA, RULE, MARKED = 0, 1, 2, 4
 
 
@@ -77,7 +87,9 @@ class Record:
 
 
 def load(path):
-    with open(path, "rb") as f:
+    """A record, from `NNNN.irec`, or compressed as `.irec.xz` or `.irec.gz`"""
+    opener = {".xz": lzma.open, ".gz": gzip.open}.get(os.path.splitext(path)[1], open)
+    with opener(path, "rb") as f:
         data = f.read()
     nl = data.index(b"\n")
     head = json.loads(data[:nl])
@@ -165,6 +177,9 @@ class Orders:
         ra, rb = self.lam[a], self.lam[b]
         if (ra, rb) != (self.rec.a["s_ra"][i], self.rec.a["s_rb"][i]):
             raise AssertionError(f"step {i}: rows ({ra}, {rb}) against the record's")
+        heir = a if ra < rb else b
+        if self.rec.a["s_heir"][i] != heir:
+            raise AssertionError(f"step {i}: heir {self.rec.a['s_heir'][i]}, replay {heir}")
         w = min(ra, rb)
         c = self.r + i
         self.lam[c] = w
@@ -209,7 +224,8 @@ class Orders:
 
 def paths(arg):
     if os.path.isdir(arg):
-        return sorted(os.path.join(arg, f) for f in os.listdir(arg) if f.endswith(".irec"))
+        ends = (".irec", ".irec.xz", ".irec.gz")
+        return sorted(os.path.join(arg, f) for f in os.listdir(arg) if f.endswith(ends))
     return [arg]
 
 

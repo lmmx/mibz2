@@ -3,11 +3,13 @@
 //! induction's actual paths (#145, QUEUED 6915302968). Without the feature this module is
 //! not compiled, and the kernel's hooks are not either.
 //!
-//! **What the kernel gives.** While a thread records (`Recording`), `induce_lazy` logs each
-//! cell it makes, as `(ra, rb, la, lb)`: what was left of the top and bottom front letters,
-//! in rows, and their words' lengths with the mark bit. It also logs each letter that closes
-//! (the same letter last in both orders), with its word's length; the last closes with the
-//! mark, and the induction ends there. The kernel names no letter: its slots are reused.
+//! **What the kernel gives.** While a thread records, `induce_lazy` logs each cell it makes,
+//! as `(ra, rb, la, lb)`: what was left of the top and bottom front letters, in rows, and
+//! their words' lengths with the mark bit; and, for each front read since the cell before,
+//! whether it read its letter from its stream (a letter no front had reached) or from a slot.
+//! It also logs each letter that closes (the same letter last in both orders), with its
+//! word's length; the last closes with the mark, and the induction ends there. The kernel
+//! names no letter: its slots are reused.
 //!
 //! **What the replay adds.** `record` builds the same letters from the same run records as
 //! the kernel's first stage, and runs the same induction on them, safely, as an interval
@@ -44,6 +46,10 @@ const SHIFT: usize = 1;
 struct Log {
     /// a cell: (ra, rb, la, lb)
     cells: Vec<[u32; 4]>,
+    /// a cell's reads (`s_fresh`'s bits): the fronts read since the cell before, and how
+    reads: Vec<u32>,
+    /// the reads since the last cell or closure
+    pending: u32,
     /// a closed letter: (cells made before it, its word's length with the mark)
     closed: Vec<(u32, u32)>,
 }
@@ -58,6 +64,18 @@ pub(crate) fn cell(ra: u64, rb: u64, la: u64, lb: u64) {
     LOG.with(|l| {
         if let Some(log) = l.borrow_mut().as_mut() {
             log.cells.push([ra as u32, rb as u32, la as u32, lb as u32]);
+            log.reads.push(std::mem::take(&mut log.pending));
+        }
+    });
+}
+
+/// (the kernel's hook) a front read its letter: `side` 0 the top, 1 the bottom; `fresh`, from
+/// its stream (else from a slot)
+#[inline(always)]
+pub(crate) fn read(side: u32, fresh: bool) {
+    LOG.with(|l| {
+        if let Some(log) = l.borrow_mut().as_mut() {
+            log.pending |= if fresh { FRESH_A } else { SLOT_A } << side;
         }
     });
 }
@@ -69,6 +87,7 @@ pub(crate) fn closed(len: u64) {
         if let Some(log) = l.borrow_mut().as_mut() {
             let at = log.cells.len() as u32;
             log.closed.push((at, len as u32));
+            log.pending = 0;
         }
     });
 }
@@ -94,8 +113,17 @@ pub const ARENA: u32 = 1;
 pub const RULE: u32 = 2;
 /// `w_kind`: the word holds the walk's row
 pub const MARKED: u32 = 4;
-/// `w_birth` of a block's own letter; `w_death` of the final letter
+/// `w_birth` of a block's own letter; `w_death` of the final letter; `s_heir` of none
 pub const NONE: u32 = u32::MAX;
+
+/// `s_fresh`: the step's top front letter was read for it, from its stream: a block's own
+/// letter no front had reached (bit 0); the bottom's (bit 1)
+pub const FRESH_A: u32 = 1;
+pub const FRESH_B: u32 = 2;
+/// `s_fresh`: the step's top front letter was read for it, from a slot (bit 2); the
+/// bottom's (bit 3). A letter that goes on from the step before is not read: neither bit
+pub const SLOT_A: u32 = 4;
+pub const SLOT_B: u32 = 8;
 
 /// One block's record (the format `irec/1`; `bench/irec.py` reads it)
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -125,6 +153,11 @@ pub struct Record {
     pub s_ra: Vec<u32>,
     pub s_rb: Vec<u32>,
     pub s_type: Vec<u32>,
+    /// the letter a step's cell continues, as classical Rauzy–Veech keeps it: the loser, or
+    /// B at an equal step
+    pub s_heir: Vec<u32>,
+    /// how the step's fronts were read for it (`FRESH_A`, `FRESH_B`, `SLOT_A`, `SLOT_B`)
+    pub s_fresh: Vec<u32>,
     /// a closed letter, after how many steps
     pub c_step: Vec<u32>,
     pub c_letter: Vec<u32>,
@@ -139,7 +172,7 @@ pub struct Record {
 
 impl Record {
     /// The arrays, by name, in the order written
-    pub fn arrays(&self) -> [(&'static str, &[u32]); 15] {
+    pub fn arrays(&self) -> [(&'static str, &[u32]); 17] {
         [
             ("l_byte", &self.l_byte),
             ("l_lam", &self.l_lam),
@@ -149,6 +182,8 @@ impl Record {
             ("s_ra", &self.s_ra),
             ("s_rb", &self.s_rb),
             ("s_type", &self.s_type),
+            ("s_heir", &self.s_heir),
+            ("s_fresh", &self.s_fresh),
             ("c_step", &self.c_step),
             ("c_letter", &self.c_letter),
             ("w_len", &self.w_len),
@@ -359,10 +394,26 @@ fn replay(recs: &[u16], n: u32, p: u32, log: &Log) -> Result<Record, String> {
     rec.l_bottom = bottom;
     let mut ci = 0usize; // the kernel's closures read
     let mut whole = true;
+    // the fronts to read before the next step (both, when both letters are read whole), the
+    // reads since the last cell or closure, and the block's letters some front has read
+    let (mut read_a, mut read_b) = (true, true);
+    let mut pending = 0u32;
+    let mut reached = vec![false; r];
     loop {
         let (a, b) = (t.tail, bo.tail);
         if a == NONE || b == NONE {
             return Err("an order ran out before the marked letter closed".into());
+        }
+        // a front reads its letter from its stream if it is a block's letter no front has
+        // read, else from a slot
+        for (side, x, go) in [(0, a, read_a), (1, b, read_b)] {
+            if go {
+                let fresh = (x as usize) < r && !reached[x as usize];
+                if (x as usize) < r {
+                    reached[x as usize] = true;
+                }
+                pending |= if fresh { FRESH_A } else { SLOT_A } << side;
+            }
         }
         if whole && a == b {
             // one letter last in both orders: its cycle closes
@@ -375,6 +426,8 @@ fn replay(recs: &[u16], n: u32, p: u32, log: &Log) -> Result<Record, String> {
                 ));
             }
             ci += 1;
+            pending = 0;
+            (read_a, read_b) = (true, true);
             rec.c_step.push(s);
             rec.c_letter.push(a);
             t.remove(a);
@@ -406,6 +459,13 @@ fn replay(recs: &[u16], n: u32, p: u32, log: &Log) -> Result<Record, String> {
                 [ra, rb, la, lb]
             ));
         }
+        if log.reads.get(i) != Some(&pending) {
+            return Err(format!(
+                "step {i}: the replay's reads are {pending:#x}, the kernel's {:?} (letters {a} and {b})",
+                log.reads.get(i)
+            ));
+        }
+        rec.s_fresh.push(std::mem::take(&mut pending));
         let w = ra.min(rb);
         let c = (r + i) as u32;
         lam[c as usize] = w;
@@ -421,11 +481,13 @@ fn replay(recs: &[u16], n: u32, p: u32, log: &Log) -> Result<Record, String> {
         rec.s_b.push(b);
         rec.s_ra.push(ra);
         rec.s_rb.push(rb);
-        rec.s_type.push(match ra.cmp(&rb) {
-            std::cmp::Ordering::Equal => EQUAL,
-            std::cmp::Ordering::Greater => TOP_WINS,
-            std::cmp::Ordering::Less => BOTTOM_WINS,
-        });
+        let (ty, heir) = match ra.cmp(&rb) {
+            std::cmp::Ordering::Equal => (EQUAL, b),
+            std::cmp::Ordering::Greater => (TOP_WINS, b),
+            std::cmp::Ordering::Less => (BOTTOM_WINS, a),
+        };
+        rec.s_type.push(ty);
+        rec.s_heir.push(heir);
         // the cell: on top at the right end of B's place, on the bottom of A's
         t.insert_after(b, c);
         bo.insert_after(a, c);
@@ -439,8 +501,9 @@ fn replay(recs: &[u16], n: u32, p: u32, log: &Log) -> Result<Record, String> {
             }
         }
         // the kernel reads both letters whole again (and so looks for a closed one) only
-        // after a step that ends both
+        // after a step that ends both; else the one that ended is read
         whole = ra == rb;
+        (read_a, read_b) = (lam[a as usize] == 0, lam[b as usize] == 0);
     }
     if ci != log.closed.len() || rec.s_a.len() != steps {
         return Err(format!(
@@ -585,6 +648,8 @@ mod tests {
         assert!(rec.s_a.len() > 4);
         let fresh = || Log {
             cells: log.cells.clone(),
+            reads: log.reads.clone(),
+            pending: 0,
             closed: log.closed.clone(),
         };
         for i in 0..log.cells.len() {
@@ -597,6 +662,16 @@ mod tests {
                 );
             }
         }
+        for i in 0..log.reads.len() {
+            for bit in [FRESH_A, FRESH_B, SLOT_A, SLOT_B] {
+                let mut bad = fresh();
+                bad.reads[i] ^= bit;
+                assert!(
+                    replay(runs.records(), n as u32, p, &bad).is_err(),
+                    "reads {i} {bit}"
+                );
+            }
+        }
         let mut bad = fresh();
         bad.cells.pop();
         assert!(
@@ -605,6 +680,7 @@ mod tests {
         );
         let mut bad = fresh();
         bad.cells.push([1, 1, 1, 1]);
+        bad.reads.push(0);
         assert!(
             replay(runs.records(), n as u32, p, &bad).is_err(),
             "a cell more"

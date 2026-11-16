@@ -512,6 +512,9 @@ impl Kernel {
                             // the bottom front reached it first: its cells, from this slot
                             s = (e ^ TAG) as usize;
                         } else {
+                            // (research only, `induction-trace`: read from its stream)
+                            #[cfg(feature = "induction-trace")]
+                            crate::itrace::read(0, true);
                             na = 0;
                             ra = (e & ((1 << LEN_BITS) - 1)) as u64;
                             aw = first1 + ((c as u64) << 32) + (((e & ROW) as u64) << 1);
@@ -525,6 +528,9 @@ impl Kernel {
                         }
                     }
                     if s != 0 {
+                        // (research only, `induction-trace`: read from a slot)
+                        #[cfg(feature = "induction-trace")]
+                        crate::itrace::read(0, false);
                         na = rd32(base, s) as usize;
                         ra = rd32(base, s + 4) as u64;
                         aw = rd64(base, s + 8);
@@ -549,6 +555,9 @@ impl Kernel {
                             // the top front reached it first: its cells, from this slot
                             s = (e ^ TAG) as usize;
                         } else {
+                            // (research only, `induction-trace`: read from its stream)
+                            #[cfg(feature = "induction-trace")]
+                            crate::itrace::read(1, true);
                             nb = 0;
                             rb = (e & ((1 << LEN_BITS) - 1)) as u64;
                             let c = (e >> LEN_BITS & 255) as u64;
@@ -563,6 +572,9 @@ impl Kernel {
                         }
                     }
                     if s != 0 {
+                        // (research only, `induction-trace`: read from a slot)
+                        #[cfg(feature = "induction-trace")]
+                        crate::itrace::read(1, false);
                         (nb, ts) = rd_bottom(bb, s);
                         rb = rd32(base, ts + 4) as u64;
                         bw = rd64(base, ts + 8);

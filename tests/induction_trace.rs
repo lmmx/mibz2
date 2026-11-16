@@ -9,7 +9,10 @@
 
 mod common;
 use common::*;
-use mibz2::itrace::{self, Record, ARENA, BYTE, EQUAL, MARKED, NONE, RULE, TOP_WINS};
+use mibz2::itrace::{
+    self, Record, ARENA, BOTTOM_WINS, BYTE, EQUAL, FRESH_A, FRESH_B, MARKED, NONE, RULE, SLOT_A,
+    SLOT_B, TOP_WINS,
+};
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::Kernels;
 
@@ -34,7 +37,14 @@ fn consistent(rec: &Record) {
     for a in [&rec.l_byte, &rec.l_lam, &rec.l_bottom] {
         assert_eq!(a.len(), r);
     }
-    for a in [&rec.s_b, &rec.s_ra, &rec.s_rb, &rec.s_type] {
+    for a in [
+        &rec.s_b,
+        &rec.s_ra,
+        &rec.s_rb,
+        &rec.s_type,
+        &rec.s_heir,
+        &rec.s_fresh,
+    ] {
         assert_eq!(a.len(), steps);
     }
     for a in [
@@ -76,6 +86,39 @@ fn consistent(rec: &Record) {
         assert_eq!(ty == TOP_WINS, ra > rb);
         uses[a] += 1;
         uses[b] += 1;
+        // the heir: the loser, or B at an equal step
+        let heir = if ty == BOTTOM_WINS { a } else { b };
+        assert_eq!(rec.s_heir[i] as usize, heir, "step {i}");
+        // the reads: a front is read for the first step and after its letter ended, once,
+        // from its stream or from a slot; a block's own letter is read from its stream once
+        let f = rec.s_fresh[i];
+        assert_eq!(f & !(FRESH_A | FRESH_B | SLOT_A | SLOT_B), 0);
+        assert!(
+            f & (FRESH_A | SLOT_A) != FRESH_A | SLOT_A
+                && f & (FRESH_B | SLOT_B) != FRESH_B | SLOT_B
+        );
+        let new_a = i == 0 || rec.s_a[i - 1] != rec.s_a[i];
+        let new_b = i == 0 || rec.s_b[i - 1] != rec.s_b[i];
+        assert_eq!(f & (FRESH_A | SLOT_A) != 0, new_a, "step {i}");
+        assert_eq!(f & (FRESH_B | SLOT_B) != 0, new_b, "step {i}");
+        if f & FRESH_A != 0 {
+            assert!(a < r);
+        }
+        if f & FRESH_B != 0 {
+            assert!(b < r);
+        }
+    }
+    // each of the block's letters is read from its stream once at most
+    let mut seen = vec![false; r];
+    for i in 0..steps {
+        for (bit, x) in [(FRESH_A, rec.s_a[i]), (FRESH_B, rec.s_b[i])] {
+            if rec.s_fresh[i] & bit != 0 {
+                assert!(
+                    !std::mem::replace(&mut seen[x as usize], true),
+                    "letter {x} read fresh twice"
+                );
+            }
+        }
     }
     assert_eq!(uses, rec.w_uses);
     // a letter leaves at each equal step (two end, one is made) and each closure, and none
