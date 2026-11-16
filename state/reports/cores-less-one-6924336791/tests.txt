@@ -1,0 +1,28 @@
+ok   t cdf: P(T_9 <= -2.262) = 0.02501, about 0.025
+ok   t cdf: P(T_4 <= -2.776) = 0.02501, about 0.025
+ok   t cdf: P(T_29 <= -2.045) = 0.02501, about 0.025
+ok   Holm: rejects [12, 16] of 0.009, 0.02, 0.5 (12 and 16)
+ok   canonical arms: mibz2@build-master, mibz2
+ok   adopts: exit 0, found 'VERDICT: ADOPTS. A gain at [12, 20] threads'
+ok   held on memory: exit 0, found 'VERDICT: HELD ON MEMORY'
+ok   a finding: exit 0, found "VERDICT: A FINDING, NOT ADOPTED. A gain at [12] threads (Holm), but SLOWER at [('text', 20)]"
+ok   not adopted: exit 0, found 'VERDICT: NOT ADOPTED. No gain established'
+ok   a control moved: exit 1, found "control cells moved [('wikidata-x4', 10)]"
+ok   a guard control moved: exit 1, found "control cells moved [('text', 9)]"
+ok   the Researcher's bundle: exit 1, found 'VOID'
+ok   the Researcher's bundle, at its own two rounds: exit 1, found 'VOID'
+ok   a record duplicated: exit 1, found 'duplicated'
+ok   a record missing: exit 1, found 'roster keys missing'
+ok   an unexpected arm: exit 1, found 'not in the roster'
+ok   a corpus mislabelled: exit 1, found 'not in the roster'
+ok   a failed run: exit 1, found 'did not succeed'
+ok   an error: exit 1, found 'did not succeed'
+ok   peak memory missing: exit 1, found 'rss_kb None'
+ok   wall not finite: exit 1, found 'wall nan'
+ok   wall a string: exit 1, found "wall '0.5'"
+ok   no hash: exit 1, found 'hash None'
+ok   an output differs: exit 1, found 'outputs differ'
+ok   a run beside a shared spinner: exit 1, found 'spinner sharing'
+ok   a line not JSON: exit 1, found 'not JSON'
+
+26 of 26 checks pass

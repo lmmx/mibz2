@@ -1,0 +1,47 @@
+{
+  "cauchy_cdf_max_error": 2.220446049250313e-16,
+  "holm_boundary_checks": "pass",
+  "control_false_void_independent_null": 0.18549375000000012,
+  "topology": [
+    {
+      "physical_cores": 8,
+      "requested": 16,
+      "old_workers": 8,
+      "new_workers": 8,
+      "old_slots": 64,
+      "new_slots": 32
+    },
+    {
+      "physical_cores": 9,
+      "requested": 18,
+      "old_workers": 9,
+      "new_workers": 8,
+      "old_slots": 72,
+      "new_slots": 32
+    },
+    {
+      "physical_cores": 10,
+      "requested": 12,
+      "old_workers": 10,
+      "new_workers": 9,
+      "old_slots": 48,
+      "new_slots": 36
+    },
+    {
+      "physical_cores": 10,
+      "requested": 16,
+      "old_workers": 10,
+      "new_workers": 9,
+      "old_slots": 64,
+      "new_slots": 36
+    },
+    {
+      "physical_cores": 10,
+      "requested": 20,
+      "old_workers": 10,
+      "new_workers": 9,
+      "old_slots": 80,
+      "new_slots": 36
+    }
+  ]
+}
