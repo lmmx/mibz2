@@ -6,3 +6,5 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-release-scaling        master                    Release scaling: 0.5.1 (workers at 10 threads #462; one lazy worker a core past the cores #468) against 0.5.0 (RELEASING §5)
+bench-lazy-crossover         master                    The team threshold at 0.5.1 (RELEASING §5a): shipped plan (now capped past the cores) against eager, lazy and teams, 4-20 threads, and the memory dose
