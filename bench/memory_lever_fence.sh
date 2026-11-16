@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # The staged kernel's store fence in the compiled library (Guardian D108, #145), and the
-# experiment's code absent from a build without its feature.
+# staged kernel's code absent from a build without its feature. (The experiment's other
+# kernel, lazy letters, is production's: src/cells_lazy.rs.)
 #
 # The tests model the fence (src/cells_lever.rs, PENDING): they show a fence object covers
 # every exit of the staged induction, but not that the object still runs `sfence`. This
 # reads the machine code:
 #   1. built with `memory-lever`, the staged induction reaches an `sfence`: in its own body,
 #      or in the `Fence` drop it calls;
-#   2. built without the feature, the library has no `sfence` and none of the experiment's
-#      functions.
+#   2. built without the feature, the library has no `sfence` and none of the staged
+#      kernel's functions.
 # x86-64 only (elsewhere the staged kernel stores nothing past the cache). Exits non-zero on
 # a failure. Usage: bash bench/memory_lever_fence.sh
 set -euo pipefail
@@ -53,8 +54,8 @@ cargo build -q --release
 without=$(fences "$lib")
 [ -z "$without" ] || fail "a build without the feature holds an sfence: $without"
 if objdump -d --no-show-raw-insn "$lib" 2>/dev/null \
-  | grep -E '^[0-9a-f]+ <.*(induce_cells_staged|induce_lazy|slots_lazy|send_rules).*>:$' >/dev/null; then
-  fail "a build without the feature holds one of the experiment's functions"
+  | grep -E '^[0-9a-f]+ <.*(induce_cells_staged|send_rules).*>:$' >/dev/null; then
+  fail "a build without the feature holds one of the staged kernel's functions"
 fi
-echo "without the feature: no sfence, none of the experiment's functions"
+echo "without the feature: no sfence, none of the staged kernel's functions"
 echo "memory_lever_fence: ok"

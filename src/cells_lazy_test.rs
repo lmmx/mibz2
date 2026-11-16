@@ -422,3 +422,41 @@ fn miri_cells_lazy_tail_is_the_callers() {
     let kernel = &cells.0.state.kernel;
     assert!(kernel.tail.capacity() >= kernel.lay.tail && kernel.tail.is_empty());
 }
+
+/// The lazy induction's own checks of what its first stage left. Each copy of it refuses a
+/// layout that has the rules in the other place, and both refuse a tail without the spare
+/// capacity the first stage reserved. Nothing is written before the refusal.
+#[test]
+fn miri_cells_lazy_induction_checks_its_layout() {
+    let ll: Vec<u8> = (0..40usize).flat_map(|i| [(i * 7 % 5) as u8; 16]).collect();
+    let r = Runs::of_column(&ll);
+    let n = ll.len();
+    for variant in [LAZY, LAZY_BUF] {
+        let mut kernel = Kernel {
+            variant,
+            ..Default::default()
+        };
+        let mut tail = vec![9u8; 3];
+        kernel
+            .first_stage(n, r.records(), 3, n, false, &mut tail)
+            .unwrap();
+        assert_eq!(kernel.lay.bout, variant == LAZY);
+        // the copy for the other place
+        let other = if variant == LAZY {
+            kernel.induce_lazy::<false>(n, &mut tail)
+        } else {
+            kernel.induce_lazy::<true>(n, &mut tail)
+        };
+        assert_eq!(other, Err(Refusal::Invalid));
+        // a tail without the spare capacity
+        let mut short = Vec::new();
+        assert_eq!(
+            kernel.induce_variant(n, &mut short),
+            Err(Refusal::Invalid)
+        );
+        assert_eq!(short.capacity(), 0);
+        // and the tail it was laid out in is taken
+        assert!(kernel.induce_variant(n, &mut tail).is_ok());
+        assert_eq!(tail, [9u8; 3]);
+    }
+}
