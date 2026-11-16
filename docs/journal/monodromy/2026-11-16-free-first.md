@@ -20,6 +20,7 @@ free steps, with any paid step when none is free.
 | σ = 2, n = 11 (2,026) | 7 (worst gap **2**) | 0 |
 | σ = 2, n = 12 (4,072) | 33 (worst gap **2**) | **1** (gap 1) |
 | σ = 2, n = 13 (8,166) | 104 | **2** |
+| σ = 2, n = 14 (16,356) | 299 | **5** |
 | σ = 3, n ≤ 9 (19,632 at n = 9) | 15 at n = 9; 2 at n = 8 (worst gap 1) | 0 |
 | σ = 4, n ≤ 7 (16,308 at n = 7) | 0 | 0 |
 
@@ -73,7 +74,7 @@ posting.
   (1.28 r) and the least is unmeasured, and bounded on small columns by two steps a column.
 
 **Open (Conj).** Is the least step count within a constant of free-first on every column, or does
-the gap grow with n? The counts so far are 0 at n ≤ 9, 1 at n = 12 and 2 at n = 13. A family showing
+the gap grow with n? The counts of columns where no free-first order is optimal: 0 at n ≤ 11, then 1, 2 and 5 at n = 12, 13 and 14 (σ = 2). A family showing
 growth would be the next refutation to look for.
 
 ## Reproduce
@@ -83,4 +84,4 @@ cp docs/journal/monodromy/2026-11-16-free-first/mintail.rs.txt examples/mintail.
 cargo run --release --example mintail -- 2 13   # also 3 9 and 4 7; minutes to an hour
 ```
 
-The output is `free_first_small.txt`. The σ = 2, n = 14 row was still running at the commit.
+The outputs are `free_first_small.txt` and `worst_gap_small.txt`.
