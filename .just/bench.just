@@ -1659,6 +1659,10 @@ bench-cores-less-one MASTER="4ffe2bcbef1d4296e7d7bdf35ba3972c03edd6e3" COPIES="4
       || { echo "bench-cores-less-one: {{MASTER}} is not merged into this commit"; exit 1; }
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-cores-less-one: the checkout has local changes"; exit 1; }
+    # both builds by the one toolchain the gates were counted with (#145: 1.99.1, the repo's pin)
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-cores-less-one: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
     cargo build -q --release --example ab --example windows
     AB=$PWD/target/release/examples/ab
     [ -d "$W/build-master" ] || git worktree add -q --detach "$W/build-master" "{{MASTER}}"
@@ -1673,8 +1677,8 @@ bench-cores-less-one MASTER="4ffe2bcbef1d4296e7d7bdf35ba3972c03edd6e3" COPIES="4
       || { echo "bench-cores-less-one: build-master is not at {{MASTER}}"; exit 1; }
     git rev-parse HEAD > "$O/commit.txt"
     echo "{{MASTER}}" > "$O/master.txt"
-    { rustc -V; cargo -V; } | tee "$O/toolchain.txt"
-    (cd "$W/build-master" && { rustc -V; cargo -V; }) | cmp -s - "$O/toolchain.txt" \
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    (cd "$W/build-master" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
       || { echo "bench-cores-less-one: the two builds' toolchains differ"; exit 1; }
     sha256sum "$AB" "$MAB" | tee "$O/binaries.sha256"
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
