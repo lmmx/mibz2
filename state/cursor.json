@@ -2086,10 +2086,12 @@
     },
     {
       "trigger_comment_id": 6925048452,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "report_path": "state/reports/dictionary-6925048452/report.md",
-      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_commit": "11d75644c4d1f4c30f0997aa6664ae3a42175495",
+      "disposition": "REVISE: censored certificate share is a lower bound; explicit category composition and loop/operand incidences; general marked closure proof; supplied book edition locators unverified. Core identities and 6015 finite cases pass."
     }
   ],
   "active_delegations": [],
