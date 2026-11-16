@@ -1,0 +1,587 @@
+diff --git a/.github/workflows/miri.yml b/.github/workflows/miri.yml
+index 9b57e2098..cc4223b52 100644
+--- a/.github/workflows/miri.yml
++++ b/.github/workflows/miri.yml
+@@ -80,6 +80,7 @@ jobs:
+           grep -q '^cells::tests::miri_cells_lever_exact_fit_and_reuse:' miri-list.txt
+           grep -q '^cells::tests::miri_cells_lazy_closed_letters_give_their_slots_back:' miri-list.txt
+           grep -q '^cells::tests::miri_cells_lazy_fetch_ahead_stays_inside:' miri-list.txt
++          grep -q '^cells::tests::miri_cells_lazy_ring_keeps_fewer_words:' miri-list.txt
+           grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
+           grep -q '^parallel::service_tests::miri_every_retirement_returns_its_buffers' miri-list.txt
+           grep -q '^parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop' miri-list.txt
+diff --git a/.just/bench.just b/.just/bench.just
+index e3cbbee92..50d775ab5 100644
+--- a/.just/bench.just
++++ b/.just/bench.just
+@@ -1670,6 +1670,41 @@ bench-lazy-hint ROUNDS="10" THREADS="4,8,9,10":
+     git rev-parse HEAD > "$O/commit.txt"
+     bash bench/bundle.sh "$O"
+ 
++# The lazy kernel's ring of eight (#145; its decision rule is posted there before the data):
++# one block a thread with lazy letters (`mibz2-workers-lazy`, the plan's kernel from 8
++# threads) against the same keeping a word equal to one of its last eight once
++# (`mibz2-workers-lazy-ring`),
++# at 8, 9 and 10 threads, where the plan uses the kernel, and at 4 as a control. On this
++# machine, at the commit checked out.
++bench-lazy-ring ROUNDS="10" THREADS="4,8,9,10":
++    #!/usr/bin/env bash
++    set -euo pipefail
++    W=$PWD/target/lazy-ring
++    mkdir -p "$W"
++    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
++    mkdir "$O"
++    exec > >(tee -a "$O/console.log") 2>&1
++    echo "bench-lazy-ring (#145, its rule posted there before the data): mibz2-workers-lazy against mibz2-workers-lazy-ring (one block a thread with lazy letters; the second keeps a word equal to one of its last eight once), at {{THREADS}} threads, {{ROUNDS}} paired rounds, on Wikidata, at $(git rev-parse HEAD)"
++    cargo build -q --release --example ab --example windows
++    AB=$PWD/target/release/examples/ab
++    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
++    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
++      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
++        && git archive origin/bench-data "$dir" | tar -x || true
++    fi
++    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
++    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
++    "$AB" env > "$O/env.json"
++    lscpu > "$O/lscpu.txt"
++    hold=(); hold_cpu=${HOLD_CPU:-auto}
++    [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
++    "$AB" run "$O/runs.jsonl" --arms "mibz2-workers-lazy,mibz2-workers-lazy-ring" \
++      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
++    # the rule's reading: the arm with the ring against the plan's kernel
++    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-lazy | tee "$O/summary.txt"
++    git rev-parse HEAD > "$O/commit.txt"
++    bash bench/bundle.sh "$O"
++
+ # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
+ # data): is memory per core what holds one block a thread back at 10 threads? The shipped
+ # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,
+diff --git a/examples/ab.rs b/examples/ab.rs
+index 145d8e592..fa46ffc7a 100644
+--- a/examples/ab.rs
++++ b/examples/ab.rs
+@@ -1162,6 +1162,18 @@ fn decode(
+             h,
+             last,
+         ),
++        // (and lazy letters with the ring of eight, which keeps a word equal to one of the
++        // last eight once: a candidate, not a default)
++        "mibz2-workers-lazy-ring" => drain(
++            mibz2::BzReader::parallel_inverse::<mibz2::bwt::RingLazyCells>(
++                open()?,
++                threads,
++                mibz2::parallel::SLOTS_PER_THREAD * threads,
++                mibz2::Kernels::detect(),
++            ),
++            h,
++            last,
++        ),
+         "mibz2-workers-eager" | "mibz2-workers-lazy" => drain(
+             mibz2::BzReader::parallel_workers(
+                 open()?,
+diff --git a/examples/lever_counts.rs b/examples/lever_counts.rs
+index f64a7567b..80e62f415 100644
+--- a/examples/lever_counts.rs
++++ b/examples/lever_counts.rs
+@@ -1,6 +1,6 @@
+ //! scratch (memory-lever): a file's blocks decoded on one thread with one Cells kernel, for
+-//! callgrind, and the kernel's route counts and lazy pool. lever_counts FILE.bz2 cells|lazy|lazy-hint|nt
+-use mibz2::bwt::{Cells, HintLazyCells, InverseBwt, LazyCells, StagedCells};
++//! callgrind, and the kernel's route counts and lazy pool. lever_counts FILE.bz2 cells|lazy|lazy-hint|lazy-ring|nt
++use mibz2::bwt::{Cells, CellsVariant, InverseBwt, StagedCells};
+ use mibz2::stream::{Event, Scanner, SliceSource};
+ use mibz2::{decode_block, Kernels, Scratch};
+ 
+@@ -18,32 +18,48 @@ fn run<I: InverseBwt + Default>(data: &[u8], mut after: impl FnMut(&Scratch<I>))
+     s
+ }
+ 
++/// A lazy kernel's blocks: its route counts, its pool's peak over its letters, and the bytes
++/// of words it kept, a letter (summed over the admitted blocks).
++fn lazy<const V: u8>(data: &[u8]) {
++    let (mut shares, mut admitted) = (Vec::new(), 0);
++    let (mut letters, mut bytes, mut rules) = (0usize, 0usize, 0usize);
++    let s = run::<CellsVariant<V>>(data, |s| {
++        let c = s.cells_counts();
++        if c.admitted > admitted {
++            admitted = c.admitted;
++            let (slots, n) = s.lazy_pool();
++            shares.push(slots as f64 / n as f64);
++            let (b, r) = s.lazy_words();
++            (letters, bytes, rules) = (letters + n, bytes + b, rules + r);
++        }
++    });
++    shares.sort_by(|a, b| a.partial_cmp(b).unwrap());
++    println!("{:?}", s.cells_counts());
++    println!(
++        "pool's peak over letters, min median max: {:.3} {:.3} {:.3}",
++        shares[0],
++        shares[shares.len() / 2],
++        shares[shares.len() - 1]
++    );
++    println!(
++        "words kept, bytes a letter: as bytes {:.2}, as rules {:.2}, both {:.2} ({} letters)",
++        bytes as f64 / letters as f64,
++        rules as f64 / letters as f64,
++        (bytes + rules) as f64 / letters as f64,
++        letters
++    );
++}
++
+ fn main() {
+     let a: Vec<String> = std::env::args().collect();
+     let data = std::fs::read(&a[1]).unwrap();
+     match a[2].as_str() {
+         "cells" => println!("{:?}", run::<Cells>(&data, |_| ()).cells_counts()),
+         "nt" => println!("{:?}", run::<StagedCells>(&data, |_| ()).cells_counts()),
+-        "lazy-hint" => println!("{:?}", run::<HintLazyCells>(&data, |_| ()).cells_counts()),
+-        "lazy" => {
+-            let (mut shares, mut admitted) = (Vec::new(), 0);
+-            let s = run::<LazyCells>(&data, |s| {
+-                let c = s.cells_counts();
+-                if c.admitted > admitted {
+-                    admitted = c.admitted;
+-                    let (slots, letters) = s.lazy_pool();
+-                    shares.push(slots as f64 / letters as f64);
+-                }
+-            });
+-            shares.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-            println!("{:?}", s.cells_counts());
+-            println!(
+-                "pool's peak over letters, min median max: {:.3} {:.3} {:.3}",
+-                shares[0],
+-                shares[shares.len() / 2],
+-                shares[shares.len() - 1]
+-            );
+-        }
+-        m => panic!("the kernel is cells, lazy, lazy-hint or nt, not {m}"),
++        // (the variants' numbers: `cells_lazy.rs`)
++        "lazy" => lazy::<1>(&data),
++        "lazy-hint" => lazy::<3>(&data),
++        "lazy-ring" => lazy::<4>(&data),
++        m => panic!("the kernel is cells, lazy, lazy-hint, lazy-ring or nt, not {m}"),
+     }
+ }
+diff --git a/src/bwt.rs b/src/bwt.rs
+index 411b4018b..493bf2750 100644
+--- a/src/bwt.rs
++++ b/src/bwt.rs
+@@ -19,7 +19,7 @@
+ 
+ pub use crate::cells::{
+     Cells, CellsKernel, CellsVariant, Counts as CellsCounts, ForcedCells, ForcedHintLazyCells,
+-    ForcedLazyCells, HintLazyCells, LazyCells,
++    ForcedLazyCells, ForcedRingLazyCells, HintLazyCells, LazyCells, RingLazyCells,
+ };
+ #[cfg(feature = "memory-lever")]
+ pub use crate::cells::{ForcedStagedCells, StagedCells};
+diff --git a/src/cells.rs b/src/cells.rs
+index dcff20078..e3763c2f0 100644
+--- a/src/cells.rs
++++ b/src/cells.rs
+@@ -469,7 +469,7 @@ impl Kernel {
+             // (the lazy kernel's bottom slots' pool, in the output buffer)
+             if let (Some(out), true) = (
+                 out,
+-                self.bottom_laid && matches!(self.variant, LAZY | LAZY_HINT),
++                self.bottom_laid && matches!(self.variant, LAZY | LAZY_HINT | LAZY_RING),
+             ) {
+                 let end = self.lz.bend;
+                 assert!(
+diff --git a/src/cells_lazy.rs b/src/cells_lazy.rs
+index e92e3e620..af51b7644 100644
+--- a/src/cells_lazy.rs
++++ b/src/cells_lazy.rs
+@@ -10,6 +10,9 @@ pub(crate) const LAZY: u8 = 1;
+ /// Lazy letters with the induction's fetch-ahead (`induce_lazy`): a bench arm beside
+ /// `LAZY`, until the i9 has read it
+ pub(crate) const LAZY_HINT: u8 = 3;
++/// Lazy letters with the ring of eight (`Ring`): a word equal to one of the last eight made
++/// is not kept again. A bench arm beside `LAZY`, until the i9 has read it
++pub(crate) const LAZY_RING: u8 = 4;
+ 
+ /// The Cells kernel with another first stage and induction (`V`): `LAZY`, or (research
+ /// only, `memory-lever`) `STAGED_RULES`. Admission, budget, fallback and writer are Cells'
+@@ -29,6 +32,13 @@ pub type HintLazyCells = CellsVariant<LAZY_HINT>;
+ /// Test/fuzz route: `HintLazyCells` with `ForcedCells`' open admission
+ #[doc(hidden)]
+ pub type ForcedHintLazyCells = CellsVariant<LAZY_HINT, true>;
++/// Bench arm: `LazyCells` with the ring of eight: fewer words kept. The same output, block
++/// for block.
++#[doc(hidden)]
++pub type RingLazyCells = CellsVariant<LAZY_RING>;
++/// Test/fuzz route: `RingLazyCells` with `ForcedCells`' open admission
++#[doc(hidden)]
++pub type ForcedRingLazyCells = CellsVariant<LAZY_RING, true>;
+ 
+ impl<const V: u8, const F: bool> Default for CellsVariant<V, F> {
+     fn default() -> Self {
+@@ -46,6 +56,10 @@ impl<const V: u8, const F: bool> CellsVariant<V, F> {
+     pub fn pool(&self) -> (usize, usize) {
+         (self.0.state.kernel.lz.peak, self.0.state.kernel.letters)
+     }
++    /// The bytes of words the last lazy induction kept: (as bytes, as rules)
++    pub fn words(&self) -> (usize, usize) {
++        self.0.state.kernel.lz.words
++    }
+ }
+ 
+ impl<const V: u8, const F: bool> InverseBwt for CellsVariant<V, F> {
+@@ -96,6 +110,50 @@ const FAR_PLACES: usize = 12;
+ const NEAR_PLACES: usize = 6;
+ const _: () = assert!(NEAR_PLACES <= FAR_PLACES && 4 * FAR_PLACES <= BPAD);
+ 
++/// The last eight words the lazy induction made (`LAZY_RING`), each by its key: its two
++/// factors' offsets, 32 bits each. Equal keys are equal words. The search is over the keys
++/// folded to 32 bits, eight at once; the key itself is then compared, so a folded match of
++/// two different keys is no match. (A key of all ones is no word's: an offset is below
++/// 2^31.)
++#[repr(C, align(64))]
++struct Ring {
++    folded: [u32; 8],
++    words: [u32; 8],
++    keys: [u64; 8],
++}
++
++impl Ring {
++    fn new() -> Ring {
++        Ring {
++            folded: [0; 8],
++            words: [0; 8],
++            keys: [u64::MAX; 8],
++        }
++    }
++
++    /// The first of the eight whose folded key is `folded`, or 8
++    #[inline(always)]
++    fn find(&self, folded: u32) -> usize {
++        #[cfg(all(target_arch = "x86_64", not(miri)))]
++        // SAFETY: SSE2 is in every x86-64; the two loads are of this struct's first 32
++        // bytes, which its alignment makes aligned loads
++        unsafe {
++            use core::arch::x86_64::*;
++            let f = _mm_set1_epi32(folded as i32);
++            let p = self.folded.as_ptr() as *const __m128i;
++            let a = _mm_cmpeq_epi32(f, _mm_load_si128(p));
++            let b = _mm_cmpeq_epi32(f, _mm_load_si128(p.add(1)));
++            let m = _mm_movemask_ps(_mm_castsi128_ps(a))
++                | _mm_movemask_ps(_mm_castsi128_ps(b)) << 4;
++            (m as u32 | 0x100).trailing_zeros() as usize
++        }
++        #[cfg(not(all(target_arch = "x86_64", not(miri))))]
++        {
++            self.folded.iter().position(|&f| f == folded).unwrap_or(8)
++        }
++    }
++}
++
+ /// What `slots_lazy` leaves for `induce_lazy`, besides the layout.
+ #[derive(Clone, Copy)]
+ struct Lazy {
+@@ -108,6 +166,8 @@ struct Lazy {
+     nt: [u32; 256],
+     /// the most slots the last induction took from each pool
+     peak: usize,
++    /// the bytes of words the last induction kept: (as bytes, as rules)
++    words: (usize, usize),
+ }
+ impl Default for Lazy {
+     fn default() -> Self {
+@@ -116,6 +176,7 @@ impl Default for Lazy {
+             bend: 0,
+             nt: [0; 256],
+             peak: 0,
++            words: (0, 0),
+         }
+     }
+ }
+@@ -208,7 +269,7 @@ impl Kernel {
+         forced: bool,
+         out: &mut Vec<u8>,
+     ) -> Result<(), Refusal> {
+-        if matches!(self.variant, LAZY | LAZY_HINT) {
++        if matches!(self.variant, LAZY | LAZY_HINT | LAZY_RING) {
+             self.slots_lazy(n, recs, p, budget, forced, out)
+         } else {
+             self.slots(n, recs, p, budget, forced, out)
+@@ -224,8 +285,9 @@ impl Kernel {
+         match self.variant {
+             // (one copy of the induction with the fetch-ahead and one without: no test
+             // of it in the loop)
+-            LAZY => self.induce_lazy::<false>(budget, out),
+-            LAZY_HINT => self.induce_lazy::<true>(budget, out),
++            LAZY => self.induce_lazy::<false, false>(budget, out),
++            LAZY_HINT => self.induce_lazy::<true, false>(budget, out),
++            LAZY_RING => self.induce_lazy::<false, true>(budget, out),
+             #[cfg(feature = "memory-lever")]
+             STAGED_RULES => self.induce_cells_staged(budget, out),
+             _ => self.induce_cells(budget, out),
+@@ -395,6 +457,7 @@ impl Kernel {
+             bend,
+             nt,
+             peak: 0,
++            words: (0, 0),
+         };
+         Ok(())
+     }
+@@ -437,7 +500,7 @@ impl Kernel {
+     /// Returns (the cycle's word, its length with the mark, cells). `slots_lazy` has run on
+     /// this kernel for the block, and nothing has changed since.
+     #[inline(never)]
+-    fn induce_lazy<const AHEAD: bool>(
++    fn induce_lazy<const AHEAD: bool, const RING: bool>(
+         &mut self,
+         budget: usize,
+         out: &mut Vec<u8>,
+@@ -485,6 +548,7 @@ impl Kernel {
+             let (mut tnew, mut bnew) = (lay.tops, lay.bots);
+             // the streams: the top order's bytes and the entries not yet reached
+             let (mut ti, mut kb) = (rr, rr);
++            let mut ring = Ring::new();
+             // The fetch-ahead (`AHEAD`: the bench arm `LAZY_HINT`; the plan's kernel has
+             // none). A front's misses are the slots it reads through an entry the
+             // other front has tagged: those slots lie anywhere in the pools. So each front
+@@ -704,6 +768,10 @@ impl Kernel {
+                         }
+                         self.rule_end = rp;
+                         self.lz.peak = (tnew - lay.tops) / SLOT;
++                        self.lz.words = (
++                            top - (lay.arena + BYTES as usize + 256 + 16),
++                            rp - lay.rules,
++                        );
+                         #[cfg(test)]
+                         {
+                             self.hints_met = hints_met;
+@@ -737,9 +805,41 @@ impl Kernel {
+                         wr64(base, rp, aw);
+                         wr64(base, rp + 8, bw);
+                     }
+-                    let word = if small { top } else { rp };
+-                    top += if small { len as usize } else { 0 };
+-                    rp += if small { 0 } else { 16 };
++                    // The ring (`RING`: the bench arm `LAZY_RING`; the plan's kernel has
++                    // none). A cell with the two factors of one of the last eight words is
++                    // that word again: it takes that word's offset, and the bytes or the
++                    // rule just written are written over by the next word.
++                    let (mut again, mut earlier) = (false, 0usize);
++                    if RING {
++                        // (a word's factors, as their offsets: the mark is not in them, so
++                        // a word made with the walk's row is neither looked up nor kept)
++                        let key = (aw >> 32) | (bw >> 32) << 32;
++                        let marked = (aw | bw) as u32 & MARK != 0;
++                        let folded = key as u32 ^ ((key >> 32) as u32).rotate_left(16);
++                        let i = ring.find(folded) & 7;
++                        again = ring.keys[i] == key && !marked;
++                        earlier = ring.words[i] as usize;
++                        // the oldest of the eight gives way (`left` counts the cells down)
++                        let j = left & 7;
++                        ring.folded[j] = folded;
++                        ring.keys[j] = if marked { u64::MAX } else { key };
++                        ring.words[j] = if again {
++                            earlier as u32
++                        } else if small {
++                            top as u32
++                        } else {
++                            rp as u32
++                        };
++                    }
++                    let word = if again {
++                        earlier
++                    } else if small {
++                        top
++                    } else {
++                        rp
++                    };
++                    top += if small && !again { len as usize } else { 0 };
++                    rp += if small || again { 0 } else { 16 };
+                     let cw = len | (word as u64) << 32;
+                     #[cfg(test)]
+                     self.record_materialization([
+diff --git a/src/cells_lazy_test.rs b/src/cells_lazy_test.rs
+index c989a0b08..6ee29e1ed 100644
+--- a/src/cells_lazy_test.rs
++++ b/src/cells_lazy_test.rs
+@@ -417,3 +417,126 @@ fn miri_cells_lazy_fetch_ahead_stays_inside() {
+         let _ = met;
+     }
+ }
++
++/// The ring of eight (the bench arm `LAZY_RING`) through `try_invert` against the plain
++/// walk: every binary column to length 10 at every row, and two long ones. It makes the
++/// plan's kernel's cells, one for one; only which words are kept differs.
++#[test]
++fn cells_lazy_ring_exhaustive_arbitrary_columns() {
++    let (mut ring, mut plain) = (
++        Kernel {
++            variant: LAZY_RING,
++            ..Default::default()
++        },
++        Kernel {
++            variant: LAZY,
++            ..Default::default()
++        },
++    );
++    for n in 1..=10 {
++        for bits in 0..1usize << n {
++            let ll: Vec<_> = (0..n).map(|i| ((bits >> i) & 1) as u8).collect();
++            for p in 0..n {
++                assert_eq!(
++                    check(&mut ring, &ll, p as u32),
++                    check(&mut plain, &ll, p as u32)
++                );
++                let (kept, all) = (ring.lz.words, plain.lz.words);
++                assert!(kept.0 <= all.0 && kept.1 <= all.1, "{ll:?} at {p}");
++            }
++        }
++    }
++    for ll in [
++        [vec![1], vec![0; 100]].concat(),
++        [vec![1; 3], vec![0; 200]].concat(),
++    ] {
++        for p in [0, ll.len() / 2, ll.len() - 1] {
++            assert_eq!(
++                check(&mut ring, &ll, p as u32),
++                check(&mut plain, &ll, p as u32)
++            );
++        }
++    }
++}
++
++/// The ring keeps fewer words on a column that repeats, at every row the walk may start
++/// from (a word made with the walk's row is never shared: its mark is not in its key), with
++/// both kernels' buffers reused from block to block, under Miri.
++#[test]
++fn miri_cells_lazy_ring_keeps_fewer_words() {
++    let (mut ring, mut plain) = (
++        Kernel {
++            variant: LAZY_RING,
++            ..Default::default()
++        },
++        Kernel {
++            variant: LAZY,
++            ..Default::default()
++        },
++    );
++    let (mut fewer, mut fewer_rules) = (0, 0);
++    for ll in [
++        // runs of five bytes in a period of five: the same two letters meet again and again
++        (0..60usize)
++            .flat_map(|i| [(i % 5) as u8; 4])
++            .collect::<Vec<u8>>(),
++        // two bytes in runs of twenty and twenty-one rows by turns: cells whose words are
++        // rules meet again
++        (0..24usize)
++            .flat_map(|i| vec![(i % 2) as u8; 20 + i % 2])
++            .collect(),
++        b"abababababababababab".to_vec(),
++        long_writer_column(),
++        (0..65).map(|i| (i % 3) as u8).collect(),
++    ] {
++        let n = ll.len() as u32;
++        for p in [0, 1, n / 2, n - 1] {
++            ring.buf.fill(0x5A);
++            let cells = check(&mut ring, &ll, p);
++            assert_eq!(cells, check(&mut plain, &ll, p), "column {ll:?}, row {p}");
++            let (kept, all) = (ring.lz.words, plain.lz.words);
++            assert!(kept.0 <= all.0 && kept.1 <= all.1, "{ll:?} at {p}");
++            fewer += usize::from(kept.0 + kept.1 < all.0 + all.1);
++            fewer_rules += usize::from(kept.1 < all.1);
++            // a budget of exactly the cells made is accepted, and one less refused
++            let r = Runs::of_column(&ll);
++            let mut out = vec![0xCC; ll.len()];
++            if ring.letters - 1 <= cells && cells > 0 {
++                assert!(ring
++                    .try_invert(r.records(), ll.len(), p, cells, true, &mut out)
++                    .is_ok());
++                assert_eq!(out, oracle(&ll, p));
++                assert!(ring
++                    .try_invert(r.records(), ll.len(), p, cells - 1, true, &mut out)
++                    .is_err());
++            }
++        }
++    }
++    assert!(fewer > 4, "the ring kept fewer words on {fewer} blocks");
++    assert!(fewer_rules > 0, "and fewer rules on {fewer_rules}");
++}
++
++/// The ring's search is over folded keys; the key itself decides. Two keys that fold to one
++/// value are found at the first's place, and are not equal.
++#[test]
++fn cells_lazy_ring_folded_keys() {
++    let fold = |key: u64| key as u32 ^ ((key >> 32) as u32).rotate_left(16);
++    let mut ring = Ring::new();
++    // nothing kept: a folded 0 is found (the ring starts as zeros), and its key is no word's
++    assert_eq!(ring.find(0), 0);
++    assert_eq!(ring.keys[0], u64::MAX);
++    assert_eq!(ring.find(7), 8);
++    let (a, b) = (0x0000_0005_0000_0003u64, 0x0005_0000_0000_0003 >> 16 << 16 | 3);
++    // (two different keys of one folded value)
++    let b = if fold(a) == fold(b) { b } else { (0x0001_0000u64) << 32 | (fold(a) ^ 1) as u64 };
++    assert!(a != b && fold(a) == fold(b), "{a:x} {b:x}");
++    ring.folded[5] = fold(a);
++    ring.keys[5] = a;
++    assert_eq!(ring.find(fold(b)), 5);
++    assert_ne!(ring.keys[5], b);
++    // the first of several
++    ring.folded[2] = fold(a);
++    assert_eq!(ring.find(fold(a)), 2);
++    ring.folded[7] = 99;
++    assert_eq!(ring.find(99), 7);
++}
+diff --git a/src/cells_selective_test.rs b/src/cells_selective_test.rs
+index 1a32dcd38..de96a62a6 100644
+--- a/src/cells_selective_test.rs
++++ b/src/cells_selective_test.rs
+@@ -23,7 +23,7 @@ fn compare_materialization(
+     // The candidate may be the lazy kernel, which has no letters' slots to compare, or
+     // (research only, `memory-lever`) the staged one, whose rules start at a multiple of 16,
+     // so the original is laid out the same way.
+-    let lazy = matches!(candidate.variant, LAZY | LAZY_HINT);
++    let lazy = matches!(candidate.variant, LAZY | LAZY_HINT | LAZY_RING);
+     #[cfg(feature = "memory-lever")]
+     {
+         original.variant = if candidate.variant == STAGED_RULES {
+diff --git a/src/lib.rs b/src/lib.rs
+index c5286f02b..8f99e428c 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -677,4 +677,9 @@ impl<const V: u8, const F: bool> Scratch<bwt::CellsVariant<V, F>> {
+     pub fn lazy_pool(&self) -> (usize, usize) {
+         self.inverse.pool()
+     }
++    /// The bytes of words the last lazy induction kept: (as bytes, as rules).
++    #[doc(hidden)]
++    pub fn lazy_words(&self) -> (usize, usize) {
++        self.inverse.words()
++    }
+ }
+diff --git a/tests/common/cells.rs b/tests/common/cells.rs
+index 7ec667efe..9945e073f 100644
+--- a/tests/common/cells.rs
++++ b/tests/common/cells.rs
+@@ -59,7 +59,10 @@ pub fn check(data: &[u8], k: Kernels) -> (CellsCounts, CellsCounts) {
+         )
+     };
+     {
+-        use mibz2::bwt::{ForcedHintLazyCells, ForcedLazyCells, HintLazyCells, LazyCells};
++        use mibz2::bwt::{
++            ForcedHintLazyCells, ForcedLazyCells, ForcedRingLazyCells, HintLazyCells, LazyCells,
++            RingLazyCells,
++        };
+         let (g, e, s) = decode::<LazyCells>(data, k);
+         assert_eq!((&g, &e), (&want, &err), "lazy letters");
+         same(s.cells_counts(), prod.cells_counts());
+@@ -73,6 +76,13 @@ pub fn check(data: &[u8], k: Kernels) -> (CellsCounts, CellsCounts) {
+         let (g, e, s) = decode::<ForcedHintLazyCells>(data, k);
+         assert_eq!((&g, &e), (&want, &err), "lazy letters, fetch-ahead, forced");
+         same(s.cells_counts(), forced.cells_counts());
++        // (the bench arm: lazy letters with the ring of eight)
++        let (g, e, s) = decode::<RingLazyCells>(data, k);
++        assert_eq!((&g, &e), (&want, &err), "lazy letters, the ring");
++        same(s.cells_counts(), prod.cells_counts());
++        let (g, e, s) = decode::<ForcedRingLazyCells>(data, k);
++        assert_eq!((&g, &e), (&want, &err), "lazy letters, the ring, forced");
++        same(s.cells_counts(), forced.cells_counts());
+     }
+     // (research only, `memory-lever`: the experiment's staged kernel, the same)
+     #[cfg(feature = "memory-lever")]

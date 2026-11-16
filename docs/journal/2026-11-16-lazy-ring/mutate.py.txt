@@ -1,0 +1,69 @@
+"""Mutation pass for the ring of eight on the lazy kernel (src/cells_lazy.rs).
+
+Each mutant is one replacement. A mutant is killed if the Cells unit tests fail on it in the
+debug profile. A mutant that does not build is not a kill. Each row gives the reason. The
+first row is the tree as it is. The tree is left as it was.
+
+    mutate.py WORKTREE
+"""
+import os
+import subprocess
+import sys
+
+wt = sys.argv[1]
+LZ = "src/cells_lazy.rs"
+M = [
+    (LZ, "a word made with the walk's row is shared", "                        again = ring.keys[i] == key && !marked;", "                        again = ring.keys[i] == key;"),
+    (LZ, "a word made with the walk's row is kept in the ring", "                        ring.keys[j] = if marked { u64::MAX } else { key };", "                        ring.keys[j] = key;"),
+    (LZ, "a folded match taken for the word, its key not compared", "                        again = ring.keys[i] == key && !marked;", "                        again = ring.find(folded) < 8 && !marked;"),
+    (LZ, "the key is one factor's offset alone", "                        let key = (aw >> 32) | (bw >> 32) << 32;", "                        let key = (aw >> 32) | (aw >> 32) << 32;"),
+    (LZ, "a shared word's offset not taken", "                    let word = if again {\n                        earlier\n                    } else if small {", "                    let word = if false {\n                        earlier\n                    } else if small {"),
+    (LZ, "a shared short word still advances the bytes", "                    top += if small && !again { len as usize } else { 0 };", "                    top += if small { len as usize } else { 0 };"),
+    (LZ, "a shared rule still advances the rules", "                    rp += if small || again { 0 } else { 16 };", "                    rp += if small { 0 } else { 16 };"),
+    (LZ, "the ring keeps the new word's place for a shared word", "                        ring.words[j] = if again {\n                            earlier as u32\n                        } else if small {", "                        ring.words[j] = if false {\n                            earlier as u32\n                        } else if small {"),
+    (LZ, "the ring never keeps a word's key", "                        ring.folded[j] = folded;\n", ""),
+    (LZ, "the search reads the first four only", "                | _mm_movemask_ps(_mm_castsi128_ps(b)) << 4;", "                | 0;"),
+    (LZ, "the plan's kernel runs the ring", "            LAZY => self.induce_lazy::<false, false>(budget, out),", "            LAZY => self.induce_lazy::<false, true>(budget, out),"),
+    (LZ, "the ring's arm runs without it", "            LAZY_RING => self.induce_lazy::<false, true>(budget, out),", "            LAZY_RING => self.induce_lazy::<false, false>(budget, out),"),
+]
+env = dict(os.environ, CARGO_TARGET_DIR=os.path.join(wt, "target"))
+
+
+def tests():
+    r = subprocess.run(["cargo", "test", "--lib", "--", "cells::"], cwd=wt, env=env, capture_output=True, text=True)
+    out = (r.stdout + r.stderr).splitlines()
+    if any("could not compile" in l for l in out):
+        return "does not build", next((l.strip() for l in out if l.startswith("error")), "")
+    if r.returncode == 0:
+        return "pass", next((l.strip() for l in out if l.startswith("test result")), "")
+    failed = sorted({l.split()[1].split("::")[-1] for l in out if l.startswith("test ") and l.rstrip().endswith("FAILED")})
+    why = ""
+    for i, l in enumerate(out):
+        if "panicked at" in l:
+            why = l.split("panicked at", 1)[1].strip() + " " + (out[i + 1].strip() if i + 1 < len(out) else "")
+            break
+    if not why:
+        why = next((l.strip() for l in out if "signal:" in l), "no panic message")
+    return "fail", (", ".join(failed) if failed else "the test binary died") + " | " + why[:160]
+
+
+print("# file\tmutant\tverdict\tthe tests", flush=True)
+t, tw = tests()
+print(f"-\tthe tree as it is\t{'ok' if t == 'pass' else 'BASELINE BROKEN'}\ttests {t}: {tw}", flush=True)
+survivors = 0
+for path, name, a, b in M:
+    p = os.path.join(wt, path)
+    orig = open(p).read()
+    if orig.count(a) != 1:
+        print(f"{path}\t{name}\tNOT APPLIED: the text occurs {orig.count(a)} times\t", flush=True)
+        survivors += 1
+        continue
+    open(p, "w").write(orig.replace(a, b))
+    try:
+        t, tw = tests()
+    finally:
+        open(p, "w").write(orig)
+    verdict = "killed by the tests" if t == "fail" else ("SURVIVED" if t == "pass" else "DOES NOT BUILD")
+    survivors += t != "fail"
+    print(f"{path}\t{name}\t{verdict}\ttests {t}: {tw}", flush=True)
+print(f"# {len(M)} mutants, {survivors} not killed", flush=True)
