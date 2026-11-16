@@ -601,6 +601,9 @@ impl Kernel {
                     // one letter, last in both orders (A's bottom slot is the bottom
                     // front's, or both fronts read the one entry): its points' cycles are
                     // closed
+                    // (research only, `induction-trace`: the closed letter's word length)
+                    #[cfg(feature = "induction-trace")]
+                    crate::itrace::closed(aw & M);
                     if aw as u32 & MARK != 0 {
                         if top + 32 > lay.ends[2] || rp + 16 > lay.ends[3] {
                             debug_assert!(false, "cells region exhausted");
@@ -641,6 +644,10 @@ impl Kernel {
                     top += if small { len as usize } else { 0 };
                     rp += if small { 0 } else { 16 };
                     let cw = len | (word as u64) << 32;
+                    // (research only, `induction-trace`: the cell's two letters, what was
+                    // left of each and their words' lengths)
+                    #[cfg(feature = "induction-trace")]
+                    crate::itrace::cell(ra, rb, la, lb);
                     #[cfg(test)]
                     self.record_materialization([
                         ra,
