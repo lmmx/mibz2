@@ -192,4 +192,15 @@ MONODROMY proposed splitting the walk's serial chain into two from x_μ: down by
 - *Not a stream scan:* the stream steps run about 1.5 M times against 1.33 M live letters.
 - *The plain cut:* fusing the top pass with the record pass would save perhaps a third. It is not built, because it cannot close the gap above.
 
+**Against mibz2's own room walk** (#157, #159; the staged walk #171, #181; `2026-11-02-memory-level-parallelism.md`). It is the in-house answer to a dependent-load walk, and it does three things the stop-walk walk does not.
+- *It needs no places.* Its eight lanes each walk one segment of Ψ (or LF) into a buffer of their own, stopping at the next marked start. `assemble` then joins the buffers in successor order.
+  - A lane that reaches another's start stops and takes the next queued segment (the deferred handovers). That is exactly the hazard that sank the first, eight-lane stop-and-walk: lanes writing into each other's places. The fix is that no lane writes anywhere but its own buffer.
+  - Ported here, k lanes from k marked points would run without pass 1 and without the overrun rule. The cost is one more copy of the block's n bytes at assembly.
+- *It is staged:* the start flags are tested once an offset, and the bytes are staged in a tile.
+- *It writes one byte a step,* so its whole cost is the chain, and interleaving is the lever.
+
+The stop-walk walk writes a whole live word a point, about 27 bytes, so its per-point chain is already amortised over the bytes. What remains is producing those bytes: copies from first places and expansions of rules, of data-dependent length. Lanes and staging attack the chain, which these measurements show is not the binding term here; the two chains are the evidence.
+
+Nor does the room walk copy runs. The design that transfers to larger runs is the shipped Cells writer's: its first-occurrence copies of repeated sub-words of the final word. That needs to know which stretch of places repeats an earlier one.
+
 **What would change the arithmetic** is a walk that writes in larger units than one live word: copying a run of points whose words already lie together, as the writer copies a repeated sub-word. That is MONODROMY's to say whether the stopped exchange's structure offers one.
