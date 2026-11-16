@@ -1361,7 +1361,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt committed; verifying archived evidence and ranking layout options."
+      "progress": "29 evidence archives SHA-256 verified; post-0.5.1 nine-worker/window findings and layout measurement limits committed; full matrix in progress."
     }
   ],
   "migrated_from": {
