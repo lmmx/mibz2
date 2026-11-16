@@ -288,7 +288,7 @@ by $w_{\alpha(x)}$. Along paths, these labels concatenate in forward output orde
 
 $$\boxed{\mathsf{Path}(G_{T_D}^{-1})\longrightarrow B\Sigma^*,}\tag{8}$$
 
-where $B\Sigma^*$ is the category with one object, whose morphisms are words and whose composition is concatenation. It uses a monoid as a one-object category, which is a different construction from a sheaf valued in the category of monoids.
+where $B\Sigma^*$ is the category with one object, whose morphisms are words and whose composition is concatenation **in traversal order**: a path that takes $e$ and then $f$ is sent to $w_e w_f$. (Under the usual convention that $g\circ f$ means "$f$ first", the target is the opposite monoid $(\Sigma^*)^{\mathrm{op}}$ instead.) It uses a monoid as a one-object category, which is a different construction from a sheaf valued in the category of monoids.
 
 The SLP stores compressed expressions for these path labels. Length is then a monoid homomorphism,
 
@@ -298,7 +298,7 @@ Together they account exactly for ordered word composition and for return times 
 
 ### A genuine sheaf can be built
 
-For the grammar itself, we can build a sheaf of sets on a bipartite incidence graph:
+For the grammar itself, we can build a sheaf of sets on a bipartite incidence graph. Each production has three distinct incidence edges, for its result, its left child and its right child, even when the two children are the same symbol, as in $N\to UU$:
 
 - a symbol vertex has stalk $\Sigma^*$;
 - a production vertex for $N\to UV$ has stalk $\{(u,v,w):w=uv\}$;
@@ -363,7 +363,7 @@ The construction handles this (journal, §2). The [stop-and-walk record](https:/
 
 ### 5.3 The position sheaf
 
-Here is a concrete realisation of the phrase "positions are sections of length data". For each induced edge $e:x\to y$, put $\mathbb Z/d\mathbb Z$ at both end vertices and at the edge, and define the maps from the ends
+Here is a concrete realisation of the phrase "positions are sections of length data". For each induced edge $e:x\to y$, put $\mathbb Z/d\mathbb Z$ at both end vertices and at the edge. Give every edge two endpoint incidences, even when it is a loop ($x=y$), or subdivide loops first, so that a loop's two maps stay distinct. Then define the maps from the ends
 
 $$\rho_{x,e}(u)=u-h_e,\qquad\rho_{y,e}(v)=v.$$
 
@@ -483,7 +483,7 @@ These are reported counts, separate from the proofs above, each with its scope:
 | C | 27,439,723 elementary steps, $S/r=1.812$, $S/n=0.1309$ ([construction journal](https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-10-rauzy-veech.md)) | The original right-end census on 233 Wikidata blocks; not an asymptotic law |
 | C | At a stop after $1.5r$ cells, about 33%, or 5.0 bytes per original run, of word storage avoided ([stop and walk, reopened](https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-16-stop-walk-reopened.md)) | A prototype's counts; separate from timing the whole decoder |
 | C | Compact tail from $1.2r$: 4.89 bytes per original run saved, about 32% of word storage ([compact tail](https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-compact-tail.md)) | All 233 Wikidata blocks, with wider IDs where needed; the same grammar |
-| C | At $\beta=1.5$, about one third of starts still share their certificate with another start after 256 emitted bytes ([certificates](https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-certificates.md)) | Every eighth Wikidata block; does not show that all this reuse can be realised profitably |
+| C | At $\beta=1.5$, **at least** about one third of sampled starts share a whole-word itinerary covering 256 bytes with another start, certified within a 64-step search that does not wrap past the walk's end. This is a lower bound: starts the search doesn't certify are not shown to fail (on `b a^999` the true share is 0.744 and this search reports 0) ([certificates](https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-certificates.md)) | Every eighth Wikidata block; does not show that all this reuse can be realised profitably |
 
 Here $\beta$ is the stop's budget of cells per original run. One vocabulary correction changes how these figures read: "per letter" in our records usually means per original run $r$, not per interval still alive. The [record on splitting the walk](https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-two-chains.md) gives, at $\beta=1.5$, approximately
 
@@ -505,7 +505,7 @@ What comes next follows from the status of each part. The two sheaves of section
 
 **Sources:**
 
-- R. Ghrist, *Elementary Applied Topology*, edition 1.0, Createspace, 2014. Page numbers are those of the printed edition: §7.13 (pp. 185–186), Theorem 7.34 (p. 184), Example 7.37 (p. 185), §8.8 and Theorem 8.24 (pp. 205–206), §11.9 and equation (11.3) (p. 286).
+- R. Ghrist, *Elementary Applied Topology*, edition 1.0, Createspace, 2014. Page numbers are those of the printed edition: §7.13 (pp. 185–186), Theorem 7.34 (p. 184), Example 7.37 (p. 185), §8.8 and Theorem 8.24 (pp. 205–206), §11.9 and equation (11.3) (p. 286). §8.8 (p. 205), §11.9 (p. 286) and §7.13 (p. 185) have been checked against the book; the other page numbers and Theorem 7.34 have not yet.
 - The construction and its proof: [the construction's research journal](https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-10-rauzy-veech.md), and the [code](https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/src/cells.rs).
 - Stop and walk: [the design record](https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-16-stop-and-walk.md) and [its reopening](https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-16-stop-walk-reopened.md); [the census of word lifetimes](https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-16-words.md).
 - In review as research pull request [#497](https://github.com/lmmx/mibz2/pull/497): [splitting the walk](https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-two-chains.md), [the compact tail](https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-compact-tail.md), [itinerary certificates](https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-certificates.md) and [the note on Ghrist's book](https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-ghrist.md).
