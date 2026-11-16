@@ -1176,10 +1176,15 @@ fn decode(
         | "mibz2-workers-lazy-cores1"
         | "mibz2-workers-lazy-cores-pin"
         | "mibz2-workers-lazy-cores1-pin" => {
+            // (the machine and, for `-pin`, the mask: both done before the timer started,
+            // by `cores_arm_setup`; here only read back)
             let spare = usize::from(arm.contains("-cores1"));
-            let n = workers_past_cores(threads, mibz2::parallel::Machine::here().phys, spare);
+            let n = workers_past_cores(threads, cores_arm_phys(), spare);
             if arm.ends_with("-pin") {
-                one_cpu_a_core()?;
+                PINNED
+                    .get()
+                    .cloned()
+                    .unwrap_or_else(|| Err("one CPU a core: not set before the run".into()))?;
             }
             drain(
                 mibz2::BzReader::parallel_workers(
@@ -1392,6 +1397,8 @@ fn child(arm: &str, threads: usize, path: &str, hold: Option<Hold>) {
     // region, enabled and disabled at its edges; None leaves every path as it was)
     let counted = machine::requested();
     let mut perf = None;
+    // (the `-cores` arms' machine read and placement, before any timer or sampler)
+    cores_arm_setup(arm);
     // (with the counters: the region's affinity, context switches and the CPUs seen)
     let mut region: Option<machine::Region> = None;
     let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus), startup) = match external {
@@ -1640,6 +1647,29 @@ fn workers_past_cores(threads: usize, phys: Option<usize>, spare: usize) -> usiz
     threads
         .min(phys.map_or(threads, |p| p.saturating_sub(spare).max(1)))
         .max(1)
+}
+
+/// The physical cores as the `-cores` arms read them (`Machine::here`), read once
+static PHYS: std::sync::OnceLock<Option<usize>> = std::sync::OnceLock::new();
+/// A `-pin` arm's placement, done once before the run's timer and sampler start
+static PINNED: std::sync::OnceLock<Result<(), String>> = std::sync::OnceLock::new();
+
+/// The `-cores` arms' physical cores (`Machine::here`, about 0.3 ms on a fresh process:
+/// read by `cores_arm_setup` before the timer, so never timed)
+fn cores_arm_phys() -> Option<usize> {
+    *PHYS.get_or_init(|| mibz2::parallel::Machine::here().phys)
+}
+
+/// Before a `-cores` arm's timer and sampler start: the machine read, and for a `-pin` arm
+/// the mask narrowed, so neither is timed, and the sampler, started afterwards, sees the
+/// narrowed mask and keeps off its CPUs as it does in a `--spread` run
+fn cores_arm_setup(arm: &str) {
+    if arm.starts_with("mibz2-workers-lazy-cores") {
+        cores_arm_phys();
+        if arm.ends_with("-pin") {
+            PINNED.get_or_init(one_cpu_a_core);
+        }
+    }
 }
 
 /// The `-pin` arms' placement: this process's CPUs narrowed to the first CPU of each core
