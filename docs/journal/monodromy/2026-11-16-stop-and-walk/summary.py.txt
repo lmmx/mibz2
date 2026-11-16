@@ -1,0 +1,15 @@
+import json,sys,statistics as st
+for f in sys.argv[1:]:
+    B=[json.loads(l) for l in open(f)]
+    print(f.split('/')[-1], len(B),'blocks; S/r med %.3f'%st.median(b['S']/b['r'] for b in B), 'alloc/r %.2f'%st.median(b['alloc']/b['r'] for b in B))
+    print(' k  m/n     steps/S  rem/m(break-even)  live/r  untouched/r  alloc/end  reach/end  walk/r')
+    for k in range(2,26,2):
+        rows=[]
+        for b in B:
+            c=[x for x in b['curve'] if x[0]==k]
+            if not c: continue
+            _,m,s,live,unt,al,g,occ=c[0]
+            rows.append((m/b['n'],s/b['S'],(b['S']-s)/m,live/b['r'],unt/b['r'],al/b['alloc'],g/b['alloc'],m/b['r']))
+        if not rows: continue
+        md=[st.median(x[i] for x in rows) for i in range(8)]
+        print('%2d %.5f  %.3f    %.3f            %.3f   %.3f        %.3f      %.3f     %.3f'%(k,*md))
