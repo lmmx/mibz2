@@ -281,8 +281,8 @@ impl Kernel {
         st.letters += self.letters as u64;
         st.bytes += n as u64;
         st.rules += nr as u64;
-        for w in 0..3 {
-            st.ns[w] += best[w];
+        for (t, b) in st.ns.iter_mut().zip(best) {
+            *t += b;
         }
         for w in 0..2 {
             st.differ[w] += differ[w] as usize;
@@ -296,8 +296,8 @@ impl Kernel {
             st.saved8[w] += saved8[w];
         }
         st.touched += touched as u64;
-        for i in 0..10 {
-            st.run_len[i] += run_len[i];
+        for (t, k) in st.run_len.iter_mut().zip(run_len) {
+            *t += k;
         }
     }
 
