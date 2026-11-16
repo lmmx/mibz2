@@ -131,6 +131,10 @@ jobs:
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py
+      # bench-clamp's reading (bench/clamp.py) on synthetic runs: the rule's verdicts, the
+      # A/A control, and a run whose arms' outputs differ left unread
+      - name: The clamp run's verdict
+        run: python3 bench/test_clamp.py
       # bench-cells-imc's statistic, rule and validity (bench/cells_imc.py) on synthetic
       # readings, and its collection driven end to end with stand-ins for ab and perf
       - name: The working-set premise test's verdict

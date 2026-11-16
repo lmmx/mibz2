@@ -98,7 +98,9 @@
 //!   `mibz2-workers` (THREADS workers of a block each, `Plan::Workers`: the decoder before
 //!   the policy, 2 blocks in flight a worker), `mibz2-workers-w` (the same plan with the
 //!   default's window, `parallel::SLOTS_PER_THREAD` blocks a worker: below 6 physical
-//!   cores, exactly what `mibz2` runs);
+//!   cores, exactly what `mibz2` runs), `mibz2-clamp` (`mibz2` asked for min(THREADS,
+//!   physical cores) threads: the clamp applied before the decoder is built, so its plan,
+//!   window and pool all see the clamped count; the cores are read before the timer);
 //! - `mibz2-coop2`, `-coop3`, `-coop4` (the cooperative decoder, `bwt::Cooperative`:
 //!   THREADS cores as THREADS / K teams of K, `BzReader::parallel_planned`, 2 blocks in
 //!   flight a team), `mibz2-team2`, `-team3`, `-team4` (the same plans with the default's
@@ -1354,6 +1356,17 @@ fn child(arm: &str, threads: usize, path: &str, hold: Option<Hold>) {
     #[cfg(feature = "walk-stats")]
     let _walk_stats = WalkStats;
     let mut h = Hash::new();
+    // `mibz2-clamp`: the shipped decoder (`mibz2`) asked for min(THREADS, physical cores)
+    // threads, so nothing in it (plan, window, pool) scales with hyperthreads. The cores are
+    // read here, before the timer, so the arm's wall carries no extra read; the record keeps
+    // the arm's name and the THREADS asked for
+    let (dec_arm, dec_threads) = match arm {
+        "mibz2-clamp" => (
+            "mibz2",
+            clamped_threads(threads, mibz2::parallel::Machine::here().phys),
+        ),
+        _ => (arm, threads),
+    };
     let external = program(arm, threads, path);
     let is_program = external.is_some();
     // (`ab run --machine-state` only: the counters, opened before and read after the timed
@@ -1379,7 +1392,7 @@ fn child(arm: &str, threads: usize, path: &str, hold: Option<Hold>) {
                 p.enable();
             }
             let t0 = Instant::now();
-            let res = decode(arm, threads, path, &mut h, &|| ());
+            let res = decode(dec_arm, dec_threads, path, &mut h, &|| ());
             let wall = t0.elapsed().as_secs_f64();
             if let Some(p) = &perf {
                 p.disable();
@@ -1401,7 +1414,7 @@ fn child(arm: &str, threads: usize, path: &str, hold: Option<Hold>) {
                 p.enable();
             }
             let t0 = Instant::now();
-            let res = decode(arm, threads, path, &mut h, &|| w.sample());
+            let res = decode(dec_arm, dec_threads, path, &mut h, &|| w.sample());
             let wall = t0.elapsed().as_secs_f64();
             if let Some(p) = &perf {
                 p.disable();
@@ -2247,6 +2260,50 @@ fn json_str(line: &str, key: &str) -> Option<String> {
     } else {
         let end = rest.find([',', '}']).unwrap_or(rest.len());
         Some(rest[..end].to_string())
+    }
+}
+
+/// The threads `mibz2-clamp` asks the decoder for when `threads` are asked for on a machine
+/// of `phys` physical cores (as the plan policy counts them: the cores of the CPUs this
+/// process may use): min(threads, phys), and `threads` where the cores are not known
+fn clamped_threads(threads: usize, phys: Option<usize>) -> usize {
+    threads.min(phys.unwrap_or(threads)).max(1)
+}
+
+#[cfg(test)]
+mod clamped_threads_tests {
+    #[test]
+    fn at_most_the_physical_cores() {
+        use super::clamped_threads;
+        for (threads, phys, want) in [
+            (1, Some(10), 1),
+            (8, Some(10), 8),
+            (9, Some(10), 9),
+            (10, Some(10), 10),
+            (12, Some(10), 10),
+            (16, Some(10), 10),
+            (20, Some(10), 10),
+            (8, Some(8), 8),
+            (20, None, 20),
+            (0, Some(10), 1),
+            (8, Some(2), 2),
+        ] {
+            assert_eq!(clamped_threads(threads, phys), want, "{threads} on {phys:?}");
+        }
+    }
+
+    /// On this machine the arm's effective count is min(threads, the plan policy's cores)
+    #[test]
+    fn here_is_min_of_threads_and_cores() {
+        use super::clamped_threads;
+        let phys = mibz2::parallel::Machine::here().phys;
+        for t in [1, 2, 4, 8, 10, 12, 16, 20, 64] {
+            let want = match phys {
+                Some(p) => t.min(p),
+                None => t,
+            };
+            assert_eq!(clamped_threads(t, phys), want.max(1), "{t} on {phys:?}");
+        }
     }
 }
 

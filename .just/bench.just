@@ -1675,3 +1675,50 @@ bench-memory-lever ROUNDS="10" THREADS="4,6,8,9,10,12":
       || echo "bench-memory-lever: the sign reading is not valid (lever.txt says why)"
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
+
+# The thread count clamped to the physical cores (#145; its decision rule is stated in the
+# PR that added this recipe, before the data): the shipped decoder (`mibz2`, 0.5.1's plan:
+# Workers(cores) past the cores on 8 to 10 of them, but its window still SLOTS_PER_THREAD a
+# thread *asked for*) against the same decoder asked for min(THREADS, cores) threads
+# (`mibz2-clamp`: plan, window and pool all see the clamped count). On the Wikidata sample
+# and on COPIES copies of it end to end, at the cores' count, below it (where the two arms
+# are one decoder: the A/A control) and above it. `bench/clamp.py` reads the rule, the A/A
+# control, the harness's shape past the cores (mibz2-clamp at T over mibz2 at the cores),
+# and mibz2 at 8 and 9 threads over 10 (fewer workers than cores, one binary). The held
+# spinner around runs of 10 threads or fewer, as bench-release-scaling has it. On this
+# machine, at the commit checked out.
+bench-clamp COPIES="8" ROUNDS="10" THREADS="8,9,10,12,16,20":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/clamp
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-clamp (#145, its rule stated before the data): mibz2 (shipped 0.5.1 plan) against mibz2-clamp (mibz2 asked for min(THREADS, physical cores) threads) on the Wikidata sample and on {{COPIES}} copies of it, at {{THREADS}} threads, {{ROUNDS}} paired rounds, at $(git rev-parse HEAD)"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    # COPIES copies end to end: bzip2 streams one after another are one valid file
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    cores=$(python3 -c 'import json, sys; e = json.loads(open(sys.argv[1]).readline()); print(e.get("cores") or "")' "$O/env.json" 2>/dev/null || true)
+    [ -n "$cores" ] || cores=$(lscpu -p=core,socket | grep -v '^#' | sort -u | wc -l)
+    echo "bench-clamp: $cores physical cores"
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-clamp" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
+    "$AB" summary "$O/runs.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    python3 bench/clamp.py "$O/runs.jsonl" --cores "$cores" | tee "$O/clamp.txt" \
+      || echo "bench-clamp: the reading is not valid (clamp.txt says why)"
+    git rev-parse HEAD > "$O/commit.txt"
+    bash bench/bundle.sh "$O"
