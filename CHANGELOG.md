@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2](https://github.com/lmmx/mibz2/compare/v0.5.1...v0.5.2) - 2026-11-16
+
+A plan release: past the physical cores, the decoder runs one lazy worker fewer than the
+cores, and sizes its in-flight window by the workers. That leaves one core for the scanner.
+Below the core count nothing changes.
+
+- **One lazy worker a core but one, past the cores** (#481). It applies only on the measured
+  profile (10 cores, as on the i9-10900K). On Wikidata ×4, its registered run
+  (cores-less-one/run-20261116T203759Z) had wall time 0.956, 0.960 and 0.959 of master's at
+  12, 16 and 20 threads, CPU 0.85–0.89 and peak memory 0.82–0.88. The text guard and the
+  9- and 10-thread controls showed no change.
+- **Release scaling, 0.5.2 against 0.5.1 on the i9** (release-scaling/run-20261116T221259Z):
+  0.5.1 takes 1.047, 1.047 and 1.050 of 0.5.2's wall time at 12, 16 and 20 threads, and
+  13–16% more CPU. At 1–10 threads the two are level (0.984–1.008, every interval spanning 1).
+- **Team threshold (RELEASING §5a), unchanged** (crossover/run-20261116T215235Z). No forced
+  arm beat the shipped decoder at any count it would change. Teams are slower at every count
+  from 4 to 20.
+- **The toolchain is pinned** to rustc 1.99.1 (#504) for CI, the bench, the wheels and
+  workstation runs. The published crate doesn't carry the pin, and the MSRV stays 1.80.
+
+### <!-- 1 -->Features
+
+- *(research)* the lazy kernel's induction, recorded block by block (induction-trace) ([#486](https://github.com/lmmx/mibz2/pull/486))
+
+### <!-- 3 -->Performance
+
+- *(plan)* past the cores, one lazy worker a core but one, with the window sized to the workers ([#481](https://github.com/lmmx/mibz2/pull/481))
+
+### <!-- 9 -->Other
+
+- Grammar replay: W10 writer, and W12 as #506's layout, research only ([#508](https://github.com/lmmx/mibz2/pull/508))
+- Grammar replay harness: W16/W12/W8 writers on the same rules, research feature only ([#503](https://github.com/lmmx/mibz2/pull/503))
+- Pin the Rust toolchain to 1.99.1 for CI, bench, wheels and workstation runs ([#504](https://github.com/lmmx/mibz2/pull/504))
+- Towers, words and loops, a mathematical dictionary for BWT inversion ([#502](https://github.com/lmmx/mibz2/pull/502))
+- stop and walk, cutting a text rebuild short and walking the rest (result pending #493) ([#495](https://github.com/lmmx/mibz2/pull/495))
+- wake Claude Code roles with a direct session message, never through Louis (§1a) ([#484](https://github.com/lmmx/mibz2/pull/484))
+- Release scaling: 0.5.1 against 0.5.0 on the i9 ([#475](https://github.com/lmmx/mibz2/pull/475))
+- 0.5.0's and 0.5.1's notes ([#474](https://github.com/lmmx/mibz2/pull/474))
+
 ## [0.5.1](https://github.com/lmmx/mibz2/compare/v0.5.0...v0.5.1) - 2026-11-16
 
 A plan release: the decoder now uses one block a thread (workers, with lazy letters) instead of

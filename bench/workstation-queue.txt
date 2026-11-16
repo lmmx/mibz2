@@ -6,4 +6,6 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-cores-less-one         perf/cores-less-one       Nine lazy workers and a worker-sized window past the cores, i9 profile only, against master's build (#481; registration 6923522255 with REVIEW 6924511372's corrections, QUEUED 6924894726)
+bench-release-scaling        master                    0.5.2 against 0.5.1 on the i9 (RELEASING §5), at the v0.5.2 tag commit ad0fcd33
+bench-w12                    perf/w12-rules            12-byte rules (W12) against master's build, rustc 1.99.1, with the L2 diagnostic at 10 threads (#506; registration 6928288705, run ahead of the Researcher's review at Louis's instruction)
+bench-workers-window         bench/occupancy           Eight vs nine workers and the window at 2x and 1/2 past the cores (#510; registration 6930443845, run ahead of review at Louis's instruction)
