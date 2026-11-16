@@ -1161,6 +1161,27 @@ fn decode(
             h,
             last,
         ),
+        // the stop-and-walk arms (#145 HANDOFF 6916839849): `mibz2-workers-lazy` with the
+        // lazy induction stopped after ⌈β r⌉ cells, β = 1.4, 1.5 or 1.6, and the rest of the
+        // block walked (`bwt::StopLazyCells15`). The plan and the window are
+        // `mibz2-workers-lazy`'s, so an arm differs from it in the kernel alone
+        "mibz2-workers-stop14" | "mibz2-workers-stop15" | "mibz2-workers-stop16" => {
+            use mibz2::bwt::{StopLazyCells14, StopLazyCells15, StopLazyCells16};
+            let (r, slots) = (open()?, mibz2::parallel::SLOTS_PER_THREAD * threads);
+            let k = mibz2::Kernels::detect();
+            let rd = match arm {
+                "mibz2-workers-stop14" => {
+                    mibz2::BzReader::parallel_workers_with::<StopLazyCells14>(r, threads, slots, k)
+                }
+                "mibz2-workers-stop15" => {
+                    mibz2::BzReader::parallel_workers_with::<StopLazyCells15>(r, threads, slots, k)
+                }
+                _ => {
+                    mibz2::BzReader::parallel_workers_with::<StopLazyCells16>(r, threads, slots, k)
+                }
+            };
+            drain(rd, h, last)
+        }
         // the memory-lever experiment's two arms (research, `memory-lever` feature; #145
         // QUEUED 6901989466): `mibz2-workers-w` with Cells' lazy letters, or with its rules
         // staged and stored past the cache. The plan and the window are `mibz2-workers-w`'s,

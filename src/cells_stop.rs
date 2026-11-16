@@ -23,14 +23,18 @@
 // the marked letter's one point, whose place the marked word's rules and `SHIFT` give, writing
 // each point's word ending at its place, downward. After m points it is back at x_μ, n bytes
 // lower: once round the block.
-// - *A word's 16-byte stores reach up to 15 bytes below it,* into places the walk has not
-//   reached yet, because places only fall. Only near place 0, where the walk wraps to n, and
-//   in its last 16 bytes, which lie just above where it began, is a word written exactly.
-// - *A letter's word is expanded from its rules once,* where the walk first meets the letter.
-//   Every later point copies it from there, 16 bytes a step, top down. The two occurrences are
-//   disjoint and the first lies above, and a chunk reads below the first place only where it
-//   writes below the copy, which the walk writes over later. A word kept as bytes (16 or
-//   fewer) is one store from the arena either way.
+// - *A point's stores reach below its word* (by up to `COPY` bytes), into places the walk
+//   has not reached yet, because places only fall. Only near place 0, where the walk wraps to
+//   n, and in its last `COPY` bytes, which lie just above where it began, is a word written
+//   exactly.
+// - *Each point copies its word from one place,* `COPY` bytes whatever its length and 16 at a
+//   time past that, top down, so the walk does not branch on the word: a word kept as bytes
+//   from the arena; a rule from where the walk first met the letter and expanded it. The two
+//   occurrences are disjoint and the first lies above, and the copy reads below the first
+//   place only where it writes below this one, which the walk writes over later.
+// - *The walk is one chain,* point to point: a rank, a popcount and the letter's offset,
+//   which is kept apart from the rest of its record so that the chain's loads stay in the
+//   first-level cache. It is latency-bound: about half its time at β = 1.5.
 //
 // **When it does not apply.** If the walk comes back to x_μ before m points or not n bytes
 // lower (the stopped exchange is several cycles: the block is a shorter cycle's copies), or
@@ -72,8 +76,6 @@ const _: () = assert!(STOP_AT + 8 <= PAD);
 
 /// An untouched letter's key: its bottom entry's index, beside this bit
 const KEY_ENTRY: u32 = 1 << 31;
-/// A letter whose word the walk has not written yet (`Walk::first`)
-const UNWRITTEN: u32 = u32::MAX;
 /// The low 32 bits
 const M32: u64 = 0xFFFF_FFFF;
 
@@ -100,15 +102,17 @@ struct Rank {
     _pad: u32,
 }
 
-/// A letter, in top order: its word (offset << 32 | length with the mark), the offset from
-/// its top interval to its bottom one, and where the walk first wrote its word (its end;
-/// `UNWRITTEN`: not yet, or not where it can be copied from)
+/// A letter, in top order, as the walk writes it at each point: where its word's bytes end,
+/// to be copied from (a word kept as bytes: in the arena; else where the walk first wrote it;
+/// 0: not yet), and its word's length. (The offset to its bottom interval, which the walk's
+/// chain from point to point needs, is apart, in `Walk::dls`, small enough to stay in the
+/// first-level cache; its word itself, needed only once, in `Walk::words`.)
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
 struct Rec {
-    word: u64,
-    dl: i32,
-    first: u32,
+    src: usize,
+    len: u32,
+    _pad: u32,
 }
 
 /// The walk's tables and scratch, kept from block to block
@@ -125,6 +129,8 @@ struct Walk {
     /// the rank bitmap over [0, m), and the letters in top order
     rank: Vec<Rank>,
     recs: Vec<Rec>,
+    dls: Vec<i32>,
+    words: Vec<u64>,
     /// the words being expanded past the frame's depth: (word, end)
     stack: Vec<(u64, usize)>,
     /// a word written exactly, through here
@@ -151,7 +157,7 @@ impl Kernel {
         let r = self.tables(&st, out, &mut w).and_then(|(mu, xmu, m)| {
             // its word ends where the block's place 0 lies after the walk's row's byte and
             // `SHIFT`
-            let (j, wmu) = self.marked_offset(w.recs[mu].word)?;
+            let (j, wmu) = self.marked_offset(w.words[mu])?;
             let p = (wmu + 2 * n - j - SHIFT) % n;
             if out.len() < n + 32 {
                 out.resize(n + 32, 0);
@@ -205,6 +211,8 @@ impl Kernel {
         if w.tops.len() < rr {
             w.tops.resize(rr, (0, 0, 0));
             w.recs.resize(rr, Rec::default());
+            w.words.resize(rr, 0);
+            w.dls.resize(rr, 0);
         }
         let stamp = (w.stamp as u64) << 32;
         // the bottom order, right to left: each letter's bottom interval's end, from the right
@@ -309,8 +317,17 @@ impl Kernel {
             }
             // (its bottom interval [m − jr, m − jr + λ) lies in [0, m): jr ≥ λ, as the bottom
             // order's ends are sums of the letters' rows up to and with it)
+            // a word kept as bytes is copied from the arena (16 readable bytes before its end,
+            // and the buffer's padding below the arena), a rule from where the walk first
+            // writes it
+            let (off, len) = ((word >> 32) as usize, word as u32 & !MARK);
+            let src = if off < lay.rules { base as usize + off + len as usize } else { 0 };
             // SAFETY: i < nl ≤ rr
-            unsafe { *w.recs.get_unchecked_mut(i) = Rec { word, dl: (m - jr) as i32 - x as i32, first: UNWRITTEN } };
+            unsafe {
+                *w.recs.get_unchecked_mut(i) = Rec { src, len, _pad: 0 };
+                *w.dls.get_unchecked_mut(i) = (m - jr) as i32 - x as i32;
+                *w.words.get_unchecked_mut(i) = word;
+            }
             x += lam as usize;
         }
         if x != m {
@@ -386,46 +403,47 @@ fn walk_body(buf: &[u8], rules: usize, w: &mut Walk, xmu: usize, p: usize, n: us
     let base = buf.as_ptr();
     let o = out.as_mut_ptr();
     let recs = w.recs.as_mut_ptr();
+    let dls = w.dls.as_ptr();
     let mut stack = std::mem::take(&mut w.stack);
     let mut tmp = std::mem::take(&mut w.tmp);
     let mut st: Frame = [(0, 0); DEEP];
     let mut v = p + n;
-    // 16 above the lap's floor on the line, and the line's offset from the place
-    let (mut lim, mut lap) = if v > n { (n + 16, n) } else { (p + 16, 0) };
+    // `COPY` above the lap's floor on the line, and the line's offset from the place
+    let (mut lim, mut lap) = if v > n { (n + COPY, n) } else { (p + COPY, 0) };
     let mut x = xmu as u32;
     let mut points = 0usize;
     // (T sends [0, m) into itself: `tables` checked each letter's two intervals lie in it)
     let r = loop {
         let i = w.letter(x);
         // SAFETY: i is a letter of the tables (`letter`)
-        let rec = unsafe { recs.add(i) };
-        let Rec { word, dl, .. } = unsafe { *rec };
-        let len = (word as u32 & !MARK) as usize;
+        let (rec, dl) = unsafe { (recs.add(i), *dls.add(i)) };
+        let Rec { src, len, .. } = unsafe { *rec };
+        let len = len as usize;
         if v >= lim + len {
             let at = v - lap;
-            let off = (word >> 32) as usize;
-            if off < rules {
-                // SAFETY: [at − len − 16, at) lies in [0, n]; a word kept as bytes has 16
-                // readable bytes before its end (the arena's slack)
-                unsafe { copy16(o.add(at - 16), base.add(off + len - 16)) };
-            } else {
-                // SAFETY: as above
-                let f = unsafe { (*rec).first };
-                if f == UNWRITTEN {
-                    // SAFETY: as above, and a rule's factors are the kernel's words
-                    unsafe {
-                        (*rec).first = at as u32;
-                        emit(base, rules, word, at, o, &mut st, &mut stack);
-                    }
-                } else {
-                    // SAFETY: the first place's word ends at f, at least len + 16 above its
-                    // lap's floor, and above this one: each chunk ends inside both words
-                    let src = f as usize;
-                    let mut k = 0;
+            if src != 0 {
+                // SAFETY: the word's bytes end at `src`, with `COPY` readable bytes before it
+                // and its whole length: a word kept as bytes in the arena (the buffer's
+                // padding lies below it), else where the walk first wrote it, at least
+                // `COPY` + len above its lap's floor and above this point's word. The stores
+                // lie in [at − max(len, COPY) − 15, at), inside [0, n] above the floor. The
+                // first `COPY` bytes are read before any is stored
+                unsafe {
+                    let s = src as *const u8;
+                    let (a0, a1) = (ld16(s.sub(16)), ld16(s.sub(32)));
+                    st16(o.add(at - 16), a0);
+                    st16(o.add(at - 32), a1);
+                    let mut k = COPY;
                     while k < len {
                         k += 16;
-                        unsafe { copy16(o.add(at - k), o.add(src - k)) };
+                        copy16(o.add(at - k), s.sub(k));
                     }
+                }
+            } else {
+                // SAFETY: as above, and a rule's factors are the kernel's words
+                unsafe {
+                    (*rec).src = o.add(at) as usize;
+                    emit(base, rules, *w.words.get_unchecked(i), at, o, &mut st, &mut stack);
                 }
             }
         } else {
@@ -433,9 +451,11 @@ fn walk_body(buf: &[u8], rules: usize, w: &mut Walk, xmu: usize, p: usize, n: us
                 break Err(());
             }
             let at = v - lap;
+            // SAFETY: i is a letter of the tables
+            let word = unsafe { *w.words.get_unchecked(i) };
             emit_exact(buf, rules, word, len, at, n, out, &mut st, &mut stack, &mut tmp);
             if v - len <= n {
-                (lim, lap) = (p + 16, 0);
+                (lim, lap) = (p + COPY, 0);
             }
         }
         v -= len;
@@ -448,6 +468,22 @@ fn walk_body(buf: &[u8], rules: usize, w: &mut Walk, xmu: usize, p: usize, n: us
     w.stack = stack;
     w.tmp = tmp;
     r
+}
+
+/// The bytes each point copies whatever its word's length (a word longer copies the rest 16
+/// at a time): one fixed copy, so the walk does not branch on the length
+const COPY: usize = 32;
+
+/// 16 bytes, loaded and stored
+#[inline(always)]
+unsafe fn ld16(p: *const u8) -> [u8; 16] {
+    // SAFETY: the caller's
+    unsafe { (p as *const [u8; 16]).read_unaligned() }
+}
+#[inline(always)]
+unsafe fn st16(p: *mut u8, v: [u8; 16]) {
+    // SAFETY: the caller's
+    unsafe { (p as *mut [u8; 16]).write_unaligned(v) }
 }
 
 /// Pending factors a word's expansion keeps before it spills to the heap

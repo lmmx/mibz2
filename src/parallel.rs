@@ -242,11 +242,23 @@ impl StreamDecoder {
     #[doc(hidden)]
     pub fn workers(threads: usize, slots: usize, k: Kernels, lazy: bool) -> StreamDecoder {
         use super::bwt::{Cells, LazyCells};
-        let mut dec = if lazy {
-            Self::with_inverse::<LazyCells>(threads, slots, k)
+        if lazy {
+            Self::workers_with::<LazyCells>(threads, slots, k)
         } else {
-            Self::with_inverse::<Cells>(threads, slots, k)
-        };
+            Self::workers_with::<Cells>(threads, slots, k)
+        }
+    }
+
+    /// `threads` workers of a block each, inverting with `I`, whatever the thread count: as
+    /// `workers`, for the bench arms that compare another kernel with the shipped one (the
+    /// stop-and-walk arms, `bwt::StopLazyCells15`)
+    #[doc(hidden)]
+    pub fn workers_with<I: super::bwt::InverseBwt + 'static>(
+        threads: usize,
+        slots: usize,
+        k: Kernels,
+    ) -> StreamDecoder {
+        let mut dec = Self::with_inverse::<I>(threads, slots, k);
         dec.threads = Plan::Workers(threads).threads();
         dec
     }

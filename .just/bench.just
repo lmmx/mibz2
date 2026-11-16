@@ -1636,6 +1636,51 @@ bench-lazy-crossover ROUNDS="10" THREADS="4,6,7,8,9,10,12,14,16,20":
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
+# Stop-and-walk, Gate 2 (MONODROMY's HANDOFF 6916839849; its rule posted on #145 before the
+# data): the shipped kernel at 8 threads and more, lazy letters forced as `mibz2-workers-lazy`,
+# against the same workers with the lazy induction stopped after ⌈β r⌉ cells, β = 1.4, 1.5 and
+# 1.6, and the rest of each block walked (`mibz2-workers-stop14`, `-stop15`, `-stop16`). An arm
+# differs from the reference in the kernel alone. Judged at 8, 9 and 10 threads on COPIES
+# copies of the Wikidata sample; then every arm at 1 and 10 threads on one copy (the 1-thread
+# cost and the memory dose, recorded, not judged). `bench/stop_walk.py` reads the verdict.
+bench-stop-walk COPIES="4" ROUNDS="10" THREADS="8,9,10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/stop-walk
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    arms="mibz2-workers-lazy,mibz2-workers-stop14,mibz2-workers-stop15,mibz2-workers-stop16"
+    echo "bench-stop-walk (MONODROMY's HANDOFF 6916839849, Gate 2; its rule posted on #145 before the data): $arms on {{COPIES}} copies of the Wikidata sample at {{THREADS}} threads, {{ROUNDS}} paired rounds; then at 1 and 10 threads on one copy (recorded), at $(git rev-parse HEAD)"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    # COPIES copies end to end: bzip2 streams one after another are one valid file
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+    "$AB" run "$O/runs.jsonl" --arms "$arms" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata-x{{COPIES}}.bz2"
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-lazy | tee "$O/summary.txt"
+    # recorded, not judged: the 1-thread cost, and the memory dose (CPU at 10 over CPU at 1)
+    "$AB" run "$O/dose.jsonl" --arms "$arms" \
+      --threads "1,10" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
+    "$AB" summary "$O/dose.jsonl" --ref mibz2-workers-lazy > "$O/summary-one-copy.txt"
+    python3 bench/stop_walk.py "$O/runs.jsonl" "$O/dose.jsonl" | tee "$O/verdict.txt" \
+      || echo "bench-stop-walk: the run is void (verdict.txt says why)"
+    git rev-parse HEAD > "$O/commit.txt"
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,
