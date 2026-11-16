@@ -53,17 +53,18 @@ def main(argv):
                 len(workers),
                 sum(cpu.get(MAIN, [0.0])) / wall,
                 sum(cpu.get(READ, [0.0])) / wall,
+                sum(cpu.get(SCAN, [0.0])),
             )
         )
     print("\na thread's CPU over the wall, the mean of the rounds")
-    print(f"  {'corpus':14s}{'arm':26s}{'threads':>8s}{'wall s':>9s}{'scanner':>9s}{'workers':>9s}{'busiest':>9s}{'  n':>4s}{'consumer':>10s}{'feeder':>8s}")
+    print(f"  {'corpus':14s}{'arm':26s}{'threads':>8s}{'wall s':>9s}{'scanner':>9s}{'workers':>9s}{'busiest':>9s}{'  n':>4s}{'consumer':>10s}{'feeder':>8s}{'scanner s':>11s}")
     walls = {}
     for (corpus, arm, threads), v in sorted(groups.items()):
         m = lambda i: statistics.mean(x[i] for x in v)
         walls[(corpus, arm, threads)] = statistics.median(x[0] for x in v)
         print(
             f"  {corpus:14s}{arm:26s}{threads:8d}{walls[(corpus, arm, threads)]:9.4f}{m(1):9.0%}{m(2):9.0%}{m(3):9.0%}"
-            f"{m(4):4.0f}{m(5):10.0%}{m(6):8.0%}"
+            f"{m(4):4.0f}{m(5):10.0%}{m(6):8.0%}{m(7):11.3f}"
         )
     # The fixed cost: with a corpus of one copy and one of N copies of it (named ...-xN), a
     # run of one copy takes `fixed + a copy's time`, a run of N takes `fixed + N` of them.
@@ -87,7 +88,9 @@ def main(argv):
             print(f"  {arm:26s}{threads:8d}{one:10.4f}{many:10.4f}{n:4d}{each:9.4f}{fixed:9.4f}{fixed / one:26.0%}")
     print(
         "\nreading: a stage binds where its share is near 100%. The scanner is one thread and "
-        "cannot be given more; the workers can; the consumer is the caller's."
+        "cannot be given more; the workers can; the consumer is the caller's. The scanner's seconds "
+        "are its CPU for the same work at every thread count: where they rise with the "
+        "threads, it is sharing its core."
     )
     return 0
 

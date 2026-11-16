@@ -1680,7 +1680,7 @@ bench-lazy-cap ROUNDS="10" THREADS="10,12,14,16,20":
 # (`mibz2-workers-lazy-cap`) on the Wikidata sample and on COPIES copies of it end to end,
 # with each thread's CPU over the wall read out (`bench/lazy_occupancy.py`). On this machine,
 # at the commit checked out.
-bench-lazy-occupancy COPIES="8" ROUNDS="10" THREADS="4,8,10,20":
+bench-lazy-occupancy COPIES="8" ROUNDS="10" THREADS="4,8,9,10,20":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/lazy-occupancy

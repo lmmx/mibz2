@@ -53,7 +53,7 @@ jobs:
       - name: The occupancy reading (made-up run)
         run: |
           python3 bench/lazy_occupancy.py bench/lazy_occupancy_example_runs.jsonl | tee occupancy.txt
-          grep -q 'made-up-x8 *mibz2-workers-lazy-cap *2 *0.4000 *95% *70% *75% *2 *25% *0%' occupancy.txt
+          grep -q 'made-up-x8 *mibz2-workers-lazy-cap *2 *0.4000 *95% *70% *75% *2 *25% *0% *0.380' occupancy.txt
           grep -q 'mibz2 *2 *0.1000 *0.5200 *8 *0.0600 *0.0400 *40%' occupancy.txt
           # a run whose arms' outputs differ is not read
           sed 's/"out": 8000, "hash": "0000000000001f40", "thread_cpu": "mibz2-0=0.26/"out": 8001, "hash": "0000000000001f41", "thread_cpu": "mibz2-0=0.26/' \
