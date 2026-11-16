@@ -1,0 +1,10 @@
+{"block":0,"index":1,"n":899931,"r":51184,"steps":92570,"closures":1,"period":899931,"admitted":true,"bytes":6081863,"s":0.047}
+{"block":24,"index":41,"n":900000,"r":131363,"steps":228384,"closures":1,"period":900000,"admitted":false,"bytes":15166684,"s":0.094}
+{"block":48,"index":85,"n":900000,"r":62533,"steps":117921,"closures":1,"period":900000,"admitted":true,"bytes":7661890,"s":0.054}
+{"block":72,"index":134,"n":900000,"r":54808,"steps":100079,"closures":1,"period":900000,"admitted":true,"bytes":6558275,"s":0.048}
+{"block":96,"index":176,"n":900000,"r":57079,"steps":102601,"closures":1,"period":900000,"admitted":true,"bytes":6752003,"s":0.029}
+{"block":120,"index":225,"n":900000,"r":49209,"steps":92932,"closures":1,"period":900000,"admitted":true,"bytes":6036043,"s":0.025}
+{"block":144,"index":269,"n":899984,"r":124940,"steps":207162,"closures":1,"period":899984,"admitted":false,"bytes":13942492,"s":0.062}
+{"block":168,"index":313,"n":900000,"r":51854,"steps":98089,"closures":1,"period":900000,"admitted":true,"bytes":6368220,"s":0.030}
+{"block":192,"index":359,"n":900000,"r":49036,"steps":88258,"closures":1,"period":900000,"admitted":true,"bytes":5806155,"s":0.037}
+{"block":216,"index":397,"n":900000,"r":58478,"steps":108057,"closures":1,"period":900000,"admitted":true,"bytes":7058658,"s":0.041}
