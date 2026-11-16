@@ -1,4 +1,4 @@
-# 2026-11-15 · Pathfinder · Shared words through a ring of eight: a quarter of the word store, three quarters more induction, closed
+# 2026-11-15 · Pathfinder · Shared words through a ring of eight: a quarter of the word store, three quarters more induction
 
 Asked by the Coordinator on #145 after MONODROMY's count of equal words: price the ring of
 eight in the kernel before sharing is closed. The ring lives in memory, not in registers,
@@ -68,18 +68,30 @@ Callgrind, one thread, inclusive, per letter, both builds with AVX2:
 
 ## Verdict
 
-Closed. Two comparisons settle it without a clock:
+**On instructions, the measure in force when this was counted: it fails.**
 
 | cut | memory besides the output | first stage + induction + writer |
 |---|--:|--:|
 | lazy letters (the `-lazy` arm, `2026-11-15-memory-lever/counts.txt`) | −13.6 B a letter | +52 instructions a letter (+21%) |
 | ring of eight | −4.5 B a letter | +76 instructions a letter (+31%) |
 
-The ring saves a third of what lazy letters save, for half as many instructions again. Lazy letters
-are already an arm of the i9 run (`bench-memory-lever`). If that arm does not pay at ten
-threads, the ring cannot. If it does, lazy letters are the cut to build, not this.
+The ring saves a third of what lazy letters save, for half as many instructions again.
 
-**What would reopen it:** a way to find an equal word without a search a cell. None is
+**The measure changed the same hour.** The i9 run (LOG 6903318530) found lazy letters
+faster than the shipped decoder at 8, 9 and 10 threads despite its instructions, and the
+Coordinator ruled (QUEUED 6903426694) that a memory cut is now judged on peak memory and
+wall time at 8 to 10 threads. On that measure the ring is not closed. It is a cut to stack
+on lazy letters, and what it is worth there is smaller than the table above suggests:
+
+| kernel | live memory besides the output | the ring would take |
+|---|--:|--:|
+| lazy letters | 22.0 B a letter (6.4 slots, 15.6 words) | 4.5 B (−20%) |
+| lazy letters, rules in the output's spare capacity (#449) | 12.8 B a letter (6.4 slots, 6.4 arena) | 2.2 B of live memory (−17%), and 2.2 B of the tail |
+
+It waits behind the production lazy kernel and the free-steps-first order, and is judged
+by a clock on the i9 if it is built.
+
+**What would make it cheap:** a way to find an equal word without a search a cell. None is
 known. The key is only available once both factors are, which is at the cell itself.
 
 ## Reproduce
