@@ -1,7 +1,7 @@
 ---
-title: "Towers, words and loops: a mathematical dictionary for our text rebuild"
+title: "Towers, words and loops: a mathematical dictionary for BWT inversion"
 image: assets/social/blog-2026-11-16-mathematical-dictionary.png
-description: "Our text rebuild turns out not to be the sheaf an earlier analogy suggested, yet the places of its words form one naturally and exactly."
+description: "Our BWT inversion is not the sheaf an earlier analogy suggested, yet the places of its words form one naturally."
 ---
 
 <div class="post-hero" markdown>
@@ -11,9 +11,9 @@ description: "Our text rebuild turns out not to be the sheaf an earlier analogy 
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Towers, words and loops: a mathematical dictionary for our text rebuild
+# Towers, words and loops: a mathematical dictionary for BWT inversion
 
-Our text rebuild turns out not to be the sheaf an earlier analogy suggested, yet the places of its words form one naturally and exactly.
+Our BWT inversion is not the sheaf an earlier analogy suggested, yet the places of its words form one naturally.
 {: .post-dek }
 
 16 November 2026 · 17 min read · [Research synthesis](#8-where-this-leaves-us)
@@ -25,7 +25,7 @@ Our text rebuild turns out not to be the sheaf an earlier analogy suggested, yet
 
 </div>
 
-mibz2, our bzip2 decoder, rebuilds the text of a block with a kernel we call **Cells**. Over the past week our notes have described it in a working vocabulary of letters, words, cells, rules, steps, a marked row, a writer and a stop. They have also borrowed three pictures from Robert Ghrist's *Elementary Applied Topology*: discrete Morse theory, sheaves of monoids, and circular coordinates. This post says exactly which mathematical object each of our words names, and how far each borrowed picture holds.
+mibz2, our bzip2 decoder, inverts each block's Burrows–Wheeler transform with a kernel we call **Cells**. Over the past week our notes have described it in a working vocabulary of letters, words, cells, rules, steps, a marked row, a writer and a stop. They have also borrowed three pictures from Robert Ghrist's *Elementary Applied Topology*: discrete Morse theory, sheaves of monoids, and circular coordinates. This post says exactly which mathematical object each of our words names, and how far each borrowed picture holds.
 
 **The setting, in brief.** bzip2 stores a block as the last column $L$ of its sorted rotations, the Burrows–Wheeler transform (BWT), together with the row that holds the original text. A map called **LF** sends each row to the row of the rotation one byte earlier. Following LF from that row reads the block backwards, one byte per step. A **run** is a stretch of equal bytes in $L$, and LF shifts all of a run's rows by the same amount. So LF is an **interval exchange**: a handful of intervals, each moved whole to a new place. [The mathematical structure of inverse-BWT navigation](2026-11-08-inverse-bwt-navigation.md) sets out that structure. [A new way back from the BWT](2026-11-10-rauzy-veech-reconstruction.md) shows Cells shrinking the exchange step by step on a three-byte block, and the [technical companion](2026-11-12-rauzy-technical-companion.md) describes its memory layout.
 
