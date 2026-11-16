@@ -1636,6 +1636,43 @@ bench-lazy-crossover ROUNDS="10" THREADS="4,6,7,8,9,10,12,14,16,20":
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
+# Lazy workers capped at the physical cores (#145; its decision rule is posted there before
+# the data): past the cores the shipped decoder runs teams, and lazy workers on a core's two
+# threads lose to them. `mibz2-workers-lazy-cap` runs min(THREADS, cores) lazy workers and
+# leaves the other hardware threads idle. Against the shipped decoder (`mibz2`) and lazy
+# workers one a thread (`mibz2-workers-lazy`), at the cores' count and above. On this
+# machine, at the commit checked out.
+bench-lazy-cap ROUNDS="10" THREADS="10,12,14,16,20":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/lazy-cap
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-lazy-cap (#145, its rule posted there before the data): mibz2 (shipped plan) against mibz2-workers-lazy-cap (lazy workers, one a physical core at most) and mibz2-workers-lazy (lazy workers, one a thread), at {{THREADS}} threads, {{ROUNDS}} paired rounds, on Wikidata, at $(git rev-parse HEAD)"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers-lazy-cap,mibz2-workers-lazy" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
+    # the rule's reading: the capped workers against the shipped plan; and, for the record,
+    # against lazy workers one a thread (at the cores' count the two are one decoder)
+    "$AB" summary "$O/runs.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-lazy | tee "$O/summary-lazy.txt"
+    git rev-parse HEAD > "$O/commit.txt"
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,

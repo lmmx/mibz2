@@ -1161,6 +1161,25 @@ fn decode(
             h,
             last,
         ),
+        // lazy workers, no more of them than the machine has physical cores: THREADS
+        // asked for, min(THREADS, cores) workers of a block each, the other hardware threads
+        // left idle. Two workers on one core's two threads share its cache, which is what
+        // lazy letters were made to relieve (#145: lazy workers lose to the teams past the
+        // cores). A candidate plan for THREADS above the cores, not a default.
+        "mibz2-workers-lazy-cap" => {
+            let n = capped_workers(threads, mibz2::parallel::Machine::here().phys);
+            drain(
+                mibz2::BzReader::parallel_workers(
+                    open()?,
+                    n,
+                    mibz2::parallel::SLOTS_PER_THREAD * n,
+                    mibz2::Kernels::detect(),
+                    true,
+                ),
+                h,
+                last,
+            )
+        }
         // the memory-lever experiment's two arms (research, `memory-lever` feature; #145
         // QUEUED 6901989466): `mibz2-workers-w` with Cells' lazy letters, or with its rules
         // staged and stored past the cache. The plan and the window are `mibz2-workers-w`'s,
@@ -2247,6 +2266,31 @@ fn json_str(line: &str, key: &str) -> Option<String> {
     } else {
         let end = rest.find([',', '}']).unwrap_or(rest.len());
         Some(rest[..end].to_string())
+    }
+}
+
+/// The workers `mibz2-workers-lazy-cap` runs when `threads` are asked for on a machine of
+/// `phys` physical cores: one a core at most, and `threads` where the cores are not known
+fn capped_workers(threads: usize, phys: Option<usize>) -> usize {
+    threads.min(phys.unwrap_or(threads)).max(1)
+}
+
+#[cfg(test)]
+mod capped_workers_tests {
+    #[test]
+    fn one_worker_a_core_at_most() {
+        use super::capped_workers;
+        for (threads, phys, want) in [
+            (4, Some(10), 4),
+            (10, Some(10), 10),
+            (12, Some(10), 10),
+            (20, Some(10), 10),
+            (20, None, 20),
+            (0, Some(10), 1),
+            (8, Some(2), 2),
+        ] {
+            assert_eq!(capped_workers(threads, phys), want, "{threads} on {phys:?}");
+        }
     }
 }
 
