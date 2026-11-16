@@ -2274,10 +2274,13 @@ pub const COOP_MIN_CORES: usize = 6;
 /// Below this many threads, each with a physical core of its own, the default stays on
 /// workers of a block each even from `COOP_MIN_CORES` cores: after Cells (0.3.0) and the
 /// slot layouts (0.3.2, 0.3.3), workers beat teams of 2 at 6 to 9 threads on the i9-10900K
-/// (14%, 11%, 8% and 4% faster; three teams of three still win at 10), the crossover's
-/// second run (#145; `just bench-crossover`). More threads than physical cores keep the
-/// teams: one block a thread on SMT siblings was 28-49% slower there.
-pub const WORKERS_BELOW_THREADS: usize = 10;
+/// (14%, 11%, 8% and 4% faster), the crossover's second run (#145; `just bench-crossover`).
+/// With lazy letters (0.5.0), workers also beat three teams of three at 10 threads, all
+/// ten cores: 0.949 [0.933, 0.966] in the memory-lever run and 0.931 [0.905, 0.958] in the
+/// lazy crossover at v0.5.0 (#145, LOGs 6903318530 and 6905312941). More threads than
+/// physical cores keep the teams: one block a thread on SMT siblings was 28-49% slower
+/// there.
+pub const WORKERS_BELOW_THREADS: usize = 11;
 
 /// From this many workers of a block each, a worker inverts with lazy letters
 /// (`bwt::LazyCells`): a slot only for a letter in flight, which is 38% less memory beside
@@ -2343,8 +2346,8 @@ impl Plan {
     /// - else teams of 2 on the physical cores the threads can use (never SMT siblings), as
     ///   many as keep the live tables near 0.7 of the L3: the knee measured on the i9 at
     ///   two block sizes (workstation journal §9), 4 teams there;
-    /// - except on the measured ten-core topology (10 physical cores, a 20 MiB L3) at 10 or
-    ///   more threads: three teams of three, which two registered runs qualified against
+    /// - except on the measured ten-core topology (10 physical cores, a 20 MiB L3) at more
+    ///   threads than its cores (at 10, workers with lazy letters win): three teams of three, which two registered runs qualified against
     ///   four teams of two on the i9-10900K (docs/journal/2026-11-06-three-tables.md). Any
     ///   other CPU with that topology gets it too, unmeasured. At that plan alone
     ///   (`PIPELINED_PLAN`) the default decoder runs its teams pipelined, with park and
@@ -3659,8 +3662,9 @@ mod plan_tests {
         assert_eq!(plan_with(5, i9.0, i9.1), Plan::Workers(5));
         assert_eq!(plan_with(8, None, i9.1), Plan::Workers(8));
         assert_eq!(plan_with(20, Some(4), i9.1), Plan::Workers(20));
-        // the i9 below 10 threads, each on its own core: workers (the crossover's run 2)
-        for t in 6..=9 {
+        // the i9 up to 10 threads, each on its own core: workers (the crossover's run 2;
+        // at 10, lazy letters)
+        for t in 6..=10 {
             assert_eq!(plan_with(t, i9.0, i9.1), Plan::Workers(t), "{t}");
         }
         // more threads than physical cores, from 6 cores: teams of 2, at most 4 (0.7 × 20
@@ -3670,8 +3674,8 @@ mod plan_tests {
         assert_eq!(plan_with(16, Some(8), i9.1), Plan::Teams { teams: 4, k: 2 });
         // a bigger machine below 10 threads: workers
         assert_eq!(plan_with(8, Some(16), Some(32 << 20)), Plan::Workers(8));
-        // the i9 at 10 threads or more: three teams of three (docs/journal/2026-11-06-three-tables.md)
-        for t in [10, 11, 12, 16, 20, 64, usize::MAX] {
+        // the i9 past its 10 cores: three teams of three (docs/journal/2026-11-06-three-tables.md)
+        for t in [11, 12, 16, 20, 64, usize::MAX] {
             assert_eq!(
                 plan_with(t, i9.0, i9.1),
                 Plan::Teams { teams: 3, k: 3 },
@@ -3777,12 +3781,14 @@ mod plan_tests {
         }
         // on a machine whose cores are not known, the plan is workers at every count
         assert!(!plan_with(7, None, None).lazy() && plan_with(8, None, None).lazy());
-        // the i9: workers at 8 and 9 threads, teams from 10
+        // the i9: lazy workers at 8 to 10 threads, teams from 11
         let i9 = (Some(TEN_CORES.0), Some(TEN_CORES.1));
         assert!(!plan_with(6, i9.0, i9.1).lazy());
-        assert!(plan_with(8, i9.0, i9.1).lazy() && plan_with(9, i9.0, i9.1).lazy());
+        for t in 8..=10 {
+            assert!(plan_with(t, i9.0, i9.1).lazy(), "{t}");
+        }
         for plan in [
-            plan_with(10, i9.0, i9.1),
+            plan_with(11, i9.0, i9.1),
             PIPELINED_PLAN,
             Plan::Teams { teams: 8, k: 2 },
             Plan::Teams { teams: 3, k: 4 },
