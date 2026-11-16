@@ -6,4 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-stop-walk-counters     bench/stop-walk-counters  Stop-and-walk hardware counters (cycles, cache, branches, stalls) against lazy; records only, VOID on any missing counter (#501; rule LOG 6924413955)
+bench-cores-less-one         perf/cores-less-one       Nine lazy workers and a worker-sized window past the cores, i9 profile only, against master's build (#481; registration 6923522255 with REVIEW 6924511372's corrections, QUEUED 6924894726)
