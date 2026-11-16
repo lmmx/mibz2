@@ -330,6 +330,16 @@ So, for any arm built from a model, whoever proposed it:
    the Optimiser and the Researcher of §11.
 3. **The author gets one reopening round.** It returns a construction with its own count, or
    says none exists. A reopened arm is built and gated like a new one.
+4. **A second miss closes the line** (Louis, 16 November 2026). If the reopened arm also
+   misses its model, the model is shown to be poorly calibrated for that line. The line
+   closes: no rescue of the rescue. What it taught goes into a calibration note, the author's
+   record of each predicted term against what was measured. The author reads that note before
+   proposing again. A rescue can bring insight, but a campaign is not built out of rescues.
+5. **Each role keeps to its lane.** The author calibrates against the builder's counts. It
+   does not build prototypes to check itself: that is the builder's work (OWNERSHIP.md §4a).
+6. **Relayed proposals are inputs, not assignments.** An outside chat's suggestions, such as
+   a ChatGPT relay, go to the exploratory lane to judge on its own terms. They are not routed
+   straight to the builder as a queue of items.
 
 **Lines §11 and §11a apply to now:** stop-and-walk (#485, HANDOFF 6916839849); run-fed construction of the navigation table from compressed
 runs (the posts of 8 November, #266, #269, the run-fed leader).
