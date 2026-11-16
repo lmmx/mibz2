@@ -209,51 +209,87 @@
     const keys = Object.keys(ch.series);
     const corpora = [...new Set(keys.map((k) => k.split("|")[0]))].sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
     if (!corpora.includes(state.tCorpus)) state.tCorpus = corpora.includes("wikidata") ? "wikidata" : corpora[0];
-    const threads = [...new Set(keys.filter((k) => k.startsWith(`${state.tCorpus}|`)).map((k) => k.split("|")[1]))].sort((a, b) => a - b);
-    if (!threads.includes(state.tThreads)) state.tThreads = threads.includes("4") ? "4" : threads[threads.length - 1];
     if (!TRAJ.some((f) => f[0] === state.tFig)) state.tFig = "wall";
+    const ciThreads = [...new Set(keys.filter((k) => k.startsWith(`${state.tCorpus}|`)).map((k) => k.split("|")[1]))];
+    // The release-scaling machine's releases (modelled, throughput only), on this corpus
+    const lg = state.tFig === "wall" ? ((data.scaling && data.scaling.lineage) || []).find((g) => g.corpus === state.tCorpus) : null;
+    const lgThreads = lg ? lg.threads.map(String).filter((t) => releaseSeries(data, lg, start, t)) : [];
+    const threads = [...new Set([...ciThreads, ...lgThreads])].sort((a, b) => a - b);
+    const opts = threads.map((t) => [t, `${t} thread${t === "1" ? "" : "s"}`]);
+    if (lgThreads.length > 1) opts.push(["all", `All (${shortCpu(lg.cpu)})`]);
+    if (!opts.some((o) => o[0] === state.tThreads)) state.tThreads = threads.includes("4") ? "4" : threads[threads.length - 1];
     seg("Corpus", corpora.map((c) => [c, c]), state.tCorpus, (v) => (state.tCorpus = v));
-    seg("Threads", threads.map((t) => [t, `${t} thread${t === "1" ? "" : "s"}`]), state.tThreads, (v) => (state.tThreads = v));
+    seg("Threads", opts, state.tThreads, (v) => (state.tThreads = v));
     seg("Figure", TRAJ.map((f) => [f[0], f[1]]), state.tFig, (v) => (state.tFig = v));
     const fig = TRAJ.find((f) => f[0] === state.tFig);
     const sign = fig[2];
-    const key = `${state.tCorpus}|${state.tThreads}`;
-    const chain = ch.series[key][fig[0]];
-    const own = (data.changes[key] || {})[fig[0]] || [];
+    const T = state.tThreads;
+    const tWord = `${T} thread${T === "1" ? "" : "s"}`;
+    if (T === "all") { releaseMultiples(data, lg, start, lgThreads, box); return; }
+    const key = `${state.tCorpus}|${T}`;
+    const ciOn = ciThreads.includes(T);
+    const chain = ciOn ? ch.series[key][fig[0]] : [];
+    const own = ciOn ? (data.changes[key] || {})[fig[0]] || [] : [];
+    const rs = lgThreads.includes(T) ? releaseSeries(data, lg, start, T) : null;
     const idx = [];
     for (let i = start; i < data.links.length; i++) idx.push(i);
     const pts = idx.filter((i) => chain[i]);
     const lead = el("p", { class: "bh-hero-focus" }, box);
     const body = el("div", { class: "bh-hero-chart" }, box);
+    const key2 = el("p", { class: "bh-hero-commit bh-traj-key" }, box);
     const readout = el("p", { class: "bh-hero-commit", "aria-live": "polite" }, box);
-    if (!pts.length) { el("p", { text: "No link measured this figure." }, body); return; }
+    if (!pts.length && !rs) { el("p", { text: "No link measured this figure." }, body); return; }
     const tag = (l) => (l.pr ? `#${l.pr}` : l.sha.slice(0, 7));
     const decoderLinks = pts.filter((i) => data.links[i].decoder);
-    const last = pts[pts.length - 1];
-    const [L, S, sg] = chain[last];
-    const segStart = pts.find((i) => chain[i][2] === sg);
-    const cpus = [...new Set(decoderLinks.map((i) => data.links[i].cpu))];
-    const better = sign < 0 ? "faster" : "less";
-    const lv = pct(L, sign), lo = pct(L - S, sign), hi = pct(L + S, sign);
-    const strong = el("strong", { text: `${fig[1]}, ${state.tCorpus} at ${state.tThreads} thread${state.tThreads === "1" ? "" : "s"}: ${fmtPct(lv)}` }, lead);
-    strong.title = "chained change since the segment's start";
-    lead.append(` (95%: ${fmtPct(Math.min(lo, hi))} to ${fmtPct(Math.max(lo, hi))}) from ${tag(data.links[segStart])}'s base to ${tag(data.links[last])}, over ${decoderLinks.filter((i) => chain[i][2] === sg).length} decoder merges, each measured on its own runner (${cpus.join(", ")}). ${sign < 0 ? "Up is faster." : `Down is ${better}.`}`);
+    const last = pts.length ? pts[pts.length - 1] : null;
+    const cpuR = rs ? shortCpu(lg.cpu) : null;
+    const rLast = rs ? rs.pts[rs.pts.length - 1] : null;
+    const relHead = rs ? `${fmtPct(rLast.c[0])} (95%: ${fmtPct(rLast.c[1])} to ${fmtPct(rLast.c[2])}) from ${rs.base} to ${rLast.version}` : "";
+    if (pts.length) {
+      const [L, S, sg] = chain[last];
+      const segStart = pts.find((i) => chain[i][2] === sg);
+      const cpus = [...new Set(decoderLinks.map((i) => data.links[i].cpu))];
+      const better = sign < 0 ? "faster" : "less";
+      const lv = pct(L, sign), lo = pct(L - S, sign), hi = pct(L + S, sign);
+      const strong = el("strong", { text: `${fig[1]}, ${state.tCorpus} at ${tWord}: ${fmtPct(lv)}` }, lead);
+      strong.title = "chained change since the segment's start";
+      lead.append(` (95%: ${fmtPct(Math.min(lo, hi))} to ${fmtPct(Math.max(lo, hi))}) from ${tag(data.links[segStart])}'s base to ${tag(data.links[last])}, over ${decoderLinks.filter((i) => chain[i][2] === sg).length} decoder merges, each measured on its own runner (${cpus.join(", ")}). ${sign < 0 ? "Up is faster." : `Down is ${better}.`}`);
+      if (rs) lead.append(` Dotted: the ${cpuR}'s releases, modelled, ${relHead}; another machine, with its own zero at ${rs.base}.`);
+    } else {
+      el("strong", { text: `${fig[1]}, ${state.tCorpus} at ${tWord}, ${cpuR} releases only: ${fmtPct(rLast.c[0])}` }, lead);
+      lead.append(` (95%: ${fmtPct(rLast.c[1])} to ${fmtPct(rLast.c[2])}) from ${rs.base} to ${rLast.version}, modelled from ${lg.runs.length} release-against-release runs on one ${cpuR}. CI's runners have 4 CPUs, so no merge is measured at ${tWord}: each point is a release at the last merge its tag contains, and the dotted line between releases is not measured. Up is faster.`);
+    }
 
     const W = Math.max(300, Math.round(body.clientWidth) || 700);
     const narrow = W < 560;
     const H1 = narrow ? 230 : 280, H2 = narrow ? 130 : 150, gapY = 38;
     const H = H1 + gapY + H2;
-    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `${fig[1]} of ${state.tCorpus} at ${state.tThreads} threads: the change chained over ${pts.length} merges, and each merge's own change` }, body);
-    // y scales: the chain (top) and each link's own change (bottom), in percent
+    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": pts.length ? `${fig[1]} of ${state.tCorpus} at ${tWord}: the change chained over ${pts.length} merges, and each merge's own change${rs ? `, with the ${cpuR}'s releases, modelled` : ""}` : `${fig[1]} of ${state.tCorpus} at ${tWord}: the ${cpuR}'s releases, modelled, relative to ${rs.base}, and each release's change against the one before it` }, body);
+    // y scales: the chain and the releases (top, one scale: change since each one's start)
+    // and each link's own change, or each release's against the one before (bottom), in percent
     const band = pts.map((i) => [pct(chain[i][0] - chain[i][1], sign), pct(chain[i][0] + chain[i][1], sign)]).flat();
-    const t1 = ticks(Math.min(0, ...band), Math.max(0, ...band), narrow ? 4 : 5);
-    const ownV = idx.filter((i) => own[i]).map((i) => [pct(own[i][0] - own[i][1], sign), pct(own[i][0] + own[i][1], sign)]).flat();
+    if (rs) for (const p of rs.pts) band.push(p.c[1], p.c[2]);
+    // (the outer ticks at or past the releases' outermost marks, so none leaves its panel; CI's
+    // own scales as they were)
+    const cover = (t, lo, hi) => {
+      const st = t.length > 1 ? t[1] - t[0] : 1;
+      while (t[t.length - 1] < hi) t.push(+(t[t.length - 1] + st).toFixed(10));
+      while (t[0] > lo) t.unshift(+(t[0] - st).toFixed(10));
+      return t;
+    };
+    const rv = rs ? rs.pts.flatMap((p) => [p.c[1], p.c[2]]) : [0];
+    const t1 = cover(ticks(Math.min(0, ...band), Math.max(0, ...band), narrow ? 4 : 5), Math.min(0, ...rv), Math.max(0, ...rv));
+    const ownV = ciOn
+      ? idx.filter((i) => own[i]).map((i) => [pct(own[i][0] - own[i][1], sign), pct(own[i][0] + own[i][1], sign)]).flat()
+      : rs.pts.filter((p) => p.step).flatMap((p) => [p.step.c[1], p.step.c[2]]);
     const t2 = ticks(Math.min(0, ...ownV), Math.max(0, ...ownV), 3);
+    if (!ciOn) cover(t2, Math.min(0, ...ownV), Math.max(0, ...ownV));
     const meas = svg("text", { class: "bh-tick", x: 0, y: -50 }, s);
     const textW = (t) => { meas.textContent = t; return meas.getComputedTextLength(); };
     const tw = Math.max(24, ...[...t1, ...t2].map((v) => textW(fmtPct(v))));
     meas.remove();
-    const M = { l: Math.ceil(tw) + 12, r: 12, t: 14, b: 26 };
+    // (with releases, a row above the plot names each one at its merge)
+    const M = { l: Math.ceil(tw) + 12, r: 12, t: rs ? 30 : 14, b: 26 };
     const inner = W - M.l - M.r;
     const xs = new Map(idx.map((i, k) => [i, M.l + (idx.length === 1 ? inner / 2 : 8 + (k * (inner - 16)) / (idx.length - 1))]));
     const y1 = (v) => M.t + (H1 - M.t - 8) * (1 - (v - t1[0]) / (t1[t1.length - 1] - t1[0] || 1));
@@ -267,7 +303,9 @@
       svg("line", { x1: M.l, x2: W - M.r, y1: y2(v), y2: y2(v), class: v === 0 ? "bh-zero" : "bh-grid" }, s);
       svg("text", { x: M.l - 6, y: y2(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = fmtPct(v);
     }
-    svg("text", { x: M.l, y: top2 - 14, class: "bh-unit" }, s).textContent = narrow ? "each merge's own change (95%)" : "each merge's own change, with its 95% interval (hollow: the decoder unchanged, an A/A pair)";
+    svg("text", { x: M.l, y: top2 - 14, class: "bh-unit" }, s).textContent = ciOn
+      ? (narrow ? "each merge's own change (95%)" : "each merge's own change, with its 95% interval (hollow: the decoder unchanged, an A/A pair)")
+      : (narrow ? "each release against the one before (modelled, 95%)" : `each release against the one before it, modelled on the ${cpuR}, with its 95% interval`);
     // segments of the chain: a band and a line each, never bridged across a gap
     const segs = [];
     for (const i of pts) {
@@ -275,6 +313,7 @@
       if (!segs.length || segs[segs.length - 1].g !== g) segs.push({ g, pts: [] });
       segs[segs.length - 1].pts.push(i);
     }
+    const gapLabels = [];
     for (const sgm of segs) {
       const p = sgm.pts;
       const upper = p.map((i) => `${xs.get(i)},${y1(Math.max(pct(chain[i][0] - chain[i][1], sign), pct(chain[i][0] + chain[i][1], sign)))}`);
@@ -288,6 +327,12 @@
         const right = xg > M.l + inner / 2;
         const gt = svg("text", { x: right ? xg - 3 : xg + 3, y: M.t + 10, class: "bh-tick", "text-anchor": right ? "end" : "start" }, s);
         gt.textContent = narrow ? "gap" : "gap: a decoder change with no link";
+        // (a label that would run into an earlier one's says only "gap", or nothing)
+        const span = (e) => { const b = e.getBBox(); return [b.x, b.x + b.width]; };
+        const hits = (e) => gapLabels.some((q) => { const [a, b] = span(e), [c, d] = span(q); return a < d + 4 && c < b + 4; });
+        if (hits(gt)) gt.textContent = "gap";
+        if (hits(gt)) gt.remove();
+        else gapLabels.push(gt);
         svg("title", {}, gt).textContent = "a decoder change with no link: the chain starts again here";
       }
     }
@@ -322,23 +367,216 @@
       readout.append(" · ");
       el("a", { href: `${data.repo}/pull/${l.pr}`, text: "pull request" }, readout);
     };
-    for (const i of idx) {
-      const l = data.links[i];
-      const g = svg("g", { tabindex: 0, class: "bh-pt", role: "button", "aria-label": `${tag(l)}` }, s);
-      if (chain[i]) svg("circle", { cx: xs.get(i), cy: y1(pct(chain[i][0], sign)), r: l.decoder ? 3.5 : 2.5, class: l.decoder ? "bh-dot-chain" : "bh-dot-aa" }, g);
-      const o = own[i];
-      if (o) {
-        const a = pct(o[0] - o[1], sign), b = pct(o[0] + o[1], sign);
-        const excl = Math.min(a, b) > 0 || Math.max(a, b) < 0;
-        svg("line", { x1: xs.get(i), x2: xs.get(i), y1: y2(Math.min(a, b)), y2: y2(Math.max(a, b)), class: "bh-whisker", stroke: "var(--bh-ink-2)" }, g);
-        svg("circle", { cx: xs.get(i), cy: y2(pct(o[0], sign)), r: 3.5, class: l.decoder ? (excl ? "bh-dot-own bh-dot-excl" : "bh-dot-own") : "bh-dot-aa" }, g);
+    if (pts.length) {
+      for (const i of idx) {
+        const l = data.links[i];
+        const g = svg("g", { tabindex: 0, class: "bh-pt", role: "button", "aria-label": `${tag(l)}` }, s);
+        if (chain[i]) svg("circle", { cx: xs.get(i), cy: y1(pct(chain[i][0], sign)), r: l.decoder ? 3.5 : 2.5, class: l.decoder ? "bh-dot-chain" : "bh-dot-aa" }, g);
+        const o = own[i];
+        if (o) {
+          const a = pct(o[0] - o[1], sign), b = pct(o[0] + o[1], sign);
+          const excl = Math.min(a, b) > 0 || Math.max(a, b) < 0;
+          svg("line", { x1: xs.get(i), x2: xs.get(i), y1: y2(Math.min(a, b)), y2: y2(Math.max(a, b)), class: "bh-whisker", stroke: "var(--bh-ink-2)" }, g);
+          svg("circle", { cx: xs.get(i), cy: y2(pct(o[0], sign)), r: 3.5, class: l.decoder ? (excl ? "bh-dot-own bh-dot-excl" : "bh-dot-own") : "bh-dot-aa" }, g);
+        }
+        svg("rect", { x: xs.get(i) - Math.max(4, inner / idx.length / 2), y: M.t, width: Math.max(8, inner / idx.length), height: H - M.t - M.b, class: "bh-hit" }, g);
+        svg("title", {}, g).textContent = `${tag(l)} ${l.subject}`;
+        for (const ev of ["pointerenter", "focus", "click"]) g.addEventListener(ev, () => show(i));
       }
-      svg("rect", { x: xs.get(i) - Math.max(4, inner / idx.length / 2), y: M.t, width: Math.max(8, inner / idx.length), height: H - M.t - M.b, class: "bh-hit" }, g);
-      svg("title", {}, g).textContent = `${tag(l)} ${l.subject}`;
-      for (const ev of ["pointerenter", "focus", "click"]) g.addEventListener(ev, () => show(i));
+      show(last);
     }
-    show(last);
-    el("p", { class: "bh-hero-note", text: "Top: the change chained since the start, with its 95% band. Below: each merge's own change, its head against its base on one runner. Point at, tap or Tab to a merge for its figures. What the chain assumes is under the chart." }, box);
+    if (rs) {
+      const tip = el("div", { class: "bh-tip", hidden: "" }, box);
+      drawReleases(s, rs, { x: (p) => xs.get(p.link), y: y1, y2: ciOn ? null : y2, top: M.t, left: M.l, right: W - M.r, W, narrow, tip, box, readout: pts.length ? null : readout, tag, data });
+    }
+    // the key: what is measured, and what is modelled
+    if (pts.length) {
+      const k1 = el("span", { class: "bh-ws-key" }, key2);
+      el("span", { class: "bh-swatch is-line", style: "border-color:var(--bh-s1)" }, k1);
+      k1.append(` CI runners, merge by merge (measured, chained, 95% band)  `);
+    }
+    if (rs) {
+      const k2 = el("span", { class: "bh-ws-key" }, key2);
+      el("span", { class: "bh-swatch is-dotted" }, k2);
+      k2.append(` ${cpuR}, releases (modelled; dotted between releases, not measured)`);
+    }
+    el("p", {
+      class: "bh-hero-note",
+      text: pts.length
+        ? `Top: the change chained since the start, with its 95% band. Below: each merge's own change, its head against its base on one runner. Point at, tap or Tab to a merge for its figures.${rs ? ` Diamonds: the ${cpuR}'s releases (wikidata, Release scaling), each at the last merge its tag contains, its throughput modelled from release-against-release runs relative to ${rs.base}, with 95% whiskers. The two series share the axis and its meaning (change since its own start, up faster), not a zero or a machine; point at or tap a diamond for its release.` : ""} What the chain assumes is under the chart.`
+        : `Only the ${cpuR} has figures at ${tWord}. Top: each release's throughput relative to ${rs.base}, modelled from release-against-release runs on that one machine (the Release scaling view), with 95% whiskers, at the last merge its tag contains; the dotted line only joins releases. Below: each release against the one before it. Point at, tap or Tab to a release for its figures.`,
+    }, box);
+  }
+
+  // A machine's name without its maker's marks: "Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz" is
+  // the i9-10900K
+  const shortCpu = (c) => String(c).replace(/^.*?\b(?:Core\(TM\)|Ryzen)\s+/, "").replace(/\s+CPU\b.*$/, "").replace(/\s+@.*$/, "");
+
+  // The release-scaling lineage's releases on the merge axis at T threads: each release that
+  // has a tag on master after the chain's start (bench_history.py, release_positions) at the
+  // last merge its tag contains, with its modelled throughput (lbzip2's measured MB/s in the
+  // newest run over the release's pooled wall ratio, as the All releases view has it), its
+  // change since the lineage's oldest placed release, and against the release before it.
+  // Null when fewer than two releases can be placed.
+  function releaseSeries(data, g, start, T) {
+    const P = g.per_thread[T];
+    if (!P || !P.anchor_mbps) return null;
+    const pos = new Map((data.releases || []).filter((r) => r.link >= start && r.link < data.links.length).map((r) => [r.version, r]));
+    const R = g.releases, k = g.t975;
+    const ok = (i) => P.x[i] !== null && P.x[i] !== undefined;
+    const placed = R.map((_, i) => i).filter((i) => ok(i) && pos.has(R[i]));
+    if (placed.length < 2) return null;
+    const b = placed[0];
+    const mb = (i, z = 0) => P.anchor_mbps / Math.exp(P.x[i] - z * Math.sqrt(P.v[i]));
+    // throughput of release i against release a: the ratio of their pooled figures
+    const vs = (a, i) => {
+      const d = P.x[a] - P.x[i], h = a === i ? 0 : k * Math.sqrt(P.v[a] + P.v[i]);
+      return [100 * (Math.exp(d) - 1), 100 * (Math.exp(d - h) - 1), 100 * (Math.exp(d + h) - 1)];
+    };
+    const runs = (data.scaling && data.scaling.runs) || [];
+    return {
+      g, T, base: R[b], cpu: shortCpu(g.cpu),
+      pts: placed.map((i) => {
+        const rel = pos.get(R[i]);
+        const prev = i > 0 && ok(i - 1) ? i - 1 : null;
+        let direct = null;
+        if (prev !== null) {
+          // the pair measured in one run, if one was: its wall change, as throughput
+          const r = g.runs.find((r) => r.new === R[i] && r.old === R[prev]);
+          const wr = r && runs.find((w) => w.id === r.id);
+          const c = wr && ((wr.corpora[g.corpus] || {}).change || {})[R[prev]];
+          const e = c && c[T];
+          // (the older arm's wall against the newer's: the newer's throughput against the older's)
+          if (e) direct = { run: r, c: [e[0], e[1], e[2]] };
+        }
+        return {
+          i, version: R[i], rel, link: rel.link, c: vs(b, i), mb: [mb(i), mb(i, -k), mb(i, k)], n: P.n[i],
+          step: prev !== null ? { from: R[prev], c: vs(prev, i) } : null, direct,
+          runs: g.runs.filter((r) => r.new === R[i] || r.old === R[i]),
+        };
+      }),
+    };
+  }
+
+  // A release's figures, as the rows of its card
+  const releaseRows = (rs, p, tag, data) => {
+    const t = rs.T;
+    const rows = [
+      [`tag v${p.version} at ${p.rel.sha.slice(0, 7)} (${p.rel.date.slice(0, 10)}), placed at ${tag(data.links[p.link])}, the last merge it contains${p.rel.unlinked ? `; ${p.rel.unlinked} decoder change(s) with no link between them` : ""}`],
+      [`${p.mb[0].toFixed(0)} MB/s modelled (95%: ${p.mb[1].toFixed(0)} to ${p.mb[2].toFixed(0)}) at ${t} thread${t === "1" ? "" : "s"}`, true],
+      [p.version === rs.base ? `the zero: the oldest release placed` : `${fmtPct(p.c[0])} since ${rs.base} (95%: ${fmtPct(p.c[1])} to ${fmtPct(p.c[2])})`],
+    ];
+    if (p.step) rows.push([`against ${p.step.from}: ${fmtPct(p.step.c[0])} (95%: ${fmtPct(p.step.c[1])} to ${fmtPct(p.step.c[2])}), modelled` + (p.direct ? `; ${fmtPct(p.direct.c[0])} (${fmtPct(p.direct.c[1])} to ${fmtPct(p.direct.c[2])}) measured directly in their run` : `; no run measured the pair directly`)]);
+    rows.push([`from ${p.n} run${p.n === 1 ? "" : "s"} on the ${rs.cpu}: ${p.runs.map((r) => `${r.new} against ${r.old} (${r.date})`).join("; ")}`]);
+    return rows;
+  };
+
+  // The releases' marks on a merge-axis plot: whiskers, diamonds, the dotted line between
+  // them (not measured), the row of release names above the plot, and each one's card.
+  // o: { x(p), y, y2 (the steps' scale, or null), top, left, right, W, narrow, tip, box,
+  // readout (or null), tag, data, small (a small multiple: no names, no steps) }
+  function drawReleases(s, rs, o) {
+    const gr = svg("g", { class: "bh-i9" }, s);
+    svg("polyline", { points: rs.pts.map((p) => `${o.x(p)},${o.y(p.c[0])}`).join(" "), class: "bh-i9-line" }, gr);
+    const dia = (cx, cy, r, parent, cls = "bh-i9-dot") => svg("path", { d: `M${cx},${cy - r}L${cx + r},${cy}L${cx},${cy + r}L${cx - r},${cy}Z`, class: cls }, parent);
+    // the names above the plot, as many as fit, the newest always
+    if (!o.small) {
+      const minGap = o.narrow ? 30 : 36, put = [];
+      [...rs.pts].reverse().forEach((p, k) => {
+        const xx = o.x(p);
+        if (k && put.some((q) => Math.abs(q - xx) < minGap)) return;
+        put.push(xx);
+        const anchor = xx + 16 > o.right ? "end" : xx - 16 < o.left ? "start" : "middle";
+        svg("text", { x: xx, y: o.top - 14, class: "bh-tick bh-i9-name", "text-anchor": anchor }, gr).textContent = p.version;
+      });
+      for (const p of rs.pts) svg("line", { x1: o.x(p), x2: o.x(p), y1: o.top - 10, y2: o.top - 4, class: "bh-i9-rug" }, gr);
+    }
+    const tip = o.tip;
+    const card = (p, px, py) => {
+      const rows = releaseRows(rs, p, o.tag, o.data);
+      if (o.readout) {
+        o.readout.textContent = "";
+        el("strong", { text: `${p.version} ` }, o.readout);
+        o.readout.append(rows.map((r) => r[0]).join(" · "));
+      }
+      if (!tip) return;
+      tip.textContent = "";
+      el("div", { class: "bh-tip-title", text: `${p.version} · ${rs.cpu} · ${rs.T} thread${rs.T === "1" ? "" : "s"}` }, tip);
+      for (const [text, on] of rows) {
+        const d = el("div", { class: `bh-tip-row${on ? " is-on" : ""}` }, tip);
+        if (on) el("span", { class: "bh-swatch", style: "background:var(--bh-i9)" }, d);
+        el("span", { text }, d);
+      }
+      tip.hidden = false;
+      const r = s.getBoundingClientRect(), hb = o.box.getBoundingClientRect(), z = r.width / o.W;
+      const ax = r.left - hb.left + px * z, ay = r.top - hb.top + py * z;
+      const left = ax + 14 + tip.offsetWidth <= hb.width ? ax + 14 : ax - 14 - tip.offsetWidth;
+      tip.style.left = `${Math.max(0, Math.min(hb.width - tip.offsetWidth, left))}px`;
+      tip.style.top = `${ay + 12}px`;
+    };
+    const hide = () => { if (tip) tip.hidden = true; };
+    for (const p of rs.pts) {
+      const xx = o.x(p), yy = o.y(p.c[0]);
+      const a = svg("g", { class: "bh-pt bh-i9-pt", tabindex: 0, role: "button", "aria-label": `${p.version} on the ${rs.cpu} at ${rs.T} threads: ${p.mb[0].toFixed(0)} MB/s modelled, ${fmtPct(p.c[0])} since ${rs.base}` }, gr);
+      if (p.c[2] - p.c[1] > 0) svg("line", { x1: xx, x2: xx, y1: o.y(p.c[1]), y2: o.y(p.c[2]), class: "bh-whisker bh-i9-whisker" }, a);
+      dia(xx, yy, o.small ? 3.5 : 5, a);
+      if (o.y2 && p.step) {
+        svg("line", { x1: xx, x2: xx, y1: o.y2(p.step.c[1]), y2: o.y2(p.step.c[2]), class: "bh-whisker bh-i9-whisker" }, a);
+        dia(xx, o.y2(p.step.c[0]), 4.5, a);
+      }
+      svg("circle", { cx: xx, cy: yy, r: o.small ? 9 : 12, class: "bh-hit" }, a);
+      if (o.y2 && p.step) svg("circle", { cx: xx, cy: o.y2(p.step.c[0]), r: 12, class: "bh-hit" }, a);
+      const show = () => card(p, xx, yy);
+      a.addEventListener("pointerenter", show);
+      a.addEventListener("focus", show);
+      a.addEventListener("click", (ev) => { ev.stopPropagation(); show(); });
+      // (a touch's pointerleave follows its tap at once: the card stays until a tap elsewhere)
+      a.addEventListener("pointerleave", (ev) => { if (ev.pointerType !== "touch") hide(); });
+      a.addEventListener("blur", hide);
+    }
+    s.addEventListener("click", (ev) => { if (!ev.target.closest(".bh-i9-pt")) hide(); });
+    if (o.readout && !o.small) card(rs.pts[rs.pts.length - 1], 0, 0), hide();
+  }
+
+  // Every thread count of the release-scaling machine's releases on the merge axis, a small
+  // panel each, sharing their x (the merges) and y (change since the oldest release) scales
+  function releaseMultiples(data, g, start, ts, box) {
+    const all = ts.map((t) => releaseSeries(data, g, start, t)).filter(Boolean);
+    const cpu = shortCpu(g.cpu), base = all[0].base, newest = all[0].pts[all[0].pts.length - 1].version;
+    const lead = el("p", { class: "bh-hero-focus" }, box);
+    el("strong", { text: `Throughput, ${g.corpus}, ${cpu} releases at every thread count: change since ${base}, modelled` }, lead);
+    lead.append(`. ${newest} against ${base}: ` + all.map((r) => `${r.T} thread${r.T === "1" ? "" : "s"} ${fmtPct(r.pts[r.pts.length - 1].c[0])}`).join(", ") + `. CI's chain is not drawn here; each panel is the ${cpu}'s releases alone, on shared scales. Up is faster.`);
+    const grid = el("div", { class: "bh-mult" }, box);
+    const readout = el("p", { class: "bh-hero-commit", "aria-live": "polite" }, box);
+    const tip = el("div", { class: "bh-tip", hidden: "" }, box);
+    const vals = all.flatMap((r) => r.pts.flatMap((p) => [p.c[1], p.c[2]]));
+    const yt = ticks(Math.min(0, ...vals), Math.max(0, ...vals), 3);
+    while (yt[yt.length - 1] < Math.max(...vals)) yt.push(+(yt[yt.length - 1] + (yt[1] - yt[0])).toFixed(10));
+    const idx = [];
+    for (let i = start; i < data.links.length; i++) idx.push(i);
+    const tag = (l) => (l.pr ? `#${l.pr}` : l.sha.slice(0, 7));
+    const panels = all.map((rs) => {
+      const f = el("figure", { class: "bh-mult-panel" }, grid);
+      el("figcaption", { text: `${rs.T} thread${rs.T === "1" ? "" : "s"}` }, f);
+      return [rs, f];
+    });
+    for (const [rs, f] of panels) {
+      const W = Math.max(140, Math.round(f.clientWidth) || 200), H = 130;
+      const M = { l: 36, r: 6, t: 6, b: 16 };
+      const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `The ${cpu}'s releases at ${rs.T} threads, change since ${base}, modelled` }, f);
+      const inner = W - M.l - M.r;
+      const xs = new Map(idx.map((i, k) => [i, M.l + 4 + (k * (inner - 8)) / Math.max(1, idx.length - 1)]));
+      const y = (v) => M.t + (H - M.t - M.b) * (1 - (v - yt[0]) / (yt[yt.length - 1] - yt[0] || 1));
+      for (const v of yt) {
+        svg("line", { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), class: v === 0 ? "bh-zero" : "bh-grid" }, s);
+        svg("text", { x: M.l - 4, y: y(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = fmtPct(v);
+      }
+      svg("text", { x: M.l, y: H - 3, class: "bh-tick", "text-anchor": "start" }, s).textContent = tag(data.links[idx[0]]);
+      svg("text", { x: W - M.r, y: H - 3, class: "bh-tick", "text-anchor": "end" }, s).textContent = tag(data.links[idx[idx.length - 1]]);
+      drawReleases(s, rs, { x: (p) => xs.get(p.link), y, y2: null, top: M.t, left: M.l, right: W - M.r, W, narrow: true, tip, box, readout, tag, data, small: true });
+    }
+    readout.textContent = "Point at or tap a release for its figures.";
+    el("p", { class: "bh-hero-note", text: `Each panel: one thread count, the ${cpu}'s releases at the last merge each tag contains, from ${tag(data.links[idx[0]])} to ${tag(data.links[idx[idx.length - 1]])}, modelled from release-against-release runs (the Release scaling view), relative to ${base}, with 95% whiskers. The dotted lines only join releases; nothing between them is measured.` }, box);
   }
 
   function table(data, metric, root, shown = () => true) {
@@ -684,6 +922,7 @@
       (wT ? `Drift, a release against itself in its two runs (the later less the earlier): largest at ${T} thread${T === "1" ? "" : "s"} ${drift(wT)}` +
         (wAll && wAll.t !== T ? `; largest at any thread count ${drift(wAll)} at ${wAll.t} thread${wAll.t === "1" ? "" : "s"}.` : ", the largest at any thread count.") : "") +
       " Point at, tap or Tab to a point for its figures; point at a release (its line, end label or key entry) to pick it out, and click or tap to keep it.";
+    kneeTable(g, box);
     // the matrix: row against column, newest first, throughput change, at the chosen threads
     el("p", { class: "bh-hero-commit", text: `Throughput of the row's release against the column's at ${T} thread${T === "1" ? "" : "s"}, with its 95% interval. Coloured where the interval excludes zero: blue faster, orange slower; a ring marks a pair measured directly in one run.` }, box);
     const order = R.map((_, i) => n - 1 - i);
@@ -709,6 +948,54 @@
         el("span", { text: fmtPct(100 * (Math.exp(d) - 1)) }, td);
         el("small", { text: `${fmtPct(100 * (Math.exp(d - h) - 1))} to ${fmtPct(100 * (Math.exp(d + h) - 1))}` }, td);
         td.title = `${R[i]} against ${R[j]} at ${T} threads: wall ${Math.exp(-d).toFixed(3)}× (modelled through ${g.anchor})`;
+      }
+    }
+  }
+
+  // The knee: per release, newest first, the thread count of its highest modelled throughput,
+  // and that peak against the release's own 8- and 10-thread figures. A strip shades each
+  // thread count by its share of the release's peak (from 80% up), the knee ringed. Modelled,
+  // as the curves are: lbzip2's measured MB/s in the newest run over each pooled wall ratio.
+  function kneeTable(g, box) {
+    const R = g.releases, ts = g.threads.map(String), P = g.per_thread, k = g.t975;
+    const ok = (t, i) => P[t] && P[t].anchor_mbps && P[t].x[i] !== null && P[t].x[i] !== undefined;
+    const mb = (t, i) => P[t].anchor_mbps / Math.exp(P[t].x[i]);
+    el("p", { class: "bh-hero-commit", text: `The knee, modelled: each release's thread count of highest throughput on the ${shortCpu(g.cpu)}, newest first, and its peak against its own 8- and 10-thread figures (95%). The strip shades each thread count by its share of that release's peak, from 80% (blank) to 100%; the ring marks the knee. The intervals are the releases' ratios to lbzip2 alone, not lbzip2's own MB/s at each thread count.` }, box);
+    const tbl = el("table", { class: "bh-matrix bh-knee" }, el("div", { class: "bh-scroll" }, box));
+    const hr = el("tr", {}, el("thead", {}, tbl));
+    el("th", { text: "release", scope: "col" }, hr);
+    for (const t of ts) el("th", { text: t, scope: "col", class: "bh-knee-t" }, hr);
+    for (const h of ["knee", "peak MB/s", "peak ÷ 8", "peak ÷ 10"]) el("th", { text: h, scope: "col" }, hr);
+    const tb = el("tbody", {}, tbl);
+    const vs = (a, b, i) => {
+      if (a === b) return "the knee";
+      if (!ok(b, i)) return "–";
+      const d = Math.log(mb(a, i) / mb(b, i)), h = k * Math.sqrt(P[a].v[i] + P[b].v[i]);
+      return [fmtPct(100 * (Math.exp(d) - 1)), `${fmtPct(100 * (Math.exp(d - h) - 1))} to ${fmtPct(100 * (Math.exp(d + h) - 1))}`];
+    };
+    for (let i = R.length - 1; i >= 0; i--) {
+      const have = ts.filter((t) => ok(t, i));
+      if (!have.length) continue;
+      const knee = have.reduce((b, t) => (mb(t, i) > mb(b, i) ? t : b), have[0]);
+      const peak = mb(knee, i);
+      const tr = el("tr", {}, tb);
+      el("th", { text: R[i], scope: "row" }, tr);
+      for (const t of ts) {
+        const td = el("td", { class: `bh-knee-cell${t === knee ? " is-knee" : ""}` }, tr);
+        if (!ok(t, i)) { td.textContent = "–"; continue; }
+        const f = mb(t, i) / peak;
+        const share = Math.round(70 * Math.max(0, Math.min(1, (f - 0.8) / 0.2)));
+        if (share) td.style.background = `color-mix(in srgb, var(--bh-s1) ${share}%, transparent)`;
+        td.textContent = (100 * f).toFixed(0);
+        td.title = `${R[i]} at ${t} threads: ${mb(t, i).toFixed(0)} MB/s modelled, ${(100 * f).toFixed(1)}% of its peak (at ${knee})`;
+      }
+      el("td", { text: knee, class: "bh-knee-at" }, tr);
+      el("td", { text: peak.toFixed(0) }, tr);
+      for (const b of ["8", "10"]) {
+        const v = vs(knee, b, i), td = el("td", {}, tr);
+        if (typeof v === "string") { td.textContent = v; td.className = "is-self"; continue; }
+        el("span", { text: v[0] }, td);
+        el("small", { text: v[1] }, td);
       }
     }
   }

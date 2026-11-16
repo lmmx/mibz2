@@ -238,6 +238,52 @@ def chains(entries: list[dict], start: int | None, gap_after: set[int]) -> dict:
     return out
 
 
+def release_positions(
+    log: list[list[str]], order: dict, entries: list[dict], gap_list: list[dict]
+) -> list[dict]:
+    """Each release tag's place on the merge axis: the last link its commit contains.
+
+    A tag's commit on master's first-parent line takes the newest link at or before it; one
+    off that line takes the first first-parent commit that contains it. `unlinked` counts
+    the decoder changes with no link between that link and the tag (none: the tag decodes
+    as the link's merge does). The History page puts each release's modelled figures here.
+    """
+    fp = [sha for sha, _, _ in reversed(log)]
+    link_at = [order[e["commit"]] for e in entries]
+    gap_at = [order[g["sha"]] for g in gap_list]
+    out = []
+    for line in git("for-each-ref", "refs/tags", "--format=%(refname:short)").splitlines():
+        m = re.fullmatch(r"v(\d+\.\d+\.\d+)", line.strip())
+        if not m:
+            continue
+        sha = git("rev-list", "-n", "1", line.strip()).strip()
+        pos = order.get(sha)
+        if pos is None:  # (off the first-parent line: the first merge that contains it)
+            for i, c in enumerate(fp):
+                ok = subprocess.run(
+                    ["git", "-C", str(ROOT), "merge-base", "--is-ancestor", sha, c],
+                    capture_output=True,
+                )
+                if ok.returncode == 0:
+                    pos = i
+                    break
+        if pos is None:
+            continue
+        k = max((i for i, at in enumerate(link_at) if at <= pos), default=None)
+        if k is None:
+            continue
+        out.append(
+            {
+                "version": m.group(1),
+                "sha": sha,
+                "date": git("log", "-1", "--format=%cI", sha).strip(),
+                "link": k,
+                "unlinked": sum(1 for at in gap_at if link_at[k] < at <= pos),
+            }
+        )
+    return sorted(out, key=lambda r: tuple(int(p) for p in r["version"].split(".")))
+
+
 def build(read, master: str) -> tuple[dict, dict | None]:
     """The history's data, and the latest master result (None without one)."""
     log = [
@@ -360,6 +406,8 @@ def build(read, master: str) -> tuple[dict, dict | None]:
         "changes": changes,
         "chain": {"start": start, "series": chains(entries, start, gap_after)},
         "gaps": gap_list,
+        # each release tag on the merge axis (the History page's release overlay)
+        "releases": release_positions(log, order, entries, gap_list),
     }
     return data, (ordered[-1][1] if ordered else None)
 
