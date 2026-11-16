@@ -1,5 +1,14 @@
-// Included inside cells::tests with the `memory-lever` feature: the experiment's two kernels
-// (`cells_lever.rs`) against the original induction, the oracle, and the store-fence model.
+// Included inside cells::tests: the lazy kernel (`cells_lazy.rs`) against the original
+// induction and the oracle. With the `memory-lever` feature (research only), the
+// experiment's staged kernel (`cells_lever.rs`) too, and its store-fence model.
+
+/// The kernels these tests run: the lazy one, and (research only) the staged one
+fn lever_variants() -> Vec<u8> {
+    #[cfg(feature = "memory-lever")]
+    return vec![LAZY, STAGED_RULES];
+    #[cfg(not(feature = "memory-lever"))]
+    vec![LAZY]
+}
 
 fn lever_cases() -> Vec<Vec<u8>> {
     vec![
@@ -22,7 +31,7 @@ fn lever_cases() -> Vec<Vec<u8>> {
 /// offsets, on every short column: `compare_materialization`, the candidate one of them.
 #[test]
 fn cells_lever_exhaustive_state() {
-    for variant in [LAZY, STAGED_RULES] {
+    for variant in lever_variants() {
         let (mut old, mut new) = (Kernel::default(), Kernel::default());
         new.variant = variant;
         for (alphabet, max_n) in [(2usize, 8u32), (3, 6)] {
@@ -50,11 +59,13 @@ fn cells_lever_exhaustive_state() {
 /// slots from its pools, never more than a slot a letter.
 #[test]
 fn miri_cells_lever_boundaries_reuse() {
-    for variant in [LAZY, STAGED_RULES] {
+    for variant in lever_variants() {
         let (mut old, mut new) = (Kernel::default(), Kernel::default());
         new.variant = variant;
         let mut reached = Vec::new();
-        let (mut sends, mut pool) = (0, 0);
+        #[cfg(feature = "memory-lever")]
+        let mut sends = 0;
+        let mut pool = 0;
         for column in lever_cases() {
             for origin in [0, 1, column.len() / 2, column.len() - 1] {
                 reached.extend(compare_materialization(
@@ -64,7 +75,10 @@ fn miri_cells_lever_boundaries_reuse() {
                     origin as u32,
                     column.len(),
                 ));
-                sends = sends.max(new.rule_sends);
+                #[cfg(feature = "memory-lever")]
+                {
+                    sends = sends.max(new.rule_sends);
+                }
                 if variant == LAZY {
                     assert!(new.lz.peak <= new.letters, "a slot a letter at most");
                     pool = pool.max(new.lz.peak);
@@ -79,12 +93,14 @@ fn miri_cells_lever_boundaries_reuse() {
             assert!(reached.iter().any(|&(_, _, o)| o == order));
         }
         assert!(reached.iter().any(|&(n, marked, _)| n > 16 && marked));
+        #[cfg(feature = "memory-lever")]
         if variant == STAGED_RULES {
             assert!(
                 !STAGED || sends >= 3,
                 "one induction sends its rules on several times: {sends}"
             );
-        } else {
+        }
+        if variant == LAZY {
             assert!(pool > 1, "the lazy induction takes slots: {pool}");
         }
         // a refusal on the budget, at the same cell as the original's
@@ -101,7 +117,7 @@ fn miri_cells_lever_boundaries_reuse() {
 /// column to length 10 at every row, and two long Euclid-like ones.
 #[test]
 fn cells_lever_exhaustive_arbitrary_columns() {
-    for variant in [LAZY, STAGED_RULES] {
+    for variant in lever_variants() {
         let mut kernel = Kernel {
             variant,
             ..Default::default()
@@ -130,7 +146,7 @@ fn cells_lever_exhaustive_arbitrary_columns() {
 /// lazy kernel every slot a cell is written to inside its pool.
 #[test]
 fn miri_cells_lever_exact_fit_and_reuse() {
-    for variant in [LAZY, STAGED_RULES] {
+    for variant in lever_variants() {
         let mut kernel = Kernel {
             variant,
             ..Default::default()
@@ -196,6 +212,7 @@ fn miri_cells_lever_exact_fit_and_reuse() {
 /// rule. Here every way out of the staged induction after a send is taken: a word returned,
 /// a refusal on the budget, and an unwinding panic. After each, nothing is pending and
 /// exactly one fence has run.
+#[cfg(feature = "memory-lever")]
 #[test]
 fn miri_cells_staged_fence_covers_every_exit() {
     let column: Vec<u8> = long_writer_column()
@@ -245,12 +262,12 @@ fn miri_cells_staged_fence_covers_every_exit() {
     check(&mut kernel, &column, 3);
 }
 
-/// Both kernels through the public route (`LeverCells`), against Segmented: admitted
+/// Both kernels through the public route (`CellsVariant`), against Segmented: admitted
 /// blocks inverted by the kernel, refused ones by the fallback, the output equal either way.
 #[test]
 fn cells_lever_route_and_fallback() {
     fn run<const V: u8>() -> (Counts, usize) {
-        let mut cells = LeverCells::<V>::default();
+        let mut cells = CellsVariant::<V>::default();
         let mut seg = Segmented::default();
         let mut pool = 0;
         for ll in [
@@ -274,11 +291,13 @@ fn cells_lever_route_and_fallback() {
         (cells.counts(), pool)
     }
     let (lazy, pool) = run::<LAZY>();
-    let (staged, _) = run::<STAGED_RULES>();
-    for counts in [lazy, staged] {
-        assert!(counts.admitted > 1 && counts.density > 0, "{counts:?}");
+    assert!(lazy.admitted > 1 && lazy.density > 0, "{lazy:?}");
+    #[cfg(feature = "memory-lever")]
+    {
+        let (staged, _) = run::<STAGED_RULES>();
+        assert!(staged.admitted > 1 && staged.density > 0, "{staged:?}");
+        assert_eq!(lazy.cells, staged.cells);
     }
-    assert_eq!(lazy.cells, staged.cells);
     assert!(pool > 0, "an admitted block's lazy induction took slots");
 }
 
@@ -336,4 +355,60 @@ fn cells_lazy_long_letter() {
     for p in [1, ll.len() as u32 - 2] {
         check(&mut kernel, &ll, p);
     }
+}
+
+/// The lazy kernel's tail (`invert_runs_tail`): its entries, its bytes, its bottom slots'
+/// pool and its rules lie in the caller's spare capacity, which holds nothing until the
+/// kernel writes it (Miri sees any read of what was not written). Its buffer holds the top
+/// slots' pool and the words kept as bytes, and no rule. The tail keeps its length and its
+/// bytes, the kernel's own tail stays unallocated, and the output is the fallback's. A
+/// refusal inside the induction leaves the output and the tail's bytes as they were.
+/// Without a tail given (`invert_runs`), the kernel uses its own.
+#[test]
+fn miri_cells_lazy_tail_is_the_callers() {
+    // 40 runs of 16 rows over five bytes: inside both of admission's gates
+    let ll: Vec<u8> = (0..40usize).flat_map(|i| [(i * 7 % 5) as u8; 16]).collect();
+    let r = Runs::of_column(&ll);
+    let k = crate::Kernels::scalar();
+    let mut want = Vec::new();
+    assert!(Segmented::default().invert_runs(&r, ll.len(), 3, &mut want, k));
+    let mut cells = LazyCells::default();
+    let mut tail = Vec::with_capacity(16);
+    tail.extend_from_slice(&[3u8; 7]);
+    // twice: the second block finds the tail's capacity already there
+    for _ in 0..2 {
+        let mut got = vec![42; 5];
+        assert!(cells.invert_runs_tail(&r, ll.len(), 3, &mut got, &mut tail, k));
+        assert_eq!(got, want);
+        assert_eq!(tail, [3u8; 7], "the tail's own bytes");
+        let kernel = &cells.0.state.kernel;
+        let (lay, lz) = (kernel.lay, kernel.lz);
+        assert!(lay.bout && tail.capacity() - tail.len() >= lay.tail);
+        // the rules: in the tail after the bottom slots' pool, and some were made
+        assert_eq!((lay.shift, lay.rules), (RSHIFT, RSHIFT + lz.bend + GAP));
+        assert!(kernel.rule_end > lay.rules && kernel.rule_end <= lay.ends[3]);
+        assert_eq!(lay.tail, lay.ends[3] - RSHIFT + GAP);
+        // the kernel's buffer ends with the words kept as bytes
+        assert!(lay.ends[2] + GAP <= kernel.buf.len() && kernel.buf.len() < RSHIFT);
+        assert_eq!(kernel.tail.capacity(), 0, "the kernel's own tail");
+    }
+    assert_eq!(cells.counts().admitted, 2, "{:?}", cells.counts());
+    // a refusal on the budget, inside the induction (two runs of almost equal lengths need
+    // many cells): `out` and the tail's bytes as they were
+    let hard = Runs::of_column(&[vec![1; 51], vec![0; 50]].concat());
+    let mut got = vec![42; 5];
+    let refused =
+        cells
+            .0
+            .state
+            .kernel
+            .try_invert_tail(hard.records(), 101, 0, 16, false, &mut got, &mut tail);
+    assert_eq!(refused, Err(Refusal::Budget));
+    assert_eq!((got, &tail[..]), (vec![42; 5], &[3u8; 7][..]));
+    // no tail given: the kernel's own
+    let mut got = Vec::new();
+    assert!(cells.invert_runs(&r, ll.len(), 3, &mut got, k));
+    assert_eq!(got, want);
+    let kernel = &cells.0.state.kernel;
+    assert!(kernel.tail.capacity() >= kernel.lay.tail && kernel.tail.is_empty());
 }

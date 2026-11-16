@@ -45,11 +45,10 @@ struct Kernel {
     lay: Layout,
     rule_end: usize,
     letters: usize,
-    /// (research only, `memory-lever`) which induction runs: 0 the shipped one, else one of
-    /// the experiment's two (`cells_lever.rs`), and the lazy letters' state
-    #[cfg(feature = "memory-lever")]
+    /// which first stage and induction run: 0 `slots` and `induce_cells`, `LAZY` the lazy
+    /// letters' (`cells_lazy.rs`), or (research only, `memory-lever`) `STAGED_RULES`
     variant: u8,
-    #[cfg(feature = "memory-lever")]
+    /// the lazy letters' state
     lz: Lazy,
     /// (test only) how many times the last staged induction sent rules on; whether it is
     /// to panic right after its first send (the fence's unwinding exit)
@@ -89,7 +88,9 @@ struct Materialization {
 }
 #[cfg(test)]
 include!("cells_original_test.rs");
-// (research only: the memory-lever experiment's two kernels)
+// Cells with lazy letters, the workers' kernel on many threads
+include!("cells_lazy.rs");
+// (research only: the memory-lever experiment's staged kernel)
 #[cfg(feature = "memory-lever")]
 include!("cells_lever.rs");
 
@@ -538,16 +539,15 @@ impl Kernel {
                     // block and wrote the canaries; nothing has changed the tail since
                     (true, Some(tail)) if self.bottom_laid => unsafe {
                         debug_assert!(tail.capacity() - tail.len() >= self.lay.tail);
-                        let at = tail.len() + end - self.lay.shift;
+                        let at = tail.len() + (end - self.lay.shift);
                         std::slice::from_raw_parts(tail.as_ptr().add(at), GAP)
                     },
                     (true, _) => continue,
                 };
                 assert!(region.iter().all(|&x| x == 0xA5), "cells canary");
             }
-            // (research only, `memory-lever`: the lazy kernel's two regions in the tail, its
-            // streams and its bottom slots' pool)
-            #[cfg(feature = "memory-lever")]
+            // (the lazy kernel's own two regions in the tail, its streams and its bottom
+            // slots' pool, counted from the tail's length)
             if let (Some(tail), true) = (tail, self.bottom_laid && self.variant == LAZY) {
                 for end in [self.lz.streams, self.lz.bend] {
                     // SAFETY: `slots_lazy` reserved the spare capacity for this block and
@@ -597,18 +597,11 @@ impl Kernel {
         if budget > n || n >= 1 << 24 || recs.len() > n {
             return Err(Refusal::Invalid);
         }
-        #[cfg(not(feature = "memory-lever"))]
-        let result = self.slots(n, recs, p, budget, forced, tail).and_then(|()| {
-            // (research only, `phase-counters`: the induction's scope)
-            #[cfg(feature = "phase-counters")]
-            let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
-            self.induce_cells(budget, tail)
-        });
-        // (research only, `memory-lever`: the same, or one of the experiment's inductions)
-        #[cfg(feature = "memory-lever")]
+        // the kernel's first stage and induction: the shipped ones, or the lazy letters'
         let result = self
             .first_stage(n, recs, p, budget, forced, tail)
             .and_then(|()| {
+                // (research only, `phase-counters`: the induction's scope)
                 #[cfg(feature = "phase-counters")]
                 let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
                 self.induce_variant(budget, tail)
@@ -1910,6 +1903,5 @@ mod tests {
         );
     }
     include!("cells_selective_test.rs");
-    #[cfg(feature = "memory-lever")]
-    include!("cells_lever_test.rs");
+    include!("cells_lazy_test.rs");
 }

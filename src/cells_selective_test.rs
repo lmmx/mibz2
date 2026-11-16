@@ -20,13 +20,10 @@ fn compare_materialization(
     // are 8 bytes, the slot before and the letter's top slot.
     original.wide_bottom = true;
     candidate.wide_bottom = false;
-    // (research only, `memory-lever`: the candidate may be one of the experiment's kernels.
-    // The staged one's rules start at a multiple of 16, so the original is laid out the same
-    // way; the lazy one has no letters' slots to compare.)
-    #[cfg(feature = "memory-lever")]
+    // The candidate may be the lazy kernel, which has no letters' slots to compare, or
+    // (research only, `memory-lever`) the staged one, whose rules start at a multiple of 16,
+    // so the original is laid out the same way.
     let lazy = candidate.variant == LAZY;
-    #[cfg(not(feature = "memory-lever"))]
-    let lazy = false;
     #[cfg(feature = "memory-lever")]
     {
         original.variant = if candidate.variant == STAGED_RULES {
@@ -38,9 +35,6 @@ fn compare_materialization(
     // the candidate's output buffer: the lazy kernel keeps its entries and bottom slots there
     let mut cout = Vec::new();
     let a = original.slots(column.len(), recs.records(), origin, budget, true, &mut Vec::new());
-    #[cfg(not(feature = "memory-lever"))]
-    let b = candidate.slots(column.len(), recs.records(), origin, budget, true, &mut cout);
-    #[cfg(feature = "memory-lever")]
     let b = candidate.first_stage(column.len(), recs.records(), origin, budget, true, &mut cout);
     assert_eq!(a, b);
     if a.is_err() {
@@ -70,9 +64,6 @@ fn compare_materialization(
         }
     }
     let a = original.induce_cells_original(budget);
-    #[cfg(not(feature = "memory-lever"))]
-    let b = candidate.induce_cells(budget, &mut cout);
-    #[cfg(feature = "memory-lever")]
     let b = candidate.induce_variant(budget, &mut cout);
     assert_eq!(a, b, "column {column:?}, origin {origin}, budget {budget}");
     // The slots a cell is written to differ (a promised slot is the one let go at the

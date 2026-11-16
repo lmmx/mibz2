@@ -17,9 +17,12 @@
 //! out), so another (an LF^2 walk: a pair table, with a flag for an intermediate row that
 //! is a segment start) can be put in without touching the stream, CRC or thread code.
 
-pub use crate::cells::{Cells, CellsKernel, Counts as CellsCounts, ForcedCells};
+pub use crate::cells::{
+    Cells, CellsKernel, CellsVariant, Counts as CellsCounts, ForcedCells, ForcedLazyCells,
+    LazyCells,
+};
 #[cfg(feature = "memory-lever")]
-pub use crate::cells::{ForcedLazyCells, ForcedStagedCells, LazyCells, LeverCells, StagedCells};
+pub use crate::cells::{ForcedStagedCells, StagedCells};
 
 /// An inverse-BWT kernel: a block's RLE1-coded text from its last column `ll` (whose
 /// bytes `counts` counts) and its primary index (below `ll.len()`: the caller checks),
