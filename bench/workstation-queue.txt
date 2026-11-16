@@ -6,4 +6,5 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-cores-less-one         perf/cores-less-one       Nine lazy workers and a worker-sized window past the cores, i9 profile only, against master's build (#481; registration 6923522255 with REVIEW 6924511372's corrections, QUEUED 6924894726)
+bench-release-scaling        master                    0.5.2 against 0.5.1 on the i9 (RELEASING §5), at the v0.5.2 tag commit ad0fcd33
+bench-crossover              master                    The team threshold after #481's plan change (RELEASING §5a), at v0.5.2's commit ad0fcd33
