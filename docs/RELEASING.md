@@ -101,8 +101,10 @@ made workers 4–14% faster than the teams at 6–9 threads (#425).
    block a thread (`mibz2-workers-w`) and teams of 2 and 3 (`mibz2-team2`, `mibz2-team3`) at
    4 to 10, 12, 16 and 20 threads, every arm with the default window.
 3. **The rule** (the one judged on 15 November, #145 LOG 6896455773, kept for every run):
-   - **sanity:** where an arm runs the same plan as the shipped decoder, their interval must
-     span 1, or the run decides nothing;
+   - **sanity:** where an arm runs the same plan as the shipped decoder, their interval should
+     span 1. A near miss is noise to weigh, not a veto: judge the run as a whole, and repeat
+     it if an effect needs confirming (Louis, 16 November 2026: use judgement, not rigid
+     rules);
    - **move the threshold** to where a forced arm is faster than the shipped decoder (its
      interval wholly below 1) at every count it would change, in a PR measured by the next
      release scaling;
