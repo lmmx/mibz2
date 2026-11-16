@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1](https://github.com/lmmx/mibz2/compare/v0.5.0...v0.5.1) - 2026-11-16
+
+### <!-- 9 -->Other
+
+- Past the physical cores, on 8 to 10 of them: lazy workers, one a core ([#468](https://github.com/lmmx/mibz2/pull/468))
+- a deliberate repeat run is fine; a near-miss sanity check is weighed, not a veto ([#463](https://github.com/lmmx/mibz2/pull/463))
+- Workers with lazy letters at 10 threads; teams only past the physical cores ([#462](https://github.com/lmmx/mibz2/pull/462))
+
 ## [0.5.0](https://github.com/lmmx/mibz2/compare/v0.4.0...v0.5.0) - 2026-11-16
 
 ### <!-- 9 -->Other
