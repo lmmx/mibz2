@@ -1654,6 +1654,20 @@
       "status": "finished",
       "disposition": "PROCEED scoped B5 closure; lift D108/D109 HOLD; record B6 resumption.",
       "comment": 6903106255
+    },
+    {
+      "id": "D111",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6903560983,
+      "pr": 161,
+      "sha": "3071cad5cd88b4db493292a5f39c4ee583ffc4c1",
+      "evidence_digest": "sha256:671edbc1a49a970d89e9b948ad097579b6ee4d33a23ab3581f45c3c46440f167",
+      "commit": "f35c4be2f14598dada2f4ea12fc78fcff122754f",
+      "status": "complete",
+      "disposition": "HOLD B5 closure pending completed Miri evidence; source proof accepted."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -2221,7 +2235,7 @@
   },
   "current_execution": {
     "active_comment": 6903560983,
-    "status": "in progress",
+    "status": "complete",
     "decision": "D111"
   },
   "duplicate_events": [
@@ -3067,6 +3081,13 @@
       "evidence_digest": "sha256:3af9b48fbeb427ad9c2cefed14beba0bb00289ea136cc7de53144311251292f9",
       "incoming_comment": 6903067177,
       "decision": "D110"
+    },
+    {
+      "pr": 449,
+      "sha": "3071cad5cd88b4db493292a5f39c4ee583ffc4c1",
+      "evidence_digest": "sha256:671edbc1a49a970d89e9b948ad097579b6ee4d33a23ab3581f45c3c46440f167",
+      "incoming_comment": 6903560983,
+      "decision": "D111"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3978,9 +3999,11 @@
     {
       "comment_id": 6903560983,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D111",
-      "progress": "Receipt; reviewing PR449 tail storage and refusal safety."
+      "progress": "D111 work committed; awaiting REVIEW publication.",
+      "work_commit": "f35c4be2f14598dada2f4ea12fc78fcff122754f",
+      "receipt_commit": "404ed1cae9ad2909a6dffbcd33d4e4d02d984bea"
     }
   ],
   "migrated_from": {
