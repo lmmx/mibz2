@@ -178,9 +178,11 @@
     6886868279,
     6920377932,
     6924336791,
-    6925048452
+    6925048452,
+    6926192217,
+    6926214255
   ],
-  "last_processed_comment_id": 6925048452,
+  "last_processed_comment_id": 6926214255,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2099,22 +2101,28 @@
     },
     {
       "trigger_comment_id": 6926192217,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/cap-claim-6926192217/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "106e3c9e9db0b4fa1ef3d43ca789e37ebbb08650",
-      "disposition": "Correction confirmed: cap/uncapped time 0.775636; no tested uncapping gain over later capped production. Historical team baseline and 40/80-slot distinction retained. No registration."
+      "disposition": "Correction confirmed: cap/uncapped time 0.775636; no tested uncapping gain over later capped production. Historical team baseline and 40/80-slot distinction retained. No registration.",
+      "review_comment_id": 6926375141,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body, author lmmx, PR145 and role-aware routing verified. Pinned verifier retains only coordinator-only FROM restriction. One review answers original assignment as narrowed by correction."
     },
     {
       "trigger_comment_id": 6926214255,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "amends": 6926192217,
       "report_path": "state/reports/cap-claim-6926192217/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "106e3c9e9db0b4fa1ef3d43ca789e37ebbb08650",
-      "disposition": "Correction confirmed: cap/uncapped time 0.775636; no tested uncapping gain over later capped production. Historical team baseline and 40/80-slot distinction retained. No registration."
+      "disposition": "Correction confirmed: cap/uncapped time 0.775636; no tested uncapping gain over later capped production. Historical team baseline and 40/80-slot distinction retained. No registration.",
+      "review_comment_id": 6926375141,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body, author lmmx, PR145 and role-aware routing verified. Pinned verifier retains only coordinator-only FROM restriction. One review answers original assignment as narrowed by correction."
     }
   ],
   "active_delegations": [],
