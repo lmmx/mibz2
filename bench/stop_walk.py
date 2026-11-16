@@ -2,22 +2,32 @@
 """The stop-and-walk run (`just bench-stop-walk`; MONODROMY's HANDOFF 6916839849, Gate 2): the
 rule's verdict, read from the run's records, and its two recorded readings. Standard library only.
 
-    stop_walk.py RUNS.jsonl DOSE.jsonl [--judge 8,9,10] [--primary mibz2-workers-stop15]
+    stop_walk.py RUNS.jsonl DOSE.jsonl [--judge 8,9,10,12,20] [--primary mibz2-workers-stop15]
 
 **The arms.** `mibz2-workers-lazy`, the shipped kernel at 8 threads and more (lazy letters), is
 the reference. `mibz2-workers-stop14`, `-stop15` and `-stop16` are the same workers, plan and
 window with the lazy induction stopped after ⌈β r⌉ cells, β = 1.4, 1.5, 1.6, and the rest of the
 block walked (`bwt::StopLazyCells15`). An arm differs from the reference in the kernel alone.
 
-**The rule** (C1a: posted on #145 before the data). A diagnostic; it changes no default.
+**The rule** (posted on #145 before the data). It decides one thing: whether stop-and-walk
+becomes *the* lazy kernel, inside lazy's existing range (`LAZY_FROM_THREADS` = 8 and up, the
+workers past the cores included). It adds no thread threshold.
 - At each thread count, an arm's step is the geometric mean of the rounds' paired wall ratios,
   arm over reference, with its 95% interval (Student's t), as `ab summary` gives it. FASTER if
-  the interval lies below 1, SLOWER if above, else NO DIFFERENCE.
-- The judged counts are 8, 9 and 10 threads. The primary arm is β = 1.5.
-- **Reopens** (an adoption registration may follow, with its own rule): the primary arm is
-  FASTER at two of the judged counts or more, and SLOWER at none.
-- **Closes** at this design otherwise. β = 1.4 and 1.6 are read the same way, but only to say
-  which way β would move: they decide nothing.
+  the interval lies below 1, SLOWER if above, else NO DIFFERENCE (PERFORMANCE-POLICY's "beyond
+  noise").
+- The judged counts are 8, 9, 10, 12 and 20 threads: the whole of lazy's range on the i9. The
+  primary arm is β = 1.5.
+- **Adopts:** the primary arm is FASTER at one judged count or more, SLOWER at none, and its
+  peak resident memory (the median over the rounds) is at most 10% above the reference's at
+  every judged count (PERFORMANCE-POLICY rule 4).
+- **Held on memory:** the wall conditions hold but the memory one does not: the Coordinator
+  weighs it under rule 4.
+- **A finding, not an adoption:** FASTER at some judged counts and SLOWER at others. The arm
+  gets no range of its own; any change would be to the lazy threshold itself, a separate
+  decision.
+- **Not adopted** otherwise. β = 1.4 and 1.6 are read the same way, but only to say which way β
+  would move: they decide nothing.
 - **Void** if any run failed, or the arms' outputs differ on a file.
 
 **Recorded, not judged** (`DOSE.jsonl`: one copy, at 1 thread and 10):
@@ -84,7 +94,7 @@ def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("runs")
     ap.add_argument("dose")
-    ap.add_argument("--judge", default="8,9,10")
+    ap.add_argument("--judge", default="8,9,10,12,20")
     ap.add_argument("--primary", default="mibz2-workers-stop15")
     a = ap.parse_args(argv[1:])
     judge = [int(t) for t in a.judge.split(",")]
@@ -97,10 +107,17 @@ def main(argv):
         print("VOID: a run failed, or the arms' outputs differ")
         return 1
 
-    print(f"\nwall, arm over {REF}: the geometric mean of the paired rounds' ratios [95% interval]")
-    found = {}
+    print(f"\nwall, arm over {REF}: the geometric mean of the paired rounds' ratios [95% interval];"
+          " peak resident memory, the median over the rounds, over the reference's")
+    found, rss = {}, {}
+
+    def peak(arm, t):
+        v = [r["rss_kb"] for (a, tt, _), r in rows.items() if a == arm and tt == t and r.get("rss_kb")]
+        return statistics.median(v) if v else None
+
     for t in sorted({k[1] for k in rows}):
         print(f"\n{t} threads{' (judged)' if t in judge else ''}")
+        ref_rss = peak(REF, t)
         for arm in ARMS:
             s = step(rows, arm, t)
             if s is None:
@@ -109,7 +126,10 @@ def main(argv):
             g, lo, hi, n = s
             v = verdict(g, lo, hi)
             found[(arm, t)] = v
-            print(f"  {arm}: {g:.4f} [{lo:.4f}, {hi:.4f}] over {n} rounds: {v}")
+            a_rss = peak(arm, t)
+            rss[(arm, t)] = a_rss / ref_rss if a_rss and ref_rss else None
+            mem = f"; memory {rss[(arm, t)]:.3f}" if rss[(arm, t)] else "; memory not recorded"
+            print(f"  {arm}: {g:.4f} [{lo:.4f}, {hi:.4f}] over {n} rounds: {v}{mem}")
 
     prim = [found.get((a.primary, t)) for t in judge]
     missing = [t for t, v in zip(judge, prim) if v is None]
@@ -117,13 +137,23 @@ def main(argv):
     if missing:
         print(f"VOID: the primary arm has no reading at {missing} threads")
         return 1
-    faster, slower = prim.count("FASTER"), prim.count("SLOWER")
-    if faster >= 2 and slower == 0:
-        print(f"VERDICT: REOPENS. {a.primary} is FASTER at {faster} of {judge} threads and SLOWER at none: "
-              "an adoption registration may follow, with its own rule")
+    faster = [t for t, v in zip(judge, prim) if v == "FASTER"]
+    slower = [t for t, v in zip(judge, prim) if v == "SLOWER"]
+    over = [t for t in judge if rss.get((a.primary, t)) is None or rss[(a.primary, t)] > 1.10]
+    if faster and not slower and not over:
+        print(f"VERDICT: ADOPTS. {a.primary} is FASTER at {faster} threads, SLOWER at none, and its peak "
+              f"memory is within 10% of the reference's at every judged count: it becomes the lazy kernel")
+    elif faster and not slower:
+        print(f"VERDICT: HELD ON MEMORY. {a.primary} is FASTER at {faster} threads and SLOWER at none, but its "
+              f"peak memory is more than 10% above the reference's (or not recorded) at {over} threads: "
+              "PERFORMANCE-POLICY rule 4, the Coordinator's to weigh")
+    elif faster and slower:
+        print(f"VERDICT: A FINDING, NOT ADOPTED. {a.primary} is FASTER at {faster} and SLOWER at {slower} "
+              "threads. It gets no range of its own: any change would be to the lazy threshold itself, "
+              "a separate decision")
     else:
-        print(f"VERDICT: CLOSES at this design. {a.primary} is FASTER at {faster} and SLOWER at {slower} "
-              f"of {judge} threads (reopening needs FASTER at 2 or more and SLOWER at none)")
+        print(f"VERDICT: NOT ADOPTED. {a.primary} is FASTER at none of {judge} threads"
+              + (f" and SLOWER at {slower}" if slower else ""))
     for arm in ARMS:
         if arm != a.primary:
             print(f"  ({arm}, read for direction only: "

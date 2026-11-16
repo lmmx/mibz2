@@ -60,14 +60,18 @@ jobs:
           grep -q '59.8% with a slot for every letter, 20.0% with lazy letters' dose.txt
           grep -q 'mibz2-workers-lazy *110 *170' dose.txt
       # stop-and-walk's Gate 2 reading (`just bench-stop-walk`; MONODROMY's HANDOFF
-      # 6916839849), on a made-up run: the rule's verdict both ways, and the recorded dose
+      # 6916839849), on a made-up run: the rule's verdict each way (adopts, a finding, not
+      # adopted), and the recorded dose
       - name: The stop-and-walk run's reading (made-up run)
         run: |
-          python3 bench/stop_walk.py bench/stop_walk_example_runs.jsonl bench/stop_walk_example_dose.jsonl | tee walk.txt
-          grep -q 'VERDICT: REOPENS. mibz2-workers-stop15 is FASTER at 2 of \[8, 9, 10\]' walk.txt
+          r=bench/stop_walk_example_runs.jsonl; d=bench/stop_walk_example_dose.jsonl
+          python3 bench/stop_walk.py $r $d | tee walk.txt
+          grep -q 'VERDICT: ADOPTS. mibz2-workers-stop15 is FASTER at \[8, 9\] threads, SLOWER at none' walk.txt
           grep -q 'dose over the reference.s, mibz2-workers-stop15: 0.93' walk.txt
-          python3 bench/stop_walk.py bench/stop_walk_example_runs.jsonl bench/stop_walk_example_dose.jsonl --primary mibz2-workers-stop14 | tee walk14.txt
-          grep -q 'VERDICT: CLOSES at this design. mibz2-workers-stop14 is FASTER at 0 and SLOWER at 3' walk14.txt
+          python3 bench/stop_walk.py $r $d --primary mibz2-workers-stop16 > walk16.txt
+          grep -q 'VERDICT: A FINDING, NOT ADOPTED. mibz2-workers-stop16 is FASTER at \[8\] and SLOWER at \[20\]' walk16.txt
+          python3 bench/stop_walk.py $r $d --primary mibz2-workers-stop14 > walk14.txt
+          grep -q 'VERDICT: NOT ADOPTED. mibz2-workers-stop14 is FASTER at none' walk14.txt
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the

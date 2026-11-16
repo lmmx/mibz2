@@ -1,120 +1,200 @@
-{"round": 0, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5, "cpu": 3.6, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5175, "cpu": 3.7257, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4736, "cpu": 3.4098, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4873, "cpu": 3.5087, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.504, "cpu": 4.0821, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5273, "cpu": 4.2708, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4795, "cpu": 3.8841, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.497, "cpu": 4.026, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4929, "cpu": 4.4357, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.512, "cpu": 4.608, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4921, "cpu": 4.4293, "out": 838800784, "hash": "made-up"}
-{"round": 0, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.482, "cpu": 4.3381, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4915, "cpu": 3.5389, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5138, "cpu": 3.6994, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4698, "cpu": 3.3829, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4828, "cpu": 3.4762, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5053, "cpu": 4.0929, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5234, "cpu": 4.2394, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4775, "cpu": 3.8679, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4958, "cpu": 4.016, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5035, "cpu": 4.5313, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5238, "cpu": 4.7142, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.5038, "cpu": 4.5346, "out": 838800784, "hash": "made-up"}
-{"round": 1, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4941, "cpu": 4.4471, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4951, "cpu": 3.5644, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.516, "cpu": 3.7153, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4714, "cpu": 3.3942, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4861, "cpu": 3.4998, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5084, "cpu": 4.1181, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5304, "cpu": 4.296, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4839, "cpu": 3.9193, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.5005, "cpu": 4.054, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5053, "cpu": 4.5476, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5268, "cpu": 4.7416, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.5081, "cpu": 4.573, "out": 838800784, "hash": "made-up"}
-{"round": 2, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4953, "cpu": 4.4574, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4971, "cpu": 3.5789, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5194, "cpu": 3.7397, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4733, "cpu": 3.4074, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4856, "cpu": 3.4962, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5084, "cpu": 4.1182, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5264, "cpu": 4.2638, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4815, "cpu": 3.9003, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4958, "cpu": 4.0159, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5079, "cpu": 4.5709, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5281, "cpu": 4.7533, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.5113, "cpu": 4.6013, "out": 838800784, "hash": "made-up"}
-{"round": 3, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.5002, "cpu": 4.5017, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5007, "cpu": 3.6049, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5234, "cpu": 3.7688, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4759, "cpu": 3.4265, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4914, "cpu": 3.538, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5013, "cpu": 4.0606, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5201, "cpu": 4.2124, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4746, "cpu": 3.8442, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.491, "cpu": 3.9768, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4936, "cpu": 4.4426, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5127, "cpu": 4.6139, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4912, "cpu": 4.4212, "out": 838800784, "hash": "made-up"}
-{"round": 4, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4833, "cpu": 4.3494, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4978, "cpu": 3.584, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5184, "cpu": 3.7324, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4732, "cpu": 3.4069, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4878, "cpu": 3.5124, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4996, "cpu": 4.0468, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5164, "cpu": 4.1825, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4748, "cpu": 3.8458, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4879, "cpu": 3.9521, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5058, "cpu": 4.5518, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5262, "cpu": 4.7361, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.5055, "cpu": 4.5497, "out": 838800784, "hash": "made-up"}
-{"round": 5, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4953, "cpu": 4.4577, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4935, "cpu": 3.5531, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5125, "cpu": 3.6902, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4709, "cpu": 3.3902, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4858, "cpu": 3.4977, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4981, "cpu": 4.0343, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5174, "cpu": 4.1909, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.471, "cpu": 3.8154, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.487, "cpu": 3.9443, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4977, "cpu": 4.4796, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5197, "cpu": 4.6776, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.5001, "cpu": 4.5013, "out": 838800784, "hash": "made-up"}
-{"round": 6, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4899, "cpu": 4.4088, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5038, "cpu": 3.6274, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5263, "cpu": 3.7893, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4787, "cpu": 3.4468, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4972, "cpu": 3.5801, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4966, "cpu": 4.0224, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.515, "cpu": 4.1711, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4711, "cpu": 3.8158, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4841, "cpu": 3.9215, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4943, "cpu": 4.449, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5145, "cpu": 4.6305, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4929, "cpu": 4.4363, "out": 838800784, "hash": "made-up"}
-{"round": 7, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4829, "cpu": 4.3464, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.497, "cpu": 3.5782, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5144, "cpu": 3.7035, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4703, "cpu": 3.3864, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.485, "cpu": 3.4921, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5056, "cpu": 4.0955, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5243, "cpu": 4.2467, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4787, "cpu": 3.8777, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.493, "cpu": 3.9929, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5005, "cpu": 4.5044, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5197, "cpu": 4.6776, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.5004, "cpu": 4.5035, "out": 838800784, "hash": "made-up"}
-{"round": 8, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4903, "cpu": 4.4127, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4991, "cpu": 3.5934, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5205, "cpu": 3.7477, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4741, "cpu": 3.4139, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4907, "cpu": 3.5329, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4953, "cpu": 4.0122, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5148, "cpu": 4.17, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4726, "cpu": 3.8282, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4867, "cpu": 3.9426, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5075, "cpu": 4.5676, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5274, "cpu": 4.747, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.5056, "cpu": 4.5504, "out": 838800784, "hash": "made-up"}
-{"round": 9, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4965, "cpu": 4.4682, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.499, "cpu": 3.59279, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51377, "cpu": 3.69913, "rss_kb": 326400, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.46931, "cpu": 3.37902, "rss_kb": 323200, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.47425, "cpu": 3.41459, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50503, "cpu": 4.09076, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51998, "cpu": 4.21184, "rss_kb": 367200, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47498, "cpu": 3.84736, "rss_kb": 363600, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49998, "cpu": 4.04985, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49279, "cpu": 4.43511, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.50738, "cpu": 4.56639, "rss_kb": 408000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.48786, "cpu": 4.39076, "rss_kb": 404000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.48786, "cpu": 4.39076, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49758, "cpu": 5.37383, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51231, "cpu": 5.53289, "rss_kb": 489600, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4926, "cpu": 5.32009, "rss_kb": 484800, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.4926, "cpu": 5.32009, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49134, "cpu": 8.84409, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.50588, "cpu": 9.10588, "rss_kb": 816000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.48643, "cpu": 8.75565, "rss_kb": 808000, "out": 838800784, "hash": "made-up"}
+{"round": 0, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.50588, "cpu": 9.10588, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50593, "cpu": 3.64267, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.53143, "cpu": 3.82626, "rss_kb": 326400, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.48544, "cpu": 3.49514, "rss_kb": 323200, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49055, "cpu": 3.53193, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49028, "cpu": 3.97126, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51499, "cpu": 4.17141, "rss_kb": 367200, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47042, "cpu": 3.81042, "rss_kb": 363600, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49518, "cpu": 4.01097, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.5052, "cpu": 4.5468, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.53066, "cpu": 4.77596, "rss_kb": 408000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.51025, "cpu": 4.59227, "rss_kb": 404000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.51025, "cpu": 4.59227, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49421, "cpu": 5.33745, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51912, "cpu": 5.60645, "rss_kb": 489600, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.49915, "cpu": 5.39082, "rss_kb": 484800, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49915, "cpu": 5.39082, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50623, "cpu": 9.11208, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.53174, "cpu": 9.57133, "rss_kb": 816000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.51129, "cpu": 9.2032, "rss_kb": 808000, "out": 838800784, "hash": "made-up"}
+{"round": 1, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.53174, "cpu": 9.57133, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4927, "cpu": 3.54744, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.50728, "cpu": 3.65245, "rss_kb": 326400, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.46338, "cpu": 3.33637, "rss_kb": 323200, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.46826, "cpu": 3.37149, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50079, "cpu": 4.05637, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51561, "cpu": 4.17644, "rss_kb": 367200, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47099, "cpu": 3.81501, "rss_kb": 363600, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49578, "cpu": 4.0158, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49803, "cpu": 4.48225, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51277, "cpu": 4.61492, "rss_kb": 408000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.49305, "cpu": 4.43742, "rss_kb": 404000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49305, "cpu": 4.43742, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49716, "cpu": 5.3693, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51187, "cpu": 5.52824, "rss_kb": 489600, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.49219, "cpu": 5.31561, "rss_kb": 484800, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49219, "cpu": 5.31561, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49566, "cpu": 8.92189, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51033, "cpu": 9.18598, "rss_kb": 816000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4907, "cpu": 8.83267, "rss_kb": 808000, "out": 838800784, "hash": "made-up"}
+{"round": 2, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.51033, "cpu": 9.18598, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49315, "cpu": 3.55066, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.518, "cpu": 3.72961, "rss_kb": 326400, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47317, "cpu": 3.40686, "rss_kb": 323200, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.47816, "cpu": 3.44272, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.4917, "cpu": 3.98273, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51648, "cpu": 4.18346, "rss_kb": 367200, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47178, "cpu": 3.82143, "rss_kb": 363600, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49661, "cpu": 4.02256, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50453, "cpu": 4.54077, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52996, "cpu": 4.76963, "rss_kb": 408000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.50958, "cpu": 4.58618, "rss_kb": 404000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.50958, "cpu": 4.58618, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50724, "cpu": 5.47819, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5328, "cpu": 5.75429, "rss_kb": 489600, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.51231, "cpu": 5.53297, "rss_kb": 484800, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.51231, "cpu": 5.53297, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49755, "cpu": 8.95584, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52262, "cpu": 9.40722, "rss_kb": 816000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.50252, "cpu": 9.0454, "rss_kb": 808000, "out": 838800784, "hash": "made-up"}
+{"round": 3, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.52262, "cpu": 9.40722, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50451, "cpu": 3.63248, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51945, "cpu": 3.74001, "rss_kb": 326400, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47449, "cpu": 3.41635, "rss_kb": 323200, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.47949, "cpu": 3.45231, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50388, "cpu": 4.08145, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5188, "cpu": 4.20226, "rss_kb": 367200, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4739, "cpu": 3.8386, "rss_kb": 363600, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49884, "cpu": 4.04063, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49374, "cpu": 4.44368, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.50836, "cpu": 4.57522, "rss_kb": 408000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.48881, "cpu": 4.39925, "rss_kb": 404000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.48881, "cpu": 4.39925, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49079, "cpu": 5.30049, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.50531, "cpu": 5.45739, "rss_kb": 489600, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.48588, "cpu": 5.24749, "rss_kb": 484800, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.48588, "cpu": 5.24749, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.507, "cpu": 9.12594, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.522, "cpu": 9.39607, "rss_kb": 816000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.50193, "cpu": 9.03468, "rss_kb": 808000, "out": 838800784, "hash": "made-up"}
+{"round": 4, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.522, "cpu": 9.39607, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50367, "cpu": 3.62646, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52906, "cpu": 3.80923, "rss_kb": 326400, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.48328, "cpu": 3.47959, "rss_kb": 323200, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.48836, "cpu": 3.51621, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.499, "cpu": 4.04188, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52415, "cpu": 4.24559, "rss_kb": 367200, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47879, "cpu": 3.87818, "rss_kb": 363600, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.50399, "cpu": 4.0823, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49989, "cpu": 4.49898, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52508, "cpu": 4.72573, "rss_kb": 408000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.50489, "cpu": 4.54397, "rss_kb": 404000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.50489, "cpu": 4.54397, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50083, "cpu": 5.409, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52608, "cpu": 5.68161, "rss_kb": 489600, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.50584, "cpu": 5.46309, "rss_kb": 484800, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.50584, "cpu": 5.46309, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50265, "cpu": 9.04777, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52799, "cpu": 9.50378, "rss_kb": 816000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.50768, "cpu": 9.13825, "rss_kb": 808000, "out": 838800784, "hash": "made-up"}
+{"round": 5, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.52799, "cpu": 9.50378, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49556, "cpu": 3.568, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51022, "cpu": 3.67361, "rss_kb": 326400, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.46607, "cpu": 3.3557, "rss_kb": 323200, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.47098, "cpu": 3.39102, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49746, "cpu": 4.02944, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51219, "cpu": 4.14871, "rss_kb": 367200, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.46786, "cpu": 3.78969, "rss_kb": 363600, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49249, "cpu": 3.98915, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50308, "cpu": 4.52775, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51798, "cpu": 4.66178, "rss_kb": 408000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.49805, "cpu": 4.48248, "rss_kb": 404000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49805, "cpu": 4.48248, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50343, "cpu": 5.43701, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51833, "cpu": 5.59795, "rss_kb": 489600, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.49839, "cpu": 5.38264, "rss_kb": 484800, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49839, "cpu": 5.38264, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50223, "cpu": 9.04013, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.5171, "cpu": 9.30772, "rss_kb": 816000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.49721, "cpu": 8.94973, "rss_kb": 808000, "out": 838800784, "hash": "made-up"}
+{"round": 6, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.5171, "cpu": 9.30772, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50943, "cpu": 3.66791, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.53511, "cpu": 3.85277, "rss_kb": 326400, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.4888, "cpu": 3.51936, "rss_kb": 323200, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49395, "cpu": 3.55641, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49499, "cpu": 4.0094, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51993, "cpu": 4.21147, "rss_kb": 367200, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47494, "cpu": 3.84702, "rss_kb": 363600, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49994, "cpu": 4.04949, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50262, "cpu": 4.52358, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52795, "cpu": 4.75157, "rss_kb": 408000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.50765, "cpu": 4.56882, "rss_kb": 404000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.50765, "cpu": 4.56882, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49951, "cpu": 5.39472, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52469, "cpu": 5.66661, "rss_kb": 489600, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.50451, "cpu": 5.44867, "rss_kb": 484800, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.50451, "cpu": 5.44867, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50626, "cpu": 9.11276, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.53178, "cpu": 9.57204, "rss_kb": 816000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.51133, "cpu": 9.20389, "rss_kb": 808000, "out": 838800784, "hash": "made-up"}
+{"round": 7, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.53178, "cpu": 9.57204, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50722, "cpu": 3.65198, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52223, "cpu": 3.76007, "rss_kb": 326400, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47704, "cpu": 3.43468, "rss_kb": 323200, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.48206, "cpu": 3.47084, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49047, "cpu": 3.9728, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.50499, "cpu": 4.09039, "rss_kb": 367200, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.46129, "cpu": 3.73641, "rss_kb": 363600, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.48556, "cpu": 3.93307, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49685, "cpu": 4.47164, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51156, "cpu": 4.604, "rss_kb": 408000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.49188, "cpu": 4.42692, "rss_kb": 404000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49188, "cpu": 4.42692, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50438, "cpu": 5.44727, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51931, "cpu": 5.60851, "rss_kb": 489600, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.49933, "cpu": 5.3928, "rss_kb": 484800, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.49933, "cpu": 5.3928, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49088, "cpu": 8.8359, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.50541, "cpu": 9.09745, "rss_kb": 816000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.48597, "cpu": 8.74754, "rss_kb": 808000, "out": 838800784, "hash": "made-up"}
+{"round": 8, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.50541, "cpu": 9.09745, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49746, "cpu": 3.58172, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52253, "cpu": 3.76223, "rss_kb": 326400, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47731, "cpu": 3.43666, "rss_kb": 323200, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 8, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.48234, "cpu": 3.47283, "rss_kb": 320000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49803, "cpu": 4.03402, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52313, "cpu": 4.23734, "rss_kb": 367200, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.47786, "cpu": 3.87064, "rss_kb": 363600, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 9, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.50301, "cpu": 4.07436, "rss_kb": 360000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50987, "cpu": 4.58883, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.53557, "cpu": 4.82011, "rss_kb": 408000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.51497, "cpu": 4.63472, "rss_kb": 404000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 10, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.51497, "cpu": 4.63472, "rss_kb": 400000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.50353, "cpu": 5.4381, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.52891, "cpu": 5.71218, "rss_kb": 489600, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.50856, "cpu": 5.49248, "rss_kb": 484800, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 12, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.50856, "cpu": 5.49248, "rss_kb": 480000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-lazy", "termination": "success", "wall": 0.49013, "cpu": 8.82225, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop14", "termination": "success", "wall": 0.51483, "cpu": 9.26689, "rss_kb": 816000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop15", "termination": "success", "wall": 0.49503, "cpu": 8.91047, "rss_kb": 808000, "out": 838800784, "hash": "made-up"}
+{"round": 9, "corpus": "wikidata-x4", "threads": 20, "arm": "mibz2-workers-stop16", "termination": "success", "wall": 0.51483, "cpu": 9.26689, "rss_kb": 800000, "out": 838800784, "hash": "made-up"}

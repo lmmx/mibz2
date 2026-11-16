@@ -1637,13 +1637,15 @@ bench-lazy-crossover ROUNDS="10" THREADS="4,6,7,8,9,10,12,14,16,20":
     bash bench/bundle.sh "$O"
 
 # Stop-and-walk, Gate 2 (MONODROMY's HANDOFF 6916839849; its rule posted on #145 before the
-# data): the shipped kernel at 8 threads and more, lazy letters forced as `mibz2-workers-lazy`,
+# data): whether stop-and-walk becomes the lazy kernel, in lazy's own range (8 threads and up;
+# no new threshold). The shipped kernel there, lazy letters forced as `mibz2-workers-lazy`,
 # against the same workers with the lazy induction stopped after ⌈β r⌉ cells, β = 1.4, 1.5 and
 # 1.6, and the rest of each block walked (`mibz2-workers-stop14`, `-stop15`, `-stop16`). An arm
-# differs from the reference in the kernel alone. Judged at 8, 9 and 10 threads on COPIES
-# copies of the Wikidata sample; then every arm at 1 and 10 threads on one copy (the 1-thread
-# cost and the memory dose, recorded, not judged). `bench/stop_walk.py` reads the verdict.
-bench-stop-walk COPIES="4" ROUNDS="10" THREADS="8,9,10":
+# differs from the reference in the kernel alone. Judged at 8, 9, 10, 12 and 20 threads on
+# COPIES copies of the Wikidata sample, wall and peak memory; then every arm at 1 and 10
+# threads on one copy (the 1-thread cost and the memory dose, recorded, not judged).
+# `bench/stop_walk.py` reads the verdict.
+bench-stop-walk COPIES="4" ROUNDS="10" THREADS="8,9,10,12,20":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/stop-walk
@@ -1652,7 +1654,7 @@ bench-stop-walk COPIES="4" ROUNDS="10" THREADS="8,9,10":
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
     arms="mibz2-workers-lazy,mibz2-workers-stop14,mibz2-workers-stop15,mibz2-workers-stop16"
-    echo "bench-stop-walk (MONODROMY's HANDOFF 6916839849, Gate 2; its rule posted on #145 before the data): $arms on {{COPIES}} copies of the Wikidata sample at {{THREADS}} threads, {{ROUNDS}} paired rounds; then at 1 and 10 threads on one copy (recorded), at $(git rev-parse HEAD)"
+    echo "bench-stop-walk (MONODROMY's HANDOFF 6916839849, Gate 2; its rule posted on #145 before the data; whether stop-and-walk becomes the lazy kernel): $arms on {{COPIES}} copies of the Wikidata sample at {{THREADS}} threads, {{ROUNDS}} paired rounds; then at 1 and 10 threads on one copy (recorded), at $(git rev-parse HEAD)"
     cargo build -q --release --example ab --example windows
     AB=$PWD/target/release/examples/ab
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')

@@ -76,8 +76,9 @@ const _: () = assert!(STOP_AT + 8 <= PAD);
 
 /// An untouched letter's key: its bottom entry's index, beside this bit
 const KEY_ENTRY: u32 = 1 << 31;
-/// The low 32 bits
-const M32: u64 = 0xFFFF_FFFF;
+/// A cell's bottom slot once the bottom order's pass has read it (`tables`): no offset is this
+/// (the kernel's layouts stay below `u32::MAX`)
+const VISITED: u32 = u32::MAX;
 
 /// Where an induction stopped: both fronts' links, both streams' next places, and what the
 /// top stream's byte-to-entry map had reached; the block's rows
@@ -106,25 +107,19 @@ struct Rank {
 /// to be copied from (a word kept as bytes: in the arena; else where the walk first wrote it;
 /// 0: not yet), and its word's length. (The offset to its bottom interval, which the walk's
 /// chain from point to point needs, is apart, in `Walk::dls`, small enough to stay in the
-/// first-level cache; its word itself, needed only once, in `Walk::words`.)
-#[repr(C)]
-#[derive(Clone, Copy, Default)]
-struct Rec {
-    src: usize,
-    len: u32,
-    _pad: u32,
-}
+/// first-level cache; its word itself, needed only once, in `Walk::words`.) A tuple, so that
+/// a table of them is allocated as zeroed pages (`tables`).
+type Rec = (usize, u32);
 
 /// The walk's tables and scratch, kept from block to block
 #[derive(Default)]
 struct Walk {
-    /// a letter's bottom interval's end, counted from the bottom order's right end, by key
-    /// (an entry's index, or a top slot's), beside the stamp of the block that wrote it:
-    /// stamp << 32 | end
-    j_ent: Vec<u64>,
-    j_slot: Vec<u64>,
-    stamp: u32,
-    /// the top order's letters, right to left as read: (key, λ, word)
+    /// a letter of the block's own still in the bottom stream: its bottom interval's end,
+    /// counted from the bottom order's right end, by its entry's index (a cell's is kept in
+    /// its bottom slot, `tables`)
+    j_ent: Vec<u32>,
+    /// the top order's letters, right to left as read: (`KEY_ENTRY` | entry's index, or the
+    /// cell's bottom slot; λ; word)
     tops: Vec<(u32, u32, u64)>,
     /// the rank bitmap over [0, m), and the letters in top order
     rank: Vec<Rank>,
@@ -154,7 +149,7 @@ impl Kernel {
         let st = std::mem::take(&mut self.stop);
         let n = st.n;
         let mut w = std::mem::take(&mut self.walk);
-        let r = self.tables(&st, out, &mut w).and_then(|(mu, xmu, m)| {
+        let r = self.tables(&st, &mut out[..], &mut w).and_then(|(mu, xmu, m)| {
             // its word ends where the block's place 0 lies after the walk's row's byte and
             // `SHIFT`
             let (j, wmu) = self.marked_offset(w.words[mu])?;
@@ -173,7 +168,7 @@ impl Kernel {
 
     /// Both orders read from where the induction stopped, into `w`'s tables in top order.
     /// Returns the marked letter's index, its one point, and the domain's size m.
-    fn tables(&self, st: &Stop, out: &[u8], w: &mut Walk) -> Result<(usize, usize, usize), ()> {
+    fn tables(&self, st: &Stop, out: &mut [u8], w: &mut Walk) -> Result<(usize, usize, usize), ()> {
         let lay = self.lay;
         let rr = self.letters;
         let Lazy { tby, .. } = self.lz;
@@ -190,7 +185,7 @@ impl Kernel {
         {
             return Err(());
         }
-        let (bb, base) = (out.as_ptr(), buf.as_ptr());
+        let (bb, base) = (out.as_mut_ptr(), buf.as_ptr());
         let slot_key = |s: usize| -> Result<usize, ()> {
             let i = s.wrapping_sub(lay.tops);
             if i % SLOT != 0 || i / SLOT >= rr {
@@ -199,30 +194,23 @@ impl Kernel {
             Ok(i / SLOT)
         };
         let first1 = (lay.arena as u64 + BYTES as u64) << 32 | 1;
-        w.stamp = w.stamp.wrapping_add(1);
-        if w.stamp == 0 || w.j_ent.len() < rr {
-            // (a fresh start: every stamp is old)
-            w.stamp = 1;
-            for v in [&mut w.j_ent, &mut w.j_slot] {
-                v.clear();
-                v.resize(rr.max(v.capacity()), 0);
-            }
+        // (the tables grow to what a block needs, not to r: a worker's resident memory grows
+        // by its live letters, about a tenth of r, and the bottom stream's unread entries)
+        if w.j_ent.len() < st.kb {
+            w.j_ent.resize(st.kb, 0);
         }
-        if w.tops.len() < rr {
-            w.tops.resize(rr, (0, 0, 0));
-            w.recs.resize(rr, Rec::default());
-            w.words.resize(rr, 0);
-            w.dls.resize(rr, 0);
-        }
-        let stamp = (w.stamp as u64) << 32;
-        // the bottom order, right to left: each letter's bottom interval's end, from the right
+        // the bottom order, right to left: each letter's bottom interval's end, from the right.
+        // A letter of the block's own (every entry below `kb` not yet a cell's) keeps it in
+        // `j_ent`. A cell keeps it in its bottom slot, which nothing reads after this, as
+        // (end, `VISITED`) in place of (link, top slot): the top order's pass finds it there
+        // through the top slot's `other`, and a slot read twice is refused
         let (mut s, mut kb, mut end) = (st.nb, st.kb, 0usize);
         // SAFETY (this block): an entry's index is below `rr`, so it and the top order's
-        // bytes are read below `tby + rr`; a bottom slot is read only below `olen - 8`; a top
-        // slot only where its key is good; a key's tables have `rr` places
+        // bytes are read below `tby + rr`; a bottom slot is read and written only below
+        // `olen - 8`; a top slot only where its key is good; `j_ent` has `st.kb` places
         unsafe {
             loop {
-                let (j, at, lam);
+                let lam;
                 if s == 0 {
                     if kb == 0 {
                         break;
@@ -233,23 +221,23 @@ impl Kernel {
                         s = (e ^ TAG) as usize;
                         continue;
                     }
-                    (j, at) = (&mut w.j_ent, kb);
                     lam = (e & ((1 << LEN_BITS) - 1)) as usize;
+                    end += lam;
+                    *w.j_ent.get_unchecked_mut(kb) = end as u32;
                 } else {
                     if s + 8 > olen {
                         return Err(());
                     }
                     let (link, ts) = rd_bottom(bb, s);
-                    (j, at) = (&mut w.j_slot, slot_key(ts)?);
+                    slot_key(ts)?;
                     lam = rd32(base, ts + 4) as usize;
+                    end += lam;
+                    wr64(bb, s, end as u64 | (VISITED as u64) << 32);
                     s = link;
                 }
-                end += lam;
-                let e = j.get_unchecked_mut(at);
-                if lam == 0 || *e & !M32 == stamp || end >= M32 as usize {
+                if lam == 0 || end >= VISITED as usize {
                     return Err(());
                 }
-                *e = stamp | end as u64;
             }
         }
         let m = end;
@@ -261,11 +249,15 @@ impl Kernel {
         let mut nt = [0u32; 256];
         nt.copy_from_slice(&st.nt);
         // SAFETY: as above; a top slot is read only where its key is good, and `tops` has
-        // `rr` places, as many as there are live letters at most (a step never adds one)
+        // more than `nl` places (live letters are `rr` at most: a step never adds one)
         unsafe {
             loop {
-                if nl >= rr {
-                    return Err(());
+                if nl >= w.tops.len() {
+                    if nl >= rr {
+                        return Err(());
+                    }
+                    let grow = (2 * nl).max(1024).min(rr);
+                    w.tops.resize(grow, (0, 0, 0));
                 }
                 if s == 0 {
                     if ti == 0 {
@@ -279,6 +271,10 @@ impl Kernel {
                         return Err(());
                     }
                     let e = rd32(bb, BPAD + 4 * k);
+                    // (an entry not yet a cell's lies in the bottom stream's unread part)
+                    if e & TAG == 0 && k >= st.kb {
+                        return Err(());
+                    }
                     if e & TAG != 0 {
                         s = (e ^ TAG) as usize;
                         continue;
@@ -287,25 +283,45 @@ impl Kernel {
                     let word = first1 + ((c as u64) << 32) + (((e & ROW) as u64) << 1);
                     *w.tops.get_unchecked_mut(nl) = (KEY_ENTRY | k as u32, lam, word);
                 } else {
-                    let key = slot_key(s)?;
+                    slot_key(s)?;
                     let link = rd32(base, s) as usize;
-                    *w.tops.get_unchecked_mut(nl) = (key as u32, rd32(base, s + 4), rd64(base, s + 8));
+                    let bs = rd_other(base, s) as u32;
+                    if bs & KEY_ENTRY != 0 {
+                        return Err(());
+                    }
+                    *w.tops.get_unchecked_mut(nl) = (bs, rd32(base, s + 4), rd64(base, s + 8));
                     s = link;
                 }
                 nl += 1;
             }
         }
         // in top order: the rank bitmap, and each letter's record
+        if w.recs.len() < nl {
+            w.recs.resize(nl, (0, 0));
+            w.words.resize(nl, 0);
+            w.dls.resize(nl, 0);
+        }
         let nw = m / 64 + 1;
         w.rank.clear();
         w.rank.resize(nw, Rank::default());
         let (mut x, mut mu) = (0usize, None);
         for (i, &(key, lam, word)) in w.tops[..nl].iter().rev().enumerate() {
-            let (j, at) = if key & KEY_ENTRY != 0 { (&w.j_ent, key ^ KEY_ENTRY) } else { (&w.j_slot, key) };
-            // SAFETY: a key is below `rr`, checked as it was read
-            let e = unsafe { *j.get_unchecked(at as usize) };
-            let jr = (e & M32) as usize;
-            if e & !M32 != stamp || lam == 0 || x + lam as usize > m || jr > m || jr < lam as usize || word as u32 & !MARK == 0 {
+            let jr = if key & KEY_ENTRY != 0 {
+                // SAFETY: an entry's index is below `st.kb`, checked as it was read
+                (unsafe { *w.j_ent.get_unchecked((key ^ KEY_ENTRY) as usize) }) as usize
+            } else {
+                let bs = key as usize;
+                if bs + 8 > olen {
+                    return Err(());
+                }
+                // SAFETY: just checked
+                let (jr, seen) = unsafe { rd_bottom(bb, bs) };
+                if seen != VISITED as usize {
+                    return Err(());
+                }
+                jr
+            };
+            if lam == 0 || x + lam as usize > m || jr > m || jr < lam as usize || word as u32 & !MARK == 0 {
                 return Err(());
             }
             w.rank[x / 64].bits |= 1 << (x % 64);
@@ -324,7 +340,7 @@ impl Kernel {
             let src = if off < lay.rules { base as usize + off + len as usize } else { 0 };
             // SAFETY: i < nl ≤ rr
             unsafe {
-                *w.recs.get_unchecked_mut(i) = Rec { src, len, _pad: 0 };
+                *w.recs.get_unchecked_mut(i) = (src, len);
                 *w.dls.get_unchecked_mut(i) = (m - jr) as i32 - x as i32;
                 *w.words.get_unchecked_mut(i) = word;
             }
@@ -417,7 +433,7 @@ fn walk_body(buf: &[u8], rules: usize, w: &mut Walk, xmu: usize, p: usize, n: us
         let i = w.letter(x);
         // SAFETY: i is a letter of the tables (`letter`)
         let (rec, dl) = unsafe { (recs.add(i), *dls.add(i)) };
-        let Rec { src, len, .. } = unsafe { *rec };
+        let (src, len) = unsafe { *rec };
         let len = len as usize;
         if v >= lim + len {
             let at = v - lap;
@@ -442,7 +458,7 @@ fn walk_body(buf: &[u8], rules: usize, w: &mut Walk, xmu: usize, p: usize, n: us
             } else {
                 // SAFETY: as above, and a rule's factors are the kernel's words
                 unsafe {
-                    (*rec).src = o.add(at) as usize;
+                    (*rec).0 = o.add(at) as usize;
                     emit(base, rules, *w.words.get_unchecked(i), at, o, &mut st, &mut stack);
                 }
             }
