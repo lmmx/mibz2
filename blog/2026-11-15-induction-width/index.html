@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=dab66ed212a6">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=f7b70d0005ff">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=dab66ed212a6">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=f7b70d0005ff">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=dab66ed212a6">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=f7b70d0005ff">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=dab66ed212a6">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=f7b70d0005ff">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=dab66ed212a6">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=f7b70d0005ff">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=dab66ed212a6">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=f7b70d0005ff">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2407,7 +2407,7 @@
 
 <p><strong>What is classical and what is new.</strong> The steps are Rauzy–Veech induction, a 1979 construction in the theory of dynamical systems, and the words are the return words that theory has studied since. Counting the most words alive at once is not part of it. "Width" in this sense is not a standard term of that theory. It is a new measure, and its closest relatives are graph measures such as <em>cutwidth</em>: line a graph's vertices up, cut the line between any two, and count the edges that cross. <a href="#2-why-do-only-the-long-words-count">Section 2</a> says where the line between old and new falls.</p>
 <p><strong>What this is not.</strong> These are counts, not timings. They come from one family of text, Wikidata's JSON, with four blocks of prose beside it. Prose gains less: the right end peaks at 0.37 r and free-first orders at 0.21 r. The link to cutwidth is a conjecture. Above all, no decoder that takes free steps first has been built or timed. Finding the free steps needs a worklist, which an earlier count priced at about 150 instructions a run against the right-end sweep's 115. Whether the smaller state pays for that is the next question, not an answer here.</p>
-<p><strong>Why mibz2 cares.</strong> Width is how much state the rebuild keeps in memory. When every thread decodes a block of its own, those states share the processor's cache, and the threads contend for it. Less state per block leaves less for the cache to hold. At ten threads on a 10-core Intel desktop, a block per thread takes 1.040 times the wall time of threads working in teams (95% interval 1.019 to 1.061; <a href="https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992">the run's report</a>), so the margin is small. Whether a narrower induction closes it has not been tested.</p>
+<p><strong>Why mibz2 cares.</strong> Width is how much state the rebuild keeps in memory. When every thread decodes a block of its own, those states share the processor's cache, and the threads contend for it. Less state per block leaves less for the cache to hold. At ten threads on a 10-core Intel desktop, a block per thread takes 1.040 times the wall time of threads working in teams (95% interval 1.019 to 1.061; <a href="https://github.com/lmmx/mibz2/issues/145#issuecomment-6900029992">the run's report</a>), so the margin is small. <a href="../2026-11-16-lazy-letters/">Lazy letters</a> tested it: holding only the letters still in play, one block per thread beat the teams by 5% at ten threads, and mibz2 0.5.0 uses it from 8 threads up.</p>
 <p><a href="#1-what-does-the-rebuild-hold-on-a-nine-byte-word">Section 1</a> works a nine-byte word by hand and draws its width. <a href="#2-why-do-only-the-long-words-count">Section 2</a> says why only the long words count, and what is classical. <a href="#3-does-the-order-of-steps-matter">Section 3</a> compares twelve orders of steps, and <a href="#4-how-narrow-can-a-free-first-order-be">section 4</a> gives the bound and the theorem. <a href="#5-what-would-it-mean-for-mibz2">Section 5</a> says what is open, and <a href="#6-where-to-read-more">section 6</a> lists the reading.</p>
 <h2 id="1-what-does-the-rebuild-hold-on-a-nine-byte-word">1. What does the rebuild hold, on a nine-byte word?<a class="headerlink" href="#1-what-does-the-rebuild-hold-on-a-nine-byte-word" title="Permanent link">&para;</a></h2>
 <p>Suppose you want to compress the word <code>possesses</code>. Its nine rotations, sorted, are its nine rows, and the last byte of each gives the last column <code>sspssseeo</code>. LF sends each row to the row of the rotation one byte earlier in the text:</p>
@@ -2731,19 +2731,19 @@ Right end: <span class="arithmatex">\(W = 3\)</span>, <span class="arithmatex">\
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=dab66ed212a6"></script>
+        <script src="../../assets/javascripts/bench.js?v=f7b70d0005ff"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=dab66ed212a6"></script>
+        <script src="../../assets/javascripts/couriers.js?v=f7b70d0005ff"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=dab66ed212a6"></script>
+        <script src="../../assets/javascripts/blog.js?v=f7b70d0005ff"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=dab66ed212a6"></script>
+        <script src="../../assets/javascripts/frontier.js?v=f7b70d0005ff"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=dab66ed212a6"></script>
+        <script src="../../assets/javascripts/observatory.js?v=f7b70d0005ff"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=dab66ed212a6"></script>
+        <script src="../../assets/javascripts/katex.js?v=f7b70d0005ff"></script>
       
     
   </body>
