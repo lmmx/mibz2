@@ -175,9 +175,10 @@
     6857053711,
     6857336623,
     6877415766,
-    6886868279
+    6886868279,
+    6920377932
   ],
-  "last_processed_comment_id": 6886868279,
+  "last_processed_comment_id": 6920377932,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2058,9 +2059,13 @@
     },
     {
       "trigger_comment_id": 6920377932,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
-      "report_path": "state/reports/stop-walk-adoption-6920377932/report.md"
+      "report_path": "state/reports/stop-walk-adoption-6920377932/report.md",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "5870fd3a20b69821536c072e22d650149bb080b6",
+      "report_commit": "35b323b7cb16ddec57de36aae5b410f2b135e282",
+      "disposition": "REVISE production-plan correspondence: forced12/20 differ from shipped capped10 workers; synthetic incomplete bundle incorrectly ADOPTS. Spinner, multiplicity and held-out text recommendations recorded."
     }
   ],
   "active_delegations": [],
