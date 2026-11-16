@@ -1676,10 +1676,13 @@ bench-lazy-cap ROUNDS="10" THREADS="10,12,14,16,20":
 # Who binds the decoder at the cores' count and past it (#145; its reading is posted there
 # before the data)? Lazy workers take about the same time at 8, 9 and 10 threads, and no
 # thread is near 100% busy on the 0.11 s run, so a run's fixed cost and its serial stages
-# are in question. The shipped decoder (`mibz2`) and lazy workers capped at the cores
-# (`mibz2-workers-lazy-cap`) on the Wikidata sample and on COPIES copies of it end to end,
-# with each thread's CPU over the wall read out (`bench/lazy_occupancy.py`). On this machine,
-# at the commit checked out.
+# are in question. The shipped decoder (`mibz2`), lazy workers capped at the cores
+# (`mibz2-workers-lazy-cap`) and lazy workers one a thread (`mibz2-workers-lazy`: the same
+# decoder up to the cores' count, the cores' second threads used past it) on the Wikidata
+# sample and on COPIES copies of it end to end, with each thread's CPU over the wall read
+# out (`bench/lazy_occupancy.py`). The capped arm won past the cores on the one copy; the
+# long file says whether that holds once a run's fixed cost is a small part. On this
+# machine, at the commit checked out.
 bench-lazy-occupancy COPIES="8" ROUNDS="10" THREADS="4,8,9,10,20":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -1688,7 +1691,7 @@ bench-lazy-occupancy COPIES="8" ROUNDS="10" THREADS="4,8,9,10,20":
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-lazy-occupancy (#145, its reading posted there before the data): mibz2 (shipped plan) and mibz2-workers-lazy-cap (lazy workers, one a physical core at most) on the Wikidata sample and on {{COPIES}} copies of it, at {{THREADS}} threads, {{ROUNDS}} paired rounds, each thread's CPU over the wall, at $(git rev-parse HEAD)"
+    echo "bench-lazy-occupancy (#145, its reading posted there before the data): mibz2 (shipped plan), mibz2-workers-lazy-cap (lazy workers, one a physical core at most) and mibz2-workers-lazy (one a thread) on the Wikidata sample and on {{COPIES}} copies of it, at {{THREADS}} threads, {{ROUNDS}} paired rounds, each thread's CPU over the wall, at $(git rev-parse HEAD)"
     cargo build -q --release --example ab --example windows
     AB=$PWD/target/release/examples/ab
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
@@ -1705,9 +1708,11 @@ bench-lazy-occupancy COPIES="8" ROUNDS="10" THREADS="4,8,9,10,20":
     lscpu > "$O/lscpu.txt"
     hold=(); hold_cpu=${HOLD_CPU:-auto}
     [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
-    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers-lazy-cap" \
+    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers-lazy-cap,mibz2-workers-lazy" \
       --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     "$AB" summary "$O/runs.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    # the cores' second threads: capped over one a thread
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-lazy > "$O/summary-lazy.txt"
     python3 bench/lazy_occupancy.py "$O/runs.jsonl" | tee "$O/occupancy.txt" \
       || echo "bench-lazy-occupancy: the reading is not valid (occupancy.txt says why)"
     git rev-parse HEAD > "$O/commit.txt"
