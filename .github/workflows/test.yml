@@ -52,6 +52,17 @@ jobs:
           python3 bench/split_051.py report <(grep '"threads": 20' $r | sed 's/"wall": 0.93[0-9]*/"wall": 1.0/') --step v0.5.0:pr462 --step pr462:pr468 --total v0.5.0:pr468 --judge 20 | grep -q 'FLAG: no step is attributed at \[20\]'
           sed '0,/"hash": "00000000000003e8"/s//"hash": "00000000000003e9"/' $r > split-differ.jsonl
           ! python3 bench/split_051.py report split-differ.jsonl --step v0.5.0:pr462
+      # the induction recorder (#145, QUEUED 6915302968): the replay against the kernel on
+      # arbitrary columns, tampered logs refused, every block of the test corpora recorded
+      # and checked; then a file of the repository's Markdown recorded (MONODROMY's prose
+      # recipe) and every step replayed again by the Python reader
+      - name: The induction recorder (research feature)
+        run: |
+          cargo test --release --features induction-trace --lib itrace::
+          cargo test --release --features induction-trace --test induction_trace
+          git ls-files 'docs/**/*.md' '*.md' | sort -u | xargs cat | bzip2 -9 > prose.bz2
+          cargo run --release --features induction-trace --example induction_trace -- prose.bz2 irec 1 0
+          python3 bench/irec.py irec --check
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
