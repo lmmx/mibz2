@@ -2073,13 +2073,16 @@
     },
     {
       "trigger_comment_id": 6924336791,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/cores-less-one-6924336791/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "source_commit": "c7c11c73244dc763b7c46c0562178604161f77e0",
       "report_commit": "55fbb1f48185d65535f806c24a634bfd07e4f6e9",
-      "disposition": "REVISE adoption scope: gate count and window changes to measured i9 profile; eight-core window and nine-core count effects unmeasured. Controls accepted as guards; 26 checks and independent t/Holm checks pass."
+      "disposition": "REVISE adoption scope: gate count and window changes to measured i9 profile; eight-core window and nine-core count effects unmeasured. Controls accepted as guards; 26 checks and independent t/Holm checks pass.",
+      "review_comment_pr": 145,
+      "review_comment_id": 6924511372,
+      "publication_verification": "Exact body/author/PR145 and role-aware routing verified; pinned helper has only known coordinator-only FROM rejection."
     }
   ],
   "active_delegations": [],
