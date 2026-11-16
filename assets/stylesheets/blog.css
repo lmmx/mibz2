@@ -313,6 +313,27 @@
 [data-md-color-scheme="slate"] .post-card-date[data-kind="question"] { --pill: #c4a6f6; --pill-bg: #2b2340; }
 [data-md-color-scheme="slate"] .md-typeset .post-meta a[data-kind="meta"],
 [data-md-color-scheme="slate"] .post-card-date[data-kind="meta"] { --pill: #90b5f5; --pill-bg: #1e2940; }
+/* the hero's bottom line, and a card's border on hover, in its kind's colour */
+.md-typeset .post-card[data-kind="progress"] { --kind-line: #965700; }
+.md-typeset .post-card[data-kind="result"] { --kind-line: #1b7339; }
+.md-typeset .post-card[data-kind="synthesis"] { --kind-line: #0b6e70; }
+.md-typeset .post-card[data-kind="question"] { --kind-line: #6a3db3; }
+.md-typeset .post-card[data-kind="meta"] { --kind-line: #2155ad; }
+[data-md-color-scheme="slate"] .md-typeset .post-card[data-kind="progress"] { --kind-line: #f2b544; }
+[data-md-color-scheme="slate"] .md-typeset .post-card[data-kind="result"] { --kind-line: #6fd08c; }
+[data-md-color-scheme="slate"] .md-typeset .post-card[data-kind="synthesis"] { --kind-line: #5ccfcd; }
+[data-md-color-scheme="slate"] .md-typeset .post-card[data-kind="question"] { --kind-line: #c4a6f6; }
+[data-md-color-scheme="slate"] .md-typeset .post-card[data-kind="meta"] { --kind-line: #90b5f5; }
+.md-typeset .post-hero[data-kind="progress"] { border-bottom-color: #965700; }
+.md-typeset .post-hero[data-kind="result"] { border-bottom-color: #1b7339; }
+.md-typeset .post-hero[data-kind="synthesis"] { border-bottom-color: #0b6e70; }
+.md-typeset .post-hero[data-kind="question"] { border-bottom-color: #6a3db3; }
+.md-typeset .post-hero[data-kind="meta"] { border-bottom-color: #2155ad; }
+[data-md-color-scheme="slate"] .md-typeset .post-hero[data-kind="progress"] { border-bottom-color: #f2b544; }
+[data-md-color-scheme="slate"] .md-typeset .post-hero[data-kind="result"] { border-bottom-color: #6fd08c; }
+[data-md-color-scheme="slate"] .md-typeset .post-hero[data-kind="synthesis"] { border-bottom-color: #5ccfcd; }
+[data-md-color-scheme="slate"] .md-typeset .post-hero[data-kind="question"] { border-bottom-color: #c4a6f6; }
+[data-md-color-scheme="slate"] .md-typeset .post-hero[data-kind="meta"] { border-bottom-color: #90b5f5; }
 .md-typeset .post-hero .post-meta a {
   display: inline-block;
   padding: 0.05rem 0.55rem;
@@ -372,7 +393,7 @@
   text-decoration: none;
 }
 .md-typeset .post-card:hover {
-  border-color: var(--md-primary-fg-color);
+  border-color: var(--kind-line, var(--md-primary-fg-color));
   box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.08);
   color: var(--md-default-fg-color);
 }
