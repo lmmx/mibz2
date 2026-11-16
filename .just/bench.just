@@ -1593,7 +1593,8 @@ bench-crossover ROUNDS="10" THREADS="4,5,6,7,8,9,10,12,16,20":
 # data; the memory dose is 6903426694's): from how many threads should a worker invert with
 # lazy letters, and how far up do workers with lazy letters beat the teams? The shipped
 # decoder (`mibz2`), one block a thread with a slot for every letter (`mibz2-workers-eager`)
-# and with lazy letters (`mibz2-workers-lazy`), whatever the thread count, and the plain
+# and with lazy letters (`mibz2-workers-lazy`; `mibz2-workers-lazy-plain` is the same without
+# the induction's fetch-ahead, as 0.5.0 shipped it), whatever the thread count, and the plain
 # teams of two and three (`mibz2-team2`, `mibz2-team3`). Then the two workers arms at 1 and
 # 10 threads for the memory dose (reported, not a gate). On this machine, at the commit
 # checked out.
@@ -1619,13 +1620,15 @@ bench-lazy-crossover ROUNDS="10" THREADS="4,6,7,8,9,10,12,14,16,20":
     lscpu > "$O/lscpu.txt"
     hold=(); hold_cpu=${HOLD_CPU:-auto}
     [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
-    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers-eager,mibz2-workers-lazy,mibz2-team2,mibz2-team3" \
+    "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2-workers-eager,mibz2-workers-lazy,mibz2-workers-lazy-plain,mibz2-team2,mibz2-team3" \
       --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
     # the rule's readings: the sanity case against the shipped plan; lazy letters against a
     # slot for every letter (the kernel's switch point); lazy letters against each team arm
     # (the team threshold)
     "$AB" summary "$O/runs.jsonl" --ref mibz2 | tee "$O/summary.txt"
     "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-eager | tee "$O/summary-eager.txt"
+    # the fetch-ahead: lazy letters against lazy letters without it
+    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-lazy-plain | tee "$O/summary-lazy-plain.txt"
     "$AB" summary "$O/runs.jsonl" --ref mibz2-team2 | tee "$O/summary-team2.txt"
     "$AB" summary "$O/runs.jsonl" --ref mibz2-team3 | tee "$O/summary-team3.txt"
     # the memory dose: a block's CPU time among nine others over its CPU time alone

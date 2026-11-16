@@ -7,6 +7,9 @@
 
 /// The kernel a `CellsVariant` runs: Cells as shipped but for this.
 pub(crate) const LAZY: u8 = 1;
+/// Lazy letters without the induction's fetch-ahead: the kernel as 0.5.0 shipped it, kept
+/// as a bench arm beside `LAZY`
+pub(crate) const LAZY_PLAIN: u8 = 3;
 
 /// The Cells kernel with another first stage and induction (`V`): `LAZY`, or (research
 /// only, `memory-lever`) `STAGED_RULES`. Admission, budget, fallback and writer are Cells'
@@ -19,6 +22,13 @@ pub type LazyCells = CellsVariant<LAZY>;
 /// Test/fuzz route: lazy letters with `ForcedCells`' open admission
 #[doc(hidden)]
 pub type ForcedLazyCells = CellsVariant<LAZY, true>;
+/// Bench arm: `LazyCells` without its induction's fetch-ahead. The same output, block for
+/// block.
+#[doc(hidden)]
+pub type PlainLazyCells = CellsVariant<LAZY_PLAIN>;
+/// Test/fuzz route: `PlainLazyCells` with `ForcedCells`' open admission
+#[doc(hidden)]
+pub type ForcedPlainLazyCells = CellsVariant<LAZY_PLAIN, true>;
 
 impl<const V: u8, const F: bool> Default for CellsVariant<V, F> {
     fn default() -> Self {
@@ -75,6 +85,16 @@ const ROW: u32 = 1 << 30;
 /// An untouched letter's bottom entry holds its length in this many low bits, and its byte
 /// in the eight above them
 const LEN_BITS: u32 = 22;
+
+/// How many places on in a stream the lazy induction fetches for: the slot a place's entry
+/// names, if the other front has reached its letter (`induce_lazy`'s fetch-ahead). The
+/// entries read that far before the stream's first lie in the output buffer's first `BPAD`
+/// bytes, so it is at most `BPAD / 4`.
+const FAR_PLACES: usize = 12;
+/// How many places on in the bottom stream it fetches the letter's top slot for, read from
+/// the bottom slot fetched `FAR_PLACES - NEAR_PLACES` places before
+const NEAR_PLACES: usize = 6;
+const _: () = assert!(NEAR_PLACES <= FAR_PLACES && 4 * FAR_PLACES <= BPAD);
 
 /// What `slots_lazy` leaves for `induce_lazy`, besides the layout.
 #[derive(Clone, Copy)]
@@ -188,7 +208,7 @@ impl Kernel {
         forced: bool,
         out: &mut Vec<u8>,
     ) -> Result<(), Refusal> {
-        if self.variant == LAZY {
+        if matches!(self.variant, LAZY | LAZY_PLAIN) {
             self.slots_lazy(n, recs, p, budget, forced, out)
         } else {
             self.slots(n, recs, p, budget, forced, out)
@@ -202,7 +222,10 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Result<(u32, u32, usize), Refusal> {
         match self.variant {
-            LAZY => self.induce_lazy(budget, out),
+            // (one copy of the induction with the fetch-ahead and one without: no test
+            // of it in the loop)
+            LAZY => self.induce_lazy::<true>(budget, out),
+            LAZY_PLAIN => self.induce_lazy::<false>(budget, out),
             #[cfg(feature = "memory-lever")]
             STAGED_RULES => self.induce_cells_staged(budget, out),
             _ => self.induce_cells(budget, out),
@@ -291,6 +314,10 @@ impl Kernel {
         if out.len() < bend + GAP {
             out.resize(bend + GAP, 0);
         }
+        // the bytes before the entries: the induction's fetch-ahead reads them as entries
+        // of places before the bottom stream's first (`FAR_PLACES`), and as the slot such
+        // an entry names: none, so 0
+        out[..BPAD].fill(0);
         self.bottom_laid = true;
         self.lay = lay;
         self.letters = letters;
@@ -408,7 +435,7 @@ impl Kernel {
     /// Returns (the cycle's word, its length with the mark, cells). `slots_lazy` has run on
     /// this kernel for the block, and nothing has changed since.
     #[inline(never)]
-    fn induce_lazy(
+    fn induce_lazy<const AHEAD: bool>(
         &mut self,
         budget: usize,
         out: &mut Vec<u8>,
@@ -456,6 +483,27 @@ impl Kernel {
             let (mut tnew, mut bnew) = (lay.tops, lay.bots);
             // the streams: the top order's bytes and the entries not yet reached
             let (mut ti, mut kb) = (rr, rr);
+            // The fetch-ahead. A front's misses are the slots it reads through an entry the
+            // other front has tagged: those slots lie anywhere in the pools. So each front
+            // looks `FAR_PLACES` on in its stream, and if that place's entry names a slot as
+            // memory has it now, hints it. (An entry tagged later than that is not hinted.)
+            //
+            // The top front finds a place's entry through its byte's counter, so the
+            // look-ahead has counters of its own, `FAR_PLACES` places further on.
+            let mut nt_far = nt;
+            for i in 0..if AHEAD { FAR_PLACES.min(rr) } else { 0 } {
+                let c = *bb.add(tby + rr - 1 - i) as usize;
+                nt_far[c] = nt_far[c].wrapping_sub(1);
+            }
+            // A tagged entry's slot, else 0: the hint then names the buffer's first bytes,
+            // which are mapped and idle
+            #[inline(always)]
+            fn slot_or_0(e: u32) -> usize {
+                ((e ^ TAG) & ((e as i32 >> 31) as u32)) as usize
+            }
+            // the top slots' end: what a bottom slot not yet written names as its top slot
+            // may be anything, and is kept to the pool
+            let top_end = lay.ends[0];
             // as in `induce_cells`: the link before each letter in its order (0: the
             // stream); what is left of the letter; its (length, word); the slot the next
             // cell cut from it takes in the other order; the letters' front slots
@@ -508,6 +556,14 @@ impl Kernel {
                         *nt.get_unchecked_mut(c) = (k as u32).wrapping_sub(1);
                         debug_assert!(k < rr);
                         let e = rd32(bb, BPAD + 4 * k);
+                        if AHEAD && ti >= FAR_PLACES {
+                            // the place `FAR_PLACES` on: its entry's top slot, if it has one
+                            let c = *bb.add(tby + ti - FAR_PLACES) as usize;
+                            let k = *nt_far.get_unchecked(c) as usize;
+                            *nt_far.get_unchecked_mut(c) = (k as u32).wrapping_sub(1);
+                            debug_assert!(k < rr);
+                            prefetch(base.wrapping_add(slot_or_0(rd32(bb, BPAD + 4 * k))));
+                        }
                         if e & TAG != 0 {
                             // the bottom front reached it first: its cells, from this slot
                             s = (e ^ TAG) as usize;
@@ -545,6 +601,20 @@ impl Kernel {
                         }
                         kb -= 1;
                         let e = rd32(bb, BPAD + 4 * kb);
+                        // the place `FAR_PLACES` on: its entry's bottom slot, if it has one;
+                        // and the place `NEAR_PLACES` on: the top slot its bottom slot names,
+                        // which holds the letter. (Before the stream's first place the
+                        // entries read are the buffer's first bytes, which `slots_lazy` set
+                        // to 0: no slot. So the bottom slot read here is a slot an entry
+                        // names, or the buffer's first bytes: inside the buffer either way.
+                        // What it names as its top slot may not be written yet.)
+                        if AHEAD {
+                            let far = rd32(bb, BPAD + 4 * kb - 4 * FAR_PLACES);
+                            prefetch(bb.wrapping_add(slot_or_0(far)));
+                            let near = slot_or_0(rd32(bb, BPAD + 4 * kb - 4 * NEAR_PLACES));
+                            let top = rd32(bb, near + 4) as usize;
+                            prefetch(base.wrapping_add(top.min(top_end)));
+                        }
                         if e & TAG != 0 {
                             // the top front reached it first: its cells, from this slot
                             s = (e ^ TAG) as usize;

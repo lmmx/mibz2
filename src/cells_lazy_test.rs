@@ -5,9 +5,14 @@
 /// The kernels these tests run: the lazy one, and (research only) the staged one
 fn lever_variants() -> Vec<u8> {
     #[cfg(feature = "memory-lever")]
-    return vec![LAZY, STAGED_RULES];
+    return vec![LAZY, LAZY_PLAIN, STAGED_RULES];
     #[cfg(not(feature = "memory-lever"))]
-    vec![LAZY]
+    vec![LAZY, LAZY_PLAIN]
+}
+
+/// Whether the kernel is a lazy one (with its fetch-ahead, or without)
+fn lazy_variant(variant: u8) -> bool {
+    matches!(variant, LAZY | LAZY_PLAIN)
 }
 
 fn lever_cases() -> Vec<Vec<u8>> {
@@ -79,7 +84,7 @@ fn miri_cells_lever_boundaries_reuse() {
                 {
                     sends = sends.max(new.rule_sends);
                 }
-                if variant == LAZY {
+                if lazy_variant(variant) {
                     assert!(new.lz.peak <= new.letters, "a slot a letter at most");
                     pool = pool.max(new.lz.peak);
                 }
@@ -100,7 +105,7 @@ fn miri_cells_lever_boundaries_reuse() {
                 "one induction sends its rules on several times: {sends}"
             );
         }
-        if variant == LAZY {
+        if lazy_variant(variant) {
             assert!(pool > 1, "the lazy induction takes slots: {pool}");
         }
         // a refusal on the budget, at the same cell as the original's
@@ -167,7 +172,7 @@ fn miri_cells_lever_exact_fit_and_reuse() {
                 let lay = kernel.lay;
                 // slots are given back and taken again: a block of many letters never has
                 // half of them in slots at once (these columns peak near a quarter)
-                if variant == LAZY && kernel.letters >= 60 {
+                if lazy_variant(variant) && kernel.letters >= 60 {
                     assert!(
                         kernel.lz.peak * 2 < kernel.letters,
                         "{} slots of {} letters",
@@ -180,7 +185,7 @@ fn miri_cells_lever_exact_fit_and_reuse() {
                     let (bs, ts) = (m.state[11] as usize, m.state[12] as usize);
                     assert!(fa >= lay.tops && fa + SLOT <= lay.ends[0]);
                     assert!(ts >= lay.tops && ts + SLOT <= lay.ends[0]);
-                    if variant == LAZY {
+                    if lazy_variant(variant) {
                         // the bottom slots' pool, in the output buffer after the streams
                         let (lo, hi) = (lay.bots, kernel.lz.bend);
                         assert_eq!(lo, lay.ends[1] + GAP);
@@ -292,6 +297,9 @@ fn cells_lever_route_and_fallback() {
     }
     let (lazy, pool) = run::<LAZY>();
     assert!(lazy.admitted > 1 && lazy.density > 0, "{lazy:?}");
+    let (plain, pool_plain) = run::<LAZY_PLAIN>();
+    assert_eq!((plain.admitted, plain.cells), (lazy.admitted, lazy.cells));
+    assert_eq!(pool_plain, pool);
     #[cfg(feature = "memory-lever")]
     {
         let (staged, _) = run::<STAGED_RULES>();
@@ -354,5 +362,47 @@ fn cells_lazy_long_letter() {
     };
     for p in [1, ll.len() as u32 - 2] {
         check(&mut kernel, &ll, p);
+    }
+}
+
+/// The lazy induction's fetch-ahead reads entries `FAR_PLACES` on in each stream, and a slot
+/// through one. Here the output buffer comes in full of bytes that would read as tagged
+/// entries naming far-off slots, on columns of fewer letters than the look-ahead and of
+/// more: the first stage sets the bytes before the entries, every read stays inside the
+/// buffer (Miri sees one that does not), and the output is the oracle's. The kernel without
+/// the fetch-ahead gives the same cells.
+#[test]
+fn miri_cells_lazy_fetch_ahead_stays_inside() {
+    for ll in [
+        b"bbaaa".to_vec(),
+        (0..2 * FAR_PLACES as u8).map(|i| i ^ 1).collect(),
+        (0..65).map(|i| (i % 3) as u8).collect(),
+        long_writer_column(),
+    ] {
+        let r = Runs::of_column(&ll);
+        let n = ll.len();
+        let mut cells = Vec::new();
+        for variant in [LAZY, LAZY_PLAIN] {
+            let mut kernel = Kernel {
+                variant,
+                ..Default::default()
+            };
+            for p in [0, n as u32 / 2, n as u32 - 1] {
+                // (longer than the block needs, so that none of it is new and zeroed)
+                let mut out = vec![0xFFu8; 64 * n + 4096];
+                let (made, _) = kernel
+                    .try_invert(r.records(), n, p, n, true, &mut out)
+                    .unwrap();
+                assert_eq!(out, oracle(&ll, p), "column {ll:?}, row {p}");
+                cells.push(made);
+                // the first stage alone: the bytes before the entries are set
+                let mut out = vec![0xFFu8; 64 * n + 4096];
+                kernel
+                    .first_stage(n, r.records(), p, n, true, &mut out)
+                    .unwrap();
+                assert!(out[..BPAD].iter().all(|&b| b == 0));
+            }
+        }
+        assert_eq!(cells[..3], cells[3..]);
     }
 }

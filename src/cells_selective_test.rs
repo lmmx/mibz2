@@ -23,7 +23,7 @@ fn compare_materialization(
     // The candidate may be the lazy kernel, which has no letters' slots to compare, or
     // (research only, `memory-lever`) the staged one, whose rules start at a multiple of 16,
     // so the original is laid out the same way.
-    let lazy = candidate.variant == LAZY;
+    let lazy = matches!(candidate.variant, LAZY | LAZY_PLAIN);
     #[cfg(feature = "memory-lever")]
     {
         original.variant = if candidate.variant == STAGED_RULES {
