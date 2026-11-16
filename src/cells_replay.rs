@@ -5,8 +5,12 @@
 // through three writers on the same rules, each timed (the fastest of `reps`, interleaved) and
 // its bytes checked against the shipped one's:
 // - **W16**, the shipped `write_cells`, on today's 16-byte rules (two 64-bit descriptors);
-// - **W12**, 12-byte rules: two 48-bit children (a 27-bit reference, the mark, a 20-bit
-//   length), so the lengths stay inline;
+// - **W12**, 12-byte rules as the 12-byte rules arm stores them (#506, `cells_w12.rs`): two
+//   48-bit children, a 27-bit reference (a rule's index, or a word's arena offset) under the
+//   length and mark (the descriptor's low half rotated by one), read field by field;
+// - **W10**, 10-byte rules (MONODROMY's HANDOFF 6925942307): two 40-bit tagged children, the
+//   arena tag and the mark, then a rule's 18-bit index and 20-bit length, or an arena word's
+//   22-bit offset from the arena and 5-bit length;
 // - **W8**, 8-byte rules: two 32-bit references (the mark, a leaf flag, and a rule's index or
 //   a leaf's arena offset and length less one), the rules' lengths rebuilt by a forward pass
 //   over the rules before the shipped passes, the pass charged.
@@ -45,10 +49,10 @@ pub struct ReplayStats {
     pub letters: u64,
     pub bytes: u64,
     pub rules: u64,
-    /// the writers' time (ns), the fastest of the reps a block, summed: W16, W12, W8
-    pub ns: [u64; 3],
-    /// blocks whose bytes differ from W16's: W12, W8
-    pub differ: [usize; 2],
+    /// the writers' time (ns), the fastest of the reps a block, summed: W16, W12, W8, W10
+    pub ns: [u64; 4],
+    /// blocks whose bytes differ from W16's: W12, W8, W10
+    pub differ: [usize; 3],
     /// the top slots the induction touched (bytes), summed
     pub touched: u64,
     /// blocks whose tables fit in the touched top slots, and the bytes past them, summed: for
@@ -76,8 +80,8 @@ impl ReplayStats {
             letters: 0,
             bytes: 0,
             rules: 0,
-            ns: [0; 3],
-            differ: [0; 2],
+            ns: [0; 4],
+            differ: [0; 3],
             touched: 0,
             fit: [0; 2],
             past: [0; 2],
@@ -125,9 +129,20 @@ fn replay_start() {
 const LEAF: u32 = 1 << 30;
 const IDX: u32 = LEAF - 1;
 const LEAF_AT: u32 = (1 << 26) - 1;
-/// A W12 child: the length (20 bits), the mark, the reference (27 bits)
+/// A W12 child (`cells_w12.rs`'s layout): the reference's bits; the length and mark above them
+/// A 12-byte rule's stride
+const RULE12: usize = 12;
+const C12_REF: u64 = (1 << 27) - 1;
+const C12_LM: u32 = 27;
 const C12_LEN: u64 = (1 << 20) - 1;
-const C12_MASK: u64 = (1 << 48) - 1;
+/// A W10 child: the arena tag, the mark; a rule's index and length, or an arena word's offset
+/// and length
+const C10_ARENA: u64 = 1 << 39;
+const C10_MARK: u64 = 1 << 38;
+const C10_MASK: u64 = (1 << 40) - 1;
+const C10_IDX: u64 = (1 << 18) - 1;
+const C10_LEN: u64 = (1 << 20) - 1;
+const C10_OFF: u64 = (1 << 22) - 1;
 
 #[inline(always)]
 fn len8(r: u32, lens: *const u32) -> u32 {
@@ -137,12 +152,6 @@ fn len8(r: u32, lens: *const u32) -> u32 {
         // SAFETY: a rule's index is below the rules' count, the length table's
         unsafe { *lens.add((r & IDX) as usize) }
     }
-}
-
-/// A W12 child as a 16-byte rule's descriptor, its offset the reference
-#[inline(always)]
-fn desc12(c: u64) -> u64 {
-    (c >> 21) << 32 | (c & C12_LEN) | ((c >> 20) & 1) << 31
 }
 
 impl Kernel {
@@ -163,6 +172,7 @@ impl Kernel {
         let mut ok = (word as usize) >= ro && (word as usize - ro) % 16 == 0 && (len & !MARK) < 1 << 20;
         let mut r8 = vec![0u32; 2 * nr];
         let mut r12 = vec![0u8; 12 * nr + 8];
+        let mut r10 = vec![0u8; 10 * nr + 8];
         let c8 = |d: u64| -> Option<u32> {
             let (o, l) = ((d >> 32) as usize, d as u32);
             let (mark, pl) = (l & MARK, l & !MARK);
@@ -175,41 +185,56 @@ impl Kernel {
         };
         let c12 = |d: u64| -> Option<u64> {
             let (o, l) = ((d >> 32) as usize, d as u32);
-            let (mark, pl) = ((l >> 31) as u64, (l & !MARK) as u64);
-            let r = if o >= ro { (o - ro) / 16 } else { o.wrapping_sub(arena) };
-            (pl <= C12_LEN && r < 1 << 27).then_some((r as u64) << 21 | mark << 20 | pl)
+            let r = if o >= ro { (o - ro) / 16 } else { o };
+            ((l & !MARK) as u64 <= C12_LEN && (r as u64) <= C12_REF)
+                .then_some(r as u64 | (l.rotate_left(1) as u64) << C12_LM)
+        };
+        let c10 = |d: u64| -> Option<u64> {
+            let (o, l) = ((d >> 32) as usize, d as u32);
+            let (mark, pl) = (if l & MARK != 0 { C10_MARK } else { 0 }, (l & !MARK) as u64);
+            if o >= ro {
+                let i = ((o - ro) / 16) as u64;
+                (i <= C10_IDX && pl <= C10_LEN).then_some(mark | i << 20 | pl)
+            } else {
+                let off = o.wrapping_sub(arena) as u64;
+                ((1..=SMALL as u64).contains(&pl) && off <= C10_OFF).then_some(C10_ARENA | mark | off << 5 | pl)
+            }
         };
         for j in 0..nr {
             let (a, b) = rule(j);
-            match (c8(a), c8(b), c12(a), c12(b)) {
-                (Some(x), Some(y), Some(u), Some(v)) => {
+            match (c8(a), c8(b), c12(a), c12(b), c10(a), c10(b)) {
+                (Some(x), Some(y), Some(u), Some(v), Some(e), Some(f)) => {
                     (r8[2 * j], r8[2 * j + 1]) = (x, y);
-                    r12[12 * j..12 * j + 8].copy_from_slice(&(u | v << 48).to_le_bytes());
-                    r12[12 * j + 8..12 * j + 12].copy_from_slice(&((v >> 16) as u32).to_le_bytes());
+                    // (as the arm stores them: 8 bytes, then 8 more where the first child ends)
+                    r12[12 * j..12 * j + 8].copy_from_slice(&u.to_le_bytes());
+                    r12[12 * j + 6..12 * j + 14].copy_from_slice(&v.to_le_bytes());
+                    r10[10 * j..10 * j + 8].copy_from_slice(&e.to_le_bytes());
+                    r10[10 * j + 5..10 * j + 13].copy_from_slice(&f.to_le_bytes());
                 }
                 _ => ok = false,
             }
         }
         let root = (word as u64) << 32 | len as u64;
-        let (root8, root12) = (c8(root), c12(root));
+        let (root8, root12, root10) = (c8(root), c12(root), c10(root));
         let mut st = REPLAY_STATS.lock().unwrap();
-        if !ok || root8.is_none() || root12.is_none() {
+        if !ok || root8.is_none() || root12.is_none() || root10.is_none() {
             st.skipped += 1;
             return;
         }
         drop(st);
-        let (root8, root12) = (root8.unwrap(), root12.unwrap());
+        let (root8, root12, root10) = (root8.unwrap(), root12.unwrap(), root10.unwrap());
         // the writers, interleaved, the fastest of the reps each
-        let mut best = [u64::MAX; 3];
+        let mut best = [u64::MAX; 4];
         let mut want = Vec::new();
-        let mut differ = [false; 2];
+        let mut differ = [false; 3];
         for rep in 0..reps {
-            for w in 0..3 {
+            for w in 0..4 {
                 let t = std::time::Instant::now();
                 match w {
                     0 => self.write_cells(word, len, n, out),
                     1 => self.write_w12(&r12, nr, root12, n, out),
-                    _ => self.write_w8(&r8, root8, n, out),
+                    2 => self.write_w8(&r8, root8, n, out),
+                    _ => self.write_w10(&r10, nr, root10, n, out),
                 }
                 best[w] = best[w].min(t.elapsed().as_nanos() as u64);
                 if w == 0 && rep == 0 {
@@ -220,7 +245,7 @@ impl Kernel {
                 }
             }
         }
-        // (`out` ends as W8 left it, its bytes W16's unless counted as differing; the shipped
+        // (`out` ends as W10 left it, its bytes W16's unless counted as differing; the shipped
         // writer runs next)
         // the fit: the top slots the induction touched, and the whole room
         let touched = SLOT * self.lz.peak;
@@ -284,8 +309,10 @@ impl Kernel {
         for (t, b) in st.ns.iter_mut().zip(best) {
             *t += b;
         }
+        for (t, d) in st.differ.iter_mut().zip(differ) {
+            *t += d as usize;
+        }
         for w in 0..2 {
-            st.differ[w] += differ[w] as usize;
             let need = 4 * (w + 1) * nr + 3;
             st.fit[w] += (need <= touched) as usize;
             st.past[w] += need.saturating_sub(touched) as u64;
@@ -318,69 +345,123 @@ impl Kernel {
         }
     }
 
-    /// W12: `write_cells` on 12-byte rules
+    /// W12: `write_cells` on 12-byte rules, as `cells_w12.rs` stores and reads them
     #[inline(never)]
     fn write_w12(&mut self, r12: &[u8], nr: usize, root: u64, n: usize, out: &mut Vec<u8>) {
-        let root = desc12(root);
-        let p = (root as u32 & !MARK) as usize;
+        // a child's reference (a rule's index, or an arena offset), its length, its mark
+        let at = |c: u64| (c & C12_REF) as usize;
+        let ln = |c: u64| (c >> (C12_LM + 1)) as usize;
+        let marked = |c: u64| (c >> C12_LM) & 1 != 0;
+        let rp = r12.as_ptr();
+        // SAFETY: a rule's 12 bytes lie in `r12`, read as 8 at its start and 8 at 4 in (8
+        // bytes of slack past the last)
+        let rule = |j: usize| unsafe {
+            (rd64(rp, RULE12 * j) & ((1 << 48) - 1), rd64(rp, RULE12 * j + 4) >> 16)
+        };
+        let leaf = |c: u64| at(c);
+        // (a plain child is a word kept as bytes if 16 bytes or fewer; on the marked spine, a
+        // short marked word is still a rule, and only the row's own byte ends it)
+        let short = |c: u64| ln(c) <= SMALL as usize;
+        self.write_packed(nr, root, n, out, rule, at, ln, marked, short, |c| ln(c) == 1, leaf)
+    }
+
+    /// W10: `write_cells` on 10-byte rules of two tagged 40-bit children (HANDOFF 6925942307)
+    #[inline(never)]
+    fn write_w10(&mut self, r10: &[u8], nr: usize, root: u64, n: usize, out: &mut Vec<u8>) {
+        let arena = self.lay.arena;
+        // a child's tag; its reference (a rule's index, or the arena word's offset in the
+        // buffer); its length; its mark
+        let is_arena = |c: u64| c & C10_ARENA != 0;
+        let at = move |c: u64| {
+            if c & C10_ARENA != 0 {
+                arena + ((c >> 5) & C10_OFF) as usize
+            } else {
+                ((c >> 20) & C10_IDX) as usize
+            }
+        };
+        let ln = |c: u64| if c & C10_ARENA != 0 { (c & 31) as usize } else { (c & C10_LEN) as usize };
+        let marked = |c: u64| c & C10_MARK != 0;
+        let rp = r10.as_ptr();
+        // SAFETY: a rule's 10 bytes lie in `r10`, read as 8 at its start and 8 at 2 in (8
+        // bytes of slack past the last)
+        let rule = |j: usize| unsafe { (rd64(rp, 10 * j) & C10_MASK, rd64(rp, 10 * j + 2) >> 24) };
+        self.write_packed(nr, root, n, out, rule, at, ln, marked, is_arena, is_arena, at)
+    }
+
+    /// `write_cells` on packed rules: `rule(j)` a rule's two children; `at`, `ln`, `marked` a
+    /// child's reference, length and mark; `short` whether a plain child is a word kept as
+    /// bytes (else a rule, `at` its index); `row` whether the marked spine has reached the
+    /// row's byte; `leaf` a short word's offset in the buffer
+    #[allow(clippy::too_many_arguments)]
+    #[inline(always)]
+    fn write_packed(
+        &mut self,
+        nr: usize,
+        root: u64,
+        n: usize,
+        out: &mut Vec<u8>,
+        rule: impl Fn(usize) -> (u64, u64),
+        at: impl Fn(u64) -> usize,
+        ln: impl Fn(u64) -> usize,
+        marked: impl Fn(u64) -> bool,
+        short: impl Fn(u64) -> bool,
+        row: impl Fn(u64) -> bool,
+        leaf: impl Fn(u64) -> usize,
+    ) {
+        let p = ln(root);
         out.resize(n + 32, 0);
         let dst = out.as_mut_ptr();
         let pos = self.replay_table(nr);
         let base = self.buf.as_ptr();
-        let leaf = self.lay.arena;
-        let rp = r12.as_ptr();
-        // SAFETY: as `write_cells`; a rule's 12 bytes lie in `r12` (8 bytes past the last),
-        // a reference is a rule's index or a leaf's arena offset
+        // SAFETY: as `write_cells`. A rule's children are words made before it: a rule's
+        // index below its own, or a word kept as bytes with 16 bytes after it. A position is
+        // below the period; `out` has 16 bytes past it.
         unsafe {
-            let rule = |j: usize| {
-                let (lo, hi) = (rd64(rp, 12 * j), rd32(rp, 12 * j + 8) as u64);
-                (desc12(lo & C12_MASK), desc12(lo >> 48 | hi << 16))
-            };
             core::ptr::write_bytes(pos, 0xFF, nr);
-            // the row's place: down the marked rules (a marked word of one byte is the row's)
+            // the row's place: down the marked rules to the marked word kept as bytes (the
+            // row's single byte)
             let (mut w, mut j) = (root, 0usize);
-            while w as u32 & !MARK != 1 {
-                let (a, b) = rule((w >> 32) as usize);
-                if a as u32 & MARK != 0 {
+            while !row(w) {
+                let (a, b) = rule(at(w));
+                if marked(a) {
                     w = a;
                 } else {
-                    j += a as u32 as usize;
+                    j += ln(a);
                     w = b;
                 }
             }
             let start = (j + SHIFT) % p;
             let (mut w, mut q) = (root, 0usize);
-            while w as u32 & !MARK != 1 {
-                let (a, b) = rule((w >> 32) as usize);
-                let la = (a as u32 & !MARK) as usize;
-                let (plain, at, next) = if a as u32 & MARK != 0 { (b, q + la, a) } else { (a, q, b) };
-                let d = (at + p - start) % p;
-                let lx = plain as u32 as usize;
-                if lx <= SMALL as usize {
-                    copy_small(dst.add(d), base.add(leaf + (plain >> 32) as usize), lx);
+            while !row(w) {
+                let (a, b) = rule(at(w));
+                let la = ln(a);
+                let (plain, pq, next) = if marked(a) { (b, q + la, a) } else { (a, q, b) };
+                let d = (pq + p - start) % p;
+                if short(plain) {
+                    copy_small(dst.add(d), base.add(leaf(plain)), ln(plain));
                 } else {
-                    let x = pos.add((plain >> 32) as usize);
+                    let x = pos.add(at(plain));
                     *x = (*x).min(d as u32);
                 }
-                if a as u32 & MARK == 0 {
+                if !marked(a) {
                     q += la;
                 }
                 w = next;
             }
-            *dst.add((q + p - start) % p) = *base.add(leaf + (w >> 32) as usize);
+            *dst.add((q + p - start) % p) = *base.add(leaf(w));
             for j in (0..nr).rev() {
                 let q = *pos.add(j);
                 if q == NIL {
                     continue;
                 }
                 let (a, b) = rule(j);
-                if a as u32 > SMALL {
-                    let x = pos.add((a >> 32) as usize);
+                if !short(a) {
+                    let x = pos.add(at(a));
                     *x = (*x).min(q);
                 }
-                if b as u32 > SMALL {
-                    let x = pos.add((b >> 32) as usize);
-                    *x = (*x).min(q + a as u32);
+                if !short(b) {
+                    let x = pos.add(at(b));
+                    *x = (*x).min(q + ln(a) as u32);
                 }
             }
             for j in 0..nr {
@@ -389,40 +470,39 @@ impl Kernel {
                     continue;
                 }
                 let (a, b) = rule(j);
-                let (ll, rr) = (a as u32 as usize, b as u32 as usize);
+                let (ll, rr) = (ln(a), ln(b));
                 let d = dst.add(q as usize);
-                if ll <= SMALL as usize {
-                    copy_small(d, base.add(leaf + (a >> 32) as usize), ll);
+                if short(a) {
+                    copy_small(d, base.add(leaf(a)), ll);
                 } else {
-                    let f = *pos.add((a >> 32) as usize);
+                    let f = *pos.add(at(a));
                     if f != q {
                         copy_long(d, dst.add(f as usize), ll);
                     }
                 }
                 let d = d.add(ll);
-                if rr <= SMALL as usize {
-                    copy_small(d, base.add(leaf + (b >> 32) as usize), rr);
+                if short(b) {
+                    copy_small(d, base.add(leaf(b)), rr);
                 } else {
-                    let f = *pos.add((b >> 32) as usize);
+                    let f = *pos.add(at(b));
                     if f != q + ll as u32 {
                         copy_long(d, dst.add(f as usize), rr);
                     }
                 }
             }
             let (mut w, mut q) = (root, 0usize);
-            while w as u32 & !MARK != 1 {
-                let (a, b) = rule((w >> 32) as usize);
-                let la = (a as u32 & !MARK) as usize;
-                let (plain, at, next) = if a as u32 & MARK != 0 { (b, q + la, a) } else { (a, q, b) };
-                let d = (at + p - start) % p;
-                let lx = plain as u32 as usize;
-                if lx > SMALL as usize {
-                    let f = *pos.add((plain >> 32) as usize) as usize;
+            while !row(w) {
+                let (a, b) = rule(at(w));
+                let la = ln(a);
+                let (plain, pq, next) = if marked(a) { (b, q + la, a) } else { (a, q, b) };
+                let d = (pq + p - start) % p;
+                if !short(plain) {
+                    let f = *pos.add(at(plain)) as usize;
                     if f != d {
-                        copy_long(dst.add(d), dst.add(f), lx);
+                        copy_long(dst.add(d), dst.add(f), ln(plain));
                     }
                 }
-                if a as u32 & MARK == 0 {
+                if !marked(a) {
                     q += la;
                 }
                 w = next;
