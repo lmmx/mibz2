@@ -1,0 +1,62 @@
+diff --git a/src/cells_lazy.rs b/src/cells_lazy.rs
+index bd2706aa7..37205a1c7 100644
+--- a/src/cells_lazy.rs
++++ b/src/cells_lazy.rs
+@@ -615,6 +615,57 @@ impl Kernel {
+                     }
+                     continue 'fresh;
+                 }
++                if bs & fb & ENTRY != 0 && ra == rb && (aw | bw) as u32 & MARK == 0 {
++                    // Both letters fresh from their entries, of one length, neither the
++                    // walk's row: an equal step between two original letters. Its cell
++                    // takes one pair of slots, where the general step takes a pair for
++                    // each letter and gives one back unused (the two front slots, which
++                    // are only promised when one letter outlasts the other).
++                    if left == 0 {
++                        return Err(Refusal::Budget);
++                    }
++                    left -= 1;
++                    let (ka, kb2) = (bs ^ ENTRY, fb ^ ENTRY);
++                    let (t, b) = take!();
++                    // the word: A's byte, then B's (the general step's two copies)
++                    copy16(base.add(top), base.add((aw >> 32) as usize));
++                    copy16(base.add(top + 1), base.add((bw >> 32) as usize));
++                    let cw = 2 | (top as u64) << 32;
++                    top += 2;
++                    #[cfg(test)]
++                    self.record_materialization([
++                        ra,
++                        rb,
++                        aw,
++                        bw,
++                        cw,
++                        top as u64,
++                        rp as u64,
++                        t as u64,
++                        b as u64,
++                        0,
++                        0,
++                        b as u64,
++                        t as u64,
++                        0,
++                        0,
++                        (budget - left) as u64,
++                    ]);
++                    // the cell, last in both letters' places: before it in each order
++                    // lies the stream's next place
++                    wr32(base, t, 0);
++                    wr32(base, t + 4, ra as u32);
++                    wr64(base, t + 8, cw);
++                    wr_other(base, t, b);
++                    wr64(bb, b, (t as u64) << 32);
++                    // each letter's entry now holds the slot its cells begin at, for the
++                    // other front
++                    wr32(bb, BPAD + 4 * ka, TAG | b as u32);
++                    wr32(bb, BPAD + 4 * kb2, TAG | t as u32);
++                    #[cfg(test)]
++                    self.record_selected_slots_in(t, b, bb);
++                    continue 'fresh;
++                }
+                 settle_top!();
+                 settle_bottom!();
+                 loop {

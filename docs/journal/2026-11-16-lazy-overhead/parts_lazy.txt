@@ -1,0 +1,17 @@
+part                                               Ir       Dr       Dw       Bc      Bcm
+elsewhere (no line in the file)                181.01    34.52    32.88    19.13     0.88
+all (exclusive of callees)                     181.01    34.52    32.88    19.13     0.88
+
+elsewhere, by its frames (Ir, Dr+Dw a letter):
+   16.97   3.16  cells.rs:1025
+   11.64   2.59  cells.rs:1032
+   10.18   3.79  cells_lever.rs:322
+    5.81   2.50  cells_lever.rs:283
+    5.61   1.87  mod.rs:1933 <- mod.rs:3660 <- spec_from_elem.rs:27 <- mod.rs:3708 <- cells.rs:1033
+    5.07   5.07  range.rs:942 <- range.rs:1116 <- rev.rs:53 <- cells.rs:1085
+    3.81   2.97  cells_lever.rs:?
+    3.74   1.87  range.rs:? <- range.rs:985 <- mod.rs:3659 <- spec_from_elem.rs:27 <- mod.rs:3708 <- cells.rs:1033
+    3.58   0.53  mod.rs:1933 <- mod.rs:3660 <- mod.rs:3526 <- cells.rs:1008
+    3.21   1.60  set_len_on_drop.rs:19 <- mod.rs:3669 <- mod.rs:3526 <- cells.rs:1008
+    3.04   1.01  mod.rs:551 <- mod.rs:1821 <- const_ptr.rs:1212 <- cells.rs:273 <- cells_lever.rs:411
+    3.04   2.03  cmp.rs:1916 <- range.rs:942 <- range.rs:1116 <- rev.rs:53 <- cells.rs:1085

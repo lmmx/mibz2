@@ -1,0 +1,18 @@
+part                                               Ir       Dr       Dw       Bc      Bcm
+other lines                                     15.21     4.06     2.03     2.03     0.00
+elsewhere (no line in the file)                100.25    21.47    19.26     5.45     0.42
+all (exclusive of callees)                     115.46    25.53    21.29     7.48     0.42
+
+elsewhere, by its frames (Ir, Dr+Dw a letter):
+   22.56   9.05  cells_lazy.rs:613
+   20.76   7.74  cells_lazy.rs:?
+    9.74   2.73  cells_lazy.rs:612
+    6.95   2.14  cells_lazy.rs:611
+    5.71   4.38  cells_lever.rs:?
+    5.56   0.97  cells_lazy.rs:615
+    4.06   4.06  cells_lazy.rs:559
+    3.74   0.00  unix.rs:48 <- alloc.rs:463 <- alloc.rs:128 <- alloc.rs:229 <- alloc.rs:344 <- alloc.rs:462 <- mod.rs:876 <- mod.rs:424 <- mod.rs:825 <- mod.rs:825 <- 
+    3.74   1.87  unix.rs:?
+    3.04   0.00  cells_lazy.rs:565
+    3.04   1.01  cells_lever.rs:178
+    2.67   1.60  cells_lazy.rs:606

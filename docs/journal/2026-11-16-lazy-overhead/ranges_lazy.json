@@ -1,0 +1,5 @@
+[["setup", 411, 467], ["take! (a pair from the pools)", 468, 486], ["give! (a pair back)", 487, 497],
+ ["read_top! (slot, or the top stream)", 498, 538], ["read_bottom! (slot, or the bottom stream)", 539, 575],
+ ["settle_top!", 576, 585], ["settle_bottom!", 586, 595], ["both letters whole (the loop's head)", 596, 619],
+ ["the cell: budget, word, bytes or rule", 620, 662], ["both letters end", 663, 674],
+ ["B ends, A goes on", 675, 688], ["A ends, B goes on", 689, 702]]

@@ -1,0 +1,19 @@
+part                                               Ir       Dr       Dw       Bc      Bcm
+setup                                            0.00     0.00     0.00     0.00     0.00
+take! (a pair from the pools)                    5.79     2.00     0.59     1.44     0.12
+give! (a pair back)                              3.97     2.38     1.59     0.00     0.00
+read_top! (slot, or the top stream)             28.68     8.92     2.40     3.93     0.35
+read_bottom! (slot, or the bottom stream)       28.30     5.89     0.51     4.03     0.13
+settle_top!                                      4.84     0.57     1.36     0.79     0.01
+settle_bottom!                                   5.47     1.08     0.65     0.79     0.00
+both letters whole (the loop's head)             8.72     0.22     1.01     2.51     0.05
+the direct path: two fresh letters, an equal step     7.92     1.10     2.20     0.22     0.00
+the cell: budget, word, bytes or rule           38.79     5.66     7.68     3.30     0.09
+both letters end                                10.51     2.38     3.18     1.65     0.27
+B ends, A goes on                                6.20     1.07     2.67     0.86     0.07
+A ends, B goes on                                3.22     0.97     1.93     0.00     0.00
+other lines                                      0.00     0.00     0.00     0.00     0.00
+elsewhere (no line in the file)                 38.64    14.65    12.14     0.00     0.00
+all (exclusive of callees)                     191.05    46.88    37.90    19.53     1.09
+
+elsewhere, by its frames (Ir, Dr+Dw a letter):

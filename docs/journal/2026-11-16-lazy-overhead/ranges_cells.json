@@ -1,0 +1,4 @@
+[["setup", 784, 826], ["fetch-ahead (hints)", 827, 847],
+ ["both letters whole: two slots read (the loop's head)", 848, 877],
+ ["the cell: budget, word, bytes or rule", 878, 920], ["both letters end", 921, 930],
+ ["B ends, A goes on (and the next B read)", 931, 952], ["A ends, B goes on (and the next A read)", 953, 976]]
