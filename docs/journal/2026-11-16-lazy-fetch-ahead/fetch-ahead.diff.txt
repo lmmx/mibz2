@@ -1,0 +1,529 @@
+diff --git a/.github/workflows/miri.yml b/.github/workflows/miri.yml
+index a0ac0e04a..9b57e2098 100644
+--- a/.github/workflows/miri.yml
++++ b/.github/workflows/miri.yml
+@@ -79,6 +79,7 @@ jobs:
+           grep -q '^cells::tests::miri_cells_lever_boundaries_reuse:' miri-list.txt
+           grep -q '^cells::tests::miri_cells_lever_exact_fit_and_reuse:' miri-list.txt
+           grep -q '^cells::tests::miri_cells_lazy_closed_letters_give_their_slots_back:' miri-list.txt
++          grep -q '^cells::tests::miri_cells_lazy_fetch_ahead_stays_inside:' miri-list.txt
+           grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
+           grep -q '^parallel::service_tests::miri_every_retirement_returns_its_buffers' miri-list.txt
+           grep -q '^parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop' miri-list.txt
+diff --git a/.just/bench.just b/.just/bench.just
+index 6376c1233..e3cbbee92 100644
+--- a/.just/bench.just
++++ b/.just/bench.just
+@@ -1636,6 +1636,40 @@ bench-lazy-crossover ROUNDS="10" THREADS="4,6,7,8,9,10,12,14,16,20":
+     git rev-parse HEAD > "$O/commit.txt"
+     bash bench/bundle.sh "$O"
+ 
++# The lazy kernel's fetch-ahead (#145; its decision rule is posted there before the data):
++# one block a thread with lazy letters (`mibz2-workers-lazy`, the plan's kernel from 8
++# threads) against the same with the induction fetching ahead (`mibz2-workers-lazy-hint`),
++# at 8, 9 and 10 threads, where the plan uses the kernel, and at 4 as a control. On this
++# machine, at the commit checked out.
++bench-lazy-hint ROUNDS="10" THREADS="4,8,9,10":
++    #!/usr/bin/env bash
++    set -euo pipefail
++    W=$PWD/target/lazy-hint
++    mkdir -p "$W"
++    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
++    mkdir "$O"
++    exec > >(tee -a "$O/console.log") 2>&1
++    echo "bench-lazy-hint (#145, its rule posted there before the data): mibz2-workers-lazy against mibz2-workers-lazy-hint (one block a thread with lazy letters; the second fetches ahead in its induction), at {{THREADS}} threads, {{ROUNDS}} paired rounds, on Wikidata, at $(git rev-parse HEAD)"
++    cargo build -q --release --example ab --example windows
++    AB=$PWD/target/release/examples/ab
++    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
++    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
++      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
++        && git archive origin/bench-data "$dir" | tar -x || true
++    fi
++    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
++    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
++    "$AB" env > "$O/env.json"
++    lscpu > "$O/lscpu.txt"
++    hold=(); hold_cpu=${HOLD_CPU:-auto}
++    [ "$hold_cpu" = off ] || hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
++    "$AB" run "$O/runs.jsonl" --arms "mibz2-workers-lazy,mibz2-workers-lazy-hint" \
++      --threads "{{THREADS}}" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2"
++    # the rule's reading: the arm that fetches ahead against the plan's kernel
++    "$AB" summary "$O/runs.jsonl" --ref mibz2-workers-lazy | tee "$O/summary.txt"
++    git rev-parse HEAD > "$O/commit.txt"
++    bash bench/bundle.sh "$O"
++
+ # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
+ # data): is memory per core what holds one block a thread back at 10 threads? The shipped
+ # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,
+diff --git a/examples/ab.rs b/examples/ab.rs
+index 83c7eec87..145d8e592 100644
+--- a/examples/ab.rs
++++ b/examples/ab.rs
+@@ -1148,8 +1148,20 @@ fn decode(
+         }
+         // workers of a block each with one Cells kernel whatever the thread count, where
+         // `mibz2-workers-w` takes the plan's choice (lazy letters from `LAZY_FROM_THREADS`):
+-        // a slot for every letter (`-eager`), or lazy letters (`-lazy`). The plan and the
+-        // window are `mibz2-workers-w`'s, so the two differ in the kernel alone
++        // a slot for every letter (`-eager`), lazy letters (`-lazy`), or lazy letters with
++        // their induction fetching ahead (`-lazy-hint`: a candidate, not a default). The
++        // plan and the window are `mibz2-workers-w`'s, so the arms differ in the kernel
++        // alone
++        "mibz2-workers-lazy-hint" => drain(
++            mibz2::BzReader::parallel_inverse::<mibz2::bwt::HintLazyCells>(
++                open()?,
++                threads,
++                mibz2::parallel::SLOTS_PER_THREAD * threads,
++                mibz2::Kernels::detect(),
++            ),
++            h,
++            last,
++        ),
+         "mibz2-workers-eager" | "mibz2-workers-lazy" => drain(
+             mibz2::BzReader::parallel_workers(
+                 open()?,
+diff --git a/examples/lever_counts.rs b/examples/lever_counts.rs
+index 470cc09cf..f64a7567b 100644
+--- a/examples/lever_counts.rs
++++ b/examples/lever_counts.rs
+@@ -1,6 +1,6 @@
+ //! scratch (memory-lever): a file's blocks decoded on one thread with one Cells kernel, for
+-//! callgrind, and the kernel's route counts and lazy pool. lever_counts FILE.bz2 cells|lazy|nt
+-use mibz2::bwt::{Cells, InverseBwt, LazyCells, StagedCells};
++//! callgrind, and the kernel's route counts and lazy pool. lever_counts FILE.bz2 cells|lazy|lazy-hint|nt
++use mibz2::bwt::{Cells, HintLazyCells, InverseBwt, LazyCells, StagedCells};
+ use mibz2::stream::{Event, Scanner, SliceSource};
+ use mibz2::{decode_block, Kernels, Scratch};
+ 
+@@ -24,6 +24,7 @@ fn main() {
+     match a[2].as_str() {
+         "cells" => println!("{:?}", run::<Cells>(&data, |_| ()).cells_counts()),
+         "nt" => println!("{:?}", run::<StagedCells>(&data, |_| ()).cells_counts()),
++        "lazy-hint" => println!("{:?}", run::<HintLazyCells>(&data, |_| ()).cells_counts()),
+         "lazy" => {
+             let (mut shares, mut admitted) = (Vec::new(), 0);
+             let s = run::<LazyCells>(&data, |s| {
+@@ -43,6 +44,6 @@ fn main() {
+                 shares[shares.len() - 1]
+             );
+         }
+-        m => panic!("the kernel is cells, lazy or nt, not {m}"),
++        m => panic!("the kernel is cells, lazy, lazy-hint or nt, not {m}"),
+     }
+ }
+diff --git a/src/bwt.rs b/src/bwt.rs
+index f7e3e1717..411b4018b 100644
+--- a/src/bwt.rs
++++ b/src/bwt.rs
+@@ -18,8 +18,8 @@
+ //! is a segment start) can be put in without touching the stream, CRC or thread code.
+ 
+ pub use crate::cells::{
+-    Cells, CellsKernel, CellsVariant, Counts as CellsCounts, ForcedCells, ForcedLazyCells,
+-    LazyCells,
++    Cells, CellsKernel, CellsVariant, Counts as CellsCounts, ForcedCells, ForcedHintLazyCells,
++    ForcedLazyCells, HintLazyCells, LazyCells,
+ };
+ #[cfg(feature = "memory-lever")]
+ pub use crate::cells::{ForcedStagedCells, StagedCells};
+diff --git a/src/cells.rs b/src/cells.rs
+index fbaa29f36..dcff20078 100644
+--- a/src/cells.rs
++++ b/src/cells.rs
+@@ -61,6 +61,10 @@ struct Kernel {
+     /// (test only) the writer kept the rules' first places in the dead top slots
+     #[cfg(test)]
+     pos_in_tops: bool,
++    /// (test only) how many of the lazy induction's hinted slots were then read at the place
++    /// they were hinted for
++    #[cfg(test)]
++    hints_met: usize,
+     pos: Vec<u32>,
+     #[cfg(test)]
+     writer_reach: WriterReach,
+@@ -463,7 +467,10 @@ impl Kernel {
+                 );
+             }
+             // (the lazy kernel's bottom slots' pool, in the output buffer)
+-            if let (Some(out), true) = (out, self.bottom_laid && self.variant == LAZY) {
++            if let (Some(out), true) = (
++                out,
++                self.bottom_laid && matches!(self.variant, LAZY | LAZY_HINT),
++            ) {
+                 let end = self.lz.bend;
+                 assert!(
+                     out[end..end + GAP].iter().all(|&x| x == 0xA5),
+diff --git a/src/cells_lazy.rs b/src/cells_lazy.rs
+index bd2706aa7..e92e3e620 100644
+--- a/src/cells_lazy.rs
++++ b/src/cells_lazy.rs
+@@ -7,6 +7,9 @@
+ 
+ /// The kernel a `CellsVariant` runs: Cells as shipped but for this.
+ pub(crate) const LAZY: u8 = 1;
++/// Lazy letters with the induction's fetch-ahead (`induce_lazy`): a bench arm beside
++/// `LAZY`, until the i9 has read it
++pub(crate) const LAZY_HINT: u8 = 3;
+ 
+ /// The Cells kernel with another first stage and induction (`V`): `LAZY`, or (research
+ /// only, `memory-lever`) `STAGED_RULES`. Admission, budget, fallback and writer are Cells'
+@@ -19,6 +22,13 @@ pub type LazyCells = CellsVariant<LAZY>;
+ /// Test/fuzz route: lazy letters with `ForcedCells`' open admission
+ #[doc(hidden)]
+ pub type ForcedLazyCells = CellsVariant<LAZY, true>;
++/// Bench arm: `LazyCells` with its induction fetching ahead. The same output, block for
++/// block.
++#[doc(hidden)]
++pub type HintLazyCells = CellsVariant<LAZY_HINT>;
++/// Test/fuzz route: `HintLazyCells` with `ForcedCells`' open admission
++#[doc(hidden)]
++pub type ForcedHintLazyCells = CellsVariant<LAZY_HINT, true>;
+ 
+ impl<const V: u8, const F: bool> Default for CellsVariant<V, F> {
+     fn default() -> Self {
+@@ -76,6 +86,16 @@ const ROW: u32 = 1 << 30;
+ /// in the eight above them
+ const LEN_BITS: u32 = 22;
+ 
++/// How many places on in a stream the lazy induction fetches for: the slot a place's entry
++/// names, if the other front has reached its letter (`induce_lazy`'s fetch-ahead). The
++/// entries read that far before the stream's first lie in the output buffer's first `BPAD`
++/// bytes, so it is at most `BPAD / 4`.
++const FAR_PLACES: usize = 12;
++/// How many places on in the bottom stream it fetches the letter's top slot for, read from
++/// the bottom slot fetched `FAR_PLACES - NEAR_PLACES` places before
++const NEAR_PLACES: usize = 6;
++const _: () = assert!(NEAR_PLACES <= FAR_PLACES && 4 * FAR_PLACES <= BPAD);
++
+ /// What `slots_lazy` leaves for `induce_lazy`, besides the layout.
+ #[derive(Clone, Copy)]
+ struct Lazy {
+@@ -188,7 +208,7 @@ impl Kernel {
+         forced: bool,
+         out: &mut Vec<u8>,
+     ) -> Result<(), Refusal> {
+-        if self.variant == LAZY {
++        if matches!(self.variant, LAZY | LAZY_HINT) {
+             self.slots_lazy(n, recs, p, budget, forced, out)
+         } else {
+             self.slots(n, recs, p, budget, forced, out)
+@@ -202,7 +222,10 @@ impl Kernel {
+         out: &mut Vec<u8>,
+     ) -> Result<(u32, u32, usize), Refusal> {
+         match self.variant {
+-            LAZY => self.induce_lazy(budget, out),
++            // (one copy of the induction with the fetch-ahead and one without: no test
++            // of it in the loop)
++            LAZY => self.induce_lazy::<false>(budget, out),
++            LAZY_HINT => self.induce_lazy::<true>(budget, out),
+             #[cfg(feature = "memory-lever")]
+             STAGED_RULES => self.induce_cells_staged(budget, out),
+             _ => self.induce_cells(budget, out),
+@@ -291,6 +314,12 @@ impl Kernel {
+         if out.len() < bend + GAP {
+             out.resize(bend + GAP, 0);
+         }
++        // the bytes before the entries: the induction's fetch-ahead (`LAZY_HINT`) reads them
++        // as entries of places before the bottom stream's first (`FAR_PLACES`), and as the
++        // slot such an entry names: none, so 0
++        if self.variant == LAZY_HINT {
++            out[..BPAD].fill(0);
++        }
+         self.bottom_laid = true;
+         self.lay = lay;
+         self.letters = letters;
+@@ -408,7 +437,7 @@ impl Kernel {
+     /// Returns (the cycle's word, its length with the mark, cells). `slots_lazy` has run on
+     /// this kernel for the block, and nothing has changed since.
+     #[inline(never)]
+-    fn induce_lazy(
++    fn induce_lazy<const AHEAD: bool>(
+         &mut self,
+         budget: usize,
+         out: &mut Vec<u8>,
+@@ -456,6 +485,33 @@ impl Kernel {
+             let (mut tnew, mut bnew) = (lay.tops, lay.bots);
+             // the streams: the top order's bytes and the entries not yet reached
+             let (mut ti, mut kb) = (rr, rr);
++            // The fetch-ahead (`AHEAD`: the bench arm `LAZY_HINT`; the plan's kernel has
++            // none). A front's misses are the slots it reads through an entry the
++            // other front has tagged: those slots lie anywhere in the pools. So each front
++            // looks `FAR_PLACES` on in its stream, and if that place's entry names a slot as
++            // memory has it now, hints it. (An entry tagged later than that is not hinted.)
++            //
++            // The top front finds a place's entry through its byte's counter, so the
++            // look-ahead has counters of its own, `FAR_PLACES` places further on.
++            let mut nt_far = nt;
++            for i in 0..if AHEAD { FAR_PLACES.min(rr) } else { 0 } {
++                let c = *bb.add(tby + rr - 1 - i) as usize;
++                nt_far[c] = nt_far[c].wrapping_sub(1);
++            }
++            // A tagged entry's slot, else 0: the hint then names the buffer's first bytes,
++            // which are mapped and idle
++            #[inline(always)]
++            fn slot_or_0(e: u32) -> usize {
++                ((e ^ TAG) & ((e as i32 >> 31) as u32)) as usize
++            }
++            // the top slots' end: what a bottom slot not yet written names as its top slot
++            // may be anything, and is kept to the pool
++            let top_end = lay.ends[0];
++            // (test only) the slot hinted for each place of each stream, and how many of
++            // them the front then read there: a tagged entry is never written again, so
++            // a hinted slot is the one its place's letter is read from
++            #[cfg(test)]
++            let (mut hint_top, mut hint_bottom, mut hints_met) = (vec![0u32; rr], vec![0u32; rr], 0);
+             // as in `induce_cells`: the link before each letter in its order (0: the
+             // stream); what is left of the letter; its (length, word); the slot the next
+             // cell cut from it takes in the other order; the letters' front slots
+@@ -508,6 +564,23 @@ impl Kernel {
+                         *nt.get_unchecked_mut(c) = (k as u32).wrapping_sub(1);
+                         debug_assert!(k < rr);
+                         let e = rd32(bb, BPAD + 4 * k);
++                        #[cfg(test)]
++                        if hint_top[ti] != 0 {
++                            assert_eq!(e, TAG | hint_top[ti], "the top place {ti}'s hint");
++                            hints_met += 1;
++                        }
++                        if AHEAD && ti >= FAR_PLACES {
++                            // the place `FAR_PLACES` on: its entry's top slot, if it has one
++                            let c = *bb.add(tby + ti - FAR_PLACES) as usize;
++                            let k = *nt_far.get_unchecked(c) as usize;
++                            *nt_far.get_unchecked_mut(c) = (k as u32).wrapping_sub(1);
++                            debug_assert!(k < rr);
++                            #[cfg(test)]
++                            {
++                                hint_top[ti - FAR_PLACES] = slot_or_0(rd32(bb, BPAD + 4 * k)) as u32;
++                            }
++                            prefetch(base.wrapping_add(slot_or_0(rd32(bb, BPAD + 4 * k))));
++                        }
+                         if e & TAG != 0 {
+                             // the bottom front reached it first: its cells, from this slot
+                             s = (e ^ TAG) as usize;
+@@ -545,6 +618,29 @@ impl Kernel {
+                         }
+                         kb -= 1;
+                         let e = rd32(bb, BPAD + 4 * kb);
++                        // the place `FAR_PLACES` on: its entry's bottom slot, if it has one;
++                        // and the place `NEAR_PLACES` on: the top slot its bottom slot names,
++                        // which holds the letter. (Before the stream's first place the
++                        // entries read are the buffer's first bytes, which `slots_lazy` set
++                        // to 0: no slot. So the bottom slot read here is a slot an entry
++                        // names, or the buffer's first bytes: inside the buffer either way.
++                        // What it names as its top slot may not be written yet.)
++                        #[cfg(test)]
++                        if hint_bottom[kb] != 0 {
++                            assert_eq!(e, TAG | hint_bottom[kb], "the bottom place {kb}'s hint");
++                            hints_met += 1;
++                        }
++                        if AHEAD {
++                            let far = rd32(bb, BPAD + 4 * kb - 4 * FAR_PLACES);
++                            #[cfg(test)]
++                            if kb >= FAR_PLACES {
++                                hint_bottom[kb - FAR_PLACES] = slot_or_0(far) as u32;
++                            }
++                            prefetch(bb.wrapping_add(slot_or_0(far)));
++                            let near = slot_or_0(rd32(bb, BPAD + 4 * kb - 4 * NEAR_PLACES));
++                            let top = rd32(bb, near + 4) as usize;
++                            prefetch(base.wrapping_add(top.min(top_end)));
++                        }
+                         if e & TAG != 0 {
+                             // the top front reached it first: its cells, from this slot
+                             s = (e ^ TAG) as usize;
+@@ -608,6 +704,10 @@ impl Kernel {
+                         }
+                         self.rule_end = rp;
+                         self.lz.peak = (tnew - lay.tops) / SLOT;
++                        #[cfg(test)]
++                        {
++                            self.hints_met = hints_met;
++                        }
+                         return Ok(((aw >> 32) as u32, aw as u32, budget - left));
+                     }
+                     if bs & ENTRY == 0 {
+diff --git a/src/cells_lazy_test.rs b/src/cells_lazy_test.rs
+index 5a4fe140e..c989a0b08 100644
+--- a/src/cells_lazy_test.rs
++++ b/src/cells_lazy_test.rs
+@@ -5,9 +5,14 @@
+ /// The kernels these tests run: the lazy one, and (research only) the staged one
+ fn lever_variants() -> Vec<u8> {
+     #[cfg(feature = "memory-lever")]
+-    return vec![LAZY, STAGED_RULES];
++    return vec![LAZY, LAZY_HINT, STAGED_RULES];
+     #[cfg(not(feature = "memory-lever"))]
+-    vec![LAZY]
++    vec![LAZY, LAZY_HINT]
++}
++
++/// Whether the kernel is a lazy one (the plan's, or the one that fetches ahead)
++fn lazy_variant(variant: u8) -> bool {
++    matches!(variant, LAZY | LAZY_HINT)
+ }
+ 
+ fn lever_cases() -> Vec<Vec<u8>> {
+@@ -79,7 +84,7 @@ fn miri_cells_lever_boundaries_reuse() {
+                 {
+                     sends = sends.max(new.rule_sends);
+                 }
+-                if variant == LAZY {
++                if lazy_variant(variant) {
+                     assert!(new.lz.peak <= new.letters, "a slot a letter at most");
+                     pool = pool.max(new.lz.peak);
+                 }
+@@ -100,7 +105,7 @@ fn miri_cells_lever_boundaries_reuse() {
+                 "one induction sends its rules on several times: {sends}"
+             );
+         }
+-        if variant == LAZY {
++        if lazy_variant(variant) {
+             assert!(pool > 1, "the lazy induction takes slots: {pool}");
+         }
+         // a refusal on the budget, at the same cell as the original's
+@@ -167,7 +172,7 @@ fn miri_cells_lever_exact_fit_and_reuse() {
+                 let lay = kernel.lay;
+                 // slots are given back and taken again: a block of many letters never has
+                 // half of them in slots at once (these columns peak near a quarter)
+-                if variant == LAZY && kernel.letters >= 60 {
++                if lazy_variant(variant) && kernel.letters >= 60 {
+                     assert!(
+                         kernel.lz.peak * 2 < kernel.letters,
+                         "{} slots of {} letters",
+@@ -180,7 +185,7 @@ fn miri_cells_lever_exact_fit_and_reuse() {
+                     let (bs, ts) = (m.state[11] as usize, m.state[12] as usize);
+                     assert!(fa >= lay.tops && fa + SLOT <= lay.ends[0]);
+                     assert!(ts >= lay.tops && ts + SLOT <= lay.ends[0]);
+-                    if variant == LAZY {
++                    if lazy_variant(variant) {
+                         // the bottom slots' pool, in the output buffer after the streams
+                         let (lo, hi) = (lay.bots, kernel.lz.bend);
+                         assert_eq!(lo, lay.ends[1] + GAP);
+@@ -292,6 +297,9 @@ fn cells_lever_route_and_fallback() {
+     }
+     let (lazy, pool) = run::<LAZY>();
+     assert!(lazy.admitted > 1 && lazy.density > 0, "{lazy:?}");
++    let (hint, pool_hint) = run::<LAZY_HINT>();
++    assert_eq!((hint.admitted, hint.cells), (lazy.admitted, lazy.cells));
++    assert_eq!(pool_hint, pool);
+     #[cfg(feature = "memory-lever")]
+     {
+         let (staged, _) = run::<STAGED_RULES>();
+@@ -356,3 +364,56 @@ fn cells_lazy_long_letter() {
+         check(&mut kernel, &ll, p);
+     }
+ }
++
++/// The fetch-ahead (the bench arm `LAZY_HINT`) reads entries `FAR_PLACES` on in each stream, and a slot
++/// through one. Here the output buffer comes in full of bytes that would read as tagged
++/// entries naming far-off slots, on columns of fewer letters than the look-ahead and of
++/// more: the first stage sets the bytes before the entries, every read stays inside the
++/// buffer (Miri sees one that does not), and the output is the oracle's. Every slot hinted
++/// is the slot then read at its place. The plan's kernel, which has no fetch-ahead, gives
++/// the same cells and hints nothing.
++#[test]
++fn miri_cells_lazy_fetch_ahead_stays_inside() {
++    for ll in [
++        b"bbaaa".to_vec(),
++        (0..2 * FAR_PLACES as u8).map(|i| i ^ 1).collect(),
++        (0..65).map(|i| (i % 3) as u8).collect(),
++        long_writer_column(),
++    ] {
++        let r = Runs::of_column(&ll);
++        let n = ll.len();
++        let mut cells = Vec::new();
++        let mut met = 0;
++        for variant in [LAZY_HINT, LAZY] {
++            let mut kernel = Kernel {
++                variant,
++                ..Default::default()
++            };
++            for p in [0, n as u32 / 2, n as u32 - 1] {
++                // (longer than the block needs, so that none of it is new and zeroed)
++                let mut out = vec![0xFFu8; 64 * n + 4096];
++                let (made, _) = kernel
++                    .try_invert(r.records(), n, p, n, true, &mut out)
++                    .unwrap();
++                assert_eq!(out, oracle(&ll, p), "column {ll:?}, row {p}");
++                cells.push(made);
++                // a hinted slot is the one its place is then read from (the induction
++                // asserts each), and on a column of enough letters some are hinted
++                if variant == LAZY {
++                    assert_eq!(kernel.hints_met, 0);
++                } else if kernel.letters > 2 * FAR_PLACES {
++                    assert!(kernel.hints_met > 0, "column {ll:?}, row {p}");
++                    met += kernel.hints_met;
++                }
++                // the first stage alone: the bytes before the entries are set
++                let mut out = vec![0xFFu8; 64 * n + 4096];
++                kernel
++                    .first_stage(n, r.records(), p, n, true, &mut out)
++                    .unwrap();
++                assert_eq!(out[..BPAD].iter().all(|&b| b == 0), variant == LAZY_HINT);
++            }
++        }
++        assert_eq!(cells[..3], cells[3..]);
++        let _ = met;
++    }
++}
+diff --git a/src/cells_selective_test.rs b/src/cells_selective_test.rs
+index 8366d94fd..1a32dcd38 100644
+--- a/src/cells_selective_test.rs
++++ b/src/cells_selective_test.rs
+@@ -23,7 +23,7 @@ fn compare_materialization(
+     // The candidate may be the lazy kernel, which has no letters' slots to compare, or
+     // (research only, `memory-lever`) the staged one, whose rules start at a multiple of 16,
+     // so the original is laid out the same way.
+-    let lazy = candidate.variant == LAZY;
++    let lazy = matches!(candidate.variant, LAZY | LAZY_HINT);
+     #[cfg(feature = "memory-lever")]
+     {
+         original.variant = if candidate.variant == STAGED_RULES {
+diff --git a/src/read.rs b/src/read.rs
+index 679110b09..a29328ff3 100644
+--- a/src/read.rs
++++ b/src/read.rs
+@@ -141,6 +141,19 @@ impl<R: Read + Send + 'static> BzReader<R> {
+         Self::on(r, StreamDecoder::workers(threads, slots, kernels, lazy))
+     }
+ 
++    /// `threads` workers of a block each, inverting with the kernel `I`
++    /// (`StreamDecoder::with_inverse`): for a bench arm that times the whole decoder with
++    /// one. `slots` blocks in flight and the kernels given.
++    #[doc(hidden)]
++    pub fn parallel_inverse<I: crate::bwt::InverseBwt + 'static>(
++        r: R,
++        threads: usize,
++        slots: usize,
++        kernels: Kernels,
++    ) -> Self {
++        Self::on(r, StreamDecoder::with_inverse::<I>(threads, slots, kernels))
++    }
++
+     /// Research, opt-in (`memory-lever`): workers with the experiment's staged Cells kernel,
+     /// or with lazy letters (`StreamDecoder::lever`), with `slots` blocks in flight and the
+     /// kernels given
+diff --git a/tests/common/cells.rs b/tests/common/cells.rs
+index 3c4de722d..7ec667efe 100644
+--- a/tests/common/cells.rs
++++ b/tests/common/cells.rs
+@@ -59,13 +59,20 @@ pub fn check(data: &[u8], k: Kernels) -> (CellsCounts, CellsCounts) {
+         )
+     };
+     {
+-        use mibz2::bwt::{ForcedLazyCells, LazyCells};
++        use mibz2::bwt::{ForcedHintLazyCells, ForcedLazyCells, HintLazyCells, LazyCells};
+         let (g, e, s) = decode::<LazyCells>(data, k);
+         assert_eq!((&g, &e), (&want, &err), "lazy letters");
+         same(s.cells_counts(), prod.cells_counts());
+         let (g, e, s) = decode::<ForcedLazyCells>(data, k);
+         assert_eq!((&g, &e), (&want, &err), "lazy letters, forced");
+         same(s.cells_counts(), forced.cells_counts());
++        // (the bench arm: lazy letters with the induction's fetch-ahead)
++        let (g, e, s) = decode::<HintLazyCells>(data, k);
++        assert_eq!((&g, &e), (&want, &err), "lazy letters, fetch-ahead");
++        same(s.cells_counts(), prod.cells_counts());
++        let (g, e, s) = decode::<ForcedHintLazyCells>(data, k);
++        assert_eq!((&g, &e), (&want, &err), "lazy letters, fetch-ahead, forced");
++        same(s.cells_counts(), forced.cells_counts());
+     }
+     // (research only, `memory-lever`: the experiment's staged kernel, the same)
+     #[cfg(feature = "memory-lever")]

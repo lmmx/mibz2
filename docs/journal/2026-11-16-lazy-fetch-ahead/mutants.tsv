@@ -1,0 +1,12 @@
+# file	mutant	verdict	the tests
+-	the tree as it is	ok	tests pass: test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 103 filtered out; finished in 0.22s
+src/cells_lazy.rs	the bytes before the entries not set	killed by the tests	tests fail: the test binary died | process didn't exit successfully: `mfa/target/debug/deps/mibz2-a977ef3135caf4
+src/cells_lazy.rs	the look-ahead's counters not moved on at the start	killed by the tests	tests fail: cells_lever_route_and_fallback, miri_cells_lazy_fetch_ahead_stays_inside, miri_cells_lever_exact_fit_and_reuse | src/cells_lazy.rs:690:17: assertion `left == right` failed: the top place 186's hint
+src/cells_lazy.rs	the top look-ahead runs before the stream's first place	killed by the tests	tests fail: cells_lazy_long_letter, cells_lazy_refuses_a_block_past_its_entries, cells_lever_exhaustive_arbitrary_columns, cells_lever_exhaustive_state, cells_lever_route_and_fallback, miri_cells_lazy_closed_letters_give_their_slots_back, miri_cells_lazy_fetch_ahead_stays_inside, miri_cells_lever_boundaries_reuse, miri_cells_lever_exact_fit_and_reuse | src/cells_lazy.rs:691:17: assertion failed: k < rr
+src/cells_lazy.rs	the look-ahead's counter not moved on at a place	killed by the tests	tests fail: cells_lever_route_and_fallback, miri_cells_lazy_fetch_ahead_stays_inside, miri_cells_lever_exact_fit_and_reuse | src/cells_lazy.rs:690:17: assertion `left == right` failed: the top place 184's hint
+src/cells_lazy.rs	an untagged entry read as a slot	killed by the tests	tests fail: the test binary died | process didn't exit successfully: `mfa/target/debug/deps/mibz2-a977ef3135caf4
+src/cells_lazy.rs	a tagged entry's slot read with its tag	killed by the tests	tests fail: the test binary died | process didn't exit successfully: `mfa/target/debug/deps/mibz2-a977ef3135caf4
+src/cells_lazy.rs	the look-ahead reaches past the bytes before the entries	does not build (the constant's own assertion)	tests does not build: error[E0080]: evaluation panicked: assertion failed: NEAR_PLACES <= FAR_PLACES && 4 * FAR_PLACES <= BPAD
+src/cells_lazy.rs	the hinted top slot not kept to the pool	SURVIVED	tests pass: test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 103 filtered out; finished in 0.26s
+src/cells_lazy.rs	the kernel without the fetch-ahead runs it	killed by the tests	tests fail: miri_cells_lazy_fetch_ahead_stays_inside | src/cells_lazy_test.rs:403:21: assertion `left == right` failed
+# 9 mutants, 1 not killed
