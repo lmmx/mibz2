@@ -624,23 +624,34 @@
   display: inline-block;
   margin-right: 0.8rem;
 }
-/* every thread count, a small panel each (shared scales) */
-.bh-hero .bh-mult {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
-  gap: 0.4rem 0.8rem;
-  margin: 0.4rem 0;
+/* every thread count in one chart (bench.js, releaseOverlay): a series per thread count in
+   the releases' ramp, dotted (modelled, not measured between releases); the whiskers only on
+   the series in focus */
+.bh-hero .bh-ovl .bh-line {
+  stroke-width: 2;
+  stroke-dasharray: 0.5 4.5;
+  stroke-linecap: round;
 }
-.md-typeset .bh-hero .bh-mult-panel {
-  margin: 0;
-  min-width: 0;
+.bh-hero .bh-ovl.is-on .bh-line {
+  stroke-width: 3;
 }
-.md-typeset .bh-hero .bh-mult-panel figcaption {
-  margin: 0;
-  font-size: 0.66rem;
-  font-weight: 600;
-  text-align: left;
-  max-width: none;
+.bh-hero .bh-ovl .bh-whisker {
+  display: none;
+}
+.bh-hero .bh-ovl.is-on .bh-whisker {
+  display: inline;
+}
+.bh-hero .bh-ovl-rug {
+  stroke: var(--bh-ink-2);
+  stroke-width: 1.25;
+}
+.bh-root .bh-swatch.is-dotted.is-ink {
+  border-top-color: var(--bh-ink-2);
+}
+.md-typeset .bh-hero .bh-ovl-key {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.3rem;
 }
 /* the knee readout (bench.js, kneeTable) */
 .md-typeset .bh-hero table.bh-knee td.bh-knee-cell {

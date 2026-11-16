@@ -225,7 +225,7 @@
     const sign = fig[2];
     const T = state.tThreads;
     const tWord = `${T} thread${T === "1" ? "" : "s"}`;
-    if (T === "all") { releaseMultiples(data, lg, start, lgThreads, box); return; }
+    if (T === "all") { releaseOverlay(data, lg, start, lgThreads, box); return; }
     const key = `${state.tCorpus}|${T}`;
     const ciOn = ciThreads.includes(T);
     const chain = ciOn ? ch.series[key][fig[0]] : [];
@@ -474,14 +474,14 @@
   // The releases' marks on a merge-axis plot: whiskers, diamonds, the dotted line between
   // them (not measured), the row of release names above the plot, and each one's card.
   // o: { x(p), y, y2 (the steps' scale, or null), top, left, right, W, narrow, tip, box,
-  // readout (or null), tag, data, small (a small multiple: no names, no steps) }
+  // readout (or null), tag, data }
   function drawReleases(s, rs, o) {
     const gr = svg("g", { class: "bh-i9" }, s);
     svg("polyline", { points: rs.pts.map((p) => `${o.x(p)},${o.y(p.c[0])}`).join(" "), class: "bh-i9-line" }, gr);
     const dia = (cx, cy, r, parent, cls = "bh-i9-dot") => svg("path", { d: `M${cx},${cy - r}L${cx + r},${cy}L${cx},${cy + r}L${cx - r},${cy}Z`, class: cls }, parent);
     // the names above the plot, as many as fit, the newest always
-    if (!o.small) {
-      const minGap = o.narrow ? 30 : 36, put = [];
+    {
+      const minGap = o.narrow ? 38 : 40, put = [];
       [...rs.pts].reverse().forEach((p, k) => {
         const xx = o.x(p);
         if (k && put.some((q) => Math.abs(q - xx) < minGap)) return;
@@ -519,12 +519,12 @@
       const xx = o.x(p), yy = o.y(p.c[0]);
       const a = svg("g", { class: "bh-pt bh-i9-pt", tabindex: 0, role: "button", "aria-label": `${p.version} on the ${rs.cpu} at ${rs.T} threads: ${p.mb[0].toFixed(0)} MB/s modelled, ${fmtPct(p.c[0])} since ${rs.base}` }, gr);
       if (p.c[2] - p.c[1] > 0) svg("line", { x1: xx, x2: xx, y1: o.y(p.c[1]), y2: o.y(p.c[2]), class: "bh-whisker bh-i9-whisker" }, a);
-      dia(xx, yy, o.small ? 3.5 : 5, a);
+      dia(xx, yy, 5, a);
       if (o.y2 && p.step) {
         svg("line", { x1: xx, x2: xx, y1: o.y2(p.step.c[1]), y2: o.y2(p.step.c[2]), class: "bh-whisker bh-i9-whisker" }, a);
         dia(xx, o.y2(p.step.c[0]), 4.5, a);
       }
-      svg("circle", { cx: xx, cy: yy, r: o.small ? 9 : 12, class: "bh-hit" }, a);
+      svg("circle", { cx: xx, cy: yy, r: 12, class: "bh-hit" }, a);
       if (o.y2 && p.step) svg("circle", { cx: xx, cy: o.y2(p.step.c[0]), r: 12, class: "bh-hit" }, a);
       const show = () => card(p, xx, yy);
       a.addEventListener("pointerenter", show);
@@ -535,48 +535,177 @@
       a.addEventListener("blur", hide);
     }
     s.addEventListener("click", (ev) => { if (!ev.target.closest(".bh-i9-pt")) hide(); });
-    if (o.readout && !o.small) card(rs.pts[rs.pts.length - 1], 0, 0), hide();
+    if (o.readout) card(rs.pts[rs.pts.length - 1], 0, 0), hide();
   }
 
-  // Every thread count of the release-scaling machine's releases on the merge axis, a small
-  // panel each, sharing their x (the merges) and y (change since the oldest release) scales
-  function releaseMultiples(data, g, start, ts, box) {
+  // Every thread count of the release-scaling machine's releases on the merge axis, in one
+  // chart: a series per thread count, each the change since the oldest release (the axis the
+  // single-count views use). Thread count is ordinal, so its colour is its place along the
+  // releases' ramp (bench.css --bh-rel-0..4, walked by OKLab arc length: Ok.ramp), low to
+  // high, every series at full strength. Pointing at a series (its line, a point, its end
+  // label or its key entry) raises it and fades the rest; a click or tap keeps it.
+  const ovlFocus = { pinned: null, hover: null };
+  function releaseOverlay(data, g, start, ts, box) {
     const all = ts.map((t) => releaseSeries(data, g, start, t)).filter(Boolean);
     const cpu = shortCpu(g.cpu), base = all[0].base, newest = all[0].pts[all[0].pts.length - 1].version;
+    const tw = (t) => `${t} thread${t === "1" ? "" : "s"}`;
     const lead = el("p", { class: "bh-hero-focus" }, box);
     el("strong", { text: `Throughput, ${g.corpus}, ${cpu} releases at every thread count: change since ${base}, modelled` }, lead);
-    lead.append(`. ${newest} against ${base}: ` + all.map((r) => `${r.T} thread${r.T === "1" ? "" : "s"} ${fmtPct(r.pts[r.pts.length - 1].c[0])}`).join(", ") + `. CI's chain is not drawn here; each panel is the ${cpu}'s releases alone, on shared scales. Up is faster.`);
-    const grid = el("div", { class: "bh-mult" }, box);
+    lead.append(`. ${newest} against ${base}: ` + all.map((r) => `${tw(r.T)} ${fmtPct(r.pts[r.pts.length - 1].c[0])}`).join(", ") + `. CI's chain is not drawn here. Up is faster.`);
+    const body = el("div", { class: "bh-hero-chart" }, box);
+    const legend = el("p", { class: "bh-hero-commit" }, box);
     const readout = el("p", { class: "bh-hero-commit", "aria-live": "polite" }, box);
     const tip = el("div", { class: "bh-tip", hidden: "" }, box);
-    const vals = all.flatMap((r) => r.pts.flatMap((p) => [p.c[1], p.c[2]]));
-    const yt = ticks(Math.min(0, ...vals), Math.max(0, ...vals), 3);
-    while (yt[yt.length - 1] < Math.max(...vals)) yt.push(+(yt[yt.length - 1] + (yt[1] - yt[0])).toFixed(10));
+    const tag = (l) => (l.pr ? `#${l.pr}` : l.sha.slice(0, 7));
     const idx = [];
     for (let i = start; i < data.links.length; i++) idx.push(i);
-    const tag = (l) => (l.pr ? `#${l.pr}` : l.sha.slice(0, 7));
-    const panels = all.map((rs) => {
-      const f = el("figure", { class: "bh-mult-panel" }, grid);
-      el("figcaption", { text: `${rs.T} thread${rs.T === "1" ? "" : "s"}` }, f);
-      return [rs, f];
-    });
-    for (const [rs, f] of panels) {
-      const W = Math.max(140, Math.round(f.clientWidth) || 200), H = 130;
-      const M = { l: 36, r: 6, t: 6, b: 16 };
-      const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `The ${cpu}'s releases at ${rs.T} threads, change since ${base}, modelled` }, f);
-      const inner = W - M.l - M.r;
-      const xs = new Map(idx.map((i, k) => [i, M.l + 4 + (k * (inner - 8)) / Math.max(1, idx.length - 1)]));
-      const y = (v) => M.t + (H - M.t - M.b) * (1 - (v - yt[0]) / (yt[yt.length - 1] - yt[0] || 1));
-      for (const v of yt) {
-        svg("line", { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), class: v === 0 ? "bh-zero" : "bh-grid" }, s);
-        svg("text", { x: M.l - 4, y: y(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = fmtPct(v);
-      }
-      svg("text", { x: M.l, y: H - 3, class: "bh-tick", "text-anchor": "start" }, s).textContent = tag(data.links[idx[0]]);
-      svg("text", { x: W - M.r, y: H - 3, class: "bh-tick", "text-anchor": "end" }, s).textContent = tag(data.links[idx[idx.length - 1]]);
-      drawReleases(s, rs, { x: (p) => xs.get(p.link), y, y2: null, top: M.t, left: M.l, right: W - M.r, W, narrow: true, tip, box, readout, tag, data, small: true });
+    const W = Math.max(300, Math.round(body.clientWidth) || 700);
+    const narrow = W < 560;
+    const H = narrow ? 300 : 360;
+    const vals = all.flatMap((r) => r.pts.flatMap((p) => [p.c[1], p.c[2]]));
+    const yt = ticks(Math.min(0, ...vals), Math.max(0, ...vals), narrow ? 4 : 5);
+    while (yt[yt.length - 1] < Math.max(...vals)) yt.push(+(yt[yt.length - 1] + (yt[1] - yt[0])).toFixed(10));
+    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `The ${cpu}'s releases at ${ts.join(", ")} threads: throughput change since ${base}, modelled, by merge` }, body);
+    const meas = svg("text", { class: "bh-tick", x: 0, y: -50 }, s);
+    meas.textContent = "+100%";
+    const M = { l: Math.ceil(Math.max(24, meas.getComputedTextLength())) + 12, r: 36, t: 30, b: 26 };
+    meas.remove();
+    const inner = W - M.l - M.r;
+    const xs = new Map(idx.map((i, k) => [i, M.l + (idx.length === 1 ? inner / 2 : 8 + (k * (inner - 16)) / (idx.length - 1))]));
+    const x = (p) => xs.get(p.link);
+    const y = (v) => M.t + (H - M.t - M.b) * (1 - (v - yt[0]) / (yt[yt.length - 1] - yt[0] || 1));
+    for (const v of yt) {
+      svg("line", { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), class: v === 0 ? "bh-zero" : "bh-grid" }, s);
+      svg("text", { x: M.l - 6, y: y(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = fmtPct(v);
     }
-    readout.textContent = "Point at or tap a release for its figures.";
-    el("p", { class: "bh-hero-note", text: `Each panel: one thread count, the ${cpu}'s releases at the last merge each tag contains, from ${tag(data.links[idx[0]])} to ${tag(data.links[idx[idx.length - 1]])}, modelled from release-against-release runs (the Release scaling view), relative to ${base}, with 95% whiskers. The dotted lines only join releases; nothing between them is measured.` }, box);
+    // x labels: as many merges as fit, the last always shown
+    const minGap = narrow ? 40 : 46, put = [];
+    idx.forEach((i, k) => {
+      const xx = xs.get(i), last = k === idx.length - 1;
+      if (!last && put.length && xx - put[put.length - 1].x < minGap) return;
+      if (last) while (put.length && xx - put[put.length - 1].x < minGap) put.pop().el.remove();
+      const t = svg("text", { x: xx, y: H - 8, class: "bh-tick", "text-anchor": k === 0 ? "start" : last ? "end" : "middle" }, s);
+      t.textContent = tag(data.links[i]);
+      put.push({ x: xx, el: t });
+    });
+    // the releases' names above the plot, as many as fit, the newest always
+    const names = [];
+    [...all[0].pts].reverse().forEach((p, k) => {
+      const xx = x(p);
+      svg("line", { x1: xx, x2: xx, y1: M.t - 10, y2: M.t - 4, class: "bh-ovl-rug" }, s);
+      if (k && names.some((q) => Math.abs(q - xx) < (narrow ? 38 : 40))) return;
+      names.push(xx);
+      svg("text", { x: xx, y: M.t - 14, class: "bh-tick", "text-anchor": xx + 16 > W - M.r ? "end" : xx - 16 < M.l ? "start" : "middle" }, s).textContent = p.version;
+    });
+    // the colours: the releases' ramp, low threads to high, at equal perceived steps
+    const cs = getComputedStyle(box), cv = (k) => cs.getPropertyValue(k).trim();
+    const full = Ok.ramp([0, 1, 2, 3, 4].map((k) => cv(`--bh-rel-${k}`)));
+    const n = all.length;
+    const col = all.map((_, j) => (n < 2 ? full(1) : full(j / (n - 1))));
+    const groups = all.map((rs, j) => svg("g", { class: "bh-rel bh-ovl", "data-t": rs.T, style: `--rc:${col[j]};--rf:${col[j]}` }, s));
+    const card = (rs, j, p) => {
+      const rows = releaseRows(rs, p, tag, data);
+      readout.textContent = "";
+      el("strong", { text: `${tw(rs.T)}, ${p.version} ` }, readout);
+      readout.append(rows.map((r) => r[0]).join(" · "));
+      tip.textContent = "";
+      el("div", { class: "bh-tip-title", text: `${tw(rs.T)} · ${p.version} · ${cpu}` }, tip);
+      for (const [text, on] of rows) {
+        const d = el("div", { class: `bh-tip-row${on ? " is-on" : ""}` }, tip);
+        if (on) el("span", { class: "bh-swatch", style: `background:${col[j]}` }, d);
+        el("span", { text }, d);
+      }
+      tip.hidden = false;
+      const r = s.getBoundingClientRect(), hb = box.getBoundingClientRect(), z = r.width / W;
+      const ax = r.left - hb.left + x(p) * z, ay = r.top - hb.top + y(p.c[0]) * z;
+      const left = ax + 14 + tip.offsetWidth <= hb.width ? ax + 14 : ax - 14 - tip.offsetWidth;
+      tip.style.left = `${Math.max(0, Math.min(hb.width - tip.offsetWidth, left))}px`;
+      tip.style.top = `${ay + 12}px`;
+    };
+    const hideTip = () => { tip.hidden = true; };
+    const paint = () => {
+      const key = ovlFocus.pinned !== null && ts.includes(ovlFocus.pinned) ? ovlFocus.pinned : ovlFocus.hover;
+      groups.forEach((gr, j) => {
+        gr.classList.toggle("is-dim", key !== null && all[j].T !== key);
+        gr.classList.toggle("is-on", all[j].T === key);
+      });
+      if (key !== null && all.some((r) => r.T === key)) raise.setAttribute("href", `#bh-ovl-${key}`);
+      else raise.removeAttribute("href");
+      for (const b of legend.querySelectorAll(".bh-ws-item")) {
+        b.classList.toggle("is-focus", b.dataset.key === key);
+        b.setAttribute("aria-pressed", String(b.dataset.key === ovlFocus.pinned));
+      }
+    };
+    const enter = (j) => { ovlFocus.hover = all[j].T; paint(); };
+    const leave = (j) => { if (ovlFocus.hover === all[j].T) { ovlFocus.hover = null; paint(); } };
+    const pin = (j) => { ovlFocus.pinned = ovlFocus.pinned === all[j].T ? null : all[j].T; ovlFocus.hover = all[j].T; paint(); };
+    all.forEach((rs, j) => {
+      const gr = groups[j];
+      gr.id = `bh-ovl-${rs.T}`;
+      const line = rs.pts.map((p) => `${x(p)},${y(p.c[0])}`).join(" ");
+      svg("polyline", { points: line, class: "bh-line", fill: "none" }, gr);
+      const lh = svg("polyline", { points: line, class: "bh-line-hit", fill: "none" }, gr);
+      const nearest = (ev) => {
+        const r = s.getBoundingClientRect(), px = ((ev.clientX - r.left) * W) / r.width;
+        return rs.pts.reduce((b, p) => (Math.abs(x(p) - px) < Math.abs(x(b) - px) ? p : b), rs.pts[0]);
+      };
+      lh.addEventListener("pointerenter", () => enter(j));
+      lh.addEventListener("pointermove", (ev) => card(rs, j, nearest(ev)));
+      lh.addEventListener("pointerleave", (ev) => { if (ev.pointerType !== "touch") { leave(j); hideTip(); } });
+      lh.addEventListener("click", (ev) => { pin(j); card(rs, j, nearest(ev)); });
+      for (const p of rs.pts) {
+        const a = svg("g", { class: "bh-pt", tabindex: 0, role: "button", "aria-label": `${tw(rs.T)}, ${p.version}: ${fmtPct(p.c[0])} since ${base}, modelled` }, gr);
+        if (p.c[2] - p.c[1] > 0) svg("line", { x1: x(p), x2: x(p), y1: y(p.c[1]), y2: y(p.c[2]), class: "bh-whisker" }, a);
+        svg("circle", { cx: x(p), cy: y(p.c[0]), r: 3, class: "bh-dot" }, a);
+        svg("circle", { cx: x(p), cy: y(p.c[0]), r: 9, class: "bh-hit" }, a);
+        const show = () => { enter(j); card(rs, j, p); };
+        a.addEventListener("pointerenter", show);
+        a.addEventListener("focus", show);
+        // (a touch's pointerleave follows its tap at once: the tap pins, and the card stays)
+        a.addEventListener("pointerleave", (ev) => { if (ev.pointerType !== "touch") { leave(j); hideTip(); } });
+        a.addEventListener("blur", () => { leave(j); hideTip(); });
+        a.addEventListener("click", (ev) => { ev.stopPropagation(); pin(j); card(rs, j, p); });
+        a.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pin(j); } });
+      }
+    });
+    s.addEventListener("click", (ev) => { if (!ev.target.closest(".bh-pt, .bh-line-hit")) hideTip(); });
+    // the series in focus, drawn again on top of the others
+    const raise = svg("use", { class: "bh-raise", "aria-hidden": "true" }, s);
+    // direct labels at the right-hand end, nudged apart so neighbours never collide
+    const ends = all.map((rs, j) => {
+      const p = rs.pts[rs.pts.length - 1];
+      return { j, x0: x(p), y0: y(p.c[0]), y: y(p.c[0]) };
+    }).sort((a, b) => a.y0 - b.y0);
+    const gap = 11;
+    for (let q = 1; q < ends.length; q++) ends[q].y = Math.max(ends[q].y, ends[q - 1].y + gap);
+    const over = ends.length ? ends[ends.length - 1].y - (H - M.b) : 0;
+    if (over > 0) for (const e of ends) e.y -= over;
+    for (let q = ends.length - 2; q >= 0; q--) ends[q].y = Math.min(ends[q].y, ends[q + 1].y - gap);
+    for (const e of ends) {
+      const lg = svg("g", { class: "bh-end" }, groups[e.j]);
+      svg("line", { x1: e.x0 + 4, x2: e.x0 + 10, y1: e.y0, y2: e.y, class: "bh-leader" }, lg);
+      svg("text", { x: e.x0 + 12, y: e.y + 4, class: "bh-tick bh-end-label" }, lg).textContent = `${all[e.j].T}t`;
+      lg.addEventListener("pointerenter", () => enter(e.j));
+      lg.addEventListener("pointerleave", () => leave(e.j));
+      lg.addEventListener("click", () => pin(e.j));
+    }
+    // the key, in thread order: pointing or focusing raises a series, a click or tap keeps it
+    all.forEach((rs, j) => {
+      const b = el("button", { type: "button", class: "bh-ws-key bh-ws-item", "aria-pressed": "false", "data-key": rs.T, style: `--rc:${col[j]};--rf:${col[j]}` }, legend);
+      el("span", { class: "bh-swatch" }, b);
+      el("span", { text: tw(rs.T) }, b);
+      b.addEventListener("click", () => pin(j));
+      b.addEventListener("pointerenter", () => enter(j));
+      b.addEventListener("focus", () => enter(j));
+      b.addEventListener("pointerleave", () => leave(j));
+      b.addEventListener("blur", () => leave(j));
+    });
+    const kd = el("span", { class: "bh-ws-key bh-ovl-key" }, legend);
+    el("span", { class: "bh-swatch is-dotted is-ink" }, kd);
+    kd.append(` ${cpu}, releases (modelled; not measured between releases)`);
+    paint();
+    readout.textContent = "Point at, tap or Tab to a release for its figures; point at a thread count (its line, end label or key entry) to raise it, and click or tap to keep it.";
+    el("p", { class: "bh-hero-note", text: `Each series: one thread count, the ${cpu}'s releases at the last merge each tag contains, from ${tag(data.links[idx[0]])} to ${tag(data.links[idx[idx.length - 1]])}, its throughput modelled from release-against-release runs (the Release scaling view) relative to ${base}; the series in focus shows its 95% whiskers. The dotted lines only join releases: modelled, and not measured between releases.` }, box);
   }
 
   function table(data, metric, root, shown = () => true) {
