@@ -9,6 +9,7 @@ How mibz2's decoding speed, CPU time and peak memory have changed, merge by merg
 - **A decoder change with no paired run** breaks the chain into a new segment. No gap is bridged.
 - **What the chain assumes:** that a relative change measured on one runner holds on another (the merges ran on several CPU models, each named), and that the links' errors are independent.
 - **Before bench 3.0.0** the head ran first in every round, which favoured it by about 1.8% at 1 thread in an A/A run. Those merges' changes are listed in the table below the charts, not chained.
+- **Releases past 4 threads.** On wikidata's throughput, the chart also offers 8 to 20 threads, from the release-scaling runs below, on one i9-10900K. Those figures exist only at releases, so each is a diamond at the last merge its release tag contains, joined to the next by a dotted line that is not measured. They are modelled from release-against-release runs (the **All releases** inference below). They share the chain's axis and its meaning, a change since the start with up faster, but start from the oldest release and run on another machine. At 1, 2 and 4 threads they overlay CI's chain; above 4, CI has no figure and they stand alone. **All** overlays every thread count in one chart, a colour each along the releases' ramp, low to high.
 - **`text`** is generated from mibz2's own sources, so its content changes from merge to merge, and its chain multiplies ratios measured on different files.
 
 These are decoder-level results. End-to-end results, the decoder in wikidata-pq's pipeline, are in [wikidata-pq's tracker](<https://lmmx.github.io/wikidata-pq/guide/bench-history/>).
@@ -25,7 +26,7 @@ Loading the benchmark history…
 
 ## Release scaling, past 4 threads
 
-CI's runners have 4 vCPUs on 2 physical cores, so the charts above stop at 4 threads. A release-scaling run (`just bench-release-scaling`) fills in the rest. It runs two releases and lbzip2 on one machine of a developer's, with the same harness and paired rounds, from 1 thread to every CPU the machine has. When one is recorded, the chart at the top offers it as the **Release scaling** view.
+CI's runners have 4 vCPUs on 2 physical cores, so CI's figures stop at 4 threads. A release-scaling run (`just bench-release-scaling`) fills in the rest. It runs two releases and lbzip2 on one machine of a developer's, with the same harness and paired rounds, from 1 thread to every CPU the machine has. When one is recorded, the chart at the top offers it as the **Release scaling** view.
 
 These runs inform; they don't decide. Nothing merges or releases on a release-scaling figure: pull requests are measured on CI, and pass without any run here. Each run is kept as it was recorded, with its machine, its date and its raw records, in [`bench/release-scaling/`](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling>). Runs on different machines are never compared or combined.
 
@@ -35,9 +36,29 @@ These runs inform; they don't decide. Nothing merges or releases on a release-sc
 - **Any pair** is the ratio of the two figures. Its interval adds their variances, which is cautious for two releases from the same run, since their rounds share lbzip2's.
 - **The curves** apply each release's figure to lbzip2's measured throughput in the newest run, so all of them are on one scale. Only lbzip2's curve is measured as drawn.
 - **The cross-check** is the chain, the product of each run's direct comparison of its two releases. It needs no anchor, but its errors add up along the chain.
+- **The knee** is each release's thread count of highest modelled throughput, with that peak against the release's own 8- and 10-thread figures. Its table, under the curves, shows where the knee sits release by release, and how the roof above it moves.
 - **The drift diagnostic** compares a release with itself: its ratio to lbzip2 in its two runs, made days apart. A difference beyond noise means the machine, or lbzip2's figure on it, moved between the runs.
 
 Each table gives an arm's median wall time. It also gives the geometric mean of the rounds' paired wall ratios against the reference arm, with its 95% interval: a minus sign is faster. Up to the machine's physical core count, each thread runs on a core of its own (`--spread`); above it, threads share cores.
+
+### 2026-11-16: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.1** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-16-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.1>)
+
+**`wikidata`**
+
+| threads | 0.5.1 wall (median) | lbzip2 2.5 wall (median) | 0.5.0 wall (median) | lbzip2 2.5 against 0.5.1 | 0.5.0 against 0.5.1 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.404 s | 2.510 s | 0.397 s | \+530.3% (+511.5, +549.7) **slower** | −0.7% (−3.2, +1.9) |
+| 2 | 0.241 s | 1.331 s | 0.240 s | \+453.2% (+445.7, +460.7) **slower** | −0.9% (−2.5, +0.7) |
+| 4 | 0.151 s | 0.714 s | 0.149 s | \+379.5% (+367.3, +392.1) **slower** | −0.8% (−3.4, +1.9) |
+| 8 | 0.109 s | 0.513 s | 0.109 s | \+374.6% (+369.0, +380.3) **slower** | \+0.6% (−0.9, +2.2) |
+| 10 | 0.113 s | 0.505 s | 0.123 s | \+349.0% (+345.3, +352.8) **slower** | \+7.9% (+6.8, +9.0) **slower** |
+| 12 | 0.120 s | 0.508 s | 0.127 s | \+327.9% (+320.9, +334.9) **slower** | \+6.6% (+4.7, +8.5) **slower** |
+| 16 | 0.119 s | 0.501 s | 0.129 s | \+317.1% (+309.9, +324.4) **slower** | \+8.4% (+6.4, +10.4) **slower** |
+| 20 | 0.121 s | 0.492 s | 0.128 s | \+308.6% (+302.5, +314.9) **slower** | \+8.4% (+3.9, +13.2) **slower** |
+
+Every arm's output was the same bytes as the reference's.
 
 ### 2026-11-16: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
