@@ -77,11 +77,18 @@ cycle order.
 intervals, while the cycle is the orbit; a map giving each point's cycle position *is* the
 ranking.
 
-**The conjugacy is the induction.** Each Rauzy–Veech step conjugates the first return on a smaller
-domain to the larger map, with weights (word lengths) composing additively along excursions.
-Continued to one point, it reduces the ranking to the root. The Cells writer's first-place pass
-then propagates places down the hierarchy, last rule to first: weighted ranking by the existing
-passes.
+**The induction does what a conjugacy was asked to do.** The precise statement, corrected 16
+November after the Researcher's account of Cells:
+- *Not a topological conjugacy.* The induced map lives on fewer points than the map it comes
+  from.
+- *A tower representation:* the map on D is the Kakutani tower over the induced map on D' ⊂ D,
+  with roof the return time. Weights (word lengths) add along each excursion.
+- *Exact level by level,* because each Rauzy–Veech stop's map is the exact first return of the
+  stage before. It needs those levels to be exact first returns, as the induction's stops are;
+  it fails for arbitrary subsets.
+- *For the ranking:* continued to one point (on a single-cycle block, record 19 §2), it reduces
+  the ranking to the root. The Cells writer's first-place pass then propagates places down the
+  hierarchy, last rule to first: weighted ranking by the existing passes.
 
 **So the cheap conjugacy asked for is to continue the induction past the stop.** It costs no
 rule bytes if the tail is stored compactly. That is §6 (record 27): at a 1.2 r switch, 32% of the

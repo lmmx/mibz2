@@ -71,7 +71,9 @@ writes outside its words lie in [p, q), and are overwritten before the chains me
   are disjoint while p ≤ q.
 - *Why they meet once:* each step moves p up or q down by a word, and both are places of
   points of D. Every point of D is visited once, by one chain, because the cycle from x_μ read
-  forwards and backwards meets once.
+  forwards and backwards meets once. This holds when T is one cycle on D, the hypothesis of
+  record 19 §2: a block whose text is a power (abab) has several cycles, and its blocks fall back
+  (correction, 16 November).
 - *Why the stray bytes are safe:* up stores reach at most 15 bytes above p + |w|, and down
   stores at most 15 below q − |w|. Both lie in [p, q) whenever q − p ≥ |w| + 16, which the
   writer tests. Otherwise it writes the word exactly. ∎
