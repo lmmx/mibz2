@@ -6,6 +6,6 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-release-scaling        master                    Release scaling: 0.5.0 (lazy letters from 8 threads, #452) against 0.4.0 (RELEASING §5)
 bench-lazy-crossover         master                    Confirms LAZY_FROM_THREADS = 8 and reads the memory dose (10t/1t), 4-20 threads (#452; rule 6903395401 as amended by LOG 6904285481)
-bench-lazy-hint              perf/lazy-fetch-ahead     Fetch-ahead in the lazy kernel: lazy-hint vs lazy at 4/8/9/10 threads (#459; rule LOG 6905226406)
+bench-lazy-cap               bench/lazy-cap            Lazy workers capped at the physical cores vs shipped teams, 10-20 threads (#465; rule LOG 6905531834)
+bench-lazy-ring              perf/lazy-ring            Ring of eight on the lazy kernel vs plain lazy, 4/8/9/10 threads (#464; rule LOG 6905472931)

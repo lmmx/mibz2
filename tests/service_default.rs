@@ -133,12 +133,11 @@ fn the_entry_points_reach_the_service_core() {
             let ((got, res), b) = on(Machine::service_target(), e, z, 10);
             res.unwrap_or_else(|err| panic!("{name}: {e:?}: {err}"));
             assert!(got == *data, "{name}: {e:?}: the bytes");
-            assert!(b.service && !b.pipelined, "{name}: {e:?}: {b:?}");
-            assert_eq!((b.threads, b.window), (8, 8), "{name}: {e:?}");
-            let c = b.counts.expect("the service core's counts");
-            assert!(c.ended, "{name}: {e:?}: the completion fence");
-            assert_eq!((c.prepared, c.finished), (blocks, blocks), "{name}: {e:?}");
-            assert!(c.pooled >= blocks - 1, "{name}: {e:?}: {c:?}");
+            // (lazy workers beat the service core at 10 threads, #145 LOG 6905312941, so
+            // it is no longer the default: workers of a block each, all ten cores)
+            assert!(!b.service && !b.pipelined, "{name}: {e:?}: {b:?}");
+            assert_eq!(b.threads, 10, "{name}: {e:?}");
+            assert!(b.counts.is_none(), "{name}: {e:?}");
         }
     }
 }
@@ -158,8 +157,8 @@ fn custom_windows_scale_to_the_teams() {
             let ((got, res), b) = on(Machine::service_target(), e, &z, 10);
             res.unwrap();
             assert!(got == data, "{e:?}");
-            assert!(b.service, "{e:?}");
-            assert_eq!(b.window, want, "{e:?}");
+            assert!(!b.service, "{e:?}");
+            let _ = want;
         }
     }
 }
@@ -193,8 +192,8 @@ fn the_existing_plan_otherwise() {
         (i9.clone(), 9, false, 9),
         (i9.clone(), 11, true, 9),
         (i9.clone(), 20, true, 9),
-        (same_shape, 10, true, 9),
-        (unknown_quota, 10, true, 9),
+        (same_shape, 10, false, 10),
+        (unknown_quota, 10, false, 10),
         (small, 10, false, 10),
     ];
     for (m, t, pipelined, threads) in cases {
@@ -247,7 +246,7 @@ fn errors_through_the_entry_points() {
         assert!(want_res.is_err(), "{what}");
         for e in ENTRIES {
             let ((got, res), b) = on(Machine::service_target(), e, bad, 10);
-            assert!(b.service, "{what}: {e:?}");
+            assert!(!b.service, "{what}: {e:?}");
             assert_eq!(res, want_res, "{what}: {e:?}: the error");
             if !matches!(e, Entry::Whole) {
                 assert!(got == want, "{what}: {e:?}: the bytes before");

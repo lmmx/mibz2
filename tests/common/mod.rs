@@ -922,17 +922,10 @@ pub fn service_candidates() -> Vec<Serviced> {
         slots,
         scalar,
     };
+    // (the default entry points no longer reach the service core: lazy workers beat it at
+    // 10 threads, #145 LOG 6905778670; its default shape, svc2, is checked explicitly)
     [
-        SvcShape::Push {
-            chunk: 1 << 20,
-            read: 1 << 16,
-        },
-        SvcShape::Push {
-            chunk: 997,
-            read: 509,
-        },
-        SvcShape::Reader { read: 4093 },
-        SvcShape::Whole,
+        e(2, 3, 2, 8, false),
         e(1, 3, 1, 1, false),
         e(3, 3, 1, 12, false),
         e(1, 4, 2, 2, false),
