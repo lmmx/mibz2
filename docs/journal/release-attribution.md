@@ -37,7 +37,7 @@ Backfilled on 16 November 2026, from 0.2.4 (the first release with an i9 run) to
 | 0.3.3 → 0.3.4 | 8t +8.2% (+6.8, +9.7) | #425, workers below 10 threads | routing (8t from teams to Cells) | the only decoder merge |
 | 0.3.4 → 0.4.0 | 8t +9.5% (+7.7, +11.3) | #433, Cells' bottom slots in the dead output buffer | memory | of the three decoder merges, #431 and #432 change no shipped path |
 | 0.4.0 → 0.5.0 | 8t +4.2% (+2.9, +5.5) | #452, lazy letters from 8 threads | memory | #447 is opt-in arms only |
-| 0.5.0 → 0.5.1 | 10t +7.3% (+6.2, +8.5); 12–20t +6.7 to +7.7% | #462 or #468 (not yet split) | routing; memory | `bench-split-051` (#489) splits them |
+| 0.5.0 → 0.5.1 | 10t +7.3% (+6.2, +8.5); 12–20t +6.7 to +7.7% | 10t: #462, lazy workers at 10 threads instead of teams; 12–20t: #468, past the cores, lazy workers one a core | routing; memory | `bench-split-051` (split-051/run-20261116T145423Z): wall 10t #462 0.931 [0.908, 0.954], #468 0.996 (noise); 12/16/20t #468 0.924 / 0.933 / 0.942, #462 noise |
 
 0.2.6 → 0.2.7 has no row: no thread count moved by 3% or more.
 
@@ -54,5 +54,4 @@ Cells' memory diet (#391, #414, #433, #452) moved 8 threads and below only, beca
 
 - **The i9 sees more than CI from Cells' memory changes** (#383, #414: 1t +15% and +4% on the i9, about 0 on CI).
   - Hypothesis, unconfirmed: cache size (the i9's 20 MB L3 against a 4-vCPU slice of an EPYC 7763).
-  - Tested by `bench-split-051`'s older arms, with LLC misses per byte where the i9 lets perf count.
-- **0.5.1's split** between #462 and #468: `bench-split-051`.
+  - `bench-split-051`'s older arms reproduce the i9's gains (v0.2.9 → v0.3.0 wall 0.872 at 1t, 0.927 at 4t; v0.3.2 → v0.3.3 0.950 at 4t, 1t within noise), but perf could not count on the workstation, so the cause is still untested. Its test needs `kernel.perf_event_paranoid` ≤ 1 on the i9.

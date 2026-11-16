@@ -7,4 +7,3 @@
 #
 # recipe                       branch                    what it measures
 bench-lazy-place             bench/lazy-place          Past the cores: window per worker, cores-1, and one CPU a core pinned, at 10/12/20 threads on x8, plus a dose run (#477; rule LOG 6912912161)
-bench-split-051              bench/split-051           0.5.1's +7% at 10-20 threads split between #462 and #468, plus the CI-i9 gap at 1/4 threads (#489; rule QUEUED 6916536279)
