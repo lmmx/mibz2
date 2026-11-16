@@ -12,6 +12,10 @@
 //   With reduced motion the figure starts as a still picture, and either button runs the
 //   animation on request.
 //
+// - .post-meta a and .post-card-date: the post's kind, read from its label (the text after the
+//   last "·") and set as data-kind, which blog.css colours. The labels and their kinds are
+//   KINDS below; docs/scripts/check_site.py keeps the posts to them.
+//
 // Runs on load and on each instant navigation, as bench.js does.
 (() => {
   "use strict";
@@ -392,7 +396,27 @@
     load(stages ? stages.querySelector('[aria-pressed="true"]').dataset.word : "");
   };
 
+  // keep in step with KINDS in docs/scripts/check_site.py
+  const KINDS = {
+    "Research result": "result",
+    "Research synthesis": "synthesis",
+    "Research in progress": "progress",
+    "Work in progress": "progress",
+    "Investigation in progress": "progress",
+    "Open question": "question",
+    "Meta": "meta",
+  };
+  const kind = (el) => {
+    const label = el.textContent.split("·").pop().trim();
+    if (!KINDS[label]) return;
+    el.dataset.kind = KINDS[label];
+    // the post's hero, or its card on the index, takes the same colour for its bottom line
+    const box = el.closest(".post-hero, .post-card");
+    if (box) box.dataset.kind = KINDS[label];
+  };
+
   const init = () => {
+    document.querySelectorAll(".md-typeset .post-meta a, .post-card-date").forEach(kind);
     document.querySelectorAll(".bf-chain").forEach(chain);
     document.querySelectorAll(".bf-bitbuf").forEach(bitbuf);
     document.querySelectorAll(".bf-anim-controls").forEach(animated);
