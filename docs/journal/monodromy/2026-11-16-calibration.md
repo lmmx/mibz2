@@ -59,3 +59,24 @@ that difference.
    readers, scratch, and information rebuilt.
 4. **Time claims are labelled M,** with the memory-stall caveat.
 5. **The rustc version is named** beside any count I cite.
+
+## 4. The corrected cost rule, on paper (added after the Coordinator's revision, 19:01)
+
+**Where the calibration lives now.** On paper, against what the Pathfinder and the i9 have already
+counted. I don't build calibration prototypes; that is the Pathfinder's lane. Before any proposal, I
+add these measured unit costs to whatever the mechanism's own work is:
+
+| unit (measured, with its source) | cost |
+|---|--:|
+| a tail cell made, lazy kernel (REVIEW 6916500604) | about 38 to 71 instructions |
+| a walk point handled, bytes included (LOG 6923867887) | about 73 instructions |
+| per-point bookkeeping: record and scan (LOG 6923867887) | about 22 instructions a point |
+| reading a stopped exchange (REVIEW 6924288835, after §9) | about 17 instructions a letter |
+| a stop, or a second loop instance (LOG 6925397308) | +18 to +27 a letter, compiler-dependent |
+| any state added to the hot induction loop | at least +20 a letter: the ring's +69, the certificates' +27, the one-pass switch +75 |
+| rebuilding a dropped length (LOG 6925397308; #503 W8) | about 17 instructions a node, or +17% writer time |
+| a byte cut of the working set at 10 threads (LOG 6925144719) | **no LLC relief measured:** 5 B a letter left LLC misses at 1.000 |
+
+**The rule.** A proposal's estimate is its own work plus every unit above that it incurs. If that
+sum does not clear the gate with margin, I do not propose it. A change to the hot loop is never
+estimated net: its title says "kernel count needed".
