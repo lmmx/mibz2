@@ -64,6 +64,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
+          rust-toolchain: 1.99.1 # rust-toolchain.toml's (test.yml checks they agree)
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           manylinux: ${{ matrix.platform.manylinux }}
       - name: Upload wheels
@@ -92,6 +93,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
+          rust-toolchain: 1.99.1 # rust-toolchain.toml's (test.yml checks they agree)
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
       - name: Upload wheels
         uses: actions/upload-artifact@v7
@@ -123,6 +125,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
+          rust-toolchain: 1.99.1 # rust-toolchain.toml's (test.yml checks they agree)
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
       - name: Upload wheels
         uses: actions/upload-artifact@v7
@@ -169,6 +172,8 @@ jobs:
         uses: taiki-e/install-action@64adfd9e935fa438859b9e080fd026720b2ba070 # tag=just
         with:
           tool: just@1.38.0,release-plz@0.3.172
+      # (release-plz's `cargo publish` builds the packaged crate with it)
+      - uses: dtolnay/rust-toolchain@1.99.1
       - name: Get a crates.io token (Trusted Publishing)
         id: auth
         uses: rust-lang/crates-io-auth-action@v1

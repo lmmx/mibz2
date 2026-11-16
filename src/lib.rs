@@ -81,6 +81,10 @@ pub mod bits;
 pub mod block;
 pub mod bwt;
 mod cells;
+// (research only: the grammar replay harness, with `grammar-replay`)
+#[cfg(feature = "grammar-replay")]
+#[doc(hidden)]
+pub use cells::{replay_reps, replay_stats, ReplayStats};
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;

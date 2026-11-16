@@ -1636,6 +1636,79 @@ bench-lazy-crossover ROUNDS="10" THREADS="4,6,7,8,9,10,12,14,16,20":
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
+# Cores less one (#481), its adoption run (the registration on #145, posted before the data):
+# whether production's plan past the physical cores should be one lazy worker a core but one,
+# with the window scaled to the workers. Master's decoder (`mibz2@build-master`, built at
+# MASTER, the commit this branch has merged) against this commit's (`mibz2`), each its own
+# production plan: on the i9, 12, 16 and 20 threads asked are ten workers on master and nine
+# here (judged); 9 and 10 threads asked build the same decoder in both (controls, which void
+# the run if either moves). COPIES copies of the Wikidata sample (the gain family) and the
+# text corpus (a loss and memory guard). The spinner is held only where a core is free (at 9
+# threads): no run shares a decoder core. `bench/two_arm.py` checks the records whole, then
+# reads the verdict.
+bench-cores-less-one MASTER="4ffe2bcbef1d4296e7d7bdf35ba3972c03edd6e3" COPIES="4" ROUNDS="10" JUDGED="12,16,20" CONTROLS="9,10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/cores-less-one
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-cores-less-one (#481's adoption registration on #145): mibz2 at $(git rev-parse HEAD) against mibz2 at {{MASTER}}, production's plan each, on {{COPIES}} copies of the Wikidata sample and on text, judged at {{JUDGED}} threads, controls at {{CONTROLS}}, {{ROUNDS}} paired rounds"
+    git merge-base --is-ancestor "{{MASTER}}" HEAD \
+      || { echo "bench-cores-less-one: {{MASTER}} is not merged into this commit"; exit 1; }
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-cores-less-one: the checkout has local changes"; exit 1; }
+    # both builds by the one toolchain the gates were counted with (#145: 1.99.1, the repo's pin)
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-cores-less-one: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    [ -d "$W/build-master" ] || git worktree add -q --detach "$W/build-master" "{{MASTER}}"
+    git -C "$W/build-master" checkout -q --detach "{{MASTER}}"
+    # (the baseline is built from a clean source: a detached checkout keeps local changes)
+    [ -z "$(git -C "$W/build-master" status --porcelain)" ] \
+      || { echo "bench-cores-less-one: build-master has local changes"; git -C "$W/build-master" status --short; exit 1; }
+    (cd "$W/build-master" && cargo build -q --release --example ab)
+    MAB=$W/build-master/target/release/examples/ab
+    # the identities measured, checked rather than assumed from a reused directory
+    [ "$(git -C "$W/build-master" rev-parse HEAD)" = "{{MASTER}}" ] \
+      || { echo "bench-cores-less-one: build-master is not at {{MASTER}}"; exit 1; }
+    git rev-parse HEAD > "$O/commit.txt"
+    echo "{{MASTER}}" > "$O/master.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    (cd "$W/build-master" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+      || { echo "bench-cores-less-one: the two builds' toolchains differ"; exit 1; }
+    sha256sum "$AB" "$MAB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    free=(); hold_cpu=${HOLD_CPU:-auto}; hold_max=0
+    [ "$hold_cpu" = off ] || { free=(--hold-cpu "$hold_cpu" --hold-max-threads 9); hold_max=9; }
+    "$AB" run "$O/judged.jsonl" --arms "mibz2@$MAB,mibz2" \
+      --threads "{{CONTROLS}},{{JUDGED}}" --rounds {{ROUNDS}} --spread "${free[@]}" \
+      "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    "$AB" summary "$O/judged.jsonl" --ref "mibz2@$MAB" | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2@build-master --cand mibz2 \
+      --main wikidata-x{{COPIES}} --guard text --judged "{{JUDGED}}" --controls "{{CONTROLS}}" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads "$hold_max" \
+      | tee "$O/verdict.txt" \
+      || echo "bench-cores-less-one: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    bash bench/bundle.sh "$O"
+
 # 12-byte rules (#506), their adoption run (the registration on #145, posted before the data):
 # whether production's lazy kernel should store each rule in 12 bytes, not 16
 # (`bwt::W12LazyCells`). Master's decoder (`mibz2@build-master`, built at MASTER, the commit
@@ -1726,8 +1799,9 @@ bench-w12 MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" ROUNDS="1
 
 # W12's store-traffic diagnostic (#506; its rule posted on #145 before the data): is store
 # traffic the lever behind 12-byte rules? Counters only, nothing timed. The L2 diagnostic's
-# arms, builds and thread count: master's decoder (`mibz2@build-master`, built at MASTER in
-# bench-w12's own target/w12/build-master) against this commit's `mibz2-w12`, both by rustc
+# arms and thread count: master's decoder (`mibz2@build-master`, built at MASTER, the master
+# parent of this branch's merge of master, so the two arms differ only by W12) against this
+# commit's `mibz2-w12` (master + W12, what would ship), both by rustc
 # 1.99.1, at 10 threads (the first CPU of each of the first 10 cores), REPS reps with the arms
 # alternating, on COPIES copies of the Wikidata sample. Under `perf stat` (`bench/counters.py
 # --events stores`): l2_lines_out.non_silent, resource_stalls.sb, mem_inst_retired.all_stores,
@@ -1740,7 +1814,7 @@ bench-w12 MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" ROUNDS="1
 #   just submit bench-w12-stores
 
 # W12's store traffic against master's lazy kernel at 10 threads, under perf stat (counters only)
-bench-w12-stores MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" REPS="10":
+bench-w12-stores MASTER="3ae9bbe0d8e2fe7106a46117ce770e7eee7cd2c0" COPIES="4" REPS="10":
     #!/usr/bin/env bash
     set -euo pipefail
     # each attempt in a directory of its own, never overwritten
@@ -1793,9 +1867,8 @@ bench-w12-stores MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" RE
     rustc -V | grep -q '^rustc 1\.99\.1 ' || void "rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"
     cargo build -q --release --example ab --example windows
     AB=$PWD/target/release/examples/ab
-    # master's build where bench-w12 makes it, so the two recipes count the same baseline
-    M=$PWD/target/w12/build-master
-    mkdir -p "$PWD/target/w12"
+    # master's build, beside this recipe's runs (bench-w12 keeps its own, at its own MASTER)
+    M=$B/build-master
     [ -d "$M" ] || git worktree add -q --detach "$M" "{{MASTER}}"
     git -C "$M" checkout -q --detach "{{MASTER}}"
     [ -z "$(git -C "$M" status --porcelain)" ] || { git -C "$M" status --short; void "build-master has local changes"; }
