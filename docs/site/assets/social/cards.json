@@ -167,6 +167,13 @@
     "section": " · Research blog",
     "title": "Modelling the cache to rightsize workers"
   },
+  "assets/social/blog-2026-11-17-the-knee-is-gone.png": {
+    "description": "Four releases that run fewer workers than threads have smoothed mibz2's slide past eight threads into a level plateau near 2 GB of output a second.",
+    "foot": "lmmx.github.io/mibz2 · 17 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "The knee is gone: how mibz2 stopped losing speed to more threads"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
