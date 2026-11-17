@@ -61,6 +61,10 @@ measured the decoder 7–19% slower.
 **Docs-only and measurement-only changes** merge when CI is green and nothing measured
 changed that wasn't meant to.
 
+**Queue-only PRs, and content CI has already passed,** merge without waiting for their own CI
+(Louis, 17 November 2026; CLAUDE.md, "When not to wait for CI"). The head-sha checks before and
+after still run, and the merge's LOG names what made the wait unnecessary.
+
 **A red check** is handled by `docs/team/CI-INCIDENTS.md`. It classifies the failure from its
 log, re-runs only the failed job, paced to the outage, and records which checks did not run. It
 does not relax the green-head rule above.
