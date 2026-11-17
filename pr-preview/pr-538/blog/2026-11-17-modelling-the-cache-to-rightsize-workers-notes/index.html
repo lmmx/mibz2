@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=543885636ae6">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=34646f01c776">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=543885636ae6">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=34646f01c776">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=543885636ae6">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=34646f01c776">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=543885636ae6">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=34646f01c776">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=543885636ae6">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=34646f01c776">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=543885636ae6">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=34646f01c776">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2538,7 +2538,7 @@
 
 <p>← <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers/">Modelling the cache to rightsize workers</a></p>
 <h1 id="technical-notes-modelling-the-cache-to-rightsize-workers">Technical notes: modelling the cache to rightsize workers<a class="headerlink" href="#technical-notes-modelling-the-cache-to-rightsize-workers" title="Permanent link">&para;</a></h1>
-<p>These notes hold the detail that <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers/">the main post</a> leaves out to keep its argument moving. They use its notation: <span class="arithmatex">\(W\)</span> workers, <span class="arithmatex">\(N\)</span> logical CPUs in the process's affinity set, the normalised cost per byte <span class="arithmatex">\(c(W) = a + b\,W^2\)</span> with <span class="arithmatex">\(a \approx 0.422\)</span> and <span class="arithmatex">\(b \approx 0.0068\)</span>, and the footprint <span class="arithmatex">\(F\)</span>. Measured figures are on the i9-10900K, decoding four copies of an 11.9 MB Wikidata extract with the lazy-letters kernel, unless a row says otherwise. Its sections can be read in any order.</p>
+<p>These notes hold the detail that <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers/">the main post</a> leaves out to keep its argument moving. They use its notation: <span class="arithmatex">\(W\)</span> workers, <span class="arithmatex">\(N\)</span> logical CPUs in the process's affinity set, the normalised cost per byte <span class="arithmatex">\(c(W) = a + b\,W^2\)</span> with <span class="arithmatex">\(a \approx 0.422\)</span> and <span class="arithmatex">\(b \approx 0.0068\)</span>, and the footprint <span class="arithmatex">\(F\)</span>. Measured figures are on the test machine, a ten-core Intel i9-10900K desktop, decoding four copies of an 11.9 MB Wikidata extract with the lazy-letters kernel, unless a row says otherwise. Its sections can be read in any order.</p>
 <h2 id="1-the-trade-off-at-the-optimum">1. The trade-off at the optimum<a class="headerlink" href="#1-the-trade-off-at-the-optimum" title="Permanent link">&para;</a></h2>
 <p>With every worker kept busy, the wall time goes as <span class="arithmatex">\(c(W)/W = a/W + b\,W^{p-1}\)</span> for a cost <span class="arithmatex">\(c(W) = a + b\,W^p\)</span>. Setting the derivative to zero gives <span class="arithmatex">\(a = (p-1)\,b\,W^p\)</span>, so at the continuous optimum the contention-associated overhead <span class="arithmatex">\(b\,W^p\)</span> is <span class="arithmatex">\(1/p\)</span> of the total: half at <span class="arithmatex">\(p = 2\)</span>, two thirds at 1.5, 40% at 2.5. It is a fitted term, not counted stall cycles.</p>
 <p>The fits over 6 to 9 workers at 10 threads, and what each says at 7 workers:</p>
@@ -2712,8 +2712,8 @@
 <tr>
 <td>46</td>
 <td>8, 6 and 4 threads: 6, 5 and 4 workers; utilisation flat near 0.76</td>
-<td>6, 5 and the reference 4; 0.742, 0.725, 0.740</td>
-<td>right</td>
+<td>pinned: 6, 5 and the reference 4; 0.742, 0.725, 0.740; later, eager 3 beat 4 (0.959)</td>
+<td>right at 8 and 6, overtaken at 4; pinned only, confounded</td>
 </tr>
 <tr>
 <td>46</td>
@@ -2765,12 +2765,12 @@
 </tr>
 </tbody>
 </table>
-<p>The 8-thread count was observed before record 46's CPU bound was written; the low-thread sweep re-measured it and tested 6 and 4 threads afresh.</p>
+<p>The 8-thread count was observed before record 46's CPU bound was written; the low-thread sweep re-measured it and tested 6 and 4 threads afresh. All of it ran pinned. An <a href="https://github.com/lmmx/mibz2/pull/145#issuecomment-6949008682">unpinned run</a> later found no gain at 8 threads (1.000) and losses at 6 and 4, so these pinned gains came from freeing a core for the decoder's other threads, not from the cache, and the 6- and 8-thread points come out of the contention fit.</p>
 <p><strong>The low-thread sweep in full.</strong> Each arm against the reference plan at its count, 10 paired rounds, pinned one CPU a core:</p>
 <figure class="bf-fig">
 <p class="bf-title">Below 8 threads: 5 workers win at 6 threads, and nothing beats the reference 4 at 4</p>
 <svg viewBox="0 0 600 380" role="img" aria-label="The low-thread sweep against the reference plan. At 6 threads: 4 lazy workers 1.077, 5 lazy workers 0.963, 6 lazy workers 1.040. At 4 threads: 2 lazy workers 1.533, 3 lazy workers 1.113, 4 lazy workers 1.098."><text x="4.0" y="18.0" class="bf-tm" text-anchor="start" style="font-size:14px">wall time against the reference plan at the same thread count (lower is faster)</text><path d="M70 283.0H470" class="bf-grid"/><text x="62.0" y="288.0" class="bf-tm" text-anchor="end" style="font-size:14px">0.96</text><path d="M70 256.0H470" class="bf-grid"/><path d="M70 229.0H470" class="bf-rule"/><text x="62.0" y="234.0" class="bf-tm" text-anchor="end" style="font-size:14px">1.00</text><path d="M70 202.0H470" class="bf-grid"/><path d="M70 175.0H470" class="bf-grid"/><text x="62.0" y="180.0" class="bf-tm" text-anchor="end" style="font-size:14px">1.04</text><path d="M70 148.0H470" class="bf-grid"/><path d="M70 121.0H470" class="bf-grid"/><text x="62.0" y="126.0" class="bf-tm" text-anchor="end" style="font-size:14px">1.08</text><path d="M70 94.0H470" class="bf-grid"/><path d="M70 67.0H470" class="bf-grid"/><text x="62.0" y="72.0" class="bf-tm" text-anchor="end" style="font-size:14px">1.12</text><text x="103.3" y="334.0" class="bf-tm" text-anchor="middle" style="font-size:15px">2</text><text x="186.7" y="334.0" class="bf-tm" text-anchor="middle" style="font-size:15px">3</text><text x="270.0" y="334.0" class="bf-tm" text-anchor="middle" style="font-size:15px">4</text><text x="353.3" y="334.0" class="bf-tm" text-anchor="middle" style="font-size:15px">5</text><text x="436.7" y="334.0" class="bf-tm" text-anchor="middle" style="font-size:15px">6</text><text x="270.0" y="360.0" class="bf-tm" text-anchor="middle" style="font-size:15px">lazy-letters workers</text><path d="M270.0 125.0 L353.3 278.9 L436.7 175.0" style="fill:none;stroke:var(--bf-blue);stroke-width:3"/><circle cx="270.0" cy="125.0" r="6" style="fill:var(--bf-blue);stroke:var(--bf-blue);stroke-width:2.5"><title>4 workers: 1.077</title></circle><path d="M353.3 299.2V260.0" style="stroke:var(--bf-ink);stroke-width:2"/><circle cx="353.3" cy="278.9" r="6" style="fill:var(--bf-blue);stroke:var(--bf-blue);stroke-width:2.5"><title>5 workers: 0.963</title></circle><circle cx="436.7" cy="175.0" r="6" style="fill:var(--bf-blue);stroke:var(--bf-blue);stroke-width:2.5"><title>6 workers: 1.040</title></circle><path d="M186.7 76.4 L270.0 96.7" style="fill:none;stroke:var(--bf-amber);stroke-width:3"/><circle cx="186.7" cy="76.4" r="6" style="fill:var(--bf-amber);stroke:var(--bf-amber);stroke-width:2.5"><title>3 workers: 1.113</title></circle><circle cx="270.0" cy="96.7" r="6" style="fill:var(--bf-amber);stroke:var(--bf-amber);stroke-width:2.5"><title>4 workers: 1.098</title></circle><path d="M103.3 94.0V46.7" style="stroke:var(--bf-amber);stroke-width:3"/><path d="M97.3 56.2l6 -8 6 8" style="fill:none;stroke:var(--bf-amber);stroke-width:3"/><text x="115.3" y="60.2" class="bf-tm" text-anchor="start" style="font-size:14px">2: 1.533</text><text x="353.3" y="308.9" class="bf-t-strong" text-anchor="middle" style="font-size:16px;fill:var(--bf-blue)">6 threads: 5 workers, 0.963</text><text x="426.7" y="161.0" class="bf-tm" text-anchor="end" style="font-size:14px">6 lazy: 1.040</text><text x="280.0" y="147.0" class="bf-tm" text-anchor="start" style="font-size:14px">1.077</text><text x="176.7" y="98.4" class="bf-tm" text-anchor="middle" style="font-size:14px">1.113</text><text x="282.0" y="101.7" class="bf-tm" text-anchor="start" style="font-size:14px">1.098</text><path d="M488 120H512" style="stroke:var(--bf-blue);stroke-width:3"/><text x="518.0" y="125.0" class="bf-t" text-anchor="start" style="font-size:15px">6 threads</text><path d="M488 150H512" style="stroke:var(--bf-amber);stroke-width:3"/><text x="518.0" y="155.0" class="bf-t" text-anchor="start" style="font-size:15px">4 threads</text><text x="488.0" y="200.0" class="bf-tm" text-anchor="start" style="font-size:14px">1.00 = reference</text><text x="488.0" y="220.0" class="bf-tm" text-anchor="start" style="font-size:14px">eager plan,</text><text x="488.0" y="240.0" class="bf-tm" text-anchor="start" style="font-size:14px">one worker</text><text x="488.0" y="260.0" class="bf-tm" text-anchor="start" style="font-size:14px">a thread</text></svg>
-<figcaption>Measured on the i9, decoding four copies of the Wikidata extract, 10 paired rounds a point, the process limited to one hardware thread a core; the bar is the 95% interval over the rounds. At 6 and 4 threads the reference plan runs the older (eager) kernel, one worker a thread, so the 6-worker point at 6 threads and the 4-worker point at 4 threads measure the lazy-letters kernel alone. The 2-worker point at 4 threads, 1.533, is off the chart.</figcaption>
+<figcaption>Measured on the test machine, decoding four copies of the Wikidata extract, 10 paired rounds a point, the process limited to one hardware thread a core; the bar is the 95% interval over the rounds. At 6 and 4 threads the reference plan runs the older (eager) kernel, one worker a thread, so the 6-worker point at 6 threads and the 4-worker point at 4 threads measure the lazy-letters kernel alone. The 2-worker point at 4 threads, 1.533, is off the chart.</figcaption>
 </figure>
 
 <table>
@@ -2845,7 +2845,7 @@
 <h2 id="5-topology-and-transfer">5. Topology and transfer<a class="headerlink" href="#5-topology-and-transfer" title="Permanent link">&para;</a></h2>
 <p>The cache bound sums over LLC-sharing domains: <span class="arithmatex">\(\sum_d \min(N_d,\ 0.8 \times L_d / F)\)</span>, with <span class="arithmatex">\(N_d\)</span> the logical CPUs of the affinity set in domain <span class="arithmatex">\(d\)</span>. The sum holds only if workers are spread across domains, which soft affinity per domain would arrange. The CPU bound stays process-wide. SMT enters through each worker's cost <span class="arithmatex">\(c(W)\)</span>, not through the caps.</p>
 <p>On the free GitHub x86 runners sampled so far (AMD EPYC 7763, 9V74 and 9V45: 2 cores, 4 logical CPUs, one 32 MiB L3) the cache bound is about 12.8 and never binds, and the rule gives <span class="arithmatex">\(m = 3.2\)</span>. "Within one worker" can only fail there on an outcome the existing data already rule out, so the runners are judged on three frozen refuters instead: 3 workers beating 4 by more than 2%; 2 workers coming within 3% of 4; or any lazy-letters plan beating the reference plan by more than 2%.</p>
-<p>The open topology question is the one the main post ends on. The i9 check reads the topology through the affinity set; a 10-thread run pinned to CPUs 0 to 9 sees 10 logical CPUs and no trim, while every sweep behind the trims ran pinned that way. Whether the decoder should read its topology machine-wide (present and online CPUs) or through its affinity set waits on the unpinned run.</p>
+<p>0.5.3 read the machine through the process's affinity set, so a 10-thread run pinned to CPUs 0 to 9 saw 10 logical CPUs and no trim. 0.5.4 recognises the test machine from its present and online CPUs and trims in both modes, and the unpinned 10-thread trim measured 0.873. For a general model, whether to read topology machine-wide or through the affinity set is still open.</p>
 <hr />
 <p><strong>Research records:</strong> the <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers/">main post's</a> list, and the model's records <a href="https://github.com/lmmx/mibz2/blob/c7ea4a5c5e8447fbdfd407c6f0ae07b6669bd87e/docs/journal/monodromy/2026-11-17-workers-machine-model.md">45</a>, <a href="https://github.com/lmmx/mibz2/blob/c7ea4a5c5e8447fbdfd407c6f0ae07b6669bd87e/docs/journal/monodromy/2026-11-17-workers-cpu-budget.md">46</a>, <a href="https://github.com/lmmx/mibz2/blob/c7ea4a5c5e8447fbdfd407c6f0ae07b6669bd87e/docs/journal/monodromy/2026-11-17-contention-counters.md">47</a>, <a href="https://github.com/lmmx/mibz2/blob/c7ea4a5c5e8447fbdfd407c6f0ae07b6669bd87e/docs/journal/monodromy/2026-11-17-level3-scoring.md">48</a>, <a href="https://github.com/lmmx/mibz2/blob/c7ea4a5c5e8447fbdfd407c6f0ae07b6669bd87e/docs/journal/monodromy/2026-11-17-worker-rule.md">49</a>, <a href="https://github.com/lmmx/mibz2/blob/c7ea4a5c5e8447fbdfd407c6f0ae07b6669bd87e/docs/journal/monodromy/2026-11-17-rule-scope.md">50</a> and <a href="https://github.com/lmmx/mibz2/blob/c7ea4a5c5e8447fbdfd407c6f0ae07b6669bd87e/docs/journal/monodromy/2026-11-17-miss-cost-scoring.md">51</a>; the <a href="https://github.com/lmmx/mibz2/pull/145#issuecomment-6944610173">12-byte rules at 7 workers</a>; the <a href="https://github.com/lmmx/mibz2/pull/145#issuecomment-6943635048">simple candidate rules and their scoring</a>.</p>
 <p><strong>Further reading:</strong></p>
@@ -3016,19 +3016,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=543885636ae6"></script>
+        <script src="../../assets/javascripts/bench.js?v=34646f01c776"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=543885636ae6"></script>
+        <script src="../../assets/javascripts/couriers.js?v=34646f01c776"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=543885636ae6"></script>
+        <script src="../../assets/javascripts/blog.js?v=34646f01c776"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=543885636ae6"></script>
+        <script src="../../assets/javascripts/frontier.js?v=34646f01c776"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=543885636ae6"></script>
+        <script src="../../assets/javascripts/observatory.js?v=34646f01c776"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=543885636ae6"></script>
+        <script src="../../assets/javascripts/katex.js?v=34646f01c776"></script>
       
     
   </body>

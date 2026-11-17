@@ -2,7 +2,7 @@
 
 # Technical notes: modelling the cache to rightsize workers
 
-These notes hold the detail that [the main post](<https://lmmx.github.io/mibz2/pr-preview/pr-538/blog/2026-11-17-modelling-the-cache-to-rightsize-workers/index.md>) leaves out to keep its argument moving. They use its notation: \\(W\\) workers, \\(N\\) logical CPUs in the process's affinity set, the normalised cost per byte \\(c(W) = a + b\\,W^2\\) with \\(a \\approx 0.422\\) and \\(b \\approx 0.0068\\), and the footprint \\(F\\). Measured figures are on the i9-10900K, decoding four copies of an 11.9 MB Wikidata extract with the lazy-letters kernel, unless a row says otherwise. Its sections can be read in any order.
+These notes hold the detail that [the main post](<https://lmmx.github.io/mibz2/pr-preview/pr-538/blog/2026-11-17-modelling-the-cache-to-rightsize-workers/index.md>) leaves out to keep its argument moving. They use its notation: \\(W\\) workers, \\(N\\) logical CPUs in the process's affinity set, the normalised cost per byte \\(c(W) = a + b\\,W^2\\) with \\(a \\approx 0.422\\) and \\(b \\approx 0.0068\\), and the footprint \\(F\\). Measured figures are on the test machine, a ten-core Intel i9-10900K desktop, decoding four copies of an 11.9 MB Wikidata extract with the lazy-letters kernel, unless a row says otherwise. Its sections can be read in any order.
 
 ## 1\. The trade-off at the optimum
 
@@ -60,7 +60,7 @@ Each prediction below was frozen before its run. Where a later record corrected 
 | 45 | `-3`: 7 workers no better than 0.98 of 10's time | 0.978 (0.973, 0.983) | borderline |
 | 45 | `-3`, if bandwidth-bound: 7 at about 0.885 | 0.978 | refuted |
 | 45 | CI runner: 4 workers, and the reference plan stays | not yet run | pending |
-| 46 | 8, 6 and 4 threads: 6, 5 and 4 workers; utilisation flat near 0.76 | 6, 5 and the reference 4; 0.742, 0.725, 0.740 | right |
+| 46 | 8, 6 and 4 threads: 6, 5 and 4 workers; utilisation flat near 0.76 | pinned: 6, 5 and the reference 4; 0.742, 0.725, 0.740; later, eager 3 beat 4 (0.959) | right at 8 and 6, overtaken at 4; pinned only, confounded |
 | 46 | rival idle term: 3 workers at 4 threads; utilisation 0.56, 0.67, 0.74 | the reference 4; flat | refuted |
 | 46 | `-3`, 10 threads: 9 workers, 7 at about 1.18 of 10's time | 7 best, at 0.978 | refuted |
 | LOG | 0.7 of the threads, rounded: 6, 4 and 3 | penalties of 12% at 6 threads and about 11% at 4 | refuted |
@@ -70,13 +70,13 @@ Each prediction below was frozen before its run. Where a later record corrected 
 | 48 | the same at 3 workers | 0.00225 against 0.0034 (0.0027, 0.0042), 34% low | refuted |
 | 49 | eager kernel at the trimmed counts | the eager-trim run is queued | pending |
 
-The 8-thread count was observed before record 46's CPU bound was written; the low-thread sweep re-measured it and tested 6 and 4 threads afresh.
+The 8-thread count was observed before record 46's CPU bound was written; the low-thread sweep re-measured it and tested 6 and 4 threads afresh. All of it ran pinned. An [unpinned run](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6949008682>) later found no gain at 8 threads (1.000) and losses at 6 and 4, so these pinned gains came from freeing a core for the decoder's other threads, not from the cache, and the 6- and 8-thread points come out of the contention fit.
 
 **The low-thread sweep in full.** Each arm against the reference plan at its count, 10 paired rounds, pinned one CPU a core:
 
 Below 8 threads: 5 workers win at 6 threads, and nothing beats the reference 4 at 4
 
-Measured on the i9, decoding four copies of the Wikidata extract, 10 paired rounds a point, the process limited to one hardware thread a core; the bar is the 95% interval over the rounds. At 6 and 4 threads the reference plan runs the older (eager) kernel, one worker a thread, so the 6-worker point at 6 threads and the 4-worker point at 4 threads measure the lazy-letters kernel alone. The 2-worker point at 4 threads, 1.533, is off the chart.
+Measured on the test machine, decoding four copies of the Wikidata extract, 10 paired rounds a point, the process limited to one hardware thread a core; the bar is the 95% interval over the rounds. At 6 and 4 threads the reference plan runs the older (eager) kernel, one worker a thread, so the 6-worker point at 6 threads and the 4-worker point at 4 threads measure the lazy-letters kernel alone. The 2-worker point at 4 threads, 1.533, is off the chart.
 
 | threads | reference plan | arm | wall |
 | ---: | --- | --- | ---: |
@@ -111,7 +111,7 @@ The cache bound sums over LLC-sharing domains: \\(\\sum\_d \\min(N\_d,\\ 0.8 \\t
 
 On the free GitHub x86 runners sampled so far (AMD EPYC 7763, 9V74 and 9V45: 2 cores, 4 logical CPUs, one 32 MiB L3) the cache bound is about 12.8 and never binds, and the rule gives \\(m = 3.2\\). "Within one worker" can only fail there on an outcome the existing data already rule out, so the runners are judged on three frozen refuters instead: 3 workers beating 4 by more than 2%; 2 workers coming within 3% of 4; or any lazy-letters plan beating the reference plan by more than 2%.
 
-The open topology question is the one the main post ends on. The i9 check reads the topology through the affinity set; a 10-thread run pinned to CPUs 0 to 9 sees 10 logical CPUs and no trim, while every sweep behind the trims ran pinned that way. Whether the decoder should read its topology machine-wide (present and online CPUs) or through its affinity set waits on the unpinned run.
+0.5.3 read the machine through the process's affinity set, so a 10-thread run pinned to CPUs 0 to 9 saw 10 logical CPUs and no trim. 0.5.4 recognises the test machine from its present and online CPUs and trims in both modes, and the unpinned 10-thread trim measured 0.873. For a general model, whether to read topology machine-wide or through the affinity set is still open.
 
 ---
 
