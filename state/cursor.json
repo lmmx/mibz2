@@ -2227,6 +2227,13 @@
       "review_comment_id": 6948628221,
       "review_comment_pr": 145,
       "publication_verification": "Exact body, author lmmx, destination145 and role-aware pinned coord.py checks pass. Helper's coordinator-only FROM limitation recorded."
+    },
+    {
+      "trigger_comment_id": 6953475922,
+      "status": "in progress",
+      "pr": 162,
+      "report_path": "state/reports/blog-r3-6953475922/report.md",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
     }
   ],
   "active_delegations": [],
