@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share.">
+        <meta name="description" content="Rather than re-measure every worker count whenever the decoder changes, mibz2 sizes its workers from a model of the cache and cores they share.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1362a3a58550">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=60abcf80efa6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1362a3a58550">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=60abcf80efa6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1362a3a58550">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=60abcf80efa6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1362a3a58550">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=60abcf80efa6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=1362a3a58550">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=60abcf80efa6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=1362a3a58550">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=60abcf80efa6">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -90,7 +90,7 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
   <meta property="og:title" content="Modelling the cache to rightsize workers">
-  <meta property="og:description" content="Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share.">
+  <meta property="og:description" content="Rather than re-measure every worker count whenever the decoder changes, mibz2 sizes its workers from a model of the cache and cores they share.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-527/blog/2026-11-17-modelling-the-cache-to-rightsize-workers/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-527/assets/social/blog-2026-11-17-modelling-the-cache-to-rightsize-workers.png">
   <meta property="og:image:type" content="image/png">
@@ -99,7 +99,7 @@
   <meta property="og:image:alt" content="Modelling the cache to rightsize workers">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Modelling the cache to rightsize workers">
-  <meta name="twitter:description" content="Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share.">
+  <meta name="twitter:description" content="Rather than re-measure every worker count whenever the decoder changes, mibz2 sizes its workers from a model of the cache and cores they share.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-527/assets/social/blog-2026-11-17-modelling-the-cache-to-rightsize-workers.png">
   <meta name="twitter:image:alt" content="Modelling the cache to rightsize workers">
 
@@ -2494,7 +2494,7 @@
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
 <h1 id="modelling-the-cache-to-rightsize-workers">Modelling the cache to rightsize workers<a class="headerlink" href="#modelling-the-cache-to-rightsize-workers" title="Permanent link">&para;</a></h1>
-<p class="post-dek">Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share.</p>
+<p class="post-dek">Rather than re-measure every worker count whenever the decoder changes, mibz2 sizes its workers from a model of the cache and cores they share.</p>
 <p class="post-meta">17 November 2026 · 13 min read · <a href="#6-what-changes-for-users-and-what-comes-next">Research in progress</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
@@ -2524,7 +2524,7 @@
 <figcaption>Conceptual. The thread names are the code's (src/parallel.rs). In the kitchen, each cook prepares a whole dish at a station, and all of them spread their ingredients on one worktop; more cooks crowd it. The analogy stops at eviction: a cook's ingredients never vanish from a worktop, but a worker's data does leave the cache and has to be fetched again from main memory.</figcaption>
 </figure>
 
-<p>mibz2's parallel decoder (<a href="https://github.com/lmmx/mibz2/blob/33e7225ba6147fb480168dc54fe30727f0b93aea/src/parallel.rs#L1-L22"><code>src/parallel.rs</code></a>) has three kinds of thread. The <em>scanner</em> reads the compressed stream in order. A block's end is only known once its Huffman-coded symbols have been read, so this step can't be split. Each <em>worker</em> then finishes one block on its own: the move-to-front step, the inverse Burrows–Wheeler transform and the block's checksum. The <em>reader</em> takes the finished blocks back in order and hands out their bytes. Each worker keeps up to four blocks in flight, so seven workers hold 28.</p>
+<p>mibz2's parallel decoder (<a href="https://github.com/lmmx/mibz2/blob/33e7225ba6147fb480168dc54fe30727f0b93aea/src/parallel.rs#L1-L22"><code>src/parallel.rs</code></a>) has three kinds of thread. The <em>scanner</em> reads the compressed stream in order. A block's end is only known once its Huffman-coded symbols have been read, so this step can't be split. Each <em>worker</em> then finishes one block on its own: the move-to-front step, the inverse Burrows–Wheeler transform, a run-length step and the block's checksum. The <em>reader</em> takes the finished blocks back in order and hands out their bytes. Each worker keeps up to four blocks in flight, so seven workers hold 28.</p>
 <p>Blocks decode independently, so more workers means more blocks at once. But the workers are not independent. They run on cores that share one L3 cache.</p>
 <figure class="bf-fig">
 <p class="bf-title">The i9's caches: private L2s, one shared L3</p>
@@ -2543,7 +2543,7 @@
 </figure>
 
 <h2 id="2-why-are-fewer-workers-faster">2. Why are fewer workers faster?<a class="headerlink" href="#2-why-are-fewer-workers-faster" title="Permanent link">&para;</a></h2>
-<p>There are two explanations a reader might reach for. One is the clock: a processor running fewer cores may run each faster. The other is idle time: with more workers than the processor can keep busy, some wait. A third is the cache: each worker slows the others by evicting their data. The hardware counters at 10 threads tell these apart. They count, per byte of output, against 10 workers.</p>
+<p>There are three explanations a reader might reach for. One is the clock: a processor running fewer cores may run each faster. The other is idle time: with more workers than the processor can keep busy, some wait. A third is the cache: each worker slows the others by evicting their data. The hardware counters at 10 threads tell these apart. They count, per byte of output, against 10 workers.</p>
 <figure class="bf-fig">
 <p class="bf-title">Fewer workers, cheaper bytes: the work is the same, the shared-cache misses fall</p>
 <svg viewBox="0 0 720 360" role="img" aria-label="Hardware counters per byte at 10 threads, against 10 workers. From 10 workers to 6: instructions 1 to 0.977, L2 misses 1 to 1.039, cycles 1 to 0.672 (0.752 at 7), L3 misses 1 to 0.403 (0.521 at 7)."><path d="M100 272.7H570" class="bf-grid"/><text x="94.0" y="276.7" class="bf-ttiny" text-anchor="end">0.4</text><path d="M100 238.0H570" class="bf-grid"/><text x="94.0" y="242.0" class="bf-ttiny" text-anchor="end">0.5</text><path d="M100 203.3H570" class="bf-grid"/><text x="94.0" y="207.3" class="bf-ttiny" text-anchor="end">0.6</text><path d="M100 168.7H570" class="bf-grid"/><text x="94.0" y="172.7" class="bf-ttiny" text-anchor="end">0.7</text><path d="M100 134.0H570" class="bf-grid"/><text x="94.0" y="138.0" class="bf-ttiny" text-anchor="end">0.8</text><path d="M100 99.3H570" class="bf-grid"/><text x="94.0" y="103.3" class="bf-ttiny" text-anchor="end">0.9</text><path d="M100 64.7H570" class="bf-rule"/><text x="94.0" y="68.7" class="bf-ttiny" text-anchor="end">1.0</text><path d="M100 30.0H570" class="bf-grid"/><text x="94.0" y="34.0" class="bf-ttiny" text-anchor="end">1.1</text><text x="560.0" y="310.0" class="bf-ttiny" text-anchor="middle">6</text><text x="447.5" y="310.0" class="bf-ttiny" text-anchor="middle">7</text><text x="335.0" y="310.0" class="bf-ttiny" text-anchor="middle">8</text><text x="222.5" y="310.0" class="bf-ttiny" text-anchor="middle">9</text><text x="110.0" y="310.0" class="bf-ttiny" text-anchor="middle">10</text><text x="335.0" y="332.0" class="bf-tm" text-anchor="middle">decoding workers, at 10 threads</text><text x="14.0" y="18.0" class="bf-tm" text-anchor="start">per byte of output, against 10 workers</text><path d="M110.0 64.7 L222.5 66.4 L335.0 68.8 L447.5 70.9 L560.0 72.6" style="fill:none;stroke:var(--bf-muted);stroke-width:2.5;stroke-dasharray:4 3"/><circle cx="110.0" cy="64.7" r="4" style="fill:var(--bf-muted)"><title>instructions, 10 workers: 1.000</title></circle><circle cx="222.5" cy="66.4" r="4" style="fill:var(--bf-muted)"><title>instructions, 9 workers: 0.995</title></circle><circle cx="335.0" cy="68.8" r="4" style="fill:var(--bf-muted)"><title>instructions, 8 workers: 0.988</title></circle><circle cx="447.5" cy="70.9" r="4" style="fill:var(--bf-muted)"><title>instructions, 7 workers: 0.982</title></circle><circle cx="560.0" cy="72.6" r="4" style="fill:var(--bf-muted)"><title>instructions, 6 workers: 0.977</title></circle><text x="578.0" y="86.6" class="bf-t" text-anchor="start">instructions 0.977</text><path d="M110.0 64.7 L222.5 64.3 L335.0 60.2 L447.5 54.6 L560.0 51.1" style="fill:none;stroke:var(--bf-steel);stroke-width:2.5;stroke-dasharray:4 3"/><circle cx="110.0" cy="64.7" r="4" style="fill:var(--bf-steel)"><title>L2 misses, 10 workers: 1.000</title></circle><circle cx="222.5" cy="64.3" r="4" style="fill:var(--bf-steel)"><title>L2 misses, 9 workers: 1.001</title></circle><circle cx="335.0" cy="60.2" r="4" style="fill:var(--bf-steel)"><title>L2 misses, 8 workers: 1.013</title></circle><circle cx="447.5" cy="54.6" r="4" style="fill:var(--bf-steel)"><title>L2 misses, 7 workers: 1.029</title></circle><circle cx="560.0" cy="51.1" r="4" style="fill:var(--bf-steel)"><title>L2 misses, 6 workers: 1.039</title></circle><text x="578.0" y="45.1" class="bf-t" text-anchor="start" style="fill:var(--bf-steel)">L2 misses 1.039</text><path d="M110.0 64.7 L222.5 76.5 L335.0 113.2 L447.5 150.6 L560.0 178.4" style="fill:none;stroke:var(--bf-blue);stroke-width:2.5"/><circle cx="110.0" cy="64.7" r="4" style="fill:var(--bf-blue)"><title>cycles, 10 workers: 1.000</title></circle><circle cx="222.5" cy="76.5" r="4" style="fill:var(--bf-blue)"><title>cycles, 9 workers: 0.966</title></circle><circle cx="335.0" cy="113.2" r="4" style="fill:var(--bf-blue)"><title>cycles, 8 workers: 0.860</title></circle><circle cx="447.5" cy="150.6" r="4" style="fill:var(--bf-blue)"><title>cycles, 7 workers: 0.752</title></circle><circle cx="560.0" cy="178.4" r="4" style="fill:var(--bf-blue)"><title>cycles, 6 workers: 0.672</title></circle><text x="578.0" y="182.4" class="bf-t" text-anchor="start" style="fill:var(--bf-blue)">cycles 0.672</text><path d="M110.0 64.7 L222.5 91.0 L335.0 185.0 L447.5 230.7 L560.0 271.6" style="fill:none;stroke:var(--bf-green);stroke-width:2.5"/><circle cx="110.0" cy="64.7" r="4" style="fill:var(--bf-green)"><title>L3 misses, 10 workers: 1.000</title></circle><circle cx="222.5" cy="91.0" r="4" style="fill:var(--bf-green)"><title>L3 misses, 9 workers: 0.924</title></circle><circle cx="335.0" cy="185.0" r="4" style="fill:var(--bf-green)"><title>L3 misses, 8 workers: 0.653</title></circle><circle cx="447.5" cy="230.7" r="4" style="fill:var(--bf-green)"><title>L3 misses, 7 workers: 0.521</title></circle><circle cx="560.0" cy="271.6" r="4" style="fill:var(--bf-green)"><title>L3 misses, 6 workers: 0.403</title></circle><text x="578.0" y="275.6" class="bf-t" text-anchor="start" style="fill:var(--bf-green)">L3 misses 0.403</text><text x="447.5" y="138.6" class="bf-ttiny" text-anchor="middle">0.752</text><text x="447.5" y="250.7" class="bf-ttiny" text-anchor="middle">0.521</text></svg>
@@ -2557,7 +2557,7 @@
 <h2 id="3-a-model-of-three-limits">3. A model of three limits<a class="headerlink" href="#3-a-model-of-three-limits" title="Permanent link">&para;</a></h2>
 <p>The model's answer is W* ≈ min(C, W_L3, W_CPU): the cores available, the cache limit and the CPU budget. The smallest binds, since plenty of one resource doesn't make up for running out of another.</p>
 <p><strong>The cache limit.</strong> At 10 threads, the cycles per byte fit c(W) = a + b·W², with a ≈ 0.42 the cost of a worker alone and b·W² the contention. The square comes from each of W workers missing more often in proportion to the W footprints sharing the cache. Throughput is then proportional to W / (a + b·W²), which peaks where b·W² = a: where contention costs as much as the work itself. That is W = √(a/b) ≈ 7.9. At 2.1 MB a worker, 7.9 footprints fill about 0.8 of the 20 MiB L3. The fits with other exponents put the peak in the same place, 0.77 to 0.84 of the L3, so the rule is W_L3 ≈ 0.8 × L3 ÷ footprint. The 0.8 is a fitted constant, not a law. mibz2's teams policy already sizes its tables to about 0.7 of the L3, and the simple candidate rule frozen before the next runs uses that 0.7, which gives 7.</p>
-<p><strong>The CPU budget.</strong> A worker with a processor to itself is busy 0.93 of the time; the rest it waits on the scanner. The scanner and reader use about one processor (1.08 counted at 10 threads). And a fully subscribed set of processors leaves some idle, about 1.25 at 10 threads, from the scheduler's slack. So the workers can use at most N − ν − ι processors, with N the processors allowed, ν the non-worker threads' use and ι the slack, and the budget in workers is W_CPU ≈ (N − ν − ι) ÷ 0.93. This reproduces the measured busy shares at 10 threads: 0.767, 0.851, 0.930, 0.930 and 0.930 for 10 down to 6 workers, against 0.763, 0.857, 0.931, 0.925 and 0.931 measured.</p>
+<p><strong>The CPU budget.</strong> A worker with a processor to itself is busy 0.93 of the time; the rest it waits on the rest of the pipeline. The scanner and reader use about one processor (1.08 counted at 10 threads). And a fully subscribed set of processors leaves some idle, about 1.25 at 10 threads, from the scheduler's slack. So the workers can use at most N − ν − ι processors, with N the processors allowed, ν the non-worker threads' use and ι the slack, and the budget in workers is W_CPU ≈ (N − ν − ι) ÷ 0.93. This reproduces the measured busy shares at 10 threads: 0.767, 0.851, 0.930, 0.930 and 0.930 for 10 down to 6 workers, against 0.763, 0.857, 0.931, 0.925 and 0.931 measured.</p>
 <p>An earlier version of this term was derived from the wall times and the cycles, and the review of the runs pointed out that it was close to the identity above, so its match was not independent evidence. The term is now built only from the processor time each thread was counted using.</p>
 <figure class="bf-fig">
 <p class="bf-title">The model at two thread counts: the smallest limit binds</p>
@@ -2571,7 +2571,7 @@
 <p>Every prediction is frozen before its run and scored after it. So far:</p>
 <ul>
 <li>a capacity <em>cliff</em>, once the footprints fit, was refuted by the smooth fall in misses;</li>
-<li>contention for the bus between the cores, rather than the cache, was refuted on its counter pattern;</li>
+<li>contention for the ring that links the cores, or for memory bandwidth, was refuted on its counter pattern: it predicted flat misses, and they fell by 41% from 8 workers to 6;</li>
 <li>at 10 threads the model named 7 workers, which was right, but it predicted 0.93 of the time, and 0.885 was measured: the gain was larger than it allowed.</li>
 </ul>
 <p><strong>Frozen for the low-thread sweep</strong> (4, 6 and 8 threads):</p>
@@ -2611,8 +2611,8 @@
 </table>
 <p>The rival keeps the slack ι fixed at 1.25 processors rather than in proportion to N. The two disagree at 4 threads, and the counters can tell them apart without timing anything: each worker's busy share at T workers stays about 0.76 under the model, against 0.56, 0.67 and 0.74 at 4, 6 and 8 threads under the rival.</p>
 <p>A prediction passes at a thread count if it is within one worker of the best measured, and its choice costs at most 2% against the best: wall(predicted) ÷ wall(best) − 1 ≤ 2%.</p>
-<p><strong>The test that can fail.</strong> The same file compressed with <code>bzip2 -3</code> has blocks a third the size, so each footprint shrinks to about a third, and the cache limit moves from about 8 to about 24. The model predicts that the trim disappears: at 10 threads the best count is 9 or 10, and 7 workers are no better than 0.98 of 10's time. If contention were set by memory bandwidth instead, 7 would still win at about 0.885, as now.</p>
-<p><strong>The free CI machines.</strong> GitHub's free x86 runners have 4 processors on 2 cores and a 32 MiB L3. There the cache limit is about 12.8 and never binds, so the model predicts that 4 workers stay best (or 3 within 2%), and that today's plan stays. With only 2 to 4 workers possible, "within one worker" can't fail there, so the runners are judged on three refuters instead: the model is wrong if 3 workers beat 4 by more than 2%, if 2 come within 3% of 4, or if any lazy-letters plan beats today's by more than 2%.</p>
+<p><strong>The test that can fail.</strong> The same file compressed with <code>bzip2 -3</code> has blocks a third the size. If a footprint shrinks with its block, to about a third, and the cache limit moves from about 8 to about 24. The model predicts that the trim disappears: at 10 threads the best count is 9 or 10, and 7 workers are no better than 0.98 of 10's time. If contention were set by memory bandwidth instead, 7 would still win at about 0.885, as now.</p>
+<p><strong>The free CI machines.</strong> GitHub's free x86 runners have 4 processors on 2 cores and a 32 MiB L3. There the cache limit is about 12.8 and never binds, so the model predicts that 4 workers stay best (or 3 within 2%), and that today's plan stays. With only 2 to 4 workers possible, "within one worker" fails there only on an outcome the existing data already rule out, so the runners are judged on three refuters instead: the model is wrong if 3 workers beat 4 by more than 2%, if 2 come within 3% of 4, or if any lazy-letters plan beats today's by more than 2%.</p>
 <div class="admonition note">
 <p class="admonition-title">Results pending</p>
 <!-- RESULTS: fill in when the low-thread sweep and the bzip2 -3 run are read -->
@@ -2802,19 +2802,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=1362a3a58550"></script>
+        <script src="../../assets/javascripts/bench.js?v=60abcf80efa6"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=1362a3a58550"></script>
+        <script src="../../assets/javascripts/couriers.js?v=60abcf80efa6"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=1362a3a58550"></script>
+        <script src="../../assets/javascripts/blog.js?v=60abcf80efa6"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=1362a3a58550"></script>
+        <script src="../../assets/javascripts/frontier.js?v=60abcf80efa6"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=1362a3a58550"></script>
+        <script src="../../assets/javascripts/observatory.js?v=60abcf80efa6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=1362a3a58550"></script>
+        <script src="../../assets/javascripts/katex.js?v=60abcf80efa6"></script>
       
     
   </body>

@@ -161,7 +161,7 @@
     "title": "Stop and walk: cutting a BWT inversion short and walking the rest"
   },
   "assets/social/blog-2026-11-17-modelling-the-cache-to-rightsize-workers.png": {
-    "description": "Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share.",
+    "description": "Rather than re-measure every worker count whenever the decoder changes, mibz2 sizes its workers from a model of the cache and cores they share.",
     "foot": "lmmx.github.io/mibz2 · 17 November 2026",
     "kind": "progress",
     "section": " · Research blog",
