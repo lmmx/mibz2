@@ -1709,6 +1709,498 @@ bench-cores-less-one MASTER="4ffe2bcbef1d4296e7d7bdf35ba3972c03edd6e3" COPIES="4
       || echo "bench-cores-less-one: VOID, no verdict (verdict.txt says why); the bundle is kept"
     bash bench/bundle.sh "$O"
 
+# Workers and window past the cores (#145, the Coordinator's ruling after #481; the registration posted
+# before the data): with #481's nine lazy workers and a window sized to them as production, are
+# eight workers, or nine with the window doubled or halved, faster? Production's decoder
+# (`mibz2`: on the i9 past its cores, nine workers, 36 blocks in flight) against three arms of
+# the same build that differ from it in the worker count or the window alone (`ab`'s
+# `mibz2-occ-N-S`: N lazy workers, S blocks): eight workers at 4 a worker (32), and nine at 8
+# a worker (72) and at 2 (18). Judged at 12, 16 and 20 threads asked; COPIES copies of the
+# Wikidata sample (the gain family) and the text corpus (a loss and memory guard). Built by
+# rustc 1.99.1, its rustc -vV and cargo -vV recorded. No spinner: no judged count leaves a
+# core free. `bench/two_arm.py` checks the records and the machine whole, then reads a verdict
+# for each arm and the choice among those that adopt.
+bench-workers-window COPIES="4" ROUNDS="10" JUDGED="12,16,20":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/workers-window
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-workers-window (the registration on #145): mibz2 against mibz2-occ-8-32, mibz2-occ-9-72 and mibz2-occ-9-18 at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and on text, judged at {{JUDGED}} threads, {{ROUNDS}} paired rounds"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-workers-window: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-workers-window: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    "$AB" run "$O/judged.jsonl" --arms "mibz2,mibz2-occ-8-32,mibz2-occ-9-72,mibz2-occ-9-18" \
+      --threads "{{JUDGED}}" --rounds {{ROUNDS}} --spread \
+      "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    "$AB" summary "$O/judged.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2 \
+      --cand mibz2-occ-8-32 --cand mibz2-occ-9-72 --cand mibz2-occ-9-18 \
+      --main wikidata-x{{COPIES}} --guard text --judged "{{JUDGED}}" --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads 0 \
+      | tee "$O/verdict.txt" \
+      || echo "bench-workers-window: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    bash bench/bundle.sh "$O"
+
+# Fewer workers past the cores (the registration on #145, docs/journal/2026-11-16-workers-low.md,
+# posted before the data; stacked on #510): bench-workers-window found eight workers with 32
+# blocks in flight (`mibz2-occ-8-32`) ADOPTS over production's nine with 36. Are seven or six
+# workers, each at 4 blocks a worker and with lazy letters held (the plan would drop them
+# below 8 workers), faster still? `mibz2-occ-8-32` is the reference (the
+# ratios' denominator, the candidate production after #510); `mibz2-occ-7-28` and
+# `mibz2-occ-6-24` the candidates; production's `mibz2` (nine workers, 36 blocks) a context
+# arm, run and checked with the others, reported, not judged. Everything else is
+# bench-workers-window's: one build by rustc 1.99.1, judged at 12, 16 and 20 threads asked,
+# COPIES copies of the Wikidata sample (the gain family) and text (a loss and memory guard), no
+# spinner, `bench/two_arm.py`'s checks and rule. Then a diagnostic that decides nothing: at 12
+# threads, LLC load misses, L2 misses and L2 non-silent evictions a byte of output, the four
+# arms under `perf stat` (`bench/counters.py --groups`), each event kept only if `perf list`
+# names it, if `kernel.perf_event_paranoid` is 1 or less.
+bench-workers-low COPIES="4" ROUNDS="10" JUDGED="12,16,20" REPS="10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/workers-low
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-workers-low (the registration on #145): mibz2-occ-7-28 and mibz2-occ-6-24 against mibz2-occ-8-32, mibz2 as context, at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and on text, judged at {{JUDGED}} threads, {{ROUNDS}} paired rounds; then counters at 12 threads, {{REPS}} reps"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-workers-low: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-workers-low: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    "$AB" run "$O/judged.jsonl" --arms "mibz2-occ-8-32,mibz2-occ-7-28,mibz2-occ-6-24,mibz2" \
+      --threads "{{JUDGED}}" --rounds {{ROUNDS}} --spread \
+      "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    "$AB" summary "$O/judged.jsonl" --ref mibz2-occ-8-32 | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2-occ-8-32 \
+      --cand mibz2-occ-7-28 --cand mibz2-occ-6-24 --context mibz2 \
+      --main wikidata-x{{COPIES}} --guard text --judged "{{JUDGED}}" --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads 0 \
+      | tee "$O/verdict.txt" \
+      || echo "bench-workers-low: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # the occupancy diagnostic (decides nothing): skipped, and said so, where perf cannot count;
+    # an event `perf list` does not name is dropped, and said so
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 1 ]; then
+      perf --version | tee "$O/perf_version.txt"
+      perf list > "$O/perf_list.txt" 2>&1 || true
+      has() { grep -Fqw -- "$1" "$O/perf_list.txt"; }
+      l2=""; llc=""
+      for e in l2_rqsts.miss l2_lines_out.non_silent; do
+        if has "$e"; then l2="$l2,$e"; else echo "the event $e: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+      done
+      if has LLC-load-misses; then llc="cycles,LLC-load-misses"; else echo "the event LLC-load-misses: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+      groups=""
+      [ -z "$l2" ] || groups="cycles,instructions$l2"
+      [ -z "$llc" ] || groups="${groups:+$groups;}$llc"
+      echo "the groups: ${groups:-none}" | tee -a "$O/events.txt"
+      if [ -n "$groups" ]; then
+        python3 bench/counters.py run --ab "$AB" --arm mibz2-occ-8-32 --arm mibz2 --arm mibz2-occ-7-28 \
+          --arm mibz2-occ-6-24 --groups "$groups" --threads 12 --reps {{REPS}} --file "$W/wikidata.bz2" \
+          --out "$O/counters.jsonl"
+        python3 bench/counters.py report "$O/counters.jsonl" --ref mibz2-occ-8-32 --cand mibz2 \
+          --cand mibz2-occ-7-28 --cand mibz2-occ-6-24 --groups "$groups" --threads 12 --reps {{REPS}} \
+          | tee "$O/counters.txt" \
+          || echo "bench-workers-low: the occupancy diagnostic is VOID (counters.txt says why); the verdict stands"
+      else
+        echo "bench-workers-low: the occupancy diagnostic skipped (perf list names none of its events); the verdict stands" | tee "$O/counters.txt"
+      fi
+    else
+      echo "bench-workers-low: the occupancy diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 1); the verdict stands" | tee "$O/counters.txt"
+    fi
+    bash bench/bundle.sh "$O"
+
+# Fewer workers within the cores (the registration, docs/journal/2026-11-17-workers-at-cores.md,
+# posted before the data; stacked on #514): past the cores, bench-workers-low found seven lazy
+# workers with 28 blocks in flight faster than eight. Within them, where production runs one
+# lazy worker a thread asked (`Plan::for_threads`: ten workers and 40 blocks at 10 threads,
+# eight and 32 at 8), are fewer workers faster too? Production's `mibz2`, its own plan at each
+# count, is the reference; the occupancy arms (`ab`'s `mibz2-occ-N-S`, lazy, 4 blocks a worker)
+# 6/24, 7/28, 8/32 and 9/36 run beside it at both counts, since `ab run` crosses arms and
+# counts. Judged at 10 threads: 7/28, 8/32 and 9/36; at 8: 7/28 and 6/24 (`bench/two_arm.py
+# --judge-at`); every other cell is reported, not judged (8/32 at 8 threads is production's own
+# decoder there). One build by rustc 1.99.1, COPIES copies of the Wikidata sample (the gain
+# family) and text (a loss and memory guard), each run pinned one CPU a core (`--spread`), the
+# spinner held on a free core where one is (at 8 threads; HOLD_CPU=off for none), none at 10.
+# Then a diagnostic that decides nothing: at 10 threads, W = 10 (production) to 6, cycles,
+# ref-cycles, instructions, LLC load misses and L2 misses a byte of output, and a busy share a
+# worker from task-clock (`bench/counters.py --groups`), each event kept only if `perf list`
+# names it, if `kernel.perf_event_paranoid` is 1 or less.
+bench-workers-at-cores COPIES="4" ROUNDS="10" REPS="10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/workers-at-cores
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-workers-at-cores (the registration, docs/journal/2026-11-17-workers-at-cores.md): mibz2-occ-9-36, -8-32 and -7-28 at 10 threads and mibz2-occ-7-28 and -6-24 at 8 against production's mibz2 at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and on text, {{ROUNDS}} paired rounds; then counters at 10 threads, {{REPS}} reps"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-workers-at-cores: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-workers-at-cores: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    # the spinner as bench-cores-less-one holds it within the cores: on a core the run leaves
+    # free, so at 8 threads and not at 10
+    free=(); hold_cpu=${HOLD_CPU:-auto}; hold_max=0
+    [ "$hold_cpu" = off ] || { free=(--hold-cpu "$hold_cpu" --hold-max-threads 9); hold_max=9; }
+    "$AB" run "$O/judged.jsonl" --arms "mibz2,mibz2-occ-9-36,mibz2-occ-8-32,mibz2-occ-7-28,mibz2-occ-6-24" \
+      --threads "8,10" --rounds {{ROUNDS}} --spread "${free[@]}" \
+      "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    "$AB" summary "$O/judged.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2 \
+      --cand mibz2-occ-9-36 --cand mibz2-occ-8-32 --cand mibz2-occ-7-28 --cand mibz2-occ-6-24 \
+      --judge-at mibz2-occ-9-36=10 --judge-at mibz2-occ-8-32=10 --judge-at mibz2-occ-7-28=8,10 \
+      --judge-at mibz2-occ-6-24=8 \
+      --main wikidata-x{{COPIES}} --guard text --judged "8,10" --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads "$hold_max" \
+      | tee "$O/verdict.txt" \
+      || echo "bench-workers-at-cores: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # the diagnostic (decides nothing): skipped, and said so, where perf cannot count; an event
+    # `perf list` does not name is dropped, and said so
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 1 ]; then
+      perf --version | tee "$O/perf_version.txt"
+      perf list > "$O/perf_list.txt" 2>&1 || true
+      has() { grep -Fqw -- "$1" "$O/perf_list.txt"; }
+      one=""; llc=""
+      for e in ref-cycles instructions l2_rqsts.miss task-clock; do
+        if has "$e"; then one="$one,$e"; else echo "the event $e: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+      done
+      if has LLC-load-misses; then llc="cycles,LLC-load-misses"; else echo "the event LLC-load-misses: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+      groups=""
+      [ -z "$one" ] || groups="cycles$one"
+      [ -z "$llc" ] || groups="${groups:+$groups;}$llc"
+      echo "the groups: ${groups:-none}" | tee -a "$O/events.txt"
+      if [ -n "$groups" ]; then
+        python3 bench/counters.py run --ab "$AB" --arm mibz2 --arm mibz2-occ-9-36 --arm mibz2-occ-8-32 \
+          --arm mibz2-occ-7-28 --arm mibz2-occ-6-24 --groups "$groups" --threads 10 --reps {{REPS}} \
+          --file "$W/wikidata.bz2" --out "$O/counters.jsonl"
+        python3 bench/counters.py report "$O/counters.jsonl" --ref mibz2 --cand mibz2-occ-9-36 \
+          --cand mibz2-occ-8-32 --cand mibz2-occ-7-28 --cand mibz2-occ-6-24 --workers mibz2=10 \
+          --groups "$groups" --threads 10 --reps {{REPS}} \
+          | tee "$O/counters.txt" \
+          || echo "bench-workers-at-cores: the diagnostic is VOID (counters.txt says why); the verdict stands"
+      else
+        echo "bench-workers-at-cores: the diagnostic skipped (perf list names none of its events); the verdict stands" | tee "$O/counters.txt"
+      fi
+    else
+      echo "bench-workers-at-cores: the diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 1); the verdict stands" | tee "$O/counters.txt"
+    fi
+    bash bench/bundle.sh "$O"
+
+# The lower worker counts within the cores (the registration,
+# docs/journal/2026-11-17-workers-sweep-low.md, posted before the data; stacked on #515): within
+# the i9's cores, bench-workers-at-cores found fewer lazy workers than threads faster (7/28 at 10
+# threads, 6/24 and 7/28 at 8), and past them 7 is best (#514). This maps the counts below, for a
+# production rule workers = f(threads, cores). Production's `mibz2`, its own plan at each count,
+# is the reference: one worker a thread asked (`Plan::for_threads`), lazy at 8 threads but a slot
+# for every letter (eager Cells) at 6 and 4, below `LAZY_FROM_THREADS`. The candidates are
+# occupancy arms (`ab`'s `mibz2-occ-N-S`, lazy, 4 blocks a worker): 6/24 and 5/20 at 8 threads;
+# 6/24, 5/20 and 4/16 at 6; 4/16, 3/12 and 2/8 at 4. 6/24 at 6 and 4/16 at 4 are the lazy controls
+# (production's workers and window with lazy letters), judged as candidates too, so a gain splits
+# into kernel and count. One `ab run` a count with that count's arms alone (`bench/two_arm.py
+# --judge-at --sparse`), one build by rustc 1.99.1, COPIES copies of the Wikidata sample (the gain
+# family) and text (a loss and memory guard), each run pinned one CPU a core (`--spread`), the
+# spinner held on a free core at every count (HOLD_CPU=off for none). Then a diagnostic that
+# decides nothing, for MONODROMY's record 44: at each count, every arm judged there (and 3/12 at
+# 6), cycles, ref-cycles, instructions and L2 misses a byte of output and a busy share a worker
+# from task-clock; at 6 threads also LLC load misses a byte (`bench/counters.py --groups`), each
+# event kept only if `perf list` names it, if `kernel.perf_event_paranoid` is 1 or less; and,
+# for record 46, the workers' and non-workers' CPU from the judged records' per-thread samples
+# (`bench/thread_split.py`), reported, not judged. ROUNDS and REPS are 8 and 6 (not #515's 10
+# and 10), to keep the run near 25 minutes on the i9.
+bench-workers-sweep-low COPIES="4" ROUNDS="8" REPS="6":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/workers-sweep-low
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-workers-sweep-low (the registration, docs/journal/2026-11-17-workers-sweep-low.md): mibz2-occ-6-24 and -5-20 at 8 threads, -6-24, -5-20 and -4-16 at 6, and -4-16, -3-12 and -2-8 at 4 against production's mibz2 at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and on text, {{ROUNDS}} paired rounds; then counters at 8, 6 and 4 threads, {{REPS}} reps"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-workers-sweep-low: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-workers-sweep-low: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    # the spinner as bench-cores-less-one holds it within the cores: on a core the run leaves
+    # free, which every count here does
+    free=(); hold_cpu=${HOLD_CPU:-auto}; hold_max=0
+    [ "$hold_cpu" = off ] || { free=(--hold-cpu "$hold_cpu" --hold-max-threads 9); hold_max=9; }
+    # one `ab run` a count, its own arms alone, all appending to one file
+    for spec in "8:mibz2,mibz2-occ-6-24,mibz2-occ-5-20" \
+                "6:mibz2,mibz2-occ-6-24,mibz2-occ-5-20,mibz2-occ-4-16" \
+                "4:mibz2,mibz2-occ-4-16,mibz2-occ-3-12,mibz2-occ-2-8"; do
+      echo "at ${spec%%:*} threads: ${spec#*:}"
+      "$AB" run "$O/judged.jsonl" --arms "${spec#*:}" --threads "${spec%%:*}" --rounds {{ROUNDS}} \
+        --spread "${free[@]}" "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    done
+    "$AB" summary "$O/judged.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2 \
+      --cand mibz2-occ-6-24 --cand mibz2-occ-5-20 --cand mibz2-occ-4-16 --cand mibz2-occ-3-12 --cand mibz2-occ-2-8 \
+      --judge-at mibz2-occ-6-24=8,6 --judge-at mibz2-occ-5-20=8,6 --judge-at mibz2-occ-4-16=6,4 \
+      --judge-at mibz2-occ-3-12=4 --judge-at mibz2-occ-2-8=4 --sparse \
+      --main wikidata-x{{COPIES}} --guard text --judged "8,6,4" --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads "$hold_max" \
+      | tee "$O/verdict.txt" \
+      || echo "bench-workers-sweep-low: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # reported, not judged (MONODROMY's record 46): from the judged records' per-thread samples,
+    # each arm's workers' busy share and its non-workers' CPU over wall, by count
+    python3 bench/thread_split.py "$O/judged.jsonl" --workers mibz2=T | tee "$O/thread-split.txt" \
+      || echo "bench-workers-sweep-low: the thread split is VOID (thread-split.txt says why); the verdict stands"
+    # the diagnostic (decides nothing): skipped, and said so, where perf cannot count; an event
+    # `perf list` does not name is dropped, and said so
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 1 ]; then
+      perf --version | tee "$O/perf_version.txt"
+      perf list > "$O/perf_list.txt" 2>&1 || true
+      has() { grep -Fqw -- "$1" "$O/perf_list.txt"; }
+      one=""; llc=""
+      for e in ref-cycles instructions l2_rqsts.miss task-clock; do
+        if has "$e"; then one="$one,$e"; else echo "the event $e: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+      done
+      if has LLC-load-misses; then llc="cycles,LLC-load-misses"; else echo "the event LLC-load-misses: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+      if [ -n "$one" ]; then
+        # at every judged count, every arm judged there (and 3/12 at 6, for W = 6 to 3): the
+        # clock, cycles a byte and the busy share (`cycles` with `ref-cycles` and `task-clock`);
+        # at 6 threads also LLC misses a byte (the second group)
+        for spec in "8:mibz2,mibz2-occ-6-24,mibz2-occ-5-20" \
+                    "6:mibz2,mibz2-occ-6-24,mibz2-occ-5-20,mibz2-occ-4-16,mibz2-occ-3-12" \
+                    "4:mibz2,mibz2-occ-4-16,mibz2-occ-3-12,mibz2-occ-2-8"; do
+          t=${spec%%:*}; IFS=, read -ra arms <<< "${spec#*:}"
+          g="cycles$one"
+          [ "$t" != 6 ] || [ -z "$llc" ] || g="$g;$llc"
+          echo "counters at $t threads: ${spec#*:}; the groups: $g" | tee -a "$O/events.txt"
+          python3 bench/counters.py run --ab "$AB" $(printf -- '--arm %s ' "${arms[@]}") --groups "$g" \
+            --threads "$t" --reps {{REPS}} --file "$W/wikidata.bz2" --out "$O/counters-$t.jsonl"
+          python3 bench/counters.py report "$O/counters-$t.jsonl" --ref mibz2 \
+            $(printf -- '--cand %s ' "${arms[@]:1}") --workers "mibz2=$t" \
+            --groups "$g" --threads "$t" --reps {{REPS}} \
+            | tee "$O/counters-$t.txt" \
+            || echo "bench-workers-sweep-low: the diagnostic at $t threads is VOID (counters-$t.txt says why); the verdict stands"
+        done
+      else
+        echo "bench-workers-sweep-low: the diagnostic skipped (perf list names none of the first group's events); the verdict stands" | tee "$O/counters.txt"
+      fi
+    else
+      echo "bench-workers-sweep-low: the diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 1); the verdict stands" | tee "$O/counters.txt"
+    fi
+    bash bench/bundle.sh "$O"
+
+# Eager or lazy at trimmed worker counts below 8 (the registration,
+# docs/journal/2026-11-17-eager-trim.md, posted before the data; stacked on #521): production's
+# plan is eager Cells below `LAZY_FROM_THREADS` (8) workers, but every trimmed arm measured so
+# far was lazy. Production's `mibz2`, its own decoder at each count, is the reference: eager 6/24
+# at 6 threads, eager 4/16 at 4, and at 10 seven lazy workers with 28 blocks (`trims_to_seven`,
+# #524). The candidates: eager 5/20 and lazy 5/20 at 6 threads; eager 3/12 at 4; eager 7/28 and
+# lazy 7/28 at 10. The eager arms are `ab`'s `mibz2-oce-N-S` (`parallel_workers(N, S, false)`,
+# the decoder production builds for an eager `Plan::Workers(N)` with S blocks); the lazy ones
+# `mibz2-occ-N-S`. Lazy 7/28 at 10 is production's own decoder there, an A/A check judged as a
+# candidate. One `ab run` a count with that count's arms alone (`bench/two_arm.py --judge-at
+# --sparse`), one build by rustc 1.99.1, COPIES copies of the Wikidata sample (the gain family)
+# and text (a loss and memory guard), each run pinned one CPU a core (`--spread`), the spinner
+# held on a free core at 6 and 4 threads (none at 10; HOLD_CPU=off for none). The eager arm over
+# its lazy twin at equal counts (5 at 6 threads, 7 at 10) is reported, not judged (`--pair`).
+# Then, deciding nothing: each judged record's worker and non-worker CPU (`bench/thread_split.py`,
+# production's W given count by count: 6, 4 and 7), and the cycles counters per arm at each
+# count (`bench/counters.py --groups`, if `kernel.perf_event_paranoid` is 1 or less).
+bench-eager-trim COPIES="4" ROUNDS="8" REPS="4":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/eager-trim
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-eager-trim (the registration, docs/journal/2026-11-17-eager-trim.md): mibz2-oce-5-20 and mibz2-occ-5-20 at 6 threads, mibz2-oce-3-12 at 4, and mibz2-oce-7-28 and mibz2-occ-7-28 at 10 against production's mibz2 at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and on text, {{ROUNDS}} paired rounds; then counters at 6, 4 and 10 threads, {{REPS}} reps"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-eager-trim: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-eager-trim: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    # the spinner as bench-cores-less-one holds it within the cores: on a core the run leaves
+    # free, at 6 and 4 threads; at 10 every core is the run's, and none is held
+    free=(); hold_cpu=${HOLD_CPU:-auto}; hold_max=0
+    [ "$hold_cpu" = off ] || { free=(--hold-cpu "$hold_cpu" --hold-max-threads 9); hold_max=9; }
+    # one `ab run` a count, its own arms alone, all appending to one file
+    for spec in "6:mibz2,mibz2-oce-5-20,mibz2-occ-5-20" \
+                "4:mibz2,mibz2-oce-3-12" \
+                "10:mibz2,mibz2-oce-7-28,mibz2-occ-7-28"; do
+      echo "at ${spec%%:*} threads: ${spec#*:}"
+      "$AB" run "$O/judged.jsonl" --arms "${spec#*:}" --threads "${spec%%:*}" --rounds {{ROUNDS}} \
+        --spread "${free[@]}" "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    done
+    "$AB" summary "$O/judged.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2 \
+      --cand mibz2-oce-5-20 --cand mibz2-occ-5-20 --cand mibz2-oce-3-12 --cand mibz2-oce-7-28 --cand mibz2-occ-7-28 \
+      --judge-at mibz2-oce-5-20=6 --judge-at mibz2-occ-5-20=6 --judge-at mibz2-oce-3-12=4 \
+      --judge-at mibz2-oce-7-28=10 --judge-at mibz2-occ-7-28=10 --sparse \
+      --pair mibz2-oce-5-20/mibz2-occ-5-20 --pair mibz2-oce-7-28/mibz2-occ-7-28 \
+      --main wikidata-x{{COPIES}} --guard text --judged "6,4,10" --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads "$hold_max" \
+      | tee "$O/verdict.txt" \
+      || echo "bench-eager-trim: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # reported, not judged: from the judged records' per-thread samples, each arm's workers'
+    # busy share and its non-workers' CPU over wall, count by count with production's W there
+    # (6 and 4 workers at 6 and 4 threads, and the seven lazy workers at 10)
+    : > "$O/thread-split.txt"
+    for spec in 6:6 4:4 10:7; do
+      python3 bench/thread_split.py "$O/judged.jsonl" --threads "${spec%%:*}" --workers "mibz2=${spec#*:}" \
+        | tee -a "$O/thread-split.txt" \
+        || echo "bench-eager-trim: the thread split at ${spec%%:*} threads is VOID (thread-split.txt says why); the verdict stands"
+    done
+    # the diagnostic (decides nothing): skipped, and said so, where perf cannot count; an event
+    # `perf list` does not name is dropped, and said so
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 1 ]; then
+      perf --version | tee "$O/perf_version.txt"
+      perf list > "$O/perf_list.txt" 2>&1 || true
+      has() { grep -Fqw -- "$1" "$O/perf_list.txt"; }
+      one=""
+      for e in ref-cycles instructions l2_rqsts.miss task-clock; do
+        if has "$e"; then one="$one,$e"; else echo "the event $e: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+      done
+      if [ -n "$one" ]; then
+        # at every count, every arm judged there and production: the clock, cycles a byte and
+        # the busy share (`cycles` with `ref-cycles` and `task-clock`), production's W given
+        for spec in "6:6:mibz2,mibz2-oce-5-20,mibz2-occ-5-20" \
+                    "4:4:mibz2,mibz2-oce-3-12" \
+                    "10:7:mibz2,mibz2-oce-7-28,mibz2-occ-7-28"; do
+          t=${spec%%:*}; rest=${spec#*:}; w=${rest%%:*}; IFS=, read -ra arms <<< "${rest#*:}"
+          g="cycles$one"
+          echo "counters at $t threads: ${rest#*:}; the group: $g" | tee -a "$O/events.txt"
+          python3 bench/counters.py run --ab "$AB" $(printf -- '--arm %s ' "${arms[@]}") --groups "$g" \
+            --threads "$t" --reps {{REPS}} --file "$W/wikidata.bz2" --out "$O/counters-$t.jsonl"
+          python3 bench/counters.py report "$O/counters-$t.jsonl" --ref mibz2 \
+            $(printf -- '--cand %s ' "${arms[@]:1}") --workers "mibz2=$w" \
+            --groups "$g" --threads "$t" --reps {{REPS}} \
+            | tee "$O/counters-$t.txt" \
+            || echo "bench-eager-trim: the diagnostic at $t threads is VOID (counters-$t.txt says why); the verdict stands"
+        done
+      else
+        echo "bench-eager-trim: the diagnostic skipped (perf list names none of the group's events); the verdict stands" | tee "$O/counters.txt"
+      fi
+    else
+      echo "bench-eager-trim: the diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 1); the verdict stands" | tee "$O/counters.txt"
+    fi
+    bash bench/bundle.sh "$O"
+
 # 12-byte rules (#506), their adoption run (the registration on #145, posted before the data):
 # whether production's lazy kernel should store each rule in 12 bytes, not 16
 # (`bwt::W12LazyCells`). Master's decoder (`mibz2@build-master`, built at MASTER, the commit

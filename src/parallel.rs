@@ -3951,6 +3951,195 @@ mod plan_tests {
         );
     }
 
+    /// The occupancy arms (`ab`'s `mibz2-occ-N-S`, `just bench-workers-window` and `-low`) build
+    /// production's decoder but for what they name. On the i9 past its cores, `new` now builds
+    /// seven lazy workers with 28 blocks at 12, 16 and 20 threads asked (`trims_to_seven`,
+    /// #524), the very decoder `mibz2-occ-7-28` is (the kernel, the threads, the window); and
+    /// from `LAZY_FROM_THREADS` workers an arm is `planned(Workers(N), S)`, so each differs
+    /// from another in its worker count or its window alone
+    #[test]
+    fn the_occupancy_arms() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let shape = |d: &StreamDecoder| (d.kernel, d.threads, d.window());
+        for t in [12, 16, 20] {
+            let prod = with_machine(Machine::service_target(), || {
+                StreamDecoder::new(t, 4 * t, both)
+            });
+            let same = StreamDecoder::workers(7, 28, both, true);
+            assert_eq!(shape(&prod), shape(&same), "{t}");
+            assert!(prod.is_lazy(), "{t}");
+            let eight = StreamDecoder::planned(Plan::Workers(8), 32, both);
+            assert_eq!(shape(&eight), (prod.kernel, 8, 32), "{t}");
+            // `ab` builds the arms as `workers(N, S, .., true)`: from `LAZY_FROM_THREADS`
+            // workers the very decoder `planned(Workers(N), S)` is
+            for (n, s) in [(9, 36), (8, 32), (9, 72), (9, 18)] {
+                let arm = StreamDecoder::workers(n, s, both, true);
+                let plan = StreamDecoder::planned(Plan::Workers(n), s, both);
+                assert_eq!(shape(&arm), shape(&plan), "{t} {n} {s}");
+                arm.close();
+                plan.close();
+            }
+            // `just bench-workers-low`: seven and six workers, 4 blocks a worker, the lazy
+            // letters held (the plan would choose a slot for every letter below 8 workers):
+            // each differs from eight in the worker count alone
+            for n in [7, 6] {
+                let fewer = StreamDecoder::workers(n, 4 * n, both, true);
+                assert_eq!(shape(&fewer), (prod.kernel, n, 4 * n as u64), "{t} {n}");
+                assert!(fewer.is_lazy() && eight.is_lazy(), "{t} {n}");
+                assert!(!StreamDecoder::planned(Plan::Workers(n), 4 * n, both).is_lazy());
+                fewer.close();
+            }
+            for w in [72, 18] {
+                let win = StreamDecoder::planned(Plan::Workers(9), w, both);
+                assert_eq!(shape(&win), (prod.kernel, 9, w as u64), "{t}");
+            }
+            for d in [prod, same, eight] {
+                d.close();
+            }
+        }
+    }
+
+    /// `just bench-workers-at-cores`: within the i9's cores, at 8 threads asked, production's
+    /// decoder is `planned(Workers(8), 32)`, lazy, untrimmed (the plan `Plan::for_threads`
+    /// gives, the window as asked); at 10 it is seven lazy workers with 28 blocks
+    /// (`trims_to_seven`, #524), though the plan is still `Workers(10)`. Each occupancy arm
+    /// from 6 to 10 workers at 4 blocks a worker is lazy with its own worker count and window:
+    /// an arm differs from production in its worker count (and the window scaled with it)
+    /// alone, and production is `mibz2-occ-8-32` at 8 and `mibz2-occ-7-28` at 10
+    #[test]
+    fn the_occupancy_arms_within_the_cores() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let shape = |d: &StreamDecoder| (d.kernel, d.threads, d.window());
+        for (t, w) in [(8, 8), (10, 7)] {
+            let prod = with_machine(Machine::service_target(), || {
+                assert_eq!(Plan::for_threads(t), Plan::Workers(t), "{t}");
+                StreamDecoder::new(t, 4 * t, both)
+            });
+            assert!(prod.is_lazy() && !prod.is_service(), "{t}");
+            assert_eq!(shape(&prod), (prod.kernel, w, 4 * w as u64), "{t}");
+            let arm = StreamDecoder::workers(w, 4 * w, both, true);
+            assert_eq!(shape(&prod), shape(&arm), "{t}");
+            for n in 6..=10 {
+                let arm = StreamDecoder::workers(n, 4 * n, both, true);
+                assert!(arm.is_lazy(), "{t} {n}");
+                assert_eq!(shape(&arm), (prod.kernel, n, 4 * n as u64), "{t} {n}");
+                arm.close();
+            }
+            for d in [prod, arm] {
+                d.close();
+            }
+        }
+    }
+
+    /// `just bench-workers-sweep-low`: on the i9 at 4, 6 and 8 threads asked, production's
+    /// decoder is `planned(Workers(T), 4T)` (one worker a thread, the window as asked, not
+    /// the service core): lazy at 8, but a slot for every letter (`Cells`, eager) at 4 and 6,
+    /// below `LAZY_FROM_THREADS`. The lazy control at T, `workers(T, 4T, .., true)`, differs
+    /// from it there in the kernel alone; and each occupancy arm from 2 to 6 workers at 4
+    /// blocks a worker is lazy with its own worker count and window
+    #[test]
+    fn the_occupancy_arms_low() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let lazy = std::any::type_name::<crate::bwt::LazyCells>();
+        let eager = std::any::type_name::<crate::bwt::Cells>();
+        let shape = |d: &StreamDecoder| (d.kernel, d.threads, d.window());
+        for t in [4, 6, 8] {
+            let prod = with_machine(Machine::service_target(), || {
+                assert_eq!(Plan::for_threads(t), Plan::Workers(t), "{t}");
+                StreamDecoder::new(t, 4 * t, both)
+            });
+            assert!(!prod.is_service(), "{t}");
+            let kernel = if t >= LAZY_FROM_THREADS { lazy } else { eager };
+            assert_eq!(prod.is_lazy(), t >= LAZY_FROM_THREADS, "{t}");
+            assert_eq!(shape(&prod), (kernel, t, 4 * t as u64), "{t}");
+            let plan = StreamDecoder::planned(Plan::Workers(t), 4 * t, both);
+            assert_eq!(shape(&prod), shape(&plan), "{t}");
+            // the lazy control: production's workers and window, lazy letters
+            let control = StreamDecoder::workers(t, 4 * t, both, true);
+            assert_eq!(shape(&control), (lazy, t, 4 * t as u64), "{t}");
+            for d in [prod, plan, control] {
+                d.close();
+            }
+        }
+        for n in 2..=6 {
+            let arm = StreamDecoder::workers(n, 4 * n, both, true);
+            assert!(arm.is_lazy(), "{n}");
+            assert_eq!(shape(&arm), (lazy, n, 4 * n as u64), "{n}");
+            arm.close();
+        }
+    }
+
+    /// `just bench-eager-trim`: the eager occupancy arms (`ab`'s `mibz2-oce-N-S`,
+    /// `workers(N, S, .., false)`) are the decoder production builds for an eager
+    /// `Plan::Workers(N)` with S blocks, `planned(Workers(N), S)`, below `LAZY_FROM_THREADS`:
+    /// a slot for every letter (`Cells`), N workers, S blocks. Each differs from its lazy
+    /// twin (`mibz2-occ-N-S`) in the kernel alone. Against production on the i9: at 6 and 4
+    /// threads asked (eager, T workers, 4T blocks) 5/20 and 3/12 differ in the worker count
+    /// (and the window scaled with it) alone; at 10 (seven lazy workers, 28 blocks,
+    /// `trims_to_seven`) eager 7/28 differs in the kernel alone, and lazy 7/28 is production
+    #[test]
+    fn the_eager_occupancy_arms() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let lazy = std::any::type_name::<crate::bwt::LazyCells>();
+        let eager = std::any::type_name::<crate::bwt::Cells>();
+        let shape = |d: &StreamDecoder| (d.kernel, d.threads, d.window());
+        for (t, n) in [(6, 5), (4, 3), (10, 7)] {
+            let s = 4 * n;
+            let arm = StreamDecoder::workers(n, s, both, false);
+            assert!(!arm.is_lazy() && !arm.is_service(), "{t} {n}");
+            assert_eq!(shape(&arm), (eager, n, s as u64), "{t} {n}");
+            assert!(!Plan::Workers(n).lazy(), "{n}");
+            let plan = StreamDecoder::planned(Plan::Workers(n), s, both);
+            assert_eq!(
+                shape(&arm),
+                shape(&plan),
+                "{t} {n}: production's eager Workers({n})"
+            );
+            let twin = StreamDecoder::workers(n, s, both, true);
+            assert_eq!(shape(&twin), (lazy, n, s as u64), "{t} {n}: the lazy twin");
+            let prod = with_machine(Machine::service_target(), || {
+                StreamDecoder::new(t, 4 * t, both)
+            });
+            assert!(!prod.is_service(), "{t}");
+            if t < LAZY_FROM_THREADS {
+                // production eager at T workers: the arm differs in the count alone
+                assert_eq!(shape(&prod), (eager, t, 4 * t as u64), "{t}");
+            } else {
+                // production the seven lazy workers: the eager arm differs in the kernel
+                // alone, and the lazy twin is production's decoder (the A/A at 10)
+                assert_eq!(shape(&prod), (lazy, n, s as u64), "{t}");
+                assert_eq!(shape(&prod), shape(&twin), "{t}");
+            }
+            for d in [arm, plan, twin, prod] {
+                d.close();
+            }
+        }
+    }
+
     /// The seven lazy workers' predicate holds on the measured i9 alone: at 10 threads asked
     /// or more, with its kernels, unlimited. Not at 9 threads or fewer, not on another CPU of
     /// its shape, another core count or L3, without SMT, the scalar kernels or either kernel
