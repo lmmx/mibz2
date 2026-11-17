@@ -135,7 +135,7 @@ fn child(a: &[String]) {
     let teams_of: Option<usize> = Some(team_arg)
         .filter(|k| *k != "auto")
         .map(|k| k.trim_start_matches('p').parse().unwrap());
-    let plan = match teams_of {
+    let mut plan = match teams_of {
         None => Plan::for_threads(threads),
         Some(k) => Plan::Teams {
             teams: (threads / k).max(1),
@@ -166,6 +166,7 @@ fn child(a: &[String]) {
                 }
                 _ => BzReader::parallel_with(f, threads, slots, Kernels::detect()),
             };
+            plan = built_plan(plan, teams_of.is_some(), reader.parallel_decoder());
             drain(reader, &mut h)
         });
     let wall = t0.elapsed().as_secs_f64();
@@ -213,6 +214,22 @@ fn child(a: &[String]) {
         let _ = write!(line, " {k}={v}");
     }
     println!("{line}");
+}
+
+/// The plan the decoder was built with, where it differs from the policy's answer: a plan
+/// of workers whose decoder runs another number of them (`StreamDecoder::new`'s trim to
+/// `TRIMMED_WORKERS` on the measured i9, which `Plan::for_threads` doesn't show) is that
+/// many workers, so the trace waits for the threads that ran and its shares are theirs.
+/// Teams forced by `--teams`/`--pipe`, the service core and the pipelined default are kept.
+fn built_plan(plan: Plan, forced: bool, dec: Option<&mibz2::parallel::StreamDecoder>) -> Plan {
+    match (plan, dec) {
+        (Plan::Workers(n), Some(d))
+            if !forced && !d.is_service() && !d.is_pipelined() && d.threads() != n =>
+        {
+            Plan::Workers(d.threads())
+        }
+        _ => plan,
+    }
 }
 
 #[derive(Default)]
@@ -419,6 +436,51 @@ fn cross_overlaps(iv: &[Interval], lead: &str) -> usize {
         .count()
 }
 
+/// The decode's edges, in seconds from the trace's start (`set_level`, just before the file
+/// is opened), into `kv` (keys `t.e.*`; `just bench-knee`'s fixed costs, H3):
+/// - `first_issued`, `first_decode`, `first_taken`: the scanner's first block issued, a
+///   worker's first `decode_block`, the reader's first block taken (the first-block latency);
+/// - `last_issued`, `last_decode_end`, `last_taken`: the scanner's last block issued (the
+///   last dispatched), the last `decode_block` to end, the reader's last block taken;
+/// - `tail`: from the last block issued to the last taken, the decode's tail once nothing
+///   is left to dispatch; `head`: up to the first block taken;
+/// - `end`: the last mark of any thread (the reader's or a worker's end).
+fn edges(traces: &[ThreadTrace], roles: &[Option<Role>], kv: &mut Kv) {
+    let first = |r: Role, k: Kind| {
+        traces
+            .iter()
+            .zip(roles)
+            .filter(|(_, x)| **x == Some(r))
+            .flat_map(|(t, _)| t.marks.iter().filter(|m| m.kind == k).map(|m| m.ns))
+            .fold((u64::MAX, 0u64), |(lo, hi), ns| (lo.min(ns), hi.max(ns)))
+    };
+    let s = |ns: u64| {
+        if ns == u64::MAX {
+            f64::NAN
+        } else {
+            ns as f64 / 1e9
+        }
+    };
+    let issued = first(Role::Scanner, Kind::Issued);
+    let decode = first(Role::Worker, Kind::DecodeStart);
+    let decoded = first(Role::Worker, Kind::DecodeEnd);
+    let taken = first(Role::Reader, Kind::Taken);
+    let end = traces
+        .iter()
+        .filter_map(|t| t.marks.last().map(|m| m.ns))
+        .max()
+        .unwrap_or(0);
+    kv.f("t.e.first_issued", s(issued.0));
+    kv.f("t.e.first_decode", s(decode.0));
+    kv.f("t.e.first_taken", s(taken.0));
+    kv.f("t.e.last_issued", s(issued.1));
+    kv.f("t.e.last_decode_end", s(decoded.1));
+    kv.f("t.e.last_taken", s(taken.1));
+    kv.f("t.e.head", s(taken.0));
+    kv.f("t.e.tail", s(taken.1.saturating_sub(issued.1)));
+    kv.f("t.e.end", s(end));
+}
+
 /// The trace's checks and its sweep, into `kv` (keys `t.*`)
 fn summarise(
     traces: &[ThreadTrace],
@@ -513,6 +575,7 @@ fn summarise(
         return;
     }
     pipeline_phases(traces, kv);
+    edges(traces, &roles, kv);
 
     // the sweep: every mark in time order, each interval credited to the states then
     let mut ev: Vec<(u64, usize, Kind, u64)> = Vec::new();
@@ -2716,6 +2779,45 @@ mod tests {
         close("t.f.window_live_max_mb", 1000.0);
         close("t.q.decode_ms_mean", (40.0 + 15.0 + 4.0) / 3.0);
         close("t.f.syms_cap_max_mb", 1000.0);
+        // the edges, in seconds: the first block issued and decoded at 10 ms and taken at
+        // 51; the last issued at 55, decoded by 61 and taken at 85; so a 30 ms tail
+        close("t.e.first_issued", 0.010);
+        close("t.e.first_decode", 0.010);
+        close("t.e.first_taken", 0.051);
+        close("t.e.head", 0.051);
+        close("t.e.last_issued", 0.055);
+        close("t.e.last_decode_end", 0.061);
+        close("t.e.last_taken", 0.085);
+        close("t.e.tail", 0.030);
+        close("t.e.end", 0.090);
+    }
+
+    /// The plan the trace waits for is the decoder's: a plan of ten workers whose decoder
+    /// runs three (as `StreamDecoder::new`'s trim does on the measured i9) is three workers;
+    /// a forced plan, or a decoder that runs the plan's own count, is left as it was
+    #[test]
+    fn built_plan_is_the_decoders() {
+        let d = mibz2::parallel::StreamDecoder::workers(3, 12, Kernels::detect(), true);
+        assert_eq!(
+            built_plan(Plan::Workers(10), false, Some(&d)),
+            Plan::Workers(3)
+        );
+        assert_eq!(
+            built_plan(Plan::Workers(3), false, Some(&d)),
+            Plan::Workers(3)
+        );
+        assert_eq!(
+            built_plan(Plan::Workers(10), true, Some(&d)),
+            Plan::Workers(10)
+        );
+        assert_eq!(
+            built_plan(Plan::Workers(10), false, None),
+            Plan::Workers(10)
+        );
+        let teams = Plan::Teams { teams: 2, k: 2 };
+        assert_eq!(built_plan(teams, false, Some(&d)), teams);
+        d.close();
+        d.join();
     }
 
     /// An inverse BWT outside its block makes the trace incomplete

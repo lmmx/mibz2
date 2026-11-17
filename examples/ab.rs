@@ -84,6 +84,9 @@
 //!                                    1), one JSON line each, whatever they read; it never
 //!                                    stops early, waits for nothing and never fails
 //!                                    (`machine::sample`)
+//! ab stream [--threads T] [--mib M] [--reps R] [--kernel scale|triad]
+//!                                    untimed by `run`: a STREAM-like memory bandwidth
+//!                                    ceiling, one JSON line (`stream`; `just bench-knee`)
 //! ab telemetry-check                 untimed: the machine-state recorder's failure paths
 //!                                    (a failed enable or disable, a missing counter,
 //!                                    multiplexing, the user-only fallback) and coverage
@@ -2706,6 +2709,112 @@ fn gen(args: &[String]) {
     }
 }
 
+/// `ab stream [--threads T] [--mib M] [--reps R] [--kernel scale|triad]`: untimed by `ab
+/// run`, a STREAM-like ceiling for the machine's memory bandwidth (`just bench-knee`, H1),
+/// measured rather than assumed. T threads (default 1), each owning (first-touching) its
+/// share of three arrays of f64 that total M MiB each (default 256: far past any L3), run
+/// the kernel R times (default 10), all starting each repetition together (a barrier):
+/// - `scale`: a[i] = s·b[i] (STREAM's copy with a multiply, so the compiler can't make it
+///   a `memcpy`, whose large copies may stream past the cache);
+/// - `triad`: a[i] = b[i] + s·c[i].
+///
+/// One JSON line: the arrays' first touch (`init_s`), every repetition's time (`rep_s`, the
+/// barrier to barrier time of the slowest thread), the bytes a repetition moves by STREAM's
+/// count (`counted_bytes`: scale 16, triad 24 a element) and with each store's line read
+/// for ownership first (`wa_bytes`: 24 and 32, what the memory controller sees for plain
+/// stores), and the best repetition's rate in GB/s (10^9 B/s) by each count. A process
+/// pinned with `taskset` keeps its threads on those CPUs. A checksum of the output keeps
+/// the work from being optimised away.
+fn stream(args: &[String]) {
+    use std::sync::{Arc, Barrier};
+    let (mut threads, mut mib, mut reps, mut kernel) =
+        (1usize, 256usize, 10usize, "triad".to_string());
+    let mut it = args.iter();
+    while let Some(a) = it.next() {
+        let mut val = || {
+            it.next()
+                .unwrap_or_else(|| panic!("ab stream: {a} needs a value"))
+                .clone()
+        };
+        match a.as_str() {
+            "--threads" => threads = val().parse().expect("--threads"),
+            "--mib" => mib = val().parse().expect("--mib"),
+            "--reps" => reps = val().parse().expect("--reps"),
+            "--kernel" => kernel = val(),
+            _ => panic!("ab stream: unknown argument {a}"),
+        }
+    }
+    assert!(
+        threads >= 1 && reps >= 1 && mib >= 1,
+        "ab stream: threads, reps and mib must be at least 1"
+    );
+    let triad = match kernel.as_str() {
+        "triad" => true,
+        "scale" => false,
+        k => panic!("ab stream: unknown kernel {k} (scale or triad)"),
+    };
+    let elems = (mib << 20) / 8;
+    let share = elems.div_ceil(threads);
+    let barrier = Arc::new(Barrier::new(threads));
+    let t_start = Instant::now();
+    let workers: Vec<_> = (0..threads)
+        .map(|i| {
+            let barrier = barrier.clone();
+            let n = share.min(elems.saturating_sub(i * share));
+            std::thread::spawn(move || {
+                let s = std::hint::black_box(3.0f64);
+                // first touch on this thread, so its pages are its own
+                let mut a = vec![0f64; n];
+                let b: Vec<f64> = (0..n).map(|j| (j % 1024) as f64).collect();
+                let c: Vec<f64> = (0..n).map(|j| (j % 512) as f64 * 0.5).collect();
+                a.iter_mut().for_each(|x| *x = 1.0);
+                barrier.wait();
+                let init = Instant::now();
+                let mut times = Vec::with_capacity(reps);
+                for _ in 0..reps {
+                    barrier.wait();
+                    let t0 = Instant::now();
+                    if triad {
+                        for ((x, y), z) in a.iter_mut().zip(&b).zip(&c) {
+                            *x = *y + s * *z;
+                        }
+                    } else {
+                        for (x, y) in a.iter_mut().zip(&b) {
+                            *x = s * *y;
+                        }
+                    }
+                    std::hint::black_box(&mut a);
+                    times.push(t0.elapsed().as_secs_f64());
+                }
+                barrier.wait();
+                let sum: f64 = a.iter().step_by(4093).sum();
+                (init, times, sum)
+            })
+        })
+        .collect();
+    let out: Vec<_> = workers.into_iter().map(|w| w.join().unwrap()).collect();
+    let init_s = out
+        .iter()
+        .map(|o| o.0.duration_since(t_start).as_secs_f64())
+        .fold(0f64, f64::max);
+    // a repetition lasts as long as its slowest thread
+    let rep_s: Vec<f64> = (0..reps)
+        .map(|r| out.iter().map(|o| o.1[r]).fold(0f64, f64::max))
+        .collect();
+    let check: f64 = out.iter().map(|o| o.2).sum();
+    let (counted, wa) = if triad { (24, 32) } else { (16, 24) };
+    let (counted, wa) = ((counted * elems) as f64, (wa * elems) as f64);
+    let best = rep_s.iter().copied().fold(f64::INFINITY, f64::min);
+    let kernel_s: f64 = rep_s.iter().sum();
+    let reps_json: Vec<String> = rep_s.iter().map(|x| format!("{x:.6}")).collect();
+    println!(
+        "{{\"stream\":\"{kernel}\",\"threads\":{threads},\"mib\":{mib},\"reps\":{reps},\"elems\":{elems},\"init_s\":{init_s:.6},\"kernel_s\":{kernel_s:.6},\"rep_s\":[{}],\"counted_bytes\":{counted:.0},\"wa_bytes\":{wa:.0},\"best_gbs_counted\":{:.4},\"best_gbs_wa\":{:.4},\"check\":{check:.1}}}",
+        reps_json.join(","),
+        counted / best / 1e9,
+        wa / best / 1e9,
+    );
+}
+
 fn main() {
     let args: Vec<String> = std::env::args()
         .skip(1)
@@ -2737,7 +2846,8 @@ fn main() {
             machine::sample(&args[1..], &cpus)
         }
         Some("telemetry-check") => std::process::exit(machine::check()),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] [--hold-cpu N|auto [--hold-max-threads T]] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE [--hold-cpu N|auto] | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
+        Some("stream") => stream(&args[1..]),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] [--hold-cpu N|auto [--hold-max-threads T]] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE [--hold-cpu N|auto] | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check | ab stream [--threads T] [--mib M] [--reps R] [--kernel scale|triad]"),
     }
 }
 

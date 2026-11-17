@@ -1836,3 +1836,139 @@ bench-memory-lever ROUNDS="10" THREADS="4,6,8,9,10,12":
       || echo "bench-memory-lever: the sign reading is not valid (lever.txt says why)"
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
+
+# The knee (the registration, docs/journal/2026-11-17-knee.md, frozen before the data; a
+# diagnostic, reported, decides nothing in production): why does production's wall stop falling
+# from 8 to 20 threads on the i9-10900K (0.5.3's release-scaling: 0.110 s at 8, 0.106-0.107 at
+# 12 to 20 on Wikidata, about 2 GB/s of output) while no serial thread is saturated? Four
+# hypotheses, each with its own measurement (`bench/knee.py`):
+# - H1, DRAM bandwidth: the memory controller's read and write bytes over each run (`perf stat -a`
+#   of `uncore_imc/data_reads/` and `data_writes/`, where `kernel.perf_event_paranoid` is 0 or
+#   less, or through `sudo -n`; else UNMEASURED and the proxy, lines the L3 missed x 64 B, per
+#   process), against a ceiling measured on the same machine in the same units (`ab stream`,
+#   scale and triad, at STREAM thread counts, by the difference of two repetition counts);
+# - H2, a serial front end, and H2w, the in-order window: where the workers wait, from the
+#   decoder's own timeline (examples/occupancy.rs built with the `trace` feature, which the
+#   production build never compiles: its child decodes as production's `BzReader::parallel`,
+#   the plan the decoder built, at level 0 and level 1 alternately, the timeline's cost paired);
+# - H3, fixed costs: Wikidata x1 against x COPIES (the wall's fixed and per-byte parts, and
+#   whether the plateau moves with size), minor faults, the first block's latency and the tail;
+# - H4, the in-order consumer: main's CPU (`thread_cpu`) and the timeline's consumer waits.
+# Production's `ab child mibz2` at THREADS unpinned and at PINNED pinned as `ab run --spread`
+# pins (the first CPU of each of the first T cores; affinity recorded), on both files, ROUNDS
+# rounds, the cells rotated; the timeline TROUNDS rounds. One build by rustc 1.99.1.
+# `just bench-knee` with no arguments is the registered run; smaller arguments are dry runs.
+bench-knee COPIES="4" ROUNDS="10" TROUNDS="10" THREADS="4,8,10,12,20" PINNED="4,8,10" STREAM="1,2,4,10,20" MIB="256" REPEAT="3":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/knee
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-knee (the registration, docs/journal/2026-11-17-knee.md; a diagnostic, reported, decides nothing in production): mibz2 at $(git rev-parse HEAD), threads {{THREADS}} unpinned and {{PINNED}} pinned, Wikidata x1 and x{{COPIES}}, {{ROUNDS}} rounds, the timeline {{TROUNDS}} rounds; ab stream at {{STREAM}} threads, {{MIB}} MiB an array, {{REPEAT}} repeats"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-knee: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-knee: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    python3 bench/knee.py estimate --threads "{{THREADS}}" --pinned "{{PINNED}}" --rounds {{ROUNDS}} \
+      --trace-rounds {{TROUNDS}} --copies {{COPIES}} --stream-threads "{{STREAM}}" --repeat {{REPEAT}} \
+      --mib {{MIB}} | tee "$O/estimate.json"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    # the timeline's build: the `trace` feature, never in production's; ab's binary is untouched
+    cargo build -q --release --features trace --example occupancy
+    OCC=$PWD/target/release/examples/occupancy
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" "$OCC" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    sha256sum "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    head -3 /proc/meminfo > "$O/meminfo.txt" || true
+    # the DIMMs' speed, the bandwidth's nominal peak (the ceiling is measured; this is context):
+    # without root, from the first source that names one
+    dimm=unknown
+    if out=$(dmidecode -t memory 2>&1) && grep -q 'Speed:' <<<"$out"; then
+      { echo "# dmidecode -t memory"; echo "$out"; } > "$O/dimm.txt"; dimm=dmidecode
+    elif out=$(lshw -C memory 2>&1) && grep -Eqi 'MT/s|MHz|clock:' <<<"$out"; then
+      { echo "# lshw -C memory"; echo "$out"; } > "$O/dimm.txt"; dimm=lshw
+    elif ls -d /sys/devices/system/edac/mc/mc*/dimm* >/dev/null 2>&1; then
+      { echo "# /sys/devices/system/edac (no speed there: sizes and types only)"
+        for f in /sys/devices/system/edac/mc/mc*/dimm*/{dimm_label,size,dimm_mem_type,dimm_dev_type}; do
+          [ -r "$f" ] && echo "$f: $(cat "$f")"; done; } > "$O/dimm.txt"; dimm="edac (no speed)"
+    else
+      echo "unknown (no dmidecode or lshw output with a speed without root, no edac)" > "$O/dimm.txt"
+    fi
+    echo "the DIMMs' speed: from $dimm (dimm.txt)"
+    # what perf can count here: each event kept only if `perf list` names it and a trial counts
+    # it; the memory controller system-wide only (paranoid 0 or less, or `sudo -n`, never a
+    # password prompt), else UNMEASURED and the proxy alone
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    core=""; imc=""; prefix=""
+    if command -v perf >/dev/null; then
+      perf --version | tee "$O/perf_version.txt"
+      perf list > "$O/perf_list.txt" 2>&1 || true
+      has() { grep -Fqw -- "$1" "$O/perf_list.txt"; }
+      if [ "$paranoid" != unknown ] && [ "$paranoid" -le 1 ]; then
+        for e in cycles instructions ref-cycles longest_lat_cache.miss l2_lines_out.non_silent \
+          offcore_response.demand_data_rd.l3_miss.any_snoop offcore_response.demand_rfo.l3_miss.any_snoop \
+          task-clock page-faults minor-faults major-faults context-switches cpu-migrations; do
+          if has "$e"; then core="$core,$e"; else echo "the event $e: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+        done
+        if ! has longest_lat_cache.miss && has LLC-load-misses; then
+          core="$core,LLC-load-misses"; echo "the proxy: LLC-load-misses (longest_lat_cache.miss not listed)" | tee -a "$O/events.txt"
+        fi
+        core=${core#,}
+        if [ -n "$core" ] && ! perf stat -x, -o /dev/null -e "$core" -- true 2>"$O/core-trial.txt"; then
+          echo "the core events: the trial failed (core-trial.txt), dropped" | tee -a "$O/events.txt"; core=""
+        fi
+      else
+        echo "the core events: skipped, kernel.perf_event_paranoid $paranoid above 1" | tee -a "$O/events.txt"
+      fi
+      if has uncore_imc/data_reads/ && has uncore_imc/data_writes/; then
+        imc="uncore_imc/data_reads/,uncore_imc/data_writes/"
+        if [ "$paranoid" != unknown ] && [ "$paranoid" -le 0 ]; then prefix=""
+        elif sudo -n true 2>/dev/null; then prefix="sudo -n"
+        else
+          echo "the memory controller: UNMEASURED, system-wide counting needs kernel.perf_event_paranoid 0 or less (not $paranoid) or passwordless sudo" | tee -a "$O/events.txt"; imc=""
+        fi
+        if [ -n "$imc" ] && ! $prefix perf stat -a -x, -o /dev/null -e "$imc" -- true 2>"$O/imc-trial.txt"; then
+          echo "the memory controller: the trial failed (imc-trial.txt), UNMEASURED" | tee -a "$O/events.txt"; imc=""
+        fi
+      else
+        echo "the memory controller: UNMEASURED, perf list names no uncore_imc/data_reads/ and data_writes/" | tee -a "$O/events.txt"
+      fi
+    else
+      echo "perf: not installed; the counters, the memory controller and the proxy UNMEASURED" | tee -a "$O/events.txt"
+    fi
+    echo "the core events: ${core:-none}; the memory controller: ${imc:-none}${prefix:+ (through $prefix)}" | tee -a "$O/events.txt"
+    ev=(--core-events "$core" --imc-events "$imc" --imc-prefix "$prefix")
+    files=(--file "wikidata=$W/wikidata.bz2" --file "wikidata-x{{COPIES}}=$W/wikidata-x{{COPIES}}.bz2")
+    [ -z "$imc" ] || python3 bench/knee.py idle --out "$O/idle.jsonl" --seconds 2 --count 5 "${ev[@]}"
+    python3 bench/knee.py run --ab "$AB" --out "$O/runs.jsonl" "${files[@]}" --threads "{{THREADS}}" \
+      --pinned "{{PINNED}}" --rounds {{ROUNDS}} "${ev[@]}"
+    python3 bench/knee.py trace --occupancy "$OCC" --out "$O/trace.jsonl" "${files[@]}" \
+      --threads "{{THREADS}}" --pinned "{{PINNED}}" --rounds {{TROUNDS}}
+    python3 bench/knee.py stream --ab "$AB" --out "$O/stream.jsonl" --threads "{{STREAM}}" \
+      --repeat {{REPEAT}} --mib {{MIB}} "${ev[@]}"
+    [ -z "$imc" ] || python3 bench/knee.py idle --out "$O/idle.jsonl" --seconds 2 --count 5 "${ev[@]}"
+    python3 bench/knee.py report --runs "$O/runs.jsonl" --trace "$O/trace.jsonl" --stream "$O/stream.jsonl" \
+      --idle "$O/idle.jsonl" --main wikidata-x{{COPIES}} --small wikidata --copies {{COPIES}} \
+      --json "$O/report.json" | tee "$O/report.txt" \
+      || echo "bench-knee: VOID, no reading (report.txt says why); the bundle is kept"
+    bash bench/bundle.sh "$O"

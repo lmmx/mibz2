@@ -81,6 +81,19 @@ jobs:
       # with a stub perf and child: a complete run read, and every defect leaves no report
       - name: The counters reader (stub perf)
         run: python3 bench/test_counters.py
+      # the knee diagnostic's driver and reader (`bench/knee.py`; `just bench-knee`), driven with
+      # a stub perf, ab and occupancy child: the records, each hypothesis's rule either side of
+      # its thresholds, the ceiling by difference, and the VOID cases
+      - name: The knee diagnostic (stub perf)
+        run: python3 bench/test_knee.py
+      # `ab stream`, the knee's bandwidth ceiling: a tiny run of each kernel parses
+      - name: The knee's ceiling (ab stream, tiny)
+        run: |
+          cargo build --example ab
+          for k in scale triad; do
+            target/debug/examples/ab stream --threads 2 --mib 4 --reps 2 --kernel $k \
+              | python3 -c 'import json,sys; r=json.loads(sys.stdin.read()); assert r["reps"] == 2 and len(r["rep_s"]) == 2 and r["best_gbs_wa"] > 0, r; print(r)'
+          done
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the
