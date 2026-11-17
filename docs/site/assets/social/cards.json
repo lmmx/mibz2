@@ -167,12 +167,12 @@
     "section": " · Research blog",
     "title": "Modelling the cache to rightsize workers"
   },
-  "assets/social/blog-2026-11-17-the-knee-is-gone.png": {
-    "description": "mibz2 straightens its scaling curve by taming worker contention, sustaining nearly 2 GB/s from eight to twenty threads on a ten-core processor.",
+  "assets/social/blog-2026-11-17-raising-the-knee.png": {
+    "description": "mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are busy, then holds level on the whole machine up to twenty threads.",
     "foot": "lmmx.github.io/mibz2 · 17 November 2026",
     "kind": "result",
     "section": " · Research blog",
-    "title": "Straightening the knee: scaling throughput beyond physical cores"
+    "title": "Raising the knee: scaling throughput to the limit of physical cores"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",

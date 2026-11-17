@@ -1,7 +1,7 @@
 ---
-title: "Straightening the knee: scaling throughput beyond physical cores"
-image: assets/social/blog-2026-11-17-the-knee-is-gone.png
-description: "mibz2 straightens its scaling curve by taming worker contention, sustaining nearly 2 GB/s from eight to twenty threads on a ten-core processor."
+title: "Raising the knee: scaling throughput to the limit of physical cores"
+image: assets/social/blog-2026-11-17-raising-the-knee.png
+description: "mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are busy, then holds level on the whole machine up to twenty threads."
 ---
 
 <div class="post-hero" markdown>
@@ -11,12 +11,12 @@ description: "mibz2 straightens its scaling curve by taming worker contention, s
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Straightening the knee: scaling throughput beyond physical cores
+# Raising the knee: scaling throughput to the limit of physical cores
 
-mibz2 straightens its scaling curve by taming worker contention, sustaining nearly 2 GB/s from eight to twenty threads on a ten-core processor.
+mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are busy, then holds level on the whole machine up to twenty threads.
 {: .post-dek }
 
-17 November 2026 · 9 min read · [Research result](#5-what-comes-after-the-knee)
+17 November 2026 · 13 min read · [Research result](#6-what-comes-next-for-the-knee)
 {: .post-meta }
 
 </div>
@@ -37,20 +37,26 @@ It could avoid a fall, but only by declining to use the extra threads. Since the
 changed both how it reconstructs a block and how many workers it starts. Version 0.5.4 puts the
 result in view. Our test machine is a ten-core Intel desktop (an i9-10900K, with 20 logical CPUs
 and a 20 MiB level-3 cache that all ten cores share). On it, ten requested threads decode a
-210 MB Wikidata sample in **0.102 seconds**, the fastest median in the release sweep. Asking for
-12, 16 or 20 threads barely changes the result. At those counts 0.5.4 runs seven active
-workers, not twelve or twenty. Whether memory bandwidth is what holds that plateau down is not yet
-established.
+210 MB Wikidata sample in **0.102 seconds**, the fastest median in the release sweep. The knee is still there, but it has been raised and softened. It is raised because the best
+point has moved from eight threads to ten, the machine's physical-core count. It is softened
+because asking for more now costs little or nothing. In 0.4.0 and 0.5.0, 12 to 20 threads took
+11–18% longer than the best point. In 0.5.4's release sweep they take 4–5% longer by the medians,
+but that sweep pins ten threads and gives twelve or more the whole machine. With placement held
+constant, 10, 12 and 20 threads decode in the same time, to within half a per cent. It is not straightened:
+the extra hardware threads add nothing yet. At 12 to 20 requested threads 0.5.4 runs seven active
+workers, not twelve or twenty. Whether memory bandwidth is what holds that plateau down is not
+yet established.
 
 <figure class="bf-fig">
 <p class="bf-title">Throughput against threads, five releases on the test machine</p>
-<svg viewBox="0 0 720 380" role="img" aria-label="Throughput against threads for five releases: 0.5.0 peaks at 8 threads and falls about 14% by 12; 0.5.4 stays between 1.95 and 2.06 GB a second from 8 to 20 threads."><line x1="70" y1="330.0" x2="690" y2="330.0" class="bf-axis"/><text x="62" y="334.0" text-anchor="end" class="bf-tm" style="font-size:14px">0.0</text><line x1="70" y1="261.8" x2="690" y2="261.8" class="bf-grid"/><text x="62" y="265.8" text-anchor="end" class="bf-tm" style="font-size:14px">0.5</text><line x1="70" y1="193.6" x2="690" y2="193.6" class="bf-grid"/><text x="62" y="197.6" text-anchor="end" class="bf-tm" style="font-size:14px">1.0</text><line x1="70" y1="125.5" x2="690" y2="125.5" class="bf-grid"/><text x="62" y="129.5" text-anchor="end" class="bf-tm" style="font-size:14px">1.5</text><line x1="70" y1="57.3" x2="690" y2="57.3" class="bf-grid"/><text x="62" y="61.3" text-anchor="end" class="bf-tm" style="font-size:14px">2.0</text><text x="101.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">1</text><text x="132.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">2</text><text x="194.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">4</text><text x="318.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">8</text><text x="380.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">10</text><text x="442.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">12</text><text x="566.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">16</text><text x="690.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">20</text><text x="380.0" y="368" text-anchor="middle" class="bf-t" style="font-size:15px">threads asked for</text><text x="18" y="180.0" text-anchor="middle" transform="rotate(-90 18 180.0)" class="bf-t" style="font-size:15px">GB of output a second</text><line x1="411.0" y1="30" x2="411.0" y2="330" class="bf-grid"/><text x="405.0" y="42" text-anchor="end" class="bf-tm" style="font-size:14px">pinned, one CPU a core</text><text x="417.0" y="42" class="bf-tm" style="font-size:14px">whole machine</text><polyline points="101.0,275.1 132.0,233.4 194.0,189.6 318.0,152.1 380.0,156.3 442.0,155.4 566.0,156.8 690.0,157.5" style="fill:none;stroke:var(--bf-muted);stroke-width:2;stroke-linejoin:round;stroke-dasharray:4 3"/><circle cx="101.0" cy="275.1" r="2.2" style="fill:var(--bf-muted)"/><circle cx="132.0" cy="233.4" r="2.2" style="fill:var(--bf-muted)"/><circle cx="194.0" cy="189.6" r="2.2" style="fill:var(--bf-muted)"/><circle cx="318.0" cy="152.1" r="2.2" style="fill:var(--bf-muted)"/><circle cx="380.0" cy="156.3" r="2.2" style="fill:var(--bf-muted)"/><circle cx="442.0" cy="155.4" r="2.2" style="fill:var(--bf-muted)"/><circle cx="566.0" cy="156.8" r="2.2" style="fill:var(--bf-muted)"/><circle cx="690.0" cy="157.5" r="2.2" style="fill:var(--bf-muted)"/><polyline points="101.0,255.9 132.0,209.7 194.0,133.9 318.0,71.0 380.0,94.8 442.0,107.1 566.0,105.0 690.0,106.4" style="fill:none;stroke:var(--bf-amber);stroke-width:2;stroke-linejoin:round"/><circle cx="101.0" cy="255.9" r="2.2" style="fill:var(--bf-amber)"/><circle cx="132.0" cy="209.7" r="2.2" style="fill:var(--bf-amber)"/><circle cx="194.0" cy="133.9" r="2.2" style="fill:var(--bf-amber)"/><circle cx="318.0" cy="71.0" r="2.2" style="fill:var(--bf-amber)"/><circle cx="380.0" cy="94.8" r="2.2" style="fill:var(--bf-amber)"/><circle cx="442.0" cy="107.1" r="2.2" style="fill:var(--bf-amber)"/><circle cx="566.0" cy="105.0" r="2.2" style="fill:var(--bf-amber)"/><circle cx="690.0" cy="106.4" r="2.2" style="fill:var(--bf-amber)"/><polyline points="101.0,259.2 132.0,211.2 194.0,140.4 318.0,67.9 380.0,77.8 442.0,90.9 566.0,90.7 690.0,93.3" style="fill:none;stroke:var(--bf-steel);stroke-width:2.2;stroke-linejoin:round;stroke-dasharray:7 4"/><circle cx="101.0" cy="259.2" r="2.2" style="fill:var(--bf-steel)"/><circle cx="132.0" cy="211.2" r="2.2" style="fill:var(--bf-steel)"/><circle cx="194.0" cy="140.4" r="2.2" style="fill:var(--bf-steel)"/><circle cx="318.0" cy="67.9" r="2.2" style="fill:var(--bf-steel)"/><circle cx="380.0" cy="77.8" r="2.2" style="fill:var(--bf-steel)"/><circle cx="442.0" cy="90.9" r="2.2" style="fill:var(--bf-steel)"/><circle cx="566.0" cy="90.7" r="2.2" style="fill:var(--bf-steel)"/><circle cx="690.0" cy="93.3" r="2.2" style="fill:var(--bf-steel)"/><polyline points="101.0,256.1 132.0,212.7 194.0,136.4 318.0,69.6 380.0,82.4 442.0,61.5 566.0,63.0 690.0,60.5" style="fill:none;stroke:var(--bf-blue);stroke-width:2.2;stroke-linejoin:round;stroke-dasharray:2 4"/><circle cx="101.0" cy="256.1" r="2.2" style="fill:var(--bf-blue)"/><circle cx="132.0" cy="212.7" r="2.2" style="fill:var(--bf-blue)"/><circle cx="194.0" cy="136.4" r="2.2" style="fill:var(--bf-blue)"/><circle cx="318.0" cy="69.6" r="2.2" style="fill:var(--bf-blue)"/><circle cx="380.0" cy="82.4" r="2.2" style="fill:var(--bf-blue)"/><circle cx="442.0" cy="61.5" r="2.2" style="fill:var(--bf-blue)"/><circle cx="566.0" cy="63.0" r="2.2" style="fill:var(--bf-blue)"/><circle cx="690.0" cy="60.5" r="2.2" style="fill:var(--bf-blue)"/><polyline points="101.0,255.7 132.0,211.4 194.0,130.9 318.0,56.9 380.0,49.7 442.0,59.7 566.0,60.5 690.0,64.2" style="fill:none;stroke:var(--bf-green);stroke-width:3;stroke-linejoin:round"/><circle cx="101.0" cy="255.7" r="3" style="fill:var(--bf-green)"/><circle cx="132.0" cy="211.4" r="3" style="fill:var(--bf-green)"/><circle cx="194.0" cy="130.9" r="3" style="fill:var(--bf-green)"/><circle cx="318.0" cy="56.9" r="3" style="fill:var(--bf-green)"/><circle cx="380.0" cy="49.7" r="3" style="fill:var(--bf-green)"/><circle cx="442.0" cy="59.7" r="3" style="fill:var(--bf-green)"/><circle cx="566.0" cy="60.5" r="3" style="fill:var(--bf-green)"/><circle cx="690.0" cy="64.2" r="3" style="fill:var(--bf-green)"/><rect x="428.9" y="178.36363636363637" width="265.1" height="120" rx="6" class="bf-card"/><line x1="438.9" y1="192.36363636363637" x2="464.9" y2="192.36363636363637" style="stroke:var(--bf-muted);stroke-width:2;stroke-dasharray:4 3"/><text x="472.9" y="196.36363636363637" class="bf-t" style="font-size:15px">0.2.4 (6 November)</text><line x1="438.9" y1="214.36363636363637" x2="464.9" y2="214.36363636363637" style="stroke:var(--bf-amber);stroke-width:2"/><text x="472.9" y="218.36363636363637" class="bf-t" style="font-size:15px">0.5.0: the fall at its deepest</text><line x1="438.9" y1="236.36363636363637" x2="464.9" y2="236.36363636363637" style="stroke:var(--bf-steel);stroke-width:2.2;stroke-dasharray:7 4"/><text x="472.9" y="240.36363636363637" class="bf-t" style="font-size:15px">0.5.1</text><line x1="438.9" y1="258.3636363636364" x2="464.9" y2="258.3636363636364" style="stroke:var(--bf-blue);stroke-width:2.2;stroke-dasharray:2 4"/><text x="472.9" y="262.3636363636364" class="bf-t" style="font-size:15px">0.5.3</text><line x1="438.9" y1="280.3636363636364" x2="464.9" y2="280.3636363636364" style="stroke:var(--bf-green);stroke-width:3"/><text x="472.9" y="284.3636363636364" class="bf-t" style="font-size:15px">0.5.4: level from 8 threads</text></svg>
+<svg viewBox="0 0 720 380" role="img" aria-label="Throughput against threads for five releases: 0.5.0 peaks at 8 threads and falls about 14% by 12; 0.5.4 peaks at 2.06 GB a second at 10 threads and stays between 1.95 and 2.06 from 8 to 20."><line x1="70" y1="330.0" x2="690" y2="330.0" class="bf-axis"/><text x="62" y="334.0" text-anchor="end" class="bf-tm" style="font-size:14px">0.0</text><line x1="70" y1="261.8" x2="690" y2="261.8" class="bf-grid"/><text x="62" y="265.8" text-anchor="end" class="bf-tm" style="font-size:14px">0.5</text><line x1="70" y1="193.6" x2="690" y2="193.6" class="bf-grid"/><text x="62" y="197.6" text-anchor="end" class="bf-tm" style="font-size:14px">1.0</text><line x1="70" y1="125.5" x2="690" y2="125.5" class="bf-grid"/><text x="62" y="129.5" text-anchor="end" class="bf-tm" style="font-size:14px">1.5</text><line x1="70" y1="57.3" x2="690" y2="57.3" class="bf-grid"/><text x="62" y="61.3" text-anchor="end" class="bf-tm" style="font-size:14px">2.0</text><text x="101.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">1</text><text x="132.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">2</text><text x="194.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">4</text><text x="318.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">8</text><text x="380.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">10</text><text x="442.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">12</text><text x="566.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">16</text><text x="690.0" y="348" text-anchor="middle" class="bf-tm" style="font-size:14px">20</text><text x="380.0" y="368" text-anchor="middle" class="bf-t" style="font-size:15px">threads asked for</text><text x="18" y="180.0" text-anchor="middle" transform="rotate(-90 18 180.0)" class="bf-t" style="font-size:15px">GB of output a second</text><line x1="411.0" y1="30" x2="411.0" y2="330" class="bf-grid"/><text x="405.0" y="42" text-anchor="end" class="bf-tm" style="font-size:14px">pinned, one CPU a core</text><text x="417.0" y="42" class="bf-tm" style="font-size:14px">whole machine</text><polyline points="101.0,275.1 132.0,233.4 194.0,189.6 318.0,152.1 380.0,156.3 442.0,155.4 566.0,156.8 690.0,157.5" style="fill:none;stroke:var(--bf-muted);stroke-width:2;stroke-linejoin:round;stroke-dasharray:4 3"/><circle cx="101.0" cy="275.1" r="2.2" style="fill:var(--bf-muted)"/><circle cx="132.0" cy="233.4" r="2.2" style="fill:var(--bf-muted)"/><circle cx="194.0" cy="189.6" r="2.2" style="fill:var(--bf-muted)"/><circle cx="318.0" cy="152.1" r="2.2" style="fill:var(--bf-muted)"/><circle cx="380.0" cy="156.3" r="2.2" style="fill:var(--bf-muted)"/><circle cx="442.0" cy="155.4" r="2.2" style="fill:var(--bf-muted)"/><circle cx="566.0" cy="156.8" r="2.2" style="fill:var(--bf-muted)"/><circle cx="690.0" cy="157.5" r="2.2" style="fill:var(--bf-muted)"/><polyline points="101.0,255.9 132.0,209.7 194.0,133.9 318.0,71.0 380.0,94.8 442.0,107.1 566.0,105.0 690.0,106.4" style="fill:none;stroke:var(--bf-amber);stroke-width:2;stroke-linejoin:round"/><circle cx="101.0" cy="255.9" r="2.2" style="fill:var(--bf-amber)"/><circle cx="132.0" cy="209.7" r="2.2" style="fill:var(--bf-amber)"/><circle cx="194.0" cy="133.9" r="2.2" style="fill:var(--bf-amber)"/><circle cx="318.0" cy="71.0" r="2.2" style="fill:var(--bf-amber)"/><circle cx="380.0" cy="94.8" r="2.2" style="fill:var(--bf-amber)"/><circle cx="442.0" cy="107.1" r="2.2" style="fill:var(--bf-amber)"/><circle cx="566.0" cy="105.0" r="2.2" style="fill:var(--bf-amber)"/><circle cx="690.0" cy="106.4" r="2.2" style="fill:var(--bf-amber)"/><polyline points="101.0,259.2 132.0,211.2 194.0,140.4 318.0,67.9 380.0,77.8 442.0,90.9 566.0,90.7 690.0,93.3" style="fill:none;stroke:var(--bf-steel);stroke-width:2.2;stroke-linejoin:round;stroke-dasharray:7 4"/><circle cx="101.0" cy="259.2" r="2.2" style="fill:var(--bf-steel)"/><circle cx="132.0" cy="211.2" r="2.2" style="fill:var(--bf-steel)"/><circle cx="194.0" cy="140.4" r="2.2" style="fill:var(--bf-steel)"/><circle cx="318.0" cy="67.9" r="2.2" style="fill:var(--bf-steel)"/><circle cx="380.0" cy="77.8" r="2.2" style="fill:var(--bf-steel)"/><circle cx="442.0" cy="90.9" r="2.2" style="fill:var(--bf-steel)"/><circle cx="566.0" cy="90.7" r="2.2" style="fill:var(--bf-steel)"/><circle cx="690.0" cy="93.3" r="2.2" style="fill:var(--bf-steel)"/><polyline points="101.0,256.1 132.0,212.7 194.0,136.4 318.0,69.6 380.0,82.4 442.0,61.5 566.0,63.0 690.0,60.5" style="fill:none;stroke:var(--bf-blue);stroke-width:2.2;stroke-linejoin:round;stroke-dasharray:2 4"/><circle cx="101.0" cy="256.1" r="2.2" style="fill:var(--bf-blue)"/><circle cx="132.0" cy="212.7" r="2.2" style="fill:var(--bf-blue)"/><circle cx="194.0" cy="136.4" r="2.2" style="fill:var(--bf-blue)"/><circle cx="318.0" cy="69.6" r="2.2" style="fill:var(--bf-blue)"/><circle cx="380.0" cy="82.4" r="2.2" style="fill:var(--bf-blue)"/><circle cx="442.0" cy="61.5" r="2.2" style="fill:var(--bf-blue)"/><circle cx="566.0" cy="63.0" r="2.2" style="fill:var(--bf-blue)"/><circle cx="690.0" cy="60.5" r="2.2" style="fill:var(--bf-blue)"/><polyline points="101.0,255.7 132.0,211.4 194.0,130.9 318.0,56.9 380.0,49.7 442.0,59.7 566.0,60.5 690.0,64.2" style="fill:none;stroke:var(--bf-green);stroke-width:3;stroke-linejoin:round"/><circle cx="101.0" cy="255.7" r="3" style="fill:var(--bf-green)"/><circle cx="132.0" cy="211.4" r="3" style="fill:var(--bf-green)"/><circle cx="194.0" cy="130.9" r="3" style="fill:var(--bf-green)"/><circle cx="318.0" cy="56.9" r="3" style="fill:var(--bf-green)"/><circle cx="380.0" cy="49.7" r="3" style="fill:var(--bf-green)"/><circle cx="442.0" cy="59.7" r="3" style="fill:var(--bf-green)"/><circle cx="566.0" cy="60.5" r="3" style="fill:var(--bf-green)"/><circle cx="690.0" cy="64.2" r="3" style="fill:var(--bf-green)"/><rect x="428.9" y="178.36363636363637" width="265.1" height="120" rx="6" class="bf-card"/><line x1="438.9" y1="192.36363636363637" x2="464.9" y2="192.36363636363637" style="stroke:var(--bf-muted);stroke-width:2;stroke-dasharray:4 3"/><text x="472.9" y="196.36363636363637" class="bf-t" style="font-size:15px">0.2.4 (6 November)</text><line x1="438.9" y1="214.36363636363637" x2="464.9" y2="214.36363636363637" style="stroke:var(--bf-amber);stroke-width:2"/><text x="472.9" y="218.36363636363637" class="bf-t" style="font-size:15px">0.5.0: the fall at its deepest</text><line x1="438.9" y1="236.36363636363637" x2="464.9" y2="236.36363636363637" style="stroke:var(--bf-steel);stroke-width:2.2;stroke-dasharray:7 4"/><text x="472.9" y="240.36363636363637" class="bf-t" style="font-size:15px">0.5.1</text><line x1="438.9" y1="258.3636363636364" x2="464.9" y2="258.3636363636364" style="stroke:var(--bf-blue);stroke-width:2.2;stroke-dasharray:2 4"/><text x="472.9" y="262.3636363636364" class="bf-t" style="font-size:15px">0.5.3</text><line x1="438.9" y1="280.3636363636364" x2="464.9" y2="280.3636363636364" style="stroke:var(--bf-green);stroke-width:3"/><text x="472.9" y="284.3636363636364" class="bf-t" style="font-size:15px">0.5.4: best at 10</text></svg>
 <figcaption>Measured on the test machine: the median of 10 paired rounds per point, decoding an 11.9 MB extract of a Wikidata dump to 209.7 MB of output. Each release is taken from its own <a href="https://github.com/lmmx/mibz2/tree/745a7381ab72ca07675ddfcb000c4156f926c0eb/bench/release-scaling/">release-scaling run</a> (0.2.4 from 6 November; 0.5.0, 0.5.1 from 16 November; 0.5.3, 0.5.4 from 17 November). The runs pin 10 threads or fewer to one CPU a core, and give 12 threads or more the whole machine.</figcaption>
 </figure>
 
-**The result is a flatter *default* curve, not the disappearance of contention.** The decoder
+**The result is a flatter *default* curve, not the disappearance of the knee or of contention.** The decoder
 now starts fewer workers than threads in the measured configurations where extra workers made
-decoding slower.
+decoding slower. In effect, 0.5.4 caps its workers at the number that pays off: seven, from ten
+requested threads.
 The cost of competing for the cache remains; it is now part of the plan rather than a surprise in
 the benchmark. Here is how we reached that result, what the release run establishes, and what the
 plateau still leaves open.
@@ -115,8 +121,9 @@ count.
 The shape matters more than the last decimal place. In 0.5.3, asking for ten threads made the
 decoder slower than asking for eight. At twelve and above it recovered. In 0.5.4, **ten threads
 are the fastest point**, while twelve to twenty sit between 0.106 and 0.108 seconds. Across eight
-to twenty threads that is **1.95–2.06 GB/s of decoded output**. Twenty is still about 6% slower
-than ten by these medians; this is a plateau with a small slope, not perfect monotonic scaling.
+to twenty threads that is **1.95–2.06 GB/s of decoded output**. Twenty is still about 5% slower
+than ten by these medians. As the box below explains, most or all of that is a change of
+placement, not of thread count.
 
 The paired comparison is stronger evidence for the version change than the medians alone.
 Across ten paired rounds, 0.5.3 took **1.123 times** 0.5.4's wall time at ten threads (95%
@@ -131,6 +138,39 @@ the median ordering, not paired confidence intervals between different thread co
 below gives those within-release comparisons against eight threads, for selected releases since
 0.2.4. It leaves out 0.2.5 to 0.3.3. The history between was not one continuous fall. In 0.2.5,
 ten threads took 0.918 of eight threads' wall time (95% interval 0.910–0.927).
+
+!!! info "The decline past ten is a change of placement"
+
+    Paired round by round within 0.5.4's run, the higher counts took longer than ten threads:
+
+    | threads | wall time against ten threads (95% interval) |
+    | ---: | ---: |
+    | 12 | 1.049 (1.022–1.076) |
+    | 16 | 1.044 (1.025–1.064) |
+    | 20 | 1.074 (1.031–1.117) |
+
+    Past ten, extra threads would land on the cores' second hardware threads. But the run also
+    changes placement at that point. Ten threads ran pinned to one logical CPU a core. Twelve to
+    twenty ran on the whole machine, with the same seven workers. So the decline can't be put down
+    to hyperthreading.
+
+    The knee diagnostic did hold placement constant: it ran every count on the whole machine,
+    in one session. Its medians, in seconds, with the interquartile range for four copies:
+
+    | threads | four copies of the sample | one copy |
+    | ---: | ---: | ---: |
+    | 10 | 0.3661 (0.365–0.368) | 0.1013 |
+    | 12 | 0.3657 (0.365–0.369) | 0.1009 |
+    | 20 | 0.3664 (0.364–0.370) | 0.1010 |
+ Its build falls between
+    0.5.3 and 0.5.4, which run the same plan on the whole machine. A release-build sweep from
+    eight to twenty threads, all on the whole machine, would confirm it for 0.5.4 itself.
+
+<figure class="bf-fig">
+<p class="bf-title">Placement held constant: faster up to the cores, level beyond</p>
+<svg viewBox="0 0 720 372" role="img" aria-label="Throughput against threads asked for. With the whole machine at every count, mibz2 gets faster up to 10 threads and then holds level to 20, within half a per cent, on one copy and four copies of the sample. The release sweep, pinned up to 10 threads and on the whole machine from 12, peaks at 10 and is about 4 to 5% lower from 12 to 20."><line x1="80" y1="292.7" x2="690" y2="292.7" class="bf-grid"/><text x="72.0" y="297.7" text-anchor="end" class="bf-tm" style="font-size:14px">1.4</text><line x1="80" y1="238.2" x2="690" y2="238.2" class="bf-grid"/><text x="72.0" y="243.2" text-anchor="end" class="bf-tm" style="font-size:14px">1.6</text><line x1="80" y1="183.6" x2="690" y2="183.6" class="bf-grid"/><text x="72.0" y="188.6" text-anchor="end" class="bf-tm" style="font-size:14px">1.8</text><line x1="80" y1="129.1" x2="690" y2="129.1" class="bf-grid"/><text x="72.0" y="134.1" text-anchor="end" class="bf-tm" style="font-size:14px">2.0</text><line x1="80" y1="74.5" x2="690" y2="74.5" class="bf-grid"/><text x="72.0" y="79.5" text-anchor="end" class="bf-tm" style="font-size:14px">2.2</text><line x1="80" y1="20.0" x2="690" y2="20.0" class="bf-grid"/><text x="72.0" y="25.0" text-anchor="end" class="bf-tm" style="font-size:14px">2.4</text><line x1="80" y1="320" x2="690" y2="320" class="bf-axis"/><text x="147.8" y="340.0" text-anchor="middle" class="bf-tm" style="font-size:14px">4</text><text x="283.3" y="340.0" text-anchor="middle" class="bf-tm" style="font-size:14px">8</text><text x="351.1" y="340.0" text-anchor="middle" class="bf-tm" style="font-size:14px">10</text><text x="418.9" y="340.0" text-anchor="middle" class="bf-tm" style="font-size:14px">12</text><text x="554.4" y="340.0" text-anchor="middle" class="bf-tm" style="font-size:14px">16</text><text x="690.0" y="340.0" text-anchor="middle" class="bf-tm" style="font-size:14px">20</text><text x="385.0" y="362.0" text-anchor="middle" class="bf-t" style="font-size:15px">threads asked for</text><text x="20" y="170.0" text-anchor="middle" transform="rotate(-90 20 170.0)" class="bf-t" style="font-size:15px">GB of output a second (axis from 1.3)</text><line x1="385.0" y1="20" x2="385.0" y2="320" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:3 3"/><text x="391.0" y="303.6" text-anchor="start" class="bf-tm" style="font-size:13px">10 physical cores; hardware threads beyond</text><polyline points="147.8,110.2 283.3,65.6 351.1,49.7 418.9,48.9 690.0,50.2" style="fill:none;stroke:var(--bf-green);stroke-width:3;stroke-linejoin:round"/><line x1="147.8" y1="117.8" x2="147.8" y2="107.6" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="147.8" cy="110.2" r="4" style="fill:var(--bf-green)"/><line x1="283.3" y1="72.7" x2="283.3" y2="63.4" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="283.3" cy="65.6" r="4" style="fill:var(--bf-green)"/><line x1="351.1" y1="52.7" x2="351.1" y2="48.7" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="351.1" cy="49.7" r="4" style="fill:var(--bf-green)"/><line x1="418.9" y1="54.2" x2="418.9" y2="47.3" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="418.9" cy="48.9" r="4" style="fill:var(--bf-green)"/><line x1="690.0" y1="55.5" x2="690.0" y2="46.0" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="690.0" cy="50.2" r="4" style="fill:var(--bf-green)"/><polyline points="147.8,172.4 283.3,120.6 351.1,110.3 418.9,107.7 690.0,108.0" style="fill:none;stroke:var(--bf-steel);stroke-width:2.2;stroke-linejoin:round"/><line x1="147.8" y1="181.4" x2="147.8" y2="168.2" style="stroke:var(--bf-steel);stroke-width:2.5"/><circle cx="147.8" cy="172.4" r="4" style="fill:var(--bf-steel)"/><line x1="283.3" y1="125.0" x2="283.3" y2="117.3" style="stroke:var(--bf-steel);stroke-width:2.5"/><circle cx="283.3" cy="120.6" r="4" style="fill:var(--bf-steel)"/><line x1="351.1" y1="116.0" x2="351.1" y2="104.6" style="stroke:var(--bf-steel);stroke-width:2.5"/><circle cx="351.1" cy="110.3" r="4" style="fill:var(--bf-steel)"/><line x1="418.9" y1="115.1" x2="418.9" y2="101.9" style="stroke:var(--bf-steel);stroke-width:2.5"/><circle cx="418.9" cy="107.7" r="4" style="fill:var(--bf-steel)"/><line x1="690.0" y1="111.6" x2="690.0" y2="101.5" style="stroke:var(--bf-steel);stroke-width:2.5"/><circle cx="690.0" cy="108.0" r="4" style="fill:var(--bf-steel)"/><polyline points="147.8,276.3 283.3,128.3 351.1,113.8 418.9,134.0 554.4,135.5 690.0,143.0" style="fill:none;stroke:var(--bf-amber);stroke-width:2;stroke-linejoin:round;stroke-dasharray:6 4"/><circle cx="147.8" cy="276.3" r="4" style="fill:var(--bf-amber)"/><circle cx="283.3" cy="128.3" r="4" style="fill:var(--bf-amber)"/><circle cx="351.1" cy="113.8" r="4" style="fill:var(--bf-amber)"/><circle cx="418.9" cy="134.0" r="4.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2"/><circle cx="554.4" cy="135.5" r="4.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2"/><circle cx="690.0" cy="143.0" r="4.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2"/><rect x="395.3333333333333" y="169.09090909090907" width="302.6666666666667" height="96" rx="6" class="bf-card"/><line x1="405.3333333333333" y1="184.09090909090907" x2="431.3333333333333" y2="184.09090909090907" style="stroke:var(--bf-green);stroke-width:3"/><text x="439.3" y="189.1" text-anchor="start" class="bf-t" style="font-size:15px">whole machine, four copies</text><line x1="405.3333333333333" y1="208.09090909090907" x2="431.3333333333333" y2="208.09090909090907" style="stroke:var(--bf-steel);stroke-width:2.2"/><text x="439.3" y="213.1" text-anchor="start" class="bf-t" style="font-size:15px">whole machine, one copy</text><line x1="405.3333333333333" y1="232.09090909090907" x2="431.3333333333333" y2="232.09090909090907" style="stroke:var(--bf-amber);stroke-width:2;stroke-dasharray:6 4"/><text x="439.3" y="237.1" text-anchor="start" class="bf-t" style="font-size:15px">release sweep, one copy</text><text x="405.3" y="259.1" text-anchor="start" class="bf-tm" style="font-size:13px">hollow: whole machine; filled: pinned</text></svg>
+<figcaption>Measured on the test machine. Solid lines: the <a href="https://github.com/lmmx/mibz2/blob/evidence/knee/run-20261117T123939Z.tar.gz">knee diagnostic</a> of 17 November, every count on the whole machine in one session, 10 rounds a point; the dots are medians and the bars the interquartile range, decoding one copy or four copies of the Wikidata sample. Its build (399d33d6) falls between 0.5.3 and 0.5.4; on the whole machine both releases run the same plan, 4 and 8 workers at 4 and 8 threads and 7 workers from 10. Dashed: 0.5.4's release sweep, medians of 10 rounds, pinned one CPU a core up to 10 threads (filled) and on the whole machine from 12 (hollow). The vertical axis starts at 1.3 GB/s.</figcaption>
+</figure>
 
 <figure class="bf-fig">
 <p class="bf-title">The fall past eight threads, release by release</p>
@@ -221,19 +261,48 @@ workload, is needed before calling the plateau a bandwidth ceiling.
 There is another reason to be precise about the word *plateau*. At twelve to twenty
 **requested** threads on this machine, 0.5.4 still runs **seven decoding workers**. The decoder
 is not starting twelve, sixteen or twenty competing workers; the plan has capped the number of
-blocks being decoded simultaneously. A flat result there means the planner has kept the
-expensive part of the curve out of the default path. It does not prove that the hardware would
+blocks being decoded simultaneously. A nearly flat result there means the planner has kept
+the most expensive part of the curve out of the default path. It does not prove that the hardware would
 scale if twenty independent decoding workers were set loose.
 
-## 5. What comes after the knee?
+## 5. How would we straighten the knee?
 
-The first task is to establish what limits the seven-worker plan. If the memory controller is
-close to its sustainable bandwidth, reducing memory traffic per output byte should raise the
-plateau. If cache misses and shared-cache queuing dominate, smaller hot working sets or a
-different access pattern may matter more. The distinction decides which experiment deserves the
-next implementation.
+Straightening the knee means a curve that keeps rising past the ten physical cores. The second
+hardware thread on each core (simultaneous multithreading, which Intel calls hyperthreading)
+would then add speed. Today it adds none. Three routes could change that. Each is a
+hypothesis with a measurement that tests it; none is a result yet.
 
-The second task is to make the planner portable. The measured seven-worker choice is not a
+**Cheaper bytes per worker.** At seven workers, the reads that miss the L3 come to 11 bytes for
+every byte of output. A smaller hot set per worker would cut that: the store and the tables the
+kernel keeps for a block. So would less traffic on the output side. One piece of the
+output side is folding the block's checksum into the final pass. That is an open research arm
+([#535](https://github.com/lmmx/mibz2/pull/535)), and its measured 1.5–3% gain is not yet settled.
+Fewer bytes moved per output byte raise the number of workers that pays, so more workers, and
+eventually the second hardware threads, can contribute. If memory bandwidth binds, this is the
+route that raises the ceiling. The test: bytes per output byte and wall time by worker count,
+before and after each cut.
+
+**Latency hiding with the second hardware threads.** The counters run at ten threads measured
+about 2.2 reads that missed the L3 in flight at once, whenever any were. That is little
+memory-level parallelism. If the plateau is bound by latency rather than bandwidth, two workers
+sharing a core can overlap each other's misses: one computes while the other waits. That is the
+classic case where hyperthreading helps code that waits on memory. The test: the same number of
+workers placed as pairs on shared cores, against one worker a core.
+
+**Helpers on the second hardware threads.** The decoder's other threads already gain from spare
+CPUs. Decoding four copies of the sample with four threads took 0.405 seconds on the whole
+machine, against 0.535 seconds pinned. Pinned, the scanner, reader and main thread share the
+workers' cores. The second hardware threads could host prefetch or helper threads that bring the
+next block's data into cache ahead of the workers. The test: a helper arm against none, at the
+same worker count, with the misses per output byte counted.
+
+**Which first.** The next memory-controller run reads the controller's own counters and
+compares them with a measured sustainable ceiling for a similar mix of reads and writes. It says
+whether bandwidth or latency binds, and so which route to take first. It is the next step.
+
+## 6. What comes next for the knee?
+
+The other task is to make the planner portable. The measured seven-worker choice is not a
 general law. The cache model under test correctly recovered some counts on this machine, then
 predicted the wrong optimum for smaller bzip2 blocks. Other processors have different core
 counts, cache sizes, cache-sharing domains and memory systems. The right worker count needs to
@@ -241,12 +310,14 @@ follow those facts, with tests that can prove a proposed rule wrong.
 
 For now the release result is a good one, with a precise boundary. **mibz2 no longer punishes a
 request for more threads with a large fall in throughput on this measured workload and
-machine.** It gets there by doing *less work in parallel*, more efficiently. The old knee exposed
+machine.** In the release sweep the penalty past the best point is 4–5%, down from 11–18%. With placement
+held constant, no decline is seen. It gets there by doing *less work in parallel*, more efficiently. The old knee exposed
 a bad trade-off between concurrency and interference. Version 0.5.4 runs on the better side of
 it.
 
-What remains is a ceiling to raise, and a policy to generalise. That is a more useful problem
-than a curve that falls whenever we give it another core.
+What remains is a flat stretch past the cores to turn into a rising curve, a ceiling to raise,
+and a policy to generalise. That is a more useful problem than a curve that falls whenever we give it another
+core.
 
 ---
 

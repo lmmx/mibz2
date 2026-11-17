@@ -55,7 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "Straightening the knee" = "blog/2026-11-17-the-knee-is-gone.md" },
+    { "Raising the knee" = "blog/2026-11-17-raising-the-knee.md" },
     { "Modelling the cache to rightsize workers" = [
       { "Modelling the cache" = "blog/2026-11-17-modelling-the-cache-to-rightsize-workers.md" },
       { "Technical notes" = "blog/2026-11-17-modelling-the-cache-to-rightsize-workers-notes.md" },
@@ -260,7 +260,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-17-the-knee-is-gone.md" = "mibz2 straightens its scaling curve by taming worker contention, sustaining nearly 2 GB/s from eight to twenty threads on a ten-core processor." },
+  { "blog/2026-11-17-raising-the-knee.md" = "mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are busy, then holds level on the whole machine up to twenty threads." },
   { "blog/2026-11-17-modelling-the-cache-to-rightsize-workers.md" = "mibz2 now runs fewer workers than threads on a ten-core desktop and finishes sooner, while a cache model is tested to pick the count on any machine." },
   { "blog/2026-11-17-modelling-the-cache-to-rightsize-workers-notes.md" = "Technical notes to the post on modelling the cache to rightsize workers: the contention–parallelism trade-off and its sensitivity, what the contention-associated overhead is made of, the full ledger of frozen predictions, the CPU bound's history, and topology and transfer." },
   { "blog/2026-11-16-mathematical-dictionary.md" = "Our BWT inversion is not the sheaf an earlier analogy suggested, yet the places of its words form one naturally." },
