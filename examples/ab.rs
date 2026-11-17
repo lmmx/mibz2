@@ -1197,6 +1197,26 @@ fn decode(
             h,
             last,
         ),
+        // the 12-byte rules arms (#145, the Coordinator's ruling on LOG 6925645704): lazy
+        // letters with each rule stored in 12 bytes (`bwt::W12LazyCells`). `mibz2-w12` is
+        // production's decoder, plan and window, with that kernel wherever the plan runs lazy
+        // workers (`BzReader::parallel_lazy_as`); `mibz2-workers-w12` is `mibz2-workers-lazy`
+        // with that kernel. Each differs from its reference in the kernel alone
+        "mibz2-w12" => drain(
+            mibz2::BzReader::parallel_lazy_as::<mibz2::bwt::W12LazyCells>(open()?, threads),
+            h,
+            last,
+        ),
+        "mibz2-workers-w12" => drain(
+            mibz2::BzReader::parallel_workers_with::<mibz2::bwt::W12LazyCells>(
+                open()?,
+                threads,
+                mibz2::parallel::SLOTS_PER_THREAD * threads,
+                mibz2::Kernels::detect(),
+            ),
+            h,
+            last,
+        ),
         // the memory-lever experiment's two arms (research, `memory-lever` feature; #145
         // QUEUED 6901989466): `mibz2-workers-w` with Cells' lazy letters, or with its rules
         // staged and stored past the cache. The plan and the window are `mibz2-workers-w`'s,

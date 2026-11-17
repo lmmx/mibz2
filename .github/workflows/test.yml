@@ -71,14 +71,15 @@ jobs:
           python3 bench/lazy_crossover.py bench/lazy_crossover_example_runs.jsonl bench/lazy_crossover_example_dose.jsonl | tee dose.txt
           grep -q '59.8% with a slot for every letter, 20.0% with lazy letters' dose.txt
           grep -q 'mibz2-workers-lazy *110 *170' dose.txt
-      # a two-arm adoption run's reading (`bench/two_arm.py`; `just bench-cores-less-one`):
-      # each verdict on synthetic runs, Holm's arithmetic, a moved control, and no verdict
-      # from incomplete or malformed records, the Researcher's fabricated bundle among them
+      # a two-arm adoption run's reading (`bench/two_arm.py`; `just bench-cores-less-one`,
+      # `bench-w12`, `bench-workers-low`, `bench-w12-at-7`): each verdict on synthetic runs, Holm's
+      # arithmetic, a moved control, and no verdict from incomplete or malformed records or
+      # metadata, the Researcher's fabricated bundle among them
       - name: The two-arm adoption reading (synthetic runs)
         run: python3 bench/test_two_arm.py
-      # the counters' reader (`bench/counters.py`, #506's; `just bench-workers-low`'s occupancy
-      # diagnostic, its named groups and several candidates), driven with a stub perf and
-      # child: a complete run read, and every defect leaves no report
+      # the counters' reader (`bench/counters.py`, #506's; `bench-w12`'s L2 diagnostic and
+      # `bench-workers-low`'s occupancy diagnostic, its named groups and several candidates),
+      # driven with a stub perf and child: a complete run read, and every defect leaves no report
       - name: The counters reader (stub perf)
         run: python3 bench/test_counters.py
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
