@@ -172,7 +172,7 @@
     "foot": "lmmx.github.io/mibz2 · 17 November 2026",
     "kind": "result",
     "section": " · Research blog",
-    "title": "The knee is gone: more threads without the fall"
+    "title": "Straightening the knee: gaining speed with more threads and hyperthreading"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",

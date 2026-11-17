@@ -55,7 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "The knee is gone" = "blog/2026-11-17-the-knee-is-gone.md" },
+    { "Straightening the knee" = "blog/2026-11-17-the-knee-is-gone.md" },
     { "Modelling the cache to rightsize workers" = [
       { "Modelling the cache" = "blog/2026-11-17-modelling-the-cache-to-rightsize-workers.md" },
       { "Technical notes" = "blog/2026-11-17-modelling-the-cache-to-rightsize-workers-notes.md" },

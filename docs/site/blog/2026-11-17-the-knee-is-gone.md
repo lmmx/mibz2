@@ -1,5 +1,5 @@
 ---
-title: "The knee is gone: more threads without the fall"
+title: "Straightening the knee: gaining speed with more threads and hyperthreading"
 image: assets/social/blog-2026-11-17-the-knee-is-gone.png
 description: "mibz2 0.5.4 removes the ten-thread dip, and higher thread counts now hold near 2 GB/s instead of losing ground to contention."
 ---
@@ -11,7 +11,7 @@ description: "mibz2 0.5.4 removes the ten-thread dip, and higher thread counts n
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# The knee is gone: more threads without the fall
+# Straightening the knee: gaining speed with more threads and hyperthreading
 
 mibz2 0.5.4 removes the ten-thread dip, and higher thread counts now hold near 2 GB/s instead of losing ground to contention.
 {: .post-dek }
