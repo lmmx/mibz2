@@ -2241,6 +2241,13 @@
       "review_comment_pr": 145,
       "review_comment_id": 6953772428,
       "publication_verification": "Exact body, author lmmx, destination145 and role-aware pinned coord.py verification passed; helper's coordinator-only FROM limitation retained."
+    },
+    {
+      "trigger_comment_id": 6955971254,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/knee-blog-6955971254/report.md"
     }
   ],
   "active_delegations": [],
