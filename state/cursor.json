@@ -186,9 +186,10 @@
     6945387574,
     6946449283,
     6946571935,
-    6946859150
+    6946859150,
+    6947285652
   ],
-  "last_processed_comment_id": 6946859150,
+  "last_processed_comment_id": 6947285652,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2204,12 +2205,15 @@
     },
     {
       "trigger_comment_id": 6947285652,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/eager-trim-6947285652/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "56034daf7439de030f8957e3bfbc8a4abce9f4f9",
-      "disposition": "PROCEED pinned eager5/20 at6 replacing lazy5; eager3/12 at4. HOLD unpinned extension pending exact-arm evidence or reviewed forward policy."
+      "disposition": "PROCEED pinned eager5/20 at6 replacing lazy5; eager3/12 at4. HOLD unpinned extension pending exact-arm evidence or reviewed forward policy.",
+      "review_comment_id": 6947387421,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body, lmmx author, destination145 and role-aware pinned coord.py verification passed; helper's coordinator-only FROM limitation retained."
     }
   ],
   "active_delegations": [],
