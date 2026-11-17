@@ -2244,10 +2244,13 @@
     },
     {
       "trigger_comment_id": 6955971254,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "report_path": "state/reports/knee-blog-6955971254/report.md"
+      "report_path": "state/reports/knee-blog-6955971254/report.md",
+      "report_commit": "9c99bb816a6d8704ce2016b782f2c472a28824a0",
+      "source_commit": "ccba7bb644995cf1b958b979cdf1172fb90c486a",
+      "disposition": "REVISE article: affinity does not provide exclusive core placement; history figure is selected releases; IMC traffic alone does not settle bandwidth limitation. Release numbers reproduced."
     }
   ],
   "active_delegations": [],
