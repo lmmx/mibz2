@@ -187,9 +187,10 @@
     6946449283,
     6946571935,
     6946859150,
-    6947285652
+    6947285652,
+    6948462696
   ],
-  "last_processed_comment_id": 6947285652,
+  "last_processed_comment_id": 6948462696,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2217,12 +2218,15 @@
     },
     {
       "trigger_comment_id": 6948462696,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/unpinned-6948462696/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "1a5515ce91cb482f11773965ca605e03a86237cb",
-      "disposition": "Targeted correction before launch: bound repeats, scope affinity admission, correct power/common-mode claims; then proceed unchanged five-cell eight-round experiment."
+      "disposition": "Targeted correction before launch: bound repeats, scope affinity admission, correct power/common-mode claims; then proceed unchanged five-cell eight-round experiment.",
+      "review_comment_id": 6948628221,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body, author lmmx, destination145 and role-aware pinned coord.py checks pass. Helper's coordinator-only FROM limitation recorded."
     }
   ],
   "active_delegations": [],
