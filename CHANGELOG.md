@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.4](https://github.com/lmmx/mibz2/compare/v0.5.3...v0.5.4) - 2026-11-17
 
+A plan release: on the measured i9, the trimmed workers now fire by how the process is placed.
+Pinned one CPU a core, the decoder runs fewer workers than threads at 4 to 10 threads; on the
+whole machine, from 10 threads, as in 0.5.3. Every other machine and mask is unchanged.
+
+- **The trimmed workers by mode** (#537). **Pinned** (one CPU on each of exactly the threads
+  asked, no two on a core, as every sweep measured): lazy 7/28 at 10 threads (0.881 to 0.889
+  of lazy 10/40), lazy 6/24 at 8 (0.925 of lazy 8/32), eager 5/20 at 6 (0.938 of eager 6/24)
+  and eager 3/12 at 4 (0.959 of eager 4/16). The 10-thread cell now fires pinned to CPUs 0–9,
+  where 0.5.3 declined it. **Unpinned** (the whole machine): lazy 7/28 from 10 threads, as in
+  0.5.3, now measured unpinned at 0.873 [0.866, 0.880] at 10, and nothing below 10. The
+  low-count gains are a pinned scheduling effect (a worker fewer frees a core for the front
+  end): unpinned, the 8-, 6- and 4-thread trims took 1.00, 1.01 and 1.21 of master's wall.
+  **Anything else** (another mask, such as two CPUs of a core or more cores than threads; any
+  cpu.max quota; another machine) is unchanged. The machine is recognised from every CPU
+  present and online, not from this process's affinity; the service core's predicate still
+  reads the affinity. Verdicts: #145 LOGs 6945639925, 6947274621 and 6949008682, admitted by
+  the Researcher's REVIEWs 6946555118, 6947387421 and 6948628221.
+- **The machine read once a process** (#545). The machine-wide facts (the L3, cpuinfo's CPU
+  identities and the topology of every CPU present and online) are cached on first use. The
+  affinity and the cgroup quota are read only where those facts admit the measured i9. Every
+  plan and cell is unchanged.
+- **The release check (RELEASING §3).** Its first run, 44095874788 on an Intel Xeon 8370C,
+  caught #537's per-decoder sysfs and cpuinfo reads at 4 to 8 threads (0.5 to 1 ms a default
+  decoder on a 4-CPU runner): 4-thread small inputs were 3.8–5.8% slower. #545 fixed it, and
+  the re-check, 44108684132 on an AMD EPYC 9V45, had no slower row (#145 LOG 6952096740).
+- **Release scaling, 0.5.4 against 0.5.3 on the i9** (release-scaling/run-20261117T151421Z,
+  #145 LOG 6952656453). The harness pins runs of 10 threads or fewer one CPU a core, and the
+  thread names show the pinned cells: 3 workers at 4 threads, 6 at 8 and 7 at 10. 0.5.3 takes
+  1.123 [1.094, 1.152] of 0.5.4's wall time at 10 threads and 1.045 [1.038, 1.053] at 8, with
+  1.241 and 1.132 of its CPU and a peak RSS of 184 and 154 MB against 0.5.4's 134 and 121 MB.
+  At 4 threads 0.5.3 takes 1.074 of the CPU, and its 1.020 [0.994, 1.048] of the wall is not
+  resolved. At 1, 2 and 12–20 threads the two are level (0.980–0.996, every interval
+  spanning 1).
+- **Team threshold (RELEASING §5a), unchanged** (crossover/run-20261117T152519Z, #145 LOG
+  6952857309). No team arm beat the shipped plan at any count from 4 to 20. One block a thread
+  is 2–11% slower than the trimmed plan at 4, 6, 8 and 10 threads. In the sanity check at 5, 7
+  and 9 threads, where the two arms build the same plan, 5 and 9 span 1 and 7 is a near miss
+  at 0.979 [0.969, 0.990]. #537 doesn't change the plan at 7, and the same cell was 1.000 at
+  0.5.3, so it is noted, not acted on.
+
 ### <!-- 3 -->Performance
 
 - *(plan)* read the machine once a process ([#545](https://github.com/lmmx/mibz2/pull/545))
@@ -17,11 +57,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### <!-- 9 -->Other
 
 - Release scaling: 0.5.3 against 0.5.2 on the i9; 0.5.3's notes and attribution row ([#544](https://github.com/lmmx/mibz2/pull/544))
-
-### <!-- 3 -->Performance
-
-- *(plan)* the machine read once a process: the machine-wide facts (the L3, cpuinfo's CPU identities and the topology of every CPU present and online) are cached on first use, and the affinity and cgroup quota are read only where those facts admit the measured i9. This fixes #537's per-decoder sysfs and cpuinfo reads at 4, 6 and 8 threads (0.5 to 1 ms a default decoder on a 4-CPU runner); every plan and cell is unchanged
-- *(plan)* on the measured i9, the trimmed workers by mode. **Pinned** (one CPU on each of exactly the threads asked, no two on a core, as every sweep measured): lazy 7/28 at 10 threads (0.881 to 0.889 of lazy 10/40), lazy 6/24 at 8 (0.925 of lazy 8/32), eager 5/20 at 6 (0.938 of eager 6/24) and eager 3/12 at 4 (0.959 of eager 4/16); the 10-thread cell now fires pinned to CPUs 0-9, where 0.5.3 declined it (release-scaling/run-20261117T111525Z built 10 workers there). **Unpinned** (the whole machine): lazy 7/28 from 10 threads, as in 0.5.3 and now measured unpinned at 0.873 [0.866, 0.880] at 10; nothing below 10. The low-count gains are a pinned scheduling effect (a worker fewer frees a core for the front end): unpinned, the 8-, 6- and 4-thread trims took 1.00, 1.01 and 1.21 of master's wall. **Anything else** (another mask, such as two CPUs of a core or more cores than threads; any cpu.max quota; another machine) is unchanged. The machine is recognised from every CPU present and online, not from this process's affinity; the service core's predicate still reads the affinity. Verdicts #145 LOGs 6945639925, 6947274621 and 6949008682; admitted by the Researcher's REVIEWs 6946555118, 6947387421 and 6948628221
 
 ## [0.5.3](https://github.com/lmmx/mibz2/compare/v0.5.2...v0.5.3) - 2026-11-17
 
