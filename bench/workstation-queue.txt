@@ -7,3 +7,4 @@
 #
 # recipe                       branch                    what it measures
 bench-workers-level3         bench/workers-level3      W = 10/9/8/7/6/4 lazy at 10 threads on Wikidata recompressed at -3 (#526): the transfer test of MONODROMY record 45
+bench-workers-sweep-low      bench/workers-sweep-low   lazy workers at 8 (6, 5), 6 (6 control, 5, 4) and 4 (4 control, 3, 2) threads, with per-thread CPU (#521; MONODROMY records 44 and 46, and LOG 6943635048, frozen before the data)
