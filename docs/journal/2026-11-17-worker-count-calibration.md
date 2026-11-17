@@ -91,13 +91,18 @@ Today's plan hard-codes the measured i9: a profile check (10 physical cores, a 2
 - **Where it fits:** past the cores (7, as measured) and at 10 threads (7, as measured).
 - **Where it misses:** at 8 threads it says 7, but 6 measured better (0.929 against 7's 0.975).
 - **What that means:** the cache budget alone is not enough, and the thread count matters too. The busy-share term, the reader and scanner competing for the T threads, is the candidate.
-- **What would fit all three:** W = min(W_cache, ≈ 0.7·T).
+- **What would fit all three:** W = min(W_cache, round(0.7·T)), where round means half away from zero, so 8 → 6, 10 → 7 and 12 → 8. The convention is frozen here, before the sweep. floor(0.7·T) would predict 5 at 8 threads, and the sweep's 5-worker arm at 8 threads tells the two apart.
+- **Domains must be read through the affinity:** discovery reports the L3 domains that intersect the process's allowed CPUs, not every cache on the machine. Linux may also migrate threads between domains. So the policy either places workers predictably, or assumes migration and budgets against the smallest domain.
 - **What decides it:** the low-thread sweep (4, 6 and 8 threads, with 5 workers at 8) tests it, against MONODROMY's frozen record 44.
 
 **How the model is fitted and tested:**
 1. Fit a, b and k on the i9 from the sweep above. That is one machine at two block sizes: the -9 Wikidata and a -1 or -3 file, which varies the footprint.
 2. Predict W* on a second machine before measuring it. CI's GitHub runners (4 vCPUs on AMD EPYC, and the macOS runners) are free and differ in L3 size. Then measure with `bench-workers-sweep`. This is the transfer test, and its rule is posted before the data.
-3. Ship the model only if it predicts the second machine's W* to within one worker, and its wall to within the sweep's noise. Otherwise keep the measured profile and widen the measurement.
+3. Ship the model only if both of these hold on the second machine:
+   - it predicts W* to within one worker;
+   - **the penalty for its choice** is at most 2%. The penalty is wall(predicted W) / wall(measured best W) − 1. Being one worker off at a 1% cost is acceptable; one worker off at a 15% cost is not.
+
+   Otherwise keep the measured profile and widen the measurement.
 
 **Options considered:**
 - **Online self-tuning,** where the decoder varies W during a stream and keeps the fastest: deferred. Streams are often short, the noise is high, and output timing would stop being deterministic. A one-off calibration command, which runs the sweep and caches its parameters under the XDG cache directory, is the fallback if no static model transfers.
