@@ -180,9 +180,10 @@
     6924336791,
     6925048452,
     6926192217,
-    6926214255
+    6926214255,
+    6928304008
   ],
-  "last_processed_comment_id": 6926214255,
+  "last_processed_comment_id": 6928304008,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2126,12 +2127,15 @@
     },
     {
       "trigger_comment_id": 6928304008,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/w12-6928304008/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "b29e6300e09d50d76d610210a7bbc63ef617985e",
-      "disposition": "PROCEED frozen W12 rule and replayed ADOPTS; memory-only route not admissible retrospectively; #517 compiled equivalence not independently reproduced."
+      "disposition": "PROCEED frozen W12 rule and replayed ADOPTS; memory-only route not admissible retrospectively; #517 compiled equivalence not independently reproduced.",
+      "review_comment_id": 6943371729,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body/author/destination and role-aware routing verified; pinned verifier retains coordinator-only FROM restriction."
     }
   ],
   "active_delegations": [],
