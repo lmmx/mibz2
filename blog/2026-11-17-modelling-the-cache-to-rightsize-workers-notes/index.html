@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=745a7381ab72">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=fbc0a3ee0656">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=745a7381ab72">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=fbc0a3ee0656">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=745a7381ab72">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=fbc0a3ee0656">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=745a7381ab72">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=fbc0a3ee0656">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=745a7381ab72">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=fbc0a3ee0656">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=745a7381ab72">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=fbc0a3ee0656">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2595,7 +2595,7 @@
 </div>
 <h2 id="2-what-the-contention-associated-overhead-is-made-of">2. What the contention-associated overhead is made of<a class="headerlink" href="#2-what-the-contention-associated-overhead-is-made-of" title="Permanent link">&para;</a></h2>
 <p><strong>A smaller footprint at 7 workers.</strong> A variant of the lazy-letters kernel that stores its rules in 12 bytes instead of 16 shrinks each worker's footprint. With 9 workers past the cores it took 0.98 to 0.99 of the wall time. With 7 it cut LLC misses per byte to 0.926 at 12 threads, with 1.6% more instructions, and no change in wall time was detected: 1.012 (0.998, 1.028), 0.996 (0.987, 1.005) and 1.002 (0.985, 1.018) of the 16-byte kernel's at 12, 16 and 20 threads. That is consistent with the saved misses overlapping other work and being offset by the extra instructions. It doesn't identify what the overhead is.</p>
-<p><strong>The cycles per miss avoided.</strong> Across the 10-thread arms, the cycles saved per LLC miss avoided come to about 589 from 10 workers to 7. That is a slope across arms, not a cost per miss: it moves with the cost of the misses that remain, with overlap, and with every other cost that changes with the count. A conditional calculation is all it supports: <em>if</em> each removed miss carried 390 to 490 unhidden cycles, the cost of an uncontended trip to memory at an assumed 80 to 100 ns, <em>and</em> nothing else changed, fewer misses would account for 66% to 83% of the saving. Neither assumption is established. The counters run below measured a loaded miss latency of about 595 cycles, already outside that range, with about 2.2 misses in flight at once; dividing one by the other doesn't give the exposed critical-path cost either. The remainder can't be assigned to anything by subtraction. Large miss reductions need not cut cycles in proportion when memory-level parallelism changes, as <a href="https://doi.org/10.1109/MICRO.2006.49">Qureshi and Patt (2006)</a> show, and stall counters overlap, as <a href="https://doi.org/10.1109/ISPASS.2014.6844459">Yasin (2014)</a> warns.</p>
+<p><strong>The cycles per miss avoided.</strong> Across the 10-thread arms, the cycles saved per LLC miss avoided come to about 589 from 10 workers to 7. That is a slope across arms, not a cost per miss: it moves with the cost of the misses that remain, with overlap, and with every other cost that changes with the count. A conditional calculation is all it supports: <em>if</em> each removed miss carried 390 to 490 unhidden cycles, the cost of an uncontended trip to memory at an assumed 80 to 100 ns, <em>and</em> nothing else changed, fewer misses would account for 66% to 83% of the saving. Neither assumption is established. The counters run below measured a loaded miss latency of about 595 cycles, already outside that range, with about 2.2 misses in flight at once; dividing one by the other doesn't give the exposed critical-path cost either. The remainder can't be assigned to anything by subtraction. Misses serviced in parallel cost less than isolated ones, so a cut in misses need not cut stall cycles in proportion, as <a href="https://doi.org/10.1109/ISCA.2006.5">Qureshi, Lynch, Mutlu and Patt (2006, §1.1)</a> show, and stall counters overlap, as <a href="https://doi.org/10.1109/ISPASS.2014.6844459">Yasin (2014)</a> warns.</p>
 <p><strong>The two hypotheses, scored.</strong> Before the counters run, the model's <a href="https://github.com/lmmx/mibz2/blob/0e7c6888bcba2ce8dd3056c587a23be958d6de4f/docs/journal/monodromy/2026-11-17-contention-counters.md">record 47</a> froze predictions for two readings: queueing in the L3 and the ring that links it to the cores (Q), and main-memory latency rising with load (D). <a href="https://github.com/lmmx/mibz2/blob/c7ea4a5c5e8447fbdfd407c6f0ae07b6669bd87e/docs/journal/monodromy/2026-11-17-miss-cost-scoring.md">Record 51</a> scored them, from 10 workers to 7 at 10 threads:</p>
 <table>
 <thead>
@@ -2682,7 +2682,7 @@
 <tr>
 <td>44</td>
 <td>counts at 8, 6 and 4 threads, with 11 ratio intervals</td>
-<td>counts right; 4 of 11 intervals missed; its near-saturated utilisation refuted</td>
+<td>counts right; 5 of 11 values outside their intervals (record 49's heading says four; its own table shows five); its near-saturated utilisation refuted</td>
 <td>mixed</td>
 </tr>
 <tr>
@@ -2761,11 +2761,17 @@
 <td>49</td>
 <td>eager kernel at the trimmed counts: 5 workers at 6 threads at 0.90 (0.86, 0.95), 3 at 4 threads at 0.99 (0.95, 1.03), against the reference plan</td>
 <td>pinned: 0.938 and 0.959</td>
-<td>met, pinned only</td>
+<td>both inside their bands; pinned only</td>
+</tr>
+<tr>
+<td>49</td>
+<td>eager 7 workers over lazy 7 at 10 threads: 0.98 (0.95, 1.02)</td>
+<td>1.0906 (1.0821, 1.0992)</td>
+<td>refuted</td>
 </tr>
 </tbody>
 </table>
-<p>The 8-thread count was observed before record 46's CPU bound was written; the low-thread sweep re-measured it and tested 6 and 4 threads afresh. All of it ran pinned. An <a href="https://github.com/lmmx/mibz2/pull/145#issuecomment-6949008682">unpinned run</a> later found no gain at 8 threads (1.000) and losses at 6 and 4, so these pinned gains came from freeing a core for the decoder's other threads, not from the cache, and the 6- and 8-thread points come out of the contention fit.</p>
+<p>The 8-thread count was observed before record 46's CPU bound was written; the low-thread sweep re-measured it and tested 6 and 4 threads afresh. All of it ran pinned. An <a href="https://github.com/lmmx/mibz2/pull/145#issuecomment-6949008682">unpinned run</a> later found no gain at 8 threads (1.000) and losses at 6 and 4. So these gains did not transfer to the full machine, and competition for the CPU with the decoder's other threads is implicated. Net ratios don't separate the parts: a cache saving to 0.96 and a parallelism loss of 1.0417 also net to 1.000. The 6- and 8-thread points can't calibrate cache contention alone, so they come out of the contention fit.</p>
 <p><strong>The low-thread sweep in full.</strong> Each arm against the reference plan at its count, 10 paired rounds, pinned one CPU a core:</p>
 <figure class="bf-fig">
 <p class="bf-title">Below 8 threads, pinned: 5 lazy workers win at 6 threads, and no lazy count beats the reference 4 at 4</p>
@@ -2852,6 +2858,7 @@
 <ul>
 <li>N. J. Gunther, <a href="https://arxiv.org/abs/0808.1431">"A General Theory of Computational Scalability Based on Rational Functions"</a>, 2008: the Universal Scalability Law.</li>
 <li>M. K. Qureshi and Y. N. Patt, <a href="https://doi.org/10.1109/MICRO.2006.49">"Utility-Based Cache Partitioning"</a>, MICRO 2006: shared-LLC capacity and miss rates.</li>
+<li>M. K. Qureshi, D. N. Lynch, O. Mutlu and Y. N. Patt, <a href="https://doi.org/10.1109/ISCA.2006.5">"A Case for MLP-Aware Cache Replacement"</a>, ISCA 2006: misses differ in cost with memory-level parallelism.</li>
 <li>C. Xu, X. Chen, R. P. Dick and Z. M. Mao, <a href="https://doi.org/10.1109/ISPASS.2010.5452065">"Cache Contention and Application Performance Prediction for Multi-Core Systems"</a>, ISPASS 2010.</li>
 <li>A. Yasin, <a href="https://doi.org/10.1109/ISPASS.2014.6844459">"A Top-Down Method for Performance Analysis and Counters Architecture"</a>, ISPASS 2014.</li>
 <li>R. L. Mattson, J. Gecsei, D. R. Slutz and I. L. Traiger, <a href="https://doi.org/10.1147/sj.92.0078">"Evaluation Techniques for Storage Hierarchies"</a>, IBM Systems Journal, 1970.</li>
@@ -3016,19 +3023,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=745a7381ab72"></script>
+        <script src="../../assets/javascripts/bench.js?v=fbc0a3ee0656"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=745a7381ab72"></script>
+        <script src="../../assets/javascripts/couriers.js?v=fbc0a3ee0656"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=745a7381ab72"></script>
+        <script src="../../assets/javascripts/blog.js?v=fbc0a3ee0656"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=745a7381ab72"></script>
+        <script src="../../assets/javascripts/frontier.js?v=fbc0a3ee0656"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=745a7381ab72"></script>
+        <script src="../../assets/javascripts/observatory.js?v=fbc0a3ee0656"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=745a7381ab72"></script>
+        <script src="../../assets/javascripts/katex.js?v=fbc0a3ee0656"></script>
       
     
   </body>
