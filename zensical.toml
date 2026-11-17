@@ -55,7 +55,10 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "Modelling the cache to rightsize workers" = "blog/2026-11-17-modelling-the-cache-to-rightsize-workers.md" },
+    { "Modelling the cache to rightsize workers" = [
+      { "Modelling the cache" = "blog/2026-11-17-modelling-the-cache-to-rightsize-workers.md" },
+      { "Technical notes" = "blog/2026-11-17-modelling-the-cache-to-rightsize-workers-notes.md" },
+    ] },
     { "A mathematical dictionary" = "blog/2026-11-16-mathematical-dictionary.md" },
     { "Stop and walk" = "blog/2026-11-16-stop-and-walk.md" },
     { "Lazy letters" = "blog/2026-11-16-lazy-letters.md" },
@@ -256,7 +259,8 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-17-modelling-the-cache-to-rightsize-workers.md" = "Rather than re-measure every worker count whenever the decoder changes, mibz2 sizes its workers from a model of the cache and cores they share." },
+  { "blog/2026-11-17-modelling-the-cache-to-rightsize-workers.md" = "mibz2 0.5.3 runs fewer workers than threads on the i9 and finishes sooner, while a model of the cache they share is tested to pick the count elsewhere." },
+  { "blog/2026-11-17-modelling-the-cache-to-rightsize-workers-notes.md" = "Technical notes to the post on modelling the cache to rightsize workers: the contention–parallelism trade-off and its sensitivity, what the contention-associated overhead is made of, the full ledger of frozen predictions, the CPU bound's history, and topology and transfer." },
   { "blog/2026-11-16-mathematical-dictionary.md" = "Our BWT inversion is not the sheaf an earlier analogy suggested, yet the places of its words form one naturally." },
   { "blog/2026-11-16-stop-and-walk.md" = "Halting each block's rebuild early and walking the small loop that remains spares mibz2 a third of the text pieces it stores, for two per cent more instructions." },
   { "blog/2026-11-16-lazy-letters.md" = "Holding fewer letters at once leaves the cache less crowded, so eight to ten threads decode up to 11% faster despite extra instructions." },
