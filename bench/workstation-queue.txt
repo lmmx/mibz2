@@ -7,3 +7,4 @@
 #
 # recipe                       branch                    what it measures
 bench-workers-confirm        bench/workers-confirm     7/28 past the cores and at 10, 6/24 at 8, against production, with held-out records and text at -1 (#520, stacked on #515)
+bench-w12-at-7               bench/w12-at-7            W12 against W16 at 7/28 past the cores, 9/36 as context (#519; combines #506 via #517 and #514)
