@@ -8,7 +8,8 @@ correction, #145 REVIEW 6921090225), for `just bench-cores-less-one` (#481) and 
     two_arm.py RUNS.jsonl --ref ARM --cand ARM [--cand ARM ...] --main CORPUS --guard CORPUS
                --judged 12,16,20 --controls 9,10 --env ENV.json [--rounds 10]
                [--cores 10 --cpus 20] [--hold-max-threads 9] [--context ARM ...]
-               [--judge-at ARM=COUNTS ...]
+               [--judge-at ARM=COUNTS ...] [--guard CORPUS ...]
+               [--confirm [--predict STEP | --predict ARM=COUNTS=STEP ...]]
 
 **Several candidates** (`--cand` repeated; `just bench-workers-window`): each is read against the one
 reference as below, but Holm's family is every candidate's main-corpus judged cells together, and
@@ -37,6 +38,27 @@ still one: every candidate's main-corpus cell at every count it is judged at, to
 cell at a count where it is not judged (a candidate's elsewhere, and every context arm's) is
 reported beside them, not judged. A `--judge-at` arm that is not a candidate, a count that is not
 judged, a candidate without one, or a judged count with no candidate is VOID.
+
+**Several guards** (`--guard` repeated; `just bench-workers-confirm`'s text and its held-out
+corpora): every guard enters the loss screen and the memory gate, none the Holm family. With one
+guard, all of this is as before.
+
+**A confirmation** (`--confirm`; `just bench-workers-confirm`): a run that confirms choices
+already made, read in *groups*: a candidate and the judged counts whose choice it confirms.
+- *The groups:* without `--judge-at`, one candidate and every judged count, one group. With
+  it, each `--judge-at ARM=COUNTS` is a group, and an arm may head several (its counts never
+  shared between two). Every judged count is in a group. Under `--confirm`, a candidate runs
+  only at its groups' counts: its records elsewhere are outside the roster. The reference and
+  any context arm run at every judged count.
+- *Holm's family* is every group's main-corpus cells together, family α = 0.05.
+- *A group's verdict:* **CONFIRMS** if Holm rejects at every one of its counts, no cell of it
+  SLOWER on any corpus, and the memory gate passed at every cell of it; else CONFIRMS IN PART
+  (a gain at some of its counts, not all; no SLOWER cell; the memory gate passed), HELD ON
+  MEMORY, NOT CONFIRMED, A FINDING, NOT CONFIRMED (a cell SLOWER) or NOT CONFIRMED (no gain).
+- *A prediction* (`--predict STEP` for the one group without `--judge-at`, or `--predict
+  ARM=COUNTS=STEP` naming a group exactly) is checked against each of that group's main-corpus
+  cells' 95% intervals and reported, inside or OUTSIDE. It is never a veto, and changes no
+  verdict and no exit code.
 
 **Arms.** A record's arm is canonical: `NAME` for this build's harness, and `NAME@build-X`
 for another build's (`ab run`'s `NAME@EXE` arm, EXE under a directory `build-X`).
@@ -394,13 +416,140 @@ def by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak):
     return 0
 
 
+def parse_groups(specs, cands, judged, errors):
+    """`--confirm`'s groups [(candidate, (counts...))]: one candidate at every judged count
+    without `--judge-at`, else each `--judge-at ARM=COUNTS` (errors appended)"""
+    if not specs:
+        if len(cands) != 1:
+            errors.append(f"--confirm without --judge-at reads one candidate, not {len(cands)}")
+        return [(cands[0], tuple(sorted(judged)))]
+    groups, seen = [], {}
+    for spec in specs:
+        arm, eq, counts = spec.rpartition("=")
+        try:
+            ts = tuple(sorted({int(t) for t in counts.split(",") if t}))
+        except ValueError:
+            ts = ()
+        if not eq or not arm or not ts:
+            errors.append(f"--judge-at {spec!r}: not ARM=COUNTS")
+            continue
+        if arm not in cands:
+            errors.append(f"--judge-at {spec!r}: {arm} is not a candidate")
+        if set(ts) - set(judged):
+            errors.append(f"--judge-at {spec!r}: {sorted(set(ts) - set(judged))} not judged counts")
+        for t in ts:
+            if (arm, t) in seen:
+                errors.append(f"--judge-at {spec!r}: {arm} at {t} already in a group")
+            seen[(arm, t)] = True
+        groups.append((arm, ts))
+    for c in cands:
+        if not any(g == c for g, _ in groups):
+            errors.append(f"the candidate {c} has no --judge-at")
+    for t in judged:
+        if not any(t in ts for _, ts in groups):
+            errors.append(f"the judged count {t} judges no candidate")
+    return groups
+
+
+def parse_predicts(specs, groups, by_group, errors):
+    """`--predict`'s map {group: step}: `STEP` for the one group without `--judge-at`, else
+    `ARM=COUNTS=STEP` naming a group exactly (errors appended)"""
+    out = {}
+    for spec in specs:
+        parts = spec.split("=")
+        try:
+            if by_group:
+                if len(parts) != 3:
+                    raise ValueError
+                g = (parts[0], tuple(sorted({int(t) for t in parts[1].split(",") if t})))
+            else:
+                if len(parts) != 1:
+                    raise ValueError
+                g = groups[0]
+            v = float(parts[-1])
+        except (ValueError, IndexError):
+            errors.append(f"--predict {spec!r}: not {'ARM=COUNTS=STEP' if by_group else 'STEP'}")
+            continue
+        if not (math.isfinite(v) and v > 0):
+            errors.append(f"--predict {spec!r}: not a finite positive step")
+        elif g not in groups:
+            errors.append(f"--predict {spec!r}: names no group")
+        elif g in out:
+            errors.append(f"--predict {spec!r}: its group predicted twice")
+        else:
+            out[g] = v
+    return out
+
+
+def confirm(a, ref, cands, context, groups, predicts, judged, corpora, cell, peak):
+    """The verdicts of a confirmation (`--confirm`): one Holm family over every group's
+    main-corpus cells, then a verdict for each group and its predictions' consistency"""
+    steps, ps, mem, ivs = {}, {}, {}, {}
+    single = len(groups) == 1
+    for cand, ts in groups:
+        print(f"\nThe judged cells: {cand} over {ref} at {list(ts)} threads, the paired rounds' wall ratios: "
+              f"geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over {ref}'s")
+        for corpus in corpora:
+            print(f"\n{corpus}{' (gain family)' if corpus == a.main else ' (loss and memory guard)'}")
+            for t in ts:
+                g, lo, hi, p = step(cell(corpus, t, cand))
+                steps[(cand, corpus, t)] = label(lo, hi)
+                mem[(cand, corpus, t)] = peak(corpus, cand, t) / peak(corpus, ref, t)
+                if corpus == a.main:
+                    ps[(cand, t)], ivs[(cand, t)] = p, (lo, hi)
+                print(f"  {t:>2} threads: {g:.4f} [{lo:.4f}, {hi:.4f}] {steps[(cand, corpus, t)]}"
+                      + (f"; p {p:.2e}" if corpus == a.main else "") + f"; memory {mem[(cand, corpus, t)]:.3f}")
+    for arm in context:
+        print(f"\nContext, reported and not judged: {arm} over {ref}")
+        for corpus in corpora:
+            for t in judged:
+                g, lo, hi, _ = step(cell(corpus, t, arm))
+                print(f"  {corpus} {t:>2} threads: {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; "
+                      f"memory {peak(corpus, arm, t) / peak(corpus, ref, t):.3f}")
+    rejected = holm(ps, ALPHA)
+    print(f"\nHolm at family α {ALPHA} over the {len(ps)} main-corpus cells: "
+          + ", ".join(f"{t if single else f'{c} at {t}'} p {ps[(c, t)]:.2e} "
+                      f"{'rejects' if (c, t) in rejected else 'does not'}" for c, t in sorted(ps, key=ps.get)))
+    for cand, ts in groups:
+        gains = [t for t in ts if (cand, t) in rejected]
+        slower = sorted((c, t) for c in corpora for t in ts if steps[(cand, c, t)] == "SLOWER")
+        over = sorted((c, t) for c in corpora for t in ts if mem[(cand, c, t)] > RSS_GATE)
+        head = "VERDICT" if single else f"VERDICT for {cand} at {list(ts)} threads"
+        print()
+        if gains == list(ts) and not slower and not over:
+            print(f"{head}: CONFIRMS. A gain at every judged count, {gains} threads (Holm), no judged cell SLOWER, "
+                  f"and peak memory within {RSS_GATE:.2f} of the reference's at every judged cell")
+        elif gains and not slower and not over:
+            print(f"{head}: CONFIRMS IN PART. A gain at {gains} threads (Holm), not at "
+                  f"{[t for t in ts if t not in gains]}; no judged cell SLOWER and the memory gate passed")
+        elif gains and not slower:
+            print(f"{head}: HELD ON MEMORY, NOT CONFIRMED. A gain at {gains} threads (Holm) and no judged cell "
+                  f"SLOWER, but peak memory is above {RSS_GATE:.2f} of the reference's at {over}")
+        elif gains:
+            print(f"{head}: A FINDING, NOT CONFIRMED. A gain at {gains} threads (Holm), but SLOWER at {slower}"
+                  + (f"; memory above the gate at {over}" if over else ""))
+        else:
+            print(f"{head}: NOT CONFIRMED. No gain established (Holm rejects at none of its cells)"
+                  + (f"; SLOWER at {slower}" if slower else "") + (f"; memory above the gate at {over}" if over else ""))
+    for (cand, ts), v in predicts.items():
+        inside = [t for t in ts if ivs[(cand, t)][0] <= v <= ivs[(cand, t)][1]]
+        outside = [t for t in ts if t not in inside]
+        print(f"\nCONSISTENCY (pre-registered, not a veto): the prediction {v:.4f}"
+              + ("" if single else f" for {cand} at {list(ts)}")
+              + f" lies within {'each' if not outside else 'not every'} {a.main} cell's 95% interval"
+              + (f": inside at {inside}" if inside else "")
+              + (f"{';' if inside else ':'} OUTSIDE at {outside}, reported" if outside else ""))
+    return 0
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("runs")
     ap.add_argument("--ref", required=True)
     ap.add_argument("--cand", required=True, action="append")
     ap.add_argument("--main", required=True)
-    ap.add_argument("--guard", required=True)
+    ap.add_argument("--guard", required=True, action="append",
+                    help="a loss and memory guard corpus; repeated for several")
     ap.add_argument("--judged", required=True)
     ap.add_argument("--controls", default="")
     ap.add_argument("--rounds", type=int, default=10)
@@ -413,6 +562,10 @@ def main(argv):
                     help="an arm checked with the run and reported over the reference, not judged")
     ap.add_argument("--judge-at", action="append", default=[], metavar="ARM=COUNTS",
                     help="a candidate judged at these counts alone; with any, each judged count is read alone")
+    ap.add_argument("--confirm", action="store_true",
+                    help="a confirmation run, read in groups: CONFIRMS only with a gain at every count of a group")
+    ap.add_argument("--predict", action="append", default=[], metavar="[ARM=COUNTS=]STEP",
+                    help="a prior estimate of a group's main-corpus step, checked against its cells (no veto)")
     a = ap.parse_args(argv[1:])
     judged = [int(t) for t in a.judged.split(",")]
     controls = [int(t) for t in a.controls.split(",") if t]
@@ -423,13 +576,27 @@ def main(argv):
     arms = [ref, *cands, *context]
     if set(judged) & set(controls) or len(set(arms)) != len(arms):
         errors.append("the judged and control counts overlap, or two arms are one")
-    judge_at = parse_judge_at(a.judge_at, cands, judged, errors)
-    corpora = [a.main, a.guard]
-    roster = {(c, arm, t, i) for c in corpora for arm in arms for t in judged + controls for i in range(R)}
+    corpora = [a.main, *a.guard]
+    if len(set(corpora)) != len(corpora):
+        errors.append("two corpora are one (the main corpus and the guards must differ)")
+    if a.confirm and controls:
+        errors.append("--confirm takes no control counts")
+    if a.confirm:
+        judge_at, groups = {}, parse_groups(a.judge_at, cands, judged, errors)
+        predicts = parse_predicts(a.predict, groups, bool(a.judge_at), errors)
+        runs_at = {arm: set(judged + controls) for arm in arms}
+        for cand in cands:
+            runs_at[cand] = {t for c, ts in groups if c == cand for t in ts}
+    else:
+        if a.predict:
+            errors.append("--predict is read only with --confirm")
+        judge_at = parse_judge_at(a.judge_at, cands, judged, errors)
+        runs_at = {arm: set(judged + controls) for arm in arms}
+    roster = {(c, arm, t, i) for c in corpora for arm in arms for t in runs_at[arm] for i in range(R)}
     core_of = topology(a.env, a.cores, a.cpus, errors)
     rows = load(a.runs, roster, errors, None if core_of is None else (core_of, a.cores, a.hold_max_threads))
     print(f"records {len(rows)}; roster {len(roster)} ({ref} and {' and '.join(cands)}"
-          + (f"; context {', '.join(context)}" if context else "") + f"; {a.main} and {a.guard}; "
+          + (f"; context {', '.join(context)}" if context else "") + f"; {a.main} and {' and '.join(a.guard)}; "
           f"judged {judged}, controls {controls}; {R} rounds)"
           + (("; judged by count: " + ", ".join(f"{c} at {sorted(ts)}" for c, ts in judge_at.items()))
              if judge_at else ""))
@@ -459,6 +626,8 @@ def main(argv):
         if len(errors) > 25:
             print(f"  ... and {len(errors) - 25} more")
         return 1
+    if a.confirm:
+        return confirm(a, ref, cands, context, groups, predicts, judged, corpora, cell, peak)
     if judge_at:
         return by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak)
 

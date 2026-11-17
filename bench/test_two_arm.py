@@ -444,6 +444,178 @@ def main():
     results.append(expect_low("by count: no --judge-at, the old reading", low({"mibz2-occ-7-28": 0.96}), 0,
                               ["THE CHOICE: mibz2-occ-7-28"], absent=["judged by count", "THE CHOICE at"]))
 
+    # a confirmation (`just bench-workers-confirm`): production's `mibz2` the reference, 7/28 the
+    # one candidate, text and two held-out corpora as guards; CONFIRMS only with a gain at every
+    # judged count; the chained prediction checked against each Wikidata cell, never a veto
+    guards = {"text": (49067679, "bb"), "records": (38400000, "cc"), "text-l1": (49067679, "dd")}
+
+    def conf(steps=None, guard=None, mem=None, drop_corpus=None):
+        """bench-workers-confirm-shaped runs: `steps` maps a judged count to 7/28's Wikidata step
+        (default level), `guard` a (corpus, count) to its guard step, `mem` a corpus to its peak
+        memory over the reference's"""
+        import random
+        steps, guard, mem = steps or {}, guard or {}, mem or {}
+        rng = random.Random(17)
+        rows = []
+        for i in range(R):
+            for corpus, out in (("wikidata-x4", (838800784, "aa")), *guards.items()):
+                if corpus == drop_corpus:
+                    continue
+                for t in (12, 16, 20):
+                    base = 0.5 * (1 + 0.02 * rng.uniform(-1, 1))
+                    wig = 1 + 0.01 * (1 if i % 2 else -1)
+                    f = steps.get(t, 1.0) if corpus == "wikidata-x4" else guard.get((corpus, t), 1.0)
+                    for arm in ("mibz2", "mibz2-occ-7-28"):
+                        cand = arm != "mibz2"
+                        rows.append({"round": i, "corpus": corpus, "threads": t, "arm": arm,
+                                     "termination": "success", "wall": base * (f * wig if cand else 1.0),
+                                     "cpu": base * t * 0.9, "rss_kb": 100000 * t * (mem.get(corpus, 1.0) if cand else 1.0),
+                                     "out": out[0], "hash": out[1], "cpus": "all"})
+        return rows
+
+    def conf_args(guard=("text", "records", "text-l1"), predict="0.92", extra=()):
+        return ["--ref", "mibz2", "--cand", "mibz2-occ-7-28", "--main", "wikidata-x4",
+                *sum((["--guard", g] for g in guard), []), "--judged", "12,16,20", "--controls", "",
+                "--hold-max-threads", "0", "--confirm", *(["--predict", predict] if predict else []), *extra]
+
+    all3 = {12: 0.92, 16: 0.92, 20: 0.92}
+    results.append(expect_low("confirm: a gain at every count, the prediction inside", conf(all3), 0, [
+        "VERDICT: CONFIRMS. A gain at every judged count, [12, 16, 20]", "records (loss and memory guard)",
+        "text-l1 (loss and memory guard)", "lies within each wikidata-x4 cell's 95% interval"],
+        args=conf_args(), absent=["OUTSIDE", "ADOPTS", "THE CHOICE"]))
+    results.append(expect_low("confirm: Holm over the Wikidata cells alone", conf(all3), 0,
+                              ["over the 3 main-corpus cells"], args=conf_args()))
+    results.append(expect_low("confirm: the prediction outside a cell is reported, not a veto",
+                              conf({12: 0.92, 16: 0.92, 20: 0.97}), 0, [
+        "VERDICT: CONFIRMS.", "lies within not every wikidata-x4 cell's 95% interval: inside at [12, 16]; "
+        "OUTSIDE at [20], reported"], args=conf_args()))
+    results.append(expect_low("confirm: a gain at two counts of three", conf({12: 0.92, 16: 0.92}), 0, [
+        "VERDICT: CONFIRMS IN PART. A gain at [12, 16] threads (Holm), not at [20]"],
+        args=conf_args(), absent=["VERDICT: CONFIRMS."]))
+    results.append(expect_low("confirm: a held-out corpus SLOWER", conf(all3, guard={("records", 16): 1.05}), 0, [
+        "VERDICT: A FINDING, NOT CONFIRMED. A gain at [12, 16, 20] threads (Holm), but SLOWER at [('records', 16)]"],
+        args=conf_args()))
+    results.append(expect_low("confirm: the -1 file SLOWER", conf(all3, guard={("text-l1", 20): 1.05}), 0, [
+        "SLOWER at [('text-l1', 20)]", "NOT CONFIRMED"], args=conf_args(), absent=["VERDICT: CONFIRMS"]))
+    results.append(expect_low("confirm: a held-out corpus over the memory gate", conf(all3, mem={"text-l1": 1.2}), 0, [
+        "VERDICT: HELD ON MEMORY, NOT CONFIRMED", "[('text-l1', 12), ('text-l1', 16), ('text-l1', 20)]"],
+        args=conf_args()))
+    results.append(expect_low("confirm: no gain", conf(), 0, ["VERDICT: NOT CONFIRMED. No gain established",
+                                                              "OUTSIDE at [12, 16, 20]"], args=conf_args()))
+    results.append(expect_low("confirm: no prediction, no consistency line", conf(all3), 0, ["VERDICT: CONFIRMS."],
+                              args=conf_args(predict=None), absent=["CONSISTENCY"]))
+    results.append(expect_low("confirm: a held-out corpus's records missing", conf(all3, drop_corpus="records"), 1,
+                              ["VOID", "roster keys missing", "'records'"], args=conf_args()))
+    results.append(expect_low("confirm: a held-out corpus run but not named", conf(all3), 1,
+                              ["VOID", "not in the roster"], args=conf_args(guard=("text", "text-l1"))))
+    results.append(expect_low("confirm: a guard the main corpus", conf(all3), 1, ["VOID", "two corpora are one"],
+                              args=conf_args(guard=("text", "records", "text-l1", "wikidata-x4"))))
+    results.append(expect_low("confirm: a guard named twice", conf(all3), 1, ["VOID", "two corpora are one"],
+                              args=conf_args(guard=("text", "records", "text-l1", "text"))))
+    results.append(expect_low("confirm: one candidate only", low({"mibz2-occ-7-28": 0.96}), 1,
+                              ["VOID", "--confirm without --judge-at reads one candidate, not 2"], args=[*low_args(), "--confirm"]))
+    results.append(expect_low("confirm: a prediction not a positive step", conf(all3), 1,
+                              ["VOID", "--predict '-0.5': not a finite positive step"], args=conf_args(predict="-0.5")))
+    results.append(expect_low("several guards without --confirm: the adoption verdicts as before", conf(all3), 0,
+                              ["VERDICT: ADOPTS"], args=[a for a in conf_args(predict=None) if a != "--confirm"]))
+
+    results.append(expect_low("confirm: a control count", conf(all3), 1, ["VOID", "--confirm takes no control counts"],
+                              args=[*conf_args(), "--controls", "9"]))
+    results.append(expect_low("confirm: --predict without --confirm", conf(all3), 1,
+                              ["VOID", "--predict is read only with --confirm"],
+                              args=[a for a in conf_args() if a != "--confirm"]))
+
+    # the confirmation in groups (`just bench-workers-confirm` widened, the Coordinator after #515):
+    # 7/28 past the cores at 12, 16 and 20 (#514's choice, one group), 7/28 at 10 and 6/24 at 8
+    # (#515's choices, a group each), all against production; each candidate run only at its
+    # groups' counts; pinned with a spinner at 8, pinned at 10, unpinned past the cores
+    grp_at = {("mibz2-occ-7-28", (12, 16, 20)), ("mibz2-occ-7-28", (10,)), ("mibz2-occ-6-24", (8,))}
+
+    def grp(steps=None, guard=None, mem=None, edit=None, extra_cells=()):
+        """grouped-confirmation runs: `steps` maps (arm, threads) to its Wikidata step, `guard`
+        (arm, corpus, threads) to a guard step, `mem` (arm, corpus, threads) to its peak memory
+        over production's; `extra_cells` (arm, threads) run beyond the groups"""
+        import random
+        steps, guard, mem = steps or {}, guard or {}, mem or {}
+        rng = random.Random(19)
+        cells = {(c, t) for c, ts in grp_at for t in ts} | set(extra_cells)
+        rows = []
+        for i in range(R):
+            for corpus, out in (("wikidata-x4", (838800784, "aa")), *guards.items()):
+                for t in (8, 10, 12, 16, 20):
+                    base = 0.5 * (1 + 0.02 * rng.uniform(-1, 1))
+                    wig = 1 + 0.01 * (1 if i % 2 else -1)
+                    for arm in ("mibz2", "mibz2-occ-7-28", "mibz2-occ-6-24"):
+                        if arm != "mibz2" and (arm, t) not in cells:
+                            continue
+                        cand = arm != "mibz2"
+                        f = steps.get((arm, t), 1.0) if corpus == "wikidata-x4" else guard.get((arm, corpus, t), 1.0)
+                        r = {"round": i, "corpus": corpus, "threads": t, "arm": arm, "termination": "success",
+                             "wall": base * (f * wig if cand else 1.0), "cpu": base * t * 0.9,
+                             "rss_kb": 100000 * t * (mem.get((arm, corpus, t), 1.0) if cand else 1.0),
+                             "out": out[0], "hash": out[1], "cpus": pinned(t)}
+                        if t <= 9:
+                            r["held_spinner"] = {"cpu": 19, "auto": True, "overlap": False,
+                                                 "decoder_cpus": pinned(t), "owner": "run", "cpu_s": 2.0}
+                        r = edit(r) if edit else r
+                        if r is not None:
+                            rows.append(r)
+        return rows
+
+    def grp_args(at=("mibz2-occ-7-28=12,16,20", "mibz2-occ-7-28=10", "mibz2-occ-6-24=8"),
+                 predict=("mibz2-occ-7-28=12,16,20=0.92", "mibz2-occ-7-28=10=0.885", "mibz2-occ-6-24=8=0.929")):
+        return ["--ref", "mibz2", "--cand", "mibz2-occ-7-28", "--cand", "mibz2-occ-6-24",
+                *sum((["--judge-at", s] for s in at), []), "--main", "wikidata-x4",
+                *sum((["--guard", g] for g in guards), []), "--judged", "8,10,12,16,20", "--controls", "",
+                "--hold-max-threads", "9", "--confirm", *sum((["--predict", p] for p in predict), [])]
+
+    good_grp = {("mibz2-occ-7-28", 12): 0.92, ("mibz2-occ-7-28", 16): 0.92, ("mibz2-occ-7-28", 20): 0.92,
+                ("mibz2-occ-7-28", 10): 0.885, ("mibz2-occ-6-24", 8): 0.929}
+    results.append(expect_low("groups: all three confirm, every prediction inside", grp(good_grp), 0, [
+        "VERDICT for mibz2-occ-7-28 at [12, 16, 20] threads: CONFIRMS",
+        "VERDICT for mibz2-occ-7-28 at [10] threads: CONFIRMS", "VERDICT for mibz2-occ-6-24 at [8] threads: CONFIRMS",
+        "over the 5 main-corpus cells", "the prediction 0.9200 for mibz2-occ-7-28 at [12, 16, 20] lies within each",
+        "the prediction 0.8850 for mibz2-occ-7-28 at [10] lies within each",
+        "the prediction 0.9290 for mibz2-occ-6-24 at [8] lies within each"],
+        args=grp_args(), absent=["OUTSIDE", "NOT CONFIRMED", "ADOPTS", "THE CHOICE"]))
+    results.append(expect_low("groups: a held-out loss at 8 leaves the others confirmed",
+                              grp(good_grp, guard={("mibz2-occ-6-24", "records", 8): 1.05}), 0, [
+        "VERDICT for mibz2-occ-6-24 at [8] threads: A FINDING, NOT CONFIRMED. A gain at [8] threads (Holm), "
+        "but SLOWER at [('records', 8)]", "VERDICT for mibz2-occ-7-28 at [10] threads: CONFIRMS",
+        "VERDICT for mibz2-occ-7-28 at [12, 16, 20] threads: CONFIRMS"], args=grp_args()))
+    results.append(expect_low("groups: no gain at 10, the -1 file over the memory gate past the cores",
+                              grp({**good_grp, ("mibz2-occ-7-28", 10): 1.0},
+                                  mem={("mibz2-occ-7-28", "text-l1", 16): 1.2}), 0, [
+        "VERDICT for mibz2-occ-7-28 at [10] threads: NOT CONFIRMED. No gain established",
+        "VERDICT for mibz2-occ-7-28 at [12, 16, 20] threads: HELD ON MEMORY, NOT CONFIRMED",
+        "[('text-l1', 16)]", "the prediction 0.8850 for mibz2-occ-7-28 at [10] lies within not every "
+        "wikidata-x4 cell's 95% interval: OUTSIDE at [10], reported"], args=grp_args()))
+    results.append(expect_low("groups: a candidate run where it is not judged", grp(good_grp,
+                              extra_cells=[("mibz2-occ-6-24", 10)]), 1, ["VOID", "not in the roster"],
+                              args=grp_args()))
+    results.append(expect_low("groups: a judged cell missing", grp(good_grp, edit=lambda r: None if (
+        r["arm"] == "mibz2-occ-6-24" and r["corpus"] == "text-l1" and r["round"] == 4) else r), 1,
+        ["VOID", "roster keys missing"], args=grp_args()))
+    results.append(expect_low("groups: no spinner at 8", grp(good_grp, edit=lambda r: {
+        k: v for k, v in r.items() if k != "held_spinner"} if r["threads"] == 8 and r["round"] == 2 else r), 1,
+        ["VOID", "no spinner recorded"], args=grp_args()))
+    results.append(expect_low("groups: unpinned at 10", grp(good_grp, edit=lambda r: {**r, "cpus": "all"}
+                                                             if r["threads"] == 10 and r["round"] == 2 else r), 1,
+                              ["VOID", "missing or malformed"], args=grp_args()))
+    results.append(expect_low("groups: one count in two groups", grp(good_grp), 1,
+                              ["VOID", "mibz2-occ-7-28 at 10 already in a group"],
+                              args=grp_args(at=("mibz2-occ-7-28=10,12,16,20", "mibz2-occ-7-28=10",
+                                                "mibz2-occ-6-24=8"), predict=())))
+    results.append(expect_low("groups: a judged count in no group", grp(good_grp), 1,
+                              ["VOID", "the judged count 10 judges no candidate"],
+                              args=grp_args(at=("mibz2-occ-7-28=12,16,20", "mibz2-occ-6-24=8"), predict=())))
+    results.append(expect_low("groups: a prediction naming no group", grp(good_grp), 1,
+                              ["VOID", "names no group"], args=grp_args(predict=("mibz2-occ-7-28=12,16=0.92",))))
+    results.append(expect_low("groups: a bare prediction with groups", grp(good_grp), 1,
+                              ["VOID", "not ARM=COUNTS=STEP"], args=grp_args(predict=("0.92",))))
+    results.append(expect_low("groups: a group predicted twice", grp(good_grp), 1, ["VOID", "predicted twice"],
+                              args=grp_args(predict=("mibz2-occ-6-24=8=0.93", "mibz2-occ-6-24=8=0.92"))))
+
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

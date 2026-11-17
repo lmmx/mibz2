@@ -1960,6 +1960,83 @@ bench-workers-at-cores COPIES="4" ROUNDS="10" REPS="10":
     fi
     bash bench/bundle.sh "$O"
 
+# The plan confirmed directly, on held-out corpora (the registration on #145,
+# docs/journal/2026-11-17-workers-confirm.md, posted before the data; stacked on #515):
+# production's `mibz2` the reference at every count, against the choices already made.
+# - Past the cores (#514's choice, after #510): `mibz2-occ-7-28` at 12, 16 and 20 threads asked,
+#   unpinned. The chained estimate over production is about 0.92.
+# - Within the cores (#515's choices): `mibz2-occ-7-28` at 10 threads and `mibz2-occ-6-24` at 8,
+#   pinned one CPU a core, a spinner on a free core at 8 as #515.
+# Each candidate runs only at the counts it is judged at: two `ab run`s, one for 7/28 (10 to
+# 20) and one for 6/24 (8), production in both. The corpora: COPIES copies of the Wikidata
+# sample (the gain family); text (a loss and memory guard, as before); and two held out from
+# every choice, guards in the same way: `records` (`ab gen`'s fixed-width binary records,
+# low-run, at -9) and `text-l1` (the text corpus recompressed at -1 by Python's bz2, libbzip2:
+# 100k blocks). One build by rustc 1.99.1. `bench/two_arm.py --confirm` reads a verdict for each
+# group (7/28 past the cores, 7/28 at 10, 6/24 at 8): CONFIRMS only with a gain at every count of
+# the group, no cell of it SLOWER on any corpus and the memory gate passed. `--predict` checks
+# each group's prior estimate (0.92, #515's 0.885 and 0.929) against its Wikidata cells'
+# intervals, reported, never a veto.
+bench-workers-confirm COPIES="4" ROUNDS="10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/workers-confirm
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-workers-confirm (the registration on #145): mibz2-occ-7-28 at 10, 12, 16 and 20 threads and mibz2-occ-6-24 at 8 against mibz2 at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample, text, records and text-l1, {{ROUNDS}} paired rounds"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-workers-confirm: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-workers-confirm: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    # text and records: `ab gen` at scale 16 (libbzip2 -9); text-l1: that text at -1, made
+    # afresh from it every run (Python's bz2 is libbzip2, so the bytes are fixed by the text's)
+    { [ -f "$W/gen/text.bz2" ] && [ -f "$W/gen/records.bz2" ]; } || "$AB" gen "$W/gen" 16 >/dev/null
+    python3 -I -c 'import bz2, sys; open(sys.argv[2], "wb").write(bz2.compress(bz2.decompress(open(sys.argv[1], "rb").read()), 1))' \
+      "$W/gen/text.bz2" "$W/text-l1.bz2"
+    files=("$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" "$W/gen/records.bz2" "$W/text-l1.bz2")
+    sha256sum "${files[@]}" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    # the spinner as bench-workers-at-cores holds it: on a core the run leaves free, so at 8
+    # threads and at no other count
+    free=(); hold_cpu=${HOLD_CPU:-auto}; hold_max=0
+    [ "$hold_cpu" = off ] || { free=(--hold-cpu "$hold_cpu" --hold-max-threads 9); hold_max=9; }
+    "$AB" run "$O/judged-7-28.jsonl" --arms "mibz2,mibz2-occ-7-28" \
+      --threads "10,12,16,20" --rounds {{ROUNDS}} --spread "${free[@]}" "${files[@]}"
+    "$AB" run "$O/judged-6-24.jsonl" --arms "mibz2,mibz2-occ-6-24" \
+      --threads "8" --rounds {{ROUNDS}} --spread "${free[@]}" "${files[@]}"
+    cat "$O/judged-7-28.jsonl" "$O/judged-6-24.jsonl" > "$O/judged.jsonl"
+    "$AB" summary "$O/judged.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2 --cand mibz2-occ-7-28 --cand mibz2-occ-6-24 \
+      --judge-at mibz2-occ-7-28=12,16,20 --judge-at mibz2-occ-7-28=10 --judge-at mibz2-occ-6-24=8 \
+      --main wikidata-x{{COPIES}} --guard text --guard records --guard text-l1 \
+      --judged "8,10,12,16,20" --controls "" --rounds {{ROUNDS}} --env "$O/env.json" \
+      --cores 10 --cpus 20 --hold-max-threads "$hold_max" --confirm \
+      --predict mibz2-occ-7-28=12,16,20=0.92 --predict mibz2-occ-7-28=10=0.885 --predict mibz2-occ-6-24=8=0.929 \
+      | tee "$O/verdict.txt" \
+      || echo "bench-workers-confirm: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,
