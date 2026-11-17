@@ -77,7 +77,7 @@ The article later labels the paragraph a conjecture, but that does not repair it
 
 Keep the registered scores: nine/ten optimum refuted; “seven no better than .98” borderline because its interval includes .98; unchanged .885 bandwidth-rival gain refuted. Do not claim the later CPU budget retrospectively explains seven at both block sizes. [Record48](https://github.com/lmmx/mibz2/blob/be614017696167f2f84ed7dafee600afc1afa8b6/docs/journal/monodromy/2026-11-17-level3-scoring.md) explicitly scores frozen record46 as predicting nine and ~1.18 for seven/ten, wrong in direction.
 
-The serial-supply limit is a plausible missing term, not yet a clean causal measurement: record48's occupancy trace is flagged with 63 ledger violations and is unpinned, unlike the timed arms. Its admitted plateau supports investigating supply; do not turn the 68%/28% trace into unqualified proof. Preserve both the failed prediction and any later revision separately. The low-thread sweep remains pending in this review; no result is invented or backfilled.
+The serial-supply limit is a plausible missing term, not yet a clean causal measurement: record48's occupancy trace is flagged with 63 ledger violations and is unpinned, unlike the timed arms. Its admitted plateau supports investigating supply; do not turn the 68%/28% trace into unqualified proof. Preserve both the failed prediction and any later revision separately. The low-thread result arrived during final publication checks; the addendum below records it separately from the frozen article and the baseline.
 
 ## Fact audit by passage
 
@@ -123,6 +123,23 @@ Reader profile: programmer familiar with caches and pointers, new to bzip2 inter
 
 Three figure changes earn their space. First, replace the dense “half the cycles” derivation with a cost-vs-worker plot: a/W falls, bW rises, their sum bottoms between 7 and 8; mark the measured seven-worker choice separately and annotate model sensitivity. Second, replace the long W12/miss-cost/ring paragraph with an evidence-to-hypothesis panel: observed LLC/instruction/wall changes on one side, Q/D predictions and missing measurements on the other. Do not draw conjectural causal arrows as facts. Third, give frozen prediction/result pairs for -3 and the pending low sweep; make the failed optimum and borderline .98 threshold visible. Existing pipeline/cache sketches and the capacity slider are useful; they need clearer status/ownership labels, not more decorative figures.
 
+## Late evidence: the low sweep arrived during the publication check
+
+[LOG6945639925](https://github.com/lmmx/mibz2/pull/145#issuecomment-6945639925) reports the submitted `workers-sweep-low/run-20261117T102836Z` bundle (submission6945620303). This review reads the LOG; it does not independently replay that archive or decide its C6 admission.
+
+| Requested threads | Registered comparison | Reported wall ratio | Reported outcome |
+|---:|---|---:|---|
+| 8 | lazy6/24 vs lazy8/32 | .925 [.918,.933] | ADOPTS, chosen |
+| 8 | lazy5/20 vs lazy8/32 | .997 [.984,1.010] | Not adopted |
+| 6 | lazy5/20 vs eager6/24 | .963 [.948,.977] | ADOPTS, chosen |
+| 6 | lazy6/24 control vs eager6/24 | 1.040 | SLOWER |
+| 6 | lazy4/16 vs eager6/24 | 1.077 | SLOWER |
+| 4 | lazy4/16 vs eager4/16 | 1.098 | SLOWER |
+| 4 | lazy3/12 vs eager4/16 | 1.113 | SLOWER |
+| 4 | lazy2/8 vs eager4/16 | 1.533 | SLOWER |
+
+The frozen primary model's counts6/5/4 match the reported choices among the tested lazy counts; production's eager four remains better at four threads. Reported busy shares .742/.725/.740 are approximately flat. The simple rounded .7T rule fails at six/four under the LOG's scoring; the floor variant fails too. Preserve baseline distinctions: .963 at six includes a kernel switch, while the control is1.040; their ratio≈.926 is descriptive, not a newly paired inferential result. None of these outcomes repairs the article's incorrect derivation from flooring7.9, its SMT inconsistency, or record46's failed -3 extrapolation. They strengthen a scoped low-thread prediction, not a universal law. Replace the article's blanket “have not yet run” note and pending table in the follow-up. The separate queued C6 assignment6945648510 is not executed by this blog review.
+
 ## Fresh-reader answers checked
 
 The independent reader recovered the measured result, the cheaper-bytes-versus-lost-parallelism accounting, and the current-versus-proposed distinction as presented. Its ten/eight count answer follows the article's flooring procedure but independently rejects that procedure as a derivation. Its transfer answer identifies the missing inputs and SMT contradiction. Its user-status answer repeats the article's unmerged status, demonstrating why the now-merged #524 needs a status update. Both held-out answers pass: the reader rejects causal identification from the W12 null and computes that eight beats seven under the printed objective. It also independently distinguishes model cost attribution from recoverable time. These are answer-level observations, not a claim that the page “clicked.” No revised text was produced or second-pass convergence claimed in this review.
@@ -131,6 +148,6 @@ The independent reader recovered the measured result, the cheaper-bytes-versus-l
 
 Expected: a cache/CPU model would reproduce selected counts and transfer when block size shrank. Observed: scoped worker-plan gains repeat, but the printed minimisation selects a different integer and the frozen -3 optimum fails. The measured seven-worker win remains; no portion of the model's 44% has thereby been recovered. Counter changes narrow plausible explanations but do not identify a unique residual cost.
 
-Next value: publish a factual follow-up correcting units, integer selection, SMT, causal status and prediction scores; show the pending low-sweep results only after they are available under their frozen rule. Direct latency/bandwidth evidence can distinguish the proposed mechanisms; an amended serial-limit model must be labelled a new model and independently tested. No extra workstation run is authorised by this review.
+Next value: publish a factual follow-up correcting units, integer selection, SMT, causal status and prediction scores; show the newly arrived low-sweep result beside the frozen predictions, keeping its subsequent C6 admission review separate. Direct latency/bandwidth evidence can distinguish the proposed mechanisms; an amended serial-limit model must be labelled a new model and independently tested. No extra workstation run is authorised by this review.
 
 Primary records opened: LOGs [6931719814](https://github.com/lmmx/mibz2/pull/145#issuecomment-6931719814), [6942020517](https://github.com/lmmx/mibz2/pull/145#issuecomment-6942020517), [6943194948](https://github.com/lmmx/mibz2/pull/145#issuecomment-6943194948), [6944271342](https://github.com/lmmx/mibz2/pull/145#issuecomment-6944271342), [6944610173](https://github.com/lmmx/mibz2/pull/145#issuecomment-6944610173), [6945320222](https://github.com/lmmx/mibz2/pull/145#issuecomment-6945320222); prior independent [REVIEW6943617731](https://github.com/lmmx/mibz2/pull/145#issuecomment-6943617731); calibration at 33e7225ba6147fb480168dc54fe30727f0b93aea; records45–48 at PR497 head be614017696167f2f84ed7dafee600afc1afa8b6. The newer record48 was consulted as a correction, not substituted for frozen45–47. No novel prior-art claim is needed to establish these errors; elementary discrete optimisation and accounting suffice.

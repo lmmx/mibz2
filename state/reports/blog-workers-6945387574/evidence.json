@@ -8,8 +8,9 @@
   "live_render_verified": false,
   "limitations": [
     "Directory and .html routes returned HTTP404",
-    "New confirmation/W12/-3 archives not independently replayed in this article review",
-    "Low-thread result remains pending within reviewed evidence"
+    "New confirmation/W12/-3 archives not independently replayed in this article review"
   ],
-  "verdict": "REVISE"
+  "verdict": "REVISE",
+  "low_sweep_log": 6945639925,
+  "low_sweep_archive_replayed": false
 }
