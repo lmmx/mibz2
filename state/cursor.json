@@ -190,9 +190,10 @@
     6947285652,
     6948462696,
     6953475922,
-    6955971254
+    6955971254,
+    6956224553
   ],
-  "last_processed_comment_id": 6955971254,
+  "last_processed_comment_id": 6956224553,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2258,13 +2259,16 @@
     },
     {
       "trigger_comment_id": 6956224553,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/blog-r4-6956224553/report.md",
       "report_commit": "91c59c02c1fdfdff5163d2e38347d04c7175df23",
       "source_commit": "fbc0a3ee0656893830e3a229e9f822a06b8c6efc",
-      "disposition": "PROCEED focused article corrections: all five prior points resolved; live main and notes verified, including transfer-test link."
+      "disposition": "PROCEED focused article corrections: all five prior points resolved; live main and notes verified, including transfer-test link.",
+      "review_comment_pr": 145,
+      "review_comment_id": 6956336794,
+      "publication_verification": "Exact body, lmmx author and issue145 read back; pinned helper reports only coordinator-only FROM limitation; role-aware header and routing checks passed."
     }
   ],
   "active_delegations": [],
