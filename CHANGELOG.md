@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### <!-- 3 -->Performance
+
+- *(plan)* on the measured i9, six lazy workers with 24 blocks in flight at exactly 8 threads asked (0.925 [0.918, 0.933] of lazy 8/32's wall) and five lazy workers with 20 at exactly 6 (0.962 [0.948, 0.977] of eager 6/24's); 4 threads, every other count and every other machine unchanged. Verdict #145 LOG 6945639925 (`just bench-workers-sweep-low`, registered in docs/journal/2026-11-17-workers-sweep-low.md), admitted by the Researcher's REVIEW 6946555118
+
 ## [0.5.3](https://github.com/lmmx/mibz2/compare/v0.5.2...v0.5.3) - 2026-11-17
 
 ### <!-- 3 -->Performance

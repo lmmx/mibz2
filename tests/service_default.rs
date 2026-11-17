@@ -164,11 +164,12 @@ fn custom_windows_scale_to_the_teams() {
     }
 }
 
-/// The existing plan everywhere else, by the same dispatch: 8 and 9 threads on the target
-/// (workers), 10, 11 and 20 (from its 10 cores: seven lazy workers, the window scaled to
-/// them, `trims_to_seven`), 10 and 20 threads off it (a CPU of the same shape but another
-/// model, an unknown quota or a cpu.max limit, a smaller machine: workers, the window as
-/// asked), and a plan forced on the target
+/// The existing plan everywhere else, by the same dispatch: 4, 5, 7 and 9 threads on the
+/// target (workers), 6 and 8 (five and six lazy workers, the window scaled to them,
+/// `trimmed_workers`), 10, 11 and 20 (from its 10 cores: seven lazy workers, the window
+/// scaled to them, `trims_to_seven`), 6, 8, 10 and 20 threads off it (a CPU of the same
+/// shape but another model, an unknown quota or a cpu.max limit, a smaller machine: workers,
+/// the window as asked), and a plan forced on the target
 #[test]
 fn the_existing_plan_otherwise() {
     if !supported() {
@@ -195,13 +196,21 @@ fn the_existing_plan_otherwise() {
     };
     // (machine, threads, pipelined, decoding threads, the window scaled to them)
     let cases = [
-        (i9.clone(), 8, false, 8, false),
+        (i9.clone(), 4, false, 4, false),
+        (i9.clone(), 5, false, 5, false),
+        (i9.clone(), 6, false, 5, true),
+        (i9.clone(), 7, false, 7, false),
+        (i9.clone(), 8, false, 6, true),
         (i9.clone(), 9, false, 9, false),
         (i9.clone(), 10, false, 7, true),
         (i9.clone(), 11, false, 7, true),
         (i9.clone(), 20, false, 7, true),
+        (limited.clone(), 6, false, 6, false),
+        (limited.clone(), 8, false, 8, false),
         (limited.clone(), 10, false, 10, false),
         (limited, 20, false, 10, false),
+        (same_shape.clone(), 6, false, 6, false),
+        (same_shape.clone(), 8, false, 8, false),
         (same_shape.clone(), 10, false, 10, false),
         (same_shape, 20, false, 10, false),
         (unknown_quota.clone(), 10, false, 10, false),

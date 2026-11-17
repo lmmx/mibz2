@@ -154,10 +154,12 @@ impl StreamDecoder {
     /// `BzReader::parallel` or `decode_parallel` gives at 10 threads), its lookahead one
     /// block a team (2). A plan forced with `with_plan` is never replaced by it.
     ///
-    /// And on the measured i9 alone (`trims_to_seven`), at 10 threads asked or more, where
-    /// the plan is its ten lazy workers: `TRIMMED_WORKERS` (7) lazy workers, the window
-    /// scaled to them (`window`: 28 blocks at 4 a thread asked), the very decoder
-    /// `workers(7, 28, k, true)` builds. A forced plan is never replaced by it either.
+    /// And on the measured i9 alone (`trimmed_workers`), at the thread counts it measured,
+    /// fewer lazy workers than the plan's, the window scaled to them (`window`: 4 blocks a
+    /// worker at 4 a thread asked): at 10 threads asked or more, where the plan is its ten
+    /// lazy workers, `TRIMMED_WORKERS` (7), the very decoder `workers(7, 28, k, true)`
+    /// builds; at exactly 8, 6 (`workers(6, 24, k, true)`); at exactly 6, 5 (`workers(5,
+    /// 20, k, true)`). A forced plan is never replaced by them either.
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
         let threads = threads.max(1);
         let forced = FORCED.with(|c| c.get()).is_some();
@@ -174,17 +176,17 @@ impl StreamDecoder {
             Self::service(p.teams, p.k, p.services, slots, k)
         } else {
             let plan = Plan::for_threads(threads);
-            // on the measured i9 alone, at 10 threads asked or more, where the plan is its ten
-            // lazy workers (`trims_to_seven`): seven lazy workers, the window scaled to them.
-            // Lazy explicitly: `Plan::lazy` gives seven workers a slot for every letter, and
-            // the measured arms held the lazy letters (`workers(7, 28, k, true)`). (The
-            // machine is read only where the plan is ten workers at 10 threads or more.)
-            let trimmed = !forced
-                && threads >= TEN_CORES.0
-                && plan == Plan::Workers(TEN_CORES.0)
-                && trims_to_seven(threads, k, &Machine::here());
-            if trimmed {
-                let n = TRIMMED_WORKERS;
+            // on the measured i9 alone, at a measured cell (`trimmed_workers`): fewer lazy
+            // workers, the window scaled to them. Lazy explicitly: `Plan::lazy` gives 7, 6 or
+            // 5 workers a slot for every letter, and the measured arms held the lazy letters
+            // (`workers(n, 4n, k, true)`). (The machine is read only at a cell's thread count
+            // and plan.)
+            let trimmed = if forced {
+                None
+            } else {
+                trim_cell(threads, plan).filter(|_| measured_i9(k, &Machine::here()))
+            };
+            if let Some(n) = trimmed {
                 Self::workers(n, window(Plan::Workers(n), threads, slots, true), k, true)
             } else {
                 Self::defaulted(plan, window(plan, threads, slots, false), k)
@@ -286,8 +288,9 @@ impl StreamDecoder {
     /// invert with lazy letters, and nothing else changed: the same plan
     /// (`Plan::for_threads`), the same window, the same threads, so that a bench arm built
     /// this way differs from production in the kernel alone (the 12-byte rules arm,
-    /// `bwt::W12LazyCells`). That includes `new`'s seven lazy workers on the measured i9
-    /// (`trims_to_seven`). Where production's plan is not lazy workers, this is `new`.
+    /// `bwt::W12LazyCells`). That includes `new`'s trimmed lazy workers on the measured i9
+    /// (`trimmed_workers`: 7 from 10 threads, 6 at 8, 5 at 6). Where production's decoder
+    /// is not lazy workers, this is `new`.
     #[doc(hidden)]
     pub fn new_lazy_as<I: super::bwt::InverseBwt + 'static>(
         threads: usize,
@@ -297,14 +300,14 @@ impl StreamDecoder {
         let threads = threads.max(1);
         let forced = FORCED.with(|c| c.get()).is_some();
         let plan = Plan::for_threads(threads);
-        // as `new`: on the measured i9 at 10 threads asked or more, where the plan is its ten
-        // lazy workers (`trims_to_seven`), seven lazy workers, the window scaled to them
-        let trimmed = !forced
-            && threads >= TEN_CORES.0
-            && plan == Plan::Workers(TEN_CORES.0)
-            && trims_to_seven(threads, k, &Machine::here());
-        if trimmed {
-            let n = TRIMMED_WORKERS;
+        // as `new`: on the measured i9 at a measured cell (`trimmed_workers`), fewer lazy
+        // workers, the window scaled to them
+        let trimmed = if forced {
+            None
+        } else {
+            trim_cell(threads, plan).filter(|_| measured_i9(k, &Machine::here()))
+        };
+        if let Some(n) = trimmed {
             let mut dec =
                 Self::workers_with::<I>(n, window(Plan::Workers(n), threads, slots, true), k);
             dec.threads = n;
@@ -326,7 +329,7 @@ impl StreamDecoder {
     }
 
     /// Whether this decoder's workers invert with lazy letters (`workers`, a plan of
-    /// `LAZY_FROM_THREADS` workers or more, or `new`'s `TRIMMED_WORKERS` on the measured i9):
+    /// `LAZY_FROM_THREADS` workers or more, or `new`'s trimmed workers on the measured i9):
     /// read from the kernel its workers were launched with
     #[doc(hidden)]
     pub fn is_lazy(&self) -> bool {
@@ -2743,9 +2746,9 @@ pub fn service_target(threads: usize, k: Kernels, m: &Machine) -> bool {
 
 /// The blocks in flight for `plan` when a caller asked for `slots` on `threads` threads:
 /// as many a worker as asked (a team counting as one worker), at least one each. Workers
-/// `trimmed` on the measured i9 (`trims_to_seven`) scale it as teams do: 28 blocks for 7
+/// `trimmed` on the measured i9 (`trimmed_workers`) scale it as teams do: 28 blocks for 7
 /// workers where 20 threads were asked with 4 a thread, not 80, and 28 where 10 were, not
-/// 40. On the i9-10900K the 80-block window cost 7.5% more CPU at 20 threads for the same
+/// 40; 24 for 6 where 8 were, not 32; 20 for 5 where 6 were, not 24. On the i9-10900K the 80-block window cost 7.5% more CPU at 20 threads for the same
 /// wall (#145 LOG 6913804367, `just bench-lazy-place`). Every other plan of workers keeps
 /// the window asked.
 fn window(plan: Plan, threads: usize, slots: usize, trimmed: bool) -> usize {
@@ -2766,8 +2769,9 @@ pub const TRIMMED_WORKERS: usize = 7;
 /// That is 10 threads asked or more, on the machine `service_target` admits, read as it
 /// reads it: the i9-10900K by vendor, family, model and name, 10 physical cores and 20 CPUs
 /// in this process's affinity, a 20 MiB L3, no CPU quota, and the AVX2 and CLMUL kernels.
-/// Below 10 threads (9 and 8 included), on any other machine, including another CPU of the
-/// same shape, and under any quota, the plan and window are master's; a wider adoption
+/// It does not hold below 10 threads (the measured i9's cells at exactly 8 and 6 are
+/// `trimmed_workers`' own), on any other machine, including another CPU of the same shape,
+/// or under any quota, where the plan and window are master's; a wider adoption
 /// (another count, another machine, a fraction of the threads) needs its own registration.
 ///
 /// The evidence, workers and window judged together (the plan couples them):
@@ -2790,8 +2794,60 @@ pub const TRIMMED_WORKERS: usize = 7;
 /// which `Plan::Workers(7)` alone would not choose (below `LAZY_FROM_THREADS`). The default
 /// builds that same decoder here.
 pub fn trims_to_seven(threads: usize, k: Kernels, m: &Machine) -> bool {
-    threads >= TEN_CORES.0
-        && k.avx2
+    threads >= TEN_CORES.0 && measured_i9(k, m)
+}
+
+/// The lazy workers the default decoder runs on the measured i9 at exactly 8 threads asked
+/// (`trimmed_workers`), in place of the plan's eight lazy workers
+pub const TRIMMED_AT_EIGHT: usize = 6;
+
+/// The lazy workers the default decoder runs on the measured i9 at exactly 6 threads asked
+/// (`trimmed_workers`), in place of the plan's six eager workers (`Cells`, a slot for every
+/// letter, below `LAZY_FROM_THREADS`)
+pub const TRIMMED_AT_SIX: usize = 5;
+
+/// The measured cells, by thread count and the plan there, without the machine: the lazy
+/// workers in place of the plan's (`trimmed_workers` adds the machine)
+fn trim_cell(threads: usize, plan: Plan) -> Option<usize> {
+    match threads {
+        t if t >= TEN_CORES.0 && plan == Plan::Workers(TEN_CORES.0) => Some(TRIMMED_WORKERS),
+        8 if plan == Plan::Workers(8) => Some(TRIMMED_AT_EIGHT),
+        6 if plan == Plan::Workers(6) => Some(TRIMMED_AT_SIX),
+        _ => None,
+    }
+}
+
+/// The lazy workers the default decoder runs at `threads` with the plan `plan`
+/// (`Plan::for_threads`) on machine `m` with kernels `k`, in place of the plan's, the window
+/// scaled to them (`StreamDecoder::new`, `window`): `None` off the measured cells. Each cell
+/// is on the measured i9 alone (`trims_to_seven`'s profile), at the counts measured:
+/// - 10 threads asked or more, where the plan is ten lazy workers: `TRIMMED_WORKERS` (7),
+///   28 blocks at 4 a thread asked (`trims_to_seven`);
+/// - exactly 8, where the plan is eight lazy workers (lazy 8/32): `TRIMMED_AT_EIGHT` (6),
+///   24 blocks. Lazy 6/24 took 0.925 [0.918, 0.933] of lazy 8/32's wall on the Wikidata
+///   sample (text 0.998 [0.993, 1.004]; peak RSS 0.80);
+/// - exactly 6, where the plan is six eager workers (eager 6/24): `TRIMMED_AT_SIX` (5),
+///   lazy, 20 blocks. Lazy 5/20 took 0.962 [0.948, 0.977] of eager 6/24's wall (text
+///   0.991 [0.980, 1.003]; peak RSS 0.82): one registered treatment, kernel and count
+///   together.
+///
+/// The 8 and 6 cells: `just bench-workers-sweep-low`, registered in
+/// docs/journal/2026-11-17-workers-sweep-low.md (#521), its verdict #145 LOG 6945639925 (the
+/// bundle workers-sweep-low/run-20261117T102836Z), admitted for these two cells alone by the
+/// Researcher's REVIEW 6946555118. 4 threads (no lazy arm qualified), 7, 9, every other
+/// count and every other machine keep master's plan. The measured arms were `ab`'s
+/// `mibz2-occ-6-24` and `mibz2-occ-5-20`, `StreamDecoder::workers(n, 4n, k, true)`, which
+/// `Plan::Workers(6)` or `Plan::Workers(5)` alone would not build (eager below
+/// `LAZY_FROM_THREADS`).
+pub fn trimmed_workers(threads: usize, plan: Plan, k: Kernels, m: &Machine) -> Option<usize> {
+    trim_cell(threads, plan).filter(|_| measured_i9(k, m))
+}
+
+/// The measured i9's profile, whatever the thread count: the i9-10900K by vendor, family,
+/// model and name, 10 physical cores and 20 CPUs in this process's affinity, a 20 MiB L3, no
+/// CPU quota, and the AVX2 and CLMUL kernels (`trims_to_seven`, `trimmed_workers`)
+fn measured_i9(k: Kernels, m: &Machine) -> bool {
+    k.avx2
         && k.clmul
         && cfg!(all(target_os = "linux", target_arch = "x86_64"))
         && m.target.as_ref().is_some_and(|t| {
@@ -4056,17 +4112,14 @@ mod plan_tests {
     }
 
     /// What `StreamDecoder::new` builds at `t` threads on machine `m` with kernels `k`, its
-    /// service core aside: the plan, seven lazy workers on the measured i9 at 10 threads or
-    /// more, and its window
+    /// service core aside: the plan, the trimmed lazy workers on the measured i9 at its cells
+    /// (`trimmed_workers`: 7 at 10 threads or more, 6 at 8, 5 at 6), and its window
     fn planned_as_new(t: usize, slots: usize, k: Kernels, m: &Machine) -> (Plan, usize) {
         let plan = with_machine(m.clone(), || Plan::for_threads(t));
-        let trimmed = plan == Plan::Workers(TEN_CORES.0) && trims_to_seven(t, k, m);
-        let plan = if trimmed {
-            Plan::Workers(TRIMMED_WORKERS)
-        } else {
-            plan
-        };
-        (plan, window(plan, t, slots, trimmed))
+        match trimmed_workers(t, plan, k, m) {
+            Some(n) => (Plan::Workers(n), window(Plan::Workers(n), t, slots, true)),
+            None => (plan, window(plan, t, slots, false)),
+        }
     }
 
     /// A decoder's shape: its kernel, its threads, its window, and whether it is pipelined
@@ -4239,14 +4292,15 @@ mod plan_tests {
                 want.close();
             }
         };
-        // the i9 itself, below 10 threads
-        for t in 1..=9 {
+        // the i9 itself, below 10 threads, but for the cells at exactly 8 and 6
+        // (`six_and_five_lazy_workers_on_the_i9`)
+        for t in [1, 2, 3, 4, 5, 7, 9] {
             same("the i9", &i9, t, both);
         }
         // master's plan there, by name: workers as asked, lazy from 8
-        for t in [8, 9] {
+        for (t, lazy) in [(9, true), (7, false), (5, false), (4, false)] {
             let dec = with_machine(i9.clone(), || StreamDecoder::new(t, 4 * t, both));
-            assert!(dec.is_lazy(), "{t}");
+            assert_eq!(dec.is_lazy(), lazy, "{t}");
             assert_eq!((dec.threads(), dec.window()), (t, 4 * t as u64), "{t}");
             dec.close();
         }
@@ -4288,6 +4342,191 @@ mod plan_tests {
             };
             for t in counts {
                 same("another machine", &m, t, both);
+            }
+        }
+    }
+
+    /// The low cells' predicate (`trimmed_workers`) holds on the measured i9 alone, at
+    /// exactly 8 and 6 threads asked with the plan there (8 and 6 workers), and at 10 or more
+    /// as `trims_to_seven` does: not at 4, 5, 7 or 9, not with another plan at 8 or 6 (a
+    /// machine whose policy plans teams there), not on the scalar kernels or either kernel
+    /// alone, and not one fact off the profile (`near_misses`)
+    #[test]
+    fn the_low_trims() {
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let i9 = Machine::service_target();
+        let on = cfg!(all(target_os = "linux", target_arch = "x86_64"));
+        let w = Plan::Workers;
+        let cell = |t: usize, plan: Plan| trimmed_workers(t, plan, both, &i9);
+        assert_eq!(cell(8, w(8)), on.then_some(6));
+        assert_eq!(cell(6, w(6)), on.then_some(5));
+        for t in [10, 11, 12, 16, 20, 64] {
+            assert_eq!(cell(t, w(10)), on.then_some(7), "{t}");
+            assert_eq!(
+                cell(t, w(10)).is_some(),
+                trims_to_seven(t, both, &i9),
+                "{t}"
+            );
+        }
+        for t in [0, 1, 2, 3, 4, 5, 7, 9] {
+            assert_eq!(cell(t, w(t)), None, "{t}");
+        }
+        // another plan at the cells' counts
+        for (t, plan) in [
+            (8, w(7)),
+            (8, w(10)),
+            (8, Plan::Teams { teams: 3, k: 2 }),
+            (6, w(5)),
+            (6, w(8)),
+            (6, Plan::Teams { teams: 2, k: 3 }),
+            (10, w(9)),
+            (12, PIPELINED_PLAN),
+        ] {
+            assert_eq!(cell(t, plan), None, "{t} {plan:?}");
+        }
+        for k in [
+            Kernels::scalar(),
+            Kernels {
+                avx2: true,
+                clmul: false,
+            },
+            Kernels {
+                avx2: false,
+                clmul: true,
+            },
+        ] {
+            for t in [6, 8] {
+                assert_eq!(trimmed_workers(t, w(t), k, &i9), None, "{t} {k:?}");
+            }
+        }
+        for (what, m) in near_misses() {
+            for t in [6, 8] {
+                assert_eq!(trimmed_workers(t, w(t), both, &m), None, "{what} at {t}");
+            }
+        }
+    }
+
+    /// The admitted low cells (#145, the Researcher's REVIEW 6946555118 on the verdict LOG
+    /// 6945639925): on the measured i9 at exactly 8 threads asked the default decoder is six
+    /// lazy workers with 24 blocks in flight, and at exactly 6 five lazy workers with 20, at
+    /// 4 a thread asked, through each public entry point: the very decoders the bench arms
+    /// measured, `ab`'s `mibz2-occ-6-24` and `mibz2-occ-5-20`
+    /// (`BzReader::parallel_workers(.., n, 4n, k, true)`, so `StreamDecoder::workers(n, 4n,
+    /// k, true)`): their kernel, threads and window. The lazy letters are this dispatch's
+    /// own: `Plan::Workers(6)` and `Plan::Workers(5)` are not lazy, nor the decoders their
+    /// plans build, since `LAZY_FROM_THREADS` stays 8
+    #[test]
+    fn six_and_five_lazy_workers_on_the_i9() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let i9 = Machine::service_target();
+        // the trap: below 8 workers a plan's own kernel is a slot for every letter, unchanged
+        assert_eq!(LAZY_FROM_THREADS, 8);
+        for (t, n) in [(8, TRIMMED_AT_EIGHT), (6, TRIMMED_AT_SIX)] {
+            assert!(!Plan::Workers(n).lazy(), "{n}");
+            let cells = StreamDecoder::planned(Plan::Workers(n), 4 * n, both);
+            assert!(!cells.is_lazy(), "{n}");
+            let arm = StreamDecoder::workers(n, 4 * n, both, true);
+            assert!(arm.is_lazy(), "{n}");
+            assert_ne!(cells.kernel, arm.kernel);
+            let ((dec, plan), b) = observe_builds(|| {
+                with_machine(i9.clone(), || {
+                    (StreamDecoder::new(t, 4 * t, both), Plan::for_threads(t))
+                })
+            });
+            // (the plan itself is master's: t workers, lazy at 8 and eager at 6)
+            assert_eq!(plan, Plan::Workers(t), "{t}");
+            assert_eq!(plan.lazy(), t == 8, "{t}");
+            assert!(dec.is_lazy(), "{t}: lazy");
+            assert_eq!((dec.threads(), dec.window()), (n, 4 * n as u64), "{t}");
+            assert_eq!(shape(&dec), shape(&arm), "{t}: the measured arm's decoder");
+            assert_eq!(
+                (b[0].threads, b[0].window, b[0].service, b[0].pipelined),
+                (n, 4 * n as u64, false, false),
+                "{t}"
+            );
+            assert_eq!(
+                planned_as_new(t, 4 * t, both, &i9),
+                (Plan::Workers(n), 4 * n),
+                "{t}"
+            );
+            dec.close();
+            // a caller's own window scales to the workers, at least one a worker
+            for (slots, w) in [(1, n), (2 * t, 2 * n), (8 * t, 8 * n), (40, 40 * n / t)] {
+                let dec = with_machine(i9.clone(), || StreamDecoder::new(t, slots, both));
+                assert!(dec.is_lazy(), "{t} {slots}");
+                assert_eq!((dec.threads(), dec.window()), (n, w as u64), "{t} {slots}");
+                dec.close();
+            }
+            // through the reader and the whole-input entry point too, decoding
+            let (out, b) = observe_builds(|| {
+                with_machine(i9.clone(), || {
+                    let mut r = crate::BzReader::parallel(service_tests::Z, t);
+                    let dec = r.parallel_decoder().unwrap();
+                    assert!(dec.is_lazy(), "{t}");
+                    assert_eq!(shape(dec), shape(&arm), "{t}");
+                    let mut out = Vec::new();
+                    std::io::Read::read_to_end(&mut r, &mut out).unwrap();
+                    out
+                })
+            });
+            assert_eq!(out, service_tests::want(), "BzReader::parallel at {t}");
+            assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{t}");
+            let (out, b) = observe_builds(|| {
+                with_machine(i9.clone(), || {
+                    crate::decode_parallel(service_tests::Z, t).unwrap()
+                })
+            });
+            assert_eq!(out, service_tests::want(), "decode_parallel at {t}");
+            assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{t}");
+            // `new_lazy_as` (the W12 arms) applies the same trim: with the shipped lazy
+            // kernel it is `new`'s decoder, and with another it differs in the kernel alone
+            let (same, w12) = with_machine(i9.clone(), || {
+                (
+                    StreamDecoder::new_lazy_as::<crate::bwt::LazyCells>(t, 4 * t, both),
+                    StreamDecoder::new_lazy_as::<crate::bwt::W12LazyCells>(t, 4 * t, both),
+                )
+            });
+            assert_eq!(shape(&same), shape(&arm), "{t}");
+            assert_eq!((w12.threads(), w12.window()), (n, 4 * n as u64), "{t}");
+            assert_eq!(
+                w12.kernel,
+                std::any::type_name::<crate::bwt::W12LazyCells>(),
+                "{t}"
+            );
+            // a forced plan is never replaced
+            for forced in [Plan::Workers(t), Plan::Workers(n), PIPELINED_PLAN] {
+                let dec = with_machine(i9.clone(), || {
+                    with_plan(forced, || StreamDecoder::new(t, 4 * t, both))
+                });
+                assert_eq!(dec.threads(), forced.threads(), "{t} {forced:?}");
+                assert_eq!(dec.is_lazy(), forced.lazy(), "{t} {forced:?}");
+                dec.close();
+            }
+            // one fact off the profile, or other kernels: master's plan, t workers
+            let mut off: Vec<(String, Machine, Kernels)> = near_misses()
+                .into_iter()
+                .map(|(w, m)| (w.to_string(), m, both))
+                .collect();
+            off.push(("scalar".into(), i9.clone(), Kernels::scalar()));
+            for (what, m, k) in off {
+                let dec = with_machine(m.clone(), || StreamDecoder::new(t, 4 * t, k));
+                let want = masters(t, 4 * t, k, &m);
+                assert_eq!(shape(&dec), shape(&want), "{what} at {t}");
+                assert!(dec.threads() != n || !dec.is_lazy(), "{what} at {t}");
+                dec.close();
+                want.close();
+            }
+            for d in [cells, arm, same, w12] {
+                d.close();
             }
         }
     }
