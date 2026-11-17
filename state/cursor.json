@@ -2269,6 +2269,14 @@
       "review_comment_pr": 145,
       "review_comment_id": 6956336794,
       "publication_verification": "Exact body, lmmx author and issue145 read back; pinned helper reports only coordinator-only FROM limitation; role-aware header and routing checks passed."
+    },
+    {
+      "trigger_comment_id": 6957030345,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/knee-r2-6957030345/report.md",
+      "source_commit": "afc5c5ab5fb4cd1c9f4fee838417693e42c08ff0"
     }
   ],
   "active_delegations": [],
