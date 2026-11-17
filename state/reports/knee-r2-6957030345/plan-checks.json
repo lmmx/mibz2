@@ -1,0 +1,302 @@
+[
+  {
+    "version": "0.2.4",
+    "t": 8,
+    "n": 10,
+    "names": [
+      null
+    ],
+    "rss": 83452,
+    "cpu": 1.0476
+  },
+  {
+    "version": "0.2.4",
+    "t": 10,
+    "n": 10,
+    "names": [
+      null
+    ],
+    "rss": 83684,
+    "cpu": 1.09225
+  },
+  {
+    "version": "0.2.4",
+    "t": 12,
+    "n": 10,
+    "names": [
+      null
+    ],
+    "rss": 83376,
+    "cpu": 1.0824500000000001
+  },
+  {
+    "version": "0.2.4",
+    "t": 16,
+    "n": 10,
+    "names": [
+      null
+    ],
+    "rss": 83044,
+    "cpu": 1.0843500000000001
+  },
+  {
+    "version": "0.2.4",
+    "t": 20,
+    "n": 10,
+    "names": [
+      null
+    ],
+    "rss": 83830,
+    "cpu": 1.0957
+  },
+  {
+    "version": "0.5.0",
+    "t": 8,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 158612,
+    "cpu": 0.7549
+  },
+  {
+    "version": "0.5.0",
+    "t": 10,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 74240,
+    "cpu": 0.83735
+  },
+  {
+    "version": "0.5.0",
+    "t": 12,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 74172,
+    "cpu": 0.88075
+  },
+  {
+    "version": "0.5.0",
+    "t": 16,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 73976,
+    "cpu": 0.8709
+  },
+  {
+    "version": "0.5.0",
+    "t": 20,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 73022,
+    "cpu": 0.87825
+  },
+  {
+    "version": "0.5.1",
+    "t": 8,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 157594,
+    "cpu": 0.7460500000000001
+  },
+  {
+    "version": "0.5.1",
+    "t": 10,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-8 mibz2-9 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 191616,
+    "cpu": 0.92395
+  },
+  {
+    "version": "0.5.1",
+    "t": 12,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-8 mibz2-9 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 195712,
+    "cpu": 1.14165
+  },
+  {
+    "version": "0.5.1",
+    "t": 16,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-8 mibz2-9 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 197726,
+    "cpu": 1.15515
+  },
+  {
+    "version": "0.5.1",
+    "t": 20,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-8 mibz2-9 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 197876,
+    "cpu": 1.1674
+  },
+  {
+    "version": "0.5.2",
+    "t": 8,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 155028,
+    "cpu": 0.744
+  },
+  {
+    "version": "0.5.2",
+    "t": 10,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-8 mibz2-9 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 188420,
+    "cpu": 0.92835
+  },
+  {
+    "version": "0.5.2",
+    "t": 12,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-8 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 171036,
+    "cpu": 0.9956
+  },
+  {
+    "version": "0.5.2",
+    "t": 16,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-8 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 171022,
+    "cpu": 1.0128
+  },
+  {
+    "version": "0.5.2",
+    "t": 20,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-8 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 170342,
+    "cpu": 1.00725
+  },
+  {
+    "version": "0.5.3",
+    "t": 8,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 159076,
+    "cpu": 0.75205
+  },
+  {
+    "version": "0.5.3",
+    "t": 10,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-7 mibz2-8 mibz2-9 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 192040,
+    "cpu": 0.94255
+  },
+  {
+    "version": "0.5.3",
+    "t": 12,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 136594,
+    "cpu": 0.74985
+  },
+  {
+    "version": "0.5.3",
+    "t": 16,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 132056,
+    "cpu": 0.7633
+  },
+  {
+    "version": "0.5.3",
+    "t": 20,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 134738,
+    "cpu": 0.7537
+  },
+  {
+    "version": "0.5.4",
+    "t": 8,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 123766,
+    "cpu": 0.6668499999999999
+  },
+  {
+    "version": "0.5.4",
+    "t": 10,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 137596,
+    "cpu": 0.7484500000000001
+  },
+  {
+    "version": "0.5.4",
+    "t": 12,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 138552,
+    "cpu": 0.74885
+  },
+  {
+    "version": "0.5.4",
+    "t": 16,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 135656,
+    "cpu": 0.7478
+  },
+  {
+    "version": "0.5.4",
+    "t": 20,
+    "n": 10,
+    "names": [
+      "ab mibz2-0 mibz2-1 mibz2-2 mibz2-3 mibz2-4 mibz2-5 mibz2-6 mibz2-read mibz2-scan sampler"
+    ],
+    "rss": 140666,
+    "cpu": 0.75145
+  }
+]
