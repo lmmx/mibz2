@@ -2048,6 +2048,142 @@ bench-workers-at-cores COPIES="4" ROUNDS="10" REPS="10":
     fi
     bash bench/bundle.sh "$O"
 
+# The miss cost (the registration, docs/journal/2026-11-17-miss-cost.md; MONODROMY's predictions
+# frozen as record 47 on PR #497 before the data): a diagnostic, reported, not judged, adopts
+# nothing. At 10 threads, from 10 lazy workers to 7, cycles a byte fell 25% and LLC misses a byte
+# 48% (#515, LOG 6943194948); where do the contention cycles go? Lazy W workers with 4W blocks in
+# flight (`ab`'s `mibz2-occ-N-S`) for W = 10 (the reference), 9, 8 and 7, production's `mibz2`
+# (10 workers, 40 blocks at 10 threads) a sanity arm, and 7/28 with glibc's malloc asking for
+# transparent huge pages (`mibz2-occ-7-28+thp`, `GLIBC_TUNABLES=glibc.malloc.hugetlb=1`, no code
+# changed) a side arm where the kernel's THP mode is not `never` and glibc is 2.35 or later. Under
+# `perf stat` (`bench/counters.py --groups`), 10 threads, REPS reps a arm, the arms alternating,
+# COPIES copies of the Wikidata sample, each run pinned one CPU a core as #515's runs: the stall
+# cycles (total, L2 miss, L3 miss), retired loads' L2 misses, L3 hits and misses, the offcore
+# data reads and their occupancy (latency by Little's law, reads in flight, bandwidth), page walks,
+# and, system-wide where perf allows it (`kernel.perf_event_paranoid` 0 or less), the memory
+# controller's bytes. Each event kept only if `perf list` names it. Then load latency by data
+# source with IPs (`bench/memlat.py`, `perf record` of `mem-loads`) for 10/40 and 7/28, MEMREPS
+# reps each, and the DIMMs' speed where it can be read without root.
+bench-miss-cost COPIES="4" REPS="10" MEMREPS="3" PERIOD="10007":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/miss-cost
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-miss-cost (the registration, docs/journal/2026-11-17-miss-cost.md; a diagnostic, reported, not judged): mibz2-occ-9-36, -8-32, -7-28, mibz2 and mibz2-occ-7-28+thp against mibz2-occ-10-40 at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample, counters at 10 threads, {{REPS}} reps; load latency {{MEMREPS}} reps"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-miss-cost: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-miss-cost: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    # the DIMMs' speed, the bandwidth's peak: without root, from the first source that names one
+    dimm=unknown
+    if out=$(dmidecode -t memory 2>&1) && grep -q 'Speed:' <<<"$out"; then
+      { echo "# dmidecode -t memory"; echo "$out"; } > "$O/dimm.txt"; dimm=dmidecode
+    elif out=$(lshw -C memory 2>&1) && grep -Eqi 'MT/s|MHz|clock:' <<<"$out"; then
+      { echo "# lshw -C memory"; echo "$out"; } > "$O/dimm.txt"; dimm=lshw
+    elif ls -d /sys/devices/system/edac/mc/mc*/dimm* >/dev/null 2>&1; then
+      { echo "# /sys/devices/system/edac (no speed there: sizes and types only)"
+        for f in /sys/devices/system/edac/mc/mc*/dimm*/{dimm_label,size,dimm_mem_type,dimm_dev_type}; do
+          [ -r "$f" ] && echo "$f: $(cat "$f")"; done; } > "$O/dimm.txt"; dimm="edac (no speed)"
+    else
+      echo "unknown (no dmidecode or lshw output with a speed without root, no edac)" > "$O/dimm.txt"
+    fi
+    echo "the DIMMs' speed: from $dimm (dimm.txt)"
+    # the side arm's conditions: the kernel's THP mode, and glibc's hugetlb tunable (2.35 on)
+    thp=$(cat /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null || echo unknown)
+    glibc=$(getconf GNU_LIBC_VERSION 2>/dev/null | awk '{print $2}' || echo unknown)
+    echo "transparent_hugepage/enabled: $thp; defrag: $(cat /sys/kernel/mm/transparent_hugepage/defrag 2>/dev/null || echo unknown); glibc $glibc" | tee "$O/thp.txt"
+    arms=(mibz2-occ-9-36 mibz2-occ-8-32 mibz2-occ-7-28 mibz2)
+    if [[ "$thp" != *"[never]"* && "$thp" != unknown ]] \
+       && python3 -c "import sys; v=tuple(map(int, sys.argv[1].split('.')[:2])); sys.exit(v < (2, 35))" "$glibc" 2>/dev/null; then
+      arms+=(mibz2-occ-7-28+thp)
+    else
+      echo "the side arm mibz2-occ-7-28+thp: dropped (THP mode $thp, glibc $glibc)" | tee -a "$O/events.txt"
+    fi
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if ! command -v perf >/dev/null || [ "$paranoid" = unknown ] || [ "$paranoid" -gt 1 ]; then
+      echo "bench-miss-cost: skipped (no perf, or kernel.perf_event_paranoid $paranoid above 1); nothing measured" | tee "$O/counters.txt"
+      bash bench/bundle.sh "$O"
+      exit 0
+    fi
+    perf --version | tee "$O/perf_version.txt"
+    perf list > "$O/perf_list.txt" 2>&1 || true
+    has() { grep -Fqw -- "$1" "$O/perf_list.txt"; }
+    # each group cycles and up to three events, so nothing is multiplexed on the i9's four general
+    # counters a thread; an event perf list does not name is dropped and logged, a group left with
+    # none dropped
+    groups=""
+    for g in \
+      cycle_activity.stalls_total,cycle_activity.stalls_l3_miss \
+      cycle_activity.stalls_l2_miss,mem_load_retired.l2_miss,mem_load_retired.l3_miss \
+      mem_load_retired.l3_hit,offcore_requests.demand_data_rd,offcore_requests_outstanding.demand_data_rd \
+      offcore_requests.all_data_rd,offcore_requests_outstanding.all_data_rd,offcore_requests_outstanding.cycles_with_data_rd \
+      offcore_requests.l3_miss_demand_data_rd,offcore_requests_outstanding.l3_miss_demand_data_rd,offcore_requests_outstanding.cycles_with_l3_miss_demand_data_rd \
+      dtlb_load_misses.walk_active,dtlb_load_misses.walk_pending,dtlb_load_misses.walk_completed; do
+      kept=""
+      for e in ${g//,/ }; do
+        if has "$e"; then kept="$kept,$e"; else echo "the event $e: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+      done
+      # instructions ride in the first group, on a fixed counter
+      [ "$g" != "${g#cycle_activity.stalls_total}" ] && has instructions && kept=",instructions$kept"
+      [ -z "$kept" ] || groups="${groups:+$groups;}cycles$kept"
+    done
+    # the memory controller: system-wide only, so only at paranoid 0 or less
+    imc=""
+    if has uncore_imc/data_reads/ && has uncore_imc/data_writes/; then imc="uncore_imc/data_reads/,uncore_imc/data_writes/"
+    elif has unc_m_cas_count.rd && has unc_m_cas_count.wr; then imc="unc_m_cas_count.rd,unc_m_cas_count.wr"
+    else echo "the memory controller's events: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+    if [ -n "$imc" ]; then
+      if [ "$paranoid" -le 0 ]; then groups="${groups:+$groups;}system:$imc"
+      else echo "the memory controller's events ($imc): skipped, system-wide counting needs kernel.perf_event_paranoid 0 or less, not $paranoid" | tee -a "$O/events.txt"; fi
+    fi
+    echo "the groups: ${groups:-none}" | tee -a "$O/events.txt"
+    if [ -n "$groups" ]; then
+      python3 bench/counters.py run --ab "$AB" --arm mibz2-occ-10-40 $(printf -- '--arm %s ' "${arms[@]}") \
+        --groups "$groups" --threads 10 --reps {{REPS}} --file "$W/wikidata-x{{COPIES}}.bz2" --out "$O/counters.jsonl"
+      python3 bench/counters.py report "$O/counters.jsonl" --ref mibz2-occ-10-40 $(printf -- '--cand %s ' "${arms[@]}") \
+        --groups "$groups" --threads 10 --reps {{REPS}} \
+        | tee "$O/counters.txt" \
+        || echo "bench-miss-cost: the counters are VOID (counters.txt says why)"
+    else
+      echo "bench-miss-cost: the counters skipped (perf list names none of their events)" | tee "$O/counters.txt"
+    fi
+    # load latency by data source, with IPs: 10/40 and 7/28
+    if has mem-loads; then
+      python3 bench/memlat.py run --ab "$AB" --arm mibz2-occ-10-40 --arm mibz2-occ-7-28 --threads 10 \
+        --reps {{MEMREPS}} --period {{PERIOD}} --file "$W/wikidata-x{{COPIES}}.bz2" --out "$O/memlat"
+      python3 bench/memlat.py report "$O/memlat" --arm mibz2-occ-10-40 --arm mibz2-occ-7-28 --threads 10 \
+        --reps {{MEMREPS}} | tee "$O/memlat.txt" \
+        || echo "bench-miss-cost: the load latency is VOID (memlat.txt says why)"
+    else
+      echo "bench-miss-cost: the load latency skipped (perf list names no mem-loads)" | tee "$O/memlat.txt"
+    fi
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,

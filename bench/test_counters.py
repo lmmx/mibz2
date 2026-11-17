@@ -29,10 +29,15 @@ if cmd[0] == "taskset":
 p = subprocess.run(cmd)
 mode = os.environ.get("STUB_PERF", "ok")
 arm = cmd[2]
+thp = 3 if os.environ.get("GLIBC_TUNABLES") == "glibc.malloc.hugetlb=1" else 1
 with open(out, "w") as f:
     for i, e in enumerate(events):
-        v = 1000000 * (i + 1) * (2 if "stop" in arm else 1)
-        if mode == "unsupported" and e == "ld_blocks.store_forward":
+        v = 1000000 * (i + 1) * (2 if "stop" in arm else 1) * thp
+        if e.startswith("uncore_imc/"):
+            # the uncore: counted only system-wide, in MiB as perf scales it
+            f.write(f"{1.5 * (i + 1):.2f},MiB,{e},1000,100.00,,\n" if "-a" in a
+                    else f"<not supported>,,{e},0,100.00,,\n")
+        elif mode == "unsupported" and e == "ld_blocks.store_forward":
             f.write(f"<not supported>,,{e},0,100.00,,\n")
         elif mode == "notcounted" and e == "branch-misses":
             f.write(f"<not counted>,,{e},0,0.00,,\n")
@@ -48,6 +53,8 @@ CHILD = r'''#!/usr/bin/env python3
 import json, os, sys
 if os.environ.get("STUB_CHILD") == "fail" and "stop" in sys.argv[2]:
     sys.exit(3)
+if "+thp" in sys.argv[2]:
+    sys.exit(4)
 print(json.dumps({"wall": 0.5, "out": 209700196, "hash": "h", "err": ""}))
 '''
 
@@ -202,6 +209,72 @@ def main():
     ok = code == 1 and "VOID" in out and "not ARM=N" in out
     results.append(ok)
     print(f"{'ok  ' if ok else 'FAIL'} --workers malformed: exit {code}, VOID")
+    # the miss cost (`just bench-miss-cost`): 10/40 the reference; 9/36, production and 7/28 with
+    # glibc's huge pages the candidates; a system-wide group for the IMC (MiB, read in bytes)
+    mc_groups = ("cycles,instructions,cycle_activity.stalls_total,cycle_activity.stalls_l3_miss;"
+                 "cycles,offcore_requests.all_data_rd,offcore_requests_outstanding.all_data_rd,"
+                 "offcore_requests_outstanding.cycles_with_data_rd;"
+                 "cycles,mem_load_retired.l3_hit,mem_load_retired.l3_miss,dtlb_load_misses.walk_active;"
+                 "system:uncore_imc/data_reads/,uncore_imc/data_writes/")
+    mc_ref, mc_cands = "mibz2-occ-10-40", ["mibz2-occ-9-36", "mibz2", "mibz2-occ-7-28+thp"]
+    mc_file = d / "mc.jsonl"
+    subprocess.run([sys.executable, str(HERE / "counters.py"), "run", "--ab", str(d / "ab"),
+                    *sum((["--arm", x] for x in [mc_ref, *mc_cands]), []), "--threads", "10", "--reps", "2",
+                    "--file", "x.bz2", "--out", str(mc_file), "--groups", mc_groups],
+                   env=e, capture_output=True, check=True)
+    recs = [json.loads(line) for line in open(mc_file)]
+
+    def mc_report(groups=mc_groups, runs=mc_file):
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            code = counters.main(["counters.py", "report", str(runs), "--ref", mc_ref,
+                                  *sum((["--cand", c] for c in mc_cands), []), "--threads", "10", "--reps", "2",
+                                  "--groups", groups])
+        return code, buf.getvalue()
+
+    code, out = mc_report()
+    rows = {ln.split("  ")[1].strip(): ln for ln in out.splitlines() if ln.startswith("  ") and "  " in ln[2:]}
+    imc = 1.5 * 2 ** 20 / 0.5 / 1e9  # 1.5 MiB over the stub's 0.5 s wall
+    want = {
+        # the stub counts the i-th event of a group (i + 1) million: within a group, ratios of positions
+        "IPC": "2.0000", "stalls, share of cycles": "3.0000", "L3-miss stalls, share of cycles": "4.0000",
+        "data reads in flight, when any": "0.7500", "cycles with a data read out, share": "4.0000",
+        "L3 hits, share of L2-miss loads": "0.4000", "page walks, share of cycles": "4.0000",
+        "offcore data reads, GB/s": f"{2e6 * 64 / 0.5 / 1e9:.4f}", "DRAM reads (IMC), GB/s": f"{imc:.4f}",
+        "DRAM writes (IMC), GB/s": f"{2 * imc:.4f}",
+    }
+    got = {k: rows.get(k, "") for k in want}
+    ok = (code == 0 and len(recs) == 4 * 2 * 4
+          and all(r.get("system") is True for r in recs if r["group"] == 3)
+          and not any("system" in r for r in recs if r["group"] != 3)
+          and all(r["counts"]["uncore_imc/data_reads/"][3] == "MiB" for r in recs if r["group"] == 3)
+          and all(isinstance(r.get("thp_faults"), int) for r in recs)
+          and all(v in got[k].split()[-4:] for k, v in want.items())
+          and "THP faults a run (system-wide)" in out and "uncore_imc/data_reads/" in out)
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} the miss cost's derived figures, the IMC counted system-wide in MiB: exit {code}")
+    if not ok:
+        print(out)
+    # the +thp arm runs its arm with glibc's tunable set: the stub counts 3 times as much, not
+    # the child's name with the suffix (the stub child fails on it)
+    cyc = next(ln for ln in out.splitlines() if ln.startswith("  cycles "))
+    ok = code == 0 and cyc.split()[-1] == "3.0000" and cyc.split()[-2] == "1.0000"
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} NAME+thp: the arm's name stripped and GLIBC_TUNABLES set: {cyc.split()[-3:]}")
+    code, out = mc_report(groups=mc_groups.replace("system:", ""))
+    ok = code == 1 and "VOID" in out and "not as the group is named" in out
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} a system-wide group read as a process's: exit {code}, VOID")
+    nowall = d / "mc-nowall.jsonl"
+    with open(nowall, "w") as f:
+        for r in recs:
+            if r["group"] == 1:
+                r.pop("wall")
+            f.write(json.dumps(r) + "\n")
+    code, out = mc_report(runs=nowall)
+    ok = code == 1 and "no wall for the busy share or a bandwidth" in out
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} a bandwidth's run without a wall: exit {code}, VOID")
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

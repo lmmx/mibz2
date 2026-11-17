@@ -79,10 +79,15 @@ jobs:
         run: python3 bench/test_two_arm.py
       # the counters' reader (`bench/counters.py`, #506's; `just bench-w12`'s L2 diagnostic,
       # `just bench-workers-low`'s occupancy diagnostic with its named groups and several
-      # candidates), driven with a stub perf and child: a complete run read, and every defect
-      # leaves no report
+      # candidates, `just bench-miss-cost`'s derived figures, system-wide group and THP arm),
+      # driven with a stub perf and child: a complete run read, and every defect leaves no report
       - name: The counters reader (stub perf)
         run: python3 bench/test_counters.py
+      # the load-latency sampler (`bench/memlat.py`, `just bench-miss-cost`), driven with a stub
+      # perf printing samples as perf 6.8's `perf script` does: latency by data source and the
+      # top IPs read, and every defect leaves no report
+      - name: The load-latency sampler (stub perf)
+        run: python3 bench/test_memlat.py
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the

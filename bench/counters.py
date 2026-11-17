@@ -10,14 +10,30 @@ Standard library only.
     (either: --groups 'cycles,instructions,l2_rqsts.miss;cycles,LLC-load-misses' in place of --events)
 
 **Arms.** `NAME` runs `AB child NAME`; `NAME@EXE` runs another build's harness, `EXE child NAME`
-(as `ab run`'s arms), its records keeping the arm as given.
+(as `ab run`'s arms), its records keeping the arm as given. `NAME+thp` runs `NAME` with glibc's
+malloc asking for transparent huge pages (`GLIBC_TUNABLES=glibc.malloc.hugetlb=1`: glibc 2.35 or
+later madvises its heaps and mappings `MADV_HUGEPAGE`), no code changed (`just bench-miss-cost`'s
+side arm). Every run records `thp_faults`, the rise of `/proc/vmstat`'s `thp_fault_alloc` over it
+(system-wide, so context only), and the report prints its median for each arm: whether the
+tunable took effect is read there, not assumed.
 
 **Events.** The default: the three groups below. `--events l2`: one group, cycles, instructions,
 L2 demand-request misses and references (`l2_rqsts.miss`, `l2_rqsts.references`), for W12's L2
 diagnostic (#145, the Coordinator's ruling on #506). `--groups`: the groups named, `;` between
 groups and `,` between a group's events, in place of a set (`just bench-workers-low`'s occupancy
 diagnostic, its events those of `perf list` on the machine that runs it); the run and the report
-must name the same groups.
+must name the same groups. A group written `system:EV,EV` is counted system-wide (`perf stat -a`,
+the uncore's memory-controller events, which perf will not count for one process; the workstation's
+`kernel.perf_event_paranoid` at 0 or less); a count perf gives in MiB is read in bytes.
+
+**The miss cost** (`just bench-miss-cost`): where the groups name them, the report adds a table
+of derived figures for each arm: the stall shares of cycles (`cycle_activity.*` over cycles), the
+L3 hit share of retired loads that missed L2, the page walks' share of cycles and cycles a walk,
+the average latency of offcore demand data reads and of those that missed L3 (Little's law: the
+outstanding count's sum over cycles over the requests), the reads in flight while any is, and
+bandwidth in GB/s against the child's wall (64 bytes a request or retired miss; the IMC's own
+bytes where counted). The counts cover the whole process and the wall the decode alone, so each
+GB/s is an upper bound on the decode's.
 
 **The clock and the busy share** (`just bench-workers-at-cores`): with named groups, where
 `ref-cycles` is counted beside `cycles`, the report gives cycles over ref-cycles (the core clock
@@ -68,10 +84,30 @@ EVENT_SETS = {
 GROUPS = EVENT_SETS["default"]
 
 
+THP_ENV = {"GLIBC_TUNABLES": "glibc.malloc.hugetlb=1"}
+SYSTEM = set()
+
+
 def harness(ab, arm):
-    """The harness and the arm's name for `ab child`: `NAME@EXE` runs EXE"""
+    """The harness, the arm's name for `ab child` and the child's extra environment: `NAME@EXE`
+    runs EXE, `NAME+thp` asks glibc's malloc for transparent huge pages"""
     name, at, exe = arm.partition("@")
-    return (exe, name) if at else (ab, arm)
+    exe = exe if at else ab
+    if name.endswith("+thp"):
+        return exe, name.removesuffix("+thp"), THP_ENV
+    return exe, name, {}
+
+
+def thp_faults():
+    """`/proc/vmstat`'s thp_fault_alloc, else None"""
+    try:
+        for line in open("/proc/vmstat"):
+            k, _, v = line.partition(" ")
+            if k == "thp_fault_alloc":
+                return int(v)
+    except (OSError, ValueError):
+        pass
+    return None
 
 
 def spread(t):
@@ -100,7 +136,7 @@ def spread(t):
 
 
 def parse_perf(path):
-    """perf stat -x, output: {event: (value or None, enabled percent, raw)}"""
+    """perf stat -x, output: {event: (value or None, enabled percent, raw, unit)}"""
     got = {}
     for line in open(path):
         line = line.strip()
@@ -121,14 +157,25 @@ def parse_perf(path):
                 v = float(value)
             except ValueError:
                 v = None
-        got[event] = (v, pct, value)
+        got[event] = (v, pct, value, f[1])
     return got
 
 
 def groups(a):
-    """The event groups `--groups` names, else `--events`' set"""
+    """The event groups `--groups` names, else `--events`' set; SYSTEM, those counted system-wide"""
+    SYSTEM.clear()
     if a.groups:
-        return [[e for e in g.split(",") if e] for g in a.groups.split(";") if g.strip(",")]
+        out = []
+        for g in a.groups.split(";"):
+            g = g.strip()
+            system = g.startswith("system:")
+            g = g.removeprefix("system:")
+            if not g.strip(","):
+                continue
+            if system:
+                SYSTEM.add(len(out))
+            out.append([e for e in g.split(",") if e])
+        return out
     return EVENT_SETS[a.events]
 
 
@@ -149,15 +196,22 @@ def run(a):
                 for arm in arms:
                     for g, events in enumerate(GROUPS):
                         rec = {"arm": arm, "threads": t, "rep": rep, "group": g, "events": events}
+                        if g in SYSTEM:
+                            rec["system"] = True
                         with tempfile.NamedTemporaryFile("r", suffix=".csv") as tf:
-                            cmd = ["perf", "stat", "-x,", "-o", tf.name, "-e", ",".join(events), "--"]
+                            cmd = ["perf", "stat", "-x,", "-o", tf.name, *(["-a"] if g in SYSTEM else []),
+                                   "-e", ",".join(events), "--"]
                             cpus = spread(t)
                             if cpus:
                                 cmd += ["taskset", "-c", cpus]
-                            exe, name = harness(a.ab, arm)
+                            exe, name, env = harness(a.ab, arm)
                             cmd += [exe, "child", name, str(t), a.file]
                             try:
-                                p = subprocess.run(cmd, capture_output=True, text=True)
+                                before = thp_faults()
+                                p = subprocess.run(cmd, capture_output=True, text=True,
+                                                   env={**os.environ, **env} if env else None)
+                                after = thp_faults()
+                                rec["thp_faults"] = after - before if None not in (before, after) else None
                             except OSError as e:
                                 rec["err"] = f"perf did not start: {e}"
                                 out.write(json.dumps(rec) + "\n")
@@ -208,6 +262,10 @@ def report(a):
             if "events" in r and r["events"] != GROUPS[key[3]]:
                 errors.append(f"{key}: counted {r['events']}, not the group named {GROUPS[key[3]]}")
                 continue
+            if bool(r.get("system")) != (key[3] in SYSTEM):
+                errors.append(f"{key}: counted {'system-wide' if r.get('system') else 'for the process'}, "
+                              f"not as the group is named")
+                continue
             rows[key] = r
             if r.get("err") or r.get("rc") != 0 or r.get("child_err"):
                 errors.append(f"{key}: the run failed: {r.get('err') or r.get('child_err') or r.get('rc')}")
@@ -236,21 +294,26 @@ def report(a):
             errors.append(f"--workers {spec!r}: not ARM=N")
         else:
             workers[arm] = int(n)
-    if "task-clock" in sum(GROUPS, []):
-        for k, r in rows.items():
-            if "task-clock" in GROUPS[k[3]] and not (
-                    isinstance(r.get("wall"), (int, float)) and r["wall"] > 0):
-                errors.append(f"{k}: no wall for the busy share")
+    walled = {"task-clock"} | {num for _, kind, num, _ in DERIVED if kind == "bw"}
+    for k, r in rows.items():
+        if walled & set(GROUPS[k[3]]) and not (isinstance(r.get("wall"), (int, float)) and r["wall"] > 0):
+            errors.append(f"{k}: no wall for the busy share or a bandwidth")
     if errors:
         print(f"VOID: the counters do not make the registered run ({len(errors)} problems); nothing reported")
         for e in errors[:25]:
             print(f"  {e}")
         return 1
 
+    def record(arm, t, r, e):
+        return rows[(arm, t, r, next(i for i, ev in enumerate(GROUPS) if e in ev))]
+
+    def count(rec, e):
+        c = rec["counts"][e]
+        return c[0] * 2 ** 20 if len(c) > 3 and c[3] == "MiB" else c[0]
+
     def per_byte(arm, t, r, e):
-        g = next(i for i, ev in enumerate(GROUPS) if e in ev)
-        rec = rows[(arm, t, r, g)]
-        return rec["counts"][e][0] / rec["out"]
+        rec = record(arm, t, r, e)
+        return count(rec, e) / rec["out"]
 
     events = []
     for ev in GROUPS:
@@ -297,7 +360,75 @@ def report(a):
                   f"instructions; store-forward blocks {1000 * med('ld_blocks.store_forward') / ins:.3f}; stalls "
                   f"{stall / cyc:.1%} of cycles (memory {med('cycle_activity.stalls_mem_any') / cyc:.1%}, "
                   f"L3 miss {med('cycle_activity.stalls_l3_miss') / cyc:.1%})")
+        if a.groups:
+            derived(arms, t, events, a.reps, rows, record, count, per_byte)
     return 0
+
+
+# the miss cost's derived figures (`just bench-miss-cost`): (label, kind, numerator, denominator);
+# "ratio" a ratio of counts, "bw" GB/s at a byte a count (with the numerator's bytes a count)
+OFFCORE = "offcore_requests_outstanding."
+DERIVED = [
+    ("IPC", "ratio", "instructions", "cycles"),
+    ("stalls, share of cycles", "ratio", "cycle_activity.stalls_total", "cycles"),
+    ("L2-miss stalls, share of cycles", "ratio", "cycle_activity.stalls_l2_miss", "cycles"),
+    ("L3-miss stalls, share of cycles", "ratio", "cycle_activity.stalls_l3_miss", "cycles"),
+    ("L3 hits, share of L2-miss loads", "hit", "mem_load_retired.l3_hit", "mem_load_retired.l3_miss"),
+    ("page walks, share of cycles", "ratio", "dtlb_load_misses.walk_active", "cycles"),
+    ("cycles a page walk", "ratio", "dtlb_load_misses.walk_pending", "dtlb_load_misses.walk_completed"),
+    ("demand-read latency, cycles", "ratio", OFFCORE + "demand_data_rd", "offcore_requests.demand_data_rd"),
+    ("L3-miss demand-read latency, cycles", "ratio", OFFCORE + "l3_miss_demand_data_rd",
+     "offcore_requests.l3_miss_demand_data_rd"),
+    ("L3-miss demand reads in flight, when any", "ratio", OFFCORE + "l3_miss_demand_data_rd",
+     OFFCORE + "cycles_with_l3_miss_demand_data_rd"),
+    ("data reads in flight, when any", "ratio", OFFCORE + "all_data_rd", OFFCORE + "cycles_with_data_rd"),
+    ("cycles with a data read out, share", "ratio", OFFCORE + "cycles_with_data_rd", "cycles"),
+    ("offcore data reads, GB/s", "bw", "offcore_requests.all_data_rd", 64),
+    ("L3-miss demand reads, GB/s", "bw", "offcore_requests.l3_miss_demand_data_rd", 64),
+    ("L3-miss retired loads, GB/s", "bw", "mem_load_retired.l3_miss", 64),
+    ("DRAM reads (IMC), GB/s", "bw", "uncore_imc/data_reads/", 1),
+    ("DRAM writes (IMC), GB/s", "bw", "uncore_imc/data_writes/", 1),
+    ("DRAM reads (IMC CAS), GB/s", "bw", "unc_m_cas_count.rd", 64),
+    ("DRAM writes (IMC CAS), GB/s", "bw", "unc_m_cas_count.wr", 64),
+]
+
+
+def derived(arms, t, events, reps, rows, record, count, per_byte):
+    """The miss cost's table: each derived figure the groups allow, for each arm, the median over
+    the reps (a ratio within one group read rep by rep, across groups as the ratio of medians)"""
+    def figure(arm, kind, num, den):
+        if num not in events or (kind != "bw" and den not in events):
+            return None
+        if kind == "bw":
+            return statistics.median(count(record(arm, t, r, num), num) * den / record(arm, t, r, num)["wall"] / 1e9
+                                     for r in range(reps))
+        if kind == "hit":
+            h = statistics.median(per_byte(arm, t, r, num) for r in range(reps))
+            m = statistics.median(per_byte(arm, t, r, den) for r in range(reps))
+            return h / (h + m) if h + m > 0 else None
+        if record(arm, t, 0, num) is record(arm, t, 0, den):
+            vals = [count(record(arm, t, r, num), num) / count(record(arm, t, r, num), den)
+                    for r in range(reps) if count(record(arm, t, r, num), den) > 0]
+            return statistics.median(vals) if vals else None
+        n = statistics.median(per_byte(arm, t, r, num) for r in range(reps))
+        d = statistics.median(per_byte(arm, t, r, den) for r in range(reps))
+        return n / d if d > 0 else None
+
+    table = []
+    for label, kind, num, den in DERIVED:
+        vals = [figure(arm, kind, num, den) for arm in arms]
+        if any(v is not None for v in vals):
+            table.append((label, vals))
+    thp = [[rows[k].get("thp_faults") for k in rows if k[0] == arm and k[1] == t] for arm in arms]
+    if any("+thp" in arm for arm in arms) and all(v is not None for vs in thp for v in vs):
+        table.append(("THP faults a run (system-wide)", [statistics.median(vs) for vs in thp]))
+    if not table:
+        return
+    print(f"\n  the miss cost at {t} threads: the median over {reps} reps "
+          "(latency in core cycles; GB/s against the child's wall, an upper bound)")
+    print(f"  {'figure':42s} " + " ".join(f"{arm[-20:]:>20s}" for arm in arms))
+    for label, vals in table:
+        print(f"  {label:42s} " + " ".join(f"{'-':>20s}" if v is None else f"{v:20.4f}" for v in vals))
 
 
 def main(argv):
