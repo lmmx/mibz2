@@ -347,6 +347,103 @@ def main():
         {**r, "cpus": "0,1,2"} if r["arm"] == "mibz2" and r["threads"] == 16 and r["round"] == 3 else r
         for r in low()], 1, ["VOID", "not unpinned"]))
 
+    # candidates judged by count (`just bench-workers-at-cores`): production's `mibz2` the
+    # reference at 8 and 10 threads asked, within the cores (pinned one CPU a core, a spinner on
+    # a free core at 8, none at 10); 7/28, 8/32 and 9/36 judged at 10, 7/28 and 6/24 at 8; every
+    # other cell reported, not judged; one Holm family of five cells, a verdict and a choice a count
+    atc_cands = ["mibz2-occ-6-24", "mibz2-occ-7-28", "mibz2-occ-8-32", "mibz2-occ-9-36"]
+    atc_at = {"mibz2-occ-6-24": "8", "mibz2-occ-7-28": "8,10", "mibz2-occ-8-32": "10", "mibz2-occ-9-36": "10"}
+
+    def atc(steps=None, guard=None, mem=None, edit=None):
+        """at-cores-shaped runs: `steps`, `guard` and `mem` map (arm, threads) to its main-corpus
+        step, its text step and its peak memory over production's (default level); `edit` a
+        function of a record returning it changed, or None to leave it out"""
+        import random
+        steps, guard, mem = steps or {}, guard or {}, mem or {}
+        rng = random.Random(17)
+        rows = []
+        for i in range(R):
+            for corpus, out in (("wikidata-x4", (838800784, "aa")), ("text", (49067679, "bb"))):
+                for t in (8, 10):
+                    base = 0.5 * (1 + 0.02 * rng.uniform(-1, 1))
+                    wig = 1 + 0.01 * (1 if i % 2 else -1)
+                    for arm in ["mibz2", *atc_cands]:
+                        f = (steps if corpus == "wikidata-x4" else guard).get((arm, t), 1.0)
+                        wall = base * (f * wig if arm != "mibz2" else 1.0)
+                        r = {"round": i, "corpus": corpus, "threads": t, "arm": arm, "termination": "success",
+                             "wall": wall, "cpu": wall * t * 0.9, "rss_kb": 100000 * t * mem.get((arm, t), 1.0),
+                             "out": out[0], "hash": out[1], "cpus": pinned(t)}
+                        if t <= 9:
+                            r["held_spinner"] = {"cpu": 19, "auto": True, "overlap": False,
+                                                 "decoder_cpus": pinned(t), "owner": "run", "cpu_s": 2.0}
+                        r = edit(r) if edit else r
+                        if r is not None:
+                            rows.append(r)
+        return rows
+
+    def atc_args(at=None, cands=None):
+        at = atc_at if at is None else at
+        return ["--ref", "mibz2", *sum((["--cand", c] for c in (cands or atc_cands)), []),
+                *sum((["--judge-at", f"{c}={ts}"] for c, ts in at.items()), []), "--main", "wikidata-x4",
+                "--guard", "text", "--judged", "8,10", "--controls", "", "--hold-max-threads", "9"]
+
+    def first(arm, t, corpus="wikidata-x4", rnd=3):
+        return lambda r: r["arm"] == arm and r["threads"] == t and r["corpus"] == corpus and r["round"] == rnd
+
+    results.append(expect_low("by count: 7 workers adopt at 10, the rest reported", atc({("mibz2-occ-7-28", 10): 0.95}), 0, [
+        "VERDICT for mibz2-occ-7-28 at 10 threads: ADOPTS", "VERDICT for mibz2-occ-8-32 at 10 threads: NOT ADOPTED",
+        "VERDICT for mibz2-occ-9-36 at 10 threads: NOT ADOPTED", "VERDICT for mibz2-occ-7-28 at 8 threads: NOT ADOPTED",
+        "VERDICT for mibz2-occ-6-24 at 8 threads: NOT ADOPTED", "THE CHOICE at 10 threads: mibz2-occ-7-28",
+        "THE CHOICE at 8 threads: none; the reference stays", "over the 5 main-corpus cells",
+        "Context at 10 threads, reported and not judged:\n    mibz2-occ-6-24 wikidata-x4",
+        "Context at 8 threads, reported and not judged:\n    mibz2-occ-8-32 wikidata-x4"],
+        args=atc_args(), absent=["VERDICT for mibz2-occ-6-24 at 10", "VERDICT for mibz2-occ-9-36 at 8",
+                                 "VERDICT for mibz2-occ-8-32 at 8", "mibz2-occ-6-24 at 10 p"]))
+    results.append(expect_low("by count: a gain where an arm is not judged judges nothing",
+                              atc({("mibz2-occ-6-24", 10): 0.9, ("mibz2-occ-9-36", 8): 0.9}), 0, [
+        "THE CHOICE at 10 threads: none", "THE CHOICE at 8 threads: none", "mibz2-occ-6-24 wikidata-x4: 0.9"],
+        args=atc_args()))
+    results.append(expect_low("by count: two adopt at 10, the faster chosen; one at 8",
+                              atc({("mibz2-occ-8-32", 10): 0.97, ("mibz2-occ-7-28", 10): 0.94,
+                                   ("mibz2-occ-6-24", 8): 0.96}), 0, [
+        "THE CHOICE at 10 threads: mibz2-occ-7-28, of those that ADOPT there (mibz2-occ-7-28, mibz2-occ-8-32)",
+        "THE CHOICE at 8 threads: mibz2-occ-6-24"], args=atc_args()))
+    results.append(expect_low("by count: each count read alone (a loss at 10 leaves 8's adoption)",
+                              atc({("mibz2-occ-7-28", 10): 0.96, ("mibz2-occ-7-28", 8): 0.96},
+                                  guard={("mibz2-occ-7-28", 10): 1.05}), 0, [
+        "VERDICT for mibz2-occ-7-28 at 10 threads: A FINDING, NOT ADOPTED. A gain (Holm), but SLOWER on ['text']",
+        "VERDICT for mibz2-occ-7-28 at 8 threads: ADOPTS", "THE CHOICE at 8 threads: mibz2-occ-7-28",
+        "THE CHOICE at 10 threads: none"], args=atc_args()))
+    results.append(expect_low("by count: held on memory at 8",
+                              atc({("mibz2-occ-6-24", 8): 0.96}, mem={("mibz2-occ-6-24", 8): 1.2}), 0, [
+        "VERDICT for mibz2-occ-6-24 at 8 threads: HELD ON MEMORY", "THE CHOICE at 8 threads: none"],
+        args=atc_args()))
+    results.append(expect_low("by count: a candidate without --judge-at", atc(), 1, ["VOID", "has no --judge-at"],
+                              args=atc_args(at={k: v for k, v in atc_at.items() if k != "mibz2-occ-9-36"})))
+    results.append(expect_low("by count: --judge-at for an arm not a candidate", atc(), 1,
+                              ["VOID", "mibz2 is not a candidate"], args=atc_args(at={**atc_at, "mibz2": "10"})))
+    results.append(expect_low("by count: a count not judged", atc(), 1, ["VOID", "[12] not judged counts"],
+                              args=atc_args(at={**atc_at, "mibz2-occ-8-32": "10,12"})))
+    results.append(expect_low("by count: a judged count with no candidate", atc(), 1,
+                              ["VOID", "the judged count 8 judges no candidate"],
+                              args=atc_args(at={**atc_at, "mibz2-occ-6-24": "10", "mibz2-occ-7-28": "10"})))
+    results.append(expect_low("by count: --judge-at malformed", atc(), 1, ["VOID", "not ARM=COUNTS"],
+                              args=atc_args(at={**atc_at, "mibz2-occ-9-36": ""})))
+    results.append(expect_low("by count: unpinned at 10 threads", atc(edit=lambda r: {**r, "cpus": "all"}
+                                                                       if first("mibz2-occ-8-32", 10)(r) else r), 1,
+                              ["VOID", "its CPUs 'all' missing or malformed"], args=atc_args()))
+    results.append(expect_low("by count: a spinner at 10 threads", atc(
+        edit=lambda r: {**r, "held_spinner": {"cpu": 19, "overlap": False}} if first("mibz2", 10)(r) else r), 1,
+        ["VOID", "past the hold limit"], args=atc_args()))
+    results.append(expect_low("by count: no spinner at 8 threads", atc(
+        edit=lambda r: {k: v for k, v in r.items() if k != "held_spinner"} if first("mibz2-occ-6-24", 8)(r) else r),
+        1, ["VOID", "no spinner recorded"], args=atc_args()))
+    results.append(expect_low("by count: a context arm's cell missing", atc(
+        edit=lambda r: None if first("mibz2-occ-9-36", 8, "text")(r) else r), 1,
+        ["VOID", "roster keys missing"], args=atc_args()))
+    results.append(expect_low("by count: no --judge-at, the old reading", low({"mibz2-occ-7-28": 0.96}), 0,
+                              ["THE CHOICE: mibz2-occ-7-28"], absent=["judged by count", "THE CHOICE at"]))
+
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

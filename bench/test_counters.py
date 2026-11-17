@@ -36,6 +36,8 @@ with open(out, "w") as f:
             f.write(f"<not supported>,,{e},0,100.00,,\n")
         elif mode == "notcounted" and e == "branch-misses":
             f.write(f"<not counted>,,{e},0,0.00,,\n")
+        elif e == "task-clock":
+            f.write(f"{4000.25 * (2 if 'stop' in arm else 1):.2f},msec,{e},1000,100.00,,\n")
         elif mode == "multiplexed" and e == "LLC-load-misses":
             f.write(f"{v},,{e},500,50.00,,\n")
         else:
@@ -159,6 +161,47 @@ def main():
     ok = code == 1 and "runs missing" in out
     results.append(ok)
     print(f"{'ok  ' if ok else 'FAIL'} a candidate's runs missing: exit {code}, {'found' if 'runs missing' in out else 'missing'} 'runs missing'")
+    # the at-cores diagnostic (`just bench-workers-at-cores`): production's `mibz2` (10 workers
+    # at 10 threads, given) the reference, 9/36 to 6/24 the candidates (their workers read from
+    # their names); cycles beside ref-cycles for the clock, task-clock for the busy share
+    atc_groups = "cycles,ref-cycles,instructions,l2_rqsts.miss,task-clock;cycles,LLC-load-misses"
+    atc_cands = ["mibz2-occ-9-36", "mibz2-occ-8-32", "mibz2-occ-7-28", "mibz2-occ-6-24"]
+    atc_file = d / "atc.jsonl"
+    subprocess.run([sys.executable, str(HERE / "counters.py"), "run", "--ab", str(d / "ab"),
+                    *sum((["--arm", x] for x in ["mibz2", *atc_cands]), []), "--threads", "10", "--reps", "2",
+                    "--file", "x.bz2", "--out", str(atc_file), "--groups", atc_groups],
+                   env=e, capture_output=True, check=True)
+
+    def atc_report(extra=()):
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            code = counters.main(["counters.py", "report", str(atc_file), "--ref", "mibz2",
+                                  *sum((["--cand", c] for c in atc_cands), []), "--threads", "10", "--reps", "2",
+                                  "--groups", atc_groups, *extra])
+        return code, buf.getvalue()
+
+    code, out = atc_report(("--workers", "mibz2=10"))
+    # the stub: cycles 1e6 and ref-cycles 2e6 in the first group; task-clock 4000.25 msec, the wall 0.5 s
+    want = ["mibz2: IPC 3.000; cycles over ref-cycles 0.500; busy share 0.800 a worker (task-clock over wall x 10)",
+            "mibz2-occ-8-32: IPC 3.000; cycles over ref-cycles 0.500; busy share 1.000 a worker",
+            "mibz2-occ-6-24: IPC 3.000; cycles over ref-cycles 0.500; busy share 1.333 a worker", "ref-cycles",
+            "task-clock"]
+    ok = code == 0 and all(w in out for w in want)
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} the clock and the busy share, W 10 to 6: exit {code}, "
+          + ", ".join(f"{'found' if w in out else 'missing'} {w!r}" for w in want))
+    if not ok:
+        print(out)
+    code, out = atc_report()
+    ok = code == 0 and "mibz2: IPC 3.000; cycles over ref-cycles 0.500\n" in out and "x 9)" in out
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} production's busy share left out without its workers given: exit {code}")
+    if not ok:
+        print(out)
+    code, out = atc_report(("--workers", "mibz2=ten"))
+    ok = code == 1 and "VOID" in out and "not ARM=N" in out
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} --workers malformed: exit {code}, VOID")
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

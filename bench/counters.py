@@ -6,6 +6,7 @@ Standard library only.
 
     counters.py run --ab AB --arm A --arm B --threads 1,10 --reps 10 --file F --out C.jsonl [--events l2]
     counters.py report C.jsonl --ref A --cand B [--cand C ...] --threads 1,10 --reps 10 [--events l2]
+                       [--workers ARM=N ...]
     (either: --groups 'cycles,instructions,l2_rqsts.miss;cycles,LLC-load-misses' in place of --events)
 
 **Arms.** `NAME` runs `AB child NAME`; `NAME@EXE` runs another build's harness, `EXE child NAME`
@@ -17,6 +18,16 @@ diagnostic (#145, the Coordinator's ruling on #506). `--groups`: the groups name
 groups and `,` between a group's events, in place of a set (`just bench-workers-low`'s occupancy
 diagnostic, its events those of `perf list` on the machine that runs it); the run and the report
 must name the same groups.
+
+**The clock and the busy share** (`just bench-workers-at-cores`): with named groups, where
+`ref-cycles` is counted beside `cycles`, the report gives cycles over ref-cycles (the core clock
+over the reference clock, the turbo and frequency residual). Where the software event
+`task-clock` is counted (msec, kept as perf prints it), it gives a busy share a worker: the
+median over the reps of task-clock over (the child's wall × W). W is read from an occupancy
+arm's name (`mibz2-occ-N-S`: N) or given (`--workers ARM=N`, production's `mibz2` at its own
+plan); an arm of unknown W has no share printed. task-clock counts every thread of the process
+(the reader and the scanner beside the workers, and the start-up outside the child's wall), so
+the share is an upper bound on the workers' own.
 
 **Several candidates** (`--cand` repeated, `bench-workers-low`): each read against the one
 reference, a column and a ratio each; the run's arms are the reference and every candidate.
@@ -107,7 +118,7 @@ def parse_perf(path):
             v = int(value)
         except ValueError:
             try:
-                v = int(float(value))
+                v = float(value)
             except ValueError:
                 v = None
         got[event] = (v, pct, value)
@@ -119,6 +130,12 @@ def groups(a):
     if a.groups:
         return [[e for e in g.split(",") if e] for g in a.groups.split(";") if g.strip(",")]
     return EVENT_SETS[a.events]
+
+
+def occ_workers(arm):
+    """An occupancy arm's workers (`mibz2-occ-N-S`: N), else None"""
+    n, _, s = arm.removeprefix("mibz2-occ-").partition("-") if arm.startswith("mibz2-occ-") else ("", "", "")
+    return int(n) if n.isdigit() and s.isdigit() and int(n) > 0 else None
 
 
 def run(a):
@@ -212,6 +229,18 @@ def report(a):
         errors.append(f"{len(missing)} of {len(roster)} runs missing, e.g. {missing[:3]}")
     if len(outputs) > 1:
         errors.append(f"the arms' outputs differ: {sorted(outputs, key=str)[:3]}")
+    workers = {}
+    for spec in a.workers:
+        arm, _, n = spec.rpartition("=")
+        if not arm or not n.isdigit() or int(n) < 1:
+            errors.append(f"--workers {spec!r}: not ARM=N")
+        else:
+            workers[arm] = int(n)
+    if "task-clock" in sum(GROUPS, []):
+        for k, r in rows.items():
+            if "task-clock" in GROUPS[k[3]] and not (
+                    isinstance(r.get("wall"), (int, float)) and r["wall"] > 0):
+                errors.append(f"{k}: no wall for the busy share")
     if errors:
         print(f"VOID: the counters do not make the registered run ({len(errors)} problems); nothing reported")
         for e in errors[:25]:
@@ -243,8 +272,19 @@ def report(a):
             def med(e):
                 return statistics.median(per_byte(arm, t, r, e) for r in range(a.reps))
             if a.groups:
+                parts = []
                 if "cycles" in events and "instructions" in events:
-                    print(f"  {arm}: IPC {med('instructions') / med('cycles'):.3f}")
+                    parts.append(f"IPC {med('instructions') / med('cycles'):.3f}")
+                if "cycles" in events and "ref-cycles" in events:
+                    parts.append(f"cycles over ref-cycles {med('cycles') / med('ref-cycles'):.3f}")
+                w = workers.get(arm) or occ_workers(arm)
+                if "task-clock" in events and w:
+                    g = next(i for i, ev in enumerate(GROUPS) if "task-clock" in ev)
+                    share = statistics.median(rows[(arm, t, r, g)]["counts"]["task-clock"][0] / 1000
+                                              / (rows[(arm, t, r, g)]["wall"] * w) for r in range(a.reps))
+                    parts.append(f"busy share {share:.3f} a worker (task-clock over wall x {w})")
+                if parts:
+                    print(f"  {arm}: {'; '.join(parts)}")
                 continue
             cyc, ins = med("cycles"), med("instructions")
             if a.events == "l2":
@@ -280,6 +320,8 @@ def main(argv):
     p.add_argument("--reps", type=int, default=10)
     p.add_argument("--events", choices=sorted(EVENT_SETS), default="default")
     p.add_argument("--groups", default="", help="event groups, ';' between groups, in place of --events")
+    p.add_argument("--workers", action="append", default=[], metavar="ARM=N",
+                   help="an arm's workers, for the busy share (an occupancy arm's are read from its name)")
     a = ap.parse_args(argv[1:])
     return run(a) if a.cmd == "run" else report(a)
 

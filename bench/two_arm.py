@@ -8,6 +8,7 @@ correction, #145 REVIEW 6921090225), for `just bench-cores-less-one` (#481) and 
     two_arm.py RUNS.jsonl --ref ARM --cand ARM [--cand ARM ...] --main CORPUS --guard CORPUS
                --judged 12,16,20 --controls 9,10 --env ENV.json [--rounds 10]
                [--cores 10 --cpus 20] [--hold-max-threads 9] [--context ARM ...]
+               [--judge-at ARM=COUNTS ...]
 
 **Several candidates** (`--cand` repeated; `just bench-workers-window`): each is read against the one
 reference as below, but Holm's family is every candidate's main-corpus judged cells together, and
@@ -23,6 +24,19 @@ run beside the others and checked with them (the roster, the records, the pinnin
 spinner), whose steps over the reference are reported but not judged. They enter no Holm family,
 no loss screen, no memory gate, no verdict and no choice (`bench-workers-low`'s production
 `mibz2`, after #510 no longer the reference).
+
+**Candidates judged by count** (`--judge-at ARM=T[,T...]`, repeated, one for every candidate;
+none by default, and then nothing here changes; `just bench-workers-at-cores`): every arm runs
+at every judged count, as `ab run` crosses them, but a candidate is judged only at the counts
+its `--judge-at` names, and each count is read on its own, since production's plan is chosen
+count by count. At each judged count, each candidate judged there has its own verdict, read
+from its two cells at that count alone (its main-corpus step for the gain, both corpora for
+the loss screen and the memory gate), and the choice is made among those that ADOPT there, by
+the lowest step (the geometric mean of the paired ratios) on the main corpus. Holm's family is
+still one: every candidate's main-corpus cell at every count it is judged at, together. An arm's
+cell at a count where it is not judged (a candidate's elsewhere, and every context arm's) is
+reported beside them, not judged. A `--judge-at` arm that is not a candidate, a count that is not
+judged, a candidate without one, or a judged count with no candidate is VOID.
 
 **Arms.** A record's arm is canonical: `NAME` for this build's harness, and `NAME@build-X`
 for another build's (`ab run`'s `NAME@EXE` arm, EXE under a directory `build-X`).
@@ -288,6 +302,98 @@ def load(path, roster, errors, meta=None):
     return rows
 
 
+def parse_judge_at(specs, cands, judged, errors):
+    """`--judge-at ARM=T[,T...]`'s map {candidate: its judged counts}; {} without any (errors
+    appended for a malformed or incomplete set)"""
+    out = {}
+    for spec in specs:
+        arm, eq, counts = spec.rpartition("=")
+        try:
+            ts = {int(t) for t in counts.split(",") if t}
+        except ValueError:
+            ts = set()
+        if not eq or not arm or not ts:
+            errors.append(f"--judge-at {spec!r}: not ARM=COUNTS")
+            continue
+        if arm not in cands:
+            errors.append(f"--judge-at {spec!r}: {arm} is not a candidate")
+        if arm in out:
+            errors.append(f"--judge-at {spec!r}: {arm} named twice")
+        if ts - set(judged):
+            errors.append(f"--judge-at {spec!r}: {sorted(ts - set(judged))} not judged counts")
+        out[arm] = ts
+    if out:
+        for c in cands:
+            if c not in out:
+                errors.append(f"the candidate {c} has no --judge-at")
+        for t in judged:
+            if not any(t in ts for ts in out.values()):
+                errors.append(f"the judged count {t} judges no candidate")
+    return out
+
+
+def by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak):
+    """The verdicts with candidates judged by count (`--judge-at`): one Holm family over every
+    judged main-corpus cell, then at each count a verdict for each candidate judged there and
+    the choice among those that ADOPT"""
+    steps, ps, mem, gm = {}, {}, {}, {}
+    here = {t: [c for c in cands if t in judge_at[c]] for t in judged}
+    for t in judged:
+        print(f"\n{t} threads: the judged cells, each candidate over {ref}, the paired rounds' wall ratios: "
+              f"geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) "
+              f"over {ref}'s")
+        for cand in here[t]:
+            print(f"  {cand}")
+            for corpus in corpora:
+                g, lo, hi, p = step(cell(corpus, t, cand))
+                steps[(cand, t, corpus)] = label(lo, hi)
+                mem[(cand, t, corpus)] = peak(corpus, cand, t) / peak(corpus, ref, t)
+                if corpus == a.main:
+                    ps[(cand, t)], gm[(cand, t)] = p, g
+                print(f"    {corpus}{' (gain family)' if corpus == a.main else ' (loss and memory guard)'}: "
+                      f"{g:.4f} [{lo:.4f}, {hi:.4f}] {steps[(cand, t, corpus)]}"
+                      + (f"; p {p:.2e}" if corpus == a.main else "") + f"; memory {mem[(cand, t, corpus)]:.3f}")
+        others = [arm for arm in (*cands, *context) if arm not in here[t]]
+        if others:
+            print(f"  Context at {t} threads, reported and not judged:")
+            for arm in others:
+                for corpus in corpora:
+                    g, lo, hi, _ = step(cell(corpus, t, arm))
+                    print(f"    {arm} {corpus}: {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; "
+                          f"memory {peak(corpus, arm, t) / peak(corpus, ref, t):.3f}")
+    rejected = holm(ps, ALPHA)
+    print(f"\nHolm at family α {ALPHA} over the {len(ps)} main-corpus cells: "
+          + ", ".join(f"{c} at {t} p {ps[(c, t)]:.2e} {'rejects' if (c, t) in rejected else 'does not'}"
+                      for c, t in sorted(ps, key=ps.get)))
+    for t in judged:
+        adopts = []
+        for cand in here[t]:
+            slower = [c for c in corpora if steps[(cand, t, c)] == "SLOWER"]
+            over = [c for c in corpora if mem[(cand, t, c)] > RSS_GATE]
+            head = f"VERDICT for {cand} at {t} threads"
+            print()
+            if (cand, t) in rejected and not slower and not over:
+                adopts.append(cand)
+                print(f"{head}: ADOPTS. A gain (Holm), neither cell SLOWER, and peak memory within {RSS_GATE:.2f} "
+                      f"of the reference's in both corpora")
+            elif (cand, t) in rejected and not slower:
+                print(f"{head}: HELD ON MEMORY. A gain (Holm) and neither cell SLOWER, but peak memory is above "
+                      f"{RSS_GATE:.2f} of the reference's on {over}: PERFORMANCE-POLICY rule 4, the Coordinator's to weigh")
+            elif (cand, t) in rejected:
+                print(f"{head}: A FINDING, NOT ADOPTED. A gain (Holm), but SLOWER on {slower}")
+            else:
+                print(f"{head}: NOT ADOPTED. No gain established (Holm does not reject)"
+                      + (f"; SLOWER on {slower}" if slower else "") + (f"; memory above the gate on {over}" if over else ""))
+        print()
+        if adopts:
+            best = min(adopts, key=lambda c: gm[(c, t)])
+            print(f"THE CHOICE at {t} threads: {best}, of those that ADOPT there ({', '.join(adopts)}), the lowest "
+                  f"geometric mean of its main-corpus step ({gm[(best, t)]:.4f})")
+        else:
+            print(f"THE CHOICE at {t} threads: none; the reference stays")
+    return 0
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("runs")
@@ -305,6 +411,8 @@ def main(argv):
                     help="the spinner's limit as the run had it; 0 for a run without one")
     ap.add_argument("--context", action="append", default=[],
                     help="an arm checked with the run and reported over the reference, not judged")
+    ap.add_argument("--judge-at", action="append", default=[], metavar="ARM=COUNTS",
+                    help="a candidate judged at these counts alone; with any, each judged count is read alone")
     a = ap.parse_args(argv[1:])
     judged = [int(t) for t in a.judged.split(",")]
     controls = [int(t) for t in a.controls.split(",") if t]
@@ -315,13 +423,16 @@ def main(argv):
     arms = [ref, *cands, *context]
     if set(judged) & set(controls) or len(set(arms)) != len(arms):
         errors.append("the judged and control counts overlap, or two arms are one")
+    judge_at = parse_judge_at(a.judge_at, cands, judged, errors)
     corpora = [a.main, a.guard]
     roster = {(c, arm, t, i) for c in corpora for arm in arms for t in judged + controls for i in range(R)}
     core_of = topology(a.env, a.cores, a.cpus, errors)
     rows = load(a.runs, roster, errors, None if core_of is None else (core_of, a.cores, a.hold_max_threads))
     print(f"records {len(rows)}; roster {len(roster)} ({ref} and {' and '.join(cands)}"
           + (f"; context {', '.join(context)}" if context else "") + f"; {a.main} and {a.guard}; "
-          f"judged {judged}, controls {controls}; {R} rounds)")
+          f"judged {judged}, controls {controls}; {R} rounds)"
+          + (("; judged by count: " + ", ".join(f"{c} at {sorted(ts)}" for c, ts in judge_at.items()))
+             if judge_at else ""))
 
     def cell(corpus, t, cand):
         return [math.log(rows[(corpus, cand, t, i)]["wall"] / rows[(corpus, ref, t, i)]["wall"]) for i in range(R)]
@@ -348,6 +459,8 @@ def main(argv):
         if len(errors) > 25:
             print(f"  ... and {len(errors) - 25} more")
         return 1
+    if judge_at:
+        return by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak)
 
     steps, ps, mem, gm = {}, {}, {}, {}
     for cand in cands:
