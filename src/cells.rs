@@ -493,7 +493,7 @@ impl Kernel {
             return Err(Refusal::Invalid);
         }
         // (the 12-byte rules' arm: a length fits 20 bits)
-        if self.variant == LAZY_W12 && n > C12_LEN as usize {
+        if w12_variant(self.variant) && n > C12_LEN as usize {
             return Err(Refusal::Invalid);
         }
         // the kernel's first stage and induction: the shipped ones, or the lazy letters'
@@ -515,7 +515,7 @@ impl Kernel {
             // (research only, `phase-counters`: the writer's scope)
             #[cfg(feature = "phase-counters")]
             let _scope = crate::phase::Scope::new(crate::phase::Phase::Writer);
-            if self.variant == LAZY_W12 {
+            if w12_variant(self.variant) {
                 self.write_w12(word, len, n, out);
             } else {
                 self.write_cells(word, len, n, out);

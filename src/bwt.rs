@@ -19,7 +19,7 @@
 
 pub use crate::cells::{
     Cells, CellsKernel, CellsVariant, Counts as CellsCounts, ForcedCells, ForcedLazyCells,
-    ForcedW12LazyCells, LazyCells, W12LazyCells,
+    ForcedW12LazyCells, ForcedW12OneLazyCells, LazyCells, W12LazyCells, W12OneLazyCells,
 };
 #[cfg(feature = "memory-lever")]
 pub use crate::cells::{ForcedStagedCells, StagedCells};

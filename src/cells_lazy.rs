@@ -202,8 +202,9 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Result<(u32, u32, usize), Refusal> {
         match self.variant {
-            LAZY => self.induce_lazy::<false>(budget, out),
-            LAZY_W12 => self.induce_lazy::<true>(budget, out),
+            LAZY => self.induce_lazy::<false, false>(budget, out),
+            LAZY_W12 => self.induce_lazy::<true, false>(budget, out),
+            LAZY_W12_ONE => self.induce_lazy::<true, true>(budget, out),
             #[cfg(feature = "memory-lever")]
             STAGED_RULES => self.induce_cells_staged(budget, out),
             _ => self.induce_cells(budget, out),
@@ -410,9 +411,10 @@ impl Kernel {
     /// this kernel for the block, and nothing has changed since.
     ///
     /// `R12` (the 12-byte rules' arm, `cells_w12.rs`): a rule is stored in 12 bytes, its
-    /// children packed, and its word is its index.
+    /// children packed, and its word is its index. `ONE` (with `R12`, the `LAZY_W12_ONE`
+    /// arm): each rule written with one 16-byte store (`wr_rule12`), the same bytes.
     #[inline(never)]
-    fn induce_lazy<const R12: bool>(
+    fn induce_lazy<const R12: bool, const ONE: bool>(
         &mut self,
         budget: usize,
         out: &mut Vec<u8>,
@@ -653,6 +655,11 @@ impl Kernel {
                             base.add(top + la.min(16) as usize),
                             base.add((bw >> 32) as usize),
                         );
+                    } else if R12 && ONE {
+                        // (the one-store arm) the same 12 bytes and 4 of zeros, one store:
+                        // the region holds `budget` rules of 16 bytes (`wr_rule12`)
+                        debug_assert!(rp + 16 <= lay.ends[3], "a rule's store past the rules");
+                        wr_rule12(base, rp, pack12(aw), pack12(bw));
                     } else if R12 {
                         // (the 12-byte rules' arm) the two children packed, 48 bits each
                         wr64(base, rp, pack12(aw));

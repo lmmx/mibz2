@@ -1181,6 +1181,24 @@ fn decode(
             h,
             last,
         ),
+        // the one-store arms: `mibz2-w12` and `mibz2-workers-w12` with each 12-byte rule
+        // written by one 16-byte store, not two 8-byte ones (`bwt::W12OneLazyCells`; the same
+        // rules, byte for byte). Each differs from its 12-byte arm in that store alone
+        "mibz2-w12one" => drain(
+            mibz2::BzReader::parallel_lazy_as::<mibz2::bwt::W12OneLazyCells>(open()?, threads),
+            h,
+            last,
+        ),
+        "mibz2-workers-w12one" => drain(
+            mibz2::BzReader::parallel_workers_with::<mibz2::bwt::W12OneLazyCells>(
+                open()?,
+                threads,
+                mibz2::parallel::SLOTS_PER_THREAD * threads,
+                mibz2::Kernels::detect(),
+            ),
+            h,
+            last,
+        ),
         // the memory-lever experiment's two arms (research, `memory-lever` feature; #145
         // QUEUED 6901989466): `mibz2-workers-w` with Cells' lazy letters, or with its rules
         // staged and stored past the cache. The plan and the window are `mibz2-workers-w`'s,
