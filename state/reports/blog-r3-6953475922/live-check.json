@@ -1,0 +1,39 @@
+[
+  {
+    "name": "live-fresh",
+    "status": 200,
+    "url": "https://lmmx.github.io/mibz2/blog/2026-11-17-modelling-the-cache-to-rightsize-workers/?review=745a7381",
+    "sha256": "afd14f90e40a970191661e6f9b3942219373fc843ec725a3042e43ce14ea6761",
+    "new_dek": false,
+    "version054": false,
+    "headers": {
+      "server": "envoy",
+      "content-type": "text/html; charset=utf-8",
+      "last-modified": "Tue, 17 Nov 2026 16:05:14 GMT",
+      "access-control-allow-origin": "*",
+      "etag": "\"6afc7b3a-24ee6\"",
+      "expires": "Tue, 17 Nov 2026 16:17:39 GMT",
+      "cache-control": "max-age=600",
+      "x-proxy-cache": "MISS",
+      "x-github-request-id": "2D60:2ED7CB:1B2C29:1D03CB:6AFC7BCB",
+      "x-github-edge-region": "iad",
+      "accept-ranges": "bytes",
+      "date": "Tue, 17 Nov 2026 16:08:11 GMT",
+      "via": "1.1 varnish",
+      "age": "32",
+      "x-served-by": "cache-dfw-kdfw8210038-DFW",
+      "x-cache": "HIT",
+      "x-cache-hits": "1",
+      "x-timer": "S1794931691.063710,VS0,VE2",
+      "vary": "Accept-Encoding",
+      "x-fastly-request-id": "daec8b7e52038eec7a29dd2c9b950d25af3a858b",
+      "content-length": "151270",
+      "x-envoy-upstream-service-time": "26",
+      "connection": "close"
+    }
+  },
+  {
+    "name": "notes-live",
+    "error": "HTTP Error 404: Not Found"
+  }
+]
