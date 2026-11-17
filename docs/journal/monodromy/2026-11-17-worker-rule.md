@@ -175,3 +175,5 @@ table. Two defects in §2 are corrected here; §1's scores stand.
 - *Record 47's 4–9 GB/s* is a prediction, with prefetch traffic unknown.
 - *Record 48's scanner reading* rests on a flagged, unpinned trace plus the plateau and the idle
   CPUs. It is Conj, not C.
+
+**Scope (added 10:55; record 50).** The rule is a heuristic composition of separately estimated bounds, not a joint optimum. On the i9 it lands within 0.7% of the fitted model's joint optimum. F is end-of-block buffer capacity, a proxy for the working set. With the spec's own ν ≈ 0.16 W, N = 4 gives 3, not the 4 in §2's table. The safe default there stays eager 4 until the eager-trim run.
