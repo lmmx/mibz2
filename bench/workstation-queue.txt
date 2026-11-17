@@ -6,4 +6,5 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-workers-at-cores       bench/workers-at-cores    7/8/9 workers at 10 threads and 6/7 at 8, against production, within the cores (#515, stacked on #514; MONODROMY record 43 frozen before the data)
+bench-workers-confirm        bench/workers-confirm     7/28 past the cores and at 10, 6/24 at 8, against production, with held-out records and text at -1 (#520, stacked on #515)
+bench-w12-at-7               bench/w12-at-7            W12 against W16 at 7/28 past the cores, 9/36 as context (#519; combines #506 via #517 and #514)
