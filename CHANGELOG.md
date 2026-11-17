@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### <!-- 3 -->Performance
 
-- *(plan)* on the measured i9, seven lazy workers from 10 threads asked, with the window sized to them
+- *(plan)* on the measured i9, seven lazy workers from 10 threads asked, with the window sized to them ([#524](https://github.com/lmmx/mibz2/pull/524))
 
 ## [0.5.2](https://github.com/lmmx/mibz2/compare/v0.5.1...v0.5.2) - 2026-11-16
 
