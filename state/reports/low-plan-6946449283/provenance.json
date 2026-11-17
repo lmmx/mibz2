@@ -1,0 +1,12 @@
+{
+  "trigger": 6946449283,
+  "registration_commit": "b336315a88271193133df5f098f33c0e0bfb8793",
+  "archive_commit": "479a56d22e223ddebd0aaffe0a75c496b5efffb4",
+  "archive_sha256": "7d3af59a1b36b4d802e088ad4d2a954a6012e457eb001e858ca1788454aefa30",
+  "checker_tests": "90/90",
+  "exact_replay": true,
+  "independent_calculation": true,
+  "migration_verified": true,
+  "routing_audit": [],
+  "verdict": "PROCEED both exact lazy cells through scoped adoption; no kernel-switch HOLD"
+}
