@@ -403,7 +403,7 @@
   // what was measured there (the i9 at 10 threads). Without JavaScript the figure shows its
   // static stepped summary (.bf-l3-static) instead.
   const L3_SAY = {
-    1: "One footprint uses a tenth of the L3, and nothing competes with it for the cache. Not measured at 10 threads.",
+    1: "One footprint uses a tenth of the L3, and no other decoding worker competes with it for the cache (the scanner, the reader and the rest of the system still do). Not measured at 10 threads.",
     2: "Two footprints fill a fifth of the L3. Not measured at 10 threads; the model expects little contention this low.",
     3: "Three footprints fill under a third of the L3. Not measured at 10 threads; the model expects little contention this low.",
     4: "Four footprints fill 40% of the L3. Not measured at 10 threads; in the model, each worker added here still gains more than it costs the others.",
