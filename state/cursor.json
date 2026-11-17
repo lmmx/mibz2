@@ -2230,10 +2230,14 @@
     },
     {
       "trigger_comment_id": 6953475922,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "report_path": "state/reports/blog-r3-6953475922/report.md",
-      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_commit": "f3dba9877e11167c0b8d0ec02973e84213e929c6",
+      "source_commit": "745a7381ab72ca07675ddfcb000c4156f926c0eb",
+      "disposition": "REVISE article: causal exclusion exceeds unpinned evidence; missing failed eager-seven prediction and interval count; affinity summary too broad; live source mismatch; minor sweep/citation corrections.",
+      "review_comment_pr": 145
     }
   ],
   "active_delegations": [],
