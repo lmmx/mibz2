@@ -93,3 +93,38 @@ W\* = the smaller of ⌊m⌋ and ⌈m⌉ within 1%, where
 - **The kernel at trimmed counts, and N ≤ 4, wait on the eager-trim run.**
 - **Calibrated on one machine.** It ships off the i9 only after a transfer test, with a
   working-set measurement preferred to F.
+
+## Amendment (17 November, 11:00): what F is (C)
+
+The Coordinator corrected its 10:48 message: the 2.1 MB is the calibration journal's hot (reused)
+footprint per worker, not the buffer sum. §2 above inherited the wrong description.
+
+**1. What F is in records 45–50.**
+- *Records 45, 46 and 49:* F = 2.1 MB a lazy worker at -9, taken from #522.
+- *It matches record 39's census:* the lazy store is 29.5 B a letter (words, slots, entries,
+  bytes), and Wikidata at -9 has r = 69,048 letters a block (every 24th block). That is
+  **2.04 MB**. So F is the lazy kernel's per-letter store, an estimate of the reused working set,
+  not LLC residency.
+- *On the i9 at -9:* its absolute value cancels in W_L3, as before.
+
+**2. k's transfer used the buffer ratio as a stand-in. Yes.**
+- *Where:* records 48 and 50 used 0.355, the occupancy instrument's summed buffers (5.97 / 16.81
+  MB), as the hot-set ratio.
+- *The hot set counted directly:* -3 has r = 26,046 letters a block (every 72nd block, the same
+  offsets as -9's every 24th). The store is 0.77 MB, so the hot-set ratio is **0.377** (r/n:
+  0.0868 against 0.0767; letters are denser in smaller blocks).
+
+| slope ratio, -3 against -9 | k on the buffer ratio, 0.355 | **k on the hot-set ratio, 0.377** |
+|---|--:|--:|
+| cycles, W = 6–9 (0.138) | 1.91 | **2.03** |
+| LLC misses, W = 6–9 (0.114) | 2.10 | **2.23** |
+| cycles, W = 7–10 (0.164) | 1.74 | **1.85** |
+| LLC misses, W = 7–10 (0.135) | 1.94 | **2.05** |
+
+**What changes:**
+- *k:* with the hot set, k is **1.85–2.23, centred near 2.0–2.1**, about 0.1 higher than on the
+  buffers. §2's 1.7–2.3 by-buffer range is superseded; it compared buffers.
+- *W_L3 at -3:* 0.8 × 20 MiB / 0.77 MB is about 22, against record 45's "about 24". That changes
+  nothing at 10 threads, where the scanner binds (record 48).
+- *Still open:* the census counts what the kernel stores, not what it reuses within the L3's
+  window. A miss-ratio curve (§2) stays the stronger input.
