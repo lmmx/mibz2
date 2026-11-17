@@ -523,6 +523,78 @@ def main():
         edit=lambda r: {k: v for k, v in r.items() if k != "held_spinner"} if first("mibz2-occ-2-8", 4)(r) else r),
         1, ["VOID", "no spinner recorded"], args=swp_args()))
 
+    # eager against lazy at trimmed counts (`just bench-eager-trim`): production's `mibz2` the
+    # reference at 6, 4 and 10 threads asked (pinned one CPU a core; a spinner on a free core at
+    # 6 and 4, none at 10); eager and lazy 5/20 at 6, eager 3/12 at 4, eager and lazy 7/28 at
+    # 10. One Holm family of five cells, a verdict and a choice a count, and the eager arm over
+    # its lazy twin at 6 and 10 reported, not judged
+    ett_at = {"mibz2-oce-5-20": "6", "mibz2-occ-5-20": "6", "mibz2-oce-3-12": "4",
+              "mibz2-oce-7-28": "10", "mibz2-occ-7-28": "10"}
+    ett_cands = list(ett_at)
+    ett_pairs = ["mibz2-oce-5-20/mibz2-occ-5-20", "mibz2-oce-7-28/mibz2-occ-7-28"]
+
+    def ett(steps=None, guard=None):
+        import random
+        steps, guard = steps or {}, guard or {}
+        rng = random.Random(29)
+        rows = []
+        for t in (6, 4, 10):
+            arms = ["mibz2", *(c for c in ett_cands if ett_at[c] == str(t))]
+            for i in range(R):
+                for corpus, out in (("wikidata-x4", (838800784, "aa")), ("text", (49067679, "bb"))):
+                    base = 0.5 * (1 + 0.02 * rng.uniform(-1, 1))
+                    wig = 1 + 0.01 * (1 if i % 2 else -1)
+                    for arm in arms:
+                        f = (steps if corpus == "wikidata-x4" else guard).get((arm, t), 1.0)
+                        wall = base * (f * wig if arm != "mibz2" else 1.0)
+                        r = {"round": i, "corpus": corpus, "threads": t, "arm": arm, "termination": "success",
+                             "wall": wall, "cpu": wall * t * 0.9, "rss_kb": 100000 * t, "out": out[0],
+                             "hash": out[1], "cpus": pinned(t)}
+                        if t <= 9:
+                            r["held_spinner"] = {"cpu": 19, "auto": True, "overlap": False,
+                                                 "decoder_cpus": pinned(t), "owner": "run", "cpu_s": 2.0}
+                        rows.append(r)
+        return rows
+
+    def ett_args(pairs=None, judge=True):
+        return ["--ref", "mibz2", *sum((["--cand", c] for c in ett_cands), []),
+                *(sum((["--judge-at", f"{c}={ts}"] for c, ts in ett_at.items()), []) if judge else []),
+                "--main", "wikidata-x4", "--guard", "text", "--judged", "6,4,10", "--controls", "",
+                "--hold-max-threads", "9", *(["--sparse"] if judge else []),
+                *sum((["--pair", p] for p in (ett_pairs if pairs is None else pairs)), [])]
+
+    ett_steps = {("mibz2-oce-5-20", 6): 0.90, ("mibz2-occ-5-20", 6): 0.96, ("mibz2-oce-7-28", 10): 0.98}
+    results.append(expect_low("eager trim: a choice a count, the pairs reported at 6 and 10", ett(ett_steps), 0, [
+        "over the 5 main-corpus cells", "VERDICT for mibz2-oce-5-20 at 6 threads: ADOPTS",
+        "VERDICT for mibz2-occ-5-20 at 6 threads: ADOPTS", "THE CHOICE at 6 threads: mibz2-oce-5-20",
+        "THE CHOICE at 4 threads: none; the reference stays", "VERDICT for mibz2-occ-7-28 at 10 threads: NOT ADOPTED",
+        "Pairs at 6 threads, reported and not judged",
+        "mibz2-oce-5-20 over mibz2-occ-5-20 wikidata-x4: 0.9375", "mibz2-oce-5-20 over mibz2-occ-5-20 text: 1.0000",
+        "Pairs at 10 threads, reported and not judged", "mibz2-oce-7-28 over mibz2-occ-7-28 wikidata-x4: 0.9800"],
+        args=ett_args(), absent=["Pairs at 4 threads", "VOID"]))
+    results.append(expect_low("eager trim: a pair SLOWER judges nothing",
+                              ett({("mibz2-oce-7-28", 10): 1.05, ("mibz2-occ-7-28", 10): 0.95}), 0, [
+        "mibz2-oce-7-28 over mibz2-occ-7-28 wikidata-x4: 1.10", "SLOWER",
+        "VERDICT for mibz2-occ-7-28 at 10 threads: ADOPTS", "THE CHOICE at 10 threads: mibz2-occ-7-28"],
+        args=ett_args()))
+    results.append(expect_low("eager trim: without --pair, no pairs", ett(ett_steps), 0, [
+        "THE CHOICE at 6 threads: mibz2-oce-5-20"], args=ett_args(pairs=[]), absent=["Pairs at"]))
+    results.append(expect_low("eager trim: --pair without --judge-at", low(), 1, ["VOID", "--pair: with --judge-at only"],
+                              args=low_args() + ["--pair", "mibz2-occ-7-28/mibz2-occ-6-24"]))
+    results.append(expect_low("eager trim: --pair malformed", ett(), 1, ["VOID", "not ARM/ARM, two arms"],
+                              args=ett_args(pairs=["mibz2-oce-5-20"])))
+    results.append(expect_low("eager trim: --pair of one arm twice", ett(), 1, ["VOID", "not ARM/ARM, two arms"],
+                              args=ett_args(pairs=["mibz2-oce-5-20/mibz2-oce-5-20"])))
+    results.append(expect_low("eager trim: --pair naming an arm not in the run", ett(), 1,
+                              ["VOID", "['mibz2-occ-3-12'] not an arm of the run"],
+                              args=ett_args(pairs=["mibz2-oce-3-12/mibz2-occ-3-12"])))
+    results.append(expect_low("eager trim: --pair of two arms never run together", ett(), 1,
+                              ["VOID", "run together at no judged count"],
+                              args=ett_args(pairs=["mibz2-oce-3-12/mibz2-oce-5-20"])))
+    results.append(expect_low("eager trim: the lazy twin missing at 10", [
+        r for r in ett() if not (r["arm"] == "mibz2-occ-7-28" and r["round"] == 2)], 1,
+        ["VOID", "roster keys missing"], args=ett_args()))
+
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

@@ -107,3 +107,25 @@ fn the_low_occupancy_arms_one_output() {
         }
     }
 }
+
+/// `ab`'s eager occupancy arms (`just bench-eager-trim`): 7, 5 and 3 workers with a slot for
+/// every letter and 4 blocks in flight a worker, `workers(N, 4N, .., false)`, as
+/// `BzReader::parallel_workers(.., false)` builds them. Eager whatever N, and one output and
+/// one error, the same as the lazy twins'
+#[test]
+fn the_eager_occupancy_arms_one_output() {
+    let k = Kernels::detect();
+    for z in streams() {
+        let (want, err) = plain_parallel(&z);
+        for n in [7, 5, 3] {
+            let dec = StreamDecoder::workers(n, 4 * n, k, false);
+            assert!(!dec.is_lazy(), "{n}");
+            let (out, res) = drive(&dec, &z, 1 << 16, 1 << 14);
+            assert!(
+                out == want && res == err,
+                "{n} eager workers, {} blocks: {res:?}",
+                4 * n
+            );
+        }
+    }
+}

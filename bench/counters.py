@@ -24,8 +24,8 @@ must name the same groups.
 over the reference clock, the turbo and frequency residual). Where the software event
 `task-clock` is counted (msec, kept as perf prints it), it gives a busy share a worker: the
 median over the reps of task-clock over (the child's wall × W). W is read from an occupancy
-arm's name (`mibz2-occ-N-S`: N) or given (`--workers ARM=N`, production's `mibz2` at its own
-plan); an arm of unknown W has no share printed. task-clock counts every thread of the process
+arm's name (`mibz2-occ-N-S`, or the eager `mibz2-oce-N-S`: N) or given (`--workers ARM=N`,
+production's `mibz2` at its own plan); an arm of unknown W has no share printed. task-clock counts every thread of the process
 (the reader and the scanner beside the workers, and the start-up outside the child's wall), so
 the share is an upper bound on the workers' own.
 
@@ -133,9 +133,16 @@ def groups(a):
 
 
 def occ_workers(arm):
-    """An occupancy arm's workers (`mibz2-occ-N-S`: N), else None"""
-    n, _, s = arm.removeprefix("mibz2-occ-").partition("-") if arm.startswith("mibz2-occ-") else ("", "", "")
+    """An occupancy arm's workers (`mibz2-occ-N-S`, or the eager `mibz2-oce-N-S`: N), else None"""
+    pre = next((p for p in ("mibz2-occ-", "mibz2-oce-") if arm.startswith(p)), None)
+    n, _, s = arm.removeprefix(pre).partition("-") if pre else ("", "", "")
     return int(n) if n.isdigit() and s.isdigit() and int(n) > 0 else None
+
+
+def short(arm):
+    """A candidate's column: an occupancy arm by its workers and blocks (`7-28`), an eager one
+    marked (`e7-28`)"""
+    return arm.removeprefix("mibz2-occ-").replace("mibz2-oce-", "e")[-12:]
 
 
 def run(a):
@@ -259,7 +266,7 @@ def report(a):
         print(f"\n{t} thread{'s' if t > 1 else ''}: the median over {a.reps} reps, a byte of output; "
               f"{' and '.join(cands)} over {a.ref} as the median of the reps' paired ratios")
         print(f"  {'event':32s} {a.ref:>22s} " + " ".join(f"{c:>22s}" for c in cands) + "   "
-              + ("ratio" if len(cands) == 1 else " ".join(f"{c.removeprefix('mibz2-occ-')[-12:]:>12s}" for c in cands)))
+              + ("ratio" if len(cands) == 1 else " ".join(f"{short(c):>12s}" for c in cands)))
         for e in events:
             ref = [per_byte(a.ref, t, r, e) for r in range(a.reps)]
             line, ratios = f"  {e:32s} {statistics.median(ref):22.6f} ", []

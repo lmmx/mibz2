@@ -67,6 +67,20 @@ def main():
           ["mibz2: busy share a worker n/a (W unknown); non-worker CPU / wall 1.000"])
     code, out = run(rows + [{**rows[0], "round": 9, "thread_cpu": ""}], ("--workers", "mibz2=T"))
     check("a record without thread_cpu left out", code, out, 0, ["1 records left out", "no worker threads"])
+    # the eager occupancy arms (`just bench-eager-trim`): W from the name, as the lazy twin's
+    eager = [rec("mibz2-oce-5-20", 6, rnd, [0.8] * 5, [("main", 0.5)]) for rnd in range(3)]
+    code, out = run(rows + eager, ("--workers", "mibz2=T"))
+    check("an eager occupancy arm (W its name)", code, out, 0, [
+        "mibz2-oce-5-20: busy share a worker 0.800; non-worker CPU / wall 0.500 (named 0.500); worker threads seen 5"])
+    # one count alone (`just bench-eager-trim`: production's W given at that count)
+    at10 = [rec("mibz2", 10, rnd, [0.9] * 7, [("main", 0.5)]) for rnd in range(3)]
+    code, out = run(rows + at10, ("--threads", "10", "--workers", "mibz2=7"))
+    check("--threads: one count alone, production's W given there", code, out, 0, [
+        "10 threads\n    mibz2: busy share a worker 0.900; non-worker CPU / wall 0.500 (named 0.500); "
+        "worker threads seen 7"])
+    ok = "6 threads" not in out and "mibz2-occ-4-16" not in out
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} --threads: the other counts left out")
     code, out = run(rows, ("--workers", "mibz2=six"))
     check("--workers malformed", code, out, 1, ["VOID", "not ARM=N or ARM=T"])
     failed = results.count(False)

@@ -19,9 +19,11 @@ hashing its output) are not.
 - *of which named:* the named non-worker threads' CPU over wall;
 - the worker threads seen.
 
-**W** is read from an occupancy arm's name (`mibz2-occ-N-S`: N), or given: `--workers ARM=N`, or
-`--workers ARM=T` for the count asked (production's `mibz2`, `Workers(T)` at 4, 6 and 8 threads).
-An arm of unknown W has no busy share printed. A record without `thread_cpu`, or with no worker
+**W** is read from an occupancy arm's name (`mibz2-occ-N-S`, or the eager `mibz2-oce-N-S`: N),
+or given: `--workers ARM=N`, or `--workers ARM=T` for the count asked (production's `mibz2`,
+`Workers(T)` at 4, 6 and 8 threads; not at 10 on the i9 since #524, where it is 7). `--threads
+N` reads the records at N threads asked alone, so production's W can be given count by count
+(`just bench-eager-trim`: 7 at 10 threads). An arm of unknown W has no busy share printed. A record without `thread_cpu`, or with no worker
 thread in it, is counted and left out, and said so.
 """
 import argparse
@@ -57,7 +59,7 @@ def split(thread_cpu):
 
 
 def occ_workers(arm):
-    m = re.match(r"^mibz2-occ-(\d+)-(\d+)$", arm)
+    m = re.match(r"^mibz2-oc[ce]-(\d+)-(\d+)$", arm)
     return int(m.group(1)) if m else None
 
 
@@ -65,6 +67,7 @@ def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("runs")
     ap.add_argument("--workers", action="append", default=[], metavar="ARM=N|T")
+    ap.add_argument("--threads", type=int, default=None, help="the records at this count asked alone")
     a = ap.parse_args(argv[1:])
     given = {}
     for spec in a.workers:
@@ -83,6 +86,8 @@ def main(argv):
             wall, cpu = float(r["wall"]), float(r["cpu"])
         except (ValueError, KeyError, TypeError):
             skipped.append(f"line {ln}: not a record")
+            continue
+        if a.threads is not None and key[1] != a.threads:
             continue
         s = split(r.get("thread_cpu"))
         if s is None or s[2] == 0 or wall <= 0:

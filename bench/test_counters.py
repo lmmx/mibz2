@@ -227,6 +227,28 @@ def main():
           + ", ".join(f"{'found' if w in out else 'missing'} {w!r}" for w in want))
     if not ok:
         print(out)
+    # `just bench-eager-trim`'s diagnostic, as at 6 threads: production given 6 workers, the
+    # eager 5/20 and the lazy 5/20 read from their names, the eager column marked
+    ett_cands = ["mibz2-oce-5-20", "mibz2-occ-5-20"]
+    ett_file = d / "ett.jsonl"
+    subprocess.run([sys.executable, str(HERE / "counters.py"), "run", "--ab", str(d / "ab"),
+                    *sum((["--arm", x] for x in ["mibz2", *ett_cands]), []), "--threads", "6", "--reps", "2",
+                    "--file", "x.bz2", "--out", str(ett_file), "--groups", swp_group],
+                   env=e, capture_output=True, check=True)
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        code = counters.main(["counters.py", "report", str(ett_file), "--ref", "mibz2",
+                              *sum((["--cand", c] for c in ett_cands), []), "--threads", "6", "--reps", "2",
+                              "--groups", swp_group, "--workers", "mibz2=6"])
+    out = buf.getvalue()
+    want = ["mibz2-oce-5-20: IPC 3.000; cycles over ref-cycles 0.500; busy share 1.600 a worker (task-clock over wall x 5)",
+            "mibz2-occ-5-20: IPC 3.000; cycles over ref-cycles 0.500; busy share 1.600 a worker", "       e5-20         5-20"]
+    ok = code == 0 and all(w in out for w in want)
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} the eager arm's workers from its name, its column marked: exit {code}, "
+          + ", ".join(f"{'found' if w in out else 'missing'} {w!r}" for w in want))
+    if not ok:
+        print(out)
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

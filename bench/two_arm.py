@@ -8,7 +8,7 @@ correction, #145 REVIEW 6921090225), for `just bench-cores-less-one` (#481) and 
     two_arm.py RUNS.jsonl --ref ARM --cand ARM [--cand ARM ...] --main CORPUS --guard CORPUS
                --judged 12,16,20 --controls 9,10 --env ENV.json [--rounds 10]
                [--cores 10 --cpus 20] [--hold-max-threads 9] [--context ARM ...]
-               [--judge-at ARM=COUNTS ... [--sparse]]
+               [--judge-at ARM=COUNTS ... [--sparse] [--pair ARM/ARM ...]]
 
 **Several candidates** (`--cand` repeated; `just bench-workers-window`): each is read against the one
 reference as below, but Holm's family is every candidate's main-corpus judged cells together, and
@@ -45,6 +45,13 @@ context arm, and no other arm: a candidate's record at a count it is not judged 
 roster (VOID), and the report has no cell for it there. The run makes one `ab run` a count, each
 with that count's arms alone, so no time goes on cells that judge nothing (2 workers at 8
 threads, say).
+
+**Pairs, reported and not judged** (`--pair A/B`, repeated, with `--judge-at` only; none by
+default, and then nothing here changes; `just bench-eager-trim`): at each judged count where both
+arms are in the roster, A's paired rounds' wall ratios over B's (geometric mean and 95% interval)
+and A's peak memory over B's, in both corpora. A pair enters no Holm family, no loss screen, no
+memory gate, no verdict and no choice. A pair naming an arm that is not the reference, a
+candidate or a context arm, naming one arm twice, or present at no judged count is VOID.
 
 **Arms.** A record's arm is canonical: `NAME` for this build's harness, and `NAME@build-X`
 for another build's (`ab run`'s `NAME@EXE` arm, EXE under a directory `build-X`).
@@ -340,7 +347,29 @@ def parse_judge_at(specs, cands, judged, errors):
     return out
 
 
-def by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak):
+def parse_pairs(specs, arms, judge_at, present, judged, errors):
+    """`--pair A/B`'s list of (A, B); errors appended for a malformed pair, one not among the
+    arms, or one present at no judged count (`present(t)`: the arms in the roster at t)"""
+    out = []
+    if specs and not judge_at:
+        errors.append("--pair: with --judge-at only")
+        return out
+    for spec in specs:
+        parts = spec.split("/")
+        if len(parts) != 2 or not all(parts) or parts[0] == parts[1]:
+            errors.append(f"--pair {spec!r}: not ARM/ARM, two arms")
+            continue
+        if any(x not in arms for x in parts):
+            errors.append(f"--pair {spec!r}: {[x for x in parts if x not in arms]} not an arm of the run")
+            continue
+        if not any(set(parts) <= set(present(t)) for t in judged):
+            errors.append(f"--pair {spec!r}: the two arms run together at no judged count")
+            continue
+        out.append(tuple(parts))
+    return out
+
+
+def by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak, pairs=(), present=None, pcell=None):
     """The verdicts with candidates judged by count (`--judge-at`): one Holm family over every
     judged main-corpus cell, then at each count a verdict for each candidate judged there and
     the choice among those that ADOPT"""
@@ -369,6 +398,15 @@ def by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak):
                     g, lo, hi, _ = step(cell(corpus, t, arm))
                     print(f"    {arm} {corpus}: {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; "
                           f"memory {peak(corpus, arm, t) / peak(corpus, ref, t):.3f}")
+        here_pairs = [(x, y) for x, y in pairs if {x, y} <= set(present(t))]
+        if here_pairs:
+            print(f"  Pairs at {t} threads, reported and not judged: the first arm over the second, the paired "
+                  f"rounds' wall ratios; peak memory over the second's")
+            for x, y in here_pairs:
+                for corpus in corpora:
+                    g, lo, hi, _ = step(pcell(corpus, t, x, y))
+                    print(f"    {x} over {y} {corpus}: {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; "
+                          f"memory {peak(corpus, x, t) / peak(corpus, y, t):.3f}")
     rejected = holm(ps, ALPHA)
     print(f"\nHolm at family α {ALPHA} over the {len(ps)} main-corpus cells: "
           + ", ".join(f"{c} at {t} p {ps[(c, t)]:.2e} {'rejects' if (c, t) in rejected else 'does not'}"
@@ -424,6 +462,9 @@ def main(argv):
     ap.add_argument("--sparse", action="store_true",
                     help="with --judge-at: each count's roster is the reference, its judged candidates and "
                          "the context arms alone")
+    ap.add_argument("--pair", action="append", default=[], metavar="ARM/ARM",
+                    help="with --judge-at: the first arm over the second at each judged count where both run, "
+                         "reported and not judged")
     a = ap.parse_args(argv[1:])
     judged = [int(t) for t in a.judged.split(",")]
     controls = [int(t) for t in a.controls.split(",") if t]
@@ -442,7 +483,9 @@ def main(argv):
         here = {t: [ref, *(c for c in cands if t in judge_at.get(c, ())), *context] for t in judged}
         roster = {(c, arm, t, i) for c in corpora for t in judged for arm in here[t] for i in range(R)}
     else:
+        here = {t: arms for t in judged}
         roster = {(c, arm, t, i) for c in corpora for arm in arms for t in judged + controls for i in range(R)}
+    pairs = parse_pairs(a.pair, arms, judge_at, here.get, judged, errors)
     core_of = topology(a.env, a.cores, a.cpus, errors)
     rows = load(a.runs, roster, errors, None if core_of is None else (core_of, a.cores, a.hold_max_threads))
     print(f"records {len(rows)}; roster {len(roster)} ({ref} and {' and '.join(cands)}"
@@ -453,6 +496,9 @@ def main(argv):
 
     def cell(corpus, t, cand):
         return [math.log(rows[(corpus, cand, t, i)]["wall"] / rows[(corpus, ref, t, i)]["wall"]) for i in range(R)]
+
+    def pcell(corpus, t, x, y):
+        return [math.log(rows[(corpus, x, t, i)]["wall"] / rows[(corpus, y, t, i)]["wall"]) for i in range(R)]
 
     def peak(corpus, arm, t):
         return statistics.median(rows[(corpus, arm, t, i)]["rss_kb"] for i in range(R))
@@ -477,7 +523,7 @@ def main(argv):
             print(f"  ... and {len(errors) - 25} more")
         return 1
     if judge_at:
-        return by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak)
+        return by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak, pairs, here.get, pcell)
 
     steps, ps, mem, gm = {}, {}, {}, {}
     for cand in cands:

@@ -109,7 +109,10 @@
 //!   blocks in flight whatever THREADS, `BzReader::parallel_workers(N, S, lazy)`: from
 //!   `LAZY_FROM_THREADS` workers the very call `parallel_planned(Plan::Workers(N), S)` makes,
 //!   and below it the lazy letters held; `just bench-workers-window`, `bench-workers-low`,
-//!   `bench-workers-at-cores`, `bench-workers-sweep-low`);
+//!   `bench-workers-at-cores`, `bench-workers-sweep-low`); `mibz2-oce-N-S` (the eager
+//!   occupancy arms: the same with a slot for every letter, `parallel_workers(N, S, false)`,
+//!   below `LAZY_FROM_THREADS` the very call `parallel_planned(Plan::Workers(N), S)` makes;
+//!   `just bench-eager-trim`);
 //! - `mibz2-pipe2`, `-pipe3`, `-pipe4` (research: the pipelined team,
 //!   `BzReader::parallel_pipelined`, its leader's RLE1, CRC and next move-to-front overlapped
 //!   with its helpers' build and walk: THREADS / K teams of K in the teamK arms' window);
@@ -833,7 +836,7 @@ fn census_saw(seen: &mut BTreeMap<u64, String>, tid: u64, name: &str) {
 
 #[cfg(test)]
 mod occ_arm_tests {
-    use super::occ_arm;
+    use super::{occ_arm, oce_arm};
 
     #[test]
     fn occupancy_arms_parse() {
@@ -857,6 +860,27 @@ mod occ_arm_tests {
             "mibz2",
         ] {
             assert_eq!(occ_arm(bad), None, "{bad}");
+        }
+    }
+
+    #[test]
+    fn eager_occupancy_arms_parse() {
+        // `just bench-eager-trim`'s
+        assert_eq!(oce_arm("mibz2-oce-5-20"), Some((5, 20)));
+        assert_eq!(oce_arm("mibz2-oce-3-12"), Some((3, 12)));
+        assert_eq!(oce_arm("mibz2-oce-7-28"), Some((7, 28)));
+        // the two families apart
+        assert_eq!(occ_arm("mibz2-oce-5-20"), None);
+        assert_eq!(oce_arm("mibz2-occ-5-20"), None);
+        for bad in [
+            "mibz2-oce-5",
+            "mibz2-oce-0-20",
+            "mibz2-oce-5-0",
+            "mibz2-oce-x-20",
+            "mibz2-oce--20",
+            "mibz2-oce-5-20-1",
+        ] {
+            assert_eq!(oce_arm(bad), None, "{bad}");
         }
     }
 }
@@ -1129,7 +1153,17 @@ fn program(arm: &str, threads: usize, path: &str) -> Option<(Command, bool)> {
 
 /// An occupancy arm's workers and blocks in flight: `mibz2-occ-N-S`, N and S at least 1
 fn occ_arm(arm: &str) -> Option<(usize, usize)> {
-    let (n, s) = arm.strip_prefix("mibz2-occ-")?.split_once('-')?;
+    counts(arm.strip_prefix("mibz2-occ-")?)
+}
+
+/// An eager occupancy arm's workers and blocks in flight: `mibz2-oce-N-S`, N and S at least 1
+fn oce_arm(arm: &str) -> Option<(usize, usize)> {
+    counts(arm.strip_prefix("mibz2-oce-")?)
+}
+
+/// `N-S`, N and S at least 1
+fn counts(ns: &str) -> Option<(usize, usize)> {
+    let (n, s) = ns.split_once('-')?;
     let (n, s) = (n.parse().ok()?, s.parse().ok()?);
     (n >= 1 && s >= 1).then_some((n, s))
 }
@@ -1353,6 +1387,20 @@ fn decode(
                 occ_arm(a).ok_or_else(|| format!("unknown arm {a} (mibz2-occ-WORKERS-SLOTS)"))?;
             drain(
                 mibz2::BzReader::parallel_workers(open()?, n, s, mibz2::Kernels::detect(), true),
+                h,
+                last,
+            )
+        }
+        // the eager occupancy arms (`just bench-eager-trim`): the same with a slot for every
+        // letter (`bwt::Cells`), whatever N: below `LAZY_FROM_THREADS` workers the decoder
+        // production builds for `Plan::Workers(N)` with S blocks (`parallel_planned`, which
+        // calls `parallel_workers(.., false)` there), each the lazy `mibz2-occ-N-S` but for
+        // its kernel
+        a if a.starts_with("mibz2-oce-") => {
+            let (n, s) =
+                oce_arm(a).ok_or_else(|| format!("unknown arm {a} (mibz2-oce-WORKERS-SLOTS)"))?;
+            drain(
+                mibz2::BzReader::parallel_workers(open()?, n, s, mibz2::Kernels::detect(), false),
                 h,
                 last,
             )
