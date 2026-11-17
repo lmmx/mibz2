@@ -11,6 +11,8 @@
 //   holds its last frame. Pause freezes it where it is; replay starts it from the beginning.
 //   With reduced motion the figure starts as a still picture, and either button runs the
 //   animation on request.
+// - .bf-l3fill: workers' footprints filling a shared L3, set by a slider, with each count's
+//   measurements said in words. Without JavaScript the figure shows a stepped summary.
 //
 // - .post-meta a and .post-card-date: the post's kind, read from its label (the text after the
 //   last "·") and set as data-kind, which blog.css colours. The labels and their kinds are
@@ -396,6 +398,60 @@
     load(stages ? stages.querySelector('[aria-pressed="true"]').dataset.word : "");
   };
 
+  // .bf-l3fill: workers' footprints filling a shared L3, one block per worker, set by a slider.
+  // data-l3 and data-mb are the cache's and a footprint's size in MB. Each count says in words
+  // what was measured there (the i9 at 10 threads). Without JavaScript the figure shows its
+  // static stepped summary (.bf-l3-static) instead.
+  const L3_SAY = {
+    1: "One footprint uses a tenth of the L3, and nothing competes with it for the cache. Not measured at 10 threads.",
+    2: "Two footprints fill a fifth of the L3. Not measured at 10 threads; the model expects little contention this low.",
+    3: "Three footprints fill under a third of the L3. Not measured at 10 threads; the model expects little contention this low.",
+    4: "Four footprints fill 40% of the L3. Not measured at 10 threads; in the model, each worker added here still gains more than it costs the others.",
+    5: "Five footprints fill half the L3. Not measured at 10 threads; in the model, each worker raises the others' misses a little, with no cliff.",
+    6: "Six footprints fill 60%. Measured at 10 threads: 0.40 of ten workers' L3 misses per byte, and 0.922 of their wall time.",
+    7: "Seven footprints fill 70%, the teams policy's budget. Measured at 10 threads: 0.52 of ten workers' L3 misses per byte, and the fastest count, 0.885 of the wall time.",
+    8: "Eight footprints fill 80%, about where the fitted optimum lies. Measured at 10 threads: 0.65 of ten workers' L3 misses per byte, 0.902 of the wall time.",
+    9: "Nine footprints fill 90%. Measured at 10 threads: 0.92 of ten workers' L3 misses per byte, 0.982 of the wall time.",
+    10: "Ten footprints fill the whole L3. Every worker's data is evicted more often, and this is the slowest count measured at 10 threads.",
+  };
+  const l3fill = (fig) => {
+    if (fig.dataset.ready) return;
+    fig.dataset.ready = "1";
+    const l3 = Number(fig.dataset.l3);
+    const mb = Number(fig.dataset.mb);
+    const q = (sel) => fig.querySelector(sel);
+    const [svg, text, controls, input, out] = [
+      ".bf-l3-svg", ".bf-l3-text", ".bf-l3-controls", "input", ".bf-l3-n",
+    ].map(q);
+    const BX = 10, BW = 700, BY = 30, BH = 40;
+    const show = () => {
+      const n = Number(input.value);
+      out.textContent = String(n);
+      const parts = [];
+      parts.push(`<rect x="${BX}" y="${BY}" width="${BW}" height="${BH}" rx="5" class="bf-track"/>`);
+      const w = (mb / l3) * BW;
+      for (let k = 0; k < n; k++) {
+        parts.push(`<rect x="${(BX + k * w).toFixed(1)}" y="${BY}" width="${(w - 2).toFixed(1)}" height="${BH}" rx="3" style="fill:var(--bf-green)"/>`);
+      }
+      for (const [f, lab] of [[0.7, "0.7"], [0.8, "0.8"]]) {
+        const x = (BX + f * BW).toFixed(1);
+        parts.push(`<path d="M${x} ${BY - 8}V${BY + BH + 8}" style="stroke:var(--bf-amber);stroke-width:1.5;stroke-dasharray:4 3"/>`);
+        parts.push(T(x, BY - 12, lab, "bf-ttiny", 11, ";fill:var(--bf-amber)"));
+      }
+      const used = n * mb;
+      parts.push(T(BX, BY + BH + 30, `${n} × ${mb} MB = ${used.toFixed(1)} MB of ${l3.toFixed(1)} MB`, "bf-t-strong", 14, "", "start"));
+      parts.push(T(BX + BW, BY + BH + 30, `${Math.round((100 * used) / l3)}% of the L3`, "bf-t", 14, "", "end"));
+      svg.innerHTML = parts.join("");
+      text.textContent = L3_SAY[n] || "";
+    };
+    input.addEventListener("input", show);
+    q(".bf-l3-static").hidden = true;
+    svg.removeAttribute("hidden");
+    text.hidden = false;
+    controls.hidden = false;
+    show();
+  };
+
   // keep in step with KINDS in docs/scripts/check_site.py
   const KINDS = {
     "Research result": "result",
@@ -421,6 +477,7 @@
     document.querySelectorAll(".bf-bitbuf").forEach(bitbuf);
     document.querySelectorAll(".bf-anim-controls").forEach(animated);
     document.querySelectorAll(".bf-stepper").forEach(stepper);
+    document.querySelectorAll(".bf-l3fill").forEach(l3fill);
   };
   if (window.document$ && typeof window.document$.subscribe === "function") window.document$.subscribe(init);
   else if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
