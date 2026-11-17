@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4](https://github.com/lmmx/mibz2/compare/v0.5.3...v0.5.4) - 2026-11-17
+
+### <!-- 3 -->Performance
+
+- *(plan)* read the machine once a process ([#545](https://github.com/lmmx/mibz2/pull/545))
+- *(plan)* on the measured i9, six lazy workers at 8 threads asked and five at 6 ([#537](https://github.com/lmmx/mibz2/pull/537))
+
+### <!-- 9 -->Other
+
+- Release scaling: 0.5.3 against 0.5.2 on the i9; 0.5.3's notes and attribution row ([#544](https://github.com/lmmx/mibz2/pull/544))
+
 ### <!-- 3 -->Performance
 
 - *(plan)* the machine read once a process: the machine-wide facts (the L3, cpuinfo's CPU identities and the topology of every CPU present and online) are cached on first use, and the affinity and cgroup quota are read only where those facts admit the measured i9. This fixes #537's per-decoder sysfs and cpuinfo reads at 4, 6 and 8 threads (0.5 to 1 ms a default decoder on a 4-CPU runner); every plan and cell is unchanged
