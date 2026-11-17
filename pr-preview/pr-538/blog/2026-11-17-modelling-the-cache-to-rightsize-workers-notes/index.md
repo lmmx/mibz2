@@ -68,13 +68,13 @@ Each prediction below was frozen before its run. Where a later record corrected 
 | 47 | Q and D, the counters run | see section 2 | mixed |
 | 48 | `-9` misses at 4 workers match `-3`'s at equal fullness | 0.00368 against 0.0045 (0.0035, 0.0058) | met |
 | 48 | the same at 3 workers | 0.00225 against 0.0034 (0.0027, 0.0042), 34% low | refuted |
-| 49 | eager kernel at the trimmed counts | the eager-trim run is queued | pending |
+| 49 | eager kernel at the trimmed counts: 5 workers at 6 threads at 0.90 (0.86, 0.95), 3 at 4 threads at 0.99 (0.95, 1.03), against the reference plan | pinned: 0.938 and 0.959 | met, pinned only |
 
 The 8-thread count was observed before record 46's CPU bound was written; the low-thread sweep re-measured it and tested 6 and 4 threads afresh. All of it ran pinned. An [unpinned run](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6949008682>) later found no gain at 8 threads (1.000) and losses at 6 and 4, so these pinned gains came from freeing a core for the decoder's other threads, not from the cache, and the 6- and 8-thread points come out of the contention fit.
 
 **The low-thread sweep in full.** Each arm against the reference plan at its count, 10 paired rounds, pinned one CPU a core:
 
-Below 8 threads: 5 workers win at 6 threads, and nothing beats the reference 4 at 4
+Below 8 threads, pinned: 5 lazy workers win at 6 threads, and no lazy count beats the reference 4 at 4
 
 Measured on the test machine, decoding four copies of the Wikidata extract, 10 paired rounds a point, the process limited to one hardware thread a core; the bar is the 95% interval over the rounds. At 6 and 4 threads the reference plan runs the older (eager) kernel, one worker a thread, so the 6-worker point at 6 threads and the 4-worker point at 4 threads measure the lazy-letters kernel alone. The 2-worker point at 4 threads, 1.533, is off the chart.
 
