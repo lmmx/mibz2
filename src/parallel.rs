@@ -3911,6 +3911,59 @@ mod plan_tests {
         }
     }
 
+    /// `just bench-workers-level3`: production's plan reads no block size. On the emulated
+    /// i9 at 10 threads asked, `BzReader::parallel` over a level-3 stream (300 kB blocks)
+    /// builds the decoder it builds over a level-9 one: ten lazy workers with 40 blocks in
+    /// flight, the shape of `mibz2-occ-10-40`, so the run needs no lazy 10/40 control. Each
+    /// of its candidates (9/36, 8/32, 7/28, 6/24 and 4/16) is lazy with its own worker count
+    /// and window, below `LAZY_FROM_THREADS` too. Both streams decode to their bytes.
+    #[test]
+    fn the_occupancy_arms_at_level3() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        use std::io::{Read, Write};
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let shape = |d: &StreamDecoder| (d.kernel, d.threads, d.window());
+        let ten = StreamDecoder::workers(10, 40, both, true);
+        assert!(ten.is_lazy());
+        // letters at random, about 2.3 blocks at -3 and one at -9
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let data: Vec<u8> = (0..700_000)
+            .map(|_| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                b'a' + (x % 26) as u8
+            })
+            .collect();
+        for level in [3, 9] {
+            let mut e = bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(level));
+            e.write_all(&data).unwrap();
+            let z = e.finish().unwrap();
+            assert_eq!(&z[..4], format!("BZh{level}").as_bytes());
+            let mut r = with_machine(Machine::service_target(), || {
+                crate::BzReader::parallel(std::io::Cursor::new(z), 10)
+            });
+            let d = r.parallel_decoder().expect("a parallel decoder");
+            assert!(d.is_lazy() && !d.is_service(), "{level}");
+            assert_eq!(shape(d), shape(&ten), "{level}");
+            let mut out = Vec::new();
+            r.read_to_end(&mut out).unwrap();
+            assert!(out == data, "level {level}: the decode differs");
+        }
+        for (n, s) in [(9, 36), (8, 32), (7, 28), (6, 24), (4, 16)] {
+            let arm = StreamDecoder::workers(n, s, both, true);
+            assert!(arm.is_lazy(), "{n}");
+            assert_eq!(shape(&arm), (ten.kernel, n, s as u64), "{n}");
+            arm.close();
+        }
+        ten.close();
+    }
+
     #[test]
     fn the_trim_past_the_cores() {
         let both = Kernels {

@@ -444,6 +444,66 @@ def main():
     results.append(expect_low("by count: no --judge-at, the old reading", low({"mibz2-occ-7-28": 0.96}), 0,
                               ["THE CHOICE: mibz2-occ-7-28"], absent=["judged by count", "THE CHOICE at"]))
 
+    # one count, five candidates (`just bench-workers-level3`): production's `mibz2` the
+    # reference at 10 threads alone, on the -3 corpora; 9/36 to 6/24 and 4/16 all judged there,
+    # one Holm family of five cells, no spinner (none free at 10), the roster 120 at R = 10
+    l3_cands = ["mibz2-occ-9-36", "mibz2-occ-8-32", "mibz2-occ-7-28", "mibz2-occ-6-24", "mibz2-occ-4-16"]
+
+    def l3(steps=None, guard=None, mem=None, edit=None):
+        """level-3-shaped runs: `steps`, `guard` and `mem` map an arm to its main-corpus step,
+        its text step and its peak memory over production's (default level); `edit` a function
+        of a record returning it changed, or None to leave it out"""
+        import random
+        steps, guard, mem = steps or {}, guard or {}, mem or {}
+        rng = random.Random(23)
+        rows = []
+        for i in range(R):
+            for corpus, out in (("wikidata-l3-x4", (838800784, "aa")), ("text-l3", (49067679, "bb"))):
+                base = 0.5 * (1 + 0.02 * rng.uniform(-1, 1))
+                wig = 1 + 0.01 * (1 if i % 2 else -1)
+                for arm in ["mibz2", *l3_cands]:
+                    f = (steps if corpus == "wikidata-l3-x4" else guard).get(arm, 1.0)
+                    wall = base * (f * wig if arm != "mibz2" else 1.0)
+                    r = {"round": i, "corpus": corpus, "threads": 10, "arm": arm, "termination": "success",
+                         "wall": wall, "cpu": wall * 9, "rss_kb": 1000000 * mem.get(arm, 1.0),
+                         "out": out[0], "hash": out[1], "cpus": pinned(10)}
+                    r = edit(r) if edit else r
+                    if r is not None:
+                        rows.append(r)
+        return rows
+
+    def l3_args():
+        return ["--ref", "mibz2", *sum((["--cand", c] for c in l3_cands), []), "--main", "wikidata-l3-x4",
+                "--guard", "text-l3", "--judged", "10", "--controls", "", "--hold-max-threads", "0"]
+
+    results.append(expect_low("level 3: no trim, production stays", l3(), 0, [
+        "records 120; roster 120", "over the 5 main-corpus cells", "THE CHOICE: none; the reference stays",
+        "VERDICT for mibz2-occ-4-16: NOT ADOPTED"], args=l3_args()))
+    results.append(expect_low("level 3: two adopt, the faster chosen; 4/16 slower",
+                              l3({"mibz2-occ-9-36": 0.98, "mibz2-occ-7-28": 0.95, "mibz2-occ-4-16": 1.3}), 0, [
+        "VERDICT for mibz2-occ-9-36: ADOPTS", "VERDICT for mibz2-occ-7-28: ADOPTS",
+        "VERDICT for mibz2-occ-4-16: NOT ADOPTED. No gain established (Holm rejects at no main-corpus cell); "
+        "SLOWER at [('wikidata-l3-x4', 10)]",
+        "THE CHOICE: mibz2-occ-7-28, of those that ADOPT (mibz2-occ-9-36, mibz2-occ-7-28)"], args=l3_args()))
+    results.append(expect_low("level 3: a gain lost on the text guard",
+                              l3({"mibz2-occ-8-32": 0.96}, guard={"mibz2-occ-8-32": 1.05}), 0, [
+        "VERDICT for mibz2-occ-8-32: A FINDING, NOT ADOPTED", "THE CHOICE: none"], args=l3_args()))
+    results.append(expect_low("level 3: held on memory",
+                              l3({"mibz2-occ-6-24": 0.96}, mem={"mibz2-occ-6-24": 1.2}), 0, [
+        "VERDICT for mibz2-occ-6-24: HELD ON MEMORY", "THE CHOICE: none"], args=l3_args()))
+    results.append(expect_low("level 3: the 4/16 cell missing", l3(
+        edit=lambda r: None if r["arm"] == "mibz2-occ-4-16" and r["corpus"] == "text-l3" and r["round"] == 4 else r),
+        1, ["VOID", "roster keys missing"], args=l3_args()))
+    results.append(expect_low("level 3: a -9 corpus in the records", l3(
+        edit=lambda r: {**r, "corpus": "wikidata-x4"} if r["corpus"] == "wikidata-l3-x4" and r["round"] == 0 else r),
+        1, ["VOID", "not in the roster"], args=l3_args()))
+    results.append(expect_low("level 3: a spinner at 10 threads", l3(
+        edit=lambda r: {**r, "held_spinner": {"cpu": 19, "overlap": False}} if r["arm"] == "mibz2" and r["round"] == 2
+        else r), 1, ["VOID", "past the hold limit"], args=l3_args()))
+    results.append(expect_low("level 3: unpinned at 10 threads", l3(
+        edit=lambda r: {**r, "cpus": "all"} if r["arm"] == "mibz2-occ-4-16" and r["round"] == 1 else r), 1,
+        ["VOID", "missing or malformed"], args=l3_args()))
+
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

@@ -1960,6 +1960,130 @@ bench-workers-at-cores COPIES="4" ROUNDS="10" REPS="10":
     fi
     bash bench/bundle.sh "$O"
 
+# The worker count at smaller blocks (the transfer test of MONODROMY's machine-parameterised
+# model, record 45 on #497; the registration, docs/journal/2026-11-17-workers-level3.md, posted
+# before the data; stacked on #515): within the i9's cores at 10 threads, production runs ten
+# lazy workers with 40 blocks in flight (`Plan::for_threads`; the plan reads no block size), and
+# at -9 fewer were faster. The model says the trim is set by the workers' footprints against the
+# L3, so with blocks a third the size (bzip2 -3, 300 kB) it should mostly disappear. The same
+# arms as bench-workers-at-cores, on the same content recompressed at -3: production's `mibz2`
+# the reference; `ab`'s occupancy arms (`mibz2-occ-N-S`, lazy, 4 blocks a worker) 9/36, 8/32,
+# 7/28, 6/24 and 4/16 the candidates, all judged at 10 threads, one Holm family. The corpora:
+# COPIES copies of the Wikidata sample (the gain family) and text (a loss and memory guard),
+# each decoded and recompressed by bzip2 -3 as the level policy's runs made theirs
+# (research/level-policy: `bzip2 -dc | bzip2 -3`), checked to decode to the same bytes. One
+# build by rustc 1.99.1, each run pinned one CPU a core (`--spread`), no spinner (no core is
+# free at 10). Then two diagnostics that decide nothing: at 10 threads, the six arms' cycles,
+# ref-cycles, instructions, LLC load misses, L2 misses and a busy share a worker from task-clock
+# (`bench/counters.py --groups`), on one copy at -3; and production's per-worker footprint at -3
+# and at -9 (examples/occupancy.rs, feature `trace`: the ledger's arithmetic, and each worker's
+# buffers as measured at its end).
+bench-workers-level3 COPIES="4" ROUNDS="10" REPS="10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/workers-level3
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    arms=mibz2,mibz2-occ-9-36,mibz2-occ-8-32,mibz2-occ-7-28,mibz2-occ-6-24,mibz2-occ-4-16
+    echo "bench-workers-level3 (the registration, docs/journal/2026-11-17-workers-level3.md): mibz2-occ-9-36, -8-32, -7-28, -6-24 and -4-16 against production's mibz2 at 10 threads at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and on text, both at bzip2 -3, {{ROUNDS}} paired rounds; then counters at 10 threads, {{REPS}} reps, and the footprint at -3 and -9"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-workers-level3: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-workers-level3: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    command -v bzip2 >/dev/null || { echo "bench-workers-level3: needs bzip2 (the -3 corpora)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    cargo build -q --release --features trace --example occupancy
+    AB=$PWD/target/release/examples/ab
+    OCC=$PWD/target/release/examples/occupancy
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; bzip2 --version </dev/null 2>&1 | sed -n 1p; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" "$OCC" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    # the -3 corpora: the same bytes, recompressed by bzip2 -3 (one stream, 300 kB blocks),
+    # checked to be level 3 and to decode to the source's bytes
+    level3() {
+      bzip2 -dc "$1" | bzip2 -3 > "$2"
+      [ "$(head -c 4 "$2")" = BZh3 ] || { echo "bench-workers-level3: $2 is not a level-3 stream"; exit 1; }
+      [ "$(bzip2 -dc "$1" | sha256sum)" = "$(bzip2 -dc "$2" | sha256sum)" ] \
+        || { echo "bench-workers-level3: $2 does not decode to $1's bytes"; exit 1; }
+    }
+    level3 "$W/wikidata.bz2" "$W/wikidata-l3.bz2"
+    level3 "$W/gen/text.bz2" "$W/text-l3.bz2"
+    : > "$W/wikidata-l3-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata-l3.bz2" >> "$W/wikidata-l3-x{{COPIES}}.bz2"; done
+    sha256sum "$W/wikidata-l3-x{{COPIES}}.bz2" "$W/text-l3.bz2" "$W/wikidata-l3.bz2" "$W/wikidata.bz2" \
+      "$W/gen/text.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    "$AB" run "$O/judged.jsonl" --arms "$arms" --threads 10 --rounds {{ROUNDS}} --spread \
+      "$W/wikidata-l3-x{{COPIES}}.bz2" "$W/text-l3.bz2"
+    "$AB" summary "$O/judged.jsonl" --ref mibz2 | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2 \
+      --cand mibz2-occ-9-36 --cand mibz2-occ-8-32 --cand mibz2-occ-7-28 --cand mibz2-occ-6-24 \
+      --cand mibz2-occ-4-16 \
+      --main wikidata-l3-x{{COPIES}} --guard text-l3 --judged 10 --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads 0 \
+      | tee "$O/verdict.txt" \
+      || echo "bench-workers-level3: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # the counters (decide nothing): skipped, and said so, where perf cannot count; an event
+    # `perf list` does not name is dropped, and said so
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 1 ]; then
+      perf --version | tee "$O/perf_version.txt"
+      perf list > "$O/perf_list.txt" 2>&1 || true
+      has() { grep -Fqw -- "$1" "$O/perf_list.txt"; }
+      one=""; llc=""
+      for e in ref-cycles instructions l2_rqsts.miss task-clock; do
+        if has "$e"; then one="$one,$e"; else echo "the event $e: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+      done
+      if has LLC-load-misses; then llc="cycles,LLC-load-misses"; else echo "the event LLC-load-misses: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+      groups=""
+      [ -z "$one" ] || groups="cycles$one"
+      [ -z "$llc" ] || groups="${groups:+$groups;}$llc"
+      echo "the groups: ${groups:-none}" | tee -a "$O/events.txt"
+      if [ -n "$groups" ]; then
+        python3 bench/counters.py run --ab "$AB" --arm mibz2 --arm mibz2-occ-9-36 --arm mibz2-occ-8-32 \
+          --arm mibz2-occ-7-28 --arm mibz2-occ-6-24 --arm mibz2-occ-4-16 --groups "$groups" --threads 10 \
+          --reps {{REPS}} --file "$W/wikidata-l3.bz2" --out "$O/counters.jsonl"
+        python3 bench/counters.py report "$O/counters.jsonl" --ref mibz2 --cand mibz2-occ-9-36 \
+          --cand mibz2-occ-8-32 --cand mibz2-occ-7-28 --cand mibz2-occ-6-24 --cand mibz2-occ-4-16 \
+          --workers mibz2=10 --groups "$groups" --threads 10 --reps {{REPS}} \
+          | tee "$O/counters.txt" \
+          || echo "bench-workers-level3: the counters are VOID (counters.txt says why); the verdict stands"
+      else
+        echo "bench-workers-level3: the counters skipped (perf list names none of their events); the verdict stands" | tee "$O/counters.txt"
+      fi
+    else
+      echo "bench-workers-level3: the counters skipped (no perf, or kernel.perf_event_paranoid $paranoid above 1); the verdict stands" | tee "$O/counters.txt"
+    fi
+    # the footprint (decides nothing): production's decoder at 10 threads, 40 blocks in flight
+    # (ten lazy workers on the i9), on one copy at -3 and at -9. The ledger's arithmetic (full
+    # blocks of the file's level, a column-only worker: it has no entry for lazy letters), then
+    # each worker's buffers as it recorded them at its end (capacities, `full` mode), measured
+    for f in wikidata-l3 wikidata; do
+      "$OCC" "$W/$f.bz2" --ledger --threads 10 --slots 40 | tee "$O/ledger-$f.txt" \
+        || echo "bench-workers-level3: the ledger at $f failed; the verdict stands"
+      "$OCC" "$W/$f.bz2" --threads 10 --slots 40 --rounds 3 --out "$O/occupancy-$f.json" \
+        --meta "commit=$(git rev-parse HEAD)" > "$O/occupancy-$f.txt" 2>&1 \
+        || echo "bench-workers-level3: the occupancy run at $f exited non-zero (occupancy-$f.txt says why); the verdict stands"
+      echo "$f: $(grep -F 'worker buffers' "$O/occupancy-$f.txt" || echo 'no worker buffers line')" | tee -a "$O/footprint.txt"
+    done
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,

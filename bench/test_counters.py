@@ -202,6 +202,28 @@ def main():
     ok = code == 1 and "VOID" in out and "not ARM=N" in out
     results.append(ok)
     print(f"{'ok  ' if ok else 'FAIL'} --workers malformed: exit {code}, VOID")
+    # the level-3 diagnostic (`just bench-workers-level3`): the at-cores roster and 4/16 beside
+    # it, below `LAZY_FROM_THREADS`, its four workers read from its name
+    l3_cands = [*atc_cands, "mibz2-occ-4-16"]
+    l3_file = d / "l3.jsonl"
+    subprocess.run([sys.executable, str(HERE / "counters.py"), "run", "--ab", str(d / "ab"),
+                    *sum((["--arm", x] for x in ["mibz2", *l3_cands]), []), "--threads", "10", "--reps", "2",
+                    "--file", "x.bz2", "--out", str(l3_file), "--groups", atc_groups],
+                   env=e, capture_output=True, check=True)
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        code = counters.main(["counters.py", "report", str(l3_file), "--ref", "mibz2",
+                              *sum((["--cand", c] for c in l3_cands), []), "--threads", "10", "--reps", "2",
+                              "--groups", atc_groups, "--workers", "mibz2=10"])
+    out = buf.getvalue()
+    want = ["mibz2: IPC 3.000; cycles over ref-cycles 0.500; busy share 0.800 a worker (task-clock over wall x 10)",
+            "mibz2-occ-4-16: IPC 3.000; cycles over ref-cycles 0.500; busy share 2.000 a worker"]
+    ok = code == 0 and all(w in out for w in want)
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} the level-3 roster, W 10 to 4: exit {code}, "
+          + ", ".join(f"{'found' if w in out else 'missing'} {w!r}" for w in want))
+    if not ok:
+        print(out)
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0
