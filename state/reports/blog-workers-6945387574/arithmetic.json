@@ -1,0 +1,50 @@
+{
+  "fits": [
+    {
+      "exponent": 1.5,
+      "c7": 0.7593024276008129,
+      "contention_share": 0.6049005125034072,
+      "conditional_speedup": 2.53100809200271,
+      "continuous_optimum": 8.365008367162515,
+      "share_at_optimum": 0.6666666666666666
+    },
+    {
+      "exponent": 1.75,
+      "c7": 0.7586075914804942,
+      "contention_share": 0.5122643061376302,
+      "conditional_speedup": 2.0502907877851193,
+      "continuous_optimum": 8.022592154845334,
+      "share_at_optimum": 0.5714285714285714
+    },
+    {
+      "exponent": 2,
+      "c7": 0.7552,
+      "contention_share": 0.4412076271186441,
+      "conditional_speedup": 1.7895734597156399,
+      "continuous_optimum": 7.87774228630334,
+      "share_at_optimum": 0.5
+    },
+    {
+      "exponent": 2.5,
+      "c7": 0.7532836284843298,
+      "contention_share": 0.344204518298148,
+      "conditional_speedup": 1.5248656447051212,
+      "continuous_optimum": 7.702687480509562,
+      "share_at_optimum": 0.4
+    }
+  ],
+  "quadratic_wall_proxy": {
+    "6": 0.11113333333333332,
+    "7": 0.10788571428571428,
+    "8": 0.10715,
+    "9": 0.10808888888888887,
+    "10": 0.11019999999999999
+  },
+  "wall8_over7": 0.9931806144067796,
+  "cycles_saved_per_miss": 588.3575883575883,
+  "relative_L2_increase": 0.03338171262699574,
+  "relative_LLC_decrease": 0.489816700610998,
+  "wall_reduction_at_ratio_0885": 0.11499999999999999,
+  "throughput_gain_at_ratio_0885": 0.12994350282485878,
+  "buffer_ratio": 0.355145746579417
+}

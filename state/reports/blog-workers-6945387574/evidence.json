@@ -1,0 +1,15 @@
+{
+  "trigger": 6945387574,
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "post_sha": "3c957d936dcdcd4a691925256491d8f4992a5187",
+  "monodromy_sha": "be614017696167f2f84ed7dafee600afc1afa8b6",
+  "plan_merge": "521ef934edb4c5f763aaf542ee70d043a1735dfc",
+  "baseline_before_post": true,
+  "live_render_verified": false,
+  "limitations": [
+    "Directory and .html routes returned HTTP404",
+    "New confirmation/W12/-3 archives not independently replayed in this article review",
+    "Low-thread result remains pending within reviewed evidence"
+  ],
+  "verdict": "REVISE"
+}
