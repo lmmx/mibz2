@@ -1,0 +1,12 @@
+# Independent baseline before reading the knee article
+Assignment6955971254. Reconstructed from raw release-scaling runs committed at ccba7bb6 (sixteen run directories), release-attribution ledger, LOGs6946756938/6952656453/6948385717/6949008682, and cells-imc diagnostic. Prior research is known; independence is from the article narrative, not blindness to the subject.
+
+The release curve combines changed decoder code, routing, worker counts and affinity. Requested threads are not active workers. 0.5.4 uses seven lazy workers at ten and beyond, six at eight in the pinned class. Thus removing the regression beyond eight requested threads is an engineering success, not evidence of continued parallel scaling as worker counts increase. Ten to twenty is a plan plateau with different allowed CPUs, not a clean SMT experiment.
+
+The earliest 0.2.4 raw curve has wall .16109 at8, .16428 at10 and .16639 at20 (2–3% penalty). But 0.2.5–0.3.3 often have ten faster than eight: do not generalise the initial fall over every early release. 0.5.0 has .11008 at8 versus .12162/.12997/.12811/.12865 at10/12/16/20: pronounced fall. 0.5.4 has .10473 at8, .10170 at10 and .10664/.10617/.10918 at12/16/20 in its own current-arm data. Pooled/history aggregations can differ and must be reproduced using their convention.
+
+Attribution ledger supports staged kernel and memory improvements, ports to previously excluded team paths, then routing changes from teams to independent workers and count trims. CI has only four CPUs; high-count attribution needs single-merge intervals or split runs. Cross-release absolute times are historical observations, not one paired causal experiment. The initial spinner-conditioning change also limits naive historical causal comparison.
+
+Unpinned timeline: workers busy93–95%, low idle; no major measured front-end starvation. Miss-read proxy25–28GB/s vs triad37.6GB/s does not measure total traffic or establish DRAM saturation. A historical IMC result at another kernel/configuration cannot simply become current total bandwidth. Fewer workers can lower cache cost while losing parallelism; disappearing low-count gains do not exclude a cache contribution. Use paired current-plan evidence for deployment claims.
+
+Held-out reader probe fixed now: Does this mean twenty workers scale better, is the memory bandwidth limit proved, and should every machine pick seven? Expected answer: no to all three. It is a scoped measured-machine policy, supported by workload-specific tests, with remaining mechanisms and transfer open.
