@@ -6,5 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-w12-stores             bench/w12-stores          W12 against lazy at 10 threads: store write-backs and store-buffer stalls (#512; rule in #160 comment 6931580102, posted before the data)
-bench-workers-low            bench/workers-low         8 / 7 / 6 workers at 4 a worker past the cores, 8-32 the reference (stacked on #510; MONODROMY records 41-42 frozen before the data)
+bench-workers-at-cores       bench/workers-at-cores    7/8/9 workers at 10 threads and 6/7 at 8, against production, within the cores (#515, stacked on #514; MONODROMY record 43 frozen before the data)
