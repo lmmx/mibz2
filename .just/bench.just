@@ -2201,6 +2201,101 @@ bench-eager-trim COPIES="4" ROUNDS="8" REPS="4":
     fi
     bash bench/bundle.sh "$O"
 
+# The trims unpinned (the registration, docs/journal/2026-11-17-unpinned.md, posted before the
+# data; stacked on #533, after LOG 6946756938 on #145): every run that measured the worker trims
+# at 6, 8 and 10 threads was pinned one CPU a core (`--spread`, CPUs 0..T-1 on the i9), but a
+# decoder in real use is unpinned on all 20 CPUs, where two workers may share a core's SMT
+# siblings. The same explicit arms, unpinned: lazy 7/28 over lazy 10/40 at 10 threads, lazy 6/24
+# over lazy 8/32 at 8, lazy 5/20 over eager 6/24 at 6 (`ab`'s `mibz2-occ-N-S` and `mibz2-oce-N-S`;
+# the reference at each count the untrimmed plan, `two_arm.py --ref-at`), so production's
+# predicate plays no part. Every run on every online CPU (`ab run --unpinned`: the affinity set
+# in the child before it execs and read back; the record's `cpus` that list), no spinner (no CPU
+# is free of an unpinned decode), and the checker told so (`--unpinned --hold-max-threads 0`).
+# One `ab run` a count with its two arms alone (`--judge-at --sparse`), one build by rustc 1.99.1,
+# COPIES copies of the Wikidata sample (the gain family) and text (a loss and memory guard).
+# Then, reported only: production's `mibz2` at 10 threads unpinned, PROD rounds, its worker
+# threads counted from each record's `observed_threads` (7 expected on the i9, `trims_to_seven`),
+# and each judged record's worker and non-worker CPU (`bench/thread_split.py`). No counters.
+bench-unpinned COPIES="4" ROUNDS="10" PROD="3":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/unpinned
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-unpinned (the registration, docs/journal/2026-11-17-unpinned.md): unpinned on every online CPU, mibz2-occ-7-28 over mibz2-occ-10-40 at 10 threads, mibz2-occ-6-24 over mibz2-occ-8-32 at 8, mibz2-occ-5-20 over mibz2-oce-6-24 at 6, at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and on text, {{ROUNDS}} paired rounds; then production's mibz2 at 10 threads unpinned, {{PROD}} rounds, reported"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-unpinned: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-unpinned: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    # one `ab run` a count, its two arms alone, all appending to one file; every run on every
+    # online CPU, and no spinner
+    for spec in "10:mibz2-occ-10-40,mibz2-occ-7-28" \
+                "8:mibz2-occ-8-32,mibz2-occ-6-24" \
+                "6:mibz2-oce-6-24,mibz2-occ-5-20"; do
+      echo "at ${spec%%:*} threads, unpinned: ${spec#*:}"
+      "$AB" run "$O/judged.jsonl" --arms "${spec#*:}" --threads "${spec%%:*}" --rounds {{ROUNDS}} \
+        --unpinned "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    done
+    python3 bench/two_arm.py "$O/judged.jsonl" \
+      --ref-at mibz2-occ-10-40=10 --ref-at mibz2-occ-8-32=8 --ref-at mibz2-oce-6-24=6 \
+      --cand mibz2-occ-7-28 --cand mibz2-occ-6-24 --cand mibz2-occ-5-20 \
+      --judge-at mibz2-occ-7-28=10 --judge-at mibz2-occ-6-24=8 --judge-at mibz2-occ-5-20=6 --sparse \
+      --main wikidata-x{{COPIES}} --guard text --judged "10,8,6" --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads 0 --unpinned \
+      | tee "$O/verdict.txt" \
+      || echo "bench-unpinned: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # reported, not judged: production's own decoder at 10 threads unpinned, which on the i9
+    # should be seven lazy workers (`trims_to_seven`, which reads 20 CPUs allowed)
+    "$AB" run "$O/production.jsonl" --arms mibz2 --threads 10 --rounds {{PROD}} \
+      --unpinned "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    python3 - "$O/production.jsonl" <<'PY' | tee "$O/production.txt"
+    import json, re, sys
+    seen = []
+    for line in open(sys.argv[1]):
+        r = json.loads(line)
+        names = [p.partition("=")[0] for p in str(r.get("observed_threads", "")).split()]
+        w = sum(1 for n in names if re.fullmatch(r"mibz2-\d+", n))
+        seen.append(w)
+        print(f"{r['corpus']} round {r['round']}: cpus {r['cpus']}; {w} worker threads; wall {r['wall']:.3f} s; "
+              f"observed {r.get('observed_threads')}")
+    verdict = "seven workers in every run, as trims_to_seven builds" if seen and set(seen) == {7} else \
+        f"NOT seven workers in every run: {sorted(set(seen))} (on the i9 production at 10 threads unpinned should build 7)"
+    print(f"production mibz2 at 10 threads unpinned, {len(seen)} runs (reported, judges nothing): {verdict}")
+    PY
+    # reported, not judged: from the judged records' per-thread samples, each arm's workers' busy
+    # share and its non-workers' CPU over wall, count by count (W from the arms' names)
+    : > "$O/thread-split.txt"
+    for t in 10 8 6; do
+      python3 bench/thread_split.py "$O/judged.jsonl" --threads "$t" | tee -a "$O/thread-split.txt" \
+        || echo "bench-unpinned: the thread split at $t threads is VOID (thread-split.txt says why); the verdict stands"
+    done
+    bash bench/bundle.sh "$O"
+
 # 12-byte rules (#506), their adoption run (the registration on #145, posted before the data):
 # whether production's lazy kernel should store each rule in 12 bytes, not 16
 # (`bwt::W12LazyCells`). Master's decoder (`mibz2@build-master`, built at MASTER, the commit

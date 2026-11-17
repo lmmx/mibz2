@@ -595,6 +595,91 @@ def main():
         r for r in ett() if not (r["arm"] == "mibz2-occ-7-28" and r["round"] == 2)], 1,
         ["VOID", "roster keys missing"], args=ett_args()))
 
+    # unpinned, the reference by count (`just bench-unpinned`): every run on all 20 CPUs, no
+    # spinner; at 10 threads lazy 7/28 over lazy 10/40, at 8 lazy 6/24 over lazy 8/32, at 6 lazy
+    # 5/20 over eager 6/24. One Holm family of three cells, a verdict and a choice a count
+    unp_ref = {10: "mibz2-occ-10-40", 8: "mibz2-occ-8-32", 6: "mibz2-oce-6-24"}
+    unp_cand = {10: "mibz2-occ-7-28", 8: "mibz2-occ-6-24", 6: "mibz2-occ-5-20"}
+    every = ",".join(str(c) for c in range(20))
+
+    def unp(steps=None, guard=None, mem=None, edit=None):
+        import random
+        steps, guard, mem = steps or {}, guard or {}, mem or {}
+        rng = random.Random(31)
+        rows = []
+        for t in (10, 8, 6):
+            for i in range(R):
+                for corpus, out in (("wikidata-x4", (838800784, "aa")), ("text", (49067679, "bb"))):
+                    base = 0.5 * (1 + 0.02 * rng.uniform(-1, 1))
+                    wig = 1 + 0.01 * (1 if i % 2 else -1)
+                    for arm in (unp_ref[t], unp_cand[t]):
+                        f = (steps if corpus == "wikidata-x4" else guard).get(t, 1.0)
+                        wall = base * (f * wig if arm == unp_cand[t] else 1.0)
+                        rss = 100000 * t * (mem.get(t, 1.0) if arm == unp_cand[t] else 1.0)
+                        r = {"round": i, "corpus": corpus, "threads": t, "arm": arm, "termination": "success",
+                             "wall": wall, "cpu": wall * t * 0.9, "rss_kb": rss, "out": out[0],
+                             "hash": out[1], "cpus": every}
+                        r = edit(r) if edit else r
+                        if r is not None:
+                            rows.append(r)
+        return rows
+
+    def unp_args(refs=None, unpinned=True, hold="0", ref=None):
+        refs = [f"{a}={t}" for t, a in unp_ref.items()] if refs is None else refs
+        return [*(["--ref", ref] if ref else []), *sum((["--ref-at", x] for x in refs), []),
+                *sum((["--cand", c] for c in unp_cand.values()), []),
+                *sum((["--judge-at", f"{c}={t}"] for t, c in unp_cand.items()), []), "--sparse",
+                "--main", "wikidata-x4", "--guard", "text", "--judged", "10,8,6", "--controls", "",
+                "--hold-max-threads", hold, *(["--unpinned"] if unpinned else [])]
+
+    results.append(expect_low("unpinned: each count against its own reference", unp({10: 0.88, 8: 0.97}), 0, [
+        "the reference by count: mibz2-occ-10-40 at 10, mibz2-occ-8-32 at 8, mibz2-oce-6-24 at 6",
+        "unpinned: every run on every CPU", "over the 3 main-corpus cells",
+        "10 threads: the judged cells, each candidate over mibz2-occ-10-40",
+        "6 threads: the judged cells, each candidate over mibz2-oce-6-24",
+        "VERDICT for mibz2-occ-7-28 at 10 threads: ADOPTS", "VERDICT for mibz2-occ-6-24 at 8 threads: ADOPTS",
+        "VERDICT for mibz2-occ-5-20 at 6 threads: NOT ADOPTED", "THE CHOICE at 10 threads: mibz2-occ-7-28",
+        "THE CHOICE at 6 threads: none; the reference stays"], args=unp_args(), absent=["VOID"]))
+    results.append(expect_low("unpinned: a loss at 6, the memory gate at 8", unp({6: 1.05, 8: 0.95}, mem={8: 1.2}), 0, [
+        "VERDICT for mibz2-occ-5-20 at 6 threads: NOT ADOPTED. No gain established (Holm does not reject); "
+        "SLOWER on ['wikidata-x4']", "VERDICT for mibz2-occ-6-24 at 8 threads: HELD ON MEMORY"], args=unp_args()))
+    results.append(expect_low("unpinned: a run pinned one CPU a core", unp(
+        edit=lambda r: {**r, "cpus": ",".join(str(c) for c in range(r["threads"]))} if r["round"] == 4 else r), 1,
+        ["VOID", "are not every one of the 20 CPUs (unpinned)"], args=unp_args()))
+    results.append(expect_low("unpinned: a run recorded as 'all' (inherited, not set)", unp(
+        edit=lambda r: {**r, "cpus": "all"} if r["threads"] == 8 and r["round"] == 0 else r), 1,
+        ["VOID", "'all' missing or malformed, not every CPU listed"], args=unp_args()))
+    results.append(expect_low("unpinned: a CPU missing", unp(
+        edit=lambda r: {**r, "cpus": ",".join(str(c) for c in range(19))} if r["threads"] == 6 else r), 1,
+        ["VOID", "not every one of the 20 CPUs"], args=unp_args()))
+    results.append(expect_low("unpinned: a spinner recorded", unp(
+        edit=lambda r: {**r, "held_spinner": {"cpu": 19, "auto": True, "overlap": True, "decoder_cpus": every,
+                                              "owner": "run", "cpu_s": 2.0}} if r["threads"] == 10 else r), 1,
+        ["VOID", "sharing a decoder core"], args=unp_args()))
+    results.append(expect_low("unpinned: a spinner allowed", unp(), 1,
+                              ["VOID", "--unpinned: with --hold-max-threads 0 only"], args=unp_args(hold="9")))
+    results.append(expect_low("unpinned runs read as pinned ones", unp(), 1,
+                              ["VOID", "are not one on each of 10 cores"], args=unp_args(unpinned=False)))
+    results.append(expect_low("--ref-at: a count with none", unp(), 1, ["VOID", "the judged count 6 has no --ref-at"],
+                              args=unp_args(refs=["mibz2-occ-10-40=10", "mibz2-occ-8-32=8"])))
+    results.append(expect_low("--ref-at: a count with two", unp(), 1, ["VOID", "8 has two references"],
+                              args=unp_args(refs=["mibz2-occ-10-40=10,8", "mibz2-occ-8-32=8", "mibz2-oce-6-24=6"])))
+    results.append(expect_low("--ref-at: a count not judged", unp(), 1, ["VOID", "4 is not a judged count"],
+                              args=unp_args(refs=[*(f"{a}={t}" for t, a in unp_ref.items()), "mibz2=4"])))
+    results.append(expect_low("--ref-at: malformed", unp(), 1, ["VOID", "not ARM=COUNTS"],
+                              args=unp_args(refs=[*(f"{a}={t}" for t, a in unp_ref.items()), "mibz2"])))
+    results.append(expect_low("--ref-at and --ref together", unp(), 1, ["VOID", "--ref or --ref-at, exactly one"],
+                              args=unp_args(ref="mibz2")))
+    results.append(expect_low("neither --ref nor --ref-at", unp(), 1, ["VOID", "--ref or --ref-at, exactly one"],
+                              args=unp_args(refs=[])))
+    results.append(expect_low("--ref-at: a reference that is a candidate", unp(), 1, ["VOID", "two arms are one"],
+                              args=unp_args(refs=["mibz2-occ-10-40=10", "mibz2-occ-8-32=8", "mibz2-occ-5-20=6"])))
+    results.append(expect_low("--ref-at without --judge-at", low(), 1, ["VOID", "--ref-at: with --judge-at and --sparse"],
+                              args=low_args()[2:] + ["--ref-at", "mibz2-occ-8-32=12,16,20"]))
+    results.append(expect_low("unpinned: the reference missing at a count", unp(
+        edit=lambda r: None if r["arm"] == "mibz2-oce-6-24" and r["round"] == 1 else r), 1,
+        ["VOID", "roster keys missing"], args=unp_args()))
+
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

@@ -9,6 +9,7 @@ correction, #145 REVIEW 6921090225), for `just bench-cores-less-one` (#481) and 
                --judged 12,16,20 --controls 9,10 --env ENV.json [--rounds 10]
                [--cores 10 --cpus 20] [--hold-max-threads 9] [--context ARM ...]
                [--judge-at ARM=COUNTS ... [--sparse] [--pair ARM/ARM ...]]
+               [--ref-at ARM=COUNTS ... in place of --ref] [--unpinned]
 
 **Several candidates** (`--cand` repeated; `just bench-workers-window`): each is read against the one
 reference as below, but Holm's family is every candidate's main-corpus judged cells together, and
@@ -53,6 +54,19 @@ and A's peak memory over B's, in both corpora. A pair enters no Holm family, no 
 memory gate, no verdict and no choice. A pair naming an arm that is not the reference, a
 candidate or a context arm, naming one arm twice, or present at no judged count is VOID.
 
+**A reference by count** (`--ref-at ARM=T[,T...]`, repeated, in place of `--ref`; with `--judge-at`
+and `--sparse` only; none by default, and then nothing here changes; `just bench-unpinned`): each
+judged count has its own reference arm, named by exactly one `--ref-at`, and every ratio, the
+memory gate and the choice at that count are against it. At 10 threads lazy 10/40, at 6 eager 6/24,
+say: the untrimmed plan at each count, as explicit arms. A reference arm that is also a candidate
+or a context arm, a judged count with none or two, or a count that is not judged is VOID.
+
+**Unpinned runs** (`--unpinned`; off by default, and then nothing here changes; `just
+bench-unpinned`, `ab run --unpinned`): every record, at every count, must have run on every CPU of
+the registered profile: its `cpus` a list naming each of the `--cpus` CPUs once (not `all`, which
+says only that the run inherited the harness's affinity), and no spinner (`--hold-max-threads 0`
+required: an unpinned decode may run on any CPU, so no core is free to hold).
+
 **Arms.** A record's arm is canonical: `NAME` for this build's harness, and `NAME@build-X`
 for another build's (`ab run`'s `NAME@EXE` arm, EXE under a directory `build-X`).
 
@@ -84,7 +98,8 @@ registration on #145).
     registered: `--cores` physical cores and `--cpus` CPUs in the affinity, each core's CPUs
     listed and together all of them, and no CPU quota;
   - *the pinning:* a record's `cpus` missing or malformed; at a count up to the cores, not one
-    CPU on each of that many distinct cores (`ab run --spread`); past the cores, not `all`;
+    CPU on each of that many distinct cores (`ab run --spread`); past the cores, not `all`; with
+    `--unpinned`, at any count, not every registered CPU;
   - *the spinner:* at a count up to `--hold-max-threads`, a record's `held_spinner` missing or
     malformed (its `cpu`, `overlap`, `decoder_cpus` and `owner`), its `decoder_cpus` not the
     record's own, or its CPU on a core of the decode's; past it, a spinner recorded.
@@ -224,10 +239,17 @@ def topology(path, cores, cpus, errors):
     return core_of
 
 
-def check_metadata(where, key, r, core_of, cores, hold_max, errors):
-    """A record's pinning and spinner, against the machine (`core_of`) and the hold limit"""
+def check_metadata(where, key, r, core_of, cores, hold_max, errors, unpinned=False):
+    """A record's pinning and spinner, against the machine (`core_of`) and the hold limit;
+    `unpinned`: every registered CPU at every count (`ab run --unpinned`)"""
     t, s = key[2], r.get("cpus")
-    if t > cores:
+    if unpinned:
+        lst = cpu_list(s)
+        if lst is None:
+            errors.append(f"{where}: {key} its CPUs {s!r} missing or malformed, not every CPU listed")
+        elif sorted(lst) != sorted(core_of) or len(set(lst)) != len(lst):
+            errors.append(f"{where}: {key} its CPUs {s!r} are not every one of the {len(core_of)} CPUs (unpinned)")
+    elif t > cores:
         if s != "all":
             errors.append(f"{where}: {key} pinned {s!r} past the {cores} cores, not unpinned ('all')")
     else:
@@ -262,8 +284,8 @@ def check_metadata(where, key, r, core_of, cores, hold_max, errors):
 
 def load(path, roster, errors, meta=None):
     """The file's records by key (corpus, canonical arm, threads, round), after checking each
-    record and the roster; errors appended. `meta`: (core_of, cores, hold_max) to check each
-    record's pinning and spinner against"""
+    record and the roster; errors appended. `meta`: (core_of, cores, hold_max[, unpinned]) to
+    check each record's pinning and spinner against"""
     name, rows, outputs = os.path.basename(path), {}, {}
     if not os.path.exists(path):
         errors.append(f"{name}: missing")
@@ -306,7 +328,8 @@ def load(path, roster, errors, meta=None):
             if isinstance(hs, dict) and hs.get("overlap"):
                 errors.append(f"{where}: {key} ran beside a spinner sharing a decoder core")
             if meta is not None:
-                check_metadata(where, key, r, *meta, errors)
+                core_of, cores, hold_max, *unpinned = meta
+                check_metadata(where, key, r, core_of, cores, hold_max, errors, *unpinned)
             rows[key] = r
     missing = sorted(roster - set(rows))
     if missing:
@@ -347,6 +370,32 @@ def parse_judge_at(specs, cands, judged, errors):
     return out
 
 
+def parse_ref_at(specs, judged, errors):
+    """`--ref-at ARM=T[,T...]`'s map {count: its reference arm}; errors appended for a malformed
+    spec, a count that is not judged, and a judged count with no reference or two"""
+    out = {}
+    for spec in specs:
+        arm, eq, counts = spec.rpartition("=")
+        try:
+            ts = [int(t) for t in counts.split(",") if t]
+        except ValueError:
+            ts = []
+        if not eq or not arm or not ts:
+            errors.append(f"--ref-at {spec!r}: not ARM=COUNTS")
+            continue
+        for t in ts:
+            if t not in judged:
+                errors.append(f"--ref-at {spec!r}: {t} is not a judged count")
+            elif t in out:
+                errors.append(f"--ref-at {spec!r}: {t} has two references ({out[t]} and {arm})")
+            else:
+                out[t] = arm
+    for t in judged:
+        if t not in out and specs:
+            errors.append(f"the judged count {t} has no --ref-at")
+    return out
+
+
 def parse_pairs(specs, arms, judge_at, present, judged, errors):
     """`--pair A/B`'s list of (A, B); errors appended for a malformed pair, one not among the
     arms, or one present at no judged count (`present(t)`: the arms in the roster at t)"""
@@ -369,13 +418,14 @@ def parse_pairs(specs, arms, judge_at, present, judged, errors):
     return out
 
 
-def by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak, pairs=(), present=None, pcell=None):
+def by_count(a, refs, cands, context, judge_at, judged, corpora, cell, peak, pairs=(), present=None, pcell=None):
     """The verdicts with candidates judged by count (`--judge-at`): one Holm family over every
     judged main-corpus cell, then at each count a verdict for each candidate judged there and
-    the choice among those that ADOPT"""
+    the choice among those that ADOPT. `refs`: the reference arm at each count ({t: arm})"""
     steps, ps, mem, gm = {}, {}, {}, {}
     here = {t: [c for c in cands if t in judge_at[c]] for t in judged}
     for t in judged:
+        ref = refs[t]
         print(f"\n{t} threads: the judged cells, each candidate over {ref}, the paired rounds' wall ratios: "
               f"geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) "
               f"over {ref}'s")
@@ -443,7 +493,11 @@ def by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak, pair
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("runs")
-    ap.add_argument("--ref", required=True)
+    ap.add_argument("--ref")
+    ap.add_argument("--ref-at", action="append", default=[], metavar="ARM=COUNTS",
+                    help="in place of --ref, with --judge-at and --sparse: the reference at these counts")
+    ap.add_argument("--unpinned", action="store_true",
+                    help="every record ran on every registered CPU (ab run --unpinned), with no spinner")
     ap.add_argument("--cand", required=True, action="append")
     ap.add_argument("--main", required=True)
     ap.add_argument("--guard", required=True)
@@ -472,7 +526,15 @@ def main(argv):
     errors = []
     if R < 2:
         errors.append(f"--rounds {R}: at least 2")
-    arms = [ref, *cands, *context]
+    if (ref is None) == (not a.ref_at):
+        errors.append("the reference: --ref or --ref-at, exactly one of them")
+    if a.ref_at and not (a.judge_at and a.sparse):
+        errors.append("--ref-at: with --judge-at and --sparse only")
+    refs = parse_ref_at(a.ref_at, judged, errors) if a.ref_at else {t: ref for t in judged + controls}
+    ref_arms = list(dict.fromkeys(refs[t] for t in judged if t in refs)) if a.ref_at else [ref]
+    if a.unpinned and a.hold_max_threads != 0:
+        errors.append(f"--unpinned: with --hold-max-threads 0 only (no spinner), not {a.hold_max_threads}")
+    arms = [*ref_arms, *cands, *context]
     if set(judged) & set(controls) or len(set(arms)) != len(arms):
         errors.append("the judged and control counts overlap, or two arms are one")
     judge_at = parse_judge_at(a.judge_at, cands, judged, errors)
@@ -480,22 +542,26 @@ def main(argv):
     if a.sparse and (not judge_at or controls):
         errors.append("--sparse: with --judge-at and no control counts only")
     if a.sparse and judge_at:
-        here = {t: [ref, *(c for c in cands if t in judge_at.get(c, ())), *context] for t in judged}
+        here = {t: [refs.get(t, ref), *(c for c in cands if t in judge_at.get(c, ())), *context] for t in judged}
         roster = {(c, arm, t, i) for c in corpora for t in judged for arm in here[t] for i in range(R)}
     else:
         here = {t: arms for t in judged}
         roster = {(c, arm, t, i) for c in corpora for arm in arms for t in judged + controls for i in range(R)}
     pairs = parse_pairs(a.pair, arms, judge_at, here.get, judged, errors)
     core_of = topology(a.env, a.cores, a.cpus, errors)
-    rows = load(a.runs, roster, errors, None if core_of is None else (core_of, a.cores, a.hold_max_threads))
-    print(f"records {len(rows)}; roster {len(roster)} ({ref} and {' and '.join(cands)}"
+    rows = load(a.runs, roster, errors,
+                None if core_of is None else (core_of, a.cores, a.hold_max_threads, a.unpinned))
+    ref_name = ref if not a.ref_at else ("the reference by count: "
+                                         + ", ".join(f"{refs[t]} at {t}" for t in judged if t in refs))
+    print(f"records {len(rows)}; roster {len(roster)} ({ref_name} and {' and '.join(cands)}"
           + (f"; context {', '.join(context)}" if context else "") + f"; {a.main} and {a.guard}; "
           f"judged {judged}, controls {controls}; {R} rounds)"
           + (("; judged by count: " + ", ".join(f"{c} at {sorted(ts)}" for c, ts in judge_at.items()))
-             if judge_at else "") + ("; sparse: each count's own arms alone" if a.sparse else ""))
+             if judge_at else "") + ("; sparse: each count's own arms alone" if a.sparse else "")
+          + ("; unpinned: every run on every CPU" if a.unpinned else ""))
 
     def cell(corpus, t, cand):
-        return [math.log(rows[(corpus, cand, t, i)]["wall"] / rows[(corpus, ref, t, i)]["wall"]) for i in range(R)]
+        return [math.log(rows[(corpus, cand, t, i)]["wall"] / rows[(corpus, refs[t], t, i)]["wall"]) for i in range(R)]
 
     def pcell(corpus, t, x, y):
         return [math.log(rows[(corpus, x, t, i)]["wall"] / rows[(corpus, y, t, i)]["wall"]) for i in range(R)]
@@ -523,7 +589,7 @@ def main(argv):
             print(f"  ... and {len(errors) - 25} more")
         return 1
     if judge_at:
-        return by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak, pairs, here.get, pcell)
+        return by_count(a, refs, cands, context, judge_at, judged, corpora, cell, peak, pairs, here.get, pcell)
 
     steps, ps, mem, gm = {}, {}, {}, {}
     for cand in cands:

@@ -16,6 +16,13 @@
 //!                      rounds, each arm runs in each position equally often
 //!     --cap ARM=N,..   run ARM (as given in --arms) in the first N rounds only
 //!     --pin CPU        the CPU 1-thread runs are pinned to (default 1)
+//!     --unpinned       run every run, whatever its threads (1 included), on every online
+//!                      CPU (/sys/devices/system/cpu/online), the affinity set in the child
+//!                      before it execs and read back there (the spawn fails unless it is
+//!                      exactly that), whatever this process's own; the record's `cpus` is
+//!                      that list, e.g. "0,1,...,19" on the i9, never `all`. Off by default.
+//!                      Refused with --spread, --pin or --hold-cpu: no CPU is the run's
+//!                      alone, so none is free to hold (`just bench-unpinned`)
 //!     --spread         pin a run of T threads, where the machine has at least T physical
 //!                      cores, to one CPU on each of T cores (its first SMT sibling), so 2
 //!                      threads on CI's 2-core runners are two cores' worth, never one
@@ -2383,70 +2390,211 @@ fn json_f(line: &str, key: &str) -> f64 {
         .unwrap_or(f64::NAN)
 }
 
+/// `ab run`'s options, parsed (`RunOpts::parse`): every default as it was before `--unpinned`
+#[derive(Debug)]
+struct RunOpts {
+    arms: Vec<String>,
+    threads: Vec<usize>,
+    rounds: usize,
+    max_busy: f64,
+    settle: f64,
+    pin: String,
+    spread: bool,
+    unpinned: bool,
+    machine_state: bool,
+    sysfs_state: bool,
+    hold: Option<Hold>,
+    hold_max: usize,
+    capped: BTreeMap<String, usize>,
+    files: Vec<String>,
+}
+
+impl RunOpts {
+    /// The options after `OUT.jsonl` (`args[0]`, skipped); Err for a combination `ab run`
+    /// refuses: `--unpinned` with `--spread`, `--pin` or `--hold-cpu`
+    fn parse(args: &[String]) -> Result<RunOpts, String> {
+        let mut o = RunOpts {
+            arms: vec!["mibz2".to_string(), "pbz2".into(), "lbzip2".into()],
+            threads: vec![1, 4],
+            rounds: 5,
+            max_busy: 1.5,
+            settle: 2.0,
+            pin: "1".to_string(),
+            spread: false,
+            unpinned: false,
+            machine_state: false,
+            sysfs_state: false,
+            hold: None,
+            hold_max: usize::MAX,
+            capped: BTreeMap::new(),
+            files: Vec::new(),
+        };
+        let mut pinned_to = false;
+        let mut i = 1;
+        while i < args.len() {
+            match args[i].as_str() {
+                "--arms" => {
+                    o.arms = args[i + 1].split(',').map(String::from).collect();
+                    i += 1;
+                }
+                "--threads" => {
+                    o.threads = args[i + 1].split(',').map(|x| x.parse().unwrap()).collect();
+                    i += 1;
+                }
+                "--rounds" => {
+                    o.rounds = args[i + 1].parse().unwrap();
+                    i += 1;
+                }
+                "--pin" => {
+                    o.pin = args[i + 1].clone();
+                    pinned_to = true;
+                    i += 1;
+                }
+                "--spread" => o.spread = true,
+                "--unpinned" => o.unpinned = true,
+                "--machine-state" => o.machine_state = true,
+                "--sysfs-state" => o.sysfs_state = true,
+                "--hold-cpu" => {
+                    o.hold = Some(Hold::parse(&args[i + 1]));
+                    i += 1;
+                }
+                "--hold-max-threads" => {
+                    o.hold_max = args[i + 1].parse().unwrap();
+                    i += 1;
+                }
+                "--max-busy" => {
+                    o.max_busy = args[i + 1].parse().unwrap();
+                    i += 1;
+                }
+                "--settle" => {
+                    o.settle = args[i + 1].parse().unwrap();
+                    i += 1;
+                }
+                "--cap" => {
+                    for c in args[i + 1].split(',') {
+                        let (arm, n) = c.split_once('=').expect("--cap ARM=ROUNDS,..");
+                        o.capped.insert(arm.to_string(), n.parse().unwrap());
+                    }
+                    i += 1;
+                }
+                f => o.files.push(f.to_string()),
+            }
+            i += 1;
+        }
+        if o.unpinned {
+            if o.spread {
+                return Err("--unpinned and --spread: a run is pinned or it is not".into());
+            }
+            if pinned_to {
+                return Err(
+                    "--unpinned and --pin: --unpinned runs 1-thread runs unpinned too".into(),
+                );
+            }
+            if o.hold.is_some() {
+                return Err(
+                    "--unpinned and --hold-cpu: an unpinned decode may run on any CPU, so no \
+                            CPU is free to hold"
+                        .into(),
+                );
+            }
+        }
+        Ok(o)
+    }
+}
+
+/// The CPUs a run of `t` threads is given, as its record's `cpus` names them: under
+/// `--unpinned` (`all`: the online CPUs, every one) that list at every count, 1 thread
+/// included; else 1 thread on `pin`, more on `--spread`'s CPUs where it gives some (`spread`),
+/// and None (unpinned as `all`, the affinity this process has) otherwise
+fn run_cpus(t: usize, pin: &str, spread: Option<String>, all: Option<&[usize]>) -> Option<String> {
+    match all {
+        Some(cpus) => Some(
+            cpus.iter()
+                .map(|c| c.to_string())
+                .collect::<Vec<_>>()
+                .join(","),
+        ),
+        None if t == 1 => Some(pin.to_string()),
+        None => spread,
+    }
+}
+
+/// A cpu_set_t of 1024 bits holding `cpus`; None if there are none or one is past 1023
+fn affinity_mask(cpus: &[usize]) -> Option<[u64; 16]> {
+    if cpus.is_empty() || cpus.iter().any(|&c| c >= 1024) {
+        return None;
+    }
+    let mut mask = [0u64; 16];
+    for &c in cpus {
+        mask[c / 64] |= 1 << (c % 64);
+    }
+    Some(mask)
+}
+
+/// `--unpinned`: the child's affinity set to `mask` between the fork and the exec, then read
+/// back, the spawn failing (EINVAL) unless it is exactly `mask`. So the child, and whatever
+/// build it execs, starts on those CPUs and no others: not this process's own affinity,
+/// whatever that is, and never a subset the kernel quietly narrowed it to (a cpuset)
+fn unpin(cmd: &mut Command, mask: [u64; 16]) {
+    use std::os::unix::process::CommandExt;
+    // SAFETY: between fork and exec only two system calls run, on stack arrays, and the
+    // error is built from a raw errno with no allocation
+    unsafe {
+        cmd.pre_exec(move || {
+            if sched_setaffinity(0, std::mem::size_of_val(&mask), mask.as_ptr()) != 0 {
+                return Err(std::io::Error::last_os_error());
+            }
+            let mut got = [0u64; 16];
+            if sched_getaffinity(0, std::mem::size_of_val(&got), got.as_mut_ptr()) < 0 {
+                return Err(std::io::Error::last_os_error());
+            }
+            if got != mask {
+                return Err(std::io::Error::from_raw_os_error(22));
+            }
+            Ok(())
+        });
+    }
+}
+
+/// The online CPUs (`/sys/devices/system/cpu/online`), in order: `--unpinned`'s affinity.
+/// Falls back to the CPUs this process may run on where sysfs can't be read
+fn online_cpus() -> Vec<usize> {
+    let mut cpus: Vec<usize> = online_cores().into_iter().flatten().collect();
+    cpus.sort_unstable();
+    cpus.dedup();
+    cpus
+}
+
 fn run(args: &[String]) {
     let out_path = &args[0];
-    let mut arms = vec!["mibz2".to_string(), "pbz2".into(), "lbzip2".into()];
-    let mut threads = vec![1usize, 4];
-    let mut rounds = 5;
-    let mut max_busy = 1.5;
-    let mut settle = 2.0;
-    let mut pin = "1".to_string();
-    let mut spread = false;
-    let mut machine_state = false;
-    let mut sysfs_state = false;
-    let mut hold: Option<Hold> = None;
-    let mut hold_max = usize::MAX;
-    let mut capped: BTreeMap<String, usize> = BTreeMap::new();
-    let mut files = Vec::new();
-    let mut i = 1;
-    while i < args.len() {
-        match args[i].as_str() {
-            "--arms" => {
-                arms = args[i + 1].split(',').map(String::from).collect();
-                i += 1;
-            }
-            "--threads" => {
-                threads = args[i + 1].split(',').map(|x| x.parse().unwrap()).collect();
-                i += 1;
-            }
-            "--rounds" => {
-                rounds = args[i + 1].parse().unwrap();
-                i += 1;
-            }
-            "--pin" => {
-                pin = args[i + 1].clone();
-                i += 1;
-            }
-            "--spread" => spread = true,
-            "--machine-state" => machine_state = true,
-            "--sysfs-state" => sysfs_state = true,
-            "--hold-cpu" => {
-                hold = Some(Hold::parse(&args[i + 1]));
-                i += 1;
-            }
-            "--hold-max-threads" => {
-                hold_max = args[i + 1].parse().unwrap();
-                i += 1;
-            }
-            "--max-busy" => {
-                max_busy = args[i + 1].parse().unwrap();
-                i += 1;
-            }
-            "--settle" => {
-                settle = args[i + 1].parse().unwrap();
-                i += 1;
-            }
-            "--cap" => {
-                for c in args[i + 1].split(',') {
-                    let (arm, n) = c.split_once('=').expect("--cap ARM=ROUNDS,..");
-                    capped.insert(arm.to_string(), n.parse().unwrap());
-                }
-                i += 1;
-            }
-            f => files.push(f.to_string()),
-        }
-        i += 1;
-    }
+    let RunOpts {
+        arms,
+        threads,
+        rounds,
+        max_busy,
+        settle,
+        pin,
+        spread,
+        unpinned,
+        machine_state,
+        sysfs_state,
+        hold,
+        hold_max,
+        capped,
+        files,
+    } = RunOpts::parse(args).unwrap_or_else(|e| {
+        eprintln!("ab run: {e}");
+        std::process::exit(2)
+    });
+    // (--unpinned: every run on every online CPU, set in the child before it execs and read
+    // back there, the record's `cpus` that list)
+    let all: Option<Vec<usize>> = unpinned.then(online_cpus);
+    let unpin_mask = all.as_deref().map(|cpus| {
+        affinity_mask(cpus).unwrap_or_else(|| {
+            eprintln!("ab run: --unpinned: no online CPU, or one past 1023: {cpus:?}");
+            std::process::exit(2)
+        })
+    });
     let me = std::env::current_exe().unwrap();
     let mut out = std::fs::OpenOptions::new()
         .create(true)
@@ -2471,11 +2619,7 @@ fn run(args: &[String]) {
                         continue;
                     }
                     let waited = Instant::now();
-                    let cpus = if t == 1 {
-                        Some(pin.clone())
-                    } else {
-                        spread_cpus(t)
-                    };
+                    let cpus = run_cpus(t, &pin, spread_cpus(t), all.as_deref());
                     let mask: Vec<usize> = match &cpus {
                         Some(list) => cpu_list(list),
                         None => cores.iter().flatten().copied().collect(),
@@ -2506,13 +2650,18 @@ fn run(args: &[String]) {
                         Some((n, e)) => (n.to_string(), std::path::PathBuf::from(e)),
                         None => (arm.clone(), me.clone()),
                     };
-                    let mut cmd = match &cpus {
-                        Some(list) => {
+                    let mut cmd = match (&cpus, unpin_mask) {
+                        (_, Some(mask)) => {
+                            let mut c = Command::new(&exe);
+                            unpin(&mut c, mask);
+                            c
+                        }
+                        (Some(list), None) => {
                             let mut c = Command::new("taskset");
                             c.args(["-c", list]).arg(&exe);
                             c
                         }
-                        None => Command::new(&exe),
+                        (None, None) => Command::new(&exe),
                     };
                     cmd.args(["child", &name, &t.to_string(), file]);
                     // (--machine-state: the child counts its cycles, and the clock and the
@@ -2540,7 +2689,17 @@ fn run(args: &[String]) {
                         .stdout(std::process::Stdio::piped())
                         .stderr(std::process::Stdio::inherit())
                         .spawn()
-                        .unwrap();
+                        .unwrap_or_else(|e| {
+                            eprintln!(
+                                "ab run: {arm} at {t} threads did not start{}: {e}",
+                                if unpinned {
+                                    " (--unpinned: the affinity set and read back in the child)"
+                                } else {
+                                    ""
+                                }
+                            );
+                            std::process::exit(2)
+                        });
                     let census = Census::watch(child.id());
                     let o = child.wait_with_output().unwrap();
                     let observed = census.finish();
@@ -5555,6 +5714,120 @@ mod tests {
         assert_eq!(cores, vec![vec![0], vec![2]]);
         // siblings unreadable: each CPU a core of its own
         assert_eq!(group(&[0, 1], |_| None), vec![vec![0], vec![1]]);
+    }
+
+    fn run_args(extra: &[&str]) -> Vec<String> {
+        std::iter::once("out.jsonl")
+            .chain(extra.iter().copied())
+            .map(String::from)
+            .collect()
+    }
+
+    #[test]
+    fn unpinned_is_off_by_default() {
+        // the defaults as before `--unpinned`: pinned 1-thread runs on CPU 1, no spread
+        let o = RunOpts::parse(&run_args(&["--arms", "mibz2", "f.bz2"])).unwrap();
+        assert!(!o.unpinned && !o.spread);
+        assert_eq!(o.pin, "1");
+        assert_eq!(o.hold, None);
+        assert_eq!(o.files, vec!["f.bz2".to_string()]);
+        assert_eq!((o.threads, o.rounds), (vec![1, 4], 5));
+        // today's recipes' flags parse as they did
+        let o = RunOpts::parse(&run_args(&[
+            "--spread",
+            "--hold-cpu",
+            "auto",
+            "--hold-max-threads",
+            "9",
+            "--threads",
+            "6",
+            "f.bz2",
+        ]))
+        .unwrap();
+        assert!(o.spread && !o.unpinned);
+        assert_eq!((o.hold, o.hold_max), (Some(Hold::Auto), 9));
+        // and the CPUs a run is given are unchanged without it
+        let cores = group(&(0..20).collect::<Vec<_>>(), |c| {
+            Some(vec![c % 10, c % 10 + 10])
+        });
+        let spread = |t: usize| spread_list(&cores, t);
+        assert_eq!(run_cpus(1, "1", spread(1), None).as_deref(), Some("1"));
+        assert_eq!(
+            run_cpus(6, "1", spread(6), None).as_deref(),
+            Some("0,1,2,3,4,5")
+        );
+        assert_eq!(run_cpus(12, "1", spread(12), None), None);
+    }
+
+    #[test]
+    fn unpinned_parses_and_names_every_cpu() {
+        let o = RunOpts::parse(&run_args(&["--unpinned", "--threads", "6,8,10", "f.bz2"])).unwrap();
+        assert!(o.unpinned && !o.spread);
+        assert_eq!(o.threads, vec![6, 8, 10]);
+        assert_eq!(o.files, vec!["f.bz2".to_string()]);
+        // the i9's 20 CPUs at every count, 1 thread included, whatever the spread or the pin
+        let all: Vec<usize> = (0..20).collect();
+        let list = (0..20).map(|c| c.to_string()).collect::<Vec<_>>().join(",");
+        for t in [1, 6, 8, 10, 12, 20] {
+            assert_eq!(
+                run_cpus(t, "1", Some("0,1".into()), Some(&all)).as_deref(),
+                Some(list.as_str())
+            );
+        }
+        // refused beside a pin or a spinner
+        for bad in [
+            &["--unpinned", "--spread"][..],
+            &["--spread", "--unpinned"],
+            &["--unpinned", "--pin", "3"],
+            &["--unpinned", "--hold-cpu", "auto"],
+            &["--hold-cpu", "19", "--unpinned"],
+        ] {
+            assert!(RunOpts::parse(&run_args(bad)).is_err(), "{bad:?}");
+        }
+    }
+
+    #[test]
+    fn affinity_masks() {
+        let m = affinity_mask(&[0, 1, 19, 64, 1023]).unwrap();
+        assert_eq!(m[0], (1 << 0) | (1 << 1) | (1 << 19));
+        assert_eq!(m[1], 1);
+        assert_eq!(m[15], 1 << 63);
+        assert_eq!(affinity_mask(&[]), None);
+        assert_eq!(affinity_mask(&[1024]), None);
+    }
+
+    /// The affinity the child actually starts with, under `--unpinned`'s spawn: every online
+    /// CPU, read from the child's own /proc/self/status, the list the record's `cpus` names
+    #[test]
+    fn unpinned_child_runs_on_every_online_cpu() {
+        let all = online_cpus();
+        let mask = affinity_mask(&all).unwrap();
+        // from a parent pinned to one CPU, so the child's affinity cannot be inherited
+        let parent = std::thread::spawn(move || {
+            let one = affinity_mask(&[all[0]]).unwrap();
+            // SAFETY: a cpu_set_t of 1024 bits; pid 0 is this thread
+            assert_eq!(
+                unsafe { sched_setaffinity(0, std::mem::size_of_val(&one), one.as_ptr()) },
+                0
+            );
+            let mut cmd = Command::new("grep");
+            cmd.args(["Cpus_allowed_list", "/proc/self/status"]);
+            unpin(&mut cmd, mask);
+            let o = cmd.output().unwrap();
+            assert!(o.status.success());
+            let line = String::from_utf8(o.stdout).unwrap();
+            let got = cpu_list(line.split(':').nth(1).unwrap());
+            (got, run_cpus(4, "1", None, Some(&all)).unwrap(), all)
+        });
+        let (got, recorded, all) = parent.join().unwrap();
+        assert_eq!(got, all);
+        assert_eq!(cpu_list(&recorded), all);
+        // a mask with a CPU the kernel can't give (none online past 1023 here): the spawn fails
+        let mut bad = [0u64; 16];
+        bad[15] = 1 << 63;
+        let mut cmd = Command::new("true");
+        unpin(&mut cmd, bad);
+        assert!(cmd.status().is_err());
     }
 
     #[test]
