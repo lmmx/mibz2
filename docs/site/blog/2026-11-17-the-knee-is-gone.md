@@ -1,7 +1,7 @@
 ---
-title: "Straightening the knee: gaining speed with more threads and hyperthreading"
+title: "Straightening the knee: scaling throughput beyond physical cores"
 image: assets/social/blog-2026-11-17-the-knee-is-gone.png
-description: "mibz2 0.5.4 removes the ten-thread dip, and higher thread counts now hold near 2 GB/s instead of losing ground to contention."
+description: "mibz2 straightens its scaling curve by taming worker contention, sustaining nearly 2 GB/s from eight to twenty threads on a ten-core processor."
 ---
 
 <div class="post-hero" markdown>
@@ -11,9 +11,9 @@ description: "mibz2 0.5.4 removes the ten-thread dip, and higher thread counts n
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Straightening the knee: gaining speed with more threads and hyperthreading
+# Straightening the knee: scaling throughput beyond physical cores
 
-mibz2 0.5.4 removes the ten-thread dip, and higher thread counts now hold near 2 GB/s instead of losing ground to contention.
+mibz2 straightens its scaling curve by taming worker contention, sustaining nearly 2 GB/s from eight to twenty threads on a ten-core processor.
 {: .post-dek }
 
 17 November 2026 · 9 min read · [Research result](#5-what-comes-after-the-knee)

@@ -168,11 +168,11 @@
     "title": "Modelling the cache to rightsize workers"
   },
   "assets/social/blog-2026-11-17-the-knee-is-gone.png": {
-    "description": "mibz2 0.5.4 removes the ten-thread dip, and higher thread counts now hold near 2 GB/s instead of losing ground to contention.",
+    "description": "mibz2 straightens its scaling curve by taming worker contention, sustaining nearly 2 GB/s from eight to twenty threads on a ten-core processor.",
     "foot": "lmmx.github.io/mibz2 · 17 November 2026",
     "kind": "result",
     "section": " · Research blog",
-    "title": "Straightening the knee: gaining speed with more threads and hyperthreading"
+    "title": "Straightening the knee: scaling throughput beyond physical cores"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
