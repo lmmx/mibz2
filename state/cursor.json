@@ -2255,6 +2255,13 @@
       "review_comment_pr": 145,
       "review_comment_id": 6956210576,
       "publication_verification": "Exact body, author lmmx and destination145 read back; pinned coord.py has only its coordinator-only FROM limitation; role-aware header and misrouting checks passed."
+    },
+    {
+      "trigger_comment_id": 6956224553,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/blog-r4-6956224553/report.md"
     }
   ],
   "active_delegations": [],
