@@ -2873,7 +2873,7 @@ fn trim_cell(threads: usize, plan: Plan) -> Option<usize> {
 ///
 /// The machine is read whatever this process's affinity (`measured_i9`, from `machine`), and
 /// the affinity must be one the cells were measured in (`affinity_admits`): pinned one CPU a
-/// core on at least the threads asked, as every sweep measured them, at every cell; or
+/// core on exactly the threads asked, as every sweep measured them, at every cell; or
 /// unpinned, from 10 threads alone (`unpinned_trims`) until `bench-unpinned` reports on 8
 /// and 6.
 pub fn trimmed_workers(threads: usize, plan: Plan, k: Kernels, m: &Machine) -> Option<usize> {
@@ -2882,21 +2882,23 @@ pub fn trimmed_workers(threads: usize, plan: Plan, k: Kernels, m: &Machine) -> O
 }
 
 /// Whether this process's affinity (`target`) is one the cells were measured in (#145,
-/// the Researcher's REVIEW 6947387421): pinned one CPU a core on at least the threads asked
-/// (`pinned_one_a_core`), or the whole machine (`whole_machine`) where an unpinned run
-/// measured the count (`unpinned_trims`). Never another mask (two CPUs of a core, fewer
-/// cores than threads), nor an affinity that can't be read
+/// the Researcher's REVIEWs 6947387421 and 6948628221): pinned one CPU a core on exactly the
+/// threads asked (`pinned_one_a_core`), or the whole machine (`whole_machine`) where an
+/// unpinned run measured the count (`unpinned_trims`). Never another mask (two CPUs of a
+/// core, fewer or more cores than threads), nor an affinity that can't be read
 fn affinity_admits(threads: usize, m: &Machine) -> bool {
     pinned_one_a_core(threads, m) || (whole_machine(m) && unpinned_trims(threads))
 }
 
-/// Whether this process's affinity is one CPU on each of at least `threads` distinct cores,
-/// no two of its CPUs sharing a core: pinned as every sweep pinned its arms within the
-/// cores (`taskset -c 0-(N-1)` on the i9, CPU c on core c % 10)
+/// Whether this process's affinity is one CPU on each of exactly `threads` distinct cores,
+/// no two of its CPUs sharing a core: the measured class, pinned as every sweep pinned its
+/// arms within the cores (`taskset -c 0-(N-1)` on the i9, CPU c on core c % 10). Not a wider
+/// mask of one CPU a core (0-7 at 4 threads): more cores than threads leave the front end
+/// cores the runs never had (the Researcher's REVIEW 6948628221)
 fn pinned_one_a_core(threads: usize, m: &Machine) -> bool {
     m.target
         .as_ref()
-        .is_some_and(|t| t.phys == t.logical && t.logical >= threads)
+        .is_some_and(|t| t.phys == threads && t.logical == threads)
 }
 
 /// Whether this process may use the whole machine: its affinity's snapshot is the
@@ -4477,15 +4479,18 @@ mod plan_tests {
         let on = cfg!(all(target_os = "linux", target_arch = "x86_64"));
         let w = Plan::Workers;
         let cell = |t: usize, plan: Plan| trimmed_workers(t, plan, both, &i9);
-        // the low cells pinned one CPU a core (on 8, 6 or all 10 cores), not unpinned yet
+        // the low cells pinned one CPU a core on exactly their threads, not on more cores,
+        // and not unpinned yet
         let pin = |t: usize, plan: Plan, cores: usize| {
             trimmed_workers(t, plan, both, &Machine::pinned_i9(cores))
         };
-        for cores in [8, 9, 10] {
-            assert_eq!(pin(8, w(8), cores), on.then_some(6), "{cores}");
+        assert_eq!(pin(8, w(8), 8), on.then_some(6));
+        assert_eq!(pin(6, w(6), 6), on.then_some(5));
+        for cores in [9, 10] {
+            assert_eq!(pin(8, w(8), cores), None, "{cores}");
         }
-        for cores in [6, 7, 8, 10] {
-            assert_eq!(pin(6, w(6), cores), on.then_some(5), "{cores}");
+        for cores in [7, 8, 10] {
+            assert_eq!(pin(6, w(6), cores), None, "{cores}");
         }
         assert_eq!(cell(8, w(8)), None);
         assert_eq!(cell(6, w(6)), None);
@@ -4684,14 +4689,15 @@ mod plan_tests {
     /// Pinned or not (#145, the release-scaling run's finding, and the Researcher's REVIEW
     /// 6947387421; `Machine::pinned_i9`). The cells read the machine, not the affinity, and
     /// admit two affinities alone (`affinity_admits`):
-    /// - pinned one CPU on each of at least the threads asked, no two on a core, as every
+    /// - pinned one CPU on each of exactly the threads asked, no two on a core, as every
     ///   sweep measured them: lazy 5/20 at 6 (pinned 0-5), lazy 6/24 at 8 (0-7), lazy 7/28
     ///   at 10 (0-9), where before this the 10-thread trim declined pinned;
     /// - the whole machine (unpinned), from 10 threads alone (`unpinned_trims`): lazy 7/28 at
     ///   10 and more as #524, and master's plan at 8 and 6 until `bench-unpinned` reports.
     ///
     /// Through every entry point. Any other mask (two CPUs of a core, {0,10,1,11}; fewer
-    /// cores than threads; most CPUs but not all) and any quota keep master's plan; the
+    /// or more cores than threads, 0-7 at 4 or 6; most CPUs but not all) and any quota keep
+    /// master's plan; the
     /// service core's predicate still reads the affinity
     #[test]
     fn pinned_or_unpinned_on_the_i9() {
@@ -4785,16 +4791,21 @@ mod plan_tests {
             }
             arm.close();
         }
-        // pinned one a core on more cores than the threads asked: admitted (one CPU on each
-        // of at least T distinct cores)
-        assert_eq!(
-            trimmed_workers(6, w(6), both, &Machine::pinned_i9(8)),
-            Some(5)
-        );
-        assert_eq!(
-            trimmed_workers(8, w(8), both, &Machine::pinned_i9(10)),
-            Some(6)
-        );
+        // pinned one a core on more cores than the threads asked: refused (the measured class
+        // is exactly T cores, REVIEW 6948628221), and the default is master's
+        for (t, cores) in [(4, 8), (6, 7), (6, 8), (6, 10), (8, 9), (8, 10)] {
+            let m = Machine::pinned_i9(cores);
+            assert!(!affinity_admits(t, &m), "{t} on {cores}");
+            let plan = with_machine(m.clone(), || Plan::for_threads(t));
+            assert_eq!(plan, w(t), "{t} on {cores}");
+            assert_eq!(trimmed_workers(t, plan, both, &m), None, "{t} on {cores}");
+            let dec = with_machine(m.clone(), || StreamDecoder::new(t, 4 * t, both));
+            let want = masters(t, 4 * t, both, &m);
+            assert_eq!(shape(&dec), shape(&want), "{t} on {cores}");
+            assert_eq!(dec.threads(), t, "{t} on {cores}");
+            dec.close();
+            want.close();
+        }
         // unpinned from 10 threads, as #524
         for t in [11, 12, 16, 20, 24, 64] {
             assert_eq!(trimmed_workers(t, w(10), both, &i9), Some(7), "{t}");
@@ -4855,7 +4866,9 @@ mod plan_tests {
         }
         // the gates themselves
         assert!(pinned_one_a_core(8, &Machine::pinned_i9(8)));
-        assert!(pinned_one_a_core(6, &Machine::pinned_i9(8)));
+        assert!(pinned_one_a_core(10, &Machine::pinned_i9(10)));
+        assert!(!pinned_one_a_core(6, &Machine::pinned_i9(8)));
+        assert!(!pinned_one_a_core(4, &Machine::pinned_i9(8)));
         assert!(!pinned_one_a_core(8, &Machine::pinned_i9(6)));
         assert!(!pinned_one_a_core(4, &mask(2, 4)));
         assert!(!pinned_one_a_core(8, &i9));
