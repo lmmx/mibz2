@@ -185,9 +185,10 @@
     6943391643,
     6945387574,
     6946449283,
-    6946571935
+    6946571935,
+    6946859150
   ],
-  "last_processed_comment_id": 6946571935,
+  "last_processed_comment_id": 6946859150,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2191,12 +2192,15 @@
     },
     {
       "trigger_comment_id": 6946859150,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/fused-finish-6946859150/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "17ce296775e29c01915061fc6c5f3c7de94bac94",
-      "disposition": "Targeted description correction, then PROCEED unchanged i9 experiment; global default requires existing CI/safety/policy admission."
+      "disposition": "Targeted description correction, then PROCEED unchanged i9 experiment; global default requires existing CI/safety/policy admission.",
+      "review_comment_id": 6947023492,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body, lmmx author and destination145 verified by read-back; pinned coord.py route and role-aware verification pass, retaining only its coordinator-only FROM limitation."
     }
   ],
   "active_delegations": [],
