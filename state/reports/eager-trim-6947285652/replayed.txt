@@ -1,0 +1,46 @@
+records 128; roster 128 (mibz2 and mibz2-oce-5-20 and mibz2-occ-5-20 and mibz2-oce-3-12 and mibz2-oce-7-28 and mibz2-occ-7-28; wikidata-x4 and text; judged [6, 4, 10], controls []; 8 rounds); judged by count: mibz2-oce-5-20 at [6], mibz2-occ-5-20 at [6], mibz2-oce-3-12 at [4], mibz2-oce-7-28 at [10], mibz2-occ-7-28 at [10]; sparse: each count's own arms alone
+
+6 threads: the judged cells, each candidate over mibz2, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2's
+  mibz2-oce-5-20
+    wikidata-x4 (gain family): 0.9379 [0.9279, 0.9479] FASTER; p 1.02e-06; memory 0.860
+    text (loss and memory guard): 0.9939 [0.9774, 1.0105] INCONCLUSIVE; memory 0.882
+  mibz2-occ-5-20
+    wikidata-x4 (gain family): 0.9734 [0.9576, 0.9895] FASTER; p 3.00e-03; memory 0.867
+    text (loss and memory guard): 0.9926 [0.9797, 1.0056] INCONCLUSIVE; memory 0.887
+  Pairs at 6 threads, reported and not judged: the first arm over the second, the paired rounds' wall ratios; peak memory over the second's
+    mibz2-oce-5-20 over mibz2-occ-5-20 wikidata-x4: 0.9635 [0.9525, 0.9746] FASTER; memory 0.992
+    mibz2-oce-5-20 over mibz2-occ-5-20 text: 1.0013 [0.9937, 1.0090] INCONCLUSIVE; memory 0.994
+
+4 threads: the judged cells, each candidate over mibz2, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2's
+  mibz2-oce-3-12
+    wikidata-x4 (gain family): 0.9594 [0.9463, 0.9726] FASTER; p 9.27e-05; memory 0.761
+    text (loss and memory guard): 0.9679 [0.9478, 0.9885] FASTER; memory 0.813
+
+10 threads: the judged cells, each candidate over mibz2, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2's
+  mibz2-oce-7-28
+    wikidata-x4 (gain family): 0.9691 [0.9579, 0.9806] FASTER; p 1.96e-04; memory 0.745
+    text (loss and memory guard): 0.9956 [0.9448, 1.0491] INCONCLUSIVE; memory 0.810
+  mibz2-occ-7-28
+    wikidata-x4 (gain family): 0.8886 [0.8831, 0.8942] FASTER; p 3.70e-10; memory 0.737
+    text (loss and memory guard): 0.9734 [0.9420, 1.0058] INCONCLUSIVE; memory 0.806
+  Pairs at 10 threads, reported and not judged: the first arm over the second, the paired rounds' wall ratios; peak memory over the second's
+    mibz2-oce-7-28 over mibz2-occ-7-28 wikidata-x4: 1.0906 [1.0821, 1.0992] SLOWER; memory 1.010
+    mibz2-oce-7-28 over mibz2-occ-7-28 text: 1.0228 [0.9731, 1.0750] INCONCLUSIVE; memory 1.005
+
+Holm at family α 0.05 over the 5 main-corpus cells: mibz2-occ-7-28 at 10 p 3.70e-10 rejects, mibz2-oce-5-20 at 6 p 1.02e-06 rejects, mibz2-oce-3-12 at 4 p 9.27e-05 rejects, mibz2-oce-7-28 at 10 p 1.96e-04 rejects, mibz2-occ-5-20 at 6 p 3.00e-03 rejects
+
+VERDICT for mibz2-oce-5-20 at 6 threads: ADOPTS. A gain (Holm), neither cell SLOWER, and peak memory within 1.10 of the reference's in both corpora
+
+VERDICT for mibz2-occ-5-20 at 6 threads: ADOPTS. A gain (Holm), neither cell SLOWER, and peak memory within 1.10 of the reference's in both corpora
+
+THE CHOICE at 6 threads: mibz2-oce-5-20, of those that ADOPT there (mibz2-oce-5-20, mibz2-occ-5-20), the lowest geometric mean of its main-corpus step (0.9379)
+
+VERDICT for mibz2-oce-3-12 at 4 threads: ADOPTS. A gain (Holm), neither cell SLOWER, and peak memory within 1.10 of the reference's in both corpora
+
+THE CHOICE at 4 threads: mibz2-oce-3-12, of those that ADOPT there (mibz2-oce-3-12), the lowest geometric mean of its main-corpus step (0.9594)
+
+VERDICT for mibz2-oce-7-28 at 10 threads: ADOPTS. A gain (Holm), neither cell SLOWER, and peak memory within 1.10 of the reference's in both corpora
+
+VERDICT for mibz2-occ-7-28 at 10 threads: ADOPTS. A gain (Holm), neither cell SLOWER, and peak memory within 1.10 of the reference's in both corpora
+
+THE CHOICE at 10 threads: mibz2-occ-7-28, of those that ADOPT there (mibz2-oce-7-28, mibz2-occ-7-28), the lowest geometric mean of its main-corpus step (0.8886)
