@@ -1,0 +1,21 @@
+{"arm": "mibz2-workers-lazy", "threads": 8, "round": 0, "wall": 1, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-lazy", "threads": 8, "round": 1, "wall": 1, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-stop15", "threads": 8, "round": 0, "wall": 0.9, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-stop15", "threads": 8, "round": 1, "wall": 0.9, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-lazy", "threads": 9, "round": 0, "wall": 1, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-lazy", "threads": 9, "round": 1, "wall": 1, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-stop15", "threads": 9, "round": 0, "wall": 0.9, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-stop15", "threads": 9, "round": 1, "wall": 0.9, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-lazy", "threads": 10, "round": 0, "wall": 1, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-lazy", "threads": 10, "round": 1, "wall": 1, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-stop15", "threads": 10, "round": 0, "wall": 0.9, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-stop15", "threads": 10, "round": 1, "wall": 0.9, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-lazy", "threads": 12, "round": 0, "wall": 1, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-lazy", "threads": 12, "round": 1, "wall": 1, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-stop15", "threads": 12, "round": 0, "wall": 0.9, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-stop15", "threads": 12, "round": 1, "wall": 0.9, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-lazy", "threads": 20, "round": 0, "wall": 1, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-lazy", "threads": 20, "round": 1, "wall": 1, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-stop15", "threads": 20, "round": 0, "wall": 0.9, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+{"arm": "mibz2-workers-stop15", "threads": 20, "round": 1, "wall": 0.9, "cpu": 1, "rss_kb": 100, "corpus": "fake", "out": 123, "hash": "ok", "termination": "success"}
+

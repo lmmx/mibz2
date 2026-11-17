@@ -1,0 +1,20 @@
+records 80; roster 80 (mibz2@build-master and mibz2-fused; wikidata-x4 and text; judged [10, 12], controls []; 10 rounds)
+
+The judged cells: mibz2-fused over mibz2@build-master, the paired rounds' wall ratios: geometric mean [95% interval]; one-sided p (gain); peak memory (median of the runs' peaks) over mibz2@build-master's
+
+wikidata-x4 (gain family)
+  10 threads: 0.9700 [0.9627, 0.9773] FASTER; p 3.72e-06; memory 1.000
+  12 threads: 0.9999 [0.9924, 1.0075] INCONCLUSIVE; p 4.94e-01; memory 1.000
+
+text (loss and memory guard)
+  10 threads: 0.9999 [0.9924, 1.0075] INCONCLUSIVE; memory 1.000
+  12 threads: 0.9999 [0.9924, 1.0075] INCONCLUSIVE; memory 1.000
+
+Holm at family α 0.05 over the 2 main-corpus cells: 10 p 3.72e-06 rejects, 12 p 4.94e-01 does not
+
+VERDICT: ADOPTS. A gain at [10] threads (Holm), no judged cell SLOWER, and peak memory within 1.10 of the reference's at every judged cell
+
+Invalid-pinning mutation:
+records 80; roster 80 (mibz2@build-master and mibz2-fused; wikidata-x4 and text; judged [10, 12], controls []; 10 rounds)
+VOID: the records do not make the registered run (1 problems); no verdict
+  judged.jsonl:1: ('wikidata-x4', 'mibz2@build-master', 10, 0) its CPUs 'all' missing or malformed

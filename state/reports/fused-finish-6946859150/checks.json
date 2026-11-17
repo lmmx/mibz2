@@ -1,0 +1,33 @@
+{
+  "source_sha": "2bcd82721d637c7e21326006b8475c84a57e9fd1",
+  "synthetic_only": true,
+  "plans": [
+    {
+      "asked": 10,
+      "allowed_logical": 10,
+      "trimmed": false,
+      "workers": 10,
+      "slots": 40
+    },
+    {
+      "asked": 12,
+      "allowed_logical": 20,
+      "trimmed": true,
+      "workers": 7,
+      "slots": 28
+    },
+    {
+      "asked": 10,
+      "allowed_logical": 20,
+      "trimmed": true,
+      "workers": 7,
+      "slots": 28
+    }
+  ],
+  "full_roster": 80,
+  "only_10_gain_adopts": true,
+  "wrong_pinning_void": true,
+  "ratio_of_medians": true,
+  "naive_serial_fraction": 0.05940652818991098,
+  "sd_log_needed_at_mean_0985": 0.021128876750924633
+}
