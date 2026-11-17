@@ -52,6 +52,66 @@ pub fn crc32(data: &[u8], k: Kernels) -> u32 {
     !update(!0, data)
 }
 
+/// The CRC register after `data`, from `s` (no initial or final xor), by the kernels given:
+/// `crc32`'s own step, so the register taken over pieces in order is `crc32`'s of them
+/// joined (#183's)
+pub fn update_with(s: u32, data: &[u8], k: Kernels) -> u32 {
+    #[cfg(target_arch = "x86_64")]
+    {
+        if k.clmul && data.len() >= 128 {
+            // SAFETY: `k.clmul` is set only when PCLMULQDQ, SSE4.1 and SSSE3 were detected
+            // (a `Kernels` invariant)
+            return unsafe { clmul_update(s, data) };
+        }
+    }
+    let _ = k;
+    update(s, data)
+}
+
+/// The bytes `Running` lets build up before it folds them in: few enough that they are
+/// still in L1 or L2 when it does (the i9's L2 is 256 KiB), many enough that each fold's
+/// fixed cost (its last 64 bytes through the table) is a small share
+pub const FOLD: usize = 16 << 10;
+
+/// The CRC of what is appended to a buffer from `at` on, taken as it is appended (RLE1's
+/// output: `rle::unrle_crc`), so that each piece is folded in while it is still in cache
+/// rather than read again from the whole block afterwards. Exactly `crc32` of the bytes
+/// appended, however they were appended (#183's).
+pub struct Running {
+    s: u32,
+    at: usize,
+}
+
+impl Running {
+    /// The CRC of `buf[at..]`, for a buffer now `at` bytes long
+    pub fn new(at: usize) -> Running {
+        Running { s: !0, at }
+    }
+
+    /// Folds in what `buf` gained since the last fold, once that is at least `FOLD` bytes:
+    /// its whole 64-byte units, the rest left for the next. `buf` only grows in between.
+    #[inline(always)]
+    pub fn fold(&mut self, buf: &[u8], k: Kernels) {
+        debug_assert!(buf.len() >= self.at);
+        if buf.len() - self.at >= FOLD {
+            self.fold_now(buf, k);
+        }
+    }
+
+    #[cold]
+    #[inline(never)]
+    fn fold_now(&mut self, buf: &[u8], k: Kernels) {
+        let m = (buf.len() - self.at) & !63;
+        self.s = update_with(self.s, &buf[self.at..self.at + m], k);
+        self.at += m;
+    }
+
+    /// The CRC of everything appended to `buf` since `new`
+    pub fn finish(self, buf: &[u8], k: Kernels) -> u32 {
+        !update_with(self.s, &buf[self.at..], k)
+    }
+}
+
 /// The CRC register after `data`, from `s` (no initial or final xor): a byte at a time
 /// as bzip2 takes it, 8 at a time where it can
 pub fn update(mut s: u32, data: &[u8]) -> u32 {
@@ -163,6 +223,25 @@ mod tests {
             for n in (0..300).chain([511, 512, 513, 1023, 4096, 4999, 5000]) {
                 let want = !update_bytewise(!0, &data[..n]);
                 assert_eq!(crc32(&data[..n], k), want, "n {n} {k:?}");
+            }
+        }
+        // `Running` over any pieces is `crc32` of them joined
+        for k in [Kernels::scalar(), Kernels::detect()] {
+            for n in [0usize, 1, 63, 64, 127, 4999, 5000] {
+                let mut buf = vec![7u8; 3];
+                let mut r = Running::new(buf.len());
+                let mut i = 0;
+                while i < n {
+                    let j = (i + 1 + (i * 7919) % 1500).min(n);
+                    buf.extend_from_slice(&data[i..j]);
+                    r.fold(&buf, k);
+                    i = j;
+                }
+                assert_eq!(
+                    r.finish(&buf, k),
+                    crc32(&data[..n], k),
+                    "Running n {n} {k:?}"
+                );
             }
         }
         // the check value of CRC-32/BZIP2

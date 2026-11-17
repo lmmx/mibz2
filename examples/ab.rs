@@ -1171,6 +1171,29 @@ fn decode(
             h,
             last,
         ),
+        // the fused post-walk arms (#145 QUEUED 6946051925, #183's fusion on Cells): RLE1
+        // undone with the block's CRC folded in as it goes (`bwt::FusedFinish`). `mibz2-fused`
+        // is production's decoder, plan and window, with that finish wherever the plan runs
+        // lazy workers; `mibz2-workers-fused` is `mibz2-workers-lazy` with it. Each differs
+        // from its reference in the finish alone
+        "mibz2-fused" => drain(
+            mibz2::BzReader::parallel_lazy_as::<mibz2::bwt::FusedFinish<mibz2::bwt::LazyCells>>(
+                open()?,
+                threads,
+            ),
+            h,
+            last,
+        ),
+        "mibz2-workers-fused" => drain(
+            mibz2::BzReader::parallel_workers_with::<mibz2::bwt::FusedFinish<mibz2::bwt::LazyCells>>(
+                open()?,
+                threads,
+                mibz2::parallel::SLOTS_PER_THREAD * threads,
+                mibz2::Kernels::detect(),
+            ),
+            h,
+            last,
+        ),
         "mibz2-workers-w12" => drain(
             mibz2::BzReader::parallel_workers_with::<mibz2::bwt::W12LazyCells>(
                 open()?,

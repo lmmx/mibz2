@@ -21,6 +21,7 @@ pub use crate::cells::{
     Cells, CellsKernel, CellsVariant, Counts as CellsCounts, ForcedCells, ForcedLazyCells,
     ForcedW12LazyCells, LazyCells, W12LazyCells,
 };
+
 #[cfg(feature = "memory-lever")]
 pub use crate::cells::{ForcedStagedCells, StagedCells};
 
@@ -111,6 +112,68 @@ pub trait InverseBwt: Default + Send {
     ) -> bool {
         let _ = (r, n, orig_ptr, out, k);
         unreachable!("invert_runs on a kernel that doesn't read runs");
+    }
+
+    /// Whether the decoder undoes this kernel's RLE1 with the block's CRC folded in as it goes
+    /// (`rle::unrle_crc`), rather than reading the output back for the CRC afterwards (a
+    /// research arm, `FusedFinish`). A kernel answers the same for every block.
+    fn fuses_finish(&self) -> bool {
+        false
+    }
+}
+
+/// Research, opt-in (an arm, #145 QUEUED 6946051925): `I`, with the decoder's last steps
+/// fused (`InverseBwt::fuses_finish`): RLE1 undone with the block's CRC folded in every
+/// `crc::FOLD` bytes while they are still in cache (`rle::unrle_crc`), #183's fusion on
+/// Cells' contiguous output. Every inversion is `I`'s.
+#[doc(hidden)]
+#[derive(Default)]
+pub struct FusedFinish<I>(I);
+
+impl<I: InverseBwt> InverseBwt for FusedFinish<I> {
+    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
+        self.0.invert(ll, counts, orig_ptr, out)
+    }
+    fn wants_checkpoints(&self) -> bool {
+        self.0.wants_checkpoints()
+    }
+    fn invert_checkpointed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        checkpoints: &[[u32; 256]],
+        orig_ptr: u32,
+        out: &mut Vec<u8>,
+    ) {
+        self.0
+            .invert_checkpointed(ll, counts, checkpoints, orig_ptr, out)
+    }
+    #[cfg(any(test, feature = "trace"))]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        self.0.buffers()
+    }
+    fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], orig_ptr: u32) -> bool {
+        self.0.invert_in_place(ll, counts, orig_ptr)
+    }
+    fn reads_runs(&self) -> bool {
+        self.0.reads_runs()
+    }
+    #[cfg(any(test, feature = "trace"))]
+    fn took_cells(&self) -> bool {
+        self.0.took_cells()
+    }
+    fn invert_runs(
+        &mut self,
+        r: &crate::runs::Runs,
+        n: usize,
+        orig_ptr: u32,
+        out: &mut Vec<u8>,
+        k: crate::Kernels,
+    ) -> bool {
+        self.0.invert_runs(r, n, orig_ptr, out, k)
+    }
+    fn fuses_finish(&self) -> bool {
+        true
     }
 }
 

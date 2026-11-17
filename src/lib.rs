@@ -459,6 +459,9 @@ pub fn decode_block<I: bwt::InverseBwt>(
                 b.max_len,
                 k,
             );
+            if s.inverse.fuses_finish() {
+                return finish_fused(&s.ll, b.crc, k, out);
+            }
             return finish(&s.ll, b.crc, k, out);
         }
         // a broken tiling is a bug in `runs::front` (a debug build stops here): the column's
@@ -503,6 +506,9 @@ pub fn decode_block<I: bwt::InverseBwt>(
         k,
     );
     let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
+    if s.inverse.fuses_finish() {
+        return finish_fused(inverted, b.crc, k, out);
+    }
     finish(inverted, b.crc, k, out)
 }
 
@@ -515,6 +521,31 @@ fn finish(inverted: &[u8], stored: u32, k: Kernels, out: &mut Vec<u8>) -> Result
         return Err(kind);
     }
     let computed = crc::crc32(&out[start..], k);
+    if computed != stored {
+        out.truncate(start);
+        return Err(ErrorKind::BlockCrc { stored, computed });
+    }
+    Ok(computed)
+}
+
+/// `finish` for a kernel that `fuses_finish` (a research arm, `bwt::FusedFinish`): the CRC
+/// folded in as RLE1 appends (`rle::unrle_crc`), not read back afterwards; the same CRC, bytes
+/// and errors
+#[inline(never)]
+fn finish_fused(
+    inverted: &[u8],
+    stored: u32,
+    k: Kernels,
+    out: &mut Vec<u8>,
+) -> Result<u32, ErrorKind> {
+    let start = out.len();
+    let computed = match rle::unrle_crc(inverted, out, k) {
+        Ok(c) => c,
+        Err(kind) => {
+            out.truncate(start);
+            return Err(kind);
+        }
+    };
     if computed != stored {
         out.truncate(start);
         return Err(ErrorKind::BlockCrc { stored, computed });

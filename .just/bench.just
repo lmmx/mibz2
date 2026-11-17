@@ -1797,6 +1797,104 @@ bench-w12 MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" ROUNDS="1
     fi
     bash bench/bundle.sh "$O"
 
+# The fused post-walk on Cells (#145 QUEUED 6946051925; #183's fusion, its run's
+# registration on #145, posted before the data): whether production's decoder should undo
+# RLE1 with the block's CRC folded in as it goes (`rle::unrle_crc`, every 16 KiB while the
+# bytes are still in L1), not read the output back for the CRC afterwards. Master's decoder
+# (`mibz2@build-master`, built at MASTER, the commit this branch has merged) against this
+# commit's with that finish wherever production runs lazy workers (`mibz2-fused`,
+# `BzReader::parallel_lazy_as::<FusedFinish<LazyCells>>`): the same plan, window and threads,
+# seven workers with 28 in flight on the i9. Both built by rustc 1.99.1. Judged at 10 and 12
+# threads asked; COPIES copies of the Wikidata sample (the gain family) and the text corpus (a
+# loss and memory guard). No judged count leaves a core free, so no spinner. `bench/two_arm.py`
+# checks the records and the machine whole, then reads the verdict. Then, deciding nothing:
+# the same two finishes at ten lazy workers with 40 in flight (`mibz2-workers-lazy` against
+# `mibz2-workers-fused`, 10 threads), and L2 misses and references a byte at 10 threads
+# (`bench/counters.py --events l2`), if `kernel.perf_event_paranoid` is 1 or less.
+bench-fused MASTER="77fa4cd34e6ceab28d172e5dfed1ef3aafa7be03" COPIES="4" ROUNDS="10" JUDGED="10,12" REPS="10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/fused
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-fused (the fused post-walk's registration on #145): mibz2-fused at $(git rev-parse HEAD) against mibz2 at {{MASTER}}, production's plan each, on {{COPIES}} copies of the Wikidata sample and on text, judged at {{JUDGED}} threads, {{ROUNDS}} paired rounds; then the same at ten workers (context), and L2 counters at 10 threads, {{REPS}} reps"
+    git merge-base --is-ancestor "{{MASTER}}" HEAD \
+      || { echo "bench-fused: {{MASTER}} is not merged into this commit"; exit 1; }
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-fused: the checkout has local changes"; exit 1; }
+    # both builds by the repo's pinned toolchain
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-fused: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    [ -d "$W/build-master" ] || git worktree add -q --detach "$W/build-master" "{{MASTER}}"
+    git -C "$W/build-master" checkout -q --detach "{{MASTER}}"
+    # (the baseline is built from a clean source: a detached checkout keeps local changes)
+    [ -z "$(git -C "$W/build-master" status --porcelain)" ] \
+      || { echo "bench-fused: build-master has local changes"; git -C "$W/build-master" status --short; exit 1; }
+    (cd "$W/build-master" && cargo build -q --release --example ab)
+    MAB=$W/build-master/target/release/examples/ab
+    # the identities measured, checked rather than assumed from a reused directory
+    [ "$(git -C "$W/build-master" rev-parse HEAD)" = "{{MASTER}}" ] \
+      || { echo "bench-fused: build-master is not at {{MASTER}}"; exit 1; }
+    git rev-parse HEAD > "$O/commit.txt"
+    echo "{{MASTER}}" > "$O/master.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    (cd "$W/build-master" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+      || { echo "bench-fused: the two builds' toolchains differ"; exit 1; }
+    sha256sum "$AB" "$MAB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    [ -f "$W/gen/text.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    # (no spinner: 10 and 12 threads leave no core free)
+    "$AB" run "$O/judged.jsonl" --arms "mibz2@$MAB,mibz2-fused" \
+      --threads "{{JUDGED}}" --rounds {{ROUNDS}} --spread \
+      "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    "$AB" summary "$O/judged.jsonl" --ref "mibz2@$MAB" | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2@build-master --cand mibz2-fused \
+      --main wikidata-x{{COPIES}} --guard text --judged "{{JUDGED}}" --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads 0 \
+      | tee "$O/verdict.txt" \
+      || echo "bench-fused: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # context (decides nothing): the same two finishes at ten lazy workers with 40 in flight
+    "$AB" run "$O/context.jsonl" --arms "mibz2-workers-lazy@$MAB,mibz2-workers-fused" \
+      --threads 10 --rounds {{ROUNDS}} --spread \
+      "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
+    python3 bench/two_arm.py "$O/context.jsonl" --ref mibz2-workers-lazy@build-master \
+      --cand mibz2-workers-fused --main wikidata-x{{COPIES}} --guard text --judged 10 --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads 0 \
+      | tee "$O/context.txt" \
+      || echo "bench-fused: the context is VOID (context.txt says why); the verdict stands"
+    # the L2 diagnostic (decides nothing): skipped, and said so, where perf cannot count
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 1 ]; then
+      perf --version | tee "$O/perf_version.txt"
+      python3 bench/counters.py run --ab "$AB" --arm "mibz2@$MAB" --arm mibz2-fused --events l2 \
+        --threads 10 --reps {{REPS}} --file "$W/wikidata.bz2" --out "$O/counters.jsonl"
+      python3 bench/counters.py report "$O/counters.jsonl" --ref "mibz2@$MAB" --cand mibz2-fused --events l2 \
+        --threads 10 --reps {{REPS}} | tee "$O/counters.txt" \
+        || echo "bench-fused: the L2 diagnostic is VOID (counters.txt says why); the verdict stands"
+    else
+      echo "bench-fused: the L2 diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 1); the verdict stands" | tee "$O/counters.txt"
+    fi
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,
