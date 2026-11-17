@@ -142,3 +142,36 @@ A one-off calibration command (#522's fallback) would measure 2 and 3 on a new m
 pinned run and its thread split.
 
 **The constants refit only with the kernel:** F(s), Δa and Δb.
+
+## Correction (17 November, 10:50, before the eager-trim run's data)
+
+The Researcher's blog review (REVIEW 6945679959) prompted a check of this spec against its own
+table. Two defects in §2 are corrected here; §1's scores stand.
+
+**1. The core cap contradicts §3.**
+- *The defect:* m = min(C, …) caps the CI runner (C = 2) at 2, yet §3 says m = 3.2 there. The
+  physical-core term double-counts SMT: §2 already moves SMT into each worker's cycles.
+- *Corrected:* **m = min(N, Σ_d min(N_d, W_L3,d), 0.80 · N, W_ser)**, with N and N_d the logical
+  CPUs allowed (in all, and in each domain). SMT enters only through c(W).
+- *On the i9:* nothing changes, since the L3 or CPU term binds first at every measured count.
+
+**2. The tie-break contradicts the table.**
+- *The defect:* "within 1%, take the larger" gives 7 at N = 8 (the model has 7 at 0.942 against 6
+  at 0.940). At N = 10 it gives 8: on the printed objective t(8) is 0.68% under t(7), as the
+  Researcher computed. The measured bests are 6 (7 is 5% worse) and 7 (8 is 1.9% worse).
+- *Corrected:* **within 1%, take the smaller.**
+  - *What it gives:* 6 at N = 8, 7 at N = 10 and 4 at N = 4 (3 is 1.9% worse by the model).
+  - *How it was chosen:* fitted to those two counts, not predicted. Both are cases where the model
+    overvalues the worker that fills the CPU budget.
+- *The table's 7 at N = 10 is a measurement:* the model alone puts 8 within 0.7%. Under the
+  corrected rule both are chosen by the tie-break, which is calibrated on these points.
+
+**3. Presentation, carried from the review:**
+- *a and b are normalised:* a = 0.422 and b = 0.0068 are relative to production's 10 workers at
+  10 threads, not cycles a byte. a is an extrapolated intercept.
+- *The contention share at the optimum is 1/p:* that is ½ only at p = 2.
+- *589 cycles per avoided miss* (record 47) is a slope across arms. The 80–100 ns DRAM latency it
+  is set against was assumed, not measured.
+- *Record 47's 4–9 GB/s* is a prediction, with prefetch traffic unknown.
+- *Record 48's scanner reading* rests on a flagged, unpinned trace plus the plateau and the idle
+  CPUs. It is Conj, not C.
