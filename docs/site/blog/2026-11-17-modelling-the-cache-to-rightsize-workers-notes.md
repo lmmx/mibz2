@@ -15,7 +15,7 @@ With every worker kept busy, the wall time goes as $c(W)/W = a/W + b\,W^{p-1}$ f
 
 The fits over 6 to 9 workers at 10 threads, and what each says at 7 workers:
 
-| exponent $p$ | $a$ | $b$ | continuous optimum | overhead share at 7 | cost ratio $c(7)/a$ |
+| exponent *p* | *a* | *b* | continuous optimum | overhead share at 7 | cost ratio *c*(7)/*a* |
 |---:|---:|---:|---:|---:|---:|
 | 1.5 | 0.300 | 0.0248 | 8.37 | 60.5% | 2.53 |
 | 1.75 | 0.370 | 0.0129 | 8.02 | 51.2% | 2.05 |
