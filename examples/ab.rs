@@ -108,7 +108,9 @@
 //! - `mibz2-occ-N-S` (the occupancy arms: production's decoder with N lazy workers and S
 //!   blocks in flight whatever THREADS, `BzReader::parallel_workers(N, S, lazy)`: from
 //!   `LAZY_FROM_THREADS` workers the very call `parallel_planned(Plan::Workers(N), S)` makes,
-//!   and below it the lazy letters held; `just bench-workers-window`, `bench-workers-low`);
+//!   and below it the lazy letters held; `just bench-workers-window`, `bench-workers-low`),
+//!   and `mibz2-occ-N-S-w12` (the same plan with 12-byte rules, `bwt::W12LazyCells`, in
+//!   place of the lazy kernel's 16: `BzReader::parallel_workers_with`; `just bench-w12-at-7`);
 //! - `mibz2-pipe2`, `-pipe3`, `-pipe4` (research: the pipelined team,
 //!   `BzReader::parallel_pipelined`, its leader's RLE1, CRC and next move-to-front overlapped
 //!   with its helpers' build and walk: THREADS / K teams of K in the teamK arms' window);
@@ -836,11 +838,13 @@ mod occ_arm_tests {
 
     #[test]
     fn occupancy_arms_parse() {
-        assert_eq!(occ_arm("mibz2-occ-8-32"), Some((8, 32)));
-        assert_eq!(occ_arm("mibz2-occ-9-72"), Some((9, 72)));
-        assert_eq!(occ_arm("mibz2-occ-9-18"), Some((9, 18)));
-        assert_eq!(occ_arm("mibz2-occ-7-28"), Some((7, 28)));
-        assert_eq!(occ_arm("mibz2-occ-6-24"), Some((6, 24)));
+        assert_eq!(occ_arm("mibz2-occ-8-32"), Some((8, 32, false)));
+        assert_eq!(occ_arm("mibz2-occ-9-72"), Some((9, 72, false)));
+        assert_eq!(occ_arm("mibz2-occ-9-18"), Some((9, 18, false)));
+        assert_eq!(occ_arm("mibz2-occ-7-28"), Some((7, 28, false)));
+        assert_eq!(occ_arm("mibz2-occ-6-24"), Some((6, 24, false)));
+        assert_eq!(occ_arm("mibz2-occ-7-28-w12"), Some((7, 28, true)));
+        assert_eq!(occ_arm("mibz2-occ-9-36-w12"), Some((9, 36, true)));
         for bad in [
             "mibz2-occ-9",
             "mibz2-occ-0-36",
@@ -848,10 +852,35 @@ mod occ_arm_tests {
             "mibz2-occ-x-36",
             "mibz2-occ--36",
             "mibz2-occ-9-36-1",
+            "mibz2-occ-9-w12",
+            "mibz2-occ-9-36-w16",
+            "mibz2-occ-9-36-w12-w12",
+            "mibz2-occ-0-36-w12",
             "mibz2",
         ] {
             assert_eq!(occ_arm(bad), None, "{bad}");
         }
+    }
+
+    /// bench-w12-at-7's arms build the plan their names give, and differ in the rule width
+    /// alone: N workers, S blocks in flight, lazy letters with 16-byte rules or 12
+    #[test]
+    fn occupancy_arms_build_their_plan_and_rule_width() {
+        for (arm, workers, slots, rule) in [
+            ("mibz2-occ-7-28", 7, 28, 16),
+            ("mibz2-occ-7-28-w12", 7, 28, 12),
+            ("mibz2-occ-9-36", 9, 36, 16),
+            ("mibz2-occ-9-36-w12", 9, 36, 12),
+            ("mibz2-occ-6-24", 6, 24, 16),
+        ] {
+            let r = super::occ_reader(arm, std::io::empty()).unwrap();
+            let dec = r.parallel_decoder().expect("a parallel decoder");
+            assert_eq!(dec.threads(), workers, "{arm}: workers");
+            assert_eq!(dec.window(), slots as u64, "{arm}: blocks in flight");
+            assert_eq!(dec.lazy_rule_bytes(), Some(rule), "{arm}: rule width");
+            assert_eq!(dec.is_lazy(), rule == 16, "{arm}: the shipped lazy kernel");
+        }
+        assert!(super::occ_reader("mibz2-occ-7", std::io::empty()).is_err());
     }
 }
 
@@ -1121,11 +1150,35 @@ fn program(arm: &str, threads: usize, path: &str) -> Option<(Command, bool)> {
     }
 }
 
-/// An occupancy arm's workers and blocks in flight: `mibz2-occ-N-S`, N and S at least 1
-fn occ_arm(arm: &str) -> Option<(usize, usize)> {
-    let (n, s) = arm.strip_prefix("mibz2-occ-")?.split_once('-')?;
+/// An occupancy arm's workers, blocks in flight and whether its rules are 12 bytes:
+/// `mibz2-occ-N-S`, or `mibz2-occ-N-S-w12`, N and S at least 1
+fn occ_arm(arm: &str) -> Option<(usize, usize, bool)> {
+    let rest = arm.strip_prefix("mibz2-occ-")?;
+    let (rest, w12) = match rest.strip_suffix("-w12") {
+        Some(r) => (r, true),
+        None => (rest, false),
+    };
+    let (n, s) = rest.split_once('-')?;
     let (n, s) = (n.parse().ok()?, s.parse().ok()?);
-    (n >= 1 && s >= 1).then_some((n, s))
+    (n >= 1 && s >= 1).then_some((n, s, w12))
+}
+
+/// An occupancy arm's reader of `r` (`occ_arm`): N lazy workers and S blocks in flight,
+/// whatever the threads asked, with the lazy kernel's 16-byte rules (`bwt::LazyCells`, the
+/// very call `parallel_planned(Plan::Workers(N), S)` makes from `LAZY_FROM_THREADS` workers),
+/// or with 12-byte rules (`bwt::W12LazyCells`): the two differ in the kernel alone
+fn occ_reader<R: std::io::Read + Send + 'static>(
+    arm: &str,
+    r: R,
+) -> Result<mibz2::BzReader<R>, String> {
+    let (n, s, w12) =
+        occ_arm(arm).ok_or_else(|| format!("unknown arm {arm} (mibz2-occ-WORKERS-SLOTS[-w12])"))?;
+    let k = mibz2::Kernels::detect();
+    Ok(if w12 {
+        mibz2::BzReader::parallel_workers_with::<mibz2::bwt::W12LazyCells>(r, n, s, k)
+    } else {
+        mibz2::BzReader::parallel_workers(r, n, s, k, true)
+    })
 }
 
 /// An in-process arm's decode of the file at `path`, every byte through `h`, `last` run
@@ -1342,15 +1395,8 @@ fn decode(
         // (`parallel_workers(.., true)`, which `parallel_planned` calls from
         // `LAZY_FROM_THREADS` workers): below 8 workers (`bench-workers-low`'s 7 and 6) the
         // plan would switch to a slot for every letter, and the arm would differ in its kernel too
-        a if a.starts_with("mibz2-occ-") => {
-            let (n, s) =
-                occ_arm(a).ok_or_else(|| format!("unknown arm {a} (mibz2-occ-WORKERS-SLOTS)"))?;
-            drain(
-                mibz2::BzReader::parallel_workers(open()?, n, s, mibz2::Kernels::detect(), true),
-                h,
-                last,
-            )
-        }
+        // (`mibz2-occ-N-S-w12`, #145 bench-w12-at-7: the same plan with 12-byte rules)
+        a if a.starts_with("mibz2-occ-") => drain(occ_reader(a, open()?)?, h, last),
         _ => Err(format!("unknown arm {arm} (in this build of the harness)")),
     }
 }

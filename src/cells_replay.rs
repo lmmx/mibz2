@@ -129,12 +129,8 @@ fn replay_start() {
 const LEAF: u32 = 1 << 30;
 const IDX: u32 = LEAF - 1;
 const LEAF_AT: u32 = (1 << 26) - 1;
-/// A W12 child (`cells_w12.rs`'s layout): the reference's bits; the length and mark above them
-/// A 12-byte rule's stride
-const RULE12: usize = 12;
-const C12_REF: u64 = (1 << 27) - 1;
-const C12_LM: u32 = 27;
-const C12_LEN: u64 = (1 << 20) - 1;
+// (a W12 child and rule: `cells_w12.rs`'s layout and constants, `RULE12`, `C12_REF`, `C12_LM`
+// and `C12_LEN`, included beside this file)
 /// A W10 child: the arena tag, the mark; a rule's index and length, or an arena word's offset
 /// and length
 const C10_ARENA: u64 = 1 << 39;
@@ -232,7 +228,7 @@ impl Kernel {
                 let t = std::time::Instant::now();
                 match w {
                     0 => self.write_cells(word, len, n, out),
-                    1 => self.write_w12(&r12, nr, root12, n, out),
+                    1 => self.replay_write_w12(&r12, nr, root12, n, out),
                     2 => self.write_w8(&r8, root8, n, out),
                     _ => self.write_w10(&r10, nr, root10, n, out),
                 }
@@ -347,7 +343,7 @@ impl Kernel {
 
     /// W12: `write_cells` on 12-byte rules, as `cells_w12.rs` stores and reads them
     #[inline(never)]
-    fn write_w12(&mut self, r12: &[u8], nr: usize, root: u64, n: usize, out: &mut Vec<u8>) {
+    fn replay_write_w12(&mut self, r12: &[u8], nr: usize, root: u64, n: usize, out: &mut Vec<u8>) {
         // a child's reference (a rule's index, or an arena offset), its length, its mark
         let at = |c: u64| (c & C12_REF) as usize;
         let ln = |c: u64| (c >> (C12_LM + 1)) as usize;

@@ -286,11 +286,20 @@ impl StreamDecoder {
     ) -> StreamDecoder {
         let threads = threads.max(1);
         let plan = Plan::for_threads(threads);
+        // past the physical cores on the measured i9, `new`'s trim (#481): one worker fewer,
+        // and the window scaled to the workers
+        let trimmed = FORCED.with(|c| c.get()).is_none()
+            && matches!(plan, Plan::Workers(n) if n < threads)
+            && trims_past_the_cores(threads, k, &Machine::here());
+        let plan = match plan {
+            Plan::Workers(n) if trimmed => Plan::Workers(n - 1),
+            plan => plan,
+        };
         match plan {
             // (the service core and the pipelined teams are never a plan of workers, so
             // `new` would take `planned` here: `workers(n, slots, k, true)`)
             Plan::Workers(n) if plan.lazy() => {
-                let mut dec = Self::workers_with::<I>(n, window(plan, threads, slots), k);
+                let mut dec = Self::workers_with::<I>(n, window(plan, threads, slots, trimmed), k);
                 dec.threads = plan.threads();
                 record_built(&dec);
                 dec
@@ -305,6 +314,22 @@ impl StreamDecoder {
     #[doc(hidden)]
     pub fn is_lazy(&self) -> bool {
         self.kernel == std::any::type_name::<super::bwt::LazyCells>()
+    }
+
+    /// The bytes a rule takes in this decoder's lazy kernel, read from the kernel its
+    /// workers were launched with: 16 for `bwt::LazyCells` (production's), 12 for
+    /// `bwt::W12LazyCells` (the 12-byte rules arm), None for any other kernel. For the tests
+    /// of the bench arms that differ in the rule width alone
+    #[doc(hidden)]
+    pub fn lazy_rule_bytes(&self) -> Option<usize> {
+        use super::bwt::{LazyCells, W12LazyCells};
+        if self.kernel == std::any::type_name::<LazyCells>() {
+            Some(16)
+        } else if self.kernel == std::any::type_name::<W12LazyCells>() {
+            Some(12)
+        } else {
+            None
+        }
     }
 
     /// Research, opt-in (`memory-lever`): production's workers, `threads` of them, each
@@ -3948,6 +3973,20 @@ mod plan_tests {
                 assert!(fewer.is_lazy() && eight.is_lazy(), "{t} {n}");
                 assert!(!StreamDecoder::planned(Plan::Workers(n), 4 * n, both).is_lazy());
                 fewer.close();
+            }
+            // `just bench-w12-at-7`: 7/28 and 9/36 with 12-byte rules (`workers_with`),
+            // each the same plan as its 16-byte arm, differing in the rule width alone
+            for n in [7, 9] {
+                let w16 = StreamDecoder::workers(n, 4 * n, both, true);
+                let w12 = StreamDecoder::workers_with::<crate::bwt::W12LazyCells>(n, 4 * n, both);
+                assert_eq!((w16.threads, w16.window()), (n, 4 * n as u64), "{t} {n}");
+                assert_eq!((w12.threads, w12.window()), (n, 4 * n as u64), "{t} {n}");
+                assert_eq!(w16.kernel, prod.kernel, "{t} {n}");
+                assert_eq!(w16.lazy_rule_bytes(), Some(16), "{t} {n}");
+                assert_eq!(w12.lazy_rule_bytes(), Some(12), "{t} {n}");
+                assert_eq!(prod.lazy_rule_bytes(), Some(16), "{t} {n}");
+                w16.close();
+                w12.close();
             }
             for w in [72, 18] {
                 let win = StreamDecoder::planned(Plan::Workers(9), w, both);
