@@ -36,6 +36,30 @@ On aarch64: `rustup target add aarch64-unknown-linux-gnu`, `apt install qemu-use
 gcc-aarch64-linux-gnu`, then `cargo test --release --target aarch64-unknown-linux-gnu
 --config .cargo/aarch64-qemu.toml`.
 
+### The toolchain
+
+The Rust toolchain is pinned in `rust-toolchain.toml` (1.99.1), and rustup uses it for
+every build in the checkout: CI, the benchmark, the release wheels and the workstation
+recipes. The compiler moves the decoder's figures more than many of the effects being
+gated. Lazy Cells' induction, for one, took 219 instructions a letter under 1.97 and 176
+under 1.99.1 in one research binary, where a candidate against it swung from 37.6
+instructions a letter fewer to 22.6 more. In the benchmark binary the same candidate moved
+far less (+6.2 under 1.98.0, −7.1 under 1.99.1): codegen differs by binary as well as by
+compiler. So gates are counted on the benchmark's own arms, built with the pinned compiler.
+A comparison between toolchains is not a comparison of the code.
+
+- **The workflows name the same version** (`dtolnay/rust-toolchain@1.99.1`, maturin-action's
+  `rust-toolchain`). test.yml checks that they agree with the file. A deliberate exception
+  says why on its line: Miri runs on nightly, and a registration's dispatch uses the
+  toolchain it froze.
+- **Every workstation bundle records the toolchain** (`toolchain.txt`, written by
+  `bench/bundle.sh`).
+- **Bumping the toolchain is its own pull request,** with nothing else in it. The benchmark
+  builds each arm with its own commit's toolchain, so that pull request measures the new
+  compiler against the old one.
+- **The published crate and sdist leave the file out:** a downstream build uses its own
+  toolchain, from `rust-version` (1.80) up.
+
 The segmented walks' unsafe code also runs under [Miri](https://github.com/rust-lang/miri),
 on blocks small enough to interpret: `cargo +nightly miri test --lib -- miri_` (about a
 minute; CI runs it on changes to `src/bwt.rs`). Those tests assert they reached the

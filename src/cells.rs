@@ -88,6 +88,9 @@ include!("cells_original_test.rs");
 include!("cells_lazy.rs");
 // (a bench arm: lazy letters with 12-byte rules)
 include!("cells_w12.rs");
+// (research only: the grammar replay harness, with `grammar-replay`)
+#[cfg(feature = "grammar-replay")]
+include!("cells_replay.rs");
 // (research only: the memory-lever experiment's staged kernel)
 #[cfg(feature = "memory-lever")]
 include!("cells_lever.rs");
@@ -503,6 +506,9 @@ impl Kernel {
                 // (research only, `phase-counters`: the induction's scope)
                 #[cfg(feature = "phase-counters")]
                 let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
+                // (research only, `grammar-replay`: the induction's words counted afresh)
+                #[cfg(feature = "grammar-replay")]
+                replay_start();
                 self.induce_variant(budget, out)
             });
         self.check_canaries(Some(out));
@@ -515,6 +521,11 @@ impl Kernel {
             // (research only, `phase-counters`: the writer's scope)
             #[cfg(feature = "phase-counters")]
             let _scope = crate::phase::Scope::new(crate::phase::Phase::Writer);
+            // (research only, `grammar-replay`: the block's grammar replayed by each writer)
+            #[cfg(feature = "grammar-replay")]
+            if self.variant == LAZY {
+                self.replay(word, len, n, out);
+            }
             if self.variant == LAZY_W12 {
                 self.write_w12(word, len, n, out);
             } else {

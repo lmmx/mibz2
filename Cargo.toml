@@ -16,6 +16,7 @@ exclude = [
   "pyproject.toml",
   "python/",
   "release-plz.toml",
+  "rust-toolchain.toml",
   "taplo.toml",
 ]
 homepage = "https://lmmx.github.io/mibz2/"
@@ -25,7 +26,7 @@ name = "mibz2"
 readme = "README.md"
 repository = "https://github.com/lmmx/mibz2"
 rust-version = "1.80"
-version = "0.5.1"
+version = "0.5.2"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -78,6 +79,12 @@ phase-counters = []
 # programme. Retain while that programme reads induction records; remove at the first release
 # review after it closes
 induction-trace = []
+# Research: the second ChatGPT relay's grammar replay harness (src/cells_replay.rs,
+# examples/grammar_replay.rs; #145, LOG 6924013198): each lazy block's grammar written by the
+# shipped writer and by 12-byte and 8-byte rule writers, timed and checked, with the tables'
+# fit and the tiny-word and common-child censuses. Retain while the relay's compact-rule
+# questions are open; remove at the first release review after they close
+grammar-replay = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -126,6 +133,10 @@ required-features = ["wait-stats"]
 [[example]]
 name = "induction_trace"
 required-features = ["induction-trace"]
+
+[[example]]
+name = "grammar_replay"
+required-features = ["grammar-replay"]
 
 [[example]]
 name = "lever_counts"

@@ -15,10 +15,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.99.1
         with:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@v2
+      # One toolchain (rust-toolchain.toml): every workflow that installs Rust names its
+      # channel, unless the line says why not (`# not the pin: ...`: Miri's nightly, a
+      # registration's own toolchain), and this job runs it
+      - name: The pinned toolchain everywhere
+        run: |
+          pin=$(sed -nE 's/^channel = "([^"]+)"$/\1/p' rust-toolchain.toml)
+          [ -n "$pin" ] || { echo "::error::rust-toolchain.toml names no channel"; exit 1; }
+          v=${pin//./\\.}
+          bad=$(grep -nE '^\s*(- )?uses: dtolnay/rust-toolchain@|^\s*rust-toolchain: ' .github/workflows/*.yml \
+            | grep -vE "dtolnay/rust-toolchain@$v( |$)|rust-toolchain: $v( |$)|not the pin" || true)
+          [ -z "$bad" ] || { echo "::error::Rust installed at another version than rust-toolchain.toml's $pin:"; echo "$bad"; exit 1; }
+          rustc -V | tee /dev/stderr | grep -q "^rustc $v " || { echo "::error::this job's rustc is not $pin"; exit 1; }
       - name: Format
         run: cargo fmt --all --check
       - name: Clippy
@@ -107,7 +119,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.99.1
       - uses: Swatinem/rust-cache@v2
       - name: Build
         run: cargo build --profile fuzz --example fuzz
@@ -220,7 +232,7 @@ jobs:
         python-version: ${{ fromJson(needs.get-python-versions.outputs.versions) }}
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.99.1
       - uses: Swatinem/rust-cache@v2
 
       - name: Install uv
@@ -239,7 +251,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.99.1
       - uses: Swatinem/rust-cache@v2
       - name: Install uv
         uses: astral-sh/setup-uv@v7

@@ -38,6 +38,7 @@ Backfilled on 16 November 2026, from 0.2.4 (the first release with an i9 run) to
 | 0.3.4 → 0.4.0 | 8t +9.5% (+7.7, +11.3) | #433, Cells' bottom slots in the dead output buffer | memory | of the three decoder merges, #431 and #432 change no shipped path |
 | 0.4.0 → 0.5.0 | 8t +4.2% (+2.9, +5.5) | #452, lazy letters from 8 threads | memory | #447 is opt-in arms only |
 | 0.5.0 → 0.5.1 | 10t +7.3% (+6.2, +8.5); 12–20t +6.7 to +7.7% | 10t: #462, lazy workers at 10 threads instead of teams; 12–20t: #468, past the cores, lazy workers one a core | routing; memory | `bench-split-051` (split-051/run-20261116T145423Z): wall 10t #462 0.931 [0.908, 0.954], #468 0.996 (noise); 12/16/20t #468 0.924 / 0.933 / 0.942, #462 noise |
+| 0.5.1 → 0.5.2 | 12t +4.7% (+2.4, +7.0); 16t +4.7% (+0.1, +9.5); 20t +5.0% (+1.2, +8.9) | #481, past the cores, one lazy worker a core but one, with the window sized to the workers | routing; memory | the only decoder merge (#503 and #508 are feature-gated research; #504 pins the toolchain). `bench-cores-less-one` (cores-less-one/run-20261116T203759Z): wall 0.956 / 0.960 / 0.959 at 12/16/20t |
 
 0.2.6 → 0.2.7 has no row: no thread count moved by 3% or more.
 
