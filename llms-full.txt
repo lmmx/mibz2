@@ -1042,9 +1042,9 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# Straightening the knee: gaining speed with more threads and hyperthreading
+# Straightening the knee: scaling throughput beyond physical cores
 
-mibz2 0.5.4 removes the ten-thread dip, and higher thread counts now hold near 2 GB/s instead of losing ground to contention.
+mibz2 straightens its scaling curve by taming worker contention, sustaining nearly 2 GB/s from eight to twenty threads on a ten-core processor.
 
 17 November 2026 · 9 min read · [Research result](<#5-what-comes-after-the-knee>)
 
