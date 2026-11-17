@@ -24,9 +24,13 @@ Docs, journal, bench-harness or blog changes alone are not.
 
 ## 2. When
 
-- **Release while the maintainer is around,** not overnight or when they are away from the keyboard. A broken
-  release needs someone to hear of it.
-- **If work becomes releasable while they are away,** release it when they are next around, and say so.
+- **Release unless the maintainer has said they are asleep or otherwise indisposed.** A broken
+  release needs someone to hear of it. Being away from the desk doesn't count: they can still
+  oversee from their phone. Only their own statement that they are asleep or indisposed holds a
+  release back; never infer it from silence, a quiet session or the time of day (Louis, 17
+  November 2026).
+- **If work becomes releasable while they are indisposed,** release it when they are next
+  available, and say so.
 
 ## 3. Before
 
