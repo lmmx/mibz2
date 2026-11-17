@@ -2272,11 +2272,13 @@
     },
     {
       "trigger_comment_id": 6957030345,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/knee-r2-6957030345/report.md",
-      "source_commit": "afc5c5ab5fb4cd1c9f4fee838417693e42c08ff0"
+      "source_commit": "afc5c5ab5fb4cd1c9f4fee838417693e42c08ff0",
+      "report_commit": "529ba8641ce5c6dc43bea3e888ed278d728a195e",
+      "disposition": "PROCEED revised article: three material findings resolved; nonblocking Figure4 workload-caption clarification; transfer question answered with prior-exposure disclosed."
     }
   ],
   "active_delegations": [],
