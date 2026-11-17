@@ -321,11 +321,12 @@ def report(a):
     for t in threads:
         print(f"\n{t} thread{'s' if t > 1 else ''}: the median over {a.reps} reps, a byte of output; "
               f"{' and '.join(cands)} over {a.ref} as the median of the reps' paired ratios")
-        print(f"  {'event':32s} {a.ref:>22s} " + " ".join(f"{c:>22s}" for c in cands) + "   "
+        ew = max(32, *(len(e) for e in events))
+        print(f"  {'event':{ew}s} {a.ref:>22s} " + " ".join(f"{c:>22s}" for c in cands) + "   "
               + ("ratio" if len(cands) == 1 else " ".join(f"{c.removeprefix('mibz2-occ-')[-12:]:>12s}" for c in cands)))
         for e in events:
             ref = [per_byte(a.ref, t, r, e) for r in range(a.reps)]
-            line, ratios = f"  {e:32s} {statistics.median(ref):22.6f} ", []
+            line, ratios = f"  {e:{ew}s} {statistics.median(ref):22.6f} ", []
             for c in cands:
                 cand = [per_byte(c, t, r, e) for r in range(a.reps)]
                 ratios.append(statistics.median(x / y for x, y in zip(cand, ref) if y > 0) if any(ref) else float("nan"))
