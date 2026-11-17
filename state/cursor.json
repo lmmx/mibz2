@@ -182,9 +182,10 @@
     6926192217,
     6926214255,
     6928304008,
-    6943391643
+    6943391643,
+    6945387574
   ],
-  "last_processed_comment_id": 6943391643,
+  "last_processed_comment_id": 6945387574,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2152,12 +2153,15 @@
     },
     {
       "trigger_comment_id": 6945387574,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/blog-workers-6945387574/report.md",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "a4c8661fb83d57f3dca8adf22fd2769cb64c7994",
-      "disposition": "REVISE article: integer minimisation, normalised units, SMT, causal attribution and -3 scoring; measured worker-plan gains stand. Live rendering unverified (404)."
+      "disposition": "REVISE article: integer minimisation, normalised units, SMT, causal attribution and -3 scoring; measured worker-plan gains stand. Live rendering unverified (404).",
+      "review_comment_id": 6945679959,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body, author lmmx and destination145 verified by read-back. coord.py route returns145; role-aware verify and misrouted checks pass, retaining only the helper's coordinator-only FROM limitation."
     }
   ],
   "active_delegations": [],
