@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=d8fc1c3b6b63">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=d8fc1c3b6b63">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=d8fc1c3b6b63">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=d8fc1c3b6b63">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=d8fc1c3b6b63">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=d8fc1c3b6b63">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3050,7 +3050,19 @@
 </div>
 <p>mibz2, our bzip2 decoder, inverts each block's Burrows–Wheeler transform with a kernel we call <strong>Cells</strong>. Over the past week our notes have described it in a working vocabulary of letters, words, cells, rules, steps, a marked row, a writer and a stop. They have also borrowed three pictures from Robert Ghrist's <em>Elementary Applied Topology</em>: discrete Morse theory, sheaves of monoids, and circular coordinates. This post says exactly which mathematical object each of our words names, and how far each borrowed picture holds.</p>
 <p><strong>The setting, in brief.</strong> bzip2 stores a block as the last column <span class="arithmatex">\(L\)</span> of its sorted rotations, the Burrows–Wheeler transform (BWT), together with the row that holds the original text. A map called <strong>LF</strong> sends each row to the row of the rotation one byte earlier. Following LF from that row reads the block backwards, one byte per step. A <strong>run</strong> is a stretch of equal bytes in <span class="arithmatex">\(L\)</span>, and LF shifts all of a run's rows by the same amount. So LF is an <strong>interval exchange</strong>: a handful of intervals, each moved whole to a new place. <a href="../2026-11-08-inverse-bwt-navigation/">The mathematical structure of inverse-BWT navigation</a> sets out that structure. <a href="../2026-11-10-rauzy-veech-reconstruction/">A new way back from the BWT</a> shows Cells shrinking the exchange step by step on a three-byte block, and the <a href="../2026-11-12-rauzy-technical-companion/">technical companion</a> describes its memory layout.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Interval_exchange_transformation">Wikipedia: Interval exchange transformation</a></p>
+<p>An <em>interval exchange transformation</em> cuts an interval into pieces and puts them back in a different order, each piece moved whole, without stretching it. Here, LF does exactly this to the block's rows, one piece per run. Cells repeatedly shrinks the exchange onto a smaller interval, a step known as Rauzy induction, which has no Wikipedia article of its own.</p>
+</div>
 <p><strong>The simplest correct picture.</strong> Cells shrinks LF's interval exchange from its right-hand end. At each stage it keeps a smaller set of rows. For each interval of kept rows it holds a <strong>return tower</strong>: the rows the LF path passes through before it comes back to a kept row. A tower has a <strong>width</strong>, the number of kept rows at its base, and a <strong>height</strong>, the number of LF steps from its base back to a kept row. It also has a <strong>word</strong>, the bytes those steps read, stored in forward text order. The towers' volumes, width times height, always add up to the block's rows. When the tower that holds bzip2's starting row closes on itself, its word is the block's text, and the starting row says where the text begins in it.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Rokhlin_lemma">Wikipedia: Rokhlin lemma</a></p>
+<p>A <em>Kakutani–Rokhlin tower</em> is a base set stacked with its successive images under a map, like the floors of a building. The Rokhlin lemma says that many systems can be cut almost entirely into tall towers, with a small piece left over. Here, the return towers are exact and finite: they cover the rows they describe with nothing left over.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Free_monoid">Wikipedia: Free monoid</a></p>
+<p>A <em>free monoid</em> is the set of all finite strings over an alphabet, the empty string included, combined by concatenation. Here, every word is an element of it: the bytes of one return path, in forward text order.</p>
+</div>
 <p><strong>What we found.</strong></p>
 <ul>
 <li><strong>Each of our working words names one exact object.</strong> The <a href="#2-what-do-our-words-name">dictionary in section 2</a> gives them. Two need care: a <em>letter</em> labels an interval, and is neither a byte nor a word, and "per letter" in our figures means per original run, not per interval still alive.</li>
@@ -3069,6 +3081,14 @@
 <div class="arithmatex">\[C(c)=\#\{i:L[i]&lt;c\},\]</div>
 <p>and the LF permutation</p>
 <div class="arithmatex">\[\pi(x)=C(L[x])+\#\{i&lt;x:L[i]=L[x]\}.\]</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Alphabet_(formal_languages)">Wikipedia: Alphabet (formal languages)</a></p>
+<p>An <em>alphabet</em> is the set of symbols that strings are written in. Here it is <span class="arithmatex">\(\Sigma\)</span>, the 256 possible byte values.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Permutation">Wikipedia: Permutation</a></p>
+<p>A <em>permutation</em> is a rearrangement of a finite set: each element is sent to exactly one place, and no place is left empty. Here, LF permutes the block's rows, and following it from one row reads the text backwards.</p>
+</div>
 <p>The output the reference inversion produces is</p>
 <div class="arithmatex">\[O[k]=L\!\left[\pi^{-(k+1)}(r_*)\right],\qquad 0\le k&lt;n.\]</div>
 <p>These are the inverse-BWT bytes, before bzip2's later run-length decoding.</p>
@@ -3081,6 +3101,10 @@
 <div class="arithmatex">\[D_m=\{0,\ldots,m-1\}.\]</div>
 <p>The active permutation is the first-return map</p>
 <div class="arithmatex">\[T_m(x)=\pi^{h_m(x)}(x),\qquad h_m(x)=\min\{j&gt;0:\pi^j(x)\in D_m\}.\]</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Poincar%C3%A9_map">Wikipedia: Poincaré map</a></p>
+<p>A <em>first-return map</em>, also called a Poincaré map, follows a system from a point of a chosen section until it first comes back to that section, and sends the point to where it lands; the number of steps taken is the return time. Wikipedia's article treats continuous flows. Here, the system is LF, the section is the kept rows, the return time is a tower's height, and the smaller map on the section is the <em>induced system</em>.</p>
+</div>
 <p>The kept rows are cut into intervals <span class="arithmatex">\(I_\alpha\)</span> on which the return path is the same. Each interval has</p>
 <div class="arithmatex">\[\lambda_\alpha=|I_\alpha|,\qquad J_\alpha=T_m(I_\alpha),\qquad h_\alpha=h_m|_{I_\alpha},\]</div>
 <p>and a byte word <span class="arithmatex">\(w_\alpha\)</span>. The orientation convention is the crucial one:</p>
@@ -3095,6 +3119,10 @@
 <p>They form a finite return tower, also called a Kakutani–Rokhlin tower. Its base width is <span class="arithmatex">\(\lambda_\alpha\)</span> and its height is <span class="arithmatex">\(h_\alpha\)</span>.</p>
 <p><strong>P.</strong> The levels of all the towers partition the saturation of the kept rows, the rows on LF cycles that meet them:</p>
 <div class="arithmatex">\[X_m=\bigcup_{j\in\mathbb Z}\pi^j(D_m).\]</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Orbit_(dynamics)">Wikipedia: Orbit (dynamics)</a></p>
+<p>An <em>orbit</em> is the set of states a system passes through from a starting point, by applying its map again and again. A permutation of finitely many rows has only cycles for orbits. Here, the <em>saturation</em> of the kept rows is the union of every LF cycle that meets them.</p>
+</div>
 <p>Every point of <span class="arithmatex">\(X_m\)</span> has a unique most recent visit to <span class="arithmatex">\(D_m\)</span> before it, and that visit gives its base point and its level. So</p>
 <div class="arithmatex">\[\boxed{\sum_\alpha \lambda_\alpha h_\alpha=|X_m|.}\tag{2}\]</div>
 <p>When LF is one cycle through all <span class="arithmatex">\(n\)</span> rows, the sum is always <span class="arithmatex">\(n\)</span>. If whole components without the starting row have been discarded, the sum is smaller.</p>
@@ -3106,7 +3134,15 @@
 <div class="arithmatex">\[\eta(x,j)=\pi^j(x)\]</div>
 <p>is a bijection onto <span class="arithmatex">\(X_m\)</span>, and</p>
 <div class="arithmatex">\[\eta\circ\widehat T_m=\pi\circ\eta.\tag{3}\]</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Suspension_(dynamical_systems)">Wikipedia: Suspension (dynamical systems)</a></p>
+<p>A <em>suspension</em> turns a map into a flow: each point rises for a while, set by a "roof" function, before it jumps to its image. Wikipedia describes the continuous version. The <em>discrete suspension</em> here does the same in whole steps, by stacking each kept row with the intermediate rows of its return path.</p>
+</div>
 <p>The towers, expanded, are conjugate to the original permutation on its saturation. The smaller map <span class="arithmatex">\(T_m\)</span> on the bases is an induced system: it has fewer states and variable return times. Our <a href="https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-certificates.md">notes on itinerary certificates</a> (§3) described each step as a conjugacy of the smaller map to the larger one. That overstated it: the conjugacy holds once the tower levels are added, as (3) states.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Topological_conjugacy">Wikipedia: Topological conjugacy</a></p>
+<p>A <em>conjugacy</em> is a change of coordinates that turns one system into another step for step, so that the two are the same system described differently. Here, the expanded towers are conjugate to LF on its saturation; the smaller induced map is not, until the tower levels are put back.</p>
+</div>
 <h3 id="14-one-step">1.4 One step<a class="headerlink" href="#14-one-step" title="Permanent link">&para;</a></h3>
 <p>Let <span class="arithmatex">\(A\)</span> be the last domain interval and <span class="arithmatex">\(B\)</span> the last image interval, with <span class="arithmatex">\(A\ne B\)</span>. Put</p>
 <div class="arithmatex">\[s=\min(\lambda_A,\lambda_B).\]</div>
@@ -3207,19 +3243,59 @@
 </tbody>
 </table>
 <p>The code says "cell" because a finished return piece is written into the records of both orders, while what remains of each interval stays at the fronts. That is a representation of the induction above, which the <a href="../2026-11-12-rauzy-technical-companion/#4-how-the-cells-algorithm-implements-that-mathematics">technical companion</a> describes in detail.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/CW_complex">Wikipedia: CW complex</a></p>
+<p>A <em>CW complex</em> is a space built by gluing cells together: points (0-cells), then edges (1-cells), then discs and their higher-dimensional analogues. Our "cells" are not such cells. In section 3, though, the rows are 0-cells and the LF transitions are 1-cells.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Formal_grammar">Wikipedia: Formal grammar</a></p>
+<p>A <em>formal grammar</em> is a set of rewriting rules, called <em>productions</em>, each saying how a symbol may be replaced by a string of other symbols. Here, every rule has the form <span class="arithmatex">\(N\to UV\)</span>: one symbol stands for the concatenation of two others.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Straight-line_grammar">Wikipedia: Straight-line grammar</a></p>
+<p>A <em>straight-line grammar</em>, or straight-line program (SLP), is a grammar that produces exactly one string, never branching or looping. Repeated pieces are named once and reused, so the grammar can be far smaller than its string. Here, Cells' rules form one.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">Wikipedia: Directed acyclic graph</a></p>
+<p>A <em>directed acyclic graph</em> (DAG) is a set of nodes joined by one-way arrows, with no path that leads back to where it started. Here, each rule points to its two children, and children shared between rules make the grammar a DAG rather than a tree.</p>
+</div>
 <h3 id="substitutions-cylinders-and-grammar-nodes">Substitutions, cylinders and grammar nodes<a class="headerlink" href="#substitutions-cylinders-and-grammar-nodes" title="Permanent link">&para;</a></h3>
 <p>Three further descriptions are useful.</p>
 <p><strong>A finite S-adic presentation.</strong> Each stage defines a substitution from the new alphabet of intervals into the previous one. Composed, they give a finite directive sequence of return-word substitutions. The stored object is most directly called an SLP. Versions matter: an assignment such as <span class="arithmatex">\(w_B\leftarrow w_Aw_B\)</span> creates a new node that refers to the old values, so the grammar has no cycles.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Symbolic_dynamics">Wikipedia: Symbolic dynamics</a></p>
+<p><em>Symbolic dynamics</em> studies a system through <em>itineraries</em>: for each point, the sequence of symbols naming the regions it visits. An <em>S-adic presentation</em>, which has no article of its own, builds such sequences by composing a series of substitutions, each replacing every symbol by a word. Here, each stage of the induction is one substitution.</p>
+</div>
 <p><strong>Cylinder sets.</strong> A base interval lies inside a cylinder of constant return path. It need not be the largest cylinder for its byte word. Isolating the starting row deliberately cuts intervals finer, and equal byte words need not mean equal paths through the rows.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Cylinder_set">Wikipedia: Cylinder set</a></p>
+<p>A <em>cylinder set</em> is the set of all sequences that agree on a fixed, finite stretch of positions, for instance all those whose first three symbols are given. Here, a cylinder is the set of rows whose return path follows a given itinerary.</p>
+</div>
 <p><strong>Occurrence coordinates.</strong> A grammar node can occur many times in the output. The writer's "first place" for a node is the smallest position of one of its occurrences. It is not a position that belongs to the string value itself.</p>
 <p>For an unrotated expansion of the root, the first places come from a min-plus computation over the DAG. If <span class="arithmatex">\(N\to UV\)</span>,</p>
 <div class="arithmatex">\[P(U)\leftarrow\min(P(U),P(N)),\qquad P(V)\leftarrow\min(P(V),P(N)+|U|).\tag{5}\]</div>
 <p>That is why the writer passes over the rules in reverse order. Its next pass writes out factors and copies repeated occurrences, and its handling of the marked path adds the output phase (construction journal, §§3.2 and 3.5).</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Tropical_semiring">Wikipedia: Tropical semiring</a></p>
+<p>The <em>tropical semiring</em> replaces ordinary addition by taking the minimum, and ordinary multiplication by addition, so that a "sum of products" becomes a "smallest total". Here, rule (5) is such a <em>min-plus</em> computation: a node's first place is the smallest of the places its parents offer.</p>
+</div>
 <h2 id="3-is-the-induction-discrete-morse-theory">3. Is the induction discrete Morse theory?<a class="headerlink" href="#3-is-the-induction-discrete-morse-theory" title="Permanent link">&para;</a></h2>
 <h3 id="what-ghrist-states">What Ghrist states<a class="headerlink" href="#what-ghrist-states" title="Permanent link">&para;</a></h3>
 <p>In §8.8 (pp. 205–206), a discrete vector field pairs cells <span class="arithmatex">\((\sigma,\tau)\)</span>, with <span class="arithmatex">\(\sigma\)</span> a face of <span class="arithmatex">\(\tau\)</span> of one dimension lower. Unpaired cells are critical. The field is a gradient when it has no periodic alternating flowline. The discrete flow is</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Discrete_Morse_theory">Wikipedia: Discrete Morse theory</a></p>
+<p><em>Discrete Morse theory</em> simplifies a space built from cells by pairing cells off, each with a neighbour one dimension higher, and keeping only the unpaired, <em>critical</em> cells, without changing its homology. The pairing is a <em>discrete vector field</em>, and following it gives <em>gradient paths</em>. Here, each removed row pairs with its outgoing LF edge, and the gradient path from a kept row is its return path.</p>
+</div>
 <div class="arithmatex">\[\Phi=\operatorname{Id}+\partial V+V\partial,\]</div>
 <p>and Theorem 8.24 (p. 206) identifies the resulting Morse homology with the original cellular homology. These are constructions on chain modules, with signed or mod-two counts of paths.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Homology_(mathematics)">Wikipedia: Homology (mathematics)</a></p>
+<p><em>Homology</em> counts the holes of a space in each dimension: its connected pieces, its loops, its enclosed cavities and so on. <em>Cellular homology</em> computes it from the cells of a complex. Here, every LF cycle is a circle, one piece with one loop, and a valid reduction must keep both.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Chain_complex">Wikipedia: Chain complex</a></p>
+<p>A <em>chain complex</em> is a sequence of <em>chain modules</em>, here formal sums of cells, linked by boundary maps that send each cell to its boundary; applying a boundary map twice gives zero. Homology is read off from it. Here, the <em>Morse boundary</em> in the table below is the boundary map of the reduced complex.</p>
+</div>
 <h3 id="the-exact-construction-for-lf">The exact construction for LF<a class="headerlink" href="#the-exact-construction-for-lf" title="Permanent link">&para;</a></h3>
 <p>Build the orbit graph <span class="arithmatex">\(G_\pi\)</span>, with a vertex for every row <span class="arithmatex">\(x\)</span> and an oriented edge <span class="arithmatex">\(e_x:x\to\pi(x)\)</span>. Every component is a circle. The complex is built from the dynamics; it is not the coordinate interval <span class="arithmatex">\([0,n)\)</span>. Subdivide one-point loops where needed, to meet Ghrist's hypothesis of a regular cell complex.</p>
 <p>Choose a section <span class="arithmatex">\(D\)</span> that meets every component under consideration, and define</p>
@@ -3270,6 +3346,10 @@
 <p>A word is the byte coding of the return path, reversed as in (1). That is weaker than recording the path itself. Different paths can emit the same string, and one shared SLP node can stand for several path occurrences. The intervals and the marker keep distinctions that the string alone loses.</p>
 <p>So it is legitimate to speak of Morse return paths decorated with word labels. "Morse theory with free-monoid coefficients" is not justified by the cited theorem. Its chain maps use addition and incidence coefficients, and the free monoid of strings is not a chain module. Ordered labels are an enrichment that needs its own argument for being preserved.</p>
 <p>Two further qualifications. Suppressing vertices of degree two on a circle is a graph contraction, a Morse reduction. It is not literally a sequence of collapses through free faces inside the original circle, whose vertices each have two incident edges. And discarding a closed LF component without the starting row removes a whole circle, which does not preserve the homology of the full orbit graph. The Morse statement applies component by component to the components still represented.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Edge_contraction">Wikipedia: Edge contraction</a></p>
+<p>An <em>edge contraction</em> removes an edge from a graph and merges its two ends into one vertex. Here, suppressing a removed row on an LF circle contracts one edge, and repeated contractions shorten the circle without breaking it.</p>
+</div>
 <h3 id="what-the-theorem-adds">What the theorem adds<a class="headerlink" href="#what-the-theorem-adds" title="Permanent link">&para;</a></h3>
 <p>It gives a valid statement that homology is preserved, and it forces at least one critical vertex and one critical edge on every circle: a circle cannot be reduced to a point with its homology intact. It does not establish that the bytes are right, the output phase, the grammar's size, or the best order of contraction. Those depend on the labelled return invariant (1).</p>
 <p>So the correspondence holds exactly, but between row-level contraction of return paths and a Morse matching, not between the implementation's records and topological cells. Our <a href="https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-ghrist.md">earlier note on Ghrist's book</a> marked as proved that the induction is a Morse contraction with "flowlines labelled by words in the free monoid". That wording drops these distinctions.</p>
@@ -3277,7 +3357,23 @@
 <h3 id="what-a-sheaf-here-would-require">What a sheaf here would require<a class="headerlink" href="#what-a-sheaf-here-would-require" title="Permanent link">&para;</a></h3>
 <p>In §11.9 (p. 286), a cellular sheaf is a functor</p>
 <div class="arithmatex">\[\mathcal F:\operatorname{Face}(X)\longrightarrow\mathcal C.\]</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Sheaf_(mathematics)">Wikipedia: Sheaf (mathematics)</a></p>
+<p>A <em>sheaf</em> attaches data to the pieces of a space, with rules saying how the data on overlapping or adjacent pieces must agree; a <em>global section</em> is a choice of data everywhere that obeys every rule. A <em>cellular sheaf</em> does this on the cells of a complex, with a <em>stalk</em> of data on each cell and a map for each face. Here, section 4 asks which sheaf, if any, our words form.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Functor">Wikipedia: Functor</a></p>
+<p>A <em>functor</em> is a map between categories that sends objects to objects and arrows to arrows, keeping identities and composition. Here, the functor that matters sends each LF path to its word, and following two paths in turn to concatenating their words.</p>
+</div>
 <p>For <span class="arithmatex">\(\mathcal C=\mathbf{Mon}\)</span>, the category of monoids, that requires a monoid at every cell, a monoid homomorphism for every incidence of faces, and compatibility between those homomorphisms. Equation (11.3) on the same page describes the global sections as the limit of that diagram.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Monoid">Wikipedia: Monoid</a></p>
+<p>A <em>monoid</em> is a set with an associative way of combining two elements and an identity element that changes nothing. Strings under concatenation, with the empty string, form one, and so do the natural numbers under addition. A <em>monoid homomorphism</em> keeps the combining and the identity: word length is one.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Limit_(category_theory)">Wikipedia: Limit (category theory)</a></p>
+<p>A <em>limit</em> of a diagram is the most general object with compatible maps to every part of it: a universal way of making all the parts agree at once. Here, the global sections of a sheaf form such a limit.</p>
+</div>
 <p>A stored word is an element of a monoid. It is not itself a stalk. Our notes said that words are "free-monoid sections" of such a sheaf (<a href="https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-ghrist.md">the note on Ghrist's book</a>, §0), but they never gave the stalks and incidence maps that claim needs.</p>
 <p>The obvious choices do not work. Putting <span class="arithmatex">\(\Sigma^*\)</span> on every cell, with identity restriction maps, would force adjacent cells to hold equal words, not to concatenate them. Nor can multiplication serve as a restriction map. For strings, which do not commute,</p>
 <div class="arithmatex">\[\mu:\Sigma^*\times\Sigma^*\to\Sigma^*,\qquad\mu(u,v)=uv\]</div>
@@ -3290,6 +3386,14 @@
 <p>by <span class="arithmatex">\(w_{\alpha(x)}\)</span>. Along paths, these labels concatenate in forward output order. That is a functor</p>
 <div class="arithmatex">\[\boxed{\mathsf{Path}(G_{T_D}^{-1})\longrightarrow B\Sigma^*,}\tag{8}\]</div>
 <p>where <span class="arithmatex">\(B\Sigma^*\)</span> is the category with one object, whose morphisms are words and whose composition is concatenation <strong>in traversal order</strong>: a path that takes <span class="arithmatex">\(e\)</span> and then <span class="arithmatex">\(f\)</span> is sent to <span class="arithmatex">\(w_e w_f\)</span>. (Under the usual convention that <span class="arithmatex">\(g\circ f\)</span> means "<span class="arithmatex">\(f\)</span> first", the target is the opposite monoid <span class="arithmatex">\((\Sigma^*)^{\mathrm{op}}\)</span> instead.) It uses a monoid as a one-object category, which is a different construction from a sheaf valued in the category of monoids.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Free_category">Wikipedia: Free category</a></p>
+<p>A <em>free category</em>, or path category, is built from a directed graph: its arrows are the paths in the graph, and composing two arrows means following one path and then the other. Here, the path category of the return graph is where the functor (8) starts.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Category_(mathematics)">Wikipedia: Category (mathematics)</a></p>
+<p>A <em>category</em> is a collection of objects and arrows between them that can be composed, with an identity arrow on each object. A monoid is exactly a category with one object: its elements are the arrows, and combining them is composition. Here, <span class="arithmatex">\(B\Sigma^*\)</span> is the monoid of words seen this way.</p>
+</div>
 <p>The SLP stores compressed expressions for these path labels. Length is then a monoid homomorphism,</p>
 <div class="arithmatex">\[|\cdot|:\Sigma^*\longrightarrow(\mathbb N,+).\]</div>
 <p>Together they account exactly for ordered word composition and for return times that add.</p>
@@ -3303,6 +3407,10 @@
 <li>the maps from a symbol to its edges are identities;</li>
 <li>the terminals' values are fixed.</li>
 </ul>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Bipartite_graph">Wikipedia: Bipartite graph</a></p>
+<p>A <em>bipartite graph</em> has two kinds of vertices, with edges only between the kinds, never within one. Here, the kinds are the grammar's symbols and its productions, and each edge records that a symbol takes part in a production.</p>
+</div>
 <p>Its global sections are the consistent evaluations of the grammar. It is an exact encoding, but it is extra formal structure, and it does not turn concatenation into a monoid homomorphism. There is also a particularly natural sheaf of positions, built in <a href="#53-the-position-sheaf">section 5.3</a>.</p>
 <p><strong>The verdict.</strong> The monoid observation is sound and useful. "Words are free-monoid sections" does not follow until a sheaf is specified. Ghrist's section licenses such definitions; it supplies neither them nor a faster way to evaluate.</p>
 <h2 id="5-are-word-places-circular-coordinates">5. Are word places circular coordinates?<a class="headerlink" href="#5-are-word-places-circular-coordinates" title="Permanent link">&para;</a></h2>
@@ -3313,11 +3421,31 @@
 <p>On the induced graph, orient edges in the LF direction and define</p>
 <div class="arithmatex">\[a(e_x)=-h(x),\qquad e_x:x\to T_D(x).\]</div>
 <p>This is an integer 1-cocycle. On a graph every 1-cochain is a cocycle, because there are no 2-cells, so what carries the information is its period:</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Cocycle">Wikipedia: Cocycle</a></p>
+<p>A <em>cocycle</em> is a <em>cochain</em>, an assignment of numbers to the edges (or higher cells) of a space, that passes a closure test; on a graph every cochain passes. A <em>coboundary</em> is a cochain of the form "value at the head minus value at the tail" for some numbers on the vertices. Here, the step lengths form a cocycle that is not a coboundary, because round the cycle they add up to <span class="arithmatex">\(-d\)</span>, not zero.</p>
+</div>
 <div class="arithmatex">\[\langle a,[C_D]\rangle=-d.\tag{10}\]</div>
 <p>It follows that <span class="arithmatex">\(a\)</span> is not the coboundary of an integer-valued or real-valued position function on the closed cycle. Modulo <span class="arithmatex">\(d\)</span>, though, it is exact:</p>
 <div class="arithmatex">\[\boxed{p(T_D(x))-p(x)\equiv-h(x)\pmod d.}\tag{11}\]</div>
 <p>Here <span class="arithmatex">\(p(x)\)</span> is the place in the text just after the word of <span class="arithmatex">\(x\)</span>. The scaled cocycle <span class="arithmatex">\(a/d\)</span> is a real cocycle with integral period <span class="arithmatex">\(-1\)</span>, so it integrates to a coordinate in <span class="arithmatex">\(\mathbb R/\mathbb Z\)</span>, and one marked occurrence fixes the additive phase. This is the exact link to §7.13 (pp. 185–186), and in particular to the correspondence between integral first cohomology and maps to the circle on p. 186.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Cohomology">Wikipedia: Cohomology</a></p>
+<p><em>Cohomology</em> measures when local data, such as a number on every edge, fail to come from one global quantity, such as a position for every vertex. The failure shows up as a nonzero total round a loop, called a <em>period</em>. Here, <em>integral first cohomology</em> classifies the ways of wrapping a space round a circle, which is how word places become circular coordinates.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Modular_arithmetic">Wikipedia: Modular arithmetic</a></p>
+<p><em>Modular arithmetic</em> is arithmetic on a clock: modulo <span class="arithmatex">\(d\)</span>, two numbers count as equal when they differ by a multiple of <span class="arithmatex">\(d\)</span>. Here, places taken modulo the cycle length <span class="arithmatex">\(d\)</span> come back to their start after one trip round the cycle, which places as plain integers cannot.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Circle_group">Wikipedia: Circle group</a></p>
+<p>The <em>circle group</em> <span class="arithmatex">\(\mathbb R/\mathbb Z\)</span> is the real numbers with only the part after the decimal point kept, so that 0.9 plus 0.2 is 0.1. A coordinate with values there wraps around instead of growing. Here, places in the text divided by <span class="arithmatex">\(d\)</span> are such <em>circular coordinates</em>.</p>
+</div>
 <p>Keep the edge increments as well as the vertex coordinates. At final closure the induced graph may have one vertex and one loop, and the vertex's coordinate alone says nothing about how far the loop winds.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Winding_number">Wikipedia: Winding number</a></p>
+<p>A <em>winding number</em> counts how many times a closed loop goes round a point or a circle, with direction. Here, the edge increments record how far round the circle each step goes, which a vertex's circular coordinate alone cannot show.</p>
+</div>
 <h3 id="52-why-modulo-n-is-not-always-correct">5.2 Why modulo <span class="arithmatex">\(n\)</span> is not always correct<a class="headerlink" href="#52-why-modulo-n-is-not-always-correct" title="Permanent link">&para;</a></h3>
 <p><a href="../2026-11-16-stop-and-walk/#1-how-does-cells-rebuild-a-block">Stop and walk</a> writes the invariant as</p>
 <div class="arithmatex">\[p(Tx)\equiv p(x)-|w(x)|\pmod n.\]</div>
@@ -3336,9 +3464,17 @@
 <p>A global section satisfies</p>
 <div class="arithmatex">\[\rho_{x,e}(p(x))=\rho_{y,e}(p(y)),\]</div>
 <p>which is exactly (11). These are maps of sets, or affine maps of torsors. In general they are not group or monoid homomorphisms, since translation by a nonzero constant does not preserve the identity.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Principal_homogeneous_space">Wikipedia: Principal homogeneous space</a></p>
+<p>A <em>torsor</em>, also called a principal homogeneous space, is a set where differences between elements make sense but no element is singled out as zero, like positions on a line with no chosen origin. Here, the position sheaf's stalks behave as torsors: one marked occurrence chooses the origin.</p>
+</div>
 <p>Sections exist precisely when the total increment round each cycle vanishes modulo the chosen modulus. One anchor fixes the remaining additive freedom on each component. With the stalks and restriction maps that were missing, the compatibility claim becomes exact.</p>
 <h3 id="54-what-example-737-contributes">5.4 What Example 7.37 contributes<a class="headerlink" href="#54-what-example-737-contributes" title="Permanent link">&para;</a></h3>
 <p>Example 7.37 (p. 185) comes just before the §7.13 heading. It uses the discrete Hodge decomposition of Theorem 7.34 (p. 184) to split pairwise comparison data into a gradient ranking and cyclic inconsistencies. For Cells, the relevant lesson is the obstruction to a real-valued ranking on a closed cycle with nonzero circulation.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Helmholtz%E2%80%93Hodge_decomposition">Wikipedia: Helmholtz–Hodge decomposition</a></p>
+<p>The <em>Helmholtz–Hodge decomposition</em> splits a flow into a part that comes from a potential and parts that circulate. On a graph of pairwise comparisons, it splits the data into a global ranking plus cyclic inconsistencies; this discrete form is the <em>discrete Hodge decomposition</em> Ghrist uses. Here, the nonzero circulation of the step lengths round an LF cycle is what rules out a real-valued ranking of positions.</p>
+</div>
 <p>The harmonic smoothing in §7.13 has no evident role in exact decoding. Replacing the length cocycle by a cohomologous harmonic representative keeps the winding, but in general it moves the positions given to intermediate vertices. Decoding needs the actual return lengths, not only their cohomology class.</p>
 <p>Finally, the row coordinate <span class="arithmatex">\(p\)</span> and the writer's first-occurrence function <span class="arithmatex">\(P\)</span> in (5) are different objects. The first integrates lengths along an orbit; the second chooses canonical occurrences in a grammar DAG.</p>
 <h2 id="6-what-does-the-formal-account-prove">6. What does the formal account prove?<a class="headerlink" href="#6-what-does-the-formal-account-prove" title="Permanent link">&para;</a></h2>
@@ -3362,6 +3498,14 @@
 <p>The first equation undoes the subtraction of widths; the second adds return times. Therefore</p>
 <div class="arithmatex">\[\lambda_{\mathrm{new}}^{\mathsf T}h_{\mathrm{new}}=\lambda_{\mathrm{old}}^{\mathsf T}h_{\mathrm{old}}.\]</div>
 <p>That is a cheap algebraic check on every update. An equal step uses the corresponding rectangular incidence matrix. Either way, it states that the towers' volume is conserved, without following individual rows.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Elementary_matrix">Wikipedia: Elementary matrix</a></p>
+<p>An <em>elementary matrix</em> differs from the identity matrix by a single row operation, such as adding one row to another. Here, <span class="arithmatex">\(M=I+E_{AB}\)</span> records one step: adding one interval's width back onto another's.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Transpose">Wikipedia: Transpose</a></p>
+<p>The <em>transpose</em> of a matrix swaps its rows and columns. When widths change by a matrix and heights by its transpose, the total of width times height stays the same, the algebra that keeps a dot product fixed. Here, that total is the towers' volume.</p>
+</div>
 <h3 id="63-bounds-on-the-present-schedule-of-steps">6.3 Bounds on the present schedule of steps<a class="headerlink" href="#63-bounds-on-the-present-schedule-of-steps" title="Permanent link">&para;</a></h3>
 <p>Let <span class="arithmatex">\(r_0\)</span> be the number of starting intervals after the starting row is isolated, so <span class="arithmatex">\(r_0\le r+2\)</span> for <span class="arithmatex">\(r\)</span> runs. Let <span class="arithmatex">\(S\)</span> count the ordinary concatenating steps. When LF is one <span class="arithmatex">\(n\)</span>-cycle,</p>
 <div class="arithmatex">\[\boxed{r_0-1\le S\le n-1.}\tag{14}\]</div>
@@ -3372,12 +3516,20 @@
 <div class="arithmatex">\[S=k+1=\frac{n+1}{2}\]</div>
 <p>steps. After the first subtraction the widths are <span class="arithmatex">\(k\)</span> and <span class="arithmatex">\(1\)</span>, and repeated subtractions of one finish the reduction. The construction journal's count of 449,991 steps at <span class="arithmatex">\(n=899{,}981\)</span> (§§2 and 4) matches this formula.</p>
 <p>The same family shows why long words must stay compressed. Successive return words grow linearly, so storing all of them literally can take quadratic total bytes.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Big_O_notation">Wikipedia: Big O notation</a></p>
+<p><em>Big O notation</em> describes how a quantity grows while ignoring constant factors: <span class="arithmatex">\(O(f)\)</span> means at most a constant times <span class="arithmatex">\(f\)</span> for large inputs, and the related <span class="arithmatex">\(\Omega(f)\)</span> means at least. Here, it states bounds on the number of steps and on the work of producing the output.</p>
+</div>
 <h3 id="64-some-batching-identities-are-proved-their-speed-benefit-is-not">6.4 Some batching identities are proved; their speed benefit is not<a class="headerlink" href="#64-some-batching-identities-are-proved-their-speed-benefit-is-not" title="Permanent link">&para;</a></h3>
 <p>For <span class="arithmatex">\(q\)</span> consecutive strict top wins by the same pair,</p>
 <div class="arithmatex">\[\lambda_A'=\lambda_A-q\lambda_B,\qquad w_B'=w_A^q w_B.\tag{15}\]</div>
 <p>For <span class="arithmatex">\(q\)</span> consecutive strict bottom wins,</p>
 <div class="arithmatex">\[\lambda_B'=\lambda_B-q\lambda_A,\qquad w_A'=w_Aw_B^q.\tag{16}\]</div>
 <p>These identities are exact. Binary powering can represent <span class="arithmatex">\(w^q\)</span> with <span class="arithmatex">\(O(\log q)\)</span> extra SLP rules. Changes of order, the boundaries of equal steps, and the transport of the marker must also be composed correctly.</p>
+<div class="admonition info">
+<p class="admonition-title"><a href="https://en.wikipedia.org/wiki/Exponentiation_by_squaring">Wikipedia: Exponentiation by squaring</a></p>
+<p><em>Exponentiation by squaring</em> computes a power <span class="arithmatex">\(x^q\)</span> with about <span class="arithmatex">\(\log_2 q\)</span> multiplications, by squaring repeatedly and combining the squares that the binary digits of <span class="arithmatex">\(q\)</span> pick out. Here, the same trick builds a word repeated <span class="arithmatex">\(q\)</span> times with <span class="arithmatex">\(O(\log q)\)</span> grammar rules.</p>
+</div>
 <p><strong>H.</strong> Whether such acceleration speeds up the actual decoder depends on how often suitable streaks occur and what finding them costs. The identities do show that the topology does not force one operation per elementary subtraction.</p>
 <h3 id="65-exact-itinerary-certificates">6.5 Exact itinerary certificates<a class="headerlink" href="#65-exact-itinerary-certificates" title="Permanent link">&para;</a></h3>
 <p>Suppose a piecewise translation <span class="arithmatex">\(F\)</span> follows the intervals</p>
@@ -3439,6 +3591,15 @@
 <li>Stop and walk: <a href="https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-16-stop-and-walk.md">the design record</a> and <a href="https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-16-stop-walk-reopened.md">its reopening</a>; <a href="https://github.com/lmmx/mibz2/blob/4599b7633eb6b38b4994b678d8cd0e2095d1a387/docs/journal/monodromy/2026-11-16-words.md">the census of word lifetimes</a>.</li>
 <li>In review as research pull request <a href="https://github.com/lmmx/mibz2/pull/497">#497</a>: <a href="https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-two-chains.md">splitting the walk</a>, <a href="https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-compact-tail.md">the compact tail</a>, <a href="https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-certificates.md">itinerary certificates</a> and <a href="https://github.com/lmmx/mibz2/blob/a2ddc1ef3dd26e8400cef0323e300baf76b26e7d/docs/journal/monodromy/2026-11-16-ghrist.md">the note on Ghrist's book</a>.</li>
 </ul>
+<p><strong>Further reading,</strong> in a suggested order:</p>
+<ol>
+<li><a href="https://en.wikipedia.org/wiki/Interval_exchange_transformation">Interval exchange transformation</a>: how LF is presented, and the setting for Rauzy-style induction.</li>
+<li><a href="https://en.wikipedia.org/wiki/Rokhlin_lemma">Rokhlin lemma</a>: the tower viewpoint, for its construction rather than its measure theory.</li>
+<li><a href="https://en.wikipedia.org/wiki/Free_monoid">Free monoid</a> and <a href="https://en.wikipedia.org/wiki/Straight-line_grammar">straight-line grammar</a>: how return paths become strings, and how repeats compress.</li>
+<li><a href="https://en.wikipedia.org/wiki/Discrete_Morse_theory">Discrete Morse theory</a>: the same reduction, seen as eliminating matched cells.</li>
+<li><a href="https://en.wikipedia.org/wiki/Functor">Functor</a> and <a href="https://en.wikipedia.org/wiki/Sheaf_(mathematics)">sheaf</a>: path concatenation is functorial, and compatible placements are sections of a sheaf.</li>
+<li><a href="https://en.wikipedia.org/wiki/Cohomology">Cohomology</a> and <a href="https://en.wikipedia.org/wiki/Cocycle">cocycle</a>: why positions are circular, and why the cycle's length matters.</li>
+</ol>
 
 
 
@@ -3599,19 +3760,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/bench.js?v=d8fc1c3b6b63"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/couriers.js?v=d8fc1c3b6b63"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/blog.js?v=d8fc1c3b6b63"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/frontier.js?v=d8fc1c3b6b63"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/observatory.js?v=d8fc1c3b6b63"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/katex.js?v=d8fc1c3b6b63"></script>
       
     
   </body>

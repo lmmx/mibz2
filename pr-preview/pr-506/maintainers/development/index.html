@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=d8fc1c3b6b63">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=d8fc1c3b6b63">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=d8fc1c3b6b63">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=d8fc1c3b6b63">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=d8fc1c3b6b63">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8dd9dcf118c1">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=d8fc1c3b6b63">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2186,6 +2186,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Building and testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-toolchain" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The toolchain
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2341,6 +2358,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Building and testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-toolchain" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The toolchain
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2453,6 +2487,29 @@ cargo<span class="w"> </span>run<span class="w"> </span>--release<span class="w"
 <p>On aarch64: <code>rustup target add aarch64-unknown-linux-gnu</code>, <code>apt install qemu-user
 gcc-aarch64-linux-gnu</code>, then <code>cargo test --release --target aarch64-unknown-linux-gnu
 --config .cargo/aarch64-qemu.toml</code>.</p>
+<h3 id="the-toolchain">The toolchain<a class="headerlink" href="#the-toolchain" title="Permanent link">&para;</a></h3>
+<p>The Rust toolchain is pinned in <code>rust-toolchain.toml</code> (1.99.1), and rustup uses it for
+every build in the checkout: CI, the benchmark, the release wheels and the workstation
+recipes. The compiler moves the decoder's figures more than many of the effects being
+gated. Lazy Cells' induction, for one, took 219 instructions a letter under 1.97 and 176
+under 1.99.1 in one research binary, where a candidate against it swung from 37.6
+instructions a letter fewer to 22.6 more. In the benchmark binary the same candidate moved
+far less (+6.2 under 1.98.0, −7.1 under 1.99.1): codegen differs by binary as well as by
+compiler. So gates are counted on the benchmark's own arms, built with the pinned compiler.
+A comparison between toolchains is not a comparison of the code.</p>
+<ul>
+<li><strong>The workflows name the same version</strong> (<code>dtolnay/rust-toolchain@1.99.1</code>, maturin-action's
+  <code>rust-toolchain</code>). test.yml checks that they agree with the file. A deliberate exception
+  says why on its line: Miri runs on nightly, and a registration's dispatch uses the
+  toolchain it froze.</li>
+<li><strong>Every workstation bundle records the toolchain</strong> (<code>toolchain.txt</code>, written by
+  <code>bench/bundle.sh</code>).</li>
+<li><strong>Bumping the toolchain is its own pull request,</strong> with nothing else in it. The benchmark
+  builds each arm with its own commit's toolchain, so that pull request measures the new
+  compiler against the old one.</li>
+<li><strong>The published crate and sdist leave the file out:</strong> a downstream build uses its own
+  toolchain, from <code>rust-version</code> (1.80) up.</li>
+</ul>
 <p>The segmented walks' unsafe code also runs under <a href="https://github.com/rust-lang/miri">Miri</a>,
 on blocks small enough to interpret: <code>cargo +nightly miri test --lib -- miri_</code> (about a
 minute; CI runs it on changes to <code>src/bwt.rs</code>). Those tests assert they reached the
@@ -2656,19 +2713,19 @@ history in <a href="https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/bench.js?v=d8fc1c3b6b63"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/couriers.js?v=d8fc1c3b6b63"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/blog.js?v=d8fc1c3b6b63"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/frontier.js?v=d8fc1c3b6b63"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/observatory.js?v=d8fc1c3b6b63"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=8dd9dcf118c1"></script>
+        <script src="../../assets/javascripts/katex.js?v=d8fc1c3b6b63"></script>
       
     
   </body>

@@ -21,7 +21,7 @@ decompress(data: bytes | bytearray, threads: int | None = None) -> bytes
 
 Decode a whole .bz2 (its streams one after another), every CRC checked.
 
-It runs on every CPU this process may use, or on `threads`: a block a worker, or teams of 2 sharing each block on 6 or more physical cores.
+It runs on every CPU this process may use, or on `threads`, as the Rust crate's `Plan::for_threads` spends them: a block a worker (past the physical cores on 8 to 10 of them, one a core; on the i9-10900K, one a core but one), or teams of 2 sharing each block (from 11 threads on 11 or more cores, or past the cores on 6 or 7).
 
 Raises:
 
@@ -44,7 +44,7 @@ Parameters:
 | Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | `source` | `Source` | A path, or a binary file object open for reading (its `read` is called). | *required* |
-| `threads` | `int \| None` | Decoding threads: `1` decodes on the reading thread; more decode blocks at once on worker threads, a block each, or, on 6 or more physical cores, in teams of 2 sharing each block (as many teams as keep their tables in the CPU's last cache level). `None` (the default) uses every CPU this process may use. | `None` |
+| `threads` | `int \| None` | Decoding threads: `1` decodes on the reading thread; more decode blocks at once, as the Rust crate's `Plan::for_threads` spends them: worker threads, a block each (past the physical cores on 8 to 10 of them, one a core; on the i9-10900K, one a core but one), or teams of 2 sharing each block (from 11 threads on 11 or more cores, or past the cores on 6 or 7). `None` (the default) asks for every CPU this process may use. | `None` |
 
 Raises:
 
