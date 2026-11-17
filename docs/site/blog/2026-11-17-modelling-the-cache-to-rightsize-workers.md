@@ -43,7 +43,7 @@ The takeaways, each shown in a section below:
 
 - **Fewer workers than threads is faster on the i9, at every count measured from 8 threads up.** At 10 threads, 7 workers take 0.885 of the wall time (11.5% faster) with a quarter less memory. At 8 threads, 6 workers take 0.929. Past the cores, 7 workers take 0.92 to 0.93 of 9's time. A confirming run, with files held out from the choice, reproduced all three ([section 1](#1-what-does-a-worker-do-and-what-do-the-workers-share)).
 - **The cause is contention for the shared cache, not idle cores.** The clock speed is the same at every count. Going from 10 workers to 7, the processor cycles spent per byte fall by 25%, and the misses in the shared cache per byte fall by 48%, while the instructions per byte barely change ([section 2](#2-why-are-fewer-workers-faster)).
-- **The model takes the smallest of three limits:** W\* ≈ min(cores, cache limit, CPU budget). At 8 threads the CPU budget, about 6.6 workers, binds before the cache limit, about 8, which is why 6 workers beat 7 there ([section 3](#3-a-model-of-three-limits)).
+- **The model takes the smallest of three limits:** $W^* \approx \min(\text{cores},\ \text{cache limit},\ \text{CPU budget})$. At 8 threads the CPU budget, about 6.6 workers, binds before the cache limit, about 8, which is why 6 workers beat 7 there ([section 3](#3-a-model-of-three-limits)).
 - **The model must predict new evidence, not only fit old.** Its predictions for 4, 6 and 8 threads, and for files compressed with a smaller block size (`bzip2 -3`), are frozen before those runs. The results are pending ([section 4](#4-how-could-the-model-be-wrong)).
 - **Production changes only where it was measured and reviewed.** Everywhere else keeps today's behaviour until the model passes its transfer tests. The decoder will detect the machine once, decide once, and not adapt mid-stream ([section 6](#6-what-changes-for-users-and-what-comes-next)).
 
@@ -90,17 +90,17 @@ The clock is ruled out first. Cycles over reference cycles, which measures the c
 
 The fall is smooth, with no cliff. Each worker removed makes the others' misses a little rarer. An earlier prediction that the cost would fall off a cliff once the footprints fit was refuted by exactly this shape.
 
-**The wall time, as bookkeeping.** The wall time is the cycles each byte costs, divided by how many processors are working on the bytes. At 10 workers each worker is busy 0.763 of the time, so 7.63 processors' worth are working; at 7 workers each is busy 0.925 of the time, 6.48 processors' worth. That is 15% less processing power. The cycles per byte fell 25%. So the wall time is 0.752 ÷ 0.849 ≈ 0.886 of what it was, against 0.885 measured. Fewer workers lose some parallelism and gain more back in cheaper bytes, up to a point.
+**The wall time, as bookkeeping.** The wall time is the cycles each byte costs, divided by how many processors are working on the bytes. At 10 workers each worker is busy 0.763 of the time, so 7.63 processors' worth are working; at 7 workers each is busy 0.925 of the time, 6.48 processors' worth. That is 15% less processing power. The cycles per byte fell 25%. So the wall time is $0.752 / 0.849 \approx 0.886$ of what it was, against 0.885 measured. Fewer workers lose some parallelism and gain more back in cheaper bytes, up to a point.
 
 This bookkeeping is close to an identity when the clock is flat, so it explains nothing on its own: any cause would balance it. The evidence for the cache is the counters' pattern: same instructions, same clock, same private-cache traffic, and fewer shared-cache misses.
 
 ## 3. A model of three limits
 
-The model's answer is W\* ≈ min(C, W_L3, W_CPU): the cores available, the cache limit and the CPU budget. The smallest binds, since plenty of one resource doesn't make up for running out of another.
+The model's answer is $W^* \approx \min(C,\ W_{L3},\ W_{\mathrm{CPU}})$: the cores available $C$, the cache limit $W_{L3}$ and the CPU budget $W_{\mathrm{CPU}}$, each counted in workers. The smallest binds, since plenty of one resource doesn't make up for running out of another.
 
-**The cache limit.** At 10 threads, the cycles per byte fit c(W) = a + b·W², with a ≈ 0.42 the cost of a worker alone and b·W² the contention. The square comes from each of W workers missing more often in proportion to the W footprints sharing the cache. Throughput is then proportional to W / (a + b·W²), which peaks where b·W² = a: where contention costs as much as the work itself. That is W = √(a/b) ≈ 7.9. At 2.1 MB a worker, 7.9 footprints fill about 0.8 of the 20 MiB L3. The fits with other exponents put the peak in the same place, 0.77 to 0.84 of the L3, so the rule is W_L3 ≈ 0.8 × L3 ÷ footprint. The 0.8 is a fitted constant, not a law. mibz2's teams policy already sizes its tables to about 0.7 of the L3, and the simple candidate rule frozen before the next runs uses that 0.7, which gives 7.
+**The cache limit.** At 10 threads, the cycles per byte with $W$ workers fit $c(W) = a + b\,W^2$, with $a \approx 0.42$ the cost of a worker alone and $b\,W^2$ the contention ($b \approx 0.0068$). The square comes from each of $W$ workers missing more often in proportion to the $W$ footprints sharing the cache. Throughput is then proportional to $W / (a + b\,W^2)$, which peaks where $b\,W^2 = a$: where contention costs as much as the work itself. That is $W = \sqrt{a/b} \approx 7.9$. At 2.1 MB a worker, 7.9 footprints fill about 0.8 of the 20 MiB L3. The fits with other exponents put the peak in the same place, 0.77 to 0.84 of the L3, so with $L_3$ the L3's size and $F$ a worker's footprint, the rule is $W_{L3} \approx 0.8 \times L_3 / F$. The 0.8 is a fitted constant, not a law. mibz2's teams policy already sizes its tables to about 0.7 of the L3, and the simple candidate rule frozen before the next runs uses that 0.7, which gives 7.
 
-**The CPU budget.** A worker with a processor to itself is busy 0.93 of the time; the rest it waits on the rest of the pipeline. The scanner and reader use about one processor (1.08 counted at 10 threads). And a fully subscribed set of processors leaves some idle, about 1.25 at 10 threads, from the scheduler's slack. So the workers can use at most N − ν − ι processors, with N the processors allowed, ν the non-worker threads' use and ι the slack, and the budget in workers is W_CPU ≈ (N − ν − ι) ÷ 0.93. This reproduces the measured busy shares at 10 threads: 0.767, 0.851, 0.930, 0.930 and 0.930 for 10 down to 6 workers, against 0.763, 0.857, 0.931, 0.925 and 0.931 measured.
+**The CPU budget.** A worker with a processor to itself is busy 0.93 of the time; the rest it waits on the rest of the pipeline. The scanner and reader use about one processor (1.08 counted at 10 threads). And a fully subscribed set of processors leaves some idle, about 1.25 at 10 threads, from the scheduler's slack. So the workers can use at most $N - \nu - \iota$ processors, with $N$ the processors allowed, $\nu$ the non-worker threads' use and $\iota$ the slack, and the budget in workers is $W_{\mathrm{CPU}} \approx (N - \nu - \iota) / 0.93$. This reproduces the measured busy shares at 10 threads: 0.767, 0.851, 0.930, 0.930 and 0.930 for 10 down to 6 workers, against 0.763, 0.857, 0.931, 0.925 and 0.931 measured.
 
 An earlier version of this term was derived from the wall times and the cycles, and the review of the runs pointed out that it was close to the identity above, so its match was not independent evidence. The term is now built only from the processor time each thread was counted using.
 
@@ -110,7 +110,7 @@ An earlier version of this term was derived from the wall times and the cycles, 
 <figcaption>Modelled, from measured inputs. The bars are in workers; the solid bar is the one that binds, and the dashed line marks it. The non-worker load at 10 threads (1.08 processors) was counted; at 8 threads (0.85) it is the model's estimate, scaled with throughput. The slack is 0.125 of the processors allowed. A count is a whole number, so the model takes the whole number below the binding limit.</figcaption>
 </figure>
 
-**At 10 threads,** the budget is (10 − 1.08 − 1.25) ÷ 0.93 ≈ 8.2 workers, the cache limit is 7.9, and the cache binds: 7 workers, as measured. **At 8 threads,** the budget is (8 − 0.85 − 1.0) ÷ 0.93 ≈ 6.6, below the cache limit, so the budget binds: 6 workers, as measured. A seventh would get only part of a processor while adding a whole footprint to the cache. **Past the cores,** with 20 processors the budget is about 17, and the cache limit gives 7 again.
+**At 10 threads,** the budget is $(10 - 1.08 - 1.25) / 0.93 \approx 8.2$ workers, the cache limit is 7.9, and the cache binds: 7 workers, as measured. **At 8 threads,** the budget is $(8 - 0.85 - 1.0) / 0.93 \approx 6.6$, below the cache limit, so the budget binds: 6 workers, as measured. A seventh would get only part of a processor while adding a whole footprint to the cache. **Past the cores,** with 20 processors the budget is about 17, and the cache limit gives 7 again.
 
 The model misses one thing at 8 threads. It puts 7 workers level with 6, but 7 measured 5% slower (0.975 against 0.929). And fitting the data it was built from is no proof.
 
@@ -124,17 +124,17 @@ Every prediction is frozen before its run and scored after it. So far:
 
 **Frozen for the low-thread sweep** (4, 6 and 8 threads):
 
-| threads | model | model, rival slack | simple rule (0.7 × threads) | measured best |
+| threads | model | model, rival slack | simple rule ($0.7 \times$ threads) | measured best |
 |---:|---:|---:|---:|---|
 | 8 | 6 | 6 | 6 | *pending* |
 | 6 | 5 | 5 | 4 | *pending* |
 | 4 | 4 | 3 | 3 | *pending* |
 
-The rival keeps the slack ι fixed at 1.25 processors rather than in proportion to N. The two disagree at 4 threads, and the counters can tell them apart without timing anything: each worker's busy share at T workers stays about 0.76 under the model, against 0.56, 0.67 and 0.74 at 4, 6 and 8 threads under the rival.
+The rival keeps the slack $\iota$ fixed at 1.25 processors rather than in proportion to $N$ (the model takes $\iota = 0.125\,N$). The two disagree at 4 threads, and the counters can tell them apart without timing anything: each worker's busy share with as many workers as threads stays about 0.76 under the model, against 0.56, 0.67 and 0.74 at 4, 6 and 8 threads under the rival.
 
-A prediction passes at a thread count if it is within one worker of the best measured, and its choice costs at most 2% against the best: wall(predicted) ÷ wall(best) − 1 ≤ 2%.
+A prediction passes at a thread count if it is within one worker of the best measured, and its choice costs at most 2% against the best: $\mathrm{wall}(W_{\text{predicted}}) / \mathrm{wall}(W_{\text{best}}) - 1 \le 2\%$.
 
-**The test that can fail.** The same file compressed with `bzip2 -3` has blocks a third the size. If a footprint shrinks with its block, to about a third, and the cache limit moves from about 8 to about 24. The model predicts that the trim disappears: at 10 threads the best count is 9 or 10, and 7 workers are no better than 0.98 of 10's time. If contention were set by memory bandwidth instead, 7 would still win at about 0.885, as now.
+**The test that can fail.** The same file compressed with `bzip2 -3` has blocks a third the size. If a footprint shrinks with its block, to about a third, the cache limit moves from about 8 to about 24. The model predicts that the trim disappears: at 10 threads the best count is 9 or 10, and 7 workers are no better than 0.98 of 10's time. If contention were set by memory bandwidth instead, 7 would still win at about 0.885, as now.
 
 **The free CI machines.** GitHub's free x86 runners have 4 processors on 2 cores and a 32 MiB L3. There the cache limit is about 12.8 and never binds, so the model predicts that 4 workers stay best (or 3 within 2%), and that today's plan stays. With only 2 to 4 workers possible, "within one worker" fails there only on an outcome the existing data already rule out, so the runners are judged on three refuters instead: the model is wrong if 3 workers beat 4 by more than 2%, if 2 come within 3% of 4, or if any lazy-letters plan beats today's by more than 2%.
 
@@ -154,7 +154,7 @@ The low-thread sweep, the `bzip2 -3` run and the CI runners have not yet run. Th
 <figcaption>Conceptual: a processor with two L3 clusters, as on many AMD chips or a two-socket server. The cache limit is the sum of each cluster's limit, provided the workers are spread across the clusters.</figcaption>
 </figure>
 
-Many processors have more than one L3. AMD's chips group their cores into clusters with an L3 each, and a two-socket server has one per socket. Workers compete only within a cluster. So the cache limit becomes a sum over the clusters the process may use: W_L3 = Σ min(C_d, 0.8 × L_d ÷ footprint), over each cluster d with C_d cores and an L3 of L_d.
+Many processors have more than one L3. AMD's chips group their cores into clusters with an L3 each, and a two-socket server has one per socket. Workers compete only within a cluster. So the cache limit becomes a sum over the clusters the process may use: $W_{L3} = \sum_d \min(C_d,\ 0.8 \times L_d / F)$, over each cluster $d$ with $C_d$ cores and an L3 of $L_d$.
 
 Today's [`l3_bytes()`](https://github.com/lmmx/mibz2/blob/33e7225ba6147fb480168dc54fe30727f0b93aea/src/parallel.rs#L2831-L2846) reads one file, the first processor's `cache/index3/size`. It assumes the cache numbered 3 is the L3, rather than finding the one whose level is 3, and it reads one cluster. The fix groups the processors the process may use by the L3 they share (`shared_cpu_list`) and reads each one's size. The sum holds only if workers are spread across the clusters, so each worker gets a soft affinity to a cluster, not a processor. The CPU budget stays one number for the process.
 
