@@ -167,9 +167,11 @@ fn custom_windows_scale_to_the_teams() {
 /// The existing plan everywhere else, by the same dispatch: 4, 5, 7 and 9 threads on the
 /// target (workers), 6 and 8 (five and six lazy workers, the window scaled to them,
 /// `trimmed_workers`), 10, 11 and 20 (from its 10 cores: seven lazy workers, the window
-/// scaled to them, `trims_to_seven`), 6, 8, 10 and 20 threads off it (a CPU of the same
-/// shape but another model, an unknown quota or a cpu.max limit, a smaller machine: workers,
-/// the window as asked), and a plan forced on the target
+/// scaled to them, `trims_to_seven`), the same cells pinned to CPUs 0 to N-1
+/// (`Machine::pinned_i9`) and never under a mask narrower than the threads asked, 6, 8, 10
+/// and 20 threads off it (a CPU of the same shape but another model, an unknown quota or a
+/// cpu.max limit, a smaller machine: workers, the window as asked), and a plan forced on
+/// the target
 #[test]
 fn the_existing_plan_otherwise() {
     if !supported() {
@@ -181,9 +183,11 @@ fn the_existing_plan_otherwise() {
     let i9 = Machine::service_target();
     let mut same_shape = i9.clone();
     same_shape.target.as_mut().unwrap().cpu = ("GenuineIntel".into(), 6, 151);
+    same_shape.machine.as_mut().unwrap().cpu = ("GenuineIntel".into(), 6, 151);
     let small = Machine {
         phys: Some(4),
         target: None,
+        machine: None,
         ..i9.clone()
     };
     let unknown_quota = Machine {
@@ -216,6 +220,16 @@ fn the_existing_plan_otherwise() {
         (unknown_quota.clone(), 10, false, 10, false),
         (unknown_quota, 20, false, 10, false),
         (small, 10, false, 10, false),
+        // pinned to CPUs 0 to N-1, one a core, as the sweeps measured: the machine is the
+        // i9's whatever the mask, so the cells trim as unpinned
+        (Machine::pinned_i9(6), 6, false, 5, true),
+        (Machine::pinned_i9(8), 8, false, 6, true),
+        (Machine::pinned_i9(10), 10, false, 7, true),
+        (Machine::pinned_i9(7), 7, false, 7, false),
+        // a mask narrower than the threads asked: never trimmed
+        (Machine::pinned_i9(4), 6, false, 6, false),
+        (Machine::pinned_i9(4), 8, false, 8, false),
+        (Machine::pinned_i9(10), 12, false, 10, false),
     ];
     for (m, t, pipelined, threads, scaled) in cases {
         for e in ENTRIES {

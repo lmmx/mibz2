@@ -184,7 +184,8 @@ impl StreamDecoder {
             let trimmed = if forced {
                 None
             } else {
-                trim_cell(threads, plan).filter(|_| measured_i9(k, &Machine::here()))
+                trim_cell(threads, plan)
+                    .and_then(|_| trimmed_workers(threads, plan, k, &Machine::here()))
             };
             if let Some(n) = trimmed {
                 Self::workers(n, window(Plan::Workers(n), threads, slots, true), k, true)
@@ -305,7 +306,8 @@ impl StreamDecoder {
         let trimmed = if forced {
             None
         } else {
-            trim_cell(threads, plan).filter(|_| measured_i9(k, &Machine::here()))
+            trim_cell(threads, plan)
+                .and_then(|_| trimmed_workers(threads, plan, k, &Machine::here()))
         };
         if let Some(n) = trimmed {
             let mut dec =
@@ -2539,9 +2541,10 @@ const SERVICE_NAME: &str = "Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz";
 
 /// What the plan policy and the service core's target predicate read of the machine
 /// (`Machine::here`). The plan policy's two facts are as it has always read them (`phys`,
-/// `l3`: None where the OS doesn't say). The predicate reads only `target` and `quota`,
-/// each read to fail closed: None, or `Quota::Unknown`, wherever a fact it needs can't be
-/// established.
+/// `l3`: None where the OS doesn't say). The service core's predicate reads only `target`
+/// and `quota`; the trimmed workers' (`trimmed_workers`) read `machine`, `target` and
+/// `quota`. Each is read to fail closed: None, or `Quota::Unknown`, wherever a fact it needs
+/// can't be established.
 #[doc(hidden)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Machine {
@@ -2553,6 +2556,10 @@ pub struct Machine {
     /// the predicate's: the CPUs this process may use, as one coherent snapshot
     /// (`target_topology`), None if any of it can't be read or the CPUs differ
     pub target: Option<Topology>,
+    /// the trimmed workers' (`measured_i9`): every CPU the machine has present and online,
+    /// whatever this process's affinity, as one coherent snapshot (`machine_topology`), None
+    /// as `target` is
+    pub machine: Option<Topology>,
     /// the predicate's: the CPU quota of this process's cgroup and every ancestor
     /// (`cpu_quota`)
     pub quota: Quota,
@@ -2613,25 +2620,42 @@ impl Machine {
             phys: physical_cores(),
             l3: l3_bytes(),
             target: target_topology(&RealFs),
+            machine: machine_topology(&RealFs),
             quota: cpu_quota(&RealFs),
         }
     }
 
     /// The i9-10900K as the service core's registered run saw it: every fact
-    /// `service_target` asks for, as it asks
+    /// `service_target` asks for, as it asks, on every CPU (unpinned)
     pub fn service_target() -> Machine {
+        let all = Topology {
+            phys: TEN_CORES.0,
+            logical: SERVICE_LOGICAL,
+            l3: TEN_CORES.1,
+            cpu: (SERVICE_CPU.0.into(), SERVICE_CPU.1, SERVICE_CPU.2),
+            name: SERVICE_NAME.into(),
+        };
         Machine {
             phys: Some(TEN_CORES.0),
             l3: Some(TEN_CORES.1),
-            target: Some(Topology {
-                phys: TEN_CORES.0,
-                logical: SERVICE_LOGICAL,
-                l3: TEN_CORES.1,
-                cpu: (SERVICE_CPU.0.into(), SERVICE_CPU.1, SERVICE_CPU.2),
-                name: SERVICE_NAME.into(),
-            }),
+            target: Some(all.clone()),
+            machine: Some(all),
             quota: Quota::Unlimited,
         }
+    }
+
+    /// The i9-10900K with this process pinned to its CPUs 0 to `n - 1` (`n` from 1 to 10):
+    /// one CPU a core, CPU c on core c % 10, as the bench pins its arms within the cores
+    /// (`taskset -c 0-(n-1)`). The plan policy and the affinity read `n` cores and `n`
+    /// CPUs; the machine is the whole i9's
+    #[doc(hidden)]
+    pub fn pinned_i9(n: usize) -> Machine {
+        let mut m = Machine::service_target();
+        m.phys = Some(n);
+        let t = m.target.as_mut().expect("the i9's snapshot");
+        t.phys = n;
+        t.logical = n;
+        m
     }
 }
 
@@ -2768,7 +2792,10 @@ pub const TRIMMED_WORKERS: usize = 7;
 /// on the profile its runs measured, at the thread counts they measured, and nowhere else.
 /// That is 10 threads asked or more, on the machine `service_target` admits, read as it
 /// reads it: the i9-10900K by vendor, family, model and name, 10 physical cores and 20 CPUs
-/// in this process's affinity, a 20 MiB L3, no CPU quota, and the AVX2 and CLMUL kernels.
+/// present and online (machine-wide, `measured_i9`; the affinity need only allow the threads
+/// asked, or every CPU, `affinity_admits`), a 20 MiB L3, no CPU quota, and the AVX2 and
+/// CLMUL kernels. Before, it read the CPUs in this process's affinity, so pinned to 0-9 (as
+/// `bench-workers-at-cores` measured 10 threads) it declined.
 /// It does not hold below 10 threads (the measured i9's cells at exactly 8 and 6 are
 /// `trimmed_workers`' own), on any other machine, including another CPU of the same shape,
 /// or under any quota, where the plan and window are master's; a wider adoption
@@ -2794,7 +2821,7 @@ pub const TRIMMED_WORKERS: usize = 7;
 /// which `Plan::Workers(7)` alone would not choose (below `LAZY_FROM_THREADS`). The default
 /// builds that same decoder here.
 pub fn trims_to_seven(threads: usize, k: Kernels, m: &Machine) -> bool {
-    threads >= TEN_CORES.0 && measured_i9(k, m)
+    threads >= TEN_CORES.0 && measured_i9(k, m) && affinity_admits(threads, m)
 }
 
 /// The lazy workers the default decoder runs on the measured i9 at exactly 8 threads asked
@@ -2839,18 +2866,48 @@ fn trim_cell(threads: usize, plan: Plan) -> Option<usize> {
 /// `mibz2-occ-6-24` and `mibz2-occ-5-20`, `StreamDecoder::workers(n, 4n, k, true)`, which
 /// `Plan::Workers(6)` or `Plan::Workers(5)` alone would not build (eager below
 /// `LAZY_FROM_THREADS`).
+///
+/// The machine is read whatever this process's affinity (`measured_i9`, from `machine`), so
+/// the cells hold pinned to CPUs 0 to N-1, as every sweep measured them, and unpinned; the
+/// affinity must allow the threads asked (`affinity_admits`).
 pub fn trimmed_workers(threads: usize, plan: Plan, k: Kernels, m: &Machine) -> Option<usize> {
-    trim_cell(threads, plan).filter(|_| measured_i9(k, m))
+    let n = trim_cell(threads, plan)?;
+    (measured_i9(k, m) && affinity_admits(threads, m)).then_some(n)
 }
 
-/// The measured i9's profile, whatever the thread count: the i9-10900K by vendor, family,
-/// model and name, 10 physical cores and 20 CPUs in this process's affinity, a 20 MiB L3, no
-/// CPU quota, and the AVX2 and CLMUL kernels (`trims_to_seven`, `trimmed_workers`)
+/// Whether this process's affinity (`target`) allows at least the threads asked, or, asked
+/// for more than the machine's CPUs, all of them: pinned to CPUs 0 to N-1 at N threads, or
+/// unpinned, as measured; never a mask narrower than that (8 threads on 4 CPUs), nor an
+/// affinity that can't be read
+fn affinity_admits(threads: usize, m: &Machine) -> bool {
+    let all = m.machine.as_ref().map_or(usize::MAX, |t| t.logical);
+    m.target
+        .as_ref()
+        .is_some_and(|t| t.logical >= threads.min(all))
+}
+
+/// Whether this process is pinned to exactly the threads asked, one CPU a core: the
+/// configuration each sweep's arms within the cores ran in (`taskset -c 0-(N-1)` on the
+/// i9). Unused by the default for now: should the unpinned 6- and 8-thread cells be refuted
+/// (#145 LOG 6946756938, `bench-unpinned`), `trimmed_workers` would require it for them, in
+/// one line: `&& (n == TRIMMED_WORKERS || one_cpu_a_core(threads, m))`.
+#[cfg_attr(not(test), allow(dead_code))]
+fn one_cpu_a_core(threads: usize, m: &Machine) -> bool {
+    m.target
+        .as_ref()
+        .is_some_and(|t| t.logical == threads && t.phys == threads)
+}
+
+/// The measured i9's profile, whatever the thread count and this process's affinity: the
+/// i9-10900K by vendor, family, model and name, 10 physical cores and 20 CPUs present and
+/// online machine-wide (`machine`, not the affinity), a 20 MiB L3, no CPU quota (`cpu.max`
+/// on this process's cgroup and every ancestor), and the AVX2 and CLMUL kernels
+/// (`trims_to_seven`, `trimmed_workers`)
 fn measured_i9(k: Kernels, m: &Machine) -> bool {
     k.avx2
         && k.clmul
         && cfg!(all(target_os = "linux", target_arch = "x86_64"))
-        && m.target.as_ref().is_some_and(|t| {
+        && m.machine.as_ref().is_some_and(|t| {
             (t.cpu.0.as_str(), t.cpu.1, t.cpu.2) == SERVICE_CPU
                 && t.name == SERVICE_NAME
                 && t.phys == TEN_CORES.0
@@ -3523,13 +3580,29 @@ fn target_topology(fs: &dyn Fs) -> Option<Topology> {
             .lines()
             .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))?,
     )?;
+    topology_of(fs, Some(&allowed))
+}
+
+/// The machine's topology (`Machine::machine`), read as `target_topology` reads it but over
+/// every CPU sysfs lists present and online, whatever this process's affinity: the same
+/// i9 pinned to CPUs 0-7 or unpinned
+fn machine_topology(fs: &dyn Fs) -> Option<Topology> {
+    if !cfg!(target_os = "linux") {
+        return None;
+    }
+    topology_of(fs, None)
+}
+
+/// The topology of the present and online CPUs among `among` (every one if None), read to
+/// fail closed (`target_topology`)
+fn topology_of(fs: &dyn Fs, among: Option<&std::collections::BTreeSet<usize>>) -> Option<Topology> {
     let sys = "/sys/devices/system/cpu";
     let online = cpu_list(&fs.read(&format!("{sys}/online")).ok()?)?;
     let present = cpu_list(&fs.read(&format!("{sys}/present")).ok()?)?;
-    let cpus: Vec<usize> = allowed
+    let cpus: Vec<usize> = present
         .iter()
         .copied()
-        .filter(|c| present.contains(c) && online.contains(c))
+        .filter(|c| online.contains(c) && among.map_or(true, |a| a.contains(c)))
         .collect();
     if cpus.is_empty() {
         return None;
@@ -4046,7 +4119,9 @@ mod plan_tests {
         }
     }
 
-    /// The measured i9 but for one fact each: none is the profile the plan was measured on
+    /// The measured i9 but for one fact each: none is the profile the plan was measured on.
+    /// A fact of the CPUs is changed both in the affinity's snapshot (`target`) and the
+    /// machine's (`machine`), as a real machine would show it either way
     fn near_misses() -> Vec<(&'static str, Machine)> {
         let i9 = Machine::service_target();
         let edit = |f: &dyn Fn(&mut Machine)| {
@@ -4054,7 +4129,11 @@ mod plan_tests {
             f(&mut m);
             m
         };
-        let target = |f: &dyn Fn(&mut Topology)| edit(&|m| f(m.target.as_mut().unwrap()));
+        let both = |m: &mut Machine, f: &dyn Fn(&mut Topology)| {
+            f(m.target.as_mut().unwrap());
+            f(m.machine.as_mut().unwrap());
+        };
+        let target = |f: &dyn Fn(&mut Topology)| edit(&|m| both(m, f));
         vec![
             ("another model", target(&|t| t.cpu.1 = 151)),
             (
@@ -4070,9 +4149,10 @@ mod plan_tests {
                 "nine cores",
                 edit(&|m| {
                     m.phys = Some(9);
-                    let t = m.target.as_mut().unwrap();
-                    t.phys = 9;
-                    t.logical = 18;
+                    both(m, &|t| {
+                        t.phys = 9;
+                        t.logical = 18;
+                    });
                 }),
             ),
             ("nine cores in the snapshot", target(&|t| t.phys = 9)),
@@ -4080,28 +4160,41 @@ mod plan_tests {
                 "eleven cores",
                 edit(&|m| {
                     m.phys = Some(11);
-                    let t = m.target.as_mut().unwrap();
-                    t.phys = 11;
-                    t.logical = 22;
+                    both(m, &|t| {
+                        t.phys = 11;
+                        t.logical = 22;
+                    });
                 }),
             ),
             ("no SMT", target(&|t| t.logical = 10)),
             (
+                "SMT off machine-wide, the affinity every CPU",
+                edit(&|m| m.machine.as_mut().unwrap().logical = 10),
+            ),
+            (
                 "a 16 MiB L3",
                 edit(&|m| {
                     m.l3 = Some(16 << 20);
-                    m.target.as_mut().unwrap().l3 = 16 << 20;
+                    both(m, &|t| t.l3 = 16 << 20);
                 }),
             ),
             (
                 "a 30 MiB L3",
                 edit(&|m| {
                     m.l3 = Some(30 << 20);
-                    m.target.as_mut().unwrap().l3 = 30 << 20;
+                    both(m, &|t| t.l3 = 30 << 20);
                 }),
             ),
             ("the L3 a byte off", target(&|t| t.l3 = (20 << 20) - 1)),
             ("unread", edit(&|m| m.target = None)),
+            ("the machine unread", edit(&|m| m.machine = None)),
+            (
+                "both unread",
+                edit(&|m| {
+                    m.target = None;
+                    m.machine = None;
+                }),
+            ),
             (
                 "a cpu.max of 20 CPUs",
                 edit(&|m| m.quota = Quota::Cpus(20.0)),
@@ -4338,6 +4431,7 @@ mod plan_tests {
                 phys,
                 l3,
                 target: None,
+                machine: None,
                 quota: Quota::Unlimited,
             };
             for t in counts {
@@ -4529,6 +4623,140 @@ mod plan_tests {
                 d.close();
             }
         }
+    }
+
+    /// Pinned or not (#145, the release-scaling run's finding; `Machine::pinned_i9`): the
+    /// cells read the machine, not the affinity, so pinned to CPUs 0 to N-1 at N threads, as
+    /// every sweep measured them, they hold as unpinned: lazy 5/20 at 6 (pinned 0-5), lazy
+    /// 6/24 at 8 (0-7), and lazy 7/28 at 10 (0-9), where before this the 10-thread trim
+    /// declined pinned. Through every entry point. A mask narrower than the threads asked
+    /// (8 threads on 0-3, 12 on 0-9) and any quota keep master's plan; the service core's
+    /// predicate still reads the affinity
+    #[test]
+    fn pinned_or_unpinned_on_the_i9() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let w = Plan::Workers;
+        for (t, n) in [(6, 5), (8, 6), (10, 7)] {
+            let arm = StreamDecoder::workers(n, 4 * n, both, true);
+            for (what, m) in [
+                ("pinned", Machine::pinned_i9(t)),
+                ("unpinned", Machine::service_target()),
+            ] {
+                let plan = with_machine(m.clone(), || Plan::for_threads(t));
+                assert_eq!(plan, w(t), "{what} {t}");
+                assert_eq!(trimmed_workers(t, plan, both, &m), Some(n), "{what} {t}");
+                assert_eq!(trims_to_seven(t, both, &m), t == 10, "{what} {t}");
+                assert!(!service_target(t, both, &m) || what == "unpinned");
+                assert_eq!(one_cpu_a_core(t, &m), what == "pinned", "{what} {t}");
+                let (dec, b) = observe_builds(|| {
+                    with_machine(m.clone(), || StreamDecoder::new(t, 4 * t, both))
+                });
+                assert!(dec.is_lazy(), "{what} {t}");
+                assert_eq!(shape(&dec), shape(&arm), "{what} {t}");
+                assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{what} {t}");
+                dec.close();
+                let (out, b) = observe_builds(|| {
+                    with_machine(m.clone(), || {
+                        let mut r = crate::BzReader::parallel(service_tests::Z, t);
+                        assert_eq!(shape(r.parallel_decoder().unwrap()), shape(&arm));
+                        let mut out = Vec::new();
+                        std::io::Read::read_to_end(&mut r, &mut out).unwrap();
+                        out
+                    })
+                });
+                assert_eq!(
+                    out,
+                    service_tests::want(),
+                    "{what} BzReader::parallel at {t}"
+                );
+                assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{what} {t}");
+                let (out, b) = observe_builds(|| {
+                    with_machine(m.clone(), || {
+                        crate::decode_parallel(service_tests::Z, t).unwrap()
+                    })
+                });
+                assert_eq!(out, service_tests::want(), "{what} decode_parallel at {t}");
+                assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{what} {t}");
+                let w12 = with_machine(m.clone(), || {
+                    StreamDecoder::new_lazy_as::<crate::bwt::W12LazyCells>(t, 4 * t, both)
+                });
+                assert_eq!(
+                    (w12.threads(), w12.window()),
+                    (n, 4 * n as u64),
+                    "{what} {t}"
+                );
+                w12.close();
+                // any quota, or an unknown one: master's
+                for q in [Quota::Cpus(20.0), Quota::Cpus(t as f64), Quota::Unknown] {
+                    let mq = Machine {
+                        quota: q,
+                        ..m.clone()
+                    };
+                    assert_eq!(
+                        trimmed_workers(t, plan, both, &mq),
+                        None,
+                        "{what} {t} {q:?}"
+                    );
+                    let dec = with_machine(mq.clone(), || StreamDecoder::new(t, 4 * t, both));
+                    let want = masters(t, 4 * t, both, &mq);
+                    assert_eq!(shape(&dec), shape(&want), "{what} {t} {q:?}");
+                    dec.close();
+                    want.close();
+                }
+            }
+            arm.close();
+        }
+        // a mask narrower than the threads asked: master's plan (as the policy reads the
+        // mask's cores), never trimmed
+        for (t, pinned) in [
+            (6, 4),
+            (8, 4),
+            (8, 7),
+            (10, 9),
+            (12, 10),
+            (16, 10),
+            (20, 10),
+        ] {
+            let m = Machine::pinned_i9(pinned);
+            let plan = with_machine(m.clone(), || Plan::for_threads(t));
+            assert_eq!(trimmed_workers(t, plan, both, &m), None, "{t} on {pinned}");
+            assert!(!trims_to_seven(t, both, &m), "{t} on {pinned}");
+            let dec = with_machine(m.clone(), || StreamDecoder::new(t, 4 * t, both));
+            let want = masters(t, 4 * t, both, &m);
+            assert_eq!(shape(&dec), shape(&want), "{t} on {pinned}");
+            dec.close();
+            want.close();
+        }
+        // the affinity unread: never trimmed
+        let unread = Machine {
+            target: None,
+            ..Machine::service_target()
+        };
+        for t in [6, 8, 10, 12] {
+            assert_eq!(trimmed_workers(t, w(t.min(10)), both, &unread), None, "{t}");
+        }
+        // more threads than the machine's CPUs, unpinned: the mask is every CPU, as #524
+        for t in [24, 64] {
+            assert_eq!(
+                trimmed_workers(t, w(10), both, &Machine::service_target()),
+                Some(7)
+            );
+        }
+        // one CPU a core (`one_cpu_a_core`, unused by the default): pinned 0 to N-1 at N
+        // threads alone
+        assert!(one_cpu_a_core(8, &Machine::pinned_i9(8)));
+        assert!(!one_cpu_a_core(6, &Machine::pinned_i9(8)));
+        assert!(!one_cpu_a_core(8, &Machine::service_target()));
+        let mut two_a_core = Machine::pinned_i9(4);
+        two_a_core.target.as_mut().unwrap().logical = 8;
+        assert!(!one_cpu_a_core(8, &two_a_core));
+        assert!(!one_cpu_a_core(8, &unread));
     }
 
     /// Workers invert with lazy letters exactly from `LAZY_FROM_THREADS` of them: by the
@@ -5098,6 +5326,63 @@ mod plan_tests {
         assert_eq!((t.logical, t.phys), (10, 10));
     }
 
+    /// The machine's topology (`machine_topology`) is the whole i9's whatever the affinity:
+    /// pinned to CPUs 0-9, 0-7 or 0-5 (one a core), to 0-3 or to a core's two CPUs, or
+    /// unpinned, it reads 10 cores and 20 CPUs, while the affinity's (`target_topology`)
+    /// reads the CPUs allowed. It fails closed as the affinity's does, and leaves out CPUs
+    /// sysfs lists offline or absent: SMT turned off (online 0-9) is 10 CPUs, not the i9
+    #[test]
+    fn discovery_reads_the_machine_whatever_the_mask() {
+        if !cfg!(target_os = "linux") {
+            assert_eq!(machine_topology(&cpus()), None);
+            return;
+        }
+        let sys = "/sys/devices/system/cpu";
+        let i9 = Machine::service_target().machine;
+        assert!(i9.is_some());
+        for (mask, logical, phys) in [
+            ("0-19", 20, 10),
+            ("0-9", 10, 10),
+            ("0-7", 8, 8),
+            ("0-5", 6, 6),
+            ("0-3", 4, 4),
+            ("0,10", 2, 1),
+        ] {
+            let fs = cpus().file(
+                "/proc/self/status",
+                &format!("Cpus_allowed_list:\t{mask}\n"),
+            );
+            assert_eq!(machine_topology(&fs), i9, "{mask}");
+            let t = target_topology(&fs).unwrap();
+            assert_eq!((t.logical, t.phys), (logical, phys), "{mask}");
+        }
+        // no affinity to read is no snapshot of it, but the machine is still read
+        let no_status = cpus().without("/proc/self/status");
+        assert_eq!(target_topology(&no_status), None);
+        assert_eq!(machine_topology(&no_status), i9);
+        // SMT off: online 0-9
+        let nosmt = cpus().file(&format!("{sys}/online"), "0-9\n");
+        let t = machine_topology(&nosmt).unwrap();
+        assert_eq!((t.logical, t.phys), (10, 10));
+        // absent CPUs are left out
+        let absent = cpus().file(&format!("{sys}/present"), "0-18\n");
+        assert_eq!(machine_topology(&absent).unwrap().logical, 19);
+        // a failed read anywhere among them is None, masked or not
+        let pd = std::io::ErrorKind::PermissionDenied;
+        for fs in [
+            cpus().fails(&format!("{sys}/cpu15/topology/core_id"), pd),
+            cpus()
+                .file("/proc/self/status", "Cpus_allowed_list:\t0-7\n")
+                .fails(&format!("{sys}/cpu15/topology/core_id"), pd),
+            cpus().file(&format!("{sys}/cpu12/cache/index3/size"), "16384K\n"),
+            cpus().fails(&format!("{sys}/online"), pd),
+            cpus().fails(&format!("{sys}/present"), pd),
+            cpus().fails("/proc/cpuinfo", pd),
+        ] {
+            assert_eq!(machine_topology(&fs), None);
+        }
+    }
+
     /// `StreamDecoder::new`'s own dispatch on the target machine (`with_machine`): lazy
     /// workers at 10 threads (the service core is no longer the default there), the plan at
     /// every other budget, on the scalar kernels, off the target, and with a plan forced
@@ -5150,11 +5435,13 @@ mod plan_tests {
         assert!(!dec.is_service() && !dec.is_pipelined() && dec.threads() == 10);
         let mut amd = i9.clone();
         amd.target.as_mut().unwrap().cpu = ("AuthenticAMD".into(), 25, 33);
+        amd.machine.as_mut().unwrap().cpu = ("AuthenticAMD".into(), 25, 33);
         let dec = build(&amd, 10, 40, both);
         assert!(!dec.is_service() && !dec.is_pipelined() && dec.threads() == 10);
         let small = Machine {
             phys: Some(4),
             target: None,
+            machine: None,
             ..i9.clone()
         };
         let dec = build(&small, 10, 40, both);
