@@ -1042,21 +1042,21 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# Straightening the knee: scaling throughput beyond physical cores
+# Raising the knee: scaling throughput to the limit of physical cores
 
-mibz2 straightens its scaling curve by taming worker contention, sustaining nearly 2 GB/s from eight to twenty threads on a ten-core processor.
+mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are busy, then holds level on the whole machine up to twenty threads.
 
-17 November 2026 · 9 min read · [Research result](<#5-what-comes-after-the-knee>)
+17 November 2026 · 13 min read · [Research result](<#6-what-comes-next-for-the-knee>)
 
 [Ten days ago](<https://lmmx.github.io/mibz2/blog/2026-11-07-why-mibz2-stops-scaling/index.md>), mibz2's problem was that giving its bzip2 decoder more work at once could make it slower. The decoder processes a compressed file in independent blocks, so it can decode several simultaneously. But each block has its own data structures, and those structures compete for the processor's shared cache. More blocks promise more parallelism while making each block more expensive. Past a certain point the extra cost wins. The throughput curve bends over: the *scaling knee*.
 
-The default decoder once dealt with that risk by stopping at a fixed number of decoding teams. It could avoid a fall, but only by declining to use the extra threads. Since then, mibz2 has changed both how it reconstructs a block and how many workers it starts. Version 0.5.4 puts the result in view. Our test machine is a ten-core Intel desktop (an i9-10900K, with 20 logical CPUs and a 20 MiB level-3 cache that all ten cores share). On it, ten requested threads decode a 210 MB Wikidata sample in **0.102 seconds**, the fastest median in the release sweep. Asking for 12, 16 or 20 threads barely changes the result. At those counts 0.5.4 runs seven active workers, not twelve or twenty. Whether memory bandwidth is what holds that plateau down is not yet established.
+The default decoder once dealt with that risk by stopping at a fixed number of decoding teams. It could avoid a fall, but only by declining to use the extra threads. Since then, mibz2 has changed both how it reconstructs a block and how many workers it starts. Version 0.5.4 puts the result in view. Our test machine is a ten-core Intel desktop (an i9-10900K, with 20 logical CPUs and a 20 MiB level-3 cache that all ten cores share). On it, ten requested threads decode a 210 MB Wikidata sample in **0.102 seconds**, the fastest median in the release sweep. The knee is still there, but it has been raised and softened. It is raised because the best point has moved from eight threads to ten, the machine's physical-core count. It is softened because asking for more now costs little or nothing. In 0.4.0 and 0.5.0, 12 to 20 threads took 11–18% longer than the best point. In 0.5.4's release sweep they take 4–5% longer by the medians, but that sweep pins ten threads and gives twelve or more the whole machine. With placement held constant, 10, 12 and 20 threads decode in the same time, to within half a per cent. It is not straightened: the extra hardware threads add nothing yet. At 12 to 20 requested threads 0.5.4 runs seven active workers, not twelve or twenty. Whether memory bandwidth is what holds that plateau down is not yet established.
 
 Throughput against threads, five releases on the test machine
 
 Measured on the test machine: the median of 10 paired rounds per point, decoding an 11.9 MB extract of a Wikidata dump to 209.7 MB of output. Each release is taken from its own [release-scaling run](<https://github.com/lmmx/mibz2/tree/745a7381ab72ca07675ddfcb000c4156f926c0eb/bench/release-scaling/>) (0.2.4 from 6 November; 0.5.0, 0.5.1 from 16 November; 0.5.3, 0.5.4 from 17 November). The runs pin 10 threads or fewer to one CPU a core, and give 12 threads or more the whole machine.
 
-**The result is a flatter *default* curve, not the disappearance of contention.** The decoder now starts fewer workers than threads in the measured configurations where extra workers made decoding slower. The cost of competing for the cache remains; it is now part of the plan rather than a surprise in the benchmark. Here is how we reached that result, what the release run establishes, and what the plateau still leaves open.
+**The result is a flatter *default* curve, not the disappearance of the knee or of contention.** The decoder now starts fewer workers than threads in the measured configurations where extra workers made decoding slower. In effect, 0.5.4 caps its workers at the number that pays off: seven, from ten requested threads. The cost of competing for the cache remains; it is now part of the plan rather than a surprise in the benchmark. Here is how we reached that result, what the release run establishes, and what the plateau still leaves open.
 
 ## 1\. What was the knee?
 
@@ -1093,11 +1093,39 @@ The [release-scaling benchmark](<https://lmmx.github.io/mibz2/benchmarks/history
 
 The runs of ten threads or fewer are pinned one logical CPU per physical core; the higher counts use the whole machine. The paired version comparisons preserve placement within each count.
 
-The shape matters more than the last decimal place. In 0.5.3, asking for ten threads made the decoder slower than asking for eight. At twelve and above it recovered. In 0.5.4, **ten threads are the fastest point**, while twelve to twenty sit between 0.106 and 0.108 seconds. Across eight to twenty threads that is **1.95–2.06 GB/s of decoded output**. Twenty is still about 6% slower than ten by these medians; this is a plateau with a small slope, not perfect monotonic scaling.
+The shape matters more than the last decimal place. In 0.5.3, asking for ten threads made the decoder slower than asking for eight. At twelve and above it recovered. In 0.5.4, **ten threads are the fastest point**, while twelve to twenty sit between 0.106 and 0.108 seconds. Across eight to twenty threads that is **1.95–2.06 GB/s of decoded output**. Twenty is still about 5% slower than ten by these medians. As the box below explains, most or all of that is a change of placement, not of thread count.
 
 The paired comparison is stronger evidence for the version change than the medians alone. Across ten paired rounds, 0.5.3 took **1.123 times** 0.5.4's wall time at ten threads (95% interval 1.094–1.152), or about 11% less elapsed time in 0.5.4. At eight threads the ratio was **1.045** (1.038–1.053). The new version also used less processor time and peak memory at those counts. At one, two and twelve to twenty threads, the release comparison detected no change. The apparent improvement at four threads was too small to resolve from the run's variation.
 
 These comparisons show a real improvement at eight and ten threads. They do not by themselves establish that ten is statistically faster than every other count within 0.5.4; the table shows the median ordering, not paired confidence intervals between different thread counts. The figure below gives those within-release comparisons against eight threads, for selected releases since 0.2.4. It leaves out 0.2.5 to 0.3.3. The history between was not one continuous fall. In 0.2.5, ten threads took 0.918 of eight threads' wall time (95% interval 0.910–0.927).
+
+> [!NOTE]
+>
+> **The decline past ten is a change of placement**
+>
+> Paired round by round within 0.5.4's run, the higher counts took longer than ten threads:
+>
+> | threads | wall time against ten threads (95% interval) |
+> | ---: | ---: |
+> | 12 | 1.049 (1.022–1.076) |
+> | 16 | 1.044 (1.025–1.064) |
+> | 20 | 1.074 (1.031–1.117) |
+>
+> Past ten, extra threads would land on the cores' second hardware threads. But the run also changes placement at that point. Ten threads ran pinned to one logical CPU a core. Twelve to twenty ran on the whole machine, with the same seven workers. So the decline can't be put down to hyperthreading.
+>
+> The knee diagnostic did hold placement constant: it ran every count on the whole machine, in one session. Its medians, in seconds, with the interquartile range for four copies:
+>
+> | threads | four copies of the sample | one copy |
+> | ---: | ---: | ---: |
+> | 10 | 0.3661 (0.365–0.368) | 0.1013 |
+> | 12 | 0.3657 (0.365–0.369) | 0.1009 |
+> | 20 | 0.3664 (0.364–0.370) | 0.1010 |
+
+Its build falls between 0.5.3 and 0.5.4, which run the same plan on the whole machine. A release-build sweep from eight to twenty threads, all on the whole machine, would confirm it for 0.5.4 itself.
+
+Placement held constant: faster up to the cores, level beyond
+
+Measured on the test machine. Solid lines: the [knee diagnostic](<https://github.com/lmmx/mibz2/blob/evidence/knee/run-20261117T123939Z.tar.gz>) of 17 November, every count on the whole machine in one session, 10 rounds a point; the dots are medians and the bars the interquartile range, decoding one copy or four copies of the Wikidata sample. Its build (399d33d6) falls between 0.5.3 and 0.5.4; on the whole machine both releases run the same plan, 4 and 8 workers at 4 and 8 threads and 7 workers from 10. Dashed: 0.5.4's release sweep, medians of 10 rounds, pinned one CPU a core up to 10 threads (filled) and on the whole machine from 12 (hollow). The vertical axis starts at 1.3 GB/s.
 
 The fall past eight threads, release by release
 
@@ -1139,17 +1167,27 @@ At the plateau: how close is the road to memory to full?
 
 Decoded output and reads that miss the L3 are measured (knee diagnostic, 7 workers, four copies of the Wikidata extract, the whole machine), and so is the read ceiling, a separate test that streams memory as fast as it can. Reads plus writes is an estimate: the reads scaled by the older decoder's ratio of writes to reads at 8 to 10 workers, 0.74 to 0.78. The read ceiling is a proxy for reads only, so it compares with the 25.3 GB/s of reads, not with the estimated total. The 51.2 GB/s line is an assumption, not a measured ceiling: it is the peak of two channels of DDR4-3200, and the test machine's memory rating is not recorded. Current memory-controller measurements, compared with a measured sustainable ceiling for a similar mix of reads and writes, are needed to test whether bandwidth is limiting the plateau.
 
-There is another reason to be precise about the word *plateau*. At twelve to twenty **requested** threads on this machine, 0.5.4 still runs **seven decoding workers**. The decoder is not starting twelve, sixteen or twenty competing workers; the plan has capped the number of blocks being decoded simultaneously. A flat result there means the planner has kept the expensive part of the curve out of the default path. It does not prove that the hardware would scale if twenty independent decoding workers were set loose.
+There is another reason to be precise about the word *plateau*. At twelve to twenty **requested** threads on this machine, 0.5.4 still runs **seven decoding workers**. The decoder is not starting twelve, sixteen or twenty competing workers; the plan has capped the number of blocks being decoded simultaneously. A nearly flat result there means the planner has kept the most expensive part of the curve out of the default path. It does not prove that the hardware would scale if twenty independent decoding workers were set loose.
 
-## 5\. What comes after the knee?
+## 5\. How would we straighten the knee?
 
-The first task is to establish what limits the seven-worker plan. If the memory controller is close to its sustainable bandwidth, reducing memory traffic per output byte should raise the plateau. If cache misses and shared-cache queuing dominate, smaller hot working sets or a different access pattern may matter more. The distinction decides which experiment deserves the next implementation.
+Straightening the knee means a curve that keeps rising past the ten physical cores. The second hardware thread on each core (simultaneous multithreading, which Intel calls hyperthreading) would then add speed. Today it adds none. Three routes could change that. Each is a hypothesis with a measurement that tests it; none is a result yet.
 
-The second task is to make the planner portable. The measured seven-worker choice is not a general law. The cache model under test correctly recovered some counts on this machine, then predicted the wrong optimum for smaller bzip2 blocks. Other processors have different core counts, cache sizes, cache-sharing domains and memory systems. The right worker count needs to follow those facts, with tests that can prove a proposed rule wrong.
+**Cheaper bytes per worker.** At seven workers, the reads that miss the L3 come to 11 bytes for every byte of output. A smaller hot set per worker would cut that: the store and the tables the kernel keeps for a block. So would less traffic on the output side. One piece of the output side is folding the block's checksum into the final pass. That is an open research arm ([\#535](<https://github.com/lmmx/mibz2/pull/535>)), and its measured 1.5–3% gain is not yet settled. Fewer bytes moved per output byte raise the number of workers that pays, so more workers, and eventually the second hardware threads, can contribute. If memory bandwidth binds, this is the route that raises the ceiling. The test: bytes per output byte and wall time by worker count, before and after each cut.
 
-For now the release result is a good one, with a precise boundary. **mibz2 no longer punishes a request for more threads with a large fall in throughput on this measured workload and machine.** It gets there by doing *less work in parallel*, more efficiently. The old knee exposed a bad trade-off between concurrency and interference. Version 0.5.4 runs on the better side of it.
+**Latency hiding with the second hardware threads.** The counters run at ten threads measured about 2.2 reads that missed the L3 in flight at once, whenever any were. That is little memory-level parallelism. If the plateau is bound by latency rather than bandwidth, two workers sharing a core can overlap each other's misses: one computes while the other waits. That is the classic case where hyperthreading helps code that waits on memory. The test: the same number of workers placed as pairs on shared cores, against one worker a core.
 
-What remains is a ceiling to raise, and a policy to generalise. That is a more useful problem than a curve that falls whenever we give it another core.
+**Helpers on the second hardware threads.** The decoder's other threads already gain from spare CPUs. Decoding four copies of the sample with four threads took 0.405 seconds on the whole machine, against 0.535 seconds pinned. Pinned, the scanner, reader and main thread share the workers' cores. The second hardware threads could host prefetch or helper threads that bring the next block's data into cache ahead of the workers. The test: a helper arm against none, at the same worker count, with the misses per output byte counted.
+
+**Which first.** The next memory-controller run reads the controller's own counters and compares them with a measured sustainable ceiling for a similar mix of reads and writes. It says whether bandwidth or latency binds, and so which route to take first. It is the next step.
+
+## 6\. What comes next for the knee?
+
+The other task is to make the planner portable. The measured seven-worker choice is not a general law. The cache model under test correctly recovered some counts on this machine, then predicted the wrong optimum for smaller bzip2 blocks. Other processors have different core counts, cache sizes, cache-sharing domains and memory systems. The right worker count needs to follow those facts, with tests that can prove a proposed rule wrong.
+
+For now the release result is a good one, with a precise boundary. **mibz2 no longer punishes a request for more threads with a large fall in throughput on this measured workload and machine.** In the release sweep the penalty past the best point is 4–5%, down from 11–18%. With placement held constant, no decline is seen. It gets there by doing *less work in parallel*, more efficiently. The old knee exposed a bad trade-off between concurrency and interference. Version 0.5.4 runs on the better side of it.
+
+What remains is a flat stretch past the cores to turn into a rising curve, a ceiling to raise, and a policy to generalise. That is a more useful problem than a curve that falls whenever we give it another core.
 
 ---
 
