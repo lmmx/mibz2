@@ -2205,18 +2205,19 @@ bench-eager-trim COPIES="4" ROUNDS="8" REPS="4":
 # data; stacked on #533, after LOG 6946756938 on #145): every run that measured the worker trims
 # at 6, 8 and 10 threads was pinned one CPU a core (`--spread`, CPUs 0..T-1 on the i9), but a
 # decoder in real use is unpinned on all 20 CPUs, where two workers may share a core's SMT
-# siblings. The same explicit arms, unpinned: lazy 7/28 over lazy 10/40 at 10 threads, lazy 6/24
-# over lazy 8/32 at 8, lazy 5/20 over eager 6/24 at 6 (`ab`'s `mibz2-occ-N-S` and `mibz2-oce-N-S`;
-# the reference at each count the untrimmed plan, `two_arm.py --ref-at`), so production's
-# predicate plays no part. Every run on every online CPU (`ab run --unpinned`: the affinity set
+# siblings. The same explicit arms, unpinned (amended before any data on the Researcher's REVIEW
+# 6947387421): lazy 7/28 over lazy 10/40 at 10 threads, lazy 6/24 over lazy 8/32 at 8, eager 5/20
+# and lazy 5/20 over eager 6/24 at 6, eager 3/12 over eager 4/16 at 4 (`ab`'s `mibz2-occ-N-S` and
+# `mibz2-oce-N-S`; the reference at each count the untrimmed plan, `two_arm.py --ref-at`), so
+# production's predicate plays no part. Eager 5/20 over lazy 5/20 at 6 is reported (`--pair`). Every run on every online CPU (`ab run --unpinned`: the affinity set
 # in the child before it execs and read back; the record's `cpus` that list), no spinner (no CPU
 # is free of an unpinned decode), and the checker told so (`--unpinned --hold-max-threads 0`).
-# One `ab run` a count with its two arms alone (`--judge-at --sparse`), one build by rustc 1.99.1,
+# One `ab run` a count with its own arms alone (`--judge-at --sparse`), one build by rustc 1.99.1,
 # COPIES copies of the Wikidata sample (the gain family) and text (a loss and memory guard).
 # Then, reported only: production's `mibz2` at 10 threads unpinned, PROD rounds, its worker
 # threads counted from each record's `observed_threads` (7 expected on the i9, `trims_to_seven`),
 # and each judged record's worker and non-worker CPU (`bench/thread_split.py`). No counters.
-bench-unpinned COPIES="4" ROUNDS="10" PROD="3":
+bench-unpinned COPIES="4" ROUNDS="8" PROD="3":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/unpinned
@@ -2224,7 +2225,7 @@ bench-unpinned COPIES="4" ROUNDS="10" PROD="3":
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-unpinned (the registration, docs/journal/2026-11-17-unpinned.md): unpinned on every online CPU, mibz2-occ-7-28 over mibz2-occ-10-40 at 10 threads, mibz2-occ-6-24 over mibz2-occ-8-32 at 8, mibz2-occ-5-20 over mibz2-oce-6-24 at 6, at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and on text, {{ROUNDS}} paired rounds; then production's mibz2 at 10 threads unpinned, {{PROD}} rounds, reported"
+    echo "bench-unpinned (the registration, docs/journal/2026-11-17-unpinned.md): unpinned on every online CPU, mibz2-occ-7-28 over mibz2-occ-10-40 at 10 threads, mibz2-occ-6-24 over mibz2-occ-8-32 at 8, mibz2-oce-5-20 and mibz2-occ-5-20 over mibz2-oce-6-24 at 6, mibz2-oce-3-12 over mibz2-oce-4-16 at 4, at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and on text, {{ROUNDS}} paired rounds; then production's mibz2 at 10 threads unpinned, {{PROD}} rounds, reported"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-unpinned: the checkout has local changes"; exit 1; }
     # the toolchain the repository pins (#504), named and checked
@@ -2252,20 +2253,23 @@ bench-unpinned COPIES="4" ROUNDS="10" PROD="3":
     lscpu -e > "$O/lscpu-e.txt" || true
     grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
     cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
-    # one `ab run` a count, its two arms alone, all appending to one file; every run on every
+    # one `ab run` a count, its own arms alone, all appending to one file; every run on every
     # online CPU, and no spinner
     for spec in "10:mibz2-occ-10-40,mibz2-occ-7-28" \
                 "8:mibz2-occ-8-32,mibz2-occ-6-24" \
-                "6:mibz2-oce-6-24,mibz2-occ-5-20"; do
+                "6:mibz2-oce-6-24,mibz2-oce-5-20,mibz2-occ-5-20" \
+                "4:mibz2-oce-4-16,mibz2-oce-3-12"; do
       echo "at ${spec%%:*} threads, unpinned: ${spec#*:}"
       "$AB" run "$O/judged.jsonl" --arms "${spec#*:}" --threads "${spec%%:*}" --rounds {{ROUNDS}} \
         --unpinned "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2"
     done
     python3 bench/two_arm.py "$O/judged.jsonl" \
-      --ref-at mibz2-occ-10-40=10 --ref-at mibz2-occ-8-32=8 --ref-at mibz2-oce-6-24=6 \
-      --cand mibz2-occ-7-28 --cand mibz2-occ-6-24 --cand mibz2-occ-5-20 \
-      --judge-at mibz2-occ-7-28=10 --judge-at mibz2-occ-6-24=8 --judge-at mibz2-occ-5-20=6 --sparse \
-      --main wikidata-x{{COPIES}} --guard text --judged "10,8,6" --controls "" \
+      --ref-at mibz2-occ-10-40=10 --ref-at mibz2-occ-8-32=8 --ref-at mibz2-oce-6-24=6 --ref-at mibz2-oce-4-16=4 \
+      --cand mibz2-occ-7-28 --cand mibz2-occ-6-24 --cand mibz2-oce-5-20 --cand mibz2-occ-5-20 --cand mibz2-oce-3-12 \
+      --judge-at mibz2-occ-7-28=10 --judge-at mibz2-occ-6-24=8 --judge-at mibz2-oce-5-20=6 \
+      --judge-at mibz2-occ-5-20=6 --judge-at mibz2-oce-3-12=4 --sparse \
+      --pair mibz2-oce-5-20/mibz2-occ-5-20 \
+      --main wikidata-x{{COPIES}} --guard text --judged "10,8,6,4" --controls "" \
       --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads 0 --unpinned \
       | tee "$O/verdict.txt" \
       || echo "bench-unpinned: VOID, no verdict (verdict.txt says why); the bundle is kept"
@@ -2290,7 +2294,7 @@ bench-unpinned COPIES="4" ROUNDS="10" PROD="3":
     # reported, not judged: from the judged records' per-thread samples, each arm's workers' busy
     # share and its non-workers' CPU over wall, count by count (W from the arms' names)
     : > "$O/thread-split.txt"
-    for t in 10 8 6; do
+    for t in 10 8 6 4; do
       python3 bench/thread_split.py "$O/judged.jsonl" --threads "$t" | tee -a "$O/thread-split.txt" \
         || echo "bench-unpinned: the thread split at $t threads is VOID (thread-split.txt says why); the verdict stands"
     done
