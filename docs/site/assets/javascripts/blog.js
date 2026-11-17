@@ -423,7 +423,7 @@
     const [svg, text, controls, input, out] = [
       ".bf-l3-svg", ".bf-l3-text", ".bf-l3-controls", "input", ".bf-l3-n",
     ].map(q);
-    const BX = 10, BW = 700, BY = 30, BH = 40;
+    const BX = 10, BW = 500, BY = 30, BH = 44;
     const show = () => {
       const n = Number(input.value);
       out.textContent = String(n);
@@ -436,11 +436,11 @@
       for (const [f, lab] of [[0.7, "0.7"], [0.8, "0.8"]]) {
         const x = (BX + f * BW).toFixed(1);
         parts.push(`<path d="M${x} ${BY - 8}V${BY + BH + 8}" style="stroke:var(--bf-amber);stroke-width:1.5;stroke-dasharray:4 3"/>`);
-        parts.push(T(x, BY - 12, lab, "bf-ttiny", 11, ";fill:var(--bf-amber)"));
+        parts.push(T(x, BY - 12, lab, "bf-t-strong", 14, ";fill:var(--bf-amber)"));
       }
       const used = n * mb;
-      parts.push(T(BX, BY + BH + 30, `${n} × ${mb} MB = ${used.toFixed(1)} MB of ${l3.toFixed(1)} MB`, "bf-t-strong", 14, "", "start"));
-      parts.push(T(BX + BW, BY + BH + 30, `${Math.round((100 * used) / l3)}% of the L3`, "bf-t", 14, "", "end"));
+      parts.push(T(BX, BY + BH + 30, `${n} × ${mb} MB = ${used.toFixed(1)} MB of ${l3.toFixed(1)} MB`, "bf-t-strong", 16, "", "start"));
+      parts.push(T(BX + BW, BY + BH + 30, `${Math.round((100 * used) / l3)}% of the L3`, "bf-t", 16, "", "end"));
       svg.innerHTML = parts.join("");
       text.textContent = L3_SAY[n] || "";
     };
