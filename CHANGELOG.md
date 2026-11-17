@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/lmmx/mibz2/compare/v0.5.2...v0.5.3) - 2026-11-17
+
+### <!-- 3 -->Performance
+
+- *(plan)* on the measured i9, seven lazy workers from 10 threads asked, with the window sized to them ([#524](https://github.com/lmmx/mibz2/pull/524))
+- *(cells)* a 12-byte rules arm (W12LazyCells), the lazy induction storing each rule's children packed ([#506](https://github.com/lmmx/mibz2/pull/506))
+
+### <!-- 4 -->Documentation
+
+- queue-only PRs and already-tested content merge without waiting for CI ([#518](https://github.com/lmmx/mibz2/pull/518))
+
+### <!-- 9 -->Other
+
+- modelling the cache to rightsize workers ([#527](https://github.com/lmmx/mibz2/pull/527))
+- Release scaling: 0.5.2 against 0.5.1 on the i9; 0.5.2's notes and attribution row ([#511](https://github.com/lmmx/mibz2/pull/511))
+
 ### <!-- 3 -->Performance
 
 - *(plan)* on the measured i9, seven lazy workers from 10 threads asked, with the window sized to them ([#524](https://github.com/lmmx/mibz2/pull/524))
