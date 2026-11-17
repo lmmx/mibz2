@@ -189,9 +189,10 @@
     6946859150,
     6947285652,
     6948462696,
-    6953475922
+    6953475922,
+    6955971254
   ],
-  "last_processed_comment_id": 6953475922,
+  "last_processed_comment_id": 6955971254,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2244,13 +2245,16 @@
     },
     {
       "trigger_comment_id": 6955971254,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/knee-blog-6955971254/report.md",
       "report_commit": "9c99bb816a6d8704ce2016b782f2c472a28824a0",
       "source_commit": "ccba7bb644995cf1b958b979cdf1172fb90c486a",
-      "disposition": "REVISE article: affinity does not provide exclusive core placement; history figure is selected releases; IMC traffic alone does not settle bandwidth limitation. Release numbers reproduced."
+      "disposition": "REVISE article: affinity does not provide exclusive core placement; history figure is selected releases; IMC traffic alone does not settle bandwidth limitation. Release numbers reproduced.",
+      "review_comment_pr": 145,
+      "review_comment_id": 6956210576,
+      "publication_verification": "Exact body, author lmmx and destination145 read back; pinned coord.py has only its coordinator-only FROM limitation; role-aware header and misrouting checks passed."
     }
   ],
   "active_delegations": [],
