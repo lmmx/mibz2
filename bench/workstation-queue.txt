@@ -6,6 +6,5 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-release-scaling        master                    0.5.2 against 0.5.1 on the i9 (RELEASING §5), at the v0.5.2 tag commit ad0fcd33
-bench-w12                    perf/w12-rules            12-byte rules (W12) against master's build, rustc 1.99.1, with the L2 diagnostic at 10 threads (#506; registration 6928288705, run ahead of the Researcher's review at Louis's instruction)
-bench-workers-window         bench/occupancy           Eight vs nine workers and the window at 2x and 1/2 past the cores (#510; registration 6930443845, run ahead of review at Louis's instruction)
+bench-workers-confirm        bench/workers-confirm     7/28 past the cores and at 10, 6/24 at 8, against production, with held-out records and text at -1 (#520, stacked on #515)
+bench-w12-at-7               bench/w12-at-7            W12 against W16 at 7/28 past the cores, 9/36 as context (#519; combines #506 via #517 and #514)
