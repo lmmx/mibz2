@@ -55,6 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "A worker count sized to the machine" = "blog/2026-11-17-worker-count-sized-to-the-machine.md" },
     { "A mathematical dictionary" = "blog/2026-11-16-mathematical-dictionary.md" },
     { "Stop and walk" = "blog/2026-11-16-stop-and-walk.md" },
     { "Lazy letters" = "blog/2026-11-16-lazy-letters.md" },
@@ -255,6 +256,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-17-worker-count-sized-to-the-machine.md" = "Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share." },
   { "blog/2026-11-16-mathematical-dictionary.md" = "Our BWT inversion is not the sheaf an earlier analogy suggested, yet the places of its words form one naturally." },
   { "blog/2026-11-16-stop-and-walk.md" = "Halting each block's rebuild early and walking the small loop that remains spares mibz2 a third of the text pieces it stores, for two per cent more instructions." },
   { "blog/2026-11-16-lazy-letters.md" = "Holding fewer letters at once leaves the cache less crowded, so eight to ten threads decode up to 11% faster despite extra instructions." },
