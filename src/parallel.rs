@@ -172,7 +172,7 @@ impl StreamDecoder {
             && !matches!(Plan::for_threads(threads), Plan::Workers(_))
             && k.avx2
             && k.clmul
-            && service_target(threads, k, &Machine::here())
+            && service_target_here(threads, k)
         {
             let p = SERVICE_PLAN;
             let slots = window(p.as_plan(), threads, slots, false);
@@ -188,7 +188,7 @@ impl StreamDecoder {
             let cell = if forced {
                 None
             } else {
-                trim_cell(threads, plan).and_then(|_| trimmed(threads, plan, k, &Machine::here()))
+                trimmed_here(threads, plan, k)
             };
             if let Some((n, lazy)) = cell {
                 Self::workers(n, window(Plan::Workers(n), threads, slots, true), k, lazy)
@@ -309,7 +309,7 @@ impl StreamDecoder {
         let cell = if forced {
             None
         } else {
-            trim_cell(threads, plan).and_then(|_| trimmed(threads, plan, k, &Machine::here()))
+            trimmed_here(threads, plan, k)
         };
         if let Some((_, false)) = cell {
             return Self::new(threads, slots, k);
@@ -2446,7 +2446,7 @@ impl Plan {
         // core's one budget alone, so no other budget pays for their discovery)
         let (phys, l3) = MACHINE
             .with(|c| c.borrow().as_ref().map(|m| (m.phys, m.l3)))
-            .unwrap_or_else(|| (physical_cores(), l3_bytes()));
+            .unwrap_or_else(|| (physical_cores(), FACTS.l3(&RealFs)));
         plan_with(threads.max(1), phys, l3)
     }
 
@@ -2616,17 +2616,22 @@ thread_local! {
 }
 
 impl Machine {
-    /// This machine, as this process sees it now (or `with_machine`'s, on this thread)
+    /// This machine, as this process sees it now (or `with_machine`'s, on this thread): the
+    /// machine-wide facts (`l3`, `machine`) as this process first read them (`FACTS`), the
+    /// affinity's (`phys`, `target`) and the quota read now
     pub fn here() -> Machine {
-        if let Some(m) = MACHINE.with(|c| c.borrow().clone()) {
-            return m;
-        }
+        overridden().unwrap_or_else(|| Machine::read(&RealFs, &FACTS))
+    }
+
+    /// The machine as `fs` shows it, its machine-wide facts from `cache` (read into it on
+    /// first use), the affinity's and the quota read now
+    fn read(fs: &dyn Fs, cache: &MachineCache) -> Machine {
         Machine {
-            phys: physical_cores(),
-            l3: l3_bytes(),
-            target: target_topology(&RealFs),
-            machine: machine_topology(&RealFs),
-            quota: cpu_quota(&RealFs),
+            phys: physical_cores_of(fs),
+            l3: cache.l3(fs),
+            target: target_topology(fs),
+            machine: cache.machine(fs).clone(),
+            quota: cpu_quota(fs),
         }
     }
 
@@ -2662,6 +2667,100 @@ impl Machine {
         t.logical = n;
         m
     }
+}
+
+/// `with_machine`'s machine, while it runs on this thread
+fn overridden() -> Option<Machine> {
+    MACHINE.with(|c| c.borrow().clone())
+}
+
+/// The machine-wide facts, read once a process on first use (`MachineCache`): the L3, the
+/// CPUs `/proc/cpuinfo` names the measured i9's, and the machine's topology. #537 had every
+/// default decoder at 4, 6, 8 and 10 threads read all of sysfs and cpuinfo again
+/// (`Machine::here`), about 0.5 to 1 ms a decoder on a 4-CPU runner; none of them changes
+/// while the process runs. The affinity (`Cpus_allowed_list`) and the quota (`cpu.max`) can,
+/// so they are read on every call that needs them, and only once the cached facts admit the
+/// measured i9 (`trimmed_here`, `service_target_here`)
+static FACTS: MachineCache = MachineCache::new();
+
+/// The machine-wide facts of `FACTS`, each read on first use
+struct MachineCache {
+    /// the L3's bytes (`l3_of`)
+    l3: std::sync::OnceLock<Option<u64>>,
+    /// how many CPUs `/proc/cpuinfo` names as the measured i9 (`i9_cpus`)
+    i9_cpus: std::sync::OnceLock<usize>,
+    /// every CPU present and online (`machine_topology`)
+    machine: std::sync::OnceLock<Option<Topology>>,
+}
+
+impl MachineCache {
+    const fn new() -> MachineCache {
+        MachineCache {
+            l3: std::sync::OnceLock::new(),
+            i9_cpus: std::sync::OnceLock::new(),
+            machine: std::sync::OnceLock::new(),
+        }
+    }
+    fn l3(&self, fs: &dyn Fs) -> Option<u64> {
+        *self.l3.get_or_init(|| l3_of(fs))
+    }
+    fn machine(&self, fs: &dyn Fs) -> &Option<Topology> {
+        self.machine.get_or_init(|| machine_topology(fs))
+    }
+    /// Whether the machine could be the measured i9: at least `SERVICE_LOGICAL` CPUs named
+    /// its vendor, family, model and name. Both predicates need it (the affinity's CPUs, and
+    /// the machine's, each have a cpuinfo record, every one the i9's, 20 of them), so where
+    /// it fails neither holds, and only cpuinfo has been read
+    fn may_be_i9(&self, fs: &dyn Fs) -> bool {
+        *self.i9_cpus.get_or_init(|| i9_cpus(fs)) >= SERVICE_LOGICAL
+    }
+}
+
+/// `trimmed` on this machine (`Machine::here`), reading the affinity and the quota only
+/// where the cached facts admit the measured i9 (`trimmed_read`)
+fn trimmed_here(threads: usize, plan: Plan, k: Kernels) -> Option<(usize, bool)> {
+    match overridden() {
+        Some(m) => trimmed(threads, plan, k, &m),
+        None => trimmed_read(threads, plan, k, &RealFs, &FACTS),
+    }
+}
+
+/// `trimmed(threads, plan, k, &Machine::read(fs, cache))`, the cheap conditions first: off
+/// a measured cell, without the kernels, or where the cached machine isn't the measured i9
+/// (`i9_profile`), `trimmed` is None whatever the affinity and quota, so they aren't read
+fn trimmed_read(
+    threads: usize,
+    plan: Plan,
+    k: Kernels,
+    fs: &dyn Fs,
+    cache: &MachineCache,
+) -> Option<(usize, bool)> {
+    trim_cell(threads, plan)?;
+    if !(k.avx2 && k.clmul && cache.may_be_i9(fs) && i9_profile(k, cache.machine(fs).as_ref())) {
+        return None;
+    }
+    trimmed(threads, plan, k, &Machine::read(fs, cache))
+}
+
+/// `service_target` on this machine (`Machine::here`), reading the affinity and the quota
+/// only where the cached facts admit the measured i9 (`service_target_read`)
+fn service_target_here(threads: usize, k: Kernels) -> bool {
+    match overridden() {
+        Some(m) => service_target(threads, k, &m),
+        None => service_target_read(threads, k, &RealFs, &FACTS),
+    }
+}
+
+/// `service_target(threads, k, &Machine::read(fs, cache))`, the cheap conditions first:
+/// at another budget, without the kernels, or where cpuinfo names fewer than 20 of the i9's
+/// CPUs (`MachineCache::may_be_i9`), it is false whatever the affinity and quota
+fn service_target_read(threads: usize, k: Kernels, fs: &dyn Fs, cache: &MachineCache) -> bool {
+    threads == SERVICE_THREADS
+        && k.avx2
+        && k.clmul
+        && cfg!(all(target_os = "linux", target_arch = "x86_64"))
+        && cache.may_be_i9(fs)
+        && service_target(threads, k, &Machine::read(fs, cache))
 }
 
 /// Testing: `f` run with `Machine::here` answering `m` on this thread, so that the plan
@@ -2937,17 +3036,22 @@ fn unpinned_trims(threads: usize) -> bool {
 /// on this process's cgroup and every ancestor), and the AVX2 and CLMUL kernels
 /// (`trims_to_seven`, `trimmed_workers`)
 fn measured_i9(k: Kernels, m: &Machine) -> bool {
+    i9_profile(k, m.machine.as_ref()) && m.quota == Quota::Unlimited
+}
+
+/// `measured_i9` without the quota: the kernels, and the machine's topology the i9's
+/// (machine-wide facts only, so `trimmed_read` can check it from the cache)
+fn i9_profile(k: Kernels, machine: Option<&Topology>) -> bool {
     k.avx2
         && k.clmul
         && cfg!(all(target_os = "linux", target_arch = "x86_64"))
-        && m.machine.as_ref().is_some_and(|t| {
+        && machine.is_some_and(|t| {
             (t.cpu.0.as_str(), t.cpu.1, t.cpu.2) == SERVICE_CPU
                 && t.name == SERVICE_NAME
                 && t.phys == TEN_CORES.0
                 && t.logical == SERVICE_LOGICAL
                 && t.l3 == TEN_CORES.1
         })
-        && m.quota == Quota::Unlimited
 }
 
 /// `Plan::for_threads` on a machine of `phys` physical cores and an L3 of `l3` bytes
@@ -2982,9 +3086,14 @@ pub(crate) fn plan_with(threads: usize, phys: Option<usize>, l3: Option<u64>) ->
 /// in this process's affinity, `Cpus_allowed_list`, grouped by their sysfs package and
 /// core ids), so a process limited to some CPUs counts only their cores
 fn physical_cores() -> Option<usize> {
+    physical_cores_of(&RealFs)
+}
+
+/// `physical_cores` as `fs` shows it
+fn physical_cores_of(fs: &dyn Fs) -> Option<usize> {
     #[cfg(target_os = "linux")]
     {
-        let status = std::fs::read_to_string("/proc/self/status").ok()?;
+        let status = fs.read("/proc/self/status").ok()?;
         let allowed = status
             .lines()
             .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))?
@@ -2996,24 +3105,36 @@ fn physical_cores() -> Option<usize> {
             let (a, b): (usize, usize) = (a.parse().ok()?, b.parse().ok()?);
             for c in a..=b {
                 let t = format!("/sys/devices/system/cpu/cpu{c}/topology");
-                let Ok(core) = std::fs::read_to_string(format!("{t}/core_id")) else {
+                let Ok(core) = fs.read(&format!("{t}/core_id")) else {
                     continue; // (an allowed CPU that is offline)
                 };
-                let pkg = std::fs::read_to_string(format!("{t}/physical_package_id")).ok()?;
+                let pkg = fs.read(&format!("{t}/physical_package_id")).ok()?;
                 cores.insert((pkg.trim().to_string(), core.trim().to_string()));
             }
         }
         (!cores.is_empty()).then_some(cores.len())
     }
     #[cfg(not(target_os = "linux"))]
-    None
+    {
+        let _ = fs;
+        None
+    }
 }
 
-/// The last-level cache's size, where the OS says (Linux: cpu0's level-3 cache)
+/// The last-level cache's size, where the OS says (Linux: cpu0's level-3 cache), read now
+/// (`FACTS` keeps it once a process)
+#[cfg(test)]
 fn l3_bytes() -> Option<u64> {
+    l3_of(&RealFs)
+}
+
+/// `l3_bytes` as `fs` shows it
+fn l3_of(fs: &dyn Fs) -> Option<u64> {
     #[cfg(target_os = "linux")]
     {
-        let s = std::fs::read_to_string("/sys/devices/system/cpu/cpu0/cache/index3/size").ok()?;
+        let s = fs
+            .read("/sys/devices/system/cpu/cpu0/cache/index3/size")
+            .ok()?;
         let s = s.trim();
         let (num, mult) = match s.as_bytes().last()? {
             b'K' => (&s[..s.len() - 1], 1u64 << 10),
@@ -3023,7 +3144,10 @@ fn l3_bytes() -> Option<u64> {
         num.parse::<u64>().ok().map(|n| n * mult)
     }
     #[cfg(not(target_os = "linux"))]
-    None
+    {
+        let _ = fs;
+        None
+    }
 }
 
 /// The service core's hub under Miri's race detector: its threads (feeder, service
@@ -3640,27 +3764,7 @@ fn topology_of(fs: &dyn Fs, among: Option<&std::collections::BTreeSet<usize>>) -
     if cpus.is_empty() {
         return None;
     }
-    // (cpuinfo's records by processor)
-    let info = fs.read("/proc/cpuinfo").ok()?;
-    let mut ids = std::collections::BTreeMap::new();
-    for rec in info.split("\n\n").filter(|r| !r.trim().is_empty()) {
-        let field = |name: &str| {
-            rec.lines().find_map(|l| {
-                let (k, v) = l.split_once(':')?;
-                (k.trim() == name).then(|| v.trim().to_string())
-            })
-        };
-        let n: usize = field("processor")?.parse().ok()?;
-        let id = (
-            field("vendor_id")?,
-            field("cpu family")?.parse::<u32>().ok()?,
-            field("model")?.parse::<u32>().ok()?,
-            field("model name")?,
-        );
-        if ids.insert(n, id).is_some() {
-            return None;
-        }
-    }
+    let ids = cpu_ids(fs)?;
     let num = |p: String| p.trim().parse::<u64>().ok();
     let (mut cores, mut l3, mut cpu) = (std::collections::BTreeSet::new(), None, None);
     for c in &cpus {
@@ -3687,6 +3791,48 @@ fn topology_of(fs: &dyn Fs, among: Option<&std::collections::BTreeSet<usize>>) -
         l3: l3?,
         cpu: (vendor, family, model),
         name,
+    })
+}
+
+/// A CPU's vendor, family, model and name (`/proc/cpuinfo`'s `model name`, trimmed)
+type CpuId = (String, u32, u32, String);
+
+/// `/proc/cpuinfo`'s records by processor, strictly: None if it can't be read, a record
+/// lacks a field or a number doesn't parse, or a processor is listed twice
+fn cpu_ids(fs: &dyn Fs) -> Option<BTreeMap<usize, CpuId>> {
+    let info = fs.read("/proc/cpuinfo").ok()?;
+    let mut ids = BTreeMap::new();
+    for rec in info.split("\n\n").filter(|r| !r.trim().is_empty()) {
+        let field = |name: &str| {
+            rec.lines().find_map(|l| {
+                let (k, v) = l.split_once(':')?;
+                (k.trim() == name).then(|| v.trim().to_string())
+            })
+        };
+        let n: usize = field("processor")?.parse().ok()?;
+        let id = (
+            field("vendor_id")?,
+            field("cpu family")?.parse::<u32>().ok()?,
+            field("model")?.parse::<u32>().ok()?,
+            field("model name")?,
+        );
+        if ids.insert(n, id).is_some() {
+            return None;
+        }
+    }
+    Some(ids)
+}
+
+/// How many CPUs `/proc/cpuinfo` names as the measured i9 (`SERVICE_CPU`, `SERVICE_NAME`):
+/// 0 where it can't be read as `topology_of` reads it, as then no snapshot is either
+fn i9_cpus(fs: &dyn Fs) -> usize {
+    if !cfg!(target_os = "linux") {
+        return 0;
+    }
+    cpu_ids(fs).map_or(0, |ids| {
+        ids.values()
+            .filter(|(v, f, m, name)| (v.as_str(), *f, *m) == SERVICE_CPU && name == SERVICE_NAME)
+            .count()
     })
 }
 
@@ -5563,6 +5709,191 @@ mod plan_tests {
             cpus().fails("/proc/cpuinfo", pd),
         ] {
             assert_eq!(machine_topology(&fs), None);
+        }
+    }
+
+    /// `fs`, recording every path read
+    struct Recording<'a> {
+        fs: &'a FakeFs,
+        read: std::cell::RefCell<Vec<String>>,
+    }
+
+    impl Fs for Recording<'_> {
+        fn read(&self, p: &str) -> std::io::Result<String> {
+            self.read.borrow_mut().push(p.into());
+            self.fs.read(p)
+        }
+        fn is_dir(&self, p: &str) -> bool {
+            self.read.borrow_mut().push(p.into());
+            self.fs.is_dir(p)
+        }
+    }
+
+    /// `a`'s files and directories with `b`'s
+    fn merged(mut a: FakeFs, b: FakeFs) -> FakeFs {
+        a.files.extend(b.files);
+        a.dirs.extend(b.dirs);
+        a
+    }
+
+    /// The i9's files, with no quota (`hierarchy`) and the affinity `mask`
+    fn i9_pinned(mask: &str) -> FakeFs {
+        merged(cpus(), hierarchy()).file(
+            "/proc/self/status",
+            &format!("Cpus_allowed_list:\t{mask}\n"),
+        )
+    }
+
+    /// The i9's files with another CPU's name in cpuinfo: a 4-CPU runner's part, say
+    fn renamed() -> FakeFs {
+        let fs = i9_pinned("0-3");
+        let info = fs.read("/proc/cpuinfo").unwrap().replace(
+            "i9-10900K CPU @ 3.70GHz",
+            "Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+        );
+        fs.file("/proc/cpuinfo", &info)
+    }
+
+    /// The machine read with its machine-wide facts cached (`Machine::read`, `FACTS`) is the
+    /// machine read afresh, field by field, first time and again; and the cached dispatch
+    /// (`trimmed_read`, `service_target_read`) decides as the predicates on the fresh read,
+    /// at every budget, plan and kernel mix, on the i9 pinned and unpinned, under a quota,
+    /// on another CPU, and where discovery fails
+    #[test]
+    fn the_cached_machine_is_the_machine_read_afresh() {
+        let sys = "/sys/devices/system/cpu";
+        let pd = std::io::ErrorKind::PermissionDenied;
+        let fixtures: Vec<(&str, FakeFs)> = vec![
+            ("i9 unpinned", i9_pinned("0-19")),
+            ("i9 0-9", i9_pinned("0-9")),
+            ("i9 0-7", i9_pinned("0-7")),
+            ("i9 0-5", i9_pinned("0-5")),
+            ("i9 0-3", i9_pinned("0-3")),
+            ("i9 0,10", i9_pinned("0,10")),
+            ("i9 no quota files", cpus()),
+            (
+                "i9 under a quota",
+                i9_pinned("0-3").file("/sys/fs/cgroup/user.slice/cpu.max", "800000 100000\n"),
+            ),
+            (
+                "i9 SMT off",
+                i9_pinned("0-9").file(&format!("{sys}/online"), "0-9\n"),
+            ),
+            ("another CPU", renamed()),
+            ("no cpuinfo", i9_pinned("0-3").fails("/proc/cpuinfo", pd)),
+            (
+                "an unreadable core",
+                i9_pinned("0-3").fails(&format!("{sys}/cpu15/topology/core_id"), pd),
+            ),
+            ("nothing", FakeFs::default()),
+        ];
+        let kernels = [(false, false), (true, false), (false, true), (true, true)]
+            .map(|(avx2, clmul)| Kernels { avx2, clmul });
+        for (what, fs) in &fixtures {
+            let fresh = Machine {
+                phys: physical_cores_of(fs),
+                l3: l3_of(fs),
+                target: target_topology(fs),
+                machine: machine_topology(fs),
+                quota: cpu_quota(fs),
+            };
+            let cache = MachineCache::new();
+            assert_eq!(Machine::read(fs, &cache), fresh, "{what}");
+            assert_eq!(Machine::read(fs, &cache), fresh, "{what}, cached");
+            for t in (1..=24).chain([32, 64]) {
+                for plan in [Plan::Workers(t), plan_with(t, fresh.phys, fresh.l3)] {
+                    for k in kernels {
+                        for cache in [&cache, &MachineCache::new()] {
+                            assert_eq!(
+                                trimmed_read(t, plan, k, fs, cache),
+                                trimmed(t, plan, k, &fresh),
+                                "{what}: {t} threads, {plan:?}, {k:?}"
+                            );
+                            assert_eq!(
+                                service_target_read(t, k, fs, cache),
+                                service_target(t, k, &fresh),
+                                "{what}: {t} threads, {k:?}"
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        // (the equivalence is not vacuous: on the i9 the cells and the service core hold)
+        if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            let both = Kernels {
+                avx2: true,
+                clmul: true,
+            };
+            let c = MachineCache::new();
+            let at = |mask: &str, t: usize| {
+                trimmed_read(t, Plan::Workers(t), both, &i9_pinned(mask), &c)
+            };
+            assert_eq!(at("0-3", 4), Some((TRIMMED_AT_FOUR, false)));
+            assert_eq!(at("0-7", 8), Some((TRIMMED_AT_EIGHT, true)));
+            assert_eq!(at("0-19", 10), Some((TRIMMED_WORKERS, true)));
+            assert_eq!(at("0-19", 4), None);
+            assert!(service_target_read(10, both, &i9_pinned("0-19"), &c));
+        }
+    }
+
+    /// Off the measured i9, the cached dispatch reads neither the affinity
+    /// (`/proc/self/status`) nor the quota (cgroup files): `/proc/cpuinfo` once a process,
+    /// then nothing at all. On the i9 it reads both on every call, as they can change
+    #[test]
+    fn off_the_i9_the_affinity_and_quota_are_not_read() {
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let other = renamed();
+        let fs = Recording {
+            fs: &other,
+            read: Default::default(),
+        };
+        let cache = MachineCache::new();
+        let decide = |fs: &dyn Fs| {
+            for t in [4, 6, 8, 10, 12, 20] {
+                assert_eq!(trimmed_read(t, Plan::Workers(t), both, fs, &cache), None);
+                assert!(!service_target_read(t, both, fs, &cache));
+            }
+        };
+        decide(&fs);
+        let first: Vec<String> = fs.read.take();
+        let want: Vec<String> = if cfg!(target_os = "linux") {
+            vec!["/proc/cpuinfo".into()]
+        } else {
+            vec![]
+        };
+        assert_eq!(first, want, "the first decoders");
+        decide(&fs);
+        assert_eq!(fs.read.take(), Vec::<String>::new(), "every later decoder");
+        // without the kernels, nothing is read at all
+        let fresh = MachineCache::new();
+        for t in [4, 6, 8, 10] {
+            let k = Kernels {
+                avx2: false,
+                clmul: true,
+            };
+            assert_eq!(trimmed_read(t, Plan::Workers(t), k, &fs, &fresh), None);
+            assert!(!service_target_read(t, k, &fs, &fresh));
+        }
+        assert_eq!(fs.read.take(), Vec::<String>::new(), "scalar kernels");
+        // on the i9, the affinity and the quota are read on every call
+        if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            let i9 = i9_pinned("0-3");
+            let fs = Recording {
+                fs: &i9,
+                read: Default::default(),
+            };
+            let cache = MachineCache::new();
+            for _ in 0..2 {
+                assert!(trimmed_read(4, Plan::Workers(4), both, &fs, &cache).is_some());
+                let read = fs.read.take();
+                for p in ["/proc/self/status", "/proc/self/cgroup"] {
+                    assert!(read.iter().any(|r| r == p), "{p} read on the i9");
+                }
+            }
         }
     }
 
