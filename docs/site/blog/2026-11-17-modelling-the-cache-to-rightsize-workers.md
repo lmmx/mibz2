@@ -1,7 +1,7 @@
 ---
 title: "Modelling the cache to rightsize workers"
 image: assets/social/blog-2026-11-17-modelling-the-cache-to-rightsize-workers.png
-description: "Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share."
+description: "Rather than re-measure every worker count whenever the decoder changes, mibz2 sizes its workers from a model of the cache and cores they share."
 ---
 
 <div class="post-hero" markdown>
@@ -13,7 +13,7 @@ description: "Rather than re-measure every worker count whenever the decoder cha
 
 # Modelling the cache to rightsize workers
 
-Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share.
+Rather than re-measure every worker count whenever the decoder changes, mibz2 sizes its workers from a model of the cache and cores they share.
 {: .post-dek }
 
 17 November 2026 · 13 min read · [Research in progress](#6-what-changes-for-users-and-what-comes-next)
@@ -55,7 +55,7 @@ The takeaways, each shown in a section below:
 <figcaption>Conceptual. The thread names are the code's (src/parallel.rs). In the kitchen, each cook prepares a whole dish at a station, and all of them spread their ingredients on one worktop; more cooks crowd it. The analogy stops at eviction: a cook's ingredients never vanish from a worktop, but a worker's data does leave the cache and has to be fetched again from main memory.</figcaption>
 </figure>
 
-mibz2's parallel decoder ([`src/parallel.rs`](https://github.com/lmmx/mibz2/blob/33e7225ba6147fb480168dc54fe30727f0b93aea/src/parallel.rs#L1-L22)) has three kinds of thread. The *scanner* reads the compressed stream in order. A block's end is only known once its Huffman-coded symbols have been read, so this step can't be split. Each *worker* then finishes one block on its own: the move-to-front step, the inverse Burrows–Wheeler transform and the block's checksum. The *reader* takes the finished blocks back in order and hands out their bytes. Each worker keeps up to four blocks in flight, so seven workers hold 28.
+mibz2's parallel decoder ([`src/parallel.rs`](https://github.com/lmmx/mibz2/blob/33e7225ba6147fb480168dc54fe30727f0b93aea/src/parallel.rs#L1-L22)) has three kinds of thread. The *scanner* reads the compressed stream in order. A block's end is only known once its Huffman-coded symbols have been read, so this step can't be split. Each *worker* then finishes one block on its own: the move-to-front step, the inverse Burrows–Wheeler transform, a run-length step and the block's checksum. The *reader* takes the finished blocks back in order and hands out their bytes. Each worker keeps up to four blocks in flight, so seven workers hold 28.
 
 Blocks decode independently, so more workers means more blocks at once. But the workers are not independent. They run on cores that share one L3 cache.
 
@@ -78,7 +78,7 @@ Each core has its own small level-2 (L2) cache, 256 KiB. Behind them sits the 20
 
 ## 2. Why are fewer workers faster?
 
-There are two explanations a reader might reach for. One is the clock: a processor running fewer cores may run each faster. The other is idle time: with more workers than the processor can keep busy, some wait. A third is the cache: each worker slows the others by evicting their data. The hardware counters at 10 threads tell these apart. They count, per byte of output, against 10 workers.
+There are three explanations a reader might reach for. One is the clock: a processor running fewer cores may run each faster. The other is idle time: with more workers than the processor can keep busy, some wait. A third is the cache: each worker slows the others by evicting their data. The hardware counters at 10 threads tell these apart. They count, per byte of output, against 10 workers.
 
 <figure class="bf-fig">
 <p class="bf-title">Fewer workers, cheaper bytes: the work is the same, the shared-cache misses fall</p>
@@ -100,7 +100,7 @@ The model's answer is W\* ≈ min(C, W_L3, W_CPU): the cores available, the cach
 
 **The cache limit.** At 10 threads, the cycles per byte fit c(W) = a + b·W², with a ≈ 0.42 the cost of a worker alone and b·W² the contention. The square comes from each of W workers missing more often in proportion to the W footprints sharing the cache. Throughput is then proportional to W / (a + b·W²), which peaks where b·W² = a: where contention costs as much as the work itself. That is W = √(a/b) ≈ 7.9. At 2.1 MB a worker, 7.9 footprints fill about 0.8 of the 20 MiB L3. The fits with other exponents put the peak in the same place, 0.77 to 0.84 of the L3, so the rule is W_L3 ≈ 0.8 × L3 ÷ footprint. The 0.8 is a fitted constant, not a law. mibz2's teams policy already sizes its tables to about 0.7 of the L3, and the simple candidate rule frozen before the next runs uses that 0.7, which gives 7.
 
-**The CPU budget.** A worker with a processor to itself is busy 0.93 of the time; the rest it waits on the scanner. The scanner and reader use about one processor (1.08 counted at 10 threads). And a fully subscribed set of processors leaves some idle, about 1.25 at 10 threads, from the scheduler's slack. So the workers can use at most N − ν − ι processors, with N the processors allowed, ν the non-worker threads' use and ι the slack, and the budget in workers is W_CPU ≈ (N − ν − ι) ÷ 0.93. This reproduces the measured busy shares at 10 threads: 0.767, 0.851, 0.930, 0.930 and 0.930 for 10 down to 6 workers, against 0.763, 0.857, 0.931, 0.925 and 0.931 measured.
+**The CPU budget.** A worker with a processor to itself is busy 0.93 of the time; the rest it waits on the rest of the pipeline. The scanner and reader use about one processor (1.08 counted at 10 threads). And a fully subscribed set of processors leaves some idle, about 1.25 at 10 threads, from the scheduler's slack. So the workers can use at most N − ν − ι processors, with N the processors allowed, ν the non-worker threads' use and ι the slack, and the budget in workers is W_CPU ≈ (N − ν − ι) ÷ 0.93. This reproduces the measured busy shares at 10 threads: 0.767, 0.851, 0.930, 0.930 and 0.930 for 10 down to 6 workers, against 0.763, 0.857, 0.931, 0.925 and 0.931 measured.
 
 An earlier version of this term was derived from the wall times and the cycles, and the review of the runs pointed out that it was close to the identity above, so its match was not independent evidence. The term is now built only from the processor time each thread was counted using.
 
@@ -119,7 +119,7 @@ The model misses one thing at 8 threads. It puts 7 workers level with 6, but 7 m
 Every prediction is frozen before its run and scored after it. So far:
 
 - a capacity *cliff*, once the footprints fit, was refuted by the smooth fall in misses;
-- contention for the bus between the cores, rather than the cache, was refuted on its counter pattern;
+- contention for the ring that links the cores, or for memory bandwidth, was refuted on its counter pattern: it predicted flat misses, and they fell by 41% from 8 workers to 6;
 - at 10 threads the model named 7 workers, which was right, but it predicted 0.93 of the time, and 0.885 was measured: the gain was larger than it allowed.
 
 **Frozen for the low-thread sweep** (4, 6 and 8 threads):
@@ -134,9 +134,9 @@ The rival keeps the slack ι fixed at 1.25 processors rather than in proportion 
 
 A prediction passes at a thread count if it is within one worker of the best measured, and its choice costs at most 2% against the best: wall(predicted) ÷ wall(best) − 1 ≤ 2%.
 
-**The test that can fail.** The same file compressed with `bzip2 -3` has blocks a third the size, so each footprint shrinks to about a third, and the cache limit moves from about 8 to about 24. The model predicts that the trim disappears: at 10 threads the best count is 9 or 10, and 7 workers are no better than 0.98 of 10's time. If contention were set by memory bandwidth instead, 7 would still win at about 0.885, as now.
+**The test that can fail.** The same file compressed with `bzip2 -3` has blocks a third the size. If a footprint shrinks with its block, to about a third, and the cache limit moves from about 8 to about 24. The model predicts that the trim disappears: at 10 threads the best count is 9 or 10, and 7 workers are no better than 0.98 of 10's time. If contention were set by memory bandwidth instead, 7 would still win at about 0.885, as now.
 
-**The free CI machines.** GitHub's free x86 runners have 4 processors on 2 cores and a 32 MiB L3. There the cache limit is about 12.8 and never binds, so the model predicts that 4 workers stay best (or 3 within 2%), and that today's plan stays. With only 2 to 4 workers possible, "within one worker" can't fail there, so the runners are judged on three refuters instead: the model is wrong if 3 workers beat 4 by more than 2%, if 2 come within 3% of 4, or if any lazy-letters plan beats today's by more than 2%.
+**The free CI machines.** GitHub's free x86 runners have 4 processors on 2 cores and a 32 MiB L3. There the cache limit is about 12.8 and never binds, so the model predicts that 4 workers stay best (or 3 within 2%), and that today's plan stays. With only 2 to 4 workers possible, "within one worker" fails there only on an outcome the existing data already rule out, so the runners are judged on three refuters instead: the model is wrong if 3 workers beat 4 by more than 2%, if 2 come within 3% of 4, or if any lazy-letters plan beats today's by more than 2%.
 
 <div class="admonition note" markdown>
 <p class="admonition-title">Results pending</p>
