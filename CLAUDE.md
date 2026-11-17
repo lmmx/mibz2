@@ -26,6 +26,18 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
   in `error` or `pending` on the head is not green, whatever the check runs say. (#351 was
   merged at 16:2x on 10 November with pre-commit.ci's class B error still on its head; the
   re-run passed minutes later.)
+- **When not to wait for CI** (Louis, 17 November 2026). Two kinds of PR merge without waiting
+  for their CI, with the head-sha checks still run before and after:
+  - **A PR that only queues:** its diff touches nothing but `bench/workstation-queue.txt`.
+    The queue file's own test (`python3 bench/test_workstation_queue.py`) passes locally first.
+  - **Content CI has already passed:** the head's tree differs from a commit that went green
+    only in ways no check reads. Examples are a ready tag or queue entry for a recipe whose PR
+    head is green, and a PR re-opened, re-based or re-targeted onto an identical tree. Name
+    the green commit in the merge's LOG, and show that the trees match
+    (`git diff --stat <green> <head>`).
+
+  Anything else waits for green, as above. Waiting on CI for these two wastes the
+  workstation's time.
 - **The merge itself:** pass that SHA as `expectedHeadSha`, the merge tool's parameter. The tool
   silently drops a name it doesn't have, such as `sha`, and then nothing checks the head.
 - **After the merge:** `coord.py head-sha --pr <n> --sha <sha> --merged` must pass: the PR is

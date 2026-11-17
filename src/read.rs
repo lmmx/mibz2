@@ -141,6 +141,34 @@ impl<R: Read + Send + 'static> BzReader<R> {
         Self::on(r, StreamDecoder::workers(threads, slots, kernels, lazy))
     }
 
+    /// `parallel`, with the lazy kernel replaced by `I` wherever production would invert
+    /// with lazy letters, and nothing else changed (`StreamDecoder::new_lazy_as`): for the
+    /// bench arms that compare another kernel with production's own decoder
+    #[doc(hidden)]
+    pub fn parallel_lazy_as<I: crate::bwt::InverseBwt + 'static>(r: R, threads: usize) -> Self {
+        Self::on(
+            r,
+            StreamDecoder::new_lazy_as::<I>(
+                threads,
+                SLOTS_PER_THREAD * threads.max(1),
+                Kernels::detect(),
+            ),
+        )
+    }
+
+    /// `threads` workers of a block each, inverting with `I` whatever the thread count
+    /// (`StreamDecoder::workers_with`): for the bench arms that compare another kernel with
+    /// the shipped one. `slots` blocks in flight and the kernels given.
+    #[doc(hidden)]
+    pub fn parallel_workers_with<I: crate::bwt::InverseBwt + 'static>(
+        r: R,
+        threads: usize,
+        slots: usize,
+        kernels: Kernels,
+    ) -> Self {
+        Self::on(r, StreamDecoder::workers_with::<I>(threads, slots, kernels))
+    }
+
     /// Research, opt-in (`memory-lever`): workers with the experiment's staged Cells kernel,
     /// or with lazy letters (`StreamDecoder::lever`), with `slots` blocks in flight and the
     /// kernels given
