@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=afc5c5ab5fb4">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=5e560303a851">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=afc5c5ab5fb4">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=5e560303a851">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=afc5c5ab5fb4">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=5e560303a851">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=afc5c5ab5fb4">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=5e560303a851">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=afc5c5ab5fb4">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=5e560303a851">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=afc5c5ab5fb4">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=5e560303a851">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2765,7 +2765,7 @@ byte of output at four workers to 11.0 at seven and 12.7 at eight.</p>
 <figure class="bf-fig">
 <p class="bf-title">More workers, more memory traffic for every byte decoded</p>
 <svg viewBox="0 0 720 454" role="img" aria-label="Bytes of memory traffic per byte of output rise with the number of workers: today, reads that miss the L3 go from 6.9 bytes at 4 workers to 11.0 at 7 and 12.7 at 8; on an older decoder, memory reads and writes together went from 15.5 bytes at 4 workers to 22.7 at 8 and 24.2 at 10."><rect x="0" y="0" width="720" height="72" rx="8" class="bf-card"/><text x="14.0" y="22.0" text-anchor="start" class="bf-t" style="font-size:15px">The analogy: each worker is a cook at one shared worktop, the 20 MiB L3 cache.</text><text x="14.0" y="42.0" text-anchor="start" class="bf-t" style="font-size:15px">Whatever does not fit on the worktop is fetched from the pantry, main memory.</text><text x="14.0" y="62.0" text-anchor="start" class="bf-tm" style="font-size:14px">More cooks crowd the worktop, so every dish needs more trips to the pantry.</text><line x1="60" y1="330.0" x2="700" y2="330.0" class="bf-axis"/><text x="52.0" y="334.0" text-anchor="end" class="bf-tm" style="font-size:14px">0</text><line x1="60" y1="286.5" x2="700" y2="286.5" class="bf-grid"/><text x="52.0" y="290.5" text-anchor="end" class="bf-tm" style="font-size:14px">5</text><line x1="60" y1="243.1" x2="700" y2="243.1" class="bf-grid"/><text x="52.0" y="247.1" text-anchor="end" class="bf-tm" style="font-size:14px">10</text><line x1="60" y1="199.6" x2="700" y2="199.6" class="bf-grid"/><text x="52.0" y="203.6" text-anchor="end" class="bf-tm" style="font-size:14px">15</text><line x1="60" y1="156.2" x2="700" y2="156.2" class="bf-grid"/><text x="52.0" y="160.2" text-anchor="end" class="bf-tm" style="font-size:14px">20</text><line x1="60" y1="112.7" x2="700" y2="112.7" class="bf-grid"/><text x="52.0" y="116.7" text-anchor="end" class="bf-tm" style="font-size:14px">25</text><text x="92.0" y="348.0" text-anchor="middle" class="bf-tm" style="font-size:14px">1</text><text x="156.0" y="348.0" text-anchor="middle" class="bf-tm" style="font-size:14px">2</text><text x="220.0" y="348.0" text-anchor="middle" class="bf-tm" style="font-size:14px">3</text><text x="284.0" y="348.0" text-anchor="middle" class="bf-tm" style="font-size:14px">4</text><text x="348.0" y="348.0" text-anchor="middle" class="bf-tm" style="font-size:14px">5</text><text x="412.0" y="348.0" text-anchor="middle" class="bf-tm" style="font-size:14px">6</text><text x="476.0" y="348.0" text-anchor="middle" class="bf-tm" style="font-size:14px">7</text><text x="540.0" y="348.0" text-anchor="middle" class="bf-tm" style="font-size:14px">8</text><text x="604.0" y="348.0" text-anchor="middle" class="bf-tm" style="font-size:14px">9</text><text x="668.0" y="348.0" text-anchor="middle" class="bf-tm" style="font-size:14px">10</text><text x="380.0" y="368.0" text-anchor="middle" class="bf-t" style="font-size:15px">workers decoding at once</text><text x="14.0" y="217.0" text-anchor="middle" class="bf-t" style="font-size:15px" transform="rotate(-90 14 217.0)">bytes moved per byte of output</text><polyline points="92.0,319.1 156.0,279.5 220.0,230.0 284.0,194.9 412.0,152.5 540.0,132.7 668.0,119.7" style="fill:none;stroke:var(--bf-amber);stroke-width:2;stroke-linejoin:round"/><polyline points="92.0,324.4 156.0,303.8 220.0,278.4 284.0,258.8 412.0,234.3 540.0,219.4 668.0,209.4" style="fill:none;stroke:var(--bf-amber);stroke-width:1.5;stroke-linejoin:round;stroke-dasharray:5 4"/><circle cx="92.0" cy="319.1" r="3" style="fill:var(--bf-amber)"/><circle cx="156.0" cy="279.5" r="3" style="fill:var(--bf-amber)"/><circle cx="220.0" cy="230.0" r="3" style="fill:var(--bf-amber)"/><circle cx="284.0" cy="194.9" r="3" style="fill:var(--bf-amber)"/><circle cx="412.0" cy="152.5" r="3" style="fill:var(--bf-amber)"/><circle cx="540.0" cy="132.7" r="3" style="fill:var(--bf-amber)"/><circle cx="668.0" cy="119.7" r="3" style="fill:var(--bf-amber)"/><circle cx="92.0" cy="324.4" r="2.4" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:1.2"/><circle cx="156.0" cy="303.8" r="2.4" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:1.2"/><circle cx="220.0" cy="278.4" r="2.4" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:1.2"/><circle cx="284.0" cy="258.8" r="2.4" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:1.2"/><circle cx="412.0" cy="234.3" r="2.4" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:1.2"/><circle cx="540.0" cy="219.4" r="2.4" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:1.2"/><circle cx="668.0" cy="209.4" r="2.4" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:1.2"/><polyline points="284.0,270.1 476.0,234.1 540.0,220.0" style="fill:none;stroke:var(--bf-green);stroke-width:3;stroke-linejoin:round"/><circle cx="284.0" cy="270.1" r="4.5" style="fill:var(--bf-green)"/><text x="292.0" y="286.1" text-anchor="start" class="bf-t-strong" style="font-size:15px">6.9</text><circle cx="476.0" cy="234.1" r="4.5" style="fill:var(--bf-green)"/><text x="484.0" y="250.1" text-anchor="start" class="bf-t-strong" style="font-size:15px">11.0</text><circle cx="540.0" cy="220.0" r="4.5" style="fill:var(--bf-green)"/><text x="548.0" y="236.0" text-anchor="start" class="bf-t-strong" style="font-size:15px">12.7</text><circle cx="668.0" cy="202.6" r="4.5" style="fill:var(--bf-surface);stroke:var(--bf-green);stroke-width:2"/><text x="658.0" y="192.6" text-anchor="end" class="bf-tm" style="font-size:14px">14.7, pinned</text><text x="660.0" y="111.7" text-anchor="end" class="bf-t-strong" style="font-size:15px">24.2</text><text x="540.0" y="122.7" text-anchor="middle" class="bf-t-strong" style="font-size:15px">22.7</text><line x1="60" y1="396" x2="84" y2="396" style="stroke:var(--bf-green);stroke-width:3"/><text x="92.0" y="400.0" text-anchor="start" class="bf-tm" style="font-size:14px">today: reads that miss the L3 (17 November)</text><line x1="60" y1="418" x2="84" y2="418" style="stroke:var(--bf-amber);stroke-width:2"/><text x="92.0" y="422.0" text-anchor="start" class="bf-tm" style="font-size:14px">older decoder: memory reads + writes (14 November)</text><line x1="60" y1="440" x2="84" y2="440" style="stroke:var(--bf-amber);stroke-width:1.5;stroke-dasharray:5 4"/><text x="92.0" y="444.0" text-anchor="start" class="bf-tm" style="font-size:14px">older decoder: memory reads only</text></svg>
-<figcaption>Measured on the test machine, decoding four copies of the Wikidata extract. Green: reads that missed the L3, counted as 64-byte lines, per byte of output, in the <a href="https://github.com/lmmx/mibz2/blob/evidence/knee/run-20261117T123939Z.tar.gz">knee diagnostic</a> of 17 November (the whole machine, except the hollow point, pinned). Amber: reads and writes counted at the memory controller, on an older decoder that held a slot for every letter of a block (<a href="https://github.com/lmmx/mibz2/blob/evidence/cells-imc/run-20261114T180428Z.tar.gz">memory-controller run</a>, 14 November). The two runs used different decoders and counters, so they are drawn side by side, not joined. The analogy stops where caches differ from kitchens: data is not used up, it is copied in 64-byte lines, and whether the pantry door is the limit is the open question.</figcaption>
+<figcaption>Measured on the test machine. Green: reads that missed the L3, counted as 64-byte lines, per byte of output, decoding four copies of the Wikidata extract, in the <a href="https://github.com/lmmx/mibz2/blob/evidence/knee/run-20261117T123939Z.tar.gz">knee diagnostic</a> of 17 November (the whole machine, except the hollow point, pinned). Amber: reads and writes counted at the memory controller, on an older decoder that held a slot for every letter of a block, over 15 repeated decodes of the single Wikidata sample a reading (<a href="https://github.com/lmmx/mibz2/blob/evidence/cells-imc/run-20261114T180428Z.tar.gz">memory-controller run</a>, 14 November). The two runs used different decoders and counters, so they are drawn side by side, not joined. The analogy stops where caches differ from kitchens: data is not used up, it is copied in 64-byte lines, and whether the pantry door is the limit is the open question.</figcaption>
 </figure>
 
 <p>It is tempting to read the two-gigabyte-per-second plateau as a DRAM bandwidth limit. A
@@ -2984,19 +2984,19 @@ than a curve that falls whenever we give it another core.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=afc5c5ab5fb4"></script>
+        <script src="../../assets/javascripts/bench.js?v=5e560303a851"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=afc5c5ab5fb4"></script>
+        <script src="../../assets/javascripts/couriers.js?v=5e560303a851"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=afc5c5ab5fb4"></script>
+        <script src="../../assets/javascripts/blog.js?v=5e560303a851"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=afc5c5ab5fb4"></script>
+        <script src="../../assets/javascripts/frontier.js?v=5e560303a851"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=afc5c5ab5fb4"></script>
+        <script src="../../assets/javascripts/observatory.js?v=5e560303a851"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=afc5c5ab5fb4"></script>
+        <script src="../../assets/javascripts/katex.js?v=5e560303a851"></script>
       
     
   </body>
