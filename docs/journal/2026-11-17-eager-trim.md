@@ -75,7 +75,7 @@ As #521's, count by count:
   - NOT ADOPTED: otherwise.
 - **A choice for each count:** of the candidates that ADOPT there, the lowest geometric mean of its Wikidata step. If none adopts, production stays at that count.
 - **VOID** (exit 1, no verdict), on #521's conditions:
-  - the records: one missing, duplicated or outside the sparse roster (160 at R = 8: 10 arm-count pairs × 2 corpora × 8 rounds), a run that did not succeed, a non-finite figure, or a corpus whose outputs differ;
+  - the records: one missing, duplicated or outside the sparse roster (128 at R = 8: 8 arm-count pairs × 2 corpora × 8 rounds), a run that did not succeed, a non-finite figure, or a corpus whose outputs differ;
   - the machine: not 10 cores and 20 CPUs with each core's CPUs listed, or under a quota;
   - the pinning, or the spinner;
   - the judging arguments.
@@ -119,7 +119,11 @@ As #521's, count by count:
 
 Its own refuter: **if eager 5 does not beat lazy 5, the kernel cost model is wrong,** and the kernel stays chosen by measurement. These are scored against the Wikidata steps (and the pair line at 10) once the bundle is read. None enters a verdict.
 
-**End to end on this VM** (1 copy, 2 rounds, 2 reps): see the PR for the result at its head. It must VOID on the machine record alone (4 cores and 4 CPUs, not 10 and 20), and the counters are skipped (`kernel.perf_event_paranoid` 2).
+**End to end on this VM** (`just bench-eager-trim 1 2 2`: 1 copy, 2 rounds, 2 reps; 4 cores, 4 CPUs): it ran in 2.5 minutes, build included. All 32 records were present (8 arm-count pairs × 2 corpora × 2 rounds), with one output per corpus. The verdict is **VOID**, as it must be here:
+- the machine record is not the registered profile (4 cores and 4 CPUs, not 10 and 20);
+- at 6 and 4 threads, the spinner shared a decoder core, since the VM has no free core.
+
+The thread split printed at each count, with W = 5, 3 and 7 read from the arms' names. The counters were skipped and said so (`kernel.perf_event_paranoid` 2). Off the i9, production at 10 threads is ten workers (the split sees 10 worker threads), since `trims_to_seven` holds on the i9 alone. On the i9 it is seven, and the split's "worker threads seen" shows which.
 
 ## The cost on the workstation: about 14 minutes
 
