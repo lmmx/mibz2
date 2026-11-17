@@ -1034,7 +1034,7 @@ The takeaways, each shown in a section below:
 
 Who does what in mibz2's parallel decoder
 
-Conceptual. The thread names are the code's (src/parallel.rs). In the kitchen, each cook prepares a whole dish at a station, and all of them spread their ingredients on one worktop; more cooks crowd it. The analogy stops at eviction: a cook's ingredients never vanish from a worktop, but a worker's data does leave the cache and has to be fetched again from main memory.
+Conceptual. The thread names are the code's (src/parallel.rs); the kitchen labels are an analogy. In the kitchen, each cook prepares a whole dish at a station, and all of them spread their ingredients on one worktop; more cooks crowd it. The analogy stops at eviction: a cook's ingredients never vanish from a worktop, but a worker's data does leave the cache and has to be fetched again from main memory.
 
 mibz2's parallel decoder ([`src/parallel.rs`](<https://github.com/lmmx/mibz2/blob/33e7225ba6147fb480168dc54fe30727f0b93aea/src/parallel.rs#L1-L22>)) has three kinds of thread. The *scanner* reads the compressed stream in order. A block's end is only known once its Huffman-coded symbols have been read, so this step can't be split. Each *worker* then finishes one block on its own: the move-to-front step, the inverse Burrows–Wheeler transform, a run-length step and the block's checksum. The *reader* takes the finished blocks back in order and hands out their bytes. Each worker keeps up to four blocks in flight, so seven workers hold 28.
 
@@ -1080,11 +1080,21 @@ An earlier version of this term was derived from the wall times and the cycles, 
 
 The model at two thread counts: the smallest limit binds
 
-Modelled, from measured inputs. The bars are in workers; the solid bar is the one that binds, and the dashed line marks it. The non-worker load at 10 threads (1.08 processors) was counted; at 8 threads (0.85) it is the model's estimate, scaled with throughput. The slack is 0.125 of the processors allowed. A count is a whole number, so the model takes the whole number below the binding limit.
+Modelled, from measured inputs. The bars are in workers, with the arithmetic in the text below; the solid bar is the one that binds, and the dashed line marks it. The non-worker load at 10 threads (1.08 processors) was counted; at 8 threads (0.85) it is the model's estimate, scaled with throughput. The slack is 0.125 of the processors allowed. A count is a whole number, so the model takes the whole number below the binding limit.
 
 **At 10 threads,** the budget is \\((10 - 1.08 - 1.25) / 0.93 \\approx 8.2\\) workers, the cache limit is 7.9, and the cache binds: 7 workers, as measured. **At 8 threads,** the budget is \\((8 - 0.85 - 1.0) / 0.93 \\approx 6.6\\), below the cache limit, so the budget binds: 6 workers, as measured. A seventh would get only part of a processor while adding a whole footprint to the cache. **Past the cores,** with 20 processors the budget is about 17, and the cache limit gives 7 again.
 
 The model misses one thing at 8 threads. It puts 7 workers level with 6, but 7 measured 5% slower (0.975 against 0.929). And fitting the data it was built from is no proof.
+
+### Half the cycles go to contention, and that's the optimum
+
+The cache limit says more than where the peak is. If each worker's cycles per byte are \\(c(W) = a + b\\,W^2\\), the wall time with \\(W\\) workers goes as \\(c(W)/W = a/W + b\\,W\\). The first term falls with more workers and the second rises, and their sum is smallest at \\(W^\* = \\sqrt{a/b}\\), exactly where \\(b\\,W^2 = a\\). So at the best worker count, contention takes as many cycles as the work itself: about half of all cycles.
+
+On the i9 at 7 workers, the fit puts contention at \\(b\\,W^2 = 0.0068 \\times 49 \\approx 0.33\\) of \\(c(7) \\approx 0.76\\), about 44% of the cycles. That is a little under half, because a worker count is a whole number, and 7 sits just below the fit's optimum of 7.9. A large share of cycles lost to contention is therefore what a well-chosen worker count looks like, not a sign of waste. It also gives the size of the prize for removing contention some other way than by cutting workers: if it vanished, 7 workers would need \\(a \\approx 0.42\\) of the cycles instead of 0.76, and run about 1.8 times faster.
+
+The 44% is soft. The cost of one worker alone, \\(a\\), is extrapolated from fits over 6 to 9 workers. And the exponent isn't pinned: fits with \\(W^{1.5}\\) to \\(W^{2.5}\\) in place of \\(W^2\\) match the data equally well, and move the share at 7 workers from about 60% to about 34%. The low-thread sweep, with 2 to 5 workers, measures the cost close to one worker alone and settles it. That result is pending, like the others in [section 4](<#4-how-could-the-model-be-wrong>).
+
+A shrunken footprint has already shown what those contention cycles are not. A variant of the lazy-letters kernel that stores its rules in 12 bytes instead of 16 shrinks each worker's footprint. With 9 workers past the cores, it took 0.98 to 0.99 of the wall time. With 7 it cut the shared-cache misses per byte by 7.4%, and the wall time didn't move: 1.012, 0.996 and 1.002 of the 16-byte kernel's at 12, 16 and 20 threads, none of them beyond noise, so it was not adopted. Once the worker count fits the cache, the remaining contention cycles are not paid in footprint bytes or in the number of misses. The counters already hint at why. From 10 workers to 7, each shared-cache miss avoided saved about 589 cycles, more than a whole uncontended trip to main memory (390 to 490 cycles on this machine), so even if no two misses overlapped, fewer misses would explain at most two thirds to four fifths of the saving, and with the overlap the kernel is built for, far less. Our working conjecture ([set out in the model's journal](<https://github.com/lmmx/mibz2/blob/0e7c6888bcba2ce8dd3056c587a23be958d6de4f/docs/journal/monodromy/2026-11-17-contention-counters.md>)) is that the rest is the 0.69 L3 accesses each byte makes. They are 35 times as many as the misses and don't change with the worker count, but each one becomes 4 to 8 cycles dearer as more workers queue in the L3 and on the ring that links it to the cores. Main memory is not the bottleneck: its traffic is estimated at 4 to 9 GB/s, 10% to 20% of the machine's peak. Fewer workers shorten the queue; a smaller footprint doesn't change the number of L3 accesses, which is why the 12-byte rules did nothing at 7 workers. If this holds, two kinds of change could win back some of the 44% without cutting workers: fewer L3 accesses a byte, from a hot set that fits in the 256 KiB L2, and fewer accesses in flight at once, by staggering the workers' access-heavy phases. It is a conjecture, under test: its predictions were frozen before a counters run that measures the latency of L3 hits and the traffic to main memory.
 
 ## 4\. How could the model be wrong?
 
@@ -1120,7 +1130,7 @@ A prediction passes at a thread count if it is within one worker of the best mea
 
 Two clusters, two caches: the limit is summed per cluster
 
-Conceptual: a processor with two L3 clusters, as on many AMD chips or a two-socket server. The cache limit is the sum of each cluster's limit, provided the workers are spread across the clusters.
+Conceptual: a processor with two L3 clusters, as on many AMD chips or a two-socket server. F is a worker's footprint. The cache limit is the sum of each cluster's limit, provided the workers are spread across the clusters.
 
 Many processors have more than one L3. AMD's chips group their cores into clusters with an L3 each, and a two-socket server has one per socket. Workers compete only within a cluster. So the cache limit becomes a sum over the clusters the process may use: \\(W\_{L3} = \\sum\_d \\min(C\_d,\\ 0.8 \\times L\_d / F)\\), over each cluster \\(d\\) with \\(C\_d\\) cores and an L3 of \\(L\_d\\).
 
@@ -1132,7 +1142,7 @@ The decoder will detect once, decide once and then decode. At startup it reads t
 
 Production changes only where the change was measured and reviewed. On the i9's own profile, seven workers past the cores and at 10 threads passed their review. At 8 threads and below, the change waits for the low-thread sweep. Everywhere else, today's behaviour stays until the model passes its transfer tests.
 
-The pull requests carrying the reviewed plan have not yet merged.
+The plan change for the i9 is in a pull request ([\#524](<https://github.com/lmmx/mibz2/pull/524>)) and has not yet merged.
 
 The chain, in short: a sweep found that fewer workers decode faster on the i9; the counters showed why, contention for the shared cache; a model of the cache, the processors and the cores reproduces the counts; and the model now has to predict machines and block sizes it hasn't seen. A count that is measured describes the machine it was measured on. A count that is modelled can be checked anywhere.
 
@@ -1144,6 +1154,8 @@ The chain, in short: a sweep found that fewer workers decode faster on the i9; t
 - Verdicts: [8 against 9 workers past the cores](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6931719814>), [7 against 8 past the cores, with counters](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6942020517>), [within the cores, with counters and the clock](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6943194948>)
 - [The confirming run, with held-out files](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6944271342>)
 - [The review of the three runs](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6943617731>), with the direct 7-against-9 contrast and the correction to the busy term
+- [The 12-byte rules at 7 workers: fewer misses, no faster](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6944610173>)
+- [What the contention cycles are: predictions frozen before the counters run](<https://github.com/lmmx/mibz2/blob/0e7c6888bcba2ce8dd3056c587a23be958d6de4f/docs/journal/monodromy/2026-11-17-contention-counters.md>)
 - [The simple candidate rule and how predictions are scored](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6943635048>)
 - The model: [its form and the `bzip2 -3` test](<https://github.com/lmmx/mibz2/blob/8afbb204008adbc0df7692e0132124d110bb21ed/docs/journal/monodromy/2026-11-17-workers-machine-model.md>), and [the CPU budget and the frozen predictions](<https://github.com/lmmx/mibz2/blob/8afbb204008adbc0df7692e0132124d110bb21ed/docs/journal/monodromy/2026-11-17-workers-cpu-budget.md>)
 
