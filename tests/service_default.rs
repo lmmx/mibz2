@@ -164,11 +164,15 @@ fn custom_windows_scale_to_the_teams() {
     }
 }
 
-/// The existing plan everywhere else, by the same dispatch: 8 and 9 threads on the target
-/// (workers), 10, 11 and 20 (from its 10 cores: seven lazy workers, the window scaled to
-/// them, `trims_to_seven`), 10 and 20 threads off it (a CPU of the same shape but another
-/// model, an unknown quota or a cpu.max limit, a smaller machine: workers, the window as
-/// asked), and a plan forced on the target
+/// The existing plan everywhere else, by the same dispatch: 4, 5, 7 and 9 threads on the
+/// target unpinned (workers, 4, 6 and 8 included), 10, 11 and 20 (from its 10 cores: seven
+/// lazy workers, the window scaled to them, `trims_to_seven`), pinned one CPU a core on
+/// exactly the threads asked (`Machine::pinned_i9`) three and five eager workers at 4 and
+/// 6, six lazy at 8 and seven at 10, the window scaled to them (`trimmed_workers`),
+/// and never under fewer or more cores than the threads asked or two CPUs of a core, 6, 8, 10
+/// and 20 threads off it (a CPU of the same shape but another model, an unknown quota or a
+/// cpu.max limit, a smaller machine: workers, the window as asked), and a plan forced on
+/// the target
 #[test]
 fn the_existing_plan_otherwise() {
     if !supported() {
@@ -180,14 +184,22 @@ fn the_existing_plan_otherwise() {
     let i9 = Machine::service_target();
     let mut same_shape = i9.clone();
     same_shape.target.as_mut().unwrap().cpu = ("GenuineIntel".into(), 6, 151);
+    same_shape.machine.as_mut().unwrap().cpu = ("GenuineIntel".into(), 6, 151);
     let small = Machine {
         phys: Some(4),
         target: None,
+        machine: None,
         ..i9.clone()
     };
     let unknown_quota = Machine {
         quota: mibz2::parallel::Quota::Unknown,
         ..i9.clone()
+    };
+    // CPUs 0 to n-1 and their SMT siblings: n cores, 2n CPUs
+    let two_a_core = |n: usize| {
+        let mut m = Machine::pinned_i9(n);
+        m.target.as_mut().unwrap().logical = 2 * n;
+        m
     };
     let limited = Machine {
         quota: mibz2::parallel::Quota::Cpus(20.0),
@@ -195,18 +207,47 @@ fn the_existing_plan_otherwise() {
     };
     // (machine, threads, pipelined, decoding threads, the window scaled to them)
     let cases = [
+        (i9.clone(), 4, false, 4, false),
+        (i9.clone(), 5, false, 5, false),
+        // unpinned at 4, 6 and 8: master's (`bench-unpinned`, LOG 6949008682)
+        (i9.clone(), 6, false, 6, false),
+        (i9.clone(), 7, false, 7, false),
         (i9.clone(), 8, false, 8, false),
         (i9.clone(), 9, false, 9, false),
         (i9.clone(), 10, false, 7, true),
         (i9.clone(), 11, false, 7, true),
         (i9.clone(), 20, false, 7, true),
+        (limited.clone(), 6, false, 6, false),
+        (limited.clone(), 8, false, 8, false),
         (limited.clone(), 10, false, 10, false),
         (limited, 20, false, 10, false),
+        (same_shape.clone(), 6, false, 6, false),
+        (same_shape.clone(), 8, false, 8, false),
         (same_shape.clone(), 10, false, 10, false),
         (same_shape, 20, false, 10, false),
         (unknown_quota.clone(), 10, false, 10, false),
         (unknown_quota, 20, false, 10, false),
         (small, 10, false, 10, false),
+        // pinned one CPU a core on exactly the threads asked, as the sweeps measured: the
+        // machine is the i9's whatever the mask, so the cells trim (eager 3/12 at 4, eager
+        // 5/20 at 6, lazy 6/24 at 8, lazy 7/28 at 10)
+        (Machine::pinned_i9(4), 4, false, 3, true),
+        (Machine::pinned_i9(6), 6, false, 5, true),
+        // one CPU a core on more cores than the threads asked: never trimmed
+        (Machine::pinned_i9(8), 4, false, 4, false),
+        (Machine::pinned_i9(8), 6, false, 6, false),
+        (Machine::pinned_i9(10), 8, false, 8, false),
+        (Machine::pinned_i9(8), 8, false, 6, true),
+        (Machine::pinned_i9(10), 10, false, 7, true),
+        (Machine::pinned_i9(7), 7, false, 7, false),
+        // fewer cores than the threads asked: never trimmed
+        (Machine::pinned_i9(4), 6, false, 6, false),
+        (Machine::pinned_i9(4), 8, false, 8, false),
+        (Machine::pinned_i9(10), 12, false, 10, false),
+        // two CPUs of a core ({0,10,1,11}; {0-3,10-13}; {0-4,10-14}): never trimmed
+        (two_a_core(2), 4, false, 4, false),
+        (two_a_core(4), 8, false, 8, false),
+        (two_a_core(5), 10, false, 10, false),
     ];
     for (m, t, pipelined, threads, scaled) in cases {
         for e in ENTRIES {

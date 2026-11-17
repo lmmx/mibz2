@@ -7,7 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4](https://github.com/lmmx/mibz2/compare/v0.5.3...v0.5.4) - 2026-11-17
+
+### <!-- 3 -->Performance
+
+- *(plan)* read the machine once a process ([#545](https://github.com/lmmx/mibz2/pull/545))
+- *(plan)* on the measured i9, six lazy workers at 8 threads asked and five at 6 ([#537](https://github.com/lmmx/mibz2/pull/537))
+
+### <!-- 9 -->Other
+
+- Release scaling: 0.5.3 against 0.5.2 on the i9; 0.5.3's notes and attribution row ([#544](https://github.com/lmmx/mibz2/pull/544))
+
+### <!-- 3 -->Performance
+
+- *(plan)* the machine read once a process: the machine-wide facts (the L3, cpuinfo's CPU identities and the topology of every CPU present and online) are cached on first use, and the affinity and cgroup quota are read only where those facts admit the measured i9. This fixes #537's per-decoder sysfs and cpuinfo reads at 4, 6 and 8 threads (0.5 to 1 ms a default decoder on a 4-CPU runner); every plan and cell is unchanged
+- *(plan)* on the measured i9, the trimmed workers by mode. **Pinned** (one CPU on each of exactly the threads asked, no two on a core, as every sweep measured): lazy 7/28 at 10 threads (0.881 to 0.889 of lazy 10/40), lazy 6/24 at 8 (0.925 of lazy 8/32), eager 5/20 at 6 (0.938 of eager 6/24) and eager 3/12 at 4 (0.959 of eager 4/16); the 10-thread cell now fires pinned to CPUs 0-9, where 0.5.3 declined it (release-scaling/run-20261117T111525Z built 10 workers there). **Unpinned** (the whole machine): lazy 7/28 from 10 threads, as in 0.5.3 and now measured unpinned at 0.873 [0.866, 0.880] at 10; nothing below 10. The low-count gains are a pinned scheduling effect (a worker fewer frees a core for the front end): unpinned, the 8-, 6- and 4-thread trims took 1.00, 1.01 and 1.21 of master's wall. **Anything else** (another mask, such as two CPUs of a core or more cores than threads; any cpu.max quota; another machine) is unchanged. The machine is recognised from every CPU present and online, not from this process's affinity; the service core's predicate still reads the affinity. Verdicts #145 LOGs 6945639925, 6947274621 and 6949008682; admitted by the Researcher's REVIEWs 6946555118, 6947387421 and 6948628221
+
 ## [0.5.3](https://github.com/lmmx/mibz2/compare/v0.5.2...v0.5.3) - 2026-11-17
+
+A plan release: on the measured i9, from 10 threads asked, the decoder runs seven lazy workers
+with 28 blocks in flight. Every other machine and thread count is unchanged.
+
+- **Seven lazy workers from 10 threads asked** (#524). It applies only on the measured profile
+  (the i9-10900K: 10 cores, 20 CPUs, a 20 MiB L3, no cpu.max limit), in place of 9 workers
+  with 36 blocks past the cores and 10 with 40 at exactly 10. On Wikidata ×4, its held-out
+  confirmation run (workers-confirm/run-20261117T092105Z) had wall time 0.921, 0.930 and 0.923
+  of 0.5.2's plan at 12, 16 and 20 threads and 0.881 at 10, with peak memory 0.73–0.81. The
+  text and records guards showed no loss.
+- **Release scaling, 0.5.3 against 0.5.2 on the i9** (release-scaling/run-20261117T111525Z):
+  0.5.2 takes 1.069 [1.044, 1.095], 1.067 [1.028, 1.107] and 1.075 [1.046, 1.104] of 0.5.3's
+  wall time at 12, 16 and 20 threads, with 29–33% more CPU and a peak RSS of 166–170 MB
+  against 0.5.3's 129–133 MB. At 1–8 threads the two are level (0.988–1.002, every interval
+  spanning 1).
+- **That run's 10-thread row doesn't measure the trim.** It pinned the 10-thread cells to
+  CPUs 0–9, and 0.5.3 recognised the machine through the process's affinity, so pinned it
+  declined the trim and built 10 workers (0.5.2 over 0.5.3: 0.984 [0.957, 1.011]). Unpinned,
+  the 10-thread trim was later measured at 0.873 [0.866, 0.880] of 10 workers
+  (unpinned/run-20261117T130353Z, #145 LOG 6949008682). The pinned case is fixed under
+  [Unreleased] (#537).
+- **Team threshold (RELEASING §5a), unchanged** (crossover/run-20261117T112620Z, #145 LOG
+  6947191226). Neither teams nor one block a thread beat the shipped plan at any count from 4
+  to 20. Teams are slower at every count; one block a thread is level at 4–10 threads and
+  20–43% slower at 12–20.
 
 ### <!-- 3 -->Performance
 
@@ -22,10 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - modelling the cache to rightsize workers ([#527](https://github.com/lmmx/mibz2/pull/527))
 - Release scaling: 0.5.2 against 0.5.1 on the i9; 0.5.2's notes and attribution row ([#511](https://github.com/lmmx/mibz2/pull/511))
-
-### <!-- 3 -->Performance
-
-- *(plan)* on the measured i9, seven lazy workers from 10 threads asked, with the window sized to them ([#524](https://github.com/lmmx/mibz2/pull/524))
 
 ## [0.5.2](https://github.com/lmmx/mibz2/compare/v0.5.1...v0.5.2) - 2026-11-16
 

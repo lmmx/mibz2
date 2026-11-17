@@ -7,6 +7,9 @@
 #
 # recipe                       branch                    what it measures
 bench-miss-cost              bench/miss-cost           contention counters at 10 threads, W = 10/9/8/7, THP arm and load-latency sampling (#529; MONODROMY record 47 frozen before the data)
-bench-release-scaling        master                    0.5.3 against 0.5.2 on the i9 (RELEASING §5), at the v0.5.3 tag commit 77fa4cd3
-bench-crossover              master                    The team threshold after #524's trim to seven (RELEASING §5a), at v0.5.3's commit 77fa4cd3
+bench-release-scaling        master                    0.5.4 against 0.5.3 on the i9 (RELEASING §5), at the v0.5.4 tag commit d27b6e7f
+bench-crossover              master                    The team threshold after #537's trims by mode (RELEASING §5a), at v0.5.4's commit d27b6e7f
 bench-eager-trim             bench/eager-trim          eager against lazy at the trimmed counts: 6, 4 and 10 threads (#533; MONODROMY record 49 frozen before the data; docs/journal/2026-11-17-eager-trim.md)
+bench-fused                  perf/fused-finish         the CRC folded into RLE1 (#535): 10 threads (both arms 10/40, pinned) and 12 threads (7/28); adoption registration docs/journal/2026-11-17-fused-finish-registration.md, Researcher PROCEED 6947023492
+bench-knee                   bench/knee                diagnostic of the 8–20 thread plateau: DRAM bytes against a measured ceiling, worker idle by cause, fixed costs (#541; docs/journal/2026-11-17-knee.md frozen before the data; decides nothing in production)
+bench-unpinned               bench/unpinned            the trims unpinned on all 20 CPUs at 10, 8, 6 and 4 threads (#539; docs/journal/2026-11-17-unpinned.md, Researcher PROCEED 6948628221 after its correction; no repeat on a non-ADOPTS)
