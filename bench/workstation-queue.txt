@@ -6,5 +6,5 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-workers-confirm        bench/workers-confirm     7/28 past the cores and at 10, 6/24 at 8, against production, with held-out records and text at -1 (#520, stacked on #515)
-bench-w12-at-7               bench/w12-at-7            W12 against W16 at 7/28 past the cores, 9/36 as context (#519; combines #506 via #517 and #514)
+bench-workers-level3         bench/workers-level3      W = 10/9/8/7/6/4 lazy at 10 threads on Wikidata recompressed at -3 (#526): the transfer test of MONODROMY record 45
+bench-workers-sweep-low      bench/workers-sweep-low   lazy workers at 8 (6, 5), 6 (6 control, 5, 4) and 4 (4 control, 3, 2) threads, with per-thread CPU (#521; MONODROMY records 44 and 46, and LOG 6943635048, frozen before the data)
