@@ -1977,8 +1977,10 @@ bench-workers-at-cores COPIES="4" ROUNDS="10" REPS="10":
 # decides nothing, for MONODROMY's record 44: at each count, every arm judged there (and 3/12 at
 # 6), cycles, ref-cycles, instructions and L2 misses a byte of output and a busy share a worker
 # from task-clock; at 6 threads also LLC load misses a byte (`bench/counters.py --groups`), each
-# event kept only if `perf list` names it, if `kernel.perf_event_paranoid` is 1 or less. ROUNDS
-# and REPS are 8 and 6 (not #515's 10 and 10), to keep the run near 25 minutes on the i9.
+# event kept only if `perf list` names it, if `kernel.perf_event_paranoid` is 1 or less; and,
+# for record 46, the workers' and non-workers' CPU from the judged records' per-thread samples
+# (`bench/thread_split.py`), reported, not judged. ROUNDS and REPS are 8 and 6 (not #515's 10
+# and 10), to keep the run near 25 minutes on the i9.
 bench-workers-sweep-low COPIES="4" ROUNDS="8" REPS="6":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -2035,6 +2037,10 @@ bench-workers-sweep-low COPIES="4" ROUNDS="8" REPS="6":
       --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads "$hold_max" \
       | tee "$O/verdict.txt" \
       || echo "bench-workers-sweep-low: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # reported, not judged (MONODROMY's record 46): from the judged records' per-thread samples,
+    # each arm's workers' busy share and its non-workers' CPU over wall, by count
+    python3 bench/thread_split.py "$O/judged.jsonl" --workers mibz2=T | tee "$O/thread-split.txt" \
+      || echo "bench-workers-sweep-low: the thread split is VOID (thread-split.txt says why); the verdict stands"
     # the diagnostic (decides nothing): skipped, and said so, where perf cannot count; an event
     # `perf list` does not name is dropped, and said so
     paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)

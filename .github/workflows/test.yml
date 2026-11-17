@@ -81,6 +81,10 @@ jobs:
       # child: a complete run read, and every defect leaves no report
       - name: The counters reader (stub perf)
         run: python3 bench/test_counters.py
+      # the workers' and non-workers' CPU from the judged records' per-thread samples
+      # (`bench/thread_split.py`; `just bench-workers-sweep-low`), reported and not judged
+      - name: The thread split reader (synthetic records)
+        run: python3 bench/test_thread_split.py
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the

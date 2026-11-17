@@ -89,6 +89,18 @@ For MONODROMY's record 44 (below), which needs cycles a byte and the busy share 
 
 Nothing is multiplexed. An event `perf list` does not name is dropped and said so; the diagnostic is skipped and says so without perf or with `kernel.perf_event_paranoid` above 1; a count's report is VOID on #515's conditions, and the others stand. Each count's report (`counters-T.txt`) gives each arm's median per byte, each arm over production, and the IPC, clock and busy share. It decides nothing; the verdict stands whatever it reads. Production against its lazy control at 6 and 4 is the kernel's counter difference at equal W. `bench/test_counters.py` (CI, 15 checks: #515's 14 and 1 for this run) checks the busy share at 4 threads for W = 4 to 2 with one group and production given 4 workers.
 
+## The thread split (reported, not judged)
+
+For MONODROMY's record 46 (LOG 6943777329 on #145): worker CPU and non-worker CPU separately, for every arm at every count. The judged records already carry what it needs, so it costs no run time. Each `ab run` record has `wall`, `cpu` (the child's total) and `thread_cpu`, each busy thread's CPU seconds sampled from /proc every 10 ms (the per-thread samples the Researcher read in REVIEW 6943617731). `bench/thread_split.py` reads them after the verdict. For each corpus, count and arm, it gives the median over the rounds of:
+- **the workers' busy share:** the CPU of the threads named `mibz2-N` (the decoder's workers) over (wall × W). W is read from an occupancy arm's name, and is the count for production (`--workers mibz2=T`).
+- **the non-workers' CPU over wall:** the total less the workers'. That covers the scanner, the reader, the main thread reading and hashing the output, threads below the sample's 2% floor, and the unattributed shortfall. The named non-worker threads' part is printed beside it.
+
+It decides nothing, and the rule above is unchanged. `bench/test_thread_split.py` (CI, 4 checks) covers:
+- production's and an occupancy arm's split;
+- production without its W given;
+- a record without samples, which is left out;
+- a malformed `--workers`, which is VOID.
+
 ## Predictions, scored after the run, not used by the rule
 
 - **MONODROMY's record 44** on PR #497 (`docs/journal/monodromy/2026-11-17-workers-low-threads.md`, at abf03d26; LOG 6943291920 on #145), frozen before this run's data, is the prediction this run scores. It reads the residual of record 43 as the workers' busy share (wall ∝ c(W) / (W · u)), with c(W) = 0.423 + 0.00676 W² from W = 6 to 9, calibrated (×0.65 on the gains) on #515's two points. It predicts **the best W is 6 at 8 threads, 5 at 6 and 4 at 4**, against the 0.7 × T rule's 6, 4 and 3:
