@@ -1,0 +1,52 @@
+[
+  {
+    "threads": 10,
+    "arm": "mibz2-occ-7-28",
+    "sigma": 0.007484168690745248,
+    "halfwidth95_log": 0.006256921606469071,
+    "observed_gain_to_cross_001": 0.007901358243296519,
+    "power_at_2pct_alpha001": 0.9998414202008361,
+    "power_at_2pct_alpha005": 0.9999998296458275,
+    "gain_for_80pct_alpha001": 0.010422541099538487
+  },
+  {
+    "threads": 6,
+    "arm": "mibz2-oce-5-20",
+    "sigma": 0.012772116061692054,
+    "halfwidth95_log": 0.01067775624105743,
+    "observed_gain_to_cross_001": 0.013446403321780154,
+    "power_at_2pct_alpha001": 0.8918833923815994,
+    "power_at_2pct_alpha005": 0.9906208817141453,
+    "gain_for_80pct_alpha001": 0.01772104086858251
+  },
+  {
+    "threads": 4,
+    "arm": "mibz2-oce-3-12",
+    "sigma": 0.01639844039187839,
+    "halfwidth95_log": 0.013709439249708055,
+    "observed_gain_to_cross_001": 0.017231113007125543,
+    "power_at_2pct_alpha001": 0.6821995310313738,
+    "power_at_2pct_alpha005": 0.9303378736497697,
+    "gain_for_80pct_alpha001": 0.022695006211273683
+  },
+  {
+    "threads": 6,
+    "arm": "mibz2-occ-5-20",
+    "sigma": 0.019596974025261987,
+    "halfwidth95_log": 0.016383480285753035,
+    "observed_gain_to_cross_001": 0.020557294678806626,
+    "power_at_2pct_alpha001": 0.5117413812129895,
+    "power_at_2pct_alpha005": 0.8350269674171187,
+    "gain_for_80pct_alpha001": 0.027061292915294223
+  },
+  {
+    "threads": 8,
+    "arm": "mibz2-occ-6-24",
+    "sigma": 0.009691883737499065,
+    "halfwidth95_log": 0.008102617574551978,
+    "observed_gain_to_cross_001": 0.01022019116761852,
+    "power_at_2pct_alpha001": 0.9896204291906422,
+    "power_at_2pct_alpha005": 0.9998367758488628,
+    "gain_for_80pct_alpha001": 0.013476231678356192
+  }
+]
