@@ -3911,6 +3911,50 @@ mod plan_tests {
         }
     }
 
+    /// `just bench-workers-sweep-low`: on the i9 at 4, 6 and 8 threads asked, production's
+    /// decoder is `planned(Workers(T), 4T)` (one worker a thread, the window as asked, not
+    /// the service core): lazy at 8, but a slot for every letter (`Cells`, eager) at 4 and 6,
+    /// below `LAZY_FROM_THREADS`. The lazy control at T, `workers(T, 4T, .., true)`, differs
+    /// from it there in the kernel alone; and each occupancy arm from 2 to 6 workers at 4
+    /// blocks a worker is lazy with its own worker count and window
+    #[test]
+    fn the_occupancy_arms_low() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let lazy = std::any::type_name::<crate::bwt::LazyCells>();
+        let eager = std::any::type_name::<crate::bwt::Cells>();
+        let shape = |d: &StreamDecoder| (d.kernel, d.threads, d.window());
+        for t in [4, 6, 8] {
+            let prod = with_machine(Machine::service_target(), || {
+                assert_eq!(Plan::for_threads(t), Plan::Workers(t), "{t}");
+                StreamDecoder::new(t, 4 * t, both)
+            });
+            assert!(!prod.is_service(), "{t}");
+            let kernel = if t >= LAZY_FROM_THREADS { lazy } else { eager };
+            assert_eq!(prod.is_lazy(), t >= LAZY_FROM_THREADS, "{t}");
+            assert_eq!(shape(&prod), (kernel, t, 4 * t as u64), "{t}");
+            let plan = StreamDecoder::planned(Plan::Workers(t), 4 * t, both);
+            assert_eq!(shape(&prod), shape(&plan), "{t}");
+            // the lazy control: production's workers and window, lazy letters
+            let control = StreamDecoder::workers(t, 4 * t, both, true);
+            assert_eq!(shape(&control), (lazy, t, 4 * t as u64), "{t}");
+            for d in [prod, plan, control] {
+                d.close();
+            }
+        }
+        for n in 2..=6 {
+            let arm = StreamDecoder::workers(n, 4 * n, both, true);
+            assert!(arm.is_lazy(), "{n}");
+            assert_eq!(shape(&arm), (lazy, n, 4 * n as u64), "{n}");
+            arm.close();
+        }
+    }
+
     #[test]
     fn the_trim_past_the_cores() {
         let both = Kernels {

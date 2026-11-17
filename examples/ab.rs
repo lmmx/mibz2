@@ -109,7 +109,7 @@
 //!   blocks in flight whatever THREADS, `BzReader::parallel_workers(N, S, lazy)`: from
 //!   `LAZY_FROM_THREADS` workers the very call `parallel_planned(Plan::Workers(N), S)` makes,
 //!   and below it the lazy letters held; `just bench-workers-window`, `bench-workers-low`,
-//!   `bench-workers-at-cores`);
+//!   `bench-workers-at-cores`, `bench-workers-sweep-low`);
 //! - `mibz2-pipe2`, `-pipe3`, `-pipe4` (research: the pipelined team,
 //!   `BzReader::parallel_pipelined`, its leader's RLE1, CRC and next move-to-front overlapped
 //!   with its helpers' build and walk: THREADS / K teams of K in the teamK arms' window);
@@ -842,6 +842,11 @@ mod occ_arm_tests {
         assert_eq!(occ_arm("mibz2-occ-9-18"), Some((9, 18)));
         assert_eq!(occ_arm("mibz2-occ-7-28"), Some((7, 28)));
         assert_eq!(occ_arm("mibz2-occ-6-24"), Some((6, 24)));
+        // `just bench-workers-sweep-low`'s lower counts
+        assert_eq!(occ_arm("mibz2-occ-5-20"), Some((5, 20)));
+        assert_eq!(occ_arm("mibz2-occ-4-16"), Some((4, 16)));
+        assert_eq!(occ_arm("mibz2-occ-3-12"), Some((3, 12)));
+        assert_eq!(occ_arm("mibz2-occ-2-8"), Some((2, 8)));
         for bad in [
             "mibz2-occ-9",
             "mibz2-occ-0-36",

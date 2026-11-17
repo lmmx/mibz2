@@ -202,6 +202,31 @@ def main():
     ok = code == 1 and "VOID" in out and "not ARM=N" in out
     results.append(ok)
     print(f"{'ok  ' if ok else 'FAIL'} --workers malformed: exit {code}, VOID")
+    # the sweep's diagnostic (`just bench-workers-sweep-low`), as at 4 threads: one group (the
+    # clock, cycles and task-clock), production given 4 workers, 4/16 to 2/8 read from their names
+    swp_group = "cycles,ref-cycles,instructions,l2_rqsts.miss,task-clock"
+    swp_cands = ["mibz2-occ-4-16", "mibz2-occ-3-12", "mibz2-occ-2-8"]
+    swp_file = d / "swp.jsonl"
+    subprocess.run([sys.executable, str(HERE / "counters.py"), "run", "--ab", str(d / "ab"),
+                    *sum((["--arm", x] for x in ["mibz2", *swp_cands]), []), "--threads", "4", "--reps", "2",
+                    "--file", "x.bz2", "--out", str(swp_file), "--groups", swp_group],
+                   env=e, capture_output=True, check=True)
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        code = counters.main(["counters.py", "report", str(swp_file), "--ref", "mibz2",
+                              *sum((["--cand", c] for c in swp_cands), []), "--threads", "4", "--reps", "2",
+                              "--groups", swp_group, "--workers", "mibz2=4"])
+    out = buf.getvalue()
+    # task-clock 4000.25 msec over the wall 0.5 s: 8.0 CPUs busy, over W
+    want = ["mibz2: IPC 3.000; cycles over ref-cycles 0.500; busy share 2.000 a worker (task-clock over wall x 4)",
+            "mibz2-occ-3-12: IPC 3.000; cycles over ref-cycles 0.500; busy share 2.667 a worker",
+            "mibz2-occ-2-8: IPC 3.000; cycles over ref-cycles 0.500; busy share 4.000 a worker"]
+    ok = code == 0 and all(w in out for w in want) and "LLC-load-misses" not in out
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} the sweep's busy share at 4 threads, W 4 to 2, one group: exit {code}, "
+          + ", ".join(f"{'found' if w in out else 'missing'} {w!r}" for w in want))
+    if not ok:
+        print(out)
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

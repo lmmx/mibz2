@@ -8,7 +8,7 @@ correction, #145 REVIEW 6921090225), for `just bench-cores-less-one` (#481) and 
     two_arm.py RUNS.jsonl --ref ARM --cand ARM [--cand ARM ...] --main CORPUS --guard CORPUS
                --judged 12,16,20 --controls 9,10 --env ENV.json [--rounds 10]
                [--cores 10 --cpus 20] [--hold-max-threads 9] [--context ARM ...]
-               [--judge-at ARM=COUNTS ...]
+               [--judge-at ARM=COUNTS ... [--sparse]]
 
 **Several candidates** (`--cand` repeated; `just bench-workers-window`): each is read against the one
 reference as below, but Holm's family is every candidate's main-corpus judged cells together, and
@@ -37,6 +37,14 @@ still one: every candidate's main-corpus cell at every count it is judged at, to
 cell at a count where it is not judged (a candidate's elsewhere, and every context arm's) is
 reported beside them, not judged. A `--judge-at` arm that is not a candidate, a count that is not
 judged, a candidate without one, or a judged count with no candidate is VOID.
+
+**A sparse roster** (`--sparse`, with `--judge-at` and no control counts only; off by default,
+and then nothing here changes; `just bench-workers-sweep-low`): the arms are not crossed with the
+counts. At each judged count the roster is the reference, the candidates judged there and every
+context arm, and no other arm: a candidate's record at a count it is not judged at is not in the
+roster (VOID), and the report has no cell for it there. The run makes one `ab run` a count, each
+with that count's arms alone, so no time goes on cells that judge nothing (2 workers at 8
+threads, say).
 
 **Arms.** A record's arm is canonical: `NAME` for this build's harness, and `NAME@build-X`
 for another build's (`ab run`'s `NAME@EXE` arm, EXE under a directory `build-X`).
@@ -353,7 +361,7 @@ def by_count(a, ref, cands, context, judge_at, judged, corpora, cell, peak):
                 print(f"    {corpus}{' (gain family)' if corpus == a.main else ' (loss and memory guard)'}: "
                       f"{g:.4f} [{lo:.4f}, {hi:.4f}] {steps[(cand, t, corpus)]}"
                       + (f"; p {p:.2e}" if corpus == a.main else "") + f"; memory {mem[(cand, t, corpus)]:.3f}")
-        others = [arm for arm in (*cands, *context) if arm not in here[t]]
+        others = [arm for arm in (*([] if a.sparse else cands), *context) if arm not in here[t]]
         if others:
             print(f"  Context at {t} threads, reported and not judged:")
             for arm in others:
@@ -413,6 +421,9 @@ def main(argv):
                     help="an arm checked with the run and reported over the reference, not judged")
     ap.add_argument("--judge-at", action="append", default=[], metavar="ARM=COUNTS",
                     help="a candidate judged at these counts alone; with any, each judged count is read alone")
+    ap.add_argument("--sparse", action="store_true",
+                    help="with --judge-at: each count's roster is the reference, its judged candidates and "
+                         "the context arms alone")
     a = ap.parse_args(argv[1:])
     judged = [int(t) for t in a.judged.split(",")]
     controls = [int(t) for t in a.controls.split(",") if t]
@@ -425,14 +436,20 @@ def main(argv):
         errors.append("the judged and control counts overlap, or two arms are one")
     judge_at = parse_judge_at(a.judge_at, cands, judged, errors)
     corpora = [a.main, a.guard]
-    roster = {(c, arm, t, i) for c in corpora for arm in arms for t in judged + controls for i in range(R)}
+    if a.sparse and (not judge_at or controls):
+        errors.append("--sparse: with --judge-at and no control counts only")
+    if a.sparse and judge_at:
+        here = {t: [ref, *(c for c in cands if t in judge_at.get(c, ())), *context] for t in judged}
+        roster = {(c, arm, t, i) for c in corpora for t in judged for arm in here[t] for i in range(R)}
+    else:
+        roster = {(c, arm, t, i) for c in corpora for arm in arms for t in judged + controls for i in range(R)}
     core_of = topology(a.env, a.cores, a.cpus, errors)
     rows = load(a.runs, roster, errors, None if core_of is None else (core_of, a.cores, a.hold_max_threads))
     print(f"records {len(rows)}; roster {len(roster)} ({ref} and {' and '.join(cands)}"
           + (f"; context {', '.join(context)}" if context else "") + f"; {a.main} and {a.guard}; "
           f"judged {judged}, controls {controls}; {R} rounds)"
           + (("; judged by count: " + ", ".join(f"{c} at {sorted(ts)}" for c, ts in judge_at.items()))
-             if judge_at else ""))
+             if judge_at else "") + ("; sparse: each count's own arms alone" if a.sparse else ""))
 
     def cell(corpus, t, cand):
         return [math.log(rows[(corpus, cand, t, i)]["wall"] / rows[(corpus, ref, t, i)]["wall"]) for i in range(R)]
