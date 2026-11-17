@@ -2178,10 +2178,12 @@
     },
     {
       "trigger_comment_id": 6946571935,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "report_path": "state/reports/blog-r2-6946571935/report.md",
-      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_commit": "e9a2943cf4a531c572c3f82036b165abf44e04ef",
+      "disposition": "REVISE article: shipped status, SMT/domain caps, fit normalisation, stale model/counter scores and causal upper-bound claims; measured plan gains stand."
     }
   ],
   "active_delegations": [],
