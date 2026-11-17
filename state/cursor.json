@@ -2165,10 +2165,12 @@
     },
     {
       "trigger_comment_id": 6946449283,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "report_path": "state/reports/low-plan-6946449283/report.md",
-      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_commit": "ff323b52f80580a86b33bd7960c5ae56499b77ee",
+      "disposition": "PROCEED exact lazy6/24 at8 and lazy5/20 at6 through scoped adoption; no HOLD for predeclared combined kernel/count change. Eager trim is a separate alternative."
     }
   ],
   "active_delegations": [],
