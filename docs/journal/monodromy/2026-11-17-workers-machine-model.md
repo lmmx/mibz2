@@ -152,11 +152,12 @@ prediction is the same (no trim), but it cannot pin k.
 
 **The formula,** for any runner: read C, N, L and SMT from `lscpu`, then
 
-  W\* = argmax over W ≤ N of Y(W; C, σ) · (1 − 0.18 e^(−(N−W)/1.3·c)) / (1 + 1.60 (W · F / L)²)
+  W\* = argmax over W ≤ N of Y(W; C, σ) · (1 − 0.18 · c · e^(−(N−W)/1.3)) / (1 + 1.60 (W · F / L)²)
 
 - *σ:* 1.24 to 1.38.
-- *c:* scales the busy deficit to the runner. Its decoding shares fit c ≈ 0.55, which gives
-  deficits 0.10 and 0.04, against the i9's 0.18 and 0.036.
+- *c:* scales the busy deficit to the machine: 1 on the i9 (pinned to T CPUs). The runner's
+  decoding shares fit c ≈ 0.55, which gives deficits 0.10 at h = 0 and 0.02 at h = 2, against the
+  i9's 0.18 and 0.036.
 
 **For GitHub's ubuntu-latest:** 4 vCPUs on 2 cores (C = 2, N = 4), L = 32 MiB as lscpu reports for
 the 7763, 9V74 and 9V45.
