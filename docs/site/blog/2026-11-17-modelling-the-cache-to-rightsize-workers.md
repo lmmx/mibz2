@@ -1,6 +1,6 @@
 ---
-title: "A worker count that sizes itself to the machine"
-image: assets/social/blog-2026-11-17-worker-count-sized-to-the-machine.png
+title: "Modelling the cache to rightsize workers"
+image: assets/social/blog-2026-11-17-modelling-the-cache-to-rightsize-workers.png
 description: "Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share."
 ---
 
@@ -11,7 +11,7 @@ description: "Rather than re-measure every worker count whenever the decoder cha
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# A worker count that sizes itself to the machine
+# Modelling the cache to rightsize workers
 
 Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share.
 {: .post-dek }

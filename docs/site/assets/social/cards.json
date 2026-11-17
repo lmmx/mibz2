@@ -160,12 +160,12 @@
     "section": " · Research blog",
     "title": "Stop and walk: cutting a BWT inversion short and walking the rest"
   },
-  "assets/social/blog-2026-11-17-worker-count-sized-to-the-machine.png": {
+  "assets/social/blog-2026-11-17-modelling-the-cache-to-rightsize-workers.png": {
     "description": "Rather than re-measure every worker count whenever the decoder changes, mibz2 is learning to size its workers from the cache and cores they share.",
     "foot": "lmmx.github.io/mibz2 · 17 November 2026",
     "kind": "progress",
     "section": " · Research blog",
-    "title": "A worker count that sizes itself to the machine"
+    "title": "Modelling the cache to rightsize workers"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
