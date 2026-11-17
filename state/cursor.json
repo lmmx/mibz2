@@ -2217,10 +2217,12 @@
     },
     {
       "trigger_comment_id": 6948462696,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "report_path": "state/reports/unpinned-6948462696/report.md",
-      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_commit": "1a5515ce91cb482f11773965ca605e03a86237cb",
+      "disposition": "Targeted correction before launch: bound repeats, scope affinity admission, correct power/common-mode claims; then proceed unchanged five-cell eight-round experiment."
     }
   ],
   "active_delegations": [],
