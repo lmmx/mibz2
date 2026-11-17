@@ -82,6 +82,18 @@ Today's plan hard-codes the measured i9: a profile check (10 physical cores, a 2
 - **b:** the contention cost. The hypothesis to test is that b scales with the working set per worker over the L3 size, (footprint / L3)^k. The footprint is set by the block size and the kernel, and is about 2.1 MB for a Cells-lazy worker on a 900 kB block.
 - **busy(W):** the share of time left after the reader and scanner threads. It depends on T against the cores.
 
+**Reading the cache correctly.** Reading the cache is cheap: one sysfs read at startup, cached. Today's `l3_bytes()` reads `/sys/devices/system/cpu/cpu0/cache/index3/size`. That has two faults to fix before any model relies on it:
+- It assumes `index3` is the L3. It should find the index whose `level` is 3.
+- It reads one instance and ignores `shared_cpu_list`. On CPUs with several L3 domains (AMD's CCXs, or two sockets), workers compete within a domain, not across the total. The model needs the per-domain size and the number of domains the threads span.
+
+**A first candidate rule,** proposed on 17 November and checked against the data already in:
+- **The rule:** W_cache = min(cores, ⌊α·L3 / M_worker⌋), with α = 0.7 (the teams policy's budget) and M_worker ≈ 2 MB. On the i9 that gives 7.
+- **Where it fits:** past the cores (7, as measured) and at 10 threads (7, as measured).
+- **Where it misses:** at 8 threads it says 7, but 6 measured better (0.929 against 7's 0.975).
+- **What that means:** the cache budget alone is not enough, and the thread count matters too. The busy-share term, the reader and scanner competing for the T threads, is the candidate.
+- **What would fit all three:** W = min(W_cache, ≈ 0.7·T).
+- **What decides it:** the low-thread sweep (4, 6 and 8 threads, with 5 workers at 8) tests it, against MONODROMY's frozen record 44.
+
 **How the model is fitted and tested:**
 1. Fit a, b and k on the i9 from the sweep above. That is one machine at two block sizes: the -9 Wikidata and a -1 or -3 file, which varies the footprint.
 2. Predict W* on a second machine before measuring it. CI's GitHub runners (4 vCPUs on AMD EPYC, and the macOS runners) are free and differ in L3 size. Then measure with `bench-workers-sweep`. This is the transfer test, and its rule is posted before the data.
