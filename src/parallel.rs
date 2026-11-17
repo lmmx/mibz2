@@ -159,7 +159,9 @@ impl StreamDecoder {
     /// worker at 4 a thread asked): at 10 threads asked or more, where the plan is its ten
     /// lazy workers, `TRIMMED_WORKERS` (7), the very decoder `workers(7, 28, k, true)`
     /// builds; at exactly 8, 6 (`workers(6, 24, k, true)`); at exactly 6, 5 (`workers(5,
-    /// 20, k, true)`). A forced plan is never replaced by them either.
+    /// 20, k, true)`). Each only in an affinity it was measured in (`affinity_admits`):
+    /// pinned one CPU a core, or, from 10 threads alone, unpinned. A forced plan is never
+    /// replaced by them either.
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
         let threads = threads.max(1);
         let forced = FORCED.with(|c| c.get()).is_some();
@@ -2792,8 +2794,8 @@ pub const TRIMMED_WORKERS: usize = 7;
 /// on the profile its runs measured, at the thread counts they measured, and nowhere else.
 /// That is 10 threads asked or more, on the machine `service_target` admits, read as it
 /// reads it: the i9-10900K by vendor, family, model and name, 10 physical cores and 20 CPUs
-/// present and online (machine-wide, `measured_i9`; the affinity need only allow the threads
-/// asked, or every CPU, `affinity_admits`), a 20 MiB L3, no CPU quota, and the AVX2 and
+/// present and online (machine-wide, `measured_i9`; the affinity pinned one CPU a core on at
+/// least the threads asked, or every CPU, `affinity_admits`), a 20 MiB L3, no CPU quota, and the AVX2 and
 /// CLMUL kernels. Before, it read the CPUs in this process's affinity, so pinned to 0-9 (as
 /// `bench-workers-at-cores` measured 10 threads) it declined.
 /// It does not hold below 10 threads (the measured i9's cells at exactly 8 and 6 are
@@ -2850,10 +2852,12 @@ fn trim_cell(threads: usize, plan: Plan) -> Option<usize> {
 /// is on the measured i9 alone (`trims_to_seven`'s profile), at the counts measured:
 /// - 10 threads asked or more, where the plan is ten lazy workers: `TRIMMED_WORKERS` (7),
 ///   28 blocks at 4 a thread asked (`trims_to_seven`);
-/// - exactly 8, where the plan is eight lazy workers (lazy 8/32): `TRIMMED_AT_EIGHT` (6),
+/// - exactly 8, where the plan is eight lazy workers (lazy 8/32), pinned one CPU a core:
+///   `TRIMMED_AT_EIGHT` (6),
 ///   24 blocks. Lazy 6/24 took 0.925 [0.918, 0.933] of lazy 8/32's wall on the Wikidata
 ///   sample (text 0.998 [0.993, 1.004]; peak RSS 0.80);
-/// - exactly 6, where the plan is six eager workers (eager 6/24): `TRIMMED_AT_SIX` (5),
+/// - exactly 6, where the plan is six eager workers (eager 6/24), pinned one CPU a core:
+///   `TRIMMED_AT_SIX` (5),
 ///   lazy, 20 blocks. Lazy 5/20 took 0.962 [0.948, 0.977] of eager 6/24's wall (text
 ///   0.991 [0.980, 1.003]; peak RSS 0.82): one registered treatment, kernel and count
 ///   together.
@@ -2867,35 +2871,46 @@ fn trim_cell(threads: usize, plan: Plan) -> Option<usize> {
 /// `Plan::Workers(6)` or `Plan::Workers(5)` alone would not build (eager below
 /// `LAZY_FROM_THREADS`).
 ///
-/// The machine is read whatever this process's affinity (`measured_i9`, from `machine`), so
-/// the cells hold pinned to CPUs 0 to N-1, as every sweep measured them, and unpinned; the
-/// affinity must allow the threads asked (`affinity_admits`).
+/// The machine is read whatever this process's affinity (`measured_i9`, from `machine`), and
+/// the affinity must be one the cells were measured in (`affinity_admits`): pinned one CPU a
+/// core on at least the threads asked, as every sweep measured them, at every cell; or
+/// unpinned, from 10 threads alone (`unpinned_trims`) until `bench-unpinned` reports on 8
+/// and 6.
 pub fn trimmed_workers(threads: usize, plan: Plan, k: Kernels, m: &Machine) -> Option<usize> {
     let n = trim_cell(threads, plan)?;
     (measured_i9(k, m) && affinity_admits(threads, m)).then_some(n)
 }
 
-/// Whether this process's affinity (`target`) allows at least the threads asked, or, asked
-/// for more than the machine's CPUs, all of them: pinned to CPUs 0 to N-1 at N threads, or
-/// unpinned, as measured; never a mask narrower than that (8 threads on 4 CPUs), nor an
-/// affinity that can't be read
+/// Whether this process's affinity (`target`) is one the cells were measured in (#145,
+/// the Researcher's REVIEW 6947387421): pinned one CPU a core on at least the threads asked
+/// (`pinned_one_a_core`), or the whole machine (`whole_machine`) where an unpinned run
+/// measured the count (`unpinned_trims`). Never another mask (two CPUs of a core, fewer
+/// cores than threads), nor an affinity that can't be read
 fn affinity_admits(threads: usize, m: &Machine) -> bool {
-    let all = m.machine.as_ref().map_or(usize::MAX, |t| t.logical);
-    m.target
-        .as_ref()
-        .is_some_and(|t| t.logical >= threads.min(all))
+    pinned_one_a_core(threads, m) || (whole_machine(m) && unpinned_trims(threads))
 }
 
-/// Whether this process is pinned to exactly the threads asked, one CPU a core: the
-/// configuration each sweep's arms within the cores ran in (`taskset -c 0-(N-1)` on the
-/// i9). Unused by the default for now: should the unpinned 6- and 8-thread cells be refuted
-/// (#145 LOG 6946756938, `bench-unpinned`), `trimmed_workers` would require it for them, in
-/// one line: `&& (n == TRIMMED_WORKERS || one_cpu_a_core(threads, m))`.
-#[cfg_attr(not(test), allow(dead_code))]
-fn one_cpu_a_core(threads: usize, m: &Machine) -> bool {
+/// Whether this process's affinity is one CPU on each of at least `threads` distinct cores,
+/// no two of its CPUs sharing a core: pinned as every sweep pinned its arms within the
+/// cores (`taskset -c 0-(N-1)` on the i9, CPU c on core c % 10)
+fn pinned_one_a_core(threads: usize, m: &Machine) -> bool {
     m.target
         .as_ref()
-        .is_some_and(|t| t.logical == threads && t.phys == threads)
+        .is_some_and(|t| t.phys == t.logical && t.logical >= threads)
+}
+
+/// Whether this process may use the whole machine: its affinity's snapshot is the
+/// machine's, every CPU present and online (unpinned)
+fn whole_machine(m: &Machine) -> bool {
+    m.target.is_some() && m.target == m.machine
+}
+
+/// Whether the cells at `threads` hold unpinned (`whole_machine`): from 10 threads asked,
+/// as #524 measured them (12, 16 and 20 unpinned); not yet at 8 or 6, which were measured
+/// pinned alone. `bench-unpinned` (#145 LOG 6946756938) decides those: admitting them is
+/// this one line
+fn unpinned_trims(threads: usize) -> bool {
+    threads >= TEN_CORES.0
 }
 
 /// The measured i9's profile, whatever the thread count and this process's affinity: the
@@ -4385,13 +4400,20 @@ mod plan_tests {
                 want.close();
             }
         };
-        // the i9 itself, below 10 threads, but for the cells at exactly 8 and 6
-        // (`six_and_five_lazy_workers_on_the_i9`)
-        for t in [1, 2, 3, 4, 5, 7, 9] {
+        // the i9 itself, unpinned, below 10 threads (the cells at exactly 8 and 6 trim pinned
+        // alone until `bench-unpinned` reports: `pinned_or_unpinned_on_the_i9`)
+        for t in 1..=9 {
             same("the i9", &i9, t, both);
         }
         // master's plan there, by name: workers as asked, lazy from 8
-        for (t, lazy) in [(9, true), (7, false), (5, false), (4, false)] {
+        for (t, lazy) in [
+            (9, true),
+            (8, true),
+            (7, false),
+            (6, false),
+            (5, false),
+            (4, false),
+        ] {
             let dec = with_machine(i9.clone(), || StreamDecoder::new(t, 4 * t, both));
             assert_eq!(dec.is_lazy(), lazy, "{t}");
             assert_eq!((dec.threads(), dec.window()), (t, 4 * t as u64), "{t}");
@@ -4455,8 +4477,18 @@ mod plan_tests {
         let on = cfg!(all(target_os = "linux", target_arch = "x86_64"));
         let w = Plan::Workers;
         let cell = |t: usize, plan: Plan| trimmed_workers(t, plan, both, &i9);
-        assert_eq!(cell(8, w(8)), on.then_some(6));
-        assert_eq!(cell(6, w(6)), on.then_some(5));
+        // the low cells pinned one CPU a core (on 8, 6 or all 10 cores), not unpinned yet
+        let pin = |t: usize, plan: Plan, cores: usize| {
+            trimmed_workers(t, plan, both, &Machine::pinned_i9(cores))
+        };
+        for cores in [8, 9, 10] {
+            assert_eq!(pin(8, w(8), cores), on.then_some(6), "{cores}");
+        }
+        for cores in [6, 7, 8, 10] {
+            assert_eq!(pin(6, w(6), cores), on.then_some(5), "{cores}");
+        }
+        assert_eq!(cell(8, w(8)), None);
+        assert_eq!(cell(6, w(6)), None);
         for t in [10, 11, 12, 16, 20, 64] {
             assert_eq!(cell(t, w(10)), on.then_some(7), "{t}");
             assert_eq!(
@@ -4480,7 +4512,18 @@ mod plan_tests {
             (12, PIPELINED_PLAN),
         ] {
             assert_eq!(cell(t, plan), None, "{t} {plan:?}");
+            assert_eq!(pin(t, plan, 10), None, "{t} {plan:?}");
         }
+        for t in [0, 1, 2, 3, 4, 5, 7, 9] {
+            assert_eq!(pin(t, w(t), 10), None, "{t}");
+        }
+        let pinned = |m: &Machine, n: usize| {
+            let mut m = m.clone();
+            if let Some(t) = m.target.as_mut() {
+                (t.phys, t.logical) = (n, n);
+            }
+            m
+        };
         for k in [
             Kernels::scalar(),
             Kernels {
@@ -4493,18 +4536,25 @@ mod plan_tests {
             },
         ] {
             for t in [6, 8] {
-                assert_eq!(trimmed_workers(t, w(t), k, &i9), None, "{t} {k:?}");
+                assert_eq!(
+                    trimmed_workers(t, w(t), k, &pinned(&i9, t)),
+                    None,
+                    "{t} {k:?}"
+                );
             }
         }
+        // one fact off the profile, pinned as measured
         for (what, m) in near_misses() {
             for t in [6, 8] {
+                let m = pinned(&m, t);
                 assert_eq!(trimmed_workers(t, w(t), both, &m), None, "{what} at {t}");
             }
         }
     }
 
     /// The admitted low cells (#145, the Researcher's REVIEW 6946555118 on the verdict LOG
-    /// 6945639925): on the measured i9 at exactly 8 threads asked the default decoder is six
+    /// 6945639925): on the measured i9, pinned one CPU a core as measured
+    /// (`Machine::pinned_i9`), at exactly 8 threads asked the default decoder is six
     /// lazy workers with 24 blocks in flight, and at exactly 6 five lazy workers with 20, at
     /// 4 a thread asked, through each public entry point: the very decoders the bench arms
     /// measured, `ab`'s `mibz2-occ-6-24` and `mibz2-occ-5-20`
@@ -4521,10 +4571,11 @@ mod plan_tests {
             avx2: true,
             clmul: true,
         };
-        let i9 = Machine::service_target();
         // the trap: below 8 workers a plan's own kernel is a slot for every letter, unchanged
         assert_eq!(LAZY_FROM_THREADS, 8);
         for (t, n) in [(8, TRIMMED_AT_EIGHT), (6, TRIMMED_AT_SIX)] {
+            // pinned one CPU a core, as measured (unpinned: `pinned_or_unpinned_on_the_i9`)
+            let i9 = Machine::pinned_i9(t);
             assert!(!Plan::Workers(n).lazy(), "{n}");
             let cells = StreamDecoder::planned(Plan::Workers(n), 4 * n, both);
             assert!(!cells.is_lazy(), "{n}");
@@ -4608,7 +4659,12 @@ mod plan_tests {
             // one fact off the profile, or other kernels: master's plan, t workers
             let mut off: Vec<(String, Machine, Kernels)> = near_misses()
                 .into_iter()
-                .map(|(w, m)| (w.to_string(), m, both))
+                .map(|(w, mut m)| {
+                    if let Some(p) = m.target.as_mut() {
+                        (p.phys, p.logical) = (t, t);
+                    }
+                    (w.to_string(), m, both)
+                })
                 .collect();
             off.push(("scalar".into(), i9.clone(), Kernels::scalar()));
             for (what, m, k) in off {
@@ -4625,13 +4681,18 @@ mod plan_tests {
         }
     }
 
-    /// Pinned or not (#145, the release-scaling run's finding; `Machine::pinned_i9`): the
-    /// cells read the machine, not the affinity, so pinned to CPUs 0 to N-1 at N threads, as
-    /// every sweep measured them, they hold as unpinned: lazy 5/20 at 6 (pinned 0-5), lazy
-    /// 6/24 at 8 (0-7), and lazy 7/28 at 10 (0-9), where before this the 10-thread trim
-    /// declined pinned. Through every entry point. A mask narrower than the threads asked
-    /// (8 threads on 0-3, 12 on 0-9) and any quota keep master's plan; the service core's
-    /// predicate still reads the affinity
+    /// Pinned or not (#145, the release-scaling run's finding, and the Researcher's REVIEW
+    /// 6947387421; `Machine::pinned_i9`). The cells read the machine, not the affinity, and
+    /// admit two affinities alone (`affinity_admits`):
+    /// - pinned one CPU on each of at least the threads asked, no two on a core, as every
+    ///   sweep measured them: lazy 5/20 at 6 (pinned 0-5), lazy 6/24 at 8 (0-7), lazy 7/28
+    ///   at 10 (0-9), where before this the 10-thread trim declined pinned;
+    /// - the whole machine (unpinned), from 10 threads alone (`unpinned_trims`): lazy 7/28 at
+    ///   10 and more as #524, and master's plan at 8 and 6 until `bench-unpinned` reports.
+    ///
+    /// Through every entry point. Any other mask (two CPUs of a core, {0,10,1,11}; fewer
+    /// cores than threads; most CPUs but not all) and any quota keep master's plan; the
+    /// service core's predicate still reads the affinity
     #[test]
     fn pinned_or_unpinned_on_the_i9() {
         if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
@@ -4642,29 +4703,45 @@ mod plan_tests {
             clmul: true,
         };
         let w = Plan::Workers;
-        for (t, n) in [(6, 5), (8, 6), (10, 7)] {
+        let i9 = Machine::service_target();
+        // a mask of `logical` CPUs on `phys` cores of the i9
+        let mask = |phys: usize, logical: usize| {
+            let mut m = Machine::service_target();
+            m.phys = Some(phys);
+            let t = m.target.as_mut().unwrap();
+            (t.phys, t.logical) = (phys, logical);
+            m
+        };
+        for (t, n, unpinned) in [(6, 5, false), (8, 6, false), (10, 7, true)] {
             let arm = StreamDecoder::workers(n, 4 * n, both, true);
-            for (what, m) in [
-                ("pinned", Machine::pinned_i9(t)),
-                ("unpinned", Machine::service_target()),
+            for (what, m, trims) in [
+                ("pinned", Machine::pinned_i9(t), true),
+                ("unpinned", i9.clone(), unpinned),
             ] {
                 let plan = with_machine(m.clone(), || Plan::for_threads(t));
                 assert_eq!(plan, w(t), "{what} {t}");
-                assert_eq!(trimmed_workers(t, plan, both, &m), Some(n), "{what} {t}");
+                let want_n = trims.then_some(n);
+                assert_eq!(trimmed_workers(t, plan, both, &m), want_n, "{what} {t}");
                 assert_eq!(trims_to_seven(t, both, &m), t == 10, "{what} {t}");
                 assert!(!service_target(t, both, &m) || what == "unpinned");
-                assert_eq!(one_cpu_a_core(t, &m), what == "pinned", "{what} {t}");
                 let (dec, b) = observe_builds(|| {
                     with_machine(m.clone(), || StreamDecoder::new(t, 4 * t, both))
                 });
-                assert!(dec.is_lazy(), "{what} {t}");
-                assert_eq!(shape(&dec), shape(&arm), "{what} {t}");
-                assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{what} {t}");
+                if trims {
+                    assert!(dec.is_lazy(), "{what} {t}");
+                    assert_eq!(shape(&dec), shape(&arm), "{what} {t}");
+                    assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{what} {t}");
+                } else {
+                    let want = masters(t, 4 * t, both, &m);
+                    assert_eq!(shape(&dec), shape(&want), "{what} {t}: master's");
+                    assert_eq!((b[0].threads, b[0].window), (t, 4 * t as u64), "{what} {t}");
+                    want.close();
+                }
                 dec.close();
+                let (wn, ww) = if trims { (n, 4 * n) } else { (t, 4 * t) };
                 let (out, b) = observe_builds(|| {
                     with_machine(m.clone(), || {
                         let mut r = crate::BzReader::parallel(service_tests::Z, t);
-                        assert_eq!(shape(r.parallel_decoder().unwrap()), shape(&arm));
                         let mut out = Vec::new();
                         std::io::Read::read_to_end(&mut r, &mut out).unwrap();
                         out
@@ -4675,22 +4752,18 @@ mod plan_tests {
                     service_tests::want(),
                     "{what} BzReader::parallel at {t}"
                 );
-                assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{what} {t}");
+                assert_eq!((b[0].threads, b[0].window), (wn, ww as u64), "{what} {t}");
                 let (out, b) = observe_builds(|| {
                     with_machine(m.clone(), || {
                         crate::decode_parallel(service_tests::Z, t).unwrap()
                     })
                 });
                 assert_eq!(out, service_tests::want(), "{what} decode_parallel at {t}");
-                assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{what} {t}");
+                assert_eq!((b[0].threads, b[0].window), (wn, ww as u64), "{what} {t}");
                 let w12 = with_machine(m.clone(), || {
                     StreamDecoder::new_lazy_as::<crate::bwt::W12LazyCells>(t, 4 * t, both)
                 });
-                assert_eq!(
-                    (w12.threads(), w12.window()),
-                    (n, 4 * n as u64),
-                    "{what} {t}"
-                );
+                assert_eq!((w12.threads(), w12.window()), (wn, ww as u64), "{what} {t}");
                 w12.close();
                 // any quota, or an unknown one: master's
                 for q in [Quota::Cpus(20.0), Quota::Cpus(t as f64), Quota::Unknown] {
@@ -4712,51 +4785,85 @@ mod plan_tests {
             }
             arm.close();
         }
-        // a mask narrower than the threads asked: master's plan (as the policy reads the
-        // mask's cores), never trimmed
-        for (t, pinned) in [
-            (6, 4),
-            (8, 4),
-            (8, 7),
-            (10, 9),
-            (12, 10),
-            (16, 10),
-            (20, 10),
-        ] {
-            let m = Machine::pinned_i9(pinned);
-            let plan = with_machine(m.clone(), || Plan::for_threads(t));
-            assert_eq!(trimmed_workers(t, plan, both, &m), None, "{t} on {pinned}");
-            assert!(!trims_to_seven(t, both, &m), "{t} on {pinned}");
-            let dec = with_machine(m.clone(), || StreamDecoder::new(t, 4 * t, both));
-            let want = masters(t, 4 * t, both, &m);
-            assert_eq!(shape(&dec), shape(&want), "{t} on {pinned}");
+        // pinned one a core on more cores than the threads asked: admitted (one CPU on each
+        // of at least T distinct cores)
+        assert_eq!(
+            trimmed_workers(6, w(6), both, &Machine::pinned_i9(8)),
+            Some(5)
+        );
+        assert_eq!(
+            trimmed_workers(8, w(8), both, &Machine::pinned_i9(10)),
+            Some(6)
+        );
+        // unpinned from 10 threads, as #524
+        for t in [11, 12, 16, 20, 24, 64] {
+            assert_eq!(trimmed_workers(t, w(10), both, &i9), Some(7), "{t}");
+        }
+        // other masks: never trimmed, and the default is master's
+        let others = [
+            // fewer cores than threads, one CPU a core
+            (6, mask(4, 4)),
+            (8, mask(4, 4)),
+            (8, mask(7, 7)),
+            (10, mask(9, 9)),
+            (12, mask(10, 10)),
+            (16, mask(10, 10)),
+            (20, mask(10, 10)),
+            // two CPUs of a core: {0,10,1,11}, {0-2,10-12}, {0-3,10-13}, {0-4,10-14}
+            (4, mask(2, 4)),
+            (6, mask(3, 6)),
+            (8, mask(4, 8)),
+            (10, mask(5, 10)),
+            // as many CPUs as threads, some sharing a core: 0-7 and 10
+            (8, mask(8, 9)),
+            (6, mask(6, 7)),
+            // most CPUs but not all (0-18), and every core with a sibling short
+            (12, mask(10, 19)),
+            (10, mask(10, 19)),
+            (8, mask(10, 19)),
+        ];
+        for (t, m) in &others {
+            let tg = m.target.as_ref().unwrap();
+            let what = format!("{t} on {} CPUs of {} cores", tg.logical, tg.phys);
+            assert!(!affinity_admits(*t, m), "{what}");
+            let plan = with_machine(m.clone(), || Plan::for_threads(*t));
+            assert_eq!(trimmed_workers(*t, plan, both, m), None, "{what}");
+            for p in [w(4), w(6), w(8), w(10)] {
+                assert_eq!(trimmed_workers(*t, p, both, m), None, "{what} {p:?}");
+            }
+            assert!(!trims_to_seven(*t, both, m), "{what}");
+            let dec = with_machine(m.clone(), || StreamDecoder::new(*t, 4 * *t, both));
+            let want = masters(*t, 4 * *t, both, m);
+            assert_eq!(shape(&dec), shape(&want), "{what}");
             dec.close();
             want.close();
         }
-        // the affinity unread: never trimmed
-        let unread = Machine {
-            target: None,
-            ..Machine::service_target()
-        };
-        for t in [6, 8, 10, 12] {
-            assert_eq!(trimmed_workers(t, w(t.min(10)), both, &unread), None, "{t}");
+        // the affinity unread, or the machine unread: never trimmed
+        for m in [
+            Machine {
+                target: None,
+                ..i9.clone()
+            },
+            Machine {
+                machine: None,
+                ..Machine::pinned_i9(8)
+            },
+        ] {
+            for t in [6, 8, 10, 12] {
+                assert_eq!(trimmed_workers(t, w(t.min(10)), both, &m), None, "{t}");
+            }
         }
-        // more threads than the machine's CPUs, unpinned: the mask is every CPU, as #524
-        for t in [24, 64] {
-            assert_eq!(
-                trimmed_workers(t, w(10), both, &Machine::service_target()),
-                Some(7)
-            );
-        }
-        // one CPU a core (`one_cpu_a_core`, unused by the default): pinned 0 to N-1 at N
-        // threads alone
-        assert!(one_cpu_a_core(8, &Machine::pinned_i9(8)));
-        assert!(!one_cpu_a_core(6, &Machine::pinned_i9(8)));
-        assert!(!one_cpu_a_core(8, &Machine::service_target()));
-        let mut two_a_core = Machine::pinned_i9(4);
-        two_a_core.target.as_mut().unwrap().logical = 8;
-        assert!(!one_cpu_a_core(8, &two_a_core));
-        assert!(!one_cpu_a_core(8, &unread));
+        // the gates themselves
+        assert!(pinned_one_a_core(8, &Machine::pinned_i9(8)));
+        assert!(pinned_one_a_core(6, &Machine::pinned_i9(8)));
+        assert!(!pinned_one_a_core(8, &Machine::pinned_i9(6)));
+        assert!(!pinned_one_a_core(4, &mask(2, 4)));
+        assert!(!pinned_one_a_core(8, &i9));
+        assert!(whole_machine(&i9) && !whole_machine(&Machine::pinned_i9(10)));
+        assert!(!whole_machine(&mask(10, 19)));
+        assert!(!whole_machine(&Machine::default()));
+        assert!(!unpinned_trims(6) && !unpinned_trims(8) && !unpinned_trims(9));
+        assert!(unpinned_trims(10) && unpinned_trims(64));
     }
 
     /// Workers invert with lazy letters exactly from `LAZY_FROM_THREADS` of them: by the
