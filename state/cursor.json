@@ -2188,6 +2188,13 @@
       "review_comment_id": 6946839547,
       "review_comment_pr": 145,
       "publication_verification": "Exact body, lmmx author and destination145 verified by read-back; coord.py route145 and role-aware verification pass, with helper's coordinator-only FROM limitation recorded."
+    },
+    {
+      "trigger_comment_id": 6946859150,
+      "status": "in progress",
+      "pr": 162,
+      "report_path": "state/reports/fused-finish-6946859150/report.md",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
     }
   ],
   "active_delegations": [],
