@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [The knee is gone](<https://lmmx.github.io/mibz2/blog/2026-11-17-the-knee-is-gone/index.md>): mibz2 0.5.4 removes the ten-thread dip, and higher thread counts now hold near 2 GB/s instead of losing ground to contention.
+- [Straightening the knee](<https://lmmx.github.io/mibz2/blog/2026-11-17-the-knee-is-gone/index.md>): mibz2 0.5.4 removes the ten-thread dip, and higher thread counts now hold near 2 GB/s instead of losing ground to contention.
 - [Modelling the cache](<https://lmmx.github.io/mibz2/blog/2026-11-17-modelling-the-cache-to-rightsize-workers/index.md>): mibz2 now runs fewer workers than threads on a ten-core desktop and finishes sooner, while a cache model is tested to pick the count on any machine.
 - [Technical notes](<https://lmmx.github.io/mibz2/blog/2026-11-17-modelling-the-cache-to-rightsize-workers-notes/index.md>): Technical notes to the post on modelling the cache to rightsize workers: the contention–parallelism trade-off and its sensitivity, what the contention-associated overhead is made of, the full ledger of frozen predictions, the CPU bound's history, and topology and transfer.
 - [A mathematical dictionary](<https://lmmx.github.io/mibz2/blog/2026-11-16-mathematical-dictionary/index.md>): Our BWT inversion is not the sheaf an earlier analogy suggested, yet the places of its words form one naturally.

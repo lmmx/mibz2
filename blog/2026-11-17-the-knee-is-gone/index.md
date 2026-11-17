@@ -1,6 +1,6 @@
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# The knee is gone: more threads without the fall
+# Straightening the knee: gaining speed with more threads and hyperthreading
 
 mibz2 0.5.4 removes the ten-thread dip, and higher thread counts now hold near 2 GB/s instead of losing ground to contention.
 
