@@ -343,6 +343,13 @@ impl StreamDecoder {
         self.kernel == std::any::type_name::<super::bwt::LazyCells>()
     }
 
+    /// The kernel this decoder's workers were launched with, by its type's name (empty for a
+    /// decoder that launched none of its own): `ab built`'s, for a bench run's pre-flight
+    #[doc(hidden)]
+    pub fn kernel(&self) -> &'static str {
+        self.kernel
+    }
+
     /// Research, opt-in (`memory-lever`): production's workers, `threads` of them, each
     /// inverting with Cells' rules staged and stored past the cache, or (`lazy`) with lazy
     /// letters, as `workers` does. Otherwise as `planned(Plan::Workers(threads))`.
@@ -3037,6 +3044,13 @@ fn unpinned_trims(threads: usize) -> bool {
 /// (`trims_to_seven`, `trimmed_workers`)
 fn measured_i9(k: Kernels, m: &Machine) -> bool {
     i9_profile(k, m.machine.as_ref()) && m.quota == Quota::Unlimited
+}
+
+/// `measured_i9` on this machine, as `StreamDecoder::new` reads it: `ab built`'s, for a bench
+/// run's pre-flight (the profile its registered plan assumes)
+#[doc(hidden)]
+pub fn measured_i9_here(k: Kernels) -> bool {
+    measured_i9(k, &Machine::here())
 }
 
 /// `measured_i9` without the quota: the kernels, and the machine's topology the i9's

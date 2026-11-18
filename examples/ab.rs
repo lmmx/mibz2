@@ -1716,6 +1716,107 @@ thread_local! {
 /// should be wait); a counter that reads zero there is never read as no wait. Active: the
 /// spin loads every CPU, and `machine`'s `perf` field opens (and closes) perf counters.
 /// `ab env --facts` (`facts`) is the passive reading
+/// `ab built ARMS THREADS`: the decoder each arm builds at each thread count asked, without
+/// decoding (`just bench-admit`'s pre-flight, #145 REVIEW 6974376850): its workers, window and
+/// kernel, whether this is the measured i9 (`measured_i9_here`), and this process's affinity.
+/// One JSON line each. The arms: `mibz2` (`StreamDecoder::new`, as `BzReader::parallel`) and
+/// `mibz2-wide` (`StreamDecoder::new_lazy_as::<WideLazyCells>`, as `BzReader::parallel_lazy_as`)
+fn built(args: &[String]) {
+    let (Some(arms), Some(threads)) = (args.first(), args.get(1)) else {
+        panic!("ab built ARMS THREADS (e.g. ab built mibz2,mibz2-wide 8,10)");
+    };
+    let k = mibz2::Kernels::detect();
+    let allowed = std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|s| {
+            s.lines().find_map(|l| {
+                l.strip_prefix("Cpus_allowed_list:")
+                    .map(|v| v.trim().to_string())
+            })
+        })
+        .unwrap_or_default();
+    for arm in arms.split(',') {
+        for t in threads.split(',') {
+            let t: usize = t.parse().expect("ab built: a thread count");
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * t.max(1);
+            let dec = match arm {
+                "mibz2" => mibz2::StreamDecoder::new(t, slots, k),
+                "mibz2-wide" => {
+                    mibz2::StreamDecoder::new_lazy_as::<mibz2::bwt::WideLazyCells>(t, slots, k)
+                }
+                a => panic!("ab built: arm {a} (mibz2 or mibz2-wide)"),
+            };
+            println!(
+                "{{\"arm\":\"{arm}\",\"threads\":{t},\"workers\":{},\"window\":{},\"kernel\":\"{}\",\"lazy\":{},\"measured_i9\":{},\"cpus_allowed\":\"{allowed}\"}}",
+                dec.threads(),
+                dec.window(),
+                dec.kernel(),
+                dec.is_lazy(),
+                mibz2::parallel::measured_i9_here(k)
+            );
+        }
+    }
+}
+
+/// `ab census FILE..`: each file's blocks by route under the lazy kernel's admission and the
+/// wide arm's (`LazyCells`, `WideLazyCells`; `just bench-admit`'s pre-flight and its newly
+/// admitted stratum, #145 REVIEW 6974376850): blocks taking the column path; of those taking
+/// the run records, both admit, the wide arm alone, the lazy kernel alone (none expected), and
+/// neither, each with its rows; and any block whose two outputs differ. One JSON line a file
+fn census(files: &[String]) {
+    use mibz2::bwt::{InverseBwt, LazyCells, WideLazyCells};
+    let k = mibz2::Kernels::detect();
+    for path in files {
+        let data = std::fs::read(path).unwrap_or_else(|e| panic!("ab census: {path}: {e}"));
+        let mut sc = mibz2::stream::Scanner::new(mibz2::stream::SliceSource(&data));
+        let mut syms = Vec::new();
+        let mut runs = mibz2::runs::Runs::default();
+        let (mut lazy, mut wide) = (LazyCells::default(), WideLazyCells::default());
+        let (mut a, mut b) = (Vec::new(), Vec::new());
+        // [column, both, wide alone, lazy alone, neither], blocks and rows; outputs differing
+        let (mut blocks, mut rows, mut differ) = ([0usize; 5], [0usize; 5], 0usize);
+        while let Ok(mibz2::stream::Event::Block { symbols, .. }) =
+            sc.next(std::mem::take(&mut syms))
+        {
+            let g = if mibz2::runs::takes_runs(&symbols) {
+                let n = mibz2::runs::front(&symbols, &mut runs, k)
+                    .unwrap_or_else(|e| panic!("ab census: {path}: {e:?}"));
+                let (la, wa) = (lazy.counts().admitted, wide.counts().admitted);
+                assert!(lazy.invert_runs(&runs, n, symbols.orig_ptr, &mut a, k));
+                assert!(wide.invert_runs(&runs, n, symbols.orig_ptr, &mut b, k));
+                differ += usize::from(a != b);
+                let g = match (lazy.counts().admitted > la, wide.counts().admitted > wa) {
+                    (true, true) => 1,
+                    (false, true) => 2,
+                    (true, false) => 3,
+                    (false, false) => 4,
+                };
+                rows[g] += n;
+                g
+            } else {
+                0
+            };
+            blocks[g] += 1;
+            syms = symbols.syms;
+        }
+        println!(
+            "{{\"file\":\"{}\",\"blocks\":{},\"column\":{},\"both\":{},\"wide_only\":{},\"lazy_only\":{},\"neither\":{},\"rows_both\":{},\"rows_wide_only\":{},\"rows_neither\":{},\"differ\":{differ}}}",
+            std::path::Path::new(path)
+                .file_name()
+                .map_or(path.clone(), |f| f.to_string_lossy().into_owned()),
+            blocks.iter().sum::<usize>(),
+            blocks[0],
+            blocks[1],
+            blocks[2],
+            blocks[3],
+            blocks[4],
+            rows[1],
+            rows[2],
+            rows[4],
+        );
+    }
+}
+
 fn env_line() -> String {
     let cores = cores();
     let ncpu: usize = cores.iter().map(Vec::len).sum();
@@ -2743,6 +2844,8 @@ fn main() {
         Some("run") => run(&args[1..]),
         Some("summary") => summary(&args[1..]),
         Some("gen") => gen(&args[1..]),
+        Some("built") => built(&args[1..]),
+        Some("census") => census(&args[1..]),
         Some("env") => match args.get(1).map(String::as_str) {
             None => println!("{}", env_line()),
             Some("--facts") if args.len() == 2 => println!("{}", facts::live()),
@@ -2757,7 +2860,7 @@ fn main() {
             machine::sample(&args[1..], &cpus)
         }
         Some("telemetry-check") => std::process::exit(machine::check()),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] [--hold-cpu N|auto [--hold-max-threads T]] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE [--hold-cpu N|auto] | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab built ARMS THREADS | ab census FILE.. | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] [--hold-cpu N|auto [--hold-max-threads T]] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE [--hold-cpu N|auto] | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
     }
 }
 

@@ -125,10 +125,16 @@ def parse_perf(path, scaled=False):
                 v = int(float(value) * SCALE[unit])
             except (ValueError, KeyError):
                 v = None
-            if event in got and got[event][0] is not None and v is not None:
+            # an event on several controllers: summed, a failed entry failing the sum (never
+            # overwritten by a later valid one), and the entries counted (the report checks
+            # every run has as many)
+            if event in got:
                 prev = got[event]
-                got[event] = (prev[0] + v, min(prev[1], pct), prev[2] + ";" + value)
-                continue
+                total = prev[0] + v if prev[0] is not None and v is not None else None
+                got[event] = (total, min(prev[1], pct), prev[2] + ";" + value, prev[3] + 1)
+            else:
+                got[event] = (v, pct, value, 1)
+            continue
         got[event] = (v, pct, value)
     return got
 
@@ -237,6 +243,15 @@ def report(a):
     missing = sorted(roster - set(rows))
     if missing:
         errors.append(f"{len(missing)} of {len(roster)} runs missing, e.g. {missing[:3]}")
+    if system_wide:
+        # every controller in every run: each event summed over as many entries everywhere
+        units = {(e, len(c) > 3 and c[3]) for r in rows.values() for e, c in (r.get("counts") or {}).items()}
+        per = {}
+        for e, n in units:
+            per.setdefault(e, set()).add(n)
+        for e, ns in sorted(per.items()):
+            if len(ns) != 1 or not all(isinstance(n, int) and n >= 1 for n in ns):
+                errors.append(f"{e}: the runs count it on differing controllers ({sorted(ns, key=str)}): unscorable")
     if len(outputs) > 1:
         errors.append(f"the arms' outputs differ: {sorted(outputs, key=str)[:3]}")
     if errors:

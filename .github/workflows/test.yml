@@ -81,6 +81,10 @@ jobs:
       # with a stub perf and child: a complete run read, and every defect leaves no report
       - name: The counters reader (stub perf)
         run: python3 bench/test_counters.py
+      # `just bench-admit`'s pre-flight (`bench/admit_preflight.py`): the registered machine,
+      # plans, census and guards pass, and each way they can differ stops the run
+      - name: The wide-admission pre-flight (fabricated)
+        run: python3 bench/test_admit_preflight.py
       # the memory-lever experiment's staged Cells kernel (#145 QUEUED 6901989466; its lazy
       # kernel is production's now, tested above): against the original induction state by
       # state, the store fence's model, the public route, the harness's two arms built, the

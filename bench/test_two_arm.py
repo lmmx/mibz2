@@ -229,6 +229,19 @@ def main():
                 out.append({**r, "corpus": "random", "out": 32000000, "hash": "cc", "wall": w})
         return out
 
+    # the pair of counts (`--pair`, deciding nothing): each arm's wall at one count over another,
+    # matched by round, and the candidate's over the reference's
+    code, out = run(runs(main={12: 0.96, 20: 0.99}), ("--pair", "12,20"))
+    sec = out.split("Deciding nothing", 1)[-1]
+    import re as _re
+    m = _re.search(r"mibz2's over mibz2@build-master's: ([0-9.]+)", sec)
+    ok = code == 0 and m is not None and abs(float(m.group(1)) - 0.96 / 0.99) < 0.01
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} the pair 12,20: the candidate's 12-over-20 over the reference's, about "
+          f"0.96/0.99: {m.group(1) if m else None}")
+    if not ok:
+        print(out)
+
     two = ("--guard", "text,random")
     results.append(expect("two guards, both level", with_random(good()), 0, "VERDICT: ADOPTS", extra=two))
     results.append(expect("two guards, the second SLOWER", with_random(good(), {20: 1.05}), 0,

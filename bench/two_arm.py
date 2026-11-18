@@ -7,7 +7,11 @@ correction, #145 REVIEW 6921090225), for `just bench-cores-less-one` (#481) and 
 
     two_arm.py RUNS.jsonl --ref ARM --cand ARM --main CORPUS --guard CORPUS[,CORPUS..]
                --judged 12,16,20 --controls 9,10 --env ENV.json [--rounds 10]
-               [--cores 10 --cpus 20] [--hold-max-threads 9] [--unpinned]
+               [--cores 10 --cpus 20] [--hold-max-threads 9] [--unpinned] [--pair 8,10]
+
+**A pair of counts** (`--pair A,B`, deciding nothing; `just bench-admit`'s knee, #145 REVIEW
+6974376850): after the verdict, on the main corpus, each arm's wall at A over its wall at B,
+matched by round (geometric mean and 95% interval), and the candidate's over the reference's.
 
 **Guards.** `--guard` names one guard corpus or several, comma-separated: each is screened for
 loss and memory as the one guard is (`just bench-admit`'s text and random).
@@ -299,6 +303,8 @@ def main(argv):
                     help="the spinner's limit as the run had it; 0 for a run without one")
     ap.add_argument("--unpinned", action="store_true",
                     help="the run was registered unpinned at every count (`all`)")
+    ap.add_argument("--pair", default="",
+                    help="A,B: report each arm's wall at A over B, matched by round (decides nothing)")
     a = ap.parse_args(argv[1:])
     judged = [int(t) for t in a.judged.split(",")]
     controls = [int(t) for t in a.controls.split(",") if t]
@@ -375,6 +381,21 @@ def main(argv):
     else:
         print("VERDICT: NOT ADOPTED. No gain established (Holm rejects at no main-corpus cell)"
               + (f"; SLOWER at {slower}" if slower else "") + (f"; memory above the gate at {over}" if over else ""))
+    pair = [int(t) for t in a.pair.split(",") if t]
+    if len(pair) == 2 and all(t in judged for t in pair):
+        ta, tb = pair
+        print(f"\nDeciding nothing, {a.main}: each arm's wall at {ta} threads over its wall at {tb}, "
+              f"matched by round [95% interval]")
+        logs = {}
+        for arm in (ref, cand):
+            logs[arm] = [math.log(rows[(a.main, arm, ta, i)]["wall"] / rows[(a.main, arm, tb, i)]["wall"])
+                         for i in range(R)]
+            g, lo, hi, _ = step(logs[arm])
+            print(f"  {arm}: {g:.4f} [{lo:.4f}, {hi:.4f}]")
+        g, lo, hi, _ = step([c - r for c, r in zip(logs[cand], logs[ref])])
+        print(f"  {cand}'s over {ref}'s: {g:.4f} [{lo:.4f}, {hi:.4f}]")
+    elif a.pair:
+        print(f"\n--pair {a.pair!r}: two judged counts, not reported")
     return 0
 
 

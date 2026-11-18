@@ -1807,11 +1807,16 @@ bench-w12 MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" ROUNDS="1
 # Judged at 8 and 10 threads asked, unpinned on the whole machine (`ab run` without `--spread`):
 # the plan's eight lazy workers with 32 in flight, and the i9's seven with 28. COPIES copies of
 # the Wikidata sample (the gain family); the text corpus and random bytes (`ab gen`, a loss and
-# memory guard each: every block of both stays refused). No spinner. `bench/two_arm.py`
-# (`--unpinned`, two guards) checks the records and the machine whole, then reads the verdict.
-# Then a diagnostic that decides nothing: the memory controller's read and write bytes a byte of
-# output at 8 and 10 threads, idle taken off (`bench/counters.py --events imc`), if
-# `kernel.perf_event_paranoid` is 0 or less.
+# memory guard each: every block of both stays refused), the guards generated afresh for each run
+# and their digests the registered ones. No spinner. Before any timing, a pre-flight
+# (`bench/admit_preflight.py`, the Researcher's REVIEW 6974376850) stops the run unless both arms
+# build 8/32 and 7/28 on the measured i9 with every CPU, the census of every block on the exact
+# inputs is the registered one, and the guards' digests are. `bench/two_arm.py` (`--unpinned`,
+# two guards) checks the records and the machine whole, then reads the verdict, and reports each
+# arm's 8-over-10 wall matched by round (`--pair`, deciding nothing). Then a diagnostic that
+# decides nothing: the memory controller's read and write bytes a byte of output at 8 and 10
+# threads, idle taken off (`bench/counters.py --events imc`), if `kernel.perf_event_paranoid` is
+# 0 or less.
 bench-admit MASTER="f71de528d33a6c8288353176f70a9708bdca4283" COPIES="4" ROUNDS="10" JUDGED="8,10" REPS="5":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -1856,21 +1861,34 @@ bench-admit MASTER="f71de528d33a6c8288353176f70a9708bdca4283" COPIES="4" ROUNDS=
     python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
     : > "$W/wikidata-x{{COPIES}}.bz2"
     for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
-    [ -f "$W/gen/text.bz2" ] && [ -f "$W/gen/random.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
-    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" "$W/gen/random.bz2" | tee "$O/inputs.sha256"
+    # the guards, generated afresh for this run (never reused: the text corpus is this checkout's
+    # own sources), their digests checked by the pre-flight
+    G=$W/gen-${O##*/}
+    mkdir "$G"
+    "$AB" gen "$G" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$G/text.bz2" "$G/random.bz2" | tee "$O/inputs.sha256"
     "$AB" env > "$O/env.json"
     lscpu > "$O/lscpu.txt"
     lscpu -e > "$O/lscpu-e.txt" || true
     grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    # the pre-flight, before any timing: the machine, both arms' plans, the census, the guards
+    "$AB" built mibz2,mibz2-wide "{{JUDGED}}" | tee "$O/built.jsonl"
+    "$AB" census "$W/wikidata.bz2" "$G/text.bz2" "$G/random.bz2" | tee "$O/census.jsonl"
+    if ! python3 bench/admit_preflight.py --built "$O/built.jsonl" --census "$O/census.jsonl" \
+        --inputs "$O/inputs.sha256" | tee "$O/preflight.txt"; then
+      echo "bench-admit: VOID, the pre-flight failed (preflight.txt says why); nothing timed" | tee "$O/verdict.txt"
+      bash bench/bundle.sh "$O"
+      exit 0
+    fi
     # (unpinned at every judged count, the whole machine; no spinner)
     "$AB" run "$O/judged.jsonl" --arms "mibz2@$MAB,mibz2-wide" \
       --threads "{{JUDGED}}" --rounds {{ROUNDS}} \
-      "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" "$W/gen/random.bz2"
+      "$W/wikidata-x{{COPIES}}.bz2" "$G/text.bz2" "$G/random.bz2"
     "$AB" summary "$O/judged.jsonl" --ref "mibz2@$MAB" | tee "$O/summary.txt"
     python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2@build-master --cand mibz2-wide \
       --main wikidata-x{{COPIES}} --guard text,random --judged "{{JUDGED}}" --controls "" \
       --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads 0 --unpinned \
-      | tee "$O/verdict.txt" \
+      --pair 8,10 | tee "$O/verdict.txt" \
       || echo "bench-admit: VOID, no verdict (verdict.txt says why); the bundle is kept"
     # the DRAM diagnostic (decides nothing): the memory controller system-wide, so only where
     # `kernel.perf_event_paranoid` is 0 or less; skipped, and said so, otherwise

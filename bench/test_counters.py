@@ -40,8 +40,14 @@ with open(out, "w") as f:
             if mode == "imcnotcounted" and arm != "idle" and "writes" in e:
                 f.write(f"<not counted>,MiB,{e},0,0.00,,\n")
                 continue
-            for unit in range(2):
+            if mode == "imcfirstfails" and arm != "idle" and "reads" in e:
+                # the first controller's entry failed, the second's valid: the sum must fail
+                f.write(f"<not counted>,MiB,{e},0,0.00,,\n")
                 f.write(f"{v / 2 / 2**20:.6f},MiB,{e},1000,100.00,,\n")
+                continue
+            units = 1 if mode == "imconeunit" and arm != "idle" else 2
+            for unit in range(units):
+                f.write(f"{v / units / 2**20:.6f},MiB,{e},1000,100.00,,\n")
         sys.exit(p.returncode)
     for i, e in enumerate(events):
         v = 1000000 * (i + 1) * (2 if "stop" in arm else 1)
@@ -160,6 +166,10 @@ def main():
     if not ok:
         print(out)
     for name, env, drop, phrase in (("an IMC event not counted", {"STUB_PERF": "imcnotcounted"}, False, "not counted"),
+                                    ("a controller's entry failed, a later one valid", {"STUB_PERF": "imcfirstfails"},
+                                     False, "not counted"),
+                                    ("a controller missing from the runs", {"STUB_PERF": "imconeunit"}, False,
+                                     "differing controllers"),
                                     ("an idle record missing", {}, True, "runs missing")):
         code, out, _ = imc(env, drop)
         ok = code == 1 and phrase in out
