@@ -1,0 +1,541 @@
+{
+  "incoming": 6988881933,
+  "head": "270a29ba52a90b8411d20c2326b93692a6e421e7",
+  "miri_run": {
+    "id": 44374581630,
+    "head_sha": "cd7e5de2b7c61442f7a391436eee910a5ebb126a",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "jobs": [
+    {
+      "id": 135050178989,
+      "run_id": 44374581630,
+      "workflow_name": "Miri",
+      "head_branch": "perf/one-scan-writer",
+      "run_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/44374581630",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVZCza88AAAAfcZ4xrQ",
+      "head_sha": "cd7e5de2b7c61442f7a391436eee910a5ebb126a",
+      "url": "https://api.github.com/repos/lmmx/mibz2/actions/jobs/135050178989",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/44374581630/job/135050178989",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-18T18:53:26Z",
+      "started_at": "2026-11-18T18:53:28Z",
+      "completed_at": "2026-11-18T19:09:46Z",
+      "name": "miri",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-18T18:53:29Z",
+          "completed_at": "2026-11-18T18:53:30Z"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-18T18:53:30Z",
+          "completed_at": "2026-11-18T18:53:31Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@nightly",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-18T18:53:31Z",
+          "completed_at": "2026-11-18T18:53:40Z"
+        },
+        {
+          "name": "Run Swatinem/rust-cache@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-18T18:53:40Z",
+          "completed_at": "2026-11-18T18:53:42Z"
+        },
+        {
+          "name": "Miri setup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-18T18:53:42Z",
+          "completed_at": "2026-11-18T18:53:54Z"
+        },
+        {
+          "name": "The worker recovery tests are selected",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-18T18:53:54Z",
+          "completed_at": "2026-11-18T18:53:56Z"
+        },
+        {
+          "name": "Miri",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-18T18:53:56Z",
+          "completed_at": "2026-11-18T19:08:01Z"
+        },
+        {
+          "name": "The memory-lever kernels' tests are selected",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-18T19:08:01Z",
+          "completed_at": "2026-11-18T19:08:03Z"
+        },
+        {
+          "name": "Miri, the memory-lever kernels",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-18T19:08:03Z",
+          "completed_at": "2026-11-18T19:09:42Z"
+        },
+        {
+          "name": "Post Run Swatinem/rust-cache@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-18T19:09:42Z",
+          "completed_at": "2026-11-18T19:09:44Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-18T19:09:44Z",
+          "completed_at": "2026-11-18T19:09:44Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-18T19:09:44Z",
+          "completed_at": "2026-11-18T19:09:45Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/lmmx/mibz2/check-runs/135050178989",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000099583,
+      "runner_name": "GitHub Actions 1000099583",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ],
+  "merge_tree": "05e4de166ea5f342f93de40f3983116e1815fbfa",
+  "changed": [
+    "docs/journal/2026-11-18-one-scan-writer.md",
+    "docs/journal/2026-11-18-one-scan-writer/mutate.py",
+    "docs/journal/2026-11-18-one-scan-writer/receipts.json"
+  ],
+  "receipts": {
+    "source": "src/cells_owned.rs",
+    "selections": [
+      "owned_writer",
+      "miri_cells_owned"
+    ],
+    "head": "cd7e5de2b7c61442f7a391436eee910a5ebb126a",
+    "baseline": {
+      "owned_writer": {
+        "exit": 0,
+        "ran": 6,
+        "passed": [
+          "cells::tests::miri_cells_owned_writer",
+          "cells::tests::owned_writer_nested_copies",
+          "cells::tests::owned_writer_periodic_witnesses",
+          "cells::tests::owned_writer_exhaustive_binary",
+          "cells::tests::owned_writer_exhaustive_ternary",
+          "cells::tests::owned_writer_long_columns"
+        ],
+        "results": [
+          "ok"
+        ]
+      },
+      "miri_cells_owned": {
+        "exit": 0,
+        "ran": 1,
+        "passed": [
+          "cells::tests::miri_cells_owned_writer"
+        ],
+        "results": [
+          "ok"
+        ]
+      }
+    },
+    "baseline_built": true,
+    "mutants": [
+      {
+        "name": "the survival certificate inverted",
+        "verdict": "KILLED",
+        "built": true,
+        "failing": [
+          "cells::tests::miri_cells_owned_writer",
+          "cells::tests::owned_writer_exhaustive_binary",
+          "cells::tests::owned_writer_exhaustive_ternary",
+          "cells::tests::owned_writer_long_columns",
+          "cells::tests::owned_writer_nested_copies",
+          "cells::tests::owned_writer_periodic_witnesses"
+        ],
+        "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [115, 101, 115, 115, 115, 108, 108, 101, 101, 105, 32, 100, 110, 32, 98, 105, 97, 101, 104, 98, 101, 101, 100, 101, 104, 32, 104, 32, 99, 98, 108, 100, 110, 99, 99, 107, 99, 99, 98, 99, 114, 114, 32, 101, 101, 117, 101, 101, 108, 108, 11",
+        "selections": {
+          "owned_writer": {
+            "exit": 101,
+            "ran": 6,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::owned_writer_long_columns",
+              "cells::tests::miri_cells_owned_writer",
+              "cells::tests::owned_writer_exhaustive_binary",
+              "cells::tests::owned_writer_exhaustive_ternary",
+              "cells::tests::owned_writer_periodic_witnesses",
+              "cells::tests::owned_writer_nested_copies"
+            ]
+          },
+          "miri_cells_owned": {
+            "exit": 101,
+            "ran": 1,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::miri_cells_owned_writer"
+            ]
+          }
+        }
+      },
+      {
+        "name": "no wrap on the marked spine",
+        "verdict": "KILLED",
+        "built": true,
+        "failing": [
+          "cells::tests::miri_cells_owned_writer",
+          "cells::tests::owned_writer_exhaustive_binary",
+          "cells::tests::owned_writer_exhaustive_ternary",
+          "cells::tests::owned_writer_long_columns",
+          "cells::tests::owned_writer_nested_copies",
+          "cells::tests::owned_writer_periodic_witnesses"
+        ],
+        "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [115, 101, 115, 115, 115, 108, 108, 101, 101, 105, 32, 100, 110, 32, 98, 105, 97, 101, 104, 98, 101, 101, 100, 101, 104, 32, 104, 32, 99, 98, 108, 100, 110, 99, 99, 107, 99, 99, 98, 99, 114, 114, 32, 101, 101, 117, 101, 101, 108, 108, 11",
+        "selections": {
+          "owned_writer": {
+            "exit": 101,
+            "ran": 6,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::owned_writer_long_columns",
+              "cells::tests::owned_writer_exhaustive_ternary",
+              "cells::tests::owned_writer_exhaustive_binary",
+              "cells::tests::owned_writer_periodic_witnesses",
+              "cells::tests::miri_cells_owned_writer",
+              "cells::tests::owned_writer_nested_copies"
+            ]
+          },
+          "miri_cells_owned": {
+            "exit": 101,
+            "ran": 1,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::miri_cells_owned_writer"
+            ]
+          }
+        }
+      },
+      {
+        "name": "the commands run last parent first",
+        "verdict": "KILLED",
+        "built": true,
+        "failing": [
+          "cells::tests::owned_writer_nested_copies"
+        ],
+        "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [46, 125, 125, 10, 125, 125, 59, 123, 59, 59, 110, 111, 123, 115, 101, 123, 123, 114, 41, 100, 59, 59, 123, 123, 123, 123, 59, 59, 123, 123, 59, 59, 59, 125, 59, 59, 59, 59, 59, 59, 123, 59, 125, 59, 59, 123, 123, 123, 123, 123, 59, 125,",
+        "selections": {
+          "owned_writer": {
+            "exit": 101,
+            "ran": 6,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::owned_writer_nested_copies"
+            ]
+          },
+          "miri_cells_owned": {
+            "exit": 0,
+            "ran": 1,
+            "results": [
+              "ok"
+            ],
+            "failed": []
+          }
+        }
+      },
+      {
+        "name": "no command stored",
+        "verdict": "KILLED",
+        "built": true,
+        "failing": [
+          "cells::tests::miri_cells_owned_writer",
+          "cells::tests::owned_writer_long_columns",
+          "cells::tests::owned_writer_nested_copies",
+          "cells::tests::owned_writer_periodic_witnesses"
+        ],
+        "panic": "src/cells_owned_test.rs:135:13:: assertion `left == right` failed: variant 0, row 0",
+        "selections": {
+          "owned_writer": {
+            "exit": 101,
+            "ran": 6,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::miri_cells_owned_writer",
+              "cells::tests::owned_writer_long_columns",
+              "cells::tests::owned_writer_nested_copies",
+              "cells::tests::owned_writer_periodic_witnesses"
+            ]
+          },
+          "miri_cells_owned": {
+            "exit": 101,
+            "ran": 1,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::miri_cells_owned_writer"
+            ]
+          }
+        }
+      },
+      {
+        "name": "an owned child's position not set",
+        "verdict": "KILLED",
+        "built": true,
+        "failing": [
+          "cells::tests::miri_cells_owned_writer",
+          "cells::tests::owned_writer_exhaustive_binary",
+          "cells::tests::owned_writer_exhaustive_ternary",
+          "cells::tests::owned_writer_long_columns",
+          "cells::tests::owned_writer_nested_copies",
+          "cells::tests::owned_writer_periodic_witnesses"
+        ],
+        "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [115, 101, 115, 115, 115, 108, 108, 101, 101, 105, 32, 100, 110, 32, 98, 105, 97, 101, 104, 98, 101, 101, 100, 101, 104, 32, 104, 32, 99, 98, 108, 100, 110, 99, 99, 107, 99, 99, 98, 99, 114, 114, 32, 101, 101, 117, 101, 101, 108, 108, 11",
+        "selections": {
+          "owned_writer": {
+            "exit": 101,
+            "ran": 6,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::owned_writer_long_columns",
+              "cells::tests::miri_cells_owned_writer",
+              "cells::tests::owned_writer_exhaustive_binary",
+              "cells::tests::owned_writer_exhaustive_ternary",
+              "cells::tests::owned_writer_periodic_witnesses",
+              "cells::tests::owned_writer_nested_copies"
+            ]
+          },
+          "miri_cells_owned": {
+            "exit": 101,
+            "ran": 1,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::miri_cells_owned_writer"
+            ]
+          }
+        }
+      },
+      {
+        "name": "the root one place off",
+        "verdict": "KILLED",
+        "built": true,
+        "failing": [
+          "cells::tests::miri_cells_owned_writer",
+          "cells::tests::owned_writer_exhaustive_binary",
+          "cells::tests::owned_writer_exhaustive_ternary",
+          "cells::tests::owned_writer_long_columns",
+          "cells::tests::owned_writer_nested_copies",
+          "cells::tests::owned_writer_periodic_witnesses"
+        ],
+        "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [1, 0], row 0",
+        "selections": {
+          "owned_writer": {
+            "exit": 101,
+            "ran": 6,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::owned_writer_exhaustive_binary",
+              "cells::tests::owned_writer_exhaustive_ternary",
+              "cells::tests::owned_writer_long_columns",
+              "cells::tests::miri_cells_owned_writer",
+              "cells::tests::owned_writer_periodic_witnesses",
+              "cells::tests::owned_writer_nested_copies"
+            ]
+          },
+          "miri_cells_owned": {
+            "exit": 101,
+            "ran": 1,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::miri_cells_owned_writer"
+            ]
+          }
+        }
+      },
+      {
+        "name": "the carried descriptors not updated",
+        "verdict": "KILLED",
+        "built": true,
+        "failing": [
+          "cells::tests::miri_cells_owned_writer",
+          "cells::tests::owned_writer_long_columns",
+          "cells::tests::owned_writer_nested_copies",
+          "cells::tests::owned_writer_periodic_witnesses"
+        ],
+        "panic": "src/cells_owned_test.rs:135:13:: assertion `left == right` failed: variant 0, row 0",
+        "selections": {
+          "owned_writer": {
+            "exit": 101,
+            "ran": 6,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::miri_cells_owned_writer",
+              "cells::tests::owned_writer_long_columns",
+              "cells::tests::owned_writer_periodic_witnesses",
+              "cells::tests::owned_writer_nested_copies"
+            ]
+          },
+          "miri_cells_owned": {
+            "exit": 101,
+            "ran": 1,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::miri_cells_owned_writer"
+            ]
+          }
+        }
+      },
+      {
+        "name": "the guard admits a shorter cycle",
+        "verdict": "KILLED",
+        "built": true,
+        "failing": [
+          "cells::tests::owned_writer_exhaustive_binary",
+          "cells::tests::owned_writer_exhaustive_ternary",
+          "cells::tests::owned_writer_long_columns",
+          "cells::tests::owned_writer_periodic_witnesses"
+        ],
+        "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [0, 1, 0], row 1",
+        "selections": {
+          "owned_writer": {
+            "exit": 101,
+            "ran": 6,
+            "results": [
+              "FAILED"
+            ],
+            "failed": [
+              "cells::tests::owned_writer_exhaustive_binary",
+              "cells::tests::owned_writer_exhaustive_ternary",
+              "cells::tests::owned_writer_long_columns",
+              "cells::tests::owned_writer_periodic_witnesses"
+            ]
+          },
+          "miri_cells_owned": {
+            "exit": 0,
+            "ran": 1,
+            "results": [
+              "ok"
+            ],
+            "failed": []
+          }
+        }
+      }
+    ]
+  },
+  "substitution": [
+    {
+      "mode": "baseline_build",
+      "exit": 1,
+      "calls": 1,
+      "verdicts": []
+    },
+    {
+      "mode": "mutant_build",
+      "exit": 1,
+      "calls": 11,
+      "verdicts": [
+        "INVALID (did not build)",
+        "INVALID (did not build)",
+        "INVALID (did not build)",
+        "INVALID (did not build)",
+        "INVALID (did not build)",
+        "INVALID (did not build)",
+        "INVALID (did not build)",
+        "INVALID (did not build)"
+      ]
+    },
+    {
+      "mode": "selection_build",
+      "exit": 1,
+      "calls": 27,
+      "verdicts": [
+        "SURVIVED",
+        "SURVIVED",
+        "SURVIVED",
+        "SURVIVED",
+        "SURVIVED",
+        "SURVIVED",
+        "SURVIVED",
+        "SURVIVED"
+      ]
+    },
+    {
+      "mode": "zero_tests",
+      "exit": 1,
+      "calls": 3,
+      "verdicts": []
+    },
+    {
+      "mode": "runtime",
+      "exit": 0,
+      "calls": 27,
+      "verdicts": [
+        "KILLED",
+        "KILLED",
+        "KILLED",
+        "KILLED",
+        "KILLED",
+        "KILLED",
+        "KILLED",
+        "KILLED"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+[
+  {
+    "mode": "baseline_build",
+    "exit": 1,
+    "calls": 1,
+    "verdicts": []
+  },
+  {
+    "mode": "mutant_build",
+    "exit": 1,
+    "calls": 11,
+    "verdicts": [
+      "INVALID (did not build)",
+      "INVALID (did not build)",
+      "INVALID (did not build)",
+      "INVALID (did not build)",
+      "INVALID (did not build)",
+      "INVALID (did not build)",
+      "INVALID (did not build)",
+      "INVALID (did not build)"
+    ]
+  },
+  {
+    "mode": "selection_build",
+    "exit": 1,
+    "calls": 27,
+    "verdicts": [
+      "SURVIVED",
+      "SURVIVED",
+      "SURVIVED",
+      "SURVIVED",
+      "SURVIVED",
+      "SURVIVED",
+      "SURVIVED",
+      "SURVIVED"
+    ]
+  },
+  {
+    "mode": "zero_tests",
+    "exit": 1,
+    "calls": 3,
+    "verdicts": []
+  },
+  {
+    "mode": "runtime",
+    "exit": 0,
+    "calls": 27,
+    "verdicts": [
+      "KILLED",
+      "KILLED",
+      "KILLED",
+      "KILLED",
+      "KILLED",
+      "KILLED",
+      "KILLED",
+      "KILLED"
+    ]
+  }
+]

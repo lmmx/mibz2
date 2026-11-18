@@ -4749,3 +4749,8 @@ Incoming 6904418769; head 6d97806ce32fb72db81c11a67d39140ade0caba5. G1 PROCEED f
 ## D113 — PR581 one-scan writer
 
 Incoming 6988393925; head cd7e5de2b7c61442f7a391436eee910a5ebb126a. G1 ownership/overwrite/copy-order proof supported; no unmutated writer counterexample found. G2 HOLD integration pending completed new-path Miri and identifiable runtime mutation kills. The scorer reproducibly reports 8/8 with no tests run; this does not establish that the original runs were false kills. Independent model: 41,331 classifications, 5,249 owned executions exact against LF, reversed copies detect unfinished sources. Fuzz smoke completed; paired bench/adoption separate. [Full review and exact lift condition](reports/D113-one-scan-writer.md). Evidence sha256:6a6b596cb031beb4704d77e80ac606e94a9f23f438b8f0cb03b0f9a66e8605f4.
+
+
+## D114 — PR581: lift D113
+
+Incoming 6988881933; head 270a29ba52a90b8411d20c2326b93692a6e421e7. **G1 PROCEED; G2 lift D113's B5 evidence HOLD.** Completed Miri inspected (48+4 tests); actual merge checkout tree identical to reviewed source; new head changes only journal/scorer/receipts. Eight built mutants have named runtime failure receipts. Independent scorer substitution rejects baseline/build/dependency/zero-test failures and accepts runtime failures. Seven baseline executions are six distinct tests. Performance and adoption remain separate. [Full lift review](reports/D114-one-scan-lift.md). Evidence sha256:7a64dcdcad7a380adbbde38241ffaf0c542e0e2ae0774c74cba95d02b2b2f64e.
