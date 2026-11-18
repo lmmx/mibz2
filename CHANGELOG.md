@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5](https://github.com/lmmx/mibz2/compare/v0.5.4...v0.5.5) - 2026-11-18
+
+### <!-- 3 -->Performance
+
+- *(cells)* wider admission for the lazy kernel, to r/n 0.15 with a budget of 0.32 n ([#559](https://github.com/lmmx/mibz2/pull/559))
+
+### <!-- 4 -->Documentation
+
+- *(blog)* Raising the knee, at /blog/2026-11-17-raising-the-knee/
+- *(blog)* retitle the knee post "Straightening the knee: scaling throughput beyond physical cores", with a new dek
+- *(blog)* retitle the knee post "Straightening the knee: gaining speed with more threads and hyperthreading"
+
+### <!-- 9 -->Other
+
+- the knee is gone, more threads without the fall ([#550](https://github.com/lmmx/mibz2/pull/550))
+- Blog (worker count): round-2 revision, a shorter post and technical notes ([#538](https://github.com/lmmx/mibz2/pull/538))
+- Release scaling: 0.5.4 against 0.5.3 on the i9; 0.5.4's notes and attribution row ([#548](https://github.com/lmmx/mibz2/pull/548))
+
 - **Wider admission for the lazy kernel** (#556's run, this PR). `LazyCells`, the workers' kernel
   from `LAZY_FROM_THREADS` threads and on the trimmed i9 plans, admits blocks up to r/n 0.15 (3 run
   records in 20 rows), not 0.10, with a budget of 0.32 n cells, not 0.16 n; the sparse gate is
