@@ -1,0 +1,9 @@
+# Astra A · evidence baseline before reading the summary
+
+Whole-domain extension learns that every row in an existing original-run domain can take a second already known translation and spelling. The test is full translated containment. A successful join points at completed output, and a failed test retires that source. The split alternative permits subdomains at higher navigation cost. An explicit marked cursor and terminal clipping determine the exact output length, including short periods.
+
+The frozen whole-domain receipt gives 25,283 installs, 6,902 retirements and 117,399 output visits. Its literals and copied bytes partition 899,931 marked bytes, and its unit and wide visits sum to the visit count. The candidate's two archived corpus receipts join 233 large run-front blocks. The reproduction runs each arm with two output checks: byte equality with separately extracted Plain output before RLE1, and length plus digest equality to independently rewrapped libbz2 output after RLE1.
+
+The cold 20 MiB model's staged seven-worker row charges 186,738 reads and 173,858 dirty writes for whole domains, versus 227,782 of each for lazy Cells. Ten charges 269,815 reads and 251,269 dirty writes versus 327,754 of each. Thus 360,596 versus 455,564 and 521,084 versus 655,508 are model line transfers from the synthetic cohort, not hardware traffic. The span comparison uses candidate visits and the Cells writer's logical span count R+1. Spans, model memory operands, cache transfers and wall time carry different units. The corpus receipts can support correctness over their input population without making the smaller synthetic cohort representative of all 233 or assigning a cycle price.
+
+[Companion evidence](https://github.com/lmmx/mibz2/tree/4ee40ab341b4fdb1681f8a585cde7cee21e076db/docs/journal/astra-a-reinvention)
