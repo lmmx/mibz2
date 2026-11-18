@@ -124,19 +124,38 @@ fn client_request(default: u64, _: [u64; 6]) -> u64 {
 /// end with the output bytes it decoded
 const REQ_BEGIN: u64 = (b'M' as u64) << 24 | (b'S' as u64) << 16;
 const REQ_END: u64 = REQ_BEGIN + 1;
+/// (the warm-up's start: until REQ_BEGIN, accesses fill chaingrind's caches and count nothing)
+const REQ_WARM: u64 = REQ_BEGIN + 2;
 
 /// The proxy's driver: the blocks decoded on this thread by `K`, the first once beforehand
 /// outside the region (its buffers sized, as a worker's are after its first block)
-fn proxy<K: InverseBwt>(blocks: &[mibz2::block::Symbols]) -> (u64, u64) {
+/// Decodes `blocks` on one thread between the two client requests that bound chaingrind's region.
+/// Before the region it decodes the first block once, to size the buffers. With `warm`, that
+/// first block is a warm-up only and is left out of the region: a worker's state after some other
+/// block, not after the measured block itself, and chaingrind's caches are warmed by it. The
+/// measured blocks are decoded once before that, so that no buffer grows inside the region.
+fn proxy<K: InverseBwt>(blocks: &[mibz2::block::Symbols], warm: bool) -> (u64, u64) {
     let k = Kernels::detect();
     let mut s = mibz2::Scratch::<K>::default();
     let mut out = Vec::new();
+    if warm {
+        // the measured blocks once first, outside the region and unseen by chaingrind's
+        // caches: the kernel's buffers grow only when a block needs more than they hold (a
+        // zero-filled reallocation, which Valgrind runs a byte a store), and a real worker's
+        // have grown to their size within its first few blocks, never during a later one
+        for b in blocks.iter().skip(1) {
+            out.clear();
+            mibz2::decode_block(b, k, &mut s, &mut out).unwrap_or_else(|e| fail(&format!("{e:?}")));
+        }
+        client_request(0, [REQ_WARM, 0, 0, 0, 0, 0]);
+    }
     if let Some(b) = blocks.first() {
+        out.clear();
         mibz2::decode_block(b, k, &mut s, &mut out).unwrap_or_else(|e| fail(&format!("{e:?}")));
     }
     let mut total = 0u64;
     let under = client_request(0, [REQ_BEGIN, 0, 0, 0, 0, 0]);
-    for b in blocks {
+    for b in &blocks[(warm as usize).min(blocks.len())..] {
         out.clear();
         mibz2::decode_block(b, k, &mut s, &mut out).unwrap_or_else(|e| fail(&format!("{e:?}")));
         total += out.len() as u64;
@@ -207,7 +226,8 @@ fn main() {
         "proxy" => {
             let path = need(&args, "--symbols");
             let blocks = check::read_symbols(&std::fs::read(&path).unwrap());
-            let (bytes, under) = by_arm!(arm.as_str(), proxy(&blocks), unknown());
+            let warm = args.iter().any(|a| a == "--warm");
+            let (bytes, under) = by_arm!(arm.as_str(), proxy(&blocks, warm), unknown());
             println!(
                 "{{\"arm\":{arm:?},\"blocks\":{},\"out_bytes\":{bytes},\"under_chaingrind\":{}}}",
                 blocks.len(),
