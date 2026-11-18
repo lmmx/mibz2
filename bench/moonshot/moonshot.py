@@ -339,7 +339,7 @@ def cell(
     return {"cpb": total["cycles"] / b, "lat0": lat0, "rel_slope": rel, "dram_bpb": 64 * dram / b}
 
 
-def solve(cells: dict, m: dict, iters: int = 60) -> dict:
+def solve(cells: dict, m: dict, iters: int = 60, feedback: bool = True) -> dict:
     """the bandwidth-latency fixed point. cells: {W: {arm: cell()}}, lazy among the arms at the
     anchor's W. An arm's cycles a byte at DRAM latency L are cpb (1 + rel_slope (L - lat0)).
     - lazy: its bandwidth at W is the anchor's (20.0 GB/s at 7 workers, measured) scaled by its
@@ -349,6 +349,7 @@ def solve(cells: dict, m: dict, iters: int = 60) -> dict:
       its latency the queue's at that.
     c0 is the process's DRAM traffic outside decode_block (input, scan, output copy), the i9's
     whole-process 8.0 B/B for lazy at 7 workers less the model's, never below 0.
+    Without `feedback` (an ablation), every arm takes lazy's latency at W.
     Returns {W: {arm: {cpb, lat, gbs}}}"""
     a = m["lazy_anchor"]
     aw = str(a["workers"])
@@ -394,7 +395,7 @@ def solve(cells: dict, m: dict, iters: int = 60) -> dict:
             def g_at(L, c=c):
                 return gbs[w] * (c["dram_bpb"] + c0) / (lz["dram_bpb"] + c0) * c_l / cpb(c, L)
 
-            la = fixed(g_at)
+            la = fixed(g_at) if feedback else lat[w]
             out[w][arm] = {"cpb": cpb(c, la), "lat": la, "gbs": g_at(la)}
     return out
 
@@ -411,7 +412,7 @@ def predicted_ratio(cand_cpb: float, cand_w: int, ref_cpb: float, ref_w: int) ->
 
 
 def bootstrap_cells(
-    runs: dict, sample: dict, m: dict, reps: int = 400, seed: int = 1
+    runs: dict, sample: dict, m: dict, reps: int = 400, seed: int = 1, feedback: bool = True
 ) -> list[dict]:
     """the fixed point on `reps` resamples of the blocks, the same blocks for every arm (paired);
     the slopes held at the whole sample's. runs: {W: {arm: {"base": {block: counters}, "lo":
@@ -449,7 +450,7 @@ def bootstrap_cells(
                     / tot["out_bytes"]
                 )
                 cells[w][a] = c
-        sols.append(solve(cells, m))
+        sols.append(solve(cells, m, feedback=feedback))
     return sols
 
 
@@ -781,7 +782,7 @@ def load_runs(path: Path) -> tuple[dict, dict]:
     return res, lats
 
 
-def read_proxy(runs: dict, sample: dict, cal: dict, reps: int = 400) -> dict:
+def read_proxy(runs: dict, sample: dict, cal: dict, reps: int = 400, feedback: bool = True) -> dict:
     """the proxy's reading of per-block runs ({W: {arm: ...}}, `Scorer.proxy_runs`): each arm's
     metrics a byte (corpus-weighted), the fixed point, each arm's predicted ratio over lazy with a
     paired bootstrap 95% interval over the blocks and the metrics that drive it, the i9 cells
@@ -802,8 +803,8 @@ def read_proxy(runs: dict, sample: dict, cal: dict, reps: int = 400) -> dict:
             # (cycles a byte rise, in per cent, for 100 cycles more DRAM latency)
             x["dram_latency_sensitivity"] = 100 * 100 * c["rel_slope"]
             metrics.setdefault(a, {})[w] = x
-    sol = solve(cells, m)
-    boots = bootstrap_cells(runs, sample, m, reps=reps) if reps else []
+    sol = solve(cells, m, feedback=feedback)
+    boots = bootstrap_cells(runs, sample, m, reps=reps, feedback=feedback) if reps else []
     preds: dict = {}
     for w in sol:
         for a in sol[w]:
