@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [What decoding pays for](<https://lmmx.github.io/mibz2/blog/2026-11-18-what-decoding-pays-for/index.md>): Three very different ways of undoing bzip2's block sort spend about two operations per run, and one property of each block explains why they rise and fall together.
 - [Cutting the loop open](<https://lmmx.github.io/mibz2/blog/2026-11-18-cutting-the-loop-open/index.md>): Snip the decoder's one long loop open and most of each Wikidata block falls into bundled paths, where one traced letter spells about sixteen.
 - [Technical notes](<https://lmmx.github.io/mibz2/blog/2026-11-18-cutting-the-loop-open-notes/index.md>): Technical notes to the post on cutting the loop open: the bundle bound and its tight cases, one strip's heights, the two constructors of the open paths, the narrow–wide switch cut, and what the two verifications checked.
 - [Raising the knee](<https://lmmx.github.io/mibz2/blog/2026-11-17-raising-the-knee/index.md>): mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are busy, then holds level on the whole machine up to twenty threads.
