@@ -129,3 +129,83 @@ It would take about 10 minutes.
 
 **What this decides:** nothing in production. The shipped trims hold in the turbo state, which is
 the state continuous decoding reaches.
+
+## 4. The cold-start candidate, tested first (the Coordinator's addition; the Pathfinder's REVIEW 6986646879)
+
+**The cold-start record** (`docs/journal/2026-11-10-cold-start.md`, evidence `cold-start/20261110T102700Z`,
+SHA-256 b785bf06… checked). Each run was one fresh 10-thread Wikidata decode, preceded by a 0.25 s
+idle gap from the reap, except in arm Z. The arms:
+
+| arm | condition | fast runs | wall | CPU |
+|---|---|---|---|---|
+| G | the gap alone | **9 / 30** | 0.29 s | 2.17 s |
+| Z | no gap | **29 / 30** | 0.137 s | 1.03 s |
+| B | one spinner on CPU 19 through the gap | **30 / 30** | 0.141 s | |
+| P | pinned one per core | 7 / 30 | | |
+| W | a 20 ms all-CPU burst before exec | 10 / 30 | | |
+
+The clock read at exit was 4.9 GHz in every arm, the slow G runs included.
+
+**It is the same phenomenon (C).** Six independent agreements:
+1. **The same gate.** The recalibration's `ab run` sampled a 0.25 s settle before every run. Its
+   unpinned cells had no spinner. Its pinned cells had one held on a free core at 4, 6 and 8 threads
+   (`--hold-cpu`, `--hold-max-threads 9`), and none at 10, where no core was free.
+2. **The spinner pattern.**
+   - *Pinned 10, no spinner:* bimodal.
+   - *Pinned 4, 6 and 8, spinner held:* tight.
+   - *Every unpinned cell, no spinner:* slow runs present, at 4, 6 and 8 threads too.
+
+   This is the cold start's B arm. **Record 58's explanation of the tight pinned 8 cell ("never
+   builds enough history") is wrong:** the spinner kept it fast.
+3. **The penalty is additive, not a rate.** Slow minus fast, by cell (59 cells with both modes):
+
+   | corpus | fast wall | slow − fast | slow ÷ fast |
+   |---|---|---|---|
+   | Wikidata ×4 | 0.31–0.36 s | **+0.114 to +0.145 s** | 1.33–1.45 |
+   | text | 0.064–0.071 s | **+0.11 to +0.14 s** in 9 cells (7/28 and others), **+0.02 to +0.05 s** in the rest | up to **3.09** |
+   | random | 0.12 s | +0.03 to +0.04 s | 1.23–1.35 |
+   | cold-start G | 0.137 s | **+0.15 s** | 2.1 |
+
+   - *Across cells,* the ratio ranges from 1.23 to 3.09 and correlates negatively with the fast wall
+     (−0.39). The increment correlates positively (0.67).
+   - *Record 58's "1.40×"* was an artefact of the Wikidata ×4 decodes all lasting about 0.33 s.
+   - **It is a fixed start-up penalty of about 0.13–0.15 s on a heavy decode, not a slower clock.**
+     The extra CPU, about 1.1 s across about 8 busy threads, is about that long on every thread.
+4. **No gap, no penalty.** All 30 Z runs but one were fast, as were the recalibration's back-to-back
+   DRAM phase (19 of 20) and all of bench-sustain.
+5. **The clock at exit is full speed** in the cold start's slow runs. Whatever happens is a start-up
+   transient. The sustained bundle's 1.20 dips are a separate, milder state.
+6. **Penalised runs after penalised runs.** In the cold start, G is slow after every kind of
+   predecessor (all of them heavy decodes): 6 of 6 after a slow run, 4 of 4 after the ×4 input.
+
+**Verdict: the cold-start candidate is SUPPORTED.**
+- *The mechanism:* a package-level idle in a 0.25 s gap with nothing running, followed by a heavy
+  start, costs a fixed transient of about 0.14 s.
+- *What the bundles show:* one spinner prevents it; no gap prevents it; the core clock is at full
+  speed by the end of the run.
+- *Labels:* the fixed penalty and the spinner/gate pattern are counted (C). That the cause is a deep
+  package C-state exit, an uncore ramp or similar is still Conj; there are no C-state or uncore
+  counters.
+
+**Record 58 is CORRECTED again.**
+- *Withdrawn:* "a chip-wide clock state about 1.4× slower with memory of recent load".
+- *Replaced by:* a fixed start-up penalty after a quiet 0.25 s gap, absent with a spinner or without
+  a gap.
+- *The unresolved bimodal cells:* their noise is a gate artefact. A run without the gap (or with a
+  spinner) would resolve them.
+
+**Still unexplained (C, open):**
+1. **Light predecessors.** In the recalibration, a heavy run after a *light* run (text or random)
+   was never slow: 0 of 82, through the same gate. The cold start had no light predecessors, so it
+   cannot test this.
+2. **The 2 s gate.** The admit run's 2 s gate was tight, without a spinner.
+
+Both say that the gap alone is not sufficient: what precedes it, or its length, matters.
+
+**The decisive test (Conj, smaller than §3's).** The Pathfinder's alternation, one arm cycling
+0.25 s, 2 s and no gap, with:
+- predecessors heavy and light;
+- a spinner on and off;
+- cycles ÷ ref-cycles for each decode;
+
+and, if possible, `turbostat` package C-state residency. It is the Coordinator's call.
