@@ -63,7 +63,7 @@ The medians are 1.837, 1.929 and 1.778 per run, and each count varies by only 3�
 
 | Construction | Full Wikidata stream, against eager Cells |
 | --- | ---: |
-| Open return ([Cutting the loop open](2026-11-18-cutting-the-loop-open.md)) | 9–21% slower |
+| Open return ([Cutting the loop open](2026-11-18-cutting-the-loop-open.md)) | 17.1% slower |
 | Adjacent-rank induction | 11× slower (8.37 s against 0.729 s) |
 | Forest-section elimination | 15.23× slower (median of paired rounds) |
 
