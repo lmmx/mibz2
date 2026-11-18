@@ -28,3 +28,5 @@ bash research/astra-e/score.sh packed-round1 "$MOONSHOT_CANDIDATE" --with-opend
 ```
 
 The corpus geometry test checks each accepted output byte against the shipped multi-lane Segmented reconstruction and logs actual table sizes, rule counts and capacities per large block. The scorer supplies the independent libbzip2 gate and whole-worker comparison. The raw property-suite output is in `property-test.log`.
+
+The completed large-block census checks 205,197,794 rows in 228 admissions; five large blocks declined at the pre-gate. All 26,292,727 cut counts match the existing per-block induction records. The immediate cutoff required 13,655,080 grammar rules, compared with 7,895,827 for the release writer. The follow-up stores 6–16 byte literals to price the extra rule visits. [Geometry](geometry.csv) · [Geometry check](geometry-test.log) · [Hybrid experiment](hybrid/README.md)
