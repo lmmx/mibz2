@@ -1,0 +1,30 @@
+2026-11-18
+Base commit 111ff9ac70f25c3b59adb2fb9c51c29dbf2723dd
+Production src/ and Cargo.toml at this base match master d9892b328ade871d29b10e447bcb909b3afaaf99.
+Compiler rustc 1.90.0, release profile, Cargo.lock respected.
+Xeon Platinum 8573C, five visible CPUs, one thread per core, four-CPU quota.
+
+Frozen compressed bytes 41618
+Frozen compressed SHA-256 e3bf5372b15885da138764a25bb2b7cd784ee3cbee1e664937647921ae3122b0
+Frozen primary 264045, inverse length 899931, decoded length 900000
+Frozen last-column SHA-256 db8764224ac4980112ddefbe85b8593f5236643fed71bf8f0b739567d4f2ac67
+Frozen pre-RLE SHA-256 f87e5caa2d5f0df9d5958fe60901e2023ae04ac406603d4c1584c8bb4017fbd6
+Frozen output SHA-256 d2584c09f1d643d6abff8a25513b63af4e05969c15c30256aed3a05c74281210
+
+Direct maximal-run inverse through production RLE1 and CRC, compared with bzip2 -dc by cmp
+Wikidata input SHA-256 82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915
+Wikidata output 209700196 bytes, SHA-256 3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf
+Prose input SHA-256 5dcc4817845a94d62556716f9a8305ee95bd3776653f0a48a20247cfb13d6357
+Prose output 4947388 bytes, SHA-256 0da092515b0911aad1f23304a7d5e9d058669191e5c1070afe0d43a99fb98959
+All 431 Wikidata and 6 prose blocks compared before RLE1 with Plain in the forced sparse census.
+All timed arms compared after timing with the complete calling-thread Cells output.
+Separate block and combined stream CRC mutations rejected by both sparse entrances.
+
+Exhaustive arbitrary byte columns 5325, primary choices 39758, matched Plain.
+All permutations through seven ranks 5913, plus 2000 seeded exchanges with widths up to 43.
+Every surviving row audited against original bytes, first return endpoint, seam bit and length at every level.
+Both dense local-minimum inverses and the four-byte context forest matched Plain on 9601 primary choices.
+Direct maximal-run MTF reader matched scalar MTF on 15625 symbol sequences.
+Four-source-atom, five-result-atom counterexample reproduced.
+Full cargo test --release --locked --lib --tests under CPUs 0-3 with the journal modules installed
+213 passed, 0 failed, 2 existing ignored tests.

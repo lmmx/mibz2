@@ -1,0 +1,13 @@
+input,arm,additional_peak_requested_bytes,returned_length
+frozen,cells,10353399,900000
+frozen,lazy,10784476,900000
+frozen,segmented,10487446,900000
+frozen,valley,11915687,900000
+frozen,extrema,12506302,900000
+frozen,direct,12814472,900000
+primitive,cells,9115987,875001
+primitive,lazy,9115987,875001
+primitive,segmented,9114587,875001
+primitive,valley,10564664,875001
+primitive,extrema,3564656,875001
+primitive,direct,3550330,875001
