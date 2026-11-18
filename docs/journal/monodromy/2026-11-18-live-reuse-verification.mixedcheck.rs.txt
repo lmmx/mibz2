@@ -5,7 +5,7 @@ use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{mtf, Kernels};
 const NIL: u32 = u32::MAX;
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
-struct Counts { steps: u64, t: u64, f: u64, m: u64, h: u64, g: u64, h_te: u64, h_tb: u64, diff: u64, eq_long: u64, bytes: u64, sep: u64, glue: u64, adj_bot: u64, m_any: u64, h_any: u64, d_is_a: u64, h_touched: u64, trace: u64, h_tt: u64, same_dir: u64, bsteps: u64, old_lit_t: u64, prev: u8 }
+struct Counts { steps: u64, t: u64, f: u64, m: u64, h: u64, g: u64, h_te: u64, h_tb: u64, diff: u64, eq_long: u64, bytes: u64, sep: u64, glue: u64, adj_bot: u64, m_any: u64, h_any: u64, d_is_a: u64, h_touched: u64, trace: u64, h_tt: u64, same_dir: u64, bsteps: u64, old_lit_t: u64, prev: u8, rule_win: u64 }
 struct Ind {
     // per letter (original or cell)
     w: Vec<u64>, tpos: Vec<u64>, bpos: Vec<u64>, hits: Vec<(u64, u64)>, word: Vec<u32>, orig: Vec<bool>, touched: Vec<bool>, byte: Vec<i16>,
@@ -60,6 +60,7 @@ impl Ind {
             c.steps += 1;
             c.trace = (c.trace ^ (wa.wrapping_mul(0x9E3779B97F4A7C15) ^ wb.rotate_left(29))).wrapping_mul(0x100000001B3);
             let dir = if wa > wb { 1u8 } else if wa < wb { 2 } else { 3 };
+            if dir != 3 { let wn = if dir == 1 { a } else { b }; let g = self.word[wn as usize] as usize; if self.gl[g] != NIL && self.glen[g] > 16 && !self.gmark[g] { c.rule_win += 1; } }
             if dir != 3 && dir == c.prev { c.same_dir += 1; } c.prev = dir; if dir == 2 { c.bsteps += 1; }
             if wa > wb {
                 c.t += 1;
@@ -245,8 +246,8 @@ fn main() {
             i += 1; syms = b.syms; continue;
         }
         if ll.len() >= std::env::var("MINLEN").map_or(65536, |v| v.parse().unwrap()) { let (s, j, ok) = check(&ll, p);
-            println!("{{\"blk\":{i},\"n\":{},\"ok\":{ok},\"same_m\":{},\"steps\":{},\"t\":{},\"F\":{},\"M\":{},\"H\":{},\"H_TE\":{},\"H_TB\":{},\"G\":{},\"diff\":{},\"eq_long\":{},\"bytes\":{},\"sep\":{},\"glue\":{},\"adj_bot\":{},\"m_any\":{},\"h_any\":{},\"d_is_a\":{},\"h_touched\":{},\"h_tt\":{},\"same_dir\":{},\"bsteps\":{},\"old_lit_t\":{}}}",
-                ll.len(), s.m == j.m && s.h == j.h && s.f == j.f && s.steps == j.steps && s.trace == j.trace, s.steps, s.t, s.f, s.m, s.h, s.h_te, s.h_tb, s.g, s.diff, s.eq_long, s.bytes, j.sep, j.glue, j.adj_bot, s.m_any, s.h_any, s.d_is_a, s.h_touched, s.h_tt, s.same_dir, s.bsteps, s.old_lit_t);
+            println!("{{\"blk\":{i},\"n\":{},\"ok\":{ok},\"same_m\":{},\"steps\":{},\"t\":{},\"F\":{},\"M\":{},\"H\":{},\"H_TE\":{},\"H_TB\":{},\"G\":{},\"diff\":{},\"eq_long\":{},\"bytes\":{},\"sep\":{},\"glue\":{},\"adj_bot\":{},\"m_any\":{},\"h_any\":{},\"d_is_a\":{},\"h_touched\":{},\"h_tt\":{},\"same_dir\":{},\"bsteps\":{},\"old_lit_t\":{},\"rule_win\":{}}}",
+                ll.len(), s.m == j.m && s.h == j.h && s.f == j.f && s.steps == j.steps && s.trace == j.trace, s.steps, s.t, s.f, s.m, s.h, s.h_te, s.h_tb, s.g, s.diff, s.eq_long, s.bytes, j.sep, j.glue, j.adj_bot, s.m_any, s.h_any, s.d_is_a, s.h_touched, s.h_tt, s.same_dir, s.bsteps, s.old_lit_t, s.rule_win);
             i += 1; }
         syms = b.syms;
     }
