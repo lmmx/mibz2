@@ -65,8 +65,19 @@ trim is unchanged.
   cuts per-block CPU by about 2–4%, with no change in peak memory or DRAM bytes per output
   byte. The 10-thread trim is held by its memory cost, not its speed. The release scaling and
   the crossover check it (§5a, §5c).
-- **The release scaling and the crossover** (0.5.6 against 0.5.5 on the i9) are running from
-  the workstation queue at 530ed404. Their figures follow here when they land.
+- **The release scaling** (0.5.6 against 0.5.5 on the i9-10900K, `bench-release-scaling`,
+  release-scaling/run-20261118T201717Z, 10 rounds; 0.5.5's wall over 0.5.6's on Wikidata, 95%
+  interval; above 1 means 0.5.6 is faster):
+
+  | threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+  |---|--:|--:|--:|--:|--:|--:|--:|--:|
+  | wall | 1.012 [0.976, 1.050] | 1.017 [1.000, 1.034] | 1.021 [0.994, 1.048] | **1.027** [1.015, 1.040] | 1.001 [0.957, 1.046] | 1.012 [0.989, 1.035] | **1.018** [1.002, 1.035] | **1.019** [1.001, 1.038] |
+
+  0.5.6 is about 2–3% faster at 8, 16 and 20 threads, and its CPU time is 1–3% lower from 2
+  threads up. At 10 threads wall time is unchanged within a wide interval, and CPU time is
+  1.2% lower [1.000, 1.024]. No step reaches the attribution ledger's 3% bar (§5b).
+- **The crossover** (§5a) is running from the workstation queue at 530ed404. Its verdict
+  follows here.
 
 ## [0.5.5](https://github.com/lmmx/mibz2/compare/v0.5.4...v0.5.5) - 2026-11-18
 
