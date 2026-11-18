@@ -58,19 +58,31 @@ paired bench.
 - **On real data:** bytes identical on every block in the comparison below, with zero blocks
   differing in any corpus or kernel.
 
-- **Mutation check** ([`mutate.py`](2026-11-18-one-scan-writer/mutate.py)): eight mutations of the writer, each
-  alone, against the writer's tests:
-  - the survival certificate inverted;
-  - no wrap;
-  - the commands run last parent first;
-  - no command stored;
-  - an owned position not set;
-  - the root one place off;
-  - the carried descriptors not updated;
-  - the guard admitting a shorter cycle.
+- **Mutation check** ([`mutate.py`](2026-11-18-one-scan-writer/mutate.py), receipts in
+  [`receipts.json`](2026-11-18-one-scan-writer/receipts.json), run at cd7e5de2 with `src`
+  unchanged since): eight mutations of the writer, each alone, against the writer's two test
+  selections (`owned_writer`, `miri_cells_owned`, run natively).
+  - *The scorer:* the baseline must build and run its tests with every one passing (7 ran, 7
+    passed). A mutant must build. A kill is a runtime test failure, with the failing tests
+    named. The first version counted any nonzero cargo exit as a kill, so a build failure would
+    have scored. The Guardian reproduced a false "8 of 8" that way (D113, REVIEW 6988584322).
+  - *The result:* all eight build, and each is killed by named failing tests:
 
-  The first round missed "the commands run last parent first": no small column nests copies.
-  The nested-copies test was added for it, and every mutation is caught.
+    | mutant | failing tests |
+    |---|--:|
+    | the survival certificate inverted | 6 |
+    | no wrap on the marked spine | 6 |
+    | the commands run last parent first | 1: `owned_writer_nested_copies` |
+    | no command stored | 4 |
+    | an owned child's position not set | 6 |
+    | the root one place off | 6 |
+    | the carried descriptors not updated | 4 |
+    | the guard admitting a shorter cycle | 4 |
+
+  - *The history:* the first round missed "the commands run last parent first", because no small
+    column nests copies. `owned_writer_nested_copies` was added for it. The comparison harness
+    also hid it at first, by reusing an output that held the right bytes; it now poisons the
+    output before every run.
 
 ## Writer time
 
