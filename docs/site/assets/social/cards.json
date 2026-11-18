@@ -182,7 +182,7 @@
     "title": "Cutting the loop open: decoding a block along shared paths"
   },
   "assets/social/blog-2026-11-18-what-decoding-pays-for.png": {
-    "description": "Three very different ways of undoing bzip2's block sort spend about two operations per run, and one property of each block explains why they rise and fall together.",
+    "description": "Three ways of undoing bzip2's block sort spend about two operations per run, and how long run boundaries persist explains much of why Cells and the forest vary.",
     "foot": "lmmx.github.io/mibz2 · 18 November 2026",
     "kind": "result",
     "section": " · Research blog",
