@@ -1,4 +1,5 @@
 """Replay the archived frozen references without the Rust toolchain or Valgrind."""
+
 import csv
 import hashlib
 import io
@@ -59,7 +60,8 @@ def verify(work, arm):
         if capacity == "2048":
             expected = [
                 {k: v for k, v in r.items() if k not in {"ordinal", "llc_KiB"}}
-                for r in table(evidence / f"{arm}-regions.csv") if r["ordinal"] == "1"
+                for r in table(evidence / f"{arm}-regions.csv")
+                if r["ordinal"] == "1"
             ]
             assert rows == expected, (arm, "phase and region")
         transfers = sum(int(block[k]) for k in ("dram_read", "dram_rfo", "dram_wb"))
@@ -72,8 +74,15 @@ if __name__ == "__main__":
         work = Path(tmp)
         read_traces(work)
         subprocess.run(
-            [os.environ.get("CXX", "c++"), "-std=c++17", "-O3", study / "replay.cc",
-             "-o", work / "replay"], check=True
+            [
+                os.environ.get("CXX", "c++"),
+                "-std=c++17",
+                "-O3",
+                study / "replay.cc",
+                "-o",
+                work / "replay",
+            ],
+            check=True,
         )
         for arm in arms:
             verify(work, arm)
