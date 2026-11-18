@@ -99,7 +99,7 @@ multiplexed.
    the point.
 2. **An idle baseline:** `perf stat -a sleep 2`. The cell's own DRAM rate is taken off each
    decode's bytes.
-3. **A 30 s pre-warm on the reference,** so the chip and its cooler start the rounds in the
+3. **A 60 s pre-warm on the reference,** so the chip and its cooler start the rounds in the
    sustained state.
 4. **Rounds.** Each round runs one block per arm, back to back with no gap, in `ab run`'s order:
    rotated round by round and reversed every other cycle of rounds. So over 2 × arms rounds,
@@ -129,8 +129,9 @@ multiplexed.
 **Time on the i9:**
 - about 7.5 min each for u10, p10 and p8;
 - about 4.5 min for p6 and 5 min for p4;
-- 2.5 min of pre-warm, 2.5 min of probe and rest, and about 2 min to build and generate;
-- **about 40 minutes in all.**
+- 5 min of pre-warm (60 s a cell), 2.5 min of probe and rest, and about 2 min to build and
+  generate;
+- **about 43 minutes in all.**
 
 ## The rule
 
@@ -149,7 +150,12 @@ It writes nothing, and the placement is VOID, where:
 - **the sustained state is not held:** in more than 10% of a cell's blocks, the measured
   main-corpus decodes' mean clock differs by more than 3% from the block's last warm decode's;
 - **turbo in a cell registered clamped** (u10, p10; record 64's note 1): a measured main-corpus
-  decode at a clock of 1.2 or above.
+  decode at a clock of 1.2 or above;
+- **the pre-warm missing or failed** (the Researcher's targeted correction, REVIEW 6985154079):
+  - no pre-warm decode in a cell;
+  - one failed or not fully counted;
+  - pre-warm decodes of more than one arm, or of an arm the cell does not measure;
+  - the last ending before the registered 60 s (`judged --prewarm 60`).
 
 **`bench/two_arm.py`** then reads each placement, as #506's family with the recalibration's
 extensions (#562, with the Researcher's correction of REVIEW 6978182129):
@@ -180,6 +186,32 @@ extensions (#562, with the Researcher's correction of REVIEW 6978182129):
 - *One worker fewer* uses less memory, so it ADOPTS on a gain alone.
 - *Which way this leans:* the rule leans towards the shipped count or fewer, as the
   conjecture does.
+
+## The Researcher's review (REVIEW 6985154079), as recorded
+
+**Its one targeted correction is applied above:**
+- the pre-warm is locked at 60 s in this journal and the recipe (`PREWARM="60"`, passed to the
+  judge);
+- a missing, failed, uncounted or short pre-warm VOIDs its placement, with regression checks in
+  `bench/test_sustain.py`.
+
+The cells, rounds and thresholds are unchanged.
+
+**Its other points stand as written, and are reported, not changed:**
+- *The thresholds' edges:* in u10 and p10, a measured Wikidata decode at a clock of exactly 1.2
+  VOIDs the placement, even where the block's pair mean would pass. The 3% steady-state test
+  compares a pair mean, so opposite clock excursions within a block can cancel.
+- *Pinned 8's mix:* p8 is not registered clamped. The report gives its state (clamped, turbo or
+  mixed) and its clamped share per arm.
+- *Pinned 6 and 4:* if their measured main-corpus decodes never clamp, the report calls the cell
+  **turbo**, and its verdicts are turbo-state verdicts.
+- *Predecessors:* rotation balances position, not predecessor pairs. The raw `prev_arm` and
+  `prev_block` fields record the distinction, and the carry-over diagnostic reports it.
+- *Power at a paired log SD of 0.020:* the exact first-step power for 8/32 at the predicted
+  0.970 in u10 is 84%, and at 0.975 in p10 42%. **p10 may well come out INCONCLUSIVE.** Six
+  rounds give 60% power for a 2% gain at SD 0.010.
+- *What isn't yet known:* neither the sustained SD nor the i9's counters have been measured in
+  this run.
 
 ## Power
 
@@ -295,7 +327,7 @@ follows, at the knee this finds, in whichever state this shows production decode
 ## The tooling, checked before the data
 
 - **`bench/sustain.py`:** the driver, `judged` and the report.
-- **`bench/test_sustain.py`:** 30 checks, run for real with a stub `perf` and a stub
+- **`bench/test_sustain.py`:** 36 checks, run for real with a stub `perf` and a stub
   `ab child`:
   - a complete run, judged into records that `two_arm.py` reads;
   - the phases, blocks and rotation;
@@ -305,7 +337,9 @@ follows, at the knee this finds, in whichever state this shows production decode
     not JSON;
   - the clamp screen, only in the cells registered clamped;
   - each decode's predecessor;
-  - the report's clock state and carry-over.
+  - the report's clock state and carry-over;
+  - the pre-warm: missing, failed with no counters, uncounted, short, or on an arm the cell
+    does not measure, each VOID; whole and long enough, judged.
 - **The smoke run:** the driver with the real `ab` (and the stub `perf`) on a 4-core machine,
   unpinned and pinned at 4 threads. Each placement judged clean, with every record's CPUs and
   worker threads right.

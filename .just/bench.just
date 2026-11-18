@@ -2014,8 +2014,10 @@ bench-recalibrate COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="5":
 # main corpus, text, random, the main corpus). One build, rustc 1.99.1, src as 0.5.5's
 # (checked). Then `two_arm.py` per placement, one Holm family each at α 0.025. The cells
 # registered clamped (u10, p10; MONODROMY record 64's note 1) VOID their placement on any
-# measured main-corpus decode at an effective clock of 1.2 or above.
-bench-sustain ROUNDS="8" ROUNDS3="6" WARM="6" PREWARM="30" PROBE="120":
+# measured main-corpus decode at an effective clock of 1.2 or above, and every placement VOIDs on a
+# cell whose PREWARM seconds (60) of pre-warm are missing, failed, uncounted or short (the
+# Researcher's REVIEW 6985154079).
+bench-sustain ROUNDS="8" ROUNDS3="6" WARM="6" PREWARM="60" PROBE="120":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/sustain
@@ -2103,7 +2105,7 @@ bench-sustain ROUNDS="8" ROUNDS3="6" WARM="6" PREWARM="30" PROBE="120":
             --env "$O/env.json" --cores 10 --cpus 20 --sparse --alpha 0.025
             --primary wikidata-x16,text-x16 --check-workers --hold-max-threads 0)
     # each placement one Holm family at α 0.025: unpinned, 3 cells
-    if python3 bench/sustain.py judged "$O/runs.jsonl" --placement unpinned --clamped u10 --out "$O/unpinned-judged.jsonl" \
+    if python3 bench/sustain.py judged "$O/runs.jsonl" --placement unpinned --clamped u10 --prewarm {{PREWARM}} --out "$O/unpinned-judged.jsonl" \
         | tee "$O/unpinned-judged.txt"; then
       python3 bench/two_arm.py "$O/unpinned-judged.jsonl" "${common[@]}" --judged 10 --unpinned \
         --ref-at mibz2-occ-7-28=10 \
@@ -2116,7 +2118,7 @@ bench-sustain ROUNDS="8" ROUNDS3="6" WARM="6" PREWARM="30" PROBE="120":
       echo "bench-sustain: the unpinned family is VOID (unpinned-judged.txt says why)" | tee "$O/unpinned-verdict.txt"
     fi
     # pinned, 10 cells
-    if python3 bench/sustain.py judged "$O/runs.jsonl" --placement pinned --clamped p10 --out "$O/pinned-judged.jsonl" \
+    if python3 bench/sustain.py judged "$O/runs.jsonl" --placement pinned --clamped p10 --prewarm {{PREWARM}} --out "$O/pinned-judged.jsonl" \
         | tee "$O/pinned-judged.txt"; then
       python3 bench/two_arm.py "$O/pinned-judged.jsonl" "${common[@]}" --judged 10,8,6,4 \
         --rounds-at 6={{ROUNDS3}} --rounds-at 4={{ROUNDS3}} \

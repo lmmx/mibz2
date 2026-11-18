@@ -110,7 +110,8 @@ def judge(runs, placement, extra=()):
         out.unlink()
     buf = io.StringIO()
     with redirect_stdout(buf):
-        code = sustain.main(["sustain.py", "judged", str(runs), "--placement", placement, "--out", str(out), *extra])
+        code = sustain.main(["sustain.py", "judged", str(runs), "--placement", placement, "--out", str(out),
+                             *(extra if "--prewarm" in extra else ("--prewarm", "0.01", *extra))])
     return code, buf.getvalue(), out
 
 
@@ -229,8 +230,28 @@ def main():
                          all("prev_arm" in r and "prev_block" in r for r in m2)
                          and all(r["prev_arm"] == r["arm"] for r in m2 if r["index"] > 0)
                          and any(r["prev_block"] not in (None, r["arm"]) for r in m2), str(m2[:2])))
-    results.append(check("report: the clock state and the carry-over", "clock state (" in rep
+    results.append(check("report: the clock state and the carry-over", "the cell's state (its measured main-corpus decodes): clamped" in rep
+                         and "clock state (" in rep
                          and "12 of 12 clamped" in rep and "carry-over (" in rep and "after " in rep, rep[:800]))
+    # the pre-warm (the Researcher's REVIEW 6985154079): missing, failed, uncounted or short VOIDs
+    pw = [i for i, line in enumerate(lines) if '"phase": "prewarm"' in line and '"u10"' in line]
+    for name, edit, extra, phrase in (
+            ("the pre-warm missing", lambda ls: [x for i, x in enumerate(ls) if i not in pw], (), "u10: no pre-warm"),
+            ("the pre-warm failed with no counters",
+             lambda ls: [json.dumps({**json.loads(x), "rc": 1, "err": "perf: boom", "counts": {}}) if i in pw else x
+                         for i, x in enumerate(ls)], (), "failed: perf: boom"),
+            ("the pre-warm uncounted", lambda ls: [json.dumps({**json.loads(x), "counts": {}}) if i in pw else x
+                                                   for i, x in enumerate(ls)], (), "power/energy-pkg/ missing"),
+            ("the pre-warm short of its seconds", lambda ls: ls, ("--prewarm", "60"), "short of the registered 60 s"),
+            ("the pre-warm on an arm the cell does not measure",
+             lambda ls: [json.dumps({**json.loads(x), "arm": "mibz2-occ-9-36"}) if i in pw else x
+                         for i, x in enumerate(ls)], (), "not one arm the cell measures")):
+        f = d / "edited.jsonl"
+        f.write_text("\n".join(edit(lines)) + "\n")
+        code, out, jf = judge(f, "unpinned", ("--prewarm", "0.01") + tuple(extra) if not extra else extra)
+        results.append(check(f"VOID: {name}", code == 1 and phrase in out and not jf.exists(), out[:400]))
+    code, out, jf = judge(runs, "unpinned", ("--prewarm", "0.01"))
+    results.append(check("the pre-warm whole and long enough passes", code == 0, out[:400]))
     # the parser: per-controller events merged, units read, a failed entry failing the sum
     tf = d / "p.csv"
     tf.write_text("1.5,Joules,power/energy-pkg/,1,100.00,,\n2,MiB,uncore_imc_0/data_reads/,1,100.00,,\n"

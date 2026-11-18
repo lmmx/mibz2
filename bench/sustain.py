@@ -24,7 +24,7 @@ first: `pinned` (each decode's affinity one CPU on each of the first T cores, as
    cores busy over `--gate` seconds (2), retried every 10 s up to 30 times, or the cell fails;
 2. *the idle baseline:* `perf stat -a sleep 2`, the machine's own DRAM and package rate;
 3. *the pre-warm:* the reference decoding the main corpus back to back for `--prewarm` seconds
-   (60), so the chip and its cooler start the rounds in the sustained state;
+   (60, as registered), so the chip and its cooler start the rounds in the sustained state;
 4. *ROUNDS rounds:* in each, one block per arm, in an order rotated round by round and reversed
    every other cycle of rounds (`ab run`'s `arm_order`: over 2 x arms rounds, each arm in each
    position equally often). A block is the arm decoding the main corpus back to back for
@@ -52,7 +52,12 @@ nothing and exits 1 (VOID) where:
 - a corpus's outputs differ, or an arm's decodes name different worker threads;
 - **the sustained state not held:** in more than 10% of a cell's blocks, the measured
   main-corpus decodes' mean effective clock (cycles / ref-cycles) differs from the block's last
-  warm decode's by more than 3%.
+  warm decode's by more than 3%;
+- **the pre-warm missing or failed** (`--prewarm`, 60 s; the Researcher's REVIEW 6985154079): a
+  cell with no pre-warm decode, one failed or not fully counted, pre-warm decodes of more than one
+  arm or of an arm the cell does not measure, or the last ending before the registered seconds;
+- **turbo in a cell registered clamped** (`--clamped`): a measured main-corpus decode at a clock
+  of 1.2 or above.
 
 **report** decides nothing. Its diagnostics, each declared before the data:
 - *by arm:* the measured main-corpus wall (median), package watts (energy over perf's elapsed
@@ -456,9 +461,42 @@ def clamp_screen(bs, clamped, errors):
                               f"registered clamped (turbo, not the sustained state)")
 
 
+def prewarm_check(rows, placement, seconds, errors):
+    """Each cell of the placement pre-warmed: at least one pre-warm decode, every one of them a
+    success with every event counted, all of one arm that the cell also measures, and the last
+    ending at least `seconds` after the cell's start (the Researcher's REVIEW 6985154079)"""
+    cells = {}
+    for r in rows:
+        if r.get("placement") == placement and r.get("phase") in ("prewarm", "measure") and "cell" in r:
+            cells.setdefault(r["cell"], {"prewarm": [], "arms": set()})
+            if r["phase"] == "prewarm":
+                cells[r["cell"]]["prewarm"].append(r)
+            else:
+                cells[r["cell"]]["arms"].add(r.get("arm"))
+    for cell, c in sorted(cells.items()):
+        pw = c["prewarm"]
+        if not pw:
+            errors.append(f"{cell}: no pre-warm")
+            continue
+        for r in pw:
+            key = f"{cell} prewarm seq {r.get('seq')}"
+            if failed(r):
+                errors.append(f"{key}: failed: {r.get('err') or r.get('child_err') or r.get('rc')}")
+            else:
+                check_counts(r, key, errors)
+        arms = {r.get("arm") for r in pw}
+        if len(arms) != 1 or not arms <= c["arms"]:
+            errors.append(f"{cell}: the pre-warm's arms {sorted(map(str, arms))}: not one arm the cell measures")
+        end = max((r.get("since") for r in pw if isinstance(r.get("since"), (int, float))), default=None)
+        if end is None or end < seconds:
+            errors.append(f"{cell}: the pre-warm ended at {end if end is None else round(end, 1)} s, "
+                          f"short of the registered {seconds:g} s")
+
+
 def judged(a):
     errors = []
     rows = load(a.runs, errors)
+    prewarm_check(rows, a.placement, a.prewarm, errors)
     bs = blocks(rows, a.placement, errors)
     clamp_screen(bs, set(c for c in a.clamped.split(",") if c), errors)
     n_measure = 1 + max((r.get("index", 0) for r in rows if r.get("phase") == "measure"), default=0)
@@ -579,6 +617,11 @@ def report(a):
         if ob:
             print(f"  load: other processes' busy cores, largest {max(ob):.2f}, decodes above 1.0: "
                   f"{sum(o > 1.0 for o in ob)} of {len(ob)}")
+        mc = [clock(r) for r in mains if clock(r) is not None]
+        state = ("clamped" if mc and all(c < CLAMP for c in mc) else "turbo" if mc and all(c >= CLAMP for c in mc)
+                 else "mixed")
+        print(f"  the cell's state (its measured main-corpus decodes): {state}, "
+              f"{sum(c < CLAMP for c in mc)} of {len(mc)} below {CLAMP}")
         print(f"  clock state (main-corpus decodes, warm and measured; at or above {CLAMP} is turbo):")
         for arm in arms:
             cs = [clock(r) for r in rows if r.get("cell") == cell and r.get("arm") == arm and r.get("corpus") == main
@@ -660,6 +703,8 @@ def main(argv):
     j.add_argument("--placement", choices=("pinned", "unpinned"), required=True)
     j.add_argument("--out", required=True)
     j.add_argument("--clamped", default="", help="the cells registered clamped, comma-separated (the clock screen)")
+    j.add_argument("--prewarm", type=float, default=60.0,
+                   help="the registered pre-warm in seconds: each cell's must have lasted this long, and succeeded")
     q = sub.add_parser("report")
     q.add_argument("runs")
     q.add_argument("--probe")
