@@ -1,0 +1,81 @@
+{
+  "counts": {
+    "row_depths": 129893,
+    "marks": 14209,
+    "short_cycle": 12192,
+    "partial_last_cycle": 6346,
+    "cursor_checks": 28418,
+    "partial_hits": 6949,
+    "hits": 39105,
+    "equal_word_pairs": 56059,
+    "text_round_trips": 510,
+    "wide_cursor_checks": 24
+  },
+  "witnesses": {
+    "different_row_copy": {
+      "L": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "p": 0,
+      "prior_row": 0,
+      "row": 2,
+      "source": 0,
+      "dest": 2,
+      "pair": [
+        0,
+        0
+      ],
+      "prior_exit": 2,
+      "exit": 4,
+      "displacement": 2
+    },
+    "same_word_distinct_exit": {
+      "L": [
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "rows": [
+        0,
+        1
+      ],
+      "word": [
+        0,
+        0
+      ],
+      "exits": [
+        2,
+        4
+      ],
+      "displacements": [
+        2,
+        3
+      ]
+    },
+    "phase_if_writing_back_from_n": {
+      "L": [
+        0,
+        1,
+        0
+      ],
+      "p": 1,
+      "period": 2,
+      "backward_from_end": [
+        1,
+        0,
+        1
+      ],
+      "marked": [
+        0,
+        1,
+        0
+      ]
+    }
+  }
+}
