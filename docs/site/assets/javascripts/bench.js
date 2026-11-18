@@ -172,12 +172,12 @@
   ];
   // Absolute (the Scale chips): each figure in its own units, CI's chain carried from master's
   // records (bench-history.json's series, ciAnchor). [the records' field, the units in a
-  // readout, on a narrow axis and on the axis, the figure's level as a phrase, its format, and
-  // which way is better (in either view)]
+  // readout, on a narrow axis and on the axis, the figure's level as a phrase, its format and
+  // its intervals' half-widths', and which way is better (in either view)]
   const ABS = {
-    wall: { key: "mb_s", unit: "MB/s", short: "MB/s", axis: "MB/s of output", what: "MB/s", fmt: (v) => fmtMB(v), better: "Up is faster." },
-    cpu: { key: "cpu_s", unit: "CPU seconds", short: "CPU s", axis: "CPU seconds", what: "CPU seconds", fmt: (v) => String(+v.toPrecision(3)), better: "Down is less CPU time." },
-    rss: { key: "rss_mb", unit: "MB", short: "MB", axis: "MB of peak RSS", what: "peak RSS", fmt: (v) => v.toFixed(1), better: "Down is less memory." },
+    wall: { key: "mb_s", unit: "MB/s", short: "MB/s", axis: "MB/s of output", what: "MB/s", fmt: (v) => fmtMB(v), fmtH: (v) => fmtMB(v), better: "Up is faster." },
+    cpu: { key: "cpu_s", unit: "CPU seconds", short: "CPU s", axis: "CPU seconds", what: "CPU seconds", fmt: (v) => v.toPrecision(3), fmtH: (v) => String(+v.toPrecision(2)), better: "Down is less CPU time." },
+    rss: { key: "rss_mb", unit: "MB", short: "MB", axis: "MB of peak RSS", what: "peak RSS", fmt: (v) => v.toFixed(1), fmtH: (v) => String(+v.toPrecision(2)), better: "Down is less memory." },
   };
   // an axis's tick labels: as many decimals as its step needs, so no two ticks read alike
   const fmtStep = (t) => {
@@ -301,7 +301,7 @@
         const [lo, hi] = cb(last);
         const strong = el("strong", { text: `${fig[1]}, ${state.tCorpus} at ${tWord}: ${fmtV(cv(last))} ${ax.unit} on the ${anc.cpu}'s scale` }, lead);
         strong.title = `the chain in ${ax.unit}, through one master record on one runner model`;
-        lead.append(` (95%: ${fmtV(lo)} to ${fmtV(hi)}) at ${tag(data.links[last])}. Anchored at ${ancName}, master's newest record on the ${anc.cpu} (${fmtV(anc.v)} ± ${fmtV(anc.h)} ${ax.unit}, ${anc.n} rounds), the runner model with the most records of ${state.tCorpus} at ${tWord} (${anc.count} of ${anc.total}). The chain's ratios, measured on ${cpus.join(", ")}, carry it to every other merge from ${tag(data.links[segStart])}'s base on: an ${anc.cpu}'s ${ax.what}, not any one run's. ${ax.better}`);
+        lead.append(` (95%: ${fmtV(lo)} to ${fmtV(hi)}) at ${tag(data.links[last])}. Anchored at ${ancName}, master's newest record on the ${anc.cpu} (${fmtV(anc.v)} ± ${ax.fmtH(anc.h)} ${ax.unit}, ${anc.n} rounds), the runner model with the most records of ${state.tCorpus} at ${tWord} (${anc.count} of ${anc.total}). The chain's ratios, measured on ${cpus.join(", ")}, carry it to every other merge from ${tag(data.links[segStart])}'s base on: an ${anc.cpu}'s ${ax.what}, not any one run's. ${ax.better}`);
         if (unanchored) lead.append(` ${unanchored} earlier segment${unanchored === 1 ? "" : "s"}, before a gap, ${unanchored === 1 ? "has" : "have"} no anchor and ${unanchored === 1 ? "is" : "are"} not drawn.`);
         if (rs) lead.append(` Below it, in a panel of its own: the ${cpuR}'s releases, modelled, in MB/s on the ${cpuR}: another machine, on another scale.`);
       } else {
@@ -435,7 +435,7 @@
     // absolute: the anchor, ringed
     if (anc && pts.length) {
       const ring = svg("circle", { cx: xs.get(anc.i), cy: y1(cv(anc.i)), r: 7, class: "bh-anchor" }, s);
-      svg("title", {}, ring).textContent = `the anchor: ${ancName}, master's record on the ${anc.cpu}, ${fmtV(anc.v)} ± ${fmtV(anc.h)} ${ax.unit}`;
+      svg("title", {}, ring).textContent = `the anchor: ${ancName}, master's record on the ${anc.cpu}, ${fmtV(anc.v)} ± ${ax.fmtH(anc.h)} ${ax.unit}`;
     }
     // x labels: as many as fit with a gap between them, the last always shown
     const minGap = narrow ? 40 : 46;
@@ -536,10 +536,11 @@
     const across = `It reads as what an ${anc.cpu} would have measured, assuming each relative change holds across runners`;
     if (f === "wall") return `${across}; other runners run up to 2× faster or slower.`;
     if (f === "cpu") return `${across}. CPU time scales with the runner's speed${range ? `: ${range}` : ""}.`;
-    if (range && sp.hi / sp.lo - 1 <= 0.1) {
-      return `${across}. Peak RSS, unlike time, hardly depends on the runner: ${range}, within ${(100 * (sp.hi / sp.lo - 1)).toFixed(1)}% of each other. So this level is close to any runner's, not only the ${anc.cpu}'s.`;
+    const apart = range ? (100 * (sp.hi / sp.lo - 1)).toFixed(1) : null;
+    if (range && apart <= 10) {
+      return `${across}. Peak RSS, unlike time, hardly depends on the runner: ${range}, within ${apart}% of each other. So this level is close to any runner's, not only the ${anc.cpu}'s.`;
     }
-    return `${across}${range ? `. Peak RSS varies across runners here: ${range}` : ""}.`;
+    return `${across}${range ? `. Peak RSS depends on the runner less than time does, but here ${range}, ${apart}% apart` : ""}.`;
   }
 
   // CI's chain in a figure's own units (field: mb_s, cpu_s or rss_mb, each a [mean, half-width]
