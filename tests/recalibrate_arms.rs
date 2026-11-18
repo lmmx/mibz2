@@ -17,7 +17,10 @@ fn kernels() -> Kernels {
 fn arm(name: &str) -> StreamDecoder {
     let (lazy, rest) = match name.strip_prefix("mibz2-occ-") {
         Some(r) => (true, r),
-        None => (false, name.strip_prefix("mibz2-oce-").expect("an occupancy arm")),
+        None => (
+            false,
+            name.strip_prefix("mibz2-oce-").expect("an occupancy arm"),
+        ),
     };
     let (n, s) = rest.split_once('-').expect("N-S");
     StreamDecoder::workers(n.parse().unwrap(), s.parse().unwrap(), kernels(), lazy)
@@ -62,8 +65,16 @@ fn the_shipped_and_untrimmed_arms_are_the_defaults() {
             StreamDecoder::planned(Plan::for_threads(t), 4 * t, k)
         });
         let (s, u) = (arm(shipped), arm(untrimmed));
-        assert_eq!(shape(&prod), shape(&s), "{pinned} {t}: the default is {shipped}");
-        assert_eq!(shape(&plan), shape(&u), "{pinned} {t}: the plan is {untrimmed}");
+        assert_eq!(
+            shape(&prod),
+            shape(&s),
+            "{pinned} {t}: the default is {shipped}"
+        );
+        assert_eq!(
+            shape(&plan),
+            shape(&u),
+            "{pinned} {t}: the plan is {untrimmed}"
+        );
         for d in [prod, plan, s, u] {
             d.close();
         }
