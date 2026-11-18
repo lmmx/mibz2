@@ -1,0 +1,20 @@
+use std::time::Instant;
+fn find(p:&mut Vec<u32>,mut x:u32)->u32{ while p[x as usize]!=x { let g=p[p[x as usize] as usize]; p[x as usize]=g; x=g;} x }
+fn main(){
+    let s=std::fs::read_to_string("arcs.txt").unwrap(); let mut it=s.lines();
+    let h:Vec<usize>=it.next().unwrap().split(' ').map(|x|x.parse().unwrap()).collect();
+    let (v,_e)=(h[0],h[1]);
+    let arcs:Vec<(u32,u32,u32)>=it.map(|l|{let a:Vec<u32>=l.split(' ').map(|x|x.parse().unwrap()).collect();(a[0],a[1],a[2])}).collect();
+    let mut best=f64::MAX; let mut bestu=f64::MAX; let mut trees=0;
+    for _ in 0..200 {
+        let t0=Instant::now();
+        let mut idx:Vec<u32>=(0..arcs.len() as u32).collect();
+        idx.sort_unstable_by_key(|&i| std::cmp::Reverse(arcs[i as usize].2));
+        let t1=Instant::now();
+        let mut p:Vec<u32>=(0..v as u32).collect(); trees=0;
+        for &i in &idx { let (a,b,_)=arcs[i as usize]; let ra=find(&mut p,a); let rb=find(&mut p,b); if ra!=rb { p[ra as usize]=rb; trees+=1; } }
+        let t2=Instant::now();
+        best=best.min((t1-t0).as_secs_f64()); bestu=bestu.min((t2-t1).as_secs_f64());
+    }
+    println!("arcs {} forest edges {} sort {:.3} ms union-find {:.3} ms", arcs.len(), trees, best*1e3, bestu*1e3);
+}
