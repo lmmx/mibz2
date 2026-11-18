@@ -1683,6 +1683,20 @@
       "status": "finished",
       "disposition": "PROCEED scoped B5 review; CI and adoption obligations remain.",
       "comment": 6904474217
+    },
+    {
+      "id": "D113",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6988393925,
+      "pr": 161,
+      "sha": "cd7e5de2b7c61442f7a391436eee910a5ebb126a",
+      "evidence_digest": "sha256:6a6b596cb031beb4704d77e80ac606e94a9f23f438b8f0cb03b0f9a66e8605f4",
+      "commit": "e60a87fa93fa3ba27e8edccd6d88659b5847a9fd",
+      "status": "complete",
+      "disposition": "HOLD integration pending completed Miri and runtime-specific mutation evidence; source proof supported."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -2260,8 +2274,9 @@
   },
   "current_execution": {
     "active_comment": 6988393925,
-    "status": "in progress",
-    "decision": "D113"
+    "status": "complete",
+    "decision": "D113",
+    "work_commit": "e60a87fa93fa3ba27e8edccd6d88659b5847a9fd"
   },
   "duplicate_events": [
     {
@@ -3120,6 +3135,13 @@
       "evidence_digest": "sha256:24945d19a0fb1f466c4232d7af37a5c7123199a0700cfd24c0352e085ee6d301",
       "incoming_comment": 6904418769,
       "decision": "D112"
+    },
+    {
+      "pr": 581,
+      "sha": "cd7e5de2b7c61442f7a391436eee910a5ebb126a",
+      "evidence_digest": "sha256:6a6b596cb031beb4704d77e80ac606e94a9f23f438b8f0cb03b0f9a66e8605f4",
+      "incoming_comment": 6988393925,
+      "decision": "D113"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -4053,9 +4075,11 @@
     {
       "comment_id": 6988393925,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D113",
-      "progress": "Receipt; migration manifest and old-branch boundary verified. Adversarial review of PR581 cd7e5de2b7c61442f7a391436eee910a5ebb126a."
+      "progress": "Review committed; publish one REVIEW on #145. Scoped B5 evidence HOLD; no writer defect found.",
+      "receipt_commit": "3bf6a507d5b5b7552c9cad1dbf6b46e447f431ac",
+      "work_commit": "e60a87fa93fa3ba27e8edccd6d88659b5847a9fd"
     }
   ],
   "migrated_from": {
