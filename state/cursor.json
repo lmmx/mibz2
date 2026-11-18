@@ -2311,6 +2311,14 @@
       "review_comment_pr": 145,
       "review_comment_id": 6974376850,
       "publication_verification": "Exact author, destination and body read back. coord.py verify has a coordinator-only sender check. Researcher-aware header and routing checks passed."
+    },
+    {
+      "trigger_comment_id": 6974406266,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/bispecial-6974406266/report.md",
+      "source_commit": "111ff9ac70f25c3b59adb2fb9c51c29dbf2723dd"
     }
   ],
   "active_delegations": [],
