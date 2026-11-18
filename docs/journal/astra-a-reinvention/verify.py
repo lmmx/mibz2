@@ -2,6 +2,7 @@
 import argparse
 import array
 import csv
+import hashlib
 import json
 import subprocess
 import tempfile
@@ -9,6 +10,7 @@ from collections import OrderedDict
 from pathlib import Path
 
 from price import COHORT, SAMPLE
+from shortcut import capped, read_records
 
 
 def rows(path):
@@ -48,6 +50,7 @@ def cache_tests(binary):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("data", type=Path)
+    ap.add_argument("--columns", type=Path, help="compare each packed frontend record with independently expanded MTF")
     ap.add_argument("--cache",type=Path)
     ap.add_argument("--historical-frozen",type=Path,help="also replay the unmodified Study 7 trace counters")
     args = ap.parse_args()
@@ -58,21 +61,37 @@ def main():
     arms = {k:rows(data/(k+".csv")) for k in ("shortcut","whole")}
     inp = rows(data/"input.csv")
     assert len(ref)==len(inp)==len(arms["whole"])==len(arms["shortcut"])==233
+    packed_digest = hashlib.sha256()
     for i, (a,b,c) in enumerate(zip(arms["whole"],arms["shortcut"],inp)):
         g = ref[i]
         assert i == int(a["block"]) == int(b["block"]) == int(c["block"])
         assert a["index"]==b["index"]==c["index"] and a["primary"]==b["primary"]==c["primary"]
         assert a["pre_sha256"]==b["pre_sha256"] and a["raw_sha256"]==b["raw_sha256"]
         assert a["capped"]==b["capped"]==g["records"] and a["n"]==g["n"]==g["period"]
-        assert c["run_front"]=="1"
+        assert c["run_front"]=="1" and c["n"]==a["n"] and c["capped"]==a["capped"]
+        if args.columns:
+            column = (args.columns / f"{i:04}.L").read_bytes()
+            path = args.columns / f"{i:04}.runs"
+            packed_digest.update(path.read_bytes())
+            stream = read_records(path)
+            assert len(column) == int(c["n"]) and stream.tolist() == capped(column)
         assert int(a["roots"])-int(a["nodes"])==int(a["unit_visits"])
         for x in (a,b):
             assert int(x["copy_bytes"])+int(x["literals"])==int(x["n"])
             assert int(x["copies"])+int(x["literals"])==int(x["phrases"])
         assert int(b["nodes"])==int(b["roots"])+int(b["splits"])+int(b["new_bounds"])
+    if args.columns:
+        assert packed_digest.hexdigest() == "411b052e84d6794dbf3eed144d6c208a6f25c4398cbd31f3fd65af996d1045e4"
     assert all(ref[i]["eager"]==ref[i]["lazy"]=="1" for i in COHORT)
     for r in rows(data/"pairs.csv"):
         assert ref[int(r["block"])]["steps"]==r["original_cuts"]
+    for r in rows(data/"maximal.csv"):
+        a = arms["whole"][int(r["block"])]
+        assert int(r["wide"]) == int(a["nodes"])
+        assert int(r["direct_on_demand_visits"]) == int(r["greedy_visits"])+int(r["first_extra_steps"])
+        assert int(r["greedy_visits"]) < int(a["phrases"])
+        assert int(r["direct_on_demand_visits"]) > sum(int(a[k]) for k in ("phrases", "installs", "retired"))
+        assert int(r["reverse_gap_steps"]) == int(a["n"])-int(a["roots"])
     for r in rows(data/"cache.csv"):
         i = int(r["block"])
         if r["arm"] in arms:
@@ -86,6 +105,12 @@ def main():
     if args.historical_frozen:
         from baseline import traffic
         rec=traffic.irec.load(str(args.historical_frozen))
+        top, bottom = rec.a["s_ra"], rec.a["s_rb"]
+        eager_bottom = 1 + sum(t >= b for t,b in zip(top,bottom))
+        lazy_bottom = sum(bool(bits & traffic.irec.SLOT_B) for bits in rec.a["s_fresh"])
+        lazy_bottom += int(top[-1] >= bottom[-1])
+        assert (eager_bottom, lazy_bottom) == (76145, 47690)
+        assert int(ref[0]["literal_edges"]) + 2*int(ref[0]["copies"]) == 38339
         archive=rows(folder/"2026-11-18-cells-endpoint-sweep"/"traffic.csv")
         for mode in ("eager","lazy"):
             result, pool=traffic.baseline(rec,mode=="lazy")

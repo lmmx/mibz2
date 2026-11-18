@@ -4,7 +4,7 @@ import csv
 import hashlib
 from pathlib import Path
 
-from shortcut import capped, reconstruct as split_reconstruct
+from shortcut import read_records, reconstruct as split_reconstruct
 from whole import reconstruct as whole_reconstruct
 
 
@@ -50,19 +50,20 @@ def main():
         w.writeheader()
         for entry in csv.DictReader(args.manifest.open()):
             i, j, p = (int(entry[k]) for k in ("block", "index", "primary"))
-            column = (args.columns / f"{i:04}.L").read_bytes()
-            records = capped(column)
+            n = int(entry["n"])
+            records = read_records(args.columns / f"{i:04}.runs")
+            assert len(records) == int(entry["capped"])
             if args.traces:
                 with Trace(args.traces / f"{i:04}-{mode}.bin") as trace:
-                    out, stats = reconstruct(records, len(column), p, trace.at, begin_walk=trace.next_phase)
+                    out, stats = reconstruct(records, n, p, trace.at, begin_walk=trace.next_phase)
             else:
-                out, stats = reconstruct(records, len(column), p)
+                out, stats = reconstruct(records, n, p)
             if args.plain is not None:
                 assert out == (args.plain / f"{i:04}.T").read_bytes()
             raw = unrle(out)
             digest = hashlib.sha256(raw).hexdigest()
             assert digest == checks[j]["raw_sha256"] and len(raw) == int(checks[j]["bytes"])
-            stats.update(block=i, index=j, n=len(column), primary=p, capped=len(records))
+            stats.update(block=i, index=j, n=n, primary=p, capped=len(records))
             row = {k: stats[k] for k in fields}
             row["pre_sha256"] = hashlib.sha256(out).hexdigest()
             row["raw_sha256"] = digest

@@ -4,7 +4,7 @@ import csv
 from pathlib import Path
 
 from baseline import emit, traffic
-from shortcut import capped, reconstruct
+from shortcut import read_records, reconstruct, runs
 from whole import reconstruct as whole
 
 
@@ -30,8 +30,8 @@ if __name__ == "__main__":
         w.writerow(("block", "arm", "phase", "read_bytes", "write_bytes", "q8_reads", "q8_writes"))
         for path in sorted(args.records.glob("*.irec*")):
             rec = traffic.irec.load(str(path))
-            column = (args.columns / f"{rec.block:04}.L").read_bytes()
-            records = capped(column)
+            records = read_records(args.columns / f"{rec.block:04}.runs")
+            assert list(runs(records)) == list(traffic.runs(rec.a["l_byte"], rec.a["l_lam"]))
             for mode in ("eager", "lazy", "shortcut", "whole"):
                 m = Ledger()
                 if mode in ("eager", "lazy"):

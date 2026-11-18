@@ -26,8 +26,12 @@ git archive "$windows" windows/wikidata-20261019 | tar -x -C "$scratch"
 git archive "$archive" wikidata | tar -x -C "$records"
 python3 "$study/input.py" "$scratch/windows/wikidata-20261019" "$scratch"
 CARGO_TARGET_DIR="$target" cargo build --release --locked --lib --features induction-trace --example induction_trace
-rustc --edition 2021 -O "$study/extract.rs" --extern "mibz2=$target/release/libmibz2.rlib" \
-    -L "dependency=$target/release/deps" -o "$scratch/extract"
+# Build a research entry point beside the unmodified pinned modules. Runs::records is crate-private.
+git archive "$pinned" src | tar -x -C "$scratch"
+cp "$study/extract.rs" "$scratch/src/astra_input.rs"
+cp "$scratch/src/lib.rs" "$scratch/src/input_main.rs"
+printf '\nmod astra_input;\nfn main() { astra_input::run() }\n' >> "$scratch/src/input_main.rs"
+rustc --edition 2021 -O "$scratch/src/input_main.rs" -o "$scratch/extract"
 "$scratch/extract" "$scratch/wikidata.bz2" "$columns" 1 "$plain" > "$out/input.csv"
 awk -F, 'NR==1 || $1%24==0' "$out/input.csv" > "$scratch/sample.csv"
 awk -F, 'NR==1 || $1%24==0 || $1==1 || $1==2' "$out/input.csv" > "$scratch/pricing.csv"
@@ -38,6 +42,7 @@ awk -F, 'NR==1 || $1==0' "$out/levels.csv" > "$out/frozen-levels.csv"
 python3 "$study/pairs.py" "$columns" "$out/screens.csv" > "$out/pairs.csv"
 python3 "$study/pairs.py" small
 python3 "$study/controls.py" "$columns/0000.L" 264045 > "$out/controls.json"
+python3 "$study/maximal.py" "$columns" "$scratch/sample.csv" "$plain" > "$out/maximal.csv"
 python3 "$study/check.py" > "$out/small.json"
 for arm in shortcut whole; do
     flags=()
@@ -57,7 +62,8 @@ python3 "$study/ledger.py" "$columns" "$records/wikidata" "$out/operands.csv"
 c++ -std=c++17 -O2 -Wall -Wextra -pedantic "$study/cache.cpp" -o "$scratch/cache"
 python3 "$study/price.py" "$scratch/cache" "$traces" "$out"
 python3 "$study/costs.py" --data "$out"
-python3 "$study/verify.py" "$out" --cache "$scratch/cache" --historical-frozen "$records/wikidata/0000.irec.xz"
+python3 "$study/verify.py" "$out" --columns "$columns" --cache "$scratch/cache" \
+    --historical-frozen "$records/wikidata/0000.irec.xz"
 for receipt in "$study"/evidence/*; do
     cmp "$receipt" "$out/$(basename "$receipt")"
 done

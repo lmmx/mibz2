@@ -21,6 +21,18 @@ def capped(column):
     return result
 
 
+def read_records(path):
+    """Read the pinned frontend's little-endian u16 stream as native Python integers."""
+    import array
+    import sys
+    result = array.array("H")
+    assert result.itemsize == 2
+    result.frombytes(path.read_bytes())
+    if sys.byteorder != "little":
+        result.byteswap()
+    return result
+
+
 def runs(records):
     for c, group in groupby(records, lambda z: z >> 8):
         width = 0
