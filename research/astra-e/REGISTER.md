@@ -8,7 +8,7 @@ These are the lowest recorded point estimates within each group of experiments w
 
 | Scorer / design / W | Lowest wall estimate vs lazy [95% CI] | Lowest median RSS ratio vs lazy |
 |---|---|---|
-| `9c31461` pilot, grid 1,4, 3r ×1, settle 0s, quick, 3 arms, **W1** | conjugate-pilot · 0.965 [0.660, 1.413] | two-ended-pilot · 0.747 |
+| `9c31461` pilot, grid 1,4, 3r ×1, settle 0s, quick, 3 arms, **W1** | lanes-pilot · 0.619 [0.173, 2.209] | two-ended-pilot · 0.747 |
 | `9c31461` pilot, grid 1,4, 3r ×1, settle 0s, quick, 3 arms, **W4** | page-trace-pilot · 0.672 [0.175, 2.591] | conjugate-pilot · 0.603 |
 
 ## Partial proxy · conjugate-w7
@@ -25,6 +25,32 @@ Build `e12e5f63173ee7cc6fcc413510ee76cfee0c1eb1` used scorer `9c31461df7bef24cec
 | 1 | 7 | opend | 14.553 | 19.860 / 13.029 / 7.419 | 0.00004 / 0.03162 | 2.595 | [receipt](proxy/conjugate-w7/frozen-opend.json) |
 
 Reproduction commands below replay the historical scorer on the recorded master commit. For a new scoring round, use `bash research/astra-e/score.sh <new-label> <candidate> ...` to refresh master first. Per-run `assessment.json` may record `kind`, `assessment` and `verification` (including independent run links). Regenerate with `python3 research/astra-e/register.py`.
+
+## anchors-pilot
+
+Pilot. **PASS** on 98 scorer cases (quick). [Per-case results](results/anchors-pilot/score/check.jsonl) · [manifest](results/anchors-pilot/manifest.txt) · [score](results/anchors-pilot/score/summary.txt)
+
+The build tree, including sibling modules, is [`38ad5600dfe4e621d2c44d04cc460e375bfbe522`](https://github.com/lmmx/mibz2/tree/38ad5600dfe4e621d2c44d04cc460e375bfbe522). [Candidate entry](https://github.com/lmmx/mibz2/blob/38ad5600dfe4e621d2c44d04cc460e375bfbe522/research/astra-e/anchors/candidate.rs). Fetched master `9c31461df7bef24cecf79348545b27ee26846835`, scorer path `9c31461` (no version field printed). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 3 | 0.938 [0.811, 1.086] | 0.964 [0.900, 1.032] | 0.974 | 46,976 / 61,320 / 45,768 | 0.766 |
+| 4 | 3 | 0.877 [0.649, 1.185] | 0.752 [0.302, 1.874] | 1.166 | 86,808 / 133,464 / 83,672 | 0.650 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/anchors-pilot/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 9c31461df7bef24cecf79348545b27ee26846835 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/anchors/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/anchors/candidate.rs --workers 1,4 --rounds 3 --settle 0 --quick --with-opend --no-proxy
+```
 
 ## conjugate-pilot
 
@@ -49,6 +75,32 @@ Reproduce in a fresh checkout of the build tree above.
 git checkout 9c31461df7bef24cecf79348545b27ee26846835 -- bench/moonshot .just Justfile
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/open/candidate.rs --workers 1,4 --rounds 3 --settle 0 --quick --with-opend --no-proxy
+```
+
+## dictionary-pilot
+
+Pilot. **PASS** on 98 scorer cases (quick). [Per-case results](results/dictionary-pilot/score/check.jsonl) · [manifest](results/dictionary-pilot/manifest.txt) · [score](results/dictionary-pilot/score/summary.txt)
+
+The build tree, including sibling modules, is [`5c21a8c5e100368886349ddf8b25828774a78836`](https://github.com/lmmx/mibz2/tree/5c21a8c5e100368886349ddf8b25828774a78836). [Candidate entry](https://github.com/lmmx/mibz2/blob/5c21a8c5e100368886349ddf8b25828774a78836/research/astra-e/dictionary/candidate.rs). Fetched master `9c31461df7bef24cecf79348545b27ee26846835`, scorer path `9c31461` (no version field printed). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 3 | 0.846 [0.471, 1.518] | 0.868 [0.423, 1.780] | 0.974 | 45,856 / 61,292 / 45,856 | 0.748 |
+| 4 | 3 | 0.922 [0.682, 1.245] | 0.879 [0.802, 0.964] | 1.048 | 83,456 / 125,096 / 82,584 | 0.667 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/dictionary-pilot/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 9c31461df7bef24cecf79348545b27ee26846835 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/dictionary/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/dictionary/candidate.rs --workers 1,4 --rounds 3 --settle 0 --quick --with-opend --no-proxy
 ```
 
 ## historical-control
@@ -76,6 +128,32 @@ Reproduce in a fresh checkout of the build tree above.
 git checkout 9c31461df7bef24cecf79348545b27ee26846835 -- bench/moonshot .just Justfile
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/controls/open.rs --workers 1,2,3,4 --rounds 3 --with-opend --no-proxy
+```
+
+## lanes-pilot
+
+Pilot. **PASS** on 98 scorer cases (quick). [Per-case results](results/lanes-pilot/score/check.jsonl) · [manifest](results/lanes-pilot/manifest.txt) · [score](results/lanes-pilot/score/summary.txt)
+
+The build tree, including sibling modules, is [`445d1851e26ba75ebb183f8eca7136593416f089`](https://github.com/lmmx/mibz2/tree/445d1851e26ba75ebb183f8eca7136593416f089). [Candidate entry](https://github.com/lmmx/mibz2/blob/445d1851e26ba75ebb183f8eca7136593416f089/research/astra-e/open/lanes/candidate.rs). Fetched master `9c31461df7bef24cecf79348545b27ee26846835`, scorer path `9c31461` (no version field printed). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 3 | 0.619 [0.173, 2.209] | 0.872 [0.360, 2.112] | 0.710 | 47,776 / 57,504 / 45,736 | 0.831 |
+| 4 | 3 | 0.928 [0.665, 1.297] | 0.829 [0.791, 0.869] | 1.120 | 90,548 / 124,656 / 89,316 | 0.726 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/lanes-pilot/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 9c31461df7bef24cecf79348545b27ee26846835 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/open/lanes/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/open/lanes/candidate.rs --workers 1,4 --rounds 3 --settle 0 --quick --with-opend --no-proxy
 ```
 
 ## packed-eager-pilot
@@ -124,6 +202,7 @@ Reproduce in a fresh checkout of the build tree above.
 
 ```sh
 git checkout 9c31461df7bef24cecf79348545b27ee26846835 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/dense/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/dense/candidate.rs --workers 1,4 --rounds 3 --settle 0 --quick --with-opend --no-proxy
 ```
@@ -149,6 +228,7 @@ Reproduce in a fresh checkout of the build tree above.
 
 ```sh
 git checkout 9c31461df7bef24cecf79348545b27ee26846835 -- bench/moonshot .just Justfile
+python3 research/astra-e/pairs/prepare.py
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/pairs/candidate.rs --workers 1,4 --rounds 3 --settle 0 --quick --with-opend --no-proxy
 ```

@@ -34,6 +34,17 @@ def load(path):
     candidate = argv[3]
     checksums = dict((name, sha) for sha, name in (s.split(maxsplit=1) for s in manifest if re.match(r"^[a-f0-9]{64}  ", s)))
     frozen = subprocess.check_output(["git", "show", f"{head}:{candidate}"], cwd=ROOT)
+    preparation = []
+    # Earlier milestones predate the common dispatcher. Their constructors
+    # are generated from byte-checked repository sources by a sibling script.
+    if subprocess.run(["git", "cat-file", "-e", f"{head}:research/astra-e/prepare.sh"],
+                      cwd=ROOT, stderr=subprocess.DEVNULL).returncode == 0:
+        preparation = [shlex.join(["bash", "research/astra-e/prepare.sh", candidate])]
+    elif b"constructor.rs" in frozen or b"mod constructor;" in frozen:
+        script = (Path(candidate).parent / "prepare.py").as_posix()
+        if subprocess.run(["git", "cat-file", "-e", f"{head}:{script}"], cwd=ROOT,
+                          stderr=subprocess.DEVNULL).returncode == 0:
+            preparation = [shlex.join(["python3", script])]
     if hashlib.sha256(frozen).hexdigest() != checksums[candidate]:
         raise ValueError(f"{label}: candidate entry digest differs from recorded Git tree")
     note_file = directory / "assessment.json"
@@ -60,7 +71,7 @@ def load(path):
     digest = checksums.get(opts.get("corpus") or "corpora/wikidata.bz2", "unrecorded")
     return dict(label=label, score=score, opts=opts, path=candidate, head=head, master=master,
                 revision=revision, argv=argv, gate=score["gate"], kind=kind, note=note,
-                runs=runs, version=printed, compiler=compiler, host=host, digest=digest)
+                runs=runs, version=printed, compiler=compiler, host=host, digest=digest, preparation=preparation)
 
 
 def point_leaders(entries):
@@ -128,7 +139,7 @@ def describe(e):
     if e["kind"] == "historical control":
         verification = "The i9 measured the historical Open arm separately. [Matched i9 results](prior.md)"
     lines.extend([verification, "", "Reproduce in a fresh checkout of the build tree above.", "", "```sh",
-                  f"git checkout {e['master']} -- bench/moonshot .just Justfile", "bash bench/moonshot/corpus.sh",
+                  f"git checkout {e['master']} -- bench/moonshot .just Justfile", *e["preparation"], "bash bench/moonshot/corpus.sh",
                   shlex.join(["python3", "bench/moonshot/moonshot.py", "score", e["path"], *e["argv"][4:]]), "```", ""])
     return lines
 
