@@ -1,0 +1,34 @@
+import numpy as np
+from collections import Counter
+B='/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/bisp-out/'
+L=open(B+'reference-column','rb').read(); T=np.frombuffer(open(B+'reference-raw','rb').read(),dtype=np.uint8); n=len(L); p=264045
+cnt=Counter(L); base={}; t=0
+for a in range(256): base[a]=t; t+=cnt.get(a,0)
+seen=dict(base); lf=[0]*n
+for i,a in enumerate(L): lf[i]=seen[a]; seen[a]+=1
+rho=np.zeros(n,dtype=np.int64); x=p
+for k in range(n): rho[n-1-k]=x; x=lf[x]
+pos=np.empty(n,dtype=np.int64); pos[rho]=np.arange(n)
+Larr=np.frombuffer(L,dtype=np.uint8)
+head=np.ones(n,dtype=bool); head[1:]=Larr[1:]!=Larr[:-1]
+ishead=head[rho]                 # text position q is a literal
+src=np.where(ishead,-1,pos[np.maximum(rho-1,0)])
+known=ishead.copy(); out=np.zeros(n,dtype=np.uint8); out[ishead]=T[ishead]
+dest=np.nonzero(~ishead)[0]; s=src[dest]
+passes=0
+while not known.all():
+    # one pass in increasing text order, phrase-at-a-time semantics approximated by a sequential sweep:
+    # (a forward sweep lets a byte use sources completed earlier in the same sweep)
+    newly=(~known[dest])&known[s]
+    if not newly.any(): raise SystemExit("stuck")
+    out[dest[newly]]=out[s[newly]]; known[dest[newly]]=True; passes+=1
+print("parallel (Jacobi) passes to evaluate the BWT macro scheme:",passes)
+assert (out==T).all()
+# sequential forward sweeps (Gauss-Seidel in text order)
+known=ishead.copy(); out2=np.zeros(n,dtype=np.uint8); out2[ishead]=T[ishead]; sweeps=0
+sl=s.tolist(); dl=dest.tolist(); kn=known.tolist(); o=out2.tolist()
+while not all(kn):
+    sweeps+=1
+    for d_,s_ in zip(dl,sl):
+        if not kn[d_] and kn[s_]: o[d_]=o[s_]; kn[d_]=True
+print("forward sequential sweeps:",sweeps)
