@@ -1,0 +1,52 @@
+# MONODROMY's independent implementation of the open-return factorisation (from proof.md's statements).
+import random, itertools, sys
+from collections import Counter
+def lf_of(L):
+    cnt=Counter(L); base={}; t=0
+    for a in sorted(cnt): base[a]=t; t+=cnt[a]
+    seen=dict(base); f=[0]*len(L)
+    for i,a in enumerate(L): f[i]=seen[a]; seen[a]+=1
+    return f
+def reference(L,p):
+    f=lf_of(L); n=len(L); cyc=[]; x=p
+    while True:
+        cyc.append(L[x]); x=f[x]
+        if x==p: break
+    w=bytes(reversed(cyc)); return (w*(n//len(w)+1))[:n]
+def factorised(L,p,S):
+    n=len(L); f=lf_of(L); S=sorted(S); m=len(S); idx={s:i for i,s in enumerate(S)}
+    v=bytes(L[s] for s in S); LFv=lf_of(v)
+    E=sorted(f[s] for s in S)
+    Sset=set(S); P=[0]*m; W=[b""]*m
+    for k,e in enumerate(E):          # open path from entrance e: only complement arrows used
+        x=e; w=[]
+        while x not in Sset: w.append(L[x]); x=f[x]
+        P[k]=idx[x]; W[k]=bytes(w)
+    g=[P[LFv[j]] for j in range(m)]
+    ginv=[0]*m
+    for j in range(m): ginv[g[j]]=j
+    i=idx[p]; out=[]
+    start=i
+    while True:
+        j=ginv[i]; out.append(bytes(reversed(W[LFv[j]]))+bytes([v[j]])); i=j
+        if i==start: break
+    lap=b"".join(out)   # forward spelling starting at p's return... arrange order
+    return lap
+def check(L,p,S):
+    n=len(L); ref=reference(L,p); lap=factorised(L,p,S)
+    # one lap = marked period, rotation starting at the mark; the inverse arrows spell forwards from p
+    out=(lap*(n//len(lap)+1))[:n]
+    return out==ref
+if __name__=="__main__":
+    random.seed(565); tot=bad=0
+    def bwt(t):
+        n=len(t); sa=sorted(range(n),key=lambda i:t[i:]+t[:i]); return bytes(t[(i-1)%n] for i in sa), sa.index(0)
+    print("banana:", factorised(b"annb$aa",4,[0,4,5]))
+    for _ in range(6000):
+        if random.random()<0.5:
+            n=random.randint(1,30); L=bytes(random.choice(b"abcd") for _ in range(n)); p=random.randrange(n)
+        else:
+            u=bytes(random.choice(b"abc") for _ in range(random.randint(1,15))); t=u*random.randint(1,3); L,p=bwt(t); n=len(L)
+        S=set(random.sample(range(n),random.randint(1,n)))|{p}
+        tot+=1; bad+= not check(L,p,S)
+    print("random columns/primaries/retained sets:",tot,"mismatches",bad)
