@@ -1,4 +1,4 @@
-# Astra, phrase BWT and context structure: the discussion, 17–18 November 2026
+# Astra's first investigation: phrase BWT to adjacent-rank-gap induction (17–18 November 2026)
 
 A working record of the conversation around the Codex (Astra 6.2) investigation in mibz2. It
 gathers Louis's prompts, Astra's reported progress, ChatGPT's commentary and the coordinator's
@@ -898,3 +898,32 @@ now allow us to see that neither construction revealed on its own?" The full tex
 message of 18 November.
 
 **Coordinator:** agreed; send as written.
+
+---
+
+## Conclusion of the first investigation
+
+The first investigation closes here (Louis, 18 November). The second begins with the comparison
+prompt in §8, and gets its own journal entry.
+
+**Established, each verified independently by MONODROMY and the Researcher on #145:**
+1. **The phrase-BWT run bound** and the reconstruction from branching intervals.
+2. **The RLE1 independence condition** (#553, first head).
+3. **Separator dependence, support-only sufficiency** with a distinct-future mark, and the
+   4,744/4,745 reconstruction threshold (second head).
+4. **The adjacent-rank-gap induction** (third head, 79688e06): the 3R−2 bound per round, the
+   one-bit equal-spelling certificate, and an O(R(1 + log(n/R)) log(2R)) construction from the
+   run list to the output grammar.
+
+**The computational verdict:**
+- The final algorithm is about 9.5× faster than Cells on very-low-run blocks ((abcd)^m!, 5 runs).
+- It is 7.8–12.3× slower on Wikidata, where r/n ≈ 0.057.
+- MONODROMY's record 55 explains why: its accelerated step is Zorich-like acceleration, which
+  pays only where long powers exist, and Wikidata has essentially none (record 20). So the first
+  investigation produced real mathematics, but no gain for mibz2's principal workload.
+
+**The lesson carried into the second:** freedom to choose the mathematics is not freedom to choose
+what counts as success. The second investigation makes the structure of the real blocks part of
+the mathematical problem, and asks for early, count-based tests of whether an advantage survives
+there.
+
