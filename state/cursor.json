@@ -2356,11 +2356,13 @@
     },
     {
       "trigger_comment_id": 6978698021,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-return-6978698021/report.md",
-      "source_commit": "e6df6aee5055840b8b6ed780e29727e23da6d42f"
+      "source_commit": "e6df6aee5055840b8b6ed780e29727e23da6d42f",
+      "report_commit": "432a6ce03857b21e57b03ff8d97094d0f96eff97",
+      "disposition": "VERIFIED with switch marking convention corrected"
     }
   ],
   "active_delegations": [],
