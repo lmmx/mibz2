@@ -77,6 +77,11 @@ jobs:
       # Researcher's fabricated bundle among them
       - name: The two-arm adoption reading (synthetic runs)
         run: python3 bench/test_two_arm.py
+      # the sustained-load driver (`bench/sustain.py`; `just bench-sustain`), run for real with
+      # a stub perf and a stub `ab child`: a complete run judged into two_arm's records, and
+      # every defect (a count multiplexed or missing, the sustained state not held) VOID
+      - name: The sustained-load driver (stub perf)
+        run: python3 bench/test_sustain.py
       # the counters' reader (`bench/counters.py`; `just bench-w12`'s L2 diagnostic), driven
       # with a stub perf and child: a complete run read, and every defect leaves no report
       - name: The counters reader (stub perf)

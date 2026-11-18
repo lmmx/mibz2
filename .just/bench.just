@@ -1995,3 +1995,145 @@ bench-recalibrate COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="5":
     fi
     date -u +%FT%TZ > "$O/finished.txt"
     bash bench/bundle.sh "$O"
+
+# The worker counts under sustained load (the C6 adoption registration,
+# docs/journal/2026-11-18-sustain-registration.md, frozen before the data; #145 QUEUED 6978994390,
+# CHECKPOINT 6984075662 on #314; MONODROMY's predictions frozen first). MONODROMY's record 58
+# found the recalibration's bimodal regime to be a chip-wide clock state set by recent load: a
+# decode after a rest runs in turbo, one under sustained load about 1.4x slower. Every worker
+# optimum so far was a turbo-state optimum. Here each arm is measured under its own sustained load
+# (`bench/sustain.py`): decodes back to back, no gap, each under `perf stat -a` for the package
+# energy, the effective clock (cycles / ref-cycles) and the memory controller's bytes. First a
+# probe (decides nothing): ten lazy workers unpinned for PROBE seconds after a 30 s rest, the
+# clock's onset and drift. Then five cells, the shipped trim first: unpinned lazy 7/28 against
+# 6/24, 8/32 and 10/40 (the decoders of 10 to 20 threads unpinned); pinned at 10 the same; pinned
+# at 8 lazy 6/24 against 5/20, 7/28 and 8/32; pinned at 6 eager 5/20 against 4/16 and 6/24; pinned
+# at 4 eager 3/12 against 2/8 and 4/16. Each cell: the 2 s quiet-machine gate, an idle baseline,
+# PREWARM seconds of its reference, then ROUNDS rounds (ROUNDS3 for the three-arm cells) of one
+# block an arm in rotated order: WARM seconds of the main corpus, then its measured decodes (the
+# main corpus, text, random, the main corpus). One build, rustc 1.99.1, src as 0.5.5's
+# (checked). Then `two_arm.py` per placement, one Holm family each at α 0.025.
+bench-sustain ROUNDS="8" ROUNDS3="6" WARM="6" PREWARM="30" PROBE="120":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/sustain
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-sustain (the registration, docs/journal/2026-11-18-sustain-registration.md): the worker counts under sustained load at $(git rev-parse HEAD): a {{PROBE}} s probe, then five cells (unpinned at 10, pinned at 10, 8, 6 and 4), {{ROUNDS}} rounds ({{ROUNDS3}} for three arms), {{WARM}} s warm a block, {{PREWARM}} s pre-warm a cell, every decode under perf stat -a"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-sustain: the checkout has local changes"; exit 1; }
+    git cat-file -e 7214f8cab4f0991d4b3ddfbe6c6ab7c34bb847d6^{commit} 2>/dev/null \
+      || git fetch -q origin tag v0.5.5 2>/dev/null || true
+    git diff --quiet 7214f8cab4f0991d4b3ddfbe6c6ab7c34bb847d6 HEAD -- src Cargo.toml Cargo.lock \
+      || { echo "bench-sustain: src differs from v0.5.5's (7214f8ca)"; exit 1; }
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-sustain: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    # the corpora, each decode a second or two: Wikidata ×16, text ×16, random ×8 (the guards
+    # generated afresh for this run; the text corpus is this checkout's own sources)
+    G=$W/gen-${O##*/}
+    mkdir "$G"
+    "$AB" gen "$G" 16 >/dev/null
+    : > "$W/wikidata-x16.bz2"; for i in $(seq 16); do cat "$W/wikidata.bz2" >> "$W/wikidata-x16.bz2"; done
+    : > "$G/text-x16.bz2"; for i in $(seq 16); do cat "$G/text.bz2" >> "$G/text-x16.bz2"; done
+    : > "$G/random-x8.bz2"; for i in $(seq 8); do cat "$G/random.bz2" >> "$G/random-x8.bz2"; done
+    sha256sum "$W/wikidata-x16.bz2" "$G/text-x16.bz2" "$G/random-x8.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    # the counters, before any timing: perf system-wide (kernel.perf_event_paranoid 0 or less)
+    # and every event counted once, unmultiplexed; otherwise nothing is timed
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if ! command -v perf >/dev/null || [ "$paranoid" = unknown ] || [ "$paranoid" -gt 0 ]; then
+      echo "bench-sustain: VOID, perf cannot count system-wide (no perf, or kernel.perf_event_paranoid $paranoid above 0); nothing timed" | tee "$O/verdict.txt"
+      bash bench/bundle.sh "$O"; exit 0
+    fi
+    perf --version | tee "$O/perf_version.txt"
+    perf stat -a -x, -o "$O/perf-preflight.csv" -e power/energy-pkg/ -e cycles -e ref-cycles \
+      -e uncore_imc/data_reads/ -e uncore_imc/data_writes/ -- sleep 1 || true
+    if ! python3 - "$O/perf-preflight.csv" <<'PY'
+    import sys
+    sys.path.insert(0, "bench")
+    import sustain
+    got = sustain.parse_perf(sys.argv[1])
+    bad = [f for f in sustain.FIELD.values() if f not in got or got[f][0] is None or got[f][1] < 100 or got[f][0] <= 0]
+    print("the counters' pre-flight:", "every event counted" if not bad else f"not counted: {bad}")
+    sys.exit(1 if bad else 0)
+    PY
+    then
+      echo "bench-sustain: VOID, an event cannot be counted (perf-preflight.csv); nothing timed" | tee "$O/verdict.txt"
+      bash bench/bundle.sh "$O"; exit 0
+    fi
+    # the probe (decides nothing): ten lazy workers unpinned, after a 30 s rest
+    python3 bench/sustain.py probe --ab "$AB" --arm mibz2-occ-10-40 --threads 10 --placement unpinned \
+      --seconds {{PROBE}} --file "$W/wikidata-x16.bz2" --out "$O/probe.jsonl" --gate 2 --rest 30 \
+      || echo "bench-sustain: the probe did not complete (probe.jsonl); the cells run"
+    # the cells, the shipped trim first in each
+    python3 bench/sustain.py run --ab "$AB" --main "$W/wikidata-x16.bz2" \
+      --guard "$G/text-x16.bz2" --guard "$G/random-x8.bz2" --out "$O/runs.jsonl" \
+      --warm {{WARM}} --prewarm {{PREWARM}} --gate 2 --idle 2 \
+      --cell "u10:unpinned:10:{{ROUNDS}}:mibz2-occ-7-28,mibz2-occ-6-24,mibz2-occ-8-32,mibz2-occ-10-40" \
+      --cell "p10:pinned:10:{{ROUNDS}}:mibz2-occ-7-28,mibz2-occ-6-24,mibz2-occ-8-32,mibz2-occ-10-40" \
+      --cell "p8:pinned:8:{{ROUNDS}}:mibz2-occ-6-24,mibz2-occ-5-20,mibz2-occ-7-28,mibz2-occ-8-32" \
+      --cell "p6:pinned:6:{{ROUNDS3}}:mibz2-oce-5-20,mibz2-oce-4-16,mibz2-oce-6-24" \
+      --cell "p4:pinned:4:{{ROUNDS3}}:mibz2-oce-3-12,mibz2-oce-2-8,mibz2-oce-4-16" \
+      || echo "bench-sustain: the cells did not complete (runs.jsonl); the judging says what is missing"
+    date -u +%FT%TZ > "$O/timed.txt"
+    common=(--main wikidata-x16 --guard text-x16,random-x8 --controls "" --rounds {{ROUNDS}}
+            --env "$O/env.json" --cores 10 --cpus 20 --sparse --alpha 0.025
+            --primary wikidata-x16,text-x16 --check-workers --hold-max-threads 0)
+    # each placement one Holm family at α 0.025: unpinned, 3 cells
+    if python3 bench/sustain.py judged "$O/runs.jsonl" --placement unpinned --out "$O/unpinned-judged.jsonl" \
+        | tee "$O/unpinned-judged.txt"; then
+      python3 bench/two_arm.py "$O/unpinned-judged.jsonl" "${common[@]}" --judged 10 --unpinned \
+        --ref-at mibz2-occ-7-28=10 \
+        --cand mibz2-occ-6-24 --judge-at mibz2-occ-6-24=10 \
+        --cand mibz2-occ-8-32 --judge-at mibz2-occ-8-32=10 \
+        --cand mibz2-occ-10-40 --judge-at mibz2-occ-10-40=10 \
+        | tee "$O/unpinned-verdict.txt" \
+        || echo "bench-sustain: the unpinned family is VOID (unpinned-verdict.txt says why)"
+    else
+      echo "bench-sustain: the unpinned family is VOID (unpinned-judged.txt says why)" | tee "$O/unpinned-verdict.txt"
+    fi
+    # pinned, 10 cells
+    if python3 bench/sustain.py judged "$O/runs.jsonl" --placement pinned --out "$O/pinned-judged.jsonl" \
+        | tee "$O/pinned-judged.txt"; then
+      python3 bench/two_arm.py "$O/pinned-judged.jsonl" "${common[@]}" --judged 10,8,6,4 \
+        --rounds-at 6={{ROUNDS3}} --rounds-at 4={{ROUNDS3}} \
+        --ref-at mibz2-occ-7-28=10 --ref-at mibz2-occ-6-24=8 --ref-at mibz2-oce-5-20=6 --ref-at mibz2-oce-3-12=4 \
+        --cand mibz2-occ-6-24 --judge-at mibz2-occ-6-24=10 \
+        --cand mibz2-occ-8-32 --judge-at mibz2-occ-8-32=10,8 \
+        --cand mibz2-occ-10-40 --judge-at mibz2-occ-10-40=10 \
+        --cand mibz2-occ-5-20 --judge-at mibz2-occ-5-20=8 \
+        --cand mibz2-occ-7-28 --judge-at mibz2-occ-7-28=8 \
+        --cand mibz2-oce-4-16 --judge-at mibz2-oce-4-16=6,4 \
+        --cand mibz2-oce-6-24 --judge-at mibz2-oce-6-24=6 \
+        --cand mibz2-oce-2-8 --judge-at mibz2-oce-2-8=4 \
+        | tee "$O/pinned-verdict.txt" \
+        || echo "bench-sustain: the pinned family is VOID (pinned-verdict.txt says why)"
+    else
+      echo "bench-sustain: the pinned family is VOID (pinned-judged.txt says why)" | tee "$O/pinned-verdict.txt"
+    fi
+    # the declared diagnostics (decide nothing): by arm, order, drift, load, steady state, the probe
+    python3 bench/sustain.py report "$O/runs.jsonl" --probe "$O/probe.jsonl" --tsc-ghz 3.7 \
+      | tee "$O/report.txt" || echo "bench-sustain: the report failed (decides nothing)"
+    date -u +%FT%TZ > "$O/finished.txt"
+    bash bench/bundle.sh "$O"
