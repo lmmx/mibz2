@@ -10,14 +10,14 @@ Over the past two days we built three new ways to undo the Burrows–Wheeler tra
 
 **The setting, in brief.** bzip2 stores each block of text as the last column \\(L\\) of the block's sorted rotations: the Burrows–Wheeler transform (BWT). A map called **LF** sends each row of the sorted table to the row of the rotation one byte earlier, so following LF reads the text backwards, one byte a step. A **run** is a stretch of equal bytes in \\(L\\). LF moves all the rows of a run by the same amount, so the whole map is a list of shifted runs ([One shift per run](<https://lmmx.github.io/mibz2/pr-preview/pr-574/blog/2026-11-08-inverse-bwt-navigation/index.md>)). We write \\(n\\) for a block's rows and \\(r\\) for its runs. A Wikidata block has about 900,000 rows and 50,000 runs. Cells works on runs, not rows. It shrinks the map one comparison at a time until a single row is left, recording how to spell the text as it goes. [The mathematical dictionary](<https://lmmx.github.io/mibz2/pr-preview/pr-574/blog/2026-11-16-mathematical-dictionary/index.md>) names the objects it keeps.
 
-**The structural work** of a construction is the number of basic operations it performs on the runs before it writes any output. Writing the 900,000 output bytes costs every construction the same, so the structural work is where they can differ.
+**The structural work** of a construction is the number of basic operations it performs on the runs before it writes any output. Every construction must also write the 900,000 output bytes. The structural work is the part where they differ by design.
 
 **What we found.** We counted the structural work on all 233 large blocks of mibz2's Wikidata benchmark.
 
-- **Cells and two of the new constructions do about the same work:** 1.78 to 1.93 operations per run at the median. Their counts rise and fall together from block to block. Yet they do not perform the same operations, as a small example shows.
+- **Cells and two of the new constructions, adjacent-rank induction and forest-section elimination ("the forest"), do about the same work:** 1.78 to 1.93 operations per run at the median. Their counts rise and fall together from block to block. Yet they do not perform the same operations, as a small example shows.
 - **One property of the block explains much of the shared part.** Call the place between two neighbouring rows of a run a *gap*. Follow a gap's two rows through LF, and they read the same bytes until one of them crosses a run boundary. How long these pairs stay together, counted over the whole block, is the block's *boundary-orbit profile*. The persistence of boundary-orbit chains explains much of the variation in the structural work done by Cells and the forest.
 - **The obvious ways to lower that work have each failed:** refining the description of the block, accelerating repeated steps, and splitting one block across cores. Wikidata has almost no repeats to accelerate.
-- **A description by copies of earlier text is far more compact,** but it is written in text positions, and the BWT gives text positions only by walking LF.
+- **A description by copies of earlier text is far more compact,** about 11,000 copies for a 900,000-byte block, but it is written in text positions, and the BWT gives text positions only by walking LF.
 - **So Cells is the best-performing formulation tested.** Nobody has shown that it is optimal. The open question is whether a gap's separation depth, the number of bytes its two rows read together, can be found without walking its path.
 
 Each figure is labelled as measured or proved, and each reading of it as interpretation. Sections 1 and 2 count the work and compare it. Section 3 builds the profile on a seven-row example. Sections 4 and 5 cover the routes that failed to do less, and section 6 says where things stand.
@@ -84,7 +84,7 @@ pieces, and those pieces are exactly the forest's arcs. This is **proved**, and 
 
 which is the forest's count of leftover arcs, its *chords*: 10,955 on the test block. The \\(+1\\) is row 0, a run start that is not an internal cut. On the test block, \\(q\_2\\) to \\(q\_5\\) also equal exactly the excesses of the refined networks in section 4.
 
-**The test.** The test fixed one extra quantity in advance: \\(\\sum\_{k=2}^{8} q\_k / r\\), the tail of the profile. Each count per run was fitted by least squares, with leave-one-out error:
+**The test.** The test added a single summary quantity, rather than searching over combinations: \\(\\sum\_{k=2}^{8} q\_k / r\\), the tail of the profile. Each count per run was fitted by least squares, with leave-one-out error:
 
 | Model | Cells \\(R^2\\) | Forest \\(R^2\\) | Adj.-rank \\(R^2\\) | Shared residual |
 | --- | ---: | ---: | ---: | ---: |
@@ -128,13 +128,13 @@ A summary of sections 1, 4 and 5. Counts are medians per run over 233 blocks; ti
 
 ## 6\. Where things stand
 
-**Measured and proved.** Three unrelated rank-order constructions do about 1.8 operations per run on Wikidata, their counts correlate strongly, and they do not process the same events. The identities \\(E\_0 = 2r - 1 - C\\) and \\(q\_1 = E\_0 - V\_0 + 1\\) are proved and hold on every block. The tail of the boundary-orbit profile accounts for the variation Cells and the forest share. Refinement raised the work on the test block, acceleration has nothing to act on in Wikidata, and splitting a block costs far more total work. The copy route is compact but needs text positions.
+**Measured and proved.** Three unlike constructions do about 1.8 operations per run on Wikidata, their counts correlate strongly, and they do not process the same events. The identities \\(E\_0 = 2r - 1 - C\\) and \\(q\_1 = E\_0 - V\_0 + 1\\) are proved and hold on every block. The tail of the boundary-orbit profile accounts for the variation Cells and the forest share. Refinement raised the work on the test block, acceleration has nothing to act on in Wikidata, and splitting a block costs far more total work. The copy route is compact but needs text positions.
 
 **Not shown.** No one has shown that Cells is optimal. The shared count is not a lower bound, and the only proved bounds are the trivial ones: reading the \\(r\\) runs and writing the \\(n\\) bytes. Cells is the best-performing formulation tested.
 
-**The open question.** Cells and the forest appear to pay for each boundary chain step by step. Some shortcuts exist. Division jumps over a chain that repeats, and a one-bit test tells when two neighbouring paths spell the same word. But every known way to learn how long an *aperiodic* chain runs walks it, or needs preprocessing of order \\(n \\log n\\). Can a gap's separation depth be found without walking its path? A method that could would attack the work that every tested construction shares.
+**The open question.** On our reading, Cells and the forest pay for each boundary chain step by step. Some shortcuts exist. Division jumps over a chain that repeats, and a one-bit test tells when two neighbouring paths spell the same word. But every known way to learn how long an *aperiodic* chain runs walks it, or needs preprocessing of order \\(n \\log n\\). Can a gap's separation depth be found without walking its path? A method that could would attack the work Cells and the forest share.
 
-**Next.** Two studies are under way: a bounded study of whether Cells' unlike steps can be fused, and a literature study of these gap chains.
+**Next.** Two studies are under way: a bounded study of whether steps of different kinds in Cells can be fused into one, and a literature study of these gap chains.
 
 In short: three constructions count about the same work, and much of what they share is how long the run boundaries persist. The ways tried to shorten that work raised it, found nothing to act on, or multiplied it. When unlike methods agree on a count, the reason is worth looking for in the input before tuning the methods.
 

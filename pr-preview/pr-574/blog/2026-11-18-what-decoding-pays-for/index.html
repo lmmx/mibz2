@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=d0b2a04f88f0">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=d60f6f5f4ac7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=d0b2a04f88f0">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=d60f6f5f4ac7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=d0b2a04f88f0">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=d60f6f5f4ac7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=d0b2a04f88f0">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=d60f6f5f4ac7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=d0b2a04f88f0">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=d60f6f5f4ac7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=d0b2a04f88f0">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=d60f6f5f4ac7">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2742,13 +2742,13 @@
 </div>
 <p>Over the past two days we built three new ways to undo the Burrows–Wheeler transform, and studied a fourth that describes the text by copies. The aim was a method that does less work than the kernel mibz2 ships. <a href="../2026-11-10-rauzy-veech-reconstruction/">A new way back from the BWT</a> introduced that kernel, Cells, and <a href="../2026-11-18-cutting-the-loop-open/">Cutting the loop open</a> reported one of the new ones, open return, which cuts LF's loop at chosen rows and decodes along the open paths left. This post puts all of them side by side. It asks what work each one cannot avoid, and why that work is so similar from one construction to the next.</p>
 <p><strong>The setting, in brief.</strong> bzip2 stores each block of text as the last column <span class="arithmatex">\(L\)</span> of the block's sorted rotations: the Burrows–Wheeler transform (BWT). A map called <strong>LF</strong> sends each row of the sorted table to the row of the rotation one byte earlier, so following LF reads the text backwards, one byte a step. A <strong>run</strong> is a stretch of equal bytes in <span class="arithmatex">\(L\)</span>. LF moves all the rows of a run by the same amount, so the whole map is a list of shifted runs (<a href="../2026-11-08-inverse-bwt-navigation/">One shift per run</a>). We write <span class="arithmatex">\(n\)</span> for a block's rows and <span class="arithmatex">\(r\)</span> for its runs. A Wikidata block has about 900,000 rows and 50,000 runs. Cells works on runs, not rows. It shrinks the map one comparison at a time until a single row is left, recording how to spell the text as it goes. <a href="../2026-11-16-mathematical-dictionary/">The mathematical dictionary</a> names the objects it keeps.</p>
-<p><strong>The structural work</strong> of a construction is the number of basic operations it performs on the runs before it writes any output. Writing the 900,000 output bytes costs every construction the same, so the structural work is where they can differ.</p>
+<p><strong>The structural work</strong> of a construction is the number of basic operations it performs on the runs before it writes any output. Every construction must also write the 900,000 output bytes. The structural work is the part where they differ by design.</p>
 <p><strong>What we found.</strong> We counted the structural work on all 233 large blocks of mibz2's Wikidata benchmark.</p>
 <ul>
-<li><strong>Cells and two of the new constructions do about the same work:</strong> 1.78 to 1.93 operations per run at the median. Their counts rise and fall together from block to block. Yet they do not perform the same operations, as a small example shows.</li>
+<li><strong>Cells and two of the new constructions, adjacent-rank induction and forest-section elimination ("the forest"), do about the same work:</strong> 1.78 to 1.93 operations per run at the median. Their counts rise and fall together from block to block. Yet they do not perform the same operations, as a small example shows.</li>
 <li><strong>One property of the block explains much of the shared part.</strong> Call the place between two neighbouring rows of a run a <em>gap</em>. Follow a gap's two rows through LF, and they read the same bytes until one of them crosses a run boundary. How long these pairs stay together, counted over the whole block, is the block's <em>boundary-orbit profile</em>. The persistence of boundary-orbit chains explains much of the variation in the structural work done by Cells and the forest.</li>
 <li><strong>The obvious ways to lower that work have each failed:</strong> refining the description of the block, accelerating repeated steps, and splitting one block across cores. Wikidata has almost no repeats to accelerate.</li>
-<li><strong>A description by copies of earlier text is far more compact,</strong> but it is written in text positions, and the BWT gives text positions only by walking LF.</li>
+<li><strong>A description by copies of earlier text is far more compact,</strong> about 11,000 copies for a 900,000-byte block, but it is written in text positions, and the BWT gives text positions only by walking LF.</li>
 <li><strong>So Cells is the best-performing formulation tested.</strong> Nobody has shown that it is optimal. The open question is whether a gap's separation depth, the number of bytes its two rows read together, can be found without walking its path.</li>
 </ul>
 <p>Each figure is labelled as measured or proved, and each reading of it as interpretation. Sections 1 and 2 count the work and compare it. Section 3 builds the profile on a seven-row example. Sections 4 and 5 cover the routes that failed to do less, and section 6 says where things stand.</p>
@@ -2817,7 +2817,7 @@
 <p>pieces, and those pieces are exactly the forest's arcs. This is <strong>proved</strong>, and it holds on all 233 blocks. The forest's <em>excess</em> is <span class="arithmatex">\(E_0 - V_0\)</span>, its arcs minus its sites (<span class="arithmatex">\(V_0 = r\)</span>). One more identity, verified on every block, ties the profile to it:</p>
 <div class="arithmatex">\[q_1 = r - C = E_0 - V_0 + 1,\]</div>
 <p>which is the forest's count of leftover arcs, its <em>chords</em>: 10,955 on the test block. The <span class="arithmatex">\(+1\)</span> is row 0, a run start that is not an internal cut. On the test block, <span class="arithmatex">\(q_2\)</span> to <span class="arithmatex">\(q_5\)</span> also equal exactly the excesses of the refined networks in section 4.</p>
-<p><strong>The test.</strong> The test fixed one extra quantity in advance: <span class="arithmatex">\(\sum_{k=2}^{8} q_k / r\)</span>, the tail of the profile. Each count per run was fitted by least squares, with leave-one-out error:</p>
+<p><strong>The test.</strong> The test added a single summary quantity, rather than searching over combinations: <span class="arithmatex">\(\sum_{k=2}^{8} q_k / r\)</span>, the tail of the profile. Each count per run was fitted by least squares, with leave-one-out error:</p>
 <table>
 <thead>
 <tr>
@@ -2878,10 +2878,10 @@
 </figure>
 
 <h2 id="6-where-things-stand">6. Where things stand<a class="headerlink" href="#6-where-things-stand" title="Permanent link">&para;</a></h2>
-<p><strong>Measured and proved.</strong> Three unrelated rank-order constructions do about 1.8 operations per run on Wikidata, their counts correlate strongly, and they do not process the same events. The identities <span class="arithmatex">\(E_0 = 2r - 1 - C\)</span> and <span class="arithmatex">\(q_1 = E_0 - V_0 + 1\)</span> are proved and hold on every block. The tail of the boundary-orbit profile accounts for the variation Cells and the forest share. Refinement raised the work on the test block, acceleration has nothing to act on in Wikidata, and splitting a block costs far more total work. The copy route is compact but needs text positions.</p>
+<p><strong>Measured and proved.</strong> Three unlike constructions do about 1.8 operations per run on Wikidata, their counts correlate strongly, and they do not process the same events. The identities <span class="arithmatex">\(E_0 = 2r - 1 - C\)</span> and <span class="arithmatex">\(q_1 = E_0 - V_0 + 1\)</span> are proved and hold on every block. The tail of the boundary-orbit profile accounts for the variation Cells and the forest share. Refinement raised the work on the test block, acceleration has nothing to act on in Wikidata, and splitting a block costs far more total work. The copy route is compact but needs text positions.</p>
 <p><strong>Not shown.</strong> No one has shown that Cells is optimal. The shared count is not a lower bound, and the only proved bounds are the trivial ones: reading the <span class="arithmatex">\(r\)</span> runs and writing the <span class="arithmatex">\(n\)</span> bytes. Cells is the best-performing formulation tested.</p>
-<p><strong>The open question.</strong> Cells and the forest appear to pay for each boundary chain step by step. Some shortcuts exist. Division jumps over a chain that repeats, and a one-bit test tells when two neighbouring paths spell the same word. But every known way to learn how long an <em>aperiodic</em> chain runs walks it, or needs preprocessing of order <span class="arithmatex">\(n \log n\)</span>. Can a gap's separation depth be found without walking its path? A method that could would attack the work that every tested construction shares.</p>
-<p><strong>Next.</strong> Two studies are under way: a bounded study of whether Cells' unlike steps can be fused, and a literature study of these gap chains.</p>
+<p><strong>The open question.</strong> On our reading, Cells and the forest pay for each boundary chain step by step. Some shortcuts exist. Division jumps over a chain that repeats, and a one-bit test tells when two neighbouring paths spell the same word. But every known way to learn how long an <em>aperiodic</em> chain runs walks it, or needs preprocessing of order <span class="arithmatex">\(n \log n\)</span>. Can a gap's separation depth be found without walking its path? A method that could would attack the work Cells and the forest share.</p>
+<p><strong>Next.</strong> Two studies are under way: a bounded study of whether steps of different kinds in Cells can be fused into one, and a literature study of these gap chains.</p>
 <p>In short: three constructions count about the same work, and much of what they share is how long the run boundaries persist. The ways tried to shorten that work raised it, found nothing to act on, or multiplied it. When unlike methods agree on a count, the reason is worth looking for in the input before tuning the methods.</p>
 <hr />
 <p><strong>Research records:</strong> <a href="https://github.com/lmmx/mibz2/blob/d256502657463014f64820865093fb419e89b7a3/docs/journal/monodromy/2026-11-18-synthesis.md">the synthesis of the four investigations</a> · <a href="https://github.com/lmmx/mibz2/blob/049464756c76addb72cbfaed42d421d006126eab/docs/journal/monodromy/2026-11-18-o3-o5.md">refinement and parallel depth</a> · <a href="https://github.com/lmmx/mibz2/blob/2157acad18598e9aa555b4f5e5576c0f875779de/docs/journal/monodromy/2026-11-18-q-profile.md">the boundary-orbit profile test</a> · <a href="https://github.com/lmmx/mibz2/blob/eda3167badcbd82be5ebe47607ae4b4528ed030d/docs/journal/monodromy/2026-11-18-forest-verification.md">the forest's verification</a> · <a href="https://github.com/lmmx/mibz2/issues/145#issuecomment-6983166783">the independent synthesis review</a> and <a href="https://github.com/lmmx/mibz2/blob/57b4a9403b1e26f602258248c1f088783156ec06/state/reports/synthesis-6982863130/report.md">its report</a> · <a href="https://github.com/lmmx/mibz2/issues/145#issuecomment-6982103916">the forest review</a> · investigations <a href="https://github.com/lmmx/mibz2/blob/1eb99cf48d5b5d8b62f70262ddf8cded98c38ca7/docs/journal/2026-11-18-astra-investigation-1.md">one</a>, <a href="https://github.com/lmmx/mibz2/blob/1eb99cf48d5b5d8b62f70262ddf8cded98c38ca7/docs/journal/2026-11-18-astra-investigation-2.md">two</a> and <a href="https://github.com/lmmx/mibz2/blob/1eb99cf48d5b5d8b62f70262ddf8cded98c38ca7/docs/journal/2026-11-18-astra-investigation-3.md">three</a> · <a href="https://github.com/lmmx/mibz2/blob/1eb99cf48d5b5d8b62f70262ddf8cded98c38ca7/docs/journal/2026-11-18-pro-investigation-recovered.md">the copy route, recovered</a> · <a href="https://github.com/lmmx/mibz2/blob/2157acad18598e9aa555b4f5e5576c0f875779de/docs/journal/monodromy/2026-11-10-cells-gap/evidence/i9-census-1.jsonl">the Cells census</a> · <a href="https://github.com/lmmx/mibz2/blob/1eb99cf48d5b5d8b62f70262ddf8cded98c38ca7/docs/journal/2026-11-18-switch-elimination/evidence/forest-wikidata.csv">the forest census</a></p>
@@ -3045,19 +3045,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=d0b2a04f88f0"></script>
+        <script src="../../assets/javascripts/bench.js?v=d60f6f5f4ac7"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=d0b2a04f88f0"></script>
+        <script src="../../assets/javascripts/couriers.js?v=d60f6f5f4ac7"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=d0b2a04f88f0"></script>
+        <script src="../../assets/javascripts/blog.js?v=d60f6f5f4ac7"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=d0b2a04f88f0"></script>
+        <script src="../../assets/javascripts/frontier.js?v=d60f6f5f4ac7"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=d0b2a04f88f0"></script>
+        <script src="../../assets/javascripts/observatory.js?v=d60f6f5f4ac7"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=d0b2a04f88f0"></script>
+        <script src="../../assets/javascripts/katex.js?v=d60f6f5f4ac7"></script>
       
     
   </body>
