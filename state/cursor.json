@@ -2314,11 +2314,13 @@
     },
     {
       "trigger_comment_id": 6974406266,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/bispecial-6974406266/report.md",
-      "source_commit": "111ff9ac70f25c3b59adb2fb9c51c29dbf2723dd"
+      "source_commit": "111ff9ac70f25c3b59adb2fb9c51c29dbf2723dd",
+      "report_commit": "3d5daedf08c898de050a3c98820a0ea25f5faf9b",
+      "disposition": "VERIFIED separator dependence, scoped support sufficiency, exact frozen spectrum witness and frozen replay. Full native comparison verified in archive. Cheap extraction and performance unproved."
     }
   ],
   "active_delegations": [],
