@@ -1,0 +1,4 @@
+seed,seed_len,copies,singletons,longest,seed_ops,seed_bytes,output_ops,output_bytes,cross_ops,cross_bytes
+run heads in text order,51184,11145,33,4819,6124,42627,5021,857304,0,0
+run heads in rank order,51184,18132,230,4819,9680,30244,8452,869687,0,0
+all ascending byte values,256,20068,917,4819,1138,1395,18930,898536,0,0
