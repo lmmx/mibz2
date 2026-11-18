@@ -19,6 +19,8 @@ on:
       - "src/cells_lazy.rs"
       - "src/cells_lazy_test.rs"
       - "src/cells_lever.rs"
+      - "src/cells_owned.rs"
+      - "src/cells_owned_test.rs"
       - "src/cells_selective_test.rs"
       - "src/coop.rs"
       - "src/parallel.rs"
@@ -35,6 +37,8 @@ on:
       - "src/cells_lazy.rs"
       - "src/cells_lazy_test.rs"
       - "src/cells_lever.rs"
+      - "src/cells_owned.rs"
+      - "src/cells_owned_test.rs"
       - "src/cells_selective_test.rs"
       - "src/coop.rs"
       - "src/parallel.rs"
@@ -77,6 +81,7 @@ jobs:
           grep -q '^cells::tests::miri_cells_long_writer:' miri-list.txt
           grep -q '^cells::tests::miri_cells_selective_boundaries_reuse:' miri-list.txt
           grep -q '^cells::tests::miri_cells_long_writer_production_admission:' miri-list.txt
+          grep -q '^cells::tests::miri_cells_owned_writer:' miri-list.txt
           grep -q '^cells::tests::miri_cells_promised_slots_exact_fit:' miri-list.txt
           grep -q '^cells::tests::miri_cells_bottom_slots_read_through_top:' miri-list.txt
           grep -q '^cells::tests::miri_cells_dead_regions:' miri-list.txt

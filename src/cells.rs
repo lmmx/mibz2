@@ -64,6 +64,13 @@ struct Kernel {
     pos: Vec<u32>,
     #[cfg(test)]
     writer_reach: WriterReach,
+    /// (test only) every block written by `write_cells`, the one-scan writer's fallback, so
+    /// its own branches can be reached and counted; and how many blocks the one-scan writer
+    /// (`cells_owned.rs`) wrote by its own schedule
+    #[cfg(test)]
+    shipped_writer: bool,
+    #[cfg(test)]
+    owned_taken: usize,
     #[cfg(test)]
     materialization: Option<Vec<Materialization>>,
     /// (test only) room for `budget` fresh slots after each order's letters, the layout the
@@ -91,6 +98,9 @@ include!("cells_w12.rs");
 // (research only: the grammar replay harness, with `grammar-replay`)
 #[cfg(feature = "grammar-replay")]
 include!("cells_replay.rs");
+// The one-scan writer (study 5, #579): the writer of full-period blocks, the shipped writer
+// (`write_cells`) its fallback; with `owned-writer` (research only), its comparison harness
+include!("cells_owned.rs");
 // (research only: the memory-lever experiment's staged kernel)
 #[cfg(feature = "memory-lever")]
 include!("cells_lever.rs");
@@ -533,10 +543,22 @@ impl Kernel {
             if self.variant == LAZY {
                 self.replay(word, len, n, out);
             }
+            // (research only, `owned-writer`: the shipped and one-scan writers compared on the
+            // block's grammar)
+            #[cfg(feature = "owned-writer")]
+            if self.variant != LAZY_W12 {
+                self.compare_owned(word, len, n, out);
+            }
+            #[cfg(test)]
+            let shipped = self.shipped_writer;
+            #[cfg(not(test))]
+            let shipped = false;
             if self.variant == LAZY_W12 {
                 self.write_w12(word, len, n, out);
-            } else {
+            } else if shipped {
                 self.write_cells(word, len, n, out);
+            } else {
+                self.write_owned(word, len, n, out);
             }
         }
         self.check_canaries(None);
@@ -1387,7 +1409,11 @@ mod tests {
     #[test]
     fn miri_cells_long_writer() {
         let column = long_writer_column();
-        let mut kernel = Kernel::default();
+        // (the shipped writer's own branches: the one-scan writer would take these blocks)
+        let mut kernel = Kernel {
+            shipped_writer: true,
+            ..Default::default()
+        };
         let mut out = Vec::new();
         for (ll, p, expected_cells, expected_period) in [
             ([vec![1; 16], vec![0; 15]].concat(), 16, 17, 31),
@@ -1449,6 +1475,8 @@ mod tests {
             (440, 8, 70)
         );
         let mut cells = Cells::default();
+        // (the shipped writer's own branches: the one-scan writer would take this block)
+        cells.state.kernel.shipped_writer = true;
         let want = oracle(&ll, 0);
         let mut out: Vec<_> = want.iter().map(|b| !b).collect();
         assert!(cells.invert_runs(&r, ll.len(), 0, &mut out, crate::Kernels::scalar()));
@@ -1699,5 +1727,6 @@ mod tests {
         );
     }
     include!("cells_selective_test.rs");
+    include!("cells_owned_test.rs");
     include!("cells_lazy_test.rs");
 }

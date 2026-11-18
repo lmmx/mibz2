@@ -85,6 +85,8 @@ induction-trace = []
 # fit and the tiny-word and common-child censuses. Retain while the relay's compact-rule
 # questions are open; remove at the first release review after they close
 grammar-replay = []
+# research only: the one-scan writer's prototype beside the shipped writer, compared block by block
+owned-writer = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -137,6 +139,10 @@ required-features = ["induction-trace"]
 [[example]]
 name = "grammar_replay"
 required-features = ["grammar-replay"]
+
+[[example]]
+name = "writer_owned"
+required-features = ["owned-writer"]
 
 [[example]]
 name = "lever_counts"
