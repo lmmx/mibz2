@@ -115,14 +115,29 @@ machine, and expect an identical kernel to land outside its interval now and the
 against the installed Valgrind's static libraries ([`chaingrind/build.sh`](chaingrind/build.sh);
 Debian and Ubuntu's `valgrind` package ships them).
 
-**What it runs.** `moonshot proxy` decodes 16 sampled Wikidata blocks on one thread, the
-worker's `decode_block`, between two client requests. Before the region it decodes one block
-outside it, to size the buffers. Inside the region, the tool does three things.
+**What it runs.** `moonshot proxy --warm` decodes one Wikidata block on one thread, the worker's
+`decode_block`, between two client requests, in a worker's steady state:
+1. **The block once, unseen.** A kernel's buffers grow only when a block needs more than they
+   hold, with a zero-filled reallocation that Valgrind runs a byte a store. A real worker's
+   buffers reach their size within its first few blocks. Measuring a growth once made one
+   block 6.5× slower than its steady state (block 47: 50.5 against 7.7 cycles a byte).
+2. **The warm block** (block 1), which fills the tool's caches and counts nothing.
+3. **The block, measured.** Dirty lines left at the end are charged net of those found at the
+   start.
+
+**The sample.** The bench corpus has 233 full blocks and 198 tiny ones (the dump windows' stream
+tails, a few hundred bytes each). A score decodes 48 full and 16 tiny blocks
+(`--proxy-blocks 48+16`), spread evenly, one Valgrind process each, in parallel. Each stratum's
+mean is weighted by its count in the corpus. **Every interval is a paired bootstrap over the
+blocks** (the same resampled blocks for the candidate and lazy). The per-block ratios are wide,
+0.70 to 1.23 for opend over lazy, so with 10 full blocks the ratio's 90% range was
+[0.90, 1.01]. That was the old 16-block sample, and why its fit moved.
 
 **A cache model.**
 - L1 is 32 KiB, 8-way. L2 is 256 KiB, 4-way. The LLC is 20 MiB divided by W, the i9's L3
   shared by W workers, 16-way.
-- Replacement is true LRU. Stores write-allocate.
+- Replacement is true LRU. Stores write-allocate, except fast-string (`rep movs`, `rep stos`) and
+  non-temporal stores: they write whole lines with no read for ownership, as Intel cores do.
 - An L2 streamer prefetches four lines ahead on sequential misses.
 - Each line carries its fill time, so a demand access to a line still in flight waits for it.
 
@@ -143,29 +158,58 @@ only while it is binding, meaning an input became ready after the instruction di
 
 | group | quantities |
 |---|---|
-| transfers | L1↔L2 and L2↔L3 bytes; DRAM bytes (demand, prefetch, writebacks and the end's drain) |
+| transfers | L1↔L2 and L2↔L3 bytes; DRAM bytes (demand, prefetch and writebacks) |
 | dependent chains | dependent DRAM links (DRAM loads whose address waited on an earlier DRAM load: record 71's serially dependent L3-miss chains); dependent past-L2 links (the same for loads served by L3 or DRAM); the longest of each chain; dependent loads at any level |
 | overlap | DRAM memory-level parallelism (the loads' total latency over the time at least one is outstanding); for each dependent DRAM link, the DRAM loads outstanding beside it; DRAM loads per dependent link |
 
-Beside the three groups the report gives the model's cycles and instructions per byte. The
-predicted ratio over lazy at each W is the model's cycles per byte against lazy's, with the
-workers assumed saturated. It is one proxy quantity among the others.
+Beside the three groups the report gives the model's cycles and instructions per byte, and each
+arm's **DRAM-latency sensitivity**: how much its cycles a byte rise, in per cent, for 100
+cycles more DRAM latency. It is measured, not inferred: the first 16 full blocks are run again
+at the DRAM latency plus 150 cycles.
 
-**Contention enters in three ways only:**
-- the LLC's share, 20 MiB / W;
-- the DRAM latency: the i9's measured L3-miss latency (bench-imc-ten: 549 cycles at 7 workers,
-  649 at 10), linear in W and floored at 250 cycles. This is measured, not fitted;
-- the L3-hit latency: 42 + κ·(W − 1) cycles. κ is the one fitted parameter.
+**How contention enters.**
+- **The LLC's share:** 20 MiB / W.
+- **The L3-hit latency:** 42 + κ·(W − 1) cycles. κ is the one fitted parameter.
+- **The DRAM latency follows each arm's own bandwidth.** This is a fixed point (`solve`):
+  - *The latency curve:* the i9's L3-miss latency as a queue in the memory controller's load,
+    idle + k·U/(1 − U), with U the share of its 33.39 GB/s ceiling. It is fitted to
+    bench-imc-ten's four (GB/s, latency) readings, which come from another arm (`occ`), never
+    from the arms the scorer is checked on. It gives 438 cycles idle, 495 at lazy's 20 GB/s
+    and 600 at 27 GB/s.
+  - *Lazy's bandwidth:* its measured 20.0 GB/s at 7 workers (open-return, dram.txt), scaled to
+    each W by its modelled bytes a second.
+  - *An arm's bandwidth:* lazy's at that W, times the arm's DRAM bytes a byte and its rate,
+    both relative to lazy's. The process's traffic outside `decode_block` (input, scan, output
+    copy) is the constant c0: the i9's 8.0 B/B for lazy less the model's.
+  - *The solution:* an arm's cycles at a latency are its measured cycles plus its sensitivity
+    times the difference. The latency where the curve and the arm's bandwidth agree is
+    unique, and bisection finds it.
+  - *Why:* an arm that moves more bytes waits longer for each of them, as eager Cells does at
+    28 GB/s against lazy's 20.
+- **The predicted ratio over lazy at each W** is the arm's cycles a byte over lazy's, each at
+  its own latency, with the workers assumed saturated.
 
-**What the model leaves out:** no other cores' traffic, coherence, bandwidth limit, physical
-indexing or slice hashing; no branch mispredictions (control dependences are ignored, as a
-predicted branch would ignore them).
+**Each prediction shows what drives it:**
+- the instruction ratio (work);
+- the ratio at the nominal latencies (cache and dependency behaviour at equal contention);
+- the contention feedback (what the arm's own bandwidth does to its latency);
+- each arm's DRAM latency and sensitivity;
+- the three groups above.
+
+**What the model leaves out:** no other cores' traffic, coherence, physical indexing or slice
+hashing; LRU, not the i9's adaptive replacement; no branch mispredictions (control dependences
+are ignored, as a predicted branch would ignore them).
 
 **Out of calibration.** At each W, if any of the candidate's access-pattern statistics falls
 outside the range the four reference arms span (widened by 10%), the report prints OUT OF
 CALIBRATION with the statistics that fall outside, and says its prediction there is unreliable.
-The statistics watched are dependent DRAM and past-L2 links, L2, L3 and DRAM bytes, past-L2 and
-DRAM loads per byte, and instructions per byte.
+The reference arms' statistics are in `calibration.json` (`reference`), from
+`moonshot.py calibrate --write`. The statistics watched are:
+- the DRAM-latency sensitivity;
+- dependent DRAM and past-L2 links;
+- L2, L3 and DRAM bytes;
+- past-L2 and DRAM loads per byte;
+- instructions per byte.
 
 ## Calibration, and what it shows
 
@@ -252,7 +296,9 @@ low-W prediction directly.
 - **How it is used:** κ is refitted on lazy and opend at 7 workers only. Every other cell is a
   held-out check, timing and counters alike. Its rule is posted on #145 before any data. It
   decides nothing in production.
-- **A dry run:** `just bench-moonshot-calibrate DRY=1` is untimed, two rounds, no counters.
+- **A dry run:** `just bench-moonshot-calibrate 10 2 4 1,2,4,7,8,10 1` is untimed, two rounds,
+  no counters. DRY is the 5th positional argument: `just` has no keyword arguments, so
+  `DRY=1` alone would be taken as ROUNDS, and the recipe refuses it.
 
 ## Files
 
