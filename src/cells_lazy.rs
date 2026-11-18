@@ -4,17 +4,39 @@
 // `slots` lays one out for every letter. It costs instructions and saves memory: slower on
 // few threads, faster where the threads contend for the cache (the i9 run, #145 LOG
 // 6903318530). Included in `cells.rs`.
+//
+// Its admission is wider than Cells' (`LAZY_DENSITY`, `LAZY_BUDGET`; `just bench-admit`, #556,
+// #145 LOG 6975512468): to r/n 0.15, not 0.10, with a budget of 0.32 n cells, not 0.16 n, the
+// sparse gate Cells' own. The blocks between the two lines leave the T-vector walk, whose
+// random reads carried about a third of the decoder's DRAM traffic on Wikidata: on the
+// measured i9, 0.838 and 0.878 of the wall at 8 and 10 threads, DRAM 10.70 to 8.05 B a byte of
+// output, for 25 MB more peak memory there (accepted under PERFORMANCE-POLICY rule 4).
+
+/// The lazy kernel's density line: a block is refused from `LAZY_DENSITY.0` records in
+/// `LAZY_DENSITY.1` rows (r/n ≥ 0.15). Cells' own is 1 in 10. Wikidata's blocks between the
+/// two lie at r/n 0.097 to 0.148; text starts at 0.28
+const LAZY_DENSITY: (usize, usize) = (3, 20);
+/// The lazy kernel's budget: `LAZY_BUDGET.0` cells in `LAZY_BUDGET.1` rows (0.32 n). Cells' own
+/// is 4 in 25. Wikidata's blocks between the density lines need 0.161 to 0.241 cells a row
+const LAZY_BUDGET: (usize, usize) = (8, 25);
+
+/// The lazy kernel's budget for a block of `n` rows, rounded down as Cells' own is
+fn lazy_budget(n: usize) -> usize {
+    n / LAZY_BUDGET.1 * LAZY_BUDGET.0 + n % LAZY_BUDGET.1 * LAZY_BUDGET.0 / LAZY_BUDGET.1
+}
 
 /// The kernel a `CellsVariant` runs: Cells as shipped but for this.
 pub(crate) const LAZY: u8 = 1;
 
 /// The Cells kernel with another first stage and induction (`V`): `LAZY`, or (research
-/// only, `memory-lever`) `STAGED_RULES`. Admission, budget, fallback and writer are Cells'
-/// (`FORCED`: `ForcedCells`', for tests and fuzzing only).
+/// only, `memory-lever`) `STAGED_RULES`. Fallback and writer are Cells'; admission and budget
+/// are Cells' but for the lazy kernels' wider density line and budget (`LAZY_DENSITY`,
+/// `LAZY_BUDGET`) (`FORCED`: `ForcedCells`', for tests and fuzzing only).
 #[doc(hidden)]
 pub struct CellsVariant<const V: u8, const FORCED: bool = false>(CellsKernel<FORCED>);
 /// Cells with lazy letters: a slot only for a letter in flight (`Kernel::induce_lazy`).
-/// The same output and the same refusals as `Cells`, block for block.
+/// The same output as `Cells`, block for block, admitting more: to r/n 0.15 with a budget of
+/// 0.32 n cells (`LAZY_DENSITY`, `LAZY_BUDGET`), where Cells admits to 0.10 with 0.16 n.
 pub type LazyCells = CellsVariant<LAZY>;
 /// Test/fuzz route: lazy letters with `ForcedCells`' open admission
 #[doc(hidden)]
@@ -121,8 +143,9 @@ fn census(n: usize, recs: &[u16], p: u32, forced: bool) -> Result<Census, Refusa
     if n == 0 || n >= 1 << 24 || p as usize >= n {
         return Err(Refusal::Invalid);
     }
-    // This first gate reads only the record count, before validation or allocation.
-    if !forced && recs.len() * 10 >= n {
+    // This first gate reads only the record count, before validation or allocation: the lazy
+    // kernel's density line (`LAZY_DENSITY`, r/n ≥ 0.15), wider than Cells' 1 in 10.
+    if !forced && recs.len() * LAZY_DENSITY.1 >= n * LAZY_DENSITY.0 {
         return Err(Refusal::Density);
     }
     // The second reads it too: a column of very long runs (fewer than one record per 64

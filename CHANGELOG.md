@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Wider admission for the lazy kernel** (#556's run, this PR). `LazyCells`, the workers' kernel
+  from `LAZY_FROM_THREADS` threads and on the trimmed i9 plans, admits blocks up to r/n 0.15 (3 run
+  records in 20 rows), not 0.10, with a budget of 0.32 n cells, not 0.16 n; the sparse gate is
+  Cells' own. The blocks between the lines leave the T-vector walk, whose random reads carried
+  about a third of the decoder's modelled DRAM traffic on Wikidata. Eager `Cells` (below
+  `LAZY_FROM_THREADS`), the teams and the service core keep Cells' admission. On the measured
+  i9 (`bench-admit`, admit/run-20261118T100717Z, #145 LOG 6975512468), unpinned, on Wikidata x4:
+  0.838 [0.825, 0.851] of master's wall at 8 threads (eight lazy workers) and 0.878 [0.866,
+  0.890] at 10 (seven); DRAM 10.70 to 8.05 B a byte of output at seven workers (reads 6.76 to
+  4.73, writes 3.93 to 3.33). Text and random bytes keep their route and their wall (0.993 to
+  1.007). Peak memory on Wikidata rose 25 to 26 MB (1.14 to 1.16 of master's), held on memory by
+  the frozen rule and accepted under PERFORMANCE-POLICY rule 4 for 12 to 16% less wall and 25%
+  fewer DRAM bytes a byte; text and random are unchanged. The output is byte-identical.
+
 ## [0.5.4](https://github.com/lmmx/mibz2/compare/v0.5.3...v0.5.4) - 2026-11-17
 
 A plan release: on the measured i9, the trimmed workers now fire by how the process is placed.
