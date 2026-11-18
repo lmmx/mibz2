@@ -278,3 +278,7 @@ original run fragments and bytes needed to identify and emit the misses in the s
 windows. A subsequent decoder needs to include that discovery cost, verify every block CRC, and
 beat Cells on paired whole-stream runs before its SMT scaling would answer a useful performance
 question.
+
+A follow-up takes the separator away and reconstructs the marked output from unweighted two-sided
+extensions. It also measures the first counted substring length that fixes the frozen necklace.
+[What the BWT needs to know at a branch](2026-11-18-bispecial-factors.md)
