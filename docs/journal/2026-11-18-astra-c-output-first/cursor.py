@@ -8,7 +8,7 @@ from inputs import check_frozen, dense_audit, digest, paths, read_input
 from lines import BASE, DIRECTORY, HEAD, HIST, NODE, OUT, RAW, Traffic
 
 
-def setup(runs, at):
+def setup(runs, at, anchor=None):
     # A run is delivered by coalescing adjacent capped records in registers on
     # each pass. The trace aggregates their consecutive 2-byte reads into a span.
     histogram = [[0, 0] for _ in range(256)]
@@ -24,9 +24,12 @@ def setup(runs, at):
         histogram[c][1] += 1
         at(HIST + 8*c, 8, True)
 
+    anchor_range = None
     n = count = 0
     for c, (rows, entries) in enumerate(histogram):
         at(HIST + 8*c, 8)
+        if c == anchor:
+            anchor_range = (n, n + rows)
         histogram[c] = [n, count]
         n += rows
         count += entries
@@ -58,9 +61,20 @@ def setup(runs, at):
             i += 1
         directory.append((before, mask))
         at(DIRECTORY + 16*page, 16, True)
-        at(HEAD + 4*page, 4, True)
+        if anchor is None:
+            at(HEAD + 4*page, 4, True)
     assert i == count
-    return base, directory
+    return base, directory, anchor_range
+
+
+def locate(row, base, directory, at):
+    page, offset = divmod(row, 64)
+    at(DIRECTORY + 16*page, 16)
+    before, mask = directory[page]
+    idx = before + (mask & ((2 << offset)-1)).bit_count() - 1
+    at(BASE + 8*idx, 8)
+    a, d, c = base[idx]
+    return idx, a, d, c
 
 
 class Directory:
@@ -113,18 +127,22 @@ class Directory:
             self.at(HEAD + 4*page, 4, True)
 
 
-def emit(runs, row, delim=44, cap=64, memory=None):
+def emit(runs, row, delim=44, cap=64, memory=None, out=None):
     """Use a negative delimiter for fixed cap. Source bytes always end before the cursor."""
     assert 1 <= cap <= 64 and -1 <= delim <= 255
     at = memory.at if memory else lambda *args: None
     counts = Counter()
-    base, directory = setup(runs, at)
+    base, directory, _ = setup(runs, at)
     n = base[-1][0]
     assert 0 <= row < n < 1 << 24
     memo = Directory(len(directory), at, counts)
-    out = bytearray()
-    while len(out) < n:
-        dest = len(out)
+    if out is None:
+        out = bytearray(n)
+    assert len(out) == n
+    view = memoryview(out)
+    q = 0
+    while q < n:
+        dest = q
         counts["queries"] += 1
         found = memo.find(row)
         if found is not None:
@@ -133,7 +151,8 @@ def emit(runs, row, delim=44, cap=64, memory=None):
             assert 0 <= source and source + take <= dest
             at(OUT + source, take)
             at(OUT + dest, take, True)
-            out.extend(out[source:source+take])
+            view[q:q+take] = view[source:source+take]
+            q += take
             counts["hits"] += 1
             counts["copy_bytes"] += take
             if take == length:
@@ -145,41 +164,38 @@ def emit(runs, row, delim=44, cap=64, memory=None):
         start = row
         lo, hi = 0, n
         stop = min(n, dest + cap)
-        while len(out) < stop:
-            page, offset = divmod(row, 64)
-            at(DIRECTORY + 16*page, 16)
-            before, mask = directory[page]
-            idx = before + (mask & ((2 << offset)-1)).bit_count() - 1
-            at(BASE + 8*idx, 8)
+        while q < stop:
+            idx, a, d, c = locate(row, base, directory, at)
             at(BASE + 8*(idx+1), 4)
-            a, d, c = base[idx]
             b = base[idx+1][0]
             assert a <= row < b
             shift = start - row
             lo, hi = max(lo, a+shift), min(hi, b+shift)
-            at(OUT + len(out), 1, True)
-            out.append(c)
+            at(OUT + q, 1, True)
+            out[q] = c
+            q += 1
             row += d
             if c == delim:
                 break
-        length = len(out) - dest
+        length = q - dest
         counts["direct_steps"] += length
         assert lo <= start < hi
-        if len(out) < n:
+        if q < n:
             memo.publish(lo, hi, dest, length, row-start)
             counts["posted"] += 1
             counts["covered_rows"] += hi-lo
-    assert len(out) == n and counts["direct_steps"] + counts["copy_bytes"] == n
+    assert q == n and counts["direct_steps"] + counts["copy_bytes"] == n
     counts["nodes"] = len(memo.nodes)
     counts["capacity"] = memo.capacity
-    return bytes(out), counts
+    return out, counts
 
 
 def measure(path, delim):
     runs, primary = read_input(path)
     block = int(path.name.split(".")[0])
     trace = Traffic()
-    out, c = emit(runs, primary, delim, memory=trace)
+    storage = bytearray([0xa5]) * sum(w for _, w in runs)
+    out, c = emit(runs, primary, delim, memory=trace, out=storage)
     column, want, _ = dense_audit(runs, primary)
     assert out == want
     check_frozen(block, column, out, primary)

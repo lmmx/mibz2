@@ -6,8 +6,8 @@ RAW, HIST, BASE, DIRECTORY, HEAD, OUT, NODE = (i << 30 for i in range(7))
 
 
 class Cache:
-    def __init__(self, kib):
-        self.limit = kib * 1024 // 64
+    def __init__(self, capacity_lines):
+        self.limit = capacity_lines
         self.resident = OrderedDict()
         self.fills = Counter()
         self.evicted_dirty = 0
@@ -32,7 +32,8 @@ class Cache:
 
 class Traffic:
     def __init__(self):
-        self.caches = {k: Cache(k) for k in (32, 256, 2048)}
+        self.caches = {k: Cache(k * 1024 // 64) for k in (32, 256, 2048)}
+        self.caches["_share7"] = Cache((20 * 1024**2) // (7 * 64))
         self.lines = set()
         self.bytes = Counter()
 
@@ -49,6 +50,8 @@ class Traffic:
         for k, cache in self.caches.items():
             result[f"fills{k}"], result[f"dirty{k}"] = cache.result()
             result[f"read_fills{k}"] = cache.read_fills
+            if k == "_share7":
+                continue
             for name, region in (("base", BASE), ("dir", DIRECTORY), ("head", HEAD),
                                  ("node", NODE), ("out", OUT)):
                 result[f"{name}_fills{k}"] = cache.fills[region >> 30]

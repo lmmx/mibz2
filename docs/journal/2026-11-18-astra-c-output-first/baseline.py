@@ -67,8 +67,8 @@ class Layout:
                 j += 1
             size = (width+126)//127
             mem(RAW+2*raw, 2*size)
-            mem(COUNTERS+4*c, 4)
-            mem(COUNTERS+4*c, 4, True)
+            mem(COUNTERS+4*(c+1), 4)
+            mem(COUNTERS+4*(c+1), 4, True)
             scatter.append((c, raw, size))
             scatter.extend((c, raw, 0) for _ in range(i+1, j))
             if row <= rec.p < row+width:
@@ -80,12 +80,12 @@ class Layout:
         start, stop = max(0, first-1), min(raw, first+length+1)
         mem(RAW+2*start, 2*(stop-start))
         mem(RAW+2*first, 2*length)
-        mem(COUNTERS+4*c, 4)
-        mem(COUNTERS+4*c, 4, True)
+        mem(COUNTERS+4*(c+1), 4)
+        mem(COUNTERS+4*(c+1), 4, True)
         mem(self.arena+16, 256, True)
-        for c in range(256):
-            mem(COUNTERS+4*c, 4)
-            mem(COUNTERS+4*c, 4, True)
+        for end in range(1,257):
+            mem(COUNTERS+4*end, 4)
+            mem(COUNTERS+4*end, 4, True)
         self.scatter = scatter
 
     def report(self):
@@ -176,7 +176,7 @@ def measure(path, gates, fields):
         measure = m.memory.report()
         for key in ("read_bytes","write_bytes","distinct_lines"):
             row[key] = measure[key]
-        for k in (32,256,2048):
+        for k in (32,256,2048,"_share7"):
             for group in ("fills","read_fills","dirty"):
                 row[f"{group}{k}"] = measure[f"{group}{k}"]
         yield row

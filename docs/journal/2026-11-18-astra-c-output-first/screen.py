@@ -52,23 +52,60 @@ def census(path):
     entries = pieces(runs)
     stops = [a for a, *_ in entries]
     splits = span = 0
+    last_split = False
     for a, b, delta, _ in entries:
         after = bisect.bisect_right(stops, a + delta)
         if after < len(stops) and stops[after] < b + delta:
             splits += 1
             span += b - a
+            last_split |= a <= orbit[-2] < b
     assert orbit.index(p, 1) == len(col)
     for policy in [2, 4, 8, 16, 32, 64, '"', ',']:
         yield [block, len(col), p, len(runs), sum((w+126)//127 for _, w in runs),
-               splits, span, str(policy), *screen(output, orbit, policy)]
+               splits, span, span-int(last_split), str(policy), *screen(output, orbit, policy)]
 
+
+
+def section_gate(path):
+    """Word-only and joint costs on complete comma-to-comma gaps, with ends separate."""
+    runs, p = read_input(path)
+    block = int(path.name.split(".")[0])
+    col, output, orbit = dense_audit(runs,p)
+    check_frozen(block,col,output,p)
+    assert orbit.index(p,1)==len(col)
+    anchor = 44
+    positions = [i for i,c in enumerate(output) if c==anchor]
+    a = sum(w for c,w in runs if c<anchor)
+    f = sum(w for c,w in runs if c==anchor)
+    assert len(positions)==f and f>0
+    words, joint = set(), set()
+    first_words = first_joint = longest = 0
+    for i,j in zip(positions,positions[1:]):
+        w = output[i:j]
+        key = w,orbit[j]-orbit[i]
+        longest = max(longest,j-i)
+        if w not in words:
+            first_words += j-i
+            words.add(w)
+        if key not in joint:
+            first_joint += j-i
+            joint.add(key)
+    return [block,len(col),a,f,positions[0],len(col)-positions[-1],f-1,len(words),
+            len(joint),first_words,first_joint,longest]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input")
+    parser.add_argument("--section",action="store_true")
     args = parser.parse_args()
     writer = csv.writer(sys.stdout, lineterminator="\n")
-    writer.writerow("block n p runs capped split_pieces split_visits policy chunks words "
+    if args.section:
+        writer.writerow("block n start size prefix tail complete words certificates word_first_bytes "
+                        "joint_first_bytes max_complete_length".split())
+        for path in paths(args.input):
+            writer.writerow(section_gate(path))
+        return
+    writer.writerow("block n p runs capped split_pieces split_visits needed_split_exits policy chunks words "
                     "certificates word_first_bytes direct_steps copy_bytes".split())
     for path in paths(args.input):
         writer.writerows(census(path))
