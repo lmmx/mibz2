@@ -55,6 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "What decoding pays for" = "blog/2026-11-18-what-decoding-pays-for.md" },
     { "Cutting the loop open" = [
       { "Cutting the loop open" = "blog/2026-11-18-cutting-the-loop-open.md" },
       { "Technical notes" = "blog/2026-11-18-cutting-the-loop-open-notes.md" },
@@ -264,6 +265,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-18-what-decoding-pays-for.md" = "Three very different ways of undoing bzip2's block sort spend about two operations per run, and one property of each block explains why they rise and fall together." },
   { "blog/2026-11-18-cutting-the-loop-open.md" = "Snip the decoder's one long loop open and most of each Wikidata block falls into bundled paths, where one traced letter spells about sixteen." },
   { "blog/2026-11-18-cutting-the-loop-open-notes.md" = "Technical notes to the post on cutting the loop open: the bundle bound and its tight cases, one strip's heights, the two constructors of the open paths, the narrow–wide switch cut, and what the two verifications checked." },
   { "blog/2026-11-17-raising-the-knee.md" = "mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are busy, then holds level on the whole machine up to twenty threads." },
