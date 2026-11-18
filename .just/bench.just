@@ -1812,7 +1812,7 @@ bench-w12 MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" ROUNDS="1
 # Then a diagnostic that decides nothing: the memory controller's read and write bytes a byte of
 # output at 8 and 10 threads, idle taken off (`bench/counters.py --events imc`), if
 # `kernel.perf_event_paranoid` is 0 or less.
-bench-admit MASTER="f396ccc7b3d4290468b12e4ccdfcfcfe7708f3b2" COPIES="4" ROUNDS="10" JUDGED="8,10" REPS="5":
+bench-admit MASTER="f71de528d33a6c8288353176f70a9708bdca4283" COPIES="4" ROUNDS="10" JUDGED="8,10" REPS="5":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/admit
