@@ -2286,11 +2286,13 @@
     },
     {
       "trigger_comment_id": 6973244994,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/phrase-bwt-6973244994/report.md",
-      "source_commit": "84143ba0a74cf2e61ac633fdbb8e9173f82cf45b"
+      "source_commit": "84143ba0a74cf2e61ac633fdbb8e9173f82cf45b",
+      "report_commit": "376ddff454aa724625a1e27f6fcc7199eaedbe32",
+      "disposition": "VERIFIED run bound, scoped branch reconstruction and RLE1 independence. Frozen block and archived medians reproduced. Full-stream cmp verified in the archive. i9 phrase-decoder traffic and SMT effects unproved."
     }
   ],
   "active_delegations": [],
