@@ -46,3 +46,19 @@ python3 "$d/two_counts.py" "$d/target/wikidata"
 rustc --cfg two_step --edition=2021 -O --extern "mibz2=$deps/libmibz2.rlib" -L "dependency=$deps" "$d/check.rs" -o "$d/target/check2"
 python3 "$d/check.py" "$d/target/wikidata" "$d/target" "$d/target/check2"
 ```
+
+## How far to double
+
+A k-hop tile either finishes at a retained rank before consuming k wide bytes, or emits exactly k wide bytes and reaches another original row. Keep the former. For each latter tile intersect its translated image with the entire k-hop partition, concatenating spellings and adding displacements. All continuing images are disjoint by injectivity of LF raised to k, giving at most 2T−1 new tiles from T old. The census checks every width, exit and full spelling against the one-step tracer on each marked input. The search and write columns below charge *cumulative* setup. A search locates the destination of a continuing source before intersecting intervals. The Python census uses binary search. The Rust two-step builder uses the per-byte monotone sweep priced above.
+
+| Length k | Final tiles | Cumulative compiled descriptor writes | Cumulative continuing source searches | Traced page probes | Mixed-page probes |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 56,046 | 0 | 0 | 524,517 | 98,103 |
+| 2 | 71,192 | 71,192 | 32,475 | 275,562 | 73,032 |
+| 4 | 89,847 | 161,039 | 71,747 | 152,210 | 57,341 |
+| 8 | 112,661 | 273,700 | 118,290 | 91,092 | 47,270 |
+| 16 | 139,097 | 412,797 | 171,225 | 61,356 | 41,210 |
+| 32 | 172,497 | 585,294 | 229,454 | 47,153 | 37,935 |
+| 64 | 209,500 | 794,794 | 291,737 | 40,342 | 35,784 |
+
+All rows cover the same ten input archives and exactly 35,953 return bands. Four hops remove 123,352 additional page probes and require 89,847 additional compiled writes. Eight hops remove 61,118 further probes and require 112,661 further writes. The table omits the additional bytes per wider descriptor, spelling stores and page-directory construction, each of which must be priced in a native prototype. It also assigns no time equivalence to a dependent probe and a setup store. Four hops is the next structural candidate if two hops pays for its construction on hardware. Reproduce with `python3 "$d/doubling.py" "$d/target/wikidata"`.
