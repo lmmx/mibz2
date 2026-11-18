@@ -177,7 +177,7 @@
     "6912421307": 6912767421,
     "6952107464": 6952212536
   },
-  "last_rebuilt_from": 6952096740,
+  "last_rebuilt_from": 6990634441,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -776,9 +776,10 @@
     },
     "6990632934": {
       "comment_id": 6990632934,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconcile channel after 6952096740."
+      "status": "complete",
+      "progress": "Record rebuilt through channel 6990634441; REVIEW pending.",
+      "work_commit": "8a0d2c222e62560273495d604d898f9e36a27d00"
     }
   },
-  "last_record_commit": "29753b59c84a67a9d92d5198638a84027262711b"
+  "last_record_commit": "8a0d2c222e62560273495d604d898f9e36a27d00"
 }
