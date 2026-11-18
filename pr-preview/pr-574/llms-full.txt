@@ -1065,7 +1065,7 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 Three very different ways of undoing bzip2's block sort spend about two operations per run, and one property of each block explains why they rise and fall together.
 
-18 November 2026 · 16 min read · [Research result](<#6-where-things-stand>)
+18 November 2026 · 13 min read · [Research result](<#6-where-things-stand>)
 
 Over the past two days we built three new ways to undo the Burrows–Wheeler transform, and studied a fourth that describes the text by copies. The aim was a method that does less work than the kernel mibz2 ships. [A new way back from the BWT](<https://lmmx.github.io/mibz2/pr-preview/pr-574/blog/2026-11-10-rauzy-veech-reconstruction/index.md>) introduced that kernel, Cells, and [Cutting the loop open](<https://lmmx.github.io/mibz2/pr-preview/pr-574/blog/2026-11-18-cutting-the-loop-open/index.md>) reported one of the new ones, open return. This post puts all of them side by side. It asks what work each one cannot avoid, and why that work is so similar from one construction to the next.
 
@@ -1117,7 +1117,7 @@ Cells and the forest rise and fall together, and the profile accounts for what t
 
 Measured, on 233 large Wikidata blocks. Left: Cells' steps per run against the forest's arcs per run. Right: the Pearson correlation between the two that remains after removing, by linear regression, the quantities named on each bar. The second bar's excess and the third bar's profile are explained in section 3. The per-block points were joined from the Cells census and the forest census; the third and fourth bars come from [the profile test](<https://github.com/lmmx/mibz2/blob/2157acad18598e9aa555b4f5e5576c0f875779de/docs/journal/monodromy/2026-11-18-q-profile.md#2-does-the-profile-explain-the-three-counts-for-cells-and-the-forest-yes-c>), whose per-block profile values are not published.
 
-The Cells–forest Pearson correlation is 0.906. Some of that is only run density, \\(r/n\\): blocks with more runs per row cost more per run under every method. Removing \\(r/n\\) leaves 0.859, so most of the agreement is about something else in the block. The agreement is weaker for adjacent-rank induction: 0.74 with the forest and 0.68 with Cells.
+The Cells–forest Pearson correlation is 0.906. Part of it could be run density, \\(r/n\\), which differs from block to block. Removing \\(r/n\\) by regression leaves 0.859, so most of the agreement is about something else in the block. The agreement is weaker for adjacent-rank induction: 0.74 with the forest and 0.68 with Cells.
 
 **Not the same events.** A tempting reading is that the constructions perform the same operations in different clothes. An independent verification refuted that on a 13-byte column, `1111000011100`. The forest has a free choice when two arcs have equal width. Reversing only those ties leaves the input, the starting network and the first level's output the same, yet the forest's total goes from 12 arcs to 15. Cells has no such choice, and its count is unchanged. So the shared count is not an event-by-event match. It is shared dependence on something in the block, and the next section names it.
 
@@ -1133,27 +1133,27 @@ Why do the two rows stay together? Inside a run, LF sends neighbouring rows to n
 
 **The boundary-orbit profile** counts the gaps by depth. Let \\(q\_k\\) be the number of gaps whose rows read exactly \\(k\\) bytes together. For `banana$`, \\(q\_1 = 1\\) and \\(q\_2 = 1\\). Read backwards, as in the figure, each run boundary starts a chain of gaps. So \\(q\_k\\) also counts the chains still going \\(k\\) steps back: how long the run boundaries persist when pulled back through LF.
 
-On the real blocks the profile decays slowly. The median of \\(q\_k/r\\) over the 233 blocks falls only from 0.223 at \\(k = 1\\) to 0.101 at \\(k = 8\\) ([the profile test](<https://github.com/lmmx/mibz2/blob/2157acad18598e9aa555b4f5e5576c0f875779de/docs/journal/monodromy/2026-11-18-q-profile.md#1-the-identification-verified-p-c>)). After eight steps, about a tenth of a block's runs still have a chain running.
+On the real blocks the profile decays slowly. The median of \\(q\_k/r\\) over the 233 blocks falls only from 0.223 at \\(k = 1\\) to 0.101 at \\(k = 8\\) ([the profile test](<https://github.com/lmmx/mibz2/blob/2157acad18598e9aa555b4f5e5576c0f875779de/docs/journal/monodromy/2026-11-18-q-profile.md#1-the-identification-verified-p-c>)). After eight steps, there is still about one chain running for every ten runs.
 
 **How the profile meets the forest.** The first term of the profile is already part of the forest's network. Overlay two ways of cutting the rows into pieces: at the run boundaries, and at the boundaries of the runs' images under LF. Each has \\(r - 1\\) internal cuts. If \\(C\\) of the cuts coincide, the overlay has
 
 \\\[E\_0 = 2r - 1 - C\\\]
 
-pieces, and those pieces are exactly the forest's arcs. This is **proved**, and it holds on all 233 blocks. The forest's *excess* is \\(E\_0 - V\_0\\), its arcs minus its sites (\\(V\_0 = r\\)). One more identity, also **proved** and checked on every block, ties the profile to it:
+pieces, and those pieces are exactly the forest's arcs. This is **proved**, and it holds on all 233 blocks. The forest's *excess* is \\(E\_0 - V\_0\\), its arcs minus its sites (\\(V\_0 = r\\)). One more identity, verified on every block, ties the profile to it:
 
 \\\[q\_1 = r - C = E\_0 - V\_0 + 1,\\\]
 
 which is the forest's count of leftover arcs, its *chords*: 10,955 on the test block. The \\(+1\\) is row 0, a run start that is not an internal cut. On the test block, \\(q\_2\\) to \\(q\_5\\) also equal exactly the excesses of the refined networks in section 4.
 
-**The test.** Before the fit, the summary \\(\\sum\_{k=2}^{8} q\_k / r\\), the tail of the profile, was fixed as the one extra quantity to try. Each count per run was fitted by least squares, with leave-one-out error:
+**The test.** The test fixed one extra quantity in advance: \\(\\sum\_{k=2}^{8} q\_k / r\\), the tail of the profile. Each count per run was fitted by least squares, with leave-one-out error:
 
-| Model, for each count per run | Cells \\(R^2\\) | Forest \\(R^2\\) | Adjacent-rank \\(R^2\\) | Cells–forest residual correlation |
+| Model | Cells \\(R^2\\) | Forest \\(R^2\\) | Adj.-rank \\(R^2\\) | Shared residual |
 | --- | ---: | ---: | ---: | ---: |
 | \\(r/n\\) and the excess \\((E\_0 - V\_0)/r\\) | 0.825 | 0.887 | 0.529 | 0.393 |
 | the same, plus \\(\\sum\_{k=2}^{8} q\_k/r\\) | 0.925 | 0.923 | 0.557 | −0.061 |
 | \\(r/n\\) and \\(q\_1, \\dots, q\_8\\) separately | 0.946 | 0.959 | 0.570 | 0.307 |
 
-With the tail added, the leave-one-out error falls by 34% for Cells and 17% for the forest. The correlation left between them goes from 0.393 to −0.061, which is none. Fitting all eight terms separately fits each count better but leaves 0.307 in common, so the simple summary fixed in advance does the job better. Adjacent-rank induction stays poorly explained under every model, at \\(R^2 \\le 0.57\\). It chooses its rounds by local minima of the rows' order rather than by run boundaries, and some other property of the block drives it.
+With the tail added, the leave-one-out error falls by 34% for Cells and 17% for the forest. The correlation left between them, the table's last column, goes from 0.393 to −0.061: about zero. Fitting all eight terms separately fits each count more closely, but leaves 0.307 in common. So the simple summary fixed in advance accounts for more of what the two share. Adjacent-rank induction stays poorly explained under every model, at \\(R^2 \\le 0.57\\). Its rounds are chosen by local minima of the rows' order rather than by run boundaries, which may be why some other property drives it.
 
 So, **measured:** the persistence of boundary-orbit chains explains much of the variation in the structural work done by Cells and the forest. **Our interpretation**, not a proof: both pay roughly once for each point on a boundary chain until the chains collide. Cells meets those points in order, and the forest by levels. The profile is fixed by the column \\(L\\) before any construction runs. It is not an exact accounting of either count, and it gives no lower bound on the work of other constructions.
 
