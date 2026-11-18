@@ -82,6 +82,8 @@ def main():
         assert int(b["nodes"])==int(b["roots"])+int(b["splits"])+int(b["new_bounds"])
     if args.columns:
         assert packed_digest.hexdigest() == "411b052e84d6794dbf3eed144d6c208a6f25c4398cbd31f3fd65af996d1045e4"
+        from audit_frozen import audit
+        assert audit(args.columns, arms["whole"][0]) == (1787211, 14434577)
     assert all(ref[i]["eager"]==ref[i]["lazy"]=="1" for i in COHORT)
     for r in rows(data/"pairs.csv"):
         assert ref[int(r["block"])]["steps"]==r["original_cuts"]
