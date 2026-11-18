@@ -205,9 +205,10 @@
     6982863130,
     6983357476,
     6984353753,
-    6984984150
+    6984984150,
+    6986296845
   ],
-  "last_processed_comment_id": 6984984150,
+  "last_processed_comment_id": 6986296845,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2470,13 +2471,16 @@
     },
     {
       "trigger_comment_id": 6986296845,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/live-reuse-6986296845/report.md",
       "source_commit": "8eb17de46f61ae2e0d7c950ad2cb5c8f6ba0c48f",
       "report_commit": "9501034a8cb6b67de4af3efb172458d8ebebbdc6",
-      "disposition": "VERIFIED full-period owner and compacted command proof, periodic fallback, archived raw sample and per-block ledger. Native candidate, remaining raw blocks, and lazy phase time unproved."
+      "disposition": "VERIFIED full-period owner and compacted command proof, periodic fallback, archived raw sample and per-block ledger. Native candidate, remaining raw blocks, and lazy phase time unproved.",
+      "review_comment_id": 6986491194,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, author lmmx, destination #145, and role-aware route and headers. The pinned helper's coordinator-only sender check does not apply to this Researcher REVIEW."
     }
   ],
   "active_delegations": [],
