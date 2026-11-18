@@ -2353,6 +2353,14 @@
       "review_comment_id": 6978182129,
       "review_pr": 145,
       "publication_verification": "GitHub read-back matches exact body, author, and #145. Pinned helper route and role-aware header checks passed. Its coordinator-only sender check is inapplicable to this Researcher publication."
+    },
+    {
+      "trigger_comment_id": 6978698021,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/open-return-6978698021/report.md",
+      "source_commit": "e6df6aee5055840b8b6ed780e29727e23da6d42f"
     }
   ],
   "active_delegations": [],
