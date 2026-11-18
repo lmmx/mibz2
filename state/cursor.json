@@ -2385,11 +2385,13 @@
     },
     {
       "trigger_comment_id": 6981855359,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/forest-sections-6981855359/report.md",
-      "source_commit": "3832bb12857181adb2f46b35f5c7fa8ebaa29a77"
+      "source_commit": "3832bb12857181adb2f46b35f5c7fa8ebaa29a77",
+      "report_commit": "a0afcda87cbd4c4f47ea778eb51402fc2fbf3e2a",
+      "disposition": "VERIFIED with measurement audit-scope correction"
     }
   ],
   "active_delegations": [],
