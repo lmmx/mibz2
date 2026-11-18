@@ -1,0 +1,18 @@
+{
+  "cases": 41331,
+  "baseline_counters": {
+    "fallback": 36082,
+    "owned": 5249,
+    "wraps": 8440,
+    "overwrite_next": 1,
+    "copies": 41,
+    "later_address": 19
+  },
+  "mutants": {
+    "reverse": {
+      "file": "cells_owned.rs",
+      "prefix_bytes": 12000,
+      "failure": "unfinished source"
+    }
+  }
+}

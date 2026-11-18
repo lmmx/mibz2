@@ -4744,3 +4744,8 @@ Incoming 6903560983; head 3071cad5cd88b4db493292a5f39c4ee583ffc4c1. G1 source se
 ## D112 — PR452 production lazy dispatch
 
 Incoming 6904418769; head 6d97806ce32fb72db81c11a67d39140ade0caba5. G1 PROCEED for scoped B5 review: independently matched D110's lazy code and verified admission, fallback, ownership and plan isolation. No new G2 HOLD; no green-CI or adoption-policy certification. [Full review](reports/D112-production-lazy.md).
+
+
+## D113 — PR581 one-scan writer
+
+Incoming 6988393925; head cd7e5de2b7c61442f7a391436eee910a5ebb126a. G1 ownership/overwrite/copy-order proof supported; no unmutated writer counterexample found. G2 HOLD integration pending completed new-path Miri and identifiable runtime mutation kills. The scorer reproducibly reports 8/8 with no tests run; this does not establish that the original runs were false kills. Independent model: 41,331 classifications, 5,249 owned executions exact against LF, reversed copies detect unfinished sources. Fuzz smoke completed; paired bench/adoption separate. [Full review and exact lift condition](reports/D113-one-scan-writer.md). Evidence sha256:6a6b596cb031beb4704d77e80ac606e94a9f23f438b8f0cb03b0f9a66e8605f4.

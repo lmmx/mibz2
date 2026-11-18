@@ -1,0 +1,315 @@
+{
+  "head": "cd7e5de2b7c61442f7a391436eee910a5ebb126a",
+  "base": "50612a8f7b141e4999645669cd67dce95c2dc0ad",
+  "incoming": 6988393925,
+  "pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "model": {
+    "cases": 41331,
+    "baseline_counters": {
+      "fallback": 36082,
+      "owned": 5249,
+      "wraps": 8440,
+      "overwrite_next": 1,
+      "copies": 41,
+      "later_address": 19
+    },
+    "mutants": {
+      "reverse": {
+        "file": "cells_owned.rs",
+        "prefix_bytes": 12000,
+        "failure": "unfinished source"
+      }
+    }
+  },
+  "miri_jobs": [
+    {
+      "id": 135050178989,
+      "run_id": 44374581630,
+      "workflow_name": "Miri",
+      "head_branch": "perf/one-scan-writer",
+      "run_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/44374581630",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVZCza88AAAAfcZ4xrQ",
+      "head_sha": "cd7e5de2b7c61442f7a391436eee910a5ebb126a",
+      "url": "https://api.github.com/repos/lmmx/mibz2/actions/jobs/135050178989",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/44374581630/job/135050178989",
+      "status": "in_progress",
+      "conclusion": null,
+      "created_at": "2026-11-18T18:53:26Z",
+      "started_at": "2026-11-18T18:53:28Z",
+      "completed_at": null,
+      "name": "miri",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-18T18:53:29Z",
+          "completed_at": "2026-11-18T18:53:30Z"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-18T18:53:30Z",
+          "completed_at": "2026-11-18T18:53:31Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@nightly",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-18T18:53:31Z",
+          "completed_at": "2026-11-18T18:53:40Z"
+        },
+        {
+          "name": "Run Swatinem/rust-cache@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-18T18:53:40Z",
+          "completed_at": "2026-11-18T18:53:42Z"
+        },
+        {
+          "name": "Miri setup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-18T18:53:42Z",
+          "completed_at": "2026-11-18T18:53:54Z"
+        },
+        {
+          "name": "The worker recovery tests are selected",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-18T18:53:54Z",
+          "completed_at": "2026-11-18T18:53:56Z"
+        },
+        {
+          "name": "Miri",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 7,
+          "started_at": "2026-11-18T18:53:56Z",
+          "completed_at": null
+        },
+        {
+          "name": "The memory-lever kernels' tests are selected",
+          "status": "pending",
+          "conclusion": null,
+          "number": 8,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Miri, the memory-lever kernels",
+          "status": "pending",
+          "conclusion": null,
+          "number": 9,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run Swatinem/rust-cache@v2",
+          "status": "pending",
+          "conclusion": null,
+          "number": 17,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "status": "pending",
+          "conclusion": null,
+          "number": 18,
+          "started_at": null,
+          "completed_at": null
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/lmmx/mibz2/check-runs/135050178989",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000099583,
+      "runner_name": "GitHub Actions 1000099583",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ],
+  "fuzz_job": {
+    "id": 135050179518,
+    "run_id": 44374581551,
+    "workflow_name": "Test",
+    "head_branch": "perf/one-scan-writer",
+    "run_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/44374581551",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOVZCza88AAAAfcZ4zvg",
+    "head_sha": "cd7e5de2b7c61442f7a391436eee910a5ebb126a",
+    "url": "https://api.github.com/repos/lmmx/mibz2/actions/jobs/135050179518",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/44374581551/job/135050179518",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-18T18:53:26Z",
+    "started_at": "2026-11-18T18:53:29Z",
+    "completed_at": "2026-11-18T18:57:34Z",
+    "name": "fuzz-smoke",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-18T18:53:29Z",
+        "completed_at": "2026-11-18T18:53:33Z"
+      },
+      {
+        "name": "Run actions/checkout@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-18T18:53:33Z",
+        "completed_at": "2026-11-18T18:53:39Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@1.99.1",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-18T18:53:39Z",
+        "completed_at": "2026-11-18T18:53:47Z"
+      },
+      {
+        "name": "Run Swatinem/rust-cache@v2",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-18T18:53:47Z",
+        "completed_at": "2026-11-18T18:53:54Z"
+      },
+      {
+        "name": "Build",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-18T18:53:54Z",
+        "completed_at": "2026-11-18T18:54:10Z"
+      },
+      {
+        "name": "Classic candidates",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-18T18:54:10Z",
+        "completed_at": "2026-11-18T18:54:40Z"
+      },
+      {
+        "name": "Pipeline candidates",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-18T18:54:40Z",
+        "completed_at": "2026-11-18T18:55:11Z"
+      },
+      {
+        "name": "Service candidates",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-18T18:55:11Z",
+        "completed_at": "2026-11-18T18:55:42Z"
+      },
+      {
+        "name": "Cells candidates (forced route and admission reach asserted)",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-11-18T18:55:42Z",
+        "completed_at": "2026-11-18T18:56:12Z"
+      },
+      {
+        "name": "Plain-team candidates",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-11-18T18:56:12Z",
+        "completed_at": "2026-11-18T18:56:44Z"
+      },
+      {
+        "name": "Memory-lever candidates",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11,
+        "started_at": "2026-11-18T18:56:44Z",
+        "completed_at": "2026-11-18T18:57:29Z"
+      },
+      {
+        "name": "The failing inputs",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 12,
+        "started_at": "2026-11-18T18:57:29Z",
+        "completed_at": "2026-11-18T18:57:29Z"
+      },
+      {
+        "name": "Post Run Swatinem/rust-cache@v2",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 23,
+        "started_at": "2026-11-18T18:57:29Z",
+        "completed_at": "2026-11-18T18:57:32Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 24,
+        "started_at": "2026-11-18T18:57:32Z",
+        "completed_at": "2026-11-18T18:57:32Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 25,
+        "started_at": "2026-11-18T18:57:32Z",
+        "completed_at": "2026-11-18T18:57:32Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/lmmx/mibz2/check-runs/135050179518",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000099586,
+    "runner_name": "GitHub Actions 1000099586",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "native_tests": [
+    {
+      "name": "Tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-18T18:53:51Z",
+      "completed_at": "2026-11-18T18:57:34Z"
+    },
+    {
+      "name": "Harness tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-18T18:57:34Z",
+      "completed_at": "2026-11-18T18:58:00Z"
+    }
+  ],
+  "mutation_scorer": {
+    "simulated_exit": 101,
+    "tests_executed": 0,
+    "reported": "8 of 8 mutations caught",
+    "exit": 0
+  },
+  "miri_log_error": "GitHub API error 404: ﻿<?xml version=\"1.0\" encoding=\"utf-8\"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.\nRequestId:ccd015f9-101e-003c-788e-77ce26000000\nTime:2026-11-18T18:58:37.1948638Z</Message></Error>"
+}
