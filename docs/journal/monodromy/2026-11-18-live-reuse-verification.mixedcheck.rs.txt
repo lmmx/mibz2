@@ -1,0 +1,331 @@
+//! Independent check of #575 (mixed Cells steps): an abstract two-order induction (doubly linked
+//! lists), run scalar and with the joint substitution applied directly from its table.
+//! Research only; not built by the crate.
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+const NIL: u32 = u32::MAX;
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
+struct Counts { steps: u64, t: u64, f: u64, m: u64, h: u64, g: u64, h_te: u64, h_tb: u64, diff: u64, eq_long: u64, bytes: u64, sep: u64, glue: u64, adj_bot: u64, m_any: u64, h_any: u64, d_is_a: u64, h_touched: u64, trace: u64, h_tt: u64, same_dir: u64, bsteps: u64, old_lit_t: u64, prev: u8 }
+struct Ind {
+    // per letter (original or cell)
+    w: Vec<u64>, tpos: Vec<u64>, bpos: Vec<u64>, hits: Vec<(u64, u64)>, word: Vec<u32>, orig: Vec<bool>, touched: Vec<bool>, byte: Vec<i16>,
+    tp: Vec<u32>, tn: Vec<u32>, bp: Vec<u32>, bn: Vec<u32>, ttail: u32, btail: u32,
+    // grammar: leaves (byte, marked) and products (l, r); len and marked per word
+    gl: Vec<u32>, gr: Vec<u32>, glen: Vec<u64>, gmark: Vec<bool>, gbyte: Vec<i16>,
+}
+impl Ind {
+    fn new(l: &[u8], p: usize) -> Ind {
+        // letters: maximal runs of L, the run holding row p split around it; top = L order
+        let n = l.len(); let mut lets: Vec<(usize, usize, bool)> = Vec::new(); // (start, len, marked)
+        let mut x = 0; while x < n { let mut y = x + 1; while y < n && l[y] == l[x] { y += 1; }
+            if p >= x && p < y { if p > x { lets.push((x, p - x, false)); } lets.push((p, 1, true)); if y > p + 1 { lets.push((p + 1, y - p - 1, false)); } }
+            else { lets.push((x, y - x, false)); }
+            x = y; }
+        let m = lets.len();
+        let mut s = Ind { w: vec![], tpos: vec![], bpos: vec![], hits: vec![], word: vec![], orig: vec![], touched: vec![], byte: vec![], tp: vec![], tn: vec![], bp: vec![], bn: vec![], ttail: NIL, btail: NIL,
+            gl: vec![], gr: vec![], glen: vec![], gmark: vec![], gbyte: vec![] };
+        for (i, &(st, ln, mk)) in lets.iter().enumerate() {
+            let g = s.gl.len() as u32; s.gl.push(NIL); s.gr.push(NIL); s.glen.push(1); s.gmark.push(mk); s.gbyte.push(l[st] as i16);
+            s.w.push(ln as u64); s.tpos.push(st as u64); s.bpos.push(0); s.word.push(g); s.orig.push(true); s.touched.push(false); s.byte.push(l[st] as i16);
+            s.tp.push(if i == 0 { NIL } else { i as u32 - 1 }); s.tn.push(if i + 1 == m { NIL } else { i as u32 + 1 });
+            s.bp.push(NIL); s.bn.push(NIL);
+        }
+        s.ttail = m as u32 - 1;
+        let mut ord: Vec<usize> = (0..m).collect(); ord.sort_by_key(|&i| l[lets[i].0]); // stable
+        for (j, &i) in ord.iter().enumerate() { s.bp[i] = if j == 0 { NIL } else { ord[j - 1] as u32 }; s.bn[i] = if j + 1 == m { NIL } else { ord[j + 1] as u32 }; }
+        let mut acc = 0u64; for &i in &ord { s.bpos[i] = acc; acc += lets[i].1 as u64; }
+        s.btail = ord[m - 1] as u32; s
+    }
+    fn mk_word(&mut self, a: u32, b: u32) -> u32 { let g = self.gl.len() as u32; self.gl.push(a); self.gr.push(b);
+        self.glen.push(self.glen[a as usize] + self.glen[b as usize]); self.gmark.push(self.gmark[a as usize] || self.gmark[b as usize]); self.gbyte.push(-1); g }
+    fn new_letter(&mut self, w: u64, word: u32) -> u32 { let i = self.w.len() as u32; self.w.push(w); self.tpos.push(u64::MAX); self.bpos.push(u64::MAX); self.word.push(word); self.orig.push(false); self.touched.push(true); self.byte.push(-1);
+        self.tp.push(NIL); self.tn.push(NIL); self.bp.push(NIL); self.bn.push(NIL); i }
+    // list primitives, top (o = 0) and bottom (o = 1)
+    fn links(&mut self, o: u8) -> (&mut Vec<u32>, &mut Vec<u32>, &mut u32) { if o == 0 { (&mut self.tp, &mut self.tn, &mut self.ttail) } else { (&mut self.bp, &mut self.bn, &mut self.btail) } }
+    fn remove(&mut self, o: u8, x: u32) { let (p, nx, tail) = self.links(o); let (a, b) = (p[x as usize], nx[x as usize]);
+        if a != NIL { nx[a as usize] = b; } if b != NIL { p[b as usize] = a; } else { *tail = a; } }
+    fn insert_after(&mut self, o: u8, x: u32, y: u32) { let (p, nx, tail) = self.links(o); let b = nx[x as usize];
+        p[y as usize] = x; nx[y as usize] = b; nx[x as usize] = y; if b != NIL { p[b as usize] = y; } else { *tail = y; } }
+    fn replace(&mut self, o: u8, x: u32, y: u32) { self.insert_after(o, x, y); self.remove(o, x); }
+    fn marked(&self, x: u32) -> bool { self.gmark[self.word[x as usize] as usize] }
+    /// Run to the marked closure. joint: apply the two-cut table directly on a candidate.
+    fn run(&mut self, joint: bool, c: &mut Counts) -> u32 {
+        loop {
+            let (a, b) = (self.ttail, self.btail);
+            self.touched[a as usize] = true; self.touched[b as usize] = true;
+            if self.tpos[a as usize] + self.w[a as usize] != self.bpos[b as usize] + self.w[b as usize] { c.glue += 1_000_000; }
+            if a == b && self.tpos[a as usize] != self.bpos[a as usize] { c.glue += 1_000_000; }
+            if a == b { c.prev = 0; self.remove(0, a); self.remove(1, a); if self.marked(a) { return self.word[a as usize]; } continue; }
+            let (wa, wb) = (self.w[a as usize], self.w[b as usize]);
+            c.steps += 1;
+            c.trace = (c.trace ^ (wa.wrapping_mul(0x9E3779B97F4A7C15) ^ wb.rotate_left(29))).wrapping_mul(0x100000001B3);
+            let dir = if wa > wb { 1u8 } else if wa < wb { 2 } else { 3 };
+            if dir != 3 && dir == c.prev { c.same_dir += 1; } c.prev = dir; if dir == 2 { c.bsteps += 1; }
+            if wa > wb {
+                c.t += 1;
+                if self.orig[b as usize] && !self.marked(b) { c.old_lit_t += 1; }
+                let d = self.bp[b as usize];
+                let fresh = d != NIL && self.orig[d as usize] && !self.touched[d as usize];
+                let s = wa - wb;
+                if d == a { c.d_is_a += 1; }
+                if d != NIL && d != a && s <= self.w[d as usize] {
+                    c.m_any += 1;
+                    let ua = self.word[a as usize];
+                    if self.orig[b as usize] && self.orig[d as usize] && self.byte[b as usize] == self.byte[d as usize] && !self.marked(b) && !self.marked(d)
+                        && !self.gmark[ua as usize] && self.glen[ua as usize] + 1 <= 16 { c.h_any += 1; if !fresh { c.h_touched += 1; } }
+                }
+                if fresh {
+                    c.f += 1; let wd = self.w[d as usize];
+                    if s > wd { let ua = self.word[a as usize];
+                        if self.orig[b as usize] && self.byte[b as usize] == self.byte[d as usize] && !self.marked(b) && !self.marked(d) && !self.gmark[ua as usize] && self.glen[ua as usize] + 1 <= 16 { c.h_tt += 1; } }
+                    if s <= wd {
+                        c.m += 1; if s < wd { c.g += 1; }
+                        let (ua, vb, wdd) = (self.word[a as usize], self.word[b as usize], self.word[d as usize]);
+                        let lit_eq = self.orig[b as usize] && self.byte[b as usize] == self.byte[d as usize] && !self.marked(b) && !self.marked(d);
+                        let plen = self.glen[ua as usize] + 1;
+                        let short = !self.gmark[ua as usize] && lit_eq && plen <= 16;
+                        if lit_eq && !short { c.eq_long += 1; } if !lit_eq { c.diff += 1; }
+                        if short { c.h += 1; c.bytes += plen; if s == wd { c.h_te += 1 } else { c.h_tb += 1 } }
+                        if joint {
+                            let xw = self.mk_word(ua, vb);
+                            c.trace = (c.trace ^ (s.wrapping_mul(0x9E3779B97F4A7C15) ^ wd.rotate_left(29))).wrapping_mul(0x100000001B3);
+                            let yw = if short { c.steps += 1; xw } else { c.steps += 1; self.mk_word(ua, wdd) };
+                            let x = self.new_letter(wb, xw); let y = self.new_letter(s, yw);
+                            self.tpos[x as usize] = self.tpos[b as usize]; self.bpos[x as usize] = self.bpos[a as usize] + s;
+                            self.bpos[y as usize] = self.bpos[a as usize];
+                            self.tpos[y as usize] = self.tpos[d as usize] + (wd - s);
+                            if short { self.hits.push((self.bpos[x as usize], plen)); }
+                            // the table, at the old positions
+                            self.remove(0, a); self.replace(0, b, x);
+                            self.replace(1, a, y); self.insert_after(1, y, x); self.remove(1, b);
+                            if s == wd { self.replace(0, d, y); self.remove(1, d); }
+                            else { self.insert_after(0, d, y); self.w[d as usize] = wd - s; }
+                            if short { if self.tn[y as usize] == x { c.glue += 1 } else { c.sep += 1 }
+                                       if self.bn[y as usize] == x { c.adj_bot += 1 } }
+                            continue;
+                        }
+                    }
+                }
+                let x = { let wd = self.mk_word(self.word[a as usize], self.word[b as usize]); self.new_letter(wb, wd) };
+                self.tpos[x as usize] = self.tpos[b as usize]; self.bpos[x as usize] = self.bpos[a as usize] + s;
+                self.replace(0, b, x); self.w[a as usize] = s; self.remove(1, b); self.insert_after(1, a, x);
+            } else if wa < wb {
+                let x = { let wd = self.mk_word(self.word[a as usize], self.word[b as usize]); self.new_letter(wa, wd) };
+                self.bpos[x as usize] = self.bpos[a as usize]; self.tpos[x as usize] = self.tpos[b as usize] + (wb - wa);
+                self.replace(1, a, x); self.w[b as usize] = wb - wa; self.remove(0, a); self.insert_after(0, b, x);
+            } else {
+                let x = { let wd = self.mk_word(self.word[a as usize], self.word[b as usize]); self.new_letter(wa, wd) };
+                self.tpos[x as usize] = self.tpos[b as usize]; self.bpos[x as usize] = self.bpos[a as usize];
+                self.replace(0, b, x); self.remove(0, a); self.replace(1, a, x); self.remove(1, b);
+            }
+        }
+    }
+    fn expand(&self, g: u32) -> (Vec<u8>, usize) {
+        let mut out = Vec::with_capacity(self.glen[g as usize] as usize); let mut mark = usize::MAX; let mut st = vec![g];
+        while let Some(x) = st.pop() { if self.gl[x as usize] == NIL { if self.gmark[x as usize] { mark = out.len(); } out.push(self.gbyte[x as usize] as u8); }
+            else { st.push(self.gr[x as usize]); st.push(self.gl[x as usize]); } }
+        (out, mark)
+    }
+}
+/// The marked cycle by LF inversion, as bzip2 emits it: s[n-1-k] = L[LF^k(p)] over the cycle of p.
+fn invert(l: &[u8], p: usize) -> Vec<u8> {
+    let n = l.len(); let mut cnt = [0usize; 257]; for &c in l { cnt[c as usize + 1] += 1; } for c in 1..257 { cnt[c] += cnt[c - 1]; }
+    let mut lf = vec![0usize; n]; for (x, &c) in l.iter().enumerate() { lf[x] = cnt[c as usize]; cnt[c as usize] += 1; }
+    let mut v = vec![]; let mut x = p; loop { v.push(l[x]); x = lf[x]; if x == p { break; } } v.reverse(); v
+}
+fn kasai_rows(l: &[u8]) -> Option<(Vec<u32>, Vec<u32>, Vec<u32>)> {
+    let n = l.len(); let mut cnt = [0usize; 257]; for &c in l { cnt[c as usize + 1] += 1; } for c in 1..257 { cnt[c] += cnt[c - 1]; }
+    let mut lf = vec![0u32; n]; for (x, &c) in l.iter().enumerate() { lf[x] = cnt[c as usize] as u32; cnt[c as usize] += 1; }
+    let (mut y, mut m) = (lf[0] as usize, 1usize); while y != 0 { y = lf[y] as usize; m += 1; } if m != n { return None; }
+    let (mut t, mut sa) = (vec![0u8; n], vec![0u32; n]); let mut x = 0usize;
+    for kk in 0..n { let pos = (n - kk) % n; sa[x] = pos as u32; t[(pos + n - 1) % n] = l[x]; x = lf[x] as usize; }
+    let mut rank = vec![0u32; n]; for (row, &q) in sa.iter().enumerate() { rank[q as usize] = row as u32; }
+    let mut lcp = vec![0u32; n]; let mut h = 0usize;
+    for i in 0..n { let r = rank[i] as usize; if r == 0 { h = 0; continue; } let j = sa[r - 1] as usize;
+        while h < n && t[(i + h) % n] == t[(j + h) % n] { h += 1; } lcp[r] = h as u32; if h > 0 { h -= 1; } }
+    let mut fl = vec![0u32; n]; for x in 0..n { fl[lf[x] as usize] = x as u32; }
+    // d(x): tau-steps to the chain's terminal (run boundary); initial: no tau-predecessor
+    let ind = |x: usize| x >= 1 && l[x] != l[x - 1];
+    let mut d = vec![u32::MAX; n]; let mut init = vec![0u32; n];
+    for tt in 1..n { if !ind(tt) { continue; } d[tt] = 0; let mut y = tt; let mut e = 0u32;
+        loop { let q = fl[y] as usize; if q == 0 || ind(q) { break; } e += 1; d[q] = e; y = q; } init[y] = 1; }
+    Some((lcp, d, init))
+}
+fn analyse(l: &[u8], hits: &[(u64, u64)]) -> String {
+    let Some((lcp, d, init)) = kasai_rows(l) else { return "null".into() };
+    let (mut lam_ge, mut lam_eq, mut initc, mut dge, mut deq, mut dz) = (0, 0, 0, 0, 0, 0);
+    let mut lam_minus = std::collections::BTreeMap::<i64, u64>::new();
+    let mut dmin = std::collections::BTreeMap::<i64, u64>::new();
+    for &(z, w) in hits { let z = z as usize; let lam = lcp[z] as u64;
+        if lam >= w { lam_ge += 1; } if lam == w { lam_eq += 1; } if init[z] == 1 { initc += 1; }
+        if d[z] != u32::MAX && d[z] as u64 + 1 >= w { dge += 1; } if d[z] as u64 + 1 == w { deq += 1; } if d[z] == 0 { dz += 1; }
+        *lam_minus.entry((lam as i64 - w as i64).clamp(-3, 6)).or_default() += 1;
+        *dmin.entry((d[z] as i64 - w as i64).clamp(-3, 6)).or_default() += 1; }
+    format!("{{\"hits\":{},\"lam_ge_w\":{lam_ge},\"lam_eq_w\":{lam_eq},\"init\":{initc},\"d_plus1_ge_w\":{dge},\"d_plus1_eq_w\":{deq},\"d0\":{dz},\"lam_minus_w\":\"{:?}\",\"d_minus_w\":\"{:?}\"}}", hits.len(), lam_minus, dmin)
+}
+fn check(l: &[u8], p: usize) -> (Counts, Counts, bool) {
+    let want = invert(l, p);
+    let mut res = [Counts::default(); 2]; let mut ok = true;
+    for (k, joint) in [false, true].into_iter().enumerate() {
+        let mut s = Ind::new(l, p); let g = s.run(joint, &mut res[k]);
+        if joint && std::env::var("GEOM").is_ok() { println!("{}", analyse(l, &s.hits)); }
+        if !joint && std::env::var("DUPS").is_ok() {
+            let mut seen = std::collections::HashSet::new(); let (mut short, mut dup) = (0u64, 0u64);
+            for gidx in 0..s.gl.len() { if s.gl[gidx] == NIL || s.gmark[gidx] || s.glen[gidx] > 16 { continue; }
+                short += 1; let (w, _) = s.expand(gidx as u32); if !seen.insert(w) { dup += 1; } }
+            // canonical tree ids: leaves by byte, products by (canon l, canon r); spelling -> set of trees
+            let mut canon = vec![0u32; s.gl.len()]; let mut intern = std::collections::HashMap::new();
+            for x in 0..s.gl.len() { let key = if s.gl[x] == NIL { (u32::MAX, s.gbyte[x] as u32) } else { (canon[s.gl[x] as usize], canon[s.gr[x] as usize]) };
+                let nid = intern.len() as u32; canon[x] = *intern.entry(key).or_insert(nid); }
+            let mut by_spell: std::collections::HashMap<Vec<u8>, u32> = std::collections::HashMap::new(); let mut tree_conflict = 0u64;
+            for gidx in 0..s.gl.len() { if s.gl[gidx] == NIL || s.gmark[gidx] || s.glen[gidx] > 16 { continue; }
+                let (w, _) = s.expand(gidx as u32); let e = by_spell.entry(w).or_insert(canon[gidx]); if *e != canon[gidx] { tree_conflict += 1; } }
+            println!("{{\"short_words\":{short},\"dup\":{dup},\"distinct\":{},\"tree_conflict\":{tree_conflict}}}", seen.len());
+        }
+        let (w, mark) = s.expand(g);
+        // the word, rotated to start one past the mark, is the emitted block
+        let m = w.len(); let rot: Vec<u8> = (0..m).map(|i| w[(mark + 1 + i) % m]).collect();
+        if rot != want { ok = false; }
+    }
+    (res[0], res[1], ok)
+}
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    if a[1] == "--writer-small" {
+        let thr: u64 = a[2].parse().unwrap();
+        let mut agg = W::default(); let (mut cases, mut full, mut own_fail_full, mut fb_fail, mut own_fail_short, mut short) = (0, 0, 0, 0, 0, 0);
+        for (k, maxn) in [(2u8, 9usize), (3, 6)] { for n in 1..=maxn { let tot = (k as usize).pow(n as u32);
+            for code in 0..tot { let mut l = vec![0u8; n]; let mut c = code; for i in 0..n { l[i] = (c % k as usize) as u8; c /= k as usize; }
+                for pr in 0..n { let w = writer_sim(&l, pr, thr, true); cases += 1; if !w.fb_ok { fb_fail += 1; }
+                    if w.full { full += 1; if !w.ok || w.cert_bad > 0 || w.src_incomplete > 0 || w.missing_src > 0 || w.unassigned > 0 || w.overwrite > 0 || w.multi_cmd > 0 { own_fail_full += 1; } }
+                    else { short += 1; if !w.ok { own_fail_short += 1; } }
+                    agg.k += w.k; agg.from_later += w.from_later; agg.cert_bad += w.cert_bad; } } } }
+        println!("writer-small thr {thr}: cases {cases} full {full} owner-fail(full) {own_fail_full} short-period {short} owner-fail(unguarded,short) {own_fail_short} fallback-fail {fb_fail} cmds {} from_later {} cert_bad {}", agg.k, agg.from_later, agg.cert_bad);
+        return;
+    }
+    if a[1] == "--writer-col" { let l: Vec<u8> = a[2].bytes().map(|b| b - b'0').collect(); let pr: usize = a[3].parse().unwrap();
+        println!("{:?}", writer_sim(&l, pr, 16, true)); return; }
+    if a[1] == "--writer-text" { let mut st = 0x9e37_79b9_7f4a_7c15u64; let mut rnd = || { st ^= st << 13; st ^= st >> 7; st ^= st << 17; st };
+        let (mut cases, mut prim, mut ownbad, mut fbbad, mut cm, mut fl, mut rr, mut certbad, mut wr) = (0, 0, 0, 0, 0u64, 0u64, 0u64, 0u64, 0u64);
+        for _ in 0..a[2].parse::<usize>().unwrap() {
+            // repetitive text: random pieces copied from earlier, with mutations
+            let n = 40 + (rnd() % 600) as usize; let k = 2 + (rnd() % 4) as u8; let mut t: Vec<u8> = Vec::new();
+            while t.len() < n { if t.len() > 8 && rnd() % 3 != 0 { let st0 = (rnd() % t.len() as u64) as usize; let ln = 1 + (rnd() % 40) as usize;
+                    for i in 0..ln { if t.len() < n { let b = t[(st0 + i) % t.len()]; t.push(if rnd() % 50 == 0 { (rnd() % k as u64) as u8 } else { b }); } } }
+                else { t.push((rnd() % k as u64) as u8); } }
+            let mut rot: Vec<usize> = (0..n).collect(); rot.sort_by(|&x, &y| (0..n).map(|i| t[(x + i) % n]).cmp((0..n).map(|i| t[(y + i) % n])));
+            let l: Vec<u8> = rot.iter().map(|&x| t[(x + n - 1) % n]).collect(); let pr = rot.iter().position(|&x| x == 0).unwrap();
+            let w = writer_sim(&l, pr, 16, false); cases += 1; if w.full { prim += 1; } if !w.fb_ok { fbbad += 1; }
+            if w.full && (!w.ok || w.cert_bad > 0 || w.src_incomplete > 0 || w.missing_src > 0 || w.unassigned > 0 || w.overwrite > 0 || w.multi_cmd > 0 || w.max_cmd_over_read > 0) { ownbad += 1; }
+            cm += w.k; fl += w.from_later; rr += w.r; certbad += w.cert_bad; wr += w.wraps; }
+        println!("text: cases {cases} full {prim} owner-bad {ownbad} fallback-bad {fbbad} rules {rr} cmds {cm} from_later {fl} cert_bad {certbad} wraps {wr}"); return; }
+    if a[1] == "--writer-random" { let mut st = 0x1234_5678_9abc_def0u64; let mut rnd = || { st ^= st << 13; st ^= st >> 7; st ^= st << 17; st };
+        let (mut cases, mut full, mut ownbad, mut fbbad, mut withrules, mut cm, mut fl) = (0, 0, 0, 0, 0, 0u64, 0u64);
+        for _ in 0..a[2].parse::<usize>().unwrap() { let n = 20 + (rnd() % 300) as usize; let k = 2 + (rnd() % 3) as u8; let mut l = Vec::with_capacity(n);
+            while l.len() < n { let b = (rnd() % k as u64) as u8; let run = 1 + (rnd() % 6) as usize; for _ in 0..run { if l.len() < n { l.push(b); } } }
+            let pr = (rnd() % n as u64) as usize; let w = writer_sim(&l, pr, 16, false); cases += 1; if !w.fb_ok { fbbad += 1; }
+            if w.full { full += 1; if w.r > w.m { withrules += 1; } cm += w.k; fl += w.from_later; if !w.ok || w.cert_bad > 0 || w.src_incomplete > 0 || w.missing_src > 0 || w.unassigned > 0 || w.overwrite > 0 || w.multi_cmd > 0 { ownbad += 1; } } }
+        println!("random: cases {cases} full {full} (with unmarked rules {withrules}) owner-bad {ownbad} fallback-bad {fbbad} cmds {cm} from_later {fl}"); return; }
+    if a[1] == "--small" {
+        let (mut cases, mut bad, mut agg) = (0u64, 0u64, Counts::default());
+        for (k, maxn) in [(2u8, 9usize), (3, 6)] { for n in 1..=maxn { let tot = (k as usize).pow(n as u32);
+            for code in 0..tot { let mut l = vec![0u8; n]; let mut c = code; for i in 0..n { l[i] = (c % k as usize) as u8; c /= k as usize; }
+                for p in 0..n { let (sc, jt, ok) = check(&l, p); cases += 1; if !ok || sc.m != jt.m || sc.h != jt.h || jt.steps != sc.steps { bad += 1; }
+                    agg.m += jt.m; agg.h += jt.h; agg.g += jt.g; agg.f += jt.f; agg.h_te += jt.h_te; agg.h_tb += jt.h_tb; agg.sep += jt.sep; agg.glue += jt.glue; } } } }
+        println!("small: cases {cases} bad {bad} {:?}", agg); return;
+    }
+    let data = std::fs::read(&a[1]).unwrap(); let kk = Kernels::detect(); let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]); let mut syms = Vec::new(); let mut i = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, kk).unwrap(); let p = b.orig_ptr as usize;
+        if std::env::var("WRITER").is_ok() && ll.len() >= std::env::var("MINLEN").map_or(65536, |v| v.parse().unwrap()) {
+            let w = writer_sim(&ll, p, 16, false);
+            println!("{{\"blk\":{i},\"n\":{},\"full\":{},\"ok\":{},\"fb_ok\":{},\"rules\":{},\"marked\":{},\"long_edges\":{},\"copies\":{},\"copy_bytes\":{},\"lit_edges\":{},\"lit_bytes\":{},\"wraps\":{},\"from_later\":{},\"cert_bad\":{},\"unassigned\":{},\"missing\":{},\"incomplete\":{},\"overwrite\":{},\"multi_cmd\":{},\"cmd_over_read\":{},\"min_differs\":{}}}",
+                ll.len(), w.full, w.ok, w.fb_ok, w.r, w.m, w.j, w.k, w.copy_bytes, w.lit_edges, w.lit_bytes, w.wraps, w.from_later, w.cert_bad, w.unassigned, w.missing_src, w.src_incomplete, w.overwrite, w.multi_cmd, w.max_cmd_over_read, w.min_pos_differs);
+            i += 1; syms = b.syms; continue;
+        }
+        if ll.len() >= std::env::var("MINLEN").map_or(65536, |v| v.parse().unwrap()) { let (s, j, ok) = check(&ll, p);
+            println!("{{\"blk\":{i},\"n\":{},\"ok\":{ok},\"same_m\":{},\"steps\":{},\"t\":{},\"F\":{},\"M\":{},\"H\":{},\"H_TE\":{},\"H_TB\":{},\"G\":{},\"diff\":{},\"eq_long\":{},\"bytes\":{},\"sep\":{},\"glue\":{},\"adj_bot\":{},\"m_any\":{},\"h_any\":{},\"d_is_a\":{},\"h_touched\":{},\"h_tt\":{},\"same_dir\":{},\"bsteps\":{},\"old_lit_t\":{}}}",
+                ll.len(), s.m == j.m && s.h == j.h && s.f == j.f && s.steps == j.steps && s.trace == j.trace, s.steps, s.t, s.f, s.m, s.h, s.h_te, s.h_tb, s.g, s.diff, s.eq_long, s.bytes, j.sep, j.glue, j.adj_bot, s.m_any, s.h_any, s.d_is_a, s.h_touched, s.h_tt, s.same_dir, s.bsteps, s.old_lit_t);
+            i += 1; }
+        syms = b.syms;
+    }
+}
+
+/// #579: the owner-schedule writer and the reachable-offer fallback, simulated on the model's grammar.
+#[derive(Default, Debug, Clone, Copy)]
+struct W { full: bool, r: u64, m: u64, j: u64, k: u64, copy_bytes: u64, lit_edges: u64, lit_bytes: u64, wraps: u64, from_later: u64,
+    cert_bad: u64, unassigned: u64, missing_src: u64, src_incomplete: u64, overwrite: u64, multi_cmd: u64, max_cmd_over_read: i64, ok: bool, fb_ok: bool, min_pos_differs: u64 }
+fn writer_sim(l: &[u8], prim: usize, thr: u64, owner_unguarded: bool) -> W {
+    let mut s = Ind::new(l, prim); let mut c = Counts::default(); let root = s.run(false, &mut c);
+    let want = invert(l, prim); let p = want.len(); let n = l.len();
+    let mut w = W { full: p == n, ..Default::default() };
+    let is_rule = |x: u32| s.gl[x as usize] != NIL && (s.glen[x as usize] > thr || s.gmark[x as usize]);
+    let rules: Vec<u32> = (0..s.gl.len() as u32).filter(|&x| is_rule(x)).collect();
+    let mut ridx = vec![u32::MAX; s.gl.len()]; for (k, &x) in rules.iter().enumerate() { ridx[x as usize] = k as u32; }
+    w.r = rules.len() as u64; w.m = rules.iter().filter(|&&x| s.gmark[x as usize]).count() as u64;
+    // mark offset in root
+    let (mut x, mut off) = (root, 0u64); while s.gl[x as usize] != NIL { let a = s.gl[x as usize]; if s.gmark[a as usize] { x = a; } else { off += s.glen[a as usize]; x = s.gr[x as usize]; } }
+    let pp = p as u64; let q0 = (pp - (off + 1) % pp) % pp;
+    let child = |r: u32, sd: usize| if sd == 0 { s.gl[r as usize] } else { s.gr[r as usize] };
+    // true last parent of each rule child
+    let mut last = vec![u32::MAX; s.gl.len()];
+    for (k, &r) in rules.iter().enumerate() { for sd in 0..2 { let ch = child(r, sd); if is_rule(ch) { last[ch as usize] = k as u32; } } }
+    let mut lit_buf: Vec<u8> = Vec::new();
+    let mut put = |out: &mut Vec<i16>, d: u64, bytes: &[u8], ov: &mut u64| { for (i, &b) in bytes.iter().enumerate() { let t = ((d + i as u64) % pp) as usize; if out[t] >= 0 { *ov += 1; } out[t] = b as i16; } };
+    // --- owner schedule ---
+    if (w.full || owner_unguarded) && is_rule(root) {
+        let mut out = vec![-1i16; p]; let mut pos = vec![u64::MAX; rules.len()]; pos[ridx[root as usize] as usize] = q0;
+        let mut cmds: Vec<(u32, u64)> = Vec::new(); let mut read = 0i64;
+        for k in (0..rules.len()).rev() {
+            let r = rules[k]; read += 1; let q = pos[k];
+            let mut ncmd = 0;
+            if q == u64::MAX { w.unassigned += 1; continue; }
+            let a = s.gl[r as usize]; let la = s.glen[a as usize];
+            if q + la >= pp { w.wraps += 1; }
+            for (sd, d) in [(0usize, q), (1usize, (q + la) % pp)] {
+                let ch = child(r, sd);
+                if is_rule(ch) {
+                    if !s.gmark[ch as usize] { w.j += 1; }
+                    let cert = !(k + 1 < rules.len() && child(rules[k + 1], sd) == ch);
+                    if cert != (last[ch as usize] == k as u32) { w.cert_bad += 1; }
+                    if cert { pos[ridx[ch as usize] as usize] = d; } else { cmds.push((ch, d)); ncmd += 1; }
+                } else {
+                    lit_buf.clear(); lit_buf.extend(s.expand(ch).0); w.lit_edges += 1; w.lit_bytes += lit_buf.len() as u64;
+                    let mut ov = 0; put(&mut out, d, &lit_buf, &mut ov); w.overwrite += ov;
+                }
+            }
+            if ncmd > 1 { w.multi_cmd += 1; }
+            w.max_cmd_over_read = w.max_cmd_over_read.max(cmds.len() as i64 - read);
+        }
+        w.k = cmds.len() as u64;
+        for &(ch, d) in cmds.iter().rev() {
+            let src = pos[ridx[ch as usize] as usize]; let len = s.glen[ch as usize];
+            if src == u64::MAX { w.missing_src += 1; continue; }
+            if src > d { w.from_later += 1; }
+            let mut buf = Vec::with_capacity(len as usize);
+            for i in 0..len { let v = out[((src + i) % pp) as usize]; if v < 0 { w.src_incomplete += 1; break; } buf.push(v as u8); }
+            if buf.len() as u64 != len { continue; }
+            w.copy_bytes += len; let mut ov = 0; put(&mut out, d, &buf, &mut ov); w.overwrite += ov;
+        }
+        w.ok = out.iter().zip(want.iter()).all(|(&o, &b)| o == b as i16);
+    } else if !is_rule(root) { w.ok = s.expand(root).0.len() == p; }
+    // --- fallback: reachable pass, any reachable parent's offer, forward expansion with equality test ---
+    {
+        let mut out = vec![-1i16; p]; let mut pos = vec![u64::MAX; rules.len()]; let mut minp = vec![u64::MAX; rules.len()];
+        if is_rule(root) { pos[ridx[root as usize] as usize] = q0; minp[ridx[root as usize] as usize] = q0; }
+        for k in (0..rules.len()).rev() { let r = rules[k]; let q = pos[k]; if q == u64::MAX { continue; }
+            let la = s.glen[s.gl[r as usize] as usize];
+            for (sd, d) in [(0usize, q), (1usize, (q + la) % pp)] { let ch = child(r, sd); if is_rule(ch) { let i = ridx[ch as usize] as usize; pos[i] = d; minp[i] = minp[i].min(d); } } }
+        for k in 0..rules.len() { if pos[k] != minp[k] { w.min_pos_differs += 1; } }
+        let mut bad = false;
+        for k in 0..rules.len() { let r = rules[k]; let q = pos[k]; if q == u64::MAX { continue; }
+            let la = s.glen[s.gl[r as usize] as usize];
+            for (sd, d) in [(0usize, q), (1usize, (q + la) % pp)] { let ch = child(r, sd);
+                if is_rule(ch) { let src = pos[ridx[ch as usize] as usize]; if src != d { let len = s.glen[ch as usize];
+                        for i in 0..len { let v = out[((src + i) % pp) as usize]; if v < 0 { bad = true; } out[((d + i) % pp) as usize] = v; } } }
+                else { let e = s.expand(ch).0; for (i, &b) in e.iter().enumerate() { out[((d + i as u64) % pp) as usize] = b as i16; } } } }
+        if !is_rule(root) { w.fb_ok = true; } else { w.fb_ok = !bad && out.iter().zip(want.iter()).all(|(&o, &b)| o == b as i16); }
+    }
+    w
+}
