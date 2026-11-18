@@ -2367,6 +2367,14 @@
       "review_comment_id": 6978935386,
       "review_pr": 145,
       "publication_verification": "Verified the GitHub author, destination and exact body. Pinned helper route, header and misrouting checks passed for Researcher. Its coordinator-only sender check does not apply to Researcher publication."
+    },
+    {
+      "trigger_comment_id": 6981094372,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/cutloop-blog-r1-6981094372/report.md",
+      "source_commit": "e7bae604b2fb3b508cee4d3fb2a6d8af12c92f8c"
     }
   ],
   "active_delegations": [],
