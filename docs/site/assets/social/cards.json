@@ -181,6 +181,13 @@
     "section": " · Research blog",
     "title": "Cutting the loop open: decoding a block along shared paths"
   },
+  "assets/social/blog-2026-11-18-what-decoding-pays-for.png": {
+    "description": "Three very different ways of undoing bzip2's block sort spend about two operations per run, and one property of each block explains why they rise and fall together.",
+    "foot": "lmmx.github.io/mibz2 · 18 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "What decoding pays for: how long run boundaries persist"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
