@@ -2300,11 +2300,13 @@
     },
     {
       "trigger_comment_id": 6974215305,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/wide-admit-6974215305/report.md",
-      "source_commit": "8e6d7ed1f84fd480cb41ac1336e5489243de2eab"
+      "source_commit": "8e6d7ed1f84fd480cb41ac1336e5489243de2eab",
+      "report_commit": "b3afae4218bd44677fbf8dfce28ad610fbe8b360",
+      "disposition": "Targeted correction then PROCEED with existing 10-round wall design. Confirm routes, inputs and actual plans. Keep knee and IMC diagnostic."
     }
   ],
   "active_delegations": [],
