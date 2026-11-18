@@ -2382,6 +2382,14 @@
       "review_comment_id": 6981427286,
       "review_pr": 145,
       "publication_verification": "Verified GitHub destination, author and exact body. The pinned route and role-aware header/misrouting checks passed. Its coordinator-only sender check is inapplicable to this Researcher REVIEW."
+    },
+    {
+      "trigger_comment_id": 6981855359,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/forest-sections-6981855359/report.md",
+      "source_commit": "3832bb12857181adb2f46b35f5c7fa8ebaa29a77"
     }
   ],
   "active_delegations": [],
