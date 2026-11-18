@@ -2442,11 +2442,13 @@
     },
     {
       "trigger_comment_id": 6984353753,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/mixed-steps-6984353753/report.md",
-      "source_commit": "0bb1d4bd4cbd30e45502f5aebb2446ea1d7c569d"
+      "source_commit": "0bb1d4bd4cbd30e45502f5aebb2446ea1d7c569d",
+      "report_commit": "c7b876047f2e76b8f58f99e8acc8623feecf40bc",
+      "disposition": "Verified conditional two-cut identity and geometric obstruction, all-233 CSV reduction and 16 raw traces. Positive unit ledger is price-sensitive. Native correctness and wall time unproved."
     }
   ],
   "active_delegations": [],
