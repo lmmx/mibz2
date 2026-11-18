@@ -27,7 +27,7 @@ Snip the decoder's one long loop open and most of each Wikidata block falls into
 
 Much of mibz2's research is about one stage of bzip2 decoding: turning each block's Burrows–Wheeler transform back into text. [A new way back from the BWT](2026-11-10-rauzy-veech-reconstruction.md) showed how the kernel mibz2 ships, Cells, does it by shrinking a map instead of walking it. [The mathematical dictionary](2026-11-16-mathematical-dictionary.md) named the objects that kernel works with. This post takes the same map apart another way. It cuts the map's one long loop open, solves the pieces separately, and joins them back.
 
-**The setting, in brief.** bzip2 stores a block as the last column $L$ of the block's rotations, sorted: the Burrows–Wheeler transform (BWT). It also stores the *primary row*, the row that holds the original text. A map called **LF** sends each row to the row of the rotation one byte earlier. Following LF from the primary row reads the block backwards, one byte a step, until it comes back to the primary row. That trip, the *marked loop*, is the decoder's loop. When LF is a single loop, as in the example below, that trip visits every row once. It need not be: the periodic text `abab` has the column `bbaa`, whose LF makes two loops, 0 → 2 → 0 and 1 → 3 → 1, and the marked loop covers only half the rows. A **run** is a stretch of equal bytes in $L$. LF moves all of a run's rows by the same amount, so the map is a list of shifted blocks of rows ([One shift per run](2026-11-08-inverse-bwt-navigation.md)).
+**The setting, in brief.** bzip2 stores a block as the last column $L$ of the block's rotations, sorted: the Burrows–Wheeler transform (BWT). It also stores the *primary row*, the row that holds the original text. A map called **LF** sends each row to the row of the rotation one byte earlier. Following LF from the primary row reads the block backwards, one byte a step, until it comes back to the primary row. That trip, the *marked loop*, is the decoder's loop. When LF is a single loop, as in the example below, that trip visits every row once. It need not. The periodic text `abab` has the column `bbaa`, and its LF makes two loops, 0 → 2 → 0 and 1 → 3 → 1. The marked loop covers only half the rows. A **run** is a stretch of equal bytes in $L$. LF moves all of a run's rows by the same amount, so the map is a list of shifted blocks of rows ([One shift per run](2026-11-08-inverse-bwt-navigation.md)).
 
 **Why the loop is slow.** Each step needs the row that the step before it found, so a plain decoder makes up to 900,000 memory reads per block, each waiting on the last. Cells avoids most of them by working on runs, not rows. It comes in two forms. Eager Cells lays out all its records before it starts. Lazy Cells makes them as it goes, which suits many threads at once ([Lazy letters](2026-11-16-lazy-letters.md)).
 
@@ -267,7 +267,7 @@ Two totals describe a cut. The **bundled area** $A = \sum_i b_i h_i$ is the numb
 
 ## 6. What do real blocks look like after the cut?
 
-**Why cut at short runs?** The project keeps one 899,931-row Wikidata block as a fixed test case, *the frozen block*. Of its 51,184 runs, 68.6% are a single row long, yet they hold only 3.9% of the rows. At the other end, runs longer than 256 rows are about 1.0% of the runs, and hold 73.9% of the rows. (These shares come from the cut at $t = 256$: 496 wide strips, one of which may be a run split in two by the primary row. That cut does not separate the runs of exactly 256 rows.) The short runs make most of the boundaries, and the long runs hold most of the text. Left on the open paths, every short run would add edges where bundles split. Kept instead, they go to the stable sort, which handles them in one pass, and the open paths are left a few wide strips.
+**Why cut at short runs?** The project keeps one 899,931-row Wikidata block as a fixed test case, *the frozen block*. Of its 51,184 runs, 68.6% are a single row long, yet they hold only 3.9% of the rows. At the other end, runs longer than 256 rows are about 1.0% of the runs, yet hold 73.9% of the rows. These shares come from the cut at $t = 256$, which leaves 496 wide strips. One of them may be half of a run that the primary row splits, and runs of exactly 256 rows fall on the kept side. The short runs make most of the boundaries, and the long runs hold most of the text. Left on the open paths, every short run would add edges where bundles split. Kept instead, they go to the stable sort, which handles them in one pass, and the open paths are left a few wide strips.
 
 <figure class="bf-fig" id="run-split">
 <p class="bf-title">Most runs are narrow, but most rows are in wide runs</p>
@@ -275,7 +275,7 @@ Two totals describe a cut. The **bundled area** $A = \sum_i b_i h_i$ is the numb
 <figcaption>Counted on the frozen block, at threshold 16: 89,874 kept rows (narrow runs, plus the primary row) and 3,448 wide strips out of 51,184 runs. The shares are derived from those counts; a strip split by the primary row counts twice, so the wide share of runs is at most 6.7%.</figcaption>
 </figure>
 
-**The threshold sets the balance.** Raising $t$, the widest run kept, keeps more rows for the sort to wire, and leaves fewer, wider strips. On the frozen block that leaves less to trace at every threshold swept. It is not a rule: raising $t$ can open a loop the marked one never met, and add paths to trace (the [notes](2026-11-18-cutting-the-loop-open-notes.md#one-strips-heights) give a six-row case). The frozen block's counts, recomputed independently from the proof:
+**The threshold sets the balance.** Raising $t$, the widest run kept, keeps more rows for the sort to wire, and leaves fewer, wider strips. On the frozen block that leaves less to trace at every threshold swept. That is not a rule. Raising $t$ can cut open a loop the marked one never met, and so add paths to trace; the [notes](2026-11-18-cutting-the-loop-open-notes.md#one-strips-heights) give a six-row case. The frozen block's counts, recomputed independently from the proof:
 
 | $t$ (rows) | Kept rows $m$ | Wide strips $H$ | Bundled area $A$ | Traced letters $U$ | Bundles (nonempty) |
 |---:|---:|---:|---:|---:|---:|
@@ -283,7 +283,7 @@ Two totals describe a cut. The **bundled area** $A = \sum_i b_i h_i$ is the numb
 | 16 | 89,874 | 3,448 | 810,057 | 50,709 | 3,204 (1,326) |
 | 256 | 235,281 | 496 | 664,650 | 4,658 | 738 (294) |
 
-At $t = 16$, $A/U$ is 15.97: each traced letter spells about sixteen. On this block's sweep, up to $t = 16$, the ratio rises roughly in step with $t$. Across blocks at $t = 16$ the median is 15.92, but section 6's two blocks of equal run density show how far one block can stray from another.
+At $t = 16$, $A/U$ is 15.97: each traced letter spells about sixteen. On this block's sweep, up to $t = 16$, the ratio rises roughly in step with $t$. The median over many blocks at $t = 16$ is 15.92. Yet section 6 shows two blocks of equal run density that differ widely.
 
 <figure class="bf-fig" id="threshold-tradeoff">
 <p class="bf-title">Kept rows rise with the threshold while traced letters fall</p>
@@ -291,7 +291,7 @@ At $t = 16$, $A/U$ is 15.97: each traced letter spells about sixteen. On this bl
 <figcaption>Counted on the frozen block, at eleven thresholds. <em>m</em> is the rows the stable sort wires; <em>U</em> the letters traced, one path per bundle; <em>K</em> the endpoint constructor's steps (section 7). Their sum, dashed, is least at <em>t</em> = 16, at 151,798. The sum is our reading of the decoder's cost, not a measured time: it weights a sorted row, a traced letter and an endpoint step equally. Threshold 16 was chosen from timed trials on this block.</figcaption>
 </figure>
 
-**All 233 large blocks.** Over the Wikidata blocks of at least 65,536 rows, at $t = 16$, the median bundled area is 88.7% of the block and the median traced letters 5.5% (**counted**, and re-derived by a verification). Prose differs. Over its six blocks the wide strips cover a median of 32.3% of each block, from 27.6% to 49.0%, so most of a prose block is kept rows.
+**All 233 large blocks.** Over the Wikidata blocks of at least 65,536 rows, at $t = 16$, the median bundled area is 88.7% of the block and the median traced letters 5.5% (**counted**, and re-derived by a verification). Prose differs. Over its six blocks the wide strips cover a median of 32.3% of each block, from 27.6% to 49.0%. Most of a prose block is kept rows.
 
 <figure class="bf-fig" id="density-scatter">
 <p class="bf-title">Run density says little about how much tracing a block needs</p>
