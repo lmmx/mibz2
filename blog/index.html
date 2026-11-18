@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=5aed4d938dc8">
+      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=aa65905d834f">
     
-      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=5aed4d938dc8">
+      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=aa65905d834f">
     
-      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=5aed4d938dc8">
+      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=aa65905d834f">
     
-      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=5aed4d938dc8">
+      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=aa65905d834f">
     
-      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=5aed4d938dc8">
+      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=aa65905d834f">
     
-      <link rel="stylesheet" href="../assets/stylesheets/observatory.css?v=5aed4d938dc8">
+      <link rel="stylesheet" href="../assets/stylesheets/observatory.css?v=aa65905d834f">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2548,7 +2548,7 @@ post is in the <a href="../background/journals/">journals</a> and the pull reque
 <a class="post-card" href="2026-11-17-raising-the-knee/"><img src="../assets/social/blog-2026-11-17-raising-the-knee.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">17 November 2026 · Research result</span><span class="post-card-title">Raising the knee: scaling throughput to the limit of physical cores</span><span class="post-card-dek">mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are busy, then holds level on the whole machine up to twenty threads.</span></span></a>
 <a class="post-card" href="2026-11-17-modelling-the-cache-to-rightsize-workers/"><img src="../assets/social/blog-2026-11-17-modelling-the-cache-to-rightsize-workers.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">17 November 2026 · Research in progress</span><span class="post-card-title">Modelling the cache to rightsize workers</span><span class="post-card-dek">mibz2 now runs fewer workers than threads on a ten-core desktop and finishes sooner, while a cache model is tested to pick the count on any machine.</span></span></a>
 <a class="post-card" href="2026-11-16-mathematical-dictionary/"><img src="../assets/social/blog-2026-11-16-mathematical-dictionary.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">16 November 2026 · Research synthesis</span><span class="post-card-title">Towers, words and loops: a mathematical dictionary for BWT inversion</span><span class="post-card-dek">Our BWT inversion is not the sheaf an earlier analogy suggested, yet the places of its words form one naturally.</span></span></a>
-<a class="post-card" href="2026-11-16-stop-and-walk/"><img src="../assets/social/blog-2026-11-16-stop-and-walk.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">16 November 2026 · Research in progress</span><span class="post-card-title">Stop and walk: cutting a BWT inversion short and walking the rest</span><span class="post-card-dek">Halting each block's rebuild early and walking the small loop that remains spares mibz2 a third of the text pieces it stores, for two per cent more instructions.</span></span></a>
+<a class="post-card" href="2026-11-16-stop-and-walk/"><img src="../assets/social/blog-2026-11-16-stop-and-walk.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">16 November 2026 · Research result</span><span class="post-card-title">Stop and walk: cutting a BWT inversion short and walking the rest</span><span class="post-card-dek">Halting each block's rebuild early spares mibz2 a third of the text pieces it stores, but on ten cores the slower walk outweighs the memory saved.</span></span></a>
 <a class="post-card" href="2026-11-16-lazy-letters/"><img src="../assets/social/blog-2026-11-16-lazy-letters.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">16 November 2026 · Research result</span><span class="post-card-title">Lazy letters: just-in-time memory for induction</span><span class="post-card-dek">Holding fewer letters at once leaves the cache less crowded, so eight to ten threads decode up to 11% faster despite extra instructions.</span></span></a>
 <a class="post-card" href="2026-11-15-free-closure/"><img src="../assets/social/blog-2026-11-15-free-closure.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">15 November 2026 · Research result</span><span class="post-card-title">The free closure of an induction: where free steps come to rest</span><span class="post-card-dek">The steps that cost mibz2 no bookkeeping can be taken in any order and still meet at one end point, now proved to belong to the block itself.</span></span></a>
 <a class="post-card" href="2026-11-15-induction-width/"><img src="../assets/social/blog-2026-11-15-induction-width.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">15 November 2026 · Research in progress</span><span class="post-card-title">The width of an induction: how much it must hold at once</span><span class="post-card-dek">Taking the steps that cost no bookkeeping first would let mibz2 rebuild a block while keeping about a third as much in memory at its busiest moment.</span></span></a>
@@ -2731,19 +2731,19 @@ post is in the <a href="../background/journals/">journals</a> and the pull reque
     
       <script src="../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../assets/javascripts/bench.js?v=5aed4d938dc8"></script>
+        <script src="../assets/javascripts/bench.js?v=aa65905d834f"></script>
       
-        <script src="../assets/javascripts/couriers.js?v=5aed4d938dc8"></script>
+        <script src="../assets/javascripts/couriers.js?v=aa65905d834f"></script>
       
-        <script src="../assets/javascripts/blog.js?v=5aed4d938dc8"></script>
+        <script src="../assets/javascripts/blog.js?v=aa65905d834f"></script>
       
-        <script src="../assets/javascripts/frontier.js?v=5aed4d938dc8"></script>
+        <script src="../assets/javascripts/frontier.js?v=aa65905d834f"></script>
       
-        <script src="../assets/javascripts/observatory.js?v=5aed4d938dc8"></script>
+        <script src="../assets/javascripts/observatory.js?v=aa65905d834f"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../assets/javascripts/katex.js?v=5aed4d938dc8"></script>
+        <script src="../assets/javascripts/katex.js?v=aa65905d834f"></script>
       
     
   </body>
