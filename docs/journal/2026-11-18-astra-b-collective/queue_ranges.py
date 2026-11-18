@@ -38,7 +38,7 @@ class Queue:
             self.counts['requeues'] += 1
 
 
-def contract(bands, n, mark):
+def contract(bands, n, mark, observe=None):
     # All keys are the *first* entrance in the emitted interval. Each byte
     # consumes its intervals monotonically. Count every exact-key lookup.
     transfers = {}
@@ -49,6 +49,8 @@ def contract(bands, n, mark):
     for c,begin,end,left,pieces in buckets(bands):
         for x,w,b,y in pieces:
             if b != c:
+                if observe:
+                    observe('save_source',len(external))
                 external.append((x,w,b,y))
         total = sum(w for _,w,b,_ in pieces if b != c)
         for low,high,rev,k,spans in sides(c,begin,end,left,pieces):
@@ -72,6 +74,8 @@ def contract(bands, n, mark):
                         entry = high-e-length if rev else low+e
                         exit_rank = support+(left+q.active-length if rev else left-q.active)
                         assert entry not in transfers
+                        if observe:
+                            observe('put',entry)
                         transfers[entry] = (entry+length,exit_rank,1+q.base+depth)
                         counts['ranges'] += 1
                         q.active -= length
@@ -81,19 +85,26 @@ def contract(bands, n, mark):
     cursor = [None]*256
     src = 0
     residual_mark = None
-    for x,w,b,y in external:
+    for i,(x,w,b,y) in enumerate(external):
+        if observe:
+            observe('read_source',i)
         if x <= mark < x+w:
             residual_mark = src+mark-x, 0
         if entrance_mark is not None and y <= entrance_mark[0] < y+w:
             residual_mark = src+entrance_mark[0]-y, entrance_mark[1]
         while w:
             if cursor[b] is None or cursor[b][0] != y:
+                if observe:
+                    observe('get',y)
                 stop,dest,length = transfers.pop(y)
                 counts['lookups'] += 1
             else:
                 _,stop,dest,length = cursor[b]
             take = min(w,stop-y)
+            before = len(arcs)
             append_arc(arcs,src,dest,take,bytes([b])*length)
+            if observe and len(arcs)>before:
+                observe('save_residual',before)
             counts['overlaps'] += 1
             src += take
             y += take

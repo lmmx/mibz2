@@ -7,6 +7,7 @@ import json
 from diagonal import census
 from factor import choose, factor_decode, phases, pure_rotation
 from queue_ranges import contract, decode
+from packets import contract as grouped_tiles
 from residual import induce, original, quotient
 from screen import bands_from_records
 
@@ -129,6 +130,8 @@ def main():
                     assert got == want and qr['period'] == period
                     for b,(perm,shift) in candidates.items():
                         s,mark,arcs = quotient(bands,n,p,b)
+                        gs,gm,ga,_ = grouped_tiles(bands,n,p,b)
+                        assert (gs,gm,ga) == (s,mark,arcs)
                         kept = tile_kept(column,lf,p,b)
                         assert s == len(kept)
                         check_arrows(arcs,kept,lf,column,p,mark,0)

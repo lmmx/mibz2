@@ -118,16 +118,17 @@ def induce(arcs, support, primary, original_n, mark_lf_offset=0):
     """Diagnostic right-end induction on any weighted translation tiling."""
     top, bottom = {}, {}
     grammar = Grammar()
-    def put(t, b, w, word):
-        slot = (t,b,w,word)
+    def put(t, b, w, word, raw=False):
+        slot = (t,b,w,word,raw)
         assert t not in top and b not in bottom
         top[t] = bottom[b] = slot
     for x, y, w, spelling, marked in marked_arcs(arcs, primary):
         forward = spelling[::-1]
-        put(x+w, y+w, w, (forward, len(forward), len(forward)-1-mark_lf_offset if marked else -1))
+        put(x+w, y+w, w, (forward, len(forward), len(forward)-1-mark_lf_offset if marked else -1), raw=True)
     initial = len(top)
     frontier = support
-    equal = closed = 0
+    equal = closed = top_wins = bottom_wins = 0
+    raw_top = raw_bottom = live = peak = 0
     while frontier:
         a, b = top.pop(frontier), bottom.pop(frontier)
         if a is b:
@@ -137,10 +138,19 @@ def induce(arcs, support, primary, original_n, mark_lf_offset=0):
                 out, writer = grammar.write(a[3], original_n)
                 return out, dict(support=support, bands=initial, cuts=grammar.joins,
                                  equal=equal, closures=closed, period=a[3][1],
+                                 top_wins=top_wins,bottom_wins=bottom_wins,raw_top=raw_top,
+                                 raw_bottom=raw_bottom,peak_pairs=peak,
                                  rules=len(grammar.rules), arena=grammar.arena_bytes, **writer)
             continue
-        _, ab, aw, word_a = a
-        bt, _, bw, word_b = b
+        _, ab, aw, word_a, fresh_a = a
+        bt, _, bw, word_b, fresh_b = b
+        raw_top += fresh_a
+        raw_bottom += fresh_b
+        live += fresh_a + fresh_b
+        peak = max(peak,live)
+        live -= aw == bw
+        top_wins += aw > bw
+        bottom_wins += bw > aw
         del top[bt], bottom[ab]
         w = min(aw,bw)
         equal += aw == bw
