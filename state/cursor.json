@@ -209,9 +209,10 @@
     6986296845,
     6986512740,
     6988388052,
-    6988941452
+    6988941452,
+    6990646000
   ],
-  "last_processed_comment_id": 6988941452,
+  "last_processed_comment_id": 6990646000,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2530,14 +2531,17 @@
     },
     {
       "trigger_comment_id": 6990646000,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/decoding-pays-r4-6990646000/report.md",
       "source_commit": "9da83cad742de98fc812d77c0e942ff7c654fa9d",
       "report_commit": "b954173122c78961e1a4c02f79bc9c47465843f1",
       "disposition": "PROCEED: live fit paragraph and historical accessible description verified.",
-      "deployed_site_commit": "1a793377dda13718828517a8fa4577b1dce93b49"
+      "deployed_site_commit": "1a793377dda13718828517a8fa4577b1dce93b49",
+      "review_comment_id": 6990716088,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, and role-aware headers and route. The pinned helper's coordinator-only sender check is inapplicable to a Researcher REVIEW."
     }
   ],
   "active_delegations": [],
