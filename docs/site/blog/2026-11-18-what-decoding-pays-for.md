@@ -109,7 +109,7 @@ $$q_1 = r - C = E_0 - V_0 + 1,$$
 
 which is the forest's count of leftover arcs, its *chords*: 10,955 on the test block. The $+1$ is row 0, a run start that is not an internal cut. On the test block, $q_2$ to $q_5$ also equal exactly the excesses of the refined networks in section 4.
 
-**The test.** The test fixed one extra quantity in advance: $\sum_{k=2}^{8} q_k / r$, the tail of the profile. Each count per run was fitted by least squares, with leave-one-out error:
+**The test.** The test added a single summary quantity, rather than searching over combinations: $\sum_{k=2}^{8} q_k / r$, the tail of the profile. Each count per run was fitted by least squares, with leave-one-out error:
 
 | Model | Cells $R^2$ | Forest $R^2$ | Adj.-rank $R^2$ | Shared residual |
 | --- | ---: | ---: | ---: | ---: |
