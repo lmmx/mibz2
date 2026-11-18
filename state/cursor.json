@@ -2515,11 +2515,14 @@
     },
     {
       "trigger_comment_id": 6988941452,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/decoding-pays-for-r3-6988941452/report.md",
-      "source_commit": "1609833498ba29c8582696dd5dd8424f975d7f6c"
+      "source_commit": "1609833498ba29c8582696dd5dd8424f975d7f6c",
+      "report_commit": "b6d3b87af31debb8c32a617325d8553044b68760",
+      "disposition": "REVISE: the fit paragraph must compare the historical predictor with q₁/r, the exact excess per run.",
+      "deployed_site_commit": "1e4d265e4a81deeb8d673e09965cad6a80496f71"
     }
   ],
   "active_delegations": [],
