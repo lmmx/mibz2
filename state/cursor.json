@@ -2481,6 +2481,14 @@
       "review_comment_id": 6986491194,
       "review_pr": 145,
       "publication_verification": "Verified exact body, author lmmx, destination #145, and role-aware route and headers. The pinned helper's coordinator-only sender check does not apply to this Researcher REVIEW."
+    },
+    {
+      "trigger_comment_id": 6986512740,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/decoding-pays-for-r1-6986512740/report.md",
+      "source_commit_prefix": "b427bcdb"
     }
   ],
   "active_delegations": [],
