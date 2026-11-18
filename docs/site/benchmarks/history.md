@@ -39,6 +39,16 @@ figures are measured on GitHub's runners ([methodology](index.md)).
   the oldest release and run on another machine. At 1, 2 and 4 threads they
   overlay CI's chain; above 4, CI has no figure and they stand alone. **All** overlays every
   thread count in one chart, a colour each along the releases' ramp, low to high.
+- **Relative or Absolute.** The chart shows change since the start by default. **Absolute**
+  shows throughput in MB/s of output instead (CPU time and peak RSS stay relative). CI's
+  chain has no absolute scale of its own, because its merges ran on several runner CPUs and
+  it multiplies ratios. It borrows one runner model's scale: the model with the most master
+  records at that corpus and thread count, through its newest record at a chained merge,
+  which the chart rings and names. Every other merge is that record carried by the chain's
+  ratios. The band is the links' interval between the merge and the anchor, with the
+  record's own. The i9-10900K's releases are in MB/s on the i9, another machine on another
+  scale, so beside CI's chain they get a panel of their own. In **All** every thread count
+  sits at its own level on the i9.
 - **`text`** is generated from mibz2's own sources, so its content changes from merge to
   merge, and its chain multiplies ratios measured on different files.
 
