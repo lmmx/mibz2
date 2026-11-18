@@ -1,0 +1,134 @@
+{
+  "checks": {
+    "ordinary_pass": {
+      "rc": 0,
+      "text": "unpinned: 3 records from 1 blocks, the sustained state held",
+      "judged_written": true
+    },
+    "cutoff_exact_void": {
+      "rc": 1,
+      "text": "VOID: the unpinned decodes do not make the registered run (1 problems); no records written\n  ('u10', 10, 0, 'mibz2-occ-7-28') measured decode 3: clock 1.200, at or above 1.2 in a cell registered clamped (turbo, not the sustained state)",
+      "judged_written": false
+    },
+    "balanced_clock_excursions_pass": {
+      "rc": 0,
+      "text": "unpinned: 3 records from 1 blocks, the sustained state held",
+      "judged_written": true
+    },
+    "failed_prewarm_passes": {
+      "rc": 0,
+      "text": "unpinned: 3 records from 1 blocks, the sustained state held",
+      "judged_written": true
+    }
+  },
+  "power": [
+    {
+      "name": "unpinned",
+      "m": 3,
+      "n": 8,
+      "ratio": 0.97,
+      "threshold": 3.127552274246369,
+      "mde_percent": [
+        0.7225484893271761,
+        1.4398762154600624,
+        2.8590199957616487,
+        5.6363000381616475
+      ],
+      "power": [
+        1.0,
+        0.9999831512260511,
+        0.8405885269585723,
+        0.2542240159922287
+      ],
+      "sd_max_at_ratio": 0.021001381681194864
+    },
+    {
+      "name": "pinned10/8",
+      "m": 10,
+      "n": 8,
+      "ratio": 0.975,
+      "threshold": 4.029337177642486,
+      "mde_percent": [
+        0.8985196466337587,
+        1.7889659177136488,
+        3.5459278448798868,
+        6.966119646948829
+      ],
+      "power": [
+        0.999999999975122,
+        0.9854594424739083,
+        0.4233448164777588,
+        0.07156529827891311
+      ],
+      "sd_max_at_ratio": 0.01402523263469938
+    },
+    {
+      "name": "pinned6/4",
+      "m": 10,
+      "n": 6,
+      "ratio": 0.98,
+      "threshold": 4.773340604855522,
+      "mde_percent": [
+        1.2220350710399919,
+        2.429136444931467,
+        4.799265851181991,
+        9.368202175260764
+      ],
+      "power": [
+        0.9975233612150272,
+        0.6025392238083029,
+        0.11975263529237859,
+        0.024811273204973304
+      ],
+      "sd_max_at_ratio": 0.008215399354405812
+    }
+  ],
+  "order_4": {
+    "rounds": [
+      "ABCD",
+      "BCDA",
+      "CDAB",
+      "DABC",
+      "DCBA",
+      "ADCB",
+      "BADC",
+      "CBAD"
+    ],
+    "predecessors": {
+      "AA": 1,
+      "AB": 3,
+      "AC": 1,
+      "AD": 3,
+      "BA": 3,
+      "BB": 1,
+      "BC": 3,
+      "BD": 1,
+      "CB": 3,
+      "CC": 1,
+      "CD": 4,
+      "DA": 3,
+      "DB": 1,
+      "DC": 3
+    }
+  },
+  "order_3": {
+    "rounds": [
+      "ABC",
+      "BCA",
+      "CAB",
+      "CBA",
+      "ACB",
+      "BAC"
+    ],
+    "predecessors": {
+      "AA": 1,
+      "AB": 2,
+      "AC": 3,
+      "BA": 2,
+      "BB": 1,
+      "BC": 3,
+      "CA": 2,
+      "CB": 3
+    }
+  }
+}
