@@ -148,6 +148,29 @@ there is something worth commenting on, never as a routine part of every release
 6. **The reading.** The ledger's *What the ledger says* section changes only when a new row
    changes it, such as a new way the high thread counts moved.
 
+## 5c. Worker counts: recalibrate when the cost model has moved
+
+The trimmed worker counts (`trimmed_workers` in `src/parallel.rs`) were measured against a
+particular kernel and its memory traffic. When that changes, the best count can move: with wide
+admission (#559), 8 workers beat 7 within the new kernel (0.979), where the shipped trim uses 7.
+
+1. **When:** queue a recalibration with the release scaling if either holds.
+   - **The release changes what a worker costs:** the kernel's admission or work per block, its
+     working set or scratch layout, or DRAM bytes per output byte. Examples are a new admission
+     line, a new induction, or a store or table change.
+   - **A measurement shows the knee has moved:** a frozen run reports a different best count
+     within the new kernel, or the release scaling or crossover shows the shipped trim losing to
+     a neighbouring count.
+2. **The run:** a worker-count sweep on the i9 at the release's tag commit, in both placement
+   modes. Pinned, one CPU on each of exactly T cores; and unpinned. The counts are those the trims
+   cover (4, 6, 8 and 10 threads, and 12–20 unpinned), against the shipped trim at each. Its rule
+   is posted before the data, and a change of trim is an adoption registration (C6), with the
+   Researcher's review.
+3. **Model first:** MONODROMY's contention model (records 45–55) gives each count's predicted
+   best from the new kernel's measured traffic. Record the prediction beside the sweep, so the
+   model is scored each time.
+4. **Record** the verdict in the release's CHANGELOG section, changed or not.
+
 ## 6. After
 
 1. **A CHANGELOG PR** with the release's notes. #210 is the model. It gives:
