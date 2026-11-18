@@ -2559,11 +2559,14 @@
     },
     {
       "trigger_comment_id": 6992913830,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/astra-c-6992913830/report.md",
-      "source_commit": "bfa4564c63585604623eb7429a981e064d1465c9"
+      "source_commit": "bfa4564c63585604623eb7429a981e064d1465c9",
+      "baseline_commit": "0f5e381a07fd61aa220ba9edc297b6adf76fafec",
+      "report_commit": "012fab2e82bd197c9756d7d5b38019e2db84351a",
+      "disposition": "PROCEED as research record: all 12 receipts regenerated; ten marked outputs and matched line-model claims verified."
     }
   ],
   "active_delegations": [],
