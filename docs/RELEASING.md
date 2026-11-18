@@ -45,6 +45,11 @@ Docs, journal, bench-harness or blog changes alone are not.
    purpose and a removal condition that hasn't been met. Remove any whose reason has lapsed in
    its own PR, never in the release's. The review never delays the release, and a removal is
    never automatic: list what was reviewed, and what is to go, in the release's report.
+4. **Recalibrate the worker counts first, if the cost model has moved (§5c).** When the release
+   would change what a worker costs, the trims are re-measured on master *before* the release, and
+   any retune ships in the same release. Then the release never ships a kernel change with
+   stale worker counts that could worsen the knee or the profile. This step can delay the release;
+   it is the one pre-release check that does.
 
 ## 4. The release
 
@@ -147,6 +152,31 @@ there is something worth commenting on, never as a routine part of every release
 5. **The CHANGELOG** names the row, if there is one, and says nothing more about it.
 6. **The reading.** The ledger's *What the ledger says* section changes only when a new row
    changes it, such as a new way the high thread counts moved.
+
+## 5c. Worker counts: recalibrate before releasing when the cost model has moved
+
+The trimmed worker counts (`trimmed_workers` in `src/parallel.rs`) were measured against a
+particular kernel and its memory traffic. When that changes, the best count can move: with wide
+admission (#559), 8 workers beat 7 within the new kernel (0.979), where the shipped trim uses 7.
+
+1. **When:** before the release (§3.4), if either holds.
+   - **The release changes what a worker costs:** the kernel's admission or work per block, its
+     working set or scratch layout, or DRAM bytes per output byte. Examples are a new admission
+     line, a new induction, or a store or table change.
+   - **A measurement shows the knee has moved:** a frozen run reports a different best count
+     within the new kernel, or the release scaling or crossover shows the shipped trim losing to
+     a neighbouring count.
+2. **The run:** a worker-count sweep on the i9 at master's head, the release candidate, in both placement
+   modes. Pinned, one CPU on each of exactly T cores; and unpinned. The counts are those the trims
+   cover (4, 6, 8 and 10 threads, and 12–20 unpinned), against the shipped trim at each. Its rule
+   is posted before the data, and a change of trim is an adoption registration (C6), with the
+   Researcher's review.
+3. **Model first:** MONODROMY's contention model (records 45–55) gives each count's predicted
+   best from the new kernel's measured traffic. Record the prediction beside the sweep, so the
+   model is scored each time.
+4. **Record** the verdict in the release's CHANGELOG section, changed or not.
+5. **If the release has already gone out** (0.5.5, the first case, came before this section), run
+   the sweep at once and ship any retune in a follow-up patch release.
 
 ## 6. After
 
