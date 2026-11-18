@@ -202,9 +202,10 @@
     6981094372,
     6981855359,
     6982461166,
-    6982863130
+    6982863130,
+    6983357476
   ],
-  "last_processed_comment_id": 6982863130,
+  "last_processed_comment_id": 6983357476,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2427,14 +2428,17 @@
     },
     {
       "trigger_comment_id": 6983357476,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/cutloop-blog-r2-6983357476/report.md",
       "source_commit": "642be1bc3efc7c702773e85e8a3a696b97a1821d",
       "report_commit": "5b81f5f68dac13a98e765ec7febffd40e08ae564",
       "baseline_commit": "da6f1ad0a9046b5b13a7b3666aeccbf833bfe8ab",
-      "disposition": "REVISE: repeat the marked LF spelling to block length; the revised figures, replayed values and responsive live controls checked."
+      "disposition": "REVISE: repeat the marked LF spelling to block length; the revised figures, replayed values and responsive live controls checked.",
+      "review_comment_id": 6983707304,
+      "review_pr": 145,
+      "publication_verification": "Verified GitHub destination, author and exact body. Pinned route and role-aware header/misrouting checks passed. Its coordinator-only sender check is inapplicable to this Researcher REVIEW."
     }
   ],
   "active_delegations": [],
