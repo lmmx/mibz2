@@ -1073,7 +1073,7 @@ Much of mibz2's research is about one stage of bzip2 decoding: turning each bloc
 
 **Why the loop is slow.** Each step needs the row that the step before it found, so a plain decoder makes up to 900,000 memory reads per block, each waiting on the last. Cells avoids most of them by working on runs, not rows. It comes in two forms. Eager Cells lays out all its records before it starts. Lazy Cells makes them as it goes, which suits many threads at once ([Lazy letters](<https://lmmx.github.io/mibz2/pr-preview/pr-570/blog/2026-11-16-lazy-letters/index.md>)).
 
-**The idea.** Choose some rows to keep, the primary row among them, and cut the arrow leaving each one. The marked loop falls into open paths. Each path starts at an *entrance*, a row whose incoming arrow was cut, and ends at a kept row. Where each path ends, and what it reads on the way, can be found from the uncut arrows alone. What the cut loses is which kept row's arrow went to which entrance, and that is rebuilt separately, from a stable sort of the kept rows' letters. Joining the two gives back the loop, and the text.
+**The idea.** Choose some rows to keep, the primary row among them, and cut the arrow leaving each one. The marked loop falls into open paths. Each path starts at an *entrance*, a row whose incoming arrow was cut, and ends at a kept row. Where each path ends, and what it reads on the way, can be found from the uncut arrows alone. What the cut loses is which kept row's arrow went to which entrance. That is rebuilt separately, from a stable sort of the kept rows' letters. Joining the two gives back the loop, and the text.
 
 **What we found:**
 
@@ -1151,7 +1151,7 @@ Restricting a stable sort to some rows gives those rows' own stable sort
 
 Conceptual, on the worked example. Left: the column in row order, with each kept row's index *j*. Middle: the same rows sorted stably by letter; a row's arrow (LF) points to its place here. Right: the kept letters, sorted on their own. The green entries appear in the same order in both sorted lists, so the short column's LF gives each kept row's entrance. Below: with rows 0, 4 and 6 kept, the entrances are rows 0, 1 and 3. The short column is again `a$a`, so *k* is again \[1, 0, 2\], but *k* = 2 now means row 3: *k* is a rank among the entrances, and the rank is all the sort can give.
 
-On its own, \\(\\mathrm{LF}\_v\\) has two loops here, 0 → 1 → 0 and 2 → 2. The short column is not a smaller BWT of the text; the open paths are what join its loops. Its stable sort is a counting sort, one pass over the kept letters. On the Wikidata block of section 6 it sorts 89,874 letters, against the block's 899,931 rows.
+On its own, \\(\\mathrm{LF}\_v\\) has two loops here, 0 → 1 → 0 and 2 → 2. The short column is not a smaller BWT of the text; the open paths are what join its loops. Its stable sort is a counting sort, one pass over the kept letters. On the test block of section 5 it sorts 89,874 letters, against the block's 899,931 rows.
 
 ## 3\. Stitching the loop back together
 
@@ -1161,15 +1161,15 @@ Each kept row now has a whole trip to the next kept row: the cut arrow, then an 
 
 On the way, the trip reads the kept row's own letter \\(v\[j\]\\), then the path's word.
 
-The three trips of `banana$`:
+The three trips of `banana$`. Each kept index \\(j\\) reaches entrance \\(k = \\mathrm{LF}\_v(j)\\) and then the next kept index \\(g(j)\\); the trip reads \\(v\[j\]\\) then the word \\(w\_k\\), in LF order, and the decoder writes it reversed:
 
-| \\(j\\) | Kept row | \\(v\[j\]\\) | Entrance \\(k = \\mathrm{LF}\_v(j)\\) | Word \\(w\_k\\) | Next kept index \\(g(j)\\) | Trip reads, in LF order | Written, reversed |
-| ---: | ---: | :---: | ---: | :--- | ---: | :--- | :--- |
-| 0 | 0 | `a` | 1 | `n` | 2 | `an` | `na` |
-| 1 | 4 | `$` | 0 | none | 0 | `$` | `$` |
-| 2 | 5 | `a` | 2 | `nab` | 1 | `anab` | `bana` |
+| \\(j\\) | Kept row | \\(v\[j\]\\) | \\(k\\) | Word \\(w\_k\\) | \\(g(j)\\) | Written, \\(\\mathrm{rev}(w\_k)\\,v\[j\]\\) |
+| ---: | ---: | :---: | ---: | :--- | ---: | :--- |
+| 0 | 0 | `a` | 1 | `n` | 2 | `na` |
+| 1 | 4 | `$` | 0 | none | 0 | `$` |
+| 2 | 5 | `a` | 2 | `nab` | 1 | `bana` |
 
-So \\(g = \[2, 0, 1\]\\): one loop through the three kept rows. LF reads the text backwards, so to write it forwards the decoder starts at the primary row's index, 1, and follows \\(g\\) backwards. Each step writes its trip in reverse, the last column of the table: \\(\\mathrm{rev}(w\_k)\\), then \\(v\[j\]\\). Going back from 1 to 2 writes `bana`, from 2 to 0 `na`, and from 0 to 1 `$`. Together that is `banana$`.
+So \\(g = \[2, 0, 1\]\\): one loop through the three kept rows. LF reads the text backwards, so to write it forwards the decoder starts at the primary row's index, 1, and follows \\(g\\) backwards. Each step writes its trip in reverse, as in the table's last column: \\(\\mathrm{rev}(w\_k)\\), then \\(v\[j\]\\). Going back from 1 to 2 writes `bana`, from 2 to 0 `na`, and from 0 to 1 `$`. Together that is `banana$`.
 
 Two jobs that never read each other's input, joined at the end
 
@@ -1230,7 +1230,7 @@ The two approaches side by side, as we read them:
 
 The construction is worth having only if the open paths can be solved many rows at a time. The runs make that possible. Keep the *narrow* runs, those of at most \\(t\\) rows (section 6 uses \\(t = 16\\)), and the primary row. The other rows then form \\(H\\) **wide strips**. A strip is a stretch of consecutive rows that LF shifts by one amount, each row reading the same byte. (It is a wide run, or half of one if the primary row splits it.)
 
-**Why keep the short runs?** The project keeps one 899,931-row Wikidata block as a fixed test case, *the frozen block*. Of its 51,184 runs, 68.6% are a single row long, yet they hold only 3.9% of the rows. At the other end, runs longer than 256 rows are about 1.0% of the runs, yet hold 73.9% of the rows. These shares come from the cut at \\(t = 256\\), which leaves 496 wide strips. One of them may be half of a run that the primary row splits, and runs of exactly 256 rows fall on the kept side. So the short runs make most of the boundaries, and the long runs hold most of the text. Left on the open paths, every short run would add edges where the paths split apart. Kept, they go to the stable sort, which wires them in one pass, and the open paths are left a few wide strips that hold most of the rows.
+**Why keep the short runs?** The project keeps one 899,931-row Wikidata block as a fixed test case, *the frozen block*. Of its 51,184 runs, 68.6% are a single row long, yet they hold only 3.9% of the rows. At the other end, runs longer than 256 rows are about 1.0% of the runs, yet hold 73.9% of the rows. These shares come from the cut at \\(t = 256\\), which leaves 496 wide strips. One of them may be half of a run that the primary row splits, and runs of exactly 256 rows fall on the kept side. So the short runs make most of the boundaries, and the long runs hold most of the text. Left on the open paths, every short run would add edges where the paths split apart. Kept, they go to the stable sort, which wires them in one pass. The open paths are left a few wide strips, which hold most of the rows.
 
 Most runs are narrow, but most rows are in wide runs
 
@@ -1274,11 +1274,11 @@ Counted, at *t* = 16, from the per-block records ([blocks.csv](<https://github.c
 
 ## 7\. What comes next?
 
-**Two ways to compute the open paths.** The *tracer* follows one path per bundle and measures each bundle's width as it goes. The *endpoint constructor* never follows a path. It puts \\(m\\) terminal points in front of a copy of the rows, joined to the entrances and exits by arrows with empty words, and then removes rows from the right-hand end. Removing a row joins the arrow into it and the arrow out of it into one arrow, with their words joined. The terminals are never removed, so when only they are left, each terminal's arrow is a whole path, with its word. That is \\(P\\).
+**Two ways to compute the open paths.** The *tracer* follows one path per bundle and measures each bundle's width as it goes. The *endpoint constructor* never follows a path. It puts \\(m\\) terminal points in front of a copy of the rows, and joins them to the entrances and exits by arrows with empty words. Then it removes rows from the right-hand end. Removing a row joins the arrow into it and the arrow out of it into one arrow, with their words joined. The terminals are never removed, so when only they are left, each terminal's arrow is a whole path, with its word. That is \\(P\\).
 
 The endpoint constructor removes rows from the right until only the paths' ends are left
 
-Conceptual, on banana$, with every row not kept treated as wide. The decoder removes a common stretch of rows from the end of two strips in one step, where the figure removes one row; the joining is the same. Removing rows 5, 4, 3, 2, 1 and 0 in turn leaves terminal 2's arrow reading `nab` to terminal 1, terminal 1's reading `n` to terminal 2, and terminal 0's empty arrow to itself: $P = \[0, 2, 1\]$.
+Conceptual, on banana$, with every row not kept treated as wide. The decoder removes a common stretch of rows from the end of two strips in one step, where the figure removes one row; the joining is the same. Removing rows 5, 4, 3, 2, 1 and 0 in turn leaves terminal 2's arrow reading `nab` to terminal 1, terminal 1's reading `n` to terminal 2, and terminal 0's empty arrow to itself: *P* = \[0, 2, 1\].
 
 The two constructors gave the same bundle counts and traced-letter counts on all 431 Wikidata blocks and the six prose blocks ([notes](<https://lmmx.github.io/mibz2/pr-preview/pr-570/blog/2026-11-18-cutting-the-loop-open-notes/#the-two-constructors-of-the-open-paths>)). The decoder below uses the endpoint constructor, and does the stable sort as it reads the runs, by queueing each kept row under its byte.
 
@@ -1292,7 +1292,7 @@ The two constructors gave the same bundle counts and traced-letter counts on all
 
 The open decoder beat lazy Cells at every worker count and lost to eager Cells at every one; on prose, on one thread, it took 1.455 times eager Cells' time. The figure below puts the wall times beside the two smaller measurements, each on its own scale: they have different units and cover different amounts of work.
 
-Slower than eager Cells, lighter on memory, and the table is where the time goes
+Slower than eager Cells, faster than lazy, lighter on memory: three measurements, three scales
 
 Measured on one four-CPU cloud virtual machine. Top: the paired wall-time ratios of the table above. Middle: the peak additional heap requested during one fresh decode of the frozen block. Bottom: the inverse transform alone, repeated on the frozen block, split into building the kept rows' table and writing the output; the switch cut is the harder cut described below. The three panels are not comparable with each other.
 
@@ -1342,7 +1342,7 @@ The two extremes are a shift by one row and an image disjoint from the strip. A 
 
 This is why neither the bundle count nor a small \\(H\\) bounds \\(U\\) by a multiple of \\(H\\). The same holds for the endpoint constructor's step count \\(K\\) below. It removes a common suffix one step at a time, without dividing, so a thick strip with a small displacement costs about \\(w/|d|\\) steps.
 
-**More kept rows can mean more to trace.** On the frozen block, \\(U\\) falls at every threshold swept, but that is not a rule. The column `110000` with primary 2 has \\(f = \[4, 5, 0, 1, 2, 3\]\\) and two loops, 2 → 0 → 4 → 2 and 1 → 5 → 3 → 1. At \\(t = 1\\) only the primary is kept. Its one open path, 0 → 4 → 2, traces two letters, and the other loop is never cut. At \\(t = 2\\) rows 0, 1 and 2 are kept. That cuts the second loop open, and the nonempty paths, 4 → 2 and 5 → 3 → 1, are one and two steps long, in separate bundles: \\(U\\) rises from 2 to 3.
+**More kept rows can mean more to trace.** On the frozen block, \\(U\\) falls at every threshold swept, but that is not a rule. The column `110000` with primary 2 has \\(f = \[4, 5, 0, 1, 2, 3\]\\) and two loops, 2 → 0 → 4 → 2 and 1 → 5 → 3 → 1. At \\(t = 1\\) only the primary is kept. Its one open path, 0 → 4 → 2, traces two letters, and the other loop is never cut. At \\(t = 2\\) rows 0, 1 and 2 are kept. That cuts the second loop open. The nonempty paths, 4 → 2 and 5 → 3 → 1, are one and two steps long and lie in separate bundles, so \\(U\\) rises from 2 to 3.
 
 ## The two constructors of the open paths
 

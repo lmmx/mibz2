@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=b3a485ed97bb">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8777f257f12b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=b3a485ed97bb">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8777f257f12b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=b3a485ed97bb">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8777f257f12b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=b3a485ed97bb">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8777f257f12b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=b3a485ed97bb">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8777f257f12b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=b3a485ed97bb">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8777f257f12b">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2694,7 +2694,7 @@
 <p>The bound limits the number of bundles, not their heights. Take a single wide strip of <span class="arithmatex">\(w\)</span> rows that LF moves by <span class="arithmatex">\(d \ne 0\)</span>. There are <span class="arithmatex">\(\min(w, |d|)\)</span> rows entering it. When <span class="arithmatex">\(0 &lt; |d| \le w\)</span>, each entering path advances by <span class="arithmatex">\(d\)</span> a step until it leaves the strip, so the paths' heights are <span class="arithmatex">\(\lfloor w/|d| \rfloor\)</span> and <span class="arithmatex">\(\lceil w/|d| \rceil\)</span>. These are the quotients of a Euclidean division of <span class="arithmatex">\(w\)</span> by <span class="arithmatex">\(|d|\)</span>.</p>
 <p>The two extremes are a shift by one row and an image disjoint from the strip. A shift by one gives one path of height <span class="arithmatex">\(w\)</span>: a bundle of width 1, so the traced letters <span class="arithmatex">\(U\)</span> equal the area <span class="arithmatex">\(A\)</span>. A disjoint image gives one bundle of width <span class="arithmatex">\(w\)</span> and height 1, so <span class="arithmatex">\(U = 1\)</span> for <span class="arithmatex">\(A = w\)</span>. Two twelve-row columns with the same run widths and byte counts, <code>220021021110</code> and <code>110010202221</code>, show both behaviours at threshold 2. In the first the strip's displacement is <span class="arithmatex">\(-3\)</span>, and three rows cross in parallel for one traced letter. In the second it is <span class="arithmatex">\(+1\)</span>, and one row takes three steps along the strip.</p>
 <p>This is why neither the bundle count nor a small <span class="arithmatex">\(H\)</span> bounds <span class="arithmatex">\(U\)</span> by a multiple of <span class="arithmatex">\(H\)</span>. The same holds for the endpoint constructor's step count <span class="arithmatex">\(K\)</span> below. It removes a common suffix one step at a time, without dividing, so a thick strip with a small displacement costs about <span class="arithmatex">\(w/|d|\)</span> steps.</p>
-<p><strong>More kept rows can mean more to trace.</strong> On the frozen block, <span class="arithmatex">\(U\)</span> falls at every threshold swept, but that is not a rule. The column <code>110000</code> with primary 2 has <span class="arithmatex">\(f = [4, 5, 0, 1, 2, 3]\)</span> and two loops, 2 → 0 → 4 → 2 and 1 → 5 → 3 → 1. At <span class="arithmatex">\(t = 1\)</span> only the primary is kept. Its one open path, 0 → 4 → 2, traces two letters, and the other loop is never cut. At <span class="arithmatex">\(t = 2\)</span> rows 0, 1 and 2 are kept. That cuts the second loop open, and the nonempty paths, 4 → 2 and 5 → 3 → 1, are one and two steps long, in separate bundles: <span class="arithmatex">\(U\)</span> rises from 2 to 3.</p>
+<p><strong>More kept rows can mean more to trace.</strong> On the frozen block, <span class="arithmatex">\(U\)</span> falls at every threshold swept, but that is not a rule. The column <code>110000</code> with primary 2 has <span class="arithmatex">\(f = [4, 5, 0, 1, 2, 3]\)</span> and two loops, 2 → 0 → 4 → 2 and 1 → 5 → 3 → 1. At <span class="arithmatex">\(t = 1\)</span> only the primary is kept. Its one open path, 0 → 4 → 2, traces two letters, and the other loop is never cut. At <span class="arithmatex">\(t = 2\)</span> rows 0, 1 and 2 are kept. That cuts the second loop open. The nonempty paths, 4 → 2 and 5 → 3 → 1, are one and two steps long and lie in separate bundles, so <span class="arithmatex">\(U\)</span> rises from 2 to 3.</p>
 <h2 id="the-two-constructors-of-the-open-paths">The two constructors of the open paths<a class="headerlink" href="#the-two-constructors-of-the-open-paths" title="Permanent link">&para;</a></h2>
 <p><strong>The tracer.</strong> Start at the leftmost entrance not yet covered, and follow its path through the wide strips. At each strip, and at the final interval of kept rows, note the distance from the path's row to that piece's right-hand edge. Count the starting entrance interval's edge as well. The smallest of these distances is the width of the bundle: every row in it follows the same strips to consecutive exits. Advance by that width and repeat. The tracer needs only the wide strips and the intervals between them.</p>
 <p><strong>The endpoint constructor.</strong> Build an auxiliary interval exchange on <span class="arithmatex">\(m + n\)</span> points: a prefix of <span class="arithmatex">\(m\)</span> terminal points, followed by a shifted copy of the <span class="arithmatex">\(n\)</span> rows. Its arrows are:</p>
@@ -2931,19 +2931,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=b3a485ed97bb"></script>
+        <script src="../../assets/javascripts/bench.js?v=8777f257f12b"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=b3a485ed97bb"></script>
+        <script src="../../assets/javascripts/couriers.js?v=8777f257f12b"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=b3a485ed97bb"></script>
+        <script src="../../assets/javascripts/blog.js?v=8777f257f12b"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=b3a485ed97bb"></script>
+        <script src="../../assets/javascripts/frontier.js?v=8777f257f12b"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=b3a485ed97bb"></script>
+        <script src="../../assets/javascripts/observatory.js?v=8777f257f12b"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=b3a485ed97bb"></script>
+        <script src="../../assets/javascripts/katex.js?v=8777f257f12b"></script>
       
     
   </body>
