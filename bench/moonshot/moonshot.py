@@ -873,7 +873,16 @@ def read_proxy(runs: dict, sample: dict, cal: dict, reps: int = 400, feedback: b
     held = [c for c in checks if c["role"] == "held-out"]
     flags = {}
     ref = cal.get("reference", {})
-    if "candidate" in metrics:
+    spec = f"{len(sample['full'])}+{len(sample['tiny'])}"
+    ref_spec = cal.get("reference_predictions", {}).get("sample")
+    if "candidate" in metrics and ref_spec and ref_spec != spec:
+        flags = {
+            w: [
+                f"the reference arms were read on {ref_spec} blocks, this score on {spec}: no range check"
+            ]
+            for w in metrics["candidate"]
+        }
+    elif "candidate" in metrics:
         for w, x in metrics["candidate"].items():
             refs = list(ref.get(w, {}).values())
             flags[w] = (
