@@ -2604,11 +2604,14 @@
     },
     {
       "trigger_comment_id": 6993593664,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/astra-a-6993593664/report.md",
-      "source_commit": "4ee40ab341b4fdb1681f8a585cde7cee21e076db"
+      "source_commit": "4ee40ab341b4fdb1681f8a585cde7cee21e076db",
+      "baseline_commit": "d5988ca28633275b90b4d9bc225852bfa09c116c",
+      "report_commit": "035ffb84327a26319f8591cc943e07b3d0b01cf1",
+      "disposition": "PROCEED as research record: 18 receipts reproduced, both candidates checked against Plain and libbzip2 on 233 blocks, and transfer/span model scopes verified."
     }
   ],
   "active_delegations": [],
