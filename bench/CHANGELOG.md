@@ -35,6 +35,22 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.8.2] - 2026-11-16
+
+### Changed
+
+- **Each arm is built with the toolchain its own commit selects** (`.github/workflows/bench.yml`).
+  The repository pins its Rust toolchain in `rust-toolchain.toml` (1.99.1). The base's worktree
+  sits inside the head's checkout, where rustup would find the head's toolchain file for a base
+  that has none, so the base's build now names its own: its file's channel, or the stable of the
+  day for a commit from before the pin (as every build was until then). The head's build reads
+  its own file. A change of toolchain is therefore measured as one, and `rust-toolchain.toml`
+  is among the paths that start the benchmark.
+- **The toolchains are recorded:** each arm's `rustc -vV` and `cargo -V`, in `toolchains.txt`
+  (kept with the results) and in a Toolchains section of the comment.
+- **No measured figure changes meaning,** so this is a patch version. When both commits pin the
+  same toolchain, both arms build with the same compiler, as they always did.
+
 ## [3.8.1] - 2026-11-10
 
 ### Fixed

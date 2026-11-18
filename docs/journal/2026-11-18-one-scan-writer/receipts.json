@@ -1,0 +1,340 @@
+{
+ "source": "src/cells_owned.rs",
+ "selections": [
+  "owned_writer",
+  "miri_cells_owned"
+ ],
+ "head": "cd7e5de2b7c61442f7a391436eee910a5ebb126a",
+ "baseline": {
+  "owned_writer": {
+   "exit": 0,
+   "ran": 6,
+   "passed": [
+    "cells::tests::miri_cells_owned_writer",
+    "cells::tests::owned_writer_nested_copies",
+    "cells::tests::owned_writer_periodic_witnesses",
+    "cells::tests::owned_writer_exhaustive_binary",
+    "cells::tests::owned_writer_exhaustive_ternary",
+    "cells::tests::owned_writer_long_columns"
+   ],
+   "results": [
+    "ok"
+   ]
+  },
+  "miri_cells_owned": {
+   "exit": 0,
+   "ran": 1,
+   "passed": [
+    "cells::tests::miri_cells_owned_writer"
+   ],
+   "results": [
+    "ok"
+   ]
+  }
+ },
+ "baseline_built": true,
+ "mutants": [
+  {
+   "name": "the survival certificate inverted",
+   "verdict": "KILLED",
+   "built": true,
+   "failing": [
+    "cells::tests::miri_cells_owned_writer",
+    "cells::tests::owned_writer_exhaustive_binary",
+    "cells::tests::owned_writer_exhaustive_ternary",
+    "cells::tests::owned_writer_long_columns",
+    "cells::tests::owned_writer_nested_copies",
+    "cells::tests::owned_writer_periodic_witnesses"
+   ],
+   "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [115, 101, 115, 115, 115, 108, 108, 101, 101, 105, 32, 100, 110, 32, 98, 105, 97, 101, 104, 98, 101, 101, 100, 101, 104, 32, 104, 32, 99, 98, 108, 100, 110, 99, 99, 107, 99, 99, 98, 99, 114, 114, 32, 101, 101, 117, 101, 101, 108, 108, 11",
+   "selections": {
+    "owned_writer": {
+     "exit": 101,
+     "ran": 6,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::owned_writer_long_columns",
+      "cells::tests::miri_cells_owned_writer",
+      "cells::tests::owned_writer_exhaustive_binary",
+      "cells::tests::owned_writer_exhaustive_ternary",
+      "cells::tests::owned_writer_periodic_witnesses",
+      "cells::tests::owned_writer_nested_copies"
+     ]
+    },
+    "miri_cells_owned": {
+     "exit": 101,
+     "ran": 1,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::miri_cells_owned_writer"
+     ]
+    }
+   }
+  },
+  {
+   "name": "no wrap on the marked spine",
+   "verdict": "KILLED",
+   "built": true,
+   "failing": [
+    "cells::tests::miri_cells_owned_writer",
+    "cells::tests::owned_writer_exhaustive_binary",
+    "cells::tests::owned_writer_exhaustive_ternary",
+    "cells::tests::owned_writer_long_columns",
+    "cells::tests::owned_writer_nested_copies",
+    "cells::tests::owned_writer_periodic_witnesses"
+   ],
+   "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [115, 101, 115, 115, 115, 108, 108, 101, 101, 105, 32, 100, 110, 32, 98, 105, 97, 101, 104, 98, 101, 101, 100, 101, 104, 32, 104, 32, 99, 98, 108, 100, 110, 99, 99, 107, 99, 99, 98, 99, 114, 114, 32, 101, 101, 117, 101, 101, 108, 108, 11",
+   "selections": {
+    "owned_writer": {
+     "exit": 101,
+     "ran": 6,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::owned_writer_long_columns",
+      "cells::tests::owned_writer_exhaustive_ternary",
+      "cells::tests::owned_writer_exhaustive_binary",
+      "cells::tests::owned_writer_periodic_witnesses",
+      "cells::tests::miri_cells_owned_writer",
+      "cells::tests::owned_writer_nested_copies"
+     ]
+    },
+    "miri_cells_owned": {
+     "exit": 101,
+     "ran": 1,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::miri_cells_owned_writer"
+     ]
+    }
+   }
+  },
+  {
+   "name": "the commands run last parent first",
+   "verdict": "KILLED",
+   "built": true,
+   "failing": [
+    "cells::tests::owned_writer_nested_copies"
+   ],
+   "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [46, 125, 125, 10, 125, 125, 59, 123, 59, 59, 110, 111, 123, 115, 101, 123, 123, 114, 41, 100, 59, 59, 123, 123, 123, 123, 59, 59, 123, 123, 59, 59, 59, 125, 59, 59, 59, 59, 59, 59, 123, 59, 125, 59, 59, 123, 123, 123, 123, 123, 59, 125,",
+   "selections": {
+    "owned_writer": {
+     "exit": 101,
+     "ran": 6,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::owned_writer_nested_copies"
+     ]
+    },
+    "miri_cells_owned": {
+     "exit": 0,
+     "ran": 1,
+     "results": [
+      "ok"
+     ],
+     "failed": []
+    }
+   }
+  },
+  {
+   "name": "no command stored",
+   "verdict": "KILLED",
+   "built": true,
+   "failing": [
+    "cells::tests::miri_cells_owned_writer",
+    "cells::tests::owned_writer_long_columns",
+    "cells::tests::owned_writer_nested_copies",
+    "cells::tests::owned_writer_periodic_witnesses"
+   ],
+   "panic": "src/cells_owned_test.rs:135:13:: assertion `left == right` failed: variant 0, row 0",
+   "selections": {
+    "owned_writer": {
+     "exit": 101,
+     "ran": 6,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::miri_cells_owned_writer",
+      "cells::tests::owned_writer_long_columns",
+      "cells::tests::owned_writer_nested_copies",
+      "cells::tests::owned_writer_periodic_witnesses"
+     ]
+    },
+    "miri_cells_owned": {
+     "exit": 101,
+     "ran": 1,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::miri_cells_owned_writer"
+     ]
+    }
+   }
+  },
+  {
+   "name": "an owned child's position not set",
+   "verdict": "KILLED",
+   "built": true,
+   "failing": [
+    "cells::tests::miri_cells_owned_writer",
+    "cells::tests::owned_writer_exhaustive_binary",
+    "cells::tests::owned_writer_exhaustive_ternary",
+    "cells::tests::owned_writer_long_columns",
+    "cells::tests::owned_writer_nested_copies",
+    "cells::tests::owned_writer_periodic_witnesses"
+   ],
+   "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [115, 101, 115, 115, 115, 108, 108, 101, 101, 105, 32, 100, 110, 32, 98, 105, 97, 101, 104, 98, 101, 101, 100, 101, 104, 32, 104, 32, 99, 98, 108, 100, 110, 99, 99, 107, 99, 99, 98, 99, 114, 114, 32, 101, 101, 117, 101, 101, 108, 108, 11",
+   "selections": {
+    "owned_writer": {
+     "exit": 101,
+     "ran": 6,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::owned_writer_long_columns",
+      "cells::tests::miri_cells_owned_writer",
+      "cells::tests::owned_writer_exhaustive_binary",
+      "cells::tests::owned_writer_exhaustive_ternary",
+      "cells::tests::owned_writer_periodic_witnesses",
+      "cells::tests::owned_writer_nested_copies"
+     ]
+    },
+    "miri_cells_owned": {
+     "exit": 101,
+     "ran": 1,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::miri_cells_owned_writer"
+     ]
+    }
+   }
+  },
+  {
+   "name": "the root one place off",
+   "verdict": "KILLED",
+   "built": true,
+   "failing": [
+    "cells::tests::miri_cells_owned_writer",
+    "cells::tests::owned_writer_exhaustive_binary",
+    "cells::tests::owned_writer_exhaustive_ternary",
+    "cells::tests::owned_writer_long_columns",
+    "cells::tests::owned_writer_nested_copies",
+    "cells::tests::owned_writer_periodic_witnesses"
+   ],
+   "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [1, 0], row 0",
+   "selections": {
+    "owned_writer": {
+     "exit": 101,
+     "ran": 6,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::owned_writer_exhaustive_binary",
+      "cells::tests::owned_writer_exhaustive_ternary",
+      "cells::tests::owned_writer_long_columns",
+      "cells::tests::miri_cells_owned_writer",
+      "cells::tests::owned_writer_periodic_witnesses",
+      "cells::tests::owned_writer_nested_copies"
+     ]
+    },
+    "miri_cells_owned": {
+     "exit": 101,
+     "ran": 1,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::miri_cells_owned_writer"
+     ]
+    }
+   }
+  },
+  {
+   "name": "the carried descriptors not updated",
+   "verdict": "KILLED",
+   "built": true,
+   "failing": [
+    "cells::tests::miri_cells_owned_writer",
+    "cells::tests::owned_writer_long_columns",
+    "cells::tests::owned_writer_nested_copies",
+    "cells::tests::owned_writer_periodic_witnesses"
+   ],
+   "panic": "src/cells_owned_test.rs:135:13:: assertion `left == right` failed: variant 0, row 0",
+   "selections": {
+    "owned_writer": {
+     "exit": 101,
+     "ran": 6,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::miri_cells_owned_writer",
+      "cells::tests::owned_writer_long_columns",
+      "cells::tests::owned_writer_periodic_witnesses",
+      "cells::tests::owned_writer_nested_copies"
+     ]
+    },
+    "miri_cells_owned": {
+     "exit": 101,
+     "ran": 1,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::miri_cells_owned_writer"
+     ]
+    }
+   }
+  },
+  {
+   "name": "the guard admits a shorter cycle",
+   "verdict": "KILLED",
+   "built": true,
+   "failing": [
+    "cells::tests::owned_writer_exhaustive_binary",
+    "cells::tests::owned_writer_exhaustive_ternary",
+    "cells::tests::owned_writer_long_columns",
+    "cells::tests::owned_writer_periodic_witnesses"
+   ],
+   "panic": "src/cells.rs:1270:9:: assertion `left == right` failed: column [0, 1, 0], row 1",
+   "selections": {
+    "owned_writer": {
+     "exit": 101,
+     "ran": 6,
+     "results": [
+      "FAILED"
+     ],
+     "failed": [
+      "cells::tests::owned_writer_exhaustive_binary",
+      "cells::tests::owned_writer_exhaustive_ternary",
+      "cells::tests::owned_writer_long_columns",
+      "cells::tests::owned_writer_periodic_witnesses"
+     ]
+    },
+    "miri_cells_owned": {
+     "exit": 0,
+     "ran": 1,
+     "results": [
+      "ok"
+     ],
+     "failed": []
+    }
+   }
+  }
+ ]
+}

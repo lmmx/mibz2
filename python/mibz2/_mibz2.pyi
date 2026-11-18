@@ -6,8 +6,10 @@ class DecodeError(ValueError):
 def decompress(data: bytes | bytearray, threads: int | None = None) -> bytes:
     """Decode a whole .bz2 (its streams one after another), every CRC checked.
 
-    It runs on every CPU this process may use, or on ``threads``: a block a worker,
-    or teams of 2 sharing each block on 6 or more physical cores.
+    It runs on every CPU this process may use, or on ``threads``, as the Rust crate's
+    ``Plan::for_threads`` spends them: a block a worker (past the physical cores on 8
+    to 10 of them, one a core; on the i9-10900K, one a core but one), or teams of 2
+    sharing each block (from 11 threads on 11 or more cores, or past the cores on 6 or 7).
 
     Raises
     ------

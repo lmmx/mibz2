@@ -697,6 +697,11 @@
   .md-typeset div.arithmatex .katex-display .tag { position: static; display: inline-block; margin-left: 1.2em; }
 }
 
+/* Maths in a table on a phone: the theme scrolls a wide table inside its wrapper, but KaTeX's
+   hidden MathML copy is absolutely positioned, so without a positioned wrapper it escapes the
+   scroll and widens the whole page. Positioning the wrapper keeps it inside. */
+.md-typeset .md-typeset__scrollwrap { position: relative; }
+
 /* Frames (the inverse-BWT post): one art-directed sequence of small static frames, each drawn
    on the same 230-unit width so every figure has the same scale. Typeset rails of letters, small
    indices, smooth connectors with small heads; green marks the one run being matched, ink the
@@ -867,3 +872,11 @@
 .bf-stepper .bf-btn[aria-pressed="true"], .bf-stepper .bf-btn.bf-step-main { border-color: var(--bf-ink); background: var(--bf-ink); color: var(--md-default-bg-color); }
 .bf-stepper .bf-btn:focus-visible { outline: 2px solid var(--md-accent-fg-color); outline-offset: 2px; }
 .bf-stepper .bf-arrow { stroke: var(--bf-muted); }
+
+/* .bf-l3fill: workers' footprints filling the shared L3, set by a slider (blog.js). The slider,
+   the live bar and its text appear only with JavaScript; without it the stepped summary shows. */
+.bf-l3fill [hidden] { display: none !important; }
+.md-typeset .bf-l3fill .bf-l3-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 0.2rem 0 0.6rem; font-size: 0.72rem; }
+.md-typeset .bf-l3fill .bf-l3-controls label { font-weight: 600; min-width: 5.5rem; }
+.md-typeset .bf-l3fill .bf-l3-controls input[type="range"] { flex: 1 1 10rem; min-width: 8rem; accent-color: var(--bf-green); }
+.md-typeset .bf-l3fill .bf-l3-text { min-height: 3.2em; margin: 0.5rem 0 0; padding: 0.5rem 0.7rem; border-left: 3px solid var(--bf-green); background: var(--bf-surface); color: var(--bf-ink); font-size: 0.72rem; line-height: 1.55; }

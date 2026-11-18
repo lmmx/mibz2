@@ -47,6 +47,7 @@ on:
       - "examples/windows.rs"
       - "examples/phases.rs"
       - "tests/common/**" # (the corpora's recipe)
+      - "rust-toolchain.toml" # (the compiler: a bump is measured)
       - "bench/**"
       - ".github/workflows/bench.yml"
   push:
@@ -59,6 +60,7 @@ on:
       - "examples/windows.rs"
       - "examples/phases.rs"
       - "tests/common/**"
+      - "rust-toolchain.toml"
       - "bench/**"
       - ".github/workflows/bench.yml"
   workflow_dispatch:
@@ -134,12 +136,17 @@ jobs:
       - name: lbzip2
         run: sudo apt-get install -y -qq lbzip2 > /dev/null && lbzip2 --version | head -1
 
-      - uses: dtolnay/rust-toolchain@stable
+      # Each arm is built with the toolchain its own commit selects: its rust-toolchain.toml's
+      # channel, or for a commit from before the pin (none), the stable of the day, as then.
+      # The pin is installed first, then stable as the default for those older commits
+      - uses: dtolnay/rust-toolchain@1.99.1
+      - uses: dtolnay/rust-toolchain@stable # not the pin: the toolchain of a commit with no rust-toolchain.toml
       - uses: Swatinem/rust-cache@v2
 
       # The release profile (Cargo.toml's: fat LTO, one codegen unit), as published
       - name: Build the head
         run: |
+          { echo "head: $(RUSTUP_AUTO_INSTALL=0 rustup show active-toolchain 2>&1)"; rustc -vV; cargo -V; } | tee toolchains.txt
           cargo build --release --example ab --example windows --example phases
           mkdir -p bin && cp target/release/examples/ab bin/ab && cp target/release/examples/phases bin/phases
 
@@ -175,6 +182,14 @@ jobs:
           test -f .base-src/examples/ab.rs || { echo "::error::the base $BASE_SHA has no examples/ab.rs"; exit 1; }
           # (and its examples/phases.rs, for the stage table, where it has one)
           phases=$(test -f .base-src/examples/phases.rs && echo "--example phases" || true)
+          # (the base's own toolchain, named: its worktree sits inside the head's checkout, whose
+          # rust-toolchain.toml rustup would otherwise find for a base that has none)
+          test ! -e .base-src/rust-toolchain || { echo "::error::the base has a rust-toolchain file without .toml, not read here"; exit 1; }
+          tc=$(sed -nE 's/^channel *= *"([^"]+)".*/\1/p' .base-src/rust-toolchain.toml 2>/dev/null || true)
+          tc=${tc:-stable}
+          rustup toolchain install "$tc" --profile minimal --no-self-update > /dev/null
+          export RUSTUP_TOOLCHAIN=$tc
+          { echo; echo "base: $tc"; rustc -vV; cargo -V; } | tee -a toolchains.txt
           (cd .base-src && CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo build --release --example ab $phases)
           mkdir -p base && cp target/release/examples/ab base/ab
           if [ -n "$phases" ]; then cp target/release/examples/phases base/phases; fi
@@ -250,6 +265,8 @@ jobs:
           python3 bench/report.py summary runs.jsonl --corpora corpora --mode "$MODE" --head "$HEAD_SHA" \
             ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --stages stages.jsonl --env env.json --kernels kernels.jsonl \
             --out result.json --md comment.md
+          # (each arm's compiler, as its build reported it)
+          { echo; echo "<details><summary>Toolchains</summary>"; echo; echo '```'; cat toolchains.txt; echo '```'; echo; echo "</details>"; } >> comment.md
           cat comment.md ab-summary.md >> "$GITHUB_STEP_SUMMARY"
           # (the resources section in the log too, where a dispatched run's figures can be read)
           sed -n '/^### Resources/,/^<\/details>/p' comment.md
@@ -274,6 +291,7 @@ jobs:
           path: |
             runs.jsonl
             env.json
+            toolchains.txt
             stages.jsonl
             kernels.jsonl
             result.json

@@ -64,6 +64,13 @@ struct Kernel {
     pos: Vec<u32>,
     #[cfg(test)]
     writer_reach: WriterReach,
+    /// (test only) every block written by `write_cells`, the one-scan writer's fallback, so
+    /// its own branches can be reached and counted; and how many blocks the one-scan writer
+    /// (`cells_owned.rs`) wrote by its own schedule
+    #[cfg(test)]
+    shipped_writer: bool,
+    #[cfg(test)]
+    owned_taken: usize,
     #[cfg(test)]
     materialization: Option<Vec<Materialization>>,
     /// (test only) room for `budget` fresh slots after each order's letters, the layout the
@@ -86,6 +93,14 @@ struct Materialization {
 include!("cells_original_test.rs");
 // Cells with lazy letters, the workers' kernel on many threads
 include!("cells_lazy.rs");
+// (a bench arm: lazy letters with 12-byte rules)
+include!("cells_w12.rs");
+// (research only: the grammar replay harness, with `grammar-replay`)
+#[cfg(feature = "grammar-replay")]
+include!("cells_replay.rs");
+// The one-scan writer (study 5, #579): the writer of full-period blocks, the shipped writer
+// (`write_cells`) its fallback; with `owned-writer` (research only), its comparison harness
+include!("cells_owned.rs");
 // (research only: the memory-lever experiment's staged kernel)
 #[cfg(feature = "memory-lever")]
 include!("cells_lever.rs");
@@ -118,7 +133,14 @@ impl<const F: bool> CellsKernel<F> {
         self.state.counts
     }
     fn attempt(&mut self, recs: &[u16], n: usize, p: u32, out: &mut Vec<u8>) -> bool {
-        let budget = if F { n } else { n / 25 * 4 + n % 25 * 4 / 25 };
+        let budget = if F {
+            n
+        } else if lazy_variant(self.state.kernel.variant) {
+            // (the lazy kernels' wider budget, `cells_lazy.rs`)
+            lazy_budget(n)
+        } else {
+            n / 25 * 4 + n % 25 * 4 / 25
+        };
         let result = self.state.kernel.try_invert(recs, n, p, budget, F, out);
         let counts = &mut self.state.counts;
         match result {
@@ -463,7 +485,7 @@ impl Kernel {
                 );
             }
             // (the lazy kernel's bottom slots' pool, in the output buffer)
-            if let (Some(out), true) = (out, self.bottom_laid && self.variant == LAZY) {
+            if let (Some(out), true) = (out, self.bottom_laid && lazy_variant(self.variant)) {
                 let end = self.lz.bend;
                 assert!(
                     out[end..end + GAP].iter().all(|&x| x == 0xA5),
@@ -490,6 +512,10 @@ impl Kernel {
         if budget > n || n >= 1 << 24 || recs.len() > n {
             return Err(Refusal::Invalid);
         }
+        // (the 12-byte rules' arm: a length fits 20 bits)
+        if self.variant == LAZY_W12 && n > C12_LEN as usize {
+            return Err(Refusal::Invalid);
+        }
         // the kernel's first stage and induction: the shipped ones, or the lazy letters'
         let result = self
             .first_stage(n, recs, p, budget, forced, out)
@@ -497,6 +523,9 @@ impl Kernel {
                 // (research only, `phase-counters`: the induction's scope)
                 #[cfg(feature = "phase-counters")]
                 let _scope = crate::phase::Scope::new(crate::phase::Phase::Induction);
+                // (research only, `grammar-replay`: the induction's words counted afresh)
+                #[cfg(feature = "grammar-replay")]
+                replay_start();
                 self.induce_variant(budget, out)
             });
         self.check_canaries(Some(out));
@@ -509,7 +538,28 @@ impl Kernel {
             // (research only, `phase-counters`: the writer's scope)
             #[cfg(feature = "phase-counters")]
             let _scope = crate::phase::Scope::new(crate::phase::Phase::Writer);
-            self.write_cells(word, len, n, out);
+            // (research only, `grammar-replay`: the block's grammar replayed by each writer)
+            #[cfg(feature = "grammar-replay")]
+            if self.variant == LAZY {
+                self.replay(word, len, n, out);
+            }
+            // (research only, `owned-writer`: the shipped and one-scan writers compared on the
+            // block's grammar)
+            #[cfg(feature = "owned-writer")]
+            if self.variant != LAZY_W12 {
+                self.compare_owned(word, len, n, out);
+            }
+            #[cfg(test)]
+            let shipped = self.shipped_writer;
+            #[cfg(not(test))]
+            let shipped = false;
+            if self.variant == LAZY_W12 {
+                self.write_w12(word, len, n, out);
+            } else if shipped {
+                self.write_cells(word, len, n, out);
+            } else {
+                self.write_owned(word, len, n, out);
+            }
         }
         self.check_canaries(None);
         Ok((cells, period))
@@ -1359,7 +1409,11 @@ mod tests {
     #[test]
     fn miri_cells_long_writer() {
         let column = long_writer_column();
-        let mut kernel = Kernel::default();
+        // (the shipped writer's own branches: the one-scan writer would take these blocks)
+        let mut kernel = Kernel {
+            shipped_writer: true,
+            ..Default::default()
+        };
         let mut out = Vec::new();
         for (ll, p, expected_cells, expected_period) in [
             ([vec![1; 16], vec![0; 15]].concat(), 16, 17, 31),
@@ -1421,6 +1475,8 @@ mod tests {
             (440, 8, 70)
         );
         let mut cells = Cells::default();
+        // (the shipped writer's own branches: the one-scan writer would take this block)
+        cells.state.kernel.shipped_writer = true;
         let want = oracle(&ll, 0);
         let mut out: Vec<_> = want.iter().map(|b| !b).collect();
         assert!(cells.invert_runs(&r, ll.len(), 0, &mut out, crate::Kernels::scalar()));
@@ -1671,5 +1727,6 @@ mod tests {
         );
     }
     include!("cells_selective_test.rs");
+    include!("cells_owned_test.rs");
     include!("cells_lazy_test.rs");
 }

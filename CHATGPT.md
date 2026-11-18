@@ -177,6 +177,35 @@ request; "process the swarm's pending requests" doesn't cover it.
    and change no Work task.
 5. Read it back and give Louis its URL.
 
+## Reading what the team has done, and whether a role is working
+
+Louis may ask what a role found, or whether it is still busy. Read the repository. Don't guess,
+and don't infer from silence in a chat. Everything below is readable through the GitHub
+connection.
+
+- **Messages and verdicts:** comments on PR #145, the team's channel.
+  - *Where they come from:* each starts with a `FROM:` / `TO:` / `RE:` / `TYPE:` header. A
+    role's result is a `TYPE: REVIEW` from it. The Coordinator's decisions are `TYPE: LOG`.
+  - *Assignments:* each is a `TYPE: CHECKPOINT` in the role's inbox (#160 Optimiser, #161
+    Guardian, #162 Researcher, #222 Observer, #314 Pathfinder, #346 MONODROMY, #363 Codex), or a
+    `TYPE: QUEUED` on #145 while the role is busy.
+- **Whether a role has picked up a task, and its full reports:** its state branch
+  (`docs/team/ROLES.md` lists them, such as `team-state/researcher`).
+  - *Its newest commit* says what it last did, for example "Receive review of …".
+  - *`state/cursor.json`* has an entry for each assignment, keyed by the CHECKPOINT's comment id.
+    `"status": "in progress"` means it is working on it; the entry gains the REVIEW's id when it
+    is done.
+  - *A role's full report* is at `state/reports/<topic>-<checkpoint id>/report.md` on that
+    branch. A REVIEW on #145 links it, pinned to a commit.
+- **MONODROMY's numbered records:** `docs/journal/monodromy/` on branch
+  `claude/sharp-meitner-cx0v78` (PR #497). Only records 1–22 are on `master`. Its REVIEWs on
+  #145 name each record and its commit.
+- **Research journals and decisions:** `docs/journal/` on `master`. Investigations, syntheses
+  and discussion records are there by date.
+
+A comment that exists isn't proof of a result. Read the REVIEW or the report it links, and
+report what it says, with its scope and caveats.
+
 ## Checking on an earlier request
 
 To answer "did the team do X?", find his request on #145, then the LOGs that cite its ID, then

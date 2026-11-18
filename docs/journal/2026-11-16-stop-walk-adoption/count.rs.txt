@@ -1,0 +1,128 @@
+use mibz2::bwt::{InverseBwt, LazyCells, StopLazyCells14, StopLazyCells15, StopLazyCells16};
+use mibz2::runs::{front, Runs};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::Kernels;
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[2]).unwrap();
+    let k = Kernels::detect();
+    match a[1].as_str() {
+        "letters" => {
+            let mut sc = Scanner::new(SliceSource(&data));
+            let mut syms = Vec::new();
+            let mut runs = Runs::default();
+            let mut lazy = LazyCells::default();
+            let (mut letters, mut all, mut blocks, mut adm) = (0u64, 0u64, 0, 0);
+            while let Ok(Event::Block { symbols, .. }) = sc.next(std::mem::take(&mut syms)) {
+                let n = front(&symbols, &mut runs, k).unwrap();
+                let before = lazy.counts().admitted;
+                let mut o = Vec::new();
+                lazy.invert_runs(&runs, n, symbols.orig_ptr, &mut o, k);
+                let (_, r) = lazy.pool();
+                all += r as u64;
+                if lazy.counts().admitted > before {
+                    letters += r as u64;
+                    adm += 1;
+                }
+                blocks += 1;
+                syms = symbols.syms;
+            }
+            println!("blocks {blocks} admitted {adm} letters(admitted) {letters} letters(all touched) {all}");
+        }
+        "census" => {
+            let mut sc = Scanner::new(SliceSource(&data));
+            let mut syms = Vec::new();
+            let mut runs = Runs::default();
+            let mut lazy = LazyCells::default();
+            let mut a = StopLazyCells15::default();
+            let mut i = 0;
+            while let Ok(Event::Block { symbols, .. }) = sc.next(std::mem::take(&mut syms)) {
+                let n = front(&symbols, &mut runs, k).unwrap();
+                let p = symbols.orig_ptr;
+                let (c0, s0) = (lazy.counts(), a.stops());
+                let mut o = Vec::new();
+                lazy.invert_runs(&runs, n, p, &mut o, k);
+                a.invert_runs(&runs, n, p, &mut o, k);
+                let (c1, s1) = (lazy.counts(), a.stops());
+                let (_, r) = lazy.pool();
+                println!("{i} n {n} r {r} adm {} cells {} budget {} walked {} r/n {:.3} S/r {:.3}", c1.admitted - c0.admitted, c1.cells - c0.cells, n * 4 / 25, s1.0 - s0.0, r as f64 / n as f64, (c1.cells - c0.cells) as f64 / r as f64);
+                i += 1;
+                syms = symbols.syms;
+            }
+        }
+        "time" => {
+            // every block of the file inverted REPS times by lazy and by each arm, interleaved;
+            // the fastest of the reps for each, summed over the blocks
+            let reps: usize = a.get(3).map_or(20, |v| v.parse().unwrap());
+            let mut sc = Scanner::new(SliceSource(&data));
+            let mut syms = Vec::new();
+            let mut runs = Runs::default();
+            let mut lazy = LazyCells::default();
+            let (mut a1, mut b1, mut c1) = (StopLazyCells14::default(), StopLazyCells15::default(), StopLazyCells16::default());
+            let mut best = [0f64; 4];
+            let mut o = Vec::new();
+            while let Ok(Event::Block { symbols, .. }) = sc.next(std::mem::take(&mut syms)) {
+                let n = front(&symbols, &mut runs, k).unwrap();
+                let p = symbols.orig_ptr;
+                let mut b = [f64::MAX; 4];
+                for _ in 0..reps {
+                    for (j, b) in b.iter_mut().enumerate() {
+                        let t = std::time::Instant::now();
+                        match j {
+                            0 => { let _ = lazy.invert_runs(&runs, n, p, &mut o, k); }
+                            1 => { let _ = a1.invert_runs(&runs, n, p, &mut o, k); }
+                            2 => { let _ = b1.invert_runs(&runs, n, p, &mut o, k); }
+                            _ => { let _ = c1.invert_runs(&runs, n, p, &mut o, k); }
+                        }
+                        *b = b.min(t.elapsed().as_secs_f64());
+                    }
+                }
+                for j in 0..4 { best[j] += b[j]; }
+                syms = symbols.syms;
+            }
+            println!("ms: lazy {:.1} b14 {:.1} b15 {:.1} b16 {:.1}", best[0] * 1e3, best[1] * 1e3, best[2] * 1e3, best[3] * 1e3);
+        }
+        "check" => {
+            let mut sc = Scanner::new(SliceSource(&data));
+            let mut syms = Vec::new();
+            let mut runs = Runs::default();
+            let mut lazy = LazyCells::default();
+            let (mut a, mut b, mut c) = (StopLazyCells14::default(), StopLazyCells15::default(), StopLazyCells16::default());
+            let mut blocks = 0;
+            let mut last = Vec::new();
+            while let Ok(Event::Block { symbols, .. }) = sc.next(std::mem::take(&mut syms)) {
+                let n = front(&symbols, &mut runs, k).unwrap();
+                let p = symbols.orig_ptr;
+                let mut want = Vec::new();
+                lazy.invert_runs(&runs, n, p, &mut want, k);
+                want.truncate(n);
+                for (beta, got) in [
+                    (14, { let mut o = last.clone(); a.invert_runs(&runs, n, p, &mut o, k); o }),
+                    (15, { let mut o = last.clone(); b.invert_runs(&runs, n, p, &mut o, k); o }),
+                    (16, { let mut o = last.clone(); c.invert_runs(&runs, n, p, &mut o, k); o }),
+                ] {
+                    assert!(got[..n] == want[..], "block {blocks} beta {beta}");
+                }
+                last = want;
+                blocks += 1;
+                syms = symbols.syms;
+            }
+            println!("cells lazy {} b14 {} b15 {} b16 {}", lazy.counts().cells, a.counts().cells, b.counts().cells, c.counts().cells);
+            println!("blocks {blocks} identical; walked, decoded again: 1.4 {:?} 1.5 {:?} 1.6 {:?}", a.stops(), b.stops(), c.stops());
+        }
+        v => {
+            let out = match v {
+                "lazy" => mibz2::decode_with::<LazyCells>(&data, k),
+                "b14" => mibz2::decode_with::<StopLazyCells14>(&data, k),
+                "b15" => mibz2::decode_with::<StopLazyCells15>(&data, k),
+                "b16" => mibz2::decode_with::<StopLazyCells16>(&data, k),
+                _ => panic!("kernel"),
+            }
+            .unwrap();
+            let h = out
+                .iter()
+                .fold(0u64, |h, &b| h.wrapping_mul(1099511628211) ^ b as u64);
+            println!("{v} {} {h:x}", out.len());
+        }
+    }
+}

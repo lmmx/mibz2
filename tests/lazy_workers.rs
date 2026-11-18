@@ -32,7 +32,9 @@ fn copies(len: usize, rate: u64) -> Vec<u8> {
 /// witnesses with a block whose CRC is wrong among them, and the first cut short.
 fn streams() -> Vec<Vec<u8>> {
     let admitted = compress(&copies(5_000_000, 250), 9);
-    let over_budget = compress(&copies(1_500_000, 100), 9);
+    // (more changes than the lazy kernel's budget of 0.32 n cells allows: at 1 in 100 its
+    // blocks now fit it, `tests/lazy_admission.rs`)
+    let over_budget = compress(&copies(1_500_000, 60), 9);
     let witnesses = cells::witnesses().concat();
     let mut bad = Spec::of([vec![1; 51], vec![0; 50]].concat(), 0);
     bad.crc = Some(123);

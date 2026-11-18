@@ -241,6 +241,12 @@ with one command whenever suits him. Nothing about a queued run is left to decid
   - for an adoption registration, a PROCEED (RULES C6; a stand-in's under §8 counts). For a
     diagnostic, the Coordinator's own check of the frozen recipe;
   - the `ready/<recipe>` tag points at exactly that commit, set by the Run signal workflow.
+    `ready` moves a tag that is already set, as a repeat recipe's is (#592), and the run
+    fails unless the tag on origin is then at that commit. The Coordinator checks the tag
+    itself (`git ls-remote --tags origin ready/<recipe>`) before saying the run is queued:
+    a dispatch is not a tag. (On 18 November 2026 v0.5.6's release scaling and crossover
+    sat unrun for 12 minutes: `ready` refused their old tags from 0.5.5, and the runner had
+    nothing new to run.)
 
   It also posts a LOG on #145 naming the entry, the commit and the review.
 - **Running it:** Louis runs `just workstation-queue` (`bench/run-queue.sh`). It reads the queue
@@ -330,6 +336,16 @@ So, for any arm built from a model, whoever proposed it:
    the Optimiser and the Researcher of §11.
 3. **The author gets one reopening round.** It returns a construction with its own count, or
    says none exists. A reopened arm is built and gated like a new one.
+4. **A second miss closes the line** (Louis, 16 November 2026). If the reopened arm also
+   misses its model, the model is shown to be poorly calibrated for that line. The line
+   closes: no rescue of the rescue. What it taught goes into a calibration note, the author's
+   record of each predicted term against what was measured. The author reads that note before
+   proposing again. A rescue can bring insight, but a campaign is not built out of rescues.
+5. **Each role keeps to its lane.** The author calibrates against the builder's counts. It
+   does not build prototypes to check itself: that is the builder's work (OWNERSHIP.md §4a).
+6. **Relayed proposals are inputs, not assignments.** An outside chat's suggestions, such as
+   a ChatGPT relay, go to the exploratory lane to judge on its own terms. They are not routed
+   straight to the builder as a queue of items.
 
 **Lines §11 and §11a apply to now:** stop-and-walk (#485, HANDOFF 6916839849); run-fed construction of the navigation table from compressed
 runs (the posts of 8 November, #266, #269, the run-fed leader).

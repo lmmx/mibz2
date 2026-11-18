@@ -6,4 +6,15 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-stop-walk              perf/lazy-stop-walk       Stop-and-walk (beta 1.5) against shipped lazy on production's plan, 8/9/10/12/20 threads, wikidata x4 + text guard (#493; rule REVIEW 6921622210, PROCEED LOG 6922045659)
+bench-miss-cost              bench/miss-cost           contention counters at 10 threads, W = 10/9/8/7, THP arm and load-latency sampling (#529; MONODROMY record 47 frozen before the data)
+bench-release-scaling        master                    0.5.6 against 0.5.5 on the i9 (RELEASING §5), at the v0.5.6 tag commit 530ed404
+bench-crossover              master                    The team threshold after #581's one-scan writer (RELEASING §5a), at v0.5.6's commit 530ed404
+bench-eager-trim             bench/eager-trim          eager against lazy at the trimmed counts: 6, 4 and 10 threads (#533; MONODROMY record 49 frozen before the data; docs/journal/2026-11-17-eager-trim.md)
+bench-fused                  perf/fused-finish         the CRC folded into RLE1 (#535): 10 threads (both arms 10/40, pinned) and 12 threads (7/28); adoption registration docs/journal/2026-11-17-fused-finish-registration.md, Researcher PROCEED 6947023492
+bench-knee                   bench/knee                diagnostic of the 8–20 thread plateau: DRAM bytes against a measured ceiling, worker idle by cause, fixed costs (#541; docs/journal/2026-11-17-knee.md frozen before the data; decides nothing in production)
+bench-unpinned               bench/unpinned            the trims unpinned on all 20 CPUs at 10, 8, 6 and 4 threads (#539; docs/journal/2026-11-17-unpinned.md, Researcher PROCEED 6948628221 after its correction; no repeat on a non-ADOPTS)
+bench-imc-ten                bench/imc-ten             lazy 10/40 against 7/28 unpinned, with IMC and L3-miss latency (#554; MONODROMY record 52 frozen before the data, REVIEW 6973478826; diagnostic, decides nothing in production)
+bench-admit                  bench/admit               WideLazyCells admission (density < 0.15, budget 0.32n) against master f71de528, unpinned at 8 and 10 threads (#556; adoption registration docs/journal/2026-11-18-admit-registration.md, Researcher REVIEW 6974376850 targeted correction applied)
+bench-recalibrate            bench/recalibrate         worker-count recalibration after wide admission (#562; RELEASING §5c; adoption registration docs/journal/2026-11-18-recalibration-registration.md, Researcher REVIEW 6978182129 targeted correction applied at cee99296, Coordinator LOG 6978254300; MONODROMY record 56 frozen before the data)
+bench-sustain                bench/sustain             worker counts under sustained (clamped) load (#576; adoption registration docs/journal/2026-11-18-sustain-registration.md, Researcher REVIEW 6985154079 targeted correction applied at 3b8aa41d; MONODROMY record 64 frozen before the data)
+bench-open-return            bench/open-return         the open kernel (open, opend) against 0.5.6's plan, unpinned at 10 and 8 threads (#590; C6 registration docs/journal/2026-11-18-open-return-comparison-registration.md frozen at 8045ce81 after the Researcher's targeted correction 6990885206; a diagnostic: an ADOPTS opens only a B5 study)

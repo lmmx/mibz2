@@ -49,20 +49,32 @@ pub fn check(data: &[u8], k: Kernels) -> (CellsCounts, CellsCounts) {
     assert_eq!((&got, &got_err), (&want, &err));
     let (got, got_err, forced) = decode::<ForcedCells>(data, k);
     assert_eq!((&got, &got_err), (&want, &err));
-    // Cells with lazy letters (the workers' kernel on many threads), under Cells' admission
-    // and under the forced route: the same partial output and exact error, and the routes
-    // Cells and ForcedCells take
+    // Cells with lazy letters (the workers' kernel on many threads), under its own wider
+    // admission and under the forced route: the same partial output and exact error. Its own
+    // admission (to r/n 0.15 with 0.32 n cells, `cells_lazy.rs`) takes every block Cells takes
+    // and maybe more, the same blocks in all; forced, the routes ForcedCells takes
     let same = |a: CellsCounts, b: CellsCounts| {
         assert_eq!(
             (a.admitted, a.density, a.sparse, a.floor, a.budget, a.invalid, a.cells),
             (b.admitted, b.density, b.sparse, b.floor, b.budget, b.invalid, b.cells)
         )
     };
+    let wider = |a: CellsCounts, b: CellsCounts| {
+        let blocks =
+            |c: CellsCounts| c.admitted + c.density + c.sparse + c.floor + c.budget + c.invalid;
+        assert!(
+            a.admitted >= b.admitted
+                && a.cells >= b.cells
+                && a.invalid == b.invalid
+                && blocks(a) == blocks(b),
+            "lazy letters {a:?}, Cells {b:?}"
+        )
+    };
     {
         use mibz2::bwt::{ForcedLazyCells, LazyCells};
         let (g, e, s) = decode::<LazyCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "lazy letters");
-        same(s.cells_counts(), prod.cells_counts());
+        wider(s.cells_counts(), prod.cells_counts());
         let (g, e, s) = decode::<ForcedLazyCells>(data, k);
         assert_eq!((&g, &e), (&want, &err), "lazy letters, forced");
         same(s.cells_counts(), forced.cells_counts());

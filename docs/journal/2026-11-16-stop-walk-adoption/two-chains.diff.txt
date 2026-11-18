@@ -1,0 +1,361 @@
+diff --git a/src/cells_stop.rs b/src/cells_stop.rs
+index 741a204f4..a4f74eaaf 100644
+--- a/src/cells_stop.rs
++++ b/src/cells_stop.rs
+@@ -125,6 +125,13 @@ struct Walk {
+     rank: Vec<Rank>,
+     recs: Vec<Rec>,
+     dls: Vec<i32>,
++    /// the up chain's: the bitmap of the letters' bottom intervals' first points over
++    /// [0, m), and by bottom rank each letter's top-order index and offset (T⁻¹ y = y − dl)
++    brank: Vec<Rank>,
++    bup: Vec<(u32, i32)>,
++    /// the two chains' points' letters, in each chain's order (`walk_body`'s pass A)
++    downs: Vec<u32>,
++    ups: Vec<u32>,
+     words: Vec<u64>,
+     /// the words being expanded past the frame's depth: (word, end)
+     stack: Vec<(u64, usize)>,
+@@ -140,6 +147,19 @@ impl Walk {
+         let r = unsafe { *self.rank.get_unchecked((x >> 6) as usize) };
+         r.before.wrapping_add((r.bits & (u64::MAX >> (63 - (x & 63)))).count_ones()) as usize
+     }
++    /// The bottom rank of y (y < m): which letter's bottom interval holds it, in bottom order
++    #[inline(always)]
++    fn bottom(&self, y: u32) -> usize {
++        // SAFETY: y < m, and `brank` covers [0, m) (`tables`)
++        let r = unsafe { *self.brank.get_unchecked((y >> 6) as usize) };
++        r.before.wrapping_add((r.bits & (u64::MAX >> (63 - (y & 63)))).count_ones()) as usize
++    }
++}
++
++/// A point's rank in a rank bitmap (`Walk::letter`'s, checked)
++fn rank_of(rank: &[Rank], x: u32) -> usize {
++    let r = rank[(x >> 6) as usize];
++    r.before.wrapping_add((r.bits & (u64::MAX >> (63 - (x & 63)))).count_ones()) as usize
+ }
+ 
+ impl Kernel {
+@@ -337,7 +357,7 @@ impl Kernel {
+             // and the buffer's padding below the arena), a rule from where the walk first
+             // writes it
+             let (off, len) = ((word >> 32) as usize, word as u32 & !MARK);
+-            let src = if off < lay.rules { base as usize + off + len as usize } else { 0 };
++            let src = if off < lay.rules { base as usize + off } else { 0 };
+             // SAFETY: i < nl ≤ rr
+             unsafe {
+                 *w.recs.get_unchecked_mut(i) = (src, len);
+@@ -354,6 +374,35 @@ impl Kernel {
+             r.before = before.wrapping_sub(1);
+             before += r.bits.count_ones();
+         }
++        // the bottom order's rank, for the up chain: each letter's bottom interval's first
++        // point, and by its rank the letter and its offset. The bottom intervals tile
++        // [0, m) as the top ones do, so their first points are distinct, nl of them
++        w.brank.clear();
++        w.brank.resize(nw, Rank::default());
++        let mut x = 0usize;
++        for (i, &(_, lam, _)) in w.tops[..nl].iter().rev().enumerate() {
++            let jb = (x as i64 + w.dls[i] as i64) as usize;
++            w.brank[jb / 64].bits |= 1 << (jb % 64);
++            x += lam as usize;
++        }
++        let mut before = 0u32;
++        for r in w.brank.iter_mut() {
++            r.before = before.wrapping_sub(1);
++            before += r.bits.count_ones();
++        }
++        if before as usize != nl {
++            return Err(());
++        }
++        if w.bup.len() < nl {
++            w.bup.resize(nl, (0, 0));
++        }
++        let mut x = 0usize;
++        for (i, &(_, lam, _)) in w.tops[..nl].iter().rev().enumerate() {
++            let jb = (x as i64 + w.dls[i] as i64) as u32;
++            let b = rank_of(&w.brank, jb);
++            w.bup[b] = (i as u32, w.dls[i]);
++            x += lam as usize;
++        }
+         mu.map(|(i, x)| (i, x, m)).ok_or(())
+     }
+ 
+@@ -406,84 +455,237 @@ unsafe fn walk_popcnt(buf: &[u8], rules: usize, w: &mut Walk, xmu: usize, p: usi
+ 
+ /// (the walk's body, `walk`)
+ ///
+-/// Places are counted on a line that goes once round: v from p + n down to p, the place
+-/// being v − n while v > n (the first lap, down to place 0) and v after (the second, from
+-/// place n down to p). A word is written with 16-byte stores where it lies at least 16 bytes
+-/// above its lap's floor (0 in the first lap, p in the second), else exactly.
++/// **Pass A, two chains,** both from x_μ, whose word ends at place `p` (MONODROMY's HANDOFF
++/// 6922450227), recording each point's letter and writing nothing:
++/// - *down,* x ← T x;
++/// - *up,* y ← T⁻¹ y, by the bottom rank.
++///
++/// They are independent dependency chains, so the CPU runs them side by side, a step of each a
++/// turn: on Wikidata at β = 1.5 the two take 58% of one's time. They meet when the down
++/// chain's next point is the last the up chain reached: after m points in all, if the stopped
++/// exchange is one cycle.
++///
++/// **Pass B, the writing,** with no chain: the down chain's words in its order, each ending at
++/// its place, which falls by its length from p + n; then the up chain's in its order, each
++/// starting at its place, which rises by its length from p. Places are counted on a line that
++/// goes once round, c from p to p + n, the place being c − n past n. The two meet at M.
++/// - *A down word's stores* reach below it, by `COPY` at most, onto places only later words
++///   take: the down chain's next, then the up chain's, written after.
++/// - *An up word's stores* reach above it onto the up chain's next, or past M (the down chain's,
++///   written already) only where M is `COPY` or more away.
++/// - *Nothing reaches across place 0* but into the output's slack past n.
++/// - *Elsewhere a word is written exactly.*
++///
++/// Each word is expanded where it is first written, and copied from there after.
+ #[inline(always)]
+ #[allow(clippy::too_many_arguments)]
+ fn walk_body(buf: &[u8], rules: usize, w: &mut Walk, xmu: usize, p: usize, n: usize, m: usize, out: &mut [u8]) -> Result<(), ()> {
+     if p >= n || xmu >= m || out.len() < n + 32 || w.recs.is_empty() {
+         return Err(());
+     }
++    // pass A
++    let (mut downs, mut ups) = (std::mem::take(&mut w.downs), std::mem::take(&mut w.ups));
++    downs.clear();
++    ups.clear();
++    if downs.capacity() < m {
++        downs.reserve(m);
++    }
++    if ups.capacity() < m {
++        ups.reserve(m);
++    }
++    let met = {
++        let dls = w.dls.as_ptr();
++        let bup = w.bup.as_ptr();
++        let (dp, up) = (downs.as_mut_ptr(), ups.as_mut_ptr());
++        let (mut x, mut y) = (xmu as u32, xmu as u32);
++        let (mut nd, mut nu) = (0usize, 0usize);
++        // SAFETY: a letter and a bottom rank are of the tables (`letter`, `bottom`); `downs`
++        // and `ups` have room for m points each, and the chains stop at m in all
++        unsafe {
++            let i = w.letter(x);
++            *dp.add(nd) = i as u32;
++            nd += 1;
++            x = (x as i32 + *dls.add(i)) as u32;
++            while x != y && nd + nu < m {
++                let b = w.bottom(y);
++                let (j, dl) = *bup.add(b);
++                *up.add(nu) = j;
++                nu += 1;
++                y = (y as i32 - dl) as u32;
++                if x == y || nd + nu == m {
++                    break;
++                }
++                let i = w.letter(x);
++                *dp.add(nd) = i as u32;
++                nd += 1;
++                x = (x as i32 + *dls.add(i)) as u32;
++            }
++            downs.set_len(nd);
++            ups.set_len(nu);
++        }
++        x == y && nd + nu == m
++    };
++    let r = if met { write_walk(buf, rules, w, &downs, &ups, p, n, out) } else { Err(()) };
++    w.downs = downs;
++    w.ups = ups;
++    r
++}
++
++/// Pass B (`walk_body`): the down chain's words, then the up chain's
++#[allow(clippy::too_many_arguments)]
++fn write_walk(buf: &[u8], rules: usize, w: &mut Walk, downs: &[u32], ups: &[u32], p: usize, n: usize, out: &mut [u8]) -> Result<(), ()> {
+     let base = buf.as_ptr();
+     let o = out.as_mut_ptr();
+     let recs = w.recs.as_mut_ptr();
+-    let dls = w.dls.as_ptr();
++    let nl = w.recs.len();
+     let mut stack = std::mem::take(&mut w.stack);
+     let mut tmp = std::mem::take(&mut w.tmp);
+     let mut st: Frame = [(0, 0); DEEP];
++    // where the chains meet, on the line
++    let mut bytes = 0usize;
++    for &i in downs.iter().chain(ups) {
++        if i as usize >= nl {
++            return Err(());
++        }
++        // SAFETY: just checked
++        bytes += unsafe { (*recs.add(i as usize)).1 } as usize;
++    }
++    if bytes != n {
++        return Err(());
++    }
++    let down_bytes: usize = downs.iter().map(|&i| unsafe { (*recs.add(i as usize)).1 } as usize).sum();
++    let meet = p + n - down_bytes;
++    // the down chain's words, from p + n down to the meeting point
+     let mut v = p + n;
+-    // `COPY` above the lap's floor on the line, and the line's offset from the place
+-    let (mut lim, mut lap) = if v > n { (n + COPY, n) } else { (p + COPY, 0) };
+-    let mut x = xmu as u32;
+-    let mut points = 0usize;
+-    // (T sends [0, m) into itself: `tables` checked each letter's two intervals lie in it)
+-    let r = loop {
+-        let i = w.letter(x);
+-        // SAFETY: i is a letter of the tables (`letter`)
+-        let (rec, dl) = unsafe { (recs.add(i), *dls.add(i)) };
++    for &i in downs {
++        let i = i as usize;
++        // SAFETY: i < nl, checked above
++        let rec = unsafe { recs.add(i) };
+         let (src, len) = unsafe { *rec };
+         let len = len as usize;
+-        if v >= lim + len {
+-            let at = v - lap;
++        let at = if v > n { v - n } else { v };
++        // the floor: place 0 in the first lap; in the second, p, below which the first
++        // lap's words lie, written already
++        let floor = if v > n { n } else { p };
++        if v >= floor + len + COPY {
+             if src != 0 {
+-                // SAFETY: the word's bytes end at `src`, with `COPY` readable bytes before it
+-                // and its whole length: a word kept as bytes in the arena (the buffer's
+-                // padding lies below it), else where the walk first wrote it, at least
+-                // `COPY` + len above its lap's floor and above this point's word. The stores
+-                // lie in [at − max(len, COPY) − 15, at), inside [0, n] above the floor. The
+-                // first `COPY` bytes are read before any is stored
++                // SAFETY: the word's bytes start at `src` (the arena, with the buffer's
++                // padding below it; or its first place, written before), and the `COPY` bytes
++                // before their end are readable; the stores lie in [at − max(len, COPY) − 15,
++                // at), above place 0, on places later words take
+                 unsafe {
+-                    let s = src as *const u8;
+-                    let (a0, a1) = (ld16(s.sub(16)), ld16(s.sub(32)));
++                    let e = (src as *const u8).add(len);
++                    let (a0, a1) = (ld16(e.sub(16)), ld16(e.sub(32)));
+                     st16(o.add(at - 16), a0);
+                     st16(o.add(at - 32), a1);
+                     let mut k = COPY;
+                     while k < len {
+                         k += 16;
+-                        copy16(o.add(at - k), s.sub(k));
++                        copy16(o.add(at - k), e.sub(k));
+                     }
+                 }
+             } else {
+                 // SAFETY: as above, and a rule's factors are the kernel's words
+                 unsafe {
+-                    (*rec).0 = o.add(at) as usize;
++                    (*rec).0 = o.add(at - len) as usize;
+                     emit(base, rules, *w.words.get_unchecked(i), at, o, &mut st, &mut stack);
+                 }
+             }
+         } else {
+-            if v < p + len {
+-                break Err(());
+-            }
+-            let at = v - lap;
+-            // SAFETY: i is a letter of the tables
++            // SAFETY: i < nl
+             let word = unsafe { *w.words.get_unchecked(i) };
+             emit_exact(buf, rules, word, len, at, n, out, &mut st, &mut stack, &mut tmp);
+-            if v - len <= n {
+-                (lim, lap) = (p + COPY, 0);
+-            }
+         }
+         v -= len;
+-        x = (x as i32 + dl) as u32;
+-        points += 1;
+-        if x as usize == xmu {
+-            break if points == m && v == p { Ok(()) } else { Err(()) };
++    }
++    // the up chain's words, from p up to the meeting point
++    let mut u = p;
++    for &i in ups {
++        let i = i as usize;
++        // SAFETY: i < nl, checked above
++        let rec = unsafe { recs.add(i) };
++        let (src, len) = unsafe { *rec };
++        let len = len as usize;
++        let us = if u >= n { u - n } else { u };
++        if u + len + COPY <= meet && (u >= n || u + len <= n) {
++            if src != 0 {
++                // SAFETY: the word's bytes start at `src`, with `COPY` readable bytes and its
++                // whole length after it (the arena, then the rules; or its first place,
++                // below the output's slack); the stores lie in [us, us + max(len, COPY) + 15),
++                // on places later words take or in the output's slack
++                unsafe {
++                    let s = src as *const u8;
++                    let (a0, a1) = (ld16(s), ld16(s.add(16)));
++                    st16(o.add(us), a0);
++                    st16(o.add(us + 16), a1);
++                    let mut k = COPY;
++                    while k < len {
++                        copy16(o.add(us + k), s.add(k));
++                        k += 16;
++                    }
++                }
++            } else {
++                // SAFETY: as above, and a rule's factors are the kernel's words
++                unsafe {
++                    (*rec).0 = o.add(us) as usize;
++                    emit_fwd(base, rules, *w.words.get_unchecked(i), us, o, &mut st, &mut stack);
++                }
++            }
++        } else {
++            // SAFETY: i < nl
++            let word = unsafe { *w.words.get_unchecked(i) };
++            let end = if u + len > n { u + len - n } else { u + len };
++            emit_exact(buf, rules, word, len, end, n, out, &mut st, &mut stack, &mut tmp);
+         }
+-    };
++        u += len;
++    }
+     w.stack = stack;
+     w.tmp = tmp;
+-    r
++    if u == meet { Ok(()) } else { Err(()) }
++}
++
++/// A word (`h`: offset << 32 | length with the mark) written starting at `at` in `o`, left to
++/// right: a word kept as bytes by one 16-byte store starting there, a rule by its factors. The
++/// stores may reach 15 bytes past the word (`emit`'s mirror, for the up chain).
++///
++/// SAFETY: [at, at + |word| + 16) lies in `o`; every word's bytes or rule lie in the buffer at
++/// `base` (words kept as bytes below `rules`, with 16 readable bytes from each one's start).
++#[inline(never)]
++unsafe fn emit_fwd(base: *const u8, rules: usize, h: u64, at: usize, o: *mut u8, st: &mut Frame, stack: &mut Vec<(u64, usize)>) {
++    let mut sp = 0usize;
++    let (mut h, mut at) = (h, at);
++    loop {
++        let off = (h >> 32) as usize;
++        if off < rules {
++            // SAFETY: the caller's
++            unsafe { copy16(o.add(at), base.add(off)) };
++            if sp > 0 {
++                sp -= 1;
++                // SAFETY: sp < DEEP
++                (h, at) = unsafe { *st.get_unchecked(sp) };
++            } else if let Some(v) = stack.pop() {
++                (h, at) = v;
++            } else {
++                return;
++            }
++        } else {
++            // SAFETY: a rule is 16 bytes at its offset
++            let (a, b) = unsafe { (rd64(base, off), rd64(base, off + 8)) };
++            let la = (a as u32 & !MARK) as usize;
++            // A now (the left factor), B pending
++            if sp < DEEP {
++                // SAFETY: sp < DEEP
++                unsafe { *st.get_unchecked_mut(sp) = (b, at + la) };
++                sp += 1;
++            } else {
++                stack.extend_from_slice(&st[..]);
++                sp = 0;
++                st[sp] = (b, at + la);
++                sp += 1;
++            }
++            h = a;
++        }
++    }
+ }
+ 
+ /// The bytes each point copies whatever its word's length (a word longer copies the rest 16

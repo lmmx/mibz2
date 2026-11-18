@@ -35,7 +35,23 @@ A performance change is **accepted** on its CI paired bench when all of these ho
    - **Up to 5% slower** (point estimate, wall time) at any thread count: accepted, and listed in the PR.
    - **More than 5%, up to 10%:** accepted only if the PR shows the primary gain at that thread count is at least twice the loss. It must also say why the workload matters less.
    - **More than 10%:** needs Louis's sign-off. The Coordinator may defer or abandon such a change without asking.
-4. **Memory:** peak RSS grows by no more than 10% on any corpus, or the PR justifies the growth for the target machine.
+4. **Memory:** peak RSS grows by no more than 10% on any corpus, or the growth is traded for speed:
+   - **Accepted by rule:** more than 10% is accepted when all of these hold:
+     - a workstation run on the target machine (C5, paired) shows a primary wall-time gain of at
+       least 5%, beyond noise, on the corpus and at the thread counts where memory grows;
+     - the growth, in percent, is at most twice that gain at each of those thread counts;
+     - the absolute growth stays small for an ordinary laptop: at most 64 MB of peak RSS per
+       process;
+     - no other corpus grows by more than 10%.
+
+     The PR states the trade: the gain, the growth in percent and in MB, and the run that measured
+     both.
+   - **Otherwise:** growth beyond 10% needs the PR's own justification for the target machine, and
+     the Coordinator weighs it, as before.
+
+   (Louis, 18 November 2026: the 10% line is a trigger for weighing, not a ban. The first case was
+   WideLazyCells: 16.2% less wall time for 13.9% more peak RSS at 8 threads, and 12.2% for 15.9%
+   at 10, +25 MB on Wikidata only. LOG 6975512468.)
 
 A change built for a specific machine, gated on its hardware, is judged on that machine (C5) for its gain. On every other machine it must show that it stays inactive. A deterministic check that the route is not taken, plus a neutral CI bench, settles that. Statistical non-inferiority is not required where the code path is not taken.
 

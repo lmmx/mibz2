@@ -58,8 +58,15 @@ instruction-count result gets a wall-clock CI bench within one working cycle
 PR #155 is why: its constructor saved 19.5% of its instructions, its walk added 31%, and CI
 measured the decoder 7–19% slower.
 
-**Docs-only and measurement-only changes** merge when CI is green and nothing measured
-changed that wasn't meant to.
+**Docs-only and measurement-only changes** merge when the CI their diff can reach is green and
+nothing measured changed that wasn't meant to.
+
+**Queue-only PRs, content CI has already passed, and jobs the diff can't reach** merge
+without waiting for that CI (Louis, 17 and 18 November 2026; CLAUDE.md, "When not to wait for
+CI"). A job isn't waited for when its inputs on the head are identical to those on the merge
+base, or on an earlier commit of the PR where it passed; every other job must be green on the
+head. The head-sha checks before and
+after still run, and the merge's LOG names what made the wait unnecessary.
 
 **A red check** is handled by `docs/team/CI-INCIDENTS.md`. It classifies the failure from its
 log, re-runs only the failed job, paced to the outage, and records which checks did not run. It

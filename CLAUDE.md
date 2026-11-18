@@ -26,6 +26,48 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
   in `error` or `pending` on the head is not green, whatever the check runs say. (#351 was
   merged at 16:2x on 10 November with pre-commit.ci's class B error still on its head; the
   re-run passed minutes later.)
+- **When not to wait for CI** (Louis, 17 November 2026; the third case 18 November 2026). In these
+  cases a PR merges without waiting for some or all of its CI, with the head-sha checks still
+  run before and after:
+  - **A PR that only queues:** its diff touches nothing but `bench/workstation-queue.txt`.
+    The queue file's own test (`python3 bench/test_workstation_queue.py`) passes locally first.
+  - **Content CI has already passed:** the head's tree differs from a commit that went green
+    only in ways no check reads. Examples are a ready tag or queue entry for a recipe whose PR
+    head is green, and a PR re-opened, re-based or re-targeted onto an identical tree. Name
+    the green commit in the merge's LOG, and show that the trees match
+    (`git diff --stat <green> <head>`).
+  - **A job this PR's diff can't reach** (Louis, 18 November 2026: "not to introduce process
+    latency by waiting on CI jobs that cannot possibly change an outcome … we need to keep
+    development velocity up"). A job isn't waited for when its inputs on the head are
+    identical to its inputs on a commit whose result for it is known:
+    - *the merge base:* the PR doesn't touch the job's inputs, so it can't change the job's
+      result;
+    - *an earlier commit of this PR on which the job passed:* only files the job doesn't read
+      have changed since.
+    - *Inputs:* `src/`, tests, `examples/`, `Cargo.*`, `build.rs` and `pyproject.toml` for the
+      rust, fuzz, Miri, wheel and sdist jobs; the bench's inputs for the bench;
+      `docs/site/**` and the site's config for the site build and `look`; every file for
+      pre-commit and `check-commit`; a workflow's own file for its jobs.
+    - *Examples:* a docs, journal, blog or rules PR waits only for pre-commit, `check-commit`
+      and, if it touches the site, the site build and `look`. A docs-only commit pushed onto
+      a code PR whose code jobs already passed doesn't wait for Miri or the bench again.
+    - *The record:* the merge's LOG names the jobs not waited for, and the commit compared
+      for each, with `git diff --stat <commit> <head>` showing none of their inputs.
+    - *Doubts:* if it's unclear whether a path is among a job's inputs, treat it as one, and
+      wait. A job not waited for that turns out red is checked on master: red there too
+      means it isn't this PR's (`docs/team/CI-INCIDENTS.md`).
+
+  Anything else waits for green, as above. Waiting on CI in these cases wastes the
+  workstation's time and the team's.
+- **GitHub's macOS runners never hold a merge** (Louis, 18 November 2026: "Ignore GitHub flakey
+  macOS runners! … it's never worth holding back for that").
+  - *What it covers:* a macOS job that is queued, waiting for a runner, cancelled, timed out or
+    failed in setup, before any project step ran. The PR merges once every other check run and
+    pre-commit.ci's status are green on the head.
+  - *No waiting and no re-run:* don't wait for such a job or re-run it. Name it in the merge's
+    LOG.
+  - *Real failures still count:* a macOS job whose project steps ran and failed (class A or D,
+    CI-INCIDENTS.md) is a real failure and holds the merge as usual.
 - **The merge itself:** pass that SHA as `expectedHeadSha`, the merge tool's parameter. The tool
   silently drops a name it doesn't have, such as `sha`, and then nothing checks the head.
 - **After the merge:** `coord.py head-sha --pr <n> --sha <sha> --merged` must pass: the PR is
@@ -79,7 +121,9 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
 `ready/<recipe>` tag on origin. It runs `just submit <recipe>` once at exactly the tagged commit,
 then suspends; `hold/<recipe>` stops it. The coordinator sets the tag only once the recipe is
 frozen, reviewed and green, through the dispatch-only workflow `.github/workflows/run-signal.yml`
-(`signal`: ready, hold or clear), since this session's git proxy refuses tag pushes.
+(`signal`: ready, hold or clear), since this session's git proxy refuses tag pushes. `ready`
+moves a tag that is already set, and fails unless the tag lands. A run is queued only once
+`git ls-remote --tags origin ready/<recipe>` shows the commit: a dispatch is not a tag.
 **Standing authorisation (Louis, 9 November 2026):** the coordinator may set up the queue run
 itself, without asking each time. That covers dispatching `run-signal.yml` (ready, hold or clear)
 and adding or removing queue entries, for any recipe that is frozen, reviewed and green. This is
