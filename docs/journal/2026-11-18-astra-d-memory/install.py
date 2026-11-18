@@ -71,7 +71,7 @@ impl Segmented {
 }
 """)
 edit("runs.rs", [
-    # Zero instruction compiler barriers expose only the addresses of stack arrays.
+    # Two diagnostic stores expose the addresses of stack arrays.
     # Record through globals once; read those globals after the measured block.
     ("let mut cnt = [0u64; 256];", """let mut cnt = [0u64; 256];
     ASTRA_ROWS.store(tail as usize, std::sync::atomic::Ordering::Relaxed);

@@ -1,4 +1,5 @@
 """Collect one measured lap per envelope with unmodified Valgrind Lackey."""
+from fix_ranges import resolve
 import bz2
 import os
 import subprocess
@@ -27,5 +28,6 @@ for name in names:
                                           cwd=run, stdin=valgrind.stderr)
             valgrind.stderr.close()
             assert valgrind.wait() == 0 and reduce_trace.returncode == 0
+    resolve(run)
     assert (run / "output").read_bytes() == bz2.decompress((run / "input.bz2").read_bytes())
     print(name, "matches libbz2", flush=True)

@@ -190,6 +190,9 @@ int main(int argc,char** argv) {
                 }
                 unsigned area = saved.uniform ? saved.tag :
                     ranges.intern(ranges.lookup(phase,std::max(addr,64*id)));
+                // The reverse writer reads rules and writes commands in the same slots.
+                if (phase == 6 && store && ranges.names[area] == "rules") area = ranges.intern("commands");
+                if (phase >= 12 && phase <= 15 && ranges.names[area] == "runs") area = ranges.intern("edits");
                 model.touch(id,store,phase*32+area);
             }
         }
