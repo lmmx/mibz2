@@ -71,7 +71,9 @@ def betainc(a: float, b: float, x: float) -> float:
         return 0.0
     if x >= 1:
         return 1.0
-    lbt = math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log(1 - x)
+    lbt = (
+        math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log(1 - x)
+    )
     if x < (a + 1) / (a + b + 2):
         return math.exp(lbt) * _betacf(a, b, x) / a
     return 1.0 - math.exp(lbt) * _betacf(b, a, 1 - x) / b
@@ -164,7 +166,13 @@ def gate_verdict(lines: list[str], returncode: int) -> dict:
         elif "case" in d:
             cases.append(d)
     failed = [c for c in cases if not c.get("pass")]
-    ok = returncode == 0 and final is not None and final["verdict"] == "PASS" and cases and not failed
+    ok = (
+        returncode == 0
+        and final is not None
+        and final["verdict"] == "PASS"
+        and cases
+        and not failed
+    )
     return {
         "verdict": "PASS" if ok else "FAIL",
         "cases": len(cases),
@@ -207,7 +215,9 @@ def proxy_metrics(p: dict) -> dict:
         "max_past_l2_chain": p["max_chain_past_l2"],
         # overlap
         "dram_mlp": p["dram_latency_sum"] / p["dram_busy_cycles"] if p["dram_busy_cycles"] else 0.0,
-        "overlap_per_dep_link": p["dep_overlap_sum"] / p["dep_overlap_n"] if p["dep_overlap_n"] else None,
+        "overlap_per_dep_link": p["dep_overlap_sum"] / p["dep_overlap_n"]
+        if p["dep_overlap_n"]
+        else None,
         "dram_loads_per_dep_link": p["dram_loads"] / dep if dep else None,
         # the miss mix and the work
         "past_l2_loads_per_byte": p["past_l2_loads"] / b,
@@ -286,13 +296,24 @@ class Scorer:
         env = dict(os.environ, MOONSHOT_CANDIDATE=str(candidate), CARGO_TARGET_DIR=str(self.target))
         log(f"building the harness with {candidate}")
         subprocess.run(
-            ["cargo", "build", "--release", "--locked", "--manifest-path", str(HERE / "Cargo.toml")],
+            [
+                "cargo",
+                "build",
+                "--release",
+                "--locked",
+                "--manifest-path",
+                str(HERE / "Cargo.toml"),
+            ],
             env=env,
             check=True,
         )
 
     def info(self) -> dict:
-        return json.loads(subprocess.run([str(self.bin), "info"], capture_output=True, text=True, check=True).stdout)
+        return json.loads(
+            subprocess.run(
+                [str(self.bin), "info"], capture_output=True, text=True, check=True
+            ).stdout
+        )
 
     def gate(self, corpus: Path | None, out: Path) -> dict:
         cmd = [str(self.bin), "check", "--arm", "candidate"]
@@ -318,7 +339,9 @@ class Scorer:
             perf.unlink()
         return r
 
-    def timing(self, corpus: Path, out: Path, arms: list[str] | None = None, perf: bool = False) -> dict:
+    def timing(
+        self, corpus: Path, out: Path, arms: list[str] | None = None, perf: bool = False
+    ) -> dict:
         settle = check_settle(self.a.settle)
         cpus = os.cpu_count() or 1
         counts = list(range(1, cpus + 1)) if not self.a.workers else self.a.workers
@@ -343,14 +366,27 @@ class Scorer:
         if not vg:
             return {"skipped": "valgrind is not installed (apt-get install valgrind)"}
         vlib = self.target / "chaingrind"
-        b = subprocess.run(["bash", str(HERE / "chaingrind" / "build.sh"), str(vlib)], capture_output=True, text=True)
+        b = subprocess.run(
+            ["bash", str(HERE / "chaingrind" / "build.sh"), str(vlib)],
+            capture_output=True,
+            text=True,
+        )
         if b.returncode:
             return {"skipped": "chaingrind did not build: " + (b.stdout + b.stderr).strip()[-400:]}
         m = self.cal["model"]
         blocks = sample_blocks(m["corpus_blocks"], self.a.proxy_blocks)
         sym = out / "blocks.sym"
         subprocess.run(
-            [str(self.bin), "extract", "--file", str(corpus), "--blocks", ",".join(map(str, blocks)), "--out", str(sym)],
+            [
+                str(self.bin),
+                "extract",
+                "--file",
+                str(corpus),
+                "--blocks",
+                ",".join(map(str, blocks)),
+                "--out",
+                str(sym),
+            ],
             check=True,
             capture_output=True,
         )
@@ -361,7 +397,11 @@ class Scorer:
             for arm in arms:
                 log(f"proxy: {arm} at {w} workers ({lat})")
                 p = self.chaingrind(vlib, arm, sym, lat)
-                res["arms"].setdefault(arm, {})[str(w)] = {"raw": p, "metrics": proxy_metrics(p), "latencies": lat}
+                res["arms"].setdefault(arm, {})[str(w)] = {
+                    "raw": p,
+                    "metrics": proxy_metrics(p),
+                    "latencies": lat,
+                }
         (out / "proxy.json").write_text(json.dumps(res, indent=1) + "\n")
         return summarise_proxy(res, self.cal)
 
@@ -385,7 +425,9 @@ class Scorer:
             "--symbols",
             str(sym),
         ]
-        p = subprocess.run(cmd, capture_output=True, text=True, env=dict(os.environ, VALGRIND_LIB=str(vlib)))
+        p = subprocess.run(
+            cmd, capture_output=True, text=True, env=dict(os.environ, VALGRIND_LIB=str(vlib))
+        )
         if p.returncode:
             raise RuntimeError(f"chaingrind failed on {arm}: {p.stderr[-800:]}")
         return parse_proxy(p.stderr)
@@ -445,7 +487,12 @@ def summarise_timing(runs: list[dict], arms: list[str], counts: list[int]) -> di
         if rounds and all("counters" in by[a][r] for a in arms for r in rounds):
             cell["counters_per_byte"] = {
                 a: {
-                    e: median([by[a][r]["counters"].get(e, float("nan")) / by[a][r]["out_bytes"] for r in rounds])
+                    e: median(
+                        [
+                            by[a][r]["counters"].get(e, float("nan")) / by[a][r]["out_bytes"]
+                            for r in rounds
+                        ]
+                    )
                     for e in PERF_EVENTS
                 }
                 for a in arms
@@ -464,7 +511,9 @@ def summarise_proxy(res: dict, cal: dict) -> dict:
     for w in res["workers"]:
         ref = arms["lazy"][str(w)]["metrics"]["cycles_per_byte"]
         preds[str(w)] = {
-            a: predicted_ratio(arms[a][str(w)]["metrics"]["cycles_per_byte"], w, ref, w) for a in arms if a != "lazy"
+            a: predicted_ratio(arms[a][str(w)]["metrics"]["cycles_per_byte"], w, ref, w)
+            for a in arms
+            if a != "lazy"
         }
     checks = []
     for c in cal["i9"]:
@@ -477,9 +526,18 @@ def summarise_proxy(res: dict, cal: dict) -> dict:
             arms["lazy"][str(rw)]["metrics"]["cycles_per_byte"],
             rw,
         )
-        d = arms[c["arm"]][str(cw)]["metrics"]["dram_bytes_per_byte"] / arms["lazy"][str(rw)]["metrics"]["dram_bytes_per_byte"]
+        d = (
+            arms[c["arm"]][str(cw)]["metrics"]["dram_bytes_per_byte"]
+            / arms["lazy"][str(rw)]["metrics"]["dram_bytes_per_byte"]
+        )
         checks.append(
-            dict(c, predicted=p, predicted_dram_ratio=d, same_side=(p < 1) == (c["measured"] < 1), error=p - c["measured"])
+            dict(
+                c,
+                predicted=p,
+                predicted_dram_ratio=d,
+                same_side=(p < 1) == (c["measured"] < 1),
+                error=p - c["measured"],
+            )
         )
     held = [c for c in checks if c["role"] == "held-out"]
     fitted = [c for c in checks if c["role"] == "fitted"]
@@ -488,13 +546,24 @@ def summarise_proxy(res: dict, cal: dict) -> dict:
     pairs, right = 0, 0
     for i, x in enumerate(checks):
         for y in checks[i + 1 :]:
-            if x["threads"] != y["threads"] or not (x["role"] == "held-out" or y["role"] == "held-out"):
+            if x["threads"] != y["threads"] or not (
+                x["role"] == "held-out" or y["role"] == "held-out"
+            ):
                 continue
             pairs += 1
             right += (x["predicted"] < y["predicted"]) == (x["measured"] < y["measured"])
-    opend_7 = next((c for c in checks if c["arm"] == "opend" and c["workers"] == 7 and c["reference_workers"] == 7), None)
+    opend_7 = next(
+        (
+            c
+            for c in checks
+            if c["arm"] == "opend" and c["workers"] == 7 and c["reference_workers"] == 7
+        ),
+        None,
+    )
     rank_opend = {
-        str(w): preds[str(w)]["opend"] < 1 for w in res["workers"] if w >= 7 and "opend" in preds[str(w)]
+        str(w): preds[str(w)]["opend"] < 1
+        for w in res["workers"]
+        if w >= 7 and "opend" in preds[str(w)]
     }
     # the out-of-calibration flag, at each worker count, against the reference arms
     flags = {}
@@ -533,10 +602,14 @@ def fmt(x, nd=3) -> str:
 
 def report(s: dict) -> str:
     L = []
-    L.append("MOONSHOT SCORE (container evidence only: only CI's paired bench and an i9 workstation run")
+    L.append(
+        "MOONSHOT SCORE (container evidence only: only CI's paired bench and an i9 workstation run"
+    )
     L.append("establish production performance; see bench/moonshot/README.md)")
     L.append(f"candidate: {s['info']['candidate']} ({s['info']['candidate_type']})")
-    L.append(f"machine: {s['info']['cpus']} CPUs; target 1.25x 0.5.6's throughput (a wall ratio of 0.800 or less)")
+    L.append(
+        f"machine: {s['info']['cpus']} CPUs; target 1.25x 0.5.6's throughput (a wall ratio of 0.800 or less)"
+    )
     L.append("")
     g = s["gate"]
     L.append(f"1. CORRECTNESS: {g['verdict']} ({g['cases']} cases, {len(g['failed'])} failed)")
@@ -548,8 +621,12 @@ def report(s: dict) -> str:
     L.append("")
     t = s.get("timing")
     if t:
-        L.append("2. CONTAINER WALL TIME (paired rounds, candidate over 0.5.6's LazyCells; < 1 is faster)")
-        L.append("   workers  rounds  ratio [95% interval]       verdict       speedup  peak RSS ratio")
+        L.append(
+            "2. CONTAINER WALL TIME (paired rounds, candidate over 0.5.6's LazyCells; < 1 is faster)"
+        )
+        L.append(
+            "   workers  rounds  ratio [95% interval]       verdict       speedup  peak RSS ratio"
+        )
         for w, c in t.items():
             for a in [k for k in c if k not in ("rounds", "lazy_wall_s", "lazy_peak_rss_kb")]:
                 r = c[a]
@@ -558,13 +635,19 @@ def report(s: dict) -> str:
                     f"   {w:>7}  {c['rounds']:>6}  {fmt(r['geomean'])} [{fmt(r['lo'])}, {fmt(r['hi'])}]"
                     f"  {r['verdict']:<12}  {fmt(r['speedup'], 2)}x   {fmt(r['peak_rss_ratio'])}{name}"
                 )
-        L.append("   (a container's wall misleads at contention: opend was 9-21% slower on a 4-CPU VM and")
+        L.append(
+            "   (a container's wall misleads at contention: opend was 9-21% slower on a 4-CPU VM and"
+        )
         L.append("   6-8% faster on the i9 at 8-10 workers)")
         L.append("")
     p = s.get("proxy")
     if p and "skipped" not in p:
-        L.append("3. CONTENTION PROXY (chaingrind's model, one worker per row, the i9's 20 MiB LLC shared;")
-        L.append("   three quantities kept apart, per output byte; the model's cycles drive the prediction)")
+        L.append(
+            "3. CONTENTION PROXY (chaingrind's model, one worker per row, the i9's 20 MiB LLC shared;"
+        )
+        L.append(
+            "   three quantities kept apart, per output byte; the model's cycles drive the prediction)"
+        )
         cal = p["calibration"]
         for w in sorted(p["metrics"]["lazy"], key=int):
             L.append(f"   at {w} workers:")
@@ -584,12 +667,20 @@ def report(s: dict) -> str:
                 )
             fl = p["out_of_calibration"][w]
             if fl:
-                L.append("     OUT OF CALIBRATION: the candidate's access pattern is outside the reference arms'")
+                L.append(
+                    "     OUT OF CALIBRATION: the candidate's access pattern is outside the reference arms'"
+                )
                 L.append("     range, so its prediction here is unreliable: " + "; ".join(fl))
         L.append("")
-        L.append("   Calibration against the i9 (evidence fa9707e9, open-return/run-20261118T210422Z):")
-        L.append(f"   one fitted parameter, the L3-hit latency's rise a further worker: kappa {cal['kappa']}")
-        L.append("     arm (workers / reference)  threads  role      measured  predicted  same side  DRAM ratio meas/pred")
+        L.append(
+            "   Calibration against the i9 (evidence fa9707e9, open-return/run-20261118T210422Z):"
+        )
+        L.append(
+            f"   one fitted parameter, the L3-hit latency's rise a further worker: kappa {cal['kappa']}"
+        )
+        L.append(
+            "     arm (workers / reference)  threads  role      measured  predicted  same side  DRAM ratio meas/pred"
+        )
         for c in cal["fitted"] + cal["held_out"]:
             L.append(
                 f"     {c['label']:<26} {c['threads']:>7}  {c['role']:<8}  {c['measured']:.3f}     {c['predicted']:.3f}"
@@ -597,7 +688,11 @@ def report(s: dict) -> str:
             )
         r, n = cal["held_out_pairs_ranked_right"]
         L.append(f"   held-out ranking: {r} of {n} pairs in the i9's order")
-        ok = all(cal["opend_ranked_above_lazy"].values()) if cal["opend_ranked_above_lazy"] else False
+        ok = (
+            all(cal["opend_ranked_above_lazy"].values())
+            if cal["opend_ranked_above_lazy"]
+            else False
+        )
         L.append(
             "   Does the proxy rank opend above LazyCells at 7-10 workers, as the i9 did? "
             + ("YES" if ok else "NO")
@@ -610,8 +705,12 @@ def report(s: dict) -> str:
     elif p:
         L.append(f"3. CONTENTION PROXY: skipped: {p['skipped']}")
     L.append("")
-    L.append(f"4. PEAK MEMORY: see the peak RSS ratio column above (the candidate's process over 0.5.6's,")
-    L.append("   the median of the rounds; the target is no extra peak memory, a ratio of 1.0 or less)")
+    L.append(
+        f"4. PEAK MEMORY: see the peak RSS ratio column above (the candidate's process over 0.5.6's,"
+    )
+    L.append(
+        "   the median of the rounds; the target is no extra peak memory, a ratio of 1.0 or less)"
+    )
     return "\n".join(L) + "\n"
 
 
@@ -627,7 +726,9 @@ def score(a: argparse.Namespace) -> int:
         s.build(cand)
     corpus = Path(a.corpus) if a.corpus else ROOT / "corpora" / "wikidata.bz2"
     if not corpus.exists():
-        log(f"no corpus at {corpus}: run bench/corpus.sh's corpus step (README.md), or pass --corpus")
+        log(
+            f"no corpus at {corpus}: run bench/corpus.sh's corpus step (README.md), or pass --corpus"
+        )
         return 2
     summary = {"info": s.info(), "corpus": str(corpus), "options": vars(a)}
     summary["gate"] = s.gate(corpus, out)
@@ -659,7 +760,9 @@ def calibrate(a: argparse.Namespace) -> int:
     s = Scorer(a)
     cal = s.cal
     vlib = s.target / "chaingrind"
-    subprocess.run(["bash", str(HERE / "chaingrind" / "build.sh"), str(vlib)], check=True, capture_output=True)
+    subprocess.run(
+        ["bash", str(HERE / "chaingrind" / "build.sh"), str(vlib)], check=True, capture_output=True
+    )
     m = cal["model"]
     blocks = sample_blocks(m["corpus_blocks"], a.proxy_blocks)
     out = s.target / "moonshot"
@@ -667,7 +770,16 @@ def calibrate(a: argparse.Namespace) -> int:
     sym = out / "calibrate.sym"
     corpus = Path(a.corpus) if a.corpus else ROOT / "corpora" / "wikidata.bz2"
     subprocess.run(
-        [str(s.bin), "extract", "--file", str(corpus), "--blocks", ",".join(map(str, blocks)), "--out", str(sym)],
+        [
+            str(s.bin),
+            "extract",
+            "--file",
+            str(corpus),
+            "--blocks",
+            ",".join(map(str, blocks)),
+            "--out",
+            str(sym),
+        ],
         check=True,
         capture_output=True,
     )
@@ -708,15 +820,23 @@ def sweep(a: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     sub = ap.add_subparsers(dest="cmd", required=True)
     sc = sub.add_parser("score", help="the whole score")
     sc.add_argument("candidate", help="the candidate's Rust source file (candidates/template.rs)")
     sc.add_argument("--corpus", help="the Wikidata bench corpus (default corpora/wikidata.bz2)")
     sc.add_argument("--rounds", type=int, default=5)
-    sc.add_argument("--settle", type=float, default=2.0, help="seconds between runs: 0 or at least 2")
-    sc.add_argument("--repeat", type=int, default=1, help="the corpus decoded this many times a run")
-    sc.add_argument("--workers", type=lambda s: [int(x) for x in s.split(",")], help="default: 1 to the CPUs")
+    sc.add_argument(
+        "--settle", type=float, default=2.0, help="seconds between runs: 0 or at least 2"
+    )
+    sc.add_argument(
+        "--repeat", type=int, default=1, help="the corpus decoded this many times a run"
+    )
+    sc.add_argument(
+        "--workers", type=lambda s: [int(x) for x in s.split(",")], help="default: 1 to the CPUs"
+    )
     sc.add_argument("--with-opend", action="store_true", help="time opend too, a third arm")
     sc.add_argument("--proxy-blocks", type=int, default=16)
     sc.add_argument("--quick", action="store_true", help="the gate's quick case set")
@@ -725,12 +845,16 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--no-build", action="store_true")
     sc.add_argument("--target-dir")
     sc.add_argument("--out")
-    ca = sub.add_parser("calibrate", help="refit kappa on lazy and opend 7/28 (prints it; edit calibration.json)")
+    ca = sub.add_parser(
+        "calibrate", help="refit kappa on lazy and opend 7/28 (prints it; edit calibration.json)"
+    )
     ca.add_argument("--corpus")
     ca.add_argument("--proxy-blocks", type=int, default=16)
     ca.add_argument("--grid", default="0,4,8,12,16,20,24,32,40,48")
     ca.add_argument("--target-dir")
-    sw = sub.add_parser("sweep", help="the i9 calibration run's timing (the reference arms; no candidate)")
+    sw = sub.add_parser(
+        "sweep", help="the i9 calibration run's timing (the reference arms; no candidate)"
+    )
     sw.add_argument("--corpus", required=True)
     sw.add_argument("--out", required=True)
     sw.add_argument("--arms", default="lazy,opend,open,cells")

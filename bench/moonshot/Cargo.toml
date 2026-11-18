@@ -21,6 +21,10 @@ bzip2 = { features = ["static"], version = "0.4" }
 # `moonshot`: the run records public, for a candidate built here (src/runs.rs)
 mibz2 = { features = ["moonshot"], path = "../.." }
 
+[package.metadata.cargo-machete]
+# (used by ../../tests/common, compiled here by path)
+ignored = ["bzip2"]
+
 # The crate's release profile (../../Cargo.toml), so every arm is built as mibz2 is
 [profile.release]
 codegen-units = 1
@@ -29,4 +33,6 @@ lto = "fat"
 
 # (tests/common/cells.rs, shared with the crate's tests, names a feature of the crate's)
 [lints.rust]
-unexpected_cfgs = { check-cfg = ['cfg(feature, values("memory-lever"))'], level = "warn" }
+unexpected_cfgs = { check-cfg = [
+  'cfg(feature, values("memory-lever"))',
+], level = "warn" }

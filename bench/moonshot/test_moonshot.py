@@ -17,7 +17,14 @@ import moonshot as m  # noqa: E402
 
 class Statistics(unittest.TestCase):
     def test_t_quantiles_match_the_tables(self):
-        for df, want in [(1, 12.706), (2, 4.303), (4, 2.776), (9, 2.262), (29, 2.045), (120, 1.980)]:
+        for df, want in [
+            (1, 12.706),
+            (2, 4.303),
+            (4, 2.776),
+            (9, 2.262),
+            (29, 2.045),
+            (120, 1.980),
+        ]:
             self.assertAlmostEqual(m.t_quantile(0.975, df), want, places=3)
 
     def test_t_cdf_is_symmetric(self):
@@ -112,9 +119,14 @@ class Schedule(unittest.TestCase):
 
 class Gate(unittest.TestCase):
     def lines(self, passes, final="PASS"):
-        out = [json.dumps({"case": f"c{i}", "bytes": 1, "pass": p, "failure": None if p else "x"}) for i, p in enumerate(passes)]
+        out = [
+            json.dumps({"case": f"c{i}", "bytes": 1, "pass": p, "failure": None if p else "x"})
+            for i, p in enumerate(passes)
+        ]
         if final:
-            out.append(json.dumps({"arm": "candidate", "verdict": final, "failures": passes.count(False)}))
+            out.append(
+                json.dumps({"arm": "candidate", "verdict": final, "failures": passes.count(False)})
+            )
         return out
 
     def test_a_clean_run_passes(self):
@@ -194,7 +206,10 @@ class Proxy(unittest.TestCase):
         self.assertIsNone(x["dram_loads_per_dep_link"])
 
     def test_out_of_calibration(self):
-        refs = [m.proxy_metrics(RAW), m.proxy_metrics(dict(RAW, dram_write_lines=40, dep_past_l2_loads=40))]
+        refs = [
+            m.proxy_metrics(RAW),
+            m.proxy_metrics(dict(RAW, dram_write_lines=40, dep_past_l2_loads=40)),
+        ]
         self.assertEqual(m.out_of_range(m.proxy_metrics(dict(RAW, dram_write_lines=30)), refs), [])
         flags = m.out_of_range(m.proxy_metrics(dict(RAW, dep_past_l2_loads=400)), refs)
         self.assertEqual(len(flags), 1)
@@ -206,10 +221,14 @@ class Proxy(unittest.TestCase):
         cal = json.loads(m.CALIBRATION.read_text())
         self.assertEqual(m.latencies(cal, 7)["dram_lat"], 549)
         self.assertEqual(m.latencies(cal, 10)["dram_lat"], 649)
-        self.assertEqual(m.latencies(cal, 1)["dram_lat"], max(cal["model"]["dram_latency_floor"], 349))
+        self.assertEqual(
+            m.latencies(cal, 1)["dram_lat"], max(cal["model"]["dram_latency_floor"], 349)
+        )
         self.assertEqual(m.latencies(cal, 4)["llc_kb"], 5120)
         self.assertEqual(m.latencies(cal, 1, kappa=10)["l3_lat"], cal["model"]["l3_latency_floor"])
-        self.assertEqual(m.latencies(cal, 3, kappa=10)["l3_lat"], cal["model"]["l3_latency_floor"] + 20)
+        self.assertEqual(
+            m.latencies(cal, 3, kappa=10)["l3_lat"], cal["model"]["l3_latency_floor"] + 20
+        )
 
     def test_predicted_ratio_scales_by_workers(self):
         self.assertAlmostEqual(m.predicted_ratio(10, 7, 10, 7), 1.0)
@@ -227,8 +246,18 @@ class Timing(unittest.TestCase):
     def test_summary_pairs_by_round(self):
         runs = []
         for rnd in range(4):
-            runs.append({"arm": "lazy", "workers": 2, "round": rnd, "wall_s": 1.0 + rnd, "peak_rss_kb": 100})
-            runs.append({"arm": "candidate", "workers": 2, "round": rnd, "wall_s": 0.8 * (1.0 + rnd), "peak_rss_kb": 90})
+            runs.append(
+                {"arm": "lazy", "workers": 2, "round": rnd, "wall_s": 1.0 + rnd, "peak_rss_kb": 100}
+            )
+            runs.append(
+                {
+                    "arm": "candidate",
+                    "workers": 2,
+                    "round": rnd,
+                    "wall_s": 0.8 * (1.0 + rnd),
+                    "peak_rss_kb": 90,
+                }
+            )
         # an unpaired run is left out
         runs.append({"arm": "lazy", "workers": 2, "round": 9, "wall_s": 50.0, "peak_rss_kb": 100})
         s = m.summarise_timing(runs, ["lazy", "candidate"], [2])
@@ -248,8 +277,17 @@ class Perf(unittest.TestCase):
         runs = []
         for rnd in range(2):
             for arm, c in (("lazy", 100.0), ("open", 50.0)):
-                runs.append({"arm": arm, "workers": 7, "round": rnd, "wall_s": 1.0, "peak_rss_kb": 1, "out_bytes": 10,
-                             "counters": {e: c for e in m.PERF_EVENTS}})
+                runs.append(
+                    {
+                        "arm": arm,
+                        "workers": 7,
+                        "round": rnd,
+                        "wall_s": 1.0,
+                        "peak_rss_kb": 1,
+                        "out_bytes": 10,
+                        "counters": {e: c for e in m.PERF_EVENTS},
+                    }
+                )
         s = m.summarise_timing(runs, ["lazy", "open"], [7])
         self.assertEqual(s["7"]["counters_per_byte"]["open"]["cycles"], 5.0)
         self.assertEqual(s["7"]["counters_per_byte"]["lazy"]["cycle_activity.stalls_l3_miss"], 10.0)
