@@ -1,0 +1,64 @@
+{
+  "frozen": {
+    "rows": 899931,
+    "types": 2716,
+    "tokens": 135716,
+    "token_runs": 6133,
+    "suffixes": 70560,
+    "mixed": [
+      1058,
+      12361,
+      363378
+    ],
+    "byte_runs": 51184
+  },
+  "exhaustive": {
+    "column_marker_pairs": 27990,
+    "tight_run_bound": 604
+  },
+  "cuts": {
+    "linear_slice_cases": 157326,
+    "terminal_unfinished_cases": 1998
+  },
+  "measurements": {
+    "blocks": 431,
+    "dense_grouped_stats_blocks": 396,
+    "large": 233,
+    "arms": {
+      "cells": {
+        "median_s": 0.822504,
+        "peak_requested_bytes": 9591394,
+        "admitted": 0,
+        "admitted_large": 0
+      },
+      "lazy": {
+        "median_s": 0.897773,
+        "peak_requested_bytes": 10014686,
+        "admitted": 0,
+        "admitted_large": 0
+      },
+      "grouped": {
+        "median_s": 1.735774,
+        "peak_requested_bytes": 6129795,
+        "admitted": 367,
+        "admitted_large": 233
+      },
+      "fused2": {
+        "median_s": 2.074303,
+        "peak_requested_bytes": 4844950,
+        "admitted": 367,
+        "admitted_large": 233
+      }
+    },
+    "grouped_over_cells": [
+      1.0045208656456697,
+      2.146418581720127,
+      2.2040573662863645,
+      2.1629850025380684,
+      2.1992095719366858,
+      2.0045800327211216,
+      2.1123847377368983
+    ],
+    "paired_median": 2.146418581720127
+  }
+}
