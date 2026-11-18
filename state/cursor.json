@@ -1710,8 +1710,9 @@
       "sha": "270a29ba52a90b8411d20c2326b93692a6e421e7",
       "evidence_digest": "sha256:7a64dcdcad7a380adbbde38241ffaf0c542e0e2ae0774c74cba95d02b2b2f64e",
       "commit": "2289d9a0f359fad72050f4afcce3a2310020a6a0",
-      "status": "complete",
-      "disposition": "PROCEED; lift D113 scoped B5 evidence HOLD."
+      "status": "finished",
+      "disposition": "PROCEED; lift D113 scoped B5 evidence HOLD.",
+      "comment": 6988977627
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1823,7 +1824,8 @@
     6903106255,
     6903644101,
     6904474217,
-    6988584322
+    6988584322,
+    6988977627
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -2100,7 +2102,10 @@
     "751606dcbcb04d35af215435c0b2e2abd0b3fec4",
     "3bf6a507d5b5b7552c9cad1dbf6b46e447f431ac",
     "e60a87fa93fa3ba27e8edccd6d88659b5847a9fd",
-    "c6c4a951df5c0d826149ef97b7309b3396705781"
+    "c6c4a951df5c0d826149ef97b7309b3396705781",
+    "a8348a5f9c925c07b161c22db5bd937c454c1140",
+    "2289d9a0f359fad72050f4afcce3a2310020a6a0",
+    "289b06a81def4c39238bb6b2c254e3c613a24a98"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2214,7 +2219,8 @@
     6903067177,
     6903560983,
     6904418769,
-    6988393925
+    6988393925,
+    6988881933
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2293,10 +2299,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6988881933,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D114",
-    "work_commit": "2289d9a0f359fad72050f4afcce3a2310020a6a0"
+    "incoming_comment": 6988881933,
+    "review_comment_id": 6988977627
   },
   "duplicate_events": [
     {
@@ -4113,11 +4120,13 @@
     {
       "comment_id": 6988881933,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D114",
-      "progress": "Lift review complete; publish REVIEW on #145.",
+      "progress": "Exact REVIEW body/destination verified; known coordinator-only FROM verifier limitation independently checked.",
       "receipt_commit": "a8348a5f9c925c07b161c22db5bd937c454c1140",
-      "work_commit": "2289d9a0f359fad72050f4afcce3a2310020a6a0"
+      "work_commit": "2289d9a0f359fad72050f4afcce3a2310020a6a0",
+      "review_comment_id": 6988977627,
+      "complete_cursor_commit": "289b06a81def4c39238bb6b2c254e3c613a24a98"
     }
   ],
   "migrated_from": {
