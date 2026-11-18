@@ -1,0 +1,37 @@
+{
+  "counts": {
+    "strict_exit_clips": 1452,
+    "anchor_rows": 12204,
+    "cylinders": 9086,
+    "marked_checks": 28418,
+    "misses_only": 10630,
+    "partial_hits": 6872,
+    "anchor_present_but_unreached": 4516,
+    "wide_marks": 9,
+    "distinct_gap_family": 5
+  },
+  "exit_clip_witness": {
+    "L": [
+      1,
+      0,
+      0
+    ],
+    "primary": 0,
+    "anchor": 0,
+    "A": [
+      0,
+      2
+    ],
+    "source_row": 0,
+    "piece_before_exit_clip_half_open": [
+      0,
+      2
+    ],
+    "certified_origins_half_open": [
+      0,
+      1
+    ],
+    "false_origin_if_unclipped": 1,
+    "false_exit_outside_A": 2
+  }
+}
