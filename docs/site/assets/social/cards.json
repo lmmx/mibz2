@@ -174,6 +174,13 @@
     "section": " · Research blog",
     "title": "Raising the knee: scaling throughput to the limit of physical cores"
   },
+  "assets/social/blog-2026-11-18-cutting-the-loop-open.png": {
+    "description": "Snip the decoder's one long loop open and most of each Wikidata block falls into bundled paths, where one traced letter spells about sixteen.",
+    "foot": "lmmx.github.io/mibz2 · 18 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Cutting the loop open: decoding a block along shared paths"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
