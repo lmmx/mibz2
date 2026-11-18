@@ -1862,13 +1862,13 @@ moonshot-score candidate *args:
 bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
+    [[ "{{ROUNDS}}" =~ ^[0-9]+$ ]] \
+      || { echo "bench-moonshot-calibrate: ROUNDS is {{ROUNDS}}: DRY is the 5th positional argument (just bench-moonshot-calibrate 10 2 4 1,2,4,7,8,10 1)"; exit 1; }
     W=$PWD/target/moonshot-calibrate
     mkdir -p "$W"
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    [[ "{{ROUNDS}}" =~ ^[0-9]+$ ]] \
-      || { echo "bench-moonshot-calibrate: ROUNDS is {{ROUNDS}}: DRY is the 5th positional argument (just bench-moonshot-calibrate 10 2 4 1,2,4,7,8,10 1)"; exit 1; }
     echo "bench-moonshot-calibrate (bench/moonshot/README.md): lazy, opend, open and cells in the shipped workers at {{WORKERS}} workers, unpinned, {{ROUNDS}} paired rounds, settle {{SETTLE}} s, {{COPIES}} copies of the Wikidata sample, at $(git rev-parse HEAD)"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
