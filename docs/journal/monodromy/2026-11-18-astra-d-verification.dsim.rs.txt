@@ -1,0 +1,55 @@
+// Independent inclusive LRU hierarchy for the Astra D traces (written from the stated model only).
+#[derive(Clone, Copy, Default)] struct L { id: u64, age: u64, valid: bool, dirty: bool }
+struct C { ways: usize, sets: usize, v: Vec<L> }
+impl C { fn new(kib: usize, ways: usize) -> C { let n = kib * 1024 / 64; C { ways, sets: n / ways, v: vec![L::default(); n] } }
+    fn base(&self, id: u64) -> usize { (id % self.sets as u64) as usize * self.ways }
+    fn find(&self, id: u64) -> Option<usize> { let b = self.base(id); (b..b + self.ways).find(|&i| self.v[i].valid && self.v[i].id == id) }
+    fn victim(&self, id: u64) -> usize { let b = self.base(id); (b..b + self.ways).min_by_key(|&i| if self.v[i].valid { self.v[i].age } else { 0 }).unwrap() } }
+#[derive(Default, Debug)] struct K { l2_req: u64, l2_miss: u64, dram_read: u64, dram_rfo: u64, dram_wb: u64, term_wb: u64, l1_wb: u64, l2_wb: u64 }
+struct H { c: [C; 3], clk: u64, k: K, term: bool }
+impl H {
+    // remove line at (level, idx), collecting dirty data from upper levels first
+    fn evict(&mut self, lev: usize, idx: usize) {
+        let ln = self.c[lev].v[idx]; if !ln.valid { return; }
+        let mut dirty = ln.dirty;
+        if lev > 0 { if let Some(u) = self.c[lev - 1].find(ln.id) { // back-invalidate the upper copy, merging its dirt
+                self.evict_into(lev - 1, u, lev, idx); dirty = self.c[lev].v[idx].dirty; } }
+        if dirty { if lev == 2 { self.k.dram_wb += 1; if self.term { self.k.term_wb += 1; } }
+            else { if lev == 0 { self.k.l1_wb += 1 } else { self.k.l2_wb += 1 }
+                let p = self.c[lev + 1].find(ln.id).expect("inclusive"); self.clk += 1; self.c[lev + 1].v[p].dirty = true; self.c[lev + 1].v[p].age = self.clk; } }
+        self.c[lev].v[idx] = L::default();
+    }
+    // evict an upper-level copy as part of removing the lower copy at (low, lidx)
+    fn evict_into(&mut self, up: usize, uidx: usize, low: usize, lidx: usize) {
+        let ln = self.c[up].v[uidx];
+        if up > 0 { if let Some(u2) = self.c[up - 1].find(ln.id) { self.evict_into(up - 1, u2, up, uidx); } }
+        let ln = self.c[up].v[uidx];
+        if ln.dirty { if up == 0 { self.k.l1_wb += 1 } else { self.k.l2_wb += 1 } self.c[low].v[lidx].dirty = true; self.clk += 1; self.c[low].v[lidx].age = self.clk; }
+        self.c[up].v[uidx] = L::default();
+    }
+    fn fetch(&mut self, lev: usize, id: u64, write: bool) -> usize {
+        if lev == 1 { self.k.l2_req += 1; }
+        if let Some(i) = self.c[lev].find(id) { self.clk += 1; self.c[lev].v[i].age = self.clk; return i; }
+        if lev == 1 { self.k.l2_miss += 1; }
+        if lev == 2 { if write { self.k.dram_rfo += 1 } else { self.k.dram_read += 1 } } else { self.fetch(lev + 1, id, write); }
+        let v = self.c[lev].victim(id); self.evict(lev, v); self.clk += 1;
+        self.c[lev].v[v] = L { id, age: self.clk, valid: true, dirty: false }; v
+    }
+    fn touch(&mut self, id: u64, write: bool) { let i = self.fetch(0, id, write); if write { self.c[0].v[i].dirty = true; } }
+    fn flush_private(&mut self) { for i in 0..self.c[1].v.len() { self.evict(1, i); } }
+    fn drain(&mut self) { self.term = true; for i in 0..self.c[2].v.len() { self.evict(2, i); } }
+}
+fn main() {
+    let a: Vec<String> = std::env::args().collect(); let llc: usize = a[2].parse().unwrap();
+    let data = std::fs::read(&a[1]).unwrap();
+    let mut h = H { c: [C::new(32, 8), C::new(256, 4), C::new(llc, 16)], clk: 0, k: K::default(), term: false };
+    let mut phase = 0u64;
+    for ch in data.chunks_exact(8) { let x = u64::from_le_bytes(ch.try_into().unwrap()); let size = x >> 56; let op = (x >> 52) & 15;
+        if size == 255 { phase = x & 63; if phase == 2 || phase == 11 { h.flush_private(); } continue; }
+        let addr = x & ((1u64 << 52) - 1);
+        for acc in 0..=(op == 2) as u64 { let store = op == 1 || acc == 1;
+            for id in addr / 64..=(addr + size - 1) / 64 { h.touch(id, store); } } }
+    let _ = phase; h.drain();
+    let out: f64 = a[3].parse().unwrap(); let k = &h.k;
+    println!("{} llc={}KiB l2_req={} l2_miss={} dram_read={} rfo={} wb={} term_wb={} -> DRAM B/B {:.4}", a[1].rsplit('/').nth(1).unwrap_or(""), llc, k.l2_req, k.l2_miss, k.dram_read, k.dram_rfo, k.dram_wb, k.term_wb, 64.0 * (k.dram_read + k.dram_rfo + k.dram_wb) as f64 / out);
+}
