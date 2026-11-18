@@ -31,6 +31,8 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Cutting the loop open](<https://lmmx.github.io/mibz2/blog/2026-11-18-cutting-the-loop-open/index.md>): Snip the decoder's one long loop open and most of each Wikidata block falls into bundled paths, where one traced letter spells about sixteen.
+- [Technical notes](<https://lmmx.github.io/mibz2/blog/2026-11-18-cutting-the-loop-open-notes/index.md>): Technical notes to the post on cutting the loop open: the bundle bound and its tight cases, one strip's heights, the two constructors of the open paths, the narrow–wide switch cut, and what the two verifications checked.
 - [Raising the knee](<https://lmmx.github.io/mibz2/blog/2026-11-17-raising-the-knee/index.md>): mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are busy, then holds level on the whole machine up to twenty threads.
 - [Modelling the cache](<https://lmmx.github.io/mibz2/blog/2026-11-17-modelling-the-cache-to-rightsize-workers/index.md>): mibz2 now runs fewer workers than threads on a ten-core desktop and finishes sooner, while a cache model is tested to pick the count on any machine.
 - [Technical notes](<https://lmmx.github.io/mibz2/blog/2026-11-17-modelling-the-cache-to-rightsize-workers-notes/index.md>): Technical notes to the post on modelling the cache to rightsize workers: the contention–parallelism trade-off and its sensitivity, what the contention-associated overhead is made of, the full ledger of frozen predictions, the CPU bound's history, and topology and transfer.
