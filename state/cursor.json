@@ -2283,6 +2283,14 @@
       "review_comment_pr": 145,
       "review_comment_id": 6957272312,
       "publication_verification": "Exact body, lmmx author and issue145 read back; pinned helper reports only coordinator-only FROM limitation; role-aware header and routing checks passed."
+    },
+    {
+      "trigger_comment_id": 6973244994,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/phrase-bwt-6973244994/report.md",
+      "source_commit": "84143ba0a74cf2e61ac633fdbb8e9173f82cf45b"
     }
   ],
   "active_delegations": [],
