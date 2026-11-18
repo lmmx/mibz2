@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.6](https://github.com/lmmx/mibz2/compare/v0.5.5...v0.5.6) - 2026-11-18
 
+A kernel release: Cells' writer reads its rules once. Every plan, thread count and worker
+trim is unchanged.
+
 ### <!-- 3 -->Performance
 
 - *(cells)* write each full-period block in one scan of its rules (study 5, #579) ([#581](https://github.com/lmmx/mibz2/pull/581))
@@ -27,20 +30,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - a new blog post always goes through a PR; direct commits only for amendments ([#567](https://github.com/lmmx/mibz2/pull/567))
 - Release scaling: 0.5.5 against 0.5.4 on the i9; 0.5.5's notes and attribution row ([#563](https://github.com/lmmx/mibz2/pull/563))
 
-- **Cells writes each full-period block in one scan of its rules** (study 5, #579). Eager `Cells`
-  and `LazyCells` share the writer. The shipped writer found each long rule's leftmost output
-  occurrence, then read the rules again to expand and copy them. The one-scan writer instead
-  places each rule child at its *owner*, the parent at its last use. Two consecutive stored
-  rules certify the owner, so the induction is unchanged. Each surviving child becomes a copy
-  command, stored over the rule records already read and run afterwards in increasing parent
-  order. A block whose cycle is shorter than the block is written by the shipped writer as
-  before. The output is byte-identical.
-  - On identical grammars, writer-only (`examples/writer_owned.rs`, research feature
-    `owned-writer`; `docs/journal/2026-11-18-one-scan-writer.md`), the one-scan writer takes
-    0.81 of the shipped writer's time on Wikidata eager and 0.79 lazy, the frozen block 0.80,
-    and other corpora under forced Cells 0.55 to 0.72. Its data reads fall to 0.62 and its
-    branch mispredictions to 0.70 (simulated). Its D1 write misses rise to 1.19, from the
-    scattered order of its stores and copies.
+- **Cells writes each full-period block in one scan of its rules** (study 5, #579; #581). Eager
+  `Cells` and `LazyCells` share the writer. The shipped writer found each long rule's leftmost
+  output occurrence, then read the rules again to expand and copy them. The one-scan writer
+  instead places each rule child at its *owner*, the parent at its last use. Two consecutive
+  stored rules certify the owner, so the induction is unchanged. Each surviving child becomes
+  a copy command, stored over the rule records already read and run afterwards in increasing
+  parent order. A block whose cycle is shorter than the block is written by the shipped
+  writer as before. The output is byte-identical.
+  - **The whole decoder on Wikidata, CI's paired bench** (10 rounds; wall time, head over
+    base, 95% interval):
+
+    | run | CPU | 1 thread | 2 threads | 4 threads |
+    |---|---|--:|--:|--:|
+    | #581 at cd7e5de2 | Xeon 6975P-C | −4.8% (−7.8, −1.7) | −3.5% (−5.0, −1.9) | −1.3% (−2.7, +0.2) |
+    | #581 at 270a29ba | EPYC 7763 | −3.9% (−5.5, −2.4) | −3.9% (−6.2, −1.5) | −1.6% (−2.9, −0.4) |
+    | 0.5.6 against 0.5.5 | Xeon Platinum 8370C | −1.7% (−4.0, +0.6) | −2.4% (−4.2, −0.5) | −1.3% (−2.0, −0.6) |
+
+    CPU time fell 2.0–2.6% at 4 threads in all three runs. No other corpus is slower beyond
+    noise in any run, and peak RSS shows no consistent change. The gain at the i9's thread
+    counts (7–10) is under evaluation: the release scaling, below, measures it.
+  - **The writer alone,** on identical grammars (`examples/writer_owned.rs`, research feature
+    `owned-writer`; `docs/journal/2026-11-18-one-scan-writer.md`): 0.81 of the shipped
+    writer's time on Wikidata eager and 0.79 lazy, the frozen block 0.80, and other corpora
+    under forced Cells 0.55 to 0.72. Its data reads fall to 0.62 and its branch
+    mispredictions to 0.70 (simulated). Its D1 write misses rise to 1.19, from the scattered
+    order of its stores and copies.
+  - **Its checks:** two independent verifications of the mathematics (the Researcher's REVIEW
+    6986491194; MONODROMY's record 67). The Guardian's review lifted its evidence HOLD
+    (D113, D114) on a completed Miri run and runtime mutation receipts, 8 of 8 killed.
+  - **An alternative not taken:** study 6's first-occurrence writer (#582) took 1.79× the
+    one-scan writer's time on identical grammars (`docs/journal/2026-11-18-first-occurrence-writer.md`).
+- **The worker trims are unchanged, without a recalibration** (RELEASING §3.4). The writer
+  cuts per-block CPU by about 2–4%, with no change in peak memory or DRAM bytes per output
+  byte. The 10-thread trim is held by its memory cost, not its speed. The release scaling and
+  the crossover check it (§5a, §5c).
+- **The release scaling and the crossover** (0.5.6 against 0.5.5 on the i9) are running from
+  the workstation queue at 530ed404. Their figures follow here when they land.
 
 ## [0.5.5](https://github.com/lmmx/mibz2/compare/v0.5.4...v0.5.5) - 2026-11-18
 
