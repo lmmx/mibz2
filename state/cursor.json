@@ -201,9 +201,10 @@
     6978698021,
     6981094372,
     6981855359,
-    6982461166
+    6982461166,
+    6982863130
   ],
-  "last_processed_comment_id": 6982461166,
+  "last_processed_comment_id": 6982863130,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2413,13 +2414,16 @@
     },
     {
       "trigger_comment_id": 6982863130,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/synthesis-6982863130/report.md",
       "source_commit": "049464756c76addb72cbfaed42d421d006126eab",
       "report_commit": "57b4a9403b1e26f602258248c1f088783156ec06",
-      "disposition": "Counts and partition identities verified; event correspondence unproved"
+      "disposition": "Counts and partition identities verified; event correspondence unproved",
+      "review_comment_id": 6983166783,
+      "review_pr": 145,
+      "publication_verification": "Verified GitHub destination, author and exact body. Pinned route and role-aware header/misrouting checks passed. The coordinator-only sender check is inapplicable to this Researcher REVIEW."
     }
   ],
   "active_delegations": [],
