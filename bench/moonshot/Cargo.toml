@@ -1,0 +1,32 @@
+# The moonshot scorer's harness (bench/moonshot/README.md): one candidate inverse-BWT kernel
+# checked byte for byte against libbzip2 and timed against 0.5.6's kernel (LazyCells), in
+# workers built exactly as the shipped workers are (`BzReader::parallel_workers_with`). The
+# candidate is a Rust source file named by MOONSHOT_CANDIDATE at build time (build.rs).
+# Never published, and not part of the crate's package.
+[package]
+build = "build.rs"
+edition = "2021"
+name = "mibz2-moonshot"
+publish = false
+rust-version = "1.80"
+version = "0.0.0"
+
+[[bin]]
+name = "moonshot"
+path = "src/main.rs"
+
+[dependencies]
+# The oracle (libbzip2 1.0.8, as the crate's tests use it) and the generated corpora's encoder
+bzip2 = { features = ["static"], version = "0.4" }
+# `moonshot`: the run records public, for a candidate built here (src/runs.rs)
+mibz2 = { features = ["moonshot"], path = "../.." }
+
+# The crate's release profile (../../Cargo.toml), so every arm is built as mibz2 is
+[profile.release]
+codegen-units = 1
+debug = "line-tables-only"
+lto = "fat"
+
+# (tests/common/cells.rs, shared with the crate's tests, names a feature of the crate's)
+[lints.rust]
+unexpected_cfgs = { check-cfg = ['cfg(feature, values("memory-lever"))'], level = "warn" }
