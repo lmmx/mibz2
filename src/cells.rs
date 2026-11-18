@@ -71,6 +71,16 @@ struct Kernel {
     shipped_writer: bool,
     #[cfg(test)]
     owned_taken: usize,
+    /// (research only) the first-occurrence writer's stack (`cells_first.rs`); (test only)
+    /// every block written by it, how many it wrote by its walk and its deepest stack
+    #[cfg(any(test, feature = "owned-writer"))]
+    first_stack: Vec<u64>,
+    #[cfg(test)]
+    first_writer: bool,
+    #[cfg(test)]
+    first_taken: usize,
+    #[cfg(test)]
+    first_peak: usize,
     #[cfg(test)]
     materialization: Option<Vec<Materialization>>,
     /// (test only) room for `budget` fresh slots after each order's letters, the layout the
@@ -101,6 +111,9 @@ include!("cells_replay.rs");
 // The one-scan writer (study 5, #579): the writer of full-period blocks, the shipped writer
 // (`write_cells`) its fallback; with `owned-writer` (research only), its comparison harness
 include!("cells_owned.rs");
+// (research only: study 6's first-occurrence writer, compared with `owned-writer`; and its tests)
+#[cfg(any(test, feature = "owned-writer"))]
+include!("cells_first.rs");
 // (research only: the memory-lever experiment's staged kernel)
 #[cfg(feature = "memory-lever")]
 include!("cells_lever.rs");
@@ -553,8 +566,15 @@ impl Kernel {
             let shipped = self.shipped_writer;
             #[cfg(not(test))]
             let shipped = false;
+            #[cfg(test)]
+            let first = self.first_writer;
+            #[cfg(not(test))]
+            let first = false;
             if self.variant == LAZY_W12 {
                 self.write_w12(word, len, n, out);
+            } else if first {
+                #[cfg(any(test, feature = "owned-writer"))]
+                self.write_first(word, len, n, out);
             } else if shipped {
                 self.write_cells(word, len, n, out);
             } else {
@@ -1728,5 +1748,6 @@ mod tests {
     }
     include!("cells_selective_test.rs");
     include!("cells_owned_test.rs");
+    include!("cells_first_test.rs");
     include!("cells_lazy_test.rs");
 }

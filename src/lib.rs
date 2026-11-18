@@ -88,7 +88,7 @@ pub use cells::{replay_reps, replay_stats, ReplayStats};
 // (research only: the one-scan writer's comparison, with `owned-writer`)
 #[cfg(feature = "owned-writer")]
 #[doc(hidden)]
-pub use cells::{owned_ab, owned_blocks, owned_mode, owned_phases};
+pub use cells::{first_ab, first_phases, owned_ab, owned_blocks, owned_mode, owned_phases};
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;

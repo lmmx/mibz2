@@ -223,14 +223,26 @@ unsafe fn owned_copies(base: *mut u8, dst: *mut u8, pos: *mut u32, ro: usize, ta
 #[cfg(feature = "owned-writer")]
 static OWNED_LAST_COMMANDS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// (research only, `owned-writer`) each compared block: [rows, rules, full period, shipped ns,
-/// one-scan ns, commands] (the fastest of the reps each)
+/// one-scan ns, commands, first-occurrence ns] (the fastest of the reps each)
 #[cfg(feature = "owned-writer")]
-static OWNED_BLOCKS: std::sync::Mutex<Vec<[u64; 6]>> = std::sync::Mutex::new(Vec::new());
+static OWNED_BLOCKS: std::sync::Mutex<Vec<[u64; 7]>> = std::sync::Mutex::new(Vec::new());
+/// (research only, `owned-writer`) the first-occurrence writer (`cells_first.rs`) in the
+/// comparison: [blocks whose bytes differ from the shipped writer's, full-period ns (the fastest
+/// of the reps, summed), other blocks' ns]
+#[cfg(feature = "owned-writer")]
+static FIRST_AB: [std::sync::atomic::AtomicU64; 3] = [const { std::sync::atomic::AtomicU64::new(0) }; 3];
+
+/// (research only, `owned-writer`) the first-occurrence writer's comparison totals (`FIRST_AB`)
+#[cfg(feature = "owned-writer")]
+#[doc(hidden)]
+pub fn first_ab() -> [u64; 3] {
+    std::array::from_fn(|i| FIRST_AB[i].load(std::sync::atomic::Ordering::Relaxed))
+}
 
 /// (research only, `owned-writer`) the blocks compared since the last call (see `OWNED_BLOCKS`)
 #[cfg(feature = "owned-writer")]
 #[doc(hidden)]
-pub fn owned_blocks() -> Vec<[u64; 6]> {
+pub fn owned_blocks() -> Vec<[u64; 7]> {
     std::mem::take(&mut *OWNED_BLOCKS.lock().unwrap())
 }
 
@@ -244,7 +256,8 @@ pub fn owned_phases() -> [u64; 6] {
 
 /// (research only, `owned-writer`) which writers the comparison runs after each induction, and
 /// how many times: `mode` 0 both (timed, interleaved, the fastest of the reps), 1 the shipped
-/// writer alone, 2 the one-scan writer alone, 3 nothing (the baseline the counters subtract);
+/// writer alone, 2 the one-scan writer alone, 3 nothing (the baseline the counters subtract), 4
+/// the first-occurrence writer alone (`cells_first.rs`);
 /// every mode restores the rules before each rep, uncharged by the timing but counted alike
 #[cfg(feature = "owned-writer")]
 static OWNED_MODE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -282,16 +295,17 @@ impl Kernel {
         let saved = self.buf[rules.clone()].to_vec();
         let full = (len & !MARK) as usize == n && self.rule_end > self.lay.rules
             && word as usize == self.rule_end - 16;
-        let mut best = [u64::MAX; 2];
+        let mut best = [u64::MAX; 3];
         let mut want = Vec::new();
-        let mut differ = false;
+        let (mut differ, mut first_differ) = (false, false);
         for rep in 0..reps {
             #[allow(clippy::needless_range_loop)]
-            for w in 0..2 {
+            for w in 0..3 {
                 let run = match mode {
                     0 => true,
                     1 => w == 0,
                     2 => w == 1,
+                    4 => w == 2,
                     _ => false,
                 };
                 // (uncharged) the output poisoned, so no writer passes on bytes another left,
@@ -303,10 +317,10 @@ impl Kernel {
                     continue;
                 }
                 let t = std::time::Instant::now();
-                if w == 0 {
-                    self.write_cells(word, len, n, out);
-                } else {
-                    self.write_owned(word, len, n, out);
+                match w {
+                    0 => self.write_cells(word, len, n, out),
+                    1 => self.write_owned(word, len, n, out),
+                    _ => self.write_first(word, len, n, out),
                 }
                 best[w] = best[w].min(t.elapsed().as_nanos() as u64);
                 if mode == 0 {
@@ -315,6 +329,8 @@ impl Kernel {
                         want.extend_from_slice(out);
                     } else if w == 1 && out[..] != want[..] {
                         differ = true;
+                    } else if w == 2 && out[..] != want[..] {
+                        first_differ = true;
                     }
                 }
             }
@@ -324,10 +340,14 @@ impl Kernel {
         OWNED_AB[0].fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         OWNED_AB[1].fetch_add(full as u64, std::sync::atomic::Ordering::Relaxed);
         OWNED_AB[2].fetch_add(differ as u64, std::sync::atomic::Ordering::Relaxed);
-        for (i, ns) in best.iter().enumerate() {
+        for (i, ns) in best[..2].iter().enumerate() {
             if *ns != u64::MAX {
                 OWNED_AB[k + i].fetch_add(*ns, std::sync::atomic::Ordering::Relaxed);
             }
+        }
+        FIRST_AB[0].fetch_add(first_differ as u64, std::sync::atomic::Ordering::Relaxed);
+        if best[2] != u64::MAX {
+            FIRST_AB[if full { 1 } else { 2 }].fetch_add(best[2], std::sync::atomic::Ordering::Relaxed);
         }
         OWNED_BLOCKS.lock().unwrap().push([
             n as u64,
@@ -336,6 +356,7 @@ impl Kernel {
             best[0],
             best[1],
             if full { OWNED_LAST_COMMANDS.load(std::sync::atomic::Ordering::Relaxed) } else { 0 },
+            best[2],
         ]);
         if full {
             OWNED_AB[5].fetch_add(((self.rule_end - self.lay.rules) / 16) as u64, std::sync::atomic::Ordering::Relaxed);

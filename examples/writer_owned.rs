@@ -8,8 +8,9 @@
 //!
 //!     cargo run --release --features owned-writer --example writer_owned -- MODE REPS KERNEL FILE...
 //!
-//! MODE: 0 both writers, timed; 1 the shipped writer alone; 2 the one-scan writer alone; 3
-//! neither (for `perf stat`: a mode's counts less mode 3's are its writer's). KERNEL: eager or
+//! MODE: 0 every writer, timed (the shipped, the one-scan and study 6's first-occurrence); 1
+//! the shipped writer alone; 2 the one-scan writer alone; 4 the first-occurrence writer alone; 3
+//! none (for `perf stat`: a mode's counts less mode 3's are its writer's). KERNEL: eager or
 //! lazy, as admitted, or forced-eager or forced-lazy, every block (the guards and the
 //! periodic corpora reach the writers only so).
 use mibz2::bwt::{Cells, ForcedCells, ForcedLazyCells, LazyCells};
@@ -25,6 +26,7 @@ fn main() {
     for f in &a[4..] {
         let data = std::fs::read(f).expect("a readable file");
         let (ab0, ph0) = (mibz2::owned_ab(), mibz2::owned_phases());
+        let (fa0, fp0) = (mibz2::first_ab(), mibz2::first_phases());
         let t = std::time::Instant::now();
         let out = match kernel.as_str() {
             "eager" => mibz2::decode_with::<Cells>(&data, k),
@@ -36,6 +38,7 @@ fn main() {
         .expect("a valid bzip2 stream");
         let secs = t.elapsed().as_secs_f64();
         let (ab, ph) = (mibz2::owned_ab(), mibz2::owned_phases());
+        let (fa, fp) = (mibz2::first_ab(), mibz2::first_phases());
         let d = |i: usize| ab[i] - ab0[i];
         let e = |i: usize| ph[i] - ph0[i];
         let ms = |ns: u64| ns as f64 / 1e6;
@@ -50,10 +53,18 @@ fn main() {
             e(0), e(1), e(3), ms(e(4)), ms(e(5))
         );
         if mode == 0 {
+            let first = (fa[1] - fa0[1]) as f64;
+            eprintln!(
+                "{f} {kernel}: first-occurrence writer: {} blocks differing; full-period {:.2} ms \
+                 ({:.4} of the shipped, {:.4} of the one-scan); other blocks {:.2} ms; its calls {}, \
+                 deepest stack {}",
+                fa[0] - fa0[0], first / 1e6, first / d(3) as f64, first / d(4) as f64,
+                ms(fa[2] - fa0[2]), fp[0] - fp0[0], fp[2]
+            );
             for (i, b) in mibz2::owned_blocks().iter().enumerate() {
                 println!(
-                    "{{\"file\":{f:?},\"kernel\":{kernel:?},\"block\":{i},\"rows\":{},\"rules\":{},\"full\":{},\"shipped_ns\":{},\"owned_ns\":{},\"commands\":{}}}",
-                    b[0], b[1], b[2], b[3], b[4], b[5]
+                    "{{\"file\":{f:?},\"kernel\":{kernel:?},\"block\":{i},\"rows\":{},\"rules\":{},\"full\":{},\"shipped_ns\":{},\"owned_ns\":{},\"commands\":{},\"first_ns\":{}}}",
+                    b[0], b[1], b[2], b[3], b[4], b[5], b[6]
                 );
             }
             let (s, o) = (d(3) as f64, d(4) as f64);
