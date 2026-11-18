@@ -1849,12 +1849,14 @@ bench-memory-lever ROUNDS="10" THREADS="4,6,8,9,10,12":
 # and 20. Unpinned, the arm a count builds does not depend on the threads asked: at 12, 16 and
 # 20 the shipped 7/28 meets one worker more (8/32, the predicted change, so judged at four
 # counts) and the plan's ten workers with that count's window; one worker fewer is run at 10
-# alone. No arm runs more workers than the threads asked.
+# alone. No arm runs more workers than the threads asked. Pinned at 8 threads, ROUNDS_P8 rounds
+# (24): 0.5.5's crossover put one block a thread against the shipped 6/24 at 0.983 [0.955,
+# 1.011] there, where 0.5.4's was 1.050, and record 56 predicts no change.
 # One build, rustc 1.99.1, src as 0.5.5's (checked). COPIES copies of the Wikidata sample (the
 # gain family), text and random (the guards, generated afresh). Each placement is one Holm
 # family at α 0.025 (two families, 0.05 together). Then the memory controller's bytes at three
 # cells (decides nothing), if `kernel.perf_event_paranoid` is 0 or less.
-bench-recalibrate COPIES="4" ROUNDS="12" SETTLE="0.25" REPS="5":
+bench-recalibrate COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="5":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/recalibrate
@@ -1862,7 +1864,7 @@ bench-recalibrate COPIES="4" ROUNDS="12" SETTLE="0.25" REPS="5":
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-recalibrate (the registration, docs/journal/2026-11-18-recalibration-registration.md): the worker trims on 0.5.5's kernel at $(git rev-parse HEAD), pinned at 4, 6, 8 and 10 threads and unpinned at 4, 6, 8, 10, 12, 16 and 20, the shipped trim against its neighbours, the untrimmed plan and the other kernel, on {{COPIES}} copies of the Wikidata sample, text and random, {{ROUNDS}} paired rounds, settle {{SETTLE}} s; then the memory controller, {{REPS}} reps"
+    echo "bench-recalibrate (the registration, docs/journal/2026-11-18-recalibration-registration.md): the worker trims on 0.5.5's kernel at $(git rev-parse HEAD), pinned at 4, 6, 8 and 10 threads and unpinned at 4, 6, 8, 10, 12, 16 and 20, the shipped trim against its neighbours, the untrimmed plan and the other kernel, on {{COPIES}} copies of the Wikidata sample, text and random, {{ROUNDS}} paired rounds ({{ROUNDS_P8}} pinned at 8), settle {{SETTLE}} s; then the memory controller, {{REPS}} reps"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-recalibrate: the checkout has local changes"; exit 1; }
@@ -1907,8 +1909,9 @@ bench-recalibrate COPIES="4" ROUNDS="12" SETTLE="0.25" REPS="5":
                 "8:mibz2-occ-6-24,mibz2-occ-5-20,mibz2-occ-7-28,mibz2-occ-8-32" \
                 "6:mibz2-oce-5-20,mibz2-oce-4-16,mibz2-oce-6-24,mibz2-occ-5-20" \
                 "4:mibz2-oce-3-12,mibz2-oce-2-8,mibz2-oce-4-16,mibz2-occ-3-12"; do
-      echo "pinned at ${spec%%:*} threads: ${spec#*:}"
-      "$AB" run "$O/pinned.jsonl" --arms "${spec#*:}" --threads "${spec%%:*}" --rounds {{ROUNDS}} \
+      t=${spec%%:*}; r={{ROUNDS}}; [ "$t" = 8 ] && r={{ROUNDS_P8}}
+      echo "pinned at $t threads, $r rounds: ${spec#*:}"
+      "$AB" run "$O/pinned.jsonl" --arms "${spec#*:}" --threads "$t" --rounds "$r" \
         --settle {{SETTLE}} --spread "${hold[@]}" "${files[@]}"
     done
     # unpinned, every online CPU, no spinner
@@ -1929,7 +1932,7 @@ bench-recalibrate COPIES="4" ROUNDS="12" SETTLE="0.25" REPS="5":
             --primary wikidata-x{{COPIES}},text --check-workers)
     # each placement one Holm family at α 0.025: pinned, 12 cells
     python3 bench/two_arm.py "$O/pinned.jsonl" "${common[@]}" --judged 10,8,6,4 \
-      --hold-max-threads "$hold_max" \
+      --hold-max-threads "$hold_max" --rounds-at 8={{ROUNDS_P8}} \
       --ref-at mibz2-occ-7-28=10 --ref-at mibz2-occ-6-24=8 --ref-at mibz2-oce-5-20=6 --ref-at mibz2-oce-3-12=4 \
       --cand mibz2-occ-6-24 --judge-at mibz2-occ-6-24=10 \
       --cand mibz2-occ-8-32 --judge-at mibz2-occ-8-32=10,8 \

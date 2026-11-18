@@ -32,6 +32,11 @@ the gate by construction (any corpus above it must trade). Otherwise it is HELD 
 Coordinator's to weigh, as before. An arm that ADOPTS BY TRADE counts as one that ADOPTS: of those
 at a count, the choice is the lowest main-corpus step, as before.
 
+**Rounds by count** (`--rounds-at T=N`, repeated, with `--sparse` only; none by default, and
+then nothing here changes; `just bench-recalibrate`'s pinned 8 threads, the cell the 0.5.5
+crossover put nearest the line): N paired rounds at that judged count in place of `--rounds`.
+Its roster and its steps are read over its own N rounds; Holm's family is unchanged.
+
 **The workers, checked** (`--check-workers`; off by default, and then nothing here changes;
 `just bench-recalibrate`): every record of an occupancy arm (`mibz2-occ-N-S`, `mibz2-oce-N-S`)
 must name exactly N worker threads (`mibz2-0` to `mibz2-(N-1)`) among its `observed_threads`,
@@ -595,6 +600,8 @@ def main(argv):
                     help="Holm's family α (0.05; half each where a run is judged in two calls)")
     ap.add_argument("--primary", default="",
                     help="with --judge-at: the primary corpora, comma-separated, where rule 4 may trade memory for speed")
+    ap.add_argument("--rounds-at", action="append", default=[], metavar="T=N",
+                    help="with --sparse: N paired rounds at judged count T in place of --rounds")
     ap.add_argument("--check-workers", action="store_true",
                     help="every occupancy arm's record names exactly its N worker threads")
     a = ap.parse_args(argv[1:])
@@ -604,6 +611,21 @@ def main(argv):
     errors = []
     if R < 2:
         errors.append(f"--rounds {R}: at least 2")
+    rounds_at = {}
+    for spec in a.rounds_at:
+        t, eq, n = spec.partition("=")
+        try:
+            t, n = int(t), int(n)
+        except ValueError:
+            errors.append(f"--rounds-at {spec!r}: not T=N")
+            continue
+        if not eq or n < 2 or t not in judged or t in rounds_at or not a.sparse:
+            errors.append(f"--rounds-at {spec!r}: a judged count once, at least 2 rounds, with --sparse")
+            continue
+        rounds_at[t] = n
+
+    def rounds(t):
+        return rounds_at.get(t, R)
     if (ref is None) == (not a.ref_at):
         errors.append("the reference: --ref or --ref-at, exactly one of them")
     if a.ref_at and not (a.judge_at and a.sparse):
@@ -638,7 +660,7 @@ def main(argv):
         errors.append("--sparse: with --judge-at and no control counts only")
     if a.sparse and judge_at:
         here = {t: [refs.get(t, ref), *(c for c in cands if t in judge_at.get(c, ())), *context] for t in judged}
-        roster = {(c, arm, t, i) for c in corpora for t in judged for arm in here[t] for i in range(R)}
+        roster = {(c, arm, t, i) for c in corpora for t in judged for arm in here[t] for i in range(rounds(t))}
     else:
         here = {t: arms for t in judged}
         roster = {(c, arm, t, i) for c in corpora for arm in arms for t in judged + controls for i in range(R)}
@@ -651,19 +673,20 @@ def main(argv):
                                          + ", ".join(f"{refs[t]} at {t}" for t in judged if t in refs))
     print(f"records {len(rows)}; roster {len(roster)} ({ref_name} and {' and '.join(cands)}"
           + (f"; context {', '.join(context)}" if context else "") + f"; {a.main} and {', '.join(guards)}; "
-          f"judged {judged}, controls {controls}; {R} rounds)"
+          f"judged {judged}, controls {controls}; {R} rounds"
+          + "".join(f", {n} at {t} threads" for t, n in rounds_at.items()) + ")"
           + (("; judged by count: " + ", ".join(f"{c} at {sorted(ts)}" for c, ts in judge_at.items()))
              if judge_at else "") + ("; sparse: each count's own arms alone" if a.sparse else "")
           + ("; unpinned: every run on every CPU" if a.unpinned else ""))
 
     def cell(corpus, t, cand):
-        return [math.log(rows[(corpus, cand, t, i)]["wall"] / rows[(corpus, refs[t], t, i)]["wall"]) for i in range(R)]
+        return [math.log(rows[(corpus, cand, t, i)]["wall"] / rows[(corpus, refs[t], t, i)]["wall"]) for i in range(rounds(t))]
 
     def pcell(corpus, t, x, y):
-        return [math.log(rows[(corpus, x, t, i)]["wall"] / rows[(corpus, y, t, i)]["wall"]) for i in range(R)]
+        return [math.log(rows[(corpus, x, t, i)]["wall"] / rows[(corpus, y, t, i)]["wall"]) for i in range(rounds(t))]
 
     def peak(corpus, arm, t):
-        return statistics.median(rows[(corpus, arm, t, i)]["rss_kb"] for i in range(R))
+        return statistics.median(rows[(corpus, arm, t, i)]["rss_kb"] for i in range(rounds(t)))
 
     if not errors:
         moved = []

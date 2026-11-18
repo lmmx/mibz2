@@ -126,6 +126,14 @@ exactly that arm's N worker threads (`mibz2-0` to `mibz2-(N-1)`).
   reversed round by round as `ab run` does.
 - **Rounds:** 12 paired rounds. Twelve is a multiple of 2 × arms for 2, 3 and 4 arms, so every
   arm runs in every position equally often in every cell.
+- **Pinned at 8 threads, 24 rounds** (`--rounds-at 8=24`), 24 being a multiple of 2 × 4 arms.
+  This is the cell most likely to contradict the model (the Coordinator's input, 18 November):
+  - *0.5.5's crossover* (crossover/run-20261118T113151Z, the Coordinator's LOG on #145) put
+    one block a thread, 8 lazy workers, against the shipped 6/24 at 0.983 [0.955, 1.011];
+  - *0.5.4's* was 1.050, in the trim's favour;
+  - *record 56* predicts no change there (8: 1.10).
+
+  The cell must tell 6 workers from 8 in either direction.
 - **One build** by rustc 1.99.1, the repository's pin.
 - **The corpora:**
   - Wikidata ×4, the gain family;
@@ -141,9 +149,10 @@ exactly that arm's N worker threads (`mibz2-0` to `mibz2-(N-1)`).
 - **Time:** 111 runs a round (48 pinned and 63 unpinned). At 0.25 s of gate, about 0.02 s of
   harness and about 23 s of decoding, that is about 53 s a round:
   - about 10½ to 11 minutes for 12 rounds;
+  - about 1 minute for pinned 8's 12 further rounds (12 runs and about 5 s a round);
   - about 1 minute to build and generate;
   - about ½ minute for the counters;
-  - **about 12½ minutes in all.**
+  - **about 13½ minutes in all.**
 
 ### Power, sized to the effects predicted (the fused-finish lesson)
 
@@ -164,6 +173,14 @@ exactly that arm's N worker threads (`mibz2-0` to `mibz2-(N-1)`).
 - *8 workers against 7:* predicted at 0.979 unpinned and 0.982 pinned at 10, gains of 2.1% and
   1.8%. Both are within reach.
 - *A gain under about 1.3%:* not resolved.
+
+**Pinned at 8 threads, with 24 rounds:**
+- *Holm's strictest step* (t₂₃ ≈ 3.18) detects a gain of 1.0% with 80% power at an SD of
+  0.012, and 1.6% at 0.020.
+- *The 95% interval's half-width* is about 0.5% at an SD of 0.012, and 0.8% at 0.020.
+- *A simulation* (as below, with the other eleven cells null) rejects a 1.7% gain of 8 over 6:
+  with power 1.00 at an SD of 0.012, and 0.84 at 0.020.
+- *Either direction:* a loss of that size is labelled SLOWER.
 
 **Splitting α between the two placements** costs nothing. One family of 26 cells at 0.05
 would give about the same thresholds. The unpinned family's strictest step, 0.025 / 14, needs
@@ -279,10 +296,12 @@ A lazy kernel adopted at an eager cell changes that cell's `trim_cell` entry alo
   - rule 4's trade (`--primary`);
   - `--check-workers`;
   - a reference by count that is a candidate at another count (lazy 6/24, the shipped trim at
-    8 pinned and one worker fewer at 10), never at its own.
+    8 pinned and one worker fewer at 10), never at its own;
+  - `--rounds-at`, rounds by count.
 
-  `bench/test_two_arm.py`: 137 checks. 21 of them are new: each trade condition met and
-  broken, the workers check, the halved α, and the reference-and-candidate cases.
+  `bench/test_two_arm.py`: 143 checks. 27 of them are new: each trade condition met and
+  broken, the workers check, the halved α, the reference-and-candidate cases, and rounds by
+  count.
 - **`bench/counters.py`:** `bench/admit`'s, with the IMC events.
 - **The smoke run:** a 2-round run of the whole recipe on a 4-core CI-like machine. Every arm
   ran. Both families VOIDed only on the machine (not the i9) and, pinned, on the spinner

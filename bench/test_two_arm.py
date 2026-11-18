@@ -699,7 +699,7 @@ def main():
     rcl_cands = {10: ["mibz2-occ-6-24", "mibz2-occ-8-32", "mibz2-occ-10-40"], 4: ["mibz2-oce-3-12", "mibz2-occ-4-16"]}
     rcl_out = {"wikidata-x4": (838800784, "aa"), "text": (49067679, "bb"), "random": (16777216, "cc")}
 
-    def rcl(steps=None, mem=None, base_kib=30000, edit=None, refs=None, cands=None):
+    def rcl(steps=None, mem=None, base_kib=30000, edit=None, refs=None, cands=None, rounds=None):
         """`steps` and `mem` map (arm, threads, corpus) to the candidate's step and memory over
         the shipped trim's (level by default); `base_kib` the reference's peak a thread"""
         import random
@@ -708,7 +708,7 @@ def main():
         rng = random.Random(41)
         rows = []
         for t in refs:
-            for i in range(R):
+            for i in range((rounds or {}).get(t, R)):
                 for corpus, out in rcl_out.items():
                     base = 0.5 * (1 + 0.02 * rng.uniform(-1, 1))
                     wig = 1 + 0.01 * (1 if i % 2 else -1)
@@ -818,6 +818,21 @@ def main():
         args=rcl_args(refs=prf, cands={10: ["mibz2-occ-6-24"], 8: ["mibz2-occ-8-32", "mibz2-occ-6-24"]})))
     results.append(expect_low("recalibration: a context arm that is a reference", rcl(refs=prf, cands=pcs), 1,
         ["VOID", "two arms are one"], args=rcl_args(refs=prf, cands=pcs) + ["--context", "mibz2-occ-7-28"]))
+    # rounds by count (`--rounds-at`): pinned 8 threads at 24 rounds, the rest at 10
+    results.append(expect_low("recalibration: one count at more rounds", rcl(
+        {("mibz2-occ-8-32", 10, "wikidata-x4"): 0.96}, rounds={4: 24}), 0, [
+        "10 rounds, 24 at 4 threads", "VERDICT for mibz2-occ-8-32 at 10 threads: ADOPTS"],
+        args=rcl_args() + ["--rounds-at", "4=24"], absent=["VOID"]))
+    results.append(expect_low("recalibration: a count's extra rounds missing", rcl(rounds={4: 20}), 1,
+        ["VOID", "roster keys missing"], args=rcl_args() + ["--rounds-at", "4=24"]))
+    results.append(expect_low("recalibration: extra rounds the roster does not name", rcl(rounds={4: 24}), 1,
+        ["VOID", "not in the roster"], args=rcl_args()))
+    results.append(expect_low("recalibration: --rounds-at a count not judged", rcl(), 1,
+        ["VOID", "--rounds-at '8=24': a judged count once"], args=rcl_args() + ["--rounds-at", "8=24"]))
+    results.append(expect_low("recalibration: --rounds-at malformed", rcl(), 1,
+        ["VOID", "--rounds-at 'x': not T=N"], args=rcl_args() + ["--rounds-at", "x"]))
+    results.append(expect_low("recalibration: --rounds-at a count twice", rcl(), 1,
+        ["VOID", "a judged count once"], args=rcl_args() + ["--rounds-at", "4=10", "--rounds-at", "4=12"]))
     p_mid = {("x", 1): 0.03}
     results.append(ta.holm(p_mid, 0.05) == {("x", 1)} and ta.holm(p_mid, 0.025) == set())
     print(f"{'ok  ' if results[-1] else 'FAIL'} Holm at a halved α: p 0.03 rejected at 0.05, not at 0.025")
