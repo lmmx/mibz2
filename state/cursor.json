@@ -2279,11 +2279,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D113",
-    "incoming_comment": 6988393925,
-    "review_comment_id": 6988584322
+    "active_comment": 6988881933,
+    "status": "in progress",
+    "decision": "D114"
   },
   "duplicate_events": [
     {
@@ -4089,6 +4087,13 @@
       "work_commit": "e60a87fa93fa3ba27e8edccd6d88659b5847a9fd",
       "review_comment_id": 6988584322,
       "complete_cursor_commit": "c6c4a951df5c0d826149ef97b7309b3396705781"
+    },
+    {
+      "comment_id": 6988881933,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D114",
+      "progress": "D113 lift review; migration verified."
     }
   ],
   "migrated_from": {
