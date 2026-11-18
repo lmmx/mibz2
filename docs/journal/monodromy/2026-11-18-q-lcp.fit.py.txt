@@ -1,0 +1,26 @@
+import json,math,numpy as np
+J=json.load(open('../synth/joined.json')); L={d['blk']:d for d in map(json.loads,open('lcp.jsonl'))}
+Q={d['blk']:d for d in map(json.loads,open('../synth/q.jsonl'))}
+LK={(d['n'],d['r']):d for d in L.values()}; QK={(d['n'],d['r']):d for d in Q.values()}
+rows=[]
+for j in J:
+    d=LK[(j['n'],j['r'])]; q=QK[(j['n'],j['r'])]
+    r=d['r']; qr=q['q']
+    rows.append(dict(rn=r/d['n'], exc=(qr[1]-1)/r, tail=sum(qr[2:9])/r,
+        mirr=math.log(d['s_irr']/(r-1)), mirr_rev=math.log(d['s_irr_rev']/(d['r_rev']-1)),
+        sinit=d['s_init']/d['n'], cells=j['cells'], inv1=j['inv1'], forest=j['forest']))
+def fit(feats,y):
+    X=np.c_[np.ones(len(rows)),[[r[f] for f in feats] for r in rows]]; y=np.array([r[y] for r in rows])
+    c=np.linalg.lstsq(X,y,rcond=None)[0]; res=y-X@c; H=X@np.linalg.pinv(X.T@X)@X.T
+    loo=res/(1-np.diag(H)); r2=1-res.var()/y.var(); return r2,math.sqrt(np.mean(loo**2)),res,c
+models={'M0':['rn','exc'],'M1 (prespec)':['rn','exc','mirr'],'M63':['rn','exc','tail'],'M1+M63':['rn','exc','tail','mirr'],
+        'sec: M0+rev mirr':['rn','exc','mirr_rev'],'sec: M0+s_init/n':['rn','exc','sinit']}
+for m,f in models.items():
+    out=[];R={}
+    for y in ('cells','inv1','forest'):
+        r2,loo,res,c=fit(f,y); R[y]=res; out.append(f"{y} R2 {r2:.3f} LOO {loo:.4f}")
+    cc=lambda a,b: np.corrcoef(R[a],R[b])[0,1]
+    print(f"{m:18s}", ' | '.join(out), f"| rc C~I {cc('cells','inv1'):.3f} C~F {cc('cells','forest'):.3f} I~F {cc('inv1','forest'):.3f}")
+v=lambda k: np.array([r[k] for r in rows])
+print('corr(mirr,tail) %.3f corr(mirr,rn) %.3f corr(mirr,exc) %.3f corr(mirr,mirr_rev) %.3f corr(tail,sinit) %.3f'%(np.corrcoef(v('mirr'),v('tail'))[0,1],np.corrcoef(v('mirr'),v('rn'))[0,1],np.corrcoef(v('mirr'),v('exc'))[0,1],np.corrcoef(v('mirr'),v('mirr_rev'))[0,1],np.corrcoef(v('tail'),v('sinit'))[0,1]))
+print('M1 coef cells', fit(models['M1 (prespec)'],'cells')[3])
