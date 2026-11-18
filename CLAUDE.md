@@ -26,8 +26,9 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
   in `error` or `pending` on the head is not green, whatever the check runs say. (#351 was
   merged at 16:2x on 10 November with pre-commit.ci's class B error still on its head; the
   re-run passed minutes later.)
-- **When not to wait for CI** (Louis, 17 November 2026). Two kinds of PR merge without waiting
-  for their CI, with the head-sha checks still run before and after:
+- **When not to wait for CI** (Louis, 17 November 2026; the third case 18 November 2026). In these
+  cases a PR merges without waiting for some or all of its CI, with the head-sha checks still
+  run before and after:
   - **A PR that only queues:** its diff touches nothing but `bench/workstation-queue.txt`.
     The queue file's own test (`python3 bench/test_workstation_queue.py`) passes locally first.
   - **Content CI has already passed:** the head's tree differs from a commit that went green
@@ -35,9 +36,29 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
     head is green, and a PR re-opened, re-based or re-targeted onto an identical tree. Name
     the green commit in the merge's LOG, and show that the trees match
     (`git diff --stat <green> <head>`).
+  - **A job this PR's diff can't reach** (Louis, 18 November 2026: "not to introduce process
+    latency by waiting on CI jobs that cannot possibly change an outcome … we need to keep
+    development velocity up"). A job isn't waited for when its inputs on the head are
+    identical to its inputs on a commit whose result for it is known:
+    - *the merge base:* the PR doesn't touch the job's inputs, so it can't change the job's
+      result;
+    - *an earlier commit of this PR on which the job passed:* only files the job doesn't read
+      have changed since.
+    - *Inputs:* `src/`, tests, `examples/`, `Cargo.*`, `build.rs` and `pyproject.toml` for the
+      rust, fuzz, Miri, wheel and sdist jobs; the bench's inputs for the bench;
+      `docs/site/**` and the site's config for the site build and `look`; every file for
+      pre-commit and `check-commit`; a workflow's own file for its jobs.
+    - *Examples:* a docs, journal, blog or rules PR waits only for pre-commit, `check-commit`
+      and, if it touches the site, the site build and `look`. A docs-only commit pushed onto
+      a code PR whose code jobs already passed doesn't wait for Miri or the bench again.
+    - *The record:* the merge's LOG names the jobs not waited for, and the commit compared
+      for each, with `git diff --stat <commit> <head>` showing none of their inputs.
+    - *Doubts:* if it's unclear whether a path is among a job's inputs, treat it as one, and
+      wait. A job not waited for that turns out red is checked on master: red there too
+      means it isn't this PR's (`docs/team/CI-INCIDENTS.md`).
 
-  Anything else waits for green, as above. Waiting on CI for these two wastes the
-  workstation's time.
+  Anything else waits for green, as above. Waiting on CI in these cases wastes the
+  workstation's time and the team's.
 - **GitHub's macOS runners never hold a merge** (Louis, 18 November 2026: "Ignore GitHub flakey
   macOS runners! … it's never worth holding back for that").
   - *What it covers:* a macOS job that is queued, waiting for a runner, cancelled, timed out or
