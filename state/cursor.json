@@ -1698,6 +1698,20 @@
       "status": "finished",
       "disposition": "HOLD integration pending completed Miri and runtime-specific mutation evidence; source proof supported.",
       "comment": 6988584322
+    },
+    {
+      "id": "D114",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6988881933,
+      "pr": 161,
+      "sha": "270a29ba52a90b8411d20c2326b93692a6e421e7",
+      "evidence_digest": "sha256:7a64dcdcad7a380adbbde38241ffaf0c542e0e2ae0774c74cba95d02b2b2f64e",
+      "commit": "2289d9a0f359fad72050f4afcce3a2310020a6a0",
+      "status": "complete",
+      "disposition": "PROCEED; lift D113 scoped B5 evidence HOLD."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -2280,8 +2294,9 @@
   },
   "current_execution": {
     "active_comment": 6988881933,
-    "status": "in progress",
-    "decision": "D114"
+    "status": "complete",
+    "decision": "D114",
+    "work_commit": "2289d9a0f359fad72050f4afcce3a2310020a6a0"
   },
   "duplicate_events": [
     {
@@ -3147,6 +3162,13 @@
       "evidence_digest": "sha256:6a6b596cb031beb4704d77e80ac606e94a9f23f438b8f0cb03b0f9a66e8605f4",
       "incoming_comment": 6988393925,
       "decision": "D113"
+    },
+    {
+      "pr": 581,
+      "sha": "270a29ba52a90b8411d20c2326b93692a6e421e7",
+      "evidence_digest": "sha256:7a64dcdcad7a380adbbde38241ffaf0c542e0e2ae0774c74cba95d02b2b2f64e",
+      "incoming_comment": 6988881933,
+      "decision": "D114"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -4091,9 +4113,11 @@
     {
       "comment_id": 6988881933,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D114",
-      "progress": "D113 lift review; migration verified."
+      "progress": "Lift review complete; publish REVIEW on #145.",
+      "receipt_commit": "a8348a5f9c925c07b161c22db5bd937c454c1140",
+      "work_commit": "2289d9a0f359fad72050f4afcce3a2310020a6a0"
     }
   ],
   "migrated_from": {
