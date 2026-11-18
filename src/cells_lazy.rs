@@ -202,7 +202,7 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Result<(u32, u32, usize), Refusal> {
         match self.variant {
-            LAZY => self.induce_lazy(budget, out),
+            LAZY | LAZY_WIDE => self.induce_lazy(budget, out),
             LAZY_W12 => self.induce_lazy_r12::<true>(budget, out),
             #[cfg(feature = "memory-lever")]
             STAGED_RULES => self.induce_cells_staged(budget, out),
@@ -237,6 +237,14 @@ impl Kernel {
     ) -> Result<(), Refusal> {
         self.bottom_laid = false;
         self.lz.bend = 0;
+        // (the wide-admission arm, `cells_wide.rs`: its own record-count gates, then the
+        // census's other gates)
+        let forced = if self.variant == LAZY_WIDE && !forced {
+            wide_gates(n, recs.len())?;
+            true
+        } else {
+            forced
+        };
         let Census {
             mut cnt,
             letters,

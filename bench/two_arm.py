@@ -5,9 +5,12 @@ at judged thread counts, with control counts where the two arms build the same d
 Standard library only. Generalised from the stop-and-walk adjudicator (the Researcher's
 correction, #145 REVIEW 6921090225), for `just bench-cores-less-one` (#481) and after.
 
-    two_arm.py RUNS.jsonl --ref ARM --cand ARM --main CORPUS --guard CORPUS
+    two_arm.py RUNS.jsonl --ref ARM --cand ARM --main CORPUS --guard CORPUS[,CORPUS..]
                --judged 12,16,20 --controls 9,10 --env ENV.json [--rounds 10]
-               [--cores 10 --cpus 20] [--hold-max-threads 9]
+               [--cores 10 --cpus 20] [--hold-max-threads 9] [--unpinned]
+
+**Guards.** `--guard` names one guard corpus or several, comma-separated: each is screened for
+loss and memory as the one guard is (`just bench-admit`'s text and random).
 
 **Arms.** A record's arm is canonical: `NAME` for this build's harness, and `NAME@build-X`
 for another build's (`ab run`'s `NAME@EXE` arm, EXE under a directory `build-X`).
@@ -40,7 +43,9 @@ registration on #145).
     registered: `--cores` physical cores and `--cpus` CPUs in the affinity, each core's CPUs
     listed and together all of them, and no CPU quota;
   - *the pinning:* a record's `cpus` missing or malformed; at a count up to the cores, not one
-    CPU on each of that many distinct cores (`ab run --spread`); past the cores, not `all`;
+    CPU on each of that many distinct cores (`ab run --spread`); past the cores, not `all`.
+    With `--unpinned` (a run registered unpinned at every count, `ab run` without `--spread`:
+    `just bench-admit`), any record not `all`;
   - *the spinner:* at a count up to `--hold-max-threads`, a record's `held_spinner` missing or
     malformed (its `cpu`, `overlap`, `decoder_cpus` and `owner`), its `decoder_cpus` not the
     record's own, or its CPU on a core of the decode's; past it, a spinner recorded.
@@ -180,10 +185,14 @@ def topology(path, cores, cpus, errors):
     return core_of
 
 
-def check_metadata(where, key, r, core_of, cores, hold_max, errors):
-    """A record's pinning and spinner, against the machine (`core_of`) and the hold limit"""
+def check_metadata(where, key, r, core_of, cores, hold_max, errors, unpinned=False):
+    """A record's pinning and spinner, against the machine (`core_of`) and the hold limit;
+    `unpinned`: every record unpinned (`all`), at every count"""
     t, s = key[2], r.get("cpus")
-    if t > cores:
+    if unpinned:
+        if s != "all":
+            errors.append(f"{where}: {key} pinned {s!r} in a run registered unpinned, not 'all'")
+    elif t > cores:
         if s != "all":
             errors.append(f"{where}: {key} pinned {s!r} past the {cores} cores, not unpinned ('all')")
     else:
@@ -219,7 +228,7 @@ def check_metadata(where, key, r, core_of, cores, hold_max, errors):
 def load(path, roster, errors, meta=None):
     """The file's records by key (corpus, canonical arm, threads, round), after checking each
     record and the roster; errors appended. `meta`: (core_of, cores, hold_max) to check each
-    record's pinning and spinner against"""
+    record's pinning and spinner against, with (`unpinned`) the run registered unpinned"""
     name, rows, outputs = os.path.basename(path), {}, {}
     if not os.path.exists(path):
         errors.append(f"{name}: missing")
@@ -262,7 +271,7 @@ def load(path, roster, errors, meta=None):
             if isinstance(hs, dict) and hs.get("overlap"):
                 errors.append(f"{where}: {key} ran beside a spinner sharing a decoder core")
             if meta is not None:
-                check_metadata(where, key, r, *meta, errors)
+                check_metadata(where, key, r, *meta[:3], errors, unpinned=len(meta) > 3 and meta[3])
             rows[key] = r
     missing = sorted(roster - set(rows))
     if missing:
@@ -288,6 +297,8 @@ def main(argv):
     ap.add_argument("--cpus", type=int, default=20)
     ap.add_argument("--hold-max-threads", type=int, default=9,
                     help="the spinner's limit as the run had it; 0 for a run without one")
+    ap.add_argument("--unpinned", action="store_true",
+                    help="the run was registered unpinned at every count (`all`)")
     a = ap.parse_args(argv[1:])
     judged = [int(t) for t in a.judged.split(",")]
     controls = [int(t) for t in a.controls.split(",") if t]
@@ -297,11 +308,15 @@ def main(argv):
         errors.append(f"--rounds {R}: at least 2")
     if set(judged) & set(controls) or ref == cand:
         errors.append("the judged and control counts overlap, or the two arms are one")
-    corpora = [a.main, a.guard]
+    guards = [g for g in a.guard.split(",") if g]
+    if not guards or a.main in guards or len(set(guards)) != len(guards):
+        errors.append(f"--guard {a.guard!r}: one guard corpus or more, distinct, none the main corpus")
+    corpora = [a.main] + guards
     roster = {(c, arm, t, i) for c in corpora for arm in (ref, cand) for t in judged + controls for i in range(R)}
     core_of = topology(a.env, a.cores, a.cpus, errors)
-    rows = load(a.runs, roster, errors, None if core_of is None else (core_of, a.cores, a.hold_max_threads))
-    print(f"records {len(rows)}; roster {len(roster)} ({ref} and {cand}; {a.main} and {a.guard}; "
+    rows = load(a.runs, roster, errors,
+                None if core_of is None else (core_of, a.cores, a.hold_max_threads, a.unpinned))
+    print(f"records {len(rows)}; roster {len(roster)} ({ref} and {cand}; {a.main} and {', '.join(guards)}; "
           f"judged {judged}, controls {controls}; {R} rounds)")
 
     def cell(corpus, t):

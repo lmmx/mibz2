@@ -1797,6 +1797,97 @@ bench-w12 MASTER="cf5c03e61a3c9dc37068e69158d98affdd96ab34" COPIES="4" ROUNDS="1
     fi
     bash bench/bundle.sh "$O"
 
+# Wider admission (#145 QUEUED 6973253342; its adoption registration, docs/journal/
+# 2026-11-18-admit-registration.md, frozen before the data): whether production's lazy kernel
+# should admit blocks to r/n 0.15 with a budget of 0.32 n (`bwt::WideLazyCells`), not 0.10 and
+# 0.16 n, so that Wikidata's dense blocks leave the T-vector walk. Master's decoder
+# (`mibz2@build-master`, built at MASTER, the commit this branch has merged) against this commit's
+# with that kernel wherever production runs lazy workers (`mibz2-wide`,
+# `BzReader::parallel_lazy_as`): the same plan, window and threads. Both built by rustc 1.99.1.
+# Judged at 8 and 10 threads asked, unpinned on the whole machine (`ab run` without `--spread`):
+# the plan's eight lazy workers with 32 in flight, and the i9's seven with 28. COPIES copies of
+# the Wikidata sample (the gain family); the text corpus and random bytes (`ab gen`, a loss and
+# memory guard each: every block of both stays refused). No spinner. `bench/two_arm.py`
+# (`--unpinned`, two guards) checks the records and the machine whole, then reads the verdict.
+# Then a diagnostic that decides nothing: the memory controller's read and write bytes a byte of
+# output at 8 and 10 threads, idle taken off (`bench/counters.py --events imc`), if
+# `kernel.perf_event_paranoid` is 0 or less.
+bench-admit MASTER="f396ccc7b3d4290468b12e4ccdfcfcfe7708f3b2" COPIES="4" ROUNDS="10" JUDGED="8,10" REPS="5":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/admit
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-admit (the registration, docs/journal/2026-11-18-admit-registration.md): mibz2-wide at $(git rev-parse HEAD) against mibz2 at {{MASTER}}, production's plan each, unpinned, on {{COPIES}} copies of the Wikidata sample, text and random, judged at {{JUDGED}} threads, {{ROUNDS}} paired rounds; then the memory controller at {{JUDGED}} threads, {{REPS}} reps"
+    git merge-base --is-ancestor "{{MASTER}}" HEAD \
+      || { echo "bench-admit: {{MASTER}} is not merged into this commit"; exit 1; }
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-admit: the checkout has local changes"; exit 1; }
+    # both builds by the repo's pinned toolchain
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-admit: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    [ -d "$W/build-master" ] || git worktree add -q --detach "$W/build-master" "{{MASTER}}"
+    git -C "$W/build-master" checkout -q --detach "{{MASTER}}"
+    # (the baseline is built from a clean source: a detached checkout keeps local changes)
+    [ -z "$(git -C "$W/build-master" status --porcelain)" ] \
+      || { echo "bench-admit: build-master has local changes"; git -C "$W/build-master" status --short; exit 1; }
+    (cd "$W/build-master" && cargo build -q --release --example ab)
+    MAB=$W/build-master/target/release/examples/ab
+    # the identities measured, checked rather than assumed from a reused directory
+    [ "$(git -C "$W/build-master" rev-parse HEAD)" = "{{MASTER}}" ] \
+      || { echo "bench-admit: build-master is not at {{MASTER}}"; exit 1; }
+    git rev-parse HEAD > "$O/commit.txt"
+    echo "{{MASTER}}" > "$O/master.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    (cd "$W/build-master" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+      || { echo "bench-admit: the two builds' toolchains differ"; exit 1; }
+    sha256sum "$AB" "$MAB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    [ -f "$W/gen/text.bz2" ] && [ -f "$W/gen/random.bz2" ] || "$AB" gen "$W/gen" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" "$W/gen/random.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    # (unpinned at every judged count, the whole machine; no spinner)
+    "$AB" run "$O/judged.jsonl" --arms "mibz2@$MAB,mibz2-wide" \
+      --threads "{{JUDGED}}" --rounds {{ROUNDS}} \
+      "$W/wikidata-x{{COPIES}}.bz2" "$W/gen/text.bz2" "$W/gen/random.bz2"
+    "$AB" summary "$O/judged.jsonl" --ref "mibz2@$MAB" | tee "$O/summary.txt"
+    python3 bench/two_arm.py "$O/judged.jsonl" --ref mibz2@build-master --cand mibz2-wide \
+      --main wikidata-x{{COPIES}} --guard text,random --judged "{{JUDGED}}" --controls "" \
+      --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --hold-max-threads 0 --unpinned \
+      | tee "$O/verdict.txt" \
+      || echo "bench-admit: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # the DRAM diagnostic (decides nothing): the memory controller system-wide, so only where
+    # `kernel.perf_event_paranoid` is 0 or less; skipped, and said so, otherwise
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 0 ]; then
+      perf --version | tee "$O/perf_version.txt"
+      python3 bench/counters.py run --ab "$AB" --arm "mibz2@$MAB" --arm mibz2-wide --events imc --unpinned \
+        --threads "{{JUDGED}}" --reps {{REPS}} --file "$W/wikidata-x{{COPIES}}.bz2" --out "$O/dram.jsonl"
+      python3 bench/counters.py report "$O/dram.jsonl" --ref "mibz2@$MAB" --cand mibz2-wide --events imc \
+        --threads "{{JUDGED}}" --reps {{REPS}} | tee "$O/dram.txt" \
+        || echo "bench-admit: the DRAM diagnostic is VOID (dram.txt says why); the verdict stands"
+    else
+      echo "bench-admit: the DRAM diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 0); the verdict stands" | tee "$O/dram.txt"
+    fi
+    bash bench/bundle.sh "$O"
+
 # The memory lever (#145 QUEUED 6901989466; decision rule LOG 6902022809, posted before the
 # data): is memory per core what holds one block a thread back at 10 threads? The shipped
 # decoder (`mibz2`) and one block a thread (`mibz2-workers-w`), as bench-crossover has them,

@@ -32,7 +32,7 @@ pub type ForcedW12LazyCells = CellsVariant<LAZY_W12, true>;
 /// Whether a variant's first stage and induction are the lazy letters'
 #[inline(always)]
 fn lazy_variant(v: u8) -> bool {
-    v == LAZY || v == LAZY_W12
+    v == LAZY || v == LAZY_W12 || v == LAZY_WIDE
 }
 
 /// A 12-byte rule's stride; where its second child starts

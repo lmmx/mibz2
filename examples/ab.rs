@@ -1171,6 +1171,26 @@ fn decode(
             h,
             last,
         ),
+        // the wider-admission arms (#145 QUEUED 6973253342, `just bench-admit`): lazy letters
+        // admitted to r/n 0.15 with a budget of 0.32 n (`bwt::WideLazyCells`). `mibz2-wide` is
+        // production's decoder, plan and window, with that kernel wherever the plan runs lazy
+        // workers (`BzReader::parallel_lazy_as`); `mibz2-workers-wide` is `mibz2-workers-lazy`
+        // with it. Each differs from its reference in admission alone
+        "mibz2-wide" => drain(
+            mibz2::BzReader::parallel_lazy_as::<mibz2::bwt::WideLazyCells>(open()?, threads),
+            h,
+            last,
+        ),
+        "mibz2-workers-wide" => drain(
+            mibz2::BzReader::parallel_workers_with::<mibz2::bwt::WideLazyCells>(
+                open()?,
+                threads,
+                mibz2::parallel::SLOTS_PER_THREAD * threads,
+                mibz2::Kernels::detect(),
+            ),
+            h,
+            last,
+        ),
         "mibz2-workers-w12" => drain(
             mibz2::BzReader::parallel_workers_with::<mibz2::bwt::W12LazyCells>(
                 open()?,

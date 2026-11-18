@@ -88,6 +88,8 @@ include!("cells_original_test.rs");
 include!("cells_lazy.rs");
 // (a bench arm: lazy letters with 12-byte rules)
 include!("cells_w12.rs");
+// (a bench arm: lazy letters with wider admission)
+include!("cells_wide.rs");
 // (research only: the grammar replay harness, with `grammar-replay`)
 #[cfg(feature = "grammar-replay")]
 include!("cells_replay.rs");
@@ -123,7 +125,14 @@ impl<const F: bool> CellsKernel<F> {
         self.state.counts
     }
     fn attempt(&mut self, recs: &[u16], n: usize, p: u32, out: &mut Vec<u8>) -> bool {
-        let budget = if F { n } else { n / 25 * 4 + n % 25 * 4 / 25 };
+        let budget = if F {
+            n
+        } else if self.state.kernel.variant == LAZY_WIDE {
+            // (the wide-admission arm, `cells_wide.rs`)
+            wide_budget(n)
+        } else {
+            n / 25 * 4 + n % 25 * 4 / 25
+        };
         let result = self.state.kernel.try_invert(recs, n, p, budget, F, out);
         let counts = &mut self.state.counts;
         match result {

@@ -199,6 +199,45 @@ def main():
     results.append(expect("no spinner held, as registered", unheld, 0, "VERDICT: ADOPTS",
                           extra=("--hold-max-threads", "0")))
 
+    # a run registered unpinned at every count (`--unpinned`, `just bench-admit`): every record
+    # `all`, no spinner; a pinned record voids it, and unpinned records void a run not so
+    # registered
+    def unpin(rows):
+        return [{**{k: v for k, v in r.items() if k != "held_spinner"}, "cpus": "all"} for r in rows]
+
+    free = ("--hold-max-threads", "0", "--controls", "", "--unpinned")
+    nocontrols = lambda rows: [r for r in rows if r["threads"] in JUDGED]  # noqa: E731
+    results.append(expect("unpinned, as registered", unpin(nocontrols(good())), 0, "VERDICT: ADOPTS", extra=free))
+    results.append(expect("unpinned, judged at 8 and 10", unpin([{**r, "threads": {12: 8, 16: 10, 20: 20}[r["threads"]]}
+                                                               for r in nocontrols(good())]),
+                          0, "VERDICT: ADOPTS. A gain at [8] threads", extra=(*free, "--judged", "8,10,20")))
+    one_pinned = unpin(nocontrols(good()))
+    one_pinned[3] = {**one_pinned[3], "cpus": "0,1,2,3,4,5,6,7,8,9"}
+    results.append(expect("a pinned record in an unpinned run", one_pinned, 1, "in a run registered unpinned", extra=free))
+    results.append(expect("unpinned records, the run not registered so",
+                          unpin([{**r, "threads": 8 if r["threads"] == 12 else r["threads"]} for r in nocontrols(good())]),
+                          1, "its CPUs 'all' missing or malformed",
+                          extra=("--hold-max-threads", "0", "--controls", "", "--judged", "8,16,20")))
+
+    # several guard corpora (`--guard text,random`): each screened as the one guard is
+    def with_random(rows, step=None):
+        out = []
+        for r in rows:
+            out.append(r)
+            if r["corpus"] == "text":
+                w = r["wall"] * (step.get(r["threads"], 1.0) if step and not r["arm"].startswith("mibz2@") else 1.0)
+                out.append({**r, "corpus": "random", "out": 32000000, "hash": "cc", "wall": w})
+        return out
+
+    two = ("--guard", "text,random")
+    results.append(expect("two guards, both level", with_random(good()), 0, "VERDICT: ADOPTS", extra=two))
+    results.append(expect("two guards, the second SLOWER", with_random(good(), {20: 1.05}), 0,
+                          "VERDICT: A FINDING, NOT ADOPTED. A gain at [12] threads (Holm), but SLOWER at [('random', 20)]",
+                          extra=two))
+    results.append(expect("two guards, the second missing", good(), 1, "roster keys missing", extra=two))
+    results.append(expect("a guard that is the main corpus", good(), 1, "none the main corpus",
+                          extra=("--guard", "text,wikidata-x4")))
+
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0
