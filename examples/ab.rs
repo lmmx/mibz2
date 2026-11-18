@@ -119,6 +119,9 @@
 //!   `both`, park and small together), each its pipeK arm's plan and window;
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
 //!   `ParallelDecoder::with_threads`);
+//! - `mibz2-occ-N-S` (the occupancy arms, `just bench-imc-ten`): production's decoder
+//!   with N lazy workers and S blocks in flight whatever the threads asked
+//!   (`BzReader::parallel_workers(.., N, S, .., true)`), as bench/unpinned's arms;
 //! - `libbzip2` (libbzip2 1.0.8, C, the bzip2 crate's bundled source: `MultiBzDecoder`),
 //!   single-threaded;
 //! - `lbzip2` (`lbzip2 -dc -nT`) and `indexed_bzip2` (bench/ib.py: indexed_bzip2's
@@ -847,6 +850,29 @@ mod json_field_tests {
 }
 
 #[cfg(test)]
+mod occ_arm_tests {
+    use super::occ_arm;
+
+    #[test]
+    fn occupancy_arms_parse() {
+        // `just bench-imc-ten`'s two arms
+        assert_eq!(occ_arm("mibz2-occ-10-40"), Some((10, 40)));
+        assert_eq!(occ_arm("mibz2-occ-7-28"), Some((7, 28)));
+        for bad in [
+            "mibz2-occ-9",
+            "mibz2-occ-0-36",
+            "mibz2-occ-9-0",
+            "mibz2-occ-x-36",
+            "mibz2-occ--36",
+            "mibz2-occ-9-36-1",
+            "mibz2",
+        ] {
+            assert_eq!(occ_arm(bad), None, "{bad}");
+        }
+    }
+}
+
+#[cfg(test)]
 mod child_record_tests {
     use super::*;
 
@@ -1301,8 +1327,28 @@ fn decode(
                 last,
             )
         }
+        // the occupancy arms (as on bench/unpinned and bench/eager-trim; `just bench-imc-ten`):
+        // production's decoder built with N lazy workers and S blocks in flight, whatever the
+        // threads asked (`parallel_workers(.., true)`): lazy letters whatever N, so 10/40 and
+        // 7/28 differ in the worker count and the window alone
+        a if a.starts_with("mibz2-occ-") => {
+            let (n, s) =
+                occ_arm(a).ok_or_else(|| format!("unknown arm {a} (mibz2-occ-WORKERS-SLOTS)"))?;
+            drain(
+                mibz2::BzReader::parallel_workers(open()?, n, s, mibz2::Kernels::detect(), true),
+                h,
+                last,
+            )
+        }
         _ => Err(format!("unknown arm {arm} (in this build of the harness)")),
     }
+}
+
+/// An occupancy arm's workers and blocks in flight: `mibz2-occ-N-S`, N and S at least 1
+fn occ_arm(arm: &str) -> Option<(usize, usize)> {
+    let (n, s) = arm.strip_prefix("mibz2-occ-")?.split_once('-')?;
+    let (n, s) = (n.parse().ok()?, s.parse().ok()?);
+    (n >= 1 && s >= 1).then_some((n, s))
 }
 
 /// A program's run: the result, the wall time, its busy threads, and the CPU it spent

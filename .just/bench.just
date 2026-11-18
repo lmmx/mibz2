@@ -1972,3 +1972,92 @@ bench-knee COPIES="4" ROUNDS="10" TROUNDS="10" THREADS="4,8,10,12,20" PINNED="4,
       --json "$O/report.json" | tee "$O/report.txt" \
       || echo "bench-knee: VOID, no reading (report.txt says why); the bundle is kept"
     bash bench/bundle.sh "$O"
+
+# Ten workers against seven at the memory controller (the registration,
+# docs/journal/2026-11-18-imc-ten.md; MONODROMY's record 52, REVIEW 6973478826 on #145, frozen
+# before the data): a diagnostic, it scores one prediction and decides nothing in production.
+# Lazy Cells 10 workers with 40 blocks in flight (`ab`'s `mibz2-occ-10-40`) against 7/28
+# (`mibz2-occ-7-28`), 10 threads asked, unpinned on every online CPU (all 20 on the i9; the
+# affinity each child execs with read back and recorded), on Wikidata xCOPIES (judged) and x1 (a
+# check), ROUNDS paired rounds, the arms' order alternating. Each run under `perf stat` of the
+# L3-miss demand-read latency's pair (offcore_requests and offcore_requests_outstanding
+# .l3_miss_demand_data_rd, Little's law, per process: bench-miss-cost's counted pair) and `perf
+# stat -a` of the memory controller (uncore_imc/data_reads/ and data_writes/, idle subtracted as
+# bench-knee does); the ceiling re-measured by `ab stream` as bench-knee does. The memory
+# controller needs kernel.perf_event_paranoid 0 or less: above it the run is VOID and stops before
+# building anything. `just bench-imc-ten` with no arguments is the registered run.
+bench-imc-ten COPIES="4" ROUNDS="10" STREAM="1,2,4,10,20" MIB="256" REPEAT="3":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/imc-ten
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-imc-ten (the registration, docs/journal/2026-11-18-imc-ten.md; record 52, REVIEW 6973478826; a diagnostic, decides nothing in production): mibz2-occ-10-40 against mibz2-occ-7-28 at 10 threads unpinned, at $(git rev-parse HEAD), Wikidata x{{COPIES}} and x1, {{ROUNDS}} rounds; ab stream at {{STREAM}} threads, {{MIB}} MiB an array, {{REPEAT}} repeats"
+    git rev-parse HEAD > "$O/commit.txt"
+    # the memory controller first: unreadable, the run is VOID and stops here
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    void() { echo "bench-imc-ten: VOID, the memory controller is unreadable: $1; nothing run" | tee "$O/report.txt"; bash bench/bundle.sh "$O"; exit 0; }
+    command -v perf >/dev/null || void "perf is not installed"
+    [ "$paranoid" != unknown ] && [ "$paranoid" -le 0 ] \
+      || void "kernel.perf_event_paranoid is $paranoid, above 0 (sudo sysctl kernel.perf_event_paranoid=0)"
+    perf --version | tee "$O/perf_version.txt"
+    perf list > "$O/perf_list.txt" 2>&1 || true
+    has() { grep -Fqw -- "$1" "$O/perf_list.txt"; }
+    imc="uncore_imc/data_reads/,uncore_imc/data_writes/"
+    has uncore_imc/data_reads/ && has uncore_imc/data_writes/ \
+      || void "perf list names no uncore_imc/data_reads/ and data_writes/"
+    perf stat -a -x, -o /dev/null -e "$imc" -- true 2>"$O/imc-trial.txt" \
+      || void "the trial failed (imc-trial.txt)"
+    # the L3-miss latency's pair, with cycles: each kept only if perf list names it; else the
+    # latency is UNMEASURED (the report says so), never VOID
+    core=""
+    for e in cycles offcore_requests.l3_miss_demand_data_rd offcore_requests_outstanding.l3_miss_demand_data_rd; do
+      if has "$e"; then core="$core,$e"; else echo "the event $e: not in perf list, dropped" | tee -a "$O/events.txt"; fi
+    done
+    core=${core#,}
+    if [ -n "$core" ] && ! perf stat -x, -o /dev/null -e "$core" -- true 2>"$O/core-trial.txt"; then
+      echo "the core events: the trial failed (core-trial.txt), dropped" | tee -a "$O/events.txt"; core=""
+    fi
+    echo "the core events: ${core:-none}; the memory controller: $imc" | tee -a "$O/events.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-imc-ten: the checkout has local changes"; exit 1; }
+    # the toolchain the repository pins (#504), named and checked
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-imc-ten: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    python3 bench/imc_ten.py estimate --rounds {{ROUNDS}} --copies {{COPIES}} --stream-threads "{{STREAM}}" \
+      --repeat {{REPEAT}} --mib {{MIB}} | tee "$O/estimate.json"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    sha256sum "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    ev=(--core-events "$core" --imc-events "$imc")
+    files=(--file "wikidata-x{{COPIES}}=$W/wikidata-x{{COPIES}}.bz2" --file "wikidata=$W/wikidata.bz2")
+    python3 bench/knee.py idle --out "$O/idle.jsonl" --seconds 2 --count 5 --imc-events "$imc"
+    python3 bench/imc_ten.py run --ab "$AB" --out "$O/runs.jsonl" "${files[@]}" --threads 10 \
+      --rounds {{ROUNDS}} "${ev[@]}"
+    python3 bench/knee.py stream --ab "$AB" --out "$O/stream.jsonl" --threads "{{STREAM}}" \
+      --repeat {{REPEAT}} --mib {{MIB}} --imc-events "$imc"
+    python3 bench/knee.py idle --out "$O/idle.jsonl" --seconds 2 --count 5 --imc-events "$imc"
+    python3 bench/imc_ten.py report --runs "$O/runs.jsonl" --stream "$O/stream.jsonl" --idle "$O/idle.jsonl" \
+      --main wikidata-x{{COPIES}} --check wikidata --json "$O/report.json" | tee "$O/report.txt" \
+      || echo "bench-imc-ten: VOID, no reading (report.txt says why); the bundle is kept"
+    bash bench/bundle.sh "$O"

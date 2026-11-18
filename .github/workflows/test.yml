@@ -86,6 +86,11 @@ jobs:
       # its thresholds, the ceiling by difference, and the VOID cases
       - name: The knee diagnostic (stub perf)
         run: python3 bench/test_knee.py
+      # the IMC-at-ten diagnostic's driver and report (`bench/imc_ten.py`; `just bench-imc-ten`),
+      # driven with a stub perf and ab: the frozen rule either side of each threshold, the
+      # arithmetic, and the VOID cases (IMC unreadable, a failed run, an affinity short of 20)
+      - name: The IMC-at-ten diagnostic (stub perf)
+        run: python3 bench/test_imc_ten.py
       # `ab stream`, the knee's bandwidth ceiling: a tiny run of each kernel parses
       - name: The knee's ceiling (ab stream, tiny)
         run: |
