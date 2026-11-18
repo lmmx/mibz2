@@ -1846,9 +1846,10 @@ bench-memory-lever ROUNDS="10" THREADS="4,6,8,9,10,12":
 # one more in its kernel, the untrimmed plan, and at the eager cells the lazy kernel at the
 # shipped count. Pinned one CPU a core (`--spread`, the spinner held at 4, 6 and 8) at 4, 6, 8
 # and 10 threads; unpinned on every online CPU (`--unpinned`, no spinner) at 4, 6, 8, 10, 12, 16
-# and 20. Unpinned, the arm a count builds does not depend on the threads asked, so the
-# neighbours are run once, at 10, and at 12, 16 and 20 the shipped 7/28 meets the plan's ten
-# workers with that count's window alone. No arm runs more workers than the threads asked.
+# and 20. Unpinned, the arm a count builds does not depend on the threads asked: at 12, 16 and
+# 20 the shipped 7/28 meets one worker more (8/32, the predicted change, so judged at four
+# counts) and the plan's ten workers with that count's window; one worker fewer is run at 10
+# alone. No arm runs more workers than the threads asked.
 # One build, rustc 1.99.1, src as 0.5.5's (checked). COPIES copies of the Wikidata sample (the
 # gain family), text and random (the guards, generated afresh). Each placement is one Holm
 # family at α 0.025 (two families, 0.05 together). Then the memory controller's bytes at three
@@ -1912,9 +1913,9 @@ bench-recalibrate COPIES="4" ROUNDS="12" SETTLE="0.25" REPS="5":
     done
     # unpinned, every online CPU, no spinner
     for spec in "10:mibz2-occ-7-28,mibz2-occ-6-24,mibz2-occ-8-32,mibz2-occ-10-40" \
-                "12:mibz2-occ-7-28,mibz2-occ-10-48" \
-                "16:mibz2-occ-7-28,mibz2-occ-10-64" \
-                "20:mibz2-occ-7-28,mibz2-occ-10-80" \
+                "12:mibz2-occ-7-28,mibz2-occ-8-32,mibz2-occ-10-48" \
+                "16:mibz2-occ-7-28,mibz2-occ-8-32,mibz2-occ-10-64" \
+                "20:mibz2-occ-7-28,mibz2-occ-8-32,mibz2-occ-10-80" \
                 "8:mibz2-occ-8-32,mibz2-occ-7-28" \
                 "6:mibz2-oce-6-24,mibz2-oce-5-20,mibz2-occ-6-24" \
                 "4:mibz2-oce-4-16,mibz2-oce-3-12,mibz2-occ-4-16"; do
@@ -1941,13 +1942,13 @@ bench-recalibrate COPIES="4" ROUNDS="12" SETTLE="0.25" REPS="5":
       --cand mibz2-occ-3-12 --judge-at mibz2-occ-3-12=4 \
       | tee "$O/pinned-verdict.txt" \
       || echo "bench-recalibrate: the pinned family is VOID (pinned-verdict.txt says why); the bundle is kept"
-    # unpinned, 11 cells
+    # unpinned, 14 cells
     python3 bench/two_arm.py "$O/unpinned.jsonl" "${common[@]}" --judged 10,12,16,20,8,6,4 \
       --hold-max-threads 0 --unpinned \
       --ref-at mibz2-occ-7-28=10,12,16,20 --ref-at mibz2-occ-8-32=8 --ref-at mibz2-oce-6-24=6 \
       --ref-at mibz2-oce-4-16=4 \
       --cand mibz2-occ-6-24 --judge-at mibz2-occ-6-24=10,6 \
-      --cand mibz2-occ-8-32 --judge-at mibz2-occ-8-32=10 \
+      --cand mibz2-occ-8-32 --judge-at mibz2-occ-8-32=10,12,16,20 \
       --cand mibz2-occ-10-40 --judge-at mibz2-occ-10-40=10 \
       --cand mibz2-occ-10-48 --judge-at mibz2-occ-10-48=12 \
       --cand mibz2-occ-10-64 --judge-at mibz2-occ-10-64=16 \

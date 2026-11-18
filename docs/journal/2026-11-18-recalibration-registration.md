@@ -65,9 +65,9 @@ builds there on the measured i9. The candidates are:
 | unpinned | 6 | eager 6/24 (untrimmed) | eager 5/20 | not run | — | lazy 6/24 |
 | unpinned | 8 | lazy 8/32 (untrimmed) | lazy 7/28 | not run | — | — |
 | unpinned | 10 | lazy 7/28 | lazy 6/24 | lazy 8/32 | lazy 10/40 | — |
-| unpinned | 12 | lazy 7/28 | (at 10) | (at 10) | lazy 10/48 | — |
-| unpinned | 16 | lazy 7/28 | (at 10) | (at 10) | lazy 10/64 | — |
-| unpinned | 20 | lazy 7/28 | (at 10) | (at 10) | lazy 10/80 | — |
+| unpinned | 12 | lazy 7/28 | (at 10) | lazy 8/32 | lazy 10/48 | — |
+| unpinned | 16 | lazy 7/28 | (at 10) | lazy 8/32 | lazy 10/64 | — |
+| unpinned | 20 | lazy 7/28 | (at 10) | lazy 8/32 | lazy 10/80 | — |
 
 `tests/recalibrate_arms.rs` checks this table deterministically, under
 `parallel::with_machine` with the measured i9's facts:
@@ -90,16 +90,21 @@ exactly that arm's N worker threads (`mibz2-0` to `mibz2-(N-1)`).
    - *What it removes:* the "+1" arm at unpinned 4, 6 and 8, where the shipped decoder already
      runs one worker a thread asked. Pinned at 6 and 4, "+1" is the untrimmed plan itself.
    - *The prediction there:* MONODROMY's record marks exactly those cells "no basis".
-2. **Unpinned, the neighbours are run once, at 10 threads.**
+2. **Unpinned, one worker fewer is run once, at 10 threads; one worker more at all four counts.**
    - *The same decoders:* an occupancy arm builds the same decoder whatever the threads asked,
      and unpinned it runs on the same CPUs. So lazy 6/24, 7/28 and 8/32 at 12, 16 or 20
      threads are the runs at 10 again.
    - *The shipped trim is the same too:* it is 7/28 at all four counts. The window scales as
      4 blocks a worker (`window`; the test above checks 12, 16 and 20).
-   - *What differs:* only the untrimmed plan's window (40, 48, 64, 80), and that is what 12, 16
-     and 20 measure. The choice among the neighbours at unpinned 10 is read as the choice for
-     12, 16 and 20 too. A trim adopted there would change `TRIMMED_WORKERS` from 10 threads up,
-     where `trims_to_seven` applies it.
+   - *What differs:* only the untrimmed plan's window (40, 48, 64, 80).
+   - *Where the power goes:* 8 workers against 7 is the predicted change, and the Coordinator
+     asked for the power on 7, 8 and 10 at 10 to 20 threads. So lazy 8/32 is judged at 10, 12, 16
+     and 20: four independent paired replicates of one comparison, each its own cell. That costs
+     9 runs a round, about a minute. One worker fewer (lazy 6/24, predicted 1.046) is judged at
+     10 alone, and is read as the answer for 12, 16 and 20.
+   - *Where the change lands:* a trim adopted here changes `TRIMMED_WORKERS` from 10 threads up,
+     where `trims_to_seven` applies it. If the four counts disagree, the choice is made count by
+     count, as the rule says, and a PR changing only some counts needs its own predicate.
    - *If pinned and unpinned 10 disagree:* the PR must split the constant by affinity, or keep
      it.
 3. **The lazy kernel at the eager cells.**
@@ -133,12 +138,12 @@ exactly that arm's N worker threads (`mibz2-0` to `mibz2-(N-1)`).
   - *What it keeps:* 0.25 s still samples the other processes' load before each run, the
     gate's purpose (`--max-busy` 1.5 as before). It is the i9's `share-nothing` setting.
   - *Drift:* thermal drift is balanced by the paired, rotated rounds.
-- **Time:** 102 runs a round (48 pinned and 54 unpinned). At 0.25 s of gate, about 0.02 s of
-  harness and about 21 s of decoding, that is about 50 s a round:
-  - about 10½ minutes for 12 rounds;
+- **Time:** 111 runs a round (48 pinned and 63 unpinned). At 0.25 s of gate, about 0.02 s of
+  harness and about 23 s of decoding, that is about 53 s a round:
+  - about 10½ to 11 minutes for 12 rounds;
   - about 1 minute to build and generate;
   - about ½ minute for the counters;
-  - **about 12 minutes in all.**
+  - **about 12½ minutes in all.**
 
 ### Power, sized to the effects predicted (the fused-finish lesson)
 
@@ -160,14 +165,27 @@ exactly that arm's N worker threads (`mibz2-0` to `mibz2-(N-1)`).
   1.8%. Both are within reach.
 - *A gain under about 1.3%:* not resolved.
 
-**Splitting α between the two placements** costs nothing. One family of 23 cells at 0.05
-would give the same thresholds (t ≈ 3.58).
+**Splitting α between the two placements** costs nothing. One family of 26 cells at 0.05
+would give about the same thresholds. The unpinned family's strictest step, 0.025 / 14, needs
+t₁₁ ≈ 3.66 rather than 3.60, and loses under 0.05 points.
+
+**At 10 threads and up unpinned,** 8 against 7 is judged four times, at 10, 12, 16 and 20.
+Each count still gets its own verdict. A simulation (paired normal logs, 12 rounds, Holm over
+14 cells at 0.025, the other ten cells null) gives the chance that Holm rejects 8 over 7:
+
+| true gain | SD | at one count or more | at a given count |
+|---|---|--:|--:|
+| 2.1% | 0.012 | 1.00 | 0.99 |
+| 2.1% | 0.014 | 1.00 | 0.92 |
+| 1.5% | 0.012 | 1.00 | 0.74 |
+| 1.0% | 0.012 | 0.75 | 0.29 |
+| 1.0% | 0.014 | 0.57 | 0.19 |
 
 ## The rule
 
 `bench/two_arm.py`, called once per placement, as #506's family, extended:
 
-- **The family.** Pinned: 12 main-corpus cells. Unpinned: 11. Each is one Holm family at
+- **The family.** Pinned: 12 main-corpus cells. Unpinned: 14. Each is one Holm family at
   α 0.025 (`--alpha 0.025`). Two families at 0.025 keep the family-wise error at 0.05
   (Bonferroni over the two). Each call has a reference for each count (`--ref-at`) and
   candidates judged at their counts alone (`--judge-at`, `--sparse`).
@@ -229,7 +247,8 @@ Record 56 (#497 at 131c8a54). The predicted wall over the shipped trim, on Wikid
 - **Its "+1 above the threads" predictions** (5 at unpinned 4, 7 at 6, 9 at 8) are not tested:
   those arms are not run, by design choice 1.
 - **Its refutation criterion:** at 10 or more threads unpinned, 8 slower than 7 by more than 1%,
-  or untrimmed 10 faster than 7. This run's unpinned 10, 12, 16 and 20 cells read both.
+  or untrimmed 10 faster than 7. This run's unpinned 10, 12, 16 and 20 cells read both, each
+  count's 8/32 and 10/S against 7/28.
 - **The four lazy-kernel arms at the eager cells:** the record makes no prediction for them.
 
 ## Reported, and deciding nothing
