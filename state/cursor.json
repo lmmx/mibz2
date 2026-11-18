@@ -2370,11 +2370,14 @@
     },
     {
       "trigger_comment_id": 6981094372,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/cutloop-blog-r1-6981094372/report.md",
-      "source_commit": "e7bae604b2fb3b508cee4d3fb2a6d8af12c92f8c"
+      "source_commit": "e7bae604b2fb3b508cee4d3fb2a6d8af12c92f8c",
+      "report_commit": "c8cd588c349dbaf180b944eed74eadb054fa35e3",
+      "baseline_commit": "3e41da1f4700cee5a87a61739413340bb5a98051",
+      "disposition": "REVISE"
     }
   ],
   "active_delegations": [],
