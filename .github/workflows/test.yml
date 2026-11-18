@@ -77,6 +77,8 @@ jobs:
       # Researcher's fabricated bundle among them
       - name: The two-arm adoption reading (synthetic runs)
         run: python3 bench/test_two_arm.py
+      - name: The opend worker sweep's verdict (bench/opend_sweep.py)
+        run: python3 bench/test_opend_sweep.py
       # the counters' reader (`bench/counters.py`; `just bench-w12`'s L2 diagnostic), driven
       # with a stub perf and child: a complete run read, and every defect leaves no report
       - name: The counters reader (stub perf)

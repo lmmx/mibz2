@@ -2113,3 +2113,102 @@ bench-open-return COPIES="4" ROUNDS="12" SETTLE="2" REPS="5":
     fi
     date -u +%FT%TZ > "$O/finished.txt"
     bash bench/bundle.sh "$O"
+
+# The opend worker sweep (#145 QUEUED 6992388066, step 1 of the B5 study; MONODROMY's record 71
+# §3; the rule, docs/journal/2026-11-18-opend-sweep.md, posted on #145 before any data): opend
+# against LazyCells, both built the same way (`StreamDecoder::workers_with`, `mibz2-opend-W-4W`
+# against `mibz2-occ-W-4W`), unpinned at W = 2 to 10 workers, the 2 s settle. Then, per W, the
+# stall counters (cycles, instructions, `cycle_activity.stalls_l3_miss`; `counters.py --events
+# default`) and the memory controller with the package's energy (`imcpower`). A diagnostic: it
+# decides nothing in production. One build, rustc 1.99.1, src as 0.5.6's but for the research
+# feature `open-return` (checked). Needs `kernel.perf_event_paranoid` 0 or less. DRY (any
+# value): the untimed dry run (PROTOCOL §9), marked not evidence, without the counters.
+bench-opend-sweep COPIES="4" ROUNDS="12" SETTLE="2" REPS="5" DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/opend-sweep
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-opend-sweep (docs/journal/2026-11-18-opend-sweep.md): opend against LazyCells at W = 2..10 workers, unpinned, at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and text, {{ROUNDS}} paired rounds, settle {{SETTLE}} s; then the stall counters and the memory controller, {{REPS}} reps a W"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-opend-sweep: the checkout has local changes"; exit 1; }
+    V056=530ed404a014a414ef0b62adfd947fa14d4533e6
+    git cat-file -e $V056^{commit} 2>/dev/null || git fetch -q origin tag v0.5.6 2>/dev/null || true
+    changed=$(git diff --name-only $V056 HEAD -- src Cargo.toml Cargo.lock | sort | tr '\n' ' ')
+    [ "$changed" = "Cargo.toml src/lib.rs src/open_gate.rs " ] \
+      || { echo "bench-opend-sweep: src differs from v0.5.6's (530ed404) beyond the feature: $changed"; exit 1; }
+    [ "$(git diff --numstat $V056 HEAD -- Cargo.toml src/lib.rs | awk '{s += $2} END {print s + 0}')" = 0 ] \
+      || { echo "bench-opend-sweep: a line of v0.5.6's Cargo.toml or src/lib.rs is changed"; exit 1; }
+    git diff $V056 HEAD -- src Cargo.toml > "$O/src-against-v0.5.6.diff"
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    dry="{{DRY}}"
+    if [ -n "$dry" ]; then
+      echo "bench-opend-sweep: DRY RUN: untimed, no counters; not evidence" | tee "$O/DRY-RUN.txt"
+    else
+      command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 0 ] \
+        || { echo "bench-opend-sweep: the counters need perf and kernel.perf_event_paranoid 0 or less ($paranoid)"; exit 1; }
+      perf --version | tee "$O/perf_version.txt"
+    fi
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-opend-sweep: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --features open-return --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" docs/journal/2026-11-18-open-return/open_return.rs src/open_gate.rs | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    G=$W/gen-${O##*/}
+    mkdir "$G"
+    "$AB" gen "$G" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$G/text.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    files=("$W/wikidata-x{{COPIES}}.bz2" "$G/text.bz2")
+    # the census (decides nothing): opend's blocks are exactly LazyCells' admitted ones
+    "$AB" census-open "${files[@]}" | tee "$O/census.jsonl"
+    # timing: one `ab run` a W, LazyCells first in the arm list, every online CPU, no spinner
+    for w in 2 3 4 5 6 7 8 9 10; do
+      echo "unpinned, W = $w: mibz2-occ-$w-$((4 * w)) against mibz2-opend-$w-$((4 * w))"
+      "$AB" run "$O/runs.jsonl" --arms "mibz2-occ-$w-$((4 * w)),mibz2-opend-$w-$((4 * w))" --threads "$w" \
+        --rounds {{ROUNDS}} --settle {{SETTLE}} --unpinned "${files[@]}"
+    done
+    date -u +%FT%TZ > "$O/timed.txt"
+    # the counters, per W: the stall events per process (one file a W), then the memory controller
+    # and the package's energy system-wide (one file a W), each reported pairwise
+    : > "$O/counters.txt"
+    [ -z "$dry" ] || echo "bench-opend-sweep: DRY RUN: the counters skipped" | tee -a "$O/counters.txt"
+    for w in $([ -n "$dry" ] || echo 2 3 4 5 6 7 8 9 10); do
+      l=mibz2-occ-$w-$((4 * w)) o=mibz2-opend-$w-$((4 * w))
+      echo "== W = $w: $o against $l" | tee -a "$O/counters.txt"
+      python3 bench/counters.py run --ab "$AB" --arm "$l" --arm "$o" --events default --unpinned \
+        --threads "$w" --reps {{REPS}} --file "$W/wikidata-x{{COPIES}}.bz2" --out "$O/stalls-$w.jsonl" \
+        || echo "bench-opend-sweep: the stall counters at W = $w failed (the verdict will say VOID)" | tee -a "$O/counters.txt"
+      python3 bench/counters.py report "$O/stalls-$w.jsonl" --ref "$l" --cand "$o" --events default \
+        --threads "$w" --reps {{REPS}} | tee -a "$O/counters.txt" || true
+      python3 bench/counters.py run --ab "$AB" --arm "$l" --arm "$o" --events imcpower --unpinned \
+        --threads "$w" --reps {{REPS}} --file "$W/wikidata-x{{COPIES}}.bz2" --out "$O/imc-$w.jsonl" \
+        && python3 bench/counters.py report "$O/imc-$w.jsonl" --ref "$l" --cand "$o" --events imcpower \
+          --threads "$w" --reps {{REPS}} | tee -a "$O/counters.txt" \
+        || echo "bench-opend-sweep: the memory controller at W = $w is VOID or failed (decides nothing)" | tee -a "$O/counters.txt"
+    done
+    # the verdict (docs/journal/2026-11-18-opend-sweep.md)
+    python3 bench/opend_sweep.py "$O/runs.jsonl" --lscpu "$O/lscpu.txt" --stalls-dir "$O" \
+      --rounds {{ROUNDS}} --reps {{REPS}} | tee "$O/verdict.txt" \
+      || echo "bench-opend-sweep: the verdict is VOID (verdict.txt says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/finished.txt"
+    bash bench/bundle.sh "$O"
