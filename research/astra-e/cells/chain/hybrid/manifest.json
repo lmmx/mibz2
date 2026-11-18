@@ -1,0 +1,76 @@
+{
+  "candidate": {
+    "candidate": "/workspace/work/cells-proxy/research/astra-e/cells/hybrid/candidate.rs",
+    "candidate_type": "moonshot::candidate::Candidate",
+    "arms": [
+      "lazy",
+      "cells",
+      "open",
+      "opend",
+      "candidate"
+    ],
+    "cpus": 4
+  },
+  "candidate_sha256": "92f0b650c75702bebaa87c7243f114992fd58db3999410cbd7627176e5110b54",
+  "binary_sha256": "3c64f1dee83d77e1cdac15938861ee032635c0b5fef7f753b04c34e75d191b4f",
+  "source_commit": "ff36563702a8ecf92b641681f939c3fbbc71d02c",
+  "master": "9c31461df7bef24cecf79348545b27ee26846835",
+  "scorer_path_revision": "9c31461df7bef24cecf79348545b27ee26846835",
+  "printed_scorer_version": null,
+  "calibration_sha256": "96b91faa33879721e8d9257edb880df55d07f3d5f3d82139db8547d725dc7777",
+  "chaingrind_sha256": "0fe59d0ed1fda490f96c99898533d1b98f25ac3b8fe8d97f844280bdbd141f60",
+  "valgrind": "valgrind-3.24.0",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+  "workers": 7,
+  "latencies": {
+    "llc_kb": 2925,
+    "l3_lat": 66,
+    "dram_lat": 549
+  },
+  "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+  "geometry_sha256": "5c1ef3ad0869bdbbd71597e7acc3aa1563380cbc8c5e3de3a39dd4b6ab54243e",
+  "identities": [
+    {
+      "ordinal": "0",
+      "stream_index": "1",
+      "rows": "899931",
+      "primary": "264045",
+      "records": "56386",
+      "own": "1",
+      "letters": "51184",
+      "cuts": "92570",
+      "rules": "28706",
+      "rule_capacity": "32768",
+      "top_capacity": "51184",
+      "output_capacity": "899931"
+    },
+    {
+      "ordinal": "48",
+      "stream_index": "85",
+      "rows": "900000",
+      "primary": "880651",
+      "records": "67594",
+      "own": "1",
+      "letters": "62533",
+      "cuts": "117921",
+      "rules": "34917",
+      "rule_capacity": "65536",
+      "top_capacity": "122470",
+      "output_capacity": "1799862"
+    },
+    {
+      "ordinal": "144",
+      "stream_index": "269",
+      "rows": "899984",
+      "primary": "441922",
+      "records": "129343",
+      "own": "1",
+      "letters": "124940",
+      "cuts": "207162",
+      "rules": "53471",
+      "rule_capacity": "65536",
+      "top_capacity": "124940",
+      "output_capacity": "1799862"
+    }
+  ]
+}
