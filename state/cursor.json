@@ -2342,11 +2342,13 @@
     },
     {
       "trigger_comment_id": 6978023732,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/recalibrate-6978023732/report.md",
-      "source_commit": "58c3e68809dd8b0e16d71ef48ff1d43ee00bb819"
+      "source_commit": "58c3e68809dd8b0e16d71ef48ff1d43ee00bb819",
+      "report_commit": "6c50b1d115105e700ec7018f0608b728efac749d",
+      "disposition": "TARGETED CORRECTION"
     }
   ],
   "active_delegations": [],
