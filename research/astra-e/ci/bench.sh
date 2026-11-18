@@ -12,6 +12,7 @@ base=$RUNNER_TEMP/astra-e-base
 git worktree add --detach "$base" "$BASE_SHA"
 candidate=$(cat research/astra-e/ci/candidate)
 git ls-files --error-unmatch -- "$candidate"
+bash research/astra-e/prepare.sh "$candidate"
 git fetch origin master && git checkout origin/master -- bench/moonshot .just Justfile
 fresh=$(git rev-parse origin/master)
 # HEAD retains the last scorer that built the candidate in the research tree.
@@ -64,3 +65,9 @@ for arm in candidate lazy cells; do
 done
 python3 research/astra-e/ci/paired.py "$base_bin" "$head_bin" corpora/wikidata.bz2 "$out"
 cat "$out/comparison.md" >> "$GITHUB_STEP_SUMMARY"
+# A fallback uses an older scorer than the fetched one. Let the next job retry the fresh scorer.
+if [ "$chosen" = "$fresh" ]; then
+  python3 research/astra-e/ci/inputs.py record "$RUNNER_TEMP/astra-e-inputs.json" "$BASE_SHA" \
+    --depfile "$RUNNER_TEMP/astra-e-candidate/release/moonshot.d"
+  echo "remember=true" >> "$GITHUB_OUTPUT"
+fi
