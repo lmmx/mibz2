@@ -121,7 +121,9 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
 `ready/<recipe>` tag on origin. It runs `just submit <recipe>` once at exactly the tagged commit,
 then suspends; `hold/<recipe>` stops it. The coordinator sets the tag only once the recipe is
 frozen, reviewed and green, through the dispatch-only workflow `.github/workflows/run-signal.yml`
-(`signal`: ready, hold or clear), since this session's git proxy refuses tag pushes.
+(`signal`: ready, hold or clear), since this session's git proxy refuses tag pushes. `ready`
+moves a tag that is already set, and fails unless the tag lands. A run is queued only once
+`git ls-remote --tags origin ready/<recipe>` shows the commit: a dispatch is not a tag.
 **Standing authorisation (Louis, 9 November 2026):** the coordinator may set up the queue run
 itself, without asking each time. That covers dispatching `run-signal.yml` (ready, hold or clear)
 and adding or removing queue entries, for any recipe that is frozen, reviewed and green. This is
