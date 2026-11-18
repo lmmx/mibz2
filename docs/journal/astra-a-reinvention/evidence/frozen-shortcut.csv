@@ -1,2 +1,2 @@
-block,index,n,primary,capped,roots,phrases,literals,copies,copy_bytes,installs,whole,splits,new_bounds,unit_offers,aliases,nodes,internal_reads,max_depth,tiles,clipped,raw_sha256
-0,1,899931,264045,56386,51184,83504,56508,26996,843423,37618,27908,9710,12154,45884,0,73048,96288,42,14062,0,d2584c09f1d643d6abff8a25513b63af4e05969c15c30256aed3a05c74281210
+block,index,n,primary,capped,roots,phrases,literals,copies,copy_bytes,installs,whole,splits,new_bounds,unit_offers,aliases,nodes,internal_reads,max_depth,tiles,clipped,pre_sha256,raw_sha256
+0,1,899931,264045,56386,51184,83504,56508,26996,843423,37618,27908,9710,12154,45884,0,73048,96288,42,14062,0,f87e5caa2d5f0df9d5958fe60901e2023ae04ac406603d4c1584c8bb4017fbd6,d2584c09f1d643d6abff8a25513b63af4e05969c15c30256aed3a05c74281210

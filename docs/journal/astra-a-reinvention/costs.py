@@ -1,4 +1,5 @@
 """Reproduce a scalar-price sensitivity, separate from byte/line counts and hardware."""
+import argparse
 import csv
 from pathlib import Path
 
@@ -13,6 +14,9 @@ def rows(path):
 
 
 if __name__ == "__main__":
+    ap=argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--data", type=Path, default=DATA)
+    DATA=ap.parse_args().data
     roots = {r["block"]:r for r in rows(DATA/"whole.csv")}
     ops = rows(DATA/"operands.csv")
     old_mem = {(r["block"],r["model"]):r for r in rows(OLD/"traffic.csv")}
