@@ -1,0 +1,17 @@
+{"corpus": "wikidata.bz2", "block": 0, "mark": 289568, "period": 899931, "marked_sha256": "f87e5caa2d5f0df9d5958fe60901e2023ae04ac406603d4c1584c8bb4017fbd6"}
+{"corpus": "wikidata.bz2", "block": 24, "mark": 140311, "period": 900000, "marked_sha256": "9990a824af11e465dc9dadf5bb27955c5ee6995627b71d0b43275b76e045fdd7"}
+{"corpus": "wikidata.bz2", "block": 48, "mark": 865174, "period": 900000, "marked_sha256": "27cc47ed33619819b3e1a7962d91f643475110daa8557d0b3d8065cb7a1289f5"}
+{"corpus": "wikidata.bz2", "block": 72, "mark": 190073, "period": 900000, "marked_sha256": "36169706e791b147422f81ed4029b1c823cf427b0646c9cd8b6732acf52474fe"}
+{"corpus": "wikidata.bz2", "block": 96, "mark": 456610, "period": 900000, "marked_sha256": "d1c4d34343b6188c1a90c6f8d201c673ce06315632d15f6e99493a4181b456de"}
+{"corpus": "wikidata.bz2", "block": 120, "mark": 877625, "period": 900000, "marked_sha256": "971115a2e2651282ea7674d551ae72ebe8b0b2050ce0550ada5a8f5184f19cb2"}
+{"corpus": "wikidata.bz2", "block": 144, "mark": 534613, "period": 899984, "marked_sha256": "1c2cf5920f921e6ebc16591b8e5618b0e63bfe8c6b652772f76f80a308b9b7aa"}
+{"corpus": "wikidata.bz2", "block": 168, "mark": 365725, "period": 900000, "marked_sha256": "2f9f745afb0fade4bf3fe9adcb1641f0b2d161b69879945dee64216ef6374f9d"}
+{"corpus": "wikidata.bz2", "block": 192, "mark": 103331, "period": 900000, "marked_sha256": "918c52b513cc0d8a4b6c101428e36b715f950950aff1d10aaeea6a0014192e27"}
+{"corpus": "wikidata.bz2", "block": 216, "mark": 503024, "period": 900000, "marked_sha256": "f1dd9047112eda127a96d3515acc71def8eb0a5b7eb4b2f75ba8831f3a964c73"}
+{"corpus": "prose.bz2", "block": 0, "mark": 717328, "period": 899981, "marked_sha256": "ab13254d3d428e9275bb5539799d184ae55e3eb03059fcba5d7c7ff156ebec6b"}
+{"corpus": "prose.bz2", "block": 1, "mark": 796416, "period": 899981, "marked_sha256": "b0dca6369abf82d4832c3ac3c0dceac30ccb9ac468caee74064af8bb64764fe6"}
+{"corpus": "prose.bz2", "block": 2, "mark": 148625, "period": 899981, "marked_sha256": "7839b4916a581ff7286ded0d3b52cade349c2d66419608c8fcc32f09c5b4d75f"}
+{"corpus": "prose.bz2", "block": 3, "mark": 471471, "period": 899981, "marked_sha256": "e5145a3513a3099ebcc94e8547833376eabc00c6f7dbc6ed0521f815e2cbb977"}
+{"corpus": "prose.bz2", "block": 4, "mark": 377744, "period": 899981, "marked_sha256": "507132ffe9d1bfdcb55599d33e858df5d448804e07e0bb156690c877a71ae8fb"}
+{"corpus": "prose.bz2", "block": 5, "mark": 268320, "period": 446176, "marked_sha256": "934d963389883868335827426cae8bdd339f147eabbdcc93273f9790e5628cde"}
+{"local_cases": 10188, "frozen": {"blocks": 1, "steps": 92570, "shared": 2159, "copies": 4318, "sites": 51184, "min_net": 2270, "total_net": 2270, "min_break_even_credit": 5.948587308939324}, "wikidata": {"blocks": 233, "steps": 27439756, "shared": 650507, "copies": 1301014, "sites": 15141618, "min_net": 1505, "total_net": 721413, "min_break_even_credit": 6.568731720287158}, "admitted": {"blocks": 228, "steps": 26292727, "shared": 622523, "copies": 1245046, "sites": 14427171, "min_net": 1505, "total_net": 682492, "min_break_even_credit": 6.568731720287158}, "prose": {"blocks": 6, "steps": 3369224, "shared": 166432, "copies": 332864, "sites": 1840004, "min_net": 22461, "total_net": 219666, "min_break_even_credit": 5.842398077265444}, "prose_output_bytes": 4947388, "prose_output_sha256": "0da092515b0911aad1f23304a7d5e9d058669191e5c1070afe0d43a99fb98959"}
