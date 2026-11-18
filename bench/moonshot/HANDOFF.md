@@ -1,7 +1,8 @@
 # Moonshot scorer: handoff
 
-The state of `bench/moonshot-scorer`. The design and the results are in [README.md](README.md). PR
-#606 is open. Only the Coordinator merges.
+The state of `bench/moonshot-scorer-v2`. The design and the results are in
+[README.md](README.md). #606 merged v1 (9c31461). v2 is in the follow-up PR from this branch.
+Only the Coordinator merges.
 
 ## Done
 
