@@ -2601,6 +2601,14 @@
       "review_comment_id": 6993417036,
       "review_pr": 145,
       "publication_verification": "Verified exact body, lmmx author, #145 destination, and role-aware headers and route. The pinned helper's coordinator-only sender check is inapplicable to a Researcher REVIEW."
+    },
+    {
+      "trigger_comment_id": 6993593664,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/astra-a-6993593664/report.md",
+      "source_commit": "4ee40ab341b4fdb1681f8a585cde7cee21e076db"
     }
   ],
   "active_delegations": [],
