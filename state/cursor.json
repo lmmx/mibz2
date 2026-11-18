@@ -214,9 +214,10 @@
     6990728619,
     6992913830,
     6993078803,
-    6993276769
+    6993276769,
+    6993593664
   ],
-  "last_processed_comment_id": 6993276769,
+  "last_processed_comment_id": 6993593664,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2604,14 +2605,17 @@
     },
     {
       "trigger_comment_id": 6993593664,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/astra-a-6993593664/report.md",
       "source_commit": "4ee40ab341b4fdb1681f8a585cde7cee21e076db",
       "baseline_commit": "d5988ca28633275b90b4d9bc225852bfa09c116c",
       "report_commit": "035ffb84327a26319f8591cc943e07b3d0b01cf1",
-      "disposition": "PROCEED as research record: 18 receipts reproduced, both candidates checked against Plain and libbzip2 on 233 blocks, and transfer/span model scopes verified."
+      "disposition": "PROCEED as research record: 18 receipts reproduced, both candidates checked against Plain and libbzip2 on 233 blocks, and transfer/span model scopes verified.",
+      "review_comment_id": 6993828464,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, and role-aware headers and route. The pinned helper's coordinator-only sender check is inapplicable to a Researcher REVIEW."
     }
   ],
   "active_delegations": [],
