@@ -65,4 +65,6 @@ From this branch run the following in a checkout with Git, Python 3 and NumPy, a
 bash docs/journal/astra-a-reinvention/reproduce.sh /tmp/mibz2-astra-a-repro
 ```
 
+The packed-input replay regenerated all 18 committed evidence files byte for byte. Their Git tree is `a246ecdc55c45cc52666526d0ec0c74657424335`.
+
 The archive of original Wikidata windows is pinned at `a0692452b67ec3a8833e1fc4adf58a4f09cd9e6a`. The ten historical traces are pinned at `2e4b34e086ac95e8218f1ee822a4652c8db5bb19`. The input adapter runs the pinned scanner and writes the exact u16 records from `runs::front` in little-endian order. Both reconstructions consume these files directly. The adapter separately runs scalar MTF and Plain for the column and expected output. The verifier checks every physical record against that independent column and the cost ledger checks all ten historical input geometries. For the small cases the verifier constructs Ψ independently by stable sorting and tests every row in each published interval, including the distinct next atoms at each permanent failure. [Input preparation](input.py) · [Corpus adapter](extract.rs) · [Exhaustive checks](check.py) · [Cross-checks](verify.py)
