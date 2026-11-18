@@ -1836,3 +1836,379 @@ bench-memory-lever ROUNDS="10" THREADS="4,6,8,9,10,12":
       || echo "bench-memory-lever: the sign reading is not valid (lever.txt says why)"
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
+
+# The worker-count recalibration on 0.5.5's kernel (the C6 adoption registration,
+# docs/journal/2026-11-18-recalibration-registration.md, frozen before the data; #314
+# CHECKPOINT 6977086376; RELEASING §5c; MONODROMY's predictions, record 56 at #497 head
+# 131c8a54, cited before the data). Wide admission (#559) made the lazy kernel about 17% faster
+# on Wikidata at 8 threads, so the trims measured on the narrow kernel are measured again: at
+# each cell the shipped trim (the reference, `two_arm.py --ref-at`) against one worker fewer and
+# one more in its kernel, the untrimmed plan, and at the eager cells the lazy kernel at the
+# shipped count. Pinned one CPU a core (`--spread`, the spinner held at 4, 6 and 8) at 4, 6, 8
+# and 10 threads; unpinned on every online CPU (`--unpinned`, no spinner) at 4, 6, 8, 10, 12, 16
+# and 20. Unpinned, the arm a count builds does not depend on the threads asked: at 12, 16 and
+# 20 the shipped 7/28 meets one worker more (8/32, the predicted change, so judged at four
+# counts) and the plan's ten workers with that count's window; one worker fewer is run at 10
+# alone. No arm runs more workers than the threads asked. Pinned at 8 threads, ROUNDS_P8 rounds
+# (24): 0.5.5's crossover put one block a thread against the shipped 6/24 at 0.983 [0.955,
+# 1.011] there, where 0.5.4's was 1.050, and record 56 predicts no change.
+# One build, rustc 1.99.1, src as 0.5.5's (checked). COPIES copies of the Wikidata sample (the
+# gain family), text and random (the guards, generated afresh). Each placement is one Holm
+# family at α 0.025 (two families, 0.05 together). Then the memory controller's bytes at three
+# cells (decides nothing), if `kernel.perf_event_paranoid` is 0 or less.
+bench-recalibrate COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="5":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/recalibrate
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-recalibrate (the registration, docs/journal/2026-11-18-recalibration-registration.md): the worker trims on 0.5.5's kernel at $(git rev-parse HEAD), pinned at 4, 6, 8 and 10 threads and unpinned at 4, 6, 8, 10, 12, 16 and 20, the shipped trim against its neighbours, the untrimmed plan and the other kernel, on {{COPIES}} copies of the Wikidata sample, text and random, {{ROUNDS}} paired rounds ({{ROUNDS_P8}} pinned at 8), settle {{SETTLE}} s; then the memory controller, {{REPS}} reps"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-recalibrate: the checkout has local changes"; exit 1; }
+    # 0.5.5's decoder: this commit's src is v0.5.5's (7214f8ca), byte for byte
+    git cat-file -e 7214f8cab4f0991d4b3ddfbe6c6ab7c34bb847d6^{commit} 2>/dev/null \
+      || git fetch -q origin tag v0.5.5 2>/dev/null || true
+    git diff --quiet 7214f8cab4f0991d4b3ddfbe6c6ab7c34bb847d6 HEAD -- src Cargo.toml Cargo.lock \
+      || { echo "bench-recalibrate: src differs from v0.5.5's (7214f8ca)"; exit 1; }
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-recalibrate: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    # the guards, generated afresh for this run (the text corpus is this checkout's own sources)
+    G=$W/gen-${O##*/}
+    mkdir "$G"
+    "$AB" gen "$G" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$G/text.bz2" "$G/random.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    files=("$W/wikidata-x{{COPIES}}.bz2" "$G/text.bz2" "$G/random.bz2")
+    # pinned, one CPU a core: one `ab run` a count, its own arms alone (the shipped trim first);
+    # the spinner held on a free core where there is one (4, 6 and 8 threads)
+    hold=(); hold_cpu=${HOLD_CPU:-auto}; hold_max=0
+    [ "$hold_cpu" = off ] || { hold=(--hold-cpu "$hold_cpu" --hold-max-threads 9); hold_max=9; }
+    for spec in "10:mibz2-occ-7-28,mibz2-occ-6-24,mibz2-occ-8-32,mibz2-occ-10-40" \
+                "8:mibz2-occ-6-24,mibz2-occ-5-20,mibz2-occ-7-28,mibz2-occ-8-32" \
+                "6:mibz2-oce-5-20,mibz2-oce-4-16,mibz2-oce-6-24,mibz2-occ-5-20" \
+                "4:mibz2-oce-3-12,mibz2-oce-2-8,mibz2-oce-4-16,mibz2-occ-3-12"; do
+      t=${spec%%:*}; r={{ROUNDS}}; [ "$t" = 8 ] && r={{ROUNDS_P8}}
+      echo "pinned at $t threads, $r rounds: ${spec#*:}"
+      "$AB" run "$O/pinned.jsonl" --arms "${spec#*:}" --threads "$t" --rounds "$r" \
+        --settle {{SETTLE}} --spread "${hold[@]}" "${files[@]}"
+    done
+    # unpinned, every online CPU, no spinner
+    for spec in "10:mibz2-occ-7-28,mibz2-occ-6-24,mibz2-occ-8-32,mibz2-occ-10-40" \
+                "12:mibz2-occ-7-28,mibz2-occ-8-32,mibz2-occ-10-48" \
+                "16:mibz2-occ-7-28,mibz2-occ-8-32,mibz2-occ-10-64" \
+                "20:mibz2-occ-7-28,mibz2-occ-8-32,mibz2-occ-10-80" \
+                "8:mibz2-occ-8-32,mibz2-occ-7-28" \
+                "6:mibz2-oce-6-24,mibz2-oce-5-20,mibz2-occ-6-24" \
+                "4:mibz2-oce-4-16,mibz2-oce-3-12,mibz2-occ-4-16"; do
+      echo "unpinned at ${spec%%:*} threads: ${spec#*:}"
+      "$AB" run "$O/unpinned.jsonl" --arms "${spec#*:}" --threads "${spec%%:*}" --rounds {{ROUNDS}} \
+        --settle {{SETTLE}} --unpinned "${files[@]}"
+    done
+    date -u +%FT%TZ > "$O/timed.txt"
+    common=(--main wikidata-x{{COPIES}} --guard text,random --controls "" --rounds {{ROUNDS}}
+            --env "$O/env.json" --cores 10 --cpus 20 --sparse --alpha 0.025
+            --primary wikidata-x{{COPIES}},text --check-workers)
+    # each placement one Holm family at α 0.025: pinned, 12 cells
+    python3 bench/two_arm.py "$O/pinned.jsonl" "${common[@]}" --judged 10,8,6,4 \
+      --hold-max-threads "$hold_max" --rounds-at 8={{ROUNDS_P8}} \
+      --ref-at mibz2-occ-7-28=10 --ref-at mibz2-occ-6-24=8 --ref-at mibz2-oce-5-20=6 --ref-at mibz2-oce-3-12=4 \
+      --cand mibz2-occ-6-24 --judge-at mibz2-occ-6-24=10 \
+      --cand mibz2-occ-8-32 --judge-at mibz2-occ-8-32=10,8 \
+      --cand mibz2-occ-10-40 --judge-at mibz2-occ-10-40=10 \
+      --cand mibz2-occ-7-28 --judge-at mibz2-occ-7-28=8 \
+      --cand mibz2-occ-5-20 --judge-at mibz2-occ-5-20=8,6 \
+      --cand mibz2-oce-4-16 --judge-at mibz2-oce-4-16=6,4 \
+      --cand mibz2-oce-6-24 --judge-at mibz2-oce-6-24=6 \
+      --cand mibz2-oce-2-8 --judge-at mibz2-oce-2-8=4 \
+      --cand mibz2-occ-3-12 --judge-at mibz2-occ-3-12=4 \
+      | tee "$O/pinned-verdict.txt" \
+      || echo "bench-recalibrate: the pinned family is VOID (pinned-verdict.txt says why); the bundle is kept"
+    # unpinned, 14 cells
+    python3 bench/two_arm.py "$O/unpinned.jsonl" "${common[@]}" --judged 10,12,16,20,8,6,4 \
+      --hold-max-threads 0 --unpinned \
+      --ref-at mibz2-occ-7-28=10,12,16,20 --ref-at mibz2-occ-8-32=8 --ref-at mibz2-oce-6-24=6 \
+      --ref-at mibz2-oce-4-16=4 \
+      --cand mibz2-occ-6-24 --judge-at mibz2-occ-6-24=10,6 \
+      --cand mibz2-occ-8-32 --judge-at mibz2-occ-8-32=10,12,16,20 \
+      --cand mibz2-occ-10-40 --judge-at mibz2-occ-10-40=10 \
+      --cand mibz2-occ-10-48 --judge-at mibz2-occ-10-48=12 \
+      --cand mibz2-occ-10-64 --judge-at mibz2-occ-10-64=16 \
+      --cand mibz2-occ-10-80 --judge-at mibz2-occ-10-80=20 \
+      --cand mibz2-occ-7-28 --judge-at mibz2-occ-7-28=8 \
+      --cand mibz2-oce-5-20 --judge-at mibz2-oce-5-20=6 \
+      --cand mibz2-oce-3-12 --judge-at mibz2-oce-3-12=4 \
+      --cand mibz2-occ-4-16 --judge-at mibz2-occ-4-16=4 \
+      | tee "$O/unpinned-verdict.txt" \
+      || echo "bench-recalibrate: the unpinned family is VOID (unpinned-verdict.txt says why); the bundle is kept"
+    # the DRAM diagnostic (decides nothing): the memory controller system-wide, so only where
+    # `kernel.perf_event_paranoid` is 0 or less; skipped, and said so, otherwise. Unpinned at 10
+    # threads the four lazy counts (MONODROMY's traffic model), unpinned at 6 and pinned at 4
+    # the two kernels at the shipped count
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 0 ]; then
+      perf --version | tee "$O/perf_version.txt"
+      : > "$O/dram.txt"
+      for spec in "u:10:mibz2-occ-7-28:mibz2-occ-6-24,mibz2-occ-8-32,mibz2-occ-10-40" \
+                  "u:6:mibz2-oce-6-24:mibz2-occ-6-24" \
+                  "p:4:mibz2-oce-3-12:mibz2-occ-3-12"; do
+        IFS=: read -r place t ref cands <<< "$spec"
+        IFS=, read -ra cs <<< "$cands"
+        un=(); [ "$place" = u ] && un=(--unpinned)
+        f="$O/dram-$place$t.jsonl"
+        if python3 bench/counters.py run --ab "$AB" --arm "$ref" $(printf -- '--arm %s ' "${cs[@]}") --events imc \
+            "${un[@]}" --threads "$t" --reps {{REPS}} --file "$W/wikidata-x{{COPIES}}.bz2" --out "$f"; then
+          for c in "${cs[@]}"; do
+            echo "== $([ "$place" = u ] && echo unpinned || echo pinned) at $t threads: $c against $ref" | tee -a "$O/dram.txt"
+            python3 bench/counters.py report "$f" --ref "$ref" --cand "$c" --events imc \
+              --threads "$t" --reps {{REPS}} | tee -a "$O/dram.txt" \
+              || echo "bench-recalibrate: the DRAM diagnostic for $c at $t is VOID (dram.txt says why); the verdicts stand" | tee -a "$O/dram.txt"
+          done
+        else
+          echo "bench-recalibrate: the DRAM diagnostic at $place$t failed to count; the verdicts stand" | tee -a "$O/dram.txt"
+        fi
+      done
+    else
+      echo "bench-recalibrate: the DRAM diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 0); the verdicts stand" | tee "$O/dram.txt"
+    fi
+    date -u +%FT%TZ > "$O/finished.txt"
+    bash bench/bundle.sh "$O"
+
+# The open-return comparison (#145 QUEUED 6978711740, CHECKPOINT 6989549514; the registration
+# docs/journal/2026-11-18-open-return-comparison-registration.md): Astra's open kernel (#565,
+# `Open<16, true, true>`, the research feature `open-return`) as the workers' kernel against
+# 0.5.6's plan, unpinned at 10 threads (7/28) and 8 (8/32), and the gated arm at 8/32 at 10 threads
+# (the count the recalibration held on memory). Two open arms: `mibz2-open-N-S`
+# takes every run-route block (Astra's admission), `mibz2-opend-N-S` only those LazyCells'
+# density line admits (production's fallback elsewhere); eager Cells 7/28 as context. One build,
+# rustc 1.99.1, src as 0.5.6's but for the feature's cfg-gated lines (checked). COPIES copies of
+# the Wikidata sample, text and random (the guards, generated afresh). One Holm family at α 0.05.
+# Then the census of admission, and the memory controller's bytes with the package's energy
+# (decides nothing), if `kernel.perf_event_paranoid` is 0 or less.
+bench-open-return COPIES="4" ROUNDS="12" SETTLE="2" REPS="5":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/open-return
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-open-return (the registration, docs/journal/2026-11-18-open-return-comparison-registration.md): the open kernel against 0.5.6's plan at $(git rev-parse HEAD), unpinned at 10 and 8 threads, on {{COPIES}} copies of the Wikidata sample, text and random, {{ROUNDS}} paired rounds, settle {{SETTLE}} s; then the census, and the memory controller and package energy, {{REPS}} reps"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-open-return: the checkout has local changes"; exit 1; }
+    # 0.5.6's decoder: src as v0.5.6's (530ed404) but for the feature's own lines, added and
+    # nothing removed: the module `open_gate` and its two cfg-gated declarations in lib.rs, the
+    # feature in Cargo.toml; Cargo.lock unchanged
+    V056=530ed404a014a414ef0b62adfd947fa14d4533e6
+    git cat-file -e $V056^{commit} 2>/dev/null || git fetch -q origin tag v0.5.6 2>/dev/null || true
+    changed=$(git diff --name-only $V056 HEAD -- src Cargo.toml Cargo.lock | sort | tr '\n' ' ')
+    [ "$changed" = "Cargo.toml src/lib.rs src/open_gate.rs " ] \
+      || { echo "bench-open-return: src differs from v0.5.6's (530ed404) beyond the feature: $changed"; exit 1; }
+    [ "$(git diff --numstat $V056 HEAD -- Cargo.toml src/lib.rs | awk '{s += $2} END {print s + 0}')" = 0 ] \
+      || { echo "bench-open-return: a line of v0.5.6's Cargo.toml or src/lib.rs is changed"; exit 1; }
+    git diff $V056 HEAD -- src Cargo.toml > "$O/src-against-v0.5.6.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-open-return: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --features open-return --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" docs/journal/2026-11-18-open-return/open_return.rs src/open_gate.rs | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    # the guards, generated afresh for this run (the text corpus is this checkout's own sources)
+    G=$W/gen-${O##*/}
+    mkdir "$G"
+    "$AB" gen "$G" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$G/text.bz2" "$G/random.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    files=("$W/wikidata-x{{COPIES}}.bz2" "$G/text.bz2" "$G/random.bz2")
+    # the census (decides nothing): each corpus's run-route blocks, those LazyCells admits, those
+    # the density line selects (the gated arm's open blocks), and the column-route blocks; with
+    # each arm's bytes checked against the default's
+    "$AB" census-open "${files[@]}" | tee "$O/census.jsonl"
+    # unpinned, every online CPU, no spinner: one `ab run` a count, the reference first
+    for spec in "10:mibz2,mibz2-open-7-28,mibz2-opend-7-28,mibz2-opend-8-32,mibz2-oce-7-28" \
+                "8:mibz2,mibz2-open-8-32,mibz2-opend-8-32,mibz2-oce-7-28"; do
+      echo "unpinned at ${spec%%:*} threads: ${spec#*:}"
+      "$AB" run "$O/unpinned.jsonl" --arms "${spec#*:}" --threads "${spec%%:*}" --rounds {{ROUNDS}} \
+        --settle {{SETTLE}} --unpinned "${files[@]}"
+    done
+    date -u +%FT%TZ > "$O/timed.txt"
+    # one Holm family at α 0.05 over the 5 main-corpus cells; VOID before any verdict unless the
+    # machine is the i9 and the reference observed 0.5.6's workers there, 7 at 10 threads and 8
+    # at 8 (the Researcher's REVIEW 6990885206)
+    python3 bench/two_arm.py "$O/unpinned.jsonl" --main wikidata-x{{COPIES}} --guard text,random \
+      --controls "" --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --sparse \
+      --primary wikidata-x{{COPIES}},text --check-workers --judged 10,8 --hold-max-threads 0 --unpinned \
+      --ref-at mibz2=10,8 --context mibz2-oce-7-28 \
+      --ref-workers 10=7 --ref-workers 8=8 --machine-model i9-10900K --lscpu "$O/lscpu.txt" \
+      --cand mibz2-open-7-28 --judge-at mibz2-open-7-28=10 \
+      --cand mibz2-opend-7-28 --judge-at mibz2-opend-7-28=10 \
+      --cand mibz2-open-8-32 --judge-at mibz2-open-8-32=8 \
+      --cand mibz2-opend-8-32 --judge-at mibz2-opend-8-32=10,8 \
+      --pair mibz2-opend-7-28/mibz2-open-7-28 --pair mibz2-opend-8-32/mibz2-open-8-32 \
+      --pair mibz2-opend-8-32/mibz2-opend-7-28 \
+      | tee "$O/verdict.txt" \
+      || echo "bench-open-return: the family is VOID (verdict.txt says why); the bundle is kept"
+    # the memory controller and the package's energy (decides nothing): system-wide, so only where
+    # `kernel.perf_event_paranoid` is 0 or less; skipped, and said so, otherwise. One file a pair,
+    # each open arm and the context against the reference at its count, on the Wikidata copies
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    if command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 0 ]; then
+      perf --version | tee "$O/perf_version.txt"
+      : > "$O/dram.txt"
+      for spec in 10:mibz2-open-7-28 10:mibz2-opend-7-28 10:mibz2-opend-8-32 10:mibz2-oce-7-28 \
+                  8:mibz2-open-8-32 8:mibz2-opend-8-32; do
+        t=${spec%%:*} c=${spec#*:}
+        f="$O/dram-u$t-$c.jsonl"
+        echo "== unpinned at $t threads: $c against mibz2" | tee -a "$O/dram.txt"
+        if python3 bench/counters.py run --ab "$AB" --arm mibz2 --arm "$c" --events imcpower --unpinned \
+            --threads "$t" --reps {{REPS}} --file "$W/wikidata-x{{COPIES}}.bz2" --out "$f"; then
+          python3 bench/counters.py report "$f" --ref mibz2 --cand "$c" --events imcpower \
+            --threads "$t" --reps {{REPS}} | tee -a "$O/dram.txt" \
+            || echo "bench-open-return: the diagnostic for $c at $t is VOID (dram.txt says why); the verdicts stand" | tee -a "$O/dram.txt"
+        else
+          echo "bench-open-return: the diagnostic for $c at $t failed to count; the verdicts stand" | tee -a "$O/dram.txt"
+        fi
+      done
+    else
+      echo "bench-open-return: the diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 0); the verdicts stand" | tee "$O/dram.txt"
+    fi
+    date -u +%FT%TZ > "$O/finished.txt"
+    bash bench/bundle.sh "$O"
+
+# The opend worker sweep (#145 QUEUED 6992388066, step 1 of the B5 study; MONODROMY's record 71
+# §3; the rule, docs/journal/2026-11-18-opend-sweep.md, posted on #145 before any data): opend
+# against LazyCells, both built the same way (`StreamDecoder::workers_with`, `mibz2-opend-W-4W`
+# against `mibz2-occ-W-4W`), unpinned at W = 2 to 10 workers, the 2 s settle. Then, per W, the
+# stall counters (cycles, instructions, `cycle_activity.stalls_l3_miss`; `counters.py --events
+# default`) and the memory controller with the package's energy (`imcpower`). A diagnostic: it
+# decides nothing in production. One build, rustc 1.99.1, src as 0.5.6's but for the research
+# feature `open-return` (checked). Needs `kernel.perf_event_paranoid` 0 or less. DRY (any
+# value): the untimed dry run (PROTOCOL §9), marked not evidence, without the counters.
+bench-opend-sweep COPIES="4" ROUNDS="12" SETTLE="2" REPS="5" DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/opend-sweep
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-opend-sweep (docs/journal/2026-11-18-opend-sweep.md): opend against LazyCells at W = 2..10 workers, unpinned, at $(git rev-parse HEAD), on {{COPIES}} copies of the Wikidata sample and text, {{ROUNDS}} paired rounds, settle {{SETTLE}} s; then the stall counters and the memory controller, {{REPS}} reps a W"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-opend-sweep: the checkout has local changes"; exit 1; }
+    V056=530ed404a014a414ef0b62adfd947fa14d4533e6
+    git cat-file -e $V056^{commit} 2>/dev/null || git fetch -q origin tag v0.5.6 2>/dev/null || true
+    changed=$(git diff --name-only $V056 HEAD -- src Cargo.toml Cargo.lock | sort | tr '\n' ' ')
+    [ "$changed" = "Cargo.toml src/lib.rs src/open_gate.rs " ] \
+      || { echo "bench-opend-sweep: src differs from v0.5.6's (530ed404) beyond the feature: $changed"; exit 1; }
+    [ "$(git diff --numstat $V056 HEAD -- Cargo.toml src/lib.rs | awk '{s += $2} END {print s + 0}')" = 0 ] \
+      || { echo "bench-opend-sweep: a line of v0.5.6's Cargo.toml or src/lib.rs is changed"; exit 1; }
+    git diff $V056 HEAD -- src Cargo.toml > "$O/src-against-v0.5.6.diff"
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    dry="{{DRY}}"
+    if [ -n "$dry" ]; then
+      echo "bench-opend-sweep: DRY RUN: untimed, no counters; not evidence" | tee "$O/DRY-RUN.txt"
+    else
+      command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 0 ] \
+        || { echo "bench-opend-sweep: the counters need perf and kernel.perf_event_paranoid 0 or less ($paranoid)"; exit 1; }
+      perf --version | tee "$O/perf_version.txt"
+    fi
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-opend-sweep: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --features open-return --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" docs/journal/2026-11-18-open-return/open_return.rs src/open_gate.rs | tee "$O/binaries.sha256"
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    G=$W/gen-${O##*/}
+    mkdir "$G"
+    "$AB" gen "$G" 16 >/dev/null
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$G/text.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    files=("$W/wikidata-x{{COPIES}}.bz2" "$G/text.bz2")
+    # the census (decides nothing): opend's blocks are exactly LazyCells' admitted ones
+    "$AB" census-open "${files[@]}" | tee "$O/census.jsonl"
+    # timing: one `ab run` a W, LazyCells first in the arm list, every online CPU, no spinner
+    for w in 2 3 4 5 6 7 8 9 10; do
+      echo "unpinned, W = $w: mibz2-occ-$w-$((4 * w)) against mibz2-opend-$w-$((4 * w))"
+      "$AB" run "$O/runs.jsonl" --arms "mibz2-occ-$w-$((4 * w)),mibz2-opend-$w-$((4 * w))" --threads "$w" \
+        --rounds {{ROUNDS}} --settle {{SETTLE}} --unpinned "${files[@]}"
+    done
+    date -u +%FT%TZ > "$O/timed.txt"
+    # the counters, per W: the stall events per process (one file a W), then the memory controller
+    # and the package's energy system-wide (one file a W), each reported pairwise
+    : > "$O/counters.txt"
+    [ -z "$dry" ] || echo "bench-opend-sweep: DRY RUN: the counters skipped" | tee -a "$O/counters.txt"
+    for w in $([ -n "$dry" ] || echo 2 3 4 5 6 7 8 9 10); do
+      l=mibz2-occ-$w-$((4 * w)) o=mibz2-opend-$w-$((4 * w))
+      echo "== W = $w: $o against $l" | tee -a "$O/counters.txt"
+      python3 bench/counters.py run --ab "$AB" --arm "$l" --arm "$o" --events default --unpinned \
+        --threads "$w" --reps {{REPS}} --file "$W/wikidata-x{{COPIES}}.bz2" --out "$O/stalls-$w.jsonl" \
+        || echo "bench-opend-sweep: the stall counters at W = $w failed (the verdict will say VOID)" | tee -a "$O/counters.txt"
+      python3 bench/counters.py report "$O/stalls-$w.jsonl" --ref "$l" --cand "$o" --events default \
+        --threads "$w" --reps {{REPS}} | tee -a "$O/counters.txt" || true
+      python3 bench/counters.py run --ab "$AB" --arm "$l" --arm "$o" --events imcpower --unpinned \
+        --threads "$w" --reps {{REPS}} --file "$W/wikidata-x{{COPIES}}.bz2" --out "$O/imc-$w.jsonl" \
+        && python3 bench/counters.py report "$O/imc-$w.jsonl" --ref "$l" --cand "$o" --events imcpower \
+          --threads "$w" --reps {{REPS}} | tee -a "$O/counters.txt" \
+        || echo "bench-opend-sweep: the memory controller at W = $w is VOID or failed (decides nothing)" | tee -a "$O/counters.txt"
+    done
+    # the verdict (docs/journal/2026-11-18-opend-sweep.md)
+    python3 bench/opend_sweep.py "$O/runs.jsonl" --lscpu "$O/lscpu.txt" --stalls-dir "$O" \
+      --rounds {{ROUNDS}} --reps {{REPS}} | tee "$O/verdict.txt" \
+      || echo "bench-opend-sweep: the verdict is VOID (verdict.txt says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/finished.txt"
+    bash bench/bundle.sh "$O"

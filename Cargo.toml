@@ -87,6 +87,10 @@ induction-trace = []
 grammar-replay = []
 # research only: the one-scan writer's prototype beside the shipped writer, compared block by block
 owned-writer = []
+# research only: Astra's open-return decoder (docs/journal/2026-11-18-open-return/, #565), compiled
+# from the journal where it lives, for the open-return comparison's `ab` arms (#145 QUEUED
+# 6978711740). Retained while that comparison is open; never on a production path.
+open-return = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
