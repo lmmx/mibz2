@@ -14,26 +14,36 @@ out=$base/run-$(date -u +%Y%m%dT%H%M%SZ)
 mkdir "$out"
 exec > >(tee -a "$out/console.log") 2>&1
 printf '%s\n' "$mode" > "$out/mode.txt"
-# This must be a clean disposable research checkout at the Coordinator's frozen SHA.
-git diff --quiet HEAD --
+# The Coordinator's registered Justfile stays in its checkout. Only the new,
+# detached measurement worktree receives the live master path refresh.
 git ls-files --error-unmatch -- "$candidate"
-if [[ -n $(git ls-files --others --exclude-standard -- src "$score" research/astra-e) ]]; then
-    echo 'Untracked research or source inputs are present in the frozen checkout.' >&2
-    exit 1
-fi
-git fetch origin master
-if ! git diff --quiet HEAD origin/master -- "$score" .just Justfile; then
-    echo 'The scorer or recipes changed after freeze. Return to local calibration and refreeze.' >&2
-    exit 1
-fi
-git checkout origin/master -- bench/moonshot .just Justfile
+git diff --quiet HEAD -- "$recipe/run.sh"
+frozen=$(git rev-parse HEAD)
+scratch=$(mktemp -d "$out/.build-XXXXXXXX")
+tree=$scratch/source
+cleanup() {
+    git -C "$repo" worktree remove --force "$tree" >/dev/null 2>&1 || true
+    rm -rf -- "$scratch"
+}
+finish() {
+    status=$?
+    cd "$repo"
+    cleanup
+    if (( status != 0 )); then
+        printf 'Recipe exited %s. Review the console log and partial evidence.\n' "$status" > "$out/outcome.txt"
+        git show "$frozen:bench/bundle.sh" | bash -s -- "$out" || true
+    fi
+}
+trap finish EXIT
+git worktree add -q --detach "$tree" "$frozen"
+cd "$tree"
+python3 "$recipe/refresh.py" "$out"
 release=530ed404a014a414ef0b62adfd947fa14d4533e6
 git cat-file -e "$release^{commit}" || git fetch origin tag v0.5.6
 git diff "$release" HEAD -- src Cargo.toml > "$out/src-against-v0.5.6.diff"
 git rev-parse HEAD origin/master "$release" > "$out/commits.txt"
-git log -1 --format=%h origin/master -- bench/moonshot > "$out/scorer-revision.txt"
-git rev-parse HEAD:bench/moonshot > "$out/scorer-tree.txt"
-git ls-tree -r HEAD -- "$score" "$recipe" "$candidate" > "$out/source-blobs.txt"
+git ls-tree -r HEAD -- "$recipe" "$candidate" > "$out/source-blobs.txt"
+git ls-files -s -- "$score" .just Justfile > "$out/scorer-blobs.txt"
 sha256sum "$candidate" "$score/moonshot.py" "$recipe/assess.py" > "$out/sources.sha256"
 export RUSTUP_TOOLCHAIN=1.99.1
 export PYTHONDONTWRITEBYTECODE=1
@@ -53,14 +63,16 @@ if 'i9-10900K' not in Path('/proc/cpuinfo').read_text() or len(os.sched_getaffin
     raise SystemExit('Measured run requires the unpinned i9-10900K with all 20 CPUs available.')
 PY
 fi
-scratch=$(mktemp -d "$out/.build-XXXXXXXX")
-trap 'rm -rf -- "$scratch"' EXIT
 export CARGO_TARGET_DIR=$scratch/target
-export MOONSHOT_CANDIDATE=$repo/$candidate
+export MOONSHOT_CANDIDATE=$tree/$candidate
 bash research/astra-e/prepare.sh "$candidate"
 cargo build --release --locked --manifest-path "$score/Cargo.toml"
 bin=$CARGO_TARGET_DIR/release/moonshot
 "$bin" info | tee "$out/scorer-info.json"
+if [[ $mode == measure ]]; then
+    # A 20-CPU affinity mask can coexist with a restrictive container CPU quota.
+    python3 -c 'import json, sys; sys.exit(0 if json.load(open(sys.argv[1]))["cpus"] == 20 else "Available parallelism below the 20-CPU target.")' "$out/scorer-info.json"
+fi
 sha256sum "$bin" > "$out/binaries.sha256"
 base_corpus=$scratch/wikidata.bz2
 x4=$scratch/wikidata-x4.bz2
@@ -83,6 +95,8 @@ import json, os, subprocess, sys
 from pathlib import Path
 bin_path, corpus, out = sys.argv[1:]
 cpus = sorted(os.sched_getaffinity(0))
+is_target = "i9-10900K" in Path("/proc/cpuinfo").read_text() and len(cpus) == 20
+exercised = []
 for w in (7, 8, 9, 10):
     if len(cpus) < w:
         print(f"Cloud rehearsal lacks {w} CPUs for this untimed worker gate")
@@ -91,10 +105,17 @@ for w in (7, 8, 9, 10):
     info = json.loads(subprocess.check_output([*prefix, "info"]))
     if info["cpus"] != w:
         print(f"Available parallelism {info['cpus']} cannot exercise the W={w} untimed gate")
+        if is_target:
+            raise SystemExit(f"Target dry run cannot validate W={w}")
         continue
     with (Path(out) / f"gate-candidate-w{w}.jsonl").open("w") as f:
         subprocess.run([*prefix, "check", "--quick", "--arm", "candidate", "--wikidata", corpus],
                        stdout=f, check=True)
+    exercised.append(w)
+(Path(out) / "dry-coverage.json").write_text(json.dumps({
+    "target_machine": is_target, "target_worker_counts_tested": exercised,
+    "all_target_worker_counts_tested": exercised == [7, 8, 9, 10],
+}, indent=2) + "\n")
 PYDRY
     echo 'Untimed. Candidate and control gates passed. Roster recorded.' > "$out/outcome.txt"
 else
@@ -104,6 +125,7 @@ else
     python3 -c 'import json,sys; print("i9 criterion met =",json.load(open(sys.argv[1]))["i9_criterion_met"])' \
         "$out/decision.json" > "$out/outcome.txt"
 fi
-rm -rf -- "$scratch"
+cd "$repo"
+cleanup
 trap - EXIT
-bash bench/bundle.sh "$out"
+git show "$frozen:bench/bundle.sh" | bash -s -- "$out"
