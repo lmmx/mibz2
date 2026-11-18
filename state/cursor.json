@@ -2427,11 +2427,14 @@
     },
     {
       "trigger_comment_id": 6983357476,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/cutloop-blog-r2-6983357476/report.md",
-      "source_commit": "642be1bc3efc7c702773e85e8a3a696b97a1821d"
+      "source_commit": "642be1bc3efc7c702773e85e8a3a696b97a1821d",
+      "report_commit": "5b81f5f68dac13a98e765ec7febffd40e08ae564",
+      "baseline_commit": "da6f1ad0a9046b5b13a7b3666aeccbf833bfe8ab",
+      "disposition": "REVISE: repeat the marked LF spelling to block length; the revised figures, replayed values and responsive live controls checked."
     }
   ],
   "active_delegations": [],
