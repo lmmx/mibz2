@@ -1,0 +1,41 @@
+name: Astra E paired research benchmark
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - ".github/workflows/astra-e.yml"
+      - "research/astra-e/ci/**"
+      - "research/astra-e/**/*.rs"
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+
+permissions:
+  contents: read
+
+jobs:
+  paired:
+    if: github.head_ref == 'research/astra-e-moonshot' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install corpus oracle
+        run: sudo apt-get update -qq && sudo apt-get install -y lbzip2
+      - name: Run paired Wikidata comparison
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash research/astra-e/ci/bench.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: astra-e-paired-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: astra-e-result/
+          if-no-files-found: error
