@@ -57,7 +57,7 @@ head_bin=$RUNNER_TEMP/astra-e-candidate/release/moonshot
 
 bash bench/moonshot/corpus.sh
 sha256sum corpora/wikidata.bz2 >> "$out/manifest.txt"
-for arm in candidate lazy cells; do
+for arm in candidate lazy cells opend; do
   bin=$base_bin
   if [ "$arm" = candidate ]; then bin=$head_bin; fi
   "$bin" check --arm "$arm" --wikidata corpora/wikidata.bz2 \

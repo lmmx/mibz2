@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT / "bench" / "moonshot"))
 import moonshot
 
 WORKERS = [1, 2, 4]
-ROUNDS = 12  # Two complete forward and reverse rotations of three arms.
+ROUNDS = 16  # Two complete forward and reverse rotations of four arms.
 REPEAT = 4
 
 
@@ -33,13 +33,13 @@ class Paired(moonshot.Scorer):
         return row
 
 
-def compare_to_eager(rows):
+def compare_to_reference(rows, reference):
     # The scorer summarises every comparison against an arm named "lazy".
-    # Give it the eager reference from precisely the same round as each candidate run.
+    # Give it the selected reference from precisely the same round as each candidate run.
     relabelled = [
-        dict(r, arm="lazy" if r["arm"] == "cells" else "candidate")
+        dict(r, arm="lazy" if r["arm"] == reference else "candidate")
         for r in rows
-        if r["arm"] in ("cells", "candidate")
+        if r["arm"] in (reference, "candidate")
     ]
     return moonshot.summarise_timing(relabelled, ["lazy", "candidate"], WORKERS)
 
@@ -51,10 +51,13 @@ def main():
     args = parser.parse_args()
     spec = json.loads((ROOT / "bench" / "wikidata.json").read_text())
     scorer = Paired(args.base, args.head, spec["decoded_bytes"] * REPEAT)
-    lazy = scorer.timing(args.corpus, args.out, ["lazy", "cells", "candidate"])
+    lazy = scorer.timing(args.corpus, args.out, ["lazy", "cells", "opend", "candidate"])
     rows = [json.loads(line) for line in (args.out / "runs.jsonl").read_text().splitlines()]
-    eager = compare_to_eager(rows)
-    tables = {"master LazyCells": lazy, "master eager Cells": eager}
+    tables = {
+        "master LazyCells": lazy,
+        "master eager Cells": compare_to_reference(rows, "cells"),
+        "master opend": compare_to_reference(rows, "opend"),
+    }
     (args.out / "ratios.json").write_text(json.dumps(tables, indent=2) + "\n")
     report = [
         "### Astra E paired research benchmark",
@@ -68,8 +71,7 @@ def main():
     ]
     for w in WORKERS:
         for label, table in tables.items():
-            cell = table[str(w)] if str(w) in table else table[w]
-            r = cell["candidate"]
+            r = table[str(w)]["candidate"]
             report.append(
                 f"| {w} | {label} | {r['geomean']:.4f} "
                 f"[{r['lo']:.4f}, {r['hi']:.4f}] | {r['peak_rss_ratio']:.4f} |"

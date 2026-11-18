@@ -12,7 +12,9 @@ import subprocess
 CONTROLS = [
     ".cargo", ".github/workflows/astra-e.yml", ".just", "Justfile", "Cargo.lock",
     "Cargo.toml", "rust-toolchain.toml", "bench/moonshot", "bench/wikidata.json",
-    "bench/wikidata.py", "examples/windows.rs", "tests/common", "research/astra-e/ci",
+    "bench/wikidata.py", "examples/windows.rs", "tests/common",
+    "research/astra-e/ci/candidate", "research/astra-e/ci/bench.sh",
+    "research/astra-e/ci/inputs.py", "research/astra-e/ci/paired.py",
     "research/astra-e/prepare.sh", ":(glob)research/astra-e/**/prepare.py",
 ]
 
