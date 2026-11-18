@@ -2456,11 +2456,13 @@
     },
     {
       "trigger_comment_id": 6984984150,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/sustain-registration-6984984150/report.md",
-      "source_commit": "e8857fd975265d3c7688d79ccf4ffd8c68306ac0"
+      "source_commit": "e8857fd975265d3c7688d79ccf4ffd8c68306ac0",
+      "report_commit": "f86e3ac218a97616f82026bb5a79cd7a0b2b099d",
+      "disposition": "TARGETED CORRECTION: freeze and validate 60 seconds of successful reference pre-warm. Fixed statistical design and single-primary Rule 4 otherwise confirmed."
     }
   ],
   "active_delegations": [],
