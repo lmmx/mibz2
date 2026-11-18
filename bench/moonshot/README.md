@@ -213,89 +213,120 @@ The reference arms' statistics are in `calibration.json` (`reference`), from
 
 ## Calibration, and what it shows
 
-[`calibration.json`](calibration.json) holds the model's constants and the i9 cells. The cells
+[`calibration.json`](calibration.json) holds the model's constants, the i9 cells, and the
+reference arms' metrics and predictions (`reference`, `reference_predictions`). The cells
 come from the open-return bundle (evidence fa9707e9, `open-return/run-20261118T210422Z`:
 `verdict.txt`, `dram.txt`; 12 rounds, unpinned, Wikidata ×4).
 
-**The fit.** κ is fitted on one cell: opend 7/28 against lazy at 7 workers, measured 0.940.
-`moonshot.py calibrate` scans a grid of κ values and keeps the nearest, which gives **κ = 4**.
-That is 66 cycles of L3-hit latency at 7 workers. Every other cell is held out.
+**The fit.** κ is fitted on one cell, opend 7/28 against lazy at 7 workers (measured 0.940). Over
+the grid 0, 2, 4 and 6, `moonshot.py calibrate` gives 0.956, 0.971, 0.982 and 0.992, so
+**κ = 0, at its bound.** A rising L3-hit latency only hurts opend in this model, which has about
+twice lazy's dependent past-L2 links. So no parameter is effectively fitted on timing: the
+fitted cell is missed by 0.016. Record 71 puts opend's kernel-only effect, corrected for the
+reference's construction cost, at about 0.946, which is 0.010 from the prediction.
 
-The 16-block score of the null candidate on this machine (`moonshot.py score
-candidates/lazy_cells.rs`), against the i9:
+**The held-out check** (48 full + 16 tiny blocks, 400 paired bootstrap resamples):
 
-| cell | threads | role | i9 measured | proxy predicted | same side of 1 | DRAM ratio i9 / proxy |
-|---|---|---|---|---|---|---|
-| opend 7/28 | 10 | fitted | 0.940 | 0.940 | yes | 1.035 / 1.172 |
-| open 7/28 | 10 | held out | 0.915 | 0.958 | yes | 0.975 / 1.173 |
-| oce 7/28 (eager) | 10 | held out | 1.268 | 1.154 | yes | 1.723 / 1.648 |
-| opend 8/32 over 7 workers | 10 | held out | 0.919 | 0.876 | yes | 1.152 / 1.321 |
-| open 8/32 | 8 | held out | 0.929 | 0.939 | yes | 0.954 / 1.140 |
-| opend 8/32 | 8 | held out | 0.944 | 0.916 | yes | 1.012 / 1.140 |
-| oce 7/28 over 8 workers | 8 | held out | 1.300 | 1.206 | yes | – / 1.421 |
+| cell | threads | role | i9 | handed over (v1) | v2 without feedback | **v2** [95%] | side | in interval | DRAM ratio i9 / v2 |
+|---|---|---|---|---|---|---|---|---|---|
+| opend 7/28 | 10 | fitted | 0.940 | 0.940 | 0.924 | **0.956** [0.922, 0.986] | yes | yes | 1.035 / 1.144 |
+| open 7/28 | 10 | held out | 0.915 | 0.958 | 0.895 | **0.924** [0.857, 0.979] | yes | yes | 0.975 / 1.100 |
+| oce 7/28 (eager) | 10 | held out | 1.268 | 1.154 | 1.298 | **1.397** [1.229, 1.578] | yes | yes | 1.723 / 1.724 |
+| opend 8/32 over 7 workers | 10 | held out | 0.919 | 0.876 | 0.868 | **0.931** [0.895, 0.967] | yes | yes | 1.152 / 1.279 |
+| open 8/32 | 8 | held out | 0.929 | 0.939 | 0.844 | **0.905** [0.822, 0.966] | yes | yes | 0.954 / 1.041 |
+| opend 8/32 | 8 | held out | 0.944 | 0.916 | 0.883 | **0.947** [0.916, 0.975] | yes | yes | 1.012 / 1.090 |
+| oce 7/28 over 8 workers | 8 | held out | 1.300 | 1.206 | 1.320 | **1.420** [1.250, 1.625] | yes | yes | – / 1.469 |
 
-**What it shows, plainly:**
-- **opend over LazyCells at 7–10 workers: yes.** The proxy ranks opend faster at 7, 8 and 10
-  workers (0.940, 0.916, 0.863), as the i9 did.
-  - *But not for record 71's reason.* In the model, opend's dependent past-L2 links per byte are
-    about twice lazy's (0.052 against 0.023), and its DRAM bytes are higher. Its predicted gain
-    comes from fewer instructions (17.3 against 23.9 a byte) and half the L2 and L3 traffic.
-  - *It also predicts a gain at 1–4 workers* (about 0.90–0.91). Record 71 reads the VM's loss as
-    a crossover. The model does not reproduce one.
-- **Held out, every cell is on the right side of 1.** Eager Cells is slower and open is faster.
-- **The held-out ranking is partly right: 6 of 9 pairs at the same thread count.**
-  - *Wrong:* open against opend. The i9 measured open faster (0.915 against 0.940 at 10
-    threads, 0.929 against 0.944 at 8); the proxy predicts the reverse.
-  - *The magnitudes are off.* Eager Cells' loss is underpredicted (1.15 against 1.27), and the
-    worker-count step of opend 8/32 over 7 workers is overpredicted.
-- **DRAM traffic.**
-  - *The open kernels:* their DRAM ratio is overpredicted (1.14–1.17 against 0.95–1.04).
-  - *Eager Cells:* about right (1.65 against 1.72).
-  - *Absolute:* lazy's modelled DRAM at 7 workers is 6.0 B/B for one worker's `decode_block`
-    alone, against the i9's whole-process 7.97–8.10 B/B. Records 74 and 75 put the scanner,
-    input, output copy and the rest of the process at about 2.9 B/B.
-- **The cycle scale is plausible.** Lazy at 7 workers models at 12.1 cycles per byte. The i9's
-  0.312 s for Wikidata ×4 (838.8 MB) at 7 workers is about 12.8 cycles per byte a worker,
-  assuming a 4.9 GHz all-core clock.
-- **The chain lengths in records 72–75 can't be reproduced here.** Those records count about
-  0.2–0.25 dependent stages per byte for lazy Cells and about 0.57 for Astra C's cursor, by the
-  algorithm.
-  - *Different definitions.* This model's "dependent loads at any level" is about 1.4 per byte
-    for lazy, because it counts every machine load whose address waited on a load: stack
-    reloads and table walks included. Its past-L2 links, 0.023 per byte, count only the links
-    that reach L3.
-  - *Not in the harness.* Astras A and C exist as journal prototypes, not as `InverseBwt`
-    kernels, so the scorer can't run them.
-- **Historical bundles mined, and why most are not used.** The `evidence` branch holds 95 i9
-  bundles.
-  - *eager-trim* (8426934a) measured eager over lazy at 7 workers at 1.091 and at 5 workers at
-    0.964: the eager/lazy crossover in W.
-  - *Why not used:* its kernels predate 0.5.6's admission and one-scan writer, which moved the
-    same pair to 1.27. Only bundles built on 0.5.6's kernels calibrate this model: the
-    open-return run and, when it lands, the opend sweep.
+- **Same side of 1:** every cell.
+- **Inside its 95% interval:** every cell.
+- **Pairs at the same thread count in the i9's order:** 9 of 9 (v1: 6 of 9; v2 without the
+  feedback: 8 of 9, open 7/28 against opend 8/32).
+- **Is the held-out ranking right? Yes, at both thread counts:** open < opend < 1 < eager
+  Cells, and opend 8/32 over 7 workers below opend 7/28.
 
-**The reading.** The proxy gets the sign of every held-out cell right, and it ranks opend above
-LazyCells at 7–10 workers. It does not get the open/opend order, the low-W crossover, or the
-mechanism record 71 proposes. Treat its predictions as a screen for gross regressions (a
-candidate like eager Cells), not as an estimate of a few percent.
+**What was wrong in v1, and why.** These are diagnoses, not tuning: each was found in the
+harness or the sample, before κ was refitted.
+1. **Buffer growth inside the measured region.** LazyCells grows its buffers by a zero-filled
+   reallocation when a block needs more than they hold. Valgrind runs glibc's `rep stosb` a
+   byte at a time. Whichever block triggered it carried about 10 MB of byte stores into the
+   store-buffer model: on block 47, 44 of lazy's 50.5 cycles a byte. This is why eager Cells'
+   loss was underpredicted (1.15) and the fit was unstable.
+2. **The sample.** Opend/lazy per-block ratios run from 0.70 to 1.23. Ten full blocks (the
+   16-block sample's) give a 90% range of [0.90, 1.01]. This is why κ moved from 8 to 4 and
+   why open against opend came out in the wrong order.
+3. **A cold cache with all its dirty lines charged:** about 8.6% of lazy's cycles and 22% of
+   its DRAM bytes, but under 2% of opend's.
+4. **One DRAM latency for every arm.** The 549 and 649 cycles were the `occ` arm's, at 25 and
+   29 GB/s, not lazy's at 20.
 
-**A further i9 run** (`just bench-moonshot-calibrate`, below) and the opend sweep's bundle would
-let κ, and perhaps a second parameter, be fitted on W-dependence. They would also test the
-low-W prediction directly.
+**The feedback, an honest note.**
+- *Why it is in v2:* the bandwidth-latency term was added after v1's eager miss. That miss
+  turned out to be item 1, not the missing term.
+- *Why it stays:* it rests on measurements (bench-imc-ten's curve, lazy's measured
+  bandwidth), not on these arms' timing, and it ranks 9 of 9 against 8 of 9 without it.
+- *What it costs:* it overpredicts eager (1.40 against 1.27). It also penalises the open
+  kernels for a DRAM ratio the model overpredicts.
+- *How the run judges it:* the i9 calibration run measures each arm's own L3-miss latency,
+  which tests the term directly.
+
+**The mechanism: the model and record 71 disagree, and the i9 run can tell them apart.**
+- *The model's account at 7 workers:* opend wins with 27% fewer instructions (17.5 against
+  24.0 a byte) and half the L2 and L3 traffic. Its dependent past-L2 links are *more*, not
+  fewer (0.057 against 0.032 a byte). Its DRAM-latency sensitivity is the same as lazy's
+  (8.6% against 8.8% for 100 cycles).
+- *Record 71's reading (labelled I):* "more base work … a much smaller latency-contention
+  coefficient". The instruction counts here are exact, and they contradict the "more base
+  work".
+- *The predictions differ in W:*
+  - the model: opend at **0.87 over lazy at 1–4 workers**, its advantage shrinking to about
+    0.95 at 7–10 as the feedback grows (opend moves more DRAM bytes);
+  - record 71: a crossover, with opend slower at low W and its gain growing with W.
+- *The i9 calibration run* times W = 1, 2, 4, 7, 8 and 10 with stall and latency counters, and
+  will show which.
+
+**Known limits.**
+- **DRAM bytes.** The open kernels' DRAM ratio is overpredicted: 1.10–1.14 against 0.98–1.04
+  measured. Eager Cells' is right (1.724 against 1.723).
+  - *Ruled out:* fast-string no-RFO stores, tested and kept, which save under 0.1 B/B.
+  - *Untested suspects:* LRU in place of the i9's scan-resistant adaptive replacement, which
+    would spare a streaming kernel's working set; and the streamer's overshoot.
+- **κ at its bound.** The L3 term contributes nothing; L3 contention is in the model only as
+  the LLC's share.
+- **Intervals.** They are wide, about ±4% for opend and ±13% for eager Cells at 7 workers,
+  because the per-block ratios spread. A candidate's 2–3% effect is below the proxy's
+  resolution: use the proxy as a screen for gross regressions and for the direction and
+  mechanism of a gain, not for a few per cent.
+- **Absolute scale.** Lazy models at 10.5 cycles a byte at 7 workers. The i9's 0.312 s for
+  838.8 MB is about 12.8 cycles a byte a worker at 4.9 GHz. The model omits the scan,
+  input and output copy.
+- **The chain counts of records 72–75** (0.2–0.25 dependent stages a byte for lazy, by the
+  algorithm) are not this model's machine-level counts (1.49 dependent loads a byte at any
+  level, 0.032 past L2). Astras A and C aren't `InverseBwt` kernels, so the scorer can't
+  run them.
+- **Historical bundles.** The `evidence` branch's other i9 bundles predate 0.5.6's kernels
+  (eager-trim, 8426934a), or time other arms (imc-ten's `occ`, used only for the latency
+  curve). None is used for timing calibration.
 
 ### The i9 calibration run
 
 `just bench-moonshot-calibrate` is a frozen workstation recipe.
-- **What it runs:** lazy, opend, open and eager cells in the shipped workers, kernel-only.
-- **The arrangement:** 1, 2, 4, 7, 8 and 10 workers; unpinned; 10 paired rounds; a 2 s settle;
-  Wikidata ×4.
-- **What it records:** each run's `perf stat` stall counters, `cycle_activity.stalls_l3_miss`
-  among them.
-- **Correctness:** every arm passes the quick gate on the i9 first.
-- **What it leaves:** only its bundle. It deletes its build and corpora.
-- **How it is used:** κ is refitted on lazy and opend at 7 workers only. Every other cell is a
-  held-out check, timing and counters alike. Its rule is posted on #145 before any data. It
-  decides nothing in production.
+- **What it runs:** lazy, opend, open and eager Cells in the shipped workers, kernel-only (all
+  four through `parallel_workers_with`).
+- **The arrangement:** 1, 2, 4, 7, 8 and 10 workers; unpinned; 10 paired, rotated rounds; a
+  2 s settle; Wikidata ×4.
+- **What it records:** each run's `perf stat` counters:
+  - cycles and instructions;
+  - `cycle_activity.stalls_l3_miss`;
+  - `l1d_pend_miss.pending` and `.pending_cycles`;
+  - `offcore_requests(_outstanding).l3_miss_demand_data_rd`, the mean L3-miss latency as
+    bench-imc-ten measured it, per arm.
+- **Its checks first:** every arm passes the quick gate on the i9. Every counter is checked
+  before anything is built.
+- **What it leaves:** only its bundle. It deletes its build and corpora. It takes about
+  20 minutes.
+- **How it is used:** the scorer is frozen at the commit the #145 LOG names, with κ = 0 from the
+  open-return bundle. **Every cell of the run is held out.** The predictions, made before any
+  data, are `calibration.json`'s `reference_predictions`. It decides nothing in production.
 - **A dry run:** `just bench-moonshot-calibrate 10 2 4 1,2,4,7,8,10 1` is untimed, two rounds,
   no counters. DRY is the 5th positional argument: `just` has no keyword arguments, so
   `DRY=1` alone would be taken as ROUNDS, and the recipe refuses it.
@@ -309,9 +340,10 @@ low-W prediction directly.
 | `src/main.rs`, `src/check.rs`, `src/arms.rs` | the harness: the gate, one timed run, the proxy's driver; the reference arms |
 | `build.rs` | the candidate, compiled as `crate::candidate` |
 | `chaingrind/` | the Valgrind tool and its build |
-| `calibration.json` | the model's constants and the i9 cells |
+| `calibration.json` | the model's constants, the i9 cells, the reference arms' metrics and predictions |
 | `corpus.sh` | the Wikidata bench corpus |
 | `candidates/` | the template and the worked examples |
 
 A score writes `bench/moonshot/target/moonshot/score-<time>/`: `summary.txt`, `summary.json`,
-`check.jsonl`, `runs.jsonl` and `proxy.json`.
+`check.jsonl`, `runs.jsonl`, `proxy.json` and `proxy-runs.jsonl` (every chaingrind run's counters;
+`moonshot.py calibrate --again DIR` reads a calibration's again without running anything).
