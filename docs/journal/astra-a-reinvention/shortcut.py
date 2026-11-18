@@ -35,10 +35,12 @@ def ignore(addr, size, write=False):
     pass
 
 
-def reconstruct(records, n, primary, at=ignore, audit=None):
+HEADER = 5 << 32
+
+
+def initialize(records, n, primary, at, whole=False):
     if not 0 <= primary < n <= 900000:
         raise ValueError("expected a nonempty bzip2 block and a valid primary")
-    stats = Counter()
     hist = [[0, 0] for _ in range(256)]
     at(HIST, 8 * 256, True)
     # Both input scans are sequential. Issue each read at its position in the scan.
@@ -64,7 +66,8 @@ def reconstruct(records, n, primary, at=ignore, audit=None):
     assert rows == n
     nt = (n + 63) // 64
     masks, before = [0] * nt, [0] * nt
-    nodes = [None] * roots
+    nodes = [] if whole else [None] * roots
+    headers = [0] * roots if whole else None
     at(TILE, 16 * nt, True)
     top = 0
     for c, width in scan():
@@ -72,8 +75,18 @@ def reconstruct(records, n, primary, at=ignore, audit=None):
         first, root = hist[c]
         hist[c] = [first + width, root + 1]
         at(HIST + 8*c, 8, True)
-        nodes[root] = (first, first + width, top - first, 1, c)
-        at(NODE + 16*root, 16, True)
+        leaf = (first, first + width, top - first, 1, c)
+        if whole:
+            at(HEADER + 4*root, 4, True)
+            if width == 1:
+                headers[root] = -1 - (top * 256 + c)
+            else:
+                headers[root] = len(nodes)
+                at(NODE + 16*len(nodes), 16, True)
+                nodes.append((*leaf, False))
+        else:
+            nodes[root] = leaf
+            at(NODE + 16*root, 16, True)
         tile, bit = divmod(first, 64)
         at(TILE + 16*tile, 8)
         masks[tile] |= 1 << bit
@@ -86,13 +99,22 @@ def reconstruct(records, n, primary, at=ignore, audit=None):
         seen += mask.bit_count()
         at(TILE + 16*t + 8, 4, True)
     assert seen == roots
+    return masks, before, nodes, headers, roots
 
+
+def root_at(row, masks, before, at):
+    t, bit = divmod(row, 64)
+    at(TILE + 16*t, 16)
+    return before[t] + (masks[t] & ((2 << bit)-1)).bit_count() - 1
+
+
+def reconstruct(records, n, primary, at=ignore, audit=None):
+    masks, before, nodes, _, roots = initialize(records, n, primary, at)
+    stats = Counter()
     row, pos, previous = primary, 0, None
     out = bytearray(n)  # target model writes the initialized prefix once
     while pos < n:
-        t, bit = divmod(row, 64)
-        at(TILE + 16*t, 16)
-        k = before[t] + (masks[t] & ((2 << bit)-1)).bit_count() - 1
+        k = root_at(row, masks, before, at)
         depth = 0
         while True:
             at(NODE + 16*k, 16)
@@ -159,5 +181,5 @@ def reconstruct(records, n, primary, at=ignore, audit=None):
     stats["installs"] = stats["splits"] + stats["whole"]
     stats["nodes"] = len(nodes)
     stats["roots"] = roots
-    stats["tiles"] = nt
+    stats["tiles"] = len(masks)
     return out, stats
