@@ -24,11 +24,12 @@ families together keep 0.05 (Bonferroni over the two Holm families).
 **Memory traded for speed** (`--primary CORPUS,..`, with `--judge-at` only; none by default, and
 then nothing here changes; PERFORMANCE-POLICY rule 4 as amended by #558, `just
 bench-recalibrate`): a candidate with a gain (Holm) and no judged cell SLOWER, whose peak memory
-is above the gate on some corpora, ADOPTS BY TRADE where, at that count, every corpus above the
-gate is a primary corpus (`--primary`), with a wall gain there of at least 5% beyond noise (its
-step FASTER and its geometric mean at most 0.95), memory growth in percent at most twice that
-gain, and growth of at most 64 MB (62,500 KiB) of peak RSS (medians); other corpora stay within
-the gate by construction (any corpus above it must trade). Otherwise it is HELD ON MEMORY, the
+is above the gate on one corpus, ADOPTS BY TRADE where, at that count, that one corpus is a
+primary corpus (`--primary`), with a wall gain there of at least 5% beyond noise (its step FASTER
+and its geometric mean at most 0.95), memory growth in percent at most twice that gain, and growth
+of at most 64 MB (62,500 KiB) of peak RSS (medians). Every other corpus stays within the gate:
+#558 lets no other corpus grow past 10%, so two corpora above the gate never trade, however each
+qualifies alone (the Researcher's REVIEW 6978182129). Otherwise it is HELD ON MEMORY, the
 Coordinator's to weigh, as before. An arm that ADOPTS BY TRADE counts as one that ADOPTS: of those
 at a count, the choice is the lowest main-corpus step, as before.
 
@@ -483,7 +484,8 @@ def by_count(a, refs, cands, context, judge_at, judged, corpora, cell, peak, pai
                 and mem[(cand, t, c)] - 1 <= TRADE_RATIO * (1 - g) and grow[(cand, t, c)] <= TRADE_KIB)
 
     def traded(cand, t, over):
-        return bool(primary) and all(trade_ok(cand, t, c) for c in over)
+        # rule 4 (#558): one corpus may trade; no other corpus may be above the gate
+        return bool(primary) and len(over) == 1 and trade_ok(cand, t, over[0])
 
     def trade_line(cand, t, c):
         return (f"{c}{' (primary)' if c in primary else ' (not primary)'} gain {100 * (1 - gall[(cand, t, c)]):.1f}% "
@@ -547,7 +549,11 @@ def by_count(a, refs, cands, context, judge_at, judged, corpora, cell, peak, pai
                       f"least 5% beyond noise, growth at most twice it and at most 64 MB: "
                       + "; ".join(trade_line(cand, t, c) for c in over))
             elif (cand, t) in rejected and not slower:
-                if a.primary:
+                if a.primary and len(over) > 1:
+                    print(f"  (rule 4's trade does not hold: peak memory is above {RSS_GATE:.2f} on {len(over)} "
+                          f"corpora, and no other corpus may be: "
+                          + "; ".join(trade_line(cand, t, c) for c in over) + ")")
+                elif a.primary:
                     print(f"  (rule 4's trade does not hold: "
                           + "; ".join(trade_line(cand, t, c) for c in over) + ")")
                 print(f"{head}: HELD ON MEMORY. A gain (Holm) and neither cell SLOWER, but peak memory is above "

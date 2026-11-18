@@ -133,7 +133,8 @@ exactly that arm's N worker threads (`mibz2-0` to `mibz2-(N-1)`).
   - *0.5.4's* was 1.050, in the trim's favour;
   - *record 56* predicts no change there (8: 1.10).
 
-  The cell must tell 6 workers from 8 in either direction.
+  The cell is meant to tell 6 workers from 8 in either direction, if its noise allows. The
+  power section below says how far it can; that claim is qualified there.
 - **One build** by rustc 1.99.1, the repository's pin.
 - **The corpora:**
   - Wikidata ×4, the gain family;
@@ -145,7 +146,8 @@ exactly that arm's N worker threads (`mibz2-0` to `mibz2-(N-1)`).
     the decodes.
   - *What it keeps:* 0.25 s still samples the other processes' load before each run, the
     gate's purpose (`--max-busy` 1.5 as before). It is the i9's `share-nothing` setting.
-  - *Drift:* thermal drift is balanced by the paired, rotated rounds.
+  - *Drift:* thermal drift is balanced by the paired, rotated rounds. Balance by position
+    does not rule out carryover, so the diagnostics below are declared now, before the data.
 - **Time:** 111 runs a round (48 pinned and 63 unpinned). At 0.25 s of gate, about 0.02 s of
   harness and about 23 s of decoding, that is about 53 s a round:
   - about 10½ to 11 minutes for 12 rounds;
@@ -181,6 +183,14 @@ exactly that arm's N worker threads (`mibz2-0` to `mibz2-(N-1)`).
 - *A simulation* (as below, with the other eleven cells null) rejects a 1.7% gain of 8 over 6:
   with power 1.00 at an SD of 0.012, and 0.84 at 0.020.
 - *Either direction:* a loss of that size is labelled SLOWER.
+- **Qualified (the Researcher's REVIEW 6978182129):** those figures assume an SD of 0.012 to
+  0.020. The one measured SD for this cell is higher. 0.5.5's pinned-8 crossover gave a paired
+  log SD of **0.03955** (one block a thread against 6/24, Wikidata ×1). At that SD, a true 1.7%
+  gain has about **18%** power at Holm's first step, against 83% at 0.020. The registered
+  Wikidata ×4 input may be quieter, but that is not known before the data. So this cell
+  probably resolves a gain of about 1.7% only if its noise is near 0.020. If the SD comes out
+  near 0.04, an INCONCLUSIVE there is the expected outcome and is no evidence of no
+  difference. The run's SD is reported for the cell, beside these figures.
 
 **Splitting α between the two placements** costs nothing. One family of 26 cells at 0.05
 would give about the same thresholds. The unpinned family's strictest step, 0.025 / 14, needs
@@ -213,13 +223,17 @@ Each count still gets its own verdict. A simulation (paired normal logs, 12 roun
   PERFORMANCE-POLICY rule 3 for random: #506's family, as the CHECKPOINT asks.
 - **Memory, rule 4 as amended (#558).** At the candidate's count, the median peak RSS over the
   reference's must be at most 1.10 on every corpus. Where it is above:
-  - **ADOPTS BY TRADE**, encoded (`--primary wikidata-x4,text`), when every corpus above 1.10
-    meets all of these:
+  - **ADOPTS BY TRADE**, encoded (`--primary wikidata-x4,text`), when exactly one corpus is
+    above 1.10 and it meets all of these:
     - it is a primary corpus (Wikidata or text);
     - its step is FASTER with a geometric mean at most 0.95 (a gain of at least 5% beyond
       noise);
     - its growth in percent is at most twice that gain;
     - its growth is at most 64 MB (62,500 KiB) of peak RSS.
+  - **Two corpora above 1.10 never trade,** however each qualifies alone. #558 lets no other
+    corpus grow past 10%. As first written, the reader accepted Wikidata and text both at +12%
+    with 8% gains. The Researcher's REVIEW 6978182129 reproduced that, and the reader now
+    holds it, with a regression check.
   - **HELD ON MEMORY** otherwise: the Coordinator weighs it, as rule 4 says.
 - **The verdicts at each count:**
   - ADOPTS
@@ -243,7 +257,8 @@ Each count still gets its own verdict. A simulation (paired normal logs, 12 roun
   RSS. Per worker, the earlier runs measured 163 MB at 7 and 186 MB at 8, on Wikidata
   unpinned at 8 and 10.
 - *Under rule 4:* a gain under 5% cannot buy growth above 10%. So the likely verdict for
-  8 workers is HELD ON MEMORY, for the Coordinator to weigh. It is not an adoption by rule.
+  8 workers is HELD ON MEMORY, for the Coordinator to weigh, if Holm rejects and the loss screen
+  clears. To pass the trade, 12–14% growth would need a gain of 6–7%. It is not an adoption by rule.
   This is said now, before the data, so that it cannot be argued after.
 
 ## MONODROMY's predictions, cited
@@ -279,6 +294,22 @@ three cells:
 - unpinned at 6: eager 6/24 against lazy 6/24;
 - pinned at 4: eager 3/12 against lazy 3/12.
 
+## Diagnostics, declared before the data
+
+Each is reported for every judged cell in the run's record. None changes a verdict. A
+diagnostic that shows a problem is written up beside the verdict as a qualification.
+- **Order:** the mean log wall ratio of each arm by its position in the round. A position
+  effect larger than the cell's 95% half-width marks the cell as possibly carrying over.
+- **Drift:** the least-squares slope of each cell's paired log ratio on the round index, with
+  its 95% interval. A slope whose interval excludes zero marks a drifting cell.
+- **Load:** the settle gate's busy-CPU samples before each run (`--max-busy` 1.5). Reported: the
+  median and maximum by cell, and any run that waited more than once.
+
+Holm controls the family's error across the 12 and 14 comparisons without needing the cells to
+be independent, given valid paired p-values for each. The four unpinned 8-against-7 comparisons
+on one host are each given a separate count verdict. The independent-batch simulation above
+gives a power estimate, not a joint guarantee across counts.
+
 ## What it does not decide
 
 - No other machine, mask, quota or SMT placement.
@@ -299,7 +330,8 @@ A lazy kernel adopted at an eager cell changes that cell's `trim_cell` entry alo
     8 pinned and one worker fewer at 10), never at its own;
   - `--rounds-at`, rounds by count.
 
-  `bench/test_two_arm.py`: 143 checks. 27 of them are new: each trade condition met and
+  `bench/test_two_arm.py`: 144 checks. 28 of them are new (one is the two-corpus regression of
+  the Researcher's REVIEW 6978182129): each trade condition met and
   broken, the workers check, the halved α, the reference-and-candidate cases, and rounds by
   count.
 - **`bench/counters.py`:** `bench/admit`'s, with the IMC events.

@@ -741,13 +741,20 @@ def main():
 
     eight = ("mibz2-occ-8-32", 10)
     grow = {(*eight, c): 1.12 for c in ("wikidata-x4", "text")}
-    results.append(expect_low("recalibration: memory traded for speed on both primary corpora", rcl(
-        {(*eight, "wikidata-x4"): 0.93, (*eight, "text"): 0.93}, grow), 0, [
+    results.append(expect_low("recalibration: memory traded for speed on one primary corpus", rcl(
+        {(*eight, "wikidata-x4"): 0.93, (*eight, "text"): 0.93}, {(*eight, "wikidata-x4"): 1.12}), 0, [
         "wikidata-x4 and text, random", "Holm at family α 0.025 over the 5 main-corpus cells",
         "VERDICT for mibz2-occ-8-32 at 10 threads: ADOPTS BY TRADE (PERFORMANCE-POLICY rule 4)",
-        "text (primary) gain 7.0% FASTER, growth 12.0% and 35.2 MiB: trades",
+        "wikidata-x4 (primary) gain 7.0% FASTER, growth 12.0%", "trades",
         "THE CHOICE at 10 threads: mibz2-occ-8-32", "THE CHOICE at 4 threads: none; the reference stays"],
         args=rcl_args(), absent=["VOID", "HELD ON MEMORY"]))
+    # the Researcher's REVIEW 6978182129: two primary corpora above the gate, each qualifying alone
+    results.append(expect_low("recalibration: no trade where two corpora are above the gate", rcl(
+        {(*eight, "wikidata-x4"): 0.92, (*eight, "text"): 0.92}, grow), 0, [
+        "rule 4's trade does not hold: peak memory is above 1.10 on 2 corpora, and no other corpus may be",
+        "text (primary) gain 8.0% FASTER, growth 12.0%", "trades",
+        "VERDICT for mibz2-occ-8-32 at 10 threads: HELD ON MEMORY", "THE CHOICE at 10 threads: none"],
+        args=rcl_args(), absent=["ADOPTS BY TRADE"]))
     results.append(expect_low("recalibration: no trade where the growing corpus has no gain", rcl(
         {(*eight, "wikidata-x4"): 0.93}, grow), 0, [
         "rule 4's trade does not hold", "text (primary) gain", "does not trade",
