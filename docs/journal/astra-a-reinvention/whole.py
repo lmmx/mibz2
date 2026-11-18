@@ -4,8 +4,10 @@ from collections import Counter
 from shortcut import HEADER, NODE, OUT, ignore, initialize, root_at
 
 
-def reconstruct(records, n, primary, at=ignore, audit=None):
+def reconstruct(records, n, primary, at=ignore, audit=None, begin_walk=None, publish=None):
     masks, before, nodes, headers, roots = initialize(records, n, primary, at, whole=True)
+    if begin_walk is not None:
+        begin_walk()
     stats = Counter(roots=roots, nodes=len(nodes), tiles=len(masks))
     out, row, pos, previous = bytearray(n), primary, 0, None
     while pos < n:
@@ -30,6 +32,8 @@ def reconstruct(records, n, primary, at=ignore, audit=None):
             out[pos:pos+take] = out[src:src+take]
             stats["copies"] += 1
             stats["copy_bytes"] += take
+            stats["copies_le16"] += take <= 16
+            stats["max_copy"] = max(stats["max_copy"], take)
         at(OUT+pos, take, True)
         if audit is not None:
             audit(pos, row, (low, high, shift, length, src), take)
@@ -43,9 +47,15 @@ def reconstruct(records, n, primary, at=ignore, audit=None):
             old_key, a, b, e, m, ref = previous
             if low <= a+e and b+e <= high:
                 nodes[old_key] = (a, b, e+shift, m+length, pos-m-length, False)
+                if publish is not None:
+                    publish(nodes[old_key][:5], pos-m-length, True)
                 stats["installs"] += 1
+                stats["both_longer_than_one"] += m > 1 and length > 1
+                stats["certified_extension_area"] += (b-a)*length
             else:
                 nodes[old_key] = (a, b, e, m, ref, True)
+                if publish is not None:
+                    publish(nodes[old_key][:5], pos-m-length, False)
                 stats["retired"] += 1
             at(NODE+16*old_key, 16, True)
             invalid = old_key == k

@@ -37,6 +37,7 @@ def prepare(windows, out):
             raw_block = bz2.decompress(envelope([part]))
             checksums.append((len(checksums), len(raw_block), hashlib.sha256(raw_block).hexdigest()))
         if window["name"] == "w00":
+            (out / "first-four.bz2").write_bytes(envelope(parts[:4]))
             single = envelope([parts[1]])
             assert hashlib.sha256(single).hexdigest() == "e3bf5372b15885da138764a25bb2b7cd784ee3cbee1e664937647921ae3122b0"
             assert hashlib.sha256(bz2.decompress(single)).hexdigest() == "d2584c09f1d643d6abff8a25513b63af4e05969c15c30256aed3a05c74281210"

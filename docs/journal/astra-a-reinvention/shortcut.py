@@ -51,7 +51,10 @@ def initialize(records, n, primary, at, whole=False):
                 yield record
         return runs(reads())
 
+    wide_roots = 0
     for c, width in scan():
+        if whole and width > 1:
+            wide_roots += 1
         at(HIST + 8*c, 8)
         hist[c][0] += width
         hist[c][1] += 1
@@ -66,7 +69,8 @@ def initialize(records, n, primary, at, whole=False):
     assert rows == n
     nt = (n + 63) // 64
     masks, before = [0] * nt, [0] * nt
-    nodes = [] if whole else [None] * roots
+    nodes = [None] * (wide_roots if whole else roots)
+    next_wide = 0
     headers = [0] * roots if whole else None
     at(TILE, 16 * nt, True)
     top = 0
@@ -81,9 +85,10 @@ def initialize(records, n, primary, at, whole=False):
             if width == 1:
                 headers[root] = -1 - (top * 256 + c)
             else:
-                headers[root] = len(nodes)
-                at(NODE + 16*len(nodes), 16, True)
-                nodes.append((*leaf, False))
+                headers[root] = next_wide
+                at(NODE + 16*next_wide, 16, True)
+                nodes[next_wide] = (*leaf, False)
+                next_wide += 1
         else:
             nodes[root] = leaf
             at(NODE + 16*root, 16, True)
@@ -98,7 +103,7 @@ def initialize(records, n, primary, at, whole=False):
         before[t] = seen
         seen += mask.bit_count()
         at(TILE + 16*t + 8, 4, True)
-    assert seen == roots
+    assert seen == roots and (not whole or next_wide == wide_roots)
     return masks, before, nodes, headers, roots
 
 
@@ -108,8 +113,10 @@ def root_at(row, masks, before, at):
     return before[t] + (masks[t] & ((2 << bit)-1)).bit_count() - 1
 
 
-def reconstruct(records, n, primary, at=ignore, audit=None):
+def reconstruct(records, n, primary, at=ignore, audit=None, begin_walk=None, publish=None):
     masks, before, nodes, _, roots = initialize(records, n, primary, at)
+    if begin_walk is not None:
+        begin_walk()
     stats = Counter()
     row, pos, previous = primary, 0, None
     out = bytearray(n)  # target model writes the initialized prefix once
@@ -155,6 +162,8 @@ def reconstruct(records, n, primary, at=ignore, audit=None):
                 stats["unit_offers"] += 1
             else:
                 shortcut = (lo, hi, e+shift, m+length, pos-m-length)
+                if publish is not None:
+                    publish(shortcut, pos-m-length, True)
                 if lo == a and hi == b:
                     nodes[key] = shortcut
                     stats["whole"] += 1

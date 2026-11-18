@@ -1,57 +1,159 @@
 {
-  "totals": {
-    "cases": 14209,
-    "short_cycle": 12192,
-    "nondividing_cycle": 6346,
-    "clipped": 3542,
-    "aliases": 5384,
-    "copies": 6996,
-    "whole": 4724,
-    "unit_offers": 10802,
-    "splits": 3810
+  "split": {
+    "totals": {
+      "cases": 14209,
+      "short_cycle": 12192,
+      "nondividing_cycle": 6346,
+      "certificates_checked": 11634,
+      "clipped": 3542,
+      "aliases": 5384,
+      "copies": 6996,
+      "whole": 4724,
+      "installs": 7472,
+      "unit_offers": 10802,
+      "splits": 3810
+    },
+    "capped_cases": {
+      "certificates_checked": 170,
+      "cases": 30,
+      "short_cycle": 30,
+      "nondividing_cycle": 24,
+      "clipped": 14,
+      "splits": 24,
+      "aliases": 24,
+      "copies": 24,
+      "installs": 24,
+      "unit_offers": 26
+    },
+    "witnesses": {
+      "clipped": {
+        "column": "000000",
+        "primary": 0,
+        "period": 1,
+        "output": "000000",
+        "count": 1
+      },
+      "aliases": {
+        "column": "000000",
+        "primary": 0,
+        "period": 1,
+        "output": "000000",
+        "count": 1
+      },
+      "copies": {
+        "column": "000000",
+        "primary": 0,
+        "period": 1,
+        "output": "000000",
+        "count": 1
+      },
+      "whole": {
+        "column": "000000",
+        "primary": 0,
+        "period": 1,
+        "output": "000000",
+        "count": 1
+      },
+      "installs": {
+        "column": "000000",
+        "primary": 0,
+        "period": 1,
+        "output": "000000",
+        "count": 1
+      },
+      "unit_offers": {
+        "column": "000001",
+        "primary": 2,
+        "period": 1,
+        "output": "010101",
+        "count": 1
+      },
+      "splits": {
+        "column": "01000000",
+        "primary": 0,
+        "period": 4,
+        "output": "00000001",
+        "count": 1
+      }
+    }
   },
-  "witnesses": {
-    "clipped": {
-      "column": "000000",
-      "primary": 0,
-      "period": 1,
-      "output": "000000",
-      "count": 1
+  "whole": {
+    "totals": {
+      "cases": 14209,
+      "short_cycle": 12192,
+      "nondividing_cycle": 6346,
+      "certificates_checked": 7598,
+      "clipped": 2710,
+      "aliases": 7064,
+      "copies": 5018,
+      "installs": 5056,
+      "retirements_checked": 11456,
+      "retired": 8628
     },
-    "aliases": {
-      "column": "000000",
-      "primary": 0,
-      "period": 1,
-      "output": "000000",
-      "count": 1
+    "capped_cases": {
+      "retirements_checked": 24,
+      "cases": 30,
+      "short_cycle": 30,
+      "nondividing_cycle": 24,
+      "aliases": 24,
+      "retired": 24
     },
-    "copies": {
-      "column": "000000",
-      "primary": 0,
-      "period": 1,
-      "output": "000000",
-      "count": 1
-    },
-    "whole": {
-      "column": "000000",
-      "primary": 0,
-      "period": 1,
-      "output": "000000",
-      "count": 1
-    },
-    "unit_offers": {
-      "column": "000001",
-      "primary": 2,
-      "period": 1,
-      "output": "010101",
-      "count": 1
-    },
-    "splits": {
-      "column": "01000000",
-      "primary": 0,
-      "period": 4,
-      "output": "00000001",
-      "count": 1
+    "witnesses": {
+      "clipped": {
+        "column": "000000",
+        "primary": 0,
+        "period": 1,
+        "output": "000000",
+        "count": 1
+      },
+      "aliases": {
+        "column": "000000",
+        "primary": 0,
+        "period": 1,
+        "output": "000000",
+        "count": 1
+      },
+      "copies": {
+        "column": "000000",
+        "primary": 0,
+        "period": 1,
+        "output": "000000",
+        "count": 1
+      },
+      "installs": {
+        "column": "000000",
+        "primary": 0,
+        "period": 1,
+        "output": "000000",
+        "count": 1
+      },
+      "retired": {
+        "column": "010000",
+        "primary": 0,
+        "period": 3,
+        "output": "000001",
+        "count": 1
+      },
+      "same_byte_different_exit": {
+        "column": "0100000100",
+        "primary": 0,
+        "source": [
+          0,
+          2
+        ],
+        "shift": 1,
+        "length": 1,
+        "next_atoms": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      }
     }
   }
 }

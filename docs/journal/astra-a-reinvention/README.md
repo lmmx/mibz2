@@ -31,3 +31,18 @@ The independently identified last-column hash is `db8764224ac4980112ddefbe85b859
 3. **Cache entire output chunks.** Reading backwards from the primary, partition into aligned chunks of width 2, 4, 8, etc. Tail remainders at each level are free. There are 77,620 distinct byte words summed over these levels, yet 145,619 occupied maximal intervals on which both the word and its exit-row translation are constant. To see the difference, start with the maximal constant runs of L. On an interval of depth k, the exit map is increasing by one at each consecutive row. Split it at preimages of every depth-k boundary in the image to get depth 2k. An interior cut first separates adjacent rows at a step where their bytes differ. Conversely, a separation during either half makes the doubled spellings differ. Recursively computing each distinct occupied interval once requires one binary join for each of the 145,619 intervals, even with free recognition. This exceeds Cells' 92,570 joins by 57.3% before the base layer. The bound applies to this explicitly materialised dyadic parse. A factor reused at a different boundary can escape it.
 
 The next test lets output determine the boundaries and learns an interval certificate for an entire phrase from material already emitted. It requires pricing predecessor recognition, updates, dependent row advances and actual copies. A parse of byte words supplied with its next rows by an oracle is only a control.
+
+## Further falsifications
+
+The ordered token transform can be priced against the work its first pass actually removes. The favourable streamer counts one piece for an original run, one extra when a low run straddles the low/high first-column boundary, and each change of projected predecessor *within* a high run. It gets the coarsening of all high predecessors to one symbol for free. After projecting the primary (including its within-token offset), feed the token column to the same binary geometry.
+
+| Count | Frozen | Ten-block sample |
+|---|---:|---:|
+| Ordinary Cells cuts | 92,570 | 1,236,053 |
+| Token-column cuts | 89,528 | 1,176,998 |
+| Cuts removed | 3,042 | 59,055 |
+| Pieces processed to obtain the token column | 51,781 | 699,767 |
+
+Even if token naming, digit expansion and the change of output alphabet are free, frozen needs a piece to cost less than 0.059 of a removed cut to break even in this model. All ten have more piece visits plus token cuts than original cuts. The token-column implementation checks 6,444 primitive-word and partition cases with an independently sorted token BWT, including 1,436 swallowed primaries. [Substitution and geometry falsifier](pairs.py) · [Per-block costs](evidence/pairs.csv)
+
+The ten-block dyadic screen finds 892,128 different byte words and 1,771,246 occupied exit certificates, against 1,236,053 Cells joins. The static bigram prediction has 5,694,534 exceptions among 8,999,915 rows. An adaptive LZ78 control on frozen produces 68,847 phrases with the byte spelling supplied and 121,699 on the run-identity itinerary that certifies an affine exit. Remembering just the last *partial* word per original forward domain, and falling back to its literal outside that word, costs 132,765 visits and 87,566 installations. Permanent whole-domain learning needs 117,399 visits and 25,283 installations. None of these figures charges an oracle spelling as input to the proposed algorithm. [Adaptive controls](controls.py) · [Frozen receipts](evidence/controls.json)
