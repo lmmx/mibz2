@@ -1695,8 +1695,9 @@
       "sha": "cd7e5de2b7c61442f7a391436eee910a5ebb126a",
       "evidence_digest": "sha256:6a6b596cb031beb4704d77e80ac606e94a9f23f438b8f0cb03b0f9a66e8605f4",
       "commit": "e60a87fa93fa3ba27e8edccd6d88659b5847a9fd",
-      "status": "complete",
-      "disposition": "HOLD integration pending completed Miri and runtime-specific mutation evidence; source proof supported."
+      "status": "finished",
+      "disposition": "HOLD integration pending completed Miri and runtime-specific mutation evidence; source proof supported.",
+      "comment": 6988584322
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1807,7 +1808,8 @@
     6902605296,
     6903106255,
     6903644101,
-    6904474217
+    6904474217,
+    6988584322
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -2081,7 +2083,10 @@
     "f15549ebf2cc4fd0c1340c9800738ef683294d74",
     "a90159637947900248041211374d23aeb0312e29",
     "cf618402c82219a9d6f8b6bfd56ba479583fcd72",
-    "751606dcbcb04d35af215435c0b2e2abd0b3fec4"
+    "751606dcbcb04d35af215435c0b2e2abd0b3fec4",
+    "3bf6a507d5b5b7552c9cad1dbf6b46e447f431ac",
+    "e60a87fa93fa3ba27e8edccd6d88659b5847a9fd",
+    "c6c4a951df5c0d826149ef97b7309b3396705781"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2194,7 +2199,8 @@
     6902547995,
     6903067177,
     6903560983,
-    6904418769
+    6904418769,
+    6988393925
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2273,10 +2279,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6988393925,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D113",
-    "work_commit": "e60a87fa93fa3ba27e8edccd6d88659b5847a9fd"
+    "incoming_comment": 6988393925,
+    "review_comment_id": 6988584322
   },
   "duplicate_events": [
     {
@@ -4075,11 +4082,13 @@
     {
       "comment_id": 6988393925,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D113",
-      "progress": "Review committed; publish one REVIEW on #145. Scoped B5 evidence HOLD; no writer defect found.",
+      "progress": "Exact REVIEW body and #145 destination read back. Pinned verifier's sole coordinator-FROM limitation independently checked.",
       "receipt_commit": "3bf6a507d5b5b7552c9cad1dbf6b46e447f431ac",
-      "work_commit": "e60a87fa93fa3ba27e8edccd6d88659b5847a9fd"
+      "work_commit": "e60a87fa93fa3ba27e8edccd6d88659b5847a9fd",
+      "review_comment_id": 6988584322,
+      "complete_cursor_commit": "c6c4a951df5c0d826149ef97b7309b3396705781"
     }
   ],
   "migrated_from": {
