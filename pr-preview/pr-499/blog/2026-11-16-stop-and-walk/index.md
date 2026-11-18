@@ -1,6 +1,6 @@
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-499/blog/index.md>)
 
-# Stop and walk: cutting a text rebuild short and walking the rest
+# Stop and walk: cutting a BWT inversion short and walking the rest
 
 Halting each block's rebuild early spares mibz2 a third of the text pieces it stores, but on ten cores the slower walk outweighs the memory saved.
 
