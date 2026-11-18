@@ -8,11 +8,11 @@ Snip the decoder's one long loop open and most of each Wikidata block falls into
 
 Much of mibz2's research is about one stage of bzip2 decoding: turning each block's Burrows–Wheeler transform back into text. [A new way back from the BWT](<https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/index.md>) showed how the kernel mibz2 ships, Cells, does it by shrinking a map instead of walking it. [The mathematical dictionary](<https://lmmx.github.io/mibz2/blog/2026-11-16-mathematical-dictionary/index.md>) named the objects that kernel works with. This post takes the same map apart another way. It cuts the map's one long loop open, solves the pieces separately, and joins them back.
 
-**The setting, in brief.** bzip2 stores a block as the last column \\(L\\) of the block's rotations, sorted: the Burrows–Wheeler transform (BWT). It also stores the *primary row*, the row that holds the original text. A map called **LF** sends each row to the row of the rotation one byte earlier. Following LF from the primary row visits every row once and reads the block backwards, one byte a step. That trip is the decoder's loop. A **run** is a stretch of equal bytes in \\(L\\). LF moves all of a run's rows by the same amount, so the map is a list of shifted blocks of rows ([One shift per run](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation/index.md>)).
+**The setting, in brief.** bzip2 stores a block as the last column \\(L\\) of the block's rotations, sorted: the Burrows–Wheeler transform (BWT). It also stores the *primary row*, the row that holds the original text. A map called **LF** sends each row to the row of the rotation one byte earlier. Following LF from the primary row reads the block backwards, one byte a step, until it comes back to the primary row. That trip, the *marked loop*, is the decoder's loop. When LF is a single loop, as in the example below, that trip visits every row once. It need not. The periodic text `abab` has the column `bbaa`, and its LF makes two loops, 0 → 2 → 0 and 1 → 3 → 1. The marked loop covers only half the rows. A **run** is a stretch of equal bytes in \\(L\\). LF moves all of a run's rows by the same amount, so the map is a list of shifted blocks of rows ([One shift per run](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation/index.md>)).
 
 **Why the loop is slow.** Each step needs the row that the step before it found, so a plain decoder makes up to 900,000 memory reads per block, each waiting on the last. Cells avoids most of them by working on runs, not rows. It comes in two forms. Eager Cells lays out all its records before it starts. Lazy Cells makes them as it goes, which suits many threads at once ([Lazy letters](<https://lmmx.github.io/mibz2/blog/2026-11-16-lazy-letters/index.md>)).
 
-**The idea.** Choose some rows to keep, and cut the arrow leaving each one. The loop falls into open paths. Each path starts at a row whose incoming arrow was cut, and ends at a kept row. Where each path ends, and what it reads on the way, can be found without knowing where the cut arrows went. The cut arrows are rebuilt separately, from a stable sort of the kept rows' letters alone. Joining the two gives back the loop, and the text.
+**The idea.** Choose some rows to keep, the primary row among them, and cut the arrow leaving each one. The marked loop falls into open paths. Each path starts at a row whose incoming arrow was cut, and ends at a kept row. Where each path ends, and what it reads on the way, can be found without knowing where the cut arrows went. The cut arrows are rebuilt separately, from a stable sort of the kept rows' letters alone. Joining the two gives back the loop, and the text.
 
 **What we found:**
 
@@ -185,9 +185,9 @@ The construction is worth having only if the open paths can be solved many rows 
 
 Two neighbouring entrances in the same strip are still neighbours after the step, since the strip shifts both by the same amount. They stay together, strip after strip, until a strip's edge falls between them, or they reach kept rows. A maximal set of neighbouring entrances that pass through the same strips and end at neighbouring exits is a **bundle**. The records call it a band. A bundle has a **width** \\(b\\), its number of rows, and a **height** \\(h\\), its number of steps. Tracing one of its paths costs \\(h\\) steps, and spells all \\(b \\times h\\) of its letters.
 
-A bundle is traced once for all its rows, unless its strip moves only a little
+A bundle is traced once for all its rows, but a strip that moves a little makes bundles one row wide
 
-Conceptual. Top: a bundle of width 4 and height 2 passing through two strips; in railway terms, a convoy on parallel tracks, surveyed by one train. Bottom: the proof's one-strip example, with *w* = 6 rows. When a strip moves by *d* rows, its paths have heights ⌊*w*/|*d*|⌋ and ⌈*w*/|*d*|⌉. A shift by one row gives one tall path with nothing to share, and a move clear of itself gives one short, wide bundle. The analogy fails at the edges: a bundle splits wherever a strip's edge or a kept row's falls between its rows.
+Conceptual. Top: a bundle of width 4 and height 2 passing through two strips; in railway terms, a convoy on parallel tracks, surveyed by one train. Bottom: the proof's one-strip example, with *w* = 6 rows. When a strip moves by *d* rows with 0 \< |*d*| ≤ *w*, its paths have heights ⌊*w*/|*d*|⌋ and ⌈*w*/|*d*|⌉; when |*d*| ≥ *w*, each has height one. A shift by one row gives one tall path, a bundle one row wide with nothing to share, and a move clear of itself gives one short, wide bundle. The analogy fails at the edges: a bundle splits wherever a strip's edge or a kept row's falls between its rows.
 
 Two totals describe a cut. The **bundled area** \\(A = \\sum\_i b\_i h\_i\\) is the number of letters the bundles spell. For a block whose LF is one loop, it is every row not kept, \\(n - m\\). The **traced letters** \\(U = \\sum\_i h\_i\\) are what tracing one path per bundle costs. The ratio \\(A/U\\) is how many rows travel together, on average, for each letter traced.
 
@@ -197,13 +197,13 @@ Two totals describe a cut. The **bundled area** \\(A = \\sum\_i b\_i h\_i\\) is 
 
 ## 6\. What do real blocks look like after the cut?
 
-**Why cut at short runs?** The project keeps one 899,931-row Wikidata block as a fixed test case, *the frozen block*. Of its 51,184 runs, 68.6% are a single row long, yet they hold only 3.9% of the rows. At the other end, the 1.0% of runs that are 256 rows or longer hold 73.9%. The short runs make most of the boundaries, and the long runs hold most of the text. Left on the open paths, every short run would add edges where bundles split. Kept instead, they go to the stable sort, which handles them in one pass, and the open paths are left a few wide strips.
+**Why cut at short runs?** The project keeps one 899,931-row Wikidata block as a fixed test case, *the frozen block*. Of its 51,184 runs, 68.6% are a single row long, yet they hold only 3.9% of the rows. At the other end, runs longer than 256 rows are about 1.0% of the runs, yet hold 73.9% of the rows. These shares come from the cut at \\(t = 256\\), which leaves 496 wide strips. One of them may be half of a run that the primary row splits, and runs of exactly 256 rows fall on the kept side. The short runs make most of the boundaries, and the long runs hold most of the text. Left on the open paths, every short run would add edges where bundles split. Kept instead, they go to the stable sort, which handles them in one pass, and the open paths are left a few wide strips.
 
 Most runs are narrow, but most rows are in wide runs
 
 Counted on the frozen block, at threshold 16: 89,874 kept rows (narrow runs, plus the primary row) and 3,448 wide strips out of 51,184 runs. The shares are derived from those counts; a strip split by the primary row counts twice, so the wide share of runs is at most 6.7%.
 
-**The threshold sets the balance.** Raising \\(t\\), the widest run kept, keeps more rows for the sort to wire, and leaves fewer, wider strips, so there is less to trace. On the frozen block, recomputed independently from the proof:
+**The threshold sets the balance.** Raising \\(t\\), the widest run kept, keeps more rows for the sort to wire, and leaves fewer, wider strips. On the frozen block that leaves less to trace at every threshold swept. That is not a rule. Raising \\(t\\) can cut open a loop the marked one never met, and so add paths to trace; the [notes](<https://lmmx.github.io/mibz2/blog/2026-11-18-cutting-the-loop-open-notes/#one-strips-heights>) give a six-row case. The frozen block's counts, recomputed independently from the proof:
 
 | \\(t\\) (rows) | Kept rows \\(m\\) | Wide strips \\(H\\) | Bundled area \\(A\\) | Traced letters \\(U\\) | Bundles (nonempty) |
 | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -211,13 +211,13 @@ Counted on the frozen block, at threshold 16: 89,874 kept rows (narrow runs, plu
 | 16 | 89,874 | 3,448 | 810,057 | 50,709 | 3,204 (1,326) |
 | 256 | 235,281 | 496 | 664,650 | 4,658 | 738 (294) |
 
-At \\(t = 16\\), \\(A/U\\) is 15.97: each traced letter spells about sixteen. Up to \\(t = 16\\) the ratio rises roughly in step with \\(t\\), so the threshold sets it more than the block does.
+At \\(t = 16\\), \\(A/U\\) is 15.97: each traced letter spells about sixteen. On this block's sweep, up to \\(t = 16\\), the ratio rises roughly in step with \\(t\\). The median over many blocks at \\(t = 16\\) is 15.92. Yet section 6 shows two blocks of equal run density that differ widely.
 
 Kept rows rise with the threshold while traced letters fall
 
 Counted on the frozen block, at eleven thresholds. *m* is the rows the stable sort wires; *U* the letters traced, one path per bundle; *K* the endpoint constructor's steps (section 7). Their sum, dashed, is least at *t* = 16, at 151,798. The sum is our reading of the decoder's cost, not a measured time: it weights a sorted row, a traced letter and an endpoint step equally. Threshold 16 was chosen from timed trials on this block.
 
-**All 233 large blocks.** Over the Wikidata blocks of at least 65,536 rows, at \\(t = 16\\), the median bundled area is 88.7% of the block and the median traced letters 5.5% (**counted**, and re-derived by a verification). Prose differs. Its wide strips cover only a third of each block, so most of a prose block is kept rows.
+**All 233 large blocks.** Over the Wikidata blocks of at least 65,536 rows, at \\(t = 16\\), the median bundled area is 88.7% of the block and the median traced letters 5.5% (**counted**, and re-derived by a verification). Prose differs. Over its six blocks the wide strips cover a median of 32.3% of each block, from 27.6% to 49.0%. Most of a prose block is kept rows.
 
 Run density says little about how much tracing a block needs
 
@@ -245,7 +245,7 @@ The open decoder beat lazy Cells at every worker count and lost to eager Cells a
 
 The ten-core comparison is queued behind the sustained-load run; this post will be updated with what it finds.
 
-**The chain, in three steps.** Cutting the arrows that leave the kept rows turns LF's loop into open paths, which the rest of the block determines alone. A stable sort of the kept letters rebuilds the cut arrows, and joining the two gives the exact return to the kept rows. On Wikidata the open paths travel in wide bundles, so tracing 5.5% of each block spells nearly 90% of it.
+**The chain, in three steps.** Cutting the arrows that leave the kept rows turns the marked loop into open paths, which the rest of the block determines alone. A stable sort of the kept letters rebuilds the cut arrows, and joining the two gives the exact return to the kept rows. On Wikidata the open paths travel in wide bundles, so tracing 5.5% of each block spells nearly 90% of it.
 
 The general lesson is about where to cut. A chain of dependent steps can be split into paths and a reconnection when the reconnection has a cheap rule of its own, as the stable sort is here. The split is worth making when many starting points share the paths.
 
