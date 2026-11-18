@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6](https://github.com/lmmx/mibz2/compare/v0.5.5...v0.5.6) - 2026-11-18
+
+### <!-- 3 -->Performance
+
+- *(cells)* write each full-period block in one scan of its rules (study 5, #579) ([#581](https://github.com/lmmx/mibz2/pull/581))
+
+### <!-- 4 -->Documentation
+
+- *(rules)* don't wait on a CI job whose inputs did not change ([#584](https://github.com/lmmx/mibz2/pull/584))
+- *(blog)* What decoding pays for, review round 1 corrections ([#580](https://github.com/lmmx/mibz2/pull/580))
+- *(blog)* What decoding pays for: how long run boundaries persist ([#574](https://github.com/lmmx/mibz2/pull/574))
+- *(blog)* Cutting the loop open: decoding a block along shared paths ([#566](https://github.com/lmmx/mibz2/pull/566))
+
+### <!-- 9 -->Other
+
+- where to read the team's results and each role's status ([#572](https://github.com/lmmx/mibz2/pull/572))
+- GitHub's macOS runners never hold a merge ([#571](https://github.com/lmmx/mibz2/pull/571))
+- a new blog post always goes through a PR; direct commits only for amendments ([#567](https://github.com/lmmx/mibz2/pull/567))
+- Release scaling: 0.5.5 against 0.5.4 on the i9; 0.5.5's notes and attribution row ([#563](https://github.com/lmmx/mibz2/pull/563))
+
 - **Cells writes each full-period block in one scan of its rules** (study 5, #579). Eager `Cells`
   and `LazyCells` share the writer. The shipped writer found each long rule's leftmost output
   occurrence, then read the rules again to expand and copy them. The one-scan writer instead
