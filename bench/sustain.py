@@ -84,6 +84,9 @@ FIELD = {"power/energy-pkg/": "energy_j", "cycles": "cycles", "ref-cycles": "ref
 # perf's units, as joules or bytes; a bare memory-controller count is 64-byte lines
 UNITS = {"Joules": 1.0, "B": 1, "KiB": 2**10, "MiB": 2**20, "GiB": 2**30}
 STEADY, STEADY_SHARE, MAX_BUSY = 0.03, 0.10, 1.5
+# the clamp screen (MONODROMY record 64's design note 1): in a cell registered clamped, a measured
+# main-corpus decode at this effective clock (cycles / ref-cycles) or above ran in turbo, not clamped
+CLAMP = 1.2
 
 
 def spread(t):
@@ -261,10 +264,15 @@ def run(a):
     cells = [parse_cell(s) for s in a.cell]
     seq = 0
     with open(a.out, "w") as out:
+        prev = {"arm": None, "block": None}
+
         def emit(rec, **kw):
             nonlocal seq
-            rec.update(kw, seq=seq, corpus=corpus(rec["file"]) if "file" in rec else None)
+            rec.update(kw, seq=seq, corpus=corpus(rec["file"]) if "file" in rec else None,
+                       prev_arm=prev["arm"], prev_block=prev["block"])
             seq += 1
+            if "arm" in rec:
+                prev["arm"] = rec["arm"]
             out.write(json.dumps(rec) + "\n")
             out.flush()
             return rec
@@ -282,6 +290,7 @@ def run(a):
                 print(f"sustain: {cell['name']}: the machine never quiet (busy {busy})", file=sys.stderr)
                 return 1
             emit(idle(a.idle, a.perf), **where)
+            prev.update(arm=None, block=None)
             t_cell = time.monotonic()
             t0 = time.monotonic()
             while time.monotonic() - t0 < a.prewarm:
@@ -300,6 +309,7 @@ def run(a):
                     for i, f in enumerate([a.main, *a.guard, a.main]):
                         rec = decode(a.ab, arm, t, f, cpus, a.perf)
                         emit(rec, **b, phase="measure", index=i, since=time.monotonic() - t_cell)
+                    prev["block"] = arm
                     print(f"{cell['name']} round {r} {arm}: "
                           f"{'failed: ' + rec['err'] if rec.get('err') else 'measured'}", flush=True)
     return 0
@@ -433,10 +443,24 @@ def steady(bs, n_measure, errors, report=None):
     return by_cell
 
 
+def clamp_screen(bs, clamped, errors):
+    """In the cells registered clamped, every measured main-corpus decode below CLAMP"""
+    for key, b in sorted(bs.items()):
+        if key[0] not in clamped or not b["measure"]:
+            continue
+        main = b["measure"][min(b["measure"])].get("corpus")
+        for i, m in sorted(b["measure"].items()):
+            c = clock(m)
+            if m.get("corpus") == main and c is not None and c >= CLAMP:
+                errors.append(f"{key} measured decode {i}: clock {c:.3f}, at or above {CLAMP} in a cell "
+                              f"registered clamped (turbo, not the sustained state)")
+
+
 def judged(a):
     errors = []
     rows = load(a.runs, errors)
     bs = blocks(rows, a.placement, errors)
+    clamp_screen(bs, set(c for c in a.clamped.split(",") if c), errors)
     n_measure = 1 + max((r.get("index", 0) for r in rows if r.get("phase") == "measure"), default=0)
     steady(bs, n_measure, errors)
     recs = []
@@ -555,6 +579,23 @@ def report(a):
         if ob:
             print(f"  load: other processes' busy cores, largest {max(ob):.2f}, decodes above 1.0: "
                   f"{sum(o > 1.0 for o in ob)} of {len(ob)}")
+        print(f"  clock state (main-corpus decodes, warm and measured; at or above {CLAMP} is turbo):")
+        for arm in arms:
+            cs = [clock(r) for r in rows if r.get("cell") == cell and r.get("arm") == arm and r.get("corpus") == main
+                  and r.get("phase") in ("warm", "measure") and clock(r) is not None]
+            gs = [clock(r) for r in ms if r["arm"] == arm and r["corpus"] != main and clock(r) is not None]
+            if cs:
+                print(f"   {arm}: {sum(c < CLAMP for c in cs)} of {len(cs)} clamped (median {statistics.median(cs):.3f}); "
+                      f"guards' median {statistics.median(gs) if gs else float('nan'):.3f}")
+        print("  carry-over (each arm's measured main-corpus wall over its own mean, by the block before it):")
+        for arm in arms:
+            ds = [r for r in mains if r["arm"] == arm]
+            m = statistics.mean(math.log(d["wall"]) for d in ds)
+            by = {}
+            for d in ds:
+                by.setdefault(d.get("prev_block"), []).append(math.log(d["wall"]) - m)
+            print(f"   {arm}: " + "  ".join(f"after {k or 'the pre-warm'}: {math.exp(statistics.mean(v)):.4f}"
+                                           for k, v in sorted(by.items(), key=lambda kv: str(kv[0]))))
         devs = []
         bs = {k: v for k, v in blocks([r for r in rows if r.get("cell") == cell], ms[0]["placement"], []).items()}
         steady(bs, 1 + max(r.get("index", 0) for r in ms), [], devs)
@@ -618,6 +659,7 @@ def main(argv):
     j.add_argument("runs")
     j.add_argument("--placement", choices=("pinned", "unpinned"), required=True)
     j.add_argument("--out", required=True)
+    j.add_argument("--clamped", default="", help="the cells registered clamped, comma-separated (the clock screen)")
     q = sub.add_parser("report")
     q.add_argument("runs")
     q.add_argument("--probe")

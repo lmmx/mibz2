@@ -6,7 +6,9 @@ Researcher's review through the Coordinator.*
 - **Assigned:** #145 QUEUED 6978994390, dispatched to the Pathfinder as CHECKPOINT 6984075662 on
   #314.
 - **Recipe:** `just bench-sustain`, on `bench/sustain`.
-- **Predictions:** MONODROMY's, frozen first and cited below before any data.
+- **Predictions:** MONODROMY's record 64, frozen first, cited below before any data:
+  `docs/journal/monodromy/2026-11-18-sustained-predictions.md` at
+  e9559bd0c34a14bef75a928cb722669fef82c3b6 (PR #497), REVIEW 6984343491 on #145.
 
 ## What it decides, and why
 
@@ -22,8 +24,10 @@ So every worker optimum this project has measured is the optimum of the fast mod
 seconds long. A decode longer than a few seconds runs mostly in the slow mode, and the
 decoder's primary workload, a Wikidata dump, runs for hours in it.
 
-Record 58 conjectures that under a power cap, throughput tracks the budget divided by the energy
-per byte. If so, the sustained optimum may sit at 7 workers or below.
+Record 58 conjectured that under a power cap, throughput tracks the budget divided by the energy
+per byte, so the sustained optimum may sit at 7 workers or below. Record 64 reverses that before
+the data: it predicts 8 workers best when clamped, at 10 threads and up. Both conjectures stand
+frozen, and this run scores them.
 
 **The integration decision:**
 - *What changes:* each trimmed cell's worker count (`trim_cell`, `trims_to_seven`), as this run
@@ -143,7 +147,9 @@ It writes nothing, and the placement is VOID, where:
   positive;
 - a corpus's outputs differ, or an arm's decodes name different worker threads;
 - **the sustained state is not held:** in more than 10% of a cell's blocks, the measured
-  main-corpus decodes' mean clock differs by more than 3% from the block's last warm decode's.
+  main-corpus decodes' mean clock differs by more than 3% from the block's last warm decode's;
+- **turbo in a cell registered clamped** (u10, p10; record 64's note 1): a measured main-corpus
+  decode at a clock of 1.2 or above.
 
 **`bench/two_arm.py`** then reads each placement, as #506's family with the recalibration's
 extensions (#562, with the Researcher's correction of REVIEW 6978182129):
@@ -196,13 +202,63 @@ step:
 
 ## MONODROMY's predictions, cited
 
-*To be cited here before any data: MONODROMY's record, for each cell, of:*
-- *the sustained-state best count;*
-- *each arm's wall over the reference, with intervals;*
-- *each arm's package power and effective clock;*
-- *the probe's onset and steady level.*
+Record 64 (e9559bd0 on PR #497; REVIEW 6984343491), frozen before any data. Wall over the
+shipped reference, in the sustained state, on Wikidata:
 
-The registration is frozen once that record is cited.
+| cell | reference | its best | its predicted ratios [interval] |
+|---|---|---|---|
+| unpinned (10–20) | lazy 7/28 | **8** | 8/32 0.97 [0.94, 1.00] · 10/40 0.985 [0.95, 1.02] · 6/24 1.06 [1.03, 1.09] |
+| pinned 10 | lazy 7/28 | **8** | 8/32 0.975 [0.95, 1.00] · 10/40 1.01 [0.98, 1.05] · 6/24 1.06 [1.03, 1.09] |
+| pinned 8 | lazy 6/24 | 6 | 7/28 1.03 [1.00, 1.06] · 8/32 1.04 [1.01, 1.07] · 5/20 1.12 [1.10, 1.15] |
+| pinned 6 | eager 5/20 | 5 | 6/24 1.07 [1.05, 1.09] · 4/16 1.03 [1.02, 1.05] |
+| pinned 4 | eager 3/12 | 3 | 4/16 1.045 [1.03, 1.06] · 2/8 1.37 [1.33, 1.40] |
+
+- **The basis:** the recalibration's clamped runs, taken apart by state. In them 8/32 beat 7/28
+  by 2–4% in every clamped cell, and 10 workers moved from losing in turbo (1.02–1.07) to about
+  level. The record gives two mechanisms:
+  - each miss costs about 1.4× fewer cycles at the clamped clock;
+  - under a power cap, throughput rises roughly as N^(2/3).
+- **The clock** (cycles ÷ ref-cycles; turbo is 1.326):
+  - clamped cells (unpinned, pinned 10): 0.93–0.97, with fewer-worker arms 2–5% faster;
+  - pinned 8: 1.0–1.33, a partial clamp (conjecture);
+  - pinned 6 and 4: 1.32–1.38, in turbo.
+- **Package power:** 115–135 W in the clamped cells if PL1 is 125 W; 150–200 W, drifting, if the
+  clamp is thermal.
+- **The probe:** onset within 0.5–5 s, then steady at about 1.40× below turbo, within ±3% if
+  the limit is PL1-type, or drifting down if it is thermal.
+- **Refuted if:**
+  - at 10 or more threads unpinned, 7 beats 8 by more than 1%; or
+  - the clamped cells stay at a clock of 1.2 or more.
+
+**Its four design notes, as folded in:**
+1. **The clock screen.** u10 and p10 are registered clamped (`judged --clamped`). Any measured
+   main-corpus decode there at cycles ÷ ref-cycles ≥ 1.2 VOIDs its placement, so no arm mixes
+   states.
+   - *Why the main corpus only:* the guards are lighter loads, and under a power cap they may
+     legitimately clock higher.
+   - *Reported per arm:* the clamped share of every cell's main-corpus decodes (warm and
+     measured) and the guards' median clock.
+   - *Pinned 8 is not registered clamped,* since record 64 predicts only a partial clamp
+     there. Its state is reported.
+2. **Pinned 6 and 4 may never clamp.** Their clock state is reported. If they stay in turbo
+   (≥ 1.2), their verdicts are turbo-state verdicts, a repeat of the recalibration's at those
+   cells. They are not claimed for the sustained state.
+3. **Carry-over.** Every decode records the arm before it (`prev_arm`) and the block before it
+   (`prev_block`), whatever the probe shows. The report gives each arm's measured wall by the
+   block before it. Rotation balances the carry-over; this shows its size.
+4. **One unpinned cell for 10–20 threads,** as designed.
+
+**Rule 4 and the most likely outcome.** Record 64's headline is 8/32 at about 0.97 of 7/28
+(a 3% gain). 8/32 has grown peak RSS by about 8–16% over 7/28 before.
+- **Within 1.10 on every corpus,** and Holm rejects: it ADOPTS. Unpinned, at 3% and an SD up
+  to about 0.02, that is within reach.
+- **Above 1.10 on Wikidata alone:** the trade needs a gain of at least 5% and growth of at most
+  twice it. At 3% it is **HELD ON MEMORY**, the Coordinator's to weigh, as in the
+  recalibration.
+- **Above 1.10 on two corpora:** HELD ON MEMORY, whatever the gain.
+
+So the likeliest results are an adoption of 8 at 10 threads and up, if its memory stays within
+the line, or a HELD ON MEMORY that leaves 7 shipped unless the Coordinator weighs otherwise.
 
 ## Reported, and deciding nothing (declared before the data)
 
@@ -219,6 +275,9 @@ The registration is frozen once that record is cited.
 - **Drift:** the reference's wall and clock round by round, and their slope.
 - **Load:** the other processes' busy cores, the largest, and the decodes above 1.0.
 - **Steady state:** the share of blocks within 3%.
+- **Clock state:** per arm, the clamped share of the main-corpus decodes and the guards' median
+  clock (record 64's notes 1 and 2).
+- **Carry-over:** each arm's measured wall by the block before it (note 3).
 - **The probe,** as above.
 
 This also fixes the recalibration's DRAM fault (REVIEW 6984061702). Every decode is counted
@@ -236,14 +295,17 @@ follows, at the knee this finds, in whichever state this shows production decode
 ## The tooling, checked before the data
 
 - **`bench/sustain.py`:** the driver, `judged` and the report.
-- **`bench/test_sustain.py`:** 25 checks, run for real with a stub `perf` and a stub
+- **`bench/test_sustain.py`:** 30 checks, run for real with a stub `perf` and a stub
   `ab child`:
   - a complete run, judged into records that `two_arm.py` reads;
   - the phases, blocks and rotation;
   - each decode's counts, the per-controller IMC events summed, and the parser's units;
   - every VOID: multiplexed, not counted, the clock jumping (the sustained state not held), a
     failed decode, short workers, a missing or duplicated decode, outputs differing, a line
-    not JSON.
+    not JSON;
+  - the clamp screen, only in the cells registered clamped;
+  - each decode's predecessor;
+  - the report's clock state and carry-over.
 - **The smoke run:** the driver with the real `ab` (and the stub `perf`) on a 4-core machine,
   unpinned and pinned at 4 threads. Each placement judged clean, with every record's CPUs and
   worker threads right.

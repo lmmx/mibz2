@@ -32,7 +32,7 @@ n_path = os.environ["STUB_COUNTER"]
 n = int(open(n_path).read() or 0) if os.path.exists(n_path) else 0
 open(n_path, "w").write(str(n + 1))
 idle = cmd[0] == "sleep"
-clock = 1.3 if (mode == "jumps" and n % 2) else 1.0
+clock = 1.3 if (mode == "jumps" and n % 2) or mode == "turbo" else 1.0
 with open(out, "w") as f:
     f.write("# started\n\n")
     for e in events:
@@ -104,13 +104,13 @@ def drive(d, env=None, cells=CELLS):
         os.environ.update(old)
 
 
-def judge(runs, placement):
+def judge(runs, placement, extra=()):
     out = runs.parent / f"{placement}-judged.jsonl"
     if out.exists():
         out.unlink()
     buf = io.StringIO()
     with redirect_stdout(buf):
-        code = sustain.main(["sustain.py", "judged", str(runs), "--placement", placement, "--out", str(out)])
+        code = sustain.main(["sustain.py", "judged", str(runs), "--placement", placement, "--out", str(out), *extra])
     return code, buf.getvalue(), out
 
 
@@ -214,6 +214,23 @@ def main():
         f.write_text("\n".join(edit(lines)) + "\n")
         code, out, jf = judge(f, "unpinned")
         results.append(check(f"VOID: {name}", code == 1 and phrase in out, out[:400]))
+    # the clamp screen (record 64's note 1): a cell registered clamped whose decodes ran in turbo
+    dt = setup()
+    _, rt = drive(dt, {"STUB_PERF": "turbo"}, cells=CELLS[:1])
+    code, out, jf = judge(rt, "unpinned", ["--clamped", "u10"])
+    results.append(check("VOID: a clamped cell's main-corpus decodes in turbo",
+                         code == 1 and "at or above 1.2 in a cell registered clamped" in out and not jf.exists(), out[:400]))
+    code, out, jf = judge(rt, "unpinned", ["--clamped", "p10"])
+    results.append(check("the clamp screen only in the cells registered clamped", code == 0, out[:400]))
+    code, out, jf = judge(runs, "unpinned", ["--clamped", "u10"])
+    results.append(check("a clamped cell's decodes below 1.2 pass the screen", code == 0, out[:400]))
+    m2 = [r for r in rows if r.get("phase") == "measure" and r["cell"] == "u10"]
+    results.append(check("each decode records the arm before it and the block before it",
+                         all("prev_arm" in r and "prev_block" in r for r in m2)
+                         and all(r["prev_arm"] == r["arm"] for r in m2 if r["index"] > 0)
+                         and any(r["prev_block"] not in (None, r["arm"]) for r in m2), str(m2[:2])))
+    results.append(check("report: the clock state and the carry-over", "clock state (" in rep
+                         and "12 of 12 clamped" in rep and "carry-over (" in rep and "after " in rep, rep[:800]))
     # the parser: per-controller events merged, units read, a failed entry failing the sum
     tf = d / "p.csv"
     tf.write_text("1.5,Joules,power/energy-pkg/,1,100.00,,\n2,MiB,uncore_imc_0/data_reads/,1,100.00,,\n"
