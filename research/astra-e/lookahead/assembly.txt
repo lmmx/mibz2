@@ -1,0 +1,212 @@
+9b23f367270fd6e05a01db0ab191d22a485b39b2a1aaa119137101e13eb80797  /workspace/work/anchors-build/release/moonshot
+75ce2626d24546c4350e3eb31d9bce4848b41972
+open
+
+/workspace/work/anchors-build/release/moonshot:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000038155 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2415>:
+   38155:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
+   3815c:	00 00 00 00 
+   38160:	4c 03 7c 24 30       	add    0x30(%rsp),%r15
+   38165:	48 8b 78 08          	mov    0x8(%rax),%rdi
+   38169:	4c 01 f7             	add    %r14,%rdi
+   3816c:	4c 89 fe             	mov    %r15,%rsi
+   3816f:	48 89 da             	mov    %rbx,%rdx
+   38172:	ff 15 68 37 0b 00    	call   *0xb3768(%rip)        # eb8e0 <memcpy@GLIBC_2.14>
+   38178:	48 8b 84 24 50 21 00 	mov    0x2150(%rsp),%rax
+   3817f:	00 
+   38180:	49 01 de             	add    %rbx,%r14
+   38183:	4c 8b 7c 24 48       	mov    0x48(%rsp),%r15
+   38188:	8b 54 24 3c          	mov    0x3c(%rsp),%edx
+   3818c:	44 21 e5             	and    %r12d,%ebp
+   3818f:	4c 89 70 10          	mov    %r14,0x10(%rax)
+   38193:	39 d5                	cmp    %edx,%ebp
+   38195:	0f 84 27 01 00 00    	je     382c2 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2582>
+   3819b:	89 ef                	mov    %ebp,%edi
+   3819d:	48 39 3c 24          	cmp    %rdi,(%rsp)
+   381a1:	0f 86 d1 04 00 00    	jbe    38678 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2938>
+   381a7:	48 8b 4c 24 10       	mov    0x10(%rsp),%rcx
+   381ac:	8b 2c b9             	mov    (%rcx,%rdi,4),%ebp
+   381af:	4d 85 ed             	test   %r13,%r13
+   381b2:	74 5c                	je     38210 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x24d0>
+   381b4:	49 39 fd             	cmp    %rdi,%r13
+   381b7:	0f 86 cb 04 00 00    	jbe    38688 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2948>
+   381bd:	48 8b 4c 24 08       	mov    0x8(%rsp),%rcx
+   381c2:	8b 1c b9             	mov    (%rcx,%rdi,4),%ebx
+   381c5:	81 fb 00 01 00 00    	cmp    $0x100,%ebx
+   381cb:	73 54                	jae    38221 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x24e1>
+   381cd:	4c 8b 70 10          	mov    0x10(%rax),%r14
+   381d1:	4c 3b 30             	cmp    (%rax),%r14
+   381d4:	0f 84 bd 00 00 00    	je     38297 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2557>
+   381da:	48 8b 84 24 50 21 00 	mov    0x2150(%rsp),%rax
+   381e1:	00 
+   381e2:	48 8b 40 08          	mov    0x8(%rax),%rax
+   381e6:	42 88 1c 30          	mov    %bl,(%rax,%r14,1)
+   381ea:	48 8b 84 24 50 21 00 	mov    0x2150(%rsp),%rax
+   381f1:	00 
+   381f2:	49 ff c6             	inc    %r14
+   381f5:	44 21 e5             	and    %r12d,%ebp
+   381f8:	4c 89 70 10          	mov    %r14,0x10(%rax)
+   381fc:	39 d5                	cmp    %edx,%ebp
+   381fe:	75 9b                	jne    3819b <<moonshot::open_return::Kernel>::run::<true, true, false>+0x245b>
+   38200:	e9 bd 00 00 00       	jmp    382c2 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2582>
+   38205:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
+   3820c:	00 00 00 00 
+   38210:	89 eb                	mov    %ebp,%ebx
+   38212:	48 8b 4c 24 20       	mov    0x20(%rsp),%rcx
+   38217:	d3 eb                	shr    %cl,%ebx
+   38219:	81 fb 00 01 00 00    	cmp    $0x100,%ebx
+   3821f:	72 ac                	jb     381cd <<moonshot::open_return::Kernel>::run::<true, true, false>+0x248d>
+   38221:	81 c3 00 ff ff ff    	add    $0xffffff00,%ebx
+   38227:	48 8b 74 24 40       	mov    0x40(%rsp),%rsi
+   3822c:	48 39 de             	cmp    %rbx,%rsi
+   3822f:	0f 86 6e 04 00 00    	jbe    386a3 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2963>
+   38235:	48 8d 7b 01          	lea    0x1(%rbx),%rdi
+   38239:	48 39 f7             	cmp    %rsi,%rdi
+   3823c:	0f 83 55 04 00 00    	jae    38697 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2957>
+   38242:	48 8b 44 24 18       	mov    0x18(%rsp),%rax
+   38247:	44 8b 3c 98          	mov    (%rax,%rbx,4),%r15d
+   3824b:	8b 74 98 04          	mov    0x4(%rax,%rbx,4),%esi
+   3824f:	48 39 74 24 28       	cmp    %rsi,0x28(%rsp)
+   38254:	0f 92 c0             	setb   %al
+   38257:	44 39 fe             	cmp    %r15d,%esi
+   3825a:	72 4c                	jb     382a8 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2568>
+   3825c:	84 c0                	test   %al,%al
+   3825e:	75 4e                	jne    382ae <<moonshot::open_return::Kernel>::run::<true, true, false>+0x256e>
+   38260:	48 89 f3             	mov    %rsi,%rbx
+   38263:	4c 29 fb             	sub    %r15,%rbx
+   38266:	48 8b 8c 24 50 21 00 	mov    0x2150(%rsp),%rcx
+   3826d:	00 
+   3826e:	48 8b 01             	mov    (%rcx),%rax
+   38271:	4c 8b 71 10          	mov    0x10(%rcx),%r14
+   38275:	4c 29 f0             	sub    %r14,%rax
+   38278:	48 39 c3             	cmp    %rax,%rbx
+   3827b:	0f 87 aa fe ff ff    	ja     3812b <<moonshot::open_return::Kernel>::run::<true, true, false>+0x23eb>
+   38281:	44 39 fe             	cmp    %r15d,%esi
+   38284:	48 8b 84 24 50 21 00 	mov    0x2150(%rsp),%rax
+   3828b:	00 
+   3828c:	0f 85 ce fe ff ff    	jne    38160 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2420>
+   38292:	e9 e9 fe ff ff       	jmp    38180 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2440>
+   38297:	48 89 c7             	mov    %rax,%rdi
+   3829a:	e8 71 48 03 00       	call   6cb10 <<alloc::raw_vec::RawVec<u8>>::grow_one>
+   3829f:	8b 54 24 3c          	mov    0x3c(%rsp),%edx
+   382a3:	e9 32 ff ff ff       	jmp    381da <<moonshot::open_return::Kernel>::run::<true, true, false>+0x249a>
+   382a8:	b0 01                	mov    $0x1,%al
+   382aa:	84 c0                	test   %al,%al
+   382ac:	74 b2                	je     38260 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2520>
+   382ae:	48 8d 0d db 06 0b 00 	lea    0xb06db(%rip),%rcx        # e8990 <__frame_dummy_init_array_entry+0xa78>
+   382b5:	4c 89 ff             	mov    %r15,%rdi
+   382b8:	48 8b 54 24 28       	mov    0x28(%rsp),%rdx
+   382bd:	e8 2e 6f 03 00       	call   6f1f0 <core::slice::index::slice_index_fail>
+   382c2:	49 8d 46 ff          	lea    -0x1(%r14),%rax
+   382c6:	4c 39 f8             	cmp    %r15,%rax
+   382c9:	0f 83 a7 01 00 00    	jae    38476 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2736>
+   382cf:	4d 39 fe             	cmp    %r15,%r14
+   382d2:	0f 83 8a 00 00 00    	jae    38362 <<moonshot::open_return::Kernel>::run::<true, true, false>+0x2622>
+   382d8:	4c 89 fb             	mov    %r15,%rbx
+   382db:	48 8b 84 24 50 21 00 	mov    0x2150(%rsp),%rax
+   382e2:	00 
+   382e3:	4c 8b 38             	mov    (%rax),%r15
+   382e6:	66 2e 0f 1f 84 00 00 	cs nopw 0x0(%rax,%rax,1)
+   382ed:	00 00 00 
+
+lookahead
+
+/workspace/work/anchors-build/release/moonshot:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000002c326 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2e56>:
+   2c326:	b9 01 00 00 00       	mov    $0x1,%ecx
+   2c32b:	41 b8 01 00 00 00    	mov    $0x1,%r8d
+   2c331:	4c 89 e7             	mov    %r12,%rdi
+   2c334:	4c 89 fe             	mov    %r15,%rsi
+   2c337:	48 89 ea             	mov    %rbp,%rdx
+   2c33a:	e8 41 78 02 00       	call   53b80 <<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>>
+   2c33f:	4d 8b 7c 24 10       	mov    0x10(%r12),%r15
+   2c344:	48 03 5c 24 60       	add    0x60(%rsp),%rbx
+   2c349:	49 8b 7c 24 08       	mov    0x8(%r12),%rdi
+   2c34e:	4c 01 ff             	add    %r15,%rdi
+   2c351:	48 89 de             	mov    %rbx,%rsi
+   2c354:	48 89 ea             	mov    %rbp,%rdx
+   2c357:	ff 15 83 f5 0b 00    	call   *0xbf583(%rip)        # eb8e0 <memcpy@GLIBC_2.14>
+   2c35d:	4c 8b 5c 24 20       	mov    0x20(%rsp),%r11
+   2c362:	4c 8b 54 24 40       	mov    0x40(%rsp),%r10
+   2c367:	4c 8b 4c 24 18       	mov    0x18(%rsp),%r9
+   2c36c:	4c 8b 44 24 48       	mov    0x48(%rsp),%r8
+   2c371:	49 01 ef             	add    %rbp,%r15
+   2c374:	8b 54 24 3c          	mov    0x3c(%rsp),%edx
+   2c378:	44 89 eb             	mov    %r13d,%ebx
+   2c37b:	44 8b 2c 24          	mov    (%rsp),%r13d
+   2c37f:	4d 89 7c 24 10       	mov    %r15,0x10(%r12)
+   2c384:	41 39 d6             	cmp    %edx,%r14d
+   2c387:	0f 84 14 01 00 00    	je     2c4a1 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2fd1>
+   2c38d:	4d 85 d2             	test   %r10,%r10
+   2c390:	74 1a                	je     2c3ac <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2edc>
+   2c392:	44 89 f7             	mov    %r14d,%edi
+   2c395:	49 39 fa             	cmp    %rdi,%r10
+   2c398:	0f 86 91 04 00 00    	jbe    2c82f <mibz2::decode_block::<moonshot::candidate::Candidate>+0x335f>
+   2c39e:	48 8b 44 24 10       	mov    0x10(%rsp),%rax
+   2c3a3:	8b 2c b8             	mov    (%rax,%rdi,4),%ebp
+   2c3a6:	8b 54 24 3c          	mov    0x3c(%rsp),%edx
+   2c3aa:	eb 0a                	jmp    2c3b6 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2ee6>
+   2c3ac:	44 89 ed             	mov    %r13d,%ebp
+   2c3af:	48 8b 4c 24 30       	mov    0x30(%rsp),%rcx
+   2c3b4:	d3 ed                	shr    %cl,%ebp
+   2c3b6:	45 89 ee             	mov    %r13d,%r14d
+   2c3b9:	41 21 de             	and    %ebx,%r14d
+   2c3bc:	4d 39 f0             	cmp    %r14,%r8
+   2c3bf:	0f 86 1c 04 00 00    	jbe    2c7e1 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x3311>
+   2c3c5:	47 8b 2c b3          	mov    (%r11,%r14,4),%r13d
+   2c3c9:	81 fd 00 01 00 00    	cmp    $0x100,%ebp
+   2c3cf:	73 2a                	jae    2c3fb <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2f2b>
+   2c3d1:	4d 8b 7c 24 10       	mov    0x10(%r12),%r15
+   2c3d6:	4d 3b 3c 24          	cmp    (%r12),%r15
+   2c3da:	0f 84 82 00 00 00    	je     2c462 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2f92>
+   2c3e0:	49 8b 44 24 08       	mov    0x8(%r12),%rax
+   2c3e5:	42 88 2c 38          	mov    %bpl,(%rax,%r15,1)
+   2c3e9:	49 ff c7             	inc    %r15
+   2c3ec:	4d 89 7c 24 10       	mov    %r15,0x10(%r12)
+   2c3f1:	41 39 d6             	cmp    %edx,%r14d
+   2c3f4:	75 97                	jne    2c38d <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2ebd>
+   2c3f6:	e9 a6 00 00 00       	jmp    2c4a1 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2fd1>
+   2c3fb:	44 89 2c 24          	mov    %r13d,(%rsp)
+   2c3ff:	81 c5 00 ff ff ff    	add    $0xffffff00,%ebp
+   2c405:	49 39 e9             	cmp    %rbp,%r9
+   2c408:	0f 86 3f 04 00 00    	jbe    2c84d <mibz2::decode_block::<moonshot::candidate::Candidate>+0x337d>
+   2c40e:	48 8d 7d 01          	lea    0x1(%rbp),%rdi
+   2c412:	4c 39 cf             	cmp    %r9,%rdi
+   2c415:	0f 83 23 04 00 00    	jae    2c83e <mibz2::decode_block::<moonshot::candidate::Candidate>+0x336e>
+   2c41b:	41 89 dd             	mov    %ebx,%r13d
+   2c41e:	48 8b 44 24 28       	mov    0x28(%rsp),%rax
+   2c423:	8b 1c a8             	mov    (%rax,%rbp,4),%ebx
+   2c426:	8b 74 a8 04          	mov    0x4(%rax,%rbp,4),%esi
+   2c42a:	48 39 74 24 08       	cmp    %rsi,0x8(%rsp)
+   2c42f:	0f 92 c0             	setb   %al
+   2c432:	39 de                	cmp    %ebx,%esi
+   2c434:	72 51                	jb     2c487 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2fb7>
+   2c436:	84 c0                	test   %al,%al
+   2c438:	75 53                	jne    2c48d <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2fbd>
+   2c43a:	48 89 f5             	mov    %rsi,%rbp
+   2c43d:	48 29 dd             	sub    %rbx,%rbp
+   2c440:	49 8b 04 24          	mov    (%r12),%rax
+   2c444:	4d 8b 7c 24 10       	mov    0x10(%r12),%r15
+   2c449:	4c 29 f8             	sub    %r15,%rax
+   2c44c:	48 39 c5             	cmp    %rax,%rbp
+   2c44f:	0f 87 d1 fe ff ff    	ja     2c326 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2e56>
+   2c455:	39 de                	cmp    %ebx,%esi
+   2c457:	0f 85 e7 fe ff ff    	jne    2c344 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2e74>
+   2c45d:	e9 0f ff ff ff       	jmp    2c371 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2ea1>
+   2c462:	4c 89 e7             	mov    %r12,%rdi
+   2c465:	e8 a6 06 04 00       	call   6cb10 <<alloc::raw_vec::RawVec<u8>>::grow_one>
+   2c46a:	4c 8b 5c 24 20       	mov    0x20(%rsp),%r11
+   2c46f:	4c 8b 54 24 40       	mov    0x40(%rsp),%r10
+   2c474:	4c 8b 4c 24 18       	mov    0x18(%rsp),%r9
+   2c479:	4c 8b 44 24 48       	mov    0x48(%rsp),%r8
+   2c47e:	8b 54 24 3c          	mov    0x3c(%rsp),%edx
+   2c482:	e9 59 ff ff ff       	jmp    2c3e0 <mibz2::decode_block::<moonshot::candidate::Candidate>+0x2f10>
+
