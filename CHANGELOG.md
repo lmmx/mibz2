@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Cells writes each full-period block in one scan of its rules** (study 5, #579). Eager `Cells`
+  and `LazyCells` share the writer. The shipped writer found each long rule's leftmost output
+  occurrence, then read the rules again to expand and copy them. The one-scan writer instead
+  places each rule child at its *owner*, the parent at its last use. Two consecutive stored
+  rules certify the owner, so the induction is unchanged. Each surviving child becomes a copy
+  command, stored over the rule records already read and run afterwards in increasing parent
+  order. A block whose cycle is shorter than the block is written by the shipped writer as
+  before. The output is byte-identical.
+  - On identical grammars, writer-only (`examples/writer_owned.rs`, research feature
+    `owned-writer`; `docs/journal/2026-11-18-one-scan-writer.md`), the one-scan writer takes
+    0.81 of the shipped writer's time on Wikidata eager and 0.79 lazy, the frozen block 0.80,
+    and other corpora under forced Cells 0.55 to 0.72. Its data reads fall to 0.62 and its
+    branch mispredictions to 0.70 (simulated). Its D1 write misses rise to 1.19, from the
+    scattered order of its stores and copies.
+
 ## [0.5.5](https://github.com/lmmx/mibz2/compare/v0.5.4...v0.5.5) - 2026-11-18
 
 A kernel release: the lazy kernel admits more blocks, so fewer of them take the T-vector walk.
