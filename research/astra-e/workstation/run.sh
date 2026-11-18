@@ -57,6 +57,7 @@ scratch=$(mktemp -d "$out/.build-XXXXXXXX")
 trap 'rm -rf -- "$scratch"' EXIT
 export CARGO_TARGET_DIR=$scratch/target
 export MOONSHOT_CANDIDATE=$repo/$candidate
+bash research/astra-e/prepare.sh "$candidate"
 cargo build --release --locked --manifest-path "$score/Cargo.toml"
 bin=$CARGO_TARGET_DIR/release/moonshot
 "$bin" info | tee "$out/scorer-info.json"

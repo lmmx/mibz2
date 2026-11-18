@@ -14,6 +14,12 @@ git diff --quiet HEAD -- bench/moonshot .just Justfile
 git fetch origin master
 git checkout origin/master -- bench/moonshot .just Justfile
 rev=$(git log -1 --format=%h origin/master -- bench/moonshot)
+# Preserve each imported scorer in branch history. A change starts a new
+# comparison series with the baseline and the best preserved candidate.
+if ! git diff --cached --quiet -- bench/moonshot .just Justfile; then
+  git commit --only -m "research(astra-e): refresh moonshot scorer to $rev" -- bench/moonshot .just Justfile
+fi
+bash research/astra-e/prepare.sh "$candidate"
 mkdir -p "$dest"
 {
   git rev-parse HEAD origin/master
