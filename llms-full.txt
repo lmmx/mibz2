@@ -98,6 +98,25 @@ These runs inform; they don't decide. Nothing merges or releases on a release-sc
 
 Each table gives an arm's median wall time. It also gives the geometric mean of the rounds' paired wall ratios against the reference arm, with its 95% interval: a minus sign is faster. Up to the machine's physical core count, each thread runs on a core of its own (`--spread`); above it, threads share cores.
 
+### 2026-11-18: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.5** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-18-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.5>)
+
+**`wikidata`**
+
+| threads | 0.5.5 wall (median) | lbzip2 2.5 wall (median) | 0.5.4 wall (median) | lbzip2 2.5 against 0.5.5 | 0.5.4 against 0.5.5 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.413 s | 2.512 s | 0.413 s | \+521.5% (+504.9, +538.7) **slower** | \+0.7% (−2.6, +4.1) |
+| 2 | 0.241 s | 1.338 s | 0.238 s | \+455.9% (+447.5, +464.5) **slower** | −0.3% (−2.9, +2.3) |
+| 4 | 0.143 s | 0.714 s | 0.145 s | \+399.4% (+386.6, +412.6) **slower** | \+1.1% (−1.6, +3.8) |
+| 8 | 0.099 s | 0.514 s | 0.105 s | \+417.4% (+410.1, +424.8) **slower** | \+5.4% (+3.1, +7.8) **slower** |
+| 10 | 0.089 s | 0.506 s | 0.100 s | \+474.3% (+467.4, +481.4) **slower** | \+13.5% (+11.9, +15.1) **slower** |
+| 12 | 0.095 s | 0.508 s | 0.107 s | \+435.4% (+426.4, +444.7) **slower** | \+12.8% (+10.7, +15.0) **slower** |
+| 16 | 0.097 s | 0.493 s | 0.109 s | \+406.2% (+390.5, +422.5) **slower** | \+13.2% (+7.9, +18.8) **slower** |
+| 20 | 0.095 s | 0.490 s | 0.108 s | \+411.3% (+396.3, +426.7) **slower** | \+12.1% (+8.6, +15.7) **slower** |
+
+Every arm's output was the same bytes as the reference's.
+
 ### 2026-11-17: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.4** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-17-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.4>)
