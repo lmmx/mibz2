@@ -31,7 +31,7 @@ Much of mibz2's research is about one stage of bzip2 decoding: turning each bloc
 
 **Why the loop is slow.** Each step needs the row that the step before it found, so a plain decoder makes up to 900,000 memory reads per block, each waiting on the last. Cells avoids most of them by working on runs, not rows. It comes in two forms. Eager Cells lays out all its records before it starts. Lazy Cells makes them as it goes, which suits many threads at once ([Lazy letters](2026-11-16-lazy-letters.md)).
 
-**The idea.** Choose some rows to keep, the primary row among them, and cut the arrow leaving each one. The marked loop falls into open paths. Each path starts at an *entrance*, a row whose incoming arrow was cut, and ends at a kept row. Where each path ends, and what it reads on the way, can be found from the uncut arrows alone. What the cut loses is which kept row's arrow went to which entrance, and that is rebuilt separately, from a stable sort of the kept rows' letters. Joining the two gives back the loop, and the text.
+**The idea.** Choose some rows to keep, the primary row among them, and cut the arrow leaving each one. The marked loop falls into open paths. Each path starts at an *entrance*, a row whose incoming arrow was cut, and ends at a kept row. Where each path ends, and what it reads on the way, can be found from the uncut arrows alone. What the cut loses is which kept row's arrow went to which entrance. That is rebuilt separately, from a stable sort of the kept rows' letters. Joining the two gives back the loop, and the text.
 
 **What we found:**
 
@@ -219,7 +219,7 @@ The two approaches side by side, as we read them:
 
 The construction is worth having only if the open paths can be solved many rows at a time. The runs make that possible. Keep the *narrow* runs, those of at most $t$ rows (section 6 uses $t = 16$), and the primary row. The other rows then form $H$ **wide strips**. A strip is a stretch of consecutive rows that LF shifts by one amount, each row reading the same byte. (It is a wide run, or half of one if the primary row splits it.)
 
-**Why keep the short runs?** The project keeps one 899,931-row Wikidata block as a fixed test case, *the frozen block*. Of its 51,184 runs, 68.6% are a single row long, yet they hold only 3.9% of the rows. At the other end, runs longer than 256 rows are about 1.0% of the runs, yet hold 73.9% of the rows. These shares come from the cut at $t = 256$, which leaves 496 wide strips. One of them may be half of a run that the primary row splits, and runs of exactly 256 rows fall on the kept side. So the short runs make most of the boundaries, and the long runs hold most of the text. Left on the open paths, every short run would add edges where the paths split apart. Kept, they go to the stable sort, which wires them in one pass, and the open paths are left a few wide strips that hold most of the rows.
+**Why keep the short runs?** The project keeps one 899,931-row Wikidata block as a fixed test case, *the frozen block*. Of its 51,184 runs, 68.6% are a single row long, yet they hold only 3.9% of the rows. At the other end, runs longer than 256 rows are about 1.0% of the runs, yet hold 73.9% of the rows. These shares come from the cut at $t = 256$, which leaves 496 wide strips. One of them may be half of a run that the primary row splits, and runs of exactly 256 rows fall on the kept side. So the short runs make most of the boundaries, and the long runs hold most of the text. Left on the open paths, every short run would add edges where the paths split apart. Kept, they go to the stable sort, which wires them in one pass. The open paths are left a few wide strips, which hold most of the rows.
 
 <figure class="bf-fig" id="run-split">
 <p class="bf-title">Most runs are narrow, but most rows are in wide runs</p>
@@ -271,7 +271,7 @@ At $t = 16$, $A/U$ is 15.97: each traced letter spells about sixteen. On this bl
 
 ## 7. What comes next?
 
-**Two ways to compute the open paths.** The *tracer* follows one path per bundle and measures each bundle's width as it goes. The *endpoint constructor* never follows a path. It puts $m$ terminal points in front of a copy of the rows, joined to the entrances and exits by arrows with empty words, and then removes rows from the right-hand end. Removing a row joins the arrow into it and the arrow out of it into one arrow, with their words joined. The terminals are never removed, so when only they are left, each terminal's arrow is a whole path, with its word. That is $P$.
+**Two ways to compute the open paths.** The *tracer* follows one path per bundle and measures each bundle's width as it goes. The *endpoint constructor* never follows a path. It puts $m$ terminal points in front of a copy of the rows, and joins them to the entrances and exits by arrows with empty words. Then it removes rows from the right-hand end. Removing a row joins the arrow into it and the arrow out of it into one arrow, with their words joined. The terminals are never removed, so when only they are left, each terminal's arrow is a whole path, with its word. That is $P$.
 
 <figure class="bf-fig" id="endpoint-splice">
 <p class="bf-title">The endpoint constructor removes rows from the right until only the paths' ends are left</p>
