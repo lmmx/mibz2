@@ -123,7 +123,14 @@ impl<const F: bool> CellsKernel<F> {
         self.state.counts
     }
     fn attempt(&mut self, recs: &[u16], n: usize, p: u32, out: &mut Vec<u8>) -> bool {
-        let budget = if F { n } else { n / 25 * 4 + n % 25 * 4 / 25 };
+        let budget = if F {
+            n
+        } else if lazy_variant(self.state.kernel.variant) {
+            // (the lazy kernels' wider budget, `cells_lazy.rs`)
+            lazy_budget(n)
+        } else {
+            n / 25 * 4 + n % 25 * 4 / 25
+        };
         let result = self.state.kernel.try_invert(recs, n, p, budget, F, out);
         let counts = &mut self.state.counts;
         match result {

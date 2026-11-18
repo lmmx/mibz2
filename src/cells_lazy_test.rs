@@ -275,6 +275,8 @@ fn cells_lever_route_and_fallback() {
             vec![0; 11],
             [vec![1; 51], vec![0; 50]].concat(),
             vec![0; 25],
+            // a record a row: past both density lines, Cells' and the lazy kernel's
+            (0..20usize).map(|i| (i % 3) as u8).collect(),
             // 200 runs of 16 rows over five bytes: inside both of admission's gates
             (0..200usize).flat_map(|i| [(i * 7 % 5) as u8; 16]).collect(),
         ] {
@@ -355,4 +357,31 @@ fn cells_lazy_long_letter() {
     for p in [1, ll.len() as u32 - 2] {
         check(&mut kernel, &ll, p);
     }
+}
+
+/// The lazy kernel's admission at its lines (`LAZY_DENSITY`, `LAZY_BUDGET`): refused for
+/// density from 3 records in 20 rows, for sparseness below 1 in 64 (Cells' own), and a budget
+/// of 0.32 n cells, rounded down as Cells' 0.16 n is
+#[test]
+fn the_lazy_admission_lines() {
+    // `k` records of near-equal lengths over `n` rows, the bytes alternating
+    let recs = |n: usize, k: usize| -> Vec<u16> {
+        (0..k)
+            .map(|i| ((i % 2) as u16) << 8 | (n / k + usize::from(i < n % k)) as u16)
+            .collect()
+    };
+    let n = 2000;
+    assert!(census(n, &recs(n, 299), 0, false).is_ok());
+    assert!(matches!(census(n, &recs(n, 300), 0, false), Err(Refusal::Density)));
+    // between Cells' line (1 in 10) and the lazy kernel's: admitted here
+    assert!(census(n, &recs(n, 200), 0, false).is_ok());
+    assert!(census(n, &recs(n, 32), 0, false).is_ok());
+    assert!(matches!(census(n, &recs(n, 31), 0, false), Err(Refusal::Sparse)));
+    // forced: neither gate
+    assert!(census(n, &recs(n, 300), 0, true).is_ok());
+    assert!(census(n, &recs(n, 31), 0, true).is_ok());
+    for n in [1usize, 24, 25, 26, 899_999, 900_000] {
+        assert_eq!(lazy_budget(n), n * 8 / 25, "{n}");
+    }
+    assert_eq!(lazy_budget(900_000), 288_000);
 }
