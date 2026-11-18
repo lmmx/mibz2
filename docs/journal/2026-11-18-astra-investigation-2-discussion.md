@@ -449,3 +449,47 @@ abstract, independent way of thinking.
   residual table of 4–8 B per retained row. The narrow rows still need an LF of their own.
   Whether the retained system can itself be cut open recursively, and what that does to U, is
   the obvious mathematical question. It is Astra's or Pro's to pursue, not the team's.
+
+---
+
+## 10. MONODROMY's verification (REVIEW 6978817023, record 57 at 7747fddd)
+
+- **Verdicts:** all six proof claims VERIFIED by its own code, against a plain LF walk on 6,000
+  random cases. 3H + σ is tight (equality at H = 1).
+- **Frozen-block counts reproduced exactly.** At t = 16: m 89,874, H 3,448, A 810,057, U 50,709,
+  3,204 bands; and h = 15,278.
+- **Caveat:** K has no bound beyond n; the endpoint induction doesn't divide.
+- **Its theory:**
+  - the endpoint constructor is Cells' right-end Rauzy–Veech on at most 3H + 2 = 7,786 intervals
+    instead of r = 51,184, with the narrow runs wired by a counting sort;
+  - U ≈ A/t, so the right parameter is min over t of m(t) + U(t) + K(t). On the frozen block m is
+    the largest term.
+  - *Blocks 118 and 176:* their 66% difference is bundle fragmentation (+53% nonempty bands at
+    equal A and H).
+- **The Pro packet §8 is updated** with these, and the zip is rebuilt. The Researcher's review is
+  still pending.
+
+---
+
+## 11. The Researcher's verification; #565 merged
+
+- **The Researcher's verdicts** (REVIEW 6978935386):
+  - every proof VERIFIED, by an independent model over 30,557 small cases; both band bounds
+    attain equality;
+  - the switch census's identity VERIFIED, but its marking convention CORRECTED: the executable
+    reclassifies a wide primary as narrow;
+  - the evidence re-derived as recorded.
+- **Its paired ratios, open over eager / over lazy:**
+
+| workers | over eager | over lazy |
+|--:|--:|--:|
+| 1 | 1.171 | 0.918 |
+| 2 | 1.211 | 0.931 |
+| 4 | 1.091 | 0.928 |
+
+  The 2-worker point breaks the "falling penalty" trend the coordinator read into the 1- and
+  4-worker figures (§9). ChatGPT's caution there was right: the trend is not established. Only
+  the i9 at 7–8 workers can settle it.
+- **#565 merged** to master as 2b53453e, once CI and pre-commit.ci were green and both reviews
+  were in, as Louis agreed.
+- **The Pro packet §8 and the brief are updated** to master's paths and both reviews.
