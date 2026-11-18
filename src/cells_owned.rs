@@ -23,10 +23,14 @@
 // Any other block (a cycle shorter than the block, or a word that is not the last rule) is
 // written by the shipped writer (`write_cells`): the full-period guard costs one test a block.
 //
-// **Memory safety.** The writer trusts what the shipped writer trusts: the induction's rule
-// records (a child names an arena word below the rules, with 16 readable bytes at its offset,
-// or an earlier rule's record), and nothing more. Everything it adds is checked locally, so no
-// out-of-bounds access depends on the schedule's correctness proof:
+// **Memory safety.** The proof is conditional on the premise the shipped writer already rests
+// on: the rule records are the induction's own, valid whatever the input (each child names an
+// arena word below the rules, with at most 16 bytes and 16 readable at its offset, or an earlier
+// rule's record; the marked word is a rule, its spine ends in the marked byte). It is not a
+// defence against arbitrary corrupt descriptors: the mark walk and the position table's
+// indices read through children as `write_cells` does, unchecked. On top of that premise,
+// every access the one-scan schedule adds is checked locally, so no out-of-bounds access
+// depends on the schedule's correctness proof (the Guardian's D113, note 5):
 // - a rule is visited only at a position below the period: one never assigned (NIL, its table
 //   filled first) or out of range writes nothing;
 // - its right child's destination is reduced below the period (a position and a length each
@@ -36,9 +40,11 @@
 // - a command is stored only over a record already read (`tail > j`, so at most one a parent);
 // - a command copies only if its source and destination both lie within the period (a
 //   child's NIL position, or a marked child's length with the mark bit, fails the test).
-// A violation, which a full-period grammar never makes (the tests check every full-period
-// block of every binary column to 10 rows and ternary to 7, eager and lazy), leaves bytes
-// unwritten: a wrong block, which the block's CRC rejects, never an access out of bounds.
+// A violation of the schedule, which a full-period grammar never makes (the tests check every
+// full-period block of every binary column to 10 rows and ternary to 7, eager and lazy),
+// leaves bytes unwritten: a wrong block, never an access out of bounds. The CRC would reject
+// such a block, but it is not the proof of exactness or of memory safety: the schedule's proof
+// (study 5) and the checks above are.
 
 
 /// (research only, `owned-writer`) the one-scan writer's own phases, summed over its calls:
@@ -52,6 +58,14 @@ impl Kernel {
     /// afterwards (the writer is their last reader).
     #[inline(never)]
     fn write_owned(&mut self, word: u32, len: u32, n: usize, out: &mut Vec<u8>) {
+        // (test only, `memory-lever`: the writer reads the rules, so no store that went past
+        // the cache may still be waiting for its fence; `cells_lever.rs`'s model, kept at this
+        // writer's entry as at `write_cells`', the Guardian's D113, note 6)
+        #[cfg(all(test, feature = "memory-lever"))]
+        assert!(
+            !PENDING.with(|p| p.get()),
+            "rules stored past the cache are read before a fence"
+        );
         let p = (len & !MARK) as usize;
         let ro = self.lay.rules;
         let nr = (self.rule_end - ro) / 16;
