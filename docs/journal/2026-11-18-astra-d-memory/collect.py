@@ -1,5 +1,6 @@
 """Collect one measured lap per envelope with unmodified Valgrind Lackey."""
 from fix_ranges import resolve
+from symbols import static_ranges, append
 import bz2
 import os
 import subprocess
@@ -10,6 +11,7 @@ vg, probe, capture, blocks, out = (Path(s).resolve() for s in sys.argv[1:6])
 names = sys.argv[6:] or [p.stem for p in sorted(blocks.glob("*.bz2"))]
 symbols = subprocess.check_output(["nm", "-n", probe], text=True)
 mark, = (line.split()[0] for line in symbols.splitlines() if line.endswith(" ASTRA_MARK"))
+fixed = static_ranges(probe)
 for name in names:
     run = out / name
     run.mkdir(parents=True, exist_ok=True)
@@ -29,5 +31,6 @@ for name in names:
             valgrind.stderr.close()
             assert valgrind.wait() == 0 and reduce_trace.returncode == 0
     resolve(run)
+    append(run,fixed)
     assert (run / "output").read_bytes() == bz2.decompress((run / "input.bz2").read_bytes())
     print(name, "matches libbz2", flush=True)

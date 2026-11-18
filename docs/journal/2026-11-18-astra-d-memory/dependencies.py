@@ -3,12 +3,13 @@ import csv
 import sys
 from array import array
 from collections import Counter
-from itertools import accumulate
+from itertools import accumulate, groupby
 from pathlib import Path
 from struct import iter_unpack
 study=Path(__file__).resolve().parent
 sys.path.insert(0,str(study.parents[2]/"bench"))
 import irec
+from tiles import price
 
 def slot_counts(rec, run):
     h = rec.head
@@ -89,7 +90,22 @@ def segments(path,n,p):
             d+=1
         lengths.append(d)
     assert sum(lengths)==n
-    return len(starts),sum(lengths),max(lengths)
+    period = 1
+    row = lf[p]
+    while row != p:
+        row = lf[row]
+        period += 1
+    assert period == n
+    # Stable F order from the captured L, independently of the native tile builder.
+    widths_by_symbol = [[] for _ in range(256)]
+    for symbol, same in groupby(col):
+        widths_by_symbol[symbol].append(sum(1 for _ in same))
+    widths = [w for bucket in widths_by_symbol for w in bucket]
+    cuts = list(accumulate(widths, initial=0))
+    pieces, probes = price(cuts, 128)
+    navigation_bytes = 4 * (pieces + (n + 127) // 128 + 256)
+    return (len(starts), sum(lengths), max(lengths), 32, period, len(widths),
+            pieces, navigation_bytes, probes)
 
 if __name__=="__main__":
     tapes,runs,validation,evidence=map(Path,sys.argv[1:])
@@ -102,9 +118,10 @@ if __name__=="__main__":
             if "info cells 1 " in (run/"ranges").read_text(): w.writerow(slot_counts(rec,run))
     with (evidence/"segments.csv").open("w") as f:
         w=csv.writer(f,lineterminator="\n")
-        w.writerow(("ordinal","segments","row_links","longest_segment","lanes"))
-        for x in csv.DictReader((validation/"stock.csv").open()):
+        w.writerow(("ordinal","segments","row_links","longest_segment","lanes","primary_period",
+                    "maximal_runs","tile_pieces","navigation_bytes","expected_probes"))
+        for x in csv.DictReader((validation/"stock"/"rows.csv").open()):
             p=validation/f'{int(x["ordinal"]):03}.u16'
             if p.exists():
                 vals=segments(p,int(x["rows"]),int(x["primary"]))
-                w.writerow((x["ordinal"],*vals,32))
+                w.writerow((x["ordinal"],*vals))

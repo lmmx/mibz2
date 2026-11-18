@@ -1,0 +1,6 @@
+stock BlockCrc
+direct BlockCrc
+tiles BlockCrc
+stock StreamCrc
+direct StreamCrc
+tiles StreamCrc
