@@ -170,6 +170,22 @@
     ["cpu", "CPU time", 1],
     ["rss", "Peak RSS", 1],
   ];
+  // Absolute (the Scale chips): each figure in its own units, CI's chain carried from master's
+  // records (bench-history.json's series, ciAnchor). [the records' field, the units in a
+  // readout, on a narrow axis and on the axis, the figure's level as a phrase, its format, and
+  // which way is better (in either view)]
+  const ABS = {
+    wall: { key: "mb_s", unit: "MB/s", short: "MB/s", axis: "MB/s of output", what: "MB/s", fmt: (v) => fmtMB(v), better: "Up is faster." },
+    cpu: { key: "cpu_s", unit: "CPU seconds", short: "CPU s", axis: "CPU seconds", what: "CPU seconds", fmt: (v) => String(+v.toPrecision(3)), better: "Down is less CPU time." },
+    rss: { key: "rss_mb", unit: "MB", short: "MB", axis: "MB of peak RSS", what: "peak RSS", fmt: (v) => v.toFixed(1), better: "Down is less memory." },
+  };
+  // an axis's tick labels: as many decimals as its step needs, so no two ticks read alike
+  const fmtStep = (t) => {
+    const st = t.length > 1 ? Math.abs(t[1] - t[0]) : 1;
+    let d = 0;
+    while (d < 6 && Math.abs(st * 10 ** d - Math.round(st * 10 ** d)) > 1e-6) d++;
+    return (v) => v.toFixed(d);
+  };
   const pct = (L, sign) => 100 * (Math.exp(sign * L) - 1);
   const fmtPct = (v) => {
     const a = Math.abs(v).toFixed(Math.abs(v) < 10 ? 1 : 0);
@@ -186,11 +202,10 @@
     const ws = (data.scaling && data.scaling.runs) || [];
     if (!ws.length) state.tView = "ci";
     el("h2", { class: "bh-hero-title", id: "trajectory", text: state.tView === "ws" ? "Release scaling" : "Merge by merge, chained" }, head);
-    // (off: why the choice doesn't apply here; its buttons are then disabled)
-    const seg = (label, options, value, set, off = null) => {
-      const g = el("div", { class: "bh-seg", role: "radiogroup", "aria-label": label, "aria-disabled": off ? "true" : null, title: off }, head);
+    const seg = (label, options, value, set) => {
+      const g = el("div", { class: "bh-seg", role: "radiogroup", "aria-label": label }, head);
       for (const [v, t] of options) {
-        const b = el("button", { type: "button", role: "radio", "aria-checked": String(v === value), text: t, "data-hero-id": `${label}-${v}`, disabled: off ? "" : null }, g);
+        const b = el("button", { type: "button", role: "radio", "aria-checked": String(v === value), text: t, "data-hero-id": `${label}-${v}` }, g);
         b.addEventListener("click", () => {
           set(v);
           try { localStorage.setItem("mibz2-bench", JSON.stringify(state)); } catch (e) { /* (none) */ }
@@ -222,13 +237,13 @@
     seg("Corpus", corpora.map((c) => [c, c]), state.tCorpus, (v) => (state.tCorpus = v));
     seg("Threads", opts, state.tThreads, (v) => (state.tThreads = v));
     seg("Figure", TRAJ.map((f) => [f[0], f[1]]), state.tFig, (v) => (state.tFig = v));
-    // Relative (the default: change since the start) or absolute (MB/s). Throughput only: CPU
-    // time and peak RSS keep their relative view, and the choice waits for throughput
-    const absOk = state.tFig === "wall";
-    seg("Scale", [["rel", "Relative"], ["abs", "Absolute"]], absOk ? state.tScale : "rel", (v) => (state.tScale = v), absOk ? null : "Absolute is throughput's (MB/s): CPU time and peak RSS are shown relative");
-    const abs = absOk && state.tScale === "abs";
+    // Relative (the default: change since the start) or absolute (the figure in its own units:
+    // MB/s, CPU seconds or MB of peak RSS), for every figure
+    seg("Scale", [["rel", "Relative"], ["abs", "Absolute"]], state.tScale, (v) => (state.tScale = v));
+    const abs = state.tScale === "abs";
     const fig = TRAJ.find((f) => f[0] === state.tFig);
     const sign = fig[2];
+    const ax = ABS[fig[0]];
     const T = state.tThreads;
     const tWord = `${T} thread${T === "1" ? "" : "s"}`;
     if (T === "all") { releaseOverlay(data, lg, start, lgThreads, box, abs); return; }
@@ -239,29 +254,31 @@
     const rs = lgThreads.includes(T) ? releaseSeries(data, lg, start, T) : null;
     const idx = [];
     for (let i = start; i < data.links.length; i++) idx.push(i);
-    // Absolute: CI's chain in MB/s, on one runner model's scale through one master record
-    // (ciAnchor), drawn only over the anchor's segment: a gap leaves the rest unanchored
-    const anc = abs && ciOn ? ciAnchor(data, state.tCorpus, T, chain) : null;
+    // Absolute: CI's chain in the figure's units, on one runner model's scale through one master
+    // record (ciAnchor), drawn only over the anchor's segment: a gap leaves the rest unanchored
+    const anc = abs && ciOn ? ciAnchor(data, state.tCorpus, T, chain, ax.key) : null;
     const pts = idx.filter((i) => chain[i] && (!abs || (anc && chain[i][2] === chain[anc.i][2])));
     const unanchored = anc ? new Set(idx.filter((i) => chain[i] && chain[i][2] !== chain[anc.i][2]).map((i) => chain[i][2])).size : 0;
     const lead = el("p", { class: "bh-hero-focus" }, box);
     const body = el("div", { class: "bh-hero-chart" }, box);
     const key2 = el("p", { class: "bh-hero-commit bh-traj-key" }, box);
     const readout = el("p", { class: "bh-hero-commit", "aria-live": "polite" }, box);
-    if (!pts.length && !rs) { el("p", { text: abs && ciOn ? "No master record at a chained merge anchors this chain in MB/s." : "No link measured this figure." }, body); return; }
+    if (!pts.length && !rs) { el("p", { text: abs && ciOn ? `No master record at a chained merge anchors this chain in ${ax.unit}.` : "No link measured this figure." }, body); return; }
     const tag = (l) => (l.pr ? `#${l.pr}` : l.sha.slice(0, 7));
     const decoderLinks = pts.filter((i) => data.links[i].decoder);
     const last = pts.length ? pts[pts.length - 1] : null;
     const cpuR = rs ? shortCpu(lg.cpu) : null;
     const rLast = rs ? rs.pts[rs.pts.length - 1] : null;
     const relHead = rs ? `${fmtPct(rLast.c[0])} (95%: ${fmtPct(rLast.c[1])} to ${fmtPct(rLast.c[2])}) from ${rs.base} to ${rLast.version}` : "";
-    // the top panel's figures: the change since the start (relative), or MB/s (absolute)
-    const fmtTop = abs ? fmtMB : fmtPct;
+    // the top panel's figures: the change since the start (relative), or the figure in its own
+    // units (absolute); its axis's labels, once its ticks are known
+    const fmtV = abs ? ax.fmt : fmtPct;
+    let fmtTop = fmtPct;
     // the chain at merge i, and its 95% interval [lo, hi]. Absolute: the anchor's record carried
     // by the chain's ratios; the interval is the links' between merge i and the anchor (the
     // chain's variances differenced, as they add in quadrature) with the record's own, so it
     // narrows to the record's at the anchor
-    const cv = (i) => (abs ? anc.mb * Math.exp(sign * (chain[i][0] - chain[anc.i][0])) : pct(chain[i][0], sign));
+    const cv = (i) => (abs ? anc.v * Math.exp(sign * (chain[i][0] - chain[anc.i][0])) : pct(chain[i][0], sign));
     const cb = (i) => {
       if (abs) {
         const w = Math.sqrt(Math.abs(chain[i][1] ** 2 - chain[anc.i][1] ** 2) + anc.r ** 2), m = cv(i);
@@ -280,19 +297,18 @@
       const [L, S, sg] = chain[last];
       const segStart = pts.find((i) => chain[i][2] === sg);
       const cpus = [...new Set(decoderLinks.map((i) => data.links[i].cpu))];
-      const better = sign < 0 ? "faster" : "less";
       if (abs) {
         const [lo, hi] = cb(last);
-        const strong = el("strong", { text: `${fig[1]}, ${state.tCorpus} at ${tWord}: ${fmtMB(cv(last))} MB/s on the ${anc.cpu}'s scale` }, lead);
-        strong.title = "the chain in MB/s, through one master record on one runner model";
-        lead.append(` (95%: ${fmtMB(lo)} to ${fmtMB(hi)}) at ${tag(data.links[last])}. Anchored at ${ancName}, master's newest record on the ${anc.cpu} (${fmtMB(anc.mb)} ± ${fmtMB(anc.h)} MB/s, ${anc.n} rounds), the runner model with the most records of ${state.tCorpus} at ${tWord} (${anc.count} of ${anc.total}). The chain's ratios, measured on ${cpus.join(", ")}, carry it to every other merge from ${tag(data.links[segStart])}'s base on: an ${anc.cpu}'s MB/s, not any one run's. Up is faster.`);
+        const strong = el("strong", { text: `${fig[1]}, ${state.tCorpus} at ${tWord}: ${fmtV(cv(last))} ${ax.unit} on the ${anc.cpu}'s scale` }, lead);
+        strong.title = `the chain in ${ax.unit}, through one master record on one runner model`;
+        lead.append(` (95%: ${fmtV(lo)} to ${fmtV(hi)}) at ${tag(data.links[last])}. Anchored at ${ancName}, master's newest record on the ${anc.cpu} (${fmtV(anc.v)} ± ${fmtV(anc.h)} ${ax.unit}, ${anc.n} rounds), the runner model with the most records of ${state.tCorpus} at ${tWord} (${anc.count} of ${anc.total}). The chain's ratios, measured on ${cpus.join(", ")}, carry it to every other merge from ${tag(data.links[segStart])}'s base on: an ${anc.cpu}'s ${ax.what}, not any one run's. ${ax.better}`);
         if (unanchored) lead.append(` ${unanchored} earlier segment${unanchored === 1 ? "" : "s"}, before a gap, ${unanchored === 1 ? "has" : "have"} no anchor and ${unanchored === 1 ? "is" : "are"} not drawn.`);
         if (rs) lead.append(` Below it, in a panel of its own: the ${cpuR}'s releases, modelled, in MB/s on the ${cpuR}: another machine, on another scale.`);
       } else {
         const lv = pct(L, sign), lo = pct(L - S, sign), hi = pct(L + S, sign);
         const strong = el("strong", { text: `${fig[1]}, ${state.tCorpus} at ${tWord}: ${fmtPct(lv)}` }, lead);
         strong.title = "chained change since the segment's start";
-        lead.append(` (95%: ${fmtPct(Math.min(lo, hi))} to ${fmtPct(Math.max(lo, hi))}) from ${tag(data.links[segStart])}'s base to ${tag(data.links[last])}, over ${decoderLinks.filter((i) => chain[i][2] === sg).length} decoder merges, each measured on its own runner (${cpus.join(", ")}). ${sign < 0 ? "Up is faster." : `Down is ${better}.`}`);
+        lead.append(` (95%: ${fmtPct(Math.min(lo, hi))} to ${fmtPct(Math.max(lo, hi))}) from ${tag(data.links[segStart])}'s base to ${tag(data.links[last])}, over ${decoderLinks.filter((i) => chain[i][2] === sg).length} decoder merges, each measured on its own runner (${cpus.join(", ")}). ${ax.better}`);
         if (rs) lead.append(` Dotted: the ${cpuR}'s releases, modelled, ${relHead}; another machine, with its own zero at ${rs.base}.`);
       }
     } else if (abs) {
@@ -311,7 +327,7 @@
     const H = H1 + gap3 + H3 + gapY + H2;
     const label = abs
       ? (pts.length
-        ? `${fig[1]} of ${state.tCorpus} at ${tWord} in MB/s on the ${anc.cpu}'s scale, anchored at ${anc.sha}: the chain over ${pts.length} merges, and each merge's own change${rs ? `; below, in a separate panel, the ${cpuR}'s releases, modelled, in MB/s on the ${cpuR}` : ""}`
+        ? `${fig[1]} of ${state.tCorpus} at ${tWord} in ${ax.unit} on the ${anc.cpu}'s scale, anchored at ${anc.sha}: the chain over ${pts.length} merges, and each merge's own change${rs ? `; below, in a separate panel, the ${cpuR}'s releases, modelled, in MB/s on the ${cpuR}` : ""}`
         : `${fig[1]} of ${state.tCorpus} at ${tWord}: the ${cpuR}'s releases, modelled, in MB/s on the ${cpuR}, and each release's change against the one before it`)
       : (pts.length ? `${fig[1]} of ${state.tCorpus} at ${tWord}: the change chained over ${pts.length} merges, and each merge's own change${rs ? `, with the ${cpuR}'s releases, modelled` : ""}` : `${fig[1]} of ${state.tCorpus} at ${tWord}: the ${cpuR}'s releases, modelled, relative to ${rs.base}, and each release's change against the one before it`);
     const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": label }, body);
@@ -331,8 +347,11 @@
       return t;
     };
     let t1;
-    if (abs) t1 = cover(ticks(Math.min(...band), Math.max(...band), narrow ? 4 : 5), Math.min(...band), Math.max(...band));
-    else {
+    if (abs) {
+      t1 = cover(ticks(Math.min(...band), Math.max(...band), narrow ? 4 : 5), Math.min(...band), Math.max(...band));
+      // (throughput's axis as it was; CPU seconds and MB to their step, which can be fine)
+      fmtTop = fig[0] === "wall" ? fmtMB : fmtStep(t1);
+    } else {
       const rvx = rs ? ext : [0];
       t1 = cover(ticks(Math.min(0, ...band), Math.max(0, ...band), narrow ? 4 : 5), Math.min(0, ...rvx), Math.max(0, ...rvx));
     }
@@ -372,7 +391,7 @@
     }
     if (abs) {
       svg("text", { x: M.l, y: 12, class: "bh-unit" }, s).textContent = pts.length
-        ? (narrow ? `MB/s, ${anc.cpu}'s scale, at ${anc.sha}` : `MB/s of output, on the ${anc.cpu}'s scale, anchored at ${ancName}`)
+        ? (narrow ? `${ax.short}, ${anc.cpu}'s scale, at ${anc.sha}` : `${ax.axis}, on the ${anc.cpu}'s scale, anchored at ${ancName}`)
         : (narrow ? `MB/s on the ${cpuR}, modelled` : `MB/s of output on the ${cpuR}, modelled`);
     }
     if (sep) {
@@ -416,7 +435,7 @@
     // absolute: the anchor, ringed
     if (anc && pts.length) {
       const ring = svg("circle", { cx: xs.get(anc.i), cy: y1(cv(anc.i)), r: 7, class: "bh-anchor" }, s);
-      svg("title", {}, ring).textContent = `the anchor: ${ancName}, master's record on the ${anc.cpu}, ${fmtMB(anc.mb)} ± ${fmtMB(anc.h)} MB/s`;
+      svg("title", {}, ring).textContent = `the anchor: ${ancName}, master's record on the ${anc.cpu}, ${fmtV(anc.v)} ± ${fmtV(anc.h)} ${ax.unit}`;
     }
     // x labels: as many as fit with a gap between them, the last always shown
     const minGap = narrow ? 40 : 46;
@@ -445,7 +464,7 @@
       if (!l.decoder) readout.append(" · the decoder unchanged: an A/A pair, adding nothing");
       if (abs && on.has(i)) {
         const [lo, hi] = cb(i);
-        readout.append(` · chained ${fmtMB(cv(i))} MB/s on the ${anc.cpu}'s scale (95%: ${fmtMB(lo)} to ${fmtMB(hi)})`);
+        readout.append(` · chained ${fmtV(cv(i))} ${ax.unit} on the ${anc.cpu}'s scale (95%: ${fmtV(lo)} to ${fmtV(hi)})`);
         if (i === anc.i) readout.append(` · the anchor: master's record here on the ${anc.cpu}, ${anc.n} rounds`);
       } else if (!abs && chain[i]) readout.append(` · chained ${fmtPct(pct(chain[i][0], sign))}`);
       if (l.base_ok === false || l.head_ok === false) readout.append(" · its run's base or head differs from the merge's parent or the merge on the benchmarked paths");
@@ -457,7 +476,7 @@
     if (pts.length) {
       for (const i of idx) {
         const l = data.links[i];
-        const g = svg("g", { tabindex: 0, class: "bh-pt", role: "button", "aria-label": abs && on.has(i) ? `${tag(l)}: ${fmtMB(cv(i))} MB/s on the ${anc.cpu}'s scale` : `${tag(l)}` }, s);
+        const g = svg("g", { tabindex: 0, class: "bh-pt", role: "button", "aria-label": abs && on.has(i) ? `${tag(l)}: ${fmtV(cv(i))} ${ax.unit} on the ${anc.cpu}'s scale` : `${tag(l)}` }, s);
         if (on.has(i)) svg("circle", { cx: xs.get(i), cy: y1(cv(i)), r: l.decoder ? 3.5 : 2.5, class: l.decoder ? "bh-dot-chain" : "bh-dot-aa" }, g);
         const o = own[i];
         if (o) {
@@ -481,7 +500,7 @@
       const k1 = el("span", { class: "bh-ws-key" }, key2);
       el("span", { class: "bh-swatch is-line", style: "border-color:var(--bh-s1)" }, k1);
       k1.append(abs
-        ? ` CI runners, merge by merge (measured, chained; MB/s on the ${anc.cpu}'s scale, anchored at ${anc.sha}; 95% band)  `
+        ? ` CI runners, merge by merge (measured, chained; ${ax.unit} on the ${anc.cpu}'s scale, anchored at ${anc.sha}; 95% band)  `
         : ` CI runners, merge by merge (measured, chained, 95% band)  `);
     }
     if (rs) {
@@ -494,7 +513,7 @@
     let note;
     if (abs) {
       note = pts.length
-        ? `Top: the chain in MB/s, on one runner model's scale. CI's merges ran on several runner CPUs and the chain multiplies paired ratios, so it has no absolute scale of its own: it borrows the ${anc.cpu}'s, through master's newest record on that runner at a chained merge (${ancName}, ringed). Each merge's figure is that record carried by the chain's ratios; the band is the links' 95% interval between the merge and the anchor with the record's own, so it is narrowest at the anchor. It reads as what an ${anc.cpu} would have measured, assuming each relative change holds across runners; other runners run up to 2× faster or slower.${rs ? ` Middle: the ${cpuR}'s releases (wikidata, Release scaling), each at the last merge its tag contains, their throughput modelled in MB/s on the ${cpuR}, with 95% whiskers: another machine on another scale, so a panel of its own; its levels are not comparable with the ${anc.cpu}'s. Point at or tap a diamond for its release.` : ""} Bottom: each merge's own change, its head against its base on one runner, in percent in either view. Point at, tap or Tab to a merge for its figures. What the chain assumes is under the chart.`
+        ? `Top: the chain in ${ax.unit}, on one runner model's scale. CI's merges ran on several runner CPUs and the chain multiplies paired ratios, so it has no absolute scale of its own: it borrows the ${anc.cpu}'s, through master's newest record on that runner at a chained merge (${ancName}, ringed). Each merge's figure is that record carried by the chain's ratios; the band is the links' 95% interval between the merge and the anchor with the record's own, so it is narrowest at the anchor. ${runnerNote(fig[0], anc, ax)}${rs ? ` Middle: the ${cpuR}'s releases (wikidata, Release scaling), each at the last merge its tag contains, their throughput modelled in MB/s on the ${cpuR}, with 95% whiskers: another machine on another scale, so a panel of its own; its levels are not comparable with the ${anc.cpu}'s. Point at or tap a diamond for its release.` : ""} Bottom: each merge's own change, its head against its base on one runner, in percent in either view. Point at, tap or Tab to a merge for its figures. What the chain assumes is under the chart.`
         : `Only the ${cpuR} has figures at ${tWord}. Top: each release's throughput in MB/s on that one machine, modelled from release-against-release runs (the Release scaling view), with 95% whiskers, at the last merge its tag contains; the dotted line only joins releases. Below: each release against the one before it, in percent. Point at, tap or Tab to a release for its figures.`;
     } else {
       note = pts.length
@@ -507,29 +526,50 @@
   // MB/s on an axis or in a readout
   const fmtMB = (v) => v.toFixed(Math.abs(v) < 100 ? 1 : 0);
 
-  // CI's chain in MB/s. Its merges ran on several runner CPUs and the chain multiplies paired
-  // ratios, so it has no absolute scale of its own: it borrows one runner model's. That is the
-  // model with the most master records of the corpus at T threads (bench-history.json's
-  // series; ties to the newest record), through its newest record at a merge on the chain. The
-  // chain's ratios carry that record to every other merge of its segment. Null when no record
-  // of any model sits at a chained merge.
-  function ciAnchor(data, corpus, T, chain) {
+  // What the anchor's runner model means for an absolute figure (the note under the chart):
+  // throughput and CPU time scale with the runner's speed, so the level is that runner's;
+  // peak RSS hardly depends on the runner, which the records show (their spread across runner
+  // models: ciAnchor's spread)
+  function runnerNote(f, anc, ax) {
+    const sp = anc.spread;
+    const range = sp && sp.models > 1 ? `master's newest records on the ${sp.models} runner models at this corpus and thread count, at different merges, range from ${ax.fmt(sp.lo)} to ${ax.fmt(sp.hi)} ${ax.unit}` : "";
+    const across = `It reads as what an ${anc.cpu} would have measured, assuming each relative change holds across runners`;
+    if (f === "wall") return `${across}; other runners run up to 2× faster or slower.`;
+    if (f === "cpu") return `${across}. CPU time scales with the runner's speed${range ? `: ${range}` : ""}.`;
+    if (range && sp.hi / sp.lo - 1 <= 0.1) {
+      return `${across}. Peak RSS, unlike time, hardly depends on the runner: ${range}, within ${(100 * (sp.hi / sp.lo - 1)).toFixed(1)}% of each other. So this level is close to any runner's, not only the ${anc.cpu}'s.`;
+    }
+    return `${across}${range ? `. Peak RSS varies across runners here: ${range}` : ""}.`;
+  }
+
+  // CI's chain in a figure's own units (field: mb_s, cpu_s or rss_mb, each a [mean, half-width]
+  // in master's records). Its merges ran on several runner CPUs and the chain multiplies paired
+  // ratios (head over base, of wall, CPU and peak RSS alike: bench/links.py), so it has no
+  // absolute scale of its own: it borrows one runner model's. That is the model with the most
+  // master records of the corpus at T threads (bench-history.json's series; ties to the newest
+  // record), through its newest record at a merge on the chain. The chain's ratios carry that
+  // record to every other merge of its segment. Also each model's newest record's spread (lo,
+  // hi, models), for the note. Null when no record of any model sits at a chained merge.
+  function ciAnchor(data, corpus, T, chain, field = "mb_s") {
     const sr = (data.series || []).find((q) => q.corpus === corpus && String(q.threads) === T);
     if (!sr) return null;
     const link = new Map(data.links.map((l, i) => [l.sha, i]));
     const cpuOf = (c) => ((data.classes_meta || [])[c] || {}).cpu || data.classes[c];
-    const recs = sr.lines.flatMap((l) => l.points.filter((p) => p.mb_s).map((p) => ({ p, cpu: cpuOf(l.class), i: link.get(data.commits[p.c].sha) })));
-    const count = new Map(), newest = new Map();
+    const recs = sr.lines.flatMap((l) => l.points.filter((p) => p[field]).map((p) => ({ p, cpu: cpuOf(l.class), i: link.get(data.commits[p.c].sha) })));
+    const count = new Map(), newest = new Map(), latest = new Map();
     for (const r of recs) {
       count.set(r.cpu, (count.get(r.cpu) || 0) + 1);
       newest.set(r.cpu, Math.max(newest.has(r.cpu) ? newest.get(r.cpu) : -1, r.p.c));
+      if (!latest.has(r.cpu) || r.p.c > latest.get(r.cpu).p.c) latest.set(r.cpu, r);
     }
+    const lv = [...latest.values()].map((r) => r.p[field][0]);
+    const spread = { lo: Math.min(...lv), hi: Math.max(...lv), models: lv.length };
     const cpus = [...count.keys()].sort((a, b) => count.get(b) - count.get(a) || newest.get(b) - newest.get(a));
     for (const cpu of cpus) {
       const at = recs.filter((r) => r.cpu === cpu && r.i !== undefined && chain[r.i]).sort((a, b) => b.p.c - a.p.c)[0];
       if (!at) continue;
-      const [mb, h] = at.p.mb_s, cm = data.commits[at.p.c];
-      return { cpu, i: at.i, mb, h, r: Math.log1p(h / mb), n: at.p.n, sha: cm.sha.slice(0, 7), pr: cm.pr, count: count.get(cpu), total: recs.length };
+      const [v, h] = at.p[field], cm = data.commits[at.p.c];
+      return { cpu, i: at.i, v, h, r: Math.log1p(h / v), n: at.p.n, sha: cm.sha.slice(0, 7), pr: cm.pr, count: count.get(cpu), total: recs.length, spread };
     }
     return null;
   }
