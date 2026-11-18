@@ -3,6 +3,7 @@ import subprocess
 from pathlib import Path
 
 def static_ranges(probe):
+    """The static address ranges of a probe binary's symbols."""
     rows=[]
     for s in subprocess.check_output(["nm","-S",probe],text=True).splitlines():
         a=s.split()
@@ -14,6 +15,7 @@ def static_ranges(probe):
     return "".join(rows)
 
 def append(run,rows):
+    """Append the named ranges to a run's ranges file."""
     p=run/"ranges"
     s=p.read_text()
     if "range mtf_steps " not in s: p.write_text(s+rows)

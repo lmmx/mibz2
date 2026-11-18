@@ -16,11 +16,13 @@ members = ("events", "ranges", "instructions")
 
 
 def table(path):
+    """Read a CSV file as a list of rows."""
     with path.open() as data:
         return list(csv.DictReader(data))
 
 
 def read_traces(work):
+    """Extract the archived traces for every arm into the work directory."""
     expected = {f"{arm}/{name}" for arm in arms for name in members}
     for arm in arms:
         (work / arm).mkdir()
@@ -40,6 +42,7 @@ def read_traces(work):
 
 
 def verify(work, arm):
+    """Check one arm's replay against its stored block rows."""
     local = work / arm
     stored = [r for r in table(evidence / f"{arm}-blocks.csv") if r["ordinal"] == "1"]
     with (local / "instructions").open() as data:

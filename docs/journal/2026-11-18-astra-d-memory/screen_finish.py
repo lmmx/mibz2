@@ -7,6 +7,7 @@ from pathlib import Path
 # A count byte is consumed with the four equal bytes and cannot start another token.
 quad = re.compile(rb"(.)\1{3}", re.DOTALL)
 def edits(data):
+    """Yield the RLE1 edits found in the data."""
     i = 0
     while match := quad.search(data, i):
         j = match.start()

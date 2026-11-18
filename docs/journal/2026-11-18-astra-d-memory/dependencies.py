@@ -12,6 +12,7 @@ import irec
 from tiles import price
 
 def slot_counts(rec, run):
+    """Count a record's slot accesses by kind."""
     h = rec.head
     v = rec.a
     n,r = h["n"],h["r"]
@@ -65,6 +66,7 @@ def slot_counts(rec, run):
             *longest,r-m["peak_pairs"],spine,rules,commands]
 
 def segments(path,n,p):
+    """The trace's segment starts, seeded from the block's length."""
     starts={p}
     x=0x2545f4914f6cdd1d ^ n
     mask=(1<<64)-1

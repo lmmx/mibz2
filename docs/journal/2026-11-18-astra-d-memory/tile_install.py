@@ -6,6 +6,7 @@ code = (Path(__file__).resolve().parent/"tiles.rs").read_text()
 p=tree/"lib.rs"
 s=p.read_text()
 def once(s,a,b):
+    """Replace a substring that must occur exactly once."""
     assert s.count(a)==1, a
     return s.replace(a,b)
 s=once(s,"    inverse: I,","    inverse: I,\n    tiles: AstraTiles,")

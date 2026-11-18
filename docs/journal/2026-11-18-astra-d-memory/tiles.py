@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]/"bench"))
 import irec
 
 def geometry(rec, direction):
+    """The runs and cuts of a record in one direction."""
     runs = []
     cuts = [0]
     last = -1
@@ -26,6 +27,7 @@ def geometry(rec, direction):
     return cuts
 
 def price(cuts, tile):
+    """The pieces and serial probes of a tiling at a tile width."""
     n = cuts[-1]
     b = sorted(set(cuts) | set(range(0,n,tile)))
     k = probes = 0

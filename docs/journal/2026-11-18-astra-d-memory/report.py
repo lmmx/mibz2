@@ -7,12 +7,15 @@ from pathlib import Path
 here=Path(__file__).resolve().parent
 e=Path(sys.argv[1])
 def table(path):
+    """Read a CSV file as a list of rows."""
     with path.open() as f: return list(csv.DictReader(f))
 def write(path,rows):
+    """Write rows to a CSV file."""
     with path.open("w") as f:
         w=csv.DictWriter(f,fieldnames=rows[0],lineterminator="\n")
         w.writeheader();w.writerows(rows)
 def group(x):
+    """The ledger group of a region."""
     n=x["region"]
     return {"mtf_steps":"MTF and counts","mtf_bits":"MTF and counts","mtf_rows":"MTF and counts","mtf_counts":"MTF and counts",
             "run_counts":"MTF and counts","scratch_counts":"MTF and counts","entries":"entry, byte, bottom",
@@ -61,6 +64,7 @@ for name,ids in samples.items():
             nh=hits(c)-hits(b)
             if kib!=2048:continue
             def price(w,bw):
+                """The net modelled saving at a bandwidth."""
                 return w*4.8/bw*saved - 0.5*added
             prices.append(dict(sample=name,arm=mode,saved_bytes=saved,extra_guest_I=added,
                 extra_LLC_hits=nh,extra_I_per_saved_B=f'{added/saved:.5f}' if saved>0 else "",
@@ -81,6 +85,7 @@ for s in table(e/"segments.csv"):
         tile[i] = control
 
 def lookup(mode):
+    """Per-region load counts for a mode."""
     return {(int(x["ordinal"]),int(x["phase"]),x["region"]):int(x["loads"])
             for x in table(e/(mode+"-regions.csv"))}
 stock=lookup("stock"); tiled=lookup("tiles")

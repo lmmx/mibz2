@@ -2,6 +2,7 @@
 from pathlib import Path
 
 def resolve(run):
+    """Resolve a run's address ranges file in place."""
     f = run/"ranges"
     lines = f.read_text().splitlines()
     if "info direct 0" not in lines:

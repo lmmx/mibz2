@@ -9,6 +9,7 @@ pin = "1edb29fdc3d42dfddfc3d60e46456b611323760c"
 assert subprocess.check_output(["git", "-C", tree, "rev-parse", "HEAD"], text=True).strip() == pin
 
 def edit(file, pairs=(), more=""):
+    """Write a source file from the pin with the given replacements."""
     path = tree / "src" / file
     text = subprocess.check_output(["git", "-C", tree, "show", f"{pin}:src/{file}"], text=True)
     for before, after in pairs:
@@ -17,6 +18,7 @@ def edit(file, pairs=(), more=""):
     path.write_text(text + "\n" + more)
 
 def mark(before, phase):
+    """A replacement pair that inserts a phase marker before a line."""
     return before, f"crate::astra_mark({phase});\n        {before}"
 
 edit("lib.rs", [

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 def digest(path):
+    """The SHA-256 of a file."""
     with path.open("rb") as f: return hashlib.file_digest(f,"sha256").hexdigest()
 corpus,verify,evidence=map(Path,sys.argv[1:4])
 roots=list(map(Path,sys.argv[4:]))
