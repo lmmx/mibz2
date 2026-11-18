@@ -24,3 +24,25 @@ python3 "$d/check.py" "$d/target/wikidata" "$d/target" "$d/target/check"
 ```
 
 The next distinct construction can store two LF steps in a homogeneous page when the whole page translates into a single next tile. The admissible range must use the smaller of the two right slacks. Both wide bytes, or the first byte and terminal tag, must be retained. Measure the actual missed tile lookups and the cost of building these composed descriptors before implementing the walker.
+
+## Compose the two-step partition once
+
+The page-only follow-up at 32 rows would spend 216,270 setup target lookups to remove 206,772 dependent probes on the ten blocks. A source-order refinement yields a better construction. For each wide tile, intersect its LF image with the one-step target tiles. The image starts for each byte increase. One cursor per byte therefore suffices. The 256 starting cursors are found by scanning the row boundaries once. Across bytes an original boundary can cross the interior of at most one wide image because the images are disjoint. For T original tiles, the refined list contains at most 2T−1 entries. The additional cursor movement costs O(T+256), including transitions through portions of the F buckets omitted by the retained rows.
+
+Each refined tile finishes one of three ways. An original terminal has an empty word and points to retained coordinates. A wide tile followed by a terminal carries the wide byte and finishes at a retained rank. Two wide tiles carry both bytes in traversal order and point to the original row after both moves. Intersecting the source interval with the translated-back target ensures that the end is the exact two-move right bound. The additive displacement modulo 2²⁰ is exact because the true destination lies in [0,900000). A 64-bit entry holds that displacement, the end, both byte slots and the length. The compiler retains the original and refined arrays, and the refined page directory identifies homogeneous or mixed pages as before. Other construction and writing stages use the earlier implementation.
+
+| Ten systematic archives, width 16 | One-step | Refined two-step |
+| --- | ---: | ---: |
+| Stored tile entries in the lookup partition | 56,046 | 71,192 |
+| Dependent page probes during tracing | 524,517 | 275,562 |
+| Probes requiring a mixed-page tile search | 98,103 | 73,032 |
+| Return bands | 35,953 | 35,953 |
+
+The refinement makes 55,567 target cursor advances after the initial bucket scan. On frozen its additional tile tape requires 58,024 logical bytes. The census checks the same exit and width for each actual traced band. The native candidate matches independent inversion on all 56,836 small forced trials and 11,699,915 larger input rows. The implementation uses only safe Rust. Measure complete decode time and peak RSS to price the extra preparation, descriptor footprint, bit extraction and spelling work. Routine commands for this variant are below.
+
+```sh
+python3 "$d/compose.py" "$d/target/wikidata"
+python3 "$d/two_counts.py" "$d/target/wikidata"
+rustc --cfg two_step --edition=2021 -O --extern "mibz2=$deps/libmibz2.rlib" -L "dependency=$deps" "$d/check.rs" -o "$d/target/check2"
+python3 "$d/check.py" "$d/target/wikidata" "$d/target" "$d/target/check2"
+```

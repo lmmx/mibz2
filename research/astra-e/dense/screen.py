@@ -9,7 +9,7 @@ sys.path.insert(0, str(STUDY))
 from inputs import read_input, paths
 
 
-def count(runs, primary, pages):
+def prepare(runs, primary):
     xs, endpoints, symbols, delta, by_symbol = [], [], [], [], [[] for _ in range(256)]
     hist = [0] * 256
     retained = cursor = n = 0
@@ -40,6 +40,11 @@ def count(runs, primary, pages):
         symbols.append(byte)
         delta.append(d if byte is None else d + starts[byte])
 
+    return hist, by_symbol, starts, endpoints, symbols, delta, n, retained
+
+
+def count(runs, primary, pages):
+    hist, by_symbol, starts, endpoints, symbols, delta, n, retained = prepare(runs, primary)
     visits = [[] for _ in pages]
     mixed = []
     for i, page in enumerate(pages):
@@ -74,7 +79,7 @@ def count(runs, primary, pages):
             old = starts[c] + end
     assert terminals == retained and terminals + weighted == n, "expected full-orbit archive"
     for page, mix, (indirect, after_first, scans) in zip(pages, mixed, visits):
-        yield n, retained, len(xs), bands, steps, page, (n + page - 1) // page, len(mix), indirect, after_first, scans
+        yield n, retained, len(endpoints), bands, steps, page, (n + page - 1) // page, len(mix), indirect, after_first, scans
 
 
 def main():

@@ -1,6 +1,10 @@
 //! Force the straight tracer above and below its density gate, including widths
 //! too small for the production setting. Arguments can be "primary:column-file".
 pub use mibz2::{bwt, runs, Kernels};
+#[cfg(not(two_step))]
+mod candidate;
+#[cfg(two_step)]
+#[path = "two_step.rs"]
 mod candidate;
 use std::env;
 use std::fs;
