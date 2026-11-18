@@ -2259,11 +2259,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D112",
-    "incoming_comment": 6904418769,
-    "review_comment_id": 6904474217
+    "active_comment": 6988393925,
+    "status": "in progress",
+    "decision": "D113"
   },
   "duplicate_events": [
     {
@@ -4051,6 +4049,13 @@
       "work_commit": "cf618402c82219a9d6f8b6bfd56ba479583fcd72",
       "review_comment_id": 6904474217,
       "complete_cursor_commit": "751606dcbcb04d35af215435c0b2e2abd0b3fec4"
+    },
+    {
+      "comment_id": 6988393925,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D113",
+      "progress": "Receipt; migration manifest and old-branch boundary verified. Adversarial review of PR581 cd7e5de2b7c61442f7a391436eee910a5ebb126a."
     }
   ],
   "migrated_from": {
