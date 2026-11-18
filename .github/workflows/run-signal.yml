@@ -59,3 +59,8 @@ jobs:
               ;;
           esac
           git ls-remote --tags origin "refs/tags/ready/$RECIPE" "refs/tags/hold/$RECIPE"
+          # the signal is the tag on origin, not this run's success: check it landed
+          if [[ "$SIGNAL" == ready ]]; then
+            got=$(git ls-remote --tags origin "refs/tags/ready/$RECIPE" | awk '{print $1}')
+            [[ "$got" == "$SHA" ]] || { echo "::error::ready/$RECIPE is at '${got:-nothing}' on origin, not $SHA"; exit 1; }
+          fi
