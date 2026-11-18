@@ -38,6 +38,15 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
 
   Anything else waits for green, as above. Waiting on CI for these two wastes the
   workstation's time.
+- **GitHub's macOS runners never hold a merge** (Louis, 18 November 2026: "Ignore GitHub flakey
+  macOS runners! … it's never worth holding back for that").
+  - *What it covers:* a macOS job that is queued, waiting for a runner, cancelled, timed out or
+    failed in setup, before any project step ran. The PR merges once every other check run and
+    pre-commit.ci's status are green on the head.
+  - *No waiting and no re-run:* don't wait for such a job or re-run it. Name it in the merge's
+    LOG.
+  - *Real failures still count:* a macOS job whose project steps ran and failed (class A or D,
+    CI-INCIDENTS.md) is a real failure and holds the merge as usual.
 - **The merge itself:** pass that SHA as `expectedHeadSha`, the merge tool's parameter. The tool
   silently drops a name it doesn't have, such as `sha`, and then nothing checks the head.
 - **After the merge:** `coord.py head-sha --pr <n> --sha <sha> --merged` must pass: the PR is

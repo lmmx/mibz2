@@ -28,6 +28,13 @@ the hand-over.
   post, and Louis was left asking where the PR was.
 - **Every brief to a drafting or publishing agent says this:** "Push and open the PR first,
   then iterate on it."
+- **A new post always goes through a PR, never a direct commit to master** (Louis, 18 November
+  2026: "we only directly commit when we make amendments, we are meant to open the PR asap").
+  - *Direct commits to master* are only for amendments to a post already published, such as a
+    retitle or a small edit, and only when Louis asks for one.
+  - *A brief never says "don't open a PR"* or "the coordinator will push". On 18 November the
+    coordinator's own brief said exactly that. The post was built in full on a branch with no
+    PR, and then a push straight to master was attempted.
 
 ## 1. Brief the drafting agent
 
