@@ -466,7 +466,7 @@
       "From entrance 2 (row 2), the arrows go to rows 6, 3 and 4, reading n, a, b. Row 4 is kept, so the path stops there: exit row 4, which is exit index 1. The word nab is ban, backwards.",
     ];
     PATHS.forEach((p, k) => f.push({ svg: scene({ kept: true, cut: CUTS, shown: k + 1, cur: k }), text: say[k] + (k < 2 ? ` Next: entrance ${k + 1}.` : " Next: what the three paths give.") }));
-    f.push({ svg: scene({ kept: true, cut: CUTS, shown: 3, done: true }), text: "Every row lies on exactly one open path. The paths give P = [0, 2, 1], from entrance index to exit index, and a word for each entrance. None of this needed to know where the cut arrows went: only the arrows that are left, and which rows are kept." });
+    f.push({ svg: scene({ kept: true, cut: CUTS, shown: 3, done: true }), text: "Every row lies on exactly one open path, and none joined a loop: each row of a loop already uses its one incoming arrow, and an entrance has lost its own. The paths give P = [0, 2, 1], from entrance index to exit index, and a word for each entrance. None of this needed to know where the cut arrows went: only the arrows that are left, and which rows are kept." });
     return { frames: f, height: 520 };
   };
 
