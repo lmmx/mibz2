@@ -196,9 +196,10 @@
     6973244994,
     6974215305,
     6974406266,
-    6976384308
+    6976384308,
+    6978023732
   ],
-  "last_processed_comment_id": 6976384308,
+  "last_processed_comment_id": 6978023732,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2342,13 +2343,16 @@
     },
     {
       "trigger_comment_id": 6978023732,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/recalibrate-6978023732/report.md",
       "source_commit": "58c3e68809dd8b0e16d71ef48ff1d43ee00bb819",
       "report_commit": "6c50b1d115105e700ec7018f0608b728efac749d",
-      "disposition": "TARGETED CORRECTION"
+      "disposition": "TARGETED CORRECTION",
+      "review_comment_id": 6978182129,
+      "review_pr": 145,
+      "publication_verification": "GitHub read-back matches exact body, author, and #145. Pinned helper route and role-aware header checks passed. Its coordinator-only sender check is inapplicable to this Researcher publication."
     }
   ],
   "active_delegations": [],
