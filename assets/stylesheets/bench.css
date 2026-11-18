@@ -186,6 +186,12 @@
   color: var(--md-default-fg-color);
   font-weight: 600;
 }
+/* a choice that doesn't apply to the figure shown (bench.js, seg's off: Relative | Absolute
+   on CPU time and peak RSS) */
+.bh-hero .bh-seg button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
 .bh-hero button:focus-visible,
 .bh-hero a:focus-visible {
   outline: 2px solid var(--md-default-fg-color);
@@ -596,6 +602,12 @@
 }
 .bh-hero .bh-i9-whisker {
   stroke: var(--bh-i9);
+}
+/* absolute: the record CI's chain is anchored at (bench.js, ciAnchor), ringed */
+.bh-hero .bh-anchor {
+  fill: none;
+  stroke: var(--bh-s1);
+  stroke-width: 1.5;
 }
 .bh-hero .bh-i9-rug {
   stroke: var(--bh-i9);
