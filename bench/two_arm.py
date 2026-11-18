@@ -320,8 +320,9 @@ def check_metadata(where, key, r, core_of, cores, hold_max, errors, unpinned=Fal
 
 
 def occupancy_workers(arm):
-    """An occupancy arm's workers (`mibz2-occ-N-S`, `mibz2-oce-N-S`), else None"""
-    m = re.fullmatch(r"mibz2-oc[ce]-(\d+)-(\d+)", arm)
+    """An occupancy arm's workers (`mibz2-occ-N-S`, `mibz2-oce-N-S`, and the open-return arms
+    `mibz2-open-N-S`, `mibz2-opend-N-S`), else None"""
+    m = re.fullmatch(r"mibz2-(?:occ|oce|open|opend)-(\d+)-(\d+)", arm)
     return int(m.group(1)) if m else None
 
 

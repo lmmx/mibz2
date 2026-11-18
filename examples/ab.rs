@@ -879,6 +879,14 @@ mod occ_arm_tests {
         // the two families apart
         assert_eq!(occ_arm("mibz2-oce-5-20"), None);
         assert_eq!(oce_arm("mibz2-occ-5-20"), None);
+        #[cfg(feature = "open-return")]
+        {
+            use super::open_arm;
+            assert_eq!(open_arm("mibz2-open-7-28"), Some((7, 28)));
+            assert_eq!(open_arm("mibz2-open-8-32"), Some((8, 32)));
+            assert_eq!(open_arm("mibz2-oce-7-28"), None);
+            assert_eq!(open_arm("mibz2-open-7"), None);
+        }
         for bad in [
             "mibz2-oce-5",
             "mibz2-oce-0-20",
@@ -1168,6 +1176,49 @@ fn oce_arm(arm: &str) -> Option<(usize, usize)> {
     counts(arm.strip_prefix("mibz2-oce-")?)
 }
 
+/// An open-return arm's workers and blocks in flight: `mibz2-open-N-S`, N and S at least 1
+/// (research only, `open-return`: Astra's queued open endpoint at width 16, #565)
+#[cfg(feature = "open-return")]
+fn open_arm(arm: &str) -> Option<(usize, usize)> {
+    counts(arm.strip_prefix("mibz2-open-")?)
+}
+
+/// (research only, `open-return`) an open-return arm behind LazyCells' density line:
+/// `mibz2-opend-N-S`
+#[cfg(feature = "open-return")]
+fn opend_arm(arm: &str) -> Option<(usize, usize)> {
+    counts(arm.strip_prefix("mibz2-opend-")?)
+}
+
+/// (research only, `open-return`) `ab census-open FILE..`: each file's blocks by route, one
+/// JSON line a file: on the run route; admitted by LazyCells as shipped; under its density
+/// line (the gated open arm's); both. The open arm (`mibz2-open-N-S`) takes every run-route
+/// block. Single-threaded, its output checked against the shipped decoder's.
+#[cfg(feature = "open-return")]
+mod open_census {
+    use mibz2::open_gate::{Census, CENSUS};
+    use std::sync::atomic::Ordering::Relaxed;
+
+    pub fn run(files: &[String]) {
+        let k = mibz2::Kernels::detect();
+        for f in files {
+            let data = std::fs::read(f).expect("a readable file");
+            let before: Vec<u64> = CENSUS.iter().map(|c| c.load(Relaxed)).collect();
+            let got = mibz2::decode_with::<Census>(&data, k).expect("a valid stream");
+            let want = mibz2::decode(&data).expect("a valid stream");
+            let d: Vec<u64> = CENSUS
+                .iter()
+                .zip(&before)
+                .map(|(c, b)| c.load(Relaxed) - b)
+                .collect();
+            println!(
+                "{{\"file\":{f:?},\"run_route\":{},\"lazy_admitted\":{},\"under_density\":{},\"both\":{},\"column_route\":{},\"same_output\":{}}}",
+                d[0], d[1], d[2], d[3], d[4], got == want
+            );
+        }
+    }
+}
+
 /// `N-S`, N and S at least 1
 fn counts(ns: &str) -> Option<(usize, usize)> {
     let (n, s) = ns.split_once('-')?;
@@ -1408,6 +1459,40 @@ fn decode(
                 oce_arm(a).ok_or_else(|| format!("unknown arm {a} (mibz2-oce-WORKERS-SLOTS)"))?;
             drain(
                 mibz2::BzReader::parallel_workers(open()?, n, s, mibz2::Kernels::detect(), false),
+                h,
+                last,
+            )
+        }
+        // (research only, `open-return`: the open-return comparison, #145 QUEUED 6978711740)
+        // N workers and S blocks in flight, each inverting with Astra's queued open endpoint
+        // at width 16 (`Open<16, true, true>`, `docs/journal/2026-11-18-open-return/`, #565): it
+        // takes every block on the run route, and the column route's Segmented fallback
+        #[cfg(feature = "open-return")]
+        a if a.starts_with("mibz2-opend-") => {
+            let (n, s) = opend_arm(a)
+                .ok_or_else(|| format!("unknown arm {a} (mibz2-opend-WORKERS-SLOTS)"))?;
+            drain(
+                mibz2::BzReader::parallel_workers_with::<mibz2::open_gate::OpenGated>(
+                    open()?,
+                    n,
+                    s,
+                    mibz2::Kernels::detect(),
+                ),
+                h,
+                last,
+            )
+        }
+        #[cfg(feature = "open-return")]
+        a if a.starts_with("mibz2-open-") => {
+            let (n, s) =
+                open_arm(a).ok_or_else(|| format!("unknown arm {a} (mibz2-open-WORKERS-SLOTS)"))?;
+            drain(
+                mibz2::BzReader::parallel_workers_with::<mibz2::open_return::Open<16, true, true>>(
+                    open()?,
+                    n,
+                    s,
+                    mibz2::Kernels::detect(),
+                ),
                 h,
                 last,
             )
@@ -2989,6 +3074,8 @@ fn main() {
         Some("run") => run(&args[1..]),
         Some("summary") => summary(&args[1..]),
         Some("gen") => gen(&args[1..]),
+        #[cfg(feature = "open-return")]
+        Some("census-open") => open_census::run(&args[1..]),
         Some("env") => match args.get(1).map(String::as_str) {
             None => println!("{}", env_line()),
             Some("--facts") if args.len() == 2 => println!("{}", facts::live()),

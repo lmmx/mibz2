@@ -58,11 +58,14 @@ EVENT_SETS = {
     ],
     "l2": [["cycles", "instructions", "l2_rqsts.miss", "l2_rqsts.references"]],
     "imc": [["uncore_imc/data_reads/", "uncore_imc/data_writes/"]],
+    # the memory controller and the package's energy (RAPL), system-wide: the open-return
+    # comparison's diagnostic (#145 QUEUED 6978711740; its settle and power additions)
+    "imcpower": [["uncore_imc/data_reads/", "uncore_imc/data_writes/", "power/energy-pkg/"]],
 }
 # the event sets counted system-wide (`perf stat -a`), with an idle baseline each rep
-SYSTEM_WIDE = {"imc"}
+SYSTEM_WIDE = {"imc", "imcpower"}
 # perf's scaled units, as bytes; a bare count of the memory controller's is 64-byte lines
-SCALE = {"B": 1, "KiB": 2**10, "MiB": 2**20, "GiB": 2**30, "": 64}
+SCALE = {"B": 1, "KiB": 2**10, "MiB": 2**20, "GiB": 2**30, "": 64, "Joules": 1}
 GROUPS = EVENT_SETS["default"]
 
 
@@ -300,11 +303,14 @@ def report(a):
 def report_dram(a, rows, threads, arms):
     """The memory controller's report: each arm's DRAM bytes a byte of output, read and written,
     the machine's idle rate (the median over the reps) times each run's elapsed time taken off"""
-    reads, writes = GROUPS[0]
+    reads, writes = GROUPS[0][:2]
+    power = "power/energy-pkg/" if "power/energy-pkg/" in GROUPS[0] else None
     idle = {e: statistics.median(rows[("idle", 0, r, 0)]["counts"][e][0] / rows[("idle", 0, r, 0)]["elapsed"]
                                  for r in range(a.reps)) for e in (reads, writes)}
     print(f"the machine idle: {idle[reads] / 1e9:.3f} GB/s read, {idle[writes] / 1e9:.3f} GB/s written "
           f"(the median over {a.reps} reps), taken off each run")
+    idle_power = (statistics.median(rows[("idle", 0, r, 0)]["counts"][power][0] / rows[("idle", 0, r, 0)]["elapsed"]
+                                    for r in range(a.reps)) if power else None)
 
     def dram(arm, t, r, e):
         rec = rows[(arm, t, r, 0)]
@@ -321,12 +327,25 @@ def report_dram(a, rows, threads, arms):
             cand = [f(a.cand, r) for r in range(a.reps)]
             ratio = statistics.median(c / x for c, x in zip(cand, ref) if x > 0) if any(ref) else float("nan")
             print(f"  {what:10s} {statistics.median(ref):24.3f} {statistics.median(cand):24.3f}   {ratio:.4f}")
+        if power:
+            # the package's energy: watts over each run's elapsed time, and joules a GB of
+            # output (the machine's whole package, idle included)
+            def joules(arm, r):
+                return rows[(arm, t, r, 0)]["counts"][power][0] / (rows[(arm, t, r, 0)]["out"] / 1e9)
+            ref = [joules(a.ref, r) for r in range(a.reps)]
+            cand = [joules(a.cand, r) for r in range(a.reps)]
+            ratio = statistics.median(c / x for c, x in zip(cand, ref) if x > 0)
+            print(f"  {'J a GB':10s} {statistics.median(ref):24.3f} {statistics.median(cand):24.3f}   {ratio:.4f}")
         for arm in arms:
             rate = statistics.median(
                 (rows[(arm, t, r, 0)]["counts"][reads][0] + rows[(arm, t, r, 0)]["counts"][writes][0])
                 / rows[(arm, t, r, 0)]["elapsed"] for r in range(a.reps))
-            print(f"  {arm}: {rate / 1e9:.2f} GB/s at the memory controller (idle included), "
+            watts = (f", package {statistics.median(rows[(arm, t, r, 0)]['counts'][power][0] / rows[(arm, t, r, 0)]['elapsed'] for r in range(a.reps)):.1f} W"
+                     if power else "")
+            print(f"  {arm}: {rate / 1e9:.2f} GB/s at the memory controller (idle included){watts}, "
                   f"wall {statistics.median(rows[(arm, t, r, 0)]['wall'] for r in range(a.reps)):.3f} s")
+    if power:
+        print(f"the package idle: {idle_power:.1f} W (the median over {a.reps} reps; not taken off)")
     return 0
 
 

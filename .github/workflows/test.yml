@@ -95,6 +95,13 @@ jobs:
           python3 bench/memory_lever.py bench/memory_lever_example.jsonl | tee lever.txt
           grep -q 'below the ratio at 4 in 10 of 10 rounds' lever.txt
           grep -q 'below the ratio at 4 in 5 of 10 rounds' lever.txt
+      # the open-return comparison's arms (#145 QUEUED 6978711740; research feature
+      # `open-return`): Astra's open decoder and its gated wrapper decode as the default, the
+      # census sees each route, and `ab` parses the open arms
+      - name: The open-return arms (research feature)
+        run: |
+          cargo test --release --features open-return --lib open_gate
+          cargo test --features open-return --example ab
       # the guarded service A/B's judge, with its producer driven for real: `ab run` with
       # stand-in children that succeed, exit 17, are killed or write nothing, each record judged
       - name: The guarded service A/B's producer and judge (stand-in children, untimed)

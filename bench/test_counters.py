@@ -35,6 +35,9 @@ with open(out, "w") as f:
         # written a byte of output (0.8 of that for a `wide` arm); idle, 1 MiB each
         assert "-a" in a, "the memory controller is counted system-wide"
         for e in events:
+            if e.startswith("power"):
+                f.write(f"{1.0 if arm == 'idle' else 50.0 * (0.9 if 'wide' in arm else 1.0):.3f},Joules,{e},1000,100.00,,\n")
+                continue
             per = (7 if "reads" in e else 4) * 209700196 * (0.8 if "wide" in arm else 1.0)
             v = 2**20 if arm == "idle" else per
             if mode == "imcnotcounted" and arm != "idle" and "writes" in e:
@@ -135,13 +138,13 @@ def main():
         print(out)
     # the memory controller (`--events imc`): system-wide, unpinned, an idle record each rep, the
     # idle rate taken off, the bytes read in perf's MiB
-    def imc(env, drop_idle=False):
+    def imc(env, drop_idle=False, events="imc"):
         out_file = d / "imc.jsonl"
         e = {**os.environ, "PATH": f"{d}:{os.environ['PATH']}", "COUNTERS_IDLE_S": "0.05", **env}
         ref = f"mibz2@{d / 'ab2'}"
         subprocess.run([sys.executable, str(HERE / "counters.py"), "run", "--ab", str(d / "ab"), "--arm", ref,
                         "--arm", "mibz2-wide", "--threads", "8,10", "--reps", "3", "--file", "x.bz2",
-                        "--out", str(out_file), "--events", "imc", "--unpinned"], env=e, capture_output=True, check=True)
+                        "--out", str(out_file), "--events", events, "--unpinned"], env=e, capture_output=True, check=True)
         recs = [json.loads(line) for line in open(out_file)]
         if drop_idle:
             with open(out_file, "w") as f:
@@ -151,7 +154,7 @@ def main():
         buf = io.StringIO()
         with redirect_stdout(buf):
             code = counters.main(["counters.py", "report", str(out_file), "--ref", ref, "--cand", "mibz2-wide",
-                                  "--threads", "8,10", "--reps", "3", "--events", "imc"])
+                                  "--threads", "8,10", "--reps", "3", "--events", events])
         return code, buf.getvalue(), recs
 
     code, out, recs = imc({})
@@ -177,6 +180,16 @@ def main():
         print(f"{'ok  ' if ok else 'FAIL'} {name}: exit {code}, {'found' if phrase in out else 'missing'} {phrase!r}")
         if not ok:
             print(out)
+    # the memory controller with the package's energy (`--events imcpower`): the DRAM as before,
+    # the package's joules a GB of output and its watts
+    code, out, recs = imc({}, events="imcpower")
+    ok = (code == 0 and all("power/energy-pkg/" in r["counts"] for r in recs)
+          and "J a GB" in out and "0.9000" in out and " W, wall" in out and "the package idle:" in out
+          and "0.7999" in out)
+    results.append(ok)
+    print(f"{'ok  ' if ok else 'FAIL'} the memory controller and the package's energy: exit {code}")
+    if not ok:
+        print(out)
     failed = results.count(False)
     print(f"\n{len(results) - failed} of {len(results)} checks pass")
     return 1 if failed else 0

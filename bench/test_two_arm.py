@@ -840,6 +840,11 @@ def main():
         ["VOID", "--rounds-at 'x': not T=N"], args=rcl_args() + ["--rounds-at", "x"]))
     results.append(expect_low("recalibration: --rounds-at a count twice", rcl(), 1,
         ["VOID", "a judged count once"], args=rcl_args() + ["--rounds-at", "4=10", "--rounds-at", "4=12"]))
+    # the open-return comparison's arms (#145 QUEUED 6978711740): their workers are checked too
+    results.append([ta.occupancy_workers(a) for a in ("mibz2-open-7-28", "mibz2-opend-8-32", "mibz2-occ-6-24",
+                                                      "mibz2-oce-4-16", "mibz2", "mibz2-opens-7-28")]
+                   == [7, 8, 6, 4, None, None])
+    print(f"{'ok  ' if results[-1] else 'FAIL'} the workers of the open-return arms, mibz2-open-N-S and mibz2-opend-N-S")
     p_mid = {("x", 1): 0.03}
     results.append(ta.holm(p_mid, 0.05) == {("x", 1)} and ta.holm(p_mid, 0.025) == set())
     print(f"{'ok  ' if results[-1] else 'FAIL'} Holm at a halved α: p 0.03 rejected at 0.05, not at 0.025")
