@@ -2574,11 +2574,14 @@
     },
     {
       "trigger_comment_id": 6993078803,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/astra-b-6993078803/report.md",
-      "source_commit": "c42e1c69cdad486834048434438976b0681c4493"
+      "source_commit": "c42e1c69cdad486834048434438976b0681c4493",
+      "baseline_commit": "1db74e74c3692e71c3d71f6be6924f7c6d982a3d",
+      "report_commit": "89d3c93e899f7a464b89c88c518b5270303e99a0",
+      "disposition": "PROCEED as research record: ten numerical receipts reproduced; staged-array deficit holds under the stated event accounting."
     }
   ],
   "active_delegations": [],
