@@ -13,15 +13,31 @@ fn main() {
     let mut syms = Vec::new();
     let mut large = 0;
     println!("block,index,n,primary,records,symbols,front_admitted,bit,end,crc");
-    while let Event::Block { symbols, index, bit, end, .. } = scanner.next(syms).unwrap() {
+    while let Event::Block {
+        symbols,
+        index,
+        bit,
+        end,
+        ..
+    } = scanner.next(syms).unwrap()
+    {
         let n = runs::front(&symbols, &mut runs, Kernels::detect()).unwrap();
         if n >= 65536 {
             if large % 24 == 0 {
-                let tape: Vec<_> = runs.records().iter().flat_map(|r| r.to_le_bytes()).collect();
+                let tape: Vec<_> = runs
+                    .records()
+                    .iter()
+                    .flat_map(|r| r.to_le_bytes())
+                    .collect();
                 fs::write(dir.join(format!("{large:04}.recs")), tape).unwrap();
-                println!("{large},{index},{n},{},{},{},{},{bit},{end},{}",
-                    symbols.orig_ptr, runs.records().len(), symbols.syms.len(),
-                    runs::takes_runs(&symbols), symbols.crc);
+                println!(
+                    "{large},{index},{n},{},{},{},{},{bit},{end},{}",
+                    symbols.orig_ptr,
+                    runs.records().len(),
+                    symbols.syms.len(),
+                    runs::takes_runs(&symbols),
+                    symbols.crc
+                );
             }
             large += 1;
         }

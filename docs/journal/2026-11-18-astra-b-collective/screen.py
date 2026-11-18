@@ -1,4 +1,5 @@
 """Exact screens from capped records. Python 3.10+, no event or grammar input."""
+
 import argparse
 import csv
 from collections import Counter
@@ -39,7 +40,7 @@ def rotations(bands, n):
     return dict(rotation=step, shifts=len(mass), rotation_errors=n - mass[step])
 
 
-def tiles(bands, n, size, primary):
+def tiles(bands, n, size):
     # Only real rows vote. The oracle may route a partial last tile as freely
     # as a full one and permute lanes arbitrarily.
     count = (n + size - 1) // size
@@ -68,9 +69,13 @@ def tiles(bands, n, size, primary):
                     rigid_col_best[j] = max(rigid_col_best[j], mass)
                 pairs.clear()
                 votes.clear()
-    return dict(tiles=count, fragments=piece_count, tile_pairs=pair_count,
-                arbitrary_min_errors=n-min(row_best, sum(col_best)),
-                shift_min_errors=n-min(rigid_best, sum(rigid_col_best)))
+    return dict(
+        tiles=count,
+        fragments=piece_count,
+        tile_pairs=pair_count,
+        arbitrary_min_errors=n - min(row_best, sum(col_best)),
+        shift_min_errors=n - min(rigid_best, sum(rigid_col_best)),
+    )
 
 
 def clean_links(bands, size, primary):
@@ -79,14 +84,14 @@ def clean_links(bands, size, primary):
     groups = 0
     marked_tile = primary // size
     for x, y, w, byte in bands:
-        if (y-x) % size:
+        if (y - x) % size:
             continue
-        first, stop = (x+size-1)//size, (x+w)//size
-        delta = (y-x)//size
-        groups += int(first < min(stop, marked_tile)) + int(max(first, marked_tile+1) < stop)
+        first, stop = (x + size - 1) // size, (x + w) // size
+        delta = (y - x) // size
+        groups += int(first < min(stop, marked_tile)) + int(max(first, marked_tile + 1) < stop)
         for tile in range(first, stop):
             if tile != marked_tile:
-                links[tile] = (tile+delta, byte)
+                links[tile] = (tile + delta, byte)
     return links, groups
 
 
@@ -106,28 +111,33 @@ def chains(links):
         steps += len(word)
         longest = max(longest, len(word))
         paths[head] = (tile, bytes(word))
-    return paths, dict(clean_tiles=len(links), paths=len(paths), path_links=steps,
-                       cycle_tiles=len(links)-steps, longest=longest)
+    return paths, dict(
+        clean_tiles=len(links),
+        paths=len(paths),
+        path_links=steps,
+        cycle_tiles=len(links) - steps,
+        longest=longest,
+    )
 
 
 def inputs(folder, only):
-    with (folder/"inputs.csv").open() as f:
+    with (folder / "inputs.csv").open() as f:
         for row in csv.DictReader(f):
             block = int(row["block"])
             if only is None or block in only:
-                tape = (folder/f"{block:04}.recs").read_bytes()
+                tape = (folder / f"{block:04}.recs").read_bytes()
                 assert len(tape) == 2 * int(row["records"])
                 bands = bands_from_records(tape)
                 n, primary = int(row["n"]), int(row["primary"])
                 assert sum(w for _, _, w, _ in bands) == n and 0 <= primary < n
-                yield block, n, primary, len(tape)//2, bands
+                yield block, n, primary, len(tape) // 2, bands
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("folder", type=Path)
     parser.add_argument("--blocks", type=int, nargs="+")
-    parser.add_argument("--sizes", type=int, nargs="+", default=[2,4,8,16,32,64])
+    parser.add_argument("--sizes", type=int, nargs="+", default=[2, 4, 8, 16, 32, 64])
     args = parser.parse_args()
     writer = None
     for block, n, p, m, bands in inputs(args.folder, args.blocks):
@@ -136,9 +146,18 @@ def main():
             assert size > 1
             links, groups = clean_links(bands, size, p)
             _, path_counts = chains(links)
-            row = dict(block=block, n=n, primary=p, records=m, runs=len(bands),
-                       **rotation, B=size, **tiles(bands, n, size, p),
-                       groups=groups, **path_counts)
+            row = dict(
+                block=block,
+                n=n,
+                primary=p,
+                records=m,
+                runs=len(bands),
+                **rotation,
+                B=size,
+                **tiles(bands, n, size),
+                groups=groups,
+                **path_counts,
+            )
             if writer is None:
                 writer = csv.DictWriter(sys.stdout, fieldnames=row, lineterminator="\n")
                 writer.writeheader()

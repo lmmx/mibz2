@@ -27,7 +27,26 @@
     "unmarked_closures": 11006
   },
   "phase_successors": 41,
+  "stress_marks": 358,
+  "tile_oracle_bounds": {
+    "cases": 762,
+    "loose_arbitrary": 52,
+    "loose_shift": 42
+  },
   "witnesses": {
+    "entrance_order_is_not_exit_order": {
+      "byte": 0,
+      "column": "11000",
+      "enters": [
+        1,
+        2
+      ],
+      "exits": [
+        1,
+        0
+      ],
+      "primary": 0
+    },
     "mark_inside_queue_word": {
       "column": "100",
       "lf_offset": 1,
