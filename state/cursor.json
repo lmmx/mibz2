@@ -206,9 +206,10 @@
     6983357476,
     6984353753,
     6984984150,
-    6986296845
+    6986296845,
+    6986512740
   ],
-  "last_processed_comment_id": 6986296845,
+  "last_processed_comment_id": 6986512740,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2484,7 +2485,7 @@
     },
     {
       "trigger_comment_id": 6986512740,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/decoding-pays-for-r1-6986512740/report.md",
@@ -2492,7 +2493,10 @@
       "source_commit": "b427bcdb60b123254c387b142a25348d4617d690",
       "report_commit": "76979ce2326ec033a552d53af07e6168a60f78cb",
       "baseline_commit": "6b8e0291781e26f819a6cffbcce40b52aec60892",
-      "disposition": "REVISE: reconcile internal and historical gap counts and forecast scope; fix VM timing modes, sparse control reference, and modeled row depth."
+      "disposition": "REVISE: reconcile internal and historical gap counts and forecast scope; fix VM timing modes, sparse control reference, and modeled row depth.",
+      "review_comment_id": 6986707297,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, author lmmx, destination #145, and role-aware route and headers. The pinned helper's coordinator-only sender check does not apply to this Researcher REVIEW."
     }
   ],
   "active_delegations": [],
