@@ -69,9 +69,32 @@ def pairs(cells, linked, section):
                     if new_r>old_r and cold>new else "")
 
 
+
+def reference(cells):
+    old = "../2026-11-18-cells-endpoint-sweep/"
+    fronts = {r["block"]:r for r in rows(old+"census.csv") if r["corpus"]=="wikidata.bz2"}
+    memory = {(r["block"],r["model"]):r for r in rows(old+"traffic.csv")}
+    owners = {r["block"]:r for r in rows("../2026-11-18-cells-live-reuse/blocks.csv")
+              if r["corpus"]=="wikidata.bz2"}
+    for v in cells:
+        key, mode = v["block"], v["model"]
+        f, g, o = fronts[key], memory[key,mode], owners[key]
+        fresh = f["is_equal"] + f["closures"]
+        top, bottom = fresh + f["bottom_win"], fresh + f["top_win"]
+        lazy = mode == "lazy"
+        yield dict(block=key, model=mode, cuts=v["cuts"], fresh_top=top, fresh_bottom=bottom,
+                   bottom_slot_to_top_payload=bottom-(f["raw_bottom"] if lazy else 0),
+                   top_byte_to_counter=f["letters"] if lazy else 0,
+                   top_counter_to_entry=f["letters"] if lazy else 0,
+                   hint_address_reads=g["hint_r"], geometry_reads=g["core_r"],
+                   geometry_writes=g["core_w"], recipe_loads=g["word_r"],
+                   recipe_stores=g["word_w"], marked_spine_records=v["mark_depth"],
+                   owner_scan_records=v["rules"], writer_literal_sources=o["literal_edges"],
+                   command_to_position=v["copies"], position_to_copy_source=v["copies"])
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("table",choices=["operations","populations"])
+    parser.add_argument("table",choices=["operations","populations","reference"])
     args = parser.parse_args()
     linked, section, cells = rows("cursor.csv"),rows("section.csv"),rows("cells.csv")
     by_id = lambda items: {r["block"]:r for r in items}
@@ -82,7 +105,12 @@ def main():
     assert expected == {(r["block"],r["model"]) for r in cells}
     records = {r["block"]:r["records"] for r in archived if r["corpus"]=="wikidata.bz2"}
     assert all(records[r["block"]] == r["capped"] for r in linked)
-    sequence = work(linked,s) if args.table=="operations" else pairs(cells,by_id(linked),s)
+    if args.table == "operations":
+        sequence = work(linked,s)
+    elif args.table == "reference":
+        sequence = reference(cells)
+    else:
+        sequence = pairs(cells,by_id(linked),s)
     output = None
     for row in sequence:
         if output is None:
