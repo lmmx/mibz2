@@ -1,0 +1,12 @@
+best simultaneous one-in/one-out mass 630765 outside 269166
+context_length,vertices,arcs,chords,retained
+1,51184,62138,10955,110273
+2,62138,69598,7461,69664
+3,69598,76243,6646,38231
+4,76243,82597,6355,29016
+5,82597,88577,5981,24569
+6,88577,94053,5477,21610
+7,94053,99447,5395,19650
+eleven-row first returns at original rows: 0 8 10 1 0
+primitive, same per-letter runs and mark 0 100010 1 101000 2
+chain vertices, slab matches, interval reports (64, 4097, 128)
