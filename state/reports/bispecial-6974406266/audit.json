@@ -1,0 +1,113 @@
+{
+  "frozen": {
+    "n": 899931,
+    "mark": 264045,
+    "alphabet": 89,
+    "bits": 535773,
+    "contexts": 504258,
+    "mixed": 22261,
+    "classes": 899931,
+    "period": 899931,
+    "total_nodes": 1404189
+  },
+  "tape_hash": "ea6b418be9192c2e3e4fdd8a2c45af696ae5060335d53b7937a9bedce85e10f8",
+  "raw_hash": "f87e5caa2d5f0df9d5958fe60901e2023ae04ac406603d4c1584c8bb4017fbd6",
+  "column_hash": "db8764224ac4980112ddefbe85b8593f5236643fed71bf8f0b739567d4f2ac67",
+  "output_hash": "d2584c09f1d643d6abff8a25513b63af4e05969c15c30256aed3a05c74281210",
+  "witness": {
+    "cycles": {
+      "6d6e65": [
+        899931
+      ],
+      "6d656e": [
+        442958,
+        456973
+      ],
+      "6e6d65": [
+        334609,
+        565322
+      ],
+      "6e656d": [
+        122364,
+        334609,
+        442958
+      ],
+      "656d6e": [
+        899931
+      ],
+      "656e6d": [
+        122364,
+        777567
+      ]
+    },
+    "alternative_sha256": "19c4094a807a9886a8f48ec95cefbaa9c57af41c2cddabd91399a2300b35eea4",
+    "spectra": [
+      {
+        "length": 4744,
+        "types": 899853,
+        "differences": 0,
+        "l1": 0,
+        "changed_counts": []
+      },
+      {
+        "length": 4745,
+        "types": 899856,
+        "differences": 4,
+        "l1": 4,
+        "changed_counts": [
+          [
+            0,
+            1,
+            "70f2f736bce90c56f373afefa201092099b9e42e967f6f3e7738f6e216f99d08"
+          ],
+          [
+            1,
+            0,
+            "f0bbc0b189676e065a11a77a43eb953527f75167a8af055642bc09de1ba948e1"
+          ],
+          [
+            1,
+            0,
+            "85d8e426a43dc59b0e43fe09ad0bf65cdbf566876b08798beba47cf899e15cb1"
+          ],
+          [
+            0,
+            1,
+            "c7d44dbad71f04cafe998e13752a8134644f53ed897b92b956d594bdd6756801"
+          ]
+        ]
+      }
+    ]
+  },
+  "mixed_intervals": {
+    "4743": {
+      "138927": "6d6e65"
+    },
+    "4744": {
+      "138928": "6e65"
+    },
+    "4822": {}
+  },
+  "separator_cases": 70,
+  "wikidata": {
+    "blocks": 431,
+    "n": 209706557,
+    "output_bytes": 209700196,
+    "right_special": 115321698,
+    "bispecial": 6576394,
+    "support_tape_bytes": 19763677
+  },
+  "prose": {
+    "blocks": 6,
+    "n": 4946081,
+    "output_bytes": 4947388,
+    "right_special": 2600978,
+    "bispecial": 1047106,
+    "support_tape_bytes": 2479838
+  },
+  "levels": {
+    "right_special": 504258,
+    "bispecial": 22261,
+    "support_tests": 535773
+  }
+}
