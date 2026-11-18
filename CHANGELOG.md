@@ -76,8 +76,12 @@ trim is unchanged.
   0.5.6 is about 2–3% faster at 8, 16 and 20 threads, and its CPU time is 1–3% lower from 2
   threads up. At 10 threads wall time is unchanged within a wide interval, and CPU time is
   1.2% lower [1.000, 1.024]. No step reaches the attribution ledger's 3% bar (§5b).
-- **The crossover** (§5a) is running from the workstation queue at 530ed404. Its verdict
-  follows here.
+- **The crossover** (§5a; `bench-crossover`, crossover/run-20261118T202811Z, evidence 6d06a0dd,
+  10 rounds on Wikidata): the team threshold stays. No forced arm is faster than the shipped
+  decoder at any count from 4 to 20 threads: no interval lies wholly below 1. The teams of 2
+  and 3 are 1.21–2.79× its wall time. One block a thread with the default window
+  (`mibz2-workers-w`) comes nearest at 5 threads, 0.987 [0.971, 1.004], and at 9, 0.972
+  [0.933, 1.012]; it is 1.07–1.19× from 10 threads up, where the trims run 7 lazy workers.
 
 ## [0.5.5](https://github.com/lmmx/mibz2/compare/v0.5.4...v0.5.5) - 2026-11-18
 
