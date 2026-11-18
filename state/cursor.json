@@ -2589,11 +2589,14 @@
     },
     {
       "trigger_comment_id": 6993276769,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/astra-d-6993276769/report.md",
-      "source_commit": "454f1fa8d12f92aa5c08c945d375d61a9da08b51"
+      "source_commit": "454f1fa8d12f92aa5c08c945d375d61a9da08b51",
+      "baseline_commit": "6ff819c33c595cc165ad6a7bda5445027a2d1e73",
+      "report_commit": "fb501a2443ee844ca191d3a3b6e6f0d3120e61e5",
+      "disposition": "PROCEED as research record: frozen replay and structural ledgers verified; stop for tested general forward walk and final-slot machine-comparison candidate correctly scoped."
     }
   ],
   "active_delegations": [],
