@@ -2545,11 +2545,13 @@
     },
     {
       "trigger_comment_id": 6990728619,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-return-c6-6990728619/report.md",
-      "source_commit": "ba8f8e2e8101bc1d6eba8a99d4b323d19a01d481"
+      "source_commit": "ba8f8e2e8101bc1d6eba8a99d4b323d19a01d481",
+      "report_commit": "eab87f6cdcd752f6021e48a70ff180149038dbd2",
+      "disposition": "TARGETED CORRECTION before timing: enforce the actual v0.5.6 reference method and worker counts in admissibility before scoring."
     }
   ],
   "active_delegations": [],
