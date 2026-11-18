@@ -1,0 +1,30 @@
+{
+  "candidate": {
+    "candidate": "/workspace/work/astra-e-proxy-frozen/research/astra-e/open/candidate.rs",
+    "candidate_type": "moonshot::candidate::Candidate",
+    "arms": [
+      "lazy",
+      "cells",
+      "open",
+      "opend",
+      "candidate"
+    ],
+    "cpus": 4
+  },
+  "binary_sha256": "a7d1e8cc1b6ac06bada563b2b979f35f55d12da98e7b3d6f9148bd5eae1ffdfa",
+  "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+  "head": "e12e5f63173ee7cc6fcc413510ee76cfee0c1eb1",
+  "source_path_revision": "9c31461df7bef24cecf79348545b27ee26846835",
+  "master": "9c31461df7bef24cecf79348545b27ee26846835",
+  "latencies": {
+    "llc_kb": 2925,
+    "l3_lat": 66,
+    "dram_lat": 549
+  },
+  "workers": 7,
+  "valgrind": "valgrind-3.24.0",
+  "printed_scorer_version": null,
+  "calibration_sha256": "96b91faa33879721e8d9257edb880df55d07f3d5f3d82139db8547d725dc7777",
+  "tool_sha256": "0fe59d0ed1fda490f96c99898533d1b98f25ac3b8fe8d97f844280bdbd141f60",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1"
+}
