@@ -87,6 +87,11 @@ induction-trace = []
 grammar-replay = []
 # research only: the one-scan writer's prototype beside the shipped writer, compared block by block
 owned-writer = []
+# Research only: the moonshot scorer's candidate interface (bench/moonshot/): a block's run
+# records readable by a kernel built outside the crate (`Runs::records`, public with it).
+# Changes that visibility and nothing else; never on a production path. Retain while the
+# scorer is in use
+moonshot = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source

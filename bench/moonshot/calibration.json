@@ -1,0 +1,33 @@
+{
+ "about": "The contention proxy's model and the i9 cells it is checked against. Measured on the i9-10900K: the open-return bundle (evidence fa9707e9, open-return/run-20261118T210422Z.tar.gz: verdict.txt and dram.txt, unpinned, 12 rounds, Wikidata x4) and bench-imc-ten (evidence fa9707e9, imc-ten/run-20261118T090842Z.tar.gz: report.txt). One parameter is fitted (kappa), on the `fitted` cell alone; every `held-out` cell is a prediction.",
+ "model": {
+  "llc_kb": 20480,
+  "l1_latency": 5,
+  "l2_latency": 14,
+  "l3_latency_floor": 42,
+  "kappa": 4,
+  "dram_latency_points": [[7, 549], [10, 649]],
+  "dram_latency_floor": 250,
+  "rob": 224,
+  "width": 4,
+  "mshr": 12,
+  "workers": [1, 2, 4, 7, 8, 10],
+  "corpus_blocks": 431,
+  "sources": {
+   "dram_latency_points": "bench-imc-ten report.txt, wikidata-x4: L3-miss latency 548.7 cycles at mibz2-occ-7-28, 649.0 at mibz2-occ-10-40 (medians), measured, not fitted",
+   "llc_kb": "the i9-10900K's 20 MiB L3, shared by the workers",
+   "mshr": "Comet Lake's 12 L1D fill buffers",
+   "kappa": "the L3-hit latency's rise in cycles a further worker: fitted by `moonshot.py calibrate` on opend 7/28 against lazy at 7 workers only"
+  }
+ },
+ "i9_lazy_dram_bytes_per_byte": "7.97-8.10 (dram.txt, mibz2 at 10 threads, 7 workers)",
+ "i9": [
+  {"label": "opend 7/28", "arm": "opend", "workers": 7, "reference_workers": 7, "threads": 10, "measured": 0.940, "interval": [0.928, 0.952], "measured_dram_ratio": 1.035, "role": "fitted"},
+  {"label": "open 7/28", "arm": "open", "workers": 7, "reference_workers": 7, "threads": 10, "measured": 0.915, "interval": [0.903, 0.928], "measured_dram_ratio": 0.975, "role": "held-out"},
+  {"label": "oce 7/28 (eager cells)", "arm": "cells", "workers": 7, "reference_workers": 7, "threads": 10, "measured": 1.268, "interval": [1.252, 1.285], "measured_dram_ratio": 1.723, "role": "held-out"},
+  {"label": "opend 8/32 over 7 workers", "arm": "opend", "workers": 8, "reference_workers": 7, "threads": 10, "measured": 0.919, "interval": [0.905, 0.934], "measured_dram_ratio": 1.152, "role": "held-out"},
+  {"label": "open 8/32", "arm": "open", "workers": 8, "reference_workers": 8, "threads": 8, "measured": 0.929, "interval": [0.912, 0.947], "measured_dram_ratio": 0.954, "role": "held-out"},
+  {"label": "opend 8/32", "arm": "opend", "workers": 8, "reference_workers": 8, "threads": 8, "measured": 0.944, "interval": [0.928, 0.959], "measured_dram_ratio": 1.012, "role": "held-out"},
+  {"label": "oce 7/28 over 8 workers", "arm": "cells", "workers": 7, "reference_workers": 8, "threads": 8, "measured": 1.300, "interval": [1.285, 1.316], "measured_dram_ratio": null, "role": "held-out"}
+ ]
+}
