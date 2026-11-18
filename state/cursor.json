@@ -208,9 +208,10 @@
     6984984150,
     6986296845,
     6986512740,
-    6988388052
+    6988388052,
+    6988941452
   ],
-  "last_processed_comment_id": 6988388052,
+  "last_processed_comment_id": 6988941452,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2515,14 +2516,17 @@
     },
     {
       "trigger_comment_id": 6988941452,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/decoding-pays-for-r3-6988941452/report.md",
       "source_commit": "1609833498ba29c8582696dd5dd8424f975d7f6c",
       "report_commit": "b6d3b87af31debb8c32a617325d8553044b68760",
       "disposition": "REVISE: the fit paragraph must compare the historical predictor with q₁/r, the exact excess per run.",
-      "deployed_site_commit": "1e4d265e4a81deeb8d673e09965cad6a80496f71"
+      "deployed_site_commit": "1e4d265e4a81deeb8d673e09965cad6a80496f71",
+      "review_comment_id": 6989091813,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, and role-aware headers and route. The pinned helper's coordinator-only sender check is inapplicable to a Researcher REVIEW."
     }
   ],
   "active_delegations": [],
