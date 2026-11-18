@@ -1,0 +1,57 @@
+{
+  "totals": {
+    "cases": 14209,
+    "short_cycle": 12192,
+    "nondividing_cycle": 6346,
+    "clipped": 3542,
+    "aliases": 5384,
+    "copies": 6996,
+    "whole": 4724,
+    "unit_offers": 10802,
+    "splits": 3810
+  },
+  "witnesses": {
+    "clipped": {
+      "column": "000000",
+      "primary": 0,
+      "period": 1,
+      "output": "000000",
+      "count": 1
+    },
+    "aliases": {
+      "column": "000000",
+      "primary": 0,
+      "period": 1,
+      "output": "000000",
+      "count": 1
+    },
+    "copies": {
+      "column": "000000",
+      "primary": 0,
+      "period": 1,
+      "output": "000000",
+      "count": 1
+    },
+    "whole": {
+      "column": "000000",
+      "primary": 0,
+      "period": 1,
+      "output": "000000",
+      "count": 1
+    },
+    "unit_offers": {
+      "column": "000001",
+      "primary": 2,
+      "period": 1,
+      "output": "010101",
+      "count": 1
+    },
+    "splits": {
+      "column": "01000000",
+      "primary": 0,
+      "period": 4,
+      "output": "00000001",
+      "count": 1
+    }
+  }
+}
