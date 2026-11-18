@@ -1,0 +1,63 @@
+{
+  "comb": {
+    "chunks": 3,
+    "cuts": 4095,
+    "exit_groups": 2,
+    "fixed_rows": 0,
+    "full_turn_rows": 4094,
+    "full_turns": 4094,
+    "inside_rows": 4094,
+    "n": 4096,
+    "partial_turns": 0,
+    "peak_live": 1,
+    "period": 4096,
+    "primary": 4094,
+    "queue_residual": 1,
+    "records": 34
+  },
+  "counts": {
+    "equal_cuts": 34053,
+    "interior_marks": 3686,
+    "marked_cases": 14209,
+    "nondividing_periods": 6346,
+    "pure_rotations": 1368,
+    "reference_factors": 85254,
+    "short_periods": 12192,
+    "tile_quotients": 42627,
+    "unmarked_closures": 11006
+  },
+  "phase_successors": 41,
+  "witnesses": {
+    "mark_inside_queue_word": {
+      "column": "100",
+      "lf_offset": 1,
+      "period": 3,
+      "primary": 1
+    },
+    "nondividing_period": {
+      "column": "010",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "period": 2,
+      "primary": 1
+    },
+    "smaller_support_more_cuts": {
+      "B": 2,
+      "after": 3,
+      "before": 2,
+      "column": "1101000",
+      "primary": 3,
+      "support": 5
+    },
+    "unmarked_closure_then_mark_and_equality": {
+      "closures": 2,
+      "column": "010",
+      "equal": 1,
+      "period": 1,
+      "primary": 0
+    }
+  }
+}

@@ -114,7 +114,7 @@ class Grammar:
             literal_bytes=literal_bytes, repeat_bytes=n-period, wrap_literals=wrap_literals)
 
 
-def induce(arcs, support, primary, original_n):
+def induce(arcs, support, primary, original_n, mark_lf_offset=0):
     """Diagnostic right-end induction on any weighted translation tiling."""
     top, bottom = {}, {}
     grammar = Grammar()
@@ -124,7 +124,7 @@ def induce(arcs, support, primary, original_n):
         top[t] = bottom[b] = slot
     for x, y, w, spelling, marked in marked_arcs(arcs, primary):
         forward = spelling[::-1]
-        put(x+w, y+w, w, (forward, len(forward), len(forward)-1 if marked else -1))
+        put(x+w, y+w, w, (forward, len(forward), len(forward)-1-mark_lf_offset if marked else -1))
     initial = len(top)
     frontier = support
     equal = closed = 0
