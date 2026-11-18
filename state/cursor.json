@@ -2328,11 +2328,13 @@
     },
     {
       "trigger_comment_id": 6976384308,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/adjacent-gaps-6976384308/report.md",
-      "source_commit": "79688e06113459e0187a09ce758640ff55603598"
+      "source_commit": "79688e06113459e0187a09ce758640ff55603598",
+      "report_commit": "ab52895df24a039a35d11ea84524a8cdf665a9e5",
+      "disposition": "VERIFIED marked construction, certified upper bound and scoped work. CORRECTED tightness and frozen-only cachegrind scope. Frozen counts and archived timings reproduced."
     }
   ],
   "active_delegations": [],
