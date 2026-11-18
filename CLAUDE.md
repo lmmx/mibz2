@@ -26,8 +26,9 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
   in `error` or `pending` on the head is not green, whatever the check runs say. (#351 was
   merged at 16:2x on 10 November with pre-commit.ci's class B error still on its head; the
   re-run passed minutes later.)
-- **When not to wait for CI** (Louis, 17 November 2026). Two kinds of PR merge without waiting
-  for their CI, with the head-sha checks still run before and after:
+- **When not to wait for CI** (Louis, 17 November 2026; the third case 18 November 2026). Three
+  kinds of PR, or of CI job, merge without waiting for their CI, with the head-sha checks still
+  run before and after:
   - **A PR that only queues:** its diff touches nothing but `bench/workstation-queue.txt`.
     The queue file's own test (`python3 bench/test_workstation_queue.py`) passes locally first.
   - **Content CI has already passed:** the head's tree differs from a commit that went green
@@ -35,9 +36,22 @@ The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #16
     head is green, and a PR re-opened, re-based or re-targeted onto an identical tree. Name
     the green commit in the merge's LOG, and show that the trees match
     (`git diff --stat <green> <head>`).
+  - **A job whose inputs did not change** (Louis, 18 November 2026: "not to introduce process
+    latency by waiting on CI jobs that cannot possibly change an outcome … we need to keep
+    development velocity up"). A job that passed on an earlier commit of the same PR, where
+    nothing it reads has changed since, is not waited for on the new head. Every other job
+    still must be green there. Examples:
+    - Miri or the tests rerun after a docs or journal commit, with `src/`, the tests and the
+      build inputs unchanged;
+    - the paired bench rerun after a commit that touches nothing it measures.
 
-  Anything else waits for green, as above. Waiting on CI for these two wastes the
-  workstation's time.
+    Name the green run and its commit in the merge's LOG, and show what changed:
+    `git diff --stat <green> <head>`, touching none of the job's inputs. Don't cancel the
+    rerun, and if it fails anyway, treat that as an incident (`docs/team/CI-INCIDENTS.md`).
+    A doubt about whether a path is among a job's inputs means it is: then wait.
+
+  Anything else waits for green, as above. Waiting on CI in these cases wastes the
+  workstation's time and the team's.
 - **GitHub's macOS runners never hold a merge** (Louis, 18 November 2026: "Ignore GitHub flakey
   macOS runners! … it's never worth holding back for that").
   - *What it covers:* a macOS job that is queued, waiting for a runner, cancelled, timed out or
