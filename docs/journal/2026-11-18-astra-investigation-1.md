@@ -759,6 +759,14 @@ is where a saving is won or lost.
   lower-constant route over the same runs. The real win needs R ≪ n: highly repetitive data (logs,
   versioned or genomic collections). That is a workload question for a specialised admission
   path.
+- *Correction (18 November, from the census):* the R/n range above was wrong. Across the 233
+  Wikidata blocks of at least 65,536 rows, the median r/n is **0.0623**, 82% of blocks are below
+  0.08, and 31 are above 0.10. The frozen block, at 0.0569, is 27th sparsest of the 233 (about the
+  11th percentile). The corpus-pooled r/n is 0.0722. (MONODROMY's record 40,
+  `2026-11-16-z-census/z_wikidata.jsonl`.) The conclusion stands: R is in the tens of thousands
+  per block. The runs are also very uneven in length. On the frozen block, 68.6% of runs have
+  length 1 but cover 3.9% of rows, while the 497 runs of length 256 or more (1.0% of runs) cover
+  73.9% of rows (computed from the frozen block's induction record).
 
 **ChatGPT's caution, accepted:** "Cells is a lower-overhead route over the same run structure"
 is a computational reading, not a mathematical result. The two choose different induced systems:
