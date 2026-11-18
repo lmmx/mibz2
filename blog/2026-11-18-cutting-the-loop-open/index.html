@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=284c03ded48f">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=50612a8f7b14">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=284c03ded48f">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=50612a8f7b14">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=284c03ded48f">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=50612a8f7b14">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=284c03ded48f">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=50612a8f7b14">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=284c03ded48f">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=50612a8f7b14">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=284c03ded48f">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=50612a8f7b14">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2765,7 +2765,7 @@
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
 <p>Much of mibz2's research is about one stage of bzip2 decoding: turning each block's Burrows–Wheeler transform back into text. <a href="../2026-11-10-rauzy-veech-reconstruction/">A new way back from the BWT</a> showed how the kernel mibz2 ships, Cells, does it by shrinking a map instead of walking it. <a href="../2026-11-16-mathematical-dictionary/">The mathematical dictionary</a> named the objects that kernel works with. This post takes the same map apart another way. It cuts the map's one long loop open, solves the pieces separately, and joins them back.</p>
-<p><strong>The setting, in brief.</strong> bzip2 stores a block as the last column <span class="arithmatex">\(L\)</span> of the block's rotations, sorted: the Burrows–Wheeler transform (BWT). It also stores the <em>primary row</em>, the row that holds the original text. A map called <strong>LF</strong> sends each row to the row of the rotation one byte earlier. Following LF from the primary row reads the block backwards, one byte a step, until it comes back to the primary row. That trip, the <em>marked loop</em>, is the decoder's loop. When LF is a single loop, as in the example below, that trip visits every row once. It need not. The periodic text <code>abab</code> has the column <code>bbaa</code>, and its LF makes two loops, 0 → 2 → 0 and 1 → 3 → 1. The marked loop covers only half the rows. A <strong>run</strong> is a stretch of equal bytes in <span class="arithmatex">\(L\)</span>. LF moves all of a run's rows by the same amount, so the map is a list of shifted blocks of rows (<a href="../2026-11-08-inverse-bwt-navigation/">One shift per run</a>).</p>
+<p><strong>The setting, in brief.</strong> bzip2 stores a block as the last column <span class="arithmatex">\(L\)</span> of the block's rotations, sorted: the Burrows–Wheeler transform (BWT). It also stores the <em>primary row</em>, the row that holds the original text. A map called <strong>LF</strong> sends each row to the row of the rotation one byte earlier. Following LF from the primary row reads the block backwards, one byte a step, until it comes back to the primary row. That trip, the <em>marked loop</em>, is the decoder's loop. When LF is a single loop, as in the example below, that trip visits every row once. It need not. The periodic text <code>abab</code> has the column <code>bbaa</code>, and its LF makes two loops, 0 → 2 → 0 and 1 → 3 → 1. The marked loop covers only half the rows, yet the decoder still writes the whole block. One lap reads <code>ba</code> backwards, which is <code>ab</code> forwards, and the decoder repeats that spelling up to the block's known length of four bytes, giving <code>abab</code>. A <strong>run</strong> is a stretch of equal bytes in <span class="arithmatex">\(L\)</span>. LF moves all of a run's rows by the same amount, so the map is a list of shifted blocks of rows (<a href="../2026-11-08-inverse-bwt-navigation/">One shift per run</a>).</p>
 <p><strong>Why the loop is slow.</strong> Each step needs the row that the step before it found, so a plain decoder makes up to 900,000 memory reads per block, each waiting on the last. Cells avoids most of them by working on runs, not rows. It comes in two forms. Eager Cells lays out all its records before it starts. Lazy Cells makes them as it goes, which suits many threads at once (<a href="../2026-11-16-lazy-letters/">Lazy letters</a>).</p>
 <p><strong>The idea.</strong> Choose some rows to keep, the primary row among them, and cut the arrow leaving each one. The marked loop falls into open paths. Each path starts at an <em>entrance</em>, a row whose incoming arrow was cut, and ends at a kept row. Where each path ends, and what it reads on the way, can be found from the uncut arrows alone. What the cut loses is which kept row's arrow went to which entrance. That is rebuilt separately, from a stable sort of the kept rows' letters. Joining the two gives back the loop, and the text.</p>
 <p><strong>What we found:</strong></p>
@@ -2958,7 +2958,7 @@
 </tr>
 </tbody>
 </table>
-<p>So <span class="arithmatex">\(g = [2, 0, 1]\)</span>: one loop through the three kept rows. LF reads the text backwards, so to write it forwards the decoder starts at the primary row's index, 1, and follows <span class="arithmatex">\(g\)</span> backwards. Each step writes its trip in reverse, as in the table's last column: <span class="arithmatex">\(\mathrm{rev}(w_k)\)</span>, then <span class="arithmatex">\(v[j]\)</span>. Going back from 1 to 2 writes <code>bana</code>, from 2 to 0 <code>na</code>, and from 0 to 1 <code>$</code>. Together that is <code>banana$</code>.</p>
+<p>So <span class="arithmatex">\(g = [2, 0, 1]\)</span>: one loop through the three kept rows. LF reads the text backwards, so to write it forwards the decoder starts at the primary row's index, 1, and follows <span class="arithmatex">\(g\)</span> backwards. Each step writes its trip in reverse, as in the table's last column: <span class="arithmatex">\(\mathrm{rev}(w_k)\)</span>, then <span class="arithmatex">\(v[j]\)</span>. Going back from 1 to 2 writes <code>bana</code>, from 2 to 0 <code>na</code>, and from 0 to 1 <code>$</code>. Together that is <code>banana$</code>. When the marked loop is shorter than the block, as for <code>abab</code>, the decoder writes this spelling and repeats it until it has written all <span class="arithmatex">\(n\)</span> bytes.</p>
 <figure class="bf-fig" id="factorisation-flow">
 <p class="bf-title">Two jobs that never read each other's input, joined at the end</p>
 <svg viewBox="0 0 720 410" role="img" aria-label="Two independent jobs: the open paths give P and the words, from the wide strips and the two masks; the stable sort of the kept letters gives LF of v. Joined, g(j) = P(LF of v at j) is the first return on the kept rows, and following g backwards from the primary spells the text. For banana$: P = [0, 2, 1], words none, n and nab; v = a$a, LF of v = [1, 0, 2]; g = [2, 0, 1]; bana, na, $."><defs><marker id="bf-co-fl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--bf-muted)"/></marker></defs><rect x="16" y="14" width="336" height="152" rx="10" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="32" y="38" class="bf-ts" text-anchor="start" style="font-size:15px">Job 1 · the open paths</text><text x="32" y="62" class="bf-t" text-anchor="start" style="font-size:13px">needs: the wide strips (shift and letter),</text><text x="32" y="82" class="bf-t" text-anchor="start" style="font-size:13px">and which rows are kept or entrances</text><text x="32" y="102" class="bf-t" text-anchor="start" style="font-size:13px">gives: P, entrance index → exit index,</text><text x="32" y="122" class="bf-t" text-anchor="start" style="font-size:13px">and a word for each entrance</text><text x="32" y="142" class="bf-t-strong" text-anchor="start" style="font-size:13px;fill:var(--bf-green-ink)">banana$: P = [0, 2, 1]; words: none, n, nab</text><rect x="368" y="14" width="336" height="152" rx="10" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="384" y="38" class="bf-ts" text-anchor="start" style="font-size:15px">Job 2 · the kept letters, sorted</text><text x="384" y="62" class="bf-t" text-anchor="start" style="font-size:13px">needs: v, the kept rows' letters in row order</text><text x="384" y="82" class="bf-t" text-anchor="start" style="font-size:13px">gives: LF of v, kept index j → entrance k:</text><text x="384" y="102" class="bf-t" text-anchor="start" style="font-size:13px">where each cut arrow went</text><text x="384" y="122" class="bf-tm" text-anchor="start" style="font-size:12px;font-style:italic">railway: the track out of each terminus</text><text x="384" y="142" class="bf-t-strong" text-anchor="start" style="font-size:13px;fill:var(--bf-green-ink)">banana$: v = a$a; LF of v = [1, 0, 2]</text><path d="M184 168V200" class="bf-arrow" marker-end="url(#bf-co-fl)"/><path d="M536 168V200" class="bf-arrow" marker-end="url(#bf-co-fl)"/><rect x="110" y="204" width="500" height="82" rx="10" class="bf-card-hi" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="126" y="228" class="bf-ts" text-anchor="start" style="font-size:15px">Join · g(j) = P(LF of v at j)</text><text x="126" y="252" class="bf-t" text-anchor="start" style="font-size:13px">the first return from each kept row to the next kept row</text><text x="126" y="272" class="bf-t-strong" text-anchor="start" style="font-size:13px;fill:var(--bf-green-ink)">banana$: g = [2, 0, 1], one loop through the three kept rows</text><path d="M360 288V314" class="bf-arrow" marker-end="url(#bf-co-fl)"/><rect x="110" y="318" width="500" height="82" rx="10" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1.5"/><text x="126" y="342" class="bf-ts" text-anchor="start" style="font-size:15px">Spell · follow g backwards from the primary's index</text><text x="126" y="366" class="bf-t" text-anchor="start" style="font-size:13px">each step writes rev(w), its path's word reversed, then its kept letter</text><text x="126" y="386" class="bf-t-strong" text-anchor="start" style="font-size:13px;fill:var(--bf-green-ink)">banana$: bana · na · $ = banana$</text><text x="360" y="190" class="bf-tm" text-anchor="middle" style="font-size:12px;font-style:italic">neither job reads the other's input</text></svg>
@@ -3349,19 +3349,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=284c03ded48f"></script>
+        <script src="../../assets/javascripts/bench.js?v=50612a8f7b14"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=284c03ded48f"></script>
+        <script src="../../assets/javascripts/couriers.js?v=50612a8f7b14"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=284c03ded48f"></script>
+        <script src="../../assets/javascripts/blog.js?v=50612a8f7b14"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=284c03ded48f"></script>
+        <script src="../../assets/javascripts/frontier.js?v=50612a8f7b14"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=284c03ded48f"></script>
+        <script src="../../assets/javascripts/observatory.js?v=50612a8f7b14"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=284c03ded48f"></script>
+        <script src="../../assets/javascripts/katex.js?v=50612a8f7b14"></script>
       
     
   </body>
