@@ -2484,11 +2484,15 @@
     },
     {
       "trigger_comment_id": 6986512740,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/decoding-pays-for-r1-6986512740/report.md",
-      "source_commit_prefix": "b427bcdb"
+      "source_commit_prefix": "b427bcdb",
+      "source_commit": "b427bcdb60b123254c387b142a25348d4617d690",
+      "report_commit": "76979ce2326ec033a552d53af07e6168a60f78cb",
+      "baseline_commit": "6b8e0291781e26f819a6cffbcce40b52aec60892",
+      "disposition": "REVISE: reconcile internal and historical gap counts and forecast scope; fix VM timing modes, sparse control reference, and modeled row depth."
     }
   ],
   "active_delegations": [],
