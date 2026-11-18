@@ -204,9 +204,10 @@
     6982461166,
     6982863130,
     6983357476,
-    6984353753
+    6984353753,
+    6984984150
   ],
-  "last_processed_comment_id": 6984353753,
+  "last_processed_comment_id": 6984984150,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2456,13 +2457,16 @@
     },
     {
       "trigger_comment_id": 6984984150,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/sustain-registration-6984984150/report.md",
       "source_commit": "e8857fd975265d3c7688d79ccf4ffd8c68306ac0",
       "report_commit": "f86e3ac218a97616f82026bb5a79cd7a0b2b099d",
-      "disposition": "TARGETED CORRECTION: freeze and validate 60 seconds of successful reference pre-warm. Fixed statistical design and single-primary Rule 4 otherwise confirmed."
+      "disposition": "TARGETED CORRECTION: freeze and validate 60 seconds of successful reference pre-warm. Fixed statistical design and single-primary Rule 4 otherwise confirmed.",
+      "review_comment_id": 6985154079,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, author lmmx, destination #145, and role-aware route and headers. The pinned helper's coordinator-only sender check does not apply to this Researcher REVIEW."
     }
   ],
   "active_delegations": [],
