@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=aa65905d834f">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=520bd8f60b42">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=aa65905d834f">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=520bd8f60b42">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=aa65905d834f">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=520bd8f60b42">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=aa65905d834f">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=520bd8f60b42">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=aa65905d834f">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=520bd8f60b42">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=aa65905d834f">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=520bd8f60b42">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -3089,15 +3089,21 @@ figures are measured on GitHub's runners (<a href="../">methodology</a>).</p>
   overlay CI's chain; above 4, CI has no figure and they stand alone. <strong>All</strong> overlays every
   thread count in one chart, a colour each along the releases' ramp, low to high.</li>
 <li><strong>Relative or Absolute.</strong> The chart shows change since the start by default. <strong>Absolute</strong>
-  shows throughput in MB/s of output instead (CPU time and peak RSS stay relative). CI's
-  chain has no absolute scale of its own, because its merges ran on several runner CPUs and
-  it multiplies ratios. It borrows one runner model's scale: the model with the most master
-  records at that corpus and thread count, through its newest record at a chained merge,
-  which the chart rings and names. Every other merge is that record carried by the chain's
-  ratios. The band is the links' interval between the merge and the anchor, with the
-  record's own. The i9-10900K's releases are in MB/s on the i9, another machine on another
-  scale, so beside CI's chain they get a panel of their own. In <strong>All</strong> every thread count
-  sits at its own level on the i9.</li>
+  shows each figure in its own units instead: throughput in MB/s of output, CPU time in CPU
+  seconds (user + sys) for the corpus's decode, peak RSS in MB. CI's chain has no absolute
+  scale of its own, because its merges ran on several runner CPUs and it multiplies ratios
+  (of wall, CPU time and peak RSS alike). It borrows one runner model's scale: the model
+  with the most master records at that corpus and thread count, through its newest record
+  at a chained merge, which the chart rings and names. Every other merge is that record
+  carried by the chain's ratios. The band is the links' interval between the merge and the
+  anchor, with the record's own. Throughput and CPU time scale with the runner's speed, so
+  their levels are that runner's. Peak RSS hardly depends on the runner: at a given corpus
+  and thread count the runner models' newest records mostly agree within a few percent
+  (<code>text</code> aside, whose content changes), and the note under the chart gives their range
+  for each view. The i9-10900K's releases are in MB/s on the i9,
+  another machine on another scale, so beside CI's chain they get a panel of their own. In
+  <strong>All</strong> every thread count sits at its own level on the i9. The release-scaling runs
+  record throughput only, so CPU time and peak RSS have no releases and no <strong>All</strong>.</li>
 <li><strong><code>text</code></strong> is generated from mibz2's own sources, so its content changes from merge to
   merge, and its chain multiplies ratios measured on different files.</li>
 </ul>
@@ -4807,19 +4813,19 @@ and commits its record.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=aa65905d834f"></script>
+        <script src="../../assets/javascripts/bench.js?v=520bd8f60b42"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=aa65905d834f"></script>
+        <script src="../../assets/javascripts/couriers.js?v=520bd8f60b42"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=aa65905d834f"></script>
+        <script src="../../assets/javascripts/blog.js?v=520bd8f60b42"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=aa65905d834f"></script>
+        <script src="../../assets/javascripts/frontier.js?v=520bd8f60b42"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=aa65905d834f"></script>
+        <script src="../../assets/javascripts/observatory.js?v=520bd8f60b42"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=aa65905d834f"></script>
+        <script src="../../assets/javascripts/katex.js?v=520bd8f60b42"></script>
       
     
   </body>
