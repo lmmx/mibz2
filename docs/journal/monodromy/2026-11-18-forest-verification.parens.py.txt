@@ -1,0 +1,101 @@
+import random, sys
+from collections import defaultdict
+exec(open('forest.py').read().split('if __name__')[0])
+
+def check_parens(L,p):
+    n=len(L); f=lf_of(L)
+    sites=[]; s=0
+    for i in range(1,n+1):
+        if i==n or L[i]!=L[i-1]: sites.append(list(range(s,i))); s=i
+    g={i:f[i] for i in range(n)}
+    arcs, where = network(sites,g)
+    ps,pk=where[p]
+    forced=[i for i,(s,x,t,y,b) in enumerate(arcs) if s==ps and x<=pk<x+b][0]
+    tree,c=forest(len(sites),arcs,forced)
+    chords=[i for i in range(len(arcs)) if i not in tree]
+    # adjacency of the forest
+    adj=defaultdict(list)
+    for i in tree:
+        s,x,t,y,b=arcs[i]; adj[s].append((t,i,+1)); adj[t].append((s,i,-1))
+    # potentials a (shared coordinate) and h (length, words are single bytes so |W_e|=1)
+    a={}; h={}; comp={}; children=defaultdict(list); root_of={}
+    for r0 in range(len(sites)):
+        if r0 in a: continue
+        a[r0]=0; h[r0]=0; comp[r0]=r0; stack=[r0]; seen={r0}
+        while stack:
+            u=stack.pop()
+            for v,i,d in adj[u]:
+                if v in seen: continue
+                s,x,t,y,b=arcs[i]
+                # edge s->t: a_t = a_s + x - y ; h_t = h_s + 1
+                if d==+1: a[v]=a[u]+x-y; h[v]=h[u]+1
+                else:     a[v]=a[u]-(x-y); h[v]=h[u]-1
+                comp[v]=r0; seen.add(v); stack.append(v); children[u].append((v,i,d))
+    # ports: landing of chord i at its target site; departure of chord j at its source site
+    land=defaultdict(list); dep=defaultdict(list)
+    for i in chords:
+        s,x,t,y,b=arcs[i]
+        land[t].append(('L',i,y+a[t],y+a[t]+b))
+        dep[s].append(('D',i,x+a[s],x+a[s]+b))
+    # leaf order: in-children subtrees, landings, departures, out-children subtrees
+    def order(u):
+        out=[]
+        ins=[v for v,i,d in children[u] if d==-1]   # edge v->u (u is target)
+        outs=[v for v,i,d in children[u] if d==+1]
+        for v in ins: out+=order(v)
+        out+=land[u]; out+=dep[u]
+        for v in outs: out+=order(v)
+        return out
+    bad=0; checked=0; lenbad=0
+    chord_src={}
+    for i in chords:
+        s,x,t,y,b=arcs[i]
+        for k in range(b): chord_src[sites[s][x+k]]=(i,k)
+    for r0 in set(comp.values()):
+        seq=order(r0)
+        zs=set()
+        for _,_,lo,hi in seq: zs.update(range(lo,hi))
+        for z in zs:
+            st=[]
+            for kind,i,lo,hi in seq:
+                if not (lo<=z<hi): continue
+                if kind=='L': st.append(i)
+                else:
+                    li=st.pop()      # landing li matched to departure i at height z
+                    s,x,t,y,b=arcs[li]; k=z-a[t]-y      # offset within chord li
+                    row=sites[arcs[li][0]][arcs[li][1]+k]
+                    # dense first return from row
+                    yrow=f[row]; steps=1
+                    while yrow not in chord_src: yrow=f[yrow]; steps+=1
+                    j,kj=chord_src[yrow]
+                    s2,x2,t2,y2,b2=arcs[i]; exp_k=z-a[s2]-x2
+                    checked+=1; bad+= (j!=i or kj!=exp_k)
+                    # length potential: |W_li| + h(departure site) - h(landing site)
+                    lenbad+= (1+h[s2]-h[t]) != steps
+            assert not st
+    return checked,bad,lenbad
+
+random.seed(569); tot=bad=lb=0
+def bwt(t):
+    n=len(t); sa=sorted(range(n),key=lambda i:t[i:]+t[:i]); return bytes(t[(i-1)%n] for i in sa), sa.index(0)
+for _ in range(3000):
+    if random.random()<0.5:
+        L=bytearray()
+        n=random.randint(3,50)
+        while len(L)<n: L+=bytes([random.choice(b"abcd")])*random.randint(1,6)
+        L=bytes(L[:n]); p=random.randrange(len(L))
+    else:
+        u=bytes(random.choice(b"abc") for _ in range(random.randint(2,20))); L,p=bwt(u*random.randint(1,3))
+    c,b_,l_=check_parens(L,p); tot+=c; bad+=b_; lb+=l_
+print("matched returns checked",tot,"wrong destinations",bad,"wrong lengths",lb)
+# band bound tightness over levels
+worst=0; ws=None; viol=0; cnt=0
+for _ in range(1500):
+    L=bytearray(); n=random.randint(6,60)
+    while len(L)<n: L+=bytes([random.choice(b"abcd")])*random.randint(1,5)
+    L=bytes(L[:n]); p=random.randrange(len(L))
+    for info in run_levels(L,p):
+        if info['q']<2: continue
+        cnt+=1; bnd=2*info['q']-info['c']; viol+= info['B']>bnd
+        if info['B']/bnd>worst: worst=info['B']/bnd; ws=(L,p,info)
+print("levels",cnt,"band-bound violations",viol,"max B/(2q-c) %.3f"%worst, ws)
