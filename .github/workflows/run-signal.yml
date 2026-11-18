@@ -45,12 +45,14 @@ jobs:
             ready)
               [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "ready needs a full 40-character sha"; exit 1; }
               git cat-file -e "$SHA^{commit}" || { echo "no such commit: $SHA"; exit 1; }
-              git tag "ready/$RECIPE" "$SHA"
-              git push origin "refs/tags/ready/$RECIPE"
+              # moves the tag when it is already set (a repeat recipe, such as each release's
+              # release scaling): the waiter runs once per commit, so the new commit runs
+              git tag -f "ready/$RECIPE" "$SHA"
+              git push -f origin "refs/tags/ready/$RECIPE"
               ;;
             hold)
-              git tag "hold/$RECIPE" HEAD
-              git push origin "refs/tags/hold/$RECIPE"
+              git tag -f "hold/$RECIPE" HEAD
+              git push -f origin "refs/tags/hold/$RECIPE"
               ;;
             clear)
               git push origin --delete "refs/tags/ready/$RECIPE" "refs/tags/hold/$RECIPE" || true
