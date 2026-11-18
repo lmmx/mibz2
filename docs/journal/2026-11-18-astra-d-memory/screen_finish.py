@@ -17,7 +17,7 @@ def edits(data):
 
 if __name__ == "__main__":
     w = csv.writer(sys.stdout, lineterminator="\n")
-    w.writerow(("ordinal","rows","output","edits","contract","equal","expand","min_delta","max_delta","literal_bytes","stationary_literals","dir_bytes"))
+    w.writerow(("ordinal","rows","output","edits","contract","equal","expand","min_delta","max_delta","literal_bytes","stationary_literals","screen_dir_bytes","packed_dir_bytes"))
     for path in sorted(Path(sys.argv[1]).glob("*/inverse")):
         s = path.read_bytes()
         prev = d = lo = hi = literal = fixed = 0
@@ -35,4 +35,4 @@ if __name__ == "__main__":
         n = len(s)-prev
         exact += s[prev:]
         assert exact == (path.parent/"output").read_bytes()
-        w.writerow((int(path.parent.name),len(s),len(exact),sum(counts),*counts,lo,hi,literal+n,fixed+n*(d==0),12*sum(counts)))
+        w.writerow((int(path.parent.name),len(s),len(exact),sum(counts),*counts,lo,hi,literal+n,fixed+n*(d==0),12*sum(counts),8*sum(counts)))
