@@ -2500,11 +2500,14 @@
     },
     {
       "trigger_comment_id": 6988388052,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/decoding-pays-for-r2-6988388052/report.md",
-      "source_commit": "5a3ba0d031a4ed09bcca5729ce9b9a8dd697d5cf"
+      "source_commit": "5a3ba0d031a4ed09bcca5729ce9b9a8dd697d5cf",
+      "report_commit": "1a67acf35b81b72216becb73e795a49225da450e",
+      "baseline_commit": "60b77db4d44949e0911504c0299278142a784400",
+      "disposition": "REVISE: correct the full-profile versus sum inference and label the fitted historical first-depth excess proxy at first use."
     }
   ],
   "active_delegations": [],
