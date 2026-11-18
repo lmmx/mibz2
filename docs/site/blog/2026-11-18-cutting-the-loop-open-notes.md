@@ -27,6 +27,8 @@ The two extremes are a shift by one row and an image disjoint from the strip. A 
 
 This is why neither the bundle count nor a small $H$ bounds $U$ by a multiple of $H$. The same holds for the endpoint constructor's step count $K$ below. It removes a common suffix one step at a time, without dividing, so a thick strip with a small displacement costs about $w/|d|$ steps.
 
+**More kept rows can mean more to trace.** On the frozen block, $U$ falls at every threshold swept, but that is not a rule. The column `110000` with primary 2 has $f = [4, 5, 0, 1, 2, 3]$ and two loops, 2 → 0 → 4 → 2 and 1 → 5 → 3 → 1. At $t = 1$ only the primary is kept. Its one open path, 0 → 4 → 2, traces two letters, and the other loop is never cut. At $t = 2$ rows 0, 1 and 2 are kept. That cuts the second loop open. The nonempty paths, 4 → 2 and 5 → 3 → 1, are one and two steps long and lie in separate bundles, so $U$ rises from 2 to 3.
+
 ## The two constructors of the open paths
 
 **The tracer.** Start at the leftmost entrance not yet covered, and follow its path through the wide strips. At each strip, and at the final interval of kept rows, note the distance from the path's row to that piece's right-hand edge. Count the starting entrance interval's edge as well. The smallest of these distances is the width of the bundle: every row in it follows the same strips to consecutive exits. Advance by that width and repeat. The tracer needs only the wide strips and the intervals between them.
