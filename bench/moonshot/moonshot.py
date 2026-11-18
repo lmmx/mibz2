@@ -229,6 +229,7 @@ def proxy_metrics(p: dict) -> dict:
 
 # the access-pattern statistics the out-of-calibration flag watches
 RANGE_KEYS = [
+    "dram_latency_sensitivity",
     "dep_dram_links_per_byte",
     "dep_past_l2_links_per_byte",
     "l2_bytes_per_byte",
@@ -255,27 +256,206 @@ def out_of_range(cand: dict, refs: list[dict], margin: float = 0.10) -> list[str
     return out
 
 
-def latencies(cal: dict, workers: int, kappa: float | None = None) -> dict:
-    """the model's latencies at `workers` contending workers: DRAM latency on the i9's measured
-    L3-miss latency (bench-imc-ten: 549 cycles at 7 workers, 649 at 10, linear between and
-    beyond, never under the floor); L3-hit latency its floor plus `kappa` cycles a further
-    worker (the one fitted parameter); the LLC share the i9's 20 MiB over the workers"""
-    m = cal["model"]
-    (w1, d1), (w2, d2) = m["dram_latency_points"]
-    dram = d1 + (d2 - d1) * (workers - w1) / (w2 - w1)
-    dram = max(m["dram_latency_floor"], dram)
-    k = m["kappa"] if kappa is None else kappa
+def pick(items: list, k: int) -> list:
+    """`k` of `items` spread evenly, the middle of each stretch (all of them if k >= len)"""
+    if k >= len(items):
+        return list(items)
+    return [items[(2 * i + 1) * len(items) // (2 * k)] for i in range(k)]
+
+
+def proxy_sample(cal: dict, spec: str) -> dict:
+    """the proxy's blocks: `spec` is FULL+TINY, how many of the bench corpus's full blocks and
+    of its tiny ones (the dump's stream tails, a few hundred bytes each) to decode, spread evenly,
+    each after the warm block. The full blocks' first `slope` are also run at a second DRAM
+    latency"""
+    b = cal["model"]["blocks"]
+    nf, nt = (int(x) for x in spec.split("+"))
+    full = pick([x for x in b["full"] if x != b["warm"]], nf)
+    tiny = pick([x for x in b["tiny"] if x != b["warm"]], nt)
     return {
-        "llc_kb": int(m["llc_kb"] / workers),
-        "l3_lat": int(round(m["l3_latency_floor"] + k * (workers - 1))),
-        "dram_lat": int(round(dram)),
+        "warm": b["warm"],
+        "full": full,
+        "tiny": tiny,
+        "slope": pick(full, min(len(full), cal["model"]["slope_blocks"])),
+        "n_full": len(b["full"]),
+        "n_tiny": len(b["tiny"]),
     }
 
 
+def corpus_total(runs: dict, full: list, tiny: list, n_full: int, n_tiny: int) -> dict:
+    """one pass of the corpus, estimated from per-block runs ({block: chaingrind's counters}):
+    each stratum's mean block times the corpus's count of such blocks, summed; the longest chains
+    are the longest seen"""
+    out: dict = {}
+    for blocks, n in ((full, n_full), (tiny, n_tiny)):
+        if not blocks:
+            continue
+        for k in runs[blocks[0]]:
+            if k == "config":
+                continue
+            vals = [runs[b][k] for b in blocks]
+            if k.startswith("max_"):
+                out[k] = max(out.get(k, 0), max(vals))
+            else:
+                out[k] = out.get(k, 0) + sum(vals) / len(vals) * n
+    return out
+
+
+def dram_latency(gbs: float, m: dict) -> float:
+    """the i9's L3-miss latency (cycles) at `gbs` GB/s at the memory controller: a queue,
+    idle + k U/(1 - U) with U the share of the measured ceiling, fitted to bench-imc-ten's four
+    (bandwidth, latency) readings (calibration.json's model.dram), never to an arm's timing"""
+    d = m["dram"]
+    u = min(max(gbs, 0.0) / d["ceiling_gbs"], d["u_max"])
+    return d["idle"] + d["k"] * u / (1 - u)
+
+
+def nominal_latencies(m: dict, workers: int, kappa: float | None = None) -> dict:
+    """the latencies a proxy run is made at, for `workers` contending workers: the LLC's share
+    (20 MiB over the workers); the L3-hit latency, its floor plus kappa cycles a further worker
+    (the one fitted parameter); the DRAM latency at lazy's nominal bandwidth there (the i9's
+    20.0 GB/s at 7 workers, in proportion to the workers). The fixed point (`solve`) moves each
+    arm off this DRAM latency by its measured slope"""
+    k = m["kappa"] if kappa is None else kappa
+    a = m["lazy_anchor"]
+    return {
+        "llc_kb": int(m["llc_kb"] / workers),
+        "l3_lat": int(round(m["l3_latency_floor"] + k * (workers - 1))),
+        "dram_lat": int(round(dram_latency(a["gbs"] * workers / a["workers"], m))),
+    }
+
+
+def cell(
+    total: dict, slope_lo: dict | None, slope_hi: dict | None, lat0: float, delta: float
+) -> dict:
+    """one arm at one worker count, for the fixed point: cycles a byte at the run's DRAM latency,
+    that latency, the relative slope of cycles in DRAM latency (from the slope blocks' two runs)
+    and modelled DRAM bytes a byte"""
+    rel = 0.0
+    if slope_lo and slope_hi and slope_lo["cycles"]:
+        rel = (slope_hi["cycles"] / slope_lo["cycles"] - 1) / delta
+    b = total["out_bytes"]
+    dram = total["dram_read_lines"] + total["dram_write_lines"] + total["dram_drain_lines"]
+    return {"cpb": total["cycles"] / b, "lat0": lat0, "rel_slope": rel, "dram_bpb": 64 * dram / b}
+
+
+def solve(cells: dict, m: dict, iters: int = 60) -> dict:
+    """the bandwidth-latency fixed point. cells: {W: {arm: cell()}}, lazy among the arms at the
+    anchor's W. An arm's cycles a byte at DRAM latency L are cpb (1 + rel_slope (L - lat0)).
+    - lazy: its bandwidth at W is the anchor's (20.0 GB/s at 7 workers, measured) scaled by its
+      modelled bytes a second, W (DRAM B/B + c0) / cycles a byte, against the anchor's; its
+      latency the queue's at that bandwidth;
+    - an arm: lazy's bandwidth at W times its DRAM bytes a byte and its rate against lazy's, and
+      its latency the queue's at that.
+    c0 is the process's DRAM traffic outside decode_block (input, scan, output copy), the i9's
+    whole-process 8.0 B/B for lazy at 7 workers less the model's, never below 0.
+    Returns {W: {arm: {cpb, lat, gbs}}}"""
+    a = m["lazy_anchor"]
+    aw = str(a["workers"])
+    if aw not in cells or "lazy" not in cells[aw]:
+        raise ValueError(f"the fixed point needs lazy at the anchor's {aw} workers")
+    c0 = max(0.0, m["i9_lazy_dram_bpb"] - cells[aw]["lazy"]["dram_bpb"])
+
+    def cpb(c: dict, lat: float) -> float:
+        return c["cpb"] * max(0.05, 1 + c["rel_slope"] * (lat - c["lat0"]))
+
+    def fixed(gbs_at) -> float:
+        """the latency L with L = dram_latency(gbs_at(L)): the bandwidth falls as the latency
+        rises (the cycles do), so L - dram_latency(gbs_at(L)) rises and bisection finds it"""
+        lo, hi = 0.0, dram_latency(1e12, m)
+        for _ in range(iters):
+            mid = (lo + hi) / 2
+            if mid < dram_latency(gbs_at(mid), m):
+                lo = mid
+            else:
+                hi = mid
+        return (lo + hi) / 2
+
+    def rate(w: str, lat: float) -> float:
+        lz = cells[w]["lazy"]
+        return int(w) * (lz["dram_bpb"] + c0) / cpb(lz, lat)
+
+    lat7 = dram_latency(a["gbs"], m)
+    r7 = rate(aw, lat7)
+    lat = {w: fixed(lambda L, w=w: a["gbs"] * rate(w, L) / r7) for w in cells if "lazy" in cells[w]}
+    lat[aw] = lat7
+    gbs = {w: a["gbs"] * rate(w, lat[w]) / r7 for w in lat}
+    out: dict = {}
+    for w, arms in cells.items():
+        if w not in lat:
+            continue
+        lz = arms["lazy"]
+        c_l = cpb(lz, lat[w])
+        out[w] = {"lazy": {"cpb": c_l, "lat": lat[w], "gbs": gbs[w], "c0": c0}}
+        for arm, c in arms.items():
+            if arm == "lazy":
+                continue
+
+            def g_at(L, c=c):
+                return gbs[w] * (c["dram_bpb"] + c0) / (lz["dram_bpb"] + c0) * c_l / cpb(c, L)
+
+            la = fixed(g_at)
+            out[w][arm] = {"cpb": cpb(c, la), "lat": la, "gbs": g_at(la)}
+    return out
+
+
+def ratio(sol: dict, arm: str, w: int, ref_w: int) -> float:
+    """the model's wall ratio of `arm` at `w` workers over lazy at `ref_w`, each worker at its
+    cycles a byte (the workers saturated, the wall the bytes over their rate)"""
+    return (sol[str(w)][arm]["cpb"] / w) / (sol[str(ref_w)]["lazy"]["cpb"] / ref_w)
+
+
 def predicted_ratio(cand_cpb: float, cand_w: int, ref_cpb: float, ref_w: int) -> float:
-    """the model's wall ratio of a candidate of `cand_w` workers over a reference of `ref_w`, each
-    worker at its cycles a byte: the workers saturated, the wall the bytes over their rate"""
+    """the same, from cycles a byte directly"""
     return (cand_cpb / cand_w) / (ref_cpb / ref_w)
+
+
+def bootstrap_cells(
+    runs: dict, sample: dict, m: dict, reps: int = 400, seed: int = 1
+) -> list[dict]:
+    """the fixed point on `reps` resamples of the blocks, the same blocks for every arm (paired);
+    the slopes held at the whole sample's. runs: {W: {arm: {"base": {block: counters}, "lo":
+    {...}, "hi": {...}, "lat0": L}}}"""
+    rng = __import__("random").Random(seed)
+    full, tiny = sample["full"], sample["tiny"]
+    delta = m["slope_delta"]
+    base = {
+        w: {
+            a: cell(
+                corpus_total(r["base"], full, tiny, sample["n_full"], sample["n_tiny"]),
+                corpus_total(r["lo"], sample["slope"], [], 1, 0) if r.get("lo") else None,
+                corpus_total(r["hi"], sample["slope"], [], 1, 0) if r.get("hi") else None,
+                r["lat0"],
+                delta,
+            )
+            for a, r in arms.items()
+        }
+        for w, arms in runs.items()
+    }
+    sols = []
+    for _ in range(reps):
+        f = [rng.choice(full) for _ in full]
+        t = [rng.choice(tiny) for _ in tiny] if tiny else []
+        cells = {}
+        for w, arms in runs.items():
+            cells[w] = {}
+            for a, r in arms.items():
+                tot = corpus_total(r["base"], f, t, sample["n_full"], sample["n_tiny"])
+                c = dict(base[w][a])
+                c["cpb"] = tot["cycles"] / tot["out_bytes"]
+                c["dram_bpb"] = (
+                    64
+                    * (tot["dram_read_lines"] + tot["dram_write_lines"] + tot["dram_drain_lines"])
+                    / tot["out_bytes"]
+                )
+                cells[w][a] = c
+        sols.append(solve(cells, m))
+    return sols
+
+
+def quantiles(v: list[float], lo: float = 0.025, hi: float = 0.975) -> tuple[float, float]:
+    v = sorted(v)
+    return v[int(lo * (len(v) - 1))], v[int(round(hi * (len(v) - 1)))]
 
 
 # ---------------------------------------------------------------- driving
@@ -361,10 +541,10 @@ class Scorer:
                 log(f"round {rnd + 1} of {self.a.rounds} timed")
         return summarise_timing(runs, arms, counts)
 
-    def proxy(self, corpus: Path, out: Path) -> dict:
-        vg = shutil.which("valgrind")
-        if not vg:
-            return {"skipped": "valgrind is not installed (apt-get install valgrind)"}
+    def tool(self) -> Path | str:
+        """chaingrind built into the target dir: its path, or why it isn't there"""
+        if not shutil.which("valgrind"):
+            return "valgrind is not installed (apt-get install valgrind)"
         vlib = self.target / "chaingrind"
         b = subprocess.run(
             ["bash", str(HERE / "chaingrind" / "build.sh"), str(vlib)],
@@ -372,38 +552,111 @@ class Scorer:
             text=True,
         )
         if b.returncode:
-            return {"skipped": "chaingrind did not build: " + (b.stdout + b.stderr).strip()[-400:]}
+            return "chaingrind did not build: " + (b.stdout + b.stderr).strip()[-400:]
+        return vlib
+
+    def proxy_runs(
+        self,
+        vlib: Path,
+        arms: list[str],
+        workers: list[int],
+        sample: dict,
+        corpus: Path,
+        out: Path,
+        kappa: float | None = None,
+        slopes: bool = True,
+    ) -> dict:
+        """chaingrind on each sampled block, one Valgrind process a block (the block decoded once
+        unseen, the warm block decoded to set the caches, then the block measured), for each
+        arm and worker count, in parallel over this machine's CPUs; with `slopes`, the slope
+        blocks again at the DRAM latency plus the model's slope_delta. Each run's counters go to
+        proxy-runs.jsonl. Returns {W: {arm: {"base", "lo", "hi": {block: counters}, "lat0"}}}"""
+        from concurrent.futures import ThreadPoolExecutor
+
         m = self.cal["model"]
-        blocks = sample_blocks(m["corpus_blocks"], self.a.proxy_blocks)
-        sym = out / "blocks.sym"
-        subprocess.run(
-            [
-                str(self.bin),
-                "extract",
-                "--file",
-                str(corpus),
-                "--blocks",
-                ",".join(map(str, blocks)),
-                "--out",
-                str(sym),
-            ],
-            check=True,
-            capture_output=True,
-        )
-        arms = ["lazy", "opend", "open", "cells", "candidate"]
-        res: dict = {"blocks": blocks, "workers": m["workers"], "arms": {}}
-        for w in m["workers"]:
-            lat = latencies(self.cal, w)
+        syms = out / "blocks"
+        syms.mkdir(exist_ok=True)
+        blocks = sample["full"] + sample["tiny"]
+        for b in blocks:
+            f = syms / f"{b}.sym"
+            if not f.exists():
+                subprocess.run(
+                    [
+                        str(self.bin),
+                        "extract",
+                        "--file",
+                        str(corpus),
+                        "--blocks",
+                        f"{sample['warm']},{b}",
+                        "--out",
+                        str(f),
+                    ],
+                    check=True,
+                    capture_output=True,
+                )
+        jobs = []
+        for w in workers:
+            lat = nominal_latencies(m, w, kappa)
+            hi = dict(lat, dram_lat=lat["dram_lat"] + m["slope_delta"])
             for arm in arms:
-                log(f"proxy: {arm} at {w} workers ({lat})")
-                p = self.chaingrind(vlib, arm, sym, lat)
-                res["arms"].setdefault(arm, {})[str(w)] = {
-                    "raw": p,
-                    "metrics": proxy_metrics(p),
-                    "latencies": lat,
-                }
+                jobs += [(w, arm, "base", b, lat) for b in blocks]
+                if slopes:
+                    jobs += [(w, arm, "hi", b, hi) for b in sample["slope"]]
+        res: dict = {}
+        log(
+            f"proxy: {len(jobs)} chaingrind runs ({len(arms)} arms, {len(workers)} worker counts,"
+            f" {len(sample['full'])}+{len(sample['tiny'])} blocks)"
+        )
+        done = [0]
+
+        def run(j):
+            w, arm, kind, b, lat = j
+            p = self.chaingrind(vlib, arm, syms / f"{b}.sym", lat)
+            done[0] += 1
+            if done[0] % 200 == 0:
+                log(f"proxy: {done[0]} of {len(jobs)} runs")
+            return j, p
+
+        with (
+            ThreadPoolExecutor(os.cpu_count() or 1) as ex,
+            open(out / "proxy-runs.jsonl", "a") as f,
+        ):
+            for (w, arm, kind, b, lat), p in ex.map(run, jobs):
+                f.write(
+                    json.dumps(
+                        {
+                            "workers": w,
+                            "arm": arm,
+                            "kind": kind,
+                            "block": b,
+                            "latencies": lat,
+                            "counters": p,
+                        }
+                    )
+                    + "\n"
+                )
+                r = res.setdefault(str(w), {}).setdefault(
+                    arm, {"base": {}, "lat0": nominal_latencies(m, w, kappa)["dram_lat"]}
+                )
+                r.setdefault(kind, {})[b] = p
+        for arms_ in res.values():
+            for r in arms_.values():
+                if "hi" in r:
+                    r["lo"] = {b: r["base"][b] for b in sample["slope"]}
+        return res
+
+    def proxy(self, corpus: Path, out: Path) -> dict:
+        """the candidate and lazy on the proxy's sample at the i9's worker counts, read against
+        the reference arms in calibration.json"""
+        vlib = self.tool()
+        if isinstance(vlib, str):
+            return {"skipped": vlib}
+        m = self.cal["model"]
+        sample = proxy_sample(self.cal, self.a.proxy_blocks)
+        runs = self.proxy_runs(vlib, ["lazy", "candidate"], m["workers"], sample, corpus, out)
+        res = read_proxy(runs, sample, self.cal, reps=self.a.bootstrap)
         (out / "proxy.json").write_text(json.dumps(res, indent=1) + "\n")
-        return summarise_proxy(res, self.cal)
+        return res
 
     def chaingrind(self, vlib: Path, arm: str, sym: Path, lat: dict) -> dict:
         m = self.cal["model"]
@@ -422,6 +675,7 @@ class Scorer:
             "proxy",
             "--arm",
             arm,
+            "--warm",
             "--symbols",
             str(sym),
         ]
@@ -434,13 +688,17 @@ class Scorer:
 
 
 # the stall counters a calibration run reads (Comet Lake's names), per process
+# (the last two give the mean L3-miss latency of demand reads, outstanding over requests, as
+# bench-imc-ten measured it: the scorer's DRAM latency, per arm, without the memory controller's
+# counters or sudo; five programmable events on four counters, so perf multiplexes and scales)
 PERF_EVENTS = [
     "cycles",
     "instructions",
     "cycle_activity.stalls_l3_miss",
-    "cycle_activity.stalls_l2_miss",
     "l1d_pend_miss.pending",
     "l1d_pend_miss.pending_cycles",
+    "offcore_requests.l3_miss_demand_data_rd",
+    "offcore_requests_outstanding.l3_miss_demand_data_rd",
 ]
 
 
@@ -503,89 +761,138 @@ def summarise_timing(runs: list[dict], arms: list[str], counts: list[int]) -> di
     return out
 
 
-def summarise_proxy(res: dict, cal: dict) -> dict:
-    """the proxy's per-arm metrics and its predictions against lazy at each worker count, the
-    calibration and held-out arms against the i9, and the candidate's range check"""
-    arms = res["arms"]
-    preds = {}
-    for w in res["workers"]:
-        ref = arms["lazy"][str(w)]["metrics"]["cycles_per_byte"]
-        preds[str(w)] = {
-            a: predicted_ratio(arms[a][str(w)]["metrics"]["cycles_per_byte"], w, ref, w)
-            for a in arms
-            if a != "lazy"
-        }
+def load_runs(path: Path) -> tuple[dict, dict]:
+    """proxy-runs.jsonl read back: the runs in proxy_runs' shape, and the latencies of each W's
+    base runs"""
+    res: dict = {}
+    lats: dict = {}
+    for line in path.read_text().splitlines():
+        j = json.loads(line)
+        w = str(j["workers"])
+        r = res.setdefault(w, {}).setdefault(j["arm"], {"base": {}})
+        r.setdefault(j["kind"], {})[j["block"]] = j["counters"]
+        if j["kind"] == "base":
+            r["lat0"] = j["latencies"]["dram_lat"]
+            lats[w] = j["latencies"]
+    for arms in res.values():
+        for r in arms.values():
+            if "hi" in r:
+                r["lo"] = {b: r["base"][b] for b in r["hi"]}
+    return res, lats
+
+
+def read_proxy(runs: dict, sample: dict, cal: dict, reps: int = 400) -> dict:
+    """the proxy's reading of per-block runs ({W: {arm: ...}}, `Scorer.proxy_runs`): each arm's
+    metrics a byte (corpus-weighted), the fixed point, each arm's predicted ratio over lazy with a
+    paired bootstrap 95% interval over the blocks and the metrics that drive it, the i9 cells
+    where their arms were run, and the candidate's range check against calibration.json's
+    reference arms"""
+    m = cal["model"]
+    nf, nt = sample["n_full"], sample["n_tiny"]
+    metrics: dict = {}
+    cells: dict = {}
+    for w, arms in runs.items():
+        for a, r in arms.items():
+            tot = corpus_total(r["base"], sample["full"], sample["tiny"], nf, nt)
+            lo = corpus_total(r["lo"], sample["slope"], [], 1, 0) if r.get("lo") else None
+            hi = corpus_total(r["hi"], sample["slope"], [], 1, 0) if r.get("hi") else None
+            c = cell(tot, lo, hi, r["lat0"], m["slope_delta"])
+            cells.setdefault(w, {})[a] = c
+            x = proxy_metrics(tot)
+            # (cycles a byte rise, in per cent, for 100 cycles more DRAM latency)
+            x["dram_latency_sensitivity"] = 100 * 100 * c["rel_slope"]
+            metrics.setdefault(a, {})[w] = x
+    sol = solve(cells, m)
+    boots = bootstrap_cells(runs, sample, m, reps=reps) if reps else []
+    preds: dict = {}
+    for w in sol:
+        for a in sol[w]:
+            if a == "lazy":
+                continue
+            r = ratio(sol, a, int(w), int(w))
+            iv = quantiles([ratio(b, a, int(w), int(w)) for b in boots]) if boots else (None, None)
+            ml, ma = metrics["lazy"][w], metrics[a][w]
+            common = cells[w][a]["cpb"] / cells[w]["lazy"]["cpb"]
+            preds.setdefault(a, {})[w] = {
+                "ratio": r,
+                "lo": iv[0],
+                "hi": iv[1],
+                "drivers": {
+                    "instructions_ratio": ma["instructions_per_byte"] / ml["instructions_per_byte"],
+                    "at_nominal_latency": common,
+                    "contention_feedback": r / common,
+                    "dram_bytes_ratio": ma["dram_bytes_per_byte"] / ml["dram_bytes_per_byte"],
+                    "dram_latency": [sol[w][a]["lat"], sol[w]["lazy"]["lat"]],
+                    "dram_gbs": [sol[w][a]["gbs"], sol[w]["lazy"]["gbs"]],
+                    "latency_sensitivity": [
+                        ma["dram_latency_sensitivity"],
+                        ml["dram_latency_sensitivity"],
+                    ],
+                    "dep_past_l2_links": [
+                        ma["dep_past_l2_links_per_byte"],
+                        ml["dep_past_l2_links_per_byte"],
+                    ],
+                    "dram_mlp": [ma["dram_mlp"], ml["dram_mlp"]],
+                },
+            }
+    # the i9 cells whose arms were run
     checks = []
     for c in cal["i9"]:
-        cw, rw = c["workers"], c["reference_workers"]
-        if str(cw) not in arms[c["arm"]] or str(rw) not in arms["lazy"]:
+        cw, rw = str(c["workers"]), str(c["reference_workers"])
+        if c["arm"] not in sol.get(cw, {}) or rw not in sol:
             continue
-        p = predicted_ratio(
-            arms[c["arm"]][str(cw)]["metrics"]["cycles_per_byte"],
-            cw,
-            arms["lazy"][str(rw)]["metrics"]["cycles_per_byte"],
-            rw,
+        p = ratio(sol, c["arm"], int(cw), int(rw))
+        iv = (
+            quantiles([ratio(b, c["arm"], int(cw), int(rw)) for b in boots])
+            if boots
+            else (None, None)
         )
-        d = (
-            arms[c["arm"]][str(cw)]["metrics"]["dram_bytes_per_byte"]
-            / arms["lazy"][str(rw)]["metrics"]["dram_bytes_per_byte"]
+        d = (metrics[c["arm"]][cw]["dram_bytes_per_byte"] + sol[rw]["lazy"]["c0"]) / (
+            metrics["lazy"][rw]["dram_bytes_per_byte"] + sol[rw]["lazy"]["c0"]
         )
         checks.append(
             dict(
                 c,
                 predicted=p,
+                lo=iv[0],
+                hi=iv[1],
                 predicted_dram_ratio=d,
                 same_side=(p < 1) == (c["measured"] < 1),
+                covered=None if iv[0] is None else iv[0] <= c["measured"] <= iv[1],
                 error=p - c["measured"],
             )
         )
-    held = [c for c in checks if c["role"] == "held-out"]
-    fitted = [c for c in checks if c["role"] == "fitted"]
-    # the held-out ranking: every pair of judged cells (the fitted opend included) in the
-    # measured order, at the same thread count
     pairs, right = 0, 0
     for i, x in enumerate(checks):
         for y in checks[i + 1 :]:
-            if x["threads"] != y["threads"] or not (
-                x["role"] == "held-out" or y["role"] == "held-out"
-            ):
+            if x["threads"] != y["threads"] or "held-out" not in (x["role"], y["role"]):
                 continue
             pairs += 1
             right += (x["predicted"] < y["predicted"]) == (x["measured"] < y["measured"])
-    opend_7 = next(
-        (
-            c
-            for c in checks
-            if c["arm"] == "opend" and c["workers"] == 7 and c["reference_workers"] == 7
-        ),
-        None,
-    )
-    rank_opend = {
-        str(w): preds[str(w)]["opend"] < 1
-        for w in res["workers"]
-        if w >= 7 and "opend" in preds[str(w)]
-    }
-    # the out-of-calibration flag, at each worker count, against the reference arms
+    held = [c for c in checks if c["role"] == "held-out"]
     flags = {}
-    for w in res["workers"]:
-        refs = [arms[a][str(w)]["metrics"] for a in ("lazy", "opend", "open", "cells")]
-        flags[str(w)] = out_of_range(arms["candidate"][str(w)]["metrics"], refs)
-    abs_dram = arms["lazy"]["7"]["metrics"]["dram_bytes_per_byte"] if "7" in arms["lazy"] else None
+    ref = cal.get("reference", {})
+    if "candidate" in metrics:
+        for w, x in metrics["candidate"].items():
+            refs = list(ref.get(w, {}).values())
+            flags[w] = (
+                out_of_range(x, refs)
+                if refs
+                else ["no reference arms at this worker count (moonshot.py calibrate)"]
+            )
     return {
+        "sample": sample,
+        "kappa": m["kappa"],
+        "metrics": metrics,
+        "fixed_point": sol,
         "predicted_over_lazy": preds,
         "calibration": {
-            "kappa": cal["model"]["kappa"],
-            "fitted": fitted,
+            "fitted": [c for c in checks if c["role"] == "fitted"],
             "held_out": held,
             "held_out_pairs_ranked_right": [right, pairs],
             "held_out_all_same_side": all(c["same_side"] for c in held) if held else None,
-            "opend_ranked_above_lazy": rank_opend,
-            "opend_7_predicted": opend_7["predicted"] if opend_7 else None,
-            "lazy_dram_bytes_per_byte_at_7": abs_dram,
-            "i9_lazy_dram_bytes_per_byte_at_7": cal["i9_lazy_dram_bytes_per_byte"],
         },
         "out_of_calibration": flags,
-        "metrics": {a: {w: v["metrics"] for w, v in arms[a].items()} for a in arms},
     }
 
 
@@ -598,6 +905,58 @@ def fmt(x, nd=3) -> str:
     if isinstance(x, float):
         return f"{x:.{nd}f}"
     return str(x)
+
+
+def proxy_report(p: dict, ref: dict) -> list[str]:
+    """section 3 of a score: the candidate's predicted ratio over lazy at each worker count with
+    its interval, the metrics that drive it, its three quantities beside lazy's, and the flag"""
+    L = [
+        "3. CONTENTION PROXY (chaingrind's model of one worker, the i9's LLC shared by W workers,",
+        "   DRAM latency from each arm's own bandwidth; three quantities kept apart, per output byte)",
+        f"   sample: {len(p['sample']['full'])} full + {len(p['sample']['tiny'])} tiny blocks,"
+        f" corpus-weighted; kappa {p['kappa']:g}; intervals: paired bootstrap over the blocks",
+        "",
+        "   workers  predicted/lazy [95%]    drivers: instr  at-nominal  feedback | DRAM lat (cand/lazy)  sensitivity %/100cyc",
+    ]
+    for w, x in sorted(
+        p["predicted_over_lazy"].get("candidate", {}).items(), key=lambda t: int(t[0])
+    ):
+        d = x["drivers"]
+        L.append(
+            f"   {w:>7}  {x['ratio']:.3f} [{fmt(x['lo'])}, {fmt(x['hi'])}]"
+            f"          {d['instructions_ratio']:.3f}  {d['at_nominal_latency']:.3f}       {d['contention_feedback']:.3f}"
+            f"    | {d['dram_latency'][0]:4.0f}/{d['dram_latency'][1]:4.0f}"
+            f"             {d['latency_sensitivity'][0]:5.1f}/{d['latency_sensitivity'][1]:5.1f}"
+        )
+    L += [
+        "   (instr: instructions a byte over lazy's; at-nominal: modelled cycles over lazy's at the same",
+        "   latencies; feedback: what the arm's own DRAM bandwidth does to its latency, against lazy's)",
+        "",
+        "   the three quantities, candidate against lazy:",
+        "     W   transfers: L2 B  L3 B  DRAM B   | chains: dep past-L2 links  dep DRAM links  max chain | overlap: MLP  misses/link",
+    ]
+    for w in sorted(p["metrics"].get("candidate", {}), key=int):
+        for a in ("candidate", "lazy"):
+            x = p["metrics"][a][w]
+            L.append(
+                f"   {w:>3} {a[:4]:<4}    {x['l2_bytes_per_byte']:5.1f} {x['l3_bytes_per_byte']:5.1f} {x['dram_bytes_per_byte']:5.2f}"
+                f"   |        {x['dep_past_l2_links_per_byte']:.4f}         {x['dep_dram_links_per_byte']:.5f}"
+                f"      {x['max_dram_chain']:>3}/{x['max_past_l2_chain']:<4} |       {x['dram_mlp']:4.2f}  {fmt(x['dram_loads_per_dep_link'], 1)}"
+            )
+        fl = p["out_of_calibration"].get(w)
+        if fl:
+            L.append("       OUT OF CALIBRATION, unreliable here: " + "; ".join(fl))
+    L.append("")
+    L.append("   The reference arms on the i9 (bench/moonshot/README.md, 'Calibration'):")
+    for c in ref.get("fitted", []) + ref.get("held_out", []):
+        L.append(
+            f"     {c['label']:<27} {c['role']:<8} measured {c['measured']:.3f}  predicted {c['predicted']:.3f}"
+            f" [{fmt(c['lo'])}, {fmt(c['hi'])}]"
+        )
+    if ref:
+        rr, n = ref["held_out_pairs_ranked_right"]
+        L.append(f"     held-out pairs in the i9's order: {rr} of {n}")
+    return L
 
 
 def report(s: dict) -> str:
@@ -642,66 +1001,7 @@ def report(s: dict) -> str:
         L.append("")
     p = s.get("proxy")
     if p and "skipped" not in p:
-        L.append(
-            "3. CONTENTION PROXY (chaingrind's model, one worker per row, the i9's 20 MiB LLC shared;"
-        )
-        L.append(
-            "   three quantities kept apart, per output byte; the model's cycles drive the prediction)"
-        )
-        cal = p["calibration"]
-        for w in sorted(p["metrics"]["lazy"], key=int):
-            L.append(f"   at {w} workers:")
-            L.append(
-                "     arm         pred/lazy | L2 B  L3 B  DRAM B | dep DRAM links  dep past-L2 links  max chain"
-                " | MLP   overlap/link  misses/link | instr"
-            )
-            for a in ["lazy", "opend", "open", "cells", "candidate"]:
-                m = p["metrics"][a][w]
-                pr = 1.0 if a == "lazy" else p["predicted_over_lazy"][w][a]
-                L.append(
-                    f"     {a:<10}  {pr:8.3f}  | {m['l2_bytes_per_byte']:4.1f}  {m['l3_bytes_per_byte']:4.1f}"
-                    f"  {m['dram_bytes_per_byte']:5.2f}  | {m['dep_dram_links_per_byte']:.5f}"
-                    f"         {m['dep_past_l2_links_per_byte']:.4f}             {m['max_dram_chain']:>3}/{m['max_past_l2_chain']:<4}"
-                    f" | {m['dram_mlp']:4.1f}  {fmt(m['overlap_per_dep_link'], 1):>12}  {fmt(m['dram_loads_per_dep_link'], 1):>11}"
-                    f" | {m['instructions_per_byte']:5.1f}"
-                )
-            fl = p["out_of_calibration"][w]
-            if fl:
-                L.append(
-                    "     OUT OF CALIBRATION: the candidate's access pattern is outside the reference arms'"
-                )
-                L.append("     range, so its prediction here is unreliable: " + "; ".join(fl))
-        L.append("")
-        L.append(
-            "   Calibration against the i9 (evidence fa9707e9, open-return/run-20261118T210422Z):"
-        )
-        L.append(
-            f"   one fitted parameter, the L3-hit latency's rise a further worker: kappa {cal['kappa']}"
-        )
-        L.append(
-            "     arm (workers / reference)  threads  role      measured  predicted  same side  DRAM ratio meas/pred"
-        )
-        for c in cal["fitted"] + cal["held_out"]:
-            L.append(
-                f"     {c['label']:<26} {c['threads']:>7}  {c['role']:<8}  {c['measured']:.3f}     {c['predicted']:.3f}"
-                f"      {'yes' if c['same_side'] else 'NO':<9}  {fmt(c.get('measured_dram_ratio'))}/{c['predicted_dram_ratio']:.3f}"
-            )
-        r, n = cal["held_out_pairs_ranked_right"]
-        L.append(f"   held-out ranking: {r} of {n} pairs in the i9's order")
-        ok = (
-            all(cal["opend_ranked_above_lazy"].values())
-            if cal["opend_ranked_above_lazy"]
-            else False
-        )
-        L.append(
-            "   Does the proxy rank opend above LazyCells at 7-10 workers, as the i9 did? "
-            + ("YES" if ok else "NO")
-            + f" ({cal['opend_ranked_above_lazy']})"
-        )
-        L.append(
-            f"   lazy's modelled DRAM at 7 workers: {fmt(cal['lazy_dram_bytes_per_byte_at_7'], 2)} B/B (one worker's"
-            f" decode_block only) against the i9's whole-process {cal['i9_lazy_dram_bytes_per_byte_at_7']} B/B"
-        )
+        L += proxy_report(p, s.get("reference", {}))
     elif p:
         L.append(f"3. CONTENTION PROXY: skipped: {p['skipped']}")
     L.append("")
@@ -737,6 +1037,7 @@ def score(a: argparse.Namespace) -> int:
             summary["timing"] = s.timing(corpus, out)
         if not a.no_proxy:
             summary["proxy"] = s.proxy(corpus, out)
+            summary["reference"] = s.cal.get("reference_predictions", {})
     (out / "summary.json").write_text(json.dumps(summary, indent=1, default=str) + "\n")
     text = report(summary)
     (out / "summary.txt").write_text(text)
@@ -755,46 +1056,95 @@ def rereport(a: argparse.Namespace) -> int:
 
 
 def calibrate(a: argparse.Namespace) -> int:
-    """refits kappa on the two fitted cells only (lazy and opend 7/28 at 7 workers): the value
-    whose predicted ratio is nearest the measured 0.940, over a grid"""
+    """refits kappa on the one fitted cell (opend 7/28 against lazy at 7 workers): over a grid,
+    the value whose predicted ratio, after the fixed point, is nearest the measured 0.940. Then
+    every reference arm (lazy, opend, open, cells) at every worker count at that kappa: their
+    metrics become the range the candidate's are checked against, and every other i9 cell is
+    held out. With --write, calibration.json takes the kappa and the reference arms"""
     s = Scorer(a)
+    vlib = s.tool()
+    if isinstance(vlib, str):
+        raise SystemExit(vlib)
     cal = s.cal
-    vlib = s.target / "chaingrind"
-    subprocess.run(
-        ["bash", str(HERE / "chaingrind" / "build.sh"), str(vlib)], check=True, capture_output=True
-    )
     m = cal["model"]
-    blocks = sample_blocks(m["corpus_blocks"], a.proxy_blocks)
-    out = s.target / "moonshot"
-    out.mkdir(parents=True, exist_ok=True)
-    sym = out / "calibrate.sym"
+    sample = proxy_sample(cal, a.proxy_blocks)
     corpus = Path(a.corpus) if a.corpus else ROOT / "corpora" / "wikidata.bz2"
-    subprocess.run(
-        [
-            str(s.bin),
-            "extract",
-            "--file",
-            str(corpus),
-            "--blocks",
-            ",".join(map(str, blocks)),
-            "--out",
-            str(sym),
-        ],
-        check=True,
-        capture_output=True,
-    )
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out = Path(a.out or s.target / "moonshot" / f"calibrate-{stamp}")
+    out.mkdir(parents=True, exist_ok=False)
     target = next(c for c in cal["i9"] if c["role"] == "fitted")
-    best = None
+    fits = []
     for kappa in [float(k) for k in a.grid.split(",")]:
-        lat = latencies(cal, 7, kappa)
-        lazy = proxy_metrics(s.chaingrind(vlib, "lazy", sym, lat))["cycles_per_byte"]
-        opend = proxy_metrics(s.chaingrind(vlib, "opend", sym, lat))["cycles_per_byte"]
-        r = opend / lazy
-        log(f"kappa {kappa}: opend/lazy at 7 workers {r:.4f} (measured {target['measured']})")
-        if best is None or abs(r - target["measured"]) < abs(best[1] - target["measured"]):
-            best = (kappa, r)
-    print(json.dumps({"kappa": best[0], "predicted": best[1], "measured": target["measured"]}))
+        d = out / f"kappa-{kappa:g}"
+        if a.again:
+            runs = load_runs(Path(a.again) / d.name / "proxy-runs.jsonl")[0]
+        else:
+            d.mkdir()
+            runs = s.proxy_runs(vlib, ["lazy", target["arm"]], [7], sample, corpus, d, kappa=kappa)
+        cal_k = json.loads(json.dumps(cal))
+        cal_k["model"]["kappa"] = kappa
+        r = read_proxy(runs, sample, cal_k, reps=0)
+        pr = r["predicted_over_lazy"][target["arm"]]["7"]["ratio"]
+        log(
+            f"kappa {kappa:g}: {target['arm']}/lazy at 7 workers {pr:.4f} (measured {target['measured']})"
+        )
+        fits.append({"kappa": kappa, "predicted": pr})
+    best = min(fits, key=lambda f: abs(f["predicted"] - target["measured"]))
+    m["kappa"] = best["kappa"]
+    log(f"kappa {best['kappa']:g} fitted; the reference arms at every worker count")
+    if a.again:
+        runs, lats = load_runs(Path(a.again) / "proxy-runs.jsonl")
+        if any(lt["l3_lat"] != nominal_latencies(m, int(w))["l3_lat"] for w, lt in lats.items()):
+            raise SystemExit(
+                f"calibrate --again: {a.again}'s reference runs were not made at kappa {m['kappa']:g}"
+            )
+    else:
+        runs = s.proxy_runs(
+            vlib, ["lazy", "opend", "open", "cells"], m["workers"], sample, corpus, out
+        )
+    r = read_proxy(runs, sample, cal, reps=a.bootstrap)
+    r["kappa_grid"] = fits
+    (out / "calibration-reading.json").write_text(json.dumps(r, indent=1) + "\n")
+    print(calibration_report(r))
+    if a.write:
+        cal["reference"] = {
+            w: {arm: r["metrics"][arm][w] for arm in r["metrics"]} for w in r["metrics"]["lazy"]
+        }
+        cal["reference_predictions"] = {
+            "sample": a.proxy_blocks,
+            "kappa_grid": fits,
+            "fitted": r["calibration"]["fitted"],
+            "held_out": r["calibration"]["held_out"],
+            "held_out_pairs_ranked_right": r["calibration"]["held_out_pairs_ranked_right"],
+            "predicted_over_lazy": {
+                arm: {w: {k: v for k, v in x.items() if k != "drivers"} for w, x in ws.items()}
+                for arm, ws in r["predicted_over_lazy"].items()
+            },
+        }
+        CALIBRATION.write_text(json.dumps(cal, indent=1) + "\n")
+        log(
+            f"calibration.json written: kappa {m['kappa']:g}, the reference arms at {sorted(cal['reference'], key=int)}"
+        )
+    log(f"written to {out}")
     return 0
+
+
+def calibration_report(r: dict) -> str:
+    """the held-out table: each i9 cell, measured against predicted with its interval"""
+    L = [
+        f"kappa {r['kappa']:g}; sample {len(r['sample']['full'])} full + {len(r['sample']['tiny'])} tiny blocks"
+    ]
+    L.append(
+        "  cell                        threads  role      measured  predicted [95% interval]   side  covered  DRAM meas/pred"
+    )
+    for c in r["calibration"]["fitted"] + r["calibration"]["held_out"]:
+        L.append(
+            f"  {c['label']:<27} {c['threads']:>7}  {c['role']:<8}  {c['measured']:.3f}     {c['predicted']:.3f} [{fmt(c['lo'])}, {fmt(c['hi'])}]"
+            f"  {'yes' if c['same_side'] else 'NO':<4}  {fmt(c['covered']):<7}  {fmt(c.get('measured_dram_ratio'))}/{c['predicted_dram_ratio']:.3f}"
+        )
+    rr, n = r["calibration"]["held_out_pairs_ranked_right"]
+    L.append(f"  held-out pairs in the i9's order: {rr} of {n}")
+    return "\n".join(L)
 
 
 def sweep(a: argparse.Namespace) -> int:
@@ -838,7 +1188,10 @@ def main(argv: list[str] | None = None) -> int:
         "--workers", type=lambda s: [int(x) for x in s.split(",")], help="default: 1 to the CPUs"
     )
     sc.add_argument("--with-opend", action="store_true", help="time opend too, a third arm")
-    sc.add_argument("--proxy-blocks", type=int, default=16)
+    sc.add_argument(
+        "--proxy-blocks", default="48+16", help="FULL+TINY blocks of the bench corpus for the proxy"
+    )
+    sc.add_argument("--bootstrap", type=int, default=400, help="the proxy's resamples of blocks")
     sc.add_argument("--quick", action="store_true", help="the gate's quick case set")
     sc.add_argument("--no-timing", action="store_true")
     sc.add_argument("--no-proxy", action="store_true")
@@ -846,12 +1199,18 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--target-dir")
     sc.add_argument("--out")
     ca = sub.add_parser(
-        "calibrate", help="refit kappa on lazy and opend 7/28 (prints it; edit calibration.json)"
+        "calibrate", help="refit kappa on opend 7/28, read the reference arms (--write to keep)"
     )
     ca.add_argument("--corpus")
-    ca.add_argument("--proxy-blocks", type=int, default=16)
-    ca.add_argument("--grid", default="0,4,8,12,16,20,24,32,40,48")
+    ca.add_argument("--proxy-blocks", default="48+16", help="FULL+TINY blocks of the bench corpus")
+    ca.add_argument("--grid", default="0,4,8,12,16,24,32")
+    ca.add_argument("--bootstrap", type=int, default=400)
+    ca.add_argument("--write", action="store_true", help="write kappa and the reference arms")
+    ca.add_argument(
+        "--again", help="a calibrate run's directory: read its saved runs again, running nothing"
+    )
     ca.add_argument("--target-dir")
+    ca.add_argument("--out")
     sw = sub.add_parser(
         "sweep", help="the i9 calibration run's timing (the reference arms; no candidate)"
     )
