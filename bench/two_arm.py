@@ -11,6 +11,7 @@ correction, #145 REVIEW 6921090225), for `just bench-cores-less-one` (#481) and 
                [--judge-at ARM=COUNTS ... [--sparse] [--pair ARM/ARM ...]]
                [--ref-at ARM=COUNTS ... in place of --ref] [--unpinned]
                [--alpha 0.05] [--primary CORPUS,..] [--check-workers]
+               [--ref-workers T=N ...] [--machine-model TEXT --lscpu FILE]
 
 **Guards** (`--guard`, one guard corpus or several, comma-separated; `just bench-admit`'s and
 `just bench-recalibrate`'s text and random): each is screened for loss and memory as the one
@@ -42,6 +43,19 @@ Its roster and its steps are read over its own N rounds; Holm's family is unchan
 `just bench-recalibrate`): every record of an occupancy arm (`mibz2-occ-N-S`, `mibz2-oce-N-S`)
 must name exactly N worker threads (`mibz2-0` to `mibz2-(N-1)`) among its `observed_threads`,
 or the run is VOID: the arm measured is the arm named.
+
+**The reference's workers, checked** (`--ref-workers T=N`, repeated, with `--ref-at` only; none
+by default, and then nothing here changes; `just bench-open-return`, the Researcher's REVIEW
+6990885206): every record of the reference at judged count T must name exactly N worker threads
+among its `observed_threads`, or the run is VOID. The reference is production's own arm
+(`mibz2`), whose name carries no count: this checks that the default built the decoder the
+registration names (7 workers at 10 threads, 8 at 8 on the i9), not one worker or another plan.
+No observed threads is missing evidence, and VOIDs too.
+
+**The machine's identity** (`--machine-model TEXT --lscpu FILE`, both or neither; none by
+default, and then nothing here changes; `just bench-open-return`): the run's `lscpu` output must
+name a CPU model containing TEXT, or the run is VOID. The topology (`--cores`, `--cpus`) checks
+the shape; this checks the machine.
 
 **Several candidates** (`--cand` repeated; `just bench-workers-window`): each is read against the one
 reference as below, but Holm's family is every candidate's main-corpus judged cells together, and
@@ -393,6 +407,43 @@ def load(path, roster, errors, meta=None, check_workers=False):
     return rows
 
 
+def parse_ref_workers(specs, judged, errors):
+    """`--ref-workers T=N`'s map {count: the reference's workers there}; errors appended for a
+    malformed spec, a count that is not judged or is named twice, and N below 1"""
+    out = {}
+    for spec in specs:
+        t, eq, n = spec.partition("=")
+        try:
+            t, n = int(t), int(n)
+        except ValueError:
+            errors.append(f"--ref-workers {spec!r}: not T=N")
+            continue
+        if not eq or n < 1 or t not in judged or t in out:
+            errors.append(f"--ref-workers {spec!r}: a judged count once, at least 1 worker")
+            continue
+        out[t] = n
+    return out
+
+
+def machine_model(path, want, errors):
+    """The CPU model the run's `lscpu` output at `path` names, if it contains `want`; None
+    otherwise (errors appended)"""
+    try:
+        text = open(path).read()
+    except OSError as e:
+        errors.append(f"--lscpu {path}: unreadable ({e.strerror or e}): the machine is unidentified")
+        return None
+    models = re.findall(r"^\s*Model name:\s*(.+?)\s*$", text, re.M)
+    if len(set(models)) != 1:
+        errors.append(f"--lscpu {os.path.basename(path)}: {len(set(models))} model names, not one: "
+                      f"the machine is unidentified")
+        return None
+    if want not in models[0]:
+        errors.append(f"not the registered machine: the CPU is {models[0]!r}, not a {want!r}")
+        return None
+    return models[0]
+
+
 def parse_judge_at(specs, cands, judged, errors):
     """`--judge-at ARM=T[,T...]`'s map {candidate: its judged counts}; {} without any (errors
     appended for a malformed or incomplete set)"""
@@ -609,6 +660,10 @@ def main(argv):
                     help="with --judge-at: the primary corpora, comma-separated, where rule 4 may trade memory for speed")
     ap.add_argument("--rounds-at", action="append", default=[], metavar="T=N",
                     help="with --sparse: N paired rounds at judged count T in place of --rounds")
+    ap.add_argument("--ref-workers", action="append", default=[], metavar="T=N",
+                    help="with --ref-at: every reference record at judged count T names exactly N worker threads")
+    ap.add_argument("--machine-model", help="with --lscpu: text the run's CPU model name must contain")
+    ap.add_argument("--lscpu", help="with --machine-model: the run's `lscpu` output")
     ap.add_argument("--check-workers", action="store_true",
                     help="every occupancy arm's record names exactly its N worker threads")
     a = ap.parse_args(argv[1:])
@@ -639,6 +694,12 @@ def main(argv):
         errors.append("--ref-at: with --judge-at and --sparse only")
     refs = parse_ref_at(a.ref_at, judged, errors) if a.ref_at else {t: ref for t in judged + controls}
     ref_arms = list(dict.fromkeys(refs[t] for t in judged if t in refs)) if a.ref_at else [ref]
+    ref_workers = parse_ref_workers(a.ref_workers, judged, errors)
+    if a.ref_workers and not a.ref_at:
+        errors.append("--ref-workers: with --ref-at only")
+    if (a.machine_model is None) != (a.lscpu is None):
+        errors.append("--machine-model and --lscpu: both or neither")
+    model = machine_model(a.lscpu, a.machine_model, errors) if a.machine_model and a.lscpu else None
     if a.unpinned and a.hold_max_threads != 0:
         errors.append(f"--unpinned: with --hold-max-threads 0 only (no spinner), not {a.hold_max_threads}")
     judge_at = parse_judge_at(a.judge_at, cands, judged, errors)
@@ -676,6 +737,13 @@ def main(argv):
     rows = load(a.runs, roster, errors,
                 None if core_of is None else (core_of, a.cores, a.hold_max_threads, a.unpinned),
                 a.check_workers)
+    # the reference's own workers (`--ref-workers`): production's arm names no count, so the
+    # records must show the decoder the registration names
+    for (corpus, arm, t, i), r in sorted(rows.items()):
+        n = ref_workers.get(t)
+        if n is not None and arm == refs.get(t) and worker_names(r) != sorted(f"mibz2-{k}" for k in range(n)):
+            errors.append(f"{os.path.basename(a.runs)}: {(corpus, arm, t, i)} the reference observed workers "
+                          f"{worker_names(r)}, not the registered {n}")
     ref_name = ref if not a.ref_at else ("the reference by count: "
                                          + ", ".join(f"{refs[t]} at {t}" for t in judged if t in refs))
     print(f"records {len(rows)}; roster {len(roster)} ({ref_name} and {' and '.join(cands)}"
@@ -684,7 +752,9 @@ def main(argv):
           + "".join(f", {n} at {t} threads" for t, n in rounds_at.items()) + ")"
           + (("; judged by count: " + ", ".join(f"{c} at {sorted(ts)}" for c, ts in judge_at.items()))
              if judge_at else "") + ("; sparse: each count's own arms alone" if a.sparse else "")
-          + ("; unpinned: every run on every CPU" if a.unpinned else ""))
+          + ("; unpinned: every run on every CPU" if a.unpinned else "")
+          + (f"; the reference's workers checked: {', '.join(f'{n} at {t}' for t, n in ref_workers.items())}"
+             if ref_workers else "") + (f"; the machine: {model}" if model else ""))
 
     def cell(corpus, t, cand):
         return [math.log(rows[(corpus, cand, t, i)]["wall"] / rows[(corpus, refs[t], t, i)]["wall"]) for i in range(rounds(t))]

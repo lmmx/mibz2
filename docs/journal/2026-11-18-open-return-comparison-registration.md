@@ -141,12 +141,35 @@ cells. The recipe's call is the registered one:
 - `--check-workers`. Every record of an open arm must name exactly its N workers
   (`mibz2-0` … `mibz2-{N-1}`). The regex now accepts `mibz2-open-N-S` and `mibz2-opend-N-S`,
   tested in `bench/test_two_arm.py`.
+- `--ref-workers 10=7 --ref-workers 8=8 --machine-model i9-10900K --lscpu lscpu.txt`: reference
+  admission, below.
 
 It is VOID, and nothing is read from it, where:
 - a record is missing, malformed or duplicated;
 - a corpus's outputs differ between any two arms;
 - an arm names other workers than its own;
-- the machine is not the registered one.
+- the machine is not the registered one: its topology is not 10 cores and 20 CPUs, or its
+  `lscpu` output does not name an i9-10900K (`--machine-model i9-10900K --lscpu`);
+- **the reference is not the registered decoder:** a `mibz2` record at 10 threads that does not
+  observe exactly 7 worker threads (`mibz2-0` … `mibz2-6`), or one at 8 threads that does not
+  observe exactly 8 (`--ref-workers 10=7 --ref-workers 8=8`). A record with no thread census is
+  missing evidence and VOIDs too.
+
+**Reference admission** (the Researcher's targeted correction, REVIEW 6990885206, accepted in the
+Coordinator's LOG 6990984237):
+- *Why:* `--check-workers` reads an arm's workers from its name, and `mibz2` names none. Before
+  this correction, the exact scoring call gave ADOPTS on 324 synthetic records whose 72 reference
+  records each observed one worker.
+- *The evidence for 7 and 8:* `tests/recalibrate_arms.rs` checks the unpinned defaults
+  deterministically with the i9's facts. On the i9 itself, `mibz2` observed 7 workers at 10
+  threads unpinned (the unpinned run, run-20261117T130353Z) and pinned (0.5.6's release scaling,
+  run-20261118T201717Z). No i9 bundle runs the default unpinned at 8 threads: there the 8 rests
+  on the test, and an i9 that builds anything else VOIDs the run.
+- *The test:* `bench/test_two_arm.py` replays the Researcher's case, the recipe's own arguments
+  on 324 records. With the reference's workers checked it is VOID at both counts, and without the
+  check it still scores ADOPTS, which is the fault the correction closes. The other negative
+  cases: 8 workers at 10, one record with no thread census, another CPU, no `lscpu`, an `lscpu`
+  with no model name, and malformed options.
 
 Otherwise each judged cell has the policy's verdict, from `two_arm.py`'s own lines:
 - ADOPTS: a gain (Holm), no SLOWER cell, memory within the gate;

@@ -845,6 +845,94 @@ def main():
                                                       "mibz2-oce-4-16", "mibz2", "mibz2-opens-7-28")]
                    == [7, 8, 6, 4, None, None])
     print(f"{'ok  ' if results[-1] else 'FAIL'} the workers of the open-return arms, mibz2-open-N-S and mibz2-opend-N-S")
+    # the open-return comparison (`just bench-open-return`), scored as the recipe scores it: 0.5.6's
+    # `mibz2` the reference at 10 and 8 threads, the open arms the candidates, eager 7/28 as
+    # context. The Researcher's REVIEW 6990885206: 324 records whose 72 reference records observe
+    # one worker scored ADOPTS, since only arms naming their count were checked; with the
+    # reference's workers and the machine checked, that run is VOID before any verdict
+    orb_cands = {10: ["mibz2-open-7-28", "mibz2-opend-7-28", "mibz2-opend-8-32"],
+                 8: ["mibz2-open-8-32", "mibz2-opend-8-32"]}
+    orb_ref_n = {10: 7, 8: 8}
+    i9 = "Model name:                              Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\n"
+
+    def orb(steps=None, ref_n=None, edit=None):
+        """`steps` maps (arm, threads, corpus) to a candidate's step over `mibz2` (level by
+        default); `ref_n` the workers each reference record observes (the registered 7 and 8)"""
+        import random
+        steps, ref_n = steps or {}, ref_n or orb_ref_n
+        rng = random.Random(59)
+        rows = []
+        for t in (10, 8):
+            for i in range(12):
+                for corpus, out in rcl_out.items():
+                    base = 0.5 * (1 + 0.02 * rng.uniform(-1, 1))
+                    wig = 1 + 0.01 * (1 if i % 2 else -1)
+                    for arm in ("mibz2", *orb_cands[t], "mibz2-oce-7-28"):
+                        ref = arm == "mibz2"
+                        n = ref_n[t] if ref else int(arm.split("-")[2])
+                        wall = base * (1.0 if ref else steps.get((arm, t, corpus), 1.0) * wig)
+                        r = {"round": i, "corpus": corpus, "threads": t, "arm": arm, "termination": "success",
+                             "wall": wall, "cpu": wall * t * 0.9, "rss_kb": 30000 * t * (1.0 if ref else 0.8),
+                             "out": out[0], "hash": out[1], "cpus": every, "observed_threads": " ".join(
+                                 ["ab", *(f"mibz2-{k}" for k in range(n)), "mibz2-read", "mibz2-scan", "sampler"])}
+                        r = edit(r) if edit else r
+                        if r is not None:
+                            rows.append(r)
+        return rows
+
+    def orb_args(lscpu, admit=True):
+        return ["--main", "wikidata-x4", "--guard", "text,random", "--controls", "", "--rounds", "12",
+                "--cores", "10", "--cpus", "20", "--sparse", "--primary", "wikidata-x4,text", "--check-workers",
+                "--judged", "10,8", "--hold-max-threads", "0", "--unpinned", "--ref-at", "mibz2=10,8",
+                "--context", "mibz2-oce-7-28",
+                *sum((["--cand", c, "--judge-at", f"{c}={t}"] for t, cs in orb_cands.items() for c in cs
+                      if c != "mibz2-opend-8-32"), []),
+                "--cand", "mibz2-opend-8-32", "--judge-at", "mibz2-opend-8-32=10,8",
+                *(["--ref-workers", "10=7", "--ref-workers", "8=8", "--machine-model", "i9-10900K",
+                   "--lscpu", lscpu] if admit else [])]
+
+    def expect_orb(name, rows, code, phrases, lscpu_text=i9, admit=True, extra=(), absent=()):
+        d = Path(tempfile.mkdtemp())
+        try:
+            (d / "lscpu.txt").write_text(lscpu_text) if lscpu_text is not None else None
+            return expect_low(name, rows, code, phrases, args=orb_args(str(d / "lscpu.txt"), admit) + list(extra),
+                              absent=absent)
+        finally:
+            shutil.rmtree(d)
+
+    gain = {("mibz2-opend-7-28", 10, "wikidata-x4"): 0.93}
+    results.append(len(orb()) == 324 and sum(r["arm"] == "mibz2" for r in orb()) == 72)
+    print(f"{'ok  ' if results[-1] else 'FAIL'} the open-return run: 324 records, 72 of the reference")
+    results.append(expect_orb("open-return: the reference as registered, a gain adopts", orb(gain), 0, [
+        "the reference's workers checked: 7 at 10, 8 at 8", "the machine: Intel(R) Core(TM) i9-10900K",
+        "VERDICT for mibz2-opend-7-28 at 10 threads: ADOPTS"], absent=["VOID"]))
+    results.append(expect_orb("open-return: unchecked, one-worker reference records still score (the review's replay)",
+                              orb(gain, ref_n={10: 1, 8: 1}), 0,
+                              ["VERDICT for mibz2-opend-7-28 at 10 threads: ADOPTS"], admit=False, absent=["VOID"]))
+    results.append(expect_orb("open-return: the Researcher's synthetic case, the reference observing one worker, is VOID",
+                              orb(gain, ref_n={10: 1, 8: 1}), 1, [
+        "VOID", "the reference observed workers ['mibz2-0'], not the registered 7",
+        "the reference observed workers ['mibz2-0'], not the registered 8"], absent=["ADOPTS"]))
+    results.append(expect_orb("open-return: the reference's plan at the other count (8 workers at 10) is VOID",
+                              orb(gain, ref_n={10: 8, 8: 8}), 1, ["VOID", "not the registered 7"], absent=["ADOPTS"]))
+    results.append(expect_orb("open-return: one reference record with no thread census is VOID", orb(gain, edit=lambda r: {
+        k: v for k, v in r.items() if k != "observed_threads"} if r["arm"] == "mibz2" and r["round"] == 7
+        and r["threads"] == 8 and r["corpus"] == "text" else r), 1,
+        ["VOID", "the reference observed workers [], not the registered 8"], absent=["ADOPTS"]))
+    results.append(expect_orb("open-return: another CPU is VOID", orb(gain), 1, [
+        "VOID", "not the registered machine: the CPU is 'Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz'"],
+        lscpu_text="Model name: Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz\n", absent=["ADOPTS"]))
+    results.append(expect_orb("open-return: no lscpu is VOID", orb(gain), 1, [
+        "VOID", "unreadable", "the machine is unidentified"], lscpu_text=None, absent=["ADOPTS"]))
+    results.append(expect_orb("open-return: an lscpu with no model name is VOID", orb(gain), 1, [
+        "VOID", "0 model names, not one"], lscpu_text="Architecture: x86_64\n", absent=["ADOPTS"]))
+    results.append(expect_orb("open-return: --ref-workers at a count not judged is VOID", orb(gain), 1, [
+        "VOID", "--ref-workers '6=5': a judged count once"], extra=["--ref-workers", "6=5"]))
+    results.append(expect_orb("open-return: --ref-workers twice at a count is VOID", orb(gain), 1, [
+        "VOID", "--ref-workers '10=8': a judged count once"], extra=["--ref-workers", "10=8"]))
+    results.append(expect_orb("open-return: --machine-model without --lscpu is VOID", orb(gain), 1, [
+        "VOID", "--machine-model and --lscpu: both or neither"], admit=False,
+        extra=["--machine-model", "i9-10900K"]))
     p_mid = {("x", 1): 0.03}
     results.append(ta.holm(p_mid, 0.05) == {("x", 1)} and ta.holm(p_mid, 0.025) == set())
     print(f"{'ok  ' if results[-1] else 'FAIL'} Holm at a halved α: p 0.03 rejected at 0.05, not at 0.025")

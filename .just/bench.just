@@ -2070,11 +2070,14 @@ bench-open-return COPIES="4" ROUNDS="12" SETTLE="2" REPS="5":
         --settle {{SETTLE}} --unpinned "${files[@]}"
     done
     date -u +%FT%TZ > "$O/timed.txt"
-    # one Holm family at α 0.05 over the 5 main-corpus cells
+    # one Holm family at α 0.05 over the 5 main-corpus cells; VOID before any verdict unless the
+    # machine is the i9 and the reference observed 0.5.6's workers there, 7 at 10 threads and 8
+    # at 8 (the Researcher's REVIEW 6990885206)
     python3 bench/two_arm.py "$O/unpinned.jsonl" --main wikidata-x{{COPIES}} --guard text,random \
       --controls "" --rounds {{ROUNDS}} --env "$O/env.json" --cores 10 --cpus 20 --sparse \
       --primary wikidata-x{{COPIES}},text --check-workers --judged 10,8 --hold-max-threads 0 --unpinned \
       --ref-at mibz2=10,8 --context mibz2-oce-7-28 \
+      --ref-workers 10=7 --ref-workers 8=8 --machine-model i9-10900K --lscpu "$O/lscpu.txt" \
       --cand mibz2-open-7-28 --judge-at mibz2-open-7-28=10 \
       --cand mibz2-opend-7-28 --judge-at mibz2-opend-7-28=10 \
       --cand mibz2-open-8-32 --judge-at mibz2-open-8-32=8 \
