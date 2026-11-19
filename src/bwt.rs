@@ -87,6 +87,20 @@ pub trait InverseBwt: Default + Send {
         false
     }
 
+    /// Research-only fused MTF/RLE2 front and inverse on the ordinary run route.
+    /// On success, validate the symbols, row bound, and primary as the stock front
+    /// does, and write the marked inverse into `out`. On decline, leave `out`
+    /// intact so the stock front can perform its normal validation and decode.
+    #[cfg(feature = "moonshot")]
+    fn invert_symbol_runs(
+        &mut self,
+        _block: &crate::block::Symbols,
+        _k: crate::Kernels,
+        _out: &mut Vec<u8>,
+    ) -> bool {
+        false
+    }
+
     /// Research-only run kernel that appends fully RLE1-expanded bytes. The decoder
     /// has validated the mark and owns both CRC verification and rollback on error.
     /// Returning `None` leaves the caller's output intact and takes the usual route.
