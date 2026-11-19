@@ -1,0 +1,33 @@
+1639f183554070bd8a11e1d73741e6be73ba281a
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+bf240a3d505c23f258fa3349a1666d7c5cacca1c7addb87a67debea3196392a8  /workspace/work/astra-queue-short-fill/original/panel
+04d4c8033c1e4d00b3c3fb71db1c17f64360cf766868652a3f74529197292007  /workspace/work/astra-queue-short-fill/meter/panel
+e56800466e516e405629879c5c41a2d609cec5251629bddc868b1d0e4790bb38  /workspace/work/astra-edge-displacements/libmibz2.rlib
+28887faadf587df16449b28fc156e17fc92e21f24c0edc73470a9a46c052069c  research/astra-e/queue-short-fill/prepare.py
+075f213307ca5962f4a5ae78c7024d079877550cf0b47afd983dd4986b3de687  research/astra-e/queue-short-fill/panel.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf  /workspace/work/astra-budget-local/oracle
+df6ca62fd216ea0997dc8dc947f91e8ca3ba55cfb6aebdbbd5ebe3a1e72464a4  /workspace/work/astra-queue-short-fill/original/generated/edge0.rs
+0fd8ad4c501ed49b769f8ccc605b64d27ab3247a27698f6badb072355ed4ce9b  /workspace/work/astra-queue-short-fill/original/generated/edge1.rs
+f2c0178b848039c9b867e72ca7f9b3179dd9f00fcf756f2501c4293b9326bda5  /workspace/work/astra-queue-short-fill/original/generated/edge4.rs
+add3f49bdcd89c9a6c531230a14b7c8f80577c0eaf84c46f62c18000e5b95178  /workspace/work/astra-queue-short-fill/original/generated/both0.rs
+92ca460c2726343ad8bcf02fac216a08849a2baf088dc7179f2154c770b0b518  /workspace/work/astra-queue-short-fill/original/generated/both1.rs
+11f43d3e8fe9f37706d4a1885bd45888b4e73699efbe132266a9faa6a6de6969  /workspace/work/astra-queue-short-fill/original/generated/both4.rs
+400000 100000
+Model name:                              INTEL(R) XEON(R) PLATINUM 8573C
+PSR  NI %CPU COMMAND
+  4   0  4.0 codex-linux-san
+  3   0  2.1 codex
+  0   0  1.1 containerd
+  0   0  0.9 codex
+  3   0  0.2 dockerd
+  0   0  0.0 tail
+  0   0  0.0 bash
+  0   0  0.0 git
+  0   0  0.0 git
