@@ -47,13 +47,23 @@ Researcher's review through the Coordinator.*
 - *the port's head (`PORT`);*
 - *v0.5.6 (530ed404).*
 
-**Both run through the same public entry point:** `ab`'s `mibz2` arm, `BzReader::parallel`, the
-default a user gets. The two differ in the change alone; the reference is the release, not a
-kernel-only arm. That avoids the construction constant record 71 found.
+**Both run through the same public entry point:** each build's own `ab child mibz2`,
+`BzReader::parallel`, the default a user gets. The two differ in the change alone; the reference
+is the release, not a kernel-only arm. That avoids the construction constant record 71 found.
+
+**The harness only schedules.** This branch's `ab run --unpinned` sets the CPUs, the 2 s gate and
+the order, and runs every arm as a child of one build or the other (`mibz2@<port's ab>`,
+`mibz2@<v0.5.6's ab>`). No code of this branch's is timed. (Master's `ab` has no `--unpinned`,
+which the dry run found.)
 
 **Reference and candidate admission:** both must observe the shipped workers, 8 at 8 threads and 7
 at 10 and 20, on the registered machine (`lscpu` names an i9-10900K; `ab env` 10 cores, 20 CPUs).
 Anything else VOIDs the run.
+- *Where the workers are read:* on the Wikidata corpora (the primary, the held-out pair and the
+  sustained cell).
+- *Why there alone:* a guard's decode of a few milliseconds can end before the thread sampler
+  sees every worker. The dry run showed it on `runs`. An arm builds the same decoder whatever the
+  corpus, so the long decodes settle it.
 
 **The cells:**
 - *the decision:* unpinned at 8, 10 and 20 threads, 12 paired rounds, the 2 s settle gate;
@@ -114,7 +124,8 @@ before.
 - *There is no trade.* Rule 4 isn't used here: P2 requires Wikidata memory not to grow at all.
 
 `bench/test_open_port.py` checks the scorer: ADOPTS; each of P1, P2, H, G (SLOWER, the bound, and
-memory) and S failing alone and together; and each VOID. 22 checks.
+memory) and S failing alone and together; each VOID; and a guard's short decode seeing fewer
+workers without a VOID. 24 checks.
 
 ## Context, reported and not judged
 

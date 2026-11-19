@@ -2254,9 +2254,13 @@ bench-open-port PORT="3f09500ee3289b0dd06948003f45c89aedd8ea36" COPIES="4" ROUND
     done
     AB=$W/build-port/target/release/examples/ab
     OLDAB=$W/build-v0.5.6/target/release/examples/ab
+    # the harness: this branch's own `ab` (`run --unpinned`), which only schedules; every arm is
+    # one of the two builds, run as its child (`NAME@EXE`), so no code of this branch's is timed
+    cargo build -q --release --example ab
+    HAB=$PWD/target/release/examples/ab
     git rev-parse HEAD > "$O/commit.txt"
     { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
-    sha256sum "$AB" "$OLDAB" | tee "$O/binaries.sha256"
+    sha256sum "$AB" "$OLDAB" "$HAB" | tee "$O/binaries.sha256"
     # the corpora: Wikidata x4 (primary) and x16 (sustained); the development guards, afresh; the
     # held-out corpora (the small ones as 4 copies, as Wikidata x4 is)
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
@@ -2275,7 +2279,7 @@ bench-open-port PORT="3f09500ee3289b0dd06948003f45c89aedd8ea36" COPIES="4" ROUND
     for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$C/wikidata-x{{COPIES}}.bz2"; done
     : > "$C/wikidata-x16.bz2"
     for i in $(seq 16); do cat "$W/wikidata.bz2" >> "$C/wikidata-x16.bz2"; done
-    "$AB" gen "$C/gen" 16 >/dev/null
+    "$HAB" gen "$C/gen" 16 >/dev/null
     python3 bench/heldout.py build "$C/ho" "$W/wikidata-heldout.bz2"
     cp "$C/ho/heldout.json" "$O/heldout.json"
     for f in "$C"/ho/ho-prose-l1 "$C"/ho/ho-prose-l9 "$C"/ho/ho-code-l1 "$C"/ho/ho-code-l9 \
@@ -2289,19 +2293,19 @@ bench-open-port PORT="3f09500ee3289b0dd06948003f45c89aedd8ea36" COPIES="4" ROUND
            "$C/ho-wikidata-l9.bz2" "$C/ho-wikidata-l1.bz2" "$C/ho-prose-l1.bz2" "$C/ho-prose-l9.bz2"
            "$C/ho-code-l1.bz2" "$C/ho-code-l9.bz2" "$C/ho-structured-l1.bz2" "$C/ho-structured-l9.bz2")
     sha256sum "${files[@]}" "$C/wikidata-x16.bz2" "$W/wikidata.bz2" "$W/wikidata-heldout.bz2" | tee "$O/inputs.sha256"
-    "$AB" env > "$O/env.json"
+    "$HAB" env > "$O/env.json"
     lscpu > "$O/lscpu.txt"
     lscpu -e > "$O/lscpu-e.txt" || true
     cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
     # the decision: one `ab run` a count, v0.5.6 and the port through the same entry point
     for t in 8 10 20; do
-      echo "unpinned at $t threads: mibz2 against mibz2@v0.5.6"
-      "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2@$OLDAB" --threads "$t" --rounds {{ROUNDS}} \
+      echo "unpinned at $t threads: the port against v0.5.6"
+      "$HAB" run "$O/runs.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads "$t" --rounds {{ROUNDS}} \
         --settle {{SETTLE}} --unpinned "${files[@]}"
     done
     # sustained: 10 threads, back to back (no settle), Wikidata x16
-    echo "sustained at 10 threads: mibz2 against mibz2@v0.5.6, back to back"
-    "$AB" run "$O/sustained.jsonl" --arms "mibz2,mibz2@$OLDAB" --threads 10 --rounds {{SROUNDS}} \
+    echo "sustained at 10 threads: the port against v0.5.6, back to back"
+    "$HAB" run "$O/sustained.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads 10 --rounds {{SROUNDS}} \
       --settle 0 --unpinned "$C/wikidata-x16.bz2"
     date -u +%FT%TZ > "$O/timed.txt"
     # the verdict (docs/journal/2026-11-19-open-port-registration.md)
@@ -2312,11 +2316,11 @@ bench-open-port PORT="3f09500ee3289b0dd06948003f45c89aedd8ea36" COPIES="4" ROUND
     # and against 0.5.6's LazyCells, kernel-only arms of W workers) at W 7..10, and the eager/open
     # crossover at W 4..8
     for w in 7 8 9 10; do
-      "$AB" run "$O/gate.jsonl" --arms "mibz2-workers-lazy,mibz2-workers-open,mibz2-workers-lazycells" \
+      "$HAB" run "$O/gate.jsonl" --arms "mibz2-workers-lazy@$AB,mibz2-workers-open@$AB,mibz2-workers-lazycells@$AB" \
         --threads "$w" --rounds {{CROUNDS}} --settle {{SETTLE}} --unpinned "$C/wikidata-x{{COPIES}}.bz2" "$C/gen/text.bz2"
     done
     for w in 4 5 6 7 8; do
-      "$AB" run "$O/crossover.jsonl" --arms "mibz2-workers-lazy,mibz2-workers-eager" \
+      "$HAB" run "$O/crossover.jsonl" --arms "mibz2-workers-lazy@$AB,mibz2-workers-eager@$AB" \
         --threads "$w" --rounds {{CROUNDS}} --settle {{SETTLE}} --unpinned "$C/wikidata-x{{COPIES}}.bz2" "$C/gen/text.bz2"
     done
     python3 bench/open_port.py pairs "$O/gate.jsonl" --pair mibz2-workers-lazy/mibz2-workers-open \

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """The open port's adoption verdict (`just bench-open-port`; the C6 registration
 docs/journal/2026-11-19-open-port-registration.md; #145 CHECKPOINT 7004759994): the port's
-release build (`mibz2`) against v0.5.6's (`mibz2@<v0.5.6's ab>`), both through the same public
-entry point (`BzReader::parallel`), unpinned on the i9 at the shipped thread counts.
+release build (`mibz2@…/build-port/…/ab`) against v0.5.6's (`mibz2@…/build-v0.5.6/…/ab`), each
+its own binary run as `ab run`'s child, both through the same public entry point
+(`BzReader::parallel`), unpinned on the i9 at the shipped thread counts.
 
     open_port.py judge RUNS.jsonl SUSTAINED.jsonl --lscpu LSCPU --env ENV.json
                        [--counts 8,10,20] [--rounds 12] [--sustained-rounds 8]
@@ -13,8 +14,10 @@ entry point (`BzReader::parallel`), unpinned on the i9 at the shipped thread cou
 - a corpus's outputs differ;
 - the machine is not the registered one: `lscpu` names no single i9-10900K, or `ab env` records
   other than 10 cores and 20 CPUs;
-- either arm observes other than the shipped workers at a count: 8 at 8 threads, 7 at 10 and 20
-  (0.5.6's plan and the port's are the same plan; only the kernel differs);
+- either arm observes other than the shipped workers at a count on the Wikidata corpora (8 at 8
+  threads, 7 at 10 and 20: 0.5.6's plan and the port's are the same plan; only the kernel
+  differs). Read there alone: a decode of a few milliseconds can end before the thread sampler
+  sees every worker, and an arm builds the same decoder whatever the corpus;
 - the run is a dry run (`DRY-RUN.txt` beside the records).
 
 **Each cell** (corpus, count): the rounds' paired log ratios of wall, the port over v0.5.6, as a
@@ -43,7 +46,9 @@ import re
 import statistics
 import sys
 
-CAND, MAIN, HELDOUT, SUSTAINED = "mibz2", "wikidata-x4", "ho-wikidata-l9", "wikidata-x16"
+CAND_DIR, REF_DIR = "/build-port/", "/build-v0.5.6/"
+MAIN, HELDOUT, SUSTAINED = "wikidata-x4", "ho-wikidata-l9", "wikidata-x16"
+CHECKED = (MAIN, HELDOUT, "ho-wikidata-l1", SUSTAINED)
 WORKERS = {8: 8, 10: 7, 20: 7}
 ALPHA, GUARD_MAX, RSS_GATE = 0.05, 1.02, 1.10
 T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262,
@@ -139,15 +144,17 @@ def load(path, counts, rounds, errors, check_workers=True):
         try:
             r = json.loads(line)
             arm = r["arm"]
-            key = (r["corpus"], int(r["threads"]), CAND if arm == CAND else "ref", int(r["round"]))
+            side = "cand" if arm.startswith("mibz2@") and CAND_DIR in arm else \
+                "ref" if arm.startswith("mibz2@") and REF_DIR in arm else None
+            key = (r["corpus"], int(r["threads"]), side, int(r["round"]))
         except (ValueError, KeyError, TypeError):
             errors.append(f"{os.path.basename(path)} line {ln}: not a record")
             continue
-        if arm != CAND:
-            if not arm.startswith(CAND + "@"):
-                errors.append(f"{os.path.basename(path)} line {ln}: arm {arm!r} is neither {CAND} nor {CAND}@<v0.5.6>")
-                continue
-            refs.add(arm)
+        if side is None:
+            errors.append(f"{os.path.basename(path)} line {ln}: arm {arm!r} is neither the port's build "
+                          f"(mibz2@…{CAND_DIR}…) nor v0.5.6's (mibz2@…{REF_DIR}…)")
+            continue
+        refs.add((side, arm))
         if key in rows:
             errors.append(f"{key} duplicated")
             continue
@@ -157,14 +164,17 @@ def load(path, counts, rounds, errors, check_workers=True):
             errors.append(f"{key}: failed, or no wall time or peak memory")
             continue
         t = key[1]
-        if check_workers and t in WORKERS and workers(r) != sorted(f"mibz2-{k}" for k in range(WORKERS[t])):
+        if check_workers and key[0] in CHECKED and t in WORKERS \
+                and workers(r) != sorted(f"mibz2-{k}" for k in range(WORKERS[t])):
             errors.append(f"{key}: observed workers {workers(r)}, not the shipped {WORKERS[t]} at {t} threads")
         outs.setdefault(key[0], set()).add((r.get("out"), r.get("sha256") or r.get("hash")))
         corpora.add(key[0])
         rows[key] = r
-    if len(refs) > 1:
-        errors.append(f"more than one reference arm: {sorted(refs)}")
-    roster = {(c, t, a, i) for c in corpora for t in counts for a in (CAND, "ref") for i in range(rounds)}
+    for side in ("cand", "ref"):
+        arms = sorted(a for s, a in refs if s == side)
+        if len(arms) > 1:
+            errors.append(f"more than one {'port' if side == 'cand' else 'reference'} binary: {arms}")
+    roster = {(c, t, a, i) for c in corpora for t in counts for a in ("cand", "ref") for i in range(rounds)}
     missing = sorted(roster - set(rows))
     extra = sorted(set(rows) - roster)
     if missing:
@@ -178,10 +188,10 @@ def load(path, counts, rounds, errors, check_workers=True):
 
 
 def cell(rows, corpus, t, rounds):
-    xs = [math.log(rows[(corpus, t, CAND, i)]["wall"] / rows[(corpus, t, "ref", i)]["wall"]) for i in range(rounds)]
+    xs = [math.log(rows[(corpus, t, "cand", i)]["wall"] / rows[(corpus, t, "ref", i)]["wall"]) for i in range(rounds)]
     m, se = statistics.mean(xs), statistics.stdev(xs) / math.sqrt(len(xs))
     h = t975(len(xs) - 1) * se
-    mem = statistics.median(rows[(corpus, t, CAND, i)]["rss_kb"] for i in range(rounds)) / \
+    mem = statistics.median(rows[(corpus, t, "cand", i)]["rss_kb"] for i in range(rounds)) / \
         statistics.median(rows[(corpus, t, "ref", i)]["rss_kb"] for i in range(rounds))
     return math.exp(m), math.exp(m - h), math.exp(m + h), p_gain(xs), mem
 
@@ -267,11 +277,15 @@ def pairs(a):
     for ln, line in enumerate(open(a.runs), 1):
         if line.strip():
             r = json.loads(line)
-            if r.get("termination") != "success":
-                errors.append(f"line {ln}: failed")
-            recs[(r["corpus"], int(r["threads"]), r["arm"], int(r["round"]))] = r
+            wall = r.get("wall")
+            if r.get("termination") != "success" or isinstance(wall, bool) \
+                    or not isinstance(wall, (int, float)) or not wall > 0:
+                errors.append(f"line {ln}: {r.get('corpus')} {r.get('arm')} failed")
+                continue
+            # (the arm's name before `@`: the context arms are one build's)
+            recs[(r["corpus"], int(r["threads"]), r["arm"].split("@")[0], int(r["round"]))] = r
     if errors:
-        print(f"VOID: {len(errors)} records failed")
+        print(f"VOID: {len(errors)} records failed, e.g. {errors[:3]}")
         return 1
     for spec in a.pair:
         x, y = spec.split("/")
