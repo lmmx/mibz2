@@ -1,0 +1,18 @@
+d38b8af5aac80579da3ede854c65c9469d18bd03
+3df195b10e9fb6f86f0c06ad9fad1feb992406d5
+75297a1
+75297a1d57b2bdf262c3a19f3064848dedf2c493
+040000 tree 75f7b0321bd71c5086cbfb34747f7ea963463784	bench/moonshot
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+fc1ab0c7f46bb8152e395c5ae22d52a1eb06d299212e9a6bf452139d8c9eb990  research/astra-e/queue-short-fill/both1.rs
+28887faadf587df16449b28fc156e17fc92e21f24c0edc73470a9a46c052069c  research/astra-e/queue-short-fill/prepare.py
+377b1dd2fd9a17e4ceeb0fd1d586d6c33915842baf9d225e957c3c222c776ba6  research/astra-e/queue-short-fill/target/generated/both1.rs
+2dde2d590cb4684e79b9b5a910c5ebd16ebf4ed87077eaa614980c43fd029104  research/astra-e/queue-short-fill/target/generated/adapter.inc.rs
+23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212  research/astra-e/queue-short-fill/target/generated/gate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  /workspace/work/astra-e/corpora/wikidata.bz2
