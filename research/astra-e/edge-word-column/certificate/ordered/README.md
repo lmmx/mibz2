@@ -37,7 +37,7 @@ cmp "$d/checked.txt" "$t/ordered-check.txt"
 python3 "$d/verify.py" | cmp "$d/counts.txt" -
 ```
 
-The next bounded storage test is to stage ancestry only for variable Pull(I) positions, keeping outside/constant directives in their existing compressed certificate streams. Compare per-band, per-Q and per-source-I override runs and bin states, with actual byte-order acquisition still charged.
+The mixed-only and modal override study is now complete. Both eager and suspended exception variants were verified on the same finite and real sets. The direct online route uses one original-cap pass and at most 57 open mixed-bucket readers (508 total simultaneously queued byte heads) on any measured block.
 
 The unseeded ranked-source/deletion work at d7fc8712 carries a marked source that can itself be deleted. It recovers the joined alias’s base plus the incoming occurrence rank within the old destination bucket (and the old predecessor’s byte offset); a surviving mark may instead require its deletion rank. Our fixed protected singleton cannot be deleted and its one source alias directly identifies the new marked rank. That shortcut for the mark does not determine the order of the other surviving incoming tags. [Ranked-source mark proof and measurements](../../../formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/marker-insert/quotient/fold/iterated/cut/unseeded/native/published/bucket/README.md)
 

@@ -68,7 +68,8 @@ void override_check(const RootInput& a,const V& base,const V& uniform,const V& w
                 b.pos=b.slices[b.si].lo;heap.push({a.q[b.byte][b.pos],e.idx});cost.reads++;
             }
             auto& out=ex[j];if(!out.empty()&&out.back().hi==start&&out.back().tag==slice.tag)out.back().hi=stop;
-            else out.push_back({start,stop,slice.tag});exparts++;
+            else out.push_back({start,stop,slice.tag});
+            exparts++;
         }
         intervals+=ex[j].size();
         u n=0;for(auto r:ex[j]){assert(r.lo>=base[j]&&r.hi<=base[j+1]&&r.lo<r.hi&&r.tag!=mode[j]);n+=r.hi-r.lo;}

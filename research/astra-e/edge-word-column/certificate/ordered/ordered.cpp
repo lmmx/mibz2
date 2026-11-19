@@ -52,6 +52,7 @@ void compare_stock(const std::vector<Span>& old,const V& words,const V& color,u 
     const std::vector<Span>& result,const Names& names,u next_mark);
 #ifdef EDGE_MODAL_OVERRIDES
 #include "overrides/modal.inc"
+#include "overrides/live.inc"
 #endif
 void process_order(const RootInput& a,const V& truth,const Weights& words,const std::vector<uint8_t>& oracle,
        u block,int forced,bool print){
@@ -163,6 +164,7 @@ void process_order(const RootInput& a,const V& truth,const Weights& words,const 
     assert(other.size()==published.size());for(u i=0;i<other.size();i++)assert(other[i].label==published[i].label&&other[i].width==published[i].width);
 #ifdef EDGE_MODAL_OVERRIDES
     override_check(a,base,uniform,widths,branches,ops,outer,ancestry,physical,published,block,print);
+    live_check(a,base,color,surv,uniform,widths,fs,first,stop,start,outer,published,block,print);
 #endif
     // Verification only. The truth permutation, old incoming RLE, new dense
     // ranks and output vectors below are not used by either publication schedule.
@@ -229,6 +231,8 @@ int main(int argc,char** argv){
     if(argc==2&&std::string(argv[1])=="small"){small();return 0;}
 #ifdef EDGE_MODAL_OVERRIDES
     assert(argc==6);std::ifstream cap(argv[4],std::ios::binary);modal_csv.open(argv[5]);override_header();
+    live_csv.open(std::string(argv[5])+".live");
+    live_csv<<"block,m,nondefault_rows,exception_slices,exception_bins,exception_q_reads,heap_comparisons,heap_chunks,outer_claims,inner_claims,default_claims,peak_open_buckets,peak_live_heads,cap_records,output_runs\n";
 #else
     assert(argc==4);
 #endif
