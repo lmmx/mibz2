@@ -53,7 +53,7 @@ s=one(s,old,'''        if direct {
 s=one(s,'[(3,4),(4,8),(5,12)]','[(15,4),(16,8),(17,12)]')
 s=one(s,'if arm==1{0}else{arm},if arm>=3','if arm==1{0}else if arm>=3{arm+12}else{arm},if arm>=3')
 s=one(s,'let codes=[0,6,3,9,4,10];','let codes=[0,3,9,15,4,16];')
-s=one(s,'["named","named_stream","quot4","quot4_stream","quot8","quot8_stream"]','["named","quot4","quot4_stream","direct4","quot8","direct8"]')
+s=one(s,'let names=["named","named_stream","quot4","quot4_stream","quot8","quot8_stream"]','let names=["named","quot4","quot4_stream","direct4","quot8","direct8"]')
 s=one(s,'let code=[0,6,3,9,4,10][arm];','let code=[0,3,9,15,4,16][arm];')
 s=one(s,'let name=["named","named_stream","quot4","quot4_stream","quot8","quot8_stream"][arm];','let name=["named","quot4","quot4_stream","direct4","quot8","direct8"][arm];')
 main.write_text(s)
