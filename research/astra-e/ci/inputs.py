@@ -20,22 +20,27 @@ CONTROLS = [
 ]
 
 
-# The previous independently selected combined kernel is immutable, including its
-# generated constructor inputs, worker code and Cargo dependencies. Its harness
-# receives the same scorer projection as the PR head and master-based references.
-PREDECESSOR = {
+# Each predecessor has its own frozen checkout, including generated inputs,
+# worker code and Cargo dependencies. The harness receives the same scorer
+# projection as the PR head and the master-based references.
+COMBINED = {
     "commit": "5c7704b3d149b05b8e9dc2ace06da0179459a8b3",
     "path": "research/astra-e/narrow-short/ahead.rs",
 }
-MATCHED = {
-    "research/astra-e/edge-budget/candidate.rs",
-    "research/astra-e/final-slot/candidate.rs",
+STATIC_FRONTIER = {
+    "commit": "d48e80ff01eeee6d23277945e2f58b61004470aa",
+    "path": "research/astra-e/formulations/f2-frontier/candidate.rs",
+}
+PREDECESSORS = {
+    "research/astra-e/edge-budget/candidate.rs": COMBINED,
+    "research/astra-e/final-slot/candidate.rs": COMBINED,
+    "research/astra-e/formulations/f2-scheduler/candidate.rs": STATIC_FRONTIER,
 }
 
 
 def predecessor():
     candidate = Path("research/astra-e/ci/candidate").read_text().strip()
-    return PREDECESSOR if candidate in MATCHED else None
+    return PREDECESSORS.get(candidate)
 
 
 def git(*args):

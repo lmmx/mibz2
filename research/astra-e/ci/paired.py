@@ -64,7 +64,7 @@ def main():
         "master opend": compare_to_reference(rows, "opend"),
     }
     if args.predecessor:
-        tables["frozen narrow-short/ahead"] = compare_to_reference(rows, "predecessor")
+        tables["frozen predecessor"] = compare_to_reference(rows, "predecessor")
     (args.out / "ratios.json").write_text(json.dumps(tables, indent=2) + "\n")
     report = [
         "### Astra E paired research benchmark",

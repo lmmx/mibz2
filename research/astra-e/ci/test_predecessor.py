@@ -47,7 +47,7 @@ def check(count):
         tables = json.loads((path/"ratios.json").read_text())
         ratios = {"master LazyCells": .75, "master eager Cells": 1.2, "master opend": .75/.875}
         if count == 5:
-            ratios["frozen narrow-short/ahead"] = .8
+            ratios["frozen predecessor"] = .8
         assert set(tables) == set(ratios)
         for w in paired.WORKERS:
             for label, desired in ratios.items():
@@ -55,7 +55,7 @@ def check(count):
                 assert cell["n"] == rounds and abs(cell["geomean"]-desired) < 1e-10
                 assert abs(cell["hi"]-desired) < 1e-10 and abs(cell["lo"]-desired) < 1e-10
             if count == 5:
-                cell = tables["frozen narrow-short/ahead"][str(w)]["candidate"]
+                cell = tables["frozen predecessor"][str(w)]["candidate"]
                 assert abs(cell["peak_rss_ratio"] - 75/85) < 1e-10
         assert all(r["build"] == "frozen predecessor" and r["compiled_arm"] == "candidate"
                    for r in rows if r["arm"] == "predecessor")
@@ -67,14 +67,23 @@ def receipts():
     base = "fixture-base"
     receipt = dict(head=head, base=base, scorer=inputs.scorer_revision(),
                    inputs=["research/astra-e/ci/candidate"], generated={})
-    with patch.object(inputs, "predecessor", return_value=inputs.PREDECESSOR):
-        assert not inputs.reusable(receipt,base)
-        assert not inputs.reusable(dict(receipt, predecessor=dict(inputs.PREDECESSOR,commit="f"*40)),base)
-        assert inputs.reusable(dict(receipt, predecessor=inputs.PREDECESSOR),base)
-    with patch.object(inputs, "predecessor", return_value=None):
+    selections = {
+        "research/astra-e/edge-budget/candidate.rs": inputs.COMBINED,
+        "research/astra-e/final-slot/candidate.rs": inputs.COMBINED,
+        "research/astra-e/formulations/f2-scheduler/candidate.rs": inputs.STATIC_FRONTIER,
+    }
+    for candidate, pin in selections.items():
+        with patch.object(Path, "read_text", return_value=candidate+"\n"):
+            assert inputs.predecessor() == pin
+            assert inputs.git("cat-file", "-t", pin["commit"]+":"+pin["path"]) == "blob"
+            assert not inputs.reusable(receipt,base)
+            assert not inputs.reusable(dict(receipt, predecessor=dict(pin,commit="f"*40)),base)
+            assert inputs.reusable(dict(receipt, predecessor=pin),base)
+    with patch.object(Path, "read_text", return_value="unmatched-candidate\n"):
+        assert inputs.predecessor() is None
         assert inputs.reusable(receipt,base)
-        assert not inputs.reusable(dict(receipt, predecessor=inputs.PREDECESSOR),base)
-    print("Completed-input check rejected absent, changed, and extraneous predecessor identities; matched mode reused the identical pin.")
+        assert not inputs.reusable(dict(receipt, predecessor=inputs.STATIC_FRONTIER),base)
+    print("Completed-input check rejected absent, changed, and extraneous predecessors. Edge-budget and final-slot matched combined-ahead; refill matched its static eight-path frontier.")
 
 
 if __name__ == "__main__":
