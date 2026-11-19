@@ -1,0 +1,8 @@
+{
+  "queried_groups": 5226,
+  "physical_partner_words": 3678,
+  "deterministic_cycles": 3206,
+  "cycle_len_greater_than_one": 1736,
+  "balanced_three_or_more": 1296,
+  "lift_lane_congruences": 101728
+}
