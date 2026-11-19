@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufRead,BufReader,Read,Seek,SeekFrom};
+use std::io::{BufRead,BufReader,BufWriter,Read,Seek,SeekFrom,Write};
 
 fn read32(f:&mut impl Read)->u32{let mut v=[0;4];f.read_exact(&mut v).unwrap();u32::from_le_bytes(v)}
 fn bytes(f:&mut impl Read,n:usize)->Vec<u8>{let mut data=vec![0;n];f.read_exact(&mut data).unwrap();data}
@@ -45,7 +45,7 @@ struct Measured {
 fn measure(t:&Table,mark:usize,seed:Option<usize>,n:usize,
            canonical:&[usize],want:&[u8],reused:&mut Vec<u8>)->Measured{
     let rows=t.edges.len();let valid=seed.is_some_and(|s|s<rows && s!=mark);
-    let (mut first,mut second);
+    let (first,mut second);
     let mut z=Measured::default();
     if valid {
         let s=seed.unwrap();
@@ -85,9 +85,32 @@ fn measure(t:&Table,mark:usize,seed:Option<usize>,n:usize,
     if z.relation=="same"{out.extend_from_slice(reused);z.joined=reused.len();}
     if z.relation=="foreign"{z.discarded=reused.len();}
     z.repeat=n-out.len();repeat(&mut out,n);assert_eq!(out,want);
-    // Do not let incidental per-function temporaries become part of a worker-state estimate.
-    first.clear();
     z
+}
+fn bounded(aa:&[usize],bb:&[usize],n:usize)->(usize,&'static str,usize,usize,usize,usize){
+    if bb.is_empty(){return (0,"no_secondary",0,0,0,0);}
+    let cut=n/2;
+    let prefix=|ends:&[usize],h:usize|if h==0{0}else{ends[h-1]};
+    let q=aa.partition_point(|&x|x<=cut).min(bb.partition_point(|&x|x<=n-cut));
+    let why=if q==aa.len() || q==bb.len(){"seed"}else if aa[q]>cut{"primary_boundary"}else{"secondary_boundary"};
+    let primary_advanced=q+usize::from(why=="secondary_boundary");
+    let primary_len=*aa.last().unwrap();
+    let moved=|a_done:bool,kept:usize| {
+        let source=if a_done{cut}else{n-kept};
+        usize::from(!a_done && source!=cut)*kept+usize::from(source!=primary_len)*kept
+    };
+    let kept=prefix(bb,q);
+    let directed=if why=="primary_boundary"{*bb.last().unwrap()}else{kept};
+    let normal_moved=moved(primary_advanced==aa.len(),kept);
+    let directed_moved=moved(why=="secondary_boundary" || primary_advanced==aa.len(),directed);
+    (q,why,kept,normal_moved,directed,directed_moved)
+}
+fn predict_capacity(ends:&[usize],mut old:usize)->usize {
+    loop {
+        let i=ends.partition_point(|&n|n<=old);
+        if i==ends.len(){return old;}
+        old=8.max(2*old).max(ends[i]);
+    }
 }
 fn un_rle(coded:&[u8])->Vec<u8>{
     let mut out=Vec::new();let mut at=0;let(mut prev,mut count)=(256,0);
@@ -149,6 +172,11 @@ fn main(){
     }
     let mut lib=File::open(&args[4]).unwrap();assert_eq!(offset,lib.metadata().unwrap().len()as usize);
     let mut reusable:[Vec<u8>;4]=Default::default();
+    let mut slot_caps=[[[0usize;10];5];4];
+    let mut storage=BufWriter::new(File::create(&args[5]).unwrap());
+    let mut fixed=BufWriter::new(File::create(&args[6]).unwrap());
+    writeln!(fixed,"block,method,paired_before_boundary,stop,normal_carried,normal_moved,directed_carried,directed_moved").unwrap();
+    writeln!(storage,"block,method,workers,slot,initial_capacity,final_capacity,all_slot_capacity").unwrap();
     let(mut blocks,mut total,mut final_bytes,mut rows)=(0,0,0,0);
     println!("block,stream,n,m,mark,method,seed,relation,primary_hops,secondary_hops,paired_rounds,ideal_paired_rounds,critical_rounds,primary_words,secondary_words,primary_spelling_bytes,secondary_spelling_bytes,primary_bytes,secondary_bytes,join_copy_bytes,discarded_bytes,repeat_bytes,both_nonliteral_rounds,paired_shorter_payload_sum,same_edge_line_rounds,same_edge_page_rounds,fresh_secondary_capacity,persistent_secondary_capacity");
     while !edges.fill_buf().unwrap().is_empty(){
@@ -172,6 +200,27 @@ fn main(){
         for (j,seed) in seeds(mark,m).into_iter().enumerate(){
             let z=measure(&t,mark,seed,n,&cycle,&want,&mut reusable[j]);
             let method=["half_shift","xor1","zero","midpoint"][j];
+            // Exact requested end offsets. The all-block calculation does not rely on
+            // a block's fresh high-water also being its high-water after reuse.
+            let secondary:Vec<usize>=match z.relation {
+                "same"=>cycle[z.primary_hops..].to_vec(),
+                "foreign"=>t.arc(seed.unwrap(),mark).0[..z.secondary_hops].to_vec(),
+                _=>Vec::new()
+            };
+            let mut used=0;
+            let ends:Vec<_>=secondary.iter().map(|&i|{used+=t.length(t.code(t.edges[i]));used}).collect();
+            assert_eq!(used,z.secondary_bytes);assert_eq!(predict_capacity(&ends,0),z.fresh_cap);
+            assert_ne!(z.relation,"foreign","real panel assumes measured marked orbit includes all rows");
+            let mut pc=0;
+            let pa:Vec<_>=cycle[..z.primary_hops].iter().map(|&i|{pc+=t.length(t.code(t.edges[i]));pc}).collect();
+            let (pairs,stop,carried,moved,dc,dm)=bounded(&pa,&ends,n);
+            writeln!(fixed,"{id},{method},{pairs},{stop},{carried},{moved},{dc},{dm}").unwrap();
+            for (wi,w) in [1,7,8,9,10].into_iter().enumerate(){
+                let lane=id%w;let caps=&mut slot_caps[j][wi];let before=caps[lane];
+                caps[lane]=predict_capacity(&ends,before);
+                if w==1{assert_eq!(caps[lane],z.reuse_cap);}
+                writeln!(storage,"{id},{method},{w},{lane},{before},{},{}",caps[lane],caps.iter().sum::<usize>()).unwrap();
+            }
             println!("{id},{stream},{n},{m},{mark},{method},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
                      seed.map_or(-1,|s|s as i64),z.relation,z.primary_hops,z.secondary_hops,z.paired,z.ideal,z.critical,
                      z.primary_words,z.secondary_words,z.primary_word_bytes,z.secondary_word_bytes,z.primary_bytes,
