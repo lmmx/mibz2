@@ -1,0 +1,210 @@
+{
+  "counts": {
+    "layouts": 63840,
+    "kept_adjacencies": 214875,
+    "sections": 12768
+  },
+  "step_directions": {
+    "stable": {
+      "equal": 12768
+    },
+    "reflected": {
+      "equal": 12351,
+      "more": 203,
+      "fewer": 214
+    },
+    "short_first": {
+      "equal": 12622,
+      "fewer": 73,
+      "more": 73
+    },
+    "long_first": {
+      "equal": 12645,
+      "fewer": 76,
+      "more": 47
+    },
+    "reverse_spans": {
+      "equal": 12496,
+      "fewer": 147,
+      "more": 125
+    }
+  },
+  "witnesses": {
+    "reflected more": {
+      "last": [
+        1,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "kept": [
+        0
+      ],
+      "baseline": 4,
+      "changed": 5
+    },
+    "reflected fewer": {
+      "last": [
+        1,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "kept": [
+        5
+      ],
+      "baseline": 5,
+      "changed": 4
+    },
+    "short_first fewer": {
+      "last": [
+        1,
+        0,
+        2,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1
+      ],
+      "kept": [
+        0,
+        2,
+        10
+      ],
+      "baseline": 10,
+      "changed": 9
+    },
+    "reverse_spans fewer": {
+      "last": [
+        1,
+        0,
+        2,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1
+      ],
+      "kept": [
+        0,
+        2,
+        10
+      ],
+      "baseline": 10,
+      "changed": 9
+    },
+    "reverse_spans more": {
+      "last": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "kept": [
+        0,
+        4,
+        12
+      ],
+      "baseline": 14,
+      "changed": 15
+    },
+    "long_first fewer": {
+      "last": [
+        2,
+        2,
+        0,
+        2,
+        2,
+        3,
+        3,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1
+      ],
+      "kept": [
+        3,
+        7
+      ],
+      "baseline": 12,
+      "changed": 11
+    },
+    "long_first more": {
+      "last": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "kept": [
+        0,
+        3
+      ],
+      "baseline": 8,
+      "changed": 9
+    },
+    "short_first more": {
+      "last": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "kept": [
+        9
+      ],
+      "baseline": 9,
+      "changed": 10
+    }
+  }
+}
