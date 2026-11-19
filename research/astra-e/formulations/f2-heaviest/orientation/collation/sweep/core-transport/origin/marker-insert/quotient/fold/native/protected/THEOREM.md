@@ -7,3 +7,15 @@ At token level, every surviving symbol k expands as (k,g(k)) if k is selected, o
 A marked point in a deleted word moves to the preceding surviving word at the original skip plus the predecessor's old byte length. The d boundary before the mark, its d-visit rank, and the subsequent byte offset from it are consequently identical in the two representations. Cycles disjoint from d stay disjoint, so a mark there uses the same fallback decision. An all-d component remains unchanged. Tied byte itineraries do not identify any distinct ordinal row; all arguments use stable input ranks and physical first return to D.
 
 The second discovery builds a return trie over its input token alphabet. Folding can change its rank queries and selector merges while preserving the normalized root and bytes. The local test compares the actual complete stock objects and marked shifts outside timing.
+
+## Stock dependent rank queries admit an exact original-interval count
+
+A logical stock second-discovery search state is a distinct proper token suffix u of a positive old d-return word, including the empty suffix. Starting at the ordered D interval, restrict to each preceding token other than d and take LF to get a child. Descending after a homogeneous non-d run in the same Rust loop still calls find once at the next logical state. Splitting children by token in the branching case calls find exactly once at each new state. Thus the number Q of stock discovery rank queries equals the number of these distinct suffix states. A marked cycle without d can bypass this phase entirely; the mathematical Q describes the admitted d traversal.
+
+Each new proper suffix expands to an old proper suffix under the uniquely decoded protected substitution. For a particular old suffix u, its source rows are exactly the interval reached from D by the backward search spelling u. Such an old suffix has a new counterpart precisely when at least one row of that interval survives. Starting at a surviving row parses its entire suffix into the deterministic new symbols with d as a fixed fence. Conversely every expanded new suffix starts at a surviving row. Hence
+
+```text
+Q_new = Q_old − number of old suffix-state intervals containing only deleted rows.
+```
+
+The original states partition the old token rows on cycles intersecting D. Each such row has one suffix up to its next d, taking the empty suffix on D itself. A row in a fully removed interval has an incoming old label k selected for contraction. Testing whether all incoming labels appearing in each original interval are selected gives an exact objective for reducing stock search work. It can differ sharply from maximizing the total number of rows deleted. In the verification diagnostic each original d-reachable row is inspected once; dense LF coordinates, interval grouping and a per-row partition check are paid only in that diagnostic. The emitted native constructor uses direct old-RLE cursors.
