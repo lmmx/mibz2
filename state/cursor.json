@@ -2703,11 +2703,13 @@
     },
     {
       "trigger_comment_id": 7008546954,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-port-c6-freeze-7008546954/report.md",
-      "source_commit": "4bb9e31963b20ab2c359bb89afaf81b8b537ba35"
+      "source_commit": "4bb9e31963b20ab2c359bb89afaf81b8b537ba35",
+      "report_commit": "2a282c65b7a0d0eb674faf28fd1b22e39fe271d8",
+      "disposition": "PROCEED on targeted technical review of 4bb9e319. Frozen inputs and DRY archive verified, all 73 checks pass, and SIGKILL after the marker consumed the attempt. CI remains a separate queue gate."
     }
   ],
   "active_delegations": [],
