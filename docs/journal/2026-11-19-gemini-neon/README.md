@@ -13,6 +13,7 @@ unless Louis decides so.
 |---|---|
 | [prompt.md](prompt.md) | The prompt, verbatim. |
 | [response.md](response.md) | Neon's response, verbatim and unedited. |
+| [response-2.md](response-2.md) | Neon's second response, after a follow-up asking it to re-examine Theorem 3 and repair Theorem 2. Verbatim and unedited. |
 | [check_theorem1.py](check_theorem1.py) | The Coordinator's exhaustive check of Theorem 1 and of the 7-cycle example. |
 
 ## Status of the claims
@@ -79,7 +80,33 @@ These items were withheld from the prompt.
 
 **Classification so far:** a promising, testable conjectural construction, not a proved new theorem.
 
+## Round 2
+
+Asked to re-examine Theorem 3 and repair Theorem 2, Neon ([response-2.md](response-2.md)) did the following.
+
+**What it got right:**
+- **It refuted its own Theorem 3,** with three concrete defects:
+  - cached front pointers go stale when a cut in one component changes another component's rightmost codomain interval. It gives an n = 4 counterexample with a single front;
+  - forward mark transport is not local in a coordinate-free representation;
+  - the Case 3a write footprint was incomplete.
+- **It replaced it with Theorem 3′:**
+  - per-component sentinels;
+  - backward mark transport;
+  - exact footprints.
+
+  Its dynamical core is that if T(Y) ∩ Y = ∅ for the union Y of the cut pieces, every surviving point returns within two steps. That is sound, and is the part most worth keeping.
+- **Theorem 2′:** the Fibonacci indexing is repaired, and the Kac identity is now limited to explicit row tracing. It says plainly that this is not a bound on interval-level discovery.
+
+**Still not established:**
+- **No executable verification.** "Verified" rests on three hand-worked examples. There is no checker, no case count and no reproducible output.
+- **Test A's repair is impossible.** It proposes splitting I₂ and I₅ into two non-empty intervals each, but both have length 1. The two-front, conflict-free batch it claims to demonstrate is therefore not demonstrated.
+- **Batching may rarely be possible.** In Test B, the only multi-front example that runs, Condition 2 (A_j ≠ B_j′) rejects every attempted batch. Whether real blocks admit batches of two or more fronts often enough to matter is untested, and it decides the practical value. Measure it first: the fraction of rounds with |S| ≥ 2 on Wikidata blocks.
+
+**Classification:** Theorem 3′ is a plausible corrected construction with a sound dynamical core. Its pointer-level and mark-transport claims need an executable reference model. MONODROMY now audits Theorem 3′ rather than the withdrawn Theorem 3.
+
+**Round 2 also shows how Neon behaves under correction:** it found a real defect in its own construction and repaired it rather than defending the original. It still labels claims "proved" ahead of its evidence.
+
 ## Routing
 
-- **MONODROMY:** verify Theorems 1–3. Theorem 3's confluence comes first, by an exhaustive small-case comparison against direct first-return computation, with return words and marks.
+- **MONODROMY:** verify Theorems 1, 2′ and 3′ (CHECKPOINT 7005355308, redirected to 3′ after round 2). Theorem 3′ comes first: an exhaustive small-case comparison against direct first-return computation, with return words and marks. Then the batch rate: how often |S| ≥ 2 is admissible.
 - **Louis's optional follow-up to Neon:** ChatGPT's suggested follow-up asks Neon to re-examine Theorem 3 exhaustively and to repair Theorem 2. That is a good second-round test of calibration.
