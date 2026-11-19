@@ -2224,7 +2224,7 @@ bench-opend-sweep COPIES="4" ROUNDS="12" SETTLE="2" REPS="5" DRY="":
 # attempt (the Researcher's correction, REVIEW 7007213171): the recipe refuses a second timed attempt.
 # DRY (any value): the untimed preflight (PROTOCOL §9), which times nothing: each corpus decoded
 # once by each build, only the output's size and digest kept, and the scorer's own checks.
-bench-open-port PORT="3f09500ee3289b0dd06948003f45c89aedd8ea36" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="8" CROUNDS="8" DRY="":
+bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="8" CROUNDS="8" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/open-port

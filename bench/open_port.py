@@ -51,6 +51,7 @@ median of the port's peaks over the median of v0.5.6's.
 **ADOPTS** only where P1, P2, H, every G and S hold. Otherwise **NOT ADOPTED**, every failing
 condition named. Standard library only.
 """
+
 import argparse
 import json
 import math
@@ -63,9 +64,23 @@ CAND_DIR, REF_DIR = "/build-port/", "/build-v0.5.6/"
 MAIN, HELDOUT, SUSTAINED = "wikidata-x4", "ho-wikidata-l9", "wikidata-x16"
 # the registered roster (the Researcher's correction, REVIEW 7007213171): exactly these corpora
 # at exactly these counts and rounds, never the corpora a file happens to hold
-CORPORA = ("wikidata-x4", "text", "random", "records", "runs", "pattern", "onebyte",
-           "ho-wikidata-l9", "ho-wikidata-l1", "ho-prose-l1", "ho-prose-l9", "ho-code-l1", "ho-code-l9",
-           "ho-structured-l1", "ho-structured-l9")
+CORPORA = (
+    "wikidata-x4",
+    "text",
+    "random",
+    "records",
+    "runs",
+    "pattern",
+    "onebyte",
+    "ho-wikidata-l9",
+    "ho-wikidata-l1",
+    "ho-prose-l1",
+    "ho-prose-l9",
+    "ho-code-l1",
+    "ho-code-l9",
+    "ho-structured-l1",
+    "ho-structured-l9",
+)
 COUNTS, ROUNDS, SUSTAINED_ROUNDS = (8, 10, 20), 12, 8
 # the registered identities: the two builds' commits, and the two pinned Wikidata corpora
 V056 = "530ed404a014a414ef0b62adfd947fa14d4533e6"
@@ -74,9 +89,33 @@ HELDOUT_SHA256 = "7f5c9a0044e5a30589bf343b9b31e698849b2acc69461a55c97b550193128b
 CHECKED = (MAIN, HELDOUT, "ho-wikidata-l1", SUSTAINED)
 WORKERS = {8: 8, 10: 7, 20: 7}
 ALPHA, GUARD_MAX, RSS_GATE = 0.05, 1.02, 1.10
-T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262,
-        10: 2.228, 11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145, 15: 2.131, 16: 2.120, 17: 2.110,
-        18: 2.101, 19: 2.093, 20: 2.086, 21: 2.080, 22: 2.074, 23: 2.069, 24: 2.064, 25: 2.060}
+T975 = {
+    1: 12.706,
+    2: 4.303,
+    3: 3.182,
+    4: 2.776,
+    5: 2.571,
+    6: 2.447,
+    7: 2.365,
+    8: 2.306,
+    9: 2.262,
+    10: 2.228,
+    11: 2.201,
+    12: 2.179,
+    13: 2.160,
+    14: 2.145,
+    15: 2.131,
+    16: 2.120,
+    17: 2.110,
+    18: 2.101,
+    19: 2.093,
+    20: 2.086,
+    21: 2.080,
+    22: 2.074,
+    23: 2.069,
+    24: 2.064,
+    25: 2.060,
+}
 
 
 def t975(df):
@@ -145,11 +184,15 @@ def machine(lscpu, env, errors):
     except OSError:
         models = set()
     if len(models) != 1 or "i9-10900K" not in next(iter(models)):
-        errors.append(f"not the registered machine: lscpu names {sorted(models)}, not one i9-10900K")
+        errors.append(
+            f"not the registered machine: lscpu names {sorted(models)}, not one i9-10900K"
+        )
     try:
         e = json.load(open(env))
         if e.get("cores") != 10 or e.get("cpus") != 20:
-            errors.append(f"not the registered profile: {e.get('cores')} cores, {e.get('cpus')} CPUs, not 10 and 20")
+            errors.append(
+                f"not the registered profile: {e.get('cores')} cores, {e.get('cpus')} CPUs, not 10 and 20"
+            )
     except (OSError, ValueError):
         errors.append(f"{env}: unreadable")
     return next(iter(models)) if len(models) == 1 else None
@@ -173,15 +216,22 @@ def load(path, corpora, counts, rounds, errors, check_workers=True):
         try:
             r = json.loads(line)
             arm = r["arm"]
-            side = "cand" if arm.startswith("mibz2@") and CAND_DIR in arm else \
-                "ref" if arm.startswith("mibz2@") and REF_DIR in arm else None
+            side = (
+                "cand"
+                if arm.startswith("mibz2@") and CAND_DIR in arm
+                else "ref"
+                if arm.startswith("mibz2@") and REF_DIR in arm
+                else None
+            )
             key = (r["corpus"], int(r["threads"]), side, int(r["round"]))
         except (ValueError, KeyError, TypeError):
             errors.append(f"{os.path.basename(path)} line {ln}: not a record")
             continue
         if side is None:
-            errors.append(f"{os.path.basename(path)} line {ln}: arm {arm!r} is neither the port's build "
-                          f"(mibz2@…{CAND_DIR}…) nor v0.5.6's (mibz2@…{REF_DIR}…)")
+            errors.append(
+                f"{os.path.basename(path)} line {ln}: arm {arm!r} is neither the port's build "
+                f"(mibz2@…{CAND_DIR}…) nor v0.5.6's (mibz2@…{REF_DIR}…)"
+            )
             continue
         refs.add((side, arm))
         if key in rows:
@@ -191,22 +241,38 @@ def load(path, corpora, counts, rounds, errors, check_workers=True):
             errors.append(f"{key}: failed ({r.get('termination')!r}, {r.get('err')!r})")
             continue
         if not positive(r.get("wall")) or not positive(r.get("rss_kb")):
-            errors.append(f"{key}: wall {r.get('wall')!r} or peak RSS {r.get('rss_kb')!r} not a finite positive number")
+            errors.append(
+                f"{key}: wall {r.get('wall')!r} or peak RSS {r.get('rss_kb')!r} not a finite positive number"
+            )
             continue
         if not positive(r.get("out")) or not (r.get("sha256") or r.get("hash")):
             errors.append(f"{key}: no output size or digest")
             continue
         t = key[1]
-        if check_workers and key[0] in CHECKED and t in WORKERS \
-                and workers(r) != sorted(f"mibz2-{k}" for k in range(WORKERS[t])):
-            errors.append(f"{key}: observed workers {workers(r)}, not the shipped {WORKERS[t]} at {t} threads")
+        if (
+            check_workers
+            and key[0] in CHECKED
+            and t in WORKERS
+            and workers(r) != sorted(f"mibz2-{k}" for k in range(WORKERS[t]))
+        ):
+            errors.append(
+                f"{key}: observed workers {workers(r)}, not the shipped {WORKERS[t]} at {t} threads"
+            )
         outs.setdefault(key[0], set()).add((r.get("out"), r.get("sha256") or r.get("hash")))
         rows[key] = r
     for side in ("cand", "ref"):
         arms = sorted(a for s, a in refs if s == side)
         if len(arms) > 1:
-            errors.append(f"more than one {'port' if side == 'cand' else 'reference'} binary: {arms}")
-    roster = {(c, t, a, i) for c in corpora for t in counts for a in ("cand", "ref") for i in range(rounds)}
+            errors.append(
+                f"more than one {'port' if side == 'cand' else 'reference'} binary: {arms}"
+            )
+    roster = {
+        (c, t, a, i)
+        for c in corpora
+        for t in counts
+        for a in ("cand", "ref")
+        for i in range(rounds)
+    }
     if not rows:
         errors.append(f"{os.path.basename(path)}: no records (the roster is {len(roster)})")
     missing = sorted(roster - set(rows))
@@ -226,31 +292,45 @@ def identities(bundle, port, errors):
     port's pinned commit and v0.5.6's, and `inputs.sha256` the two pinned Wikidata corpora and a
     digest for each corpus of the roster"""
     try:
-        commits = dict(line.split() for line in open(os.path.join(bundle, "commits.txt")) if line.strip())
+        commits = dict(
+            line.split() for line in open(os.path.join(bundle, "commits.txt")) if line.strip()
+        )
     except (OSError, ValueError):
         commits = {}
     if commits.get("port") != port or commits.get("v0.5.6") != V056:
         errors.append(f"commits.txt: the builds are {commits}, not port {port} and v0.5.6 {V056}")
     try:
-        digests = {os.path.basename(f): d for d, f in (line.split() for line in open(os.path.join(bundle, "inputs.sha256"))
-                                                        if line.strip())}
+        digests = {
+            os.path.basename(f): d
+            for d, f in (
+                line.split() for line in open(os.path.join(bundle, "inputs.sha256")) if line.strip()
+            )
+        }
     except (OSError, ValueError):
         digests = {}
     if digests.get("wikidata.bz2") != WIKIDATA_SHA256:
-        errors.append(f"inputs.sha256: the Wikidata sample is {digests.get('wikidata.bz2')!r}, not {WIKIDATA_SHA256}")
+        errors.append(
+            f"inputs.sha256: the Wikidata sample is {digests.get('wikidata.bz2')!r}, not {WIKIDATA_SHA256}"
+        )
     if digests.get("wikidata-heldout.bz2") != HELDOUT_SHA256:
-        errors.append(f"inputs.sha256: the held-out Wikidata is {digests.get('wikidata-heldout.bz2')!r}, not {HELDOUT_SHA256}")
+        errors.append(
+            f"inputs.sha256: the held-out Wikidata is {digests.get('wikidata-heldout.bz2')!r}, not {HELDOUT_SHA256}"
+        )
     missing = [c for c in (*CORPORA, SUSTAINED) if f"{c}.bz2" not in digests]
     if missing:
         errors.append(f"inputs.sha256: no digest for {missing}")
 
 
 def cell(rows, corpus, t, rounds):
-    xs = [math.log(rows[(corpus, t, "cand", i)]["wall"] / rows[(corpus, t, "ref", i)]["wall"]) for i in range(rounds)]
+    xs = [
+        math.log(rows[(corpus, t, "cand", i)]["wall"] / rows[(corpus, t, "ref", i)]["wall"])
+        for i in range(rounds)
+    ]
     m, se = statistics.mean(xs), statistics.stdev(xs) / math.sqrt(len(xs))
     h = t975(len(xs) - 1) * se
-    mem = statistics.median(rows[(corpus, t, "cand", i)]["rss_kb"] for i in range(rounds)) / \
-        statistics.median(rows[(corpus, t, "ref", i)]["rss_kb"] for i in range(rounds))
+    mem = statistics.median(
+        rows[(corpus, t, "cand", i)]["rss_kb"] for i in range(rounds)
+    ) / statistics.median(rows[(corpus, t, "ref", i)]["rss_kb"] for i in range(rounds))
     return math.exp(m), math.exp(m - h), math.exp(m + h), p_gain(xs), mem
 
 
@@ -266,30 +346,46 @@ def judge(a):
     model = machine(os.path.join(a.bundle, "lscpu.txt"), os.path.join(a.bundle, "env.json"), errors)
     identities(a.bundle, a.port, errors)
     rows = load(os.path.join(a.bundle, "runs.jsonl"), corpora, counts, ROUNDS, errors)
-    srows = load(os.path.join(a.bundle, "sustained.jsonl"), [SUSTAINED], [10], SUSTAINED_ROUNDS, errors)
-    print(f"records {len(rows)} of {len(corpora) * len(counts) * 2 * ROUNDS} and {len(srows)} of "
-          f"{2 * SUSTAINED_ROUNDS} sustained; the registered roster: {len(corpora)} corpora at {counts} threads, "
-          f"{ROUNDS} rounds ({SUSTAINED_ROUNDS} sustained)" + (f"; the machine: {model}" if model else ""))
+    srows = load(
+        os.path.join(a.bundle, "sustained.jsonl"), [SUSTAINED], [10], SUSTAINED_ROUNDS, errors
+    )
+    print(
+        f"records {len(rows)} of {len(corpora) * len(counts) * 2 * ROUNDS} and {len(srows)} of "
+        f"{2 * SUSTAINED_ROUNDS} sustained; the registered roster: {len(corpora)} corpora at {counts} threads, "
+        f"{ROUNDS} rounds ({SUSTAINED_ROUNDS} sustained)"
+        + (f"; the machine: {model}" if model else "")
+    )
     if errors:
-        print(f"VOID: the records do not make the registered run ({len(errors)} problems); no verdict. "
-              "This registration's one confirmatory attempt gives no adoption evidence, and opens no retry.")
+        print(
+            f"VOID: the records do not make the registered run ({len(errors)} problems); no verdict. "
+            "This registration's one confirmatory attempt gives no adoption evidence, and opens no retry."
+        )
         for e in errors[:25]:
             print(f"  {e}")
         return 1
     fails, ps, res = [], {}, {}
-    print("\nthe port over v0.5.6: wall, the rounds' paired ratios, geometric mean [95% interval]; "
-          "one-sided p (gain); peak RSS, median over median")
+    print(
+        "\nthe port over v0.5.6: wall, the rounds' paired ratios, geometric mean [95% interval]; "
+        "one-sided p (gain); peak RSS, median over median"
+    )
     for t in counts:
         print(f"  {t} threads")
         for c in corpora:
             g, lo, hi, p, mem = res[(c, t)] = cell(rows, c, t, ROUNDS)
             role = "primary" if c == MAIN else "held-out replication" if c == HELDOUT else "guard"
-            print(f"    {c} ({role}): {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; p {p:.2e}; memory {mem:.3f}")
+            print(
+                f"    {c} ({role}): {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; p {p:.2e}; memory {mem:.3f}"
+            )
             if c == MAIN:
                 ps[t] = p
     rejected = holm(ps, ALPHA)
-    print(f"\nP1, wall on {MAIN}: Holm at α {ALPHA} over {len(ps)} cells: "
-          + ", ".join(f"{t} threads p {ps[t]:.2e} {'rejects' if t in rejected else 'does not'}" for t in counts))
+    print(
+        f"\nP1, wall on {MAIN}: Holm at α {ALPHA} over {len(ps)} cells: "
+        + ", ".join(
+            f"{t} threads p {ps[t]:.2e} {'rejects' if t in rejected else 'does not'}"
+            for t in counts
+        )
+    )
     for t in counts:
         if t not in rejected:
             fails.append(f"P1: no gain on {MAIN} at {t} threads")
@@ -310,8 +406,10 @@ def judge(a):
             if mem > RSS_GATE:
                 fails.append(f"G: {c} at {t} threads peak RSS {mem:.3f}, above {RSS_GATE}")
     g, lo, hi, p, mem = cell(srows, SUSTAINED, 10, SUSTAINED_ROUNDS)
-    print(f"\nS, sustained: 10 threads back to back on {SUSTAINED}: {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; "
-          f"memory {mem:.3f}")
+    print(
+        f"\nS, sustained: 10 threads back to back on {SUSTAINED}: {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; "
+        f"memory {mem:.3f}"
+    )
     if lo > 1:
         fails.append(f"S: sustained SLOWER, {g:.4f} [{lo:.4f}, {hi:.4f}]")
     elif g > GUARD_MAX:
@@ -321,9 +419,11 @@ def judge(a):
         for f in fails:
             print(f"  {f}")
     else:
-        print("\nVERDICT: ADOPTS. A wall gain on Wikidata at every count (Holm), peak RSS not above "
-              "v0.5.6's, the gain replicated on held-out Wikidata, every guard within its bound, and "
-              "the sustained cell within its bound.")
+        print(
+            "\nVERDICT: ADOPTS. A wall gain on Wikidata at every count (Holm), peak RSS not above "
+            "v0.5.6's, the gain replicated on held-out Wikidata, every guard within its bound, and "
+            "the sustained cell within its bound."
+        )
     return 0
 
 
@@ -334,8 +434,12 @@ def pairs(a):
         if line.strip():
             r = json.loads(line)
             wall = r.get("wall")
-            if r.get("termination") != "success" or isinstance(wall, bool) \
-                    or not isinstance(wall, (int, float)) or not wall > 0:
+            if (
+                r.get("termination") != "success"
+                or isinstance(wall, bool)
+                or not isinstance(wall, (int, float))
+                or not wall > 0
+            ):
                 errors.append(f"line {ln}: {r.get('corpus')} {r.get('arm')} failed")
                 continue
             # (the arm's name before `@`: the context arms are one build's)
@@ -346,16 +450,26 @@ def pairs(a):
     for spec in a.pair:
         x, y = spec.split("/")
         print(f"{x} over {y}: wall, geometric mean [95% interval]; peak RSS, median over median")
-        for (c, t) in sorted({(k[0], k[1]) for k in recs if k[2] == x}, key=lambda k: (k[1], k[0])):
-            n = sorted(i for (cc, tt, arm, i) in recs if (cc, tt, arm) == (c, t, x) and (c, t, y, i) in recs)
+        for c, t in sorted({(k[0], k[1]) for k in recs if k[2] == x}, key=lambda k: (k[1], k[0])):
+            n = sorted(
+                i
+                for (cc, tt, arm, i) in recs
+                if (cc, tt, arm) == (c, t, x) and (c, t, y, i) in recs
+            )
             if len(n) < 2:
                 continue
             xs = [math.log(recs[(c, t, x, i)]["wall"] / recs[(c, t, y, i)]["wall"]) for i in n]
-            m, h = statistics.mean(xs), t975(len(xs) - 1) * statistics.stdev(xs) / math.sqrt(len(xs))
-            mem = statistics.median(recs[(c, t, x, i)]["rss_kb"] for i in n) / \
-                statistics.median(recs[(c, t, y, i)]["rss_kb"] for i in n)
-            print(f"  W {t:2d} {c}: {math.exp(m):.4f} [{math.exp(m - h):.4f}, {math.exp(m + h):.4f}] "
-                  f"{label(math.exp(m - h), math.exp(m + h))}; memory {mem:.3f}")
+            m, h = (
+                statistics.mean(xs),
+                t975(len(xs) - 1) * statistics.stdev(xs) / math.sqrt(len(xs)),
+            )
+            mem = statistics.median(recs[(c, t, x, i)]["rss_kb"] for i in n) / statistics.median(
+                recs[(c, t, y, i)]["rss_kb"] for i in n
+            )
+            print(
+                f"  W {t:2d} {c}: {math.exp(m):.4f} [{math.exp(m - h):.4f}, {math.exp(m + h):.4f}] "
+                f"{label(math.exp(m - h), math.exp(m + h))}; memory {mem:.3f}"
+            )
     return 0
 
 
@@ -363,8 +477,11 @@ def main(argv):
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="mode", required=True)
     j = sub.add_parser("judge")
-    j.add_argument("bundle", help="the run's directory: runs.jsonl, sustained.jsonl, lscpu.txt, env.json, "
-                                  "commits.txt, inputs.sha256")
+    j.add_argument(
+        "bundle",
+        help="the run's directory: runs.jsonl, sustained.jsonl, lscpu.txt, env.json, "
+        "commits.txt, inputs.sha256",
+    )
     j.add_argument("--port", required=True, help="the port's registered commit (the recipe's PORT)")
     q = sub.add_parser("pairs")
     q.add_argument("runs")

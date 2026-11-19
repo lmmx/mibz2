@@ -12,8 +12,10 @@ Researcher's review through the Coordinator.*
   - *Louis's rule:* adaptive dispatch is fair, changing the measurement is not
     (PERFORMANCE-POLICY §2, #626).
 - **The change:** the port, #630 (`perf/open-kernel`), at
-  3f09500ee3289b0dd06948003f45c89aedd8ea36. Its B5 evidence is
-  `docs/journal/2026-11-19-open-port-b5.md`, for the Guardian.
+  9743bbe0d51ba451b8b8ab9e6fd731c238940052. Its B5 evidence is `docs/journal/2026-11-19-open-port-b5.md`; the
+  Guardian's D115 gave G1 PROCEED on it (7007260113). The pin moved from 3f09500e, the head D115
+  reviewed, only for D115's two scoped corrections (Miri's path filter and the journal's memory
+  claims); no source file differs between them.
 - **The recipe:** `just bench-open-port`, on `bench/open-port`, with the port's head pinned in the
   recipe as `PORT`.
 - **What it decides:** whether 0.5.7 ships `OpenCells` as the workers' kernel wherever 0.5.6 ran
