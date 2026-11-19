@@ -46,6 +46,14 @@ fn main(){
                     let mut data=b"abcXY".to_vec();
                     let holes=(0..m as u32).filter(|&i|mask&(1<<i)!=0).collect::<Vec<_>>();
                     let patch=splice(&j,&mut data,&holes);
+                    let mut charged=b"abcXY".to_vec();
+                    let reserved=splice_with_reserve::<true>(&j,&mut charged,&holes);
+                    assert_eq!(data,charged);
+                    assert_eq!(reserved.owner,patch.owner);
+                    match (&reserved.obj,&patch.obj) {
+                        (Some(x),Some(y))=>{assert_eq!(x.runs,y.runs);assert_eq!(x.words,y.words);assert_eq!(x.bases,y.bases);}
+                        (None,None)=>{},_=>panic!()
+                    }
                     let h=patch.obj.as_ref().unwrap_or(&j);
                     let (ns,nl)=dense(h);
                     let alive:Vec<_>=(0..m as u32).filter(|&i|mask&(1<<i)==0).collect();

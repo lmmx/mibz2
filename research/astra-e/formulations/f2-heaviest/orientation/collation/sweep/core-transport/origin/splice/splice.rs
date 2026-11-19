@@ -43,6 +43,9 @@ struct Segment {end:u32,id:Option<u32>}
 // Each source ID has positive mass. Physical source rank order, including arbitrary
 // numeric ID permutations, is established once without materializing a row array.
 pub fn splice(j:&Obj,arena:&mut Vec<u8>,holes:&[u32])->Patch {
+    splice_with_reserve::<false>(j,arena,holes)
+}
+pub fn splice_with_reserve<const EXACT:bool>(j:&Obj,arena:&mut Vec<u8>,holes:&[u32])->Patch {
     let e=holes.len();
     let mut result=Patch{obj:None,holes:holes.to_vec(),owner:vec![None;e],changes:0,
                          compound_bytes:0,visits:0,segments:0};
@@ -92,6 +95,11 @@ pub fn splice(j:&Obj,arena:&mut Vec<u8>,holes:&[u32])->Patch {
     let mut events:Vec<(u32,Option<u32>)>=holes.iter().map(|&r|(r,None)).collect();
     let (mut ci,mut hi,mut new_rank)=(0,0,0);
     let old_bytes=arena.len();
+    let mut suffix=0usize;
+    let mut copy_plan=Vec::<Piece>::new();
+    let mut append=|arena:&mut Vec<u8>,w:Piece|{
+        if EXACT {copy_plan.push(w);}else{copy_old(arena,w);}
+    };
     for &a in &order {
         piece_index[a]=cuts.len();
         let mut x=j.bases[a];
@@ -112,25 +120,31 @@ pub fn splice(j:&Obj,arena:&mut Vec<u8>,holes:&[u32])->Patch {
             if x==end {break;}
             let (s,mut hole)=changes[ci];assert_eq!(x,s);
             let new_id=out.words.len() as u32;
-            let start=arena.len();
-            copy_old(arena,j.words[a]);
+            let start=old_bytes+suffix;
+            append(arena,j.words[a]);suffix+=j.words[a].width as usize;
             let landing=loop {
                 assert!(result.owner[hole].is_none());
-                result.owner[hole]=Some((s,(arena.len()-start) as u32));
-                copy_old(arena,j.words[owner_id[hole]]);
+                result.owner[hole]=Some((s,(old_bytes+suffix-start) as u32));
+                let w=j.words[owner_id[hole]];
+                append(arena,w);suffix+=w.width as usize;
                 match holes.binary_search(&succ[hole]) {
                     Ok(h)=>hole=h,Err(_)=>break succ[hole]
                 }
             };
             events.push((landing,Some(new_id)));
-            out.words.push(Piece{id:start.try_into().unwrap(),width:(arena.len()-start).try_into().unwrap()});
+            out.words.push(Piece{id:start.try_into().unwrap(),width:(old_bytes+suffix-start).try_into().unwrap()});
             out.bases.push(new_rank);new_rank+=1;
             cuts.push(Segment{end:x+1,id:Some(new_id)});
             ci+=1;x+=1;
         }
     }
     assert_eq!(new_rank,out.m);
-    result.compound_bytes=(arena.len()-old_bytes).try_into().unwrap();
+    if EXACT {
+        arena.reserve_exact(suffix);
+        for w in copy_plan {copy_old(arena,w);}
+    }
+    assert_eq!(arena.len(),old_bytes+suffix);
+    result.compound_bytes=suffix.try_into().unwrap();
     result.segments=cuts.len();
     events.sort_unstable_by_key(|v|v.0);
     assert!(events.windows(2).all(|w|w[0].0!=w[1].0));

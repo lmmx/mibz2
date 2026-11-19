@@ -53,12 +53,12 @@ fn choose<'a>(j:&'a Obj,p:&'a Patch,mark:u32,skip:u32)->(&'a Obj,u32,u32,bool) {
         Mark::Old(at,off)=>(j,at,off,true)
     }
 }
-fn validate(c:&mut Case,report:bool) {
+fn validate(c:&mut Case,report:bool,reserved:bool) {
     let mut h=Reader::open(&c.oracle_path,b"JHORv1\0\0");
     let (hm,mark,skip,n)=(h.u(),h.u(),h.u(),h.u());
     assert_eq!(n,c.n);
     let before=c.arena.as_ptr();let cap0=c.arena.capacity();
-    let p=splice(&c.j,&mut c.arena,&c.holes);
+    let p=if reserved {splice_with_reserve::<true>(&c.j,&mut c.arena,&c.holes)}else{splice(&c.j,&mut c.arena,&c.holes)};
     let shifted=c.arena.as_ptr()!=before;
     let obj=p.obj.as_ref().unwrap_or(&c.j);assert_eq!(obj.m,hm);
     let mut next=vec![(0,0);hm as usize];
@@ -116,6 +116,36 @@ fn laps(cases:&mut[Case]){
         }
     }
 }
+fn allocation_panel(cases:&mut[Case]){
+    let cases:Vec<_>=cases.iter().filter(|c|!c.holes.is_empty()).collect();
+    assert_eq!(cases.len(),5);
+    let mut warm:Vec<[Vec<u8>;2]>=cases.iter().map(|c|std::array::from_fn(|_|c.arena[..c.original_dictionary].to_vec())).collect();
+    println!("round,case,position,arm,patch_ns,before_capacity,after_capacity,pointer_moved,compound_bytes");
+    for round in 0..=24usize {
+        let lap=round.saturating_sub(1);
+        for off in 0..cases.len(){
+            let i=(if round%2==0{off}else{cases.len()-off-1}+lap)%cases.len();
+            let c=cases[i];
+            for pos in 0..4 {
+                let a=(lap+i+if (lap/4+i)%2==0{pos}else{4-pos})%4;
+                let mut exact_fit;
+                let data=if a<2 {exact_fit=c.arena[..c.original_dictionary].to_vec();&mut exact_fit}
+                         else {&mut warm[i][a-2]};
+                data.truncate(c.original_dictionary);
+                let before=data.capacity();let addr=data.as_ptr();
+                let t=clock();
+                let p=if a%2==0{splice_with_reserve::<false>(&c.j,data,&c.holes)}
+                      else{splice_with_reserve::<true>(&c.j,data,&c.holes)};
+                let bytes=p.compound_bytes;
+                std::hint::black_box(&p);drop(p);
+                let elapsed=clock()-t;
+                assert_eq!(data.len(),c.original_dictionary+bytes as usize);
+                if round!=0{println!("{round},{},{pos},{a},{elapsed},{before},{},{},{bytes}",
+                    c.name,data.capacity(),usize::from(data.as_ptr()!=addr));}
+            }
+        }
+    }
+}
 fn main(){
     let args:Vec<_>=std::env::args().collect();
     let dir=Path::new(&args[2]);
@@ -124,8 +154,8 @@ fn main(){
           p.file_name().unwrap().to_string_lossy().contains("-frequent-h8.") || p.file_name().unwrap().to_string_lossy().contains("-quote-h12."))).collect();
     paths.sort();
     let mut cases=Vec::new();
-    let timed=args[1]=="price";
+    let timed=args[1]=="price" || args[1]=="alloc";
     if !timed{println!("case,m_j,m_h,holes,q,k_j,k_h,r_j,r_h,run_fragments,source_segments,compound_bytes,original_dictionary,old_capacity,new_capacity,arena_moved,jmark,new_mark,new_skip,old_j_fallback,j_used_second,h_used_second");}
-    for path in paths {let mut c=Case::new(&path);validate(&mut c,!timed);if timed && c.jmark!=u32::MAX {cases.push(c);}}
-    if timed{assert_eq!(cases.len(),20);laps(&mut cases);}
+    for path in paths {let mut c=Case::new(&path);validate(&mut c,!timed,args[1]=="reserved");if timed && c.jmark!=u32::MAX {cases.push(c);}}
+    if timed{assert_eq!(cases.len(),20);if args[1]=="alloc"{allocation_panel(&mut cases);}else{laps(&mut cases);}}
 }
