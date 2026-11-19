@@ -145,7 +145,17 @@ def describe(e):
         lines.extend(["This score has no completed instruction, cache-transfer, dependency or overlap model.", ""])
     if e["note"].get("assessment"):
         lines.extend([e["note"]["assessment"], ""])
-    verification = e["note"].get("verification", "Independent candidate CI and target evidence have not been recorded for this run in this register.")
+    independent = {
+        "narrow-short/ahead.rs": "[Independent W1/2/4 CI](ci/evidence/combined-ahead-44429350230.md) · [Independent W7–10 i9 result](workstation/combined-i9.md)",
+        "edge-budget/candidate.rs": "[Independent W1/2/4 CI](ci/evidence/edge-budget-44431030145.md) · [Target request](workstation/edge-request.md)",
+        "formulations/f2-pages/instructions/candidate.rs": "[Independent W1/2/4 POPCNT result](ci/evidence/guarded-popcnt-44436826833.md)",
+        "formulations/f2-scheduler/candidate.rs": "[Independent W1/2/4 scheduler result](ci/evidence/delimiter-refill-44433942216.md)",
+        "formulations/f2-rle/combined/candidate.rs": "[Independent W1/2/4 word-action result](ci/evidence/combined-word-actions-44436152031.md)",
+    }
+    family = e["path"].removeprefix("research/astra-e/")
+    verification = e["note"].get("verification", "No independent benchmark is attached to this individual scorer receipt.")
+    if family in independent:
+        verification = "Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. " + independent[family]
     if e["kind"] == "historical control":
         verification = "The i9 measured the historical Open arm separately. [Matched i9 results](prior.md)"
     lines.extend([verification, "", "Reproduce in a fresh checkout of the build tree above.", "", "```sh",

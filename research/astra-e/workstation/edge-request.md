@@ -1,4 +1,6 @@
-# Draft workstation request for edge-budget admission
+# Workstation request for edge-budget admission
+
+Submitted to the Coordinator after the two-binary cloud rehearsal. Dedicated branch `bench/astra-e-edge-budget` is published at `e00b278656838aad9487ffa8fb7333eaa0c4705e`. [Coordinator request](https://github.com/lmmx/mibz2/pull/145#issuecomment-6997357501)
 
 The combined writer reached 1.097–1.127× LazyCells throughput at 7–10 workers on the i9-10900K. Edge-budget uses the same implementation on the original admissions. Its additional width guard admits five dense Wikidata blocks whose certified tables range from 796,756 to 926,400 bytes. It scans capped records when testing a potential admission. The question is whether those five decisions conserve process memory at target concurrency, and how their construction costs affect complete wall time. [Combined i9 result](combined-i9.md) · [Structural census](../edge-budget/README.md)
 

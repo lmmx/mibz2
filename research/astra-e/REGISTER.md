@@ -46,6 +46,8 @@ These are the lowest recorded point estimates within each group of experiments w
 | `604dac3` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-final-slot-confirm · 0.718 [0.551, 0.934] | v1-edge-confirm · 0.732 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1-delimiter-f2c · 1.165 [0.833, 1.628] | v1-delimiter-f2c · 1.002 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-delimiter-f2c · 1.144 [0.826, 1.586] | v1-delimiter-f2c · 0.941 |
+| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1p2-final-slot-confirm · 0.819 [0.565, 1.188] | v1p2-combined-confirm · 0.966 |
+| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1p2-final-slot-confirm · 0.767 [0.517, 1.139] | v1p2-combined-confirm · 0.844 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W1** | hierarchy-f4 · 1.940 [1.080, 3.487] | hierarchy-f4 · 0.878 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W4** | hierarchy-f4 · 2.159 [1.407, 3.313] | hierarchy-f4 · 0.819 |
 | `9c31461` local score, grid 1,4, 6r ×2, settle 2s, full, 3 arms, **W1** | delimiter-f2b · 1.460 [1.210, 1.762] | tableless-f1b · 0.951 |
@@ -100,7 +102,7 @@ The build tree, including sibling modules, is [`38ad5600dfe4e621d2c44d04cc460e37
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -128,7 +130,7 @@ This score has no completed instruction, cache-transfer, dependency or overlap m
 
 The combined implementation beat opend at all three CI worker counts. At four workers its paired wall ratio was 0.9569 [0.9290, 0.9856] against opend and 0.8379 [0.8344, 0.8413] against LazyCells, with median peak RSS 0.8617 of LazyCells. Eager Cells remained faster on this four-logical-CPU EPYC runner. The CI round ran scorer 9c31461 before v1 landed.
 
-Independent CI ran 16 paired rounds of Wikidata ×4 on AMD EPYC 7763 64-Core Processor, using four slots per worker and a 2 s settle. At W1/W2/W4 the candidate/LazyCells wall ratios were 0.9021/0.8953/0.8379, with peak RSS ratios 0.9702/0.9461/0.8617. Candidate/opend wall ratios were 0.9718/0.9666/0.9569. Candidate/eager wall ratios were 1.2516/1.2044/1.0314. All four 338-case correctness gates passed. Target i9 verification is pending. [CI run](https://github.com/lmmx/mibz2/actions/runs/44427324957) · [Raw checks and measurements](ci/evidence/combined-ahead-44427324957.zip)
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/combined-ahead-44429350230.md) · [Independent W7–10 i9 result](workstation/combined-i9.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -156,7 +158,7 @@ The build tree, including sibling modules, is [`b981d78984a195408501ff7fb495f77a
 
 V0 16-block calibrated point estimates for candidate/opend were .951 at W7, .962 at W8 and .963 at W10. At W10 the same model overstates historical opend/lazy by about 7.5 percentage points. The quick gate passed, and W4 was outside the reference envelope. [Full calibration, admissions and receipts](results/combined-full-proxy/README.md).
 
-v0 designated frozen candidate and matching local source passed the full 338-case local rehearsal. Independent performance belongs to the separate CI and i9 evidence. [CI](https://github.com/lmmx/mibz2/actions/runs/44427324957)
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/combined-ahead-44429350230.md) · [Independent W7–10 i9 result](workstation/combined-i9.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -182,7 +184,7 @@ The build tree, including sibling modules, is [`8775403b45da1ceafb8ba7ca5fc441c4
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -219,7 +221,7 @@ The build tree, including sibling modules, is [`6a8a366cd786d58a528000b58da12fd2
 
 Official v1 on 48 full and 16 tiny sampled blocks models candidate/lazy 0.910 / 0.912 / 0.915 at W7/8/10. Ratios to opend compare the deposited and new point estimates. The fresh lazy/candidate pair supplies the interval. [Full v1 calibrated reading](results/combined-v1-proxy/README.md).
 
-Independent i9-10900K measured the combined candidate at .8982/.9117/.9031/.8871 wall and .8489/.8288/.8230/.8191 median peak RSS versus LazyCells at W7/8/9/10. All three prospective model intervals contain the corresponding i9 point. No W meets the 0.80 wall criterion. [Measured bundle](https://github.com/lmmx/mibz2/blob/c381da23edd8f466bcfe8b8e6c850075d58588de/astra-e/run-20261119T013135Z.tar.gz) · [Raw replay and comparison](results/combined-v1-proxy/heldout-i9.csv) · [Low-W paired CI](https://github.com/lmmx/mibz2/actions/runs/44427324957).
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/combined-ahead-44429350230.md) · [Independent W7–10 i9 result](workstation/combined-i9.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -245,7 +247,7 @@ The build tree, including sibling modules, is [`a990f1e3e39b92a616cb1b9fa08a2b4d
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -298,7 +300,7 @@ The build tree, including sibling modules, is [`d28fc0d10cbb29a30ef06a2c882e4cfc
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -324,7 +326,7 @@ The build tree, including sibling modules, is [`5c21a8c5e100368886349ddf8b258287
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -350,7 +352,7 @@ The build tree, including sibling modules, is [`ffb54d10d40a721e96db8e1342d51244
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -376,7 +378,7 @@ The build tree, including sibling modules, is [`99e90871536108bed01e44809aad44ee
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -429,7 +431,7 @@ The build tree, including sibling modules, is [`b88a02738799f8e021db356157ef4239
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -455,7 +457,7 @@ The build tree, including sibling modules, is [`445d1851e26ba75ebb183f8eca713659
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -509,7 +511,7 @@ The build tree, including sibling modules, is [`29f98ee83b5096eb9c9b49ff5d10c31b
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -535,7 +537,7 @@ The build tree, including sibling modules, is [`491bb839464ea9a7c35b1a60f932f39a
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -560,7 +562,7 @@ The build tree, including sibling modules, is [`396fc717c67ea5dd779a150f13283ab3
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -586,7 +588,7 @@ The build tree, including sibling modules, is [`31503cc2c69a9dd227e3d7a7e2293bd0
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -642,7 +644,7 @@ The build tree, including sibling modules, is [`5dcaff2b8612b17b78af526fd72d872d
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -668,7 +670,7 @@ The build tree, including sibling modules, is [`a48e94ed83595000c60a264c13357c80
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -694,7 +696,7 @@ The build tree, including sibling modules, is [`625a4ff15e6d8f6c065e749fad6aa69c
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -720,7 +722,7 @@ The build tree, including sibling modules, is [`9d746dd1825880b86739fd1045bda612
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -745,7 +747,7 @@ The build tree, including sibling modules, is [`3ebdba68dc52233b47c33a6d06cf4b3c
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -771,7 +773,7 @@ The build tree, including sibling modules, is [`ff36563702a8ecf92b641681f939c3fb
 | 8 | 16.548 | 20.355 / 15.888 / 7.607 | 0.00004 / 0.06081 | 1.922 | within envelope |
 | 10 | 16.548 | 20.355 / 15.888 / 8.005 | 0.00014 / 0.06072 | 1.867 | within envelope |
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -797,7 +799,7 @@ The build tree, including sibling modules, is [`e293f7c7262042023098406891b8a45d
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/combined-ahead-44429350230.md) · [Independent W7–10 i9 result](workstation/combined-i9.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -823,7 +825,7 @@ The build tree, including sibling modules, is [`ab7076541459b8b66a137c9f1cc0804e
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -842,7 +844,7 @@ The build tree, including sibling modules, is [`ee35db00e5e8b9b726d6bc1c16817a9f
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -861,7 +863,7 @@ The build tree, including sibling modules, is [`d1a52c3fee7bf46879336270fe417bcf
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -887,7 +889,7 @@ The build tree, including sibling modules, is [`e293f7c7262042023098406891b8a45d
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -906,7 +908,7 @@ The build tree, including sibling modules, is [`27a7b198d8e7a41b03b5184c6f625d4a
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -925,7 +927,7 @@ The build tree, including sibling modules, is [`87d41eb0e1cdd3b82268ea91ac736d15
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 scheduler result](ci/evidence/delimiter-refill-44433942216.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -944,7 +946,7 @@ The build tree, including sibling modules, is [`2b6be099be0922dfd122e5d0ea427b50
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -963,7 +965,7 @@ The build tree, including sibling modules, is [`48759eed0ea95cd6454c9b7a8cbc8e33
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -982,7 +984,7 @@ The build tree, including sibling modules, is [`ba6f6bab601c1c1c876311c0fef134d1
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1001,7 +1003,7 @@ The build tree, including sibling modules, is [`3bdf7f0ee207b44b80509de1e6f19438
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1029,7 +1031,7 @@ This score has no completed instruction, cache-transfer, dependency or overlap m
 
 The W4 point estimate against LazyCells is below 0.80 on this host, and its upper confidence limit is above 0.80. Direct paired wall comparisons to opend were W1 0.986 [0.821,1.184] W4 0.954 [0.851,1.070]. Shared-host load varied. Separate-epoch leader rankings and three-round pilot differences do not establish a production gain.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/edge-budget-44431030145.md) · [Target request](workstation/edge-request.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1057,7 +1059,7 @@ This score has no completed instruction, cache-transfer, dependency or overlap m
 
 Both W1/W4 local intervals against LazyCells include parity. Same-round direct candidate/opend wall ratios were W1 1.993 [1.087,3.652] and W4 1.284 [1.005,1.641]. The W1 median peak RSS ratio against LazyCells was above one. Stage evidence for a learned advantage versus unmodified F2c varied between runs. See the F2d proof, ownership experiments and full gates in the formulation ledger.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1076,7 +1078,7 @@ The build tree, including sibling modules, is [`31fc2ab8e0065c7f5e23b76af4c8b76b
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1102,7 +1104,7 @@ The build tree, including sibling modules, is [`2ad93eddd79377812d22a3e6110c7fe7
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1121,7 +1123,7 @@ The build tree, including sibling modules, is [`b474a86f91c255d4334ce92ba33648f6
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1147,7 +1149,7 @@ The build tree, including sibling modules, is [`543e4e07c14c16fec01b2b081b73d5e3
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1166,7 +1168,7 @@ The build tree, including sibling modules, is [`548ef34524e8d007febcf879a9b2c6cd
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1192,7 +1194,7 @@ The build tree, including sibling modules, is [`252646aec0dd1a80a6969b2e1598c734
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1211,7 +1213,7 @@ The build tree, including sibling modules, is [`252646aec0dd1a80a6969b2e1598c734
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1230,7 +1232,7 @@ The build tree, including sibling modules, is [`244001c9e2be855669fbb09cfec77eea
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1249,7 +1251,7 @@ The build tree, including sibling modules, is [`2b19f2e2f3430b9efe23467de968959c
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1275,7 +1277,7 @@ The build tree, including sibling modules, is [`efbacc6d17b24aaf9c70538e8def30d2
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1301,7 +1303,7 @@ The build tree, including sibling modules, is [`3651470cb0ef5458e75cf97d3de363a1
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 POPCNT result](ci/evidence/guarded-popcnt-44436826833.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1327,7 +1329,7 @@ The build tree, including sibling modules, is [`252646aec0dd1a80a6969b2e1598c734
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 scheduler result](ci/evidence/delimiter-refill-44433942216.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1336,6 +1338,25 @@ git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/formulations/f2-scheduler/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-scheduler/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy
+```
+
+## v1-rle-backbone-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-rle-backbone-gate/score/check.jsonl) · [manifest](results/v1-rle-backbone-gate/manifest.txt) · [score](results/v1-rle-backbone-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`d9a6cb24d835864f53d7953f0acee3abd1157de0`](https://github.com/lmmx/mibz2/tree/d9a6cb24d835864f53d7953f0acee3abd1157de0). [Candidate entry](https://github.com/lmmx/mibz2/blob/d9a6cb24d835864f53d7953f0acee3abd1157de0/research/astra-e/formulations/f2-rle/decoded-column/backbone/candidate.rs). Fetched master `75297a1d57b2bdf262c3a19f3064848dedf2c493`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+No independent benchmark is attached to this individual scorer receipt.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 75297a1d57b2bdf262c3a19f3064848dedf2c493 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-rle/decoded-column/backbone/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-rle/decoded-column/backbone/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2-backbone-score
 ```
 
 ## v1-rle-bundle-confirm
@@ -1353,7 +1374,7 @@ The build tree, including sibling modules, is [`1a6435808471e7f95361a552e92e83ad
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1372,7 +1393,7 @@ The build tree, including sibling modules, is [`1a6435808471e7f95361a552e92e83ad
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1391,7 +1412,7 @@ The build tree, including sibling modules, is [`fcbb4918d488422e24b281d59f04cb7b
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 word-action result](ci/evidence/combined-word-actions-44436152031.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1410,7 +1431,7 @@ The build tree, including sibling modules, is [`bab2515760936fa68e0bad775183e823
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1429,7 +1450,7 @@ The build tree, including sibling modules, is [`b474a86f91c255d4334ce92ba33648f6
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1448,7 +1469,7 @@ The build tree, including sibling modules, is [`bab2515760936fa68e0bad775183e823
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1467,7 +1488,7 @@ The build tree, including sibling modules, is [`bab2515760936fa68e0bad775183e823
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1486,7 +1507,7 @@ The build tree, including sibling modules, is [`41685b52ceb5fece5a3a152023abf042
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1505,7 +1526,7 @@ The build tree, including sibling modules, is [`0bebdcfece931da18ddcd431f47e2368
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1533,7 +1554,7 @@ This score has no completed instruction, cache-transfer, dependency or overlap m
 
 The earlier W4 point estimate for short words did not recur. Direct paired wall comparisons to opend were W1 0.952 [0.836,1.084] W4 1.068 [0.718,1.588]. Shared-host load varied. Separate-epoch leader rankings and three-round pilot differences do not establish a production gain.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1552,7 +1573,7 @@ The build tree, including sibling modules, is [`b3c02b71e5699b902ce1a590fbb4312b
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent candidate CI and target evidence have not been recorded for this run in this register.
+No independent benchmark is attached to this individual scorer receipt.
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1561,4 +1582,75 @@ git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/formulations/f2-scheduler/sorted/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-scheduler/sorted/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2d-dual-build
+```
+
+## v1-union-eight-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-union-eight-gate/score/check.jsonl) · [manifest](results/v1-union-eight-gate/manifest.txt) · [score](results/v1-union-eight-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`81585172f5fb9e7a59f330124779ba084fd6bf04`](https://github.com/lmmx/mibz2/tree/81585172f5fb9e7a59f330124779ba084fd6bf04). [Candidate entry](https://github.com/lmmx/mibz2/blob/81585172f5fb9e7a59f330124779ba084fd6bf04/research/astra-e/formulations/f2-heaviest/union/native/candidate.rs). Fetched master `75297a1d57b2bdf262c3a19f3064848dedf2c493`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+No independent benchmark is attached to this individual scorer receipt.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 75297a1d57b2bdf262c3a19f3064848dedf2c493 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-heaviest/union/native/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-heaviest/union/native/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2count-check
+```
+
+## v1p2-combined-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-combined-confirm/score/check.jsonl) · [manifest](results/v1p2-combined-confirm/manifest.txt) · [score](results/v1p2-combined-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`a651e93f063737426cc19223d9b3ed8a2650fd8f`](https://github.com/lmmx/mibz2/tree/a651e93f063737426cc19223d9b3ed8a2650fd8f). [Candidate entry](https://github.com/lmmx/mibz2/blob/a651e93f063737426cc19223d9b3ed8a2650fd8f/research/astra-e/narrow-short/ahead.rs). Fetched master `75297a1d57b2bdf262c3a19f3064848dedf2c493`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 0.928 [0.782, 1.102] | 1.186 [1.001, 1.404] | 0.783 | 77,336 / 80,060 / 77,476 | 0.966 |
+| 4 | 9 | 0.877 [0.710, 1.085] | 1.001 [0.727, 1.378] | 0.876 | 115,812 / 137,212 / 119,584 | 0.844 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1p2-combined-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/combined-ahead-44429350230.md) · [Independent W7–10 i9 result](workstation/combined-i9.md)
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 75297a1d57b2bdf262c3a19f3064848dedf2c493 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/narrow-short/ahead.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/narrow-short/ahead.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/astra-e-refresh-75297a1-build
+```
+
+## v1p2-final-slot-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-final-slot-confirm/score/check.jsonl) · [manifest](results/v1p2-final-slot-confirm/manifest.txt) · [score](results/v1p2-final-slot-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`a651e93f063737426cc19223d9b3ed8a2650fd8f`](https://github.com/lmmx/mibz2/tree/a651e93f063737426cc19223d9b3ed8a2650fd8f). [Candidate entry](https://github.com/lmmx/mibz2/blob/a651e93f063737426cc19223d9b3ed8a2650fd8f/research/astra-e/final-slot/candidate.rs). Fetched master `75297a1d57b2bdf262c3a19f3064848dedf2c493`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 0.819 [0.565, 1.188] | 0.823 [0.687, 0.987] | 0.995 | 77,696 / 80,204 / 77,592 | 0.969 |
+| 4 | 9 | 0.767 [0.517, 1.139] | 0.880 [0.628, 1.234] | 0.871 | 116,852 / 133,168 / 115,640 | 0.877 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1p2-final-slot-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+No independent benchmark is attached to this individual scorer receipt.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 75297a1d57b2bdf262c3a19f3064848dedf2c493 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/final-slot/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/final-slot/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/astra-e-refresh-75297a1-build
 ```
