@@ -30,3 +30,14 @@ nice -n 12 bash research/astra-e/score.sh combined-v1-repetition \
   research/astra-e/narrow-short/ahead.rs --target-dir /tmp/astra-combined-v1 \
   --quick --no-timing --proxy-blocks 48+16
 ```
+
+## Dense blocks and the wider admission experiment
+
+Five full corpus blocks exceed the combined candidate's run-density cutoff. The separate [edge-budget candidate](../../edge-budget/) admits all five. Their share of the canonical output is 2.15%. The official v1 sample includes one of them, stream ordinal 165, and it contributes 2.08% of corpus-weighted sample bytes. In contrast, the highest-latency runs used to estimate each arm's DRAM slope contain none of the five. That distinction matters when using this proxy to discuss policy changes restricted to dense inputs.
+
+At nominal W1 ordinal 165 accounts for 2.93% of the combined arm's modeled cycles, 2.84% of instructions, 19.58% of DRAM read lines and 22.53% of DRAM lines including writes and final dirty drainage. Changing its route could influence traffic more than its work share suggests. These figures describe the combined candidate's existing costs. Buffer lifetime, between-block interference and the effect of another implementation at 7–10 workers require independent measurements. [Population and raw-counter decomposition](checkpoint/route-shares.json) · [Analysis program](route_shares.py)
+
+```sh
+python3 research/astra-e/results/combined-v1-proxy/route_shares.py \
+  research/astra-e/results/combined-v1-proxy/checkpoint/proxy-runs.jsonl.gz
+```

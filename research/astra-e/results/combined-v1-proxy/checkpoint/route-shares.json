@@ -1,0 +1,84 @@
+{
+  "actual_corpus": {
+    "tiny_job_on_lazy": {
+      "blocks": 150,
+      "bytes": 8427
+    },
+    "open": {
+      "blocks": 228,
+      "bytes": 205191352
+    },
+    "column": {
+      "blocks": 48,
+      "bytes": 465
+    },
+    "large_job_on_lazy": {
+      "blocks": 5,
+      "bytes": 4499952
+    }
+  },
+  "actual_dense": [
+    41,
+    56,
+    165,
+    270,
+    278
+  ],
+  "stratified_weighted": {
+    "open": {
+      "blocks": 47,
+      "bytes": 205323133.83333334
+    },
+    "large_job_on_lazy": {
+      "blocks": 1,
+      "bytes": 4368750.0
+    },
+    "tiny_job_on_lazy": {
+      "blocks": 12,
+      "bytes": 6088.5
+    },
+    "column": {
+      "blocks": 4,
+      "bytes": 618.75
+    }
+  },
+  "sampled_dense": [
+    165
+  ],
+  "slope_dense": [],
+  "dense_nominal_shares": {
+    "candidate_w1": {
+      "cycles": 0.02927836434163651,
+      "instructions": 0.028412380279199786,
+      "dram_read_lines": 0.19584245245821527,
+      "l2_transfers": 0.08082321391173697,
+      "l3_transfers": 0.10354406878317755,
+      "dep_past_l2_loads": 0.14311986318610345,
+      "dep_dram_loads": 0.017632813682458,
+      "out_bytes": 0.020833473307714675,
+      "dram_total_lines": 0.22529707198877696
+    },
+    "lazy_w1": {
+      "cycles": 0.025190081636915256,
+      "instructions": 0.020219492497049844,
+      "dram_read_lines": 0.1106022119786997,
+      "l2_transfers": 0.03931873361240351,
+      "l3_transfers": 0.050960451716999915,
+      "dep_past_l2_loads": 0.25254607264210677,
+      "dep_dram_loads": 0.019553705553084534,
+      "out_bytes": 0.020833473307714675,
+      "dram_total_lines": 0.1173749204068
+    },
+    "lazy_w2": {
+      "cycles": 0.025221621292906785,
+      "instructions": 0.020219492497049844,
+      "dram_read_lines": 0.11034377994337566,
+      "l2_transfers": 0.03931873361240351,
+      "l3_transfers": 0.050960451716999915,
+      "dep_past_l2_loads": 0.25254732547994313,
+      "dep_dram_loads": 0.019553705553084534,
+      "out_bytes": 0.020833473307714675,
+      "dram_total_lines": 0.11635303475432647
+    }
+  }
+}
