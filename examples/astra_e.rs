@@ -2,11 +2,14 @@
 //! research/astra-e/stage/run.sh to verify the pinned compressed corpus digest.
 //! The clock encloses invert_runs on ready MTF records. All stream setup,
 //! equality checks, RLE1, CRC, output delivery and logging are outside it.
+// Two experimental kernels bind the same endpoint source to distinct parent types.
+#![allow(clippy::duplicate_mod)]
 use mibz2::stream::{Event, Scanner, SliceSource};
 pub use mibz2::{bwt, runs, Kernels};
 use std::{env, fs, time::Instant};
 
-#[allow(dead_code)]
+#[rustfmt::skip]
+#[allow(dead_code, clippy::too_many_arguments)]
 #[path = "../research/astra-e/open/candidate.rs"]
 mod conjugate;
 #[allow(dead_code)]
@@ -15,16 +18,17 @@ mod hybrid;
 #[allow(dead_code)]
 #[path = "../research/astra-e/dense/candidate.rs"]
 mod one;
-#[allow(dead_code)]
+#[allow(dead_code, clippy::too_many_arguments)]
 #[path = "../docs/journal/2026-11-18-open-return/open_return.rs"]
 mod open_return;
-#[allow(dead_code)]
+#[rustfmt::skip]
+#[allow(dead_code, clippy::too_many_arguments)]
 #[path = "../research/astra-e/bidirectional/candidate.rs"]
 mod opposed;
 #[allow(dead_code)]
 #[path = "../research/astra-e/cells/packed.rs"]
 mod packed;
-#[allow(dead_code)]
+#[allow(dead_code, clippy::int_plus_one)]
 #[path = "../research/astra-e/dense/two_step.rs"]
 mod two;
 
