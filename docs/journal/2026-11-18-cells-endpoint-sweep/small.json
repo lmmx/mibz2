@@ -1,0 +1,101 @@
+{
+  "totals": {
+    "budget_cases": 5544,
+    "cases": 14209,
+    "early_period": 12192,
+    "full": 2017,
+    "unmarked_closures": 11006
+  },
+  "witnesses": {
+    "decreasing_posts": {
+      "column": "1000",
+      "cut": 1,
+      "frontier": 3,
+      "gaps": [
+        1,
+        2
+      ],
+      "post": 2,
+      "previous": 3,
+      "primary": 0,
+      "widths": [
+        2,
+        1
+      ]
+    },
+    "early_mark": {
+      "column": "00",
+      "cut": 0,
+      "frontier": 2,
+      "primary": 1,
+      "rows_left": 1
+    },
+    "increasing_posts": {
+      "column": "1100100",
+      "cut": 2,
+      "frontier": 5,
+      "gaps": [
+        1,
+        4
+      ],
+      "post": 4,
+      "previous": 3,
+      "primary": 0,
+      "widths": [
+        1,
+        1
+      ]
+    },
+    "unit_equal_bottom": {
+      "column": "100",
+      "cut": 0,
+      "frontier": 3,
+      "gaps": [
+        1,
+        2
+      ],
+      "post": 2,
+      "primary": 1,
+      "widths": [
+        1,
+        1
+      ]
+    },
+    "unit_equal_top": {
+      "column": "110",
+      "cut": 0,
+      "frontier": 3,
+      "gaps": [
+        2,
+        1
+      ],
+      "post": 2,
+      "primary": 0,
+      "widths": [
+        1,
+        1
+      ]
+    },
+    "unmarked_closure": {
+      "column": "00",
+      "cut": 0,
+      "frontier": 2,
+      "primary": 0
+    },
+    "zero_born_at_strict": {
+      "column": "1100",
+      "cut": 0,
+      "frontier": 4,
+      "gaps": [
+        2,
+        2
+      ],
+      "post": 2,
+      "primary": 0,
+      "widths": [
+        2,
+        1
+      ]
+    }
+  }
+}

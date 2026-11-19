@@ -1,0 +1,20 @@
+{
+  "lz78_bytes": {
+    "phrases": 68847,
+    "entries": 68846
+  },
+  "lz78_run_ids": {
+    "phrases": 121699,
+    "entries": 121698
+  },
+  "replace_partial": {
+    "phrases": 132765,
+    "installs": 87566,
+    "misses": 28387
+  },
+  "backward_split": {
+    "phrases": 84434,
+    "installs": 38614,
+    "new_bounds": 11403
+  }
+}

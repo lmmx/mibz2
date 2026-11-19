@@ -597,6 +597,12 @@
 .bh-hero .bh-i9-whisker {
   stroke: var(--bh-i9);
 }
+/* absolute: the record CI's chain is anchored at (bench.js, ciAnchor), ringed */
+.bh-hero .bh-anchor {
+  fill: none;
+  stroke: var(--bh-s1);
+  stroke-width: 1.5;
+}
 .bh-hero .bh-i9-rug {
   stroke: var(--bh-i9);
   stroke-width: 1.5;

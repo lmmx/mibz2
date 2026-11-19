@@ -241,6 +241,12 @@ with one command whenever suits him. Nothing about a queued run is left to decid
   - for an adoption registration, a PROCEED (RULES C6; a stand-in's under §8 counts). For a
     diagnostic, the Coordinator's own check of the frozen recipe;
   - the `ready/<recipe>` tag points at exactly that commit, set by the Run signal workflow.
+    `ready` moves a tag that is already set, as a repeat recipe's is (#592), and the run
+    fails unless the tag on origin is then at that commit. The Coordinator checks the tag
+    itself (`git ls-remote --tags origin ready/<recipe>`) before saying the run is queued:
+    a dispatch is not a tag. (On 18 November 2026 v0.5.6's release scaling and crossover
+    sat unrun for 12 minutes: `ready` refused their old tags from 0.5.5, and the runner had
+    nothing new to run.)
 
   It also posts a LOG on #145 naming the entry, the commit and the review.
 - **Running it:** Louis runs `just workstation-queue` (`bench/run-queue.sh`). It reads the queue

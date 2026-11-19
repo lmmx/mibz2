@@ -121,6 +121,45 @@ jobs:
       - name: The benchmark alternatives' lock
         run: cargo metadata --locked --format-version 1 --manifest-path bench/alternatives/Cargo.toml > /dev/null
 
+  # The moonshot scorer (bench/moonshot/README.md): its statistics, gate and proxy reading
+  # (Python), the gate's own checks (Rust), the gate passed by the null candidate and by
+  # opend, and the proxy's Valgrind tool built and run on two blocks. Untimed: the scorer's
+  # timings are container evidence only, never CI's
+  moonshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: bench/moonshot -> target
+      - name: The scorer's statistics, gate verdict and proxy reading
+        run: python3 bench/moonshot/test_moonshot.py
+      - name: The harness's format, lints and tests
+        run: |
+          cargo fmt --manifest-path bench/moonshot/Cargo.toml --check
+          cargo clippy --release --locked --manifest-path bench/moonshot/Cargo.toml --all-targets -- -D warnings
+          cargo test --release --locked --manifest-path bench/moonshot/Cargo.toml
+          cargo build --release --locked --manifest-path bench/moonshot/Cargo.toml
+      - name: The gate, quick set (the null candidate, opend)
+        run: |
+          bench/moonshot/target/release/moonshot check --quick --arm candidate | tail -1
+          bench/moonshot/target/release/moonshot check --quick --arm opend | tail -1
+      - name: The proxy's tool on two blocks
+        run: |
+          # (the image's package index goes stale: refresh it first)
+          sudo apt-get update -qq > /dev/null
+          sudo apt-get install -y -qq valgrind > /dev/null
+          bash bench/moonshot/chaingrind/build.sh target/chaingrind
+          git ls-files 'src/*.rs' | xargs cat | bzip2 -9 > moonshot.bz2
+          M=bench/moonshot/target/release/moonshot
+          $M extract --file moonshot.bz2 --blocks 0,1 --out moonshot.sym
+          VALGRIND_LIB=$PWD/target/chaingrind valgrind --tool=chaingrind --llc-kb=2048 \
+            $M proxy --arm lazy --symbols moonshot.sym 2> proxy.txt
+          python3 -c "import sys; sys.path.insert(0, 'bench/moonshot'); import moonshot as m; x = m.proxy_metrics(m.parse_proxy(open('proxy.txt').read())); print(x); assert x['cycles_per_byte'] > 0"
+
   # examples/fuzz.rs, briefly: the classic candidates (sequential, parallel) and the
   # pipeline cases (the shipped default, 3 x 3 pipelined with park and small, forced
   # through each default entry point; docs/journal/2026-11-09-pipeline-fuzz-and-mutation.md),
