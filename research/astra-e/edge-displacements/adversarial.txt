@@ -1,0 +1,1 @@
+17064 adversarial marked comparisons each for frozen, local and bucket kernels, including periodic columns and 16-bit endpoint guard transitions
