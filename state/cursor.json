@@ -217,9 +217,10 @@
     6993276769,
     6993593664,
     6997119955,
-    7003699363
+    7003699363,
+    7007096443
   ],
-  "last_processed_comment_id": 7003699363,
+  "last_processed_comment_id": 7007096443,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2647,13 +2648,16 @@
     },
     {
       "trigger_comment_id": 7007096443,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-port-c6-7007096443/report.md",
       "source_commit": "b6412e1e43cbe7281c8f61033f7223f131244037",
       "report_commit": "f3810ddc44947a66fc0894fbcd90bfce140f0bcf",
-      "disposition": "HOLD before i9 timing for one targeted correction: enforce the entire fixed roster and one confirmatory attempt. Synthetic records without text or with NaN RSS can ADOPT. Inherited thresholds and conjunctive testing reviewed. Dry run recorded timings and was excluded."
+      "disposition": "HOLD before i9 timing for one targeted correction: enforce the entire fixed roster and one confirmatory attempt. Synthetic records without text or with NaN RSS can ADOPT. Inherited thresholds and conjunctive testing reviewed. Dry run recorded timings and was excluded.",
+      "review_comment_id": 7007213171,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, checkpoint citation, disposition, and role-aware headers and route. The pinned helper applies a coordinator-only sender check to Researcher publications."
     }
   ],
   "active_delegations": [],
