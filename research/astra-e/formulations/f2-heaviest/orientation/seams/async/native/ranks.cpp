@@ -1,6 +1,8 @@
 // Physical rank-only asynchronous first-return construction. Build with C++20.
 #include <algorithm>
 #include <array>
+#include <bit>
+#include <deque>
 #include <cassert>
 #include <cstdint>
 #include <ctime>
@@ -62,6 +64,7 @@ struct Stats {
     N states=0,pops=0,repush=0,shift=0,pieces=0,seeks=0,edge_cmp=0;
     N probes=0,tree_cmp=0,join=0,hit=0,gap=0,op_splits=0,coalesces=0;
     N fragment_inserts=0,fragment_erases=0,peak_map=0,peak_heap=0,sort_cmp=0,heap_cmp=0;
+    N mask_reads=0,mask_writes=0,local_hops=0;
 };
 struct Seg { U lo,hi,owner,g; Seg *prev,*next; };
 struct Group { Seg *head; U mass,depth,birth,parent; Byte side,c; };
@@ -81,10 +84,18 @@ struct RowOrder {
 };
 using Map=std::map<U,Seg,RowOrder,Paid<std::pair<const U,Seg>>>;
 
-class Constructor {
+class TreeIndex : public Map {
+public:
+    using Map::Map;
+    void init(U,Stats&){}
+};
+#include "paged.hpp"
+template<class Index>
+class BasicConstructor {
     const Edges& edges;
-    std::array<Map,2> front;
+    std::array<Index,2> front;
     Vec<Key> heap;
+    std::array<Vec<U>,2> page_first;
     U birth=0;
     U new_group(U side,U depth,U parent,Byte c){
         U id=groups.size();
@@ -118,7 +129,7 @@ class Constructor {
         g.head=p; ++stats.fragment_inserts;
         stats.peak_map=std::max<N>(stats.peak_map,front[0].size()+front[1].size());
     }
-    Map::iterator remove(U side,Map::iterator it){
+    typename Index::iterator remove(U side,typename Index::iterator it){
         auto p=it->second;
         if(p.prev)p.prev->next=p.next;
         else groups[p.g].head=p.next;
@@ -136,9 +147,15 @@ class Constructor {
             auto it=front[side].find(a.lo);
             remove(side,it);
             ++stats.seeks;
-            auto k=std::prev(std::upper_bound(e.begin(),e.end(),a.lo,[&](U row,Piece p){
-                ++stats.edge_cmp;return row<p.lo;
-            }));
+            auto k=e.begin();
+            if(page_first[side].empty())
+                k=std::prev(std::upper_bound(e.begin(),e.end(),a.lo,[&](U row,Piece p){
+                    ++stats.edge_cmp;return row<p.lo;
+                }));
+            else {
+                k+=page_first[side][a.lo/64];
+                while(k->hi<=a.lo){++k;++stats.edge_cmp;}
+            }
             for(U x=a.lo;x<a.hi;++k){
                 U end=std::min(a.hi,k->hi),y=k->dst+(x-k->lo),stop=y+(end-x);
                 U own=a.owner+(x-a.lo); Byte byte=k->c;
@@ -178,7 +195,18 @@ public:
     Stats stats;
     Vec<Group> groups;
     Vec<Band> bands;
-    Constructor(const Edges& e): edges(e),front{Map(RowOrder{&stats.tree_cmp}),Map(RowOrder{&stats.tree_cmp})} {}
+    BasicConstructor(const Edges& e): edges(e),front{Index(RowOrder{&stats.tree_cmp}),Index(RowOrder{&stats.tree_cmp})} {
+        for(auto& m:front)m.init(e[0].back().hi,stats);
+    }
+    void index_edges(){
+        for(U side:{0u,1u}){
+            U i=0;auto& e=edges[side];
+            for(U row=0;row<e.back().hi;row+=64){
+                while(e[i].hi<=row)++i;
+                page_first[side].push_back(i);
+            }
+        }
+    }
     void run(const Section& section){
         for(U side:{0u,1u}){
             U id=new_group(side,0,nil,0);
@@ -197,6 +225,38 @@ public:
         }
         assert(front[0].empty() && front[1].empty());
         std::sort(bands.begin(),bands.end(),[&](auto a,auto b){++stats.sort_cmp;return a.lo<b.lo;});
+    }
+    Vec<Byte> indexed_marked(U row,U n) const{
+        struct Ref {U base,len;};
+        Vec<Ref> refs;
+        Vec<Byte> spellings;
+        Vec<U> directory(bands.back().hi-bands[0].lo,nil);
+        for(U id=0;id<bands.size();++id){
+            Band b=bands[id];U width=groups[b.left].depth,base=spellings.size();
+            spellings.resize(base+width);
+            for(U g=b.left;groups[g].parent!=nil;g=groups[g].parent)
+                spellings[base+groups[g].depth-1]=groups[g].c;
+            spellings.push_back(b.c);
+            for(U g=b.right;groups[g].parent!=nil;g=groups[g].parent)
+                spellings.push_back(groups[g].c);
+            refs.push_back({base,U(spellings.size()-base)});
+            std::fill_n(directory.begin()+(b.lo-bands[0].lo),b.hi-b.lo,id);
+        }
+        Vec<Byte> out;out.reserve(n);
+        while(out.size()<n){
+            U offset=row-bands[0].lo;
+            U id=offset<directory.size()?directory[offset]:nil;
+            if(id==nil){
+                auto& e=edges[0];U i=page_first[0][row/64];
+                while(e[i].hi<=row)++i;
+                auto k=e[i];out.push_back(k.c);row=k.dst+row-k.lo;continue;
+            }
+            auto r=refs[id];auto b=bands[id];
+            U take=std::min<U>(n-out.size(),r.len);
+            out.insert(out.end(),spellings.begin()+r.base,spellings.begin()+r.base+take);
+            row=b.dest+row-b.lo;
+        }
+        return out;
     }
     Vec<Byte> marked(U row, U n) const{
         Vec<Byte> out;
@@ -233,6 +293,11 @@ public:
     }
 };
 
+#ifdef ASTRA_PAGED
+using Constructor=BasicConstructor<PagedIndex>;
+#else
+using Constructor=BasicConstructor<TreeIndex>;
+#endif
 struct Oracle {
     std::vector<U> psi;
     Word f;
@@ -351,8 +416,9 @@ void tiny(){
         U n=oracle.f.size();
         for(U bits=1;bits<(1u<<n);++bits){
             Section s=section_mask(n,bits);Constructor c(edges);c.run(s);
-            Audit a(oracle,c,s);assert(model(a.counts)==c.stats.states);
+            Audit a(oracle,c,s);assert(model(a.counts)==c.stats.states);c.index_edges();
             for(U p=0;p<n;++p){auto expected=oracle.tape(p);auto actual=c.marked(p,n);
+                auto indexed=c.indexed_marked(p,n);assert(std::equal(indexed.begin(),indexed.end(),expected.begin()));
                 assert(a.marked(oracle,c,p)==expected && std::equal(actual.begin(),actual.end(),expected.begin()));++marks;}
             ++cases;different+=a.covered<n;
         }
@@ -380,6 +446,7 @@ void tiny(){
              <<" checked_marked_outputs="<<marks<<" sections_missing_at_least_one_cycle="<<different<<"\n";
 }
 
+#ifndef ASTRA_RANK_LIBRARY
 int main(int argc,char** argv){
     if(argc==1){tiny();return 0;}
     assert(argc==4);
@@ -410,3 +477,4 @@ int main(int argc,char** argv){
     }
     assert(mem.live==0);
 }
+#endif
