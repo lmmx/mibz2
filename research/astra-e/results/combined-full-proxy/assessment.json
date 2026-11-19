@@ -1,0 +1,5 @@
+{
+  "kind": "advisory proxy",
+  "assessment": "V0 16-block calibrated point estimates for candidate/opend were .951 at W7, .962 at W8 and .963 at W10. At W10 the same model overstates historical opend/lazy by about 7.5 percentage points. The quick gate passed, and W4 was outside the reference envelope. [Full calibration, admissions and receipts](results/combined-full-proxy/README.md).",
+  "verification": "v0 designated frozen candidate and matching local source passed the full 338-case local rehearsal. Independent performance belongs to the separate CI and i9 evidence. [CI](https://github.com/lmmx/mibz2/actions/runs/44427324957)"
+}
