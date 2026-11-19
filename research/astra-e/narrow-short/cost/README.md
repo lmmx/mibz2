@@ -56,3 +56,13 @@ d=research/astra-e/narrow-short/cost
 bash research/astra-e/prepare.sh "$d/candidate.rs"
 bash "$d/marked.sh" /tmp/astra-combined-cost-marked "$PWD/target/release/deps" 3
 ```
+
+The freshly refreshed official scorer gate passed **338/338** cases on this entry at af0664a, covering the real corpus, oracle/adversarial outputs, CRCs and periodic and multiple-cycle cases. The scorer path revision was 75297a1d57b2bdf262c3a19f3064848dedf2c493. It printed v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04. This run used only the correctness gate. The native phase executable also contains a geometry caller that consumes the kernel's returned statistics. Production builds can optimize statistics and code layout differently, so the complete worker timing remains the necessary performance comparison. [Official verdict and frozen arguments](gate/summary.json) · [All correctness cases](gate/check.jsonl)
+
+```sh
+git fetch origin master && git checkout origin/master -- bench/moonshot .just Justfile
+git log -1 --format=%h origin/master -- bench/moonshot
+d=research/astra-e/narrow-short/cost
+bash research/astra-e/prepare.sh "$d/candidate.rs"
+python3 bench/moonshot/moonshot.py score "$d/candidate.rs" --no-proxy --no-timing --corpus corpora/wikidata.bz2 --target-dir /tmp/astra-counter-build --out /tmp/astra-counter-gate
+```
