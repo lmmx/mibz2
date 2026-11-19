@@ -250,8 +250,31 @@ void block(std::array<U,8> h,const std::vector<U>& edge){
                c.exceptional,c.exc,c.predictivepoints,c.zerobit);
     }
 }
+void check_floor(){
+    int permutations=0;long long trials=0;
+    for(int q=1;q<=7;++q){
+        std::vector<U> ys;for(int i=0;i<q;++i)ys.push_back(i);
+        do {
+            std::vector<int> dif;
+            for(int i=1;i<q;++i)dif.push_back(int(ys[i])-int(ys[i-1]));
+            std::sort(dif.begin(),dif.end());
+            int rb=std::max(1,bits(q-1)),floor=optimistic(ys,rb,dif);
+            for(int s=-2*q;s<=2*q;++s)for(int mask=0;mask<(1<<q);++mask){
+                int k=std::popcount(U(mask));if(k>q/4)continue;
+                int lo=INT32_MAX,hi=INT32_MIN;
+                for(int i=0;i<q;++i)if(!(mask&(1<<i))){
+                    int z=int(ys[i])-s*i;lo=std::min(lo,z);hi=std::max(hi,z);
+                }
+                assert(floor<=affine_size(q,bits(hi-lo),k,rb,s!=0&&s!=1));++trials;
+            }
+            ++permutations;
+        }while(std::next_permutation(ys.begin(),ys.end()));
+    }
+    printf("%d permutations checked, %lld page/slope/exception comparisons, all lower bounds valid\n",permutations,trials);
+}
 int main(int argc,char** argv){
     assert(argc==2 && std::endian::native==std::endian::little);
+    if(std::string(argv[1])=="--check"){check_floor();return 0;}
     FILE* f=fopen(argv[1],"rb");assert(f);
     puts("block,stream,n,m,row_bits,code_bits,page,original,residual24,code_bytes,code_paged,global_row_bytes,page_row_bytes,row_floor,row_paged,row_bytes,total_bytes,total_floor,global_both,pages,increasing_pages,adjacent,negative_steps,unit_steps,raw_pages,constant_pages,unit_slope_pages,custom_slope_pages,exception_pages,exceptions,predictive_rows,zero_bit_pages");
     std::array<U,8> h;

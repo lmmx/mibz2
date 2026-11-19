@@ -1,0 +1,2 @@
+2376 synthetic packed/wide cases, all rows, marks, partial pages, periodic expansion and retained-buffer reuse checked
+233 real blocks and 26567581 packed original edges reproduced with all per-block native sizes exactly 14 bytes above the P32 oracle

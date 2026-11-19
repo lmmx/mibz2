@@ -1,0 +1,1 @@
+5913 permutations checked, 1312541 page/slope/exception comparisons, all lower bounds valid
