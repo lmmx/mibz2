@@ -3,6 +3,7 @@ import argparse
 
 from collections import Counter, defaultdict
 import csv
+import hashlib
 from itertools import groupby, product
 import json
 from pathlib import Path
@@ -82,11 +83,18 @@ def split(slices, edges, words, target, protected):
     return raw,scales,selected,a
 
 
-def check_step(root,bounds,words,refined,rb,rwords,f,anchor_source):
+def check_step(root,bounds,words,refined,rb,rwords,f,anchor_source,target_set):
     before=forward(root,bounds[:-1])
     ref=forward(refined,rb[:-1])
+    by_pair={}
+    by_id={}
     for (d,k),(q,j) in zip(before,ref,strict=True):
         assert d==q and words[k] is rwords[j]
+        partner_class=before[d][1]
+        pair=(k,-1 if k in target_set else partner_class)
+        assert by_pair.setdefault(pair,j)==j and by_id.setdefault(j,pair)==pair
+        assert (j in f.chosen)==(k not in target_set and partner_class in target_set)
+    assert [by_id[j] for j in range(len(rwords))]==sorted(by_pair)
     after=forward(f.root,f.bases)
     dead={d for d,j in ref if j in f.chosen}
     alive={i:rank for rank,i in enumerate(i for i in range(len(ref)) if i not in dead)}
@@ -94,6 +102,7 @@ def check_step(root,bounds,words,refined,rb,rwords,f,anchor_source):
     for i,v in alive.items():
         target,k=ref[i]
         d,label=after[v]
+        assert label==f.ids[k]
         weight=f.weights[label]
         if target in dead:
             successor,j=ref[target]
@@ -143,7 +152,7 @@ def solve(raw,literals,mark,skip,horizon,trace=None,finish=None):
         assert f.chosen==selected and m-f.m==entering
         assert len(slices)<=len(raw)+len(weights)-1
         assert len(refined)<=len(slices) and len(f.root)<=len(refined)+h
-        checked,newsource=check_step(raw,bounds,weights,refined,rb,rwords,f,source)
+        checked,newsource=check_step(raw,bounds,weights,refined,rb,rwords,f,source,target)
         assert f.bases[f.ids[ra]]==newsource and f.m<m
         row=dict(depth=counts['rounds'],old_rows=m,residual_rows=f.m,old_runs=len(raw),
                  new_runs=len(f.root),old_ids=len(weights),refined_runs=len(refined),
@@ -224,7 +233,10 @@ def real(args):
                     writer=csv.DictWriter(out,full,lineterminator='\n')
                     writer.writeheader()
                 writer.writerow(full)
-            return solve(raw,literals,mark,skip,horizon,trace)
+            result,counts=solve(raw,literals,mark,skip,horizon,trace)
+            counts['output_sha256']=hashlib.sha256(result).hexdigest()
+            counts['input_sha256']=hashlib.sha256(tape.read_bytes()).hexdigest()
+            return result,counts
         # Reuse the pinned source's independent original-LF reference, primary
         # transfer and original-horizon comparison. Only its solver is replaced.
         with patch.object(anchor,'solve',run):
