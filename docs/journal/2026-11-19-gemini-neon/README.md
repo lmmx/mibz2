@@ -222,3 +222,37 @@ Every case was compared against direct first-return computation, with return wor
 - **Neon's identity is verified.** Applied to the shipped decoder, it shows that Cells' induction schedule is within about 2% of optimal in accelerated steps, among monotone component-suffix schedules.
 - **Any monotone schedule** can save at most about 1.4–1.5× in unaccelerated steps, and Cells' accelerated steps already take most of that.
 - **So the audition closed its own line:** induction *scheduling* is exhausted. Further total-work reductions must come from outside monotone interval induction: construction, emission, or a different reconstruction principle.
+
+## Round 5: outside monotone induction (real admitted blocks)
+
+**The setup:** Neon could not fetch the binary blocks, and stopped as instructed. It was then given a text packet: the corrected regime, record 80, the project's cost findings, and per-block statistics computed by the Coordinator. Its verifiers are run on the six authenticated blocks of `data/admitted-bwt` at 41c03a5b.
+
+**Neon's claims** ([response-5.md](response-5.md)):
+- **Theorem 1, weight-only Rauzy–Veech:** accelerated RV with integer weights only recovers the text-order (LF-orbit) position of every run head, every run tail and the primary mark. It therefore gives every boundary gap's separation depth, in "≈ 1.015r accelerated steps" and O(r) memory, without walking n rows.
+- **Theorem 2:** from those positions alone, the Navarro–Ochoa–Prezza Theorem 7 copy scheme is extracted exactly: r literals and k = r − |D̄∩C̄| copies. Each byte's copy depth equals its offset within its run.
+- **The proposed decoder, RV-Copy:** replay the copies by multi-pass interval peeling. It registered its own criteria:
+  - positive: no more than 3 fragments per copy, and a mean fragment of at least 15 B;
+  - sharp negative: at least 3r fragments, a mean below 5 B, or more than 50 passes.
+
+**What the Coordinator ran:** `verify_rv_copy.py.txt`, verbatim, on all six blocks. Output: [round5_output.txt](round5_output.txt).
+
+| Block (r/n) | Positions and bytes against an independent LF walk | Steps | Copies | Fragments per copy | Fragments / r | Mean fragment | Passes |
+|---|---|---|---|---|---|---|---|
+| 0 (0.057) | **PASS** | 1.809r | 10,954 | 40.6 | 8.69 | 1.9 B | 14,931 |
+| 2 (0.061) | **PASS** | 1.869r | 13,223 | 35.6 | 8.64 | 1.8 B | 14,361 |
+| 85 (0.088) | **PASS** | 1.771r | 17,119 | 25.5 | 5.49 | 1.9 B | 10,195 |
+| 207 (0.097) | **PASS** | 1.764r | 20,803 | 22.6 | 5.41 | 1.7 B | 11,559 |
+| 143 (0.120) | **PASS** | 1.790r | 26,964 | 16.4 | 4.09 | 1.8 B | 12,720 |
+| 210 (0.143) | **PASS** | 1.684r | 26,748 | 16.4 | 3.41 | 1.8 B | 10,866 |
+
+**Theorems 1 and 2: verified on every real block.** Every run head, every run tail, the primary mark and all ~900,000 reconstructed bytes match an independent LF walk.
+
+**The step-count claim is wrong.** The "accelerated" and unaccelerated counts are identical on every block, so Neon's acceleration condition never fires on Wikidata. The figure is 1.68–1.87r, not 1.015r. On block 0 it is exactly 92,571, MONODROMY's figure for the shipped Cells (record 80). So weight-only RV does the same induction work as Cells, not less, and its saving is only the SLP and word state per step.
+
+**RV-Copy is refuted by Neon's own registered criterion.** All six blocks meet the sharp-negative condition: 3.4–8.7r fragments, a mean of 1.7–1.9 B, and 10,000–15,000 passes. The copy description is compact, at 11–27k copies, but its copies depend on each other in both directions across long runs. Replay shatters into byte-scale pieces, which is the obstruction Neon itself named in its Theorem 2.3.
+
+**What survives:** a verified construction that recovers the text positions of all run boundaries, and so every boundary gap's separation depth, with integer-only state in Cells' step count.
+
+**Two questions are routed:**
+- **Novelty, to the Researcher.** It is close to the r-index's sampling of suffix-array values at run boundaries, and to toehold and φ.
+- **Proof and scope, to MONODROMY.** Does it answer the project's open question for *every* gap within a run, or only for boundary gaps?
