@@ -48,3 +48,5 @@ python3 -B "$d/report.py" "$out/phase.csv"
 ```
 
 For all admissions use the previous [original capped-run exporter](../../../seams/async/native/token-writer/export.rs), then pass the result to `check verify`. Full implementation, generator and native drivers are in this directory.
+
+A second implementation tags whole-byte sections directly and clips complete maximal runs for all other cases. It restores the named quote path to an unresolved timing comparison with original Compact while preserving exact arbitrary-section construction. [Paid setup comparison and 228-block receipts](SETUP.md)

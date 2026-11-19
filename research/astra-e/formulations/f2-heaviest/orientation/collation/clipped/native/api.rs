@@ -1,10 +1,15 @@
 #[allow(dead_code)]
 impl<PARAMS> TYPE {
     pub fn first(&mut self,caps:&[u16],freq:&[u32;256],n:u32,p:u32 SECTION_SIGNATURE)->Option<(Option<(u32,u32)>,u32)>{
+        #[cfg(clipped_profile)] let t0=crate::now();
         let (lo,m)=START_MARK;
         let mark=self.transfer_mark(p,lo);
-        self.build(lo,m);self.inverse_merge();
+        #[cfg(clipped_profile)] let t1=crate::now();
+        self.build(lo,m);
+        #[cfg(clipped_profile)] let t2=crate::now();
+        self.inverse_merge();
         AFTER_MERGE
+        #[cfg(clipped_profile)] {self.phases=[t1-t0,t2-t1,crate::now()-t2];}
         Some((mark,m))
     }
     pub fn object(&self)->(Vec<(u32,Vec<u8>)>,Vec<(u32,u32)>){

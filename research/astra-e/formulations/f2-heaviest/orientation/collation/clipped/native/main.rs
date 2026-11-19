@@ -1,6 +1,7 @@
 pub use mibz2::{bwt,runs,Kernels};
 #[allow(dead_code)] mod control;
 #[allow(dead_code,unused_imports)] mod clip;
+#[allow(dead_code,unused_imports)] mod fast;
 type Obj=(Vec<(u32,Vec<u8>)>,Vec<(u32,u32)>);
 type Native<const S:bool>=clip::Dispatch<2,2,S>;
 type Original=control::Dispatch<2,2>;
@@ -86,21 +87,23 @@ impl Truth{
         (words,runs)
     }
 }
-#[derive(Default)] struct Library{mono:Native<true>,multi:Native<false>,control:Original,bytes:Vec<u8>}
-struct ResultRow{object:Option<Obj>,mark:Option<(u32,u32)>,second:bool,first_ns:u64,total_ns:u64,mixed:u32,splits:u32}
+#[derive(Default)] struct Library{mono:Native<true>,multi:Native<false>,control:Original,quick:fast::Dispatch<2,2,true>,general:fast::Dispatch<2,2,false>,bytes:Vec<u8>}
+struct ResultRow{object:Option<Obj>,mark:Option<(u32,u32)>,second:bool,first_ns:u64,total_ns:u64,mixed:u32,splits:u32,caps:usize,phases:[u64;3]}
 fn execute(lib:&mut Library,input:&Input,sec:(u32,u32),arm:&str,snapshot:bool)->ResultRow{
     let t=now();
     let (first,single)=input.bucket(sec);
     let caps=&input.caps;let freq=&input.freq;let n=input.n;let p=input.p;
     let native=arm!="original";
-    let mono=single && arm!="raw_quote";
+    let mono=single && !arm.contains("raw_quote");
     macro_rules! run {($s:expr,$st:expr,$mixed:expr,$splits:expr)=>{{
         let (mark,m)=$st.unwrap();
         let end=now();
         let object=if snapshot{Some($s.object())}else{None};
         let second=$s.finish(mark,m,n,p,&mut lib.bytes);
         let total_ns=now()-t;
-        ResultRow{object,mark,second,first_ns:end-t,total_ns,mixed:$mixed,splits:$splits}
+        #[cfg(clipped_profile)] let phases=$s.phases;
+        #[cfg(not(clipped_profile))] let phases=[0;3];
+        ResultRow{object,mark,second,first_ns:end-t,total_ns,mixed:$mixed,splits:$splits,caps:$s.whole_capacity()+lib.bytes.capacity(),phases}
     }}}
     if !native{return run!(lib.control,lib.control.first(caps,freq,n,p),0,0);}
     macro_rules! clipped {($s:expr)=>{{
@@ -109,7 +112,9 @@ fn execute(lib:&mut Library,input:&Input,sec:(u32,u32),arm:&str,snapshot:bool)->
         #[cfg(not(clipped_counts))] let (mixed,splits)=(0,0);
         run!($s,res,mixed,splits)
     }}}
-    if mono{clipped!(lib.mono)}else{clipped!(lib.multi)}
+    if arm.starts_with("fast"){
+        if mono{clipped!(lib.quick)}else{clipped!(lib.general)}
+    }else if mono{clipped!(lib.mono)}else{clipped!(lib.multi)}
 }
 fn highest(obj:&Obj,lo:u32)->(u32,u32){
     let mut count=HashMap::<u32,u32>::new();
@@ -133,6 +138,9 @@ fn small(){
                        assert!(result.mixed<=2 && result.splits<=2);
                        counters[1+result.mixed as usize]+=1;}
                     assert_eq!(result.mark,check.mark(p,s,mono));assert_eq!(lib.bytes,check.output(p));
+                    let quick=execute(&mut lib,&x,s,"fast",p==0);
+                    assert_eq!(quick.object,result.object);assert_eq!(quick.mark,result.mark);
+                    assert_eq!((quick.mixed,quick.splits),(result.mixed,result.splits));assert_eq!(lib.bytes,check.output(p));
                     counters[4]+=1;counters[5]+=u64::from(result.mark.is_none());counters[6]+=u64::from(!result.second);
                 }
             }}
@@ -144,7 +152,7 @@ fn small(){
 fn blocks(path:&str,mode:&str,reps:u32){
     let mut reader=BufReader::new(std::fs::File::open(path).unwrap());
     if mode=="time"{println!("stream,rep,arm,first_ns,total_ns");}
-    else{println!("stream,section,lo,hi,rotated,words,root_runs,dict_bytes,mixed,run_splits,mark,skip,second");}
+    else{println!("stream,section,lo,hi,rotated,words,root_runs,dict_bytes,mixed,run_splits,mark,skip,second,reserved_with_output");}
     let mut count=0;
     while let Some(x)=Input::read(&mut reader){
         let truth=Truth::new(&x);let expected=truth.output(x.p);
@@ -165,21 +173,57 @@ fn blocks(path:&str,mode:&str,reps:u32){
         }else{
             for arm in 1..6{
                 let sec=sections[arm];let rotate=x.bucket(sec).1 && arm!=2;
-                let r=execute(&mut libs[arm],&x,sec,names[arm],true);
+                let which=if mode=="fast_verify"{format!("fast_{}",names[arm])}else{names[arm].to_owned()};
+                let r=execute(&mut libs[arm],&x,sec,&which,true);
                 assert_eq!(libs[arm].bytes,expected);assert_eq!(r.mark,truth.mark(x.p,sec,rotate));
                 let got=r.object.unwrap();assert_eq!(got,truth.object(sec,rotate));
                 if arm==1{assert_eq!(got,*obj);assert_eq!(ref_result.mark,r.mark);}
                 assert!(r.mixed<=2 && r.splits<=2);
                 let (mark,skip)=r.mark.unwrap_or((u32::MAX,0));
-                println!("{},{},{},{},{},{},{},{},{},{},{},{},{}",x.index,names[arm],sec.0,sec.1,rotate,
-                         got.0.len(),got.1.len(),got.0.iter().map(|w|w.1.len()).sum::<usize>(),r.mixed,r.splits,mark,skip,r.second);
+                println!("{},{},{},{},{},{},{},{},{},{},{},{},{},{}",x.index,names[arm],sec.0,sec.1,rotate,
+                         got.0.len(),got.1.len(),got.0.iter().map(|w|w.1.len()).sum::<usize>(),r.mixed,r.splits,mark,skip,r.second,r.caps);
             }
         }
         count+=1;
     }
     eprintln!("{count} inputs verified");
 }
+fn price(path:&str,reps:u32,custom:Option<&str>){
+    let mut reader=BufReader::new(std::fs::File::open(path).unwrap());
+    let mut intervals=HashMap::new();
+    if let Some(source)=custom{
+        let content=std::fs::read_to_string(source).unwrap();
+        for row in content.lines().skip(1){
+            let c=row.split(',').collect::<Vec<_>>();
+            let idx=c[0].parse::<u32>().unwrap();let lo=c[1].parse::<u32>().unwrap();let hi=c[2].parse::<u32>().unwrap();
+            assert!(intervals.insert(idx,(lo,hi)).is_none());
+        }
+    }
+    println!("stream,rep,arm,lo,hi,first_ns,total_ns,prepare_mark_ns,discover_ns,merge_ns,reserved_with_output");
+    while let Some(x)=Input::read(&mut reader){
+        let truth=Truth::new(&x);let expected=truth.output(x.p);
+        let q=x.quote();let mut reference=Library::default();
+        let r=execute(&mut reference,&x,q,"original",true);
+        let f=highest(&r.object.unwrap(),q.0);
+        let other=if custom.is_some(){*intervals.get(&x.index).unwrap()}else{(x.n/5,x.n/5+x.n/11)};
+        let names=["original","quote","fast_quote","frequent","fast_frequent","fifth_or_custom","fast_fifth_or_custom","fast_raw_quote"];
+        let sections=[q,q,q,f,f,other,other,q];
+        let mut libs:Vec<_>=(0..8).map(|_|Library::default()).collect();
+        for (j,name) in names.iter().enumerate(){
+            let s=sections[j];let rotate=x.bucket(s).1 && !name.contains("raw_quote");
+            let result=execute(&mut libs[j],&x,s,name,true);
+            assert_eq!(result.object.unwrap(),truth.object(s,rotate));assert_eq!(result.mark,truth.mark(x.p,s,rotate));assert_eq!(libs[j].bytes,expected);
+        }
+        let order=[0,1,7,2,6,3,5,4];
+        for rep in 0..reps{for k in order{
+            let j=(rep as usize+k)%8;
+            let name=names[j];let s=sections[j];let r=execute(&mut libs[j],&x,s,name,false);
+            assert_eq!(libs[j].bytes,expected);
+            println!("{},{},{},{},{},{},{},{},{},{},{}",x.index,rep,name,s.0,s.1,r.first_ns,r.total_ns,r.phases[0],r.phases[1],r.phases[2],r.caps);
+        }}
+    }
+}
 fn main(){
     let args=std::env::args().collect::<Vec<_>>();
-    if args.len()==1{small();}else{blocks(&args[2],&args[1],args.get(3).map_or(24,|s|s.parse().unwrap()));}
+    if args.len()==1{small();}else if args[1]=="price"{price(&args[2],args[3].parse().unwrap(),args.get(4).map(String::as_str));}else{blocks(&args[2],&args[1],args.get(3).map_or(24,|s|s.parse().unwrap()));}
 }

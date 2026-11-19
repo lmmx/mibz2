@@ -2,6 +2,7 @@
 import hashlib
 from pathlib import Path
 import sys
+from shared import materialize
 D=Path(__file__).resolve().parent
 F=D.parents[4]
 def checked(path,digest):
@@ -17,10 +18,11 @@ def main(out):
     out.mkdir(exist_ok=True,parents=True)
     base=checked(F/'f2-pages/payload/slots/candidate.rs','84cc39ea5322f37e5a3da7383ea342da4ed7f14ffd4957496b1de2f92a1cbe06')
     second=checked(F/'f2c/second.rs','877dd1870572c4c5237cbdd1362b8d7124c4393abdcbcebb5194e1fadcffc992')
-    (out/'second.rs').write_text(second)
+    (out/'second.rs').write_text(second+(D/'second-cap.rs').read_text())
     base=once(base,'../../../f2c/second.rs','second.rs')
-    api=(D/'api.rs').read_text()
-    ctrl=base+'\n'+api.replace('PARAMS','const MODE:u8,const SCHEDULE:u8').replace('TYPE','Dispatch<MODE,SCHEDULE>').replace('START_MARK','self.prepare_counted(caps,n,freq)?').replace('AFTER_MERGE','').replace('SECTION_SIGNATURE','')
+    api=(D/'api.rs').read_text()+(D/'cap.rs').read_text()
+    base=once(base,'    fallback: Segmented,','    #[cfg(clipped_profile)] pub phases:[u64;3],\n    fallback: Segmented,')
+    ctrl=base+'\n'+api.replace('PARAMS','const MODE:u8,const SCHEDULE:u8').replace('TYPE','Dispatch<MODE,SCHEDULE>').replace('START_MARK','self.prepare_counted(caps,n,freq)?').replace('AFTER_MERGE','').replace('SECTION_SIGNATURE','').replace('EXTRA','0')
     (out/'control.rs').write_text(ctrl)
     # Retain the original eight-lane preload loop, popcount index, merge and writer.
     s=base[:base.index('    #[cfg(test)]\n    fn attempt<const FORCE')]
@@ -57,7 +59,12 @@ def main(out):
     s=once(s,'if id == NONE {\n                    Self::emit(&mut self.merged, start, i as u32, width);','''if (ONLY && id==NONE) || (!ONLY && id&LIVE!=0) {
                     Self::emit(&mut self.merged,start,if ONLY {i as u32} else {!id},width);''')
     s+='\n}\n'
-    s+=api.replace('PARAMS','const MODE:u8,const SCHEDULE:u8,const ONLY:bool').replace('TYPE','Dispatch<MODE,SCHEDULE,ONLY>').replace('START_MARK','{self.section=sec;self.symbol=first;self.prepare_counted(caps,n,freq)?}').replace('AFTER_MERGE',(D/'bases.rs').read_text()).replace('SECTION_SIGNATURE',',sec:(u32,u32), first:u8')
+    s+=api.replace('PARAMS','const MODE:u8,const SCHEDULE:u8,const ONLY:bool').replace('TYPE','Dispatch<MODE,SCHEDULE,ONLY>').replace('START_MARK','{self.section=sec;self.symbol=first;self.prepare_counted(caps,n,freq)?}').replace('AFTER_MERGE',(D/'bases.rs').read_text()).replace('SECTION_SIGNATURE',',sec:(u32,u32), first:u8').replace('EXTRA','bytes(&self.bases)')
     (out/'clip.rs').write_text(s)
+    fast=once(s,(D/'prepare.rs').read_text(),(D/'setup-fast.rs').read_text())
+    fast=once(fast,'    fn prepare(&mut self,',(D/'flush.rs').read_text()+'    fn prepare(&mut self,')
+    (out/'fast.rs').write_text(fast)
+    (out/'shared.rs').write_text(materialize(fast))
+    (out/'memory.rs').write_text((D/'shared-main.rs').read_text())
     (out/'main.rs').write_text((D/'main.rs').read_text())
 if __name__=='__main__':main(Path(sys.argv[1]))
