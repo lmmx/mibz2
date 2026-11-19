@@ -225,16 +225,16 @@ cells weaker than G at +2%; this successor exists to fix that, so none is used.
   6. the guards' extension, batch by batch;
   7. the verdict;
   8. the context and the census, as before.
-- **The untimed preflight** (`just bench-open-port-2 … dry`), in the cloud container at fd896bf7
-  (the corrected scorer, schedule, tests and recipe):
+- **The untimed preflight** (`just bench-open-port-2 … dry`), in the cloud container at 7dbcf5f4
+  (S in G2, the full schedule):
   - "the builds and all 18 inputs are the registered ones";
   - 16 of 16 outputs the same in both builds;
-  - 29 of 29 scorer checks;
+  - 30 of 30 scorer checks;
   - no timing field, and no `runq` probe.
 
-  Its bundle is `2026-11-19-open-port-2-registration/preflight/run-20261119T144715Z.tar.gz`, sha256
-  `86926cc4ba41e640ffb6c0abd605ebc476d260ece9a729e030bcdba6637bcfc3`. The first draft's preflight, at 9b3ed323, is superseded; it stays in this
-  branch's history.
+  Its bundle is `2026-11-19-open-port-2-registration/preflight/run-20261119T145510Z.tar.gz`, sha256
+  `c1f0ab76a588a7aa015c11bb49bd85b2b8f7cfd448406b1c8829b75bdd20792e`. The earlier drafts' preflights, at 9b3ed323 and fd896bf7, are superseded; they
+  stay in this branch's history.
 
 ## The rule (`bench/open_port2.py judge`, frozen with this registration)
 
