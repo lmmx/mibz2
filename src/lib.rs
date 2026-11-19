@@ -441,6 +441,13 @@ pub fn decode_block<I: bwt::InverseBwt>(
         if b.orig_ptr as usize >= n {
             return Err(ErrorKind::BadOrigPtr);
         }
+        #[cfg(feature = "moonshot")]
+        {
+            let start = out.len();
+            if let Some(result) = s.inverse.expand_runs(&s.runs, n, b.orig_ptr, out, k) {
+                return check_streamed(result, start, b.crc, k, out);
+            }
+        }
         #[cfg(feature = "trace")]
         trace::mark_sized(
             trace::Kind::InvertStart,
@@ -508,6 +515,29 @@ pub fn decode_block<I: bwt::InverseBwt>(
     );
     let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
     finish(inverted, b.crc, k, out)
+}
+
+/// Finish the research-only expanded route with the same CRC and rollback as `finish`.
+#[cfg(feature = "moonshot")]
+fn check_streamed(
+    expanded: Result<(), ErrorKind>,
+    start: usize,
+    stored: u32,
+    k: Kernels,
+    out: &mut Vec<u8>,
+) -> Result<u32, ErrorKind> {
+    let checked = expanded.and_then(|()| {
+        let computed = crc::crc32(&out[start..], k);
+        if computed == stored {
+            Ok(computed)
+        } else {
+            Err(ErrorKind::BlockCrc { stored, computed })
+        }
+    });
+    if checked.is_err() {
+        out.truncate(start);
+    }
+    checked
 }
 
 /// RLE1 undone into `out` and the block's CRC checked against `stored` (`decode_block`'s
