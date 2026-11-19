@@ -321,3 +321,23 @@ Every case was compared against direct first-return computation, with return wor
 - whether the floor is valid as stated, once temporary buffers, arbitrary order, self-overlap or a secondary grammar are allowed. (ChatGPT's review raises the same point.)
 
 The giant SCC is a property of the macro graph. It does not by itself force expensive byte-level replay.
+
+**Attainability, measured by the Coordinator** ([round6_attainability.py](round6_attainability.py)). The method:
+1. Take Neon's own minimal partition, F_self_ns: every copy split greedily wherever a BWT run repeats.
+2. Add an edge from the fragment holding each byte's Φ-source to the fragment holding the byte.
+3. Ask whether any valid order exists, using Kahn's algorithm.
+
+| Block | Minimal fragments | Orderable | Deadlocked in cycles |
+|---|---|---|---|
+| 0 | 41,684 (0.81r) | 3,125 | 92.5% |
+| 2 | 46,310 (0.85r) | 2,860 | 93.8% |
+| 85 | 43,479 (0.55r) | 4,346 | 90.0% |
+| 207 | 58,605 (0.67r) | 4,988 | 91.5% |
+| 143 | 59,690 (0.55r) | 5,668 | 90.5% |
+| 210 | 51,741 (0.40r) | 7,580 | 85.3% |
+
+**What this shows:**
+- **The floor is not attained.** Each fragment is duplicate-free and none depends on itself, yet 85–94% of them lie on dependency cycles, so no order of this partition exists.
+- **The floor is valid but loose.** Every direct Φ-copy schedule must cut those cycles further, so the true minimum lies strictly between F_self_ns (0.40–0.85r) and the 3.4–8.7r that round 5 achieved.
+- **The real obstruction is a cycle-breaking problem**, akin to finding a minimum feedback set over the fragment graph. Its size, not F_self_ns, decides whether direct Φ-copy replay can compete with Cells' ≈ 1.8r.
+- **Neon's own follow-up** concedes that F_self_ns binds only direct Φ-copy execution, that SCC size is a diagnostic, and that its closing claim was overbroad. It tightened the proof of part 4 for temporary buffers and byte loops.
