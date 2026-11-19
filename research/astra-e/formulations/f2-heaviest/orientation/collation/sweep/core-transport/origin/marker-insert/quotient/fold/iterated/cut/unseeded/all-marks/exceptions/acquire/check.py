@@ -38,6 +38,8 @@ def check_columns():
                     ex={x for x in range(n) if L[x]!=c.modal[c.state[x]]}
                     for mark in range(n):
                         res,stats=acquire(runs,start,c.modal,mark)
+                        fused,bill=acquire(runs,start,c.modal,mark,compact=True)
+                        assert fused==res and bill["states"]<=bill["events"]
                         E=ex|{mark};assert set(res)==E
                         for x in E:
                             y=c.lf[x];steps=1
@@ -77,6 +79,7 @@ def huge():
         else:merged.append((x,w))
     start=[0]+[n-k*m+j*m for j in range(k+1)];assert start[-1]==n
     got,stats=acquire(merged,start,[0]*(k+1),mark)
+    other,compact=acquire(merged,start,[0]*(k+1),mark,compact=True);assert got==other
     F,psi,lf=index(L);count1=m-count0;old_to_event={}
     for u,ch in enumerate(L):
         # Terminating b in the long-only highest layer, or in the full next layer.
@@ -88,6 +91,6 @@ def huge():
             v,h=got[v];age+=h
         assert v==expect and age==G+2-L[lf[x]]
     assert stats['virtual_rows']>G and stats['rope_nodes_created']<200
-    return dict(monotone_line=N,positive_and_negative_regular_gap=bulk,lifted_rows=n,source_rows=m,stats=stats)
+    return dict(monotone_line=N,positive_and_negative_regular_gap=bulk,lifted_rows=n,source_rows=m,stats=stats,contracted=compact)
 if __name__=='__main__':
     print(json.dumps(dict(partial_maps=check_holes(8),marked=check_columns(),large=huge()),indent=2))

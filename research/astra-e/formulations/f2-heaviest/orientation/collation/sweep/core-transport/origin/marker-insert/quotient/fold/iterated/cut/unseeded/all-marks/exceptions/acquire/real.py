@@ -39,7 +39,7 @@ def run(args):
         mark,rle,L,lf,order,raw_hash=original(op)
         for k in args.depths:
             n,p,K,start,modal,ranges,sha=read_model(args.models/str(i)/f"{k}.ctx");assert mark==p and n==len(L)
-            before=time.thread_time_ns();got,stats=acquire(rle,start,modal,mark);thread=time.thread_time_ns()-before
+            before=time.thread_time_ns();got,stats=acquire(rle,start,modal,mark,compact=args.compact);thread=time.thread_time_ns()-before
             expected={mark};clocks=[]
             for lo,hi,j,c in ranges:expected.update(range(lo,hi))
             assert set(got)==expected
@@ -61,4 +61,4 @@ def run(args):
             write.writerow(row);sys.stdout.flush()
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument("original",type=Path);p.add_argument("models",type=Path);p.add_argument("sources",type=Path);p.add_argument("wires",type=Path)
-    p.add_argument("--ids",nargs="+",type=int);p.add_argument("--depths",nargs="+",type=int,default=[8]);run(p.parse_args())
+    p.add_argument("--compact",action="store_true");p.add_argument("--ids",nargs="+",type=int);p.add_argument("--depths",nargs="+",type=int,default=[8]);run(p.parse_args())

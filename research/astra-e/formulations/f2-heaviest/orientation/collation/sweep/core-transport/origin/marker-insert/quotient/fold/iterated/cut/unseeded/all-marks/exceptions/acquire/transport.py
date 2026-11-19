@@ -37,23 +37,56 @@ def geometry(runs,start,modal,mark):
     assert all(v is not None for v in D)
     return D,pieces,stops,births,fragments
 
-def anchors_of(D,width):
+def anchors_of(D,width,step):
     status=[False]*len(D);anchors={}
     for j in range(len(D)):
         stack=[];seen={}
         while not status[j] and j not in seen:seen[j]=len(stack);stack.append(j);j=D[j]
         if j in seen:
             cycle=stack[seen[j]:];anchor=min(cycle,key=lambda z:(width[z],z))
-            anchors[anchor]=len(cycle)
+            anchors[anchor]=sum(step[v] for v in cycle)
         for j in stack:status[j]=True
     return anchors
 
-def acquire(runs,start,modal,mark,seed=143):
+def contract(D,pieces,stops,births,width):
+    active=[j for j in range(len(D)) if stops[j]];ids={j:i for i,j in enumerate(active)}
+    route={j:(ids[j],0,0) for j in active}
+    for j in range(len(D)):
+        seen=set();path=[]
+        while j not in route and j not in seen:
+            seen.add(j);path.append(j);j=D[j]
+        if j not in route:
+            # Such cycles fill every destination, so no incoming tree or event can reach one.
+            assert path[0]==j
+            for z in path:route[z]=None
+            continue
+        known=route[j]
+        for t in reversed(path):
+            assert known is not None
+            end,delta,hops=known
+            (offset,w),=pieces[t];assert w==width[t]
+            known=(end,delta+offset,hops+1);route[t]=known
+    dest=[];packets=[];step=[]
+    for j in active:
+        out,off,hops=route[D[j]]
+        dest.append(out);packets.append([(off+v,w) for v,w in pieces[j]]);step.append(1+hops)
+    starts=[]
+    for t,off,e in births:
+        z,b,hops=route[t];starts.append((z,b+off,e,1+hops))
+    return active,dest,packets,step,starts
+
+def acquire(runs,start,modal,mark,seed=143,compact=False):
     width=[y-x for x,y in zip(start,start[1:])]
     D,pieces,stops,births,fragments=geometry(runs,start,modal,mark)
-    K=len(D);anchors=anchors_of(D,width);r=Rope(seed)
+    original_states=len(D)
+    if compact:
+        active,D,pieces,step,births=contract(D,pieces,stops,births,width)
+        width=[width[j] for j in active];start=[start[j] for j in active];stops=[stops[j] for j in active]
+    else:
+        step=[1]*len(D);births=[(j,off,event,1) for j,off,event in births]
+    K=len(D);anchors=anchors_of(D,width,step);r=Rope(seed)
     incoming=[[] for _ in D];finish={};U={a:{} for a in anchors};V={a:{} for a in anchors}
-    for j,off,event in births:incoming[j].append((off,r.node(-1,event,age=1)))
+    for j,off,event,age in births:incoming[j].append((off,r.node(-1,event,age=age)))
     def collect(j):
         res=None;pos=0
         for off,t in sorted(incoming[j],key=lambda packet:packet[0]):
@@ -70,7 +103,7 @@ def acquire(runs,start,modal,mark,seed=143):
             if origin<0:finish[source]=(event,age)
             else:U[origin][source]=(event,age)
             pos=at+1
-        good=add(join(good,seq),1)
+        good=add(join(good,seq),step[j])
         for off,w in pieces[j]:
             segment,good=r.split(good,w);incoming[D[j]].append((off,segment))
         assert good is None
@@ -108,7 +141,7 @@ def acquire(runs,start,modal,mark,seed=143):
             finish[source]=(target,first+laps*d+last)
     assert len(finish)==len(births) and {t for t,dt in finish.values()}==set(finish)
     assert all(dt>0 for t,dt in finish.values())
-    return finish,dict(states=K,events=len(births),overlay_fragments=fragments,
+    return finish,dict(states=K,original_states=original_states,events=len(births),overlay_fragments=fragments,
         default_packets=sum(map(len,pieces)),cycle_anchors=len(anchors),virtual_rows=sum(width[a]for a in anchors),
         virtual_full_returns=anchor_survivors,real_via_anchors=anchored,
         regular_rows_bulk=regular,maximum_fifo=peak_queue,rope_nodes_created=r.created)
