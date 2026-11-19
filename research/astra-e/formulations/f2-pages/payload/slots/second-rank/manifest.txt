@@ -1,0 +1,16 @@
+da1ce6de53fe9fdd703246711bedcd94d026150a
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+529febfcb4ded7382b04f836277a21f59426838ec57b7afdbf6828345aff1a00  /workspace/work/queue-spans/second-rank/price
+94cde584edb498f92432363845ea66fe30f0f70984dd7992d95d9d3782e188d0  /workspace/work/queue-spans/second-rank/focus.rs
+4081729ca21e6aab15d3caa8e6973fac6ae8d8533ea5f6d11d5964c3f16bf73e  /workspace/work/queue-spans/second-rank/control.rs
+202529436594e64591801559eb1d3a0bfa24f2e4f40a1cbc16e6a253e334e2b8  /workspace/work/queue-spans/second-rank/slots.rs
+f38c0ae713c308e909b41e3c86379fd31a3e8b328364fd75fc0261f678a559bb  /workspace/work/page-counted-lib/release/deps/libmibz2.rlib
+0c08784024d6b86cacaf716b0d977dd36eea6d61af90c17690df594006d48ff1  research/astra-e/formulations/f2-pages/payload/slots/second-rank/second.rs
+pinned CPUs 4 2
+400000 100000
