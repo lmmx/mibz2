@@ -1,0 +1,57 @@
+"""Worker-count predictions for 0.5.7 (OpenCells as the lazy route's kernel), records 45-56's form:
+wall ∝ c(W)/CPU(W), c = 1 + beta * W * CPU(W).
+  pinned:   CPU = min(0.93 W, N - 0.125 N - nu W)
+  unpinned: CPU = min(W u(W), 10 - nu W), u = 0.941 - 0.0103 (W - 7)  (10 physical cores)
+beta (wide/open kernel) 0.0116 [0.0088, 0.0150]; nu, the front end's cores per worker, calibrated on the
+one wide-admission worker-count point since record 56 (pinned 8: untrimmed 8 / shipped 6 = 0.983),
+scaled by 1.06 for OpenCells' ~6% faster workers; range up to record 56's 0.18 W."""
+import itertools
+def cpu(W,N,nu,pinned):
+    if pinned: return min(0.93*W, N-0.125*N-nu*W)
+    return min(W*(0.941-0.0103*(W-7)), 10-nu*W)
+def wall(W,N,nu,beta,pinned):
+    C=cpu(W,N,nu,pinned); return (1+beta*W*C)/C
+# calibrate nu on pinned 8: wall(8)/wall(6) = 0.983 at beta 0.0116
+import math
+lo,hi=0.0,0.3
+for _ in range(60):
+    m=(lo+hi)/2
+    r=wall(8,8,m,0.0116,True)/wall(6,8,m,0.0116,True)
+    if r<0.983: lo=m
+    else: hi=m
+nu_wide=(lo+hi)/2; nu_c=nu_wide*1.06
+print(f'nu calibrated (wide) {nu_wide:.4f} W; OpenCells central {nu_c:.4f} W; range [{nu_c:.3f}, 0.19]')
+cells=[('pinned',10,7,[6,8,10]),('pinned',8,6,[5,7,8]),('unpinned',8,8,[7,9]),('unpinned',10,7,[6,8,10]),('unpinned',12,7,[6,8,10]),('unpinned',16,7,[6,8,10]),('unpinned',20,7,[6,8,10])]
+for place,N,ship,arms in cells:
+    pin=place=='pinned'
+    row=[]; best_all=set()
+    grid=[(b,nu) for b in (0.0088,0.0116,0.0150) for nu in (nu_c,0.10,0.19)]
+    for W in arms:
+        c=wall(W,N,nu_c,0.0116,pin)/wall(ship,N,nu_c,0.0116,pin)
+        vals=[wall(W,N,nu,b,pin)/wall(ship,N,nu,b,pin) for b,nu in grid]
+        row.append(f'{W}: {c:.3f} [{min(vals)-0.02:.2f}, {max(vals)+0.02:.2f}]')
+    for b,nu in grid:
+        best_all.add(min([ship]+arms,key=lambda W:wall(W,N,nu,b,pin)))
+    best=min([ship]+arms,key=lambda W:wall(W,N,nu_c,0.0116,pin))
+    print(f'{place} {N}: shipped {ship}; central best {best}; best over grid {sorted(best_all)}; '+'; '.join(row))
+print('--- calibration to the crossover at 10 threads: 10 workers / shipped 7 = 1.047 (wide kernel)')
+def solve(target,N,pin,b=0.0116):
+    lo,hi=0.0,0.6
+    for _ in range(60):
+        m=(lo+hi)/2
+        rr=wall(10,N,m,b,pin)/wall(7,N,m,b,pin)
+        if rr<target: lo=m
+        else: hi=m
+    return (lo+hi)/2
+for pin in (True,False):
+    nu10=solve(1.047,10,pin)
+    print(f"{'pinned' if pin else 'unpinned'}: nu fitting 10/7 = 1.047 is {nu10:.3f} W; then 8/7 = {wall(8,10,nu10,0.0116,pin)/wall(7,10,nu10,0.0116,pin):.3f}, 6/7 = {wall(6,10,nu10,0.0116,pin)/wall(7,10,nu10,0.0116,pin):.3f}")
+    for b in (0.0088,0.0150):
+        n2=solve(1.047,10,pin,b); print(f'   beta {b}: nu {n2:.3f}; 8/7 = {wall(8,10,n2,b,pin)/wall(7,10,n2,b,pin):.3f}; 6/7 = {wall(6,10,n2,b,pin)/wall(7,10,n2,b,pin):.3f}')
+nu_u=solve(1.047,10,False)*1.06
+print(f'unpinned 8 with nu {nu_u:.3f}: 7/8 = {wall(7,8,nu_u,0.0116,False)/wall(8,8,nu_u,0.0116,False):.3f}, 9/8 = {wall(9,8,nu_u,0.0116,False)/wall(8,8,nu_u,0.0116,False):.3f}')
+for N in (10,):
+    for W in (6,8,10): print(f'unpinned {N} nu {nu_u:.3f}: {W}/7 = {wall(W,N,nu_u,0.0116,False)/wall(7,N,nu_u,0.0116,False):.3f}')
+nu_p=solve(1.047,10,True)*1.06
+for W in (6,8,10): print(f'pinned 10 nu {nu_p:.3f}: {W}/7 = {wall(W,10,nu_p,0.0116,True)/wall(7,10,nu_p,0.0116,True):.3f}')
+for W in (5,7,8): print(f'pinned 8 nu {nu_p:.3f}: {W}/6 = {wall(W,8,nu_p,0.0116,True)/wall(6,8,nu_p,0.0116,True):.3f}')
