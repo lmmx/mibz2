@@ -27,3 +27,14 @@ rustc -O --edition 2021 "$d/audit.rs" --extern mibz2="$deps/libmibz2.rlib" -L "d
 "$scratch/audit" small
 "$scratch/audit" corpora/wikidata.bz2
 ```
+
+**Owned AVX2 prototype.** The isolated worker receives a genuinely mutable Symbols buffer. Its front classifies bitmap words first and then reads each literal rank from one source pointer. It writes the encoded run to either that pointer's consumed prefix or a separate preallocated output log in the matched control. Common spans write one word. For large widths the encoder accumulates ceil(w/127) minus the number of packed words, so packed length plus that difference reproduces the old density decision exactly. The five large dense blocks use the frozen marked charge decision on decoded compact widths. The frozen combined constructor receives the same maximal runs through a new iterator. RLE1, CRC and ordinary fallback keep their full costs.
+
+All four real-worker arms matched the 209,700,196 expanded bytes and every block CRC on all 431 real blocks. Both compact arms completed all 233 large blocks directly. The independent stock arms share identical code with separate scratch. Another 252 complete-worker comparisons covered malformed ranks/EOB, later overlong runs, too-small block bounds, duplicate alphabets, bad CRCs/primaries, scalar fallback and the exact 1 MiB charge transitions. Thirty-three calls restored already-written symbol prefixes before stock fallback, totaling 6,061,458 overwritten packed bytes. The in-place arm has no separate packed-record vector allocation; its fallback retains the actual stock buffers requested by that worker. [Worker sources](native.rs) · [Generated AVX2 writes](front.inc.rs) · [All real routes](checked.csv) · [Adversarial checks](errors.txt) · [Errors driver](errors.rs)
+
+```sh
+python3 "$d/prepare.py" "$scratch/native-src"
+rustc -O --edition 2021 -A unused -C codegen-units=1 "$scratch/native-src/main.rs" --extern mibz2="$deps/libmibz2.rlib" -L "dependency=$deps" -o "$scratch/native"
+"$scratch/native" corpora/wikidata.bz2 errors
+"$scratch/native" corpora/wikidata.bz2 0
+```
