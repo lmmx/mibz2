@@ -1,0 +1,143 @@
+{
+  "format": "raw BWT last column (bzip2 block after Huffman, MTF and RLE2 decoding; before RLE1), one byte per row",
+  "blocks": [
+    {
+      "file": "block-0.L",
+      "n": 899931,
+      "primary_index": 264045,
+      "r": 51184,
+      "r_over_n": 0.05688,
+      "sha256": "db8764224ac4980112ddefbe85b8593f5236643fed71bf8f0b739567d4f2ac67",
+      "admitted_by": {
+        "Cells": true,
+        "LazyCells": true
+      },
+      "provenance": {
+        "corpus": "corpora/wikidata.bz2",
+        "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+        "dump": "wikidata-20261019-all.json.bz2",
+        "window": "w00",
+        "window_offset": 4312029054,
+        "block_in_window": 1,
+        "block_in_corpus": 1,
+        "large_block_index": 0,
+        "note": "large_block_index counts only blocks of at least 65,536 rows, as in the MONODROMY records; block 0 is the frozen column"
+      }
+    },
+    {
+      "file": "block-2.L",
+      "n": 900000,
+      "primary_index": 320807,
+      "r": 54532,
+      "r_over_n": 0.06059,
+      "sha256": "8b47073232d1d9cff7a0688399cfd405211045e15228706f213780e083fc4174",
+      "admitted_by": {
+        "Cells": true,
+        "LazyCells": true
+      },
+      "provenance": {
+        "corpus": "corpora/wikidata.bz2",
+        "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+        "dump": "wikidata-20261019-all.json.bz2",
+        "window": "w00",
+        "window_offset": 4312029054,
+        "block_in_window": 3,
+        "block_in_corpus": 3,
+        "large_block_index": 2,
+        "note": "large_block_index counts only blocks of at least 65,536 rows, as in the MONODROMY records; block 0 is the frozen column"
+      }
+    },
+    {
+      "file": "block-85.L",
+      "n": 899935,
+      "primary_index": 325088,
+      "r": 79375,
+      "r_over_n": 0.0882,
+      "sha256": "5def63ec66c914e1986a97f8206a8debd09f6e936f0bc8d8f4cab8544ff64fe8",
+      "admitted_by": {
+        "Cells": true,
+        "LazyCells": true
+      },
+      "provenance": {
+        "corpus": "corpora/wikidata.bz2",
+        "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+        "dump": "wikidata-20261019-all.json.bz2",
+        "window": "w04",
+        "window_offset": 38808261491,
+        "block_in_window": 6,
+        "block_in_corpus": 158,
+        "large_block_index": 85,
+        "note": "large_block_index counts only blocks of at least 65,536 rows, as in the MONODROMY records; block 0 is the frozen column"
+      }
+    },
+    {
+      "file": "block-143.L",
+      "n": 899869,
+      "primary_index": 802868,
+      "r": 108335,
+      "r_over_n": 0.12039,
+      "sha256": "eb443421d4d7b459a1db02a00c068f4c2f1e3b7e70f85674228ea2cba30ceba2",
+      "admitted_by": {
+        "Cells": false,
+        "LazyCells": true
+      },
+      "provenance": {
+        "corpus": "corpora/wikidata.bz2",
+        "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+        "dump": "wikidata-20261019-all.json.bz2",
+        "window": "w07",
+        "window_offset": 64680435819,
+        "block_in_window": 3,
+        "block_in_corpus": 268,
+        "large_block_index": 143,
+        "note": "large_block_index counts only blocks of at least 65,536 rows, as in the MONODROMY records; block 0 is the frozen column"
+      }
+    },
+    {
+      "file": "block-210.L",
+      "n": 899959,
+      "primary_index": 791429,
+      "r": 128732,
+      "r_over_n": 0.14304,
+      "sha256": "dd4d0c7d03dd6bc7ec8752ad03b2fd5607222c54bebab8d81ae98a2c277f3dcd",
+      "admitted_by": {
+        "Cells": false,
+        "LazyCells": true
+      },
+      "provenance": {
+        "corpus": "corpora/wikidata.bz2",
+        "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+        "dump": "wikidata-20261019-all.json.bz2",
+        "window": "w10",
+        "window_offset": 90552610147,
+        "block_in_window": 13,
+        "block_in_corpus": 387,
+        "large_block_index": 210,
+        "note": "large_block_index counts only blocks of at least 65,536 rows, as in the MONODROMY records; block 0 is the frozen column"
+      }
+    },
+    {
+      "file": "block-207.L",
+      "n": 899998,
+      "primary_index": 205180,
+      "r": 87111,
+      "r_over_n": 0.09679,
+      "sha256": "7343ef019b44f0e838e68abc09e36d9806a0f45249cf2286702a2e482e555099",
+      "admitted_by": {
+        "Cells": false,
+        "LazyCells": true
+      },
+      "provenance": {
+        "corpus": "corpora/wikidata.bz2",
+        "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+        "dump": "wikidata-20261019-all.json.bz2",
+        "window": "w10",
+        "window_offset": 90552610147,
+        "block_in_window": 10,
+        "block_in_corpus": 384,
+        "large_block_index": 207,
+        "note": "large_block_index counts only blocks of at least 65,536 rows, as in the MONODROMY records; block 0 is the frozen column"
+      }
+    }
+  ]
+}
