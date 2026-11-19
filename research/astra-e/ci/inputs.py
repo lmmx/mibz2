@@ -31,7 +31,12 @@ STATIC_FRONTIER = {
     "commit": "d48e80ff01eeee6d23277945e2f58b61004470aa",
     "path": "research/astra-e/formulations/f2-frontier/candidate.rs",
 }
+COUNTED = {
+    "commit": "252646aec0dd1a80a6969b2e1598c73486006efd",
+    "path": "research/astra-e/formulations/f2-front-counts/candidate.rs",
+}
 PREDECESSORS = {
+    "research/astra-e/formulations/f2-pages/instructions/candidate.rs": COUNTED,
     "research/astra-e/edge-budget/candidate.rs": COMBINED,
     "research/astra-e/final-slot/candidate.rs": COMBINED,
     "research/astra-e/formulations/f2-rle/combined/candidate.rs": COMBINED,
