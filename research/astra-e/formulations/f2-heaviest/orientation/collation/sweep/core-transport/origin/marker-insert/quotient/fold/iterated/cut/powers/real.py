@@ -79,7 +79,7 @@ def original(args):
     else:
         from normalize import normalize
     start=time.process_time_ns()
-    out,totals=solve(root,words,mark,0,meta['n'],trace.append,check=args.differential,normalizer=normalize)
+    out,totals=solve(root,words,mark,0,meta['n'],trace.append,check=args.differential,normalizer=normalize,gated=args.gated)
     solver_ns=time.process_time_ns()-start
     o=Oracle(b''.join(bytes([k])*n for k,n in runs))
     p=mark
@@ -113,4 +113,5 @@ if __name__=='__main__':
     p.add_argument('--trace',required=True,type=Path)
     p.add_argument('--differential',action='store_true')
     p.add_argument('--backward',action='store_true')
+    p.add_argument('--gated',action='store_true')
     print(json.dumps(original(p.parse_args()),indent=2))

@@ -9,7 +9,7 @@ from grammar import Node, output
 from normalize import normalize
 
 
-def solve(raw,literals,mark,skip,horizon,detail=None,check=True,normalizer=normalize):
+def solve(raw,literals,mark,skip,horizon,detail=None,check=True,normalizer=normalize,gated=False):
     words=[Node(literal=s) for s in literals]
     raw,words,anchor=seed(raw,words,mark)
     stats=Counter(rounds=0,normalized_rounds=0,old_rows=0,old_runs=0,old_ids=0,
@@ -34,7 +34,17 @@ def solve(raw,literals,mark,skip,horizon,detail=None,check=True,normalizer=norma
         slices,edges=overlay(raw,bounds)
         self_mass=sum(targets.get(k,0) for k,targets in enumerate(edges))
         stats.update(old_rows=old_m,old_ids=len(words),old_runs=len(raw),scanned_fragments=len(slices))
-        if self_mass:
+        existing_cut=None
+        if gated and self_mass:
+            old_choice=choose(edges,anchor)
+            ingress=sum(n for k,targets in enumerate(edges) if k not in old_choice
+                        for j,n in targets.items() if j in old_choice)
+            stats['gate_graphs']+=1
+            stats['gate_contacts']+=sum(map(len,edges))
+            if 4*ingress>=old_m:
+                existing_cut=old_choice
+                stats['normalizations_avoided']+=1
+        if self_mass and existing_cut is None:
             raw,words,anchor,c=normalizer(raw,words,anchor,bounds,slices,check)
             stats.update(normalized_rounds=1,normal_written_rows=c.get('destination_scatter_rows',c['macro_rows']),
                          normal_pieces=c['affine_pieces'],lookups=c['point_lookups'],
@@ -53,8 +63,8 @@ def solve(raw,literals,mark,skip,horizon,detail=None,check=True,normalizer=norma
         else:
             c={}
         macro_m=bounds[-1]
-        assert macro_m==old_m-self_mass
-        target=choose(edges,anchor)
+        assert macro_m==old_m-(self_mass if c else 0)
+        target=choose(edges,anchor) if existing_cut is None else existing_cut
         refined,rwords,chosen,a=split(slices,edges,words,target,anchor)
         rf,rb=geometry(refined,len(rwords))
         f=Fold(refined,dict(enumerate(rwords)),list(range(len(rwords))),dict(enumerate(rf)),protected=a,chosen=chosen)
