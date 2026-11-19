@@ -1,0 +1,4705 @@
+{
+ "voids": [],
+ "triggers": [
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t10",
+   "event": "Ir",
+   "ratio": 0.9982862444264573,
+   "aa": 0.007807683615123295,
+   "class": "within same-binary spread",
+   "attribution": "Ir x0.9983 (601,180,948 -> 600,150,671, -1,030,277; same-binary ranges 3,895,283 port, 4,668,129 v0.5.6). Split: decoder -20,028 (its same-binary range 373,462), harness -938,418, runtime -71,830. Largest by function: __memcpy_avx_unaligned_erms +688,401; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core -625,690; realloc -150,856. The decoder executes the same instructions (decoder Ir x0.999963). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1278% of the run.",
+   "cost_share": 0.001277666149074299
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t10",
+   "event": "I1mr",
+   "ratio": 0.9506285948647389,
+   "aa": 0.2348584304888801,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x0.9506 (60,468 -> 57,483, -2,985; same-binary ranges 11,986 port, 10,340 v0.5.6). Split: decoder -2,356 (its same-binary range 6,697), harness +858, runtime -1,488. Largest by function: mibz2::block::read_item -634; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +388; mibz2::parallel::scanner -331. The decoder executes the same instructions (decoder Ir x0.999963). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0037% of the run.",
+   "cost_share": 3.702250735478441e-05
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t10",
+   "event": "DLmw",
+   "ratio": 1.0532342023221004,
+   "aa": 0.15850558318614816,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x1.0532 (282,589 -> 297,632, +15,043; same-binary ranges 34,231 port, 42,897 v0.5.6). Split: decoder +6,339 (its same-binary range 31,294), harness -22, runtime +8,726. Largest by function: __memcpy_avx_unaligned_erms +8,480; mibz2::bwt::build +6,253; mibz2::runs::fill_avx2 -6,249. The decoder executes the same instructions (decoder Ir x0.999963). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1866% of the run.",
+   "cost_share": 0.0018655603508439932
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t10",
+   "event": "Bim",
+   "ratio": 1.6850565318076556,
+   "aa": 0.24195680916703388,
+   "class": "harness",
+   "attribution": "Bim x1.6851 (1,468 -> 2,474, +1,006; same-binary ranges 549 port, 149 v0.5.6). Split: decoder +11 (its same-binary range 30), harness +924, runtime +70. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +415; ab::run_delay +414; ab::sample_tasks -96. The decoder executes the same instructions (decoder Ir x0.999963). Class: harness. Cost of the whole difference by the CEst model: 0.0012% of the run.",
+   "cost_share": 1.2473115126094404e-05
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t20",
+   "event": "Ir",
+   "ratio": 1.0025630455479138,
+   "aa": 0.011385230728270246,
+   "class": "within same-binary spread",
+   "attribution": "Ir x1.0026 (606,857,261 -> 608,412,663, +1,555,403; same-binary ranges 6,301,367 port, 6,867,311 v0.5.6). Split: decoder +31,984 (its same-binary range 725,818), harness +432,810, runtime +1,090,609. Largest by function: __memcpy_avx_unaligned_erms +433,018; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +288,410; _int_malloc +241,308. The decoder executes the same instructions (decoder Ir x1.000058). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1869% of the run.",
+   "cost_share": 0.0018686863859237344
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t20",
+   "event": "I1mr",
+   "ratio": 1.059630433255832,
+   "aa": 0.29091020985906835,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0596 (54,107 -> 57,333, +3,226; same-binary ranges 14,181 port, 12,262 v0.5.6). Split: decoder +224 (its same-binary range 5,456), harness +2,524, runtime +478. Largest by function: ab::sample_tasks +651; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +443; <alloc::string::String>::from_utf8_lossy +382. The decoder executes the same instructions (decoder Ir x1.000058). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0039% of the run.",
+   "cost_share": 3.876249776292369e-05
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t20",
+   "event": "DLmr",
+   "ratio": 0.9699830436928976,
+   "aa": 0.24038577699029506,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9700 (55,908 -> 54,230, -1,678; same-binary ranges 6,704 port, 11,939 v0.5.6). Split: decoder +8 (its same-binary range 4), harness -0, runtime -1,686. Largest by function: __memcpy_avx_unaligned_erms -1,701; _dl_relocate_object +18; <alloc::collections::btree::map::BTreeMap<u64, core::result::Result<alloc::vec::Vec<u8>, m +7. The decoder executes the same instructions (decoder Ir x1.000058). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0202% of the run.",
+   "cost_share": 0.00020162169521986944
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t20",
+   "event": "Bim",
+   "ratio": 1.8840472673559823,
+   "aa": 0.36500242365487146,
+   "class": "harness",
+   "attribution": "Bim x1.8840 (1,354 -> 2,551, +1,197; same-binary ranges 753 port, 217 v0.5.6). Split: decoder +29 (its same-binary range 53), harness +1,045, runtime +123. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +455; ab::run_delay +454; ab::drain::<mibz2::read::BzReader<std::fs::File>> +80. The decoder executes the same instructions (decoder Ir x1.000058). Class: harness. Cost of the whole difference by the CEst model: 0.0014% of the run.",
+   "cost_share": 1.4380953949361405e-05
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t8",
+   "event": "DLmw",
+   "ratio": 1.056704696786478,
+   "aa": 0.09926463237616923,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x1.0567 (244,946 -> 258,836, +13,890; same-binary ranges 24,824 port, 13,028 v0.5.6). Split: decoder +5,722 (its same-binary range 13,797), harness -41, runtime +8,209. Largest by function: __memcpy_avx_unaligned_erms +8,135; mibz2::block::read_item +4,394; mibz2::runs::fill_avx2 +2,498. The decoder executes the same instructions (decoder Ir x1.000073). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1741% of the run.",
+   "cost_share": 0.0017407613976003437
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t8",
+   "event": "Bim",
+   "ratio": 1.6495714285714287,
+   "aa": 0.286783042394015,
+   "class": "harness",
+   "attribution": "Bim x1.6496 (1,400 -> 2,309, +909; same-binary ranges 575 port, 83 v0.5.6). Split: decoder +21 (its same-binary range 42), harness +817, runtime +71. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +355; ab::run_delay +354; ab::sample_tasks -96. The decoder executes the same instructions (decoder Ir x1.000073). Class: harness. Cost of the whole difference by the CEst model: 0.0011% of the run.",
+   "cost_share": 1.1397365042749649e-05
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "w7",
+   "event": "Ir",
+   "ratio": 1.0018345667956114,
+   "aa": 0.008884907719619584,
+   "class": "within same-binary spread",
+   "attribution": "Ir x1.0018 (594,215,668 -> 595,305,796, +1,090,128; same-binary ranges 2,316,181 port, 5,253,867 v0.5.6). Split: decoder +376,650 (its same-binary range 217,439), harness +323,207, runtime +390,271. Largest by function: __memcpy_avx_unaligned_erms +349,317; mibz2::bwt::room_segments::<32, 1, false> +248,564; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +213,616. The decoder executes the same instructions (decoder Ir x1.000690). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1372% of the run.",
+   "cost_share": 0.0013716548875661882
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "w7",
+   "event": "I1mr",
+   "ratio": 1.1102341215403522,
+   "aa": 0.44740466234319043,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.1102 (51,270 -> 56,921, +5,652; same-binary ranges 6,035 port, 17,868 v0.5.6). Split: decoder +2,320 (its same-binary range 7,131), harness +2,187, runtime +1,145. Largest by function: ab::sample_tasks +522; mibz2::block::read_item +478; mibz2::bwt::room_segments::<32, 1, false> +465. The decoder executes the same instructions (decoder Ir x1.000690). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0071% of the run.",
+   "cost_share": 7.111214312285523e-05
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "w7",
+   "event": "DLmr",
+   "ratio": 0.9432874775705509,
+   "aa": 0.03526939159752174,
+   "class": "runtime/scheduling",
+   "attribution": "DLmr x0.9433 (49,043 -> 46,261, -2,781; same-binary ranges 1,611 port, 1,366 v0.5.6). Split: decoder +0 (its same-binary range 1), harness +1, runtime -2,783. Largest by function: __memcpy_avx_unaligned_erms -2,797; _dl_relocate_object +18; ab::child +2. The decoder executes the same instructions (decoder Ir x1.000690). Class: runtime/scheduling. Cost of the whole difference by the CEst model: 0.0350% of the run.",
+   "cost_share": 0.00034996149939080066
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "w7",
+   "event": "DLmw",
+   "ratio": 0.9527728663992265,
+   "aa": 0.2000586821541528,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x0.9528 (249,609 -> 237,821, -11,788; same-binary ranges 11,775 port, 46,365 v0.5.6). Split: decoder -14,292 (its same-binary range 37,955), harness -24, runtime +2,528. Largest by function: mibz2::rle::unrle_avx2 -8,472; mibz2::bwt::build +8,333; mibz2::runs::fill_avx2 -8,333. The decoder executes the same instructions (decoder Ir x1.000690). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1483% of the run.",
+   "cost_share": 0.0014832680280387942
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "w7",
+   "event": "Bim",
+   "ratio": 1.7661398339137422,
+   "aa": 0.24514435695538062,
+   "class": "harness",
+   "attribution": "Bim x1.7661 (1,244 -> 2,198, +953; same-binary ranges 467 port, 264 v0.5.6). Split: decoder +48 (its same-binary range 72), harness +818, runtime +87. Largest by function: ab::run_delay +332; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +332; ab::drain::<mibz2::read::BzReader<std::fs::File>> +90. The decoder executes the same instructions (decoder Ir x1.000690). Class: harness. Cost of the whole difference by the CEst model: 0.0012% of the run.",
+   "cost_share": 1.1995324643548556e-05
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t10",
+   "event": "Ir",
+   "ratio": 0.9981155933372151,
+   "aa": 0.011452978596636632,
+   "class": "within same-binary spread",
+   "attribution": "Ir x0.9981 (473,853,239 -> 472,960,306, -892,932; same-binary ranges 5,391,192 port, 3,213,145 v0.5.6). Split: decoder +33,675 (its same-binary range 64,965), harness -84,647, runtime -841,959. Largest by function: __memcpy_avx_unaligned_erms -839,613; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core -59,520; __memset_avx2_unaligned_erms -52,778. The decoder executes the same instructions (decoder Ir x1.000076). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1212% of the run.",
+   "cost_share": 0.0012115787441423019
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t10",
+   "event": "I1mr",
+   "ratio": 1.05804017312174,
+   "aa": 0.19517034181735737,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0580 (19,824 -> 20,975, +1,151; same-binary ranges 3,636 port, 3,443 v0.5.6). Split: decoder +342 (its same-binary range 1,000), harness +671, runtime +137. Largest by function: ab::sample_tasks +210; __memcpy_avx_unaligned_erms +183; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +138. The decoder executes the same instructions (decoder Ir x1.000076). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0016% of the run.",
+   "cost_share": 1.561196362960207e-05
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t10",
+   "event": "D1mw",
+   "ratio": 0.9725572898593935,
+   "aa": 0.052580959800543337,
+   "class": "within same-binary spread",
+   "attribution": "D1mw x0.9726 (1,834,024 -> 1,783,694, -50,331; same-binary ranges 92,668 port, 86,472 v0.5.6). Split: decoder -22,360 (its same-binary range 430), harness -3, runtime -27,968. Largest by function: __memcpy_avx_unaligned_erms -28,662; mibz2::bwt::room_segments::<32, 1, true> -22,694; _int_malloc +1,178. The decoder executes the same instructions (decoder Ir x1.000076). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0683% of the run.",
+   "cost_share": 0.000682912825183425
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t10",
+   "event": "DLmr",
+   "ratio": 0.8568816889775972,
+   "aa": 0.5240843507214206,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.8569 (46,494 -> 39,840, -6,654; same-binary ranges 18,890 port, 18,888 v0.5.6). Split: decoder +9 (its same-binary range 1), harness -3, runtime -6,661. Largest by function: __memcpy_avx_unaligned_erms -6,677; _dl_relocate_object +18; <alloc::collections::btree::map::BTreeMap<u64, core::result::Result<alloc::vec::Vec<u8>, m +9. The decoder executes the same instructions (decoder Ir x1.000076). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0903% of the run.",
+   "cost_share": 0.000902877875752636
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t10",
+   "event": "Bim",
+   "ratio": 1.4701728303289352,
+   "aa": 0.26083761939750194,
+   "class": "harness",
+   "attribution": "Bim x1.4702 (1,076 -> 1,582, +506; same-binary ranges 355 port, 54 v0.5.6). Split: decoder +17 (its same-binary range 9), harness +419, runtime +70. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +184; ab::run_delay +183; ??? +37. The decoder executes the same instructions (decoder Ir x1.000076). Class: harness. Cost of the whole difference by the CEst model: 0.0007% of the run.",
+   "cost_share": 6.865681902119466e-06
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t20",
+   "event": "Ir",
+   "ratio": 1.0017940105747298,
+   "aa": 0.005940182111622283,
+   "class": "within same-binary spread",
+   "attribution": "Ir x1.0018 (473,961,309 -> 474,811,600, +850,292; same-binary ranges 2,765,660 port, 2,809,823 v0.5.6). Split: decoder -13,159 (its same-binary range 82,654), harness -111,676, runtime +975,126. Largest by function: __memcpy_avx_unaligned_erms +1,032,556; __memset_avx2_unaligned_erms +79,176; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core -74,570. The decoder executes the same instructions (decoder Ir x0.999970). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1129% of the run.",
+   "cost_share": 0.0011287549781227525
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t20",
+   "event": "I1mr",
+   "ratio": 0.9637772842695734,
+   "aa": 0.18715516406930588,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x0.9638 (22,605 -> 21,786, -819; same-binary ranges 2,388 port, 3,867 v0.5.6). Split: decoder -209 (its same-binary range 1,222), harness +114, runtime -724. Largest by function: __memcpy_avx_unaligned_erms +125; alloc::io::read::default_read_to_end::<std::fs::File> -123; std::fs::read_to_string::inner -106. The decoder executes the same instructions (decoder Ir x0.999970). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0011% of the run.",
+   "cost_share": 1.0869501428532844e-05
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t20",
+   "event": "DLmr",
+   "ratio": 1.2419331604724864,
+   "aa": 0.8037874802735403,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x1.2419 (36,098 -> 44,832, +8,733; same-binary ranges 29,032 port, 4 v0.5.6). Split: decoder +11 (its same-binary range 1), harness -4, runtime +8,727. Largest by function: __memcpy_avx_unaligned_erms +8,711; _dl_relocate_object +18; <alloc::collections::btree::map::BTreeMap<u64, core::result::Result<alloc::vec::Vec<u8>, m +10. The decoder executes the same instructions (decoder Ir x0.999970). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1159% of the run.",
+   "cost_share": 0.0011593515361009873
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t20",
+   "event": "DLmw",
+   "ratio": 0.9700609488380624,
+   "aa": 0.19004053128682208,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x0.9701 (1,256,332 -> 1,218,719, -37,613; same-binary ranges 83,373 port, 215,635 v0.5.6). Split: decoder -53,716 (its same-binary range 173,436), harness +5, runtime +16,098. Largest by function: mibz2::runs::fill_avx2 -28,634; __memcpy_avx_unaligned_erms +15,460; <mibz2::bwt::SegScratch>::assemble_reversed -9,076. The decoder executes the same instructions (decoder Ir x0.999970). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.4993% of the run.",
+   "cost_share": 0.004993147350170697
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t20",
+   "event": "Bim",
+   "ratio": 1.5606710158434296,
+   "aa": 0.1792328042328042,
+   "class": "harness",
+   "attribution": "Bim x1.5607 (1,073 -> 1,675, +602; same-binary ranges 271 port, 41 v0.5.6). Split: decoder +12 (its same-binary range 9), harness +498, runtime +92. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +221; ab::run_delay +220; ??? +41. The decoder executes the same instructions (decoder Ir x0.999970). Class: harness. Cost of the whole difference by the CEst model: 0.0008% of the run.",
+   "cost_share": 7.98618961822834e-06
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t8",
+   "event": "I1mr",
+   "ratio": 1.0290724190465101,
+   "aa": 0.1818690258287574,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0291 (20,611 -> 21,210, +599; same-binary ranges 3,577 port, 2,910 v0.5.6). Split: decoder -286 (its same-binary range 1,423), harness +952, runtime -67. Largest by function: ab::sample_tasks +302; __memcpy_avx_unaligned_erms +173; ab::run_delay +167. The decoder executes the same instructions (decoder Ir x1.000021). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0008% of the run.",
+   "cost_share": 8.214539455992434e-06
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t8",
+   "event": "DLmr",
+   "ratio": 0.9392188847005528,
+   "aa": 0.5243465459292798,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9392 (47,327 -> 44,451, -2,877; same-binary ranges 10,156 port, 18,877 v0.5.6). Split: decoder +8 (its same-binary range 1), harness -2, runtime -2,883. Largest by function: __memcpy_avx_unaligned_erms -2,899; _dl_relocate_object +18; <alloc::collections::btree::map::BTreeMap<u64, core::result::Result<alloc::vec::Vec<u8>, m +8. The decoder executes the same instructions (decoder Ir x1.000021). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0394% of the run.",
+   "cost_share": 0.0003943582142708244
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t8",
+   "event": "Bim",
+   "ratio": 1.5251482118952,
+   "aa": 0.1815680880330124,
+   "class": "harness",
+   "attribution": "Bim x1.5251 (1,046 -> 1,595, +549; same-binary ranges 264 port, 45 v0.5.6). Split: decoder +15 (its same-binary range 10), harness +461, runtime +73. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +197; ab::run_delay +196; ??? +37. The decoder executes the same instructions (decoder Ir x1.000021). Class: harness. Cost of the whole difference by the CEst model: 0.0008% of the run.",
+   "cost_share": 7.5290805561265686e-06
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "w7",
+   "event": "Ir",
+   "ratio": 1.0041471108072118,
+   "aa": 0.008250777345116589,
+   "class": "within same-binary spread",
+   "attribution": "Ir x1.0041 (472,694,146 -> 474,654,461, +1,960,315; same-binary ranges 3,898,810 port, 1,418,126 v0.5.6). Split: decoder -13,346 (its same-binary range 59,197), harness +225,509, runtime +1,748,151. Largest by function: __memcpy_avx_unaligned_erms +1,433,482; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +148,752; _int_malloc +100,693. The decoder executes the same instructions (decoder Ir x0.999970). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.2720% of the run.",
+   "cost_share": 0.0027202202803086523
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "w7",
+   "event": "I1mr",
+   "ratio": 1.05187502136533,
+   "aa": 0.2894319981896356,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0519 (19,502 -> 20,514, +1,012; same-binary ranges 5,116 port, 2,208 v0.5.6). Split: decoder -70 (its same-binary range 1,256), harness +863, runtime +219. Largest by function: ab::sample_tasks +262; __memcpy_avx_unaligned_erms +216; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +159. The decoder executes the same instructions (decoder Ir x0.999970). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0014% of the run.",
+   "cost_share": 1.4038336612120619e-05
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "w7",
+   "event": "DLmr",
+   "ratio": 1.2370813990573728,
+   "aa": 0.37453896490184424,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x1.2371 (47,032 -> 58,182, +11,150; same-binary ranges 18,888 port, 10,156 v0.5.6). Split: decoder +7 (its same-binary range 0), harness +0, runtime +11,143. Largest by function: __memcpy_avx_unaligned_erms +11,128; _dl_relocate_object +18; <alloc::collections::btree::map::BTreeMap<u64, core::result::Result<alloc::vec::Vec<u8>, m +7. The decoder executes the same instructions (decoder Ir x0.999970). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1547% of the run.",
+   "cost_share": 0.0015472698451797244
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "w7",
+   "event": "DLmw",
+   "ratio": 1.0318471589969629,
+   "aa": 0.0954822484438711,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x1.0318 (925,336 -> 954,806, +29,469; same-binary ranges 88,234 port, 83,429 v0.5.6). Split: decoder -9,467 (its same-binary range 73,321), harness -22, runtime +38,959. Largest by function: __memcpy_avx_unaligned_erms +40,552; mibz2::rle::unrle_avx2 -2,615; mibz2::block::read_item -2,140. The decoder executes the same instructions (decoder Ir x0.999970). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.4089% of the run.",
+   "cost_share": 0.0040892957601461445
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "w7",
+   "event": "Bim",
+   "ratio": 1.5694492552822998,
+   "aa": 0.19635036496350367,
+   "class": "harness",
+   "attribution": "Bim x1.5694 (962 -> 1,510, +548; same-binary ranges 269 port, 27 v0.5.6). Split: decoder +17 (its same-binary range 12), harness +449, runtime +82. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +190; ab::run_delay +190; ??? +39. The decoder executes the same instructions (decoder Ir x0.999970). Class: harness. Cost of the whole difference by the CEst model: 0.0008% of the run.",
+   "cost_share": 7.604291726631389e-06
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t10",
+   "event": "Ir",
+   "ratio": 1.0013433840239219,
+   "aa": 0.0034923123744938778,
+   "class": "within same-binary spread",
+   "attribution": "Ir x1.0013 (1,500,396,137 -> 1,502,411,745, +2,015,608; same-binary ranges 5,234,680 port, 3,280,325 v0.5.6). Split: decoder +29,307 (its same-binary range 77,200), harness +256,358, runtime +1,729,943. Largest by function: __memcpy_avx_unaligned_erms +1,284,167; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +168,586; _int_malloc +118,187. The decoder executes the same instructions (decoder Ir x1.000021). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0948% of the run.",
+   "cost_share": 0.0009481269302558384
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t10",
+   "event": "I1mr",
+   "ratio": 1.0535906298003073,
+   "aa": 0.12242692095212937,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0536 (41,664 -> 43,897, +2,233; same-binary ranges 5,097 port, 2,551 v0.5.6). Split: decoder +3 (its same-binary range 692), harness +1,797, runtime +433. Largest by function: ab::sample_tasks +535; __memcpy_avx_unaligned_erms +421; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +362. The decoder executes the same instructions (decoder Ir x1.000021). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0011% of the run.",
+   "cost_share": 1.0502923186535898e-05
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t10",
+   "event": "DLmr",
+   "ratio": 1.0773332481369957,
+   "aa": 0.2961071633858432,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x1.0773 (125,201 -> 134,883, +9,682; same-binary ranges 35,545 port, 21,210 v0.5.6). Split: decoder +6,454 (its same-binary range 32,244), harness +0, runtime +3,228. Largest by function: mibz2::block::read_item +5,986; __memcpy_avx_unaligned_erms +3,213; <mibz2::block::Huff>::decode_entry_slow +461. The decoder executes the same instructions (decoder Ir x1.000021). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0455% of the run.",
+   "cost_share": 0.000455443402349865
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t10",
+   "event": "DLmw",
+   "ratio": 1.0235537293632258,
+   "aa": 0.10515881280916428,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x1.0236 (1,612,195 -> 1,650,168, +37,973; same-binary ranges 160,567 port, 161,566 v0.5.6). Split: decoder +26,147 (its same-binary range 104,774), harness -8, runtime +11,834. Largest by function: mibz2::runs::fill_avx2 +52,238; mibz2::bwt::build -40,984; __memcpy_avx_unaligned_erms +12,209. The decoder executes the same instructions (decoder Ir x1.000021). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1786% of the run.",
+   "cost_share": 0.001786230753972429
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t10",
+   "event": "Bim",
+   "ratio": 1.8352106156457337,
+   "aa": 0.2414599906410857,
+   "class": "harness",
+   "attribution": "Bim x1.8352 (1,296 -> 2,379, +1,083; same-binary ranges 516 port, 39 v0.5.6). Split: decoder +9 (its same-binary range 13), harness +973, runtime +101. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +434; ab::run_delay +433; ??? +61. The decoder executes the same instructions (decoder Ir x1.000021). Class: harness. Cost of the whole difference by the CEst model: 0.0005% of the run.",
+   "cost_share": 5.092468936646251e-06
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t20",
+   "event": "I1mr",
+   "ratio": 1.0209749072906273,
+   "aa": 0.22344867941591073,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0210 (42,498 -> 43,390, +891; same-binary ranges 5,758 port, 8,401 v0.5.6). Split: decoder +238 (its same-binary range 2,981), harness +713, runtime -60. Largest by function: ab::sample_tasks +298; alloc::io::read::default_read_to_end::<std::fs::File> -236; __memcpy_avx_unaligned_erms +209. The decoder executes the same instructions (decoder Ir x1.000000). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0004% of the run.",
+   "cost_share": 4.057691151193261e-06
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t20",
+   "event": "DLmr",
+   "ratio": 0.8935443666768793,
+   "aa": 0.3289207912528169,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.8935 (134,475 -> 120,159, -14,316; same-binary ranges 13,547 port, 39,408 v0.5.6). Split: decoder -12,889 (its same-binary range 32,244), harness -2, runtime -1,425. Largest by function: mibz2::block::read_item -11,973; __memcpy_avx_unaligned_erms -1,438; <mibz2::block::Huff>::decode_entry_slow -922. The decoder executes the same instructions (decoder Ir x1.000000). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0652% of the run.",
+   "cost_share": 0.0006516522710794493
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t20",
+   "event": "Bim",
+   "ratio": 1.9745736434108525,
+   "aa": 0.19380530973451338,
+   "class": "harness",
+   "attribution": "Bim x1.9746 (1,290 -> 2,547, +1,257; same-binary ranges 438 port, 105 v0.5.6). Split: decoder +17 (its same-binary range 29), harness +1,125, runtime +115. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +515; ab::run_delay +514; ??? +65. The decoder executes the same instructions (decoder Ir x1.000000). Class: harness. Cost of the whole difference by the CEst model: 0.0006% of the run.",
+   "cost_share": 5.722828489208165e-06
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t8",
+   "event": "I1mr",
+   "ratio": 1.024701881784839,
+   "aa": 0.0940068820493214,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0247 (43,406 -> 44,478, +1,072; same-binary ranges 3,566 port, 3,934 v0.5.6). Split: decoder -322 (its same-binary range 1,740), harness +1,409, runtime -15. Largest by function: ab::sample_tasks +397; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +371; mibz2::block::read_item -341. The decoder executes the same instructions (decoder Ir x1.000031). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0005% of the run.",
+   "cost_share": 5.126415456821364e-06
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t8",
+   "event": "DLmw",
+   "ratio": 1.0698153681488445,
+   "aa": 0.22236353715357415,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x1.0698 (1,297,923 -> 1,388,538, +90,615; same-binary ranges 272,221 port, 124,956 v0.5.6). Split: decoder +21,857 (its same-binary range 44,635), harness -21, runtime +68,780. Largest by function: __memcpy_avx_unaligned_erms +70,335; mibz2::runs::fill_avx2 +25,730; mibz2::bwt::build -25,724. The decoder executes the same instructions (decoder Ir x1.000031). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.4332% of the run.",
+   "cost_share": 0.004332495211899516
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t8",
+   "event": "Bim",
+   "ratio": 1.7938813349814584,
+   "aa": 0.11919927206551417,
+   "class": "harness",
+   "attribution": "Bim x1.7939 (1,294 -> 2,322, +1,028; same-binary ranges 262 port, 76 v0.5.6). Split: decoder +12 (its same-binary range 17), harness +918, runtime +97. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +409; ab::run_delay +408; ab::sample_tasks -60. The decoder executes the same instructions (decoder Ir x1.000031). Class: harness. Cost of the whole difference by the CEst model: 0.0005% of the run.",
+   "cost_share": 4.913173403683653e-06
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "w7",
+   "event": "Ir",
+   "ratio": 1.001254868598581,
+   "aa": 0.0016279496049860231,
+   "class": "within same-binary spread",
+   "attribution": "Ir x1.0013 (1,498,437,102 -> 1,500,317,444, +1,880,342; same-binary ranges 1,254,796 port, 2,436,985 v0.5.6). Split: decoder +62,431 (its same-binary range 56,058), harness +458,105, runtime +1,359,806. Largest by function: __memcpy_avx_unaligned_erms +1,097,636; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +303,115; realloc +74,333. The decoder executes the same instructions (decoder Ir x1.000044). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0898% of the run.",
+   "cost_share": 0.0008980449005518261
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "w7",
+   "event": "I1mr",
+   "ratio": 1.0979668071025295,
+   "aa": 0.08697786285770381,
+   "class": "harness",
+   "attribution": "I1mr x1.0980 (39,085 -> 42,914, +3,829; same-binary ranges 3,544 port, 3,216 v0.5.6). Split: decoder +196 (its same-binary range 1,325), harness +2,226, runtime +1,407. Largest by function: ab::sample_tasks +665; _int_malloc +506; __memcpy_avx_unaligned_erms +476. The decoder executes the same instructions (decoder Ir x1.000044). Class: harness. Cost of the whole difference by the CEst model: 0.0018% of the run.",
+   "cost_share": 1.8287176129583526e-05
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "w7",
+   "event": "DLmr",
+   "ratio": 0.87677046680037,
+   "aa": 0.3295987561007212,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.8768 (138,782 -> 121,680, -17,102; same-binary ranges 5,839 port, 38,156 v0.5.6). Split: decoder -21,493 (its same-binary range 32,244), harness -0, runtime +4,392. Largest by function: mibz2::block::read_item -19,955; __memcpy_avx_unaligned_erms +4,381; <mibz2::block::Huff>::decode_entry_slow -1,537. The decoder executes the same instructions (decoder Ir x1.000044). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0817% of the run.",
+   "cost_share": 0.0008167858087441556
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "w7",
+   "event": "DLmw",
+   "ratio": 1.0363727461539127,
+   "aa": 0.11740258445510454,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x1.0364 (1,309,946 -> 1,357,592, +47,646; same-binary ranges 150,734 port, 52,795 v0.5.6). Split: decoder -7,625 (its same-binary range 127,156), harness -6, runtime +55,278. Largest by function: __memcpy_avx_unaligned_erms +55,367; mibz2::bwt::build +12,075; mibz2::rle::unrle_avx2 -7,132. The decoder executes the same instructions (decoder Ir x1.000044). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.2276% of the run.",
+   "cost_share": 0.002275572968387338
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "w7",
+   "event": "Bim",
+   "ratio": 1.9181688125894134,
+   "aa": 0.12102217936354864,
+   "class": "harness",
+   "attribution": "Bim x1.9182 (1,165 -> 2,235, +1,070; same-binary ranges 251 port, 38 v0.5.6). Split: decoder +16 (its same-binary range 10), harness +943, runtime +110. Largest by function: ab::run_delay +403; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +403; ??? +63. The decoder executes the same instructions (decoder Ir x1.000044). Class: harness. Cost of the whole difference by the CEst model: 0.0005% of the run.",
+   "cost_share": 5.108692278213069e-06
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t10",
+   "event": "Ir",
+   "ratio": 0.998947596564462,
+   "aa": 0.007132308890630323,
+   "class": "within same-binary spread",
+   "attribution": "Ir x0.9989 (131,607,894 -> 131,469,390, -138,505; same-binary ranges 697,405 port, 935,970 v0.5.6). Split: decoder +1,217 (its same-binary range 150), harness -53,197, runtime -86,524. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core -36,064; __memset_avx2_unaligned_erms -29,540; realloc -9,189. The decoder executes the same instructions (decoder Ir x1.000017). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0329% of the run.",
+   "cost_share": 0.0003288597012917118
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t10",
+   "event": "DLmr",
+   "ratio": 0.9705567229664729,
+   "aa": 0.40025045225487066,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9706 (742,193 -> 720,341, -21,853; same-binary ranges 167,177 port, 225,014 v0.5.6). Split: decoder -21,866 (its same-binary range 225,014), harness -1, runtime +15. Largest by function: mibz2::crc::clmul_update -21,868; _dl_relocate_object +18; <alloc::collections::btree::map::BTreeMap<u64, core::result::Result<alloc::vec::Vec<u8>, m +2. The decoder executes the same instructions (decoder Ir x1.000017). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.5189% of the run.",
+   "cost_share": 0.005188592659338961
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t10",
+   "event": "DLmw",
+   "ratio": 0.9772719156611956,
+   "aa": 0.1219950736431259,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x0.9773 (1,467,339 -> 1,433,989, -33,350; same-binary ranges 109,776 port, 169,285 v0.5.6). Split: decoder -119 (its same-binary range 2,460), harness +2, runtime -33,232. Largest by function: __memcpy_avx_unaligned_erms -22,797; __memset_avx2_unaligned_erms -10,460; mibz2::rle::unrle_avx2 -202. The decoder executes the same instructions (decoder Ir x1.000017). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.7918% of the run.",
+   "cost_share": 0.007918441168118342
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t10",
+   "event": "Bim",
+   "ratio": 1.339984939759036,
+   "aa": 0.08950843727072644,
+   "class": "harness",
+   "attribution": "Bim x1.3400 (1,062 -> 1,424, +361; same-binary ranges 122 port, 53 v0.5.6). Split: decoder -4 (its same-binary range 3), harness +305, runtime +60. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +132; ab::run_delay +131; ??? +42. The decoder executes the same instructions (decoder Ir x1.000017). Class: harness. Cost of the whole difference by the CEst model: 0.0009% of the run.",
+   "cost_share": 8.57618621378341e-06
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t20",
+   "event": "Ir",
+   "ratio": 1.0016726814547605,
+   "aa": 0.014767132464650556,
+   "class": "within same-binary spread",
+   "attribution": "Ir x1.0017 (132,518,717 -> 132,740,378, +221,662; same-binary ranges 1,454,248 port, 1,943,500 v0.5.6). Split: decoder +2,448 (its same-binary range 133), harness +90,682, runtime +128,532. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +58,826; _int_malloc +30,591; _int_free +15,718. The decoder executes the same instructions (decoder Ir x1.000035). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0540% of the run.",
+   "cost_share": 0.0005397002960851708
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t20",
+   "event": "I1mr",
+   "ratio": 1.0903051145094023,
+   "aa": 0.3211782310782074,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0903 (13,667 -> 14,901, +1,234; same-binary ranges 4,078 port, 1,758 v0.5.6). Split: decoder +139 (its same-binary range 113), harness +880, runtime +215. Largest by function: ab::sample_tasks +331; ab::run_delay +195; __memcpy_avx_unaligned_erms +143. The decoder executes the same instructions (decoder Ir x1.000035). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0030% of the run.",
+   "cost_share": 3.005022545304605e-05
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t20",
+   "event": "DLmr",
+   "ratio": 0.9624258490863723,
+   "aa": 1.3345982692119547,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9624 (597,059 -> 574,625, -22,434; same-binary ranges 334,322 port, 450,164 v0.5.6). Split: decoder -22,479 (its same-binary range 450,044), harness -2, runtime +47. Largest by function: mibz2::crc::clmul_update -22,490; _dl_relocate_object +18; __malloc_arena_thread_freeres +11. The decoder executes the same instructions (decoder Ir x1.000035). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.5462% of the run.",
+   "cost_share": 0.0054622164788011235
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t20",
+   "event": "Bcm",
+   "ratio": 1.0227776210547277,
+   "aa": 0.12116610665977423,
+   "class": "within same-binary spread",
+   "attribution": "Bcm x1.0228 (96,419 -> 98,615, +2,196; same-binary ranges 11,251 port, 10,698 v0.5.6). Split: decoder +46 (its same-binary range 38), harness +673, runtime +1,477. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +589; _int_free +523; ab::sample_tasks -473. The decoder executes the same instructions (decoder Ir x1.000035). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0053% of the run.",
+   "cost_share": 5.347294210012932e-05
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t20",
+   "event": "Bim",
+   "ratio": 1.5389938283149427,
+   "aa": 0.22841604350781775,
+   "class": "harness",
+   "attribution": "Bim x1.5390 (1,069 -> 1,646, +576; same-binary ranges 336 port, 61 v0.5.6). Split: decoder -3 (its same-binary range 3), harness +479, runtime +100. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +204; ab::run_delay +203; ??? +55. The decoder executes the same instructions (decoder Ir x1.000035). Class: harness. Cost of the whole difference by the CEst model: 0.0014% of the run.",
+   "cost_share": 1.4034151637607947e-05
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t8",
+   "event": "I1mr",
+   "ratio": 1.0405216752387951,
+   "aa": 0.1574248586449758,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0405 (10,888 -> 11,329, +441; same-binary ranges 1,097 port, 1,587 v0.5.6). Split: decoder +103 (its same-binary range 273), harness +253, runtime +85. Largest by function: ab::sample_tasks +134; ab::run_delay +117; alloc::io::read::default_read_to_end::<std::fs::File> -84. The decoder executes the same instructions (decoder Ir x1.000014). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0010% of the run.",
+   "cost_share": 1.0355440360247517e-05
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t8",
+   "event": "DLmr",
+   "ratio": 0.942850674720646,
+   "aa": 0.4002803492269049,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9429 (787,155 -> 742,170, -44,985; same-binary ranges 225,020 port, 1 v0.5.6). Split: decoder -45,001 (its same-binary range 225,014), harness -0, runtime +16. Largest by function: mibz2::crc::clmul_update -45,003; _dl_relocate_object +18; <alloc::collections::btree::map::BTreeMap<u64, core::result::Result<alloc::vec::Vec<u8>, m +2. The decoder executes the same instructions (decoder Ir x1.000014). Class: within same-binary spread. Cost of the whole difference by the CEst model: 1.0559% of the run.",
+   "cost_share": 0.010558559083904762
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t8",
+   "event": "DLmw",
+   "ratio": 0.9320016508862821,
+   "aa": 0.1457866500201701,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x0.9320 (1,477,509 -> 1,377,041, -100,468; same-binary ranges 115,576 port, 198,043 v0.5.6). Split: decoder -1,515 (its same-binary range 3,025), harness +12, runtime -98,965. Largest by function: __memset_avx2_unaligned_erms -79,437; __memcpy_avx_unaligned_erms -19,548; mibz2::rle::unrle_avx2 -1,582. The decoder executes the same instructions (decoder Ir x1.000014). Class: within same-binary spread. Cost of the whole difference by the CEst model: 2.3581% of the run.",
+   "cost_share": 0.023580971287430134
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t8",
+   "event": "Bim",
+   "ratio": 1.298385528107372,
+   "aa": 0.12459807073954976,
+   "class": "harness",
+   "attribution": "Bim x1.2984 (1,028 -> 1,335, +307; same-binary ranges 155 port, 45 v0.5.6). Split: decoder -3 (its same-binary range 4), harness +260, runtime +50. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +110; ab::run_delay +109; ??? +40. The decoder executes the same instructions (decoder Ir x1.000014). Class: harness. Cost of the whole difference by the CEst model: 0.0007% of the run.",
+   "cost_share": 7.200927249600935e-06
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "w7",
+   "event": "I1mr",
+   "ratio": 1.0757018021190103,
+   "aa": 0.1252492640774856,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0757 (10,414 -> 11,202, +788; same-binary ranges 1,319 port, 651 v0.5.6). Split: decoder +90 (its same-binary range 197), harness +477, runtime +221. Largest by function: ab::sample_tasks +211; ab::run_delay +124; __memcpy_avx_unaligned_erms +114. The decoder executes the same instructions (decoder Ir x1.000012). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0019% of the run.",
+   "cost_share": 1.8956079044586123e-05
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "w7",
+   "event": "Bim",
+   "ratio": 1.3397819205065074,
+   "aa": 0.07931316434995916,
+   "class": "harness",
+   "attribution": "Bim x1.3398 (948 -> 1,270, +322; same-binary ranges 97 port, 25 v0.5.6). Split: decoder -2 (its same-binary range 2), harness +270, runtime +55. Largest by function: ab::run_delay +111; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +111; ??? +38. The decoder executes the same instructions (decoder Ir x1.000012). Class: harness. Cost of the whole difference by the CEst model: 0.0008% of the run.",
+   "cost_share": 7.742736726033906e-06
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t10",
+   "event": "I1mr",
+   "ratio": 1.0724445230240267,
+   "aa": 0.26542861746696755,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0724 (53,166 -> 57,018, +3,852; same-binary ranges 13,178 port, 6,910 v0.5.6). Split: decoder +198 (its same-binary range 5,853), harness +2,893, runtime +760. Largest by function: ab::sample_tasks +902; ab::run_delay +602; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +581. The decoder executes the same instructions (decoder Ir x1.000014). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0024% of the run.",
+   "cost_share": 2.3511636661165562e-05
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t10",
+   "event": "Bim",
+   "ratio": 2.179191554382553,
+   "aa": 0.17635066258919463,
+   "class": "harness",
+   "attribution": "Bim x2.1792 (1,440 -> 3,138, +1,698; same-binary ranges 519 port, 145 v0.5.6). Split: decoder +68 (its same-binary range 55), harness +1,441, runtime +189. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +631; ab::run_delay +630; ??? +101. The decoder executes the same instructions (decoder Ir x1.000014). Class: harness. Cost of the whole difference by the CEst model: 0.0010% of the run.",
+   "cost_share": 1.0364019296740791e-05
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t20",
+   "event": "I1mr",
+   "ratio": 1.0401612644231872,
+   "aa": 0.23207207207207214,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0402 (34,874 -> 36,275, +1,401; same-binary ranges 7,728 port, 5,465 v0.5.6). Split: decoder -94 (its same-binary range 2,223), harness +1,053, runtime +442. Largest by function: ab::sample_tasks +456; __memcpy_avx_unaligned_erms +427; mibz2::bwt::room_segments::<32, 1, true> +377. The decoder executes the same instructions (decoder Ir x0.999987). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0008% of the run.",
+   "cost_share": 7.783845133092057e-06
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t20",
+   "event": "DLmr",
+   "ratio": 0.6357944638020561,
+   "aa": 2.161444185745699,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.6358 (196,937 -> 125,211, -71,725; same-binary ranges 133,681 port, 122,118 v0.5.6). Split: decoder +27 (its same-binary range 34), harness -8, runtime -71,744. Largest by function: __memcpy_avx_unaligned_erms -71,737; <alloc::collections::btree::map::BTreeMap<u64, core::result::Result<alloc::vec::Vec<u8>, m +20; __malloc_arena_thread_freeres -19. The decoder executes the same instructions (decoder Ir x0.999987). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.3986% of the run.",
+   "cost_share": 0.003986144550257616
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t20",
+   "event": "DLmw",
+   "ratio": 0.9788194884522537,
+   "aa": 0.07181537948846128,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x0.9788 (2,976,113 -> 2,913,078, -63,036; same-binary ranges 144,530 port, 205,156 v0.5.6). Split: decoder -56,254 (its same-binary range 194,520), harness -12, runtime -6,769. Largest by function: mibz2::rle::unrle_avx2 -61,873; __memcpy_avx_unaligned_erms -6,111; mibz2::runs::fill_avx2 +5,685. The decoder executes the same instructions (decoder Ir x0.999987). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.3503% of the run.",
+   "cost_share": 0.0035032082555443308
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t20",
+   "event": "Bim",
+   "ratio": 1.6738798723817452,
+   "aa": 0.21889191643960038,
+   "class": "harness",
+   "attribution": "Bim x1.6739 (1,442 -> 2,413, +972; same-binary ranges 482 port, 77 v0.5.6). Split: decoder +4 (its same-binary range 26), harness +836, runtime +132. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +366; ab::run_delay +365; ab::sample_tasks -108. The decoder executes the same instructions (decoder Ir x0.999987). Class: harness. Cost of the whole difference by the CEst model: 0.0005% of the run.",
+   "cost_share": 5.399674376204665e-06
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t8",
+   "event": "I1mr",
+   "ratio": 1.1219009428490945,
+   "aa": 0.1381715196035047,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.1219 (60,349 -> 67,706, +7,357; same-binary ranges 8,184 port, 7,806 v0.5.6). Split: decoder +968 (its same-binary range 3,424), harness +4,147, runtime +2,242. Largest by function: ab::sample_tasks +1,180; _int_malloc +805; __memcpy_avx_unaligned_erms +736. The decoder executes the same instructions (decoder Ir x1.000009). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0046% of the run.",
+   "cost_share": 4.5774938311647035e-05
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t8",
+   "event": "Bim",
+   "ratio": 2.4796872818651403,
+   "aa": 0.1215121512151216,
+   "class": "harness",
+   "attribution": "Bim x2.4797 (1,433 -> 3,552, +2,120; same-binary ranges 405 port, 74 v0.5.6). Split: decoder +106 (its same-binary range 26), harness +1,784, runtime +230. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +761; ab::run_delay +760; ??? +110. The decoder executes the same instructions (decoder Ir x1.000009). Class: harness. Cost of the whole difference by the CEst model: 0.0013% of the run.",
+   "cost_share": 1.3190021780853833e-05
+  },
+  {
+   "corpus": "pattern",
+   "threads": "w7",
+   "event": "I1mr",
+   "ratio": 1.061057599069106,
+   "aa": 0.12226780666069081,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0611 (61,876 -> 65,654, +3,778; same-binary ranges 3,528 port, 7,093 v0.5.6). Split: decoder +91 (its same-binary range 3,245), harness +2,676, runtime +1,012. Largest by function: ab::sample_tasks +799; __memcpy_avx_unaligned_erms +596; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +535. The decoder executes the same instructions (decoder Ir x1.000002). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0024% of the run.",
+   "cost_share": 2.376877146223438e-05
+  },
+  {
+   "corpus": "pattern",
+   "threads": "w7",
+   "event": "Bim",
+   "ratio": 2.378848063555114,
+   "aa": 0.034537389100126825,
+   "class": "harness",
+   "attribution": "Bim x2.3788 (1,343 -> 3,194, +1,851; same-binary ranges 109 port, 19 v0.5.6). Split: decoder +104 (its same-binary range 14), harness +1,538, runtime +209. Largest by function: ab::run_delay +655; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +655; ??? +102. The decoder executes the same instructions (decoder Ir x1.000002). Class: harness. Cost of the whole difference by the CEst model: 0.0012% of the run.",
+   "cost_share": 1.164741103769629e-05
+  },
+  {
+   "corpus": "random",
+   "threads": "t10",
+   "event": "I1mr",
+   "ratio": 1.0672547076313181,
+   "aa": 0.16270383334756255,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0673 (50,450 -> 53,843, +3,393; same-binary ranges 6,419 port, 7,623 v0.5.6). Split: decoder -374 (its same-binary range 2,524), harness +3,703, runtime +64. Largest by function: ab::sample_tasks +921; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +842; <alloc::string::String>::from_utf8_lossy +747. The decoder executes the same instructions (decoder Ir x0.999999). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0006% of the run.",
+   "cost_share": 6.450113990509206e-06
+  },
+  {
+   "corpus": "random",
+   "threads": "t10",
+   "event": "DLmr",
+   "ratio": 0.9332792260820403,
+   "aa": 0.36340473430335885,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9333 (397,975 -> 371,422, -26,553; same-binary ranges 95,226 port, 118,809 v0.5.6). Split: decoder -10,673 (its same-binary range 53,364), harness +0, runtime -15,881. Largest by function: __memcpy_avx_unaligned_erms -15,896; mibz2::block::read_item -10,605; <mibz2::block::Huff>::decode_entry_slow -67. The decoder executes the same instructions (decoder Ir x0.999999). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0505% of the run.",
+   "cost_share": 0.0005047779746913915
+  },
+  {
+   "corpus": "random",
+   "threads": "t10",
+   "event": "DLmw",
+   "ratio": 0.9765553625309297,
+   "aa": 0.08306186466726673,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x0.9766 (1,540,506 -> 1,504,389, -36,117; same-binary ranges 106,433 port, 121,063 v0.5.6). Split: decoder -5,607 (its same-binary range 70,405), harness +3, runtime -30,512. Largest by function: __memcpy_avx_unaligned_erms -30,240; mibz2::block::read_item -5,624; __memset_avx2_unaligned_erms -293. The decoder executes the same instructions (decoder Ir x0.999999). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0687% of the run.",
+   "cost_share": 0.0006865788003230928
+  },
+  {
+   "corpus": "random",
+   "threads": "t10",
+   "event": "Bim",
+   "ratio": 2.345954780713702,
+   "aa": 0.3436185133239831,
+   "class": "harness",
+   "attribution": "Bim x2.3460 (1,468 -> 3,445, +1,976; same-binary ranges 980 port, 158 v0.5.6). Split: decoder -4 (its same-binary range 22), harness +1,859, runtime +122. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +858; ab::run_delay +857; ??? +94. The decoder executes the same instructions (decoder Ir x0.999999). Class: harness. Cost of the whole difference by the CEst model: 0.0004% of the run.",
+   "cost_share": 3.7571486268324182e-06
+  },
+  {
+   "corpus": "random",
+   "threads": "t20",
+   "event": "I1mr",
+   "ratio": 1.1408281277196513,
+   "aa": 0.05556040274312046,
+   "class": "harness",
+   "attribution": "I1mr x1.1408 (51,707 -> 58,989, +7,282; same-binary ranges 3,184 port, 2,717 v0.5.6). Split: decoder +148 (its same-binary range 1,366), harness +5,205, runtime +1,928. Largest by function: ab::sample_tasks +1,325; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +1,019; <alloc::string::String>::from_utf8_lossy +913. The decoder executes the same instructions (decoder Ir x1.000001). Class: harness. Cost of the whole difference by the CEst model: 0.0014% of the run.",
+   "cost_share": 1.3633119248329298e-05
+  },
+  {
+   "corpus": "random",
+   "threads": "t20",
+   "event": "DLmr",
+   "ratio": 0.8680572885818055,
+   "aa": 0.49835493671659115,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.8681 (373,464 -> 324,188, -49,276; same-binary ranges 130,567 port, 116,414 v0.5.6). Split: decoder +0 (its same-binary range 0), harness -2, runtime -49,274. Largest by function: __memcpy_avx_unaligned_erms -49,289; _dl_relocate_object +18; core::str::converts::from_utf8 -1. The decoder executes the same instructions (decoder Ir x1.000001). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0923% of the run.",
+   "cost_share": 0.0009225505471955072
+  },
+  {
+   "corpus": "random",
+   "threads": "t20",
+   "event": "Bim",
+   "ratio": 2.97765899122807,
+   "aa": 0.13113137786541773,
+   "class": "harness",
+   "attribution": "Bim x2.9777 (1,459 -> 4,345, +2,886; same-binary ranges 532 port, 52 v0.5.6). Split: decoder +12 (its same-binary range 15), harness +2,715, runtime +158. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +1,268; ab::run_delay +1,267; ??? +107. The decoder executes the same instructions (decoder Ir x1.000001). Class: harness. Cost of the whole difference by the CEst model: 0.0005% of the run.",
+   "cost_share": 5.402847582579674e-06
+  },
+  {
+   "corpus": "random",
+   "threads": "t8",
+   "event": "I1mr",
+   "ratio": 1.0764283484233532,
+   "aa": 0.16414517195767186,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0764 (51,248 -> 55,165, +3,917; same-binary ranges 5,400 port, 7,942 v0.5.6). Split: decoder -57 (its same-binary range 2,392), harness +3,190, runtime +783. Largest by function: ab::sample_tasks +849; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +693; __memcpy_avx_unaligned_erms +679. The decoder executes the same instructions (decoder Ir x1.000002). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0007% of the run.",
+   "cost_share": 7.4744588837687106e-06
+  },
+  {
+   "corpus": "random",
+   "threads": "t8",
+   "event": "DLmr",
+   "ratio": 0.8621616113744076,
+   "aa": 0.3642422406433312,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.8622 (422,000 -> 363,832, -58,168; same-binary ranges 119,034 port, 55,015 v0.5.6). Split: decoder -21,345 (its same-binary range 53,364), harness -1, runtime -36,822. Largest by function: __memcpy_avx_unaligned_erms -36,837; mibz2::block::read_item -21,209; <mibz2::block::Huff>::decode_entry_slow -134. The decoder executes the same instructions (decoder Ir x1.000002). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1110% of the run.",
+   "cost_share": 0.001110020500049227
+  },
+  {
+   "corpus": "random",
+   "threads": "t8",
+   "event": "DLmw",
+   "ratio": 0.932035092030341,
+   "aa": 0.12108189023426918,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x0.9320 (1,370,613 -> 1,277,460, -93,154; same-binary ranges 143,923 port, 154,817 v0.5.6). Split: decoder -36,417 (its same-binary range 70,380), harness +20, runtime -56,756. Largest by function: __memcpy_avx_unaligned_erms -56,554; mibz2::block::read_item -28,123; mibz2::rle::unrle_avx2 -8,438. The decoder executes the same instructions (decoder Ir x1.000002). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.1778% of the run.",
+   "cost_share": 0.0017776571514374882
+  },
+  {
+   "corpus": "random",
+   "threads": "t8",
+   "event": "Bim",
+   "ratio": 2.2823432569625464,
+   "aa": 0.18392325504465767,
+   "class": "harness",
+   "attribution": "Bim x2.2823 (1,458 -> 3,327, +1,869; same-binary ranges 556 port, 155 v0.5.6). Split: decoder -3 (its same-binary range 25), harness +1,755, runtime +117. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +800; ab::run_delay +799; ??? +95. The decoder executes the same instructions (decoder Ir x1.000002). Class: harness. Cost of the whole difference by the CEst model: 0.0004% of the run.",
+   "cost_share": 3.5673900728444693e-06
+  },
+  {
+   "corpus": "random",
+   "threads": "w7",
+   "event": "I1mr",
+   "ratio": 1.03318707205633,
+   "aa": 0.058722038318788305,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0332 (51,506 -> 53,215, +1,709; same-binary ranges 2,058 port, 2,927 v0.5.6). Split: decoder -508 (its same-binary range 680), harness +2,674, runtime -457. Largest by function: ab::sample_tasks +713; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +687; __memcpy_avx_unaligned_erms +621. The decoder executes the same instructions (decoder Ir x1.000001). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0003% of the run.",
+   "cost_share": 3.2772596602064056e-06
+  },
+  {
+   "corpus": "random",
+   "threads": "w7",
+   "event": "DLmr",
+   "ratio": 0.9642898096475804,
+   "aa": 0.20061017218851074,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9643 (348,827 -> 336,370, -12,457; same-binary ranges 28,134 port, 65,558 v0.5.6). Split: decoder +9,378 (its same-binary range 28,135), harness +1, runtime -21,836. Largest by function: __memcpy_avx_unaligned_erms -21,852; mibz2::block::read_item +9,323; <mibz2::block::Huff>::decode_entry_slow +53. The decoder executes the same instructions (decoder Ir x1.000001). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0239% of the run.",
+   "cost_share": 0.00023882838046394966
+  },
+  {
+   "corpus": "random",
+   "threads": "w7",
+   "event": "Bim",
+   "ratio": 2.2282246549262257,
+   "aa": 0.14948096885813156,
+   "class": "harness",
+   "attribution": "Bim x2.2282 (1,401 -> 3,121, +1,720; same-binary ranges 432 port, 70 v0.5.6). Split: decoder -12 (its same-binary range 7), harness +1,626, runtime +106. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +742; ab::run_delay +742; ??? +93. The decoder executes the same instructions (decoder Ir x1.000001). Class: harness. Cost of the whole difference by the CEst model: 0.0003% of the run.",
+   "cost_share": 3.298349669720209e-06
+  },
+  {
+   "corpus": "records",
+   "threads": "t10",
+   "event": "I1mr",
+   "ratio": 1.0765674850880844,
+   "aa": 0.11236508168028014,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0766 (57,672 -> 62,088, +4,416; same-binary ranges 1,953 port, 6,163 v0.5.6). Split: decoder -291 (its same-binary range 1,730), harness +4,393, runtime +314. Largest by function: ab::sample_tasks +1,131; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +977; <alloc::string::String>::from_utf8_lossy +884. The decoder executes the same instructions (decoder Ir x1.000000). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0007% of the run.",
+   "cost_share": 6.667230302642235e-06
+  },
+  {
+   "corpus": "records",
+   "threads": "t10",
+   "event": "Bim",
+   "ratio": 2.498139355832157,
+   "aa": 0.13753039718994864,
+   "class": "harness",
+   "attribution": "Bim x2.4981 (1,559 -> 3,894, +2,335; same-binary ranges 509 port, 128 v0.5.6). Split: decoder -4 (its same-binary range 15), harness +2,199, runtime +140. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +1,010; ab::run_delay +1,009; ??? +107. The decoder executes the same instructions (decoder Ir x1.000000). Class: harness. Cost of the whole difference by the CEst model: 0.0004% of the run.",
+   "cost_share": 3.5255180843040013e-06
+  },
+  {
+   "corpus": "records",
+   "threads": "t20",
+   "event": "I1mr",
+   "ratio": 1.075636415984864,
+   "aa": 0.1144122294491603,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0756 (58,350 -> 62,764, +4,413; same-binary ranges 4,936 port, 6,227 v0.5.6). Split: decoder -520 (its same-binary range 1,446), harness +4,088, runtime +845. Largest by function: ab::sample_tasks +1,078; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +930; <alloc::string::String>::from_utf8_lossy +834. The decoder executes the same instructions (decoder Ir x0.999999). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0007% of the run.",
+   "cost_share": 6.580235508732913e-06
+  },
+  {
+   "corpus": "records",
+   "threads": "t20",
+   "event": "DLmr",
+   "ratio": 1.185635064652033,
+   "aa": 0.19903662942243505,
+   "class": "runtime/scheduling",
+   "attribution": "DLmr x1.1856 (354,235 -> 419,993, +65,758; same-binary ranges 65,532 port, 65,287 v0.5.6). Split: decoder +0 (its same-binary range 0), harness -1, runtime +65,759. Largest by function: __memcpy_avx_unaligned_erms +65,744; _dl_relocate_object +18; __GI___tunables_init -2. The decoder executes the same instructions (decoder Ir x0.999999). Class: runtime/scheduling. Cost of the whole difference by the CEst model: 0.0980% of the run.",
+   "cost_share": 0.0009804363046120052
+  },
+  {
+   "corpus": "records",
+   "threads": "t20",
+   "event": "Bim",
+   "ratio": 2.8972159915556146,
+   "aa": 0.3118617439120188,
+   "class": "harness",
+   "attribution": "Bim x2.8972 (1,516 -> 4,392, +2,876; same-binary ranges 1,191 port, 75 v0.5.6). Split: decoder +5 (its same-binary range 9), harness +2,702, runtime +169. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +1,267; ab::run_delay +1,266; ??? +109. The decoder executes the same instructions (decoder Ir x0.999999). Class: harness. Cost of the whole difference by the CEst model: 0.0004% of the run.",
+   "cost_share": 4.287724039519215e-06
+  },
+  {
+   "corpus": "records",
+   "threads": "t8",
+   "event": "I1mr",
+   "ratio": 1.091463080443391,
+   "aa": 0.12974642573103745,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0915 (58,386 -> 63,727, +5,340; same-binary ranges 1,156 port, 7,015 v0.5.6). Split: decoder -173 (its same-binary range 2,360), harness +4,959, runtime +554. Largest by function: ab::sample_tasks +1,274; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +1,017; <alloc::string::String>::from_utf8_lossy +905. The decoder executes the same instructions (decoder Ir x1.000002). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0008% of the run.",
+   "cost_share": 8.093890916309773e-06
+  },
+  {
+   "corpus": "records",
+   "threads": "t8",
+   "event": "DLmr",
+   "ratio": 0.9650555538532909,
+   "aa": 0.8742146996035376,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9651 (372,053 -> 359,052, -13,001; same-binary ranges 66,052 port, 229,324 v0.5.6). Split: decoder -13,105 (its same-binary range 56,166), harness -2, runtime +106. Largest by function: mibz2::block::read_item -13,104; __memcpy_avx_unaligned_erms +90; _dl_relocate_object +18. The decoder executes the same instructions (decoder Ir x1.000002). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0197% of the run.",
+   "cost_share": 0.0001970530964778974
+  },
+  {
+   "corpus": "records",
+   "threads": "t8",
+   "event": "DLmw",
+   "ratio": 0.9776081098516265,
+   "aa": 0.11581275951403591,
+   "class": "within same-binary spread",
+   "attribution": "DLmw x0.9776 (1,356,375 -> 1,326,003, -30,372; same-binary ranges 127,569 port, 146,850 v0.5.6). Split: decoder -2,855 (its same-binary range 84,305), harness -2, runtime -27,515. Largest by function: __memcpy_avx_unaligned_erms -27,655; mibz2::rle::unrle_avx2 -2,813; mibz2::bwt::room_segments::<32, 1, false> -121. The decoder executes the same instructions (decoder Ir x1.000002). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0460% of the run.",
+   "cost_share": 0.0004603311414029019
+  },
+  {
+   "corpus": "records",
+   "threads": "t8",
+   "event": "Bim",
+   "ratio": 2.5379229871645275,
+   "aa": 0.09986320109439117,
+   "class": "harness",
+   "attribution": "Bim x2.5379 (1,543 -> 3,915, +2,372; same-binary ranges 236 port, 146 v0.5.6). Split: decoder -4 (its same-binary range 33), harness +2,230, runtime +147. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +1,007; ab::run_delay +1,006; ??? +118. The decoder executes the same instructions (decoder Ir x1.000002). Class: harness. Cost of the whole difference by the CEst model: 0.0004% of the run.",
+   "cost_share": 3.5957355173688843e-06
+  },
+  {
+   "corpus": "records",
+   "threads": "w7",
+   "event": "I1mr",
+   "ratio": 1.070253164556962,
+   "aa": 0.08574206961303732,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0703 (57,407 -> 61,440, +4,033; same-binary ranges 5,114 port, 4,164 v0.5.6). Split: decoder -120 (its same-binary range 1,579), harness +3,521, runtime +632. Largest by function: ab::sample_tasks +903; __memcpy_avx_unaligned_erms +826; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +786. The decoder executes the same instructions (decoder Ir x0.999998). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0006% of the run.",
+   "cost_share": 6.130670679374511e-06
+  },
+  {
+   "corpus": "records",
+   "threads": "w7",
+   "event": "DLmr",
+   "ratio": 0.9096245355334404,
+   "aa": 0.3952909000648712,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9096 (393,193 -> 357,658, -35,535; same-binary ranges 65,027 port, 129,791 v0.5.6). Split: decoder +7,801 (its same-binary range 23,403), harness -0, runtime -43,336. Largest by function: __memcpy_avx_unaligned_erms -43,348; mibz2::block::read_item +7,801; _dl_relocate_object +18. The decoder executes the same instructions (decoder Ir x0.999998). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0540% of the run.",
+   "cost_share": 0.0005401769962597899
+  },
+  {
+   "corpus": "records",
+   "threads": "w7",
+   "event": "Bim",
+   "ratio": 2.3907888736890106,
+   "aa": 0.17240328967407859,
+   "class": "harness",
+   "attribution": "Bim x2.3908 (1,462 -> 3,495, +2,033; same-binary ranges 566 port, 74 v0.5.6). Split: decoder -17 (its same-binary range 8), harness +1,912, runtime +138. Largest by function: ab::run_delay +860; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +860; ??? +109. The decoder executes the same instructions (decoder Ir x0.999998). Class: harness. Cost of the whole difference by the CEst model: 0.0003% of the run.",
+   "cost_share": 3.090924137877884e-06
+  },
+  {
+   "corpus": "runs",
+   "threads": "t10",
+   "event": "I1mr",
+   "ratio": 1.0455901437648527,
+   "aa": 0.15547921071176884,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0456 (11,867 -> 12,408, +541; same-binary ranges 1,765 port, 1,391 v0.5.6). Split: decoder +39 (its same-binary range 174), harness +526, runtime -24. Largest by function: ab::sample_tasks +180; ab::run_delay +133; __memcpy_avx_unaligned_erms +103. The decoder executes the same instructions (decoder Ir x1.000017). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0021% of the run.",
+   "cost_share": 2.0825110734677797e-05
+  },
+  {
+   "corpus": "runs",
+   "threads": "t10",
+   "event": "DLmr",
+   "ratio": 1.3211192015567135,
+   "aa": 0.9559860650862435,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x1.3211 (140,193 -> 185,211, +45,019; same-binary ranges 112,506 port, 112,510 v0.5.6). Split: decoder +45,004 (its same-binary range 112,507), harness -1, runtime +15. Largest by function: mibz2::crc::clmul_update +45,003; _dl_relocate_object +18; <alloc::collections::btree::map::BTreeMap<u64, core::result::Result<alloc::vec::Vec<u8>, m +2. The decoder executes the same instructions (decoder Ir x1.000017). Class: within same-binary spread. Cost of the whole difference by the CEst model: 1.7329% of the run.",
+   "cost_share": 0.017329340667655565
+  },
+  {
+   "corpus": "runs",
+   "threads": "t10",
+   "event": "Bim",
+   "ratio": 1.341278849791903,
+   "aa": 0.08098068350668641,
+   "class": "harness",
+   "attribution": "Bim x1.3413 (1,057 -> 1,418, +361; same-binary ranges 109 port, 46 v0.5.6). Split: decoder -6 (its same-binary range 3), harness +309, runtime +58. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +137; ab::run_delay +136; ??? +41. The decoder executes the same instructions (decoder Ir x1.000017). Class: harness. Cost of the whole difference by the CEst model: 0.0014% of the run.",
+   "cost_share": 1.3888539654476428e-05
+  },
+  {
+   "corpus": "runs",
+   "threads": "t20",
+   "event": "Ir",
+   "ratio": 0.9933092621552071,
+   "aa": 0.015777176162784956,
+   "class": "within same-binary spread",
+   "attribution": "Ir x0.9933 (105,368,558 -> 104,663,565, -704,993; same-binary ranges 1,640,367 port, 1,094,510 v0.5.6). Split: decoder +2,397 (its same-binary range 133), harness -327,787, runtime -379,603. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core -219,533; __memset_avx2_unaligned_erms -52,801; realloc -51,526. The decoder executes the same instructions (decoder Ir x1.000034). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.2743% of the run.",
+   "cost_share": 0.0027434454503388293
+  },
+  {
+   "corpus": "runs",
+   "threads": "t20",
+   "event": "I1mr",
+   "ratio": 1.0202316736323014,
+   "aa": 0.14881759301099562,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0202 (13,830 -> 14,110, +280; same-binary ranges 1,976 port, 1,547 v0.5.6). Split: decoder +6 (its same-binary range 274), harness +386, runtime -112. Largest by function: ab::sample_tasks +188; __memcpy_avx_unaligned_erms +138; ab::run_delay +127. The decoder executes the same instructions (decoder Ir x1.000034). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0011% of the run.",
+   "cost_share": 1.0888272670422175e-05
+  },
+  {
+   "corpus": "runs",
+   "threads": "t20",
+   "event": "DLmr",
+   "ratio": 1.945104321735497,
+   "aa": 85.85463563525371,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x1.9451 (95,253 -> 185,278, +90,024; same-binary ranges 450,046 port, 450,050 v0.5.6). Split: decoder +90,006 (its same-binary range 450,021), harness -1, runtime +20. Largest by function: mibz2::crc::clmul_update +90,004; _dl_relocate_object +18; <alloc::collections::btree::map::BTreeMap<u64, core::result::Result<alloc::vec::Vec<u8>, m +2. The decoder executes the same instructions (decoder Ir x1.000034). Class: within same-binary spread. Cost of the whole difference by the CEst model: 3.5033% of the run.",
+   "cost_share": 0.0350325308860311
+  },
+  {
+   "corpus": "runs",
+   "threads": "t20",
+   "event": "Bcm",
+   "ratio": 0.9763501761921326,
+   "aa": 0.05455704573082598,
+   "class": "within same-binary spread",
+   "attribution": "Bcm x0.9764 (264,484 -> 258,229, -6,255; same-binary ranges 13,778 port, 5,345 v0.5.6). Split: decoder +46 (its same-binary range 100), harness -2,874, runtime -3,426. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core -1,842; _int_malloc -1,309; ab::sample_tasks -647. The decoder executes the same instructions (decoder Ir x1.000034). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0243% of the run.",
+   "cost_share": 0.00024341009847566277
+  },
+  {
+   "corpus": "runs",
+   "threads": "t20",
+   "event": "Bim",
+   "ratio": 1.416152551878856,
+   "aa": 0.16117729502452693,
+   "class": "harness",
+   "attribution": "Bim x1.4162 (1,070 -> 1,515, +445; same-binary ranges 230 port, 27 v0.5.6). Split: decoder -2 (its same-binary range 4), harness +364, runtime +83. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +164; ab::run_delay +163; ??? +45. The decoder executes the same instructions (decoder Ir x1.000034). Class: harness. Cost of the whole difference by the CEst model: 0.0017% of the run.",
+   "cost_share": 1.732472835193686e-05
+  },
+  {
+   "corpus": "runs",
+   "threads": "t8",
+   "event": "I1mr",
+   "ratio": 1.0260691801143353,
+   "aa": 0.19556792209082774,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0261 (11,055 -> 11,343, +288; same-binary ranges 1,968 port, 800 v0.5.6). Split: decoder +24 (its same-binary range 357), harness +326, runtime -62. Largest by function: ab::sample_tasks +130; ab::run_delay +111; __memcpy_avx_unaligned_erms +82. The decoder executes the same instructions (decoder Ir x1.000014). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0011% of the run.",
+   "cost_share": 1.074292026960706e-05
+  },
+  {
+   "corpus": "runs",
+   "threads": "t8",
+   "event": "Bim",
+   "ratio": 1.30546875,
+   "aa": 0.1187800963081862,
+   "class": "harness",
+   "attribution": "Bim x1.3055 (1,024 -> 1,337, +313; same-binary ranges 148 port, 26 v0.5.6). Split: decoder -5 (its same-binary range 2), harness +265, runtime +52. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +117; ab::run_delay +116; ??? +38. The decoder executes the same instructions (decoder Ir x1.000014). Class: harness. Cost of the whole difference by the CEst model: 0.0012% of the run.",
+   "cost_share": 1.1659907912328594e-05
+  },
+  {
+   "corpus": "runs",
+   "threads": "w7",
+   "event": "Ir",
+   "ratio": 0.998080131077048,
+   "aa": 0.008028266150399421,
+   "class": "within same-binary spread",
+   "attribution": "Ir x0.9981 (103,444,909 -> 103,246,309, -198,601; same-binary ranges 825,517 port, 64,270 v0.5.6). Split: decoder +866 (its same-binary range 154), harness -75,323, runtime -124,144. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core -50,885; __memset_avx2_unaligned_erms -44,008; _int_malloc -11,964. The decoder executes the same instructions (decoder Ir x1.000012). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0741% of the run.",
+   "cost_share": 0.0007411540046075518
+  },
+  {
+   "corpus": "runs",
+   "threads": "w7",
+   "event": "Bim",
+   "ratio": 1.3015929203539824,
+   "aa": 0.09906063193851411,
+   "class": "harness",
+   "attribution": "Bim x1.3016 (942 -> 1,226, +284; same-binary ranges 116 port, 15 v0.5.6). Split: decoder -5 (its same-binary range 1), harness +231, runtime +58. Largest by function: ab::run_delay +99; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +99; ??? +37. The decoder executes the same instructions (decoder Ir x1.000012). Class: harness. Cost of the whole difference by the CEst model: 0.0011% of the run.",
+   "cost_share": 1.0598541326240361e-05
+  },
+  {
+   "corpus": "text",
+   "threads": "t10",
+   "event": "DLmr",
+   "ratio": 0.944833782398063,
+   "aa": 0.22744197659523646,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9448 (209,472 -> 197,917, -11,556; same-binary ranges 41,778 port, 41,903 v0.5.6). Split: decoder -12,565 (its same-binary range 31,437), harness -2, runtime +1,011. Largest by function: mibz2::block::read_item -11,745; __memcpy_avx_unaligned_erms +995; <mibz2::block::Huff>::decode_entry_slow -829. The decoder executes the same instructions (decoder Ir x1.000002). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0377% of the run.",
+   "cost_share": 0.0003771825555823517
+  },
+  {
+   "corpus": "text",
+   "threads": "t10",
+   "event": "Bim",
+   "ratio": 2.1260616897630755,
+   "aa": 0.2864775996711879,
+   "class": "harness",
+   "attribution": "Bim x2.1261 (1,342 -> 2,854, +1,511; same-binary ranges 697 port, 52 v0.5.6). Split: decoder +53 (its same-binary range 14), harness +1,299, runtime +159. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +583; ab::run_delay +582; ??? +74. The decoder executes the same instructions (decoder Ir x1.000002). Class: harness. Cost of the whole difference by the CEst model: 0.0005% of the run.",
+   "cost_share": 4.933225864995646e-06
+  },
+  {
+   "corpus": "text",
+   "threads": "t20",
+   "event": "Ir",
+   "ratio": 1.0011329145436114,
+   "aa": 0.004546454002565481,
+   "class": "within same-binary spread",
+   "attribution": "Ir x1.0011 (2,186,513,196 -> 2,188,990,329, +2,477,133; same-binary ranges 5,674,051 port, 9,926,661 v0.5.6). Split: decoder -1,742 (its same-binary range 43,606), harness +1,300,273, runtime +1,178,602. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +864,042; realloc +212,020; _int_malloc +167,631. The decoder executes the same instructions (decoder Ir x0.999999). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0782% of the run.",
+   "cost_share": 0.000781884220004616
+  },
+  {
+   "corpus": "text",
+   "threads": "t20",
+   "event": "I1mr",
+   "ratio": 1.1057145569820557,
+   "aa": 0.11959795650075722,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.1057 (56,876 -> 62,888, +6,013; same-binary ranges 7,187 port, 5,691 v0.5.6). Split: decoder +965 (its same-binary range 1,973), harness +3,429, runtime +1,619. Largest by function: ab::sample_tasks +921; __memcpy_avx_unaligned_erms +632; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +599. The decoder executes the same instructions (decoder Ir x0.999999). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0019% of the run.",
+   "cost_share": 1.8978221275679525e-05
+  },
+  {
+   "corpus": "text",
+   "threads": "t20",
+   "event": "DLmr",
+   "ratio": 0.9707572906385117,
+   "aa": 0.27111672711832324,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9708 (214,583 -> 208,308, -6,275; same-binary ranges 22,803 port, 52,996 v0.5.6). Split: decoder -6,272 (its same-binary range 31,472), harness -4, runtime +1. Largest by function: mibz2::block::read_item -5,872; <mibz2::block::Huff>::decode_entry_slow -414; __memcpy_avx_unaligned_erms +47. The decoder executes the same instructions (decoder Ir x0.999999). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0198% of the run.",
+   "cost_share": 0.00019806462845505947
+  },
+  {
+   "corpus": "text",
+   "threads": "t20",
+   "event": "Bim",
+   "ratio": 2.5548883756735954,
+   "aa": 0.3166547533952824,
+   "class": "harness",
+   "attribution": "Bim x2.5549 (1,299 -> 3,319, +2,020; same-binary ranges 886 port, 62 v0.5.6). Split: decoder +58 (its same-binary range 22), harness +1,772, runtime +190. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +796; ab::run_delay +795; ??? +80. The decoder executes the same instructions (decoder Ir x0.999999). Class: harness. Cost of the whole difference by the CEst model: 0.0006% of the run.",
+   "cost_share": 6.375313729936718e-06
+  },
+  {
+   "corpus": "text",
+   "threads": "t8",
+   "event": "I1mr",
+   "ratio": 1.0362158966128896,
+   "aa": 0.08190688120506673,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0362 (59,195 -> 61,339, +2,144; same-binary ranges 4,785 port, 3,029 v0.5.6). Split: decoder -375 (its same-binary range 1,766), harness +2,228, runtime +291. Largest by function: ab::sample_tasks +628; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +524; ab::run_delay +441. The decoder executes the same instructions (decoder Ir x1.000009). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0007% of the run.",
+   "cost_share": 7.063128634283502e-06
+  },
+  {
+   "corpus": "text",
+   "threads": "t8",
+   "event": "DLmr",
+   "ratio": 0.9667041260377729,
+   "aa": 0.18787344710484466,
+   "class": "within same-binary spread",
+   "attribution": "DLmr x0.9667 (220,328 -> 212,992, -7,336; same-binary ranges 34,964 port, 16,026 v0.5.6). Split: decoder -6,279 (its same-binary range 31,437), harness -1, runtime -1,056. Largest by function: mibz2::block::read_item -5,872; __memcpy_avx_unaligned_erms -1,069; <mibz2::block::Huff>::decode_entry_slow -414. The decoder executes the same instructions (decoder Ir x1.000009). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0242% of the run.",
+   "cost_share": 0.00024169750751517724
+  },
+  {
+   "corpus": "text",
+   "threads": "t8",
+   "event": "Bim",
+   "ratio": 2.1267540478026215,
+   "aa": 0.2263443101292204,
+   "class": "harness",
+   "attribution": "Bim x2.1268 (1,297 -> 2,758, +1,461; same-binary ranges 543 port, 44 v0.5.6). Split: decoder +54 (its same-binary range 34), harness +1,234, runtime +173. Largest by function: <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +540; ab::run_delay +539; ??? +74. The decoder executes the same instructions (decoder Ir x1.000009). Class: harness. Cost of the whole difference by the CEst model: 0.0005% of the run.",
+   "cost_share": 4.814841023482552e-06
+  },
+  {
+   "corpus": "text",
+   "threads": "w7",
+   "event": "Ir",
+   "ratio": 1.0010044732382737,
+   "aa": 0.0014613884692427082,
+   "class": "within same-binary spread",
+   "attribution": "Ir x1.0010 (2,175,368,060 -> 2,177,553,159, +2,185,099; same-binary ranges 1,519,859 port, 3,177,176 v0.5.6). Split: decoder +2,029 (its same-binary range 9,384), harness +711,783, runtime +1,471,287. Largest by function: __memcpy_avx_unaligned_erms +821,702; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +472,368; realloc +111,716. The decoder executes the same instructions (decoder Ir x1.000001). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0723% of the run.",
+   "cost_share": 0.0007231756388604701
+  },
+  {
+   "corpus": "text",
+   "threads": "w7",
+   "event": "I1mr",
+   "ratio": 1.0900914228231604,
+   "aa": 0.12936270977041087,
+   "class": "within same-binary spread",
+   "attribution": "I1mr x1.0901 (56,332 -> 61,407, +5,075; same-binary ranges 7,539 port, 6,139 v0.5.6). Split: decoder +678 (its same-binary range 3,364), harness +2,918, runtime +1,479. Largest by function: ab::sample_tasks +847; __memcpy_avx_unaligned_erms +579; <core::str::iter::Split<core::str::IsWhitespace> as core::iter::traits::iterator::Iterator +499. The decoder executes the same instructions (decoder Ir x1.000001). Class: within same-binary spread. Cost of the whole difference by the CEst model: 0.0017% of the run.",
+   "cost_share": 1.6796110232153717e-05
+  },
+  {
+   "corpus": "text",
+   "threads": "w7",
+   "event": "Bim",
+   "ratio": 2.296774193548387,
+   "aa": 0.11881947106170943,
+   "class": "harness",
+   "attribution": "Bim x2.2968 (1,188 -> 2,729, +1,541; same-binary ranges 310 port, 53 v0.5.6). Split: decoder +57 (its same-binary range 8), harness +1,299, runtime +185. Largest by function: ab::run_delay +545; <alloc::vec::Vec<&str> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<&str, core +545; ??? +77. The decoder executes the same instructions (decoder Ir x1.000001). Class: harness. Cost of the whole difference by the CEst model: 0.0005% of the run.",
+   "cost_share": 5.100060269507169e-06
+  }
+ ],
+ "rows": [
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t10",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    10412436,
+    "bdac3d621295054f"
+   ],
+   "Ir": {
+    "port": 600150670.6,
+    "v056": 601180947.8,
+    "ratio": 0.9982862444264573,
+    "aa": 0.007807683615123295
+   },
+   "I1mr": {
+    "port": 57482.8,
+    "v056": 60468.2,
+    "ratio": 0.9506285948647389,
+    "aa": 0.2348584304888801
+   },
+   "ILmr": {
+    "port": 4564.8,
+    "v056": 4526.2,
+    "ratio": 1.008528125138085,
+    "aa": 0.012195121951219523
+   },
+   "D1mr": {
+    "port": 10801438.8,
+    "v056": 10796784,
+    "ratio": 1.0004311283804512,
+    "aa": 0.002452146492330609
+   },
+   "D1mw": {
+    "port": 2142886,
+    "v056": 2133455.2,
+    "ratio": 1.0044204349826515,
+    "aa": 0.008418669505374954
+   },
+   "DLmr": {
+    "port": 49685.8,
+    "v056": 49082,
+    "ratio": 1.0123018621898048,
+    "aa": 0.08271923747139476
+   },
+   "DLmw": {
+    "port": 297632.4,
+    "v056": 282589,
+    "ratio": 1.0532342023221004,
+    "aa": 0.15850558318614816
+   },
+   "Bc": {
+    "port": 101055096,
+    "v056": 100629553.6,
+    "ratio": 1.004228801428371,
+    "aa": 0.010823582753782368
+   },
+   "Bcm": {
+    "port": 4134581.2,
+    "v056": 4165191.8,
+    "ratio": 0.9926508546377145,
+    "aa": 0.01208512158584063
+   },
+   "Bi": {
+    "port": 599789.6,
+    "v056": 608376,
+    "ratio": 0.9858863597512064,
+    "aa": 0.03896258193203139
+   },
+   "Bim": {
+    "port": 2474,
+    "v056": 1468.2,
+    "ratio": 1.6850565318076556,
+    "aa": 0.24195680916703388
+   }
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t20",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    10412436,
+    "bdac3d621295054f"
+   ],
+   "Ir": {
+    "port": 608412663.4,
+    "v056": 606857260.6,
+    "ratio": 1.0025630455479138,
+    "aa": 0.011385230728270246
+   },
+   "I1mr": {
+    "port": 57333,
+    "v056": 54106.6,
+    "ratio": 1.059630433255832,
+    "aa": 0.29091020985906835
+   },
+   "ILmr": {
+    "port": 4547.6,
+    "v056": 4532.6,
+    "ratio": 1.0033093588668756,
+    "aa": 0.005730659025787954
+   },
+   "D1mr": {
+    "port": 10877861.2,
+    "v056": 10881156,
+    "ratio": 0.9996972012900099,
+    "aa": 0.005879294403558832
+   },
+   "D1mw": {
+    "port": 2195537.6,
+    "v056": 2190100.6,
+    "ratio": 1.0024825343639465,
+    "aa": 0.026330101908927706
+   },
+   "DLmr": {
+    "port": 54230.2,
+    "v056": 55908.4,
+    "ratio": 0.9699830436928976,
+    "aa": 0.24038577699029506
+   },
+   "DLmw": {
+    "port": 467090,
+    "v056": 463747,
+    "ratio": 1.0072086719698456,
+    "aa": 0.2143733419028564
+   },
+   "Bc": {
+    "port": 104024043.8,
+    "v056": 103406472.4,
+    "ratio": 1.0059722702618756,
+    "aa": 0.03642391887720264
+   },
+   "Bcm": {
+    "port": 4172449.6,
+    "v056": 4180767,
+    "ratio": 0.9980105564361755,
+    "aa": 0.021150625735000705
+   },
+   "Bi": {
+    "port": 641724,
+    "v056": 636807.8,
+    "ratio": 1.007720068755439,
+    "aa": 0.04853761265730072
+   },
+   "Bim": {
+    "port": 2551,
+    "v056": 1354,
+    "ratio": 1.8840472673559823,
+    "aa": 0.36500242365487146
+   }
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "t8",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    10412436,
+    "bdac3d621295054f"
+   ],
+   "Ir": {
+    "port": 596919262,
+    "v056": 597156559,
+    "ratio": 0.9996026217975443,
+    "aa": 0.005985335133787295
+   },
+   "I1mr": {
+    "port": 58006.4,
+    "v056": 58923.8,
+    "ratio": 0.984430739361684,
+    "aa": 0.18634652295880705
+   },
+   "ILmr": {
+    "port": 4541.2,
+    "v056": 4519.8,
+    "ratio": 1.004734722775344,
+    "aa": 0.01351950354609932
+   },
+   "D1mr": {
+    "port": 10778391.2,
+    "v056": 10775309.6,
+    "ratio": 1.000285987142309,
+    "aa": 0.0018237020548237393
+   },
+   "D1mw": {
+    "port": 2129351.4,
+    "v056": 2120608.6,
+    "ratio": 1.0041227787155065,
+    "aa": 0.005622599980606768
+   },
+   "DLmr": {
+    "port": 48858.8,
+    "v056": 49357,
+    "ratio": 0.9899061936503435,
+    "aa": 0.052682414698162816
+   },
+   "DLmw": {
+    "port": 258835.8,
+    "v056": 244946.2,
+    "ratio": 1.056704696786478,
+    "aa": 0.09926463237616923
+   },
+   "Bc": {
+    "port": 100069924.2,
+    "v056": 99734837.6,
+    "ratio": 1.0033597748596526,
+    "aa": 0.010200252172350766
+   },
+   "Bcm": {
+    "port": 4111744.2,
+    "v056": 4130244.4,
+    "ratio": 0.9955207977523074,
+    "aa": 0.008921583321861881
+   },
+   "Bi": {
+    "port": 580610.2,
+    "v056": 582562.8,
+    "ratio": 0.9966482583508591,
+    "aa": 0.03345748418833461
+   },
+   "Bim": {
+    "port": 2309.4,
+    "v056": 1400,
+    "ratio": 1.6495714285714287,
+    "aa": 0.286783042394015
+   }
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": "w7",
+   "repeats": [
+    3,
+    3
+   ],
+   "out": [
+    10412436,
+    "bdac3d621295054f"
+   ],
+   "Ir": {
+    "port": 595305796,
+    "v056": 594215667.6666666,
+    "ratio": 1.0018345667956114,
+    "aa": 0.008884907719619584
+   },
+   "I1mr": {
+    "port": 56921.333333333336,
+    "v056": 51269.666666666664,
+    "ratio": 1.1102341215403522,
+    "aa": 0.44740466234319043
+   },
+   "ILmr": {
+    "port": 4289.666666666667,
+    "v056": 4280.666666666667,
+    "ratio": 1.0021024762498054,
+    "aa": 0.005856172405715565
+   },
+   "D1mr": {
+    "port": 10769183,
+    "v056": 10757200,
+    "ratio": 1.0011139515859147,
+    "aa": 0.0010676476708730842
+   },
+   "D1mw": {
+    "port": 2118504.3333333335,
+    "v056": 2108500.3333333335,
+    "ratio": 1.004744604419476,
+    "aa": 0.005164569199755942
+   },
+   "DLmr": {
+    "port": 46261.333333333336,
+    "v056": 49042.666666666664,
+    "ratio": 0.9432874775705509,
+    "aa": 0.03526939159752174
+   },
+   "DLmw": {
+    "port": 237821,
+    "v056": 249609.33333333334,
+    "ratio": 0.9527728663992265,
+    "aa": 0.2000586821541528
+   },
+   "Bc": {
+    "port": 99383552.66666667,
+    "v056": 99034265.66666667,
+    "ratio": 1.0035269307814696,
+    "aa": 0.0070965758692740355
+   },
+   "Bcm": {
+    "port": 4107701.3333333335,
+    "v056": 4106301.3333333335,
+    "ratio": 1.0003409394212341,
+    "aa": 0.012151875766985842
+   },
+   "Bi": {
+    "port": 582342.3333333334,
+    "v056": 566458.3333333334,
+    "ratio": 1.0280408973887458,
+    "aa": 0.053466467220602665
+   },
+   "Bim": {
+    "port": 2197.6666666666665,
+    "v056": 1244.3333333333333,
+    "ratio": 1.7661398339137422,
+    "aa": 0.24514435695538062
+   }
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t10",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    10412436,
+    "bdac3d621295054f"
+   ],
+   "Ir": {
+    "port": 472960306.4,
+    "v056": 473853238.6,
+    "ratio": 0.9981155933372151,
+    "aa": 0.011452978596636632
+   },
+   "I1mr": {
+    "port": 20974.8,
+    "v056": 19824.2,
+    "ratio": 1.05804017312174,
+    "aa": 0.19517034181735737
+   },
+   "ILmr": {
+    "port": 4352.4,
+    "v056": 4339.6,
+    "ratio": 1.0029495806065074,
+    "aa": 0.0053179190751444505
+   },
+   "D1mr": {
+    "port": 11280039.6,
+    "v056": 11318203,
+    "ratio": 0.9966281396437225,
+    "aa": 0.009083852800896075
+   },
+   "D1mw": {
+    "port": 1783693.8,
+    "v056": 1834024.4,
+    "ratio": 0.9725572898593935,
+    "aa": 0.052580959800543337
+   },
+   "DLmr": {
+    "port": 39840.2,
+    "v056": 46494.4,
+    "ratio": 0.8568816889775972,
+    "aa": 0.5240843507214206
+   },
+   "DLmw": {
+    "port": 1093315,
+    "v056": 1076906,
+    "ratio": 1.015237170189413,
+    "aa": 0.20043761773041213
+   },
+   "Bc": {
+    "port": 71080380,
+    "v056": 71868307.4,
+    "ratio": 0.9890365109670023,
+    "aa": 0.03885235915005425
+   },
+   "Bcm": {
+    "port": 1862606.6,
+    "v056": 1864038.2,
+    "ratio": 0.9992319899881881,
+    "aa": 0.011997056255349303
+   },
+   "Bi": {
+    "port": 439408.8,
+    "v056": 438770.2,
+    "ratio": 1.001455431567595,
+    "aa": 0.026605876158626307
+   },
+   "Bim": {
+    "port": 1582.2,
+    "v056": 1076.2,
+    "ratio": 1.4701728303289352,
+    "aa": 0.26083761939750194
+   }
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t20",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    10412436,
+    "bdac3d621295054f"
+   ],
+   "Ir": {
+    "port": 474811600.4,
+    "v056": 473961308.8,
+    "ratio": 1.0017940105747298,
+    "aa": 0.005940182111622283
+   },
+   "I1mr": {
+    "port": 21785.8,
+    "v056": 22604.6,
+    "ratio": 0.9637772842695734,
+    "aa": 0.18715516406930588
+   },
+   "ILmr": {
+    "port": 4323.2,
+    "v056": 4310.2,
+    "ratio": 1.003016101341005,
+    "aa": 0.004415524052986397
+   },
+   "D1mr": {
+    "port": 11315657,
+    "v056": 11276959.4,
+    "ratio": 1.00343156329888,
+    "aa": 0.014443314908574534
+   },
+   "D1mw": {
+    "port": 1817711.4,
+    "v056": 1795847.6,
+    "ratio": 1.012174641099835,
+    "aa": 0.08186580906190843
+   },
+   "DLmr": {
+    "port": 44831.8,
+    "v056": 36098.4,
+    "ratio": 1.2419331604724864,
+    "aa": 0.8037874802735403
+   },
+   "DLmw": {
+    "port": 1218719,
+    "v056": 1256332.4,
+    "ratio": 0.9700609488380624,
+    "aa": 0.19004053128682208
+   },
+   "Bc": {
+    "port": 71780673,
+    "v056": 70896553.4,
+    "ratio": 1.0124705582655305,
+    "aa": 0.03650024462517809
+   },
+   "Bcm": {
+    "port": 1868224.8,
+    "v056": 1870016.6,
+    "ratio": 0.9990418266875277,
+    "aa": 0.009835018901509063
+   },
+   "Bi": {
+    "port": 444751.8,
+    "v056": 446146.4,
+    "ratio": 0.9968741202439377,
+    "aa": 0.029283448210317697
+   },
+   "Bim": {
+    "port": 1674.6,
+    "v056": 1073,
+    "ratio": 1.5606710158434296,
+    "aa": 0.1792328042328042
+   }
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "t8",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    10412436,
+    "bdac3d621295054f"
+   ],
+   "Ir": {
+    "port": 473301242.2,
+    "v056": 472868747,
+    "ratio": 1.0009146199717023,
+    "aa": 0.008519487943011494
+   },
+   "I1mr": {
+    "port": 21209.8,
+    "v056": 20610.6,
+    "ratio": 1.0290724190465101,
+    "aa": 0.1818690258287574
+   },
+   "ILmr": {
+    "port": 4345.2,
+    "v056": 4335.4,
+    "ratio": 1.0022604603958112,
+    "aa": 0.0027662517289073207
+   },
+   "D1mr": {
+    "port": 11294600.2,
+    "v056": 11317607.8,
+    "ratio": 0.9979670968983391,
+    "aa": 0.009233213909423332
+   },
+   "D1mw": {
+    "port": 1798412.4,
+    "v056": 1834425,
+    "ratio": 0.9803684533300625,
+    "aa": 0.053831728332488504
+   },
+   "DLmr": {
+    "port": 44450.6,
+    "v056": 47327.2,
+    "ratio": 0.9392188847005528,
+    "aa": 0.5243465459292798
+   },
+   "DLmw": {
+    "port": 992501.4,
+    "v056": 1010823.6,
+    "ratio": 0.9818739886959506,
+    "aa": 0.1945185402639198
+   },
+   "Bc": {
+    "port": 71674708,
+    "v056": 71843631.2,
+    "ratio": 0.9976487379997574,
+    "aa": 0.03542842432543103
+   },
+   "Bcm": {
+    "port": 1864621.6,
+    "v056": 1858407.8,
+    "ratio": 1.0033436148944275,
+    "aa": 0.008124256501073956
+   },
+   "Bi": {
+    "port": 437048.8,
+    "v056": 433157.6,
+    "ratio": 1.0089833353957083,
+    "aa": 0.015784054235226552
+   },
+   "Bim": {
+    "port": 1595,
+    "v056": 1045.8,
+    "ratio": 1.5251482118952,
+    "aa": 0.1815680880330124
+   }
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": "w7",
+   "repeats": [
+    3,
+    3
+   ],
+   "out": [
+    10412436,
+    "bdac3d621295054f"
+   ],
+   "Ir": {
+    "port": 474654460.6666667,
+    "v056": 472694145.6666667,
+    "ratio": 1.0041471108072118,
+    "aa": 0.008250777345116589
+   },
+   "I1mr": {
+    "port": 20513.666666666668,
+    "v056": 19502,
+    "ratio": 1.05187502136533,
+    "aa": 0.2894319981896356
+   },
+   "ILmr": {
+    "port": 4085.3333333333335,
+    "v056": 4058.6666666666665,
+    "ratio": 1.0065703022339028,
+    "aa": 0.0037027894347074763
+   },
+   "D1mr": {
+    "port": 11365609.333333334,
+    "v056": 11317610.333333334,
+    "ratio": 1.004241089645809,
+    "aa": 0.009419805784903978
+   },
+   "D1mw": {
+    "port": 1862524,
+    "v056": 1835066.6666666667,
+    "ratio": 1.0149625808326672,
+    "aa": 0.05219546885889126
+   },
+   "DLmr": {
+    "port": 58182,
+    "v056": 47031.666666666664,
+    "ratio": 1.2370813990573728,
+    "aa": 0.37453896490184424
+   },
+   "DLmw": {
+    "port": 954805.6666666666,
+    "v056": 925336.3333333334,
+    "ratio": 1.0318471589969629,
+    "aa": 0.0954822484438711
+   },
+   "Bc": {
+    "port": 72984925,
+    "v056": 71733270.66666667,
+    "ratio": 1.0174487280685913,
+    "aa": 0.03445817411712393
+   },
+   "Bcm": {
+    "port": 1862829.6666666667,
+    "v056": 1857745.6666666667,
+    "ratio": 1.0027366501729604,
+    "aa": 0.007768430135361104
+   },
+   "Bi": {
+    "port": 435031.3333333333,
+    "v056": 433006,
+    "ratio": 1.0046773793742658,
+    "aa": 0.01848448590313989
+   },
+   "Bim": {
+    "port": 1510.3333333333333,
+    "v056": 962.3333333333334,
+    "ratio": 1.5694492552822998,
+    "aa": 0.19635036496350367
+   }
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t10",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    27980940,
+    "49e6631177b9f7f5"
+   ],
+   "Ir": {
+    "port": 1502411745.2,
+    "v056": 1500396137,
+    "ratio": 1.0013433840239219,
+    "aa": 0.0034923123744938778
+   },
+   "I1mr": {
+    "port": 43896.8,
+    "v056": 41664,
+    "ratio": 1.0535906298003073,
+    "aa": 0.12242692095212937
+   },
+   "ILmr": {
+    "port": 4519.4,
+    "v056": 4510.2,
+    "ratio": 1.0020398208505166,
+    "aa": 0.003330373001776188
+   },
+   "D1mr": {
+    "port": 31712160.2,
+    "v056": 31706589.2,
+    "ratio": 1.0001757048027102,
+    "aa": 0.006035351779892784
+   },
+   "D1mw": {
+    "port": 5356417.8,
+    "v056": 5319691.2,
+    "ratio": 1.0069038969780801,
+    "aa": 0.035852874014404845
+   },
+   "DLmr": {
+    "port": 134883.2,
+    "v056": 125201,
+    "ratio": 1.0773332481369957,
+    "aa": 0.2961071633858432
+   },
+   "DLmw": {
+    "port": 1650168,
+    "v056": 1612194.8,
+    "ratio": 1.0235537293632258,
+    "aa": 0.10515881280916428
+   },
+   "Bc": {
+    "port": 235358021,
+    "v056": 233984640.4,
+    "ratio": 1.0058695331353895,
+    "aa": 0.01536824263482317
+   },
+   "Bcm": {
+    "port": 8001744.4,
+    "v056": 8060520.4,
+    "ratio": 0.9927081631106597,
+    "aa": 0.005723086141665945
+   },
+   "Bi": {
+    "port": 692814,
+    "v056": 689350.2,
+    "ratio": 1.0050247319867318,
+    "aa": 0.02751243613628751
+   },
+   "Bim": {
+    "port": 2378.8,
+    "v056": 1296.2,
+    "ratio": 1.8352106156457337,
+    "aa": 0.2414599906410857
+   }
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t20",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    27980940,
+    "49e6631177b9f7f5"
+   ],
+   "Ir": {
+    "port": 1504891280.2,
+    "v056": 1505211132,
+    "ratio": 0.9997875036975212,
+    "aa": 0.003063747024528496
+   },
+   "I1mr": {
+    "port": 43389.8,
+    "v056": 42498.4,
+    "ratio": 1.0209749072906273,
+    "aa": 0.22344867941591073
+   },
+   "ILmr": {
+    "port": 4500.6,
+    "v056": 4480.6,
+    "ratio": 1.0044636878989421,
+    "aa": 0.005146565227120092
+   },
+   "D1mr": {
+    "port": 31693628.8,
+    "v056": 31706635,
+    "ratio": 0.9995897956374116,
+    "aa": 0.0053390367408538975
+   },
+   "D1mw": {
+    "port": 5331642.2,
+    "v056": 5309573.2,
+    "ratio": 1.0041564546091952,
+    "aa": 0.032785414802769974
+   },
+   "DLmr": {
+    "port": 120159.2,
+    "v056": 134474.8,
+    "ratio": 0.8935443666768793,
+    "aa": 0.3289207912528169
+   },
+   "DLmw": {
+    "port": 2272642.4,
+    "v056": 2263662.4,
+    "ratio": 1.003967022644366,
+    "aa": 0.15771756920649493
+   },
+   "Bc": {
+    "port": 234219744.6,
+    "v056": 234053306.4,
+    "ratio": 1.0007111123639312,
+    "aa": 0.013719150740999053
+   },
+   "Bcm": {
+    "port": 8010840.6,
+    "v056": 8074291.4,
+    "ratio": 0.9921416261989255,
+    "aa": 0.008360763512923697
+   },
+   "Bi": {
+    "port": 712203,
+    "v056": 714186,
+    "ratio": 0.9972234123883694,
+    "aa": 0.026486453291669543
+   },
+   "Bim": {
+    "port": 2547.2,
+    "v056": 1290,
+    "ratio": 1.9745736434108525,
+    "aa": 0.19380530973451338
+   }
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "t8",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    27980940,
+    "49e6631177b9f7f5"
+   ],
+   "Ir": {
+    "port": 1499974660,
+    "v056": 1498752631,
+    "ratio": 1.0008153640398847,
+    "aa": 0.002853791286355989
+   },
+   "I1mr": {
+    "port": 44477.8,
+    "v056": 43405.6,
+    "ratio": 1.024701881784839,
+    "aa": 0.0940068820493214
+   },
+   "ILmr": {
+    "port": 4520,
+    "v056": 4503,
+    "ratio": 1.003775260937153,
+    "aa": 0.004671857619577224
+   },
+   "D1mr": {
+    "port": 31655680.4,
+    "v056": 31599305.2,
+    "ratio": 1.0017840645432925,
+    "aa": 0.006603825318504564
+   },
+   "D1mw": {
+    "port": 5304055,
+    "v056": 5211926.8,
+    "ratio": 1.0176764186327407,
+    "aa": 0.03974259590404272
+   },
+   "DLmr": {
+    "port": 131239,
+    "v056": 132009.8,
+    "ratio": 0.9941610395591843,
+    "aa": 0.27059130113149177
+   },
+   "DLmw": {
+    "port": 1388538.4,
+    "v056": 1297923.4,
+    "ratio": 1.0698153681488445,
+    "aa": 0.22236353715357415
+   },
+   "Bc": {
+    "port": 234371779.2,
+    "v056": 233248748,
+    "ratio": 1.004814736240299,
+    "aa": 0.009087563070520943
+   },
+   "Bcm": {
+    "port": 7996977.4,
+    "v056": 8076434,
+    "ratio": 0.9901619204713368,
+    "aa": 0.013693501208696057
+   },
+   "Bi": {
+    "port": 683483.4,
+    "v056": 684095.4,
+    "ratio": 0.9991053879327357,
+    "aa": 0.015083076487051317
+   },
+   "Bim": {
+    "port": 2322,
+    "v056": 1294.4,
+    "ratio": 1.7938813349814584,
+    "aa": 0.11919927206551417
+   }
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": "w7",
+   "repeats": [
+    3,
+    3
+   ],
+   "out": [
+    27980940,
+    "49e6631177b9f7f5"
+   ],
+   "Ir": {
+    "port": 1500317444,
+    "v056": 1498437102.3333333,
+    "ratio": 1.001254868598581,
+    "aa": 0.0016279496049860231
+   },
+   "I1mr": {
+    "port": 42913.666666666664,
+    "v056": 39084.666666666664,
+    "ratio": 1.0979668071025295,
+    "aa": 0.08697786285770381
+   },
+   "ILmr": {
+    "port": 4249,
+    "v056": 4232.666666666667,
+    "ratio": 1.0038588754134508,
+    "aa": 0.002356823002592545
+   },
+   "D1mr": {
+    "port": 31703224.666666668,
+    "v056": 31669994.666666668,
+    "ratio": 1.0010492581495436,
+    "aa": 0.002864493949453095
+   },
+   "D1mw": {
+    "port": 5353782.666666667,
+    "v056": 5283809,
+    "ratio": 1.0132430348384407,
+    "aa": 0.0159918914670536
+   },
+   "DLmr": {
+    "port": 121679.66666666667,
+    "v056": 138781.66666666666,
+    "ratio": 0.87677046680037,
+    "aa": 0.3295987561007212
+   },
+   "DLmw": {
+    "port": 1357592.3333333333,
+    "v056": 1309946,
+    "ratio": 1.0363727461539127,
+    "aa": 0.11740258445510454
+   },
+   "Bc": {
+    "port": 235035661,
+    "v056": 234091408.66666666,
+    "ratio": 1.0040336906796863,
+    "aa": 0.011597110030091784
+   },
+   "Bcm": {
+    "port": 7989712.333333333,
+    "v056": 8014331.666666667,
+    "ratio": 0.9969280865383034,
+    "aa": 0.00787508412935689
+   },
+   "Bi": {
+    "port": 682817.3333333334,
+    "v056": 677227.6666666666,
+    "ratio": 1.008253748247143,
+    "aa": 0.009279422901816048
+   },
+   "Bim": {
+    "port": 2234.6666666666665,
+    "v056": 1165,
+    "ratio": 1.9181688125894134,
+    "aa": 0.12102217936354864
+   }
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t10",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    80000000,
+    "f015f3862fcf2b77"
+   ],
+   "Ir": {
+    "port": 131469389.6,
+    "v056": 131607894.2,
+    "ratio": 0.998947596564462,
+    "aa": 0.007132308890630323
+   },
+   "I1mr": {
+    "port": 11995.2,
+    "v056": 11845.4,
+    "ratio": 1.0126462593074106,
+    "aa": 0.14344927013876374
+   },
+   "ILmr": {
+    "port": 4269.2,
+    "v056": 4262.8,
+    "ratio": 1.001501360608051,
+    "aa": 0.0025839793281654533
+   },
+   "D1mr": {
+    "port": 3963113.4,
+    "v056": 3965083.6,
+    "ratio": 0.9995031126203745,
+    "aa": 0.002444959341269204
+   },
+   "D1mw": {
+    "port": 2749761,
+    "v056": 2749372.8,
+    "ratio": 1.0001411958392838,
+    "aa": 0.0008788244785551402
+   },
+   "DLmr": {
+    "port": 720340.6,
+    "v056": 742193.2,
+    "ratio": 0.9705567229664729,
+    "aa": 0.40025045225487066
+   },
+   "DLmw": {
+    "port": 1433989,
+    "v056": 1467338.8,
+    "ratio": 0.9772719156611956,
+    "aa": 0.1219950736431259
+   },
+   "Bc": {
+    "port": 12568709.8,
+    "v056": 12616967.8,
+    "ratio": 0.9961751507362966,
+    "aa": 0.021733265707408078
+   },
+   "Bcm": {
+    "port": 89119.2,
+    "v056": 90521.2,
+    "ratio": 0.9845119154408029,
+    "aa": 0.08105097019775331
+   },
+   "Bi": {
+    "port": 335245.4,
+    "v056": 335733,
+    "ratio": 0.9985476554285698,
+    "aa": 0.01063594392881062
+   },
+   "Bim": {
+    "port": 1423.6,
+    "v056": 1062.4,
+    "ratio": 1.339984939759036,
+    "aa": 0.08950843727072644
+   }
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t20",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    80000000,
+    "f015f3862fcf2b77"
+   ],
+   "Ir": {
+    "port": 132740378.4,
+    "v056": 132518716.8,
+    "ratio": 1.0016726814547605,
+    "aa": 0.014767132464650556
+   },
+   "I1mr": {
+    "port": 14901.2,
+    "v056": 13667,
+    "ratio": 1.0903051145094023,
+    "aa": 0.3211782310782074
+   },
+   "ILmr": {
+    "port": 4248.8,
+    "v056": 4239.8,
+    "ratio": 1.0021227416387566,
+    "aa": 0.003307347035199637
+   },
+   "D1mr": {
+    "port": 3966667.4,
+    "v056": 3966155.2,
+    "ratio": 1.000129142702232,
+    "aa": 0.0003741648735831049
+   },
+   "D1mw": {
+    "port": 2751666.4,
+    "v056": 2750402.8,
+    "ratio": 1.0004594236160609,
+    "aa": 0.0008542675555800461
+   },
+   "DLmr": {
+    "port": 574625.4,
+    "v056": 597059.4,
+    "ratio": 0.9624258490863723,
+    "aa": 1.3345982692119547
+   },
+   "DLmw": {
+    "port": 1505721.8,
+    "v056": 1497866.2,
+    "ratio": 1.0052445271814,
+    "aa": 0.208721883809029
+   },
+   "Bc": {
+    "port": 12761538.4,
+    "v056": 12726203,
+    "ratio": 1.0027765862292155,
+    "aa": 0.026615097787848985
+   },
+   "Bcm": {
+    "port": 98615.4,
+    "v056": 96419.2,
+    "ratio": 1.0227776210547277,
+    "aa": 0.12116610665977423
+   },
+   "Bi": {
+    "port": 341197.2,
+    "v056": 340327.6,
+    "ratio": 1.0025551850628631,
+    "aa": 0.025789038766786954
+   },
+   "Bim": {
+    "port": 1645.8,
+    "v056": 1069.4,
+    "ratio": 1.5389938283149427,
+    "aa": 0.22841604350781775
+   }
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "t8",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    80000000,
+    "f015f3862fcf2b77"
+   ],
+   "Ir": {
+    "port": 131003536.8,
+    "v056": 131054543.6,
+    "ratio": 0.9996107971643038,
+    "aa": 0.006125935038596264
+   },
+   "I1mr": {
+    "port": 11329.2,
+    "v056": 10888,
+    "ratio": 1.0405216752387951,
+    "aa": 0.1574248586449758
+   },
+   "ILmr": {
+    "port": 4256.8,
+    "v056": 4257,
+    "ratio": 0.9999530185576697,
+    "aa": 0.014723343623842311
+   },
+   "D1mr": {
+    "port": 3964596.8,
+    "v056": 3964518.8,
+    "ratio": 1.000019674518885,
+    "aa": 0.00023662316046313414
+   },
+   "D1mw": {
+    "port": 2748842,
+    "v056": 2748377.2,
+    "ratio": 1.0001691179798755,
+    "aa": 0.0008626334488486265
+   },
+   "DLmr": {
+    "port": 742170,
+    "v056": 787155.4,
+    "ratio": 0.942850674720646,
+    "aa": 0.4002803492269049
+   },
+   "DLmw": {
+    "port": 1377041.2,
+    "v056": 1477509.4,
+    "ratio": 0.9320016508862821,
+    "aa": 0.1457866500201701
+   },
+   "Bc": {
+    "port": 12467430.2,
+    "v056": 12498015.4,
+    "ratio": 0.9975527954622299,
+    "aa": 0.019913783348253
+   },
+   "Bcm": {
+    "port": 85710.6,
+    "v056": 86139.6,
+    "ratio": 0.9950197121881226,
+    "aa": 0.09390850505991022
+   },
+   "Bi": {
+    "port": 333175.6,
+    "v056": 333274.2,
+    "ratio": 0.9997041475157692,
+    "aa": 0.010621824997962603
+   },
+   "Bim": {
+    "port": 1335,
+    "v056": 1028.2,
+    "ratio": 1.298385528107372,
+    "aa": 0.12459807073954976
+   }
+  },
+  {
+   "corpus": "onebyte",
+   "threads": "w7",
+   "repeats": [
+    3,
+    3
+   ],
+   "out": [
+    80000000,
+    "f015f3862fcf2b77"
+   ],
+   "Ir": {
+    "port": 130847189,
+    "v056": 130819463,
+    "ratio": 1.0002119409403172,
+    "aa": 0.0037637929027036776
+   },
+   "I1mr": {
+    "port": 11202,
+    "v056": 10413.666666666666,
+    "ratio": 1.0757018021190103,
+    "aa": 0.1252492640774856
+   },
+   "ILmr": {
+    "port": 3991,
+    "v056": 3984,
+    "ratio": 1.0017570281124497,
+    "aa": 0.0037735849056603765
+   },
+   "D1mr": {
+    "port": 3964353,
+    "v056": 3964287,
+    "ratio": 1.0000166486432491,
+    "aa": 0.00017785433502903736
+   },
+   "D1mw": {
+    "port": 2748060.6666666665,
+    "v056": 2748700.6666666665,
+    "ratio": 0.9997671627151835,
+    "aa": 0.0009016495782776524
+   },
+   "DLmr": {
+    "port": 787070.3333333334,
+    "v056": 787056,
+    "ratio": 1.0000182113259202,
+    "aa": 3.8116099096985323e-06
+   },
+   "DLmw": {
+    "port": 1359482.3333333333,
+    "v056": 1378768.3333333333,
+    "ratio": 0.9860121533590971,
+    "aa": 0.04337475724065931
+   },
+   "Bc": {
+    "port": 12418429,
+    "v056": 12486438,
+    "ratio": 0.9945533706249933,
+    "aa": 0.011755113737486278
+   },
+   "Bcm": {
+    "port": 83593.66666666667,
+    "v056": 82984,
+    "ratio": 1.0073467977762782,
+    "aa": 0.04572749397678777
+   },
+   "Bi": {
+    "port": 332467,
+    "v056": 332005.6666666667,
+    "ratio": 1.0013895345159771,
+    "aa": 0.006292723246876353
+   },
+   "Bim": {
+    "port": 1269.6666666666667,
+    "v056": 947.6666666666666,
+    "ratio": 1.3397819205065074,
+    "aa": 0.07931316434995916
+   }
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t10",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    78400000,
+    "eca1ccd9f133559a"
+   ],
+   "Ir": {
+    "port": 1210890924.4,
+    "v056": 1210799712.4,
+    "ratio": 1.0000753320297866,
+    "aa": 0.003312549835263079
+   },
+   "I1mr": {
+    "port": 57017.8,
+    "v056": 53166.2,
+    "ratio": 1.0724445230240267,
+    "aa": 0.26542861746696755
+   },
+   "ILmr": {
+    "port": 4338.6,
+    "v056": 4327.8,
+    "ratio": 1.0024954942464994,
+    "aa": 0.00533147890588781
+   },
+   "D1mr": {
+    "port": 12469284.2,
+    "v056": 12448547.6,
+    "ratio": 1.001665784689613,
+    "aa": 0.0012907753534927568
+   },
+   "D1mw": {
+    "port": 10515978.2,
+    "v056": 10485272.2,
+    "ratio": 1.002928488589929,
+    "aa": 0.0009194178966953626
+   },
+   "DLmr": {
+    "port": 2939.4,
+    "v056": 2917.4,
+    "ratio": 1.007540961129773,
+    "aa": 0.002058319039451195
+   },
+   "DLmw": {
+    "port": 1586475.4,
+    "v056": 1582901.4,
+    "ratio": 1.0022578791073151,
+    "aa": 0.00804145421949709
+   },
+   "Bc": {
+    "port": 219785303.2,
+    "v056": 219750970,
+    "ratio": 1.000156236853016,
+    "aa": 0.0031819791980094436
+   },
+   "Bcm": {
+    "port": 3851541.2,
+    "v056": 3846891,
+    "ratio": 1.001208820317498,
+    "aa": 0.00965130905718592
+   },
+   "Bi": {
+    "port": 454387.2,
+    "v056": 453729,
+    "ratio": 1.001450645649716,
+    "aa": 0.038474470327269916
+   },
+   "Bim": {
+    "port": 3137.6,
+    "v056": 1439.8,
+    "ratio": 2.179191554382553,
+    "aa": 0.17635066258919463
+   }
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t20",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    78400000,
+    "eca1ccd9f133559a"
+   ],
+   "Ir": {
+    "port": 1211355184,
+    "v056": 1211366608.4,
+    "ratio": 0.9999905689987483,
+    "aa": 0.0028796016828798177
+   },
+   "I1mr": {
+    "port": 36275,
+    "v056": 34874.4,
+    "ratio": 1.0401612644231872,
+    "aa": 0.23207207207207214
+   },
+   "ILmr": {
+    "port": 4343.8,
+    "v056": 4356.6,
+    "ratio": 0.997061929027223,
+    "aa": 0.019612367328103453
+   },
+   "D1mr": {
+    "port": 12587542,
+    "v056": 12582413.4,
+    "ratio": 1.0004076006595046,
+    "aa": 0.0021911448419664747
+   },
+   "D1mw": {
+    "port": 10611528.4,
+    "v056": 10587340.4,
+    "ratio": 1.0022846153128315,
+    "aa": 0.002060631774270405
+   },
+   "DLmr": {
+    "port": 125211.2,
+    "v056": 196936.6,
+    "ratio": 0.6357944638020561,
+    "aa": 2.161444185745699
+   },
+   "DLmw": {
+    "port": 2913077.6,
+    "v056": 2976113.2,
+    "ratio": 0.9788194884522537,
+    "aa": 0.07181537948846128
+   },
+   "Bc": {
+    "port": 219666592.8,
+    "v056": 219710916.8,
+    "ratio": 0.9997982621863057,
+    "aa": 0.0029609411235445027
+   },
+   "Bcm": {
+    "port": 3823877.8,
+    "v056": 3819981.4,
+    "ratio": 1.0010200049665163,
+    "aa": 0.007319392981419703
+   },
+   "Bi": {
+    "port": 462212.2,
+    "v056": 462383.4,
+    "ratio": 0.9996297444934226,
+    "aa": 0.03394795379037907
+   },
+   "Bim": {
+    "port": 2413.4,
+    "v056": 1441.8,
+    "ratio": 1.6738798723817452,
+    "aa": 0.21889191643960038
+   }
+  },
+  {
+   "corpus": "pattern",
+   "threads": "t8",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    78400000,
+    "eca1ccd9f133559a"
+   ],
+   "Ir": {
+    "port": 1211704071.4,
+    "v056": 1210509141.2,
+    "ratio": 1.0009871302572861,
+    "aa": 0.002296331613674374
+   },
+   "I1mr": {
+    "port": 67705.6,
+    "v056": 60349,
+    "ratio": 1.1219009428490945,
+    "aa": 0.1381715196035047
+   },
+   "ILmr": {
+    "port": 4331.2,
+    "v056": 4319.2,
+    "ratio": 1.0027782922763475,
+    "aa": 0.0055619930475085955
+   },
+   "D1mr": {
+    "port": 12440858.2,
+    "v056": 12422106.8,
+    "ratio": 1.001509518498102,
+    "aa": 0.000666316958140456
+   },
+   "D1mw": {
+    "port": 10493416.8,
+    "v056": 10463851.2,
+    "ratio": 1.0028254988947092,
+    "aa": 0.0006249874534103306
+   },
+   "DLmr": {
+    "port": 2902.2,
+    "v056": 2882.6,
+    "ratio": 1.006799417192812,
+    "aa": 0.0013884068031932983
+   },
+   "DLmw": {
+    "port": 1278213.2,
+    "v056": 1278651.2,
+    "ratio": 0.9996574515395598,
+    "aa": 0.0036297028989029645
+   },
+   "Bc": {
+    "port": 219936276.2,
+    "v056": 219711990.4,
+    "ratio": 1.001020817296278,
+    "aa": 0.0023122891074336405
+   },
+   "Bcm": {
+    "port": 3860580,
+    "v056": 3855212,
+    "ratio": 1.0013924007291946,
+    "aa": 0.007231294312818548
+   },
+   "Bi": {
+    "port": 456752.6,
+    "v056": 450632,
+    "ratio": 1.0135822578068134,
+    "aa": 0.02558988047826749
+   },
+   "Bim": {
+    "port": 3552.4,
+    "v056": 1432.6,
+    "ratio": 2.4796872818651403,
+    "aa": 0.1215121512151216
+   }
+  },
+  {
+   "corpus": "pattern",
+   "threads": "w7",
+   "repeats": [
+    3,
+    3
+   ],
+   "out": [
+    78400000,
+    "eca1ccd9f133559a"
+   ],
+   "Ir": {
+    "port": 1209042255.3333333,
+    "v056": 1209439549.3333333,
+    "ratio": 0.9996715056984709,
+    "aa": 0.0019399352229798605
+   },
+   "I1mr": {
+    "port": 65654,
+    "v056": 61876,
+    "ratio": 1.061057599069106,
+    "aa": 0.12226780666069081
+   },
+   "ILmr": {
+    "port": 4063,
+    "v056": 4039,
+    "ratio": 1.0059420648675415,
+    "aa": 0.002728174603174649
+   },
+   "D1mr": {
+    "port": 12418837.333333334,
+    "v056": 12398405,
+    "ratio": 1.0016479807953793,
+    "aa": 0.0013119173290645492
+   },
+   "D1mw": {
+    "port": 10473979,
+    "v056": 10445123,
+    "ratio": 1.0027626290279206,
+    "aa": 0.001348388684121904
+   },
+   "DLmr": {
+    "port": 2806.6666666666665,
+    "v056": 2787.6666666666665,
+    "ratio": 1.0068157359799115,
+    "aa": 0.00035880875493354836
+   },
+   "DLmw": {
+    "port": 1120021.6666666667,
+    "v056": 1118546,
+    "ratio": 1.0013192722218547,
+    "aa": 0.009344098539726398
+   },
+   "Bc": {
+    "port": 219481010,
+    "v056": 219548554.33333334,
+    "ratio": 0.9996923489952442,
+    "aa": 0.0023400328638409906
+   },
+   "Bcm": {
+    "port": 3842398.6666666665,
+    "v056": 3843627,
+    "ratio": 0.9996804233778841,
+    "aa": 0.003269147941002526
+   },
+   "Bi": {
+    "port": 444112,
+    "v056": 445507.6666666667,
+    "ratio": 0.9968672443347402,
+    "aa": 0.02315715643241778
+   },
+   "Bim": {
+    "port": 3194,
+    "v056": 1342.6666666666667,
+    "ratio": 2.378848063555114,
+    "aa": 0.034537389100126825
+   }
+  },
+  {
+   "corpus": "random",
+   "threads": "t10",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    32000000,
+    "cc6875414231a8c8"
+   ],
+   "Ir": {
+    "port": 4336122351,
+    "v056": 4337150386,
+    "ratio": 0.9997629699437404,
+    "aa": 0.0026431451530513073
+   },
+   "I1mr": {
+    "port": 53843,
+    "v056": 50450,
+    "ratio": 1.0672547076313181,
+    "aa": 0.16270383334756255
+   },
+   "ILmr": {
+    "port": 4300.2,
+    "v056": 4289.4,
+    "ratio": 1.0025178346621906,
+    "aa": 0.0025676937441643233
+   },
+   "D1mr": {
+    "port": 38820167,
+    "v056": 38843579.4,
+    "ratio": 0.9993972646094506,
+    "aa": 0.0003204595667234411
+   },
+   "D1mw": {
+    "port": 7664501,
+    "v056": 7565263,
+    "ratio": 1.013117587584199,
+    "aa": 0.009156860499663688
+   },
+   "DLmr": {
+    "port": 371421.8,
+    "v056": 397975,
+    "ratio": 0.9332792260820403,
+    "aa": 0.36340473430335885
+   },
+   "DLmw": {
+    "port": 1504389.2,
+    "v056": 1540505.8,
+    "ratio": 0.9765553625309297,
+    "aa": 0.08306186466726673
+   },
+   "Bc": {
+    "port": 557681130.2,
+    "v056": 557881657,
+    "ratio": 0.9996405567426643,
+    "aa": 0.009819972156922763
+   },
+   "Bcm": {
+    "port": 26282611.2,
+    "v056": 26433713.6,
+    "ratio": 0.994283724099969,
+    "aa": 0.009942639204163495
+   },
+   "Bi": {
+    "port": 918892.8,
+    "v056": 923033,
+    "ratio": 0.9955145699016179,
+    "aa": 0.033868045192922525
+   },
+   "Bim": {
+    "port": 3444.8,
+    "v056": 1468.4,
+    "ratio": 2.345954780713702,
+    "aa": 0.3436185133239831
+   }
+  },
+  {
+   "corpus": "random",
+   "threads": "t20",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    32000000,
+    "cc6875414231a8c8"
+   ],
+   "Ir": {
+    "port": 4348396377.2,
+    "v056": 4344911866.2,
+    "ratio": 1.000801975070451,
+    "aa": 0.0023581559460312818
+   },
+   "I1mr": {
+    "port": 58988.8,
+    "v056": 51707,
+    "ratio": 1.1408281277196513,
+    "aa": 0.05556040274312046
+   },
+   "ILmr": {
+    "port": 4272.4,
+    "v056": 4261.2,
+    "ratio": 1.0026283675959824,
+    "aa": 0.0040000000000000036
+   },
+   "D1mr": {
+    "port": 38859455.6,
+    "v056": 38879686.6,
+    "ratio": 0.9994796511554185,
+    "aa": 0.000260660092294307
+   },
+   "D1mw": {
+    "port": 7721321.2,
+    "v056": 7580697.2,
+    "ratio": 1.0185502726582985,
+    "aa": 0.017588254216295285
+   },
+   "DLmr": {
+    "port": 324187.8,
+    "v056": 373463.6,
+    "ratio": 0.8680572885818055,
+    "aa": 0.49835493671659115
+   },
+   "DLmw": {
+    "port": 2255518.6,
+    "v056": 2285784,
+    "ratio": 0.9867592913416141,
+    "aa": 0.05523723590986562
+   },
+   "Bc": {
+    "port": 561093182.2,
+    "v056": 558400119.2,
+    "ratio": 1.0048228195292261,
+    "aa": 0.01559997375410127
+   },
+   "Bcm": {
+    "port": 26341946.8,
+    "v056": 26485922.2,
+    "ratio": 0.9945640782709844,
+    "aa": 0.006088020145647022
+   },
+   "Bi": {
+    "port": 963873,
+    "v056": 961308.2,
+    "ratio": 1.0026680309187002,
+    "aa": 0.017222185568133153
+   },
+   "Bim": {
+    "port": 4345,
+    "v056": 1459.2,
+    "ratio": 2.97765899122807,
+    "aa": 0.13113137786541773
+   }
+  },
+  {
+   "corpus": "random",
+   "threads": "t8",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    32000000,
+    "cc6875414231a8c8"
+   ],
+   "Ir": {
+    "port": 4334928847.2,
+    "v056": 4332731590.8,
+    "ratio": 1.0005071295911026,
+    "aa": 0.0015843627309521935
+   },
+   "I1mr": {
+    "port": 55164.8,
+    "v056": 51248,
+    "ratio": 1.0764283484233532,
+    "aa": 0.16414517195767186
+   },
+   "ILmr": {
+    "port": 4293.8,
+    "v056": 4281.2,
+    "ratio": 1.0029431000654023,
+    "aa": 0.003968253968253954
+   },
+   "D1mr": {
+    "port": 38812525.2,
+    "v056": 38835790.8,
+    "ratio": 0.9994009237478951,
+    "aa": 0.0001855432908421939
+   },
+   "D1mw": {
+    "port": 7670044.8,
+    "v056": 7528494,
+    "ratio": 1.018802007413435,
+    "aa": 0.008634820785007546
+   },
+   "DLmr": {
+    "port": 363832.2,
+    "v056": 422000,
+    "ratio": 0.8621616113744076,
+    "aa": 0.3642422406433312
+   },
+   "DLmw": {
+    "port": 1277459.6,
+    "v056": 1370613.2,
+    "ratio": 0.932035092030341,
+    "aa": 0.12108189023426918
+   },
+   "Bc": {
+    "port": 558190967.4,
+    "v056": 555747029,
+    "ratio": 1.004397573486623,
+    "aa": 0.007916894420305853
+   },
+   "Bcm": {
+    "port": 26270503.2,
+    "v056": 26365462.6,
+    "ratio": 0.9963983412147678,
+    "aa": 0.005594516538710126
+   },
+   "Bi": {
+    "port": 910427,
+    "v056": 911237.8,
+    "ratio": 0.9991102212836209,
+    "aa": 0.03339295436828493
+   },
+   "Bim": {
+    "port": 3327.2,
+    "v056": 1457.8,
+    "ratio": 2.2823432569625464,
+    "aa": 0.18392325504465767
+   }
+  },
+  {
+   "corpus": "random",
+   "threads": "w7",
+   "repeats": [
+    3,
+    3
+   ],
+   "out": [
+    32000000,
+    "cc6875414231a8c8"
+   ],
+   "Ir": {
+    "port": 4335017736.333333,
+    "v056": 4334603428.333333,
+    "ratio": 1.0000955815236272,
+    "aa": 0.0008746134709276543
+   },
+   "I1mr": {
+    "port": 53215.333333333336,
+    "v056": 51506,
+    "ratio": 1.03318707205633,
+    "aa": 0.058722038318788305
+   },
+   "ILmr": {
+    "port": 4013,
+    "v056": 4001.6666666666665,
+    "ratio": 1.002832153269471,
+    "aa": 0.002501876407305481
+   },
+   "D1mr": {
+    "port": 38800159.333333336,
+    "v056": 38825477.666666664,
+    "ratio": 0.9993478938353135,
+    "aa": 0.00020205259575378776
+   },
+   "D1mw": {
+    "port": 7687753.333333333,
+    "v056": 7564835.333333333,
+    "ratio": 1.016248602194734,
+    "aa": 0.00894194101034218
+   },
+   "DLmr": {
+    "port": 336370,
+    "v056": 348826.6666666667,
+    "ratio": 0.9642898096475804,
+    "aa": 0.20061017218851074
+   },
+   "DLmw": {
+    "port": 1178638.3333333333,
+    "v056": 1175642,
+    "ratio": 1.0025486783675075,
+    "aa": 0.05077545515846249
+   },
+   "Bc": {
+    "port": 559604997.6666666,
+    "v056": 558378719.3333334,
+    "ratio": 1.0021961408822981,
+    "aa": 0.00742022061721781
+   },
+   "Bcm": {
+    "port": 26259314,
+    "v056": 26385704.666666668,
+    "ratio": 0.9952098809463922,
+    "aa": 0.009357641016633389
+   },
+   "Bi": {
+    "port": 903048,
+    "v056": 906914.3333333334,
+    "ratio": 0.9957368263007568,
+    "aa": 0.01585556300978852
+   },
+   "Bim": {
+    "port": 3121,
+    "v056": 1400.6666666666667,
+    "ratio": 2.2282246549262257,
+    "aa": 0.14948096885813156
+   }
+  },
+  {
+   "corpus": "records",
+   "threads": "t10",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    38400000,
+    "dfda3ff8d9d9f08f"
+   ],
+   "Ir": {
+    "port": 5673838233.2,
+    "v056": 5675052732,
+    "ratio": 0.9997859933894266,
+    "aa": 0.001822272094009536
+   },
+   "I1mr": {
+    "port": 62087.8,
+    "v056": 57672,
+    "ratio": 1.0765674850880844,
+    "aa": 0.11236508168028014
+   },
+   "ILmr": {
+    "port": 4301,
+    "v056": 4297.2,
+    "ratio": 1.0008842967513731,
+    "aa": 0.00419384902143527
+   },
+   "D1mr": {
+    "port": 46393234.4,
+    "v056": 46403847.4,
+    "ratio": 0.9997712905158808,
+    "aa": 0.00015380709641155121
+   },
+   "D1mw": {
+    "port": 9212460.2,
+    "v056": 9080004.4,
+    "ratio": 1.0145876361029076,
+    "aa": 0.01481926211842488
+   },
+   "DLmr": {
+    "port": 378941,
+    "v056": 374246.2,
+    "ratio": 1.0125446831524274,
+    "aa": 0.4930313101276893
+   },
+   "DLmw": {
+    "port": 1587531,
+    "v056": 1582414.8,
+    "ratio": 1.0032331598516393,
+    "aa": 0.06390731365320801
+   },
+   "Bc": {
+    "port": 687440866.6,
+    "v056": 687634270.4,
+    "ratio": 0.9997187403125103,
+    "aa": 0.012883975074669207
+   },
+   "Bcm": {
+    "port": 19548459.4,
+    "v056": 19656066.8,
+    "ratio": 0.9945254866553465,
+    "aa": 0.0074899975872677604
+   },
+   "Bi": {
+    "port": 1097355,
+    "v056": 1102361.4,
+    "ratio": 0.995458476684688,
+    "aa": 0.023262617934153962
+   },
+   "Bim": {
+    "port": 3893.6,
+    "v056": 1558.6,
+    "ratio": 2.498139355832157,
+    "aa": 0.13753039718994864
+   }
+  },
+  {
+   "corpus": "records",
+   "threads": "t20",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    38400000,
+    "dfda3ff8d9d9f08f"
+   ],
+   "Ir": {
+    "port": 5676563975.8,
+    "v056": 5681865908.6,
+    "ratio": 0.999066867665431,
+    "aa": 0.0014969076605639842
+   },
+   "I1mr": {
+    "port": 62763.6,
+    "v056": 58350.2,
+    "ratio": 1.075636415984864,
+    "aa": 0.1144122294491603
+   },
+   "ILmr": {
+    "port": 4277.6,
+    "v056": 4265.4,
+    "ratio": 1.0028602241290385,
+    "aa": 0.003756750410894627
+   },
+   "D1mr": {
+    "port": 46411263.2,
+    "v056": 46449014.8,
+    "ratio": 0.9991872464860118,
+    "aa": 0.001589984040851089
+   },
+   "D1mw": {
+    "port": 9142285.6,
+    "v056": 9100767,
+    "ratio": 1.004562098996711,
+    "aa": 0.014012078592112731
+   },
+   "DLmr": {
+    "port": 419993.2,
+    "v056": 354234.8,
+    "ratio": 1.185635064652033,
+    "aa": 0.19903662942243505
+   },
+   "DLmw": {
+    "port": 2341553.4,
+    "v056": 2364350,
+    "ratio": 0.9903581956986064,
+    "aa": 0.04991264728036615
+   },
+   "Bc": {
+    "port": 683492147.6,
+    "v056": 687853839.4,
+    "ratio": 0.9936589845834043,
+    "aa": 0.007155921651017083
+   },
+   "Bcm": {
+    "port": 19577321.2,
+    "v056": 19680737,
+    "ratio": 0.9947453288969819,
+    "aa": 0.007025295160147271
+   },
+   "Bi": {
+    "port": 1132553.6,
+    "v056": 1138374,
+    "ratio": 0.9948870933454208,
+    "aa": 0.0340247973081409
+   },
+   "Bim": {
+    "port": 4391.6,
+    "v056": 1515.8,
+    "ratio": 2.8972159915556146,
+    "aa": 0.3118617439120188
+   }
+  },
+  {
+   "corpus": "records",
+   "threads": "t8",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    38400000,
+    "dfda3ff8d9d9f08f"
+   ],
+   "Ir": {
+    "port": 5672147449.8,
+    "v056": 5672365884.6,
+    "ratio": 0.9999614914121472,
+    "aa": 0.0014875191396663823
+   },
+   "I1mr": {
+    "port": 63726.6,
+    "v056": 58386.4,
+    "ratio": 1.091463080443391,
+    "aa": 0.12974642573103745
+   },
+   "ILmr": {
+    "port": 4288.2,
+    "v056": 4280.8,
+    "ratio": 1.001728648850682,
+    "aa": 0.0032771535580524702
+   },
+   "D1mr": {
+    "port": 46385428.8,
+    "v056": 46397265.2,
+    "ratio": 0.9997448901363263,
+    "aa": 0.00023318869656052676
+   },
+   "D1mw": {
+    "port": 9188232.6,
+    "v056": 9067149.6,
+    "ratio": 1.0133540313485068,
+    "aa": 0.021823268468232904
+   },
+   "DLmr": {
+    "port": 359052.2,
+    "v056": 372053.4,
+    "ratio": 0.9650555538532909,
+    "aa": 0.8742146996035376
+   },
+   "DLmw": {
+    "port": 1326003.2,
+    "v056": 1356375,
+    "ratio": 0.9776081098516265,
+    "aa": 0.11581275951403591
+   },
+   "Bc": {
+    "port": 686454709.2,
+    "v056": 687186569.2,
+    "ratio": 0.9989349908266514,
+    "aa": 0.017428277772171263
+   },
+   "Bcm": {
+    "port": 19550323,
+    "v056": 19693538.8,
+    "ratio": 0.9927277772951604,
+    "aa": 0.0042247701589168685
+   },
+   "Bi": {
+    "port": 1092258.8,
+    "v056": 1089564.4,
+    "ratio": 1.0024729148639586,
+    "aa": 0.01717559377924327
+   },
+   "Bim": {
+    "port": 3915,
+    "v056": 1542.6,
+    "ratio": 2.5379229871645275,
+    "aa": 0.09986320109439117
+   }
+  },
+  {
+   "corpus": "records",
+   "threads": "w7",
+   "repeats": [
+    3,
+    3
+   ],
+   "out": [
+    38400000,
+    "dfda3ff8d9d9f08f"
+   ],
+   "Ir": {
+    "port": 5669729483.666667,
+    "v056": 5667398531.333333,
+    "ratio": 1.0004112914100618,
+    "aa": 0.0019333741923024395
+   },
+   "I1mr": {
+    "port": 61439.666666666664,
+    "v056": 57406.666666666664,
+    "ratio": 1.070253164556962,
+    "aa": 0.08574206961303732
+   },
+   "ILmr": {
+    "port": 4019.6666666666665,
+    "v056": 4009,
+    "ratio": 1.0026606801363598,
+    "aa": 0.0040000000000000036
+   },
+   "D1mr": {
+    "port": 46366645,
+    "v056": 46382290.333333336,
+    "ratio": 0.9996626873485355,
+    "aa": 0.0004394297130911884
+   },
+   "D1mw": {
+    "port": 9194624.666666666,
+    "v056": 9018945.333333334,
+    "ratio": 1.0194789220735194,
+    "aa": 0.015401264191990949
+   },
+   "DLmr": {
+    "port": 357658,
+    "v056": 393193,
+    "ratio": 0.9096245355334404,
+    "aa": 0.3952909000648712
+   },
+   "DLmw": {
+    "port": 1222312.6666666667,
+    "v056": 1198830.3333333333,
+    "ratio": 1.0195877036811716,
+    "aa": 0.07821799867281487
+   },
+   "Bc": {
+    "port": 686987184.6666666,
+    "v056": 684280257.3333334,
+    "ratio": 1.0039558752489546,
+    "aa": 0.012970650942010442
+   },
+   "Bcm": {
+    "port": 19521533.666666668,
+    "v056": 19679654,
+    "ratio": 0.9919652889561305,
+    "aa": 0.016678094797896614
+   },
+   "Bi": {
+    "port": 1076710.3333333333,
+    "v056": 1079292,
+    "ratio": 0.9976079998122225,
+    "aa": 0.015299877600979173
+   },
+   "Bim": {
+    "port": 3495.3333333333335,
+    "v056": 1462,
+    "ratio": 2.3907888736890106,
+    "aa": 0.17240328967407859
+   }
+  },
+  {
+   "corpus": "runs",
+   "threads": "t10",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    40000041,
+    "bf14c34f543d7669"
+   ],
+   "Ir": {
+    "port": 104144105.4,
+    "v056": 104052078.2,
+    "ratio": 1.0008844340410301,
+    "aa": 0.008741675094309453
+   },
+   "I1mr": {
+    "port": 12407.6,
+    "v056": 11866.6,
+    "ratio": 1.0455901437648527,
+    "aa": 0.15547921071176884
+   },
+   "ILmr": {
+    "port": 4338,
+    "v056": 4331.2,
+    "ratio": 1.0015700036941264,
+    "aa": 0.004855491329479822
+   },
+   "D1mr": {
+    "port": 3088690.4,
+    "v056": 3089982.2,
+    "ratio": 0.9995819393393268,
+    "aa": 0.00031699015420172394
+   },
+   "D1mw": {
+    "port": 1508220.6,
+    "v056": 1510751.2,
+    "ratio": 0.9983249392752428,
+    "aa": 0.0015296929290440353
+   },
+   "DLmr": {
+    "port": 185211.4,
+    "v056": 140192.8,
+    "ratio": 1.3211192015567135,
+    "aa": 0.9559860650862435
+   },
+   "DLmw": {
+    "port": 924708.2,
+    "v056": 925845.2,
+    "ratio": 0.9987719329322008,
+    "aa": 0.002924980000368116
+   },
+   "Bc": {
+    "port": 10909996.6,
+    "v056": 10894051.2,
+    "ratio": 1.0014636795538467,
+    "aa": 0.016734022731757614
+   },
+   "Bcm": {
+    "port": 255596.2,
+    "v056": 255696.2,
+    "ratio": 0.9996089108872169,
+    "aa": 0.028149539227106057
+   },
+   "Bi": {
+    "port": 233125.8,
+    "v056": 232782,
+    "ratio": 1.0014769183184267,
+    "aa": 0.017155123167206243
+   },
+   "Bim": {
+    "port": 1418,
+    "v056": 1057.2,
+    "ratio": 1.341278849791903,
+    "aa": 0.08098068350668641
+   }
+  },
+  {
+   "corpus": "runs",
+   "threads": "t20",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    40000041,
+    "bf14c34f543d7669"
+   ],
+   "Ir": {
+    "port": 104663564.8,
+    "v056": 105368558.2,
+    "ratio": 0.9933092621552071,
+    "aa": 0.015777176162784956
+   },
+   "I1mr": {
+    "port": 14109.6,
+    "v056": 13829.8,
+    "ratio": 1.0202316736323014,
+    "aa": 0.14881759301099562
+   },
+   "ILmr": {
+    "port": 4321.6,
+    "v056": 4313.6,
+    "ratio": 1.0018545994065282,
+    "aa": 0.0039507320474088115
+   },
+   "D1mr": {
+    "port": 3089564,
+    "v056": 3091450,
+    "ratio": 0.9993899302916107,
+    "aa": 0.0003714194661976755
+   },
+   "D1mw": {
+    "port": 1510780.6,
+    "v056": 1514097.2,
+    "ratio": 0.9978095197587051,
+    "aa": 0.0016777347340688475
+   },
+   "DLmr": {
+    "port": 185277.8,
+    "v056": 95253.4,
+    "ratio": 1.945104321735497,
+    "aa": 85.85463563525371
+   },
+   "DLmw": {
+    "port": 928208.6,
+    "v056": 927991.6,
+    "ratio": 1.0002338383235365,
+    "aa": 0.0048725568401997155
+   },
+   "Bc": {
+    "port": 11019207.2,
+    "v056": 11184321.8,
+    "ratio": 0.985236959115393,
+    "aa": 0.02854374520054881
+   },
+   "Bcm": {
+    "port": 258229,
+    "v056": 264484,
+    "ratio": 0.9763501761921326,
+    "aa": 0.05455704573082598
+   },
+   "Bi": {
+    "port": 235547.2,
+    "v056": 238358,
+    "ratio": 0.9882076540330093,
+    "aa": 0.029372743159169268
+   },
+   "Bim": {
+    "port": 1515,
+    "v056": 1069.8,
+    "ratio": 1.416152551878856,
+    "aa": 0.16117729502452693
+   }
+  },
+  {
+   "corpus": "runs",
+   "threads": "t8",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    40000041,
+    "bf14c34f543d7669"
+   ],
+   "Ir": {
+    "port": 103783110.2,
+    "v056": 103708744.2,
+    "ratio": 1.0007170658614533,
+    "aa": 0.008864613462512327
+   },
+   "I1mr": {
+    "port": 11343.4,
+    "v056": 11055.2,
+    "ratio": 1.0260691801143353,
+    "aa": 0.19556792209082774
+   },
+   "ILmr": {
+    "port": 4333.8,
+    "v056": 4327.2,
+    "ratio": 1.0015252357182474,
+    "aa": 0.009760632117127521
+   },
+   "D1mr": {
+    "port": 3088394,
+    "v056": 3089728,
+    "ratio": 0.999568246784183,
+    "aa": 0.0003941305955128538
+   },
+   "D1mw": {
+    "port": 1508552.6,
+    "v056": 1510286.2,
+    "ratio": 0.9988521380914426,
+    "aa": 0.0015685795729005747
+   },
+   "DLmr": {
+    "port": 230176.8,
+    "v056": 230162.2,
+    "ratio": 1.0000634335264433,
+    "aa": 1.3034354212848598e-05
+   },
+   "DLmw": {
+    "port": 924243.2,
+    "v056": 924569.6,
+    "ratio": 0.9996469708716358,
+    "aa": 0.0025398543860124523
+   },
+   "Bc": {
+    "port": 10891382.8,
+    "v056": 10835187.6,
+    "ratio": 1.005186361517174,
+    "aa": 0.02224944478954405
+   },
+   "Bcm": {
+    "port": 252162.6,
+    "v056": 253412.2,
+    "ratio": 0.9950689035492372,
+    "aa": 0.02825096137301264
+   },
+   "Bi": {
+    "port": 231089.6,
+    "v056": 231042.6,
+    "ratio": 1.0002034256885959,
+    "aa": 0.017691770050672684
+   },
+   "Bim": {
+    "port": 1336.8,
+    "v056": 1024,
+    "ratio": 1.30546875,
+    "aa": 0.1187800963081862
+   }
+  },
+  {
+   "corpus": "runs",
+   "threads": "w7",
+   "repeats": [
+    3,
+    3
+   ],
+   "out": [
+    40000041,
+    "bf14c34f543d7669"
+   ],
+   "Ir": {
+    "port": 103246308.66666667,
+    "v056": 103444909.33333333,
+    "ratio": 0.998080131077048,
+    "aa": 0.008028266150399421
+   },
+   "I1mr": {
+    "port": 10560.666666666666,
+    "v056": 10516.666666666666,
+    "ratio": 1.0041838351822503,
+    "aa": 0.09697386519944984
+   },
+   "ILmr": {
+    "port": 4065.3333333333335,
+    "v056": 4054.3333333333335,
+    "ratio": 1.0027131464276906,
+    "aa": 0.0034602076124568004
+   },
+   "D1mr": {
+    "port": 3087819,
+    "v056": 3089681.6666666665,
+    "ratio": 0.9993971331458635,
+    "aa": 0.00031139438001126507
+   },
+   "D1mw": {
+    "port": 1506745,
+    "v056": 1510287.3333333333,
+    "ratio": 0.9976545301975651,
+    "aa": 0.0013076502174780291
+   },
+   "DLmr": {
+    "port": 230076.66666666666,
+    "v056": 230058.66666666666,
+    "ratio": 1.000078240912463,
+    "aa": 8.693459910169565e-06
+   },
+   "DLmw": {
+    "port": 923592.3333333334,
+    "v056": 924891,
+    "ratio": 0.9985958705764607,
+    "aa": 0.002486363444393014
+   },
+   "Bc": {
+    "port": 10732836,
+    "v056": 10803588.666666666,
+    "ratio": 0.9934510032869943,
+    "aa": 0.013353355252006205
+   },
+   "Bcm": {
+    "port": 247309.33333333334,
+    "v056": 250182,
+    "ratio": 0.9885176924532274,
+    "aa": 0.028176650346663168
+   },
+   "Bi": {
+    "port": 229058.33333333334,
+    "v056": 229719.66666666666,
+    "ratio": 0.9971211287961125,
+    "aa": 0.015591043068936772
+   },
+   "Bim": {
+    "port": 1225.6666666666667,
+    "v056": 941.6666666666666,
+    "ratio": 1.3015929203539824,
+    "aa": 0.09906063193851411
+   }
+  },
+  {
+   "corpus": "text",
+   "threads": "t10",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    49592843,
+    "8bcf7edd128f8d12"
+   ],
+   "Ir": {
+    "port": 2180283573.2,
+    "v056": 2181844633,
+    "ratio": 0.9992845229323897,
+    "aa": 0.002057933555281055
+   },
+   "I1mr": {
+    "port": 59012.8,
+    "v056": 59831.2,
+    "ratio": 0.9863215178702751,
+    "aa": 0.11070204855289068
+   },
+   "ILmr": {
+    "port": 4355,
+    "v056": 4349,
+    "ratio": 1.0013796275005749,
+    "aa": 0.0029905682079596208
+   },
+   "D1mr": {
+    "port": 50453795,
+    "v056": 50502399.6,
+    "ratio": 0.9990375784044923,
+    "aa": 0.0039633678540409445
+   },
+   "D1mw": {
+    "port": 8265662.2,
+    "v056": 8381713.2,
+    "ratio": 0.9861542625915666,
+    "aa": 0.023806654975650154
+   },
+   "DLmr": {
+    "port": 197916.6,
+    "v056": 209472.4,
+    "ratio": 0.944833782398063,
+    "aa": 0.22744197659523646
+   },
+   "DLmw": {
+    "port": 1806500.8,
+    "v056": 1837908.8,
+    "ratio": 0.9829110127771302,
+    "aa": 0.0978089110745175
+   },
+   "Bc": {
+    "port": 336866381.8,
+    "v056": 337065119.2,
+    "ratio": 0.999410388709245,
+    "aa": 0.007135362453439376
+   },
+   "Bcm": {
+    "port": 8715356.4,
+    "v056": 8724487.4,
+    "ratio": 0.9989534055605376,
+    "aa": 0.0030951520435245072
+   },
+   "Bi": {
+    "port": 2485064.6,
+    "v056": 2491277.6,
+    "ratio": 0.997506098878744,
+    "aa": 0.007432089113925677
+   },
+   "Bim": {
+    "port": 2853.6,
+    "v056": 1342.2,
+    "ratio": 2.1260616897630755,
+    "aa": 0.2864775996711879
+   }
+  },
+  {
+   "corpus": "text",
+   "threads": "t20",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    49592843,
+    "8bcf7edd128f8d12"
+   ],
+   "Ir": {
+    "port": 2188990329,
+    "v056": 2186513196.4,
+    "ratio": 1.0011329145436114,
+    "aa": 0.004546454002565481
+   },
+   "I1mr": {
+    "port": 62888.4,
+    "v056": 56875.8,
+    "ratio": 1.1057145569820557,
+    "aa": 0.11959795650075722
+   },
+   "ILmr": {
+    "port": 4360.4,
+    "v056": 4349.2,
+    "ratio": 1.0025751862411478,
+    "aa": 0.0032161727544222085
+   },
+   "D1mr": {
+    "port": 50505922.8,
+    "v056": 50521455.8,
+    "ratio": 0.9996925464685441,
+    "aa": 0.0040706522876921
+   },
+   "D1mw": {
+    "port": 8309047,
+    "v056": 8395834.4,
+    "ratio": 0.9896630405192365,
+    "aa": 0.024351370958275664
+   },
+   "DLmr": {
+    "port": 208308.4,
+    "v056": 214583.4,
+    "ratio": 0.9707572906385117,
+    "aa": 0.27111672711832324
+   },
+   "DLmw": {
+    "port": 2793375.4,
+    "v056": 2828279.8,
+    "ratio": 0.9876587882146597,
+    "aa": 0.06827966700175736
+   },
+   "Bc": {
+    "port": 339399083.8,
+    "v056": 339148065.4,
+    "ratio": 1.000740143983142,
+    "aa": 0.018695343944884035
+   },
+   "Bcm": {
+    "port": 8744902,
+    "v056": 8716872.6,
+    "ratio": 1.00321553397488,
+    "aa": 0.005025372964799102
+   },
+   "Bi": {
+    "port": 2518010.2,
+    "v056": 2507393.6,
+    "ratio": 1.0042341178505043,
+    "aa": 0.010675281820405447
+   },
+   "Bim": {
+    "port": 3318.8,
+    "v056": 1299,
+    "ratio": 2.5548883756735954,
+    "aa": 0.3166547533952824
+   }
+  },
+  {
+   "corpus": "text",
+   "threads": "t8",
+   "repeats": [
+    5,
+    5
+   ],
+   "out": [
+    49592843,
+    "8bcf7edd128f8d12"
+   ],
+   "Ir": {
+    "port": 2179342918.8,
+    "v056": 2178461207,
+    "ratio": 1.0004047406477412,
+    "aa": 0.0025424539135590063
+   },
+   "I1mr": {
+    "port": 61338.8,
+    "v056": 59195,
+    "ratio": 1.0362158966128896,
+    "aa": 0.08190688120506673
+   },
+   "ILmr": {
+    "port": 4353,
+    "v056": 4345.8,
+    "ratio": 1.0016567720557779,
+    "aa": 0.004144600506562179
+   },
+   "D1mr": {
+    "port": 50515502.6,
+    "v056": 50467684.8,
+    "ratio": 1.0009474934344522,
+    "aa": 0.003060581914149152
+   },
+   "D1mw": {
+    "port": 8324760.4,
+    "v056": 8346312,
+    "ratio": 0.997417829575506,
+    "aa": 0.018707836600733163
+   },
+   "DLmr": {
+    "port": 212991.6,
+    "v056": 220327.6,
+    "ratio": 0.9667041260377729,
+    "aa": 0.18787344710484466
+   },
+   "DLmw": {
+    "port": 1609691.6,
+    "v056": 1584028.6,
+    "ratio": 1.0162010963690933,
+    "aa": 0.08317731566370212
+   },
+   "Bc": {
+    "port": 336898373,
+    "v056": 336094961.4,
+    "ratio": 1.0023904303612687,
+    "aa": 0.011758493932382263
+   },
+   "Bcm": {
+    "port": 8711949.4,
+    "v056": 8712256.8,
+    "ratio": 0.9999647163752106,
+    "aa": 0.004373671139709767
+   },
+   "Bi": {
+    "port": 2476571.6,
+    "v056": 2477751.2,
+    "ratio": 0.9995239231445029,
+    "aa": 0.0069384580825819775
+   },
+   "Bim": {
+    "port": 2758.4,
+    "v056": 1297,
+    "ratio": 2.1267540478026215,
+    "aa": 0.2263443101292204
+   }
+  },
+  {
+   "corpus": "text",
+   "threads": "w7",
+   "repeats": [
+    3,
+    3
+   ],
+   "out": [
+    49592843,
+    "8bcf7edd128f8d12"
+   ],
+   "Ir": {
+    "port": 2177553159.3333335,
+    "v056": 2175368060.3333335,
+    "ratio": 1.0010044732382737,
+    "aa": 0.0014613884692427082
+   },
+   "I1mr": {
+    "port": 61406.666666666664,
+    "v056": 56331.666666666664,
+    "ratio": 1.0900914228231604,
+    "aa": 0.12936270977041087
+   },
+   "ILmr": {
+    "port": 4078.3333333333335,
+    "v056": 4064.3333333333335,
+    "ratio": 1.0034445993602887,
+    "aa": 0.0012312238364935446
+   },
+   "D1mr": {
+    "port": 50470054,
+    "v056": 50463285,
+    "ratio": 1.000134137125635,
+    "aa": 0.0009783490884887058
+   },
+   "D1mw": {
+    "port": 8283467,
+    "v056": 8345724.333333333,
+    "ratio": 0.9925402121078127,
+    "aa": 0.006454378672858363
+   },
+   "DLmr": {
+    "port": 205125.33333333334,
+    "v056": 202875.66666666666,
+    "ratio": 1.01108889352592,
+    "aa": 0.15264249492349968
+   },
+   "DLmw": {
+    "port": 1477938.3333333333,
+    "v056": 1498841.3333333333,
+    "ratio": 0.986053894074623,
+    "aa": 0.07662280861100945
+   },
+   "Bc": {
+    "port": 335783818.6666667,
+    "v056": 334865210.6666667,
+    "ratio": 1.0027432171833293,
+    "aa": 0.003806086426740629
+   },
+   "Bcm": {
+    "port": 8705164.333333334,
+    "v056": 8692143.333333334,
+    "ratio": 1.0014980194758254,
+    "aa": 0.003659376152955973
+   },
+   "Bi": {
+    "port": 2473198.6666666665,
+    "v056": 2466849.6666666665,
+    "ratio": 1.002573727976127,
+    "aa": 0.005092014341206319
+   },
+   "Bim": {
+    "port": 2729.3333333333335,
+    "v056": 1188.3333333333333,
+    "ratio": 2.296774193548387,
+    "aa": 0.11881947106170943
+   }
+  }
+ ],
+ "emit": {
+  "ho-code-l1 t10 #1": [
+   0,
+   0
+  ],
+  "ho-code-l1 t10 #2": [
+   0,
+   0
+  ],
+  "ho-code-l1 t10 #3": [
+   0,
+   0
+  ],
+  "ho-code-l1 t10 #4": [
+   0,
+   0
+  ],
+  "ho-code-l1 t10 #5": [
+   0,
+   0
+  ],
+  "ho-code-l1 t20 #1": [
+   0,
+   0
+  ],
+  "ho-code-l1 t20 #2": [
+   0,
+   0
+  ],
+  "ho-code-l1 t20 #3": [
+   0,
+   0
+  ],
+  "ho-code-l1 t20 #4": [
+   0,
+   0
+  ],
+  "ho-code-l1 t20 #5": [
+   0,
+   0
+  ],
+  "ho-code-l1 t8 #1": [
+   0,
+   0
+  ],
+  "ho-code-l1 t8 #2": [
+   0,
+   0
+  ],
+  "ho-code-l1 t8 #3": [
+   0,
+   0
+  ],
+  "ho-code-l1 t8 #4": [
+   0,
+   0
+  ],
+  "ho-code-l1 t8 #5": [
+   0,
+   0
+  ],
+  "ho-code-l1 w7 #1": [
+   0,
+   0
+  ],
+  "ho-code-l1 w7 #2": [
+   0,
+   0
+  ],
+  "ho-code-l1 w7 #3": [
+   0,
+   0
+  ],
+  "ho-code-l9 t10 #1": [
+   0,
+   0
+  ],
+  "ho-code-l9 t10 #2": [
+   0,
+   0
+  ],
+  "ho-code-l9 t10 #3": [
+   0,
+   0
+  ],
+  "ho-code-l9 t10 #4": [
+   0,
+   0
+  ],
+  "ho-code-l9 t10 #5": [
+   0,
+   0
+  ],
+  "ho-code-l9 t20 #1": [
+   0,
+   0
+  ],
+  "ho-code-l9 t20 #2": [
+   0,
+   0
+  ],
+  "ho-code-l9 t20 #3": [
+   0,
+   0
+  ],
+  "ho-code-l9 t20 #4": [
+   0,
+   0
+  ],
+  "ho-code-l9 t20 #5": [
+   0,
+   0
+  ],
+  "ho-code-l9 t8 #1": [
+   0,
+   0
+  ],
+  "ho-code-l9 t8 #2": [
+   0,
+   0
+  ],
+  "ho-code-l9 t8 #3": [
+   0,
+   0
+  ],
+  "ho-code-l9 t8 #4": [
+   0,
+   0
+  ],
+  "ho-code-l9 t8 #5": [
+   0,
+   0
+  ],
+  "ho-code-l9 w7 #1": [
+   0,
+   0
+  ],
+  "ho-code-l9 w7 #2": [
+   0,
+   0
+  ],
+  "ho-code-l9 w7 #3": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t10 #1": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t10 #2": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t10 #3": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t10 #4": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t10 #5": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t20 #1": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t20 #2": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t20 #3": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t20 #4": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t20 #5": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t8 #1": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t8 #2": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t8 #3": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t8 #4": [
+   0,
+   0
+  ],
+  "ho-prose-l9 t8 #5": [
+   0,
+   0
+  ],
+  "ho-prose-l9 w7 #1": [
+   0,
+   0
+  ],
+  "ho-prose-l9 w7 #2": [
+   0,
+   0
+  ],
+  "ho-prose-l9 w7 #3": [
+   0,
+   0
+  ],
+  "onebyte t10 #1": [
+   0,
+   0
+  ],
+  "onebyte t10 #2": [
+   0,
+   0
+  ],
+  "onebyte t10 #3": [
+   0,
+   0
+  ],
+  "onebyte t10 #4": [
+   0,
+   0
+  ],
+  "onebyte t10 #5": [
+   0,
+   0
+  ],
+  "onebyte t20 #1": [
+   0,
+   0
+  ],
+  "onebyte t20 #2": [
+   0,
+   0
+  ],
+  "onebyte t20 #3": [
+   0,
+   0
+  ],
+  "onebyte t20 #4": [
+   0,
+   0
+  ],
+  "onebyte t20 #5": [
+   0,
+   0
+  ],
+  "onebyte t8 #1": [
+   0,
+   0
+  ],
+  "onebyte t8 #2": [
+   0,
+   0
+  ],
+  "onebyte t8 #3": [
+   0,
+   0
+  ],
+  "onebyte t8 #4": [
+   0,
+   0
+  ],
+  "onebyte t8 #5": [
+   0,
+   0
+  ],
+  "onebyte w7 #1": [
+   0,
+   0
+  ],
+  "onebyte w7 #2": [
+   0,
+   0
+  ],
+  "onebyte w7 #3": [
+   0,
+   0
+  ],
+  "pattern t10 #1": [
+   0,
+   0
+  ],
+  "pattern t10 #2": [
+   0,
+   0
+  ],
+  "pattern t10 #3": [
+   0,
+   0
+  ],
+  "pattern t10 #4": [
+   0,
+   0
+  ],
+  "pattern t10 #5": [
+   0,
+   0
+  ],
+  "pattern t20 #1": [
+   0,
+   0
+  ],
+  "pattern t20 #2": [
+   0,
+   0
+  ],
+  "pattern t20 #3": [
+   0,
+   0
+  ],
+  "pattern t20 #4": [
+   0,
+   0
+  ],
+  "pattern t20 #5": [
+   0,
+   0
+  ],
+  "pattern t8 #1": [
+   0,
+   0
+  ],
+  "pattern t8 #2": [
+   0,
+   0
+  ],
+  "pattern t8 #3": [
+   0,
+   0
+  ],
+  "pattern t8 #4": [
+   0,
+   0
+  ],
+  "pattern t8 #5": [
+   0,
+   0
+  ],
+  "pattern w7 #1": [
+   0,
+   0
+  ],
+  "pattern w7 #2": [
+   0,
+   0
+  ],
+  "pattern w7 #3": [
+   0,
+   0
+  ],
+  "random t10 #1": [
+   0,
+   0
+  ],
+  "random t10 #2": [
+   0,
+   0
+  ],
+  "random t10 #3": [
+   0,
+   0
+  ],
+  "random t10 #4": [
+   0,
+   0
+  ],
+  "random t10 #5": [
+   0,
+   0
+  ],
+  "random t20 #1": [
+   0,
+   0
+  ],
+  "random t20 #2": [
+   0,
+   0
+  ],
+  "random t20 #3": [
+   0,
+   0
+  ],
+  "random t20 #4": [
+   0,
+   0
+  ],
+  "random t20 #5": [
+   0,
+   0
+  ],
+  "random t8 #1": [
+   0,
+   0
+  ],
+  "random t8 #2": [
+   0,
+   0
+  ],
+  "random t8 #3": [
+   0,
+   0
+  ],
+  "random t8 #4": [
+   0,
+   0
+  ],
+  "random t8 #5": [
+   0,
+   0
+  ],
+  "random w7 #1": [
+   0,
+   0
+  ],
+  "random w7 #2": [
+   0,
+   0
+  ],
+  "random w7 #3": [
+   0,
+   0
+  ],
+  "records t10 #1": [
+   0,
+   0
+  ],
+  "records t10 #2": [
+   0,
+   0
+  ],
+  "records t10 #3": [
+   0,
+   0
+  ],
+  "records t10 #4": [
+   0,
+   0
+  ],
+  "records t10 #5": [
+   0,
+   0
+  ],
+  "records t20 #1": [
+   0,
+   0
+  ],
+  "records t20 #2": [
+   0,
+   0
+  ],
+  "records t20 #3": [
+   0,
+   0
+  ],
+  "records t20 #4": [
+   0,
+   0
+  ],
+  "records t20 #5": [
+   0,
+   0
+  ],
+  "records t8 #1": [
+   0,
+   0
+  ],
+  "records t8 #2": [
+   0,
+   0
+  ],
+  "records t8 #3": [
+   0,
+   0
+  ],
+  "records t8 #4": [
+   0,
+   0
+  ],
+  "records t8 #5": [
+   0,
+   0
+  ],
+  "records w7 #1": [
+   0,
+   0
+  ],
+  "records w7 #2": [
+   0,
+   0
+  ],
+  "records w7 #3": [
+   0,
+   0
+  ],
+  "runs t10 #1": [
+   0,
+   0
+  ],
+  "runs t10 #2": [
+   0,
+   0
+  ],
+  "runs t10 #3": [
+   0,
+   0
+  ],
+  "runs t10 #4": [
+   0,
+   0
+  ],
+  "runs t10 #5": [
+   0,
+   0
+  ],
+  "runs t20 #1": [
+   0,
+   0
+  ],
+  "runs t20 #2": [
+   0,
+   0
+  ],
+  "runs t20 #3": [
+   0,
+   0
+  ],
+  "runs t20 #4": [
+   0,
+   0
+  ],
+  "runs t20 #5": [
+   0,
+   0
+  ],
+  "runs t8 #1": [
+   0,
+   0
+  ],
+  "runs t8 #2": [
+   0,
+   0
+  ],
+  "runs t8 #3": [
+   0,
+   0
+  ],
+  "runs t8 #4": [
+   0,
+   0
+  ],
+  "runs t8 #5": [
+   0,
+   0
+  ],
+  "runs w7 #1": [
+   0,
+   0
+  ],
+  "runs w7 #2": [
+   0,
+   0
+  ],
+  "runs w7 #3": [
+   0,
+   0
+  ],
+  "text t10 #1": [
+   0,
+   0
+  ],
+  "text t10 #2": [
+   0,
+   0
+  ],
+  "text t10 #3": [
+   0,
+   0
+  ],
+  "text t10 #4": [
+   0,
+   0
+  ],
+  "text t10 #5": [
+   0,
+   0
+  ],
+  "text t20 #1": [
+   0,
+   0
+  ],
+  "text t20 #2": [
+   0,
+   0
+  ],
+  "text t20 #3": [
+   0,
+   0
+  ],
+  "text t20 #4": [
+   0,
+   0
+  ],
+  "text t20 #5": [
+   0,
+   0
+  ],
+  "text t8 #1": [
+   0,
+   0
+  ],
+  "text t8 #2": [
+   0,
+   0
+  ],
+  "text t8 #3": [
+   0,
+   0
+  ],
+  "text t8 #4": [
+   0,
+   0
+  ],
+  "text t8 #5": [
+   0,
+   0
+  ],
+  "text w7 #1": [
+   0,
+   0
+  ],
+  "text w7 #2": [
+   0,
+   0
+  ],
+  "text w7 #3": [
+   0,
+   0
+  ]
+ }
+}

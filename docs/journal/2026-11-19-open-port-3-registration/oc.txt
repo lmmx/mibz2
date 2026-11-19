@@ -1,0 +1,28 @@
+B1: 27 cells, 16 rounds; residual sd per cell (12 first-attempt rounds), median 0.0363, max 0.1260
+  [own] no effect: pooled bound fails 0.015; any flag 0.035
+  [own] every cell +0.5%: pooled bound fails 0.449; any flag 0.052
+  [own] every cell +1.0%: pooled bound fails 0.967; any flag 0.085
+  [own] every cell +1.5%: pooled bound fails 1.000; any flag 0.221
+  [part] no effect: pooled bound fails 0.017; any flag 0.000
+  [part] every cell +0.5%: pooled bound fails 0.428; any flag 0.000
+  [part] every cell +1.0%: pooled bound fails 0.970; any flag 0.000
+  [part] every cell +1.5%: pooled bound fails 1.000; any flag 0.003
+  [own] random 20t alone +2% (sd 0.0109): its flag 0.008; pooled bound fails 0.029
+  [own] random 20t alone +5% (sd 0.0109): its flag 1.000; pooled bound fails 0.082
+  [own] ho-code-l9 10t alone +2% (sd 0.1260): its flag 0.071; pooled bound fails 0.026
+  [own] ho-code-l9 10t alone +5% (sd 0.1260): its flag 0.203; pooled bound fails 0.080
+  a single cell's slowdown for 80% flag power: text 8t x1.073, random 8t x1.037, records 8t x1.039, runs 8t x1.105, pattern 8t x1.064, onebyte 8t x1.060, ho-code-l1 8t x1.113, ho-code-l9 8t x1.053, ho-prose-l9 8t x1.070, text 10t x1.073, random 10t x1.065, records 10t x1.053, runs 10t x1.076, pattern 10t x1.053, onebyte 10t x1.060, ho-code-l1 10t x1.122, ho-code-l9 10t x1.167, ho-prose-l9 10t x1.036, text 20t x1.046, random 20t x1.032, records 20t x1.036, runs 20t x1.125, pattern 20t x1.059, onebyte 20t x1.047, ho-code-l1 20t x1.131, ho-code-l9 20t x1.082, ho-prose-l9 20t x1.040
+B2: 12 cells, 16 rounds; residual sd per cell (12 first-attempt rounds), median 0.0402, max 0.0753
+  [own] no effect: pooled bound fails 0.073; any flag 0.000
+  [own] every cell +0.5%: pooled bound fails 0.555; any flag 0.000
+  [own] every cell +1.0%: pooled bound fails 0.968; any flag 0.054
+  [own] every cell +1.5%: pooled bound fails 1.000; any flag 0.073
+  [part] no effect: pooled bound fails 0.070; any flag 0.000
+  [part] every cell +0.5%: pooled bound fails 0.588; any flag 0.000
+  [part] every cell +1.0%: pooled bound fails 0.968; any flag 0.000
+  [part] every cell +1.5%: pooled bound fails 1.000; any flag 0.003
+  [own] ho-wikidata-l1 8t alone +2% (sd 0.0114): its flag 0.067; pooled bound fails 0.187
+  [own] ho-wikidata-l1 8t alone +5% (sd 0.0114): its flag 1.000; pooled bound fails 0.463
+  [own] ho-prose-l1 10t alone +2% (sd 0.0753): its flag 0.001; pooled bound fails 0.179
+  [own] ho-prose-l1 10t alone +5% (sd 0.0753): its flag 0.042; pooled bound fails 0.469
+  a single cell's slowdown for 80% flag power: ho-wikidata-l1 8t x1.031, ho-structured-l1 8t x1.058, ho-structured-l9 8t x1.063, ho-prose-l1 8t x1.069, ho-wikidata-l1 10t x1.040, ho-structured-l1 10t x1.070, ho-structured-l9 10t x1.063, ho-prose-l1 10t x1.097, ho-wikidata-l1 20t x1.051, ho-structured-l1 20t x1.056, ho-structured-l9 20t x1.036, ho-prose-l1 20t x1.075

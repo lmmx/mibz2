@@ -81,6 +81,8 @@ jobs:
         run: python3 bench/test_opend_sweep.py
       - name: The open port's adoption verdict (bench/open_port.py)
         run: python3 bench/test_open_port.py
+      - name: open-port-3's verdict (bench/open_port3.py)
+        run: python3 bench/test_open_port3.py
       # the counters' reader (`bench/counters.py`; `just bench-w12`'s L2 diagnostic), driven
       # with a stub perf and child: a complete run read, and every defect leaves no report
       - name: The counters reader (stub perf)

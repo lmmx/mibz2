@@ -1,0 +1,12 @@
+    51,108,238 std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::open::OpenCel
+    32,017,538 mibz2::open::emit
+    28,014,271 <mibz2::open::Kernel>::induced
+        12,987 core::ptr::drop_glue::<mibz2::open::Kernel>
+         4,488 <alloc::raw_vec::RawVec<mibz2::open::Strip>>::grow_one
+         2,448 <alloc::raw_vec::RawVec<mibz2::open::endpoint::Node>>::grow_one
+         2,160 <alloc::raw_vec::RawVec<mibz2::open::Band>>::grow_one
+           912 <mibz2::Scratch<mibz2::open::OpenCellsOf<false>> as core::default::Default>::default
+           322 core::ptr::drop_glue::<mibz2::Scratch<mibz2::open::OpenCellsOf<false>>>
+           320 <std::thread::lifecycle::spawn_unchecked<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDecoder>::with_inverse<mibz2::open::OpenCellsOf<false>
+total {'Ir': 200634485, 'I1mr': 12895, 'ILmr': 4319, 'Dr': 51869975, 'D1mr': 1841515, 'DLmr': 11195, 'Dw': 33918865, 'D1mw': 1071838, 'DLmw': 536244, 'Bc': 47542528, 'Bcm': 1279195, 'Bi': 265656, 'Bim': 1259}
+{"wall":1.3114,"cpu":1.5363,"rss_kb":120000,"out":9000000,"hash":"074024e9ea5f60f5","threads_busy":6,"thread_cpu":"main=0.56 mibz2-0=0.11 mibz2-1=0.10 mibz2-scan=0.07 mibz2-2=0.07 mibz2-4=0.05","runq_s":0.2296,"sampler_s":0.0780,"sampler_cpus":"pinned","schema":"ab-child/2","err_kind":null,"err_block":null,"sha256":null,"err":""}

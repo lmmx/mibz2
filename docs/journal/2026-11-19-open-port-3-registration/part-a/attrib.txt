@@ -1,0 +1,144 @@
+ho-code-l1 t10: CEst x1.00044 (A/A spread port 0.721%, v0.5.6 0.169%)
+  decoder: CEst 1.0006  Ir 1.0000  I1mr 0.9199  ILmr 1.0396  D1mr 0.9999  D1mw 1.0010  DLmr 1.0097  DLmw 1.0502  Bc 1.0000  Bcm 0.9960  Bi 0.9987  Bim 1.0362
+  harness: CEst 0.9159  Ir 0.9024  I1mr 1.0854  ILmr 1.0063  D1mr 0.9997  D1mw 0.9472  DLmr 1.0079  DLmw 0.9220  Bc 0.8517  Bcm 0.8170  Bi 0.8115  Bim 3.2927
+  runtime: CEst 1.0108  Ir 0.9984  I1mr 0.9292  ILmr 0.9968  D1mr 1.0105  D1mw 1.0112  DLmr 1.0123  DLmw 1.0560  Bc 1.0266  Bcm 0.9845  Bi 0.8973  Bim 1.0929
+ho-code-l1 t20: CEst x1.00205 (A/A spread port 0.621%, v0.5.6 1.499%)
+  decoder: CEst 1.0000  Ir 1.0001  I1mr 1.0085  ILmr 1.0165  D1mr 0.9999  D1mw 0.9989  DLmr 1.0323  DLmw 1.0075  Bc 1.0001  Bcm 0.9958  Bi 1.0020  Bim 1.1053
+  harness: CEst 1.0480  Ir 1.0505  I1mr 1.3130  ILmr 1.0041  D1mr 1.0013  D1mw 1.0430  DLmr 0.9974  DLmw 1.1587  Bc 1.0819  Bcm 1.1209  Bi 1.1077  Bim 4.0729
+  runtime: CEst 1.0116  Ir 1.0213  I1mr 1.0245  ILmr 0.9981  D1mr 0.9965  D1mw 1.0086  DLmr 0.9697  DLmw 1.0068  Bc 1.0202  Bcm 1.0049  Bi 1.0450  Bim 1.1666
+ho-code-l1 t8: CEst x1.00130 (A/A spread port 0.646%, v0.5.6 0.308%)
+  decoder: CEst 1.0007  Ir 1.0001  I1mr 0.9856  ILmr 1.0252  D1mr 1.0000  D1mw 1.0012  DLmr 1.0080  DLmw 1.0543  Bc 1.0001  Bcm 0.9967  Bi 1.0027  Bim 1.0733
+  harness: CEst 0.9596  Ir 0.9523  I1mr 1.0673  ILmr 1.0027  D1mr 1.0004  D1mw 0.9186  DLmr 0.9940  DLmw 0.8512  Bc 0.9228  Bcm 0.8939  Bi 0.8938  Bim 3.1660
+  runtime: CEst 1.0122  Ir 1.0031  I1mr 0.9433  ILmr 0.9972  D1mr 1.0056  D1mw 1.0101  DLmr 0.9898  DLmw 1.0589  Bc 1.0183  Bcm 0.9942  Bi 0.9470  Bim 1.0971
+ho-code-l1 w7: CEst x0.99992 (A/A spread port 0.427%, v0.5.6 0.348%)
+  decoder: CEst 0.9985  Ir 1.0007  I1mr 1.0905  ILmr 1.0126  D1mr 1.0010  D1mw 0.9984  DLmr 1.0015  DLmw 0.8761  Bc 1.0006  Bcm 0.9976  Bi 1.0262  Bim 1.1970
+  harness: CEst 1.0394  Ir 1.0425  I1mr 1.2787  ILmr 1.0103  D1mr 1.0019  D1mw 1.0197  DLmr 1.0220  DLmw 0.9026  Bc 1.0746  Bcm 1.1083  Bi 1.1107  Bim 3.5886
+  runtime: CEst 1.0077  Ir 1.0096  I1mr 1.0643  ILmr 0.9964  D1mr 1.0031  D1mw 1.0172  DLmr 0.9429  DLmw 1.0189  Bc 1.0110  Bcm 1.0153  Bi 1.0297  Bim 1.1274
+ho-code-l9 t10: CEst x0.99892 (A/A spread port 1.873%, v0.5.6 2.639%)
+  decoder: CEst 1.0035  Ir 1.0001  I1mr 1.0580  ILmr 1.0179  D1mr 0.9998  D1mw 0.9829  DLmr 1.0553  DLmw 1.0300  Bc 1.0001  Bcm 1.0004  Bi 1.0029  Bim 1.1139
+  harness: CEst 0.9905  Ir 0.9874  I1mr 1.1584  ILmr 1.0063  D1mr 1.0000  D1mw 0.9966  DLmr 0.9721  DLmw 0.9072  Bc 0.9755  Bcm 0.9664  Bi 0.9580  Bim 2.6100
+  runtime: CEst 0.9556  Ir 0.9674  I1mr 1.0142  ILmr 0.9973  D1mr 0.9163  D1mw 0.9470  DLmr 0.8559  DLmw 0.9658  Bc 0.9473  Bcm 0.9944  Bi 0.9874  Bim 1.1055
+ho-code-l9 t20: CEst x0.99807 (A/A spread port 2.284%, v0.5.6 2.955%)
+  decoder: CEst 0.9917  Ir 1.0000  I1mr 0.9661  ILmr 1.0225  D1mr 0.9997  D1mw 0.9823  DLmr 1.0590  DLmw 0.9461  Bc 1.0000  Bcm 1.0003  Bi 0.9986  Bim 1.0857
+  harness: CEst 0.9869  Ir 0.9841  I1mr 1.0238  ILmr 1.0039  D1mr 0.9996  D1mw 0.9517  DLmr 0.9447  DLmw 1.0138  Bc 0.9703  Bcm 0.9377  Bi 0.9512  Bim 3.0690
+  runtime: CEst 1.0644  Ir 1.0382  I1mr 0.9378  ILmr 0.9970  D1mr 1.1074  D1mw 1.0920  DLmr 1.2435  DLmw 1.0622  Bc 1.0664  Bcm 0.9964  Bi 0.9821  Bim 1.1323
+ho-code-l9 t8: CEst x0.99698 (A/A spread port 2.176%, v0.5.6 2.883%)
+  decoder: CEst 0.9993  Ir 1.0000  I1mr 0.9561  ILmr 1.0170  D1mr 0.9997  D1mw 0.9829  DLmr 1.0464  DLmw 0.9974  Bc 1.0000  Bcm 1.0003  Bi 1.0007  Bim 1.1062
+  harness: CEst 1.0601  Ir 1.0703  I1mr 1.2187  ILmr 1.0078  D1mr 1.0003  D1mw 1.0764  DLmr 0.9842  DLmw 0.9398  Bc 1.1467  Bcm 1.2810  Bi 1.2935  Bim 2.8870
+  runtime: CEst 0.9666  Ir 0.9993  I1mr 0.9931  ILmr 0.9961  D1mr 0.9532  D1mw 0.9739  DLmr 0.9387  DLmw 0.9350  Bc 0.9826  Bcm 1.0072  Bi 1.1237  Bim 1.1112
+ho-code-l9 w7: CEst x1.00950 (A/A spread port 2.328%, v0.5.6 1.509%)
+  decoder: CEst 0.9981  Ir 1.0000  I1mr 0.9884  ILmr 1.0274  D1mr 0.9997  D1mw 0.9829  DLmr 1.0422  DLmw 0.9864  Bc 1.0000  Bcm 1.0002  Bi 0.9993  Bim 1.1562
+  harness: CEst 1.0309  Ir 1.0351  I1mr 1.2061  ILmr 1.0118  D1mr 0.9999  D1mw 1.0090  DLmr 1.0000  DLmw 0.9061  Bc 1.0717  Bcm 1.1448  Bi 1.1356  Bim 2.9664
+  runtime: CEst 1.1193  Ir 1.0700  I1mr 1.0235  ILmr 0.9996  D1mr 1.1170  D1mw 1.0940  DLmr 1.2381  DLmw 1.1693  Bc 1.0825  Bcm 1.0103  Bi 1.0981  Bim 1.1311
+ho-prose-l9 t10: CEst x1.00313 (A/A spread port 1.110%, v0.5.6 0.980%)
+  decoder: CEst 1.0015  Ir 1.0000  I1mr 1.0002  ILmr 1.0163  D1mr 1.0001  D1mw 1.0049  DLmr 1.9674  DLmw 1.0264  Bc 1.0000  Bcm 0.9917  Bi 1.0014  Bim 1.0384
+  harness: CEst 1.0141  Ir 1.0153  I1mr 1.2093  ILmr 1.0036  D1mr 0.9999  D1mw 0.9942  DLmr 1.0000  DLmw 0.9695  Bc 1.0322  Bcm 1.0714  Bi 1.0633  Bim 3.8061
+  runtime: CEst 1.0205  Ir 1.0291  I1mr 1.0265  ILmr 0.9962  D1mr 1.0020  D1mw 1.0112  DLmr 1.0273  DLmw 1.0191  Bc 1.0345  Bcm 1.0056  Bi 1.0570  Bim 1.1405
+ho-prose-l9 t20: CEst x0.99937 (A/A spread port 1.877%, v0.5.6 1.746%)
+  decoder: CEst 0.9994  Ir 1.0000  I1mr 1.0142  ILmr 1.0206  D1mr 1.0001  D1mw 1.0044  DLmr 0.0184  DLmw 1.0024  Bc 1.0000  Bcm 0.9931  Bi 0.9997  Bim 1.0805
+  harness: CEst 0.9940  Ir 0.9921  I1mr 1.0832  ILmr 1.0053  D1mr 1.0000  D1mw 1.0293  DLmr 0.9794  DLmw 1.0275  Bc 0.9845  Bcm 0.9617  Bi 0.9716  Bim 4.4753
+  runtime: CEst 1.0002  Ir 0.9972  I1mr 0.9965  ILmr 0.9985  D1mr 0.9902  D1mw 1.0036  DLmr 0.9882  DLmw 1.0077  Bc 1.0051  Bcm 0.9784  Bi 0.9695  Bim 1.1536
+ho-prose-l9 t8: CEst x1.00522 (A/A spread port 1.723%, v0.5.6 0.842%)
+  decoder: CEst 1.0005  Ir 1.0000  I1mr 0.9815  ILmr 1.0172  D1mr 1.0001  D1mw 1.0057  DLmr 0.5087  DLmw 1.0270  Bc 1.0000  Bcm 0.9899  Bi 1.0019  Bim 1.0525
+  harness: CEst 0.9881  Ir 0.9848  I1mr 1.1516  ILmr 1.0084  D1mr 0.9997  D1mw 0.9410  DLmr 0.9920  DLmw 0.9184  Bc 0.9689  Bcm 0.9405  Bi 0.9374  Bim 3.6165
+  runtime: CEst 1.0664  Ir 1.0249  I1mr 0.9991  ILmr 0.9975  D1mr 1.0387  D1mw 1.0451  DLmr 1.0478  DLmw 1.1413  Bc 1.0313  Bcm 0.9998  Bi 0.9707  Bim 1.1355
+ho-prose-l9 w7: CEst x1.00276 (A/A spread port 0.836%, v0.5.6 0.344%)
+  decoder: CEst 0.9985  Ir 1.0000  I1mr 1.0123  ILmr 1.0257  D1mr 1.0001  D1mw 1.0053  DLmr 0.0102  DLmw 0.9903  Bc 1.0000  Bcm 0.9963  Bi 1.0028  Bim 1.0886
+  harness: CEst 1.0250  Ir 1.0281  I1mr 1.2738  ILmr 1.0108  D1mr 1.0001  D1mw 1.0848  DLmr 0.9944  DLmw 0.9752  Bc 1.0602  Bcm 1.1304  Bi 1.1433  Bim 4.0851
+  runtime: CEst 1.0514  Ir 1.0234  I1mr 1.0942  ILmr 0.9949  D1mr 1.0197  D1mw 1.0305  DLmr 1.0375  DLmw 1.1049  Bc 1.0220  Bcm 0.9992  Bi 1.0794  Bim 1.1635
+onebyte t10: CEst x0.98651 (A/A spread port 5.358%, v0.5.6 8.365%)
+  decoder: CEst 0.9874  Ir 1.0000  I1mr 1.0100  ILmr 1.0130  D1mr 1.0000  D1mw 1.0044  DLmr 0.9704  DLmw 0.9991  Bc 1.0000  Bcm 1.0013  Bi 1.0000  Bim 0.9663
+  harness: CEst 0.9990  Ir 0.9986  I1mr 1.1009  ILmr 1.0054  D1mr 1.0000  D1mw 1.0038  DLmr 0.9869  DLmw 1.0064  Bc 0.9962  Bcm 0.9508  Bi 0.9642  Bim 2.1245
+  runtime: CEst 0.9825  Ir 0.9961  I1mr 0.9748  ILmr 0.9971  D1mr 0.9986  D1mw 0.9999  DLmr 1.0058  DLmw 0.9751  Bc 0.9904  Bcm 0.9774  Bi 0.9707  Bim 1.0915
+onebyte t20: CEst x0.99713 (A/A spread port 12.308%, v0.5.6 19.378%)
+  decoder: CEst 0.9861  Ir 1.0000  I1mr 1.1024  ILmr 1.0183  D1mr 1.0001  D1mw 1.0053  DLmr 0.9622  DLmw 1.0023  Bc 1.0001  Bcm 1.0011  Bi 1.0001  Bim 0.9723
+  harness: CEst 1.0022  Ir 1.0023  I1mr 1.2510  ILmr 1.0024  D1mr 1.0000  D1mw 1.0632  DLmr 0.9748  DLmw 1.0211  Bc 1.0063  Bcm 1.0417  Bi 1.0484  Bim 2.8221
+  runtime: CEst 1.0046  Ir 1.0057  I1mr 1.0244  ILmr 0.9976  D1mr 1.0003  D1mw 1.0002  DLmr 1.0171  DLmw 1.0055  Bc 1.0043  Bcm 1.0368  Bi 1.0376  Bim 1.1453
+onebyte t8: CEst x0.96576 (A/A spread port 8.916%, v0.5.6 4.965%)
+  decoder: CEst 0.9739  Ir 1.0000  I1mr 1.0806  ILmr 1.0132  D1mr 1.0001  D1mw 1.0045  DLmr 0.9426  DLmw 0.9887  Bc 1.0000  Bcm 1.0014  Bi 1.0000  Bim 0.9728
+  harness: CEst 0.9998  Ir 0.9997  I1mr 1.0853  ILmr 1.0054  D1mr 1.0000  D1mw 0.9994  DLmr 0.9980  DLmw 1.0470  Bc 0.9990  Bcm 0.9775  Bi 0.9892  Bim 2.0212
+  runtime: CEst 0.9496  Ir 0.9982  I1mr 1.0128  ILmr 0.9946  D1mr 1.0000  D1mw 0.9999  DLmr 1.0061  DLmw 0.9263  Bc 0.9928  Bcm 0.9928  Bi 0.9937  Bim 1.0777
+onebyte w7: CEst x0.99546 (A/A spread port 1.347%, v0.5.6 0.669%)
+  decoder: CEst 1.0001  Ir 1.0000  I1mr 1.0745  ILmr 1.0259  D1mr 1.0000  D1mw 1.0043  DLmr 1.0000  DLmw 1.0005  Bc 1.0000  Bcm 1.0010  Bi 1.0000  Bim 0.9749
+  harness: CEst 1.0013  Ir 1.0014  I1mr 1.1764  ILmr 1.0083  D1mr 1.0000  D1mw 1.0201  DLmr 0.9783  DLmw 1.1063  Bc 1.0039  Bcm 1.0229  Bi 1.0483  Bim 2.1524
+  runtime: CEst 0.9895  Ir 0.9988  I1mr 1.0340  ILmr 0.9943  D1mr 1.0000  D1mw 0.9995  DLmr 1.0054  DLmw 0.9845  Bc 0.9797  Bcm 1.0105  Bi 1.0304  Bim 1.0881
+pattern t10: CEst x1.00065 (A/A spread port 0.273%, v0.5.6 0.247%)
+  decoder: CEst 1.0002  Ir 1.0000  I1mr 1.0094  ILmr 1.0138  D1mr 1.0000  D1mw 1.0037  DLmr 1.0616  DLmw 1.0001  Bc 1.0000  Bcm 1.0007  Bi 1.0016  Bim 1.3047
+  harness: CEst 1.0006  Ir 0.9997  I1mr 1.2404  ILmr 1.0054  D1mr 1.0000  D1mw 0.9574  DLmr 0.9786  DLmw 0.9082  Bc 0.9993  Bcm 1.0070  Bi 0.9976  Bim 4.0660
+  runtime: CEst 1.0039  Ir 1.0008  I1mr 1.0380  ILmr 0.9981  D1mr 1.0131  D1mw 1.0006  DLmr 1.0056  DLmw 1.0124  Bc 1.0004  Bcm 1.0087  Bi 1.0018  Bim 1.2529
+pattern t20: CEst x0.99270 (A/A spread port 1.388%, v0.5.6 1.689%)
+  decoder: CEst 0.9965  Ir 1.0000  I1mr 0.9913  ILmr 1.0211  D1mr 0.9993  D1mw 1.0037  DLmr 1.1097  DLmw 0.9772  Bc 1.0000  Bcm 1.0007  Bi 0.9988  Bim 1.0193
+  harness: CEst 1.0018  Ir 1.0019  I1mr 1.1214  ILmr 0.9918  D1mr 0.9999  D1mw 1.0117  DLmr 0.9250  DLmw 0.9651  Bc 1.0050  Bcm 1.0184  Bi 1.0164  Bim 2.6786
+  runtime: CEst 0.9651  Ir 0.9993  I1mr 1.0287  ILmr 0.9913  D1mr 1.0067  D1mw 0.9980  DLmr 0.6351  DLmw 0.9866  Bc 0.9993  Bcm 1.0039  Bi 1.0026  Bim 1.1768
+pattern t8: CEst x1.00111 (A/A spread port 0.144%, v0.5.6 0.209%)
+  decoder: CEst 1.0002  Ir 1.0000  I1mr 1.0388  ILmr 1.0185  D1mr 0.9998  D1mw 1.0037  DLmr 1.0412  DLmw 1.0000  Bc 1.0000  Bcm 1.0008  Bi 1.0009  Bim 1.4805
+  harness: CEst 1.0162  Ir 1.0181  I1mr 1.3065  ILmr 1.0066  D1mr 1.0001  D1mw 1.1072  DLmr 0.9741  DLmw 1.0289  Bc 1.0424  Bcm 1.1191  Bi 1.1234  Bim 4.7982
+  runtime: CEst 1.0031  Ir 1.0039  I1mr 1.1025  ILmr 0.9967  D1mr 1.0126  D1mw 0.9998  DLmr 1.0061  DLmw 0.9980  Bc 1.0008  Bcm 0.9779  Bi 1.0690  Bim 1.3092
+pattern w7: CEst x1.00018 (A/A spread port 0.165%, v0.5.6 0.185%)
+  decoder: CEst 1.0002  Ir 1.0000  I1mr 1.0036  ILmr 1.0327  D1mr 0.9999  D1mw 1.0037  DLmr 1.0456  DLmw 1.0000  Bc 1.0000  Bcm 1.0007  Bi 1.0000  Bim 1.5589
+  harness: CEst 0.9974  Ir 0.9960  I1mr 1.1913  ILmr 1.0108  D1mr 1.0001  D1mw 0.9517  DLmr 0.9944  DLmw 0.9854  Bc 0.9908  Bcm 0.9654  Bi 0.9734  Bim 4.4492
+  runtime: CEst 1.0007  Ir 0.9978  I1mr 1.0450  ILmr 0.9975  D1mr 1.0134  D1mw 0.9998  DLmr 1.0048  DLmw 1.0072  Bc 0.9996  Bcm 0.9887  Bi 0.9804  Bim 1.2939
+random t10: CEst x0.99848 (A/A spread port 0.136%, v0.5.6 0.431%)
+  decoder: CEst 0.9996  Ir 1.0000  I1mr 0.9790  ILmr 1.0165  D1mr 1.0003  D1mw 1.0198  DLmr 0.6626  DLmw 0.9941  Bc 1.0000  Bcm 0.9946  Bi 0.9998  Bim 0.9823
+  harness: CEst 0.9844  Ir 0.9799  I1mr 1.2964  ILmr 1.0060  D1mr 0.9997  D1mw 0.9780  DLmr 1.0019  DLmw 1.0105  Bc 0.9644  Bcm 0.9382  Bi 0.9458  Bim 5.2356
+  runtime: CEst 0.9756  Ir 0.9933  I1mr 1.0032  ILmr 0.9975  D1mr 0.9844  D1mw 0.9986  DLmr 0.9566  DLmw 0.9485  Bc 0.9980  Bcm 0.9873  Bi 0.9556  Bim 1.1539
+random t20: CEst x0.99914 (A/A spread port 0.250%, v0.5.6 0.152%)
+  decoder: CEst 0.9993  Ir 1.0000  I1mr 1.0082  ILmr 1.0222  D1mr 1.0002  D1mw 1.0198  DLmr 1.0000  DLmw 0.9832  Bc 1.0000  Bcm 0.9936  Bi 1.0000  Bim 1.0539
+  harness: CEst 1.0110  Ir 1.0094  I1mr 1.4191  ILmr 1.0027  D1mr 0.9998  D1mw 1.0121  DLmr 0.9727  DLmw 0.9929  Bc 1.0150  Bcm 1.0337  Bi 1.0225  Bim 7.6521
+  runtime: CEst 0.9933  Ir 1.0368  I1mr 1.0913  ILmr 0.9973  D1mr 0.9866  D1mw 1.0160  DLmr 0.8680  DLmw 0.9964  Bc 1.0506  Bcm 1.0299  Bi 1.0225  Bim 1.1919
+random t8: CEst x0.99759 (A/A spread port 0.486%, v0.5.6 0.414%)
+  decoder: CEst 0.9989  Ir 1.0000  I1mr 0.9969  ILmr 1.0168  D1mr 1.0002  D1mw 1.0199  DLmr 0.3373  DLmw 0.9561  Bc 1.0000  Bcm 0.9966  Bi 1.0002  Bim 0.9864
+  harness: CEst 0.9985  Ir 0.9965  I1mr 1.2438  ILmr 1.0057  D1mr 0.9996  D1mw 1.0038  DLmr 0.9920  DLmw 1.0801  Bc 0.9937  Bcm 0.9795  Bi 0.9888  Bim 4.9964
+  runtime: CEst 0.9683  Ir 1.0284  I1mr 1.0390  ILmr 0.9981  D1mr 0.9846  D1mw 1.0164  DLmr 0.9055  DLmw 0.8950  Bc 1.0488  Bcm 0.9900  Bi 0.9847  Bim 1.1500
+random w7: CEst x0.99985 (A/A spread port 0.192%, v0.5.6 0.099%)
+  decoder: CEst 1.0000  Ir 1.0000  I1mr 0.9717  ILmr 1.0284  D1mr 1.0002  D1mw 1.0198  DLmr 50.8848  DLmw 0.9873  Bc 1.0000  Bcm 0.9956  Bi 1.0004  Bim 0.9418
+  harness: CEst 0.9822  Ir 0.9779  I1mr 1.2051  ILmr 1.0061  D1mr 0.9995  D1mw 0.9798  DLmr 1.0112  DLmw 1.0498  Bc 0.9595  Bcm 0.9220  Bi 0.9329  Bim 4.7523
+  runtime: CEst 0.9988  Ir 1.0110  I1mr 0.9777  ILmr 0.9958  D1mr 0.9840  D1mw 1.0085  DLmr 0.9374  DLmw 1.0285  Bc 1.0250  Bcm 0.9880  Bi 0.9478  Bim 1.1397
+records t10: CEst x1.00000 (A/A spread port 0.250%, v0.5.6 0.199%)
+  decoder: CEst 1.0002  Ir 1.0000  I1mr 0.9860  ILmr 1.0146  D1mr 1.0006  D1mw 1.0229  DLmr 1.1506  DLmw 1.0000  Bc 1.0000  Bcm 0.9952  Bi 1.0000  Bim 0.9830
+  harness: CEst 0.9831  Ir 0.9787  I1mr 1.3070  ILmr 1.0033  D1mr 0.9996  D1mw 0.9899  DLmr 0.9904  DLmw 1.0860  Bc 0.9624  Bcm 0.9269  Bi 0.9399  Bim 5.5851
+  runtime: CEst 0.9978  Ir 0.9945  I1mr 1.0139  ILmr 0.9962  D1mr 0.9859  D1mw 0.9997  DLmr 1.0000  DLmw 1.0082  Bc 0.9990  Bcm 0.9862  Bi 0.9534  Bim 1.1711
+records t20: CEst x0.99971 (A/A spread port 0.257%, v0.5.6 0.244%)
+  decoder: CEst 0.9999  Ir 1.0000  I1mr 0.9752  ILmr 1.0191  D1mr 1.0005  D1mw 1.0228  DLmr 1.0000  DLmw 0.9933  Bc 1.0000  Bcm 0.9945  Bi 0.9997  Bim 1.0196
+  harness: CEst 0.9822  Ir 0.9771  I1mr 1.2872  ILmr 1.0035  D1mr 0.9996  D1mw 0.9781  DLmr 0.9874  DLmw 0.9680  Bc 0.9613  Bcm 0.9607  Bi 0.9445  Bim 7.2349
+  runtime: CEst 0.9977  Ir 0.9607  I1mr 1.0365  ILmr 0.9983  D1mr 0.9781  D1mw 0.9720  DLmr 1.1858  DLmw 0.9834  Bc 0.9438  Bcm 1.0040  Bi 0.9610  Bim 1.2016
+records t8: CEst x0.99927 (A/A spread port 0.322%, v0.5.6 0.356%)
+  decoder: CEst 0.9998  Ir 1.0000  I1mr 0.9918  ILmr 1.0152  D1mr 1.0006  D1mw 1.0231  DLmr 0.2709  DLmw 0.9965  Bc 1.0000  Bcm 0.9923  Bi 1.0003  Bim 0.9833
+  harness: CEst 1.0099  Ir 1.0092  I1mr 1.3361  ILmr 1.0081  D1mr 0.9998  D1mw 1.0217  DLmr 0.9820  DLmw 0.9922  Bc 1.0165  Bcm 1.0201  Bi 1.0289  Bim 5.6516
+  runtime: CEst 0.9861  Ir 0.9957  I1mr 1.0246  ILmr 0.9962  D1mr 0.9853  D1mw 0.9957  DLmr 1.0003  DLmw 0.9499  Bc 0.9896  Bcm 0.9991  Bi 1.0272  Bim 1.1807
+records w7: CEst x1.00018 (A/A spread port 0.239%, v0.5.6 0.149%)
+  decoder: CEst 1.0001  Ir 1.0000  I1mr 0.9942  ILmr 1.0234  D1mr 1.0006  D1mw 1.0231  DLmr 42.9409  DLmw 0.9940  Bc 1.0000  Bcm 0.9921  Bi 0.9996  Bim 0.9261
+  harness: CEst 0.9932  Ir 0.9906  I1mr 1.2442  ILmr 1.0077  D1mr 0.9997  D1mw 0.9653  DLmr 0.9944  DLmw 1.0569  Bc 0.9825  Bcm 0.9554  Bi 0.9691  Bim 5.1754
+  runtime: CEst 1.0038  Ir 1.0241  I1mr 1.0284  ILmr 0.9964  D1mr 0.9846  D1mw 1.0128  DLmr 0.8897  DLmw 1.0612  Bc 1.0381  Bcm 0.9923  Bi 0.9755  Bim 1.1769
+runs t10: CEst x1.01713 (A/A spread port 4.548%, v0.5.6 4.465%)
+  decoder: CEst 1.0390  Ir 1.0000  I1mr 1.0243  ILmr 1.0104  D1mr 0.9998  D1mw 0.9779  DLmr 1.3330  DLmw 1.0006  Bc 1.0000  Bcm 1.0008  Bi 1.0000  Bim 0.9536
+  harness: CEst 1.0017  Ir 1.0017  I1mr 1.1759  ILmr 1.0045  D1mr 1.0000  D1mw 1.0325  DLmr 0.9887  DLmw 0.9709  Bc 1.0045  Bcm 1.0250  Bi 1.0236  Bim 2.1548
+  runtime: CEst 0.9994  Ir 1.0041  I1mr 0.9968  ILmr 0.9980  D1mr 0.9988  D1mw 1.0002  DLmr 1.0031  DLmw 0.9985  Bc 1.0040  Bcm 0.9949  Bi 1.0207  Bim 1.0887
+runs t20: CEst x1.03196 (A/A spread port 18.675%, v0.5.6 18.187%)
+  decoder: CEst 1.0815  Ir 1.0000  I1mr 1.0037  ILmr 1.0168  D1mr 0.9998  D1mw 0.9790  DLmr 1.9983  DLmw 1.0015  Bc 1.0001  Bcm 1.0003  Bi 1.0001  Bim 0.9848
+  harness: CEst 0.9870  Ir 0.9841  I1mr 1.1133  ILmr 1.0042  D1mr 0.9998  D1mw 0.9171  DLmr 0.9820  DLmw 0.9621  Bc 0.9597  Bcm 0.8281  Bi 0.8334  Bim 2.3974
+  runtime: CEst 0.9964  Ir 0.9736  I1mr 0.9873  ILmr 0.9969  D1mr 0.9980  D1mw 0.9996  DLmr 1.0039  DLmw 1.0001  Bc 0.9586  Bcm 0.9672  Bi 0.8842  Bim 1.1207
+runs t8: CEst x1.00002 (A/A spread port 0.383%, v0.5.6 0.220%)
+  decoder: CEst 0.9998  Ir 1.0000  I1mr 1.0161  ILmr 1.0124  D1mr 0.9998  D1mw 0.9779  DLmr 1.0000  DLmw 1.0003  Bc 1.0000  Bcm 1.0007  Bi 1.0000  Bim 0.9640
+  harness: CEst 1.0009  Ir 1.0008  I1mr 1.1165  ILmr 1.0054  D1mr 1.0000  D1mw 1.0267  DLmr 0.9920  DLmw 1.0736  Bc 1.0021  Bcm 1.0032  Bi 1.0090  Bim 2.0533
+  runtime: CEst 1.0001  Ir 1.0043  I1mr 0.9907  ILmr 0.9970  D1mr 0.9987  D1mw 1.0008  DLmr 1.0028  DLmw 0.9995  Bc 1.0238  Bcm 0.9862  Bi 0.9993  Bim 1.0813
+runs w7: CEst x0.99849 (A/A spread port 0.343%, v0.5.6 0.070%)
+  decoder: CEst 0.9998  Ir 1.0000  I1mr 0.9706  ILmr 1.0234  D1mr 0.9998  D1mw 0.9777  DLmr 1.0000  DLmw 1.0005  Bc 1.0000  Bcm 1.0006  Bi 1.0000  Bim 0.9507
+  harness: CEst 0.9968  Ir 0.9962  I1mr 1.0428  ILmr 1.0098  D1mr 0.9999  D1mw 0.8949  DLmr 1.0056  DLmw 0.8928  Bc 0.9897  Bcm 0.9159  Bi 0.9307  Bim 1.9943
+  runtime: CEst 0.9975  Ir 0.9907  I1mr 0.9954  ILmr 0.9954  D1mr 0.9981  D1mw 0.9996  DLmr 1.0032  DLmw 0.9984  Bc 0.9747  Bcm 0.9779  Bi 0.9559  Bim 1.0943
+text t10: CEst x0.99752 (A/A spread port 0.202%, v0.5.6 0.851%)
+  decoder: CEst 0.9992  Ir 1.0000  I1mr 0.9468  ILmr 1.0152  D1mr 0.9998  D1mw 0.9834  DLmr 0.3404  DLmw 1.0010  Bc 1.0000  Bcm 1.0002  Bi 1.0001  Bim 1.2536
+  harness: CEst 0.9790  Ir 0.9743  I1mr 1.1018  ILmr 1.0045  D1mr 0.9998  D1mw 0.9420  DLmr 0.9790  DLmw 0.9243  Bc 0.9452  Bcm 0.8842  Bi 0.8798  Bim 4.1417
+  runtime: CEst 0.9837  Ir 0.9931  I1mr 0.9656  ILmr 0.9961  D1mr 0.9814  D1mw 0.9923  DLmr 1.0053  DLmw 0.9605  Bc 0.9993  Bcm 0.9972  Bi 0.9164  Bim 1.2210
+text t20: CEst x0.99927 (A/A spread port 0.788%, v0.5.6 1.096%)
+  decoder: CEst 0.9984  Ir 1.0000  I1mr 1.0401  ILmr 1.0205  D1mr 0.9998  D1mw 0.9829  DLmr 0.0452  DLmw 0.9844  Bc 1.0000  Bcm 1.0003  Bi 0.9999  Bim 1.2898
+  harness: CEst 1.0391  Ir 1.0447  I1mr 1.2997  ILmr 1.0021  D1mr 1.0003  D1mw 1.0554  DLmr 0.9529  DLmw 0.9092  Bc 1.0959  Bcm 1.2279  Bi 1.2154  Bim 6.0450
+  runtime: CEst 1.0026  Ir 1.0096  I1mr 1.0758  ILmr 0.9974  D1mr 0.9968  D1mw 1.0047  DLmr 1.0000  DLmw 0.9939  Bc 0.9999  Bcm 1.0088  Bi 1.1206  Bim 1.2541
+text t8: CEst x1.00099 (A/A spread port 0.649%, v0.5.6 0.526%)
+  decoder: CEst 0.9993  Ir 1.0000  I1mr 0.9854  ILmr 1.0161  D1mr 0.9998  D1mw 0.9837  DLmr 0.8014  DLmw 0.9958  Bc 1.0000  Bcm 1.0003  Bi 1.0002  Bim 1.2696
+  harness: CEst 0.9949  Ir 0.9927  I1mr 1.1778  ILmr 1.0075  D1mr 0.9999  D1mw 0.9693  DLmr 0.9900  DLmw 1.0418  Bc 0.9838  Bcm 0.9661  Bi 0.9618  Bim 4.1062
+  runtime: CEst 1.0190  Ir 1.0093  I1mr 1.0138  ILmr 0.9955  D1mr 1.0274  D1mw 1.0286  DLmr 0.9944  DLmw 1.0390  Bc 1.0115  Bcm 0.9994  Bi 0.9747  Bim 1.2474
+text w7: CEst x0.99999 (A/A spread port 0.204%, v0.5.6 0.364%)
+  decoder: CEst 0.9985  Ir 1.0000  I1mr 1.0281  ILmr 1.0272  D1mr 0.9998  D1mw 0.9838  DLmr 1.0003  DLmw 0.9596  Bc 1.0000  Bcm 1.0003  Bi 1.0001  Bim 1.3455
+  harness: CEst 1.0228  Ir 1.0259  I1mr 1.2444  ILmr 1.0088  D1mr 1.0002  D1mw 1.0675  DLmr 1.0057  DLmw 1.0108  Bc 1.0594  Bcm 1.1512  Bi 1.1633  Bim 4.6343
+  runtime: CEst 1.0122  Ir 1.0130  I1mr 1.0730  ILmr 0.9957  D1mr 1.0069  D1mw 1.0123  DLmr 1.0123  DLmw 1.0142  Bc 1.0108  Bcm 1.0031  Bi 1.1066  Bim 1.2783
