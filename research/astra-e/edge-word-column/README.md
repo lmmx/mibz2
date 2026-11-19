@@ -41,3 +41,7 @@ From the repository root with the canonical corpus available and rustc 1.99.1 on
 ```bash
 bash research/astra-e/edge-word-column/replay.sh /tmp/astra-edge-ordinary-replay
 ```
+
+## A paid use of direct partner publication
+
+The follow-up wrote a fused two-literal shortcut directly from the old queues, reserving a physical band directory and preserving one final packed edge per retained rank. It reduced the actual marked walk to its optimal 19,482,169 hops under that rule. On the eight packable cases in the 17-block native panel, marked emission improved to 0.7994 [0.6929, 0.9223] of edge CPU, but the full inverse took 1.1423 [1.0432, 1.2508]. The source, every coded row, fresh-process memory, original control, prior dense postpass and timings are preserved. [Complete native reconstruction evidence](fused-ascii/README.md)
