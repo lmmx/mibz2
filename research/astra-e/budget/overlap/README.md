@@ -23,6 +23,8 @@ M(i+1) = max(M(i), delta_i + M(max(0,i+1-K))).
 
 The same bound holds with work-conserving FIFO dispatch onto identical workers when assignments change between the two schedules. Inductively, the available-worker vector sorted by availability can advance coordinatewise by at most M(i). Replacing its earliest coordinate with the new ready time and re-sorting preserves the coordinatewise bound. The scan completion can advance by at most the largest improvement to an eligible earlier take, at most M(max(0,i+1-K)). Combining the unchanged worker predecessor with its discounted scanner predecessor gives the recurrence. Ordered reader max and a fixed copy duration preserve the bound. Worker-specific speed changes, changed cache behavior, altered scanner service, arbitrary scheduling changes and a changed reader workload fall outside this theorem.
 
+An independent subset enumeration agrees with the spacing DP on 4,096 short schedules. Earliest-available dispatch changed worker assignments in 770 early replays. Every fixed and rerouted gain respected the bound. A one-slot witness attains a 14-unit gain with largest single discount 7, demonstrating why a bounded pipeline needs the slot term. [Executable checks](check.py) · [Receipt](check.txt)
+
 ## Capacity falsifier and FIFO replay
 
 | Workers | Saving needed ms | Largest conditional capacity bound ms | Bound / required | Fixed worker gain ms | FIFO with reassignment gain ms |
@@ -53,6 +55,7 @@ The decisive missing observation is an untimed same-build trace on the target wi
 From this directory, Python 3 can recompute all tables from the tracked measurements. The Rust build extracts the frozen source into its argument directory. It uses Rust 1.99.1 and the indicated feature instrumentation.
 
 ```sh
+python3 -B check.py | diff - check.txt
 python3 -B schedule.py
 python3 -B capacity.py | diff - capacity-summary.txt
 python3 -B trace_replay.py edge-w2.csv.xz 2 | diff - trace-summary.json

@@ -128,6 +128,7 @@ def main():
             free_early = replay(w,len(work),scan,front,work,copy,True,fixed_roster)[0]
             packing = weighted_bound(discounts, 4*w)
             assert -1e-10 <= atomic-fixed <= packing+1e-10
+            assert -1e-10 <= atomic-dynamic <= packing+1e-10
             assert -1e-10 <= unbounded-free_early <= max(discounts)+1e-10
             scenarios.append(dict(workers=w,scenario=label,atomic_s=atomic,atomic_over_edge=atomic/t,
                                   fixed_gain_s=atomic-fixed,rerouted_gain_s=atomic-dynamic,
