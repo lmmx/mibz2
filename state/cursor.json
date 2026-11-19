@@ -229,9 +229,10 @@
     7013543921,
     7014835513,
     7015931440,
-    7018475871
+    7018475871,
+    7019619997
   ],
-  "last_processed_comment_id": 7018475871,
+  "last_processed_comment_id": 7019619997,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2815,13 +2816,16 @@
     },
     {
       "trigger_comment_id": 7019619997,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/trim-057-7019619997/report.md",
       "source_commit": "05f4174c7fbdcc43f499bbc35174ba542dced05e",
       "report_commit": "6abafb45906f137582ab7ed39396921f2fd2b62f",
-      "disposition": "PROCEED at 05f4174c subject to exact-head CI and the paired bench. Both six-thread adoptions reproduced. Pinned-eight model prediction was tested and refuted."
+      "disposition": "PROCEED at 05f4174c subject to exact-head CI and the paired bench. Both six-thread adoptions reproduced. Pinned-eight model prediction was tested and refuted.",
+      "review_comment_id": 7019740778,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, single publication, and role-aware header and route. The pinned helper's coordinator-only sender check is inapplicable to the Researcher REVIEW."
     }
   ],
   "active_delegations": [],
@@ -2873,5 +2877,5 @@
     "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
     "date": "2026-11-06"
   },
-  "last_observed_pr162_comment_id": 7018475871
+  "last_observed_pr162_comment_id": 7019619997
 }
