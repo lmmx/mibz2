@@ -50,6 +50,9 @@ struct Counts{
 };
 void compare_stock(const std::vector<Span>& old,const V& words,const V& color,u mark,
     const std::vector<Span>& result,const Names& names,u next_mark);
+#ifdef EDGE_MODAL_OVERRIDES
+#include "overrides/modal.inc"
+#endif
 void process_order(const RootInput& a,const V& truth,const Weights& words,const std::vector<uint8_t>& oracle,
        u block,int forced,bool print){
     const u m=a.m,B=a.bands.size();V physical(B),start(B),base,weight;
@@ -158,6 +161,9 @@ void process_order(const RootInput& a,const V& truth,const Weights& words,const 
     at=0;while(at<m){replay.ensure();u c=all[replay.ix].c;auto& cu=fcur[c];
         u w=std::min(replay.left,cu.left(final[c]));emit(other,cu.id(final[c]),w);cu.take(final[c],w);replay.left-=w;at+=w;cnt.p_ancestry++;}
     assert(other.size()==published.size());for(u i=0;i<other.size();i++)assert(other[i].label==published[i].label&&other[i].width==published[i].width);
+#ifdef EDGE_MODAL_OVERRIDES
+    override_check(a,base,uniform,widths,branches,ops,outer,ancestry,physical,published,block,print);
+#endif
     // Verification only. The truth permutation, old incoming RLE, new dense
     // ranks and output vectors below are not used by either publication schedule.
     V inc(m);for(u x=0;x<m;x++){auto it=std::upper_bound(base.begin(),base.end(),x);inc[truth[x]]=it-base.begin()-1;}
@@ -196,7 +202,16 @@ void small(){
             }
             u horizon=0;for(u w:owner)horizon+=ww.value[w].size();
             for(u p=0;p<m;p++){
-                inp.mark=p;std::vector<uint8_t> cycle,oracle;u x=p;
+                inp.mark=p;
+#ifdef EDGE_MODAL_OVERRIDES
+                originals.clear();original_mark=p;
+                for(u y=0;y<m;y++){
+                    auto c=(uint8_t)ww.value[owner[pred[y]]].back();
+                    if(!originals.empty()&&(originals.back()>>8)==c)originals.back()++;
+                    else originals.push_back((u(c)<<8)|1);
+                }
+#endif
+                std::vector<uint8_t> cycle,oracle;u x=p;
                 do{for(uint8_t z:ww.value[owner[x]])cycle.push_back(z);x=next[x];}while(x!=p);
                 for(u j=0;j<horizon;j++)oracle.push_back(cycle[j%cycle.size()]);
                 u classes=1;for(u j=1;j<m;j++)classes+=(owner[j]!=owner[j-1]||j==p||j==p+1);
@@ -212,9 +227,17 @@ void small(){
 }
 int main(int argc,char** argv){
     if(argc==2&&std::string(argv[1])=="small"){small();return 0;}
-    assert(argc==4);std::ifstream edge(argv[1],std::ios::binary),word(argv[2],std::ios::binary),thin(argv[3],std::ios::binary);
+#ifdef EDGE_MODAL_OVERRIDES
+    assert(argc==6);std::ifstream cap(argv[4],std::ios::binary);modal_csv.open(argv[5]);override_header();
+#else
+    assert(argc==4);
+#endif
+    std::ifstream edge(argv[1],std::ios::binary),word(argv[2],std::ios::binary),thin(argv[3],std::ios::binary);
     std::cout<<"block,m,bands,seeded_classes,cert_frags,cert_queue_reads,cert_rank_comparisons,deleted,aliases,output_runs,mixed_buckets,occupied_mixed_bins,stored_ancestry_runs,constant_inside_mass,pulled_mass,outer_queue_ops,outer_claims,inner_claims,outer_low_runs,outer_heap_reads,outer_heap_comparisons,inner_low_runs,inner_heap_reads,inner_heap_comparisons,source_band_ops,source_composition_claims,band_final_tags,queue_final_tags,replay_claims\n";
     u n=0;while(true){Block b;if(!next_block(b,edge,word,thin))break;
+#ifdef EDGE_MODAL_OVERRIDES
+        assert(get(cap)==b.index&&get(cap)==b.n);original_mark=get(cap);u ncap=get(cap);originals.resize(ncap);read(cap,originals.data(),2*ncap);
+#endif
         RootInput in;in.m=b.m;in.mark=b.mark;in.bands=b.band;
         for(auto r:b.band)in.names.push_back(b.weight[r.code]);
         for(u y=0;y<b.m;y++)in.q[b.thin[y]].push_back(y);
