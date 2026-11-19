@@ -24,3 +24,21 @@ cmp "$scratch/geometry.csv" "$d/all.csv"
 taskset -c 3 nice -n 16 "$scratch/panel" price corpora/wikidata.bz2 > "$scratch/paid.csv"
 python3 "$d/report.py" | cmp - "$d/summary.json"
 ```
+
+## Complete worker and independent status
+
+Both independently built worker executables passed the refreshed scorer's full 338-case gate. In the official nine-round, repeat-two scorer at W1 and W4, the candidate's local wall ratios to 0.5.6 were 0.673 [0.340, 1.332] and 0.723 [0.271, 1.930], with median RSS ratios 0.889 and 0.734. The estimates at both worker counts have substantial host variance. The common scorer path revision was `75297a1d57b2bdf262c3a19f3064848dedf2c493`. The scorer printed `v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04`. [Scorer output, including opend](official/score/summary.txt) · [54 raw official observations](official/score/runs.jsonl)
+
+In 20 direct pairs per worker count, two-seed over the exact unchanged edge worker was 1.0202 [0.9088, 1.1454] at W1 and 0.9769 [0.8686, 1.0986] at W4. Direct RSS ratios were 1.0023 [0.9964, 1.0082] and 0.9961 [0.9826, 1.0098]. Clustering four consecutive rounds widened the wall intervals. The native emitter benefit remains measured, and the complete local comparison leaves the incremental direction unresolved. The Coordinator's i9 result would establish target throughput and peak RSS. [Direct comparisons and uncertainty](official/direct-summary.json) · [80 raw direct observations](official/direct.jsonl) · [Independent CI run 44465700927](https://github.com/lmmx/mibz2/actions/runs/44465700927)
+
+For an exact receipt replay run `python3 research/astra-e/two-seed/official/verify.py`. Complete scorings use a fresh detached checkout at `c0e0e657e1e9628a7b80c33f4584819d1b169893`. Run the following with the canonical corpus path and a scratch directory. For a new round, refresh again immediately before scoring, save the scorer path and printed version, and compare arms only under the common projection. A separate archive holds both exact binaries, including their original compiler layouts.
+
+```sh
+git fetch origin master && git checkout origin/master -- bench/moonshot .just Justfile
+git log -1 --format=%h origin/master -- bench/moonshot
+d=research/astra-e/two-seed
+python3 "$d/build_worker.py"
+python3 bench/moonshot/moonshot.py score "$d/candidate.rs" --corpus "$wiki" --target-dir "$scratch/candidate-target" --rounds 9 --workers 1,4 --repeat 2 --settle 2 --with-opend --no-proxy --out "$scratch/score"
+python3 bench/moonshot/moonshot.py score "$d/control.rs" --corpus "$wiki" --target-dir "$scratch/control-target" --no-proxy --no-timing --out "$scratch/control-gate"
+python3 "$d/official/direct.py" run "$scratch/control-target/release/moonshot" "$scratch/candidate-target/release/moonshot" "$wiki" "$scratch/direct.jsonl"
+```
