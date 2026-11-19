@@ -322,6 +322,7 @@ public:
     }
 };
 
+#ifndef FORWARD_LIBRARY
 int main(int argc,char** argv) {
     std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
     std::string command=argc>1 ? argv[1] : "";
@@ -367,3 +368,4 @@ int main(int argc,char** argv) {
         }
     }
 }
+#endif
