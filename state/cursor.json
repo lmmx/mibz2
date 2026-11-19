@@ -225,9 +225,10 @@
     7008546954,
     7011926888,
     7012815426,
-    7013154415
+    7013154415,
+    7013543921
   ],
-  "last_processed_comment_id": 7013154415,
+  "last_processed_comment_id": 7013543921,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2759,13 +2760,16 @@
     },
     {
       "trigger_comment_id": 7013543921,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-057-decision-7013543921/report.md",
       "source_commit": "9743bbe0d51ba451b8b8ab9e6fd731c238940052",
       "report_commit": "bc729f228936fe626140d60b0f26c9178866d0bd",
-      "disposition": "AMEND: retain the successor pause, confine Cachegrind to diagnosis, correct the admitted guard record, and preserve release wall/non-regression scope or obtain explicit maintainer risk acceptance. Recalibration remains a release cost."
+      "disposition": "AMEND: retain the successor pause, confine Cachegrind to diagnosis, correct the admitted guard record, and preserve release wall/non-regression scope or obtain explicit maintainer risk acceptance. Recalibration remains a release cost.",
+      "review_comment_id": 7013742538,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, single publication, and role-aware header and route. The pinned helper's coordinator-only sender check is inapplicable to the Researcher REVIEW."
     }
   ],
   "active_delegations": [],
