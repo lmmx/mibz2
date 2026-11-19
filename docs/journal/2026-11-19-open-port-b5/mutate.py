@@ -14,7 +14,9 @@ The scorer is the one D113 asked for (#145 REVIEW 6988584322), as in the one-sca
   failing tests and first panic message are recorded.
 - **The receipts:** RECEIPTS_DIR/receipts.json, and each run's full cargo log beside it.
 
-No mutant here can make a decode loop forever (none touches a loop's exit), so every run ends.
+Every run ends: the port bounds `emit`'s walk by the retained rows and asserts that each band in
+`induced` takes a row. (Before those two lines, two of these mutants made a loop grow until the
+OOM killer stopped the test binary, which this scorer rightly does not count as a kill.)
 The exit is 0 only if the baseline passes and every mutant builds and is killed at run time.
 """
 import json

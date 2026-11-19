@@ -229,6 +229,9 @@ impl Kernel {
             while k < end {
                 let node = e.nodes[id as usize];
                 let width = (end - k).min(node.width - in_node);
+                // (the port's) every band takes a row at least, so the loop always ends; a wrong
+                // construction panics here rather than looping (the mutation check's finding)
+                assert!(width > 0);
                 let dst = e.bottom[id as usize] + in_node;
                 let code = if node.word == 0 {
                     a as u32
