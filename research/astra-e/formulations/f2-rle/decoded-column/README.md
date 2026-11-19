@@ -18,3 +18,7 @@ deps="$scratch/release/deps"
 rustc -O --edition 2021 "$d/probe.rs" --extern mibz2="$deps/libmibz2.rlib" -L "dependency=$deps" -o "$scratch/probe"
 "$scratch/probe" corpora/wikidata.bz2
 ```
+
+**Two exact merge methods.** Gallop from each old source rank to the new gap in the list of certified rows, comparing corrected streams until a byte differs or both positions are certified. Sort exceptions sharing an insertion gap with the same comparator. The merger verified every new rank against cyclic doubling on all nine samples. Frozen used 25,276 comparisons and 2,770,010 byte pairs. Stream 134 used 172,275 and 24,624,658. Caching the normalized source-position pair and propagating its answer backwards cut those byte pairs to 49,607 and 618,104. Stream 134 required 917,504 hash entries of capacity before allocator overhead, already above the desired per-worker memory budget at ordinary entry widths. These are exact operation counts against a dense corrected-string oracle; a compressed implementation must also supply the queried positions and bytes. The BWT run count was nearly unchanged (frozen 51,184→51,204, stream 134 54,808→54,808). Query reuse explains a large part of the repeated work, but these two constructors do not yet establish a throughput or memory gain. [Raw merge costs](merge.csv) · [Memoized costs](memo.csv)
+
+To reproduce each merge screen, generate its verifier with `python3 "$d/merge.py" "$scratch/merge.rs"` or `python3 "$d/memo.py" "$scratch/merge.rs"` and compile that source with the preceding Rust command.
