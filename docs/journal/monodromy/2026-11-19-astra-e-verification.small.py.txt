@@ -1,0 +1,122 @@
+"""Independent checks of Astra E items 1-3 on exhaustive small columns."""
+import itertools, sys
+from collections import Counter
+
+def lf_of(L):
+    n=len(L); cnt=Counter(L); C={}; acc=0
+    for c in sorted(cnt): C[c]=acc; acc+=cnt[c]
+    seen=Counter(); lf=[0]*n
+    for x,c in enumerate(L): lf[x]=C[c]+seen[c]; seen[c]+=1
+    psi=[0]*n
+    for x in range(n): psi[lf[x]]=x
+    F=sorted(L); return lf,psi,F
+def runs(L): return 1+sum(1 for i in range(1,len(L)) if L[i]!=L[i-1]) if L else 0
+def fwd(psi,F,x,k):
+    w=[]
+    for _ in range(k): w.append(F[x]); x=psi[x]
+    return tuple(w),x
+def cyl(psi,F,P):
+    n=len(F); return [x for x in range(n) if fwd(psi,F,x,len(P))[0]==tuple(P)]
+def labels(L,lf,Sset,order):
+    out=[]
+    for x in order:
+        w=[L[x]]; y=lf[x]
+        while y not in Sset: w.append(L[y]); y=lf[y]
+        out.append(tuple(w))
+    return out
+def truns(lab): return (1+sum(1 for i in range(1,len(lab)) if lab[i]!=lab[i-1])) if lab else 0
+
+def item1():
+    stats=Counter(); attain=Counter()
+    for n in range(1,10):
+        for L in itertools.product((0,1),repeat=n):
+            lf,psi,F=lf_of(L); r=runs(L)
+            # every nonempty subset: general bound t <= r + k - 1 + h
+            for mask in range(1,1<<n):
+                S=[x for x in range(n) if mask>>x&1]; Ss=set(S)
+                k=sum(1 for i,x in enumerate(S) if i==0 or S[i-1]!=x-1)
+                h=sum(1 for g in range(1,n) if (g-1 in Ss)!=(g in Ss))
+                t=truns(labels(L,lf,Ss,S)); stats['arb']+=1
+                if t>r+k-1+h: stats['arb_bad']+=1
+                if k==1 and t>r: stats['interval_exceeds_r']+=1; attain['interval_max_excess']=max(attain['interval_max_excess'],t-r)
+            # word cylinders, |P| 1..4
+            cyls={}
+            for m in range(1,5):
+                for P in itertools.product((0,1),repeat=m):
+                    S=cyl(psi,F,P)
+                    if not S: continue
+                    cyls[P]=S; Ss=set(S); stats['word']+=1
+                    if S!=list(range(S[0],S[-1]+1)): stats['cyl_not_interval']+=1
+                    lab=labels(L,lf,Ss,S); t=truns(lab)
+                    if t>r: stats['word_bad']+=1
+                    if t==r and m==2: attain['word_eq_r_len2']+=1
+                    # injection: charged internal gaps -> input seams
+                    seams=[]
+                    for i in range(1,len(S)):
+                        if lab[i]==lab[i-1]: continue
+                        a,b=S[i-1],S[i]
+                        while True:
+                            if L[a]!=L[b]: seams.append(b); break
+                            a,b=lf[a],lf[b]
+                            if b!=a+1: stats['not_adjacent']+=1; break
+                            if (a in Ss)!=(b in Ss): stats['split_hit']+=1; break
+                            if a in Ss: stats['both_hit_equal_label?']+=1; break
+                    if len(seams)!=len(set(seams)): stats['injection_bad']+=1
+            # pairs of distinct equal-length words
+            for m in range(1,5):
+                ws=[P for P in cyls if len(P)==m]
+                for P,Q in itertools.combinations(ws,2):
+                    S=sorted(cyls[P]+cyls[Q]); Ss=set(S); stats['pair']+=1
+                    t=truns(labels(L,lf,Ss,S))
+                    if t>r+1: stats['pair_bad']+=1
+                    if t==r+1: attain['pair_eq_r_plus_1']+=1
+    print('item1',dict(stats),dict(attain))
+
+def item2():
+    st=Counter()
+    for alph,maxn in ((2,9),(3,6)):
+        for n in range(1,maxn+1):
+            for L in itertools.product(range(alph),repeat=n):
+                lf,psi,F=lf_of(L)
+                for d in range(alph):
+                    others=[c for c in range(alph) if c!=d]
+                    ws=[(d,)]+[tuple(u)+(d,) for k in (1,2) for u in itertools.product(others,repeat=k)]
+                    for w in ws:
+                        P=(d,)+w; S=cyl(psi,F,P)
+                        if not S: continue
+                        st['cases']+=1; m=len(P); Ss=set(S)
+                        img=[fwd(psi,F,x,m)[1] for x in S]
+                        if any(img[i]>=img[i+1] for i in range(len(img)-1)): st['not_increasing']+=1
+                        A=sorted(y for y in range(n) if fwd(lf,L,y,m)[0][::-1]==P and True)
+                        # rows whose preceding m bytes (L, LF L, ...) read P backwards
+                        Aset=set(A)
+                        if sorted(img)!=A: st['image_ne_after_section']+=1
+                        def ret(x,T):
+                            y=psi[x]; k=1
+                            while y not in T: y=psi[y]; k+=1
+                            return y,k
+                        for x,ax in zip(S,img):
+                            rx,t=ret(x,Ss); ry,t2=ret(ax,Aset)
+                            if fwd(psi,F,rx,m)[1]!=ry: st['conj_bad']+=1
+                            X=fwd(psi,F,x,t)[0]; Y=fwd(psi,F,ax,t2)[0]
+                            if X+P!=P+Y: st['XP_ne_PY']+=1
+                            if t<m: st['overlap']+=1
+    print('item2',dict(st))
+
+def item3():
+    st=Counter()
+    for m in range(2,10):
+        for bits in range(1<<m):
+            xs=[(1+((bits>>j)&1)) if j%2==0 else (3+((bits>>j)&1)) for j in range(m)]
+            L=xs+[0]*m; lf,psi,F=lf_of(L); r=runs(L); st['cols']+=1
+            if r!=m+1: st['r_bad']+=1
+            S=[x for x in range(len(L)) if L[x]==0]; Ss=set(S)
+            lab=labels(L,lf,Ss,S)
+            if [l for l in lab]!=[(0,xs[j]) for j in range(m)]: st['token_bad']+=1
+            if truns(lab)!=m: st['truns_bad']+=1
+            for cls in (0,1):
+                pos=[j for j in range(m) if j%2==cls]
+                for i,j in itertools.combinations(pos,2):
+                    if xs[i]!=xs[j]: st['swaps']+=1
+    print('item3',dict(st))
+item3(); item2(); item1()
