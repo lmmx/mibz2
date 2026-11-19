@@ -13,7 +13,7 @@ uses = [
 ]
 
 [[edge]]
-cost = { W = "n", D = "lmax + r", B = "n", Q = "n", M = "n" }
+cost = { B = "n", D = "lmax + r", M = "n", Q = "n", W = "n" }
 dependent = false
 evidence = "the arc-synchronous walk records each visited row's run id in text order (record 84)"
 id = "arc_walk_labels"
@@ -22,7 +22,7 @@ output = "run_label_sequences"
 status = "verified"
 
 [[edge]]
-cost = { W = "n", D = "1", B = "n", Q = "0", M = "n" }
+cost = { B = "n", D = "1", M = "n", Q = "0", W = "n" }
 dependent = false
 evidence = "a run id fixes its byte: text[j] = symbol(label[j]). So run_label_sequences is a text emission in disguise (record 84)"
 id = "labels_determine_text"
@@ -31,7 +31,7 @@ output = "text"
 status = "proved"
 
 [[edge]]
-cost = { W = "n", D = "lambda", B = "F", Q = "F", M = "F" }
+cost = { B = "F", D = "lambda", M = "F", Q = "F", W = "n" }
 dependent = false
 evidence = "record 82"
 id = "potential_schedule_from_labels"
@@ -40,7 +40,7 @@ output = "copy_schedule"
 status = "verified"
 
 [[edge]]
-cost = { W = "n", D = "lambda", B = "n", Q = "F", M = "n" }
+cost = { B = "n", D = "lambda", M = "n", Q = "F", W = "n" }
 dependent = false
 evidence = "record 82; listed with the text as an input to show the replay comes after the text exists"
 id = "copy_replay_again"
