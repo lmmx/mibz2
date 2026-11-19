@@ -91,7 +91,9 @@
     6997166415,
     7009759290
   ],
-  "in_progress": [],
+  "in_progress": [
+    7021181046
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -798,6 +800,11 @@
       "progress": "Record committed; REVIEW 7009851110 published and read back.",
       "work_commit": "5632721b7abf261495f04be7773cc70622a07c46",
       "review_id": 7009851110
+    },
+    "7021181046": {
+      "comment_id": 7021181046,
+      "status": "in_progress",
+      "progress": "Receipt committed; rebuilding from channel 7009741436."
     }
   },
   "last_record_commit": "5632721b7abf261495f04be7773cc70622a07c46"
