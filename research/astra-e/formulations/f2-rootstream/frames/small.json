@@ -1,0 +1,10 @@
+{
+  "tree_tapes": 55694,
+  "rows": 298776,
+  "nodes": 245563,
+  "selectors": 467709,
+  "root_runs": 252638,
+  "membership_intervals": 320938,
+  "frames": 174780,
+  "overlaps": 371724
+}

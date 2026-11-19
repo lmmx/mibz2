@@ -1,0 +1,7 @@
+merge_ns frames / leaf 0.77619 0.65990 0.91296
+merge_ns frames / refill 1.41758 1.18756 1.69216
+total_ns frames / leaf 0.92729 0.88097 0.97603
+total_ns frames / refill 1.05142 0.99902 1.10656
+total_ns frames / lazy 1.03821 0.98935 1.08949
+original visits, absorbed visits, frame overlaps 7739733 6254289 5448240
+suspensions 1596200
