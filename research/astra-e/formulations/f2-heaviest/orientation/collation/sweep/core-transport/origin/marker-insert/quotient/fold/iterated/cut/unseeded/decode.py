@@ -58,7 +58,7 @@ def power_mark(raw,bounds,slices,x,skip,words):
     raise ValueError("missing power entry")
 
 
-def solve(raw,literals,mark,skip,horizon,policy='cheaper',check=False,trace=None):
+def solve(raw,literals,mark,skip,horizon,policy='cheaper',check=False,trace=None,observe_cut=None):
     words=[Node(literal=v) for v in literals]
     total=Counter()
     while True:
@@ -86,6 +86,8 @@ def solve(raw,literals,mark,skip,horizon,policy='cheaper',check=False,trace=None
         alt=estimate(complement,edges,seams,len(raw))
         flip=policy=='flip' or (policy=='cheaper' and alt<orig)
         target=complement if flip else choice
+        if observe_cut is not None:
+            observe_cut(raw,words,bounds,slices,target)
         selected=set()
         ids={}
         weights=[]
