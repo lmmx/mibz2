@@ -70,6 +70,7 @@ def receipts():
     selections = {
         "research/astra-e/edge-budget/candidate.rs": inputs.COMBINED,
         "research/astra-e/final-slot/candidate.rs": inputs.COMBINED,
+        "research/astra-e/formulations/f2-rle/combined/candidate.rs": inputs.COMBINED,
         "research/astra-e/formulations/f2-scheduler/candidate.rs": inputs.STATIC_FRONTIER,
     }
     for candidate, pin in selections.items():
@@ -83,7 +84,7 @@ def receipts():
         assert inputs.predecessor() is None
         assert inputs.reusable(receipt,base)
         assert not inputs.reusable(dict(receipt, predecessor=inputs.STATIC_FRONTIER),base)
-    print("Completed-input check rejected absent, changed, and extraneous predecessors. Edge-budget and final-slot matched combined-ahead; refill matched its static eight-path frontier.")
+    print("Completed-input check rejected absent, changed, and extraneous predecessors. Edge-budget, final-slot and word actions matched combined-ahead; refill matched its static eight-path frontier.")
 
 
 if __name__ == "__main__":

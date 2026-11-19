@@ -34,6 +34,7 @@ STATIC_FRONTIER = {
 PREDECESSORS = {
     "research/astra-e/edge-budget/candidate.rs": COMBINED,
     "research/astra-e/final-slot/candidate.rs": COMBINED,
+    "research/astra-e/formulations/f2-rle/combined/candidate.rs": COMBINED,
     "research/astra-e/formulations/f2-scheduler/candidate.rs": STATIC_FRONTIER,
 }
 
