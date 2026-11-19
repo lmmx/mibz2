@@ -1,0 +1,3 @@
+column,n,initial_runs,qualified,best_productive_runs,mixed_floor,mask_lo,mask_hi,q_lo,r_lo,q_hi,r_hi
+11111133333333355500000000222224,32,6,44,6,6,0,33,0,6,11,6
+1111111122222222344444444555555550000000000,43,6,22,7,171/28,1,13,10,6,17,7

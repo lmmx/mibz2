@@ -9,7 +9,7 @@ import sys
 LAST="11111133333333355500000000222224"
 
 
-def test(last):
+def test(last,coarse=False):
     last=tuple(map(int,last))
     first=sorted(last);p=sorted(range(len(last)),key=last.__getitem__)
     ix=0;word=[]
@@ -25,12 +25,20 @@ def test(last):
     for mask in range(1<<k):
         pred={x for x in range(len(last)) if not (mask>>first[x])&1 and (mask>>first[p[x]])&1}
         dead={p[x] for x in pred}
+        group={}
+        for i in range(k):
+            before_selected=True
+            for j in sorted({first[p[x]] for x in range(len(last)) if first[x]==i}):
+                selected=(mask>>j)&1
+                if selected or before_selected: bucket=j
+                group[i,j]=bucket
+                before_selected=selected
         after={}
         for x in range(len(last)):
             if x in dead:continue
             y=p[x]
             dst=p[y] if y in dead else y
-            tag=(first[x],-1 if (mask>>first[x])&1 else first[y])
+            tag=(first[x],-1 if (mask>>first[x])&1 else group[first[x],first[y]] if coarse else first[y])
             after[dst]=tag
         assert len(after)==len(last)-len(dead)
         ordered=[after[i] for i in sorted(after)]

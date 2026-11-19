@@ -20,3 +20,11 @@ for t in scan sparse exchange; do
 done
 python3 -B "$d/witness.py" | diff - "$d/witness.csv"
 ```
+
+## Coalesced gap aliases and an infinite primitive rotation family
+
+Merging consecutive unselected target classes in every outside source bucket makes the 32-row witness preserve six runs. It does not remove the obstruction. Take incoming column 1ᵗ 2ᵗ 3 4ᵗ 5ᵗ 0ᵗ⁺², with 5t+3 rows. It is the sorted first column cyclically shifted by t+2. The forward permutation is subtraction by t+2 modulo 5t+3; it is a single cycle exactly when gcd(t+2,7)=1. For every integer t≥20 the incoming and outgoing types differ on every row. Even with coalesced gap aliases, all cuts removing at least one quarter of the mass leave at least seven runs.
+
+The certificate partitions retained physical destination coordinates z at the first-column boundaries translated by zero, minus one step and minus two steps. On each resulting interval the types at z, z+s and z+2s are all constant, where s=t+2. A deleted z emits no incoming label. Otherwise its predecessor is z+s when that point survives, or z+2s when z+s was deleted. This directly computes the complete induced incoming column in destination order. All interval coordinates are affine integer functions of t. The program checks each comparison at 20 and checks its slope on the whole ray. Each of 64 masks yields a fixed run count and an affine ingress. For every mask with fewer than seven output runs it proves 4q<5t+3 throughout the ray. Infinitely many admissible t are coprime to seven in the required offset. These are single-orbit examples with six byte values and only two affine translations of the original permutation. The mathematical family extends past the bzip2 block-size cap; its admissible finite members have the same obstruction.
+
+At t=8, independent exhaustive reconstruction of the 43-row circular word also gives a minimum seven. All orientations then obey 7r′≥32+q, with equality at (10,6) and (17,7). For disjoint copies the sharp global minimum at ingress m/4 becomes 171/28 runs per six original runs, a factor 57/56. The 32- and 43-row checks distinguish a limitation of the former constructor from one that persists through the coarsening. [Two finite coarsened witnesses](gaps.csv) · [All 64 symbolic cut outcomes](rotation.csv) · [Affine certificate and independent dense checks](rotation.py)
