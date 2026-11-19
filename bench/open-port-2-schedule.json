@@ -97,14 +97,14 @@
   {
    "corpus": "ho-structured-l9",
    "threads": 8,
-   "rounds": 84,
-   "c": 0.0161
+   "rounds": 96,
+   "c": 0.0151
   },
   {
    "corpus": "ho-structured-l9",
    "threads": 10,
-   "rounds": 84,
-   "c": 0.0161
+   "rounds": 96,
+   "c": 0.0149
   },
   {
    "corpus": "ho-structured-l9",
@@ -127,8 +127,8 @@
   {
    "corpus": "ho-wikidata-l1",
    "threads": 20,
-   "rounds": 72,
-   "c": 0.017
+   "rounds": 84,
+   "c": 0.0161
   },
   {
    "corpus": "onebyte",
@@ -244,5 +244,6 @@
    "rounds": 84,
    "c": 0.0162
   }
- ]
+ ],
+ "serialised": "each c rounded up to 4 places; the planner selects and reports with it (the Researcher's HOLD 7013288271)"
 }

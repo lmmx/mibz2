@@ -57,6 +57,13 @@ GRID = [
     1000,
 ]
 TOL = 0.005
+
+
+def serialise(c):
+    """The cutoff as the schedule stores it and the judge reads it: rounded up to 4 places."""
+    return math.ceil(float(c) * 1e4) / 1e4
+
+
 L1, L2, L3 = math.log(1.01), math.log(1.02), math.log(1.03)
 
 
@@ -123,7 +130,9 @@ for k in CELLS:
     target = max(0.80, g[1] - TOL)
     for n in GRID:
         mo, mp, ma = means(own[k], n), means(pooled[k[0]], n), means(allres, n)
-        c = float(max(np.quantile(mo, 1 - A), np.quantile(mp, 1 - A), np.quantile(ma, 1 - A)))
+        # the cutoff as serialised in the schedule, the one the judge uses (rounded up to 4
+        # places; the Researcher's HOLD 7013288271): selection and every reported figure use it
+        c = serialise(max(np.quantile(mo, 1 - A), np.quantile(mp, 1 - A), np.quantile(ma, 1 - A)))
         if (mo + L2 > c).mean() >= target or n == GRID[-1]:
             break
     ms = means(own[k], n, spike=0.02)
@@ -131,7 +140,7 @@ for k in CELLS:
         "corpus": k[0],
         "threads": k[1],
         "rounds": n,
-        "c": round(c + 5e-5, 4),
+        "c": c,
         "sd": float(own[k].std(ddof=1)),
         "g2": [float((mo + d > c).mean()) for d in (L1, L2, L3)],
         "g2_pooled_2": float((mp + L2 > c).mean()),
