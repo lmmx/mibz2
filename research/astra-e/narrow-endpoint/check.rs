@@ -1,8 +1,19 @@
 //! Compare the narrowed endpoint and its wide fallback with stable LF and historical Open.
 #![allow(dead_code)]
 pub use mibz2::{bwt, runs, Kernels};
+#[cfg(not(any(short_words, ahead)))]
 #[path = "../../../docs/journal/2026-11-18-open-return/open_return.rs"]
 mod old;
+#[cfg(any(short_words, ahead))]
+#[path = "../short-words/constructor.rs"]
+mod old;
+#[cfg(not(any(short_words, ahead)))]
+mod candidate;
+#[cfg(short_words)]
+#[path = "../narrow-short/candidate.rs"]
+mod candidate;
+#[cfg(ahead)]
+#[path = "../narrow-short/ahead.rs"]
 mod candidate;
 
 fn reference(column: &[u8], primary: usize) -> Vec<u8> {
