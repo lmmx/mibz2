@@ -1,0 +1,2 @@
+alphabet=2 max_n=8 sections=86870 disconnected=72024 return_occurrences=334962 exact_meeting_bands=293358 projected_words_runs=277376 equal_labels_across_section_gaps=15982 dynamic_packet_coalescences=0
+alphabet=3 max_n=6 sections=54894 disconnected=34938 return_occurrences=162363 exact_meeting_bands=149138 projected_words_runs=145704 equal_labels_across_section_gaps=3434 dynamic_packet_coalescences=0
