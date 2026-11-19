@@ -1,0 +1,18 @@
+streams 1
+f2c prep_mark=0.4460ms discover=1.5351ms merge=0.1602ms residual_output=0.7127ms total=2.8795ms
+learn prep_mark=0.4306ms discover=1.3871ms merge=0.1416ms residual_output=0.7077ms total=2.6595ms
+eight prep_mark=0.4243ms discover=1.7208ms merge=0.1513ms residual_output=0.7262ms total=3.1512ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=2.3992ms total=2.3992ms
+learn/f2c 0.9370 [0.8827,0.9946]
+learn/lazy 1.0689 [0.9093,1.2566]
+eight/f2c 1.1239 [1.0382,1.2168]
+eight/lazy 1.2821 [1.0733,1.5316]
+streams 1,85,134,176,225,269,313,359,397
+f2c prep_mark=4.7865ms discover=19.1016ms merge=1.6522ms residual_output=7.9611ms total=34.2336ms
+learn prep_mark=4.5703ms discover=18.0863ms merge=1.6088ms residual_output=7.9051ms total=32.8896ms
+eight prep_mark=4.4371ms discover=22.4442ms merge=1.6175ms residual_output=7.7665ms total=37.2648ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=27.3978ms total=27.3978ms
+learn/f2c 0.9304 [0.8672,0.9983]
+learn/lazy 1.2022 [1.1462,1.2609]
+eight/f2c 1.0810 [0.9978,1.1711]
+eight/lazy 1.3967 [1.3142,1.4844]

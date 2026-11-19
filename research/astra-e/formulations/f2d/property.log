@@ -1,0 +1,18 @@
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-e)
+   Compiling cc v1.11.2
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling bzip2 v0.4.4
+    Finished `release` profile [optimized + debuginfo] target(s) in 1m 06s
+     Running unittests src/main.rs (/workspace/work/f2d-native/release/deps/moonshot-53d7c20ebe2ea968)
+
+running 1 test
+each implementation: 11264 exact outputs and 2945 correct refusals
+test candidate::checks::marked_paths ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.02s
+

@@ -29,3 +29,16 @@ rustc --edition=2021 -O "$study/extract.rs" --extern mibz2="$tmp/build/release/d
 python3 "$study/chains.py" --small | diff - "$study/lower-bound.txt"
 python3 "$study/chains.py" "$tmp" | diff - "$study/jumps.csv"
 ```
+
+## Native two-level comparison
+
+The learned arm keeps the F2c run cell at 12 bytes. It packs the byte and an unknown, ambiguous, or known whole-run successor into the same 32-bit field. At the first *actual* mapped-subinterval lookup the returned run is its whole-image destination exactly when both full-image endpoints fit. Every subsequent full hit bypasses the page-index/popcount lookup and still executes the unary-step body. The eight-byte arm additionally caches up to eight cumulative translations and bytes per descriptor. It allocates a four-byte descriptor index for every run plus a 20-byte payload for every created jump. Neither changes the token order, marked offset, second induction, or final output. [Learned source](candidate.rs) · [Eight-byte entry](eight.rs)
+
+Both arms passed 11,264 covered marks and 2,945 exact section-free refusals each. They and the F2c control returned the same bytes as Segmented on all 233 large blocks. The density gate admits 228 of these, or 205,197,794 raw inverse bytes. The stage comparison measures thread CPU after one warm rotation, using 20 paired rotations of F2c, learned, eight-byte and Lazy. Every arm's output is checked outside its timed region. Across nine matched blocks, the ratio of round sums for learned/F2c was 0.9304 [0.8672,0.9983] and learned/Lazy was 1.2022 [1.1462,1.2609]. Eight-byte/F2c was 1.0810 [0.9978,1.1711]. Frozen learned discovery took a median 1.387 ms versus 1.535 ms for F2c. These are inverse-stage observations on this host. The official gate and whole-worker wall/RSS measurements have a separate scope. [Per-block census](geometry.csv) · [Raw paired phases](phase-cpu.csv) · [Full summaries](phase-summary.txt)
+
+```sh
+export MOONSHOT_CANDIDATE="$PWD/$study/candidate.rs"
+cargo test --locked --release --manifest-path bench/moonshot/Cargo.toml candidate::checks::marked_paths -- --nocapture
+bash "$study/native.sh" "$tmp/price" "$tmp/build/release/deps"
+python3 "$study/summary.py" "$tmp/price"
+```
