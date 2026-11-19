@@ -494,10 +494,34 @@ impl Candidate for Mibz2 {
     }
 }
 
+/// The open kernel through the decoder's own route (`decode_with`): `OpenCells` as shipped
+/// (the workers' kernel wherever `LazyCells` ran), or forced onto every run-route block
+/// (`ForcedOpenCells`, so that every block the fuzzer makes reaches it)
+pub struct Mibz2Open {
+    pub forced: bool,
+}
+
+impl Candidate for Mibz2Open {
+    fn name(&self) -> String {
+        format!("mibz2 open{}", if self.forced { " forced" } else { "" })
+    }
+    fn decode(&self, data: &[u8]) -> Result<Vec<u8>, String> {
+        let k = Kernels::detect();
+        let r = if self.forced {
+            mibz2::decode_with::<mibz2::bwt::ForcedOpenCells>(data, k)
+        } else {
+            mibz2::decode_with::<mibz2::bwt::OpenCells>(data, k)
+        };
+        r.map_err(|e| kind_name(&e))
+    }
+}
+
 /// The decoders the harness checks: this crate's, sequential on both kernel sets and
-/// parallel (another decoder joins here)
+/// parallel, and the open kernel's two routes (another decoder joins here)
 pub fn candidates() -> Vec<Box<dyn Candidate>> {
     vec![
+        Box::new(Mibz2Open { forced: false }),
+        Box::new(Mibz2Open { forced: true }),
         Box::new(Mibz2 {
             kernels: Kernels::scalar(),
             threads: 0,

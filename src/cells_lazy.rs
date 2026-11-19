@@ -20,6 +20,15 @@ const LAZY_DENSITY: (usize, usize) = (3, 20);
 /// is 4 in 25. Wikidata's blocks between the density lines need 0.161 to 0.241 cells a row
 const LAZY_BUDGET: (usize, usize) = (8, 25);
 
+/// Whether `LazyCells`' record-count gates admit a block of `records` records in `n` rows: its
+/// density line (`LAZY_DENSITY`, r/n below 0.15) and Cells' sparse gate (r/n at least 1/64), the
+/// two gates `census` tests before any allocation. `OpenCells` admits the open kernel on these
+/// (`docs/journal/2026-11-19-open-admission.md`): it is faster than production on the blocks
+/// `LazyCells` admits and slower on every block these gates refuse.
+pub(crate) fn lazy_counts_admit(records: usize, n: usize) -> bool {
+    records * LAZY_DENSITY.1 < n * LAZY_DENSITY.0 && records * 64 >= n
+}
+
 /// The lazy kernel's budget for a block of `n` rows, rounded down as Cells' own is
 fn lazy_budget(n: usize) -> usize {
     n / LAZY_BUDGET.1 * LAZY_BUDGET.0 + n % LAZY_BUDGET.1 * LAZY_BUDGET.0 / LAZY_BUDGET.1

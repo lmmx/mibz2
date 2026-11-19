@@ -93,6 +93,7 @@ jobs:
           grep -q '^parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop' miri-list.txt
           grep -q '^coop::tests::miri_team_run_and_its_panic' miri-list.txt
           grep -q '^parallel::service_unwind_tests::miri_outer_parked' miri-list.txt
+          grep -q '^open::b5::miri_open_kernel_small_columns:' miri-list.txt
       - name: Miri
         run: cargo miri test --lib -- miri_
       # the memory-lever experiment's staged Cells kernel (`memory-lever`, research): its
