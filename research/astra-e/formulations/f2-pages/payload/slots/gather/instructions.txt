@@ -1,0 +1,34 @@
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a33e:	f3 4d 0f b8 d2       	popcnt %r10,%r10
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a503:	c4 e2 e5 90 14 c1    	vpgatherdq %ymm3,(%rcx,%xmm0,8),%ymm2
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a517:	c4 e2 ed 47 d3       	vpsllvq %ymm3,%ymm2,%ymm2
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a531:	c4 e2 3d 00 db       	vpshufb %ymm3,%ymm8,%ymm3
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a53f:	c4 e2 3d 00 d2       	vpshufb %ymm2,%ymm8,%ymm2
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a54c:	c5 ed f6 d6          	vpsadbw %ymm6,%ymm2,%ymm2
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a55e:	c4 e2 d5 90 24 d9    	vpgatherdq %ymm5,(%rcx,%xmm3,8),%ymm4
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a56f:	c4 e2 dd 47 c9       	vpsllvq %ymm1,%ymm4,%ymm1
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a57c:	c4 e2 5d 90 1c 80    	vpgatherdd %ymm4,(%rax,%ymm0,4),%ymm3
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a58b:	c4 e2 3d 00 c0       	vpshufb %ymm0,%ymm8,%ymm0
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a594:	c4 e2 3d 00 c9       	vpshufb %ymm1,%ymm8,%ymm1
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2a59d:	c5 fd f6 c6          	vpsadbw %ymm6,%ymm0,%ymm0
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2af8b:	c4 e2 65 00 dc       	vpshufb %ymm4,%ymm3,%ymm3
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2af96:	c4 e2 6d 00 d4       	vpshufb %ymm4,%ymm2,%ymm2
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2afa1:	c4 e2 75 00 cc       	vpshufb %ymm4,%ymm1,%ymm1
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2afac:	c4 e2 7d 00 c4       	vpshufb %ymm4,%ymm0,%ymm0
+0000000000029f00 <<focus::slots::Dispatch<2>>::build_avx>:    2b036:	c4 e2 79 00 c1       	vpshufb %xmm1,%xmm0,%xmm0
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e61e:	f3 4d 0f b8 d2       	popcnt %r10,%r10
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e7e3:	c4 e2 e5 90 14 c1    	vpgatherdq %ymm3,(%rcx,%xmm0,8),%ymm2
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e7f7:	c4 e2 ed 47 d3       	vpsllvq %ymm3,%ymm2,%ymm2
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e80a:	c4 e2 d5 90 24 d9    	vpgatherdq %ymm5,(%rcx,%xmm3,8),%ymm4
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e81b:	c4 e2 dd 47 c9       	vpsllvq %ymm1,%ymm4,%ymm1
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e828:	c4 e2 5d 90 1c 80    	vpgatherdd %ymm4,(%rax,%ymm0,4),%ymm3
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e843:	c4 e2 4d 00 c0       	vpshufb %ymm0,%ymm6,%ymm0
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e851:	c4 e2 4d 00 d2       	vpshufb %ymm2,%ymm6,%ymm2
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e85e:	c5 fd f6 c4          	vpsadbw %ymm4,%ymm0,%ymm0
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e878:	c4 e2 4d 00 c0       	vpshufb %ymm0,%ymm6,%ymm0
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e886:	c4 e2 4d 00 c9       	vpshufb %ymm1,%ymm6,%ymm1
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2e88f:	c5 fd f6 c4          	vpsadbw %ymm4,%ymm0,%ymm0
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2f26b:	c4 e2 65 00 dc       	vpshufb %ymm4,%ymm3,%ymm3
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2f276:	c4 e2 6d 00 d4       	vpshufb %ymm4,%ymm2,%ymm2
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2f281:	c4 e2 75 00 cc       	vpshufb %ymm4,%ymm1,%ymm1
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2f28c:	c4 e2 7d 00 c4       	vpshufb %ymm4,%ymm0,%ymm0
+000000000002e1e0 <<focus::slots::Dispatch<2, 2, 2>>::build_avx>:    2f316:	c4 e2 79 00 c1       	vpshufb %xmm1,%xmm0,%xmm0
