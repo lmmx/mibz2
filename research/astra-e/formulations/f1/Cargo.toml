@@ -9,4 +9,4 @@ name = "f1"
 path = "main.rs"
 
 [dependencies]
-mibz2 = { path = "../../../..", features = ["moonshot"] }
+mibz2 = { features = ["moonshot"], path = "../../../.." }
