@@ -1,0 +1,88 @@
+{
+  "dry_sha256": "9e043b67e9e30c8c76237e29f3dd36e9415081e4c40c5703479a1b43ab8f1550",
+  "measured_sha256": "083288e4788798e784c39e5a47f95405f1c94b384485fe4c46aaa575c471c30c",
+  "workers": [
+    7,
+    8,
+    9,
+    10
+  ],
+  "rounds": 16,
+  "runs": 256,
+  "candidate_over_open_wall": [
+    "faster",
+    "faster",
+    "faster",
+    "faster"
+  ],
+  "candidate_over_open_rss": [
+    "unresolved",
+    "smaller",
+    "smaller",
+    "smaller"
+  ],
+  "reproduction": [
+    {
+      "workers": 7,
+      "arm": "open",
+      "historical": 0.919,
+      "observed": 0.9190886144202198,
+      "within": true
+    },
+    {
+      "workers": 7,
+      "arm": "candidate",
+      "historical": 0.87,
+      "observed": 0.8744649237054518,
+      "within": true
+    },
+    {
+      "workers": 8,
+      "arm": "open",
+      "historical": 0.919,
+      "observed": 0.9167932367408755,
+      "within": true
+    },
+    {
+      "workers": 8,
+      "arm": "candidate",
+      "historical": 0.88,
+      "observed": 0.8805964540578876,
+      "within": true
+    },
+    {
+      "workers": 9,
+      "arm": "open",
+      "historical": 0.919,
+      "observed": 0.903228880842032,
+      "within": true
+    },
+    {
+      "workers": 9,
+      "arm": "candidate",
+      "historical": 0.876,
+      "observed": 0.8752940703964697,
+      "within": true
+    },
+    {
+      "workers": 10,
+      "arm": "open",
+      "historical": 0.919,
+      "observed": 0.8976955007107846,
+      "within": true
+    },
+    {
+      "workers": 10,
+      "arm": "candidate",
+      "historical": 0.859,
+      "observed": 0.8766905320962273,
+      "within": true
+    }
+  ],
+  "stretch_by_worker": [
+    false,
+    false,
+    false,
+    false
+  ]
+}
