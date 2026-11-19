@@ -28,7 +28,9 @@ with source.open("a") as f:
     f.write((HERE / "observe.inc.rs").read_text())
 for name in ["gate.rs"]:
     shutil.copy(d / "edge-budget" / name, out / name)
-shutil.copy(HERE / "main.rs", out / "main.rs")
-subprocess.run(["rustc", "--edition=2021", "-C", "opt-level=3", "-C", "codegen-units=1",
-                out/"main.rs", "--extern", f"mibz2={library}",
-                "-L", f"dependency={library.parent}", "-o", out/"replay"], check=True)
+shutil.copy(HERE / "geometry.rs", out / "geometry.rs")
+for name, program in [("main.rs", "replay"), ("panel.rs", "panel")]:
+    shutil.copy(HERE / name, out / name)
+    subprocess.run(["rustc", "--edition=2021", "-C", "opt-level=3", "-C", "codegen-units=1",
+                    out/name, "--extern", f"mibz2={library}",
+                    "-L", f"dependency={library.parent}", "-o", out/program], check=True)
