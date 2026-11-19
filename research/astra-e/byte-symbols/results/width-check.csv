@@ -15,6 +15,8 @@ a256.bz2,scalar,1,0,0,257,92049,ok
 a256.bz2,detected,1,0,0,257,92049,ok
 alternate.bz2,scalar,5,4,2,257,800000,ok
 alternate.bz2,detected,5,4,2,257,800000,ok
+bad-combined.bz2,scalar,1,1,1,257,183442,scan_StreamCrc { stored: 2852566894  computed: 2856761198 }
+bad-combined.bz2,detected,1,1,1,257,183442,scan_StreamCrc { stored: 2852566894  computed: 2856761198 }
 concat-both.bz2,scalar,3,4,4,257,563327,ok
 concat-both.bz2,detected,3,4,4,257,563327,ok
 concat-short.bz2,scalar,1,2,1,256,114115,ok

@@ -38,3 +38,18 @@ for i in range(192):
     else:
         idx=rng.randrange(len(enc));enc[idx]^=1<<rng.randrange(8)
     (d/f"mut-{i:03}.bz2").write_bytes(enc)
+# The first single-block stream is valid. Corrupt only the combined checksum
+# after the last stream's end marker, including the non-byte-aligned case.
+tail=bytearray(streams[4][0])
+bits=''.join(f'{b:08b}' for b in tail)
+mark=f'{0x177245385090:048b}'
+at=bits.rindex(mark)+48+9
+tail[at//8]^=1<<(7-at%8)
+broken=streams[6][0]+tail
+try:
+    bz2.BZ2Decompressor().decompress(tail)
+except OSError:
+    pass
+else:
+    raise AssertionError('the reference accepted the corrupt combined CRC')
+(d/'bad-combined.bz2').write_bytes(broken)
