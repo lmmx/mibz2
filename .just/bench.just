@@ -1940,3 +1940,10 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# Target-only cap-counter comparison against both independently measured i9 ancestors.
+bench-astra-e-cap-counter:
+    bash research/astra-e/workstation/counter/run.sh measure
+
+bench-astra-e-cap-counter-dry:
+    bash research/astra-e/workstation/counter/run.sh dry
