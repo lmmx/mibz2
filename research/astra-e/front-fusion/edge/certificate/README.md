@@ -22,3 +22,5 @@ cmp "$scratch/real.csv" "$d/real.csv"
 rustc -O --edition 2021 "$d/witness.rs" -o "$scratch/witness"
 "$scratch/witness"
 ```
+
+All 32 paired rotations finished after the local worker-dose timing queue. Across the five dense gates the AVX2 capped-record certificate cost 0.0745 [0.0641,0.0866] of the frozen marked walk's CPU. The bitmap version cost 0.2131 [0.1850,0.2453] starting with valid symbol masks. The identical frozen control pair produced 0.9733 [0.8793,1.0773]. Median gate CPU over the five was 1.382 ms frozen, 0.109 ms capped AVX2 and 0.293 ms bitmap. The five original gates occupied 0.358%, 0.188% and 0.205% of the complete serial compressed-input-through-CRC CPU in three separate corpus passes. A complete elimination would consequently save a median of 0.205% of this worker's CPU if other costs stayed fixed. These data establish the phase saving and motivate combining it with further verified changes. [All 128 observations](panel.csv) · [Three complete passes](full.csv) · [Statistics](summary.txt) · [Frozen recipe](recipe.md)
