@@ -186,4 +186,5 @@ int main(int argc,char** argv){
     out.sections<<"block,coordinate,section,base,section_rows,queries,run_intersections,distinct_supports_incidence,visited_rows,second_word_types,second_dictionary_bytes,mark_steps,mark_skip,marked_hit\n";
     unsigned count=0;while(true){Block b;if(!next_block(b,edge,word,thin))break;process(b,out);count++;}
     assert(count==233&&word.peek()==std::char_traits<char>::eof()&&thin.peek()==std::char_traits<char>::eof());std::cerr<<count<<" true tables: all live acquired incoming records, conjugate/physical forward ranks and marked coded bytes matched.\n";
+    return 0;
 }
