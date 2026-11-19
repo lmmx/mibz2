@@ -9,6 +9,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.7](https://github.com/lmmx/mibz2/compare/v0.5.6...v0.5.7) - 2026-11-19
 
+A kernel release. On LazyCells' admitted blocks (r/n from 1/64 to 0.15: Wikidata and other
+repetitive data), the workers now invert with the open kernel. Everywhere else they run
+LazyCells as shipped. The output is byte-identical.
+
+**On the i9-10900K** (open-port-3/run-20261119T171047Z, the one registered attempt, verdict ADOPT):
+
+| | 8 threads | 10 threads | 20 threads | peak RSS |
+|---|--:|--:|--:|--:|
+| Wikidata ×4, wall | 0.954 | 0.934 | 0.940 | 0.76–0.78 |
+| held-out Wikidata, wall | 0.944 | 0.933 | 0.927 | 0.78–0.81 |
+
+- **Sustained** (10 threads back to back): 0.954, at 0.74 of the peak memory.
+- **Corpora with no admitted block** (27 cells): pooled 1.0003 [0.9954, 1.0051], with no cell
+  flagged.
+- **Guard corpora with admitted blocks** (12 cells): no slowdown under Holm; points 0.982–1.006.
+
+**The worker trims** were recalibrated for the new kernel (RELEASING §5c). One changes, at
+6 threads (below).
+
+**The paired run on CI** (the last tag against master, Benchmark run 44588824608, AMD EPYC 7763,
+4 cores) is neutral. At 1–4 threads the open kernel is not on the route there: Wikidata
+−0.7%, −0.2% and +0.9%, every interval spanning 0.
+
+**Caveats:**
+- **The first registered attempt was NOT ADOPTED, and that verdict stands**
+  (open-port/run-20261119T125538Z). Four guard point estimates exceeded 1.02, all on corpora
+  that route no block to the new kernel, under a rule whose false-fail rate was about 0.97.
+- **0.5.7 rests on a second, separately registered evaluation** with fresh data. It used:
+  - a deterministic cachegrind equivalence check on those corpora;
+  - a pooled wall bound;
+  - G per cell, Holm-adjusted, wherever the kernel runs.
+- **Its estimated false NOT-ADOPTED rate** was 0.085–0.12 under the planning models, and 0.26
+  under the pessimistic model.
+- **All figures are from one i9.** The trims apply only to that measured machine.
+- **The new policy** is PERFORMANCE-POLICY §4a (#637).
+
 ### <!-- 3 -->Performance
 
 - *(parallel)* the lazy kernel at 6 threads on the measured i9, pinned and unpinned ([#642](https://github.com/lmmx/mibz2/pull/642))
