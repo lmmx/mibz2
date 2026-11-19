@@ -11,21 +11,26 @@ with (folder / "phase-cpu.csv").open() as source:
     rows = list(csv.DictReader(source))
 phases = ("prep_mark_ns", "discover_ns", "merge_ns", "residual_output_ns", "total_ns")
 blocks = sorted({r["stream"] for r in rows}, key=int)
+arms = list(dict.fromkeys(r["arm"] for r in rows))
+pairs = [("learn", "f2c"), ("learn", "lazy")]
+if "eight" in arms:
+    pairs.extend([("eight", "f2c"), ("eight", "lazy")])
+if "direct-learn" in arms:
+    pairs.extend([("direct-learn", "direct"), ("direct-learn", "learn"), ("direct-learn", "lazy")])
 for selected in (["1"], blocks):
     print("streams " + ",".join(selected))
     observations = [r for r in rows if r["stream"] in selected]
     paired = defaultdict(lambda: defaultdict(int))
-    for arm in ("f2c", "learn", "eight", "lazy"):
+    for arm in arms:
         arm_rows = [r for r in observations if r["arm"] == arm]
         sums = [sum(median(int(r[k]) for r in arm_rows if r["stream"] == block)
                     for block in selected) for k in phases]
         print(arm, " ".join(f"{k.removesuffix('_ns')}={v/1e6:.4f}ms" for k, v in zip(phases, sums)))
         for r in arm_rows:
             paired[arm][int(r["round"])] += int(r["total_ns"])
-    for arm in ("learn", "eight"):
-        for ref in ("f2c", "lazy"):
-            samples = [log(paired[arm][i] / paired[ref][i]) for i in sorted(paired[arm])]
-            assert len(samples) == 20 and set(paired[arm]) == set(paired[ref])
-            delta = 2.093024 * stdev(samples) / sqrt(len(samples))
-            center = mean(samples)
-            print(f"{arm}/{ref} {exp(center):.4f} [{exp(center-delta):.4f},{exp(center+delta):.4f}]")
+    for arm, ref in pairs:
+        samples = [log(paired[arm][i] / paired[ref][i]) for i in sorted(paired[arm])]
+        assert len(samples) == 20 and set(paired[arm]) == set(paired[ref])
+        delta = 2.093024 * stdev(samples) / sqrt(len(samples))
+        center = mean(samples)
+        print(f"{arm}/{ref} {exp(center):.4f} [{exp(center-delta):.4f},{exp(center+delta):.4f}]")

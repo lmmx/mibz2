@@ -42,3 +42,15 @@ cargo test --locked --release --manifest-path bench/moonshot/Cargo.toml candidat
 bash "$study/native.sh" "$tmp/price" "$tmp/build/release/deps"
 python3 "$study/summary.py" "$tmp/price"
 ```
+
+## Two extensions
+
+[Compound marker](compound/) applies the same packed successor theorem to direct induction on the three-byte pattern. A translated unary interval still undergoes the ordinary section-membership check on every step, so overlapping occurrences and swallowed marks do not require an additional certificate. All 98,080 covered and 147,740 refused pattern/mark cases agree with the dense oracle. All admitted and fallback real outputs matched. Twenty pairwise-aligned five-arm rotations across the same nine blocks gave learned-direct/direct 0.9275 [0.8321,1.0339] and learned-direct/Lazy 1.2230 [1.1041,1.3547] in inverse-stage CPU. The nested learned/F2c control in this run was 1.0231 [0.9168,1.1417], whereas the preceding four-arm experiment gave 0.9304 [0.8672,0.9983]. The close result on the two-level kernel did not recur. Retain both observations and the common construction question. [Raw five-arm observations](compound/phase-cpu.csv) · [Summary](compound/phase-summary.txt)
+
+[Path slack](slack.py) tests a stronger skip rule without a separate setup walk. Given an ordinary sequence of h unary transitions with cumulative displacements Δₜ, intersect the original-coordinate preimages [start(runₜ)−Δₜ, end(runₜ)−Δₜ). Any later interval fully inside this intersection has exactly those h bytes and the same cumulative translation. This is exactly the maximal window for that run itinerary. Store its most recently learned descriptor per starting run. After each successful skip pay a lookup for the unknown ending run. A miss captures an otherwise necessary chunk of steps and updates both slack bounds. Every hit's bytes and translated endpoints were checked against the independent original path. Of caps 2/4/8/16, cap 4 saved the most page lookups on the nine admitted blocks, 112,429 of 751,521. Packed one-step reuse saves 199,469 without the interval/four-byte payload, 190,476 descriptor probes or the miss-time bound intersections. This replacement policy fails the comparative structural screen. Other selection policies have separate costs. [All ten streams and sizes](slack.csv)
+
+```sh
+bash "$study/compound/native.sh" "$tmp/compound" "$tmp/build/release/deps"
+python3 "$study/summary.py" "$tmp/compound"
+PYTHONDONTWRITEBYTECODE=1 python3 "$study/slack.py" "$tmp" | diff - "$study/slack.csv"
+```
