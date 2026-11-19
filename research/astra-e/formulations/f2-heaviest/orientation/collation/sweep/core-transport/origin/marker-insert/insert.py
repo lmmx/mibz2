@@ -21,7 +21,6 @@ class Insert:
     def __init__(self,raw,words,old_order,frequency,c,h):
         self.words=[c]
         self.bases=[0]
-        self.prefix={}
         self.old_ids={k:i+1 for i,k in enumerate(old_order)}
         self.selected={k for k in old_order if words[k][min(h,len(words[k])-1):]==c}
         self.s=s=sum(frequency[k] for k in self.selected)
@@ -90,7 +89,7 @@ class Insert:
 
 def verify(col,oracle,u,raw,words,minima,freq,c,h,marks,lib=None):
     obj=Insert(raw,words,sorted(words,key=minima.get),freq,c,h)
-    old,dest_words=truth(oracle,u)
+    old,_=truth(oracle,u)
     # Dense "source -> old destination" truth and exact physical H cut rows.
     src={}
     h_at={}

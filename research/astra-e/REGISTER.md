@@ -52,6 +52,14 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 The [official v1 JSONL register](official-register.jsonl) preserves the scorer's original records; read it with `just moonshot-best research/astra-e/official-register.jsonl`. The register below also includes v0 and gate-only experiments with their input manifests.
 
+The prospective scalar cap proxy, frozen before collecting the twelve new cases, found 1.55–1.70% fewer instructions than edge on three real blocks, with every transfer change below 0.174%. On ordinary block 85 at W10 the maximum past-L2 chain grew from 247 to 288. The measured CI crossover and pending target measurement remain the respective performance evidence. [Prospective plan, raw events and matched binaries](results/scalar-route-pricing/)
+
+The exact width-16 spelling census establishes a 270,366-byte lower bound for even the closest original table with shared contiguous substrings and free descriptors. Aliasing equal bytes cut initialized walk storage 4.06% but left retained walk-vector peak capacity at 1,585,440 bytes and the complete stage unresolved against its identical-code control. Sparse row landmarks doubled residual hops when acquiring offsets and took 1.62–1.89 times stock stage CPU. [Spelling cost and complete differential](edge-spellings/) · [Exact private-cache census](private-cache/) · [Landmark receipts](sparse-landmarks/)
+
+**Combined scalar and counter recovery.** The frozen combined worker at 50b8ecb passed 338 independent cases in the complete refreshed scorer. Against 0.5.6 Lazy at W1 it took 0.9332 [0.7373,1.1810] of the time, and at W4 it took 0.7938 [0.7318,0.8610]. Median process peaks were 0.8952 and 0.7267; the latter is the lowest observed W4 median in the current series. Directly against opend its corresponding wall ratios were 1.0509 [0.8443,1.3081] and 0.8702 [0.6836,1.1077]. The W4 point is below 0.80 and its upper bound exceeds 0.80. The nine rounds have a distinct environment and concurrency from the workstation. Thirty-two local factorial rounds on the instrumented worker measured a 0.8864 [0.8513,0.9229] scan ratio against edge, while complete combined/scalar CPU in forty rounds remained unresolved at 0.9763 [0.9514,1.0018]. A seven-arm independent CI compares all four assignments with the same references and scorer. [Full local scorer](results/v1p2-cap-counter-confirm/) · [Factorial control and raw data](front-fusion/cap-counter/) · [Independent schedule](front-fusion/cap-counter/CI.md)
+
+**Lower-memory successor representation.** The Elias–Fano queue worker a098919 passed all 338 authoritative cases. On 233 admissions it reduced the edge payload to 1.383 bytes per row and fit the edge plus original dictionary in 256 KiB on 203 blocks. It used 614,472 versus 1,585,440 bytes at the highest reused successor-plus-spelling capacity. Twelve independent single-worker processes per arm had median peak 18,570 versus 19,816 KiB. Direct marked inverse CPU was 1.8760 [1.8115,1.9427] of edge, with emission 2.7001 times as costly. Its lower memory is verified locally, separate from the speed and high-worker RSS leader. [Raw complete costs and scorer gate](edge-displacements/)
+
 ## Local leaders by tested design
 
 These are the lowest recorded point estimates within each group of experiments with matching scorer revision, corpus hash, compiler, host, design and worker count. Each experiment pairs its candidate with its own lazy control. Between-experiment order remains uncertain when timing variation is large. A shared quiet comparison is needed to establish which candidate wins head to head. Pilot runs may overlap other work. Confirmation runs have their own rows. The historical control stays separate. RSS leaders remain visible when timing and memory favour different candidates.
@@ -63,7 +71,7 @@ These are the lowest recorded point estimates within each group of experiments w
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1-delimiter-f2c · 1.165 [0.833, 1.628] | v1-delimiter-f2c · 1.002 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-delimiter-f2c · 1.144 [0.826, 1.586] | v1-delimiter-f2c · 0.941 |
 | `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1p2-front-confirm · 0.808 [0.570, 1.145] | v1p2-cap-batch-scalar-confirm · 0.885 |
-| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1p2-final-slot-confirm · 0.767 [0.517, 1.139] | v1p2-edge-confirm · 0.750 |
+| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1p2-final-slot-confirm · 0.767 [0.517, 1.139] | v1p2-cap-counter-confirm · 0.727 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W1** | hierarchy-f4 · 1.940 [1.080, 3.487] | hierarchy-f4 · 0.878 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W4** | hierarchy-f4 · 2.159 [1.407, 3.313] | hierarchy-f4 · 0.819 |
 | `9c31461` local score, grid 1,4, 6r ×2, settle 2s, full, 3 arms, **W1** | delimiter-f2b · 1.460 [1.210, 1.762] | tableless-f1b · 0.951 |
@@ -1662,6 +1670,32 @@ git checkout be74d5763d212864607d46521d74ebc0827f9f36 -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/front-fusion/cap-batch/worker/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/front-fusion/cap-batch/worker/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/astra-cap-batch-scalar-build
+```
+
+## v1p2-cap-counter-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-cap-counter-confirm/score/check.jsonl) · [manifest](results/v1p2-cap-counter-confirm/manifest.txt) · [score](results/v1p2-cap-counter-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`97ab8ad0b9744cf8a008ef9642e9049dc4e0b350`](https://github.com/lmmx/mibz2/tree/97ab8ad0b9744cf8a008ef9642e9049dc4e0b350). [Candidate entry](https://github.com/lmmx/mibz2/blob/97ab8ad0b9744cf8a008ef9642e9049dc4e0b350/research/astra-e/front-fusion/cap-counter/both.rs). Fetched master `3df195b10e9fb6f86f0c06ad9fad1feb992406d5`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 0.933 [0.737, 1.181] | 0.888 [0.755, 1.045] | 1.051 | 71,756 / 80,160 / 77,372 | 0.895 |
+| 4 | 9 | 0.794 [0.732, 0.861] | 0.912 [0.759, 1.096] | 0.870 | 100,596 / 138,428 / 118,004 | 0.727 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1p2-cap-counter-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+No independent benchmark is attached to this individual scorer receipt.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 3df195b10e9fb6f86f0c06ad9fad1feb992406d5 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/front-fusion/cap-counter/both.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/front-fusion/cap-counter/both.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --corpus corpora/wikidata.bz2 --target-dir /workspace/work/astra-cap-counter-official
 ```
 
 ## v1p2-cap-edge-certificate-gate
