@@ -1,0 +1,7 @@
+moonshot: building the harness with /workspace/work/f2d-score-tree/research/astra-e/formulations/f2d/candidate.rs
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/f2d-score-tree/bench/moonshot)
+   Compiling mibz2 v0.5.6 (/workspace/work/f2d-score-tree)
+    Finished `release` profile [optimized + debuginfo] target(s) in 1m 53s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/f2d-score-tree/corpora/wikidata.bz2
+moonshot: written to research/astra-e/results/f2d-learn-gate/score
+moonshot: recorded in research/astra-e/results/f2d-learn-gate/official-register.jsonl
