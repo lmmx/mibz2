@@ -1,3 +1,5 @@
 # Favorable native hardware test
 
 Freeze the historical Astra 3 first byte coloring, the protected rank and the exact carried-owner representation. Export the complete ready-to-use implicit indices from the independently checked Python constructor. Compare a native marked writer against the frozen scalar-cap control on the same ten production capped inputs. Charge all dependent owner/word lookups and literal output in the native writer, giving it free index construction, initial mark transfer and preallocated output. Check every output against the complete original bytes. Use 24 paired ten-block rounds of pinned thread CPU. Unfavorable free-index time closes this serial representation. A favorable result would require a new all-in paid native constructor and an independent worker benchmark.
+
+Also repeat the panel with an immediate untimed exact run of the same arm on the same block before every timed call. This gives the writer its fully touched index and preallocated output at entry. Keep the original once-warmed, rotating-block series separately.
