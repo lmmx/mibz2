@@ -62,6 +62,8 @@ def load(path):
     runs = [json.loads(s) for s in runs_file.read_text().splitlines()] if runs_file.exists() else []
     info = score.get("info", {})
     printed = next((source[k] for source in (info, score) for k in ("scorer_version", "version") if source.get(k)), None)
+    if score.get("scorer", {}).get("version"):
+        printed = "{version} at {commit}".format(**score["scorer"])
     if printed is None:
         report = path.with_name("summary.txt").read_text()
         match = re.search(r"^.*?scorer[ _-]version\s*[:= ]\s*(\S+)", report, re.I | re.M)
@@ -131,6 +133,14 @@ def describe(e):
             lines.append(f"| {w} | {number(m['instructions_per_byte'])} | {traffic} | {links} | {number(m['dram_mlp'])} | "
                          f"{'outside' if proxy['out_of_calibration'][w] else 'within envelope'} |")
         lines.append("")
+        predictions = proxy.get("predicted_over_lazy", {}).get("candidate", {})
+        if predictions and "drivers" in next(iter(predictions.values())):
+            lines.extend(["| W model | Paired bootstrap predicted ratio vs lazy [95%] | Instruction ratio | Contention feedback |",
+                          "|---:|---|---:|---:|"])
+            for w, row in sorted(predictions.items(), key=lambda pair: int(pair[0])):
+                lines.append(f"| {w} | {number(row['ratio'])} [{number(row['lo'])}, {number(row['hi'])}] | "
+                             f"{number(row['drivers']['instructions_ratio'])} | {number(row['drivers']['contention_feedback'])} |")
+            lines.append("")
     else:
         lines.extend(["This score has no completed instruction, cache-transfer, dependency or overlap model.", ""])
     if e["note"].get("assessment"):

@@ -34,5 +34,9 @@ mkdir -p "$dest"
   printf ' %q' "$@"
   printf '\n'
 } > "$dest/manifest.txt"
-python3 bench/moonshot/moonshot.py score "$candidate" --out "$dest/score" "$@" \
+record=()
+if python3 bench/moonshot/moonshot.py score --help | rg -q -- '--record'; then
+  record=(--record "$dest/official-register.jsonl")
+fi
+python3 bench/moonshot/moonshot.py score "$candidate" --out "$dest/score" "${record[@]}" "$@" \
    > "$dest/stdout.txt" 2> "$dest/stderr.txt"

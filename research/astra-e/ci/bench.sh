@@ -50,6 +50,17 @@ head_bin=$RUNNER_TEMP/astra-e-candidate/release/moonshot
   echo "fetched master $fresh"
   echo "selected scorer source $chosen"
   git log -1 --format='scorer path revision %h %H' "$chosen" -- bench/moonshot
+  python3 -B - <<'SCORER'
+import sys
+
+sys.path.insert(0, "bench/moonshot")
+import moonshot
+
+if hasattr(moonshot, "VERSION"):
+    print(f"scorer {moonshot.VERSION} at {moonshot.scorer_commit()}")
+else:
+    print("scorer version not printed by this revision")
+SCORER
   sha256sum "$candidate" "$base_bin" "$head_bin"
   "$base_bin" info
   "$head_bin" info
