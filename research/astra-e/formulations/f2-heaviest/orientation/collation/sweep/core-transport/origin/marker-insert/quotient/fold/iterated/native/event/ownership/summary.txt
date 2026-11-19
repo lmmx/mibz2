@@ -1,0 +1,48 @@
+named max capacity 8473542 max RSS KiB 8184
+indexed max capacity 7648262 max RSS KiB 7316
+dense max capacity 10920006 max RSS KiB 9416
+owner max capacity 11224358 max RSS KiB 9700
+ten.csv n sum 8999915 min 899931 max 900000
+ten.csv period sum 8999915 min 899931 max 900000
+ten.csv leaf_copies sum 259770 min 18717 max 43846
+ten.csv leaf_bytes sum 1970201 min 145725 max 357224
+ten.csv copied_bytes sum 7029714 min 542760 max 754275
+ten.csv hits sum 178950 min 15432 max 23066
+ten.csv partial_hits sum 0 min 0 max 0
+ten.csv partial_misses sum 2152 min 120 max 476
+ten.csv visits sum 878498 min 71452 max 133887
+ten.csv published sum 437626 min 35629 max 66845
+ten.csv owner_slots sum 438702 min 35693 max 66910
+ten.csv owner_bytes sum 2891344 min 152176 max 304352
+ten.csv stack sum 1060 min 54 max 248
+rss-3.csv n sum 205197794 min 899809 max 900000
+rss-3.csv period sum 205197794 min 899809 max 900000
+rss-3.csv leaf_copies sum 5493153 min 11032 max 44359
+rss-3.csv leaf_bytes sum 42592248 min 103166 max 357224
+rss-3.csv copied_bytes sum 162605546 min 542760 max 796834
+rss-3.csv hits sum 3971143 min 14070 max 24014
+rss-3.csv partial_hits sum 4 min 0 max 1
+rss-3.csv partial_misses sum 61366 min 24 max 3042
+rss-3.csv visits sum 18958866 min 54965 max 133887
+rss-3.csv published sum 9433204 min 27432 max 66845
+rss-3.csv owner_slots sum 9463884 min 27465 max 66910
+rss-3.csv owner_bytes sum 69240080 min 152176 max 304352
+rss-3.csv stack sum 30318 min 28 max 1512
+phase named total_ns=7197.57us first_ns=4256.75us index_ns=0.00us contract_ns=0.00us emit_ns=2940.18us
+phase indexed total_ns=8975.62us first_ns=4169.95us index_ns=709.85us contract_ns=0.00us emit_ns=4094.04us
+phase owner total_ns=15035.54us first_ns=4110.44us index_ns=1329.47us contract_ns=6103.34us emit_ns=3485.48us
+phase dense total_ns=17627.82us first_ns=4097.29us index_ns=1347.25us contract_ns=5970.42us emit_ns=6209.99us
+owner/dense=0.8572 [0.7991,0.9196]
+owner/named=2.1134 [1.8992,2.3517]
+owner/indexed=1.6778 [1.5621,1.8021]
+free_emit/dense=0.6512 [0.6187,0.6853]
+free_emit/named=1.6054 [1.4601,1.7652]
+owner_emit_only/named_second=1.2148 [1.1156,1.3228]
+resident plain_a emit_ns=5880.58us
+resident owner_a emit_ns=3424.31us
+resident owner_b emit_ns=3149.58us
+resident plain_b emit_ns=5934.06us
+owner_a/plain_a=0.5783 [0.5228,0.6396]
+owner_b/plain_b=0.5150 [0.4483,0.5916]
+plain_b/plain_a=1.0093 [0.9150,1.1134]
+owner_b/owner_a=0.8989 [0.7718,1.0469]
