@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <ctime>
 #include <vector>
 
 using Clock = std::chrono::steady_clock;
@@ -25,6 +26,7 @@ struct Stats {
     u64 live_merges=0, full_seeks=0, comparisons=0, retained=0, next=0, sort_comparisons=0;
     u64 peak_frontier=0, peak_frontier_capacity=0, depth=0, source_rows=0, covered=0;
     u64 word_bytes=0, words=0, mark_seeks=0, output_lookups=0, mark_prefix=0;
+    u64 page_seeks=0, page_run_increments=0, scatter_writes=0;
 };
 
 template<class T> u64 cap(const std::vector<T>& v) { return sizeof(T)*v.capacity(); }
@@ -33,6 +35,8 @@ class Forward {
     int n;
     std::vector<Interval> section;
     std::vector<Select> select;
+    bool pages, scatter;
+    std::vector<int> page_start, section_offset, band_at;
     std::vector<Node> nodes{{-1,0}};
     std::vector<Band> bands;
     std::vector<int> spelling_offset, spelling_len;
@@ -44,6 +48,15 @@ class Forward {
         if (prev>=0 && prev+1<int(select.size()) && x<select[prev+1].hi) {
             if(account) ++s.next;
             return prev+1;
+        }
+        if (pages) {
+            if (account) ++s.page_seeks;
+            int i=page_start[x/64];
+            while (x>=select[i].hi) {
+                ++i;
+                if (account) ++s.page_run_increments;
+            }
+            return i;
         }
         int lo=prev>=0 ? prev+2 : 0, hi=select.size();
         if(account) ++s.full_seeks;
@@ -66,8 +79,9 @@ class Forward {
 public:
     Stats s;
     double setup_ms=0, discover_ms=0, order_ms=0, dict_ms=0, emit_ms=0;
-    Forward(int n_,const std::vector<InputRun>& runs, std::vector<Interval> components)
-        : n(n_), section(std::move(components)) {
+    Forward(int n_,const std::vector<InputRun>& runs, std::vector<Interval> components,
+            bool use_pages=false, bool use_scatter=false)
+        : n(n_), section(std::move(components)), pages(use_pages), scatter(use_scatter) {
         auto t=Clock::now();
         std::array<int,256> counts{}, positions{}, slots{}, run_counts{};
         for(auto r:runs) { counts[r.byte]+=r.width; ++run_counts[r.byte]; }
@@ -83,6 +97,20 @@ public:
             positions[r.byte]+=r.width; row+=r.width;
         }
         assert(row==n);
+        if (pages) {
+            int i=0;
+            int num_pages=(n+63)/64;
+            page_start.reserve(num_pages);
+            for (int page=0; page<num_pages; ++page) {
+                while (select[i].hi<=page*64) ++i;
+                page_start.push_back(i);
+            }
+        }
+        if (scatter) {
+            int total=0;
+            for (auto v:section) { section_offset.push_back(total-v.lo); total+=v.hi-v.lo; }
+            band_at.resize(total);
+        }
         setup_ms=std::chrono::duration<double,std::milli>(Clock::now()-t).count();
     }
 
@@ -162,18 +190,29 @@ public:
         }
         discover_ms=std::chrono::duration<double,std::milli>(Clock::now()-t).count();
         t=Clock::now();
-        std::sort(bands.begin(),bands.end(),[this](const Band& a,const Band& b) {
-            ++s.sort_comparisons; return a.source<b.source;
-        });
-        size_t k=0;
-        for(auto b:bands) {
-            if(k && bands[k-1].source+bands[k-1].width==b.source &&
-                    bands[k-1].dest+bands[k-1].width==b.dest &&
-                    bands[k-1].word==b.word && bands[k-1].color==b.color)
-                bands[k-1].width+=b.width;
-            else bands[k++]=b;
+        if (scatter) {
+            for (int i=0;i<int(bands.size());++i) {
+                auto b=bands[i];
+                int c=next_component(b.source);
+                assert(c<int(section.size()) && b.source+b.width<=section[c].hi);
+                int first=b.source+section_offset[c];
+                std::fill_n(band_at.begin()+first,b.width,i);
+                s.scatter_writes+=b.width;
+            }
+        } else {
+            std::sort(bands.begin(),bands.end(),[this](const Band& a,const Band& b) {
+                ++s.sort_comparisons; return a.source<b.source;
+            });
+            size_t k=0;
+            for(auto b:bands) {
+                if(k && bands[k-1].source+bands[k-1].width==b.source &&
+                        bands[k-1].dest+bands[k-1].width==b.dest &&
+                        bands[k-1].word==b.word && bands[k-1].color==b.color)
+                    bands[k-1].width+=b.width;
+                else bands[k++]=b;
+            }
+            bands.resize(k);
         }
-        bands.resize(k);
         order_ms=std::chrono::duration<double,std::milli>(Clock::now()-t).count();
         t=Clock::now();
         spelling_offset.assign(nodes.size(),-1); spelling_len.resize(nodes.size());
@@ -206,9 +245,16 @@ public:
         s.mark_prefix=out.size();
         while(int(out.size())<n) {
             ++s.output_lookups;
-            auto it=std::upper_bound(bands.begin(),bands.end(),row,
-                  [](int x,const Band& b){return x<b.source;});
-            assert(it!=bands.begin()); auto b=*(--it);
+            Band b;
+            if (scatter) {
+                int component=next_component(row);
+                b=bands[band_at[row+section_offset[component]]];
+            } else {
+                auto it=std::upper_bound(bands.begin(),bands.end(),row,
+                        [](int x,const Band& band){return x<band.source;});
+                assert(it!=bands.begin());
+                b=*(--it);
+            }
             assert(row<b.source+b.width);
             out.append(dictionary,spelling_offset[b.word],std::min(n-int(out.size()),spelling_len[b.word]));
             row=b.dest+row-b.source;
@@ -232,6 +278,11 @@ public:
         FIELD("n",n); FIELD("groups",s.groups); FIELD("packet_inputs",s.packets);
         FIELD("select_translations",s.translations); FIELD("component_pieces",s.classified);
         FIELD("live_outputs",s.live_outputs); FIELD("raw_hits",s.raw_hits); FIELD("live_merges",s.live_merges);
+        FIELD("select_page_seeks",s.page_seeks);
+        FIELD("select_page_run_increments",s.page_run_increments);
+        FIELD("page_capacity_bytes",cap(page_start));
+        FIELD("source_directory_capacity_bytes",cap(band_at)+cap(section_offset));
+        FIELD("source_directory_fills",s.scatter_writes);
         FIELD("select_binary_searches",s.full_seeks); FIELD("select_binary_comparisons",s.comparisons);
         FIELD("select_finger_retained",s.retained); FIELD("select_finger_next",s.next);
         FIELD("sort_comparisons",s.sort_comparisons); FIELD("max_depth",s.depth); FIELD("peak_frontier",s.peak_frontier);
@@ -249,13 +300,22 @@ public:
         if(hit) hex(output.data(),output.size()); else std::cout<<"null";
         if(detailed) {
             std::cout<<",\"bands\":["; bool first=true;
-            for(auto b:bands) {
+            auto dump=[&](const Band& b) {
                 if(!first) std::cout<<",";
                 first=false;
                 std::cout<<"["<<b.source<<","<<b.dest<<","<<b.width<<",";
                 hex(dictionary.data()+spelling_offset[b.word],spelling_len[b.word]);
                 std::cout<<","<<b.color<<"]";
-            }
+            };
+            if(scatter) {
+                for(size_t c=0;c<section.size();++c)
+                    for(int row=section[c].lo;row<section[c].hi;) {
+                        const auto& b=bands[band_at[row+section_offset[c]]];
+                        assert(b.source==row);
+                        dump(b);
+                        row+=b.width;
+                    }
+            } else for(const auto& b:bands) dump(b);
             std::cout<<"]";
         }
         std::cout<<"}\n";
@@ -264,12 +324,46 @@ public:
 
 int main(int argc,char** argv) {
     std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
-    bool detailed=argc==2 && std::string(argv[1])=="BANDS";
+    std::string command=argc>1 ? argv[1] : "";
+    bool detailed=command=="BANDS" || command=="INDEXED_BANDS";
+    bool indexed=command=="INDEXED_BANDS";
+    bool price=command=="PRICE";
+    int rounds=price && argc>2 ? std::stoi(argv[2]) : 1;
     int n,mark,r,c;
     while(std::cin>>n>>mark>>r>>c) {
         assert(n>0 && 0<=mark && mark<n);
         std::vector<InputRun> runs(r); for(auto &v:runs) std::cin>>v.byte>>v.width;
         std::vector<Interval> comp(c); for(auto &v:comp) std::cin>>v.lo>>v.hi;
-        Forward f(n,runs,std::move(comp)); f.discover(); f.write(mark,detailed);
+        if(!price) {
+            Forward f(n,runs,std::move(comp),indexed,indexed); f.discover(); f.write(mark,detailed);
+            continue;
+        }
+        std::string expected;
+        for(int lap=-1;lap<rounds;++lap) {
+            for(int slot=0;slot<4;++slot) {
+                int id=(slot+lap+1)%4;
+                if(lap>=0 && (lap/4)%2==1) id=3-id;
+                timespec before, after;
+                clock_gettime(CLOCK_THREAD_CPUTIME_ID,&before);
+                auto start=Clock::now();
+                std::string out;
+                bool hit;
+                double setup,discover,order,dict,emit;
+                {
+                    Forward f(n,runs,comp,id%2,id/2);
+                    f.discover(); hit=f.expand(mark,out);
+                    setup=f.setup_ms;discover=f.discover_ms;order=f.order_ms;dict=f.dict_ms;emit=f.emit_ms;
+                }
+                double wall=std::chrono::duration<double,std::milli>(Clock::now()-start).count();
+                clock_gettime(CLOCK_THREAD_CPUTIME_ID,&after);
+                double cpu=(after.tv_sec-before.tv_sec)*1000.+(after.tv_nsec-before.tv_nsec)*1e-6;
+                assert(hit && out.size()==size_t(n));
+                if(lap==-1 && slot==0) expected=out;
+                else assert(expected==out);
+                if(lap>=0)
+                    std::cout<<lap<<","<<slot<<","<<id<<","<<cpu<<","<<wall<<","<<setup<<","
+                             <<discover<<","<<order<<","<<dict<<","<<emit<<"\n";
+            }
+        }
     }
 }
