@@ -19,7 +19,7 @@ rounds in the harness's ABBA order, unpinned, at the registered settle of 2 s):
 - **B1, zero-route guards** (`b1.jsonl`): the 9 corpora of `B1` at 8, 10 and 20 threads, 16 rounds.
 - **B2, admitted guards** (`b2.jsonl`): the 4 corpora of `B2` at 8, 10 and 20 threads, 32 rounds.
 - **B3, benefit** (`b3.jsonl`): wikidata-x4 and ho-wikidata-l9 at 8, 10 and 20 threads, 12 rounds.
-- **B4, sustained** (`b4.jsonl`): wikidata-x16 at 10 threads, back to back (settle 0), 8 rounds.
+- **B4, sustained** (`b4.jsonl`): wikidata-x16 at 10 threads, back to back (settle 0), 16 rounds.
 
 **Each cell** (corpus, count): x_i, the rounds' paired log ratios of wall, the port over v0.5.6;
 its mean m, standard error s/sqrt(n), and peak RSS as the median of the port's peaks over the median
@@ -34,14 +34,16 @@ HOLD 7015030749):**
   on any Python). Pass: the upper bound at most `POOLED_MAX` (1.01).
 - **B1, credible regression.** A cell is flagged when its one-sided lower confidence bound,
   m - t(1 - 0.05/27, n - 1) * s/sqrt(n), lies above log `FLAG_MIN` (1.02). Any flag fails.
-- **B2 = G exactly, in each of the 12 cells** (Open executes there): not SLOWER (the two-sided
-  95% t-interval wholly above 1), a geometric mean at most `GUARD_MAX` (1.02), and peak RSS at
-  most 1.10. The pooled B2 figure is reported, not judged.
+- **B2, G in each of the 12 cells, its SLOWER test multiplicity-adjusted** (Open executes there;
+  the Coordinator's prospective ruling after the planner's figures): a cell fails if its
+  one-sided slowdown test (Student's t) is rejected under Holm across the 12 at family alpha
+  0.05, or its geometric mean is above `GUARD_MAX` (1.02), or its peak RSS is above 1.10. The
+  pooled B2 figure is reported, not judged.
 - **Memory, every guard cell (B1 and B2):** peak RSS at most `RSS_GATE` (1.10).
 - **B3, benefit:** every one of the 6 cells is FASTER (its two-sided 95% t-interval wholly below
   1) and a gain under Holm at family alpha 0.05 (one-sided t, as P1 was); and its peak RSS is at
   most 1.00.
-- **B4 = S exactly as registered:** not SLOWER, and a geometric mean at most 1.02; no memory
+- **B4, S's rule at 16 rounds:** not SLOWER, and a geometric mean at most 1.02; no memory
   condition.
 - **Part A,** bound to its evidence: the summary's SHA-256 is the committed one's
   (`PART_A_SHA256`), its `voids` and `triggers` are present, its rows cover every B1 corpus at
@@ -92,7 +94,7 @@ B1 = (
 B2 = ("ho-wikidata-l1", "ho-structured-l1", "ho-structured-l9", "ho-prose-l1")
 B3 = (op.MAIN, op.HELDOUT)
 B4 = (op.SUSTAINED, 10)
-B1_ROUNDS, B2_ROUNDS, BENEFIT_ROUNDS, SUSTAINED_ROUNDS, SETTLE = 16, 32, 12, 8, 2
+B1_ROUNDS, B2_ROUNDS, BENEFIT_ROUNDS, SUSTAINED_ROUNDS, SETTLE = 16, 48, 12, 16, 2
 POOLED_MAX, FLAG_MIN, RSS_GATE, BENEFIT_RSS, ALPHA = 1.01, 1.02, op.RSS_GATE, 1.00, 0.05
 GUARD_MAX = op.GUARD_MAX
 # Part A's committed summary (docs/journal/2026-11-19-open-port-3-registration/part-a/summary.json)
@@ -182,6 +184,16 @@ def interval(xs):
     m = statistics.mean(xs)
     h = t_quantile(0.975, n - 1) * statistics.stdev(xs) / math.sqrt(n)
     return math.exp(m), math.exp(m - h), math.exp(m + h)
+
+
+def p_slow(xs):
+    """One-sided p that a cell's mean log ratio is above 0 (a slowdown; Student's t)"""
+    n = len(xs)
+    sd = statistics.stdev(xs)
+    m = statistics.mean(xs)
+    if sd == 0:
+        return 0.0 if m > 0 else 1.0
+    return 1 - t_cdf(m / (sd / math.sqrt(n)), n - 1)
 
 
 def flag_bound(xs, k):
@@ -349,17 +361,28 @@ def judge(a):
     r = rows["b2.jsonl"]
     cells = [(c, t) for t in COUNTS for c in B2]
     xs = {ct: logs(r, *ct, B2_ROUNDS) for ct in cells}
+    ps = {ct: p_slow(xs[ct]) for ct in cells}
+    slower = op.holm(ps, ALPHA)
     print(
-        f"\nB2, admitted guards (G, per cell): {len(cells)} cells, {B2_ROUNDS} rounds; geometric mean "
-        f"[95% t-interval]; peak RSS. Fails: SLOWER, above {GUARD_MAX}, or memory above {RSS_GATE}"
+        f"\nB2, admitted guards (G per cell, its SLOWER test adjusted): {len(cells)} cells, "
+        f"{B2_ROUNDS} rounds; geometric mean [95% t-interval]; one-sided p (slowdown); peak RSS. "
+        f"Fails: a slowdown under Holm at family alpha {ALPHA}, above {GUARD_MAX}, or memory above "
+        f"{RSS_GATE}"
     )
     for c, t in cells:
         g, glo, ghi = interval(xs[(c, t)])
         mem = memory(r, c, t, B2_ROUNDS)
-        print(f"  {c} {t}t: {g:.4f} [{glo:.4f}, {ghi:.4f}] {op.label(glo, ghi)}; memory {mem:.3f}")
-        if glo > 1:
-            fails.append(f"B2: {c} at {t} threads SLOWER, {g:.4f} [{glo:.4f}, {ghi:.4f}]")
-        elif g > GUARD_MAX:
+        print(
+            f"  {c} {t}t: {g:.4f} [{glo:.4f}, {ghi:.4f}] {op.label(glo, ghi)}; p {ps[(c, t)]:.2e}"
+            + (" (Holm rejects)" if (c, t) in slower else "")
+            + f"; memory {mem:.3f}"
+        )
+        if (c, t) in slower:
+            fails.append(
+                f"B2: {c} at {t} threads SLOWER after Holm (p {ps[(c, t)]:.2e}), {g:.4f} "
+                f"[{glo:.4f}, {ghi:.4f}]"
+            )
+        if g > GUARD_MAX:
             fails.append(f"B2: {c} at {t} threads {g:.4f}, above the bound {GUARD_MAX}")
         if mem > RSS_GATE:
             fails.append(f"memory: {c} at {t} threads peak RSS {mem:.3f}, above {RSS_GATE}")
@@ -407,7 +430,7 @@ def judge(a):
         print(
             "\nVERDICT: ADOPT. Part A bound and attributed; the zero-route guards' pooled upper bound "
             f"within {POOLED_MAX} with no credible regression above {FLAG_MIN}; every admitted guard "
-            f"within G (not SLOWER, at most {GUARD_MAX}); every benefit cell FASTER and a gain under "
+            f"within G (no slowdown under Holm, at most {GUARD_MAX}); every benefit cell FASTER and a gain under "
             f"Holm at no more memory; sustained within S; every guard's memory within {RSS_GATE}."
         )
     return 0

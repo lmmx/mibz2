@@ -296,9 +296,9 @@ def main():
             [
                 "VERDICT: ADOPT",
                 "b1.jsonl 864 of 864",
-                "b2.jsonl 768 of 768",
+                f"b2.jsonl {24 * o3.B2_ROUNDS} of {24 * o3.B2_ROUNDS}",
                 "b3.jsonl 144 of 144",
-                "b4.jsonl 16 of 16",
+                f"b4.jsonl {2 * o3.SUSTAINED_ROUNDS} of {2 * o3.SUSTAINED_ROUNDS}",
                 f"Part A: sha256 {o3.PART_A_SHA256[:16]}…; 36 cells, 162 zero-open receipts; 0 VOIDs; "
                 "124 triggers, 124 with a written attribution",
                 "pooled (reported, not judged)",
@@ -345,7 +345,7 @@ def main():
             "interval: B2 fails it",
             build3(step={("ho-prose-l1", 10): 1.05}),
             0,
-            ["B2: ho-prose-l1 at 10 threads SLOWER", "NOT ADOPTED"],
+            ["B2: ho-prose-l1 at 10 threads SLOWER after Holm", "NOT ADOPTED"],
             absent=["VERDICT: ADOPT"],
         )
     )
@@ -356,15 +356,41 @@ def main():
             build3(vectors={("ho-structured-l1", 20): v}),
             0,
             ["B2: ho-structured-l1 at 20 threads 1.0250, above the bound 1.02", "NOT ADOPTED"],
-            absent=["B2: ho-structured-l1 at 20 threads SLOWER"],
+            absent=["B2: ho-structured-l1 at 20 threads SLOWER after Holm"],
         )
     )
     res.append(
         expect(
-            "every admitted cell truly 1.5% slower: B2 fails each SLOWER cell",
+            "every admitted cell truly 1.5% slower: B2 fails each, SLOWER after Holm",
             build3(step={(c, t): 1.015 for c in o3.B2 for t in o3.COUNTS}),
             0,
-            ["B2: ho-wikidata-l1 at 8 threads SLOWER", "NOT ADOPTED"],
+            ["B2: ho-wikidata-l1 at 8 threads SLOWER after Holm", "NOT ADOPTED"],
+            absent=["above the bound 1.02"],
+        )
+    )
+    res.append(
+        expect(
+            "one admitted cell at 1.015, within the point bound, its slowdown significant after Holm: "
+            "B2 fails it",
+            build3(step={("ho-structured-l9", 10): 1.015}),
+            0,
+            [
+                "B2: ho-structured-l9 at 10 threads SLOWER after Holm",
+                "(Holm rejects)",
+                "NOT ADOPTED",
+            ],
+            absent=["above the bound 1.02"],
+        )
+    )
+    v = shaped(37, o3.B2_ROUNDS, 1.008, 0.01878 * math.sqrt(o3.B2_ROUNDS / 32))
+    res.append(
+        expect(
+            "one admitted cell at 1.008, SLOWER unadjusted (p about 0.011) but not after Holm: "
+            "B2 passes it (what the adjustment gives up)",
+            build3(vectors={("ho-wikidata-l1", 20): v}),
+            0,
+            ["ho-wikidata-l1 20t: 1.0080", "SLOWER; p 1.", "VERDICT: ADOPT"],
+            absent=["(Holm rejects)", "NOT ADOPTED"],
         )
     )
     # B3: FASTER and Holm (point 1)
@@ -409,7 +435,7 @@ def main():
             ["B4: sustained SLOWER", "NOT ADOPTED"],
         )
     )
-    v = shaped(13, o3.SUSTAINED_ROUNDS, 1.03, 0.05)
+    v = shaped(13, o3.SUSTAINED_ROUNDS, 1.03, 0.08)
     res.append(
         expect(
             "Researcher HOLD 3: sustained at 1.03 whose interval crosses 1: B4 fails it on the point bound",

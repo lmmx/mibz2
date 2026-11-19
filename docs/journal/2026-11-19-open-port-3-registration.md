@@ -14,6 +14,13 @@ urgent review by the Researcher through the Coordinator.*
   - *B4* is S exactly as registered;
   - *Part A* is bound to its committed evidence;
   - *B1* is unchanged (ruled admissible under PERFORMANCE-POLICY §4a).
+- **Then changed by the Coordinator's prospective ruling** (under Louis's authority), after
+  `oc2.txt` put the false NOT ADOPTED rate at 0.31–0.51:
+  - *B2:* the SLOWER test is adjusted for multiplicity across the 12 cells (Holm, family α 0.05,
+    one-sided), with the 1.02 point cap and the 1.10 RSS cap unchanged, at **48 rounds**;
+  - *B4:* S's rule at **16 rounds**.
+
+  Why, and what it gives up, are in §5.
 - **What stands:**
   - the first registration's NOT ADOPTED (`open-port/run-20261119T125538Z`), permanently;
   - #635 is shelved and will not be run; its branch is kept as a record.
@@ -21,7 +28,7 @@ urgent review by the Researcher through the Coordinator.*
   9743bbe0d51ba451b8b8ab9e6fd731c238940052, against v0.5.6 (530ed404). Its correctness evidence
   (B5, D115 and Miri) is unchanged.
 - **The recipe:** `just bench-open-port-3`, on `bench/open-port-3`. The scorer is
-  `bench/open_port3.py`, and its checks are `bench/test_open_port3.py` (48, in CI).
+  `bench/open_port3.py`, and its checks are `bench/test_open_port3.py` (50, in CI).
 - **One attempt.** It is archived as `open-port-3/run-*.tar.gz`, with the guard, the timing marker,
   the queue entry and the ready tag, as before.
 
@@ -136,15 +143,15 @@ registered settle of 2 s):
 | part | file | corpora | threads | rounds | records |
 |---|---|---|---|---|---|
 | B1, zero-route guards | `b1.jsonl` | text, random, records, runs, pattern, onebyte, ho-code-l1, ho-code-l9, ho-prose-l9 | 8, 10, 20 | 16 | 864 |
-| B2, admitted guards | `b2.jsonl` | ho-wikidata-l1, ho-structured-l1, ho-structured-l9, ho-prose-l1 | 8, 10, 20 | 32 | 768 |
+| B2, admitted guards | `b2.jsonl` | ho-wikidata-l1, ho-structured-l1, ho-structured-l9, ho-prose-l1 | 8, 10, 20 | 48 | 1,152 |
 | B3, benefit | `b3.jsonl` | wikidata-x4, ho-wikidata-l9 | 8, 10, 20 | 12 | 144 |
-| B4, sustained | `b4.jsonl` | wikidata-x16, back to back (settle 0) | 10 | 8 | 16 |
+| B4, sustained | `b4.jsonl` | wikidata-x16, back to back (settle 0) | 10 | 16 | 32 |
 
-**The estimate: about 72 minutes on the i9.**
-- *Timed part, about 62 minutes:* 1,776 settled records. The first attempt's decision run took
-  2.07 s a record (1,096 records, 12:58:02 to 13:36:08, settle included). B2's 32 rounds add 384
-  records, about 13 minutes, to the first draft's 48.5 minutes. The 16 back-to-back records add
-  about 20 s.
+**The estimate: about 86 minutes on the i9.**
+- *Timed part, about 75 minutes:* 2,160 settled records. The first attempt's decision run took
+  2.07 s a record (1,096 records, 12:58:02 to 13:36:08, settle included). B2's 48 rounds add 768
+  records, about 26 minutes, to the first draft's 48.5 minutes. The 32 back-to-back records of B4
+  add about 40 s.
 - *Setup, about 10 minutes:* both builds from scratch in a new `target/open-port-3`, then the
   corpora.
 - *Dropped:* the first recipe's context arms (gate and crossover) and its census. They decided
@@ -166,18 +173,21 @@ code is the same and routing depends only on the bytes.
   **Pass:** the upper bound, as a ratio, is at most **1.01**.
 - **B1, credible regression.** A cell is flagged when its one-sided lower bound,
   m − t(1 − 0.05/27, 15)·s/√16, lies above ln 1.02. **Any flag fails.**
-- **B2 = G exactly, in each of the 12 admitted-guard cells** (Open executes there: §4a's usual
-  guards where the new code executes). A cell fails if it is SLOWER (the two-sided 95% t-interval
-  wholly above 1, with the exact t quantile at 31 degrees of freedom) or if its geometric mean is
-  above **1.02**. Its peak RSS is capped at 1.10, as below. B2's pooled figure, computed as B1's,
-  is reported and not judged.
+- **B2: G in each of the 12 admitted-guard cells, its SLOWER test adjusted for multiplicity**
+  (Open executes there: §4a's usual guards where the new code executes). Each cell has a one-sided
+  slowdown p (Student's t, 47 degrees of freedom). A cell fails if:
+  - Holm across the 12 at family α 0.05 rejects its no-slowdown null; or
+  - its geometric mean is above **1.02**; or
+  - its peak RSS is above 1.10, as below.
+
+  B2's pooled figure, computed as B1's, is reported and not judged.
 - **Memory, every guard cell (B1 and B2):** peak RSS, the median of the port's peaks over the
   median of v0.5.6's, at most **1.10**.
 - **B3, benefit:** every one of the 6 cells passes both tests. It is FASTER: its two-sided 95%
   t-interval lies wholly below 1. It is also a gain under Holm at family α 0.05 (one-sided t, as P1
   was). Every cell's peak RSS is at most **1.00**.
-- **B4 = S exactly as registered:** 8 rounds. It fails if SLOWER, or if its geometric mean is above
-  **1.02**. Memory is reported but not judged, as S's was.
+- **B4: S's rule at 16 rounds** (S had 8). It fails if SLOWER (two-sided 95% t), or if its
+  geometric mean is above **1.02**. Memory is reported but not judged, as S's was.
 - **Part A, bound to its evidence.** The scorer holds the committed summary's SHA-256
   (`b9ae3a70…944b`). The recipe copies `part-a/summary.json` into the bundle. Before the timing
   marker (`open_port3.py part-a`), and again when the run is judged or rejudged, it checks:
@@ -208,8 +218,22 @@ A). What is left of §2 acts on every block: the monomorph, the scratch layout a
 on every worker. A common effect moves every cell together, and the pooled bound sees it with 432
 paired rounds. The per-cell flag catches a single cell whose regression is clearly above 2%.
 
-**B2 and B4, G and S** (the Researcher's HOLD, point 2). Open executes on these blocks, so they
-keep the usual guards. They are judged per cell, as the first registration's were.
+**B2 and B4: G and S, B2's SLOWER test adjusted.** Open executes on these blocks, so they keep
+the usual guards per cell (the Researcher's HOLD, point 2). The Coordinator's prospective ruling
+then changed two things:
+- **What changed.** G and S test SLOWER unadjusted, at a two-sided 95% per cell. B2 now adjusts
+  that test across its 12 cells: one-sided, Holm, family α 0.05. B4 keeps S's test with 16 rounds
+  instead of 8.
+- **Why.** The multiplicity flaw sank the first attempt. G applied an unadjusted test to each of
+  39 cells, so its false-fail rate under no effect was about 0.96 (0.63 from SLOWER alone).
+  Applied unadjusted to 12 cells here, it gave 0.23–0.40 (`oc2.txt`). Each cell carries 2.5% by
+  construction, so more rounds cannot remove it.
+- **What it gives up.** A small slowdown, under 2%, that is significant unadjusted but not after
+  Holm now passes. The regression check is a cell at 1.008 with p about 0.011, which ADOPTS.
+- **Why the point caps keep the protection that matters.** Each cell's 1.02 cap on its geometric
+  mean is unadjusted and unchanged: any cell whose estimate exceeds 2% fails, significant or not.
+  So the adjustment only lets through cells whose estimate is at most 1.02. At 48 rounds, a single
+  cell at +5% fails with probability at least 0.996, and at +3% with median power 0.99 (below).
 
 **B1's operating characteristics, before any data** (`open-port-3-registration/oc.py` and
 `oc.txt`, from the first draft; B1 is unchanged; B2's pooled rows are now reported only):
@@ -229,38 +253,50 @@ keep the usual guards. They are judged per cell, as the first registration's wer
 | one cell +5%: its flag (least / most noisy cell) | 1.000 / 0.203 | 1.000 / 0.042 |
 | one cell: the slowdown its flag catches with power 0.80 | x1.032 to x1.167 | x1.031 to x1.097 |
 
-**B2 as G and B4 as S, before any data** (`oc2.py` and `oc2.txt`). The method is the same
-residual resampling, with 100,000 simulations. B4 draws from the first attempt's sustained
-residuals (8 rounds).
+**B2 and B4 as ruled, before any data** (`oc3.py` and `oc3.txt`; 50,000 simulations). Three
+models of the noise:
+- *own:* each cell's 12 centred first-attempt residuals, resampled; B1 used this model;
+- *part:* the part's residuals pooled;
+- *normal:* normal noise at each cell's own spread.
 
-| | own-cell residuals | the part's residuals pooled |
-|---|---|---|
-| **B2 at 32 rounds, no effect: some cell of the 12 fails** | **0.398** | 0.228 |
-| B2, each cell's false-fail under no effect | 0.004 to 0.083 | about 0.021 |
-| B2, SLOWER alone (any of 12) / the point bound alone | 0.363 / 0.102 | |
-| B2 with normal noise at each cell's spread (any of 12) | 0.297 | |
-| (B2 at 16 rounds, for comparison: any of 12) | 0.630 | |
-| B2, one cell's power at a true +2% / +3% | 0.49 to 1.00 / 0.78 to 1.00 | about 0.775 / 0.980 |
-| **B4 at 8 rounds, no effect: fails** | **0.148** (sd 0.033) | 0.088 (all guards' residuals) |
-| B4 at a true +2% / +3% | 0.549 / 0.819 | 0.526 / 0.765 |
+B4 draws from the first attempt's sustained residuals (normal: at their spread; part: all the
+guards').
 
-- **Most of B2's false-fail rate is G's SLOWER test,** which is not reduced by more rounds: each
-  cell has 2.5% by construction, so 12 cells under normal noise give about 0.26. The doubled
-  rounds bring the point bound's share down: any of the 12 falls from 0.63 at 16 rounds to 0.40
-  at 32 under the own-cell model.
-- **The false NOT ADOPTED rate under no effect is about 0.3 to 0.5.** These are approximate
-  products over B1's pooled bound and flag, B2 and B4:
-  - *own-cell model:* 1 − 0.985 × 0.965 × 0.602 × 0.852 ≈ **0.51**;
-  - *pooled residuals:* 1 − 0.983 × 1.000 × 0.772 × 0.912 ≈ **0.31**.
+| at B2's 48 rounds and B4's 16 | own | part | normal |
+|---|---|---|---|
+| B2, no effect: some cell of the 12 fails (the point cap alone) | 0.146 (0.040) | 0.034 (0.006) | 0.082 (0.047) |
+| B4, no effect: fails | 0.093 | 0.036 | 0.025 |
+| **the overall false NOT ADOPTED rate under no effect** | **0.26** | **0.085** | **0.12** |
+| B2, a single cell at +5%: that cell fails | ≥ 0.998 | 1.000 | ≥ 0.996 |
+| B2, a single cell at +3%: that cell fails (median; the noisiest cell) | 0.990; 0.824 | 0.987 | 0.986; 0.818 |
+| B4 at +2% / +3% | 0.645 / 0.904 | 0.568 / 0.864 | 0.644 / 0.936 |
 
-  The first draft's rate was about 0.12. The rise is the cost of G and S where Open executes, which
-  the Coordinator accepted with the Researcher's HOLD.
+- **The overall rate** combines B1's pooled bound and flag (`oc.txt`) with B2 and B4, as
+  independent runs. For example, own: 1 − 0.985 × 0.965 × 0.854 × 0.907 ≈ 0.26.
+- **The own model is the pessimistic bound,** and it is the model B1's figures used. Its B2 floor
+  is about 0.12–0.15 even at 64 rounds (0.117), and its B4 rate stays about 0.09. That is because
+  resampling 32 or more draws from 12 skewed residuals miscalibrates the one-sided t test. The
+  normal model shows what a calibrated test gives at the same spreads.
+- **The options considered** (B2 at 32 rounds was the ruling's first form):
+
+  | B2 rounds | own | part | normal | the run |
+  |---|---|---|---|---|
+  | 32 | 0.35 | 0.11 | 0.17 | about 72.5 min |
+  | **48 (chosen)** | **0.26** | **0.085** | **0.12** | **about 86 min** |
+  | 64 | 0.24 | 0.086 | 0.10 | over 90 min |
+
+  At 32 rounds, a single cell at +3% failed with median power 0.93. The Coordinator chose 48: it
+  is the only option inside the 90-minute budget that keeps the normal and pooled models under
+  0.15.
+- **Before the ruling,** `oc2.txt` records G and S unadjusted (B2 at 32 rounds, B4 at 8). It gave
+  0.40 own and 0.23 part for some B2 cell failing, and 0.31–0.51 overall. That record is kept.
+
 - **These criteria were set after the first attempt's data was seen.** Applied to that attempt's
   12 rounds, they give:
   - *B1:* pooled 0.9995 [0.9937, 1.0051], with no cell flagged;
-  - *B2:* pooled 0.9923 [0.9858, 0.9990], with no cell flagged. Under G, at 12 rounds, every B2
-    cell passed in the first attempt: none was SLOWER, and none was above 1.02. Its largest was
-    ho-structured-l1 at 10 threads, 1.0192.
+  - *B2:* pooled 0.9923 [0.9858, 0.9990], with no cell flagged. Under G, unadjusted, at 12 rounds,
+    every B2 cell passed in the first attempt: none was SLOWER, and none was above 1.02. Its
+    largest was ho-structured-l1 at 10 threads, 1.0192.
 
   This attempt is prospective only for its own new data (C1a). Its rule is frozen here, before
   that data, and is not relaxed after it (C2).
@@ -273,30 +309,31 @@ residuals (8 rounds).
   hours. A common effect of 1% fails the pooled bound with probability about 0.97.
 - *The flag's false-alarm rate is modelled, not exact.* It rests on the first attempt's
   heavy-tailed residuals: 0.035 for B1 under the own-cell model.
-- *These limits are B1's alone.* B2 and B4 keep G's and S's per-cell protections, at G's and S's
-  false-fail cost above.
+- *These limits are B1's.* B2 and B4 keep G's and S's per-cell point caps. B2's SLOWER test is
+  adjusted, as above.
 
 ## 6. The preflight
 
 `just bench-open-port-3 9743bbe0d51ba451b8b8ab9e6fd731c238940052 1` (DRY) ran in the container
 on the corrected recipe, and is archived as
-`open-port-3-registration/preflight/run-20261119T162813Z.tar.gz` (at 83a389ee):
+`open-port-3-registration/preflight/{{PREFLIGHT}}`:
 - both builds were made, and the 18 inputs built and verified ("the builds and all 18 inputs are
   the registered ones");
 - Part A's pre-timing check passed;
 - every corpus was decoded once by each build, with the same output size and digest for all 16;
-- the scorer's 48 checks pass;
+- the scorer's 50 checks pass;
 - no timing was kept.
 
 The first draft's preflight, at e4d60735, stays beside it as a record
-(`preflight/run-20261119T160851Z.tar.gz`).
+(`preflight/run-20261119T160851Z.tar.gz`), as does the HOLD correction's, at 83a389ee
+(`preflight/run-20261119T162813Z.tar.gz`).
 
 The timed loop's path handling was checked separately: `ab run` records `text` for the
 `gen/text.bz2` symlink, and both arms succeed.
 
 ## 7. Reproduce
 
-- **The scorer's checks:** `python3 bench/test_open_port3.py` (48 checks; in CI).
+- **The scorer's checks:** `python3 bench/test_open_port3.py` (50 checks; in CI).
 - **The plan:** `python3 bench/open_port3.py plan`.
 - **Part A:** `docs/journal/2026-11-19-open-port-3-registration/part-a/` holds:
   - *the runs:* `run.sh` and `run7.sh`, one per line of `jobs.txt` and `jobs7.txt`, through
@@ -307,5 +344,6 @@ The timed loop's path handling was checked separately: `ab run` records `text` f
     `attrib.txt`, `decoder.txt` and `positive-control.txt`;
   - *the raw cachegrind and child outputs:* `raw.tar.xz` (sha256 464d6264…7f0e).
 - **The operating characteristics:** `python3 oc.py RUNS.jsonl` and
-  `python3 oc2.py RUNS.jsonl SUSTAINED.jsonl`. RUNS and SUSTAINED are the first attempt's
+  `python3 oc2.py RUNS.jsonl SUSTAINED.jsonl` (G and S unadjusted, before the ruling), and
+  `python3 oc3.py RUNS.jsonl SUSTAINED.jsonl` (as ruled). RUNS and SUSTAINED are the first attempt's
   `runs.jsonl` and `sustained.jsonl`, from its evidence bundle (sha256 fb4771f5…a523).
