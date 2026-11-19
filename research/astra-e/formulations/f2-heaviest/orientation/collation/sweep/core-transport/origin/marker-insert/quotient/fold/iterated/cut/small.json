@@ -1,0 +1,45 @@
+{
+  "max_rows": 6,
+  "totals": {
+    "marks": 9225,
+    "other_cycles": 7616,
+    "incomplete_final_lap": 5819,
+    "rounds": 16653,
+    "checked_partners": 123891,
+    "other_rows_at_stop": 7616
+  },
+  "witness": {
+    "high_self": {
+      "incoming": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "mark": 3,
+      "row": {
+        "depth": 0,
+        "old_rows": 5,
+        "residual_rows": 4,
+        "old_runs": 3,
+        "new_runs": 2,
+        "old_ids": 3,
+        "refined_runs": 3,
+        "new_ids": 2,
+        "refined_ids": 3,
+        "splits": 0,
+        "slice_cuts": 0,
+        "contacts": 3,
+        "target_classes": 1,
+        "self_mass": 3,
+        "nonself": 2,
+        "removed": 1,
+        "joins": 1,
+        "target_stream_runs": 1,
+        "selected_runs": 1,
+        "checked_partners": 9
+      }
+    }
+  }
+}
