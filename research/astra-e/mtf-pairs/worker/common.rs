@@ -29,7 +29,7 @@ impl InverseBwt for Candidate {
     fn reads_runs(&self)->bool{true}
     fn invert_symbol_runs(&mut self,b:&mibz2::block::Symbols,k:Kernels,out:&mut Vec<u8>)->bool{
         #[cfg(target_arch="x86_64")]
-        if b.syms.len()>=64 && k.avx2 && is_x86_feature_detected!("bmi2") && is_x86_feature_detected!("lzcnt") && is_x86_feature_detected!("popcnt"){
+        if b.syms.len()>=64 && k.avx2() && is_x86_feature_detected!("bmi2") && is_x86_feature_detected!("lzcnt") && is_x86_feature_detected!("popcnt"){
             // This CPU has exactly the complete stock front's required features.
             if let Some(n)=unsafe{accelerated::front_avx2(b,&mut self.front)} {
                 let r=&self.front.runs;
