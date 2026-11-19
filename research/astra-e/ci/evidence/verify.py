@@ -1,4 +1,4 @@
-"""Verify a completed four- or five-arm CI archive and reproduce its Markdown receipt."""
+"""Verify a completed four-, five- or seven-arm CI archive and reproduce its Markdown receipt."""
 
 import argparse
 import hashlib
@@ -23,6 +23,7 @@ p.add_argument(
     metavar=("COMMIT", "ENTRY"),
     help="expected immutable fifth-arm revision and source entry",
 )
+p.add_argument("--extra", action="append", nargs=3, default=[], metavar=("ARM","COMMIT","ENTRY"))
 a = p.parse_args()
 if not __debug__:
     raise SystemExit("run this verifier with Python assertions enabled")
@@ -31,6 +32,11 @@ names = ["lazy", "cells", "opend", "candidate"]
 if a.predecessor:
     names.append("predecessor")
     pin, ppath = a.predecessor
+frozen = {"predecessor": tuple(a.predecessor)} if a.predecessor else {}
+for name, commit, entry in a.extra:
+    assert name not in names
+    names.append(name)
+    frozen[name]=(commit,entry)
 n = len(names) * 4
 
 
@@ -50,16 +56,16 @@ with ZipFile(a.zip) as z:
     assert digest + "  " + path in lines
     checksum = "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
     assert checksum + "  corpora/wikidata.bz2" in lines
-    if a.predecessor:
-        assert f"matched predecessor {pin} {ppath}" in lines
-        pdigest = hashlib.sha256(git("show", pin + ":" + ppath)).hexdigest()
-        assert any(x.startswith(pdigest + "  ") and x.endswith("/" + ppath) for x in lines)
+    for name, (revision, entry) in frozen.items():
+        assert f"matched {name} {revision} {entry}" in lines
+        pdigest = hashlib.sha256(git("show", revision + ":" + entry)).hexdigest()
+        assert any(x.startswith(pdigest + "  ") and x.endswith("/" + entry) for x in lines)
     checks = {}
     for arm in names:
         data = list(map(json.loads, z.read(arm + ".check.jsonl").splitlines()))
         *cases, verdict = data
         assert verdict == {
-            "arm": "candidate" if arm == "predecessor" else arm,
+            "arm": "candidate" if arm in frozen else arm,
             "verdict": "PASS",
             "failures": 0,
         }
@@ -84,19 +90,21 @@ with ZipFile(a.zip) as z:
         "candidate": "head",
         "predecessor": "frozen predecessor",
     }
+    builds.update({name: f"frozen {name}" for name, _, _ in a.extra})
     assert all(r["out_bytes"] == 838800784 and r["build"] == builds[r["arm"]] for r in rows)
     if a.predecessor:
         assert all(
-            r["compiled_arm"] == ("candidate" if r["arm"] == "predecessor" else r["arm"]) for r in rows
+            r["compiled_arm"] == ("candidate" if r["arm"] in frozen else r["arm"]) for r in rows
         )
     data = json.loads(z.read("ratios.json"))
     labels = {"master LazyCells": "lazy", "master eager Cells": "cells", "master opend": "opend"}
     if a.predecessor:
-        extra = set(data) - set(labels)
+        extra = set(data) - set(labels) - {f"frozen {name}" for name, _, _ in a.extra}
         assert extra in ({"frozen predecessor"}, {"frozen narrow-short/ahead"})
         labels[extra.pop()] = "predecessor"
+    labels.update({f"frozen {name}": name for name, _, _ in a.extra})
     assert data.keys() == labels.keys()
-    ts = {16: 2.13144954556, 20: 2.09302405441}
+    ts = {16: 2.13144954556, 20: 2.09302405441, 28: 2.05183051648}
     for label, arm in labels.items():
         for w in [1, 2, 4]:
             subset = [r for r in rows if r["workers"] == w]
@@ -116,6 +124,27 @@ with ZipFile(a.zip) as z:
                 ("peak_rss_ratio", rss),
             ]:
                 assert math.isclose(got[key], x, rel_tol=2e-10), (key, got[key], x)
+    effects = None
+    if a.extra:
+        assert set(frozen)=={"edge","counter","predecessor"}
+        effects = json.loads(z.read("factorial.json"))
+        def direct(left, right, w, metric="wall_s"):
+            by = {(r["round"],r["arm"]):r[metric] for r in rows if r["workers"]==w}
+            return [math.log(by[i,left]/by[i,right]) for i in range(n)]
+        for w in (1,2,4):
+            expected = {name:direct(left,right,w) for name,left,right in (
+                ("counter_on_edge","counter","edge"),("counter_on_scalar","candidate","predecessor"),
+                ("scalar_on_edge","predecessor","edge"),("scalar_on_counter","candidate","counter"),
+                ("both_on_edge","candidate","edge"))}
+            expected["interaction"]=[x-y for x,y in zip(expected["counter_on_scalar"],expected["counter_on_edge"])]
+            assert set(effects[str(w)])==set(expected)
+            for key,logs in expected.items():
+                m=statistics.mean(logs)
+                half=ts[n]*statistics.stdev(logs)/math.sqrt(n)
+                result=effects[str(w)][key]
+                assert result["n"]==n
+                for field,value in (("geomean",m),("lo",m-half),("hi",m+half)):
+                    assert math.isclose(result[field],math.exp(value),rel_tol=2e-10)
     prev = next((x for x in lines if x.startswith("scorer v")), "scorer version unprinted")
     base = next(x.split()[1] for x in lines if x.startswith("base "))
     rev = next(x.split()[-1] for x in lines if x.startswith("scorer path revision "))
@@ -138,6 +167,8 @@ with ZipFile(a.zip) as z:
                 "",
             ]
         )
+    for label, rev_extra, entry in a.extra:
+        text.extend([f"The frozen {label} comparator built `{entry}` at `{rev_extra}`.", ""])
     text.extend(
         [
             "The wall ratio uses the geometric mean of paired candidate/reference times. Its 95% Student interval uses paired log ratios. RSS is the candidate median peak divided by the reference median peak. The ZIP passed CRC checks, and the archived arm order, verification records, timing intervals and RSS ratios reproduced from the raw JSONL.",
@@ -152,6 +183,21 @@ with ZipFile(a.zip) as z:
             text.append(
                 f"| {w} | {label} | {r['geomean']:.4f} [{r['lo']:.4f}, {r['hi']:.4f}] | {r['peak_rss_ratio']:.4f} |"
             )
+    if effects:
+        text.extend(["", "| W | Counter on edge | Counter on scalar | Scalar on edge | Scalar on counter | Both on edge | Interaction |",
+                     "|---:|---:|---:|---:|---:|---:|---:|"])
+        for w in (1,2,4):
+            parts=[f"| {w}"]
+            for name in ("counter_on_edge","counter_on_scalar","scalar_on_edge","scalar_on_counter","both_on_edge","interaction"):
+                r=effects[str(w)][name]
+                parts.append(f"{r['geomean']:.4f} [{r['lo']:.4f},{r['hi']:.4f}]")
+            text.append(" | ".join(parts)+" |")
+        cells={k:v["4"]["candidate"] for k,v in data.items()}
+        gate=(cells["frozen edge"]["hi"]<1 and cells["frozen predecessor"]["hi"]<=1.01
+              and cells["master LazyCells"]["peak_rss_ratio"]<=1)
+        text.extend(["",f"The preregistered W4 screen {'passed' if gate else 'did not pass'}. "
+                     "It requires the combined/edge wall upper endpoint below one, combined/scalar upper endpoint at most 1.01, "
+                     "and median peak RSS at most Lazy. [Registered decision](../../front-fusion/cap-counter/CI.md)"])
     text.extend(
         [
             "",
