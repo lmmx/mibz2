@@ -27,3 +27,18 @@ cmp "$d/all.csv" "$scratch/all.csv"
 taskset -c 3 nice -n 16 "$scratch/test/panel" price corpora/wikidata.bz2 > "$scratch/paid.csv"
 python3 "$d/report.py" | cmp - "$d/summary.json"
 ```
+
+## Inclusive complete-worker results
+
+The official scalar-four score passed all 338 cases. Across nine complete paired repeat-two runs at each W, its local ratio to the release LazyCells worker was 0.990 [0.863, 1.135] at W1 and 0.865 [0.809, 0.926] at W4. Median process peak RSS ratios were 0.894 and 0.729. Against opend, the W1 and W4 ratios were 0.954 and 0.968. Every arm used scorer path `75297a1d57b2bdf262c3a19f3064848dedf2c493`, printed `v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04`. [Official score, including both opend intervals](official/score/summary.txt)
+
+In the separate balanced five-arm panel, four-forward's incremental whole-worker wall ratios crossed parity at both W1 and W4. There is no established incremental gain from this local comparison, despite the measured emitter gain. The prespecified scalar interaction log contrast also includes parity. Independent CI is evaluating four-forward on the i9-verified scalar baseline. [Decision rule](official/PLAN.md) · [200 direct official-worker observations](official/direct/panel.jsonl) · [All direct contrasts and clustered intervals](official/direct-summary.json) · [Independent CI run 44467969034](https://github.com/lmmx/mibz2/actions/runs/44467969034)
+
+| Incremental complete comparison | W1 wall [95%] | W4 wall [95%] | W1/W4 peak RSS ratios |
+|---|---:|---:|---:|
+| Four-forward edge / edge | 1.0250 [0.9650, 1.0887] | 1.0548 [0.9950, 1.1182] | 1.0002 / 0.9935 |
+| Four-forward scalar / scalar | 1.0462 [0.9812, 1.1155] | 1.0164 [0.9697, 1.0655] | 1.0074 / 1.0042 |
+| Four-forward edge / two-forward edge | 1.0053 [0.9437, 1.0709] | 1.0076 [0.9402, 1.0797] | 1.0019 / 1.0064 |
+| Scalar interaction | 1.0207 [0.9464, 1.1009] | 0.9636 [0.8966, 1.0357] | 1.0072 / 1.0108 |
+
+The local official scorer and direct worker executables had identical scorer blob trees across their before-round master refreshes. The three new compiled executables each passed all 338 cases, including 209,700,196 Wikidata output bytes, periodic and multiple-cycle fixtures, and 600 corrupted input cases. The five-arm comparison used the exact two older executables from the original two-forward record. From the repository root run `python3 research/astra-e/two-seed/multi/official/verify.py` to verify all 254 timed runs, the gates and preserved compiler images. [Compiler and constructor hashes](official/manifest.json) · [Three complete worker images](official/workers.tar.xz) · [Edge and two-forward compiler images](../official/workers.tar.xz)
