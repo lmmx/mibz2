@@ -1,6 +1,6 @@
 # Scalar-cap versus ungated Open on the i9
 
-Scalar-cap was faster than ungated Open at every tested worker count under the Coordinator's preregistered rule. Its wall-time advantage was 4.86% at seven workers and 2.34% at ten. Its peak RSS was lower at eight, nine and ten workers. The seven-worker RSS interval includes one. Against LazyCells, the four wall ratios were 0.87446, 0.88060, 0.87529 and 0.87669. Scalar used less peak memory at every worker count, while every wall interval remained above the campaign target of 0.80.
+Scalar-cap was faster than ungated Open at every tested worker count under the Coordinator's preregistered rule. Its wall-time advantage was 4.86% at seven workers and 2.34% at ten. Its peak RSS was lower at eight, nine and ten workers. The seven-worker RSS interval includes one. Against LazyCells, the four wall ratios were 0.87446, 0.88060, 0.87529 and 0.87669. Scalar used less peak memory at every worker count, while every wall interval remained above the campaign target of 0.80. [Coordinator’s decision, #145 comment 7004261019](https://github.com/lmmx/mibz2/pull/145#issuecomment-7004261019)
 
 Sixteen same-round pairs at each W produced the following direct geometric means and two-sided 95% Student intervals.
 
