@@ -172,6 +172,33 @@ def primitive_family(q):
     return z
 
 
+def focused_witnesses():
+    # Independently scatter a tiny cycle in which the changed source and landing differ.
+    col=(1,0,0);T,F=ordinary(col);H=(0,1);i=1
+    assert T==[1,2,0] and T[i]==2 and T[T[i]]==0
+    emitted=[bytes([97+F[0]]),bytes([97+F[1],97+F[2]])]
+    incoming=scatter(emitted,[1,0])
+    assert incoming==[b'ab',b'a']
+    # Both ordinary BWT inputs restrict to the same retained a token, but the
+    # deleted mark must decode distinct old bytes all the way to the block length.
+    tp,_=ordinary((0,1));assert tp==[0,1]
+    a=marked(tp,[b'a',b'b'],1,0,9);b=marked(tp,[b'a',b'c'],1,0,9)
+    assert a!=b and a==b'b'*9 and b==b'c'*9
+    many=verify(tuple([0,1,2]*3),[3,4,5],[b'a',b'b',b'c'])
+    assert many['u']==2 and many['removed_cycles']==1
+    # A payload dictionary may store identical bytes under different ordered IDs.
+    alias_checks=0
+    for col in product((0,1,2),repeat=4):
+        for mask in range(16):
+            verify(col,[i for i in range(4) if mask>>i&1],[b'a',b'a',b'aa'])
+            alias_checks+=1
+    return dict(changed_source_vs_landing=dict(B='baa',holes=[2],source=1,landing=0,
+                                                incoming=[w.decode() for w in incoming]),
+                deleted_only_pair=dict(retained='a',first_deleted_output=a.decode(),second_deleted_output=b.decode()),
+                one_hole_interval=dict(column='abcabcabc',holes=[3,4,5],result=many),
+                equal_payload_id_instances=alias_checks)
+
+
 def main():
     stats=Counter()
     witness=None
@@ -214,4 +241,8 @@ def main():
 
 
 if __name__=='__main__':
-    main()
+    import sys
+    if sys.argv[1:]==['--witnesses']:
+        print(json.dumps(focused_witnesses(),indent=2))
+    else:
+        main()
