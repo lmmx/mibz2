@@ -21,3 +21,12 @@ rustc -O --edition=2021 "$d/probe.rs" --extern mibz2="$deps/libmibz2.rlib" -L "d
 "$scratch/probe" small
 "$scratch/probe" corpora/wikidata.bz2
 ```
+
+The first complete worker hook retains the primary, the original thin rows and the sealed window rows. The output array tags only dangerous singleton residual labels, reserving enough extended label space in wide mode. It limits H to 1,024 occurrences before materialization and otherwise uses the stock gated path. The forced native writer matched 18,434 arbitrary marked columns, including 1,680 unfinished-run refusals. It used the sparse route on 227 of 228 large density admissions and independently matched 204,297,794 coded bytes through decoded output and CRC. The other 900,000-row admission exceeded the cap. Over 20 paired rounds on nine systematic admissions, sparse/stock opend thread CPU was 1.250 [1.185,1.319]. The median summed recognition time of 3.91 ms alone exceeded opend's 1.10 ms stock RLE1 time. End-to-end worker and memory measurements have a separate scope. [Census](native.csv) · [Raw observations](phases.csv) · [Combined phase accounting](summary.txt)
+
+```sh
+python3 "$d/prepare.py"
+rustc -O -C codegen-units=1 --edition=2021 "$d/measure.rs" --extern mibz2="$deps/libmibz2.rlib" -L "dependency=$deps" -o "$scratch/native"
+"$scratch/native" small
+"$scratch/native" corpora/wikidata.bz2 "$scratch/phase.csv"
+```
