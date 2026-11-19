@@ -1,0 +1,19 @@
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.24s
+     Running unittests src/main.rs (/workspace/work/cells-build/debug/deps/moonshot-5662b5ce9a543761)
+
+running 1 test
+0,1,899931,17547,0,135716,2716,6133
+24,41,900000,69284,64,135408,6448,17053
+48,85,900000,100411,1,136161,3454,8256
+72,134,900000,75242,7,138760,2827,6915
+96,176,900000,131486,2,132873,2754,6766
+120,225,900000,17473,0,134704,2730,6007
+144,269,899984,49755,1,136607,5986,13749
+168,313,900000,17985,26,133525,2598,6397
+192,359,900000,75107,3,137591,2671,5748
+216,397,900000,71010,13,135722,2933,7293
+test candidate::f2_export::export ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 2.79s
+

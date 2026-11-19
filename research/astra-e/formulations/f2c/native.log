@@ -1,0 +1,10 @@
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.61s
+     Running unittests src/main.rs (/workspace/work/cells-build/debug/deps/moonshot-5662b5ce9a543761)
+
+running 1 test
+228/233 second-level admissions; 205197794 exact raw bytes
+test candidate::checks::native_second_level ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 18.95s
+
