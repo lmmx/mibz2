@@ -220,9 +220,10 @@
     7003699363,
     7007096443,
     7007534493,
-    7007879370
+    7007879370,
+    7008210706
   ],
-  "last_processed_comment_id": 7007879370,
+  "last_processed_comment_id": 7008210706,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2689,13 +2690,16 @@
     },
     {
       "trigger_comment_id": 7008210706,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-port-c6-ruling-7008210706/report.md",
       "source_commit": "8c6c1035f009623cd534fcf97c4d5716fcffd448",
       "report_commit": "8bbcbbf7aadd566c5e2e681529c98c4d08821b28",
-      "disposition": "HOLD before i9 timing. Both archive checksums and all 63 regressions verified. Freeze the generated workload, reject empty output digests, and distinguish environment telemetry from decoder timings."
+      "disposition": "HOLD before i9 timing. Both archive checksums and all 63 regressions verified. Freeze the generated workload, reject empty output digests, and distinguish environment telemetry from decoder timings.",
+      "review_comment_id": 7008312938,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, single publication, and role-aware header and route. The pinned helper's coordinator-only sender check is inapplicable to the Researcher REVIEW."
     }
   ],
   "active_delegations": [],
