@@ -14,6 +14,8 @@ The independent recursive oracle also checked 55,694 small ordered trees and tap
 
 Forty matched rotations with four arms on nine systematic blocks reduced merge CPU relative to the restarted leaf cursor to .776 [.660,.913]. Complete inverse CPU was .927 [.881,.976] on that comparison. Relative to the materialized dynamic refill, merge CPU was 1.418 [1.188,1.692] and whole inverse CPU was 1.051 [.999,1.107]. Relative to Lazy the whole inverse was 1.038 [.989,1.089]. This improves the tested root-only strategy without establishing a worker, RSS or target-machine victory. [Raw phase observations](phase.csv) · [Paired summary](summary.txt)
 
+The full v1 scorer gate passed 338 cases against libbzip2, including CRCs. The refresh identified scorer source `604dac3`; the scorer printed `6a8a366`. The receipt is preserved at `d5ae56a`. [Scorer report](../../../results/v1-delimiter-frames-gate/score/summary.txt)
+
 From the research worktree root, with the archived inputs, corpus and release dependencies prepared:
 
 ```sh

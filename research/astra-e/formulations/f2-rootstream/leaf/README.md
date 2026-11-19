@@ -8,6 +8,8 @@ Across 228 real admissions the count of visited selector cursors falls from 7,73
 
 The four arms rotated in each trial on CPU 4, with one warm-up followed by 32 balanced rotations on each of nine systematic real blocks. All four outputs were compared with an independent reference after every inversion. Complete inverse thread CPU relative to the original root cursor was .989 [.950,1.028], relative to bottom-up refill .996 [.940,1.056], and relative to Lazy 1.062 [1.015,1.111]. The merge alone took .949 [.872,1.032] of original root merge CPU and 1.600 [1.504,1.703] of bottom-up merge CPU. The local phase interval permits both a gain and a regression against the root cursor. A leaf cursor can be omitted even on inputs where testing its type costs more than skipping it saves. [Raw rotations](phase.csv) · [Paired results](summary.txt)
 
+The full v1 scorer gate passed 338 cases against libbzip2, including CRCs. The refresh identified scorer source `604dac3`; the scorer printed `6a8a366`. The receipt is preserved at `4383954`. [Scorer report](../../../results/v1-delimiter-root-leaf-gate/score/summary.txt)
+
 Reproduce the first-level geometry and local paired phase observations from the worktree root with a release scorer build and the frozen corpus present.
 
 ```sh
