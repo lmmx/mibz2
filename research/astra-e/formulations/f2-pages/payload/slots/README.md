@@ -21,3 +21,18 @@ d=research/astra-e/formulations/f2-pages/payload/slots
 bash "$d/run.sh" /tmp/astra-e-fixed-slots
 python3 "$d/report.py" /tmp/astra-e-fixed-slots/{first,repeat}.csv
 ```
+
+## Independent result and follow-on experiments
+
+The preserved entry is preload.rs at 6758831810b6a913c88ff079dede881b578ca03a. Independent EPYC CI run 44440381983 gave W1/W2/W4 ratios of 0.9134/0.9151/0.9225 against its guarded POPCNT predecessor and 0.8468/0.8631/0.8904 against LazyCells. Its W4 opend ratio was 1.0069 [1.0033,1.0105], and its W4 median RSS was 1.0735 of opend. All five arms passed 338 authoritative checks. This result is specific to that independent CI machine. The target i9 winner is maintained separately. [Original receipts](../../../../ci/evidence/compact-preload-44440381983.md) · [Campaign register](../../../../REGISTER.md)
+
+| Frozen follow-on | Exact opportunity | Paid decision against 6758831 |
+|---|---|---|
+| cf8cf27 | 77.6% of queries have width one; split hot/cold words keep total payload bytes unchanged | +7–9% complete CPU. [Inputs and trials](singleton/) |
+| a4f90a7 | Second-token discovery has 1.42M rank queries; fuse its mask construction and runtime-dispatch POPCNT | No resolved whole gain in either process. [Instructions and timings](second-rank/) |
+| 68e14cb | Copy already published terminal ancestor spellings at the first level, second level, or both | Second-level cached tails cover only 6,753 bytes. First-level saves 571,594 splices after charging replacements, no resolved gain. [Proof and actual counts](suffix/) |
+| ba8e9e0 | Eight-way AVX2 gathers with scalar or vector rank counts | +42–45% discovery CPU. [Mixed-lane checks and pricing](gather/) |
+| 0dc5935 | Existing per-lane capacities permit 18.76M direct writes; natural growth unchanged | No resolved complete gain; exact capacities agree after every block. [Checks and trials](path-writes/) |
+| 7a816ce | Validated last observed successor saves 6.17M ranks, including 728,401 hits outside whole-run images | More than doubles discovery CPU in side and embedded formats. [Rank and cache writes](successor/) |
+
+Earlier frozen studies also priced alternate [lane widths](width/), [early survivor rank](early/), and the tiny bound for the [same-run shortcut](../self-run/). The fixed preload remains the delimiter control for new mathematical work. The official local rerun under master scorer path 75297a1 used the same frozen entry and the baseline grid alongside other preserved candidates. [Same-version series](../../../../results/refresh-75297a1/)
