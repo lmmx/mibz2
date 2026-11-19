@@ -95,7 +95,8 @@ def analyze(words):
     if not words:
         return dict(unique=0, unique_bytes=0, maximal=0, maximal_bytes=0, subword_bytes=0,
                     adjacent_overlap=0, adjacent_reachable_arena=0, maximal_order_overlap=0,
-                    maximal_order_arena=0, incoming_floor=0, outgoing_floor=0, qgram_floor=0, arena_floor=0)
+                    maximal_order_arena=0, incoming_floor=0, outgoing_floor=0, qgram_floor=0, arena_floor=0,
+                    start_bits=0,length_bits=0,descriptors32=1,dictionary_lookups=0)
     unique = list(dict.fromkeys(words))
     index = PrefixIndex(unique)
     maximal = [unique[i] for i in index.maximal_indices(unique)]
@@ -112,7 +113,17 @@ def analyze(words):
         if grams:
             qgram_floor = max(qgram_floor, len(grams) + k - 1)
     floor = max(max(map(len, maximal)), outgoing_floor, incoming_floor, qgram_floor)
-    assert floor <= maximal_bytes - overlap_maximal
+    arena = bytearray(maximal[0])
+    for left, right in zip(maximal, maximal[1:]):
+        arena.extend(right[overlap(left,right):])
+    assert floor <= len(arena) == maximal_bytes-overlap_maximal
+    # Produce an actual start and length for every distinct word. These descriptors
+    # make no assumption about whether the front can find a containing string cheaply.
+    for word in unique:
+        pos = arena.find(word)
+        assert pos >= 0 and arena[pos:pos+len(word)] == word
+    start_bits = max(1,(len(arena)-1).bit_length())
+    length_bits = max(map(len,unique)).bit_length()
     return dict(unique=len(unique), unique_bytes=unique_bytes, maximal=len(maximal),
                 maximal_bytes=maximal_bytes, subword_bytes=unique_bytes-maximal_bytes,
                 adjacent_overlap=overlap_original,
@@ -120,7 +131,8 @@ def analyze(words):
                 maximal_order_overlap=overlap_maximal,
                 maximal_order_arena=maximal_bytes-overlap_maximal,
                 incoming_floor=incoming_floor, outgoing_floor=outgoing_floor,
-                qgram_floor=qgram_floor, arena_floor=floor)
+                qgram_floor=qgram_floor, arena_floor=floor, start_bits=start_bits, length_bits=length_bits,
+                descriptors32=int(start_bits+length_bits<=32), dictionary_lookups=len(words))
 
 
 def blocks(path):
@@ -170,6 +182,7 @@ def main():
     if args.path:
         writer = None
         for base, words in blocks(args.path):
+            assert base["n"] == base["m"] - base["expansions"] + base["bytes_spelled"]
             record = {**base, **analyze(words)}
             if writer is None:
                 writer = csv.DictWriter(sys.stdout,record,lineterminator='\n')
