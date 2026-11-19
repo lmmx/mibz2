@@ -1,0 +1,20 @@
+{
+  "4": {
+    "blocks": 219,
+    "fixed_present": 219,
+    "contained": 219,
+    "median_fraction": 0.8748144482929243,
+    "half_count": 219,
+    "min_fraction": 0.6818181818181818,
+    "passes": true
+  },
+  "12": {
+    "blocks": 219,
+    "fixed_present": 219,
+    "contained": 219,
+    "median_fraction": 0.8583569405099151,
+    "half_count": 219,
+    "min_fraction": 0.6759683465222824,
+    "passes": true
+  }
+}

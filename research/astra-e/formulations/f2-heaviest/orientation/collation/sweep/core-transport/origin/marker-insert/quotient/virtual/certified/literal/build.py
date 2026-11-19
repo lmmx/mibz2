@@ -11,7 +11,8 @@ p=out/'second.rs';s=p.read_text()
 s=one(s,'    pub(super) use_forest:bool,','    pub(super) use_forest:bool,\n    pub(super) supplied_child:Option<(u32,u32)>,')
 s=one(s,'Self::reset(&mut self.forest.first,k,m);Self::reset(&mut self.forest.last,k,0);','')
 s=one(s,'self.forest.first[c]=self.forest.first[c].min(at);','')
-s=one(s,'at+=r.width;self.forest.last[c]=at;','at+=r.width;')
+s=one(s,'at+=r.width;self.forest.last[c]=at;','')
+s=one(s,'        let mut at=0;\n        for r in root {\n            let n=nodes[r.id as usize];let c=n.word as usize;','        for r in root {\n            let n=nodes[r.id as usize];let c=n.word as usize;')
 a=s.index('        let b=self.base[d as usize];let z=b+self.count[d as usize];');b=s.index('        let root_pos=',a)
 s=s[:a]+'''        let b=self.base[d as usize];
         f.order.clear();
