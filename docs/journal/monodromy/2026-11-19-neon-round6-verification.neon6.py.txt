@@ -1,0 +1,106 @@
+"""Round 6 on a real block: the Phi copy scheme (NOP-7), Neon's floor F_self_ns, and constructed
+valid in-place Phi-sourced schedules. A schedule assigns each non-literal row a time tau, strictly
+increasing along each run (a byte's source is its run predecessor); a fragment is a maximal text
+segment of one copy D_i with one tau. Executing fragments in increasing tau is valid."""
+import sys
+from collections import Counter, defaultdict
+L=open(sys.argv[1],'rb').read(); n=len(L); p0=int(sys.argv[2])
+cnt=Counter(L); C={}; a=0
+for c in sorted(cnt): C[c]=a; a+=cnt[c]
+seen=Counter(); lf=[0]*n
+for x,c in enumerate(L): lf[x]=C[c]+seen[c]; seen[c]+=1
+heads=[0]+[x for x in range(1,n) if L[x]!=L[x-1]]; r=len(heads)
+run=[0]*n; hd=[0]*n
+for k,d in enumerate(heads):
+    e=heads[k+1] if k+1<r else n
+    for x in range(d,e): run[x]=k; hd[x]=d
+isH=bytearray(n)
+for d in heads: isH[d]=1
+# text order: position j holds row rowat[j]; t(LF x) = t(x) + 1
+rowat=[0]*n; t=[0]*n; z=p0
+for j in range(n): rowat[j]=z; t[z]=j; z=lf[z]
+assert z==p0, 'not one cycle'
+theta=[x-hd[x] for x in range(n)]
+# copies: maximal blocks of non-literal positions; source of position j is t(row-1)
+copies=[]; j=0
+while j<n:
+    if isH[rowat[j]]: j+=1; continue
+    s=j
+    while j<n and not isH[rowat[j]]: j+=1
+    copies.append((s,j))
+k=len(copies); _Cs=set(lf[h] for h in heads); DC=sum(1 for d in heads if d in _Cs)
+# Neon's floor
+Fself=0; selfov=0
+for s,e in copies:
+    src0=t[rowat[s]-1]; m=e-s
+    if not(src0+m<=s or src0>=e): selfov+=1; Fself+=1; continue
+    used=set(); f=1
+    for j in range(s,e):
+        a_=run[rowat[j]]
+        if a_ in used: f+=1; used={a_}
+        else: used.add(a_)
+    Fself+=f
+def frags(tau):
+    F=0; levels=set()
+    for s,e in copies:
+        F+=1
+        for j in range(s+1,e):
+            if tau[rowat[j]]!=tau[rowat[j-1]]: F+=1
+    return F
+# validity check of a tau: strictly increasing along each run
+def valid(tau):
+    return all(tau[x]>tau[x-1] for x in range(1,n) if not isH[x])
+bfs=frags(theta)
+# potentials: tau = theta + phi[run]; overlap (a,b) wants phi_b = phi_a - (c_a - d_b); weight = mergeable pairs
+w=Counter()
+for j in range(n-1):
+    y=rowat[j]; y2=rowat[j+1]
+    if isH[y] or isH[y2]: continue
+    a_,b_=run[y],run[y2]; w[(a_,b_)]+=1
+par=list(range(r)); off=[0]*r   # off: phi[x] - phi[root]
+def find(x):
+    if par[x]==x: return x,0
+    rt,o=find(par[x]); par[x]=rt; off[x]+=o; return rt,off[x]
+sys.setrecursionlimit(1000000)
+cA={a_:lf[heads[a_]] for a_ in range(r)}
+sat=0
+for (a_,b_),wt in sorted(w.items(),key=lambda kv:-kv[1]):
+    want=-(cA[a_]-heads[b_])          # phi_b - phi_a
+    ra,oa=find(a_); rb,ob=find(b_)
+    if ra==rb:
+        if ob-oa==want: sat+=wt
+        continue
+    # attach rb under ra: phi_b = phi_a + want -> off_rb (rel ra) = oa + want - ob
+    par[rb]=ra; off[rb]=oa+want-ob; sat+=wt
+phi=[find(x)[1] for x in range(r)]
+tau=[theta[x]+phi[run[x]] for x in range(n)]
+assert valid(tau)
+pot=frags(tau)
+tot=sum(w.values())
+lens=sorted(e-s for s,e in copies)
+print(f'n={n} r={r} k={k} |D∩C|={DC} self-overlapping copies={selfov}')
+print(f'Neon floor F_self_ns={Fself} ({Fself/r:.3f}r, mean {(n-r)/Fself:.1f} B)')
+print(f'BFS (tau=theta): {bfs} ({bfs/r:.3f}r, mean {(n-r)/bfs:.2f} B)')
+print(f'potential tau=theta+phi (max-weight forest): {pot} ({pot/r:.3f}r, mean {(n-r)/pot:.2f} B); mergeable pairs satisfied {sat}/{tot}')
+print(f'copy lengths: mean {sum(lens)/k:.1f}, median {lens[k//2]}, max {lens[-1]}')
+# parts 3 and 5: depth floor lambda_max - 1 and alternating-sweep floor max_a alt(R_a)
+lam=[(heads[k+1] if k+1<r else n)-heads[k] for k in range(r)]
+best=(0,0,0)
+for k in range(r):
+    d=heads[k]; e=d+lam[k]
+    if lam[k]<2: continue
+    pieces=1; dirn=0
+    for x in range(d+1,e):
+        s_=1 if t[x]>t[x-1] else -1
+        if dirn and s_!=dirn: pieces+=1
+        dirn=s_
+    if pieces>best[0]: best=(pieces,k,lam[k])
+km=max(range(r),key=lambda k:lam[k])
+print(f'depth floor lambda_max-1={lam[km]-1}; tau-depth of the potential schedule={max(tau)-min(tau)+1}, of BFS={max(theta)+1}')
+print(f'sweep floor max alt={best[0]} (run of length {best[2]}); alt of the longest run computed below')
+d=heads[km]; pieces=1; dirn=0
+for x in range(d+1,d+lam[km]):
+    s_=1 if t[x]>t[x-1] else -1
+    if dirn and s_!=dirn: pieces+=1
+    dirn=s_
+print(f'longest run lambda={lam[km]}: alt={pieces} ({pieces/lam[km]:.3f} lambda)')
