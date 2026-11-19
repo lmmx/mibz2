@@ -5,12 +5,25 @@ release build (`mibz2@…/build-port/…/ab`) against v0.5.6's (`mibz2@…/build
 its own binary run as `ab run`'s child, both through the same public entry point
 (`BzReader::parallel`), unpinned on the i9 at the shipped thread counts.
 
-    open_port.py judge RUNS.jsonl SUSTAINED.jsonl --lscpu LSCPU --env ENV.json
-                       [--counts 8,10,20] [--rounds 12] [--sustained-rounds 8]
+    open_port.py judge BUNDLE --port PORT_COMMIT
     open_port.py pairs RUNS.jsonl --pair X/Y [--pair X/Y ...]   (context: reported, not judged)
 
+**The registered roster, fixed here** (the Researcher's correction, REVIEW 7007213171): the 15
+corpora of `CORPORA` at 8, 10 and 20 threads, 12 paired rounds each (1,080 records), and
+`wikidata-x16` at 10 threads, 8 rounds (16 records). The scorer never builds the roster from the
+corpora a file holds.
+
+**One confirmatory attempt.** The first timed attempt is this registration's only one, kept
+whatever its outcome. A VOID gives no adoption evidence and an inconclusive required gain is
+NOT ADOPTED; neither opens a retry.
+
 **VOID, and nothing is read,** where:
-- a timed record is missing, duplicated, malformed or failed;
+- a record of the roster is missing, duplicated or failed, a record lies outside it, or a file is
+  empty or missing;
+- a wall time, peak RSS or output size is not a finite positive number (a NaN included);
+- the registered identities do not hold: the bundle's `commits.txt` names other builds than the
+  port's pinned commit and v0.5.6 (530ed404), or its `inputs.sha256` other Wikidata corpora than
+  the pinned sample and held-out windows, or no digest for a corpus of the roster;
 - a corpus's outputs differ;
 - the machine is not the registered one: `lscpu` names no single i9-10900K, or `ab env` records
   other than 10 cores and 20 CPUs;
@@ -48,6 +61,16 @@ import sys
 
 CAND_DIR, REF_DIR = "/build-port/", "/build-v0.5.6/"
 MAIN, HELDOUT, SUSTAINED = "wikidata-x4", "ho-wikidata-l9", "wikidata-x16"
+# the registered roster (the Researcher's correction, REVIEW 7007213171): exactly these corpora
+# at exactly these counts and rounds, never the corpora a file happens to hold
+CORPORA = ("wikidata-x4", "text", "random", "records", "runs", "pattern", "onebyte",
+           "ho-wikidata-l9", "ho-wikidata-l1", "ho-prose-l1", "ho-prose-l9", "ho-code-l1", "ho-code-l9",
+           "ho-structured-l1", "ho-structured-l9")
+COUNTS, ROUNDS, SUSTAINED_ROUNDS = (8, 10, 20), 12, 8
+# the registered identities: the two builds' commits, and the two pinned Wikidata corpora
+V056 = "530ed404a014a414ef0b62adfd947fa14d4533e6"
+WIKIDATA_SHA256 = "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+HELDOUT_SHA256 = "7f5c9a0044e5a30589bf343b9b31e698849b2acc69461a55c97b550193128b45"
 CHECKED = (MAIN, HELDOUT, "ho-wikidata-l1", SUSTAINED)
 WORKERS = {8: 8, 10: 7, 20: 7}
 ALPHA, GUARD_MAX, RSS_GATE = 0.05, 1.02, 1.10
@@ -132,12 +155,18 @@ def machine(lscpu, env, errors):
     return next(iter(models)) if len(models) == 1 else None
 
 
-def load(path, counts, rounds, errors, check_workers=True):
-    """{(corpus, threads, arm, round): record}, the reference arm canonical as `ref`"""
-    rows, outs, refs, corpora = {}, {}, set(), set()
+def positive(v):
+    """A finite, positive number (never a bool, a NaN or an infinity)"""
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and v > 0
+
+
+def load(path, corpora, counts, rounds, errors, check_workers=True):
+    """{(corpus, threads, side, round): record}, `side` the port's build (`cand`) or v0.5.6's
+    (`ref`), against the registered roster `corpora` x `counts` x both sides x `rounds`"""
+    rows, outs, refs = {}, {}, set()
     if not os.path.exists(path):
         errors.append(f"{os.path.basename(path)}: missing")
-        return rows, []
+        return rows
     for ln, line in enumerate(open(path), 1):
         if not line.strip():
             continue
@@ -158,23 +187,28 @@ def load(path, counts, rounds, errors, check_workers=True):
         if key in rows:
             errors.append(f"{key} duplicated")
             continue
-        wall = r.get("wall")
-        if r.get("termination") != "success" or r.get("err") or isinstance(wall, bool) \
-                or not isinstance(wall, (int, float)) or not wall > 0 or not isinstance(r.get("rss_kb"), (int, float)):
-            errors.append(f"{key}: failed, or no wall time or peak memory")
+        if r.get("termination") != "success" or r.get("err"):
+            errors.append(f"{key}: failed ({r.get('termination')!r}, {r.get('err')!r})")
+            continue
+        if not positive(r.get("wall")) or not positive(r.get("rss_kb")):
+            errors.append(f"{key}: wall {r.get('wall')!r} or peak RSS {r.get('rss_kb')!r} not a finite positive number")
+            continue
+        if not positive(r.get("out")) or not (r.get("sha256") or r.get("hash")):
+            errors.append(f"{key}: no output size or digest")
             continue
         t = key[1]
         if check_workers and key[0] in CHECKED and t in WORKERS \
                 and workers(r) != sorted(f"mibz2-{k}" for k in range(WORKERS[t])):
             errors.append(f"{key}: observed workers {workers(r)}, not the shipped {WORKERS[t]} at {t} threads")
         outs.setdefault(key[0], set()).add((r.get("out"), r.get("sha256") or r.get("hash")))
-        corpora.add(key[0])
         rows[key] = r
     for side in ("cand", "ref"):
         arms = sorted(a for s, a in refs if s == side)
         if len(arms) > 1:
             errors.append(f"more than one {'port' if side == 'cand' else 'reference'} binary: {arms}")
     roster = {(c, t, a, i) for c in corpora for t in counts for a in ("cand", "ref") for i in range(rounds)}
+    if not rows:
+        errors.append(f"{os.path.basename(path)}: no records (the roster is {len(roster)})")
     missing = sorted(roster - set(rows))
     extra = sorted(set(rows) - roster)
     if missing:
@@ -184,7 +218,31 @@ def load(path, counts, rounds, errors, check_workers=True):
     for c, o in sorted(outs.items()):
         if len(o) != 1:
             errors.append(f"{c}: the outputs differ: {sorted(o, key=str)[:3]}")
-    return rows, sorted(corpora)
+    return rows
+
+
+def identities(bundle, port, errors):
+    """The registered builds and inputs, from the bundle's own records: `commits.txt` names the
+    port's pinned commit and v0.5.6's, and `inputs.sha256` the two pinned Wikidata corpora and a
+    digest for each corpus of the roster"""
+    try:
+        commits = dict(line.split() for line in open(os.path.join(bundle, "commits.txt")) if line.strip())
+    except (OSError, ValueError):
+        commits = {}
+    if commits.get("port") != port or commits.get("v0.5.6") != V056:
+        errors.append(f"commits.txt: the builds are {commits}, not port {port} and v0.5.6 {V056}")
+    try:
+        digests = {os.path.basename(f): d for d, f in (line.split() for line in open(os.path.join(bundle, "inputs.sha256"))
+                                                        if line.strip())}
+    except (OSError, ValueError):
+        digests = {}
+    if digests.get("wikidata.bz2") != WIKIDATA_SHA256:
+        errors.append(f"inputs.sha256: the Wikidata sample is {digests.get('wikidata.bz2')!r}, not {WIKIDATA_SHA256}")
+    if digests.get("wikidata-heldout.bz2") != HELDOUT_SHA256:
+        errors.append(f"inputs.sha256: the held-out Wikidata is {digests.get('wikidata-heldout.bz2')!r}, not {HELDOUT_SHA256}")
+    missing = [c for c in (*CORPORA, SUSTAINED) if f"{c}.bz2" not in digests]
+    if missing:
+        errors.append(f"inputs.sha256: no digest for {missing}")
 
 
 def cell(rows, corpus, t, rounds):
@@ -201,22 +259,20 @@ def label(lo, hi):
 
 
 def judge(a):
-    counts = [int(t) for t in a.counts.split(",")]
+    counts, corpora = list(COUNTS), list(CORPORA)
     errors = []
-    if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(a.runs)), "DRY-RUN.txt")):
-        errors.append("a dry run (DRY-RUN.txt beside the records): not evidence")
-    model = machine(a.lscpu, a.env, errors)
-    rows, corpora = load(a.runs, counts, a.rounds, errors)
-    srows, scorp = load(a.sustained, [10], a.sustained_rounds, errors)
-    for need in (MAIN, HELDOUT):
-        if rows and need not in corpora:
-            errors.append(f"{need}: not in the run")
-    if srows and scorp != [SUSTAINED]:
-        errors.append(f"the sustained run's corpora are {scorp}, not [{SUSTAINED}]")
-    print(f"records {len(rows)} and {len(srows)} sustained; counts {counts}; {a.rounds} rounds "
-          f"({a.sustained_rounds} sustained); corpora {corpora}" + (f"; the machine: {model}" if model else ""))
+    if os.path.exists(os.path.join(a.bundle, "DRY-RUN.txt")):
+        errors.append("a dry run (DRY-RUN.txt in the bundle): not evidence")
+    model = machine(os.path.join(a.bundle, "lscpu.txt"), os.path.join(a.bundle, "env.json"), errors)
+    identities(a.bundle, a.port, errors)
+    rows = load(os.path.join(a.bundle, "runs.jsonl"), corpora, counts, ROUNDS, errors)
+    srows = load(os.path.join(a.bundle, "sustained.jsonl"), [SUSTAINED], [10], SUSTAINED_ROUNDS, errors)
+    print(f"records {len(rows)} of {len(corpora) * len(counts) * 2 * ROUNDS} and {len(srows)} of "
+          f"{2 * SUSTAINED_ROUNDS} sustained; the registered roster: {len(corpora)} corpora at {counts} threads, "
+          f"{ROUNDS} rounds ({SUSTAINED_ROUNDS} sustained)" + (f"; the machine: {model}" if model else ""))
     if errors:
-        print(f"VOID: the records do not make the registered run ({len(errors)} problems); no verdict")
+        print(f"VOID: the records do not make the registered run ({len(errors)} problems); no verdict. "
+              "This registration's one confirmatory attempt gives no adoption evidence, and opens no retry.")
         for e in errors[:25]:
             print(f"  {e}")
         return 1
@@ -226,7 +282,7 @@ def judge(a):
     for t in counts:
         print(f"  {t} threads")
         for c in corpora:
-            g, lo, hi, p, mem = res[(c, t)] = cell(rows, c, t, a.rounds)
+            g, lo, hi, p, mem = res[(c, t)] = cell(rows, c, t, ROUNDS)
             role = "primary" if c == MAIN else "held-out replication" if c == HELDOUT else "guard"
             print(f"    {c} ({role}): {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; p {p:.2e}; memory {mem:.3f}")
             if c == MAIN:
@@ -253,7 +309,7 @@ def judge(a):
                 fails.append(f"G: {c} at {t} threads {g:.4f}, above the bound {GUARD_MAX}")
             if mem > RSS_GATE:
                 fails.append(f"G: {c} at {t} threads peak RSS {mem:.3f}, above {RSS_GATE}")
-    g, lo, hi, p, mem = cell(srows, SUSTAINED, 10, a.sustained_rounds)
+    g, lo, hi, p, mem = cell(srows, SUSTAINED, 10, SUSTAINED_ROUNDS)
     print(f"\nS, sustained: 10 threads back to back on {SUSTAINED}: {g:.4f} [{lo:.4f}, {hi:.4f}] {label(lo, hi)}; "
           f"memory {mem:.3f}")
     if lo > 1:
@@ -307,13 +363,9 @@ def main(argv):
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="mode", required=True)
     j = sub.add_parser("judge")
-    j.add_argument("runs")
-    j.add_argument("sustained")
-    j.add_argument("--lscpu", required=True)
-    j.add_argument("--env", required=True)
-    j.add_argument("--counts", default="8,10,20")
-    j.add_argument("--rounds", type=int, default=12)
-    j.add_argument("--sustained-rounds", type=int, default=8)
+    j.add_argument("bundle", help="the run's directory: runs.jsonl, sustained.jsonl, lscpu.txt, env.json, "
+                                  "commits.txt, inputs.sha256")
+    j.add_argument("--port", required=True, help="the port's registered commit (the recipe's PORT)")
     q = sub.add_parser("pairs")
     q.add_argument("runs")
     q.add_argument("--pair", action="append", required=True)

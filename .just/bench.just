@@ -2220,8 +2220,10 @@ bench-opend-sweep COPIES="4" ROUNDS="12" SETTLE="2" REPS="5" DRY="":
 # settle, on Wikidata x4 (primary), the development guards and the held-out corpora
 # (bench/heldout.py, bench/wikidata-heldout.json); then 10 threads back to back on Wikidata x16;
 # then, reported and not judged, the gate's cost and the eager/open crossover (kernel-only arms)
-# and the per-block coverage census. `bench/open_port.py judge` gives the verdict. DRY (any
-# value): the untimed dry run (PROTOCOL §9), marked not evidence.
+# and the per-block coverage census. `bench/open_port.py judge` gives the verdict. One confirmatory
+# attempt (the Researcher's correction, REVIEW 7007213171): the recipe refuses a second timed attempt.
+# DRY (any value): the untimed preflight (PROTOCOL §9), which times nothing: each corpus decoded
+# once by each build, only the output's size and digest kept, and the scorer's own checks.
 bench-open-port PORT="3f09500ee3289b0dd06948003f45c89aedd8ea36" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="8" CROUNDS="8" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -2235,7 +2237,21 @@ bench-open-port PORT="3f09500ee3289b0dd06948003f45c89aedd8ea36" COPIES="4" ROUND
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-open-port: the checkout has local changes"; exit 1; }
     dry="{{DRY}}"
-    [ -z "$dry" ] || echo "bench-open-port: DRY RUN: untimed; not evidence" | tee "$O/DRY-RUN.txt"
+    [ -z "$dry" ] || echo "bench-open-port: DRY RUN: the untimed preflight; nothing is timed; not evidence" | tee "$O/DRY-RUN.txt"
+    # one confirmatory attempt: a timed attempt already started here, or archived on the evidence
+    # branch, is the registration's one, whatever its outcome; a second is refused
+    if [ -z "$dry" ]; then
+      for prev in "$W"/run-*/started.txt; do
+        [ -e "$prev" ] || continue
+        d=${prev%/started.txt}
+        [ "$d" = "$O" ] || [ -e "$d/DRY-RUN.txt" ] \
+          || { echo "bench-open-port: a timed attempt already started here (${d##*/}): this registration allows one"; rm -rf "$O"; exit 1; }
+      done
+      git fetch -q origin evidence:refs/remotes/origin/evidence 2>/dev/null || true
+      if git ls-tree --name-only origin/evidence open-port/ 2>/dev/null | grep -q 'run-.*\.tar\.gz$'; then
+        echo "bench-open-port: a timed attempt is already archived on the evidence branch: this registration allows one"; rm -rf "$O"; exit 1
+      fi
+    fi
     export RUSTUP_TOOLCHAIN=1.99.1
     rustc -V | grep -q '^rustc 1\.99\.1 ' \
       || { echo "bench-open-port: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
@@ -2297,6 +2313,21 @@ bench-open-port PORT="3f09500ee3289b0dd06948003f45c89aedd8ea36" COPIES="4" ROUND
     lscpu > "$O/lscpu.txt"
     lscpu -e > "$O/lscpu-e.txt" || true
     cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    if [ -n "$dry" ]; then
+      # the untimed preflight: each corpus decoded once by each build, its size and digest kept
+      # and compared, nothing else; then the scorer's own checks
+      for f in "${files[@]}" "$C/wikidata-x16.bz2"; do
+        a=$("$AB" child mibz2 4 "$f" | tail -1 | python3 -c 'import json,sys; r=json.loads(sys.stdin.read()); print(r["out"], r.get("sha256") or r.get("hash"))')
+        b=$("$OLDAB" child mibz2 4 "$f" | tail -1 | python3 -c 'import json,sys; r=json.loads(sys.stdin.read()); print(r["out"], r.get("sha256") or r.get("hash"))')
+        [ "$a" = "$b" ] && s=same || s=DIFFER
+        echo "${f##*/}: the port $a, v0.5.6 $b: $s" | tee -a "$O/untimed-check.txt"
+      done
+      ! grep -q DIFFER "$O/untimed-check.txt" || echo "bench-open-port: the builds' outputs differ (untimed-check.txt)"
+      python3 bench/test_open_port.py | tail -1 | tee "$O/scorer-checks.txt"
+      date -u +%FT%TZ > "$O/finished.txt"
+      bash bench/bundle.sh "$O"
+      exit 0
+    fi
     # the decision: one `ab run` a count, v0.5.6 and the port through the same entry point
     for t in 8 10 20; do
       echo "unpinned at $t threads: the port against v0.5.6"
@@ -2309,8 +2340,7 @@ bench-open-port PORT="3f09500ee3289b0dd06948003f45c89aedd8ea36" COPIES="4" ROUND
       --settle 0 --unpinned "$C/wikidata-x16.bz2"
     date -u +%FT%TZ > "$O/timed.txt"
     # the verdict (docs/journal/2026-11-19-open-port-registration.md)
-    python3 bench/open_port.py judge "$O/runs.jsonl" "$O/sustained.jsonl" --lscpu "$O/lscpu.txt" \
-      --env "$O/env.json" --rounds {{ROUNDS}} --sustained-rounds {{SROUNDS}} | tee "$O/verdict.txt" \
+    python3 bench/open_port.py judge "$O" --port "$port" | tee "$O/verdict.txt" \
       || echo "bench-open-port: the verdict is VOID (verdict.txt says why); the bundle is kept"
     # context, reported and not judged: the gate's cost (the shipped OpenCells against ungated open
     # and against 0.5.6's LazyCells, kernel-only arms of W workers) at W 7..10, and the eager/open

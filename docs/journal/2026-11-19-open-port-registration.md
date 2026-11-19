@@ -91,7 +91,51 @@ Anything else VOIDs the run.
 **Time:** about 41 minutes for the decision cells, 1 for the sustained cell, 15 for the context,
 3 for the census and 3 for the builds. About **65 minutes** in all.
 
+## One confirmatory attempt (the Researcher's correction, REVIEW 7007213171)
+
+**This registration allows one timed attempt on the i9.** Its bundle or failure record is kept,
+whatever happens.
+- *A VOID* gives no adoption evidence.
+- *An inconclusive required gain* (P1 or H missing its cutoff) is NOT ADOPTED.
+- *Neither opens a retry* under this registration. A different experiment would need its own
+  prospective review, and would leave this attempt and its outcome standing.
+- *Untimed setup* may be repaired before the attempt starts.
+- *The recipe enforces it.* A non-dry run refuses to start if a timed attempt already started in
+  this checkout, or if an `open-port/run-*` bundle is on the evidence branch.
+
+## The preflights
+
+- **The earlier dry runs were a *timed* preflight.**
+  - *Which:* `bench-open-port … dry` at b6412e1e, and two before it at 70879f15 and fab84e57, in
+    the cloud container.
+  - *What they generated:* through the recipe's own `ab run` calls, timing records for every cell
+    (the held-out corpora and the sustained cell included), the context runs, and the per-block
+    census `census-timed`.
+  - *What happened to them:* marked DRY, VOID by design, and excluded. Their timings were not
+    read; only the census's route counts were (which blocks the gates admit).
+  - *What they changed:* no timing changed the port, the corpus roster, the thresholds or the
+    decision rule. The changes they caused were mechanical:
+    - the harness, since master's `ab` lacks `--unpinned`;
+    - where the workers are read;
+    - the context reporter skipping failed records.
+  - *Kept:* the last bundle, `run-20261119T103840Z` (sha256 1d44ee48…7f1b), is kept, VOID.
+- **The preflight for this pin is untimed** (`just bench-open-port … dry`). It doesn't run
+  `ab run`, the timed census or the context runs. It does:
+  - both builds, the identities and every corpus with its digest;
+  - each corpus decoded once by each build, keeping only the output's size and digest
+    (`untimed-check.txt`);
+  - the scorer's own checks.
+
 ## The rule (`bench/open_port.py judge`, frozen with this registration)
+
+**The roster is fixed in the scorer, never read from the records:**
+- the 15 corpora of the table, at 8, 10 and 20 threads, 12 pairs each: 1,080 records;
+- `wikidata-x16` at 10 threads, 8 pairs: 16 records.
+
+**The registered identities**, from the bundle's own files:
+- `commits.txt` names the port's pinned commit and v0.5.6 (530ed404);
+- `inputs.sha256` names the pinned Wikidata sample (82f65ace…) and held-out windows (7f5c9a00…),
+  and gives a digest for every corpus of the roster.
 
 **Each cell** (corpus, count): the 12 rounds' paired log ratios of wall time, the port over
 v0.5.6.
@@ -99,8 +143,11 @@ v0.5.6.
 - *Peak RSS:* the median of the port's peaks over the median of v0.5.6's.
 
 **VOID**, with no verdict, where:
-- a record is missing, duplicated, malformed or failed;
+- a record of the roster is missing, duplicated, malformed or failed;
+- a record lies outside the roster, or a file is empty or missing;
+- a wall time, peak RSS or output size is not a finite positive number (a NaN included);
 - a corpus's outputs differ;
+- an identity doesn't hold;
 - the machine isn't the registered one;
 - either arm observes other than the shipped workers;
 - the run is a dry run.
@@ -123,9 +170,24 @@ before.
   within noise is caught too.
 - *There is no trade.* Rule 4 isn't used here: P2 requires Wikidata memory not to grow at all.
 
-`bench/test_open_port.py` checks the scorer: ADOPTS; each of P1, P2, H, G (SLOWER, the bound, and
-memory) and S failing alone and together; each VOID; and a guard's short decode seeing fewer
-workers without a VOID. 24 checks.
+`bench/test_open_port.py` checks the scorer, 39 checks on bundles of the full roster:
+- ADOPTS;
+- each of P1, P2, H, G (SLOWER, the bound, and memory) and S failing, alone and together;
+- **the Researcher's counterexamples, now regressions,** each VOID:
+  - only the primary and the held-out replication, with no guard at all (which had scored
+    ADOPTS);
+  - a NaN peak RSS on the primary (which had scored ADOPTS);
+  - an empty sustained file (which had crashed);
+- the roster:
+  - one corpus missing at one count, or everywhere;
+  - a record or corpus outside the roster;
+  - a missing sustained round;
+  - a NaN or infinite wall, or a zero peak RSS;
+  - a record with no digest;
+- each identity: another port or reference commit, no `commits.txt`, another sample or held-out
+  set, a corpus with no digest;
+- the machine, the workers, the outputs, a third arm, two reference binaries, a dry run;
+- a guard's short decode seeing fewer workers, without a VOID.
 
 ## Context, reported and not judged
 
