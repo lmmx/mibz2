@@ -127,8 +127,16 @@ impl Kernel {
             self.fill::<false, LIMIT>(records, p, buckets, bits);
         }
         if !wide {
-            writer::emit(&self.edges, &self.reverse, &self.spelling, &self.offsets,
-                n as usize, mark, bits, out);
+            writer::emit(
+                &self.edges,
+                &self.reverse,
+                &self.spelling,
+                &self.offsets,
+                n as usize,
+                mark,
+                bits,
+                out,
+            );
             return;
         }
         emit(
@@ -284,7 +292,6 @@ impl InverseBwt for Candidate {
     }
 }
 
-
 #[cfg(test)]
 mod verify {
     use super::Kernel;
@@ -295,10 +302,12 @@ mod verify {
         let mut inverse: Vec<_> = (0..l.len()).collect();
         inverse.sort_by_key(|&j| l[j]);
         let mut j = p;
-        (0..l.len()).map(|_| {
-            j = inverse[j];
-            l[j]
-        }).collect()
+        (0..l.len())
+            .map(|_| {
+                j = inverse[j];
+                l[j]
+            })
+            .collect()
     }
 
     #[test]
@@ -308,18 +317,18 @@ mod verify {
         let mut cases = 0;
         for n in 1..=10 {
             for mask in 0..1u32 << n {
-                let l: Vec<_> = (0..n).map(|j| ((mask>>j)&1) as u8).collect();
-                let records: Vec<u16> = l.iter().map(|&b| ((b as u16)<<8)|1).collect();
+                let l: Vec<_> = (0..n).map(|j| ((mask >> j) & 1) as u8).collect();
+                let records: Vec<u16> = l.iter().map(|&b| ((b as u16) << 8) | 1).collect();
                 for p in 0..n {
-                    let expected = oracle(&l,p);
+                    let expected = oracle(&l, p);
                     for limit in 1..=3 {
                         match limit {
                             1 => k.run::<1>(&records, n as u32, p as u32, &mut out),
                             2 => k.run::<2>(&records, n as u32, p as u32, &mut out),
                             _ => k.run::<3>(&records, n as u32, p as u32, &mut out),
                         }
-                        assert_eq!(out,expected,"column={l:?}, mark={p}, limit={limit}");
-                        cases+=1;
+                        assert_eq!(out, expected, "column={l:?}, mark={p}, limit={limit}");
+                        cases += 1;
                     }
                 }
             }

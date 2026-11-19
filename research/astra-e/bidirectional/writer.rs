@@ -1,7 +1,13 @@
 //! Write two independent walks into opposite ends of the final text.
 pub(super) fn emit(
-    forward: &[u32], backward: &[u32], dictionary: &[u8], offsets: &[u32],
-    n: usize, mark: u32, bits: u32, out: &mut Vec<u8>,
+    forward: &[u32],
+    backward: &[u32],
+    dictionary: &[u8],
+    offsets: &[u32],
+    n: usize,
+    mark: u32,
+    bits: u32,
+    out: &mut Vec<u8>,
 ) {
     out.resize(n, 0);
     let mask = (1u32 << bits) - 1;
