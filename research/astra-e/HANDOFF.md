@@ -1,0 +1,41 @@
+# Astra E continuation record
+
+## Decision and reproduction
+
+The 1.25× target is open. The combined writer at `80d8409359214b4e5abfd4430213921e82e9cd30` is the speed reference to beat. Two independent AMD CI runs verify a gain against opend. In the v1 run, candidate/Lazy was 0.8894, 0.8938 and 0.8332 at W1, W2 and W4; W4 median peak RSS was 0.8710 of Lazy. The bounded dense-admission writer at `badb2aec3624bd65606c429b2e6f79e9d9d0050f` is the independent space reference. In its five-arm Xeon test W4 peak was 0.7129 of Lazy and 0.8334 of the immediate combined predecessor. The table in the register preserves all worker counts, intervals, eager comparisons, separate local leaders and their raw paired observations. [Speed frontier](frontier.md) · [Best-so-far register](REGISTER.md) · [Previous i9 experiments at their source commits](prior.md)
+
+The full Wikidata file SHA-256 is `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`. It contains 431 blocks in 12 streams and decodes to 209,700,196 bytes. The release compiler is Rust 1.99.1. The most recent compatible scorer path observed is upstream `604dac3f46569edd9ac9b6706b23a68d9d7d8f8d`, scorer v1. Local v1 manifests print `v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8` for the imported tree; the CI/workstation receipts give their own printed identities. Scorer v0 estimates remain in their original series. The dense-admission, final-slot and counted candidates have different setup, fallback and memory profiles. Across nine paired local rounds W4 final-slot/Lazy was 0.718 [0.551,0.934], but opend/Lazy in the same epoch was 0.657. Replicate sub-5% claims independently. [Exact build hashes and commands for every local arm](REGISTER.md) · [Default and feature validation](validation/)
+
+For a new scoring round use the durable research branch in a separate worktree. The wrapper fetches master and refreshes all three scorer-owned paths before each invocation. On a new scorer series, repeat the historical controls and the strongest preserved implementation. The pinned recipes in the register replay the observed historical builds instead. Use unique output labels. Set the worker grid to the actual local capacity.
+
+```sh
+git fetch origin research/astra-e-moonshot
+git worktree add --detach ../astra-check origin/research/astra-e-moonshot
+cd ../astra-check
+bash bench/moonshot/corpus.sh
+bash research/astra-e/score.sh resume-combined research/astra-e/narrow-short/ahead.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy
+python3 research/astra-e/register.py
+```
+
+## Independent target decision
+
+The Coordinator queued the combined candidate on master at `f8061b3c6e13047a787bc2169277389ed7b1b897`. Both `ready/bench-astra-e-narrow-short-dry` and `ready/bench-astra-e-narrow-short` were observed at `8c9640d8ab186f81a0500f48e606e0c21c2a6669`. The first standalone lookahead attempt rejected the obsolete v0 pin before timing; the validated v1 retry is at `e5f232b8db47af73585d918ee97308aaa6e1be34`. Only the Coordinator queues target runs. [Queue](https://github.com/lmmx/mibz2/pull/615) · [Frozen recipe, dry run and preregistration](workstation/combined-request.md) · [Standalone failure and recovery](workstation/lookahead-first-attempt.md)
+
+Read the evidence commit and the original archive first. On a measured result, match the binary/source hashes, scorer version, corpus, 338 candidate gate, control gates, workers, 4W slots and complete set of 256 rows. Recompute each of the 16-round W7/8/9/10 paired wall and RSS intervals from the raw rows, with the frozen recipe's decision program. Each worker count must independently meet the upper 0.80 wall, upper 1.00 RSS, median RSS and max-peak criteria. Preserve comparisons against opend and ungated Open as well. Archive failures and partial receipts even if they yield zero timed rows.
+
+```sh
+git ls-remote origin 'refs/tags/*astra-e*' 'refs/heads/evidence'
+git fetch origin refs/heads/evidence:refs/remotes/origin/evidence
+git log -8 --oneline origin/evidence -- astra-e
+git ls-tree -r --name-only origin/evidence -- astra-e
+```
+
+## Mathematical and engineering work to resume
+
+* The delimiter programme now constructs a token BWT from stable FM interval partitions, transports an arbitrary mark with a byte offset, and induces again on tokens. Direct induction on a compound original marker removes the entire first token BWT and first dictionary. The induced column at a single word marker has at most as many runs as the original BWT, for every marker length. That bound certifies packed four-byte links on all 228 real admissions. Discovery, spelling and ordering still cost real time. [Formulation ledger](formulations/LEDGER.md) · [Sharp run bounds](formulations/f2-bounds/) · [Direct compound construction](formulations/f2-word/)
+* On 228 admitted blocks, first-level rank discovery occupies 99.697% of eight dynamic lanes. Dynamic refill at `87d41eb0e1cdd3b82268ea91ac736d150207188e` beat static F2 at W1/2/4 in independent five-arm CI, while its complete worker remained 1.015–1.025 of Lazy on that Xeon. Two coordinated improvements reuse the run-front histogram (`252646a`) and emit hardware POPCNT under one runtime guard (`3651470cb0ef5458e75cf97d3de363a1c73f2f76`). The latter reduced complete local inverse-stage CPU to 0.9115 and 0.9294 of the counted control in two balanced 60-round experiments. Verify whole-worker wall and memory against that same control. [Dynamic CI](ci/evidence/delimiter-refill-44433942216.md) · [Rank instruction receipts](formulations/f2-pages/instructions/focus/)
+* Root-only selector traversal at `0bebdcf` writes exactly one entry per maximal token run and eliminates all nonroot merge streams. Its all-block count fell from 5,390,514 stored pieces to 1,786,472, at a price of 7,739,733 cursor visits. The local merge took 1.642 [1.310,2.058] of dynamic refill CPU. The space/work tradeoff can be tested by choosing a subtree cut between the two constructions. [Proof, raw geometry and paired stage](formulations/f2-rootstream/) · [Full CRC gate](results/v1-rootstream-gate/)
+* Sparse RLE1 word actions in the combined writer at `fcbb4918d488422e24b281d59f04cb7bea20aac7` have passed the full gate. Compare its registered fifth arm, the frozen combined writer, in independent CI. A new protected-component mass theorem verifies which marked lap covers the original column and supports direct output from count-byte edits. The first direct patch retained extra spellings for 222 blocks; the sparse slice experiment removes that copy budget. [Combined kernel](formulations/f2-rle/combined/) · [Coverage certificate and exact tests](formulations/f2-rle/count-only/)
+* Price a cross-track portfolio by comparing the best engineering writer with guarded F2 on each complete block. First compute how much an oracle could gain over the better fixed decoder. Where justified, test a decision based on information the run front already supplies, using held-out streams and accounting for both kernels' retained memory. Reuse the pinned whole-block instrumentation. The global threshold from all-block accounting is a complete paid inverse ≤0.728 of Lazy on admissions under the local additive model. The W9/W10 i9 scanner already used 0.773/0.778 of baseline wall. [CPU denominator and source](budget/)
+
+The research default path is feature-isolated. Keep the shipping policy and allocator untouched. Continue the delimiter programme while independently testing engineering improvements. Every new round should preserve its input, a falsifier or proof, and raw measurements before replacing a working candidate.

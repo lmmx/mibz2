@@ -8,7 +8,7 @@ Master `9c31461df7bef24cecf79348545b27ee26846835` supplies the scorer and 0.5.6 
 
 Start with ungated Open, density-gated Open and Lazy in the same round. This distinguishes a gate/policy effect from changes to the underlying inverse. Use explicit workers 1,2,3,4 for the four-CPU quota. Preserve raw per-arm samples and peak process RSS. New controlled arms investigate conjugating retained ranks, contracting literal paths, compact eager descriptors, predecoding trace pages and overlapping the two directions of the marked cycle. None has an established performance result at campaign opening.
 
-The [performance register](REGISTER.md) links complete scorer receipts, individual timings, peak memory and independent evidence. The [formulation ledger](formulations/LEDGER.md) follows the separate search for objects that can eliminate reconstruction phases.
+The [continuation record](HANDOFF.md) gives the current independent target status, reproducible reference candidates and next experiments. The [performance register](REGISTER.md) links complete scorer receipts, individual timings, peak memory and independent evidence. The [formulation ledger](formulations/LEDGER.md) follows the separate search for objects that can eliminate reconstruction phases.
 
 ## Delimiter induction and independent measurements
 
