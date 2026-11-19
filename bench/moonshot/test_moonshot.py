@@ -407,5 +407,45 @@ class Register(unittest.TestCase):
         self.assertIn("0.950  hand", text)
 
 
+class Retrospective(unittest.TestCase):
+    def test_joins_by_source_and_scores_only_matching_hosts(self):
+        import tempfile
+
+        import eval as ev
+
+        d = Path(tempfile.mkdtemp())
+        (d / "a" / "score").mkdir(parents=True)
+        (d / "a" / "score" / "summary.json").write_text(
+            json.dumps(
+                {
+                    "info": {"candidate": "/x/k.rs"},
+                    "gate": {"verdict": "PASS"},
+                    "scorer": {"version": "v1", "commit": "c" * 40},
+                    "timing": {"4": {"candidate": {"geomean": 0.9, "lo": 0.8, "hi": 1.0}}},
+                    "proxy": {"predicted_over_lazy": {"candidate": {"4": {"ratio": 0.95}}}},
+                }
+            )
+        )
+        run = {
+            "machine": "AMD EPYC",
+            "selected": "k.rs",
+            "candidate_over_reference": {ev.LAZY: {"4": {"geomean": 0.85}, "2": {"geomean": 0.9}}},
+        }
+        (d / "a" / "assessment.json").write_text(
+            json.dumps({"ci_run": run, "i9_run": dict(run, machine="i9-10900K")})
+        )
+        rows = ev.join(ev.forecasts(d), ev.results(d))
+        w4 = [r for r in rows if r["w"] == "4" and r.get("indep")]
+        self.assertEqual(len(w4), 2)
+        i9 = next(r for r in w4 if r["indep"]["i9"])
+        self.assertTrue(i9["proxy_scored"])
+        self.assertAlmostEqual(ev.err(i9["proxy"], i9["indep"]["ratio"]), math.log(0.95 / 0.85))
+        epyc = next(r for r in w4 if not r["indep"]["i9"])
+        self.assertFalse(epyc["proxy_scored"])
+        self.assertTrue(any("not calibration" in f for f in epyc["flags"]))
+        # (W 2 was measured but not forecast: a row of its own, flagged)
+        self.assertTrue(any(r["w"] == "2" and "no local forecast" in r["flags"][0] for r in rows))
+
+
 if __name__ == "__main__":
     unittest.main()
