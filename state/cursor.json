@@ -2644,6 +2644,14 @@
       "review_comment_id": 7003886829,
       "review_pr": 145,
       "publication_verification": "Verified exact body, lmmx author, #145 destination, checkpoint citation, and role-aware headers and route. The pinned helper applies a coordinator-only sender check to Researcher publications."
+    },
+    {
+      "trigger_comment_id": 7007096443,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/open-port-c6-7007096443/report.md",
+      "source_commit": "b6412e1e43cbe7281c8f61033f7223f131244037"
     }
   ],
   "active_delegations": [],
