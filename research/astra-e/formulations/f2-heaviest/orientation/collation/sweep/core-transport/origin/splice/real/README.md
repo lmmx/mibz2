@@ -38,3 +38,20 @@ python3 "$d/generate.py" "$d/sources.xz" /tmp/splice-extended full > /tmp/splice
 cmp /tmp/splice-extended/cases.csv "$d/extended.csv"
 python3 "$d/verify.py" /tmp/splice-extended "$d/extended.csv"
 ```
+
+## True native source convention
+
+The direct-native property and comma kernels use trailing-marker words. All J words of one case start with the same byte c, and every H compound does also. Replace each word cY by Yc. Concatenating rotated source words around a cycle shifts its full byte sequence forward by one. The source type order, destination labels, widths and all successors stay the same. To preserve the first output byte, subtract one from a positive natural skip. For a zero natural skip, move to the preceding source in that section and start at the last byte of its rotated word. A disjoint-source mark keeps its sentinel. This also explains why concatenation commutes with rotation for H words here. The fixture conversion rotates each dense-original H word once, independently of J contraction. [Converter](rotate.py) · [Trailing-format case digests](rotated.csv) · [Complete trailing-format dense replay](rotated-check.txt)
+
+An independent export ran the original native fixed-literal first and second decoders at source pin `8ec1f2efb6e84b5a1626d92aa42039af79934e8a`. It requested the actual first-object snapshot from arm 4 for frequent h8 and arm 3 for quote h12. All twenty native snapshots agreed exactly with the converted J objects on each source base in order, all 52,927 type spellings (7,183,214 bytes), all 87,345 incoming run bases and widths, marked source and skip, and every one of the 17,999,830 final coded bytes. All twenty natural skips happened to be positive. A separate skip-zero test checks the required wrap to the previous source's last byte. Native export executes against the parent decoder library exposing the moonshot `byte_counts` accessor. [Raw export digests and counts](native-match.csv) · [Exact comparator](native_compare.py) · [Compiler input and native binary hashes](native-manifest.txt)
+
+```bash
+mkdir -p /tmp/splice-native-rotated
+python3 "$d/rotate.py" /tmp/splice-primary /tmp/splice-native-rotated "$d/primary.csv" > /tmp/splice-native-rotated/cases.csv
+cmp /tmp/splice-native-rotated/cases.csv "$d/rotated.csv"
+python3 "$d/verify.py" /tmp/splice-native-rotated "$d/rotated.csv"
+cargo build --release --lib --features moonshot
+python3 "$d/native_export.py" /tmp/splice-native-export "$PWD/target/release/deps/libmibz2.rlib"
+python3 "$d/native_compare.py" /tmp/splice-native-export /tmp/splice-native-rotated "$d/rotated.csv" > /tmp/splice-native-match.csv
+cmp /tmp/splice-native-match.csv "$d/native-match.csv"
+```
