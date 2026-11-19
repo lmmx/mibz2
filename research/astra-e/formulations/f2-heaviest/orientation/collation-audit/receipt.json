@@ -1,0 +1,196 @@
+{
+  "limits": {
+    "binary": 9,
+    "ternary": 6
+  },
+  "counts": {
+    "columns": 1988,
+    "multicycle_columns": 1688,
+    "tied_code_columns": 811,
+    "intervals": 55796,
+    "noncylinder_intervals": 35158,
+    "intervals_spanning_cycles": 26831,
+    "intervals_cutting_tied_rotations": 11460,
+    "inside_reference_marks": 177210,
+    "adjacent_checks": 599484,
+    "prefix_checks": 124278,
+    "reference_in_other_cycle_from_both_sources": 15824,
+    "unequal_prefix_returns_at_tied_source_codes": 5072,
+    "rank_tiebreak_checks": 22042
+  },
+  "counterexamples": {
+    "outside_reverse": {
+      "last": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "section": [
+        0,
+        1
+      ],
+      "q": 3,
+      "earlier_source": 0,
+      "later_source": 1,
+      "earlier_word": [
+        0
+      ],
+      "later_word": [
+        0,
+        0,
+        1
+      ],
+      "comparison": "outside_reverse",
+      "numeric": [
+        "4/63",
+        "79/4032"
+      ]
+    },
+    "hole_equal": {
+      "last": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "section": [
+        0,
+        1,
+        3
+      ],
+      "q": 0,
+      "earlier_source": 0,
+      "later_source": 1,
+      "earlier_word": [
+        0
+      ],
+      "later_word": [
+        0,
+        0
+      ],
+      "comparison": "hole_equal",
+      "numeric": [
+        "0",
+        "0"
+      ]
+    },
+    "hole_reverse": {
+      "last": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "section": [
+        0,
+        1,
+        3
+      ],
+      "q": 1,
+      "earlier_source": 0,
+      "later_source": 1,
+      "earlier_word": [
+        0
+      ],
+      "later_word": [
+        0,
+        0
+      ],
+      "comparison": "hole_reverse",
+      "numeric": [
+        "1/252",
+        "1/1008"
+      ]
+    },
+    "outside_equal": {
+      "last": [
+        0,
+        1,
+        0,
+        1
+      ],
+      "section": [
+        0,
+        1
+      ],
+      "q": 3,
+      "earlier_source": 0,
+      "later_source": 1,
+      "earlier_word": [
+        0
+      ],
+      "later_word": [
+        0,
+        1
+      ],
+      "comparison": "outside_equal",
+      "numeric": [
+        "1/12",
+        "1/12"
+      ]
+    },
+    "hole_split_bucket": {
+      "last": [
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "section": [
+        0,
+        1,
+        3,
+        4
+      ],
+      "source_ordered_words": [
+        [
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0
+        ],
+        [
+          1
+        ]
+      ]
+    },
+    "finite_suffix_wrong": {
+      "last": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "section": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "q": 1,
+      "earlier_source": 3,
+      "later_source": 4,
+      "earlier_word": [
+        1,
+        0
+      ],
+      "later_word": [
+        1
+      ],
+      "comparison": "finite padded order differs from true source order",
+      "numeric": [
+        [
+          0,
+          0
+        ]
+      ]
+    }
+  }
+}
