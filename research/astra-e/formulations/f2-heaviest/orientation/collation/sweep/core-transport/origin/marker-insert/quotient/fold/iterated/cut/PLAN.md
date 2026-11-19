@@ -1,0 +1,5 @@
+# Executable cut policy
+
+Apply the committed cut theorem with the protected single source first and all other current IDs in increasing original source order. Assign each next ID to the side that produces the larger observed cut against previously assigned neighbors; resolve ties by leaving it outside the delimiter set. Recompute this coloring after each contraction, until the singleton primary is a fixed point. No tuning from tape outcomes.
+
+For every step, check stable old→refined destinations, stable refined→contracted destinations, source ancestry and grammar children against dense permutation oracles. Check the bound on transition mass, fraction of self-edges, exact split/merge/grammar costs and both RLE bounds. Compare the final output including its in-word skip and multiple laps against the original marked cycle. Use all ten systematic full tapes and all small surjective token columns through six rows on up to three source labels. Include every weighted original byte mark in the small panel, including classes on disjoint cycles. Compare cumulative interests with the protected ordinary-fold construction on the same tapes. These are structural counts.
