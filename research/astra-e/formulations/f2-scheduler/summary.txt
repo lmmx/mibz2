@@ -1,0 +1,9 @@
+refill prep_mark=3.0758ms discover=6.9322ms merge=1.2086ms residual_output=4.7634ms total=16.3234ms
+batch prep_mark=3.0460ms discover=8.1325ms merge=1.1819ms residual_output=4.7277ms total=17.4742ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=16.8310ms total=16.8310ms
+refill/batch discover_ns: {'n': 30, 'geomean': 0.8455810953741796, 'lo': 0.8056949355111769, 'hi': 0.8874418310704133}
+refill/batch total_ns: {'n': 30, 'geomean': 0.9258681841872698, 'lo': 0.9012563433518348, 'hi': 0.9511521342553079}
+refill/lazy total_ns: {'n': 30, 'geomean': 0.9763380772168585, 'lo': 0.9502318932828405, 'hi': 1.0031614890658882}
+nine graph blocks {'lookups': 751521, 'batch_waves': 212887, 'refill_waves': 94236, 'lower_waves': 93944, 'selectors': 164689, 'dict_bytes': 890273}
+native simulation agreement for every systematic admission
+all admissions observed: 19750839 rank lookups in 2476362 waves, occupancy 0.996968
