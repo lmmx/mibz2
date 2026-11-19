@@ -1,0 +1,6 @@
+alphabet=1 windows=1..6 checked=112
+alphabet=2 windows=1..6 checked=5136
+alphabet=3 windows=1..6 checked=84510
+alphabet=4 windows=1..6 checked=798720
+full_window_checks=32608 duplicate_label_case=PASS
+small_exhaustive_checks=888478
