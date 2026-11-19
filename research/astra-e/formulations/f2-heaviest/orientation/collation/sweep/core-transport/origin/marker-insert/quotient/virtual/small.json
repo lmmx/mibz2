@@ -1,0 +1,18 @@
+{
+  "events": 14076,
+  "full_pages": 10170,
+  "marker_chosen": 7668,
+  "nodes": 20954,
+  "objects": 10170,
+  "old_input_runs": 43362,
+  "outer_pages": 10152,
+  "outer_pieces": 16779,
+  "outer_queries": 15043,
+  "outer_runs": 22676,
+  "published_runs": 48728,
+  "root_pieces": 25542,
+  "root_queries": 7650,
+  "root_rows": 38679,
+  "rows": 75495,
+  "streamed_runs": 29598
+}
