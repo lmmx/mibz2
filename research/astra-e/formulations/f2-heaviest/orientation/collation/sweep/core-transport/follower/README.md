@@ -35,6 +35,7 @@ d=research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-tra
 python3 "$d/physical.py" | diff - "$d/small.json"
 python3 "$d/physical.py" research/astra-e/dense/target/wikidata frequent | diff - "$d/frequent.csv"
 python3 "$d/physical.py" research/astra-e/dense/target/wikidata quote | diff - "$d/quote.csv"
-bash research/astra-e/formulations/f2-heaviest/orientation/seams/async/native/token-writer/build.sh /tmp/astra-token-all
+cargo build --release --locked --manifest-path bench/moonshot/Cargo.toml
+bash research/astra-e/formulations/f2-heaviest/orientation/seams/async/native/token-writer/build.sh /tmp/astra-token-all "$PWD/bench/moonshot/target/release/deps"
 python3 "$d/native_gate.py" /tmp/astra-token-all/libtoken.so research/astra-e/dense/target/wikidata | diff - "$d/native-gate.csv"
 ```

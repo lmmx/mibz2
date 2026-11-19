@@ -18,6 +18,7 @@ The Coordinator queued ready commit `e00b278656838aad9487ffa8fb7333eaa0c4705e` t
 The measured archive SHA-256 is `3a10607c7d4ff026f4f3a7241a6d72dff10f590c07fd9b19eab9a7c6fbed2559` at evidence commit `683c22e98aa41e42f90209063aa3650b224c595f`. The verifier checks both builds, all gate transcripts and the rotor, and reproduces the complete stored decision. A checkout with the registered Git objects and Python 3 suffices.
 
 ```sh
+git fetch origin bench/astra-e-edge-budget bench/astra-e-narrow-short
 d=research/astra-e/workstation
 python3 "$d/verify_edge.py" "$d/evidence/edge-i9-683c22e.tar.gz" | diff - "$d/evidence/edge-i9-683c22e.json"
 python3 "$d/edge_metrics.py" "$d/evidence/edge-i9-683c22e.tar.gz" | diff - "$d/edge-i9.csv"
