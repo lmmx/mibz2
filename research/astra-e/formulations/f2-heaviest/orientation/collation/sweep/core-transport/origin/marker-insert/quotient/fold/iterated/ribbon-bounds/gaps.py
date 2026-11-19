@@ -55,7 +55,15 @@ def main():
                     if str(c) not in attained:
                         attained[str(c)]=dict(column=col,live=sorted(live),initial=r,
                                               components=c,border=b,ribbons=t)
-    print(json.dumps(dict(counts=stats,attained=attained),indent=2))
+    family=[]
+    for holes in (1,2,3,7,16,64,257,1024):
+        n=8*holes+9
+        col=(1,1)+(0,)*(n-2)
+        live=set(range(n))-{6+8*i for i in range(holes)}
+        r,c,b,t,bound=audit(col,live)
+        assert (r,c,b,t,bound)==(2,holes+1,2*holes,2+3*holes,2+3*holes)
+        family.append(dict(n=n,holes=holes,ribbons=t))
+    print(json.dumps(dict(counts=stats,attained=attained,family=family),indent=2))
 
 
 if __name__=='__main__':main()
