@@ -1,0 +1,16 @@
+{
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-Wall",
+    "-Wextra",
+    "-Werror"
+  ],
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "code": {
+    "seed_check.py": "008ce66e53d2016ee2c3317fc02549183b09e7be33c2531db03af42c551ff522",
+    "seed_driver.cpp": "a98c57021910d866181436b605ddde01da187187d29340f2d73aaa5e0b86ca4a",
+    "seeds.hpp": "bb368f4065c1f2792ae04da86a2c8d48c78cab0766357b7a840a490bfb465a4e"
+  },
+  "exe": "cd7cc9478d98f1afa8431469f8de2679aa66f59cd139e4652c2995105db55900"
+}
