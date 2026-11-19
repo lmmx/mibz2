@@ -1,0 +1,11 @@
+h_rows 331033
+h_spelling_bytes 17999830
+holes 32
+j_mark_on_hole 0
+j_rows 331065
+marked_bytes 17999830
+objects 20
+positive_holes 5
+raw_h_fallback 0
+raw_j_fallback 0
+Replayed every physical row, original-digest marked bytes and fallback/offset witnesses.

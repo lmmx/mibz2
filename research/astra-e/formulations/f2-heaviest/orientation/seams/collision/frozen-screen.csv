@@ -1,0 +1,5 @@
+section,mode,visits,return_edge_steps,occupied_advance_pieces,unlabelled_stored_intervals,intersection_input_intervals,matched_row_count,phases
+quote,backward,135716,899931,66682,48690,49757,135716,272
+quote,collision,135716,899931,59999,40939,85994,135716,272
+compound,backward,24165,899931,79665,63628,64962,24165,331
+compound,collision,24165,899931,68571,52067,108730,24165,331

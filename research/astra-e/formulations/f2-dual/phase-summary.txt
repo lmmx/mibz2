@@ -1,0 +1,8 @@
+1 cache prep_mark_ns=0.3243 ms discover_ns=2.9234 ms merge_ns=0.0000 ms residual_output_ns=0.1516 ms total_ns=3.4227 ms vs_lazy=2.0859
+1 plain prep_mark_ns=0.3200 ms discover_ns=3.5913 ms merge_ns=0.0000 ms residual_output_ns=0.1517 ms total_ns=4.1567 ms vs_lazy=2.5332
+1 trie prep_mark_ns=0.3555 ms discover_ns=1.8001 ms merge_ns=0.1586 ms residual_output_ns=0.1883 ms total_ns=2.5477 ms vs_lazy=1.5526
+1 lazy prep_mark_ns=0.0000 ms discover_ns=0.0000 ms merge_ns=0.0000 ms residual_output_ns=1.6409 ms total_ns=1.6409 ms vs_lazy=1.0000
+all-nine cache prep_mark_ns=3.2484 ms discover_ns=31.0390 ms merge_ns=0.0000 ms residual_output_ns=1.3958 ms total_ns=35.9133 ms vs_lazy=2.1414
+all-nine plain prep_mark_ns=3.1882 ms discover_ns=34.8748 ms merge_ns=0.0000 ms residual_output_ns=1.3440 ms total_ns=39.6933 ms vs_lazy=2.3668
+all-nine trie prep_mark_ns=3.4934 ms discover_ns=18.4556 ms merge_ns=1.5597 ms residual_output_ns=1.6845 ms total_ns=25.4636 ms vs_lazy=1.5183
+all-nine lazy prep_mark_ns=0.0000 ms discover_ns=0.0000 ms merge_ns=0.0000 ms residual_output_ns=16.7710 ms total_ns=16.7710 ms vs_lazy=1.0000

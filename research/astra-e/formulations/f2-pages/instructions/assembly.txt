@@ -1,0 +1,54 @@
+<price::counted::Candidate>::build at 0x28d50 bytes=4808 static matching instructions={'movabs': 13}
+  290fa:	movabs r10,0x5555555555555555
+  29104:	movabs r11,0x3333333333333333
+  29177:	movabs r9,0xf0f0f0f0f0f0f0f
+  291ee:	movabs r9,0xf0f0f0f0f0f0f0f
+  29265:	movabs r9,0xf0f0f0f0f0f0f0f
+  292dc:	movabs r9,0xf0f0f0f0f0f0f0f
+  29353:	movabs r9,0xf0f0f0f0f0f0f0f
+  293ca:	movabs r9,0xf0f0f0f0f0f0f0f
+  29441:	movabs r9,0xf0f0f0f0f0f0f0f
+  294b8:	movabs rdx,0xf0f0f0f0f0f0f0f
+  29db1:	movabs r11,0x5555555555555555
+  29dbb:	movabs rbx,0x3333333333333333
+  29e32:	movabs r15,0xf0f0f0f0f0f0f0f
+<price::dispatch::Dispatch<0>>::prepare_counted at 0x2a2a0 bytes=1470 static matching instructions={'movabs': 3}
+  2a59f:	movabs rdi,0x5555555555555555
+  2a5a9:	movabs r8,0x3333333333333333
+  2a5b3:	movabs r9,0xf0f0f0f0f0f0f0f
+<price::dispatch::Dispatch<1>>::build_pop at 0x2ce60 bytes=4191 static matching instructions={'popcnt': 9}
+  2d24d:	popcnt rcx,r9
+  2d284:	popcnt rcx,r9
+  2d2bb:	popcnt rcx,r9
+  2d2f2:	popcnt rcx,r9
+  2d329:	popcnt rcx,r9
+  2d360:	popcnt rcx,r9
+  2d397:	popcnt rcx,r9
+  2d3ce:	popcnt rax,rax
+  2dcfc:	popcnt r10,r10
+<price::dispatch::Dispatch<2>>::prepare_pop at 0x2dec0 bytes=1474 static matching instructions={'popcnt': 2}
+  2e306:	popcnt r10,r9
+  2e32d:	popcnt rsi,r9
+<price::dispatch::Dispatch<2>>::prepare_counted at 0x2e490 bytes=1614 static matching instructions={'movabs': 3}
+  2e7d6:	movabs r8,0x5555555555555555
+  2e7e0:	movabs r9,0x3333333333333333
+  2e7ea:	movabs r10,0xf0f0f0f0f0f0f0f
+<price::dispatch::Dispatch<3>>::build_bmi at 0x2fe90 bytes=4300 static matching instructions={'bzhi': 9, 'popcnt': 9}
+  30283:	bzhi   r8,QWORD PTR [rdx+rdi*8],r9
+  30289:	popcnt r8,r8
+  302c7:	bzhi   r8,QWORD PTR [rdx+rdi*8],r9
+  302cd:	popcnt r8,r8
+  3030b:	bzhi   r8,QWORD PTR [rdx+rdi*8],r9
+  30311:	popcnt r8,r8
+  3034f:	bzhi   r8,QWORD PTR [rdx+rdi*8],r9
+  30355:	popcnt r8,r8
+  30393:	bzhi   r8,QWORD PTR [rdx+rdi*8],r9
+  30399:	popcnt r8,r8
+  303d7:	bzhi   r8,QWORD PTR [rdx+rdi*8],r9
+  303dd:	popcnt r8,r8
+  3041b:	bzhi   r8,QWORD PTR [rdx+rdi*8],r9
+  30421:	popcnt r8,r8
+  3045e:	bzhi   rax,QWORD PTR [rdx+rdi*8],rax
+  30464:	popcnt rax,rax
+  30d8e:	bzhi   r9,QWORD PTR [rdx+rdi*8],r10
+  30d98:	popcnt r9,r9

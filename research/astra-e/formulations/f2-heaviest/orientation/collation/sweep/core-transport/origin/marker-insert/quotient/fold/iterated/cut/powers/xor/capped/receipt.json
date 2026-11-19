@@ -1,0 +1,764 @@
+{
+  "preregistration": "923f215",
+  "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+  "checked_reference_sources": {
+    "docs/journal/2026-11-18-open-return/segments.rs": "6b7e1c516893ba585183a12202b433da450e605a2f122473266d42de112a5fd7",
+    "research/astra-e/front-fusion/cap-batch/worker/adapter.inc.rs": "2dde2d590cb4684e79b9b5a910c5ebd16ebf4ed87077eaa614980c43fd029104",
+    "research/astra-e/front-fusion/cap-batch/worker/candidate.rs": "6d30fdc7bf7a66b061cfd7842ab5f1327c2f35deb7dae66ad0b8c690f498027c",
+    "research/astra-e/front-fusion/cap-batch/worker/gate.rs": "23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212",
+    "research/astra-e/front-fusion/cap-batch/worker/kernel.rs": "6ec9b514f032890c04e1afb7c29ea3d1983ab359bbf59880f8171b95c96f0278",
+    "research/astra-e/narrow-short/constructor_ahead.rs": "c0ccf8939b8cdf02ac4c8157c588d980afa378805fcb37498ca3cda0ccbc6d4f",
+    "research/astra-e/short-words/endpoint.rs": "09380d30e328d27056735776812e55677a69c21933dc8b56412da75b87ee2d4d"
+  },
+  "inputs": [
+    {
+      "block": 1,
+      "mark": 264045,
+      "rows": 899931,
+      "records": 56386,
+      "maximal_runs": 51184,
+      "caps_le_sha256": "f7a530a74f772303247114bb99cf3d83c4bbecc2d0d454c677c19e3528ccb4a2",
+      "raw_sha256": "f87e5caa2d5f0df9d5958fe60901e2023ae04ac406603d4c1584c8bb4017fbd6",
+      "decoded_sha256": "d2584c09f1d643d6abff8a25513b63af4e05969c15c30256aed3a05c74281210",
+      "decoded_bytes": 900000,
+      "block_crc": "d4a25a5c"
+    },
+    {
+      "block": 41,
+      "mark": 221182,
+      "rows": 900000,
+      "records": 135769,
+      "maximal_runs": 131363,
+      "caps_le_sha256": "6e347d0b8feaac152d533b91a0925593254439777d5b8356eb6b9649a7064f9a",
+      "raw_sha256": "9990a824af11e465dc9dadf5bb27955c5ee6995627b71d0b43275b76e045fdd7",
+      "decoded_sha256": "cc98d1776902c50c2d52ed051ac3548892a6e4d7f54f7283b285d9b2ff5ef022",
+      "decoded_bytes": 899971,
+      "block_crc": "5e615a88"
+    },
+    {
+      "block": 85,
+      "mark": 880651,
+      "rows": 900000,
+      "records": 67594,
+      "maximal_runs": 62533,
+      "caps_le_sha256": "8f104390604a7f6a04d1832daddca52ef448dde7b80db5870df7777016c5514b",
+      "raw_sha256": "27cc47ed33619819b3e1a7962d91f643475110daa8557d0b3d8065cb7a1289f5",
+      "decoded_sha256": "1c7839012df54d61d0f55912f73c358d2ced0ca389234fb75fa3631f3e2cc7e0",
+      "decoded_bytes": 899988,
+      "block_crc": "ab859da1"
+    },
+    {
+      "block": 134,
+      "mark": 523129,
+      "rows": 900000,
+      "records": 59974,
+      "maximal_runs": 54808,
+      "caps_le_sha256": "8201a1243cf9a82c78f8b99fd8cf1357b360134fa6dc1d51519d083440bb421d",
+      "raw_sha256": "36169706e791b147422f81ed4029b1c823cf427b0646c9cd8b6732acf52474fe",
+      "decoded_sha256": "6193cbde371bbc6cc5a813b8312f7b695d77ed560497aad4f964fc6609660791",
+      "decoded_bytes": 899973,
+      "block_crc": "ff6f4fa2"
+    },
+    {
+      "block": 176,
+      "mark": 721531,
+      "rows": 900000,
+      "records": 62210,
+      "maximal_runs": 57079,
+      "caps_le_sha256": "7ab7e52179f57925093b0a431eae13ac38891ae1b27fd4bcfc2d5345423c43c6",
+      "raw_sha256": "d1c4d34343b6188c1a90c6f8d201c673ce06315632d15f6e99493a4181b456de",
+      "decoded_sha256": "9f1361c74b204e00c46b89c529686aafff500ae990ddb4f50685f5e9defdc38d",
+      "decoded_bytes": 899991,
+      "block_crc": "d20d7bba"
+    },
+    {
+      "block": 225,
+      "mark": 294130,
+      "rows": 900000,
+      "records": 54512,
+      "maximal_runs": 49209,
+      "caps_le_sha256": "953a80bcedd2f51d7438da13ddcf63664c86dbbac16fe9a0a25058f15ea11c96",
+      "raw_sha256": "971115a2e2651282ea7674d551ae72ebe8b0b2050ce0550ada5a8f5184f19cb2",
+      "decoded_sha256": "7eae81e16c118c1ec00638ab76826e9987448874c4b50f5398a3dbb46488de7f",
+      "decoded_bytes": 899989,
+      "block_crc": "6eadb179"
+    },
+    {
+      "block": 269,
+      "mark": 441922,
+      "rows": 899984,
+      "records": 129343,
+      "maximal_runs": 124940,
+      "caps_le_sha256": "675722331f6bc29d283277879be45156b38bccd6c9dbd8d1ee158f35358b7a4a",
+      "raw_sha256": "1c2cf5920f921e6ebc16591b8e5618b0e63bfe8c6b652772f76f80a308b9b7aa",
+      "decoded_sha256": "2062993bb150032c0f1300ebed1e9acce12e5a9ae73bc365d6746ce992f37a48",
+      "decoded_bytes": 900000,
+      "block_crc": "a1f0576d"
+    },
+    {
+      "block": 313,
+      "mark": 350261,
+      "rows": 900000,
+      "records": 56974,
+      "maximal_runs": 51854,
+      "caps_le_sha256": "6cdd35a88408ae30eae0bf3545a43987166a456899b913a0da170fa6930deca1",
+      "raw_sha256": "2f9f745afb0fade4bf3fe9adcb1641f0b2d161b69879945dee64216ef6374f9d",
+      "decoded_sha256": "f3a0ca42e490bea56f22ddee69a31fa68e0d44cd005b4b9f172ce5249b8886f8",
+      "decoded_bytes": 899975,
+      "block_crc": "50d3569a"
+    },
+    {
+      "block": 359,
+      "mark": 374465,
+      "rows": 900000,
+      "records": 54366,
+      "maximal_runs": 49036,
+      "caps_le_sha256": "f4a3d0ece50e490028c1bd6bc64350a327055598eae594a434acc31343f06f9b",
+      "raw_sha256": "918c52b513cc0d8a4b6c101428e36b715f950950aff1d10aaeea6a0014192e27",
+      "decoded_sha256": "3f8d5382ff3996ced7e228785d8b561cb053a0f196e5ff389d09129d170b205d",
+      "decoded_bytes": 899961,
+      "block_crc": "1eb2033b"
+    },
+    {
+      "block": 397,
+      "mark": 35838,
+      "rows": 900000,
+      "records": 63662,
+      "maximal_runs": 58478,
+      "caps_le_sha256": "eb7e923ede838cd36b841c5182d11963fc8b1699d5752b89aaed2c0bd4a77eae",
+      "raw_sha256": "f1dd9047112eda127a96d3515acc71def8eb0a5b7eb4b2f75ba8831f3a964c73",
+      "decoded_sha256": "75a1267e220f5264a638f96b50802e520b94dbbb5333183869b3bb96666faf01",
+      "decoded_bytes": 899937,
+      "block_crc": "c3a871f4"
+    }
+  ],
+  "timings": {
+    "all": {
+      "median_ms": {
+        "stream": 248.75151,
+        "streamgaps": 242.05774,
+        "dense": 226.92587,
+        "scalar": 33.86841,
+        "lazy": 36.42557,
+        "opend": 34.78397
+      },
+      "ratios": {
+        "stream/dense": [
+          1.08275,
+          1.025722,
+          1.142948
+        ],
+        "stream/scalar": [
+          7.251771,
+          6.734429,
+          7.808856
+        ],
+        "stream/lazy": [
+          6.809952,
+          6.473559,
+          7.163825
+        ],
+        "stream/opend": [
+          6.830148,
+          6.13193,
+          7.607871
+        ],
+        "streamgaps/stream": [
+          0.962081,
+          0.926982,
+          0.99851
+        ],
+        "streamgaps/dense": [
+          1.041693,
+          0.997643,
+          1.087689
+        ],
+        "streamgaps/scalar": [
+          6.976793,
+          6.504463,
+          7.483421
+        ],
+        "streamgaps/lazy": [
+          6.551726,
+          6.237587,
+          6.881687
+        ],
+        "streamgaps/opend": [
+          6.571157,
+          5.853053,
+          7.377366
+        ]
+      }
+    },
+    "1": {
+      "median_ms": {
+        "stream": 18.44433,
+        "streamgaps": 17.45571,
+        "dense": 19.91406,
+        "scalar": 2.45275,
+        "lazy": 2.52749,
+        "opend": 2.3592
+      },
+      "ratios": {
+        "stream/dense": [
+          0.939897,
+          0.890394,
+          0.992152
+        ],
+        "stream/scalar": [
+          7.747225,
+          7.28727,
+          8.23621
+        ],
+        "stream/lazy": [
+          7.45765,
+          7.02701,
+          7.914682
+        ],
+        "stream/opend": [
+          7.985067,
+          7.586867,
+          8.404166
+        ],
+        "streamgaps/stream": [
+          0.922626,
+          0.881865,
+          0.965272
+        ],
+        "streamgaps/dense": [
+          0.867173,
+          0.837854,
+          0.897519
+        ],
+        "streamgaps/scalar": [
+          7.147792,
+          6.779699,
+          7.535871
+        ],
+        "streamgaps/lazy": [
+          6.880623,
+          6.559169,
+          7.217832
+        ],
+        "streamgaps/opend": [
+          7.367231,
+          7.063366,
+          7.684169
+        ]
+      }
+    },
+    "41": {
+      "median_ms": {
+        "stream": 45.43398,
+        "streamgaps": 45.21705,
+        "dense": 22.38698,
+        "scalar": 6.61898,
+        "lazy": 4.85359,
+        "opend": 5.12742
+      },
+      "ratios": {
+        "stream/dense": [
+          2.040031,
+          1.87148,
+          2.223763
+        ],
+        "stream/scalar": [
+          6.738058,
+          6.325909,
+          7.177059
+        ],
+        "stream/lazy": [
+          9.213494,
+          8.646296,
+          9.8179
+        ],
+        "stream/opend": [
+          7.650134,
+          6.020101,
+          9.721524
+        ],
+        "streamgaps/stream": [
+          1.02379,
+          0.925738,
+          1.132227
+        ],
+        "streamgaps/dense": [
+          2.088563,
+          1.888538,
+          2.309774
+        ],
+        "streamgaps/scalar": [
+          6.898356,
+          6.208758,
+          7.664546
+        ],
+        "streamgaps/lazy": [
+          9.432682,
+          8.356017,
+          10.648075
+        ],
+        "streamgaps/opend": [
+          7.832131,
+          5.880393,
+          10.431661
+        ]
+      }
+    },
+    "85": {
+      "median_ms": {
+        "stream": 21.40024,
+        "streamgaps": 20.46954,
+        "dense": 28.0431,
+        "scalar": 2.79383,
+        "lazy": 3.43609,
+        "opend": 3.34514
+      },
+      "ratios": {
+        "stream/dense": [
+          0.765574,
+          0.677189,
+          0.865496
+        ],
+        "stream/scalar": [
+          7.15817,
+          6.009719,
+          8.52609
+        ],
+        "stream/lazy": [
+          6.135101,
+          5.407302,
+          6.960859
+        ],
+        "stream/opend": [
+          5.877555,
+          5.009378,
+          6.896195
+        ],
+        "streamgaps/stream": [
+          0.908684,
+          0.82213,
+          1.00435
+        ],
+        "streamgaps/dense": [
+          0.695665,
+          0.649401,
+          0.745225
+        ],
+        "streamgaps/scalar": [
+          6.504512,
+          5.476672,
+          7.725255
+        ],
+        "streamgaps/lazy": [
+          5.574866,
+          4.83583,
+          6.426846
+        ],
+        "streamgaps/opend": [
+          5.340838,
+          4.277574,
+          6.668393
+        ]
+      }
+    },
+    "134": {
+      "median_ms": {
+        "stream": 19.72162,
+        "streamgaps": 19.56042,
+        "dense": 21.77816,
+        "scalar": 2.75861,
+        "lazy": 3.08282,
+        "opend": 2.8521
+      },
+      "ratios": {
+        "stream/dense": [
+          0.869859,
+          0.759569,
+          0.996163
+        ],
+        "stream/scalar": [
+          7.108629,
+          6.525067,
+          7.744382
+        ],
+        "stream/lazy": [
+          6.467098,
+          5.875751,
+          7.11796
+        ],
+        "stream/opend": [
+          6.730858,
+          6.272295,
+          7.222946
+        ],
+        "streamgaps/stream": [
+          1.005614,
+          0.968382,
+          1.044277
+        ],
+        "streamgaps/dense": [
+          0.874742,
+          0.784124,
+          0.975833
+        ],
+        "streamgaps/scalar": [
+          7.148536,
+          6.701414,
+          7.62549
+        ],
+        "streamgaps/lazy": [
+          6.503404,
+          6.001149,
+          7.047694
+        ],
+        "streamgaps/opend": [
+          6.768644,
+          6.426267,
+          7.129262
+        ]
+      }
+    },
+    "176": {
+      "median_ms": {
+        "stream": 19.85274,
+        "streamgaps": 19.22896,
+        "dense": 25.95789,
+        "scalar": 2.38371,
+        "lazy": 2.85048,
+        "opend": 2.65405
+      },
+      "ratios": {
+        "stream/dense": [
+          0.800582,
+          0.743441,
+          0.862115
+        ],
+        "stream/scalar": [
+          7.940011,
+          7.012817,
+          8.989794
+        ],
+        "stream/lazy": [
+          6.6981,
+          6.2623,
+          7.164227
+        ],
+        "stream/opend": [
+          7.213705,
+          6.531754,
+          7.966855
+        ],
+        "streamgaps/stream": [
+          0.949813,
+          0.905248,
+          0.996573
+        ],
+        "streamgaps/dense": [
+          0.760403,
+          0.728708,
+          0.793477
+        ],
+        "streamgaps/scalar": [
+          7.541528,
+          6.423073,
+          8.85474
+        ],
+        "streamgaps/lazy": [
+          6.361943,
+          5.799085,
+          6.979433
+        ],
+        "streamgaps/opend": [
+          6.851672,
+          5.993998,
+          7.832071
+        ]
+      }
+    },
+    "225": {
+      "median_ms": {
+        "stream": 18.48887,
+        "streamgaps": 18.44032,
+        "dense": 18.28859,
+        "scalar": 2.26506,
+        "lazy": 2.51954,
+        "opend": 2.33451
+      },
+      "ratios": {
+        "stream/dense": [
+          0.930554,
+          0.837541,
+          1.033895
+        ],
+        "stream/scalar": [
+          7.78837,
+          7.28082,
+          8.331301
+        ],
+        "stream/lazy": [
+          7.090609,
+          6.638709,
+          7.57327
+        ],
+        "stream/opend": [
+          7.603517,
+          7.126552,
+          8.112404
+        ],
+        "streamgaps/stream": [
+          1.004616,
+          0.965369,
+          1.045458
+        ],
+        "streamgaps/dense": [
+          0.934849,
+          0.851911,
+          1.025861
+        ],
+        "streamgaps/scalar": [
+          7.82432,
+          7.302517,
+          8.383408
+        ],
+        "streamgaps/lazy": [
+          7.123339,
+          6.691105,
+          7.583494
+        ],
+        "streamgaps/opend": [
+          7.638614,
+          7.242488,
+          8.056405
+        ]
+      }
+    },
+    "269": {
+      "median_ms": {
+        "stream": 43.39397,
+        "streamgaps": 42.63012,
+        "dense": 21.09289,
+        "scalar": 5.30532,
+        "lazy": 7.37186,
+        "opend": 5.41901
+      },
+      "ratios": {
+        "stream/dense": [
+          2.078116,
+          1.84873,
+          2.335963
+        ],
+        "stream/scalar": [
+          8.215091,
+          7.027847,
+          9.6029
+        ],
+        "stream/lazy": [
+          5.998692,
+          5.333178,
+          6.747253
+        ],
+        "stream/opend": [
+          7.892869,
+          7.06535,
+          8.817311
+        ],
+        "streamgaps/stream": [
+          0.937506,
+          0.861341,
+          1.020406
+        ],
+        "streamgaps/dense": [
+          1.948247,
+          1.789454,
+          2.121131
+        ],
+        "streamgaps/scalar": [
+          7.701699,
+          6.742177,
+          8.797778
+        ],
+        "streamgaps/lazy": [
+          5.623812,
+          5.055066,
+          6.256547
+        ],
+        "streamgaps/opend": [
+          7.399615,
+          6.710121,
+          8.159958
+        ]
+      }
+    },
+    "313": {
+      "median_ms": {
+        "stream": 18.42704,
+        "streamgaps": 17.89438,
+        "dense": 22.16817,
+        "scalar": 2.54567,
+        "lazy": 2.86331,
+        "opend": 2.65693
+      },
+      "ratios": {
+        "stream/dense": [
+          0.79371,
+          0.695964,
+          0.905185
+        ],
+        "stream/scalar": [
+          6.495891,
+          5.63344,
+          7.49038
+        ],
+        "stream/lazy": [
+          5.910174,
+          5.118839,
+          6.823845
+        ],
+        "stream/opend": [
+          6.722127,
+          6.212566,
+          7.273483
+        ],
+        "streamgaps/stream": [
+          0.986047,
+          0.931805,
+          1.043447
+        ],
+        "streamgaps/dense": [
+          0.782636,
+          0.710616,
+          0.861954
+        ],
+        "streamgaps/scalar": [
+          6.405255,
+          5.616688,
+          7.304535
+        ],
+        "streamgaps/lazy": [
+          5.827711,
+          5.07681,
+          6.689676
+        ],
+        "streamgaps/opend": [
+          6.628335,
+          6.30996,
+          6.962773
+        ]
+      }
+    },
+    "359": {
+      "median_ms": {
+        "stream": 17.73059,
+        "streamgaps": 17.51045,
+        "dense": 18.66785,
+        "scalar": 2.19438,
+        "lazy": 2.40252,
+        "opend": 2.2148
+      },
+      "ratios": {
+        "stream/dense": [
+          0.989519,
+          0.921483,
+          1.062578
+        ],
+        "stream/scalar": [
+          8.258907,
+          7.792377,
+          8.753369
+        ],
+        "stream/lazy": [
+          7.444272,
+          7.117425,
+          7.786128
+        ],
+        "stream/opend": [
+          7.690097,
+          7.201515,
+          8.211827
+        ],
+        "streamgaps/stream": [
+          0.959904,
+          0.901657,
+          1.021914
+        ],
+        "streamgaps/dense": [
+          0.949843,
+          0.911867,
+          0.989401
+        ],
+        "streamgaps/scalar": [
+          7.927757,
+          7.48455,
+          8.397209
+        ],
+        "streamgaps/lazy": [
+          7.145785,
+          6.657852,
+          7.669477
+        ],
+        "streamgaps/opend": [
+          7.381754,
+          6.703558,
+          8.128563
+        ]
+      }
+    },
+    "397": {
+      "median_ms": {
+        "stream": 21.05099,
+        "streamgaps": 20.78595,
+        "dense": 22.59748,
+        "scalar": 2.85278,
+        "lazy": 3.09836,
+        "opend": 3.01147
+      },
+      "ratios": {
+        "stream/dense": [
+          0.913004,
+          0.781462,
+          1.066689
+        ],
+        "stream/scalar": [
+          7.112834,
+          6.33091,
+          7.991333
+        ],
+        "stream/lazy": [
+          6.880611,
+          6.232884,
+          7.59565
+        ],
+        "stream/opend": [
+          6.826063,
+          6.275807,
+          7.424565
+        ],
+        "streamgaps/stream": [
+          0.963905,
+          0.900574,
+          1.031689
+        ],
+        "streamgaps/dense": [
+          0.880049,
+          0.775555,
+          0.998622
+        ],
+        "streamgaps/scalar": [
+          6.856095,
+          6.282648,
+          7.481882
+        ],
+        "streamgaps/lazy": [
+          6.632253,
+          6.198037,
+          7.096889
+        ],
+        "streamgaps/opend": [
+          6.579675,
+          6.185972,
+          6.998435
+        ]
+      }
+    }
+  }
+}

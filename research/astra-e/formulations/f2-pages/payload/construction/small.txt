@@ -1,0 +1,22 @@
+
+running 12 tests
+test control::checks::corpus ... ignored
+test control::checks::native_second_level ... ignored
+exact section outputs for 11264 covered small marks
+test coalesced::checks::arbitrary_marks ... ok
+exact section outputs for 11264 covered small marks
+test eager::checks::arbitrary_marks ... ok
+exact section outputs for 11264 covered small marks
+test control::checks::arbitrary_marks ... ok
+test eager::checks::packed_lf_and_boundaries ... ok
+test coalesced::checks::packed_lf_and_boundaries ... ok
+exact section outputs for 11264 covered small marks
+test ends::checks::arbitrary_marks ... ok
+exact section outputs for 11264 covered small marks
+test starts::checks::arbitrary_marks ... ok
+test control::count_checks::page_boundaries_and_counted_path ... ok
+test ends::checks::packed_lf_and_boundaries ... ok
+test starts::checks::packed_lf_and_boundaries ... ok
+
+test result: ok. 10 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.09s
+

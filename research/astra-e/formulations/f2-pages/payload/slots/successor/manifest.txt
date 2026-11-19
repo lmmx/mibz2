@@ -1,0 +1,16 @@
+bea261caf3009d2260dea4dcdabaaff28d500454
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+80f1d1b125332b4e7f75f66b33ea65dd8b261209b88fb29c8b587b9cdfdf6c82  /workspace/work/queue-spans/successor-price/price
+d94b7a50f0765d32c7796308d69504845d90462bae69d157bb6fe14c89ac2b48  /workspace/work/queue-spans/successor-price/focus.rs
+06f17b964554048db292be14510bd47e63a29bf2b707e627916a8738a143465a  /workspace/work/queue-spans/successor-price/control.rs
+2c3512794889f02e49507f29c39e385d40558b9d8c3b1d26c5f0914f9c0bb51b  /workspace/work/queue-spans/successor-price/slots.rs
+f38c0ae713c308e909b41e3c86379fd31a3e8b328364fd75fc0261f678a559bb  /workspace/work/page-counted-lib/release/deps/libmibz2.rlib
+c901ac3a5daf7ae30b68d454ac83fd130412abdd01ca0a798055ba1d3ec4f21c  research/astra-e/formulations/f2-pages/payload/slots/successor/lookup.inc
+pinned CPUs 4 2
+400000 100000

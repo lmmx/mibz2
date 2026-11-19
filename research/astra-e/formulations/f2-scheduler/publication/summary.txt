@@ -1,0 +1,6 @@
+refill {'prep_mark_ns': 3.0695, 'discover_ns': 7.1489, 'merge_ns': 1.1949, 'residual_output_ns': 4.7518, 'total_ns': 16.4741}
+prepaid {'prep_mark_ns': 3.0911, 'discover_ns': 1.936, 'merge_ns': 1.1916, 'residual_output_ns': 4.7294, 'total_ns': 11.1894}
+lazy {'prep_mark_ns': 0.0, 'discover_ns': 0.0, 'merge_ns': 0.0, 'residual_output_ns': 16.6107, 'total_ns': 16.6107}
+prepaid/refill discover_ns 0.2692 [0.2574,0.2816]
+prepaid/refill total_ns 0.6792 [0.6536,0.7059]
+prepaid/lazy total_ns 0.6749 [0.6460,0.7051]

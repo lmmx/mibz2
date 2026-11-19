@@ -1,0 +1,1 @@
+blocks 431 tables 1796 exact LUT entries 1839104 decision intervals 1284790

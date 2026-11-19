@@ -1,0 +1,27 @@
+[
+  {
+    "alphabet": 2,
+    "columns": 254,
+    "minimum_width_counts": {
+      "0": 5588,
+      "1": 26472,
+      "2": 400,
+      "3": 76
+    },
+    "neutral_sets": 32536,
+    "old_partitions": 5588,
+    "through_n": 7
+  },
+  {
+    "alphabet": 3,
+    "columns": 363,
+    "minimum_width_counts": {
+      "0": 1701,
+      "1": 2736,
+      "2": 30
+    },
+    "neutral_sets": 4467,
+    "old_partitions": 1701,
+    "through_n": 5
+  }
+]

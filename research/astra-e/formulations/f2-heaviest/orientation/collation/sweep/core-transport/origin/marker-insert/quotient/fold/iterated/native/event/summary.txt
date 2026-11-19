@@ -1,0 +1,24 @@
+n sum=205197794 min=899809 max=900000
+old sum=30868395 min=125580 max=145852
+events sum=9463884 min=27465 max=66910
+edits sum=30868167 min=125579 max=145851
+queue_pushes sum=10184302 min=29769 max=72864
+pops sum=10183929 min=29768 max=72862
+nodes sum=10192771 min=29784 max=72896
+moved sum=2392 min=2 max=20
+leaf_copies sum=30868579 min=125581 max=145853
+live sum=228 min=1 max=1
+stack sum=30319 min=28 max=1512
+named max retained 8473542 aux bytes 0 VmHWM KiB 8184
+repeated max retained 8179526 aux bytes 0 VmHWM KiB 8036
+indexed max retained 7648262 aux bytes 2388736 VmHWM KiB 7300
+event max retained 10920006 aux bytes 5660480 VmHWM KiB 9436
+named total_ns=1833.47us first_ns=1125.59us index_ns=0.00us contract_ns=0.00us emit_ns=707.30us
+repeated total_ns=6513.86us first_ns=1085.80us index_ns=118.65us contract_ns=3778.68us emit_ns=1528.70us
+event total_ns=4881.59us first_ns=1123.82us index_ns=312.54us contract_ns=1782.80us emit_ns=1659.58us
+indexed total_ns=2470.20us first_ns=1115.58us index_ns=202.26us contract_ns=0.00us emit_ns=1150.29us
+event/repeated=0.7481 [0.7312,0.7653]
+event/named=2.6680 [2.5791,2.7600]
+event/indexed=1.9746 [1.9238,2.0267]
+indexed/named=1.3511 [1.3065,1.3974]
+repeated/named=3.5666 [3.4532,3.6837]

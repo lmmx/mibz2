@@ -1,0 +1,93 @@
+{
+ "info": {
+  "candidate": "/workspace/work/astra-e/research/astra-e/pairs/candidate.rs",
+  "candidate_type": "moonshot::candidate::PairKernel<false>",
+  "arms": [
+   "lazy",
+   "cells",
+   "open",
+   "opend",
+   "candidate"
+  ],
+  "cpus": 4
+ },
+ "corpus": "/workspace/work/astra-e/corpora/wikidata.bz2",
+ "options": {
+  "cmd": "score",
+  "candidate": "research/astra-e/pairs/candidate.rs",
+  "corpus": null,
+  "rounds": 3,
+  "settle": 0.0,
+  "repeat": 1,
+  "workers": [
+   1,
+   4
+  ],
+  "with_opend": true,
+  "proxy_blocks": 16,
+  "quick": true,
+  "no_timing": false,
+  "no_proxy": true,
+  "no_build": false,
+  "target_dir": null,
+  "out": "research/astra-e/results/pairs-pilot/score"
+ },
+ "gate": {
+  "verdict": "PASS",
+  "cases": 98,
+  "failed": [],
+  "exit": 0
+ },
+ "timing": {
+  "1": {
+   "rounds": 3,
+   "candidate": {
+    "n": 3,
+    "geomean": 1.0206069988807567,
+    "lo": 0.7567912170534591,
+    "hi": 1.376388391794463,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 0.9798090754782641,
+    "peak_rss_ratio": 0.7490999541794855,
+    "wall_s": 0.690117
+   },
+   "opend": {
+    "n": 3,
+    "geomean": 1.1521980281155604,
+    "lo": 0.3110474025238093,
+    "hi": 4.268032091641616,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 0.8679063629674121,
+    "peak_rss_ratio": 0.7503436538587419,
+    "wall_s": 0.718461
+   },
+   "lazy_wall_s": 0.642164,
+   "lazy_peak_rss_kb": 61108
+  },
+  "4": {
+   "rounds": 3,
+   "candidate": {
+    "n": 3,
+    "geomean": 0.8936901526343687,
+    "lo": 0.743335588173167,
+    "hi": 1.0744569500277723,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.1189560465137243,
+    "peak_rss_ratio": 0.6042504128883488,
+    "wall_s": 0.3155
+   },
+   "opend": {
+    "n": 3,
+    "geomean": 0.9051814375645433,
+    "lo": 0.7892764054407768,
+    "hi": 1.038107093108706,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.1047508913688873,
+    "peak_rss_ratio": 0.6473154466984513,
+    "wall_s": 0.323201
+   },
+   "lazy_wall_s": 0.373814,
+   "lazy_peak_rss_kb": 128364
+  }
+ }
+}

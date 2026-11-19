@@ -1,0 +1,18 @@
+{
+  "bands_donor": "614c99ac1a696952edd26f72c3e9624977c0b768b1f825e23d32c68f0cc5817a",
+  "contexts": "2e849e261b3dc4207b03b5d522cdfa86e1b9fcca8f021791b90c971196b98a49",
+  "literal_donor": "15ec90d6129ef678b1405f688da973453a28dcc9b05932cce20c3d39bc98b3ee",
+  "source": "f6fcc67134997b54b7ef83e8a256c4baa7c4d60672295ea5d4458ee8ced30307",
+  "driver": "ab12be9da06bdb5a93733a0003449dc8538896c672fea68570ea9d178020e6e9",
+  "bands_header": "b3ac6118febce6e05aabad22773afeefa08b4f7e6b525d32c821ade20e8946f9",
+  "literal_header": "37bef3682f129a92c3b66aeaa0992aa3f2aff230e9c604a781267effc4032ba6",
+  "binary": "c07550272c74677c579fc9168a4762b3678fbb47a47ff56e9221720fcf5b45e8",
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-Wall",
+    "-Wextra",
+    "-Werror"
+  ]
+}

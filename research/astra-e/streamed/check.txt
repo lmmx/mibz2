@@ -1,0 +1,2 @@
+524880 exhaustive count-byte cut/parsing comparisons; 3200 long-word stream boundaries
+Scalar and detected kernels passed nonempty append, CRC rollback, retry, and unfinished-run rollback on the streamed route.

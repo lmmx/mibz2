@@ -1,0 +1,72 @@
+frozen
+rows 899931
+token_rows 135716
+root_runs 6133
+words 2716
+singleton_types 2142
+cutoff_nodes 2118
+total_queries 70560
+retained_queries 15396
+deferred_queries 55164
+known_nonquote_bytes 11196
+cold_raw_bytes 66360
+total_dict_bytes 83454
+suppressed_edge_bytes 53046
+second_rows 24165
+partial_barrier_rows 26283
+partial_components 195
+tainted_second_arcs 2117
+tainted_second_bytes 98164
+partial_regularity_queries 2188
+partial_fm_intersections 7741
+partial_hot_types 1052
+partial_hot_dict 49600
+partial_dangling_known_bytes 17326
+barrier_original_queries 55164
+hot_gap_zero 0
+hot_cycle_rows 0
+standard_second_rank_lookups 5694
+standard_second_dictionary_bytes 146183
+standard_first_lookup_waves 8838
+cold_post_cut_lookups p50 p95 max 9 45 240
+cold_complete_bytes p50 p95 max 16 58 272
+hot_gap_tokens p50 p95 max 15 168 695
+hot_gap_bytes p50 p95 max 83 1039 5329
+cut_known_nonquote_bytes p50 p95 max 4 14 161
+separate_parallel_cold_pass_lower_and_lpt_waves 6896 6896
+nine admissions
+rows 8099915
+token_rows 1221659
+root_runs 67264
+words 28669
+singleton_types 22664
+cutoff_nodes 22168
+total_queries 751521
+retained_queries 153096
+deferred_queries 598425
+known_nonquote_bytes 114509
+cold_raw_bytes 712934
+total_dict_bytes 890273
+suppressed_edge_bytes 576257
+second_rows 220497
+partial_barrier_rows 242665
+partial_components 2375
+tainted_second_arcs 22136
+tainted_second_bytes 1049667
+partial_regularity_queries 22773
+partial_fm_intersections 84379
+partial_hot_types 12024
+partial_hot_dict 528967
+partial_dangling_known_bytes 209116
+barrier_original_queries 598425
+hot_gap_zero 2
+hot_cycle_rows 0
+standard_second_rank_lookups 54511
+standard_second_dictionary_bytes 1554280
+standard_first_lookup_waves 94236
+cold_post_cut_lookups p50 p95 max 18 45 273
+cold_complete_bytes p50 p95 max 24 53 312
+hot_gap_tokens p50 p95 max 21 168 709
+hot_gap_bytes p50 p95 max 120 1038 6208
+cut_known_nonquote_bytes p50 p95 max 4 12 205
+separate_parallel_cold_pass_lower_and_lpt_waves 74806 74806

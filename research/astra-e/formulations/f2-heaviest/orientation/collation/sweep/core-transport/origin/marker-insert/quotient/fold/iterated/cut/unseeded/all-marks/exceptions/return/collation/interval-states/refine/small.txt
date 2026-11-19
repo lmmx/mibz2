@@ -1,0 +1,1 @@
+parent_partition_penalties=8190 beaten_or_equal_finite_subsets=23712

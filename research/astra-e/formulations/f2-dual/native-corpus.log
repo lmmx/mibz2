@@ -1,0 +1,10 @@
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `release` profile [optimized + debuginfo] target(s) in 38.61s
+     Running unittests src/main.rs (/workspace/work/f2d-dual-build/release/deps/moonshot-53d7c20ebe2ea968)
+
+running 1 test
+233 large blocks; verified (blocks, inverse bytes) for quote and compound: [(224, 201597872), (228, 205197794)]
+test candidate::checks::corpus ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 5.57s
+

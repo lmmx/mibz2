@@ -1,0 +1,1 @@
+30 dense 1-MiB edge-cap crossings agreed (13 eligible; 17 delegated), including 4/8-byte width and marked strip boundaries

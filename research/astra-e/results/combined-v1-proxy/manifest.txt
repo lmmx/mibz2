@@ -1,0 +1,17 @@
+6a8a366cd786d58a528000b58da12fd2cfb47be8
+604dac3f46569edd9ac9b6706b23a68d9d7d8f8d
+scorer path revision 604dac3
+7b7741a017f12aaf5c9624028e32715ad4fd806210bef0c6b210c7c1d16631d6  research/astra-e/narrow-short/ahead.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.13.5
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh combined-v1-full-proxy research/astra-e/narrow-short/ahead.rs --target-dir /workspace/work/narrow-proxy/v1-target --quick --no-timing --proxy-blocks 48+16 --record research/astra-e/results/combined-v1-full-proxy/record.jsonl

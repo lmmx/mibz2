@@ -1,0 +1,15 @@
+06c8eb65c202838684d9be56a3034682a3b84555
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+4fd4950519ec5fc1aa78866671f800dc162204f0402d1896320820952f952a7b  /workspace/work/queue-spans/early-slots/price
+e0fbbaaaf7dfe6ea0c6cb0e9605221acbf20266c06739471678a567740d08126  /workspace/work/queue-spans/early-slots/focus.rs
+9f0c860fe1f6f27275cdf98cdf6c6112af59ef8717d176b023078b6b5db77dcb  /workspace/work/queue-spans/early-slots/control.rs
+bbc1019da7feed21c144d3105392c242b99ea0807c2a3b514b98fde7af667b30  /workspace/work/queue-spans/early-slots/early.rs
+f38c0ae713c308e909b41e3c86379fd31a3e8b328364fd75fc0261f678a559bb  /workspace/work/page-counted-lib/release/deps/libmibz2.rlib
+pinned CPUs 4 2
+400000 100000

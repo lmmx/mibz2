@@ -1,0 +1,33 @@
+{
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-g0",
+    "-Wall",
+    "-Wextra"
+  ],
+  "cpp_sha256": "62cc6a0e0a81b0ec10c984bd1ac99139a68091253d431e3246fe52c85780c7f2",
+  "binary_sha256": "26c65dc2e8afb4e60706fb2187103c81a3974919a9e4c555e9db0a4a32bdcb43",
+  "input_sha256": "aa9544bb4129c12803ad9a784e1593ef49febce420810fa4824f00fd5a27e9bb",
+  "source_sha256": "540f2d64a6cd2e6e4774583a31ce060263fc8257219f17e0b97171b77332a83b",
+  "root_rows": 899931,
+  "root_runs": 51184,
+  "original_mark": 264045,
+  "normalized_rle_sha256": "ef07956504c2537663cfce70fb56c4847ae6750369b5ba4279ec3a6a1afa1fc7",
+  "normalized_words_sha256": "68741fa4e95b83f6f20a7c8558dd8dac26ff3bf3926c713c03b8d4fa2066866a",
+  "direct_sha256": "f87e5caa2d5f0df9d5958fe60901e2023ae04ac406603d4c1584c8bb4017fbd6",
+  "costs": {
+    "affine_pieces": 51186,
+    "start_fragments": 48903,
+    "macro_rows": 884296,
+    "macro_types": 259,
+    "macro_runs": 48980,
+    "power_nodes": 66,
+    "point_lookups": 899931,
+    "bulk_self_steps": 15635,
+    "largest_power": 4,
+    "nonfixed_old_rows": 899931,
+    "omitted_fixed_rows": 0
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "counters": {
+    "sections": 37886,
+    "partial_0": 24804,
+    "partial_1": 11852,
+    "partial_2": 1230
+  },
+  "two_clip_witness": {
+    "last": "010000010100",
+    "section": [
+      1,
+      5
+    ],
+    "lookups": 3,
+    "run_pieces": 4,
+    "partial": 2,
+    "nodes": 5,
+    "intermediate_run_entries": 10,
+    "token_runs": 4,
+    "types": 4,
+    "dictionary_bytes": 6
+  }
+}

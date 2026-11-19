@@ -1,0 +1,42 @@
+{
+  "changed_source_vs_landing": {
+    "B": "baa",
+    "holes": [
+      2
+    ],
+    "source": 1,
+    "landing": 0,
+    "incoming": [
+      "ab",
+      "a"
+    ]
+  },
+  "deleted_only_pair": {
+    "retained": "a",
+    "first_deleted_output": "bbbbbbbbb",
+    "second_deleted_output": "ccccccccc"
+  },
+  "one_hole_interval": {
+    "column": "abcabcabc",
+    "holes": [
+      3,
+      4,
+      5
+    ],
+    "result": {
+      "KJ": 3,
+      "RJ": 9,
+      "q": 3,
+      "k": 2,
+      "u": 2,
+      "surviving_old_labels": 2,
+      "KH": 6,
+      "RH": 6,
+      "Kmin": 6,
+      "Rmin": 6,
+      "removed_cycles": 1,
+      "mark_offsets": 9
+    }
+  },
+  "equal_payload_id_instances": 1296
+}

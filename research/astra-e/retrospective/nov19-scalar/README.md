@@ -1,0 +1,7 @@
+# Forecasts through the independent scalar i9 and four-stream CI epochs
+
+The refreshed official evaluator found 164 forecasts and 63 independent worker-count results at the frozen research commit in the manifest. Its v1 i9 proxy calibration covers three worker counts, with mean absolute log error 0.015 and zero pairwise ranking comparisons. Its v1 cross-host local-wall report has 64 cells with mean absolute log error 0.152 and 144 of 240 concordant pairs. Those runner comparisons do not measure target-machine rank accuracy. In particular, the favorable two-stream local W4 point and indirect four-stream emitter stage did not predict the losses against their frozen implementation controls in complete independent CI.
+
+The original evaluator output, its version and source revision are archived below. Each new five-arm run includes 20 complete rounds at each W. Both the direct predecessor contrasts and the full raw process samples are retained outside the evaluator's summaries against Lazy. [Full evaluator output](official.txt) · [Frozen source and replay arguments](source.json) · [Two-stream CI](../../ci/evidence/two-seed-44465700927.md) · [Four-stream CI](../../ci/evidence/four-stream-44467969034.md) · [Scalar target replay](../../workstation/scalar-independent-i9.md)
+
+For historical reproduction check out the recorded data commit, project bench/moonshot, .just and Justfile from the manifest's master commit and run the stored arguments. New scoring rounds refresh master first.

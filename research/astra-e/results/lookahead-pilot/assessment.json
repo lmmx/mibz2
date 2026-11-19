@@ -1,0 +1,101 @@
+{
+  "assessment": "The independent EPYC run resolved a wall-time gain of about 3% against opend at one and two workers. At four workers the 95% interval against opend was [0.9546, 1.0202]. Against LazyCells at four workers the ratio was 0.8475 [0.8124, 0.8842]. Low-worker eager Cells remained faster at each count.",
+  "verification": "Independent CI ran 16 paired rounds of Wikidata ×4 on AMD EPYC 7763 64-Core Processor, using four slots per worker and a 2 s settle. At W1/W2/W4 the candidate/LazyCells wall ratios were 0.8896/0.8959/0.8475, with peak RSS ratios 0.9689/0.9314/0.8682. Candidate/opend wall ratios were 0.9694/0.9690/0.9869. Candidate/eager wall ratios were 1.2464/1.1947/1.0550. All four 338-case correctness gates passed. Target i9 verification is pending. [CI run](https://github.com/lmmx/mibz2/actions/runs/44425372339) · [Raw checks and measurements](ci/evidence/lookahead-44425372339.zip)",
+  "ci_run": {
+    "id": 44425372339,
+    "artifact_id": 14485430792,
+    "artifact_sha256": "78387d4e6cd3eafef71426162ed07fdbb2cb937e75814edd49e0232096b3d880",
+    "head": "2dd991699c0286d17b1d1fae330b30b1b9689b82",
+    "base": "9c31461df7bef24cecf79348545b27ee26846835",
+    "scorer_path_revision": "9c31461df7bef24cecf79348545b27ee26846835",
+    "printed_scorer_version": null,
+    "selected": "research/astra-e/lookahead/candidate.rs",
+    "candidate_source_sha256": "c7b3e98763e6c6b1fe98e4810802e52969d0ea8207643a4984727020705842aa",
+    "base_binary_sha256": "f4113f6f0eaa331ad638138830fd03c0d31b08267f876dcb25894d0f1596ab4a",
+    "candidate_binary_sha256": "8d3437d41ba3f6688a70f5fa8d0aac4579da070a0704b74032f69f4f6573f97e",
+    "machine": "AMD EPYC 7763 64-Core Processor",
+    "rounds": 16,
+    "repeat": 4,
+    "settle_s": 2,
+    "gates": {
+      "candidate": {
+        "cases": 338,
+        "verdict": "PASS"
+      },
+      "cells": {
+        "cases": 338,
+        "verdict": "PASS"
+      },
+      "lazy": {
+        "cases": 338,
+        "verdict": "PASS"
+      },
+      "opend": {
+        "cases": 338,
+        "verdict": "PASS"
+      }
+    },
+    "candidate_over_reference": {
+      "master LazyCells": {
+        "1": {
+          "geomean": 0.8895624073008133,
+          "lo": 0.8815928992589264,
+          "hi": 0.8976039588658308,
+          "peak_rss_ratio": 0.9689320746367727
+        },
+        "2": {
+          "geomean": 0.8959212669822063,
+          "lo": 0.8845328571682339,
+          "hi": 0.9074563032069897,
+          "peak_rss_ratio": 0.9314030780286244
+        },
+        "4": {
+          "geomean": 0.8475341358609426,
+          "lo": 0.8123968901012982,
+          "hi": 0.8841911142224926,
+          "peak_rss_ratio": 0.8681558430052273
+        }
+      },
+      "master eager Cells": {
+        "1": {
+          "geomean": 1.2464488298395042,
+          "lo": 1.2381046621731053,
+          "hi": 1.2548492327630443,
+          "peak_rss_ratio": 0.9787127053302045
+        },
+        "2": {
+          "geomean": 1.1947299448397022,
+          "lo": 1.1741761256904633,
+          "hi": 1.2156435562487025,
+          "peak_rss_ratio": 0.9471136280599196
+        },
+        "4": {
+          "geomean": 1.0550365485372843,
+          "lo": 1.0207898218339109,
+          "hi": 1.090432227027607,
+          "peak_rss_ratio": 0.9087863295424246
+        }
+      },
+      "master opend": {
+        "1": {
+          "geomean": 0.9694299150784532,
+          "lo": 0.9625149406501226,
+          "hi": 0.9763945686019595,
+          "peak_rss_ratio": 1.0003235999543152
+        },
+        "2": {
+          "geomean": 0.9689725838786324,
+          "lo": 0.9585440550831085,
+          "hi": 0.9795145703835463,
+          "peak_rss_ratio": 0.9989081917729039
+        },
+        "4": {
+          "geomean": 0.9868651324719158,
+          "lo": 0.9546270833126008,
+          "hi": 1.0201918704310413,
+          "peak_rss_ratio": 0.9841068581543367
+        }
+      }
+    }
+  }
+}

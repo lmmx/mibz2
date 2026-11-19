@@ -1,0 +1,1 @@
+marked_configurations=85296 stages=137692 selected_marked_orbits=52396 short_semantic_cycles=72396 maximum_levels=2

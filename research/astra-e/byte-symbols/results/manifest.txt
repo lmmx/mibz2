@@ -1,0 +1,25 @@
+research implementation ae43fb76de758d8faae2e318ffff0022e0f0a0ae
+scratch and control source base 01b15841c09bef243e0123f0bd0ebcabcbc5d2d5
+origin/master be74d5763d212864607d46521d74ebc0827f9f36
+latest origin/master commit for bench/moonshot 75297a1d57b2bdf262c3a19f3064848dedf2c493
+research scorer receipt v1 81585172f5fb9e7a59f330124779ba084fd6bf04
+master scorer tree 75f7b0321bd71c5086cbfb34747f7ea963463784
+research scorer tree 75f7b0321bd71c5086cbfb34747f7ea963463784
+i9 predecessor badb2aec3624bd65606c429b2e6f79e9d9d0050f
+baseline decoder mibz2 0.5.6
+host Intel Xeon Platinum 8573C
+cpu.max 400000 100000
+interval Student two-sided 95%, paired log ratios over 16 rounds
+W2 and W4, 4W slots, two-copy 419400392 output bytes, three arms, zero settle, n=96
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+control SHA-256 799a341d17bc5a67bc4ac03958ee3ede35bbaca93ca74f384198db845ba19338
+narrow SHA-256 318f1d907c7624e6871c9dfe1e8a4947a18bbc8c1293d2214ec412d12deb062b
+corpus SHA-256 82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915
+kernel SHA-256 c0ccf8939b8cdf02ac4c8157c588d980afa378805fcb37498ca3cda0ccbc6d4f
+gate SHA-256 23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212

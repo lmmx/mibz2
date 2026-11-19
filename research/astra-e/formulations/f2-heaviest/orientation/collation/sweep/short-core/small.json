@@ -1,0 +1,30 @@
+{
+  "counts": {
+    "section_depths": 22520,
+    "individually_verified_arcs": 63496,
+    "early": 14696
+  },
+  "witness": {
+    "last": "000100",
+    "section": [
+      0,
+      2
+    ],
+    "h": 1,
+    "mass": 2,
+    "types": 2,
+    "core_types": 2,
+    "original_D": 3,
+    "core_D": 2,
+    "original_Q": 2,
+    "core_Q": 1,
+    "forward_intersections": 2,
+    "packet_steps": 1,
+    "terminal_bands": 2,
+    "early_bands": 1,
+    "hidden_components": 1,
+    "hidden_rows": 1,
+    "prefix_types": 2,
+    "prefix_dictionary_bytes": 1
+  }
+}

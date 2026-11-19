@@ -1,0 +1,111 @@
+{
+  "native": {
+    "median_ms": {
+      "library": 144.6439285,
+      "copy": 143.842891,
+      "fifty": 182.6434975,
+      "eight_hundred": 168.812489
+    },
+    "fifty/library": {
+      "ratio": 1.2204813683787603,
+      "ci95": [
+        1.1100666798985417,
+        1.3418786434485503
+      ],
+      "median_paired_difference_ms": 31.943094
+    },
+    "fifty/copy": {
+      "ratio": 1.27010742807577,
+      "ci95": [
+        1.1460420821394597,
+        1.4076035286956798
+      ],
+      "median_paired_difference_ms": 35.490809999999996
+    },
+    "eight_hundred/library": {
+      "ratio": 1.1335664174841802,
+      "ci95": [
+        1.0637822004343063,
+        1.2079284860409467
+      ],
+      "median_paired_difference_ms": 23.67521
+    },
+    "eight_hundred/copy": {
+      "ratio": 1.1796584236074048,
+      "ci95": [
+        1.1174119435730032,
+        1.2453724021762176
+      ],
+      "median_paired_difference_ms": 22.0159275
+    },
+    "copy/library": {
+      "ratio": 0.9609276675342385,
+      "ci95": [
+        0.8988935528277612,
+        1.0272428579869046
+      ],
+      "median_paired_difference_ms": 1.6941285000000001
+    }
+  },
+  "split": {
+    "median_ms": {
+      "library": 132.350291,
+      "materialized": 155.1569525,
+      "eight_hundred": 157.478552
+    },
+    "eight_hundred/materialized": {
+      "ratio": 1.0260455562669577,
+      "ci95": [
+        0.9958623464343072,
+        1.0571435774277638
+      ],
+      "median_paired_difference_ms": 5.577313
+    },
+    "materialized/library": {
+      "ratio": 1.1657203365966724,
+      "ci95": [
+        1.1373794596731643,
+        1.1947674029083941
+      ],
+      "median_paired_difference_ms": 20.693502000000002
+    },
+    "eight_hundred/library": {
+      "ratio": 1.1960821712150378,
+      "ci95": [
+        1.154125036408997,
+        1.2395646183621138
+      ],
+      "median_paired_difference_ms": 24.4696815
+    }
+  },
+  "retained_vector_capacity": {
+    "library": {
+      "symbol_vector": 1800200,
+      "private_run_front": 0,
+      "stock_run_front": 864472,
+      "column": 900000,
+      "max_sum_bytes": 3564672
+    },
+    "fifty": {
+      "symbol_vector": 1800200,
+      "private_run_front": 819600,
+      "stock_run_front": 0,
+      "column": 900000,
+      "max_sum_bytes": 3519800
+    },
+    "eight_hundred": {
+      "symbol_vector": 1800200,
+      "private_run_front": 819600,
+      "stock_run_front": 0,
+      "column": 900000,
+      "max_sum_bytes": 3519800
+    },
+    "materialized": {
+      "symbol_vector": 1800200,
+      "private_run_front": 819440,
+      "stock_run_front": 0,
+      "column": 900000,
+      "max_sum_bytes": 3519640
+    }
+  }
+}

@@ -1,0 +1,1 @@
+78 periodic, constant and random byte tapes matched 1566774 suffix-pair orderings and 3133548 capped LCP queries

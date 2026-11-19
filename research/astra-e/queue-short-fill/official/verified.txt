@@ -1,0 +1,4 @@
+338 full cases passed; 209700196 Wikidata bytes and 600 mutated inputs verified
+18 exact scorer blobs at path revision 75297a1d57b2bdf262c3a19f3064848dedf2c493
+printed scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04; candidate d38b8af5aac80579da3ede854c65c9469d18bd03
+binary SHA-256 37f3660caeb77c5b0ec219301f301ac61310d50d1bd44dfe7b3631923eaf1c3d

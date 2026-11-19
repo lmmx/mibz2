@@ -1,0 +1,8 @@
+First-level dynamic predecessor queries 19750839
+cuts 0 {'pages_or_waves': 2318843, 'longest_rows': 148402675, 'lookups': 2972659, 'unary': 2582255, 'longest_hits': 2972659, 'longest_unary': 2582255} lookup share 0.150508 longest hit share 0.150508
+cuts 1 {'pages_or_waves': 110141, 'longest_rows': 5472823, 'lookups': 455703, 'unary': 425566, 'longest_hits': 323359, 'longest_unary': 302778} lookup share 0.023073 longest hit share 0.016372
+cuts 2 {'pages_or_waves': 88300, 'longest_rows': 3879865, 'lookups': 647000, 'unary': 612209, 'longest_hits': 394878, 'longest_unary': 373787} lookup share 0.032758 longest hit share 0.019993
+cuts 3 {'pages_or_waves': 60429, 'longest_rows': 2402888, 'lookups': 498434, 'unary': 472368, 'longest_hits': 251329, 'longest_unary': 238111} lookup share 0.025236 longest hit share 0.012725
+cuts 4+ {'pages_or_waves': 628620, 'longest_rows': 13792277, 'lookups': 15177043, 'unary': 14670759, 'longest_hits': 2190596, 'longest_unary': 2100805} lookup share 0.768425 longest hit share 0.110912
+wave histogram {0: 942340, 1: 741468, 2: 425272, 3: 206147, 4: 91193, 5: 38870, 6: 18039, 7: 9414, 8: 3619}
+largest-span queries on at most one cut 0.16687989811470794

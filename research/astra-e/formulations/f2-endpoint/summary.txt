@@ -1,0 +1,15 @@
+228 admitted blocks, 205,197,794 inverse bytes
+Streams 1
+endpoint thread/wall ms 6.3388 7.6792
+trace thread/wall ms 6.4425 7.1159
+lazy thread/wall ms 2.6036 2.7924
+endpoint thread/wall ratio to Lazy 2.4347 2.7501
+trace thread/wall ratio to Lazy 2.4745 2.5483
+Streams 1,85,134,176,225,269,313,359,397
+endpoint thread/wall ms 74.3819 92.151
+trace thread/wall ms 70.1165 85.7042
+lazy thread/wall ms 29.5642 34.4375
+endpoint thread/wall ratio to Lazy 2.5159 2.6759
+trace thread/wall ratio to Lazy 2.3717 2.4887
+endpoint frozen {'section_rows': 24165, 'plus_mark': 24166, 'complement_strips': 50986, 'endpoint_nodes': 50996, 'endpoint_steps': 82576, 'rules': 79586, 'bands': 5009, 'spelling_bytes': 243726, 'table_bytes': 96664}
+trace frozen {'section_rows': 24165, 'plus_mark': 24166, 'complement_strips': 50986, 'endpoint_nodes': 0, 'endpoint_steps': 0, 'rules': 0, 'bands': 5009, 'spelling_bytes': 243726, 'table_bytes': 96664}

@@ -1,0 +1,99 @@
+{"case":"sample empty level 1","bytes":0,"pass":true,"failure":null}
+{"case":"sample empty level 9","bytes":0,"pass":true,"failure":null}
+{"case":"sample one level 1","bytes":1,"pass":true,"failure":null}
+{"case":"sample one level 9","bytes":1,"pass":true,"failure":null}
+{"case":"sample short level 1","bytes":13,"pass":true,"failure":null}
+{"case":"sample short level 9","bytes":13,"pass":true,"failure":null}
+{"case":"sample text level 1","bytes":2500000,"pass":true,"failure":null}
+{"case":"sample text level 9","bytes":2500000,"pass":true,"failure":null}
+{"case":"sample runs level 1","bytes":1214040,"pass":true,"failure":null}
+{"case":"sample runs level 9","bytes":1214040,"pass":true,"failure":null}
+{"case":"sample random level 1","bytes":1100000,"pass":true,"failure":null}
+{"case":"sample random level 9","bytes":1100000,"pass":true,"failure":null}
+{"case":"sample few level 1","bytes":1000000,"pass":true,"failure":null}
+{"case":"sample few level 9","bytes":1000000,"pass":true,"failure":null}
+{"case":"sample zeros level 1","bytes":3000000,"pass":true,"failure":null}
+{"case":"sample zeros level 9","bytes":3000000,"pass":true,"failure":null}
+{"case":"sample abab level 1","bytes":1200000,"pass":true,"failure":null}
+{"case":"sample abab level 9","bytes":1200000,"pass":true,"failure":null}
+{"case":"sample period3 level 1","bytes":1200000,"pass":true,"failure":null}
+{"case":"sample period3 level 9","bytes":1200000,"pass":true,"failure":null}
+{"case":"sample all bytes level 1","bytes":1000000,"pass":true,"failure":null}
+{"case":"sample all bytes level 9","bytes":1000000,"pass":true,"failure":null}
+{"case":"corpus text level 9","bytes":3757322,"pass":true,"failure":null}
+{"case":"corpus random level 9","bytes":2000000,"pass":true,"failure":null}
+{"case":"corpus one byte level 9","bytes":5000000,"pass":true,"failure":null}
+{"case":"corpus pattern level 9","bytes":4900000,"pass":true,"failure":null}
+{"case":"corpus runs level 9","bytes":2500444,"pass":true,"failure":null}
+{"case":"corpus records level 9","bytes":2400000,"pass":true,"failure":null}
+{"case":"text level 5","bytes":1600000,"pass":true,"failure":null}
+{"case":"records level 4","bytes":1700000,"pass":true,"failure":null}
+{"case":"streams of levels 9, 1, 2, empty, 3","bytes":3355045,"pass":true,"failure":null}
+{"case":"crafted 0: periodic, 1 rows","bytes":1,"pass":true,"failure":null}
+{"case":"crafted 1: random column, 203 rows","bytes":203,"pass":true,"failure":null}
+{"case":"crafted 2: random column, 160055 rows","bytes":185290,"pass":true,"failure":null}
+{"case":"crafted 3: random column, 899789 rows","bytes":1003644,"pass":true,"failure":null}
+{"case":"crafted 4: random column, 160165 rows","bytes":185922,"pass":true,"failure":null}
+{"case":"crafted 5: periodic, 54235 rows","bytes":273935,"pass":true,"failure":null}
+{"case":"crafted 6: random column, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 7: random column, 54 rows","bytes":54,"pass":true,"failure":null}
+{"case":"crafted 8: random column, 144577 rows","bytes":168306,"pass":true,"failure":null}
+{"case":"crafted 9: random column, 899392 rows","bytes":899392,"pass":true,"failure":null}
+{"case":"crafted 10: periodic, 150523 rows","bytes":331147,"pass":true,"failure":null}
+{"case":"crafted 11: random column, 134601 rows","bytes":135042,"pass":true,"failure":null}
+{"case":"crafted 12: random column, 7 rows","bytes":6,"pass":true,"failure":null}
+{"case":"crafted 13: random column, 567 rows","bytes":567,"pass":true,"failure":null}
+{"case":"crafted 14: random column, 89876 rows","bytes":103361,"pass":true,"failure":null}
+{"case":"crafted 15: periodic, 899495 rows","bytes":3302883,"pass":true,"failure":null}
+{"case":"crafted 16: random column, 266061 rows","bytes":212849,"pass":true,"failure":null}
+{"case":"crafted 17: random column, 90163 rows","bytes":90221,"pass":true,"failure":null}
+{"case":"crafted 18: random column, 3 rows","bytes":3,"pass":true,"failure":null}
+{"case":"crafted 19: random column, 954 rows","bytes":954,"pass":true,"failure":null}
+{"case":"crafted 20: periodic, 72742 rows","bytes":164637,"pass":true,"failure":null}
+{"case":"crafted 21: random column, 899895 rows","bytes":899895,"pass":true,"failure":null}
+{"case":"crafted 22: random column, 119939 rows","bytes":137713,"pass":true,"failure":null}
+{"case":"crafted 23: random column, 220858 rows","bytes":253472,"pass":true,"failure":null}
+{"case":"crafted 24: random column, 4 rows","bytes":4,"pass":true,"failure":null}
+{"case":"crafted 25: periodic, 945 rows","bytes":14201,"pass":true,"failure":null}
+{"case":"crafted 26: random column, 123530 rows","bytes":98824,"pass":true,"failure":null}
+{"case":"crafted 27: random column, 899900 rows","bytes":900478,"pass":true,"failure":null}
+{"case":"crafted 28: random column, 76690 rows","bytes":61352,"pass":true,"failure":null}
+{"case":"crafted 29: random column, 197680 rows","bytes":197680,"pass":true,"failure":null}
+{"case":"crafted 30: periodic, 5 rows","bytes":5,"pass":true,"failure":null}
+{"case":"crafted 31: random column, 883 rows","bytes":883,"pass":true,"failure":null}
+{"case":"crafted 32: random column, 74766 rows","bytes":59813,"pass":true,"failure":null}
+{"case":"crafted 33: random column, 899472 rows","bytes":899472,"pass":true,"failure":null}
+{"case":"crafted 34: random column, 298082 rows","bytes":356970,"pass":true,"failure":null}
+{"case":"crafted 35: periodic, 295254 rows","bytes":485273,"pass":true,"failure":null}
+{"case":"crafted 36: random column, 10 rows","bytes":8,"pass":true,"failure":null}
+{"case":"crafted 37: random column, 441 rows","bytes":441,"pass":true,"failure":null}
+{"case":"crafted 38: random column, 80408 rows","bytes":64327,"pass":true,"failure":null}
+{"case":"crafted 39: random column, 899197 rows","bytes":913672,"pass":true,"failure":null}
+{"case":"crafted 40: periodic, 58019 rows","bytes":71631,"pass":true,"failure":null}
+{"case":"crafted 41: random column, 288469 rows","bytes":288469,"pass":true,"failure":null}
+{"case":"crafted 42: random column, 1 rows","bytes":1,"pass":true,"failure":null}
+{"case":"crafted 43: random column, 587 rows","bytes":587,"pass":true,"failure":null}
+{"case":"crafted 44: random column, 136121 rows","bytes":155939,"pass":true,"failure":null}
+{"case":"crafted 45: periodic, 899034 rows","bytes":1901048,"pass":true,"failure":null}
+{"case":"crafted 46: random column, 205429 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 47: random column, 21713 rows","bytes":21713,"pass":true,"failure":null}
+{"case":"crafted 48: random column, 3 rows","bytes":3,"pass":true,"failure":null}
+{"case":"crafted 49: random column, 335 rows","bytes":335,"pass":true,"failure":null}
+{"case":"crafted 50: periodic, 128045 rows","bytes":460962,"pass":true,"failure":null}
+{"case":"crafted 51: random column, 899084 rows","bytes":899912,"pass":true,"failure":null}
+{"case":"crafted 52: random column, 62222 rows","bytes":71951,"pass":true,"failure":null}
+{"case":"crafted 53: random column, 270855 rows","bytes":270855,"pass":true,"failure":null}
+{"case":"crafted 54: random column, 2 rows","bytes":2,"pass":true,"failure":null}
+{"case":"crafted 55: periodic, 138 rows","bytes":646,"pass":true,"failure":null}
+{"case":"crafted 56: random column, 84608 rows","bytes":97357,"pass":true,"failure":null}
+{"case":"crafted 57: random column, 899687 rows","bytes":911913,"pass":true,"failure":null}
+{"case":"crafted 58: random column, 144569 rows, ends in a run","bytes":0,"pass":true,"failure":null}
+{"case":"crafted 59: random column, 237079 rows","bytes":237079,"pass":true,"failure":null}
+{"case":"crafted multi-block: periodic and several-cycle columns","bytes":9174412,"pass":true,"failure":null}
+{"case":"Cells witness 0","bytes":8,"pass":true,"failure":null}
+{"case":"Cells witness 1","bytes":9,"pass":true,"failure":null}
+{"case":"Cells witness 2","bytes":101,"pass":true,"failure":null}
+{"case":"Cells witness 3","bytes":20,"pass":true,"failure":null}
+{"case":"wikidata /workspace/work/astra-e-dose-77a3f8c/corpora/wikidata.bz2","bytes":209700196,"pass":true,"failure":null}
+{"case":"120 mutated inputs against 0.5.6's kernel","bytes":0,"pass":true,"failure":null}
+{"arm":"lazy","verdict":"PASS","failures":0}

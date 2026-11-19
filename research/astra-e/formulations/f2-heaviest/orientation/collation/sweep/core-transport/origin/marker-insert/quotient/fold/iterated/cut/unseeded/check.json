@@ -1,0 +1,71 @@
+{
+  "tiny": {
+    "cases": 27675,
+    "nondividing": 17457,
+    "normalizations": 7749,
+    "jumps": 3537,
+    "terminal_shared": 7044
+  },
+  "sparse": [
+    {
+      "n": 17,
+      "mark": 0,
+      "queries": 1,
+      "hops": 0
+    },
+    {
+      "n": 17,
+      "mark": 1,
+      "queries": 2,
+      "hops": 1
+    },
+    {
+      "n": 17,
+      "mark": 8,
+      "queries": 2,
+      "hops": 8
+    },
+    {
+      "n": 17,
+      "mark": 16,
+      "queries": 2,
+      "hops": 16
+    },
+    {
+      "n": 17,
+      "mark": 17,
+      "queries": 1,
+      "hops": 0
+    },
+    {
+      "n": 4294967303,
+      "mark": 0,
+      "queries": 1,
+      "hops": 0
+    },
+    {
+      "n": 4294967303,
+      "mark": 1,
+      "queries": 2,
+      "hops": 1
+    },
+    {
+      "n": 4294967303,
+      "mark": 2147483651,
+      "queries": 2,
+      "hops": 2147483651
+    },
+    {
+      "n": 4294967303,
+      "mark": 4294967302,
+      "queries": 2,
+      "hops": 4294967302
+    },
+    {
+      "n": 4294967303,
+      "mark": 4294967303,
+      "queries": 1,
+      "hops": 0
+    }
+  ]
+}

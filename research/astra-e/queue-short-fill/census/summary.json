@@ -1,0 +1,490 @@
+{
+  "blocks": 233,
+  "width_histogram": {
+    "1": 10851747,
+    "2": 1601666,
+    "3": 491356,
+    "4": 382550,
+    "5": 166534,
+    "6": 147762,
+    "7": 100694,
+    "8": 113369,
+    "9": 120547,
+    "10": 90178,
+    "11": 74980,
+    "12": 68479,
+    "13": 49787,
+    "14": 46484,
+    "15": 41432,
+    "16": 39029
+  },
+  "cumulative": {
+    "1": {
+      "calls": 10851747,
+      "call_fraction": 0.7542957700759471,
+      "rows": 10851747,
+      "row_fraction": 0.40845822583546465,
+      "min_block_call_fraction": 0.6757124543930579,
+      "max_block_call_fraction": 0.920219170141134
+    },
+    "2": {
+      "calls": 12453413,
+      "call_fraction": 0.8656262211889764,
+      "rows": 14055079,
+      "row_fraction": 0.5290311903067125,
+      "min_block_call_fraction": 0.7718342197808585,
+      "max_block_call_fraction": 0.9868564803460347
+    },
+    "3": {
+      "calls": 12944769,
+      "call_fraction": 0.8997799618172306,
+      "rows": 15529147,
+      "row_fraction": 0.5845149018271555,
+      "min_block_call_fraction": 0.8176519567027477,
+      "max_block_call_fraction": 0.9948551871753138
+    },
+    "4": {
+      "calls": 13327319,
+      "call_fraction": 0.9263706892680783,
+      "rows": 17059347,
+      "row_fraction": 0.6421114139070471,
+      "min_block_call_fraction": 0.8579214291121036,
+      "max_block_call_fraction": 0.9968283873269269
+    },
+    "8": {
+      "calls": 13855678,
+      "call_fraction": 0.9630964771786845,
+      "rows": 20390399,
+      "row_fraction": 0.7674917411562611,
+      "min_block_call_fraction": 0.9074361719774999,
+      "max_block_call_fraction": 0.9989576598069162
+    },
+    "16": {
+      "calls": 14386594,
+      "call_fraction": 1.0,
+      "rows": 26567581,
+      "row_fraction": 1.0,
+      "min_block_call_fraction": 1.0,
+      "max_block_call_fraction": 1.0
+    }
+  },
+  "forced_split_blocks": [
+    54,
+    63,
+    101,
+    216,
+    231,
+    303,
+    415
+  ],
+  "modes": {
+    "0": {
+      "0": {
+        "growing_appends": 147166,
+        "first_allocations": 20024,
+        "reallocations": 127142,
+        "existing_u32_at_reallocation": 38531257,
+        "peak_queue_bytes": 1386192,
+        "split_singleton_growths": 0
+      },
+      "1": {
+        "growing_appends": 147166,
+        "first_allocations": 20024,
+        "reallocations": 127142,
+        "existing_u32_at_reallocation": 38531257,
+        "peak_queue_bytes": 1386192,
+        "split_singleton_growths": 0
+      },
+      "2": {
+        "growing_appends": 147166,
+        "first_allocations": 20024,
+        "reallocations": 127142,
+        "existing_u32_at_reallocation": 38539015,
+        "peak_queue_bytes": 1386192,
+        "split_singleton_growths": 0
+      },
+      "3": {
+        "growing_appends": 147166,
+        "first_allocations": 20024,
+        "reallocations": 127142,
+        "existing_u32_at_reallocation": 38551367,
+        "peak_queue_bytes": 1386192,
+        "split_singleton_growths": 0
+      },
+      "4": {
+        "growing_appends": 147166,
+        "first_allocations": 20024,
+        "reallocations": 127142,
+        "existing_u32_at_reallocation": 38569553,
+        "peak_queue_bytes": 1386192,
+        "split_singleton_growths": 0
+      },
+      "8": {
+        "growing_appends": 146083,
+        "first_allocations": 20024,
+        "reallocations": 128263,
+        "existing_u32_at_reallocation": 38646567,
+        "peak_queue_bytes": 1387376,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 18136,
+          "smaller": 1073,
+          "larger": 815
+        }
+      },
+      "16": {
+        "growing_appends": 144630,
+        "first_allocations": 20024,
+        "reallocations": 131681,
+        "existing_u32_at_reallocation": 39057164,
+        "peak_queue_bytes": 1377232,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 15157,
+          "smaller": 2502,
+          "larger": 2365
+        }
+      }
+    },
+    "1": {
+      "0": {
+        "growing_appends": 885,
+        "first_allocations": 112,
+        "reallocations": 773,
+        "existing_u32_at_reallocation": 402859,
+        "peak_queue_bytes": 1619264,
+        "split_singleton_growths": 0
+      },
+      "1": {
+        "growing_appends": 885,
+        "first_allocations": 112,
+        "reallocations": 773,
+        "existing_u32_at_reallocation": 402859,
+        "peak_queue_bytes": 1619264,
+        "split_singleton_growths": 0
+      },
+      "2": {
+        "growing_appends": 885,
+        "first_allocations": 112,
+        "reallocations": 773,
+        "existing_u32_at_reallocation": 402905,
+        "peak_queue_bytes": 1619264,
+        "split_singleton_growths": 0
+      },
+      "3": {
+        "growing_appends": 885,
+        "first_allocations": 112,
+        "reallocations": 773,
+        "existing_u32_at_reallocation": 402949,
+        "peak_queue_bytes": 1619264,
+        "split_singleton_growths": 0
+      },
+      "4": {
+        "growing_appends": 885,
+        "first_allocations": 112,
+        "reallocations": 773,
+        "existing_u32_at_reallocation": 403089,
+        "peak_queue_bytes": 1619264,
+        "split_singleton_growths": 0
+      },
+      "8": {
+        "growing_appends": 875,
+        "first_allocations": 112,
+        "reallocations": 782,
+        "existing_u32_at_reallocation": 396434,
+        "peak_queue_bytes": 1591040,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 16119,
+          "smaller": 2291,
+          "larger": 1614
+        }
+      },
+      "16": {
+        "growing_appends": 866,
+        "first_allocations": 112,
+        "reallocations": 795,
+        "existing_u32_at_reallocation": 407808,
+        "peak_queue_bytes": 1633024,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 13510,
+          "smaller": 3754,
+          "larger": 2760
+        }
+      }
+    },
+    "7": {
+      "0": {
+        "growing_appends": 5783,
+        "first_allocations": 740,
+        "reallocations": 5043,
+        "existing_u32_at_reallocation": 2495440,
+        "peak_queue_bytes": 10030920,
+        "split_singleton_growths": 0
+      },
+      "1": {
+        "growing_appends": 5783,
+        "first_allocations": 740,
+        "reallocations": 5043,
+        "existing_u32_at_reallocation": 2495440,
+        "peak_queue_bytes": 10030920,
+        "split_singleton_growths": 0
+      },
+      "2": {
+        "growing_appends": 5783,
+        "first_allocations": 740,
+        "reallocations": 5043,
+        "existing_u32_at_reallocation": 2495754,
+        "peak_queue_bytes": 10030920,
+        "split_singleton_growths": 0
+      },
+      "3": {
+        "growing_appends": 5783,
+        "first_allocations": 740,
+        "reallocations": 5043,
+        "existing_u32_at_reallocation": 2496112,
+        "peak_queue_bytes": 10030920,
+        "split_singleton_growths": 0
+      },
+      "4": {
+        "growing_appends": 5783,
+        "first_allocations": 740,
+        "reallocations": 5043,
+        "existing_u32_at_reallocation": 2497120,
+        "peak_queue_bytes": 10030920,
+        "split_singleton_growths": 0
+      },
+      "8": {
+        "growing_appends": 5739,
+        "first_allocations": 740,
+        "reallocations": 5085,
+        "existing_u32_at_reallocation": 2490895,
+        "peak_queue_bytes": 9996968,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 17792,
+          "smaller": 1228,
+          "larger": 1004
+        }
+      },
+      "16": {
+        "growing_appends": 5690,
+        "first_allocations": 740,
+        "reallocations": 5197,
+        "existing_u32_at_reallocation": 2510544,
+        "peak_queue_bytes": 10054016,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 14558,
+          "smaller": 2732,
+          "larger": 2734
+        }
+      }
+    },
+    "8": {
+      "0": {
+        "growing_appends": 6545,
+        "first_allocations": 839,
+        "reallocations": 5706,
+        "existing_u32_at_reallocation": 2788126,
+        "peak_queue_bytes": 11208568,
+        "split_singleton_growths": 0
+      },
+      "1": {
+        "growing_appends": 6545,
+        "first_allocations": 839,
+        "reallocations": 5706,
+        "existing_u32_at_reallocation": 2788126,
+        "peak_queue_bytes": 11208568,
+        "split_singleton_growths": 0
+      },
+      "2": {
+        "growing_appends": 6545,
+        "first_allocations": 839,
+        "reallocations": 5706,
+        "existing_u32_at_reallocation": 2788463,
+        "peak_queue_bytes": 11208568,
+        "split_singleton_growths": 0
+      },
+      "3": {
+        "growing_appends": 6545,
+        "first_allocations": 839,
+        "reallocations": 5706,
+        "existing_u32_at_reallocation": 2788902,
+        "peak_queue_bytes": 11208568,
+        "split_singleton_growths": 0
+      },
+      "4": {
+        "growing_appends": 6545,
+        "first_allocations": 839,
+        "reallocations": 5706,
+        "existing_u32_at_reallocation": 2790028,
+        "peak_queue_bytes": 11208568,
+        "split_singleton_growths": 0
+      },
+      "8": {
+        "growing_appends": 6493,
+        "first_allocations": 839,
+        "reallocations": 5753,
+        "existing_u32_at_reallocation": 2808673,
+        "peak_queue_bytes": 11272872,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 17613,
+          "smaller": 1319,
+          "larger": 1092
+        }
+      },
+      "16": {
+        "growing_appends": 6434,
+        "first_allocations": 839,
+        "reallocations": 5871,
+        "existing_u32_at_reallocation": 2817820,
+        "peak_queue_bytes": 11284704,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 14706,
+          "smaller": 2831,
+          "larger": 2487
+        }
+      }
+    },
+    "9": {
+      "0": {
+        "growing_appends": 7330,
+        "first_allocations": 942,
+        "reallocations": 6388,
+        "existing_u32_at_reallocation": 3095760,
+        "peak_queue_bytes": 12446912,
+        "split_singleton_growths": 0
+      },
+      "1": {
+        "growing_appends": 7330,
+        "first_allocations": 942,
+        "reallocations": 6388,
+        "existing_u32_at_reallocation": 3095760,
+        "peak_queue_bytes": 12446912,
+        "split_singleton_growths": 0
+      },
+      "2": {
+        "growing_appends": 7330,
+        "first_allocations": 942,
+        "reallocations": 6388,
+        "existing_u32_at_reallocation": 3096134,
+        "peak_queue_bytes": 12446912,
+        "split_singleton_growths": 0
+      },
+      "3": {
+        "growing_appends": 7330,
+        "first_allocations": 942,
+        "reallocations": 6388,
+        "existing_u32_at_reallocation": 3096609,
+        "peak_queue_bytes": 12446912,
+        "split_singleton_growths": 0
+      },
+      "4": {
+        "growing_appends": 7330,
+        "first_allocations": 942,
+        "reallocations": 6388,
+        "existing_u32_at_reallocation": 3097875,
+        "peak_queue_bytes": 12446912,
+        "split_singleton_growths": 0
+      },
+      "8": {
+        "growing_appends": 7278,
+        "first_allocations": 942,
+        "reallocations": 6446,
+        "existing_u32_at_reallocation": 3108945,
+        "peak_queue_bytes": 12480820,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 17756,
+          "smaller": 1285,
+          "larger": 983
+        }
+      },
+      "16": {
+        "growing_appends": 7208,
+        "first_allocations": 942,
+        "reallocations": 6591,
+        "existing_u32_at_reallocation": 3134716,
+        "peak_queue_bytes": 12553936,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 14554,
+          "smaller": 2952,
+          "larger": 2518
+        }
+      }
+    },
+    "10": {
+      "0": {
+        "growing_appends": 8061,
+        "first_allocations": 1037,
+        "reallocations": 7024,
+        "existing_u32_at_reallocation": 3361045,
+        "peak_queue_bytes": 13512620,
+        "split_singleton_growths": 0
+      },
+      "1": {
+        "growing_appends": 8061,
+        "first_allocations": 1037,
+        "reallocations": 7024,
+        "existing_u32_at_reallocation": 3361045,
+        "peak_queue_bytes": 13512620,
+        "split_singleton_growths": 0
+      },
+      "2": {
+        "growing_appends": 8061,
+        "first_allocations": 1037,
+        "reallocations": 7024,
+        "existing_u32_at_reallocation": 3361499,
+        "peak_queue_bytes": 13512620,
+        "split_singleton_growths": 0
+      },
+      "3": {
+        "growing_appends": 8061,
+        "first_allocations": 1037,
+        "reallocations": 7024,
+        "existing_u32_at_reallocation": 3362024,
+        "peak_queue_bytes": 13512620,
+        "split_singleton_growths": 0
+      },
+      "4": {
+        "growing_appends": 8061,
+        "first_allocations": 1037,
+        "reallocations": 7024,
+        "existing_u32_at_reallocation": 3363319,
+        "peak_queue_bytes": 13512620,
+        "split_singleton_growths": 0
+      },
+      "8": {
+        "growing_appends": 8001,
+        "first_allocations": 1037,
+        "reallocations": 7089,
+        "existing_u32_at_reallocation": 3385378,
+        "peak_queue_bytes": 13588484,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 17579,
+          "smaller": 1297,
+          "larger": 1148
+        }
+      },
+      "16": {
+        "growing_appends": 7931,
+        "first_allocations": 1037,
+        "reallocations": 7260,
+        "existing_u32_at_reallocation": 3453232,
+        "peak_queue_bytes": 13829520,
+        "split_singleton_growths": 0,
+        "active_block_label_capacity_vs_range": {
+          "equal": 14526,
+          "smaller": 2695,
+          "larger": 2803
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+# Optimal bounded movements through a common prefix
+
+Let P be a common length-k prefix of **each complete original return word** on U, with k≥1. Choose a number t_i between zero and k independently at every cut. Advance the cut by that many steps, allowing any interleaving in rank order and any context dependence of the new spellings. Require distinct cuts. The words are long enough that a cut cannot pass the next one. The statement below concerns the lookup count Q for proper suffixes, including the empty suffix.
+
+At a fixed h≤k write P_h=P[:h], let V=A[h:] range over tails of all original words A, and let S_h be the union of their nonempty proper suffixes. For each u in S_h consider its possible continuations u·P[:j] for 0≤j≤h. Suppose these sets are disjoint for different u and avoid all h nonempty suffixes of P_h. An easily checked sufficient condition is that none of the final bytes of the u belongs to the alphabet of P_h. Then the last byte outside that alphabet determines the end of u in each continued string, and also distinguishes it from every suffix of P_h.
+
+If this separation holds at **every h from 1 to k**, and some original word has length greater than k, moving every cut by k minimizes Q over all individual shift choices. On all ten frequent sections the common prefix is quote, colon, quote. The separation holds at each of the three depths. Frozen's optimum is **91,849 states**, covering every assignment of zero to three steps to its 24,165 cuts, even when transformed word types coalesce and physical rank order changes. The same test covers all ten one-byte quote sections. [Forty real depth-specific checks](wikidata.csv)
+
+**Proof.** Take the largest chosen displacement h. If h is zero, the original dictionary's Q is at least that of the uniform k-shift by iterating the [one-step rotation theorem](../../rotation.md). If all cuts of a cycle are at depth h and every word there equals P_h, changing all its displacements to zero leaves its physical section and its word set unchanged. Make this change on those cycles and recompute h, retaining all their words in the dictionary at the new depth. Otherwise choose a cut advanced h on a remaining cycle. Follow predecessor cuts backward until encountering one moved less than h or a word longer than h. Such a predecessor exists on that cycle. Its arc into a cut moved h has new length greater than h, and ends in P_h. Thus all h nonempty suffixes of P_h are proper suffixes of some new word.
+
+Every nonempty proper suffix u of an old tail V also survives as u·P[:t_next] at one of its occurrences, independently of the preceding source shift. Its properness inside V leaves at least one byte before it. Separation forces a distinct state for every u, in addition to the h suffixes already forced and the empty suffix. The lower bound 1+h+|S_h| is attained by uniform h, since every resulting word is V·P_h and at least one V is nonempty. Each further uniform one-byte shift preserves the applicable common letter and cannot increase Q. The lower bound is therefore at least Q_uniform_k. If all original words instead equal P, conservation of total output length on each cut cycle forces some new word of length at least k. It has at least k distinct proper suffixes including the empty one, and the uniform move attains exactly k.
+
+Checking only the last depth can give a false conclusion. Mixed shifts can also win without the separation hypothesis. Exhaustive binary cases through seven rows included 13,016 positive assignments on 2,880 section/depth pairs with depth at least two. On the 558 pairs meeting the implemented sufficient test every chosen vector satisfied the claimed minimum. On fourteen pairs an unrestricted mixed choice beat uniform. [Counts and a two-step counterexample](small.json) · [Enumerator and real certificates](levels.py)
+
+```sh
+d=research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/choice/multibyte
+python3 "$d/levels.py" | diff - "$d/small.json"
+python3 "$d/levels.py" research/astra-e/dense/target/wikidata | diff - "$d/wikidata.csv"
+```
+
+The bound concerns complete rotated-word suffix states. A constructor can instead represent the original prefix and the remaining core separately. That changes the object counted by the bound.

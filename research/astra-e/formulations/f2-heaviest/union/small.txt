@@ -1,0 +1,1 @@
+29207 exact marked inverses, 10564 disjoint-cycle refusals, 0 selected unions split an uncolored source label

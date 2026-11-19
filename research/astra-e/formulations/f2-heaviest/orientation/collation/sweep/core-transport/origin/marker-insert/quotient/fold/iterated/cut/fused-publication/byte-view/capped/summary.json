@@ -1,0 +1,192 @@
+{
+  "rows": 1440,
+  "median_ms": {
+    "byte_grammar": {
+      "thread_ns": 150.626609,
+      "first_paid_ns": 20.318422,
+      "cut_only_ns": 19.615423
+    },
+    "byte_residual": {
+      "thread_ns": 117.76611,
+      "first_paid_ns": 20.735651,
+      "cut_only_ns": 19.804723
+    },
+    "joint": {
+      "thread_ns": 160.55158,
+      "first_paid_ns": 31.689496,
+      "cut_only_ns": 25.768499
+    },
+    "lazy": {
+      "thread_ns": 25.019115
+    },
+    "opend": {
+      "thread_ns": 23.206305
+    },
+    "scalar": {
+      "thread_ns": 23.321202
+    }
+  },
+  "ratios": {
+    "byte_grammar.thread_ns/scalar.thread_ns": [
+      6.235409,
+      5.889227,
+      6.60194
+    ],
+    "byte_grammar.thread_ns/lazy.thread_ns": [
+      6.044991,
+      5.589194,
+      6.537957
+    ],
+    "byte_grammar.thread_ns/opend.thread_ns": [
+      6.186664,
+      5.55617,
+      6.888703
+    ],
+    "byte_grammar.thread_ns/byte_residual.thread_ns": [
+      1.28477,
+      1.193883,
+      1.382575
+    ],
+    "byte_grammar.thread_ns/joint.thread_ns": [
+      0.929784,
+      0.883944,
+      0.978002
+    ],
+    "byte_grammar.first_paid_ns/scalar.thread_ns": [
+      0.838237,
+      0.806419,
+      0.871311
+    ],
+    "byte_grammar.first_paid_ns/opend.thread_ns": [
+      0.831684,
+      0.762451,
+      0.907205
+    ],
+    "byte_grammar.cut_only_ns/scalar.thread_ns": [
+      0.803698,
+      0.772099,
+      0.83659
+    ],
+    "byte_grammar.cut_only_ns/opend.thread_ns": [
+      0.797415,
+      0.72819,
+      0.873221
+    ],
+    "byte_residual.thread_ns/scalar.thread_ns": [
+      4.853328,
+      4.756804,
+      4.951809
+    ],
+    "byte_residual.thread_ns/lazy.thread_ns": [
+      4.705116,
+      4.437054,
+      4.989372
+    ],
+    "byte_residual.thread_ns/opend.thread_ns": [
+      4.815387,
+      4.485203,
+      5.169878
+    ],
+    "byte_residual.thread_ns/byte_grammar.thread_ns": [
+      0.77835,
+      0.723288,
+      0.837603
+    ],
+    "byte_residual.thread_ns/joint.thread_ns": [
+      0.723697,
+      0.697266,
+      0.75113
+    ],
+    "byte_residual.first_paid_ns/scalar.thread_ns": [
+      0.869091,
+      0.83571,
+      0.903806
+    ],
+    "byte_residual.first_paid_ns/opend.thread_ns": [
+      0.862297,
+      0.806976,
+      0.921411
+    ],
+    "byte_residual.cut_only_ns/scalar.thread_ns": [
+      0.832952,
+      0.803343,
+      0.863652
+    ],
+    "byte_residual.cut_only_ns/opend.thread_ns": [
+      0.82644,
+      0.769876,
+      0.88716
+    ],
+    "joint.thread_ns/scalar.thread_ns": [
+      6.706296,
+      6.586236,
+      6.828544
+    ],
+    "joint.thread_ns/lazy.thread_ns": [
+      6.501498,
+      6.268637,
+      6.743009
+    ],
+    "joint.thread_ns/opend.thread_ns": [
+      6.65387,
+      6.267663,
+      7.063875
+    ],
+    "joint.thread_ns/byte_grammar.thread_ns": [
+      1.075518,
+      1.022493,
+      1.131293
+    ],
+    "joint.thread_ns/byte_residual.thread_ns": [
+      1.381793,
+      1.331327,
+      1.434173
+    ],
+    "joint.first_paid_ns/scalar.thread_ns": [
+      1.343641,
+      1.283738,
+      1.406339
+    ],
+    "joint.first_paid_ns/opend.thread_ns": [
+      1.333137,
+      1.30682,
+      1.359984
+    ],
+    "joint.cut_only_ns/scalar.thread_ns": [
+      1.08776,
+      1.045174,
+      1.13208
+    ],
+    "joint.cut_only_ns/opend.thread_ns": [
+      1.079256,
+      1.050001,
+      1.109327
+    ]
+  },
+  "rss_kib": {
+    "byte_grammar": {
+      "median": 5224.0,
+      "max": 9036
+    },
+    "byte_residual": {
+      "median": 5944.0,
+      "max": 6848
+    },
+    "joint": {
+      "median": 5556.0,
+      "max": 9320
+    },
+    "lazy": {
+      "median": 4480.0,
+      "max": 9180
+    },
+    "opend": {
+      "median": 4894.0,
+      "max": 9184
+    },
+    "scalar": {
+      "median": 4716.0,
+      "max": 6100
+    }
+  }
+}

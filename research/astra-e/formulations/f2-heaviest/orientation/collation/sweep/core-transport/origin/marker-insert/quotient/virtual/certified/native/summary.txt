@@ -1,0 +1,31 @@
+named_forest named total_ns 1.21961 1.15001 1.29342
+named_forest named after_first_ns 1.54473 1.38008 1.72903
+named_forest named index_discover_ns 1.93992 1.76972 2.12649
+named_forest named second_merge_ns 1.09149 0.99105 1.20210
+named_forest named second_emit_ns 1.07846 0.91016 1.27789
+quot4_forest quot4 total_ns 1.21018 1.16501 1.25710
+quot4_forest quot4 after_first_ns 1.47171 1.38595 1.56277
+quot4_forest quot4 index_discover_ns 1.94920 1.83767 2.06749
+quot4_forest quot4 second_merge_ns 1.27199 1.15246 1.40391
+quot4_forest quot4 second_emit_ns 1.02098 0.92672 1.12482
+quot12_forest quot12 total_ns 1.18782 1.15441 1.22219
+quot12_forest quot12 after_first_ns 1.41892 1.34493 1.49699
+quot12_forest quot12 index_discover_ns 1.94393 1.84302 2.05037
+quot12_forest quot12 second_merge_ns 1.31685 1.14722 1.51156
+quot12_forest quot12 second_emit_ns 0.92451 0.82655 1.03409
+quot4_forest named total_ns 1.25681 1.20405 1.31188
+quot4_forest named after_first_ns 1.62069 1.53673 1.70924
+quot4_forest named index_discover_ns 1.94272 1.84777 2.04255
+quot4_forest named second_merge_ns 0.79828 0.76789 0.82987
+quot4_forest named second_emit_ns 1.10466 1.00406 1.21534
+quot12_forest named total_ns 1.24209 1.20502 1.28030
+quot12_forest named after_first_ns 1.60354 1.52350 1.68779
+quot12_forest named index_discover_ns 1.88421 1.74847 2.03049
+quot12_forest named second_merge_ns 0.82347 0.74189 0.91403
+quot12_forest named second_emit_ns 1.07038 1.01524 1.12851
+named mean ten-block ms {'total_ns': 20.3462, 'after_first_ns': 7.8107, 'index_discover_ns': 4.1266, 'second_index_ns': 0.7799, 'second_discover_ns': 3.3467, 'second_merge_ns': 1.0713, 'second_emit_ns': 2.5894, 'publication_ns': 0.0}
+named_forest mean ten-block ms {'total_ns': 25.0663, 'after_first_ns': 12.2731, 'index_discover_ns': 8.0239, 'second_index_ns': 4.7613, 'second_discover_ns': 3.2626, 'second_merge_ns': 1.2806, 'second_emit_ns': 2.9442, 'publication_ns': 0.0}
+quot12 mean ten-block ms {'total_ns': 21.2735, 'after_first_ns': 8.8536, 'index_discover_ns': 3.9763, 'second_index_ns': 0.7673, 'second_discover_ns': 3.209, 'second_merge_ns': 0.6758, 'second_emit_ns': 3.0687, 'publication_ns': 1.1048}
+quot12_forest mean ten-block ms {'total_ns': 25.329, 'after_first_ns': 12.5769, 'index_discover_ns': 7.8597, 'second_index_ns': 5.2167, 'second_discover_ns': 2.6431, 'second_merge_ns': 0.8861, 'second_emit_ns': 2.7153, 'publication_ns': 1.085}
+quot4 mean ten-block ms {'total_ns': 21.1777, 'after_first_ns': 8.6362, 'index_discover_ns': 4.1071, 'second_index_ns': 0.7205, 'second_discover_ns': 3.3866, 'second_merge_ns': 0.6886, 'second_emit_ns': 2.8293, 'publication_ns': 0.9819}
+quot4_forest mean ten-block ms {'total_ns': 25.6969, 'after_first_ns': 12.7452, 'index_discover_ns': 8.0243, 'second_index_ns': 5.2576, 'second_discover_ns': 2.7667, 'second_merge_ns': 0.8583, 'second_emit_ns': 2.9028, 'publication_ns': 0.9301}

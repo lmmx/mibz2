@@ -1,0 +1,18 @@
+{
+  "source": "7322ee18479b0e16f79a7d6189c2097180b656aad24798e34f50c8ff06626c10",
+  "driver": "23c50ea5522e001cdaa29ec87745bd813ee649d9dc0659f5112d7f1beb9addbc",
+  "parent": "0289ffa25944ee32d82a22b1472a05ffe936a73e8c1c284399a473c7d1cf5a5d",
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-g0",
+    "-Wall",
+    "-Wextra",
+    "-Werror"
+  ],
+  "rust": "1b4922c1fc30a38e2b959f3ee8d2291b72a3b5fae5a046c48bbdf15cf60952ad",
+  "small": "85031cff394dba6fe78750f1d2dda35a278daab6b53a082725cf20af2f544c88",
+  "small_inc": "0ff58d96536f6b6af5c578a2122e8623eff465f6b55f8ae9979fba70c61c20bf",
+  "dso": "a405d7cb8b9b614bce199c8b4da508737cc470ff59a4ea631cc068cf16a6a8b8",
+  "gxx": "g++ (Debian 14.2.0-19) 14.2.0"
+}

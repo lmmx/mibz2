@@ -1,0 +1,13 @@
+dense max capacity 10920006 RSS KiB 9440 extra cache 0 borrowed capacity 0
+side_a max capacity 11224358 RSS KiB 9696 extra cache 304352 borrowed capacity 0
+side_b max capacity 11224358 RSS KiB 9688 extra cache 304352 borrowed capacity 0
+reuse max capacity 10920006 RSS KiB 9444 extra cache 0 borrowed capacity 1085728
+dense total_ns=4700.01us first_ns=1142.71us index_ns=255.93us contract_ns=1648.91us emit_ns=1649.99us
+side_a total_ns=4134.79us first_ns=1135.07us index_ns=265.65us contract_ns=1768.00us emit_ns=963.18us
+reuse total_ns=4178.31us first_ns=1157.65us index_ns=262.59us contract_ns=1836.24us emit_ns=919.09us
+side_b total_ns=4198.73us first_ns=1158.95us index_ns=281.92us contract_ns=1818.55us emit_ns=936.38us
+reuse/dense=0.8841 [0.8254,0.9469]
+side_a/dense=0.8787 [0.8420,0.9170]
+reuse/side_a=1.0061 [0.9329,1.0850]
+reuse/side_b=0.9964 [0.9124,1.0881]
+side_b/side_a=1.0097 [0.9294,1.0969]

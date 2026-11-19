@@ -1,0 +1,1 @@
+Scalar and detected kernels passed nonempty append, CRC rollback, retry, and unfinished-run rollback on the F5 action route.

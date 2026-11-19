@@ -1,0 +1,25 @@
+01c9dcc196cf3750824eb854118105f5f524246b
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+b82423ebee30e9ac441350b8e2c267ee3fd4ce03600739c9be8889b26a346c50  /workspace/work/astra-core-splice-build/small
+dafb287e5849cc073236e30a836e6f3bf3461724715af321fdfcfece63d3e975  /workspace/work/astra-core-splice-build/panel
+076a7078b6694e9defc857521d0e0641358d4848618364393ef098505608b8c8  /tmp/astra-token-all/libtoken.so
+906ff21f277ca42767270b70dea555e44bd4aac7b76dbd37b893f4a3e94dd7ba  research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/splice/splice.rs
+3d86650b63cc1162c25b324499f3f5fb005d2537c8b450ea943c1936677b427a  research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/splice/native.rs
+8e677ec384c7567b88d733f44cf83f5fef7d42d12ab97383d5b79349c49340dd  research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/splice/small.rs
+762b3d7552f5066710e118309801127e5d94794bef01b98a22e0c41da13ba54a  research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/splice/real/sources.xz
+400000 100000
+PSR  NI %CPU COMMAND
+  3   0  200 ps
+  0  16 99.4 python3
+  1  10 90.0 python3
+  2   0  8.0 codex-linux-san
+  3   0  4.5 codex
+  0   0  1.0 containerd
+  0   0  0.9 codex
+  3   0  0.2 dockerd

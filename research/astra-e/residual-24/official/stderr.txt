@@ -1,0 +1,6 @@
+moonshot: building the harness with /workspace/work/astra-e-page-scorer/research/astra-e/residual-24/p16.rs
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e-page-scorer/bench/moonshot)
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-e-page-scorer)
+    Finished `release` profile [optimized + debuginfo] target(s) in 29.27s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-e/corpora/wikidata.bz2
+moonshot: written to /workspace/work/astra-e/research/astra-e/residual-24/official/score

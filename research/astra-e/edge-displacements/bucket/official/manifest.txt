@@ -1,0 +1,24 @@
+a098919de8016b425fd7dd97186d1378c12eb41c
+75297a1
+75297a1d57b2bdf262c3a19f3064848dedf2c493
+3df195b10e9fb6f86f0c06ad9fad1feb992406d5
+6ecd7c75a8595172dd3c9aded053405a9d7759a975642e61fc73f1d56f862458  -
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+17191df8090b22bd6da6a31e17f93ce81abfe4f8bb5c872b7a2edaa11dac27ef  research/astra-e/edge-displacements/bucket/entry.rs
+e1bb215cdaee50906b5b9d26dc5badb8c520ccd07e5ba87df75e102f8e14f558  research/astra-e/edge-displacements/bucket/prepare.py
+2fd7ed90a8be1c67def944365be2223e99a2559c93c4d0d3f0075268f6718f17  research/astra-e/edge-displacements/bucket/native.py
+a740b8dd8a8b53c00ea59c4ba9734ed0cfd52030aefcd3819de58a2a31eb91e6  research/astra-e/edge-displacements/bucket/native.inc.rs
+b9c4b7e53a56e8fc3c535cca2091af45e1b95f7e7b09908e0587513ac6c02035  research/astra-e/edge-displacements/bucket/target/kernel.rs
+252301a541ee67617a447dc1755ab39d337ab9975e43816345a2fa6296d58224  research/astra-e/edge-displacements/bucket/target/narrow.rs
+09380d30e328d27056735776812e55677a69c21933dc8b56412da75b87ee2d4d  research/astra-e/edge-displacements/bucket/target/wide.rs
+6b7e1c516893ba585183a12202b433da450e605a2f122473266d42de112a5fd7  research/astra-e/edge-displacements/bucket/target/segments.rs
+23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212  research/astra-e/edge-displacements/bucket/target/gate.rs
+2dde2d590cb4684e79b9b5a910c5ebd16ebf4ed87077eaa614980c43fd029104  research/astra-e/edge-displacements/bucket/target/adapter.inc.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+1b415c46a7f0f8e2315fadb3c614425f72256e7d2ff59488e7aa57cd0ffa0dc2  /workspace/work/astra-e-queue-select-gate/bench/moonshot/target/release/moonshot

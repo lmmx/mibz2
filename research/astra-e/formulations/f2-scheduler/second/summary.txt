@@ -1,0 +1,20 @@
+isolated serial second-level CPU {'column_shift_ns': 0.6649, 'second_discover_ns': 3.0657, 'second_merge_ns': 0.9273, 'second_table_ns': 0.4344, 'second_emit_ns': 1.6429, 'total_ns': 27.3227}
+eight-lane graph {'nodes': 32639, 'lookups': 54511, 'lower_waves': 6817, 'batch_waves': 8583, 'refill_waves': 6848, 'dict_bytes': 1554280, 'selectors': 93414}
+refill {'residual_output_ns': 7.1227, 'total_ns': 36.9516}
+batch {'residual_output_ns': 5.9838, 'total_ns': 35.7818}
+scalar {'residual_output_ns': 6.0271, 'total_ns': 37.6807}
+lazy {'residual_output_ns': 37.9758, 'total_ns': 37.9758}
+refill/scalar residual_output_ns: 0.9858 [0.8167,1.1899]
+refill/scalar total_ns: 0.9335 [0.8420,1.0348]
+batch/scalar residual_output_ns: 0.8842 [0.7104,1.1004]
+batch/scalar total_ns: 1.0050 [0.9014,1.1205]
+refill/batch residual_output_ns: 1.1150 [0.8932,1.3918]
+refill/batch total_ns: 0.9288 [0.8352,1.0329]
+refill/lazy total_ns: 0.9395 [0.8647,1.0208]
+batch/lazy total_ns: 1.0115 [0.9121,1.1218]
+pinned replay refill/scalar discover_ns: 1.0677 [1.0032,1.1364]
+pinned replay refill/scalar complete_second_ns: 1.0240 [0.9686,1.0826]
+pinned replay batch/scalar discover_ns: 1.0291 [0.9600,1.1032]
+pinned replay batch/scalar complete_second_ns: 0.9961 [0.9459,1.0490]
+pinned replay refill/batch discover_ns: 1.0376 [0.9796,1.0989]
+pinned replay refill/batch complete_second_ns: 1.0280 [0.9800,1.0784]

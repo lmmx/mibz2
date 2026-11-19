@@ -1,0 +1,1 @@
+synthetic cases 4000 {"BadHuffmanCode overran=false": 915, "SelectorOverrun overran=false": 175, "Truncated overran=true": 525, "block overran=false": 2382, "block overran=true": 3}

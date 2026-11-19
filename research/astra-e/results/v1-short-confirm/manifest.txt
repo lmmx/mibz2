@@ -1,0 +1,17 @@
+e293f7c7262042023098406891b8a45d081879f5
+604dac3f46569edd9ac9b6706b23a68d9d7d8f8d
+scorer path revision 604dac3
+40b35254ccb72fb6a8353efe56a92c8f7339733eefe1c65ce660b7e2bd360691  research/astra-e/short-words/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1-short-confirm research/astra-e/short-words/candidate.rs --workers 1\,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy

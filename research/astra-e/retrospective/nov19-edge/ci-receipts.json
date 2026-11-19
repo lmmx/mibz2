@@ -1,0 +1,288 @@
+{
+  "compact_preload_ci_run": {
+    "id": 44440381983,
+    "artifact": "research/astra-e/ci/evidence/compact-preload-44440381983.zip",
+    "artifact_id": 14491856447,
+    "artifact_sha256": "308cbaabcbda6cfcd588e171adbc871597ace97661c61745e8ba216a7630b558",
+    "head": "5cefe941ff0c9bf6e436ef1bf171592fbc927d9c",
+    "base": "735796c1882782e9b93fe7eb3d8d2068962d8c42",
+    "selected": "research/astra-e/formulations/f2-pages/payload/slots/preload.rs",
+    "candidate_source_sha256": "6bfd17944f3e76a54525d0f27d661321a189d7d8c9da9392d5bbec3cd5f9a77a",
+    "scorer_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+    "printed_scorer_version": "scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+    "machine": "AMD EPYC 9V74 80-Core Processor",
+    "candidate_over_reference": {
+      "master LazyCells": {
+        "1": {
+          "n": 20,
+          "geomean": 0.8467756112708062,
+          "lo": 0.8338506931025448,
+          "hi": 0.8599008692733308,
+          "verdict": "FASTER",
+          "speedup": 1.180950403731209,
+          "peak_rss_ratio": 0.9930643941490048,
+          "wall_s": 1.9158225
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.8631255532039348,
+          "lo": 0.8534228189049017,
+          "hi": 0.8729385998250575,
+          "verdict": "FASTER",
+          "speedup": 1.1585799960248948,
+          "peak_rss_ratio": 0.9819162677608084,
+          "wall_s": 1.051145
+        },
+        "4": {
+          "n": 20,
+          "geomean": 0.890362812343995,
+          "lo": 0.8878326262690441,
+          "hi": 0.8929002090590873,
+          "verdict": "FASTER",
+          "speedup": 1.123137653702507,
+          "peak_rss_ratio": 0.9139630836047774,
+          "wall_s": 0.9053415
+        }
+      },
+      "master eager Cells": {
+        "1": {
+          "n": 20,
+          "geomean": 1.127900879040901,
+          "lo": 1.1079080287276464,
+          "hi": 1.1482545120665146,
+          "verdict": "SLOWER",
+          "speedup": 0.8866027313059103,
+          "peak_rss_ratio": 1.00296210738105,
+          "wall_s": 1.9158225
+        },
+        "2": {
+          "n": 20,
+          "geomean": 1.1264002364200645,
+          "lo": 1.111687943758405,
+          "hi": 1.141307234400404,
+          "verdict": "SLOWER",
+          "speedup": 0.8877839045721521,
+          "peak_rss_ratio": 0.9919861215591753,
+          "wall_s": 1.051145
+        },
+        "4": {
+          "n": 20,
+          "geomean": 1.070112876863944,
+          "lo": 1.0648700814933059,
+          "hi": 1.0753814846822942,
+          "verdict": "SLOWER",
+          "speedup": 0.934480858627348,
+          "peak_rss_ratio": 0.9839277156316115,
+          "wall_s": 0.9053415
+        }
+      },
+      "master opend": {
+        "1": {
+          "n": 20,
+          "geomean": 0.8816966791542048,
+          "lo": 0.8621907054547812,
+          "hi": 0.9016439508258235,
+          "verdict": "FASTER",
+          "speedup": 1.1341768928508174,
+          "peak_rss_ratio": 1.0248029847336964,
+          "wall_s": 1.9158225
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.911227845942719,
+          "lo": 0.898184221841292,
+          "hi": 0.9244608923536923,
+          "verdict": "FASTER",
+          "speedup": 1.097420370165972,
+          "peak_rss_ratio": 1.0368759728485004,
+          "wall_s": 1.051145
+        },
+        "4": {
+          "n": 20,
+          "geomean": 1.006883422548681,
+          "lo": 1.0032623703827535,
+          "hi": 1.010517544096233,
+          "verdict": "SLOWER",
+          "speedup": 0.9931636350400356,
+          "peak_rss_ratio": 1.0734680864630493,
+          "wall_s": 0.9053415
+        }
+      },
+      "frozen predecessor": {
+        "1": {
+          "n": 20,
+          "geomean": 0.9134128056763794,
+          "lo": 0.9065828900408821,
+          "hi": 0.9202941757879102,
+          "verdict": "FASTER",
+          "speedup": 1.094795248966871,
+          "peak_rss_ratio": 0.994458503426492,
+          "wall_s": 1.9158225
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.9150943638521651,
+          "lo": 0.9046785741295077,
+          "hi": 0.9256300731558197,
+          "verdict": "FASTER",
+          "speedup": 1.0927834762203295,
+          "peak_rss_ratio": 0.99625335347991,
+          "wall_s": 1.051145
+        },
+        "4": {
+          "n": 20,
+          "geomean": 0.9224549349068161,
+          "lo": 0.9197826488016876,
+          "hi": 0.9251349849255571,
+          "verdict": "FASTER",
+          "speedup": 1.0840637977626704,
+          "peak_rss_ratio": 0.9867073027781034,
+          "wall_s": 0.9053415
+        }
+      }
+    }
+  },
+  "precounted_front_ci_run": {
+    "id": 44445335323,
+    "artifact": "research/astra-e/ci/evidence/front-fusion-44445335323.zip",
+    "artifact_id": 14494002054,
+    "artifact_sha256": "799ea11a50501ad419e102449f9fd9872af5974846baaf6ee656da13aa6f1460",
+    "head": "0d37dfb03ad3fee4ca03dba8a4d9ba3370625af5",
+    "base": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+    "selected": "research/astra-e/front-fusion/precount/worker/candidate.rs",
+    "candidate_source_sha256": "00c796e97ad5450405cec8ab066702c5acc6606fd0319bed3d43fbbe64bc1b4f",
+    "scorer_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+    "printed_scorer_version": "scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+    "machine": "AMD EPYC 9V45 96-Core Processor",
+    "candidate_over_reference": {
+      "master LazyCells": {
+        "1": {
+          "n": 20,
+          "geomean": 0.9560554116912173,
+          "lo": 0.9403769445653681,
+          "hi": 0.9719952786023728,
+          "verdict": "FASTER",
+          "speedup": 1.0459644783883884,
+          "peak_rss_ratio": 0.9683177811381994,
+          "wall_s": 1.4670415
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.9605788889465644,
+          "lo": 0.9461288173050155,
+          "hi": 0.9752496541835591,
+          "verdict": "FASTER",
+          "speedup": 1.0410389105018407,
+          "peak_rss_ratio": 0.9438716545012166,
+          "wall_s": 0.774519
+        },
+        "4": {
+          "n": 20,
+          "geomean": 0.9029239240503506,
+          "lo": 0.8842859824252988,
+          "hi": 0.9219546943246435,
+          "verdict": "FASTER",
+          "speedup": 1.1075130178345303,
+          "peak_rss_ratio": 0.8776117429251521,
+          "wall_s": 0.6336725
+        }
+      },
+      "master eager Cells": {
+        "1": {
+          "n": 20,
+          "geomean": 1.3137970085873145,
+          "lo": 1.2835268937439372,
+          "hi": 1.3447810000600773,
+          "verdict": "SLOWER",
+          "speedup": 0.7611525931812474,
+          "peak_rss_ratio": 0.9783491708589529,
+          "wall_s": 1.4670415
+        },
+        "2": {
+          "n": 20,
+          "geomean": 1.2745188477227325,
+          "lo": 1.2503385862491874,
+          "hi": 1.2991667305680876,
+          "verdict": "SLOWER",
+          "speedup": 0.7846098170982457,
+          "peak_rss_ratio": 0.9602110115870732,
+          "wall_s": 0.774519
+        },
+        "4": {
+          "n": 20,
+          "geomean": 1.0539270382079713,
+          "lo": 1.0335779635116231,
+          "hi": 1.0746767453245296,
+          "verdict": "SLOWER",
+          "speedup": 0.948832285108023,
+          "peak_rss_ratio": 0.9267776096822995,
+          "wall_s": 0.6336725
+        }
+      },
+      "master opend": {
+        "1": {
+          "n": 20,
+          "geomean": 0.9960730179892165,
+          "lo": 0.9797024171441687,
+          "hi": 1.0127171677888633,
+          "verdict": "INCONCLUSIVE",
+          "speedup": 1.0039424639959738,
+          "peak_rss_ratio": 0.9990296619037653,
+          "wall_s": 1.4670415
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.9951654870706497,
+          "lo": 0.9822001336909757,
+          "hi": 1.0083019872283514,
+          "verdict": "INCONCLUSIVE",
+          "speedup": 1.00485799898827,
+          "peak_rss_ratio": 0.9963241195543998,
+          "wall_s": 0.774519
+        },
+        "4": {
+          "n": 20,
+          "geomean": 0.9859497188391654,
+          "lo": 0.9699895343604849,
+          "hi": 1.0021725118095564,
+          "verdict": "INCONCLUSIVE",
+          "speedup": 1.014250504759388,
+          "peak_rss_ratio": 1.0091361810509776,
+          "wall_s": 0.6336725
+        }
+      },
+      "frozen predecessor": {
+        "1": {
+          "n": 20,
+          "geomean": 1.0109534998302272,
+          "lo": 0.9946214251106807,
+          "hi": 1.027553753635716,
+          "verdict": "INCONCLUSIVE",
+          "speedup": 0.9891651793756423,
+          "peak_rss_ratio": 0.9986496510013504,
+          "wall_s": 1.4670415
+        },
+        "2": {
+          "n": 20,
+          "geomean": 1.0212139730255843,
+          "lo": 1.0083729462242699,
+          "hi": 1.0342185226285856,
+          "verdict": "SLOWER",
+          "speedup": 0.9792267109676017,
+          "peak_rss_ratio": 0.9997583918561949,
+          "wall_s": 0.774519
+        },
+        "4": {
+          "n": 20,
+          "geomean": 1.0121909796169761,
+          "lo": 0.9946382198316296,
+          "hi": 1.0300534996447295,
+          "verdict": "INCONCLUSIVE",
+          "speedup": 0.9879558503657192,
+          "peak_rss_ratio": 1.0208429472388862,
+          "wall_s": 0.6336725
+        }
+      }
+    }
+  }
+}

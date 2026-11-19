@@ -1,0 +1,4 @@
+twin blocks 431 symbols 24979299 bit/metadata fold 59e4c4b888b845b2; every symbol and complete block metadata checked
+stockskip blocks 431 symbols 24979299 bit/metadata fold 59e4c4b888b845b2; every symbol and complete block metadata checked
+singletiny blocks 431 symbols 24979299 bit/metadata fold 59e4c4b888b845b2; every symbol and complete block metadata checked
+skipboth blocks 431 symbols 24979299 bit/metadata fold 59e4c4b888b845b2; every symbol and complete block metadata checked

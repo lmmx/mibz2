@@ -1,0 +1,8 @@
+{
+  "cpu": [
+    0
+  ],
+  "nice": 12,
+  "quota": "400000 100000",
+  "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C"
+}

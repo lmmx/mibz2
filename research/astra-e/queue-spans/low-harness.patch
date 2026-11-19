@@ -1,0 +1,38 @@
+--- check-low.rs
++++ check-low.rs
+@@ -42,0 +43 @@
++            check::<4>(kernel, &rec, col.len(), p as u32, limit, &reference);
+@@ -71 +72,8 @@
+-    println!("{cases} marked-column/limit cases, each checked in all four modes");
++    // Exercise many pages, changes inside thin runs, and buckets empty for entire pages.
++    let mut multi_page = Vec::new();
++    for (count, pair) in [(131_083, [1, 2]), (196_617, [4, 5]), (131_079, [1, 2])] {
++        multi_page.extend(pair.into_iter().cycle().take(count));
++    }
++    cases += verify(&multi_page, &[0, 65_535, 65_536, 262_145, multi_page.len() - 1], &[16], &mut kernel);
++    cases += verify(&vec![2; 170_035], &[0, 65_536, 170_034], &[900000], &mut kernel);
++    println!("{cases} marked-column/limit cases, each checked in all five modes");
+--- ledger-low.rs
++++ ledger-low.rs
+@@ -13 +13 @@
+-    println!("{index},{MODE},{n},{},{},{},{},{},{},{},{},{}",
++    println!("{index},{MODE},{n},{},{},{},{},{},{},{},{},{},{}",
+@@ -15 +15 @@
+-        s.queue_cap,s.intersections,s.singletons,s.queue_capacity);
++        s.queue_cap,s.intersections,s.singletons,s.queue_capacity,s.page_cuts);
+@@ -21 +21 @@
+-    let mut kernels: [spans::kernel::Kernel;3] = Default::default();
++    let mut kernels: [spans::kernel::Kernel;4] = Default::default();
+@@ -23,2 +23,2 @@
+-    let mut answers: [Vec<u8>;3] = Default::default();
+-    println!("ordinal,mode,rows,retained,bands,input_spans,stored,joined_rows,cap_boundaries,intersections,singletons,capacity_bytes");
++    let mut answers: [Vec<u8>;4] = Default::default();
++    println!("ordinal,mode,rows,retained,bands,input_spans,stored,joined_rows,cap_boundaries,intersections,singletons,capacity_bytes,page_cuts");
+@@ -31,0 +32,2 @@
++        record::<4>(&mut kernels[3], index, &r, n, symbols.orig_ptr, &mut answers[3]);
++        assert_eq!(answers[0], answers[3]);
+--- stage-low.rs
++++ stage-low.rs
+@@ -117 +117 @@
+-        arm::<spans::Variant<3>>("joined", kernels),
++        arm::<spans::Variant<4>>("low16", kernels),

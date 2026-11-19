@@ -1,0 +1,15 @@
+run,host,head,source,receipt,workers,joined_workers,official_rows
+44423427194,"Intel Xeon 6975P-C, 2 cores, 4 logical CPUs",e12e5f63173ee7cc6fcc413510ee76cfee0c1eb1,,research/astra-e/results/conjugate-pilot/assessment.json:ci_run,1 2 4,1 4,3
+44424367557,"AMD EPYC 7763, 2 cores, 4 logical CPUs",68e6a57a7a224293d34616fa6839ce192608307b,,research/astra-e/results/conjugate-pilot/assessment.json:second_ci_run,1 2 4,1 4,3
+44425372339,AMD EPYC 7763 64-Core Processor,2dd991699c0286d17b1d1fae330b30b1b9689b82,research/astra-e/lookahead/candidate.rs,research/astra-e/results/lookahead-pilot/assessment.json:ci_run,1 2 4,1 4,7
+44427324957,AMD EPYC 7763 64-Core Processor,5c7704b3d149b05b8e9dc2ace06da0179459a8b3,research/astra-e/narrow-short/ahead.rs,research/astra-e/results/combined-ahead-pilot/assessment.json:ci_run,1 2 4,1 2 4,16
+44429350230,AMD EPYC 7763 64-Core Processor,e53d5e23228bf82c48bdd7e8099f4ac67e3ddb69,research/astra-e/narrow-short/ahead.rs,research/astra-e/retrospective/ci-receipts.json:combined_ahead_ci_run,1 2 4,1 2 4,16
+44431030145,Intel(R) Xeon(R) 6975P-C,cfe0eb279d90d8ff84b620fcf96dbf101676d8e6,research/astra-e/edge-budget/candidate.rs,research/astra-e/retrospective/ci-receipts.json:edge_budget_ci_run,1 2 4,1 4,9
+44433942216,Intel(R) Xeon(R) 6973P-C,daf8a86f0bc6f07e6dc0d24d837f92104219081c,research/astra-e/formulations/f2-scheduler/candidate.rs,research/astra-e/retrospective/ci-receipts.json:delimiter_refill_ci_run,1 2 4,1 4,5
+44436152031,AMD EPYC 9V74 80-Core Processor,21218294764c887f16f6d72beb1c2ebbc3368eed,research/astra-e/formulations/f2-rle/combined/candidate.rs,research/astra-e/retrospective/ci-receipts.json:combined_word_actions_ci_run,1 2 4,,3
+44436826833,Intel(R) Xeon(R) 6975P-C,e3dc2c416fd6f10b8214940bea8eecfe66c78c14,research/astra-e/formulations/f2-pages/instructions/candidate.rs,research/astra-e/retrospective/ci-receipts.json:guarded_popcnt_ci_run,1 2 4,1 4,9
+44440381983,AMD EPYC 9V74 80-Core Processor,5cefe941ff0c9bf6e436ef1bf171592fbc927d9c,research/astra-e/formulations/f2-pages/payload/slots/preload.rs,research/astra-e/retrospective/nov19-edge/ci-receipts.json:compact_preload_ci_run,1 2 4,1 4,5
+44445335323,AMD EPYC 9V45 96-Core Processor,0d37dfb03ad3fee4ca03dba8a4d9ba3370625af5,research/astra-e/front-fusion/precount/worker/candidate.rs,research/astra-e/retrospective/nov19-edge/ci-receipts.json:precounted_front_ci_run,1 2 4,1 4,5
+44448175373,AMD EPYC 7763 64-Core Processor,c783b7820a2d89af8d2ddfb77e63f9c017e5247b,research/astra-e/worker-dose/candidate.rs,research/astra-e/results/v1p2-dose-gate/ci-receipt.json:worker_dose_ci_run,1 2 4,,3
+run-20261119T013135Z,Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz,8c9640d8ab186f81a0500f48e606e0c21c2a6669,research/astra-e/narrow-short/ahead.rs,research/astra-e/results/combined-v1-proxy/i9-receipt.json:combined_i9_run,7 8 9 10,7 8 10,7
+run-20261119T022117Z,Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz,badb2aec3624bd65606c429b2e6f79e9d9d0050f,research/astra-e/edge-budget/candidate.rs,research/astra-e/results/v1p2-edge-confirm/i9-receipt.json:edge_i9_run,7 8 9 10,,4

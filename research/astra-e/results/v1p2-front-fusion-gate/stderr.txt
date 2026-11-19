@@ -1,0 +1,41 @@
+moonshot: building the harness with /workspace/work/astra-front-worker-check/research/astra-e/front-fusion/precount/worker/candidate.rs
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling cc v1.11.2
+   Compiling pkg-config v0.3.34
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-front-worker-check/bench/moonshot)
+   Compiling bzip2 v0.4.4
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-front-worker-check)
+warning: variable does not need to be mutable
+   --> /workspace/work/astra-front-worker-check/research/astra-e/front-fusion/precount/worker/kernel.rs:392:13
+    |
+392 |         let mut cursors = if true {
+    |             ----^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> /workspace/work/astra-front-worker-check/research/astra-e/front-fusion/precount/worker/kernel.rs:654:53
+    |
+654 |         let mut tile=[0u32;TILE];let mut used=0;let mut seen=0u32;
+    |                                                     ----^^^^
+    |                                                     |
+    |                                                     help: remove this `mut`
+
+warning: unused variable: `seen`
+   --> /workspace/work/astra-front-worker-check/research/astra-e/front-fusion/precount/worker/kernel.rs:654:53
+    |
+654 |         let mut tile=[0u32;TILE];let mut used=0;let mut seen=0u32;
+    |                                                     ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_seen`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `mibz2-moonshot` (bin "moonshot") generated 3 warnings (run `cargo fix --bin "moonshot" -p mibz2-moonshot` to apply 3 suggestions)
+    Finished `release` profile [optimized + debuginfo] target(s) in 46.73s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-front-worker-check/corpora/wikidata.bz2
+moonshot: written to research/astra-e/results/v1p2-front-fusion-gate/score
+moonshot: recorded in research/astra-e/results/v1p2-front-fusion-gate/official-register.jsonl

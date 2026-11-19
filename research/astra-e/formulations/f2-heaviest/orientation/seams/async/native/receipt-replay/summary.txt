@@ -1,0 +1,16 @@
+quote free_geometry.total_cpu_s/direct: 2.0159 [1.9013, 2.1373]
+quote free_geometry.total_cpu_s/compact: 5.9002 [5.5232, 6.3028]
+quote free_order.total_cpu_s/direct: 0.7166 [0.6447, 0.7965]
+quote free_order.total_cpu_s/compact: 2.0973 [1.8779, 2.3423]
+quote compact fresh-process VmHWM KiB 8212..15500
+quote direct fresh-process VmHWM KiB 8460..14108
+quote free_geometry fresh-process VmHWM KiB 11472..24100
+quote free_order fresh-process VmHWM KiB 11472..24096
+frequent free_geometry.total_cpu_s/direct: 2.0378 [1.9227, 2.1598]
+frequent free_geometry.total_cpu_s/compact: 5.6031 [5.4019, 5.8117]
+frequent free_order.total_cpu_s/direct: 0.5098 [0.4745, 0.5476]
+frequent free_order.total_cpu_s/compact: 1.4016 [1.2938, 1.5185]
+frequent compact fresh-process VmHWM KiB 8228..15500
+frequent direct fresh-process VmHWM KiB 8348..13580
+frequent free_geometry fresh-process VmHWM KiB 11472..28560
+frequent free_order fresh-process VmHWM KiB 11472..28560

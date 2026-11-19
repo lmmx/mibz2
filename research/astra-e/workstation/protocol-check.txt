@@ -1,0 +1,6 @@
+registered upstream scorer is current
+upstream scorer changed; re-score baseline and preserved candidate before measuring
+using registered last-working scorer for this documented incompatible update
+registered upstream scorer is current
+Four detached Git refresh cases passed; the registered caller remained clean.
+The official 256-sample schedule, four malformed rosters and a losing W=9 cell passed.

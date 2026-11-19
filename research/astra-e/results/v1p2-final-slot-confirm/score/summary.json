@@ -1,0 +1,99 @@
+{
+ "info": {
+  "candidate": "/workspace/work/astra-e-reprice-75297a1/research/astra-e/final-slot/candidate.rs",
+  "candidate_type": "moonshot::candidate::FinalSlot<false>",
+  "arms": [
+   "lazy",
+   "cells",
+   "open",
+   "opend",
+   "candidate"
+  ],
+  "cpus": 4
+ },
+ "corpus": "/workspace/work/astra-e-reprice-75297a1/corpora/wikidata.bz2",
+ "options": {
+  "cmd": "score",
+  "candidate": "research/astra-e/final-slot/candidate.rs",
+  "corpus": null,
+  "rounds": 9,
+  "settle": 2.0,
+  "repeat": 2,
+  "workers": [
+   1,
+   4
+  ],
+  "with_opend": true,
+  "proxy_blocks": "48+16",
+  "bootstrap": 400,
+  "quick": false,
+  "no_timing": false,
+  "no_proxy": true,
+  "no_build": false,
+  "target_dir": "/workspace/work/astra-e-refresh-75297a1-build",
+  "out": "research/astra-e/results/v1p2-final-slot-confirm/score",
+  "record": "research/astra-e/results/v1p2-final-slot-confirm/official-register.jsonl"
+ },
+ "scorer": {
+  "version": "v1",
+  "commit": "81585172f5fb9e7a59f330124779ba084fd6bf04"
+ },
+ "gate": {
+  "verdict": "PASS",
+  "cases": 338,
+  "failed": [],
+  "exit": 0
+ },
+ "timing": {
+  "1": {
+   "rounds": 9,
+   "candidate": {
+    "n": 9,
+    "geomean": 0.8190902683804328,
+    "lo": 0.5645577830968566,
+    "hi": 1.1883794499746132,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.2208666597605606,
+    "peak_rss_ratio": 0.968729739165129,
+    "wall_s": 1.438261
+   },
+   "opend": {
+    "n": 9,
+    "geomean": 0.8232679194276905,
+    "lo": 0.6867019772222454,
+    "hi": 0.9869930328443537,
+    "verdict": "FASTER",
+    "speedup": 1.2146714045351943,
+    "peak_rss_ratio": 0.9674330457333798,
+    "wall_s": 1.344711
+   },
+   "lazy_wall_s": 1.455678,
+   "lazy_peak_rss_kb": 80204
+  },
+  "4": {
+   "rounds": 9,
+   "candidate": {
+    "n": 9,
+    "geomean": 0.767007329388873,
+    "lo": 0.5165123380199469,
+    "hi": 1.1389858480273742,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.3037685060933748,
+    "peak_rss_ratio": 0.8774780728102848,
+    "wall_s": 0.487439
+   },
+   "opend": {
+    "n": 9,
+    "geomean": 0.8801436041891827,
+    "lo": 0.6279127025412636,
+    "hi": 1.2336950038755077,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.1361782273260201,
+    "peak_rss_ratio": 0.868376787216148,
+    "wall_s": 0.72299
+   },
+   "lazy_wall_s": 0.683803,
+   "lazy_peak_rss_kb": 133168
+  }
+ }
+}

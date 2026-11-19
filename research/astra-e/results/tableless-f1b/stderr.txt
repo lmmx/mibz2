@@ -1,0 +1,11 @@
+moonshot: building the harness with /workspace/work/astra-e/research/astra-e/formulations/f1b/candidate.rs
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `release` profile [optimized + debuginfo] target(s) in 17.97s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-e/corpora/wikidata.bz2
+moonshot: round 1 of 6 timed
+moonshot: round 2 of 6 timed
+moonshot: round 3 of 6 timed
+moonshot: round 4 of 6 timed
+moonshot: round 5 of 6 timed
+moonshot: round 6 of 6 timed
+moonshot: written to research/astra-e/results/tableless-f1b/score

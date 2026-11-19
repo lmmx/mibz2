@@ -1,0 +1,117 @@
+{
+  "counts": {
+    "monochromatic": 42754,
+    "contiguous_images": 32106,
+    "holed_images": 10648,
+    "positive": 2414,
+    "zero_multiword": 12630,
+    "strictly_between": 718,
+    "full_gain_multiword": 1696
+  },
+  "stable_contiguous_examples": {
+    "zero_multiword": {
+      "psi": [
+        1,
+        2,
+        0
+      ],
+      "label": [
+        0,
+        0,
+        1
+      ],
+      "source": [
+        0,
+        2
+      ],
+      "image": [
+        1,
+        2
+      ],
+      "original": {
+        "words": 2,
+        "distinct_bytes": 3,
+        "proper_suffixes": 2
+      },
+      "shifted": {
+        "words": 2,
+        "distinct_bytes": 3,
+        "proper_suffixes": 2
+      },
+      "maximal_tails": 1
+    },
+    "full_gain_multiword": {
+      "psi": [
+        1,
+        3,
+        4,
+        0,
+        2
+      ],
+      "label": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "source": [
+        1,
+        3
+      ],
+      "image": [
+        3,
+        4
+      ],
+      "original": {
+        "words": 2,
+        "distinct_bytes": 5,
+        "proper_suffixes": 4
+      },
+      "shifted": {
+        "words": 2,
+        "distinct_bytes": 5,
+        "proper_suffixes": 3
+      },
+      "maximal_tails": 2
+    },
+    "strictly_between": {
+      "psi": [
+        1,
+        3,
+        4,
+        5,
+        0,
+        2
+      ],
+      "label": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "source": [
+        1,
+        4
+      ],
+      "image": [
+        3,
+        4,
+        5
+      ],
+      "original": {
+        "words": 3,
+        "distinct_bytes": 6,
+        "proper_suffixes": 4
+      },
+      "shifted": {
+        "words": 3,
+        "distinct_bytes": 6,
+        "proper_suffixes": 3
+      },
+      "maximal_tails": 2
+    }
+  }
+}

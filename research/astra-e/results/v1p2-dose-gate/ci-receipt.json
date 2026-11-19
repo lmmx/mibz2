@@ -1,0 +1,145 @@
+{
+  "worker_dose_ci_run": {
+    "id": 44448175373,
+    "artifact": "research/astra-e/ci/evidence/worker-dose-44448175373.zip",
+    "artifact_id": 14494653458,
+    "artifact_sha256": "ddd85da86ecedcb1e628558e10fd1958af55d44cf493387eaf12643d1d44ee32",
+    "head": "c783b7820a2d89af8d2ddfb77e63f9c017e5247b",
+    "base": "be74d5763d212864607d46521d74ebc0827f9f36",
+    "selected": "research/astra-e/worker-dose/candidate.rs",
+    "candidate_source_sha256": "076c5c673a4f9b379d4ab2f666c81fd39413e95b812d630cece2cec164bc2594",
+    "scorer_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+    "printed_scorer_version": "scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+    "machine": "AMD EPYC 7763 64-Core Processor",
+    "candidate_over_reference": {
+      "master LazyCells": {
+        "1": {
+          "n": 20,
+          "geomean": 0.7212538404159451,
+          "lo": 0.7111252357171454,
+          "hi": 0.7315267075146595,
+          "verdict": "FASTER",
+          "speedup": 1.3864744199120005,
+          "peak_rss_ratio": 0.9906305907523193,
+          "wall_s": 1.6112950000000001
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.8170977262318996,
+          "lo": 0.7955953234241935,
+          "hi": 0.8391812703722558,
+          "verdict": "FASTER",
+          "speedup": 1.22384381683641,
+          "peak_rss_ratio": 0.900619605096899,
+          "wall_s": 1.0116960000000002
+        },
+        "4": {
+          "n": 20,
+          "geomean": 0.8351078675588622,
+          "lo": 0.8018023581734504,
+          "hi": 0.8697968312882457,
+          "verdict": "FASTER",
+          "speedup": 1.1974501005757983,
+          "peak_rss_ratio": 0.7567359423811176,
+          "wall_s": 0.8461285000000001
+        }
+      },
+      "master eager Cells": {
+        "1": {
+          "n": 20,
+          "geomean": 1.0000991166349142,
+          "lo": 0.9810817291405204,
+          "hi": 1.019485139092502,
+          "verdict": "INCONCLUSIVE",
+          "speedup": 0.9999008931882194,
+          "peak_rss_ratio": 1.0006147770036142,
+          "wall_s": 1.6112950000000001
+        },
+        "2": {
+          "n": 20,
+          "geomean": 1.0968503095845747,
+          "lo": 1.078072529337399,
+          "hi": 1.115955159691538,
+          "verdict": "SLOWER",
+          "speedup": 0.9117014338800195,
+          "peak_rss_ratio": 0.9047793836506844,
+          "wall_s": 1.0116960000000002
+        },
+        "4": {
+          "n": 20,
+          "geomean": 1.0456515928695655,
+          "lo": 1.020838773828335,
+          "hi": 1.0710675198692292,
+          "verdict": "SLOWER",
+          "speedup": 0.9563414877566584,
+          "peak_rss_ratio": 0.8093575256966519,
+          "wall_s": 0.8461285000000001
+        }
+      },
+      "master opend": {
+        "1": {
+          "n": 20,
+          "geomean": 0.782988459860598,
+          "lo": 0.7738487403674812,
+          "hi": 0.7922361261242594,
+          "verdict": "FASTER",
+          "speedup": 1.2771580313942794,
+          "peak_rss_ratio": 1.0227160211736928,
+          "wall_s": 1.6112950000000001
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.8916513184411239,
+          "lo": 0.8765979155908589,
+          "hi": 0.9069632262836345,
+          "verdict": "FASTER",
+          "speedup": 1.1215146316929159,
+          "peak_rss_ratio": 0.9524415178787049,
+          "wall_s": 1.0116960000000002
+        },
+        "4": {
+          "n": 20,
+          "geomean": 0.9649870993546178,
+          "lo": 0.9368643913689477,
+          "hi": 0.9939539921676049,
+          "verdict": "FASTER",
+          "speedup": 1.0362832836509408,
+          "peak_rss_ratio": 0.877039700299198,
+          "wall_s": 0.8461285000000001
+        }
+      },
+      "frozen predecessor": {
+        "1": {
+          "n": 20,
+          "geomean": 0.7906005457484603,
+          "lo": 0.7817843120121842,
+          "hi": 0.7995162007395484,
+          "verdict": "FASTER",
+          "speedup": 1.2648612568984525,
+          "peak_rss_ratio": 1.0869371648284933,
+          "wall_s": 1.6112950000000001
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.9095255995160234,
+          "lo": 0.8977124229558633,
+          "hi": 0.9214942280192255,
+          "verdict": "FASTER",
+          "speedup": 1.099474275965536,
+          "peak_rss_ratio": 1.078854746056351,
+          "wall_s": 1.0116960000000002
+        },
+        "4": {
+          "n": 20,
+          "geomean": 0.9881117141394432,
+          "lo": 0.9536659020837684,
+          "hi": 1.0238016872431144,
+          "verdict": "INCONCLUSIVE",
+          "speedup": 1.0120313176035065,
+          "peak_rss_ratio": 1.0701466437599705,
+          "wall_s": 0.8461285000000001
+        }
+      }
+    }
+  }
+}

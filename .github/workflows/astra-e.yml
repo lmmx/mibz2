@@ -1,0 +1,65 @@
+name: Astra E paired research benchmark
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - ".github/workflows/astra-e.yml"
+      - "research/astra-e/ci/**"
+      - "research/astra-e/**/*.rs"
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+
+permissions:
+  contents: read
+
+jobs:
+  paired:
+    if: github.head_ref == 'research/astra-e-moonshot' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Find most recent completed measurement's inputs
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/astra-e-inputs.json
+          key: astra-e-inputs-v1-${{ github.event.pull_request.base.sha }}-${{ github.event.pull_request.head.sha }}
+          restore-keys: |
+            astra-e-inputs-v1-${{ github.event.pull_request.base.sha }}-
+      - name: Check the candidate and its compiler-tracked dependencies
+        id: inputs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch origin master
+          bash research/astra-e/prepare.sh "$(cat research/astra-e/ci/candidate)"
+          python3 research/astra-e/ci/inputs.py check "$RUNNER_TEMP/astra-e-inputs.json" "$BASE_SHA" >> "$GITHUB_OUTPUT"
+      - name: Install corpus oracle
+        if: steps.inputs.outputs.run == 'true'
+        run: sudo apt-get update -qq && sudo apt-get install -y lbzip2
+      - name: Run paired Wikidata comparison
+        id: measure
+        if: steps.inputs.outputs.run == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash research/astra-e/ci/bench.sh
+      - name: Remember inputs of this completed measurement
+        if: success() && steps.measure.outputs.remember == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/astra-e-inputs.json
+          key: astra-e-inputs-v1-${{ github.event.pull_request.base.sha }}-${{ github.event.pull_request.head.sha }}
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.inputs.outputs.run == 'true'
+        with:
+          name: astra-e-paired-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: astra-e-result/
+          if-no-files-found: error

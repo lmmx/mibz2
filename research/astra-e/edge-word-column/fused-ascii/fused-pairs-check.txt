@@ -1,0 +1,1 @@
+233 verified all original and directly composed row/code transitions; all three marked traversals matched each coded byte.

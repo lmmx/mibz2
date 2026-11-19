@@ -1,0 +1,3 @@
+batched prep_mark_ns=3.1192 ms discover_ns=8.7620 ms merge_ns=1.2355 ms residual_output_ns=4.9846 ms total_ns=18.4094 ms
+two prep_mark_ns=3.2585 ms discover_ns=14.5072 ms merge_ns=1.2320 ms residual_output_ns=4.9881 ms total_ns=24.7929 ms
+lazy prep_mark_ns=0.0000 ms discover_ns=0.0000 ms merge_ns=0.0000 ms residual_output_ns=17.0455 ms total_ns=17.0455 ms

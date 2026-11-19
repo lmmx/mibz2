@@ -1,0 +1,15 @@
+2b19f2e2f3430b9efe23467de968959c6059a272
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+b231d168d3c40d85e8aa7116d6a3e1f6908cc3a7b623b0098cbc10ae261ce43c  /workspace/work/queue-spans/packed-compact/price
+805a9231bf5ffe691592a0c96476df110baebf5e7bac214c3ab92a328f88f0fe  /workspace/work/queue-spans/packed-compact/focus.rs
+462114251ba949f70076317c4153f5ff28a648dbec8418918af9a0f40671f00d  /workspace/work/queue-spans/packed-compact/control.rs
+1b08702d93c1a00c2d24609d0320f0ed97615307e2462050197c4d322f9371fc  /workspace/work/queue-spans/packed-compact/packed.rs
+f38c0ae713c308e909b41e3c86379fd31a3e8b328364fd75fc0261f678a559bb  /workspace/work/page-counted-lib/release/deps/libmibz2.rlib
+pinned CPUs 4 2
+400000 100000

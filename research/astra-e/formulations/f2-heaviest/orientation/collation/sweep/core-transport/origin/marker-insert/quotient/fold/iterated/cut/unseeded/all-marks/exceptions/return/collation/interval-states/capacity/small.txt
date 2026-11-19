@@ -1,0 +1,1 @@
+dual_optima=2520 actual_partition_bounds=54600 direct_powers=2568

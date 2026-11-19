@@ -1,0 +1,5 @@
+# Cost and sharpness of a single delimiter cut
+
+Test whether a protected set of types can always remove substantially more than one quarter of the nonself mass. Use an Euler circuit containing every ordered unequal pair once. Build its true circular BWT, reconstruct it, and enumerate vertex cuts. Repeat with a unique anchor inserted on one edge. Compare the universal guarantee to the largest possible cut as alphabet size increases.
+
+For a constructive lower bound pair disjoint type vertices and force each pair onto opposite sides before coloring. Test whether the improvement in the guaranteed mass automatically certifies bypass of power normalization, and what happens to *realized* ingress. Freeze greedy heaviest undirected pair first, ties by lexicographic endpoint ID. Color grouped components by minimum source ID, maximizing weight crossing to previously colored components, ties unswapped. Flip the resulting cut globally to protect the anchor. Report all ten original-byte first passes with the old fixed chooser as control. Report graph size and match cost separately. These are structural tests.

@@ -1,0 +1,43 @@
+moonshot: building the harness with /workspace/work/narrow-proxy/full-tree/research/astra-e/narrow-short/ahead.rs
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/narrow-proxy/full-tree/bench/moonshot)
+   Compiling cc v1.11.2
+   Compiling mibz2 v0.5.6 (/workspace/work/narrow-proxy/full-tree)
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling bzip2 v0.4.4
+    Finished `release` profile [optimized + debuginfo] target(s) in 36.24s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/narrow-proxy/full-tree/corpora/wikidata.bz2 --quick
+moonshot: proxy: lazy at 1 workers ({'llc_kb': 20480, 'l3_lat': 42, 'dram_lat': 349})
+moonshot: proxy: opend at 1 workers ({'llc_kb': 20480, 'l3_lat': 42, 'dram_lat': 349})
+moonshot: proxy: open at 1 workers ({'llc_kb': 20480, 'l3_lat': 42, 'dram_lat': 349})
+moonshot: proxy: cells at 1 workers ({'llc_kb': 20480, 'l3_lat': 42, 'dram_lat': 349})
+moonshot: proxy: candidate at 1 workers ({'llc_kb': 20480, 'l3_lat': 42, 'dram_lat': 349})
+moonshot: proxy: lazy at 2 workers ({'llc_kb': 10240, 'l3_lat': 46, 'dram_lat': 382})
+moonshot: proxy: opend at 2 workers ({'llc_kb': 10240, 'l3_lat': 46, 'dram_lat': 382})
+moonshot: proxy: open at 2 workers ({'llc_kb': 10240, 'l3_lat': 46, 'dram_lat': 382})
+moonshot: proxy: cells at 2 workers ({'llc_kb': 10240, 'l3_lat': 46, 'dram_lat': 382})
+moonshot: proxy: candidate at 2 workers ({'llc_kb': 10240, 'l3_lat': 46, 'dram_lat': 382})
+moonshot: proxy: lazy at 4 workers ({'llc_kb': 5120, 'l3_lat': 54, 'dram_lat': 449})
+moonshot: proxy: opend at 4 workers ({'llc_kb': 5120, 'l3_lat': 54, 'dram_lat': 449})
+moonshot: proxy: open at 4 workers ({'llc_kb': 5120, 'l3_lat': 54, 'dram_lat': 449})
+moonshot: proxy: cells at 4 workers ({'llc_kb': 5120, 'l3_lat': 54, 'dram_lat': 449})
+moonshot: proxy: candidate at 4 workers ({'llc_kb': 5120, 'l3_lat': 54, 'dram_lat': 449})
+moonshot: proxy: lazy at 7 workers ({'llc_kb': 2925, 'l3_lat': 66, 'dram_lat': 549})
+moonshot: proxy: opend at 7 workers ({'llc_kb': 2925, 'l3_lat': 66, 'dram_lat': 549})
+moonshot: proxy: open at 7 workers ({'llc_kb': 2925, 'l3_lat': 66, 'dram_lat': 549})
+moonshot: proxy: cells at 7 workers ({'llc_kb': 2925, 'l3_lat': 66, 'dram_lat': 549})
+moonshot: proxy: candidate at 7 workers ({'llc_kb': 2925, 'l3_lat': 66, 'dram_lat': 549})
+moonshot: proxy: lazy at 8 workers ({'llc_kb': 2560, 'l3_lat': 70, 'dram_lat': 582})
+moonshot: proxy: opend at 8 workers ({'llc_kb': 2560, 'l3_lat': 70, 'dram_lat': 582})
+moonshot: proxy: open at 8 workers ({'llc_kb': 2560, 'l3_lat': 70, 'dram_lat': 582})
+moonshot: proxy: cells at 8 workers ({'llc_kb': 2560, 'l3_lat': 70, 'dram_lat': 582})
+moonshot: proxy: candidate at 8 workers ({'llc_kb': 2560, 'l3_lat': 70, 'dram_lat': 582})
+moonshot: proxy: lazy at 10 workers ({'llc_kb': 2048, 'l3_lat': 78, 'dram_lat': 649})
+moonshot: proxy: opend at 10 workers ({'llc_kb': 2048, 'l3_lat': 78, 'dram_lat': 649})
+moonshot: proxy: open at 10 workers ({'llc_kb': 2048, 'l3_lat': 78, 'dram_lat': 649})
+moonshot: proxy: cells at 10 workers ({'llc_kb': 2048, 'l3_lat': 78, 'dram_lat': 649})
+moonshot: proxy: candidate at 10 workers ({'llc_kb': 2048, 'l3_lat': 78, 'dram_lat': 649})
+moonshot: written to research/astra-e/results/combined-full-proxy/score

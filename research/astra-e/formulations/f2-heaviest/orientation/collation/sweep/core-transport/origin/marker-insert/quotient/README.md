@@ -1,0 +1,25 @@
+# Identifying the existing suffix bucket with the marker
+
+Let the first induced alphabet have ordered source buckets in U, incoming column L with R runs, and positive word spellings. Select a set S of word IDs ending in the same positive C, with one distinguished Z in S whose entire spelling is C. Let m be the number of old rows, s the selected mass, z the frequency of Z, and b the old base of Z. The m+s construction contains z copies of a zero-length transition directly into its own marker. All z can be identified simultaneously while keeping an ordinary weighted token BWT. The result has m+s−z rows and the original number of source IDs.
+
+Order the s marker ranks by old selected destination and put them at the old Z bucket position. Embed an old Z source as the marker for its own old destination. All other sources retain their relative order, shifting the part after the old bucket by s−z. This embedding is strictly increasing because old Z destinations increase in Z source order. Every marker emits C, then goes to the embedded old destination. A selected non-Z source emits its prefix and goes to the marker for its old destination. All other sources keep their old words. These maps are stable separately within each source bucket. Following one original arc reproduces its old bytes. A marked suffix moves to its marker at the old offset minus the prefix length, using one filtered occurrence count. If S contains only Z, the old object and its mark are already the answer. Keep the existing disjoint-cycle fallback. Z now wins a frequency tie only when no equally frequent ID precedes its old base. Any winning ID still yields the exact marked output.
+
+## A column with sparse insertions
+
+Replace each selected label of L by Z, obtaining A. Its old Z source window is A[b,b+z). Scan L, counting old Z occurrences. For each selected non-Z run insert its old ID and width into A at b plus the current count. The final column is read in this order, with insertions at equal coordinates following their original order. In particular, the old Z window supplies the incoming label of each reused marker, in its original order. The inserted records are exactly the incoming labels of the remaining markers. Every old destination outside that window has the incoming label in A. This proves the direct rule. It requires O(R) time with constant-time ID classification and at most k auxiliary events for k selected non-Z input runs, plus materializing the output. Recognizing a supplied suffix from dictionary slices and testing IDs, building the initial word column, the second index and eventual output are separate costs. If every row of the new column must be emitted as maximal RLE, writing it costs Ω(R_new). The identity case can reuse the entire old object.
+
+Let p count old adjacent run pairs that merge in A. Each nonempty insertion gap contributes its own maximal run count t_g of inserted IDs. These IDs occur nowhere in A. At an interior gap with equal A labels on the two sides there is one further boundary. Let e count those gaps. Then **R_new = R − p + Σ t_g + e**. For each gap strictly between old Z occurrences, p can charge at most t_g−1 interior transitions between distinct adjacent changed labels plus two contacts with old Z. A gap before the first or after the last old Z can have only one such contact. All p charges occur within one of those groups. Hence **R−k ≤ R_new ≤ R+2k**. The exhaustive record includes four-row examples attaining both coefficients at k=1. The stronger lower bound subtracts only the number of occupied interior old-Z gaps. This bounds storage and publication work even when the selected mass is much larger than k.
+
+| Quote horizon, ten blocks | Selected old rows | Additional rows after identification | Selected non-Z input runs | Original runs | Quotient runs |
+|---:|---:|---:|---:|---:|---:|
+| 4 | 282,172 | 123,558 | 4,104 | 84,317 | 84,427 |
+| 8 | 288,648 | 130,034 | 5,562 | 84,317 | 84,995 |
+| 12 | 299,675 | 141,061 | 9,990 | 84,317 | 84,641 |
+
+The thirty real cases checked every quotient edge against independent dense graph identification and every output byte against the original marked orbit through the unchanged Rust second decoder. The small suite covered 10,170 weighted objects, 75,495 quotient arcs and 93,903 byte marks, including 2,898 identity configurations. Its graph oracle uses arbitrary finite stable columns, including multiple cycles. On the real primary marks the extra scan for a mark inside a selected suffix was never needed. The synthetic suite explicitly exercises that transfer. The native benchmark separately charges first construction, quotient publication, second traversal, output and peak memory. [All real structural terms](wikidata.csv) · [Adversarial witnesses](small.json) · [Native experiment](native/)
+
+```bash
+d=research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/marker-insert/quotient
+python3 "$d/quotient.py" /tmp/astra-token-all/libtoken.so | diff - "$d/small.json"
+python3 "$d/quotient.py" /tmp/astra-token-all/libtoken.so research/astra-e/dense/target/wikidata | diff - "$d/wikidata.csv"
+```

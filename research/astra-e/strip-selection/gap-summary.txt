@@ -1,0 +1,3 @@
+split blocks nodes gap_nodes observed_node_saving upper_gap_saving upper_all_fraction candidate_pairs same_candidate_pairs
+train 93 738431 425791 4269 6727 0.00910986 4391 3884
+held 140 1064543 622162 6985 11619 0.01091454 7816 6775

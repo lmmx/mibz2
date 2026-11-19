@@ -1,0 +1,24 @@
+both_four start=000000000002e560 size=17001 kernel_sha256=13c693c1d5a51455baf4d4fd378bd5b81e8ce4aab20ec8a494b1c3a7b4ab68c8
+both_range start=000000000001e520 size=16587 kernel_sha256=d2cb4f2224a74777d56d97fe52f03378153f1bade4b9f5eaf90448942ca5f137
+both_single start=0000000000026550 size=16545 kernel_sha256=e5a38a55e83393844515eef12de0ce5d276d9fb89bbf57c0049c6793b53b2c0e
+edge_four start=00000000000327d0 size=16683 kernel_sha256=5ade4b974f2b008b4bca79856a4a645802c8fc8ee6b5f80e73dd1b7b1ce23460
+edge_range start=00000000000225f0 size=16223 kernel_sha256=3a7aef7c95f3a43bc20807fd6af9c2b06bd0d57c04eeade2ff28a74fc9211ef2
+edge_single start=000000000002a600 size=16209 kernel_sha256=f1311118b2870458da854431487120893fe5083f8f49044fbee67fadb18c8575
+worker cda7633a00fe6ed9c00d4b58c6fa6d1effeff23937e133d19702ded3ca486461
+original 74dfb158ddc2f9db4c756be6edb1a86472a18157237fa0238cf603a8e69b54eb
+support library 3d04e40ffa7b5a8f6212ec2e473ada22f47e984ec10385e8005496995364c9d5
+actual scorer info {"candidate":"/workspace/work/astra-e-dose-77a3f8c/research/astra-e/edge-budget/candidate.rs","candidate_type":"moonshot::candidate::Candidate","arms":["lazy", "cells", "open", "opend", "candidate"],"cpus":1}
+worker.py 900fa4a3ba0903fd172101b518c123374f78656949fdf20fa0a9121458a6c363
+capture.py 8189713704b2ff38a67618cfb13eef7ccda4df9681fff70fa6bdec666e8d4394
+probe.rs 8995e893ab0aeba03e7b2b7afec4bc02a5492988485e1547ca8eaf1593bc2724
+probe.s 4a149631ea5f70c1207bc365b56e55bd17581508c785720a560583f73023cca2
+capacity.rs ef297f74054c7d0d9038cea1c250869a2df02dcdd1f2a94c8304aabf6e025d24
+compressed full disassembly 15f6c052440891e0f2f37e8688a4dc8d32575d662f362a79ae3ecf0683aef593
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+GNU objdump (GNU Binutils for Debian) 2.44

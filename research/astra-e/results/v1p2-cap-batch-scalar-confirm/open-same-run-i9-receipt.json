@@ -1,0 +1,68 @@
+{
+  "open_same_run_scalar_i9_run": {
+    "id": "run-20261119T083507Z",
+    "arm": "candidate",
+    "evidence_commit": "f71f153baaae2d28f0a61acc25a2129612eac9cc",
+    "artifact": "research/astra-e/workstation/open-same-run/measured.tar.gz",
+    "artifact_sha256": "083288e4788798e784c39e5a47f95405f1c94b384485fe4c46aaa575c471c30c",
+    "recipe_commit": "9f867e69e5e7fe33aaae569af94a447eb38cbe26",
+    "selected": "research/astra-e/front-fusion/cap-batch/worker/candidate.rs",
+    "candidate_source_sha256": "6d30fdc7bf7a66b061cfd7842ab5f1327c2f35deb7dae66ad0b8c690f498027c",
+    "machine": "Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz",
+    "scorer_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+    "printed_scorer_version": "scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+    "head": "d0a42980e896211906234c7679b38760ae44a46e",
+    "candidate_over_reference": {
+      "master LazyCells": {
+        "7": {
+          "n": 16,
+          "geomean": 0.8744649237054518,
+          "lo": 0.8706466114042366,
+          "hi": 0.878299981616928,
+          "peak_rss_ratio": 0.6952583064452096,
+          "peak_rss_geomean": 0.6976080166989603,
+          "peak_rss_lo": 0.6820011912160289,
+          "peak_rss_hi": 0.7135719867218014,
+          "arm_max_kib": 194396,
+          "reference_max_kib": 298256
+        },
+        "8": {
+          "n": 16,
+          "geomean": 0.8805964540578876,
+          "lo": 0.8718167848737768,
+          "hi": 0.8894645392857357,
+          "peak_rss_ratio": 0.6640093801993947,
+          "peak_rss_geomean": 0.6677807366001525,
+          "peak_rss_lo": 0.649240526715877,
+          "peak_rss_hi": 0.6868503949221153,
+          "arm_max_kib": 204440,
+          "reference_max_kib": 338460
+        },
+        "9": {
+          "n": 16,
+          "geomean": 0.8752940703964697,
+          "lo": 0.8658511396708796,
+          "hi": 0.8848399852686444,
+          "peak_rss_ratio": 0.6510080019849885,
+          "peak_rss_geomean": 0.6531865728732374,
+          "peak_rss_lo": 0.6405280747961077,
+          "peak_rss_hi": 0.6660952357438771,
+          "arm_max_kib": 213616,
+          "reference_max_kib": 339676
+        },
+        "10": {
+          "n": 16,
+          "geomean": 0.8766905320962273,
+          "lo": 0.8606176004136542,
+          "hi": 0.8930636425489632,
+          "peak_rss_ratio": 0.6555449919577138,
+          "peak_rss_geomean": 0.6624046417296784,
+          "peak_rss_lo": 0.648258194083614,
+          "peak_rss_hi": 0.6768597965896727,
+          "arm_max_kib": 221564,
+          "reference_max_kib": 357164
+        }
+      }
+    }
+  }
+}

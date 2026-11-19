@@ -1,0 +1,22 @@
+wall_ns direct/opend 1.21044 [0.96278, 1.52180]
+cpu_ns direct/opend 1.07301 [1.01501, 1.13433]
+direct sum of per-input median milliseconds
+construction_ns 11.5707
+book_ns 0.4694
+walk_ns 9.4350
+unrle_ns 0.0000
+crc_ns 0.4280
+cpu_ns 22.2184
+opend sum of per-input median milliseconds
+construction_ns 0.0000
+book_ns 0.0000
+walk_ns 19.7676
+unrle_ns 0.8741
+crc_ns 0.3703
+cpu_ns 21.1566
+streamed bytes validated 205191352
+action_count frozen 1326 max 3635
+action_bytes frozen 20 max 20
+cache_bytes frozen 25 max 6567
+cache_capacity frozen 32 max 8192
+action_capacity frozen 40960 max 81920

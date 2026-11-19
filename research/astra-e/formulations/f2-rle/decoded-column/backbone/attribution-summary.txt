@@ -1,0 +1,18 @@
+arm 0 medians of nine-block CPU sums in microseconds
+complete_cpu 34441.46
+nav 0.0
+hazards 0.0
+reorder 0.0
+scatter 0.0
+geometry 0.0
+copy 0.0
+rle 1232.25
+arm 1 medians of nine-block CPU sums in microseconds
+complete_cpu 54106.81
+nav 5946.64
+hazards 417.74
+reorder 7629.8
+scatter 4627.69
+geometry 18587.46
+copy 12852.95
+rle 0.0

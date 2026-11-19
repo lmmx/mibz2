@@ -1,0 +1,31 @@
+3b206c27aeb5b026bdd0e1857e8b9d3daf558277
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+fb0b0bc236550eb3fb1811983bb422d398fdf18a8eb8256ae09d5aae68f6af65  /workspace/work/astra-edge-spellings/libmibz2.rlib
+9195dc5b870bbf620af4e74a369b3b2b52e1ff454e514e1b265b61eeaeabad1b  /workspace/work/astra-edge-spellings/words.bin
+6c3fa3f1bed81ee913929f9a6c670806bb9a294685e909cedea95609044945c3  /workspace/work/astra-edge-spellings/dump
+0e178321baf421c5a2390eef319d75cc022efb94224ab843d9acebf29b4336ec  /workspace/work/astra-edge-spellings/price
+a79426e5dff0f62965916ec5a861c7174ff2193d57a823d8993f0c481846d1bf  research/astra-e/edge-spellings/words.bin.xz
+dcc255e8aec37dce0f870674d01f2ff1fb32d31255c357153c26a7f249bc525e  research/astra-e/edge-spellings/price.rs
+24de2876adc1b8962b6831b2e326e08d8b3af4e0285c4236a87c4e6f4fd16ea2  research/astra-e/edge-spellings/price.py
+7d45214f46cc3c845d0099cdf7b9ba26b2ba0763db32ad55482fa2972823d732  research/astra-e/edge-spellings/byte_alias.py
+38b266434d0d008beadd053617fbddd9d21daf351c407050f4893954d5a008e6  research/astra-e/edge-spellings/byte_alias.inc.rs
+7850ba171beeead8f1523dd9bb4cb7a2c7d7e26e11aa621746efc8cea0776b0d  research/astra-e/edge-spellings/handle_alias.py
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf  /workspace/work/astra-budget-local/oracle
+400000 100000
+2048K
+PSR  NI %CPU COMMAND
+  2   0  200 ps
+  1  16  100 rustc
+  2   0  7.8 codex-linux-san
+  4   0  4.5 codex
+  0   0  1.1 containerd
+  1  16  1.0 python3
+  0   0  0.9 codex
+  2   0  0.7 codex-linux-san

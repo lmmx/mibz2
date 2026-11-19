@@ -1,0 +1,74 @@
+{
+  "binary_sha256": null,
+  "counts": {
+    "columns_with_multiple_cycles": 108,
+    "components": 9553,
+    "direct_checked_sections": 4908,
+    "disjoint_marks": 7524,
+    "distinct_last_columns": 153,
+    "empty_sections": 153,
+    "first_return_hits": 16314,
+    "fragmented_sections": 3327,
+    "marked_hits": 26193,
+    "marked_tests": 33717,
+    "nondividing_period_hits": 8726,
+    "repeated_tagged_bucket": 1866,
+    "same_word_multiple_colors": 1241,
+    "section_tests": 5848,
+    "sections_on_cyclic_column": 1658,
+    "tagged_buckets": 13388,
+    "untagged_words": 12065
+  },
+  "coverage": {
+    "all_binary_cyclic_texts_through_n": 7,
+    "all_primary_indices_tested": true,
+    "exhaustive_arbitrary_binary_last_columns_and_sections_through_n": 6,
+    "structured_marker_lengths": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "targeted_texts_hex": [
+      "62616e616e61",
+      "6d69737369737369707069",
+      "6162616261",
+      "61616161",
+      "00ff8000ff11"
+    ]
+  },
+  "direct_outside_structured_domain": {
+    "direct.py:74 assert row+width <= self.components[i][1]": 479,
+    "direct.py:76 assert i+1 == len(self.starts) or row+width <= self.starts[i+1]": 461
+  },
+  "mode": "dense and Direct oracles only",
+  "native_checks": [],
+  "ordered_datasets_sha256": "0a0aa5bcf8160885ce6bc8ea99db9a26db4015a9075f9281939d74378d9e4a84",
+  "section_labels": {
+    "arbitrary_exhaustive": 5460,
+    "overlapping_parent_occurrences": 611,
+    "selected_return_types": 1098,
+    "targeted_cut": 755,
+    "whole_marker_cylinder": 1011
+  },
+  "witnesses": {
+    "direct.py:74 assert row+width <= self.components[i][1]": {
+      "last_hex": "010100",
+      "section": [
+        [
+          0,
+          2
+        ]
+      ]
+    },
+    "direct.py:76 assert i+1 == len(self.starts) or row+width <= self.starts[i+1]": {
+      "last_hex": "010000",
+      "section": [
+        [
+          1,
+          3
+        ]
+      ]
+    }
+  }
+}

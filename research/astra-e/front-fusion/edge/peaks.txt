@@ -1,0 +1,9 @@
+arm 0: 431 real CRCs, 209700196 bytes, 0 direct completions; VmHWM:	   20048 kB
+arm 1: 431 real CRCs, 209700196 bytes, 233 direct completions; VmHWM:	   19628 kB
+arm 2: 431 real CRCs, 209700196 bytes, 233 direct completions; VmHWM:	   19676 kB
+arm 1: 431 real CRCs, 209700196 bytes, 233 direct completions; VmHWM:	   19680 kB
+arm 2: 431 real CRCs, 209700196 bytes, 233 direct completions; VmHWM:	   19628 kB
+arm 0: 431 real CRCs, 209700196 bytes, 0 direct completions; VmHWM:	   20060 kB
+arm 2: 431 real CRCs, 209700196 bytes, 233 direct completions; VmHWM:	   19668 kB
+arm 0: 431 real CRCs, 209700196 bytes, 0 direct completions; VmHWM:	   20044 kB
+arm 1: 431 real CRCs, 209700196 bytes, 233 direct completions; VmHWM:	   19688 kB

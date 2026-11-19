@@ -1,0 +1,60 @@
+{
+  "start": "2026-11-19T05:36:37.328406+00:00",
+  "plan": "15851f3fabb55d487bfa73ec6c50f2c65a65cf73",
+  "fetched_master": "3df195b10e9fb6f86f0c06ad9fad1feb992406d5",
+  "scorer_path": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "scorer_version": "v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+  "files": {
+    "bench/moonshot/moonshot.py": "db78f811fe11c60874562452a8d42a5cc2fcdd8c77a4e171db15254abc584a42",
+    "bench/moonshot/chaingrind/chaingrind.c": "12b07d73550a3e53d7fa5f686831a2e3a5b76f2fd29083880ffbf06402e4937c",
+    "bench/moonshot/chaingrind/build.sh": "03775be21938a1349d841e12ab83b7eaec6e63ab44b0d859b600980b9695d853",
+    "bench/moonshot/calibration.json": "0623e13c5a008f678055b9170eeb9648c41dd19f145a05e5abcc514fa3aa1c21",
+    "bench/moonshot/src/main.rs": "5b1952d302e619aea168a8371d149ca051f9cfea6189e7a70bfc3f5cafb52da6",
+    "bench/moonshot/src/check.rs": "03545e457bc904e9ac4479212bcabe85baac843ab1431128ec4bf35710687563"
+  },
+  "tools": {
+    "valgrind": "4652774bd116cb49951ef74115ad4237cad5021b2bd4d80002f09d986ec438b9",
+    "valgrind.bin": "333955eab1162f0b5031e7f238e0aece3ee5c6e1ea00f1b93cdb52baa3242179",
+    "chaingrind-amd64-linux": "2549501a58551de0d8ab10d22f164c32a6c5284c5aa55e01eddf182189911f38",
+    "vgpreload_core-amd64-linux.so": "065bd6808a42f8011c01fc7714c0bf025ebf209f652b5269e0a0d76fb92ce20f"
+  },
+  "samples": {
+    "1": {
+      "measured_single_sha256": "1e6dbb700bb47dd598c2df529947a9926c7402f5d57ce34fb58f5c99e2dcd9f9",
+      "two_record_sha256": "4494c243198cd4d82fc5843e77af4fc0e3be9c86992b3f58ba5ad43c176b565f",
+      "bytes": 359484
+    },
+    "85": {
+      "measured_single_sha256": "4786774f8d042a917ee58ab017c1515bb60898594b71d00fcc39eec22f7dae21",
+      "two_record_sha256": "3b6ba01c4917779d3124095ca38f51fc84261a05cda497f703ebf1fdd61728c1",
+      "bytes": 383932
+    },
+    "165": {
+      "measured_single_sha256": "6ae26ffcaa7591726d6029a45b4a56178517438a39bf08bbf28925094aac93d7",
+      "two_record_sha256": "77088c19c767b5db767d12f79159eb9f67df34b3e0aacbc437c35df37a73412e",
+      "bytes": 578820
+    }
+  },
+  "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+  "cpu": 4,
+  "nice": 15,
+  "arms": {
+    "control": {
+      "executable": "/workspace/work/astra-two-seed/control-target/release/moonshot",
+      "binary_sha256": "3c0658868cd865c48cf83944f5f359cf596ff1fb1738e7ec23b04b137a547877",
+      "entry": "/workspace/work/astra-two-seed-gate/research/astra-e/two-seed/control.rs",
+      "entry_sha256": "a7901c24f6b20e05f67255e95fd654998f9decc25ba9810e33e5e9db2332ed36",
+      "source_checkout": "c0e0e657e1e9628a7b80c33f4584819d1b169893",
+      "gate_sha256": "2bcc4899b9a53459d0614c61600edd06d98f8b5043a01d4578091c5c890242d8"
+    },
+    "candidate": {
+      "executable": "/workspace/work/astra-two-seed/candidate-target/release/moonshot",
+      "binary_sha256": "2eb12b39f1795f975c5dc1a6dd8edbc8958705f2ddc1bc2cd51829bea7d6235e",
+      "entry": "/workspace/work/astra-two-seed-gate/research/astra-e/two-seed/candidate.rs",
+      "entry_sha256": "0d57245905a2784aebae4dab69fa1bff6452c3eab8b8a80efde62df308854044",
+      "source_checkout": "c0e0e657e1e9628a7b80c33f4584819d1b169893",
+      "gate_sha256": "2bcc4899b9a53459d0614c61600edd06d98f8b5043a01d4578091c5c890242d8"
+    }
+  },
+  "finish": "2026-11-19T05:37:10.375365+00:00"
+}

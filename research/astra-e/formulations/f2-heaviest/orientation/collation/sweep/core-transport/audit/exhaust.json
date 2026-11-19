@@ -1,0 +1,112 @@
+{
+  "counts": {
+    "intervals": 14846,
+    "nondividing_mark_section_pairs": 51144,
+    "tied_itinerary_mark_section_pairs": 29754,
+    "rows": 110090,
+    "whole_interval_probes": 217766,
+    "present_words": 56114,
+    "absent_probes": 161652,
+    "all_mask_heaviest_checks_through_n5": 18356,
+    "marked_outputs": 481288,
+    "all_occurrence_assignments": 63462,
+    "typewise_assignments": 58750,
+    "disjoint_rows": 28982,
+    "varying_split_assignments": 3360,
+    "varying_band_gt_full_runs": 2012
+  },
+  "witnesses": {
+    "minimum_nonconvex": {
+      "n": 3,
+      "L": [
+        0,
+        0,
+        0
+      ],
+      "U": [
+        0,
+        2
+      ],
+      "psi": [
+        0,
+        1,
+        2
+      ],
+      "core": "00",
+      "members": [
+        0,
+        2
+      ],
+      "all_rows": [
+        "00",
+        null,
+        "00"
+      ]
+    },
+    "minimum_nonconvex_one_cycle": {
+      "n": 4,
+      "L": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "U": [
+        1,
+        3
+      ],
+      "psi": [
+        1,
+        2,
+        3,
+        0
+      ],
+      "core": "00",
+      "members": [
+        0,
+        2
+      ],
+      "all_rows": [
+        "00",
+        "0000",
+        "00",
+        "0100"
+      ]
+    },
+    "minimum_occurrence_varying_overpartition": {
+      "n": 4,
+      "L": [
+        1,
+        1,
+        0,
+        0
+      ],
+      "U": [
+        0,
+        2
+      ],
+      "psi": [
+        2,
+        3,
+        0,
+        1
+      ],
+      "cuts": [
+        0,
+        1
+      ],
+      "words": [
+        "0001",
+        "0001"
+      ],
+      "dest": [
+        0,
+        1
+      ],
+      "atlas_bands": 2,
+      "full_runs": 1,
+      "core_runs": 2,
+      "intersections": 2
+    }
+  }
+}

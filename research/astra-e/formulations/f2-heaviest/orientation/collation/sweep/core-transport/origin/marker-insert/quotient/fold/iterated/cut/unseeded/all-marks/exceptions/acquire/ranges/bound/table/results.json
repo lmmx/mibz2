@@ -1,0 +1,52 @@
+[
+  {
+    "k": 1,
+    "states": 2,
+    "pairs": 1,
+    "feedback_tables": 2,
+    "single_cycle_tables": 1,
+    "switched_tables_checked": 1,
+    "minimum_changed_primary_lap": 1,
+    "maximum_changed_primary_lap": 1
+  },
+  {
+    "k": 2,
+    "states": 4,
+    "pairs": 2,
+    "feedback_tables": 4,
+    "single_cycle_tables": 1,
+    "switched_tables_checked": 2,
+    "minimum_changed_primary_lap": 1,
+    "maximum_changed_primary_lap": 3
+  },
+  {
+    "k": 3,
+    "states": 8,
+    "pairs": 4,
+    "feedback_tables": 16,
+    "single_cycle_tables": 2,
+    "switched_tables_checked": 8,
+    "minimum_changed_primary_lap": 1,
+    "maximum_changed_primary_lap": 7
+  },
+  {
+    "k": 4,
+    "states": 16,
+    "pairs": 8,
+    "feedback_tables": 256,
+    "single_cycle_tables": 16,
+    "switched_tables_checked": 128,
+    "minimum_changed_primary_lap": 1,
+    "maximum_changed_primary_lap": 15
+  },
+  {
+    "k": 5,
+    "states": 32,
+    "pairs": 16,
+    "feedback_tables": 65536,
+    "single_cycle_tables": 2048,
+    "switched_tables_checked": 32768,
+    "minimum_changed_primary_lap": 1,
+    "maximum_changed_primary_lap": 31
+  }
+]

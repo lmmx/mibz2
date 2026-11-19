@@ -1,0 +1,53 @@
+{
+  "counts": {
+    "objects": 10170,
+    "old_arcs": 57087,
+    "quotient_arcs": 75495,
+    "identity": 2898,
+    "checked_byte_marks": 93903
+  },
+  "witnesses": {
+    "upper": {
+      "last": [
+        0,
+        0,
+        2,
+        1
+      ],
+      "order": [
+        2,
+        1,
+        0
+      ],
+      "selected": [
+        0,
+        1
+      ],
+      "zero": 1,
+      "old_R": 3,
+      "new_R": 5,
+      "changed_input_runs": 1
+    },
+    "lower": {
+      "last": [
+        0,
+        1,
+        0,
+        2
+      ],
+      "order": [
+        2,
+        1,
+        0
+      ],
+      "selected": [
+        0,
+        1
+      ],
+      "zero": 0,
+      "old_R": 4,
+      "new_R": 3,
+      "changed_input_runs": 1
+    }
+  }
+}

@@ -1,0 +1,17 @@
+0bebdcfece931da18ddcd431f47e236883a1fa0a
+f8061b3c6e13047a787bc2169277389ed7b1b897
+scorer path revision 604dac3
+2ac8ed792046b6e92ac465192c29eac54c586eca2c359b8e91b599fae53068c5  research/astra-e/formulations/f2-rootstream/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1-rootstream-gate research/astra-e/formulations/f2-rootstream/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2count-check

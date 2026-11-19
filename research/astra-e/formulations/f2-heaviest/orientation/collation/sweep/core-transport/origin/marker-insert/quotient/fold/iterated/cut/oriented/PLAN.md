@@ -1,0 +1,5 @@
+# Orient the same cut to reduce construction
+
+The number of deleted rows does not depend on which side becomes delimiters. Test whether a frequency-one marker allows both orientations in every pass, including when its own row is absorbed. If the marked row is removed track the unique selected predecessor class and add its positive old word length to the byte offset. Predict both oriented refined alphabet and incoming run counts exactly from transition support and source-bucket boundaries. Choose the orientation that minimizes (refined IDs, refined runs, number of joins), retaining the ordinary chooser on ties. This order is a structural criterion.
+
+Use every mark and intra-word offset on arbitrary tiny columns and both orientations. For complete multi-pass tests, use the existing quarter gate and power normalizer. Check final spelled bytes on ten real original byte columns against independently recovered libbzip2 blocks including RLE1 and header CRC. Compare complete per-depth row, run, alias, join and normalized costs to the old schedule. Keep any larger downstream cost even when immediate construction is smaller.

@@ -1,0 +1,3 @@
+case,kernels,wide_blocks,narrow_blocks,odd_narrow,eob_max,output_bytes,outcome
+wikidata.bz2,scalar,0,431,221,103,209700196,ok
+wikidata.bz2,detected,0,431,221,103,209700196,ok

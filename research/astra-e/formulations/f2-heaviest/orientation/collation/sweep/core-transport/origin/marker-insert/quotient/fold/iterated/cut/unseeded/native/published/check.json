@@ -1,0 +1,31 @@
+{
+  "binaries": {
+    "run": "e991ae2c23a58711e5b8eab619c2e64f5d2b47ad8df36d7efa8a991997bb33d5",
+    "audit": "f7d5c584ef9894424800e8d4040b07dab55e636cc67601b2895f4ea1c2542082"
+  },
+  "small": {
+    "marked_cases": 66712,
+    "arms": 3,
+    "through_rows": 8,
+    "shared_fixed": 16618,
+    "ordinary_moves": 55362,
+    "power_passes": 21772,
+    "power_queries": 28629,
+    "power_hops": 9408,
+    "nondividing_horizons": 33996,
+    "additional_large_marks": 15
+  },
+  "tapes": 10,
+  "paid_native_output_hashes": 30,
+  "audited_native_output_hashes": 30,
+  "matched_ordinary_steps": 250,
+  "audited_objects": [
+    "source bases",
+    "marked raw run and LF ordinal",
+    "complete old RLE",
+    "per-source word IDs",
+    "complete grammar DAG",
+    "mark ordinal",
+    "byte offset"
+  ]
+}

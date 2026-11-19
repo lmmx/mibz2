@@ -1,0 +1,15 @@
+{
+  "reps": 400,
+  "seed": 1,
+  "dense_copies_to_draw_count": {
+    "0": 177,
+    "1": 123,
+    "2": 70,
+    "3": 23,
+    "4": 5,
+    "5": 1,
+    "6": 1
+  },
+  "probability_dense_absent_independent_uniform_full_draws": 0.3640137484848344,
+  "exactly_unit_edge_over_control_replicates_from_absent_block": 177
+}

@@ -1,0 +1,33 @@
+{
+  "ordinal": 0,
+  "tape_sha256": "540f2d64a6cd2e6e4774583a31ce060263fc8257219f17e0b97171b77332a83b",
+  "sec": [
+    21229,
+    45394
+  ],
+  "words": 2950,
+  "original_Q": 100644,
+  "cap8": {
+    "Q": 78084,
+    "F": 7583,
+    "B": 1715,
+    "cores": 2726,
+    "core_bytes": 118088,
+    "reached_states": 1583,
+    "in_packets": 5869
+  },
+  "cap16": {
+    "Q": 60890,
+    "F": 28756,
+    "B": 3398,
+    "cores": 2102,
+    "core_bytes": 91383,
+    "reached_states": 10755,
+    "in_packets": 25359
+  },
+  "goals": 5198,
+  "variables": 10755,
+  "mark": 264045,
+  "selector_pops": 4,
+  "selector_pieces": 5243
+}

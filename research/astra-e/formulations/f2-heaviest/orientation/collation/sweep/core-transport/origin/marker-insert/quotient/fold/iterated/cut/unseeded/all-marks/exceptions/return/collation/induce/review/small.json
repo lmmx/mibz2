@@ -1,0 +1,191 @@
+{
+  "counts": {
+    "sections_layouts": 33840,
+    "physical_marked_outputs": 92145,
+    "tail_steps": 79267,
+    "partial_steps": 1886,
+    "hitting_lower_bound": 52021,
+    "sections": 6768
+  },
+  "versus_stable": {
+    "stable": {
+      "equal": 6768
+    },
+    "reverse_spans": {
+      "equal": 6710,
+      "fewer": 58
+    },
+    "long_first": {
+      "equal": 6750,
+      "fewer": 18
+    },
+    "short_first": {
+      "equal": 6739,
+      "fewer": 29
+    },
+    "reflected": {
+      "equal": 6708,
+      "more": 30,
+      "fewer": 30
+    }
+  },
+  "witnesses": {
+    "reflectedmore": {
+      "last": [
+        1,
+        1,
+        0,
+        0
+      ],
+      "V": [
+        0
+      ],
+      "stable": [
+        2,
+        2,
+        0,
+        2,
+        1,
+        1
+      ],
+      "alternate": [
+        3,
+        2,
+        0,
+        4,
+        1,
+        0
+      ]
+    },
+    "reverse_spansfewer": {
+      "last": [
+        1,
+        1,
+        0,
+        0
+      ],
+      "V": [
+        2
+      ],
+      "stable": [
+        3,
+        2,
+        1,
+        4,
+        1,
+        0
+      ],
+      "alternate": [
+        2,
+        2,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    "short_firstfewer": {
+      "last": [
+        1,
+        1,
+        0,
+        0
+      ],
+      "V": [
+        2
+      ],
+      "stable": [
+        3,
+        2,
+        1,
+        4,
+        1,
+        0
+      ],
+      "alternate": [
+        2,
+        2,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    "reflectedfewer": {
+      "last": [
+        1,
+        1,
+        0,
+        0
+      ],
+      "V": [
+        3
+      ],
+      "stable": [
+        3,
+        2,
+        0,
+        4,
+        1,
+        0
+      ],
+      "alternate": [
+        2,
+        2,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    "long_firstfewer": {
+      "last": [
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "V": [
+        1
+      ],
+      "stable": [
+        4,
+        2,
+        0,
+        5,
+        1,
+        0
+      ],
+      "alternate": [
+        3,
+        2,
+        0,
+        3,
+        1,
+        1
+      ]
+    }
+  },
+  "partial": {
+    "last": [
+      0,
+      0
+    ],
+    "V": [
+      0
+    ],
+    "order": [
+      0,
+      1
+    ],
+    "metrics": [
+      1,
+      1,
+      0,
+      1,
+      1,
+      1
+    ]
+  }
+}

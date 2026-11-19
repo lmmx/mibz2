@@ -1,0 +1,3 @@
+# Cross-built release anchors
+
+Freeze this separate screening round before running its first sample. Use twelve forward/reverse rotations of the three arms (each arm four times in each position per W), W1/W4, four slots per worker, canonical Wikidata repeated twice and the official scorer’s two-second settle. Route LazyCells and opend to the independent stock-scanner executable and the candidate to the scalar worker with singletiny scanner. Revalidate both stock reference arms against libbzip2 with their real compiled binary. Preserve median, maximum and paired peak RSS, CPU and wall ratios with each true reference. These are screen measurements; the separate 32-pair direct comparison against scalar on stock remains primary.

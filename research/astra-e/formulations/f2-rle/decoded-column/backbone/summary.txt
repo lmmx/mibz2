@@ -1,0 +1,15 @@
+outcomes Counter({'0': 224, '2': 3, '1': 1})
+events sum 10195 frozen 34 largest 277
+ranks sum 85222 frozen 838 largest 7870
+explicit sum 61812 frozen 298 largest 7867
+holes sum 66848 frozen 229 largest 8141
+retained high water opend 7910380
+retained high water ahead 7558316
+retained high water combo 6730182
+retained high water update 10779008
+wall_ns update/opend 1.0665 0.6746 1.6862
+wall_ns update/ahead 1.4175 0.8374 2.3994
+wall_ns update/combo 1.9809 1.3098 2.996
+cpu_ns update/opend 0.9605 0.6343 1.4544
+cpu_ns update/ahead 1.2452 0.7319 2.1184
+cpu_ns update/combo 1.7678 1.2101 2.5825

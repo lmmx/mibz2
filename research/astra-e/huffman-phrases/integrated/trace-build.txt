@@ -1,0 +1,33 @@
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.11.2
+   Compiling pkg-config v0.3.34
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-huff-integrated-trace/stock/bench/moonshot)
+   Compiling bzip2 v0.4.4
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-huff-integrated-trace/stock)
+    Finished `release` profile [optimized + debuginfo] target(s) in 1m 04s
+frozen scanner df6ad1d33b301fa8b6b593cff6a5e965cd9e9dcbf30edb5eabb57238869ef171
+integrated block.rs 3f6b17647790aeb320ed2fc3a540230db5ff9ce0ca0caa309491b13d6d32da65
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.11.2
+   Compiling pkg-config v0.3.34
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-huff-integrated-trace/phrase/bench/moonshot)
+   Compiling bzip2 v0.4.4
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-huff-integrated-trace/phrase)
+warning: variable does not need to be mutable
+   --> /workspace/work/astra-huff-integrated-trace/phrase/src/block.rs:214:5
+    |
+214 |     mut syms: Vec<u16>,
+    |     ----^^^^
+    |     |
+    |     help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `mibz2` (lib) generated 1 warning (run `cargo fix --lib -p mibz2` to apply 1 suggestion)
+    Finished `release` profile [optimized + debuginfo] target(s) in 49.10s

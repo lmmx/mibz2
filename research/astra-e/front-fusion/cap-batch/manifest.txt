@@ -1,0 +1,22 @@
+d0a42980e896211906234c7679b38760ae44a46e
+80d8409359214b4e5abfd4430213921e82e9cd30
+badb2aec3624bd65606c429b2e6f79e9d9d0050f
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+b8dfcf46ab232424450f23ec7957f5dadd92caed6da1972e0ae380b06969bac5  research/astra-e/front-fusion/cap-batch/main.rs
+e5ff66149c70999eb30243e847ebda3aa46feb37135433748f489b5c18efcec4  research/astra-e/front-fusion/cap-batch/prepare.py
+f56f59a2ed631d750f4da5d347a5bac61e683c28296aa83cd7f6a26705c28b13  research/astra-e/front-fusion/cap-batch/grouped.rs
+a1862b84642299ff5b315596021b00cd62ffaac77e4f27d2fc440439dda713c0  research/astra-e/front-fusion/cap-batch/phase.py
+8f7f0c5765e65a816facd4b62b6780fa4d788270896b7ea95891bc33527b0b7e  research/astra-e/front-fusion/cap-batch/phase_summary.py
+c0ccf8939b8cdf02ac4c8157c588d980afa378805fcb37498ca3cda0ccbc6d4f  research/astra-e/narrow-short/constructor_ahead.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+27e15cad2634f1f26fe8ad95500112a7508dfddaf63ebcf179d1817bfdb5d450  /workspace/work/astra-cap-batch-native
+14ab12e4ac56f5232a0a3b010537bc50e9d1e740e0928df80098d76da6aa5151  /workspace/work/astra-cap-batch-stage-native
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C

@@ -1,0 +1,14 @@
+moonshot: building the harness with /workspace/work/astra-e-dose-77a3f8c/research/astra-e/worker-dose/candidate.rs
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e-dose-77a3f8c/bench/moonshot)
+   Compiling cc v1.11.2
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-e-dose-77a3f8c)
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling bzip2 v0.4.4
+    Finished `release` profile [optimized + debuginfo] target(s) in 37.25s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-e-dose-77a3f8c/corpora/wikidata.bz2
+moonshot: written to research/astra-e/results/v1p2-dose-gate/score
+moonshot: recorded in research/astra-e/results/v1p2-dose-gate/official-register.jsonl

@@ -1,0 +1,17 @@
+97ab8ad0b9744cf8a008ef9642e9049dc4e0b350
+3df195b10e9fb6f86f0c06ad9fad1feb992406d5
+scorer path revision 75297a1
+ba5292601b5c6196e0f12c437a29ffb4886fae750ce9c0182fb3ada714f2106b  research/astra-e/front-fusion/cap-counter/both.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1p2-cap-counter-confirm research/astra-e/front-fusion/cap-counter/both.rs --workers 1\,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --corpus corpora/wikidata.bz2 --target-dir /workspace/work/astra-cap-counter-official

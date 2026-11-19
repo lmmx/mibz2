@@ -1,0 +1,12 @@
+large density admissions 228 bytes 205197794
+outcomes {'0': 161, '2': 66, '1': 1}
+navigation capacity frozen 33376 maximum 73808
+wall_ns paired 1.08 0.8777 1.329
+wall_ns sparse 27.16874 ms opend 26.82899 ms
+cpu_ns paired 1.039 0.9997 1.0799
+cpu_ns sparse 22.76665 ms opend 22.29470 ms
+constructor_ns sparse 12.48338 ms opend 0.00000 ms
+navigation_ns sparse 0.41930 ms opend 0.00000 ms
+owner_ns sparse 0.15790 ms opend 0.00000 ms
+unrle_ns sparse 0.00973 ms opend 0.93123 ms
+crc_ns sparse 0.49627 ms opend 0.47884 ms

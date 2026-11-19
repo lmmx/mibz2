@@ -1,0 +1,32 @@
+{
+  "1": {
+    "rounds": 9,
+    "candidate": {
+      "n": 9,
+      "geomean": 0.9861674477269682,
+      "lo": 0.8211636115708056,
+      "hi": 1.1843269979973603,
+      "verdict": "INCONCLUSIVE",
+      "speedup": 1.0140265756134161,
+      "peak_rss_ratio": 0.9303047550059502,
+      "wall_s": 1.566385
+    },
+    "lazy_wall_s": 1.424517,
+    "lazy_peak_rss_kb": 77308
+  },
+  "4": {
+    "rounds": 9,
+    "candidate": {
+      "n": 9,
+      "geomean": 0.9540897773166676,
+      "lo": 0.850977999811419,
+      "hi": 1.069695460260891,
+      "verdict": "INCONCLUSIVE",
+      "speedup": 1.0481193948146608,
+      "peak_rss_ratio": 0.8724955727629432,
+      "wall_s": 0.589002
+    },
+    "lazy_wall_s": 0.700684,
+    "lazy_peak_rss_kb": 115196
+  }
+}

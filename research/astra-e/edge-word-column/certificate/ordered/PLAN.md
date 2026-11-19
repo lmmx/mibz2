@@ -1,0 +1,9 @@
+# An ordered first cut directly from original edge queues
+
+Freeze the physical seeded XOR/gap color from the previous certificate. Compare the following exact schedules against the output of the original stock compact publisher on every actual root, including IDs, alias weights, mark, full ordered RLE and reconstructed bytes.
+
+* One suspended ancestral cursor per mixed inside source bucket. An occupied (target bucket, retained byte) identifies a contiguous Q slice whose certificate fragments provide old incoming ancestry. The original retained-byte order interleaves them. The outer suspended cursor uses gaps or the ancestral result.
+* A source-order construction. Each old x receives a final tag to attach to its outgoing old rank: an outside source contributes a gap alias or Skip, while an inside source contributes either its surviving ID or the joined alias of its incoming predecessor. Store these tags as runs within each original physical band. In a second pass stably read these lists in old byte-queue order, coalescing output and skipping delete. Charge exactly the stored runs and two low-byte passes. The final tags are not an old high-ID incoming column.
+* The purely Q-based alternative for observing the low byte at each old rank is a merge of sorted Q slices. Before deletion these slices cover a contiguous rank interval: the current minimum byte contributes through the next competing byte's minimum. Count actual low-byte runs and sparse slice state; distinguish from a two-pass raw-capped retained-byte iterator. Account for aliases, destination-order output, active ancestry, finite disjoint cycles and the hidden costs of per-ordinal bitmap directories. Use ordered start vectors and binary search instead.
+
+Start with the four-row seeded pair obstruction, exhaustive small valid columns, the frozen real table and the full 233. No native timing from a smaller proxy tally alone.

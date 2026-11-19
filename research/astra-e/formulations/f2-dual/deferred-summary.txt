@@ -1,0 +1,4 @@
+1 deferred prep_mark_ns=0.3457 ms discover_ns=2.8176 ms scatter_ns=0.0342 ms residual_output_ns=0.1464 ms total_ns=3.4029 ms vs_lazy=2.0277
+1 lazy prep_mark_ns=0.0000 ms discover_ns=0.0000 ms scatter_ns=0.0000 ms residual_output_ns=1.6782 ms total_ns=1.6782 ms vs_lazy=1.0000
+all-nine deferred prep_mark_ns=3.3471 ms discover_ns=29.1331 ms scatter_ns=0.3071 ms residual_output_ns=1.2530 ms total_ns=34.3304 ms vs_lazy=2.0959
+all-nine lazy prep_mark_ns=0.0000 ms discover_ns=0.0000 ms scatter_ns=0.0000 ms residual_output_ns=16.3799 ms total_ns=16.3799 ms vs_lazy=1.0000

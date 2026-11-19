@@ -1,0 +1,1 @@
+Both audited and timed ownership builds matched the complete independent dense-LF output for all 205197794 bytes from 228 production admissions. Every period, occurrence count and moved mark agreed with dense event control.

@@ -1,0 +1,9 @@
+layers=2 left=2 right=3 interior_length=16 cyclic_text_rows=160 edge_cover_bound=32 optimal=37 maximum_mass=53 ratio=1.43243
+layers=2 left=2 right=3 interior_length=64 cyclic_text_rows=544 edge_cover_bound=128 optimal=133 maximum_mass=197 ratio=1.48120
+layers=2 left=2 right=3 interior_length=256 cyclic_text_rows=2080 edge_cover_bound=512 optimal=517 maximum_mass=773 ratio=1.49516
+layers=3 left=6 right=11 interior_length=16 cyclic_text_rows=1872 edge_cover_bound=96 optimal=116 maximum_mass=200 ratio=1.72414
+layers=3 left=6 right=11 interior_length=64 cyclic_text_rows=5616 edge_cover_bound=384 optimal=404 maximum_mass=728 ratio=1.80198
+layers=3 left=6 right=11 interior_length=256 cyclic_text_rows=20592 edge_cover_bound=1536 optimal=1556 maximum_mass=2840 ratio=1.82519
+layers=4 left=12 right=25 interior_length=16 cyclic_text_rows=12480 edge_cover_bound=192 optimal=232 maximum_mass=451 ratio=1.94397
+layers=4 left=12 right=25 interior_length=64 cyclic_text_rows=35520 edge_cover_bound=768 optimal=808 maximum_mass=1651 ratio=2.04332
+layers=4 left=12 right=25 interior_length=256 cyclic_text_rows=127680 edge_cover_bound=3072 optimal=3112 maximum_mass=6451 ratio=2.07294

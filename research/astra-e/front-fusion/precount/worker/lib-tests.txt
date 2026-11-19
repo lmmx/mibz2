@@ -1,0 +1,4 @@
+400000 100000
+0-4
+/workspace/work/front-feature-pinned.log:test result: ok. 141 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 164.06s
+/workspace/work/front-default-pinned.log:test result: ok. 141 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 235.78s

@@ -1,0 +1,29 @@
+fast_quote/original prepare_mark_ns 1.1116 [1.0376, 1.1908]
+fast_quote/original first_ns 1.0145 [0.9786, 1.0516]
+fast_quote/original total_ns 0.9851 [0.9548, 1.0163]
+fast_quote/quote prepare_mark_ns 0.7296 [0.6962, 0.7647]
+fast_quote/quote first_ns 0.9304 [0.9011, 0.9606]
+fast_quote/quote total_ns 0.9424 [0.9116, 0.9743]
+fast_frequent/frequent prepare_mark_ns 0.9226 [0.8783, 0.9691]
+fast_frequent/frequent first_ns 0.9565 [0.9054, 1.0105]
+fast_frequent/frequent total_ns 0.9723 [0.9145, 1.0337]
+fast_frequent/original prepare_mark_ns 1.4345 [1.3352, 1.5412]
+fast_frequent/original first_ns 1.3169 [1.2736, 1.3617]
+fast_frequent/original total_ns 1.0481 [1.0087, 1.0891]
+fast_fifth_or_custom/fifth_or_custom prepare_mark_ns 0.8662 [0.8113, 0.9247]
+fast_fifth_or_custom/fifth_or_custom first_ns 0.9720 [0.9313, 1.0145]
+fast_fifth_or_custom/fifth_or_custom total_ns 0.9925 [0.9512, 1.0356]
+fast_fifth_or_custom/original prepare_mark_ns 2.3633 [2.1702, 2.5735]
+fast_fifth_or_custom/original first_ns 2.2304 [2.1370, 2.3279]
+fast_fifth_or_custom/original total_ns 2.2685 [2.1825, 2.3578]
+fast_raw_quote/original prepare_mark_ns 1.5566 [1.4135, 1.7142]
+fast_raw_quote/original first_ns 1.1461 [1.0783, 1.2182]
+fast_raw_quote/original total_ns 1.0682 [1.0168, 1.1222]
+original total retained bytes including output: 3460392 8243092
+quote total retained bytes including output: 3460392 8243092
+fast_raw_quote total retained bytes including output: 3476776 8275860
+fast_quote total retained bytes including output: 3460392 8243092
+fast_fifth_or_custom total retained bytes including output: 4830692 10738912
+frequent total retained bytes including output: 3440516 8724448
+fifth_or_custom total retained bytes including output: 4830692 10738912
+fast_frequent total retained bytes including output: 3440516 8724448

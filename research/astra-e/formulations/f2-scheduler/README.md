@@ -1,0 +1,29 @@
+# Scheduling the contracted delimiter-trie DAG
+
+Each interval trie edge requires a serial sequence of predecessor queries. Its length L is the number of bytes in the stored edge, including the fixed first byte: each nonterminal rank request appends one further byte and one final request ends the path. After that final request a parent publishes its edge, scans its selectors, forms its entire set of child intervals in stable order, and builds a terminal dictionary spelling from already published ancestor edges when needed. The children can issue their first rank queries in the next wave. Separate intervals already allocated have no mutual rank dependency.
+
+For a rooted tree of those edges let A=sum L and D be the maximum sum of L along a root-to-node path. Under the model of at most k rank requests per wave, all results available by the next wave and free between-wave publication, max(ceil(A/k),D) is a lower bound. Advancing all ready paths at unit rate gives the attainable unlimited-lane width at each wave and its maximum. Fixed eight-lane batches instead pay the longest L among each group before publishing any of its children. To bound a real alternative, we simulated a FIFO ready queue, earliest free lane, and publication in lane order for simultaneous retirements. The model includes parent-to-child and ancestor-spelling dependencies rather than assuming all intervals are known initially. Selector scans, spelling bytes, branch prediction and register pressure have real CPU costs. The scheduling bound does not assign those costs clock-cycle weights; native execution measures the whole computation.
+
+On frozen, 3,689 paths have 70,560 queries and depth 272; unlimited-width peak concurrency is 2,274 paths. The incumbent needs 19,695 waves with eight lanes, 44.8% occupied. The new schedule takes 8,838 waves, with a lower bound of 8,820. The largest fanout is 54; 14,992 selectors and 83,454 dictionary bytes still require publication. Nine native input graphs gave 212,887 old waves, 94,236 new and 93,944 as the sum of lower bounds. Their entire 751,521 queries and every predicted refill wave count reproduced in the independently instrumented native scheduler. [Source DAGs](graphs.csv.xz) · [Per-block simulations at 1, 4, 8 and 16 lanes](waves.csv)
+
+## Native invariant and costs
+
+Up to eight live intervals store independent endpoints, widths and paths in fixed lanes. Every wave first locates all live endpoints. After reading their run bounds, it advances each unary path and publishes completed branches in ascending lane order. Any free lane can immediately acquire the next already allocated node. Reallocation of the nodes vector is safe because lanes hold integer identities and copied interval bounds. A parent has published its edges and terminal word before a newly allocated child is allowed to run; every parent ID still precedes every child ID. The historical reverse-ID merge is therefore a child-before-parent traversal. Each node's interval-local selectors remain contiguous, in original L order, and references to child identities still describe the same stable partitions. The dictionary may assign different IDs; each label retains its original F bucket start, which determines second-level collation and the frequency tie break. Arbitrary scheduling among already-published parents preserves the exact token BWT and transported mark up to internal renaming.
+
+The source derives from the frozen eight-lane candidate at `d48e80ff01eeee6d23277945e2f58b61004470aa`. Both methods retain eight reusable path buffers. The refill checks active and retired masks each wave and copies completed paths once, as the batched worker does. It changes layout and node numbering through publication order. It does not decrease the underlying rank queries or total dictionary spelling.
+
+All 228 large real admissions produced the same 205,197,794 inverse bytes as Segmented, and every accepted block exercised recursive token reconstruction. Across these blocks native instrumentation counted 19,750,839 queries in 2,476,362 waves (99.697% occupancy). The forced small cases tested multiple cycles and arbitrary primaries. [All observed histograms](native-waves.csv) · [Small-case gate](property.log)
+
+Thirty rotated passes per block on nine admitted systematic blocks compared dynamic refill, the original fixed eight, and LazyCells in the same process using Linux thread CPU. Every output was independently checked outside its timed region. Pairing the sum across the same nine blocks within each pass gave refill/fixed discovery 0.8456 [0.8057,0.8874] and complete inverse 0.9259 [0.9013,0.9512]. Refill/Lazy complete inverse was 0.9763 [0.9502,1.0032]. The median summed discovery times were 6.93 ms dynamic and 8.13 ms fixed. The 56% decrease in modeled waves did not become a 56% time reduction. Setup, publication, output and other compute still run. These compare this local inverse stage; the full worker loop and the target i9 require separate measurements. [Individual observations](phase.csv) · [Paired estimates and occupancy](summary.txt)
+
+```sh
+d=research/astra-e/formulations/f2-scheduler
+python3 "$d/prepare.py"
+export MOONSHOT_CANDIDATE="$PWD/$d/candidate.rs"
+cargo test --locked --release --manifest-path bench/moonshot/Cargo.toml candidate::checks::arbitrary_marks -- --nocapture
+F2_CORPUS="$PWD/corpora/wikidata.bz2" F2_WAVES=/tmp/f2-scheduler-native.csv cargo test --locked --release --manifest-path bench/moonshot/Cargo.toml candidate::observations::observed_waves -- --ignored --nocapture
+bash "$d/graph.sh" /tmp/f2-scheduler-graph "$PWD/bench/moonshot/target/release/deps" > /tmp/f2-scheduler-graph.xz
+python3 "$d/waves.py" /tmp/f2-scheduler-graph.xz
+bash "$d/price.sh" /tmp/f2-scheduler-price "$PWD/bench/moonshot/target/release/deps"
+bash research/astra-e/score.sh delimiter-refill-new "$MOONSHOT_CANDIDATE" --with-opend --workers 1,4 --rounds 9 --repeat 2 --settle 2 --no-proxy
+```

@@ -1,0 +1,17 @@
+625a4ff15e6d8f6c065e749fad6aa69c1629fa66
+9c31461df7bef24cecf79348545b27ee26846835
+scorer path revision 9c31461
+f578f013d17284a45943c1a4ef8d21e3a46b2d5846693ab7dc299914949c0a9b  research/astra-e/formulations/f1b/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh tableless-f1b research/astra-e/formulations/f1b/candidate.rs --rounds 6 --repeat 2 --workers 1\,4 --with-opend --no-proxy

@@ -1,0 +1,28 @@
+streams 1
+mixed2 prep_mark=0.3398ms discover=0.6593ms merge=0.1092ms residual_output=0.7492ms total=1.9073ms
+outowned prep_mark=0.3307ms discover=0.6632ms merge=0.1099ms residual_output=0.6761ms total=1.9082ms
+mixed64 prep_mark=0.3394ms discover=0.6759ms merge=0.1185ms residual_output=0.7216ms total=1.8417ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=1.5323ms total=1.5323ms
+batched prep_mark=0.3316ms discover=0.7034ms merge=0.1176ms residual_output=0.5068ms total=1.7581ms
+outowned/batched 1.1473 [1.0009,1.3152]
+outowned/lazy 1.3253 [1.1517,1.5250]
+mixed2/outowned 0.9892 [0.8486,1.1529]
+mixed2/batched 1.1349 [1.0211,1.2614]
+mixed2/lazy 1.3109 [1.1758,1.4614]
+mixed64/outowned 0.9398 [0.8229,1.0734]
+mixed64/batched 1.0783 [0.9884,1.1763]
+mixed64/lazy 1.2455 [1.1398,1.3610]
+streams 1,85,134,176,225,269,313,359,397
+mixed2 prep_mark=3.5365ms discover=7.2359ms merge=1.1912ms residual_output=7.6279ms total=20.4092ms
+outowned prep_mark=3.5852ms discover=7.3352ms merge=1.2228ms residual_output=7.3263ms total=20.3094ms
+mixed64 prep_mark=3.5926ms discover=7.3040ms merge=1.2428ms residual_output=7.5524ms total=20.3130ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=16.6927ms total=16.6927ms
+batched prep_mark=3.5015ms discover=8.0732ms merge=1.2506ms residual_output=5.0776ms total=18.3864ms
+outowned/batched 1.1396 [1.0391,1.2499]
+outowned/lazy 1.2702 [1.1768,1.3709]
+mixed2/outowned 0.9953 [0.9158,1.0817]
+mixed2/batched 1.1342 [1.0289,1.2504]
+mixed2/lazy 1.2642 [1.1677,1.3686]
+mixed64/outowned 0.9823 [0.9054,1.0657]
+mixed64/batched 1.1195 [1.0267,1.2206]
+mixed64/lazy 1.2477 [1.1754,1.3244]

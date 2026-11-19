@@ -1,0 +1,18 @@
+{
+  "config": {
+    "max_rows": 5,
+    "max_classes": 4
+  },
+  "totals": {
+    "classes": 1741,
+    "runs": 2105,
+    "slices": 2283,
+    "output_runs": 1415,
+    "run_bound": 1803,
+    "ancestry_runs": 1985,
+    "cycles": 86,
+    "cycle_rows_kept": 90,
+    "removed": 864,
+    "objects": 513
+  }
+}

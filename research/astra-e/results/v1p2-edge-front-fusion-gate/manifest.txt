@@ -1,0 +1,17 @@
+74e1324aea9cd209b8786ec14437f886d77290d8
+be74d5763d212864607d46521d74ebc0827f9f36
+scorer path revision 75297a1
+5eebbb91f35625e4007e3552d017b95dfbe4bfde751fa3b3957b584f8bae35b3  research/astra-e/front-fusion/edge/worker/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1p2-edge-front-fusion-gate research/astra-e/front-fusion/edge/worker/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/astra-edge-front-worker-target

@@ -1,0 +1,37 @@
+{
+  "rust_executable": "panel",
+  "rust_exe_sha256": "1b4922c1fc30a38e2b959f3ee8d2291b72a3b5fae5a046c48bbdf15cf60952ad",
+  "inherited_rust_build": {
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "g++": "g++ (Debian 14.2.0-19) 14.2.0",
+    "donor": "d0a42980e896211906234c7679b38760ae44a46e",
+    "src_tree": "3a6a7b574d4216b909c68f26223a70d02ad00473",
+    "source_sha256": {
+      "open_return": "b02a1d2ed7490a0dbef8f5ecf464153d75d2cd71b42993807a3a713bc18bbfc1",
+      "arms": "b08e1153c9ab680f008cabb8245f40ad57338d7eacf0abacd12ce7b3e21b706c",
+      "candidate": "6d30fdc7bf7a66b061cfd7842ab5f1327c2f35deb7dae66ad0b8c690f498027c",
+      "kernel.rs": "6ec9b514f032890c04e1afb7c29ea3d1983ab359bbf59880f8171b95c96f0278",
+      "gate.rs": "23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212",
+      "adapter.inc.rs": "2dde2d590cb4684e79b9b5a910c5ebd16ebf4ed87077eaa614980c43fd029104"
+    },
+    "rlib_sha256": "b5eed93a5d80e89a35e492de78455e18df92a4ca65ecda91807e921a14a497bb",
+    "dso_sha256": "bedff2fc9326bde4fdc223f9183548da9b74ec5ccf911080e2b020c29685a146",
+    "exe_sha256": "1b4922c1fc30a38e2b959f3ee8d2291b72a3b5fae5a046c48bbdf15cf60952ad",
+    "rust_flags": [
+      "--edition=2021",
+      "-C",
+      "opt-level=3",
+      "-C",
+      "codegen-units=1",
+      "-C",
+      "debuginfo=line-tables-only",
+      "-C",
+      "lto=fat"
+    ]
+  },
+  "matches_archived_executable": true,
+  "cxx_so_sha256": "421fbc0b9c3d940c41eb32ecafadab8f945e3e8d1a2eedb197f10318e7b8a2e8",
+  "bridge_sha256": "f7cf66bde67cb723d5365b891811e0f8cf22f797ae9987a8389daab247413d21",
+  "raw_inc_sha256": "ded55e690eafd8fa3eca6e0498af8003c06a607ac74dc29fc6d217117aba1db0",
+  "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+}

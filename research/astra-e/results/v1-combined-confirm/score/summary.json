@@ -1,0 +1,99 @@
+{
+ "info": {
+  "candidate": "/workspace/work/astra-e-edge-safe/research/astra-e/narrow-short/ahead.rs",
+  "candidate_type": "moonshot::candidate::Candidate",
+  "arms": [
+   "lazy",
+   "cells",
+   "open",
+   "opend",
+   "candidate"
+  ],
+  "cpus": 4
+ },
+ "corpus": "/workspace/work/astra-e-edge-safe/corpora/wikidata.bz2",
+ "options": {
+  "cmd": "score",
+  "candidate": "research/astra-e/narrow-short/ahead.rs",
+  "corpus": null,
+  "rounds": 9,
+  "settle": 2.0,
+  "repeat": 2,
+  "workers": [
+   1,
+   4
+  ],
+  "with_opend": true,
+  "proxy_blocks": "48+16",
+  "bootstrap": 400,
+  "quick": false,
+  "no_timing": false,
+  "no_proxy": true,
+  "no_build": false,
+  "target_dir": null,
+  "out": "research/astra-e/results/v1-combined-confirm/score",
+  "record": "research/astra-e/results/v1-combined-confirm/official-register.jsonl"
+ },
+ "scorer": {
+  "version": "v1",
+  "commit": "6a8a366cd786d58a528000b58da12fd2cfb47be8"
+ },
+ "gate": {
+  "verdict": "PASS",
+  "cases": 338,
+  "failed": [],
+  "exit": 0
+ },
+ "timing": {
+  "1": {
+   "rounds": 9,
+   "candidate": {
+    "n": 9,
+    "geomean": 0.6475595356942502,
+    "lo": 0.5005257617658245,
+    "hi": 0.8377857531032374,
+    "verdict": "FASTER",
+    "speedup": 1.5442595543402777,
+    "peak_rss_ratio": 0.966120327803318,
+    "wall_s": 1.585829
+   },
+   "opend": {
+    "n": 9,
+    "geomean": 0.7633303734471515,
+    "lo": 0.5449344480317158,
+    "hi": 1.069253854535281,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.3100487479412926,
+    "peak_rss_ratio": 0.963921647011793,
+    "wall_s": 1.523827
+   },
+   "lazy_wall_s": 2.330895,
+   "lazy_peak_rss_kb": 80048
+  },
+  "4": {
+   "rounds": 9,
+   "candidate": {
+    "n": 9,
+    "geomean": 0.8884476162617405,
+    "lo": 0.6435858135964397,
+    "hi": 1.2264707365599636,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.1255587630564317,
+    "peak_rss_ratio": 0.8400998287820308,
+    "wall_s": 0.838768
+   },
+   "opend": {
+    "n": 9,
+    "geomean": 0.8405363586433774,
+    "lo": 0.6487578507553352,
+    "hi": 1.0890062746507092,
+    "verdict": "INCONCLUSIVE",
+    "speedup": 1.189716530066583,
+    "peak_rss_ratio": 0.8816274413070606,
+    "wall_s": 0.92458
+   },
+   "lazy_wall_s": 0.98548,
+   "lazy_peak_rss_kb": 137836
+  }
+ }
+}

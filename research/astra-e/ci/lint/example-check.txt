@@ -1,0 +1,7 @@
+Detached clean source: f05e6f2 plus examples/astra_e.rs patch subsequently committed with this log.
+Rust toolchain: 1.99.1 with its rustfmt and clippy components.
+cargo fmt --all --check exited 0 with empty stdout and stderr.
+cargo clippy --all-targets --all-features -- -D warnings exited 0.
+    Checking mibz2 v0.5.6 (/workspace/work/astra-ci-clean)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.69s
+Only examples/astra_e.rs changed in the disposable checkout.

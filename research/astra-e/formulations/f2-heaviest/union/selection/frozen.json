@@ -1,0 +1,47 @@
+{
+  "development_stream": 1,
+  "fixed_parent_hex": "22",
+  "reference_token_hex": "3a22",
+  "ordered_tokens": [
+    {
+      "hex": "3a22",
+      "count": 24165,
+      "source_rank": 18000
+    },
+    {
+      "hex": "2c22",
+      "count": 15844,
+      "source_rank": 748
+    },
+    {
+      "hex": "3a7b22",
+      "count": 8322,
+      "source_rank": 50852
+    },
+    {
+      "hex": "76616c756522",
+      "count": 7797,
+      "source_rank": 114583
+    },
+    {
+      "hex": "7d2c22",
+      "count": 7405,
+      "source_rank": 125758
+    },
+    {
+      "hex": "7479706522",
+      "count": 4017,
+      "source_rank": 109978
+    },
+    {
+      "hex": "3a5b7b22",
+      "count": 3502,
+      "source_rank": 47350
+    },
+    {
+      "hex": "646174617479706522",
+      "count": 3232,
+      "source_rank": 74217
+    }
+  ]
+}

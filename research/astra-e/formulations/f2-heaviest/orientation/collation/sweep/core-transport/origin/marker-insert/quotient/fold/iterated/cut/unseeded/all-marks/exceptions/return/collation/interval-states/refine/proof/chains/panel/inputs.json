@@ -1,0 +1,58 @@
+{
+  "cpp": "b8a159bc2abbec9eede731fbd30109e731c0009319021303b894926f0395ce7f",
+  "exe": "0ede1b1ad373ee0f2ebddd6d518f29d046537f31ca39189c83fa87018df7c176",
+  "donor_receipt": "ce0c7a4a9c9899187beb8ecc2a7dd6bd78a2159577e61eb39f739d62776b1666",
+  "inputs": [
+    {
+      "block": 1,
+      "mark": 264045,
+      "caps_sha256": "f7a530a74f772303247114bb99cf3d83c4bbecc2d0d454c677c19e3528ccb4a2"
+    },
+    {
+      "block": 41,
+      "mark": 221182,
+      "caps_sha256": "6e347d0b8feaac152d533b91a0925593254439777d5b8356eb6b9649a7064f9a"
+    },
+    {
+      "block": 85,
+      "mark": 880651,
+      "caps_sha256": "8f104390604a7f6a04d1832daddca52ef448dde7b80db5870df7777016c5514b"
+    },
+    {
+      "block": 134,
+      "mark": 523129,
+      "caps_sha256": "8201a1243cf9a82c78f8b99fd8cf1357b360134fa6dc1d51519d083440bb421d"
+    },
+    {
+      "block": 176,
+      "mark": 721531,
+      "caps_sha256": "7ab7e52179f57925093b0a431eae13ac38891ae1b27fd4bcfc2d5345423c43c6"
+    },
+    {
+      "block": 225,
+      "mark": 294130,
+      "caps_sha256": "953a80bcedd2f51d7438da13ddcf63664c86dbbac16fe9a0a25058f15ea11c96"
+    },
+    {
+      "block": 269,
+      "mark": 441922,
+      "caps_sha256": "675722331f6bc29d283277879be45156b38bccd6c9dbd8d1ee158f35358b7a4a"
+    },
+    {
+      "block": 313,
+      "mark": 350261,
+      "caps_sha256": "6cdd35a88408ae30eae0bf3545a43987166a456899b913a0da170fa6930deca1"
+    },
+    {
+      "block": 359,
+      "mark": 374465,
+      "caps_sha256": "f4a3d0ece50e490028c1bd6bc64350a327055598eae594a434acc31343f06f9b"
+    },
+    {
+      "block": 397,
+      "mark": 35838,
+      "caps_sha256": "eb7e923ede838cd36b841c5182d11963fc8b1699d5752b89aaed2c0bd4a77eae"
+    }
+  ],
+  "adaptive_receipt": "c4ce5ead7e92b0bf4158ccd666ffa1e163f61456471029a976fd2015c376dcbc"
+}

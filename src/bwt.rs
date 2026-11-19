@@ -87,6 +87,35 @@ pub trait InverseBwt: Default + Send {
         false
     }
 
+    /// Research-only fused MTF/RLE2 front and inverse on the ordinary run route.
+    /// On success, validate the symbols, row bound, and primary as the stock front
+    /// does, and write the marked inverse into `out`. On decline, leave `out`
+    /// intact so the stock front can perform its normal validation and decode.
+    #[cfg(feature = "moonshot")]
+    fn invert_symbol_runs(
+        &mut self,
+        _block: &crate::block::Symbols,
+        _k: crate::Kernels,
+        _out: &mut Vec<u8>,
+    ) -> bool {
+        false
+    }
+
+    /// Research-only run kernel that appends fully RLE1-expanded bytes. The decoder
+    /// has validated the mark and owns both CRC verification and rollback on error.
+    /// Returning `None` leaves the caller's output intact and takes the usual route.
+    #[cfg(feature = "moonshot")]
+    fn expand_runs(
+        &mut self,
+        _runs: &crate::runs::Runs,
+        _n: usize,
+        _orig_ptr: u32,
+        _out: &mut Vec<u8>,
+        _k: crate::Kernels,
+    ) -> Option<Result<(), crate::ErrorKind>> {
+        None
+    }
+
     /// Whether the last `invert_runs` that returned true was done by Cells, in its own
     /// buffers, rather than by the fallback's table: the footprint ledger's route only
     /// (src/trace.rs), so that a Cells block is not charged the fallback's T-vector

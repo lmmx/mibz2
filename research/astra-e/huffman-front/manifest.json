@@ -1,0 +1,25 @@
+{
+  "native_ref": "f2bfea26",
+  "split_ref": "9f6d64f9",
+  "decoder_base": "d0a42980e896211906234c7679b38760ae44a46e",
+  "evidence_ref": "f8ea693b17b5866f133baa7edf30f3cb685b054d",
+  "corpus": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+  "gold": "3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf",
+  "native_binary": "732e70f68e3d8b45e9352fac27d95dda874067c44849ac35770768423968d191",
+  "split_binary": "02574c9704a9cf64eebdfbb832e337223c4f039560ac50bb49e6177fa5bb89fd",
+  "support_rlib": "b8a369b74c7eb778d296571693594dbf821d5b5ebe132971bdaf69e93f8309f2",
+  "rust": "1.99.1",
+  "native_cpu": 3,
+  "split_cpu": 1,
+  "nice": 10,
+  "host": "Intel Xeon Platinum 8573C, four CPU equivalents",
+  "source_sha256": {
+    "driver.rs": "aca2fde2b0c8cb052a49927a84e730542f243145f06853c84bee62848bbbcdec",
+    "front.rs": "07fe8ea8949ae44555d0076874b6f18ebcabdad7b21fd886604d34ac389e84b2",
+    "generate.py": "b799160201bd3bfe09409afa60d520daf08b2df222d253739a8f11257bfa44a9",
+    "attribution.py": "01a059ae0b3502e0df1049a10a1265212ef243a22c763f0e4c223a0c09b42f18",
+    "fused.rs": "6f0de0d2edc5bffc82b3f39b3894fc6d3851433923c453b93d4a83a36b85b1fe",
+    "stock.rs": "30565401cb2c8fef1b0da116c68a06afc6ae81e5e4a8b4a2c8af076f697ba0d3",
+    "bits.rs": "a7c27128ecb77fb6c6ce213385ea3e8a1e4b254f4cb47540fc6968b74111162f"
+  }
+}

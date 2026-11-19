@@ -1,0 +1,48 @@
+# A reversible in-place MTF-to-maximal-run log
+
+The AVX2 front already computes the true width of each maximal BWT run. Retain the temporal separation between MTF and the inverse constructor by writing that run to a contiguous log. The log fits inside the already-consumed u16 MTF symbols for every run prefix, including an opening run that has no literal. Its construction reads the original literal before overwriting its slot. The decoder's symbol bitmaps retain RUNA/B values and the positions of future literals.
+
+## Representation and prefix contraction
+
+A maximal run of byte c and positive width w≤254 takes one word c⟨8⟩+w, where c occupies the high byte. For 255≤w≤65535 use low-byte tag 0 and one u16 payload. For larger w use low-byte tag 255 and two payload words, least-significant first. The occupied space is at most ceil(w/127) for every w. This is a word-count statement independent of canonical run order.
+
+A regular literal with t following run symbols and little-endian RUNB mask u has width 2ᵗ+u and consumes 1+t input words. A nonempty opening span has width 2ᵗ−1+u and consumes t input words. A regular span with t=0 uses one word. A nonempty opening has t≥1 and takes one word through width 254. To reach 255 at least seven run symbols are necessary; to exceed 65535 at least sixteen are necessary. Thus every local output width in machine words is at most its span of input symbols. Summing this inequality proves the invariant at every run boundary. Writing forward to the front of a mutable input slice cannot overwrite a later literal. This removes a separately allocated record buffer without coupling MTF to label-indexed row queues.
+
+## Restoring an overwritten prefix
+
+The map is injective on every valid completed run prefix when its ordered active alphabet is fixed and contains distinct bytes. If the first log byte is the initial MTF head, its span was the opening run. Otherwise the first span has a literal. For every regular span its literal's old rank is recovered by moving the stored byte to the front of the original evolving alphabet. Its original rank is positive, since two consecutive maximal run bytes differ. For a regular span take v=w; for the opening take v=w+1. The number of run symbols is floor(log₂ v), and their low-order RUNB bits are the low floor(log₂ v) bits of v.
+
+Let T be the number of packed words and U the number of original symbols covered. A log scan recovers U from the widths and the opening flag. Move T words to the right end of this U-word prefix. Expand forward using only a 256-byte MTF list and fixed scalars. After any number of decoded records, the accumulated expansion is at most the final U−T, by local nonnegative expansion. The output cursor never passes the end of the just-read log record. Read the current record completely before writing its restored span. The original suffix, including any later malformed symbols or EOB, was never touched. Thus a late error or rejected admission may restore the exact original symbol buffer before invoking the stock worker and its normal error ordering. The rollback cost includes a log-size move, two log passes, and MTF rank lookup during expansion. It can be expensive on a rejected block.
+
+The scalar oracle checked every input word and every interruption position through eight packed-source alphabet-4 symbols (844,686 prefix restores), 34 escape boundaries including 65535 and 65536, and 11 failing partial writes. All 431 real blocks matched stock maximal runs exactly and restored every input symbol and suffix. The 233 large blocks contained 24,970,771 MTF input words, 16,320,934 stock cap records and 15,258,121 packed words, including 116,519 extended u16 widths. None needed the long u32 form. This saves 6.51% of sequential log words on these blocks and makes a separate record buffer unnecessary given mutable ownership. [Scalar implementation](log.rs) · [Exhaustive and corruption checks](small.txt) · [All real blocks](real.csv) · [Audit source](audit.rs)
+
+The existing worker hook borrows immutable Symbols. Any actual implementation requires a genuinely mutable ownership entry to reuse the buffer. The scalar oracle receives a mutable slice and uses safe overlapping copy for rollback. The paid native follow-up must compare the two full phases and include in-place ownership, bitmap construction, both admission alternatives, fallback restoration, RLE1 and CRC in addition to separately measuring the sequential log conversion. Real output speed and i9 RSS remain open.
+
+```sh
+d=research/astra-e/front-fusion/packed
+scratch=$(mktemp -d)
+cargo build --release --locked --manifest-path bench/moonshot/Cargo.toml --target-dir "$scratch/build"
+deps="$scratch/build/release/deps"
+rustc -O --edition 2021 "$d/audit.rs" --extern mibz2="$deps/libmibz2.rlib" -L "dependency=$deps" -o "$scratch/audit"
+"$scratch/audit" small
+"$scratch/audit" corpora/wikidata.bz2
+```
+
+**Owned AVX2 prototype.** The isolated worker receives a genuinely mutable Symbols buffer. Its front classifies bitmap words first and then reads each literal rank from one source pointer. It writes the encoded run to either that pointer's consumed prefix or a separate preallocated output log in the matched control. Common spans write one word. For large widths the encoder accumulates ceil(w/127) minus the number of packed words, so packed length plus that difference reproduces the old density decision exactly. The five large dense blocks use the frozen marked charge decision on decoded compact widths. The frozen combined constructor receives the same maximal runs through a new iterator. RLE1, CRC and ordinary fallback keep their full costs.
+
+All four real-worker arms matched the 209,700,196 expanded bytes and every block CRC on all 431 real blocks. Both compact arms completed all 233 large blocks directly. The independent stock arms share identical code with separate scratch. Another 252 complete-worker comparisons covered malformed ranks/EOB, later overlong runs, too-small block bounds, duplicate alphabets, bad CRCs/primaries, scalar fallback and the exact 1 MiB charge transitions. Thirty-three calls restored already-written symbol prefixes before stock fallback, totaling 6,061,458 overwritten packed bytes. The in-place arm has no separate packed-record vector allocation; its fallback retains the actual stock buffers requested by that worker. [Worker sources](native.rs) · [Generated AVX2 writes](front.inc.rs) · [All real routes](checked.csv) · [Adversarial checks](errors.txt) · [Errors driver](errors.rs)
+
+```sh
+python3 "$d/prepare.py" "$scratch/native-src"
+rustc -O --edition 2021 -A unused -C codegen-units=1 "$scratch/native-src/main.rs" --extern mibz2="$deps/libmibz2.rlib" -L "dependency=$deps" -o "$scratch/native"
+"$scratch/native" corpora/wikidata.bz2 errors
+"$scratch/native" corpora/wikidata.bz2 0
+```
+
+The 24-rotation complete block-worker screen included every ordinary large block three times and each of the five extra dense blocks in every round. In-place/frozen was 1.0254 [1.0031,1.0482], separate-log/frozen 1.0276 [0.9992,1.0569] and identical-control/frozen 1.0049 [0.9835,1.0267]. The direct in-place/separate-log ratio was 0.9978 [0.9728,1.0235]. The three fresh-process rotated high-water medians on all 431 blocks were 18,688 KiB frozen, 18,384 KiB in place and 18,732 KiB separate log, with each process reusing the scanner's symbol Vec. Both compact workers retained 28,668 bytes of stock fallback front and 89,920 bytes of custom bitmap capacity. The separate-log worker additionally retained 717,840 bytes; the in-place worker allocated zero run-log words beyond existing Symbols. The frozen worker retained 864,472 bytes of stock front. Each process included its input file and decoded outputs. These results price the complete two-pass variant and establish a local CPU regression for its first in-place implementation. [Raw paired observations](panel.csv) · [Class intervals](panel.txt) · [Rotated process peaks](memory.csv) · [Memory driver](memory.py)
+
+## Sharp scope of forward overwrite
+
+For a per-run format requiring E(w) u16 words, an unbuffered forward writer can safely reuse the original symbols of every valid block if and only if its lengths satisfy both E(w)≤1+floor(log₂ w) for a regular first span and E(w)≤floor(log₂(w+1)) for an opening span, at every possible width. Sufficiency follows span by span. For necessity, realize the offending width as the first span of its type and append a second literal of an independently chosen positive rank. The next unread rank occupies the first word beyond the consumed span. With no prior slack, a longer encoding would overwrite it. For a model that preloads a future literal, that literal supplies additional state and the stated necessity no longer applies. In particular a fixed u32 record for every maximal run fails at width one even if the entire block ultimately compresses enough. A long all-literal prefix followed by ordinary nonzero repeat spans can still satisfy the production run-route heuristic.
+
+The distinct-active-alphabet condition on exact rollback is also necessary for a log of bytes and widths only. If two active positive ranks refer to the same byte B, a regular rank-one symbol and a regular rank-two symbol can each generate (B,1). Their packed prefixes are identical and the original symbol differs. The native implementation guards duplicates before the first write. Together these witnesses specify where in-place allocation reuse or symbol recovery would need extra state.

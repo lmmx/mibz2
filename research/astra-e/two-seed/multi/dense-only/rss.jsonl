@@ -1,0 +1,12 @@
+{"round": 0, "label": "base", "peak_rss_kib": 32240, "count": 0, "coded": 0, "rows": 0, "construct_ns": 0, "emit_ns": 0, "process_ns": 749040326, "wall_ns": 751855024, "bytes": 209700196}
+{"round": 0, "label": "audit", "peak_rss_kib": 29560, "count": 5, "coded": 4499868, "rows": 1083380, "construct_ns": 7995494, "emit_ns": 8744206, "process_ns": 674985186, "wall_ns": 679095703, "bytes": 209700196}
+{"round": 1, "label": "audit", "peak_rss_kib": 28504, "count": 5, "coded": 4499868, "rows": 1083380, "construct_ns": 8138562, "emit_ns": 10775244, "process_ns": 675629484, "wall_ns": 679781293, "bytes": 209700196}
+{"round": 1, "label": "base", "peak_rss_kib": 29712, "count": 0, "coded": 0, "rows": 0, "construct_ns": 0, "emit_ns": 0, "process_ns": 683864596, "wall_ns": 686385286, "bytes": 209700196}
+{"round": 2, "label": "base", "peak_rss_kib": 29352, "count": 0, "coded": 0, "rows": 0, "construct_ns": 0, "emit_ns": 0, "process_ns": 674581362, "wall_ns": 675174804, "bytes": 209700196}
+{"round": 2, "label": "audit", "peak_rss_kib": 28600, "count": 5, "coded": 4499868, "rows": 1083380, "construct_ns": 8256326, "emit_ns": 8131713, "process_ns": 676640461, "wall_ns": 678074303, "bytes": 209700196}
+{"round": 3, "label": "audit", "peak_rss_kib": 29948, "count": 5, "coded": 4499868, "rows": 1083380, "construct_ns": 9944953, "emit_ns": 9540188, "process_ns": 667114467, "wall_ns": 669323784, "bytes": 209700196}
+{"round": 3, "label": "base", "peak_rss_kib": 30188, "count": 0, "coded": 0, "rows": 0, "construct_ns": 0, "emit_ns": 0, "process_ns": 639582487, "wall_ns": 641805686, "bytes": 209700196}
+{"round": 4, "label": "base", "peak_rss_kib": 29400, "count": 0, "coded": 0, "rows": 0, "construct_ns": 0, "emit_ns": 0, "process_ns": 646826031, "wall_ns": 650003566, "bytes": 209700196}
+{"round": 4, "label": "audit", "peak_rss_kib": 29372, "count": 5, "coded": 4499868, "rows": 1083380, "construct_ns": 9811594, "emit_ns": 15006979, "process_ns": 676043535, "wall_ns": 680277511, "bytes": 209700196}
+{"round": 5, "label": "audit", "peak_rss_kib": 29328, "count": 5, "coded": 4499868, "rows": 1083380, "construct_ns": 7803331, "emit_ns": 10490978, "process_ns": 682695936, "wall_ns": 688019501, "bytes": 209700196}
+{"round": 5, "label": "base", "peak_rss_kib": 29332, "count": 0, "coded": 0, "rows": 0, "construct_ns": 0, "emit_ns": 0, "process_ns": 692495943, "wall_ns": 695561283, "bytes": 209700196}

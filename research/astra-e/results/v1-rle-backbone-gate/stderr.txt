@@ -1,0 +1,14 @@
+moonshot: building the harness with /workspace/work/astra-backbone-checked/research/astra-e/formulations/f2-rle/decoded-column/backbone/candidate.rs
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.11.2
+   Compiling pkg-config v0.3.34
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-backbone-checked/bench/moonshot)
+   Compiling bzip2 v0.4.4
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-backbone-checked)
+    Finished `release` profile [optimized + debuginfo] target(s) in 55.45s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-backbone-checked/corpora/wikidata.bz2
+moonshot: written to research/astra-e/results/v1-rle-backbone-gate/score
+moonshot: recorded in research/astra-e/results/v1-rle-backbone-gate/official-register.jsonl

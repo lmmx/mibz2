@@ -1,0 +1,10 @@
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `release` profile [optimized + debuginfo] target(s) in 35.10s
+     Running unittests src/main.rs (/workspace/work/f2-word-build/release/deps/moonshot-53d7c20ebe2ea968)
+
+running 1 test
+98080 exact covered marks, 147740 exact section-free refusals
+test candidate::checks::arbitrary_marks_and_overlaps ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.14s
+

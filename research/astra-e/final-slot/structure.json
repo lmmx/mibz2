@@ -1,0 +1,37 @@
+{
+  "frozen": {
+    "blocks": 1,
+    "strategy": {
+      "Applied": 1
+    },
+    "encoded_bytes": 899931,
+    "output_bytes": 900000,
+    "recorded_edits": 34,
+    "scanned": 899931,
+    "literal_bytes_moved_left": 0,
+    "literal_bytes_moved_right": 730501,
+    "run_bytes_filled": 239,
+    "initialized_new_tail_bytes": 69,
+    "fallback_reparse_bytes": 0,
+    "maximum_directory_bytes": 512,
+    "maximum_fallback_capacity": 0
+  },
+  "all_gated": {
+    "blocks": 228,
+    "strategy": {
+      "Applied": 227,
+      "DirectoryFull": 1
+    },
+    "encoded_bytes": 205197794,
+    "output_bytes": 205191352,
+    "recorded_edits": 10993,
+    "scanned": 204669009,
+    "literal_bytes_moved_left": 155645358,
+    "literal_bytes_moved_right": 28163527,
+    "run_bytes_filled": 47146,
+    "initialized_new_tail_bytes": 2206,
+    "fallback_reparse_bytes": 900000,
+    "maximum_directory_bytes": 4096,
+    "maximum_fallback_capacity": 900256
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "4": {
+    "true_bands": 269447,
+    "intersection_pieces": 322322,
+    "key_comparisons": 321498,
+    "radix_item_scatters": 538894,
+    "radix_histogram_bins": 11776,
+    "fragment_capacity": 458752,
+    "logical_fragment_bytes": 3867864,
+    "allocated_fragment_bytes": 5505024,
+    "max_block_allocated_fragment_bytes": 1572864
+  },
+  "8": {
+    "true_bands": 127359,
+    "intersection_pieces": 163280,
+    "key_comparisons": 162511,
+    "radix_item_scatters": 254718,
+    "radix_histogram_bins": 10880,
+    "fragment_capacity": 196608,
+    "logical_fragment_bytes": 1959360,
+    "allocated_fragment_bytes": 2359296,
+    "max_block_allocated_fragment_bytes": 393216
+  },
+  "16": {
+    "true_bands": 101275,
+    "intersection_pieces": 125900,
+    "key_comparisons": 125170,
+    "radix_item_scatters": 202550,
+    "radix_histogram_bins": 10560,
+    "fragment_capacity": 196608,
+    "logical_fragment_bytes": 1510800,
+    "allocated_fragment_bytes": 2359296,
+    "max_block_allocated_fragment_bytes": 393216
+  }
+}

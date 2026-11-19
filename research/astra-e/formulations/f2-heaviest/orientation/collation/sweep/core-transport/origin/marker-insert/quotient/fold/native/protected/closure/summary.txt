@@ -1,0 +1,19 @@
+census root_ns 13.40884
+census eligible_ns 2.68227
+census index_ns 0.92274
+census geometry_ns 2.53124
+census table_ns 0.1395
+census total_ns 19.69455
+census states 69999
+census pieces 144782
+census incidence 108637
+census eligible_incidence 24174
+census visited_rows 1357067
+census eligible_states 7853
+solver totals {'old_types': 35117, 'eligible': 32160, 'eligible_states': 7853, 'unique_supports': 1832, 'unique_incidence': 18095, 'state_incidence': 24174, 'selected': 16265, 'removed_rows': 151160, 'optimal_saved_q': 7716, 'minimum_appended': 763903, 'components': 134, 'odd_components': 0, 'flow_variables': 17513, 'implications': 17554}
+application totals {'selected': 16265, 'removed': 151160, 'old_runs': 84317, 'new_runs': 82882, 'appended': 763903, 'old_q': 69999, 'new_q': 62283, 'old_dictionary': 1926457, 'new_dictionary': 1926457, 'links': 245445, 'mark_moved': 0}
+named mean ten-block ms {'first_ns': 14.64319, 'eligible_ns': 0.0, 'index_ns': 0.0, 'geometry_ns': 0.0, 'types_ns': 0.0, 'transfer_wait_ns': 0.0, 'apply_ns': 0.0, 'second_ns': 8.19619, 'caller_cpu_ns': 22.87759, 'solver_cpu_ns': 0.0, 'elapsed_ns': 23.12201, 'both_cpu_ns': 22.87759}
+fresh mean ten-block ms {'first_ns': 14.06891, 'eligible_ns': 2.8331, 'index_ns': 1.04501, 'geometry_ns': 2.36998, 'types_ns': 0.1862, 'transfer_wait_ns': 170.63073, 'apply_ns': 4.58686, 'second_ns': 8.89081, 'caller_cpu_ns': 34.79456, 'solver_cpu_ns': 168.17415, 'elapsed_ns': 204.77555, 'both_cpu_ns': 202.96871}
+elapsed_ns paired ratio 8.9431 7.8446 10.1953
+both_cpu_ns paired ratio 8.9551 7.8801 10.1768
+caller_cpu_ns paired ratio 1.521 1.3032 1.7751

@@ -1,0 +1,16 @@
+eight {'prepare_ns': 3.3677, 'select_mark_ns': 0.1495, 'discover_ns': 20.6963, 'merge_ns': 1.2451, 'residual_output_ns': 4.9535, 'total_ns': 31.5061}
+four {'prepare_ns': 3.5601, 'select_mark_ns': 0.124, 'discover_ns': 20.5689, 'merge_ns': 1.3144, 'residual_output_ns': 3.8945, 'total_ns': 30.3215}
+one {'prepare_ns': 3.4817, 'select_mark_ns': 0.105, 'discover_ns': 22.3049, 'merge_ns': 1.6442, 'residual_output_ns': 1.8411, 'total_ns': 30.3946}
+lazy {'prepare_ns': 0.0, 'select_mark_ns': 0.0, 'discover_ns': 0.0, 'merge_ns': 0.0, 'residual_output_ns': 19.7215, 'total_ns': 19.7215}
+eight/one discover_ns {'n': 32, 'geomean': 0.9255199122527129, 'lo': 0.885831798079282, 'hi': 0.966986181613233}
+eight/one residual_output_ns {'n': 32, 'geomean': 2.6101682807064592, 'lo': 2.340775399217542, 'hi': 2.9105647880114893}
+eight/one total_ns {'n': 32, 'geomean': 1.0477940752942643, 'lo': 1.001093211770536, 'hi': 1.0966735278127224}
+four/one discover_ns {'n': 32, 'geomean': 0.936376501503682, 'lo': 0.8990877324640734, 'hi': 0.9752117851338953}
+four/one residual_output_ns {'n': 32, 'geomean': 1.9531327118257384, 'lo': 1.7672050476109322, 'hi': 2.1586218278183718}
+four/one total_ns {'n': 32, 'geomean': 1.0151508543663998, 'lo': 0.9744631102115369, 'hi': 1.0575374750688338}
+eight/four total_ns {'n': 32, 'geomean': 1.032156029606298, 'lo': 0.9940383371629767, 'hi': 1.0717353945253008}
+eight/lazy total_ns {'n': 32, 'geomean': 1.6086791241426428, 'lo': 1.5425399921197385, 'hi': 1.6776540884986406}
+Native root runs and section sizes match the independent point-band constructor across all systematic admissions.
+1 {'token_rows': 5566401, 'pieces': 1433311, 'spelling_bytes': 41433719, 'lookup_steps': 28053831}
+4 {'token_rows': 12851251, 'pieces': 1582976, 'spelling_bytes': 32528316, 'lookup_steps': 26197107}
+8 {'token_rows': 16964080, 'pieces': 1615028, 'spelling_bytes': 29598573, 'lookup_steps': 24729324}

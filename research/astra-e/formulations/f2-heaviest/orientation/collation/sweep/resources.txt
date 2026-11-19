@@ -1,0 +1,1 @@
+elapsed_s 3.516544 user_cpu_s 3.207273 system_cpu_s 0.282698 peak_kib 68164

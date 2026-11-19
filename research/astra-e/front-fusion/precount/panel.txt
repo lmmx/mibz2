@@ -1,0 +1,15 @@
+all block counts {'short-stock': 150, 'fused': 228, 'column': 48, 'large-replay': 5} raw rows {'short-stock': 8430, 'fused': 205197794, 'column': 465, 'large-replay': 4499868}
+timed counts {'short-stock': 150, 'fused': 9, 'column': 48, 'large-replay': 1}
+paired thread CPU ratios across 24 rounds; geometric means and 95% log-t intervals
+short-stock 1 1.35246 1.07132 1.70738
+short-stock 2 1.15906 0.83847 1.60223
+fused 1 1.01231 0.95469 1.0734
+fused 2 0.97793 0.92493 1.03397
+column 1 1.07325 0.85603 1.34558
+column 2 0.97051 0.81439 1.15655
+large-replay 1 1.53209 1.25388 1.87204
+large-replay 2 0.89445 0.71147 1.12447
+panel 1 1.09903 1.02211 1.18175
+panel 2 0.95366 0.87797 1.03588
+weighted-corpus 1 1.03384 0.97526 1.09595
+weighted-corpus 2 0.9683 0.91585 1.02376

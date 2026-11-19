@@ -1,0 +1,13 @@
+process,clock,arm,ref,paired,lo,hi
+first,elapsed_ns,single,rows,1.0096,0.9008,1.1316
+first,elapsed_ns,four,rows,0.9835,0.9337,1.0360
+first,elapsed_ns,hybrid,rows,0.9690,0.9195,1.0211
+first,thread_cpu_ns,single,rows,1.0086,0.8998,1.1305
+first,thread_cpu_ns,four,rows,0.9814,0.9320,1.0335
+first,thread_cpu_ns,hybrid,rows,0.9683,0.9188,1.0205
+repeat,elapsed_ns,single,rows,0.9952,0.9534,1.0389
+repeat,elapsed_ns,four,rows,0.9910,0.9435,1.0409
+repeat,elapsed_ns,hybrid,rows,0.9695,0.9282,1.0126
+repeat,thread_cpu_ns,single,rows,1.0121,0.9814,1.0437
+repeat,thread_cpu_ns,four,rows,0.9957,0.9640,1.0284
+repeat,thread_cpu_ns,hybrid,rows,0.9657,0.9427,0.9893

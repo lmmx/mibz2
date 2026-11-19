@@ -1,0 +1,39 @@
+{
+  "counts": {
+    "numerical": 98,
+    "positions_checked": 560,
+    "power_or_multicycle": 1440
+  },
+  "examples": {
+    "multiple_cycles": {
+      "last": [
+        0,
+        1
+      ],
+      "mark": 0,
+      "period": 1,
+      "output": [
+        0,
+        0
+      ]
+    },
+    "primitive_with_power": {
+      "last": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mark": 0,
+      "period": 5,
+      "output": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    }
+  }
+}

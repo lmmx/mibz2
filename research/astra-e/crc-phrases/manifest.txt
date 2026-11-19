@@ -1,0 +1,13 @@
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+immutable combined 80d8409359214b4e5abfd4430213921e82e9cd30
+a5f058c8ea1b77d14e9cc326756e7bc5423682d04e04f2db2afc1fb43fab520f  /workspace/work/queue-spans/combined-crc/main.rs
+c16a5236b3257306818f676298b25e789ee19f0438ae4bc37646a68584b292f8  /workspace/work/queue-spans/combined-crc/price
+f4e0ca97769083d0e229b70e20bc574ea13ca864bcf01c85af93812878314fe2  research/astra-e/crc-phrases/main.rs
+034e66aed30759128cec8a3b4ea94faa403648dac2e7dffac17808f7d8cb0684  /workspace/work/f2-word-build/release/deps/libmibz2.rlib
+pin 4

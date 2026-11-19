@@ -1,0 +1,13 @@
+moonshot: building the harness with /workspace/work/astra-queue-both1-gate/research/astra-e/queue-short-fill/both1.rs
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.11.2
+   Compiling pkg-config v0.3.34
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-queue-both1-gate/bench/moonshot)
+   Compiling bzip2 v0.4.4
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-queue-both1-gate)
+    Finished `release` profile [optimized + debuginfo] target(s) in 31.25s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-e/corpora/wikidata.bz2
+moonshot: written to /workspace/work/astra-queue-both1-receipt/score

@@ -1,0 +1,52 @@
+{
+  "counts": {
+    "sections": 3671,
+    "complete_orders": 49220,
+    "distinct_subset_edges": 35992,
+    "physical_component_removals": 246562,
+    "order_matters": 12,
+    "stable_suboptimal": 8
+  },
+  "witness": {
+    "last": [
+      0,
+      1,
+      1,
+      2,
+      1,
+      2,
+      0,
+      2,
+      2,
+      1,
+      1,
+      0,
+      1,
+      1,
+      2,
+      1,
+      1,
+      2,
+      2,
+      1,
+      0
+    ],
+    "V": [
+      1,
+      3,
+      4,
+      5,
+      9,
+      10,
+      11,
+      18,
+      20
+    ],
+    "k": 5,
+    "orders": 120,
+    "edges": 80,
+    "stable": 12,
+    "best": 11,
+    "worst": 12
+  }
+}

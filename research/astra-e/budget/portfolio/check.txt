@@ -1,0 +1,2 @@
+431 blocks, 12 nonempty streams, 209700196 oracle bytes, block and stream CRCs checked
+228 admissions checked for both paid paths on 1 warm + 24 measured iterations; all marked outputs checked again while counting retained Vec capacity

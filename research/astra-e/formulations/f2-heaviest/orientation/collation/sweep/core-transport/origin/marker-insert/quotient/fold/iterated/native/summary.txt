@@ -1,0 +1,44 @@
+systematic terminal 10/10, total n=8999915, fallbacks=Counter({'0': 10})
+  old_rows                  sum=1357067 min=132873 max=138760
+  old_classes               sum=35117 min=2598 max=6448
+  rounds                    sum=1111 min=61 max=255
+  final_rows                sum=10 min=1 max=1
+  dag_nodes                 sum=470902 min=38360 max=72539
+  paid_runs                 sum=1484260 min=96757 max=233186
+  paid_classes              sum=609269 min=44171 max=89551
+  removed                   sum=1357057 min=132872 max=138759
+  moved                     sum=90 min=6 max=14
+  period                    sum=8999915 min=899931 max=900000
+  expanded_internal         sum=1358069 min=132938 max=138991
+  leaf_copies               sum=1357075 min=132874 max=138761
+  stack                     sum=1086 min=60 max=250
+  grammar_and_fold_bytes    sum=27221472 min=1306776 max=2879752
+  total_capacity            sum=90298777 min=3802907 max=9611278
+production terminal 228/228, total n=205197794, fallbacks=Counter({'0': 228})
+  old_rows                  sum=30868395 min=125580 max=145852
+  old_classes               sum=728887 min=2319 max=5986
+  rounds                    sum=31414 min=31 max=1515
+  final_rows                sum=228 min=1 max=1
+  dag_nodes                 sum=10085721 min=27983 max=72539
+  paid_runs                 sum=46981268 min=54144 max=4356822
+  paid_classes              sum=14767748 min=33130 max=450029
+  removed                   sum=30868167 min=125579 max=145851
+  moved                     sum=2031 min=2 max=18
+  period                    sum=205197794 min=899809 max=900000
+  expanded_internal         sum=30897903 min=125624 max=145908
+  leaf_copies               sum=30868579 min=125581 max=145853
+  stack                     sum=30918 min=30 max=1514
+  grammar_and_fold_bytes    sum=606642912 min=1306776 max=2920000
+  total_capacity            sum=1772203957 min=3802907 max=8179526
+dag capacity B=8179526 fresh-process peak KiB=8048
+named capacity B=8473542 fresh-process peak KiB=8212
+joint capacity B=unmetered fresh-process peak KiB=6384
+named_a: first_setup_mark=279.1us/block first_discover=779.8us/block first_merge=226.0us/block dag_init=0.0us/block folds=0.0us/block emit=0.0us/block total_ns=2054.6us/block
+named_b: first_setup_mark=259.4us/block first_discover=831.5us/block first_merge=203.5us/block dag_init=0.0us/block folds=0.0us/block emit=0.0us/block total_ns=2078.9us/block
+joint: first_setup_mark=0.0us/block first_discover=0.0us/block first_merge=0.0us/block dag_init=0.0us/block folds=0.0us/block emit=0.0us/block total_ns=2367.6us/block
+dag: first_setup_mark=269.1us/block first_discover=729.4us/block first_merge=217.6us/block dag_init=125.6us/block folds=4178.4us/block emit=1765.1us/block total_ns=7288.5us/block
+named_b/named_a=1.0163 [0.9550,1.0815]
+dag/named_a=3.6003 [3.3605,3.8573]
+dag/named_b=3.5426 [3.3558,3.7398]
+dag/joint=3.1180 [2.9181,3.3315]
+named_a/joint=0.8660 [0.8368,0.8963]

@@ -1,0 +1,62 @@
+{
+  "counts": {
+    "objects": 22896,
+    "original_arcs": 128493,
+    "new_arcs": 214155
+  },
+  "witnesses": {
+    "crossing_color_islands": {
+      "last": [
+        0,
+        1,
+        0,
+        1
+      ],
+      "coloring": [
+        1,
+        2
+      ],
+      "order": [
+        1,
+        0
+      ],
+      "colors": 2,
+      "extra_rows": 4,
+      "original_R": 4,
+      "factored_R": 6,
+      "islands": 4,
+      "equal_bridges": 2,
+      "extra_runs": 2,
+      "literal_bytes": 3,
+      "old_bytes": 3
+    },
+    "one_class_upper": {
+      "last": [
+        0,
+        1,
+        2,
+        1,
+        0
+      ],
+      "coloring": [
+        1,
+        0,
+        1
+      ],
+      "order": [
+        2,
+        1,
+        0
+      ],
+      "colors": 1,
+      "extra_rows": 3,
+      "original_R": 5,
+      "factored_R": 8,
+      "islands": 3,
+      "equal_bridges": 0,
+      "extra_runs": 3,
+      "literal_bytes": 5,
+      "old_bytes": 6
+    }
+  }
+}

@@ -1,0 +1,5 @@
+4513 small joint tries matched all tagged source intervals of independent affine returns, 128 with multiple components
+k=1 separate=1296362 unique=1296362 paid_start_probes=1296362 maximum_saved=0.00000% saved_starts=0.00000% occupied_runs=1423936 clipped_color_run_pieces=1423936 unique_dict_bytes=1926457 tagged_dict_bytes=1926457
+k=2 separate=1216875 unique=1216647 paid_start_probes=1216825 maximum_saved=0.01874% saved_starts=0.00411% occupied_runs=1354670 clipped_color_run_pieces=1354720 unique_dict_bytes=1609538 tagged_dict_bytes=1609538
+k=4 separate=1195478 unique=1188106 paid_start_probes=1190772 maximum_saved=0.61666% saved_starts=0.39365% occupied_runs=1330759 clipped_color_run_pieces=1335465 unique_dict_bytes=1484818 tagged_dict_bytes=1487866
+k=8 separate=1140103 unique=1113730 paid_start_probes=1120697 maximum_saved=2.31321% saved_starts=1.70213% occupied_runs=1264424 clipped_color_run_pieces=1283830 unique_dict_bytes=1350442 tagged_dict_bytes=1366833

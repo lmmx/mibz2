@@ -1,0 +1,5 @@
+class,productive_columns,productive_bipartitions,prescribed_growth,forced_growth_columns,largest_forced_increase,witness_largest,first_forced,first_prescribed
+all,177407,436475,1464,82,1,1122210,1122210/4/5,1110220/1/2/5/5
+primitive,25521,69935,396,34,1,1122330,1122330/4/5,1110220/1/2/5/5
+zero_self,11106,47788,118,0,0,,,2233110/5/2/5/5
+primitive_zero_self,3125,13699,18,0,0,,,21310000/13/2/6/6

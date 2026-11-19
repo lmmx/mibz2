@@ -1,0 +1,10 @@
+{
+  "mark": 264045,
+  "rows": 899931,
+  "depth": 25,
+  "original_runs": 51184,
+  "pre_rle_sha": "f87e5caa2d5f0df9d5958fe60901e2023ae04ac406603d4c1584c8bb4017fbd6",
+  "final_skip": 84941,
+  "wire_bytes": 1591408,
+  "wire_sha256": "48989d2bd0c0ad214fd6feb2d2d7a115ea061348190e489e965fd1a059cccc38"
+}

@@ -1,0 +1,5 @@
+frozen median gate CPU ns / all five 1381952 ratio and paired 95% interval 1.0 1.0 1.0
+frozen clone median gate CPU ns / all five 1422282 ratio and paired 95% interval 0.97327 0.87928 1.07731
+capped AVX2 median gate CPU ns / all five 108975 ratio and paired 95% interval 0.07451 0.06412 0.08658
+symbol bitmap median gate CPU ns / all five 293449 ratio and paired 95% interval 0.21305 0.18502 0.24533
+frozen gate fraction of complete serial CPU, input through checked CRC 0.0035814 0.0018795 0.0020538 median 0.0020538

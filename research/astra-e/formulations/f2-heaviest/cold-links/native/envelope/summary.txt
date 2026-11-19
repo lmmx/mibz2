@@ -1,0 +1,9 @@
+complete mean nine-block ms 23.2984
+first mean nine-block ms 14.8272
+cut1 mean nine-block ms 27.1448
+cut8 mean nine-block ms 29.0334
+cut1 / complete 1.16655 1.11654 1.21879
+cut8 / complete 1.24717 1.20267 1.29333
+cut1 / first 1.83846 1.75629 1.92447
+cut8 / first 1.96553 1.86769 2.06849
+first / complete 0.63452 0.60041 0.67057

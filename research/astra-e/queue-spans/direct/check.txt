@@ -1,0 +1,1 @@
+56843 marked-column/limit cases, each checked in u32 rows, raw spans, rescan and all three direct append modes

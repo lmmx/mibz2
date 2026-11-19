@@ -1,0 +1,17 @@
+scan_queues 10.1468 ms 0.32088 0.22755 0.35572
+strip_images 0.1087 ms 0.00367 0.00297 0.00729
+endpoint_lists 1.0893 ms 0.03468 0.02743 0.0628
+endpoint_eliminate 3.1262 ms 0.10353 0.06344 0.18187
+bottom_positions 0.1334 ms 0.00436 0.00262 0.01069
+bands_spellings 2.5086 ms 0.08347 0.05123 0.1099
+edge_table 1.5439 ms 0.05108 0.0345 0.1896
+residual_emit 11.948 ms 0.38391 0.32594 0.53779
+instrument/original full [1.0505, 1.014849, 1.087404]
+admitted inverse fraction of all paid worker CPU 0.79637
+W 7 required fraction of current wall 0.10933 conditional reductions (scan, emit, both) 0.42784 0.3576 0.19479
+W 8 required fraction of current wall 0.12252 conditional reductions (scan, emit, both) 0.47945 0.40073 0.21829
+W 9 required fraction of current wall 0.11416 conditional reductions (scan, emit, both) 0.44675 0.3734 0.2034
+W 10 required fraction of current wall 0.09819 conditional reductions (scan, emit, both) 0.38423 0.32115 0.17493
+counter elision meter_queues meter_original scan_ns [0.900309, 0.84932, 0.954359]
+counter elision meter_queues meter_original total_ns [0.97441, 0.919805, 1.032257]
+counter elision queues original total_ns [0.987934, 0.918701, 1.062384]

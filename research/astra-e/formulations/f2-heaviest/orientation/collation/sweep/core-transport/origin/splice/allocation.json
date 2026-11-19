@@ -1,0 +1,40 @@
+{
+  "cold": {
+    "reserved_over_incremental": [
+      0.8461150075066584,
+      0.6008028910213318,
+      1.1915898152736648
+    ],
+    "median_us_per_lap": [
+      1326.4025,
+      956.726
+    ],
+    "capacity_B_per_lap": [
+      5419512.0,
+      2714409.0
+    ],
+    "relocations_across_120_calls": [
+      72,
+      72
+    ]
+  },
+  "warm": {
+    "reserved_over_incremental": [
+      0.8984113627809429,
+      0.586286891704378,
+      1.3767030922821564
+    ],
+    "median_us_per_lap": [
+      821.535,
+      708.4255
+    ],
+    "capacity_B_per_lap": [
+      5419512.0,
+      2714409.0
+    ],
+    "relocations_across_120_calls": [
+      0,
+      0
+    ]
+  }
+}

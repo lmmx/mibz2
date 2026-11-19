@@ -1,0 +1,102 @@
+{
+  "binary_command": "INDEXED_BANDS",
+  "binary_sha256": "bb55b895c10ac13629a66b65938f548709122624fdf257053644e08a0390169c",
+  "counts": {
+    "columns_with_multiple_cycles": 108,
+    "components": 9553,
+    "direct_checked_sections": 4908,
+    "disjoint_marks": 7524,
+    "distinct_last_columns": 153,
+    "empty_sections": 153,
+    "first_return_hits": 16314,
+    "fragmented_sections": 3327,
+    "marked_hits": 26193,
+    "marked_tests": 33717,
+    "nondividing_period_hits": 8726,
+    "repeated_tagged_bucket": 1866,
+    "same_word_multiple_colors": 1241,
+    "section_tests": 5848,
+    "sections_on_cyclic_column": 1658,
+    "tagged_buckets": 13388,
+    "untagged_words": 12065
+  },
+  "coverage": {
+    "all_binary_cyclic_texts_through_n": 7,
+    "all_primary_indices_tested": true,
+    "exhaustive_arbitrary_binary_last_columns_and_sections_through_n": 6,
+    "structured_marker_lengths": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "targeted_texts_hex": [
+      "62616e616e61",
+      "6d69737369737369707069",
+      "6162616261",
+      "61616161",
+      "00ff8000ff11"
+    ]
+  },
+  "direct_outside_structured_domain": {
+    "direct.py:74 assert row+width <= self.components[i][1]": 479,
+    "direct.py:76 assert i+1 == len(self.starts) or row+width <= self.starts[i+1]": 461
+  },
+  "indexed_checks": [
+    "source table fills equal U size in every dataset, with U and component directories charged",
+    "each discovered packet charged one page or finger seek; zero binary searches or order comparisons",
+    "raw terminal spans retained in the source-rank directory",
+    "source table allocated at setup and filled in the order phase, as recorded in forward.cpp",
+    "exact page-run increments on singleton-section orbits across three pages"
+  ],
+  "mode": "validate forward",
+  "native_checks": [
+    "every source row's first-return destination, word and destination color",
+    "marked expansion or disjoint-cycle fallback",
+    "exact covered mass, proper-prefix groups, full trie and distinct spellings",
+    "initial mark-to-section distance and number of output word lookups",
+    "packet conservation, select seeks and terminal/live accounting"
+  ],
+  "ordered_datasets_sha256": "0a0aa5bcf8160885ce6bc8ea99db9a26db4015a9075f9281939d74378d9e4a84",
+  "section_labels": {
+    "arbitrary_exhaustive": 5460,
+    "overlapping_parent_occurrences": 611,
+    "selected_return_types": 1098,
+    "targeted_cut": 755,
+    "whole_marker_cylinder": 1011
+  },
+  "supplemental_page_boundaries": {
+    "datasets": 732,
+    "largest_zero_based_page": 2,
+    "max_page_run_increments_per_singleton_orbit": 3969,
+    "n": [
+      63,
+      64,
+      65,
+      127,
+      128,
+      129
+    ],
+    "ordered_datasets_sha256": "cc11c434242c1be6fda3fe1afa17c9c43fc383ab89cea37f9b4662798eb09a94"
+  },
+  "witnesses": {
+    "direct.py:74 assert row+width <= self.components[i][1]": {
+      "last_hex": "010100",
+      "section": [
+        [
+          0,
+          2
+        ]
+      ]
+    },
+    "direct.py:76 assert i+1 == len(self.starts) or row+width <= self.starts[i+1]": {
+      "last_hex": "010000",
+      "section": [
+        [
+          1,
+          3
+        ]
+      ]
+    }
+  }
+}

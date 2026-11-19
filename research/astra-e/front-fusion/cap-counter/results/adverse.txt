@@ -1,0 +1,2 @@
+6 dense stock rejections matched all four original return statuses and output buffers.
+10823 independent marked constructions; four queued arms; 3651 also used all four nonqueue specializations; 3 wide endpoint; 1 8-byte packed edges.

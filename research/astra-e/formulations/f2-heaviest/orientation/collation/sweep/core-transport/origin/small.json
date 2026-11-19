@@ -1,0 +1,109 @@
+{
+  "counts": {
+    "objects": 22520,
+    "old_selected_sources": 44360,
+    "rotated_second_partners": 35432,
+    "tied_winner": 5362,
+    "multiple_origin_prefix": 3396,
+    "fragmented_origin": 656,
+    "fragmented_physical_single_prefix": 2
+  },
+  "witnesses": {
+    "tied_winner": {
+      "last": "0001",
+      "u": [
+        0,
+        2
+      ],
+      "h": 0,
+      "top_hex": "00",
+      "mass": 1,
+      "ties": 2,
+      "source_components": 1,
+      "prefix_count": 1,
+      "old_bands": 1,
+      "physical_components": 1,
+      "selected_second_partners": 1,
+      "second_types": 1,
+      "second_D": 1,
+      "tested": 2,
+      "search_nodes": 1,
+      "search_pieces": 2,
+      "probe_nodes": 2,
+      "probe_pieces": 0,
+      "max_heap": 1
+    },
+    "multiple_origin_prefix": {
+      "last": "010000",
+      "u": [
+        1,
+        3
+      ],
+      "h": 1,
+      "top_hex": "00",
+      "mass": 2,
+      "ties": 1,
+      "source_components": 1,
+      "prefix_count": 2,
+      "old_bands": 2,
+      "physical_components": 1,
+      "selected_second_partners": 0,
+      "second_types": 0,
+      "second_D": 0,
+      "tested": 1,
+      "search_nodes": 1,
+      "search_pieces": 1,
+      "probe_nodes": 2,
+      "probe_pieces": 1,
+      "max_heap": 0
+    },
+    "fragmented_origin": {
+      "last": "0100000100",
+      "u": [
+        1,
+        4
+      ],
+      "h": 1,
+      "top_hex": "00",
+      "mass": 2,
+      "ties": 1,
+      "source_components": 2,
+      "prefix_count": 2,
+      "old_bands": 2,
+      "physical_components": 1,
+      "selected_second_partners": 0,
+      "second_types": 0,
+      "second_D": 0,
+      "tested": 1,
+      "search_nodes": 1,
+      "search_pieces": 2,
+      "probe_nodes": 2,
+      "probe_pieces": 1,
+      "max_heap": 1
+    },
+    "fragmented_physical_single_prefix": {
+      "last": "01010001000000",
+      "u": [
+        4,
+        7
+      ],
+      "h": 1,
+      "top_hex": "00",
+      "mass": 2,
+      "ties": 1,
+      "source_components": 1,
+      "prefix_count": 1,
+      "old_bands": 1,
+      "physical_components": 2,
+      "selected_second_partners": 2,
+      "second_types": 2,
+      "second_D": 7,
+      "tested": 2,
+      "search_nodes": 2,
+      "search_pieces": 4,
+      "probe_nodes": 4,
+      "probe_pieces": 3,
+      "max_heap": 2
+    }
+  }
+}

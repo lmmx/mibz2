@@ -1,0 +1,1 @@
+sharp_complete_graphs=15 marked_random_panels=2400 at_least_three_stages=1815 maximum_stages=4

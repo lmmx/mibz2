@@ -1,0 +1,55 @@
+{
+  "65_adjacent_18_byte_tokens_three_copies_plus_five_singletons": {
+    "admitted_marks": 82,
+    "arrows": 195,
+    "columns": 1,
+    "fallback_marks": 2,
+    "interior_admitted_marks": 77,
+    "marked_cases": 84,
+    "multicycle_columns": 1,
+    "nondividing_admitted_marks": 82,
+    "nonidentical_conjugates": 195,
+    "overlap_arrows": 192,
+    "sections": 1
+  },
+  "all_2-ary_columns_1_to_9": {
+    "admitted_marks": 25430,
+    "arrows": 8194,
+    "columns": 1022,
+    "fallback_marks": 11588,
+    "interior_admitted_marks": 17236,
+    "marked_cases": 37018,
+    "multicycle_columns": 895,
+    "nondividing_admitted_marks": 16084,
+    "nonidentical_conjugates": 4444,
+    "overlap_arrows": 4530,
+    "sections": 4524
+  },
+  "all_3-ary_columns_1_to_6": {
+    "admitted_marks": 17451,
+    "arrows": 6015,
+    "columns": 1092,
+    "fallback_marks": 9762,
+    "interior_admitted_marks": 11436,
+    "marked_cases": 27213,
+    "multicycle_columns": 896,
+    "nondividing_admitted_marks": 7578,
+    "nonidentical_conjugates": 3564,
+    "overlap_arrows": 3819,
+    "sections": 4836
+  },
+  "dd_marker_longer_than_one_row_cycle": {
+    "admitted_marks": 1,
+    "arrows": 1,
+    "columns": 1,
+    "fallback_marks": 2,
+    "interior_admitted_marks": 0,
+    "marked_cases": 3,
+    "multicycle_columns": 1,
+    "nondividing_admitted_marks": 0,
+    "nonidentical_conjugates": 0,
+    "overlap_arrows": 1,
+    "sections": 1
+  },
+  "f2c_constructor_sha256": "afb703824c8fe28433f51f9a0adeae47ed895fbd2e53e0c11d8abe3006c867c1"
+}

@@ -1,0 +1,14 @@
+moonshot: building the harness with /workspace/work/astra-e-queue-scorer/research/astra-e/queue-spans/raw.rs
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e-queue-scorer/bench/moonshot)
+warning: type alias `Candidate` is never used
+ --> /workspace/work/astra-e-queue-scorer/research/astra-e/queue-spans/candidate.rs:6:10
+  |
+6 | pub type Candidate = Variant<3>;
+  |          ^^^^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `mibz2-moonshot` (bin "moonshot") generated 1 warning
+    Finished `release` profile [optimized + debuginfo] target(s) in 43.38s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-e/corpora/wikidata.bz2
+moonshot: written to /workspace/work/astra-e/research/astra-e/queue-spans/official/raw

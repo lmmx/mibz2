@@ -1,0 +1,17 @@
+{
+  "rev": "85025c903eed22e2df130b6f345613a4ddfaf5d1",
+  "scorer_path": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "scorer_tree": "040000 tree 75f7b0321bd71c5086cbfb34747f7ea963463784\tbench/moonshot",
+  "sources_sha256": {
+    "research/astra-e/two-seed/multi/seams/candidate.rs": "5a2dfb188483b68533a015a1053192276b99dc9d776fe30611b75c97a07f0791",
+    "research/astra-e/two-seed/multi/seams/joined.rs": "19296790ecbb58e493db47d2fd8c8c7a3b728c163204494b54f121f1d0fa6048",
+    "research/astra-e/two-seed/multi/seams/generate.py": "eb64160e4d225be54fb18ad5d2fbe82dd5cb3044e49f530cad48e6207dea3d72",
+    "research/astra-e/two-seed/multi/seams/slices.rs": "f685852af610feb1315e5e61064f6d5157941daa46063089b7dfe5ac25f0beb1",
+    "research/astra-e/two-seed/multi/seams/target/generated/expanded.rs": "d7fba568a1ebff82aa6da85a262cf79f4ff928ee69fd92287e8d51f6557c1b62",
+    "research/astra-e/two-seed/multi/seams/target/generated/expanded-adapter.rs": "4d54388c7c5205e84df5a9b762a8b35ea13d9104bd4a409677aa1c25b3081a95"
+  },
+  "binaries_sha256": {
+    "candidate": "b0080bb2eebe4b9af0f5220b4d84c3f7a62fd3add6b150221fb360c16db09911",
+    "joined": "7b86d337df13b96c0d0c88b7c6f57c59c8c7b22cba43c0f571f26f5e7b24a397"
+  }
+}

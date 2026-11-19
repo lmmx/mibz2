@@ -1,0 +1,28 @@
+{
+  "counts": {
+    "columns": 374,
+    "occurrence_cycles": 321,
+    "canonical_optima": 46796,
+    "old_partitions": 11699,
+    "all_neutral": 88542,
+    "canonical_candidates": 85426,
+    "strictly_reduced_partitions": 243,
+    "columns_with_pure_mandatory_cycles": 165
+  },
+  "max_distinct_necklaces": 4,
+  "max_pure_cycles": 6,
+  "thick_cover": {
+    "n": 9000000000153,
+    "run_count": 4,
+    "necklaces": 1,
+    "multiplicity": 1000000000017,
+    "stored_path_rows": 17,
+    "offset_slabs": 2,
+    "old": [
+      2333333333373,
+      6000000000102
+    ],
+    "tested_canonical": 4296,
+    "maximum_unit_charge_objective": 9000000000138
+  }
+}
