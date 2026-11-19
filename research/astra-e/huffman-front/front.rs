@@ -54,7 +54,7 @@ impl Front{
     unsafe fn select(&mut self,s:usize)->u8{
         // A set literal bit is at least 2, and EOB was removed.
         if s<33{
-            let t=STEPS.as_ptr().add(s-1);
+            let t=MTF_STEPS.as_ptr().add(s-1);
             let a=_mm_load_si128((*t).a.as_ptr().cast());let b=_mm_load_si128((*t).b.as_ptr().cast());
             let c=_mm_load_si128((*t).c.as_ptr().cast());let d=_mm_load_si128((*t).d.as_ptr().cast());
             let first=_mm_or_si128(_mm_shuffle_epi8(self.f0,a),_mm_shuffle_epi8(self.f1,b));

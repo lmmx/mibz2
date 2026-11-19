@@ -49,5 +49,5 @@ at=s.index("    if let Err(k) = res");s=s[:at]+'''    if res.is_err() || br.over
 '''
 r=git("runs");a=r.index("#[cfg(target_arch",r.index("/// `src/mtf.rs`'s first level"));b=r.index("/// The AVX2",a) if "/// The AVX2" in r[a:] else 0
 b=r.index("    v\n}",r.index("unsafe fn second(",a))+len("    v\n}")
-s+=r[a:b]+"\n"+(d/"front.rs").read_text()
+s+=r[a:b].replace("static STEPS:","static MTF_STEPS:")+"\n"+(d/"front.rs").read_text()
 (out/"fused.rs").write_text(s)
