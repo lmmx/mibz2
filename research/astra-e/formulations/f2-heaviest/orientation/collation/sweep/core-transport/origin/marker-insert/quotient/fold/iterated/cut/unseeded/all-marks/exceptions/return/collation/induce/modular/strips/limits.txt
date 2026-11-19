@@ -1,0 +1,1 @@
+arbitrary permutation (0, 1, 2) colors (0, 1, 0) q 2 start 0 equal return word (0,) targets 0 2 first failed translation 0
