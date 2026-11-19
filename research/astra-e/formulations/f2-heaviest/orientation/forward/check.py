@@ -113,10 +113,10 @@ def check_bands(bands, expected):
     assert observed == expected, (bands, expected)
 
 
-def batch(binary, requests):
+def batch(binary, command, requests):
     if binary is None:
         return
-    proc = subprocess.run([binary, "BANDS"], input="".join(s for s, _ in requests),
+    proc = subprocess.run([binary, command], input="".join(s for s, _ in requests),
                           text=True, capture_output=True)
     if proc.returncode:
         raise RuntimeError(f"forward exited {proc.returncode}: {proc.stderr[-1000:]}")
@@ -132,14 +132,71 @@ def batch(binary, requests):
             component_count = int(dataset.split("\n", 1)[0].split()[-1])
             assert obj["bands_count"] == len(bands) <= obj["raw_hits"]
             assert obj["packet_inputs"] == component_count + obj["live_outputs"] - obj["live_merges"]
-            assert obj["packet_inputs"] == sum(obj[k] for k in (
+            assert obj["packet_inputs"] == obj.get("select_page_seeks", 0) + sum(obj[k] for k in (
                 "select_binary_searches", "select_finger_retained", "select_finger_next"))
+            if command == "INDEXED_BANDS":
+                assert obj["select_binary_searches"] == obj["select_binary_comparisons"] == 0
+                assert obj["page_capacity_bytes"] >= 4 * ((obj["n"] + 63) // 64)
+                assert obj["select_page_run_increments"] <= 63 * obj["select_page_seeks"]
+                assert obj["source_directory_fills"] == len(want[0])
+                assert obj["source_directory_capacity_bytes"] >= 4 * (len(want[0]) + component_count)
+                assert obj["sort_comparisons"] == 0 and obj["bands_count"] == obj["raw_hits"]
             assert obj["component_pieces"] == obj["live_outputs"] + obj["raw_hits"]
         except Exception as exc:
             raise AssertionError(f"binary disagrees on dataset\n{dataset}\nreported {row}") from exc
 
 
-def main(binary):
+def check_page_boundaries(binary, command):
+    # A singleton section has one live packet at each proper prefix. Each select
+    # starts with a fresh finger. Count precisely how many run ends the page
+    # lookup must cross, independently of which row was marked for expansion.
+    tests = 0
+    largest_page = 0
+    fingerprints = sha256()
+    increments = set()
+    for n in (63, 64, 65, 127, 128, 129):
+        for last in (bytes(range(n)), bytes(reversed(range(n))),
+                     bytes((i * 37 + i // 3) % 13 for i in range(n))):
+            first, psi, _ = geometry(last)
+            runs = [(b, len(list(it))) for b,it in groupby(last)]
+            l_run = [index for index,(_,width) in enumerate(runs) for _ in range(width)]
+            select_run_rank = {r:i for i,r in enumerate(sorted(range(len(runs)), key=lambda r: runs[r][0]))}
+            select_rank = [select_run_rank[l_run[y]] for y in psi]
+            cuts = sorted(set(x for x in (0, 1, 62, 63, 64, 65, 126, 127, 128, n-1) if 0<=x<n))
+            requests = []
+            for src in cuts:
+                _, word = step_to_set(src, psi, first, {src})
+                row = src
+                steps = 0
+                for _ in word:
+                    page = row // 64
+                    steps += select_rank[row] - select_rank[page*64]
+                    largest_page = max(page, largest_page)
+                    row = psi[row]
+                increments.add(steps)
+                for mark in cuts:
+                    pos = mark
+                    cycle = set()
+                    while pos not in cycle:
+                        cycle.add(pos)
+                        pos = psi[pos]
+                    expected = spell(first, psi, mark, n).hex() if src in cycle else None
+                    oracle = {"source_directory_fills": 1, "select_page_seeks": len(word),
+                              "select_page_run_increments": steps, "select_translations": len(word)}
+                    data = f"{n} {mark} {len(runs)} 1\n" + "".join(
+                        f"{a} {b}\n" for a,b in [*runs,(src,src+1)])
+                    fingerprints.update(data.encode())
+                    requests.append((data, ({src:(src,word,0)}, expected, oracle)))
+                    tests += 1
+            batch(binary, command, requests)
+    assert largest_page == 2 and 0 in increments and 63 in increments
+    return dict(datasets=tests, n=[63,64,65,127,128,129], largest_zero_based_page=largest_page,
+                ordered_datasets_sha256=fingerprints.hexdigest(),
+                max_page_run_increments_per_singleton_orbit=max(increments))
+
+
+def main(binary, command="BANDS"):
+
     cases, cyclic_columns = case_inputs()
     totals = Counter()
     labels = Counter()
@@ -240,14 +297,14 @@ def main(binary):
                                  output_lookups=lookups)
                     requests.append((data, (edges, None if want is None else want.hex(), stats)))
                     if len(requests) == 256:
-                        batch(binary, requests)
+                        batch(binary, command, requests)
                         requests.clear()
     if requests:
-        batch(binary, requests)
+        batch(binary, command, requests)
     assert all(totals[k] for k in ("fragmented_sections","disjoint_marks","same_word_multiple_colors",
                                     "columns_with_multiple_cycles","nondividing_period_hits"))
     assert labels["overlapping_parent_occurrences"] and refusals
-    return dict(coverage={"exhaustive_arbitrary_binary_last_columns_and_sections_through_n": 6,
+    report = dict(coverage={"exhaustive_arbitrary_binary_last_columns_and_sections_through_n": 6,
                           "all_binary_cyclic_texts_through_n": 7,
                           "structured_marker_lengths": [1, 2, 3, 4],
                           "targeted_texts_hex": [x.hex() for x in (b"banana", b"mississippi", b"ababa", b"aaaa", bytes([0,255,128,0,255,17]))],
@@ -264,8 +321,22 @@ def main(binary):
                 ordered_datasets_sha256=fingerprint.hexdigest(), counts=totals,
                 section_labels=labels, direct_outside_structured_domain=refusals, witnesses=witnesses)
 
+    if command == "INDEXED_BANDS":
+        report["binary_command"] = command
+        report["indexed_checks"] = [
+            "source table fills equal U size in every dataset, with U and component directories charged",
+            "each discovered packet charged one page or finger seek; zero binary searches or order comparisons",
+            "raw terminal spans retained in the source-rank directory",
+            "source table allocated at setup and filled in the order phase, as recorded in forward.cpp",
+            "exact page-run increments on singleton-section orbits across three pages",
+        ]
+        report["supplemental_page_boundaries"] = check_page_boundaries(binary, command)
+    return report
+
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("binary", nargs="?", type=lambda x: Path(x).resolve())
-    print(json.dumps(main(p.parse_args().binary), indent=2, sort_keys=True))
+    p.add_argument("command", nargs="?", choices=["BANDS", "INDEXED_BANDS"], default="BANDS")
+    args = p.parse_args()
+    print(json.dumps(main(args.binary, args.command), indent=2, sort_keys=True))
