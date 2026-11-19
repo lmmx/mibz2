@@ -2,7 +2,6 @@
 import hashlib
 import json
 from pathlib import Path
-import re
 import subprocess
 import sys
 import tarfile
@@ -46,6 +45,9 @@ def verify(path):
     assert [s.split()[0]for s in items["inputs.sha256"].splitlines()]==[WIKI,X4]
     binaries=[s.split()[0]for s in items["binaries.sha256"].splitlines()]
     assert len(binaries)==len(set(binaries))==2
+    for name,entry in [("scorer-info.json",scalar.CANDIDATE),("predecessor-info.json",scalar.PREDECESSOR)]:
+        info=json.loads(items[name])
+        assert info["candidate"].endswith("/"+entry) and set(scalar.ARMS)-{"predecessor"}<=set(info["arms"])
     report=next(s for s in items["scorer-report.txt"].splitlines() if s.startswith("scorer v"))
     assert report in items["predecessor-report.txt"].splitlines()
     assert json.loads(items["roster.json"])==list(map(list,scalar.roster()))
