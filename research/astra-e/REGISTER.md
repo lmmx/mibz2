@@ -34,6 +34,8 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 **Refreshed local comparison.** On upstream scorer `75297a1`, final-slot again gave the lowest of six wall point estimates at W1/W4 (0.819 [0.565,1.188] and 0.767 [0.517,1.139]); edge retained the lowest median peaks (0.898 and 0.750). Every candidate/Lazy wall interval contained one. Each implementation had its own directly paired Lazy and opend controls. Guarded W4 included a 62-second process sample. [Full series, 324 samples and direct candidate/opend contrasts](results/refresh-75297a1/)
 
+**Scalar capped-run iterator.** At source d0a42980e896211906234c7679b38760ae44a46e all 338 cases passed. On the same v1 scorer path (nine paired rounds per worker count), wall against Lazy was 0.9097 [0.8181,1.0116] at W1 and 0.8781 [0.7591,1.0158] at W4. Its W1 median peak ratio 0.8845 is the lowest among these eight confirmation candidates, and the W4 ratio was 0.7567. Edge remains the lowest W4 median at 0.750. Front fusion and final-slot retain the lowest local W1/W4 wall point estimates, respectively. The direct concurrent edge comparison is in CI. [Frozen source, original timings and direct opend replay](results/v1p2-cap-batch-scalar-confirm/) · [Instructions and modeled cache diagnostics](front-fusion/cap-batch/)
+
 **Calibrated v1 proxy for the combined writer.** The complete 960-row run predicts 0.9102 [0.8811,0.9376], 0.9118 [0.8817,0.9396] and 0.9155 [0.8740,0.9516] of Lazy at W7, W8 and W10. The high-worker reference cells lie inside the diagnostic envelope. W1, W2 and W4 fall outside it on dependent DRAM links. W7 has a marked concentration of dependent loads on a sparsely represented dense block; the companion analysis gives traffic, instructions, dependency and overlap individually. [Complete raw simulator results and deterministic replay](results/combined-v1-proxy/)
 
 **Delimiter mechanism in independent CI.** At W1/W2/W4 the dynamic rank scheduler ran in 0.9561/0.9586/0.9784 of the static F2 predecessor. The candidate's full worker took 1.0252/1.0153/1.0196 of Lazy, so the independently verified scheduling improvement leaves a measurable pipeline gap on this runner. [Twenty complete rotations and artifact](ci/evidence/delimiter-refill-44433942216.md)
@@ -58,7 +60,7 @@ These are the lowest recorded point estimates within each group of experiments w
 | `604dac3` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-final-slot-confirm · 0.718 [0.551, 0.934] | v1-edge-confirm · 0.732 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1-delimiter-f2c · 1.165 [0.833, 1.628] | v1-delimiter-f2c · 1.002 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-delimiter-f2c · 1.144 [0.826, 1.586] | v1-delimiter-f2c · 0.941 |
-| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1p2-front-confirm · 0.808 [0.570, 1.145] | v1p2-edge-confirm · 0.898 |
+| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1p2-front-confirm · 0.808 [0.570, 1.145] | v1p2-cap-batch-scalar-confirm · 0.885 |
 | `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1p2-final-slot-confirm · 0.767 [0.517, 1.139] | v1p2-edge-confirm · 0.750 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W1** | hierarchy-f4 · 1.940 [1.080, 3.487] | hierarchy-f4 · 0.878 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W4** | hierarchy-f4 · 2.159 [1.407, 3.313] | hierarchy-f4 · 0.819 |
@@ -1613,6 +1615,32 @@ git checkout 75297a1d57b2bdf262c3a19f3064848dedf2c493 -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/formulations/f2-heaviest/union/native/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-heaviest/union/native/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2count-check
+```
+
+## v1p2-cap-batch-scalar-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-cap-batch-scalar-confirm/score/check.jsonl) · [manifest](results/v1p2-cap-batch-scalar-confirm/manifest.txt) · [score](results/v1p2-cap-batch-scalar-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`d0a42980e896211906234c7679b38760ae44a46e`](https://github.com/lmmx/mibz2/tree/d0a42980e896211906234c7679b38760ae44a46e). [Candidate entry](https://github.com/lmmx/mibz2/blob/d0a42980e896211906234c7679b38760ae44a46e/research/astra-e/front-fusion/cap-batch/worker/candidate.rs). Fetched master `be74d5763d212864607d46521d74ebc0827f9f36`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 0.910 [0.818, 1.012] | 0.961 [0.848, 1.089] | 0.947 | 70,940 / 80,200 / 77,468 | 0.885 |
+| 4 | 9 | 0.878 [0.759, 1.016] | 0.809 [0.670, 0.978] | 1.085 | 99,400 / 131,368 / 118,076 | 0.757 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1p2-cap-batch-scalar-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+No independent benchmark is attached to this individual scorer receipt.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout be74d5763d212864607d46521d74ebc0827f9f36 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/front-fusion/cap-batch/worker/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/front-fusion/cap-batch/worker/candidate.rs --workers 1,4 --rounds 9 --repeat 2 --settle 2 --with-opend --no-proxy --target-dir /workspace/work/astra-cap-batch-scalar-build
 ```
 
 ## v1p2-cap-batch-scalar-gate
