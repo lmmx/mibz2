@@ -94,11 +94,32 @@ versions. A version that changes it says so below.
 **TODO:**
 - the measured IPC and instructions a byte from `perf stat` in the container timing, where
   `perf` is allowed;
-- `just moonshot-eval`: one fast command printing predicted against measured for every
-  i9-measured arm (the open-return bundle, the opend sweep, the recalibration bundle's
-  LazyCells against eager at W = 3–4, and 0.5.6 against 0.5.5), with rank agreement and the
-  mean absolute log error on a fixed held-out subset. The estimator is then improved in small,
-  logged versions, starting with instructions a byte and IPC.
+- `just moonshot-eval`, improved: fixed held-out i9 arms (the open-return bundle, the opend
+  sweep, the recalibration bundle's LazyCells against eager at W = 3–4, 0.5.6 against 0.5.5),
+  then estimators improved in small, logged versions.
+
+**The retrospective.** `just moonshot-eval research/astra-e` (or any directories) prints, for
+every candidate with a local forecast, one row per W:
+- the record and the candidate commit;
+- the scorer version and commit;
+- the local wall ratio with its interval, and the proxy's prediction;
+- every later independent result for the same frozen source, with its host and W;
+- each forecast's log error.
+
+What it reads:
+- *Forecasts:* score `summary.json` files and register lines.
+- *Results:* any JSON key ending `ci_run` or `i9_run`, in `assessment.json`'s shape.
+
+How a forecast and a result are joined:
+- by the source's SHA-256;
+- else by a shared results directory;
+- else by path, which is flagged.
+
+Losing candidates are included. A pairing whose host or W doesn't match the forecast's target is
+flagged and not scored as calibration: local timing forecasts the local host, and the proxy
+forecasts the i9. The accuracy summary, by scorer version, gives the mean absolute log error and
+the pairwise rank agreement of the scored cells. Cross-host pairings are summarised apart. It is
+read-only and refits nothing.
 
 ## Plugging in a candidate
 

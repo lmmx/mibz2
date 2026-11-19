@@ -1854,6 +1854,14 @@ moonshot-score candidate *args:
 moonshot-best register:
     python3 bench/moonshot/moonshot.py best "{{register}}"
 
+# The scorer's retrospective (bench/moonshot/README.md, "The retrospective"): every candidate's
+# local forecast (scores, register lines) beside every later independent CI or i9 result for the
+# same frozen source, with each prediction's error; accuracy by scorer version, counting only
+# forecasts whose host and W match. Read-only: it fits nothing.
+#   just moonshot-eval research/astra-e
+moonshot-eval *dirs:
+    python3 bench/moonshot/eval.py {{dirs}}
+
 # The scorer's i9 calibration run (bench/moonshot/README.md, "Calibration"; its rule posted on
 # #145 before any data): the reference arms in the shipped workers, kernel-only (lazy, 0.5.6's
 # LazyCells; opend; open; cells, eager), paired and alternating at WORKERS workers, unpinned,
