@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **0.5.7's worker-count recalibration (RELEASING §5c): one change, at 6 threads on the measured
+  i9.** The open kernel (#630) changes the lazy workers' per-block work and scratch, so every
+  trim was measured again on master at 17405826 (`just bench-recalibrate-057`, the reviewed
+  2026-11-18 design re-pinned; recalibrate-057/run-20261119T185157Z, evidence f6c32d79, sha256
+  98200b84…3805). At exactly 6 threads the default decoder now inverts with the lazy kernel
+  (`OpenCells`) in place of eager `Cells`, with the shipped worker count and window:
+  - pinned one CPU a core: lazy 5/20 over eager 5/20, 0.9340 [0.9264, 0.9417] of the wall on
+    Wikidata ×4, at 0.844 of the peak memory (guards: text 0.9972, random 0.9989);
+  - unpinned: the plan's six workers, lazy 6/24 over eager 6/24, 0.8531 [0.8024, 0.9071], at
+    0.869 of the memory (guards inconclusive: text 1.0846 [0.8799, 1.3370], random 0.9835).
+
+  Every other trim is unchanged: pinned at 4, 8 and 10 threads, and unpinned at 4, 8, 10, 12,
+  16 and 20. So are the plan, `LAZY_FROM_THREADS` and every other machine. The output is
+  byte-identical.
+
 ## [0.5.6](https://github.com/lmmx/mibz2/compare/v0.5.5...v0.5.6) - 2026-11-18
 
 A kernel release: Cells' writer reads its rules once. Every plan, thread count and worker
