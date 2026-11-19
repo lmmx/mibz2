@@ -1,0 +1,84 @@
+fold/named_a setup_ns 1.00496 [0.93306,1.08241]
+fold/named_a discover_ns 0.95737 [0.88133,1.03996]
+fold/named_a merge_ns 0.96622 [0.83745,1.11479]
+fold/named_a second_index_ns 0.90081 [0.76330,1.06309]
+fold/named_a second_discover_ns 0.89646 [0.82069,0.97923]
+fold/named_a second_merge_ns 0.96820 [0.86485,1.08390]
+fold/named_a second_emit_ns 1.02602 [0.95953,1.09711]
+fold/named_a total_ns 1.18226 [1.12406,1.24347]
+fold/named_a first_ns 0.96985 [0.91253,1.03076]
+fold/named_a post_root_ns 1.54133 [1.47326,1.61255]
+fold/named_a second_total_ns 0.95299 [0.90733,1.00095]
+fold/named_b setup_ns 1.02590 [0.94478,1.11400]
+fold/named_b discover_ns 1.05206 [0.98661,1.12185]
+fold/named_b merge_ns 0.94875 [0.84139,1.06982]
+fold/named_b second_index_ns 0.89743 [0.77047,1.04531]
+fold/named_b second_discover_ns 0.84011 [0.73304,0.96282]
+fold/named_b second_merge_ns 0.92960 [0.84141,1.02704]
+fold/named_b second_emit_ns 1.00448 [0.88197,1.14401]
+fold/named_b total_ns 1.20145 [1.12264,1.28579]
+fold/named_b first_ns 1.03574 [0.97786,1.09704]
+fold/named_b post_root_ns 1.46036 [1.32414,1.61059]
+fold/named_b second_total_ns 0.90315 [0.81581,0.99983]
+fold/recognize setup_ns 0.96329 [0.91674,1.01221]
+fold/recognize discover_ns 0.99433 [0.94789,1.04303]
+fold/recognize merge_ns 1.02776 [0.86494,1.22123]
+fold/recognize publication_ns 1.56252 [1.42868,1.70890]
+fold/recognize recognize_ns 0.96977 [0.87595,1.07365]
+fold/recognize second_index_ns 0.97533 [0.84819,1.12153]
+fold/recognize second_discover_ns 0.89067 [0.80410,0.98655]
+fold/recognize second_merge_ns 0.91416 [0.81986,1.01931]
+fold/recognize second_emit_ns 1.08272 [1.00933,1.16144]
+fold/recognize total_ns 1.05979 [1.01605,1.10542]
+fold/recognize first_ns 0.99892 [0.95242,1.04769]
+fold/recognize post_root_ns 1.13274 [1.07956,1.18855]
+fold/recognize second_total_ns 0.96908 [0.90668,1.03577]
+recognize/named_a setup_ns 1.04326 [0.96036,1.13331]
+recognize/named_a discover_ns 0.96283 [0.88418,1.04847]
+recognize/named_a merge_ns 0.94012 [0.83156,1.06286]
+recognize/named_a second_index_ns 0.92359 [0.77376,1.10244]
+recognize/named_a second_discover_ns 1.00650 [0.92770,1.09201]
+recognize/named_a second_merge_ns 1.05911 [0.96039,1.16798]
+recognize/named_a second_emit_ns 0.94763 [0.88973,1.00930]
+recognize/named_a total_ns 1.11556 [1.05842,1.17577]
+recognize/named_a first_ns 0.97089 [0.91799,1.02684]
+recognize/named_a post_root_ns 1.36071 [1.27707,1.44982]
+recognize/named_a second_total_ns 0.98340 [0.92146,1.04951]
+recognize/named_b setup_ns 1.06500 [0.99263,1.14264]
+recognize/named_b discover_ns 1.05806 [0.98982,1.13101]
+recognize/named_b merge_ns 0.92313 [0.82409,1.03407]
+recognize/named_b second_index_ns 0.92013 [0.74407,1.13784]
+recognize/named_b second_discover_ns 0.94323 [0.84043,1.05862]
+recognize/named_b second_merge_ns 1.01689 [0.88730,1.16541]
+recognize/named_b second_emit_ns 0.92774 [0.83301,1.03324]
+recognize/named_b total_ns 1.13367 [1.08227,1.18750]
+recognize/named_b first_ns 1.03686 [0.98902,1.08701]
+recognize/named_b post_root_ns 1.28923 [1.17297,1.41701]
+recognize/named_b second_total_ns 0.93197 [0.84389,1.02924]
+named_b/named_a setup_ns 0.97958 [0.89446,1.07281]
+named_b/named_a discover_ns 0.90999 [0.83326,0.99380]
+named_b/named_a merge_ns 1.01841 [0.92910,1.11631]
+named_b/named_a second_index_ns 1.00377 [0.91710,1.09862]
+named_b/named_a second_discover_ns 1.06708 [0.96801,1.17629]
+named_b/named_a second_merge_ns 1.04152 [0.92879,1.16793]
+named_b/named_a second_emit_ns 1.02144 [0.89999,1.15928]
+named_b/named_a total_ns 0.98403 [0.94505,1.02460]
+named_b/named_a first_ns 0.93638 [0.87115,1.00650]
+named_b/named_a post_root_ns 1.05544 [0.96536,1.15394]
+named_b/named_a second_total_ns 1.05519 [0.96560,1.15309]
+named_a ten-block arithmetic mean ms {'setup_ns': 2.901, 'discover_ns': 9.1864, 'merge_ns': 2.2321, 'publication_ns': 0.0, 'recognize_ns': 0.0, 'dictionary_ns': 0.0, 'weave_ns': 0.0, 'second_index_ns': 0.8803, 'second_discover_ns': 3.4917, 'second_merge_ns': 1.2525, 'second_emit_ns': 2.852, 'total_ns': 22.8211, 'first_ns': 14.3195, 'post_root_ns': 8.5015, 'second_total_ns': 8.4765}
+named_b ten-block arithmetic mean ms {'setup_ns': 2.7946, 'discover_ns': 8.1414, 'merge_ns': 2.2825, 'publication_ns': 0.0, 'recognize_ns': 0.0, 'dictionary_ns': 0.0, 'weave_ns': 0.0, 'second_index_ns': 0.9064, 'second_discover_ns': 3.7596, 'second_merge_ns': 1.3689, 'second_emit_ns': 3.1308, 'total_ns': 22.4121, 'first_ns': 13.2186, 'post_root_ns': 9.1936, 'second_total_ns': 9.1658}
+recognize ten-block arithmetic mean ms {'setup_ns': 2.9647, 'discover_ns': 8.6621, 'merge_ns': 2.1054, 'publication_ns': 3.2048, 'recognize_ns': 2.9892, 'dictionary_ns': 0.0, 'weave_ns': 0.0, 'second_index_ns': 0.7592, 'second_discover_ns': 3.5195, 'second_merge_ns': 1.3488, 'second_emit_ns': 2.6655, 'total_ns': 25.2531, 'first_ns': 13.7322, 'post_root_ns': 11.5208, 'second_total_ns': 8.293}
+fold ten-block arithmetic mean ms {'setup_ns': 2.9454, 'discover_ns': 8.8593, 'merge_ns': 2.1335, 'publication_ns': 4.9217, 'recognize_ns': 2.8726, 'dictionary_ns': 0.8467, 'weave_ns': 1.1945, 'second_index_ns': 0.7523, 'second_discover_ns': 3.2688, 'second_merge_ns': 1.2517, 'second_emit_ns': 2.9577, 'total_ns': 27.1222, 'first_ns': 13.9383, 'post_root_ns': 13.184, 'second_total_ns': 8.2305}
+ten.csv named_a sums {'rows': 8999915, 'quote': 1357067, 'tokens': 1357067, 'eligible': 0, 'eligible_mass': 0, 'chosen': 0, 'removed': 0, 'old_runs': 0, 'empty': 0, 'new_runs': 0, 'appended_dictionary': 0, 'moved': 0, 'lazy_chunks': 0, 'lookups': 69999, 'words': 38648, 'second_dictionary': 1926457, 'links': 245445} stock second 10
+ten.csv named_b sums {'rows': 8999915, 'quote': 1357067, 'tokens': 1357067, 'eligible': 0, 'eligible_mass': 0, 'chosen': 0, 'removed': 0, 'old_runs': 0, 'empty': 0, 'new_runs': 0, 'appended_dictionary': 0, 'moved': 0, 'lazy_chunks': 0, 'lookups': 69999, 'words': 38648, 'second_dictionary': 1926457, 'links': 245445} stock second 10
+ten.csv recognize sums {'rows': 8999915, 'quote': 1357067, 'tokens': 1357067, 'eligible': 32160, 'eligible_mass': 220912, 'chosen': 32098, 'removed': 215523, 'old_runs': 84317, 'empty': 0, 'new_runs': 0, 'appended_dictionary': 0, 'moved': 0, 'lazy_chunks': 0, 'lookups': 69999, 'words': 38648, 'second_dictionary': 1926457, 'links': 245445} stock second 10
+ten.csv fold sums {'rows': 8999915, 'quote': 1357067, 'tokens': 1141544, 'eligible': 32160, 'eligible_mass': 220912, 'chosen': 32098, 'removed': 215523, 'old_runs': 84317, 'empty': 74, 'new_runs': 83729, 'appended_dictionary': 1116807, 'moved': 0, 'lazy_chunks': 71685, 'lookups': 62283, 'words': 38648, 'second_dictionary': 1926457, 'links': 245445} stock second 10
+admissions.csv named_a sums {'rows': 205197794, 'quote': 30868395, 'tokens': 30868395, 'eligible': 0, 'eligible_mass': 0, 'chosen': 0, 'removed': 0, 'old_runs': 0, 'empty': 0, 'new_runs': 0, 'appended_dictionary': 0, 'moved': 0, 'lazy_chunks': 0, 'lookups': 1424280, 'words': 806027, 'second_dictionary': 41433719, 'links': 5566401} stock second 228
+admissions.csv named_b sums {'rows': 205197794, 'quote': 30868395, 'tokens': 30868395, 'eligible': 0, 'eligible_mass': 0, 'chosen': 0, 'removed': 0, 'old_runs': 0, 'empty': 0, 'new_runs': 0, 'appended_dictionary': 0, 'moved': 0, 'lazy_chunks': 0, 'lookups': 1424280, 'words': 806027, 'second_dictionary': 41433719, 'links': 5566401} stock second 228
+admissions.csv recognize sums {'rows': 205197794, 'quote': 30868395, 'tokens': 30868395, 'eligible': 667269, 'eligible_mass': 4991200, 'chosen': 665970, 'removed': 4875983, 'old_runs': 1786472, 'empty': 0, 'new_runs': 0, 'appended_dictionary': 0, 'moved': 0, 'lazy_chunks': 0, 'lookups': 1424280, 'words': 806027, 'second_dictionary': 41433719, 'links': 5566401} stock second 228
+admissions.csv fold sums {'rows': 205197794, 'quote': 30868395, 'tokens': 25992412, 'eligible': 667269, 'eligible_mass': 4991200, 'chosen': 665970, 'removed': 4875983, 'old_runs': 1786472, 'empty': 1764, 'new_runs': 1779438, 'appended_dictionary': 24069073, 'moved': 2, 'lazy_chunks': 1526524, 'lookups': 1275152, 'words': 806027, 'second_dictionary': 41433719, 'links': 5566401} stock second 228
+named_a max retained bytes 8473542 HWM KiB 8192
+named_b max retained bytes 8473542 HWM KiB 8212
+recognize max retained bytes 9169542 HWM KiB 8636
+fold max retained bytes 9522118 HWM KiB 8992
