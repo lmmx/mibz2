@@ -35,6 +35,7 @@ In Python:
   - The cells it is a child of.
   - The step its letter was made at and the step it ended or closed at (`NONE` for neither).
 """
+
 import array
 import gzip
 import json
@@ -95,11 +96,11 @@ def load(path):
     head = json.loads(data[:nl])
     if head.get("format") != "irec/1":
         raise ValueError(f"{path}: not irec/1: {head.get('format')!r}")
-    body = memoryview(data)[nl + 1:]
+    body = memoryview(data)[nl + 1 :]
     arrays = {}
     for name, (at, count) in head["arrays"].items():
         a = array.array("I")
-        a.frombytes(body[at:at + 4 * count])
+        a.frombytes(body[at : at + 4 * count])
         if sys.byteorder != "little":
             a.byteswap()
         arrays[name] = a
@@ -158,11 +159,17 @@ class Orders:
     def _close(self):
         """The closure due before the next step, if any, as the record has it"""
         c = self.rec.a
-        while (self.closed < len(c["c_step"]) and c["c_step"][self.closed] == self.steps
-               and self.whole and self.ttail == self.btail):
+        while (
+            self.closed < len(c["c_step"])
+            and c["c_step"][self.closed] == self.steps
+            and self.whole
+            and self.ttail == self.btail
+        ):
             x = self.ttail
             if c["c_letter"][self.closed] != x:
-                raise AssertionError(f"closure {self.closed}: replay {x}, record {c['c_letter'][self.closed]}")
+                raise AssertionError(
+                    f"closure {self.closed}: replay {x}, record {c['c_letter'][self.closed]}"
+                )
             self._remove(x, self.tp, self.tn, "t")
             self._remove(x, self.bp, self.bn, "b")
             self.closed += 1
@@ -173,7 +180,9 @@ class Orders:
         i = self.steps
         a, b = self.rec.a["s_a"][i], self.rec.a["s_b"][i]
         if (a, b) != (self.ttail, self.btail):
-            raise AssertionError(f"step {i}: record ({a}, {b}), replay fronts ({self.ttail}, {self.btail})")
+            raise AssertionError(
+                f"step {i}: record ({a}, {b}), replay fronts ({self.ttail}, {self.btail})"
+            )
         ra, rb = self.lam[a], self.lam[b]
         if (ra, rb) != (self.rec.a["s_ra"][i], self.rec.a["s_rb"][i]):
             raise AssertionError(f"step {i}: rows ({ra}, {rb}) against the record's")
@@ -206,7 +215,9 @@ class Orders:
         self.run_to(self.rec.head["steps"])
         self._close()
         if self.closed != len(self.rec.a["c_step"]):
-            raise AssertionError(f"{self.closed} closures replayed, {len(self.rec.a['c_step'])} recorded")
+            raise AssertionError(
+                f"{self.closed} closures replayed, {len(self.rec.a['c_step'])} recorded"
+            )
 
     def _walk(self, head, nxt):
         out, x = [], head
@@ -238,7 +249,10 @@ def main(argv):
     for p in paths(args[0]):
         rec = load(p)
         h = rec.head
-        line = {k: h[k] for k in ("corpus", "block", "n", "r", "steps", "closures", "period", "admitted")}
+        line = {
+            k: h[k]
+            for k in ("corpus", "block", "n", "r", "steps", "closures", "period", "admitted")
+        }
         if check:
             o = Orders(rec)
             o.finish()

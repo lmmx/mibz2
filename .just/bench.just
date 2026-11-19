@@ -2224,7 +2224,10 @@ bench-opend-sweep COPIES="4" ROUNDS="12" SETTLE="2" REPS="5" DRY="":
 # attempt (the Researcher's correction, REVIEW 7007213171): the recipe refuses a second timed attempt.
 # DRY (any value): the untimed preflight (PROTOCOL §9), which keeps no timing: each corpus decoded
 # once by each build (the child's own timing fields dropped), only the output's size and digest
-# kept, and the scorer's own checks. The one-attempt guard (open_port.py guard) fails closed.
+# kept, and the scorer's own checks; `ab env`'s spin probe (runq) dropped too. The one-attempt guard
+# (open_port.py guard) fails closed, and reads `timing-started.txt`, written just before the first
+# `ab run`: a run that stops before it (a build, or the inputs not matching the manifest
+# bench/open-port-inputs.sha256, verified first) is untimed setup, and may be repaired.
 bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="8" CROUNDS="8" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -2289,7 +2292,7 @@ bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUND
     : > "$C/wikidata-x16.bz2"
     for i in $(seq 16); do cat "$W/wikidata.bz2" >> "$C/wikidata-x16.bz2"; done
     "$HAB" gen "$C/gen" 16 >/dev/null
-    python3 bench/heldout.py build "$C/ho" "$W/wikidata-heldout.bz2"
+    python3 bench/heldout.py build "$C/ho" "$W/wikidata-heldout.bz2" "$v056"
     cp "$C/ho/heldout.json" "$O/heldout.json"
     for f in "$C"/ho/ho-prose-l1 "$C"/ho/ho-prose-l9 "$C"/ho/ho-code-l1 "$C"/ho/ho-code-l9 \
              "$C"/ho/ho-structured-l1 "$C"/ho/ho-structured-l9; do
@@ -2302,7 +2305,16 @@ bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUND
            "$C/ho-wikidata-l9.bz2" "$C/ho-wikidata-l1.bz2" "$C/ho-prose-l1.bz2" "$C/ho-prose-l9.bz2"
            "$C/ho-code-l1.bz2" "$C/ho-code-l9.bz2" "$C/ho-structured-l1.bz2" "$C/ho-structured-l9.bz2")
     sha256sum "${files[@]}" "$C/wikidata-x16.bz2" "$W/wikidata.bz2" "$W/wikidata-heldout.bz2" | tee "$O/inputs.sha256"
-    "$HAB" env > "$O/env.json"
+    # before any timing: the builds and every input are the registered ones (the manifest
+    # bench/open-port-inputs.sha256, every input's exact compressed bytes); if not, nothing is
+    # timed, and the untimed setup may be repaired
+    python3 bench/open_port.py verify "$O" --port "$port" | tee "$O/inputs-check.txt"
+    if [ -n "$dry" ]; then
+      # (the environment probe's spin timings, runq, are dropped: a DRY run keeps no timing)
+      "$HAB" env | python3 -c 'import json, sys; e = json.load(sys.stdin); e.pop("runq", None); print(json.dumps(e))' > "$O/env.json"
+    else
+      "$HAB" env > "$O/env.json"
+    fi
     lscpu > "$O/lscpu.txt"
     lscpu -e > "$O/lscpu-e.txt" || true
     cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
@@ -2321,6 +2333,9 @@ bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUND
       bash bench/bundle.sh "$O"
       exit 0
     fi
+    # the timed attempt starts here: the one-attempt guard reads this marker, so a run that stopped
+    # in its untimed setup above is no attempt
+    date -u +%FT%TZ > "$O/timing-started.txt"
     # the decision: one `ab run` a count, v0.5.6 and the port through the same entry point
     for t in 8 10 20; do
       echo "unpinned at $t threads: the port against v0.5.6"

@@ -6,6 +6,7 @@ its own binary run as `ab run`'s child, both through the same public entry point
 (`BzReader::parallel`), unpinned on the i9 at the shipped thread counts.
 
     open_port.py judge BUNDLE --port PORT_COMMIT
+    open_port.py verify BUNDLE --port PORT_COMMIT   (before any timing: the builds and inputs)
     open_port.py guard TARGET --this RUN_DIR [--remote origin]   (the one attempt; see guard)
     open_port.py pairs RUNS.jsonl --pair X/Y [--pair X/Y ...]   (context: reported, not judged)
 
@@ -23,14 +24,13 @@ NOT ADOPTED; neither opens a retry.
   empty or missing;
 - a record's corpus, thread count or round is not exactly one of the registered values of its
   type (threads 8.5 is not 8; "8" is not 8), its arm is not a string, or its output digest is not
-  one (the Researcher's second correction, REVIEW 7008014645): checked before any is used;
+  a nonempty one (the Researcher's second correction, REVIEW 7008014645): checked before any is used;
 - a wall time, peak RSS or output size is not a finite positive number (a NaN included);
 - the registered identities do not hold: the bundle's `commits.txt` names other builds than the
   port's pinned commit and v0.5.6 (530ed404); or its `inputs.sha256` does not give each input of
-  `INPUTS` exactly once, with a 64-hex-digit SHA-256 and no other input, or gives a judged copy
-  of `FROZEN` another digest than the frozen one: the pinned sample and held-out windows, the
-  primary and sustained corpora (4 and 16 copies of the sample), and the held-out replication
-  (the windows verbatim);
+  `INPUTS` exactly once, with a 64-hex-digit SHA-256 and no other input, or gives any input
+  another digest than the registered manifest's (`bench/open-port-inputs.sha256`: every input's
+  exact compressed bytes, the held-out sources read from v0.5.6's tree);
 - a corpus's outputs differ;
 - the machine is not the registered one: `lscpu` names no single i9-10900K, or `ab env` records
   other than 10 cores and 20 CPUs;
@@ -95,18 +95,28 @@ COUNTS, ROUNDS, SUSTAINED_ROUNDS = (8, 10, 20), 12, 8
 V056 = "530ed404a014a414ef0b62adfd947fa14d4533e6"
 WIKIDATA_SHA256 = "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
 HELDOUT_SHA256 = "7f5c9a0044e5a30589bf343b9b31e698849b2acc69461a55c97b550193128b45"
-# the judged copies whose bytes are fixed by those two, with no compressor between (the
-# Researcher's second correction, REVIEW 7008014645): the primary and sustained corpora are 4 and
-# 16 copies of the sample, and the held-out replication is the held-out windows verbatim
-FROZEN = {
-    "wikidata.bz2": WIKIDATA_SHA256,
-    "wikidata-heldout.bz2": HELDOUT_SHA256,
-    "wikidata-x4.bz2": "0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e",
-    "wikidata-x16.bz2": "1aeac0d469a85ae21de32e97cddcae6a6f1b29ed950526bc664491c372dbf422",
-    "ho-wikidata-l9.bz2": HELDOUT_SHA256,
-}
 # every input the receipt must name, each with a well-formed SHA-256
 INPUTS = (*(f"{c}.bz2" for c in (*CORPORA, "wikidata-x16")), "wikidata.bz2", "wikidata-heldout.bz2")
+# the registered manifest: every input's exact compressed SHA-256 (the Researcher's third
+# correction, REVIEW 7008312938: the routing depends on the compressed block layout, so the
+# compressed bytes are what is fixed; the held-out sources come from v0.5.6's tree, never HEAD)
+MANIFEST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "open-port-inputs.sha256")
+
+
+def manifest(path=MANIFEST):
+    """{input name: frozen SHA-256}, from the registered manifest"""
+    out = {}
+    for line in open(path):
+        if line.strip() and not line.startswith("#"):
+            d, name = line.split()
+            assert re.fullmatch(r"[0-9a-f]{64}", d) and name not in out, line
+            out[name] = d
+    assert sorted(out) == sorted(INPUTS), sorted(set(out) ^ set(INPUTS))
+    assert out["wikidata.bz2"] == WIKIDATA_SHA256 and out["wikidata-heldout.bz2"] == HELDOUT_SHA256
+    return out
+
+
+FROZEN = manifest()
 CHECKED = (MAIN, HELDOUT, "ho-wikidata-l1", SUSTAINED)
 WORKERS = {8: 8, 10: 7, 20: 7}
 ALPHA, GUARD_MAX, RSS_GATE = 0.05, 1.02, 1.10
@@ -287,8 +297,10 @@ def load(path, corpora, counts, rounds, errors, check_workers=True):
                 f"{key}: wall {r.get('wall')!r} or peak RSS {r.get('rss_kb')!r} not a finite positive number"
             )
             continue
+        # the effective digest must be a nonempty string: two empty strings never agree (the
+        # Researcher's third correction)
         digest = r.get("sha256") or r.get("hash")
-        if not positive(r.get("out")) or type(digest) is not str:
+        if not positive(r.get("out")) or type(digest) is not str or not digest.strip():
             errors.append(f"{key}: no output size or digest")
             continue
         t = key[1]
@@ -526,10 +538,12 @@ def pairs(a):
 def guard(a):
     """The one confirmatory attempt (the Researcher's corrections, REVIEWs 7007213171 and
     7008014645): exit 0 only if no timed attempt has started in `target` (a run directory with
-    `started.txt` and no `DRY-RUN.txt`, other than `--this`) and the evidence branch, fetched
-    afresh, is readable and archives no `open-port/run-*.tar.gz`. Fails closed: an evidence branch
-    that can't be fetched or read refuses, as an archived attempt does."""
-    for started in sorted(glob.glob(os.path.join(a.target, "run-*", "started.txt"))):
+    `timing-started.txt`, written just before the first `ab run`, other than `--this`) and the
+    evidence branch, fetched afresh, is readable and archives no `open-port/run-*.tar.gz`. Fails
+    closed: an evidence branch that can't be fetched or read refuses, as an archived attempt does.
+    A run that stopped in its untimed setup (a build, or inputs not matching the manifest) is no
+    attempt, and may be repaired."""
+    for started in sorted(glob.glob(os.path.join(a.target, "run-*", "timing-started.txt"))):
         d = os.path.dirname(started)
         if a.this and os.path.realpath(d) == os.path.realpath(a.this):
             continue
@@ -567,6 +581,22 @@ def guard(a):
     return 0
 
 
+def verify(a):
+    """Before any timing: the bundle's builds and inputs are the registered ones (`identities`)"""
+    errors = []
+    identities(a.bundle, a.port, errors)
+    for e in errors:
+        print(f"  {e}")
+    if errors:
+        print(
+            f"bench-open-port: {len(errors)} problems with the builds or inputs; nothing is "
+            "timed (untimed setup: repair it and run again)"
+        )
+        return 1
+    print(f"the builds and all {len(INPUTS)} inputs are the registered ones")
+    return 0
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="mode", required=True)
@@ -577,6 +607,9 @@ def main(argv):
         "commits.txt, inputs.sha256",
     )
     j.add_argument("--port", required=True, help="the port's registered commit (the recipe's PORT)")
+    v = sub.add_parser("verify")
+    v.add_argument("bundle")
+    v.add_argument("--port", required=True)
     g = sub.add_parser("guard")
     g.add_argument("target", help="the recipe's target directory (target/open-port)")
     g.add_argument("--this", help="this attempt's own run directory, already started")
@@ -585,7 +618,7 @@ def main(argv):
     q.add_argument("runs")
     q.add_argument("--pair", action="append", required=True)
     a = ap.parse_args(argv[1:])
-    return {"judge": judge, "guard": guard, "pairs": pairs}[a.mode](a)
+    return {"judge": judge, "verify": verify, "guard": guard, "pairs": pairs}[a.mode](a)
 
 
 if __name__ == "__main__":

@@ -79,13 +79,22 @@ Anything else VOIDs the run.
 | development | text, random, records, runs, pattern, onebyte (`ab gen`, afresh) | guards |
 | **held out** | `ho-wikidata-l9`: 12 new windows of the same dump (`bench/wikidata-heldout.json`, at (4i + 3)/48, between the sample's), Wikimedia's own blocks | **replication** |
 | **held out** | `ho-wikidata-l1`: the same bytes at level 1 (100k blocks) | guard |
-| **held out** | `ho-prose-l1`, `-l9`: the journal's prose, every `docs/**/*.md` and `*.txt` (7.0 MB) | guards |
-| **held out** | `ho-code-l1`, `-l9`: other code, every `*.py`, `*.just`, `*.yml` and `docs/**/*.asm` (2.7 MB) | guards |
-| **held out** | `ho-structured-l1`, `-l9`: structured data that isn't Wikidata, every `docs/**/*.json`, `*.jsonl`, `*.csv` and `bench/*.json` (8.9 MB) | guards |
+| **held out** | `ho-prose-l1`, `-l9`: the journal's prose at v0.5.6, every `docs/**/*.md` and `*.txt` (7.0 MB) | guards |
+| **held out** | `ho-code-l1`, `-l9`: other code at v0.5.6, every `*.py`, `*.just`, `*.yml` and `docs/**/*.asm` (2.6 MB) | guards |
+| **held out** | `ho-structured-l1`, `-l9`: structured data that isn't Wikidata, at v0.5.6: every `docs/**/*.json`, `*.jsonl`, `*.csv` and `bench/*.json` (8.8 MB) | guards |
 
-- *Determinism:* the held-out prose, code and structured sets are built by `bench/heldout.py`
-  from the frozen commit's own tree, so their bytes are fixed by it. The small ones run as 4
-  copies, as Wikidata ×4 does.
+- *Determinism:* `bench/heldout.py` builds the held-out prose, code and structured sets from
+  one pinned source tree, the v0.5.6 tag's commit (530ed404), which no later commit can change.
+  - *Why not HEAD:* building from the registration's HEAD let a docs commit change every prose
+    guard. Archiving the preflight added 2,736 decoded bytes (the Researcher's third correction,
+    REVIEW 7008312938).
+  - The small ones run as 4 copies, as Wikidata ×4 does.
+- *The manifest:* every input's exact compressed SHA-256 is frozen in
+  `bench/open-port-inputs.sha256`. Routing depends on the compressed block layout, so the
+  compressed bytes are what is fixed.
+  - The recipe checks the bundle's inputs against it before any timing (`open_port.py verify`).
+    A mismatch stops the run in its untimed setup, so nothing is timed.
+  - The scorer checks them again when it judges; a mismatch there is VOID.
 - *Never timed before this freeze:*
   - the held-out Wikidata windows were fetched and checked against libbzip2 and lbzip2 only;
   - nothing in the held-out set has been timed under any arm.
@@ -103,7 +112,9 @@ whatever happens.
   prospective review, and would leave this attempt and its outcome standing.
 - *Untimed setup* may be repaired before the attempt starts.
 - *The recipe enforces it* (`open_port.py guard`). A non-dry run refuses to start:
-  - if a timed attempt already started in this checkout;
+  - if a timed attempt already started in this checkout. The attempt starts at
+    `timing-started.txt`, written just before the first `ab run`. A run that stopped in its
+    untimed setup is no attempt: a build failing, or the inputs not matching the manifest;
   - if an `open-port/run-*` bundle is on the evidence branch;
   - **failing closed** (the Researcher's second correction, REVIEW 7008014645): if the evidence
     branch can't be fetched afresh or read. A stale local copy of the branch doesn't stand in.
@@ -131,9 +142,11 @@ whatever happens.
     (`untimed-check.txt`);
   - the scorer's own checks.
 
-  *What "untimed" covers:* no timing is kept or read. The builds' `ab child` measures its own
-  decode internally and prints the timing fields, and the recipe drops them, keeping only the
-  output's size and digest.
+  *What "untimed" covers:* no timing is kept or read.
+  - The builds' `ab child` measures its own decode internally and prints the timing fields. The
+    recipe drops them, keeping only the output's size and digest.
+  - `ab env`'s environment probe spins threads and reports `runq.off_cpu_s` and `runq.wait_s`. A
+    DRY run drops the probe's `runq` fields from `env.json` (the Researcher's third correction).
 - **The preflight bundles are archived beside this note,** in
   `2026-11-19-open-port-registration/preflight/`, each with its `.sha256`. Both ran in the cloud
   container, so `DRY-RUN.txt` marks them and the scorer would void them; they check the recipe,
@@ -144,8 +157,12 @@ whatever happens.
   | `run-20261119T111634Z` | 4e86ffc8 | 98ba331d4e49b8f09fbf8e05b8b5b9cde97193471860c3c9c702286da9215957 | 16 of 16 the same | 39 of 39 |
   | `run-20261119T114444Z` | 5308788c | 60e11db7e2b9fbca3a56e0833d1e18eea1ab3e4caf397cce38741394f0038332 | 16 of 16 the same | 63 of 63 |
 
-  The second is the preflight for the second correction. Its `inputs.sha256` passes every identity
-  check of the scorer, the frozen judged copies included, and no file holds a timing field.
+  The second is the preflight for the second correction. Its `inputs.sha256` passes that
+  correction's identity checks, and no file holds a decoder timing field. Its `env.json` still
+  holds the environment probe's `runq` timings, which DRY runs now drop.
+  - *Why both are superseded:* both built the held-out prose, code and structured sets from the
+    branch's HEAD, so their corpora differ from each other and from the manifest's. The
+    preflight for the third correction, below the table, is the one for the pinned corpora.
   - *Not on the evidence branch:* the one-attempt guard refuses any `open-port/run-*` bundle
     archived there, so a preflight there would block the attempt.
   - *The earlier timed preflight's bundle is not archived,* since its timing records stay
@@ -161,25 +178,19 @@ whatever happens.
 - `commits.txt` names the port's pinned commit and v0.5.6 (530ed404).
 - `inputs.sha256` gives every input exactly once, as a 64-hex-digit SHA-256: the 16 corpora of
   the roster and the two bases. It names no other input.
-- **The judged copies are frozen,** not only their bases (the Researcher's second correction):
-
-  | input | frozen SHA-256 | why fixed |
-  |---|---|---|
-  | `wikidata.bz2` | 82f65ace… | the pinned sample |
-  | `wikidata-heldout.bz2` | 7f5c9a00… | the pinned held-out windows |
-  | `wikidata-x4.bz2` | 0b820d14… | 4 copies of the sample |
-  | `wikidata-x16.bz2` | 1aeac0d4… | 16 copies of the sample |
-  | `ho-wikidata-l9.bz2` | 7f5c9a00… | the held-out windows, verbatim |
-
-  *Why not the other 11 corpora's digests:* they pass through a compressor (`ab gen`, Python's
-  libbzip2) on the workstation. Their digests are recorded, checked for form, and compared
-  between the builds' outputs, but not frozen. A harmless difference in a compressor's build
-  would otherwise void the one attempt.
+- **Every input is frozen** at its exact compressed SHA-256, in the manifest
+  `bench/open-port-inputs.sha256`. That covers the bases, the judged copies (the Researcher's
+  second correction) and the 11 generated guards (its third).
+  - *Two pass through a compressor:* `ab gen`, with the crate's vendored libbzip2, and Python's
+    libbzip2 for the held-out sets.
+  - *If the workstation's compressor differs,* the inputs fail `verify` before any timing. That
+    is a repairable setup failure, not a VOID.
 
 **Every record's fields are checked before use.** The corpus, thread count and round must be
 exactly one of the registered values of their type: threads 8.5 is not 8, and "8" is not 8. The
-arm and the output digest must be strings. Any other record is VOID, never coerced into the
-roster and never an exception.
+arm must be a string, and the output digest a nonempty string (an empty `hash` with no `sha256`
+can't make two outputs agree). Any other record is VOID, never coerced into the roster and never
+an exception.
 
 **Each cell** (corpus, count): the 12 rounds' paired log ratios of wall time, the port over
 v0.5.6.
@@ -215,8 +226,8 @@ before.
   within noise is caught too.
 - *There is no trade.* Rule 4 isn't used here: P2 requires Wikidata memory not to grow at all.
 
-`bench/test_open_port.py` checks the scorer and the guard, 63 checks, on bundles of the full
-roster and on scratch repositories:
+`bench/test_open_port.py` checks the scorer, `verify` and the guard, 73 checks, on bundles of
+the full roster and on scratch repositories:
 - ADOPTS;
 - each of P1, P2, H, G (SLOWER, the bound, and memory) and S failing, alone and together;
 - **the Researcher's counterexamples, now regressions,** each VOID:
@@ -248,9 +259,19 @@ roster and on scratch repositories:
     an input named twice or outside the registration, a receipt line of three fields;
   - a receipt of well-formed digests, giving ADOPTS;
 - *the guard:*
-  - it passes a readable evidence branch with only a dry run present;
+  - it passes a readable evidence branch with only a dry run present, or a run that stopped in
+    its untimed setup;
   - it refuses a timed attempt started here, an attempt archived on the branch, a remote with no
-    evidence branch, and an unreachable remote whose stale clean copy is present.
+    evidence branch, and an unreachable remote whose stale clean copy is present;
+- **the Researcher's third counterexamples (REVIEW 7008312938), now regressions:**
+  - an empty effective digest (`hash: ""`, no `sha256`) gives VOID, as a blank `sha256` does;
+  - a generated guard off the manifest gives VOID, for a held-out set, an `ab gen` corpus and a
+    level-1 set;
+- *the manifest and `verify`:*
+  - the manifest names every input once, the held-out copy as its base, and the held-out sources
+    as v0.5.6's tree;
+  - `verify` passes the registered builds and inputs, and refuses an input off the manifest or
+    another port.
 
 ## Context, reported and not judged
 

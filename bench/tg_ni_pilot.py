@@ -94,14 +94,19 @@ def batches(x, m, n=None):
         raise ValueError(f"{n} rounds don't split into batches of {m} (of {len(x)})")
     y = x[:n]
     k = n // m
-    means = [statistics.fmean(y[i * m:(i + 1) * m]) for i in range(k)]
+    means = [statistics.fmean(y[i * m : (i + 1) * m]) for i in range(k)]
     var_means = statistics.variance(means) if k > 1 else None
     lrv = m * var_means if var_means is not None else None
     marginal = statistics.variance(y)
-    return {"m": m, "rounds": n, "batches": k, "lrv": lrv,
-            "se": math.sqrt(lrv / n) if lrv is not None else None,
-            "lrv_over_marginal": lrv / marginal if lrv is not None and marginal else None,
-            "lag1_of_means": acf(means, 1) if k > 2 else None}
+    return {
+        "m": m,
+        "rounds": n,
+        "batches": k,
+        "lrv": lrv,
+        "se": math.sqrt(lrv / n) if lrv is not None else None,
+        "lrv_over_marginal": lrv / marginal if lrv is not None and marginal else None,
+        "lag1_of_means": acf(means, 1) if k > 2 else None,
+    }
 
 
 def trend(x):
@@ -177,8 +182,12 @@ def tail(xs):
     if not xs:
         return None
     s = sorted(xs)
-    return {"median": statistics.median(s), "p95": s[min(len(s) - 1, math.ceil(0.95 * len(s)) - 1)],
-            "max": s[-1], "n": len(s)}
+    return {
+        "median": statistics.median(s),
+        "p95": s[min(len(s) - 1, math.ceil(0.95 * len(s)) - 1)],
+        "max": s[-1],
+        "n": len(s),
+    }
 
 
 def ts(s):
@@ -190,8 +199,15 @@ def analyse(root, man, head, base, rustc, corpus_text, rounds=PILOT_ROUNDS, menu
     label pilot: the manifest, unlisted artifacts, the history, every file rehashed, every
     shard's files, runner, read-back, corpus, rows and timing)"""
     reg = {"frozen": {"base": base, "ni_rustc": rustc, "corpus_text": corpus_text}, "bench": None}
-    out = {"schema": "mibz2.tg_ni_pilot/2", "run": man.get("run"), "head": head, "valid": False,
-           "problems": [], "cells": {}, "shards": {}}
+    out = {
+        "schema": "mibz2.tg_ni_pilot/2",
+        "run": man.get("run"),
+        "head": head,
+        "valid": False,
+        "problems": [],
+        "cells": {},
+        "shards": {},
+    }
     p = out["problems"]
     q, admitted = tg.structural(root, man, head, reg, rounds, "pilot", check_git=False)
     p += q
@@ -205,8 +221,14 @@ def analyse(root, man, head, base, rustc, corpus_text, rounds=PILOT_ROUNDS, menu
         ended = tg.read_text(d, "measurement-ended.txt").strip()
         if not job.get("started_at"):
             p.append(f"{sid}: the job's start time is missing: setup unknown")
-        model = next((l.split(":", 1)[1].strip() for l in tg.read_text(d, "lscpu.txt").splitlines()
-                      if l.startswith("Model name:")), None)
+        model = next(
+            (
+                l.split(":", 1)[1].strip()
+                for l in tg.read_text(d, "lscpu.txt").splitlines()
+                if l.startswith("Model name:")
+            ),
+            None,
+        )
         ends = round_ends(times, rows)
         durations = [b - a_ for a_, b in zip([start] + ends[:-1], ends)]
         out["shards"][sid] = {
@@ -220,12 +242,20 @@ def analyse(root, man, head, base, rustc, corpus_text, rounds=PILOT_ROUNDS, menu
         for t in threads:
             for metric in tg.CI_METRICS:
                 x, hf = cell_series(rows, corpus, t, metric)
-                c = {"shard": sid, "sd": statistics.stdev(x),
-                     "acf": {str(k): acf(x, k) for k in LAGS},
-                     "batches": [batches(x, m, n) for m, n in menu],
-                     "order": order_contrast(x, hf), "trend": trend(x), "cusum": cusum(x)}
+                c = {
+                    "shard": sid,
+                    "sd": statistics.stdev(x),
+                    "acf": {str(k): acf(x, k) for k in LAGS},
+                    "batches": [batches(x, m, n) for m, n in menu],
+                    "order": order_contrast(x, hf),
+                    "trend": trend(x),
+                    "cusum": cusum(x),
+                }
                 # (the series centred: no ratio or bound of the candidate's is kept)
-                c["trend"] = {"t": c["trend"]["t"], "change_over_run": c["trend"]["change_over_run"]}
+                c["trend"] = {
+                    "t": c["trend"]["t"],
+                    "change_over_run": c["trend"]["change_over_run"],
+                }
                 out["cells"][f"{corpus}/{t}/{metric}"] = c
     out["valid"] = not p
     if p:
@@ -234,32 +264,46 @@ def analyse(root, man, head, base, rustc, corpus_text, rounds=PILOT_ROUNDS, menu
 
 
 def markdown(v):
-    o = ["# The target-gated noninferiority pilot (not evidence: no cell's ratio or bound is shown)", ""]
+    o = [
+        "# The target-gated noninferiority pilot (not evidence: no cell's ratio or bound is shown)",
+        "",
+    ]
     if not v["valid"]:
         return "\n".join(o + ["**Not admitted:**"] + [f"- {x}" for x in v["problems"]]) + "\n"
     f = lambda z: "–" if z is None else f"{z:+.2f}"  # noqa: E731
     g = lambda z: "–" if z is None else f"{z:.2f}"  # noqa: E731
-    o += ["LRV_m = m · var(batch means) = n_m · SE_m², shown over the marginal variance (1 for iid rounds). "
-          "The largest over the fixed menu is a sensitivity choice, not a confidence bound on the long-run "
-          "variance, nor a guarantee of any power.", "",
-          "| cell | sd | acf 1 / 5 / 30 | LRV / marginal at m 10 / 30 / 48* / 60 | order diff / se | trend t | CUSUM |",
-          "|---|--:|---|---|--:|--:|--:|"]
+    o += [
+        "LRV_m = m · var(batch means) = n_m · SE_m², shown over the marginal variance (1 for iid rounds). "
+        "The largest over the fixed menu is a sensitivity choice, not a confidence bound on the long-run "
+        "variance, nor a guarantee of any power.",
+        "",
+        "| cell | sd | acf 1 / 5 / 30 | LRV / marginal at m 10 / 30 / 48* / 60 | order diff / se | trend t | CUSUM |",
+        "|---|--:|---|---|--:|--:|--:|",
+    ]
     for k, c in v["cells"].items():
         a = c["acf"]
         br = {b["m"]: b["lrv_over_marginal"] for b in c["batches"]}
         od = c["order"]
         order = "–" if not od else "%+.4f / %.4f" % (od["difference"], od["se"])
-        o.append(f"| {k} | {c['sd']:.4f} | {f(a['1'])} / {f(a['5'])} / {f(a['30'])} | "
-                 f"{g(br.get(10))} / {g(br.get(30))} / {g(br.get(48))} / {g(br.get(60))} | "
-                 f"{order} | {f(c['trend']['t'])} | {g(c['cusum']['max'])} |")
-    o += ["", "*m 48 over the first 576 rounds only (twelve batches; the last 24 rounds are in every other column).", "",
-          "| shard | model | setup s | measurement s | round s median / p95 / max | batch s at m 30: median / p95 / max |",
-          "|---|---|--:|--:|---|---|"]
+        o.append(
+            f"| {k} | {c['sd']:.4f} | {f(a['1'])} / {f(a['5'])} / {f(a['30'])} | "
+            f"{g(br.get(10))} / {g(br.get(30))} / {g(br.get(48))} / {g(br.get(60))} | "
+            f"{order} | {f(c['trend']['t'])} | {g(c['cusum']['max'])} |"
+        )
+    o += [
+        "",
+        "*m 48 over the first 576 rounds only (twelve batches; the last 24 rounds are in every other column).",
+        "",
+        "| shard | model | setup s | measurement s | round s median / p95 / max | batch s at m 30: median / p95 / max |",
+        "|---|---|--:|--:|---|---|",
+    ]
     t3 = lambda r: "–" if not r else f"{r['median']:.2f} / {r['p95']:.2f} / {r['max']:.2f}"  # noqa: E731
     for sid, s in v["shards"].items():
         setup = "–" if s["setup_s"] is None else f"{s['setup_s']:.0f}"
-        o.append(f"| {sid} | {s['model']} | {setup} | {s['measurement_s']:.0f} | {t3(s['round_s'])} | "
-                 f"{t3(s['batch_s'].get('30'))} |")
+        o.append(
+            f"| {sid} | {s['model']} | {setup} | {s['measurement_s']:.0f} | {t3(s['round_s'])} | "
+            f"{t3(s['batch_s'].get('30'))} |"
+        )
     return "\n".join(o) + "\n"
 
 

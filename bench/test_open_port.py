@@ -209,9 +209,14 @@ def guard_checks():
                 "a remote with no evidence branch: refuses", 1, "can't be fetched", remote="empty"
             )
         )
+        setup = target / "run-20261119T190000Z"
+        setup.mkdir()
+        (setup / "started.txt").write_text("then\n")
+        out.append(check("a run stopped in its untimed setup here: passes", 0, ""))
         timed = target / "run-20261119T200000Z"
         timed.mkdir()
         (timed / "started.txt").write_text("then\n")
+        (timed / "timing-started.txt").write_text("then\n")
         out.append(check("a timed attempt started here: refuses", 1, "already started here"))
         shutil.rmtree(timed)
         (seed / "open-port").mkdir()
@@ -731,6 +736,67 @@ def main():
             ["VERDICT: ADOPTS"],
         )
     )
+    # the Researcher's third correction (REVIEW 7008312938)
+    res.append(
+        expect(
+            "Researcher 9: an empty effective digest (hash '', no sha256): VOID",
+            build(
+                edit=lambda r: (
+                    {**{k: v for k, v in r.items() if k != "sha256"}, "hash": ""}
+                    if r["corpus"] == "text"
+                    else r
+                )
+            ),
+            1,
+            ["VOID", "no output size or digest"],
+            absent=["VERDICT"],
+        )
+    )
+    res.append(
+        expect(
+            "a blank sha256 and no hash: VOID",
+            build(edit=lambda r: {**r, "sha256": "  "} if first_text(r) else r),
+            1,
+            ["VOID", "no output size or digest"],
+            absent=["VERDICT"],
+        )
+    )
+    for name in ("ho-prose-l9.bz2", "text.bz2", "ho-structured-l1.bz2"):
+        res.append(
+            expect(
+                f"Researcher 10: a generated guard {name} off the manifest: VOID",
+                build(digests={name: "5a" * 32}),
+                1,
+                ["VOID", f"{name} is '5a5a", "not the frozen"],
+                absent=["VERDICT"],
+            )
+        )
+    import heldout
+
+    m = op.manifest()
+    ok = (
+        sorted(m) == sorted(op.INPUTS)
+        and m["ho-wikidata-l9.bz2"] == op.HELDOUT_SHA256
+        and heldout.SOURCE == op.V056
+    )
+    print(
+        f"{'ok  ' if ok else 'FAIL'} the manifest names every input once, the held-out copy as its "
+        "base, and the held-out sources are v0.5.6's tree"
+    )
+    res.append(ok)
+    for name, d, want in [
+        ("verify: the registered builds and inputs pass", build(), 0),
+        ("verify: an input off the manifest refuses", build(digests={"runs.bz2": "6b" * 32}), 1),
+        ("verify: another port refuses", build(commits=f"port {'1' * 40}\nv0.5.6 {op.V056}\n"), 1),
+    ]:
+        buf = io.StringIO()
+        try:
+            with redirect_stdout(buf):
+                got = op.main(["open_port.py", "verify", str(d), "--port", PORT_SHA])
+        finally:
+            shutil.rmtree(d)
+        print(f"{'ok  ' if got == want else 'FAIL'} {name}: exit {got}")
+        res.append(got == want)
     res.extend(guard_checks())
     d = build()
     (d / "DRY-RUN.txt").write_text("dry\n")

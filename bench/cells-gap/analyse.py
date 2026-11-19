@@ -48,22 +48,27 @@ def analyse(census, historical):
         cells = sum(r["c_whole"] * r["n"] for r in old)
         mixed = sum((r["c_whole"] if gate(r) == "admitted" else r["ns_rec"]) * r["n"] for r in old)
         weight = sum(r["n"] for r in admitted)
-        repeats.append({
-            "historical_all_cells_over_records": cells / prod,
-            "hypothetical_mixed_over_records_excluding_refusal_cost": mixed / prod,
-            "hypothetical_saved_ns": prod - mixed,
-            "admitted_research_ns_per_row": {
-                k: sum(r[k] * r["n"] for r in admitted) / weight
-                for k in ["c_order", "c_induce", "c_write", "c_whole", "ns_rec"]
-            },
-        })
+        repeats.append(
+            {
+                "historical_all_cells_over_records": cells / prod,
+                "hypothetical_mixed_over_records_excluding_refusal_cost": mixed / prod,
+                "hypothetical_saved_ns": prod - mixed,
+                "admitted_research_ns_per_row": {
+                    k: sum(r[k] * r["n"] for r in admitted) / weight
+                    for k in ["c_order", "c_induce", "c_write", "c_whole", "ns_rec"]
+                },
+            }
+        )
     return {
-        "blocks": len(blocks), "rows": total,
+        "blocks": len(blocks),
+        "rows": total,
         "output_bytes": sum(b["bytes"] for b in blocks),
         "routes": dict(grouped),
         "admitted_row_share": grouped["admitted"]["rows"] / total,
-        "below_historical_minimum": {"blocks": len(blocks) - len(selected),
-                                      "rows": sum(b["rows"] for b in blocks if b["rows"] < 65536)},
+        "below_historical_minimum": {
+            "blocks": len(blocks) - len(selected),
+            "rows": sum(b["rows"] for b in blocks if b["rows"] < 65536),
+        },
         "historical_repeats": repeats,
         "warning": "Historical counterfactual only. Different hardware/cache/port; refusal work omitted. No whole-decoder prediction.",
     }

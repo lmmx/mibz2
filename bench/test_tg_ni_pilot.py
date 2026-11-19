@@ -33,7 +33,13 @@ import tg_ni_pilot as pilot  # noqa: E402
 import tg_ni_stamp as stamp  # noqa: E402
 
 N = 120  # (rounds in these fixtures; the pilot's own are 600)
-MENU = ((10, None), (20, None), (30, None), (48, 96), (60, None))  # (the registered shape, scaled to N)
+MENU = (
+    (10, None),
+    (20, None),
+    (30, None),
+    (48, 96),
+    (60, None),
+)  # (the registered shape, scaled to N)
 
 
 def series_rows(sid, x_of, rounds=N, order_effect=0.0):
@@ -48,9 +54,22 @@ def series_rows(sid, x_of, rounds=N, order_effect=0.0):
             for i in order:
                 arm = tg.CI_ARMS[i]
                 w = 0.05 * (math.exp(x) if i == 0 else 1.0)
-                rows.append({"round": rnd, "corpus": corpus, "threads": t, "arm": arm, "wall": w, "cpu": w * 1.6,
-                             "rss_kb": 30000, "out": 1000, "hash": "0123456789abcdef", "termination": "success",
-                             "err": "", "cpus": {1: "1", 2: "0,2", 4: "all"}[t]})
+                rows.append(
+                    {
+                        "round": rnd,
+                        "corpus": corpus,
+                        "threads": t,
+                        "arm": arm,
+                        "wall": w,
+                        "cpu": w * 1.6,
+                        "rss_kb": 30000,
+                        "out": 1000,
+                        "hash": "0123456789abcdef",
+                        "termination": "success",
+                        "err": "",
+                        "cpus": {1: "1", 2: "0,2", 4: "all"}[t],
+                    }
+                )
     return rows
 
 
@@ -63,8 +82,9 @@ def add_times(root, sid, rows, attempt=1, step=1.5, round_seconds=None):
     for r in range(len(rows) // per):
         t += step if round_seconds is None else round_seconds(r)
         ends.append(t)
-    (d / "row-times.txt").write_text(f"# start {T.T0:.3f}\n" + "".join(
-        f"{i} {ends[i // per]:.3f}\n" for i in range(len(rows))))
+    (d / "row-times.txt").write_text(
+        f"# start {T.T0:.3f}\n" + "".join(f"{i} {ends[i // per]:.3f}\n" for i in range(len(rows)))
+    )
 
 
 class Pilot(unittest.TestCase):
@@ -91,8 +111,16 @@ class Pilot(unittest.TestCase):
             j["started_at"] = "2026-11-09T23:50:00Z"
         if after:
             after(self.root, man)
-        return pilot.analyse(self.root, man, T.HEAD, T.BASESHA, T.REG["frozen"]["ni_rustc"],
-                             T.REG["frozen"]["corpus_text"], rounds=N, menu=menu)
+        return pilot.analyse(
+            self.root,
+            man,
+            T.HEAD,
+            T.BASESHA,
+            T.REG["frozen"]["ni_rustc"],
+            T.REG["frozen"]["corpus_text"],
+            rounds=N,
+            menu=menu,
+        )
 
     def fresh(self):
         shutil.rmtree(self.root)
@@ -129,7 +157,7 @@ class Pilot(unittest.TestCase):
         self.assertEqual(v["shards"]["runs"]["setup_s"], 600.0)
         md = pilot.markdown(v)
         text = json.dumps(v)
-        for leak in ("upper", "lo95", "ratio\"", "passes"):
+        for leak in ("upper", "lo95", 'ratio"', "passes"):
             self.assertNotIn(leak, text, leak)
         self.assertIn("not evidence", md)
 
@@ -140,12 +168,15 @@ class Pilot(unittest.TestCase):
             used = 600 if n is None else n
             self.assertEqual(b["rounds"], used)
             self.assertEqual(b["batches"], used // m)
-            means = [sum(x[i * m:(i + 1) * m]) / m for i in range(used // m)]
+            means = [sum(x[i * m : (i + 1) * m]) / m for i in range(used // m)]
             mu = sum(means) / len(means)
             var = sum((y - mu) ** 2 for y in means) / (len(means) - 1)
             self.assertAlmostEqual(b["lrv"], m * var)
             self.assertAlmostEqual(b["lrv"], used * b["se"] ** 2)
-        self.assertEqual([(m, n) for m, n in pilot.BATCH_MENU], [(10, None), (20, None), (30, None), (48, 576), (60, None)])
+        self.assertEqual(
+            [(m, n) for m, n in pilot.BATCH_MENU],
+            [(10, None), (20, None), (30, None), (48, 576), (60, None)],
+        )
         with self.assertRaises(ValueError):
             pilot.batches(x, 48)  # (600 isn't 48s: never silently dropped)
 
@@ -169,6 +200,7 @@ class Pilot(unittest.TestCase):
             rows = [json.loads(l) for l in path.read_text().splitlines()]
             rows[5]["wall"] *= 1.5
             path.write_text("".join(json.dumps(r) + "\n" for r in rows))
+
         v = self.run_pilot(per, after=change_a_row)
         self.assertFalse(v["valid"])
         self.assertTrue(any("runs.jsonl does not match" in p for p in v["problems"]), v["problems"])
@@ -190,10 +222,12 @@ class Pilot(unittest.TestCase):
             d = Path(root) / "tg-ni-runs-a1" / "runs"
             lines = (d / "row-times.txt").read_text().splitlines()
             n = len(lines) - 1
-            (d / "row-times.txt").write_text(lines[0] + "\n" + "".join(
-                f"{i} {T.T0 + 100 - i:.3f}\n" for i in range(n)))
-            [a for a in man["artifacts"] if a["shard"] == "runs"][0]["files"]["row-times.txt"] = \
+            (d / "row-times.txt").write_text(
+                lines[0] + "\n" + "".join(f"{i} {T.T0 + 100 - i:.3f}\n" for i in range(n))
+            )
+            [a for a in man["artifacts"] if a["shard"] == "runs"][0]["files"]["row-times.txt"] = (
                 tg.sha256_file(str(d / "row-times.txt"))
+            )
 
         def no_job_start(root, man):
             for j in man["jobs"]:
@@ -202,12 +236,16 @@ class Pilot(unittest.TestCase):
         def stamper_failed(root, man):
             d = Path(root) / "tg-ni-text-a1" / "text"
             (d / "stamp.exit").write_text("1\n")
-            [a for a in man["artifacts"] if a["shard"] == "text"][0]["files"]["stamp.exit"] = \
+            [a for a in man["artifacts"] if a["shard"] == "text"][0]["files"]["stamp.exit"] = (
                 tg.sha256_file(str(d / "stamp.exit"))
-        for what, after, needle in (("no timestamps", drop_times, "row-times.txt"),
-                                    ("backwards timestamps", backwards, "go backwards"),
-                                    ("no job start", no_job_start, "setup unknown"),
-                                    ("the stamper failed", stamper_failed, "did not exit 0")):
+            )
+
+        for what, after, needle in (
+            ("no timestamps", drop_times, "row-times.txt"),
+            ("backwards timestamps", backwards, "go backwards"),
+            ("no job start", no_job_start, "setup unknown"),
+            ("the stamper failed", stamper_failed, "did not exit 0"),
+        ):
             with self.subTest(what):
                 self.fresh()
                 v = self.run_pilot(per, after=after)
@@ -226,11 +264,19 @@ class Pilot(unittest.TestCase):
 
     def test_the_gate_needs_the_structural_admission(self):
         # (the Researcher's §4: a refused label with nothing behind it said "plumbing OK")
-        empty = {"schema": "mibz2.tg_ni_manifest/2", "label": "smoke", "run": T.RUN, "artifacts": [], "jobs": []}
+        empty = {
+            "schema": "mibz2.tg_ni_manifest/2",
+            "label": "smoke",
+            "run": T.RUN,
+            "artifacts": [],
+            "jobs": [],
+        }
         for label in ("smoke", "pilot"):
             with self.subTest(label):
                 man = dict(empty, label=label)
-                refused = tg.ni_judge(self.root, man, T.HEAD, reg={"frozen": {}, "bench": None}, check_git=False)
+                refused = tg.ni_judge(
+                    self.root, man, T.HEAD, reg={"frozen": {}, "bench": None}, check_git=False
+                )
                 structure = tg.structure(self.root, man, T.HEAD, T.BASESHA, 2, label, "1.99.1")
                 self.assertFalse(structure["valid"])
                 status, line = gate.gate(label, refused, 2, structure)
@@ -247,7 +293,9 @@ class Pilot(unittest.TestCase):
             self.assertTrue(structure["valid"], structure["problems"])
             self.assertEqual(len(structure["shards"]), 9)
             self.assertTrue(structure["unchecked"])
-            refused = tg.ni_judge(self.root, man, T.HEAD, reg={"frozen": {}, "bench": None}, check_git=False, rounds=2)
+            refused = tg.ni_judge(
+                self.root, man, T.HEAD, reg={"frozen": {}, "bench": None}, check_git=False, rounds=2
+            )
             status, line = gate.gate("smoke", refused, 2, structure)
             self.assertEqual(status, 0, line)
             self.assertIn("smoke: not evidence", line)
@@ -259,8 +307,17 @@ class Pilot(unittest.TestCase):
             self.assertFalse(broken["valid"])
             self.assertEqual(gate.gate("smoke", refused, 2, broken)[0], 1)
             # (another toolchain than the dispatched one)
-            self.assertFalse(tg.structure(self.root, T.build(self.root + "x", label="smoke", **per), T.HEAD,
-                                          T.BASESHA, 2, "smoke", "1.98.0")["valid"])
+            self.assertFalse(
+                tg.structure(
+                    self.root,
+                    T.build(self.root + "x", label="smoke", **per),
+                    T.HEAD,
+                    T.BASESHA,
+                    2,
+                    "smoke",
+                    "1.98.0",
+                )["valid"]
+            )
         finally:
             T.R = saved
             shutil.rmtree(self.root + "x", ignore_errors=True)
@@ -274,8 +331,11 @@ class Stamp(unittest.TestCase):
             runs, out, stop = d / "runs.jsonl", d / "times.txt", d / "stop"
             runs.write_text("")
             clock = iter(range(1000, 100000))
-            t = threading.Thread(target=stamp.follow, args=(str(runs), str(out), str(stop)),
-                                 kwargs={"interval": 0.01, "clock": lambda: next(clock)})
+            t = threading.Thread(
+                target=stamp.follow,
+                args=(str(runs), str(out), str(stop)),
+                kwargs={"interval": 0.01, "clock": lambda: next(clock)},
+            )
             t.start()
             for i in range(3):
                 with open(runs, "a") as f:
@@ -287,7 +347,9 @@ class Stamp(unittest.TestCase):
             t.join(5)
             self.assertFalse(t.is_alive())
             lines = out.read_text().splitlines()
-            self.assertEqual([l.split()[0] for l in lines if not l.startswith("#")][:3], ["0", "1", "2"])
+            self.assertEqual(
+                [l.split()[0] for l in lines if not l.startswith("#")][:3], ["0", "1", "2"]
+            )
             self.assertIn("# truncated", lines)
             self.assertEqual(lines[-1].split()[0], "0")
         finally:

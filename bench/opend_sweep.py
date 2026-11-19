@@ -38,6 +38,7 @@ opend over LazyCells: their mean as a geometric mean, with a two-sided 95% t-int
 Text is an A/A check: opend runs LazyCells as shipped there (no text block is under the density
 line). Its ratio at each W is reported, and an interval excluding 1 is flagged, not judged.
 """
+
 import argparse
 import json
 import math
@@ -50,10 +51,38 @@ OPEND, LAZY = "mibz2-opend-{w}-{s}", "mibz2-occ-{w}-{s}"
 MAIN, AA = "wikidata-x4", "text"
 STALL = "cycle_activity.stalls_l3_miss"
 # two-sided 97.5% quantiles of Student's t, by degrees of freedom (beyond 30, the normal's)
-T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262,
-        10: 2.228, 11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145, 15: 2.131, 16: 2.120, 17: 2.110,
-        18: 2.101, 19: 2.093, 20: 2.086, 21: 2.080, 22: 2.074, 23: 2.069, 24: 2.064, 25: 2.060,
-        26: 2.056, 27: 2.052, 28: 2.048, 29: 2.045, 30: 2.042}
+T975 = {
+    1: 12.706,
+    2: 4.303,
+    3: 3.182,
+    4: 2.776,
+    5: 2.571,
+    6: 2.447,
+    7: 2.365,
+    8: 2.306,
+    9: 2.262,
+    10: 2.228,
+    11: 2.201,
+    12: 2.179,
+    13: 2.160,
+    14: 2.145,
+    15: 2.131,
+    16: 2.120,
+    17: 2.110,
+    18: 2.101,
+    19: 2.093,
+    20: 2.086,
+    21: 2.080,
+    22: 2.074,
+    23: 2.069,
+    24: 2.064,
+    25: 2.060,
+    26: 2.056,
+    27: 2.052,
+    28: 2.048,
+    29: 2.045,
+    30: 2.042,
+}
 
 
 def t975(df):
@@ -73,7 +102,9 @@ def machine(path, want, errors):
     try:
         text = open(path).read()
     except OSError as e:
-        errors.append(f"--lscpu {path}: unreadable ({e.strerror or e}): the machine is unidentified")
+        errors.append(
+            f"--lscpu {path}: unreadable ({e.strerror or e}): the machine is unidentified"
+        )
         return None
     models = set(re.findall(r"^\s*Model name:\s*(.+?)\s*$", text, re.M))
     if len(models) != 1:
@@ -88,7 +119,9 @@ def machine(path, want, errors):
 
 def load_runs(path, counts, rounds, errors):
     rows, outs = {}, {}
-    roster = {(c, w, arm, i) for c in (MAIN, AA) for w in counts for arm in arms(w) for i in range(rounds)}
+    roster = {
+        (c, w, arm, i) for c in (MAIN, AA) for w in counts for arm in arms(w) for i in range(rounds)
+    }
     if not os.path.exists(path):
         errors.append(f"{path}: missing")
         return rows
@@ -108,9 +141,16 @@ def load_runs(path, counts, rounds, errors):
             errors.append(f"runs line {ln}: {key} duplicated")
             continue
         wall = r.get("wall")
-        if r.get("termination") != "success" or r.get("err") or isinstance(wall, bool) \
-                or not isinstance(wall, (int, float)) or not wall > 0:
-            errors.append(f"{key}: failed or no wall time ({r.get('termination')!r}, {r.get('err')!r})")
+        if (
+            r.get("termination") != "success"
+            or r.get("err")
+            or isinstance(wall, bool)
+            or not isinstance(wall, (int, float))
+            or not wall > 0
+        ):
+            errors.append(
+                f"{key}: failed or no wall time ({r.get('termination')!r}, {r.get('err')!r})"
+            )
             continue
         w = key[1]
         if workers(r) != sorted(f"mibz2-{k}" for k in range(w)):
@@ -150,8 +190,16 @@ def load_stalls(d, counts, reps, errors):
                 errors.append(f"stalls-{w}.jsonl line {ln}: {arm} rep {rep} failed")
                 continue
             v, outb = counts_[STALL][0], r.get("out")
-            if not isinstance(v, (int, float)) or isinstance(v, bool) or not v > 0 or not isinstance(outb, int) or outb <= 0:
-                errors.append(f"stalls-{w}.jsonl line {ln}: {arm} rep {rep}: {STALL} {v!r} not counted")
+            if (
+                not isinstance(v, (int, float))
+                or isinstance(v, bool)
+                or not v > 0
+                or not isinstance(outb, int)
+                or outb <= 0
+            ):
+                errors.append(
+                    f"stalls-{w}.jsonl line {ln}: {arm} rep {rep}: {STALL} {v!r} not counted"
+                )
                 continue
             out[(w, arm, rep)] = v / outb
         for arm in arms(w):
@@ -163,7 +211,10 @@ def load_stalls(d, counts, reps, errors):
 
 def cell(rows, corpus, w, rounds):
     o, l = arms(w)
-    xs = [math.log(rows[(corpus, w, o, i)]["wall"] / rows[(corpus, w, l, i)]["wall"]) for i in range(rounds)]
+    xs = [
+        math.log(rows[(corpus, w, o, i)]["wall"] / rows[(corpus, w, l, i)]["wall"])
+        for i in range(rounds)
+    ]
     m, sd = statistics.mean(xs), statistics.stdev(xs)
     se = sd / math.sqrt(len(xs))
     h = t975(len(xs) - 1) * se
@@ -183,16 +234,22 @@ def main(argv):
     counts = [int(w) for w in a.counts.split(",")]
     errors = []
     if a.rounds < 2 or a.reps < 1 or not {2, 8, 10} <= set(counts):
-        errors.append("--rounds at least 2, --reps at least 1, and the counts must include 2, 8 and 10")
+        errors.append(
+            "--rounds at least 2, --reps at least 1, and the counts must include 2, 8 and 10"
+        )
     if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(a.runs)), "DRY-RUN.txt")):
         errors.append("a dry run (DRY-RUN.txt beside the records): not evidence")
     model = machine(a.lscpu, a.machine_model, errors)
     rows = load_runs(a.runs, counts, a.rounds, errors)
     stalls = load_stalls(a.stalls_dir, counts, a.reps, errors)
-    print(f"records {len(rows)}; W {counts}; {a.rounds} rounds; {a.reps} counter reps"
-          + (f"; the machine: {model}" if model else ""))
+    print(
+        f"records {len(rows)}; W {counts}; {a.rounds} rounds; {a.reps} counter reps"
+        + (f"; the machine: {model}" if model else "")
+    )
     if errors:
-        print(f"VOID: the records do not make the registered run ({len(errors)} problems); no verdict")
+        print(
+            f"VOID: the records do not make the registered run ({len(errors)} problems); no verdict"
+        )
         for e in errors[:25]:
             print(f"  {e}")
         return 1
@@ -204,24 +261,31 @@ def main(argv):
         res[w] = (m, se)
         am, _, (alo, ahi) = cell(rows, AA, w, a.rounds)
         flag = "" if alo <= 0 <= ahi else "  (A/A: text's interval excludes 1, flagged)"
-        print(f"  W {w:2d}: {MAIN} {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}]; "
-              f"{AA} {math.exp(am):.4f} [{math.exp(alo):.4f}, {math.exp(ahi):.4f}]{flag}")
+        print(
+            f"  W {w:2d}: {MAIN} {math.exp(m):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}]; "
+            f"{AA} {math.exp(am):.4f} [{math.exp(alo):.4f}, {math.exp(ahi):.4f}]{flag}"
+        )
 
     (m2, s2), (m10, s10) = res[2], res[10]
-    d, sd = m2 - m10, math.sqrt(s2 ** 2 + s10 ** 2)
+    d, sd = m2 - m10, math.sqrt(s2**2 + s10**2)
     h = t975(a.rounds - 1) * sd
     m1 = d - h > 0
-    print(f"\nM1, the ratio falls with W: W 2 over W 10 {math.exp(d):.4f} [{math.exp(d - h):.4f}, {math.exp(d + h):.4f}]: "
-          + ("HOLDS" if m1 else "FAILS"))
+    print(
+        f"\nM1, the ratio falls with W: W 2 over W 10 {math.exp(d):.4f} [{math.exp(d - h):.4f}, {math.exp(d + h):.4f}]: "
+        + ("HOLDS" if m1 else "FAILS")
+    )
 
     def below(w):
         m, se = res[w]
         return m + t975(a.rounds - 1) * se < 0
+
     above2 = res[2][0] - t975(a.rounds - 1) * res[2][1] > 0
     cross = [w for w in counts if 3 <= w <= 6 and below(w)]
     m2_ = above2 and bool(cross)
-    print(f"M2, it crosses 1 between W 2 and 6: W 2 above 1 {'yes' if above2 else 'no'}; below 1 at "
-          f"{cross or 'none of 3–6'}: " + ("CONFIRMED" if m2_ else "NOT CONFIRMED") + " (secondary)")
+    print(
+        f"M2, it crosses 1 between W 2 and 6: W 2 above 1 {'yes' if above2 else 'no'}; below 1 at "
+        f"{cross or 'none of 3–6'}: " + ("CONFIRMED" if m2_ else "NOT CONFIRMED") + " (secondary)"
+    )
 
     print(f"\n{STALL} a byte, opend over LazyCells, the median of {a.reps} reps' paired ratios:")
     m3 = {}
@@ -230,23 +294,34 @@ def main(argv):
         rs = [stalls[(w, o, r)] / stalls[(w, l, r)] for r in range(a.reps)]
         med = statistics.median(rs)
         m3[w] = (med, all(x < 1 for x in rs))
-        print(f"  W {w:2d}: {med:.4f} (reps {', '.join(f'{x:.3f}' for x in rs)}); "
-              f"LazyCells {statistics.median(stalls[(w, l, r)] for r in range(a.reps)):.3f} a byte, "
-              f"opend {statistics.median(stalls[(w, o, r)] for r in range(a.reps)):.3f}")
+        print(
+            f"  W {w:2d}: {med:.4f} (reps {', '.join(f'{x:.3f}' for x in rs)}); "
+            f"LazyCells {statistics.median(stalls[(w, l, r)] for r in range(a.reps)):.3f} a byte, "
+            f"opend {statistics.median(stalls[(w, o, r)] for r in range(a.reps)):.3f}"
+        )
     med8, all8 = m3[8]
     m3h = med8 < 1 and all8
-    print(f"M3, fewer L3-miss stalls a byte at W 8: median {med8:.4f}, every rep below 1: {'yes' if all8 else 'no'}: "
-          + ("HOLDS" if m3h else "FAILS" if med8 >= 1 else "NOT EVERY REP"))
+    print(
+        f"M3, fewer L3-miss stalls a byte at W 8: median {med8:.4f}, every rep below 1: {'yes' if all8 else 'no'}: "
+        + ("HOLDS" if m3h else "FAILS" if med8 >= 1 else "NOT EVERY REP")
+    )
 
     if not m1 or med8 >= 1:
-        verdict = "REFUTED: " + ("the ratio does not fall from W 2 to W 10" if not m1 else "") + \
-                  (" and " if not m1 and med8 >= 1 else "") + \
-                  ("opend's L3-miss stalls a byte are no lower at W 8" if med8 >= 1 else "")
+        verdict = (
+            "REFUTED: "
+            + ("the ratio does not fall from W 2 to W 10" if not m1 else "")
+            + (" and " if not m1 and med8 >= 1 else "")
+            + ("opend's L3-miss stalls a byte are no lower at W 8" if med8 >= 1 else "")
+        )
     elif m3h:
-        verdict = "SUPPORTED: the ratio falls with W, and opend stalls less on L3 misses a byte at W 8"
+        verdict = (
+            "SUPPORTED: the ratio falls with W, and opend stalls less on L3 misses a byte at W 8"
+        )
     else:
         verdict = "INCONCLUSIVE: the ratio falls with W; at W 8 the stalls' median is below 1 but not every rep"
-    print(f"\nTHE MECHANISM (record 71 §3): {verdict}. A diagnostic: it decides nothing in production.")
+    print(
+        f"\nTHE MECHANISM (record 71 §3): {verdict}. A diagnostic: it decides nothing in production."
+    )
     return 0
 
 

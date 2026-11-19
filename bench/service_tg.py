@@ -216,9 +216,22 @@ CORPUS_SHA256 = {
     "runs": "af3be4d130faf312fe087baee037ca0d802dcf9cd6aefeefe9d9373b25a92fb8",
     "wikidata": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
 }
-SHARD_FILES = ("shard.json", "rustc.txt", "binaries.sha256", "lscpu.txt", "env.json", "preflight.json",
-               "preflight.exit", "preflight-check.json", "corpus.sha256", "measurement-started.txt",
-               "measurement-ended.txt", "runs.jsonl", "row-times.txt", "stamp.exit")
+SHARD_FILES = (
+    "shard.json",
+    "rustc.txt",
+    "binaries.sha256",
+    "lscpu.txt",
+    "env.json",
+    "preflight.json",
+    "preflight.exit",
+    "preflight-check.json",
+    "corpus.sha256",
+    "measurement-started.txt",
+    "measurement-ended.txt",
+    "runs.jsonl",
+    "row-times.txt",
+    "stamp.exit",
+)
 # the row timestamps (bench/tg_ni_stamp.py): the runner's CLOCK_REALTIME (Python's time.time()),
 # written to the millisecond, each the time the poller (every 0.2 s) saw the row, not when ab
 # wrote it: an observation time, with no hard bound on scheduling latency. The measurement's
@@ -301,7 +314,12 @@ def summary(logs):
 def two_sided(logs, conf):
     m, se, n = summary(logs)
     t = t_ppf(1 - (1 - conf) / 2, n - 1)
-    return {"ratio": math.exp(m), "lo": math.exp(m - t * se), "hi": math.exp(m + t * se), "conf": conf}
+    return {
+        "ratio": math.exp(m),
+        "lo": math.exp(m - t * se),
+        "hi": math.exp(m + t * se),
+        "conf": conf,
+    }
 
 
 def upper(logs, conf):
@@ -349,8 +367,12 @@ def registered(root=None):
             bench = m and m.group(1)
     except OSError:
         pass
-    return {"corpus_sha256": w["corpus_sha256"], "decoded_bytes": w["decoded_bytes"],
-            "frozen": frozen, "bench": bench}
+    return {
+        "corpus_sha256": w["corpus_sha256"],
+        "decoded_bytes": w["decoded_bytes"],
+        "frozen": frozen,
+        "bench": bench,
+    }
 
 
 # ---------------------------------------------------------------------------------------
@@ -362,19 +384,31 @@ def bundle_problems(files, reg):
     p = []
     if "DRY-RUN.txt" in files:
         p.append(("identity", "a DRY run: never evidence"))
-    commits = dict(l.split()[:2] for l in files.get("commits.txt", "").splitlines() if len(l.split()) >= 2)
+    commits = dict(
+        l.split()[:2] for l in files.get("commits.txt", "").splitlines() if len(l.split()) >= 2
+    )
     for k in ("candidate", "base", "base_fetched"):
         if not reg["frozen"].get(k):
             p.append(("identity", f"bench/{FROZEN} names no {k}"))
         elif commits.get(k) != reg["frozen"][k]:
-            p.append(("identity", f"commits.txt's {k} {commits.get(k)!r} is not the frozen {reg['frozen'][k]}"))
+            p.append(
+                (
+                    "identity",
+                    f"commits.txt's {k} {commits.get(k)!r} is not the frozen {reg['frozen'][k]}",
+                )
+            )
     rustc = reg["frozen"].get("rustc")
     if not rustc:
         p.append(("identity", f"bench/{FROZEN} names no rustc"))
     elif rustc not in [l.strip() for l in files.get("inputs.txt", "").splitlines()]:
         p.append(("identity", f"inputs.txt's toolchain is not the frozen {rustc!r}"))
     arms = [a for a in files.get("arms.txt", "").splitlines() if a.strip()]
-    if not (len(arms) == 2 and arms[0] == "mibz2" and arms[1].startswith("mibz2@/") and arms[1].endswith(BASE_SUFFIX)):
+    if not (
+        len(arms) == 2
+        and arms[0] == "mibz2"
+        and arms[1].startswith("mibz2@/")
+        and arms[1].endswith(BASE_SUFFIX)
+    ):
         p.append(("identity", f"arms.txt is not the registered two arms: {arms}"))
         arms = []
     digests = {}
@@ -382,11 +416,16 @@ def bundle_problems(files, reg):
         f = l.split(None, 1)
         if len(f) == 2 and re.fullmatch(r"[0-9a-f]{64}", f[0]):
             digests[f[1].strip()] = f[0]
-    if arms and arms[1][len("mibz2@"):] not in digests:
+    if arms and arms[1][len("mibz2@") :] not in digests:
         p.append(("identity", "inputs.txt gives no digest for the base executable run"))
     seen = files.get("corpus.sha256", "").split()
     if not seen or seen[0] != reg["corpus_sha256"]:
-        p.append(("workload", f"corpus.sha256 {seen[0] if seen else 'missing'} is not the registered corpus's"))
+        p.append(
+            (
+                "workload",
+                f"corpus.sha256 {seen[0] if seen else 'missing'} is not the registered corpus's",
+            )
+        )
     return p, arms
 
 
@@ -421,7 +460,9 @@ def row_problems(rows, arms, reg):
             q.append(f"out {r.get('out')!r} not the registered {reg['decoded_bytes']} bytes")
         if r.get("corpus") != CORPUS:
             q.append(f"corpus {r.get('corpus')!r}")
-        if not (isinstance(r.get("thread_cpu"), str) and isinstance(r.get("observed_threads"), str)):
+        if not (
+            isinstance(r.get("thread_cpu"), str) and isinstance(r.get("observed_threads"), str)
+        ):
             q.append("a thread record missing")
         if q:
             p.append(f"row {i}: " + ", ".join(q))
@@ -431,8 +472,18 @@ def row_problems(rows, arms, reg):
 def judge(files, rows, unreadable=(), reg=None):
     """The workstation attempt's verdict (see the module's doc)"""
     reg = reg or registered()
-    v = {"valid": False, "failure": None, "problems": [], "cells": {}, "preflight": None,
-         "target": None, "fallback": None, "other": None, "qualifies": False, "reasons": []}
+    v = {
+        "valid": False,
+        "failure": None,
+        "problems": [],
+        "cells": {},
+        "preflight": None,
+        "target": None,
+        "fallback": None,
+        "other": None,
+        "qualifies": False,
+        "reasons": [],
+    }
 
     def fail(kind, problems):
         v["failure"] = v["failure"] or kind
@@ -478,10 +529,13 @@ def judge(files, rows, unreadable=(), reg=None):
         if not complete:
             fail("structural", [f"{t} threads: rounds incomplete or repeated"])
         if not plans_ok:
-            fail("structural", [
-                f"{t} threads: ran base {label(seen['base'])}, head {label(seen['head'])}; "
-                f"expected base {label([EXPECT[t]['base']])}, head {label([EXPECT[t]['head']])}"
-            ])
+            fail(
+                "structural",
+                [
+                    f"{t} threads: ran base {label(seen['base'])}, head {label(seen['head'])}; "
+                    f"expected base {label([EXPECT[t]['base']])}, head {label([EXPECT[t]['head']])}"
+                ],
+            )
         if complete:
             base = {r["round"]: r for r in runs["base"]}
             head = {r["round"]: r for r in runs["head"]}
@@ -513,17 +567,26 @@ def judge(files, rows, unreadable=(), reg=None):
     rss_harm = [t for t in THREADS if v["cells"][t]["rss95"]["lo"] > RSS_MARGIN]
     v["other"] = {"cpu_regression": cpu_harm, "rss_regression": rss_harm}
     if not v["target"]["wall"]:
-        v["reasons"].append(f"condition 3: wall speed at 10 threads, lower bound {c['speed_k']['lo']:.4f}, not above {MARGIN}")
+        v["reasons"].append(
+            f"condition 3: wall speed at 10 threads, lower bound {c['speed_k']['lo']:.4f}, not above {MARGIN}"
+        )
     if not v["target"]["cpu"]:
-        v["reasons"].append(f"condition 3: CPU at 10 threads, upper bound {c['cpu_upper_k']['upper']:.4f}, above {MARGIN}")
+        v["reasons"].append(
+            f"condition 3: CPU at 10 threads, upper bound {c['cpu_upper_k']['upper']:.4f}, above {MARGIN}"
+        )
     for t in FALLBACK:
         if not v["fallback"][t]:
             v["reasons"].append(
-                f"condition 4: NOT SHOWN at {t} threads, wall upper bound {v['cells'][t]['wall_upper_m']['upper']:.4f} above {MARGIN}")
+                f"condition 4: NOT SHOWN at {t} threads, wall upper bound {v['cells'][t]['wall_upper_m']['upper']:.4f} above {MARGIN}"
+            )
     for t in cpu_harm:
-        v["reasons"].append(f"condition 7: CPU regression demonstrated at {t} threads (lower bound above {MARGIN})")
+        v["reasons"].append(
+            f"condition 7: CPU regression demonstrated at {t} threads (lower bound above {MARGIN})"
+        )
     for t in rss_harm:
-        v["reasons"].append(f"condition 7: peak RSS regression demonstrated at {t} threads (lower bound above {RSS_MARGIN})")
+        v["reasons"].append(
+            f"condition 7: peak RSS regression demonstrated at {t} threads (lower bound above {RSS_MARGIN})"
+        )
     v["qualifies"] = not v["reasons"]
     return v
 
@@ -551,20 +614,31 @@ def markdown(v):
         plans = f"{label(seen.get('base', []))} → {label(seen.get('head', []))}"
         if t == TARGET:
             role = "on target (condition 3)"
-            judged = (f"speed lo {c['speed_k']['lo']:.4f}; CPU up {c['cpu_upper_k']['upper']:.4f}"
-                      if "speed_k" in c else "–")
+            judged = (
+                f"speed lo {c['speed_k']['lo']:.4f}; CPU up {c['cpu_upper_k']['upper']:.4f}"
+                if "speed_k" in c
+                else "–"
+            )
         else:
             role = "fallback (condition 4)"
             judged = f"wall up {c['wall_upper_m']['upper']:.4f}" if "wall_upper_m" in c else "–"
-        out.append(f"| {t} | {role} | {plans} | {fmt(c.get('speed95'))} | {judged} | {fmt(c.get('cpu95'))} "
-                   f"| {fmt(c.get('rss95'))} |")
+        out.append(
+            f"| {t} | {role} | {plans} | {fmt(c.get('speed95'))} | {judged} | {fmt(c.get('cpu95'))} "
+            f"| {fmt(c.get('rss95'))} |"
+        )
     pf = v.get("preflight") or {}
     out += ["", f"**The preflight:** {pf.get('verdict', '–')}."]
-    out += ["", f"**Valid:** {'yes' if v['valid'] else 'no' + (' (' + v['failure'] + ')' if v['failure'] else '')}"]
+    out += [
+        "",
+        f"**Valid:** {'yes' if v['valid'] else 'no' + (' (' + v['failure'] + ')' if v['failure'] else '')}",
+    ]
     out += [f"- {p}" for p in v["problems"]]
     if v["valid"]:
-        out += ["", "**The workstation conditions (3, 4 and 7's workstation criteria):** "
-                + ("**met**." if v["qualifies"] else "**not met**:")]
+        out += [
+            "",
+            "**The workstation conditions (3, 4 and 7's workstation criteria):** "
+            + ("**met**." if v["qualifies"] else "**not met**:"),
+        ]
         out += [f"- {r}" for r in v["reasons"]]
         out += [
             "",
@@ -579,7 +653,15 @@ def markdown(v):
     return "\n".join(out) + "\n"
 
 
-FILES = ("commits.txt", "arms.txt", "inputs.txt", "corpus.sha256", "preflight.json", "preflight.exit", "DRY-RUN.txt")
+FILES = (
+    "commits.txt",
+    "arms.txt",
+    "inputs.txt",
+    "corpus.sha256",
+    "preflight.json",
+    "preflight.exit",
+    "DRY-RUN.txt",
+)
 
 
 def read_jsonl(path):
@@ -619,10 +701,19 @@ def head_problems(head, cand, root=None):
     else: the candidate an ancestor of it, and the only path that differs bench/service-tg.frozen"""
     root = root or os.path.dirname(HERE)
     try:
-        subprocess.run(["git", "merge-base", "--is-ancestor", cand, head], cwd=root, check=True,
-                       capture_output=True)
-        diff = subprocess.run(["git", "diff", "--name-only", cand, head], cwd=root, check=True,
-                              capture_output=True, text=True).stdout.split()
+        subprocess.run(
+            ["git", "merge-base", "--is-ancestor", cand, head],
+            cwd=root,
+            check=True,
+            capture_output=True,
+        )
+        diff = subprocess.run(
+            ["git", "diff", "--name-only", cand, head],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.split()
     except (OSError, subprocess.CalledProcessError) as e:
         return [f"git could not relate the head {head} to the candidate {cand}: {e}"]
     other = [d for d in diff if d != f"bench/{FROZEN}"]
@@ -652,8 +743,15 @@ def manifest(root, artifacts=(), jobs=(), run=None, attempt=None, label=None):
     (`jobs`, the API's `filter=all`)"""
     listed = {a.get("name"): a for a in artifacts if ARTIFACT.fullmatch(str(a.get("name", "")))}
     on_disk = sorted(os.listdir(root)) if os.path.isdir(root) else []
-    out = {"schema": "mibz2.tg_ni_manifest/2", "run": run, "attempt": attempt, "label": label,
-           "artifacts": [], "unlisted": [], "jobs": list(jobs)}
+    out = {
+        "schema": "mibz2.tg_ni_manifest/2",
+        "run": run,
+        "attempt": attempt,
+        "label": label,
+        "artifacts": [],
+        "unlisted": [],
+        "jobs": list(jobs),
+    }
     for name in sorted(set(listed) | {n for n in on_disk if ARTIFACT.fullmatch(n)}):
         m = ARTIFACT.fullmatch(name)
         if m.group(1) == "aggregate":
@@ -661,14 +759,25 @@ def manifest(root, artifacts=(), jobs=(), run=None, attempt=None, label=None):
         d = os.path.join(root, name, m.group(1))
         files = None
         if name in on_disk and os.path.isdir(d):
-            files = {f: sha256_file(os.path.join(d, f)) for f in sorted(os.listdir(d))
-                     if os.path.isfile(os.path.join(d, f))}
+            files = {
+                f: sha256_file(os.path.join(d, f))
+                for f in sorted(os.listdir(d))
+                if os.path.isfile(os.path.join(d, f))
+            }
         if name not in listed:
             out["unlisted"].append(name)
         a = listed.get(name, {})
-        out["artifacts"].append({"name": name, "shard": m.group(1), "attempt": int(m.group(2)),
-                                 "id": a.get("id"), "digest": a.get("digest"),
-                                 "expired": a.get("expired"), "files": files})
+        out["artifacts"].append(
+            {
+                "name": name,
+                "shard": m.group(1),
+                "attempt": int(m.group(2)),
+                "id": a.get("id"),
+                "digest": a.get("digest"),
+                "expired": a.get("expired"),
+                "files": files,
+            }
+        )
     return out
 
 
@@ -728,12 +837,19 @@ def history_problems(sid, jobs, arts, head=None, run=None):
             measured.append(k)
             continue
         # (a setup failure: positive evidence it never measured)
-        if not (j.get("status") == "completed" and j.get("conclusion") == "failure"
-                and step.get("conclusion") == "skipped"):
-            p.append(f"{sid}: attempt {k} neither measured nor a verified setup failure "
-                     f"(job {j.get('status')}/{j.get('conclusion')}, step {step.get('conclusion')})")
+        if not (
+            j.get("status") == "completed"
+            and j.get("conclusion") == "failure"
+            and step.get("conclusion") == "skipped"
+        ):
+            p.append(
+                f"{sid}: attempt {k} neither measured nor a verified setup failure "
+                f"(job {j.get('status')}/{j.get('conclusion')}, step {step.get('conclusion')})"
+            )
         if a is not None and files is None:
-            p.append(f"{sid}: attempt {k}'s listed artifact was not downloaded: its contents are unknown")
+            p.append(
+                f"{sid}: attempt {k}'s listed artifact was not downloaded: its contents are unknown"
+            )
     if p:
         return p, None
     if len(measured) != 1:
@@ -743,7 +859,9 @@ def history_problems(sid, jobs, arts, head=None, run=None):
         return [f"{sid}: an attempt after the measured one ({attempts})"], None
     j, a, step = by_attempt[k], art.get(k), measure_step(by_attempt[k])
     if not (j.get("status") == "completed" and j.get("conclusion") == "success"):
-        p.append(f"{sid}: the measured attempt's job ended {j.get('status')}/{j.get('conclusion')}, not success")
+        p.append(
+            f"{sid}: the measured attempt's job ended {j.get('status')}/{j.get('conclusion')}, not success"
+        )
     if step.get("conclusion") != "success":
         p.append(f"{sid}: the measurement step ended {step.get('conclusion')!r}, not success")
     if a is None or a.get("id") is None:
@@ -778,9 +896,11 @@ def sequence_problems(sid, rows, corpus, threads, rounds):
     first = bad[0] if bad else min(len(got), len(want))
     seen = got[first] if first < len(got) else "end of file"
     expected = want[first] if first < len(want) else "end of file"
-    return [f"{sid}: rows not in the registered order (round, thread counts {list(threads)}, ab's arm cycle): "
-            f"{len(got)} rows for {len(want)}, {len(bad) + abs(len(got) - len(want))} out of place, "
-            f"first at row {first}: {seen}, expected {expected}"]
+    return [
+        f"{sid}: rows not in the registered order (round, thread counts {list(threads)}, ab's arm cycle): "
+        f"{len(got)} rows for {len(want)}, {len(bad) + abs(len(got) - len(want))} out of place, "
+        f"first at row {first}: {seen}, expected {expected}"
+    ]
 
 
 def rounds_problems(rounds):
@@ -800,8 +920,11 @@ def diagnostics(logs):
     var = sum((x - m) ** 2 for x in logs)
     r1 = sum((logs[i] - m) * (logs[i + 1] - m) for i in range(n - 1)) / var if var else 0.0
     h = n // 2
-    return {"lag1": r1, "first_half": math.exp(statistics.fmean(logs[:h])),
-            "second_half": math.exp(statistics.fmean(logs[h:]))}
+    return {
+        "lag1": r1,
+        "first_half": math.exp(statistics.fmean(logs[:h])),
+        "second_half": math.exp(statistics.fmean(logs[h:])),
+    }
 
 
 def read_text(d, name):
@@ -815,8 +938,11 @@ def read_text(d, name):
 def utc(stamp):
     """A `date -u +%Y-%m-%dT%H:%M:%SZ` marker as POSIX seconds, or None"""
     try:
-        return datetime.datetime.strptime(stamp.strip(), "%Y-%m-%dT%H:%M:%SZ").replace(
-            tzinfo=datetime.timezone.utc).timestamp()
+        return (
+            datetime.datetime.strptime(stamp.strip(), "%Y-%m-%dT%H:%M:%SZ")
+            .replace(tzinfo=datetime.timezone.utc)
+            .timestamp()
+        )
     except (AttributeError, ValueError):
         return None
 
@@ -858,7 +984,9 @@ def timing_problems(sid, d, n_rows):
     never a zero"""
     p = []
     if (read_text(d, "stamp.exit") or "").strip() != "0":
-        p.append(f"{sid}: the row stamper did not exit 0 ({(read_text(d, 'stamp.exit') or 'missing').strip()!r})")
+        p.append(
+            f"{sid}: the row stamper did not exit 0 ({(read_text(d, 'stamp.exit') or 'missing').strip()!r})"
+        )
     got = read_row_times(d)
     if got is None:
         return p + [f"{sid}: row-times.txt missing or malformed"]
@@ -866,23 +994,40 @@ def timing_problems(sid, d, n_rows):
     if start is None or not math.isfinite(start):
         p.append(f"{sid}: row-times.txt has no start time")
     if sorted(times) != list(range(n_rows)):
-        return p + [f"{sid}: row-times.txt covers {len(times)} rows, not 0 .. {n_rows - 1} once each"]
+        return p + [
+            f"{sid}: row-times.txt covers {len(times)} rows, not 0 .. {n_rows - 1} once each"
+        ]
     seq = [times[i] for i in range(n_rows)]
     if not all(math.isfinite(t) for t in seq):
         return p + [f"{sid}: a row time is not finite"]
     if any(b < a for a, b in zip(seq, seq[1:])):
         p.append(f"{sid}: row times go backwards")
-    lo, hi = utc(read_text(d, "measurement-started.txt") or ""), utc(read_text(d, "measurement-ended.txt") or "")
+    lo, hi = (
+        utc(read_text(d, "measurement-started.txt") or ""),
+        utc(read_text(d, "measurement-ended.txt") or ""),
+    )
     if lo is None or hi is None:
         p.append(f"{sid}: the measurement markers are unreadable")
-    elif seq and (seq[0] < lo - TIME_SLACK_S or seq[-1] > hi + TIME_SLACK_S
-                  or (start is not None and (start < lo - TIME_SLACK_S or start > seq[0]))):
+    elif seq and (
+        seq[0] < lo - TIME_SLACK_S
+        or seq[-1] > hi + TIME_SLACK_S
+        or (start is not None and (start < lo - TIME_SLACK_S or start > seq[0]))
+    ):
         p.append(f"{sid}: row times outside the measurement's markers")
     return p
 
 
-def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repository="lmmx/mibz2",
-                   label="qualification"):
+def shard_problems(
+    sid,
+    d,
+    reg,
+    head,
+    run_id,
+    expect_rounds,
+    attempt=None,
+    repository="lmmx/mibz2",
+    label="qualification",
+):
     """What keeps one shard's measured attempt from being admitted (empty: admitted), and its
     rows by (corpus, threads, arm) and round"""
     p = []
@@ -895,14 +1040,27 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
         info = json.loads(read_text(d, "shard.json"))
     except json.JSONDecodeError:
         return [f"{sid}: shard.json unreadable"], {}
-    want = {"schema": "mibz2.tg_ni_shard/1", "label": label, "shard": sid, "corpus": corpus,
-            "threads": list(threads), "rounds": expect_rounds, "head": head, "base": fz.get("base"),
-            "github_sha": head, "workflow_sha": head, "run_id": run_id, "run_attempt": attempt,
-            "repository": repository}
+    want = {
+        "schema": "mibz2.tg_ni_shard/1",
+        "label": label,
+        "shard": sid,
+        "corpus": corpus,
+        "threads": list(threads),
+        "rounds": expect_rounds,
+        "head": head,
+        "base": fz.get("base"),
+        "github_sha": head,
+        "workflow_sha": head,
+        "run_id": run_id,
+        "run_attempt": attempt,
+        "repository": repository,
+    }
     for k, v in want.items():
         if info.get(k) != v:
             p.append(f"{sid}: shard.json {k} {info.get(k)!r}, not {v!r}")
-    if not str(info.get("workflow_ref", "")).startswith(f"{repository}/.github/workflows/target-gated-ni.yml@"):
+    if not str(info.get("workflow_ref", "")).startswith(
+        f"{repository}/.github/workflows/target-gated-ni.yml@"
+    ):
         p.append(f"{sid}: not run by target-gated-ni.yml ({info.get('workflow_ref')!r})")
     rustc = read_text(d, "rustc.txt").strip()
     if fz.get("ni_rustc"):
@@ -918,12 +1076,24 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
     except json.JSONDecodeError:
         env = {}
     core_cpus = env.get("core_cpus") or []
-    if not (env.get("cpus") == CI_CPUS and env.get("cores") == CI_CORES and len(core_cpus) == CI_CORES
-            and all(len(str(c).split(",")) == 2 for c in core_cpus)):
-        p.append(f"{sid}: the runner is not 4 CPUs on 2 cores, two a core: {env.get('cpus')!r} CPUs, "
-                 f"{env.get('cores')!r} cores, {core_cpus!r}")
-    model = next((l.split(":", 1)[1].strip() for l in read_text(d, "lscpu.txt").splitlines()
-                  if l.startswith("Model name:")), None)
+    if not (
+        env.get("cpus") == CI_CPUS
+        and env.get("cores") == CI_CORES
+        and len(core_cpus) == CI_CORES
+        and all(len(str(c).split(",")) == 2 for c in core_cpus)
+    ):
+        p.append(
+            f"{sid}: the runner is not 4 CPUs on 2 cores, two a core: {env.get('cpus')!r} CPUs, "
+            f"{env.get('cores')!r} cores, {core_cpus!r}"
+        )
+    model = next(
+        (
+            l.split(":", 1)[1].strip()
+            for l in read_text(d, "lscpu.txt").splitlines()
+            if l.startswith("Model name:")
+        ),
+        None,
+    )
     if not model or model == TARGET_NAME:
         p.append(f"{sid}: lscpu's model {model!r} is not shown off the target")
     try:
@@ -937,7 +1107,9 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
     digest = read_text(d, "corpus.sha256").split()
     want_digest = fz.get("corpus_text") if corpus == "text" else CORPUS_SHA256[corpus]
     if corpus == "text" and want_digest is None and fz.get("text_unchecked"):
-        want_digest = digest[0] if digest else None  # (a smoke check before the freeze: recorded, unchecked)
+        want_digest = (
+            digest[0] if digest else None
+        )  # (a smoke check before the freeze: recorded, unchecked)
     if not digest or not want_digest or digest[0] != want_digest:
         p.append(f"{sid}: corpus digest {digest[:1]}, not the registered {want_digest!r}")
     rows, unreadable = read_jsonl(os.path.join(d, "runs.jsonl"))
@@ -978,8 +1150,10 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
         t = key[1]
         if t == 1 and not re.fullmatch(r"[0-9]+", placed):
             q.append(f"1 thread placed on {placed!r}")
-        if t == 2 and not (len(placed.split(",")) == 2
-                           and all(sum(c in core for c in placed.split(",")) == 1 for core in cores)):
+        if t == 2 and not (
+            len(placed.split(",")) == 2
+            and all(sum(c in core for c in placed.split(",")) == 1 for core in cores)
+        ):
             q.append(f"2 threads placed on {placed!r}, not one CPU a core")
         if t == 4 and placed != "all":
             q.append(f"4 threads placed on {placed!r}")
@@ -996,8 +1170,10 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
     for t in threads:
         for arm in CI_ARMS:
             if sorted(by.get((corpus, t, arm), {})) != list(range(expect_rounds)):
-                p.append(f"{sid}: {corpus} {t}t {arm}: {len(by.get((corpus, t, arm), {}))} rounds, "
-                         f"not 0..{expect_rounds - 1} once each")
+                p.append(
+                    f"{sid}: {corpus} {t}t {arm}: {len(by.get((corpus, t, arm), {}))} rounds, "
+                    f"not 0..{expect_rounds - 1} once each"
+                )
     # (implied by the chronology above; kept as a second, local statement of it) the schedule
     # (§2.9): in each round and thread count, the two arms back to back, the head
     # first exactly in the rounds ORDER_CYCLE names
@@ -1012,8 +1188,10 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
             elif (h < b) != ORDER_CYCLE[rnd % len(ORDER_CYCLE)]:
                 bad.append(f"round {rnd}: {'head' if h < b else 'base'} first")
         if bad:
-            p.append(f"{sid}: {corpus} {t}t: {len(bad)} rounds off ab's four-round schedule (head, base, base, "
-                     f"head, the arms back to back), first {bad[0]}")
+            p.append(
+                f"{sid}: {corpus} {t}t: {len(bad)} rounds off ab's four-round schedule (head, base, base, "
+                f"head, the arms back to back), first {bad[0]}"
+            )
     return p[:20], by
 
 
@@ -1026,7 +1204,9 @@ def structural(root, man, head, reg, rounds, label, check_git=True):
     fz = reg["frozen"]
     p, out = [], {}
     if man.get("schema") != "mibz2.tg_ni_manifest/2":
-        p.append(f"manifest schema {man.get('schema')!r}: not one that records the run's whole history")
+        p.append(
+            f"manifest schema {man.get('schema')!r}: not one that records the run's whole history"
+        )
     if man.get("label") != label:
         p.append(f"the run is labelled {man.get('label')!r}: not {label}")
     for name in man.get("unlisted") or []:
@@ -1035,7 +1215,9 @@ def structural(root, man, head, reg, rounds, label, check_git=True):
         p += head_problems(head, fz["candidate"])
     run_id, arts, jobs = man.get("run"), man.get("artifacts", []), man.get("jobs") or []
     for sid in SHARDS:
-        q, a = history_problems(sid, jobs, [x for x in arts if x["shard"] == sid], head=head, run=run_id)
+        q, a = history_problems(
+            sid, jobs, [x for x in arts if x["shard"] == sid], head=head, run=run_id
+        )
         if q:
             p += q
             continue
@@ -1056,8 +1238,11 @@ def window(man):
     manifest's API record of the run's jobs (every attempt); None where unknown"""
     jobs = man.get("jobs") or []
     starts = [utc(j.get("started_at")) for j in jobs if j.get("started_at")]
-    ends = [utc(j.get("completed_at")) for j in jobs
-            if j.get("completed_at") and str(j.get("name", "")).startswith("shard (")]
+    ends = [
+        utc(j.get("completed_at"))
+        for j in jobs
+        if j.get("completed_at") and str(j.get("name", "")).startswith("shard (")
+    ]
     starts, ends = [x for x in starts if x is not None], [x for x in ends if x is not None]
     return (min(starts) if starts else None, max(ends) if ends else None)
 
@@ -1070,25 +1255,50 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS):
     reg = reg or registered()
     fz = reg["frozen"]
     start, end = window(man)
-    v = {"schema": "mibz2.tg_ni_dispatch/1", "valid": False, "problems": [], "cells": {}, "shards": {},
-         "run": man.get("run"), "head": head, "label": man.get("label"), "rounds": rounds,
-         "started": start, "completed": end,
-         "settings": {k: fz.get(k) for k in ("candidate", "base", "ni_rustc", "corpus_text")}}
+    v = {
+        "schema": "mibz2.tg_ni_dispatch/1",
+        "valid": False,
+        "problems": [],
+        "cells": {},
+        "shards": {},
+        "run": man.get("run"),
+        "head": head,
+        "label": man.get("label"),
+        "rounds": rounds,
+        "started": start,
+        "completed": end,
+        "settings": {k: fz.get(k) for k in ("candidate", "base", "ni_rustc", "corpus_text")},
+    }
     p = v["problems"]
     p += rounds_problems(rounds)
     for k in ("candidate", "base", "ni_rustc", "corpus_text"):
         if k not in fz:
             p.append(f"bench/{FROZEN} names no {k}")
     if man.get("label") != "qualification":
-        p.append(f"the run is labelled {man.get('label')!r}: not qualification (a smoke check or the pilot is never evidence)")
+        p.append(
+            f"the run is labelled {man.get('label')!r}: not qualification (a smoke check or the pilot is never evidence)"
+        )
     if not is_int(man.get("run")):
         p.append(f"the manifest names no run id ({man.get('run')!r})")
     q, admitted = structural(root, man, head, reg, rounds, "qualification", check_git=check_git)
     p += [x for x in q if not x.startswith("the run is labelled")]
     for sid, (a, by) in admitted.items():
-        model = next((l.split(":", 1)[1].strip() for l in (read_text(os.path.join(root, a["name"], sid), "lscpu.txt") or "").splitlines()
-                      if l.startswith("Model name:")), None)
-        v["shards"][sid] = {"attempt": a["attempt"], "artifact": a.get("id"), "digest": a.get("digest"), "model": model}
+        model = next(
+            (
+                l.split(":", 1)[1].strip()
+                for l in (
+                    read_text(os.path.join(root, a["name"], sid), "lscpu.txt") or ""
+                ).splitlines()
+                if l.startswith("Model name:")
+            ),
+            None,
+        )
+        v["shards"][sid] = {
+            "attempt": a["attempt"],
+            "artifact": a.get("id"),
+            "digest": a.get("digest"),
+            "model": model,
+        }
         corpus, threads = SHARDS[sid]
         if rounds_problems(rounds):
             continue
@@ -1113,8 +1323,14 @@ def dispatch_stats(ds, conf_upper=0.95, conf_two=0.95):
     m = statistics.fmean(ds)
     se = statistics.stdev(ds) / math.sqrt(k)
     tu, tt = t_ppf(conf_upper, k - 1), t_ppf(1 - (1 - conf_two) / 2, k - 1)
-    return {"ratio": math.exp(m), "upper": math.exp(m + tu * se), "lo95": math.exp(m - tt * se),
-            "hi95": math.exp(m + tt * se), "se": se, "d": list(ds)}
+    return {
+        "ratio": math.exp(m),
+        "upper": math.exp(m + tu * se),
+        "lo95": math.exp(m - tt * se),
+        "hi95": math.exp(m + tt * se),
+        "se": se,
+        "d": list(ds),
+    }
 
 
 def replicated(dispatches, head, k=NI_DISPATCHES, spacing_min=SPACING_MIN, rounds=NI_ROUNDS):
@@ -1123,9 +1339,21 @@ def replicated(dispatches, head, k=NI_DISPATCHES, spacing_min=SPACING_MIN, round
     distinct run ids, every cell's estimates finite, at the frozen spacing; then per cell and
     metric U = exp(mean D + t(0.95, k - 1) sd(D)/sqrt(k)) <= 1.02 at all 42"""
     runs = [d.get("run") if isinstance(d, dict) else None for d in dispatches]
-    v = {"schema": "mibz2.tg_ni_replicated/1", "valid": False, "problems": [], "cells": {}, "flags": [],
-         "rss_regression": [], "passes": False, "failing": [], "condition2": "INVALID", "k": k,
-         "runs": runs, "head": head, "models": {}}
+    v = {
+        "schema": "mibz2.tg_ni_replicated/1",
+        "valid": False,
+        "problems": [],
+        "cells": {},
+        "flags": [],
+        "rss_regression": [],
+        "passes": False,
+        "failing": [],
+        "condition2": "INVALID",
+        "k": k,
+        "runs": runs,
+        "head": head,
+        "models": {},
+    }
     p = v["problems"]
     if len(dispatches) != k:
         p.append(f"{len(dispatches)} dispatches, not the registered {k}")
@@ -1134,12 +1362,18 @@ def replicated(dispatches, head, k=NI_DISPATCHES, spacing_min=SPACING_MIN, round
             p.append(f"dispatch {i + 1}: no readable verdict")
             continue
         if not d.get("valid"):
-            p.append(f"dispatch {i + 1} (run {d.get('run')!r}) is INVALID: "
-                     + "; ".join(map(str, (d.get("problems") or ["not admitted"])[:3])))
+            p.append(
+                f"dispatch {i + 1} (run {d.get('run')!r}) is INVALID: "
+                + "; ".join(map(str, (d.get("problems") or ["not admitted"])[:3]))
+            )
         if d.get("head") != head:
-            p.append(f"dispatch {i + 1} (run {d.get('run')!r}) is of head {d.get('head')!r}, not {head}")
+            p.append(
+                f"dispatch {i + 1} (run {d.get('run')!r}) is of head {d.get('head')!r}, not {head}"
+            )
         if d.get("rounds") != rounds:
-            p.append(f"dispatch {i + 1} (run {d.get('run')!r}): R {d.get('rounds')!r}, not {rounds}")
+            p.append(
+                f"dispatch {i + 1} (run {d.get('run')!r}): R {d.get('rounds')!r}, not {rounds}"
+            )
     if not all(is_int(r) for r in runs) or len(set(runs)) != len(runs):
         p.append(f"the run ids are not {len(runs)} distinct dispatches: {runs}")
     # (the frozen spacing: starts at least `spacing_min` apart, never before the previous
@@ -1150,10 +1384,14 @@ def replicated(dispatches, head, k=NI_DISPATCHES, spacing_min=SPACING_MIN, round
             continue
         s0, e0, s1 = a.get("started"), a.get("completed"), b.get("started")
         if not all(isinstance(x, (int, float)) for x in (s0, e0, s1)):
-            p.append(f"dispatches {i} and {i + 1}: their times are unknown, so the spacing is unshown")
+            p.append(
+                f"dispatches {i} and {i + 1}: their times are unknown, so the spacing is unshown"
+            )
             continue
         if s1 < s0 + 60 * spacing_min:
-            p.append(f"dispatch {i + 1} started {(s1 - s0) / 60:.1f} minutes after dispatch {i}, not {spacing_min}")
+            p.append(
+                f"dispatch {i + 1} started {(s1 - s0) / 60:.1f} minutes after dispatch {i}, not {spacing_min}"
+            )
         if s1 < e0:
             p.append(f"dispatch {i + 1} started before dispatch {i}'s shards completed")
     if not p:
@@ -1161,7 +1399,10 @@ def replicated(dispatches, head, k=NI_DISPATCHES, spacing_min=SPACING_MIN, round
             cell = {}
             for metric in CI_METRICS + ("rss_kb",):
                 ds = [((d["cells"].get(key) or {}).get(metric) or {}).get("d") for d in dispatches]
-                if not all(isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) for x in ds):
+                if not all(
+                    isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+                    for x in ds
+                ):
                     p.append(f"{key} {metric}: not {k} finite dispatch estimates")
                     continue
                 cell[metric] = dispatch_stats(ds)
@@ -1193,31 +1434,57 @@ def structure(root, man, head, base, rounds, label, toolchain, corpus_text=None,
     toolchain. The `text` corpus's digest is checked against `corpus_text` if given, and
     otherwise recorded as unchecked. Green plumbing means this is valid, not merely that the
     judge refused the label"""
-    reg = {"frozen": {"base": base, "ni_toolchain": toolchain, "corpus_text": corpus_text,
-                      "text_unchecked": corpus_text is None}, "bench": None}
+    reg = {
+        "frozen": {
+            "base": base,
+            "ni_toolchain": toolchain,
+            "corpus_text": corpus_text,
+            "text_unchecked": corpus_text is None,
+        },
+        "bench": None,
+    }
     p, admitted = structural(root, man, head, reg, rounds, label, check_git=check_git)
-    return {"schema": "mibz2.tg_ni_structure/1", "valid": not p and len(admitted) == len(SHARDS),
-            "label": label, "rounds": rounds, "run": man.get("run"), "head": head,
-            "shards": sorted(admitted), "problems": p,
-            "unchecked": [] if corpus_text else ["the text corpus's digest (no corpus_text before the freeze)"]}
+    return {
+        "schema": "mibz2.tg_ni_structure/1",
+        "valid": not p and len(admitted) == len(SHARDS),
+        "label": label,
+        "rounds": rounds,
+        "run": man.get("run"),
+        "head": head,
+        "shards": sorted(admitted),
+        "problems": p,
+        "unchecked": []
+        if corpus_text
+        else ["the text corpus's digest (no corpus_text before the freeze)"],
+    }
 
 
 def dispatch_markdown(v):
-    out = [f"# Target-gated NI: one dispatch of the replicated programme (run {v.get('run')}): not a verdict", ""]
+    out = [
+        f"# Target-gated NI: one dispatch of the replicated programme (run {v.get('run')}): not a verdict",
+        "",
+    ]
     if not v["valid"]:
         out += ["**Not admitted** (INVALID: the programme fails; nothing is re-run or replaced):"]
         out += [f"- {p}" for p in v["problems"]]
         return "\n".join(out) + "\n"
-    out += [f"Admitted: all nine shards, R {v['rounds']}. Each cell's dispatch-level estimate D (the mean of its "
-            f"paired log ratios) is in the JSON. Condition 2 is judged only from all {NI_DISPATCHES} dispatches "
-            "(`service_tg.py replicated`).", "",
-            "| shard | runner model |", "|---|---|"]
+    out += [
+        f"Admitted: all nine shards, R {v['rounds']}. Each cell's dispatch-level estimate D (the mean of its "
+        f"paired log ratios) is in the JSON. Condition 2 is judged only from all {NI_DISPATCHES} dispatches "
+        "(`service_tg.py replicated`).",
+        "",
+        "| shard | runner model |",
+        "|---|---|",
+    ]
     out += [f"| {sid} | {sh.get('model')} |" for sid, sh in v["shards"].items()]
     return "\n".join(out) + "\n"
 
 
 def ni_markdown(v):
-    out = ["# The guarded service default under the target-gated route: CI condition 2 (replicated)", ""]
+    out = [
+        "# The guarded service default under the target-gated route: CI condition 2 (replicated)",
+        "",
+    ]
     if not v["valid"]:
         out += ["**Not admitted** (INVALID: the route fails; nothing is re-run or replaced):"]
         out += [f"- {p}" for p in v["problems"]]
@@ -1237,18 +1504,28 @@ def ni_markdown(v):
     for key, c in v["cells"].items():
         w, cp, r = c["wall"], c["cpu"], c["rss_kb"]
         mark = lambda x: "" if x["pass"] else " **FAIL**"  # noqa: E731
-        out.append(f"| {key} | {w['ratio']:.4f} | {w['upper']:.4f}{mark(w)} | {cp['ratio']:.4f} "
-                   f"| {cp['upper']:.4f}{mark(cp)} | {r['ratio']:.4f} [{r['lo95']:.4f}, {r['hi95']:.4f}] |")
-    c2 = "**not met** (NOT SHOWN): " + "; ".join(v["failing"]) if v["failing"] else "**met** at every cell"
+        out.append(
+            f"| {key} | {w['ratio']:.4f} | {w['upper']:.4f}{mark(w)} | {cp['ratio']:.4f} "
+            f"| {cp['upper']:.4f}{mark(cp)} | {r['ratio']:.4f} [{r['lo95']:.4f}, {r['hi95']:.4f}] |"
+        )
+    c2 = (
+        "**not met** (NOT SHOWN): " + "; ".join(v["failing"])
+        if v["failing"]
+        else "**met** at every cell"
+    )
     out += ["", f"**Condition 2:** {c2}."]
-    out += [f"**Wall flags (harm signals, §2.6; condition 7 under replication is the Guardian's):** {', '.join(v['flags']) or 'none'}."]
+    out += [
+        f"**Wall flags (harm signals, §2.6; condition 7 under replication is the Guardian's):** {', '.join(v['flags']) or 'none'}."
+    ]
     out += [f"**Peak RSS regression (condition 7):** {', '.join(v['rss_regression']) or 'none'}."]
     out += ["", "| shard | runner models, dispatch order |", "|---|---|"]
     out += [f"| {sid} | {', '.join(map(str, m))} |" for sid, m in v["models"].items()]
     return "\n".join(out) + "\n"
 
 
-def confirm(primary, confirmation, head, k=NI_DISPATCHES, spacing_min=SPACING_MIN, rounds=NI_ROUNDS):
+def confirm(
+    primary, confirmation, head, k=NI_DISPATCHES, spacing_min=SPACING_MIN, rounds=NI_ROUNDS
+):
     """The harm confirmation under replication (§2.6 as D094 rules it): `primary` and
     `confirmation` are each a full programme's dispatch verdicts, in dispatch order, freshly
     judged from their archived artifacts (`ni_judge`; the command line re-judges them, never
@@ -1266,8 +1543,15 @@ def confirm(primary, confirmation, head, k=NI_DISPATCHES, spacing_min=SPACING_MI
     - **D094-C7**, a separate admission constraint: met only if there is no primary wall flag,
       or the one registered confirmation is valid and confirms none. A missing, invalid or
       malformed confirmation never clears a flag. It never enters condition 2"""
-    out = {"schema": "mibz2.tg_ni_confirm/1", "valid": False, "problems": [], "confirmed": [], "unresolved": [],
-           "primary_flags": [], "d094_c7": {"met": False, "why": "not adjudicated"}}
+    out = {
+        "schema": "mibz2.tg_ni_confirm/1",
+        "valid": False,
+        "problems": [],
+        "confirmed": [],
+        "unresolved": [],
+        "primary_flags": [],
+        "d094_c7": {"met": False, "why": "not adjudicated"},
+    }
     p = out["problems"]
     for name, prog in (("primary", primary), ("confirmation", confirmation)):
         if not isinstance(prog, list):
@@ -1288,25 +1572,36 @@ def confirm(primary, confirmation, head, k=NI_DISPATCHES, spacing_min=SPACING_MI
         if shared:
             p.append(f"run ids shared between the programmes: {shared}")
         settings = {json.dumps(d.get("settings"), sort_keys=True) for d in primary + confirmation}
-        if len(settings) != 1 or any(not isinstance(d.get("settings"), dict) or None in d["settings"].values()
-                                     for d in primary + confirmation):
-            p.append("the dispatches' frozen settings (candidate, base, toolchain, text corpus) are not one and the same")
+        if len(settings) != 1 or any(
+            not isinstance(d.get("settings"), dict) or None in d["settings"].values()
+            for d in primary + confirmation
+        ):
+            p.append(
+                "the dispatches' frozen settings (candidate, base, toolchain, text corpus) are not one and the same"
+            )
         last, first = primary[-1], confirmation[0]
         s0, e0, s1 = last.get("started"), last.get("completed"), first.get("started")
         if not all(isinstance(x, (int, float)) for x in (s0, e0, s1)):
-            p.append("the boundary between the programmes: times unknown, so the spacing is unshown")
+            p.append(
+                "the boundary between the programmes: times unknown, so the spacing is unshown"
+            )
         else:
             if s1 < s0 + 60 * spacing_min:
-                p.append(f"the confirmation started {(s1 - s0) / 60:.1f} minutes after the primary's last dispatch, "
-                         f"not {spacing_min}")
+                p.append(
+                    f"the confirmation started {(s1 - s0) / 60:.1f} minutes after the primary's last dispatch, "
+                    f"not {spacing_min}"
+                )
             if s1 < e0:
                 p.append("the confirmation started before the primary's last dispatch completed")
     if p:
         if pv["valid"] and not out["primary_flags"]:
             out["d094_c7"] = {"met": True, "why": "no primary wall flag"}
         elif pv["valid"]:
-            out["d094_c7"] = {"met": False, "why": "the confirmation is missing, invalid or malformed: "
-                                                   "no primary wall flag is cleared"}
+            out["d094_c7"] = {
+                "met": False,
+                "why": "the confirmation is missing, invalid or malformed: "
+                "no primary wall flag is cleared",
+            }
         else:
             out["d094_c7"] = {"met": False, "why": "the primary programme is not admitted"}
         return out
@@ -1314,9 +1609,16 @@ def confirm(primary, confirmation, head, k=NI_DISPATCHES, spacing_min=SPACING_MI
     flags, again = pv["flags"], set(cv["flags"])
     out["confirmed"] = [f for f in flags if f in again]
     out["unresolved"] = [f for f in flags if f not in again]
-    out["d094_c7"] = ({"met": True, "why": "no primary wall flag"} if not flags else
-                      {"met": False, "why": f"confirmed harm: {', '.join(out['confirmed'])}"} if out["confirmed"] else
-                      {"met": True, "why": "every primary wall flag adjudicated by the valid confirmation, none confirmed"})
+    out["d094_c7"] = (
+        {"met": True, "why": "no primary wall flag"}
+        if not flags
+        else {"met": False, "why": f"confirmed harm: {', '.join(out['confirmed'])}"}
+        if out["confirmed"]
+        else {
+            "met": True,
+            "why": "every primary wall flag adjudicated by the valid confirmation, none confirmed",
+        }
+    )
     return out
 
 
@@ -1347,8 +1649,14 @@ def main(argv=None):
     n.add_argument("--head", required=True)
     n.add_argument("--out", required=True)
     rp = sub.add_parser("replicated")
-    rp.add_argument("--dispatch", nargs=2, action="append", metavar=("ROOT", "MANIFEST"), required=True,
-                    help="each dispatch's artifacts and manifest, in dispatch order, all k")
+    rp.add_argument(
+        "--dispatch",
+        nargs=2,
+        action="append",
+        metavar=("ROOT", "MANIFEST"),
+        required=True,
+        help="each dispatch's artifacts and manifest, in dispatch order, all k",
+    )
     rp.add_argument("--head", required=True)
     rp.add_argument("--out", required=True)
     st = sub.add_parser("structure")
@@ -1362,10 +1670,22 @@ def main(argv=None):
     st.add_argument("--corpus-text")
     st.add_argument("--out", required=True)
     f = sub.add_parser("confirm")
-    f.add_argument("--primary", nargs=2, action="append", metavar=("ROOT", "MANIFEST"), required=True,
-                   help="each primary dispatch's artifacts and manifest, in dispatch order, all k")
-    f.add_argument("--confirmation", nargs=2, action="append", metavar=("ROOT", "MANIFEST"), required=True,
-                   help="each confirmation dispatch's artifacts and manifest, in dispatch order, all k")
+    f.add_argument(
+        "--primary",
+        nargs=2,
+        action="append",
+        metavar=("ROOT", "MANIFEST"),
+        required=True,
+        help="each primary dispatch's artifacts and manifest, in dispatch order, all k",
+    )
+    f.add_argument(
+        "--confirmation",
+        nargs=2,
+        action="append",
+        metavar=("ROOT", "MANIFEST"),
+        required=True,
+        help="each confirmation dispatch's artifacts and manifest, in dispatch order, all k",
+    )
     f.add_argument("--head", required=True)
     f.add_argument("--out", required=True)
     a = p.parse_args(argv)
@@ -1377,17 +1697,27 @@ def main(argv=None):
     if a.cmd == "manifest":
         arts = read_jsonl(a.artifacts)[0] if a.artifacts else []
         jobs = read_jsonl(a.jobs)[0] if a.jobs else []
-        json.dump(manifest(a.root, arts, jobs, a.run, a.attempt, a.label), sys.stdout, indent=1, sort_keys=True)
+        json.dump(
+            manifest(a.root, arts, jobs, a.run, a.attempt, a.label),
+            sys.stdout,
+            indent=1,
+            sort_keys=True,
+        )
         print()
         return 0
     if a.cmd == "structure":
         with open(a.manifest) as fh:
             man = json.load(fh)
         v = structure(a.root, man, a.head, a.base, a.rounds, a.label, a.toolchain, a.corpus_text)
-        md = (f"# Structural admission ({a.label}, R {a.rounds})\n\n"
-              + ("**Admitted:** all nine shards.\n" if v["valid"] else "**Not admitted:**\n\n"
-                 + "".join(f"- {x}\n" for x in v["problems"]))
-              + "".join(f"- unchecked: {x}\n" for x in v["unchecked"]))
+        md = (
+            f"# Structural admission ({a.label}, R {a.rounds})\n\n"
+            + (
+                "**Admitted:** all nine shards.\n"
+                if v["valid"]
+                else "**Not admitted:**\n\n" + "".join(f"- {x}\n" for x in v["problems"])
+            )
+            + "".join(f"- unchecked: {x}\n" for x in v["unchecked"])
+        )
         write(a.out, v, md)
         return 0 if v["valid"] else 2
     if a.cmd == "ni":
@@ -1404,6 +1734,7 @@ def main(argv=None):
         v = replicated(ds, a.head)
         write(a.out, v, ni_markdown(v))
         return 0 if v["valid"] and v["passes"] else 1 if v["valid"] else 2
+
     def judged(pairs):
         ds = []
         for root, mpath in pairs:
@@ -1415,13 +1746,21 @@ def main(argv=None):
                 continue
             ds.append(ni_judge(root, man, a.head))
         return ds
+
     v = confirm(judged(a.primary), judged(a.confirmation), a.head)
-    md = ("# Harm confirmation (two programmes, re-judged from their archives)\n\n"
-          + (f"Confirmed: {', '.join(v['confirmed']) or 'none'}. Unresolved: {', '.join(v['unresolved']) or 'none'}.\n"
-             if v["valid"] else "Not admitted (fails closed):\n" + "".join(f"- {x}\n" for x in v["problems"]))
-          + f"\nD094-C7: {'met' if v['d094_c7']['met'] else 'NOT met'} ({v['d094_c7']['why']}).\n")
+    md = (
+        "# Harm confirmation (two programmes, re-judged from their archives)\n\n"
+        + (
+            f"Confirmed: {', '.join(v['confirmed']) or 'none'}. Unresolved: {', '.join(v['unresolved']) or 'none'}.\n"
+            if v["valid"]
+            else "Not admitted (fails closed):\n" + "".join(f"- {x}\n" for x in v["problems"])
+        )
+        + f"\nD094-C7: {'met' if v['d094_c7']['met'] else 'NOT met'} ({v['d094_c7']['why']}).\n"
+    )
     write(a.out, v, md)
-    return 0 if v["valid"] and not v["confirmed"] and v["d094_c7"]["met"] else 1 if v["valid"] else 2
+    return (
+        0 if v["valid"] and not v["confirmed"] and v["d094_c7"]["met"] else 1 if v["valid"] else 2
+    )
 
 
 if __name__ == "__main__":

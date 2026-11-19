@@ -12,6 +12,7 @@ Neither is a gate. The rule's intervals are `ab summary`'s; this adds nothing to
 
     lazy_crossover.py RUNS.jsonl DOSE.jsonl [HIGH]     (HIGH: default 10)
 """
+
 import json
 import math
 import statistics
