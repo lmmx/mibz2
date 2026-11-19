@@ -256,3 +256,24 @@ Every case was compared against direct first-return computation, with return wor
 **Two questions are routed:**
 - **Novelty, to the Researcher.** It is close to the r-index's sampling of suffix-array values at run boundaries, and to toehold and φ.
 - **Proof and scope, to MONODROMY.** Does it answer the project's open question for *every* gap within a run, or only for boundary gaps?
+
+### Round 5 reviews
+
+**MONODROMY (REVIEW 7007723857; record 81):**
+- **Theorem 1 (position recovery): VERIFIED WITH CORRECTION.** 0 failures in 70,706 runs: 60,159 with several cycles, 27,877 with λ > 1 bands, 10,485 with quotient steps. The correction: on a λ > 1 band, tails resolve on the right endpoint's cycle (phase-aligned), not on the heads' cycle.
+- **Scope: boundary gaps only, in O(r).** Every gap's separation depth *is* determined, by one tail-successor search per row of run offset; this is exact on all 848,747 interior gaps of block 0. But one gap then costs a mean of 1,643.5 searches against a walked depth of 262.2. So the project's open question is answered for boundary gaps cheaply, and for interior gaps only at a cost above walking.
+- **The "≈ 1.015r accelerated steps": REFUTED.** Neon's quotient fires zero times on blocks 0, 85 and 210, so on block 0 accelerated = raw = 92,571. 1.015r is MONODROMY's winner-run lower-bound count. Each loser still costs O(1), so weight-only RV does 1.68–1.87r steps, as Cells does.
+
+**Researcher (REVIEW 7007681052):**
+- **The targets are known.** The recovered positions are the r-index's run-boundary suffix-array samples, up to origin and direction. The classical construction takes a full LF lap; toehold and φ consume the samples.
+- **Sublinear routes already exist:**
+  - Kempa (SODA 2019, Thm. 5.1): O(n/log n + r log⁵ n) time;
+  - Agol–Hass–Thurston weighted interval pairing: polynomial in r and log n.
+
+  Neither has Neon's O(r) words of working state.
+- **No worst-case guarantee.** On `2·1·0^N` (r = 3), the pinned schedule takes n steps: 4,098 at n = 4,098.
+- **What is distinctive:** the weight-only O(r)-state implementation, and its measured 1.68–1.87r on real admitted blocks without a separate unit LF lap.
+
+**Round 5 overall:**
+- **Kept:** a correct, verified construction that recovers the run-boundary positions in Cells' step count with integer-only state. It is practically neat, and not theoretically new.
+- **Refuted:** the RV-Copy decoder (by Neon's own criterion), the step-count claim, and the claim to have answered the open question for every gap.
