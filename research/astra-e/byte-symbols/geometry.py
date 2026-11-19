@@ -16,4 +16,7 @@ for w in [1,2,4,7,8,9,10]:
     k = 4*w
     saved = [n if e<=255 else 0 for n,_,e,_ in blocks]
     print(w,k,sum(saved),max(sum(saved[i:i+k]) for i in range(len(saved)-k+1)),
-          sum(sorted(saved,reverse=True)[:k]),k*min(b[3] for b in blocks),sep=',')
+          sum(sorted(saved,reverse=True)[:k]),k*(min(b[3] for b in blocks)-2),sep=',')
+
+odd=sum(n&1 for n,_,_,_ in blocks)
+print(f"carrier_header_pad_bytes={2*len(blocks)+odd} odd_tapes={odd} realized_handoff_payload_saving={sum(b[0] for b in blocks)-2*len(blocks)-odd}")
