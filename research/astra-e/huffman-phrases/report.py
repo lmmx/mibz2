@@ -11,7 +11,8 @@ from moonshot import paired_ratio
 
 def main(path):
     rows=list(csv.DictReader(path.open()))
-    arms=["stock","twin","triple","quad"]
+    third="scatter" if any(r["arm"]=="scatter" for r in rows) else "triple"
+    arms=["stock","twin",third,"quad"]
     rounds=len(rows)//len(arms)
     assert len(rows)==rounds*4 and rounds>=24 and rounds%8==0
     table={}
@@ -27,8 +28,14 @@ def main(path):
     assert set(positions.values())=={rounds//4}
     out=csv.writer(sys.stdout,lineterminator="\n")
     out.writerow(["metric","candidate","reference","paired_rounds","geo","lo95","hi95"])
-    for metric in ("thread_ns","wall_ns"):
-        for arm,ref in [("twin","stock"),("triple","stock"),("quad","stock"),("triple","twin"),("quad","twin"),("quad","triple")]:
+    metrics=["thread_ns","wall_ns"]
+    if rows and "table_ns" in rows[0]:
+        for r in rows:
+            r["outside_table_ns"]=int(r["thread_ns"])-int(r["table_ns"])
+            assert 0 < r["outside_table_ns"] < int(r["thread_ns"])
+        metrics.extend(["table_ns","outside_table_ns"])
+    for metric in metrics:
+        for arm,ref in [("twin","stock"),(third,"stock"),("quad","stock"),(third,"twin"),("quad","twin"),("quad",third)]:
             c=[int(table[r,arm][metric])for r in range(rounds)]
             b=[int(table[r,ref][metric])for r in range(rounds)]
             result=paired_ratio(c,b)
