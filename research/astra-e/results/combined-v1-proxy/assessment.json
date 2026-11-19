@@ -1,0 +1,5 @@
+{
+  "kind": "advisory proxy",
+  "assessment": "Official v1 on 48 full and 16 tiny sampled blocks models candidate/lazy 0.910 / 0.912 / 0.915 at W7/8/10. It reuses the upstream deposited opend model; candidate/opend has no fresh paired interval. [Full v1 calibrated reading](results/combined-v1-proxy/README.md).",
+  "verification": "The quick gate passed 98 cases for this model. Other full libbzip2 gate and CI receipts for the same candidate remain separate. [Paired CI](https://github.com/lmmx/mibz2/actions/runs/44427324957)."
+}
