@@ -1,0 +1,17 @@
+deceb227224c86f7c47bee273c65a9d54366945c
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+8f6d954c921a9943f2d9e0c362451eecbc1808c3de9e2a8028af9cd2df687d5b  /workspace/work/queue-spans/sequential-pages/baseline.rs
+544b00e3311454b417d30cbccee8d890754f060ce88fdbc12eb974203222f617  /workspace/work/queue-spans/sequential-pages/layout.rs
+0fccb125812c4c4f3f555a7ad2f07bef13ae57e9f686b0b38e62093200b959d4  /workspace/work/queue-spans/sequential-pages/price.rs
+535d3897ea976861d31bab5552dd464aae2cbd39669b820b09a29318f5c1d16a  /workspace/work/queue-spans/sequential-pages/sequential.rs
+9a6cea8a24e48086be748ffd34ef3e66c462ee000b9cbb54c9c2140b1a691eac  /workspace/work/queue-spans/sequential-pages/price
+5ec3fad21f47e162a0131089b0036dffcfe2ba94ecf2148ca17cd3d157430db9  /workspace/work/queue-authoritative-build/release/deps/libmibz2.rlib
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+pinned CPUs 3 0
+400000 100000
