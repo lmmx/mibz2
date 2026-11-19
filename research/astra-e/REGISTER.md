@@ -12,9 +12,17 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 | 2 | 0.8953 [0.8897,0.9009] | 0.9666 [0.9474,0.9862] | 0.9461 |
 | 4 | 0.8379 [0.8344,0.8413] | 0.9569 [0.9290,0.9856] | 0.8617 |
 
+**Scorer v1 replication.** A second 16-round AMD run gave combined/Lazy wall 0.8894, 0.8938 and 0.8332 at W1/2/4. W4's interval was [0.8024,0.8651] and its median peak ratio was 0.8710. Direct ratios to opend were 0.9581 [0.9493,0.9670], 0.9632 [0.9533,0.9733], and 0.9639 [0.9594,0.9684]. The W4 contrast against eager included parity. [Independent v1 receipt and raw ZIP](ci/evidence/combined-ahead-44429350230.md) · [Coordinator priority request](workstation/combined-request.md)
+
+**Independently measured memory leader.** Widening admission on five dense blocks reduced peak RSS versus the frozen combined predecessor to 0.9383, 0.8904 and 0.8334 at W1/2/4. On that same five-arm Xeon CI, edge/predecessor wall was 1.0071 [0.9986,1.0156], 1.0096 [1.0031,1.0161] and 1.0027 [0.9995,1.0058]. W4 edge/Lazy wall was 0.9074 [0.9029,0.9119], with peak RSS at 0.7129. This establishes the space tradeoff and a W2 timing regression. [20-round five-arm CI and original observations](ci/evidence/edge-budget-44431030145.md)
+
 **Local v1 speed and memory.** For the nine-round W1/W4 comparison, the combined candidate recorded 0.648 [0.501,0.838] at W1 and 0.888 [0.644,1.226] at W4. Its bounded-admission derivative, source `badb2aec3624bd65606c429b2e6f79e9d9d0050f`, has the leading W4 wall and memory observations among those first three confirmations. W4 took 0.743 [0.621,0.888] versus LazyCells and 0.954 [0.851,1.070] versus opend; median peak RSS was 0.732 of LazyCells. W1 took 0.970 [0.668,1.408] versus LazyCells. These arms ran in separate, host-load-sensitive epochs against their own controls. The independent five-arm CI includes a directly paired combined predecessor. [Bounded admission score and reproduction](results/v1-edge-confirm/manifest.txt) · [Comparisons against opend](results/v1-edge-confirm/vs-opend.json) · [Combined v1 score](results/v1-combined-confirm/score/summary.txt)
 
 **Previously preserved leaders.** The v0 settled short-word result at W4 was 0.766 [0.610,0.962] versus LazyCells; it regressed against opend at W3 and its W4 advantage did not repeat on the v1 grid. Single lookahead remains a simpler independent milestone with an i9 request. A conjugate-rank constructor has a distinct space advantage (W4 peak RSS about 0.849 of Lazy on two CI hosts) and divergent CPU results across those hosts. The register retains build references, input hashes, and separate instructions, traffic and dependency quantities below. [Short words](results/short-words-confirm/assessment.json) · [v1 repeat](results/v1-short-confirm/assessment.json) · [Lookahead](results/lookahead-pilot/assessment.json) · [Conjugate constructor](results/conjugate-pilot/assessment.json)
+
+**Local final-slot milestone.** Final-slot repair at source `e53d5e2` reached 0.718 [0.551,0.934] of Lazy wall at W4 with median peak RSS 0.859. Opend in that same epoch took 0.657 [0.483,0.896]. The lower candidate/Lazy point than the edge-budget result was measured in a separate epoch; it does not establish a direct victory. [Nine-pair run](results/v1-final-slot-confirm/score/summary.txt)
+
+**Target status.** The first i9 attempt exited on the stale v0 scorer pin before recording timings. A validated v1 freeze preserving the Coordinator's changes is published. The combined and standalone requests retain their frozen decision rules and dry-run instructions. [Failure receipt and recovery](workstation/lookahead-first-attempt.md)
 
 ## Local leaders by tested design
 
@@ -23,7 +31,7 @@ These are the lowest recorded point estimates within each group of experiments w
 | Scorer / design / W | Lowest wall estimate vs lazy [95% CI] | Lowest median RSS ratio vs lazy |
 |---|---|---|
 | `604dac3` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1-combined-confirm · 0.648 [0.501, 0.838] | v1-edge-confirm · 0.897 |
-| `604dac3` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-edge-confirm · 0.743 [0.621, 0.888] | v1-edge-confirm · 0.732 |
+| `604dac3` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-final-slot-confirm · 0.718 [0.551, 0.934] | v1-edge-confirm · 0.732 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1-delimiter-f2c · 1.165 [0.833, 1.628] | v1-delimiter-f2c · 1.002 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-delimiter-f2c · 1.144 [0.826, 1.586] | v1-delimiter-f2c · 0.941 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W1** | hierarchy-f4 · 1.940 [1.080, 3.487] | hierarchy-f4 · 0.878 |
@@ -796,6 +804,82 @@ bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2c/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy
 ```
 
+## v1-delimiter-refill-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-delimiter-refill-gate/score/check.jsonl) · [manifest](results/v1-delimiter-refill-gate/manifest.txt) · [score](results/v1-delimiter-refill-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`87d41eb0e1cdd3b82268ea91ac736d150207188e`](https://github.com/lmmx/mibz2/tree/87d41eb0e1cdd3b82268ea91ac736d150207188e). [Candidate entry](https://github.com/lmmx/mibz2/blob/87d41eb0e1cdd3b82268ea91ac736d150207188e/research/astra-e/formulations/f2-scheduler/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-scheduler/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-scheduler/candidate.rs --no-proxy --no-timing --target-dir /workspace/work/f2d-dual-build
+```
+
+## v1-direct-refill-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-direct-refill-gate/score/check.jsonl) · [manifest](results/v1-direct-refill-gate/manifest.txt) · [score](results/v1-direct-refill-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`48759eed0ea95cd6454c9b7a8cbc8e33e58ffc75`](https://github.com/lmmx/mibz2/tree/48759eed0ea95cd6454c9b7a8cbc8e33e58ffc75). [Candidate entry](https://github.com/lmmx/mibz2/blob/48759eed0ea95cd6454c9b7a8cbc8e33e58ffc75/research/astra-e/formulations/f2-scheduler/direct/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-scheduler/direct/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-scheduler/direct/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2d-dual-build
+```
+
+## v1-double-refill-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-double-refill-gate/score/check.jsonl) · [manifest](results/v1-double-refill-gate/manifest.txt) · [score](results/v1-double-refill-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`ba6f6bab601c1c1c876311c0fef134d11fb699cb`](https://github.com/lmmx/mibz2/tree/ba6f6bab601c1c1c876311c0fef134d11fb699cb). [Candidate entry](https://github.com/lmmx/mibz2/blob/ba6f6bab601c1c1c876311c0fef134d11fb699cb/research/astra-e/formulations/f2-scheduler/second/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-scheduler/second/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-scheduler/second/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2d-dual-build
+```
+
+## v1-dual-bands-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-dual-bands-gate/score/check.jsonl) · [manifest](results/v1-dual-bands-gate/manifest.txt) · [score](results/v1-dual-bands-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`3bdf7f0ee207b44b80509de1e6f19438fddb6598`](https://github.com/lmmx/mibz2/tree/3bdf7f0ee207b44b80509de1e6f19438fddb6598). [Candidate entry](https://github.com/lmmx/mibz2/blob/3bdf7f0ee207b44b80509de1e6f19438fddb6598/research/astra-e/formulations/f2-dual/candidate.rs). Fetched master `566f090be41095c3495f149e60c2041c439d528b`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 566f090be41095c3495f149e60c2041c439d528b -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-dual/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-dual/candidate.rs --no-proxy --no-timing --target-dir /workspace/work/f2d-dual-build
+```
+
 ## v1-edge-confirm
 
 Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-edge-confirm/score/check.jsonl) · [manifest](results/v1-edge-confirm/manifest.txt) · [score](results/v1-edge-confirm/score/summary.txt)
@@ -824,6 +908,34 @@ bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/edge-budget/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy
 ```
 
+## v1-f2d-learn-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-f2d-learn-confirm/score/check.jsonl) · [manifest](results/v1-f2d-learn-confirm/manifest.txt) · [score](results/v1-f2d-learn-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`cbacb63d20904f12227adb2400d00250263fa747`](https://github.com/lmmx/mibz2/tree/cbacb63d20904f12227adb2400d00250263fa747). [Candidate entry](https://github.com/lmmx/mibz2/blob/cbacb63d20904f12227adb2400d00250263fa747/research/astra-e/formulations/f2d/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 1.505 [0.882, 2.569] | 0.755 [0.594, 0.960] | 1.993 | 79,940 / 78,936 / 77,088 | 1.013 |
+| 4 | 9 | 0.936 [0.642, 1.363] | 0.729 [0.463, 1.146] | 1.284 | 124,572 / 132,816 / 116,868 | 0.938 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1-f2d-learn-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Both W1/W4 local intervals against LazyCells include parity. Same-round direct candidate/opend wall ratios were W1 1.993 [1.087,3.652] and W4 1.284 [1.005,1.641]. The W1 median peak RSS ratio against LazyCells was above one. Stage evidence for a learned advantage versus unmodified F2c varied between runs. See the F2d proof, ownership experiments and full gates in the formulation ledger.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2d/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2d/candidate.rs --workers 1,4 --rounds 9 --repeat 2 --settle 2 --with-opend --no-proxy --target-dir /workspace/work/f2d-native
+```
+
 ## v1-f5-action-gate
 
 Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-f5-action-gate/score/check.jsonl) · [manifest](results/v1-f5-action-gate/manifest.txt) · [score](results/v1-f5-action-gate/score/summary.txt)
@@ -843,6 +955,77 @@ bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f5/kernel/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f5-build
 ```
 
+## v1-f5-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-f5-confirm/score/check.jsonl) · [manifest](results/v1-f5-confirm/manifest.txt) · [score](results/v1-f5-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`2ad93eddd79377812d22a3e6110c7fe7f9a394fa`](https://github.com/lmmx/mibz2/tree/2ad93eddd79377812d22a3e6110c7fe7f9a394fa). [Candidate entry](https://github.com/lmmx/mibz2/blob/2ad93eddd79377812d22a3e6110c7fe7f9a394fa/research/astra-e/formulations/f5/kernel/candidate.rs). Fetched master `566f090be41095c3495f149e60c2041c439d528b`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 0.745 [0.473, 1.172] | 0.827 [0.491, 1.393] | 0.901 | 77,208 / 79,836 / 77,516 | 0.967 |
+| 4 | 9 | 1.001 [0.575, 1.744] | 1.167 [0.750, 1.817] | 0.858 | 113,380 / 131,872 / 114,472 | 0.860 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1-f5-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 566f090be41095c3495f149e60c2041c439d528b -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f5/kernel/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f5/kernel/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/f5-build
+```
+
+## v1-f5-lean-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-f5-lean-gate/score/check.jsonl) · [manifest](results/v1-f5-lean-gate/manifest.txt) · [score](results/v1-f5-lean-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`b474a86f91c255d4334ce92ba33648f67483e772`](https://github.com/lmmx/mibz2/tree/b474a86f91c255d4334ce92ba33648f67483e772). [Candidate entry](https://github.com/lmmx/mibz2/blob/b474a86f91c255d4334ce92ba33648f67483e772/research/astra-e/formulations/f5/kernel/lean/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f5/kernel/lean/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f5/kernel/lean/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2-rle-build
+```
+
+## v1-final-slot-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-final-slot-confirm/score/check.jsonl) · [manifest](results/v1-final-slot-confirm/manifest.txt) · [score](results/v1-final-slot-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`543e4e07c14c16fec01b2b081b73d5e3440e3d37`](https://github.com/lmmx/mibz2/tree/543e4e07c14c16fec01b2b081b73d5e3440e3d37). [Candidate entry](https://github.com/lmmx/mibz2/blob/543e4e07c14c16fec01b2b081b73d5e3440e3d37/research/astra-e/final-slot/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 0.796 [0.623, 1.017] | 0.910 [0.777, 1.065] | 0.875 | 77,696 / 80,200 / 77,332 | 0.969 |
+| 4 | 9 | 0.718 [0.551, 0.934] | 0.657 [0.483, 0.896] | 1.091 | 116,540 / 135,640 / 115,652 | 0.859 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1-final-slot-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/final-slot/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/final-slot/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy
+```
+
 ## v1-final-slot-gate
 
 Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-final-slot-gate/score/check.jsonl) · [manifest](results/v1-final-slot-gate/manifest.txt) · [score](results/v1-final-slot-gate/score/summary.txt)
@@ -860,6 +1043,165 @@ git checkout 604dac3f46569edd9ac9b6706b23a68d9d7d8f8d -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/final-slot/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/final-slot/candidate.rs --no-proxy --no-timing --target-dir /workspace/work/f2-word-build
+```
+
+## v1-front-counts-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-front-counts-gate/score/check.jsonl) · [manifest](results/v1-front-counts-gate/manifest.txt) · [score](results/v1-front-counts-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`252646aec0dd1a80a6969b2e1598c73486006efd`](https://github.com/lmmx/mibz2/tree/252646aec0dd1a80a6969b2e1598c73486006efd). [Candidate entry](https://github.com/lmmx/mibz2/blob/252646aec0dd1a80a6969b2e1598c73486006efd/research/astra-e/formulations/f2-front-counts/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-front-counts/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-front-counts/candidate.rs --target-dir /workspace/work/f2count-check --no-timing --no-proxy
+```
+
+## v1-frontier-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-frontier-gate/score/check.jsonl) · [manifest](results/v1-frontier-gate/manifest.txt) · [score](results/v1-frontier-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`244001c9e2be855669fbb09cfec77eea37ff33f6`](https://github.com/lmmx/mibz2/tree/244001c9e2be855669fbb09cfec77eea37ff33f6). [Candidate entry](https://github.com/lmmx/mibz2/blob/244001c9e2be855669fbb09cfec77eea37ff33f6/research/astra-e/formulations/f2-frontier/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-frontier/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-frontier/candidate.rs --target-dir /workspace/work/f2word-frontier --no-timing --no-proxy
+```
+
+## v1-lookahead-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-lookahead-confirm/score/check.jsonl) · [manifest](results/v1-lookahead-confirm/manifest.txt) · [score](results/v1-lookahead-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`efbacc6d17b24aaf9c70538e8def30d2e9ade691`](https://github.com/lmmx/mibz2/tree/efbacc6d17b24aaf9c70538e8def30d2e9ade691). [Candidate entry](https://github.com/lmmx/mibz2/blob/efbacc6d17b24aaf9c70538e8def30d2e9ade691/research/astra-e/lookahead/candidate.rs). Fetched master `566f090be41095c3495f149e60c2041c439d528b`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 0.693 [0.286, 1.676] | 0.483 [0.263, 0.886] | 1.434 | 77,472 / 80,060 / 77,096 | 0.968 |
+| 4 | 9 | 1.432 [0.838, 2.446] | 1.046 [0.636, 1.721] | 1.368 | 118,856 / 137,864 / 122,580 | 0.862 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1-lookahead-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 566f090be41095c3495f149e60c2041c439d528b -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/lookahead/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/lookahead/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy
+```
+
+## v1-rle-bundle-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-rle-bundle-gate/score/check.jsonl) · [manifest](results/v1-rle-bundle-gate/manifest.txt) · [score](results/v1-rle-bundle-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`1a6435808471e7f95361a552e92e83ad34ba755f`](https://github.com/lmmx/mibz2/tree/1a6435808471e7f95361a552e92e83ad34ba755f). [Candidate entry](https://github.com/lmmx/mibz2/blob/1a6435808471e7f95361a552e92e83ad34ba755f/research/astra-e/formulations/f2-rle/bundled/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-rle/bundled/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-rle/bundled/candidate.rs --no-proxy --target-dir /workspace/work/f2-bundle-score --no-timing
+```
+
+## v1-rle-compiled-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-rle-compiled-gate/score/check.jsonl) · [manifest](results/v1-rle-compiled-gate/manifest.txt) · [score](results/v1-rle-compiled-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`bab2515760936fa68e0bad775183e8230a848dc0`](https://github.com/lmmx/mibz2/tree/bab2515760936fa68e0bad775183e8230a848dc0). [Candidate entry](https://github.com/lmmx/mibz2/blob/bab2515760936fa68e0bad775183e8230a848dc0/research/astra-e/formulations/f2-rle/compiled/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-rle/compiled/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-rle/compiled/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2-rle-build
+```
+
+## v1-rle-cylinder-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-rle-cylinder-gate/score/check.jsonl) · [manifest](results/v1-rle-cylinder-gate/manifest.txt) · [score](results/v1-rle-cylinder-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`b474a86f91c255d4334ce92ba33648f67483e772`](https://github.com/lmmx/mibz2/tree/b474a86f91c255d4334ce92ba33648f67483e772). [Candidate entry](https://github.com/lmmx/mibz2/blob/b474a86f91c255d4334ce92ba33648f67483e772/research/astra-e/formulations/f2-rle/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-rle/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-rle/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2-rle-build
+```
+
+## v1-rle-diagonal-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-rle-diagonal-gate/score/check.jsonl) · [manifest](results/v1-rle-diagonal-gate/manifest.txt) · [score](results/v1-rle-diagonal-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`bab2515760936fa68e0bad775183e8230a848dc0`](https://github.com/lmmx/mibz2/tree/bab2515760936fa68e0bad775183e8230a848dc0). [Candidate entry](https://github.com/lmmx/mibz2/blob/bab2515760936fa68e0bad775183e8230a848dc0/research/astra-e/formulations/f2-rle/diagonal/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-rle/diagonal/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-rle/diagonal/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2-rle-build
+```
+
+## v1-rle-saturation-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-rle-saturation-gate/score/check.jsonl) · [manifest](results/v1-rle-saturation-gate/manifest.txt) · [score](results/v1-rle-saturation-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`bab2515760936fa68e0bad775183e8230a848dc0`](https://github.com/lmmx/mibz2/tree/bab2515760936fa68e0bad775183e8230a848dc0). [Candidate entry](https://github.com/lmmx/mibz2/blob/bab2515760936fa68e0bad775183e8230a848dc0/research/astra-e/formulations/f2-rle/saturated/candidate.rs). Fetched master `6fb777541e3ce4613c34e14d8f5def7fbada8b4a`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-rle/saturated/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-rle/saturated/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2-rle-build
 ```
 
 ## v1-short-confirm
