@@ -1,0 +1,510 @@
+{
+ "sources": [
+  "src/cells_lazy.rs",
+  "src/open.rs",
+  "src/open/endpoint.rs"
+ ],
+ "selections": [
+  "open::"
+ ],
+ "mutants": [
+  {
+   "name": "the primary's run loses its leading fragment",
+   "file": "src/open.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::arbitrary_columns_through_one_kernel",
+    "open::b5::miri_open_kernel_small_columns",
+    "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+    "open::checks::all_port_arrows",
+    "open::checks::capped_runs_and_shifted_marks",
+    "open::checks::residual_segments_on_short_cycles"
+   ],
+   "panic": "src/open.rs:219:9:: assertion failed: m > 0 && all.iter().sum::<u32>() == n",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::open_cells_gate_edges",
+      "open::b5::every_small_column_at_every_row",
+      "open::b5::worst_case_scratch_per_row",
+      "open::b5::stress_streams_decode_exactly"
+     ],
+     "failed": [
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::checks::all_port_arrows",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open.rs:219:9:: assertion failed: m > 0 && all.iter().sum::<u32>() == n"
+    }
+   }
+  },
+  {
+   "name": "each byte's first row one place on",
+   "file": "src/open.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::arbitrary_columns_through_one_kernel",
+    "open::b5::miri_open_kernel_small_columns",
+    "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+    "open::b5::stress_streams_decode_exactly",
+    "open::b5::worst_case_scratch_per_row",
+    "open::checks::all_port_arrows",
+    "open::checks::capped_runs_and_shifted_marks",
+    "open::checks::residual_segments_on_short_cycles"
+   ],
+   "panic": "src/open.rs:230:29:: index out of bounds: the len is 1 but the index is 1",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::open_cells_gate_edges",
+      "open::b5::every_small_column_at_every_row"
+     ],
+     "failed": [
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::checks::all_port_arrows",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::worst_case_scratch_per_row",
+      "open::b5::stress_streams_decode_exactly"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open.rs:230:29:: index out of bounds: the len is 1 but the index is 1"
+    }
+   }
+  },
+  {
+   "name": "the marked row's rank one place on",
+   "file": "src/open.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::arbitrary_columns_through_one_kernel",
+    "open::b5::every_small_column_at_every_row",
+    "open::b5::miri_open_kernel_small_columns",
+    "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+    "open::b5::stress_streams_decode_exactly",
+    "open::b5::worst_case_scratch_per_row",
+    "open::checks::all_port_arrows",
+    "open::checks::capped_runs_and_shifted_marks",
+    "open::checks::residual_segments_on_short_cycles"
+   ],
+   "panic": "src/open.rs:470:20:: index out of bounds: the len is 1 but the index is 1",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::open_cells_gate_edges"
+     ],
+     "failed": [
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::every_small_column_at_every_row",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::checks::all_port_arrows",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::worst_case_scratch_per_row",
+      "open::b5::stress_streams_decode_exactly"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open.rs:470:20:: index out of bounds: the len is 1 but the index is 1"
+    }
+   }
+  },
+  {
+   "name": "a band's destination one place on",
+   "file": "src/open.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::arbitrary_columns_through_one_kernel",
+    "open::b5::every_small_column_at_every_row",
+    "open::b5::miri_open_kernel_small_columns",
+    "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+    "open::b5::stress_streams_decode_exactly",
+    "open::b5::worst_case_scratch_per_row",
+    "open::checks::all_port_arrows",
+    "open::checks::capped_runs_and_shifted_marks",
+    "open::checks::residual_segments_on_short_cycles"
+   ],
+   "panic": "src/open.rs:311:51:: range end index 7 out of range for slice of length 6",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::open_cells_gate_edges"
+     ],
+     "failed": [
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::every_small_column_at_every_row",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::checks::all_port_arrows",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::worst_case_scratch_per_row",
+      "open::b5::stress_streams_decode_exactly"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open.rs:311:51:: range end index 7 out of range for slice of length 6"
+    }
+   }
+  },
+  {
+   "name": "a short cycle over-repeated",
+   "file": "src/open.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::arbitrary_columns_through_one_kernel",
+    "open::b5::every_small_column_at_every_row",
+    "open::b5::miri_open_kernel_small_columns",
+    "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+    "open::b5::worst_case_scratch_per_row",
+    "open::checks::residual_segments_on_short_cycles"
+   ],
+   "panic": "src/open/b5.rs:97:21:: assertion `left == right` failed: n 64, alphabet 2, mean 1, row 0",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::open_cells_gate_edges",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::b5::stress_streams_decode_exactly",
+      "open::checks::all_port_arrows"
+     ],
+     "failed": [
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::every_small_column_at_every_row",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::worst_case_scratch_per_row"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open/b5.rs:97:21:: assertion `left == right` failed: n 64, alphabet 2, mean 1, row 0"
+    }
+   }
+  },
+  {
+   "name": "the open kernel's block truncated in OpenCells",
+   "file": "src/open.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+    "open::b5::stress_streams_decode_exactly"
+   ],
+   "panic": "src/open/b5.rs:140:9:: assertion `left == right` failed",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::open_cells_gate_edges",
+      "open::b5::worst_case_scratch_per_row",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::every_small_column_at_every_row",
+      "open::checks::all_port_arrows"
+     ],
+     "failed": [
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::b5::stress_streams_decode_exactly"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open/b5.rs:140:9:: assertion `left == right` failed"
+    }
+   }
+  },
+  {
+   "name": "equal widths taken as the right side's cut",
+   "file": "src/open/endpoint.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::arbitrary_columns_through_one_kernel",
+    "open::b5::every_small_column_at_every_row",
+    "open::b5::miri_open_kernel_small_columns",
+    "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+    "open::b5::stress_streams_decode_exactly",
+    "open::b5::worst_case_scratch_per_row",
+    "open::checks::all_port_arrows",
+    "open::checks::capped_runs_and_shifted_marks",
+    "open::checks::residual_segments_on_short_cycles"
+   ],
+   "panic": "src/open/endpoint.rs:264:9:: assertion `left == right` failed",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::open_cells_gate_edges"
+     ],
+     "failed": [
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::every_small_column_at_every_row",
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::checks::all_port_arrows",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::worst_case_scratch_per_row",
+      "open::b5::stress_streams_decode_exactly"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open/endpoint.rs:264:9:: assertion `left == right` failed"
+    }
+   }
+  },
+  {
+   "name": "a rule expanded as a copy on its first visit",
+   "file": "src/open/endpoint.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::arbitrary_columns_through_one_kernel",
+    "open::b5::miri_open_kernel_small_columns",
+    "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+    "open::b5::stress_streams_decode_exactly",
+    "open::b5::worst_case_scratch_per_row",
+    "open::checks::all_port_arrows",
+    "open::checks::capped_runs_and_shifted_marks",
+    "open::checks::residual_segments_on_short_cycles"
+   ],
+   "panic": "/rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/slice/index.rs:1009:51:: range end index 4294967299 out of range for slice of length 0",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::open_cells_gate_edges",
+      "open::b5::every_small_column_at_every_row"
+     ],
+     "failed": [
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::checks::all_port_arrows",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::worst_case_scratch_per_row",
+      "open::b5::stress_streams_decode_exactly"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "/rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/slice/index.rs:1009:51:: range end index 4294967299 out of range for slice of length 0"
+    }
+   }
+  },
+  {
+   "name": "a node's rows all placed at its first",
+   "file": "src/open/endpoint.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::arbitrary_columns_through_one_kernel",
+    "open::b5::every_small_column_at_every_row",
+    "open::b5::miri_open_kernel_small_columns",
+    "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+    "open::b5::stress_streams_decode_exactly",
+    "open::b5::worst_case_scratch_per_row",
+    "open::checks::all_port_arrows",
+    "open::checks::capped_runs_and_shifted_marks",
+    "open::checks::residual_segments_on_short_cycles"
+   ],
+   "panic": "src/open/b5.rs:97:21:: assertion `left == right` failed: n 64, alphabet 2, mean 1, row 0",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::open_cells_gate_edges"
+     ],
+     "failed": [
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::every_small_column_at_every_row",
+      "open::checks::all_port_arrows",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::b5::worst_case_scratch_per_row",
+      "open::b5::stress_streams_decode_exactly"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open/b5.rs:97:21:: assertion `left == right` failed: n 64, alphabet 2, mean 1, row 0"
+    }
+   }
+  },
+  {
+   "name": "a band past its node's end",
+   "file": "src/open/endpoint.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::arbitrary_columns_through_one_kernel",
+    "open::b5::miri_open_kernel_small_columns",
+    "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+    "open::b5::stress_streams_decode_exactly",
+    "open::b5::worst_case_scratch_per_row",
+    "open::checks::all_port_arrows",
+    "open::checks::capped_runs_and_shifted_marks",
+    "open::checks::residual_segments_on_short_cycles"
+   ],
+   "panic": "src/open/endpoint.rs:234:17:: assertion failed: width > 0",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::open_cells_gate_edges",
+      "open::b5::every_small_column_at_every_row"
+     ],
+     "failed": [
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::checks::all_port_arrows",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::worst_case_scratch_per_row",
+      "open::b5::stress_streams_decode_exactly"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open/endpoint.rs:234:17:: assertion failed: width > 0"
+    }
+   }
+  },
+  {
+   "name": "the density line admitting r/n 0.15",
+   "file": "src/cells_lazy.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::open_cells_gate_edges"
+   ],
+   "panic": "src/open/b5.rs:159:5:: r/n 0.15 is refused, as LazyCells refuses it",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::b5::every_small_column_at_every_row",
+      "open::b5::worst_case_scratch_per_row",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::stress_streams_decode_exactly",
+      "open::checks::all_port_arrows"
+     ],
+     "failed": [
+      "open::b5::open_cells_gate_edges"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open/b5.rs:159:5:: r/n 0.15 is refused, as LazyCells refuses it"
+    }
+   }
+  },
+  {
+   "name": "the sparse gate refusing exactly one record in 64 rows",
+   "file": "src/cells_lazy.rs",
+   "verdict": "KILLED",
+   "failing": [
+    "open::b5::open_cells_gate_edges"
+   ],
+   "panic": "src/open/b5.rs:167:5:: assertion failed: OpenCells::admits(16, 1024, 0) && !OpenCells::admits(15, 1024, 0)",
+   "built": true,
+   "selections": {
+    "open::": {
+     "exit": 101,
+     "ran": 11,
+     "passed": [
+      "open::b5::miri_open_kernel_small_columns",
+      "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+      "open::b5::every_small_column_at_every_row",
+      "open::b5::worst_case_scratch_per_row",
+      "open::b5::arbitrary_columns_through_one_kernel",
+      "open::checks::capped_runs_and_shifted_marks",
+      "open::checks::residual_segments_on_short_cycles",
+      "open::b5::stress_streams_decode_exactly",
+      "open::checks::all_port_arrows"
+     ],
+     "failed": [
+      "open::b5::open_cells_gate_edges"
+     ],
+     "results": [
+      "FAILED"
+     ],
+     "panic": "src/open/b5.rs:167:5:: assertion failed: OpenCells::admits(16, 1024, 0) && !OpenCells::admits(15, 1024, 0)"
+    }
+   }
+  }
+ ],
+ "baseline": {
+  "built": true,
+  "selections": {
+   "open::": {
+    "exit": 0,
+    "ran": 11,
+    "passed": [
+     "open::b5::miri_open_kernel_small_columns",
+     "open::b5::open_cells_gate_edges",
+     "open::b5::open_cells_admits_on_lazy_cells_count_gates",
+     "open::b5::arbitrary_columns_through_one_kernel",
+     "open::b5::worst_case_scratch_per_row",
+     "open::checks::capped_runs_and_shifted_marks",
+     "open::checks::residual_segments_on_short_cycles",
+     "open::b5::stress_streams_decode_exactly",
+     "open::b5::every_small_column_at_every_row",
+     "open::checks::all_port_arrows"
+    ],
+    "failed": [],
+    "results": [
+     "ok"
+    ],
+    "panic": null
+   }
+  }
+ }
+}
