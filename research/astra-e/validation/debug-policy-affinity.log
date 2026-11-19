@@ -1,0 +1,8 @@
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-c5bc636cd73e6170)
+
+running 1 test
+test parallel::plan_tests::the_policy_here ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 141 filtered out; finished in 0.00s
+

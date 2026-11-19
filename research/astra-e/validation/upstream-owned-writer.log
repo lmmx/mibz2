@@ -1,0 +1,80 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling target-lexicon v0.13.5
+   Compiling pyo3-build-config v0.29.3
+   Compiling libm v0.2.16
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling libc v0.2.191
+   Compiling cc v1.10.0
+   Compiling pyo3-ffi v0.29.3
+   Compiling syn v3.0.9
+   Compiling pkg-config v0.3.34
+   Compiling thiserror v2.0.21
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling thiserror-impl v2.0.21
+   Compiling syn v2.0.119
+   Compiling heck v0.5.0
+   Compiling pyo3-macros-backend v0.29.3
+   Compiling fearless_simd v1.2.0
+   Compiling pyo3 v0.29.3
+   Compiling bytemuck v1.25.2
+   Compiling pbz2-core v0.2.0
+   Compiling pyo3-macros v0.29.3
+   Compiling once_cell v1.21.4
+   Compiling bzip2 v0.4.4
+   Compiling pbz2 v0.2.0
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-e-baseline-tests)
+    Finished `release` profile [optimized + debuginfo] target(s) in 2m 52s
+     Running unittests src/lib.rs (/workspace/work/astra-e-baseline-archive/release/deps/mibz2-1dea337c970068aa)
+
+running 6 tests
+test cells::tests::miri_cells_owned_writer ... FAILED
+test cells::tests::owned_writer_exhaustive_binary ... FAILED
+test cells::tests::owned_writer_exhaustive_ternary ... FAILED
+test cells::tests::owned_writer_long_columns ... ok
+test cells::tests::owned_writer_nested_copies ... FAILED
+test cells::tests::owned_writer_periodic_witnesses ... ok
+
+failures:
+
+---- cells::tests::miri_cells_owned_writer stdout ----
+
+thread 'cells::tests::miri_cells_owned_writer' (284567) panicked at src/cells_owned_test.rs:137:17:
+assertion `left == right` failed: the one-scan schedule taken
+  left: 4
+ right: 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- cells::tests::owned_writer_exhaustive_binary stdout ----
+
+thread 'cells::tests::owned_writer_exhaustive_binary' (284568) panicked at src/cells_owned_test.rs:55:5:
+assertion `left == right` failed
+  left: 15712
+ right: 3928
+
+---- cells::tests::owned_writer_exhaustive_ternary stdout ----
+
+thread 'cells::tests::owned_writer_exhaustive_ternary' (284581) panicked at src/cells_owned_test.rs:61:5:
+assertion `left == right` failed
+  left: 25776
+ right: 6444
+
+---- cells::tests::owned_writer_nested_copies stdout ----
+
+thread 'cells::tests::owned_writer_nested_copies' (284613) panicked at src/cells_owned_test.rs:178:21:
+assertion `left == right` failed: source 0 at 0
+  left: 4
+ right: 1
+
+
+failures:
+    cells::tests::miri_cells_owned_writer
+    cells::tests::owned_writer_exhaustive_binary
+    cells::tests::owned_writer_exhaustive_ternary
+    cells::tests::owned_writer_nested_copies
+
+test result: FAILED. 2 passed; 4 failed; 0 ignored; 0 measured; 147 filtered out; finished in 0.34s
+
+error: test failed, to rerun pass `--lib`
