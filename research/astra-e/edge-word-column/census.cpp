@@ -139,7 +139,7 @@ void sections(Outputs& out,const Block& b,const Obj& o,const char* coord,u mark,
     section(out,b,o,coord,"quote-first-byte",base[34],base[34]+freq[34],mark,skip);
 }
 struct Acquired{u chunks=0,singles=0,in_runs=0;};
-Acquired bwt_from_live_geometry(const Block& b,const Obj& expected,bool alias){
+Acquired bwt_from_live_geometry(const Block& b,const Obj& expected,bool alias,std::vector<Span>* published=nullptr){
     u m=b.m,nb=b.band.size();std::vector<U> starts((m+63)/64);V prefix(starts.size()),order(nb),id(nb);
     for(auto a:b.band){assert(!(starts[a.start/64]&(U(1)<<(a.start%64))));starts[a.start/64]|=U(1)<<(a.start%64);}
     u p=0;for(u i=0;i<starts.size();++i){prefix[i]=p;p+=__builtin_popcountll(starts[i]);}assert(p==nb);
@@ -158,7 +158,7 @@ Acquired bwt_from_live_geometry(const Block& b,const Obj& expected,bool alias){
         }
     }
     at=0;for(auto s:result){for(u z=0;z<s.width;++z)assert(expected.incoming[at++]==s.label);}assert(at==m);
-    count.in_runs=result.size();return count;
+    count.in_runs=result.size();if(published)*published=std::move(result);return count;
 }
 void process(Block& b,Outputs& out){
     u m=b.m;V spelling(m),leading(m),rotcode(m),rotspelling(m),rotbyte(m);

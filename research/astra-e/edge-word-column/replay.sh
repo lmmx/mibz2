@@ -34,7 +34,9 @@ done
 "$out/census" "$edge" "$words" "$out/thin.bin" "$out" 2>"$out/check.txt"
 "$out/extra" "$edge" "$words" "$out/thin.bin" "$out" 2>"$out/extra-check.txt"
 "$out/union" "$edge" "$words" "$out/thin.bin" "$out/union.bin" "$out" 2>"$out/union-check.txt"
+g++ -std=c++20 -O2 -Wall -Wextra "$here/cuts.cpp" -o "$out/cuts"
+"$out/cuts" "$edge" "$words" "$out/thin.bin" "$out/union.bin" >"$out/cuts.csv" 2>"$out/cuts-check.txt"
 python3 "$here/small.py" > "$out/small.txt"
-for artifact in "$here"/*.csv "$here"/{check,extra-check,union-check,small}.txt; do
+for artifact in "$here"/*.csv "$here"/{check,extra-check,union-check,cuts-check,small}.txt; do
     cmp "$artifact" "$out/$(basename "$artifact")"
 done

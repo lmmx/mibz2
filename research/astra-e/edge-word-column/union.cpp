@@ -8,7 +8,8 @@ struct Cursor {
     u id()const{return tape[i].label;}
     void advance(u w){assert(w&&w<=left());consumed+=w;if(consumed==tape[i].width){consumed=0;i++;}}
 };
-void analyze_union(Block& b,std::istream& ms,std::ostream& counts,Outputs& outfile){
+using Inspect=void(*)(const Block&,const Obj&,const std::vector<Span>&,u,const char*);
+void analyze_union(Block& b,std::istream& ms,std::ostream& counts,Outputs& outfile,Inspect inspect=nullptr){
     assert(get(ms)==b.index&&get(ms)==b.m);
     const u src_intervals=get(ms),lf_intervals=get(ms),nm=get(ms);
     V masks(nm);read(ms,masks.data(),4*nm);
@@ -100,10 +101,12 @@ void analyze_union(Block& b,std::istream& ms,std::ostream& counts,Outputs& outfi
         const auto& w=b.words.value[o.label[o.source[row]]];assert(!w.empty());size_t take=std::min<size_t>(w.size(),b.n-out);
         assert(std::equal(w.begin(),w.begin()+take,b.reference.begin()+out,[](char a,uint8_t c){return uint8_t(a)==c;}));out+=take;row=next[row];
     }
-    sections(outfile,b,o,"original-union",s_emb[b.mark],0);
+    if(inspect)inspect(b,o,published,s_emb[b.mark],"original-union");
+    else sections(outfile,b,o,"original-union",s_emb[b.mark],0);
     counts<<b.index<<','<<b.m<<','<<rows<<','<<src_intervals<<','<<lf_intervals<<','<<nm<<','<<overlap<<','<<source_chunks<<','<<source_single<<','
         <<o.width.size()<<','<<src_claims<<','<<src_in.size()<<','<<extra_claims<<','<<extra_in.size()<<','<<merge_claims<<','<<published.size()<<','<<queue_classes<<','<<modal_errors<<','<<single_queue_mass<<','<<entropy(o.width,rows)<<'\n';
 }
+#ifndef EDGE_UNION_LIBRARY
 int main(int argc,char** argv){
     assert(argc==6);std::ifstream edge(argv[1],std::ios::binary),word(argv[2],std::ios::binary),thin(argv[3],std::ios::binary),mask(argv[4],std::ios::binary);std::string dir=argv[5];
     std::ofstream counts(dir+"/union.csv");Outputs out;out.sections.open(dir+"/union-sections.csv");
@@ -112,3 +115,4 @@ int main(int argc,char** argv){
     u n=0;while(true){Block b;if(!next_block(b,edge,word,thin))break;analyze_union(b,mask,counts,out);n++;}
     assert(n==233&&mask.peek()==std::char_traits<char>::eof());std::cerr<<n<<" exact positive unions; independent incoming publication reproduced each edge, each phase, and every marked byte.\n";
 }
+#endif
