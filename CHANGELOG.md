@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.7](https://github.com/lmmx/mibz2/compare/v0.5.6...v0.5.7) - 2026-11-19
+
+### <!-- 3 -->Performance
+
+- *(parallel)* the lazy kernel at 6 threads on the measured i9, pinned and unpinned ([#642](https://github.com/lmmx/mibz2/pull/642))
+- *(open)* the open kernel as the workers' kernel on LazyCells' admitted blocks ([#630](https://github.com/lmmx/mibz2/pull/630))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.5.6's crossover: the team threshold stays ([#596](https://github.com/lmmx/mibz2/pull/596))
+- *(protocol)* a ready signal is the tag on origin, checked ([#594](https://github.com/lmmx/mibz2/pull/594))
+- *(changelog)* 0.5.6's notes ([#593](https://github.com/lmmx/mibz2/pull/593))
+
+### <!-- 9 -->Other
+
+- *(moonshot)* a self-checking scorer for candidate kernels against 0.5.6 ([#606](https://github.com/lmmx/mibz2/pull/606))
+- stop and walk, the i9 verdict (not adopted) fills the result placeholders ([#499](https://github.com/lmmx/mibz2/pull/499))
+- Release scaling: 0.5.6 against 0.5.5 on the i9; its figures in 0.5.6's notes ([#595](https://github.com/lmmx/mibz2/pull/595))
+
 - **0.5.7's worker-count recalibration (RELEASING §5c): one change, at 6 threads on the measured
   i9.** The open kernel (#630) changes the lazy workers' per-block work and scratch, so every
   trim was measured again on master at 17405826 (`just bench-recalibrate-057`, the reviewed
