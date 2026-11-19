@@ -27,3 +27,14 @@ python3 "$d/generate.py" "$d/sources.xz" /tmp/splice-primary > /tmp/splice-prima
 ```
 
 The same generator accepts the original directory of `.irec.xz` files. The source pack records ordinal, n, original primary, the original archive digest and each true (byte,width) run. It excludes all induction arrays. To reproduce that pack from the initial archives, run `python3 "$d/sources.py" research/astra-e/dense/target/wikidata /tmp/sources.xz`.
+
+## Extended independent replay
+
+The six fixed section/depth choices (frequent and quote, each at h4, h8 and h12) give 60 cases. The extended generation from the normalized source pack reproduced the original twenty files byte-for-byte. Across the sixty, Ψ has period n on every original mark, and every J and H row belongs to the corresponding marked return cycle. The binary verifier read 993,194 J ranks, independently contracted their 28,625 hole ranks and compared the successor and full outgoing word at every one of 964,569 H ranks with the dense original-domain oracle. J and H marked output matched all 53,999,490 original bytes; two J marks landed on holes. A three-row nonprimitive fixture places the initial byte inside a compound H word. Separate fixed points exercise the uncovered-mark fallback. [Sixty input and oracle digests](extended.csv) · [Independent binary replay](verify.py) · [Results](replay.txt)
+
+```bash
+mkdir -p /tmp/splice-extended
+python3 "$d/generate.py" "$d/sources.xz" /tmp/splice-extended full > /tmp/splice-extended/cases.csv
+cmp /tmp/splice-extended/cases.csv "$d/extended.csv"
+python3 "$d/verify.py" /tmp/splice-extended "$d/extended.csv"
+```
