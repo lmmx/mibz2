@@ -2,6 +2,8 @@
 
 Target decision requires a paired wall ratio at or below 0.80 versus 0.5.6 at the same 7–10-worker concurrency on Wikidata on the i9-10900K, with no increase in peak memory. The local reference is the scorer's explicit LazyCells arm. The shipping low-thread policy also uses eager Cells. Results below are experimental until independent target verification.
 
+The current independently verified target reference is scalar-cap at d0a4298. It achieved 1.137–1.164× the throughput of mibz2 0.5.6 at W7–10, with each of the 192 paired peaks below Lazy. The 48-round incremental ratio versus edge was 0.99462 [0.99078,0.99849]. [Independent i9 table and raw data](workstation/scalar-independent-i9.md)
+
 ## Opening experiment
 
 Master `9c31461df7bef24cecf79348545b27ee26846835` supplies the scorer and 0.5.6 decoder. Its `info` command prints the candidate identity and CPU count but has no version field. Each result includes the scorer path revision, toolchain, corpus digest, invocation, stdout, stderr, gate and individual runs. Corpus SHA-256 is `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`, 209,700,196 decoded bytes. Use the pinned compiler in rust-toolchain.toml. Build the corpus with `bash bench/moonshot/corpus.sh` (`lbzip2` required).
