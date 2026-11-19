@@ -29,3 +29,21 @@ For maximum fragmentation let E consist of the ascending letters 0,…,2h−2 fo
 To realize all examples in original bytes for arbitrarily large parent alphabets, code type j by Xj=0·2^j·1 with delimiter P=0, using j repetitions of byte 2. The byte L begins with |E| copies of 1. Append one group per d=0,…,max(E), reading the entries j≥d of E in their original order and writing 0 for j=d, 2 for j>d. The byte first column orders marker rows first, then the suffixes 1P, 21P, 221P and so on, each group internally sorted by the following marker's rank. A marker LF step leads to group zero at its own rank. Within group d the continuation predecessors 2 go stably into group d+1, while the terminal predecessors 0 go stably into the marker rows with rank start for parent type d. Returning to P therefore reproduces E and its stable LF exactly, including multiple cycles. These byte examples have unequal word lengths. [Complete finite-family checks](families.json) · [Generator](families.py)
 
 A separate small witness already exhibits overlap and fragmentation using only bytes 0 and 1. For L=0110000010, P=00, the parent source words in rank order are 0, 001, 0011. Selecting 0 and 0011 gives original rows 0,1,2,4. In packed U source order the plain outgoing words are 0, 0001, 0, 0011. The two runs of outgoing 0 lead to distinct destination components. A single base plus equal-word occurrence count would link the second occurrence to the wrong source rank.
+
+## Strictly most frequent types
+
+The bounds remain sharp when U must contain the k most frequent parent types and there is no tie at the selection threshold. In parent E=02002211, types 0 and 2 occur three times each while 1 occurs twice. Selecting them gives 0, 2, 0, 2, 01, 21 as incoming macro words, six runs against five parent runs. As above, concatenate m relabeled copies. Exactly the top 2m types have multiplicity three; the m excluded types each have multiplicity two. Now h=m+1 and T=C=6m=r+h−1. In E=02021 the top two types each have mass two, the omitted type has mass one, and coloring adds one run. Its disjoint copies give C−T=h−1 with the same strict frequency separation.
+
+For h-way fragmentation under strictly top-h selection, begin E with 0,…,2h−2. For each j=1,…,2h−2 append a single zero if j is odd and the pair (0,j) if j is even. The F-zero bucket has mass 2h−1, the other even buckets each have mass two and the odd buckets each have mass one. Again each first-letter bucket contains exactly one incoming zero. The outgoing one-token macro 0 has h disjoint source pieces. The ternary byte lift proves the same lower bounds for directly selecting unequal-length parent byte words. [Parameter families and checked sizes](families.json)
+
+## Independent exhaustive evidence
+
+The dense audit enumerated every nonempty selection of available parent return types for every nonempty word cylinder of pattern lengths one through four on binary last columns through length ten and ternary last columns through length seven. Ternary columns already tested as binary inputs were deduplicated. All 159,176 selections passed. Of these, 4,344 had multiple components, 34,474 selected unequal-length words and 36,849 included a return shorter than P. In 256 cases a plain outgoing spelling had separated source ranks. Comparisons checked the direct byte LF construction against the independently induced parent-token permutation, the seam injection, the exact internal-gap identity, component and collation rules, and all 254,068 packed links. Expanding from each reachable primary matched dense Ψ for all 852,698 marked outputs. The remaining 404,044 marks completed an LF cycle outside U and correctly selected fallback. [Exact counts and counterexamples](exhaustive.json) · [Complete checker](audit.py)
+
+```sh
+d=research/astra-e/formulations/f2-heaviest/union-audit
+python3 "$d/audit.py" > /tmp/astra-union-exhaustive.json
+cmp /tmp/astra-union-exhaustive.json "$d/exhaustive.json"
+PYTHONDONTWRITEBYTECODE=1 python3 "$d/families.py" > /tmp/astra-union-families.json
+cmp /tmp/astra-union-families.json "$d/families.json"
+```

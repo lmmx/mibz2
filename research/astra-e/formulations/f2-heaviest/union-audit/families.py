@@ -26,13 +26,16 @@ def inspect(e,selected):
                 colored=runs((uw[back[x]],component_by_row[x]) for x in u),zero_parts=zero_parts)
 
 results={}
-for kind,base in [('run_bound',(1,1,0,0,2,2,0)),('color_cost',(1,0,2,0))]:
+for kind,base in [('run_bound',(1,1,0,0,2,2,0)),('color_cost',(1,0,2,0)),('strict_run_bound',(0,2,0,0,2,2,1,1)),('strict_color_cost',(0,2,0,2,1))]:
     rows=[]
     for m in range(1,11):
         e=tuple(3*i+c for i in range(m) for c in base)
-        result=inspect(e,{3*i+a for i in range(m) for a in (0,2)})
+        selected={3*i+a for i in range(m) for a in (0,2)}
+        if kind.startswith('strict'):
+            assert min(e.count(j) for j in selected)>max(e.count(j) for j in set(e)-selected)
+        result=inspect(e,selected)
         assert result['h']==m+1
-        if kind=='run_bound': assert result['t']==result['colored']==result['r']+m
+        if kind.endswith('run_bound'): assert result['t']==result['colored']==result['r']+m
         else: assert result['colored']-result['t']==m
         rows.append(result)
     results[kind]=rows
@@ -42,4 +45,13 @@ for h in range(2,13):
     result=inspect(e,set(range(0,2*h-1,2)))
     assert result['h']==h==result['zero_parts']
     results['fragmentation'].append(result)
+results['strict_fragmentation']=[]
+for h in range(2,13):
+    # One zero in each F bucket. Add one self-symbol to every positive even bucket.
+    e=tuple(range(2*h-1))+tuple(v for j in range(1,2*h-1) for v in ((0,j) if j%2==0 else (0,)))
+    selected=set(range(0,2*h-1,2))
+    assert min(e.count(j) for j in selected)>max(e.count(j) for j in set(e)-selected)
+    result=inspect(e,selected)
+    assert result['h']==h==result['zero_parts']
+    results['strict_fragmentation'].append(result)
 print(json.dumps(results,indent=2))
