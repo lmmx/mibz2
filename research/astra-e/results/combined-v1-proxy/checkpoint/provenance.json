@@ -2,8 +2,8 @@
   "build": "6a8a366cd786d58a528000b58da12fd2cfb47be8",
   "upstream_scorer": "604dac3f46569edd9ac9b6706b23a68d9d7d8f8d",
   "scorer_version": "v1",
-  "checkpoint_utc": "2026-11-19T01:01:53.114611+00:00",
-  "rows": 480,
+  "checkpoint_utc": "2026-11-19T01:10:02.744451+00:00",
+  "rows": 640,
   "source": {
     "bench/moonshot/moonshot.py": "db78f811fe11c60874562452a8d42a5cc2fcdd8c77a4e171db15254abc584a42",
     "bench/moonshot/calibration.json": "0623e13c5a008f678055b9170eeb9648c41dd19f145a05e5abcc514fa3aa1c21",

@@ -6,7 +6,7 @@ The quick libbzip2/CRC gate passed all 98 cases. The full 338-case gate for this
 
 ## In-progress recovery
 
-The checkpoint preserves 480 complete official observations, all W1, W2 and W4 rows. The earlier 240-row checkpoint remains at commit `6a5d160`. A source check confirms that v1's `proxy-runs.jsonl` receives one record per block, with normal file buffering. The live job continues to append independently. The incomplete worker grid supplies no campaign ranking.
+The checkpoint preserves 640 complete official observations, all W1, W2, W4 and W7 rows. The earlier 240- and 480-row checkpoints remain at commits `6a5d160` and `b633eed`. A source check confirms that v1's `proxy-runs.jsonl` receives one record per block, with normal file buffering. The live job continues to append independently. The incomplete worker grid supplies no campaign ranking.
 
 The live study runs in `/workspace/work/narrow-proxy/v1-tree` and writes `research/astra-e/results/combined-v1-full-proxy/score/proxy-runs.jsonl`. Its target directory is `/workspace/work/narrow-proxy/v1-target`. To inspect progress without consuming a CPU for simulation, count the complete lines in that file. The root process is the shell executing `/workspace/work/narrow-proxy/v1-run.sh`. If it survives, let the same process finish.
 
@@ -45,3 +45,10 @@ python3 research/astra-e/results/combined-v1-proxy/route_shares.py \
 ## The calibration's independent controls
 
 The scorer's calibrated reference recovers all nine held-out pairs in its original high-worker comparison. The later 12-pair i9 opend sweep provides another check at equal concurrency. At W2 the v1 reference predicts opend/lazy 0.869 [0.838,0.900]; the i9 saw 0.950 [0.932,0.969]. At W4 the model predicts 0.867 [0.836,0.900], and the i9 saw 0.953 [0.939,0.967]. Its low-concurrency opend estimates miss by more than eight percentage points. At W7, W8 and W10 the respective model estimates are 0.956, 0.947 and 0.944, and their block-bootstrap intervals include the matched i9 observations of 0.934, 0.952 and 0.933. The W7 and W8 reference configurations also occur in the original calibration bundle. These are separate experimental sweeps on the same workstation. [Upstream v1 calibration](https://github.com/lmmx/mibz2/blob/604dac3f46569edd9ac9b6706b23a68d9d7d8f8d/bench/moonshot/calibration.json) · [Raw i9 sweep and pinned recipe](../../prior.md)
+
+
+## Seven-worker result from the complete W7 grid
+
+Once W7 is present, the scorer has the fresh LazyCells anchor for its bandwidth fixed point. Its 400 paired stratified draws model candidate/lazy at W7 as **0.9102 [0.8811,0.9376]**, within the reference envelope. Candidate/lazy is 0.7116 for instructions and 0.8898 for cycles at the nominal latency. Feedback from the modeled DRAM traffic multiplies the nominal cycle ratio by 1.0228. W7's deposited opend reference is 0.9558 of its calibration lazy, yielding a candidate/opend ratio of *point estimates* of 0.9522. The comparison uses different executables and has no paired candidate/opend interval. W1, W2 and W4 candidate readings are outside the reference range for dependent DRAM links. [Retained fixed-point reading](checkpoint/partial-prediction.json)
+
+On W7, the sole sampled large dense block (ordinal 165) accounts for 7.42% of the combined candidate's corpus-weighted nominal cycles and 88.92% of its dependent DRAM loads, although it supplies 2.08% of the modeled bytes. Its raw count was 11,844 dependent DRAM loads. The other 63 sampled blocks together produced 1,385. LazyCells records a similar concentration at the same block. The elevated DRAM latency subsample has no large dense block. This gives a specific source of uncertainty in extrapolating model dependency or latency-sensitivity differences to the [wider edge gate](../../edge-budget/). [Weighted contributions](checkpoint/route-shares.json)
