@@ -2801,11 +2801,13 @@
     },
     {
       "trigger_comment_id": 7018475871,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/recalibrate-057-7018475871/report.md",
-      "source_commit": "9ba4416acc9911f2dbd668e6d9895be52c485a76"
+      "source_commit": "9ba4416acc9911f2dbd668e6d9895be52c485a76",
+      "report_commit": "300508a95c926297831acb356d9b77498d5cc058",
+      "disposition": "PROCEED at 9ba4416a. Timed design and decoder pin verified. The archived DRY receipts pass independently. Queue admission remains subject to Protocol §9."
     }
   ],
   "active_delegations": [],
