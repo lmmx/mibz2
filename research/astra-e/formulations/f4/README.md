@@ -75,3 +75,26 @@ Nine balanced passes over the fixed eleven large eligible Wikidata blocks compar
 Across ten systematic structural archives the construction needs 2,077,271 prefix pieces, 1,363,357 output pieces, 758,171 trie nodes and 8,183,049 dictionary bytes written before final expansion. This changes different dependencies from the frozen boundary-orbit depth-one count of 10,955 and the 16,230 forest routing bands. Neither count describes the work of producing or lexically naming F4 prefixes. No reduction in a boundary-profile count predicts the price of this new unit of computation. [Prior source-pinned measurements](../../prior.md)
 
 The first native build used the same candidate digest as the immutable source commit. The independent source-property suite can be reproduced with `bash "$d/native.sh" "$d/target/wikidata"`. To regenerate the phase ratio table run `python3 "$d/price.py" "$d/stage-laps.csv"`.
+
+## Budget after one compiler pass
+
+A separate nine-pass comparison clocks the first native reduction from ready MTF records, starting before run coalescing and ending after word naming, dictionary construction, the residual run column and marked target rank are available. The instrumented arm then finishes and verifies the entire block. Across the same eleven ordinals the first pass alone took 0.657 of opend's whole stage time (95% log-t interval 0.533–0.810) and 0.705 of its thread CPU time (0.624–0.797). The median remaining wall budget to tie opend was 8.50 ms for the whole sample, or **1.66 ns per residual token**, including its share of final byte emission. The remaining 5,109,604 token rows still encode the complete output. The later recursive levels and actual final walk took 70.87 ms in the median paired time difference against the first pass. A new general-alphabet residual engine would have to fit the much smaller budget. No zero-residual impossibility follows from these data. The 0.80× LazyCells column is only a kernel-stage sensitivity, not an end-to-end i9 gate. [Raw per-call phases](phase-laps.csv) · [Budget and intervals](phase-budget.csv) · [Build manifest](phase-manifest.txt)
+
+```sh
+bash "$d/phase.sh" > phases.csv 2> phases-manifest.txt
+python3 "$d/budget.py" phases.csv
+```
+
+A second instrumented build stops reduction after exactly one pass, then builds and walks the actual dense token table and writes the full marked byte output. Across the 11 blocks it constructs 607,002 initial overlay records, 367,408 prefix intervals and 41,147 trie nodes. The first pass emits 372,840 token runs and builds 115,375 bytes of unique dictionary spelling. The residual writes 20,438,416 bytes of packed entries (no wide overflow side table), takes 5,109,604 marked dependent links, stages the same number of backward token IDs and writes 9,899,856 bytes of output period. These are summed buffer lengths/operations, not measured bus traffic or process RSS. All 33 warm and 297 measured outputs again matched. [Per-block structural receipt](one-counts.csv)
+
+With the one-pass dense residual, full F4/opend16 was 4.880 wall (4.499–5.294) and 4.769 thread CPU (4.367–5.207). In this contemporaneous comparison the residual and writing took a median 15.62 wall ns per token, versus 0.877 available to tie opend. CPU cost and available time were 15.26 and 0.875 ns per token. Different process conditions account for a different available budget from the seven-level comparison above; each budget uses controls in its own pass. Both implemented solvers miss the target. A replacement exploiting the reduced token-run structure while naming a much larger alphabet would need genuinely different residual construction and output, so it is a separate unverified hypothesis. [Raw calls](one-laps.csv) · [Ratios](one-ratios.csv) · [Budget](one-budget.csv) · [Residual price](one-residual.csv) · [Manifest](one-manifest.txt)
+
+```sh
+bash "$d/one.sh" > one.csv 2> one-manifest.txt
+python3 "$d/price.py" one.csv
+python3 "$d/budget.py" one.csv
+python3 "$d/residual.py" one.csv
+python3 "$d/one_counts.py"
+```
+
+The frozen scorer accepted all 338 full correctness cases for the seven-level candidate. At one and four workers, five paired whole-corpus rounds gave F4/LazyCells wall ratios of 1.940 (1.080–3.487) and 2.159 (1.407–3.313), respectively. Median peak-RSS ratios were 0.878 and 0.819. The complete local decoder is slower at both measured counts, even with lower peak memory. No i9 result exists for F4. [Full local score](../../results/hierarchy-f4/score/summary.txt)
