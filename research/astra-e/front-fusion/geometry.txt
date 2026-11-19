@@ -1,0 +1,2 @@
+228 admitted n=205197794 caps=15583349 true_runs=14427155 queue_rows=25484201 thick_pieces=744649 capped_excess=1156194
+155 rejected n=4508298 caps=743605 true_runs=720467 queue_rows=1091715 thick_pieces=10376 capped_excess=23138

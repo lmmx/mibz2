@@ -7,3 +7,20 @@ The fixed control is narrow-short/ahead at `80d8409359214b4e5abfd4430213921e82e9
 The native experiment preserves the stock scalar front and errors by discarding partial speculative work and replaying stock when the AVX2 machine or dense crossover does not admit completion. During a speculative decode the running row bound is checked before storing geometry, bounding malformed input and preserving the stock front's final choice of error. Blocks with fewer than 256 symbols use stock immediately; this avoids speculation on the corpus's numerous tiny blocks. Stock finish buffers remain live after fallback. A candidate worker retaining custom bitmap scratch alongside the stock front would need to account for both; a shared front hook could reuse those bitmaps. No source under `src/` is required for this standalone native test.
 
 The original run front and constructor closure are pinned by SHA-256 in [the generator](prepare.py). The first screening pass over the 383 `takes_runs` blocks completed 228 directly and 155 through the stock route, matching all capped counts, marked output bytes, decoded output and stored CRC. [Initial structural receipt](exact.txt) · [Raw observations](exact.csv)
+
+The complete route differential at `da1ce6d` checked all 431 real scanner blocks. The 228 direct blocks have 205,197,794 inverse rows, 14,427,155 maximal runs, 15,583,349 cap records, 25,484,201 thin queue entries and 744,649 thick pieces. Thus the fused construction avoids a write and a reread of 31,166,698 bytes of caps over these blocks, in addition to the separate coalescing loop. Five large dense rejections, 150 small stock-run finishes and 48 plain-column blocks retain the actual predecessor route. A total of 11,200 adversarial detected/scalar comparisons agreed on valid bytes and the exact first error, including bad primaries, source bounds, oversized RLE2 and incomplete RLE1. [All route rows](checked.csv) · [Adversarial outcomes](adversarial2.txt) · [Full cap and geometry census](geometry.csv)
+
+To reproduce the native test, run the following from the research checkout.
+
+```sh
+d=research/astra-e/front-fusion
+scratch=$(mktemp -d)
+cargo build --release --locked --manifest-path bench/moonshot/Cargo.toml --target-dir "$scratch/build"
+deps="$scratch/build/release/deps"
+python3 "$d/prepare.py" "$scratch/source"
+rustc -O --edition 2021 -A unused -C codegen-units=1 "$scratch/source/main.rs" --extern mibz2="$deps/libmibz2.rlib" -L "dependency=$deps" -o "$scratch/native"
+"$scratch/native" adversarial
+"$scratch/native" corpora/wikidata.bz2 0
+nice -n 10 taskset -c 3 "$scratch/native" corpora/wikidata.bz2 24 > "$scratch/panel.csv"
+python3 "$d/summarize.py" "$scratch/panel.csv"
+```
