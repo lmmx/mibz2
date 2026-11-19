@@ -1,6 +1,5 @@
 """Verify the public CI ZIP, export its official evidence record and price mixed service."""
 import csv
-import io
 import json
 from pathlib import Path
 import sys
@@ -11,10 +10,14 @@ HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parent/"retrospective"))
 from receipts import ci_receipt
 
-STEM="worker-dose-44448175373"
+STEMS={
+    "primary": ("worker-dose-44448175373","c783b7820a2d89af8d2ddfb77e63f9c017e5247b"),
+    "replication": ("worker-dose-44448785057","ecd26dd331c74bdfba1384f8fad6088d1b6dfd13"),
+}
+STEM,HEAD=STEMS[sys.argv[2] if len(sys.argv)>2 else "primary"]
 REF="badb2aec3624bd65606c429b2e6f79e9d9d0050f"
 receipt=ci_receipt(STEM)
-assert receipt["head"]=="c783b7820a2d89af8d2ddfb77e63f9c017e5247b"
+assert receipt["head"]==HEAD
 assert receipt["selected"]=="research/astra-e/worker-dose/candidate.rs"
 z=Path(receipt["artifact"])
 with ZipFile(z) as archive:
