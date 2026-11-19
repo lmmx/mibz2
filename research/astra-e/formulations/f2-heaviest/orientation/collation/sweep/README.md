@@ -38,6 +38,8 @@ On the frozen panel the cycle decomposition took 0.062 s, exact suffix indexing 
 
 ## Verification and reproduction
 
+The substring index was also checked against direct lexical and byte comparisons across 32-row RMQ block boundaries on constant, periodic, low-alphabet and arbitrary-byte tapes. [Index receipt](index-check.txt)
+
 The exhaustive tests cover every nonempty sliding window of every permutation through size five with binary outgoing byte labels, plus every binary stable column through size seven. All 67,384 comparisons matched explicit independently built dictionaries and separately sorted truncated proper keys, including 53,964 windows on multi-cycle permutations. On the full frozen block 19 preselected windows passed the independent native dense check. A second implementation stable-sorts the original column in Python and spells all return arcs at the named section, both per-metric extrema, the two improving Pareto points and the bounded selection rules. It checks the final prices and the actual rotated return words. [Small permutation receipt](small.txt) · [Dense checks](dense-checks.csv) · [Independent real dictionary receipt](rotation-frozen.json) · [Shift theorem and limitations](rotation.md)
 
 ```bash
@@ -45,6 +47,8 @@ d=research/astra-e/formulations/f2-heaviest/orientation/collation/sweep
 out=$(mktemp -d)
 g++ -std=c++20 -O3 -Wall -Wextra -Wpedantic "$d/sweep.cpp" -o "$out/sweep"
 "$out/sweep" | diff - "$d/small.txt"
+g++ -std=c++20 -O3 -Wall -Wextra -Wpedantic "$d/index_test.cpp" -o "$out/index-test"
+"$out/index-test" | diff - "$d/index-check.txt"
 python3 -B "$d/input.py" research/astra-e/dense/target/wikidata/0000.irec.xz "$out/column" | diff - "$d/frozen-input.txt"
 python3 -B "$d/measure.py" "$out/resources.txt" nice -n 10 taskset -c 3 "$out/sweep" "$out/column" 24165 21229 "$out/spectrum.csv" "$out/checks.csv" 2> "$out/stages.txt"
 diff "$out/checks.csv" "$d/dense-checks.csv"
