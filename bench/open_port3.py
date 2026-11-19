@@ -8,15 +8,16 @@ One new prospective attempt, not a retry. The first registration's attempt
 shelved. `bench/open_port.py`, the first registration's scorer, is unchanged and imported here for
 its loader, its identity checks, its manifest and its statistics.
 
-    open_port3.py judge BUNDLE --port PORT_COMMIT [--part-a SUMMARY]
+    open_port3.py judge BUNDLE --port PORT_COMMIT --part-a SUMMARY
     open_port3.py verify BUNDLE --port PORT_COMMIT   (before any timing: the builds and inputs)
+    open_port3.py part-a SUMMARY   (before any timing: Part A's summary is the committed one)
     open_port3.py guard TARGET --this RUN_DIR [--remote origin]   (this registration's one attempt)
     open_port3.py plan   (the recipe's runs: FILE THREADS ROUNDS SETTLE CORPUS...)
 
 **The parts, each its own records file** (`ab run`, the port's build against v0.5.6's, paired
 rounds in the harness's ABBA order, unpinned, at the registered settle of 2 s):
 - **B1, zero-route guards** (`b1.jsonl`): the 9 corpora of `B1` at 8, 10 and 20 threads, 16 rounds.
-- **B2, admitted guards** (`b2.jsonl`): the 4 corpora of `B2` at 8, 10 and 20 threads, 16 rounds.
+- **B2, admitted guards** (`b2.jsonl`): the 4 corpora of `B2` at 8, 10 and 20 threads, 32 rounds.
 - **B3, benefit** (`b3.jsonl`): wikidata-x4 and ho-wikidata-l9 at 8, 10 and 20 threads, 12 rounds.
 - **B4, sustained** (`b4.jsonl`): wikidata-x16 at 10 threads, back to back (settle 0), 8 rounds.
 
@@ -24,21 +25,29 @@ rounds in the harness's ABBA order, unpinned, at the registered settle of 2 s):
 its mean m, standard error s/sqrt(n), and peak RSS as the median of the port's peaks over the median
 of v0.5.6's.
 
-**The rule (the Coordinator's criteria, QUEUED 7013818037):**
-- **B1 and B2, pooled.** The pooled estimand is the mean of the cells' means (each cell weighted
+**The rule (the Coordinator's criteria, QUEUED 7013818037, as corrected after the Researcher's
+HOLD 7015030749):**
+- **B1, pooled.** The pooled estimand is the mean of the 27 cells' means (each cell weighted
   equally); its exponential is the pooled geometric mean ratio. Its 95% interval is a stratified
   bootstrap: rounds resampled with replacement within each cell, `BOOT` resamples, the 2.5th and
   97.5th percentiles, from a fixed generator (`SEED`, splitmix64, so the verdict is reproducible
   on any Python). Pass: the upper bound at most `POOLED_MAX` (1.01).
-- **B1 and B2, credible regression.** A cell is flagged when its one-sided lower confidence bound,
-  m - t(1 - 0.05/k, n - 1) * s/sqrt(n) with k the part's cell count (27 or 12), lies above
-  log `FLAG_MIN` (1.02). Any flag fails.
+- **B1, credible regression.** A cell is flagged when its one-sided lower confidence bound,
+  m - t(1 - 0.05/27, n - 1) * s/sqrt(n), lies above log `FLAG_MIN` (1.02). Any flag fails.
+- **B2 = G exactly, in each of the 12 cells** (Open executes there): not SLOWER (the two-sided
+  95% t-interval wholly above 1), a geometric mean at most `GUARD_MAX` (1.02), and peak RSS at
+  most 1.10. The pooled B2 figure is reported, not judged.
 - **Memory, every guard cell (B1 and B2):** peak RSS at most `RSS_GATE` (1.10).
-- **B3, benefit:** every one of the 6 cells is a gain under Holm at family alpha 0.05 (one-sided
-  t, as P1 was), and its peak RSS is at most 1.00.
-- **B4, sustained:** not SLOWER: the two-sided 95% t-interval's lower bound is not above 1.
-- **Part A** (`--part-a`, the cachegrind diagnostic's summary, committed before timing): no VOID,
-  and every trigger carries a written attribution. Without it the verdict is withheld.
+- **B3, benefit:** every one of the 6 cells is FASTER (its two-sided 95% t-interval wholly below
+  1) and a gain under Holm at family alpha 0.05 (one-sided t, as P1 was); and its peak RSS is at
+  most 1.00.
+- **B4 = S exactly as registered:** not SLOWER, and a geometric mean at most 1.02; no memory
+  condition.
+- **Part A,** bound to its evidence: the summary's SHA-256 is the committed one's
+  (`PART_A_SHA256`), its `voids` and `triggers` are present, its rows cover every B1 corpus at
+  t8, t10, t20 and w7, and every one of those cells has zero-open receipts (the open kernel's
+  `emit` and `induced` at zero instructions in every port run). Anything else, missing or empty,
+  is VOID. Then: no VOID of its own, and every trigger carries a written attribution.
 
 **VOID, and nothing is read,** where `open_port.py`'s conditions hold of any file (a record
 missing, duplicated, failed or outside the roster; a field of the wrong type; a wall, RSS or output
@@ -53,6 +62,7 @@ Standard library only.
 
 import argparse
 import glob
+import hashlib
 import json
 import math
 import os
@@ -82,15 +92,19 @@ B1 = (
 B2 = ("ho-wikidata-l1", "ho-structured-l1", "ho-structured-l9", "ho-prose-l1")
 B3 = (op.MAIN, op.HELDOUT)
 B4 = (op.SUSTAINED, 10)
-GUARD_ROUNDS, BENEFIT_ROUNDS, SUSTAINED_ROUNDS, SETTLE = 16, 12, 8, 2
+B1_ROUNDS, B2_ROUNDS, BENEFIT_ROUNDS, SUSTAINED_ROUNDS, SETTLE = 16, 32, 12, 8, 2
 POOLED_MAX, FLAG_MIN, RSS_GATE, BENEFIT_RSS, ALPHA = 1.01, 1.02, op.RSS_GATE, 1.00, 0.05
+GUARD_MAX = op.GUARD_MAX
+# Part A's committed summary (docs/journal/2026-11-19-open-port-3-registration/part-a/summary.json)
+PART_A_SHA256 = "b9ae3a702fefed51f7b4c2602f7d39e5b268d2d7db883f3bb576ecc3525b944b"
+PART_A_LABELS = ("t8", "t10", "t20", "w7")
 BOOT, SEED = 20000, 7013818037
 assert sorted(B1 + B2 + B3) == sorted(op.CORPORA)
 
 # (file, corpora, counts, rounds, settle): the recipe's runs, in its order, and the judge's roster
 PARTS = (
-    ("b1.jsonl", B1, COUNTS, GUARD_ROUNDS, SETTLE),
-    ("b2.jsonl", B2, COUNTS, GUARD_ROUNDS, SETTLE),
+    ("b1.jsonl", B1, COUNTS, B1_ROUNDS, SETTLE),
+    ("b2.jsonl", B2, COUNTS, B2_ROUNDS, SETTLE),
     ("b3.jsonl", B3, COUNTS, BENEFIT_ROUNDS, SETTLE),
     ("b4.jsonl", (B4[0],), (B4[1],), SUSTAINED_ROUNDS, 0),
 )
@@ -161,6 +175,15 @@ def pooled(cells, boot=BOOT, seed=SEED):
     return est, draws[int(0.025 * boot)], draws[int(math.ceil(0.975 * boot)) - 1]
 
 
+def interval(xs):
+    """(geometric mean, two-sided 95% t-interval) of a cell's log ratios, with the exact t
+    quantile at any count (`op.t975`'s table stops at 25 degrees of freedom)"""
+    n = len(xs)
+    m = statistics.mean(xs)
+    h = t_quantile(0.975, n - 1) * statistics.stdev(xs) / math.sqrt(n)
+    return math.exp(m), math.exp(m - h), math.exp(m + h)
+
+
 def flag_bound(xs, k):
     """The cell's one-sided lower confidence bound on its mean log ratio, at 1 - ALPHA/k"""
     n = len(xs)
@@ -187,18 +210,45 @@ def joins(files, errors):
             )
 
 
-def part_a(path, errors, fails):
-    """Part A's committed summary: VOID on any of its VOIDs; NOT ADOPTED on an unattributed trigger"""
+def part_a(path, errors, fails, expect=PART_A_SHA256):
+    """Part A's summary, bound to its evidence (the Researcher's HOLD 7015030749): VOID unless it
+    is the committed summary (its SHA-256), with `voids` and `triggers` present, rows for every B1
+    corpus at every label of `PART_A_LABELS`, and zero-open receipts for each of those cells; VOID
+    on any of its own VOIDs; NOT ADOPTED on an unattributed trigger. `expect` None skips the
+    identity (for the checks of the rest)"""
     if not path:
-        errors.append("Part A: no summary given (--part-a); the verdict is withheld")
+        errors.append("Part A: no summary given (--part-a): VOID")
         return
     try:
-        s = json.load(open(path))
-        voids, triggers = s["voids"], s["triggers"]
-        assert isinstance(voids, list) and isinstance(triggers, list)
-    except (OSError, ValueError, KeyError, AssertionError, TypeError) as e:
+        raw = open(path, "rb").read()
+        s = json.loads(raw)
+    except (OSError, ValueError) as e:
         errors.append(f"Part A: {path} unreadable ({e})")
         return
+    digest = hashlib.sha256(raw).hexdigest()
+    if expect is not None and digest != expect:
+        errors.append(f"Part A: the summary's SHA-256 is {digest}, not the committed {expect}")
+    if not isinstance(s, dict):
+        errors.append("Part A: the summary is not an object")
+        return
+    voids, triggers = s.get("voids"), s.get("triggers")
+    rows, emit = s.get("rows"), s.get("emit")
+    if not isinstance(voids, list) or not isinstance(triggers, list):
+        errors.append("Part A: `voids` or `triggers` missing")
+        return
+    if not isinstance(rows, list) or not isinstance(emit, dict):
+        errors.append("Part A: no corpus rows or no zero-open receipts")
+        return
+    have = {(r.get("corpus"), r.get("threads")) for r in rows if isinstance(r, dict)}
+    want = {(c, label) for c in B1 for label in PART_A_LABELS}
+    if want - have:
+        errors.append(f"Part A: no rows for {sorted(want - have)[:4]} ({len(want - have)} cells)")
+    for c, label in sorted(want):
+        got = [v for k, v in emit.items() if k.rsplit(" #", 1)[0] == f"{c} {label}"]
+        if not got:
+            errors.append(f"Part A: no zero-open receipt for {c} at {label}")
+        elif any(v != [0, 0] for v in got):
+            errors.append(f"Part A: {c} at {label}: the open kernel ran ({got})")
     for v in voids:
         errors.append(f"Part A VOID: {v}")
     bare = [
@@ -211,14 +261,27 @@ def part_a(path, errors, fails):
         )
     ]
     print(
-        f"Part A: {len(voids)} VOIDs; {len(triggers)} triggers, "
-        f"{len(triggers) - len(bare)} with a written attribution"
+        f"Part A: sha256 {digest[:16]}…; {len(rows)} cells, {len(emit)} zero-open receipts; "
+        f"{len(voids)} VOIDs; {len(triggers)} triggers, {len(triggers) - len(bare)} with a written "
+        "attribution"
     )
     for t in bare:
         fails.append(
             f"Part A: an unattributed trigger: {t.get('corpus')} at {t.get('threads')}, {t.get('event')} "
             f"x{t.get('ratio')}"
         )
+
+
+def check_part_a(a):
+    """Before the timing marker: Part A's summary is the committed one, complete"""
+    errors, fails = [], []
+    part_a(a.summary, errors, fails)
+    for e in errors + fails:
+        print(f"  {e}")
+    if errors or fails:
+        print("bench-open-port-3: Part A's summary is not the registered one; nothing is timed")
+        return 1
+    return 0
 
 
 def judge(a):
@@ -251,45 +314,59 @@ def judge(a):
         for e in errors[:25]:
             print(f"  {e}")
         return 1
-    for name, label, corpora in (
-        ("b1.jsonl", "B1, zero-route guards", B1),
-        ("b2.jsonl", "B2, admitted guards", B2),
-    ):
-        r = rows[name]
-        cells = [(c, t) for t in COUNTS for c in corpora]
-        k = len(cells)
-        xs = {ct: logs(r, *ct, GUARD_ROUNDS) for ct in cells}
-        est, lo, hi = pooled([xs[ct] for ct in cells])
+    r = rows["b1.jsonl"]
+    cells = [(c, t) for t in COUNTS for c in B1]
+    k = len(cells)
+    xs = {ct: logs(r, *ct, B1_ROUNDS) for ct in cells}
+    est, lo, hi = pooled([xs[ct] for ct in cells])
+    print(
+        f"\nB1, zero-route guards: {k} cells, {B1_ROUNDS} rounds; the port over v0.5.6, wall as each "
+        f"cell's geometric mean [95% t-interval]; the flag bound (one-sided, 1 - {ALPHA}/{k}); peak RSS"
+    )
+    for c, t in cells:
+        g, glo, ghi = interval(xs[(c, t)])
+        fb = flag_bound(xs[(c, t)], k)
+        mem = memory(r, c, t, B1_ROUNDS)
+        flagged = fb > math.log(FLAG_MIN)
         print(
-            f"\n{label}: {k} cells, {GUARD_ROUNDS} rounds; the port over v0.5.6, wall as each cell's "
-            f"geometric mean [95% t-interval]; the flag bound (one-sided, 1 - {ALPHA}/{k}); peak RSS"
+            f"  {c} {t}t: {g:.4f} [{glo:.4f}, {ghi:.4f}]; "
+            f"flag bound {math.exp(fb):.4f}{' FLAGGED' if flagged else ''}; memory {mem:.3f}"
+            + (" ABOVE THE CAP" if mem > RSS_GATE else "")
         )
-        for c, t in cells:
-            m = statistics.mean(xs[(c, t)])
-            h = op.t975(GUARD_ROUNDS - 1) * statistics.stdev(xs[(c, t)]) / math.sqrt(GUARD_ROUNDS)
-            fb = flag_bound(xs[(c, t)], k)
-            mem = memory(r, c, t, GUARD_ROUNDS)
-            flagged = fb > math.log(FLAG_MIN)
-            print(
-                f"  {c} {t}t: {math.exp(m):.4f} [{math.exp(m - h):.4f}, {math.exp(m + h):.4f}]; "
-                f"flag bound {math.exp(fb):.4f}{' FLAGGED' if flagged else ''}; memory {mem:.3f}"
-                + (" ABOVE THE CAP" if mem > RSS_GATE else "")
-            )
-            if flagged:
-                fails.append(
-                    f"{label[:2]}: a credible regression, {c} at {t} threads, lower bound "
-                    f"{math.exp(fb):.4f} above {FLAG_MIN}"
-                )
-            if mem > RSS_GATE:
-                fails.append(f"memory: {c} at {t} threads peak RSS {mem:.3f}, above {RSS_GATE}")
-        print(
-            f"  pooled: {math.exp(est):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}] "
-            f"(stratified bootstrap, {BOOT} resamples, seed {SEED}); pass at most {POOLED_MAX}"
-        )
-        if not math.exp(hi) <= POOLED_MAX:
+        if flagged:
             fails.append(
-                f"{label[:2]}: the pooled upper bound {math.exp(hi):.4f} is above {POOLED_MAX}"
+                f"B1: a credible regression, {c} at {t} threads, lower bound "
+                f"{math.exp(fb):.4f} above {FLAG_MIN}"
             )
+        if mem > RSS_GATE:
+            fails.append(f"memory: {c} at {t} threads peak RSS {mem:.3f}, above {RSS_GATE}")
+    print(
+        f"  pooled: {math.exp(est):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}] "
+        f"(stratified bootstrap, {BOOT} resamples, seed {SEED}); pass at most {POOLED_MAX}"
+    )
+    if not math.exp(hi) <= POOLED_MAX:
+        fails.append(f"B1: the pooled upper bound {math.exp(hi):.4f} is above {POOLED_MAX}")
+    r = rows["b2.jsonl"]
+    cells = [(c, t) for t in COUNTS for c in B2]
+    xs = {ct: logs(r, *ct, B2_ROUNDS) for ct in cells}
+    print(
+        f"\nB2, admitted guards (G, per cell): {len(cells)} cells, {B2_ROUNDS} rounds; geometric mean "
+        f"[95% t-interval]; peak RSS. Fails: SLOWER, above {GUARD_MAX}, or memory above {RSS_GATE}"
+    )
+    for c, t in cells:
+        g, glo, ghi = interval(xs[(c, t)])
+        mem = memory(r, c, t, B2_ROUNDS)
+        print(f"  {c} {t}t: {g:.4f} [{glo:.4f}, {ghi:.4f}] {op.label(glo, ghi)}; memory {mem:.3f}")
+        if glo > 1:
+            fails.append(f"B2: {c} at {t} threads SLOWER, {g:.4f} [{glo:.4f}, {ghi:.4f}]")
+        elif g > GUARD_MAX:
+            fails.append(f"B2: {c} at {t} threads {g:.4f}, above the bound {GUARD_MAX}")
+        if mem > RSS_GATE:
+            fails.append(f"memory: {c} at {t} threads peak RSS {mem:.3f}, above {RSS_GATE}")
+    est, lo, hi = pooled([xs[ct] for ct in cells])
+    print(
+        f"  pooled (reported, not judged): {math.exp(est):.4f} [{math.exp(lo):.4f}, {math.exp(hi):.4f}]"
+    )
     r = rows["b3.jsonl"]
     ps, res = {}, {}
     print(
@@ -307,6 +384,8 @@ def judge(a):
         f"  Holm at alpha {ALPHA} over {len(ps)} cells: {len(rejected)} of {len(ps)} reject no gain"
     )
     for (c, t), (g, lo, hi, p, mem) in sorted(res.items()):
+        if not hi < 1:
+            fails.append(f"B3: {c} at {t} threads not FASTER, {g:.4f} [{lo:.4f}, {hi:.4f}]")
         if (c, t) not in rejected:
             fails.append(f"B3: no gain on {c} at {t} threads under Holm (p {p:.2e}, {g:.4f})")
         if mem > BENEFIT_RSS:
@@ -314,20 +393,22 @@ def judge(a):
     g, lo, hi, p, mem = op.cell(rows["b4.jsonl"], B4[0], B4[1], SUSTAINED_ROUNDS)
     print(
         f"\nB4, sustained: {B4[1]} threads back to back on {B4[0]}, {SUSTAINED_ROUNDS} rounds: "
-        f"{g:.4f} [{lo:.4f}, {hi:.4f}] {op.label(lo, hi)}; memory {mem:.3f} (reported)"
+        f"{g:.4f} [{lo:.4f}, {hi:.4f}] {op.label(lo, hi)}; memory {mem:.3f} (reported, as S's)"
     )
     if lo > 1:
         fails.append(f"B4: sustained SLOWER, {g:.4f} [{lo:.4f}, {hi:.4f}]")
+    elif g > GUARD_MAX:
+        fails.append(f"B4: sustained {g:.4f}, above the bound {GUARD_MAX}")
     if fails:
         print(f"\nVERDICT: NOT ADOPTED. {len(fails)} conditions fail:")
         for f in fails:
             print(f"  {f}")
     else:
         print(
-            "\nVERDICT: ADOPT. Part A attributed; the zero-route and admitted guards' pooled upper "
-            f"bounds within {POOLED_MAX} with no credible regression above {FLAG_MIN}; a gain on every "
-            "benefit cell (Holm) at no more memory; sustained not SLOWER; every guard's memory within "
-            f"{RSS_GATE}."
+            "\nVERDICT: ADOPT. Part A bound and attributed; the zero-route guards' pooled upper bound "
+            f"within {POOLED_MAX} with no credible regression above {FLAG_MIN}; every admitted guard "
+            f"within G (not SLOWER, at most {GUARD_MAX}); every benefit cell FASTER and a gain under "
+            f"Holm at no more memory; sustained within S; every guard's memory within {RSS_GATE}."
         )
     return 0
 
@@ -398,12 +479,16 @@ def main(argv):
     v.add_argument("bundle")
     v.add_argument("--port", required=True)
     sub.add_parser("plan")
+    pa = sub.add_parser("part-a")
+    pa.add_argument("summary")
     g = sub.add_parser("guard")
     g.add_argument("target")
     g.add_argument("--this")
     g.add_argument("--remote", default="origin")
     a = ap.parse_args(argv[1:])
-    return {"judge": judge, "verify": verify, "plan": plan, "guard": guard}[a.mode](a)
+    return {"judge": judge, "verify": verify, "plan": plan, "guard": guard, "part-a": check_part_a}[
+        a.mode
+    ](a)
 
 
 if __name__ == "__main__":

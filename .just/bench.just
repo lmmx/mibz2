@@ -2374,8 +2374,9 @@ bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUND
     bash bench/bundle.sh "$O"
 
 # open-port-3, the proportionate validation for 0.5.7 (docs/journal/2026-11-19-open-port-3-registration.md;
-# #145 QUEUED 7013818037): one attempt on the i9, about 60 minutes. B1, the 9 zero-route guards,
-# and B2, the 4 admitted guards, at 8, 10 and 20 threads, 16 rounds; B3, the benefit on
+# #145 QUEUED 7013818037, corrected after HOLD 7015030749): one attempt on the i9, about 72
+# minutes. B1, the 9 zero-route guards, at 8, 10 and 20 threads, 16 rounds; B2, the 4 admitted
+# guards, 32 rounds; B3, the benefit on
 # wikidata-x4 and ho-wikidata-l9, 12 rounds; B4, sustained, wikidata-x16 at 10 threads back to
 # back, 8 rounds. The port at PORT against v0.5.6, unpinned, settle 2 s. The rounds and corpora
 # are the scorer's (`open_port3.py plan`), never this recipe's
@@ -2425,6 +2426,9 @@ bench-open-port-3 PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" DRY="":
     { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
     sha256sum "$AB" "$OLDAB" "$HAB" | tee "$O/binaries.sha256"
     cp "$PARTA" "$O/part-a-summary.json"
+    # Part A bound to its evidence before anything is timed: the committed summary (its SHA-256 in
+    # the scorer), complete, with zero-open receipts for every B1 cell; if not, nothing is timed
+    python3 bench/open_port3.py part-a "$O/part-a-summary.json" | tee "$O/part-a-check.txt"
     # the corpora, as the first registration built them (the 18 inputs of the frozen manifest)
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
     if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then

@@ -1,0 +1,34 @@
+B2 as G at 32 rounds [own]: each cell's false-fail under no effect; power at +2% and +3%
+  ho-wikidata-l1 8t (sd 0.0114): 0.0757; +2% 1.000; +3% 1.000
+  ho-structured-l1 8t (sd 0.0376): 0.0165; +2% 0.883; +3% 0.998
+  ho-structured-l9 8t (sd 0.0429): 0.0286; +2% 0.740; +3% 0.976
+  ho-prose-l1 8t (sd 0.0488): 0.0322; +2% 0.630; +3% 0.926
+  ho-wikidata-l1 10t (sd 0.0196): 0.0042; +2% 1.000; +3% 1.000
+  ho-structured-l1 10t (sd 0.0495): 0.0134; +2% 0.656; +3% 0.991
+  ho-structured-l9 10t (sd 0.0428): 0.0385; +2% 0.732; +3% 0.959
+  ho-prose-l1 10t (sd 0.0753): 0.0650; +2% 0.490; +3% 0.777
+  ho-wikidata-l1 20t (sd 0.0305): 0.0834; +2% 0.904; +3% 0.994
+  ho-structured-l1 20t (sd 0.0360): 0.0779; +2% 0.805; +3% 0.971
+  ho-structured-l9 20t (sd 0.0157): 0.0238; +2% 1.000; +3% 1.000
+  ho-prose-l1 20t (sd 0.0537): 0.0329; +2% 0.568; +3% 0.881
+  any of the 12 under no effect: 0.3980
+B2 as G at 32 rounds [part]: each cell's false-fail under no effect; power at +2% and +3%
+  ho-wikidata-l1 8t (sd 0.0114): 0.0211; +2% 0.774; +3% 0.980
+  ho-structured-l1 8t (sd 0.0376): 0.0215; +2% 0.773; +3% 0.979
+  ho-structured-l9 8t (sd 0.0429): 0.0218; +2% 0.773; +3% 0.980
+  ho-prose-l1 8t (sd 0.0488): 0.0210; +2% 0.776; +3% 0.980
+  ho-wikidata-l1 10t (sd 0.0196): 0.0215; +2% 0.775; +3% 0.980
+  ho-structured-l1 10t (sd 0.0495): 0.0215; +2% 0.774; +3% 0.979
+  ho-structured-l9 10t (sd 0.0428): 0.0209; +2% 0.774; +3% 0.980
+  ho-prose-l1 10t (sd 0.0753): 0.0210; +2% 0.776; +3% 0.979
+  ho-wikidata-l1 20t (sd 0.0305): 0.0208; +2% 0.778; +3% 0.981
+  ho-structured-l1 20t (sd 0.0360): 0.0216; +2% 0.775; +3% 0.980
+  ho-structured-l9 20t (sd 0.0157): 0.0217; +2% 0.775; +3% 0.980
+  ho-prose-l1 20t (sd 0.0537): 0.0218; +2% 0.775; +3% 0.980
+  any of the 12 under no effect: 0.2280
+  (for comparison, the same at 16 rounds [own]: any of the 12 0.6299)
+B4 as S at 8 rounds [own residuals, sd 0.0325]: false-fail 0.1475; +2% 0.549; +3% 0.819
+B4 as S at 8 rounds [all guards' residuals, sd 0.0406]: false-fail 0.0880; +2% 0.526; +3% 0.765
+B2 at 32 rounds [own], SLOWER alone: any of the 12 0.3631
+B2 at 32 rounds [own], the point bound alone: any of the 12 0.1017
+B2 at 32 rounds, normal noise at each cell's sd: any of the 12 0.2970

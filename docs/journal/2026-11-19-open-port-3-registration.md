@@ -7,6 +7,13 @@ urgent review by the Researcher through the Coordinator.*
   autonomously please yes put simply, no marathon runs for ill founded reasons".
 - **The criteria are the Coordinator's** (QUEUED 7013818037). This document implements them and
   states what they cost and what they give up. It changes none of them.
+- **Corrected after the Researcher's HOLD 7015030749,** accepted in full by the Coordinator
+  (LOG 7015050099, and its instructions to the Pathfinder):
+  - *B3* requires FASTER as well as Holm;
+  - *B2* is G in each admitted-guard cell, at 32 rounds;
+  - *B4* is S exactly as registered;
+  - *Part A* is bound to its committed evidence;
+  - *B1* is unchanged (ruled admissible under PERFORMANCE-POLICY §4a).
 - **What stands:**
   - the first registration's NOT ADOPTED (`open-port/run-20261119T125538Z`), permanently;
   - #635 is shelved and will not be run; its branch is kept as a record.
@@ -14,7 +21,7 @@ urgent review by the Researcher through the Coordinator.*
   9743bbe0d51ba451b8b8ab9e6fd731c238940052, against v0.5.6 (530ed404). Its correctness evidence
   (B5, D115 and Miri) is unchanged.
 - **The recipe:** `just bench-open-port-3`, on `bench/open-port-3`. The scorer is
-  `bench/open_port3.py`, and its checks are `bench/test_open_port3.py` (35, in CI).
+  `bench/open_port3.py`, and its checks are `bench/test_open_port3.py` (48, in CI).
 - **One attempt.** It is archived as `open-port-3/run-*.tar.gz`, with the guard, the timing marker,
   the queue entry and the ready tag, as before.
 
@@ -129,21 +136,22 @@ registered settle of 2 s):
 | part | file | corpora | threads | rounds | records |
 |---|---|---|---|---|---|
 | B1, zero-route guards | `b1.jsonl` | text, random, records, runs, pattern, onebyte, ho-code-l1, ho-code-l9, ho-prose-l9 | 8, 10, 20 | 16 | 864 |
-| B2, admitted guards | `b2.jsonl` | ho-wikidata-l1, ho-structured-l1, ho-structured-l9, ho-prose-l1 | 8, 10, 20 | 16 | 384 |
+| B2, admitted guards | `b2.jsonl` | ho-wikidata-l1, ho-structured-l1, ho-structured-l9, ho-prose-l1 | 8, 10, 20 | 32 | 768 |
 | B3, benefit | `b3.jsonl` | wikidata-x4, ho-wikidata-l9 | 8, 10, 20 | 12 | 144 |
 | B4, sustained | `b4.jsonl` | wikidata-x16, back to back (settle 0) | 10 | 8 | 16 |
 
-**The estimate: about 60 minutes on the i9.**
-- *Timed part, about 48.5 minutes:* 1,392 settled records. The first attempt's decision run took
-  2.07 s a record (1,096 records, 12:58:02 to 13:36:08, settle included). The 16 back-to-back
-  records add about 20 s.
+**The estimate: about 72 minutes on the i9.**
+- *Timed part, about 62 minutes:* 1,776 settled records. The first attempt's decision run took
+  2.07 s a record (1,096 records, 12:58:02 to 13:36:08, settle included). B2's 32 rounds add 384
+  records, about 13 minutes, to the first draft's 48.5 minutes. The 16 back-to-back records add
+  about 20 s.
 - *Setup, about 10 minutes:* both builds from scratch in a new `target/open-port-3`, then the
   corpora.
 - *Dropped:* the first recipe's context arms (gate and crossover) and its census. They decided
   nothing and took 14 minutes.
 
-The run is shorter than the 75–90 minutes allowed. The rounds are the Coordinator's, and they are
-not padded.
+The run is within the 75–90 minutes allowed. The rounds are the Coordinator's, and they are not
+padded.
 
 **The inputs are the first registration's frozen 18,** checked against
 `bench/open-port-inputs.sha256` before any timing. These are the same compressed bytes Part A
@@ -151,23 +159,36 @@ measured, so Part A's routing (no block opens on the B1 corpora) holds for the i
 code is the same and routing depends only on the bytes.
 
 **The rule** (each cell: x_i, the rounds' paired log ratios of wall, the port over v0.5.6):
-- **B1 and B2, pooled.** The estimand is the mean of the cells' mean log ratios, each cell
+- **B1, pooled.** The estimand is the mean of the 27 cells' mean log ratios, each cell
   weighted equally. Its 95% interval is a stratified bootstrap: rounds are resampled with
   replacement within each cell, 20,000 resamples, and the 2.5th and 97.5th percentiles taken. The
   generator is fixed (splitmix64, seed 7013818037), so the verdict is reproducible on any Python.
   **Pass:** the upper bound, as a ratio, is at most **1.01**.
-- **B1 and B2, credible regression.** A cell is flagged when its one-sided lower bound,
-  m − t(1 − 0.05/k, 15)·s/√16, lies above ln 1.02. Here k is 27 for B1 and 12 for B2. **Any flag
-  fails.**
+- **B1, credible regression.** A cell is flagged when its one-sided lower bound,
+  m − t(1 − 0.05/27, 15)·s/√16, lies above ln 1.02. **Any flag fails.**
+- **B2 = G exactly, in each of the 12 admitted-guard cells** (Open executes there: §4a's usual
+  guards where the new code executes). A cell fails if it is SLOWER (the two-sided 95% t-interval
+  wholly above 1, with the exact t quantile at 31 degrees of freedom) or if its geometric mean is
+  above **1.02**. Its peak RSS is capped at 1.10, as below. B2's pooled figure, computed as B1's,
+  is reported and not judged.
 - **Memory, every guard cell (B1 and B2):** peak RSS, the median of the port's peaks over the
   median of v0.5.6's, at most **1.10**.
-- **B3, benefit:** every one of the 6 cells is a gain under Holm at family α 0.05 (one-sided t, as
-  P1 was), and every cell's peak RSS is at most **1.00**.
-- **B4, sustained:** not SLOWER; the two-sided 95% t-interval's lower bound is not above 1. Memory
-  is reported but not judged, as the first registration's S was.
-- **Part A:** no VOID, and every trigger carries a written attribution. The scorer reads
-  `part-a/summary.json`, committed beside this registration before timing. The recipe copies it
-  into the bundle.
+- **B3, benefit:** every one of the 6 cells passes both tests. It is FASTER: its two-sided 95%
+  t-interval lies wholly below 1. It is also a gain under Holm at family α 0.05 (one-sided t, as P1
+  was). Every cell's peak RSS is at most **1.00**.
+- **B4 = S exactly as registered:** 8 rounds. It fails if SLOWER, or if its geometric mean is above
+  **1.02**. Memory is reported but not judged, as S's was.
+- **Part A, bound to its evidence.** The scorer holds the committed summary's SHA-256
+  (`b9ae3a70…944b`). The recipe copies `part-a/summary.json` into the bundle. Before the timing
+  marker (`open_port3.py part-a`), and again when the run is judged or rejudged, it checks:
+  - the summary's SHA-256 is the committed one;
+  - its `voids` and `triggers` are present;
+  - its rows cover every B1 corpus at t8, t10, t20 and w7;
+  - each of those 36 cells has zero-open receipts (`emit` and `induced` at zero in every port
+    run).
+
+  Anything missing or empty is VOID. Beyond that, Part A must have no VOID of its own, and every
+  trigger must carry a written attribution.
 
 **The verdict:**
 - **ADOPT** only if Part A, B1, B2, B3, B4 and the memory caps all hold.
@@ -180,14 +201,18 @@ code is the same and routing depends only on the bytes.
 - **NOT ADOPTED** otherwise, with every failing condition named. The Open campaign then ends, and
   #630 is closed with the evidence kept.
 
-## 5. Why the pooled-plus-flag check is proportionate, and what it gives up
+## 5. What the checks bound, and what they cost
 
-**What it bounds.** The mechanisms of §2 that act on every block are common: the monomorph, the
-scratch layout and the code layout act on every worker and every block. A common effect moves
-every cell together, and the pooled bound sees it with 432 (B1) or 192 (B2) paired rounds. The
-per-cell flag catches a single cell whose regression is clearly above 2%.
+**B1, pooled plus flag** (ruled admissible under §4a). Open never executes on these blocks (Part
+A). What is left of §2 acts on every block: the monomorph, the scratch layout and the code layout,
+on every worker. A common effect moves every cell together, and the pooled bound sees it with 432
+paired rounds. The per-cell flag catches a single cell whose regression is clearly above 2%.
 
-**The operating characteristics, before any data** (`open-port-3-registration/oc.py` and `oc.txt`):
+**B2 and B4, G and S** (the Researcher's HOLD, point 2). Open executes on these blocks, so they
+keep the usual guards. They are judged per cell, as the first registration's were.
+
+**B1's operating characteristics, before any data** (`open-port-3-registration/oc.py` and
+`oc.txt`, from the first draft; B1 is unchanged; B2's pooled rows are now reported only):
 - *How:* each cell's 16 rounds are drawn from the first attempt's 12 residuals for that cell
   (centred: "own"), or from the part's residuals pooled ("part"). 2,000 simulations each, with
   the bootstrap at 2,000 resamples in the simulation and 20,000 in the scorer.
@@ -204,14 +229,38 @@ per-cell flag catches a single cell whose regression is clearly above 2%.
 | one cell +5%: its flag (least / most noisy cell) | 1.000 / 0.203 | 1.000 / 0.042 |
 | one cell: the slowdown its flag catches with power 0.80 | x1.032 to x1.167 | x1.031 to x1.097 |
 
-- **The false NOT ADOPTED rate under no effect is about 0.12** under the own-cell model, treating
-  the three as independent: 1 − 0.985 × 0.965 × 0.927. Most of it is B2's pooled bound (0.073).
-  Its 12 cells give the bound less room than B1's 27 at the same 1.01 margin, and its admitted
-  cells are spikier.
+**B2 as G and B4 as S, before any data** (`oc2.py` and `oc2.txt`). The method is the same
+residual resampling, with 100,000 simulations. B4 draws from the first attempt's sustained
+residuals (8 rounds).
+
+| | own-cell residuals | the part's residuals pooled |
+|---|---|---|
+| **B2 at 32 rounds, no effect: some cell of the 12 fails** | **0.398** | 0.228 |
+| B2, each cell's false-fail under no effect | 0.004 to 0.083 | about 0.021 |
+| B2, SLOWER alone (any of 12) / the point bound alone | 0.363 / 0.102 | |
+| B2 with normal noise at each cell's spread (any of 12) | 0.297 | |
+| (B2 at 16 rounds, for comparison: any of 12) | 0.630 | |
+| B2, one cell's power at a true +2% / +3% | 0.49 to 1.00 / 0.78 to 1.00 | about 0.775 / 0.980 |
+| **B4 at 8 rounds, no effect: fails** | **0.148** (sd 0.033) | 0.088 (all guards' residuals) |
+| B4 at a true +2% / +3% | 0.549 / 0.819 | 0.526 / 0.765 |
+
+- **Most of B2's false-fail rate is G's SLOWER test,** which is not reduced by more rounds: each
+  cell has 2.5% by construction, so 12 cells under normal noise give about 0.26. The doubled
+  rounds bring the point bound's share down: any of the 12 falls from 0.63 at 16 rounds to 0.40
+  at 32 under the own-cell model.
+- **The false NOT ADOPTED rate under no effect is about 0.3 to 0.5.** These are approximate
+  products over B1's pooled bound and flag, B2 and B4:
+  - *own-cell model:* 1 − 0.985 × 0.965 × 0.602 × 0.852 ≈ **0.51**;
+  - *pooled residuals:* 1 − 0.983 × 1.000 × 0.772 × 0.912 ≈ **0.31**.
+
+  The first draft's rate was about 0.12. The rise is the cost of G and S where Open executes, which
+  the Coordinator accepted with the Researcher's HOLD.
 - **These criteria were set after the first attempt's data was seen.** Applied to that attempt's
   12 rounds, they give:
   - *B1:* pooled 0.9995 [0.9937, 1.0051], with no cell flagged;
-  - *B2:* pooled 0.9923 [0.9858, 0.9990], with no cell flagged.
+  - *B2:* pooled 0.9923 [0.9858, 0.9990], with no cell flagged. Under G, at 12 rounds, every B2
+    cell passed in the first attempt: none was SLOWER, and none was above 1.02. Its largest was
+    ho-structured-l1 at 10 threads, 1.0192.
 
   This attempt is prospective only for its own new data (C1a). Its rule is frozen here, before
   that data, and is not relaxed after it (C2).
@@ -224,24 +273,30 @@ per-cell flag catches a single cell whose regression is clearly above 2%.
   hours. A common effect of 1% fails the pooled bound with probability about 0.97.
 - *The flag's false-alarm rate is modelled, not exact.* It rests on the first attempt's
   heavy-tailed residuals: 0.035 for B1 under the own-cell model.
+- *These limits are B1's alone.* B2 and B4 keep G's and S's per-cell protections, at G's and S's
+  false-fail cost above.
 
 ## 6. The preflight
 
 `just bench-open-port-3 9743bbe0d51ba451b8b8ab9e6fd731c238940052 1` (DRY) ran in the container
-at e4d60735, the recipe as frozen, and is archived as
-`open-port-3-registration/preflight/run-20261119T160851Z.tar.gz`:
-- both builds made, and the 18 inputs built and verified ("the builds and all 18 inputs are the
-  registered ones");
-- every corpus decoded once by each build, with the same output size and digest for all 16;
-- the scorer's 35 checks pass;
+on the corrected recipe, and is archived as
+`open-port-3-registration/preflight/{{PREFLIGHT}}`:
+- both builds were made, and the 18 inputs built and verified ("the builds and all 18 inputs are
+  the registered ones");
+- Part A's pre-timing check passed;
+- every corpus was decoded once by each build, with the same output size and digest for all 16;
+- the scorer's 48 checks pass;
 - no timing was kept.
+
+The first draft's preflight, at e4d60735, stays beside it as a record
+(`preflight/run-20261119T160851Z.tar.gz`).
 
 The timed loop's path handling was checked separately: `ab run` records `text` for the
 `gen/text.bz2` symlink, and both arms succeed.
 
 ## 7. Reproduce
 
-- **The scorer's checks:** `python3 bench/test_open_port3.py` (35 checks; in CI).
+- **The scorer's checks:** `python3 bench/test_open_port3.py` (48 checks; in CI).
 - **The plan:** `python3 bench/open_port3.py plan`.
 - **Part A:** `docs/journal/2026-11-19-open-port-3-registration/part-a/` holds:
   - *the runs:* `run.sh` and `run7.sh`, one per line of `jobs.txt` and `jobs7.txt`, through
@@ -251,5 +306,6 @@ The timed loop's path handling was checked separately: `ab run` records `text` f
   - *the outputs:* `summary.json` (which the scorer reads), `attribution.json`, `table.txt`,
     `attrib.txt`, `decoder.txt` and `positive-control.txt`;
   - *the raw cachegrind and child outputs:* `raw.tar.xz` (sha256 464d6264…7f0e).
-- **The operating characteristics:** `python3 oc.py RUNS.jsonl`, with RUNS the first attempt's
-  `runs.jsonl` from its evidence bundle (sha256 fb4771f5…a523).
+- **The operating characteristics:** `python3 oc.py RUNS.jsonl` and
+  `python3 oc2.py RUNS.jsonl SUSTAINED.jsonl`. RUNS and SUSTAINED are the first attempt's
+  `runs.jsonl` and `sustained.jsonl`, from its evidence bundle (sha256 fb4771f5…a523).

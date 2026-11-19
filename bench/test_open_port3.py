@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Checks of bench/open_port3.py, open-port-3's verdict, on made-up bundles: every part complete
-and as hoped (ADOPT); each part's failure (B1 and B2 pooled and flagged, B3's gain and memory,
-B4, the guards' memory, Part A's unattributed trigger); each VOID, within and across files; the
-statistics against known values; and the registration's own one attempt"""
+and as hoped (ADOPT); each part's failure (B1 pooled and flagged; B2 as G per cell; B3 FASTER and
+Holm, and its memory; B4 as S; the guards' memory; Part A's unattributed trigger); each VOID,
+within and across files, Part A's binding to its committed evidence among them (the Researcher's
+HOLD 7015030749); the statistics against known values; and the registration's own one attempt"""
 
+import hashlib
 import io
 import json
 import math
@@ -37,15 +39,22 @@ def write(path, rows):
     path.write_text("".join(json.dumps(r) + "\n" for r in rows))
 
 
-GOOD_A = {
-    "voids": [],
-    "triggers": [
-        {"corpus": "text", "threads": "t8", "event": "I1mr", "ratio": 1.04, "attribution": "layout"}
-    ],
-}
+# Part A's committed summary, the one the scorer binds (its SHA-256 is o3.PART_A_SHA256)
+SUMMARY = (
+    Path(__file__).parent.parent
+    / "docs/journal/2026-11-19-open-port-3-registration/part-a/summary.json"
+)
+COMMITTED = SUMMARY.read_bytes()
 
 
-def build3(step=None, vectors=None, mem=None, edit=None, part_a=GOOD_A, drop=(), **kw):
+def shaped(seed, n, gm, sd):
+    """n log ratios with mean exactly log(gm) and sample standard deviation exactly sd"""
+    z = noise(seed, n)
+    s = (sum(x * x for x in z) / (n - 1)) ** 0.5
+    return [math.log(gm) + sd * x / s for x in z]
+
+
+def build3(step=None, vectors=None, mem=None, edit=None, part_a=COMMITTED, drop=(), **kw):
     """A bundle of every part: `step` maps (corpus, t) to the port's true wall ratio (a 6% gain on
     the B3 corpora, none elsewhere, by default), `vectors` to a cell's exact log ratios, `mem` to its
     peak ratio (0.8 on B3, 1.0 elsewhere); `edit` edits a record (file, record) -> record or None"""
@@ -74,7 +83,9 @@ def build3(step=None, vectors=None, mem=None, edit=None, part_a=GOOD_A, drop=(),
                             rows.append(r)
         if name not in drop:
             write(d / name, rows)
-    if part_a is not None:
+    if isinstance(part_a, bytes):
+        (d / "part-a.json").write_bytes(part_a)
+    elif part_a is not None:
         (d / "part-a.json").write_text(json.dumps(part_a) if isinstance(part_a, dict) else part_a)
     return d
 
@@ -208,6 +219,73 @@ def stats_checks():
     return out
 
 
+def part_a_checks():
+    """Part A bound to its evidence (the Researcher's HOLD 7015030749, point 4), beyond its
+    identity: each check edits a copy of the committed summary and reads it with the identity
+    check off, so the rest is shown to catch the edit on its own"""
+    out = []
+    base = json.loads(COMMITTED)
+
+    def run(name, s, want_errors, want_fails=()):
+        d = Path(tempfile.mkdtemp())
+        try:
+            (d / "s.json").write_text(json.dumps(s))
+            errors, fails = [], []
+            with redirect_stdout(io.StringIO()):
+                o3.part_a(str(d / "s.json"), errors, fails, expect=None)
+        finally:
+            shutil.rmtree(d)
+        ok = all(any(w in e for e in errors) for w in want_errors) and all(
+            any(w in f for f in fails) for w in want_fails
+        )
+        ok = ok and (bool(errors) == bool(want_errors)) and (bool(fails) == bool(want_fails))
+        print(
+            f"{'ok  ' if ok else 'FAIL'} Part A: {name}"
+            + ("" if ok else f": {errors[:3]} {fails[:3]}")
+        )
+        out.append(ok)
+
+    run("the committed summary, identity aside: clean", base, ())
+    s = json.loads(COMMITTED)
+    s["rows"] = [r for r in s["rows"] if r["threads"] != "w7"]
+    run("the 7-worker rows missing: VOID", s, ["no rows for"])
+    s = json.loads(COMMITTED)
+    s["emit"] = {k: v for k, v in s["emit"].items() if not k.startswith("random t10 ")}
+    run(
+        "random at t10's zero-open receipts missing: VOID",
+        s,
+        ["no zero-open receipt for random at t10"],
+    )
+    s = json.loads(COMMITTED)
+    s["emit"]["text t8 #1"] = [5, 0]
+    run("a receipt with the open kernel running: VOID", s, ["text at t8: the open kernel ran"])
+    s = json.loads(COMMITTED)
+    del s["emit"]
+    run("no receipts at all: VOID", s, ["no zero-open receipts"])
+    s = json.loads(COMMITTED)
+    s["triggers"][0]["attribution"] = "  "
+    run("a trigger's attribution blanked: NOT ADOPTED", s, (), ["unattributed"])
+    # the recipe's pre-timing check
+    for name, data, want in [
+        ("the committed summary passes the pre-timing check", COMMITTED, 0),
+        ("an edited summary fails the pre-timing check", COMMITTED + b" ", 1),
+    ]:
+        d = Path(tempfile.mkdtemp())
+        try:
+            (d / "s.json").write_bytes(data)
+            with redirect_stdout(io.StringIO()):
+                got = o3.main(["open_port3.py", "part-a", str(d / "s.json")])
+        finally:
+            shutil.rmtree(d)
+        ok = got == want
+        print(f"{'ok  ' if ok else 'FAIL'} Part A: {name}: exit {got}")
+        out.append(ok)
+    ok = hashlib.sha256(COMMITTED).hexdigest() == o3.PART_A_SHA256
+    print(f"{'ok  ' if ok else 'FAIL'} Part A: the committed summary's SHA-256 is the scorer's")
+    out.append(ok)
+    return out
+
+
 def main():
     res = []
     res.append(
@@ -218,10 +296,12 @@ def main():
             [
                 "VERDICT: ADOPT",
                 "b1.jsonl 864 of 864",
-                "b2.jsonl 384 of 384",
+                "b2.jsonl 768 of 768",
                 "b3.jsonl 144 of 144",
                 "b4.jsonl 16 of 16",
-                "Part A: 0 VOIDs; 1 triggers, 1 with a written attribution",
+                f"Part A: sha256 {o3.PART_A_SHA256[:16]}…; 36 cells, 162 zero-open receipts; 0 VOIDs; "
+                "124 triggers, 124 with a written attribution",
+                "pooled (reported, not judged)",
             ],
             absent=["VOID:", "FLAGGED", "NOT ADOPTED"],
         )
@@ -234,14 +314,6 @@ def main():
             0,
             ["B1: the pooled upper bound", "NOT ADOPTED"],
             absent=["FLAGGED"],
-        )
-    )
-    res.append(
-        expect(
-            "every admitted guard truly 1.5% slower: B2's pooled bound fails",
-            build3(step={(c, t): 1.015 for c in o3.B2 for t in o3.COUNTS}),
-            0,
-            ["B2: the pooled upper bound", "NOT ADOPTED"],
         )
     )
     res.append(
@@ -259,19 +331,57 @@ def main():
     )
     res.append(
         expect(
-            "one admitted guard truly 5% slower: flagged",
-            build3(step={("ho-prose-l1", 8): 1.05}),
-            0,
-            ["B2: a credible regression, ho-prose-l1 at 8 threads", "NOT ADOPTED"],
-        )
-    )
-    res.append(
-        expect(
             "one zero-route cell 1.5% slower, noisy: neither pooled nor flagged (by design: 1% common, 2% single)",
             build3(step={("text", 10): 1.015}),
             0,
             ["VERDICT: ADOPT"],
             absent=["FLAGGED"],
+        )
+    )
+    # B2 = G per cell (the Researcher's HOLD 7015030749, point 2)
+    res.append(
+        expect(
+            "Researcher HOLD 2: ho-prose-l1 at 10 threads truly 5% slower, a conventional SLOWER "
+            "interval: B2 fails it",
+            build3(step={("ho-prose-l1", 10): 1.05}),
+            0,
+            ["B2: ho-prose-l1 at 10 threads SLOWER", "NOT ADOPTED"],
+            absent=["VERDICT: ADOPT"],
+        )
+    )
+    v = shaped(31, o3.B2_ROUNDS, 1.025, 0.08)
+    res.append(
+        expect(
+            "an admitted cell at 1.025 whose interval crosses 1: B2 fails it on the point bound",
+            build3(vectors={("ho-structured-l1", 20): v}),
+            0,
+            ["B2: ho-structured-l1 at 20 threads 1.0250, above the bound 1.02", "NOT ADOPTED"],
+            absent=["B2: ho-structured-l1 at 20 threads SLOWER"],
+        )
+    )
+    res.append(
+        expect(
+            "every admitted cell truly 1.5% slower: B2 fails each SLOWER cell",
+            build3(step={(c, t): 1.015 for c in o3.B2 for t in o3.COUNTS}),
+            0,
+            ["B2: ho-wikidata-l1 at 8 threads SLOWER", "NOT ADOPTED"],
+        )
+    )
+    # B3: FASTER and Holm (point 1)
+    v = shaped(7, o3.BENEFIT_ROUNDS, 0.9883, 0.020882)
+    res.append(
+        expect(
+            "Researcher HOLD 1: held-out 20t at 0.9883 [0.9753, 1.0015], Holm rejects all six: "
+            "not FASTER, so B3 fails",
+            build3(vectors={("ho-wikidata-l9", 20): v}, step={("ho-wikidata-l9", 20): 1.0}),
+            0,
+            [
+                "ho-wikidata-l9 20t: 0.9883 [0.9753, 1.0015] INCONCLUSIVE",
+                "6 of 6 reject no gain",
+                "B3: ho-wikidata-l9 at 20 threads not FASTER",
+                "NOT ADOPTED",
+            ],
+            absent=["VERDICT: ADOPT"],
         )
     )
     res.append(
@@ -290,12 +400,31 @@ def main():
             ["B3: peak RSS on wikidata-x4 at 10 threads 1.010", "NOT ADOPTED"],
         )
     )
+    # B4 = S (point 3)
     res.append(
         expect(
-            "sustained truly 3% slower: B4 fails",
+            "sustained truly 3% slower: B4 fails it SLOWER",
             build3(step={(op.SUSTAINED, 10): 1.03}),
             0,
             ["B4: sustained SLOWER", "NOT ADOPTED"],
+        )
+    )
+    v = shaped(13, o3.SUSTAINED_ROUNDS, 1.03, 0.05)
+    res.append(
+        expect(
+            "Researcher HOLD 3: sustained at 1.03 whose interval crosses 1: B4 fails it on the point bound",
+            build3(vectors={(op.SUSTAINED, 10): v}, step={(op.SUSTAINED, 10): 1.0}),
+            0,
+            ["B4: sustained 1.0300, above the bound 1.02", "NOT ADOPTED"],
+            absent=["B4: sustained SLOWER"],
+        )
+    )
+    res.append(
+        expect(
+            "sustained memory 1.5: reported, no condition (as S)",
+            build3(mem={(op.SUSTAINED, 10): 1.5}),
+            0,
+            ["VERDICT: ADOPT", "memory 1.500 (reported, as S's)"],
         )
     )
     res.append(
@@ -314,40 +443,29 @@ def main():
             ["memory: ho-structured-l9 at 8 threads", "NOT ADOPTED"],
         )
     )
-    bare = {
-        "voids": [],
-        "triggers": [{"corpus": "random", "threads": "t8", "event": "Bim", "ratio": 2.4}],
-    }
-    res.append(
-        expect(
-            "Part A: a trigger without a written attribution: NOT ADOPTED",
-            build3(part_a=bare),
-            0,
-            ["Part A: an unattributed trigger: random at t8, Bim", "NOT ADOPTED"],
-        )
-    )
-    blank = {
-        "voids": [],
-        "triggers": [
-            {"corpus": "random", "threads": 8, "event": "Bim", "ratio": 2.4, "attribution": "  "}
-        ],
-    }
-    res.append(
-        expect(
-            "Part A: a blank attribution: NOT ADOPTED",
-            build3(part_a=blank),
-            0,
-            ["unattributed", "NOT ADOPTED"],
-        )
-    )
+    res.extend(part_a_checks())
     other_port = t1.PORT.replace("/w/target/", "/elsewhere/target/")
     for name, d, phrase in [
         ("Part A not given", build3(part_a=None), "Part A: no summary given"),
         ("Part A unreadable", build3(part_a="{not json"), "Part A: "),
         (
-            "Part A with a VOID (a block opened)",
-            build3(part_a={"voids": ["text t8 #1: the open kernel ran"], "triggers": []}),
-            "Part A VOID",
+            "Researcher HOLD 4: Part A with empty voids and triggers",
+            build3(part_a={"voids": [], "triggers": []}),
+            "not the committed",
+        ),
+        (
+            "Part A without voids or triggers",
+            build3(part_a={"rows": [], "emit": {}}),
+            "`voids` or `triggers` missing",
+        ),
+        (
+            "Part A, the committed summary with a VOID added",
+            build3(
+                part_a=COMMITTED.replace(
+                    b'"voids": []', b'"voids": ["text t8 #1: the open kernel ran"]'
+                )
+            ),
+            "not the committed",
         ),
         ("b2.jsonl missing", build3(drop=("b2.jsonl",)), "b2.jsonl: missing"),
         (
