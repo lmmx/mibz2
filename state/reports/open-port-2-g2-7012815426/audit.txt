@@ -1,0 +1,21 @@
+('ho-prose-l9', 10): old size/+1/+2/+3 (np.float64(0.008345), np.float64(0.65926), np.float64(1.0), np.float64(1.0)); new +1/+2/+3 (np.float64(1.5e-05), np.float64(0.92394), np.float64(1.0))
+('ho-prose-l9', 20): old size/+1/+2/+3 (np.float64(0.03576), np.float64(0.466), np.float64(0.921865), np.float64(0.99791)); new +1/+2/+3 (np.float64(6.5e-05), np.float64(0.88433), np.float64(1.0))
+('ho-structured-l9', 20): old size/+1/+2/+3 (np.float64(0.025395), np.float64(0.511825), np.float64(0.9988), np.float64(1.0)); new +1/+2/+3 (np.float64(0.0), np.float64(0.903585), np.float64(1.0))
+('ho-wikidata-l1', 8): old size/+1/+2/+3 (np.float64(0.15419), np.float64(0.73665), np.float64(0.988405), np.float64(0.99998)); new +1/+2/+3 (np.float64(0.0), np.float64(0.972875), np.float64(1.0))
+('ho-wikidata-l1', 10): old size/+1/+2/+3 (np.float64(0.002135), np.float64(0.4247), np.float64(1.0), np.float64(1.0)); new +1/+2/+3 (np.float64(0.001805), np.float64(0.885625), np.float64(1.0))
+('random', 8): old size/+1/+2/+3 (np.float64(0.019995), np.float64(0.529935), np.float64(0.999765), np.float64(1.0)); new +1/+2/+3 (np.float64(3e-05), np.float64(0.93298), np.float64(1.0))
+('random', 20): old size/+1/+2/+3 (np.float64(0.054135), np.float64(0.80027), np.float64(0.999615), np.float64(1.0)); new +1/+2/+3 (np.float64(0.0), np.float64(0.98683), np.float64(1.0))
+('records', 8): old size/+1/+2/+3 (np.float64(0.02702), np.float64(0.448525), np.float64(0.97676), np.float64(1.0)); new +1/+2/+3 (np.float64(0.00012), np.float64(0.909245), np.float64(1.0))
+('records', 20): old size/+1/+2/+3 (np.float64(0.07406), np.float64(0.596375), np.float64(0.96421), np.float64(0.999835)); new +1/+2/+3 (np.float64(0.0), np.float64(0.931515), np.float64(1.0))
+('text', 20): old size/+1/+2/+3 (np.float64(0.006835), np.float64(0.262565), np.float64(0.87632), np.float64(0.998985)); new +1/+2/+3 (np.float64(0.00449), np.float64(0.83802), np.float64(1.0))
+S own: size 0.000000, +1/+2/+3 (np.float64(0.049775), np.float64(0.93853), np.float64(0.99999))
+S corpus: size 0.000000, +1/+2/+3 (np.float64(0.050535), np.float64(0.937535), np.float64(1.0))
+S all: size 0.001265, +1/+2/+3 (np.float64(0.154595), np.float64(0.84109), np.float64(0.997555))
+S stress: size 0.003695, +1/+2/+3 (np.float64(0.173565), np.float64(0.825245), np.float64(0.99551))
+S blocks: size 0.000000, +1/+2/+3 (np.float64(0.07677), np.float64(0.923525), np.float64(1.0))
+('wikidata-x16', 10): old size/+1/+2/+3 (np.float64(0.14923), np.float64(0.31543), np.float64(0.5471), np.float64(0.817075)); new +1/+2/+3 (np.float64(0.049775), np.float64(0.93853), np.float64(0.99999))
+own: max cell size 0.001390, sum 0.011495, independent P(any) 0.011435, min +2% (np.float64(0.798175), ('ho-structured-l1', 10)), cells below .80 1
+corpus: max cell size 0.001385, sum 0.010785, independent P(any) 0.010732, min +2% (np.float64(0.71103), ('text', 20)), cells below .80 9
+all: max cell size 0.001500, sum 0.034190, independent P(any) 0.033632, min +2% (np.float64(0.663585), ('onebyte', 20)), cells below .80 12
+stress: max cell size 0.011525, sum 0.154565, independent P(any) 0.143589, min +2% (np.float64(0.665175), ('onebyte', 20)), cells below .80 24
+blocks: max cell size 0.013430, sum 0.035890, independent P(any) 0.035397, min +2% (np.float64(0.737085), ('ho-structured-l1', 10)), cells below .80 4
