@@ -27,16 +27,18 @@ def require(value, message):
         raise ValueError(message)
 
 
-def student_critical():
-    """Invert the normalized cos^46 integral for Student t with 47 df.
+def student_critical(df=47):
+    """Invert the normalized cosine integral for Student t with odd df.
 
-    x = sqrt(47) tan(theta) transforms the t density into cos^46(theta)
+    x = sqrt(df) tan(theta) transforms the t density into cos^(df-1)(theta)
     times a constant. Integration by parts evaluates its integral from 0.
     """
+    require(df >= 1 and df % 2 == 1, "cosine recurrence requires positive odd df")
+
     def integral(theta):
         value = theta
         cosine, sine = math.cos(theta), math.sin(theta)
-        for n in range(2, 47, 2):
+        for n in range(2, df, 2):
             value = ((n - 1) * value + sine * cosine ** (n - 1)) / n
         return value
 
@@ -48,16 +50,16 @@ def student_critical():
             lo = mid
         else:
             hi = mid
-    return math.sqrt(47) * math.tan((lo + hi) / 2)
+    return math.sqrt(df) * math.tan((lo + hi) / 2)
 
 
 T47 = student_critical()
 
 
-def interval(logs):
-    require(len(logs) == ROUNDS, "expected 48 matched round observations")
+def interval(logs, rounds=ROUNDS, critical=T47):
+    require(len(logs) == rounds, f"expected {rounds} matched round observations")
     mean = statistics.fmean(logs)
-    radius = T47 * statistics.stdev(logs) / math.sqrt(ROUNDS)
+    radius = critical * statistics.stdev(logs) / math.sqrt(rounds)
     return {"ratio": math.exp(mean), "lo": math.exp(mean - radius), "hi": math.exp(mean + radius)}
 
 
@@ -94,16 +96,16 @@ def by_cell(rows):
     return result
 
 
-def compare(w, treatment, ref, cells):
+def compare(w, treatment, ref, cells, rounds=ROUNDS, critical=T47):
     a, b = cells[w, treatment], cells[w, ref]
-    result = dict(workers=w, treatment=treatment, reference=ref, n=ROUNDS, df=47)
+    result = dict(workers=w, treatment=treatment, reference=ref, n=rounds, df=rounds - 1)
     keys = ("wall_s", "cpu_s", "occupancy", "peak_rss_kb")
     for name in keys:
         if name == "occupancy":
             x, y = ([r["cpu_s"] / r["wall_s"] for r in side] for side in (a, b))
         else:
             x, y = ([r[name] for r in side] for side in (a, b))
-        stat = interval(log_ratios(x, y))
+        stat = interval(log_ratios(x, y), rounds, critical)
         result.update({name + "_" + key: value for key, value in stat.items()})
         result[name + "_median"] = statistics.median(x)
         result[name + "_ref_median"] = statistics.median(y)
@@ -118,8 +120,8 @@ def compare(w, treatment, ref, cells):
         result[prefix + "_paired_n"] = len(matched)
         for index, suffix in ((0, "_sum"), (1, "_ref_sum")):
             result[prefix + suffix] = sum(pair[index] for pair in matched)
-        if len(matched) == ROUNDS and all(min(pair) > 0 for pair in matched):
-            values = interval([math.log(i / j) for i, j in matched])
+        if len(matched) == rounds and all(min(pair) > 0 for pair in matched):
+            values = interval([math.log(i / j) for i, j in matched], rounds, critical)
             result.update({prefix + "_" + k: v for k, v in values.items()})
     result["throughput_ratio"] = 1 / result["wall_s_ratio"]
     result["throughput_lo"] = 1 / result["wall_s_hi"]

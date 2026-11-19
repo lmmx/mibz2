@@ -1,0 +1,1 @@
+40 paired rounds, 39 df, both pooled tests, individual worker and peak guards, correlated rounds and rotor verified
