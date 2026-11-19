@@ -1,0 +1,1 @@
+All 205197794 bytes independently checked in both code paths on 228 inputs. All 228 per-block retained capacities no higher than unowned dense, identical emitted ownership metrics vs side table and zero owner-table capacity.
