@@ -1,5 +1,4 @@
 """Balanced complete-process finalist comparison on the official scorer's executable."""
-import csv
 import hashlib
 import itertools
 import json
@@ -37,10 +36,16 @@ def execute(bin_dir,corpus,dest):
 def report(dest):
     rows=[json.loads(l) for l in (dest/"timing.jsonl").read_text().splitlines()]
     assert [(r["round"],r["workers"],r["position"],r["label"]) for r in rows]==list(order())
+    assert len(rows)==108 and all(r["out_bytes"]==209700196 and r["arm"]=="candidate" for r in rows)
     idx={(r["round"],r["workers"],r["label"]):r for r in rows}
     result={}
     for w in [1,4]:
-        result[w]={}
+        result[w]={"absolute":{}}
+        for a in labels:
+            selected=[v for v in rows if v["workers"]==w and v["label"]==a]
+            assert len(selected)==18
+            result[w]["absolute"][a]={m:st.median(v[m] for v in selected) for m in ("wall_s","cpu_s","peak_rss_kb")}
+            result[w]["absolute"][a]["max_peak_rss_kb"]=max(v["peak_rss_kb"] for v in selected)
         for measure in ["wall_s","cpu_s","peak_rss_kb"]:
             entry={}
             for a,b in [("candidate","scalar"),("copied","scalar"),("candidate","copied")]:
