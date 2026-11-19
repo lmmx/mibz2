@@ -13,7 +13,7 @@ struct Band {int lo,hi,origin,prefix;};
 struct Prefix {int parent,byte;};
 struct Stats{
     int accepted=0,first_hit=0,mass=0,prefix_types=0,tag_bands=0,tag_components=0,full_types=0,core_types=0,root_runs=0,core_runs=0;
-    N forward_seeks=0,forward_scans=0,formed_bands=0,formed_prefix_nodes=0,sort_comparisons=0,formation_slots=0;
+    N forward_key_comparisons=0,forward_seeks=0,forward_scans=0,formed_bands=0,formed_prefix_nodes=0,sort_comparisons=0,formation_slots=0;
     N lf_pieces=0,lookup=0,scans=0,page_increments=0,gapped=0,holes=0,states=0,selector_entries=0;
     N terminal_pieces=0,split_core_types=0,extra_word_lookups=0,root_zeros=0,root_zero_pieces=0;
     N full_bytes=0,core_bytes=0,prefix_bytes=0,source_scatter=0,merged_inputs=0,branch_aliases=0,mark_steps=0,output_words=0;
@@ -34,7 +34,11 @@ struct Plan{
                 std::vector<Band> next;std::pair<int,int> prior{-1,-1};int id=-1;
                 bool overlap=false;
                 for(auto old:current){
-                    int x=old.lo;auto it=std::lower_bound(fwd.begin(),fwd.end(),x,[](auto r,int y){return r.hi<=y;});
+                    int x=old.lo;auto it=std::lower_bound(fwd.begin(),fwd.end(),x,[&](auto r,int y){
+#ifdef CORE_SETUP_COUNTS
+                        ++s.forward_key_comparisons;
+#endif
+                        return r.hi<=y;});
                     ++s.forward_seeks;
                     while(x<old.hi){
                         ++s.forward_scans;int stop=std::min(old.hi,it->hi);
