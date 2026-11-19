@@ -277,3 +277,47 @@ Every case was compared against direct first-return computation, with return wor
 **Round 5 overall:**
 - **Kept:** a correct, verified construction that recovers the run-boundary positions in Cells' step count with integer-only state. It is practically neat, and not theoretically new.
 - **Refuted:** the RV-Copy decoder (by Neon's own criterion), the step-count claim, and the claim to have answered the open question for every gap.
+
+## Round 6: the run-collision obstruction
+
+**The prompt:** Neon was told that RV-Copy failed, and asked to change objective. Either use the recovered run-boundary positions for a dependency-efficient reconstruction, or prove a structural obstruction ([response-6.md](response-6.md)).
+
+**Its Theorem 1** concerns replay of the NOP-7 / Φ copy scheme exposed by the boundary samples:
+1. The copy graph has fewer than 2k edges and is built in O(k).
+2. A replay order exists if and only if the fragment graph is a DAG.
+3. Any non-self-overlapping schedule has critical-path depth ≥ λ_max − 1.
+4. **An "omniscient" fragment floor F_self_ns:** every disjoint copy must split wherever a BWT run repeats.
+5. Alternating-sweep schedules need at least max_a alt(R_a) passes.
+6. An exact same-depth transition identity: θ(LF(x)) = θ(x) if and only if c_a = d_b.
+
+**What the Coordinator ran** (`verify_phi_obstruction.py.txt`, verbatim, on all six blocks; [round6_output.txt](round6_output.txt)):
+
+| Block (r/n) | Edges / k | Largest SCC (copy bytes) | Depth floor | Sweep floor | F_self_ns floor | Level-by-level |
+|---|---|---|---|---|---|---|
+| 0 (0.057) | 1.09 | 99.3% | 26,406 | 16,102 | 0.81r, ≤ 20.4 B | 9.65r, 1.7 B |
+| 2 (0.061) | 1.22 | 99.4% | 26,318 | 15,593 | 0.85r, ≤ 18.3 B | 9.48r, 1.6 B |
+| 85 (0.088) | 1.07 | 99.2% | 25,629 | 10,638 | 0.55r, ≤ 18.9 B | 6.14r, 1.7 B |
+| 207 (0.097) | 1.12 | 99.0% | 25,779 | 12,615 | 0.67r, ≤ 13.9 B | 6.14r, 1.5 B |
+| 143 (0.120) | 1.22 | 98.8% | 25,133 | 13,642 | 0.55r, ≤ 13.3 B | 4.60r, 1.6 B |
+| 210 (0.143) | 1.06 | 98.6% | 27,233 | 11,623 | 0.40r, ≤ 14.9 B | 3.88r, 1.5 B |
+
+**Verified:**
+- the edge bound, on every block;
+- the same-depth identity (part 6), on every row of every block;
+- the giant cyclic component: 98.6–99.4% of copy bytes lie in one SCC.
+
+**Neon's registered criteria:**
+- **Obstruction confirmed:** blocks 0, 2, 207, 143 and 210. The SCC covers at least 70% of copy bytes, there are at least 3k fragments or a mean of at most 15 B, and the sweep floor is at least 5,000.
+- **Neither confirmed nor refuted:** block 85, at 2.54k fragments and 18.9 B.
+- **"Falsified" (≥ 60% acyclic) was met on no block.**
+
+**The Coordinator's reading: the claimed obstruction is not established.**
+- **The floor is low.** F_self_ns, the floor Neon says binds *any* scheduler, is only **0.40–0.85r fragments of 13–20 B**. That is fewer operations than Cells' ≈ 1.8r induction steps, so it does not exclude a competitive copy replay.
+- **The depth floor is about parallelism, not work.** Its 25–27k bounds parallel depth, not total work.
+- **The schedules actually tried sit far above the floor:** level-by-level takes 3.9–9.7r fragments of about 1.6 B, and round 5's peeling took 3.4–8.7r.
+
+**What is open:**
+- whether a schedule can approach the floor;
+- whether the floor is valid as stated, once temporary buffers, arbitrary order, self-overlap or a secondary grammar are allowed. (ChatGPT's review raises the same point.)
+
+The giant SCC is a property of the macro graph. It does not by itself force expensive byte-level replay.
