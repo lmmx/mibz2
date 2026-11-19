@@ -55,6 +55,39 @@ class Quotient:
                 if w>0:
                     append_run(target,label,w)
             at=until
+        # Independently count the transition change at each insertion gap.
+        # Changed IDs are absent from the relabeled original A.
+        self.relabels_lost=len(raw)-sum(map(len,streams))
+        for left,right in ((before,middle),(middle,after)):
+            self.relabels_lost+=bool(left and right and left[-1][0]==right[0][0])
+        self.hazard_runs=self.equal_gaps=self.gaps=self.interior_zero_gaps=0
+        pending=False
+        consumed=0
+        window=remaining=0
+        for k,width in filt:
+            if k==z:
+                pending=False
+                consumed+=width
+                continue
+            self.hazard_runs+=1
+            if pending:
+                continue
+            pending=True
+            self.gaps+=1
+            self.interior_zero_gaps+=0<consumed<freq[z]
+            gap=self.cut+consumed
+            if not 0<gap<self.m:
+                continue
+            if gap==self.cut:
+                equal=before[-1][0]==middle[0][0]
+            elif consumed==freq[z]:
+                equal=middle[-1][0]==after[0][0]
+            else:
+                while remaining<consumed:
+                    remaining+=middle[window][1]
+                    window+=1
+                equal=remaining!=consumed
+            self.equal_gaps+=equal
         self.filtered_runs=len(filt)
         self.window_runs=len(middle)
         j=used=0
@@ -76,7 +109,9 @@ class Quotient:
         for k,width in after:
             append_run(self.root,k,width)
         assert sum(w for _,w in self.root)==self.m+self.extra
-        assert abs(len(self.root)-len(raw))<=2*self.entry_runs
+        assert len(self.root)==len(raw)-self.relabels_lost+self.hazard_runs+self.equal_gaps
+        assert self.relabels_lost<=self.hazard_runs+self.interior_zero_gaps
+        assert -self.interior_zero_gaps<=len(self.root)-len(raw)<=2*self.entry_runs
         if not self.extra:
             assert self.root==[(self.ids[k],w) for k,w in raw] and self.weights==[words[k] for k in order]
 
@@ -182,7 +217,7 @@ def small(lib):
                                     skip=0
                             assert got==expected
                     delta=len(q.root)-len(q.raw)
-                    if q.entry_runs and abs(delta)==2*q.entry_runs:
+                    if q.entry_runs and delta in (-q.entry_runs,2*q.entry_runs):
                         name='upper' if delta>0 else 'lower'
                         examples.setdefault(name,dict(last=last,order=order,selected=sorted(active),zero=z,
                                 old_R=len(raw),new_R=len(q.root),changed_input_runs=q.entry_runs))
@@ -225,7 +260,8 @@ def real(lib,tapes):
             assert got==reference
             row=dict(ordinal=int(tape.name.split('.')[0]),h=h,m=q.m,selected=q.s,zero_count=count[z],
                      extra=q.extra,changed_types=len(selected)-1,changed_input_runs=q.entry_runs,
-                     old_R=len(raw),quotient_R=len(q.root),filtered_R=q.filtered_runs,
+                     old_R=len(raw),quotient_R=len(q.root),lost=q.relabels_lost,hazard_runs=q.hazard_runs,
+                     insertion_gaps=q.gaps,equal_gaps=q.equal_gaps,interior_zero_gaps=q.interior_zero_gaps,filtered_R=q.filtered_runs,
                      window_R=q.window_runs,real_skip=byte,mark_probes=probes,second=taken)
             if writer is None:
                 writer=csv.DictWriter(sys.stdout,fieldnames=row,lineterminator='\n')
