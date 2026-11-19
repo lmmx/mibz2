@@ -18,7 +18,8 @@ with tarfile.open(archive) as z:
 assert len(runs) == 256
 out=csv.writer(sys.stdout,lineterminator="\n")
 out.writerow(["workers","arm","median_process_cpu_s","median_wall_s","median_cpu_s_per_wall_s",
-              "candidate_over_arm_cpu","cpu_low","cpu_high","candidate_over_arm_occupancy","occ_low","occ_high"])
+              "candidate_over_arm_cpu","cpu_low","cpu_high","candidate_over_arm_occupancy","occ_low","occ_high",
+              "median_peak_kib","median_peak_to_lazy","candidate_wall_wins","candidate_peak_at_most_arm"])
 for w in range(7,11):
     cells={a:sorted((row for row in runs if row["arm"]==a and row["workers"]==w),
                     key=lambda row: row["round"]) for a in ("candidate","lazy","opend","open")}
@@ -30,5 +31,9 @@ for w in range(7,11):
     for arm in cells:
         c=paired_ratio(cpu("candidate"),cpu(arm))
         o=paired_ratio(occ("candidate"),occ(arm))
+        peaks = [r["peak_rss_kb"] for r in cells[arm]]
+        baseline = median(r["peak_rss_kb"] for r in cells["lazy"])
+        wins = sum(x["wall_s"] < y["wall_s"] for x,y in zip(cells["candidate"],cells[arm],strict=True))
+        smaller = sum(x["peak_rss_kb"] <= y["peak_rss_kb"] for x,y in zip(cells["candidate"],cells[arm],strict=True))
         out.writerow([w,arm,median(cpu(arm)),median(r["wall_s"] for r in cells[arm]),median(occ(arm)),
-                      c["geomean"],c["lo"],c["hi"],o["geomean"],o["lo"],o["hi"]])
+                      c["geomean"],c["lo"],c["hi"],o["geomean"],o["lo"],o["hi"],median(peaks),median(peaks)/baseline,wins,smaller])

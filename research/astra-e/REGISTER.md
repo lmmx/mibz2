@@ -16,7 +16,9 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 **Scorer v1 replication.** A second 16-round AMD run gave combined/Lazy wall 0.8894, 0.8938 and 0.8332 at W1/2/4. W4's interval was [0.8024,0.8651] and its median peak ratio was 0.8710. Direct ratios to opend were 0.9581 [0.9493,0.9670], 0.9632 [0.9533,0.9733], and 0.9639 [0.9594,0.9684]. The W4 contrast against eager included parity. [Independent v1 receipt and raw ZIP](ci/evidence/combined-ahead-44429350230.md) · [Coordinator priority request](workstation/combined-request.md)
 
-**Independently measured memory leader.** Widening admission on five dense blocks reduced peak RSS versus the frozen combined predecessor to 0.9383, 0.8904 and 0.8334 at W1/2/4. On that same five-arm Xeon CI, edge/predecessor wall was 1.0071 [0.9986,1.0156], 1.0096 [1.0031,1.0161] and 1.0027 [0.9995,1.0058]. W4 edge/Lazy wall was 0.9074 [0.9029,0.9119], with peak RSS at 0.7129. This establishes the space tradeoff and a W2 timing regression. [20-round five-arm CI and original observations](ci/evidence/edge-budget-44431030145.md)
+**Target memory frontier.** The historical ungated Open arm used the least peak memory on the target in the four-arm combined sweep, with median peak ratios 0.6925/0.6839/0.6710/0.6797 versus Lazy at W7–10. It used less memory than combined in every matched pair; only the W7 wall interval separated the two. [Complete i9 comparison](workstation/combined-i9.md)
+
+**Independently measured experimental memory leader.** Widening admission on five dense blocks reduced peak RSS versus the frozen combined predecessor to 0.9383, 0.8904 and 0.8334 at W1/2/4. On that same five-arm Xeon CI, edge/predecessor wall was 1.0071 [0.9986,1.0156], 1.0096 [1.0031,1.0161] and 1.0027 [0.9995,1.0058]. W4 edge/Lazy wall was 0.9074 [0.9029,0.9119], with peak RSS at 0.7129. This establishes the space tradeoff and a W2 timing regression. [20-round five-arm CI and original observations](ci/evidence/edge-budget-44431030145.md)
 
 **Local v1 speed and memory.** For the nine-round W1/W4 comparison, the combined candidate recorded 0.648 [0.501,0.838] at W1 and 0.888 [0.644,1.226] at W4. Its bounded-admission derivative, source `badb2aec3624bd65606c429b2e6f79e9d9d0050f`, has the leading W4 wall and memory observations among those first three confirmations. W4 took 0.743 [0.621,0.888] versus LazyCells and 0.954 [0.851,1.070] versus opend; median peak RSS was 0.732 of LazyCells. W1 took 0.970 [0.668,1.408] versus LazyCells. These arms ran in separate, host-load-sensitive epochs against their own controls. The independent five-arm CI includes a directly paired combined predecessor. [Bounded admission score and reproduction](results/v1-edge-confirm/manifest.txt) · [Comparisons against opend](results/v1-edge-confirm/vs-opend.json) · [Combined v1 score](results/v1-combined-confirm/score/summary.txt)
 
@@ -46,8 +48,8 @@ These are the lowest recorded point estimates within each group of experiments w
 | `604dac3` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-final-slot-confirm · 0.718 [0.551, 0.934] | v1-edge-confirm · 0.732 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1-delimiter-f2c · 1.165 [0.833, 1.628] | v1-delimiter-f2c · 1.002 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-delimiter-f2c · 1.144 [0.826, 1.586] | v1-delimiter-f2c · 0.941 |
-| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1p2-final-slot-confirm · 0.819 [0.565, 1.188] | v1p2-combined-confirm · 0.966 |
-| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1p2-final-slot-confirm · 0.767 [0.517, 1.139] | v1p2-combined-confirm · 0.844 |
+| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1p2-final-slot-confirm · 0.819 [0.565, 1.188] | v1p2-edge-confirm · 0.898 |
+| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1p2-final-slot-confirm · 0.767 [0.517, 1.139] | v1p2-edge-confirm · 0.750 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W1** | hierarchy-f4 · 1.940 [1.080, 3.487] | hierarchy-f4 · 0.878 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W4** | hierarchy-f4 · 2.159 [1.407, 3.313] | hierarchy-f4 · 0.819 |
 | `9c31461` local score, grid 1,4, 6r ×2, settle 2s, full, 3 arms, **W1** | delimiter-f2b · 1.460 [1.210, 1.762] | tableless-f1b · 0.951 |
@@ -1627,6 +1629,32 @@ git checkout 75297a1d57b2bdf262c3a19f3064848dedf2c493 -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/narrow-short/ahead.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/narrow-short/ahead.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/astra-e-refresh-75297a1-build
+```
+
+## v1p2-edge-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-edge-confirm/score/check.jsonl) · [manifest](results/v1p2-edge-confirm/manifest.txt) · [score](results/v1p2-edge-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`a651e93f063737426cc19223d9b3ed8a2650fd8f`](https://github.com/lmmx/mibz2/tree/a651e93f063737426cc19223d9b3ed8a2650fd8f). [Candidate entry](https://github.com/lmmx/mibz2/blob/a651e93f063737426cc19223d9b3ed8a2650fd8f/research/astra-e/edge-budget/candidate.rs). Fetched master `be74d5763d212864607d46521d74ebc0827f9f36`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 1.067 [0.882, 1.291] | 0.984 [0.892, 1.086] | 1.084 | 71,796 / 79,940 / 77,168 | 0.898 |
+| 4 | 9 | 0.943 [0.758, 1.172] | 1.006 [0.821, 1.233] | 0.937 | 100,924 / 134,628 / 112,740 | 0.750 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1p2-edge-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/edge-budget-44431030145.md) · [Target request](workstation/edge-request.md)
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout be74d5763d212864607d46521d74ebc0827f9f36 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/edge-budget/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/edge-budget/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/astra-e-refresh-75297a1-build
 ```
 
 ## v1p2-final-slot-confirm
