@@ -9,7 +9,8 @@ path=Path(__file__).resolve().parent
 totals=defaultdict(int)
 placed=Counter()
 limits=defaultdict(dict)
-with (path/'paid.csv').open() as f:
+raw=Path(sys.argv[1]) if len(sys.argv)>1 else path/'paid.csv'
+with raw.open() as f:
     for x in csv.DictReader(f):
         r={k:int(v) for k,v in x.items()}
         i,b,p,a,t=r['round'],r['block'],r['position'],r['arm'],r['limit']
@@ -25,7 +26,7 @@ for a in range(1,8):
         z=[log(totals[i,a]/totals[i,ref]) for i in range(1,25)]
         g=mean(z); radius=2.06865761*stdev(z)/sqrt(24)
         out.writerow([names[a],names[ref],*(f'{exp(x):.6f}' for x in [g,g-radius,g+radius]),24])
-with (path/'panel-selection.csv').open('w') as f:
+with (raw.parent/'panel-selection.csv').open('w') as f:
     w=csv.writer(f,lineterminator='\n')
     w.writerow(['block',*names])
     for b in sorted(limits):w.writerow([b,*(limits[b][i] for i in range(8))])
