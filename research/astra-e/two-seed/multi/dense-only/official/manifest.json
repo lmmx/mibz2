@@ -1,0 +1,17 @@
+{
+  "source": "3932c278d9a9a273618d59e4e042f73447b68300",
+  "control_source": "d0a42980e896211906234c7679b38760ae44a46e",
+  "path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "scorer_tree": "040000 tree 75f7b0321bd71c5086cbfb34747f7ea963463784\tbench/moonshot",
+  "source_sha256": {
+    "research/astra-e/two-seed/multi/dense-only/candidate.rs": "ad06504923dc71f01dde4f070a94dddce461f77a5aa88e636477f8e2f641a2bc",
+    "research/astra-e/two-seed/multi/dense-only/build_worker.py": "eb1ed2af62ac8187be32f6a4d87cddf5aa901181d0db0528bfd99089ae2be0d8",
+    "research/astra-e/two-seed/multi/dense-only/target/generated/select.rs": "6bee5f09407413f1bfead4468fdcef2639a1aeddddca84f7f2687b435feced75",
+    "research/astra-e/two-seed/multi/dense-only/target/generated/select-adapter.rs": "a008b73901661cdc2d5b4bea16978e3349f259d5c13eeac515e0e8a7716dba48",
+    "research/astra-e/two-seed/multi/dense-only/target/generated/gate.rs": "23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212"
+  },
+  "control_sha256": "7e64fb3fd5cc03542fde1d3a36cc986db7cdcb983ef2e69de321f49092801fdc",
+  "candidate_sha256": "be912eebe63b594e1b72729c077137488ae2e4d4dec8bb8edbb594bcad764c2f",
+  "native_audit_sha256": "3987e24c35f0c7820b1653370624af438b54c6231a2292122c359a2c6d850eb5",
+  "toolchain": "Rust 1.99.1 (58cf8f9c3) LLVM 23.1.1"
+}
