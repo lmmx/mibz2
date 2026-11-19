@@ -1,0 +1,1 @@
+{'columns': 3279, 'unions': 8755, 'queries': 34757, 'components': 9273}
