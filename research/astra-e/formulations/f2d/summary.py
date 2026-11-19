@@ -19,7 +19,11 @@ if "combined" in arms:
     pairs.extend([("combined", "batched"), ("combined", "lazy"), ("batched", "lazy")])
     if "owned" in arms: pairs.append(("combined", "owned"))
 if "outowned" in arms:
-    pairs.extend([("outowned","combined"), ("outowned","batched"), ("outowned","lazy")])
+    pairs.extend([("outowned","batched"), ("outowned","lazy")])
+    if "combined" in arms: pairs.append(("outowned","combined"))
+for arm in ("mixed2", "mixed64"):
+    if arm in arms:
+        pairs.extend([(arm,"outowned"), (arm,"batched"), (arm,"lazy")])
 if "splice" in arms:
     pairs.extend([("splice", "f2c"), ("splice", "lazy")])
 if "eight" in arms:
