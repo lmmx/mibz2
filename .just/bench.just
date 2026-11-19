@@ -1947,3 +1947,11 @@ bench-astra-e-scalar-cap:
 
 bench-astra-e-scalar-cap-dry:
     bash research/astra-e/workstation/scalar-run.sh dry
+
+# Same-run comparison of scalar-cap against ungated open, opend and LazyCells (#607; the
+# B5 scope note 6997140568). The four-arm sweep of run.sh without --edge-matched.
+bench-scalar-vs-open:
+    bash research/astra-e/workstation/run.sh measure research/astra-e/front-fusion/cap-batch/worker/candidate.rs
+
+bench-scalar-vs-open-dry:
+    bash research/astra-e/workstation/run.sh dry research/astra-e/front-fusion/cap-batch/worker/candidate.rs
