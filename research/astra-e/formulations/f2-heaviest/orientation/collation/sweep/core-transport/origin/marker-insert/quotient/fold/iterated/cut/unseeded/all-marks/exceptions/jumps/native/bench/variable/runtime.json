@@ -1,0 +1,8 @@
+{
+  "cpu_affinity": [
+    0
+  ],
+  "nice": 8,
+  "mode": "variable",
+  "so": "f087e5843147fc79ccaf3ac6ce09d98f8bec7ab0453e93a187067ab3ddd04d53"
+}
