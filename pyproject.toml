@@ -65,6 +65,9 @@ include = ["python"]
 
 [tool.ruff]
 line-length = 100
+# research/ holds research agents' scratch code and evidence (Astra's campaigns): not linted,
+# so lint never gates a research recipe; anything promoted out of it is linted as usual
+extend-exclude = ["research"]
 
 [tool.ruff.lint]
 ignore = ["D401"]

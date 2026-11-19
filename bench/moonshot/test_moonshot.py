@@ -217,18 +217,86 @@ class Proxy(unittest.TestCase):
         # (within the margin is in range)
         self.assertEqual(m.out_of_range(m.proxy_metrics(dict(RAW, dep_past_l2_loads=42)), refs), [])
 
-    def test_latencies_follow_the_measured_points(self):
+    def test_nominal_latencies(self):
+        mo = json.loads(m.CALIBRATION.read_text())["model"]
+        self.assertEqual(m.nominal_latencies(mo, 4)["llc_kb"], 5120)
+        self.assertEqual(m.nominal_latencies(mo, 1, kappa=10)["l3_lat"], mo["l3_latency_floor"])
+        self.assertEqual(
+            m.nominal_latencies(mo, 3, kappa=10)["l3_lat"], mo["l3_latency_floor"] + 20
+        )
+        # (lazy's nominal bandwidth rises with the workers, and so its DRAM latency)
+        lat = [m.nominal_latencies(mo, w)["dram_lat"] for w in (1, 4, 7, 8, 10)]
+        self.assertEqual(lat, sorted(lat))
+        self.assertGreaterEqual(lat[0], mo["dram"]["idle"])
+
+    def test_the_dram_queue_fits_bench_imc_ten(self):
+        mo = json.loads(m.CALIBRATION.read_text())["model"]
+        for gbs, cycles in mo["dram"]["points_gbs_cycles"]:
+            self.assertLess(abs(m.dram_latency(gbs, mo) - cycles), 50)
+        self.assertAlmostEqual(m.dram_latency(0, mo), mo["dram"]["idle"])
+        # (capped short of the ceiling)
+        self.assertLess(m.dram_latency(1e9, mo), 1e5)
+
+    def test_pick_spreads_evenly(self):
+        self.assertEqual(m.pick(list(range(10)), 2), [2, 7])
+        self.assertEqual(m.pick([1, 2], 5), [1, 2])
+
+    def test_the_sample_leaves_out_the_warm_block(self):
         cal = json.loads(m.CALIBRATION.read_text())
-        self.assertEqual(m.latencies(cal, 7)["dram_lat"], 549)
-        self.assertEqual(m.latencies(cal, 10)["dram_lat"], 649)
-        self.assertEqual(
-            m.latencies(cal, 1)["dram_lat"], max(cal["model"]["dram_latency_floor"], 349)
-        )
-        self.assertEqual(m.latencies(cal, 4)["llc_kb"], 5120)
-        self.assertEqual(m.latencies(cal, 1, kappa=10)["l3_lat"], cal["model"]["l3_latency_floor"])
-        self.assertEqual(
-            m.latencies(cal, 3, kappa=10)["l3_lat"], cal["model"]["l3_latency_floor"] + 20
-        )
+        s = m.proxy_sample(cal, "48+16")
+        self.assertEqual((len(s["full"]), len(s["tiny"])), (48, 16))
+        self.assertNotIn(s["warm"], s["full"] + s["tiny"])
+        self.assertEqual((s["n_full"], s["n_tiny"]), (233, 198))
+        self.assertTrue(set(s["slope"]) <= set(s["full"]))
+
+    def test_the_corpus_total_weights_each_stratum(self):
+        runs = {
+            1: dict(RAW, cycles=100, out_bytes=10),
+            2: dict(RAW, cycles=300, out_bytes=30),
+            9: dict(RAW, cycles=5, out_bytes=1, max_chain_dram=9),
+        }
+        t = m.corpus_total(runs, [1, 2], [9], 4, 10)
+        self.assertAlmostEqual(t["cycles"], 200 * 4 + 5 * 10)
+        self.assertAlmostEqual(t["out_bytes"], 20 * 4 + 10)
+        self.assertEqual(t["max_chain_dram"], 9)
+        self.assertNotIn("config", t)
+
+    def mo(self):
+        mo = json.loads(m.CALIBRATION.read_text())["model"]
+        return dict(mo, i9_lazy_dram_bpb=8.0, lazy_anchor={"workers": 7, "gbs": 20.0})
+
+    def test_the_fixed_point_anchors_lazy_and_is_neutral_for_lazy_itself(self):
+        mo = self.mo()
+        lz = {"cpb": 12.0, "lat0": 500, "rel_slope": 0.001, "dram_bpb": 6.0}
+        cells = {
+            "7": {"lazy": lz, "same": dict(lz)},
+            "8": {"lazy": dict(lz, cpb=13.0), "same": dict(lz, cpb=13.0)},
+        }
+        sol = m.solve(cells, mo)
+        self.assertAlmostEqual(sol["7"]["lazy"]["gbs"], 20.0)
+        self.assertAlmostEqual(sol["7"]["lazy"]["lat"], m.dram_latency(20.0, mo))
+        self.assertAlmostEqual(m.ratio(sol, "same", 7, 7), 1.0)
+        self.assertAlmostEqual(sol["7"]["lazy"]["c0"], 2.0)
+        # (an arm the same as lazy at 8 workers over lazy at 7: its workers over 7, its cycles)
+        self.assertGreater(sol["8"]["lazy"]["gbs"], 20.0)
+
+    def test_more_dram_traffic_raises_an_arms_latency_and_its_cycles(self):
+        mo = self.mo()
+        # (lazy run at its anchored latency, so that only the arms' own latencies move)
+        lz = {"cpb": 12.0, "lat0": m.dram_latency(20.0, mo), "rel_slope": 0.001, "dram_bpb": 6.0}
+        heavy = dict(lz, dram_bpb=12.0)
+        deaf = dict(heavy, rel_slope=0.0)
+        sol = m.solve({"7": {"lazy": lz, "heavy": heavy, "deaf": deaf}}, mo)
+        self.assertGreater(sol["7"]["heavy"]["lat"], sol["7"]["lazy"]["lat"])
+        self.assertGreater(m.ratio(sol, "heavy", 7, 7), 1.0)
+        # (an arm insensitive to DRAM latency pays nothing for it)
+        self.assertAlmostEqual(m.ratio(sol, "deaf", 7, 7), 1.0)
+
+    def test_the_fixed_point_needs_lazy_at_the_anchor(self):
+        with self.assertRaises(ValueError):
+            m.solve(
+                {"8": {"lazy": {"cpb": 1, "lat0": 500, "rel_slope": 0, "dram_bpb": 1}}}, self.mo()
+            )
 
     def test_predicted_ratio_scales_by_workers(self):
         self.assertAlmostEqual(m.predicted_ratio(10, 7, 10, 7), 1.0)
@@ -291,6 +359,52 @@ class Perf(unittest.TestCase):
         s = m.summarise_timing(runs, ["lazy", "open"], [7])
         self.assertEqual(s["7"]["counters_per_byte"]["open"]["cycles"], 5.0)
         self.assertEqual(s["7"]["counters_per_byte"]["lazy"]["cycle_activity.stalls_l3_miss"], 10.0)
+
+
+class Register(unittest.TestCase):
+    def rec(self, ratio, rss, hi=None, gate="PASS", kb=200_000, v="v1", name="c"):
+        w = {
+            "ratio": ratio,
+            "lo": ratio - 0.02,
+            "hi": hi if hi is not None else ratio + 0.02,
+            "peak_rss_ratio": rss,
+            "lazy_peak_rss_kb": kb,
+        }
+        return {"candidate": name, "scorer_version": v, "gate": gate, "walls": {"8": w}}
+
+    def test_eligibility_follows_rule_4(self):
+        self.assertTrue(m.eligible(self.rec(0.9, 1.05))[0])
+        self.assertFalse(m.eligible(self.rec(0.9, 1.0, gate="FAIL"))[0])
+        # (+15% for a 10% gain: within twice the gain, and 29 MB)
+        self.assertTrue(m.eligible(self.rec(0.9, 1.15))[0])
+        # (+25% for a 10% gain: more than twice)
+        self.assertFalse(m.eligible(self.rec(0.9, 1.25))[0])
+        # (+15% of 600 MB is 88 MB: over 64)
+        self.assertFalse(m.eligible(self.rec(0.9, 1.15, kb=600_000))[0])
+        # (a gain not beyond noise trades for nothing)
+        self.assertFalse(m.eligible(self.rec(0.9, 1.15, hi=1.01))[0])
+
+    def test_best_reads_hand_written_lines(self):
+        import contextlib
+        import io
+        import tempfile
+
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
+            for r in (
+                self.rec(0.85, 1.4, name="fat"),
+                self.rec(0.9, 1.0, name="lean"),
+                {"candidate": "hand", "gate": "PASS", "walls": {"8": {"ratio": 0.95}}},
+            ):
+                f.write(json.dumps(r) + "\n")
+            f.write("not json\n")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            m.best(type("A", (), {"register": f.name})())
+        text = out.getvalue()
+        self.assertIn("eligible  0.900  lean", text)
+        self.assertIn("INELIGIBLE 0.850  fat", text)
+        self.assertIn("scorer unversioned", text)
+        self.assertIn("0.950  hand", text)
 
 
 if __name__ == "__main__":
