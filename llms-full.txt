@@ -99,6 +99,25 @@ These runs inform; they don't decide. Nothing merges or releases on a release-sc
 
 Each table gives an arm's median wall time. It also gives the geometric mean of the rounds' paired wall ratios against the reference arm, with its 95% interval: a minus sign is faster. Up to the machine's physical core count, each thread runs on a core of its own (`--spread`); above it, threads share cores.
 
+### 2026-11-19: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.7** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-19-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.7>)
+
+**`wikidata`**
+
+| threads | 0.5.7 wall (median) | lbzip2 2.5 wall (median) | 0.5.6 wall (median) | lbzip2 2.5 against 0.5.7 | 0.5.6 against 0.5.7 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.397 s | 2.514 s | 0.391 s | \+536.5% (+517.5, +556.0) **slower** | −1.2% (−4.7, +2.5) |
+| 2 | 0.241 s | 1.335 s | 0.240 s | \+454.5% (+444.0, +465.3) **slower** | −0.9% (−4.0, +2.2) |
+| 4 | 0.142 s | 0.714 s | 0.142 s | \+403.8% (+394.8, +412.8) **slower** | \+1.1% (−2.0, +4.3) |
+| 8 | 0.088 s | 0.513 s | 0.097 s | \+485.7% (+481.3, +490.2) **slower** | \+10.8% (+8.8, +12.7) **slower** |
+| 10 | 0.082 s | 0.505 s | 0.089 s | \+518.1% (+513.7, +522.7) **slower** | \+7.3% (+6.1, +8.5) **slower** |
+| 12 | 0.087 s | 0.509 s | 0.094 s | \+482.1% (+465.3, +499.3) **slower** | \+8.1% (+4.5, +11.9) **slower** |
+| 16 | 0.088 s | 0.501 s | 0.095 s | \+462.8% (+449.5, +476.3) **slower** | \+7.4% (+3.9, +11.0) **slower** |
+| 20 | 0.088 s | 0.492 s | 0.094 s | \+460.3% (+457.7, +462.9) **slower** | \+9.1% (+6.1, +12.3) **slower** |
+
+Every arm's output was the same bytes as the reference's.
+
 ### 2026-11-18: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.6** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-18-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.6>)
