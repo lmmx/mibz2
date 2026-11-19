@@ -30,7 +30,9 @@ def compare(out):
             peak=paired_ratio(series("candidate","peak_rss_kb"),series(ref,"peak_rss_kb"))
             result.append(dict(workers=w,reference=ref,wall=wall["geomean"],lo=wall["lo"],hi=wall["hi"],
                         cpu=cpu["geomean"],median_peak=statistics.median(series("candidate","peak_rss_kb"))/statistics.median(series(ref,"peak_rss_kb")),
-                        peak_lo=peak["lo"],peak_hi=peak["hi"]))
+                        peak_lo=peak["lo"],peak_hi=peak["hi"],
+                        max_candidate_kib=max(series("candidate","peak_rss_kb")),max_reference_kib=max(series(ref,"peak_rss_kb")),
+                        faster_pairs=sum(x<y for x,y in zip(series("candidate","wall_s"),series(ref,"wall_s")))))
     with (out/"comparison.csv").open("w") as f:
         writer=csv.DictWriter(f,fieldnames=result[0],lineterminator="\n");writer.writeheader();writer.writerows(result)
 
