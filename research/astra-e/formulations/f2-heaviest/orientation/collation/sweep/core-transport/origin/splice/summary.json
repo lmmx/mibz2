@@ -1,0 +1,417 @@
+{
+  "primary": {
+    "frequent-h8": {
+      "cases": 10,
+      "m_j": 31367,
+      "m_h": 31358,
+      "holes": 9,
+      "q": 8,
+      "k_j": 14849,
+      "k_h": 14843,
+      "r_j": 20169,
+      "r_h": 20162,
+      "compound_bytes": 3391,
+      "original_dictionary": 5525092,
+      "old_capacity": 5525092,
+      "new_capacity": 7623826,
+      "arena_moved": 3,
+      "j_used_second": 10,
+      "h_used_second": 10,
+      "old_j_fallback": 0,
+      "run_fragments": 6807,
+      "source_segments": 5875
+    },
+    "identity": {
+      "cases": 15,
+      "m_j": 263277,
+      "m_h": 263277,
+      "holes": 0,
+      "q": 0,
+      "k_j": 32925,
+      "k_h": 32925,
+      "r_j": 57473,
+      "r_h": 57473,
+      "compound_bytes": 0,
+      "original_dictionary": 4473458,
+      "old_capacity": 4473458,
+      "new_capacity": 4473458,
+      "arena_moved": 0,
+      "j_used_second": 15,
+      "h_used_second": 15,
+      "old_j_fallback": 0,
+      "run_fragments": 0,
+      "source_segments": 0
+    },
+    "all": {
+      "cases": 20,
+      "m_j": 331065,
+      "m_h": 331033,
+      "holes": 32,
+      "q": 23,
+      "k_j": 52927,
+      "k_h": 52913,
+      "r_j": 87345,
+      "r_h": 87331,
+      "compound_bytes": 4653,
+      "original_dictionary": 7183214,
+      "old_capacity": 7183214,
+      "new_capacity": 9892970,
+      "arena_moved": 5,
+      "j_used_second": 20,
+      "h_used_second": 20,
+      "old_j_fallback": 0,
+      "run_fragments": 29873,
+      "source_segments": 20004
+    },
+    "quote-h12": {
+      "cases": 10,
+      "m_j": 299698,
+      "m_h": 299675,
+      "holes": 23,
+      "q": 15,
+      "k_j": 38078,
+      "k_h": 38070,
+      "r_j": 67176,
+      "r_h": 67169,
+      "compound_bytes": 1262,
+      "original_dictionary": 1658122,
+      "old_capacity": 1658122,
+      "new_capacity": 2269144,
+      "arena_moved": 2,
+      "j_used_second": 10,
+      "h_used_second": 10,
+      "old_j_fallback": 0,
+      "run_fragments": 23066,
+      "source_segments": 14129
+    },
+    "positive": {
+      "cases": 5,
+      "m_j": 67788,
+      "m_h": 67756,
+      "holes": 32,
+      "q": 23,
+      "k_j": 20002,
+      "k_h": 19988,
+      "r_j": 29872,
+      "r_h": 29858,
+      "compound_bytes": 4653,
+      "original_dictionary": 2709756,
+      "old_capacity": 2709756,
+      "new_capacity": 5419512,
+      "arena_moved": 5,
+      "j_used_second": 5,
+      "h_used_second": 5,
+      "old_j_fallback": 0,
+      "run_fragments": 29873,
+      "source_segments": 20004
+    }
+  },
+  "extended": {
+    "frequent-h12": {
+      "cases": 10,
+      "m_j": 31367,
+      "m_h": 31358,
+      "holes": 9,
+      "q": 8,
+      "k_j": 14849,
+      "k_h": 14843,
+      "r_j": 20169,
+      "r_h": 20162,
+      "compound_bytes": 3391,
+      "original_dictionary": 5525092,
+      "old_capacity": 5525092,
+      "new_capacity": 7623826,
+      "arena_moved": 3,
+      "j_used_second": 10,
+      "h_used_second": 10,
+      "old_j_fallback": 0,
+      "run_fragments": 6807,
+      "source_segments": 5875
+    },
+    "identity": {
+      "cases": 30,
+      "m_j": 311667,
+      "m_h": 311667,
+      "holes": 0,
+      "q": 0,
+      "k_j": 52064,
+      "k_h": 52064,
+      "r_j": 86176,
+      "r_h": 86176,
+      "compound_bytes": 0,
+      "original_dictionary": 11797352,
+      "old_capacity": 11797352,
+      "new_capacity": 11797352,
+      "arena_moved": 0,
+      "j_used_second": 30,
+      "h_used_second": 30,
+      "old_j_fallback": 0,
+      "run_fragments": 0,
+      "source_segments": 0
+    },
+    "all": {
+      "cases": 60,
+      "m_j": 993194,
+      "m_h": 964569,
+      "holes": 28625,
+      "q": 28367,
+      "k_j": 158781,
+      "k_h": 168988,
+      "r_j": 262034,
+      "r_h": 266431,
+      "compound_bytes": 1197511,
+      "original_dictionary": 21549859,
+      "old_capacity": 21549859,
+      "new_capacity": 31302366,
+      "arena_moved": 23,
+      "j_used_second": 60,
+      "h_used_second": 60,
+      "old_j_fallback": 0,
+      "run_fragments": 193907,
+      "source_segments": 125565
+    },
+    "frequent-h4": {
+      "cases": 10,
+      "m_j": 31366,
+      "m_h": 31358,
+      "holes": 8,
+      "q": 7,
+      "k_j": 14849,
+      "k_h": 14843,
+      "r_j": 20168,
+      "r_h": 20162,
+      "compound_bytes": 3043,
+      "original_dictionary": 5525309,
+      "old_capacity": 5525309,
+      "new_capacity": 7153082,
+      "arena_moved": 2,
+      "j_used_second": 10,
+      "h_used_second": 10,
+      "old_j_fallback": 0,
+      "run_fragments": 4827,
+      "source_segments": 4684
+    },
+    "frequent-h8": {
+      "cases": 10,
+      "m_j": 31367,
+      "m_h": 31358,
+      "holes": 9,
+      "q": 8,
+      "k_j": 14849,
+      "k_h": 14843,
+      "r_j": 20169,
+      "r_h": 20162,
+      "compound_bytes": 3391,
+      "original_dictionary": 5525092,
+      "old_capacity": 5525092,
+      "new_capacity": 7623826,
+      "arena_moved": 3,
+      "j_used_second": 10,
+      "h_used_second": 10,
+      "old_j_fallback": 0,
+      "run_fragments": 6807,
+      "source_segments": 5875
+    },
+    "quote-h12": {
+      "cases": 10,
+      "m_j": 299698,
+      "m_h": 299675,
+      "holes": 23,
+      "q": 15,
+      "k_j": 38078,
+      "k_h": 38070,
+      "r_j": 67176,
+      "r_h": 67169,
+      "compound_bytes": 1262,
+      "original_dictionary": 1658122,
+      "old_capacity": 1658122,
+      "new_capacity": 2269144,
+      "arena_moved": 2,
+      "j_used_second": 10,
+      "h_used_second": 10,
+      "old_j_fallback": 0,
+      "run_fragments": 23066,
+      "source_segments": 14129
+    },
+    "quote-h4": {
+      "cases": 10,
+      "m_j": 299698,
+      "m_h": 282172,
+      "holes": 17526,
+      "q": 17319,
+      "k_j": 38078,
+      "k_h": 45513,
+      "r_j": 67176,
+      "r_h": 70609,
+      "compound_bytes": 739106,
+      "original_dictionary": 1658122,
+      "old_capacity": 1658122,
+      "new_capacity": 3316244,
+      "arena_moved": 7,
+      "j_used_second": 10,
+      "h_used_second": 10,
+      "old_j_fallback": 0,
+      "run_fragments": 78624,
+      "source_segments": 50322
+    },
+    "positive": {
+      "cases": 30,
+      "m_j": 681527,
+      "m_h": 652902,
+      "holes": 28625,
+      "q": 28367,
+      "k_j": 106717,
+      "k_h": 116924,
+      "r_j": 175858,
+      "r_h": 180255,
+      "compound_bytes": 1197511,
+      "original_dictionary": 9752507,
+      "old_capacity": 9752507,
+      "new_capacity": 19505014,
+      "arena_moved": 23,
+      "j_used_second": 30,
+      "h_used_second": 30,
+      "old_j_fallback": 0,
+      "run_fragments": 193907,
+      "source_segments": 125565
+    },
+    "quote-h8": {
+      "cases": 10,
+      "m_j": 299698,
+      "m_h": 288648,
+      "holes": 11050,
+      "q": 11010,
+      "k_j": 38078,
+      "k_h": 40876,
+      "r_j": 67176,
+      "r_h": 68167,
+      "compound_bytes": 447318,
+      "original_dictionary": 1658122,
+      "old_capacity": 1658122,
+      "new_capacity": 3316244,
+      "arena_moved": 6,
+      "j_used_second": 10,
+      "h_used_second": 10,
+      "old_j_fallback": 0,
+      "run_fragments": 73776,
+      "source_segments": 44680
+    }
+  },
+  "paid": {
+    "all": {
+      "complete_1/0": [
+        1.0160942517024873,
+        0.9590153526873161,
+        1.076570385916923
+      ],
+      "complete_2/0": [
+        1.0789787026851778,
+        1.0138619765433512,
+        1.1482776430943609
+      ],
+      "complete_3/0": [
+        1.0559497898013699,
+        1.0020112118389881,
+        1.1127918983412832
+      ],
+      "complete_2/3": [
+        1.0218087196060144,
+        0.9700077402119837,
+        1.076376008334437
+      ],
+      "median_splice_ns_arm2_per_lap": 770789.5
+    },
+    "positive": {
+      "complete_1/0": [
+        1.0361737630689725,
+        0.9432611115028089,
+        1.1382384518767665
+      ],
+      "complete_2/0": [
+        1.2229508676702066,
+        1.1391593878918322,
+        1.3129056746862582
+      ],
+      "complete_3/0": [
+        1.1683342269972667,
+        1.0912247420153993,
+        1.2508925186687507
+      ],
+      "complete_2/3": [
+        1.0467474455604284,
+        0.9739346087429573,
+        1.1250038811142156
+      ],
+      "median_splice_ns_arm2_per_lap": 763211.0
+    },
+    "identity": {
+      "complete_1/0": [
+        1.009790108473221,
+        0.9347191107895164,
+        1.0908903556161202
+      ],
+      "complete_2/0": [
+        1.0271245823877606,
+        0.9394545867347652,
+        1.1229759507716193
+      ],
+      "complete_3/0": [
+        1.0144645337029394,
+        0.9457558753797088,
+        1.088164839291045
+      ],
+      "complete_2/3": [
+        1.0124795379870108,
+        0.9431226081907609,
+        1.0869369538377625
+      ],
+      "median_splice_ns_arm2_per_lap": 7403.5
+    },
+    "frequent": {
+      "complete_1/0": [
+        1.010134020357863,
+        0.9401522479389417,
+        1.085325000627566
+      ],
+      "complete_2/0": [
+        1.0754711076457721,
+        0.9896394909253264,
+        1.1687469164143316
+      ],
+      "complete_3/0": [
+        1.0944766454194796,
+        0.9898874254074121,
+        1.2101165209525326
+      ],
+      "complete_2/3": [
+        0.9826350449292381,
+        0.9025716782440721,
+        1.069800498727789
+      ],
+      "median_splice_ns_arm2_per_lap": 191997.5
+    },
+    "quote": {
+      "complete_1/0": [
+        1.011834179200292,
+        0.9329273820177679,
+        1.0974148963058628
+      ],
+      "complete_2/0": [
+        1.0776837960645287,
+        0.9936683765858083,
+        1.1688027833698094
+      ],
+      "complete_3/0": [
+        1.0412354392576373,
+        0.9787407621888943,
+        1.1077205342315177
+      ],
+      "complete_2/3": [
+        1.0350049138097699,
+        0.9593240145005946,
+        1.116656265681031
+      ],
+      "median_splice_ns_arm2_per_lap": 553249.5
+    }
+  }
+}
