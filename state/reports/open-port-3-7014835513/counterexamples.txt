@@ -1,0 +1,32 @@
+benefit CI crosses 1, last Holm test passes status 0
+  pooled: 1.0000 [0.9990, 1.0010] (stratified bootstrap, 20000 resamples, seed 7013818037); pass at most 1.01
+  ho-prose-l1 10t: 1.0000 [0.9922, 1.0079]; flag bound 0.9889; memory 1.000
+  pooled: 1.0000 [0.9985, 1.0014] (stratified bootstrap, 20000 resamples, seed 7013818037); pass at most 1.01
+  ho-wikidata-l9 20t: 0.9883 [0.9753, 1.0015] INCONCLUSIVE; p 3.86e-02; memory 0.800
+  Holm at alpha 0.05 over 6 cells: 6 of 6 reject no gain
+B4, sustained: 10 threads back to back on wikidata-x16, 8 rounds: 0.9400 [0.9307, 0.9494] FASTER; memory 0.800 (reported)
+VERDICT: ADOPT. Part A attributed; the zero-route and admitted guards' pooled upper bounds within 1.01 with no credible regression above 1.02; a gain on every benefit cell (Holm) at no more memory; sustained not SLOWER; every guard's memory within 1.1.
+one admitted guard +5% with uncertain local estimate status 0
+  pooled: 1.0000 [0.9990, 1.0010] (stratified bootstrap, 20000 resamples, seed 7013818037); pass at most 1.01
+  ho-prose-l1 10t: 1.0500 [1.0076, 1.0942]; flag bound 0.9900; memory 1.000
+  pooled: 1.0041 [1.0007, 1.0074] (stratified bootstrap, 20000 resamples, seed 7013818037); pass at most 1.01
+  ho-wikidata-l9 20t: 0.9400 [0.9362, 0.9438] FASTER; p 8.58e-13; memory 0.800
+  Holm at alpha 0.05 over 6 cells: 6 of 6 reject no gain
+B4, sustained: 10 threads back to back on wikidata-x16, 8 rounds: 0.9400 [0.9307, 0.9494] FASTER; memory 0.800 (reported)
+VERDICT: ADOPT. Part A attributed; the zero-route and admitted guards' pooled upper bounds within 1.01 with no credible regression above 1.02; a gain on every benefit cell (Holm) at no more memory; sustained not SLOWER; every guard's memory within 1.1.
+sustained +3% with uncertain local estimate status 0
+  pooled: 1.0000 [0.9990, 1.0010] (stratified bootstrap, 20000 resamples, seed 7013818037); pass at most 1.01
+  ho-prose-l1 10t: 1.0000 [0.9922, 1.0079]; flag bound 0.9889; memory 1.000
+  pooled: 1.0000 [0.9985, 1.0014] (stratified bootstrap, 20000 resamples, seed 7013818037); pass at most 1.01
+  ho-wikidata-l9 20t: 0.9400 [0.9362, 0.9438] FASTER; p 8.58e-13; memory 0.800
+  Holm at alpha 0.05 over 6 cells: 6 of 6 reject no gain
+B4, sustained: 10 threads back to back on wikidata-x16, 8 rounds: 1.0300 [0.9762, 1.0868] INCONCLUSIVE; memory 0.800 (reported)
+VERDICT: ADOPT. Part A attributed; the zero-route and admitted guards' pooled upper bounds within 1.01 with no credible regression above 1.02; a gain on every benefit cell (Holm) at no more memory; sustained not SLOWER; every guard's memory within 1.1.
+Part A empty summary status 0
+  pooled: 1.0000 [0.9990, 1.0010] (stratified bootstrap, 20000 resamples, seed 7013818037); pass at most 1.01
+  ho-prose-l1 10t: 1.0000 [0.9922, 1.0079]; flag bound 0.9889; memory 1.000
+  pooled: 1.0000 [0.9985, 1.0014] (stratified bootstrap, 20000 resamples, seed 7013818037); pass at most 1.01
+  ho-wikidata-l9 20t: 0.9400 [0.9362, 0.9438] FASTER; p 8.58e-13; memory 0.800
+  Holm at alpha 0.05 over 6 cells: 6 of 6 reject no gain
+B4, sustained: 10 threads back to back on wikidata-x16, 8 rounds: 0.9400 [0.9307, 0.9494] FASTER; memory 0.800 (reported)
+VERDICT: ADOPT. Part A attributed; the zero-route and admitted guards' pooled upper bounds within 1.01 with no credible regression above 1.02; a gain on every benefit cell (Holm) at no more memory; sustained not SLOWER; every guard's memory within 1.1.
