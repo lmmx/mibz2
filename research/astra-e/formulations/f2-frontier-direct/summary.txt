@@ -1,0 +1,15 @@
+direct prep_mark_ns=5.1827 ms discover_ns=28.2816 ms merge_ns=2.2807 ms residual_output_ns=2.7380 ms total_ns=39.8788 ms wall_ns=45.5288 ms
+direct8 prep_mark_ns=5.3043 ms discover_ns=21.4478 ms merge_ns=2.3547 ms residual_output_ns=2.6510 ms total_ns=32.5408 ms wall_ns=34.8416 ms
+nested prep_mark_ns=4.9535 ms discover_ns=21.0480 ms merge_ns=1.7113 ms residual_output_ns=8.4730 ms total_ns=37.2042 ms wall_ns=39.9513 ms
+nested8 prep_mark_ns=4.8358 ms discover_ns=16.0400 ms merge_ns=1.8337 ms residual_output_ns=8.4677 ms total_ns=32.4004 ms wall_ns=34.5341 ms
+lazy prep_mark_ns=0.0000 ms discover_ns=0.0000 ms merge_ns=0.0000 ms residual_output_ns=28.3830 ms total_ns=28.3830 ms wall_ns=30.5973 ms
+direct8/direct total_ns 0.8099 [0.7412,0.8851]
+direct8/direct wall_ns 0.7245 [0.5963,0.8803]
+nested8/nested total_ns 0.8892 [0.8145,0.9708]
+nested8/nested wall_ns 0.8538 [0.6983,1.0440]
+direct8/nested8 total_ns 0.9999 [0.8983,1.1130]
+direct8/nested8 wall_ns 0.9840 [0.7882,1.2283]
+direct8/lazy total_ns 1.1483 [1.0748,1.2268]
+direct8/lazy wall_ns 1.1234 [0.9121,1.3835]
+nested8/lazy total_ns 1.1484 [1.0349,1.2745]
+nested8/lazy wall_ns 1.1417 [0.9779,1.3328]
