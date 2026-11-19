@@ -1,0 +1,25 @@
+# Source ribbons at fixed original token coordinates
+
+A ribbon (u,v,w) represents the live edges P(u+i)=v+i for all integers 0≤i<w. Each source class owns its own increasing sequence of ribbons. The classes occupy disjoint original source intervals. Holes left by removed vertices stay holes in the original coordinates. A touched ribbon can be coalesced with the previous one only if source and target intervals are physically adjacent with the same translation.
+
+Read the original named quotient by its incoming run stream. The next run of class k, width w and destination rank v, comes from the next w original rows in k's source bucket. Keeping one cursor per class initializes every ribbon. The immutable table of original source starts supports predecessor queries for owner. It suffices to test owners of the first and last live destinations in a class by stable increasing order. There is no token-level initialization loop.
+
+When an eligible k absorbs j, a k ribbon (u,v,w) requests the original source interval [v,v+w) of j. Every row there is live and belongs to j, so the target map can be consumed in consecutive pieces. Its intersection [t,t+b) with one j ribbon translates to a consecutive interval [d,d+b). Emit (u+t−v,d,b) into the replacement k. Remove the consumed piece from j, retaining a left and/or right part as applicable. The resulting map is P² on k and P on all other survivors. Ordered k inputs and stable j maps keep the outputs in increasing source and target order. Merging adjacent equal translations gives the maximal affine decomposition in these fixed coordinates. The static owner map answers only for surviving endpoints, where it remains correct. If the removed destination interval contains the marked original row x, move the mark to u+x−v and add the old k spelling length to its byte offset.
+
+Eligibility changes only for k and j. Every other class has the same live sources, destinations and owners. The sparse FIFO therefore chooses the identical sequence of classes as the dense scheduler when it starts in the same native type order, invalidates entries at pop and rechecks k before j. Fixed-point recognition is necessary only initially and when the marked source is in k after potential transfer. A fixed point uses its rotated immutable grammar. Saturated and uncovered routes preserve the same exact fallback. [Dense predecessor](../README.md)
+
+## Counting operations and storage
+
+Let B be the number of source ribbons of k for one event, I the sum of target ribbon intersections, G the number of replacement k ribbons after coalescing, and L and T the numbers of preserved left and right target pieces. The source image intervals are disjoint, and each intersection covers a different deleted original row. Consequently B≤I≤the number of deleted rows. Summed over all events, ribbon intersections are at most m−1 for an initial m-row object. Each cut removes I old or residual target pieces in total and inserts L+T. Each of B selected source ribbons disappears and G replacement ribbons appear. Thus the exact live-ribbon count satisfies
+
+```text
+R_after − R_before = L + T − B − (I − G).
+```
+
+At most two side pieces survive each source ribbon and I−G≥0. After a total of e deletions the live ribbon count is at most R₀+e. Since each live ribbon contains a source, it is also bounded by m−e. These bounds imply a maximum of floor((m+R₀)/2) live ribbons. They concern the published map. A temporary vector holds the candidate k ribbons while the old map still exists. Our audit tracks the extra initialized records during splicing and publication. Logical ribbon counts, container capacities, tree payload and process VmHWM are different measurements.
+
+The tree performs one predecessor query for each source ribbon in the target class, then removes each intersected band by key. Each consumption inserts at most two boundary pieces. The implementation republishes k into its tree from sorted replacement ribbons. Ordered-tree operations and owner predecessor searches carry logarithmic cost. The row-edit bound therefore supplies an O((m+K+R) log(m+1)) upper bound for initialization and contraction, apart from the pre-existing named construction and output. The flat implementation instead locates the start by binary search and splices a contiguous range. If replacement count differs, the suffix in that per-class vector shifts. The sum of suffix lengths moved is not bounded by the consumed-row count. Its receipt reports logical displaced records, excluding allocator reallocation and hardware cache behavior.
+
+Each tree sample reports actual fresh-process VmHWM. The public BTreeMap interface exposes live entries, with no node-capacity counter. The per-tree byte estimate consequently charges the (key, destination, width) payload as a lower bound. Flat vector capacities are directly observable. Neither native process peak represents a complete production worker measurement.
+
+The cadence of the numerical comparisons, accuracy checks and timing units are fixed in the [registered plan](PLAN.md).
