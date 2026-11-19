@@ -6,7 +6,7 @@ The quick libbzip2/CRC gate passed all 98 cases. The full 338-case gate for this
 
 ## In-progress recovery
 
-The initial checkpoint preserves 240 complete official observations. It includes all 160 W1 rows and all 80 W2 LazyCells rows. A source check confirms that v1's `proxy-runs.jsonl` receives one record per block, with normal file buffering. The live job continues to append independently. The incomplete worker grid supplies no campaign ranking.
+The checkpoint preserves 480 complete official observations, all W1, W2 and W4 rows. The earlier 240-row checkpoint remains at commit `6a5d160`. A source check confirms that v1's `proxy-runs.jsonl` receives one record per block, with normal file buffering. The live job continues to append independently. The incomplete worker grid supplies no campaign ranking.
 
 The live study runs in `/workspace/work/narrow-proxy/v1-tree` and writes `research/astra-e/results/combined-v1-full-proxy/score/proxy-runs.jsonl`. Its target directory is `/workspace/work/narrow-proxy/v1-target`. To inspect progress without consuming a CPU for simulation, count the complete lines in that file. The root process is the shell executing `/workspace/work/narrow-proxy/v1-run.sh`. If it survives, let the same process finish.
 
