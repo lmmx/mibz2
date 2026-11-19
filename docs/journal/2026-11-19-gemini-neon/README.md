@@ -148,3 +148,17 @@ Every case was compared against direct first-return computation, with return wor
 
 - **MONODROMY:** verify Theorems 1, 2′ and 3′ (CHECKPOINT 7005355308, redirected to 3′ after round 2). Theorem 3′ comes first: an exhaustive small-case comparison against direct first-return computation, with return words and marks. Then the batch rate: how often |S| ≥ 2 is admissible.
 - **Louis's optional follow-up to Neon:** ChatGPT's suggested follow-up asks Neon to re-examine Theorem 3 exhaustively and to repair Theorem 2. That is a good second-round test of calibration.
+
+## MONODROMY's verdict (REVIEW 7005920415; record 78)
+
+| Claim | Verdict |
+|---|---|
+| Theorem 3′ (multi-boundary parallel RV) | Exact (8,049 batches, every order agrees). The sufficient condition is weaker than the footprint rule: {A} ∩ {B} = ∅. The mark rule needs a relabelling clause. |
+| ">99% full batches" | Refuted. On the frozen Wikidata column the mean batch width is 3.84 at K = 16, bounded by the heaviest component (25.6% of the cells). |
+| "Cells is strictly serial, MLP = 1" | Refuted. The shipped Cells kernel fetches 12 slots ahead. |
+| Theorem 1 | Verified, with the definition of t corrected. It sharpens Astra E's f2-bounds term h to h′ = \|∂ ∖ (D ∪ C)\|. |
+| Theorem 2 | The Kac identity is verified, with a narrow scope. The Fibonacci indexing is off by one; the corrected range is f_d − 1 ≤ \|P\| ≤ f_{d+1} − 2, for 2 ≤ d ≤ q − 1. |
+
+**Outcome of the audition:**
+- **Kept:** a correct multi-front construction, and a sharper run bound.
+- **Not supported:** the performance case. Cells already overlaps about 12 dependent loads, and real Wikidata exposes only about 4 independent fronts.
