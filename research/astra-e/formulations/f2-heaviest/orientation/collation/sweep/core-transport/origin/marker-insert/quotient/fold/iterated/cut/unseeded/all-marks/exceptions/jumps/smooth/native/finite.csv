@@ -1,0 +1,4 @@
+block,depth,inputs,marked_outputs,output_bytes,physical_rows_checked,smooth_rows,branch_rows,all_smooth_marked_laps,nondividing_marked_laps,nonconstant_all_smooth_nondividing_laps,prepared_vector_bytes
+exhaustive-2,0,2040,14344,104424,14344,11030,3314,10194,6528,4392,198586
+exhaustive-3,0,4368,24060,135588,24060,19842,4218,18732,8280,6204,419826
+targeted,0,216,648,125136,41712,36390,5322,548,236,158,228655
