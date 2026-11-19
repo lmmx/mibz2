@@ -462,7 +462,11 @@ fn emit(
     out.reserve(n);
     let mask = (1 << bits) - 1;
     let mut j = mark;
-    loop {
+    // (the port's one change to the walk) the cycle through the marked row visits each retained
+    // row once at most, so a valid construction returns to it within `edges.len()` steps; the
+    // bound and the clamp to `n` make every walk end, whatever the construction: a wrong one
+    // gives a wrong block, which the block's CRC rejects, never a walk that grows without end
+    for _ in 0..edges.len() {
         let edge = edges[j as usize];
         let code = if extra.is_empty() {
             edge >> bits
@@ -471,10 +475,11 @@ fn emit(
         };
         j = edge & mask;
         append_code(code, spelling, offsets, out);
-        if j == mark {
+        if j == mark || out.len() >= n {
             break;
         }
     }
+    out.truncate(n);
     repeat(n, out);
 }
 
