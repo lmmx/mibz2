@@ -2222,8 +2222,9 @@ bench-opend-sweep COPIES="4" ROUNDS="12" SETTLE="2" REPS="5" DRY="":
 # then, reported and not judged, the gate's cost and the eager/open crossover (kernel-only arms)
 # and the per-block coverage census. `bench/open_port.py judge` gives the verdict. One confirmatory
 # attempt (the Researcher's correction, REVIEW 7007213171): the recipe refuses a second timed attempt.
-# DRY (any value): the untimed preflight (PROTOCOL §9), which times nothing: each corpus decoded
-# once by each build, only the output's size and digest kept, and the scorer's own checks.
+# DRY (any value): the untimed preflight (PROTOCOL §9), which keeps no timing: each corpus decoded
+# once by each build (the child's own timing fields dropped), only the output's size and digest
+# kept, and the scorer's own checks. The one-attempt guard (open_port.py guard) fails closed.
 bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="8" CROUNDS="8" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -2237,20 +2238,12 @@ bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUND
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-open-port: the checkout has local changes"; exit 1; }
     dry="{{DRY}}"
-    [ -z "$dry" ] || echo "bench-open-port: DRY RUN: the untimed preflight; nothing is timed; not evidence" | tee "$O/DRY-RUN.txt"
+    [ -z "$dry" ] || echo "bench-open-port: DRY RUN: the untimed preflight; no timing kept; not evidence" | tee "$O/DRY-RUN.txt"
     # one confirmatory attempt: a timed attempt already started here, or archived on the evidence
-    # branch, is the registration's one, whatever its outcome; a second is refused
+    # branch, is the registration's one, whatever its outcome; a second is refused. Fails closed:
+    # an evidence branch that can't be fetched or read refuses too (open_port.py guard)
     if [ -z "$dry" ]; then
-      for prev in "$W"/run-*/started.txt; do
-        [ -e "$prev" ] || continue
-        d=${prev%/started.txt}
-        [ "$d" = "$O" ] || [ -e "$d/DRY-RUN.txt" ] \
-          || { echo "bench-open-port: a timed attempt already started here (${d##*/}): this registration allows one"; rm -rf "$O"; exit 1; }
-      done
-      git fetch -q origin evidence:refs/remotes/origin/evidence 2>/dev/null || true
-      if git ls-tree --name-only origin/evidence open-port/ 2>/dev/null | grep -q 'run-.*\.tar\.gz$'; then
-        echo "bench-open-port: a timed attempt is already archived on the evidence branch: this registration allows one"; rm -rf "$O"; exit 1
-      fi
+      python3 bench/open_port.py guard "$W" --this "$O" || { rm -rf "$O"; exit 1; }
     fi
     export RUSTUP_TOOLCHAIN=1.99.1
     rustc -V | grep -q '^rustc 1\.99\.1 ' \

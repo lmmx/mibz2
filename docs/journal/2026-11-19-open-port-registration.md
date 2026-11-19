@@ -102,8 +102,11 @@ whatever happens.
 - *Neither opens a retry* under this registration. A different experiment would need its own
   prospective review, and would leave this attempt and its outcome standing.
 - *Untimed setup* may be repaired before the attempt starts.
-- *The recipe enforces it.* A non-dry run refuses to start if a timed attempt already started in
-  this checkout, or if an `open-port/run-*` bundle is on the evidence branch.
+- *The recipe enforces it* (`open_port.py guard`). A non-dry run refuses to start:
+  - if a timed attempt already started in this checkout;
+  - if an `open-port/run-*` bundle is on the evidence branch;
+  - **failing closed** (the Researcher's second correction, REVIEW 7008014645): if the evidence
+    branch can't be fetched afresh or read. A stale local copy of the branch doesn't stand in.
 
 ## The preflights
 
@@ -128,6 +131,16 @@ whatever happens.
     (`untimed-check.txt`);
   - the scorer's own checks.
 
+  *What "untimed" covers:* no timing is kept or read. The builds' `ab child` measures its own
+  decode internally and prints the timing fields, and the recipe drops them, keeping only the
+  output's size and digest.
+- **The preflight bundles are archived beside this note,** in
+  `2026-11-19-open-port-registration/preflight/`, each with its `.sha256`.
+  - *Not on the evidence branch:* the one-attempt guard refuses any `open-port/run-*` bundle
+    archived there, so a preflight there would block the attempt.
+  - *The earlier timed preflight's bundle is not archived,* since its timing records stay
+    unread.
+
 ## The rule (`bench/open_port.py judge`, frozen with this registration)
 
 **The roster is fixed in the scorer, never read from the records:**
@@ -135,9 +148,28 @@ whatever happens.
 - `wikidata-x16` at 10 threads, 8 pairs: 16 records.
 
 **The registered identities**, from the bundle's own files:
-- `commits.txt` names the port's pinned commit and v0.5.6 (530ed404);
-- `inputs.sha256` names the pinned Wikidata sample (82f65ace…) and held-out windows (7f5c9a00…),
-  and gives a digest for every corpus of the roster.
+- `commits.txt` names the port's pinned commit and v0.5.6 (530ed404).
+- `inputs.sha256` gives every input exactly once, as a 64-hex-digit SHA-256: the 16 corpora of
+  the roster and the two bases. It names no other input.
+- **The judged copies are frozen,** not only their bases (the Researcher's second correction):
+
+  | input | frozen SHA-256 | why fixed |
+  |---|---|---|
+  | `wikidata.bz2` | 82f65ace… | the pinned sample |
+  | `wikidata-heldout.bz2` | 7f5c9a00… | the pinned held-out windows |
+  | `wikidata-x4.bz2` | 0b820d14… | 4 copies of the sample |
+  | `wikidata-x16.bz2` | 1aeac0d4… | 16 copies of the sample |
+  | `ho-wikidata-l9.bz2` | 7f5c9a00… | the held-out windows, verbatim |
+
+  *Why not the other 11 corpora's digests:* they pass through a compressor (`ab gen`, Python's
+  libbzip2) on the workstation. Their digests are recorded, checked for form, and compared
+  between the builds' outputs, but not frozen. A harmless difference in a compressor's build
+  would otherwise void the one attempt.
+
+**Every record's fields are checked before use.** The corpus, thread count and round must be
+exactly one of the registered values of their type: threads 8.5 is not 8, and "8" is not 8. The
+arm and the output digest must be strings. Any other record is VOID, never coerced into the
+roster and never an exception.
 
 **Each cell** (corpus, count): the 12 rounds' paired log ratios of wall time, the port over
 v0.5.6.
@@ -146,7 +178,8 @@ v0.5.6.
 
 **VOID**, with no verdict, where:
 - a record of the roster is missing, duplicated, malformed or failed;
-- a record lies outside the roster, or a file is empty or missing;
+- a record lies outside the roster, a field has another type or value than the registered ones,
+  or a file is empty or missing;
 - a wall time, peak RSS or output size is not a finite positive number (a NaN included);
 - a corpus's outputs differ;
 - an identity doesn't hold;
@@ -172,7 +205,8 @@ before.
   within noise is caught too.
 - *There is no trade.* Rule 4 isn't used here: P2 requires Wikidata memory not to grow at all.
 
-`bench/test_open_port.py` checks the scorer, 39 checks on bundles of the full roster:
+`bench/test_open_port.py` checks the scorer and the guard, 63 checks, on bundles of the full
+roster and on scratch repositories:
 - ADOPTS;
 - each of P1, P2, H, G (SLOWER, the bound, and memory) and S failing, alone and together;
 - **the Researcher's counterexamples, now regressions,** each VOID:
@@ -189,7 +223,24 @@ before.
 - each identity: another port or reference commit, no `commits.txt`, another sample or held-out
   set, a corpus with no digest;
 - the machine, the workers, the outputs, a third arm, two reference binaries, a dry run;
-- a guard's short decode seeing fewer workers, without a VOID.
+- a guard's short decode seeing fewer workers, without a VOID;
+- **the Researcher's second counterexamples (REVIEW 7008014645), now regressions:**
+  - `not-a-digest` for `text.bz2` gives VOID (it had scored ADOPTS);
+  - the judged `ho-wikidata-l9.bz2` with another digest, its base frozen, gives VOID (it had
+    scored ADOPTS);
+  - the first `text` pair at threads 8.5 gives VOID (it had scored ADOPTS);
+  - a numeric arm gives VOID (it had raised `AttributeError`);
+  - with no local marker and an unreadable evidence branch, the guard refuses (it had passed).
+- *their kin:*
+  - threads "8" or `true`, round 0.0, a numeric corpus, a numeric output digest, a record that
+    isn't an object;
+  - another digest for the primary's or the sustained copy, a digest in capitals or too short,
+    an input named twice or outside the registration, a receipt line of three fields;
+  - a receipt of well-formed digests, giving ADOPTS;
+- *the guard:*
+  - it passes a readable evidence branch with only a dry run present;
+  - it refuses a timed attempt started here, an attempt archived on the branch, a remote with no
+    evidence branch, and an unreachable remote whose stale clean copy is present.
 
 ## Context, reported and not judged
 

@@ -6,6 +6,7 @@ its own binary run as `ab run`'s child, both through the same public entry point
 (`BzReader::parallel`), unpinned on the i9 at the shipped thread counts.
 
     open_port.py judge BUNDLE --port PORT_COMMIT
+    open_port.py guard TARGET --this RUN_DIR [--remote origin]   (the one attempt; see guard)
     open_port.py pairs RUNS.jsonl --pair X/Y [--pair X/Y ...]   (context: reported, not judged)
 
 **The registered roster, fixed here** (the Researcher's correction, REVIEW 7007213171): the 15
@@ -20,10 +21,16 @@ NOT ADOPTED; neither opens a retry.
 **VOID, and nothing is read,** where:
 - a record of the roster is missing, duplicated or failed, a record lies outside it, or a file is
   empty or missing;
+- a record's corpus, thread count or round is not exactly one of the registered values of its
+  type (threads 8.5 is not 8; "8" is not 8), its arm is not a string, or its output digest is not
+  one (the Researcher's second correction, REVIEW 7008014645): checked before any is used;
 - a wall time, peak RSS or output size is not a finite positive number (a NaN included);
 - the registered identities do not hold: the bundle's `commits.txt` names other builds than the
-  port's pinned commit and v0.5.6 (530ed404), or its `inputs.sha256` other Wikidata corpora than
-  the pinned sample and held-out windows, or no digest for a corpus of the roster;
+  port's pinned commit and v0.5.6 (530ed404); or its `inputs.sha256` does not give each input of
+  `INPUTS` exactly once, with a 64-hex-digit SHA-256 and no other input, or gives a judged copy
+  of `FROZEN` another digest than the frozen one: the pinned sample and held-out windows, the
+  primary and sustained corpora (4 and 16 copies of the sample), and the held-out replication
+  (the windows verbatim);
 - a corpus's outputs differ;
 - the machine is not the registered one: `lscpu` names no single i9-10900K, or `ab env` records
   other than 10 cores and 20 CPUs;
@@ -53,11 +60,13 @@ condition named. Standard library only.
 """
 
 import argparse
+import glob
 import json
 import math
 import os
 import re
 import statistics
+import subprocess
 import sys
 
 CAND_DIR, REF_DIR = "/build-port/", "/build-v0.5.6/"
@@ -86,6 +95,18 @@ COUNTS, ROUNDS, SUSTAINED_ROUNDS = (8, 10, 20), 12, 8
 V056 = "530ed404a014a414ef0b62adfd947fa14d4533e6"
 WIKIDATA_SHA256 = "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
 HELDOUT_SHA256 = "7f5c9a0044e5a30589bf343b9b31e698849b2acc69461a55c97b550193128b45"
+# the judged copies whose bytes are fixed by those two, with no compressor between (the
+# Researcher's second correction, REVIEW 7008014645): the primary and sustained corpora are 4 and
+# 16 copies of the sample, and the held-out replication is the held-out windows verbatim
+FROZEN = {
+    "wikidata.bz2": WIKIDATA_SHA256,
+    "wikidata-heldout.bz2": HELDOUT_SHA256,
+    "wikidata-x4.bz2": "0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e",
+    "wikidata-x16.bz2": "1aeac0d469a85ae21de32e97cddcae6a6f1b29ed950526bc664491c372dbf422",
+    "ho-wikidata-l9.bz2": HELDOUT_SHA256,
+}
+# every input the receipt must name, each with a well-formed SHA-256
+INPUTS = (*(f"{c}.bz2" for c in (*CORPORA, "wikidata-x16")), "wikidata.bz2", "wikidata-heldout.bz2")
 CHECKED = (MAIN, HELDOUT, "ho-wikidata-l1", SUSTAINED)
 WORKERS = {8: 8, 10: 7, 20: 7}
 ALPHA, GUARD_MAX, RSS_GATE = 0.05, 1.02, 1.10
@@ -203,6 +224,15 @@ def positive(v):
     return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and v > 0
 
 
+def field(r, name, kind, allowed):
+    """`r[name]` if it is exactly of type `kind` (never a bool) and one of `allowed`; else a
+    ValueError naming it"""
+    v = r.get(name)
+    if type(v) is not kind or v not in allowed:
+        raise ValueError(f"{name} {v!r} is not one of the registered {sorted(allowed)}")
+    return v
+
+
 def load(path, corpora, counts, rounds, errors, check_workers=True):
     """{(corpus, threads, side, round): record}, `side` the port's build (`cand`) or v0.5.6's
     (`ref`), against the registered roster `corpora` x `counts` x both sides x `rounds`"""
@@ -213,9 +243,16 @@ def load(path, corpora, counts, rounds, errors, check_workers=True):
     for ln, line in enumerate(open(path), 1):
         if not line.strip():
             continue
+        # every field is checked for its type and value before it is used, so a record of the
+        # wrong shape is VOID, never coerced into the roster and never an exception (the
+        # Researcher's second correction: threads 8.5 is not 8; an arm that is not a string)
         try:
             r = json.loads(line)
-            arm = r["arm"]
+            if not isinstance(r, dict):
+                raise ValueError("not an object")
+            arm = r.get("arm")
+            if type(arm) is not str:
+                raise ValueError(f"arm {arm!r} is not a string")
             side = (
                 "cand"
                 if arm.startswith("mibz2@") and CAND_DIR in arm
@@ -223,9 +260,14 @@ def load(path, corpora, counts, rounds, errors, check_workers=True):
                 if arm.startswith("mibz2@") and REF_DIR in arm
                 else None
             )
-            key = (r["corpus"], int(r["threads"]), side, int(r["round"]))
-        except (ValueError, KeyError, TypeError):
-            errors.append(f"{os.path.basename(path)} line {ln}: not a record")
+            key = (
+                field(r, "corpus", str, corpora),
+                field(r, "threads", int, counts),
+                side,
+                field(r, "round", int, range(rounds)),
+            )
+        except ValueError as e:
+            errors.append(f"{os.path.basename(path)} line {ln}: not a record of the roster ({e})")
             continue
         if side is None:
             errors.append(
@@ -245,7 +287,8 @@ def load(path, corpora, counts, rounds, errors, check_workers=True):
                 f"{key}: wall {r.get('wall')!r} or peak RSS {r.get('rss_kb')!r} not a finite positive number"
             )
             continue
-        if not positive(r.get("out")) or not (r.get("sha256") or r.get("hash")):
+        digest = r.get("sha256") or r.get("hash")
+        if not positive(r.get("out")) or type(digest) is not str:
             errors.append(f"{key}: no output size or digest")
             continue
         t = key[1]
@@ -299,26 +342,33 @@ def identities(bundle, port, errors):
         commits = {}
     if commits.get("port") != port or commits.get("v0.5.6") != V056:
         errors.append(f"commits.txt: the builds are {commits}, not port {port} and v0.5.6 {V056}")
+    digests = {}
     try:
-        digests = {
-            os.path.basename(f): d
-            for d, f in (
-                line.split() for line in open(os.path.join(bundle, "inputs.sha256")) if line.strip()
-            )
-        }
-    except (OSError, ValueError):
-        digests = {}
-    if digests.get("wikidata.bz2") != WIKIDATA_SHA256:
-        errors.append(
-            f"inputs.sha256: the Wikidata sample is {digests.get('wikidata.bz2')!r}, not {WIKIDATA_SHA256}"
-        )
-    if digests.get("wikidata-heldout.bz2") != HELDOUT_SHA256:
-        errors.append(
-            f"inputs.sha256: the held-out Wikidata is {digests.get('wikidata-heldout.bz2')!r}, not {HELDOUT_SHA256}"
-        )
-    missing = [c for c in (*CORPORA, SUSTAINED) if f"{c}.bz2" not in digests]
+        for ln, line in enumerate(open(os.path.join(bundle, "inputs.sha256")), 1):
+            if not line.strip():
+                continue
+            parts = line.split()
+            name = os.path.basename(parts[-1])
+            if len(parts) != 2:
+                errors.append(f"inputs.sha256 line {ln}: not one digest and one path")
+            elif name in digests:
+                errors.append(f"inputs.sha256: {name} named twice")
+            else:
+                digests[name] = parts[0]
+    except OSError:
+        errors.append("inputs.sha256: missing")
+    bad = [n for n in INPUTS if n in digests and not re.fullmatch(r"[0-9a-f]{64}", digests[n])]
+    if bad:
+        errors.append(f"inputs.sha256: not a SHA-256 for {bad}")
+    missing = [n for n in INPUTS if n not in digests]
     if missing:
         errors.append(f"inputs.sha256: no digest for {missing}")
+    extra = sorted(set(digests) - set(INPUTS))
+    if extra:
+        errors.append(f"inputs.sha256: inputs outside the registration: {extra}")
+    for name, want in FROZEN.items():
+        if name in digests and digests[name] != want:
+            errors.append(f"inputs.sha256: {name} is {digests[name]!r}, not the frozen {want}")
 
 
 def cell(rows, corpus, t, rounds):
@@ -473,6 +523,50 @@ def pairs(a):
     return 0
 
 
+def guard(a):
+    """The one confirmatory attempt (the Researcher's corrections, REVIEWs 7007213171 and
+    7008014645): exit 0 only if no timed attempt has started in `target` (a run directory with
+    `started.txt` and no `DRY-RUN.txt`, other than `--this`) and the evidence branch, fetched
+    afresh, is readable and archives no `open-port/run-*.tar.gz`. Fails closed: an evidence branch
+    that can't be fetched or read refuses, as an archived attempt does."""
+    for started in sorted(glob.glob(os.path.join(a.target, "run-*", "started.txt"))):
+        d = os.path.dirname(started)
+        if a.this and os.path.realpath(d) == os.path.realpath(a.this):
+            continue
+        if not os.path.exists(os.path.join(d, "DRY-RUN.txt")):
+            print(
+                f"bench-open-port: a timed attempt already started here ({os.path.basename(d)}): "
+                "this registration allows one"
+            )
+            return 1
+    ref = f"refs/remotes/{a.remote}/evidence"
+
+    def git(*args):
+        return subprocess.run(["git", *args], capture_output=True, text=True)
+
+    if git("fetch", "-q", a.remote, f"+refs/heads/evidence:{ref}").returncode != 0:
+        print(
+            f"bench-open-port: the evidence branch can't be fetched from {a.remote}, so a timed "
+            "attempt archived there can't be ruled out: refusing (this registration allows one)"
+        )
+        return 1
+    listing = git("ls-tree", "-r", "--name-only", ref, "--", "open-port")
+    if listing.returncode != 0:
+        print(
+            f"bench-open-port: the evidence branch ({ref}) can't be read: refusing "
+            "(this registration allows one)"
+        )
+        return 1
+    runs = [n for n in listing.stdout.split() if re.fullmatch(r"open-port/run-[^/]*\.tar\.gz", n)]
+    if runs:
+        print(
+            f"bench-open-port: a timed attempt is already archived on the evidence branch "
+            f"({runs[0]}): this registration allows one"
+        )
+        return 1
+    return 0
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="mode", required=True)
@@ -483,11 +577,15 @@ def main(argv):
         "commits.txt, inputs.sha256",
     )
     j.add_argument("--port", required=True, help="the port's registered commit (the recipe's PORT)")
+    g = sub.add_parser("guard")
+    g.add_argument("target", help="the recipe's target directory (target/open-port)")
+    g.add_argument("--this", help="this attempt's own run directory, already started")
+    g.add_argument("--remote", default="origin")
     q = sub.add_parser("pairs")
     q.add_argument("runs")
     q.add_argument("--pair", action="append", required=True)
     a = ap.parse_args(argv[1:])
-    return judge(a) if a.mode == "judge" else pairs(a)
+    return {"judge": judge, "guard": guard, "pairs": pairs}[a.mode](a)
 
 
 if __name__ == "__main__":

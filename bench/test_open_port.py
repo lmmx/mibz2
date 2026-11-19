@@ -5,6 +5,7 @@ counterexamples (REVIEW 7007213171) as regressions"""
 
 import io
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -90,13 +91,17 @@ def build(
     (d / "commits.txt").write_text(
         commits if commits is not None else f"port {PORT_SHA}\nv0.5.6 {op.V056}\n"
     )
-    if digests is None:
-        digests = {
-            **{f"{c}.bz2": "00" * 32 for c in (*op.CORPORA, op.SUSTAINED)},
-            "wikidata.bz2": op.WIKIDATA_SHA256,
-            "wikidata-heldout.bz2": op.HELDOUT_SHA256,
-        }
-    (d / "inputs.sha256").write_text("".join(f"{v}  /w/c/{k}\n" for k, v in digests.items()))
+    # the receipt: a well-formed digest for every registered input, the frozen ones as frozen;
+    # `digests` overrides entries (None drops one), or is the receipt's whole text if a str
+    if isinstance(digests, str):
+        (d / "inputs.sha256").write_text(digests)
+    else:
+        good = {n: "0" * 63 + str(k % 10) for k, n in enumerate(op.INPUTS)}
+        good.update(op.FROZEN)
+        good.update(digests or {})
+        (d / "inputs.sha256").write_text(
+            "".join(f"{v}  /w/c/{k}\n" for k, v in good.items() if v is not None)
+        )
     return d
 
 
@@ -119,6 +124,107 @@ def expect(name, d, code, phrases, absent=()):
     if not ok:
         print(out)
     return ok
+
+
+def guard_checks():
+    """The one-attempt guard (`open_port.py guard`) against scratch repositories: it refuses a
+    timed attempt started here, an attempt archived on the evidence branch, and (the Researcher's
+    second correction) an evidence branch it can't fetch or read; it passes only a readable
+    branch with no archived attempt, whatever dry runs lie here"""
+    import subprocess
+
+    def git(cwd, *args):
+        subprocess.run(["git", "-C", str(cwd), *args], check=True, capture_output=True)
+
+    def run(target, this, remote="origin", cwd=None):
+        buf = io.StringIO()
+        old = Path.cwd()
+        os.chdir(cwd)
+        try:
+            with redirect_stdout(buf):
+                got = op.main(
+                    ["open_port.py", "guard", str(target), "--this", str(this), "--remote", remote]
+                )
+        finally:
+            os.chdir(old)
+        return got, buf.getvalue()
+
+    root = Path(tempfile.mkdtemp())
+    out = []
+    try:
+        ident = ["-c", "user.name=t", "-c", "user.email=t@t"]
+        origin = root / "origin.git"
+        git(root, "init", "-q", "--bare", str(origin))
+        seed = root / "seed"
+        git(root, "init", "-q", str(seed))
+        (seed / "README").write_text("evidence\n")
+        git(seed, "checkout", "-q", "--orphan", "evidence")
+        git(seed, "add", "README")
+        git(seed, *ident, "commit", "-q", "-m", "evidence")
+        git(seed, "push", "-q", str(origin), "evidence")
+        work = root / "work"
+        git(root, "clone", "-q", str(origin), str(work))
+        target = work / "target" / "open-port"
+        this = target / "run-20261120T000000Z"
+        this.mkdir(parents=True)
+        (this / "started.txt").write_text("now\n")
+        dry = target / "run-20261119T111634Z"
+        dry.mkdir()
+        (dry / "started.txt").write_text("then\n")
+        (dry / "DRY-RUN.txt").write_text("dry\n")
+
+        def check(name, want, phrase, **kw):
+            got, text = run(target, this, cwd=work, **kw)
+            ok = got == want and phrase in text
+            print(
+                f"{'ok  ' if ok else 'FAIL'} guard: {name}: exit {got}"
+                + ("" if ok else f"\n{text}")
+            )
+            return ok
+
+        out.append(check("a readable evidence branch, no attempt, a dry run here: passes", 0, ""))
+        out.append(
+            check(
+                "Researcher 8: no local marker and an unreadable evidence branch: refuses",
+                1,
+                "can't be fetched",
+                remote="nowhere",
+            )
+        )
+        # a stale local copy of a clean evidence branch must not stand in for a fetch that fails
+        git(work, "remote", "add", "stale", str(root / "gone.git"))
+        git(work, "update-ref", "refs/remotes/stale/evidence", "refs/remotes/origin/evidence")
+        out.append(
+            check(
+                "an unreachable remote, a stale clean copy of its branch here: refuses",
+                1,
+                "can't be fetched",
+                remote="stale",
+            )
+        )
+        git(work, "remote", "add", "empty", str(root / "empty.git"))
+        git(root, "init", "-q", "--bare", str(root / "empty.git"))
+        out.append(
+            check(
+                "a remote with no evidence branch: refuses", 1, "can't be fetched", remote="empty"
+            )
+        )
+        timed = target / "run-20261119T200000Z"
+        timed.mkdir()
+        (timed / "started.txt").write_text("then\n")
+        out.append(check("a timed attempt started here: refuses", 1, "already started here"))
+        shutil.rmtree(timed)
+        (seed / "open-port").mkdir()
+        (seed / "open-port" / "run-20261121T000000Z.tar.gz").write_bytes(b"x")
+        git(seed, "add", "open-port")
+        git(seed, *ident, "commit", "-q", "-m", "archived")
+        git(seed, "push", "-q", str(origin), "evidence")
+        out.append(
+            check("an attempt archived on the evidence branch: refuses", 1, "already archived")
+        )
+    finally:
+        shutil.rmtree(root)
+    return out
 
 
 def main():
@@ -287,7 +393,7 @@ def main():
                 )
             ),
             1,
-            ["VOID", "outside the roster"],
+            ["VOID", "not a record of the roster"],
         )
     )
     res.append(
@@ -295,7 +401,7 @@ def main():
             "a corpus not registered: VOID",
             build(corpora=(*op.CORPORA, "extra")),
             1,
-            ["VOID", "outside the roster"],
+            ["VOID", "not a record of the roster"],
         )
     )
     res.append(
@@ -375,44 +481,25 @@ def main():
     res.append(
         expect(
             "another Wikidata sample: VOID",
-            build(
-                digests={
-                    **{f"{c}.bz2": "00" * 32 for c in (*op.CORPORA, op.SUSTAINED)},
-                    "wikidata.bz2": "ab" * 32,
-                    "wikidata-heldout.bz2": op.HELDOUT_SHA256,
-                }
-            ),
+            build(digests={"wikidata.bz2": "ab" * 32}),
             1,
-            ["VOID", "the Wikidata sample is"],
+            ["VOID", "wikidata.bz2 is 'abab", "not the frozen 82f65ace"],
         )
     )
     res.append(
         expect(
             "other held-out windows: VOID",
-            build(
-                digests={
-                    **{f"{c}.bz2": "00" * 32 for c in (*op.CORPORA, op.SUSTAINED)},
-                    "wikidata.bz2": op.WIKIDATA_SHA256,
-                    "wikidata-heldout.bz2": "cd" * 32,
-                }
-            ),
+            build(digests={"wikidata-heldout.bz2": "cd" * 32}),
             1,
-            ["VOID", "the held-out Wikidata is"],
+            ["VOID", "wikidata-heldout.bz2 is 'cdcd", "not the frozen 7f5c9a00"],
         )
     )
     res.append(
         expect(
             "a corpus with no input digest: VOID",
-            build(
-                digests={
-                    **{f"{c}.bz2": "00" * 32 for c in op.CORPORA if c != "ho-code-l9"},
-                    f"{op.SUSTAINED}.bz2": "00" * 32,
-                    "wikidata.bz2": op.WIKIDATA_SHA256,
-                    "wikidata-heldout.bz2": op.HELDOUT_SHA256,
-                }
-            ),
+            build(digests={"ho-code-l9.bz2": None}),
             1,
-            ["VOID", "no digest for ['ho-code-l9']"],
+            ["VOID", "no digest for ['ho-code-l9.bz2']"],
         )
     )
     # the machine, the arms, the workers, the outputs
@@ -547,6 +634,104 @@ def main():
             ["VOID", "more than one reference binary"],
         )
     )
+    # the Researcher's second counterexamples (REVIEW 7008014645), now regressions
+    res.append(
+        expect(
+            "Researcher 4: `not-a-digest` for text.bz2: VOID",
+            build(digests={"text.bz2": "not-a-digest"}),
+            1,
+            ["VOID", "not a SHA-256 for ['text.bz2']"],
+            absent=["VERDICT"],
+        )
+    )
+    res.append(
+        expect(
+            "Researcher 5: the judged held-out copy another digest, its base frozen: VOID",
+            build(digests={"ho-wikidata-l9.bz2": "11" * 32}),
+            1,
+            ["VOID", "ho-wikidata-l9.bz2 is '1111", "not the frozen 7f5c9a00"],
+            absent=["VERDICT"],
+        )
+    )
+    first_text = lambda r: r["corpus"] == "text" and r["threads"] == 8 and r["round"] == 0  # noqa: E731
+    res.append(
+        expect(
+            "Researcher 6: the first text pair at threads 8.5: VOID, not coerced to 8",
+            build(edit=lambda r: {**r, "threads": 8.5} if first_text(r) else r),
+            1,
+            ["VOID", "threads 8.5 is not one of the registered [8, 10, 20]", "records missing"],
+            absent=["VERDICT"],
+        )
+    )
+    res.append(
+        expect(
+            "Researcher 7: a numeric arm: VOID, not an AttributeError",
+            build(edit=lambda r: {**r, "arm": 1} if first_text(r) else r),
+            1,
+            ["VOID", "arm 1 is not a string"],
+            absent=["VERDICT"],
+        )
+    )
+    # and their kin: each field's type and value, each receipt entry
+    for name, edit, phrase in [
+        ("threads the string '8'", {"threads": "8"}, "threads '8' is not one"),
+        ("threads true", {"threads": True}, "threads True is not one"),
+        ("round 0.0", {"round": 0.0}, "round 0.0 is not one"),
+        ("a corpus that is not a string", {"corpus": 7}, "corpus 7 is not one"),
+        ("an output digest that is not a string", {"sha256": 5}, "no output size or digest"),
+    ]:
+        res.append(
+            expect(
+                f"{name}: VOID",
+                build(edit=lambda r, e=edit: {**r, **e} if first_text(r) else r),
+                1,
+                ["VOID", phrase],
+                absent=["VERDICT"],
+            )
+        )
+    d = build()
+    with open(d / "runs.jsonl", "a") as f:
+        f.write("[1, 2]\n")
+    res.append(expect("a record that is not an object: VOID", d, 1, ["VOID", "not an object"]))
+    for name, digests, phrase in [
+        ("the primary's judged copy", {"wikidata-x4.bz2": "22" * 32}, "wikidata-x4.bz2 is '2222"),
+        ("the sustained copy", {"wikidata-x16.bz2": "33" * 32}, "wikidata-x16.bz2 is '3333"),
+        ("a digest in capitals", {"runs.bz2": "AB" * 32}, "not a SHA-256 for ['runs.bz2']"),
+        ("a short digest", {"runs.bz2": "ab" * 31}, "not a SHA-256 for ['runs.bz2']"),
+        ("an input outside the registration", {"other.bz2": "44" * 32}, "outside the registration"),
+    ]:
+        res.append(
+            expect(f"{name}: VOID", build(digests=digests), 1, ["VOID", phrase], absent=["VERDICT"])
+        )
+    good = {n: "ab" * 32 for n in op.INPUTS} | op.FROZEN
+    receipt = "".join(f"{v}  /w/c/{k}\n" for k, v in good.items())
+    res.append(
+        expect(
+            "an input named twice: VOID",
+            build(digests=receipt + f"{'ef' * 32}  /w/other/text.bz2\n"),
+            1,
+            ["VOID", "text.bz2 named twice"],
+            absent=["VERDICT"],
+        )
+    )
+    res.append(
+        expect(
+            "a receipt line of three fields: VOID",
+            build(digests=receipt + "ab  cd  /w/c/text.bz2\n"),
+            1,
+            ["VOID", "not one digest and one path"],
+            absent=["VERDICT"],
+        )
+    )
+    res.append(
+        expect(
+            "the receipt as hoped, every digest well formed: ADOPTS",
+            build(digests=receipt),
+            0,
+            ["VERDICT: ADOPTS"],
+        )
+    )
+    res.extend(guard_checks())
     d = build()
     (d / "DRY-RUN.txt").write_text("dry\n")
     res.append(expect("a dry run: VOID", d, 1, ["VOID", "a dry run"], absent=["VERDICT"]))
