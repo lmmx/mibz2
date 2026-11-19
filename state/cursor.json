@@ -2619,11 +2619,13 @@
     },
     {
       "trigger_comment_id": 6997119955,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/astra-e-pfp-6997119955/report.md",
-      "source_commit": "2b19f2e2f3430b9efe23467de968959c6059a272"
+      "source_commit": "2b19f2e2f3430b9efe23467de968959c6059a272",
+      "report_commit": "7bcbff5f4764cef6b5c58345bf5a47587c09e6aa",
+      "disposition": "Exact cyclic-PFP parse-order correspondence, Durand precedent for compound derivation, no exact finite labelled run-bound precedent located, PFP storage objective only for the present inverse budget."
     }
   ],
   "active_delegations": [],
