@@ -13,3 +13,22 @@ d=research/astra-e/formulations/f2-pages/payload/uniform
 bash "$d/census.sh" /tmp/astra-e-uniform-census
 python3 "$d/report.py"
 ```
+
+## Price of two no-allocation tagged lookups
+
+The mask-first route places the packed run's position/byte word in bits 1–28, its wrapping LF displacement in bits 32–63 and a tag in bit zero of the uniform page's mask. Mixed masks keep bit zero clear. A mixed reply is twice the ordinary located index. An odd reply is the embedded payload, which supplies the original byte, end and LF displacement without the dependent read. Only a retiring embedded job uses its page's u32 base to publish selectors. The base-first route additionally tags the high bit of the page base and returns an odd page ID on a hit. Its consumption reads the embedded payload from that page. Both encodings use the same two heap arrays and run table as the eager endpoint at ab70765.
+
+All rows, marks and real outputs checked in the previous compact stage agree for both routes. Per-block array byte capacities matched the control. Two distinct three-arm 60-lap processes checked every output at all six arm permutations on the nine systematic blocks. The table shows paired Linux thread-CPU ratios to the untagged eager endpoint.
+
+| Route | CPU4 setup+mark | CPU2 setup+mark | CPU4 discovery | CPU2 discovery | CPU4 complete inverse | CPU2 complete inverse |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Mask first | 1.1626 | 1.1376 | 1.3208 [1.2609,1.3834] | 1.2437 [1.1953,1.2941] | 1.1606 [1.1310,1.1910] | 1.1331 [1.0957,1.1718] |
+| Base first | 1.1599 | 1.1268 | 1.3682 [1.3124,1.4265] | 1.3001 [1.2550,1.3467] | 1.1979 [1.1570,1.2402] | 1.1415 [1.1064,1.1777] |
+
+The tagged discovery and its construction both cost more on each pin. The measured coverage and full-stage regression reject this shortcut for these inputs. The eager endpoint remains reproducible using its immutable source.
+
+```sh
+d=research/astra-e/formulations/f2-pages/payload/uniform
+bash "$d/run.sh" /tmp/astra-e-uniform-price
+python3 "$d/price-report.py" /tmp/astra-e-uniform-price/{first,repeat}.csv
+```

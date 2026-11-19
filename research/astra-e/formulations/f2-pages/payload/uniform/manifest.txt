@@ -1,0 +1,15 @@
+fd9d26fc721a7622ed22f5f7d8acf06d1d58484b
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+fcc38715e49c828d97e846dad791dd05c8253839cc0582ea6dc83006af423ffc  /workspace/work/queue-spans/uniform-price/price
+7cf5b2e84fe34fd62bb1a54f6115e5ea113fbdeee77e21bf5ec31191c9631ccc  /workspace/work/queue-spans/uniform-price/focus.rs
+e99ea620495858e1c27e637a903d04aeafe3320ccdbec09f1943527961f99757  /workspace/work/queue-spans/uniform-price/control.rs
+7f50a4511e15d8b91ba6243aec8224f5f71ae233ce929a762b205ca40728c6e9  /workspace/work/queue-spans/uniform-price/uniform.rs
+f38c0ae713c308e909b41e3c86379fd31a3e8b328364fd75fc0261f678a559bb  /workspace/work/page-counted-lib/release/deps/libmibz2.rlib
+pinned CPUs 4 2
+400000 100000
