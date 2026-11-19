@@ -1,0 +1,16 @@
+{
+  "sha256": {
+    "generated": "270f58efcf08327f658a64399c66c185a5f8a80c37e7db4a0c1ef3c12ad1ab85",
+    "kernel": "7df0437341ecea310c18860ac5a952b15d633579352856253b0314e1986b4ee7",
+    "parent": "f6fcc67134997b54b7ef83e8a256c4baa7c4d60672295ea5d4458ee8ced30307",
+    "executable": "09582c473542774aa52ad10425b9b6a72ee13524282f0656d623261b0dd7cf41",
+    "driver": "a61bbce038c28c05fbfd1cc0d70e9b91251748e00c5c52cb237e12870bea4ec5"
+  },
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-Wall",
+    "-Wextra",
+    "-Werror"
+  ]
+}
