@@ -37,6 +37,11 @@ done
 g++ -std=c++20 -O2 -Wall -Wextra "$here/cuts.cpp" -o "$out/cuts"
 "$out/cuts" "$edge" "$words" "$out/thin.bin" "$out/union.bin" >"$out/cuts.csv" 2>"$out/cuts-check.txt"
 python3 "$here/small.py" > "$out/small.txt"
-for artifact in "$here"/*.csv "$here"/{check,extra-check,union-check,cuts-check,small}.txt; do
+for entry in census affine; do
+    g++ -std=c++17 -O2 -Wall -Wextra "$here/fused-ascii/$entry.cpp" -o "$out/fused-$entry"
+done
+"$out/fused-census" "$edge" "$words" "$out/thin.bin" >"$out/fused-pairs.csv" 2>"$out/fused-pairs-check.txt"
+"$out/fused-affine" "$edge" "$words" "$out/thin.bin" >"$out/affine.csv"
+for artifact in "$here"/fused-ascii/{fused-pairs.csv,fused-pairs-check.txt,affine.csv} "$here"/*.csv "$here"/{check,extra-check,union-check,cuts-check,small}.txt; do
     cmp "$artifact" "$out/$(basename "$artifact")"
 done

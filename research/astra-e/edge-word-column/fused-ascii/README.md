@@ -28,3 +28,5 @@ python3 "$d/summary.py" "$t"
 ```
 
 An endpoint certificate for replacing the second-queue load by arithmetic could cover only 1.42% of eligible gathers on complete original ASCII bands. Even free discovery of each actual claim's suffix boundary left only 6.54% removable after checking its endpoints. Full arithmetic subdivision increased directory size 34.85×. [Proof and all alternatives](AFFINE.md)
+
+The refreshed upstream Moonshot scorer also passed its full independent correctness gate, **338 cases, zero mismatches**, at path revision 75297a1d57b2bdf262c3a19f3064848dedf2c493 and printed version v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04. It ran correctness only. The complete native regression on packable inputs leaves this source as an exact research comparison without CI or a requested i9 run. [Official score](official/summary.txt) · [All oracle cases](official/check.jsonl) · [Source, binary and reproduction](official/manifest.txt)
