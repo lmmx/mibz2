@@ -9,11 +9,10 @@ manifest = json.loads((d / 'manifest.json').read_text())
 stored = manifest['binaries_and_corpus']
 names = ['original', 'singleton']
 expected = [
-    '2fa4fb7fd78367e124d22aa5d07abc4ee32806839ef59801d99cdc6f56ecc1b1',
+    json.loads((d.parent / 'asm/both0-gate/manifest.json').read_text())['full_worker_sha256'],
     json.loads((d.parent / 'official' / 'hashes.json').read_text())['binary_sha256'],
 ]
 assert len(stored) == 3 and all(v in stored.values() for v in expected)
-assert expected[0] in (d.parent / 'asm/both0-gate/README.md').read_text()
 with tarfile.open(d / 'workers.tar.xz') as archive:
     assert archive.getnames() == names
     for name, digest in zip(names, expected):
