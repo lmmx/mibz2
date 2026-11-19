@@ -1,0 +1,44 @@
+phase.csv means in ms per nine admitted blocks across 36 rotations
+refill 4.263 9.888 1.810 0.000 0.000 0.000 15.960
+known 4.306 17.930 1.899 0.000 0.000 0.000 24.135
+compact 2.203 6.177 1.739 0.000 0.000 0.000 10.119
+cut1x8 2.105 2.937 1.647 1.358 6.051 5.087 19.185
+cut8x8 2.165 1.544 1.355 0.882 6.129 9.743 21.817
+cut8x1 2.040 1.589 1.356 0.856 5.950 11.028 22.820
+paid total cut1x8 / compact 1.8958 1.8265 1.9678
+paid total cut8x8 / compact 2.1306 2.0207 2.2465
+paid total cut8x8 / cut8x1 0.9445 0.9011 0.9901
+paid total cut1x8 / refill 1.2079 1.1422 1.2774
+paid total cut8x8 / known 0.8955 0.8446 0.9496
+free Psi index cut1x8 / compact 1.2914 1.2351 1.3503
+free Psi index cut8x8 / compact 1.5247 1.4348 1.6203
+walker cut8x8 / cut8x1 0.8608 0.7950 0.9321
+repeat.csv means in ms per nine admitted blocks across 36 rotations
+refill 3.934 9.011 1.512 0.000 0.000 0.000 14.457
+known 4.219 15.690 1.523 0.000 0.000 0.000 21.432
+compact 2.060 5.912 1.517 0.000 0.000 0.000 9.489
+cut1x8 2.123 2.759 1.548 1.252 6.112 4.532 18.324
+cut8x8 2.072 1.562 1.377 0.832 5.844 8.303 19.990
+cut8x1 2.082 1.503 1.329 0.793 5.890 10.427 22.024
+paid total cut1x8 / compact 1.9291 1.8700 1.9901
+paid total cut8x8 / compact 2.1065 2.0487 2.1660
+paid total cut8x8 / cut8x1 0.9076 0.8759 0.9405
+paid total cut1x8 / refill 1.2708 1.2151 1.3291
+paid total cut8x8 / known 0.9344 0.9013 0.9688
+free Psi index cut1x8 / compact 1.2851 1.2453 1.3262
+free Psi index cut8x8 / compact 1.4907 1.4445 1.5385
+walker cut8x8 / cut8x1 0.7965 0.7604 0.8343
+scratch capacity: frozen / maximum over 228, bytes
+compact 1596200 3459664
+cut1x8 1979296 5311760
+cut8x1 1676584 5179408
+cut8x8 1740488 5172432
+known 1858344 3983952
+refill 1858344 3983952
+isolated first-stage process high water KiB across 228 admissions
+compact 17808
+cut1x8 18996
+cut8x1 19376
+cut8x8 19360
+known 18764
+refill 18736
