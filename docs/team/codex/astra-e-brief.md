@@ -10,8 +10,9 @@ base brief and both supplements as one message, then "continue from the handoff"
 | 1 | 2026-11-18 ~23:30 | The base brief (the scorer at v0, #606) |
 | 2 | 2026-11-19 ~00:05 | Supplement: the formulation track and its ledger |
 | 3 | 2026-11-19 ~00:25 | Adjustment: depth, not breadth, on the formulation track |
+| 4 | 2026-11-19 ~08:30 | Rebalancing towards mathematics (about 75/25), and when to request an i9 run |
 
-The scorer has since moved to v1 (#608, 604dac3f); the brief's refresh command picks that up. After message 3 the steering stopped. Lint, CI, merges and queue plumbing for Astra's branches
+The scorer has since moved to v1 (#608, 604dac3f); the brief's refresh command picks that up. After message 3 the steering stopped until message 4, sent after the overnight results. Lint, CI, merges and queue plumbing for Astra's branches
 belong to the Coordinator, not to Astra (Louis, 2026-11-19), so no housekeeping requests go to
 it either.
 
@@ -257,3 +258,17 @@ Don’t abandon a surviving mathematical direction because its first constructio
 Equally, don’t force a proof or continue indefinitely without mathematical progress. When an approach genuinely reaches diminishing returns, preserve its theorems, counterexamples, unresolved questions and potential future directions before moving on.
 
 Continue the engineering track and its performance register. Close performance comparisons belong in sufficiently powered paired measurements, independent CI or the i9—not in speculative interpretations of noisy pilots.
+
+---
+
+## 4. Rebalancing towards mathematics
+
+Given the independently verified scalar-cap result and the diminishing marginal returns from recent engineering candidates, please shift the balance of the remaining moonshot session towards the mathematical programme—roughly 75% mathematical exploration and 25% engineering, as a flexible guideline rather than a strict quota.
+
+Keep scalar-cap as the preserved target-machine engineering reference. Continue engineering where necessary to test a formulation or where there is a compelling, independently supported opportunity, but don’t feel obliged to pursue small incremental improvements to the incumbent.
+
+For incremental engineering candidates, generally reserve standalone i9 requests for independently supported improvements of around 2% or more, or batch several candidates into a shared comparison. Use your judgment where a smaller effect would resolve an important uncertainty or enable a larger improvement.
+
+Prioritise finding fundamentally cheaper exact reconstruction methods. Preserve your practice of proving structural claims, finding counterexamples, charging all construction costs, and measuring complete implementations against the strongest references.
+
+This is a change in research emphasis, not a request to change your mathematical direction. Follow the most promising questions arising from your own results, including negative ones. The 1.25× target and memory constraint remain unchanged.
