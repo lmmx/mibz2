@@ -23,3 +23,30 @@ For arbitrary bzip2 primary ranks, the induced data also needs a mark bridge. On
 For known S with k moves, T can be stored in log₂ binom(m,k) bits plus rank/select support or as runs. In the abstract unrestricted two-list shuffle, distinct T give distinct source→physical permutations for fixed S. That is a conditional counting statement about the shuffle itself. Actual BWT geometry, supplied coordinates and label-derived T constrain it further. The two-mask theorem does not imply an unconditional lower bound of 2m bits for τ. Likewise a dense original successor is unnecessary for the one-step merge, but old type names, source counts, class dependencies, construction of physical incoming tokens and the mark are real inputs that must be produced and priced. Neither the theorem nor a dictionary geometry count removes that work.
 
 [Independent two-mask implementation](interface.py) · [Exhaustive arbitrary-occurrence test](small.py) · [Receipt and witnesses](small.json)
+
+## Fixed physical-geometry screens on Wikidata
+
+The 20 original sections have 16–29 follower components for quote and 600–2,500 for the most frequent quote-return cylinder. On frozen ordinal 0 there are 19 classes for 2,716 quote types and 815 classes for 2,950 frequent types. The equivalence calculation scans original U ranks once with their original incoming and source type IDs; for each incoming type it unions all following types. This provides an actual class census once the original dictionary and incoming token column have been built. [Per-tape census](census.csv)
+
+Six fixed policies per section include both uniform choices, the largest class by visit mass and its complement, and the singleton-group collection and its complement. Of 120 screens, 119 gave collision-free cuts and one distinct new spelling per old type. Moving singleton classes for quote on ordinal 24 collided. For all 119 cases we checked the reconstructed original successor at every source. On every tape and section, an independent LF walk to physical cuts discovered each incoming spelling directly and verified the original marked output bytewise, with 17,999,830 original LF row steps in total. Those audits selected the first nonuniform policy in fixed order. [All policies, mask runs, input runs, fragments and marked hashes](policies.csv) · [Reproduction program](real.py)
+
+| Ten-tape section and policy | Dictionary bytes D | Proper-suffix nodes Q | Physical components | Source mask runs | Physical mask runs |
+|---|---:|---:|---:|---:|---:|
+| Quote, stay | 1,077,638 | 908,546 | 10 | 10 | 10 |
+| Quote, shift all | 1,077,638 | 874,693 | 10,380 | 10 | 10 |
+| Quote, move largest class | 1,051,947 | 881,185 | 7,557 | 360 | 20 |
+| Frequent, stay | 1,926,457 | 1,296,362 | 10 | 10 | 10 |
+| Frequent, shift all | 1,926,457 | 1,257,725 | 11 | 10 | 10 |
+| Frequent, move non-singleton classes | 1,900,021 | 1,268,808 | 4,956 | 4,955 | 20 |
+
+The mixed quote policy cuts dictionary bytes by 25,691 and physical fragmentation by 2,823 compared with the uniform shift; it adds 6,492 suffix nodes. The frequent mixed policy saves 26,436 dictionary bytes, but splits 11 fully shifted physical components into 4,956. No fixed mixed choice beat both uniform suffix-node counts on its own tape. The strongest Q could differ among other assignments. These results exclude original dictionary discovery, selector/follower construction, building the new physical incoming column, its ordering, and the marked inverse. The two-mask argument prices an algebraic interface, with no measured whole-stage or i9 improvement.
+
+For binary last columns through n=7, exhaustive arbitrary occurrence bits gave 17,064 collision-free assignments and 111,502 exact marked outputs; 1,190 shuffles changed rank order and 9,276 assignments also met the original typewise, follower and injective-name restrictions. An independent transcript collision search through n=10 found no genuine distinct-τ pair with the same retained unlabelled data after dropping either or both masks under the original restrictions. This negative search establishes no necessity result. Dropping the physical incoming column altogether is demonstrably ambiguous: L=010 and L=100 with U=[0,2), both masks zero and ordered old words 0,01 of mass one each give the identity and the transposition respectively. [Transcript search](ambiguity.py) · [Counts](ambiguity.json)
+
+```sh
+d=research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/shuffle
+python3 -B "$d/small.py" | diff - "$d/small.json"
+python3 -B "$d/ambiguity.py" | diff - "$d/ambiguity.json"
+python3 -B "$d/census.py" research/astra-e/dense/target/wikidata | diff - "$d/census.csv"
+python3 -B "$d/real.py" research/astra-e/dense/target/wikidata | diff - "$d/policies.csv"
+```
