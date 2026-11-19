@@ -2773,11 +2773,13 @@
     },
     {
       "trigger_comment_id": 7014835513,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-port-3-7014835513/report.md",
-      "source_commit": "43aabd683d8b3bbfedb1df96084d768f5bd82909"
+      "source_commit": "43aabd683d8b3bbfedb1df96084d768f5bd82909",
+      "report_commit": "361299774ce1d45d3a354a9b9d846e819266bdea",
+      "disposition": "HOLD at 43aabd68: Part A aggregate work verified and B1 admissible under §4a. B3 omits the FASTER interval gate, B2/B4 weaken where Open executes, and replay accepts empty Part A evidence."
     }
   ],
   "active_delegations": [],
