@@ -1,0 +1,14 @@
+{
+  "input_release_lib_and_binary": {
+    "/tmp/astra-terminal-event/event": "16d273dc163064dd80d492804c13f7bd772108f51cdf12906a2b49e846481650",
+    "/tmp/astra-terminal-event/main.rs": "ddfd33290f11568ef84e603e97ea3683908aad3686b2dd9ea799e55d673017c6",
+    "/tmp/astra-terminal-event/control.rs": "8665d1b464b83ffc1f349defbd533f6fcaa72b884c97e4b5b1e8c64416363bc9",
+    "/tmp/astra-terminal-event/second.rs": "523bee3c587e17bda12437918e2b5f45951df64a0435820fe045b05683fda52a",
+    "target/release/deps/libmibz2.rlib": "26ba7a41c8fe582a45c97561f336d79ee0ac85b89561d14a07dbe9757e6f1bd9",
+    "/tmp/astra-clipped/ten.bin": "879fb79ed0e18980f2c74c8f7fd73df2789b6d976de03e87ddd0e4c136ec2cbb",
+    "/tmp/astra-token-all/admissions.bin": "da0529bf4e73b906fd997c4be87238a892f1feaaa3f549a729c6dd7584cecf26",
+    "/tmp/astra-clipped-final/expected.csv": "371c94a260c2f9a01cca5580cbee43ac687cc7b8d1a2b1a3d3e8b295c4131c10"
+  },
+  "repeat_source": "a34c81ba357b3186915113ebe5445a6e97cd7fcb",
+  "prereg": "cc3234d"
+}
