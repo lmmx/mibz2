@@ -1,0 +1,134 @@
+{
+  "columns": 1092,
+  "marks": 6015,
+  "multi_cycle_columns": 896,
+  "all_mark_colour_codings_preserved": 661,
+  "witnesses": {
+    "child": {
+      "t": [
+        0,
+        1,
+        2
+      ],
+      "l": [
+        2,
+        0,
+        1
+      ],
+      "p": 0,
+      "projected": [
+        0,
+        1
+      ],
+      "true_bwt": [
+        [
+          1,
+          0
+        ],
+        0
+      ],
+      "candidate": [
+        0,
+        1
+      ],
+      "candidate_outputs": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ]
+    },
+    "skeleton": {
+      "t": [
+        1,
+        0,
+        2
+      ],
+      "l": [
+        1,
+        2,
+        0
+      ],
+      "p": 1,
+      "projected": [
+        0,
+        0,
+        1
+      ],
+      "true_bwt": [
+        [
+          1,
+          0,
+          0
+        ],
+        0
+      ],
+      "candidate": [
+        0,
+        1,
+        0
+      ],
+      "candidate_outputs": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ]
+    }
+  },
+  "multiple_cycle_witness": {
+    "l": [
+      2,
+      1,
+      0
+    ],
+    "p": 1,
+    "marked": [
+      1,
+      1,
+      1
+    ],
+    "wanted": [
+      0,
+      0,
+      0
+    ],
+    "plain_skeleton": [
+      1,
+      0,
+      0
+    ],
+    "possible": [
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ]
+    ]
+  }
+}
