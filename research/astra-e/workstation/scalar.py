@@ -4,6 +4,7 @@ import io
 import json
 import math
 import os
+import re
 from pathlib import Path
 import statistics
 import subprocess
@@ -72,6 +73,10 @@ def decision(rows):
     return result
 
 def probe():
+    source=Path("bench/moonshot/src/main.rs").read_text()
+    # The scorer has no --slots option. Verify its actual compiled worker/slot arguments.
+    if not re.search(r"parallel_workers_with::<K>\(\s*std::io::Cursor::new\(data\),\s*workers,\s*(?:4\s*\*\s*workers|workers\s*\*\s*4),",source):
+        raise ValueError("scorer's paid invocation does not certify 4W slots")
     first,second=Path("scalar"),Path("edge")
     scorer=runner(first,second)
     def synthetic(s,arm,w,corpus,perf=None):
@@ -100,7 +105,7 @@ def dry_workers(first,second,corpus,out):
     for w in WORKERS:
         for label,arm,binary in checks:
             # --workers launches W explicit decoder workers even on the quota-limited cloud.
-            row=json.loads(subprocess.check_output([binary,"run","--arm",arm,"--workers",str(w),"--slots",str(4*w),"--file",corpus]))
+            row=json.loads(subprocess.check_output([binary,"run","--arm",arm,"--workers",str(w),"--file",corpus]))
             assert row["arm"]==arm and row["workers"]==w and row["out_bytes"]==209700196
             outputs.append(dict(label=label,compiled_arm=arm,workers=w,slots=4*w,out_bytes=row["out_bytes"]))
         if len(cpus)<w:

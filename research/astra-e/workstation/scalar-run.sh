@@ -92,7 +92,8 @@ sha256sum "$corpus" "$x4" > "$out/inputs.sha256"
 [[ $(sha256sum "$x4" | cut -d' ' -f1) == 0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e ]]
 python3 "$recipe/scalar.py" plan > "$out/roster.json"
 python3 "$score/moonshot.py" score "$candidate" --corpus "$corpus" --target-dir "$CARGO_TARGET_DIR" --no-build --no-timing --no-proxy --out "$out/candidate-gate" | tee "$out/scorer-report.txt"
-(cd "$oldtree" && python3 "$score/moonshot.py" score "$old" --corpus "$corpus" --target-dir "$other_target" --no-build --no-timing --no-proxy --out "$out/predecessor-gate") | tee "$out/predecessor-report.txt"
+python3 "$score/moonshot.py" score "$oldtree/$old" --corpus "$corpus" --target-dir "$other_target" --no-build --no-timing --no-proxy --out "$out/predecessor-gate" | tee "$out/predecessor-report.txt"
+cmp <(grep '^scorer v' "$out/scorer-report.txt") <(grep '^scorer v' "$out/predecessor-report.txt")
 python3 "$recipe/test_protocol.py" --gate "$out/candidate-gate/check.jsonl" candidate
 python3 "$recipe/test_protocol.py" --gate "$out/predecessor-gate/check.jsonl" candidate
 for arm in lazy opend; do

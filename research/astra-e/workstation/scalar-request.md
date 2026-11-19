@@ -12,7 +12,7 @@ The 1.25× stretch condition is tested separately against 0.5.6 LazyCells at eve
 
 The historical 16×4 edge/predecessor trial had a standard deviation of 0.012709 in these equal-weight, same-round log means. Under iid normal round means and the conventional two-sided interval, 48 rounds give prospective power of 65.3% at a 0.44% effect, 99.0% at 0.8%, and over 99.99% at 2%. The corresponding values at 32 rounds are 47.7%, 93.4% and over 99.99%. Historical standard-deviation uncertainty alone gives a 33–89% power range at a 0.44% effect for 48 rounds. A four-round block resample also suggests that residual temporal dependence could widen the interval. These are power estimates for the pooled wall endpoint alone. The W-specific and memory conditions can further reduce the chance of an incremental pass. [Blind calculations and original round vectors](scalar-power/README.md)
 
-Independent registration is `bench/astra-e-scalar-cap` at `23ee31abc85851d8809cfccc2273f452ca99f204`. At this exact checkout, use the following commands for the untimed target rehearsal and the Coordinator's measurement submission.
+Independent registration is `bench/astra-e-scalar-cap` at `cafcab595600d1430e67481863f92464b5544a4e`. At this exact checkout, use the following commands for the untimed target rehearsal and the Coordinator's measurement submission.
 
 ```sh
 just bench-astra-e-scalar-cap-dry
