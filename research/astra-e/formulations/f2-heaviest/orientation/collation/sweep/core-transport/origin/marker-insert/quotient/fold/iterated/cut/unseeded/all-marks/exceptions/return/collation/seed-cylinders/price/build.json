@@ -1,0 +1,21 @@
+{
+  "code": {
+    "worker.cpp": "76584c672c6d8461c8ba1aa9cb3239318ed5f3cb43d1c2ea85e5b28b863e8899",
+    "run.py": "9083d8c77a082d60abc58f9a680110291ee637cb79204350a24273666b4da9aa",
+    "seeds.hpp": "bb368f4065c1f2792ae04da86a2c8d48c78cab0766357b7a840a490bfb465a4e",
+    "forest.hpp": "2c6282cfce49a0bbc1dd2949f8ce7ad017b1efc4f3c372f11531ae20d865f2b8"
+  },
+  "flags": [
+    "-std=c++20",
+    "-O3",
+    "-g0",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-fPIC",
+    "-shared"
+  ],
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "rust": "1b4922c1fc30a38e2b959f3ee8d2291b72a3b5fae5a046c48bbdf15cf60952ad",
+  "lib": "bf1fee2c01c8cfb95b5affe21a3eb1cfd9d24f7ae7d0d99417b188af22e34763"
+}
