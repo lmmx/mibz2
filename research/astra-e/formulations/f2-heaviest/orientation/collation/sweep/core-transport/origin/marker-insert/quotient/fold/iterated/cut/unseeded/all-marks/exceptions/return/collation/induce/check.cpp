@@ -124,4 +124,5 @@ int main(int argc,char** argv){
     for(U j=0;j<std::min<size_t>(16,order.size());++j)rare[order[j].second]=true;
     for(U x=0;x<n;++x)selected[x]=rare[p.f[x]];
     verify(p,selected,mark,false,"rareF16");
+    return 0;
 }
