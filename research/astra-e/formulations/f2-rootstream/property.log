@@ -1,0 +1,10 @@
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `release` profile [optimized + debuginfo] target(s) in 20.56s
+     Running unittests src/main.rs (/workspace/work/f2count-check/release/deps/moonshot-53d7c20ebe2ea968)
+
+running 1 test
+exact section outputs for 11264 covered small marks
+test candidate::checks::arbitrary_marks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.01s
+
