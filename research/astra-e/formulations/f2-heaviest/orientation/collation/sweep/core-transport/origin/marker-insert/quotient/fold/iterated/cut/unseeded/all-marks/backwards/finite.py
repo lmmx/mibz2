@@ -6,9 +6,9 @@ from pathlib import Path
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+from audit_positions import verify_positions
 from encode import serialize_parts
 from decode import solve
-from panel import verify_positions
 
 
 def decode_exact(raw,words,mark,wire,plain,coords,executable):
