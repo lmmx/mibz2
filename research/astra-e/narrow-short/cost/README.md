@@ -42,5 +42,17 @@ The full profile and paired experiment can be rebuilt from the repository root w
 d=research/astra-e/narrow-short/cost
 cargo build --locked --release --features moonshot --lib
 bash "$d/run.sh" /tmp/astra-combined-cost "$PWD/target/release/deps" 3
-python3 "$d/report.py"
+python3 "$d/report.py" /tmp/astra-combined-cost
+```
+
+## Paid screen of the queue-counter change
+
+Across 32 rounds with four position-balanced arms, the new scan took **.9003 [.8493,.9544]** of the existing scan's CPU. The complete instrumented inverse ratio was .9744 [.9198,1.0323]. Direct timing of the two uninstrumented complete inverses gave **.9879 [.9187,1.0624]**. Ratios aggregate the same eleven block durations before pairing by round. Frozen scan instructions fell from 4,308,332 to 4,143,160 (−3.83%), and complete inverse instructions fell from 10,072,884 to 9,908,938 (−1.63%). These figures justify testing the integrated entry independently. The complete local CPU interval spans both a gain and a regression. [Raw paired timing](paired.csv) · [Frozen candidate Callgrind dumps](callgrind-queues.tar.xz) · [All statistics](summary.txt)
+
+The corpus validation matched all 228 original and released inverses and preserved the counts of bands, words, induction steps and packed table bytes. Queue order and every pushed element are identical by induction over the run scan. The targeted candidate also passed 24,590 direct stable-LF marked comparisons, including periodic and multiple-cycle inputs, the 127-byte cap and two wide-link fallbacks. Its source uses the existing generation preflight. The first invocation of the following commands prepares a scorer-ready entry. Peak process RSS, whole-worker timing and the independent i9 target remain open. [Candidate](candidate.rs) · [Marked receipt](marked.txt)
+
+```sh
+d=research/astra-e/narrow-short/cost
+bash research/astra-e/prepare.sh "$d/candidate.rs"
+bash "$d/marked.sh" /tmp/astra-combined-cost-marked "$PWD/target/release/deps" 3
 ```

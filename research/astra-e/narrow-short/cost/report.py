@@ -3,13 +3,14 @@ import csv,lzma,math,statistics,sys
 from collections import defaultdict
 from pathlib import Path
 d=Path(__file__).resolve().parent
+src=Path(sys.argv[1]) if len(sys.argv)>1 else d
 def rows(p):
     with p.open() as f: return list(csv.DictReader(f))
 def cm(vals):
     logs=list(map(math.log,vals)); m=statistics.mean(logs)
     z=(2.069 if len(logs)==24 else 2.040)*statistics.stdev(logs)/math.sqrt(len(logs))
     return [round(math.exp(x),6) for x in [m,m-z,m+z]]
-matrix=rows(d/'phases.csv')
+matrix=rows(src/'phases.csv')
 phases=list(matrix[0])[3:-2]
 groups=defaultdict(lambda:defaultdict(int))
 for row in matrix:
@@ -37,9 +38,10 @@ for w,actual in [(7,.8982),(8,.9117),(9,.9031),(10,.8871)]:
     saving=1-.8/actual
     report=[saving/(admit*x) for x in (profile['scan_queues'],profile['residual_emit'],profile['scan_queues']+profile['residual_emit'])]
     print("W",w,"required fraction of current wall",round(saving,5),"conditional reductions (scan, emit, both)",*(round(x,5) for x in report))
-if (d/'paired.csv').exists():
+trial_file = src/'paired.csv' if (src/'paired.csv').exists() else src/'rebill/paired.csv'
+if trial_file.exists():
     trial=defaultdict(lambda:defaultdict(int))
-    for row in rows(d/'paired.csv'):
+    for row in rows(trial_file):
         m=trial[int(row['round'])];arm=row['arm']
         for col in ('scan_ns','total_ns'):m[arm,col]+=int(row[col])
     assert len(trial)==32

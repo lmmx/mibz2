@@ -1,9 +1,21 @@
 """Regenerate the immutable combined kernel and insert costs at original phase boundaries."""
 from pathlib import Path
-import subprocess,sys,shutil
+import subprocess,sys,shutil,hashlib
 
 here = Path(__file__).resolve().parent
 root = here.parents[3]
+if len(sys.argv)==1:
+    # Same candidate preparation entry used by research/astra-e/prepare.sh.
+    sys.dont_write_bytecode=True
+    from queues import transform
+    subprocess.run([sys.executable,here.parent/'prepare.py'],check=True)
+    data=(here.parent/'constructor_ahead.rs').read_bytes()
+    assert hashlib.sha256(data).hexdigest()=='c0ccf8939b8cdf02ac4c8157c588d980afa378805fcb37498ca3cda0ccbc6d4f'
+    source=transform(data.decode())
+    for before,after in [('"../short-words/','"../../short-words/'),('"narrow.rs"','"../narrow.rs"'),('"../../../docs/','"../../../../docs/')]:
+        source=source.replace(before,after)
+    (here/'generated_kernel.rs').write_text(source)
+    sys.exit(0)
 tmp = Path(sys.argv[1]).resolve()
 tmp.mkdir(parents=True,exist_ok=True)
 frozen = tmp/"frozen"

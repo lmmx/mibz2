@@ -12,3 +12,6 @@ W 7 required fraction of current wall 0.10933 conditional reductions (scan, emit
 W 8 required fraction of current wall 0.12252 conditional reductions (scan, emit, both) 0.47945 0.40073 0.21829
 W 9 required fraction of current wall 0.11416 conditional reductions (scan, emit, both) 0.44675 0.3734 0.2034
 W 10 required fraction of current wall 0.09819 conditional reductions (scan, emit, both) 0.38423 0.32115 0.17493
+counter elision meter_queues meter_original scan_ns [0.900309, 0.84932, 0.954359]
+counter elision meter_queues meter_original total_ns [0.97441, 0.919805, 1.032257]
+counter elision queues original total_ns [0.987934, 0.918701, 1.062384]

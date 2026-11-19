@@ -2,10 +2,7 @@
 from pathlib import Path
 import shutil, sys
 
-def build(src, dest):
-    shutil.copytree(src,dest,dirs_exist_ok=True)
-    path=dest/"research/astra-e/narrow-short/constructor_ahead.rs"
-    s=path.read_text()
+def transform(s):
     def change(old,new):
         nonlocal s
         assert s.count(old)==1,old
@@ -22,7 +19,12 @@ def build(src, dest):
             }
         }
         assert!(m > 0 && all.iter()""")
-    path.write_text(s)
+    return s
+
+def build(src, dest):
+    shutil.copytree(src,dest,dirs_exist_ok=True)
+    path=dest/"research/astra-e/narrow-short/constructor_ahead.rs"
+    path.write_text(transform(path.read_text()))
 
 if __name__=="__main__":
     build(Path(sys.argv[1]),Path(sys.argv[2]))
