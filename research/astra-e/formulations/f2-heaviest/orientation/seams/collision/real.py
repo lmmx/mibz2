@@ -30,6 +30,7 @@ def main():
     parser.add_argument("inputs", type=Path)
     parser.add_argument("out", type=Path)
     parser.add_argument("--laps", type=int, default=6)
+    parser.add_argument("--match", action="store_true", help="Run the complete reference matcher and fresh-process memory samples.")
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     with (tempfile.TemporaryDirectory() as tmp,
@@ -40,8 +41,13 @@ def main():
                   "selection_cpu_s").split()
         writer = csv.writer(manifest, lineterminator="\n")
         writer.writerow(fields)
-        print(",".join(COLUMNS), file=laps)
-        for tape in paths(args.inputs):
+        columns = ["ordinal", "section", "mode", "lap", "total_cpu_s", "process_hwm_kib"] if args.match else COLUMNS
+        print(",".join(columns), file=laps)
+        if args.match:
+            (args.out / "memory.csv").write_text(",".join(columns) + "\n")
+        tapes = paths(args.inputs)
+        assert tapes, "no irec inputs"
+        for tape in tapes:
             ordinal = int(tape.name.split(".")[0])
             runs, mark = read_input(tape)
             started = time.process_time()
@@ -66,6 +72,12 @@ def main():
             laps.flush()
             subprocess.run([args.binary.resolve(), binary_input, str(args.laps), str(ordinal),
                             expected], check=True, stdout=laps)
+            if args.match:
+                with (args.out / "memory.csv").open("a") as memory:
+                    for section in ["quote", "compound"]:
+                        for method in ["fixed_sort", "fixed_radix", "indexed_direct"]:
+                            subprocess.run([args.binary.resolve(), binary_input, "1", str(ordinal),
+                                            expected, method, section], stdout=memory, check=True)
             print(f"verified tape {ordinal:04}", file=sys.stderr, flush=True)
 
 

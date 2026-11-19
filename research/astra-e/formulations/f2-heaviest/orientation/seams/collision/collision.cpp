@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstdlib>
 #include <cstdint>
 #include <ctime>
 #include <fstream>
@@ -23,11 +24,23 @@ using Section = std::vector<std::pair<U, U>>;
 enum Mode { Back, Forward, Collision };
 const char *names[] = {"backward", "forward", "collision"};
 
+#ifdef ASTRA_COLLISION_QUIET
+// The reference timing build erases diagnostic counter increments in hot loops.
+struct Counter {
+  Counter(Count = 0) {}
+  void operator++() {}
+  void operator+=(Count) {}
+  operator Count() const { return 0; }
+};
+#else
+using Counter = Count;
+#endif
 struct Stats {
-  Count visits = 0, edge_steps = 0, advance_pieces = 0, indexed_seeks = 0,
-        seek_cmps = 0, sort_keys = 0, sort_cmps = 0, join_steps = 0,
-        owner_steps = 0, survivor_writes = 0, hit_spans = 0,
-        peak_packet_slots = 0, phases = 0;
+  Count phases = 0;
+  Counter visits = 0, edge_steps = 0, advance_pieces = 0, indexed_seeks = 0,
+          seek_cmps = 0, sort_keys = 0, sort_cmps = 0, join_steps = 0,
+          owner_steps = 0, survivor_writes = 0, hit_spans = 0,
+          peak_packet_slots = 0;
 };
 struct Run {
   Byte byte;
@@ -134,7 +147,26 @@ struct Construction {
   std::vector<Word> words;
   std::vector<Band> bands;
   U dictionary_bytes = 0, raw_bands = 0;
-  explicit Construction(Mode m) : mode(m) {}
+  bool radix_order;
+  explicit Construction(Mode m, bool radix = false)
+      : mode(m), radix_order(radix) {}
+
+  // Bzip2 ranks fit in 20 bits. Two stable counting passes avoid comparison
+  // ordering on wide fronts; the small sparse tail uses std::sort.
+  static void radix_sort(Front &packets) {
+    constexpr U width = 1024;
+    Front temporary(packets.size());
+    auto pass = [&](const Front &from, Front &to, unsigned shift) {
+      std::array<U, width> pos{};
+      for (const auto &p : from)
+        ++pos[(p.row >> shift) & (width - 1)];
+      std::exclusive_scan(pos.begin(), pos.end(), pos.begin(), 0u);
+      for (const auto &p : from)
+        to[pos[(p.row >> shift) & (width - 1)]++] = p;
+    };
+    pass(packets, temporary, 0);
+    pass(temporary, packets, 10);
+  }
 
   void hit(U x, U y, U width, U a, U b) {
     ++s.hit_spans;
@@ -168,11 +200,15 @@ struct Construction {
     }
     if (sort) {
       s.sort_keys += next.size();
-      std::sort(next.begin(), next.end(),
-                [&](const Packet &a, const Packet &b) {
-                  ++s.sort_cmps;
-                  return a.row < b.row;
-                });
+      if (radix_order && next.size() >= 1024 &&
+          map.table.back().hi <= (1u << 20)) {
+        radix_sort(next);
+      } else
+        std::sort(next.begin(), next.end(),
+                  [&](const Packet &a, const Packet &b) {
+                    ++s.sort_cmps;
+                    return a.row < b.row;
+                  });
       size_t used = 0;
       for (auto p : next) {
         if (used) {
@@ -395,6 +431,7 @@ struct Construction {
   }
 };
 
+#ifndef ASTRA_COLLISION_LIBRARY
 struct Oracle {
   U n;
   Word l, f;
@@ -452,12 +489,15 @@ struct Oracle {
   }
 };
 
+#endif
 double cpu() {
   timespec t{};
   clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t);
   return t.tv_sec + t.tv_nsec * 1e-9;
 }
+#ifndef ASTRA_COLLISION_LIBRARY
 int main(int argc, char **argv) {
+  const bool audit_radix = std::getenv("ASTRA_AUDIT_RADIX") != nullptr;
   if (argc == 2 && std::string(argv[1]) == "small") {
     Count columns = 0, sections = 0, marks = 0, disjoint = 0, nond = 0;
     for (U alphabet : {2u, 3u})
@@ -495,7 +535,7 @@ int main(int argc, char **argv) {
                   sec.push_back({j, j + 1});
               }
             ++sections;
-            Construction c(Collision);
+            Construction c(Collision, audit_radix);
             c.run(runs, sec);
             o.check(c, sec);
             for (U p = 0; p < n; p++) {
@@ -550,7 +590,7 @@ int main(int argc, char **argv) {
          lap++, std::next_permutation(order, order + 3)) {
       for (int m : order) {
         double start = cpu();
-        Construction c{Mode(m)};
+        Construction c{Mode(m), audit_radix};
         c.run(runs, sec);
         double built = cpu();
         auto bytes = c.output(p, n);
@@ -574,3 +614,5 @@ int main(int argc, char **argv) {
     }
   }
 }
+
+#endif

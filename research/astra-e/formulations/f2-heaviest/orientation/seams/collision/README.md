@@ -44,3 +44,27 @@ Each of the three orders appears first and last twice in six round permutations,
 | Compound collision | 1,364,367 | 18,685,021 | 2,604,366 | 9,770,406 | .338 | .017 |
 
 All 360 runs matched every dense-oracle return and the external marked output. Quote midpoint used 10.4% more affine pieces than forward and lost constructor CPU. Compound midpoint used 27.2% fewer pieces and won the matched packet constructors. Dynamic ordering, simultaneous survivor splitting, a second directional index and additional packet working set are measurable costs. The high cost of repeated comparison sorting motivates one fixed-clock radix-order variant and an end-to-end check against indexed backward Direct.
+
+## Full inverse reference and paid radix ordering
+
+The complete reference links indexed backward Direct at fd2d04719fb696dd4b8d0b5cebeb000caf8032e6 (direct_native.hpp SHA-256 ca83b7e86111c055f7ed55b25e1e476cb2caa13425a2eb1cbec910877eb4e953). All three arms compile in one release translation unit. They take identical raw runs, mark and preselected section. The fixed-clock builds erase diagnostic counter increments in hot loops. Their maps, dynamic frontiers, tries, sorting, dictionary materialization, output lookups and buffer writes are all timed, including construction-state destruction. Direct constructs its LF page index, backward descriptors, spelling arena and source directory, then expands the marked output. This reference supports both requested section families. The input projection, common Python section recognizer, binary reading and post-timer byte checks are outside the comparison. Complete here means initial L runs and supplied section to n marked inverse bytes.
+
+The second fixed-clock arm applies two stable 10-bit counting passes when a frontier contains at least 1,024 packets and ranks fit in 20 bits. Each pass counts, prefixes and scatters whole packets. It uses one temporary packet array and a 1,024-counter table. Smaller fronts and final source-band ordering use the same comparison sort. The clock, owner labels, meeting rule, spelling representation and emitted output stay fixed.
+
+| Section | Paired fixed sort / Direct | Paired fixed radix / Direct | Paired radix / sort | Peak KiB fixed sort, radix, Direct |
+|---|---:|---:|---:|---:|
+| Quote | 4.775 | 4.103 | .859 | 16,564 / 16,564 / 9,416 |
+| Compound | 4.892 | 4.419 | .903 | 19,092 / 19,092 / 9,192 |
+
+The ratios use geometric means of CPU ratios in 60 matched laps per section, with all six possible orderings on each tape and an independently expanded byte-by-byte reference check on every arm. Maximum absolute process high-water marks come from Linux /proc/self/status in 60 additional fresh executions, one tape, arm, and section each. Each process includes input runs in both identical starter formats and the reference output. matched/laps.csv records all 360 complete CPU samples; its running process high-water values span multiple arms and are superseded by matched/memory.csv for memory comparisons. matched/inputs.csv identifies the inputs. matched/summary.csv retains separate per-tape contrasts.
+
+The radix change recovers part of the ordering cost on both families. The remaining complete-inverse penalty and peak memory reject these packet constructors as an integration candidate. The compound split count remains a positive structural result. A future adaptive seam needs to change the cost of owner, spelling and endpoint assembly as well as the meeting positions. These are single-thread, shared-cloud marked-inverse observations. No worker throughput or i9 speedup is inferred.
+
+```sh
+g++ -std=c++17 -O3 -DNDEBUG -Wall -Wextra -Werror match.cpp -o /tmp/astra-collision-match
+python3 -B real.py /tmp/astra-collision-match ../../../../../dense/target/wikidata /tmp/astra-collision-match-results --match
+python3 matched_report.py /tmp/astra-collision-match-results
+ASTRA_AUDIT_RADIX=1 python3 -B real.py /tmp/astra-collision ../../../../../dense/target/wikidata /tmp/astra-collision-radix-proof --laps 1
+```
+
+An additional assertion-enabled radix pass reconstructed and verified every source, destination and first-return byte across the same 20 tape/section combinations. radix-check/laps.csv reproduces every baseline geometry counter apart from ordering comparisons. Frontier plus final-band comparisons fell from 15,545,400 to 3,553,591 for quote and from 18,685,021 to 4,219,913 for compound. The instrumented packet-slot column excludes the short-lived radix scratch. Fresh-process VmHWM includes it.
