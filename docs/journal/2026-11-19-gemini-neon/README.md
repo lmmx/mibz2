@@ -14,7 +14,7 @@ unless Louis decides so.
 | [prompt.md](prompt.md) | The prompt, verbatim. |
 | [response.md](response.md) | Neon's response, verbatim and unedited. |
 | [response-2.md](response-2.md) | Neon's second response, after a follow-up asking it to re-examine Theorem 3 and repair Theorem 2. Verbatim and unedited. |
-| [verify_thm3.py](verify_thm3.py) | Neon's round-3 exhaustive verifier for Theorem 3′, verbatim. Neon could not run it; the Coordinator ran it (results below). Ruff-exempt as quoted evidence. |
+| [verify_thm3.py.txt](verify_thm3.py.txt) | Neon's round-3 exhaustive verifier for Theorem 3′, verbatim; kept as text so it is neither linted nor edited. Neon could not run it; the Coordinator ran it (results below): `cp verify_thm3.py.txt v.py && python3 v.py`. |
 | [batchrate.py](batchrate.py) | The Coordinator's measurement of how often fronts can be batched, using Neon's own code on real text. |
 | [check_theorem1.py](check_theorem1.py) | The Coordinator's exhaustive check of Theorem 1 and of the 7-cycle example. |
 
