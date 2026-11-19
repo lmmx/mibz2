@@ -31,6 +31,10 @@ MEASURED_COMBINED = {
     "commit": "80d8409359214b4e5abfd4430213921e82e9cd30",
     "path": "research/astra-e/narrow-short/ahead.rs",
 }
+MEASURED_EDGE = {
+    "commit": "badb2aec3624bd65606c429b2e6f79e9d9d0050f",
+    "path": "research/astra-e/edge-budget/candidate.rs",
+}
 STATIC_FRONTIER = {
     "commit": "d48e80ff01eeee6d23277945e2f58b61004470aa",
     "path": "research/astra-e/formulations/f2-frontier/candidate.rs",
@@ -44,6 +48,7 @@ GUARDED_POPCNT = {
     "path": "research/astra-e/formulations/f2-pages/instructions/candidate.rs",
 }
 PREDECESSORS = {
+    "research/astra-e/worker-dose/candidate.rs": MEASURED_EDGE,
     "research/astra-e/front-fusion/precount/worker/candidate.rs": MEASURED_COMBINED,
     "research/astra-e/formulations/f2-pages/payload/slots/preload.rs": GUARDED_POPCNT,
     "research/astra-e/formulations/f2-pages/instructions/candidate.rs": COUNTED,
