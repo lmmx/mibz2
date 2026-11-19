@@ -28,3 +28,9 @@ With the scorer's checksum-verified corpus, a fresh output directory and Rust 1.
 ```sh
 bash research/astra-e/queue-spans/run.sh /tmp/astra-e-queue-stage
 ```
+
+## Native stage result
+
+The source for this measurement is `300160cf9f1ab38b0a1206eb1800c42bd26b7b7f`. Two independent processes checked all eleven sample blocks in all seven arms with 28 rotated rounds and a warmup. Positions balance exactly per block in each process. The shared VM was busy during the first run, and its paired CPU intervals are wide. On the repeat, thread CPU time relative to the per-row mode measured 1.0478 [1.0292, 1.0667] for raw spans, 1.1386 [1.1053, 1.1729] for joined spans and 1.1888 [1.1659, 1.2120] for the input rescan. The direct repeat comparison with the independent preserved constructor gave 1.0137 [0.9745, 1.0544] for raw spans and 1.1015 [1.0587, 1.1461] for joined spans. Both runs' sums of per-block CPU medians placed raw spans behind row queues and joined spans behind raw spans.
+
+The nearly identical high-water capacities make the unjoined variant the stronger compact-queue alternative on these inputs. Its scorer entry is `raw.rs`. Neither whole-worker peak RSS nor target performance follows from the measured bucket capacity. See `stage/first.csv`, `stage/repeat.csv` and `stage/summary.csv` for the independent wall and CPU measurements and the preserved controls.
