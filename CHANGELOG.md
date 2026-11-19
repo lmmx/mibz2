@@ -44,6 +44,16 @@ release-scaling/run-20261119T203443Z, 10 rounds): 0.5.6's wall time over 0.5.7's
 for 0.5.6. Below 8 threads the open kernel is not on the route, and nothing changes. The step
 has its row in `docs/journal/release-attribution.md` (§5b).
 
+**The crossover** (§5a; `bench-crossover`, crossover/run-20261119T205115Z, evidence 4f895f5d,
+10 rounds on Wikidata): the team threshold stays. No forced arm beats the shipped decoder at any
+count.
+- **Teams:** `mibz2-team2` and `mibz2-team3` are 1.22–3.04× the shipped wall time.
+- **One worker per thread:** `mibz2-workers-w` is never faster. Its interval spans 1 at 4, 5, 7
+  and 9 threads, and elsewhere it is 1.045–1.136×.
+- **At 6 threads:** the shipped decoder, now the lazy kernel at 5 workers (#642), is 1.135
+  [1.118, 1.152] faster than one worker per thread. This is independent confirmation of the §5c
+  trim.
+
 **Caveats:**
 - **The first registered attempt was NOT ADOPTED, and that verdict stands**
   (open-port/run-20261119T125538Z). Four guard point estimates exceeded 1.02, all on corpora
