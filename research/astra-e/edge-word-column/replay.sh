@@ -42,6 +42,9 @@ for entry in census affine; do
 done
 "$out/fused-census" "$edge" "$words" "$out/thin.bin" >"$out/fused-pairs.csv" 2>"$out/fused-pairs-check.txt"
 "$out/fused-affine" "$edge" "$words" "$out/thin.bin" >"$out/affine.csv"
-for artifact in "$here"/fused-ascii/{fused-pairs.csv,fused-pairs-check.txt,affine.csv} "$here"/*.csv "$here"/{check,extra-check,union-check,cuts-check,small}.txt; do
+g++ -std=c++17 -O2 -Wall -Wextra "$here/certificate/choose.cpp" -o "$out/choose"
+"$out/choose" "$edge" "$words" "$out/thin.bin" >"$out/choose.csv"
+python3 "$here/certificate/check.py" | cmp "$here/certificate/check.txt" -
+for artifact in "$here"/certificate/choose.csv "$here"/fused-ascii/{fused-pairs.csv,fused-pairs-check.txt,affine.csv} "$here"/*.csv "$here"/{check,extra-check,union-check,cuts-check,small}.txt; do
     cmp "$artifact" "$out/$(basename "$artifact")"
 done
