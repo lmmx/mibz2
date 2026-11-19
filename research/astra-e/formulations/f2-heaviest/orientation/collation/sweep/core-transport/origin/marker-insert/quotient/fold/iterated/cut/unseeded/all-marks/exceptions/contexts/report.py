@@ -10,7 +10,7 @@ assert len(times)==960 and len(rss)==80
 cols=('k','models','states','extension_edges','exception_rows','physical_ranges','wire_bytes',
       'original_width_scans','partition_intersections','touched_histogram_entries',
       'final_revisit_intersections','fixed_alphabet_levels','max_observed_dynamic_bytes',
-      'median_construct_ms_per_block','fastest_ms','slowest_ms','max_peak_kib')
+      'mean_tape_median_cpu_ms','fastest_ms','slowest_ms','max_peak_kib')
 w=csv.writer(sys.stdout,lineterminator='\n');w.writerow(cols)
 for k in sorted({int(r['k']) for r in blocks}):
     group=lambda ds:[r for r in ds if int(r['k'])==k]

@@ -1,4 +1,4 @@
-k,models,states,extension_edges,exception_rows,physical_ranges,wire_bytes,original_width_scans,partition_intersections,touched_histogram_entries,final_revisit_intersections,fixed_alphabet_levels,max_observed_dynamic_bytes,median_construct_ms_per_block,fastest_ms,slowest_ms,max_peak_kib
+k,models,states,extension_edges,exception_rows,physical_ranges,wire_bytes,original_width_scans,partition_intersections,touched_histogram_entries,final_revisit_intersections,fixed_alphabet_levels,max_observed_dynamic_bytes,mean_tape_median_cpu_ms,fastest_ms,slowest_ms,max_peak_kib
 1,10,893,18054,5694534,647332,8423713,690484,690561,18054,690503,10,1704928,0.658161,0.404825,1.592864,4812
 2,10,18054,136549,3276395,609061,8080639,690484,1383965,154603,687399,20,1731008,1.095194,0.764921,2.40885,4792
 3,10,136549,471228,1865100,510708,7868505,690484,2094288,625831,658890,30,1922318,2.102031,1.545419,3.785789,4880
