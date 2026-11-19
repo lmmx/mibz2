@@ -1,5 +1,5 @@
 {
   "kind": "advisory proxy",
   "assessment": "Official v1 on 48 full and 16 tiny sampled blocks models candidate/lazy 0.910 / 0.912 / 0.915 at W7/8/10. Ratios to opend compare the deposited and new point estimates. The fresh lazy/candidate pair supplies the interval. [Full v1 calibrated reading](results/combined-v1-proxy/README.md).",
-  "verification": "The quick gate passed 98 cases for this model. Other full libbzip2 gate and CI receipts for the same candidate remain separate. [Paired CI](https://github.com/lmmx/mibz2/actions/runs/44427324957)."
+  "verification": "Independent i9-10900K measured the combined candidate at .8982/.9117/.9031/.8871 wall and .8489/.8288/.8230/.8191 median peak RSS versus LazyCells at W7/8/9/10. All three prospective model intervals contain the corresponding i9 point. No W meets the 0.80 wall criterion. [Measured bundle](https://github.com/lmmx/mibz2/blob/c381da23edd8f466bcfe8b8e6c850075d58588de/astra-e/run-20261119T013135Z.tar.gz) \u00b7 [Raw replay and comparison](results/combined-v1-proxy/heldout-i9.csv) \u00b7 [Low-W paired CI](https://github.com/lmmx/mibz2/actions/runs/44427324957)."
 }

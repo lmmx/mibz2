@@ -29,6 +29,24 @@ python3 research/astra-e/results/combined-v1-proxy/read_v1.py /path/to/frozen/ch
 
 The complete model was committed at `2337830` before the measured workstation bundle. The target-ready code at `8c9640d8ab186f81a0500f48e606e0c21c2a6669` has the same tracked decoder, scorer, Cargo configuration, original Open-Return sources and four candidate-module directories as the proxy build. The independent untimed rehearsal at that tag exercised W7, W8, W9 and W10 on the i9, passed candidate and control gates, and recorded the frozen rotation. It selected the upstream v1 scorer from `604dac3`. The dry archive's SHA-256 is `635fa5924bddbf7e7457c504ad936834722d32891f5fdbd1f06cb835d9ab8584`. [Independent target dry run](https://github.com/lmmx/mibz2/blob/8bced3f80e7e8f5f139b4e37c7d409aaf9ef8c83/astra-e/run-20261119T012848Z.tar.gz) · [Frozen model](https://github.com/lmmx/mibz2/tree/2337830/research/astra-e/results/combined-v1-proxy)
 
+The measured i9 run then completed all 256 prespecified positions. Each W had 16 paired rounds on the same 838,800,784 decoded bytes. Independent replay from the raw process results reproduced the full archived decision. Target output reported `scorer v1 at 9a9c169d70639c1c3e56cb85b3679fa7529e516c` and selected upstream path `604dac3`. The candidate, scorer and both Wikidata digests match the frozen design. [Independent measured bundle](https://github.com/lmmx/mibz2/blob/c381da23edd8f466bcfe8b8e6c850075d58588de/astra-e/run-20261119T013135Z.tar.gz) · [All paired comparisons](heldout-i9.csv)
+
+| Workers | Frozen v1 candidate/lazy [block bootstrap] | Observed i9 candidate/lazy [paired 95%] | Observed i9 candidate/opend [paired 95%] | Median peak RSS / lazy |
+|---:|---|---|---|---:|
+| 7 | 0.9102 [0.8811, 0.9376] | 0.8982 [0.8876, 0.9090] | 0.9583 [0.9521, 0.9646] | 0.8489 |
+| 8 | 0.9118 [0.8817, 0.9396] | 0.9117 [0.9030, 0.9205] | 0.9656 [0.9554, 0.9760] | 0.8288 |
+| 9 | Outside model grid | 0.9031 [0.8896, 0.9168] | 0.9616 [0.9528, 0.9704] | 0.8230 |
+| 10 | 0.9155 [0.8740, 0.9516] | 0.8871 [0.8795, 0.8947] | 0.9591 [0.9490, 0.9692] | 0.8191 |
+
+The frozen model intervals include the measured point at each of W7, W8 and W10. The corresponding model point errors (predicted minus observed wall ratio) are +0.0119, +0.00005 and +0.0284. The three intervals resample block composition, while the target intervals measure repeated worker runs. The measured wall ratios exceed 0.80 and the three preregistered memory checks pass at each W. Against ungated Open the measured candidate ratios are 0.9777, 0.9923, 0.9994 and 0.9934. Only W7's paired interval excludes equality. [Frozen comparison program](heldout.py) · [Registered decision](https://github.com/lmmx/mibz2/blob/8c9640d8ab186f81a0500f48e606e0c21c2a6669/research/astra-e/workstation/assess.py)
+
+```sh
+git fetch origin evidence
+git show c381da23edd8f466bcfe8b8e6c850075d58588de:astra-e/run-20261119T013135Z.tar.gz > /tmp/astra-e-i9.tgz
+python3 research/astra-e/results/combined-v1-proxy/heldout.py /tmp/astra-e-i9.tgz \
+   70b3c3a88d330529ff2dc976ce27451a7065b8b8f5fc49e65f20c191a7d32bfa
+```
+
 ## Earlier checkpoint and recovery
 
 The checkpoint preserves 800 complete official observations, all W1, W2, W4, W7 and W8 rows. The 240-, 480- and 640-row checkpoints remain at commits `6a5d160`, `b633eed` and `1c895fc`. W8 gives 0.9118 [0.8817,0.9396] against fresh lazy, within the v1 reference envelope. A source check confirms that v1's `proxy-runs.jsonl` receives one record per block, with normal file buffering. The full official reading above includes these observations.
