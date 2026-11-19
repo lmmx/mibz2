@@ -30,6 +30,8 @@ def main():
     p=argparse.ArgumentParser()
     for key in ("repo","scratch","vlib","corpus","output"):p.add_argument(key,type=lambda x:Path(x).resolve())
     p.add_argument("--historical-master",help="Use this immutable imported master only for replay")
+    p.add_argument("--archived-new", action="store_true", help="Verify the exact stored counter executables")
+    p.add_argument("--check-only", action="store_true", help="Verify toolchain, all binaries and all extracted inputs without collecting counters")
     args=p.parse_args()
     assert os.sched_getaffinity(0)=={4} and os.nice(0)==15
     repo=args.repo
@@ -84,13 +86,20 @@ def main():
             entry=FACTOR+("counter_edge.rs" if arm=="counter" else "both.rs")
             binary=a/(arm+"-build")/"release/moonshot"
             info=json.loads(subprocess.check_output([binary,"info"]))
-            assert info["candidate"]==str(wt/entry)
+            if args.archived_new:
+                historical=json.loads((HERE/"manifest.json").read_text())["arms"][arm]
+                assert historical["pin"]==SOURCE and historical["entry"]==entry
+                assert info==historical["info"] and digest(binary)==historical["binary_sha256"]
+            else:
+                assert info["candidate"]==str(wt/entry)
             deps=[entry,FACTOR+"adapter.inc.rs",FACTOR+"kernel.rs",FACTOR+"narrow.rs",
                   "research/astra-e/edge-budget/gate.rs","research/astra-e/short-words/endpoint.rs",
                   "docs/journal/2026-11-18-open-return/segments.rs"]
             assert not git(wt,"diff","--name-only",SOURCE,"--","src","Cargo.toml","Cargo.lock",*deps)
             inf=dict(origin="fresh release build",pin=SOURCE,entry=entry,binary_sha256=digest(binary),info=info,
                      src_tree=git(wt,"rev-parse",SOURCE+":src"),research_source_sha256={f:digest(wt/f) for f in deps})
+            if args.archived_new:
+                inf["origin"]="exact counter-workers.tar.xz member"
         meta["arms"][arm]=inf
         runner=moonshot.Scorer(argparse.Namespace(target_dir=str(a/(arm+"-build"))))
         runner.bin=binary
@@ -108,6 +117,9 @@ def main():
             assert raw==lzma.decompress((PREVIOUS/"symbols"/f"warm1-measure{block}.sym.xz").read_bytes())
             assert sha(raw)==old["samples"][str(block)]["two_record_sha256"]
             (symbols/f"{arm}-{block}.sym").write_bytes(raw)
+    if args.check_only:
+        print("All four executables, three extracted inputs per arm and the runtime verified")
+        return
     # Keep actual official argv and outcome including under_chaingrind, CRC-checked
     # output size and the printed counter record without reimplementing its CLI.
     execute=subprocess.run

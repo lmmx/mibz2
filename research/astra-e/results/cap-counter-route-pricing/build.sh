@@ -10,6 +10,10 @@ git -C "$scratch/source" checkout "$projection" -- bench/moonshot .just Justfile
 tar -tzf "$old/workers.tar.gz" > "$scratch/archive-contents.txt"
 mkdir -p "$scratch/archive"
 tar -xzf "$old/workers.tar.gz" -C "$scratch/archive"
+if [[ "${3:-build}" == archive ]]; then
+    tar -xJf "$repo/research/astra-e/results/cap-counter-route-pricing/counter-workers.tar.xz" -C "$scratch"
+    exit 0
+fi
 export CARGO_BUILD_JOBS=1
 for arm in counter both; do
     entry=both.rs
