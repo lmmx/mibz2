@@ -1,0 +1,17 @@
+27a7b198d8e7a41b03b5184c6f625d4aaa7492dd
+c76927421dae1cc46a08122dc410728bfcc3e4a7
+scorer path revision 604dac3
+f7d48fc1c54f086ea5a509170aef746eb8c981e14169ce4020bde55c41172fe6  research/astra-e/formulations/f2-rootstream/frames/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1-delimiter-frames-gate research/astra-e/formulations/f2-rootstream/frames/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2d-dual-build
