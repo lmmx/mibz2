@@ -108,9 +108,17 @@ fn blocks(mode:&str,path:&str,reps:u32){
         let dense=Truth::new(&x);let expected=dense.output(x.p);
         let mut control=Subject::default();let q=control.run(&x,x.quote(),-2,true).unwrap();assert_eq!(control.out,expected);
         let u=highest(q.obj.as_ref().unwrap(),x.quote().0);
+        let original_object=dense.object(u,false);
         let mut subjects:Vec<Subject>=(0..6).map(|_|Subject::default()).collect();
         let mut available=Vec::new();
         for h in 0..=3{if let Some(r)=check(&x,&dense,u,h,&mut subjects[h as usize+2],&expected){
+            let object=r.obj.as_ref().unwrap();
+            assert_eq!(object.1,original_object.1);
+            assert_eq!(object.0.len(),original_object.0.len());
+            for ((a,shifted),(b,word)) in object.0.iter().zip(&original_object.0){
+                let mut rotated=word.clone();let turn=h as usize % rotated.len();rotated.rotate_left(turn);
+                assert_eq!(a,b);assert_eq!(*shifted,rotated);
+            }
             totals[h as usize]+=1;available.push(h);
             if mode!="price"{let (mk,skip)=r.mark.unwrap_or((u32::MAX,0));let (w,root)=r.obj.unwrap();let s=r.metrics;
                 println!("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",x.index,h,u.0,u.1,s[0],s[1],s[2],s[3],s[4],s[5],s[6],s[7],
@@ -126,5 +134,7 @@ fn blocks(mode:&str,path:&str,reps:u32){
     }
     eprintln!("exact source intervals at h0..3 {totals:?}");
 }
+// RSS_ADAPTER
 fn main(){let args=std::env::args().collect::<Vec<_>>();if args.len()==1{small();}
+      else if args[1]=="rss"{rss(&args[2],args[3].parse().unwrap(),&args[4],&args[5]);}
       else{blocks(&args[1],&args[2],args.get(3).map_or(36,|s|s.parse().unwrap()));}}

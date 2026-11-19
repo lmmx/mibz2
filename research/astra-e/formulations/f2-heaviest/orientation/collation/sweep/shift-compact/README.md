@@ -25,3 +25,5 @@ python3 -B "$d/check.py"
 ```
 
 [Projected LF construction and mark transfer](index.rs) · [Section images and early-return plan](projection.rs) · [Native wrapper and oracle](main.rs)
+
+The paid native study covers all 228 admissions and both native controls. Measured setup dominates the h3 comparison and discovery alone has no resolved recovery. [Paid timings, setup envelope, memory and reproduction](PAID.md) · [Exact descriptor bounds](audit/README.md)

@@ -56,5 +56,5 @@ def main(out):
     (out/'projected.rs').write_text(s)
     common=(CLIP/'main.rs').read_text()
     helpers=common[common.index('use std::collections::HashMap;'):common.index('#[derive(Default)] struct Library')]
-    (out/'main.rs').write_text((D/'main.rs').read_text().replace('// INPUT_AND_DENSE_HELPERS',helpers))
+    (out/'main.rs').write_text((D/'main.rs').read_text().replace('// INPUT_AND_DENSE_HELPERS',helpers).replace('// RSS_ADAPTER',(D/'rss.inc.rs').read_text()))
 if __name__=='__main__':main(Path(sys.argv[1]))
