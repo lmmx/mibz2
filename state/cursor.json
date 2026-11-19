@@ -2630,6 +2630,14 @@
       "review_comment_id": 6997277733,
       "review_pr": 145,
       "publication_verification": "Verified exact body, lmmx author, #145 destination, checkpoint citation, and role-aware headers and route. The pinned helper applies a coordinator-only sender check to Researcher publications."
+    },
+    {
+      "trigger_comment_id": 7003699363,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_path": "state/reports/astra-e-exceptions-7003699363/report.md",
+      "source_commit": "980edb622e4d06e3d5830958ca9137ed9a608749"
     }
   ],
   "active_delegations": [],
