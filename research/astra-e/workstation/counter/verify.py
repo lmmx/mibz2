@@ -28,6 +28,44 @@ def digest(payload):
     return hashlib.sha256(payload).hexdigest()
 
 
+def verify_release_diff(payload, pin):
+    """Authenticate either Git's unified diff or the workstation's numbered Difftastic listing."""
+    scopes = ("src", "Cargo.toml", "Cargo.lock")
+    if payload == git("diff","--no-ext-diff",RELEASE,pin,"--",*scopes):
+        return "unified"
+    paths = set(git("diff","--name-only",RELEASE,pin,"--",*scopes).decode().splitlines())
+    old, new, inserted = {}, {}, {}
+    name = None
+    for line in payload.decode().splitlines():
+        if not line:
+            continue
+        heading = re.fullmatch(r"(\S+) --- (?:[0-9]+/[0-9]+ --- )?(Rust|TOML)",line)
+        if heading:
+            name = heading[1]
+            assert name in paths
+            if name not in inserted:
+                old[name] = git("show",RELEASE+":"+name).decode().splitlines(keepends=True)
+                new[name] = git("show",pin+":"+name).decode().splitlines(keepends=True)
+                inserted[name] = set()
+            continue
+        row = re.fullmatch(r" *([0-9]+|\.+)? +([0-9]+) (.*)",line)
+        assert row and name, (name,line)
+        left, right, body = row.groups()
+        n = int(right)
+        assert 1 <= n <= len(new[name]) and new[name][n-1].removesuffix("\n") == body
+        if left and left.isdigit():
+            i = int(left)
+            assert 1 <= i <= len(old[name]) and old[name][i-1].removesuffix("\n") == body
+        else:
+            inserted[name].add(n)
+    assert set(inserted) == paths
+    # These three registered release deltas contain only line additions. Removing
+    # exactly the displayed insertions must recover every release byte, including LF.
+    for name in paths:
+        assert [line for i,line in enumerate(new[name],1) if i not in inserted[name]] == old[name]
+    return "numbered additions"
+
+
 def verify(path, expected):
     assert re.fullmatch(r"[0-9a-f]{40}", expected)
     with tarfile.open(path) as bundle:
@@ -85,9 +123,10 @@ def verify(path, expected):
     signatures = {}
     binaries = {}
     versions = {}
+    diff_format = {}
     for arm,(pin,entry) in panel.SOURCES.items():
         assert items[arm+"-tree.txt"]==git("ls-tree",pin,"--","src","Cargo.toml","Cargo.lock")
-        assert items[arm+"-against-v0.5.6.diff"]==git("diff",RELEASE,pin,"--","src","Cargo.toml","Cargo.lock")
+        diff_format[arm] = verify_release_diff(items[arm+"-against-v0.5.6.diff"],pin)
         assert text(arm+"-entry.sha256").strip().split()==[digest(git("show",pin+":"+entry)),entry]
         binaries[arm] = text(arm+"-binary.sha256").split()[0]
         assert re.fullmatch("[0-9a-f]{64}",binaries[arm])
@@ -146,7 +185,7 @@ def verify(path, expected):
             assert quick==gate(f"gate-{a}-w{w}.jsonl",panel.identity(a)[1])
     result = dict(registration=expected,mode=mode,bundle_sha256=digest(path.read_bytes()),binary_sha256=binaries,
                   target_cpu=target,scorer_path=rev,selected_build=selected["selected_build"],reports=versions,
-                  full_gate_each=len(signatures["edge"]),quick_gate_each=len(quick),explicit_dry_rows=len(expected_rows),
+                  release_diff_format=diff_format,full_gate_each=len(signatures["edge"]),quick_gate_each=len(quick),explicit_dry_rows=len(expected_rows),
                   affinity_gate_worker_counts=dry["affinity_gate_worker_counts"],planned_samples=len(panel.roster()))
     if mode=="measure":
         assert target and text("affinity.txt").strip().split()[-1]=="0-19"
