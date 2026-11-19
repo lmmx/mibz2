@@ -116,6 +116,7 @@ std::vector<uint8_t> execute(const Root& in,const std::string& arm,Stats& s) {
     if(arm=="greedy")return decode_with<ParityCut<false>>(in,s);
     assert(arm=="exact");return decode_with<ParityCut<true>>(in,s);
 }
+#ifndef XOR_ROUTE_LIBRARY
 int main(int argc,char** argv) {
     assert(argc>=4); auto in=load(argv[1]);std::string mode=argv[2];
     std::vector<std::string> arms={"graph","greedy","exact","direct"};
@@ -148,3 +149,4 @@ int main(int argc,char** argv) {
         std::cout<<i<<','<<arm<<','<<dt<<','<<s.clocks.graph<<','<<s.clocks.apply<<','<<s.clocks.powers<<','<<s.clocks.emit<<','<<n<<','<<s.nodes<<','<<resident_peak()<<'\n';
     }
 }
+#endif
