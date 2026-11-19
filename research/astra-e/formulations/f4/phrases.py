@@ -137,14 +137,20 @@ def transform(runs, primary, ascending):
             code[node] = len(dictionary)
             dictionary.append(node)
 
-    def visit(node):
+    # An induced token alphabet can have thousands of symbols. A strictly
+    # monotone second-layer phrase therefore need not fit the Python call stack.
+    pending = [(0, False)]
+    while pending:
+        node, after = pending.pop()
+        if after:
+            publish(node)
+            continue
         if ascending:
             publish(node)
-        for _, child in sorted(children[node]):
-            visit(child)
-        if not ascending:
-            publish(node)
-    visit(0)
+        else:
+            pending.append((node, True))
+        for _, child in sorted(children[node], reverse=True):
+            pending.append((child, False))
     stats.update(prefix_intervals=sum(map(len, pre_ids)), trie_nodes=len(parents) - 1,
                  token_rows=token_rows, token_runs=len(token_runs), alphabet=len(dictionary))
     return [(code[name], w) for name, w in token_runs], rank, skip, parents, dictionary, stats
