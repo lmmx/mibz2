@@ -1,0 +1,7 @@
+cell,n,c,G,G2,target,delta,MC_se
+('ho-structured-l9', 8) locked n,c,power 84 0.0161 0.795608
+('ho-structured-l9', 8) next grid n,c,power, own-size 96 0.015 0.873826 0.000138
+('ho-structured-l9', 10) locked n,c,power 84 0.0161 0.798054
+('ho-structured-l9', 10) next grid n,c,power, own-size 96 0.015 0.873626 8.6e-05
+('ho-wikidata-l1', 20) locked n,c,power 72 0.017 0.79735
+('ho-wikidata-l1', 20) next grid n,c,power, own-size 84 0.0161 0.875307 0.0
