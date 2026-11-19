@@ -1,17 +1,8 @@
 --- check-low.rs
 +++ check-low.rs
-@@ -40,6 +40,7 @@
-             check::<1>(kernel, &rec, col.len(), p as u32, limit, &reference);
-             check::<2>(kernel, &rec, col.len(), p as u32, limit, &reference);
-             check::<3>(kernel, &rec, col.len(), p as u32, limit, &reference);
+@@ -42,0 +43 @@
 +            check::<4>(kernel, &rec, col.len(), p as u32, limit, &reference);
-         }
-     }
-     marks.len() * limits.len()
-@@ -68,5 +69,12 @@
-     cases += verify(&cap, &[0, 3, 4096 * 18, cap.len() - 1], &[16], &mut kernel);
-     // A wide retained run is not a production admission; it exercises generic splitting.
-     cases += verify(&vec![2; 8195], &[0, 4096, 8194], &[900000], &mut kernel);
+@@ -71 +72,8 @@
 -    println!("{cases} marked-column/limit cases, each checked in all four modes");
 +    // Exercise many pages, changes inside thin runs, and buckets empty for entire pages.
 +    let mut multi_page = Vec::new();
@@ -21,50 +12,27 @@
 +    cases += verify(&multi_page, &[0, 65_535, 65_536, 262_145, multi_page.len() - 1], &[16], &mut kernel);
 +    cases += verify(&vec![2; 170_035], &[0, 65_536, 170_034], &[900000], &mut kernel);
 +    println!("{cases} marked-column/limit cases, each checked in all five modes");
- }
 --- ledger-low.rs
 +++ ledger-low.rs
-@@ -10,18 +10,18 @@
-     n: usize, p: u32, out: &mut Vec<u8>
- ) {
-     let s = kernel.run::<true, MODE, false>(r.records(), n, p, 16, out);
+@@ -13 +13 @@
 -    println!("{index},{MODE},{n},{},{},{},{},{},{},{},{},{}",
 +    println!("{index},{MODE},{n},{},{},{},{},{},{},{},{},{},{}",
-         s.retained,s.bands,s.queue_input,s.queue_stored,s.queue_joined_rows,
+@@ -15 +15 @@
 -        s.queue_cap,s.intersections,s.singletons,s.queue_capacity);
 +        s.queue_cap,s.intersections,s.singletons,s.queue_capacity,s.page_cuts);
- }
- 
- fn main() {
-     let data = std::fs::read(std::env::args().nth(1).unwrap()).unwrap();
-     let mut scanner = Scanner::new(SliceSource(&data));
+@@ -21 +21 @@
 -    let mut kernels: [spans::kernel::Kernel;3] = Default::default();
 +    let mut kernels: [spans::kernel::Kernel;4] = Default::default();
-     let mut r = runs::Runs::default();
+@@ -23,2 +23,2 @@
 -    let mut answers: [Vec<u8>;3] = Default::default();
 -    println!("ordinal,mode,rows,retained,bands,input_spans,stored,joined_rows,cap_boundaries,intersections,singletons,capacity_bytes");
 +    let mut answers: [Vec<u8>;4] = Default::default();
 +    println!("ordinal,mode,rows,retained,bands,input_spans,stored,joined_rows,cap_boundaries,intersections,singletons,capacity_bytes,page_cuts");
-     while let Event::Block { index, symbols, .. } = scanner.next(Vec::new()).unwrap() {
-         if !runs::takes_runs(&symbols) { continue; }
-         let n = runs::front(&symbols, &mut r, Kernels::detect()).unwrap();
-@@ -29,6 +29,8 @@
-         record::<1>(&mut kernels[0], index, &r, n, symbols.orig_ptr, &mut answers[0]);
-         record::<2>(&mut kernels[1], index, &r, n, symbols.orig_ptr, &mut answers[1]);
-         record::<3>(&mut kernels[2], index, &r, n, symbols.orig_ptr, &mut answers[2]);
+@@ -31,0 +32,2 @@
 +        record::<4>(&mut kernels[3], index, &r, n, symbols.orig_ptr, &mut answers[3]);
 +        assert_eq!(answers[0], answers[3]);
-         assert_eq!(answers[0], answers[1]);
-         assert_eq!(answers[1], answers[2]);
-     }
 --- stage-low.rs
 +++ stage-low.rs
-@@ -114,7 +114,7 @@
-         arm::<spans::Variant<0>>("rescan", kernels),
-         arm::<spans::Variant<1>>("rows", kernels),
-         arm::<spans::Variant<2>>("spans", kernels),
+@@ -117 +117 @@
 -        arm::<spans::Variant<3>>("joined", kernels),
 +        arm::<spans::Variant<4>>("low16", kernels),
-     ];
-     let count = arms.len();
-     println!("round,position,ordinal,rows,primary,records,arm,elapsed_ns,thread_cpu_ns");

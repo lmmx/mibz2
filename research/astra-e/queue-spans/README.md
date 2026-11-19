@@ -48,3 +48,29 @@ The scorer entry is `low16.rs`. The new ledger and native timing sources are rep
 ```sh
 QUEUE_SUITE=low16 bash research/astra-e/queue-spans/run.sh /tmp/astra-e-u16-stage
 ```
+
+## Where the work moved
+
+A five-arm diagnostic added thread-CPU timestamps at the end of the first strip/queue scan, after endpoint induction, and after projecting the edge table. The final region includes marked emission and the small call/clock residue. All eleven outputs matched the reference at each position of twenty balanced rounds. These instrumented numbers are a separate experiment from the unstamped two-process stage above.
+
+| Route | Classify and enqueue | Induce | Project edges | Emit and call |
+| --- | ---: | ---: | ---: | ---: |
+| Rescan | 2.157 | 4.316 | 5.794 | 6.272 |
+| Row queues | 5.044 | 4.371 | 0.823 | 6.326 |
+| Raw spans | 3.219 | 4.292 | 3.540 | 6.255 |
+| Joined spans | 3.507 | 4.345 | 3.530 | 6.291 |
+| Low u16 | 5.599 | 4.323 | 0.849 | 6.253 |
+
+Each entry is milliseconds summed over the eleven per-block medians. Raw spans recovered 1.825 ms in the first scan and spent an additional 2.717 ms projecting edges. Joining adjacent input spans made little difference to projection. The u16 route restored nearly all of the row queue's projection speed, but its first scan cost another 0.555 ms. The original contiguous u32 queue remains the throughput control for this family.
+
+```sh
+d=research/astra-e/queue-spans
+scratch=$(mktemp -d)
+python3 "$d/phase.py" "$scratch"
+cargo build --release --locked --features moonshot --lib
+deps="${CARGO_TARGET_DIR:-target}/release/deps"
+rustc --edition=2021 -C opt-level=3 -C codegen-units=1 -C lto=fat \
+  -L "dependency=$deps" --extern "mibz2=$deps/libmibz2.rlib" "$scratch/phase.rs" -o "$scratch/probe"
+taskset -c 0 "$scratch/probe" corpora/wikidata.bz2 > "$scratch/phases.csv"
+python3 "$d/phase-report.py" "$scratch/phases.csv"
+```
