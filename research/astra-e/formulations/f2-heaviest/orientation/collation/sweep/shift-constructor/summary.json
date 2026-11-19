@@ -1,0 +1,288 @@
+{
+  "0": {
+    "paired": {
+      "setup_cpu_s_over_h0": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "build_cpu_s_over_h0": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "emit_cpu_s_over_h0": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "cpu_s_over_h0": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "wall_s_over_h0": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "structural_sums": {
+      "terminal_components": 10,
+      "forbidden_components": 0,
+      "old_nodes": 1296362,
+      "raw_shifted_nodes": 1296362,
+      "fused_surviving_nodes": 1296362,
+      "extra_packets": 0,
+      "partially_cut_old_nodes": 0,
+      "sum_one_shift_deficits": 0,
+      "old_raw_LF_pieces": 1423936,
+      "shifted_raw_LF_pieces": 1423936,
+      "shifted_colored_LF_pieces": 1423936,
+      "predicted_upper": 1423956
+    },
+    "native_sums": {
+      "lf_pieces": 690494,
+      "live_nodes": 1296362,
+      "live_packets": 1296362,
+      "live_rows": 8999915,
+      "translated_pieces": 1423936,
+      "selectors": 1423936,
+      "copied_merge_entries": 424200,
+      "setup_boundary_tests": 690494,
+      "fused_root_tests": 0,
+      "dictionary_bytes": 1926457,
+      "root_runs": 66373,
+      "output_words": 245454,
+      "mark_probes": 292
+    },
+    "max_vmhwm_kib": 27616
+  },
+  "1": {
+    "paired": {
+      "setup_cpu_s_over_h0": [
+        1.5538034003498054,
+        1.210086909283632,
+        1.9951500908045352
+      ],
+      "build_cpu_s_over_h0": [
+        0.9698195503692877,
+        0.9152379063245926,
+        1.027656256126391
+      ],
+      "emit_cpu_s_over_h0": [
+        1.02971372187093,
+        0.9253233286912835,
+        1.1458809219788244
+      ],
+      "cpu_s_over_h0": [
+        0.9839488084749206,
+        0.9242574325606931,
+        1.0474952362751382
+      ],
+      "wall_s_over_h0": [
+        0.9429290903523571,
+        0.8525294887286924,
+        1.0429143873469862
+      ]
+    },
+    "structural_sums": {
+      "terminal_components": 11,
+      "forbidden_components": 11,
+      "old_nodes": 1296362,
+      "raw_shifted_nodes": 1257725,
+      "fused_surviving_nodes": 1257715,
+      "extra_packets": 0,
+      "partially_cut_old_nodes": 1,
+      "sum_one_shift_deficits": 1,
+      "old_raw_LF_pieces": 1423936,
+      "shifted_raw_LF_pieces": 1385287,
+      "shifted_colored_LF_pieces": 1385289,
+      "predicted_upper": 1385322
+    },
+    "native_sums": {
+      "lf_pieces": 690486,
+      "live_nodes": 1257715,
+      "live_packets": 1257715,
+      "live_rows": 8754470,
+      "translated_pieces": 1385289,
+      "selectors": 1385289,
+      "copied_merge_entries": 424200,
+      "setup_boundary_tests": 690486,
+      "fused_root_tests": 10,
+      "dictionary_bytes": 1926457,
+      "root_runs": 66373,
+      "output_words": 245455,
+      "mark_probes": 298
+    },
+    "max_vmhwm_kib": 25832
+  },
+  "2": {
+    "paired": {
+      "setup_cpu_s_over_h0": [
+        1.2138151318158867,
+        0.9586594773686131,
+        1.5368827086228276
+      ],
+      "setup_cpu_s_over_h1": [
+        0.781189648280228,
+        0.7403912959772515,
+        0.8242361436390203
+      ],
+      "build_cpu_s_over_h0": [
+        0.9398208411125989,
+        0.8874103954721251,
+        0.9953266469452099
+      ],
+      "build_cpu_s_over_h1": [
+        0.969067741266645,
+        0.915806646709763,
+        1.0254263719722203
+      ],
+      "emit_cpu_s_over_h0": [
+        0.9498602168738854,
+        0.8621061888721024,
+        1.0465467517175608
+      ],
+      "emit_cpu_s_over_h1": [
+        0.9224507712182807,
+        0.8172025190560561,
+        1.04125404104736
+      ],
+      "cpu_s_over_h0": [
+        0.9397978153687733,
+        0.8839769757085497,
+        0.9991435954131904
+      ],
+      "cpu_s_over_h1": [
+        0.9551287701902099,
+        0.9052219685302646,
+        1.0077870393780246
+      ],
+      "wall_s_over_h0": [
+        0.9133262423988519,
+        0.8206861463424715,
+        1.0164236703300096
+      ],
+      "wall_s_over_h1": [
+        0.9686054357041386,
+        0.9124492973696282,
+        1.0282176694970329
+      ]
+    },
+    "structural_sums": {
+      "terminal_components": 2084,
+      "forbidden_components": 2095,
+      "old_nodes": 1296362,
+      "raw_shifted_nodes": 1219088,
+      "fused_surviving_nodes": 1219068,
+      "extra_packets": 0,
+      "partially_cut_old_nodes": 2,
+      "sum_one_shift_deficits": 2,
+      "old_raw_LF_pieces": 1423936,
+      "shifted_raw_LF_pieces": 1346640,
+      "shifted_colored_LF_pieces": 1346642,
+      "predicted_upper": 1352905
+    },
+    "native_sums": {
+      "lf_pieces": 693458,
+      "live_nodes": 1219068,
+      "live_packets": 1219068,
+      "live_rows": 8509025,
+      "translated_pieces": 1346642,
+      "selectors": 1346642,
+      "copied_merge_entries": 423492,
+      "setup_boundary_tests": 693458,
+      "fused_root_tests": 21,
+      "dictionary_bytes": 1926457,
+      "root_runs": 66373,
+      "output_words": 245455,
+      "mark_probes": 288
+    },
+    "max_vmhwm_kib": 25308
+  },
+  "3": {
+    "paired": {
+      "setup_cpu_s_over_h0": [
+        1.3383634849383548,
+        1.0612728703109786,
+        1.6878004403254632
+      ],
+      "setup_cpu_s_over_h1": [
+        0.861346734494886,
+        0.8123695756096503,
+        0.9132766899452435
+      ],
+      "build_cpu_s_over_h0": [
+        0.9331305152808558,
+        0.8874844171890947,
+        0.9811243348994939
+      ],
+      "build_cpu_s_over_h1": [
+        0.9621692148044846,
+        0.9122552178871769,
+        1.0148142534734976
+      ],
+      "emit_cpu_s_over_h0": [
+        1.0138141900880504,
+        0.8767475366383125,
+        1.1723092099748884
+      ],
+      "emit_cpu_s_over_h1": [
+        0.9845592697803512,
+        0.8542969483868188,
+        1.1346838561707018
+      ],
+      "cpu_s_over_h0": [
+        0.9406695596322242,
+        0.8900605949880206,
+        0.9941561567845748
+      ],
+      "cpu_s_over_h1": [
+        0.9560147352484959,
+        0.9101273142288969,
+        1.0042157396260605
+      ],
+      "wall_s_over_h0": [
+        0.9114225547768209,
+        0.8343799094119796,
+        0.9955789490920604
+      ],
+      "wall_s_over_h1": [
+        0.966586527133485,
+        0.9114813949772661,
+        1.0250231322157424
+      ]
+    },
+    "structural_sums": {
+      "terminal_components": 8140,
+      "forbidden_components": 10235,
+      "old_nodes": 1296362,
+      "raw_shifted_nodes": 1181159,
+      "fused_surviving_nodes": 1181129,
+      "extra_packets": 435,
+      "partially_cut_old_nodes": 711,
+      "sum_one_shift_deficits": 711,
+      "old_raw_LF_pieces": 1423936,
+      "shifted_raw_LF_pieces": 1307731,
+      "shifted_colored_LF_pieces": 1308198,
+      "predicted_upper": 1335218
+    },
+    "native_sums": {
+      "lf_pieces": 694719,
+      "live_nodes": 1181129,
+      "live_packets": 1181564,
+      "live_rows": 8263580,
+      "translated_pieces": 1308198,
+      "selectors": 1308130,
+      "copied_merge_entries": 421882,
+      "setup_boundary_tests": 694719,
+      "fused_root_tests": 2105,
+      "dictionary_bytes": 1926457,
+      "root_runs": 66373,
+      "output_words": 245454,
+      "mark_probes": 278
+    },
+    "max_vmhwm_kib": 24776
+  }
+}

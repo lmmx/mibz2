@@ -74,7 +74,12 @@ void verify(const std::vector<InputRun>& runs,Range initial,int mark,int ordinal
             int x=p,j=0;
             while(coordinate[x]<0){x=d.b[x];++j;if(x==p)break;}
             std::pair<int,int> truth=coordinate[x]<0?std::pair{-1,0}:std::pair{coordinate[x],j};
-            assert(obj.transfer(p)==truth);++totals.marks;
+            assert(obj.transfer(p)==truth);
+            int y=p;for(int j=0;j<h;j++)y=d.b[y];
+            int start=y,back=0;
+            while(!base[y]){y=d.b[y];++back;if(y==start)break;}
+            auto lifted=base[y]?std::pair{y-initial.lo,back}:std::pair{-1,0};
+            assert(lifted==truth);++totals.marks;
         }
         std::vector<int> erased(dict.ids.size()+1),kept(dict.ids.size()+1);
         for(int x=0;x<n;x++)if(old[x]>=0){
