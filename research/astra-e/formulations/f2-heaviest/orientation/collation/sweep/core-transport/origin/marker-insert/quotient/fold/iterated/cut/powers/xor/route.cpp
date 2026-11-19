@@ -97,6 +97,8 @@ template<bool Exact,bool Gaps=false> struct ParityCut {
     }
 };
 
+#include "stream.hpp"
+
 struct GraphCompact: Cut {
     using Cut::Cut;
     Root apply(const Root& in,std::vector<Node>& grammar) {
@@ -107,6 +109,8 @@ struct GraphCompact: Cut {
 std::vector<uint8_t> execute(const Root& in,const std::string& arm,Stats& s) {
     if(arm=="direct")return direct(in);
     if(arm=="graph")return decode_with<Cut>(in,s);
+    if(arm=="stream")return decode_with<StreamCut<false>>(in,s);
+    if(arm=="streamgaps")return decode_with<StreamCut<true>>(in,s);
     if(arm=="graphcompact")return decode_with<GraphCompact>(in,s);
     if(arm=="gaps")return decode_with<ParityCut<false,true>>(in,s);
     if(arm=="greedy")return decode_with<ParityCut<false>>(in,s);
@@ -116,7 +120,8 @@ int main(int argc,char** argv) {
     assert(argc>=4); auto in=load(argv[1]);std::string mode=argv[2];
     std::vector<std::string> arms={"graph","greedy","exact","direct"};
     if(mode=="panel5"||mode=="check5")arms={"graph","graphcompact","greedy","gaps","direct"};
-    if(mode=="check"||mode=="check5") {
+    if(mode=="panelstream"||mode=="checkstream")arms={"graph","graphcompact","stream","streamgaps","direct"};
+    if(mode=="check"||mode=="check5"||mode=="checkstream") {
         auto expected=direct(in);
         for(const auto& arm:arms) if(arm!="direct") {
             Stats s;auto out=execute(in,arm,s);assert(out==expected);
@@ -134,7 +139,7 @@ int main(int argc,char** argv) {
     std::cout<<"round,arm,thread_ns,choice_ns,publish_ns,normalize_ns,emit_ns,bytes,nodes,peak_kib\n";
     int reps=std::stoi(argv[3]);
     int k_arms=int(arms.size());
-    bool panel=mode=="panel"||mode=="panel5";
+    bool panel=mode=="panel"||mode=="panel5"||mode=="panelstream";
     for(int i=0;i<reps;++i)for(int j=0;j<(panel?k_arms:1);++j){
         int k=i%(2*k_arms)<k_arms?(i+j)%k_arms:(i+k_arms-1-j)%k_arms;
         auto arm=panel?arms[k]:mode;Stats s;U n;auto t=cpu();
