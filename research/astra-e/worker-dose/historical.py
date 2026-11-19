@@ -45,10 +45,18 @@ for rev,stamp in SNAPSHOTS:
         assert {r["hash"] for r in a+b}=={"a8830caee5c511a6"}
         def ratio(field):
             return paired_ratio([r[field] for r in a],[r[field] for r in b])
-        wall=ratio("wall"); cpu=ratio("cpu"); rss=ratio("rss_kb")
+        wall=ratio("wall"); cpu=ratio("cpu")
+        def times(samples):
+            measured=[dict((key,float(value)) for key,value in (x.split("=") for x in r["thread_cpu"].split())) for r in samples]
+            # The sampling ledger prints zero or more members per pool to .01 seconds.
+            workers=[sum(m.get(f"mibz2-{i}",0.0) for i in range(w)) for m in measured]
+            scanner=[m.get("mibz2-scan",0.0) for m in measured]
+            return statistics.mean(workers),statistics.mean(scanner)
+        ew,es=times(a);lw,ls=times(b)
         row=dict(evidence=rev,archive=filename,sha256=digest,build=source,workers=w,cpus=a[0]["cpus"],
                  pairs=len(a),eager_over_lazy_wall=wall["geomean"],lo=wall["lo"],hi=wall["hi"],
-                 eager_over_lazy_cpu=cpu["geomean"],median_peak_ratio=statistics.median(r["rss_kb"] for r in a)/statistics.median(r["rss_kb"] for r in b))
+                 eager_over_lazy_cpu=cpu["geomean"],mean_eager_worker_cpu=ew,mean_lazy_worker_cpu=lw,
+                 mean_eager_scanner_cpu=es,mean_lazy_scanner_cpu=ls,median_peak_ratio=statistics.median(r["rss_kb"] for r in a)/statistics.median(r["rss_kb"] for r in b))
         if writer is None:
             writer=csv.DictWriter(sys.stdout,fieldnames=row,lineterminator="\n");writer.writeheader()
         writer.writerow(row)
