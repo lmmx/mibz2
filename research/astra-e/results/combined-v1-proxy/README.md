@@ -41,3 +41,7 @@ At nominal W1 ordinal 165 accounts for 2.93% of the combined arm's modeled cycle
 python3 research/astra-e/results/combined-v1-proxy/route_shares.py \
   research/astra-e/results/combined-v1-proxy/checkpoint/proxy-runs.jsonl.gz
 ```
+
+## The calibration's independent controls
+
+The scorer's calibrated reference recovers all nine held-out pairs in its original high-worker comparison. The later 12-pair i9 opend sweep provides another check at equal concurrency. At W2 the v1 reference predicts opend/lazy 0.869 [0.838,0.900]; the i9 saw 0.950 [0.932,0.969]. At W4 the model predicts 0.867 [0.836,0.900], and the i9 saw 0.953 [0.939,0.967]. Its low-concurrency opend estimates miss by more than eight percentage points. At W7, W8 and W10 the respective model estimates are 0.956, 0.947 and 0.944, and their block-bootstrap intervals include the matched i9 observations of 0.934, 0.952 and 0.933. The W7 and W8 reference configurations also occur in the original calibration bundle. These are separate experimental sweeps on the same workstation. [Upstream v1 calibration](https://github.com/lmmx/mibz2/blob/604dac3f46569edd9ac9b6706b23a68d9d7d8f8d/bench/moonshot/calibration.json) · [Raw i9 sweep and pinned recipe](../../prior.md)
