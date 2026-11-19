@@ -43,3 +43,19 @@ python3 research/astra-e/formulations/f3/exact.py | diff - research/astra-e/form
 bench/moonshot/target/release/moonshot extract --file corpora/wikidata.bz2 --blocks 1,41,85 --out target/f3.sym
 python3 research/astra-e/formulations/f3/screen.py target/f3.sym | diff - research/astra-e/formulations/f3/wikidata.csv
 ```
+
+## Could a different contiguous split repair it?
+
+`cuts.py` sweeps every distinct nontrivial threshold between observed bytes. As the cut passes a byte, it moves that byte's runs into a weighted Fenwick tree to answer the binary select queries. It also advances one prefix histogram to the corresponding F boundary. For each cut it recomputes the exact count of wrong next colours across all ranks, and checks the original primary for up to 128 forward emissions. The table defines balanced as each side having at least 10% of the rows. [All 268 cuts](cuts.csv) · [Algorithm](cuts.py)
+
+| Stream ordinal | Distinct cuts | Cuts preserving all next colours | Cuts surviving 128 steps from the actual mark | Balanced cuts | Latest first marked mismatch among balanced cuts, zero-based |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 88 | 0 | 4 | 75 | 9 |
+| 41 | 95 | 0 | 8 | 77 | 10 |
+| 85 | 85 | 0 | 3 | 74 | 1 |
+
+Every one of the 226 balanced cuts fails at the original primary. Each of the three blockwise minimum counts of wrong next colours among those balanced cuts exceeds 200,000. The 15 unbalanced cuts surviving the short marked test may diverge later. All have a witness at some other start. This eliminates input-dependent selection of a balanced contiguous root split for the unchanged-mark skeleton on these three blocks. A cut with an independently computable *renumbered* primary or a corrected compressed transport has a different cost and remains open.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 research/astra-e/formulations/f3/cuts.py target/f3.sym | diff - research/astra-e/formulations/f3/cuts.csv
+```
