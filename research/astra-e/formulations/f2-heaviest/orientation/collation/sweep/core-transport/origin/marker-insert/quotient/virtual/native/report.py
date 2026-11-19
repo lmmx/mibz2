@@ -14,6 +14,8 @@ pairs=[('named_stream','named'),('quot4_stream','quot4'),('quot8_stream','quot8'
        ('quot4_stream','named'),('quot8_stream','named')] if 'direct4' not in arms else [
        ('direct4','quot4'),('direct4','quot4_stream'),('direct4','named'),('direct8','quot8'),
        ('direct8','direct4'),('quot4_stream','quot4')]
+if 'quot4_forest' in arms:
+    pairs=[('named_forest','named'),('quot4_forest','quot4'),('quot12_forest','quot12'),('quot4_forest','named'),('quot12_forest','named')]
 t=defaultdict(int); slots=Counter();cells=set()
 for r in rows:
     c,j,p,k,stream=map(int,(r['cluster'],r['rep'],r['position'],r['block_position'],r['stream']))
