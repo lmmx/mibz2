@@ -2731,11 +2731,13 @@
     },
     {
       "trigger_comment_id": 7012815426,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-port-2-g2-7012815426/report.md",
-      "source_commit": "90f8b2c2210af374c0531a5cc287c186f0474c04"
+      "source_commit": "90f8b2c2210af374c0531a5cc287c186f0474c04",
+      "report_commit": "5afc8539e6263e0afb2138f5769ef404c6955abd",
+      "disposition": "HOLD at 90f8b2c2: fixed-cutoff scorer, joins and S prospective change verified. Ten ordinary guards have lower modeled +2% power than original G, and 5% family target is model-scoped."
     }
   ],
   "active_delegations": [],
