@@ -1,0 +1,256 @@
+{
+  "binaries_and_corpus": {
+    "/workspace/work/astra-qfill-both0-build/release/moonshot": "2fa4fb7fd78367e124d22aa5d07abc4ee32806839ef59801d99cdc6f56ecc1b1",
+    "/workspace/work/astra-queue-both1-gate/bench/moonshot/target/release/moonshot": "37f3660caeb77c5b0ec219301f301ac61310d50d1bd44dfe7b3631923eaf1c3d",
+    "/workspace/work/astra-e/corpora/wikidata.bz2": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+  },
+  "info": [
+    {
+      "candidate": "/workspace/work/astra-qfill-both0/research/astra-e/queue-short-fill/both0.rs",
+      "candidate_type": "moonshot::candidate::Candidate",
+      "arms": [
+        "lazy",
+        "cells",
+        "open",
+        "opend",
+        "candidate"
+      ],
+      "cpus": 1
+    },
+    {
+      "candidate": "/workspace/work/astra-queue-both1-gate/research/astra-e/queue-short-fill/both1.rs",
+      "candidate_type": "moonshot::candidate::Candidate",
+      "arms": [
+        "lazy",
+        "cells",
+        "open",
+        "opend",
+        "candidate"
+      ],
+      "cpus": 1
+    }
+  ],
+  "labels": [
+    "originalA",
+    "originalB",
+    "singletonA",
+    "singletonB"
+  ],
+  "order": [
+    [
+      1,
+      2,
+      0,
+      3
+    ],
+    [
+      2,
+      3,
+      1,
+      0
+    ],
+    [
+      3,
+      0,
+      2,
+      1
+    ],
+    [
+      0,
+      1,
+      3,
+      2
+    ],
+    [
+      0,
+      1,
+      3,
+      2
+    ],
+    [
+      1,
+      2,
+      0,
+      3
+    ],
+    [
+      2,
+      3,
+      1,
+      0
+    ],
+    [
+      3,
+      0,
+      2,
+      1
+    ],
+    [
+      1,
+      3,
+      2,
+      0
+    ],
+    [
+      3,
+      0,
+      1,
+      2
+    ],
+    [
+      0,
+      2,
+      3,
+      1
+    ],
+    [
+      2,
+      1,
+      0,
+      3
+    ],
+    [
+      3,
+      2,
+      0,
+      1
+    ],
+    [
+      2,
+      1,
+      3,
+      0
+    ],
+    [
+      1,
+      0,
+      2,
+      3
+    ],
+    [
+      0,
+      3,
+      1,
+      2
+    ],
+    [
+      0,
+      3,
+      1,
+      2
+    ],
+    [
+      3,
+      2,
+      0,
+      1
+    ],
+    [
+      2,
+      1,
+      3,
+      0
+    ],
+    [
+      1,
+      0,
+      2,
+      3
+    ],
+    [
+      3,
+      0,
+      1,
+      2
+    ],
+    [
+      0,
+      2,
+      3,
+      1
+    ],
+    [
+      2,
+      1,
+      0,
+      3
+    ],
+    [
+      1,
+      3,
+      2,
+      0
+    ],
+    [
+      3,
+      0,
+      2,
+      1
+    ],
+    [
+      0,
+      1,
+      3,
+      2
+    ],
+    [
+      1,
+      2,
+      0,
+      3
+    ],
+    [
+      2,
+      3,
+      1,
+      0
+    ],
+    [
+      1,
+      0,
+      3,
+      2
+    ],
+    [
+      0,
+      2,
+      1,
+      3
+    ],
+    [
+      2,
+      3,
+      0,
+      1
+    ],
+    [
+      3,
+      1,
+      2,
+      0
+    ]
+  ],
+  "affinity": [
+    1
+  ],
+  "nice": 15,
+  "cgroup_quota": "400000 100000",
+  "utc_started": "2026-11-19T05:15:55Z",
+  "co_runners_at_start": [
+    "PSR  NI %CPU COMMAND",
+    "  1  15  400 ps",
+    "  1  15  1.4 python3",
+    "  0   0  1.1 containerd",
+    "  0   0  0.9 codex",
+    "  1   0  0.3 codex-linux-san",
+    "  3   0  0.2 dockerd",
+    "  4   0  0.1 codex",
+    "  1   0  0.0 tail",
+    "  1   0  0.0 bash",
+    "  0   0  0.0 git",
+    "  0   0  0.0 git",
+    "  1   0  0.0 git",
+    "  0   0  0.0 git",
+    "  2  18  0.0 cargo"
+  ]
+}

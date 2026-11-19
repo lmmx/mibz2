@@ -1,0 +1,18 @@
+[
+  {
+    "arm": "candidate",
+    "workers": 1,
+    "wall_s": 0.780624,
+    "cpu_s": 0.77,
+    "out_bytes": 209700196,
+    "peak_rss_kb": 40808
+  },
+  {
+    "arm": "candidate",
+    "workers": 1,
+    "wall_s": 0.654539,
+    "cpu_s": 0.65,
+    "out_bytes": 209700196,
+    "peak_rss_kb": 40220
+  }
+]
