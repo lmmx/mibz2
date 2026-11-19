@@ -13,12 +13,12 @@ All six matched cells completed on the preserved binaries using the official v1 
 
 The candidate shortened the frozen block’s longest modeled past-L2 chain at W7 from 364 to 219 while requiring 12.4% more instructions per output byte. The dense block’s modeled cycle direction changes with W. These nominal samples have no whole-corpus weighting or latency feedback. Each estimate represents one simulated worker. Independent paired whole-worker wall time and RSS decide performance.
 
-Reproduce with the registered matching gate binaries, corpus tapes under `research/astra-e/results/scalar-route-pricing/symbols`, and the paths below. The collector creates its raw observations exclusively. A fresh checkout preserves the original receipt.
+Reproduce with the registered matching gate binaries, corpus tapes under `research/astra-e/results/scalar-route-pricing/symbols`, and the paths below. The collector creates its raw observations exclusively. Choose a fresh output directory to preserve the original receipt.
 
 ```bash
 source /workspace/work/env.sh
 source /workspace/work/proxy-tools/env.sh
 cd research/astra-e/two-seed/proxy
-taskset -c 4 nice -n 15 python3 -B run.py /workspace/work/astra-two-seed-proxy-scorer /workspace/work/astra-two-seed /workspace/work/astra-scalar-route-build/chaingrind
-python3 -B report.py /workspace/work/astra-two-seed-proxy-scorer
+taskset -c 4 nice -n 15 python3 -B run.py /workspace/work/astra-two-seed-proxy-scorer /workspace/work/astra-two-seed /workspace/work/astra-scalar-route-build/chaingrind /tmp/astra-two-seed-proxy-replay
+python3 -B report.py /workspace/work/astra-two-seed-proxy-scorer /tmp/astra-two-seed-proxy-replay
 ```

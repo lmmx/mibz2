@@ -22,7 +22,10 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 def main():
-    scorer, build, vlib = map(lambda x:Path(x).resolve(), sys.argv[1:])
+    scorer, build, vlib, output = map(lambda x:Path(x).resolve(), sys.argv[1:])
+    output.mkdir(parents=True, exist_ok=True)
+    if (output/"runs.jsonl").exists():
+        raise FileExistsError("use an empty destination to preserve existing observations")
     assert os.sched_getaffinity(0)=={4} and os.nice(0)==15
     sys.path.insert(0,str(scorer/"bench/moonshot"))
     import moonshot
@@ -50,9 +53,9 @@ def main():
                                source_checkout=git(entry.parent,"rev-parse","HEAD"),gate_sha256=sha(gate/"check.jsonl"))
         decoders[arm]=moonshot.Scorer(argparse.Namespace(target_dir=str(target)))
     def persist():
-        (HERE/"manifest.json").write_text(json.dumps(meta,indent=2)+"\n")
+        (output/"manifest.json").write_text(json.dumps(meta,indent=2)+"\n")
     persist()
-    with TemporaryDirectory() as tmp,(HERE/"runs.jsonl").open("x") as out:
+    with TemporaryDirectory() as tmp,(output/"runs.jsonl").open("x") as out:
         for i,b in enumerate([1,85,165]):
             tape=Path(tmp)/f"{b}.sym"
             tape.write_bytes(lzma.decompress((OLD/"symbols"/f"warm1-measure{b}.sym.xz").read_bytes()))
