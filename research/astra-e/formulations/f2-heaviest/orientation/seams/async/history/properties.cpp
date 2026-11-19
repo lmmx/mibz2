@@ -13,7 +13,36 @@ void compare(const Oracle& o,const Edges& e,const Section& s){
         auto out=w.marked(p,o.f.size());auto gold=o.tape(p);assert(std::equal(out.begin(),out.end(),gold.begin(),gold.end()));
     }
 }
-int main(){
+template<bool Reclaim>
+void check_tape(const Edges& edges,const Section& section,const Constructor& tree,U mark,const Word& gold) {
+    History<64,true,Reclaim> h(edges,section);h.run();
+    assert(seams(h,gold.size())==seams(tree,gold.size()));
+    assert(h.stats.states==tree.stats.states && h.stats.pops==tree.stats.pops &&
+           h.stats.repush==tree.stats.repush && h.stats.shift==tree.stats.shift);
+    auto output=h.marked(mark,gold.size());
+    assert(std::equal(output.begin(),output.end(),gold.begin(),gold.end()));
+}
+
+void tapes(const char* raw,const char* output,const char* ordinal){
+    std::ifstream in(raw);U rows,mark,r,sections;in>>rows>>mark>>r>>sections;
+    std::vector<Run> runs(r);for(auto& x:runs)in>>x.byte>>x.len;
+    auto edges=build(runs);
+    std::ifstream gf(output,std::ios::binary);Word gold((std::istreambuf_iterator<char>(gf)),{});
+    assert(gold.size()==rows);
+    for(U i=0;i<sections;++i){
+        std::string name;U k;in>>name>>k;Section s(k);U endpoints=0;
+        for(auto& [lo,hi]:s){in>>lo>>hi;endpoints+=hi-lo;}
+        Constructor tree(edges);tree.run(s);
+        check_tape<false>(edges,s,tree,mark,gold);
+        check_tape<true>(edges,s,tree,mark,gold);
+        std::cout<<ordinal<<','<<name<<','<<rows<<','<<endpoints<<','<<tree.stats.states<<','
+                 <<tree.stats.pops<<','<<tree.stats.repush<<','<<tree.stats.shift<<'\n';
+    }
+}
+int main(int argc,char** argv){
+    if(argc==4){tapes(argv[1],argv[2],argv[3]);return 0;}
+    assert(argc==1);
+
     std::mt19937 g(142904);U cells=0;N marks=0;
     for(U n:{15u,16u,17u,63u,64u,65u,127u,128u,129u,255u,256u,257u,511u}){
         for(U trial=0;trial<8;++trial){
