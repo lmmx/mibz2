@@ -68,7 +68,7 @@ The independent scalar i9 dry receipt at 02c1b2e verified the worker settings an
 
 **Independent counter factorial.** The seven-arm AMD CI ran 588 complete scored processes. Combined/edge wall was 0.9912 [0.9861,0.9963], 0.9906 [0.9807,1.0006] and 0.9877 [0.9838,0.9917] at W1/W2/W4. At W4 combined/scalar was 0.9843 [0.9760,0.9927], combined/Lazy wall was 0.8468 [0.8442,0.8494], peak was 0.7098 of Lazy and 1.0034 of edge. The interaction ratio was 0.9828 [0.9670,0.9988] at W4. The preregistered screen passed. The 10900K requires its own paired comparison with the new scalar reference. [All seven gates, six factorial contrasts and raw evidence](ci/evidence/cap-counter-44460943655.md)
 
-**In-place two-stream emission.** Candidate c0e0e657e1e9628a7b80c33f4584819d1b169893 emits two forward prefixes of the same block into one existing n-byte output, then moves an initialized prefix once or twice to restore order. It passed 338 official cases, and the native stage on fourteen true edge blocks measured 0.9228 [0.8879,0.9591] of the previous emitter. Its refreshed W1/W4 full local scorer observed 0.673 [0.340,1.332] and 0.723 [0.271,1.930] against Lazy. This is the lowest current W4 point estimate. The wide intervals overlap earlier leaders. W4 peak was 0.734 of Lazy, versus the combined worker's 0.727 in a separate round. The five-arm independent CI directly compares two-stream and edge. [Source, tests and evidence](two-seed/) · [Preregistered rule](two-seed/CI.md) · [CI run](https://github.com/lmmx/mibz2/actions/runs/44465700927)
+**In-place two-stream emission.** Candidate c0e0e657e1e9628a7b80c33f4584819d1b169893 emits two forward prefixes of the same block into one existing n-byte output, then moves an initialized prefix once or twice to restore order. It passed 338 official cases, and the native stage on fourteen true edge blocks measured 0.9228 [0.8879,0.9591] of the previous emitter. Its refreshed W1/W4 full local scorer observed 0.673 [0.340,1.332] and 0.723 [0.271,1.930] against Lazy. This is the lowest current W4 point estimate. The wide intervals overlap earlier leaders. W4 peak was 0.734 of Lazy, versus the combined worker's 0.727 in a separate round. In 20 paired direct rounds the two-stream/edge wall was 1.0202 [0.9088,1.1454] at W1 and 0.9769 [0.8686,1.0986] at W4. The five-arm independent CI directly compares two-stream and edge. [Source, tests and evidence](two-seed/) · [Preregistered rule](two-seed/CI.md) · [CI run](https://github.com/lmmx/mibz2/actions/runs/44465700927)
 
 ## Local leaders by tested design
 
@@ -1652,7 +1652,7 @@ The build tree, including sibling modules, is [`d0a42980e896211906234c7679b38760
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-No independent benchmark is attached to this individual scorer receipt.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Scalar matched CI](ci/evidence/scalar-cap-44450850135.md) · [Paired i9 statistical replay](workstation/scalar-independent-i9.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1671,7 +1671,7 @@ The build tree, including sibling modules, is [`d0a42980e896211906234c7679b38760
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-No independent benchmark is attached to this individual scorer receipt.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Scalar matched CI](ci/evidence/scalar-cap-44450850135.md) · [Paired i9 statistical replay](workstation/scalar-independent-i9.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1697,7 +1697,7 @@ The build tree, including sibling modules, is [`97ab8ad0b9744cf8a008ef9642e9049d
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-No independent benchmark is attached to this individual scorer receipt.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Seven-arm counter factorial CI](ci/evidence/cap-counter-44460943655.md)
 
 Reproduce in a fresh checkout of the build tree above.
 

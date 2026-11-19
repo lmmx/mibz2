@@ -146,6 +146,8 @@ def describe(e):
     if e["note"].get("assessment"):
         lines.extend([e["note"]["assessment"], ""])
     independent = {
+        "front-fusion/cap-batch/worker/candidate.rs": "[Scalar matched CI](ci/evidence/scalar-cap-44450850135.md) · [Paired i9 statistical replay](workstation/scalar-independent-i9.md)",
+        "front-fusion/cap-counter/both.rs": "[Seven-arm counter factorial CI](ci/evidence/cap-counter-44460943655.md)",
         "narrow-short/ahead.rs": "[Independent W1/2/4 CI](ci/evidence/combined-ahead-44429350230.md) · [Independent W7–10 i9 result](workstation/combined-i9.md)",
         "edge-budget/candidate.rs": "[Independent W1/2/4 CI](ci/evidence/edge-budget-44431030145.md) · [Independent W7–10 i9 result](workstation/edge-i9.md)",
         "formulations/f2-pages/instructions/candidate.rs": "[Independent W1/2/4 POPCNT result](ci/evidence/guarded-popcnt-44436826833.md)",
@@ -200,7 +202,9 @@ def main():
         lines.extend(describe(e))
     # Keep the scorer's own records verbatim so moonshot-best can read the joint register.
     receipts = []
-    for path in sorted((HERE / "results").glob("*/official-register.jsonl")):
+    paths = list((HERE / "results").glob("*/official-register.jsonl"))
+    paths.extend(HERE.glob("*/official/register.jsonl"))
+    for path in sorted(paths):
         for line in path.read_text().splitlines():
             row = json.loads(line)
             receipts.append((row["time"], path.parent.name, line))
