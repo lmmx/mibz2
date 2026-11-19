@@ -228,9 +228,10 @@
     7013154415,
     7013543921,
     7014835513,
-    7015931440
+    7015931440,
+    7018475871
   ],
-  "last_processed_comment_id": 7015931440,
+  "last_processed_comment_id": 7018475871,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2801,13 +2802,16 @@
     },
     {
       "trigger_comment_id": 7018475871,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/recalibrate-057-7018475871/report.md",
       "source_commit": "9ba4416acc9911f2dbd668e6d9895be52c485a76",
       "report_commit": "300508a95c926297831acb356d9b77498d5cc058",
-      "disposition": "PROCEED at 9ba4416a. Timed design and decoder pin verified. The archived DRY receipts pass independently. Queue admission remains subject to Protocol §9."
+      "disposition": "PROCEED at 9ba4416a. Timed design and decoder pin verified. The archived DRY receipts pass independently. Queue admission remains subject to Protocol §9.",
+      "review_comment_id": 7018657158,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, single publication, and role-aware header and route. The pinned helper's coordinator-only sender check is inapplicable to the Researcher REVIEW."
     }
   ],
   "active_delegations": [],
@@ -2859,5 +2863,5 @@
     "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
     "date": "2026-11-06"
   },
-  "last_observed_pr162_comment_id": 7015931440
+  "last_observed_pr162_comment_id": 7018475871
 }
