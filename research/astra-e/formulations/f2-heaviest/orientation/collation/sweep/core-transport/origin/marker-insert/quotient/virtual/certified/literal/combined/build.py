@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import subprocess
 import sys
 HERE=Path(__file__).resolve().parent
@@ -15,7 +16,7 @@ a=s.index('    fn forest_index(');b=s.index('        let f=&mut self.forest;',a)
 c=s.index('\n    }\n}',b)
 body=s[b:c]
 body=one(body,'for r in root {\n            let n=nodes[r.id as usize];let c=n.word as usize;','for (word,width) in input {\n            let c=word as usize;')
-body=body.replace('n.word','word').replace('r.width','width')
+body=re.sub(r'\br\.width\b','width',re.sub(r'\bn\.word\b','word',body))
 a=s.index('        if self.stream {self.discover::<true>')
 c=s.index('\nimpl Second{\n    pub(super) fn capacity',a)
 tail=s[a:c]
@@ -51,5 +52,11 @@ s=one(s,'[15,17].into_iter()','[39,41].into_iter()')
 a=s.index('fn price(path:&str)');b=s.index('fn rss(',a)
 s=s[:a]+(HERE/'rotor.rs').read_text()+s[b:]
 s=one(s,'let code=[0,12,3,15,5,17][arm];let name=["named","named_forest","quot4","quot4_forest","quot12","quot12_forest"][arm];','let code=ROSTER[arm];let name=POLICY[arm];')
-p.write_text(s)
+a=s.index('fn small(){');b=s.index('fn geometry(',a)
+brace=s[a:b].replace('fn small(){','fn small_brace(){').replace("b'x'","b'}'")
+brace=one(brace,'let mut w=Worker::default();','let mut fixed_cases=0;let mut fixed_skips=0;let mut w=Worker::default();')
+brace=one(brace,'                    cases+=1;','                    if r.second && w.fast.forest_stats()[0]==2{fixed_cases+=1;fixed_skips+=u32::from(r.mark.is_some_and(|(_,skip)|skip>0));}\n                    cases+=1;')
+brace=one(brace,'    println!("{cases} dense quotient','    assert!(fixed_cases>0 && fixed_skips>0);println!("Active producer-certified child on {fixed_cases} cases including {fixed_skips} nonzero original byte skips.");\n    println!("{cases} dense quotient')
+s=one(s,'"held"=>held(&args[2]),','"brace-small"=>small_brace(),"held"=>held(&args[2]),')
+p.write_text(s+'\n'+brace)
 subprocess.run(['rustc','--edition=2021','-A','dead_code','-A','unexpected_cfgs','-A','unused_imports','-A','unused_mut','-C','opt-level=3','-C','codegen-units=1','--cfg','clipped_profile',str(p),'--extern','mibz2='+deps+'/libmibz2.rlib','-L','dependency='+deps,'-o',str(out/'combined')],check=True)
