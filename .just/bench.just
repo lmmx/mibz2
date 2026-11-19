@@ -1915,3 +1915,10 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# Experimental frozen comparison requested by Astra E. The Coordinator owns queuing.
+bench-astra-e-lookahead:
+    bash research/astra-e/workstation/run.sh measure research/astra-e/lookahead/candidate.rs
+
+bench-astra-e-lookahead-dry:
+    bash research/astra-e/workstation/run.sh dry research/astra-e/lookahead/candidate.rs
