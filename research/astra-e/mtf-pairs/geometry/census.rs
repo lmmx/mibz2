@@ -15,7 +15,7 @@ fn main() {
         let ranks=s.syms.iter().take_while(|&&s0| s0<=1 || s0!=s.eob).enumerate()
             .filter(|&(_, &s)| s>1).map(|(pos,&s)|(pos,(s-1) as usize)).collect::<Vec<_>>();
         let active=runs::takes_runs(&s);
-        for threshold in [2,4,8,16] {
+        for threshold in [2,4,8,16,32] {
             let low=ranks.iter().filter(|&&(_,rank)|rank<threshold).count();
             let mut counts=[0;4];
             for mode in 0..3 {

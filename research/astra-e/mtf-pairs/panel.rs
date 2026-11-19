@@ -2,6 +2,7 @@ use mibz2::{block::Symbols,runs,stream::{Event,Scanner,SliceSource},Kernels};
 mod stock;
 mod single;
 mod pair;
+mod wide;
 
 #[derive(Default)]
 struct Runs {
@@ -12,7 +13,7 @@ impl Default for Counts {fn default()->Self{Self([0;256])}}
 impl std::ops::Deref for Counts {type Target=[u32;256];fn deref(&self)->&Self::Target{&self.0}}
 impl std::ops::DerefMut for Counts {fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
 type Front=unsafe fn(&Symbols,&mut Runs)->Option<usize>;
-const ARMS:[(&str,Front);3]=[("stock",stock::front_avx2),("single",single::front_avx2),("pair",pair::front_avx2)];
+const ARMS:[(&str,Front);4]=[("stock",stock::front_avx2),("single",single::front_avx2),("pair",pair::front_avx2),("wide",wide::front_avx2)];
 #[repr(C)]
 struct Timespec{i:i64,n:i64}
 unsafe extern "C"{fn clock_gettime(c:i32,t:*mut Timespec)->i32;}
@@ -27,8 +28,13 @@ fn check(s:&Symbols, scratch:&mut Runs, reference:&mut runs::Runs){
         if let Some(z)=result {
             assert_eq!(&Ok(z),&n);
             assert_eq!(scratch.runs,reference.records());
-            assert_eq!(&*scratch.counts,reference.byte_counts());
-            let mut per=[0;256];for &r in reference.records(){per[(r>>8)as usize]+=1;}
+            let mut per=[0;256];
+            let mut counts=[0;256];
+            for &r in reference.records(){
+                per[(r>>8)as usize]+=1;
+                counts[(r>>8)as usize]+=u32::from(r&255);
+            }
+            assert_eq!(counts,*scratch.counts);
             assert_eq!(per,*scratch.per);
         }
     }
@@ -67,13 +73,14 @@ fn main(){
     let round_count:usize=args[2].parse().unwrap();
     println!("round,position,arm,front_ns,blocks,records");
     let orders=[[0,1,2],[1,2,0],[2,0,1],[2,1,0],[1,0,2],[0,2,1]];
-    let mut buffers=[Runs::default(),Runs::default(),Runs::default()];
+    let ids=if args.get(3).map(String::as_str)==Some("wide"){[0,2,3]}else{[0,1,2]};
+    let mut buffers=[Runs::default(),Runs::default(),Runs::default(),Runs::default()];
     for round in 0..=round_count{
         let order=orders[round.saturating_sub(1)%orders.len()];
         for (position,id) in order.iter().enumerate(){
-            let (name,arm)=ARMS[*id];let t=cpu();let mut records=0;
+            let id=ids[*id];let (name,arm)=ARMS[id];let t=cpu();let mut records=0;
             for (_,s) in &corpus{
-                let r=&mut buffers[*id];unsafe {std::hint::black_box(arm(s,r).unwrap());}
+                let r=&mut buffers[id];unsafe {std::hint::black_box(arm(s,r).unwrap());}
                 records+=r.runs.len();std::hint::black_box(&*r);
             }
             let elapsed=cpu()-t;

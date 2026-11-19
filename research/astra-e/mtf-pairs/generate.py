@@ -43,3 +43,15 @@ pair = """            let s = *spw.add(tz) as usize;
 """
 for name, update, table in [("stock",front[start:stop],""),("single",single,""),("pair",pair,(here/"masks.rs").read_text())]:
     (out/(name+".rs")).write_text(header+table+front[:start]+update+front[stop:])
+wide = pair.replace("s <= 16 && w != 0 && *spw.add(w.trailing_zeros() as usize) <= 16",
+    "w != 0 && ((s - 1) | (*spw.add(w.trailing_zeros() as usize) as usize - 1)) < 32")
+startwide = wide.index("                let idx =")
+endwide = wide.index("                let both =",startwide)
+wide = wide[:startwide]+"""                let mask=WIDE.0.as_ptr().add(32 * (s-1) + second_rank) as *const __m128i;
+                let g0=_mm_or_si128(_mm_shuffle_epi8(f0,_mm_load_si128(mask)),_mm_shuffle_epi8(f1,_mm_load_si128(mask.add(1))));
+                f1=_mm_or_si128(_mm_shuffle_epi8(f0,_mm_load_si128(mask.add(2))),_mm_shuffle_epi8(f1,_mm_load_si128(mask.add(3))));
+                f0=g0;
+"""+wide[endwide:]
+original_move = front[front.index("            if s < 33 {",start):front.index("            let c = ",start)]
+wide = wide.replace(move, original_move)
+(out/"wide.rs").write_text(header+(here/"wide.rs").read_text()+front[:start]+wide+front[stop:])
