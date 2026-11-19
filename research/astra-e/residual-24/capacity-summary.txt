@@ -1,0 +1,4 @@
+page max_old_retained max_new_retained blocks_with_greater_edge_storage
+8 1437984 1197980 0
+16 1437984 1176564 0
+32 1437984 1181612 0

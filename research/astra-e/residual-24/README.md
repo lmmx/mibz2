@@ -9,3 +9,26 @@ d=research/astra-e/residual-24
 PAGE_DEPS=/path/to/release/deps bash "$d/census.sh" /tmp/astra-e-edge-pages
 python3 "$d/sum.py"
 ```
+
+## Complete paid kernels
+
+The P=8, 16, and 32 implementations construct their final table directly from the original band's source queue slices. A first pass over band intersections classifies pages. Uniform headers store a high label. Mixed headers store a tagged 15-bit exception-page index; a second pass fills the low code and successor for every row and the high bytes for mixed fragments. The existing wide-code path and blocks that exceed the 15-bit exception count use the original representation. The final record has initialized padding for the checked unaligned 32-bit load. The walker produces its next index from the low b bits, independently looks up the page's label, and emits the same first marked cycle and final repetition.
+
+All 25,484,201 residual slots in the 228 admitted blocks had their complete ordinal and label checked against the frozen uncompressed table in each format. All resulting marked inverses agreed with Segmented. An independent stable-sort test covered 11,065 marks on arbitrary short and longer run-heavy columns, including one-row marked periods and multiple cycles. A synthetic overflow of the header's 32,768 exception-page capacity refused cleanly; reuse for a subsequent small directory succeeded. The old table's retained maximum was 1,437,984 bytes. Actual maxima for P=8/16/32 were 1,197,980 / 1,176,564 / 1,181,612 bytes, with smaller table storage on every canonical admission. Shared endpoint and output memory is outside those table measurements. Wide fallback may retain a previously allocated packed scratch on other inputs. These data do not establish whole-worker RSS.
+
+| Complete inverse thread CPU vs frozen 80d8409 | CPU 4, 64 balanced laps | CPU 2, independent 64 laps |
+|---|---|---|
+| Page 8 | 1.2458 [1.2032,1.2898] | 1.2481 [1.2120,1.2854] |
+| Page 16 | 1.2414 [1.2007,1.2835] | 1.2609 [1.2210,1.3022] |
+| Page 32 | 1.2227 [1.1833,1.2633] | 1.2415 [1.2056,1.2785] |
+
+These measurements start before run and endpoint construction and end after reconstructing the full marked raw block. The same eleven prespecified source blocks were used in both processes; every timed output was checked. P=16 preparation ratios were 1.173 / 1.161, and marked emission ratios were 1.342 / 1.429. The edge capacity reduction did not recover the time for encoding, split labels and lookup. The 32-bit combined/edge writer remains the target-speed reference. This experiment retains exact lower-table-space alternatives with known local throughput regressions. [Raw phases and intervals](price-summary.csv) · [Verified retained capacities](capacity-summary.txt) · [Properties](check.txt)
+
+```sh
+d=research/astra-e/residual-24
+PAGE_DEPS=/path/to/release/deps bash "$d/run.sh" /tmp/astra-e-residual-24
+PAGE_DEPS=/path/to/release/deps bash "$d/overflow.sh" /tmp/astra-e-residual-overflow
+python3 "$d/report.py" /tmp/astra-e-residual-24/{first,repeat}.csv
+```
+
+The compiled standalone scorer entries are p8.rs, p16.rs and p32.rs. No change to the shipping decoder is needed. The separate census and native checks preserve the exact historical geometry and price both passes before the marked walk. No worker or target timing was requested for these candidates.
