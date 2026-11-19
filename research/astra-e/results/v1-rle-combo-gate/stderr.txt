@@ -1,0 +1,7 @@
+moonshot: building the harness with /workspace/work/astra-rlecombo-checked/research/astra-e/formulations/f2-rle/combined/candidate.rs
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-rlecombo-checked/bench/moonshot)
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-rlecombo-checked)
+    Finished `release` profile [optimized + debuginfo] target(s) in 52.21s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-rlecombo-checked/corpora/wikidata.bz2
+moonshot: written to research/astra-e/results/v1-rle-combo-gate/score
+moonshot: recorded in research/astra-e/results/v1-rle-combo-gate/official-register.jsonl
