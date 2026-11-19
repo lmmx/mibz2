@@ -25,6 +25,10 @@ Recompute the calibrated grid and check the archived interpretation with the fol
 python3 research/astra-e/results/combined-v1-proxy/read_v1.py /path/to/frozen/checkout
 ```
 
+## Registered workstation comparison
+
+The complete model was committed at `2337830` before the measured workstation bundle. The target-ready code at `8c9640d8ab186f81a0500f48e606e0c21c2a6669` has the same tracked decoder, scorer, Cargo configuration, original Open-Return sources and four candidate-module directories as the proxy build. The independent untimed rehearsal at that tag exercised W7, W8, W9 and W10 on the i9, passed candidate and control gates, and recorded the frozen rotation. It selected the upstream v1 scorer from `604dac3`. The dry archive's SHA-256 is `635fa5924bddbf7e7457c504ad936834722d32891f5fdbd1f06cb835d9ab8584`. [Independent target dry run](https://github.com/lmmx/mibz2/blob/8bced3f80e7e8f5f139b4e37c7d409aaf9ef8c83/astra-e/run-20261119T012848Z.tar.gz) · [Frozen model](https://github.com/lmmx/mibz2/tree/2337830/research/astra-e/results/combined-v1-proxy)
+
 ## Earlier checkpoint and recovery
 
 The checkpoint preserves 800 complete official observations, all W1, W2, W4, W7 and W8 rows. The 240-, 480- and 640-row checkpoints remain at commits `6a5d160`, `b633eed` and `1c895fc`. W8 gives 0.9118 [0.8817,0.9396] against fresh lazy, within the v1 reference envelope. A source check confirms that v1's `proxy-runs.jsonl` receives one record per block, with normal file buffering. The full official reading above includes these observations.
