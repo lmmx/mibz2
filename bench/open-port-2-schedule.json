@@ -1,0 +1,249 @@
+{
+ "rule": "G2: a cell fails if the mean of its rounds' paired log ratios (the port over v0.5.6) exceeds c",
+ "alpha_per_cell": 0.0012000000000000001,
+ "power_target": "at a true +2% slowdown, at least max(0.80, G - 0.005) under the cell's own residuals (50,000 draws)",
+ "source": "docs/journal/2026-11-19-open-port-2-registration/plan.py on open-port/run-20261119T125538Z (planning noise only)",
+ "cells": [
+  {
+   "corpus": "ho-code-l1",
+   "threads": 8,
+   "rounds": 288,
+   "c": 0.0158
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": 10,
+   "rounds": 336,
+   "c": 0.0149
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": 20,
+   "rounds": 336,
+   "c": 0.0149
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": 8,
+   "rounds": 168,
+   "c": 0.0167
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": 10,
+   "rounds": 576,
+   "c": 0.0146
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": 20,
+   "rounds": 192,
+   "c": 0.0158
+  },
+  {
+   "corpus": "ho-prose-l1",
+   "threads": 8,
+   "rounds": 144,
+   "c": 0.015
+  },
+  {
+   "corpus": "ho-prose-l1",
+   "threads": 10,
+   "rounds": 216,
+   "c": 0.0152
+  },
+  {
+   "corpus": "ho-prose-l1",
+   "threads": 20,
+   "rounds": 144,
+   "c": 0.0149
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0152
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": 10,
+   "rounds": 84,
+   "c": 0.0159
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": 20,
+   "rounds": 84,
+   "c": 0.0163
+  },
+  {
+   "corpus": "ho-structured-l1",
+   "threads": 8,
+   "rounds": 84,
+   "c": 0.0157
+  },
+  {
+   "corpus": "ho-structured-l1",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0155
+  },
+  {
+   "corpus": "ho-structured-l1",
+   "threads": 20,
+   "rounds": 84,
+   "c": 0.0159
+  },
+  {
+   "corpus": "ho-structured-l9",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0151
+  },
+  {
+   "corpus": "ho-structured-l9",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0149
+  },
+  {
+   "corpus": "ho-structured-l9",
+   "threads": 20,
+   "rounds": 96,
+   "c": 0.0148
+  },
+  {
+   "corpus": "ho-wikidata-l1",
+   "threads": 8,
+   "rounds": 84,
+   "c": 0.016
+  },
+  {
+   "corpus": "ho-wikidata-l1",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0149
+  },
+  {
+   "corpus": "ho-wikidata-l1",
+   "threads": 20,
+   "rounds": 84,
+   "c": 0.0161
+  },
+  {
+   "corpus": "onebyte",
+   "threads": 8,
+   "rounds": 84,
+   "c": 0.0159
+  },
+  {
+   "corpus": "onebyte",
+   "threads": 10,
+   "rounds": 84,
+   "c": 0.0157
+  },
+  {
+   "corpus": "onebyte",
+   "threads": 20,
+   "rounds": 72,
+   "c": 0.0169
+  },
+  {
+   "corpus": "pattern",
+   "threads": 8,
+   "rounds": 84,
+   "c": 0.0162
+  },
+  {
+   "corpus": "pattern",
+   "threads": 10,
+   "rounds": 84,
+   "c": 0.0163
+  },
+  {
+   "corpus": "pattern",
+   "threads": 20,
+   "rounds": 84,
+   "c": 0.016
+  },
+  {
+   "corpus": "random",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0153
+  },
+  {
+   "corpus": "random",
+   "threads": 10,
+   "rounds": 84,
+   "c": 0.0162
+  },
+  {
+   "corpus": "random",
+   "threads": 20,
+   "rounds": 84,
+   "c": 0.0161
+  },
+  {
+   "corpus": "records",
+   "threads": 8,
+   "rounds": 84,
+   "c": 0.016
+  },
+  {
+   "corpus": "records",
+   "threads": 10,
+   "rounds": 84,
+   "c": 0.0161
+  },
+  {
+   "corpus": "records",
+   "threads": 20,
+   "rounds": 84,
+   "c": 0.0164
+  },
+  {
+   "corpus": "runs",
+   "threads": 8,
+   "rounds": 216,
+   "c": 0.0152
+  },
+  {
+   "corpus": "runs",
+   "threads": 10,
+   "rounds": 168,
+   "c": 0.0165
+  },
+  {
+   "corpus": "runs",
+   "threads": 20,
+   "rounds": 288,
+   "c": 0.0153
+  },
+  {
+   "corpus": "text",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0149
+  },
+  {
+   "corpus": "text",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0153
+  },
+  {
+   "corpus": "text",
+   "threads": 20,
+   "rounds": 84,
+   "c": 0.016
+  },
+  {
+   "corpus": "wikidata-x16",
+   "threads": 10,
+   "rounds": 84,
+   "c": 0.0162
+  }
+ ],
+ "serialised": "each c rounded up to 4 places; the planner selects and reports with it (the Researcher's HOLD 7013288271)"
+}

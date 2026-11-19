@@ -1,0 +1,44 @@
+ho-code-l1         8t n 288 c 0.0158 | G2 +1/2/3% 0.10 0.81 1.00 (pooled +2% 0.78) | G 0.31 0.48 0.65 | size own 0.0005 pooled 0.0011 spiky 0.0018
+ho-code-l1        10t n 336 c 0.0149 | G2 +1/2/3% 0.15 0.86 1.00 (pooled +2% 0.85) | G 0.31 0.46 0.62 | size own 0.0012 pooled 0.0008 spiky 0.0025
+ho-code-l1        20t n 336 c 0.0149 | G2 +1/2/3% 0.16 0.83 1.00 (pooled +2% 0.86) | G 0.39 0.53 0.67 | size own 0.0012 pooled 0.0011 spiky 0.0030
+ho-code-l9         8t n 168 c 0.0167 | G2 +1/2/3% 0.00 0.92 1.00 (pooled +2% 0.71) | G 0.21 0.59 0.91 | size own 0.0000 pooled 0.0012 spiky 0.0000
+ho-code-l9        10t n 576 c 0.0146 | G2 +1/2/3% 0.18 0.85 1.00 (pooled +2% 0.94) | G 0.43 0.54 0.65 | size own 0.0012 pooled 0.0000 spiky 0.0020
+ho-code-l9        20t n 192 c 0.0158 | G2 +1/2/3% 0.07 0.85 1.00 (pooled +2% 0.77) | G 0.26 0.49 0.73 | size own 0.0001 pooled 0.0012 spiky 0.0009
+ho-prose-l1        8t n 144 c 0.0150 | G2 +1/2/3% 0.10 0.89 1.00 (pooled +2% 0.84) | G 0.24 0.51 0.77 | size own 0.0000 pooled 0.0012 spiky 0.0022
+ho-prose-l1       10t n 216 c 0.0152 | G2 +1/2/3% 0.14 0.83 1.00 (pooled +2% 0.88) | G 0.31 0.48 0.67 | size own 0.0012 pooled 0.0000 spiky 0.0036
+ho-prose-l1       20t n 144 c 0.0149 | G2 +1/2/3% 0.12 0.87 1.00 (pooled +2% 0.85) | G 0.26 0.51 0.75 | size own 0.0003 pooled 0.0012 spiky 0.0041
+ho-prose-l9        8t n  96 c 0.0152 | G2 +1/2/3% 0.11 0.85 1.00 (pooled +2% 0.95) | G 0.31 0.55 0.79 | size own 0.0004 pooled 0.0000 spiky 0.0074
+ho-prose-l9       10t n  84 c 0.0159 | G2 +1/2/3% 0.00 1.00 1.00 (pooled +2% 0.90) | G 0.66 1.00 1.00 | size own 0.0000 pooled 0.0000 spiky 0.0018
+ho-prose-l9       20t n  84 c 0.0163 | G2 +1/2/3% 0.00 0.97 1.00 (pooled +2% 0.88) | G 0.47 0.92 1.00 | size own 0.0000 pooled 0.0000 spiky 0.0015
+ho-structured-l1   8t n  84 c 0.0157 | G2 +1/2/3% 0.08 0.85 1.00 (pooled +2% 0.83) | G 0.19 0.55 0.87 | size own 0.0000 pooled 0.0003 spiky 0.0059
+ho-structured-l1  10t n  96 c 0.0155 | G2 +1/2/3% 0.13 0.81 1.00 (pooled +2% 0.86) | G 0.23 0.47 0.79 | size own 0.0012 pooled 0.0001 spiky 0.0101
+ho-structured-l1  20t n  84 c 0.0159 | G2 +1/2/3% 0.05 0.85 1.00 (pooled +2% 0.81) | G 0.35 0.54 0.83 | size own 0.0000 pooled 0.0002 spiky 0.0045
+ho-structured-l9   8t n  96 c 0.0150 | G2 +1/2/3% 0.11 0.87 1.00 (pooled +2% 0.91) | G 0.21 0.50 0.79 | size own 0.0001 pooled 0.0000 spiky 0.0070
+ho-structured-l9  10t n  96 c 0.0150 | G2 +1/2/3% 0.11 0.87 1.00 (pooled +2% 0.91) | G 0.23 0.54 0.80 | size own 0.0001 pooled 0.0000 spiky 0.0075
+ho-structured-l9  20t n  96 c 0.0150 | G2 +1/2/3% 0.00 1.00 1.00 (pooled +2% 0.91) | G 0.51 1.00 1.00 | size own 0.0000 pooled 0.0000 spiky 0.0016
+ho-wikidata-l1     8t n  84 c 0.0160 | G2 +1/2/3% 0.00 1.00 1.00 (pooled +2% 0.95) | G 0.74 0.99 1.00 | size own 0.0000 pooled 0.0000 spiky 0.0016
+ho-wikidata-l1    10t n  96 c 0.0149 | G2 +1/2/3% 0.01 1.00 1.00 (pooled +2% 0.99) | G 0.42 1.00 1.00 | size own 0.0000 pooled 0.0000 spiky 0.0019
+ho-wikidata-l1    20t n  84 c 0.0158 | G2 +1/2/3% 0.03 0.89 1.00 (pooled +2% 0.95) | G 0.32 0.61 0.88 | size own 0.0000 pooled 0.0000 spiky 0.0033
+onebyte            8t n  84 c 0.0158 | G2 +1/2/3% 0.06 0.85 1.00 (pooled +2% 0.88) | G 0.33 0.55 0.83 | size own 0.0000 pooled 0.0000 spiky 0.0055
+onebyte           10t n  84 c 0.0162 | G2 +1/2/3% 0.04 0.83 1.00 (pooled +2% 0.86) | G 0.35 0.54 0.84 | size own 0.0000 pooled 0.0000 spiky 0.0041
+onebyte           20t n  84 c 0.0161 | G2 +1/2/3% 0.01 0.93 1.00 (pooled +2% 0.86) | G 0.27 0.79 0.99 | size own 0.0000 pooled 0.0000 spiky 0.0025
+pattern            8t n  84 c 0.0161 | G2 +1/2/3% 0.08 0.81 1.00 (pooled +2% 0.84) | G 0.19 0.62 0.98 | size own 0.0003 pooled 0.0001 spiky 0.0068
+pattern           10t n  84 c 0.0162 | G2 +1/2/3% 0.02 0.88 1.00 (pooled +2% 0.83) | G 0.17 0.60 0.95 | size own 0.0000 pooled 0.0000 spiky 0.0035
+pattern           20t n  84 c 0.0160 | G2 +1/2/3% 0.05 0.85 1.00 (pooled +2% 0.85) | G 0.16 0.54 0.95 | size own 0.0000 pooled 0.0001 spiky 0.0052
+random             8t n  96 c 0.0148 | G2 +1/2/3% 0.00 1.00 1.00 (pooled +2% 0.98) | G 0.53 1.00 1.00 | size own 0.0000 pooled 0.0000 spiky 0.0017
+random            10t n  96 c 0.0151 | G2 +1/2/3% 0.10 0.88 1.00 (pooled +2% 0.97) | G 0.19 0.48 0.83 | size own 0.0001 pooled 0.0000 spiky 0.0056
+random            20t n  84 c 0.0159 | G2 +1/2/3% 0.00 1.00 1.00 (pooled +2% 0.93) | G 0.80 1.00 1.00 | size own 0.0000 pooled 0.0000 spiky 0.0014
+records            8t n  84 c 0.0158 | G2 +1/2/3% 0.00 0.99 1.00 (pooled +2% 0.96) | G 0.45 0.98 1.00 | size own 0.0000 pooled 0.0000 spiky 0.0022
+records           10t n  84 c 0.0161 | G2 +1/2/3% 0.02 0.88 1.00 (pooled +2% 0.94) | G 0.35 0.59 0.88 | size own 0.0000 pooled 0.0000 spiky 0.0028
+records           20t n  84 c 0.0160 | G2 +1/2/3% 0.00 0.99 1.00 (pooled +2% 0.95) | G 0.60 0.97 1.00 | size own 0.0000 pooled 0.0000 spiky 0.0017
+runs               8t n 216 c 0.0153 | G2 +1/2/3% 0.14 0.82 1.00 (pooled +2% 0.83) | G 0.30 0.49 0.69 | size own 0.0012 pooled 0.0007 spiky 0.0043
+runs              10t n 168 c 0.0166 | G2 +1/2/3% 0.03 0.81 1.00 (pooled +2% 0.72) | G 0.35 0.54 0.75 | size own 0.0000 pooled 0.0011 spiky 0.0006
+runs              20t n 288 c 0.0152 | G2 +1/2/3% 0.16 0.81 1.00 (pooled +2% 0.86) | G 0.37 0.52 0.66 | size own 0.0012 pooled 0.0000 spiky 0.0035
+text               8t n  84 c 0.0156 | G2 +1/2/3% 0.13 0.80 1.00 (pooled +2% 0.84) | G 0.26 0.53 0.78 | size own 0.0005 pooled 0.0002 spiky 0.0113
+text              10t n  96 c 0.0152 | G2 +1/2/3% 0.13 0.84 1.00 (pooled +2% 0.87) | G 0.22 0.53 0.86 | size own 0.0011 pooled 0.0001 spiky 0.0096
+text              20t n  84 c 0.0159 | G2 +1/2/3% 0.01 0.95 1.00 (pooled +2% 0.82) | G 0.26 0.88 1.00 | size own 0.0000 pooled 0.0002 spiky 0.0025
+wikidata-x16      10t n  84 c 0.0160 | G2 +1/2/3% 0.03 0.87 1.00 (pooled +2% 0.87) | G 0.31 0.54 0.82 | size own 0.0000 pooled 0.0000 spiky 0.0036
+G2 family (40 cells) P(any fails), no effect: own 0.0117, pooled 0.0109, all-guard 0.0318, spiky (2% spikes) 0.1418
+S as registered (8 rounds): P(fails), no effect 0.147; at +2% 0.547
+guard extension pairs 4980: at 2.1 s a decode, 5.81 h
+S: 84 rounds back to back, about 3 min

@@ -2373,6 +2373,173 @@ bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUND
     date -u +%FT%TZ > "$O/finished.txt"
     bash bench/bundle.sh "$O"
 
+# The open port's successor confirmatory run (docs/journal/2026-11-19-open-port-2-registration.md;
+# #145 QUEUED 7011091171): a new experiment, not a retry of bench-open-port, whose one attempt
+# (open-port/run-20261119T125538Z) was NOT ADOPTED and stands. The same builds, machine, 18 inputs
+# and decision run as bench-open-port; its sustained cell, and then the guards' extension, each
+# cell's rounds as bench/open-port-2-schedule.json locks them (G2's 40 cells).
+# `bench/open_port2.py judge` gives the verdict. Its own one attempt, archived as open-port-2/run-*.
+# DRY (any value): the untimed preflight, as bench-open-port's.
+bench-open-port-2 PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUNDS="12" SETTLE="2" CROUNDS="8" DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/open-port-2
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-open-port-2 (docs/journal/2026-11-19-open-port-2-registration.md): the port at {{PORT}} against v0.5.6, at $(git rev-parse HEAD), unpinned at 8, 10 and 20 threads, {{ROUNDS}} rounds, settle {{SETTLE}} s; the sustained cell and the guards' extension as bench/open-port-2-schedule.json locks it; context {{CROUNDS}} rounds"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-open-port-2: the checkout has local changes"; exit 1; }
+    dry="{{DRY}}"
+    [ -z "$dry" ] || echo "bench-open-port-2: DRY RUN: the untimed preflight; no timing kept; not evidence" | tee "$O/DRY-RUN.txt"
+    # one confirmatory attempt: a timed attempt already started here, or archived on the evidence
+    # branch, is the registration's one, whatever its outcome; a second is refused. Fails closed:
+    # an evidence branch that can't be fetched or read refuses too (open_port2.py guard)
+    if [ -z "$dry" ]; then
+      python3 bench/open_port2.py guard "$W" --this "$O" || { rm -rf "$O"; exit 1; }
+    fi
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-open-port-2: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    # the two builds, each in its own worktree at its own commit: the port's head, and the tag
+    git fetch -q origin perf/open-kernel tag v0.5.6 2>/dev/null || true
+    port=$(git rev-parse --verify "{{PORT}}^{commit}") \
+      || { echo "bench-open-port-2: the port's commit {{PORT}} is not here (git fetch origin perf/open-kernel)"; exit 1; }
+    v056=$(git rev-parse --verify "v0.5.6^{commit}")
+    [ "$v056" = 530ed404a014a414ef0b62adfd947fa14d4533e6 ] || { echo "bench-open-port-2: v0.5.6 is $v056"; exit 1; }
+    for spec in "port:$port" "v0.5.6:$v056"; do
+      name=${spec%%:*} sha=${spec#*:}
+      [ -d "$W/build-$name" ] || git worktree add -q --detach "$W/build-$name" "$sha"
+      (cd "$W/build-$name" && git checkout -q --detach "$sha" && [ -z "$(git status --porcelain)" ] \
+        && cargo build -q --release --example ab --example windows)
+      echo "$name $(git -C "$W/build-$name" rev-parse HEAD)" | tee -a "$O/commits.txt"
+    done
+    AB=$W/build-port/target/release/examples/ab
+    OLDAB=$W/build-v0.5.6/target/release/examples/ab
+    # the harness: this branch's own `ab` (`run --unpinned`), which only schedules; every arm is
+    # one of the two builds, run as its child (`NAME@EXE`), so no code of this branch's is timed
+    cargo build -q --release --example ab
+    HAB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" "$OLDAB" "$HAB" | tee "$O/binaries.sha256"
+    # the corpora: Wikidata x4 (primary) and x16 (sustained); the development guards, afresh; the
+    # held-out corpora (the small ones as 4 copies, as Wikidata x4 is)
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-port/target/release/examples/windows" "$W/wikidata.bz2"
+    hdir=$(python3 -c 'import json; print(json.load(open("bench/wikidata-heldout.json"))["windows_dir"])')
+    python3 bench/wikidata.py fetch bench/wikidata-heldout.json "$hdir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata-heldout.json "$hdir" "$W/build-port/target/release/examples/windows" "$W/wikidata-heldout.bz2"
+    C=$W/corpora-${O##*/}
+    mkdir "$C"
+    : > "$C/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$C/wikidata-x{{COPIES}}.bz2"; done
+    : > "$C/wikidata-x16.bz2"
+    for i in $(seq 16); do cat "$W/wikidata.bz2" >> "$C/wikidata-x16.bz2"; done
+    "$HAB" gen "$C/gen" 16 >/dev/null
+    python3 bench/heldout.py build "$C/ho" "$W/wikidata-heldout.bz2" "$v056"
+    cp "$C/ho/heldout.json" "$O/heldout.json"
+    for f in "$C"/ho/ho-prose-l1 "$C"/ho/ho-prose-l9 "$C"/ho/ho-code-l1 "$C"/ho/ho-code-l9 \
+             "$C"/ho/ho-structured-l1 "$C"/ho/ho-structured-l9; do
+      : > "$C/${f##*/}.bz2"
+      for i in $(seq {{COPIES}}); do cat "$f.bz2" >> "$C/${f##*/}.bz2"; done
+    done
+    cp "$C/ho/ho-wikidata-l1.bz2" "$C/ho/ho-wikidata-l9.bz2" "$C/"
+    files=("$C/wikidata-x{{COPIES}}.bz2" "$C/gen/text.bz2" "$C/gen/random.bz2" "$C/gen/records.bz2"
+           "$C/gen/runs.bz2" "$C/gen/pattern.bz2" "$C/gen/onebyte.bz2"
+           "$C/ho-wikidata-l9.bz2" "$C/ho-wikidata-l1.bz2" "$C/ho-prose-l1.bz2" "$C/ho-prose-l9.bz2"
+           "$C/ho-code-l1.bz2" "$C/ho-code-l9.bz2" "$C/ho-structured-l1.bz2" "$C/ho-structured-l9.bz2")
+    sha256sum "${files[@]}" "$C/wikidata-x16.bz2" "$W/wikidata.bz2" "$W/wikidata-heldout.bz2" | tee "$O/inputs.sha256"
+    # before any timing: the builds and every input are the registered ones (the manifest
+    # bench/open-port-inputs.sha256, every input's exact compressed bytes); if not, nothing is
+    # timed, and the untimed setup may be repaired
+    python3 bench/open_port2.py verify "$O" --port "$port" | tee "$O/inputs-check.txt"
+    if [ -n "$dry" ]; then
+      # (the environment probe's spin timings, runq, are dropped: a DRY run keeps no timing)
+      "$HAB" env | python3 -c 'import json, sys; e = json.load(sys.stdin); e.pop("runq", None); print(json.dumps(e))' > "$O/env.json"
+    else
+      "$HAB" env > "$O/env.json"
+    fi
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    if [ -n "$dry" ]; then
+      # the untimed preflight: each corpus decoded once by each build, its size and digest kept
+      # and compared, nothing else; then the scorer's own checks
+      for f in "${files[@]}" "$C/wikidata-x16.bz2"; do
+        a=$("$AB" child mibz2 4 "$f" | tail -1 | python3 -c 'import json,sys; r=json.loads(sys.stdin.read()); print(r["out"], r.get("sha256") or r.get("hash"))')
+        b=$("$OLDAB" child mibz2 4 "$f" | tail -1 | python3 -c 'import json,sys; r=json.loads(sys.stdin.read()); print(r["out"], r.get("sha256") or r.get("hash"))')
+        [ "$a" = "$b" ] && s=same || s=DIFFER
+        echo "${f##*/}: the port $a, v0.5.6 $b: $s" | tee -a "$O/untimed-check.txt"
+      done
+      ! grep -q DIFFER "$O/untimed-check.txt" || echo "bench-open-port-2: the builds' outputs differ (untimed-check.txt)"
+      python3 bench/test_open_port2.py | tail -1 | tee "$O/scorer-checks.txt"
+      date -u +%FT%TZ > "$O/finished.txt"
+      bash bench/bundle.sh "$O"
+      exit 0
+    fi
+    # the timed attempt starts here: the one-attempt guard reads this marker, so a run that stopped
+    # in its untimed setup above is no attempt
+    date -u +%FT%TZ > "$O/timing-started.txt"
+    # the decision: one `ab run` a count, v0.5.6 and the port through the same entry point
+    for t in 8 10 20; do
+      echo "unpinned at $t threads: the port against v0.5.6"
+      "$HAB" run "$O/runs.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads "$t" --rounds {{ROUNDS}} \
+        --settle {{SETTLE}} --unpinned "${files[@]}"
+    done
+    # sustained: 10 threads, back to back (no settle), Wikidata x16
+    echo "sustained at 10 threads: the port against v0.5.6, back to back"
+    "$HAB" run "$O/sustained.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads 10 \
+      --rounds "$(python3 bench/open_port2.py schedule --sustained)" --settle 0 --unpinned "$C/wikidata-x16.bz2"
+    # the guards' extension (G2): each batch of bench/open-port-2-schedule.json, one `ab run`, the
+    # rounds each guard cell needs beyond the decision run's 12
+    python3 bench/open_port2.py schedule > "$O/schedule.txt"
+    while read -r t extra names; do
+      paths=()
+      for c in $names; do
+        case $c in
+          text|random|records|runs|pattern|onebyte) paths+=("$C/gen/$c.bz2") ;;
+          *) paths+=("$C/$c.bz2") ;;
+        esac
+      done
+      echo "the guards' extension at $t threads, $extra rounds: $names"
+      "$HAB" run "$O/guards-t$t-r$extra.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads "$t" \
+        --rounds "$extra" --settle {{SETTLE}} --unpinned "${paths[@]}" < /dev/null
+    done < "$O/schedule.txt"
+    date -u +%FT%TZ > "$O/timed.txt"
+    # the verdict (docs/journal/2026-11-19-open-port-2-registration.md)
+    python3 bench/open_port2.py judge "$O" --port "$port" | tee "$O/verdict.txt" \
+      || echo "bench-open-port-2: the verdict is VOID (verdict.txt says why); the bundle is kept"
+    # context, reported and not judged: the gate's cost (the shipped OpenCells against ungated open
+    # and against 0.5.6's LazyCells, kernel-only arms of W workers) at W 7..10, and the eager/open
+    # crossover at W 4..8
+    for w in 7 8 9 10; do
+      "$HAB" run "$O/gate.jsonl" --arms "mibz2-workers-lazy@$AB,mibz2-workers-open@$AB,mibz2-workers-lazycells@$AB" \
+        --threads "$w" --rounds {{CROUNDS}} --settle {{SETTLE}} --unpinned "$C/wikidata-x{{COPIES}}.bz2" "$C/gen/text.bz2"
+    done
+    for w in 4 5 6 7 8; do
+      "$HAB" run "$O/crossover.jsonl" --arms "mibz2-workers-lazy@$AB,mibz2-workers-eager@$AB" \
+        --threads "$w" --rounds {{CROUNDS}} --settle {{SETTLE}} --unpinned "$C/wikidata-x{{COPIES}}.bz2" "$C/gen/text.bz2"
+    done
+    python3 bench/open_port.py pairs "$O/gate.jsonl" --pair mibz2-workers-lazy/mibz2-workers-open \
+      --pair mibz2-workers-lazy/mibz2-workers-lazycells | tee "$O/gate.txt" || true
+    python3 bench/open_port.py pairs "$O/crossover.jsonl" --pair mibz2-workers-lazy/mibz2-workers-eager \
+      | tee "$O/crossover.txt" || true
+    # the coverage census (decides nothing): each block's route under the gates, and its cost one
+    # thread, production against the open kernel, on every corpus (this branch's research build)
+    cargo build -q --release --features open-return --example ab
+    target/release/examples/ab census-timed "${files[@]}" > "$O/census.jsonl" \
+      || echo "bench-open-port-2: the census failed (decides nothing)"
+    date -u +%FT%TZ > "$O/finished.txt"
+    bash bench/bundle.sh "$O"
+
 # The moonshot scorer (bench/moonshot/README.md): a candidate inverse-BWT kernel, a Rust source
 # file (bench/moonshot/candidates/template.rs), checked byte for byte against libbzip2, timed
 # against 0.5.6's kernel in the shipped workers, and run through the contention proxy
