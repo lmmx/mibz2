@@ -22,7 +22,7 @@ struct Oracle {
     std::string marked(int x) const {
         std::string out;for(int j=0;j<int(psi.size());j++){out.push_back(label[x]);x=psi[x];}return out;
     }
-    void object(const Section& target,Object& obj) const {
+    template<class T> void object(const Section& target,T& obj) const {
         std::map<std::string,std::pair<int,int>> lookup;
         std::vector<int> order(psi.size(),-1),incoming(target.mass,-1);
         for(auto p:target.list)for(int x=p.lo;x<p.hi;++x)order[x]=p.base+x-p.lo;
@@ -45,13 +45,13 @@ struct Oracle {
     }
 };
 struct Result {Stats stats;std::string bytes;double prepare,build,emit,total,wall;};
-Result execute(const std::vector<InputRun>& raw,Range section,int shift,bool fuse,int mark,const Oracle* oracle=nullptr,
+template<bool UseHull=false> Result execute(const std::vector<InputRun>& raw,Range section,int shift,bool fuse,int mark,const Oracle* oracle=nullptr,
                bool all_marks=false){
     auto wall=Clock::now();double t=cpu();
     Result r{};auto& st=r.stats;Counts co(raw);Plan plan(raw,co,section,shift,st);
     if(!plan.available){r.stats.h=-1;return r;}
     Index ix(raw,co,plan.levels.back(),st);
-    auto ready=cpu();Object obj(plan,ix,st,fuse);auto built=cpu();r.bytes=obj.expand(mark,co.n);auto done=cpu();
+    auto ready=cpu();ObjectImpl<UseHull> obj(plan,ix,st,fuse);auto built=cpu();r.bytes=obj.expand(mark,co.n);auto done=cpu();
     r.prepare=ready-t;r.build=built-ready;r.emit=done-built;r.total=done-t;
     r.wall=std::chrono::duration<double>(Clock::now()-wall).count();
     if(oracle){
@@ -108,6 +108,8 @@ void csv(const Result& r,int ordinal,bool fused,int rep,int pos){
       <<','<<s.copied_merge_entries<<','<<s.stream_rows<<','<<s.words<<','<<s.dictionary_bytes<<','<<s.root_runs
       <<','<<s.mark_probes<<','<<s.output_words<<','<<r.prepare<<','<<r.build<<','<<r.emit<<','<<r.total<<','<<r.wall<<'\n';
 }
+
+#ifndef SHIFT_PANEL_LIBRARY
 int main(int argc,char** argv){
     if(argc==1){small();return 0;}
     assert(argc==4);std::string mode=argv[1];int trials=std::stoi(argv[3]);
@@ -131,3 +133,5 @@ int main(int argc,char** argv){
         std::cerr<<"verified "<<id<<'\n';
     }
 }
+
+#endif

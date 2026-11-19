@@ -7,6 +7,7 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace shift {
@@ -25,6 +26,7 @@ struct Stats {
     N live_packets=0,live_rows=0,lf_seeks=0,page_increments=0,translated_pieces=0;
     N nonterminal_bands=0,terminal_bands=0,coalesced_packets=0,selectors=0,unary_moves=0;
     N copied_merge_entries=0,stream_rows=0,dictionary_bytes=0,mark_probes=0,output_words=0;
+    N global_ranges=0,gapped_hulls=0,skipped_holes=0,skipped_rows=0;
 };
 struct Section {
     std::vector<Segment> list;
@@ -120,13 +122,16 @@ public:
 };
 
 struct Word {int base=-1,width=0;std::string text;};
-struct Node {
+struct Hull { Range extent{0,0}; bool holes=false; };
+template<bool UseHull> using Storage=std::conditional_t<UseHull,Hull,std::vector<Range>>;
+template<bool UseHull> struct Node {
     int parent=-1,edge=-1,sel_begin=0,sel_end=0;
-    std::vector<Range> live;
+    Storage<UseHull> live;
 };
 struct Early {int lo,hi,id;};
-class Object {
-    std::vector<Node> nodes;
+template<bool UseHull> class ObjectImpl {
+    std::vector<Node<UseHull>> nodes;
+    std::vector<Range> forbidden;
     std::vector<Item> selector;
     std::vector<Early> ended;
     const Section& target;
@@ -139,9 +144,40 @@ class Object {
         if(!out.empty() && out.back().id==id)out.back().width+=width;
         else out.push_back({id,width});
     }
-    void append_range(std::vector<Range>& list,int lo,int hi){
-        if(!list.empty() && list.back().hi==lo){list.back().hi=hi;++st.coalesced_packets;}
-        else {assert(list.empty() || list.back().hi<lo);list.push_back({lo,hi});}
+    void append_range(Storage<UseHull>& list,int lo,int hi){
+        if constexpr(UseHull){
+            if(list.extent.lo==list.extent.hi){list.extent={lo,hi};return;}
+            assert(list.extent.hi<=lo);
+            if(list.extent.hi==lo)++st.coalesced_packets;
+            else list.holes=true;
+            list.extent.hi=hi;
+        }else{
+            if(!list.empty() && list.back().hi==lo){list.back().hi=hi;++st.coalesced_packets;}
+            else {assert(list.empty() || list.back().hi<lo);list.push_back({lo,hi});}
+        }
+    }
+    template<class F> void live_ranges(const Storage<UseHull>& live,F fn){
+        if constexpr(UseHull){
+            auto [x,end]=live.extent;if(x==end)return;
+            if(!live.holes){fn(x,end);return;}
+            ++st.gapped_hulls;
+            if(forbidden.empty()){
+                std::vector<Range> all;
+                for(size_t i=1;i<plan.levels.size();i++)for(auto s:plan.levels[i].list)all.push_back({s.lo,s.hi});
+                std::sort(all.begin(),all.end(),[](Range a,Range b){return a.lo<b.lo;});
+                for(auto p:all){
+                    if(!forbidden.empty() && p.lo<=forbidden.back().hi)forbidden.back().hi=std::max(p.hi,forbidden.back().hi);
+                    else forbidden.push_back(p);
+                }
+                st.global_ranges=forbidden.size();
+            }
+            auto gap=std::lower_bound(forbidden.begin(),forbidden.end(),x,[](Range r,int q){return r.hi<=q;});
+            while(gap!=forbidden.end() && gap->lo<end){
+                assert(x<gap->lo && gap->hi<end);fn(x,gap->lo);
+                ++st.skipped_holes;st.skipped_rows+=gap->hi-gap->lo;x=gap->hi;++gap;
+            }
+            fn(x,end);
+        }else for(auto p:live)fn(p.lo,p.hi);
     }
     int make_word(const std::string& text){int id=words.size();words.push_back({-1,0,text});st.dictionary_bytes+=text.size();return id;}
     void hit(int id,int base,int width){
@@ -150,7 +186,7 @@ class Object {
     void root(){
         nodes.push_back({});
         if(!fused || root_length==0){
-            for(auto p:target.list)nodes[0].live.push_back({p.lo,p.hi});
+            for(auto p:target.list)append_range(nodes[0].live,p.lo,p.hi);
             return;
         }
         // Domain is the common sorted-section ordinal, not physical rank.
@@ -186,7 +222,7 @@ class Object {
             st.fused_domain_pieces+=next.size();alive.swap(next);
         }
         auto a=plan.levels[0].list.front().lo;
-        for(auto p:alive)nodes[0].live.push_back({a+p.lo,a+p.hi});
+        for(auto p:alive)append_range(nodes[0].live,a+p.lo,a+p.hi);
         std::sort(ended.begin(),ended.end(),[](auto p,auto q){return p.lo<q.lo;});
     }
     void discover(){
@@ -195,7 +231,7 @@ class Object {
         for(int i=0;i<int(nodes.size());i++){
             auto live=std::move(nodes[i].live);
             int begin=selector.size();
-            for(auto [x,end]:live){
+            live_ranges(live,[&](int x,int end){
                 st.live_rows+=end-x;++st.live_packets;++st.lf_seeks;
                 int j=index.locate(x,st.page_increments);
                 while(x<end){
@@ -213,7 +249,7 @@ class Object {
                     }else{
                         ++st.nonterminal_bands;
                         if(alive_stamp[c]!=i){
-                            child[c]=nodes.size();alive_stamp[c]=i;Node n;n.parent=i;n.edge=c;nodes.push_back(std::move(n));
+                            child[c]=nodes.size();alive_stamp[c]=i;Node<UseHull> n;n.parent=i;n.edge=c;nodes.push_back(std::move(n));
                         }
                         id=child[c];append_range(nodes[id].live,y,y+width);
                     }
@@ -221,7 +257,7 @@ class Object {
                     else selector.push_back({id,width});
                     x=stop;
                 }
-            }
+            });
             nodes[i].sel_begin=begin;nodes[i].sel_end=selector.size();
         }
         st.selectors=selector.size();st.nodes=nodes.size();st.words=words.size();
@@ -260,8 +296,9 @@ class Object {
     }
 public:
     Stats& st;std::vector<Word> words;std::vector<Item> incoming;
-    Object(const Plan& p,const Index& ix,Stats& counts,bool fuse)
+    ObjectImpl(const Plan& p,const Index& ix,Stats& counts,bool fuse)
        :target(p.levels.back()),index(ix),plan(p),fused(fuse),root_length(p.prefix.size()),st(counts){
+        assert(!UseHull || fuse || root_length==0);
         st.h=root_length;st.mass=target.mass;st.selected_components=target.list.size();
         root();discover();merge();
     }
@@ -297,4 +334,5 @@ public:
         return out;
     }
 };
+using Object=ObjectImpl<false>;
 }

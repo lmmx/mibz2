@@ -1,0 +1,1 @@
+partition_cells 40846 checked_ranks 301054 transferred_marks 301054 partial_old_nodes 7258 submaximal_cells 6696 nontrivial_early_fusions 2434 saturated_nonzero_forbidden_component_bounds 0
