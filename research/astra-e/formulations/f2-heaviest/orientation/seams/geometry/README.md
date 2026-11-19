@@ -23,3 +23,14 @@ python3 "$d/optimize.py" research/astra-e/dense/target/wikidata | diff - "$d/wik
 python3 "$d/packets.py" research/astra-e/dense/target/wikidata | diff - "$d/packets.csv"
 python3 "$d/witness.py" | diff - "$d/witness.json"
 ```
+
+## A lower bound even with free switching inside every occurrence
+
+Relax the seam condition completely. Give each distinct original-run incidence an edge from its (forward prefix, run) event to its (backward suffix, run) event. To explain the byte using either end, pay at least one endpoint. No event involving run r can cover an incidence involving a different run, so this bipartite graph separates by original run. The minimum number of events in the relaxation equals the sum of the maximum matching sizes, by the bipartite vertex-cover theorem. The program constructs both a matching and an equally sized covering set, checks every matched edge, checks disjointness, and verifies that every incidence is covered. The relaxed choices need not describe any traversable path.
+
+The ten quote graphs certify at least 815,652 events compared with 815,694 for the exact shared-word seam optimum. The deeper graphs certify at least 866,058 compared with 866,587. Even charging no cost for changing ends arbitrarily within an occurrence, the remaining scope for reduction in this event count is at most 42 and 529, respectively. This bound concerns explicit original-run transitions priced by their two endpoint contexts. A decoder can still change how contexts are represented or inferred, the cost per transition, or the computation handed to the output writer. [Matching and cover verifier](local_cover.py) · [All 20 certificates' counts](runwise.csv)
+
+```sh
+d=research/astra-e/formulations/f2-heaviest/orientation/seams/geometry
+python3 "$d/local_cover.py" research/astra-e/dense/target/wikidata | diff - "$d/runwise.csv"
+```
