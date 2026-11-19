@@ -206,4 +206,19 @@ Every case was compared against direct first-return computation, with return wor
   - Only a timed interleaved kernel on the workstation would decide it.
 - **Theorem 2′:** the counts are exact. Right-end Rauzy–Veech reaches I(P_k) itself only at k = 4; it reaches a section of the same shape in k − 3 steps.
 
-**A correction to the prompts' regime figure.** By run count, admitted Wikidata blocks lie at **r/n 0.053–0.088** (196 of 233 blocks). No block between 0.10 and 0.15 is admitted; block 207, at 0.097, is refused. The "r/n 0.10–0.15" given to Neon in the round-4 corrections was the Coordinator's misreading. That figure in `src/cells_lazy.rs` describes the band *between* Cells' and LazyCells' admission lines, measured in run records. Round 4's theorem is unaffected. Its regime-specific numbers, and its synthetic blocks at r/n ≈ 0.23, target the wrong band.
+**The regime figure, settled by record 80.** LazyCells admits up to r/n 0.15: 228 of 233 Wikidata blocks, spanning about 0.057–0.143. Record 79's "0.053–0.088" referred to Cells' own narrower line, and record 80 corrects it. The prompts' "0.10–0.15" was too narrow. Neon's round-4 synthetic blocks, at r/n ≈ 0.23, are outside the admitted regime either way.
+
+## MONODROMY's verdict on round 4 (REVIEW 7006472980; record 80)
+
+| Claim | Verdict |
+|---|---|
+| Theorem 1, the exact work identity | **VERIFIED WITH CORRECTION.** The proof needs one surjectivity line. 0 failures in 165,340 runs. It gives the **shipped** Cells step count exactly on 7 Wikidata blocks (S = Cells' steps + 1 closure). |
+| Corollary 1, S ≥ 2r − \|D̄∩C̄\| | **VERIFIED.** |
+| The Zorich bound, S ≥ r | **VERIFIED** once an accelerated step is defined (a winner-run). **The shipped Cells takes 1.013–1.019r accelerated steps.** |
+| Headroom on the frozen block | floor 62,138 (1.214r) against shipped 92,571 (1.809r) unaccelerated: a ratio of 1.49. Across r/n 0.057–0.143 the ratio is 1.39–1.50. |
+| §4's \|D̄∩C̄\| ≈ r²/n | **REFUTED:** it is about 0.79r on Wikidata. |
+
+**Outcome:**
+- **Neon's identity is verified.** Applied to the shipped decoder, it shows that Cells' induction schedule is within about 2% of optimal in accelerated steps, among monotone component-suffix schedules.
+- **Any monotone schedule** can save at most about 1.4–1.5× in unaccelerated steps, and Cells' accelerated steps already take most of that.
+- **So the audition closed its own line:** induction *scheduling* is exhausted. Further total-work reductions must come from outside monotone interval induction: construction, emission, or a different reconstruction principle.
