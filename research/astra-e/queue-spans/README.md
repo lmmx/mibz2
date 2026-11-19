@@ -74,3 +74,7 @@ rustc --edition=2021 -C opt-level=3 -C codegen-units=1 -C lto=fat \
 taskset -c 0 "$scratch/probe" corpora/wikidata.bz2 > "$scratch/phases.csv"
 python3 "$d/phase-report.py" "$scratch/phases.csv"
 ```
+
+## Independent correctness gate
+
+At implementation `7998c953ab4e0de27508ab76e6c8f1018c6225d0` the unjoined, joined and low-u16 entries each passed all 338 cases in the authoritative gate. These include the 209,700,196-byte stream output, the crafted periodic/multiple-cycle stream and the 600-input mutation batch. Each round refreshed from master. Scorer path revision was `604dac3f46569edd9ac9b6706b23a68d9d7d8f8d` and each summary printed v1 at the byte-identical branch import `6a8a366cd786d58a528000b58da12fd2cfb47be8`. Exact invocation, compiler, input hashes and individual case verdicts are under `official/`. All three commands selected correctness only.
