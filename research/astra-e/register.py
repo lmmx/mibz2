@@ -204,6 +204,7 @@ def main():
     receipts = []
     paths = list((HERE / "results").glob("*/official-register.jsonl"))
     paths.extend(HERE.glob("*/official/register.jsonl"))
+    paths.extend(HERE.glob("*/*/official/register.jsonl"))
     for path in sorted(paths):
         for line in path.read_text().splitlines():
             row = json.loads(line)
