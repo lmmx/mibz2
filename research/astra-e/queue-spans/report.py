@@ -18,7 +18,10 @@ writer.writerow(["run", "clock", "arm", "reference", "rounds", "median_pass_ms",
 for path in map(Path, sys.argv[1:]):
     with path.open() as f:
         rows = list(csv.DictReader(f))
-    expected = {(a, b, q) for a in ARMS for b in BLOCKS for q in range(ROUNDS)}
+    arms = list(ARMS)
+    if any(r["arm"] == "low16" for r in rows):
+        arms[arms.index("joined")] = "low16"
+    expected = {(a, b, q) for a in arms for b in BLOCKS for q in range(ROUNDS)}
     observed = [(r["arm"], int(r["ordinal"]), int(r["round"])) for r in rows]
     assert set(observed) == expected and len(observed) == len(expected)
     assert set(Counter((r["arm"], r["ordinal"], r["position"]) for r in rows).values()) == {ROUNDS // len(ARMS)}
@@ -29,9 +32,9 @@ for path in map(Path, sys.argv[1:]):
             time = int(r[clock])
             laps[r["arm"]][int(r["round"])] += time
             blocks[r["arm"], int(r["ordinal"])].append(time)
-        typical = {a: sum(median(blocks[a,b]) for b in BLOCKS) for a in ARMS}
+        typical = {a: sum(median(blocks[a,b]) for b in BLOCKS) for a in arms}
         for ref in ["preserved", "rows", "rescan"]:
-            for arm in ARMS:
+            for arm in arms:
                 s = paired_ratio(laps[arm], laps[ref])
                 writer.writerow([path.stem, clock, arm, ref, ROUNDS, f"{median(laps[arm])/1e6:.4f}",
                                  *(f"{s[k]:.5f}" for k in ("geomean","lo","hi")),

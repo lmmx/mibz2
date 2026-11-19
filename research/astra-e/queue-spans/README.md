@@ -34,3 +34,17 @@ bash research/astra-e/queue-spans/run.sh /tmp/astra-e-queue-stage
 The source for this measurement is `300160cf9f1ab38b0a1206eb1800c42bd26b7b7f`. Two independent processes checked all eleven sample blocks in all seven arms with 28 rotated rounds and a warmup. Positions balance exactly per block in each process. The shared VM was busy during the first run, and its paired CPU intervals are wide. On the repeat, thread CPU time relative to the per-row mode measured 1.0478 [1.0292, 1.0667] for raw spans, 1.1386 [1.1053, 1.1729] for joined spans and 1.1888 [1.1659, 1.2120] for the input rescan. The direct repeat comparison with the independent preserved constructor gave 1.0137 [0.9745, 1.0544] for raw spans and 1.1015 [1.0587, 1.1461] for joined spans. Both runs' sums of per-block CPU medians placed raw spans behind row queues and joined spans behind raw spans.
 
 The nearly identical high-water capacities make the unjoined variant the stronger compact-queue alternative on these inputs. Its scorer entry is `raw.rs`. Neither whole-worker peak RSS nor target performance follows from the measured bucket capacity. See `stage/first.csv`, `stage/repeat.csv` and `stage/summary.csv` for the independent wall and CPU measurements and the preserved controls.
+
+## Bulk u16 rank queues
+
+A fourth alternative, mode 4, keeps one low u16 per retained rank. During the initial run scan it snapshots the 256 per-byte retained counts each time the global retained rank reaches a multiple of 65,536, including the part of a straddling run before that boundary. For page j, a bucket's slice between successive snapshots consists precisely of ranks with high part j. Empty pages of a byte are allowed. Inside the slice, each edge is reconstructed with a shared code and page prefix OR-ed with the low u16. The maximum original rank is below 2²⁰, so at most thirteen page boundaries are crossed. This retains the original rank order across all band splits and eliminates the per-run span decoder.
+
+All five routes agreed on 56,851 forced marked cases, including a 458,779-row multiple-page input with empty per-byte pages and an artificial 170,035-row retained run crossing two page boundaries. On the 228 admitted Wikidata blocks the low-u16 path needed 273 global cuts, and 823,841 page/band intersections versus 810,224 bands. Its bucket and page-array capacity peaked at 785,760 B. The per-row u32 control peaked at 1,563,328 B. The input and whole-worker buffers are additional.
+
+The lower-capacity representation cost more CPU on both independent 28-round runs. Relative to row queues the complete-inverse CPU ratios were 1.0799 [1.0242, 1.1386] and 1.0730 [1.0530, 1.0933]. Against the original preserved implementation they were 1.1036 [1.0511, 1.1588] and 1.0561 [1.0202, 1.0933]. The wall ratios against row queues were 1.0055 [0.8725, 1.1588] and 1.0516 [0.9261, 1.1942]. This alternative spends extra work testing page boundaries and widening stored u16 values during band filling. The stage clocks do not isolate the contributions of these two changes.
+
+The scorer entry is `low16.rs`. The new ledger and native timing sources are reproduced from the original harness using `low-harness.patch`. Raw measurements, the build receipt and the two-clock summaries are in `low-stage/`. The frozen v0/v1 scoreboard and i9 comparisons are separate from this native-stage result.
+
+```sh
+QUEUE_SUITE=low16 bash research/astra-e/queue-spans/run.sh /tmp/astra-e-u16-stage
+```

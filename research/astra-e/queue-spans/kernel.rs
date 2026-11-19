@@ -26,6 +26,7 @@ pub struct Counts {
     pub intersections: usize,
     pub singletons: usize,
     pub queue_capacity: usize,
+    pub page_cuts: usize,
 }
 
 #[derive(Clone, Copy)]
@@ -56,6 +57,8 @@ pub struct Kernel {
     endpoint: endpoint::Endpoint,
     narrow: narrow::Endpoint,
     queues: Vec<Vec<u32>>,
+    short_queues: Vec<Vec<u16>>,
+    page_ends: Vec<[u32; 256]>,
     segments: segments::Segments,
     strips: Vec<Strip>,
     image_order: Vec<u32>,
@@ -109,6 +112,7 @@ fn starts(counts: [u32; 256]) -> [u32; 256] {
 }
 
 include!("spans.rs");
+include!("low_words.rs");
 
 const PAGE: usize = 64;
 const TERMINAL: u16 = 256;
@@ -176,7 +180,14 @@ impl Kernel {
         let mut m = 0;
         let mut mark = 0;
         self.strips.clear();
-        if QUEUE != 0 {
+        let mut next_page = 1u32 << 16;
+        if QUEUE == 4 {
+            self.short_queues.resize_with(256, Vec::new);
+            for q in &mut self.short_queues {
+                q.clear();
+            }
+            self.page_ends.clear();
+        } else if QUEUE != 0 {
             self.queues.resize_with(256, Vec::new);
             for q in &mut self.queues {
                 q.clear();
@@ -192,7 +203,17 @@ impl Kernel {
                     mark = m + (p - x);
                 }
                 if QUEUE != 0 {
-                    if QUEUE == 1 {
+                    if QUEUE == 4 {
+                        self.short_queues[a].extend((m..m + w).map(|rank| rank as u16));
+                        // Snapshot per-byte counts before each crossed multiple of 65536.
+                        // The current run contributes exactly next_page - m to this prefix.
+                        while next_page <= m + w {
+                            let mut ends = thin;
+                            ends[a] += next_page - m;
+                            self.page_ends.push(ends);
+                            next_page += 1 << 16;
+                        }
+                    } else if QUEUE == 1 {
                         self.queues[a].extend(m..m + w);
                     } else {
                         #[cfg(astra_queue_stats)]
@@ -303,6 +324,11 @@ impl Kernel {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
                 let mut from = 0;
                 let mut span_cursor = SpanCursor::default();
+                let mut low_cursor = if QUEUE == 4 {
+                    LowCursor::new(a, &self.page_ends, self.short_queues[a].len())
+                } else {
+                    LowCursor::default()
+                };
                 for b in &self.bands[cursors[a]..end] {
                     let span = (b.end - k) as usize;
                     let dst = k.wrapping_add(b.delta) as usize;
@@ -311,7 +337,9 @@ impl Kernel {
                         self.extra[dst..dst + span].fill(b.code);
                     }
                     let edges = &mut self.edges[dst..dst + span];
-                    if QUEUE == 1 {
+                    if QUEUE == 4 {
+                        low_cursor.write(a, &self.page_ends, &self.short_queues[a], edges, pack, &mut stats);
+                    } else if QUEUE == 1 {
                         let src = &self.queues[a][from..from + span];
                         for (target, &j) in edges.iter_mut().zip(src) {
                             *target = pack | j;
@@ -355,8 +383,15 @@ impl Kernel {
         }
         #[cfg(astra_queue_stats)]
         {
-            stats.queue_capacity = self.queues.iter().map(|q| q.capacity() * 4).sum();
-            stats.queue_stored = self.queues.iter().map(Vec::len).sum();
+            if QUEUE == 4 {
+                stats.queue_capacity = self.short_queues.iter().map(|q| q.capacity() * 2).sum::<usize>()
+                    + self.page_ends.capacity() * std::mem::size_of::<[u32; 256]>();
+                stats.page_cuts = self.page_ends.len();
+                stats.queue_stored = self.short_queues.iter().map(Vec::len).sum();
+            } else {
+                stats.queue_capacity = self.queues.iter().map(|q| q.capacity() * 4).sum();
+                stats.queue_stored = self.queues.iter().map(Vec::len).sum();
+            }
         }
         (stats, mark, bits)
     }

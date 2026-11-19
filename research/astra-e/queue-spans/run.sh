@@ -9,6 +9,11 @@ mkdir "$out"
 out=$(cd "$out" && pwd)
 d=research/astra-e/queue-spans
 corpus=corpora/wikidata.bz2
+suffix=
+if [[ ${QUEUE_SUITE:-spans} == low16 ]]; then
+  bash "$d/prepare-low.sh"
+  suffix=-low
+fi
 sha=82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915
 echo "$sha  $corpus" | sha256sum --check
 # The separate preserved arm is built from its original generated source.
@@ -16,9 +21,9 @@ python3 research/astra-e/narrow-short/prepare.py
 cargo build --release --locked --features moonshot --lib
 deps="${CARGO_TARGET_DIR:-target}/release/deps"
 opts=(--edition=2021 -C opt-level=3 -C codegen-units=1 -C lto=fat -L "dependency=$deps" --extern "mibz2=$deps/libmibz2.rlib")
-rustc "${opts[@]}" "$d/check.rs" -o "$out/check"
-rustc "${opts[@]}" --cfg astra_queue_stats "$d/ledger.rs" -o "$out/ledger"
-rustc "${opts[@]}" "$d/stage.rs" -o "$out/stage"
+rustc "${opts[@]}" "$d/check$suffix.rs" -o "$out/check"
+rustc "${opts[@]}" --cfg astra_queue_stats "$d/ledger$suffix.rs" -o "$out/ledger"
+rustc "${opts[@]}" "$d/stage$suffix.rs" -o "$out/stage"
 {
   git rev-parse HEAD
   rustc -vV
