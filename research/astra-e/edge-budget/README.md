@@ -1,0 +1,7 @@
+# A cache-size guard for additional dense blocks
+
+The earlier ungated Open arm had a measurable i9 advantage on Wikidata and regressed on text. This experiment retains the combined kernel's existing density decisions on sparse blocks. For dense blocks of at least 65,536 rows it scans capped records once, calculating the exact retained width m and the number h of wide strips after the primary split. The inherited band bound is 3h+σ, where σ≤256, so 255+3h+256 bounds the largest dictionary label. This certifies whether four bytes per edge suffice; otherwise charge eight. Admit only when that edge table is at most 1 MiB (half the nominal 10-worker LLC share). This bounds one table only. The scanner, phase-specific buffers, allocator growth, extra scan and whole-process peak RSS must still be priced.
+
+The archived structural census admits the five additional large Wikidata blocks and none of the six large archived prose blocks. On the five new blocks the certified tables are 796,756–926,400 bytes. The prose test uses maximal run count as a lower bound on capped-record count; it suffices to establish that all six exceed the original density cutoff. This is an applicability result. The scanner still reads records on rejected inputs, so preserving the decisions on this corpus alone does not prove preservation of text throughput.
+
+Regenerate with `python3 research/astra-e/edge-budget/prepare.py`; reproduce counts with `python3 research/astra-e/edge-budget/census.py`. The timed kernel is identical to narrow-short/ahead on the previous admissions.
