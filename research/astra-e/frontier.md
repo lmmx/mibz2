@@ -24,6 +24,10 @@
 
 **Delimiter mechanism in independent CI.** At W1/W2/W4 the dynamic rank scheduler ran in 0.9561/0.9586/0.9784 of the static F2 predecessor. The candidate's full worker took 1.0252/1.0153/1.0196 of Lazy, so the independently verified scheduling improvement leaves a measurable pipeline gap on this runner. [Twenty complete rotations and artifact](ci/evidence/delimiter-refill-44433942216.md)
 
+**Guarded POPCNT, strongest independent delimiter result.** At source `3651470cb0ef5458e75cf97d3de363a1c73f2f76` this decoder takes 0.9184/0.9215/0.9317 of its exact counted predecessor at W1/W2/W4 on the independent Xeon worker. Direct candidate/opend is 0.8873/0.9135/1.0093 on that runner. The W4 full-worker regresses against opend with interval [1.0055,1.0130]. Its own local W4 estimate versus Lazy was 0.7870 [0.6588,0.9401]. No i9 outcome applies to this algorithm yet. [Raw independent evidence](ci/evidence/guarded-popcnt-44436826833.md) · [Local score and frozen recipe](results/v1-rank-popcnt-confirm/)
+
+**Combined word actions.** This derivative passed all 338 checks and reduces the cost of finishing some blocks, but the independent worker exceeded the frozen combined predecessor's wall by factors 1.0046/1.0136/1.0142 at W1/W2/W4, with W2 and W4 intervals above one. [Independent AMD result](ci/evidence/combined-word-actions-44436152031.md)
+
 **Earlier target attempt.** The original standalone-lookahead recipe declined an obsolete v0 scorer pin before timing. The measured combined implementation includes that lookahead and passes the updated protocol. [Initial receipt](workstation/lookahead-first-attempt.md) · [Combined measured result](workstation/combined-i9.md)
 
 The [official v1 JSONL register](official-register.jsonl) preserves the scorer's original records; read it with `just moonshot-best research/astra-e/official-register.jsonl`. The register below also includes v0 and gate-only experiments with their input manifests.

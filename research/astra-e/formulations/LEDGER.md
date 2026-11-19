@@ -29,6 +29,16 @@ An independent review enumerates tied rotations, multiple cycles, nondividing ma
 
 **Cost of the formulation.** Independent five-arm CI confirmed that dynamic rank discovery beats static F2 across 1/2/4 workers, while its complete worker was 1.5–2.5% slower than Lazy on that Xeon. Reusing the run-front histogram and hardware popcount reduces the next implementation's paid rank cost. The free-rank oracle's 0.675 ratio applies only to nine blocks; the 228 admissions own 73.58% of the local additive scanner, worker and copy CPU. Extending that ratio everywhere would permit only about 0.053 of admitted Lazy inverse CPU to buy all rank answers. [Independent CI](../ci/evidence/delimiter-refill-44433942216.md) · [Rank experiments](f2-pages/instructions/focus/) · [Full-corpus resource evidence](../budget/)
 
+## Choosing the reconstructed section
+
+A priority queue of original-LF interval widths finds the most frequent return using at most ⌊N/f⌋ expanded intervals, with N bytes on covered cycles and winning frequency f. The winning interval itself is the next marker; repeating needs no intermediate dictionary or token BWT. Forty nested choices on ten real blocks agreed with the dense independent oracle; 15,702 small overlapping or periodic selections also agreed. The native implementation skipped two intermediate levels and passed the full 338-case gate. On 228 admissions it reduced final visits from 5,566,622 to 705,565, while original-column construction lookups rose from 28,053,831 to 89,002,161. Its whole stage was 2.356 [2.238,2.480] of the fixed compound implementation. An explicit dictionary must store at least N/f bytes. [Proof, code, costs and raw results](f2-heaviest/)
+
+For several selected parent return words, h contiguous source components suffice to cap **colored** token-BWT runs at rₚ+h−1, including when the raw marker lengths differ. The bound is sharp even for strictly top-k choices. The tag is the destination component: raw words alone can have disconnected outgoing source buckets. A direct affine-band implementation reconstructs each of ten complete real marked blocks at k=1,2,4,8. A separate dense audit checked 159,176 arbitrary-subset cases. On frozen k=8 increases section rows from 24,165 to 74,284 while lowering band-discovery probes from 245,434 to 164,338. [Construction and real checks](f2-heaviest/union/) · [Sharp witnesses and independent audit](f2-heaviest/union-audit/)
+
+## What independent execution settled
+
+The full-worker guarded POPCNT implementation beat its counted delimiter predecessor by 6.8–8.2% across W1/2/4 and reduced W4 peak RSS versus Lazy to 0.9281. Its direct opend ratios on that runner were 0.8873, 0.9135 and 1.0093. The engineering writer separately achieved 1.097–1.127× 0.5.6 throughput and lower peak RSS at every target-machine worker count. The paired RLE1-action derivative retained its proof and memory study, but regressed by 1.36% and 1.42% against the combined predecessor at W2/W4 in five-arm CI. [POPCNT CI](../ci/evidence/guarded-popcnt-44436826833.md) · [i9 evidence](../workstation/combined-i9.md) · [RLE1 action CI](../ci/evidence/combined-word-actions-44436152031.md)
+
 ## Other formulation rounds
 
 | Round and reconstructed object | Phase displaced and decisive invariant | Cheapest falsifier and observed result |
