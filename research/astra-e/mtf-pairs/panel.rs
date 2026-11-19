@@ -46,7 +46,8 @@ fn check(s:&Symbols, scratch:&mut Runs, reference:&mut runs::Runs){
 fn fixtures(scratch:&mut Runs, reference:&mut runs::Runs)->usize{
     let mut total=0;
     let mut table=std::array::from_fn(|i| (i as u8).wrapping_mul(59));
-    for i in 1..16 {for j in 1..16 {for gap in [0,1,2,6,7,8,20,21,22,64]{
+    let limit=if cfg!(compact){32}else{16};
+    for i in 1..limit {for j in 1..limit {for gap in [0,1,2,6,7,8,20,21,22,64]{
         let mut syms=vec![i+1];syms.extend(std::iter::repeat_n(1,gap));syms.extend([j+1,17,32,33,256,257]);
         check(&Symbols{crc:0,orig_ptr:0,seq_to_unseq:table,eob:257,syms,max_len:900000},scratch,reference);total+=1;
     }}}
