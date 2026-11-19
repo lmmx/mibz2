@@ -78,7 +78,7 @@ mod implementation {
             vec![0; 67],
             vec![1; 67],
             vec![255; 33],
-            [b"aaaabxyz", b"bbbbbcde"].concat(),
+            [b"aaaabxyz".as_slice(), b"bbbbbcde".as_slice()].concat(),
         ] {
             check(&w, &mut stats);
         }

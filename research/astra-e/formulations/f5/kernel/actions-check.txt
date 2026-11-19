@@ -1,0 +1,1 @@
+479553 exact entry/word/truncation checks; preparations used 2118 borrowed, 640 raw fallback, 320 owned
