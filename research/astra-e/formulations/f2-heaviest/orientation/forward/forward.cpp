@@ -27,6 +27,9 @@ struct Stats {
     u64 peak_frontier=0, peak_frontier_capacity=0, depth=0, source_rows=0, covered=0;
     u64 word_bytes=0, words=0, mark_seeks=0, output_lookups=0, mark_prefix=0;
     u64 page_seeks=0, page_run_increments=0, scatter_writes=0;
+#ifdef FORWARD_HULL
+    u64 multi_packet_groups=0, multi_packet_inputs=0, hull_translates=0, hull_input_savings=0;
+#endif
 };
 
 template<class T> u64 cap(const std::vector<T>& v) { return sizeof(T)*v.capacity(); }
@@ -129,6 +132,25 @@ public:
             next_groups.clear(); children.clear();
             for (auto g:groups) {
                 ++s.groups;
+#ifdef FORWARD_HULL
+                // A sufficient certificate for sharing one Ψ displacement across all gaps.
+                int count=g.end-g.begin;
+                if(count>1) {
+                    ++s.multi_packet_groups;
+                    s.multi_packet_inputs+=count;
+                    int a=live[g.begin].current;
+                    auto last=live[g.end-1];
+                    int z=last.current+last.width;
+                    const auto& r=select[locate(a,-1,false)];
+                    if(z<=r.hi) {
+                        int next=next_component(a+r.displacement);
+                        if(next==int(section.size()) || z+r.displacement<=section[next].lo) {
+                            ++s.hull_translates;
+                            s.hull_input_savings+=count-1;
+                        }
+                    }
+                }
+#endif
                 int prev_run=-1,last_byte=-1, node=-1;
                 int prev_end=-1;
                 for (int pi=g.begin;pi<g.end;++pi) {
@@ -299,6 +321,10 @@ public:
         std::string output; bool hit=expand(mark,output);
         std::cout<<"{";
 #define FIELD(k,v) std::cout << "\"" << k << "\":" << (v) << ","
+#ifdef FORWARD_HULL
+        FIELD("multi_packet_groups",s.multi_packet_groups); FIELD("multi_packet_inputs",s.multi_packet_inputs);
+        FIELD("hull_translates",s.hull_translates); FIELD("hull_input_savings",s.hull_input_savings);
+#endif
         FIELD("n",n); FIELD("groups",s.groups); FIELD("packet_inputs",s.packets);
         FIELD("select_translations",s.translations); FIELD("component_pieces",s.classified);
         FIELD("live_outputs",s.live_outputs); FIELD("raw_hits",s.raw_hits); FIELD("live_merges",s.live_merges);
