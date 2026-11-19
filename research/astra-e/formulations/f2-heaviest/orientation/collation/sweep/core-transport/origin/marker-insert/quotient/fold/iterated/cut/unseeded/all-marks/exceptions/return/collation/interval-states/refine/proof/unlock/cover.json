@@ -1,0 +1,10 @@
+{
+  "all_supports_verified_k": [
+    3,
+    64
+  ],
+  "independently_sorted_cyclic_power_k": [
+    3,
+    8
+  ]
+}
