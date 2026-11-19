@@ -227,9 +227,10 @@
     7012815426,
     7013154415,
     7013543921,
-    7014835513
+    7014835513,
+    7015931440
   ],
-  "last_processed_comment_id": 7014835513,
+  "last_processed_comment_id": 7015931440,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2787,11 +2788,16 @@
     },
     {
       "trigger_comment_id": 7015931440,
-      "status": "in progress",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-port-3-final-7015931440/report.md",
-      "source_commit": "db004d00c1715d65f541184f9eb92eb85b200f7b"
+      "source_commit": "db004d00c1715d65f541184f9eb92eb85b200f7b",
+      "report_commit": "cfcdb5549687924a84180e79db56f19139583836",
+      "disposition": "PROCEED at db004d00 under the prospective ruling. All four HOLD corrections verified. Pooled and normal planning scenarios meet 15%; own-cell estimate is 26.4%. Queue admission remains subject to Protocol §9.",
+      "review_comment_id": 7016164429,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, single publication, and role-aware header and route. The pinned helper's coordinator-only sender check is inapplicable to the Researcher REVIEW."
     }
   ],
   "active_delegations": [],
@@ -2842,5 +2848,6 @@
     "manifest": "state/MANIFEST.md",
     "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
     "date": "2026-11-06"
-  }
+  },
+  "last_observed_pr162_comment_id": 7015931440
 }
