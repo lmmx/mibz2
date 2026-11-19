@@ -26,7 +26,7 @@ def optimum(records,mates,root,optional):
             diag=a-j+1
             z,prior=best.get(diag,(inf,-1))
             i=pred.get(j,-1);left=i+diag
-            if i>=last_mandatory and 0<=left<=budget and values[i][left]-1<z:
+            if i>=last_mandatory and 0<=left<=budget and values[i][left]<inf and values[i][left]-1<z:
                 z,prior=values[i][left]-1,i
             val.append(z+cost if z<inf else inf);back.append(prior)
         values.append(val);parent.append(back)
