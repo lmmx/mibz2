@@ -8,6 +8,20 @@ The frozen control is edge-budget at `badb2aec3624bd65606c429b2e6f79e9d9d0050f`.
 
 The 24 paired rotations ran on CPU 3 at niceness 10, with parsed symbols as input and the route choice, front, inverse and RLE1 inside thread CPU. Every round included all five changed dense routes, nine ordinary systematic admissions, all 150 short run blocks and all 48 column blocks. Relative to frozen edge, deferred counting was 0.988 [0.910,1.072] on the five, 1.041 [0.976,1.110] on the nine, and 1.038 [0.977,1.104] after weighting the nine by 228/9. The eager variant was 1.063 [0.906,1.248] on the five and 1.103 [1.017,1.197] weighted. The recombined CPU results are unresolved for conditional counting and unfavorable for eager counting; neither advances the verified speed reference. [All paired observations](panel.csv) · [All strata and controls](panel.txt)
 
+The five additional streams produced the following point ratios and paired 95% intervals. They enter the corpus-weighted estimate once each. Each sampled ordinary admission represents 228/9 streams. All 198 ordinary short and column cases enter once.
+
+| Stream | Deferred front / frozen edge |
+| --- | --- |
+| 41 | 1.0485 [0.8985, 1.2235] |
+| 56 | 1.0347 [0.9089, 1.1778] |
+| 165 | 0.9154 [0.8330, 1.0059] |
+| 270 | 1.0162 [0.8927, 1.1569] |
+| 278 | 0.8374 [0.7236, 0.9691] |
+
+A separate replay counted actual vector capacities after each real block, including ordinary fallback. Final stock caps and bitmap capacity was 864,472 bytes on frozen edge. Both fused variants retained 28,668 bytes of ordinary stock vectors and 89,920 bytes of fused bitmaps, saving 745,884 bytes per sequential worker. Row queues and strips occupied the same 1,756,480 bytes in all three arms. [Frozen capacities](retained-0.csv) · [Eager capacities](retained-1.csv) · [Deferred capacities](retained-2.csv)
+
+Three fresh processes per arm decoded all 431 blocks in rotated arm order, with scratch across successive blocks and every decoded CRC checked. The median Linux process VmHWM in KiB was 20,048 for frozen edge (range 20,044–20,060), 19,680 for eager (19,628–19,688), and 19,668 for deferred (19,628–19,676). These include the complete file and resident input, scanner and output. The stock-capacity counter in this assay uses integers and matched the allocator-backed capacity replay on every row. The separate highwater-{0,1,2}.txt diagnostic allocated dummy capacity vectors to verify this accounting. Concurrent i9 worker RSS remains unmeasured for either fused variant. [Rotated VmHWM](peaks.txt) · [One-process generator](peak.py) · [Vector replay generator](memory.py)
+
 ```sh
 d=research/astra-e/front-fusion/edge
 scratch=$(mktemp -d)
