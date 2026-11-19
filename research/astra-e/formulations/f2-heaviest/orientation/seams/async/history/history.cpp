@@ -11,6 +11,7 @@ struct HistoryStats {
     N lazy_ranges=0, lazy_skip_rows=0, zero_band_drops=0, reused_packets=0;
     N packet_pool_peak=0, queued_packets=0, peak_queued=0, root_tests=0;
     N owner_bytes=0, bitmap_bytes=0, page_heads_bytes=0;
+    N gc_passes=0,gc_examined=0,gc_discarded=0;
 };
 
 class Bitmap {
@@ -45,13 +46,14 @@ struct Record { U owner, group, previous; uint16_t bounds; };
 static_assert(sizeof(Record)==16);
 struct Known {U lo,hi,owner,g;};
 
-template<U Page>
+template<U Page,bool Packed=false,bool Reclaim=false>
 class History : public Constructor {
     static_assert(Page>=1 && Page<=256 && std::has_single_bit(Page));
     const Edges& e;
     const Section& roots;
     Vec<U> root_offset,page_head;
     Vec<Record> archive;
+    Vec<Vec<N>> buckets;
     Bitmap seen, collisions;
     std::array<Bitmap,2> root_dead;
     Vec<Key> queue;
@@ -94,16 +96,43 @@ class History : public Constructor {
         while(lo<hi) {
             U page=lo/Page, last=std::min(hi,(page+1)*Page);
             uint16_t bounds=uint16_t((lo%Page) | ((last-lo-1)<<8));
-            U index=archive.size();
-            archive.push_back({owner,group,page_head[page],bounds});
-            page_head[page]=index;
+            if constexpr (Packed) {
+                assert(owner<(1u<<24) && group<(1u<<24));
+                auto& bucket=buckets[page];
+                if constexpr(Reclaim) {
+                    // A dead cohort cannot own a future positive. Clean this page only
+                    // under growth pressure. A mostly live page doubles to amortize scans.
+                    size_t size=bucket.size();
+                    if(size>=4 && size==bucket.capacity()) {
+                        ++hs.gc_passes;hs.gc_examined+=size;
+                        auto end=std::remove_if(bucket.begin(),bucket.end(),[&](N record){
+                            return groups[(record>>16)&0xffffff].mass==0;
+                        });
+                        hs.gc_discarded+=bucket.end()-end;
+                        bucket.erase(end,bucket.end());
+                        if(bucket.size()>size/2) bucket.reserve(2*size);
+                    }
+                }
+                bucket.push_back((N(owner)<<40)|(N(group)<<16)|bounds);
+            } else {
+                U index=archive.size();
+                archive.push_back({owner,group,page_head[page],bounds});
+                page_head[page]=index;
+            }
             ++hs.descriptors;owner+=last-lo;lo=last;
         }
     }
     Known lookup(U y) {
         ++hs.hist_seeks;
         U page=y/Page;
-        for(U id=page_head[page];id!=nil;id=archive[id].previous) {
+        if constexpr (Packed) {
+            const auto& bucket=buckets[page];
+            for(auto it=bucket.rbegin();it!=bucket.rend();++it) {
+                ++hs.desc_examined;
+                N record=*it;U lo=page*Page+U(record&255),hi=lo+U((record>>8)&255)+1;
+                if(lo<=y && y<hi) return {lo,hi,U(record>>40),U((record>>16)&0xffffff)};
+            }
+        } else for(U id=page_head[page];id!=nil;id=archive[id].previous) {
             ++hs.desc_examined;
             const auto r=archive[id];
             U lo=page*Page+(r.bounds&255),hi=lo+(r.bounds>>8)+1;
@@ -190,7 +219,8 @@ public:
         seen.init(n);collisions.init(n);
         for(auto [lo,hi]:roots){root_offset.push_back(m);m+=hi-lo;}
         for(auto& b:root_dead)b.init(m);
-        page_head.assign((n+Page-1)/Page,nil);
+        if constexpr(Packed) buckets.resize((n+Page-1)/Page);
+        else page_head.assign((n+Page-1)/Page,nil);
         for(U side=0;side<2;++side){
             U id=add_group(side,0,nil,0);groups[id].birth=birth++;
             for(auto [lo,hi]:roots){attach(id,lo,hi,lo);groups[id].mass+=hi-lo;}
@@ -213,9 +243,15 @@ public:
             ++stats.sort_cmp;return a.lo<b.lo;
         });
         hs.bitmap_bytes=seen.bytes()+collisions.bytes()+root_dead[0].bytes()+root_dead[1].bytes();
-        hs.owner_bytes=archive.capacity()*sizeof(Record);
-        hs.page_heads_bytes=page_head.capacity()*sizeof(U);
-        hs.history_pages=page_head.size();
+        if constexpr(Packed) {
+            for(const auto& bucket:buckets) hs.owner_bytes+=bucket.capacity()*sizeof(N);
+            hs.page_heads_bytes=buckets.capacity()*sizeof(Vec<N>);
+            hs.history_pages=buckets.size();
+        } else {
+            hs.owner_bytes=archive.capacity()*sizeof(Record);
+            hs.page_heads_bytes=page_head.capacity()*sizeof(U);
+            hs.history_pages=page_head.size();
+        }
     }
 };
 
@@ -291,6 +327,7 @@ void report(const std::vector<Run>& runs,const Section& section,const Word& gold
     }
 }
 
+#ifndef ASTRA_HISTORY_LIBRARY
 int main(int argc,char** argv) {
     if(argc==1) {exhaustive();return 0;}
     assert(argc==4);
@@ -306,3 +343,4 @@ int main(int argc,char** argv) {
         report<256>(runs,sec,gold,mark,argv[3],name);
     }
 }
+#endif
