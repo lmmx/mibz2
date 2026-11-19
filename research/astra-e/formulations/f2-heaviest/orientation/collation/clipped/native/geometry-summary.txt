@@ -1,0 +1,6 @@
+40/40 systematic Python oracle geometries match the native contracted builder
+quote mixed {0: 228} physical splits {0: 228} second-stage successes 228
+raw_quote mixed {0: 228} physical splits {0: 228} second-stage successes 228
+frequent mixed {0: 228} physical splits {0: 8, 1: 220} second-stage successes 228
+fifth mixed {0: 6, 1: 39, 2: 183} physical splits {0: 11, 1: 59, 2: 158} second-stage successes 228
+half mixed {0: 2, 1: 28, 2: 198} physical splits {1: 11, 2: 217} second-stage successes 228
