@@ -1,0 +1,4481 @@
+round,block,position,arm,cpu_ns
+1,134,0,single,1136821
+1,134,1,single twin,750048
+1,134,2,freeze,773375
+1,134,3,freeze twin,685837
+1,134,4,original,968577
+1,134,5,original twin,1281358
+1,134,6,split,1797888
+1,134,7,split twin,1190393
+1,85,0,split twin,1435934
+1,85,1,split,1203855
+1,85,2,original twin,851667
+1,85,3,original,805863
+1,85,4,freeze twin,671275
+1,85,5,freeze,1026395
+1,85,6,single twin,824029
+1,85,7,single,832223
+1,56,0,split,3646390
+1,56,1,split twin,3200582
+1,56,2,single,2345579
+1,56,3,single twin,2461459
+1,56,4,freeze,2114480
+1,56,5,freeze twin,1959435
+1,56,6,original,2226063
+1,56,7,original twin,2482161
+1,41,0,original twin,3351456
+1,41,1,original,2321852
+1,41,2,freeze twin,2323550
+1,41,3,freeze,2247109
+1,41,4,single twin,2510651
+1,41,5,single,2226265
+1,41,6,split twin,1933816
+1,41,7,split,4013732
+1,1,0,original,1466818
+1,1,1,original twin,884565
+1,1,2,split,618164
+1,1,3,split twin,970083
+1,1,4,single,701964
+1,1,5,single twin,692785
+1,1,6,freeze,912950
+1,1,7,freeze twin,902045
+1,397,0,single twin,947556
+1,397,1,single,791036
+1,397,2,split twin,714866
+1,397,3,split,902138
+1,397,4,original twin,1033523
+1,397,5,original,762086
+1,397,6,freeze twin,720568
+1,397,7,freeze,946795
+1,359,0,single,758313
+1,359,1,single twin,525027
+1,359,2,freeze,541137
+1,359,3,freeze twin,487591
+1,359,4,original,435688
+1,359,5,original twin,477661
+1,359,6,split,691819
+1,359,7,split twin,627062
+1,313,0,split twin,742756
+1,313,1,split,587273
+1,313,2,original twin,597809
+1,313,3,original,592544
+1,313,4,freeze twin,574336
+1,313,5,freeze,607078
+1,313,6,single twin,611483
+1,313,7,single,663026
+1,278,0,split,1453504
+1,278,1,split twin,1704698
+1,278,2,single,1490689
+1,278,3,single twin,1743878
+1,278,4,freeze,1802859
+1,278,5,freeze twin,1359560
+1,278,6,original,1543916
+1,278,7,original twin,1543136
+1,270,0,original twin,2382527
+1,270,1,original,2287128
+1,270,2,freeze twin,1430396
+1,270,3,freeze,1521555
+1,270,4,single twin,3012945
+1,270,5,single,3970089
+1,270,6,split twin,3974767
+1,270,7,split,1151078
+1,269,0,original,2377235
+1,269,1,original twin,1660023
+1,269,2,split,1833070
+1,269,3,split twin,11277497
+1,269,4,single,5999175
+1,269,5,single twin,5594763
+1,269,6,freeze,2699010
+1,269,7,freeze twin,1984941
+1,225,0,freeze twin,1871501
+1,225,1,freeze,797871
+1,225,2,single twin,1796140
+1,225,3,single,1985967
+1,225,4,split twin,790830
+1,225,5,split,1685111
+1,225,6,original twin,1361339
+1,225,7,original,1488262
+1,176,0,freeze,1093554
+1,176,1,freeze twin,853211
+1,176,2,original,617574
+1,176,3,original twin,496297
+1,176,4,split,617580
+1,176,5,split twin,1074075
+1,176,6,single,624217
+1,176,7,single twin,562457
+1,165,0,single twin,4057343
+1,165,1,single,2497551
+1,165,2,split twin,1702708
+1,165,3,split,1648323
+1,165,4,original twin,2507111
+1,165,5,original,3817363
+1,165,6,freeze twin,2487168
+1,165,7,freeze,1881460
+2,278,0,split twin,1986765
+2,278,1,single,2155320
+2,278,2,single twin,2269134
+2,278,3,freeze,1612997
+2,278,4,freeze twin,1658851
+2,278,5,original,1954288
+2,278,6,original twin,1462790
+2,278,7,split,1622820
+2,313,0,single,1685892
+2,313,1,split twin,1926272
+2,313,2,split,1564157
+2,313,3,original twin,910163
+2,313,4,original,740760
+2,313,5,freeze twin,738202
+2,313,6,freeze,1352035
+2,313,7,single twin,734403
+2,359,0,single twin,1023462
+2,359,1,freeze,504523
+2,359,2,freeze twin,484357
+2,359,3,original,562155
+2,359,4,original twin,499400
+2,359,5,split,457467
+2,359,6,split twin,704828
+2,359,7,single,493837
+2,397,0,freeze,1485093
+2,397,1,single twin,1136579
+2,397,2,single,1174444
+2,397,3,split twin,799272
+2,397,4,split,780592
+2,397,5,original twin,1041481
+2,397,6,original,1037897
+2,397,7,freeze twin,2254504
+2,1,0,original twin,4589699
+2,1,1,split,1120887
+2,1,2,split twin,1123277
+2,1,3,single,634253
+2,1,4,single twin,725385
+2,1,5,freeze,561622
+2,1,6,freeze twin,574423
+2,1,7,original,648357
+2,41,0,split,4030217
+2,41,1,original twin,3968404
+2,41,2,original,3029948
+2,41,3,freeze twin,2103045
+2,41,4,freeze,1788912
+2,41,5,single twin,2032412
+2,41,6,single,2239115
+2,41,7,split twin,3339945
+2,56,0,split twin,3660746
+2,56,1,single,2841739
+2,56,2,single twin,2146613
+2,56,3,freeze,1850283
+2,56,4,freeze twin,1819235
+2,56,5,original,3325855
+2,56,6,original twin,1939733
+2,56,7,split,2016537
+2,85,0,single,1322690
+2,85,1,split twin,1022914
+2,85,2,split,885863
+2,85,3,original twin,1043902
+2,85,4,original,646941
+2,85,5,freeze twin,646335
+2,85,6,freeze,612435
+2,85,7,single twin,1702649
+2,134,0,single twin,1568800
+2,134,1,freeze,1338545
+2,134,2,freeze twin,761290
+2,134,3,original,860679
+2,134,4,original twin,1049701
+2,134,5,split,640751
+2,134,6,split twin,671980
+2,134,7,single,643478
+2,165,0,freeze,3536499
+2,165,1,single twin,4820544
+2,165,2,single,2948654
+2,165,3,split twin,2155606
+2,165,4,split,1942983
+2,165,5,original twin,2357119
+2,165,6,original,2152018
+2,165,7,freeze twin,3982163
+2,176,0,freeze twin,1027609
+2,176,1,original,790214
+2,176,2,original twin,687361
+2,176,3,split,977597
+2,176,4,split twin,911689
+2,176,5,single,744164
+2,176,6,single twin,1038495
+2,176,7,freeze,1236501
+2,225,0,original,1586871
+2,225,1,freeze twin,848598
+2,225,2,freeze,665940
+2,225,3,single twin,3267312
+2,225,4,single,594955
+2,225,5,split twin,3435991
+2,225,6,split,657187
+2,225,7,original twin,665095
+2,269,0,original twin,14762428
+2,269,1,split,1219817
+2,269,2,split twin,4031757
+2,269,3,single,1589488
+2,269,4,single twin,2710923
+2,269,5,freeze,1247104
+2,269,6,freeze twin,1251999
+2,269,7,original,8785107
+2,270,0,split,10717827
+2,270,1,original twin,3125646
+2,270,2,original,1691209
+2,270,3,freeze twin,3988663
+2,270,4,freeze,3014218
+2,270,5,single twin,3079818
+2,270,6,single,2906634
+2,270,7,split twin,1898636
+3,1,0,split,1262662
+3,1,1,split twin,1052398
+3,1,2,single,645767
+3,1,3,single twin,623833
+3,1,4,freeze,630097
+3,1,5,freeze twin,537212
+3,1,6,original,645753
+3,1,7,original twin,473735
+3,397,0,freeze twin,1685393
+3,397,1,freeze,1019642
+3,397,2,single twin,1189717
+3,397,3,single,973073
+3,397,4,split twin,836232
+3,397,5,split,831555
+3,397,6,original twin,784235
+3,397,7,original,683806
+3,359,0,freeze,971737
+3,359,1,freeze twin,585041
+3,359,2,original,432146
+3,359,3,original twin,437962
+3,359,4,split,441745
+3,359,5,split twin,451998
+3,359,6,single,482280
+3,359,7,single twin,459846
+3,313,0,single twin,1393045
+3,313,1,single,934228
+3,313,2,split twin,839683
+3,313,3,split,675666
+3,313,4,original twin,718996
+3,313,5,original,572211
+3,313,6,freeze twin,604166
+3,313,7,freeze,726463
+3,278,0,single,3689276
+3,278,1,single twin,2163841
+3,278,2,freeze,1580850
+3,278,3,freeze twin,1869248
+3,278,4,original,1690849
+3,278,5,original twin,1864615
+3,278,6,split,1615029
+3,278,7,split twin,1387909
+3,270,0,split twin,1081948
+3,270,1,split,1044201
+3,270,2,original twin,1792227
+3,270,3,original,1581397
+3,270,4,freeze twin,1242145
+3,270,5,freeze,1130199
+3,270,6,single twin,1899865
+3,270,7,single,1657008
+3,269,0,split,1257187
+3,269,1,split twin,1182160
+3,269,2,single,1358021
+3,269,3,single twin,1288150
+3,269,4,freeze,1408114
+3,269,5,freeze twin,1453803
+3,269,6,original,1343867
+3,269,7,original twin,1293685
+3,225,0,original twin,1133427
+3,225,1,original,735357
+3,225,2,freeze twin,662982
+3,225,3,freeze,746777
+3,225,4,single twin,662693
+3,225,5,single,1520951
+3,225,6,split twin,694249
+3,225,7,split,909063
+3,176,0,original,1169269
+3,176,1,original twin,805820
+3,176,2,split,876966
+3,176,3,split twin,641496
+3,176,4,single,589878
+3,176,5,single twin,550246
+3,176,6,freeze,592405
+3,176,7,freeze twin,635779
+3,165,0,freeze twin,3073987
+3,165,1,freeze,2740551
+3,165,2,single twin,5002420
+3,165,3,single,2263730
+3,165,4,split twin,1761953
+3,165,5,split,2397494
+3,165,6,original twin,2095154
+3,165,7,original,2281030
+3,134,0,freeze,1165929
+3,134,1,freeze twin,974176
+3,134,2,original,737371
+3,134,3,original twin,696344
+3,134,4,split,890492
+3,134,5,split twin,829695
+3,134,6,single,759903
+3,134,7,single twin,817430
+3,85,0,single twin,1240698
+3,85,1,single,970019
+3,85,2,split twin,780255
+3,85,3,split,808895
+3,85,4,original twin,688264
+3,85,5,original,630147
+3,85,6,freeze twin,698142
+3,85,7,freeze,660430
+3,56,0,single,3634676
+3,56,1,single twin,3046096
+3,56,2,freeze,5101568
+3,56,3,freeze twin,2828024
+3,56,4,original,2824556
+3,56,5,original twin,2951637
+3,56,6,split,2914553
+3,56,7,split twin,1998893
+3,41,0,split twin,3359972
+3,41,1,split,2719441
+3,41,2,original twin,2604735
+3,41,3,original,2177250
+3,41,4,freeze twin,2119266
+3,41,5,freeze,2155985
+3,41,6,single twin,2174141
+3,41,7,single,2048723
+4,176,0,original twin,991399
+4,176,1,split,615102
+4,176,2,split twin,815777
+4,176,3,single,1217491
+4,176,4,single twin,702522
+4,176,5,freeze,816977
+4,176,6,freeze twin,787589
+4,176,7,original,715851
+4,225,0,split,766551
+4,225,1,original twin,693444
+4,225,2,original,577206
+4,225,3,freeze twin,640387
+4,225,4,freeze,960003
+4,225,5,single twin,882427
+4,225,6,single,1435901
+4,225,7,split twin,623650
+4,269,0,split twin,2597341
+4,269,1,single,1663345
+4,269,2,single twin,1600099
+4,269,3,freeze,1526185
+4,269,4,freeze twin,1664969
+4,269,5,original,2870351
+4,269,6,original twin,3107159
+4,269,7,split,3784390
+4,270,0,single,2808214
+4,270,1,split twin,1648304
+4,270,2,split,1340503
+4,270,3,original twin,3597391
+4,270,4,original,2940378
+4,270,5,freeze twin,1624054
+4,270,6,freeze,1238016
+4,270,7,single twin,2048908
+4,278,0,single twin,2937760
+4,278,1,freeze,1690995
+4,278,2,freeze twin,1812262
+4,278,3,original,1626092
+4,278,4,original twin,1531531
+4,278,5,split,1258319
+4,278,6,split twin,1508376
+4,278,7,single,1458557
+4,313,0,freeze,1336574
+4,313,1,single twin,847106
+4,313,2,single,648406
+4,313,3,split twin,682526
+4,313,4,split,675223
+4,313,5,original twin,575311
+4,313,6,original,745309
+4,313,7,freeze twin,723995
+4,359,0,freeze twin,769828
+4,359,1,original,532945
+4,359,2,original twin,491494
+4,359,3,split,589455
+4,359,4,split twin,480199
+4,359,5,single,541118
+4,359,6,single twin,473251
+4,359,7,freeze,505430
+4,397,0,original,1375623
+4,397,1,freeze twin,1980867
+4,397,2,freeze,1037667
+4,397,3,single twin,1442258
+4,397,4,single,1095837
+4,397,5,split twin,858235
+4,397,6,split,1058375
+4,397,7,original twin,1048025
+4,1,0,split twin,1212424
+4,1,1,single,1141062
+4,1,2,single twin,1531295
+4,1,3,freeze,1256990
+4,1,4,freeze twin,2798854
+4,1,5,original,718873
+4,1,6,original twin,485925
+4,1,7,split,588443
+4,41,0,single,2506825
+4,41,1,split twin,2559577
+4,41,2,split,2290211
+4,41,3,original twin,2174582
+4,41,4,original,1908383
+4,41,5,freeze twin,2272784
+4,41,6,freeze,1920202
+4,41,7,single twin,2764885
+4,56,0,single twin,5952000
+4,56,1,freeze,4758724
+4,56,2,freeze twin,3558094
+4,56,3,original,2673007
+4,56,4,original twin,5569482
+4,56,5,split,2859078
+4,56,6,split twin,2088862
+4,56,7,single,2238805
+4,85,0,freeze,1189258
+4,85,1,single twin,1042342
+4,85,2,single,835750
+4,85,3,split twin,1064371
+4,85,4,split,861277
+4,85,5,original twin,655111
+4,85,6,original,723821
+4,85,7,freeze twin,681018
+4,134,0,freeze twin,1020530
+4,134,1,original,935734
+4,134,2,original twin,787895
+4,134,3,split,1405089
+4,134,4,split twin,577181
+4,134,5,single,624106
+4,134,6,single twin,600334
+4,134,7,freeze,565450
+4,165,0,original,3572649
+4,165,1,freeze twin,3089851
+4,165,2,freeze,3130792
+4,165,3,single twin,2557968
+4,165,4,single,4003278
+4,165,5,split twin,1834435
+4,165,6,split,2084253
+4,165,7,original twin,2296113
+5,278,0,freeze,2002278
+5,278,1,freeze twin,1585149
+5,278,2,original,1648270
+5,278,3,original twin,1870241
+5,278,4,split,1823254
+5,278,5,split twin,1930465
+5,278,6,single,1889327
+5,278,7,single twin,1899446
+5,270,0,single twin,3096571
+5,270,1,single,2135857
+5,270,2,split twin,1532614
+5,270,3,split,1459443
+5,270,4,original twin,1965825
+5,270,5,original,1923998
+5,270,6,freeze twin,1223846
+5,270,7,freeze,1524456
+5,269,0,single,2100869
+5,269,1,single twin,1631244
+5,269,2,freeze,1297715
+5,269,3,freeze twin,1363733
+5,269,4,original,1481637
+5,269,5,original twin,1456721
+5,269,6,split,1170028
+5,269,7,split twin,1132902
+5,225,0,split twin,833958
+5,225,1,split,743786
+5,225,2,original twin,1084478
+5,225,3,original,1009185
+5,225,4,freeze twin,1128918
+5,225,5,freeze,1821742
+5,225,6,single twin,949486
+5,225,7,single,644880
+5,176,0,split,1183871
+5,176,1,split twin,836850
+5,176,2,single,792538
+5,176,3,single twin,573941
+5,176,4,freeze,691976
+5,176,5,freeze twin,536523
+5,176,6,original,755540
+5,176,7,original twin,550213
+5,165,0,original twin,1954126
+5,165,1,original,1814921
+5,165,2,freeze twin,1646166
+5,165,3,freeze,1789802
+5,165,4,single twin,2172653
+5,165,5,single,2290430
+5,165,6,split twin,2724166
+5,165,7,split,1915148
+5,134,0,original,730492
+5,134,1,original twin,619742
+5,134,2,split,1448064
+5,134,3,split twin,834666
+5,134,4,single,671137
+5,134,5,single twin,718151
+5,134,6,freeze,1398073
+5,134,7,freeze twin,976673
+5,85,0,freeze twin,899606
+5,85,1,freeze,782060
+5,85,2,single twin,819916
+5,85,3,single,856621
+5,85,4,split twin,867959
+5,85,5,split,686671
+5,85,6,original twin,605455
+5,85,7,original,709783
+5,56,0,freeze,1946148
+5,56,1,freeze twin,1984453
+5,56,2,original,3371947
+5,56,3,original twin,3368841
+5,56,4,split,2811936
+5,56,5,split twin,1936504
+5,56,6,single,2387628
+5,56,7,single twin,2247901
+5,41,0,single twin,3103504
+5,41,1,single,2895500
+5,41,2,split twin,3164163
+5,41,3,split,2132405
+5,41,4,original twin,2026615
+5,41,5,original,2090706
+5,41,6,freeze twin,1713164
+5,41,7,freeze,2248738
+5,1,0,single,1152807
+5,1,1,single twin,678569
+5,1,2,freeze,678011
+5,1,3,freeze twin,688400
+5,1,4,original,839779
+5,1,5,original twin,519308
+5,1,6,split,558364
+5,1,7,split twin,534645
+5,397,0,original twin,1525887
+5,397,1,original,969663
+5,397,2,freeze twin,891943
+5,397,3,freeze,815536
+5,397,4,single twin,3334916
+5,397,5,single,1645628
+5,397,6,split twin,3313504
+5,397,7,split,4782116
+5,359,0,original,1112385
+5,359,1,original twin,997473
+5,359,2,split,927339
+5,359,3,split twin,617501
+5,359,4,single,628473
+5,359,5,single twin,445944
+5,359,6,freeze,453980
+5,359,7,freeze twin,419022
+5,313,0,freeze twin,1181755
+5,313,1,freeze,858726
+5,313,2,single twin,706629
+5,313,3,single,618787
+5,313,4,split twin,652367
+5,313,5,split,677460
+5,313,6,original twin,687536
+5,313,7,original,541285
+6,56,0,freeze twin,1885539
+6,56,1,original,1946641
+6,56,2,original twin,2397678
+6,56,3,split,1825476
+6,56,4,split twin,1682109
+6,56,5,single,1763184
+6,56,6,single twin,2055244
+6,56,7,freeze,3064639
+6,85,0,original,1004201
+6,85,1,freeze twin,1024628
+6,85,2,freeze,1091363
+6,85,3,single twin,761567
+6,85,4,single,1070983
+6,85,5,split twin,797123
+6,85,6,split,754163
+6,85,7,original twin,1032527
+6,134,0,original twin,1289632
+6,134,1,split,711322
+6,134,2,split twin,891482
+6,134,3,single,698555
+6,134,4,single twin,805179
+6,134,5,freeze,780399
+6,134,6,freeze twin,809481
+6,134,7,original,1237371
+6,165,0,split,4933911
+6,165,1,original twin,2633543
+6,165,2,original,2584396
+6,165,3,freeze twin,2023541
+6,165,4,freeze,2412009
+6,165,5,single twin,2463234
+6,165,6,single,2162280
+6,165,7,split twin,2016300
+6,176,0,split twin,800804
+6,176,1,single,607723
+6,176,2,single twin,2773408
+6,176,3,freeze,875933
+6,176,4,freeze twin,927997
+6,176,5,original,886726
+6,176,6,original twin,584269
+6,176,7,split,747608
+6,225,0,single,877265
+6,225,1,split twin,721115
+6,225,2,split,650499
+6,225,3,original twin,576981
+6,225,4,original,597743
+6,225,5,freeze twin,603178
+6,225,6,freeze,633802
+6,225,7,single twin,976796
+6,269,0,single twin,2526032
+6,269,1,freeze,1441695
+6,269,2,freeze twin,1559380
+6,269,3,original,1971055
+6,269,4,original twin,1706446
+6,269,5,split,1775858
+6,269,6,split twin,1621350
+6,269,7,single,1445429
+6,270,0,freeze,1840755
+6,270,1,single twin,4169795
+6,270,2,single,2809458
+6,270,3,split twin,1590776
+6,270,4,split,1274044
+6,270,5,original twin,2513928
+6,270,6,original,1748329
+6,270,7,freeze twin,1218005
+6,278,0,freeze twin,2443306
+6,278,1,original,2552828
+6,278,2,original twin,2033481
+6,278,3,split,1624917
+6,278,4,split twin,1420009
+6,278,5,single,1931113
+6,278,6,single twin,1723250
+6,278,7,freeze,1917094
+6,313,0,original,1913450
+6,313,1,freeze twin,702650
+6,313,2,freeze,829403
+6,313,3,single twin,660655
+6,313,4,single,649718
+6,313,5,split twin,647226
+6,313,6,split,653522
+6,313,7,original twin,609883
+6,359,0,original twin,639151
+6,359,1,split,490550
+6,359,2,split twin,471380
+6,359,3,single,509885
+6,359,4,single twin,471661
+6,359,5,freeze,497526
+6,359,6,freeze twin,450789
+6,359,7,original,450132
+6,397,0,split,1106656
+6,397,1,original twin,902751
+6,397,2,original,839597
+6,397,3,freeze twin,1107872
+6,397,4,freeze,791462
+6,397,5,single twin,770784
+6,397,6,single,738190
+6,397,7,split twin,780147
+6,1,0,single twin,1767782
+6,1,1,freeze,656525
+6,1,2,freeze twin,560775
+6,1,3,original,610789
+6,1,4,original twin,664294
+6,1,5,split,1164005
+6,1,6,split twin,627281
+6,1,7,single,879803
+6,41,0,freeze,4296444
+6,41,1,single twin,2479172
+6,41,2,single,2493887
+6,41,3,split twin,2172693
+6,41,4,split,4221777
+6,41,5,original twin,2852564
+6,41,6,original,2408295
+6,41,7,freeze twin,2263731
+7,176,0,single,1174714
+7,176,1,single twin,1046328
+7,176,2,freeze,812280
+7,176,3,freeze twin,1170332
+7,176,4,original,647060
+7,176,5,original twin,774014
+7,176,6,split,663457
+7,176,7,split twin,731413
+7,165,0,split twin,2629525
+7,165,1,split,1901571
+7,165,2,original twin,2060450
+7,165,3,original,2069231
+7,165,4,freeze twin,1694041
+7,165,5,freeze,2951965
+7,165,6,single twin,5403307
+7,165,7,single,3348271
+7,134,0,split,1233444
+7,134,1,split twin,1211717
+7,134,2,single,862065
+7,134,3,single twin,786493
+7,134,4,freeze,759366
+7,134,5,freeze twin,791091
+7,134,6,original,669373
+7,134,7,original twin,783997
+7,85,0,original twin,1096537
+7,85,1,original,774110
+7,85,2,freeze twin,999192
+7,85,3,freeze,783774
+7,85,4,single twin,697662
+7,85,5,single,696247
+7,85,6,split twin,781145
+7,85,7,split,789168
+7,56,0,original,2965366
+7,56,1,original twin,3255258
+7,56,2,split,2949905
+7,56,3,split twin,2940665
+7,56,4,single,2585479
+7,56,5,single twin,2291136
+7,56,6,freeze,4518448
+7,56,7,freeze twin,3379467
+7,41,0,freeze twin,2202205
+7,41,1,freeze,2128193
+7,41,2,single twin,2073520
+7,41,3,single,4171249
+7,41,4,split twin,2115399
+7,41,5,split,2509872
+7,41,6,original twin,2064132
+7,41,7,original,1881830
+7,1,0,freeze,713532
+7,1,1,freeze twin,508432
+7,1,2,original,679107
+7,1,3,original twin,652327
+7,1,4,split,678313
+7,1,5,split twin,553660
+7,1,6,single,512439
+7,1,7,single twin,536099
+7,397,0,split twin,1058133
+7,397,1,split,827098
+7,397,2,original twin,893921
+7,397,3,original,922210
+7,397,4,freeze twin,1003556
+7,397,5,freeze,917625
+7,397,6,single twin,986748
+7,397,7,single,1131386
+7,359,0,split,663794
+7,359,1,split twin,558527
+7,359,2,single,522231
+7,359,3,single twin,531217
+7,359,4,freeze,494195
+7,359,5,freeze twin,519253
+7,359,6,original,639211
+7,359,7,original twin,521975
+7,313,0,original twin,1123180
+7,313,1,original,842645
+7,313,2,freeze twin,720316
+7,313,3,freeze,701514
+7,313,4,single twin,659246
+7,313,5,single,713210
+7,313,6,split twin,686706
+7,313,7,split,734731
+7,278,0,original,2224201
+7,278,1,original twin,1949246
+7,278,2,split,1611154
+7,278,3,split twin,2610985
+7,278,4,single,2386536
+7,278,5,single twin,4187788
+7,278,6,freeze,2365244
+7,278,7,freeze twin,2197527
+7,270,0,freeze twin,1932672
+7,270,1,freeze,1427839
+7,270,2,single twin,1718453
+7,270,3,single,2013394
+7,270,4,split twin,1330842
+7,270,5,split,1166636
+7,270,6,original twin,3306671
+7,270,7,original,2707130
+7,269,0,freeze,2034334
+7,269,1,freeze twin,1485728
+7,269,2,original,1540416
+7,269,3,original twin,1537823
+7,269,4,split,1408059
+7,269,5,split twin,1300340
+7,269,6,single,1865414
+7,269,7,single twin,1853779
+7,225,0,single twin,1051530
+7,225,1,single,799151
+7,225,2,split twin,686193
+7,225,3,split,672246
+7,225,4,original twin,580363
+7,225,5,original,535410
+7,225,6,freeze twin,594650
+7,225,7,freeze,589986
+8,359,0,split twin,497132
+8,359,1,single,668939
+8,359,2,single twin,554110
+8,359,3,freeze,650169
+8,359,4,freeze twin,488008
+8,359,5,original,464603
+8,359,6,original twin,476272
+8,359,7,split,472892
+8,397,0,single,1085932
+8,397,1,split twin,1152558
+8,397,2,split,852303
+8,397,3,original twin,1177697
+8,397,4,original,814657
+8,397,5,freeze twin,852739
+8,397,6,freeze,760276
+8,397,7,single twin,825504
+8,1,0,freeze twin,862693
+8,1,1,original,624086
+8,1,2,original twin,557686
+8,1,3,split,531728
+8,1,4,split twin,578442
+8,1,5,single,558542
+8,1,6,single twin,608092
+8,1,7,freeze,562231
+8,41,0,original,2612810
+8,41,1,freeze twin,2403963
+8,41,2,freeze,2195124
+8,41,3,single twin,2539485
+8,41,4,single,2350296
+8,41,5,split twin,2288842
+8,41,6,split,2030003
+8,41,7,original twin,1980640
+8,56,0,original twin,2909089
+8,56,1,split,2584767
+8,56,2,split twin,2487881
+8,56,3,single,2078444
+8,56,4,single twin,2812189
+8,56,5,freeze,2141618
+8,56,6,freeze twin,2651406
+8,56,7,original,2338927
+8,85,0,split,1569496
+8,85,1,original twin,2176514
+8,85,2,original,1749880
+8,85,3,freeze twin,955411
+8,85,4,freeze,907877
+8,85,5,single twin,921248
+8,85,6,single,835116
+8,85,7,split twin,847646
+8,134,0,split twin,1317057
+8,134,1,single,1655804
+8,134,2,single twin,653951
+8,134,3,freeze,728232
+8,134,4,freeze twin,1001131
+8,134,5,original,1087789
+8,134,6,original twin,1004879
+8,134,7,split,1222559
+8,165,0,single,4038501
+8,165,1,split twin,2688003
+8,165,2,split,2757156
+8,165,3,original twin,2540512
+8,165,4,original,2374507
+8,165,5,freeze twin,2524344
+8,165,6,freeze,1606567
+8,165,7,single twin,2013082
+8,176,0,single twin,1004633
+8,176,1,freeze,740780
+8,176,2,freeze twin,902358
+8,176,3,original,879215
+8,176,4,original twin,520462
+8,176,5,split,567355
+8,176,6,split twin,956094
+8,176,7,single,634201
+8,225,0,freeze,1200595
+8,225,1,single twin,650824
+8,225,2,single,687568
+8,225,3,split twin,951416
+8,225,4,split,686804
+8,225,5,original twin,664869
+8,225,6,original,780283
+8,225,7,freeze twin,1205577
+8,269,0,freeze twin,2082429
+8,269,1,original,1824771
+8,269,2,original twin,1820080
+8,269,3,split,1444523
+8,269,4,split twin,1806902
+8,269,5,single,1550033
+8,269,6,single twin,1606371
+8,269,7,freeze,1370411
+8,270,0,original,2762719
+8,270,1,freeze twin,1531432
+8,270,2,freeze,1351901
+8,270,3,single twin,1848733
+8,270,4,single,1872113
+8,270,5,split twin,1537375
+8,270,6,split,1124774
+8,270,7,original twin,1715367
+8,278,0,original twin,2433794
+8,278,1,split,1617336
+8,278,2,split twin,1544349
+8,278,3,single,1809563
+8,278,4,single twin,1665910
+8,278,5,freeze,1299677
+8,278,6,freeze twin,1347857
+8,278,7,original,1429971
+8,313,0,split,1185165
+8,313,1,original twin,892368
+8,313,2,original,762654
+8,313,3,freeze twin,621886
+8,313,4,freeze,673607
+8,313,5,single twin,701422
+8,313,6,single,1040648
+8,313,7,split twin,1041104
+9,56,0,split,4711808
+9,56,1,original twin,3006203
+9,56,2,original,2209104
+9,56,3,freeze twin,1870040
+9,56,4,freeze,2021169
+9,56,5,single twin,3819582
+9,56,6,single,2360229
+9,56,7,split twin,2155601
+9,41,0,original twin,2898972
+9,41,1,split,2103696
+9,41,2,split twin,2121329
+9,41,3,single,2233422
+9,41,4,single twin,2245401
+9,41,5,freeze,1845905
+9,41,6,freeze twin,2262212
+9,41,7,original,2114309
+9,1,0,original,1011886
+9,1,1,freeze twin,692923
+9,1,2,freeze,835016
+9,1,3,single twin,735240
+9,1,4,single,629081
+9,1,5,split twin,1029115
+9,1,6,split,611529
+9,1,7,original twin,704481
+9,397,0,single twin,1499350
+9,397,1,freeze,1231640
+9,397,2,freeze twin,915749
+9,397,3,original,911390
+9,397,4,original twin,898182
+9,397,5,split,807401
+9,397,6,split twin,2671236
+9,397,7,single,940524
+9,359,0,single,1024443
+9,359,1,split twin,537673
+9,359,2,split,448830
+9,359,3,original twin,646954
+9,359,4,original,417087
+9,359,5,freeze twin,503594
+9,359,6,freeze,737192
+9,359,7,single twin,461595
+9,313,0,split twin,830163
+9,313,1,single,782923
+9,313,2,single twin,836056
+9,313,3,freeze,771777
+9,313,4,freeze twin,809158
+9,313,5,original,615685
+9,313,6,original twin,660814
+9,313,7,split,810586
+9,278,0,split,1678766
+9,278,1,original twin,2123483
+9,278,2,original,1958159
+9,278,3,freeze twin,1295606
+9,278,4,freeze,1850687
+9,278,5,single twin,1707084
+9,278,6,single,1713667
+9,278,7,split twin,1653517
+9,270,0,original twin,2329412
+9,270,1,split,1178364
+9,270,2,split twin,1096128
+9,270,3,single,1508545
+9,270,4,single twin,1617577
+9,270,5,freeze,1208145
+9,270,6,freeze twin,1220145
+9,270,7,original,1830827
+9,269,0,original,2607139
+9,269,1,freeze twin,1963584
+9,269,2,freeze,2004120
+9,269,3,single twin,2786569
+9,269,4,single,2512255
+9,269,5,split twin,1721688
+9,269,6,split,1260169
+9,269,7,original twin,2314590
+9,225,0,freeze twin,970555
+9,225,1,original,697784
+9,225,2,original twin,949876
+9,225,3,split,790485
+9,225,4,split twin,731163
+9,225,5,single,635280
+9,225,6,single twin,668792
+9,225,7,freeze,816877
+9,176,0,freeze,796043
+9,176,1,single twin,724850
+9,176,2,single,664115
+9,176,3,split twin,552998
+9,176,4,split,1024105
+9,176,5,original twin,918260
+9,176,6,original,743968
+9,176,7,freeze twin,1389861
+9,165,0,single twin,4842393
+9,165,1,freeze,2032641
+9,165,2,freeze twin,2088118
+9,165,3,original,1884420
+9,165,4,original twin,1861700
+9,165,5,split,2054010
+9,165,6,split twin,2265320
+9,165,7,single,2081180
+9,134,0,single,1211327
+9,134,1,split twin,878477
+9,134,2,split,720614
+9,134,3,original twin,762991
+9,134,4,original,943651
+9,134,5,freeze twin,883592
+9,134,6,freeze,858085
+9,134,7,single twin,686951
+9,85,0,split twin,1902567
+9,85,1,single,1275568
+9,85,2,single twin,928616
+9,85,3,freeze,1053587
+9,85,4,freeze twin,1096143
+9,85,5,original,871986
+9,85,6,original twin,655744
+9,85,7,split,962861
+10,269,0,original twin,2097940
+10,269,1,original,2053697
+10,269,2,freeze twin,1480971
+10,269,3,freeze,3202749
+10,269,4,single twin,1554290
+10,269,5,single,1484441
+10,269,6,split twin,1417949
+10,269,7,split,1298125
+10,270,0,split,1743531
+10,270,1,split twin,1479974
+10,270,2,single,2791888
+10,270,3,single twin,2592188
+10,270,4,freeze,1535778
+10,270,5,freeze twin,2379246
+10,270,6,original,2418883
+10,270,7,original twin,1937653
+10,278,0,split twin,2202987
+10,278,1,split,1502137
+10,278,2,original twin,1527222
+10,278,3,original,2045111
+10,278,4,freeze twin,2569918
+10,278,5,freeze,2351502
+10,278,6,single twin,2309934
+10,278,7,single,1975411
+10,313,0,single,941152
+10,313,1,single twin,847192
+10,313,2,freeze,800292
+10,313,3,freeze twin,701230
+10,313,4,original,757820
+10,313,5,original twin,590113
+10,313,6,split,648766
+10,313,7,split twin,693727
+10,359,0,single twin,740058
+10,359,1,single,468998
+10,359,2,split twin,522735
+10,359,3,split,430507
+10,359,4,original twin,684158
+10,359,5,original,565386
+10,359,6,freeze twin,484839
+10,359,7,freeze,486996
+10,397,0,freeze,1330598
+10,397,1,freeze twin,929637
+10,397,2,original,1301875
+10,397,3,original twin,812183
+10,397,4,split,962741
+10,397,5,split twin,922486
+10,397,6,single,950261
+10,397,7,single twin,786869
+10,1,0,original twin,899140
+10,1,1,original,1634690
+10,1,2,freeze twin,986520
+10,1,3,freeze,609527
+10,1,4,single twin,885977
+10,1,5,single,729457
+10,1,6,split twin,886451
+10,1,7,split,546525
+10,41,0,split,3059031
+10,41,1,split twin,3247343
+10,41,2,single,2446651
+10,41,3,single twin,2302085
+10,41,4,freeze,2187566
+10,41,5,freeze twin,4154275
+10,41,6,original,2384644
+10,41,7,original twin,2458522
+10,56,0,split twin,2899290
+10,56,1,split,2702253
+10,56,2,original twin,2789192
+10,56,3,original,2732136
+10,56,4,freeze twin,1936310
+10,56,5,freeze,1831344
+10,56,6,single twin,2743743
+10,56,7,single,2165730
+10,85,0,single,948430
+10,85,1,single twin,766002
+10,85,2,freeze,841903
+10,85,3,freeze twin,902737
+10,85,4,original,676653
+10,85,5,original twin,590195
+10,85,6,split,756354
+10,85,7,split twin,782898
+10,134,0,single twin,809861
+10,134,1,single,753016
+10,134,2,split twin,610700
+10,134,3,split,743330
+10,134,4,original twin,620315
+10,134,5,original,774920
+10,134,6,freeze twin,820087
+10,134,7,freeze,829118
+10,165,0,freeze,2065445
+10,165,1,freeze twin,1808067
+10,165,2,original,1907657
+10,165,3,original twin,1909447
+10,165,4,split,2414977
+10,165,5,split twin,4112721
+10,165,6,single,3803766
+10,165,7,single twin,2184010
+10,176,0,freeze twin,779198
+10,176,1,freeze,995875
+10,176,2,single twin,916108
+10,176,3,single,857332
+10,176,4,split twin,637196
+10,176,5,split,680998
+10,176,6,original twin,814366
+10,176,7,original,769328
+10,225,0,original,1410024
+10,225,1,original twin,922272
+10,225,2,split,1362875
+10,225,3,split twin,1225345
+10,225,4,single,9771596
+10,225,5,single twin,2733928
+10,225,6,freeze,1525246
+10,225,7,freeze twin,1345032
+11,359,0,freeze,868143
+11,359,1,single twin,660157
+11,359,2,single,535982
+11,359,3,split twin,1177154
+11,359,4,split,1315676
+11,359,5,original twin,1265130
+11,359,6,original,1204829
+11,359,7,freeze twin,740889
+11,313,0,single twin,1220400
+11,313,1,freeze,867889
+11,313,2,freeze twin,750762
+11,313,3,original,850187
+11,313,4,original twin,665091
+11,313,5,split,935068
+11,313,6,split twin,670888
+11,313,7,single,641338
+11,278,0,single,2604173
+11,278,1,split twin,1753624
+11,278,2,split,1563934
+11,278,3,original twin,1458696
+11,278,4,original,1444056
+11,278,5,freeze twin,1585814
+11,278,6,freeze,1392257
+11,278,7,single twin,1553189
+11,270,0,split twin,1931038
+11,270,1,single,2354590
+11,270,2,single twin,1924343
+11,270,3,freeze,1201346
+11,270,4,freeze twin,1026867
+11,270,5,original,1719813
+11,270,6,original twin,2516140
+11,270,7,split,1474992
+11,269,0,split,3737500
+11,269,1,original twin,4129430
+11,269,2,original,2404314
+11,269,3,freeze twin,1753298
+11,269,4,freeze,1583198
+11,269,5,single twin,1529743
+11,269,6,single,1930054
+11,269,7,split twin,1366831
+11,225,0,original twin,746776
+11,225,1,split,1025193
+11,225,2,split twin,887123
+11,225,3,single,682411
+11,225,4,single twin,669450
+11,225,5,freeze,578304
+11,225,6,freeze twin,852161
+11,225,7,original,813265
+11,176,0,original,962455
+11,176,1,freeze twin,595271
+11,176,2,freeze,568593
+11,176,3,single twin,667365
+11,176,4,single,634826
+11,176,5,split twin,1093824
+11,176,6,split,754867
+11,176,7,original twin,615082
+11,165,0,freeze twin,2771015
+11,165,1,original,2367138
+11,165,2,original twin,2235599
+11,165,3,split,1861481
+11,165,4,split twin,3002612
+11,165,5,single,2493086
+11,165,6,single twin,2286789
+11,165,7,freeze,1713514
+11,134,0,freeze,951395
+11,134,1,single twin,1083332
+11,134,2,single,811991
+11,134,3,split twin,679217
+11,134,4,split,599890
+11,134,5,original twin,709645
+11,134,6,original,709737
+11,134,7,freeze twin,622663
+11,85,0,single twin,1436294
+11,85,1,freeze,1153959
+11,85,2,freeze twin,1014700
+11,85,3,original,790521
+11,85,4,original twin,642211
+11,85,5,split,849639
+11,85,6,split twin,910886
+11,85,7,single,919525
+11,56,0,single,3161387
+11,56,1,split twin,2526232
+11,56,2,split,2048390
+11,56,3,original twin,2012420
+11,56,4,original,1877505
+11,56,5,freeze twin,1888504
+11,56,6,freeze,2063622
+11,56,7,single twin,1948890
+11,41,0,split twin,3980928
+11,41,1,single,2587881
+11,41,2,single twin,2873519
+11,41,3,freeze,2188411
+11,41,4,freeze twin,2573460
+11,41,5,original,2935299
+11,41,6,original twin,2446112
+11,41,7,split,4679204
+11,1,0,split,1534404
+11,1,1,original twin,1194796
+11,1,2,original,875182
+11,1,3,freeze twin,713990
+11,1,4,freeze,755856
+11,1,5,single twin,906819
+11,1,6,single,658641
+11,1,7,split twin,601805
+11,397,0,freeze twin,2027644
+11,397,1,original,1591694
+11,397,2,original twin,1322668
+11,397,3,split,1549281
+11,397,4,split twin,1371094
+11,397,5,single,1056321
+11,397,6,single twin,1072788
+11,397,7,freeze,1106562
+12,134,0,freeze twin,851891
+12,134,1,freeze,1140493
+12,134,2,single twin,822357
+12,134,3,single,668710
+12,134,4,split twin,596353
+12,134,5,split,653860
+12,134,6,original twin,673646
+12,134,7,original,761488
+12,165,0,original,1965003
+12,165,1,original twin,2219846
+12,165,2,split,2643040
+12,165,3,split twin,3174195
+12,165,4,single,2049247
+12,165,5,single twin,2226055
+12,165,6,freeze,2041860
+12,165,7,freeze twin,1843353
+12,176,0,original twin,764518
+12,176,1,original,631402
+12,176,2,freeze twin,750392
+12,176,3,freeze,576392
+12,176,4,single twin,681339
+12,176,5,single,696505
+12,176,6,split twin,703407
+12,176,7,split,907895
+12,225,0,split,1005678
+12,225,1,split twin,765576
+12,225,2,single,646943
+12,225,3,single twin,573746
+12,225,4,freeze,646420
+12,225,5,freeze twin,659219
+12,225,6,original,540981
+12,225,7,original twin,606822
+12,269,0,split twin,1608046
+12,269,1,split,1449799
+12,269,2,original twin,1528144
+12,269,3,original,1630391
+12,269,4,freeze twin,1183783
+12,269,5,freeze,1389443
+12,269,6,single twin,1409416
+12,269,7,single,1374420
+12,270,0,single,3600765
+12,270,1,single twin,2279764
+12,270,2,freeze,1357330
+12,270,3,freeze twin,1425108
+12,270,4,original,1750620
+12,270,5,original twin,2177449
+12,270,6,split,1213616
+12,270,7,split twin,1061703
+12,278,0,single twin,2615372
+12,278,1,single,2349267
+12,278,2,split twin,1671371
+12,278,3,split,1556577
+12,278,4,original twin,1801257
+12,278,5,original,1645488
+12,278,6,freeze twin,2922584
+12,278,7,freeze,3813337
+12,313,0,freeze,1566266
+12,313,1,freeze twin,1070726
+12,313,2,original,782862
+12,313,3,original twin,603943
+12,313,4,split,598004
+12,313,5,split twin,554744
+12,313,6,single,756905
+12,313,7,single twin,623881
+12,359,0,freeze twin,756494
+12,359,1,freeze,474489
+12,359,2,single twin,504250
+12,359,3,single,456756
+12,359,4,split twin,742584
+12,359,5,split,523429
+12,359,6,original twin,700444
+12,359,7,original,451016
+12,397,0,original,1078575
+12,397,1,original twin,981094
+12,397,2,split,1178436
+12,397,3,split twin,882408
+12,397,4,single,877958
+12,397,5,single twin,1100950
+12,397,6,freeze,750172
+12,397,7,freeze twin,713147
+12,1,0,split twin,758411
+12,1,1,split,516840
+12,1,2,original twin,824574
+12,1,3,original,817096
+12,1,4,freeze twin,561765
+12,1,5,freeze,521184
+12,1,6,single twin,540186
+12,1,7,single,693502
+12,41,0,single,2609983
+12,41,1,single twin,4321846
+12,41,2,freeze,2321139
+12,41,3,freeze twin,3121048
+12,41,4,original,2542333
+12,41,5,original twin,2012096
+12,41,6,split,1885289
+12,41,7,split twin,2175942
+12,56,0,single twin,3284867
+12,56,1,single,2814944
+12,56,2,split twin,3034929
+12,56,3,split,3148828
+12,56,4,original twin,2387869
+12,56,5,original,2103273
+12,56,6,freeze twin,3257324
+12,56,7,freeze,3067446
+12,85,0,freeze,1452469
+12,85,1,freeze twin,1600116
+12,85,2,original,857464
+12,85,3,original twin,701394
+12,85,4,split,746474
+12,85,5,split twin,886072
+12,85,6,single,699149
+12,85,7,single twin,652311
+13,269,0,single,9351424
+13,269,1,split twin,2891911
+13,269,2,split,2572006
+13,269,3,original twin,5053731
+13,269,4,original,3963178
+13,269,5,freeze twin,2212761
+13,269,6,freeze,2746958
+13,269,7,single twin,3033751
+13,225,0,split twin,1562499
+13,225,1,single,1421860
+13,225,2,single twin,844634
+13,225,3,freeze,597544
+13,225,4,freeze twin,669057
+13,225,5,original,746859
+13,225,6,original twin,540834
+13,225,7,split,675174
+13,176,0,split,1082665
+13,176,1,original twin,934570
+13,176,2,original,835046
+13,176,3,freeze twin,538565
+13,176,4,freeze,748270
+13,176,5,single twin,750706
+13,176,6,single,647174
+13,176,7,split twin,658486
+13,165,0,original twin,3537657
+13,165,1,split,2376433
+13,165,2,split twin,2354770
+13,165,3,single,2179164
+13,165,4,single twin,2981221
+13,165,5,freeze,4711890
+13,165,6,freeze twin,3962709
+13,165,7,original,4319408
+13,134,0,original,2420300
+13,134,1,freeze twin,1347172
+13,134,2,freeze,2018970
+13,134,3,single twin,775099
+13,134,4,single,2591504
+13,134,5,split twin,848397
+13,134,6,split,597105
+13,134,7,original twin,3293897
+13,85,0,freeze twin,1548072
+13,85,1,original,4518280
+13,85,2,original twin,1234438
+13,85,3,split,1605654
+13,85,4,split twin,1284905
+13,85,5,single,731228
+13,85,6,single twin,635095
+13,85,7,freeze,625810
+13,56,0,freeze,4967947
+13,56,1,single twin,2387083
+13,56,2,single,2532550
+13,56,3,split twin,6677418
+13,56,4,split,4564609
+13,56,5,original twin,4184580
+13,56,6,original,2551307
+13,56,7,freeze twin,2063052
+13,41,0,single twin,4043181
+13,41,1,freeze,2221131
+13,41,2,freeze twin,2048813
+13,41,3,original,2359612
+13,41,4,original twin,1975063
+13,41,5,split,1673406
+13,41,6,split twin,1787992
+13,41,7,single,2411113
+13,1,0,single,1423358
+13,1,1,split twin,1026960
+13,1,2,split,766675
+13,1,3,original twin,581682
+13,1,4,original,562040
+13,1,5,freeze twin,770399
+13,1,6,freeze,676567
+13,1,7,single twin,639701
+13,397,0,original twin,1704145
+13,397,1,split,1289933
+13,397,2,split twin,1642505
+13,397,3,single,1045998
+13,397,4,single twin,895417
+13,397,5,freeze,832997
+13,397,6,freeze twin,1111155
+13,397,7,original,1039924
+13,359,0,original,1228181
+13,359,1,freeze twin,881913
+13,359,2,freeze,575568
+13,359,3,single twin,713955
+13,359,4,single,659274
+13,359,5,split twin,543896
+13,359,6,split,465777
+13,359,7,original twin,461492
+13,313,0,freeze twin,1562672
+13,313,1,original,912384
+13,313,2,original twin,651633
+13,313,3,split,674655
+13,313,4,split twin,829677
+13,313,5,single,897837
+13,313,6,single twin,733443
+13,313,7,freeze,749515
+13,278,0,freeze,2653621
+13,278,1,single twin,2299160
+13,278,2,single,1777299
+13,278,3,split twin,2227652
+13,278,4,split,1584201
+13,278,5,original twin,2746189
+13,278,6,original,1629490
+13,278,7,freeze twin,2674934
+13,270,0,single twin,4584910
+13,270,1,freeze,1838535
+13,270,2,freeze twin,1032676
+13,270,3,original,2103440
+13,270,4,original twin,1487405
+13,270,5,split,1237271
+13,270,6,split twin,2402496
+13,270,7,single,4936119
+14,1,0,single twin,980939
+14,1,1,single,756186
+14,1,2,split twin,921074
+14,1,3,split,824078
+14,1,4,original twin,1229407
+14,1,5,original,587898
+14,1,6,freeze twin,655461
+14,1,7,freeze,544154
+14,41,0,freeze,2605670
+14,41,1,freeze twin,2685637
+14,41,2,original,2345576
+14,41,3,original twin,2540498
+14,41,4,split,1823768
+14,41,5,split twin,1966337
+14,41,6,single,1882147
+14,41,7,single twin,2498264
+14,56,0,freeze twin,2465757
+14,56,1,freeze,2174002
+14,56,2,single twin,1941153
+14,56,3,single,2407771
+14,56,4,split twin,1788234
+14,56,5,split,1912133
+14,56,6,original twin,2114585
+14,56,7,original,2285177
+14,85,0,original,985764
+14,85,1,original twin,788076
+14,85,2,split,916033
+14,85,3,split twin,648346
+14,85,4,single,716956
+14,85,5,single twin,687013
+14,85,6,freeze,638410
+14,85,7,freeze twin,641166
+14,134,0,original twin,921116
+14,134,1,original,608310
+14,134,2,freeze twin,566788
+14,134,3,freeze,601987
+14,134,4,single twin,668552
+14,134,5,single,646259
+14,134,6,split twin,579514
+14,134,7,split,794341
+14,165,0,split,3014539
+14,165,1,split twin,2233863
+14,165,2,single,1937099
+14,165,3,single twin,2054974
+14,165,4,freeze,1522661
+14,165,5,freeze twin,1595807
+14,165,6,original,1698624
+14,165,7,original twin,2082790
+14,176,0,split twin,1016546
+14,176,1,split,832532
+14,176,2,original twin,642081
+14,176,3,original,537275
+14,176,4,freeze twin,721836
+14,176,5,freeze,766666
+14,176,6,single twin,607199
+14,176,7,single,602693
+14,225,0,single,1151627
+14,225,1,single twin,689631
+14,225,2,freeze,754240
+14,225,3,freeze twin,563280
+14,225,4,original,550824
+14,225,5,original twin,543511
+14,225,6,split,647190
+14,225,7,split twin,764796
+14,269,0,single twin,2565036
+14,269,1,single,2258987
+14,269,2,split twin,1407204
+14,269,3,split,1316505
+14,269,4,original twin,1388509
+14,269,5,original,1378322
+14,269,6,freeze twin,1981990
+14,269,7,freeze,3050563
+14,270,0,freeze,2847226
+14,270,1,freeze twin,1944500
+14,270,2,original,2039371
+14,270,3,original twin,1932623
+14,270,4,split,1134235
+14,270,5,split twin,1292967
+14,270,6,single,1708890
+14,270,7,single twin,1680444
+14,278,0,freeze twin,1960345
+14,278,1,freeze,1686171
+14,278,2,single twin,1801981
+14,278,3,single,1660401
+14,278,4,split twin,1677155
+14,278,5,split,1534292
+14,278,6,original twin,2034601
+14,278,7,original,1576570
+14,313,0,original,828923
+14,313,1,original twin,742619
+14,313,2,split,928065
+14,313,3,split twin,766542
+14,313,4,single,837712
+14,313,5,single twin,665874
+14,313,6,freeze,650757
+14,313,7,freeze twin,755276
+14,359,0,original twin,685522
+14,359,1,original,594633
+14,359,2,freeze twin,493828
+14,359,3,freeze,497465
+14,359,4,single twin,480441
+14,359,5,single,683459
+14,359,6,split twin,519843
+14,359,7,split,469321
+14,397,0,split,1339798
+14,397,1,split twin,1304290
+14,397,2,single,1038229
+14,397,3,single twin,930101
+14,397,4,freeze,722197
+14,397,5,freeze twin,708141
+14,397,6,original,777820
+14,397,7,original twin,811467
+15,134,0,split,831972
+15,134,1,original twin,680805
+15,134,2,original,707122
+15,134,3,freeze twin,652475
+15,134,4,freeze,733952
+15,134,5,single twin,799558
+15,134,6,single,658968
+15,134,7,split twin,614335
+15,85,0,original twin,1057694
+15,85,1,split,880288
+15,85,2,split twin,809813
+15,85,3,single,828138
+15,85,4,single twin,746715
+15,85,5,freeze,666992
+15,85,6,freeze twin,664588
+15,85,7,original,643514
+15,56,0,original,2232234
+15,56,1,freeze twin,1928491
+15,56,2,freeze,2015626
+15,56,3,single twin,1989340
+15,56,4,single,2675242
+15,56,5,split twin,1929590
+15,56,6,split,1966465
+15,56,7,original twin,1836471
+15,41,0,freeze twin,2719083
+15,41,1,original,2432380
+15,41,2,original twin,2427586
+15,41,3,split,2284338
+15,41,4,split twin,1764027
+15,41,5,single,2051920
+15,41,6,single twin,1876880
+15,41,7,freeze,2498334
+15,1,0,freeze,750259
+15,1,1,single twin,603339
+15,1,2,single,986877
+15,1,3,split twin,986609
+15,1,4,split,1413221
+15,1,5,original twin,2102299
+15,1,6,original,1538395
+15,1,7,freeze twin,852855
+15,397,0,split twin,1169713
+15,397,1,single,1002883
+15,397,2,single twin,1040254
+15,397,3,freeze,1265686
+15,397,4,freeze twin,1159714
+15,397,5,original,991222
+15,397,6,original twin,1142152
+15,397,7,split,992069
+15,359,0,split,926840
+15,359,1,original twin,634132
+15,359,2,original,613032
+15,359,3,freeze twin,730412
+15,359,4,freeze,716053
+15,359,5,single twin,510610
+15,359,6,single,497897
+15,359,7,split twin,1136426
+15,313,0,original twin,803243
+15,313,1,split,797047
+15,313,2,split twin,610647
+15,313,3,single,873212
+15,313,4,single twin,651734
+15,313,5,freeze,878863
+15,313,6,freeze twin,627127
+15,313,7,original,723172
+15,278,0,original,2228734
+15,278,1,freeze twin,1941686
+15,278,2,freeze,1376749
+15,278,3,single twin,1649451
+15,278,4,single,1456477
+15,278,5,split twin,1318298
+15,278,6,split,1497234
+15,278,7,original twin,2136080
+15,270,0,freeze twin,1987227
+15,270,1,original,3254865
+15,270,2,original twin,1916974
+15,270,3,split,1558577
+15,270,4,split twin,1529826
+15,270,5,single,1896065
+15,270,6,single twin,2367787
+15,270,7,freeze,2184806
+15,269,0,freeze,2238716
+15,269,1,single twin,4254312
+15,269,2,single,1619997
+15,269,3,split twin,1488559
+15,269,4,split,1705596
+15,269,5,original twin,1415190
+15,269,6,original,1595338
+15,269,7,freeze twin,1233958
+15,225,0,single twin,1137196
+15,225,1,freeze,794392
+15,225,2,freeze twin,768949
+15,225,3,original,634689
+15,225,4,original twin,576846
+15,225,5,split,732154
+15,225,6,split twin,784512
+15,225,7,single,762787
+15,176,0,single,970803
+15,176,1,split twin,837041
+15,176,2,split,921308
+15,176,3,original twin,739947
+15,176,4,original,569538
+15,176,5,freeze twin,561651
+15,176,6,freeze,742047
+15,176,7,single twin,784662
+15,165,0,split twin,2913653
+15,165,1,single,3121862
+15,165,2,single twin,2219517
+15,165,3,freeze,1983057
+15,165,4,freeze twin,2891931
+15,165,5,original,4105703
+15,165,6,original twin,2892918
+15,165,7,split,2111947
+16,278,0,original twin,2038118
+16,278,1,original,1799193
+16,278,2,freeze twin,1677989
+16,278,3,freeze,1667745
+16,278,4,single twin,1977456
+16,278,5,single,2648212
+16,278,6,split twin,1941016
+16,278,7,split,1679556
+16,313,0,split,837817
+16,313,1,split twin,805780
+16,313,2,single,844169
+16,313,3,single twin,707973
+16,313,4,freeze,875062
+16,313,5,freeze twin,898640
+16,313,6,original,661195
+16,313,7,original twin,980421
+16,359,0,split twin,579200
+16,359,1,split,449764
+16,359,2,original twin,564075
+16,359,3,original,501985
+16,359,4,freeze twin,513042
+16,359,5,freeze,492774
+16,359,6,single twin,480692
+16,359,7,single,592005
+16,397,0,single,1782474
+16,397,1,single twin,994680
+16,397,2,freeze,999480
+16,397,3,freeze twin,799952
+16,397,4,original,894028
+16,397,5,original twin,961933
+16,397,6,split,872143
+16,397,7,split twin,780623
+16,1,0,freeze twin,771449
+16,1,1,freeze,566593
+16,1,2,single twin,552448
+16,1,3,single,828085
+16,1,4,split twin,683703
+16,1,5,split,571189
+16,1,6,original twin,805389
+16,1,7,original,657005
+16,41,0,original,3563157
+16,41,1,original twin,2158265
+16,41,2,split,2031059
+16,41,3,split twin,1783436
+16,41,4,single,1931719
+16,41,5,single twin,1816815
+16,41,6,freeze,1985655
+16,41,7,freeze twin,2250763
+16,56,0,original twin,3954858
+16,56,1,original,2397222
+16,56,2,freeze twin,2522902
+16,56,3,freeze,2126908
+16,56,4,single twin,2376810
+16,56,5,single,2113145
+16,56,6,split twin,2801527
+16,56,7,split,3217937
+16,85,0,split,1461502
+16,85,1,split twin,773109
+16,85,2,single,804826
+16,85,3,single twin,704566
+16,85,4,freeze,957470
+16,85,5,freeze twin,785775
+16,85,6,original,761536
+16,85,7,original twin,961766
+16,134,0,split twin,1101557
+16,134,1,split,789085
+16,134,2,original twin,835130
+16,134,3,original,1460937
+16,134,4,freeze twin,1326876
+16,134,5,freeze,1907238
+16,134,6,single twin,867864
+16,134,7,single,1085432
+16,165,0,single,3268266
+16,165,1,single twin,2229433
+16,165,2,freeze,1743341
+16,165,3,freeze twin,1917718
+16,165,4,original,2525588
+16,165,5,original twin,2172183
+16,165,6,split,1614804
+16,165,7,split twin,1765440
+16,176,0,single twin,902626
+16,176,1,single,686787
+16,176,2,split twin,710027
+16,176,3,split,794321
+16,176,4,original twin,633885
+16,176,5,original,834267
+16,176,6,freeze twin,684290
+16,176,7,freeze,631252
+16,225,0,freeze,788944
+16,225,1,freeze twin,769226
+16,225,2,original,711311
+16,225,3,original twin,750719
+16,225,4,split,752577
+16,225,5,split twin,878328
+16,225,6,single,623211
+16,225,7,single twin,683351
+16,269,0,freeze twin,1487846
+16,269,1,freeze,1337744
+16,269,2,single twin,1632754
+16,269,3,single,1765657
+16,269,4,split twin,1261373
+16,269,5,split,1376492
+16,269,6,original twin,1696988
+16,269,7,original,1835318
+16,270,0,original,2644911
+16,270,1,original twin,2060748
+16,270,2,split,1474906
+16,270,3,split twin,1195804
+16,270,4,single,2000457
+16,270,5,single twin,2149140
+16,270,6,freeze,2200756
+16,270,7,freeze twin,1791388
+17,1,0,original,677650
+17,1,1,original twin,780996
+17,1,2,split,772543
+17,1,3,split twin,574830
+17,1,4,single,628582
+17,1,5,single twin,526251
+17,1,6,freeze,492432
+17,1,7,freeze twin,611777
+17,397,0,single twin,1208173
+17,397,1,single,1053397
+17,397,2,split twin,1483970
+17,397,3,split,999070
+17,397,4,original twin,1074167
+17,397,5,original,1038168
+17,397,6,freeze twin,1022077
+17,397,7,freeze,1009692
+17,359,0,single,669804
+17,359,1,single twin,493905
+17,359,2,freeze,489359
+17,359,3,freeze twin,490766
+17,359,4,original,506768
+17,359,5,original twin,1543977
+17,359,6,split,451280
+17,359,7,split twin,471452
+17,313,0,split twin,1062736
+17,313,1,split,1256757
+17,313,2,original twin,942900
+17,313,3,original,621597
+17,313,4,freeze twin,755155
+17,313,5,freeze,627769
+17,313,6,single twin,938050
+17,313,7,single,706691
+17,278,0,split,3173549
+17,278,1,split twin,1549439
+17,278,2,single,1872899
+17,278,3,single twin,2025563
+17,278,4,freeze,2046764
+17,278,5,freeze twin,2937433
+17,278,6,original,2693989
+17,278,7,original twin,2022292
+17,270,0,original twin,1797808
+17,270,1,original,1729759
+17,270,2,freeze twin,1116844
+17,270,3,freeze,1178346
+17,270,4,single twin,1679008
+17,270,5,single,1848686
+17,270,6,split twin,1772046
+17,270,7,split,1295200
+17,269,0,original,2866703
+17,269,1,original twin,1492179
+17,269,2,split,1300206
+17,269,3,split twin,1304538
+17,269,4,single,1817421
+17,269,5,single twin,1570561
+17,269,6,freeze,1531012
+17,269,7,freeze twin,1155124
+17,225,0,freeze twin,722458
+17,225,1,freeze,601627
+17,225,2,single twin,733213
+17,225,3,single,577592
+17,225,4,split twin,601611
+17,225,5,split,591795
+17,225,6,original twin,579087
+17,225,7,original,679240
+17,176,0,freeze,736155
+17,176,1,freeze twin,554073
+17,176,2,original,565531
+17,176,3,original twin,487876
+17,176,4,split,580102
+17,176,5,split twin,687950
+17,176,6,single,679199
+17,176,7,single twin,651563
+17,165,0,single twin,3113497
+17,165,1,single,1990568
+17,165,2,split twin,1606677
+17,165,3,split,1672046
+17,165,4,original twin,2575153
+17,165,5,original,2503344
+17,165,6,freeze twin,1612666
+17,165,7,freeze,2183784
+17,134,0,single,1053472
+17,134,1,single twin,853109
+17,134,2,freeze,650400
+17,134,3,freeze twin,594830
+17,134,4,original,698974
+17,134,5,original twin,833851
+17,134,6,split,619365
+17,134,7,split twin,689725
+17,85,0,split twin,987459
+17,85,1,split,774670
+17,85,2,original twin,907126
+17,85,3,original,831402
+17,85,4,freeze twin,991068
+17,85,5,freeze,1047054
+17,85,6,single twin,805191
+17,85,7,single,811881
+17,56,0,split,3454720
+17,56,1,split twin,3801357
+17,56,2,single,2861777
+17,56,3,single twin,2329309
+17,56,4,freeze,2273834
+17,56,5,freeze twin,2281875
+17,56,6,original,2043867
+17,56,7,original twin,2720935
+17,41,0,original twin,12736811
+17,41,1,original,7183301
+17,41,2,freeze twin,3628099
+17,41,3,freeze,2022106
+17,41,4,single twin,2308874
+17,41,5,single,2499470
+17,41,6,split twin,2120269
+17,41,7,split,2030472
+18,176,0,freeze twin,647453
+18,176,1,original,552053
+18,176,2,original twin,571334
+18,176,3,split,691712
+18,176,4,split twin,814717
+18,176,5,single,1165404
+18,176,6,single twin,1327624
+18,176,7,freeze,860942
+18,225,0,original,968911
+18,225,1,freeze twin,3265847
+18,225,2,freeze,613048
+18,225,3,single twin,1692644
+18,225,4,single,2096915
+18,225,5,split twin,620663
+18,225,6,split,600469
+18,225,7,original twin,2686770
+18,269,0,original twin,3950341
+18,269,1,split,1953896
+18,269,2,split twin,1543779
+18,269,3,single,1583646
+18,269,4,single twin,1635749
+18,269,5,freeze,1481051
+18,269,6,freeze twin,1185014
+18,269,7,original,1371160
+18,270,0,split,1557497
+18,270,1,original twin,1825367
+18,270,2,original,1883411
+18,270,3,freeze twin,1038005
+18,270,4,freeze,1231853
+18,270,5,single twin,1842646
+18,270,6,single,1871525
+18,270,7,split twin,1636663
+18,278,0,split twin,2137776
+18,278,1,single,1815974
+18,278,2,single twin,1838153
+18,278,3,freeze,1792555
+18,278,4,freeze twin,1328338
+18,278,5,original,1861279
+18,278,6,original twin,1782485
+18,278,7,split,1335641
+18,313,0,single,1146414
+18,313,1,split twin,676751
+18,313,2,split,766949
+18,313,3,original twin,650438
+18,313,4,original,545402
+18,313,5,freeze twin,748496
+18,313,6,freeze,733642
+18,313,7,single twin,970940
+18,359,0,single twin,863086
+18,359,1,freeze,1164617
+18,359,2,freeze twin,916168
+18,359,3,original,1186923
+18,359,4,original twin,945535
+18,359,5,split,1741357
+18,359,6,split twin,772132
+18,359,7,single,741849
+18,397,0,freeze,1543019
+18,397,1,single twin,1324027
+18,397,2,single,922863
+18,397,3,split twin,935647
+18,397,4,split,870835
+18,397,5,original twin,933720
+18,397,6,original,871540
+18,397,7,freeze twin,823632
+18,1,0,original twin,1054076
+18,1,1,split,812279
+18,1,2,split twin,686566
+18,1,3,single,591086
+18,1,4,single twin,739797
+18,1,5,freeze,798020
+18,1,6,freeze twin,554178
+18,1,7,original,567514
+18,41,0,split,2277459
+18,41,1,original twin,3161306
+18,41,2,original,2496559
+18,41,3,freeze twin,1852435
+18,41,4,freeze,2004139
+18,41,5,single twin,2685668
+18,41,6,single,2186138
+18,41,7,split twin,3132772
+18,56,0,split twin,3385382
+18,56,1,single,2682108
+18,56,2,single twin,2387072
+18,56,3,freeze,2259971
+18,56,4,freeze twin,2053914
+18,56,5,original,1985860
+18,56,6,original twin,6992335
+18,56,7,split,2143912
+18,85,0,single,3113142
+18,85,1,split twin,1072558
+18,85,2,split,792601
+18,85,3,original twin,1250972
+18,85,4,original,815290
+18,85,5,freeze twin,767888
+18,85,6,freeze,890571
+18,85,7,single twin,1367519
+18,134,0,single twin,1192194
+18,134,1,freeze,644193
+18,134,2,freeze twin,812106
+18,134,3,original,742180
+18,134,4,original twin,934600
+18,134,5,split,602421
+18,134,6,split twin,568673
+18,134,7,single,920952
+18,165,0,freeze,2369413
+18,165,1,single twin,2687552
+18,165,2,single,2331170
+18,165,3,split twin,1989489
+18,165,4,split,2027984
+18,165,5,original twin,3420895
+18,165,6,original,2537324
+18,165,7,freeze twin,2588415
+19,278,0,single,3719419
+19,278,1,single twin,2672596
+19,278,2,freeze,2183392
+19,278,3,freeze twin,1557204
+19,278,4,original,1586160
+19,278,5,original twin,1509642
+19,278,6,split,1327335
+19,278,7,split twin,1529640
+19,270,0,split twin,2380881
+19,270,1,split,1412800
+19,270,2,original twin,2998539
+19,270,3,original,2338580
+19,270,4,freeze twin,1370468
+19,270,5,freeze,1351157
+19,270,6,single twin,1750612
+19,270,7,single,1746408
+19,269,0,split,3933504
+19,269,1,split twin,3390350
+19,269,2,single,1714884
+19,269,3,single twin,1760533
+19,269,4,freeze,1927775
+19,269,5,freeze twin,1368813
+19,269,6,original,1858292
+19,269,7,original twin,1630157
+19,225,0,original twin,1303476
+19,225,1,original,604506
+19,225,2,freeze twin,665621
+19,225,3,freeze,614623
+19,225,4,single twin,688223
+19,225,5,single,780709
+19,225,6,split twin,587901
+19,225,7,split,649693
+19,176,0,original,1072101
+19,176,1,original twin,630479
+19,176,2,split,885807
+19,176,3,split twin,1047105
+19,176,4,single,662337
+19,176,5,single twin,695558
+19,176,6,freeze,762691
+19,176,7,freeze twin,585243
+19,165,0,freeze twin,1690146
+19,165,1,freeze,1963883
+19,165,2,single twin,2372333
+19,165,3,single,2655102
+19,165,4,split twin,2932944
+19,165,5,split,2175469
+19,165,6,original twin,2162698
+19,165,7,original,2104243
+19,134,0,freeze,801582
+19,134,1,freeze twin,635627
+19,134,2,original,639143
+19,134,3,original twin,872494
+19,134,4,split,670420
+19,134,5,split twin,826217
+19,134,6,single,811169
+19,134,7,single twin,675485
+19,85,0,single twin,1105814
+19,85,1,single,1054200
+19,85,2,split twin,742924
+19,85,3,split,757925
+19,85,4,original twin,814150
+19,85,5,original,681037
+19,85,6,freeze twin,751469
+19,85,7,freeze,693150
+19,56,0,single,2562835
+19,56,1,single twin,2190649
+19,56,2,freeze,3367083
+19,56,3,freeze twin,4151603
+19,56,4,original,2740332
+19,56,5,original twin,3876094
+19,56,6,split,3446551
+19,56,7,split twin,2575836
+19,41,0,split twin,2942622
+19,41,1,split,2350152
+19,41,2,original twin,1891321
+19,41,3,original,2556489
+19,41,4,freeze twin,2268078
+19,41,5,freeze,2103846
+19,41,6,single twin,2496892
+19,41,7,single,2128275
+19,1,0,split,1009421
+19,1,1,split twin,664576
+19,1,2,single,766757
+19,1,3,single twin,1172927
+19,1,4,freeze,778714
+19,1,5,freeze twin,1260486
+19,1,6,original,874126
+19,1,7,original twin,590846
+19,397,0,freeze twin,1937021
+19,397,1,freeze,917053
+19,397,2,single twin,1617180
+19,397,3,single,1193943
+19,397,4,split twin,886927
+19,397,5,split,814061
+19,397,6,original twin,1086753
+19,397,7,original,931479
+19,359,0,freeze,943583
+19,359,1,freeze twin,762926
+19,359,2,original,821315
+19,359,3,original twin,691144
+19,359,4,split,663572
+19,359,5,split twin,475071
+19,359,6,single,580201
+19,359,7,single twin,585959
+19,313,0,single twin,1239721
+19,313,1,single,927085
+19,313,2,split twin,855003
+19,313,3,split,667473
+19,313,4,original twin,1444032
+19,313,5,original,949803
+19,313,6,freeze twin,586931
+19,313,7,freeze,779767
+20,56,0,single twin,2654453
+20,56,1,freeze,2545165
+20,56,2,freeze twin,2760391
+20,56,3,original,2371023
+20,56,4,original twin,2032228
+20,56,5,split,2371703
+20,56,6,split twin,2222908
+20,56,7,single,2259722
+20,85,0,freeze,970252
+20,85,1,single twin,955196
+20,85,2,single,1059216
+20,85,3,split twin,1003217
+20,85,4,split,1158409
+20,85,5,original twin,1014914
+20,85,6,original,823415
+20,85,7,freeze twin,980188
+20,134,0,freeze twin,945045
+20,134,1,original,732116
+20,134,2,original twin,825785
+20,134,3,split,727195
+20,134,4,split twin,880587
+20,134,5,single,1256052
+20,134,6,single twin,1249585
+20,134,7,freeze,1173016
+20,165,0,original,5561760
+20,165,1,freeze twin,2038350
+20,165,2,freeze,1902154
+20,165,3,single twin,2098965
+20,165,4,single,2287885
+20,165,5,split twin,1740952
+20,165,6,split,2287428
+20,165,7,original twin,2482396
+20,176,0,original twin,970391
+20,176,1,split,631119
+20,176,2,split twin,697120
+20,176,3,single,736323
+20,176,4,single twin,737962
+20,176,5,freeze,696754
+20,176,6,freeze twin,545930
+20,176,7,original,1170912
+20,225,0,split,851207
+20,225,1,original twin,700475
+20,225,2,original,572229
+20,225,3,freeze twin,607697
+20,225,4,freeze,839831
+20,225,5,single twin,687982
+20,225,6,single,633658
+20,225,7,split twin,706035
+20,269,0,split twin,1771378
+20,269,1,single,1907403
+20,269,2,single twin,1637378
+20,269,3,freeze,1310415
+20,269,4,freeze twin,1151178
+20,269,5,original,1420113
+20,269,6,original twin,1483347
+20,269,7,split,1174383
+20,270,0,single,2526402
+20,270,1,split twin,1357644
+20,270,2,split,1508600
+20,270,3,original twin,1729413
+20,270,4,original,1605261
+20,270,5,freeze twin,1125805
+20,270,6,freeze,1129471
+20,270,7,single twin,1468298
+20,278,0,single twin,2833832
+20,278,1,freeze,1557640
+20,278,2,freeze twin,2400239
+20,278,3,original,2248324
+20,278,4,original twin,1836606
+20,278,5,split,1758575
+20,278,6,split twin,1523700
+20,278,7,single,2151407
+20,313,0,freeze,722735
+20,313,1,single twin,746084
+20,313,2,single,746683
+20,313,3,split twin,623539
+20,313,4,split,790843
+20,313,5,original twin,768340
+20,313,6,original,598275
+20,313,7,freeze twin,758869
+20,359,0,freeze twin,557409
+20,359,1,original,500377
+20,359,2,original twin,514715
+20,359,3,split,474996
+20,359,4,split twin,568152
+20,359,5,single,582075
+20,359,6,single twin,554792
+20,359,7,freeze,511976
+20,397,0,original,1231730
+20,397,1,freeze twin,926004
+20,397,2,freeze,817970
+20,397,3,single twin,899011
+20,397,4,single,789261
+20,397,5,split twin,704809
+20,397,6,split,698101
+20,397,7,original twin,749681
+20,1,0,split twin,663735
+20,1,1,single,817147
+20,1,2,single twin,649083
+20,1,3,freeze,703113
+20,1,4,freeze twin,695766
+20,1,5,original,601156
+20,1,6,original twin,517506
+20,1,7,split,867368
+20,41,0,single,5692354
+20,41,1,split twin,3361845
+20,41,2,split,1756023
+20,41,3,original twin,2201379
+20,41,4,original,2044310
+20,41,5,freeze twin,2253435
+20,41,6,freeze,2322759
+20,41,7,single twin,2153179
+21,176,0,split,677495
+21,176,1,split twin,760917
+21,176,2,single,685111
+21,176,3,single twin,617098
+21,176,4,freeze,634668
+21,176,5,freeze twin,602844
+21,176,6,original,561699
+21,176,7,original twin,598986
+21,165,0,original twin,2146812
+21,165,1,original,2486472
+21,165,2,freeze twin,1822769
+21,165,3,freeze,2354462
+21,165,4,single twin,1900301
+21,165,5,single,2075181
+21,165,6,split twin,1601127
+21,165,7,split,1706799
+21,134,0,original,951567
+21,134,1,original twin,621334
+21,134,2,split,734476
+21,134,3,split twin,743850
+21,134,4,single,679104
+21,134,5,single twin,623993
+21,134,6,freeze,640845
+21,134,7,freeze twin,783798
+21,85,0,freeze twin,1061157
+21,85,1,freeze,760942
+21,85,2,single twin,748254
+21,85,3,single,698198
+21,85,4,split twin,714818
+21,85,5,split,803722
+21,85,6,original twin,692878
+21,85,7,original,618920
+21,56,0,freeze,2759695
+21,56,1,freeze twin,2738055
+21,56,2,original,2620076
+21,56,3,original twin,2841588
+21,56,4,split,2132959
+21,56,5,split twin,1932809
+21,56,6,single,2013628
+21,56,7,single twin,2384463
+21,41,0,single twin,2522060
+21,41,1,single,2442638
+21,41,2,split twin,9544920
+21,41,3,split,6383263
+21,41,4,original twin,2131387
+21,41,5,original,1916703
+21,41,6,freeze twin,2847831
+21,41,7,freeze,4750307
+21,1,0,single,1362746
+21,1,1,single twin,666252
+21,1,2,freeze,856580
+21,1,3,freeze twin,1033032
+21,1,4,original,561481
+21,1,5,original twin,599598
+21,1,6,split,674136
+21,1,7,split twin,751227
+21,397,0,original twin,1076613
+21,397,1,original,756780
+21,397,2,freeze twin,1389092
+21,397,3,freeze,974997
+21,397,4,single twin,1022669
+21,397,5,single,1223204
+21,397,6,split twin,785325
+21,397,7,split,781611
+21,359,0,original,1027444
+21,359,1,original twin,703270
+21,359,2,split,583358
+21,359,3,split twin,763009
+21,359,4,single,871915
+21,359,5,single twin,1036262
+21,359,6,freeze,616486
+21,359,7,freeze twin,515955
+21,313,0,freeze twin,1211733
+21,313,1,freeze,792555
+21,313,2,single twin,1036196
+21,313,3,single,1041488
+21,313,4,split twin,710052
+21,313,5,split,766828
+21,313,6,original twin,820034
+21,313,7,original,692256
+21,278,0,freeze,2089349
+21,278,1,freeze twin,1818478
+21,278,2,original,1700860
+21,278,3,original twin,1849121
+21,278,4,split,1576696
+21,278,5,split twin,1837618
+21,278,6,single,2257889
+21,278,7,single twin,1829206
+21,270,0,single twin,5096066
+21,270,1,single,2853054
+21,270,2,split twin,1676914
+21,270,3,split,1255687
+21,270,4,original twin,1849480
+21,270,5,original,1478385
+21,270,6,freeze twin,1204585
+21,270,7,freeze,1020994
+21,269,0,single,2526537
+21,269,1,single twin,1716676
+21,269,2,freeze,1381624
+21,269,3,freeze twin,1403011
+21,269,4,original,1468362
+21,269,5,original twin,1591009
+21,269,6,split,2256066
+21,269,7,split twin,1639393
+21,225,0,split twin,1412907
+21,225,1,split,768145
+21,225,2,original twin,924934
+21,225,3,original,790602
+21,225,4,freeze twin,645103
+21,225,5,freeze,631239
+21,225,6,single twin,589031
+21,225,7,single,652007
+22,359,0,original twin,493663
+22,359,1,split,559491
+22,359,2,split twin,457902
+22,359,3,single,597669
+22,359,4,single twin,471712
+22,359,5,freeze,512534
+22,359,6,freeze twin,584585
+22,359,7,original,543131
+22,397,0,split,806538
+22,397,1,original twin,935279
+22,397,2,original,777624
+22,397,3,freeze twin,811051
+22,397,4,freeze,786164
+22,397,5,single twin,1468830
+22,397,6,single,969239
+22,397,7,split twin,3205319
+22,1,0,single twin,1073263
+22,1,1,freeze,812900
+22,1,2,freeze twin,597637
+22,1,3,original,809856
+22,1,4,original twin,663889
+22,1,5,split,496619
+22,1,6,split twin,638514
+22,1,7,single,552183
+22,41,0,freeze,2258656
+22,41,1,single twin,2607102
+22,41,2,single,2353168
+22,41,3,split twin,2256283
+22,41,4,split,2053659
+22,41,5,original twin,1719019
+22,41,6,original,2175373
+22,41,7,freeze twin,1663542
+22,56,0,freeze twin,3439106
+22,56,1,original,3316884
+22,56,2,original twin,1898186
+22,56,3,split,2065367
+22,56,4,split twin,1937743
+22,56,5,single,1871362
+22,56,6,single twin,2249609
+22,56,7,freeze,1848425
+22,85,0,original,989131
+22,85,1,freeze twin,669973
+22,85,2,freeze,755855
+22,85,3,single twin,704848
+22,85,4,single,841539
+22,85,5,split twin,669766
+22,85,6,split,764674
+22,85,7,original twin,860257
+22,134,0,original twin,1125154
+22,134,1,split,933186
+22,134,2,split twin,1039283
+22,134,3,single,825709
+22,134,4,single twin,925978
+22,134,5,freeze,646108
+22,134,6,freeze twin,804593
+22,134,7,original,1098473
+22,165,0,split,2595287
+22,165,1,original twin,2582370
+22,165,2,original,1996470
+22,165,3,freeze twin,1618220
+22,165,4,freeze,1632308
+22,165,5,single twin,2370629
+22,165,6,single,2037674
+22,165,7,split twin,1523234
+22,176,0,split twin,875670
+22,176,1,single,732224
+22,176,2,single twin,710378
+22,176,3,freeze,678852
+22,176,4,freeze twin,533324
+22,176,5,original,739207
+22,176,6,original twin,666524
+22,176,7,split,649671
+22,225,0,single,733802
+22,225,1,split twin,805365
+22,225,2,split,751906
+22,225,3,original twin,632146
+22,225,4,original,912043
+22,225,5,freeze twin,874349
+22,225,6,freeze,765272
+22,225,7,single twin,775219
+22,269,0,single twin,2526877
+22,269,1,freeze,2624170
+22,269,2,freeze twin,2999777
+22,269,3,original,9539528
+22,269,4,original twin,3413329
+22,269,5,split,4044787
+22,269,6,split twin,4935979
+22,269,7,single,3620845
+22,270,0,freeze,4198726
+22,270,1,single twin,2724378
+22,270,2,single,1988649
+22,270,3,split twin,1272124
+22,270,4,split,1225815
+22,270,5,original twin,1783913
+22,270,6,original,2214590
+22,270,7,freeze twin,1594364
+22,278,0,freeze twin,4044824
+22,278,1,original,2210574
+22,278,2,original twin,1645241
+22,278,3,split,1323651
+22,278,4,split twin,1328730
+22,278,5,single,1983443
+22,278,6,single twin,1843404
+22,278,7,freeze,1646024
+22,313,0,original,1199084
+22,313,1,freeze twin,880651
+22,313,2,freeze,668486
+22,313,3,single twin,662228
+22,313,4,single,717447
+22,313,5,split twin,593673
+22,313,6,split,782019
+22,313,7,original twin,748131
+23,56,0,original,3109329
+23,56,1,original twin,2113318
+23,56,2,split,2219481
+23,56,3,split twin,2220974
+23,56,4,single,2193655
+23,56,5,single twin,1885487
+23,56,6,freeze,1889031
+23,56,7,freeze twin,7104040
+23,41,0,freeze twin,6203743
+23,41,1,freeze,5700639
+23,41,2,single twin,4187449
+23,41,3,single,5184807
+23,41,4,split twin,2910653
+23,41,5,split,3489055
+23,41,6,original twin,3997606
+23,41,7,original,3686501
+23,1,0,freeze,1025629
+23,1,1,freeze twin,669214
+23,1,2,original,727090
+23,1,3,original twin,796082
+23,1,4,split,629501
+23,1,5,split twin,653280
+23,1,6,single,578861
+23,1,7,single twin,571775
+23,397,0,split twin,2263704
+23,397,1,split,1315985
+23,397,2,original twin,1212876
+23,397,3,original,1170210
+23,397,4,freeze twin,1485327
+23,397,5,freeze,1042398
+23,397,6,single twin,1327467
+23,397,7,single,949050
+23,359,0,split,975774
+23,359,1,split twin,634902
+23,359,2,single,537149
+23,359,3,single twin,466936
+23,359,4,freeze,527790
+23,359,5,freeze twin,437728
+23,359,6,original,639861
+23,359,7,original twin,781573
+23,313,0,original twin,1135402
+23,313,1,original,715779
+23,313,2,freeze twin,1134648
+23,313,3,freeze,760307
+23,313,4,single twin,802272
+23,313,5,single,588665
+23,313,6,split twin,716689
+23,313,7,split,628811
+23,278,0,original,1955683
+23,278,1,original twin,2044529
+23,278,2,split,1607161
+23,278,3,split twin,1585349
+23,278,4,single,1779947
+23,278,5,single twin,2092072
+23,278,6,freeze,1822713
+23,278,7,freeze twin,2685769
+23,270,0,freeze twin,2146538
+23,270,1,freeze,1465387
+23,270,2,single twin,1869035
+23,270,3,single,1577791
+23,270,4,split twin,1180850
+23,270,5,split,1215195
+23,270,6,original twin,1633901
+23,270,7,original,1421714
+23,269,0,freeze,2825989
+23,269,1,freeze twin,2315036
+23,269,2,original,2379912
+23,269,3,original twin,3321469
+23,269,4,split,1802866
+23,269,5,split twin,1333396
+23,269,6,single,1430969
+23,269,7,single twin,1564670
+23,225,0,single twin,1241283
+23,225,1,single,793427
+23,225,2,split twin,833141
+23,225,3,split,871215
+23,225,4,original twin,887017
+23,225,5,original,761840
+23,225,6,freeze twin,837239
+23,225,7,freeze,746390
+23,176,0,single,1227738
+23,176,1,single twin,784634
+23,176,2,freeze,789076
+23,176,3,freeze twin,676884
+23,176,4,original,594436
+23,176,5,original twin,502554
+23,176,6,split,545565
+23,176,7,split twin,508092
+23,165,0,split twin,2752318
+23,165,1,split,2601497
+23,165,2,original twin,1853787
+23,165,3,original,1752426
+23,165,4,freeze twin,1509721
+23,165,5,freeze,1670257
+23,165,6,single twin,2210213
+23,165,7,single,1917508
+23,134,0,split,1035753
+23,134,1,split twin,955549
+23,134,2,single,856116
+23,134,3,single twin,692876
+23,134,4,freeze,1209218
+23,134,5,freeze twin,598333
+23,134,6,original,609701
+23,134,7,original twin,683073
+23,85,0,original twin,1464394
+23,85,1,original,1084217
+23,85,2,freeze twin,822052
+23,85,3,freeze,718144
+23,85,4,single twin,726080
+23,85,5,single,642893
+23,85,6,split twin,634142
+23,85,7,split,743086
+24,269,0,freeze twin,1295347
+24,269,1,original,1684573
+24,269,2,original twin,1857744
+24,269,3,split,1498192
+24,269,4,split twin,1567813
+24,269,5,single,1725953
+24,269,6,single twin,1599808
+24,269,7,freeze,1845185
+24,270,0,original,1721212
+24,270,1,freeze twin,1206881
+24,270,2,freeze,1306526
+24,270,3,single twin,1951343
+24,270,4,single,1877927
+24,270,5,split twin,1345528
+24,270,6,split,1282957
+24,270,7,original twin,1838870
+24,278,0,original twin,1954474
+24,278,1,split,1564303
+24,278,2,split twin,1552813
+24,278,3,single,2225352
+24,278,4,single twin,1652847
+24,278,5,freeze,1899985
+24,278,6,freeze twin,1842902
+24,278,7,original,1834809
+24,313,0,split,1159728
+24,313,1,original twin,651136
+24,313,2,original,841149
+24,313,3,freeze twin,1129434
+24,313,4,freeze,1119304
+24,313,5,single twin,1139928
+24,313,6,single,2030740
+24,313,7,split twin,1190568
+24,359,0,split twin,657103
+24,359,1,single,660275
+24,359,2,single twin,646613
+24,359,3,freeze,1017564
+24,359,4,freeze twin,551283
+24,359,5,original,1573540
+24,359,6,original twin,1003550
+24,359,7,split,974944
+24,397,0,single,1650278
+24,397,1,split twin,940727
+24,397,2,split,901137
+24,397,3,original twin,956687
+24,397,4,original,922392
+24,397,5,freeze twin,881693
+24,397,6,freeze,812690
+24,397,7,single twin,1019294
+24,1,0,freeze twin,902277
+24,1,1,original,780608
+24,1,2,original twin,989359
+24,1,3,split,553191
+24,1,4,split twin,1291970
+24,1,5,single,1937235
+24,1,6,single twin,1220796
+24,1,7,freeze,816609
+24,41,0,original,6454879
+24,41,1,freeze twin,6776820
+24,41,2,freeze,5897353
+24,41,3,single twin,4447768
+24,41,4,single,3338726
+24,41,5,split twin,4464134
+24,41,6,split,2310290
+24,41,7,original twin,2220748
+24,56,0,original twin,3522243
+24,56,1,split,2667371
+24,56,2,split twin,2842589
+24,56,3,single,2760939
+24,56,4,single twin,3829944
+24,56,5,freeze,2079341
+24,56,6,freeze twin,3176196
+24,56,7,original,2657605
+24,85,0,split,1040008
+24,85,1,original twin,816005
+24,85,2,original,714975
+24,85,3,freeze twin,760073
+24,85,4,freeze,737563
+24,85,5,single twin,749144
+24,85,6,single,698256
+24,85,7,split twin,726721
+24,134,0,split twin,777496
+24,134,1,single,706711
+24,134,2,single twin,633471
+24,134,3,freeze,842394
+24,134,4,freeze twin,1027720
+24,134,5,original,961302
+24,134,6,original twin,1147658
+24,134,7,split,1502694
+24,165,0,single,4146866
+24,165,1,split twin,2645875
+24,165,2,split,1981985
+24,165,3,original twin,2218535
+24,165,4,original,2602209
+24,165,5,freeze twin,2167353
+24,165,6,freeze,1830027
+24,165,7,single twin,2697871
+24,176,0,single twin,929263
+24,176,1,freeze,698607
+24,176,2,freeze twin,643168
+24,176,3,original,682874
+24,176,4,original twin,623044
+24,176,5,split,603300
+24,176,6,split twin,651141
+24,176,7,single,735279
+24,225,0,freeze,995530
+24,225,1,single twin,1084761
+24,225,2,single,680841
+24,225,3,split twin,919565
+24,225,4,split,695813
+24,225,5,original twin,644807
+24,225,6,original,558982
+24,225,7,freeze twin,867428
+25,359,0,single,635005
+25,359,1,split twin,617875
+25,359,2,split,822650
+25,359,3,original twin,486928
+25,359,4,original,407680
+25,359,5,freeze twin,451539
+25,359,6,freeze,426298
+25,359,7,single twin,542169
+25,313,0,split twin,821960
+25,313,1,single,855251
+25,313,2,single twin,647116
+25,313,3,freeze,688810
+25,313,4,freeze twin,656387
+25,313,5,original,763964
+25,313,6,original twin,740137
+25,313,7,split,671026
+25,278,0,split,1670761
+25,278,1,original twin,1681029
+25,278,2,original,1522364
+25,278,3,freeze twin,1548358
+25,278,4,freeze,1301695
+25,278,5,single twin,1761278
+25,278,6,single,2550602
+25,278,7,split twin,1529751
+25,270,0,original twin,2421539
+25,270,1,split,1522168
+25,270,2,split twin,2621268
+25,270,3,single,1685858
+25,270,4,single twin,1584033
+25,270,5,freeze,1221177
+25,270,6,freeze twin,1287640
+25,270,7,original,2908765
+25,269,0,original,2505035
+25,269,1,freeze twin,2639789
+25,269,2,freeze,1835345
+25,269,3,single twin,1545631
+25,269,4,single,1499840
+25,269,5,split twin,1164554
+25,269,6,split,1552728
+25,269,7,original twin,1734414
+25,225,0,freeze twin,754441
+25,225,1,original,663704
+25,225,2,original twin,658962
+25,225,3,split,835437
+25,225,4,split twin,638047
+25,225,5,single,726891
+25,225,6,single twin,650999
+25,225,7,freeze,623564
+25,176,0,freeze,603379
+25,176,1,single twin,551292
+25,176,2,single,512716
+25,176,3,split twin,541770
+25,176,4,split,608762
+25,176,5,original twin,780414
+25,176,6,original,682860
+25,176,7,freeze twin,831201
+25,165,0,single twin,6010675
+25,165,1,freeze,2249281
+25,165,2,freeze twin,2431811
+25,165,3,original,1702809
+25,165,4,original twin,2217267
+25,165,5,split,1964669
+25,165,6,split twin,2409945
+25,165,7,single,1974244
+25,134,0,single,886161
+25,134,1,split twin,803387
+25,134,2,split,675525
+25,134,3,original twin,854383
+25,134,4,original,930137
+25,134,5,freeze twin,2315208
+25,134,6,freeze,698501
+25,134,7,single twin,658525
+25,85,0,split twin,913248
+25,85,1,single,1321061
+25,85,2,single twin,651307
+25,85,3,freeze,1287125
+25,85,4,freeze twin,834849
+25,85,5,original,738388
+25,85,6,original twin,565664
+25,85,7,split,1210328
+25,56,0,split,2281535
+25,56,1,original twin,2118458
+25,56,2,original,1776652
+25,56,3,freeze twin,2107038
+25,56,4,freeze,2139668
+25,56,5,single twin,2152899
+25,56,6,single,2264749
+25,56,7,split twin,3033486
+25,41,0,original twin,2614425
+25,41,1,split,1700066
+25,41,2,split twin,2415621
+25,41,3,single,2014874
+25,41,4,single twin,1987695
+25,41,5,freeze,2390031
+25,41,6,freeze twin,3398860
+25,41,7,original,2862670
+25,1,0,original,1153297
+25,1,1,freeze twin,703165
+25,1,2,freeze,752558
+25,1,3,single twin,667013
+25,1,4,single,623137
+25,1,5,split twin,629406
+25,1,6,split,501845
+25,1,7,original twin,522092
+25,397,0,single twin,1285495
+25,397,1,freeze,817057
+25,397,2,freeze twin,865878
+25,397,3,original,974291
+25,397,4,original twin,916136
+25,397,5,split,1009539
+25,397,6,split twin,1055607
+25,397,7,single,810860
+26,134,0,single twin,702872
+26,134,1,single,1045347
+26,134,2,split twin,962949
+26,134,3,split,935591
+26,134,4,original twin,647259
+26,134,5,original,1164003
+26,134,6,freeze twin,1285482
+26,134,7,freeze,868075
+26,165,0,freeze,2979001
+26,165,1,freeze twin,16058446
+26,165,2,original,18788450
+26,165,3,original twin,2241706
+26,165,4,split,3181634
+26,165,5,split twin,2446268
+26,165,6,single,2266374
+26,165,7,single twin,1957989
+26,176,0,freeze twin,853781
+26,176,1,freeze,616575
+26,176,2,single twin,647436
+26,176,3,single,1401053
+26,176,4,split twin,725391
+26,176,5,split,536733
+26,176,6,original twin,854630
+26,176,7,original,912537
+26,225,0,original,806007
+26,225,1,original twin,735079
+26,225,2,split,673795
+26,225,3,split twin,1274149
+26,225,4,single,709138
+26,225,5,single twin,1180450
+26,225,6,freeze,1000284
+26,225,7,freeze twin,814254
+26,269,0,original twin,1995561
+26,269,1,original,1355619
+26,269,2,freeze twin,1230903
+26,269,3,freeze,1215665
+26,269,4,single twin,1618152
+26,269,5,single,1588177
+26,269,6,split twin,1174983
+26,269,7,split,1150863
+26,270,0,split,1398167
+26,270,1,split twin,1184562
+26,270,2,single,1569274
+26,270,3,single twin,1506850
+26,270,4,freeze,1047649
+26,270,5,freeze twin,1271257
+26,270,6,original,1576574
+26,270,7,original twin,1578600
+26,278,0,split twin,1833242
+26,278,1,split,1632967
+26,278,2,original twin,1659520
+26,278,3,original,1653296
+26,278,4,freeze twin,1383527
+26,278,5,freeze,1604657
+26,278,6,single twin,1513557
+26,278,7,single,1900086
+26,313,0,single,1166254
+26,313,1,single twin,769355
+26,313,2,freeze,1159864
+26,313,3,freeze twin,738055
+26,313,4,original,710254
+26,313,5,original twin,1043932
+26,313,6,split,1157210
+26,313,7,split twin,1292198
+26,359,0,single twin,1038114
+26,359,1,single,879684
+26,359,2,split twin,606222
+26,359,3,split,605962
+26,359,4,original twin,613452
+26,359,5,original,703797
+26,359,6,freeze twin,606553
+26,359,7,freeze,465799
+26,397,0,freeze,1048587
+26,397,1,freeze twin,872302
+26,397,2,original,1003758
+26,397,3,original twin,1080748
+26,397,4,split,824312
+26,397,5,split twin,887230
+26,397,6,single,1133945
+26,397,7,single twin,1195052
+26,1,0,original twin,956606
+26,1,1,original,639145
+26,1,2,freeze twin,762344
+26,1,3,freeze,663418
+26,1,4,single twin,832306
+26,1,5,single,877443
+26,1,6,split twin,497075
+26,1,7,split,497460
+26,41,0,split,3226888
+26,41,1,split twin,2029907
+26,41,2,single,2351455
+26,41,3,single twin,2586465
+26,41,4,freeze,2129674
+26,41,5,freeze twin,2138433
+26,41,6,original,2046317
+26,41,7,original twin,2340521
+26,56,0,split twin,5904654
+26,56,1,split,2697808
+26,56,2,original twin,2802054
+26,56,3,original,2212806
+26,56,4,freeze twin,1964265
+26,56,5,freeze,2076901
+26,56,6,single twin,2298155
+26,56,7,single,2803675
+26,85,0,single,1217945
+26,85,1,single twin,2337702
+26,85,2,freeze,1069528
+26,85,3,freeze twin,903144
+26,85,4,original,933251
+26,85,5,original twin,706650
+26,85,6,split,735786
+26,85,7,split twin,736744
+27,269,0,split,1747782
+27,269,1,original twin,2044184
+27,269,2,original,1549932
+27,269,3,freeze twin,1245147
+27,269,4,freeze,1213319
+27,269,5,single twin,1388523
+27,269,6,single,1633038
+27,269,7,split twin,1321931
+27,225,0,original twin,780121
+27,225,1,split,590394
+27,225,2,split twin,596149
+27,225,3,single,720254
+27,225,4,single twin,663554
+27,225,5,freeze,844386
+27,225,6,freeze twin,1163578
+27,225,7,original,958133
+27,176,0,original,1220622
+27,176,1,freeze twin,794521
+27,176,2,freeze,760068
+27,176,3,single twin,583030
+27,176,4,single,639734
+27,176,5,split twin,805762
+27,176,6,split,882345
+27,176,7,original twin,779030
+27,165,0,freeze twin,4026351
+27,165,1,original,4190931
+27,165,2,original twin,2403923
+27,165,3,split,1969424
+27,165,4,split twin,1766269
+27,165,5,single,2440200
+27,165,6,single twin,2494675
+27,165,7,freeze,2483787
+27,134,0,freeze,1181731
+27,134,1,single twin,824785
+27,134,2,single,698789
+27,134,3,split twin,832223
+27,134,4,split,673505
+27,134,5,original twin,861676
+27,134,6,original,622978
+27,134,7,freeze twin,636702
+27,85,0,single twin,976333
+27,85,1,freeze,1122836
+27,85,2,freeze twin,728511
+27,85,3,original,771663
+27,85,4,original twin,589182
+27,85,5,split,883567
+27,85,6,split twin,751975
+27,85,7,single,756455
+27,56,0,single,2048634
+27,56,1,split twin,1915264
+27,56,2,split,2313246
+27,56,3,original twin,2299854
+27,56,4,original,1827488
+27,56,5,freeze twin,1792149
+27,56,6,freeze,1955344
+27,56,7,single twin,2106385
+27,41,0,split twin,2520564
+27,41,1,single,2136603
+27,41,2,single twin,1985322
+27,41,3,freeze,2097305
+27,41,4,freeze twin,1982222
+27,41,5,original,1915531
+27,41,6,original twin,2237282
+27,41,7,split,2343016
+27,1,0,split,727019
+27,1,1,original twin,540366
+27,1,2,original,488802
+27,1,3,freeze twin,489007
+27,1,4,freeze,607799
+27,1,5,single twin,576971
+27,1,6,single,1020941
+27,1,7,split twin,582463
+27,397,0,freeze twin,973649
+27,397,1,original,854881
+27,397,2,original twin,804663
+27,397,3,split,820588
+27,397,4,split twin,719096
+27,397,5,single,798065
+27,397,6,single twin,776389
+27,397,7,freeze,721949
+27,359,0,freeze,535934
+27,359,1,single twin,462687
+27,359,2,single,471549
+27,359,3,split twin,505097
+27,359,4,split,481952
+27,359,5,original twin,429542
+27,359,6,original,439287
+27,359,7,freeze twin,435681
+27,313,0,single twin,858079
+27,313,1,freeze,694095
+27,313,2,freeze twin,662331
+27,313,3,original,692424
+27,313,4,original twin,818849
+27,313,5,split,634480
+27,313,6,split twin,726189
+27,313,7,single,831764
+27,278,0,single,2340727
+27,278,1,split twin,1560884
+27,278,2,split,1413940
+27,278,3,original twin,1930168
+27,278,4,original,2204329
+27,278,5,freeze twin,2501310
+27,278,6,freeze,2520134
+27,278,7,single twin,2439578
+27,270,0,split twin,2009056
+27,270,1,single,2500693
+27,270,2,single twin,2828906
+27,270,3,freeze,1218771
+27,270,4,freeze twin,1913626
+27,270,5,original,2475537
+27,270,6,original twin,2099494
+27,270,7,split,1321368
+28,1,0,split twin,756850
+28,1,1,split,655951
+28,1,2,original twin,637713
+28,1,3,original,633760
+28,1,4,freeze twin,666366
+28,1,5,freeze,554086
+28,1,6,single twin,542664
+28,1,7,single,823648
+28,41,0,single,2677833
+28,41,1,single twin,2006793
+28,41,2,freeze,1924981
+28,41,3,freeze twin,2337322
+28,41,4,original,2135400
+28,41,5,original twin,2180420
+28,41,6,split,1981986
+28,41,7,split twin,1831282
+28,56,0,single twin,2253169
+28,56,1,single,2238867
+28,56,2,split twin,1930075
+28,56,3,split,2252962
+28,56,4,original twin,1992164
+28,56,5,original,2000596
+28,56,6,freeze twin,2475859
+28,56,7,freeze,2649418
+28,85,0,freeze,1252215
+28,85,1,freeze twin,963318
+28,85,2,original,1112592
+28,85,3,original twin,842994
+28,85,4,split,870488
+28,85,5,split twin,666775
+28,85,6,single,837339
+28,85,7,single twin,867187
+28,134,0,freeze twin,882940
+28,134,1,freeze,2608466
+28,134,2,single twin,699794
+28,134,3,single,833858
+28,134,4,split twin,585499
+28,134,5,split,609353
+28,134,6,original twin,824812
+28,134,7,original,859013
+28,165,0,original,3486295
+28,165,1,original twin,2951115
+28,165,2,split,2239462
+28,165,3,split twin,2149833
+28,165,4,single,2268161
+28,165,5,single twin,2219538
+28,165,6,freeze,1897833
+28,165,7,freeze twin,2392362
+28,176,0,original twin,1208376
+28,176,1,original,1064664
+28,176,2,freeze twin,1122330
+28,176,3,freeze,1238961
+28,176,4,single twin,851161
+28,176,5,single,1354319
+28,176,6,split twin,1022713
+28,176,7,split,592563
+28,225,0,split,1792816
+28,225,1,split twin,906736
+28,225,2,single,976931
+28,225,3,single twin,1378322
+28,225,4,freeze,891678
+28,225,5,freeze twin,744723
+28,225,6,original,585847
+28,225,7,original twin,568368
+28,269,0,split twin,2703851
+28,269,1,split,1933935
+28,269,2,original twin,2248048
+28,269,3,original,3627505
+28,269,4,freeze twin,1476302
+28,269,5,freeze,1352251
+28,269,6,single twin,1476218
+28,269,7,single,2385648
+28,270,0,single,1961950
+28,270,1,single twin,1554617
+28,270,2,freeze,1234278
+28,270,3,freeze twin,1109132
+28,270,4,original,2134301
+28,270,5,original twin,1827960
+28,270,6,split,1141684
+28,270,7,split twin,1009945
+28,278,0,single twin,1734586
+28,278,1,single,1525612
+28,278,2,split twin,1272943
+28,278,3,split,1555718
+28,278,4,original twin,1782645
+28,278,5,original,1557975
+28,278,6,freeze twin,1449352
+28,278,7,freeze,1363859
+28,313,0,freeze,838728
+28,313,1,freeze twin,614933
+28,313,2,original,681057
+28,313,3,original twin,813370
+28,313,4,split,636713
+28,313,5,split twin,546777
+28,313,6,single,584027
+28,313,7,single twin,657448
+28,359,0,freeze twin,571371
+28,359,1,freeze,519101
+28,359,2,single twin,516088
+28,359,3,single,599883
+28,359,4,split twin,609525
+28,359,5,split,559484
+28,359,6,original twin,443228
+28,359,7,original,433838
+28,397,0,original,1311959
+28,397,1,original twin,824906
+28,397,2,split,779113
+28,397,3,split twin,761257
+28,397,4,single,947845
+28,397,5,single twin,768775
+28,397,6,freeze,858868
+28,397,7,freeze twin,748602
+29,134,0,original,720221
+29,134,1,freeze twin,593954
+29,134,2,freeze,575233
+29,134,3,single twin,875773
+29,134,4,single,745859
+29,134,5,split twin,600172
+29,134,6,split,571238
+29,134,7,original twin,881016
+29,85,0,freeze twin,875911
+29,85,1,original,812659
+29,85,2,original twin,675591
+29,85,3,split,644736
+29,85,4,split twin,659362
+29,85,5,single,672729
+29,85,6,single twin,614163
+29,85,7,freeze,821384
+29,56,0,freeze,2432147
+29,56,1,single twin,2584419
+29,56,2,single,2282512
+29,56,3,split twin,2105631
+29,56,4,split,2170608
+29,56,5,original twin,2495255
+29,56,6,original,3530014
+29,56,7,freeze twin,3066967
+29,41,0,single twin,4792826
+29,41,1,freeze,2751516
+29,41,2,freeze twin,2650787
+29,41,3,original,2390798
+29,41,4,original twin,3436361
+29,41,5,split,2046619
+29,41,6,split twin,1927017
+29,41,7,single,2848861
+29,1,0,single,1076552
+29,1,1,split twin,751174
+29,1,2,split,627410
+29,1,3,original twin,590560
+29,1,4,original,799087
+29,1,5,freeze twin,599253
+29,1,6,freeze,632558
+29,1,7,single twin,734860
+29,397,0,original twin,2183900
+29,397,1,split,807218
+29,397,2,split twin,867373
+29,397,3,single,924848
+29,397,4,single twin,1025566
+29,397,5,freeze,748426
+29,397,6,freeze twin,714214
+29,397,7,original,852558
+29,359,0,original,599998
+29,359,1,freeze twin,479560
+29,359,2,freeze,508820
+29,359,3,single twin,544104
+29,359,4,single,525671
+29,359,5,split twin,454013
+29,359,6,split,498817
+29,359,7,original twin,428448
+29,313,0,freeze twin,884372
+29,313,1,original,702377
+29,313,2,original twin,751956
+29,313,3,split,738058
+29,313,4,split twin,667938
+29,313,5,single,684278
+29,313,6,single twin,647399
+29,313,7,freeze,722725
+29,278,0,freeze,2640121
+29,278,1,single twin,2422589
+29,278,2,single,2538353
+29,278,3,split twin,2041034
+29,278,4,split,1854731
+29,278,5,original twin,2192951
+29,278,6,original,1590149
+29,278,7,freeze twin,1534251
+29,270,0,single twin,2357399
+29,270,1,freeze,1652469
+29,270,2,freeze twin,1270519
+29,270,3,original,1633973
+29,270,4,original twin,1780385
+29,270,5,split,1246769
+29,270,6,split twin,1258733
+29,270,7,single,1800595
+29,269,0,single,2425137
+29,269,1,split twin,1662772
+29,269,2,split,1550695
+29,269,3,original twin,1681424
+29,269,4,original,1282524
+29,269,5,freeze twin,1227224
+29,269,6,freeze,1379675
+29,269,7,single twin,2808714
+29,225,0,split twin,1588661
+29,225,1,single,1228388
+29,225,2,single twin,1132834
+29,225,3,freeze,1097078
+29,225,4,freeze twin,1221897
+29,225,5,original,1140317
+29,225,6,original twin,922108
+29,225,7,split,708729
+29,176,0,split,1004987
+29,176,1,original twin,915626
+29,176,2,original,891514
+29,176,3,freeze twin,798069
+29,176,4,freeze,1262730
+29,176,5,single twin,736353
+29,176,6,single,1430786
+29,176,7,split twin,787464
+29,165,0,original twin,3998580
+29,165,1,split,2918484
+29,165,2,split twin,2278756
+29,165,3,single,2647423
+29,165,4,single twin,2403676
+29,165,5,freeze,2158308
+29,165,6,freeze twin,2315601
+29,165,7,original,1879911
+30,278,0,freeze twin,1804924
+30,278,1,freeze,1574192
+30,278,2,single twin,1971322
+30,278,3,single,1696769
+30,278,4,split twin,1635947
+30,278,5,split,1787024
+30,278,6,original twin,2053192
+30,278,7,original,2267748
+30,313,0,original,909110
+30,313,1,original twin,730472
+30,313,2,split,1272637
+30,313,3,split twin,1016569
+30,313,4,single,1091630
+30,313,5,single twin,686617
+30,313,6,freeze,689446
+30,313,7,freeze twin,653680
+30,359,0,original twin,589261
+30,359,1,original,594452
+30,359,2,freeze twin,452933
+30,359,3,freeze,743517
+30,359,4,single twin,447835
+30,359,5,single,447565
+30,359,6,split twin,435793
+30,359,7,split,435921
+30,397,0,split,1104685
+30,397,1,split twin,783468
+30,397,2,single,885380
+30,397,3,single twin,928045
+30,397,4,freeze,1268846
+30,397,5,freeze twin,766306
+30,397,6,original,815323
+30,397,7,original twin,810530
+30,1,0,single twin,832935
+30,1,1,single,580396
+30,1,2,split twin,674837
+30,1,3,split,549150
+30,1,4,original twin,510348
+30,1,5,original,499129
+30,1,6,freeze twin,492455
+30,1,7,freeze,799909
+30,41,0,freeze,3471140
+30,41,1,freeze twin,2456047
+30,41,2,original,2363054
+30,41,3,original twin,2038657
+30,41,4,split,2867523
+30,41,5,split twin,2263336
+30,41,6,single,1951170
+30,41,7,single twin,2331796
+30,56,0,freeze twin,3204472
+30,56,1,freeze,5012486
+30,56,2,single twin,3547199
+30,56,3,single,2758819
+30,56,4,split twin,3473691
+30,56,5,split,4182093
+30,56,6,original twin,2368389
+30,56,7,original,2826994
+30,85,0,original,1312873
+30,85,1,original twin,1008021
+30,85,2,split,851382
+30,85,3,split twin,660718
+30,85,4,single,854807
+30,85,5,single twin,672078
+30,85,6,freeze,673014
+30,85,7,freeze twin,789719
+30,134,0,original twin,1168511
+30,134,1,original,836779
+30,134,2,freeze twin,707070
+30,134,3,freeze,662454
+30,134,4,single twin,621142
+30,134,5,single,674315
+30,134,6,split twin,722067
+30,134,7,split,605334
+30,165,0,split,1800433
+30,165,1,split twin,1922215
+30,165,2,single,2970337
+30,165,3,single twin,1881909
+30,165,4,freeze,1574419
+30,165,5,freeze twin,1870249
+30,165,6,original,2146660
+30,165,7,original twin,2969381
+30,176,0,split twin,930875
+30,176,1,split,900516
+30,176,2,original twin,827855
+30,176,3,original,667282
+30,176,4,freeze twin,934356
+30,176,5,freeze,863283
+30,176,6,single twin,896366
+30,176,7,single,869646
+30,225,0,single,962756
+30,225,1,single twin,847819
+30,225,2,freeze,647169
+30,225,3,freeze twin,707871
+30,225,4,original,727293
+30,225,5,original twin,622236
+30,225,6,split,577655
+30,225,7,split twin,685315
+30,269,0,single twin,2197597
+30,269,1,single,1895640
+30,269,2,split twin,1501487
+30,269,3,split,1289260
+30,269,4,original twin,1289257
+30,269,5,original,1372796
+30,269,6,freeze twin,1227938
+30,269,7,freeze,1335752
+30,270,0,freeze,1900920
+30,270,1,freeze twin,1796623
+30,270,2,original,2239278
+30,270,3,original twin,1637472
+30,270,4,split,1039179
+30,270,5,split twin,1195484
+30,270,6,single,2869250
+30,270,7,single twin,2036816
+31,1,0,freeze,687323
+31,1,1,single twin,624276
+31,1,2,single,753021
+31,1,3,split twin,1500663
+31,1,4,split,503640
+31,1,5,original twin,715284
+31,1,6,original,686154
+31,1,7,freeze twin,563600
+31,397,0,split twin,983499
+31,397,1,single,1612504
+31,397,2,single twin,1302205
+31,397,3,freeze,1193051
+31,397,4,freeze twin,1235002
+31,397,5,original,1018749
+31,397,6,original twin,1032110
+31,397,7,split,816892
+31,359,0,split,506447
+31,359,1,original twin,593684
+31,359,2,original,721140
+31,359,3,freeze twin,497738
+31,359,4,freeze,433805
+31,359,5,single twin,503187
+31,359,6,single,441190
+31,359,7,split twin,684389
+31,313,0,original twin,1038781
+31,313,1,split,764589
+31,313,2,split twin,777499
+31,313,3,single,723884
+31,313,4,single twin,1752295
+31,313,5,freeze,659956
+31,313,6,freeze twin,1502471
+31,313,7,original,809824
+31,278,0,original,2332749
+31,278,1,freeze twin,1836279
+31,278,2,freeze,1579039
+31,278,3,single twin,1511876
+31,278,4,single,1949650
+31,278,5,split twin,1721189
+31,278,6,split,2467008
+31,278,7,original twin,2737937
+31,270,0,freeze twin,1668626
+31,270,1,original,3420359
+31,270,2,original twin,2734555
+31,270,3,split,1255164
+31,270,4,split twin,1454054
+31,270,5,single,2589315
+31,270,6,single twin,1915758
+31,270,7,freeze,1265495
+31,269,0,freeze,1615426
+31,269,1,single twin,1336823
+31,269,2,single,1487720
+31,269,3,split twin,1323437
+31,269,4,split,1393767
+31,269,5,original twin,1318272
+31,269,6,original,1522999
+31,269,7,freeze twin,1372100
+31,225,0,single twin,993265
+31,225,1,freeze,694315
+31,225,2,freeze twin,575232
+31,225,3,original,610548
+31,225,4,original twin,1003464
+31,225,5,split,641986
+31,225,6,split twin,692833
+31,225,7,single,637576
+31,176,0,single,1148995
+31,176,1,split twin,562927
+31,176,2,split,558939
+31,176,3,original twin,610562
+31,176,4,original,746225
+31,176,5,freeze twin,648764
+31,176,6,freeze,636594
+31,176,7,single twin,549468
+31,165,0,split twin,2000325
+31,165,1,single,2115950
+31,165,2,single twin,2164020
+31,165,3,freeze,1719797
+31,165,4,freeze twin,2376697
+31,165,5,original,2170024
+31,165,6,original twin,3007690
+31,165,7,split,3096558
+31,134,0,split,1034641
+31,134,1,original twin,1347877
+31,134,2,original,1019534
+31,134,3,freeze twin,930895
+31,134,4,freeze,999703
+31,134,5,single twin,1564536
+31,134,6,single,1223320
+31,134,7,split twin,917690
+31,85,0,original twin,1584556
+31,85,1,split,1421428
+31,85,2,split twin,1002879
+31,85,3,single,700208
+31,85,4,single twin,857605
+31,85,5,freeze,828061
+31,85,6,freeze twin,801256
+31,85,7,original,978372
+31,56,0,original,3508991
+31,56,1,freeze twin,2387908
+31,56,2,freeze,3033633
+31,56,3,single twin,1955848
+31,56,4,single,2034514
+31,56,5,split twin,1878697
+31,56,6,split,2051624
+31,56,7,original twin,1971034
+31,41,0,freeze twin,3062349
+31,41,1,original,2325477
+31,41,2,original twin,2033005
+31,41,3,split,2124558
+31,41,4,split twin,1713361
+31,41,5,single,2447824
+31,41,6,single twin,2168022
+31,41,7,freeze,2164411
+32,176,0,single twin,937405
+32,176,1,single,1024051
+32,176,2,split twin,915803
+32,176,3,split,579295
+32,176,4,original twin,914956
+32,176,5,original,851757
+32,176,6,freeze twin,695681
+32,176,7,freeze,542309
+32,225,0,freeze,667979
+32,225,1,freeze twin,843669
+32,225,2,original,598428
+32,225,3,original twin,676100
+32,225,4,split,681578
+32,225,5,split twin,725372
+32,225,6,single,584958
+32,225,7,single twin,563513
+32,269,0,freeze twin,1515005
+32,269,1,freeze,1188180
+32,269,2,single twin,1350863
+32,269,3,single,1357301
+32,269,4,split twin,1143104
+32,269,5,split,1212287
+32,269,6,original twin,1437238
+32,269,7,original,1344994
+32,270,0,original,2510764
+32,270,1,original twin,1842884
+32,270,2,split,1251556
+32,270,3,split twin,1068767
+32,270,4,single,1587404
+32,270,5,single twin,1736219
+32,270,6,freeze,1348046
+32,270,7,freeze twin,1123247
+32,278,0,original twin,2808019
+32,278,1,original,2467565
+32,278,2,freeze twin,1557297
+32,278,3,freeze,1699747
+32,278,4,single twin,1555441
+32,278,5,single,1939187
+32,278,6,split twin,1722270
+32,278,7,split,2223163
+32,313,0,split,1971803
+32,313,1,split twin,1412499
+32,313,2,single,775502
+32,313,3,single twin,904938
+32,313,4,freeze,904787
+32,313,5,freeze twin,1174322
+32,313,6,original,827643
+32,313,7,original twin,707893
+32,359,0,split twin,755165
+32,359,1,split,556673
+32,359,2,original twin,663495
+32,359,3,original,474954
+32,359,4,freeze twin,590002
+32,359,5,freeze,468777
+32,359,6,single twin,603566
+32,359,7,single,593146
+32,397,0,single,1973236
+32,397,1,single twin,1373480
+32,397,2,freeze,1126855
+32,397,3,freeze twin,1091958
+32,397,4,original,1027496
+32,397,5,original twin,901622
+32,397,6,split,916061
+32,397,7,split twin,735197
+32,1,0,freeze twin,1156124
+32,1,1,freeze,813643
+32,1,2,single twin,591530
+32,1,3,single,667589
+32,1,4,split twin,659355
+32,1,5,split,688916
+32,1,6,original twin,564600
+32,1,7,original,543292
+32,41,0,original,2307713
+32,41,1,original twin,2083570
+32,41,2,split,2027782
+32,41,3,split twin,1711989
+32,41,4,single,2352303
+32,41,5,single twin,2476323
+32,41,6,freeze,1748055
+32,41,7,freeze twin,1818775
+32,56,0,original twin,2059192
+32,56,1,original,1932362
+32,56,2,freeze twin,1784991
+32,56,3,freeze,1904245
+32,56,4,single twin,2449589
+32,56,5,single,2024876
+32,56,6,split twin,1971139
+32,56,7,split,2044126
+32,85,0,split,883464
+32,85,1,split twin,712845
+32,85,2,single,813222
+32,85,3,single twin,808376
+32,85,4,freeze,737126
+32,85,5,freeze twin,714984
+32,85,6,original,713855
+32,85,7,original twin,851760
+32,134,0,split twin,982854
+32,134,1,split,661752
+32,134,2,original twin,748925
+32,134,3,original,671524
+32,134,4,freeze twin,586219
+32,134,5,freeze,696160
+32,134,6,single twin,695999
+32,134,7,single,580271
+32,165,0,single,2739935
+32,165,1,single twin,2401945
+32,165,2,freeze,1663441
+32,165,3,freeze twin,1921807
+32,165,4,original,2412487
+32,165,5,original twin,2164348
+32,165,6,split,2156102
+32,165,7,split twin,1813472
+33,278,0,split,1884676
+33,278,1,split twin,1683101
+33,278,2,single,2749300
+33,278,3,single twin,2500807
+33,278,4,freeze,2496934
+33,278,5,freeze twin,2883693
+33,278,6,original,2929072
+33,278,7,original twin,1533391
+33,270,0,original twin,2722016
+33,270,1,original,1867600
+33,270,2,freeze twin,1319097
+33,270,3,freeze,1253257
+33,270,4,single twin,2029250
+33,270,5,single,2193351
+33,270,6,split twin,1540728
+33,270,7,split,1350179
+33,269,0,original,1797216
+33,269,1,original twin,2213313
+33,269,2,split,1398210
+33,269,3,split twin,1743363
+33,269,4,single,1495455
+33,269,5,single twin,1589764
+33,269,6,freeze,1635739
+33,269,7,freeze twin,1357676
+33,225,0,freeze twin,891240
+33,225,1,freeze,688243
+33,225,2,single twin,1048870
+33,225,3,single,661764
+33,225,4,split twin,776775
+33,225,5,split,787513
+33,225,6,original twin,776818
+33,225,7,original,547802
+33,176,0,freeze,837868
+33,176,1,freeze twin,847661
+33,176,2,original,775880
+33,176,3,original twin,692381
+33,176,4,split,627613
+33,176,5,split twin,1067223
+33,176,6,single,797717
+33,176,7,single twin,777937
+33,165,0,single twin,2621142
+33,165,1,single,2292108
+33,165,2,split twin,2042121
+33,165,3,split,2623234
+33,165,4,original twin,3035064
+33,165,5,original,3092855
+33,165,6,freeze twin,2068181
+33,165,7,freeze,1918609
+33,134,0,single,777239
+33,134,1,single twin,807172
+33,134,2,freeze,734949
+33,134,3,freeze twin,698617
+33,134,4,original,607122
+33,134,5,original twin,549971
+33,134,6,split,643718
+33,134,7,split twin,670408
+33,85,0,split twin,826011
+33,85,1,split,905873
+33,85,2,original twin,719685
+33,85,3,original,738737
+33,85,4,freeze twin,1130875
+33,85,5,freeze,728987
+33,85,6,single twin,680879
+33,85,7,single,770462
+33,56,0,split,2362463
+33,56,1,split twin,4873281
+33,56,2,single,2154009
+33,56,3,single twin,2236850
+33,56,4,freeze,2031899
+33,56,5,freeze twin,4610150
+33,56,6,original,2908746
+33,56,7,original twin,2072026
+33,41,0,original twin,3052272
+33,41,1,original,2455511
+33,41,2,freeze twin,2215676
+33,41,3,freeze,1970712
+33,41,4,single twin,3104607
+33,41,5,single,2097258
+33,41,6,split twin,2018144
+33,41,7,split,2014296
+33,1,0,original,863520
+33,1,1,original twin,622132
+33,1,2,split,693932
+33,1,3,split twin,606273
+33,1,4,single,553793
+33,1,5,single twin,635020
+33,1,6,freeze,515031
+33,1,7,freeze twin,554008
+33,397,0,single twin,1429322
+33,397,1,single,1316692
+33,397,2,split twin,916681
+33,397,3,split,750109
+33,397,4,original twin,756815
+33,397,5,original,715577
+33,397,6,freeze twin,800387
+33,397,7,freeze,754932
+33,359,0,single,708429
+33,359,1,single twin,488219
+33,359,2,freeze,480544
+33,359,3,freeze twin,428214
+33,359,4,original,533596
+33,359,5,original twin,436266
+33,359,6,split,536853
+33,359,7,split twin,435321
+33,313,0,split twin,1139111
+33,313,1,split,711478
+33,313,2,original twin,722570
+33,313,3,original,667290
+33,313,4,freeze twin,723022
+33,313,5,freeze,823792
+33,313,6,single twin,608770
+33,313,7,single,659129
+34,56,0,split twin,2409859
+34,56,1,single,1910804
+34,56,2,single twin,1882712
+34,56,3,freeze,2076406
+34,56,4,freeze twin,1983760
+34,56,5,original,2255964
+34,56,6,original twin,1831853
+34,56,7,split,1830479
+34,85,0,single,768787
+34,85,1,split twin,659540
+34,85,2,split,647820
+34,85,3,original twin,577398
+34,85,4,original,572576
+34,85,5,freeze twin,805495
+34,85,6,freeze,708969
+34,85,7,single twin,845629
+34,134,0,single twin,682558
+34,134,1,freeze,606443
+34,134,2,freeze twin,645647
+34,134,3,original,605370
+34,134,4,original twin,591395
+34,134,5,split,713527
+34,134,6,split twin,576472
+34,134,7,single,610770
+34,165,0,freeze,1902189
+34,165,1,single twin,1964072
+34,165,2,single,2051388
+34,165,3,split twin,1648008
+34,165,4,split,1792654
+34,165,5,original twin,2140653
+34,165,6,original,2543033
+34,165,7,freeze twin,1865729
+34,176,0,freeze twin,781508
+34,176,1,original,638249
+34,176,2,original twin,566818
+34,176,3,split,609613
+34,176,4,split twin,587170
+34,176,5,single,544626
+34,176,6,single twin,687023
+34,176,7,freeze,904275
+34,225,0,original,1565956
+34,225,1,freeze twin,1139451
+34,225,2,freeze,968530
+34,225,3,single twin,1196402
+34,225,4,single,1044313
+34,225,5,split twin,676319
+34,225,6,split,771503
+34,225,7,original twin,750925
+34,269,0,original twin,2085594
+34,269,1,split,1481076
+34,269,2,split twin,1274143
+34,269,3,single,1648422
+34,269,4,single twin,1606510
+34,269,5,freeze,1686026
+34,269,6,freeze twin,1516952
+34,269,7,original,2076443
+34,270,0,split,1967120
+34,270,1,original twin,1930238
+34,270,2,original,1838655
+34,270,3,freeze twin,1116873
+34,270,4,freeze,1222807
+34,270,5,single twin,1819063
+34,270,6,single,1890404
+34,270,7,split twin,1301118
+34,278,0,split twin,2009790
+34,278,1,single,3157116
+34,278,2,single twin,2091517
+34,278,3,freeze,1961701
+34,278,4,freeze twin,2271892
+34,278,5,original,1861253
+34,278,6,original twin,2449997
+34,278,7,split,2188594
+34,313,0,single,979832
+34,313,1,split twin,1259416
+34,313,2,split,842291
+34,313,3,original twin,1126280
+34,313,4,original,1397807
+34,313,5,freeze twin,1203346
+34,313,6,freeze,1286600
+34,313,7,single twin,1278825
+34,359,0,single twin,1374225
+34,359,1,freeze,614975
+34,359,2,freeze twin,536426
+34,359,3,original,663640
+34,359,4,original twin,666483
+34,359,5,split,1109438
+34,359,6,split twin,600842
+34,359,7,single,901791
+34,397,0,freeze,1159375
+34,397,1,single twin,1047887
+34,397,2,single,982361
+34,397,3,split twin,937115
+34,397,4,split,1001715
+34,397,5,original twin,864660
+34,397,6,original,972709
+34,397,7,freeze twin,846314
+34,1,0,original twin,1203593
+34,1,1,split,589752
+34,1,2,split twin,678116
+34,1,3,single,713947
+34,1,4,single twin,697474
+34,1,5,freeze,652466
+34,1,6,freeze twin,565995
+34,1,7,original,641816
+34,41,0,split,2337864
+34,41,1,original twin,2812007
+34,41,2,original,2313251
+34,41,3,freeze twin,2851574
+34,41,4,freeze,3251900
+34,41,5,single twin,3203679
+34,41,6,single,2312831
+34,41,7,split twin,1821166
+35,176,0,original,757135
+35,176,1,original twin,554632
+35,176,2,split,790728
+35,176,3,split twin,709516
+35,176,4,single,651290
+35,176,5,single twin,568805
+35,176,6,freeze,726294
+35,176,7,freeze twin,598666
+35,165,0,freeze twin,2151126
+35,165,1,freeze,2032964
+35,165,2,single twin,2558583
+35,165,3,single,1782886
+35,165,4,split twin,1963742
+35,165,5,split,2491449
+35,165,6,original twin,1876893
+35,165,7,original,1797695
+35,134,0,freeze,792138
+35,134,1,freeze twin,611603
+35,134,2,original,599593
+35,134,3,original twin,576706
+35,134,4,split,560028
+35,134,5,split twin,638827
+35,134,6,single,700445
+35,134,7,single twin,860023
+35,85,0,single twin,1216790
+35,85,1,single,1111349
+35,85,2,split twin,794473
+35,85,3,split,926050
+35,85,4,original twin,682148
+35,85,5,original,724047
+35,85,6,freeze twin,722537
+35,85,7,freeze,758017
+35,56,0,single,2573776
+35,56,1,single twin,2292358
+35,56,2,freeze,2060141
+35,56,3,freeze twin,2050081
+35,56,4,original,2455577
+35,56,5,original twin,2103672
+35,56,6,split,1887143
+35,56,7,split twin,1833093
+35,41,0,split twin,2187207
+35,41,1,split,2015098
+35,41,2,original twin,2117636
+35,41,3,original,2098643
+35,41,4,freeze twin,2399797
+35,41,5,freeze,3440833
+35,41,6,single twin,3020870
+35,41,7,single,2497113
+35,1,0,split,959350
+35,1,1,split twin,832943
+35,1,2,single,621039
+35,1,3,single twin,496883
+35,1,4,freeze,660348
+35,1,5,freeze twin,592854
+35,1,6,original,583849
+35,1,7,original twin,515638
+35,397,0,freeze twin,816281
+35,397,1,freeze,801332
+35,397,2,single twin,1093918
+35,397,3,single,913641
+35,397,4,split twin,838775
+35,397,5,split,710480
+35,397,6,original twin,890674
+35,397,7,original,918255
+35,359,0,freeze,662774
+35,359,1,freeze twin,594359
+35,359,2,original,430047
+35,359,3,original twin,436215
+35,359,4,split,584596
+35,359,5,split twin,670902
+35,359,6,single,594846
+35,359,7,single twin,750256
+35,313,0,single twin,1410840
+35,313,1,single,1432432
+35,313,2,split twin,1085960
+35,313,3,split,987189
+35,313,4,original twin,988286
+35,313,5,original,953655
+35,313,6,freeze twin,854586
+35,313,7,freeze,963573
+35,278,0,single,2773582
+35,278,1,single twin,2072267
+35,278,2,freeze,1600177
+35,278,3,freeze twin,1614141
+35,278,4,original,3075312
+35,278,5,original twin,2110102
+35,278,6,split,2416267
+35,278,7,split twin,1777858
+35,270,0,split twin,2238521
+35,270,1,split,1638374
+35,270,2,original twin,1796580
+35,270,3,original,1802991
+35,270,4,freeze twin,1073567
+35,270,5,freeze,1176173
+35,270,6,single twin,2408128
+35,270,7,single,1918047
+35,269,0,split,2414605
+35,269,1,split twin,2135774
+35,269,2,single,1635473
+35,269,3,single twin,1779402
+35,269,4,freeze,1364371
+35,269,5,freeze twin,1535974
+35,269,6,original,1558802
+35,269,7,original twin,1412053
+35,225,0,original twin,1020858
+35,225,1,original,679864
+35,225,2,freeze twin,636155
+35,225,3,freeze,578285
+35,225,4,single twin,597286
+35,225,5,single,572569
+35,225,6,split twin,562369
+35,225,7,split,822566
+36,359,0,freeze twin,712415
+36,359,1,original,638024
+36,359,2,original twin,435314
+36,359,3,split,623956
+36,359,4,split twin,432590
+36,359,5,single,775394
+36,359,6,single twin,475091
+36,359,7,freeze,663611
+36,397,0,original,1409441
+36,397,1,freeze twin,1055726
+36,397,2,freeze,977706
+36,397,3,single twin,946888
+36,397,4,single,1020267
+36,397,5,split twin,1096243
+36,397,6,split,1245728
+36,397,7,original twin,880978
+36,1,0,split twin,757392
+36,1,1,single,754337
+36,1,2,single twin,804824
+36,1,3,freeze,828819
+36,1,4,freeze twin,710316
+36,1,5,original,719053
+36,1,6,original twin,710045
+36,1,7,split,598931
+36,41,0,single,3153076
+36,41,1,split twin,2447392
+36,41,2,split,2121119
+36,41,3,original twin,2824057
+36,41,4,original,2843793
+36,41,5,freeze twin,2747096
+36,41,6,freeze,2108332
+36,41,7,single twin,2716341
+36,56,0,single twin,4381856
+36,56,1,freeze,2684579
+36,56,2,freeze twin,1950873
+36,56,3,original,2070870
+36,56,4,original twin,2665473
+36,56,5,split,3144746
+36,56,6,split twin,2826150
+36,56,7,single,2651235
+36,85,0,freeze,1062500
+36,85,1,single twin,1067964
+36,85,2,single,786813
+36,85,3,split twin,1041545
+36,85,4,split,672632
+36,85,5,original twin,676312
+36,85,6,original,711359
+36,85,7,freeze twin,867893
+36,134,0,freeze twin,1021991
+36,134,1,original,982360
+36,134,2,original twin,1989779
+36,134,3,split,641855
+36,134,4,split twin,610490
+36,134,5,single,682237
+36,134,6,single twin,782083
+36,134,7,freeze,631159
+36,165,0,original,3009834
+36,165,1,freeze twin,1986621
+36,165,2,freeze,2151719
+36,165,3,single twin,3045215
+36,165,4,single,3791158
+36,165,5,split twin,2207560
+36,165,6,split,1609968
+36,165,7,original twin,2362790
+36,176,0,original twin,1262420
+36,176,1,split,774269
+36,176,2,split twin,613057
+36,176,3,single,886931
+36,176,4,single twin,580173
+36,176,5,freeze,642417
+36,176,6,freeze twin,535720
+36,176,7,original,710728
+36,225,0,split,812056
+36,225,1,original twin,624248
+36,225,2,original,521749
+36,225,3,freeze twin,573198
+36,225,4,freeze,760474
+36,225,5,single twin,611970
+36,225,6,single,564805
+36,225,7,split twin,595799
+36,269,0,split twin,1333443
+36,269,1,single,1987096
+36,269,2,single twin,1769099
+36,269,3,freeze,1416928
+36,269,4,freeze twin,1356328
+36,269,5,original,1753531
+36,269,6,original twin,1439416
+36,269,7,split,1442505
+36,270,0,single,2627515
+36,270,1,split twin,1156777
+36,270,2,split,1206305
+36,270,3,original twin,1541749
+36,270,4,original,1713402
+36,270,5,freeze twin,1372091
+36,270,6,freeze,1571773
+36,270,7,single twin,1707097
+36,278,0,single twin,2389541
+36,278,1,freeze,1727848
+36,278,2,freeze twin,2224240
+36,278,3,original,2733724
+36,278,4,original twin,2093143
+36,278,5,split,1561781
+36,278,6,split twin,1468089
+36,278,7,single,2763499
+36,313,0,freeze,1253630
+36,313,1,single twin,774423
+36,313,2,single,955549
+36,313,3,split twin,1343302
+36,313,4,split,821962
+36,313,5,original twin,641019
+36,313,6,original,565236
+36,313,7,freeze twin,637842
+37,56,0,freeze,2231975
+37,56,1,freeze twin,2172228
+37,56,2,original,1956911
+37,56,3,original twin,1837258
+37,56,4,split,1875785
+37,56,5,split twin,2075689
+37,56,6,single,2087346
+37,56,7,single twin,2097582
+37,41,0,single twin,2658320
+37,41,1,single,3577557
+37,41,2,split twin,2178140
+37,41,3,split,2238951
+37,41,4,original twin,1931527
+37,41,5,original,1967473
+37,41,6,freeze twin,1813712
+37,41,7,freeze,2427770
+37,1,0,single,776375
+37,1,1,single twin,618883
+37,1,2,freeze,645298
+37,1,3,freeze twin,584443
+37,1,4,original,995469
+37,1,5,original twin,756711
+37,1,6,split,924907
+37,1,7,split twin,1281050
+37,397,0,original twin,1498217
+37,397,1,original,1034059
+37,397,2,freeze twin,954324
+37,397,3,freeze,885791
+37,397,4,single twin,871947
+37,397,5,single,1132587
+37,397,6,split twin,906300
+37,397,7,split,772520
+37,359,0,original,816971
+37,359,1,original twin,665876
+37,359,2,split,596343
+37,359,3,split twin,632735
+37,359,4,single,828474
+37,359,5,single twin,519080
+37,359,6,freeze,689705
+37,359,7,freeze twin,585429
+37,313,0,freeze twin,884699
+37,313,1,freeze,705782
+37,313,2,single twin,612553
+37,313,3,single,656352
+37,313,4,split twin,653451
+37,313,5,split,670489
+37,313,6,original twin,614907
+37,313,7,original,950082
+37,278,0,freeze,3154498
+37,278,1,freeze twin,1355374
+37,278,2,original,2007920
+37,278,3,original twin,1843439
+37,278,4,split,1500197
+37,278,5,split twin,1462104
+37,278,6,single,1955907
+37,278,7,single twin,1875906
+37,270,0,single twin,2357269
+37,270,1,single,2502153
+37,270,2,split twin,3840656
+37,270,3,split,1749860
+37,270,4,original twin,2854098
+37,270,5,original,1583059
+37,270,6,freeze twin,1298560
+37,270,7,freeze,1352127
+37,269,0,single,1835196
+37,269,1,single twin,1781287
+37,269,2,freeze,1433640
+37,269,3,freeze twin,1315454
+37,269,4,original,1996964
+37,269,5,original twin,1492011
+37,269,6,split,1367611
+37,269,7,split twin,1560980
+37,225,0,split twin,1025739
+37,225,1,split,637472
+37,225,2,original twin,677228
+37,225,3,original,627584
+37,225,4,freeze twin,572824
+37,225,5,freeze,1056436
+37,225,6,single twin,789119
+37,225,7,single,767894
+37,176,0,split,1159963
+37,176,1,split twin,632116
+37,176,2,single,645072
+37,176,3,single twin,529136
+37,176,4,freeze,1168926
+37,176,5,freeze twin,720773
+37,176,6,original,593633
+37,176,7,original twin,732011
+37,165,0,original twin,2952541
+37,165,1,original,2037807
+37,165,2,freeze twin,1824871
+37,165,3,freeze,1866389
+37,165,4,single twin,2441949
+37,165,5,single,1888050
+37,165,6,split twin,1657691
+37,165,7,split,2680871
+37,134,0,original,1585038
+37,134,1,original twin,934255
+37,134,2,split,1177803
+37,134,3,split twin,711057
+37,134,4,single,848000
+37,134,5,single twin,718815
+37,134,6,freeze,911269
+37,134,7,freeze twin,740202
+37,85,0,freeze twin,1006153
+37,85,1,freeze,1048116
+37,85,2,single twin,810650
+37,85,3,single,903248
+37,85,4,split twin,910863
+37,85,5,split,725949
+37,85,6,original twin,686748
+37,85,7,original,694199
+38,269,0,single twin,1439143
+38,269,1,freeze,1298662
+38,269,2,freeze twin,1898514
+38,269,3,original,1562463
+38,269,4,original twin,1602704
+38,269,5,split,1216002
+38,269,6,split twin,1296354
+38,269,7,single,1746721
+38,270,0,freeze,1535490
+38,270,1,single twin,1694713
+38,270,2,single,1657063
+38,270,3,split twin,1176756
+38,270,4,split,1156509
+38,270,5,original twin,2002255
+38,270,6,original,1784431
+38,270,7,freeze twin,1037631
+38,278,0,freeze twin,1658637
+38,278,1,original,1966965
+38,278,2,original twin,1860506
+38,278,3,split,2593451
+38,278,4,split twin,2095904
+38,278,5,single,2222272
+38,278,6,single twin,1952126
+38,278,7,freeze,1609482
+38,313,0,original,748669
+38,313,1,freeze twin,711848
+38,313,2,freeze,714694
+38,313,3,single twin,619082
+38,313,4,single,782004
+38,313,5,split twin,588233
+38,313,6,split,667952
+38,313,7,original twin,858074
+38,359,0,original twin,679648
+38,359,1,split,531436
+38,359,2,split twin,460975
+38,359,3,single,661531
+38,359,4,single twin,736060
+38,359,5,freeze,728303
+38,359,6,freeze twin,749024
+38,359,7,original,709062
+38,397,0,split,979847
+38,397,1,original twin,1021464
+38,397,2,original,1086431
+38,397,3,freeze twin,890543
+38,397,4,freeze,820636
+38,397,5,single twin,864021
+38,397,6,single,930685
+38,397,7,split twin,808174
+38,1,0,single twin,791611
+38,1,1,freeze,706898
+38,1,2,freeze twin,897128
+38,1,3,original,576396
+38,1,4,original twin,623357
+38,1,5,split,821972
+38,1,6,split twin,1286365
+38,1,7,single,758370
+38,41,0,freeze,3015572
+38,41,1,single twin,2460519
+38,41,2,single,2546090
+38,41,3,split twin,1852402
+38,41,4,split,1806783
+38,41,5,original twin,3452579
+38,41,6,original,4725635
+38,41,7,freeze twin,4834372
+38,56,0,freeze twin,6903984
+38,56,1,original,6673151
+38,56,2,original twin,3061736
+38,56,3,split,3913472
+38,56,4,split twin,3139619
+38,56,5,single,3478768
+38,56,6,single twin,2150819
+38,56,7,freeze,1988035
+38,85,0,original,934604
+38,85,1,freeze twin,735678
+38,85,2,freeze,634300
+38,85,3,single twin,980636
+38,85,4,single,800989
+38,85,5,split twin,961140
+38,85,6,split,1038218
+38,85,7,original twin,1068448
+38,134,0,original twin,1292173
+38,134,1,split,883410
+38,134,2,split twin,953566
+38,134,3,single,742202
+38,134,4,single twin,860144
+38,134,5,freeze,730545
+38,134,6,freeze twin,699241
+38,134,7,original,743944
+38,165,0,split,2461386
+38,165,1,original twin,2424213
+38,165,2,original,2117600
+38,165,3,freeze twin,2872523
+38,165,4,freeze,2679490
+38,165,5,single twin,2097307
+38,165,6,single,2251022
+38,165,7,split twin,1779036
+38,176,0,split twin,887002
+38,176,1,single,669635
+38,176,2,single twin,618024
+38,176,3,freeze,584863
+38,176,4,freeze twin,754845
+38,176,5,original,814668
+38,176,6,original twin,503491
+38,176,7,split,542004
+38,225,0,single,1112855
+38,225,1,split twin,671459
+38,225,2,split,1282051
+38,225,3,original twin,672244
+38,225,4,original,598308
+38,225,5,freeze twin,604257
+38,225,6,freeze,595965
+38,225,7,single twin,798116
+39,359,0,split,592838
+39,359,1,split twin,679025
+39,359,2,single,524809
+39,359,3,single twin,474255
+39,359,4,freeze,1054419
+39,359,5,freeze twin,996723
+39,359,6,original,556851
+39,359,7,original twin,1277470
+39,313,0,original twin,835856
+39,313,1,original,1144520
+39,313,2,freeze twin,648792
+39,313,3,freeze,639562
+39,313,4,single twin,865916
+39,313,5,single,857203
+39,313,6,split twin,663621
+39,313,7,split,754257
+39,278,0,original,2215508
+39,278,1,original twin,1800807
+39,278,2,split,1502765
+39,278,3,split twin,1589587
+39,278,4,single,1648482
+39,278,5,single twin,1527608
+39,278,6,freeze,1393179
+39,278,7,freeze twin,1383393
+39,270,0,freeze twin,1641924
+39,270,1,freeze,1334311
+39,270,2,single twin,3285632
+39,270,3,single,2515309
+39,270,4,split twin,1270366
+39,270,5,split,1545899
+39,270,6,original twin,2218175
+39,270,7,original,2001066
+39,269,0,freeze,2009240
+39,269,1,freeze twin,1770398
+39,269,2,original,2367817
+39,269,3,original twin,1443663
+39,269,4,split,2045883
+39,269,5,split twin,1286797
+39,269,6,single,1481030
+39,269,7,single twin,1964485
+39,225,0,single twin,778206
+39,225,1,single,720907
+39,225,2,split twin,808197
+39,225,3,split,1321945
+39,225,4,original twin,955241
+39,225,5,original,1078161
+39,225,6,freeze twin,900514
+39,225,7,freeze,946267
+39,176,0,single,835661
+39,176,1,single twin,1033217
+39,176,2,freeze,728711
+39,176,3,freeze twin,632607
+39,176,4,original,618437
+39,176,5,original twin,1010769
+39,176,6,split,574139
+39,176,7,split twin,568792
+39,165,0,split twin,1724642
+39,165,1,split,1962146
+39,165,2,original twin,2621180
+39,165,3,original,1990354
+39,165,4,freeze twin,2156392
+39,165,5,freeze,2188431
+39,165,6,single twin,2201448
+39,165,7,single,2535776
+39,134,0,split,1072854
+39,134,1,split twin,1138029
+39,134,2,single,1564897
+39,134,3,single twin,1224165
+39,134,4,freeze,1357508
+39,134,5,freeze twin,870562
+39,134,6,original,989421
+39,134,7,original twin,974805
+39,85,0,original twin,1265056
+39,85,1,original,729332
+39,85,2,freeze twin,1020425
+39,85,3,freeze,724422
+39,85,4,single twin,1088642
+39,85,5,single,663068
+39,85,6,split twin,1071580
+39,85,7,split,1037257
+39,56,0,original,2187269
+39,56,1,original twin,2442655
+39,56,2,split,2023973
+39,56,3,split twin,1995983
+39,56,4,single,1868314
+39,56,5,single twin,1986790
+39,56,6,freeze,1819188
+39,56,7,freeze twin,2259631
+39,41,0,freeze twin,2786975
+39,41,1,freeze,2175379
+39,41,2,single twin,2064988
+39,41,3,single,2539807
+39,41,4,split twin,2324441
+39,41,5,split,2539870
+39,41,6,original twin,2122356
+39,41,7,original,2054477
+39,1,0,freeze,917213
+39,1,1,freeze twin,927991
+39,1,2,original,676322
+39,1,3,original twin,589939
+39,1,4,split,770380
+39,1,5,split twin,569001
+39,1,6,single,533537
+39,1,7,single twin,604706
+39,397,0,split twin,1148324
+39,397,1,split,1053367
+39,397,2,original twin,922089
+39,397,3,original,837860
+39,397,4,freeze twin,823773
+39,397,5,freeze,1062312
+39,397,6,single twin,856570
+39,397,7,single,848012
+40,134,0,split twin,738497
+40,134,1,single,669701
+40,134,2,single twin,709791
+40,134,3,freeze,741562
+40,134,4,freeze twin,788038
+40,134,5,original,616437
+40,134,6,original twin,733369
+40,134,7,split,704168
+40,165,0,single,2866582
+40,165,1,split twin,2284916
+40,165,2,split,1857427
+40,165,3,original twin,1973379
+40,165,4,original,2808282
+40,165,5,freeze twin,1974132
+40,165,6,freeze,2001431
+40,165,7,single twin,2115056
+40,176,0,single twin,645608
+40,176,1,freeze,640154
+40,176,2,freeze twin,645136
+40,176,3,original,732432
+40,176,4,original twin,806046
+40,176,5,split,664221
+40,176,6,split twin,669939
+40,176,7,single,668621
+40,225,0,freeze,839708
+40,225,1,single twin,828461
+40,225,2,single,674155
+40,225,3,split twin,680992
+40,225,4,split,608090
+40,225,5,original twin,573662
+40,225,6,original,506533
+40,225,7,freeze twin,648217
+40,269,0,freeze twin,1191983
+40,269,1,original,1302730
+40,269,2,original twin,1413358
+40,269,3,split,1438433
+40,269,4,split twin,1155631
+40,269,5,single,1330242
+40,269,6,single twin,2101874
+40,269,7,freeze,1454305
+40,270,0,original,1990794
+40,270,1,freeze twin,1182457
+40,270,2,freeze,1280637
+40,270,3,single twin,1633673
+40,270,4,single,1507636
+40,270,5,split twin,1053997
+40,270,6,split,1024898
+40,270,7,original twin,1557007
+40,278,0,original twin,1860502
+40,278,1,split,1500941
+40,278,2,split twin,1348873
+40,278,3,single,1686655
+40,278,4,single twin,1910637
+40,278,5,freeze,1468561
+40,278,6,freeze twin,1299533
+40,278,7,original,1487878
+40,313,0,split,834513
+40,313,1,original twin,692588
+40,313,2,original,654129
+40,313,3,freeze twin,702767
+40,313,4,freeze,832742
+40,313,5,single twin,894119
+40,313,6,single,804802
+40,313,7,split twin,732178
+40,359,0,split twin,826639
+40,359,1,single,662066
+40,359,2,single twin,598776
+40,359,3,freeze,488595
+40,359,4,freeze twin,654131
+40,359,5,original,475073
+40,359,6,original twin,573702
+40,359,7,split,518668
+40,397,0,single,1135850
+40,397,1,split twin,982290
+40,397,2,split,1007180
+40,397,3,original twin,877071
+40,397,4,original,838819
+40,397,5,freeze twin,713176
+40,397,6,freeze,711815
+40,397,7,single twin,797278
+40,1,0,freeze twin,601070
+40,1,1,original,504817
+40,1,2,original twin,540120
+40,1,3,split,496220
+40,1,4,split twin,508994
+40,1,5,single,505630
+40,1,6,single twin,565389
+40,1,7,freeze,592670
+40,41,0,original,2119184
+40,41,1,freeze twin,1866852
+40,41,2,freeze,2090713
+40,41,3,single twin,2989624
+40,41,4,single,2430190
+40,41,5,split twin,2819405
+40,41,6,split,2586720
+40,41,7,original twin,3522315
+40,56,0,original twin,2357561
+40,56,1,split,2293694
+40,56,2,split twin,1918161
+40,56,3,single,2627574
+40,56,4,single twin,2667496
+40,56,5,freeze,3433927
+40,56,6,freeze twin,2960629
+40,56,7,original,3129484
+40,85,0,split,1125114
+40,85,1,original twin,891096
+40,85,2,original,746953
+40,85,3,freeze twin,633836
+40,85,4,freeze,743039
+40,85,5,single twin,675512
+40,85,6,single,900755
+40,85,7,split twin,646665

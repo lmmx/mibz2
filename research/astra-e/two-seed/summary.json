@@ -1,0 +1,886 @@
+{
+  "all": {
+    "original twin/original": [
+      0.993859,
+      0.94093,
+      1.049766
+    ],
+    "single twin/single": [
+      0.999021,
+      0.962339,
+      1.0371
+    ],
+    "split twin/split": [
+      1.014776,
+      0.977829,
+      1.053119
+    ],
+    "freeze twin/freeze": [
+      1.023301,
+      0.976385,
+      1.072471
+    ],
+    "paired single/original": [
+      1.011472,
+      0.970343,
+      1.054346
+    ],
+    "paired split/original": [
+      0.922052,
+      0.88761,
+      0.95783
+    ],
+    "paired freeze/original": [
+      0.922818,
+      0.887876,
+      0.959135
+    ],
+    "paired split/single": [
+      0.911594,
+      0.884328,
+      0.9397
+    ],
+    "paired freeze/single": [
+      0.912351,
+      0.882842,
+      0.942847
+    ],
+    "paired freeze/split": [
+      1.000831,
+      0.962235,
+      1.040975
+    ]
+  },
+  "ordinary": {
+    "original twin/original": [
+      1.014801,
+      0.959572,
+      1.073209
+    ],
+    "single twin/single": [
+      0.974228,
+      0.913784,
+      1.038671
+    ],
+    "split twin/split": [
+      1.025043,
+      0.966231,
+      1.087435
+    ],
+    "freeze twin/freeze": [
+      0.984336,
+      0.948111,
+      1.021946
+    ],
+    "paired single/original": [
+      1.021091,
+      0.966707,
+      1.078536
+    ],
+    "paired split/original": [
+      0.96996,
+      0.921461,
+      1.021012
+    ],
+    "paired freeze/original": [
+      0.941332,
+      0.892418,
+      0.992927
+    ],
+    "paired split/single": [
+      0.949925,
+      0.908361,
+      0.993391
+    ],
+    "paired freeze/single": [
+      0.921888,
+      0.885877,
+      0.959363
+    ],
+    "paired freeze/split": [
+      0.970485,
+      0.933051,
+      1.009421
+    ]
+  },
+  "dense": {
+    "original twin/original": [
+      0.983769,
+      0.91925,
+      1.052817
+    ],
+    "single twin/single": [
+      1.018893,
+      0.97676,
+      1.062842
+    ],
+    "split twin/split": [
+      1.003515,
+      0.94921,
+      1.060926
+    ],
+    "freeze twin/freeze": [
+      1.048579,
+      0.97654,
+      1.125933
+    ],
+    "paired single/original": [
+      1.008759,
+      0.95547,
+      1.06502
+    ],
+    "paired split/original": [
+      0.89037,
+      0.844807,
+      0.938391
+    ],
+    "paired freeze/original": [
+      0.912997,
+      0.868284,
+      0.960012
+    ],
+    "paired split/single": [
+      0.882639,
+      0.845371,
+      0.921551
+    ],
+    "paired freeze/single": [
+      0.90507,
+      0.862707,
+      0.949512
+    ],
+    "paired freeze/split": [
+      1.025413,
+      0.974792,
+      1.078663
+    ]
+  },
+  "1": {
+    "original twin/original": [
+      1.017132,
+      0.879557,
+      1.176226
+    ],
+    "single twin/single": [
+      0.953267,
+      0.854088,
+      1.063963
+    ],
+    "split twin/split": [
+      1.082191,
+      0.956742,
+      1.224089
+    ],
+    "freeze twin/freeze": [
+      1.02597,
+      0.942135,
+      1.117265
+    ],
+    "paired single/original": [
+      1.006757,
+      0.895565,
+      1.131754
+    ],
+    "paired split/original": [
+      1.00345,
+      0.913216,
+      1.102599
+    ],
+    "paired freeze/original": [
+      0.965022,
+      0.856023,
+      1.0879
+    ],
+    "paired split/single": [
+      0.996715,
+      0.909637,
+      1.092129
+    ],
+    "paired freeze/single": [
+      0.958545,
+      0.886048,
+      1.036974
+    ],
+    "paired freeze/split": [
+      0.961704,
+      0.871464,
+      1.061289
+    ]
+  },
+  "41": {
+    "original twin/original": [
+      1.012996,
+      0.924174,
+      1.110354
+    ],
+    "single twin/single": [
+      1.028501,
+      0.938427,
+      1.127219
+    ],
+    "split twin/split": [
+      1.006765,
+      0.91847,
+      1.103548
+    ],
+    "freeze twin/freeze": [
+      1.042906,
+      0.95677,
+      1.136796
+    ],
+    "paired single/original": [
+      1.012633,
+      0.9116,
+      1.124864
+    ],
+    "paired split/original": [
+      0.959132,
+      0.843923,
+      1.090069
+    ],
+    "paired freeze/original": [
+      0.98457,
+      0.892015,
+      1.086727
+    ],
+    "paired split/single": [
+      0.947167,
+      0.853318,
+      1.051337
+    ],
+    "paired freeze/single": [
+      0.972287,
+      0.896366,
+      1.054638
+    ],
+    "paired freeze/split": [
+      1.026521,
+      0.923586,
+      1.140929
+    ]
+  },
+  "56": {
+    "original twin/original": [
+      1.035785,
+      0.918728,
+      1.167757
+    ],
+    "single twin/single": [
+      1.033312,
+      0.948212,
+      1.12605
+    ],
+    "split twin/split": [
+      0.998251,
+      0.90808,
+      1.097376
+    ],
+    "freeze twin/freeze": [
+      1.034487,
+      0.906023,
+      1.181165
+    ],
+    "paired single/original": [
+      0.951239,
+      0.891452,
+      1.015036
+    ],
+    "paired split/original": [
+      0.995752,
+      0.917794,
+      1.080332
+    ],
+    "paired freeze/original": [
+      0.983605,
+      0.915011,
+      1.05734
+    ],
+    "paired split/single": [
+      1.046794,
+      0.971623,
+      1.127782
+    ],
+    "paired freeze/single": [
+      1.034024,
+      0.956985,
+      1.117266
+    ],
+    "paired freeze/split": [
+      0.987801,
+      0.895142,
+      1.090051
+    ]
+  },
+  "85": {
+    "original twin/original": [
+      1.012207,
+      0.912633,
+      1.122645
+    ],
+    "single twin/single": [
+      0.995467,
+      0.910271,
+      1.088636
+    ],
+    "split twin/split": [
+      0.945946,
+      0.867642,
+      1.031318
+    ],
+    "freeze twin/freeze": [
+      1.00052,
+      0.921628,
+      1.086165
+    ],
+    "paired single/original": [
+      1.036518,
+      0.911412,
+      1.178797
+    ],
+    "paired split/original": [
+      1.031112,
+      0.948072,
+      1.121425
+    ],
+    "paired freeze/original": [
+      1.007818,
+      0.905634,
+      1.121531
+    ],
+    "paired split/single": [
+      0.994784,
+      0.904092,
+      1.094574
+    ],
+    "paired freeze/single": [
+      0.972311,
+      0.879186,
+      1.075299
+    ],
+    "paired freeze/split": [
+      0.977409,
+      0.905131,
+      1.055458
+    ]
+  },
+  "134": {
+    "original twin/original": [
+      1.045057,
+      0.955351,
+      1.143187
+    ],
+    "single twin/single": [
+      0.954857,
+      0.855306,
+      1.065994
+    ],
+    "split twin/split": [
+      0.970442,
+      0.888286,
+      1.060196
+    ],
+    "freeze twin/freeze": [
+      0.929468,
+      0.821319,
+      1.051858
+    ],
+    "paired single/original": [
+      0.957208,
+      0.877983,
+      1.043583
+    ],
+    "paired split/original": [
+      0.923181,
+      0.829911,
+      1.026933
+    ],
+    "paired freeze/original": [
+      0.983139,
+      0.893805,
+      1.081402
+    ],
+    "paired split/single": [
+      0.964451,
+      0.880178,
+      1.056793
+    ],
+    "paired freeze/single": [
+      1.02709,
+      0.946482,
+      1.114564
+    ],
+    "paired freeze/split": [
+      1.064948,
+      0.961737,
+      1.179235
+    ]
+  },
+  "165": {
+    "original twin/original": [
+      0.93152,
+      0.809883,
+      1.071427
+    ],
+    "single twin/single": [
+      1.039821,
+      0.919817,
+      1.175482
+    ],
+    "split twin/split": [
+      0.965154,
+      0.877782,
+      1.061222
+    ],
+    "freeze twin/freeze": [
+      1.091491,
+      0.981078,
+      1.21433
+    ],
+    "paired single/original": [
+      1.019956,
+      0.917565,
+      1.133773
+    ],
+    "paired split/original": [
+      0.875286,
+      0.794251,
+      0.964589
+    ],
+    "paired freeze/original": [
+      0.884506,
+      0.824008,
+      0.949446
+    ],
+    "paired split/single": [
+      0.85816,
+      0.786794,
+      0.936
+    ],
+    "paired freeze/single": [
+      0.8672,
+      0.785214,
+      0.957747
+    ],
+    "paired freeze/split": [
+      1.010534,
+      0.912016,
+      1.119694
+    ]
+  },
+  "176": {
+    "original twin/original": [
+      0.948346,
+      0.868391,
+      1.035661
+    ],
+    "single twin/single": [
+      0.95524,
+      0.846316,
+      1.078184
+    ],
+    "split twin/split": [
+      1.042707,
+      0.946538,
+      1.148646
+    ],
+    "freeze twin/freeze": [
+      0.951299,
+      0.88211,
+      1.025915
+    ],
+    "paired single/original": [
+      1.047554,
+      0.960353,
+      1.142673
+    ],
+    "paired split/original": [
+      1.010668,
+      0.938351,
+      1.088559
+    ],
+    "paired freeze/original": [
+      1.010968,
+      0.930952,
+      1.097861
+    ],
+    "paired split/single": [
+      0.964789,
+      0.880184,
+      1.057526
+    ],
+    "paired freeze/single": [
+      0.965075,
+      0.894435,
+      1.041294
+    ],
+    "paired freeze/split": [
+      1.000297,
+      0.930313,
+      1.075544
+    ]
+  },
+  "225": {
+    "original twin/original": [
+      1.035055,
+      0.927614,
+      1.154941
+    ],
+    "single twin/single": [
+      1.038168,
+      0.898697,
+      1.199283
+    ],
+    "split twin/split": [
+      1.043811,
+      0.905979,
+      1.202612
+    ],
+    "freeze twin/freeze": [
+      1.043713,
+      0.92701,
+      1.175109
+    ],
+    "paired single/original": [
+      1.169137,
+      1.045475,
+      1.307427
+    ],
+    "paired split/original": [
+      1.06674,
+      0.970576,
+      1.172431
+    ],
+    "paired freeze/original": [
+      1.057358,
+      0.990172,
+      1.129102
+    ],
+    "paired split/single": [
+      0.912416,
+      0.813471,
+      1.023396
+    ],
+    "paired freeze/single": [
+      0.904391,
+      0.810238,
+      1.009485
+    ],
+    "paired freeze/split": [
+      0.991205,
+      0.902133,
+      1.08907
+    ]
+  },
+  "269": {
+    "original twin/original": [
+      0.9864,
+      0.882944,
+      1.101977
+    ],
+    "single twin/single": [
+      0.991904,
+      0.895777,
+      1.098346
+    ],
+    "split twin/split": [
+      1.025074,
+      0.892997,
+      1.176685
+    ],
+    "freeze twin/freeze": [
+      0.923103,
+      0.853806,
+      0.998025
+    ],
+    "paired single/original": [
+      0.950994,
+      0.824893,
+      1.096372
+    ],
+    "paired split/original": [
+      0.851725,
+      0.754344,
+      0.961678
+    ],
+    "paired freeze/original": [
+      0.804347,
+      0.703929,
+      0.919091
+    ],
+    "paired split/single": [
+      0.895616,
+      0.812209,
+      0.987589
+    ],
+    "paired freeze/single": [
+      0.845797,
+      0.771653,
+      0.927064
+    ],
+    "paired freeze/split": [
+      0.944374,
+      0.849525,
+      1.049814
+    ]
+  },
+  "270": {
+    "original twin/original": [
+      1.017344,
+      0.935217,
+      1.106683
+    ],
+    "single twin/single": [
+      0.992094,
+      0.918035,
+      1.072128
+    ],
+    "split twin/split": [
+      1.091259,
+      0.952442,
+      1.250309
+    ],
+    "freeze twin/freeze": [
+      0.964149,
+      0.882121,
+      1.053804
+    ],
+    "paired single/original": [
+      1.058804,
+      0.958308,
+      1.169839
+    ],
+    "paired split/original": [
+      0.710617,
+      0.649171,
+      0.777878
+    ],
+    "paired freeze/original": [
+      0.705259,
+      0.647056,
+      0.768696
+    ],
+    "paired split/single": [
+      0.671151,
+      0.610323,
+      0.738041
+    ],
+    "paired freeze/single": [
+      0.66609,
+      0.600782,
+      0.738497
+    ],
+    "paired freeze/split": [
+      0.99246,
+      0.897305,
+      1.097705
+    ]
+  },
+  "278": {
+    "original twin/original": [
+      0.98967,
+      0.917991,
+      1.066946
+    ],
+    "single twin/single": [
+      0.961052,
+      0.885201,
+      1.043402
+    ],
+    "split twin/split": [
+      1.002514,
+      0.933051,
+      1.077148
+    ],
+    "freeze twin/freeze": [
+      1.017063,
+      0.926434,
+      1.116557
+    ],
+    "paired single/original": [
+      1.068001,
+      0.990451,
+      1.151624
+    ],
+    "paired split/original": [
+      0.8757,
+      0.83377,
+      0.91974
+    ],
+    "paired freeze/original": [
+      0.963276,
+      0.894533,
+      1.037303
+    ],
+    "paired split/single": [
+      0.819943,
+      0.766648,
+      0.876943
+    ],
+    "paired freeze/single": [
+      0.901943,
+      0.84265,
+      0.965408
+    ],
+    "paired freeze/split": [
+      1.100007,
+      1.01707,
+      1.189707
+    ]
+  },
+  "313": {
+    "original twin/original": [
+      1.009228,
+      0.913138,
+      1.115431
+    ],
+    "single twin/single": [
+      0.969076,
+      0.876379,
+      1.071578
+    ],
+    "split twin/split": [
+      1.001118,
+      0.937317,
+      1.069262
+    ],
+    "freeze twin/freeze": [
+      0.978526,
+      0.883727,
+      1.083494
+    ],
+    "paired single/original": [
+      1.068858,
+      0.985696,
+      1.159036
+    ],
+    "paired split/original": [
+      1.044918,
+      0.949958,
+      1.149371
+    ],
+    "paired freeze/original": [
+      1.04759,
+      0.966776,
+      1.135159
+    ],
+    "paired split/single": [
+      0.977602,
+      0.904474,
+      1.056644
+    ],
+    "paired freeze/single": [
+      0.980102,
+      0.90535,
+      1.061026
+    ],
+    "paired freeze/split": [
+      1.002557,
+      0.915094,
+      1.098379
+    ]
+  },
+  "359": {
+    "original twin/original": [
+      1.011588,
+      0.906284,
+      1.129127
+    ],
+    "single twin/single": [
+      0.949611,
+      0.86915,
+      1.037521
+    ],
+    "split twin/split": [
+      0.97665,
+      0.89196,
+      1.069381
+    ],
+    "freeze twin/freeze": [
+      0.960208,
+      0.889442,
+      1.036603
+    ],
+    "paired single/original": [
+      0.965435,
+      0.875802,
+      1.064243
+    ],
+    "paired split/original": [
+      0.969024,
+      0.893654,
+      1.05075
+    ],
+    "paired freeze/original": [
+      0.944665,
+      0.865421,
+      1.031165
+    ],
+    "paired split/single": [
+      1.003717,
+      0.920016,
+      1.095032
+    ],
+    "paired freeze/single": [
+      0.978486,
+      0.896465,
+      1.068011
+    ],
+    "paired freeze/split": [
+      0.974863,
+      0.89576,
+      1.06095
+    ]
+  },
+  "397": {
+    "original twin/original": [
+      1.040386,
+      0.952551,
+      1.136321
+    ],
+    "single twin/single": [
+      1.028253,
+      0.942363,
+      1.121972
+    ],
+    "split twin/split": [
+      1.073034,
+      0.96029,
+      1.199014
+    ],
+    "freeze twin/freeze": [
+      1.053628,
+      0.957421,
+      1.159503
+    ],
+    "paired single/original": [
+      1.087399,
+      1.004861,
+      1.176716
+    ],
+    "paired split/original": [
+      1.023827,
+      0.930003,
+      1.127116
+    ],
+    "paired freeze/original": [
+      0.991004,
+      0.91951,
+      1.068058
+    ],
+    "paired split/single": [
+      0.941538,
+      0.858356,
+      1.032781
+    ],
+    "paired freeze/single": [
+      0.911353,
+      0.83654,
+      0.992857
+    ],
+    "paired freeze/split": [
+      0.967941,
+      0.85563,
+      1.094995
+    ]
+  }
+}
