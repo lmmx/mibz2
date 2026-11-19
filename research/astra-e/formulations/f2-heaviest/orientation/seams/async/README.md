@@ -23,3 +23,14 @@ python3 "$d/schedule.py"
 python3 "$d/graphs.py" | diff - "$d/graphs.txt"
 python3 "$d/schedule.py" research/astra-e/dense/target/wikidata | diff - "$d/wikidata.csv"
 ```
+
+## Coarse priorities and batched same-direction work
+
+An occurrence count only falls within an open cohort. Store its ID in a FIFO bucket indexed by the highest set bit of its count. A nonempty-bucket mask selects the largest available class; on extraction demote a stale count or discard an empty cohort. Separate queues for each direction permit up to G consecutive activations on one side while both queues have work in the leading class. Choose the other side when only it has work in the leading class. Every activation then has more than half of the actual maximum live mass. The charging proof above gives a factor at most 2H(|S|) in the ideal state model. The number of possible mass levels is at most 20 for a bzip2 block of at most 900,000 rows. A live cohort can move downward at most that many times. Rank indexing, cohort data and output assembly remain separate costs.
+
+At G=64, the ten tapes paid 541,125 quote states and 608,046 deeper-section states. Exact-priority counts were 538,868 and 604,132. The FIFO policies needed 8,459 and 9,164 side changes, compared with 534,276 and 578,974 for one-at-a-time side alternation in the same logarithmic buckets. The 64-batch policies used 2,629 and 3,017 demotions across ten inputs. All schedules repriced the resulting seams exactly. This makes batched rank intersection an implementable follow-up without a per-state general heap. [All 60 schedules and costs](buckets.csv) · [Bucket implementation](buckets.py)
+
+```sh
+d=research/astra-e/formulations/f2-heaviest/orientation/seams/async
+python3 "$d/bucket_screen.py" research/astra-e/dense/target/wikidata | diff - "$d/buckets.csv"
+```

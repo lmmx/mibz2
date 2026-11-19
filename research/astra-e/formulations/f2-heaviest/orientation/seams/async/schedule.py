@@ -10,7 +10,7 @@ sys.path.insert(0, str(HERE.parent))
 from cut import Column, Direct, heavy_set, price, optimize
 
 
-def grow(counts, paired):
+def grow(counts, paired, bucket_queue=None):
     words = list(counts)
     masses = list(counts.values())
     ids = list(range(len(words)))
@@ -30,7 +30,9 @@ def grow(counts, paired):
         live[gid] = [side, depth, members, weight]
         for i in members:
             owner[side][i] = gid
-        if not paired:
+        if bucket_queue is not None:
+            bucket_queue.add(weight, side, gid)
+        elif not paired:
             heappush(heap, (-weight, depth, side, gid))
         return gid
 
@@ -68,6 +70,10 @@ def grow(counts, paired):
                 pairs += 1
                 advance(f)
                 advance(b)
+    elif bucket_queue is not None:
+        while (gid := bucket_queue.next(live)) is not None:
+            advance(gid)
+        heap_pops = bucket_queue.pops
     else:
         while heap:
             neg, depth, side, gid = heappop(heap)
