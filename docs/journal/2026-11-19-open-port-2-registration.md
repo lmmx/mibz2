@@ -182,11 +182,15 @@ which is spread, not outcome:
   - the extension, about 3 hours: 5,184 decodes, each after its 2 s settle;
   - the context and census, about 15;
   - in all, **about 3 hours 55 minutes**.
-- **The untimed preflight** (`just bench-open-port-2 … dry`) ran in the cloud container at this
-  branch's first commit:
+- **The untimed preflight** (`just bench-open-port-2 … dry`), in the cloud container at 9b3ed323
+  (this branch's scorer, tests and recipe; nothing they run has changed since):
   - "the builds and all 18 inputs are the registered ones";
   - 16 of 16 outputs the same in both builds;
-  - 29 of 29 scorer checks.
+  - 29 of 29 scorer checks;
+  - no timing field, and no `runq` probe.
+
+  Its bundle is `2026-11-19-open-port-2-registration/preflight/run-20261119T141721Z.tar.gz`, sha256
+  `0ead7c90dd686d8fea9952cdfb41c840e8ee4836d85f421388c5c7fd0e226a2b`.
 
 ## The rule (`bench/open_port2.py judge`, frozen with this registration)
 
