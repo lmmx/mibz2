@@ -1,0 +1,17 @@
+cbacb63d20904f12227adb2400d00250263fa747
+6fb777541e3ce4613c34e14d8f5def7fbada8b4a
+scorer path revision 604dac3
+273958277f48f7dcbe5a8637eb10dde48b03e0020bd8cfaad4ea9e0c3c4e2c03  research/astra-e/formulations/f2d/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1-f2d-learn-confirm research/astra-e/formulations/f2d/candidate.rs --workers 1\,4 --rounds 9 --repeat 2 --settle 2 --with-opend --no-proxy --target-dir /workspace/work/f2d-native
