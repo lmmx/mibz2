@@ -191,3 +191,19 @@ Every case was compared against direct first-return computation, with return wor
 - **On these blocks:** Cells sits about 1.5× above the floor of *any* monotone schedule, and induction is only part of the decoder's cost. So little total-work headroom remains inside monotone interval induction, as Neon itself anticipated if Max-Cut failed.
 - **One overreach:** it says that if Max-Cut fails, *no* monotone schedule can do much better. That does not follow: Max-Cut is one heuristic. The corollary's floor, though, does bound every monotone schedule, and the floor is the stronger statement.
 - **Not yet measured:** the same three figures (steps, floor, overlap) on a real admitted Wikidata block.
+
+## MONODROMY's second verdict, on round 2 (REVIEW 7006279867; record 79)
+
+- **Theorem 3′ is verified.** 29,395 admissible batches are exact, with no shared nodes, sentinels included. All 242,216 runs output the right mark rotation. Neon's Defects 1 and 3 are real. Record 78 missed Defect 1, because its model read the fronts off the sentinels.
+- **Batch rate on admitted Wikidata blocks** (0, 2 and 85; 85 is the highest admitted) at K = 16:
+  - 67–91% of rounds batch two or more fronts;
+  - the mean width is 4.0–5.3;
+  - the dependent chain is 3.8–4.9× shorter.
+
+  Small columns batch only 4.4%. This replaces record 78's frozen-column figure of 3.84.
+- **Not latency-bound on the cloud CPU.** Eager IPC is about 2.9 and flat in the prefetch distance from 4 to 32; prefetching is worth 8–12%. Lazy IPC is about 2.6.
+  - On the i9, prefetching was worth about 25%, so the i9 may differ.
+  - Only a timed interleaved kernel on the workstation would decide it.
+- **Theorem 2′:** the counts are exact. Right-end Rauzy–Veech reaches I(P_k) itself only at k = 4; it reaches a section of the same shape in k − 3 steps.
+
+**A correction to the prompts' regime figure.** By run count, admitted Wikidata blocks lie at **r/n 0.053–0.088** (196 of 233 blocks). No block between 0.10 and 0.15 is admitted; block 207, at 0.097, is refused. The "r/n 0.10–0.15" given to Neon in the round-4 corrections was the Coordinator's misreading. That figure in `src/cells_lazy.rs` describes the band *between* Cells' and LazyCells' admission lines, measured in run records. Round 4's theorem is unaffected. Its regime-specific numbers, and its synthetic blocks at r/n ≈ 0.23, target the wrong band.
