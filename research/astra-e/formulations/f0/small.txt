@@ -1,0 +1,1 @@
+3279 cyclic byte words, every binary-tap recurrence through the first admissible order verified
