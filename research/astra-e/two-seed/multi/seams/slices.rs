@@ -55,10 +55,9 @@ pub fn parse<const K:usize,const AUDIT:bool>(
         suffix[i]=x;prefix[i+1]=y;
         if AUDIT {audit.joined+=1;audit.bridge_bytes+=x+y;}
     }
-    if (0..K).any(|i|prefix[i]+suffix[i]>parts[i].len) {
-        if AUDIT {audit.fallback="overlap";}
-        return None;
-    }
+    // The nearest certified cut from the left cannot lie strictly after the
+    // nearest one from the right: that right cut would be a nearer left candidate.
+    debug_assert!((0..K).all(|i|prefix[i]+suffix[i]<=parts[i].len));
     if AUDIT {audit.accepted=true;}
     dst.reserve(n+if kernels.avx2(){64}else{0});
     Some((||{

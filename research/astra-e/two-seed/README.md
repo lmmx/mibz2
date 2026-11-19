@@ -42,3 +42,5 @@ python3 bench/moonshot/moonshot.py score "$d/candidate.rs" --corpus "$wiki" --ta
 python3 bench/moonshot/moonshot.py score "$d/control.rs" --corpus "$wiki" --target-dir "$scratch/control-target" --no-proxy --no-timing --out "$scratch/control-gate"
 python3 "$d/official/direct.py" run "$scratch/control-target/release/moonshot" "$scratch/candidate-target/release/moonshot" "$wiki" "$scratch/direct.jsonl"
 ```
+
+Independent paired CI at 20 rotations then found a regression for **two-forward / edge** on the 4-worker Xeon runner, ratio 1.0302 [1.0093, 1.0516]. W1 was 1.0133 [1.0003, 1.0265] and W2 was 1.0105 [0.9970, 1.0243]. W4 median RSS was 0.9995 of the edge worker and 0.7249 of LazyCells. The new writer therefore fails its independent incremental screen. The native emitter saving remains a stage result. On the separate three-block diagnostic the complete candidate executed 12.4–13.8% more instructions with 7.8–11.5% fewer past-L2 dependent links. [Independent CI](https://github.com/lmmx/mibz2/actions/runs/44465700927) · [All six nominal proxy comparisons](proxy/README.md)
