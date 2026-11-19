@@ -1,0 +1,12 @@
+streams 1
+owned prep_mark=0.4305ms discover=1.8472ms merge=0.1753ms residual_output=0.9991ms total=3.5828ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=2.4196ms total=2.4196ms
+f2c prep_mark=0.4663ms discover=1.9252ms merge=0.1707ms residual_output=0.8384ms total=3.5566ms
+owned/f2c 1.0335 [0.9580,1.1150]
+owned/lazy 1.4530 [1.3401,1.5754]
+streams 1,85,134,176,225,269,313,359,397
+owned prep_mark=4.7646ms discover=18.0911ms merge=1.7906ms residual_output=9.4739ms total=34.9869ms
+lazy prep_mark=0.0000ms discover=0.0000ms merge=0.0000ms residual_output=26.4350ms total=26.4350ms
+f2c prep_mark=4.6550ms discover=19.0253ms merge=1.7273ms residual_output=7.8295ms total=34.1226ms
+owned/f2c 1.0445 [0.9781,1.1154]
+owned/lazy 1.3825 [1.2838,1.4888]
