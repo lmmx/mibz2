@@ -1,0 +1,107 @@
+"""Round 5, Theorem 1: weight-only accelerated RV (integer state only), as stated in response-5 §2.1,
+run on the coordinate model for geometry. Checks the invariants (H), (T) after every accelerated
+step, every merge record, and the resolved head, tail and mark positions against direct LF walks,
+on every small column (several cycles, periodic bands with lambda > 1) and every start row."""
+import itertools
+from collections import Counter
+exec(open('neon3.py').read().split('def touched')[0])
+ST.clear(); EX={}
+def truth(L,lf):
+    n=len(L); cyc=[-1]*n; pos=[0]*n; clen=[]
+    for s in range(n):
+        if cyc[s]>=0: continue
+        k=len(clen); z=s; t=0
+        while cyc[z]<0: cyc[z]=k; pos[z]=t; t+=1; z=lf[z]
+        clen.append(t)
+    return cyc,pos,clen
+def same(a,b,diff,cyc,pos,clen):
+    """a on the same cycle as b, and pos(a) - pos(b) == diff (mod cycle length)"""
+    return cyc[a]==cyc[b] and (pos[a]-pos[b]-diff)%clen[cyc[a]]==0
+def check(L,p0):
+    R=Run(L,p0,set()); lf=R.lf; cyc,pos,clen=truth(L,lf)
+    ids=list(R.I); d0={k:R.I[k]['dom'][0] for k in ids}; e0={k:R.I[k]['dom'][-1] for k in ids}
+    w={k:1 for k in ids}; hs={k:0 for k in ids}; tt={k:k for k in ids}; ts={k:0 for k in ids}
+    hpar={}; tpar={}; hroot={}; troot={}
+    ip=next(k for k in ids if p0 in R.I[k]['dom']); th=p0-d0[ip]; pd=0; prim=None
+    acc=0; raw=0
+    def inv():
+        for k,I in R.I.items():
+            if not same(d0[k],I['dom'][0],hs[k],cyc,pos,clen): ST['H_FAIL']+=1; EX.setdefault('H',(L,p0)); return False
+            if tt[k] is not None and not same(e0[tt[k]],I['dom'][-1],ts[k],cyc,pos,clen): ST['T_FAIL']+=1; EX.setdefault('T',(L,p0)); return False
+            if len(I['w'])!=w[k]: ST['W_FAIL']+=1; return False
+        if ip in R.I:
+            I=R.I[ip]
+            if th>=len(I['dom']) or not same(p0,I['dom'][th],pd,cyc,pos,clen): ST['MARK_FAIL']+=1; EX.setdefault('M',(L,p0)); return False
+        return True
+    while R.I:
+        A,B=R.fronts()[1]; acc+=1
+        dn,dpv,cn,cpv=R.neighbors()
+        la,lb=len(R.I[A]['dom']),len(R.I[B]['dom']); wA,wB=w[A],w[B]
+        if A==B:
+            I=R.I[A]; band=I['dom']
+            if any(clen[cyc[x]]!=wA for x in band): ST['BAND_LEN_FAIL']+=1
+            hroot[A]=(band[0],hs[A]%wA); ST['closures']+=1; ST['closures_lambda>1']+=(len(band)>1); ST['tailroot_on_lambda>1_band']+=(len(band)>1 and tt[A] is not None); ST['mark_on_lambda>1_band']+=(len(band)>1 and ip==A)
+            if tt[A] is not None: troot[tt[A]]=(band[-1],ts[A]%wA)
+            if ip==A: prim=(band[th],pd%wA)
+            R.step(A,B); raw+=1; continue
+        if la>lb:
+            q=(la-1)//lb if cpv.get(B)==A else 1
+            if tt[A] is not None:
+                if tt[B] is not None: tpar[tt[A]]=(tt[B],wB+ts[A]-ts[B])
+                else: tt[B]=tt[A]; ts[B]=ts[A]+wB
+                tt[A]=None
+            if ip==A and th>=la-q*lb:
+                k=(la-1-th)//lb; ip=B; th=th-(la-(k+1)*lb); pd+=wB+k*wA
+            w[B]+=q*wA
+            for s in range(q):
+                F=R.fronts()[1]
+                if F!=(A,B) or not(len(R.I[A]['dom'])>len(R.I[B]['cod'])): ST['QUOTIENT_PAIR_CHANGED']+=1
+                R.step(A,B); raw+=1
+            ST['q>1']+=(q>1)
+        elif la<lb:
+            q=(lb-1)//la if dpv.get(A)==B else 1
+            hs[A]+=q*wB
+            if tt[A] is not None and tt[B] is not None:
+                tpar[tt[A]]=(tt[B],wB+ts[A]-ts[B]); tt[A]=tt[B]; ts[A]=ts[B]; tt[B]=None
+            elif tt[A] is not None: ts[A]+=wB
+            elif tt[B] is not None: tt[A]=tt[B]; ts[A]=ts[B]; tt[B]=None
+            if q>1 and tt[A] is not None: ts[A]+=(q-1)*wB
+            if ip==A: pd+=q*wB
+            elif ip==B and th>=lb-q*la:
+                k=(lb-1-th)//la; ip=A; th=th-(lb-(k+1)*la); pd+=(q-1-k)*wB
+            w[A]+=q*wB
+            for s in range(q):
+                F=R.fronts()[1]
+                if F!=(A,B) or not(len(R.I[A]['dom'])<len(R.I[B]['cod'])): ST['QUOTIENT_PAIR_CHANGED']+=1
+                R.step(A,B); raw+=1
+            ST['q>1']+=(q>1)
+        else:
+            hpar[A]=(B,wB+hs[A]-hs[B])
+            if tt[A] is not None:
+                if tt[B] is not None: tpar[tt[A]]=(tt[B],wB+ts[A]-ts[B])
+                else: tt[B]=tt[A]; ts[B]=ts[A]+wB
+                tt[A]=None
+            if ip==A: ip=B; pd+=wB
+            w[B]+=wA
+            R.step(A,B); raw+=1
+        if not inv(): return
+    # resolve the forests
+    def res(k,par,root,memo):
+        if k in memo: return memo[k]
+        if k in root: memo[k]=root[k]; return memo[k]
+        pa,dl=par[k]; anchor,ps=res(pa,par,root,memo); memo[k]=(anchor,ps+dl); return memo[k]
+    hm={}; tm={}
+    for k in ids:
+        anchor,ps=res(k,hpar,hroot,hm)
+        if not same(d0[k],anchor,ps,cyc,pos,clen): ST['HEAD_POS_FAIL']+=1; EX.setdefault('hp',(L,p0)); break
+        anchor,ps=res(k,tpar,troot,tm)
+        if not same(e0[k],anchor,ps,cyc,pos,clen): ST['TAIL_POS_FAIL']+=1; EX.setdefault('tp',(L,p0,k)); break
+        if cyc[e0[k]]!=cyc[res(k,hpar,hroot,hm)[0]] : ST['tail_on_other_band_cycle']+=1
+    if prim is None or not same(p0,prim[0],prim[1],cyc,pos,clen): ST['PRIMARY_FAIL']+=1; EX.setdefault('pr',(L,p0))
+    ST['runs']+=1; ST['multi_cycle']+=(len(clen)>1); ST['acc_steps']+=acc; ST['raw_steps']+=raw
+for alph,maxn in ((2,10),(3,7),(4,6)):
+    for n in range(1,maxn+1):
+        for L in itertools.product(range(alph),repeat=n):
+            for p in range(n): check(L,p)
+for k in sorted(ST): print(k,ST[k])
+print(EX)
