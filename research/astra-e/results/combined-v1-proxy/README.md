@@ -6,7 +6,7 @@ The quick libbzip2/CRC gate passed all 98 cases. The full 338-case gate for this
 
 ## In-progress recovery
 
-The checkpoint preserves 640 complete official observations, all W1, W2, W4 and W7 rows. The earlier 240- and 480-row checkpoints remain at commits `6a5d160` and `b633eed`. A source check confirms that v1's `proxy-runs.jsonl` receives one record per block, with normal file buffering. The live job continues to append independently. The incomplete worker grid supplies no campaign ranking.
+The checkpoint preserves 800 complete official observations, all W1, W2, W4, W7 and W8 rows. The 240-, 480- and 640-row checkpoints remain at commits `6a5d160`, `b633eed` and `1c895fc`. W8 gives 0.9118 [0.8817,0.9396] against fresh lazy, within the v1 reference envelope. A source check confirms that v1's `proxy-runs.jsonl` receives one record per block, with normal file buffering. The live job continues to append independently. The incomplete worker grid supplies no campaign ranking.
 
 The live study runs in `/workspace/work/narrow-proxy/v1-tree` and writes `research/astra-e/results/combined-v1-full-proxy/score/proxy-runs.jsonl`. Its target directory is `/workspace/work/narrow-proxy/v1-target`. To inspect progress without consuming a CPU for simulation, count the complete lines in that file. The root process is the shell executing `/workspace/work/narrow-proxy/v1-run.sh`. If it survives, let the same process finish.
 
@@ -23,12 +23,25 @@ target=/workspace/work/narrow-proxy/v1-target
 nice -n 12 /usr/bin/python3.13 "$replay" "$frozen" "$target" /tmp/astra-e-combined-v1-recovery
 ```
 
-For a fresh comparison the command below refreshes from master before scoring. In a frozen historical reproduction, first restore the scorer at the upstream revision above, then run the `moonshot.py score` command recorded in the manifest with that candidate, a fresh output directory and the same options. A changed upstream implementation begins a separate series.
+The following command refreshes from master for a new comparison. A changed upstream implementation begins a separate series.
 
 ```sh
 nice -n 12 bash research/astra-e/score.sh combined-v1-repetition \
   research/astra-e/narrow-short/ahead.rs --target-dir /tmp/astra-combined-v1 \
   --quick --no-timing --proxy-blocks 48+16
+```
+
+To replay the historical scorer independently, start a fresh checkout of the research build, use Rust 1.99.1, and have Valgrind 3.24.0 and its static headers/runtime available. The result directory must be new. The corpus recipe requires lbzip2 and verifies the Wikidata input.
+
+```sh
+git checkout --detach 6a8a366cd786d58a528000b58da12fd2cfb47be8
+git checkout 604dac3f46569edd9ac9b6706b23a68d9d7d8f8d -- bench/moonshot .just Justfile
+study=research/astra-e/narrow-short/ahead.rs
+bash research/astra-e/prepare.sh "$study"
+bash bench/moonshot/corpus.sh
+PYTHON_CPU_COUNT=1 CARGO_BUILD_JOBS=1 nice -n 12 python3.13 bench/moonshot/moonshot.py \
+  score "$study" --target-dir /tmp/astra-v1-historical-build --out /tmp/astra-v1-historical-score \
+  --quick --no-timing --proxy-blocks 48+16 --record /tmp/astra-v1-historical-score/record.jsonl
 ```
 
 ## Dense blocks and the wider admission experiment
