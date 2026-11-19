@@ -2,6 +2,25 @@
 
 *18 November 2026. The Pathfinder's C6 adoption registration, frozen before any data.*
 
+> **0.5.7's re-pin (19 November 2026; #145 QUEUED 7018306990).** The same design, re-run for
+> 0.5.7's worker-count gate (RELEASING §3.4 and §5c).
+> - **The new pin:** the recipe (`just bench-recalibrate-057`, on `bench/recalibrate-057`)
+>   refuses to run unless `src`, `Cargo.toml` and `Cargo.lock` are master's
+>   **1740582674ac8e6dcd90329a62a6c46a4b92fd29**, where 2026-11-18's run pinned v0.5.5
+>   (7214f8ca).
+> - **Why:** #630 merged the open kernel. Master's lazy workers are now `OpenCells`
+>   (`StreamDecoder::workers(.., lazy = true)` is `workers_with::<OpenCells>`,
+>   `src/parallel.rs:269–276` at 17405826). It changes per-block work and the workers' scratch
+>   layout, so §5c re-measures the trims. Every lazy arm (`mibz2-occ-N-S`, through
+>   `BzReader::parallel_workers(.., true)`) is now `OpenCells`. The eager arms (`mibz2-oce-N-S`)
+>   are `Cells`, as before.
+> - **Unchanged:** the cells, the arms, the rule (§ "The rule"), the rounds, the settle, the
+>   corpora, the method and the diagnostics, exactly as registered below.
+> - **New:** the evidence path, `recalibrate-057/` (2026-11-18's bundle is
+>   `recalibrate/run-20261118T122744Z`), and an untimed DRY preflight, which is not evidence.
+> - **Where this document says "0.5.5's kernel" or "src as 0.5.5's",** read 17405826's for this
+>   run.
+
 - **Assigned:** the Coordinator's CHECKPOINT 6977086376 on #314.
 - **Runbook:** RELEASING §5c, proposed in #560.
 - **Recipe:** `just bench-recalibrate`, on `bench/recalibrate`.
