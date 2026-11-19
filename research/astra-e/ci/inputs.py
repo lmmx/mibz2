@@ -47,7 +47,17 @@ GUARDED_POPCNT = {
     "commit": "3651470cb0ef5458e75cf97d3de363a1c73f2f76",
     "path": "research/astra-e/formulations/f2-pages/instructions/candidate.rs",
 }
+CAP_COUNTER = "research/astra-e/front-fusion/cap-counter/both.rs"
+SCALAR = {
+    "commit": "d0a42980e896211906234c7679b38760ae44a46e",
+    "path": "research/astra-e/front-fusion/cap-batch/worker/candidate.rs",
+}
+COUNTER_EDGE = {
+    "commit": "50b8ecb8946a498601e3fd894ed84a2687df6cc8",
+    "path": "research/astra-e/front-fusion/cap-counter/counter_edge.rs",
+}
 PREDECESSORS = {
+    CAP_COUNTER: SCALAR,
     "research/astra-e/front-fusion/cap-batch/worker/candidate.rs": MEASURED_EDGE,
     "research/astra-e/worker-dose/candidate.rs": MEASURED_EDGE,
     "research/astra-e/front-fusion/precount/worker/candidate.rs": MEASURED_COMBINED,
@@ -63,6 +73,11 @@ PREDECESSORS = {
 def predecessor():
     candidate = Path("research/astra-e/ci/candidate").read_text().strip()
     return PREDECESSORS.get(candidate)
+
+
+def extra_arms():
+    candidate = Path("research/astra-e/ci/candidate").read_text().strip()
+    return {"edge": MEASURED_EDGE, "counter": COUNTER_EDGE} if candidate == CAP_COUNTER else {}
 
 
 def git(*args):
@@ -94,13 +109,14 @@ def record(deps, base):
         "base": base,
         "scorer": scorer_revision(),
         "predecessor": predecessor(),
+        "extra_arms": extra_arms(),
         "inputs": sorted(sources.intersection(tracked) | set(CONTROLS)),
         "generated": generated,
     }
 
 
 def reusable(receipt, base):
-    if receipt.get("predecessor") != predecessor():
+    if receipt.get("predecessor") != predecessor() or receipt.get("extra_arms", {}) != extra_arms():
         return False
     if receipt["base"] != base or receipt["scorer"] != scorer_revision():
         return False
@@ -134,7 +150,12 @@ def main():
 
 
 if __name__ == "__main__":
-    if sys.argv[1:] == ["predecessor"]:
+    if sys.argv[1:] == ["comparators"]:
+        arms = {"predecessor": predecessor(), **extra_arms()}
+        for name, entry in arms.items():
+            if entry:
+                print(name, entry["commit"], entry["path"])
+    elif sys.argv[1:] == ["predecessor"]:
         matched = predecessor()
         if matched:
             print(matched["commit"], matched["path"])

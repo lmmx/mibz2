@@ -14,12 +14,17 @@ REPEAT = 4
 
 
 class Paired(moonshot.Scorer):
-    def __init__(self, base, head, expected_bytes, predecessor=None):
+    def __init__(self, base, head, expected_bytes, predecessor=None, extra=()):
         self.arms = ["lazy", "cells", "opend", "candidate"]
         self.binaries = {"candidate": (head, "candidate", "head")}
         if predecessor is not None:
             self.arms.append("predecessor")
             self.binaries["predecessor"] = (predecessor, "candidate", "frozen predecessor")
+        for name, binary in extra:
+            if name in self.arms:
+                raise ValueError(f"Duplicate paired arm {name}")
+            self.arms.append(name)
+            self.binaries[name] = (Path(binary), "candidate", f"frozen {name}")
         # Two complete forward and reverse rotations, regardless of arm count.
         options = argparse.Namespace(
             workers=WORKERS, rounds=4*len(self.arms), settle=2, repeat=REPEAT, target_dir=None
@@ -48,14 +53,36 @@ def compare_to_reference(rows, reference):
     return moonshot.summarise_timing(relabelled, ["lazy", "candidate"], WORKERS)
 
 
+def factorial(rows):
+    groups = {(r["workers"], r["round"], r["arm"]): r for r in rows}
+    result = {}
+    for w in WORKERS:
+        rounds = sorted({r["round"] for r in rows if r["workers"] == w})
+        def times(arm):
+            return [groups[w, i, arm]["wall_s"] for i in rounds]
+        edge, scalar, counter, both = map(times, ("edge", "predecessor", "counter", "candidate"))
+        result[str(w)] = {
+            "counter_on_edge": moonshot.paired_ratio(counter, edge),
+            "counter_on_scalar": moonshot.paired_ratio(both, scalar),
+            "scalar_on_edge": moonshot.paired_ratio(scalar, edge),
+            "scalar_on_counter": moonshot.paired_ratio(both, counter),
+            "both_on_edge": moonshot.paired_ratio(both, edge),
+            "interaction": moonshot.paired_ratio(
+                [a / b for a, b in zip(both, scalar)], [a / b for a, b in zip(counter, edge)]
+            ),
+        }
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for arg in ("base", "head", "corpus", "out"):
         parser.add_argument(arg, type=Path)
     parser.add_argument("--predecessor", type=Path)
+    parser.add_argument("--extra", nargs=2, action="append", default=[], metavar=("ARM", "BINARY"))
     args = parser.parse_args()
     spec = json.loads((ROOT / "bench" / "wikidata.json").read_text())
-    scorer = Paired(args.base, args.head, spec["decoded_bytes"] * REPEAT, args.predecessor)
+    scorer = Paired(args.base, args.head, spec["decoded_bytes"] * REPEAT, args.predecessor, args.extra)
     lazy = scorer.timing(args.corpus, args.out, scorer.arms)
     rows = [json.loads(line) for line in (args.out / "runs.jsonl").read_text().splitlines()]
     tables = {
@@ -65,6 +92,10 @@ def main():
     }
     if args.predecessor:
         tables["frozen predecessor"] = compare_to_reference(rows, "predecessor")
+    for name, _ in args.extra:
+        tables[f"frozen {name}"] = compare_to_reference(rows, name)
+    if args.predecessor and {name for name, _ in args.extra} == {"edge", "counter"}:
+        (args.out / "factorial.json").write_text(json.dumps(factorial(rows), indent=2) + "\n")
     (args.out / "ratios.json").write_text(json.dumps(tables, indent=2) + "\n")
     report = [
         "### Astra E paired research benchmark",

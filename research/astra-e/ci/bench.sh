@@ -13,13 +13,19 @@ git worktree add --detach "$base" "$BASE_SHA"
 candidate=$(cat research/astra-e/ci/candidate)
 git ls-files --error-unmatch -- "$candidate"
 bash research/astra-e/prepare.sh "$candidate"
-matched=$(python3 research/astra-e/ci/inputs.py predecessor)
-predecessor_tree=$RUNNER_TEMP/astra-e-predecessor-tree
-if [[ -n $matched ]]; then
-  read -r predecessor_commit predecessor_path <<< "$matched"
-  git worktree add --detach "$predecessor_tree" "$predecessor_commit"
-  (cd "$predecessor_tree" && bash research/astra-e/prepare.sh "$predecessor_path")
-fi
+matched=$(python3 research/astra-e/ci/inputs.py comparators)
+labels=()
+declare -A commits entries trees
+while read -r label revision entry; do
+  [[ -n $label ]] || continue
+  labels+=("$label")
+  commits[$label]=$revision
+  entries[$label]=$entry
+  tree=$RUNNER_TEMP/astra-e-$label-tree
+  trees[$label]=$tree
+  git worktree add --detach "$tree" "$revision"
+  (cd "$tree" && bash research/astra-e/prepare.sh "$entry")
+done <<< "$matched"
 git fetch origin master && git checkout origin/master -- bench/moonshot .just Justfile
 fresh=$(git rev-parse origin/master)
 # HEAD retains the last scorer that built the candidate in the research tree.
@@ -38,11 +44,12 @@ build_pair() {
   MOONSHOT_CANDIDATE="$base/bench/moonshot/candidates/lazy_cells.rs" \
     CARGO_TARGET_DIR="$RUNNER_TEMP/astra-e-lazy" \
     cargo build --locked --release --manifest-path "$base/bench/moonshot/Cargo.toml" || return 1
-  if [[ -n $matched ]]; then
-    git -C "$predecessor_tree" checkout "$rev" -- bench/moonshot .just Justfile || return 1
-    MOONSHOT_CANDIDATE="$predecessor_tree/$predecessor_path" CARGO_TARGET_DIR="$RUNNER_TEMP/astra-e-predecessor" \
-      cargo build --locked --release --manifest-path "$predecessor_tree/bench/moonshot/Cargo.toml" || return 1
-  fi
+  for label in "${labels[@]}"; do
+    local tree=${trees[$label]}
+    git -C "$tree" checkout "$rev" -- bench/moonshot .just Justfile || return 1
+    MOONSHOT_CANDIDATE="$tree/${entries[$label]}" CARGO_TARGET_DIR="$RUNNER_TEMP/astra-e-$label" \
+      cargo build --locked --release --manifest-path "$tree/bench/moonshot/Cargo.toml" || return 1
+  done
   MOONSHOT_CANDIDATE="$root/$candidate" CARGO_TARGET_DIR="$RUNNER_TEMP/astra-e-candidate" \
     cargo build --locked --release --manifest-path bench/moonshot/Cargo.toml || return 1
 }
@@ -56,7 +63,6 @@ if ! build_pair "$fresh"; then
 fi
 base_bin=$RUNNER_TEMP/astra-e-lazy/release/moonshot
 head_bin=$RUNNER_TEMP/astra-e-candidate/release/moonshot
-predecessor_bin=$RUNNER_TEMP/astra-e-predecessor/release/moonshot
 {
   echo "base $BASE_SHA"
   echo "head $HEAD_SHA"
@@ -77,26 +83,30 @@ SCORER
   sha256sum "$candidate" "$base_bin" "$head_bin"
   "$base_bin" info
   "$head_bin" info
-  if [[ -n $matched ]]; then
-    echo "matched predecessor $predecessor_commit $predecessor_path"
-    sha256sum "$predecessor_tree/$predecessor_path" "$predecessor_bin"
-    "$predecessor_bin" info
-  fi
+  for label in "${labels[@]}"; do
+    echo "matched $label ${commits[$label]} ${entries[$label]}"
+    sha256sum "${trees[$label]}/${entries[$label]}" "$RUNNER_TEMP/astra-e-$label/release/moonshot"
+    "$RUNNER_TEMP/astra-e-$label/release/moonshot" info
+  done
 } | tee "$out/manifest.txt"
 
 bash bench/moonshot/corpus.sh
 sha256sum corpora/wikidata.bz2 >> "$out/manifest.txt"
 gates=(candidate lazy cells opend)
 paired_options=()
-if [[ -n $matched ]]; then
-  gates+=(predecessor)
-  paired_options+=(--predecessor "$predecessor_bin")
-fi
+for label in "${labels[@]}"; do
+  gates+=("$label")
+  if [[ $label == predecessor ]]; then
+    paired_options+=(--predecessor "$RUNNER_TEMP/astra-e-$label/release/moonshot")
+  else
+    paired_options+=(--extra "$label" "$RUNNER_TEMP/astra-e-$label/release/moonshot")
+  fi
+done
 for arm in "${gates[@]}"; do
   bin=$base_bin
   compiled_arm=$arm
   if [[ $arm == candidate ]]; then bin=$head_bin; fi
-  if [[ $arm == predecessor ]]; then bin=$predecessor_bin; compiled_arm=candidate; fi
+  if [[ -n ${trees[$arm]:-} ]]; then bin=$RUNNER_TEMP/astra-e-$arm/release/moonshot; compiled_arm=candidate; fi
   "$bin" check --arm "$compiled_arm" --wikidata corpora/wikidata.bz2 \
     > "$out/$arm.check.jsonl" 2> "$out/$arm.check.stderr"
 done

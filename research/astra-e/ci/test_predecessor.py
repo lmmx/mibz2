@@ -17,7 +17,8 @@ def check(count):
     calls = Counter()
     costs = {("base", "lazy"): (1.0, 100), ("base", "opend"): (0.875, 80),
              ("base", "cells"): (0.625, 130), ("head", "candidate"): (0.75, 75),
-             ("match", "candidate"): (0.9375, 85)}
+             ("match", "candidate"): (0.9375, 85), ("edge", "candidate"): (1., 84),
+             ("counter", "candidate"): (.9, 81)}
     def synthetic(self, arm, workers, corpus, perf=None):
         binary = str(self.bin)
         lat, rss = costs[binary, arm]
@@ -30,9 +31,13 @@ def check(count):
         path = Path(tmp)
         args = ["paired.py","base","head","unused-corpus",tmp]
         arms = ["lazy","cells","opend","candidate"]
-        if count == 5:
+        if count >= 5:
             args.extend(["--predecessor","match"])
             arms.append("predecessor")
+        if count == 7:
+            for name in ("edge", "counter"):
+                args.extend(["--extra",name,name])
+                arms.append(name)
         rounds = 4*len(arms)
         with (patch.object(sys,"argv",args), patch.object(paired.moonshot.Scorer,"run_once",synthetic),
               patch.object(paired.moonshot.time,"sleep",lambda seconds: None), redirect_stderr(io.StringIO())):
@@ -46,15 +51,21 @@ def check(count):
         assert len(calls) == len(arms)*len(paired.WORKERS)
         tables = json.loads((path/"ratios.json").read_text())
         ratios = {"master LazyCells": .75, "master eager Cells": 1.2, "master opend": .75/.875}
-        if count == 5:
+        if count >= 5:
             ratios["frozen predecessor"] = .8
+        if count == 7:
+            ratios.update({"frozen edge":.75, "frozen counter":.75/.9})
+            effects = json.loads((path/"factorial.json").read_text())
+            for cell in effects.values():
+                assert abs(cell["interaction"]["geomean"] - (.75/.9375)/.9) < 1e-12
+                assert cell["interaction"]["n"] == 28
         assert set(tables) == set(ratios)
         for w in paired.WORKERS:
             for label, desired in ratios.items():
                 cell = tables[label][str(w)]["candidate"]
                 assert cell["n"] == rounds and abs(cell["geomean"]-desired) < 1e-10
                 assert abs(cell["hi"]-desired) < 1e-10 and abs(cell["lo"]-desired) < 1e-10
-            if count == 5:
+            if count >= 5:
                 cell = tables["frozen predecessor"][str(w)]["candidate"]
                 assert abs(cell["peak_rss_ratio"] - 75/85) < 1e-10
         assert all(r["build"] == "frozen predecessor" and r["compiled_arm"] == "candidate"
@@ -85,6 +96,13 @@ def receipts():
             assert not inputs.reusable(receipt,base)
             assert not inputs.reusable(dict(receipt, predecessor=dict(pin,commit="f"*40)),base)
             assert inputs.reusable(dict(receipt, predecessor=pin),base)
+    with patch.object(Path, "read_text", return_value=inputs.CAP_COUNTER+"\n"):
+        assert inputs.predecessor() == inputs.SCALAR
+        extra = {"counter":inputs.COUNTER_EDGE, "edge":inputs.MEASURED_EDGE}
+        assert inputs.extra_arms() == extra
+        prior = dict(receipt, predecessor=inputs.SCALAR)
+        assert not inputs.reusable(prior,base)
+        assert inputs.reusable(dict(prior, extra_arms=extra),base)
     with patch.object(Path, "read_text", return_value="unmatched-candidate\n"):
         assert inputs.predecessor() is None
         assert inputs.reusable(receipt,base)
@@ -95,4 +113,5 @@ def receipts():
 if __name__ == "__main__":
     check(4)
     check(5)
+    check(7)
     receipts()
