@@ -44,3 +44,9 @@ python3 "$d/official/direct.py" run "$scratch/control-target/release/moonshot" "
 ```
 
 Independent paired CI at 20 rotations then found a regression for **two-forward / edge** on the 4-worker Xeon runner, ratio 1.0302 [1.0093, 1.0516]. W1 was 1.0133 [1.0003, 1.0265] and W2 was 1.0105 [0.9970, 1.0243]. W4 median RSS was 0.9995 of the edge worker and 0.7249 of LazyCells. The new writer therefore fails its independent incremental screen. The native emitter saving remains a stage result. On the separate three-block diagnostic the complete candidate executed 12.4–13.8% more instructions with 7.8–11.5% fewer past-L2 dependent links. [Independent CI](https://github.com/lmmx/mibz2/actions/runs/44465700927) · [All six nominal proxy comparisons](proxy/README.md)
+
+## Preserved descendants
+
+The 3- and 4-seed bounded-reservation theorem terminates within k passes and one original output allocation, with an integer family proving the bound is tight. Four streams achieved 0.8324 [0.8071, 0.8585] of the original emitter's local CPU. The complete scalar-four/single-scalar comparison was 1.0462 at W1 and 1.0164 at W4, with both local 95% intervals including parity. Its frozen code, 338-case gates, all 254 complete W1/W4 observations and exact executables are available at `47218b5` and `1f2ec40`. [Bounded multiple streams](multi/README.md)
+
+The latest segmented RLE1 variant uses those four positive fragments without permuting them into physical marked order. It eliminated every one of the 141,536,791 bytes in recorded rotation ranges on its 233 real admissions. Each of 28 uncertified joins needed only a few raw bytes from its adjacent fragments. The complete sliced/joined W1/W4 ratios were 1.1872/1.0641, both inconclusive. The implementation, independent proofs and complete receipts are pinned at `85025c9` and `8d43bd6`. [Sliced RLE1 and CRC](multi/seams/README.md)
