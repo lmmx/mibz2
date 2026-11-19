@@ -1,0 +1,23 @@
+# Decode MTF ranks by last occurrence
+
+An MTF list is ordered by decreasing time of last use, with untouched entries in alphabet order at its end. Represent its recent prefix by a bitset of live entries among the last 64 literal updates. Rank selection becomes order-statistic selection in this bitset. Older entries occupy the suffix of a 256-byte array, right-aligned at their original global ranks. The older suffix only moves bytes on a missed selection, and that move copies exactly the requested rank minus the recent live count. The persistent MTF state is a 64-byte history, 256-byte tail, a u64 mask and two indices; no shuffle table is needed. Every block initializes its own tail. RUNA/RUNB and EOB follow the unchanged validated stock path. This differs from the previously reviewed GPU tiled MTF prefix scans and the sequential two-literal table. [State invariant and original gate](PLAN.md) · [Independent proof, alias and exhaustive checks](reference/README.md) · [Historical GPU comparison](../../../docs/journal/2026-10-27-research-synthesis.md)
+
+The structural gate passed. On the 383 record-route blocks, 15,147,621 literal moves produced 92.34% recent hits and 7.64% recent expirations. The residual tail copied 0.584 bytes per literal, averaging 7.63 on each miss. The greatest observed residual move was 92 bytes. The scalar reference independently checked both the circular and right-aligned models against complete ordinal MTF states in 888,478 small and 32,608 256-identity cases. Synthetic repeated decoded byte values leave the positional proof intact. [Per-block costs at 16, 32 and 64 positions](blocks.csv) · [Distribution of actual tail copies](tail.csv)
+
+The integrated treatment is `527187df` with the frozen independently measured scalar-cap inverse from `d0a42980e896211906234c7679b38760ae44a46e`. A separately coded scalar-front oracle checked 11,770 generated inputs and all 431 corpus blocks. The official v1 scorer passed all 338 cases, including the full 209,700,196-byte Wikidata output against libbzip2, block and stream CRCs and the 600-input mutation comparison. It used scorer path `75297a1d57b2bdf262c3a19f3064848dedf2c493`, printed v1 at `81585172f5fb9e7a59f330124779ba084fd6bf04`. The complete worker uses the same private-front hook and stock fallback as the prior composed worker; the independent long-decline example applies. [Complete gate](worker/official/gate/summary.json) · [Corpus and adversarial front check](check.txt) · [Legal large fallback](../mtf-pairs/review.md)
+
+The paid frontend lost despite the favorable geometry. Three position-balanced trials each sampled 12 complete corpus front laps per arm. History/stock-library thread-CPU ratios were **1.8282, 1.8337, and 1.8981**; the corresponding median history times were 138.5, 147.5 and 148.0 ms. Each sample includes bitmap construction, block initialization, every old-tail move and ring access, RLE2, all 16,326,954 cap records on the 383 active blocks and both counter arrays. The separate stock-source copy and history used the same reusable record scratch. [Raw observations](stages.csv) · [Paired intervals](attribution.json)
+
+In 24 further rotations, providing exact labels in an untimed 24,978,786-byte input reduced the median complete record generation to 55.93 ms. Computing the final live mask in addition took 82.16 ms, a paired ratio of **1.4658 [1.3256, 1.6208]**. Fully paid history took 148.51 ms, or **1.8304 [1.6871, 1.9859]** of the oracle-plus-mask arm. The latter comparison also changes the extra oracle reads. Both the ordered bitmap recurrence and recovering actual labels merit accounting; the ablation does not isolate hardware stall cycles. This representation is exact and preserves favorable static bounds, but its measured front offers no case for CI or target-machine promotion. [Ablation source](ablate.rs) · [Raw attribution](ablation.csv)
+
+Reproduce the native experiments below using a release research library with the public run records enabled. The standard worker gate rebuilds the isolated candidate.
+ 
+```sh
+d=research/astra-e/mtf-history
+cargo build --release --locked --manifest-path bench/moonshot/Cargo.toml --target-dir /tmp/astra-history-lib
+taskset -c 1 bash "$d/replay.sh" /tmp/astra-history-native /tmp/astra-history-lib/release/deps/libmibz2.rlib corpora/wikidata.bz2
+git fetch origin master && git checkout origin/master -- bench/moonshot .just Justfile
+git log -1 --format=%h origin/master -- bench/moonshot
+python3 "$d/worker/prepare.py"
+python3 bench/moonshot/moonshot.py score "$d/worker/candidate.rs" --no-timing --no-proxy --corpus corpora/wikidata.bz2 --out /tmp/astra-history-gate
+```
