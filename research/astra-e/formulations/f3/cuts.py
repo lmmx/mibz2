@@ -51,6 +51,16 @@ def screen(primary, runs):
                     i = j
             bit >>= 1
         return starts[i] + k
+    def zero_prefix(row, cut):
+        # Weighted rank up to this original L coordinate, including a partial run.
+        if row == 0:
+            return 0
+        run = bisect.bisect_right(starts, row - 1) - 1
+        count = row - starts[run] if runs[run][0] <= cut else 0
+        while run:
+            count += low[run]
+            run -= run & -run
+        return count
     prefix = [0] * 256
     pos = run_idx = 0
     for c in range(255):
@@ -87,7 +97,18 @@ def screen(primary, runs):
                 diff = i
                 break
             rank = select(rank - m if high else rank, high)
-        yield c + 1, m, n, errors, diff
+        # FM backward search computes all possible binary skeleton starts with
+        # the wanted prefix. This also works when the binary LF has many cycles.
+        left, right = 0, n
+        for wanted in reversed(actual):
+            lo, hi = zero_prefix(left, c), zero_prefix(right, c)
+            if wanted < m:
+                left, right = lo, hi
+            else:
+                left, right = m + left - lo, m + right - hi
+            if left == right:
+                break
+        yield c + 1, m, n, errors, diff, right - left
 
 
 if __name__ == '__main__':
@@ -98,7 +119,7 @@ if __name__ == '__main__':
     with Path(__file__).with_name('wikidata.csv').open() as f:
         known = list(csv.DictReader(f))
     out = csv.writer(sys.stdout, lineterminator='\n')
-    out.writerow(['ordinal', 'cut', 'group0_rows', 'n', 'wrong_next_colours', 'first_marked_difference_in_128'])
+    out.writerow(['ordinal', 'cut', 'group0_rows', 'n', 'wrong_next_colours', 'first_marked_difference_in_128', 'any_mark_matches_128'])
     for row, (p, runs) in zip(known, samples):
         assert receipts(runs) == row['capped_run_sha256']
         for values in screen(p, runs):
