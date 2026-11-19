@@ -1,0 +1,82 @@
+"""Theorem 3's batch widths on the frozen reference column: K pinned alphabet boundaries, greedy
+conflict-free batches under the paper's six-interval touched sets, and under the weaker exact
+condition (no front's A is another's B). Coordinate-free pointer model; batches run serially."""
+import sys
+from collections import Counter
+L=open(sys.argv[1],'rb').read(); n=len(L); K=int(sys.argv[2])
+cnt=Counter(L); C={}; acc=0
+for c in sorted(cnt): C[c]=acc; acc+=cnt[c]
+cands=sorted(v for v in C.values() if 0<v<n)
+if len(sys.argv)>4 and sys.argv[4]=='runs':
+    seams=[0]+[x for x in range(1,n) if L[x]!=L[x-1]]; import bisect as _b
+    rc=lambda v:_b.bisect_left(seams,v); R=len(seams)
+    pins=sorted({min(cands,key=lambda v:abs(rc(v)-j*R/K)) for j in range(1,K)})
+else:
+    pins=sorted({min(cands,key=lambda v:abs(v-j*n/K)) for j in range(1,K)})
+K=len(pins)+1
+bounds=[0,*pins,n]
+seen=Counter(); runs=[]  # (dom start, len, cod start)
+x=0; ps=set(pins)
+while x<n:
+    y=x+1
+    while y<n and L[y]==L[x] and y not in ps: y+=1
+    c=L[x]; runs.append((x,y-x,C[c]+seen[c])); seen[c]+=y-x; x=y
+r=len(runs); S0=r     # sentinel ids r .. r+K-1 (S_j after component j); head H = r+K
+H=r+K; N=H+1
+ln=[0]*N; dn=[0]*N; dp=[0]*N; cn=[0]*N; cp=[0]*N
+for i,(d,l,c) in enumerate(runs): ln[i]=l
+import bisect
+def comp(x): return bisect.bisect_right(bounds,x)-1
+for nx,pv,key in ((dn,dp,0),(cn,cp,2)):
+    seq=[H]
+    for j in range(K):
+        seq+=sorted((i for i in range(r) if comp(runs[i][key])==j),key=lambda i:runs[i][key]); seq.append(S0+j)
+    for a,b in zip(seq,seq[1:]): nx[a]=b; pv[b]=a
+def unlink(nx,pv,X): p,q=pv[X],nx[X]; nx[p]=q; pv[q]=p
+def ins_after(nx,pv,A,X): q=nx[A]; nx[A]=X; pv[X]=A; nx[X]=q; pv[q]=X
+def step(A,B):
+    if A==B: unlink(dn,dp,A); unlink(cn,cp,A); return 1
+    a,b=ln[A],ln[B]
+    if a>b: unlink(cn,cp,B); ins_after(cn,cp,A,B); ln[A]=a-b
+    elif a<b: unlink(dn,dp,A); ins_after(dn,dp,B,A); ln[B]=b-a
+    else: unlink(dn,dp,A); unlink(cn,cp,B); pa=cp[A]; ins_after(cn,cp,pa,B); unlink(cn,cp,A)
+    return 0
+def real(x): return x<r
+mode=sys.argv[3]  # 'paper' or 'exact'
+percomp=Counter(); rounds=0; cells=0; width=Counter(); active_hist=Counter(); full=0; closures=0
+while True:
+    fr=[]
+    for j in range(K):
+        A,B=dp[S0+j],cp[S0+j]
+        if real(A): fr.append((j,A,B))
+    if not fr: break
+    clo=[f for f in fr if f[1]==f[2]]
+    for j,A,B in clo: step(A,B); closures+=1
+    if clo: continue
+    used=set(); As=set(); Bs=set(); batch=[]
+    for j,A,B in fr:
+        if mode=='prime':
+            a,b=ln[A],ln[B]
+            if a>b: t={A,B,cn[A],cp[B]}
+            elif a<b: t={A,B,dn[B],dp[A]}
+            else: t={A,B,dp[A],cp[A],cn[A],cp[B]}
+            t={v for v in t if real(v)}
+            if t&used: continue
+            used|=t
+        elif mode=='paper':
+            t={A,B,cn[A],cp[B],dn[B],dp[A]}; t={v for v in t if real(v)}
+            if t&used: continue
+            used|=t
+        else:
+            if A in Bs or B in As: continue
+            As.add(A); Bs.add(B)
+        batch.append((A,B)); percomp[j]+=1
+    for A,B in batch: step(A,B)
+    rounds+=1; cells+=len(batch); width[len(batch)]+=1; active_hist[len(fr)]+=1; full+=(len(batch)==len(fr))
+print(f'n={n} r={r} K={K} mode={mode}: cells={cells} closures={closures} rounds={rounds} '
+      f'mean width={cells/rounds:.2f} rounds with every active front={full/rounds:.3f} rounds width>=2={sum(c for w,c in width.items() if w>=2)/rounds:.3f} rounds with >=2 active={sum(c for w,c in active_hist.items() if w>=2)/rounds:.3f}')
+tot=sum(width.values())
+print(' width share of rounds:',{w:round(c/tot,3) for w,c in sorted(width.items())})
+print(' active fronts share of rounds:',{w:round(c/tot,3) for w,c in sorted(active_hist.items())})
+top=percomp.most_common(3)
+print(' longest components (cells, share, left edge byte):',[(c,round(c/cells,3),repr(chr(L[0] if j==0 else sorted(cnt)[[C[k] for k in sorted(cnt)].index(bounds[j])]))) for j,c in top])

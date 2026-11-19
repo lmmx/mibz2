@@ -1,0 +1,21 @@
+//! scratch: the Cells induction alone, timed (INDUCE_NS) over a file's blocks, one thread.
+use mibz2::bwt::{Cells, InverseBwt, LazyCells};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{decode_block, Kernels, Scratch, INDUCE_CELLS, INDUCE_NS};
+use std::sync::atomic::Ordering::Relaxed;
+fn pass<I: InverseBwt + Default>(blocks: &[mibz2::block::Symbols], s: &mut Scratch<I>) -> (u64, u64) {
+    let k = Kernels::detect(); let mut out = Vec::new();
+    INDUCE_NS.store(0, Relaxed); INDUCE_CELLS.store(0, Relaxed);
+    for b in blocks { out.clear(); decode_block(b, k, s, &mut out).unwrap(); }
+    (INDUCE_NS.load(Relaxed), INDUCE_CELLS.load(Relaxed))
+}
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap(); let every: usize = a[3].parse().unwrap(); let passes: usize = a[4].parse().unwrap();
+    let mut sc = Scanner::new(SliceSource(&data)); let mut blocks = Vec::new(); let mut i = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(Vec::new()).unwrap() { if i % every == 0 { blocks.push(b); } i += 1; }
+    let mut best = (u64::MAX, 0);
+    if a[2] == "lazy" { let mut s = Scratch::<LazyCells>::default(); for _ in 0..passes { let r = pass(&blocks, &mut s); if r.0 < best.0 { best = r; } } }
+    else { let mut s = Scratch::<Cells>::default(); for _ in 0..passes { let r = pass(&blocks, &mut s); if r.0 < best.0 { best = r; } } }
+    println!("{} blocks={} induce_ms={:.1} cells={} ns_per_cell={:.3}", a[2], blocks.len(), best.0 as f64 / 1e6, best.1, best.0 as f64 / best.1 as f64);
+}
