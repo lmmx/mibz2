@@ -32,6 +32,18 @@ LazyCells as shipped. The output is byte-identical.
 4 cores) is neutral. At 1–4 threads the open kernel is not on the route there: Wikidata
 −0.7%, −0.2% and +0.9%, every interval spanning 0.
 
+**The release scaling** (0.5.7 against 0.5.6 on the i9-10900K, `bench-release-scaling`,
+release-scaling/run-20261119T203443Z, 10 rounds): 0.5.6's wall time over 0.5.7's on Wikidata, with
+95% intervals. Above 1 means 0.5.7 is faster.
+
+| threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| wall | 0.988 [0.953, 1.025] | 0.991 [0.960, 1.022] | 1.011 [0.980, 1.043] | **1.108** [1.088, 1.127] | **1.073** [1.061, 1.085] | **1.081** [1.045, 1.119] | **1.074** [1.039, 1.110] | **1.091** [1.061, 1.123] |
+
+0.5.7 is 7–11% faster from 8 threads up. At 8 threads its peak memory is 96 MB, against 125 MB
+for 0.5.6. Below 8 threads the open kernel is not on the route, and nothing changes. The step
+has its row in `docs/journal/release-attribution.md` (§5b).
+
 **Caveats:**
 - **The first registered attempt was NOT ADOPTED, and that verdict stands**
   (open-port/run-20261119T125538Z). Four guard point estimates exceeded 1.02, all on corpora
