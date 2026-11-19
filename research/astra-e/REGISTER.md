@@ -26,6 +26,8 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 **Later local and independent comparisons.** A seventh nine-round confirmation on `75297a1` gave the precounted front the lowest local W1 point (0.808 [0.570,1.145]); final-slot retains W4 at 0.767 [0.517,1.139]. The direct 300-sample AMD CI for the precounted front against the actual `80d8409` precursor returned 1.0110/1.0212/1.0122 at W1/W2/W4, with the W2 interval [1.0084,1.0342]. The combined front/edge variant reduced retained front capacity by 745,884 bytes per sequential worker, while its weighted W1 native stage ratio to edge was 1.038 [0.977,1.104]. A separate cap certificate accelerated the five dense gate checks 13.4×; those checks together occupied a median 0.205% of whole-corpus serial worker CPU. These results preserve space and phase gains without promoting a new target speed leader. [Local score](results/v1p2-front-confirm/) · [Independent complete-worker CI](ci/evidence/front-fusion-44445335323.md) · [Five dense routes and memory](front-fusion/edge/) · [Gate certificate](front-fusion/edge/certificate/)
 
+**Fixed eager worker mixture.** Two independent CI runs on AMD each tested 20 paired rounds per W. At W2 the fixed mix took 0.9095 [0.8977,0.9215] and 0.8861 [0.8714,0.9010] of the homogeneous edge time. The direct W4 figures were 0.9881 [0.9537,1.0238] and 0.9876 [0.9836,0.9916]. Median W4 peak rose 7.0% and 5.8% against edge while remaining below Lazy. W1 was all eager, and its replication control gave 0.9764 of the separate eager binary. The service-rate controls and higher memory leave the registered i9 frontier with edge. [Both original CI archives and decision](worker-dose/)
+
 **Previously preserved leaders.** The v0 settled short-word result at W4 was 0.766 [0.610,0.962] versus LazyCells; it regressed against opend at W3 and its W4 advantage did not repeat on the v1 grid. Single lookahead remains a simpler independent milestone with an i9 request. A conjugate-rank constructor has a distinct space advantage (W4 peak RSS about 0.849 of Lazy on two CI hosts) and divergent CPU results across those hosts. The register retains build references, input hashes, and separate instructions, traffic and dependency quantities below. [Short words](results/short-words-confirm/assessment.json) · [v1 repeat](results/v1-short-confirm/assessment.json) · [Lookahead](results/lookahead-pilot/assessment.json) · [Conjugate constructor](results/conjugate-pilot/assessment.json)
 
 **Local final-slot milestone.** Final-slot repair at source `e53d5e2` reached 0.718 [0.551,0.934] of Lazy wall at W4 with median peak RSS 0.859. Opend in that same epoch took 0.657 [0.483,0.896]. The lower candidate/Lazy point than the edge-budget result was measured in a separate epoch; it does not establish a direct victory. [Nine-pair run](results/v1-final-slot-confirm/score/summary.txt)
@@ -1611,6 +1613,25 @@ git checkout 75297a1d57b2bdf262c3a19f3064848dedf2c493 -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/formulations/f2-heaviest/union/native/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-heaviest/union/native/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2count-check
+```
+
+## v1p2-cap-batch-scalar-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-cap-batch-scalar-gate/score/check.jsonl) · [manifest](results/v1p2-cap-batch-scalar-gate/manifest.txt) · [score](results/v1p2-cap-batch-scalar-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`d0a42980e896211906234c7679b38760ae44a46e`](https://github.com/lmmx/mibz2/tree/d0a42980e896211906234c7679b38760ae44a46e). [Candidate entry](https://github.com/lmmx/mibz2/blob/d0a42980e896211906234c7679b38760ae44a46e/research/astra-e/front-fusion/cap-batch/worker/candidate.rs). Fetched master `be74d5763d212864607d46521d74ebc0827f9f36`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+No independent benchmark is attached to this individual scorer receipt.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout be74d5763d212864607d46521d74ebc0827f9f36 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/front-fusion/cap-batch/worker/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/front-fusion/cap-batch/worker/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/astra-cap-batch-scalar-build
 ```
 
 ## v1p2-cap-edge-certificate-gate
