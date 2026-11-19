@@ -60,11 +60,15 @@ U hash(Triple t){
     return U(v^(v>>31));
 }
 struct Published{U dest,source,width,id;};
-enum class Assemble{sort,scatter};
+enum class Assemble{sort,scatter,rank};
+#include "rank.hpp"
 
 // Beginning with unsorted physical meetings, charge all dictionary and ordering work.
 bool form(const Edges& e,const Capture& c,const std::vector<Band>& bands,
           const SectionRanks& s,U n,U p,bool rotate,Assemble mode,TokenObject& out){
+    if(mode==Assemble::rank && s.s.size()==1)
+        return rank_form(e,c,bands,s,n,p,rotate,false,out);
+    if(mode==Assemble::rank)mode=Assemble::scatter;
     out.tokens=s.width;out.n=n;
     out.mark=transfer(e,s,p,rotate);
     if(out.mark.rank==nil)return false;
@@ -140,7 +144,7 @@ void small(){
             Capture c(e);c.trace=&plan;c.index_edges();c.run(section);
             for(U p=0;p<n;++p){
                 auto want=ref.tape(p);
-                for(bool rotate:{false,true})for(auto mode:{Assemble::sort,Assemble::scatter}){
+                for(bool rotate:{false,true})for(auto mode:{Assemble::sort,Assemble::scatter,Assemble::rank}){
                     TokenObject data;++attempts;
                     if(form(e,c,plan.matches,s,n,p,rotate,mode,data)){
                         ++accepted;U used=0;auto o=data.view();
@@ -159,6 +163,7 @@ void small(){
              <<" token_fallback="<<accepted-second_used<<" declined="<<declined<<" disjoint="<<disjoint
              <<" verified_outputs="<<outputs<<'\n';
 }
+#ifndef ASTRA_TOKEN_LIBRARY
 int main(int argc,char** argv){
     if(argc==1){small();return 0;}
     require(argc==6,"writer RUNS EXPECTED ORDINAL REPS CSV");
@@ -185,24 +190,57 @@ int main(int argc,char** argv){
         {TokenObject raw;require(form(e,c,plan.matches,s,n,p,false,Assemble::scatter,raw),"raw not eligible");
          auto o=raw.view();U used=0;validate(consume(&o,&used),expected);}
         constexpr std::array<int,5> pattern{0,1,4,2,3};
+        #ifdef ASTRA_RANK_PANEL
+#if defined(ASTRA_ENVELOPE_PANEL)
+        const char* names[]={"rank","scatter","sort","compact","second"};
+#else
+        const char* names[]={"rank","scatter","paid_rank","compact","second"};
+#endif
+#else
         const char* names[]={"sort","scatter","old","compact","second"};
+#endif
         for(int rep=0;rep<std::stoi(argv[4]);++rep)for(int pos=0;pos<5;++pos){
             int arm=(pattern[(rep/5)%2 ? 4-pos:pos]+rep)%5;
             U used=0,probes=0,comparisons=0;N added=0;
             double start=now(),assembly=0,second=0;
             Owned out{};Vec<Byte> old;
+            #ifdef ASTRA_RANK_PANEL
+            Assemble first_mode=Assemble::rank;
+#else
+            Assemble first_mode=Assemble::sort;
+#endif
             if(arm<=1){
                 auto base=mem.live;mem.peak=base;
                 TokenObject w;
-                require(form(e,c,plan.matches,s,n,p,true,arm==0?Assemble::sort:Assemble::scatter,w),"interchange failed");
+                require(form(e,c,plan.matches,s,n,p,true,arm==0?first_mode:Assemble::scatter,w),"interchange failed");
                 auto o=w.view();assembly=now()-start;
                 added=mem.peak-base;probes=w.probes;comparisons=w.comparisons;
                 double t=now();out=consume(&o,&used);second=now()-t;
-            }else if(arm==2)old=c.indexed_marked(p,n);
+            }else if(arm==2){
+#ifdef ASTRA_RANK_PANEL
+                auto base=mem.live;mem.peak=base;
+#ifdef ASTRA_ENVELOPE_PANEL
+                TokenObject w;
+                require(form(e,c,plan.matches,s,n,p,true,Assemble::sort,w),"sort interop declined");
+                auto o=w.view();assembly=now()-start;added=mem.peak-base;
+                probes=w.probes;comparisons=w.comparisons;
+                double t=now();out=consume(&o,&used);second=now()-t;
+#else
+                auto own_e=build(runs);BasicConstructor<PagedIndex> own(own_e);
+                own.index_edges();own.run(section);
+                TokenObject w;
+                require(rank_form(own_e,own,own.bands,s,n,p,true,true,w),"paid interop declined");
+                auto o=w.view();assembly=now()-start;added=mem.peak-base;
+                double t=now();out=consume(&o,&used);second=now()-t;
+#endif
+#else
+                old=c.indexed_marked(p,n);
+#endif
+            }
             else if(arm==3)out=full(caps.data(),caps.size(),freq.data(),n,p);
             else {out=consume(&frozen_view,&used);second=now()-start;}
             double elapsed=now()-start;
-            if(arm!=2)validate(out,expected);
+            if(out.data)validate(out,expected);
             else require(old.size()==n && std::equal(old.begin(),old.end(),expected.begin()),"old writer mismatch");
             csv<<argv[3]<<','<<name<<','<<rep<<','<<names[arm]<<','<<n<<','<<s.width<<','<<plan.matches.size()
                <<','<<frozen_view.k<<','<<frozen_view.r<<','<<frozen_view.bytes<<','<<frozen_view.mark<<','<<frozen_view.skip
@@ -210,3 +248,4 @@ int main(int argc,char** argv){
         }
     }
 }
+#endif

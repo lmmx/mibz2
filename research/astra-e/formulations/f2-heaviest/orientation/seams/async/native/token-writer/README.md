@@ -32,3 +32,5 @@ python3 -B "$d/summary.py" /tmp/token-writer.csv
 ```
 
 [Raw paired CPU and work](paired.csv) · [Paired ratios](summary.txt) · [Small adversarial checks](small.txt) · [Native writer](writer.cpp) · [Rust adapter](interface.rs)
+
+The follow-up paid the complete original-rank producer and confirmed the conditional comparison in 60 additional repetitions. It verifies all 228 real admissions and the general single-rank-interval token theorem. [Paid result and reproduction](RANK.md) · [Single-interval proof](audit/README.md)

@@ -85,3 +85,24 @@ pub unsafe extern "C" fn compare(o:&Object,caps:*const u16,count:usize,freq:*con
         assert_eq!(original.width,actual.width);
     }
 }
+fn space<T>(v:&Vec<T>)->usize { v.capacity()*std::mem::size_of::<T>() }
+// Untimed capacity census, adjacent to the actual calls.
+#[no_mangle]
+pub unsafe extern "C" fn token_capacity(o:&Object)->usize{
+    let v=unsafe{o.view()};
+    let nodes:Vec<Node>=v.bases.iter().enumerate().map(|(i,&base)|{
+        let mut node=Node::new(0,NONE,0);node.word=i as u32;node.base=base;node
+    }).collect();
+    let mut stage=second::Second::default();let mut out=Vec::new();
+    if !stage.invert(v.root,&nodes,v.words,v.dict,o.mark,o.skip,o.tokens,o.n,&mut out){return 0;}
+    space(&nodes)+space(&out)+stage.capacity_bytes()
+}
+#[no_mangle]
+pub unsafe extern "C" fn full_capacity(caps:*const u16,count:usize,freq:*const u32,n:u32,p:u32)->usize{
+    let i=unsafe{raw(caps,count,freq)};let mut out=Vec::new();
+    let mut c=Dispatch::<2,2>::default();
+    assert!(c.attempt_with::<true>(i.caps,n as usize,p,&mut out,Some(i.freq)));
+    c.second.capacity_bytes()+space(&out)+space(&c.runs)+space(&c.page_first)+space(&c.starts)
+        +space(&c.nodes)+space(&c.selectors)+space(&c.edges)+space(&c.words)+space(&c.dict)
+        +space(&c.merged)+space(&c.links)+c.lane_paths.iter().map(space).sum::<usize>()
+}
