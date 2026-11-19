@@ -1,0 +1,24 @@
+{
+  "f2": {
+    "arcs": 63372,
+    "delimiter_free_marks": 32679,
+    "factorizations": 18792,
+    "marks": 126744,
+    "mixed_covered_uncovered": 5677,
+    "swallowed_marks": 30693
+  },
+  "f2_query_sha256": "d2a53d7369f964c098aa2a11c7d37242a1c2406f28550654531e1b522c794cf5",
+  "f2_reply_sha256": "b0e0c8b3f9882e440a1487a2df24f26147bb082684dab51cad57253a9fc3ffc0",
+  "f4": {
+    "arcs": 25873,
+    "marks": 34646,
+    "proper_prefix_word_pairs": 3552,
+    "swallowed_marks": 8773,
+    "two_level_mark_lifts": 12604
+  },
+  "inputs": {
+    "columns": 2489,
+    "equal_rotations": 990,
+    "nondividing_period": 1379
+  }
+}
