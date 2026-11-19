@@ -16,10 +16,11 @@ def main():
     parser.add_argument("tapes",type=Path)
     parser.add_argument("dest",type=Path)
     parser.add_argument("--reps",type=int,default=8)
+    parser.add_argument("--replay",action="store_true")
     a=parser.parse_args()
     a.dest.mkdir(exist_ok=True,parents=True)
     laps=a.dest/"paired.csv"; rss=a.dest/"fresh.csv"
-    for target in laps,rss: target.write_text(HEAD+"\n")
+    for target in laps,rss: target.write_text((HEAD.replace("published_bands","discovered_bands") if a.replay else HEAD)+"\n")
     manifest={int(row["ordinal"]):row for row in csv.DictReader((HERE/"inputs.csv").open())}
     with tempfile.TemporaryDirectory() as tmp:
         for path in paths(a.tapes):
@@ -33,7 +34,7 @@ def main():
             base=[a.binary.resolve(),fixture,gold,str(ordinal)]
             subprocess.run([*base,str(a.reps),laps],check=True)
             for sec in "quote","frequent":
-                for arm in "tree","paged","direct","compact":
+                for arm in (("free_geometry","free_order","direct","compact") if a.replay else ("tree","paged","direct","compact")):
                     subprocess.run([*base,"1",rss,arm,sec],check=True)
             print(f"paired {ordinal:04}",file=sys.stderr,flush=True)
 if __name__=="__main__":

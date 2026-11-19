@@ -15,3 +15,4 @@ RS
 rustc --edition=2021 --crate-type=cdylib -A dead_code -A unexpected_cfgs -C opt-level=3 -C codegen-units=1 "$out/wrapper.rs" --extern mibz2="$deps/libmibz2.rlib" -L dependency="$deps" -o "$out/libcompact.so"
 g++ -std=c++20 -O3 -DNDEBUG -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter -Wno-stringop-overread "$d/match.cpp" -L"$out" -lcompact -Wl,-rpath,"$out" -o "$out/match"
 g++ -std=c++20 -O3 -DASTRA_PAGED -Wno-stringop-overread "$d/ranks.cpp" -o "$out/check"
+g++ -std=c++20 -O3 -DNDEBUG -DASTRA_FREE_REPLAY -Wno-stringop-overread "$d/match.cpp" -L"$out" -lcompact -Wl,-rpath,"$out" -o "$out/replay"

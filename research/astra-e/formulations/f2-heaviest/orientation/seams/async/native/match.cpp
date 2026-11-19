@@ -27,6 +27,13 @@ Vec<Byte> run(const std::vector<Run>& runs,U mark,U n,const Section& s,Cost& cos
     auto out=c.indexed_marked(mark,n);costs.end=now()-t;costs.full_peak=mem.peak;
     return out;
 }
+template<bool Queue>
+Vec<Byte> oracle_run(const Edges& given,const FreeTrace& plan,U endpoints,U p,U n,Cost& costs){
+    double t=now();BasicConstructor<TreeIndex> c(given);c.replay<Queue>(plan,endpoints);
+    costs.build=now()-t;costs.z=c.stats;t=now();
+    auto out=c.indexed_marked(p,n);costs.end=now()-t;
+    return out;
+}
 int main(int argc,char** argv){
     if(argc!=6 && argc!=8)throw std::runtime_error("match RUNS EXPECTED ORDINAL REPS OUTPUT [ARM SECTION]");
     std::ifstream in(argv[1]);
@@ -41,7 +48,11 @@ int main(int argc,char** argv){
     std::ifstream gold(argv[2],std::ios::binary);
     Word expected((std::istreambuf_iterator<char>(gold)),{});
     std::ofstream csv(argv[5],std::ios::app);
+#ifdef ASTRA_FREE_REPLAY
+    const char* arms[]={"free_geometry","free_order","direct","compact"};
+#else
     const char* arms[]={"tree","paged","direct","compact"};
+#endif
     // Balanced four-treatment Williams order for each four repetitions.
     int order[4][4]={{0,1,3,2},{1,2,0,3},{2,3,1,0},{3,0,2,1}};
     for(U j=0;j<ns;++j){
@@ -49,12 +60,25 @@ int main(int argc,char** argv){
         Section s(cnt);std::vector<Interval> ss;
         for(auto&[lo,hi]:s){in>>lo>>hi;ss.push_back({int(lo),int(hi)});}
         if(argc==8 && name!=argv[7])continue;
+#ifdef ASTRA_FREE_REPLAY
+        Edges given=build(runs);FreeTrace plan;U endpoints=0;
+        for(auto[lo,hi]:s)endpoints+=hi-lo;
+        if(argc!=8 || argv[6]==std::string(arms[0]) || argv[6]==std::string(arms[1])){
+            BasicConstructor<PagedIndex,true> tracing(given);
+            tracing.trace=&plan;tracing.index_edges();tracing.run(s);
+        }
+#endif
         for(int rep=0;rep<std::stoi(argv[4]);++rep)for(int i:order[rep%4]){
             if(argc==8 && std::string(arms[i])!=argv[6])continue;
             Cost costs{};double t=now();
             Vec<Byte> out;std::string d;Owned h{};
+#ifdef ASTRA_FREE_REPLAY
+            if(i==0)out=oracle_run<true>(given,plan,endpoints,p,n,costs);
+            if(i==1)out=oracle_run<false>(given,plan,endpoints,p,n,costs);
+#else
             if(i==0)out=run<TreeIndex>(runs,p,n,s,costs);
             if(i==1)out=run<PagedIndex>(runs,p,n,s,costs);
+#endif
             if(i==2)d=direct_native::decode(n,p,direct,ss);
             if(i==3)h=compact_inverse(caps.data(),caps.size(),freq.data(),n,p);
             double elapsed=now()-t;

@@ -90,7 +90,14 @@ public:
     void init(U,Stats&){}
 };
 #include "paged.hpp"
-template<class Index>
+struct ChildEffect { U id,mass,birth; Byte c; };
+struct Effect { U id,hits,hit_count,kids,kid_count; };
+struct FreeTrace {
+    std::vector<Effect> steps;
+    std::vector<ChildEffect> births;
+    std::vector<Band> matches;
+};
+template<class Index,bool Recording=false>
 class BasicConstructor {
     const Edges& edges;
     std::array<Index,2> front;
@@ -193,6 +200,7 @@ class BasicConstructor {
     }
 public:
     Stats stats;
+    FreeTrace* trace=nullptr;
     Vec<Group> groups;
     Vec<Band> bands;
     BasicConstructor(const Edges& e): edges(e),front{Index(RowOrder{&stats.tree_cmp}),Index(RowOrder{&stats.tree_cmp})} {
@@ -221,10 +229,59 @@ public:
             if(mass==0)continue;
             if(k.mass!=mass){++stats.repush;push(k.g);continue;}
             ++stats.states;
+            U before=groups.size(),start=bands.size();
             advance(k.g);
+            if constexpr(Recording){
+                trace->steps.push_back({k.g,U(trace->matches.size()),U(bands.size()-start),
+                                          U(trace->births.size()),U(groups.size()-before)});
+                trace->matches.insert(trace->matches.end(),bands.begin()+start,bands.end());
+                for(U i=before;i<groups.size();++i){
+                    auto g=groups[i];trace->births.push_back({i,g.mass,g.birth,g.c});
+                }
+            }
         }
         assert(front[0].empty() && front[1].empty());
         std::sort(bands.begin(),bands.end(),[&](auto a,auto b){++stats.sort_cmp;return a.lo<b.lo;});
+    }
+    template<bool Queue> void replay(const FreeTrace& plan,U endpoints){
+        for(U side:{0u,1u}){
+            U id=new_group(side,0,nil,0);
+            groups[id].mass=endpoints;groups[id].birth=birth++;
+            if constexpr(Queue)push(id);
+        }
+        auto next=[&](){
+            while(!heap.empty()){
+                std::pop_heap(heap.begin(),heap.end(),Priority{&stats.heap_cmp});
+                auto k=heap.back();heap.pop_back();++stats.pops;
+                if(!groups[k.g].mass)continue;
+                if(groups[k.g].mass!=k.mass){push(k.g);continue;}
+                return k.g;
+            }
+            return nil;
+        };
+        for(auto a:plan.steps){
+            if constexpr(Queue)if(next()!=a.id)throw std::runtime_error("oracle queue order mismatch");
+            ++stats.states;auto g=groups[a.id];
+            auto lo=plan.matches.begin()+a.hits;
+            bands.insert(bands.end(),lo,lo+a.hit_count);
+            if constexpr(Queue){
+                for(auto i=lo;i!=lo+a.hit_count;++i){
+                    U opposite=g.side==0?i->right:i->left;
+                    groups[opposite].mass-=i->hi-i->lo;
+                }
+            }
+            for(U i=a.kids;i<a.kids+a.kid_count;++i){
+                auto child=plan.births[i];
+                U id=new_group(g.side,g.depth+1,a.id,child.c);
+                if(id!=child.id)throw std::runtime_error("oracle birth mismatch");
+                if constexpr(Queue){
+                    groups[id].mass=child.mass;groups[id].birth=child.birth;push(id);
+                }
+            }
+            groups[a.id].mass=0;
+        }
+        if constexpr(Queue)if(next()!=nil)throw std::runtime_error("oracle queue incomplete");
+        std::sort(bands.begin(),bands.end(),[](const Band& a,const Band& b){return a.lo<b.lo;});
     }
     Vec<Byte> indexed_marked(U row,U n) const{
         struct Ref {U base,len;};
@@ -247,8 +304,14 @@ public:
             U offset=row-bands[0].lo;
             U id=offset<directory.size()?directory[offset]:nil;
             if(id==nil){
-                auto& e=edges[0];U i=page_first[0][row/64];
-                while(e[i].hi<=row)++i;
+                auto& e=edges[0];
+                U i;
+                if(page_first[0].empty()){
+                    auto k=std::prev(std::upper_bound(e.begin(),e.end(),row,[](U x,Piece z){return x<z.lo;}));
+                    i=k-e.begin();
+                }else{
+                    i=page_first[0][row/64];while(e[i].hi<=row)++i;
+                }
                 auto k=e[i];out.push_back(k.c);row=k.dst+row-k.lo;continue;
             }
             auto r=refs[id];auto b=bands[id];
