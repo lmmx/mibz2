@@ -4,7 +4,9 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 ## Preserved frontier
 
-**Closest independently measured candidate.** Narrow links, inline short words and one-edge lookahead come from source `80d8409359214b4e5abfd4430213921e82e9cd30`. Independent AMD EPYC 7763 CI built head `5c7704b3d149b05b8e9dc2ace06da0179459a8b3` with v0 and 16 complete paired rounds per W. The full libbzip2/CRC gate passed for the candidate and all three references. Eager Cells was faster throughout this grid. The ten-core i9 remains the decisive test. [Candidate](https://github.com/lmmx/mibz2/tree/80d8409359214b4e5abfd4430213921e82e9cd30/research/astra-e/narrow-short) · [Raw CI archive](ci/evidence/combined-ahead-44427324957.zip) · [Scorer and candidate manifest](results/combined-ahead-pilot/assessment.json)
+**Target-machine speed leader.** On the i9-10900K, the combined writer's W7/W8/W9/W10 wall ratios versus 0.5.6 LazyCells were **0.8982/0.9117/0.9031/0.8871**. Median peak RSS ratios were **0.8489/0.8288/0.8229/0.8191**, with every memory criterion met. Direct opend ratios were 0.9583/0.9656/0.9616/0.9591; all upper limits were below parity. All four wall limits exceed the 0.80 objective. It takes a further 9.8–12.3% reduction of the measured candidate times at the point estimates. [Target evidence, raw samples and exact reproduction](workstation/combined-i9.md)
+
+**Independent CI for the i9 winner.** Narrow links, inline short words and one-edge lookahead come from source `80d8409359214b4e5abfd4430213921e82e9cd30`. Independent AMD EPYC 7763 CI built head `5c7704b3d149b05b8e9dc2ace06da0179459a8b3` with v0 and 16 complete paired rounds per W. The full libbzip2/CRC gate passed for the candidate and all three references. Eager Cells was faster throughout this grid. [Candidate](https://github.com/lmmx/mibz2/tree/80d8409359214b4e5abfd4430213921e82e9cd30/research/astra-e/narrow-short) · [Raw CI archive](ci/evidence/combined-ahead-44427324957.zip) · [Scorer and candidate manifest](results/combined-ahead-pilot/assessment.json)
 
 | Workers | Combined / LazyCells wall [95%] | Combined / opend wall [95%] | Combined / LazyCells median peak RSS |
 |---:|---|---|---:|
@@ -26,7 +28,7 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 **Delimiter mechanism in independent CI.** At W1/W2/W4 the dynamic rank scheduler ran in 0.9561/0.9586/0.9784 of the static F2 predecessor. The candidate's full worker took 1.0252/1.0153/1.0196 of Lazy, so the independently verified scheduling improvement leaves a measurable pipeline gap on this runner. [Twenty complete rotations and artifact](ci/evidence/delimiter-refill-44433942216.md)
 
-**Target status.** The first standalone-lookahead i9 attempt exited on a stale scorer pin. The validated v1 retry preserves the Coordinator's changes. The Coordinator queued the combined writer and published its dry and measured ready tags at `8c9640d8`. The latest evidence at this checkpoint contains no target worker timings for either candidate. [Queue](https://github.com/lmmx/mibz2/pull/615) · [Recipe, recovery and continuation](HANDOFF.md)
+**Earlier target attempt.** The original standalone-lookahead recipe declined an obsolete v0 scorer pin before timing. The measured combined implementation includes that lookahead and passes the updated protocol. [Initial receipt](workstation/lookahead-first-attempt.md) · [Combined measured result](workstation/combined-i9.md)
 
 The [official v1 JSONL register](official-register.jsonl) preserves the scorer's original records; read it with `just moonshot-best research/astra-e/official-register.jsonl`. The register below also includes v0 and gate-only experiments with their input manifests.
 
@@ -800,6 +802,32 @@ git checkout 604dac3f46569edd9ac9b6706b23a68d9d7d8f8d -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/narrow-short/ahead.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/narrow-short/ahead.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy
+```
+
+## v1-compact-eager-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-compact-eager-confirm/score/check.jsonl) · [manifest](results/v1-compact-eager-confirm/manifest.txt) · [score](results/v1-compact-eager-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`ab7076541459b8b66a137c9f1cc0804e0cd72de0`](https://github.com/lmmx/mibz2/tree/ab7076541459b8b66a137c9f1cc0804e0cd72de0). [Candidate entry](https://github.com/lmmx/mibz2/blob/ab7076541459b8b66a137c9f1cc0804e0cd72de0/research/astra-e/formulations/f2-pages/payload/construction/eager.rs). Fetched master `c76927421dae1cc46a08122dc410728bfcc3e4a7`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 0.825 [0.692, 0.984] | 0.938 [0.791, 1.112] | 0.880 | 79,752 / 80,204 / 77,576 | 0.994 |
+| 4 | 9 | 0.984 [0.685, 1.412] | 0.792 [0.623, 1.006] | 1.242 | 124,584 / 135,292 / 117,596 | 0.921 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1-compact-eager-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout c76927421dae1cc46a08122dc410728bfcc3e4a7 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-pages/payload/construction/eager.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-pages/payload/construction/eager.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/compact-eager-whole-target
 ```
 
 ## v1-compound-gate
