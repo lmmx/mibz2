@@ -1,0 +1,7 @@
+clock,numerator,denominator,passes,geomean,log_t95_low,log_t95_high,median_numerator_ms,median_denominator_ms
+elapsed_ns,phrases,opend16,9,3.10928,2.96172,3.26418,62.17214,19.65442
+elapsed_ns,phrases,lazy,9,3.04624,2.91869,3.17935,62.17214,20.40712
+elapsed_ns,opend16,lazy,9,0.97973,0.91797,1.04564,19.65442,20.40712
+thread_cpu_ns,phrases,opend16,9,3.10733,2.96037,3.26158,62.19249,19.67502
+thread_cpu_ns,phrases,lazy,9,3.04461,2.91697,3.17783,62.19249,20.43245
+thread_cpu_ns,opend16,lazy,9,0.97982,0.91808,1.04570,19.67502,20.43245
