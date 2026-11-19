@@ -1,0 +1,1 @@
+18434 arbitrary marked columns, including truncated runs, overlapped quartets and multiple LF cycles
