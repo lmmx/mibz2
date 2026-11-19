@@ -1,0 +1,2 @@
+262144 thin rows and 1 thick runs: primary 0 admits; primary 262145 rejects. Lower/upper charges 1048576/1048580 bytes.
+150000 thin rows and 5290 thick runs: primary 0 admits; primary 150001 rejects. Lower/upper charges 600000/1200008 bytes.

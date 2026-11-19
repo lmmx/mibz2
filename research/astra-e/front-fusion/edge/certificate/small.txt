@@ -1,0 +1,1 @@
+524224 checks over every bit alignment and every RUNA/B word of up to 12 symbols
