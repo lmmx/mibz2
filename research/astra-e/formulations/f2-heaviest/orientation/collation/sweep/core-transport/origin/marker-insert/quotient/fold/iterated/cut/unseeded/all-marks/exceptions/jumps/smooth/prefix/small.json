@@ -1,0 +1,68 @@
+{
+  "counts": {
+    "arbitrary_columns": 1602,
+    "backward_clips": 796883,
+    "columns_heterogeneous_laps": 1149,
+    "columns_multiple_cycles": 1335,
+    "depths_empty_shifted_set": 6630,
+    "marked_horizons": 892854,
+    "nondividing_marks": 3702,
+    "rows": 9601,
+    "short_shifted_returns": 2570,
+    "wrong_next_patterns": 907
+  },
+  "minimal_witnesses": {
+    "insufficient_destination": {
+      "n": 3,
+      "last": [
+        0,
+        1,
+        0
+      ],
+      "k": 1,
+      "d": 2,
+      "destination_rows": [
+        0,
+        1
+      ],
+      "common_prefix": [
+        0
+      ],
+      "required": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    "copy_next_boundary": {
+      "n": 4,
+      "last": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "k": 1,
+      "source": 2,
+      "next": 3,
+      "length": 2,
+      "source_pattern": [
+        1,
+        0
+      ],
+      "next_pattern": [
+        1,
+        1
+      ],
+      "actual": [
+        1,
+        0
+      ]
+    }
+  }
+}
