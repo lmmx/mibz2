@@ -71,9 +71,11 @@ def normalize(raw,words,protected,bounds,slices,check=False):
                 power[key]=words[k].power(d)
             weights.append(power[key])
     root=[(ids[t],n) for t,n in tmp]
-    sole=[i for i,(k,d,side) in enumerate(keys) if k==protected]
-    assert len(sole)==1
-    a=sole[0]
+    a=None
+    if protected is not None:
+        sole=[i for i,(k,d,side) in enumerate(keys) if k==protected]
+        assert len(sole)==1
+        a=sole[0]
     m=sum(n for k,n in root)
     counts=Counter(affine_pieces=len(raw),start_fragments=roots,macro_rows=m,macro_types=len(keys),
                    macro_runs=len(root),power_nodes=len(power),point_lookups=queries,
