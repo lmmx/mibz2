@@ -341,3 +341,28 @@ The giant SCC is a property of the macro graph. It does not by itself force expe
 - **The floor is valid but loose.** Every direct Φ-copy schedule must cut those cycles further, so the true minimum lies strictly between F_self_ns (0.40–0.85r) and the 3.4–8.7r that round 5 achieved.
 - **The real obstruction is a cycle-breaking problem**, akin to finding a minimum feedback set over the fragment graph. Its size, not F_self_ns, decides whether direct Φ-copy replay can compete with Cells' ≈ 1.8r.
 - **Neon's own follow-up** concedes that F_self_ns binds only direct Φ-copy execution, that SCC size is a diagnostic, and that its closing claim was overbroad. It tightened the proof of part 4 for temporary buffers and byte loops.
+
+**MONODROMY's verdict on round 6** (REVIEW 7008576600 on #145; record 82, `docs/journal/monodromy/2026-11-19-neon-round6-verification.md` at cd818e4c):
+
+1. **F_self_ns: verified with a correction. It is a class bound, not a universal one.**
+   - **What it binds:** in-place, write-once, Φ-sourced fragment schedules, in any order.
+   - **What escapes it:** temporary buffers, LZ77-style copies from any final equal stretch, and secondary structures such as an SLP or an LZ parse.
+   - **Counterexample:** `aaaaaabaaaaaaaab` (n = 16, r = 4) has F_self_ns = 12, yet LZ77 writes it in 4 operations in all. Over all 131,068 single-cycle binary texts of length ≤ 16, LZ77 needs fewer operations than r + F_self_ns in 128,936.
+2. **Attainability: the floor is not reached, but some in-class schedule comes close to Cells.** Every in-class schedule is a time τ that strictly increases along runs. MONODROMY built τ = θ + φ(run), with φ chosen on a maximum-weight forest of the run overlaps:
+
+   | Block | Floor | Potential τ | Cells steps | Potential ÷ Cells |
+   |---|--:|--:|--:|--:|
+   | 0 | 0.81r | 110,204 = 2.15r (7.7 B) | 92,571 | 1.19 |
+   | 2 | 0.85r | 114,432 = 2.10r (7.4 B) | 101,907 | 1.12 |
+   | 85 | 0.55r | 107,456 = 1.35r (7.6 B) | 140,544 | 0.76 |
+   | 210 | 0.40r | 111,991 = 0.87r (6.9 B) | 216,769 | 0.52 |
+
+   - **The fragment count is nearly constant,** at about 0.12n, while Cells' steps grow with r. From r/n ≈ 0.088 upwards the schedule needs fewer operations than Cells takes steps.
+   - **The units differ:** a memcpy fragment and a Cells step are not the same cost, and the comparison is unmeasured.
+   - **What blocks it:** building τ needs each copy's run-label sequence, an O(n) arc walk. The open question is whether the overlap transitions can be listed from the positions in o(n), about O(#overlaps).
+3. **Part 3: verified.** It bounds dependency depth, not work. The potential schedule's depth lies within 0.3–6% of the λ_max − 1 floor.
+4. **Part 5: verified with a correction.**
+   - The sweep floor is 0.42–0.61λ, not ≈ λ/2.
+   - It exceeds round 5's peeling passes on every block measured. Peeling runs ready fragments in any order, so it is outside the class this floor binds.
+
+**The status after round 6:** nothing changes in production. In-place Φ copy replay is still an open candidate, but only on blocks with high r/n, and only if the overlap labelling can be built in o(n). That is round 7's question.
