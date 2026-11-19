@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import shlex
 import subprocess
+import sys
 
 # Cargo records compiler-tracked Rust modules and include! inputs in its binary
 # depfile. These additional inputs control the build, corpus or measurement.
@@ -17,6 +18,24 @@ CONTROLS = [
     "research/astra-e/ci/inputs.py", "research/astra-e/ci/paired.py",
     "research/astra-e/prepare.sh", ":(glob)research/astra-e/**/prepare.py",
 ]
+
+
+# The previous independently selected combined kernel is immutable, including its
+# generated constructor inputs, worker code and Cargo dependencies. Its harness
+# receives the same scorer projection as the PR head and master-based references.
+PREDECESSOR = {
+    "commit": "5c7704b3d149b05b8e9dc2ace06da0179459a8b3",
+    "path": "research/astra-e/narrow-short/ahead.rs",
+}
+MATCHED = {
+    "research/astra-e/edge-budget/candidate.rs",
+    "research/astra-e/final-slot/candidate.rs",
+}
+
+
+def predecessor():
+    candidate = Path("research/astra-e/ci/candidate").read_text().strip()
+    return PREDECESSOR if candidate in MATCHED else None
 
 
 def git(*args):
@@ -47,12 +66,15 @@ def record(deps, base):
         "head": git("rev-parse", "HEAD"),
         "base": base,
         "scorer": scorer_revision(),
+        "predecessor": predecessor(),
         "inputs": sorted(sources.intersection(tracked) | set(CONTROLS)),
         "generated": generated,
     }
 
 
 def reusable(receipt, base):
+    if receipt.get("predecessor") != predecessor():
+        return False
     if receipt["base"] != base or receipt["scorer"] != scorer_revision():
         return False
     for path, digest in receipt["generated"].items():
@@ -85,4 +107,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:] == ["predecessor"]:
+        matched = predecessor()
+        if matched:
+            print(matched["commit"], matched["path"])
+    else:
+        main()

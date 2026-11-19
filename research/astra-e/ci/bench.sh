@@ -13,6 +13,13 @@ git worktree add --detach "$base" "$BASE_SHA"
 candidate=$(cat research/astra-e/ci/candidate)
 git ls-files --error-unmatch -- "$candidate"
 bash research/astra-e/prepare.sh "$candidate"
+matched=$(python3 research/astra-e/ci/inputs.py predecessor)
+predecessor_tree=$RUNNER_TEMP/astra-e-predecessor-tree
+if [[ -n $matched ]]; then
+  read -r predecessor_commit predecessor_path <<< "$matched"
+  git worktree add --detach "$predecessor_tree" "$predecessor_commit"
+  (cd "$predecessor_tree" && bash research/astra-e/prepare.sh "$predecessor_path")
+fi
 git fetch origin master && git checkout origin/master -- bench/moonshot .just Justfile
 fresh=$(git rev-parse origin/master)
 # HEAD retains the last scorer that built the candidate in the research tree.
@@ -31,6 +38,11 @@ build_pair() {
   MOONSHOT_CANDIDATE="$base/bench/moonshot/candidates/lazy_cells.rs" \
     CARGO_TARGET_DIR="$RUNNER_TEMP/astra-e-lazy" \
     cargo build --locked --release --manifest-path "$base/bench/moonshot/Cargo.toml" || return 1
+  if [[ -n $matched ]]; then
+    git -C "$predecessor_tree" checkout "$rev" -- bench/moonshot .just Justfile || return 1
+    MOONSHOT_CANDIDATE="$predecessor_tree/$predecessor_path" CARGO_TARGET_DIR="$RUNNER_TEMP/astra-e-predecessor" \
+      cargo build --locked --release --manifest-path "$predecessor_tree/bench/moonshot/Cargo.toml" || return 1
+  fi
   MOONSHOT_CANDIDATE="$root/$candidate" CARGO_TARGET_DIR="$RUNNER_TEMP/astra-e-candidate" \
     cargo build --locked --release --manifest-path bench/moonshot/Cargo.toml || return 1
 }
@@ -38,12 +50,13 @@ build_pair() {
 chosen=$fresh
 if ! build_pair "$fresh"; then
   test "$(git rev-parse "$last:bench/moonshot")" != "$(git rev-parse "$fresh:bench/moonshot")"
-  echo "Fresh scorer build failed. Retrying both builds at $last."
+  echo "Fresh scorer build failed. Retrying all builds at $last."
   chosen=$last
   build_pair "$last"
 fi
 base_bin=$RUNNER_TEMP/astra-e-lazy/release/moonshot
 head_bin=$RUNNER_TEMP/astra-e-candidate/release/moonshot
+predecessor_bin=$RUNNER_TEMP/astra-e-predecessor/release/moonshot
 {
   echo "base $BASE_SHA"
   echo "head $HEAD_SHA"
@@ -64,17 +77,30 @@ SCORER
   sha256sum "$candidate" "$base_bin" "$head_bin"
   "$base_bin" info
   "$head_bin" info
+  if [[ -n $matched ]]; then
+    echo "matched predecessor $predecessor_commit $predecessor_path"
+    sha256sum "$predecessor_tree/$predecessor_path" "$predecessor_bin"
+    "$predecessor_bin" info
+  fi
 } | tee "$out/manifest.txt"
 
 bash bench/moonshot/corpus.sh
 sha256sum corpora/wikidata.bz2 >> "$out/manifest.txt"
-for arm in candidate lazy cells opend; do
+gates=(candidate lazy cells opend)
+paired_options=()
+if [[ -n $matched ]]; then
+  gates+=(predecessor)
+  paired_options+=(--predecessor "$predecessor_bin")
+fi
+for arm in "${gates[@]}"; do
   bin=$base_bin
-  if [ "$arm" = candidate ]; then bin=$head_bin; fi
-  "$bin" check --arm "$arm" --wikidata corpora/wikidata.bz2 \
+  compiled_arm=$arm
+  if [[ $arm == candidate ]]; then bin=$head_bin; fi
+  if [[ $arm == predecessor ]]; then bin=$predecessor_bin; compiled_arm=candidate; fi
+  "$bin" check --arm "$compiled_arm" --wikidata corpora/wikidata.bz2 \
     > "$out/$arm.check.jsonl" 2> "$out/$arm.check.stderr"
 done
-python3 research/astra-e/ci/paired.py "$base_bin" "$head_bin" corpora/wikidata.bz2 "$out"
+python3 research/astra-e/ci/paired.py "$base_bin" "$head_bin" corpora/wikidata.bz2 "$out" "${paired_options[@]}"
 cat "$out/comparison.md" >> "$GITHUB_STEP_SUMMARY"
 # A fallback uses an older scorer than the fetched one. Let the next job retry the fresh scorer.
 if [ "$chosen" = "$fresh" ]; then

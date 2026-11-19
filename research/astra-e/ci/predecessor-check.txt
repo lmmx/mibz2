@@ -1,0 +1,3 @@
+4 arms: 16 complete rounds, 192 verified binary/arm samples; all paired wall and predecessor RSS checks passed
+5 arms: 20 complete rounds, 300 verified binary/arm samples; all paired wall and predecessor RSS checks passed
+Completed-input check rejected absent, changed, and extraneous predecessor identities; matched mode reused the identical pin.

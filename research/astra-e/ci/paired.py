@@ -10,26 +10,30 @@ sys.path.insert(0, str(ROOT / "bench" / "moonshot"))
 import moonshot
 
 WORKERS = [1, 2, 4]
-ROUNDS = 16  # Two complete forward and reverse rotations of four arms.
 REPEAT = 4
 
 
 class Paired(moonshot.Scorer):
-    def __init__(self, base, head, expected_bytes):
+    def __init__(self, base, head, expected_bytes, predecessor=None):
+        self.arms = ["lazy", "cells", "opend", "candidate"]
+        self.binaries = {"candidate": (head, "candidate", "head")}
+        if predecessor is not None:
+            self.arms.append("predecessor")
+            self.binaries["predecessor"] = (predecessor, "candidate", "frozen predecessor")
+        # Two complete forward and reverse rotations, regardless of arm count.
         options = argparse.Namespace(
-            workers=WORKERS, rounds=ROUNDS, settle=2, repeat=REPEAT, target_dir=None
+            workers=WORKERS, rounds=4*len(self.arms), settle=2, repeat=REPEAT, target_dir=None
         )
         super().__init__(options)
         self.base = base
-        self.head = head
         self.expected_bytes = expected_bytes
 
     def run_once(self, arm, workers, corpus, perf=None):
-        self.bin = self.head if arm == "candidate" else self.base
-        row = super().run_once(arm, workers, corpus, perf)
-        if (row["arm"], row["workers"], row["out_bytes"]) != (arm, workers, self.expected_bytes):
+        self.bin, compiled_arm, build = self.binaries.get(arm, (self.base, arm, "base"))
+        row = super().run_once(compiled_arm, workers, corpus, perf)
+        if (row["arm"], row["workers"], row["out_bytes"]) != (compiled_arm, workers, self.expected_bytes):
             raise RuntimeError(f"Unexpected run for {arm} W={workers}: {row}")
-        row["build"] = "head" if arm == "candidate" else "base"
+        row.update(arm=arm, compiled_arm=compiled_arm, build=build)
         return row
 
 
@@ -48,22 +52,25 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for arg in ("base", "head", "corpus", "out"):
         parser.add_argument(arg, type=Path)
+    parser.add_argument("--predecessor", type=Path)
     args = parser.parse_args()
     spec = json.loads((ROOT / "bench" / "wikidata.json").read_text())
-    scorer = Paired(args.base, args.head, spec["decoded_bytes"] * REPEAT)
-    lazy = scorer.timing(args.corpus, args.out, ["lazy", "cells", "opend", "candidate"])
+    scorer = Paired(args.base, args.head, spec["decoded_bytes"] * REPEAT, args.predecessor)
+    lazy = scorer.timing(args.corpus, args.out, scorer.arms)
     rows = [json.loads(line) for line in (args.out / "runs.jsonl").read_text().splitlines()]
     tables = {
         "master LazyCells": lazy,
         "master eager Cells": compare_to_reference(rows, "cells"),
         "master opend": compare_to_reference(rows, "opend"),
     }
+    if args.predecessor:
+        tables["frozen narrow-short/ahead"] = compare_to_reference(rows, "predecessor")
     (args.out / "ratios.json").write_text(json.dumps(tables, indent=2) + "\n")
     report = [
         "### Astra E paired research benchmark",
         "",
-        f"{ROUNDS} paired rounds on Wikidata ×{REPEAT}, with 4W slots and a 2 s settle. "
-        "Ratios compare the PR candidate with the base kernel in the same worker configuration. "
+        f"{scorer.a.rounds} paired rounds on Wikidata ×{REPEAT}, with 4W slots and a 2 s settle. "
+        "Ratios compare the PR candidate with each reference kernel in the same worker configuration. "
         "Eager Cells is the low-worker production kernel. The one-worker row uses the worker pool.",
         "",
         "| Workers | Reference | Wall ratio [95% CI] | Median peak RSS ratio |",
