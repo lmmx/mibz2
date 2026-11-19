@@ -4754,3 +4754,8 @@ Incoming 6988393925; head cd7e5de2b7c61442f7a391436eee910a5ebb126a. G1 ownership
 ## D114 — PR581: lift D113
 
 Incoming 6988881933; head 270a29ba52a90b8411d20c2326b93692a6e421e7. **G1 PROCEED; G2 lift D113's B5 evidence HOLD.** Completed Miri inspected (48+4 tests); actual merge checkout tree identical to reviewed source; new head changes only journal/scorer/receipts. Eight built mutants have named runtime failure receipts. Independent scorer substitution rejects baseline/build/dependency/zero-test failures and accepts runtime failures. Seven baseline executions are six distinct tests. Performance and adoption remain separate. [Full lift review](reports/D114-one-scan-lift.md). Evidence sha256:7a64dcdcad7a380adbbde38241ffaf0c542e0e2ae0774c74cba95d02b2b2f64e.
+
+
+## D115 — PR630 open port
+
+Incoming 7007091766; head 3f09500ee3289b0dd06948003f45c89aedd8ea36. **G1 PROCEED: B5 sufficient to freeze #631's registration.** No new safety/gate HOLD. Completed Miri (49+4), native tests and 85,696 classic fuzz cases verified against equivalent executable source. Twelve built mutants have named runtime failures; independent scorer substitution rejects build/dependency/zero-test failures. Scratch algebra does not bound retained capacity/RSS; C6 adoption remains separate. [Full review](reports/D115-open-port.md). Evidence sha256:f991f6a4792210a7a06813cacdfd9f4c98671374a5e660bae346793ab23e9852.

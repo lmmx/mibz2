@@ -1,0 +1,156 @@
+{
+  "decision": "D115",
+  "incoming_comment": 7007091766,
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "pr": 630,
+  "head": "3f09500ee3289b0dd06948003f45c89aedd8ea36",
+  "registration": {
+    "pr": 631,
+    "head": "b6412e1e43cbe7281c8f61033f7223f131244037",
+    "scope": "B5 readiness to freeze, not C6 adoption ruling"
+  },
+  "migration": {
+    "old_head": "f9dab3d2b40739d89d613f86e8c2d67bec3159e4",
+    "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488"
+  },
+  "ci": {
+    "checkout": "124e91a1b407b7f589a48d2e7a595e742bdfd0db",
+    "trees": [
+      {
+        "sha": "3f09500ee3289b0dd06948003f45c89aedd8ea36",
+        "tree": "3591f65b50b0a6fac956722fcb3761c12c0f89af"
+      },
+      {
+        "sha": "124e91a1b407b7f589a48d2e7a595e742bdfd0db",
+        "tree": "91019d6c05e83dd98b3f1feb87fb31e1947ee889"
+      }
+    ],
+    "head_to_checkout_changed_files": [
+      "docs/journal/2026-11-19-gemini-neon/README.md",
+      "docs/journal/2026-11-19-gemini-neon/batchrate.py",
+      "docs/journal/2026-11-19-gemini-neon/check_theorem1.py",
+      "docs/journal/2026-11-19-gemini-neon/prompt.md",
+      "docs/journal/2026-11-19-gemini-neon/response-2.md",
+      "docs/journal/2026-11-19-gemini-neon/response.md",
+      "docs/journal/2026-11-19-gemini-neon/verify_thm3.py.txt",
+      "docs/team/PERFORMANCE-POLICY.md"
+    ],
+    "miri": {
+      "run": 44505754277,
+      "job": 135496799257,
+      "default_passed": 49,
+      "feature_passed": 4,
+      "open_test": "open::b5::miri_open_kernel_small_columns"
+    },
+    "native": {
+      "run": 44505754289,
+      "job": 135496800465,
+      "passed": 151,
+      "failed": 0,
+      "ignored": 2
+    },
+    "classic_fuzz": {
+      "job": 135496799577,
+      "seed": 1,
+      "cases": 85696,
+      "seconds": 30,
+      "failures": 0,
+      "candidate_source": "tests/common/mod.rs includes OpenCells and ForcedOpenCells"
+    }
+  },
+  "local_fuzz_report": {
+    "cases": 514235,
+    "seeds": [
+      1,
+      7
+    ],
+    "independently_rerun": false
+  },
+  "mutation": {
+    "receipt_path": "docs/journal/2026-11-19-open-port-b5/receipts.json",
+    "built_and_runtime_killed": 12,
+    "baseline_passed": 10,
+    "baseline_ignored": 1,
+    "scorer_substitution": [
+      {
+        "mode": "baseline_build",
+        "exit": 1,
+        "calls": 1,
+        "verdicts": []
+      },
+      {
+        "mode": "mutant_build",
+        "exit": 1,
+        "calls": 14,
+        "verdicts": [
+          "INVALID (did not build)",
+          "INVALID (did not build)",
+          "INVALID (did not build)",
+          "INVALID (did not build)",
+          "INVALID (did not build)",
+          "INVALID (did not build)",
+          "INVALID (did not build)",
+          "INVALID (did not build)",
+          "INVALID (did not build)",
+          "INVALID (did not build)",
+          "INVALID (did not build)",
+          "INVALID (did not build)"
+        ]
+      },
+      {
+        "mode": "selection_build",
+        "exit": 1,
+        "calls": 26,
+        "verdicts": [
+          "SURVIVED",
+          "SURVIVED",
+          "SURVIVED",
+          "SURVIVED",
+          "SURVIVED",
+          "SURVIVED",
+          "SURVIVED",
+          "SURVIVED",
+          "SURVIVED",
+          "SURVIVED",
+          "SURVIVED",
+          "SURVIVED"
+        ]
+      },
+      {
+        "mode": "zero_tests",
+        "exit": 1,
+        "calls": 2,
+        "verdicts": []
+      },
+      {
+        "mode": "runtime",
+        "exit": 0,
+        "calls": 26,
+        "verdicts": [
+          "KILLED",
+          "KILLED",
+          "KILLED",
+          "KILLED",
+          "KILLED",
+          "KILLED",
+          "KILLED",
+          "KILLED",
+          "KILLED",
+          "KILLED",
+          "KILLED",
+          "KILLED"
+        ]
+      }
+    ]
+  },
+  "routing": {
+    "audit_since": 7007091766,
+    "misroutes": [],
+    "destination": 145
+  },
+  "limits": [
+    "No Rust or Miri rerun in Guardian runtime; verified completed CI logs and independently ran scorer substitution.",
+    "Scratch algebra concerns logical elements, not retained allocations/RSS.",
+    "No full C6 performance/adoption verdict."
+  ]
+}
