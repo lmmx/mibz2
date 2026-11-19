@@ -1,0 +1,33 @@
+{
+  "totals": {
+    "strict_steps": 1682098,
+    "long_strict_steps": 1285616,
+    "strict_groups": 657830,
+    "full_groups": 9,
+    "equal_steps": 986872,
+    "old_links": 19961308,
+    "new_links": 13815646,
+    "rows": 209697662,
+    "blocks": 233
+  },
+  "orientations": {
+    "0": {
+      "strict_steps": 632144,
+      "long_strict_steps": 445649,
+      "strict_groups": 298084,
+      "full_groups": 9
+    },
+    "1": {
+      "strict_steps": 1049954,
+      "long_strict_steps": 839967,
+      "strict_groups": 359746,
+      "full_groups": 0
+    },
+    "2": {
+      "equal_steps": 986872
+    }
+  },
+  "pct_links_saved": 30.78787221759215,
+  "pct_strict_steps_in_multi": 76.42931624673473,
+  "eligible_for_price": true
+}
