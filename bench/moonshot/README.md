@@ -29,6 +29,77 @@ scorer gives three kinds of evidence, side by side and **never combined into one
 A container's wall time can mislead. The open-return kernel `opend` was 9–21% slower on a
 4-CPU cloud VM, yet 6–8% faster on the i9 at 8–10 workers (MONODROMY record 71).
 
+## Status: v0, live
+
+**The scorer improves on master.** Re-pull it before each round of scoring:
+
+```sh
+git fetch origin master && git checkout origin/master -- bench/moonshot .just Justfile
+```
+
+Every score prints the scorer's version and the commit of `bench/moonshot`. Record both beside
+each result.
+
+**What is authoritative, and what is advisory.**
+- *Authoritative:* the correctness gate (§1) and the paired container wall times with peak RSS
+  (§2).
+- *Advisory:* the contention proxy (§3). Its rank agreement with the i9 is good; its magnitudes
+  are not.
+- *The predictor the i9 evidence supports:* the opend sweep (evidence 824d0954) found opend's
+  gain flat in W, about 0.93–0.95 from 2 to 10 workers. Record 76 traces it to about 24% fewer
+  instructions a byte, partly repaid by lower IPC. Record 71's contention story is refuted. The
+  proxy reports the instruction ratio beside its three quantities (`instr`).
+
+**The candidate interface** (`Candidate: mibz2::bwt::InverseBwt`, one Rust file) is stable across
+versions. A version that changes it says so below.
+
+**Versions:**
+- **v1** (this branch, PR #608). The proxy rebuilt after a diagnosis of v0's misses
+  ("Calibration"):
+  - each block measured in a worker's steady state, over a stratified sample with paired
+    bootstrap intervals;
+  - DRAM latency from each arm's own bandwidth;
+  - κ = 0.
+
+  Held out: every open-return cell inside its interval, and 9 of 9 pairs in order. Also new:
+  the version string, `--record` and `just moonshot-best`. No change to the candidate interface.
+- **v0** (#606, 9c31461). The gate, container timing, and the first proxy (κ = 4):
+  - 3 of 9 held-out pairs out of order;
+  - eager Cells underpredicted (1.15 against 1.27).
+
+**The register.**
+- *Appending a line:* `just moonshot-score CANDIDATE.rs --record register.jsonl` appends one JSON
+  line per score. It holds:
+  - the time;
+  - the candidate's path, commit and SHA-256;
+  - the scorer's version and commit;
+  - the gate's verdict;
+  - the wall ratio for each W, with its interval, the peak-RSS ratio and lazy's peak RSS;
+  - the advisory proxy's ratio and instruction ratio for each W.
+- *Where it lives:* the register belongs to the caller's branch, never to master.
+- *Reading it:* `just moonshot-best register.jsonl` prints, for each scorer version:
+  - the best production-eligible candidates, ranked by the geometric mean of their wall ratios
+    at 7–10 workers (else at the most workers timed);
+  - each W's leader.
+
+  A candidate is eligible when its gate passed, and peak RSS grew at most 10% at every timed W.
+  Above 10%, it is eligible only when the growth is at most twice a gain beyond noise and at
+  most 64 MB (PERFORMANCE-POLICY.md rule 4). Faster candidates that aren't eligible are listed
+  apart, marked INELIGIBLE, with the reason.
+- *Earlier records:* add a hand-written record as a line of the same file, and nothing earlier is
+  lost. The reader needs only `candidate`, `gate` and `walls` (`{"8": {"ratio": 0.91}}`). Every
+  other field is optional, and a line without `scorer_version` is grouped as "unversioned".
+  Lines that aren't JSON are skipped with a warning, never dropped from the file.
+
+**TODO:**
+- the measured IPC and instructions a byte from `perf stat` in the container timing, where
+  `perf` is allowed;
+- `just moonshot-eval`: one fast command printing predicted against measured for every
+  i9-measured arm (the open-return bundle, the opend sweep, the recalibration bundle's
+  LazyCells against eager at W = 3–4, and 0.5.6 against 0.5.5), with rank agreement and the
+  mean absolute log error on a fixed held-out subset. The estimator is then improved in small,
+  logged versions, starting with instructions a byte and IPC.
+
 ## Plugging in a candidate
 
 A candidate is a Rust source file that defines `Candidate`, a type implementing
@@ -109,7 +180,7 @@ The container is noisy. The null candidate's 3-round score on this 4-CPU develop
 gave ratios from 0.946 to 1.079, with intervals up to [0.81, 1.44]. Use more rounds on a busy
 machine, and expect an identical kernel to land outside its interval now and then.
 
-## 3. The contention proxy
+## 3. The contention proxy (advisory)
 
 [`chaingrind/chaingrind.c`](chaingrind/chaingrind.c) is a Valgrind tool, built out of tree
 against the installed Valgrind's static libraries ([`chaingrind/build.sh`](chaingrind/build.sh);
@@ -227,7 +298,7 @@ reference's construction cost, at about 0.946, which is 0.010 from the predictio
 
 **The held-out check** (48 full + 16 tiny blocks, 400 paired bootstrap resamples):
 
-| cell | threads | role | i9 | handed over (v1) | v2 without feedback | **v2** [95%] | side | in interval | DRAM ratio i9 / v2 |
+| cell | threads | role | i9 | v0 (#606) | v1 without feedback | **v1** [95%] | side | in interval | DRAM ratio i9 / v1 |
 |---|---|---|---|---|---|---|---|---|---|
 | opend 7/28 | 10 | fitted | 0.940 | 0.940 | 0.924 | **0.956** [0.922, 0.986] | yes | yes | 1.035 / 1.144 |
 | open 7/28 | 10 | held out | 0.915 | 0.958 | 0.895 | **0.924** [0.857, 0.979] | yes | yes | 0.975 / 1.100 |
@@ -239,12 +310,12 @@ reference's construction cost, at about 0.946, which is 0.010 from the predictio
 
 - **Same side of 1:** every cell.
 - **Inside its 95% interval:** every cell.
-- **Pairs at the same thread count in the i9's order:** 9 of 9 (v1: 6 of 9; v2 without the
+- **Pairs at the same thread count in the i9's order:** 9 of 9 (v0: 6 of 9; v1 without the
   feedback: 8 of 9, open 7/28 against opend 8/32).
 - **Is the held-out ranking right? Yes, at both thread counts:** open < opend < 1 < eager
   Cells, and opend 8/32 over 7 workers below opend 7/28.
 
-**What was wrong in v1, and why.** These are diagnoses, not tuning: each was found in the
+**What was wrong in v0, and why.** These are diagnoses, not tuning: each was found in the
 harness or the sample, before κ was refitted.
 1. **Buffer growth inside the measured region.** LazyCells grows its buffers by a zero-filled
    reallocation when a block needs more than they hold. Valgrind runs glibc's `rep stosb` a
@@ -260,7 +331,7 @@ harness or the sample, before κ was refitted.
    29 GB/s, not lazy's at 20.
 
 **The feedback, an honest note.**
-- *Why it is in v2:* the bandwidth-latency term was added after v1's eager miss. That miss
+- *Why it is in v1:* the bandwidth-latency term was added after v0's eager miss. That miss
   turned out to be item 1, not the missing term.
 - *Why it stays:* it rests on measurements (bench-imc-ten's curve, lazy's measured
   bandwidth), not on these arms' timing, and it ranks 9 of 9 against 8 of 9 without it.

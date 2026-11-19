@@ -361,5 +361,51 @@ class Perf(unittest.TestCase):
         self.assertEqual(s["7"]["counters_per_byte"]["lazy"]["cycle_activity.stalls_l3_miss"], 10.0)
 
 
+class Register(unittest.TestCase):
+    def rec(self, ratio, rss, hi=None, gate="PASS", kb=200_000, v="v1", name="c"):
+        w = {
+            "ratio": ratio,
+            "lo": ratio - 0.02,
+            "hi": hi if hi is not None else ratio + 0.02,
+            "peak_rss_ratio": rss,
+            "lazy_peak_rss_kb": kb,
+        }
+        return {"candidate": name, "scorer_version": v, "gate": gate, "walls": {"8": w}}
+
+    def test_eligibility_follows_rule_4(self):
+        self.assertTrue(m.eligible(self.rec(0.9, 1.05))[0])
+        self.assertFalse(m.eligible(self.rec(0.9, 1.0, gate="FAIL"))[0])
+        # (+15% for a 10% gain: within twice the gain, and 29 MB)
+        self.assertTrue(m.eligible(self.rec(0.9, 1.15))[0])
+        # (+25% for a 10% gain: more than twice)
+        self.assertFalse(m.eligible(self.rec(0.9, 1.25))[0])
+        # (+15% of 600 MB is 88 MB: over 64)
+        self.assertFalse(m.eligible(self.rec(0.9, 1.15, kb=600_000))[0])
+        # (a gain not beyond noise trades for nothing)
+        self.assertFalse(m.eligible(self.rec(0.9, 1.15, hi=1.01))[0])
+
+    def test_best_reads_hand_written_lines(self):
+        import contextlib
+        import io
+        import tempfile
+
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
+            for r in (
+                self.rec(0.85, 1.4, name="fat"),
+                self.rec(0.9, 1.0, name="lean"),
+                {"candidate": "hand", "gate": "PASS", "walls": {"8": {"ratio": 0.95}}},
+            ):
+                f.write(json.dumps(r) + "\n")
+            f.write("not json\n")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            m.best(type("A", (), {"register": f.name})())
+        text = out.getvalue()
+        self.assertIn("eligible  0.900  lean", text)
+        self.assertIn("INELIGIBLE 0.850  fat", text)
+        self.assertIn("scorer unversioned", text)
+        self.assertIn("0.950  hand", text)
+
+
 if __name__ == "__main__":
     unittest.main()

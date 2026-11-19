@@ -34,6 +34,21 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 CALIBRATION = HERE / "calibration.json"
+# the scorer's version: bumped with every change to its calibration or its reading (README,
+# "Status: v0, live", lists them); every score prints it beside the commit of bench/moonshot
+VERSION = "v1"
+
+
+def scorer_commit() -> str:
+    """the last commit touching bench/moonshot, with "+dirty" for local changes"""
+
+    def git(*a: str) -> str:
+        p = subprocess.run(["git", "-C", str(HERE), *a], capture_output=True, text=True)
+        return p.stdout.strip() if p.returncode == 0 else ""
+
+    c = git("log", "-1", "--format=%H", "--", ".") or "unknown"
+    return c + ("+dirty" if git("status", "--porcelain", "--", ".") else "")
+
 
 # ---------------------------------------------------------------- statistics
 
@@ -921,7 +936,10 @@ def proxy_report(p: dict, ref: dict) -> list[str]:
     """section 3 of a score: the candidate's predicted ratio over lazy at each worker count with
     its interval, the metrics that drive it, its three quantities beside lazy's, and the flag"""
     L = [
-        "3. CONTENTION PROXY (chaingrind's model of one worker, the i9's LLC shared by W workers,",
+        "3. CONTENTION PROXY, ADVISORY: the gate and the wall times above are authoritative. The i9's",
+        "   opend sweep found opend's gain flat in W and carried by fewer instructions (record 76):",
+        "   the instructions ratio (instr) is the predictor the i9 evidence currently supports.",
+        "   (chaingrind's model of one worker, the i9's LLC shared by W workers,",
         "   DRAM latency from each arm's own bandwidth; three quantities kept apart, per output byte)",
         f"   sample: {len(p['sample']['full'])} full + {len(p['sample']['tiny'])} tiny blocks,"
         f" corpus-weighted; kappa {p['kappa']:g}; intervals: paired bootstrap over the blocks",
@@ -975,6 +993,8 @@ def report(s: dict) -> str:
         "MOONSHOT SCORE (container evidence only: only CI's paired bench and an i9 workstation run"
     )
     L.append("establish production performance; see bench/moonshot/README.md)")
+    sc = s.get("scorer", {})
+    L.append(f"scorer {sc.get('version', '?')} at {sc.get('commit', '?')}")
     L.append(f"candidate: {s['info']['candidate']} ({s['info']['candidate_type']})")
     L.append(
         f"machine: {s['info']['cpus']} CPUs; target 1.25x 0.5.6's throughput (a wall ratio of 0.800 or less)"
@@ -1040,7 +1060,12 @@ def score(a: argparse.Namespace) -> int:
             f"no corpus at {corpus}: run bench/corpus.sh's corpus step (README.md), or pass --corpus"
         )
         return 2
-    summary = {"info": s.info(), "corpus": str(corpus), "options": vars(a)}
+    summary = {
+        "info": s.info(),
+        "corpus": str(corpus),
+        "options": vars(a),
+        "scorer": {"version": VERSION, "commit": scorer_commit()},
+    }
     summary["gate"] = s.gate(corpus, out)
     if summary["gate"]["verdict"] == "PASS":
         if not a.no_timing:
@@ -1053,7 +1078,126 @@ def score(a: argparse.Namespace) -> int:
     (out / "summary.txt").write_text(text)
     print(text)
     log(f"written to {out}")
+    if a.record:
+        with open(a.record, "a") as f:
+            f.write(json.dumps(record(summary, cand)) + "\n")
+        log(f"recorded in {a.record}")
     return 0 if summary["gate"]["verdict"] == "PASS" else 1
+
+
+def record(s: dict, cand: Path) -> dict:
+    """one register line for a score (README, "The register")"""
+
+    def git(*a: str) -> str:
+        p = subprocess.run(["git", "-C", str(cand.parent), *a], capture_output=True, text=True)
+        return p.stdout.strip() if p.returncode == 0 else ""
+
+    c = git("rev-parse", "HEAD")
+    if c and git("status", "--porcelain", "--", str(cand)):
+        c += "+dirty"
+    import hashlib
+
+    walls = {}
+    for w, cell in (s.get("timing") or {}).items():
+        r = cell.get("candidate")
+        if r:
+            walls[w] = {
+                "ratio": r["geomean"],
+                "lo": r["lo"],
+                "hi": r["hi"],
+                "peak_rss_ratio": r["peak_rss_ratio"],
+                "lazy_peak_rss_kb": cell["lazy_peak_rss_kb"],
+                "rounds": cell["rounds"],
+            }
+    proxy = {}
+    p = s.get("proxy") or {}
+    for w, x in (p.get("predicted_over_lazy", {}).get("candidate") or {}).items():
+        proxy[w] = {
+            "ratio": x["ratio"],
+            "lo": x["lo"],
+            "hi": x["hi"],
+            "instructions_ratio": x["drivers"]["instructions_ratio"],
+        }
+    return {
+        "time": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "candidate": str(cand),
+        "candidate_commit": c or None,
+        "candidate_sha256": hashlib.sha256(cand.read_bytes()).hexdigest(),
+        "scorer_version": s["scorer"]["version"],
+        "scorer_commit": s["scorer"]["commit"],
+        "gate": s["gate"]["verdict"],
+        "cpus": s["info"]["cpus"],
+        "walls": walls,
+        "proxy_advisory": proxy,
+    }
+
+
+def eligible(rec: dict) -> tuple[bool, str]:
+    """production-eligible (PERFORMANCE-POLICY.md rule 4): the gate passed, and at every timed
+    worker count peak RSS grew at most 10%, or else by at most twice a gain beyond noise and by
+    at most 64 MB"""
+    if rec.get("gate") != "PASS":
+        return False, f"gate {rec.get('gate')}"
+    for w, x in (rec.get("walls") or {}).items():
+        g = x.get("peak_rss_ratio", 1.0) - 1
+        if g <= 0.10:
+            continue
+        gain = 1 - x["ratio"]
+        mb = g * x.get("lazy_peak_rss_kb", float("inf")) / 1024
+        if x.get("hi", 1) >= 1 or g > 2 * gain or mb > 64:
+            return (
+                False,
+                f"peak RSS +{100 * g:.0f}% ({mb:.0f} MB) against a gain of {100 * gain:.1f}% at {w} workers",
+            )
+    return True, ""
+
+
+def best(a: argparse.Namespace) -> int:
+    """the register's best eligible candidate per scorer version, and the per-W leaders"""
+    recs = []
+    for i, line in enumerate(Path(a.register).read_text().splitlines()):
+        if line.strip():
+            try:
+                recs.append(json.loads(line))
+            except json.JSONDecodeError:
+                log(f"{a.register}:{i + 1}: not a JSON line, skipped")
+
+    def headline(r: dict) -> float | None:
+        # (the geometric mean of the wall ratios at the target's 7-10 workers, else at the most
+        # workers timed)
+        ws = r.get("walls") or {}
+        t = [x["ratio"] for w, x in ws.items() if 7 <= int(w) <= 10] or (
+            [ws[max(ws, key=int)]["ratio"]] if ws else []
+        )
+        return math.exp(sum(map(math.log, t)) / len(t)) if t else None
+
+    for v in sorted({r.get("scorer_version", "unversioned") for r in recs}):
+        rs = [r for r in recs if r.get("scorer_version", "unversioned") == v and headline(r)]
+        print(f"scorer {v}: {len(rs)} timed records")
+        ok = sorted((r for r in rs if eligible(r)[0]), key=headline)
+        no = sorted((r for r in rs if not eligible(r)[0]), key=headline)
+        for r in ok[:3]:
+            print(
+                f"  eligible  {headline(r):.3f}  {r['candidate']} @ {r.get('candidate_commit')} ({r.get('time')})"
+            )
+        for r in no:
+            if not ok or headline(r) < headline(ok[0]):
+                print(
+                    f"  INELIGIBLE {headline(r):.3f}  {r['candidate']} @ {r.get('candidate_commit')}: {eligible(r)[1]}"
+                )
+        for w in sorted({w for r in ok for w in r.get("walls", {})}, key=int):
+            lead = min(
+                (r for r in ok if w in r.get("walls", {})), key=lambda r: r["walls"][w]["ratio"]
+            )
+            x = lead["walls"][w]
+            print(
+                f"  W {w:>2} leader {x['ratio']:.3f} [{m_fmt(x.get('lo'))}, {m_fmt(x.get('hi'))}]  {lead['candidate']} @ {lead.get('candidate_commit')}"
+            )
+    return 0
+
+
+def m_fmt(x) -> str:
+    return "-" if x is None else f"{x:.3f}"
 
 
 def rereport(a: argparse.Namespace) -> int:
@@ -1208,6 +1352,7 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--no-build", action="store_true")
     sc.add_argument("--target-dir")
     sc.add_argument("--out")
+    sc.add_argument("--record", help="append the score's register line to this JSONL file")
     ca = sub.add_parser(
         "calibrate", help="refit kappa on opend 7/28, read the reference arms (--write to keep)"
     )
@@ -1233,10 +1378,18 @@ def main(argv: list[str] | None = None) -> int:
     sw.add_argument("--repeat", type=int, default=1)
     sw.add_argument("--perf", action="store_true", help="each run under perf stat (PERF_EVENTS)")
     sw.add_argument("--target-dir")
+    bp = sub.add_parser("best", help="a register's best eligible candidates, per scorer version")
+    bp.add_argument("register")
     rp = sub.add_parser("report", help="a score's summary.txt again, from its summary.json")
     rp.add_argument("dir")
     a = ap.parse_args(argv)
-    return {"score": score, "calibrate": calibrate, "sweep": sweep, "report": rereport}[a.cmd](a)
+    return {
+        "score": score,
+        "calibrate": calibrate,
+        "sweep": sweep,
+        "report": rereport,
+        "best": best,
+    }[a.cmd](a)
 
 
 if __name__ == "__main__":

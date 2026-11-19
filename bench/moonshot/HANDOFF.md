@@ -1,14 +1,14 @@
 # Moonshot scorer: handoff
 
 The state of `bench/moonshot-scorer-v2`. The design and the results are in
-[README.md](README.md). #606 merged v1 (9c31461). v2 is in the follow-up PR from this branch.
+[README.md](README.md). #606 merged v0 (9c31461). v1 is PR #608, from this branch.
 Only the Coordinator merges.
 
 ## Done
 
 - **The candidate interface, the correctness gate and container timing,** as before: byte-exact
   against libbzip2, with block and stream CRCs; paired timing with a 95% interval and peak RSS.
-- **The proxy, v2** (README §3):
+- **The proxy, rebuilt for v1** (README §3):
   - *Each block in a worker's steady state:* the block decoded once unseen (no buffer growth in
     the region), then the warm block, which fills the caches, then the block measured.
   - *The sample:* stratified (233 full, 198 tiny blocks), with a paired bootstrap interval.
@@ -17,7 +17,7 @@ Only the Coordinator merges.
     point).
   - *The report:* drivers for each prediction, and range flags against the reference arms
     stored in `calibration.json`.
-- **The diagnosis of v1's misses** (README, "What was wrong in v1"):
+- **The diagnosis of v0's misses** (README, "What was wrong in v0"):
   - buffer growth measured inside the region;
   - a 10-full-block sample;
   - a cold cache;

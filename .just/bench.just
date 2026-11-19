@@ -1848,6 +1848,12 @@ moonshot-score candidate *args:
     bash bench/moonshot/corpus.sh corpora/wikidata.bz2 > /dev/null
     python3 bench/moonshot/moonshot.py score "{{candidate}}" {{args}}
 
+# The register's best production-eligible candidate per scorer version, and each worker count's
+# leader (bench/moonshot/README.md, "The register"); faster ineligible ones listed apart.
+#   just moonshot-best register.jsonl
+moonshot-best register:
+    python3 bench/moonshot/moonshot.py best "{{register}}"
+
 # The scorer's i9 calibration run (bench/moonshot/README.md, "Calibration"; its rule posted on
 # #145 before any data): the reference arms in the shipped workers, kernel-only (lazy, 0.5.6's
 # LazyCells; opend; open; cells, eager), paired and alternating at WORKERS workers, unpinned,
