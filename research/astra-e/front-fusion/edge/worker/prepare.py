@@ -11,7 +11,7 @@ with TemporaryDirectory() as directory:
     begin=s.index('impl Kernel {\n    pub(super) fn fuse<const TILE')
     end=s.index('impl Kernel {\n    pub(super) fn fuse_edge<const LAZY',begin)
     s=s[:begin]+'#[cfg(target_arch = "x86_64")]\n'+s[end:]
-    s=s.replace("crate::front::Bits","super::front::Bits").replace("crate::pre::front_avx2","super::pre::front_avx2")
+    s=s.replace("crate::front::Bits","super::front::Bits").replace("crate::pre::","super::pre::")
     (d/"kernel.rs").write_text(s)
     s=(temp/"pre.rs").read_text().replace("use crate::front::Bits;","use super::front::Bits;")
     (d/"symbols.rs").write_text(s.replace('include!("cap_count.rs");','include!("../../cap_count.rs");'))
