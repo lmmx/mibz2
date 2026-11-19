@@ -21,6 +21,137 @@ Researcher's review through the Coordinator.*
 - **What it decides:** whether 0.5.7 ships `OpenCells` as the workers' kernel wherever 0.5.6 ran
   `LazyCells`. If not, 0.5.7 ships without the change.
 
+## The result: NOT ADOPTED (the one confirmatory attempt, 19 November)
+
+*Recorded after the data. It is a factual record and reinterprets nothing: the attempt and its
+outcome stand, and this registration opens no retry. Everything from the next section on is the
+registration as frozen at 4bb9e319, before the data.*
+
+- **The bundle:** `open-port/run-20261119T125538Z.tar.gz` on the `evidence` branch, at
+  5c028f5a8ec90effa9fdf04540c85f473c2e5375. Its SHA-256 is
+  `fb4771f5252a0d03c97b85d8b3103c7db605134075b86d2b7a45f22aef36a523`, 180,102 bytes (#145 LOG
+  7011043887).
+- **The run:**
+  - *started:* `just submit bench-open-port`, 2026-11-19T12:55:37Z (#145 LOG 7009734722);
+  - *machine:* the i9-10900K;
+  - *recipe:* at 4bb9e31963b20ab2c359bb89afaf81b8b537ba35, the frozen head;
+  - *builds:* the port at 9743bbe0d51ba451b8b8ab9e6fd731c238940052, v0.5.6 at
+    530ed404a014a414ef0b62adfd947fa14d4533e6;
+  - *timing began* at 13:36:08Z (`timing-started.txt`).
+- **The inputs:** `inputs-check.txt` reads "the builds and all 18 inputs are the registered ones".
+- **Re-judged:** the Coordinator re-ran `open_port.py judge --port 9743bbe0…` at the frozen head,
+  and its output is identical to the bundle's `verdict.txt` (#145 LOG 7011074912).
+- **Consequences, as registered:**
+  - #630 does not merge;
+  - 0.5.7 does not ship `OpenCells`;
+  - no retry follows under this registration.
+
+  A successor is a new experiment under its own prospective review.
+
+**The verdict, verbatim (`verdict.txt`):**
+
+```
+records 1080 of 1080 and 16 of 16 sustained; the registered roster: 15 corpora at [8, 10, 20] threads, 12 rounds (8 sustained); the machine: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+the port over v0.5.6: wall, the rounds' paired ratios, geometric mean [95% interval]; one-sided p (gain); peak RSS, median over median
+  8 threads
+    wikidata-x4 (primary): 0.9465 [0.9344, 0.9587] FASTER; p 6.77e-07; memory 0.779
+    text (guard): 0.9906 [0.9613, 1.0209] INCONCLUSIVE; p 2.53e-01; memory 0.990
+    random (guard): 0.9997 [0.9899, 1.0095] INCONCLUSIVE; p 4.70e-01; memory 1.000
+    records (guard): 0.9981 [0.9871, 1.0091] INCONCLUSIVE; p 3.52e-01; memory 0.998
+    runs (guard): 0.9991 [0.9527, 1.0478] INCONCLUSIVE; p 4.84e-01; memory 1.000
+    pattern (guard): 1.0067 [0.9815, 1.0325] INCONCLUSIVE; p 7.13e-01; memory 0.988
+    onebyte (guard): 0.9906 [0.9680, 1.0137] INCONCLUSIVE; p 1.94e-01; memory 1.000
+    ho-wikidata-l9 (held-out replication): 0.9419 [0.9237, 0.9605] FASTER; p 1.61e-05; memory 0.789
+    ho-wikidata-l1 (guard): 0.9971 [0.9899, 1.0043] INCONCLUSIVE; p 1.97e-01; memory 0.783
+    ho-prose-l1 (guard): 0.9808 [0.9509, 1.0117] INCONCLUSIVE; p 9.80e-02; memory 1.003
+    ho-prose-l9 (guard): 1.0046 [0.9764, 1.0337] INCONCLUSIVE; p 6.36e-01; memory 1.001
+    ho-code-l1 (guard): 1.0220 [0.9705, 1.0761] INCONCLUSIVE; p 8.13e-01; memory 0.996
+    ho-code-l9 (guard): 1.0013 [0.9825, 1.0206] INCONCLUSIVE; p 5.61e-01; memory 1.006
+    ho-structured-l1 (guard): 1.0153 [0.9914, 1.0398] INCONCLUSIVE; p 9.06e-01; memory 0.894
+    ho-structured-l9 (guard): 0.9825 [0.9561, 1.0097] INCONCLUSIVE; p 9.11e-02; memory 0.979
+  10 threads
+    wikidata-x4 (primary): 0.9372 [0.9249, 0.9496] FASTER; p 1.59e-07; memory 0.761
+    text (guard): 1.0049 [0.9752, 1.0355] INCONCLUSIVE; p 6.38e-01; memory 1.008
+    random (guard): 1.0217 [0.9959, 1.0482] INCONCLUSIVE; p 9.54e-01; memory 1.000
+    records (guard): 0.9915 [0.9729, 1.0105] INCONCLUSIVE; p 1.72e-01; memory 0.981
+    runs (guard): 0.9904 [0.9596, 1.0221] INCONCLUSIVE; p 2.57e-01; memory 1.000
+    pattern (guard): 1.0120 [0.9929, 1.0315] INCONCLUSIVE; p 9.02e-01; memory 1.001
+    onebyte (guard): 0.9878 [0.9654, 1.0107] INCONCLUSIVE; p 1.32e-01; memory 1.001
+    ho-wikidata-l9 (held-out replication): 0.9148 [0.8818, 0.9491] FASTER; p 1.21e-04; memory 0.799
+    ho-wikidata-l1 (guard): 1.0035 [0.9910, 1.0161] INCONCLUSIVE; p 7.24e-01; memory 0.798
+    ho-prose-l1 (guard): 1.0150 [0.9676, 1.0648] INCONCLUSIVE; p 7.47e-01; memory 0.991
+    ho-prose-l9 (guard): 0.9999 [0.9908, 1.0092] INCONCLUSIVE; p 4.95e-01; memory 1.002
+    ho-code-l1 (guard): 1.0310 [0.9742, 1.0912] INCONCLUSIVE; p 8.70e-01; memory 1.019
+    ho-code-l9 (guard): 0.9754 [0.9004, 1.0567] INCONCLUSIVE; p 2.54e-01; memory 1.018
+    ho-structured-l1 (guard): 1.0192 [0.9876, 1.0517] INCONCLUSIVE; p 8.95e-01; memory 0.903
+    ho-structured-l9 (guard): 0.9756 [0.9494, 1.0025] INCONCLUSIVE; p 3.56e-02; memory 0.927
+  20 threads
+    wikidata-x4 (primary): 0.9373 [0.9272, 0.9474] FASTER; p 2.14e-08; memory 0.779
+    text (guard): 1.0095 [0.9946, 1.0247] INCONCLUSIVE; p 9.06e-01; memory 1.007
+    random (guard): 1.0033 [0.9964, 1.0103] INCONCLUSIVE; p 8.45e-01; memory 0.999
+    records (guard): 0.9930 [0.9839, 1.0023] INCONCLUSIVE; p 6.31e-02; memory 0.976
+    runs (guard): 0.9624 [0.9079, 1.0201] INCONCLUSIVE; p 8.78e-02; memory 1.003
+    pattern (guard): 1.0113 [0.9888, 1.0342] INCONCLUSIVE; p 8.52e-01; memory 1.002
+    onebyte (guard): 0.9974 [0.9822, 1.0128] INCONCLUSIVE; p 3.57e-01; memory 1.000
+    ho-wikidata-l9 (held-out replication): 0.9276 [0.9161, 0.9393] FASTER; p 2.15e-08; memory 0.816
+    ho-wikidata-l1 (guard): 0.9879 [0.9690, 1.0073] INCONCLUSIVE; p 9.80e-02; memory 0.801
+    ho-prose-l1 (guard): 0.9678 [0.9353, 1.0014] INCONCLUSIVE; p 2.93e-02; memory 0.997
+    ho-prose-l9 (guard): 0.9972 [0.9859, 1.0085] INCONCLUSIVE; p 2.96e-01; memory 1.026
+    ho-code-l1 (guard): 0.9588 [0.9014, 1.0198] INCONCLUSIVE; p 8.05e-02; memory 1.005
+    ho-code-l9 (guard): 1.0289 [0.9933, 1.0658] INCONCLUSIVE; p 9.49e-01; memory 1.055
+    ho-structured-l1 (guard): 0.9870 [0.9647, 1.0098] INCONCLUSIVE; p 1.16e-01; memory 0.898
+    ho-structured-l9 (guard): 0.9773 [0.9676, 0.9871] FASTER; p 1.84e-04; memory 0.946
+
+P1, wall on wikidata-x4: Holm at α 0.05 over 3 cells: 8 threads p 6.77e-07 rejects, 10 threads p 1.59e-07 rejects, 20 threads p 2.14e-08 rejects
+
+S, sustained: 10 threads back to back on wikidata-x16: 0.9407 [0.9155, 0.9666] FASTER; memory 0.747
+
+VERDICT: NOT ADOPTED. 4 conditions fail:
+  G: ho-code-l1 at 8 threads 1.0220, above the bound 1.02
+  G: random at 10 threads 1.0217, above the bound 1.02
+  G: ho-code-l1 at 10 threads 1.0310, above the bound 1.02
+  G: ho-code-l9 at 20 threads 1.0289, above the bound 1.02
+```
+
+**The routing census** (`census.jsonl`, `ab census-timed`, one thread): blocks the shipped
+`LazyCells` gates send to the open kernel, of each corpus's blocks, and why the rest are refused.
+Only the route counts are recorded here; the census's timings are context, and are not read.
+
+| corpus | admitted to open | refused: density | refused: in-place | refused: sparse |
+|---|--:|--:|--:|--:|
+| wikidata-x4 | 912 / 1,724 | 620 | 192 | 0 |
+| text | 0 / 49 | 49 | 0 | 0 |
+| random | 0 / 36 | 0 | 36 | 0 |
+| records | 0 / 43 | 0 | 43 | 0 |
+| runs | 0 / 2 | 2 | 0 | 0 |
+| pattern | 0 / 88 | 0 | 0 | 88 |
+| onebyte | 0 / 2 | 0 | 0 | 2 |
+| ho-wikidata-l9 | 262 / 473 | 163 | 48 | 0 |
+| ho-wikidata-l1 | 2,277 / 2,359 | 82 | 0 | 0 |
+| ho-prose-l1 | 4 / 276 | 64 | 208 | 0 |
+| ho-prose-l9 | 0 / 32 | 16 | 16 | 0 |
+| ho-code-l1 | 0 / 100 | 44 | 56 | 0 |
+| ho-code-l9 | 0 / 12 | 12 | 0 | 0 |
+| ho-structured-l1 | 44 / 352 | 116 | 192 | 0 |
+| ho-structured-l9 | 4 / 40 | 20 | 16 | 0 |
+
+**The four failing cells** are on corpora where the gates admit no block: ho-code-l1 (0/100),
+random (0/36) and ho-code-l9 (0/12). There, the port decodes every block on v0.5.6's route.
+
+**The context is in the bundle, not summarised here:**
+- the gate's cost, `gate.txt` and `gate.jsonl`;
+- the eager/open crossover, `crossover.txt` and `crossover.jsonl`.
+
+**The registration's own flaw, stated by the Coordinator (#145 LOG 7011104819):**
+- *The rule:* G compared each guard's point estimate with 1.02, over 39 guard cells whose 95%
+  intervals reached about ±9%.
+- *Its false-fail rate was never stated.* For a port with no true effect, P(at least one guard
+  fails) ≈ 0.97, with ≈ 3.2 failing cells expected; this run had 4.
+- *No prospective review caught it.*
+
+The successor registration must state its guard rule's false-fail rate and power before any data.
+
 ## The change measured
 
 **`OpenCells`:**
