@@ -8,3 +8,5 @@ The initial replay tried to rebuild the historical scalar generator under a new 
 git fetch origin bench/astra-e-cap-counter
 python3 -B research/astra-e/workstation/counter/verify.py research/astra-e/workstation/counter-rehearsals/local-a7e314a.tar.gz a7e314a6f433c3ed0b1fb83ec5d9052f56be0f09
 ```
+
+The Coordinator accepted the request and added the target dry and measured jobs to master at 5298b23c7c89048c8986979e19b67c840397f0a0. Recipe CI uses the frozen registration a7e314a. The bench branch and queue belong to separate pull requests. [Request](https://github.com/lmmx/mibz2/pull/145#issuecomment-7001022850) · [Recipe CI](https://github.com/lmmx/mibz2/pull/621) · [Coordinator queue](https://github.com/lmmx/mibz2/pull/622)
