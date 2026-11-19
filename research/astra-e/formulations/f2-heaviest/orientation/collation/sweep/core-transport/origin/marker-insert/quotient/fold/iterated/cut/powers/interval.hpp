@@ -12,8 +12,8 @@ struct Alias {
 struct MappedRun { U lo,hi,k; int delta; };
 struct Pending { int x; U n,d; };
 struct TokenRun { Alias key; U width; };
-Result interval(const Root& original) {
-    auto in=seed(original);auto b=bases(in);auto counts=b;
+Result interval_seeded(const Root& in) {
+    auto b=bases(in);auto counts=b;
     std::vector<MappedRun> raw;raw.reserve(in.r.size());
     U pos=0;
     for(auto [k,n]:in.r) {
@@ -76,3 +76,5 @@ Result interval(const Root& original) {
     }
     return out;
 }
+
+Result interval(const Root& original) { return interval_seeded(seed(original)); }

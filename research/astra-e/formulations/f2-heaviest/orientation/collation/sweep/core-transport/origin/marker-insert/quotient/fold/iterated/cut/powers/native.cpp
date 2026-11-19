@@ -155,6 +155,7 @@ long resident_peak() {
     }
     return -1;
 }
+#ifndef POWER_PHASE_LIBRARY
 int main(int argc,char** argv) {
     assert(argc>=3); Root in=load(argv[1]);std::string mode=argv[2];
     if(mode=="check") {
@@ -185,3 +186,5 @@ int main(int argc,char** argv) {
         }
     }
 }
+
+#endif

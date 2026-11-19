@@ -45,6 +45,12 @@ def crc32_bzip2(data):
     return value^0xffffffff
 
 
+def recovered(d,i):
+    raw=(d/f'rec{i+1:05d}sample.bz2').read_bytes()
+    assert raw[:3]==b'BZh' and raw[4:10]==bytes.fromhex('314159265359')
+    return bz2.decompress(raw),int.from_bytes(raw[10:14],'big')
+
+
 def lib_block(corpus,i):
     with tempfile.TemporaryDirectory() as td:
         d=Path(td)
@@ -53,9 +59,7 @@ def lib_block(corpus,i):
         (d/'sample.bz2').write_bytes(prefix)
         subprocess.run(['bzip2recover','sample.bz2'],cwd=d,stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL,check=True)
-        raw=(d/f'rec{i+1:05d}sample.bz2').read_bytes()
-        assert raw[:3]==b'BZh' and raw[4:10]==bytes.fromhex('314159265359')
-        return bz2.decompress(raw),int.from_bytes(raw[10:14],'big')
+        return recovered(d,i)
 
 
 def source(tape):
@@ -89,7 +93,8 @@ def original(args):
         p=o.forward[p]
     assert out==expected
     plain=rle1(out)
-    reference,header_crc=lib_block(args.corpus,meta['index'])
+    reference,header_crc=(recovered(args.recovered,meta['index']) if getattr(args,'recovered',None)
+                          else lib_block(args.corpus,meta['index']))
     crc=crc32_bzip2(plain)
     assert plain==reference and crc==header_crc
     with args.trace.open('x',newline='') as f:
@@ -114,4 +119,5 @@ if __name__=='__main__':
     p.add_argument('--differential',action='store_true')
     p.add_argument('--backward',action='store_true')
     p.add_argument('--gated',action='store_true')
+    p.add_argument('--recovered',type=Path)
     print(json.dumps(original(p.parse_args()),indent=2))
