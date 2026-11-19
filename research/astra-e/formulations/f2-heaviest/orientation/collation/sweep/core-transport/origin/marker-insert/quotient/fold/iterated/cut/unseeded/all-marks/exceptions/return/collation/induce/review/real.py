@@ -10,7 +10,7 @@ d=Path(__file__).resolve().parent
 exe,wires,out=map(Path,sys.argv[1:])
 inputs=[]
 with (out/"orders.csv").open("wb") as f:
-    f.write(b"block,section,policy,merged,n,kept,coordinate_seams,initial_atoms,adjacent_edges,stabbing_step_floor,steps,clipped,final_bands\n")
+    f.write(b"block,section,policy,merged,n,kept,coordinate_seams,initial_atoms,adjacent_edges,stabbing_step_floor,steps,clipped,final_bands,distinct_touching_bigrams\n")
     f.flush()
     for w in sorted(wires.glob("*.mask8"),key=lambda a:int(a.stem)):
         b=int(w.stem)
@@ -25,7 +25,7 @@ for section in ["seed8","heads","prefix"]:
             chosen=[r for r in rows if r["section"]==section and r["policy"]==layout and r["merged"]==m]
             assert len(chosen)==10
             sums={k:sum(int(x[k]) for x in chosen) for k in ("n","kept","coordinate_seams","initial_atoms",
-                    "adjacent_edges","stabbing_step_floor","steps","clipped","final_bands")}
+                    "adjacent_edges","stabbing_step_floor","steps","clipped","final_bands","distinct_touching_bigrams")}
             summary.append(dict(section=section,policy=layout,merged=m,**sums))
 with (out/"totals.csv").open("w") as f:
     wr=csv.DictWriter(f,list(summary[0]),lineterminator="\n");wr.writeheader();wr.writerows(summary)

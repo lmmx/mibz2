@@ -4,6 +4,31 @@
     "kept_adjacencies": 214875,
     "sections": 12768
   },
+  "joins": {
+    "layouts": 63840,
+    "joins": 245958,
+    "distinct_totals": {
+      "2": 216230,
+      "3": 118615,
+      "4": 70220
+    },
+    "omitted_cycle_witness": {
+      "last": [
+        0,
+        0
+      ],
+      "V": [
+        0
+      ],
+      "order": [
+        0,
+        1
+      ],
+      "all_pairs": 1,
+      "live_pairs": 0,
+      "joins": 0
+    }
+  },
   "step_directions": {
     "stable": {
       "equal": 12768

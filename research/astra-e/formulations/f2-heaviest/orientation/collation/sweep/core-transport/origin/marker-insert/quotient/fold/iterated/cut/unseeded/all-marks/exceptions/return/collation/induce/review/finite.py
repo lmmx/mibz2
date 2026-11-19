@@ -39,7 +39,7 @@ def stab(edges):
         if lo>last:used.append(hi);last=hi
     return used
 
-def induce(last,kept,order,sign,merge=False,check_cylinders=False):
+def induce(last,kept,order,sign,merge=False,check_cylinders=False,join_check=None):
     n=len(last);m=len(kept);raw_lf=stable_lf(last)
     assert len(set(order))==n and set(order[:m])==kept
     go={x:i for i,x in enumerate(order)}
@@ -61,7 +61,7 @@ def induce(last,kept,order,sign,merge=False,check_cylinders=False):
     bound=1+len(stab(direct)) if m<n else 0
     adjacency=sum(abs(i-j)==1 for i,j in set((min(i,j),max(i,j)) for i,j in direct))
     original_ids=ids.copy();original_t=t.copy()
-    steps=partial=0
+    steps=partial=joins=0
     while len(t)>m:
         cur=len(t);inv=[None]*cur
         for i,j in enumerate(t):inv[j]=i
@@ -71,6 +71,7 @@ def induce(last,kept,order,sign,merge=False,check_cylinders=False):
         w=min(wa,wb,cur-m);h=cur-w;steps+=1
         partial+=w<min(wa,wb)
         if a!=b:
+            joins+=1
             assert all(t[x]<h for x in range(h,cur))
         else:
             assert all(t[x]==x for x in range(h,cur))
@@ -120,6 +121,25 @@ def induce(last,kept,order,sign,merge=False,check_cylinders=False):
             itineraries.append(tuple(w))
         pair=[ids[i]!=ids[i+1] for i in range(m-1)]
         assert pair==[itineraries[i]!=itineraries[i+1] for i in range(m-1)]
+        if join_check is not None:
+            inv0=[None]*n
+            for x,y in enumerate(original_t):inv0[y]=x
+            live=set(range(m));stack=list(live)
+            while stack:
+                y=original_t[stack.pop()]
+                if y not in live:stack.append(y);live.add(y)
+            all_middle={(original_ids[inv0[y]],original_ids[y]) for y in range(m,n)}
+            live_middle={(original_ids[inv0[y]],original_ids[y]) for y in range(m,n) if y in live}
+            for q in (2,3,4):
+                distinct={w[i:i+q] for w in itineraries for i in range(len(w)-q+1)}
+                if q==2:
+                    assert distinct==live_middle
+                    if len(all_middle)>joins and not join_check.get("omitted_cycle_witness"):
+                        join_check["omitted_cycle_witness"]=dict(last=last,V=sorted(kept),order=order,
+                            all_pairs=len(all_middle),live_pairs=len(live_middle),joins=joins)
+                assert len(distinct)<=joins*(q-1)
+                join_check["distinct_totals"][q]+=len(distinct)
+            join_check["layouts"]+=1;join_check["joins"]+=joins
         return tuple(pair[::sign]), steps
     return (steps,bound,adjacency,initial,len(code),partial)
 

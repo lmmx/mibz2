@@ -31,7 +31,10 @@ Input load(const char* path){
         U y=base[in.last[i]]++;in.lf.push_back(y);
         assert(exceptions[i]<=1);in.selected[y]=exceptions[i];in.exception_count+=exceptions[i];
     }
-    in.selected[in.mark]=1;return in;
+    in.selected[in.mark]=1;
+    U along=in.mark,visited=0;do{along=in.lf[along];++visited;}while(along!=in.mark);
+    assert(visited==in.n); // This real panel can count every complement bigram.
+    return in;
 }
 // Store the two orderings and widths independently of the main pointer implementation.
 using List=std::list<U>;
@@ -143,14 +146,20 @@ void price(const Input& in,U block,const std::string& section,const std::string&
         }
     }
     assert(stabbing(families,q.m)==q.stab);
+    U pairs=0;
+    std::vector<U> source_cut(in.n,0);
+    for(U first=0,i=0;i<widths.size();++i){source_cut[first]=1;first+=widths[i];}
+    for(U x=q.m;x<in.n;++x)
+        pairs+=U(x==q.m||source_cut[x]||start[x]!=in.n);
     U atoms=widths.size();
     for(U id:start)if(id!=in.n)reverse.push_back(id);
     assert(reverse.size()==atoms);
     Exchange e(std::move(widths),reverse);auto [steps,clips,final]=e.eliminate(in.n-q.m);
     U floor=U(q.m<in.n)+q.stab;
     assert(steps>=floor&&steps+final>=atoms);
+    assert(steps>=pairs);
     std::cout<<block<<','<<section<<','<<policy<<','<<merge<<','<<in.n<<','<<q.m<<','<<q.seams<<','<<atoms<<','
-             <<q.adj<<','<<floor<<','<<steps<<','<<clips<<','<<final<<"\n";
+             <<q.adj<<','<<floor<<','<<steps<<','<<clips<<','<<final<<','<<pairs<<"\n";
 }
 int main(int argc,char**argv){
     assert(argc==3);U block=std::stoul(argv[1]);auto in=load(argv[2]);

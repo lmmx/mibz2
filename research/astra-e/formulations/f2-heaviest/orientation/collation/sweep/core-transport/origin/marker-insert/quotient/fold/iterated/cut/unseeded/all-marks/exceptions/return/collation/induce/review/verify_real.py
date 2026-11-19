@@ -19,7 +19,7 @@ for r in rows:
         a,b=val(r,"initial_atoms"),val(r,"final_bands")
         assert (a,b)==groups.setdefault(key,(a,b))
         assert val(r,"clipped")==0
-        assert val(r,"steps")>=max(a-b,val(r,"stabbing_step_floor"))
+        assert val(r,"steps")>=max(a-b,val(r,"stabbing_step_floor"),val(r,"distinct_touching_bigrams"))
         if r["policy"]=="stable":
             f=old[key]
             for a,b in [("kept","marked_section"),("coordinate_seams","section_seams"),
