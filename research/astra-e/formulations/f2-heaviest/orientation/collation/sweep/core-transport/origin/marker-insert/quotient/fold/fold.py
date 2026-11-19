@@ -72,7 +72,7 @@ def independent(successor,freq):
 class Fold:
     abi=Quotient.abi
 
-    def __init__(self,raw,words,order,freq,protected=None):
+    def __init__(self,raw,words,order,freq,protected=None,chosen=None):
         self.old=raw
         self.words=words
         self.order=order
@@ -96,7 +96,9 @@ class Fold:
         self.succ={k:self.owner(first[k]) for k in order if self.owner(first[k])==self.owner(last[k])!=k}
         if protected is not None:
             self.succ={k:t for k,t in self.succ.items() if t!=protected}
-        self.chosen=independent(self.succ,freq)
+        self.chosen=independent(self.succ,freq) if chosen is None else set(chosen)
+        assert self.chosen<=self.succ.keys()
+        assert self.chosen.isdisjoint(self.succ[k] for k in self.chosen)
         targets={self.succ[k] for k in self.chosen}
         maps={t:[] for t in targets}
         self.deleted=[]
