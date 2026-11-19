@@ -1,0 +1,20 @@
+# Stable depth frontiers for delimiter intervals
+
+An FM cylinder I(w) extends to I(cw) under stable LF selection. If a depth frontier is processed in increasing row order, the c-children of successive parents appear in increasing row order within the F bucket for c. Bucket by c and concatenate the nonempty buckets in byte order: the entire next depth is already sorted. A parent can intersect several runs of c; their LF images concatenate exactly because each intervening row with label c belongs to the same parent interval. The root is the one-byte delimiter cylinder, so induction orders every depth without comparison sorting. The proof permits an arbitrary number of LF cycles.
+
+The structural study reconstructs all nonempty left-extension intervals. Across 4,296 small column/delimiter cases, its 11,658 interval visits equal the independent number of distinct reachable delimiter-ended prefixes computed by dense stable sort. All 10 systematic Wikidata blocks were measured. The nine accepted by the prior constructor matched its physical node, lookup and selector counts exactly. Their 751,521 rank requests occupy 539,586 distinct original runs and 312,767 different 64-row pages, counted separately at each depth. Thus 211,935 (28.2%) of the run queries can reuse an immediately preceding descriptor. The scan also makes 45,251 nonempty-bucket visits. A hypothetical seek checking up to four next runs saves 376,622 full location calls at a cost of 309,343 run advances plus boundary comparisons. [Per-block, per-depth counts](depth.csv) · [Exhaustive audit](small.txt)
+
+The native implementation keeps two reusable 256-bucket frontiers, signaled by four u64 masks per depth. Each interval record is 16 bytes. It reuses its last run if possible and otherwise uses the original page locator. Contracted siblings retain their node IDs until a terminal or branching action, but moving a job horizontally each byte breaks contiguous spelling storage. A four-byte chain entry contains an eight-bit literal and a predecessor index. The index is bounded by n because distinct cylinder intervals are disjoint. Traversing the chain at a terminal spells the dictionary word in forward order. The second level, mark, inverse merge and final output are unchanged in meaning. Producing at least one next-frontier job per extension and reading every live job costs about 24.05 MB of logical 16-byte record reads plus writes over the nine blocks (751,521 reads and almost as many writes). Cache transfers and peak process memory were not measured by that count.
+
+All 228 accepted large blocks reconstructed 205,197,794 inverse bytes matching Segmented. Thirty fixed-affinity rotated passes compared ascending depth order to the dynamic eight-lane scheduler in the same process and checked all outputs. Sorted/refill discovery cost 1.6572 [1.4110,1.9465], complete inverse 1.2962 [1.1470,1.4648], and sorted/Lazy complete inverse 1.3184 [1.1785,1.4750]. The measured decrease in location calls did not pay for queue traffic, linked spelling and ordering. These results retire this traversal as a local throughput candidate. They retain a sorting-free way to enumerate the cylinders and exact reuse bounds for an implementation with a genuinely cheaper frontier representation. [Raw stage times](phase.csv) · [Paired ratios](summary.txt) · [Native corpus](native.csv)
+
+```sh
+d=research/astra-e/formulations/f2-scheduler/sorted
+PYTHONDONTWRITEBYTECODE=1 python3 "$d/frontiers.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$d/frontiers.py" research/astra-e/dense/target/wikidata
+python3 "$d/prepare.py"
+export MOONSHOT_CANDIDATE="$PWD/$d/candidate.rs"
+cargo test --locked --release --manifest-path bench/moonshot/Cargo.toml candidate::checks::arbitrary_marks -- --nocapture
+F2_CORPUS="$PWD/corpora/wikidata.bz2" F2_CSV=/tmp/f2-sorted.csv cargo test --locked --release --manifest-path bench/moonshot/Cargo.toml candidate::checks::native_second_level -- --ignored --nocapture
+bash "$d/price.sh" /tmp/f2-sorted-price "$PWD/bench/moonshot/target/release/deps"
+```
