@@ -9,7 +9,7 @@ fn main() {
     let mut b=BufWriter::new(std::fs::File::create(&args[2]).unwrap());
     let mut h=BufWriter::new(std::fs::File::create(&args[3]).unwrap());
     writeln!(b,"block,stream,route,n,syms,literals,threshold,low,greedy_word_pairs,adjacent_input_pairs,unrestricted_pairs,used_words").unwrap();
-    let mut hist=[[[0u64;16];16];2];
+    let mut hist=[[[[0u64;32];32];2];2];
     while let Event::Block{index,stream,symbols:s,..}=scan.next(Vec::new()).unwrap(){
         let n=runs::front(&s,&mut runs,Kernels::detect()).unwrap();
         let ranks=s.syms.iter().take_while(|&&s0| s0<=1 || s0!=s.eob).enumerate()
@@ -28,7 +28,7 @@ fn main() {
                         counts[mode]+=1;
                         if mode==0 {
                             if last_pair_word!=pos/64 {counts[3]+=1; last_pair_word=pos/64;}
-                            if threshold==16 && active {hist[usize::from(end!=pos+1)][x][y]+=1;}
+                            if threshold>=16 && active {hist[usize::from(threshold==32)][usize::from(end!=pos+1)][x][y]+=1;}
                         }
                         i+=2;
                     }else{i+=1;}
@@ -37,6 +37,8 @@ fn main() {
             writeln!(b,"{index},{stream},{},{n},{},{},{threshold},{low},{},{},{},{}",u8::from(active),s.syms.len(),ranks.len(),counts[0],counts[1],counts[2],counts[3]).unwrap();
         }
     }
-    writeln!(h,"first_rank,second_rank,contiguous,separated").unwrap();
-    for i in 1..16 {for j in 1..16 {writeln!(h,"{i},{j},{},{}",hist[0][i][j],hist[1][i][j]).unwrap();}}
+    writeln!(h,"threshold,first_rank,second_rank,contiguous,separated").unwrap();
+    for (k,limit) in [16,32].into_iter().enumerate(){
+        for i in 1..limit {for j in 1..limit {writeln!(h,"{limit},{i},{j},{},{}",hist[k][0][i][j],hist[k][1][i][j]).unwrap();}}
+    }
 }
