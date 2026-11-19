@@ -226,9 +226,10 @@
     7011926888,
     7012815426,
     7013154415,
-    7013543921
+    7013543921,
+    7014835513
   ],
-  "last_processed_comment_id": 7013543921,
+  "last_processed_comment_id": 7014835513,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2773,13 +2774,16 @@
     },
     {
       "trigger_comment_id": 7014835513,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-port-3-7014835513/report.md",
       "source_commit": "bdea1a53469dd24d45b121529d4ac0be4bb1490c",
       "report_commit": "f09e6b8660051dad4abdee777bb6f7263ef2d9c7",
-      "disposition": "HOLD at bdea1a53: Part A aggregate work verified and B1 admissible under §4a. B3 omits the FASTER interval gate, B2/B4 weaken where Open executes, and replay accepts empty Part A evidence."
+      "disposition": "HOLD at bdea1a53: Part A aggregate work verified and B1 admissible under §4a. B3 omits the FASTER interval gate, B2/B4 weaken where Open executes, and replay accepts empty Part A evidence.",
+      "review_comment_id": 7015030749,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, single publication, and role-aware header and route. The pinned helper's coordinator-only sender check is inapplicable to the Researcher REVIEW."
     }
   ],
   "active_delegations": [],
