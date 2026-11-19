@@ -1,0 +1,10 @@
+{
+  "arcs": 17744,
+  "cases": 10528,
+  "disjoint_marks": 27472,
+  "early_arcs": 11544,
+  "empty_complement": 132,
+  "marks": 67188,
+  "max_virtual_rewinds": 3,
+  "tight_nonzero_virtual_rewinds": 3818
+}
