@@ -3,17 +3,21 @@ import csv
 from collections import defaultdict
 from pathlib import Path
 from statistics import median
+import sys
 
 study = Path(__file__).resolve().parent
-records = list(csv.DictReader((study/"phase.csv").open()))
-phases = ("prep_mark_ns","discover_ns","merge_ns","residual_output_ns","total_ns")
+name = sys.argv[1] if len(sys.argv) > 1 else "phase.csv"
+records = list(csv.DictReader((study/name).open()))
+deferred = "scatter_ns" in records[0]
+arms = ("deferred","lazy") if deferred else ("cache","plain","trie","lazy")
+phases = ("prep_mark_ns","discover_ns","scatter_ns" if deferred else "merge_ns","residual_output_ns","total_ns")
 groups=defaultdict(list)
 for r in records:
     groups[r["stream"],r["arm"]].append(r)
-assert len(groups)==9*4 and all(len(group)==20 for group in groups.values())
+assert len(groups)==9*len(arms) and all(len(group)==20 for group in groups.values())
 for tag in ("1","all-nine"):
     output={}
-    for arm in ("cache","plain","trie","lazy"):
+    for arm in arms:
         output[arm]=[sum(median(int(row[k]) for row in group)
                          for (stream,a),group in groups.items()
                          if a==arm and (tag=="all-nine" or stream==tag))/1e6 for k in phases]

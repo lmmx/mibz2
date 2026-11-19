@@ -64,3 +64,12 @@ For S=I(P) the stronger bound **t≤r** holds for every nonempty word P, includi
 The bound is sharp at all marker lengths and unbounded run counts on three byte values. For h,k≥1 take k alternating bytes 1,2 followed by hk+1 zeros as the column. The first zero bucket has width hk+1. Each further backward extension by zero removes the first k rows of the previous bucket, so I(0^h)=[0,k+1). Its adjacent starting rows see distinct first backward bytes, alternating until the last zero. Thus every one of those k+1 ranks starts a band and t=k+1=r. Although r can be large, the parameter alone cannot force any extra reduction in the worst case. [Family generator](sharp.py) · [616 checked instances](sharp.txt)
 
 An independent enumeration inspected 310,566 contiguous sections. For every one of the 91,525 distinct reachable word intervals, reversing only original byte seams reproduced **every exact maximal-band start** from dense return words. It also verified the sharper e-dependent arbitrary-section bound and records the smallest witnesses encountered. [Reverse construction and dense comparator](interval_bound.py) · [Raw counts and witnesses](interval-bound.json)
+
+## How much does the explicit token table cost?
+
+A separate phase test buffers the exact (source, destination, width) of each band. It defers all token-row link allocation and writes until discovery has finished, then expands the resulting marked output and checks it against Segmented. In twenty position-balanced paired rounds on the same nine systematic admissions, discovering labels and affine descriptors cost 29.133 ms, materializing all packed row links cost 0.307 ms, and expansion cost 1.253 ms. The entire Lazy inverse took 16.380 ms. On frozen the corresponding figures were 2.818, 0.034, 0.146 and 1.678 ms. In this measured construction, eliminating per-row scattering and even final expansion would still leave the discovery phase over budget. The sharp band count alone supplies neither destinations nor spelling. An eventual faster approach must reduce the cost of obtaining these descriptors, or derive the output from a different object; another token-link encoding cannot rescue this implementation. [Raw split-phase receipts](deferred.csv) · [Phase totals](deferred-summary.txt) · [Full scorer v1 gate](../../results/v1-dual-bands-gate/score/summary.txt)
+
+```sh
+bash "$d/defer.sh" /tmp/f2-dual-deferred "$PWD/bench/moonshot/target/release/deps" > /tmp/f2-dual-deferred.csv
+python3 "$d/price_summary.py" deferred.csv
+```
