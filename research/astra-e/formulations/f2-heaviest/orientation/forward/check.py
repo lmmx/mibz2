@@ -134,7 +134,7 @@ def batch(binary, command, requests):
             assert obj["packet_inputs"] == component_count + obj["live_outputs"] - obj["live_merges"]
             assert obj["packet_inputs"] == obj.get("select_page_seeks", 0) + sum(obj[k] for k in (
                 "select_binary_searches", "select_finger_retained", "select_finger_next"))
-            if command == "INDEXED_BANDS":
+            if command in ("INDEXED_BANDS", "RECYCLED_BANDS"):
                 assert obj["select_binary_searches"] == obj["select_binary_comparisons"] == 0
                 assert obj["page_capacity_bytes"] >= 4 * ((obj["n"] + 63) // 64)
                 assert obj["select_page_run_increments"] <= 63 * obj["select_page_seeks"]
@@ -321,7 +321,7 @@ def main(binary, command="BANDS"):
                 ordered_datasets_sha256=fingerprint.hexdigest(), counts=totals,
                 section_labels=labels, direct_outside_structured_domain=refusals, witnesses=witnesses)
 
-    if command == "INDEXED_BANDS":
+    if command in ("INDEXED_BANDS", "RECYCLED_BANDS"):
         report["binary_command"] = command
         report["indexed_checks"] = [
             "source table fills equal U size in every dataset, with U and component directories charged",
@@ -337,6 +337,6 @@ def main(binary, command="BANDS"):
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("binary", nargs="?", type=lambda x: Path(x).resolve())
-    p.add_argument("command", nargs="?", choices=["BANDS", "INDEXED_BANDS"], default="BANDS")
+    p.add_argument("command", nargs="?", choices=["BANDS", "INDEXED_BANDS", "RECYCLED_BANDS"], default="BANDS")
     args = p.parse_args()
     print(json.dumps(main(args.binary, args.command), indent=2, sort_keys=True))

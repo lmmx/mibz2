@@ -12,9 +12,11 @@ from census import Column,heavy_set,paths,read_input
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("binary",type=Path);p.add_argument("tapes",type=Path);p.add_argument("out",type=Path)
+    p.add_argument("--recycled",action="store_true")
     a=p.parse_args()
     paired={}
-    raw=a.out/"directions.csv"
+    stem="recycled-directions" if a.recycled else "directions"
+    raw=a.out/(stem+".csv")
     with raw.open("w") as f:
         sink=csv.writer(f,lineterminator="\n");sink.writerow(("ordinal","section",*HEADER))
         for path in paths(a.tapes):
@@ -23,7 +25,7 @@ def main():
             for section,ints in (("quote",[parent]),("frequent",heavy_set(col,parent,1)[0])):
                 head=f"{col.rows} {mark} {len(runs)} {len(ints)}\n"
                 data=(head+"".join(f"{x} {y}\n" for x,y in [*runs,*ints])).encode()
-                rows=subprocess.check_output([a.binary.resolve(),"16"],input=data).decode().splitlines()
+                rows=subprocess.check_output([a.binary.resolve(),"16",*(["RECYCLE"] if a.recycled else [])],input=data).decode().splitlines()
                 assert len(rows)==32
                 for line in rows:
                     fields=line.split(",")
@@ -49,7 +51,7 @@ def main():
             ratios.append(vals[1]/vals[0])
         scores["discovery_spelling_order_wall"]=interval(ratios)
         paired[s]=scores
-    (a.out/"directions.json").write_text(json.dumps(paired,indent=2)+"\n")
+    (a.out/(stem+".json")).write_text(json.dumps(paired,indent=2)+"\n")
 
 
 if __name__=="__main__":

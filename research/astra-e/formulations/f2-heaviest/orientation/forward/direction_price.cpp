@@ -3,7 +3,8 @@
 #include "direct_native.hpp"
 
 int main(int argc,char** argv) {
-    int laps=argc==2 ? std::stoi(argv[1]) : 16;
+    int laps=argc>=2 ? std::stoi(argv[1]) : 16;
+    bool recycle=argc>=3 && std::string(argv[2])=="RECYCLE";
     assert(laps>0 && laps%4==0);
     int n,mark,r,c;
     while(std::cin>>n>>mark>>r>>c) {
@@ -26,7 +27,7 @@ int main(int argc,char** argv) {
                     out=direct_native::decode(n,mark,runs,sections,&st);
                     setup=st.setup_ms;discover=st.discover_ms;order=st.order_ms;dict=st.dict_ms;emit=st.emit_ms;
                 } else {
-                    Forward f(n,runs,sections,true,true);
+                    Forward f(n,runs,sections,true,true,recycle);
                     f.discover();
                     bool found=f.expand(mark,out);
                     assert(found);

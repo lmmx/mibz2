@@ -17,7 +17,7 @@ using u64 = uint64_t;
 struct InputRun { int byte, width; };
 struct Interval { int lo, hi; };
 struct Select { int hi, displacement; uint8_t byte; };
-struct Node { int parent; uint8_t byte; };
+struct Node { int parent, value; };
 struct Packet { int source, current, width; };
 struct Group { int node, begin, end; };
 struct Band { int source, dest, width, word, color; };
@@ -35,7 +35,7 @@ class Forward {
     int n;
     std::vector<Interval> section;
     std::vector<Select> select;
-    bool pages, scatter;
+    bool pages, scatter, recycle;
     std::vector<int> page_start, section_offset, band_at;
     std::vector<Node> nodes{{-1,0}};
     std::vector<Band> bands;
@@ -80,8 +80,8 @@ public:
     Stats s;
     double setup_ms=0, discover_ms=0, order_ms=0, dict_ms=0, emit_ms=0;
     Forward(int n_,const std::vector<InputRun>& runs, std::vector<Interval> components,
-            bool use_pages=false, bool use_scatter=false)
-        : n(n_), section(std::move(components)), pages(use_pages), scatter(use_scatter) {
+            bool use_pages=false, bool use_scatter=false, bool recycle_nodes=false)
+        : n(n_), section(std::move(components)), pages(use_pages), scatter(use_scatter), recycle(recycle_nodes) {
         auto t=Clock::now();
         std::array<int,256> counts{}, positions{}, slots{}, run_counts{};
         for(auto r:runs) { counts[r.byte]+=r.width; ++run_counts[r.byte]; }
@@ -215,15 +215,37 @@ public:
         }
         order_ms=std::chrono::duration<double,std::milli>(Clock::now()-t).count();
         t=Clock::now();
-        spelling_offset.assign(nodes.size(),-1); spelling_len.resize(nodes.size());
-        for(auto b:bands) {
-            if(spelling_offset[b.word]<0) {
-                ++s.words; int start=dictionary.size();
-                for(int j=b.word;j!=0;j=nodes[j].parent) dictionary.push_back(char(nodes[j].byte));
+        if (recycle) {
+            // Edges lead to lower IDs. A terminal's prefix path is dead once
+            // that terminal and every higher-ID descendant have been spelled.
+            constexpr int terminal=256;
+            for (auto b:bands) nodes[b.word].value|=terminal;
+            for (int id=int(nodes.size())-1;id>0;--id) {
+                if ((nodes[id].value & terminal)==0) continue;
+                ++s.words;
+                int start=dictionary.size();
+                for (int j=id;j!=0;j=nodes[j].parent)
+                    dictionary.push_back(char(nodes[j].value & 255));
                 std::reverse(dictionary.begin()+start,dictionary.end());
-                spelling_offset[b.word]=start; spelling_len[b.word]=int(dictionary.size())-start;
+                nodes[id]={start,int(dictionary.size())-start};
             }
-            s.covered+=u64(b.width)*spelling_len[b.word];
+            for (auto& b:bands) {
+                auto range=nodes[b.word];
+                b.word=range.parent;
+                b.color=range.value;
+                s.covered+=u64(b.width)*range.value;
+            }
+        } else {
+            spelling_offset.assign(nodes.size(),-1); spelling_len.resize(nodes.size());
+            for(auto b:bands) {
+                if(spelling_offset[b.word]<0) {
+                    ++s.words; int start=dictionary.size();
+                    for(int j=b.word;j!=0;j=nodes[j].parent) dictionary.push_back(char(nodes[j].value));
+                    std::reverse(dictionary.begin()+start,dictionary.end());
+                    spelling_offset[b.word]=start; spelling_len[b.word]=int(dictionary.size())-start;
+                }
+                s.covered+=u64(b.width)*spelling_len[b.word];
+            }
         }
         s.word_bytes=dictionary.size();
         assert(s.covered<=u64(n));
@@ -256,7 +278,9 @@ public:
                 b=*(--it);
             }
             assert(row<b.source+b.width);
-            out.append(dictionary,spelling_offset[b.word],std::min(n-int(out.size()),spelling_len[b.word]));
+            int start=recycle ? b.word : spelling_offset[b.word];
+            int length=recycle ? b.color : spelling_len[b.word];
+            out.append(dictionary,start,std::min(n-int(out.size()),length));
             row=b.dest+row-b.source;
         }
         emit_ms=std::chrono::duration<double,std::milli>(Clock::now()-t).count();
@@ -304,8 +328,10 @@ public:
                 if(!first) std::cout<<",";
                 first=false;
                 std::cout<<"["<<b.source<<","<<b.dest<<","<<b.width<<",";
-                hex(dictionary.data()+spelling_offset[b.word],spelling_len[b.word]);
-                std::cout<<","<<b.color<<"]";
+                int start=recycle ? b.word : spelling_offset[b.word];
+                int length=recycle ? b.color : spelling_len[b.word];
+                hex(dictionary.data()+start,length);
+                std::cout<<","<<(recycle ? next_component(b.dest) : b.color)<<"]";
             };
             if(scatter) {
                 for(size_t c=0;c<section.size();++c)
@@ -326,8 +352,9 @@ public:
 int main(int argc,char** argv) {
     std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
     std::string command=argc>1 ? argv[1] : "";
-    bool detailed=command=="BANDS" || command=="INDEXED_BANDS";
-    bool indexed=command=="INDEXED_BANDS";
+    bool recycled=command=="RECYCLED_BANDS";
+    bool indexed=recycled || command=="INDEXED_BANDS";
+    bool detailed=indexed || command=="BANDS";
     bool price=command=="PRICE";
     int rounds=price && argc>2 ? std::stoi(argv[2]) : 1;
     int n,mark,r,c;
@@ -336,7 +363,7 @@ int main(int argc,char** argv) {
         std::vector<InputRun> runs(r); for(auto &v:runs) std::cin>>v.byte>>v.width;
         std::vector<Interval> comp(c); for(auto &v:comp) std::cin>>v.lo>>v.hi;
         if(!price) {
-            Forward f(n,runs,std::move(comp),indexed,indexed); f.discover(); f.write(mark,detailed);
+            Forward f(n,runs,std::move(comp),indexed,indexed,recycled); f.discover(); f.write(mark,detailed);
             continue;
         }
         std::string expected;
