@@ -27,3 +27,9 @@ python3 -B "$d/closure.py" research/astra-e/dense/target/wikidata | diff - "$d/w
 python3 -B "$d/endpoints.py" | diff - "$d/endpoint-small.json"
 python3 -B "$d/endpoints.py" research/astra-e/dense/target/wikidata | diff - "$d/endpoint-wikidata.csv"
 ```
+
+## Native construction and smaller certified sets
+
+The complete native forest removes most h4/h12 rank records, but it also expands many true unary paths and loses the matched complete CPU comparison. At h4 the ordinary 34,994-node trie became 61,816 physical nodes. One branching generation retains the ordinary node count and almost all of the rank-record reduction. At h12 it uses just ten source buckets per tape and 19,490 records across ten, compared with 19,441 for the full 31,460-source forest. A fixed producer-supplied right-brace child reproduced most of the remaining structural gain on all 219 unseen admissions. The separate measurements retain the observed CPU and peak-memory limits. [Full forest](native/README.md) · [Exact unary excess and depth-one bound](PRUNE.md) · [Sparse native price](sparse-native/README.md) · [Held-out literal and CPU](literal/README.md)
+
+The complement index has at most one possible LF-continuous boundary partner per original source class. This allows exact size prediction without constructing that index, and an O(Kt) optimization for all optional-child budgets up to t. All thirty measured full-forest record counts agreed. [Bridge theorem](BRIDGES.md) · [Optimal cardinality budget](SUBSET.md)

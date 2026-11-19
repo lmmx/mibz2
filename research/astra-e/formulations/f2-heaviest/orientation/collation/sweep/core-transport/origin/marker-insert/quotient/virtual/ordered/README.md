@@ -20,3 +20,5 @@ python3 -B "$d/cursor_order.py" research/astra-e/dense/target/wikidata | diff - 
 python3 -B "$d/family.py" | diff - "$d/family.csv"
 python3 -B "$d/lanes.py" | diff - "$d/lanes.csv"
 ```
+
+For N queried source intervals whose start order is known in advance, the sharp worst-case number of freely directed monotone cursors is the largest k with k(k+1)/2≤N. The matching upper bound constructs an assignment. An extremal permutation is realized as the unique compulsory c-query sequence on one primitive marked BWT over four token symbols. Thus the square-root growth seen in the four-run family has the general worst-case order even when a different order of discovery could otherwise be available. [Sharp general result and realizable extremizers](EXTREMAL.md)

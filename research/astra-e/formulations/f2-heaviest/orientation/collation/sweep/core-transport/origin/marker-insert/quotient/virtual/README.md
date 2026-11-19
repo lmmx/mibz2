@@ -26,3 +26,11 @@ d=research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-tra
 python3 -B "$d/view.py" | diff - "$d/small.json"
 python3 -B "$d/view.py" research/astra-e/dense/target/wikidata | diff - "$d/wikidata.csv"
 ```
+
+## How far the implicit representation survives measurement
+
+The first native streaming-root implementation reproduces the oracle and ordinary second writer on all 228 density admissions. Complementary indexing on a fully published quotient had unresolved complete CPU differences at h4 and h8. The direct two-cursor implementation then removed quotient publication and the hazard table entirely, checked all 24,906 small cases, and again reproduced all real outputs. Its h4 peak retained capacity was 7,664,262 bytes compared with 7,896,294 for explicit h4. Its complete h4 / explicit CPU interval was [0.98636, 1.15137]. These are inverse-stage measurements. [Published-column comparison](native/README.md) · [Fully implicit root and resource measurements](direct/README.md)
+
+The surviving lemma extends to predeclared whole source classes. The exact two-extrema criterion finds all classes with a single complete return query, including those a deterministic-successor closure misses. Native experiments isolate why precompiling all such opportunities can still lose, and an unseen-data gate confirms a single known quotient child captures most of the rank-storage gain. [Certificates, exact queries and native experiments](certified/README.md)
+
+Eliminating the remaining random lookup by keeping a fixed number of monotone cursors per source class faces a separate ordering obstruction. A primitive four-run BWT with a strictly heaviest delimiter requires exactly q cursors for q² compulsory ranks. With four available token symbols every permutation can occur on one unavoidable query chain. Adversarial theorems and real source-order counts distinguish this obstruction from the overhead in the current native implementations. [Cursor schedules and extremal realizations](ordered/README.md)
