@@ -1,0 +1,17 @@
+d9a6cb24d835864f53d7953f0acee3abd1157de0
+75297a1d57b2bdf262c3a19f3064848dedf2c493
+scorer path revision 75297a1
+684c87c37067d32d9f0e4c7e02ddf4f68bf8b84f8ca7f011bce04836c6e15901  research/astra-e/formulations/f2-rle/decoded-column/backbone/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1-rle-backbone-gate research/astra-e/formulations/f2-rle/decoded-column/backbone/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2-backbone-score
