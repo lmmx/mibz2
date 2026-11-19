@@ -1,0 +1,8 @@
+columns 852
+fallback 1164
+in_word_skip 3389
+marked 8162
+multicycle_partial_byte_lap 4820
+second 6998
+second_with_alias_and_distinct_physical_spelling 5898
+second_with_nonsingleton_spelling_aliases 6998
