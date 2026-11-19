@@ -215,9 +215,10 @@
     6992913830,
     6993078803,
     6993276769,
-    6993593664
+    6993593664,
+    6997119955
   ],
-  "last_processed_comment_id": 6993593664,
+  "last_processed_comment_id": 6997119955,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2619,13 +2620,16 @@
     },
     {
       "trigger_comment_id": 6997119955,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/astra-e-pfp-6997119955/report.md",
       "source_commit": "2b19f2e2f3430b9efe23467de968959c6059a272",
       "report_commit": "7bcbff5f4764cef6b5c58345bf5a47587c09e6aa",
-      "disposition": "Exact cyclic-PFP parse-order correspondence, Durand precedent for compound derivation, no exact finite labelled run-bound precedent located, PFP storage objective only for the present inverse budget."
+      "disposition": "Exact cyclic-PFP parse-order correspondence, Durand precedent for compound derivation, no exact finite labelled run-bound precedent located, PFP storage objective only for the present inverse budget.",
+      "review_comment_id": 6997277733,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, checkpoint citation, and role-aware headers and route. The pinned helper applies a coordinator-only sender check to Researcher publications."
     }
   ],
   "active_delegations": [],
