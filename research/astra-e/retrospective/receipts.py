@@ -52,6 +52,8 @@ def ci_receipt(stem):
         args = [sys.executable, str(CI / "verify.py"), str(path), str(run), artifact, digest, head, title]
         if pred:
             args += ["--predecessor", *pred.groups()]
+        for name, revision, entry in re.findall(r"^matched (edge|counter) (\w+) (\S+)$", manifest, re.M):
+            args += ["--extra", name, revision, entry]
         assert subprocess.check_output(args, text=True).strip() == report.strip()
         data = json.loads(archive.read("ratios.json"))
         table = {label: {w: cell["candidate"] for w, cell in ws.items()} for label, ws in data.items()}
