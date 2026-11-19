@@ -1,0 +1,308 @@
+{
+  "workers": {
+    "7": {
+      "historical_role_demands_per_lazy_wall": {
+        "lazy": {
+          "scanner": 0.7199904593804399,
+          "workers": 6.328609163775019,
+          "other_residual": 0.7543908605548758,
+          "named_other": 0.3461845270249257
+        },
+        "opend": {
+          "scanner": 0.7199904593804399,
+          "workers": 5.916443340126223,
+          "other_residual": 0.7268251236518332,
+          "named_other": 0.31511607909210027
+        }
+      },
+      "scalar48": {
+        "rounds": 48,
+        "scalar_over_lazy": 0.8702233087995074,
+        "lazy_median_wall_seconds": 0.30948149999999996,
+        "scalar_process_cpu_per_lazy_wall": 6.915459397596958,
+        "role_transfer": {
+          "lazy": {
+            "scanner_room_to_target": 0.08000954061956012,
+            "scanner_room_to_target_seconds": 0.02476147264525239,
+            "allowed_scanner_growth": 0.11112583448454205,
+            "scanner_room_to_match_scalar": 0.15023284941906745,
+            "worker_floor_if_no_cpu_saved": 0.8801526481488688,
+            "min_net_worker_saving_over_lazy": 0.5610685370420816,
+            "min_net_cpu_saving_ms": 173.64033244658896,
+            "worker_floor_using_only_named_other": 0.9384678386531474
+          },
+          "opend": {
+            "scanner_room_to_target": 0.08000954061956012,
+            "scanner_room_to_target_seconds": 0.02476147264525239,
+            "allowed_scanner_growth": 0.11112583448454205,
+            "scanner_room_to_match_scalar": 0.15023284941906745,
+            "worker_floor_if_no_cpu_saved": 0.8840906105635893,
+            "min_net_worker_saving_over_lazy": 0.5886342739451242,
+            "min_net_cpu_saving_ms": 182.17141805194797,
+            "worker_floor_using_only_named_other": 0.9429061883578368
+          }
+        }
+      },
+      "scalar40": {
+        "rounds": 40,
+        "scalar_over_lazy": 0.8687409221234104,
+        "lazy_median_wall_seconds": 0.30984599999999995,
+        "scalar_process_cpu_per_lazy_wall": 6.900120580469583,
+        "role_transfer": {
+          "lazy": {
+            "scanner_room_to_target": 0.08000954061956012,
+            "scanner_room_to_target_seconds": 0.02479063612280822,
+            "allowed_scanner_growth": 0.11112583448454205,
+            "scanner_room_to_match_scalar": 0.14875046274297044,
+            "worker_floor_if_no_cpu_saved": 0.8779613885592438,
+            "min_net_worker_saving_over_lazy": 0.5457297199147062,
+            "min_net_cpu_saving_ms": 169.09217079669202,
+            "worker_floor_using_only_named_other": 0.9362765790635225
+          },
+          "opend": {
+            "scanner_room_to_target": 0.08000954061956012,
+            "scanner_room_to_target_seconds": 0.02479063612280822,
+            "allowed_scanner_growth": 0.11112583448454205,
+            "scanner_room_to_match_scalar": 0.14875046274297044,
+            "worker_floor_if_no_cpu_saved": 0.8818993509739642,
+            "min_net_worker_saving_over_lazy": 0.5732954568177488,
+            "min_net_cpu_saving_ms": 177.63330411315218,
+            "worker_floor_using_only_named_other": 0.9407149287682117
+          }
+        }
+      }
+    },
+    "8": {
+      "historical_role_demands_per_lazy_wall": {
+        "lazy": {
+          "scanner": 0.7553883507590373,
+          "workers": 7.125648463358214,
+          "other_residual": 0.9116263272377741,
+          "named_other": 0.45642450571813975
+        },
+        "opend": {
+          "scanner": 0.7663213354348175,
+          "workers": 6.805319041590511,
+          "other_residual": 0.8840206164049165,
+          "named_other": 0.42004217647304465
+        }
+      },
+      "scalar48": {
+        "rounds": 48,
+        "scalar_over_lazy": 0.8796987303629926,
+        "lazy_median_wall_seconds": 0.300778,
+        "scalar_process_cpu_per_lazy_wall": 7.780665652590386,
+        "role_transfer": {
+          "lazy": {
+            "scanner_room_to_target": 0.044611649240962725,
+            "scanner_room_to_target_seconds": 0.013418202635398287,
+            "allowed_scanner_growth": 0.05905789941840589,
+            "scanner_room_to_match_scalar": 0.1243103796039553,
+            "worker_floor_if_no_cpu_saved": 0.8586299156690765,
+            "min_net_worker_saving_over_lazy": 0.46903932535261195,
+            "min_net_cpu_saving_ms": 141.0767102009079,
+            "worker_floor_using_only_named_other": 0.9155301433590308
+          },
+          "opend": {
+            "scanner_room_to_target": 0.03367866456518254,
+            "scanner_room_to_target_seconds": 0.010129801370586472,
+            "allowed_scanner_growth": 0.043948488718603906,
+            "scanner_room_to_match_scalar": 0.11337739492817511,
+            "worker_floor_if_no_cpu_saved": 0.8620806295231838,
+            "min_net_worker_saving_over_lazy": 0.49664503618546973,
+            "min_net_cpu_saving_ms": 149.37990069379322,
+            "worker_floor_using_only_named_other": 0.9200779345146677
+          }
+        }
+      },
+      "scalar40": {
+        "rounds": 40,
+        "scalar_over_lazy": 0.8813715465929509,
+        "lazy_median_wall_seconds": 0.29953799999999997,
+        "scalar_process_cpu_per_lazy_wall": 7.775727895827964,
+        "role_transfer": {
+          "lazy": {
+            "scanner_room_to_target": 0.044611649240962725,
+            "scanner_room_to_target_seconds": 0.013362884190339491,
+            "allowed_scanner_growth": 0.05905789941840589,
+            "scanner_room_to_match_scalar": 0.1259831958339136,
+            "worker_floor_if_no_cpu_saved": 0.8580126960737737,
+            "min_net_worker_saving_over_lazy": 0.4641015685901895,
+            "min_net_cpu_saving_ms": 139.01605565236815,
+            "worker_floor_using_only_named_other": 0.914912923763728
+          },
+          "opend": {
+            "scanner_room_to_target": 0.03367866456518254,
+            "scanner_room_to_target_seconds": 0.010088039826525645,
+            "allowed_scanner_growth": 0.043948488718603906,
+            "scanner_room_to_match_scalar": 0.11505021115813341,
+            "worker_floor_if_no_cpu_saved": 0.8614634099278808,
+            "min_net_worker_saving_over_lazy": 0.4917072794230464,
+            "min_net_cpu_saving_ms": 147.28501506382045,
+            "worker_floor_using_only_named_other": 0.9194607149193649
+          }
+        }
+      }
+    },
+    "9": {
+      "historical_role_demands_per_lazy_wall": {
+        "lazy": {
+          "scanner": 0.7731536084078037,
+          "workers": 7.82806376394298,
+          "other_residual": 0.9716885332505882,
+          "named_other": 0.45965306651342547
+        },
+        "opend": {
+          "scanner": 0.7728632612400158,
+          "workers": 7.21320625954866,
+          "other_residual": 1.0738808191062696,
+          "named_other": 0.5116148739361244
+        }
+      },
+      "scalar48": {
+        "rounds": 48,
+        "scalar_over_lazy": 0.8763253535691156,
+        "lazy_median_wall_seconds": 0.305913,
+        "scalar_process_cpu_per_lazy_wall": 8.469169872896835,
+        "role_transfer": {
+          "lazy": {
+            "scanner_room_to_target": 0.026846391592196372,
+            "scanner_room_to_target_seconds": 0.008212660191143568,
+            "allowed_scanner_growth": 0.034723231322017156,
+            "scanner_room_to_match_scalar": 0.10317174516131189,
+            "worker_floor_if_no_cpu_saved": 0.8330534821829163,
+            "min_net_worker_saving_over_lazy": 0.29748133964624657,
+            "min_net_cpu_saving_ms": 91.00340905520223,
+            "worker_floor_using_only_named_other": 0.8899463118203789
+          },
+          "opend": {
+            "scanner_room_to_target": 0.027136738759984236,
+            "scanner_room_to_target_seconds": 0.008301481164283057,
+            "allowed_scanner_growth": 0.03511195333110395,
+            "scanner_room_to_match_scalar": 0.10346209232909975,
+            "worker_floor_if_no_cpu_saved": 0.8216987837545072,
+            "min_net_worker_saving_over_lazy": 0.19528905379056472,
+            "min_net_cpu_saving_ms": 59.741460312233016,
+            "worker_floor_using_only_named_other": 0.8841727776623012
+          }
+        }
+      },
+      "scalar40": {
+        "rounds": 40,
+        "scalar_over_lazy": 0.8848617185953577,
+        "lazy_median_wall_seconds": 0.304452,
+        "scalar_process_cpu_per_lazy_wall": 8.522052617832397,
+        "role_transfer": {
+          "lazy": {
+            "scanner_room_to_target": 0.026846391592196372,
+            "scanner_room_to_target_seconds": 0.00817343761302737,
+            "allowed_scanner_growth": 0.034723231322017156,
+            "scanner_room_to_match_scalar": 0.111708110187554,
+            "worker_floor_if_no_cpu_saved": 0.8389293427313121,
+            "min_net_worker_saving_over_lazy": 0.350364084581809,
+            "min_net_cpu_saving_ms": 106.66904627910093,
+            "worker_floor_using_only_named_other": 0.8958221723687747
+          },
+          "opend": {
+            "scanner_room_to_target": 0.027136738759984236,
+            "scanner_room_to_target_seconds": 0.00826183438895472,
+            "allowed_scanner_growth": 0.03511195333110395,
+            "scanner_room_to_match_scalar": 0.11199845735534186,
+            "worker_floor_if_no_cpu_saved": 0.8275746443029031,
+            "min_net_worker_saving_over_lazy": 0.24817179872612716,
+            "min_net_cpu_saving_ms": 75.55640046576686,
+            "worker_floor_using_only_named_other": 0.8900486382106969
+          }
+        }
+      }
+    },
+    "10": {
+      "historical_role_demands_per_lazy_wall": {
+        "lazy": {
+          "scanner": 0.7776311728740177,
+          "workers": 8.264103038179567,
+          "other_residual": 1.028176045428552,
+          "named_other": 0.49506892439437267
+        },
+        "opend": {
+          "scanner": 0.7743877816786211,
+          "workers": 7.727231760623678,
+          "other_residual": 1.0354935598409392,
+          "named_other": 0.5251260179946959
+        }
+      },
+      "scalar48": {
+        "rounds": 48,
+        "scalar_over_lazy": 0.8589678799865148,
+        "lazy_median_wall_seconds": 0.3231485,
+        "scalar_process_cpu_per_lazy_wall": 8.953187152937755,
+        "role_transfer": {
+          "lazy": {
+            "scanner_room_to_target": 0.022368827125982316,
+            "scanner_room_to_target_seconds": 0.007228452932520496,
+            "allowed_scanner_growth": 0.028765342628061408,
+            "scanner_room_to_match_scalar": 0.08133670711249708,
+            "worker_floor_if_no_cpu_saved": 0.7925011107509203,
+            "min_net_worker_saving_over_lazy": 0,
+            "min_net_cpu_saving_ms": 0.0,
+            "worker_floor_using_only_named_other": 0.8458118228543382
+          },
+          "opend": {
+            "scanner_room_to_target": 0.025612218321378943,
+            "scanner_room_to_target_seconds": 0.008276549932226124,
+            "allowed_scanner_growth": 0.033074150867747454,
+            "scanner_room_to_match_scalar": 0.0845800983078937,
+            "worker_floor_if_no_cpu_saved": 0.7917693593096816,
+            "min_net_worker_saving_over_lazy": 0,
+            "min_net_cpu_saving_ms": 0.0,
+            "worker_floor_using_only_named_other": 0.8428061134943059
+          }
+        }
+      },
+      "scalar40": {
+        "rounds": 40,
+        "scalar_over_lazy": 0.8647346320827705,
+        "lazy_median_wall_seconds": 0.31981,
+        "scalar_process_cpu_per_lazy_wall": 9.070157528606225,
+        "role_transfer": {
+          "lazy": {
+            "scanner_room_to_target": 0.022368827125982316,
+            "scanner_room_to_target_seconds": 0.007153774603160404,
+            "allowed_scanner_growth": 0.028765342628061408,
+            "scanner_room_to_match_scalar": 0.08710345920875273,
+            "worker_floor_if_no_cpu_saved": 0.8041981483177674,
+            "min_net_worker_saving_over_lazy": 0.041981483177673695,
+            "min_net_cpu_saving_ms": 13.426098135051824,
+            "worker_floor_using_only_named_other": 0.8575088604211853
+          },
+          "opend": {
+            "scanner_room_to_target": 0.025612218321378943,
+            "scanner_room_to_target_seconds": 0.0081910435413602,
+            "allowed_scanner_growth": 0.033074150867747454,
+            "scanner_room_to_match_scalar": 0.09034685040414936,
+            "worker_floor_if_no_cpu_saved": 0.8034663968765287,
+            "min_net_worker_saving_over_lazy": 0.03466396876528677,
+            "min_net_cpu_saving_ms": 11.085883850826361,
+            "worker_floor_using_only_named_other": 0.8545031510611529
+          }
+        }
+      }
+    }
+  },
+  "payload": {
+    "x4": {
+      "symbols": 99917196,
+      "u16_payload": 199834392,
+      "capped_records": 65307816,
+      "capped_u16_payload": 130615632,
+      "column_fallback_symbols": 2052,
+      "column_fallback_rows": 1860,
+      "word_aligned_run_bitmaps": 12497344
+    },
+    "max_symbols_in_block": 199770,
+    "max_caps_in_block": 185251,
+    "u16_reservation_per_full_slot": 1800200
+  },
+  "prior_find_result": "VALID: wikidata: NOT FASTER; wikidata-l1: FASTER; records: FASTER;",
+  "prior_fused_scope": "bench-fused (the fused post-walk's registration on #145): mibz2-fused at 27c39f9f8447917b9bff678868f1adf1a884d0ee against mibz2 at 77fa4cd34e6ceab28d172e5dfed1ef3aafa7be03, production's plan each, on 4 copies of the Wikidata sample and on text, judged at 10,12 threads, 10 paired rounds; then the same at ten workers (context), and L2 counters at 10 threads, 10 reps"
+}
