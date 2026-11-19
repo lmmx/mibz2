@@ -156,13 +156,17 @@ whatever happens.
   |---|---|---|---|---|
   | `run-20261119T111634Z` | 4e86ffc8 | 98ba331d4e49b8f09fbf8e05b8b5b9cde97193471860c3c9c702286da9215957 | 16 of 16 the same | 39 of 39 |
   | `run-20261119T114444Z` | 5308788c | 60e11db7e2b9fbca3a56e0833d1e18eea1ab3e4caf397cce38741394f0038332 | 16 of 16 the same | 63 of 63 |
+  | **`run-20261119T115951Z`** | a1dc5aeb | 70ee82a5e3581a896bfe3661402856f6ececb70f33010919123fcc6f455d4f33 | 16 of 16 the same | 73 of 73 |
 
   The second is the preflight for the second correction. Its `inputs.sha256` passes that
   correction's identity checks, and no file holds a decoder timing field. Its `env.json` still
   holds the environment probe's `runq` timings, which DRY runs now drop.
   - *Why both are superseded:* both built the held-out prose, code and structured sets from the
-    branch's HEAD, so their corpora differ from each other and from the manifest's. The
-    preflight for the third correction, below the table, is the one for the pinned corpora.
+    branch's HEAD, so their corpora differ from each other and from the manifest's.
+  - *The third, `run-20261119T115951Z`, is the preflight for the pinned corpora:*
+    - its held-out sets are built from v0.5.6's tree (`heldout.json` names 530ed404);
+    - all 18 inputs match the manifest exactly (`inputs-check.txt`);
+    - `env.json` holds no `runq` probe, and no file holds a timing field.
   - *Not on the evidence branch:* the one-attempt guard refuses any `open-port/run-*` bundle
     archived there, so a preflight there would block the attempt.
   - *The earlier timed preflight's bundle is not archived,* since its timing records stay
