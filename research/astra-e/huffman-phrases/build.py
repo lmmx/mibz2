@@ -38,6 +38,17 @@ def build(dest,mode):
         (dest/"census.rs").write_text(text+(HERE/"census.rs").read_text())
         modules.append("census")
     else:
+        # Generate precisely the release's 4,000 arbitrary-code blocks. Test the actual
+        # item reader of each module and compare every state boundary, including errors.
+        fixture=stock[stock.index("    struct Rng"):stock.index("    /// libbzip2's bit-by-bit")]
+        fixture+=stock[stock.index("    #[derive(Default)]\n    struct Writer"):stock.index("    /// A block's symbols read as they were")]
+        a=stock.index("        let mut rng",stock.index("fn symbols_read_as_in_memory"))
+        b=stock.index("            let mut a = Bits::at(&data, start);",a)
+        body=stock[a:b].replace("let mut seen = [0usize; 6];","let mut outcomes=std::collections::BTreeMap::new();").replace("0..4000","0..limit")
+        fixture+="\npub fn fixtures(limit:usize) {\n"+body+"            *outcomes.entry(crate::check_item(&data,start)).or_insert(0usize)+=1;\n        }\n println!(\"synthetic cases {} {:?}\", limit,outcomes);\n}\n"
+        (dest/"stock.rs").write_text(stock+fixture)
+        (dest/"twin.rs").write_text(stock)
+        modules.append("twin")
         from native import transform
         for name,width in (("triple",3),("quad",4)):
             (dest/(name+".rs")).write_text(transform(stock,width))
