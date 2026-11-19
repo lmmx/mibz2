@@ -280,7 +280,7 @@ residuals (8 rounds).
 
 `just bench-open-port-3 9743bbe0d51ba451b8b8ab9e6fd731c238940052 1` (DRY) ran in the container
 on the corrected recipe, and is archived as
-`open-port-3-registration/preflight/{{PREFLIGHT}}`:
+`open-port-3-registration/preflight/run-20261119T162813Z.tar.gz` (at 83a389ee):
 - both builds were made, and the 18 inputs built and verified ("the builds and all 18 inputs are
   the registered ones");
 - Part A's pre-timing check passed;
