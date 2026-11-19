@@ -24,3 +24,15 @@ cmp "$tmp/all.csv" "$d/all.csv"
 taskset -c 3 nice -n 16 "$tmp/native/panel" price corpora/wikidata.bz2 "$tmp/oracle" > "$tmp/paid.csv"
 python3 "$d/report.py" | cmp - "$d/summary.json"
 ```
+
+## Complete worker
+
+Both isolated hook implementations passed all 338 full scorer cases at source `85025c903eed22e2df130b6f345613a4ddfaf5d1`. These include malformed and corrupt input, exact real Wikidata bytes and the stock stream CRC path. Both used refreshed scorer path `75297a1d57b2bdf262c3a19f3064848dedf2c493`, printed `v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04`. The new executables were paired with the exact original scalar and scalar-four binaries. Every one of 160 complete local process observations checked its original block and stream CRCs and produced 209,700,196 bytes. [Correctness gate](official/candidate/summary.json) · [Joined control gate](official/joined/summary.json) · [Direct raw observations](official/direct/runs.jsonl)
+
+| Direct ratio | W1 wall [95%] | W4 wall [95%] | W1/W4 peak RSS |
+|---|---:|---:|---:|
+| Sliced / joined hook | 1.1872 [0.9840, 1.4323] | 1.0641 [0.9592, 1.1805] | 1.0179 / 1.0127 |
+| Sliced / original four-forward scalar | 0.9693 [0.7412, 1.2674] | 1.0385 [0.9185, 1.1741] | 1.0108 / 1.0073 |
+| Sliced / i9-verified scalar | 1.0978 [0.9354, 1.2885] | 1.0228 [0.8748, 1.1960] | 1.0059 / 1.0038 |
+
+The local complete-process comparison leaves the elapsed-time change unresolved. Its paired point estimate against the closest control was slower at both worker counts. The geometric, proof and output milestones stand independently of system throughput. Use `python3 research/astra-e/two-seed/multi/seams/official/verify.py` to reconcile the receipts. A live scoring round must refresh both scorer trees and build with `python3 research/astra-e/two-seed/multi/seams/build_worker.py` before invoking each entry through the scorer. [Frozen full-worker plan](official/PLAN.md) · [Paired and clustered intervals](official/summary.json) · [Exact new worker executables](official/workers.tar.xz)
