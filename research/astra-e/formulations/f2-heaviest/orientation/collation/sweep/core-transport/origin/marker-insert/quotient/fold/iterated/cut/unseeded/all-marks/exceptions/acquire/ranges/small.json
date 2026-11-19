@@ -1,0 +1,59 @@
+{
+  "holes": {
+    "partial_maps": 17576,
+    "sign_splits": 2081,
+    "emitted_intervals": 61064
+  },
+  "columns": {
+    "marked_models": 9789,
+    "physical_partners": 17579,
+    "return_pieces": 16617,
+    "pure_default_cases": 4445,
+    "disconnected_cases": 8117
+  },
+  "huge": {
+    "annotated_holes": 879609302226,
+    "anchor_line": 4097333333362014,
+    "published": [
+      [
+        13,
+        666666666753,
+        333333333335,
+        45107
+      ],
+      [
+        333333333348,
+        81,
+        666666666672,
+        45096
+      ]
+    ],
+    "sweep": {
+      "regions": 3,
+      "sign_splits": 0,
+      "rotated": 4095333333362000,
+      "maximum_fifo": 1000000000007
+    },
+    "lifted_rows": 9895604650047,
+    "stable_lane_probes": 26,
+    "ranges": {
+      "original_states": 3,
+      "active_states": 3,
+      "events": 5497558138916,
+      "overlay_fragments": 8,
+      "birth_intervals": 6,
+      "stop_intervals": 4,
+      "physical_event_ranges": 4,
+      "anchor_count": 1,
+      "raw_return_pieces": 8,
+      "canonical_return_pieces": 8,
+      "rope_nodes_created": 16,
+      "virtual_return_mass": 2199023255565,
+      "hole_intervals": 5,
+      "hole_sweep_regions": 7,
+      "sign_splits": 0,
+      "bulk_fifo_rows": 0,
+      "maximum_fifo": 2199023255565
+    }
+  }
+}
