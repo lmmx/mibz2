@@ -53,5 +53,6 @@ def example(text,lam):
                 base_mass=initial,support_intervals=supports,mass_frontiers=by,
                 best={k:dict(gain=str(v),choices=ts) for k,(v,ts) in optimum.items()})
 if __name__=='__main__':
-    print(json.dumps([example('111000001101000',Fraction(1)),example('2120010000',Fraction(1,2))],
+    print(json.dumps([example('111000001101000',Fraction(1)),example('2120010000',Fraction(1,2)),
+                      example('101100000',Fraction(1,3)),example('122010011000',Fraction(1))],
                      indent=2))
