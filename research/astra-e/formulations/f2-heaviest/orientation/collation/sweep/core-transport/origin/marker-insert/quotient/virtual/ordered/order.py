@@ -67,6 +67,9 @@ class Graph:
             if p>=0:children[p].append(i)
         extrema={}
         req=[0]*len(self.buckets)
+        # Along one ancestor chain a fixed ascending scan must reset at every
+        # descent. A bidirectional scan must turn whenever consecutive signs change.
+        ascending=[0]*len(self.buckets);descending=ascending.copy();turns=ascending.copy()
         stack=[(0,False,None)]
         while stack:
             i,exit_,history=stack.pop()
@@ -76,15 +79,21 @@ class Graph:
                 else:extrema[w]=history
                 continue
             before=extrema.get(w)
-            if before is None:extrema[w]=(x,x)
+            if before is None:extrema[w]=(x,x,x,0,0,0,0)
             else:
-                a,b=before
+                a,b,last,sign,up,down,changed=before
                 if a<x:req[w]|=1
                 if b>x:req[w]|=2
-                extrema[w]=(min(a,x),max(b,x))
+                current=1 if last<x else -1
+                up+=int(current>0); down+=int(current<0)
+                changed+=int(sign!=0 and sign!=current)
+                ascending[w]=max(ascending[w],down)
+                descending[w]=max(descending[w],up)
+                turns[w]=max(turns[w],changed)
+                extrema[w]=(min(a,x),max(b,x),x,current,up,down,changed)
             stack.append((i,True,before))
             for child in children[i]:stack.append((child,False,None))
-        return req
+        return req,ascending,descending,turns
 
 
 def small():
@@ -99,7 +108,7 @@ def small():
                 g=Graph(full(q),q.bases,[f[k] for k in order],q.ids[d]);total['graphs']+=1
                 # Skip classes receiving no competing order constraints.
                 active=[i for i,x in enumerate(g.buckets) if len(x)>1]
-                req=g.forced()
+                req,up,down,turn=g.forced()
                 ok=any(g.ordering({k for k,flag in zip(active,flags) if flag})==0 for flags in product((0,1),repeat=len(active)))
                 if not ok:
                     key='local' if 3 in req else 'coupled'
@@ -126,7 +135,7 @@ def real(tapes):
             q=Quotient(raw,orig,order,count,selected,d)
             f=[count[k] if k!=d else q.s for k in order]
             g=Graph(full(q),q.bases,f,q.ids[d])
-            forced=g.forced()
+            forced,up,down,turn=g.forced()
             clash={i for i,v in enumerate(forced) if v==3}
             rev={i for i,v in enumerate(forced) if v==2}
             one={i for i,v in enumerate(g.buckets) if len(v)==1 and g.by_rows[i]==f[i]}
@@ -137,6 +146,9 @@ def real(tapes):
               both_required_types=len(clash),both_required_rows=sum(f[i] for i in clash),
               both_required_queries=sum(len(g.buckets[i]) for i in clash),
               unresolved_after_clash_exemption=g.ordering(rev,clash),
+              required_fixed_direction_resets=sum(min(a,b) for a,b in zip(up,down)),
+              max_symbol_resets=max(min(a,b) for a,b in zip(up,down)),
+              required_turns=sum(turn),max_symbol_turns=max(turn),
               stalled_ascending=g.ordering(set()),stalled_descending=g.ordering(set(range(len(order)))))
             if writer is None:
                 writer=csv.DictWriter(sys.stdout,fieldnames=report,lineterminator='\n');writer.writeheader()
