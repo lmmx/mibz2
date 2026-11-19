@@ -1,0 +1,13 @@
+## Preserved frontier
+
+**Closest independently measured candidate.** Narrow links, inline short words and one-edge lookahead come from source `80d8409359214b4e5abfd4430213921e82e9cd30`. Independent AMD EPYC 7763 CI built head `5c7704b3d149b05b8e9dc2ace06da0179459a8b3` with v0 and 16 complete paired rounds per W. The full libbzip2/CRC gate passed for the candidate and all three references. Eager Cells was faster throughout this grid. The ten-core i9 remains the decisive test. [Candidate](https://github.com/lmmx/mibz2/tree/80d8409359214b4e5abfd4430213921e82e9cd30/research/astra-e/narrow-short) · [Raw CI archive](ci/evidence/combined-ahead-44427324957.zip) · [Scorer and candidate manifest](results/combined-ahead-pilot/assessment.json)
+
+| Workers | Combined / LazyCells wall [95%] | Combined / opend wall [95%] | Combined / LazyCells median peak RSS |
+|---:|---|---|---:|
+| 1 | 0.9021 [0.8881,0.9163] | 0.9718 [0.9532,0.9907] | 0.9702 |
+| 2 | 0.8953 [0.8897,0.9009] | 0.9666 [0.9474,0.9862] | 0.9461 |
+| 4 | 0.8379 [0.8344,0.8413] | 0.9569 [0.9290,0.9856] | 0.8617 |
+
+**Local v1 speed and memory.** For the nine-round W1/W4 comparison, the combined candidate recorded 0.648 [0.501,0.838] at W1 and 0.888 [0.644,1.226] at W4. Its bounded-admission derivative, source `badb2aec3624bd65606c429b2e6f79e9d9d0050f`, has the leading W4 wall and memory observations among those first three confirmations. W4 took 0.743 [0.621,0.888] versus LazyCells and 0.954 [0.851,1.070] versus opend; median peak RSS was 0.732 of LazyCells. W1 took 0.970 [0.668,1.408] versus LazyCells. These arms ran in separate, host-load-sensitive epochs against their own controls. The independent five-arm CI includes a directly paired combined predecessor. [Bounded admission score and reproduction](results/v1-edge-confirm/manifest.txt) · [Comparisons against opend](results/v1-edge-confirm/vs-opend.json) · [Combined v1 score](results/v1-combined-confirm/score/summary.txt)
+
+**Previously preserved leaders.** The v0 settled short-word result at W4 was 0.766 [0.610,0.962] versus LazyCells; it regressed against opend at W3 and its W4 advantage did not repeat on the v1 grid. Single lookahead remains a simpler independent milestone with an i9 request. A conjugate-rank constructor has a distinct space advantage (W4 peak RSS about 0.849 of Lazy on two CI hosts) and divergent CPU results across those hosts. The register retains build references, input hashes, and separate instructions, traffic and dependency quantities below. [Short words](results/short-words-confirm/assessment.json) · [v1 repeat](results/v1-short-confirm/assessment.json) · [Lookahead](results/lookahead-pilot/assessment.json) · [Conjugate constructor](results/conjugate-pilot/assessment.json)

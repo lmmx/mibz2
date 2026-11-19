@@ -159,7 +159,7 @@ def main():
     lines = ["# Astra E best-so-far register", "", "The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. "
              "The full Wikidata input decodes to 209,700,196 bytes per copy. Each gate result and timing scope below belongs to one immutable build. "
              "The local Xeon measurements do not establish the i9 target. [Frozen target rule](workstation/README.md) · [Historical i9 frontier](prior.md) · [Astra E draft PR and CI](https://github.com/lmmx/mibz2/pull/607/checks)", "",
-             "## Local leaders by tested design", "", "These are the lowest recorded point estimates within each group of experiments with matching scorer revision, corpus hash, compiler, host, design and worker count. "
+             (HERE / "frontier.md").read_text().rstrip(), "", "## Local leaders by tested design", "", "These are the lowest recorded point estimates within each group of experiments with matching scorer revision, corpus hash, compiler, host, design and worker count. "
              "Each experiment pairs its candidate with its own lazy control. Between-experiment order remains uncertain when timing variation is large. A shared quiet comparison is needed to establish which candidate wins head to head. "
              "Pilot runs may overlap other work. Confirmation runs have their own rows. The historical control stays separate. RSS leaders remain visible when timing and memory favour different candidates.", "", *point_leaders(scores), ""]
     for manifest in sorted((HERE / "proxy").glob("*/manifest.json")):
