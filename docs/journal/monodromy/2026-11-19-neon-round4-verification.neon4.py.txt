@@ -1,0 +1,84 @@
+"""Round 4: the boundary-record work identity, the surviving count, the endpoint invariant, the
+2r - |D∩C| floor and the Zorich floor, on every small column, every pin set, random monotone
+component-suffix schedules (closures included), full and stopped."""
+import itertools, random
+from collections import Counter
+exec(open('neon3.py').read().split('def touched')[0])
+ST.clear(); EX={}
+def arcs_of(R,lf):
+    D={I['dom'][0] for I in R.I.values()}; C=[I['cod'][0] for I in R.I.values()]
+    out=[]
+    for c in C:
+        a=[c]; z=c
+        while z not in D: z=lf[z]; a.append(z)
+        out.append(a)
+    return out
+def records(arc,pi,Xs):
+    vals=[pi[x] for x in arc]; i=max(range(len(arc)),key=lambda k:vals[k])
+    p=sum(1 for k in range(i) if arc[k] not in Xs and vals[k]==max(vals[:k+1]))
+    s=sum(1 for k in range(i+1,len(arc)) if arc[k] not in Xs and vals[k]==max(vals[k:]))
+    return p,s
+def run(L,pins,rng,stop_at):
+    R=Run(L,0,pins); n=len(L); lf=R.lf
+    arcs=arcs_of(R,lf); rp=len(R.I)
+    # Lemma 1: disjoint, union = cycles meeting C
+    flat=[x for a in arcs for x in a]
+    if len(flat)!=len(set(flat)): ST['ARCS_OVERLAP']+=1
+    t_of={}; S=0; zor=0; last=None
+    while R.I and S<stop_at:
+        F=R.fronts()
+        if F is None: ST['FRONT_FAIL']+=1; return
+        j=rng.choice(sorted(F)); A,B=F[j]
+        before=set(x for I in R.I.values() for x in I['dom'])
+        lA,lB=len(R.I[A]['dom']),len(R.I[B]['cod'])
+        case='3' if (A==B or lA==lB) else ('1' if lA>lB else '2')
+        winner=(j,A) if case=='1' else ((j,B) if case=='2' else None)
+        if not(last is not None and case!='3' and winner==last) and not(case=='3' and last is not None and last in ((j,A),(j,B))): zor+=1
+        last=winner
+        R.step(A,B); S+=1
+        after=set(x for I in R.I.values() for x in I['dom'])
+        for x in before-after: t_of[x]=S
+        # endpoint invariant
+        X=after
+        firsts=set(); lasts=set()
+        for a in arcs:
+            inx=[x for x in a if x in X]
+            if inx: firsts.add(inx[0]); lasts.add(inx[-1])
+        if firsts!={I['cod'][0] for I in R.I.values()} or lasts!={I['dom'][0] for I in R.I.values()}: ST['INVARIANT_FAIL']+=1; EX.setdefault('inv',(L,sorted(pins))); return
+    Xs=set(x for I in R.I.values() for x in I['dom'])
+    pi={x:((t_of[x],-x) if x in t_of else (S+1,-x)) for x in range(n)}
+    pred=0; meet=0
+    for a in arcs:
+        p,s=records(a,pi,Xs); hit=any(x in Xs for x in a)
+        pred+=p+s+(not hit); meet+=hit
+    full=not R.I
+    ST['runs_full' if full else 'runs_stopped']+=1
+    if pred!=S: ST['IDENTITY_FAIL']+=1; EX.setdefault('id',(L,sorted(pins),S,pred))
+    if meet!=len(R.I): ST['SURVIVOR_COUNT_FAIL']+=1
+    if full:
+        runs=[]; x=0
+        while x<n:
+            y=x+1
+            while y<n and L[y]==L[x]: y+=1
+            runs.append(x); x=y
+        r=len(runs); Dset=set(runs)
+        cnt=Counter(L); Cc={}; acc=0
+        for c in sorted(cnt): Cc[c]=acc; acc+=cnt[c]
+        Cset={lf[x] for x in runs}
+        floor=2*r-len(Dset&Cset)
+        if S<floor: ST['FLOOR_FAIL']+=1; EX.setdefault('floor',(L,sorted(pins),S,floor))
+        ST['floor_tight']+=(S==floor)
+        if zor<r: ST['ZORICH_FAIL']+=1; EX.setdefault('zor',(L,sorted(pins),zor,r))
+        ST['zorich_tight']+=(zor==r)
+rng=random.Random(20261119)
+for alph,maxn in ((2,9),(3,7),(4,6)):
+    for n in range(1,maxn+1):
+        for L in itertools.product(range(alph),repeat=n):
+            _,C=lf_of(L); bnds=sorted(v for v in C.values() if 0<v<n)
+            for kk in range(len(bnds)+1):
+                for pins in itertools.combinations(bnds,kk):
+                    for rep in range(3):
+                        run(L,set(pins),rng,10**9)
+                    run(L,set(pins),rng,rng.randrange(0,n+1))
+for k in sorted(ST): print(k,ST[k])
+print(EX)
