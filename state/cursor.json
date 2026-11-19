@@ -1713,6 +1713,19 @@
       "status": "finished",
       "disposition": "PROCEED; lift D113 scoped B5 evidence HOLD.",
       "comment": 6988977627
+    },
+    {
+      "id": "D115",
+      "decision": [
+        "G1"
+      ],
+      "incoming_comment": 7007091766,
+      "pr": 161,
+      "sha": "3f09500ee3289b0dd06948003f45c89aedd8ea36",
+      "evidence_digest": "sha256:f991f6a4792210a7a06813cacdfd9f4c98671374a5e660bae346793ab23e9852",
+      "commit": "092171b8e5def8f3b16b40b90aed464716e65280",
+      "status": "complete",
+      "disposition": "PROCEED: B5 sufficient to freeze #631 registration; adoption separate."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -2300,8 +2313,9 @@
   },
   "current_execution": {
     "active_comment": 7007091766,
-    "status": "in progress",
-    "decision": "D115"
+    "status": "complete",
+    "decision": "D115",
+    "work_commit": "092171b8e5def8f3b16b40b90aed464716e65280"
   },
   "duplicate_events": [
     {
@@ -3174,6 +3188,13 @@
       "evidence_digest": "sha256:7a64dcdcad7a380adbbde38241ffaf0c542e0e2ae0774c74cba95d02b2b2f64e",
       "incoming_comment": 6988881933,
       "decision": "D114"
+    },
+    {
+      "pr": 630,
+      "sha": "3f09500ee3289b0dd06948003f45c89aedd8ea36",
+      "evidence_digest": "sha256:f991f6a4792210a7a06813cacdfd9f4c98671374a5e660bae346793ab23e9852",
+      "incoming_comment": 7007091766,
+      "decision": "D115"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -4129,9 +4150,11 @@
     {
       "comment_id": 7007091766,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D115",
-      "progress": "Open-port B5 review; migration verified."
+      "progress": "Independent source/CI/mutation review committed; publish REVIEW once.",
+      "receipt_commit": "684915adbc331ba4bdcc7ee5951b965ed2c9e0eb",
+      "work_commit": "092171b8e5def8f3b16b40b90aed464716e65280"
     }
   ],
   "migrated_from": {
