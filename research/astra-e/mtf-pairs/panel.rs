@@ -3,6 +3,7 @@ mod stock;
 mod single;
 mod pair;
 mod wide;
+#[cfg(compact)] mod compact;
 
 #[derive(Default)]
 struct Runs {
@@ -13,7 +14,10 @@ impl Default for Counts {fn default()->Self{Self([0;256])}}
 impl std::ops::Deref for Counts {type Target=[u32;256];fn deref(&self)->&Self::Target{&self.0}}
 impl std::ops::DerefMut for Counts {fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
 type Front=unsafe fn(&Symbols,&mut Runs)->Option<usize>;
+#[cfg(not(compact))]
 const ARMS:[(&str,Front);4]=[("stock",stock::front_avx2),("single",single::front_avx2),("pair",pair::front_avx2),("wide",wide::front_avx2)];
+#[cfg(compact)]
+const ARMS:[(&str,Front);3]=[("stock",stock::front_avx2),("wide",wide::front_avx2),("compact",compact::front_avx2)];
 #[repr(C)]
 struct Timespec{i:i64,n:i64}
 unsafe extern "C"{fn clock_gettime(c:i32,t:*mut Timespec)->i32;}

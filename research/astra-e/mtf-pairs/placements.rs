@@ -2,6 +2,7 @@
 use mibz2::{block::Symbols,runs,stream::{Event,Scanner,SliceSource},Kernels};
 #[path="stock.rs"] mod original;
 #[path="wide.rs"] mod composed;
+#[cfg(compact)] #[path="compact.rs"] mod narrow;
 struct Runs{runs:Vec<u16>,counts:[u32;256],per:[u32;256],lit:Vec<u64>,one:Vec<u64>}
 impl Default for Runs{
     fn default()->Self{Self{runs:Vec::new(),counts:[0;256],per:[0;256],lit:Vec::new(),one:Vec::new()}}
@@ -17,7 +18,10 @@ fn cpu()->i64{
 fn measured(kind:usize,corpus:&[Symbols],shared:&mut Runs,real:&mut runs::Runs,k:Kernels)->(i64,usize){
     let mut count=0;let a=cpu();
     match kind {
+        #[cfg(not(compact))]
         0=>for b in corpus{std::hint::black_box(runs::front(b,real,k).unwrap());count+=real.records().len();std::hint::black_box(&*real);},
+        #[cfg(compact)]
+        0=>for b in corpus{std::hint::black_box(unsafe{narrow::front_avx2(b,shared)}.unwrap());count+=shared.runs.len();std::hint::black_box(&*shared);},
         1=>for b in corpus{std::hint::black_box(unsafe{original::front_avx2(b,shared)}.unwrap());count+=shared.runs.len();std::hint::black_box(&*shared);},
         2=>for b in corpus{std::hint::black_box(unsafe{composed::front_avx2(b,shared)}.unwrap());count+=shared.runs.len();std::hint::black_box(&*shared);},
         _=>unreachable!()
@@ -43,7 +47,7 @@ fn main(){
         for (pos,&kind) in orders[round.saturating_sub(1usize)%6].iter().enumerate(){
             let (ns,count)=offset(depth,kind,&corpus,&mut shared,&mut real,k);
             assert_eq!(count,16326954);
-            if round!=0{println!("{depth},{round},{pos},{},{ns},{count}",["library","stock","wide"][kind]);}
+            if round!=0{println!("{depth},{round},{pos},{},{ns},{count}",[if cfg!(compact){"compact"}else{"library"},"stock","wide"][kind]);}
         }
     }
 }

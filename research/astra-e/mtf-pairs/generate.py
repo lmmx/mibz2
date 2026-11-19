@@ -55,3 +55,14 @@ wide = wide[:startwide]+"""                let mask=WIDE.0.as_ptr().add(32 * (s-
 original_move = front[front.index("            if s < 33 {",start):front.index("            let c = ",start)]
 wide = wide.replace(move, original_move)
 (out/"wide.rs").write_text(header+(here/"wide.rs").read_text()+front[:start]+wide+front[stop:])
+a=wide.index("                let mask=WIDE.")
+b=wide.index("                let both =",a)
+compact=wide[:a]+"""                let mask=COMPACT.0.as_ptr().add(32*(s-1)+second_rank) as *const __m128i;
+                let low=_mm_load_si128(mask);
+                let high=_mm_load_si128(mask.add(1));
+                let flip=_mm_set1_epi8(-128);
+                let g0=_mm_or_si128(_mm_shuffle_epi8(f0,low),_mm_shuffle_epi8(f1,_mm_xor_si128(low,flip)));
+                f1=_mm_or_si128(_mm_shuffle_epi8(f0,high),_mm_shuffle_epi8(f1,_mm_xor_si128(high,flip)));
+                f0=g0;
+"""+wide[b:]
+(out/"compact.rs").write_text(header+(here/"compact.rs").read_text()+front[:start]+compact+front[stop:])
