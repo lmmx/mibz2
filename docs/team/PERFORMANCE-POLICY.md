@@ -55,6 +55,11 @@ A performance change is **accepted** on its CI paired bench when all of these ho
 
 A change built for a specific machine, gated on its hardware, is judged on that machine (C5) for its gain. On every other machine it must show that it stays inactive. A deterministic check that the route is not taken, plus a neutral CI bench, settles that. Statistical non-inferiority is not required where the code path is not taken.
 
+**Adaptive dispatch is fair; changing the measurement is not** (Louis, 19 November 2026: "it is ok to detect properties of the input and switch approach accordingly but not to artificially modify the benchmark etc").
+- **Allowed:** choosing a kernel or route per block from properties the decoder observes at run time, such as run density or run structure. LazyCells' density line is an example. The rule should predict which route is cheaper, fitted to measured per-block cost, not to which corpus a block came from. It must hold on held-out data that wasn't used to fit it.
+- **Not allowed:** changing what is measured so that a candidate passes. That covers adding, dropping or reweighting corpora, loosening a guard or bound, swapping the reference, or moving a threshold after its data has been seen.
+- The bench corpora, their classes above and the registered guards stay as they are. A dispatch rule passes or fails on them unchanged.
+
 **One bench run decides.** A regression flagged in a secondary corpus is weighed under rule 3, not re-run to settle it. Only a flagged primary regression gets one re-run; if it shows again, it stands.
 
 ## 3. Statistical tests
@@ -68,6 +73,57 @@ Prefer designs that are small and exact: paired runs, sign tests, a deterministi
 Every experiment names the integration decision it will settle, and when. An instruction-count result is followed promptly by a wall-clock measurement. If the change is faster, it moves towards integration; if not, it is dropped.
 
 Complete causal explanations are welcome, but they are never a precondition for merging a measured gain.
+
+### 4a. Decision quality: the cost of evidence must match the decision (Louis, 19 November 2026)
+
+**The rule:** any experiment costing more than **30 minutes of workstation time** must state three
+things in its registration, before its data:
+1. **The decision it changes.** Say what will be done on each outcome: pass, fail and
+   inconclusive.
+2. **The causal relevance of each condition it tests.** Name the mechanism by which the change
+   could affect that measurement, and give the evidence for it (static path, routing census,
+   deterministic counts).
+3. **Why cheaper evidence won't do.** Cover the static, deterministic, CI and already-recorded
+   evidence.
+
+**Who is accountable:** the **Coordinator**.
+- The Researcher rules on statistical validity, and the Guardian on correctness and safety.
+- The Coordinator decides whether the remaining uncertainty is worth the cost. A registration
+  that satisfies every specialist can still fail this test.
+- When a review round raises an experiment's cost by more than half, the Coordinator re-asks
+  the decision question before accepting the increase.
+
+**Why this rule exists:** the open port (#630), 19 November 2026.
+- *The first attempt:* its single registered attempt failed four guard point bounds, all on
+  corpora that route no block to the new kernel. Its verdict, NOT ADOPTED, stands.
+- *The successor (#635):* it then grew, through correct review rounds, from 65 minutes to about
+  7 hours of i9 time, to measure layout-scale noise on code paths the change barely touches.
+  No one asked what decision those hours would change. Louis stopped it.
+
+**Causal-equivalence evidence:** for a corpus whose execution path the change leaves
+demonstrably near-unchanged, the evidence is:
+- **What it consists of:**
+  - a static path analysis, quoting `file:line`;
+  - a routing census showing the new route is not taken;
+  - byte-identical output;
+  - deterministic instruction, cache and branch counts (cachegrind) against the baseline.
+- **What it settles:** the question of *mechanism*, so these corpora don't need per-cell
+  powered wall-time guards. Any trigger is attributed in writing first.
+- **What it does not replace:**
+  - **a short pooled paired wall-time check on the same corpora.** A machine-level
+    difference (code layout, an unused inline field, a new monomorph) is real deployed cost,
+    so it is bounded in pooled form. A single cell clearly beyond the guard bound is still
+    flagged.
+  - **the usual guards where the new code executes:** correctness, memory, primary, held-out
+    and sustained.
+- **Its limits, stated in each use:**
+  - Simulated counts aren't native timing.
+  - Zero routing is not "identical": the scratch, layout and fallback checks still differ.
+  - The pooled wall check has less per-cell power than a powered per-cell design. It is
+    proportionate when, and only when, the causal analysis finds no mechanism specific to
+    that cell.
+- **When it applies:** from 0.5.7 on, prospectively. **It never converts an earlier failed
+  registration:** the open port's first NOT ADOPTED stands permanently.
 
 ## 5. History
 

@@ -85,6 +85,10 @@ mod cells;
 #[cfg(feature = "grammar-replay")]
 #[doc(hidden)]
 pub use cells::{replay_reps, replay_stats, ReplayStats};
+// (research only: the one-scan writer's comparison, with `owned-writer`)
+#[cfg(feature = "owned-writer")]
+#[doc(hidden)]
+pub use cells::{owned_ab, owned_blocks, owned_mode, owned_phases};
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;
@@ -98,6 +102,8 @@ pub mod dose;
 #[doc(hidden)]
 pub mod itrace;
 pub mod mtf;
+// the open kernel, the workers' kernel wherever `LazyCells` ran (`bwt::OpenCells`)
+mod open;
 pub mod parallel;
 #[cfg(feature = "phase-counters")]
 #[doc(hidden)]

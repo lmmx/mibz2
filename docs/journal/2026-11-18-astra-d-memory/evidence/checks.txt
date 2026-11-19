@@ -1,0 +1,3 @@
+libbz2 and all three whole-stream outputs: 209700196 bytes SHA-256 3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf
+Single-block libbz2 comparisons: 33
+Native small checks passed: astra_overlaps_and_refusals, astra_all_rows_and_cycles

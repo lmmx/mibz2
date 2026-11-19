@@ -23,6 +23,9 @@ pub use crate::cells::{
 };
 #[cfg(feature = "memory-lever")]
 pub use crate::cells::{ForcedStagedCells, StagedCells};
+/// The workers' kernel wherever production ran `LazyCells`: the open kernel on `LazyCells`'
+/// admitted blocks, `LazyCells` as shipped elsewhere (`open.rs`)
+pub use crate::open::{ForcedOpenCells, OpenCells, OpenCellsOf};
 
 /// An inverse-BWT kernel: a block's RLE1-coded text from its last column `ll` (whose
 /// bytes `counts` counts) and its primary index (below `ll.len()`: the caller checks),

@@ -30,7 +30,7 @@ license-files = ["LICENSE-APACHE", "LICENSE-MIT"]
 name = "mibz2"
 readme = "README.md"
 requires-python = ">=3.10"
-version = "0.5.5"
+version = "0.5.6"
 
 [project.urls]
 Documentation = "https://lmmx.github.io/mibz2/"
@@ -65,6 +65,9 @@ include = ["python"]
 
 [tool.ruff]
 line-length = 100
+# research/ holds research agents' scratch code and evidence (Astra's campaigns): not linted,
+# so lint never gates a research recipe; anything promoted out of it is linted as usual
+extend-exclude = ["research"]
 
 [tool.ruff.lint]
 ignore = ["D401"]

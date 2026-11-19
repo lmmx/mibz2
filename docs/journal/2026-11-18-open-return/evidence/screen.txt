@@ -1,0 +1,4 @@
+L=220021021110 primary=0 displacement=-3 entries=3 heights=[1, 1, 1] literal_work_per_parallel_band=1
+L=110010202221 primary=0 displacement=1 entries=1 heights=[3] literal_work_per_parallel_band=3
+rows=899931 heads=51184 copy_spans=10954 copy_bytes=848747
+settled_spans=3123 settled_bytes=5063

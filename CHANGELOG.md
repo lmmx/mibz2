@@ -7,7 +7,119 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6](https://github.com/lmmx/mibz2/compare/v0.5.5...v0.5.6) - 2026-11-18
+
+A kernel release: Cells' writer reads its rules once. Every plan, thread count and worker
+trim is unchanged.
+
+### <!-- 3 -->Performance
+
+- *(cells)* write each full-period block in one scan of its rules (study 5, #579) ([#581](https://github.com/lmmx/mibz2/pull/581))
+
+### <!-- 4 -->Documentation
+
+- *(rules)* don't wait on a CI job whose inputs did not change ([#584](https://github.com/lmmx/mibz2/pull/584))
+- *(blog)* What decoding pays for, review round 1 corrections ([#580](https://github.com/lmmx/mibz2/pull/580))
+- *(blog)* What decoding pays for: how long run boundaries persist ([#574](https://github.com/lmmx/mibz2/pull/574))
+- *(blog)* Cutting the loop open: decoding a block along shared paths ([#566](https://github.com/lmmx/mibz2/pull/566))
+
+### <!-- 9 -->Other
+
+- where to read the team's results and each role's status ([#572](https://github.com/lmmx/mibz2/pull/572))
+- GitHub's macOS runners never hold a merge ([#571](https://github.com/lmmx/mibz2/pull/571))
+- a new blog post always goes through a PR; direct commits only for amendments ([#567](https://github.com/lmmx/mibz2/pull/567))
+- Release scaling: 0.5.5 against 0.5.4 on the i9; 0.5.5's notes and attribution row ([#563](https://github.com/lmmx/mibz2/pull/563))
+
+- **Cells writes each full-period block in one scan of its rules** (study 5, #579; #581). Eager
+  `Cells` and `LazyCells` share the writer. The shipped writer found each long rule's leftmost
+  output occurrence, then read the rules again to expand and copy them. The one-scan writer
+  instead places each rule child at its *owner*, the parent at its last use. Two consecutive
+  stored rules certify the owner, so the induction is unchanged. Each surviving child becomes
+  a copy command, stored over the rule records already read and run afterwards in increasing
+  parent order. A block whose cycle is shorter than the block is written by the shipped
+  writer as before. The output is byte-identical.
+  - **The whole decoder on Wikidata, CI's paired bench** (10 rounds; wall time, head over
+    base, 95% interval):
+
+    | run | CPU | 1 thread | 2 threads | 4 threads |
+    |---|---|--:|--:|--:|
+    | #581 at cd7e5de2 | Xeon 6975P-C | −4.8% (−7.8, −1.7) | −3.5% (−5.0, −1.9) | −1.3% (−2.7, +0.2) |
+    | #581 at 270a29ba | EPYC 7763 | −3.9% (−5.5, −2.4) | −3.9% (−6.2, −1.5) | −1.6% (−2.9, −0.4) |
+    | 0.5.6 against 0.5.5 | Xeon Platinum 8370C | −1.7% (−4.0, +0.6) | −2.4% (−4.2, −0.5) | −1.3% (−2.0, −0.6) |
+
+    CPU time fell 2.0–2.6% at 4 threads in all three runs. No other corpus is slower beyond
+    noise in any run, and peak RSS shows no consistent change. The gain at the i9's thread
+    counts (7–10) is under evaluation: the release scaling, below, measures it.
+  - **The writer alone,** on identical grammars (`examples/writer_owned.rs`, research feature
+    `owned-writer`; `docs/journal/2026-11-18-one-scan-writer.md`): 0.81 of the shipped
+    writer's time on Wikidata eager and 0.79 lazy, the frozen block 0.80, and other corpora
+    under forced Cells 0.55 to 0.72. Its data reads fall to 0.62 and its branch
+    mispredictions to 0.70 (simulated). Its D1 write misses rise to 1.19, from the scattered
+    order of its stores and copies.
+  - **Its checks:** two independent verifications of the mathematics (the Researcher's REVIEW
+    6986491194; MONODROMY's record 67). The Guardian's review lifted its evidence HOLD
+    (D113, D114) on a completed Miri run and runtime mutation receipts, 8 of 8 killed.
+  - **An alternative not taken:** study 6's first-occurrence writer (#582) took 1.79× the
+    one-scan writer's time on identical grammars (`docs/journal/2026-11-18-first-occurrence-writer.md`).
+- **The worker trims are unchanged, without a recalibration** (RELEASING §3.4). The writer
+  cuts per-block CPU by about 2–4%, with no change in peak memory or DRAM bytes per output
+  byte. The 10-thread trim is held by its memory cost, not its speed. The release scaling and
+  the crossover check it (§5a, §5c).
+- **The release scaling** (0.5.6 against 0.5.5 on the i9-10900K, `bench-release-scaling`,
+  release-scaling/run-20261118T201717Z, 10 rounds; 0.5.5's wall over 0.5.6's on Wikidata, 95%
+  interval; above 1 means 0.5.6 is faster):
+
+  | threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+  |---|--:|--:|--:|--:|--:|--:|--:|--:|
+  | wall | 1.012 [0.976, 1.050] | 1.017 [1.000, 1.034] | 1.021 [0.994, 1.048] | **1.027** [1.015, 1.040] | 1.001 [0.957, 1.046] | 1.012 [0.989, 1.035] | **1.018** [1.002, 1.035] | **1.019** [1.001, 1.038] |
+
+  0.5.6 is about 2–3% faster at 8, 16 and 20 threads, and its CPU time is 1–3% lower from 2
+  threads up. At 10 threads wall time is unchanged within a wide interval, and CPU time is
+  1.2% lower [1.000, 1.024]. No step reaches the attribution ledger's 3% bar (§5b).
+- **The crossover** (§5a; `bench-crossover`, crossover/run-20261118T202811Z, evidence 6d06a0dd,
+  10 rounds on Wikidata): the team threshold stays. No forced arm is faster than the shipped
+  decoder at any count from 4 to 20 threads: no interval lies wholly below 1. The teams of 2
+  and 3 are 1.21–2.79× its wall time. One block a thread with the default window
+  (`mibz2-workers-w`) comes nearest at 5 threads, 0.987 [0.971, 1.004], and at 9, 0.972
+  [0.933, 1.012]; it is 1.07–1.19× from 10 threads up, where the trims run 7 lazy workers.
+
 ## [0.5.5](https://github.com/lmmx/mibz2/compare/v0.5.4...v0.5.5) - 2026-11-18
+
+A kernel release: the lazy kernel admits more blocks, so fewer of them take the T-vector walk.
+Every plan and thread count is unchanged.
+
+- **Wider admission for the lazy kernel** (#559). `LazyCells`, the workers' kernel from
+  `LAZY_FROM_THREADS` threads and on the trimmed i9 plans, admits blocks up to r/n 0.15 (3 run
+  records in 20 rows), not 0.10, with a budget of 0.32 n cells, not 0.16 n; the sparse gate is
+  Cells' own. The blocks between the lines leave the T-vector walk, whose random reads carried
+  about a third of the decoder's modelled DRAM traffic on Wikidata. Eager `Cells` (below
+  `LAZY_FROM_THREADS`), the teams and the service core keep Cells' admission. The output is
+  byte-identical.
+  - On the measured i9 (`bench-admit`, admit/run-20261118T100717Z, #145 LOG 6975512468),
+    unpinned, on Wikidata ×4: 0.838 [0.825, 0.851] of master's wall at 8 threads (eight lazy
+    workers) and 0.878 [0.866, 0.890] at 10 (seven). DRAM fell from 10.70 to 8.05 B a byte of
+    output at seven workers (reads 6.76 to 4.73, writes 3.93 to 3.33). Text and random keep
+    their route and their wall (0.993 to 1.007).
+  - Peak memory on Wikidata rose 25 to 26 MB (1.14 to 1.16 of master's). The frozen rule held
+    it on memory, and it was accepted under PERFORMANCE-POLICY rule 4, as amended by #558, for
+    12 to 16% less wall and 25% fewer DRAM bytes a byte. Text and random are unchanged.
+- **The release check (RELEASING §3)**, run 44290437026 on an AMD EPYC 9V74 (#145 LOG
+  6976975591): one primary row flagged, Wikidata at 1 thread, +1.6% (+0.0, +3.1), at the edge
+  of noise; #559's only footprint at 1 thread is one branch a block. The release scaling
+  doesn't reproduce it (1.007, spanning 1).
+- **Release scaling, 0.5.5 against 0.5.4 on the i9** (release-scaling/run-20261118T112057Z,
+  #145 LOG 6977328773): 0.5.4 takes 1.054 [1.031, 1.078] of 0.5.5's wall time at 8 threads,
+  1.135 [1.119, 1.151] at 10 and 1.128, 1.132 and 1.121 at 12, 16 and 20, with 1.07–1.14 of
+  its CPU. Peak RSS at 8–20 threads is about level: 118–135 MB for 0.5.4, 126–131 MB for 0.5.5
+  (+8 MB at 8 threads, on this single copy of Wikidata). At 1–4 threads the two
+  are level (0.997–1.011, every interval spanning 1). At 10 threads 0.5.5's median is
+  0.089 s, the fastest point a release sweep has recorded.
+- **Team threshold (RELEASING §5a), unchanged** (crossover/run-20261118T113151Z, #145 LOG
+  6977656986). No team arm beat the shipped plan at any count from 4 to 20. At 8 threads,
+  pinned, one block a thread over the shipped 6/24 trim is 0.983 [0.955, 1.011], where 0.5.4's
+  run read 1.050: under wide admission the trim's gain there is gone. That is left to the
+  worker-count recalibration (RELEASING §5c). At 10–20 threads the shipped plan still beats one
+  block a thread by 5–18%.
 
 ### <!-- 3 -->Performance
 
@@ -24,20 +136,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the knee is gone, more threads without the fall ([#550](https://github.com/lmmx/mibz2/pull/550))
 - Blog (worker count): round-2 revision, a shorter post and technical notes ([#538](https://github.com/lmmx/mibz2/pull/538))
 - Release scaling: 0.5.4 against 0.5.3 on the i9; 0.5.4's notes and attribution row ([#548](https://github.com/lmmx/mibz2/pull/548))
-
-- **Wider admission for the lazy kernel** (#556's run, this PR). `LazyCells`, the workers' kernel
-  from `LAZY_FROM_THREADS` threads and on the trimmed i9 plans, admits blocks up to r/n 0.15 (3 run
-  records in 20 rows), not 0.10, with a budget of 0.32 n cells, not 0.16 n; the sparse gate is
-  Cells' own. The blocks between the lines leave the T-vector walk, whose random reads carried
-  about a third of the decoder's modelled DRAM traffic on Wikidata. Eager `Cells` (below
-  `LAZY_FROM_THREADS`), the teams and the service core keep Cells' admission. On the measured
-  i9 (`bench-admit`, admit/run-20261118T100717Z, #145 LOG 6975512468), unpinned, on Wikidata x4:
-  0.838 [0.825, 0.851] of master's wall at 8 threads (eight lazy workers) and 0.878 [0.866,
-  0.890] at 10 (seven); DRAM 10.70 to 8.05 B a byte of output at seven workers (reads 6.76 to
-  4.73, writes 3.93 to 3.33). Text and random bytes keep their route and their wall (0.993 to
-  1.007). Peak memory on Wikidata rose 25 to 26 MB (1.14 to 1.16 of master's), held on memory by
-  the frozen rule and accepted under PERFORMANCE-POLICY rule 4 for 12 to 16% less wall and 25%
-  fewer DRAM bytes a byte; text and random are unchanged. The output is byte-identical.
 
 ## [0.5.4](https://github.com/lmmx/mibz2/compare/v0.5.3...v0.5.4) - 2026-11-17
 

@@ -1,0 +1,36 @@
+File: ../wt-data/admitted-bwt/block-0.L (n=899931, r=51184, r/n=0.0569, primary=264045)
+  Cycles found: 1 -> [(0, 1, 899931)]
+  Weight-Only RV: acc_steps=92571 (1.809r), unacc_steps=92571 (1.809r) [scan=0.091s, rv=0.093s]
+  NOP-7 Parse: copies=10954 (unidir=5661, 47.2% of copy bytes)
+  Interval Peeling: passes=14931, memcpy_frags=444921 (40.62x copies, 8.69r), mean_frag=1.9 B, self_overlap=0 [replay=125.795s]
+  GROUND-TRUTH VERIFICATION: PASS (d=899931, all 51184 heads, 51184 tails, primary, and 899931 bytes exact)
+File: ../wt-data/admitted-bwt/block-2.L (n=900000, r=54532, r/n=0.0606, primary=320807)
+  Cycles found: 1 -> [(0, 1, 900000)]
+  Weight-Only RV: acc_steps=101907 (1.869r), unacc_steps=101907 (1.869r) [scan=0.094s, rv=0.108s]
+  NOP-7 Parse: copies=13223 (unidir=6017, 44.7% of copy bytes)
+  Interval Peeling: passes=14361, memcpy_frags=471164 (35.63x copies, 8.64r), mean_frag=1.8 B, self_overlap=0 [replay=131.671s]
+  GROUND-TRUTH VERIFICATION: PASS (d=900000, all 54532 heads, 54532 tails, primary, and 900000 bytes exact)
+File: ../wt-data/admitted-bwt/block-85.L (n=899935, r=79375, r/n=0.0882, primary=325088)
+  Cycles found: 1 -> [(0, 1, 899935)]
+  Weight-Only RV: acc_steps=140544 (1.771r), unacc_steps=140544 (1.771r) [scan=0.107s, rv=0.146s]
+  NOP-7 Parse: copies=17119 (unidir=6934, 31.5% of copy bytes)
+  Interval Peeling: passes=10195, memcpy_frags=435723 (25.45x copies, 5.49r), mean_frag=1.9 B, self_overlap=0 [replay=90.296s]
+  GROUND-TRUTH VERIFICATION: PASS (d=899935, all 79375 heads, 79375 tails, primary, and 899935 bytes exact)
+File: ../wt-data/admitted-bwt/block-207.L (n=899998, r=87111, r/n=0.0968, primary=205180)
+  Cycles found: 1 -> [(0, 1, 899998)]
+  Weight-Only RV: acc_steps=153650 (1.764r), unacc_steps=153650 (1.764r) [scan=0.107s, rv=0.154s]
+  NOP-7 Parse: copies=20803 (unidir=9497, 35.0% of copy bytes)
+  Interval Peeling: passes=11559, memcpy_frags=470996 (22.64x copies, 5.41r), mean_frag=1.7 B, self_overlap=0 [replay=136.409s]
+  GROUND-TRUTH VERIFICATION: PASS (d=899998, all 87111 heads, 87111 tails, primary, and 899998 bytes exact)
+File: ../wt-data/admitted-bwt/block-143.L (n=899869, r=108335, r/n=0.1204, primary=802868)
+  Cycles found: 1 -> [(0, 1, 899869)]
+  Weight-Only RV: acc_steps=193866 (1.790r), unacc_steps=193866 (1.790r) [scan=0.112s, rv=0.196s]
+  NOP-7 Parse: copies=26964 (unidir=13149, 39.7% of copy bytes)
+  Interval Peeling: passes=12720, memcpy_frags=443030 (16.43x copies, 4.09r), mean_frag=1.8 B, self_overlap=0 [replay=129.851s]
+  GROUND-TRUTH VERIFICATION: PASS (d=899869, all 108335 heads, 108335 tails, primary, and 899869 bytes exact)
+File: ../wt-data/admitted-bwt/block-210.L (n=899959, r=128732, r/n=0.1430, primary=791429)
+  Cycles found: 1 -> [(0, 1, 899959)]
+  Weight-Only RV: acc_steps=216769 (1.684r), unacc_steps=216769 (1.684r) [scan=0.127s, rv=0.251s]
+  NOP-7 Parse: copies=26748 (unidir=11619, 29.7% of copy bytes)
+  Interval Peeling: passes=10866, memcpy_frags=438891 (16.41x copies, 3.41r), mean_frag=1.8 B, self_overlap=0 [replay=84.390s]
+  GROUND-TRUTH VERIFICATION: PASS (d=899959, all 128732 heads, 128732 tails, primary, and 899959 bytes exact)

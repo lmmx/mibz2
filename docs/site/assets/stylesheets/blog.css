@@ -697,6 +697,11 @@
   .md-typeset div.arithmatex .katex-display .tag { position: static; display: inline-block; margin-left: 1.2em; }
 }
 
+/* Maths in a table on a phone: the theme scrolls a wide table inside its wrapper, but KaTeX's
+   hidden MathML copy is absolutely positioned, so without a positioned wrapper it escapes the
+   scroll and widens the whole page. Positioning the wrapper keeps it inside. */
+.md-typeset .md-typeset__scrollwrap { position: relative; }
+
 /* Frames (the inverse-BWT post): one art-directed sequence of small static frames, each drawn
    on the same 230-unit width so every figure has the same scale. Typeset rails of letters, small
    indices, smooth connectors with small heads; green marks the one run being matched, ink the

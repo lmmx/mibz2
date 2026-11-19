@@ -45,6 +45,11 @@ Docs, journal, bench-harness or blog changes alone are not.
    purpose and a removal condition that hasn't been met. Remove any whose reason has lapsed in
    its own PR, never in the release's. The review never delays the release, and a removal is
    never automatic: list what was reviewed, and what is to go, in the release's report.
+4. **Recalibrate the worker counts first, if the cost model has moved (§5c).** When the release
+   would change what a worker costs, the trims are re-measured on master *before* the release, and
+   any retune ships in the same release. Then the release never ships a kernel change with
+   stale worker counts that could worsen the knee or the profile. This step can delay the release;
+   it is the one pre-release check that does.
 
 ## 4. The release
 
@@ -63,16 +68,23 @@ real many-core machine (`bench/release-scaling/`, `docs/generated/release-scalin
 shows what CI's 4-CPU runners can't, such as the decoder's knee past 8 threads (the
 three-team policy came from it). Every release gets one.
 
-1. **As soon as the tag exists, ask Louis to run, on the i9:**
+1. **As soon as the tag exists, queue it** (PROTOCOL.md §9):
+   - update `bench-release-scaling`'s line in `bench/workstation-queue.txt` to name the new
+     release and its tag commit, in a queue-only PR (merged without waiting for CI, after
+     `python3 bench/test_workstation_queue.py`);
+   - dispatch `run-signal.yml` with `ready`, the recipe and the tag commit's full SHA. It
+     moves the tag left from the last release;
+   - check the tag on origin: `git ls-remote --tags origin ready/bench-release-scaling`
+     must show the tag commit. Then the run is queued, not before;
+   - the workstation's "**Started:**" notice on #145 confirms it was picked up. A runner
+     under `--wait` checks origin every 5 minutes. If none comes within about 10 minutes,
+     ask Louis whether the queue is running.
 
-   ```sh
-   cd ~/dev/mibz2 && git checkout master && git pull
-   just submit bench-release-scaling
-   ```
-
-   - With no arguments, the recipe compares the current release (the newest `vX.Y.Z` tag)
-     against the last one (the tag before it). Never write version numbers into the command.
-   - It is his run, under RULES C5. The agents never time on the workstation. Its figures inform; they don't decide.
+   With no arguments, the recipe compares the current release (the newest `vX.Y.Z` tag)
+   against the last one (the tag before it). Never write version numbers into a command.
+   It is his run, under RULES C5. The agents never time on the workstation. Its figures
+   inform; they don't decide. If the queue isn't running, he can run it by hand:
+   `just submit bench-release-scaling` on master.
 2. **When the submission lands on #145:**
    - fetch the bundle from the `evidence` branch at the commit the post names, and check its SHA-256;
    - copy its `recorded/` directory to `bench/release-scaling/<date>-<machine>-<release>/`;
@@ -101,9 +113,9 @@ made workers 4–14% faster than the teams at 6–9 threads (#425).
 
    Not for docs, bench or packaging releases. When unsure, run it: it takes about 15 minutes.
 2. **The run:** queue `bench-crossover` (`bench/workstation-queue.txt`, its ready tag at the
-   release's tag commit) beside the release scaling. It runs the shipped decoder against one
-   block a thread (`mibz2-workers-w`) and teams of 2 and 3 (`mibz2-team2`, `mibz2-team3`) at
-   4 to 10, 12, 16 and 20 threads, every arm with the default window.
+   release's tag commit, set and checked as in §5.1) beside the release scaling. It runs the
+   shipped decoder against one block a thread (`mibz2-workers-w`) and teams of 2 and 3
+   (`mibz2-team2`, `mibz2-team3`) at 4 to 10, 12, 16 and 20 threads, every arm with the default window.
 3. **The rule** (the one judged on 15 November, #145 LOG 6896455773, kept for every run):
    - **sanity:** where an arm runs the same plan as the shipped decoder, their interval should
      span 1. A near miss is noise to weigh, not a veto: judge the run as a whole, and repeat
@@ -147,6 +159,31 @@ there is something worth commenting on, never as a routine part of every release
 5. **The CHANGELOG** names the row, if there is one, and says nothing more about it.
 6. **The reading.** The ledger's *What the ledger says* section changes only when a new row
    changes it, such as a new way the high thread counts moved.
+
+## 5c. Worker counts: recalibrate before releasing when the cost model has moved
+
+The trimmed worker counts (`trimmed_workers` in `src/parallel.rs`) were measured against a
+particular kernel and its memory traffic. When that changes, the best count can move: with wide
+admission (#559), 8 workers beat 7 within the new kernel (0.979), where the shipped trim uses 7.
+
+1. **When:** before the release (§3.4), if either holds.
+   - **The release changes what a worker costs:** the kernel's admission or work per block, its
+     working set or scratch layout, or DRAM bytes per output byte. Examples are a new admission
+     line, a new induction, or a store or table change.
+   - **A measurement shows the knee has moved:** a frozen run reports a different best count
+     within the new kernel, or the release scaling or crossover shows the shipped trim losing to
+     a neighbouring count.
+2. **The run:** a worker-count sweep on the i9 at master's head, the release candidate, in both placement
+   modes. Pinned, one CPU on each of exactly T cores; and unpinned. The counts are those the trims
+   cover (4, 6, 8 and 10 threads, and 12–20 unpinned), against the shipped trim at each. Its rule
+   is posted before the data, and a change of trim is an adoption registration (C6), with the
+   Researcher's review.
+3. **Model first:** MONODROMY's contention model (records 45–55) gives each count's predicted
+   best from the new kernel's measured traffic. Record the prediction beside the sweep, so the
+   model is scored each time.
+4. **Record** the verdict in the release's CHANGELOG section, changed or not.
+5. **If the release has already gone out** (0.5.5, the first case, came before this section), run
+   the sweep at once and ship any retune in a follow-up patch release.
 
 ## 6. After
 

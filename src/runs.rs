@@ -109,7 +109,17 @@ impl Default for Runs {
 
 impl Runs {
     /// Read-only records for the experimental cells kernel; format unchanged.
+    #[cfg(not(feature = "moonshot"))]
     pub(crate) fn records(&self) -> &[u16] {
+        &self.runs
+    }
+
+    /// Research only (`moonshot`): the same records, public, so that a candidate kernel built
+    /// outside the crate (bench/moonshot/) reads them as an in-crate kernel does, by the same
+    /// name. Without the feature the decoder compiles exactly as shipped.
+    #[cfg(feature = "moonshot")]
+    #[doc(hidden)]
+    pub fn records(&self) -> &[u16] {
         &self.runs
     }
 

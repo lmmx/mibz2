@@ -1,0 +1,54 @@
+File: ../wt-data/admitted-bwt/block-0.L (n=899931, r=51184, r/n=0.0569)
+  NOP-7: k_eff=10954, edges=11902 (1.09k, bound<=21907 OK), self_ov=0 (0.00% copy bytes)
+  G_copy SCCs: nontrivial=1, largest_SCC=7461 (99.3% copy bytes), acyclic=3493 (0.7% copy bytes)
+  Omniscient Floors (Theorem 1):
+    depth_floor (lam_max-1) = 26406
+    alt_sweep_pass_floor    = 16102
+    F_self_ns (any sched)   = 41684 (3.81x copies, 0.81r, mean_frag<=20.4 B)
+    F_BFS (level-by-level)  = 493738 (9.65r, mean_frag=1.7 B) [Thm 1.6 verified on all 899931 rows]
+
+File: ../wt-data/admitted-bwt/block-2.L (n=900000, r=54532, r/n=0.0606)
+  NOP-7: k_eff=13223, edges=16138 (1.22k, bound<=26445 OK), self_ov=0 (0.00% copy bytes)
+  G_copy SCCs: nontrivial=1, largest_SCC=9997 (99.4% copy bytes), acyclic=3226 (0.6% copy bytes)
+  Omniscient Floors (Theorem 1):
+    depth_floor (lam_max-1) = 26318
+    alt_sweep_pass_floor    = 15593
+    F_self_ns (any sched)   = 46310 (3.50x copies, 0.85r, mean_frag<=18.3 B)
+    F_BFS (level-by-level)  = 516717 (9.48r, mean_frag=1.6 B) [Thm 1.6 verified on all 900000 rows]
+
+File: ../wt-data/admitted-bwt/block-85.L (n=899935, r=79375, r/n=0.0882)
+  NOP-7: k_eff=17119, edges=18354 (1.07k, bound<=34237 OK), self_ov=0 (0.00% copy bytes)
+  G_copy SCCs: nontrivial=1, largest_SCC=12215 (99.2% copy bytes), acyclic=4904 (0.8% copy bytes)
+  Omniscient Floors (Theorem 1):
+    depth_floor (lam_max-1) = 25629
+    alt_sweep_pass_floor    = 10638
+    F_self_ns (any sched)   = 43479 (2.54x copies, 0.55r, mean_frag<=18.9 B)
+    F_BFS (level-by-level)  = 487229 (6.14r, mean_frag=1.7 B) [Thm 1.6 verified on all 899935 rows]
+
+File: ../wt-data/admitted-bwt/block-207.L (n=899998, r=87111, r/n=0.0968)
+  NOP-7: k_eff=20803, edges=23281 (1.12k, bound<=41605 OK), self_ov=0 (0.00% copy bytes)
+  G_copy SCCs: nontrivial=1, largest_SCC=15142 (99.0% copy bytes), acyclic=5661 (1.0% copy bytes)
+  Omniscient Floors (Theorem 1):
+    depth_floor (lam_max-1) = 25779
+    alt_sweep_pass_floor    = 12615
+    F_self_ns (any sched)   = 58605 (2.82x copies, 0.67r, mean_frag<=13.9 B)
+    F_BFS (level-by-level)  = 535265 (6.14r, mean_frag=1.5 B) [Thm 1.6 verified on all 899998 rows]
+
+File: ../wt-data/admitted-bwt/block-143.L (n=899869, r=108335, r/n=0.1204)
+  NOP-7: k_eff=26964, edges=32815 (1.22k, bound<=53927 OK), self_ov=0 (0.00% copy bytes)
+  G_copy SCCs: nontrivial=2, largest_SCC=20379 (98.8% copy bytes), acyclic=6579 (1.2% copy bytes)
+  Omniscient Floors (Theorem 1):
+    depth_floor (lam_max-1) = 25133
+    alt_sweep_pass_floor    = 13642
+    F_self_ns (any sched)   = 59690 (2.21x copies, 0.55r, mean_frag<=13.3 B)
+    F_BFS (level-by-level)  = 498232 (4.60r, mean_frag=1.6 B) [Thm 1.6 verified on all 899869 rows]
+
+File: ../wt-data/admitted-bwt/block-210.L (n=899959, r=128732, r/n=0.1430)
+  NOP-7: k_eff=26748, edges=28360 (1.06k, bound<=53495 OK), self_ov=0 (0.00% copy bytes)
+  G_copy SCCs: nontrivial=1, largest_SCC=18378 (98.6% copy bytes), acyclic=8370 (1.4% copy bytes)
+  Omniscient Floors (Theorem 1):
+    depth_floor (lam_max-1) = 27233
+    alt_sweep_pass_floor    = 11623
+    F_self_ns (any sched)   = 51741 (1.93x copies, 0.40r, mean_frag<=14.9 B)
+    F_BFS (level-by-level)  = 499968 (3.88r, mean_frag=1.5 B) [Thm 1.6 verified on all 899959 rows]
+

@@ -1995,3 +1995,107 @@ bench-recalibrate COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="5":
     fi
     date -u +%FT%TZ > "$O/finished.txt"
     bash bench/bundle.sh "$O"
+
+# The moonshot scorer (bench/moonshot/README.md): a candidate inverse-BWT kernel, a Rust source
+# file (bench/moonshot/candidates/template.rs), checked byte for byte against libbzip2, timed
+# against 0.5.6's kernel in the shipped workers, and run through the contention proxy
+# (chaingrind, with Valgrind). Container evidence only: CI's bench and the i9 decide.
+#   just moonshot-score bench/moonshot/candidates/opend.rs --rounds 5
+moonshot-score candidate *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    bash bench/moonshot/corpus.sh corpora/wikidata.bz2 > /dev/null
+    python3 bench/moonshot/moonshot.py score "{{candidate}}" {{args}}
+
+# The register's best production-eligible candidate per scorer version, and each worker count's
+# leader (bench/moonshot/README.md, "The register"); faster ineligible ones listed apart.
+#   just moonshot-best register.jsonl
+moonshot-best register:
+    python3 bench/moonshot/moonshot.py best "{{register}}"
+
+# The scorer's retrospective (bench/moonshot/README.md, "The retrospective"): every candidate's
+# local forecast (scores, register lines) beside every later independent CI or i9 result for the
+# same frozen source, with each prediction's error; accuracy by scorer version, counting only
+# forecasts whose host and W match. Read-only: it fits nothing.
+#   just moonshot-eval research/astra-e
+moonshot-eval *dirs:
+    python3 bench/moonshot/eval.py {{dirs}}
+
+# The scorer's i9 calibration run (bench/moonshot/README.md, "Calibration"; its rule posted on
+# #145 before any data): the reference arms in the shipped workers, kernel-only (lazy, 0.5.6's
+# LazyCells; opend; open; cells, eager), paired and alternating at WORKERS workers, unpinned,
+# SETTLE s apart, on COPIES copies of the Wikidata sample, each run's stall counters by perf
+# stat, the mean L3-miss latency among them. Decides nothing in production: the scorer, frozen
+# at the commit its #145 LOG names (kappa fitted on the open-return bundle's opend 7/28 alone),
+# predicts every cell of this run, so every cell is held out. Its builds and corpora are
+# deleted at the end; only the bundle stays. About 20 minutes.
+# DRY (untimed, no counters, two rounds, not evidence) is the 5th positional argument: `just`
+# has no keyword arguments, so `DRY=1` alone would be taken as ROUNDS (and is refused):
+#   just bench-moonshot-calibrate 10 2 4 1,2,4,7,8,10 1
+bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10" DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    [[ "{{ROUNDS}}" =~ ^[0-9]+$ ]] \
+      || { echo "bench-moonshot-calibrate: ROUNDS is {{ROUNDS}}: DRY is the 5th positional argument (just bench-moonshot-calibrate 10 2 4 1,2,4,7,8,10 1)"; exit 1; }
+    W=$PWD/target/moonshot-calibrate
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-moonshot-calibrate (bench/moonshot/README.md): lazy, opend, open and cells in the shipped workers at {{WORKERS}} workers, unpinned, {{ROUNDS}} paired rounds, settle {{SETTLE}} s, {{COPIES}} copies of the Wikidata sample, at $(git rev-parse HEAD)"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-moonshot-calibrate: the checkout has local changes"; exit 1; }
+    # the kernels are 0.5.6's: src differs from v0.5.6 only by the `moonshot` feature's accessor
+    V056=530ed404a014a414ef0b62adfd947fa14d4533e6
+    git cat-file -e $V056^{commit} 2>/dev/null || git fetch -q origin tag v0.5.6 2>/dev/null || true
+    changed=$(git diff --name-only $V056 HEAD -- src | sort | tr '\n' ' ')
+    [ "$changed" = "src/runs.rs " ] \
+      || { echo "bench-moonshot-calibrate: src differs from v0.5.6's beyond the moonshot feature: $changed"; exit 1; }
+    git diff $V056 HEAD -- src Cargo.toml > "$O/src-against-v0.5.6.diff"
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid 2>/dev/null || echo unknown)
+    echo "kernel.perf_event_paranoid $paranoid" | tee "$O/perf_event_paranoid.txt"
+    dry="{{DRY}}"
+    rounds={{ROUNDS}}
+    perf=(--perf)
+    if [ -n "$dry" ]; then
+      echo "bench-moonshot-calibrate: DRY RUN: untimed, no counters, two rounds; not evidence" | tee "$O/DRY-RUN.txt"
+      rounds=2
+      perf=()
+    else
+      command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 0 ] \
+        || { echo "bench-moonshot-calibrate: the counters need perf and kernel.perf_event_paranoid 0 or less ($paranoid)"; exit 1; }
+      perf --version | tee "$O/perf_version.txt"
+      # (every counter checked before anything is built: a name perf refuses stops the run here)
+      events=$(python3 -c 'import sys; sys.path.insert(0, "bench/moonshot"); import moonshot; print(",".join(moonshot.PERF_EVENTS))')
+      perf stat -x, -e "$events" -- true 2> "$O/perf-preflight.txt" \
+        || { cat "$O/perf-preflight.txt"; echo "bench-moonshot-calibrate: perf refuses the counters ($events)"; exit 1; }
+    fi
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-moonshot-calibrate: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    B=$W/build
+    MOONSHOT_CANDIDATE=bench/moonshot/candidates/lazy_cells.rs CARGO_TARGET_DIR=$B \
+      cargo build -q --release --locked --manifest-path bench/moonshot/Cargo.toml
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$B/release/moonshot" docs/journal/2026-11-18-open-return/open_return.rs | tee "$O/binaries.sha256"
+    CARGO_TARGET_DIR=$B bash bench/moonshot/corpus.sh "$W/wikidata.bz2"
+    : > "$W/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$W/wikidata-x{{COPIES}}.bz2"; done
+    sha256sum "$W/wikidata-x{{COPIES}}.bz2" "$W/wikidata.bz2" | tee "$O/inputs.sha256"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    # the arms' outputs, once: each byte-exact against libbzip2 (the scorer's gate, quick set)
+    for arm in lazy opend open cells; do
+      "$B/release/moonshot" check --quick --arm "$arm" --wikidata "$W/wikidata.bz2" | tail -1 | tee -a "$O/gate.jsonl"
+    done
+    python3 bench/moonshot/moonshot.py sweep --target-dir "$B" --corpus "$W/wikidata-x{{COPIES}}.bz2" \
+      --out "$O" --arms lazy,opend,open,cells --workers "{{WORKERS}}" --rounds "$rounds" \
+      --settle {{SETTLE}} "${perf[@]}" | tee "$O/sweep.txt" \
+      || echo "bench-moonshot-calibrate: the sweep stopped early; runs.jsonl holds what it timed"
+    date -u +%FT%TZ > "$O/finished.txt"
+    # nothing large left behind: the build and the corpora go; the bundle stays
+    rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
+    bash bench/bundle.sh "$O"

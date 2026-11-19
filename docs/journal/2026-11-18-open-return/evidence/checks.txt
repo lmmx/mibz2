@@ -1,0 +1,33 @@
+Baseline dbe9b40687c8531e11d4d6745523262dea2c35e2 (mibz2 0.5.5).
+Disposable detached checkout, installed with install.sh, release profile, locked dependencies.
+Rust 1.90.0, x86_64-unknown-linux-gnu. Intel Xeon Platinum 8573C.
+Five visible physical cores, one hardware thread per core, cgroup cpu.max 400000 100000.
+Calling-thread times on logical CPU 2. Two workers on 0-1. Four workers on 0-3.
+
+Clean build of open_return and return_heap succeeded.
+Independent row comparisons from the small driver, separately for tracer, endpoint and two-colour construction:
+198790 marked column/limit comparisons
+Independent per-arrow audits:
+26135 column/mark/threshold triples, four complete arrow audits each.
+Additional cap boundaries, wide-strip primary splitting, segmented output and short-cycle tests passed.
+The unpinned library suite's existing the_policy_here assertion saw 5 cores of 4 CPUs.
+Four-CPU affinity, complete clean library suite: 138 passed, 0 failed, 1 ignored (175.60 s).
+
+libbz2 reference output, byte length, SHA-256, matching research arms:
+frozen 900000 d2584c09f1d643d6abff8a25513b63af4e05969c15c30256aed3a05c74281210 16,q16,i16,qi16,s16,ranked
+wikidata 209700196 3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf 16,qi16,s16,ranked
+prose 4947388 0da092515b0911aad1f23304a7d5e9d058669191e5c1070afe0d43a99fb98959 16,qi16,s16,ranked
+block CRC rejected by all five arms
+stream CRC rejected by all five arms
+
+Clean-checkout native censuses regenerated blocks.csv, widths.csv and frozen.csv byte for byte.
+CSV groups include all 431 Wikidata and six prose blocks, with 233 Wikidata blocks of at least 65536 rows.
+Wikidata SHA-256 82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915
+Prose SHA-256 5dcc4817845a94d62556716f9a8305ee95bd3776653f0a48a20247cfb13d6357
+Frozen compressed SHA-256 e3bf5372b15885da138764a25bb2b7cd784ee3cbee1e664937647921ae3122b0
+Frozen pre-RLE1 SHA-256 f87e5caa2d5f0df9d5958fe60901e2023ae04ac406603d4c1584c8bb4017fbd6
+Two alternate wrapped Wikidata blocks, independently libbz2-decoded for the paired Cachegrind observations:
+203b9580dc5aed381b1c511629da016bcf8018b28b5189831512d7832cf20e5a  118.bz2
+5e8d1c5cb0800386fdd89551325bc68ce634f48bf6d0afefdb901a01d8613851  118.raw
+114900be9d419847f9134866b67fef0a1cc64f3593c7f9909788db258cb520e3  176.bz2
+9f1361c74b204e00c46b89c529686aafff500ae990ddb4f50685f5e9defdc38d  176.raw

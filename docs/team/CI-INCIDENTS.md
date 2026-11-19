@@ -81,7 +81,9 @@ turn a check green.
 
 ## 3. Keep the rest of the work moving
 
-**A class B incident blocks only the merge of the PR it is on.** It never blocks:
+**A class B incident on a macOS job blocks nothing,** not even its own PR's merge (Louis, 18 November 2026: "it's never worth holding back for that"). A macOS job whose project steps ran and failed is not class B and still holds the merge.
+
+**Any other class B incident blocks only the merge of the PR it is on.** It never blocks:
 - reading the PR's other results, such as the bench and parity, which are valid where their jobs
   ran;
 - other PRs, workstation runs, write-ups, or the next experiment;
@@ -98,6 +100,7 @@ other checks green on `<sha>`." Put it in the PR comment, and in #97's state if 
 | class A or C | fixes, or re-runs C once, in the PR |
 | class D, or a misclassification it can't rule out | investigates; escalates if it blocks |
 | class B on a PR that Louis needs merged soon | tells Louis what is blocked, and that the gate holds |
+| class B on a **macOS** job (queued, no runner, cancelled, timed out, setup failed) | merges anyway once every other check is green: no wait and no re-run (Louis, 18 November 2026; CLAUDE.md) |
 
 ## 4. A red check that won't recover
 

@@ -168,8 +168,8 @@
 
   // .bf-stepper: a figure that shows a process one step at a time (Back, Play, Next, a slider),
   // with each step said in words. data-model names the process: "lyndon" (cutting a Lyndon
-  // word into its tree; data-stages lists the words to choose from) or "induction"
-  // (Rauzy–Veech induction on the block aab). Without JavaScript the figure shows its
+  // word into its tree; data-stages lists the words to choose from), "induction"
+  // (Rauzy–Veech induction on the block aab) or "cutloop" (cutting banana$'s loop open). Without JavaScript the figure shows its
   // static summary (.bf-step-static) instead.
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
   const T = (x, y, s, cls = "bf-t", size = 18, extra = "", anchor = "middle") =>
@@ -338,6 +338,138 @@
     return { frames: f, height: 380 };
   };
 
+  // Cutting banana$'s loop open (the open-return post): the column annb$aa, its LF loop drawn
+  // as a ring in the loop's order, the arrows leaving the kept rows 0, 4 and 5 cut one by
+  // one, then each open path followed from its entrance to its exit, with its word.
+  const cutloopFrames = () => {
+    const L = "annb$aa";
+    const LF = [1, 5, 6, 4, 0, 2, 3];
+    const ring = [4, 0, 1, 5, 2, 6, 3]; // the loop, from the primary row
+    const KEPT = [0, 4, 5];
+    const CUTS = [4, 0, 5]; // the order the arrows are cut in
+    const PATHS = [
+      { e: 0, rows: [0], word: "", exit: 0 },
+      { e: 1, rows: [1, 5], word: "n", exit: 5 },
+      { e: 2, rows: [2, 6, 3, 4], word: "nab", exit: 4 },
+    ];
+    const HUE = ["green", "blue", "ultra"];
+    const CX = 270, CY = 196, R = 112, NR = 25;
+    const ang = {};
+    ring.forEach((r, i) => (ang[r] = -Math.PI / 2 + (i * 2 * Math.PI) / 7));
+    const at = (a, rad = R) => [CX + rad * Math.cos(a), CY + rad * Math.sin(a)];
+    const f1 = (v) => v.toFixed(1);
+    const D = (NR + 5) / R;
+    const span = (from) => {
+      const a0 = ang[from] + D;
+      let a1 = ang[LF[from]] - D;
+      if (a1 < a0) a1 += 2 * Math.PI;
+      return [a0, a1];
+    };
+    const marker = (id, v) => `<marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(${v})"/></marker>`;
+    const defs = `<defs>${marker("bf-cl-m", "--bf-muted")}${HUE.map((h) => marker(`bf-cl-${h}`, `--bf-${h}`)).join("")}</defs>`;
+    const scene = ({ walk = false, kept = false, cut = [], shown = 0, cur = -1, done = false }) => {
+      const o = [defs];
+      // the arrows
+      for (const r of ring) {
+        const [a0, a1] = span(r);
+        const [x0, y0] = at(a0), [x1, y1] = at(a1);
+        const d = `M${f1(x0)} ${f1(y0)}A${R} ${R} 0 0 1 ${f1(x1)} ${f1(y1)}`;
+        if (cut.includes(r)) {
+          const [mx, my] = at((a0 + a1) / 2);
+          o.push(`<path d="${d}" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-dasharray="3 5" opacity="0.5"/>`);
+          o.push(`<path d="M${f1(mx - 7)} ${f1(my - 7)}l14 14M${f1(mx + 7)} ${f1(my - 7)}l-14 14" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round"/>`);
+          continue;
+        }
+        const p = PATHS.findIndex((q) => q.rows.slice(0, -1).includes(r));
+        const lit = walk || (p >= 0 && p < shown);
+        const hue = walk ? "green" : p >= 0 ? HUE[p] : null;
+        const stroke = lit ? `var(--bf-${hue})` : "var(--bf-muted)";
+        const mk = lit ? `url(#bf-cl-${hue})` : "url(#bf-cl-m)";
+        const w = lit && (walk || p === cur) ? 4 : lit ? 2.8 : 2;
+        o.push(`<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${w}" marker-end="${mk}"/>`);
+      }
+      // the rows
+      for (const r of ring) {
+        const [x, y] = at(ang[r]);
+        const p = PATHS.findIndex((q) => q.rows.includes(r));
+        const lit = p >= 0 && p < shown;
+        const isKept = kept && KEPT.includes(r);
+        const fill = lit ? `var(--bf-${HUE[p]}-tint)` : walk && r === 4 ? "var(--bf-green-tint)" : "var(--bf-surface)";
+        const stroke = isKept ? "var(--bf-amber)" : lit ? `var(--bf-${HUE[p]})` : "var(--bf-frame)";
+        o.push(`<circle cx="${f1(x)}" cy="${f1(y)}" r="${NR}" fill="${fill}" stroke="${stroke}" stroke-width="${isKept ? 4 : lit && p === cur ? 3 : 1.5}"/>`);
+        o.push(T(f1(x), f1(y + 8), L[r], "bf-t-strong", 22));
+        // labels outside the ring: the row, then what it has become
+        const [lx, ly] = at(ang[r], R + NR + 30);
+        const lines = [`row ${r}`];
+        if (isKept) lines.push(`exit index ${KEPT.indexOf(r)}`);
+        const e = cut.map((c) => LF[c]).includes(r) ? r : -1;
+        if (e >= 0) lines.push(`entrance ${e}`);
+        const top = ly - ((lines.length - 1) * 17) / 2 + 5;
+        lines.forEach((s, k) => {
+          const cls = k === 0 ? "bf-tm" : "bf-t-strong";
+          const col = s.startsWith("exit") ? ";fill:var(--bf-amber)" : s.startsWith("entrance") ? ";fill:var(--bf-green-ink)" : "";
+          o.push(T(f1(lx), f1(top + k * 17), s, cls, k === 0 ? 15 : 14, col));
+        });
+        // an entrance: a dot where the cut arrow used to arrive
+        if (e >= 0) {
+          const [dx, dy] = at(ang[r] - D + 0.02);
+          o.push(`<circle cx="${f1(dx)}" cy="${f1(dy)}" r="6" fill="var(--bf-green)" stroke="var(--md-default-bg-color)" stroke-width="1.5"/>`);
+        }
+      }
+      // the panel below the ring
+      const PY = 400;
+      if (walk) {
+        o.push(T(20, PY, "read along the loop from row 4:  $  a  n  a  n  a  b", "bf-t-strong", 17, "", "start"));
+        o.push(T(20, PY + 26, "backwards, that is the text banana$", "bf-t", 17, "", "start"));
+      } else if (shown > 0 || done) {
+        const cols = [16, 116, 300, 380, 526];
+        ["entrance", "path (rows)", "exit row", "exit index", "word"].forEach((h, k) =>
+          o.push(T(cols[k], PY, h, "bf-tm", 14, "", k === 4 ? "end" : "start")));
+        PATHS.slice(0, shown).forEach((p, k) => {
+          const y = PY + 28 + k * 27;
+          const col = `;fill:var(--bf-${HUE[k] === "green" ? "green-ink" : HUE[k]})`;
+          o.push(T(cols[0], y, `${p.e}`, "bf-t-strong", 17, col, "start"));
+          o.push(T(cols[1], y, p.rows.join(" → "), "bf-t", 17, "", "start"));
+          o.push(T(cols[2], y, `${p.exit}`, "bf-t", 17, "", "start"));
+          o.push(T(cols[3], y, `${KEPT.indexOf(p.exit)}`, "bf-t-strong", 17, ";fill:var(--bf-amber)", "start"));
+          o.push(T(cols[4], y, p.word || "(empty)", "bf-t-strong", 17, "", "end"));
+        });
+        if (done) o.push(T(16, PY + 28 + 3 * 27 + 4, "P = [0, 2, 1]: entrance index → exit index", "bf-t-strong", 17, "", "start"));
+      } else if (kept) {
+        o.push(T(20, PY, "kept rows 0, 4, 5 are the exits, numbered 0, 1, 2 in row order", "bf-t", 17, "", "start"));
+        if (cut.length) o.push(T(20, PY + 24, `cut so far: the arrow${cut.length > 1 ? "s" : ""} leaving row${cut.length > 1 ? "s" : ""} ${cut.join(", ")}`, "bf-t", 17, "", "start"));
+      } else {
+        o.push(T(20, PY, "the column annb$aa: one arrow (LF) leaves each row", "bf-t", 17, "", "start"));
+      }
+      o.push(`<circle cx="388" cy="22" r="6" fill="var(--bf-green)"/>`);
+      o.push(T(400, 26, "entrance", "bf-tm", 14, "", "start"));
+      o.push(`<circle cx="476" cy="21" r="7" fill="none" stroke="var(--bf-amber)" stroke-width="3"/>`);
+      o.push(T(489, 26, "kept", "bf-tm", 14, "", "start"));
+      return o.join("");
+    };
+    const f = [];
+    f.push({ svg: scene({}), text: "The seven rows of the column annb$aa, each with its last-column letter. Each arrow is LF: it goes from a row to the row of the rotation one letter earlier. Drawn in the order the arrows visit them, the rows form one loop. Next: walk it." });
+    f.push({ svg: scene({ walk: true }), text: "Start at row 4, the primary row, and follow the arrows. The walk visits every row once and reads $ a n a n a b, which is banana$ backwards. Each step needs the row the last step found, so the steps can't overlap. Next: choose rows to keep." });
+    f.push({ svg: scene({ kept: true }), text: "Keep rows 0, 4 and 5 (amber rings). Row 4 must be kept, because the text is read from it. Numbered in row order, the kept rows are exit indices 0, 1 and 2: these are where the open paths will end. Next: cut the arrow leaving each kept row." });
+    CUTS.forEach((c, k) => {
+      const last = k === CUTS.length - 1;
+      f.push({
+        svg: scene({ kept: true, cut: CUTS.slice(0, k + 1) }),
+        text: `Cut the arrow leaving row ${c}. Row ${LF[c]}, where it arrived, now has no arrow coming in, so a path can start there: it is entrance ${LF[c]} (green dot).` +
+          (LF[c] === 0 ? " Row 0 is now both a kept row and an entrance." : "") +
+          (last ? " Three arrows cut, three entrances: rows 0, 1 and 2. Next: follow the arrows that are left, from each entrance." : ` Next: cut the arrow leaving row ${CUTS[k + 1]}.`),
+      });
+    });
+    const say = [
+      "Entrance 0 is row 0, which is itself kept. Its path takes no steps: it ends at once, at exit row 0, which is exit index 0, and reads nothing.",
+      "From entrance 1 (row 1), the arrow goes to row 5 and reads n. Row 5 is kept, and its own arrow is cut, so the path stops: exit row 5, which is exit index 2, the third kept row.",
+      "From entrance 2 (row 2), the arrows go to rows 6, 3 and 4, reading n, a, b. Row 4 is kept, so the path stops there: exit row 4, which is exit index 1. The word nab is ban, backwards.",
+    ];
+    PATHS.forEach((p, k) => f.push({ svg: scene({ kept: true, cut: CUTS, shown: k + 1, cur: k }), text: say[k] + (k < 2 ? ` Next: entrance ${k + 1}.` : " Next: what the three paths give.") }));
+    f.push({ svg: scene({ kept: true, cut: CUTS, shown: 3, done: true }), text: "Every row lies on exactly one open path, and none joined a loop: each row of a loop already uses its one incoming arrow, and an entrance has lost its own. The paths give P = [0, 2, 1], from entrance index to exit index, and a word for each entrance. None of this needed to know where the cut arrows went: only the arrows that are left, and which rows are kept." });
+    return { frames: f, height: 520 };
+  };
+
   const stepper = (fig) => {
     if (fig.dataset.ready) return;
     fig.dataset.ready = "1";
@@ -349,7 +481,8 @@
     const [prev, play, next, slider] = ["prev", "play", "next", "slider"].map((a) => q(`[data-act="${a}"]`));
     let model, i = 0, timer = null;
     const load = (word) => {
-      model = fig.dataset.model === "lyndon" ? lyndonFrames(word) : inductionFrames();
+      const m = fig.dataset.model;
+      model = m === "lyndon" ? lyndonFrames(word) : m === "cutloop" ? cutloopFrames() : inductionFrames();
       svg.setAttribute("viewBox", `0 0 540 ${model.height}`);
       slider.max = model.frames.length - 1;
       i = 0;

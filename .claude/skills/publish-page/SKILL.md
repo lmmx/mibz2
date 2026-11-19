@@ -31,3 +31,7 @@ strict build, the site checks and a read of the Markdown don't show how it rende
 
 4. Before merging, record in the PR which commit was looked at, and what was found and
    fixed.
+
+5. A new page goes to master through its PR, merged on green. Never push a new post to master
+   directly; direct commits are only for amendments Louis asks for (coordinate-blog-post, "The
+   PR opens first").
