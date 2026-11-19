@@ -1,12 +1,64 @@
 #define POWER_SOLVER_LIBRARY
 #include "../direct_cut.cpp"
 
-struct Part { U k,j,n,alias; };
-template<bool Exact> struct ParityCut {
+template<bool Gaps,class Colors> Root publish_compact(const Root& in,std::vector<Node>& grammar,
+                                                     std::vector<Slice>& parts,const Colors& color) {
+        const U no=UINT32_MAX,K=color.size();
+        std::vector<U> first(K+1),last(K,no);
+        for(U k=0;k<K;++k)first[k+1]=color[k];
+        for(auto s:parts)if(!color[s.source]) {
+            U group=Gaps&&!color[s.target]?K:s.target;
+            if(last[s.source]!=group){++first[s.source+1];last[s.source]=group;}
+        }
+        std::partial_sum(first.begin(),first.end(),first.begin());
+        U A=first.back();
+        std::vector<U> rem(A),into(A,no),id(A,no),deleted(K),cursor(first.begin(),first.end()-1);
+        std::fill(last.begin(),last.end(),no);
+        for(auto& s:parts) {
+            if(color[s.source])s.edge=first[s.source];
+            else {
+                U group=Gaps&&!color[s.target]?K:s.target;
+                if(last[s.source]!=group){last[s.source]=group;++cursor[s.source];}
+                s.edge=cursor[s.source]-1;
+                if(color[s.target]){into[s.edge]=s.target;deleted[s.target]+=s.width;}
+            }
+            rem[s.edge]+=s.width;
+        }
+        for(U j=0;j<K;++j)if(deleted[j])rem[first[j]]-=deleted[j];
+        Root out;out.bytes.reserve(A);
+        for(U k=0;k<K;++k)for(U a=first[k];a<first[k+1];++a)if(rem[a]) {
+            U node=in.bytes[k],j=into[a];id[a]=out.bytes.size();
+            if(j!=no){U r=in.bytes[j],f=grammar.size();grammar.push_back({grammar[node].n+grammar[r].n,node,r,Node::Join});node=f;}
+            out.bytes.push_back(node);
+        }
+        out.mark=id[first[in.mark]];
+        std::vector<Run> map;
+        std::vector<U> at(K),used(K);
+        U prior=no;
+        for(auto s:parts) if(deleted[s.target]) {
+            U v=into[s.edge]!=no?s.edge:first[s.target];
+            if(s.target!=prior){prior=s.target;at[s.target]=map.size();map.push_back({v,s.width});}
+            else append(map,v,s.width);
+        }
+        out.r.reserve(in.r.size());
+        for(auto s:parts) {
+            if(into[s.edge]!=no)continue;
+            if(!deleted[s.source]){append(out.r,id[s.edge],s.width);continue;}
+            U n=s.width;
+            while(n) {
+                auto p=map[at[s.source]];U take=std::min(n,p.n-used[s.source]);
+                assert(id[p.k]!=no);append(out.r,id[p.k],take);
+                used[s.source]+=take;n-=take;
+                if(used[s.source]==p.n){++at[s.source];used[s.source]=0;}
+            }
+        }
+        return out;
+    }
+template<bool Exact,bool Gaps=false> struct ParityCut {
     U m=0,self=0,ingress=0,mask=0;
     bool done=false;
     std::vector<U> base;
-    std::vector<Part> parts;
+    std::vector<Slice> parts;
     std::vector<uint8_t> color;
     explicit ParityCut(const Root& in):base(bases(in)),color(in.bytes.size()) {
         m=base.back(); U pos=0;
@@ -41,65 +93,30 @@ template<bool Exact> struct ParityCut {
         for(U k=0;k<color.size();++k)color[k]=__builtin_parity(mask&(k^in.mark));
     }
     Root apply(const Root& in,std::vector<Node>& grammar) {
-        const U no=UINT32_MAX,K=color.size();
-        std::vector<U> first(K+1),last(K,no);
-        for(U k=0;k<K;++k)first[k+1]=color[k];
-        for(auto s:parts)if(!color[s.k]&&last[s.k]!=s.j){++first[s.k+1];last[s.k]=s.j;}
-        std::partial_sum(first.begin(),first.end(),first.begin());
-        U A=first.back();
-        std::vector<U> rem(A),into(A,no),id(A,no),deleted(K),cursor(first.begin(),first.end()-1);
-        std::fill(last.begin(),last.end(),no);
-        for(auto& s:parts) {
-            if(color[s.k])s.alias=first[s.k];
-            else {
-                if(last[s.k]!=s.j){last[s.k]=s.j;++cursor[s.k];}
-                s.alias=cursor[s.k]-1;
-                if(color[s.j]){into[s.alias]=s.j;deleted[s.j]+=s.n;}
-            }
-            rem[s.alias]+=s.n;
-        }
-        for(U j=0;j<K;++j)if(deleted[j])rem[first[j]]-=deleted[j];
-        Root out;out.bytes.reserve(A);
-        for(U k=0;k<K;++k)for(U a=first[k];a<first[k+1];++a)if(rem[a]) {
-            U node=in.bytes[k],j=into[a];id[a]=out.bytes.size();
-            if(j!=no){U r=in.bytes[j],f=grammar.size();grammar.push_back({grammar[node].n+grammar[r].n,node,r,Node::Join});node=f;}
-            out.bytes.push_back(node);
-        }
-        out.mark=id[first[in.mark]];
-        std::vector<Run> map;
-        std::vector<U> at(K),used(K);
-        U prior=no;
-        for(auto s:parts) if(deleted[s.j]) {
-            U v=into[s.alias]!=no?s.alias:first[s.j];
-            if(s.j!=prior){prior=s.j;at[s.j]=map.size();map.push_back({v,s.n});}
-            else append(map,v,s.n);
-        }
-        out.r.reserve(in.r.size());
-        for(auto s:parts) {
-            if(into[s.alias]!=no)continue;
-            if(!deleted[s.k]){append(out.r,id[s.alias],s.n);continue;}
-            U n=s.n;
-            while(n) {
-                auto p=map[at[s.k]];U take=std::min(n,p.n-used[s.k]);
-                assert(id[p.k]!=no);append(out.r,id[p.k],take);
-                used[s.k]+=take;n-=take;
-                if(used[s.k]==p.n){++at[s.k];used[s.k]=0;}
-            }
-        }
-        return out;
+        return publish_compact<Gaps>(in,grammar,parts,color);
+    }
+};
+
+struct GraphCompact: Cut {
+    using Cut::Cut;
+    Root apply(const Root& in,std::vector<Node>& grammar) {
+        return publish_compact<false>(in,grammar,parts,color);
     }
 };
 
 std::vector<uint8_t> execute(const Root& in,const std::string& arm,Stats& s) {
     if(arm=="direct")return direct(in);
     if(arm=="graph")return decode_with<Cut>(in,s);
+    if(arm=="graphcompact")return decode_with<GraphCompact>(in,s);
+    if(arm=="gaps")return decode_with<ParityCut<false,true>>(in,s);
     if(arm=="greedy")return decode_with<ParityCut<false>>(in,s);
     assert(arm=="exact");return decode_with<ParityCut<true>>(in,s);
 }
 int main(int argc,char** argv) {
     assert(argc>=4); auto in=load(argv[1]);std::string mode=argv[2];
     std::vector<std::string> arms={"graph","greedy","exact","direct"};
-    if(mode=="check") {
+    if(mode=="panel5"||mode=="check5")arms={"graph","graphcompact","greedy","gaps","direct"};
+    if(mode=="check"||mode=="check5") {
         auto expected=direct(in);
         for(const auto& arm:arms) if(arm!="direct") {
             Stats s;auto out=execute(in,arm,s);assert(out==expected);
@@ -116,9 +133,11 @@ int main(int argc,char** argv) {
     }
     std::cout<<"round,arm,thread_ns,choice_ns,publish_ns,normalize_ns,emit_ns,bytes,nodes,peak_kib\n";
     int reps=std::stoi(argv[3]);
-    for(int i=0;i<reps;++i)for(int j=0;j<(mode=="panel"?4:1);++j){
-        int k=i%8<4?(i+j)%4:(i+3-j)%4;
-        auto arm=mode=="panel"?arms[k]:mode;Stats s;U n;auto t=cpu();
+    int k_arms=int(arms.size());
+    bool panel=mode=="panel"||mode=="panel5";
+    for(int i=0;i<reps;++i)for(int j=0;j<(panel?k_arms:1);++j){
+        int k=i%(2*k_arms)<k_arms?(i+j)%k_arms:(i+k_arms-1-j)%k_arms;
+        auto arm=panel?arms[k]:mode;Stats s;U n;auto t=cpu();
         { auto v=execute(in,arm,s);n=v.size();asm volatile("" : : "g"(v.data()) : "memory"); }
         auto dt=cpu()-t;
         std::cout<<i<<','<<arm<<','<<dt<<','<<s.clocks.graph<<','<<s.clocks.apply<<','<<s.clocks.powers<<','<<s.clocks.emit<<','<<n<<','<<s.nodes<<','<<resident_peak()<<'\n';
