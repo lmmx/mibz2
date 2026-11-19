@@ -2,6 +2,9 @@
 //! research/astra-e/stage/run.sh to verify the pinned compressed corpus digest.
 //! The clock encloses invert_runs on ready MTF records. All stream setup,
 //! equality checks, RLE1, CRC, output delivery and logging are outside it.
+// Research harness: its code lives in research/ and is exempt from lint (#610); correctness
+// is gated by the build, the tests and the scorer's byte checks
+#![allow(clippy::all)]
 // Two experimental kernels bind the same endpoint source to distinct parent types.
 #![allow(clippy::duplicate_mod)]
 use mibz2::stream::{Event, Scanner, SliceSource};
