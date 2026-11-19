@@ -2647,11 +2647,13 @@
     },
     {
       "trigger_comment_id": 7007096443,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-port-c6-7007096443/report.md",
-      "source_commit": "b6412e1e43cbe7281c8f61033f7223f131244037"
+      "source_commit": "b6412e1e43cbe7281c8f61033f7223f131244037",
+      "report_commit": "f3810ddc44947a66fc0894fbcd90bfce140f0bcf",
+      "disposition": "HOLD before i9 timing for one targeted correction: enforce the entire fixed roster and one confirmatory attempt. Synthetic records without text or with NaN RSS can ADOPT. Inherited thresholds and conjunctive testing reviewed. Dry run recorded timings and was excluded."
     }
   ],
   "active_delegations": [],
