@@ -1,0 +1,23 @@
+{
+  "counts": {
+    "columns": 3279,
+    "section_free_marks": 6050,
+    "marked_decodes": 15274,
+    "partial_second_decodes": 10995,
+    "nondividing_period_marks": 9738,
+    "marked_hot_cycles_without_barrier": 166
+  },
+  "witnesses": {
+    "nondividing_cold": {
+      "last": [
+        33,
+        34,
+        33
+      ],
+      "mark": 1,
+      "n": 3,
+      "period": 2,
+      "out": "212221"
+    }
+  }
+}
