@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import sys
 from zipfile import ZipFile
-from envelope import study
+from envelope import paired_ratio, study
 
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parent/"retrospective"))
@@ -33,7 +33,7 @@ results=study(rows,"candidate","predecessor","cells",lambda w:(w+3)//4)
 with (out/"envelope.csv").open("w") as f:
     writer=csv.DictWriter(f,fieldnames=results[0],lineterminator="\n");writer.writeheader();writer.writerows(results)
 with (out/"maxima.csv").open("w") as f:
-    keys=["workers","arm","min_wall","max_wall","candidate_max_peak_kib","reference_max_peak_kib","faster_pairs","smaller_pairs"]
+    keys=["workers","arm","min_wall","max_wall","candidate_max_peak_kib","reference_max_peak_kib","rss_upper","cpu_ratio","faster_pairs","smaller_pairs"]
     writer=csv.DictWriter(f,fieldnames=keys,lineterminator="\n");writer.writeheader()
     for w in (1,2,4):
         arms={a:sorted([r for r in rows if r["workers"]==w and r["arm"]==a],key=lambda r:r["round"]) for a in ("candidate","predecessor","lazy","cells","opend")}
@@ -42,6 +42,8 @@ with (out/"maxima.csv").open("w") as f:
             ref=arms[a]
             writer.writerow(dict(workers=w,arm=a,min_wall=min(r["wall_s"] for r in ref),max_wall=max(r["wall_s"] for r in ref),
                            candidate_max_peak_kib=max(r["peak_rss_kb"] for r in mixed),reference_max_peak_kib=max(r["peak_rss_kb"] for r in ref),
+                           rss_upper=paired_ratio([r["peak_rss_kb"] for r in mixed],[r["peak_rss_kb"] for r in ref])["hi"],
+                           cpu_ratio=paired_ratio([r["cpu_s"] for r in mixed],[r["cpu_s"] for r in ref])["geomean"],
                            faster_pairs=sum(x["wall_s"]<y["wall_s"] for x,y in zip(mixed,ref)),
                            smaller_pairs=sum(x["peak_rss_kb"]<y["peak_rss_kb"] for x,y in zip(mixed,ref))))
 (out/"ci-receipt.json").write_text(json.dumps({"worker_dose_ci_run":receipt},indent=2)+"\n")
