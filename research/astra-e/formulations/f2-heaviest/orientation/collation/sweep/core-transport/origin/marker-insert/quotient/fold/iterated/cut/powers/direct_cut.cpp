@@ -132,7 +132,7 @@ std::vector<uint8_t> grammar_output(const std::vector<Node>& nodes,U root,U hori
     duplicate(0,horizon-out.size());
     return out;
 }
-std::vector<uint8_t> decode(const Root& original,Stats& stats) {
+template<class Builder> std::vector<uint8_t> decode_with(const Root& original,Stats& stats) {
     U horizon=0;for(auto r:original.r)horizon+=r.n;
     auto in=seed(original);
     std::vector<Node> nodes;
@@ -142,7 +142,7 @@ std::vector<uint8_t> decode(const Root& original,Stats& stats) {
     for(U i=0;i<original.bytes.size();++i)index[original.bytes[i]]=i;
     for(U& v:in.bytes) v=index[v];
     for(;;) {
-        uint64_t t=cpu();Cut cut(in);stats.clocks.graph+=cpu()-t;
+        uint64_t t=cpu();Builder cut(in);stats.clocks.graph+=cpu()-t;
         if(cut.done)break;
         Pass pass{cut.m,U(in.r.size()),U(in.bytes.size()),cut.self,cut.ingress,0,0,0,false};
         if(4*cut.ingress<cut.m) {
@@ -160,7 +160,7 @@ std::vector<uint8_t> decode(const Root& original,Stats& stats) {
                 macro.bytes.push_back(node);
             }
             in=std::move(macro);stats.clocks.powers+=cpu()-t;
-            t=cpu();cut=Cut(in);stats.clocks.graph+=cpu()-t;
+            t=cpu();cut=Builder(in);stats.clocks.graph+=cpu()-t;
             assert(!cut.done&&cut.self==0);pass.normalized=true;
         }
         assert(4*cut.ingress>=cut.m);
@@ -172,6 +172,8 @@ std::vector<uint8_t> decode(const Root& original,Stats& stats) {
     auto t=cpu();auto out=grammar_output(nodes,in.bytes[in.mark],horizon,0);
     stats.clocks.emit+=cpu()-t;return out;
 }
+std::vector<uint8_t> decode(const Root& original,Stats& stats) { return decode_with<Cut>(original,stats); }
+#ifndef POWER_SOLVER_LIBRARY
 int main(int argc, char** argv) {
     assert(argc>=4); auto in=load(argv[1]);std::string mode=argv[2];
     if(mode=="check") {
@@ -197,3 +199,5 @@ int main(int argc, char** argv) {
         }
     }
 }
+
+#endif
