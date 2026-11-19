@@ -1,0 +1,160 @@
+{
+  "arbitrary": {
+    "tested": 310566,
+    "max_excess": 2,
+    "witness": {
+      "column": [
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "section": [
+        1,
+        5
+      ],
+      "r": 2,
+      "t": 4,
+      "split": 2,
+      "pattern": null,
+      "word_runs": [
+        [
+          [
+            1
+          ],
+          1
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          1
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          1
+        ],
+        [
+          [
+            0
+          ],
+          1
+        ]
+      ]
+    },
+    "nontrivial_max": 2,
+    "nontrivial": {
+      "column": [
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "section": [
+        1,
+        5
+      ],
+      "pattern": null,
+      "r": 2,
+      "t": 4
+    }
+  },
+  "word": {
+    "tested": 91525,
+    "max_excess": 0,
+    "witness": {
+      "column": [
+        0
+      ],
+      "section": [
+        0,
+        1
+      ],
+      "r": 1,
+      "t": 1,
+      "split": 0,
+      "pattern": [
+        0
+      ],
+      "word_runs": [
+        [
+          [
+            0
+          ],
+          1
+        ]
+      ]
+    },
+    "nontrivial_max": 0,
+    "nontrivial": {
+      "column": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "section": [
+        0,
+        2
+      ],
+      "pattern": [
+        0,
+        0
+      ],
+      "r": 2,
+      "t": 2
+    }
+  },
+  "single-byte": {
+    "tested": 17241,
+    "max_excess": 0,
+    "witness": {
+      "column": [
+        0
+      ],
+      "section": [
+        0,
+        1
+      ],
+      "r": 1,
+      "t": 1,
+      "split": 0,
+      "pattern": [
+        0
+      ],
+      "word_runs": [
+        [
+          [
+            0
+          ],
+          1
+        ]
+      ]
+    },
+    "nontrivial_max": 0,
+    "nontrivial": {
+      "column": [
+        1,
+        0,
+        0
+      ],
+      "section": [
+        0,
+        2
+      ],
+      "pattern": [
+        0
+      ],
+      "r": 2,
+      "t": 2
+    }
+  }
+}
