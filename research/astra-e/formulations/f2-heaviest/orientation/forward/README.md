@@ -37,7 +37,7 @@ The baseline locates the first F-select run for a monotone packet by first tryin
 
 This 16-lap, four-arm native crossover ran on CPU 3 of the local Xeon Platinum 8573C with G++ 14.2, at one thread. Each block and section got one untimed warm invocation per arm. Each tested arm occupied every position four times with reversed order in alternate four-round groups. Each lap pairs the sums over the ten tapes, with the 95% Student interval computed on paired log ratios. The native section operation constructs the select index from original runs, discovers and orders the returns, materializes distinct spellings, transfers the mark, emits all bytes, and drops its constructor arrays. Input parsing, selecting U, JSON and result verification are outside the timer. Every timed output matched the untimed control. Whole-worker concurrency, CRC, output delivery, process RSS and the i9 remain unmeasured for this formulation. [Summaries and source](summary.json) · [Pricing protocol](price.py)
 
-Wikidata required 793,903 indexed quote seeks with 13,365,888 contiguous run increments. The original binary seeks made 12,775,593 comparisons. More comparisons in contiguous memory still reduced quote discovery time in this screen. The sums of per-tape median discovery times were 112.56 ms for the binary/sorted control and 47.66 ms with both indices. For compound they were 157.25 and 64.81 ms. The source scatter zero-initializes its table at setup, then added one ownership fill per section row and removed 1,404,961 and 1,041,941 sort comparisons respectively. The largest per-tape sum of retained construction-array capacities was 6,552,268 bytes on quote and 7,068,684 on compound with both indices. These capacities include the live-frontier buffers, select table, source and page directories, trie, bands and dictionary. Input runs, output, stack, temporary reallocations and allocator bookkeeping are additional. [Per-tape capacities and phase breakdown](summary.json)
+Wikidata required 793,903 indexed quote seeks with 13,365,888 contiguous run increments. The original binary seeks made 12,775,593 comparisons. More comparisons in contiguous memory still reduced quote discovery time in this screen. The sums of per-tape median discovery times were 112.56 ms for the binary/sorted control and 47.66 ms with both indices. For compound they were 157.25 and 64.81 ms. The source scatter zero-initializes its table at setup, then adds one ownership fill per section row and removed 1,404,961 and 1,041,941 sort comparisons respectively. The largest per-tape sum of retained construction-array capacities was 6,552,268 bytes on quote and 7,068,684 on compound with both indices. These capacities include the live-frontier buffers, select table, source and page directories, trie, bands and dictionary. Input runs, output, stack, temporary reallocations and allocator bookkeeping are additional. [Per-tape capacities and phase breakdown](summary.json)
 
 ## Checks and reproduction
 
@@ -56,4 +56,50 @@ python3 -B "$study/census.py" "$work/forward" "$work/wikidata" "$work/real.csv"
 python3 -B "$study/family.py" "$work/forward" | cmp - "$study/family.csv"
 taskset -c 3 python3 -B "$study/price.py" "$work/forward" "$work/wikidata" "$work" --rounds 16
 python3 -B "$study/summarize.py" | cmp - "$study/summary.json"
+```
+
+## Matched native backward control
+
+Backward Direct starts at each outstanding destination interval, follows LF across original maximal runs, reduces the candidate width at each run end, and stops at first section return. In the two tested structured sections its final width is uniform. The native control prices this whole operation, copying each *band's* word once (including repetitions), storing its byte range in the band and scattering to a 32-bit source table. Its original-L predecessor index has one entry per 64 source rows, matching the granularity of forward's F-select pages. All 20 sets of descriptors, width-weighted word multiplicities, original marked outputs and digests matched Python Direct before timing. The bitwise equality check also runs after every timed sample. [Native LF control](direct_native.hpp) · [Standalone comparison](direct-native-check.json)
+
+| Forward / native backward Direct | Quote CPU [paired 95%] | Compound CPU [paired 95%] |
+| --- | ---: | ---: |
+| Indexed forward with trie-wide offset and length tables | 1.1757 [1.1363, 1.2165] | 1.3106 [1.2474, 1.3771] |
+| Indexed forward with term ranges written into the trie | 1.1811 [1.1227, 1.2424] | 1.2978 [1.2185, 1.3823] |
+
+Each row is a separate two-arm 16-lap crossover on CPU 3. The schedule repeats AB, BA, BA, AB per tape and section. The ratios compare each forward version with its concurrent backward arm. Their intervals do not supply a direct comparison of the two forward versions. The direct control collected 16,630,795 quote and 17,204,304 compound LF page increments. It writes 1,700,623 and 2,996,813 spelling bytes respectively; the forward constructors retain only one copy per distinct word. Forward's savings in materialized bytes did not pay for its discovery and terminal dictionaries in these complete section operations. [Paired native ratios](directions.json) · [All 640 first-run observations](directions.csv) · [Second run ratios](recycled-directions.json) · [Second run observations](recycled-directions.csv)
+
+The second variant eliminates both trie-wide spelling-index arrays. Each child has a strictly larger node ID than its parent. Visit terminal nodes in decreasing ID order. Once a terminal's parent chain is read to spell it, no subsequent unprocessed path can include that node. Its two fields can immediately become the offset and length of the spelling. A final pass transfers those ranges to the terminal bands. A component tag is recoverable from its destination when auditing the bands. This saved up to 1,084,832 bytes per tape on quote and 2,026,704 on compound. The new maximum retained capacities are 5,467,436 and 5,041,980 bytes. All marked outputs and ordered tagged bands matched the indexed version on all 20 real cells, 33,717 small datasets and 732 page-boundary fixtures. [Real comparisons and retained bytes](recycled-verified.csv) · [Independent small-case checks](recycled-check.json)
+
+The measured backward controls and the recycled source can be rebuilt and run with the variables from the reproduction recipe above. The complete unmodified indexed pair first ran at `fb58a94`, archived before the separate recycled run at `8a15a25`.
+
+```sh
+g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic "$study/direction_price.cpp" -o "$work/directions"
+python3 -B "$study/check.py" "$work/forward" RECYCLED_BANDS > "$work/recycled-check.json"
+python3 -B "$study/recycle_check.py" "$work/forward" "$work/wikidata" "$work/recycled-verified.csv"
+taskset -c 3 python3 -B "$study/directions.py" "$work/directions" "$work/wikidata" "$work"
+taskset -c 3 python3 -B "$study/directions.py" "$work/directions" "$work/wikidata" "$work" --recycled
+```
+
+## Sharing one displacement across a fragmented list
+
+A fragmented group sometimes has an affine translation even though its packets can never coalesce. Let the enclosing current interval be [a,z). If the F-select run containing a also contains z−1, every packet has the same displacement δ and emits the same byte. If [a+δ,z+δ) misses U, all packets survive. Keep the source list in place, append that shared trie byte, add δ to one group offset and try again. Materialize the offset only when a run boundary or possible section re-entry ends the stretch. This skips the per-packet payments in the de Bruijn lower bound using an implicit representation. At q=7,k=32 it could save 3,416 of the 3,649 independent packet inputs on that witness. [Exact pre-implementation certificate census](hull.csv) · [Falsifier](hull.py)
+
+Across the ten real tapes, the executable shared 18,465 quote groups and 69,844 compound groups. It removed 75,318 and 394,691 net per-packet operations after charging one shared operation per accepted group. The previously predicted count matched exactly on every tape and section. All first-return bands and marked outputs matched the unshared version. Skipping those operations left the count and location of **every full per-page select search** intact. The first packet in an accepted group already located that run; every later packet passed the original retained-run check. For a rejected hull the implementation reuses its first page lookup in the ordinary packet path. Both arms therefore execute the same page seeks and page-run increments, an identity verified separately at every real cell. The savings arise in retained-run checks, intermediate packet copies and loop work. [Actual probes, failed checks and deferred groups](lifted-verified.csv) · [Small-case and page-edge validation](lifted-check.json)
+
+| 24-lap matched CPU ratio [95%] | Quote | Compound |
+| --- | ---: | ---: |
+| Shared displacement / unshared recycled forward | 1.0616 [0.9126, 1.2350] | 0.9810 [0.9015, 1.0676] |
+| Shared displacement / native backward Direct | 1.2594 [1.1041, 1.4366] | 1.2577 [1.1187, 1.4141] |
+
+The three arms shared the same native binary, CPU 3 and tape. They occupied all three positions equally over 24 alternating forward/reverse rounds per section. The interval uses the paired sums across the ten inputs and 23 degrees of freedom. The contrast between the two forward versions remains unresolved. The loss against backward Direct is present for both selected sections. This screen provides no whole-worker candidate for independent production benchmarking. [All 1,440 timed outputs](lifted-price.csv) · [Unrounded intervals and phases](lifted-price.json) · [Paired harness](lift_price.py)
+
+A stronger follow-up would need to avoid locating different select runs, or avoid constructing the prefix states that cause those locations. A falsifier is to census normalized packet layouts **spanning multiple select runs** across different prefixes and count reused run/offset vectors only when they resolve a full indexed seek. It must charge recognizing a shared layout, its memory, and first-return boundary checks. Simple one-run translation has exhausted that particular source of savings.
+
+```sh
+g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -DFORWARD_HULL "$study/forward.cpp" -o "$work/hull-count"
+python3 -B "$study/hull.py" "$work/hull-count" "$work/wikidata" "$work/hull.csv"
+cmp "$work/hull.csv" "$study/hull.csv"
+python3 -B "$study/check.py" "$work/forward" HULL_BANDS > "$work/lifted-check.json"
+taskset -c 3 python3 -B "$study/lift_price.py" "$work/forward" "$work/directions" "$work/wikidata" "$work"
 ```

@@ -19,7 +19,7 @@ struct Interval { int lo, hi; };
 struct Select { int hi, displacement; uint8_t byte; };
 struct Node { int parent, value; };
 struct Packet { int source, current, width; };
-struct Group { int node, begin, end; };
+struct Group { int node, begin, end, depth; };
 struct Band { int source, dest, width, word, color; };
 struct Stats {
     u64 groups=0, packets=0, translations=0, classified=0, live_outputs=0, raw_hits=0;
@@ -27,6 +27,7 @@ struct Stats {
     u64 peak_frontier=0, peak_frontier_capacity=0, depth=0, source_rows=0, covered=0;
     u64 word_bytes=0, words=0, mark_seeks=0, output_lookups=0, mark_prefix=0;
     u64 page_seeks=0, page_run_increments=0, scatter_writes=0;
+    u64 hull_seeks=0, hull_increments=0, lifted_groups=0, lifted_packets=0, reused_first=0;
 #ifdef FORWARD_HULL
     u64 multi_packet_groups=0, multi_packet_inputs=0, hull_translates=0, hull_input_savings=0;
 #endif
@@ -38,7 +39,7 @@ class Forward {
     int n;
     std::vector<Interval> section;
     std::vector<Select> select;
-    bool pages, scatter, recycle;
+    bool pages, scatter, recycle, lift;
     std::vector<int> page_start, section_offset, band_at;
     std::vector<Node> nodes{{-1,0}};
     std::vector<Band> bands;
@@ -83,8 +84,8 @@ public:
     Stats s;
     double setup_ms=0, discover_ms=0, order_ms=0, dict_ms=0, emit_ms=0;
     Forward(int n_,const std::vector<InputRun>& runs, std::vector<Interval> components,
-            bool use_pages=false, bool use_scatter=false, bool recycle_nodes=false)
-        : n(n_), section(std::move(components)), pages(use_pages), scatter(use_scatter), recycle(recycle_nodes) {
+            bool use_pages=false, bool use_scatter=false, bool recycle_nodes=false, bool lift_groups=false)
+        : n(n_), section(std::move(components)), pages(use_pages), scatter(use_scatter), recycle(recycle_nodes), lift(lift_groups) {
         auto t=Clock::now();
         std::array<int,256> counts{}, positions{}, slots{}, run_counts{};
         for(auto r:runs) { counts[r.byte]+=r.width; ++run_counts[r.byte]; }
@@ -125,13 +126,39 @@ public:
             live.push_back({v.lo,v.lo,v.hi-v.lo});
             s.source_rows+=v.hi-v.lo;
         }
-        if (!live.empty()) groups.push_back({0,0,int(live.size())});
+        if (!live.empty()) groups.push_back({0,0,int(live.size()),0});
         while(!groups.empty()) {
-            ++s.depth;
+
             s.peak_frontier=std::max<u64>(s.peak_frontier,live.size());
             next_groups.clear(); children.clear();
             for (auto g:groups) {
                 ++s.groups;
+                int offset=0, first_run=-1;
+                if (lift && g.end-g.begin>1) {
+                    // Keep the sorted rectangles in place for this whole unary stretch.
+                    // Their original source rows stay fixed and all current rows shift equally.
+                    while (true) {
+                        int a=live[g.begin].current+offset;
+                        auto last=live[g.end-1];
+                        int z=last.current+last.width+offset;
+                        first_run=page_start[a/64];
+                        ++s.hull_seeks;
+                        while (select[first_run].hi<=a) { ++first_run; ++s.hull_increments; }
+                        auto r=select[first_run];
+                        if (z>r.hi) break;
+                        int next=next_component(a+r.displacement);
+                        if(next<int(section.size()) && z+r.displacement>section[next].lo) break;
+                        offset+=r.displacement;
+                        ++s.groups;
+                        ++s.lifted_groups;
+                        s.lifted_packets+=g.end-g.begin;
+                        nodes.push_back({g.node,r.byte});
+                        g.node=int(nodes.size())-1;
+                        ++g.depth;
+                        assert(g.depth<n);
+                    }
+                }
+                s.depth=std::max<u64>(s.depth,g.depth+1);
 #ifdef FORWARD_HULL
                 // A sufficient certificate for sharing one Ψ displacement across all gaps.
                 int count=g.end-g.begin;
@@ -156,9 +183,12 @@ public:
                 for (int pi=g.begin;pi<g.end;++pi) {
                     ++s.packets;
                     auto p=live[pi];
+                    p.current+=offset;
                     assert(prev_end<=p.current);
                     prev_end=p.current+p.width;
-                    int run=locate(p.current,prev_run);
+                    int run;
+                    if (pi==g.begin && first_run>=0) { run=first_run; ++s.reused_first; }
+                    else run=locate(p.current,prev_run);
                     for (int x=p.current;x<prev_end;) {
                         const auto &r=select[run];
                         if(r.byte!=last_byte) {
@@ -188,7 +218,7 @@ public:
                             } else {
                                 ++s.live_outputs;
                                 if(next_groups.empty() || next_groups.back().node!=node)
-                                    next_groups.push_back({node,int(children.size()),int(children.size())});
+                                    next_groups.push_back({node,int(children.size()),int(children.size()),g.depth+1});
                                 auto& ng=next_groups.back();
                                 if(ng.end>ng.begin && children.back().source+children.back().width==src &&
                                    children.back().current+children.back().width==y) {
@@ -328,7 +358,9 @@ public:
         FIELD("n",n); FIELD("groups",s.groups); FIELD("packet_inputs",s.packets);
         FIELD("select_translations",s.translations); FIELD("component_pieces",s.classified);
         FIELD("live_outputs",s.live_outputs); FIELD("raw_hits",s.raw_hits); FIELD("live_merges",s.live_merges);
-        FIELD("select_page_seeks",s.page_seeks);
+        FIELD("hull_seeks",s.hull_seeks); FIELD("hull_increments",s.hull_increments);
+        FIELD("lifted_groups",s.lifted_groups); FIELD("lifted_packets",s.lifted_packets);
+        FIELD("reused_first",s.reused_first); FIELD("select_page_seeks",s.page_seeks);
         FIELD("select_page_run_increments",s.page_run_increments);
         FIELD("page_capacity_bytes",cap(page_start));
         FIELD("source_directory_capacity_bytes",cap(band_at)+cap(section_offset));
@@ -378,7 +410,8 @@ public:
 int main(int argc,char** argv) {
     std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
     std::string command=argc>1 ? argv[1] : "";
-    bool recycled=command=="RECYCLED_BANDS";
+    bool lifted=command=="HULL_BANDS";
+    bool recycled=lifted || command=="RECYCLED_BANDS";
     bool indexed=recycled || command=="INDEXED_BANDS";
     bool detailed=indexed || command=="BANDS";
     bool price=command=="PRICE";
@@ -389,7 +422,7 @@ int main(int argc,char** argv) {
         std::vector<InputRun> runs(r); for(auto &v:runs) std::cin>>v.byte>>v.width;
         std::vector<Interval> comp(c); for(auto &v:comp) std::cin>>v.lo>>v.hi;
         if(!price) {
-            Forward f(n,runs,std::move(comp),indexed,indexed,recycled); f.discover(); f.write(mark,detailed);
+            Forward f(n,runs,std::move(comp),indexed,indexed,recycled,lifted); f.discover(); f.write(mark,detailed);
             continue;
         }
         std::string expected;
