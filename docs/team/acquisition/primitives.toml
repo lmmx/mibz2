@@ -11,113 +11,113 @@
 # The entry state I0 is the [entry] list. Nothing else is free.
 
 [entry]
-objects = ["n", "p", "records", "C", "alphabet"]
 notes = "records: production caps a record at 127 rows, so R >= r. C exists only where the route already counts symbols; otherwise use the edge counts_from_records."
+objects = ["C", "alphabet", "n", "p", "records"]
 
 [[edge]]
+cost = { B = "R", D = "1", M = "256", Q = "0", W = "R" }
+dependent = false
+evidence = "one sequential scan over the records with a 256-entry accumulator"
 id = "counts_from_records"
 inputs = ["records"]
 output = "C"
 status = "proved"
-cost = { W = "R", D = "1", B = "R", Q = "0", M = "256" }
-dependent = false
-evidence = "one sequential scan over the records with a 256-entry accumulator"
 
 [[edge]]
+cost = { B = "R", D = "1", M = "r", Q = "0", W = "R" }
+dependent = false
+evidence = "merge adjacent records with the same symbol; sequential"
 id = "maximal_runs"
 inputs = ["records"]
 output = "runs"
 status = "proved"
-cost = { W = "R", D = "1", B = "R", Q = "0", M = "r" }
-dependent = false
-evidence = "merge adjacent records with the same symbol; sequential"
 
 [[edge]]
-id = "lf_shifts"
-inputs = ["runs", "C"]
-output = "lf_affine"
-status = "proved"
-cost = { W = "r", D = "1", B = "r", Q = "0", M = "r" }
+cost = { B = "r", D = "1", M = "r", Q = "0", W = "r" }
 dependent = false
 evidence = "inside run a, LF(x) = x + delta_a, where delta_a = C[c] + rank - start; one scan with per-symbol running ranks"
+id = "lf_shifts"
+inputs = ["C", "runs"]
+output = "lf_affine"
+status = "proved"
 
 [[edge]]
+cost = { B = "r", D = "1", M = "r", Q = "0", W = "r" }
+dependent = false
+evidence = "prefix sums of the run lengths"
 id = "run_endpoints"
 inputs = ["runs"]
 output = "domain_partition"
 status = "proved"
-cost = { W = "r", D = "1", B = "r", Q = "0", M = "r" }
-dependent = false
-evidence = "prefix sums of the run lengths"
 
 [[edge]]
-id = "lf_image_partition"
-inputs = ["runs", "lf_affine"]
-output = "codomain_partition"
-status = "proved"
-cost = { W = "r", D = "1", B = "r", Q = "0", M = "r" }
+cost = { B = "r", D = "1", M = "r", Q = "0", W = "r" }
 dependent = false
 evidence = "the images of the runs, ordered by (symbol, rank): sorted already within each symbol, and the C order makes them sorted overall"
+id = "lf_image_partition"
+inputs = ["lf_affine", "runs"]
+output = "codomain_partition"
+status = "proved"
 
 [[edge]]
-id = "partition_overlaps"
-inputs = ["domain_partition", "codomain_partition"]
-output = "overlap_events"
-status = "proved"
-cost = { W = "r + K", D = "1", B = "K", Q = "0", M = "K" }
+cost = { B = "K", D = "1", M = "K", Q = "0", W = "r + K" }
 dependent = false
 evidence = "a two-pointer merge of two sorted partitions. K, the event count, is at most 2r. Its measured value on the six blocks is open (falsifier: count K)."
+id = "partition_overlaps"
+inputs = ["codomain_partition", "domain_partition"]
+output = "overlap_events"
+status = "proved"
 
 [[edge]]
-id = "lf_walk_bytes"
-inputs = ["runs", "lf_affine", "p"]
-output = "text"
-status = "measured"
-cost = { W = "n", D = "n", B = "n", Q = "n", M = "n" }
+cost = { B = "n", D = "n", M = "n", Q = "n", W = "n" }
 dependent = true
 evidence = "the classic inversion: n dependent LF links. The baseline that every candidate is compared against."
-
-[[edge]]
-id = "cells_induction"
-inputs = ["runs", "lf_affine", "p"]
+id = "lf_walk_bytes"
+inputs = ["lf_affine", "p", "runs"]
 output = "text"
 status = "measured"
-cost = { W = "n + S", D = "S", B = "n", Q = "S", M = "r" }
+
+[[edge]]
+cost = { B = "n", D = "S", M = "r", Q = "S", W = "n + S" }
 dependent = true
 evidence = "Cells, shipped. S, its induction steps, is ~1.7-1.8r on the admitted blocks (MONODROMY record 82's table: 92,571 at r = 51,184 on block 0; 216,769 at r = 128,732 on block 210). Its accelerated steps are within ~2% of the floor r (record 80). Emission is sequential."
+id = "cells_induction"
+inputs = ["lf_affine", "p", "runs"]
+output = "text"
+status = "measured"
 
 [[edge]]
-id = "boundary_text_positions"
-inputs = ["runs", "lf_affine", "p"]
-output = "boundary_positions"
-status = "verified"
-cost = { W = "S", D = "S", B = "r", Q = "S", M = "r" }
+cost = { B = "r", D = "S", M = "r", Q = "S", W = "S" }
 dependent = true
 evidence = "weight-only Rauzy-Veech recovers the text positions of run boundaries exactly (MONODROMY record 81; Neon round 5). It pays the induction's dependent steps."
+id = "boundary_text_positions"
+inputs = ["lf_affine", "p", "runs"]
+output = "boundary_positions"
+status = "verified"
 
 [[edge]]
-id = "copy_run_labels"
-inputs = ["boundary_positions", "runs", "lf_affine"]
-output = "run_label_sequences"
-status = "open"
-cost = { W = "n", D = "n", B = "n", Q = "n", M = "n" }
+cost = { B = "n", D = "n", M = "n", Q = "n", W = "n" }
 dependent = true
 evidence = "the text-order run-label sequence of each copy. The only known construction is an O(n) arc walk (MONODROMY record 82). Whether o(n) is possible, e.g. O(#overlaps) from positions, is OPEN: Neon round 7's question."
+id = "copy_run_labels"
+inputs = ["boundary_positions", "lf_affine", "runs"]
+output = "run_label_sequences"
+status = "open"
 
 [[edge]]
-id = "potential_schedule"
-inputs = ["run_label_sequences", "boundary_positions"]
-output = "copy_schedule"
-status = "verified"
-cost = { W = "n", D = "lambda", B = "F", Q = "F", M = "F" }
+cost = { B = "F", D = "lambda", M = "F", Q = "F", W = "n" }
 dependent = false
 evidence = "tau = theta + phi(run), with phi from a maximum-weight forest: F = 0.83-2.15r fragments of ~7 B (record 82 and its addendum)"
+id = "potential_schedule"
+inputs = ["boundary_positions", "run_label_sequences"]
+output = "copy_schedule"
+status = "verified"
 
 [[edge]]
+cost = { B = "n", D = "lambda", M = "n", Q = "F", W = "n" }
+dependent = false
+evidence = "in-place, write-once memcpy replay of the schedule's fragments. lambda is the dependency depth, at most lambda_max."
 id = "copy_replay"
 inputs = ["copy_schedule"]
 output = "text"
 status = "verified"
-cost = { W = "n", D = "lambda", B = "n", Q = "F", M = "n" }
-dependent = false
-evidence = "in-place, write-once memcpy replay of the schedule's fragments. lambda is the dependency depth, at most lambda_max."

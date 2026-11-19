@@ -4,5 +4,12 @@
 
 name = "in-place Φ copy replay with a potential schedule (Neon round 6)"
 target = "text"
-uses = ["boundary_text_positions", "copy_run_labels", "potential_schedule", "copy_replay",
-        "maximal_runs", "lf_shifts", "counts_from_records"]
+uses = [
+  "boundary_text_positions",
+  "copy_replay",
+  "copy_run_labels",
+  "counts_from_records",
+  "lf_shifts",
+  "maximal_runs",
+  "potential_schedule",
+]
