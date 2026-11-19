@@ -2376,11 +2376,11 @@ bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUND
 # The open port's successor confirmatory run (docs/journal/2026-11-19-open-port-2-registration.md;
 # #145 QUEUED 7011091171): a new experiment, not a retry of bench-open-port, whose one attempt
 # (open-port/run-20261119T125538Z) was NOT ADOPTED and stands. The same builds, machine, 18 inputs
-# and decision run as bench-open-port; then the guards' extension rounds for G2 (tier A, 108 more
-# rounds a cell; tier B, 48), and the sustained cell at 40 rounds. `bench/open_port2.py judge` gives
-# the verdict. Its own one attempt, archived as open-port-2/run-*.
+# and decision run as bench-open-port, and its sustained cell as registered; then the guards'
+# extension for G2, each guard cell's rounds as bench/open-port-2-schedule.json locks them.
+# `bench/open_port2.py judge` gives the verdict. Its own one attempt, archived as open-port-2/run-*.
 # DRY (any value): the untimed preflight, as bench-open-port's.
-bench-open-port-2 PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="40" GROUNDS_A="108" GROUNDS_B="48" CROUNDS="8" DRY="":
+bench-open-port-2 PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="8" CROUNDS="8" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/open-port-2
@@ -2388,7 +2388,7 @@ bench-open-port-2 PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROU
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-open-port-2 (docs/journal/2026-11-19-open-port-2-registration.md): the port at {{PORT}} against v0.5.6, at $(git rev-parse HEAD), unpinned at 8, 10 and 20 threads, {{ROUNDS}} rounds, settle {{SETTLE}} s; sustained {{SROUNDS}} rounds; guard extension {{GROUNDS_A}} (tier A) and {{GROUNDS_B}} (tier B) rounds; context {{CROUNDS}} rounds"
+    echo "bench-open-port-2 (docs/journal/2026-11-19-open-port-2-registration.md): the port at {{PORT}} against v0.5.6, at $(git rev-parse HEAD), unpinned at 8, 10 and 20 threads, {{ROUNDS}} rounds, settle {{SETTLE}} s; sustained {{SROUNDS}} rounds; the guards' extension as bench/open-port-2-schedule.json locks it; context {{CROUNDS}} rounds"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-open-port-2: the checkout has local changes"; exit 1; }
@@ -2498,17 +2498,21 @@ bench-open-port-2 PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROU
     echo "sustained at 10 threads: the port against v0.5.6, back to back"
     "$HAB" run "$O/sustained.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads 10 --rounds {{SROUNDS}} \
       --settle 0 --unpinned "$C/wikidata-x16.bz2"
-    # the guards' extension rounds (G2): tier A (bench/open_port2.py TIER_A) and tier B, at each count
-    tier_a=("$C/gen/runs.bz2" "$C/ho-prose-l1.bz2" "$C/ho-code-l1.bz2" "$C/ho-code-l9.bz2")
-    tier_b=("$C/gen/text.bz2" "$C/gen/random.bz2" "$C/gen/records.bz2" "$C/gen/pattern.bz2" "$C/gen/onebyte.bz2"
-            "$C/ho-wikidata-l1.bz2" "$C/ho-prose-l9.bz2" "$C/ho-structured-l1.bz2" "$C/ho-structured-l9.bz2")
-    for t in 8 10 20; do
-      echo "the guards' extension at $t threads: the port against v0.5.6"
-      "$HAB" run "$O/guards-a.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads "$t" --rounds {{GROUNDS_A}} \
-        --settle {{SETTLE}} --unpinned "${tier_a[@]}"
-      "$HAB" run "$O/guards-b.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads "$t" --rounds {{GROUNDS_B}} \
-        --settle {{SETTLE}} --unpinned "${tier_b[@]}"
-    done
+    # the guards' extension (G2): each batch of bench/open-port-2-schedule.json, one `ab run`, the
+    # rounds each guard cell needs beyond the decision run's 12
+    python3 bench/open_port2.py schedule > "$O/schedule.txt"
+    while read -r t extra names; do
+      paths=()
+      for c in $names; do
+        case $c in
+          text|random|records|runs|pattern|onebyte) paths+=("$C/gen/$c.bz2") ;;
+          *) paths+=("$C/$c.bz2") ;;
+        esac
+      done
+      echo "the guards' extension at $t threads, $extra rounds: $names"
+      "$HAB" run "$O/guards-t$t-r$extra.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads "$t" \
+        --rounds "$extra" --settle {{SETTLE}} --unpinned "${paths[@]}" < /dev/null
+    done < "$O/schedule.txt"
     date -u +%FT%TZ > "$O/timed.txt"
     # the verdict (docs/journal/2026-11-19-open-port-2-registration.md)
     python3 bench/open_port2.py judge "$O" --port "$port" | tee "$O/verdict.txt" \

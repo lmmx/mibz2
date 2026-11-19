@@ -1,28 +1,36 @@
-"""The successor's guard rule, planned from the first attempt's noise (open-port/run-20261119T125538Z).
+"""The successor's guard rule G2, planned from the first attempt's per-cell noise.
 
-    python3 plan.py RUN_DIR [REPS]   (numpy and scipy; planning only, not run by the recipe)
+The noise is open-port/run-20261119T125538Z's; the Researcher's correction is REVIEW 7012181194,
+and the Coordinator's decisions QUEUED 7012199074.
 
-The noise model: per corpus, each cell's paired log ratios (port over v0.5.6) less the cell's
-median, pooled over the three counts and symmetrised (no effect: the arms are exchangeable). It is
-planning noise, not an outcome. Effects are added as a shift of every round's log ratio.
+    python3 plan.py RUN_DIR OUT.json 100000   (numpy and scipy; planning only, not run by the recipe;
+    bench/open-port-2-schedule.json is OUT.json's rounds and c)
 
-The registered rule G (timing part): a cell fails if its geometric mean exceeds 1.02, or its
-two-sided 95% t-interval lies wholly above 1, from 12 rounds (sustained: 8).
-The successor's rule G2: a cell fails if a one-sided exact Wilcoxon signed-rank test of "the port
-is slower" gives p <= 0.048/40 = 0.0012, from n rounds (TIER below; sustained 40).
+G2, the scorer's own rule: a guard cell fails if the mean of its n rounds' paired log ratios (the
+port's wall over v0.5.6's; its exponential is the geometric mean, G's estimand) exceeds a critical
+value c fixed here, before the data. c is the largest of the (1 - 0.05/39) quantiles of that mean
+under no effect in three noise models, each resampled n times with replacement: the cell's own 12
+residuals (centred on its mean), its corpus's pooled 36, and all 468 guard residuals (which carry
+the first attempt's spike rate). The rounds n are the smallest on the grid giving power 0.80 at a
+true +2% slowdown under the cell's own residuals.
+
+The output also gives each cell's power at +1%, +2% and +3%, the first registration's rule G at the
+same effects (12 rounds), the sizes under each model and under a stress model (2% of rounds a
+spike of 0.2 to 0.4 either way), and the restored S's false-fail rate and power.
+
+The models assume the rounds are independent within a cell (the paired design takes out what the
+two arms share in a round; serial dependence is not modelled). They are planning models: G2's
+size is calibrated under them, not exact.
 """
 
 import json, math, collections, sys
 import numpy as np
 from scipy import stats
 
-RUN = sys.argv[1]
-REPS = int(sys.argv[2]) if len(sys.argv) > 2 else 2000
-TIER_A = ("ho-prose-l1", "ho-code-l9", "ho-code-l1", "runs")
-N = {**{c: 120 for c in TIER_A}, "wikidata-x16": 40}
-N_B = 60
-FAMILY, ALPHA = 40, 0.048 / 40
-L2, L1 = math.log(1.02), math.log(1.01)
+RUN, OUT = sys.argv[1], sys.argv[2]
+R = int(sys.argv[3]) if len(sys.argv) > 3 else 200_000
+GRID = [12, 24, 36, 48, 60, 72, 96, 120, 144, 168, 192, 240, 288, 336, 384, 480, 600]
+L1, L2, L3 = math.log(1.01), math.log(1.02), math.log(1.03)
 
 
 def cells_of(path):
@@ -34,82 +42,89 @@ def cells_of(path):
     out = collections.defaultdict(list)
     for (c, t, i), v in sorted(d.items()):
         out[(c, t)].append(math.log(v["c"]["wall"] / v["r"]["wall"]))
-    return out
+    return {k: np.array(v) for k, v in out.items()}
 
 
 cells = cells_of(f"{RUN}/runs.jsonl")
-cells.update(cells_of(f"{RUN}/sustained.jsonl"))
-guards = sorted(k for k in cells if k[0] not in ("wikidata-x4", "ho-wikidata-l9"))
-assert len(guards) == FAMILY
-shape = collections.defaultdict(list)
-for (c, t), x in cells.items():
-    m = np.median(x)
-    shape[c] += [v - m for v in x]
-shape = {c: np.concatenate([np.array(v), -np.array(v)]) for c, v in shape.items()}
+sus = cells_of(f"{RUN}/sustained.jsonl")[("wikidata-x16", 10)]
+G = sorted(k for k in cells if k[0] not in ("wikidata-x4", "ho-wikidata-l9"))
+A = 0.05 / len(G)
+own = {k: cells[k] - cells[k].mean() for k in G}
+pooled = {c: np.concatenate([own[k] for k in G if k[0] == c]) for c in {k[0] for k in G}}
+allres = np.concatenate([own[k] for k in G])
 rng = np.random.default_rng(20261119)
 
 
-def draw(c, n, d):
-    """REPS samples of n rounds from corpus c's noise, shifted by the true effect d."""
-    return d + rng.choice(shape[c], size=(REPS, n))
+def means(res, n, spike=0.0):
+    """R means of n rounds resampled from res.
 
-
-def registered(x):
-    """The registered G's timing part: the mean above 1.02, or SLOWER."""
-    n = x.shape[1]
-    m = x.mean(1)
-    se = x.std(1, ddof=1) / math.sqrt(n)
-    return (m > L2) | (m - stats.t.ppf(0.975, n - 1) * se > 0)
-
-
-def g2(x):
-    """The successor's G2: a one-sided Wilcoxon signed-rank p at most ALPHA."""
-    out = np.empty(x.shape[0], bool)
-    for i, r in enumerate(x):
-        r = r[r != 0]
-        out[i] = (
-            len(r) > 0
-            and stats.wilcoxon(
-                r, alternative="greater", method="exact" if len(r) <= 50 else "approx"
-            ).pvalue
-            <= ALPHA
-        )
+    With `spike`, each round is instead, with probability `spike`, a symmetric spike of 0.2 to 0.4
+    in log ratio.
+    """
+    out = np.empty(R)
+    step = max(1, 4_000_000 // n)
+    for i in range(0, R, step):
+        j = min(R, i + step)
+        x = rng.choice(res, size=(j - i, n))
+        if spike:
+            hit = rng.random(x.shape) < spike
+            x = np.where(hit, rng.uniform(0.2, 0.4, x.shape) * rng.choice((-1, 1), x.shape), x)
+        out[i:j] = x.mean(1)
     return out
 
 
-rows, null_reg, null_g2 = [], [], []
-for k in guards:
-    c, n_reg = k[0], len(cells[k])
-    n = N.get(c, N_B)
-    p = {}
-    for name, d in (
-        ("0", 0.0),
-        ("+1%", L1),
-        ("+2%", L2),
-        ("+3%", math.log(1.03)),
-        ("+5%", math.log(1.05)),
-        ("+10%", math.log(1.10)),
-    ):
-        p[name] = (registered(draw(c, n_reg, d)).mean(), g2(draw(c, n, d)).mean())
-    null_reg.append(p["0"][0])
-    null_g2.append(p["0"][1])
-    rows.append((k, n_reg, n, p))
-print(f"no true effect, P(at least one of the {FAMILY} timing guards fails):")
-print(f"  registered G: {1 - np.prod([1 - v for v in null_reg]):.3f}")
-print(f"  successor G2: {1 - np.prod([1 - v for v in null_g2]):.3f} (bound by construction: 0.048)")
-print()
-print("| cell | rounds (registered → successor) | +1% | +2% | +3% | +5% | +10% |")
-print("|---|---|--:|--:|--:|--:|--:|")
-weaker = []
-for k, nr, n, p in rows:
-    f = lambda s: f"{p[s][0]:.2f} → {p[s][1]:.2f}"
+def g_rule(res, n, d, reps=100_000):
+    """The registered G (or S): the mean above ln 1.02, or the 95% t-interval wholly above 0."""
+    x = d + rng.choice(res, size=(reps, n))
+    m = x.mean(1)
+    se = x.std(1, ddof=1) / math.sqrt(n)
+    return float(((m > L2) | (m - stats.t.ppf(0.975, n - 1) * se > 0)).mean())
+
+
+plan, nulls = [], {"own": [], "pooled": [], "spiky": [], "all": []}
+for k in G:
+    for n in GRID:
+        mo, mp, ma = means(own[k], n), means(pooled[k[0]], n), means(allres, n)
+        c = float(max(np.quantile(mo, 1 - A), np.quantile(mp, 1 - A), np.quantile(ma, 1 - A)))
+        if (mo + L2 > c).mean() >= 0.80 or n == GRID[-1]:
+            break
+    ms = means(own[k], n, spike=0.02)
+    row = {
+        "corpus": k[0],
+        "threads": k[1],
+        "rounds": n,
+        "c": round(c + 5e-5, 4),
+        "sd": float(own[k].std(ddof=1)),
+        "g2": [float((mo + d > c).mean()) for d in (L1, L2, L3)],
+        "g2_pooled_2": float((mp + L2 > c).mean()),
+        "g": [g_rule(own[k], 12, d) for d in (L1, L2, L3)],
+        "size": {
+            "own": float((mo > c).mean()),
+            "pooled": float((mp > c).mean()),
+            "spiky": float((ms > c).mean()),
+            "all": float((ma > c).mean()),
+        },
+    }
+    for m in nulls:
+        nulls[m].append(row["size"][m])
+    plan.append(row)
     print(
-        f"| {k[0]} {k[1]}t | {nr} → {n} | {f('+1%')} | {f('+2%')} | {f('+3%')} | {f('+5%')} | {f('+10%')} |"
+        f"{k[0]:17s} {k[1]:2d}t n {n:3d} c {row['c']:.4f} | G2 +1/2/3% {row['g2'][0]:.2f} {row['g2'][1]:.2f} {row['g2'][2]:.2f}"
+        f" (pooled +2% {row['g2_pooled_2']:.2f}) | G {row['g'][0]:.2f} {row['g'][1]:.2f} {row['g'][2]:.2f}"
+        f" | size own {row['size']['own']:.4f} pooled {row['size']['pooled']:.4f} spiky {row['size']['spiky']:.4f}",
+        flush=True,
     )
-    for s in ("+2%", "+3%", "+5%", "+10%"):
-        if p[s][1] + 0.02 < p[s][0]:
-            weaker.append((k, s, p[s]))
-print()
+sres = sus - sus.mean()
+s = {"null": g_rule(sres, 8, 0.0, 400_000), "+2%": g_rule(sres, 8, L2, 400_000)}
+fam = {m: 1 - float(np.prod([1 - v for v in nulls[m]])) for m in nulls}
 print(
-    f"cells and effects of 2% or more where G2 catches less often than G (tolerance 0.02, {REPS} draws): {weaker or 'none'}"
+    f"G2 family (39 cells) P(any fails), no effect: own {fam['own']:.4f}, pooled {fam['pooled']:.4f}, all-guard {fam['all']:.4f}, spiky (2% spikes) {fam['spiky']:.4f}"
+)
+print(f"S as registered (8 rounds): P(fails), no effect {s['null']:.3f}; at +2% {s['+2%']:.3f}")
+ext = sum(r["rounds"] - 12 for r in plan)
+print(f"extension pairs {ext}; at 2.1 s a decode, {ext * 2 * 2.1 / 3600:.2f} h")
+json.dump(
+    {"alpha": A, "cells": plan, "family": fam, "S": s, "extension_pairs": ext},
+    open(OUT, "w"),
+    indent=1,
 )

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Checks of bench/open_port2.py, the open port's successor verdict, on made-up bundles: the
-four-file roster complete, the decision conditions as registered, G2 (the guards' exact Wilcoxon
-rule) catching a real slowdown and passing noise, the exact p against enumeration, its size, each
-VOID, and the successor's own one attempt"""
+decision run, the sustained cell as registered, and every batch of the locked schedule; G2 (each
+guard cell's mean log ratio against its locked critical value) catching a real slowdown, passing
+symmetric spikes, and failing the Researcher's counterexample (REVIEW 7012181194); each VOID,
+across files too; and the successor's own one attempt"""
 
 import io
-import itertools
 import json
 import math
 import os
@@ -23,17 +23,16 @@ import open_port2 as o2  # noqa: E402
 import test_open_port as t1  # noqa: E402
 
 PORT_SHA = t1.PORT_SHA
+COUNTER = [-0.001] * 57 + [0.5] * 3  # the Researcher's counterexample: x1.02434 by geometric mean
 
 
-def noise(seed, n, scale=0.02, outliers=()):
-    """Symmetric noise for n rounds: pairs of +e and -e in a shuffled order, so a cell with no
-    effect has no tendency either way; `outliers` adds (round, value) spikes"""
+def noise(seed, n, scale=0.01, spikes=0):
+    """Symmetric noise for n rounds: pairs of +e and -e, shuffled, so a cell of no effect has a
+    mean of 0 (n even); `spikes` adds that many pairs of +0.29 and -0.29"""
     rng = random.Random(seed)
-    half = [abs(rng.gauss(0, scale)) for _ in range((n + 1) // 2)]
-    xs = [v for e in half for v in (e, -e)][:n]
+    half = [abs(rng.gauss(0, scale)) for _ in range(n // 2 - spikes)] + [0.29] * spikes
+    xs = [v for e in half for v in (e, -e)] + [0.0] * (n % 2)
     rng.shuffle(xs)
-    for i, v in outliers:
-        xs[i] += v
     return xs
 
 
@@ -41,67 +40,36 @@ def write(path, rows):
     path.write_text("".join(json.dumps(r) + "\n" for r in rows))
 
 
-def cellrows(corpus, t, effect, xs, rss=100000, rss_ratio=1.0, round0=0):
-    out = []
-    for i, x in enumerate(xs):
-        base = 0.05
-        out.append(t1.rec(corpus, t, t1.REF, round0 + i, base, rss))
-        out.append(
-            t1.rec(
-                corpus,
-                t,
-                t1.PORT,
-                round0 + i,
-                base * math.exp(math.log(effect) + x),
-                rss * rss_ratio,
-            )
-        )
-    return out
-
-
-def build2(
-    gstep=None,
-    outl=None,
-    sustained=0.97,
-    sus_n=o2.SUSTAINED_ROUNDS,
-    a_n=o2.EXTRA_A,
-    b_n=o2.EXTRA_B,
-    drop=(),
-    aedit=None,
-    **kw,
-):
-    """The first registration's decision bundle (test_open_port.build), with G2's files: every
-    guard cell's extension rounds, and the sustained cell at its new count. `gstep` maps
-    (corpus, t) to the port's true wall ratio on that guard (applied to the decision rounds too);
-    `outl` maps (corpus, t) to outlier spikes in its extension rounds."""
-    gstep, outl = gstep or {}, outl or {}
+def build2(gstep=None, vectors=None, spikes=None, drop=(), stray=False, bedit=None, **kw):
+    """The first registration's decision and sustained bundle (test_open_port.build), and every
+    batch of the locked schedule. `gstep` maps (corpus, t) to the port's true wall ratio on that
+    guard (decision rounds too); `vectors` maps (corpus, t) to the extension's exact log ratios;
+    `spikes` maps (corpus, t) to pairs of symmetric spikes; `bedit` edits extension records."""
+    gstep, vectors, spikes = gstep or {}, vectors or {}, spikes or {}
     step = dict(kw.pop("step", {}) or {})
-    for k, v in gstep.items():
-        step[k] = v
+    step.update(gstep)
     d = t1.build(step=step, **kw)
     seed = 0
-    for name, tier, n in (("guards-a.jsonl", o2.TIER_A, a_n), ("guards-b.jsonl", o2.TIER_B, b_n)):
+    for t, extra, cs in o2.batches():
         rows = []
-        for t in op.COUNTS:
-            for c in tier:
-                seed += 1
-                xs = noise(seed, n, outliers=outl.get((c, t), ()))
-                for r in cellrows(c, t, gstep.get((c, t), 1.0), xs):
-                    r = aedit(r) if aedit else r
+        for c in cs:
+            seed += 1
+            xs = vectors.get((c, t)) or noise(seed, extra, spikes=spikes.get((c, t), 0))
+            assert len(xs) == extra
+            for i, x in enumerate(xs):
+                base = 0.05
+                for r in (
+                    t1.rec(c, t, t1.REF, i, base, 100000),
+                    t1.rec(c, t, t1.PORT, i, base * gstep.get((c, t), 1.0) * math.exp(x), 100000),
+                ):
+                    r = bedit(r, t, extra) if bedit else r
                     if r is not None:
                         rows.append(r)
+        name = o2.batch_file(t, extra)
         if name not in drop:
             write(d / name, rows)
-    srows = []
-    xs = noise(99, sus_n, scale=0.01)
-    for i, x in enumerate(xs):
-        base = 1.6
-        srows.append(t1.rec(op.SUSTAINED, 10, t1.REF, i, base, 120000))
-        srows.append(t1.rec(op.SUSTAINED, 10, t1.PORT, i, base * sustained * math.exp(x), 84000))
-    if "sustained.jsonl" not in drop:
-        write(d / "sustained.jsonl", srows)
-    else:
-        (d / "sustained.jsonl").unlink()
+    if stray:
+        write(d / "guards-t8-r999.jsonl", [])
     return d
 
 
@@ -124,20 +92,6 @@ def expect(name, d, code, phrases, absent=()):
     if not ok:
         print(out)
     return ok
-
-
-def brute(xs):
-    """The exact p by enumerating every sign assignment (small n only)"""
-    nz = [x for x in xs if x != 0]
-    mags = [abs(x) for x in nz]
-    srt = sorted(mags)
-    rank = {m: (srt.index(m) + 1 + len(srt) - srt[::-1].index(m)) / 2 for m in set(mags)}
-    obs = sum(rank[abs(x)] for x in nz if x > 0)
-    hits = sum(
-        sum(rank[m] for m, s in zip(mags, signs) if s) >= obs - 1e-9
-        for signs in itertools.product((0, 1), repeat=len(nz))
-    )
-    return hits / 2 ** len(nz) if nz else 1.0
 
 
 def guard_checks():
@@ -223,6 +177,8 @@ def guard_checks():
 
 def main():
     res = []
+    plan = o2.PLAN
+    ext = sum(2 * (n - op.ROUNDS) for n, _ in plan.values())
     res.append(
         expect(
             "the port as hoped, guards with no effect: ADOPTS",
@@ -230,51 +186,63 @@ def main():
             0,
             [
                 "VERDICT: ADOPTS",
-                f"records {15 * 3 * 2 * 12} of",
-                f"{4 * 3 * 2 * 108} of",
-                f"{9 * 3 * 2 * 48} of",
-                "80 of 80 (sustained)",
-                "120 rounds",
-                "60 rounds",
+                "1080 of 1080 (decision)",
+                "16 of 16 (sustained)",
+                f"{ext} of {ext}",
             ],
             absent=["VOID", "FAILS"],
         )
     )
-    # G2 catches a real slowdown on one guard cell, in either tier
-    for c in ("ho-prose-l1", "text"):
+    for c, t in (("ho-code-l9", 10), ("text", 8), ("records", 20)):
         res.append(
             expect(
-                f"{c} at 10 threads truly 3% slower: G2 fails it",
-                build2(gstep={(c, 10): 1.03}),
+                f"{c} at {t} threads truly 2% slower: G2 fails it",
+                build2(gstep={(c, t): 1.02}),
                 0,
-                [f"G2: {c} at 10 threads slower", "VERDICT: NOT ADOPTED"],
+                [f"G2: {c} at {t} threads", "VERDICT: NOT ADOPTED"],
                 absent=["VERDICT: ADOPTS"],
             )
         )
     res.append(
         expect(
-            "a guard truly 2% slower, in its noise: G2 fails it",
-            build2(gstep={("random", 8): 1.02}),
+            "a guard truly 3% slower: G2 fails it",
+            build2(gstep={("ho-prose-l1", 20): 1.03}),
             0,
-            ["G2: random at 8 threads slower", "NOT ADOPTED"],
+            ["G2: ho-prose-l1 at 20 threads", "NOT ADOPTED"],
         )
     )
-    # noise with outliers, the shape of the first attempt's failing cells, is no slowdown
     res.append(
         expect(
-            "a guard with no effect but upward spikes (geometric mean above 1.02): G2 passes",
-            build2(outl={("ho-code-l1", 10): [(0, 0.29), (5, 0.25), (9, 0.3), (20, 0.28)]}),
+            "a guard of no effect with symmetric spikes of 0.29: G2 passes",
+            build2(spikes={("ho-code-l1", 10): 3, ("random", 8): 2}),
             0,
             ["VERDICT: ADOPTS"],
-            absent=["G2: ho-code-l1"],
+            absent=["G2: "],
         )
     )
+    # the Researcher's counterexample (REVIEW 7012181194): 57 rounds at -0.001 and 3 at +0.5
+    cell = next((c, t) for (c, t), (n, _) in sorted(plan.items()) if n - op.ROUNDS == 60)
     res.append(
         expect(
-            "the sustained cell truly 3% slower: G2 fails it",
+            f"Researcher 11: the counterexample as {cell[0]} at {cell[1]} threads' extension: G2 fails it",
+            build2(vectors={cell: COUNTER}),
+            0,
+            [f"G2: {cell[0]} at {cell[1]} threads", "NOT ADOPTED"],
+        )
+    )
+    m = sum(COUNTER) / len(COUNTER)
+    ok = all(m > c for _, c in plan.values())
+    print(
+        f"{'ok  ' if ok else 'FAIL'} Researcher 11: the counterexample's mean {m:.5f} exceeds every cell's c (max {max(c for _, c in plan.values()):.4f})"
+    )
+    res.append(ok)
+    # S, exactly as registered
+    res.append(
+        expect(
+            "the sustained cell 3% slower: S fails, as registered",
             build2(sustained=1.03),
             0,
-            ["G2: sustained slower", "NOT ADOPTED"],
+            ["S: sustained", "NOT ADOPTED"],
         )
     )
     # the decision conditions, as registered
@@ -310,75 +278,74 @@ def main():
             ["G: records at 20 threads peak RSS 1.200, above 1.1", "NOT ADOPTED"],
         )
     )
-    # VOID: the four files' rosters
+    # VOID, within and across files
+    first = o2.batch_file(*o2.batches()[0][:2])
+    other_port = t1.PORT.replace("/w/target/", "/elsewhere/target/")
     for name, d, phrase in [
-        ("guards-a.jsonl missing", build2(drop=("guards-a.jsonl",)), "guards-a.jsonl: missing"),
-        ("guards-b.jsonl missing", build2(drop=("guards-b.jsonl",)), "guards-b.jsonl: missing"),
-        ("tier A short by a round", build2(a_n=o2.EXTRA_A - 1), "records missing"),
-        ("tier B with an extra round", build2(b_n=o2.EXTRA_B + 1), "not a record of the roster"),
+        ("a batch file missing", build2(drop=(first,)), f"{first}: missing"),
+        ("a stray guards file", build2(stray=True), "files outside the schedule"),
         (
-            "the sustained cell at the first registration's 8 rounds",
-            build2(sus_n=8),
-            "records missing",
+            "Researcher 12: text's output digest different in the extension",
+            build2(bedit=lambda r, t, x: {**r, "sha256": "zz"} if r["corpus"] == "text" else r),
+            "text: the outputs differ across files",
         ),
         (
-            "a tier B corpus in the tier A file",
-            build2(aedit=lambda r: {**r, "corpus": "text"} if r["corpus"] == "runs" else r),
-            "not a record of the roster",
+            "Researcher 13: the port's binary another path in one batch",
+            build2(
+                bedit=lambda r, t, x: (
+                    {**r, "arm": other_port}
+                    if r["arm"] == t1.PORT and (t, x) == o2.batches()[0][:2]
+                    else r
+                )
+            ),
+            "the port build's arm differs across files",
         ),
         (
             "an extension record at threads 8.5",
             build2(
-                aedit=lambda r: (
-                    {**r, "threads": 8.5} if r["round"] == 3 and r["threads"] == 8 else r
-                )
+                bedit=lambda r, t, x: {**r, "threads": 8.5} if r["round"] == 3 and t == 8 else r
             ),
             "threads 8.5",
         ),
         (
             "an extension record with a NaN wall",
-            build2(aedit=lambda r: {**r, "wall": float("nan")} if r["round"] == 7 else r),
+            build2(bedit=lambda r, t, x: {**r, "wall": float("nan")} if r["round"] == 7 else r),
             "not a finite positive number",
+        ),
+        (
+            "a batch short by a round",
+            build2(bedit=lambda r, t, x: None if r["round"] == x - 1 and t == 20 else r),
+            "records missing",
         ),
         ("another port", build2(commits=f"port {'1' * 40}\nv0.5.6 {op.V056}\n"), "commits.txt"),
         ("an input off the manifest", build2(digests={"text.bz2": "5a" * 32}), "not the frozen"),
     ]:
         res.append(expect(f"{name}: VOID", d, 1, ["VOID", phrase], absent=["VERDICT"]))
     d = build2()
+    lines = (d / "sustained.jsonl").read_text().splitlines()
+    (d / "sustained.jsonl").write_text(
+        "\n".join(lines + [lines[0].replace('"round": 0', '"round": 8')]) + "\n"
+    )
+    res.append(
+        expect(
+            "the sustained cell with a ninth round: VOID (8, as registered)",
+            d,
+            1,
+            ["VOID", "not a record of the roster"],
+        )
+    )
+    d = build2()
     (d / "DRY-RUN.txt").write_text("dry\n")
     res.append(expect("a dry run: VOID", d, 1, ["VOID", "a dry run"], absent=["VERDICT"]))
-    # the exact p, against enumeration, with ties and zeros
-    rng = random.Random(5)
-    ok = True
-    for _ in range(60):
-        n = rng.randint(1, 12)
-        xs = [rng.choice((-3, -2, -1, 0, 1, 2, 3)) * 0.01 for _ in range(n)]
-        if abs(o2.signed_rank_p(xs) - brute(xs)) > 1e-12:
-            ok = False
-            print("   ", xs, o2.signed_rank_p(xs), brute(xs))
-    print(
-        f"{'ok  ' if ok else 'FAIL'} the exact signed-rank p equals enumeration on 60 small samples with ties and zeros"
-    )
-    res.append(ok)
-    # its size: with signs at random (no effect), P(p <= alpha) <= alpha
-    rng = random.Random(9)
-    for n, alpha in ((20, 0.05), (40, 0.01)):
-        mags = [abs(rng.gauss(0, 1)) for _ in range(n)]
-        hits = sum(
-            o2.signed_rank_p([m * rng.choice((-1, 1)) for m in mags]) <= alpha for _ in range(3000)
-        )
-        ok = hits / 3000 <= alpha + 3 * math.sqrt(alpha * (1 - alpha) / 3000)
-        print(
-            f"{'ok  ' if ok else 'FAIL'} the test's size at n {n}: {hits / 3000:.4f} at α {alpha}"
-        )
-        res.append(ok)
+    # the locked schedule
     ok = (
-        o2.FAMILY == 40
-        and abs(o2.ALPHA2 - 0.0012) < 1e-12
-        and set(o2.TIER_A) | set(o2.TIER_B) == set(o2.GUARDS)
+        len(plan) == 39
+        and all(op.ROUNDS <= n and 0 < c < math.log(op.GUARD_MAX) for n, c in plan.values())
+        and sorted(c for t, x, cs in o2.batches() for c in cs)
+        == sorted(c for (c, t), (n, _) in plan.items() if n > op.ROUNDS)
     )
     print(
-        f"{'ok  ' if ok else 'FAIL'} the family: 39 guard cells and the sustained cell at α 0.048/40; the tiers cover the 13 guards"
+        f"{'ok  ' if ok else 'FAIL'} the schedule: 39 guard cells once, rounds at least 12, every c below ln 1.02, every extension in one batch"
     )
     res.append(ok)
     res.extend(guard_checks())

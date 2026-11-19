@@ -1,0 +1,241 @@
+{
+ "rule": "G2: a guard cell fails if the mean of its rounds' paired log ratios (the port over v0.5.6) exceeds c",
+ "alpha_per_cell": 0.001282051282051282,
+ "source": "docs/journal/2026-11-19-open-port-2-registration/plan.py on open-port/run-20261119T125538Z (planning noise only)",
+ "cells": [
+  {
+   "corpus": "ho-code-l1",
+   "threads": 8,
+   "rounds": 288,
+   "c": 0.0155
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": 10,
+   "rounds": 336,
+   "c": 0.0148
+  },
+  {
+   "corpus": "ho-code-l1",
+   "threads": 20,
+   "rounds": 336,
+   "c": 0.0147
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": 8,
+   "rounds": 168,
+   "c": 0.0164
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": 10,
+   "rounds": 600,
+   "c": 0.0145
+  },
+  {
+   "corpus": "ho-code-l9",
+   "threads": 20,
+   "rounds": 192,
+   "c": 0.0156
+  },
+  {
+   "corpus": "ho-prose-l1",
+   "threads": 8,
+   "rounds": 120,
+   "c": 0.0162
+  },
+  {
+   "corpus": "ho-prose-l1",
+   "threads": 10,
+   "rounds": 240,
+   "c": 0.0144
+  },
+  {
+   "corpus": "ho-prose-l1",
+   "threads": 20,
+   "rounds": 120,
+   "c": 0.0159
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0149
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": 10,
+   "rounds": 72,
+   "c": 0.0173
+  },
+  {
+   "corpus": "ho-prose-l9",
+   "threads": 20,
+   "rounds": 72,
+   "c": 0.0171
+  },
+  {
+   "corpus": "ho-structured-l1",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0149
+  },
+  {
+   "corpus": "ho-structured-l1",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0155
+  },
+  {
+   "corpus": "ho-structured-l1",
+   "threads": 20,
+   "rounds": 96,
+   "c": 0.015
+  },
+  {
+   "corpus": "ho-structured-l9",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0149
+  },
+  {
+   "corpus": "ho-structured-l9",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0147
+  },
+  {
+   "corpus": "ho-structured-l9",
+   "threads": 20,
+   "rounds": 72,
+   "c": 0.0171
+  },
+  {
+   "corpus": "ho-wikidata-l1",
+   "threads": 8,
+   "rounds": 72,
+   "c": 0.0174
+  },
+  {
+   "corpus": "ho-wikidata-l1",
+   "threads": 10,
+   "rounds": 72,
+   "c": 0.0175
+  },
+  {
+   "corpus": "ho-wikidata-l1",
+   "threads": 20,
+   "rounds": 96,
+   "c": 0.0146
+  },
+  {
+   "corpus": "onebyte",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0148
+  },
+  {
+   "corpus": "onebyte",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0146
+  },
+  {
+   "corpus": "onebyte",
+   "threads": 20,
+   "rounds": 72,
+   "c": 0.0171
+  },
+  {
+   "corpus": "pattern",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0146
+  },
+  {
+   "corpus": "pattern",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0147
+  },
+  {
+   "corpus": "pattern",
+   "threads": 20,
+   "rounds": 96,
+   "c": 0.0148
+  },
+  {
+   "corpus": "random",
+   "threads": 8,
+   "rounds": 72,
+   "c": 0.0173
+  },
+  {
+   "corpus": "random",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0149
+  },
+  {
+   "corpus": "random",
+   "threads": 20,
+   "rounds": 72,
+   "c": 0.0173
+  },
+  {
+   "corpus": "records",
+   "threads": 8,
+   "rounds": 72,
+   "c": 0.0173
+  },
+  {
+   "corpus": "records",
+   "threads": 10,
+   "rounds": 72,
+   "c": 0.017
+  },
+  {
+   "corpus": "records",
+   "threads": 20,
+   "rounds": 72,
+   "c": 0.0171
+  },
+  {
+   "corpus": "runs",
+   "threads": 8,
+   "rounds": 240,
+   "c": 0.0143
+  },
+  {
+   "corpus": "runs",
+   "threads": 10,
+   "rounds": 168,
+   "c": 0.0161
+  },
+  {
+   "corpus": "runs",
+   "threads": 20,
+   "rounds": 288,
+   "c": 0.0151
+  },
+  {
+   "corpus": "text",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0147
+  },
+  {
+   "corpus": "text",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0149
+  },
+  {
+   "corpus": "text",
+   "threads": 20,
+   "rounds": 72,
+   "c": 0.0173
+  }
+ ]
+}
