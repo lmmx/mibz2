@@ -1,0 +1,145 @@
+{
+  "worker_dose_ci_run": {
+    "id": 44448785057,
+    "artifact": "research/astra-e/ci/evidence/worker-dose-44448785057.zip",
+    "artifact_id": 14495652483,
+    "artifact_sha256": "7ad35651ea50eb80d9cad8c6d542a70f4b0a4493fa16f7fca26c7965126a80e8",
+    "head": "ecd26dd331c74bdfba1384f8fad6088d1b6dfd13",
+    "base": "be74d5763d212864607d46521d74ebc0827f9f36",
+    "selected": "research/astra-e/worker-dose/candidate.rs",
+    "candidate_source_sha256": "076c5c673a4f9b379d4ab2f666c81fd39413e95b812d630cece2cec164bc2594",
+    "scorer_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+    "printed_scorer_version": "scorer v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+    "machine": "AMD EPYC 7763 64-Core Processor",
+    "candidate_over_reference": {
+      "master LazyCells": {
+        "1": {
+          "n": 20,
+          "geomean": 0.7059911890095267,
+          "lo": 0.695772609462707,
+          "hi": 0.7163598454155595,
+          "verdict": "FASTER",
+          "speedup": 1.416448272396932,
+          "peak_rss_ratio": 0.9903686482896048,
+          "wall_s": 1.6120575
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.8113547899169364,
+          "lo": 0.8026968983324382,
+          "hi": 0.8201060655506875,
+          "verdict": "FASTER",
+          "speedup": 1.232506435442843,
+          "peak_rss_ratio": 0.8990081840031641,
+          "wall_s": 1.006778
+        },
+        "4": {
+          "n": 20,
+          "geomean": 0.82918429258525,
+          "lo": 0.8073858354321057,
+          "hi": 0.8515712821517764,
+          "verdict": "FASTER",
+          "speedup": 1.206004514246377,
+          "peak_rss_ratio": 0.7750322616843405,
+          "wall_s": 0.853279
+        }
+      },
+      "master eager Cells": {
+        "1": {
+          "n": 20,
+          "geomean": 0.9763924372015753,
+          "lo": 0.9548396389419779,
+          "hi": 0.9984317287882969,
+          "verdict": "FASTER",
+          "speedup": 1.0241783548283987,
+          "peak_rss_ratio": 1.000465974539151,
+          "wall_s": 1.6120575
+        },
+        "2": {
+          "n": 20,
+          "geomean": 1.0890950687008405,
+          "lo": 1.0769989497345431,
+          "hi": 1.1013270430401472,
+          "verdict": "SLOWER",
+          "speedup": 0.9181934880973062,
+          "peak_rss_ratio": 0.9068158104707543,
+          "wall_s": 1.006778
+        },
+        "4": {
+          "n": 20,
+          "geomean": 1.018763912559069,
+          "lo": 0.9946892709289535,
+          "hi": 1.0434212370295024,
+          "verdict": "INCONCLUSIVE",
+          "speedup": 0.9815816870545254,
+          "peak_rss_ratio": 0.8066878460136887,
+          "wall_s": 0.853279
+        }
+      },
+      "master opend": {
+        "1": {
+          "n": 20,
+          "geomean": 0.7759125217776184,
+          "lo": 0.7697719854907348,
+          "hi": 0.7821020416422383,
+          "verdict": "FASTER",
+          "speedup": 1.288805080383284,
+          "peak_rss_ratio": 1.022010662604722,
+          "wall_s": 1.6120575
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.8790589487717201,
+          "lo": 0.8697966830662422,
+          "hi": 0.8884198462237534,
+          "verdict": "FASTER",
+          "speedup": 1.1375801377112045,
+          "peak_rss_ratio": 0.9507561132561133,
+          "wall_s": 1.006778
+        },
+        "4": {
+          "n": 20,
+          "geomean": 0.9642479674994383,
+          "lo": 0.9603105048038221,
+          "hi": 0.9682015745696103,
+          "verdict": "FASTER",
+          "speedup": 1.0370776332495433,
+          "peak_rss_ratio": 0.8674797156421915,
+          "wall_s": 0.853279
+        }
+      },
+      "frozen predecessor": {
+        "1": {
+          "n": 20,
+          "geomean": 0.780401495279242,
+          "lo": 0.7722801331205018,
+          "hi": 0.7886082623584051,
+          "verdict": "FASTER",
+          "speedup": 1.281391701642219,
+          "peak_rss_ratio": 1.08614095793116,
+          "wall_s": 1.6120575
+        },
+        "2": {
+          "n": 20,
+          "geomean": 0.886067560623951,
+          "lo": 0.8713958283810338,
+          "hi": 0.900986321507581,
+          "verdict": "FASTER",
+          "speedup": 1.128582113192159,
+          "peak_rss_ratio": 1.0783701919567914,
+          "wall_s": 1.006778
+        },
+        "4": {
+          "n": 20,
+          "geomean": 0.987601169187869,
+          "lo": 0.9835822780600915,
+          "hi": 0.9916364813983126,
+          "verdict": "FASTER",
+          "speedup": 1.012554491832292,
+          "peak_rss_ratio": 1.0577685887127652,
+          "wall_s": 0.853279
+        }
+      }
+    }
+  }
+}
