@@ -1,0 +1,15 @@
+# Neon round 6's in-place copy replay, written as a manifest (ACQUISITION-FIRST.md §5).
+# Expected: the availability gate FAILS on copy_run_labels (status "open", n-scale dependent).
+# The checker reaches mechanically the verdict that rounds 6 and 7 reached by hand.
+
+name = "in-place Φ copy replay with a potential schedule (Neon round 6)"
+target = "text"
+uses = [
+  "boundary_text_positions",
+  "copy_replay",
+  "copy_run_labels",
+  "counts_from_records",
+  "lf_shifts",
+  "maximal_runs",
+  "potential_schedule",
+]
