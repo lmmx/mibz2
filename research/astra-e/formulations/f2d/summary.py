@@ -34,6 +34,8 @@ if "eight" in arms:
     pairs.extend([("eight", "f2c"), ("eight", "lazy")])
 if "direct-learn" in arms:
     pairs.extend([("direct-learn", "direct"), ("direct-learn", "learn"), ("direct-learn", "lazy")])
+if "certfront" in arms:
+    pairs.extend([("certfront","batched"), ("certfront","learn"), ("certfront","lazy"), ("batched","f2c")])
 for selected in (["1"], blocks):
     print("streams " + ",".join(selected))
     observations = [r for r in rows if r["stream"] in selected]
