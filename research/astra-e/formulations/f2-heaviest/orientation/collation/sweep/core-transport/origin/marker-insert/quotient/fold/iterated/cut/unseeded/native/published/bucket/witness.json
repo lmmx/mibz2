@@ -1,0 +1,93 @@
+{
+  "equal_types_without_a_fixed_row": {
+    "last": [
+      1,
+      0,
+      0
+    ],
+    "mark": 1,
+    "target_mask": 1,
+    "moved": false,
+    "retained": 1,
+    "source_slice_start": 1,
+    "new_ordinal": 0,
+    "labels_through_mark": [
+      [
+        1,
+        0
+      ]
+    ],
+    "merges_with_previous": false
+  },
+  "cross_slice_coalescence": {
+    "last": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "mark": 0,
+    "target_mask": 1,
+    "moved": true,
+    "retained": 3,
+    "source_slice_start": 3,
+    "new_ordinal": 2,
+    "labels_through_mark": [
+      [
+        0,
+        -1
+      ]
+    ],
+    "merges_with_previous": true
+  },
+  "interior_map_boundary": {
+    "last": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "mark": 2,
+    "target_mask": 1,
+    "moved": false,
+    "retained": 2,
+    "source_slice_start": 1,
+    "new_ordinal": 1,
+    "labels_through_mark": [
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        -1
+      ]
+    ],
+    "merges_with_previous": false
+  },
+  "boundary_and_coalescence": {
+    "last": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "mark": 2,
+    "target_mask": 2,
+    "moved": false,
+    "retained": 2,
+    "source_slice_start": 1,
+    "new_ordinal": 2,
+    "labels_through_mark": [
+      [
+        1,
+        -1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "merges_with_previous": true
+  }
+}

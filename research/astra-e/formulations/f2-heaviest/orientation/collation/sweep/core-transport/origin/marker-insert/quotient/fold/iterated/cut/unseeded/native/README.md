@@ -33,3 +33,5 @@ taskset -c 3 nice -n 12 python3 -B "$d/measure.py" "$tmp/build/run" "$tmp/inputs
 python3 -B "$d/report.py" "$tmp/receipts"
 python3 -B "$d/report.py" "$d" | diff - "$d/summary.json"
 ```
+
+The follow-up supplied the next source bases during publication, then computed a removed mark from the base of its selected alias and a rank within one old bucket. On ten complete original byte columns this reduced 1,017,929 global prefix visits to 1,705 local slice visits. A further variant observed only a single old output slice per cut and ran more slowly in the paired stage measurement. [Source-base publication](published/README.md) · [Bucket identity, receipts and exact continuation](published/bucket/README.md) · [Independent all-color weighted check](all_colors.json)
