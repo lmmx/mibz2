@@ -1,0 +1,20 @@
+21218294764c887f16f6d72beb1c2ebbc3368eed
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+8f6d954c921a9943f2d9e0c362451eecbc1808c3de9e2a8028af9cd2df687d5b  /workspace/work/queue-spans/instruction-pages/baseline.rs
+b60de692c826a2ff926700237fec82f15d6d17bc7f75c22dbc4bd4ee38c423c6  /workspace/work/queue-spans/instruction-pages/counted.rs
+a1b0549781e9ecbfd2a381968c2fa1f299381a54cc85313f98a67a59bcacd56c  /workspace/work/queue-spans/instruction-pages/dispatch.rs
+e62bb7e3fa1b14919ccf3500aa92d5486aefcc941dd60c49687f22dbc7e506d3  /workspace/work/queue-spans/instruction-pages/joint.rs
+544b00e3311454b417d30cbccee8d890754f060ce88fdbc12eb974203222f617  /workspace/work/queue-spans/instruction-pages/layout.rs
+d65bd21505abc59d139a802eb459f3ff31bc50ad8005fe5931665d0d3eb3c95d  /workspace/work/queue-spans/instruction-pages/price.rs
+535d3897ea976861d31bab5552dd464aae2cbd39669b820b09a29318f5c1d16a  /workspace/work/queue-spans/instruction-pages/sequential.rs
+1d9330d66cbd0280b70c97fbdfa17c7db0e666b7ed4045bf6b3a0d1c43e9a252  /workspace/work/queue-spans/instruction-pages/price
+f38c0ae713c308e909b41e3c86379fd31a3e8b328364fd75fc0261f678a559bb  /workspace/work/page-counted-lib/release/deps/libmibz2.rlib
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+pinned CPUs 3 0
+400000 100000
