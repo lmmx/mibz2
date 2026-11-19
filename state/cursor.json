@@ -2717,11 +2717,13 @@
     },
     {
       "trigger_comment_id": 7011926888,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-port-2-7011926888/report.md",
-      "source_commit": "9e0220a29e5886aaf4fc9b6dc9628a25b14b044a"
+      "source_commit": "9e0220a29e5886aaf4fc9b6dc9628a25b14b044a",
+      "report_commit": "3c3f975a595575e5c2c48d525ebe8eb5a2fb8a6c",
+      "disposition": "TARGETED CORRECTION / HOLD: prospective noise planning admissible, but G2 does not preserve geometric-mean sensitivity or establish its null bound. Replan exact power, resolve changed S rule, and enforce cross-file identities."
     }
   ],
   "active_delegations": [],
