@@ -28,6 +28,8 @@ property_landed / twice_heaviest both selectors free 0.9918 [0.9536, 1.0315]
 comma_quote / adaptive_frequent both selectors free 1.1232 [1.0921, 1.1553]
 property_landed / compact_quote both selectors free 1.2063 [1.1692, 1.2446]
 comma_quote / compact_quote both selectors free 1.1328 [1.1004, 1.1662]
+comma_quote inferred full stage with second phases free / complete quote 0.8078 [0.7800, 0.8367]
+property_landed inferred full stage with second phases free / complete quote 1.1286 [1.0927, 1.1658]
 ten compact_quote blocks 10 total mass 1357067 {'words': 35117, 'dict_bytes': 1077638, 'token_runs': 84317, 'edge_bytes': 908546, 'second_dict_bytes': 1926457} second 10
 ten adaptive_frequent blocks 10 total mass 245445 {'words': 38648, 'dict_bytes': 1926457, 'token_runs': 66373, 'edge_bytes': 1296362, 'second_dict_bytes': 5525525} second 10
 ten literal_frequent blocks 10 total mass 245445 {'words': 38648, 'dict_bytes': 1926457, 'token_runs': 66373, 'edge_bytes': 1296362, 'second_dict_bytes': 5525525} second 10
@@ -36,3 +38,17 @@ ten property_landed blocks 10 total mass 31367 {'words': 14849, 'dict_bytes': 55
 ten twice_heaviest blocks 10 total mass 31358 {'words': 14843, 'dict_bytes': 5525525, 'token_runs': 20162, 'edge_bytes': 4030238, 'second_dict_bytes': 8999915} second 10
 ten literal_frequent adaptive_frequent equal masses 10 equal intervals 10
 ten property_landed twice_heaviest equal masses 7 equal intervals 0
+admissions compact_quote blocks 228 total mass 30868395 {'words': 728887, 'dict_bytes': 23393313, 'token_runs': 1786472, 'edge_bytes': 19750839, 'second_dict_bytes': 41433719} second 228
+admissions adaptive_frequent blocks 228 total mass 5566401 {'words': 806027, 'dict_bytes': 41433719, 'token_runs': 1433311, 'edge_bytes': 28053831, 'second_dict_bytes': 125949883} second 228
+admissions literal_frequent blocks 228 total mass 5566401 {'words': 806027, 'dict_bytes': 41433719, 'token_runs': 1433311, 'edge_bytes': 28053831, 'second_dict_bytes': 125949883} second 228
+admissions comma_quote blocks 228 total mass 6818277 {'words': 787795, 'dict_bytes': 35694544, 'token_runs': 1435945, 'edge_bytes': 30154411, 'second_dict_bytes': 179361321} second 228
+admissions property_landed blocks 228 total mass 705427 {'words': 326704, 'dict_bytes': 125948034, 'token_runs': 447462, 'edge_bytes': 86388723, 'second_dict_bytes': 205174331} second 228
+admissions twice_heaviest blocks 228 total mass 705337 {'words': 326626, 'dict_bytes': 125949883, 'token_runs': 447380, 'edge_bytes': 89002161, 'second_dict_bytes': 205174331} second 228
+admissions literal_frequent adaptive_frequent equal masses 228 equal intervals 228
+admissions property_landed twice_heaviest equal masses 191 equal intervals 0
+compact_quote VmHWM KiB 8232 retained B 8473542
+adaptive_frequent VmHWM KiB 8500 retained B 8529750
+literal_frequent VmHWM KiB 8496 retained B 8528726
+comma_quote VmHWM KiB 8120 retained B 8396806
+property_landed VmHWM KiB 7916 retained B 8047470
+twice_heaviest VmHWM KiB 7784 retained B 7540590

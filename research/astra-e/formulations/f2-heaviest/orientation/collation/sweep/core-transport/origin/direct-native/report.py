@@ -39,6 +39,11 @@ for a,b in [("property_landed","twice_heaviest"),("comma_quote","adaptive_freque
     ids=range(36)
     print(a,"/",b,"both selectors free",interval((total(a,i,"total_ns")-total(a,i,"select_ns"))/
                                                 (total(b,i,"total_ns")-total(b,i,"select_ns")) for i in ids))
+for a in ("comma_quote","property_landed"):
+    keys=("second_index_ns","second_discover_ns","second_merge_ns","second_emit_ns")
+    print(a,"inferred full stage with second phases free / complete quote",
+          interval((total(a,i,"total_ns")-sum(total(a,i,k) for k in keys))/total("compact_quote",i,"total_ns")
+                   for i in range(36)))
 for name in ("ten","admissions"):
     path=out/f"{name}.csv"
     if not path.is_file():continue
