@@ -1,6 +1,6 @@
 {
-  "assessment": "Independent CI found a crossover on its four logical CPUs. Conjugation ran 2.27% faster than LazyCells at four workers, with 15.13% less median peak RSS. One and two workers took 3.57% and 2.72% longer. Eager Cells was faster at every measured count. The independent run did not compare opend.",
-  "verification": "Independent CI at `e12e5f6` passed the full gate for all three arms and completed 12 paired rounds on Wikidata \u00d74. Candidate/LazyCells wall ratios at W1/W2/W4 were 1.0357/1.0272/0.9773, with median peak RSS ratios 0.9564/0.9282/0.8487. Candidate/eager wall ratios were 1.3810/1.3239/1.1351. Target i9 verification is pending. [CI run](https://github.com/lmmx/mibz2/actions/runs/44423427194) \u00b7 [Raw checks and measurements](ci/evidence/conjugate-44423427194.zip)",
+  "assessment": "Independent CI measured identical base and candidate executables on two host types. At four workers conjugation reduced wall time against LazyCells by 2.27% on a Xeon 6975P-C and 10.69% on an EPYC 7763. The W1 and W2 comparisons against LazyCells changed sign between hosts. Both hosts favored eager Cells at all three worker counts. Median peak RSS at W4 was approximately 15% below LazyCells in both runs. These three-arm measurements leave the direct comparison with opend open.",
+  "verification": "Each CI host passed the 338-case gate on all three arms and completed 12 paired rounds on Wikidata ×4. Candidate/LazyCells wall ratios at W1/W2/W4 were 1.0357/1.0272/0.9773 on Intel and 0.9511/0.9508/0.8931 on AMD. Candidate/eager ratios were 1.3810/1.3239/1.1351 and 1.3368/1.2891/1.1068. Target i9 verification is pending. [Intel CI](https://github.com/lmmx/mibz2/actions/runs/44423427194) · [Intel raw artifact](ci/evidence/conjugate-44423427194.zip) · [AMD CI](https://github.com/lmmx/mibz2/actions/runs/44424367557) · [AMD raw artifact](ci/evidence/conjugate-44424367557.zip)",
   "ci_run": {
     "id": 44423427194,
     "artifact_id": 14482923497,
@@ -69,5 +69,77 @@
         }
       }
     }
+  },
+  "second_ci_run": {
+    "id": 44424367557,
+    "artifact_id": 14483149348,
+    "artifact_sha256": "ae51371d5e89cd6d80d3d97ddb2ced506bfeab83e8ff0367f01f263dc5e03a2f",
+    "head": "68e6a57a7a224293d34616fa6839ce192608307b",
+    "base": "9c31461df7bef24cecf79348545b27ee26846835",
+    "scorer_path_revision": "9c31461df7bef24cecf79348545b27ee26846835",
+    "printed_scorer_version": null,
+    "machine": "AMD EPYC 7763, 2 cores, 4 logical CPUs",
+    "rounds": 12,
+    "repeat": 4,
+    "settle_s": 2,
+    "gates": {
+      "candidate": {
+        "cases": 338,
+        "verdict": "PASS"
+      },
+      "lazy": {
+        "cases": 338,
+        "verdict": "PASS"
+      },
+      "cells": {
+        "cases": 338,
+        "verdict": "PASS"
+      }
+    },
+    "candidate_over_reference": {
+      "master LazyCells": {
+        "1": {
+          "geomean": 0.9511250748270845,
+          "lo": 0.9346875201064683,
+          "hi": 0.9678517028469383,
+          "peak_rss_ratio": 0.956193604340044
+        },
+        "2": {
+          "geomean": 0.9507741100715443,
+          "lo": 0.9271875704732383,
+          "hi": 0.9749606629443364,
+          "peak_rss_ratio": 0.9386551256776737
+        },
+        "4": {
+          "geomean": 0.8930750832235638,
+          "lo": 0.8907058084827557,
+          "hi": 0.8954506602279745,
+          "peak_rss_ratio": 0.8494113241626926
+        }
+      },
+      "master eager Cells": {
+        "1": {
+          "geomean": 1.3367890494500376,
+          "lo": 1.3083899470714795,
+          "hi": 1.3658045651675343,
+          "peak_rss_ratio": 0.965205729506212
+        },
+        "2": {
+          "geomean": 1.2890654577546772,
+          "lo": 1.2697759332286027,
+          "hi": 1.308648014891234,
+          "peak_rss_ratio": 0.9188704278865
+        },
+        "4": {
+          "geomean": 1.1068318909536894,
+          "lo": 1.1021948408926296,
+          "hi": 1.1114884495739175,
+          "peak_rss_ratio": 0.9021617069062324
+        }
+      }
+    },
+    "candidate_source_sha256": "bed3163e978ec41d387da33f0a18b0af5161f5bc4029b0331879ff6a3687ff0f",
+    "base_binary_sha256": "f4113f6f0eaa331ad638138830fd03c0d31b08267f876dcb25894d0f1596ab4a",
+    "candidate_binary_sha256": "b111fce271fbc2a3043a31e81cec6b605e668f1e13adc37ecb97de50aa747073"
   }
 }
