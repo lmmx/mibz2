@@ -35,15 +35,25 @@ class Rope:
         assert 0<=k<=size(t)
         if k==0:return None,t
         if k==size(t):return t,None
-        push(t);s=size(t.left)
-        if k<s:
-            a,t.left=self.split(t.left,k);return a,update(t)
-        if k>s+t.width:
-            t.right,b=self.split(t.right,k-s-t.width);return update(t),b
-        if k==s:
-            a=t.left;t.left=None;return a,update(t)
-        if k==s+t.width:
-            b=t.right;t.right=None;return update(t),b
-        left=k-s;right=t.width-left
-        a=self.node(t.kind,t.start,left,t.age);b=self.node(t.kind,t.start+left,right,t.age)
-        return join(t.left,a),join(b,t.right)
+        node=t;pos=0
+        while node:
+            push(node);begin=pos+size(node.left);end=begin+node.width
+            if k==begin or k==end:return boundary(t,k)
+            if k<begin:node=node.left
+            elif k>end:node=node.right;pos=end
+            else:
+                before,rest=boundary(t,begin);old,after=boundary(rest,node.width)
+                assert old is node and not old.left and not old.right
+                left=self.node(old.kind,old.start,k-begin,old.age)
+                right=self.node(old.kind,old.start+k-begin,end-k,old.age)
+                return join(before,left),join(right,after)
+        raise AssertionError("missing boundary")
+
+def boundary(t,k):
+    if k==0:return None,t
+    if k==size(t):return t,None
+    push(t);s=size(t.left)
+    if k<=s:
+        a,t.left=boundary(t.left,k);return a,update(t)
+    assert k>=s+t.width
+    t.right,b=boundary(t.right,k-s-t.width);return update(t),b
