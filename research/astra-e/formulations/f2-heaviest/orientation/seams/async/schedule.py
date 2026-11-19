@@ -10,7 +10,7 @@ sys.path.insert(0, str(HERE.parent))
 from cut import Column, Direct, heavy_set, price, optimize
 
 
-def grow(counts, paired, bucket_queue=None):
+def grow(counts, paired, bucket_queue=None, seams_out=None):
     words = list(counts)
     masses = list(counts.values())
     ids = list(range(len(words)))
@@ -87,6 +87,8 @@ def grow(counts, paired, bucket_queue=None):
             else:
                 advance(gid)
     assert all(done) and states == price(words, depths[0])
+    if seams_out is not None:
+        seams_out.extend(depths[0])
     return states, pairs, heap_pops, sum(0<d<len(w) for d,w in zip(depths[0],words))
 
 
