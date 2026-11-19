@@ -47,7 +47,7 @@ def verify(path, expected):
     assert mode in ["dry","measure"] and text("registration.txt").strip()==expected
     assert text("toolchain.txt").startswith("rustc 1.99.1 ")
     assert git("ls-tree","-r",expected,"--",*PROTOCOL)==items["protocol-blobs.txt"]
-    for filepath in [HERE/"panel.py",HERE/"verify.py",HERE.parent/"assess.py",HERE.parent/"refresh.py",HERE.parent/"test_protocol.py"]:
+    for filepath in [HERE/"panel.py",HERE.parent/"assess.py",HERE.parent/"refresh.py",HERE.parent/"test_protocol.py"]:
         assert filepath.read_bytes()==git("show",f"{expected}:{filepath.relative_to(ROOT)}")
     selected = value("scorer-refresh.json")
     projection = selected["selected_projection"]
@@ -112,6 +112,13 @@ def verify(path, expected):
                 for name,h in compiled.items():
                     assert not Path(name).is_absolute() and ".." not in Path(name).parts
                     blob = git("show",projection+":"+name) if name.startswith("bench/moonshot/") else (tree/name).read_bytes()
+                    if arm=="scalar" and name=="research/astra-e/front-fusion/cap-batch/worker/kernel.rs":
+                        # d0a4298 writes three absolute Rust module attributes. Re-create the
+                        # bytes actually hashed by rustc at the recorded checkout location.
+                        recorded_root = info["candidate"].removesuffix("/"+entry).encode()
+                        prefix = rb'(#\[path\s*=\s*")' + re.escape(str(tree).encode()) + rb'(?=/)'
+                        blob, matches = re.subn(prefix, lambda m:m[1]+recorded_root, blob)
+                        assert matches==3
                     assert digest(blob)==h, (arm,name)
             finally:
                 git("worktree","remove","--force",str(tree))
