@@ -11,12 +11,12 @@ def initial(runs):
         src+=n;cursor[w]+=n
     return bands,[i for bucket in buckets for i in bucket]
 
-def step(bands,image,mark,colors,rules):
+def incident(bands,image,mark,colors,rules):
     zero=[e for e in image if not colors[bands[e][3]]]
     one=[e for e,b in enumerate(bands) if colors[b[3]]]
     count=len(bands)
     assert len(zero)+len(one)==count
-    first=[-1]*count;end=[0]*count;hits=[];words=[];width=[]
+    first=[-1]*count;end=[0]*count;hits=[];owners=[];words=[];width=[]
     i=j=comparisons=removed=below=0
     while i<len(zero) and j<len(one):
         a,b=zero[i],one[j]
@@ -27,7 +27,7 @@ def step(bands,image,mark,colors,rules):
             live=[(lo,mark),(mark+1,hi)] if lo<=mark<hi else [(lo,hi)]
             for l,h in live:
                 if h<=l:continue
-                t=len(hits);hits.append((l,h))
+                t=len(hits);hits.append((l,h));owners.append(a)
                 words.append(rules.setdefault((cb,ca),256+len(rules)));width.append(h-l)
                 removed+=h-l;below+=(h-l) if h<=mark else 0
                 for e in (a,b):
@@ -37,7 +37,11 @@ def step(bands,image,mark,colors,rules):
         if y+wa<=s+wb:i+=1
         if s+wb<=y+wa:j+=1
     assert not zero or not one or comparisons<=count-1
-    J=len(hits);items=[];base=[0]
+    return first,end,hits,owners,words,width,comparisons,removed,below
+
+def step(bands,image,mark,colors,rules):
+    first,end,hits,_,words,width,comparisons,removed,below=incident(bands,image,mark,colors,rules)
+    count=len(bands);J=len(hits);items=[];base=[0]
     def gap(lo,hi,w):
         if lo<hi:
             items.append(len(width));width.append(hi-lo);words.append(w)
