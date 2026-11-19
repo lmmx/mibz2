@@ -45,6 +45,10 @@ The full-worker guarded POPCNT implementation beat its counted delimiter predece
 
 **Delimiter engineering reference.** Eight early payload loads in the compact decoder resolved a 7.8–8.7% full-worker time reduction against the guarded-popcount predecessor on AMD CI. Source `6758831` is the reference for further mathematical changes to the delimiter decoder. Of 41,433,719 second-dictionary bytes on 228 blocks, only 6,753 could be supplied by the tested terminal-ancestor suffix copy. [CI](../ci/evidence/compact-preload-44440381983.md) · [Suffix copying](f2-pages/payload/slots/suffix/)
 
+**Incomplete first-return permutation.** Stopping as soon as a backward suffix has one row avoids eagerly spelling the rest of that return. Hot links determine the set E of missing source ranks without knowing the missing permutation. Inducing on the union of E and the usual hot second delimiter D guarantees that an unresolved link can occur only as the final step of a macro return. On nine admitted blocks it postponed 598,425 of 751,521 first queries and cut second queries from 54,511 to 22,773, with 22,168 more residual rows. The original LF work can return on the marked tour. [Proof, paid counters, exhaustive marks and source code](f2-heaviest/cold-links/)
+
+**Orientation and shared spellings.** A joint component trie saved only 1.70% of starting searches at k=8, against an upper limit of 2.31% from suffix sharing across the ten blocks. Choosing the direction of an entire spelling changes that limit. A minimum cut solves the optimistic distinct-prefix/suffix problem exactly and a fixed five-symbol cyclic family realizes an unbounded ratio over either one-direction trie. On the ten actual quote dictionaries, the optimum charges 649,685 nodes against 908,546 backwards. The experimental question is what forward interval fragmentation costs on the original run index. [Joint component falsifier](f2-heaviest/union/joint/) · [Directional theorem, exact cuts and realizable family](f2-heaviest/orientation/)
+
 ## Other formulation rounds
 
 | Round and reconstructed object | Phase displaced and decisive invariant | Cheapest falsifier and observed result |
