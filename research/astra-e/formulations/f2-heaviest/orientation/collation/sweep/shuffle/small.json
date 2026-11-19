@@ -1,0 +1,83 @@
+{
+  "counts": {
+    "injective_occurrence_assignments": 17064,
+    "marks": 111502,
+    "nontrivial_shuffles": 1190,
+    "original_restrictions_eligible": 9276,
+    "collisions": 4060
+  },
+  "first_witnesses": {
+    "context_dependent": {
+      "L": "00010000",
+      "U": [
+        0,
+        3
+      ],
+      "S": [
+        0,
+        0,
+        1
+      ],
+      "T": [
+        0,
+        0,
+        1
+      ],
+      "old_words": [
+        "00",
+        "0001"
+      ],
+      "old_counts": [
+        2,
+        1
+      ],
+      "physical_in": [
+        "00",
+        "01",
+        "0000"
+      ],
+      "tau": [
+        0,
+        2,
+        1
+      ]
+    },
+    "colliding_names": {
+      "L": "010000010000",
+      "U": [
+        1,
+        4
+      ],
+      "S": [
+        0,
+        1,
+        1
+      ],
+      "T": [
+        0,
+        1,
+        1
+      ],
+      "old_words": [
+        "00",
+        "000100",
+        "0001"
+      ],
+      "old_counts": [
+        1,
+        1,
+        1
+      ],
+      "physical_in": [
+        "0100",
+        "0000",
+        "0100"
+      ],
+      "tau": [
+        1,
+        0,
+        2
+      ]
+    }
+  }
+}
