@@ -2212,3 +2212,121 @@ bench-opend-sweep COPIES="4" ROUNDS="12" SETTLE="2" REPS="5" DRY="":
       || echo "bench-opend-sweep: the verdict is VOID (verdict.txt says why); the bundle is kept"
     date -u +%FT%TZ > "$O/finished.txt"
     bash bench/bundle.sh "$O"
+
+# The open port's confirmatory run (#145 CHECKPOINT 7004759994; the C6 adoption registration,
+# docs/journal/2026-11-19-open-port-registration.md, frozen before any data): the port's release
+# build (PR head PORT, its own worktree) against v0.5.6's, both through `BzReader::parallel`
+# (`ab`'s `mibz2` arm and `mibz2@<v0.5.6's ab>`), unpinned on the i9 at 8, 10 and 20 threads, the 2 s
+# settle, on Wikidata x4 (primary), the development guards and the held-out corpora
+# (bench/heldout.py, bench/wikidata-heldout.json); then 10 threads back to back on Wikidata x16;
+# then, reported and not judged, the gate's cost and the eager/open crossover (kernel-only arms)
+# and the per-block coverage census. `bench/open_port.py judge` gives the verdict. DRY (any
+# value): the untimed dry run (PROTOCOL §9), marked not evidence.
+bench-open-port PORT="227570e1b" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="8" CROUNDS="8" DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/open-port
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-open-port (docs/journal/2026-11-19-open-port-registration.md): the port at {{PORT}} against v0.5.6, at $(git rev-parse HEAD), unpinned at 8, 10 and 20 threads, {{ROUNDS}} rounds, settle {{SETTLE}} s; sustained {{SROUNDS}} rounds; context {{CROUNDS}} rounds"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-open-port: the checkout has local changes"; exit 1; }
+    dry="{{DRY}}"
+    [ -z "$dry" ] || echo "bench-open-port: DRY RUN: untimed; not evidence" | tee "$O/DRY-RUN.txt"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-open-port: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    # the two builds, each in its own worktree at its own commit: the port's head, and the tag
+    git fetch -q origin perf/open-kernel tag v0.5.6 2>/dev/null || true
+    port=$(git rev-parse --verify "{{PORT}}^{commit}") \
+      || { echo "bench-open-port: the port's commit {{PORT}} is not here (git fetch origin perf/open-kernel)"; exit 1; }
+    v056=$(git rev-parse --verify "v0.5.6^{commit}")
+    [ "$v056" = 530ed404a014a414ef0b62adfd947fa14d4533e6 ] || { echo "bench-open-port: v0.5.6 is $v056"; exit 1; }
+    for spec in "port:$port" "v0.5.6:$v056"; do
+      name=${spec%%:*} sha=${spec#*:}
+      [ -d "$W/build-$name" ] || git worktree add -q --detach "$W/build-$name" "$sha"
+      (cd "$W/build-$name" && git checkout -q --detach "$sha" && [ -z "$(git status --porcelain)" ] \
+        && cargo build -q --release --example ab --example windows)
+      echo "$name $(git -C "$W/build-$name" rev-parse HEAD)" | tee -a "$O/commits.txt"
+    done
+    AB=$W/build-port/target/release/examples/ab
+    OLDAB=$W/build-v0.5.6/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$AB" "$OLDAB" | tee "$O/binaries.sha256"
+    # the corpora: Wikidata x4 (primary) and x16 (sustained); the development guards, afresh; the
+    # held-out corpora (the small ones as 4 copies, as Wikidata x4 is)
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-port/target/release/examples/windows" "$W/wikidata.bz2"
+    hdir=$(python3 -c 'import json; print(json.load(open("bench/wikidata-heldout.json"))["windows_dir"])')
+    python3 bench/wikidata.py fetch bench/wikidata-heldout.json "$hdir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata-heldout.json "$hdir" "$W/build-port/target/release/examples/windows" "$W/wikidata-heldout.bz2"
+    C=$W/corpora-${O##*/}
+    mkdir "$C"
+    : > "$C/wikidata-x{{COPIES}}.bz2"
+    for i in $(seq {{COPIES}}); do cat "$W/wikidata.bz2" >> "$C/wikidata-x{{COPIES}}.bz2"; done
+    : > "$C/wikidata-x16.bz2"
+    for i in $(seq 16); do cat "$W/wikidata.bz2" >> "$C/wikidata-x16.bz2"; done
+    "$AB" gen "$C/gen" 16 >/dev/null
+    python3 bench/heldout.py build "$C/ho" "$W/wikidata-heldout.bz2"
+    cp "$C/ho/heldout.json" "$O/heldout.json"
+    for f in "$C"/ho/ho-prose-l1 "$C"/ho/ho-prose-l9 "$C"/ho/ho-code-l1 "$C"/ho/ho-code-l9 \
+             "$C"/ho/ho-structured-l1 "$C"/ho/ho-structured-l9; do
+      : > "$C/${f##*/}.bz2"
+      for i in $(seq {{COPIES}}); do cat "$f.bz2" >> "$C/${f##*/}.bz2"; done
+    done
+    cp "$C/ho/ho-wikidata-l1.bz2" "$C/ho/ho-wikidata-l9.bz2" "$C/"
+    files=("$C/wikidata-x{{COPIES}}.bz2" "$C/gen/text.bz2" "$C/gen/random.bz2" "$C/gen/records.bz2"
+           "$C/gen/runs.bz2" "$C/gen/pattern.bz2" "$C/gen/onebyte.bz2"
+           "$C/ho-wikidata-l9.bz2" "$C/ho-wikidata-l1.bz2" "$C/ho-prose-l1.bz2" "$C/ho-prose-l9.bz2"
+           "$C/ho-code-l1.bz2" "$C/ho-code-l9.bz2" "$C/ho-structured-l1.bz2" "$C/ho-structured-l9.bz2")
+    sha256sum "${files[@]}" "$C/wikidata-x16.bz2" "$W/wikidata.bz2" "$W/wikidata-heldout.bz2" | tee "$O/inputs.sha256"
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    # the decision: one `ab run` a count, v0.5.6 and the port through the same entry point
+    for t in 8 10 20; do
+      echo "unpinned at $t threads: mibz2 against mibz2@v0.5.6"
+      "$AB" run "$O/runs.jsonl" --arms "mibz2,mibz2@$OLDAB" --threads "$t" --rounds {{ROUNDS}} \
+        --settle {{SETTLE}} --unpinned "${files[@]}"
+    done
+    # sustained: 10 threads, back to back (no settle), Wikidata x16
+    echo "sustained at 10 threads: mibz2 against mibz2@v0.5.6, back to back"
+    "$AB" run "$O/sustained.jsonl" --arms "mibz2,mibz2@$OLDAB" --threads 10 --rounds {{SROUNDS}} \
+      --settle 0 --unpinned "$C/wikidata-x16.bz2"
+    date -u +%FT%TZ > "$O/timed.txt"
+    # the verdict (docs/journal/2026-11-19-open-port-registration.md)
+    python3 bench/open_port.py judge "$O/runs.jsonl" "$O/sustained.jsonl" --lscpu "$O/lscpu.txt" \
+      --env "$O/env.json" --rounds {{ROUNDS}} --sustained-rounds {{SROUNDS}} | tee "$O/verdict.txt" \
+      || echo "bench-open-port: the verdict is VOID (verdict.txt says why); the bundle is kept"
+    # context, reported and not judged: the gate's cost (the shipped OpenCells against ungated open
+    # and against 0.5.6's LazyCells, kernel-only arms of W workers) at W 7..10, and the eager/open
+    # crossover at W 4..8
+    for w in 7 8 9 10; do
+      "$AB" run "$O/gate.jsonl" --arms "mibz2-workers-lazy,mibz2-workers-open,mibz2-workers-lazycells" \
+        --threads "$w" --rounds {{CROUNDS}} --settle {{SETTLE}} --unpinned "$C/wikidata-x{{COPIES}}.bz2" "$C/gen/text.bz2"
+    done
+    for w in 4 5 6 7 8; do
+      "$AB" run "$O/crossover.jsonl" --arms "mibz2-workers-lazy,mibz2-workers-eager" \
+        --threads "$w" --rounds {{CROUNDS}} --settle {{SETTLE}} --unpinned "$C/wikidata-x{{COPIES}}.bz2" "$C/gen/text.bz2"
+    done
+    python3 bench/open_port.py pairs "$O/gate.jsonl" --pair mibz2-workers-lazy/mibz2-workers-open \
+      --pair mibz2-workers-lazy/mibz2-workers-lazycells | tee "$O/gate.txt" || true
+    python3 bench/open_port.py pairs "$O/crossover.jsonl" --pair mibz2-workers-lazy/mibz2-workers-eager \
+      | tee "$O/crossover.txt" || true
+    # the coverage census (decides nothing): each block's route under the gates, and its cost one
+    # thread, production against the open kernel, on every corpus (this branch's research build)
+    cargo build -q --release --features open-return --example ab
+    target/release/examples/ab census-timed "${files[@]}" > "$O/census.jsonl" \
+      || echo "bench-open-port: the census failed (decides nothing)"
+    date -u +%FT%TZ > "$O/finished.txt"
+    bash bench/bundle.sh "$O"
