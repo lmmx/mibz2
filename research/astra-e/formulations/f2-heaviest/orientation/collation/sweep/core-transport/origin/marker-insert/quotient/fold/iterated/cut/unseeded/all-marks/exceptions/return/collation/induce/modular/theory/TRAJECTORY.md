@@ -25,3 +25,17 @@ The unscaled primary stage also has a linear live cost for fixed q. Write t=qm+1
 The raw Python reference reproduced the complete original forward output at 7,856 tiny marked column/radix settings, including 6,508 short physical laps, by reversing one positive backward return and repeating to the bzip2 horizon. An independently written ordered-list implementation reproduced the predicted dead and live counts on the powers. For q=3, v=8, n=43,053,282 and t=6,562 it constructed 35,024 dead and 4,389 live rules from only 84 progression pieces across the tower. These are structural operation counts. [Power and finite results](checked.json) · [Ordered-list reference](trajectory.py) · [Forward spelling and marked checks](check.py)
 
 All 418 native layers from the ten original blocks and four radices satisfied the exact survivor identity, zero partial steps and the pointwise geometric bounds. At q=2 the measured progression total is 3,024,669 versus the a priori sum 8,517,670. At q=8 these are 2,007,171 and 6,559,151. This separates setup and non-strict contraction work from the strict-step cost; no throughput or memory result follows from the bounds. [Per-block bounds, counts and input receipt](layers.json) · [Verifier](layers.py) · [Actual native geometry](../levels.csv)
+
+## The setup bound is sharp on fixed-radix towers even with two original runs
+
+Use the original two-run family registered in the canonical wide-strip study, now with its sampling width M=qʲ for a fixed tower radix q and an increasing level j. Let n=M²+3M+1, L=1^(n−M−1)0^(M+1) and p=0. LF adds δ=M+1 modulo n. The orbit is primitive since n=(M+1)(M+2)−1. The full positive first-return word at normalized level-j row i, corresponding to original row iM, is given below. Target indices are also normalized.
+
+| i | Target | Backward return word |
+|---|---:|---|
+| 0,1,2 | i+M+1 | 1ᴹ |
+| 3,…,M+1 | i−1 | 1^(M+2−i) · 0 · 1^(i−2) |
+| M+2,M+3 | i−M−2 | 0 |
+
+Before wraparound each step increases the physical rank residue by one modulo M. A wrap subtracts n≡1 (mod M). The first three inputs reach a multiple of M at step M without a wrap. The final two wrap immediately to another multiple. For each middle input i, the first position that emits zero is after M+2−i nonwrapping steps, since its source rank first reaches n−δ = M(M+2) there. The wrap occurs at a step between 2 and M. The next possible positive hit after it is step M+1. Since (M+1)δ=n−M, the final target is (i−1)M. This proves all the words including the shift in zero placement.
+
+There are M+1 distinct actual return words. No intermediate choice of grammar syntax or artificial splitting can encode two different fixed words in a single uniform word band. Thus Bⱼ≥M+1 and also Aⱼ≥M+1 in the raw fixed-radix tower. Since n is quadratic in M, the cumulative O(√n) setup/survivor order at constant R and q is sharp. This lower bound is independent of the strict-step linear family above and concerns a required intermediate object. It does not assert a lower bound for arbitrary BWT decoders that avoid that object. [Registered strip family](../strips/PLAN.md) · [Unmerged tower measurements](sharp.csv) · [Rank, word and target verifier](sharp.py)
