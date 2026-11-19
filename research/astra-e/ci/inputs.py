@@ -58,6 +58,7 @@ COUNTER_EDGE = {
 }
 PREDECESSORS = {
     CAP_COUNTER: SCALAR,
+    "research/astra-e/two-seed/candidate.rs": MEASURED_EDGE,
     "research/astra-e/front-fusion/cap-batch/worker/candidate.rs": MEASURED_EDGE,
     "research/astra-e/worker-dose/candidate.rs": MEASURED_EDGE,
     "research/astra-e/front-fusion/precount/worker/candidate.rs": MEASURED_COMBINED,

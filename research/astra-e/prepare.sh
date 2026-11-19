@@ -2,6 +2,9 @@
 # Prepare external constructor modules for the Rust scorer; the other entries are standalone.
 set -euo pipefail
 case "/$1" in
+  */research/astra-e/two-seed/candidate.rs)
+    python3 "$(dirname "$1")/build_worker.py"
+    ;;
   */research/astra-e/front-fusion/edge/certificate/candidate.rs)
     python3 "$(dirname "$1")/../../../edge-budget/prepare.py"
     ;;
