@@ -162,3 +162,32 @@ Every case was compared against direct first-return computation, with return wor
 **Outcome of the audition:**
 - **Kept:** a correct multi-front construction, and a sharper run bound.
 - **Not supported:** the performance case. Cells already overlaps about 12 dependent loads, and real Wikidata exposes only about 4 independent fronts.
+
+## Round 4: total work, not depth
+
+**The prompt:** Louis asked whether an induced representation can cut *total* paid work below Cells', rather than only overlapping it. The prompt included corrections of round 1's premises: Cells prefetches; the admitted regime is r/n below 0.15; scalar-cap is a run-record kernel.
+
+**Neon's claims** ([response-4.md](response-4.md)):
+- **Lemma 1:** the r run boundaries cut every boundary-hitting cycle into r disjoint *persistence arcs*.
+- **Theorem 1, an exact work identity:** for *any* monotone component-suffix induction schedule, the number of elementary steps equals r′ plus the prefix and suffix records of the elimination order on those arcs. Stopped schedules and refined partitions are included.
+- **Corollary 1:** at least 2r − |D̄ ∩ C̄| steps for any unaccelerated monotone schedule, and at least r with Zorich acceleration.
+- **An analytical model:** Cells pays about r(2 ln(n/r) + 2γ − 1), roughly 3.8–4.8r.
+- **Max-Cut** over pinned alphabet boundaries as the one available escape.
+
+**What the Coordinator ran** (`verify_boundary_records.py.txt`, verbatim; `round4_adversarial.py`):
+
+| Check | Result |
+|---|---|
+| Neon's Part 1: all binary BWTs n ≤ 8 and ternary n ≤ 5; dIETs with r ∈ {4, 5}; single and Max-Cut schedules; full and stopped induction | **PASS**: 6,360 runs, 0 mismatches |
+| Adversarial: 400 random and repetitive BWTs, n = 20–400, under single, Max-Cut and three random schedules, each at stops 0, n/4 and n/2 | **PASS**: 6,000 runs, 0 mismatches in the identity, Corollary 1 never violated |
+| A prefix-doubling BWT builder against Neon's rotation sort, on every small string | Identical. Used for Part 2, where the rotation sort would materialise about 400 MB of rotations at n = 20,000. |
+| Neon's Part 2, its synthetic "admitted-regime" blocks, n = 20,000 | r/n is **0.23**, outside the admitted 0.10–0.15. Cells takes **1.92r** steps (full), not the 3.8–4.8r its model predicts. The floor is **1.28r**: \|D̄∩C̄\| ≈ 0.72r, not ≈ r²/n. Max-Cut against Cells: **0.96** (full) and **0.945** (stopped at 0.15n). |
+
+**Assessment:**
+- **Theorem 1 and Corollary 1:** strongly supported over a bounded domain. It is an exact accounting tool for comparing schedules without implementing them. The proof is routed to MONODROMY.
+- **The Zorich bound (≥ r):** untested.
+- **The harmonic cost model:** contradicted by the data, at 1.92r against the predicted 3.8–4.8r, and its floor estimate is off for structured text.
+- **Max-Cut:** fails Neon's own registered criterion (a ratio of 0.80 or less to support it; ≥ 0.80 refutes it).
+- **On these blocks:** Cells sits about 1.5× above the floor of *any* monotone schedule, and induction is only part of the decoder's cost. So little total-work headroom remains inside monotone interval induction, as Neon itself anticipated if Max-Cut failed.
+- **One overreach:** it says that if Max-Cut fails, *no* monotone schedule can do much better. That does not follow: Max-Cut is one heuristic. The corollary's floor, though, does bound every monotone schedule, and the floor is the stronger statement.
+- **Not yet measured:** the same three figures (steps, floor, overlap) on a real admitted Wikidata block.
