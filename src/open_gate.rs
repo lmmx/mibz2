@@ -168,10 +168,11 @@ mod tests {
     }
 }
 
-/// One run-route block's admission census: (records, rows, LazyCells admitted, production's
-/// ns, open's ns, the same bytes), the fastest of `TIMED_REPS` each
-pub static TIMED: std::sync::Mutex<Vec<(usize, usize, bool, u64, u64, bool, &'static str)>> =
-    std::sync::Mutex::new(Vec::new());
+/// One block's admission census line: (records, rows, LazyCells admitted, production's ns,
+/// open's ns, the same bytes, LazyCells' decision), the fastest of `TIMED_REPS` each
+pub type TimedBlock = (usize, usize, bool, u64, u64, bool, &'static str);
+/// Every block's census line, in decode order
+pub static TIMED: std::sync::Mutex<Vec<TimedBlock>> = std::sync::Mutex::new(Vec::new());
 /// Reps a block for [`Timed`]
 pub const TIMED_REPS: usize = 3;
 
