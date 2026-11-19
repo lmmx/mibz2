@@ -55,6 +55,11 @@ A performance change is **accepted** on its CI paired bench when all of these ho
 
 A change built for a specific machine, gated on its hardware, is judged on that machine (C5) for its gain. On every other machine it must show that it stays inactive. A deterministic check that the route is not taken, plus a neutral CI bench, settles that. Statistical non-inferiority is not required where the code path is not taken.
 
+**Adaptive dispatch is fair; changing the measurement is not** (Louis, 19 November 2026: "it is ok to detect properties of the input and switch approach accordingly but not to artificially modify the benchmark etc").
+- **Allowed:** choosing a kernel or route per block from properties the decoder observes at run time, such as run density or run structure. LazyCells' density line is an example. The rule should predict which route is cheaper, fitted to measured per-block cost, not to which corpus a block came from. It must hold on held-out data that wasn't used to fit it.
+- **Not allowed:** changing what is measured so that a candidate passes. That covers adding, dropping or reweighting corpora, loosening a guard or bound, swapping the reference, or moving a threshold after its data has been seen.
+- The bench corpora, their classes above and the registered guards stay as they are. A dispatch rule passes or fails on them unchanged.
+
 **One bench run decides.** A regression flagged in a secondary corpus is weighed under rule 3, not re-run to settle it. Only a flagged primary regression gets one re-run; if it shows again, it stands.
 
 ## 3. Statistical tests
