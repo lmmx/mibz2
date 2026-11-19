@@ -1,0 +1,151 @@
+{
+  "snapshot": "d7703b020c10bf41099501d40b07dae92db5aa9a",
+  "evaluator_upstream": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "evaluator_sha256": "b758f995e3481803e9cef2849e6c02a836f763008ae28cfda883b479fdf3ea63",
+  "forecasts": 122,
+  "distinct_independent_runs": 10,
+  "independent_cells": 31,
+  "official_output_rows": 148,
+  "rows_without_independent_measurement": 82,
+  "rows_with_independent_measurement_by_official_join": {
+    "directory": 11,
+    "no forecast": 10,
+    "path only": 17,
+    "sha256": 28
+  },
+  "audited_entry_digest_matches_on_joined_rows": {
+    "True": 56
+  },
+  "official_accuracy": {
+    "v0": {
+      "official_i9_proxy": {
+        "n": 0,
+        "male": null,
+        "pairs": 0,
+        "right": 0
+      },
+      "official_other_proxy": {
+        "n": 9,
+        "male": 0.028514563807740742,
+        "pairs": 3,
+        "right": 3
+      },
+      "distinct_forecast_result_tuples_proxy": 9,
+      "official_other_local": {
+        "n": 10,
+        "male": 0.14607512040551862,
+        "pairs": 6,
+        "right": 5
+      },
+      "distinct_forecast_result_tuples_local": 10
+    },
+    "v1": {
+      "official_i9_proxy": {
+        "n": 3,
+        "male": 0.014911019040007426,
+        "pairs": 0,
+        "right": 0
+      },
+      "official_other_proxy": {
+        "n": 6,
+        "male": 0.03578565100473885,
+        "pairs": 3,
+        "right": 3
+      },
+      "distinct_forecast_result_tuples_proxy": 6,
+      "official_other_local": {
+        "n": 28,
+        "male": 0.17136948749827535,
+        "pairs": 70,
+        "right": 54
+      },
+      "distinct_forecast_result_tuples_local": 16
+    }
+  },
+  "separate_source_audited_proxy_comparison": {
+    "v0": {
+      "forecast_study": "combined-full-proxy",
+      "forecast_build": "b981d78984a195408501ff7fb495f77a1075be02",
+      "target_build": "8c9640d8ab186f81a0500f48e606e0c21c2a6669",
+      "run": "run-20261119T013135Z",
+      "entry_sha256": "7b7741a017f12aaf5c9624028e32715ad4fd806210bef0c6b210c7c1d16631d6",
+      "unchanged_candidate_and_generator_paths": [
+        "src",
+        "Cargo.toml",
+        "docs/journal/2026-11-18-open-return",
+        "research/astra-e/narrow-short",
+        "research/astra-e/narrow-endpoint",
+        "research/astra-e/short-words",
+        "research/astra-e/lookahead"
+      ],
+      "cells": [
+        {
+          "w": 7,
+          "proxy": 0.8935179110226058,
+          "i9_ratio": 0.8982344228865374,
+          "signed_log_error": -0.005264703908761486
+        },
+        {
+          "w": 8,
+          "proxy": 0.8795239608451186,
+          "i9_ratio": 0.9117254603518228,
+          "signed_log_error": -0.03595810692064587
+        },
+        {
+          "w": 10,
+          "proxy": 0.8276814507704193,
+          "i9_ratio": 0.8870884681755544,
+          "signed_log_error": -0.06931635690885207
+        }
+      ],
+      "accuracy": {
+        "n": 3,
+        "male": 0.03684638924608648,
+        "pairs": 0,
+        "right": 0
+      }
+    },
+    "v1": {
+      "forecast_study": "combined-v1-proxy",
+      "forecast_build": "6a8a366cd786d58a528000b58da12fd2cfb47be8",
+      "target_build": "8c9640d8ab186f81a0500f48e606e0c21c2a6669",
+      "run": "run-20261119T013135Z",
+      "entry_sha256": "7b7741a017f12aaf5c9624028e32715ad4fd806210bef0c6b210c7c1d16631d6",
+      "unchanged_candidate_and_generator_paths": [
+        "src",
+        "Cargo.toml",
+        "docs/journal/2026-11-18-open-return",
+        "research/astra-e/narrow-short",
+        "research/astra-e/narrow-endpoint",
+        "research/astra-e/short-words",
+        "research/astra-e/lookahead"
+      ],
+      "cells": [
+        {
+          "w": 7,
+          "proxy": 0.9101506974061911,
+          "i9_ratio": 0.8982344228865374,
+          "signed_log_error": 0.013179103126149155
+        },
+        {
+          "w": 8,
+          "proxy": 0.911774828445719,
+          "i9_ratio": 0.9117254603518228,
+          "signed_log_error": 5.414651613885183e-05
+        },
+        {
+          "w": 10,
+          "proxy": 0.9154763431826098,
+          "i9_ratio": 0.8870884681755544,
+          "signed_log_error": 0.031499807477734273
+        }
+      ],
+      "accuracy": {
+        "n": 3,
+        "male": 0.014911019040007426,
+        "pairs": 0,
+        "right": 0
+      }
+    }
+  }
+}
