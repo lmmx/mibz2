@@ -2299,11 +2299,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D114",
-    "incoming_comment": 6988881933,
-    "review_comment_id": 6988977627
+    "active_comment": 7007091766,
+    "status": "in progress",
+    "decision": "D115"
   },
   "duplicate_events": [
     {
@@ -4127,6 +4125,13 @@
       "work_commit": "2289d9a0f359fad72050f4afcce3a2310020a6a0",
       "review_comment_id": 6988977627,
       "complete_cursor_commit": "289b06a81def4c39238bb6b2c254e3c613a24a98"
+    },
+    {
+      "comment_id": 7007091766,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D115",
+      "progress": "Open-port B5 review; migration verified."
     }
   ],
   "migrated_from": {
