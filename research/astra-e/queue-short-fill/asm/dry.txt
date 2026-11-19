@@ -1,0 +1,7 @@
+frozen.bz2 sha256=e3bf5372b15885da138764a25bb2b7cd784ee3cbee1e664937647921ae3122b0 Python bz2 output bytes=900000
+edge_range accepted stream CRC and wrote 900000 bytes
+edge_single accepted stream CRC and wrote 900000 bytes
+edge_four accepted stream CRC and wrote 900000 bytes
+both_range accepted stream CRC and wrote 900000 bytes
+both_single accepted stream CRC and wrote 900000 bytes
+both_four accepted stream CRC and wrote 900000 bytes
