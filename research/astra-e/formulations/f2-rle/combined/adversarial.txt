@@ -1,0 +1,1 @@
+33666 valid and 3382 exact unfinished-run outcomes; 90 capped graph finishes. Scalar/detected, n through 371450, arbitrary primary and a prefixed caller output.

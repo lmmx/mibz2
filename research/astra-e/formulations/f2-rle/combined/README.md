@@ -20,3 +20,7 @@ cp "$d/adversarial.rs" "$scratch/"
 rustc --edition=2021 -O -C codegen-units=1 "$scratch/adversarial.rs" --extern mibz2="$deps/libmibz2.rlib" -L "dependency=$deps" -o "$scratch/adversarial"
 "$scratch/adversarial"
 ```
+
+A separate fresh process repeated the complete 32-round four-arm schedule with the same binary. Capacity rows matched exactly. Its thread CPU ratio was 0.869 [0.792,0.955] against opend, 0.910 [0.796,1.040] against narrow-short/ahead, and 0.890 [0.806,0.983] against the ordinary bundled constructor. Both processes place the point estimate below narrow-short/ahead, and both CPU intervals for that direct comparison include one. An independent same-round comparison against the frozen narrow-short/ahead comparator is the next decisive performance check. [Repeat observations](phases-repeat.csv) · [Repeat summary](summary-repeat.txt)
+
+The exact native contract checks covered 33,666 valid and 3,382 unfinished-run outcomes under scalar and detected kernels, with a prefixed caller output and 90 bounded stock finishes. The crafted large alternating-run example has 21,850 thick original intervals, exercising the 32-bit endpoint fallback beyond the narrow guard. [Adversarial receipt](adversarial.txt)
