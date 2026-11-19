@@ -1,6 +1,8 @@
 # Open-port-3 — prospective adoption review
 
-**HOLD at `43aabd68` before freezing or queueing.** The zero-route diagnostic and a short pooled native guard are a proportionate use of §4a. The scorer can still ADOPT without the dispatched B3 FASTER condition, and B2/B4 weaken protection on workloads where Open executes. Correct those before the fresh run. The first NOT ADOPTED stands and #635 stays shelved. [Checkpoint](https://github.com/lmmx/mibz2/pull/162#issuecomment-7014835513) · [Assignment](https://github.com/lmmx/mibz2/pull/145#issuecomment-7013818037) · [Maintainer direction](https://github.com/lmmx/mibz2/pull/145#issuecomment-7013839409)
+**HOLD at `bdea1a53` before freezing or queueing.** The zero-route diagnostic and a short pooled native guard are a proportionate use of §4a. The scorer can still ADOPT without the dispatched B3 FASTER condition, and B2/B4 weaken protection on workloads where Open executes. Correct those before the fresh run. The first NOT ADOPTED stands and #635 stays shelved. [Checkpoint](https://github.com/lmmx/mibz2/pull/162#issuecomment-7014835513) · [Assignment](https://github.com/lmmx/mibz2/pull/145#issuecomment-7013818037) · [Maintainer direction](https://github.com/lmmx/mibz2/pull/145#issuecomment-7013839409)
+
+The [merge addendum](https://github.com/lmmx/mibz2/pull/145#issuecomment-7014919402) requests ruling on `bdea1a53`. I verified the live PR head and the 14-file compare. Only documentation and `bench/workstation-queue.txt` changed. The scorer, recipe, input manifest and Part A summary are byte-identical to `43aabd68`, so the replays apply to the current merge head.
 
 ## Part A: adequate attribution at diagnostic scope
 
