@@ -87,7 +87,7 @@ def huge():
     primary=next(x for x in range(len(L))if x not in ex);lane=g//5;mark=g*primary+lane
     pieces,union,cost=create(runs,start,c.modal,mark);assert cost['events']==g*len(ex)+1
     offsets={0,g-1,lane-1,lane,lane+1}
-    for s,t,w,h in pieces:offsets.update((union.select(s)%g,union.select(s+w-1)%g))
+    for s,t,width,h in pieces:offsets.update((union.select(s)%g,union.select(s+width-1)%g))
     verified=0
     for base in ex|{primary}:
         for z in offsets:
