@@ -186,6 +186,13 @@ def main():
                   "Per-run `assessment.json` may record `kind`, `assessment` and `verification` (including independent run links). Regenerate with `python3 research/astra-e/register.py`.", ""])
     for e in scores:
         lines.extend(describe(e))
+    # Keep the scorer's own records verbatim so moonshot-best can read the joint register.
+    receipts = []
+    for path in sorted((HERE / "results").glob("*/official-register.jsonl")):
+        for line in path.read_text().splitlines():
+            row = json.loads(line)
+            receipts.append((row["time"], path.parent.name, line))
+    (HERE / "official-register.jsonl").write_text("".join(row + "\n" for _, _, row in sorted(receipts)))
     (HERE / "REGISTER.md").write_text("\n".join(lines))
 
 

@@ -21,6 +21,14 @@ The active programme is the exact BWT of delimiter returns. Its rounds below sta
 
 An independent review enumerates tied rotations, multiple cycles, nondividing marks and a reachable recursion-depth failure of an earlier Python ordering algorithm. The native construction and iterative ordering reference cover that witness. [Review and compressed witness](review/)
 
+## What remains after delimiter discovery
+
+**Root projection.** Each selector stream is a stable projection of the root labels to one subtree. Synchronized cursors can therefore emit exactly one maximal root token run per descent, with no intermediate merge streams. All 228 real outputs matched; storage fell from 5,390,514 merge pieces to 1,786,472. The 7,739,733 path visits made this merge slower at 1.642 [1.310,2.058] of the materialized dynamic implementation. An independent realizable byte-BWT family attains the n-visit upper bound. A mixed subtree cut can trade visits for stored pieces. [Proof, measurements and independent audit](f2-rootstream/)
+
+**Exact output edits.** In a protected RLE1 component, cut the parser at the mark and clean entries. Each omitted LF cycle contributes strictly positive corrected mass. The length of one corrected lap can therefore certify full coverage, even with overlapping hazard cylinders and a primary inside one. The checker included 917,506 binary marked instances, including unfinished first laps and off-mark protected cycles. Storing only edit offsets removed extra word copies and five dictionary-budget fallbacks; 227 of 228 density-admitted real blocks then wrote directly. [Certificate](f2-rle/count-only/) · [Sparse edit-list kernel](f2-rle/)
+
+**Cost of the formulation.** Independent five-arm CI confirmed that dynamic rank discovery beats static F2 across 1/2/4 workers, while its complete worker was 1.5–2.5% slower than Lazy on that Xeon. Reusing the run-front histogram and hardware popcount reduces the next implementation's paid rank cost. The free-rank oracle's 0.675 ratio applies only to nine blocks; the 228 admissions own 73.58% of the local additive scanner, worker and copy CPU. Extending that ratio everywhere would permit only about 0.053 of admitted Lazy inverse CPU to buy all rank answers. [Independent CI](../ci/evidence/delimiter-refill-44433942216.md) · [Rank experiments](f2-pages/instructions/focus/) · [Full-corpus resource evidence](../budget/)
+
 ## Other formulation rounds
 
 | Round and reconstructed object | Phase displaced and decisive invariant | Cheapest falsifier and observed result |
