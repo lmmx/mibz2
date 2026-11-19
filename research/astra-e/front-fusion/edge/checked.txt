@@ -1,0 +1,1 @@
+all scanner blocks exact: 233 fused, 198 stock finishes, 233 large-symbol blocks
