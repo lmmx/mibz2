@@ -50,7 +50,7 @@ persistence arcs).
 | 210 | 0.143 | 155,480 = 1.208 r | 172,785 = 1.342 r | 187,637 = 1.458 r | 26,748 | 6,845 |
 
 **The answer: the affine endpoint geometry stays small for any fixed number of refinements.** Each
-level adds 0.12–0.17 r, and less at each level. But it never closes. The tower reaches the text
+level adds 0.12–0.18 r, and less at each level. But it never closes. The tower reaches the text
 order only at k = max ℓ + 1 (848–17,545 levels), by which point it holds all n rows. Refinement
 alone is an LF walk run arc by arc in parallel, no shortcut.
 
@@ -130,7 +130,9 @@ latency tail: rounds too narrow to overlap their loads.
 | 210 | 6,845 | 131.5 | 6,280 | 52,008 (5.8%) | 94,701 | 216,769 |
 
 **Its verdict: a candidate by the gate, but not a new cost class.**
-- *Depth:* 4–165× shorter than Cells' S.
+- *Depth:* 10–166× fewer rounds than Cells' S steps. The r-hop chain is a list ranking over an
+  r-entry array, which is cache-resident. It is serial as written, or O(log r) deep by pointer
+  jumping, so D is really the rounds plus that.
 - *Work:* n visits, against Cells' S dependent steps plus its sequential n-byte emission.
 - *Balance:* the arcs are badly unbalanced. Most rounds are narrower than 64, and on block 143,
   12% of all visits fall in those latency-exposed rounds.
