@@ -1217,6 +1217,26 @@ mod open_census {
             );
         }
     }
+
+    /// (research only) `ab census-timed FILE..`: each run-route block, one JSON line: its
+    /// records and rows, whether LazyCells admits it, production's and the open kernel's
+    /// time (the fastest of 3, interleaved, one thread) and whether their bytes agree
+    pub fn timed(files: &[String]) {
+        use mibz2::open_gate::{Timed, TIMED};
+        let k = mibz2::Kernels::detect();
+        for f in files {
+            let data = std::fs::read(f).expect("a readable file");
+            TIMED.lock().unwrap().clear();
+            let got = mibz2::decode_with::<Timed>(&data, k).expect("a valid stream");
+            let want = mibz2::decode(&data).expect("a valid stream");
+            assert!(got == want, "{f}: the census changed the output");
+            for (b, &(rec, n, adm, tl, to, same, why)) in TIMED.lock().unwrap().iter().enumerate() {
+                println!(
+                    "{{\"file\":{f:?},\"block\":{b},\"records\":{rec},\"n\":{n},\"lazy_admitted\":{adm},\"prod_ns\":{tl},\"open_ns\":{to},\"same\":{same},\"why\":{why:?}}}"
+                );
+            }
+        }
+    }
 }
 
 /// `N-S`, N and S at least 1
@@ -3076,6 +3096,8 @@ fn main() {
         Some("gen") => gen(&args[1..]),
         #[cfg(feature = "open-return")]
         Some("census-open") => open_census::run(&args[1..]),
+        #[cfg(feature = "open-return")]
+        Some("census-timed") => open_census::timed(&args[1..]),
         Some("env") => match args.get(1).map(String::as_str) {
             None => println!("{}", env_line()),
             Some("--facts") if args.len() == 2 => println!("{}", facts::live()),
