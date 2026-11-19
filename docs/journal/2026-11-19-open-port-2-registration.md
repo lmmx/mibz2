@@ -221,8 +221,16 @@ capped rounds) and the disclosed cells.
   6. the guards' extension, batch by batch;
   7. the verdict;
   8. the context and the census, as before.
-- **The untimed preflight** (`just bench-open-port-2 … dry`) is re-run at the corrected head. It is
-  recorded below, and its bundle archived beside this note.
+- **The untimed preflight** (`just bench-open-port-2 … dry`), in the cloud container at fd896bf7
+  (the corrected scorer, schedule, tests and recipe):
+  - "the builds and all 18 inputs are the registered ones";
+  - 16 of 16 outputs the same in both builds;
+  - 29 of 29 scorer checks;
+  - no timing field, and no `runq` probe.
+
+  Its bundle is `2026-11-19-open-port-2-registration/preflight/run-20261119T144715Z.tar.gz`, sha256
+  `86926cc4ba41e640ffb6c0abd605ebc476d260ece9a729e030bcdba6637bcfc3`. The first draft's preflight, at 9b3ed323, is superseded; it stays in this
+  branch's history.
 
 ## The rule (`bench/open_port2.py judge`, frozen with this registration)
 
