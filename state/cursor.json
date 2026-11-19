@@ -216,9 +216,10 @@
     6993078803,
     6993276769,
     6993593664,
-    6997119955
+    6997119955,
+    7003699363
   ],
-  "last_processed_comment_id": 6997119955,
+  "last_processed_comment_id": 7003699363,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2633,13 +2634,16 @@
     },
     {
       "trigger_comment_id": 7003699363,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/astra-e-exceptions-7003699363/report.md",
       "source_commit": "980edb622e4d06e3d5830958ca9137ed9a608749",
       "report_commit": "121dcb317d23f9dbc34b4c9f636ebbe7663f92cc",
-      "disposition": "Physical modal ranges are bounded by internal input run seams, rows need not be; LF move setup is O(r), while acquiring marked weighted first returns and chronological events is a distinct task. Cyclic PFP gives the residual order; archived methods and costs documented."
+      "disposition": "Physical modal ranges are bounded by internal input run seams, rows need not be; LF move setup is O(r), while acquiring marked weighted first returns and chronological events is a distinct task. Cyclic PFP gives the residual order; archived methods and costs documented.",
+      "review_comment_id": 7003886829,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, checkpoint citation, and role-aware headers and route. The pinned helper applies a coordinator-only sender check to Researcher publications."
     }
   ],
   "active_delegations": [],
