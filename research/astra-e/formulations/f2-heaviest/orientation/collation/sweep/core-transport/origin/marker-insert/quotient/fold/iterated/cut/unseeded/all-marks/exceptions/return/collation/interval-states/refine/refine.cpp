@@ -148,6 +148,7 @@ void run(const Source& p,U mark,U lambda){
         parts.swap(best.ends);
     }
 }
+#ifndef ASTRA_REFINEMENT_LIBRARY
 int main(int argc,char** argv){
     if(argc==1){check();return 0;}
     std::ifstream f(argv[1],std::ios::binary);char magic[8];f.read(magic,8);assert(std::string(magic,8)=="CLKMASK1");
@@ -155,3 +156,4 @@ int main(int argc,char** argv){
     Source p(std::move(l));
     for(U lambda:{1,4,16,64})run(p,mark,lambda);
 }
+#endif
