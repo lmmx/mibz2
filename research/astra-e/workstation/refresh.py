@@ -129,7 +129,12 @@ def refresh(config, out, probe=compatibility):
         attempt = {"build": label, "projection": revision}
         receipt["attempts"].append(attempt)
         write_json(record, receipt)
-        failure = probe(out, label)
+        try:
+            failure = probe(out, label)
+        except (OSError, RuntimeError) as error:
+            attempt["environment_error"] = str(error)
+            write_json(record, receipt)
+            raise
         attempt["failure"] = failure
         write_json(record, receipt)
         if failure is None:

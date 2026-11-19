@@ -1,6 +1,6 @@
 """Rehearse the registered CLI with synthetic data and validate real gate transcripts."""
 
-from contextlib import chdir, redirect_stderr, redirect_stdout
+from contextlib import chdir, contextmanager, redirect_stderr, redirect_stdout
 import io
 import json
 import math
@@ -145,6 +145,20 @@ def check_gate(path, arm):
     return len(cases)
 
 
+@contextmanager
+def synthetic_output():
+    # Keep synthetic speed figures out of the research record. On an interface
+    # failure, retain the argparse or scorer diagnostic in the attempt log.
+    transcript = io.StringIO()
+    try:
+        with redirect_stdout(transcript), redirect_stderr(transcript):
+            yield
+    except BaseException:
+        print("Synthetic CLI rehearsal failed:", file=sys.stderr)
+        print(transcript.getvalue(), file=sys.stderr)
+        raise
+
+
 def interface(tmp, target=None):
     calls = {}
 
@@ -209,8 +223,7 @@ def interface(tmp, target=None):
     with (
         patch.object(subprocess, "run", fixture_run),
         patch.object(moonshot.time, "sleep", lambda _: None),
-        redirect_stdout(io.StringIO()),
-        redirect_stderr(io.StringIO()),
+        synthetic_output(),
     ):
         assert (
             moonshot.main(
