@@ -3,7 +3,7 @@ from collections import Counter
 from itertools import groupby
 import csv
 import sys
-from order import Graph,Quotient,full
+from cursor_order import Graph,Quotient,full
 
 writer=csv.writer(sys.stdout,lineterminator='\n')
 writer.writerow(('t','rows','runs','heaviest','c_lookups','c_required_ascending_resets','c_required_descending_resets','c_required_turns'))
