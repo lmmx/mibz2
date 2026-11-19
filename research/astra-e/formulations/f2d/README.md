@@ -54,3 +54,5 @@ bash "$study/compound/native.sh" "$tmp/compound" "$tmp/build/release/deps"
 python3 "$study/summary.py" "$tmp/compound"
 PYTHONDONTWRITEBYTECODE=1 python3 "$study/slack.py" "$tmp" | diff - "$study/slack.csv"
 ```
+
+The [root-only stable merge](splice/) closes the gap in the explicit per-node run-space bound constructively. A destructive ownership algorithm allocated exactly one run cell per final token run on every admitted block. It removed the earlier intermediate run streams, while charging linked prefix search, final flattening, the rest of first-stage discovery and both output stages.

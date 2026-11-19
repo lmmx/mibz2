@@ -12,7 +12,9 @@ with (folder / "phase-cpu.csv").open() as source:
 phases = ("prep_mark_ns", "discover_ns", "merge_ns", "residual_output_ns", "total_ns")
 blocks = sorted({r["stream"] for r in rows}, key=int)
 arms = list(dict.fromkeys(r["arm"] for r in rows))
-pairs = [("learn", "f2c"), ("learn", "lazy")]
+pairs = [("learn", "f2c"), ("learn", "lazy")] if "learn" in arms else []
+if "splice" in arms:
+    pairs.extend([("splice", "f2c"), ("splice", "lazy")])
 if "eight" in arms:
     pairs.extend([("eight", "f2c"), ("eight", "lazy")])
 if "direct-learn" in arms:
@@ -30,7 +32,8 @@ for selected in (["1"], blocks):
             paired[arm][int(r["round"])] += int(r["total_ns"])
     for arm, ref in pairs:
         samples = [log(paired[arm][i] / paired[ref][i]) for i in sorted(paired[arm])]
-        assert len(samples) == 20 and set(paired[arm]) == set(paired[ref])
-        delta = 2.093024 * stdev(samples) / sqrt(len(samples))
+        assert len(samples) in (20, 21) and set(paired[arm]) == set(paired[ref])
+        critical = {20: 2.093024, 21: 2.085963}[len(samples)]
+        delta = critical * stdev(samples) / sqrt(len(samples))
         center = mean(samples)
         print(f"{arm}/{ref} {exp(center):.4f} [{exp(center-delta):.4f},{exp(center+delta):.4f}]")
