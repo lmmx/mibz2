@@ -1,0 +1,17 @@
+f5748db78ccc4f4cc29dafc11837be95f1e0964d
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+e518c73bf751c0002393ad95fbfe6cada94eae83dd48adca5b010ba6c2ec87e0  research/astra-e/narrow-short/stage.rs
+c5f707220606ae23585fbfe0a52d1212a6990f8ca8ae7352eb025ab7d2a3d894  research/astra-e/narrow-short/constructor.rs
+c0ccf8939b8cdf02ac4c8157c588d980afa378805fcb37498ca3cda0ccbc6d4f  research/astra-e/narrow-short/constructor_ahead.rs
+252301a541ee67617a447dc1755ab39d337ab9975e43816345a2fa6296d58224  research/astra-e/narrow-short/narrow.rs
+ea481469fa747bac8de0cf0de606eb5b63fb25a83b71896e0edebbc907803a9e  /workspace/work/narrow-short-stage/stage
+400000 100000
+pid 48989's current affinity list: 0-4
+11 pinned real blocks; prepared runs; 21 rounds; one untimed warm pass; 7 arms
