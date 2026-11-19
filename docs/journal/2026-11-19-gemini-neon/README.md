@@ -14,6 +14,8 @@ unless Louis decides so.
 | [prompt.md](prompt.md) | The prompt, verbatim. |
 | [response.md](response.md) | Neon's response, verbatim and unedited. |
 | [response-2.md](response-2.md) | Neon's second response, after a follow-up asking it to re-examine Theorem 3 and repair Theorem 2. Verbatim and unedited. |
+| [verify_thm3.py](verify_thm3.py) | Neon's round-3 exhaustive verifier for Theorem 3′, verbatim. Neon could not run it; the Coordinator ran it (results below). Ruff-exempt as quoted evidence. |
+| [batchrate.py](batchrate.py) | The Coordinator's measurement of how often fronts can be batched, using Neon's own code on real text. |
 | [check_theorem1.py](check_theorem1.py) | The Coordinator's exhaustive check of Theorem 1 and of the 7-cycle example. |
 
 ## Status of the claims
@@ -105,6 +107,42 @@ Asked to re-examine Theorem 3 and repair Theorem 2, Neon ([response-2.md](respon
 **Classification:** Theorem 3′ is a plausible corrected construction with a sound dynamical core. Its pointer-level and mark-transport claims need an executable reference model. MONODROMY now audits Theorem 3′ rather than the withdrawn Theorem 3.
 
 **Round 2 also shows how Neon behaves under correction:** it found a real defect in its own construction and repaired it rather than defending the original. It still labels claims "proved" ahead of its evidence.
+
+## Round 3
+
+Neon corrected Test A with a valid two-front batch (n = 10, r = 8, three unequal cycles). It also supplied an exhaustive verifier (`verify_thm3.py`), and said plainly that it had no interpreter and had **not run it**. It noted two subtleties:
+- the update must unlink a node before splicing it, to avoid a self-loop;
+- the result is a valid refinement of the maximal partition, not always the maximal partition itself.
+
+**The Coordinator ran it** (Python 3, standard library only, 1.3 s): `ALL TESTS PASSED`.
+
+| Domain | Configurations | Admissible batches | of which ≥ 2 fronts |
+|---|---|---|---|
+| BWTs: binary n ≤ 8, ternary n ≤ 5 | 2,094 (each also decoded end to end) | 3,501 | 15 |
+| General dIETs, r ∈ {4, 5}, K ∈ {2, 3} | 2,736 | 7,463 | 1,131 |
+
+Every case was compared against direct first-return computation, with return words, every primary mark, every order of each batch and the representation invariants. There were 635 strict refinements and no failures.
+
+**What this supports:** Theorem 3′ is verified exhaustively over this bounded domain. Within that scope this is computational verification, not a proof. MONODROMY's audit still stands.
+
+**Batch rate.** The small BWT cases suggest batching is almost never possible (15 of 3,501). That is an artefact of tiny blocks. `batchrate.py` runs Neon's own greedy decode on real text, with K pinned C[c] boundaries:
+
+| Source (r/n) | K | Rounds with ≥ 2 fronts | Mean fronts per round | Serial-chain reduction |
+|---|---|---|---|---|
+| markdown blog post, n = 6,000 (≈ 0.41) | 1 | 0% | 1.0 | 1× |
+| | 4 | 97% | 3.4 | ≈ 3.4× |
+| | 15 | 91% | 7.1 | ≈ 7× |
+| JSON (calibration.json), n = 20,000 (≈ 0.31) | 14 | 36% | 3.6 | ≈ 3.6× |
+| | 26 | 23% | 3.3 | ≈ 3.4× |
+
+**What the batch rate shows:**
+- The total number of induction steps is essentially unchanged; batching shortens the dependent chain, it does not remove work.
+- The gain saturates at a small K on repetitive data.
+- **Neither sample is in Cells' admitted regime** (r/n below 0.15; Wikidata's admitted blocks are 0.097–0.148).
+
+**Still open:**
+- the batch rate on a real admitted Wikidata block;
+- whether Cells' shipped induction is latency-bound in the first place. It already prefetches. If it is not latency-bound, a shorter chain buys little.
 
 ## Routing
 
