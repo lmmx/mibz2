@@ -1,0 +1,23 @@
+moonshot: building the harness with /workspace/work/astra-e-final-stage/research/astra-e/final-slot/candidate.rs
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e-final-stage/bench/moonshot)
+   Compiling cc v1.11.2
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-e-final-stage)
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling bzip2 v0.4.4
+    Finished `release` profile [optimized + debuginfo] target(s) in 1m 04s
+moonshot: the correctness gate: check --arm candidate --wikidata /workspace/work/astra-e-final-stage/corpora/wikidata.bz2
+moonshot: round 1 of 9 timed
+moonshot: round 2 of 9 timed
+moonshot: round 3 of 9 timed
+moonshot: round 4 of 9 timed
+moonshot: round 5 of 9 timed
+moonshot: round 6 of 9 timed
+moonshot: round 7 of 9 timed
+moonshot: round 8 of 9 timed
+moonshot: round 9 of 9 timed
+moonshot: written to research/astra-e/results/v1-final-slot-confirm/score
+moonshot: recorded in research/astra-e/results/v1-final-slot-confirm/official-register.jsonl
