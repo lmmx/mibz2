@@ -8,6 +8,9 @@ import subprocess
 import sys
 
 
+FROZEN_SCORER = "9c31461df7bef24cecf79348545b27ee26846835"
+
+
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -17,6 +20,11 @@ def main():
     for name in ("tree", "binary", "corpus", "runtime", "scratch", "output"):
         parser.add_argument(name, type=Path)
     a = parser.parse_args()
+    source_check = subprocess.run([
+        "git", "-C", a.tree, "diff", "--quiet", FROZEN_SCORER, "--", "bench/moonshot",
+    ])
+    if source_check.returncode:
+        raise SystemExit("This historical screen requires scorer 9c31461. See proxy/README.md.")
     sys.path.insert(0, str(a.tree / "bench/moonshot"))
     import moonshot
 
@@ -27,7 +35,8 @@ def main():
     git = lambda *args: subprocess.check_output(["git", "-C", a.tree, *args], text=True).strip()
     info = scorer.info()
     manifest = dict(candidate=info, binary_sha256=digest(a.binary), corpus_sha256=digest(a.corpus),
-                    head=git("rev-parse", "HEAD"), source_path_revision=git("log","-1","--format=%H","origin/master","--","bench/moonshot"),
+                    head=git("rev-parse", "HEAD"), source_path_revision=FROZEN_SCORER,
+                    refreshed_path_revision=git("log","-1","--format=%H","origin/master","--","bench/moonshot"),
                     master=git("rev-parse","origin/master"), latencies=latencies, workers=w,
                     valgrind=subprocess.check_output(["valgrind","--version"],text=True).strip(),
                     printed_scorer_version=info.get("scorer_version",info.get("version")),

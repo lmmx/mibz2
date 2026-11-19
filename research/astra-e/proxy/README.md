@@ -24,6 +24,9 @@ git worktree add --detach "$proxy_work/tree" e12e5f63173ee7cc6fcc413510ee76cfee0
 cd "$proxy_work/tree"
 git fetch origin master && git checkout origin/master -- bench/moonshot .just Justfile
 git log -1 --format=%h origin/master -- bench/moonshot
+# v1 replaced the v0 latency function and changed the memory model.
+# Replay the published v0 counters with the exact harness, model and tool.
+git checkout 9c31461df7bef24cecf79348545b27ee26846835 -- bench/moonshot .just Justfile
 export CARGO_TARGET_DIR="$proxy_work/build"
 export MOONSHOT_CANDIDATE="$PWD/research/astra-e/open/candidate.rs"
 cargo build --locked --release --manifest-path bench/moonshot/Cargo.toml
@@ -35,3 +38,5 @@ python3 "$research_root/research/astra-e/proxy/screen.py" "$PWD" \
 ```
 
 Use the scorer revision recorded in each manifest when comparing runs. Absolute binary digests can depend on the checkout path because the harness embeds it during the build.
+
+PR #608 introduced scorer v1 at `604dac3`. A fresh v1 screen uses separate receipts, individual warm blocks and the arm-dependent bandwidth model. The historical replay checks its inputs against v0 and records both the refreshed revision and the executed revision.
