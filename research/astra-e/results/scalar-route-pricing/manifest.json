@@ -1,0 +1,103 @@
+{
+  "start": "2026-11-19T04:10:36.679958+00:00",
+  "plan": "bac52c22318ebeecdb198bb2b9a45b13686fef55",
+  "plan_committed": "2026-11-19T04:07:34Z",
+  "plan_public_ref_verified_before_samples": true,
+  "target_result_status_at_plan": "queued as relayed; no scalar target receipt consulted",
+  "scorer_checkout": "e0a84bfd9acda7b21175e2efc1546c51f44a2214",
+  "fetched_master": "3df195b10e9fb6f86f0c06ad9fad1feb992406d5",
+  "scorer_path": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "scorer_version": "v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04",
+  "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+  "files": {
+    "bench/moonshot/moonshot.py": "db78f811fe11c60874562452a8d42a5cc2fcdd8c77a4e171db15254abc584a42",
+    "bench/moonshot/chaingrind/chaingrind.c": "12b07d73550a3e53d7fa5f686831a2e3a5b76f2fd29083880ffbf06402e4937c",
+    "bench/moonshot/chaingrind/build.sh": "03775be21938a1349d841e12ab83b7eaec6e63ab44b0d859b600980b9695d853",
+    "bench/moonshot/calibration.json": "0623e13c5a008f678055b9170eeb9648c41dd19f145a05e5abcc514fa3aa1c21",
+    "bench/moonshot/src/main.rs": "5b1952d302e619aea168a8371d149ca051f9cfea6189e7a70bfc3f5cafb52da6",
+    "bench/moonshot/src/check.rs": "03545e457bc904e9ac4479212bcabe85baac843ab1431128ec4bf35710687563"
+  },
+  "tools": {
+    "valgrind": "4652774bd116cb49951ef74115ad4237cad5021b2bd4d80002f09d986ec438b9",
+    "valgrind.bin": "333955eab1162f0b5031e7f238e0aece3ee5c6e1ea00f1b93cdb52baa3242179",
+    "chaingrind-amd64-linux": "2549501a58551de0d8ab10d22f164c32a6c5284c5aa55e01eddf182189911f38",
+    "vgpreload_core-amd64-linux.so": "065bd6808a42f8011c01fc7714c0bf025ebf209f652b5269e0a0d76fb92ce20f"
+  },
+  "arms": {
+    "edge": {
+      "pin": "badb2aec3624bd65606c429b2e6f79e9d9d0050f",
+      "entry": "research/astra-e/edge-budget/candidate.rs",
+      "binary_sha256": "34951c18521fb37ee56c87a105a9b221a46a7b9446a70be10fac0ada2dcdb168",
+      "info": {
+        "candidate": "/workspace/work/astra-scalar-route-build/edge/research/astra-e/edge-budget/candidate.rs",
+        "candidate_type": "moonshot::candidate::Candidate",
+        "arms": [
+          "lazy",
+          "cells",
+          "open",
+          "opend",
+          "candidate"
+        ],
+        "cpus": 1
+      },
+      "src_tree": "df7baca05d797d930723ac9bba0468841d1b69fd",
+      "research_source_sha256": {
+        "docs/journal/2026-11-18-open-return/segments.rs": "6b7e1c516893ba585183a12202b433da450e605a2f122473266d42de112a5fd7",
+        "research/astra-e/edge-budget/adapter.inc.rs": "2dde2d590cb4684e79b9b5a910c5ebd16ebf4ed87077eaa614980c43fd029104",
+        "research/astra-e/edge-budget/candidate.rs": "c5b7cb186c5a82b7cba4f071b972e8a82bfff66627c24fe80c8624c4cc680602",
+        "research/astra-e/edge-budget/gate.rs": "23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212",
+        "research/astra-e/narrow-short/constructor_ahead.rs": "c0ccf8939b8cdf02ac4c8157c588d980afa378805fcb37498ca3cda0ccbc6d4f",
+        "research/astra-e/short-words/endpoint.rs": "09380d30e328d27056735776812e55677a69c21933dc8b56412da75b87ee2d4d"
+      }
+    },
+    "scalar": {
+      "pin": "d0a42980e896211906234c7679b38760ae44a46e",
+      "entry": "research/astra-e/front-fusion/cap-batch/worker/candidate.rs",
+      "binary_sha256": "b31166f10e337f283b2101a5ea01128b3ad80f2914ad4785b7b197254d556c17",
+      "info": {
+        "candidate": "/workspace/work/astra-scalar-route-build/scalar/research/astra-e/front-fusion/cap-batch/worker/candidate.rs",
+        "candidate_type": "moonshot::candidate::Candidate",
+        "arms": [
+          "lazy",
+          "cells",
+          "open",
+          "opend",
+          "candidate"
+        ],
+        "cpus": 1
+      },
+      "src_tree": "3a6a7b574d4216b909c68f26223a70d02ad00473",
+      "research_source_sha256": {
+        "docs/journal/2026-11-18-open-return/segments.rs": "6b7e1c516893ba585183a12202b433da450e605a2f122473266d42de112a5fd7",
+        "research/astra-e/front-fusion/cap-batch/worker/adapter.inc.rs": "2dde2d590cb4684e79b9b5a910c5ebd16ebf4ed87077eaa614980c43fd029104",
+        "research/astra-e/front-fusion/cap-batch/worker/candidate.rs": "6d30fdc7bf7a66b061cfd7842ab5f1327c2f35deb7dae66ad0b8c690f498027c",
+        "research/astra-e/front-fusion/cap-batch/worker/gate.rs": "23d48115c627f3e0a8233cbbdc63a7e0b2fee04de1be3852140d2aabd6964212",
+        "research/astra-e/front-fusion/cap-batch/worker/kernel.rs": "6ec9b514f032890c04e1afb7c29ea3d1983ab359bbf59880f8171b95c96f0278",
+        "research/astra-e/narrow-short/constructor_ahead.rs": "c0ccf8939b8cdf02ac4c8157c588d980afa378805fcb37498ca3cda0ccbc6d4f",
+        "research/astra-e/short-words/endpoint.rs": "09380d30e328d27056735776812e55677a69c21933dc8b56412da75b87ee2d4d"
+      }
+    }
+  },
+  "samples": {
+    "1": {
+      "measured_single_sha256": "1e6dbb700bb47dd598c2df529947a9926c7402f5d57ce34fb58f5c99e2dcd9f9",
+      "two_record_sha256": "4494c243198cd4d82fc5843e77af4fc0e3be9c86992b3f58ba5ad43c176b565f",
+      "bytes": 359484
+    },
+    "85": {
+      "measured_single_sha256": "4786774f8d042a917ee58ab017c1515bb60898594b71d00fcc39eec22f7dae21",
+      "two_record_sha256": "3b6ba01c4917779d3124095ca38f51fc84261a05cda497f703ebf1fdd61728c1",
+      "bytes": 383932
+    },
+    "165": {
+      "measured_single_sha256": "6ae26ffcaa7591726d6029a45b4a56178517438a39bf08bbf28925094aac93d7",
+      "two_record_sha256": "77088c19c767b5db767d12f79159eb9f67df34b3e0aacbc437c35df37a73412e",
+      "bytes": 578820
+    }
+  },
+  "cpu": 4,
+  "nice": 15,
+  "valgrind": "valgrind-3.24.0",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+  "finish": "2026-11-19T04:11:08.986443+00:00"
+}
