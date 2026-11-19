@@ -42,6 +42,7 @@
     "direct.py:76 assert i+1 == len(self.starts) or row+width <= self.starts[i+1]": 461
   },
   "mode": "dense and Direct oracles only",
+  "native_checks": [],
   "ordered_datasets_sha256": "0a0aa5bcf8160885ce6bc8ea99db9a26db4015a9075f9281939d74378d9e4a84",
   "section_labels": {
     "arbitrary_exhaustive": 5460,

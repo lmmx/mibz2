@@ -127,6 +127,14 @@ def batch(binary, requests):
             bands = [(x,y,w,bytes.fromhex(word),c) for x,y,w,word,c in raw]
             check_bands(bands, want[0])
             assert obj["expanded_hex"] == want[1]
+            for key, value in want[2].items():
+                assert obj[key] == value, (key, obj[key], value)
+            component_count = int(dataset.split("\n", 1)[0].split()[-1])
+            assert obj["bands_count"] == len(bands) <= obj["raw_hits"]
+            assert obj["packet_inputs"] == component_count + obj["live_outputs"] - obj["live_merges"]
+            assert obj["packet_inputs"] == sum(obj[k] for k in (
+                "select_binary_searches", "select_finger_retained", "select_finger_next"))
+            assert obj["component_pieces"] == obj["live_outputs"] + obj["raw_hits"]
         except Exception as exc:
             raise AssertionError(f"binary disagrees on dataset\n{dataset}\nreported {row}") from exc
 
@@ -197,6 +205,14 @@ def main(binary):
             if direct is not None:
                 check_bands(direct.bands, edges)
                 totals["direct_checked_sections"] += 1
+            words = {w for _,w,_ in edges.values()}
+            full_trie = {w[:length] for w in words for length in range(1,len(w)+1)}
+            groups = {w[:length] for w in words for length in range(len(w))}
+            covered_rows = sum(len(w) for _,w,_ in edges.values())
+            assert covered_rows == len(set().union(*(cycles[x] for x in tag)))
+            expected_stats = dict(n=n, covered_rows=covered_rows, source_rows=len(tag), groups=len(groups),
+                                  trie_nodes=1+len(full_trie), word_count=len(words),
+                                  spelling_bytes=sum(map(len,words)), max_depth=max(map(len,words), default=0))
             for mark in range(n):
                 hit = not cycles[mark].isdisjoint(tag)
                 want = spell(first, psi, mark, n) if hit else None
@@ -208,7 +224,21 @@ def main(binary):
                     f"{a} {b}\n" for a,b in [*runs,*comp])
                 fingerprint.update(data.encode())
                 if binary:
-                    requests.append((data, (edges, None if want is None else want.hex())))
+                    before = 0
+                    row = mark
+                    if tag:
+                        while row not in tag and before < len(cycles[mark]):
+                            before += 1
+                            row = psi[row]
+                    remaining = n-before
+                    lookups = 0
+                    while hit and remaining > 0:
+                        row, word, _ = edges[row]
+                        remaining -= len(word)
+                        lookups += 1
+                    stats = dict(expected_stats, mark_seeks=before, mark_prefix=before if hit else 0,
+                                 output_lookups=lookups)
+                    requests.append((data, (edges, None if want is None else want.hex(), stats)))
                     if len(requests) == 256:
                         batch(binary, requests)
                         requests.clear()
@@ -224,6 +254,13 @@ def main(binary):
                           "all_primary_indices_tested": True},
                 mode="validate forward" if binary else "dense and Direct oracles only",
                 binary_sha256=sha256(binary.read_bytes()).hexdigest() if binary else None,
+                native_checks=([
+                    "every source row's first-return destination, word and destination color",
+                    "marked expansion or disjoint-cycle fallback",
+                    "exact covered mass, proper-prefix groups, full trie and distinct spellings",
+                    "initial mark-to-section distance and number of output word lookups",
+                    "packet conservation, select seeks and terminal/live accounting",
+                ] if binary else []),
                 ordered_datasets_sha256=fingerprint.hexdigest(), counts=totals,
                 section_labels=labels, direct_outside_structured_domain=refusals, witnesses=witnesses)
 
