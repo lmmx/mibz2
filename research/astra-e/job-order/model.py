@@ -33,6 +33,13 @@ def simulate(a,w,cap,policy,retain=False):
     assert 1<=w<=cap and len(a.scan)==len(a.work)==len(a.copy)==len(a.symbols)
     assert min(a.scan+a.work+a.copy)>0
     n=len(a.work); finished=[False]*n; ready=[]; timeline=[]
+    if policy in ('slack-symbols','slack-oracle'):
+        estimates=a.symbols if policy=='slack-symbols' else a.work
+        from itertools import accumulate
+        # The first h entries are enqueued; all later prefix values stay inaccessible.
+        prefix=list(accumulate(estimates,initial=0))
+    else:
+        estimates=None
     events=[]; t=0; next_job=0; taken=0; free=w; scanning=reading=False
     alt=changed=maxjobs=0
     while True:
@@ -45,7 +52,12 @@ def simulate(a,w,cap,policy,retain=False):
             heapq.heappush(events,(t+a.scan[next_job],'scan',next_job))
             next_job+=1
         while free and ready:
-            i=choose(ready,policy,a)
+            if estimates is None:
+                i=choose(ready,policy,a)
+            else:
+                released=next_job-int(scanning)
+                # Integer comparison of i - w * cost_i / prefix_mean.
+                i=min(ready,key=lambda j:(j*prefix[released]-w*estimates[j]*released,j))
             alt+=len(ready)>1
             changed+=i!=ready[0]
             maxjobs=max(maxjobs,len(ready))

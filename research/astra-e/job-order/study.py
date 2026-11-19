@@ -91,7 +91,10 @@ def scaled(vec,sec):
     return [max(1,round(x*unit)) for x in vec]
 
 def main():
-    arg=argparse.ArgumentParser();arg.add_argument('output',type=Path);p=arg.parse_args().output
+    global POLICIES
+    arg=argparse.ArgumentParser();arg.add_argument('output',type=Path);arg.add_argument('--slack',action='store_true')
+    opts=arg.parse_args();p=opts.output
+    if opts.slack:POLICIES=('fifo','slack-symbols','slack-oracle')
     p.mkdir(parents=True,exist_ok=True)
     tr=RESEARCH/'huffman-phrases/integrated/trace'
     paths=sorted(tr.glob('marks-*-4-stock.csv.gz'))
