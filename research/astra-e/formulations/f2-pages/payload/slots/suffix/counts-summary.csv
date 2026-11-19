@@ -1,0 +1,4 @@
+arm,first_direct_spans,first_direct_bytes,first_tail_copies,first_tail_bytes,second_direct_spans,second_direct_bytes,second_tail_copies,second_tail_bytes
+first,2394767,22136453,500503,1256860,4418276,41433719,0,0
+second,3466864,23393313,0,0,4415048,41426966,3177,6753
+both,2394767,22136453,500503,1256860,4415048,41426966,3177,6753
