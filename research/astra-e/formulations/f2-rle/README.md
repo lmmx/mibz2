@@ -30,3 +30,14 @@ rustc -O -C codegen-units=1 --edition=2021 "$d/measure.rs" --extern mibz2="$deps
 "$scratch/native" small
 "$scratch/native" corpora/wikidata.bz2 "$scratch/phase.csv"
 ```
+
+## Subsequent constructions and independent checks
+
+| Reconstruction | What survived the next test |
+| --- | --- |
+| [Diagonal rank](diagonal/) and [ownership in the existing section](saturated/) | Sparse recognition survived; constructing or tracing every protected singleton was expensive. |
+| [Rank from existing strips](compiled/) and [bundled interval owners](bundled/) | Evaluating every start from existing strip/queue geometry removed an extra cap scan. Bundling eliminated all 66 return-owner budget falls in the original corpus. |
+| [Combined narrow endpoint and one-edge lookahead](combined/) | The independent five-arm CI run beat opend at workers 1, 2 and 4. Against the frozen narrow/ahead predecessor it was 1.0046, 1.0136 and 1.0142 in paired wall time; W2/W4 intervals excluded parity on the slower side. [CI report](../../ci/evidence/combined-word-actions-44436152031.md) |
+| [Count-only substitutions](count-only/), [arbitrary marked cuts](marked-components/) and [streamed edit lists](slices/) | Positivity of every corrected component's mass certifies full marked coverage. The sparse-slice worker removed corrected spelling copies, finished directly on 227/228 admissions and passed the full gate. [Official gate](../../results/v1-rle-slices-gate/score/summary.txt) |
+| [Cyclic BWT of fully corrected bytes](decoded-column/) and [simultaneous predecessor update](decoded-column/local-update/) | Updating all counts together reduced stream 134 from 23,887 sequential moves to 470. Every corrected rotation agreed with the independent suffix order. |
+| [Sparse corrected-BWT worker](decoded-column/backbone/) | 224/228 admitted blocks wrote final bytes directly. All real outputs, stored CRCs, native adversaries and 338 official cases passed. Separate original navigation and corrected cap scattering alone cost 8.58 times the stock parser they replaced. The continuation is to test whether both full scans can be removed. |
