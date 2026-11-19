@@ -16,13 +16,13 @@ ROUNDS = 16
 BYTES = 838_800_784
 
 
-def roster():
-    return [(rnd, w, arm) for rnd in range(ROUNDS) for w in WORKERS for arm in order(ARMS, rnd + w)]
+def roster(arms=ARMS):
+    return [(rnd, w, arm) for rnd in range(ROUNDS) for w in WORKERS for arm in order(arms, rnd + w)]
 
 
-def assess(rows):
+def assess(rows, arm_names=ARMS):
     observed = [(r["round"], r["workers"], r["arm"]) for r in rows]
-    if observed != roster():
+    if observed != roster(arm_names):
         raise ValueError("incomplete, duplicated, reordered or unexpected measurement")
     for row in rows:
         if row["out_bytes"] != BYTES:
@@ -31,9 +31,9 @@ def assess(rows):
             raise ValueError("wall time and VmHWM must be finite and positive")
     cells = {}
     for w in WORKERS:
-        arms = {a: [r for r in rows if r["arm"] == a and r["workers"] == w] for a in ARMS}
+        arms = {a: [r for r in rows if r["arm"] == a and r["workers"] == w] for a in arm_names}
         cell = {}
-        for reference in ARMS[:-1]:
+        for reference in arm_names[:-1]:
             candidate = arms["candidate"]
             ref = arms[reference]
             wall = paired_ratio([r["wall_s"] for r in candidate], [r["wall_s"] for r in ref])
