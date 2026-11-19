@@ -2,15 +2,36 @@
 
 The frozen build is `6a8a366cd786d58a528000b58da12fd2cfb47be8`. The candidate entry has SHA-256 `7b7741a017f12aaf5c9624028e32715ad4fd806210bef0c6b210c7c1d16631d6`, also recorded at the narrow-short workstation freeze. Master supplied scorer v1 at `604dac3f46569edd9ac9b6706b23a68d9d7d8f8d`. The four included candidate source hashes, model, executable, corpus and 64 extracted symbol tapes are in the [provenance receipt](checkpoint/provenance.json).
 
-The quick libbzip2/CRC gate passed all 98 cases. The full 338-case gate for this candidate is separately retained with its [workstation rehearsal](../../workstation/rehearsals/narrow-short-0694800.tar.gz). The official proxy runs fresh LazyCells and candidate workers at nominal and elevated DRAM latency, comparing them with v1's deposited reference arms. Its sample has 48 full and 16 tiny blocks, weighted to the corpus populations. Each of the six worker models requires 160 simulator invocations. Each invocation warms and measures one block in a single worker. There is no process wall-time or RSS measurement in this score. [Gate receipts](checkpoint/check.jsonl) · [Invocation and environment](manifest.txt)
+The quick libbzip2/CRC gate passed all 98 cases. The full 338-case gate for this candidate is separately retained with its [workstation rehearsal](../../workstation/rehearsals/narrow-short-0694800.tar.gz). The official proxy runs fresh LazyCells and candidate workers at nominal and elevated DRAM latency, comparing them with v1's deposited reference arms. Its sample has 48 full and 16 tiny blocks, weighted to the corpus populations. Each of the six worker models requires 160 simulator invocations. Each invocation warms and measures one block in a single worker. Whole-process wall time and peak RSS belong to the paired benchmarks. [Gate receipts](checkpoint/check.jsonl) · [Invocation and environment](manifest.txt)
+
+## Complete official score
+
+The scorer printed `v1` at `6a8a366cd786d58a528000b58da12fd2cfb47be8`. The 960 nominal and high-latency simulations took 58 minutes 42 seconds on one low-priority worker on the shared Xeon. Reloading them through the pinned scorer reproduced every field of its calibrated proxy, including the 400 paired block-bootstrap comparisons. [Official score](score/summary.txt) · [All simulator counters](score/proxy-runs.jsonl) · [Rebuilt comparisons](comparison.csv)
+
+| W model | Candidate / lazy [95%] | Deposited opend / lazy | Ratio of point estimates | Candidate / opend instructions | Candidate / opend DRAM B/B | Candidate / opend dependent past-L2 links/B | Reference envelope |
+|---:|---|---:|---:|---:|---:|---:|---|
+| 1 | 0.8596 [0.8293,0.8905] | 0.8695 | 0.9886 | 0.9759 | 0.9719 | 1.0021 | dep_dram_links_per_byte 1.182e-05 outside [1.588e-05, 1.66e-05] |
+| 2 | 0.8589 [0.8284,0.8899] | 0.8688 | 0.9886 | 0.9759 | 0.9719 | 1.0021 | dep_dram_links_per_byte 1.182e-05 outside [1.588e-05, 1.66e-05] |
+| 4 | 0.8570 [0.8258,0.8889] | 0.8674 | 0.9880 | 0.9759 | 0.9589 | 1.0022 | dep_dram_links_per_byte 1.297e-05 outside [1.588e-05, 2.241e-05] |
+| 7 | 0.9102 [0.8811,0.9376] | 0.9558 | 0.9522 | 0.9759 | 0.8964 | 1.0016 | within |
+| 8 | 0.9118 [0.8817,0.9396] | 0.9466 | 0.9632 | 0.9759 | 0.9458 | 1.0007 | within |
+| 10 | 0.9155 [0.8740,0.9516] | 0.9445 | 0.9693 | 0.9759 | 0.9630 | 1.0001 | within |
+
+The candidate/lazy bootstrap compares the same blocks measured by this invocation. Opend uses the v1 reference deposited on master. Only the fresh candidate/lazy comparison supplies a paired interval. Each result models a worker at its share of LLC. The actual CI and i9 perform the paired wall and peak-RSS tests. [Corresponding independent CI](https://github.com/lmmx/mibz2/actions/runs/44427324957) · [Complete route shares](route-shares.json)
+
+Recompute the calibrated grid and check the archived interpretation with the following command, supplying a checkout of the historical v1 scorer.
+
+```sh
+python3 research/astra-e/results/combined-v1-proxy/read_v1.py /path/to/frozen/checkout
+```
 
 ## Earlier checkpoint and recovery
 
-The checkpoint preserves 800 complete official observations, all W1, W2, W4, W7 and W8 rows. The 240-, 480- and 640-row checkpoints remain at commits `6a5d160`, `b633eed` and `1c895fc`. W8 gives 0.9118 [0.8817,0.9396] against fresh lazy, within the v1 reference envelope. A source check confirms that v1's `proxy-runs.jsonl` receives one record per block, with normal file buffering. The final report below supersedes this partial receipt.
+The checkpoint preserves 800 complete official observations, all W1, W2, W4, W7 and W8 rows. The 240-, 480- and 640-row checkpoints remain at commits `6a5d160`, `b633eed` and `1c895fc`. W8 gives 0.9118 [0.8817,0.9396] against fresh lazy, within the v1 reference envelope. A source check confirms that v1's `proxy-runs.jsonl` receives one record per block, with normal file buffering. The full official reading above includes these observations.
 
-The original study ran in `/workspace/work/narrow-proxy/v1-tree` and writes `research/astra-e/results/combined-v1-full-proxy/score/proxy-runs.jsonl`. Its target directory is `/workspace/work/narrow-proxy/v1-target`. To inspect progress without consuming a CPU for simulation, count the complete lines in that file. The root process is the shell executing `/workspace/work/narrow-proxy/v1-run.sh`. The raw results from the completed process are archived below.
+The original study ran in `/workspace/work/narrow-proxy/v1-tree` and wrote `research/astra-e/results/combined-v1-full-proxy/score/proxy-runs.jsonl`. Its target directory is `/workspace/work/narrow-proxy/v1-target`. Its shell entry was `/workspace/work/narrow-proxy/v1-run.sh`. The archived counters above contain all complete rows.
 
-The following historical continuation uses Python 3.13.5 with `PYTHON_CPU_COUNT=1`, Rust 1.99.1, the saved build tree, Valgrind 3.24.0 and its development libraries. Run it only if the original simulator has stopped. The verifier matches the input, model and both executables. The continuation rechecks the gate, regenerates each symbol tape and lets the official scorer execute all missing jobs, model and report. Its only change to the cached runs is reusing the exact simulator response to the same arguments and verified tape. Choose a new output directory. A build whose tool or executable digest differs requires a fresh whole score.
+The following historical continuation uses Python 3.13.5 with `PYTHON_CPU_COUNT=1`, Rust 1.99.1, the saved build tree, Valgrind 3.24.0 and its development libraries. The verifier matches the input, model and both executables. The continuation rechecks the gate, regenerates each symbol tape and lets the official scorer execute all missing jobs, model and report. Its only change to the cached runs is reusing the exact simulator response to the same arguments and verified tape. Choose a new output directory. A build whose tool or executable digest differs requires a fresh whole score.
 
 ```sh
 source /workspace/work/env.sh
@@ -67,24 +88,3 @@ Once W7 is present, the scorer has the fresh LazyCells anchor for its bandwidth 
 On W7, the sole sampled large dense block (ordinal 165) accounts for 7.42% of the combined candidate's corpus-weighted nominal cycles and 88.92% of its dependent DRAM loads, although it supplies 2.08% of the modeled bytes. Its raw count was 11,844 dependent DRAM loads. The other 63 sampled blocks together produced 1,385. LazyCells records a similar concentration at the same block. The elevated DRAM latency subsample has no large dense block. This gives a specific source of uncertainty in extrapolating model dependency or latency-sensitivity differences to the [wider edge gate](../../edge-budget/). [Weighted contributions](checkpoint/route-shares.json)
 
 The conditional distribution explains why the large dependency counter need not imply a comparable speed effect. Of the official 400 W7 paired bootstrap draws, 177 omitted ordinal 165, 123 included it once and 100 included it at least twice. In those groups the candidate's median dependent DRAM links per million output bytes were respectively **34.8, 308.1 and 582.6**. The corresponding median modeled cycle ratios against LazyCells were **0.9060, 0.9160 and 0.9195**. The two arms share the dense fallback. These are strata of the same simulated bootstrap, with overlapping ratio ranges. [All conditional quantiles](checkpoint/W7-bootstrap-strata.csv) · [Recompute from the raw W7 observations](stratum_check.py)
-
-## Complete official score
-
-The scorer printed `v1` at `6a8a366cd786d58a528000b58da12fd2cfb47be8`. All 960 nominal and high-latency observations were collected. Reloading them through the pinned scorer reproduced every field of its calibrated proxy, including the 400 paired block-bootstrap comparisons. [Official score](score/summary.txt) · [All simulator counters](score/proxy-runs.jsonl) · [Rebuilt comparisons](comparison.csv)
-
-| W model | Candidate / lazy [95%] | Deposited opend / lazy | Ratio of point estimates | Candidate / opend instructions | Candidate / opend DRAM B/B | Candidate / opend dependent past-L2 links/B | Reference envelope |
-|---:|---|---:|---:|---:|---:|---:|---|
-| 1 | 0.8596 [0.8293,0.8905] | 0.8695 | 0.9886 | 0.9759 | 0.9719 | 1.0021 | dep_dram_links_per_byte 1.182e-05 outside [1.588e-05, 1.66e-05] |
-| 2 | 0.8589 [0.8284,0.8899] | 0.8688 | 0.9886 | 0.9759 | 0.9719 | 1.0021 | dep_dram_links_per_byte 1.182e-05 outside [1.588e-05, 1.66e-05] |
-| 4 | 0.8570 [0.8258,0.8889] | 0.8674 | 0.9880 | 0.9759 | 0.9589 | 1.0022 | dep_dram_links_per_byte 1.297e-05 outside [1.588e-05, 2.241e-05] |
-| 7 | 0.9102 [0.8811,0.9376] | 0.9558 | 0.9522 | 0.9759 | 0.8964 | 1.0016 | within |
-| 8 | 0.9118 [0.8817,0.9396] | 0.9466 | 0.9632 | 0.9759 | 0.9458 | 1.0007 | within |
-| 10 | 0.9155 [0.8740,0.9516] | 0.9445 | 0.9693 | 0.9759 | 0.9630 | 1.0001 | within |
-
-The candidate/lazy bootstrap compares the same blocks measured by this invocation. Opend uses the v1 reference deposited on master. The ratio of their point estimates has no matched candidate/opend interval. Each result models a worker at its share of LLC. The actual CI and i9 perform the paired wall and peak-RSS tests. [Corresponding independent CI](https://github.com/lmmx/mibz2/actions/runs/44427324957) · [Complete route shares](route-shares.json)
-
-Recompute the calibrated grid and check the archived interpretation with the following command, supplying a checkout of the historical v1 scorer.
-
-```sh
-python3 research/astra-e/results/combined-v1-proxy/read_v1.py /path/to/frozen/checkout
-```
