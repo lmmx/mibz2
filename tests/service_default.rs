@@ -209,7 +209,9 @@ fn the_existing_plan_otherwise() {
     let cases = [
         (i9.clone(), 4, false, 4, false),
         (i9.clone(), 5, false, 5, false),
-        // unpinned at 4, 6 and 8: master's (`bench-unpinned`, LOG 6949008682)
+        // unpinned at 4 and 8: master's (`bench-unpinned`, LOG 6949008682); at 6, from 0.5.7,
+        // the plan's six workers on the lazy kernel (`UNPINNED_AT_SIX`), the same threads and
+        // window (`the_six_thread_cells_from_0_5_7`)
         (i9.clone(), 6, false, 6, false),
         (i9.clone(), 7, false, 7, false),
         (i9.clone(), 8, false, 8, false),
@@ -229,8 +231,8 @@ fn the_existing_plan_otherwise() {
         (unknown_quota, 20, false, 10, false),
         (small, 10, false, 10, false),
         // pinned one CPU a core on exactly the threads asked, as the sweeps measured: the
-        // machine is the i9's whatever the mask, so the cells trim (eager 3/12 at 4, eager
-        // 5/20 at 6, lazy 6/24 at 8, lazy 7/28 at 10)
+        // machine is the i9's whatever the mask, so the cells trim (eager 3/12 at 4, lazy
+        // 5/20 at 6 from 0.5.7, lazy 6/24 at 8, lazy 7/28 at 10)
         (Machine::pinned_i9(4), 4, false, 3, true),
         (Machine::pinned_i9(6), 6, false, 5, true),
         // one CPU a core on more cores than the threads asked: never trimmed
