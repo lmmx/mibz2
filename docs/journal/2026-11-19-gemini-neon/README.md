@@ -365,4 +365,10 @@ The giant SCC is a property of the macro graph. It does not by itself force expe
    - The sweep floor is 0.42–0.61λ, not ≈ λ/2.
    - It exceeds round 5's peeling passes on every block measured. Peeling runs ready fragments in any order, so it is outside the class this floor binds.
 
+**MONODROMY's addendum** (record 82 at d44742a2) answers the cycle-breaking follow-ups:
+- **(a) The true minimum F\* on block 0** lies between 0.814r and 2.088r. No lower bound valid beyond F_self_ns is known yet: a cycle-packing bound on the greedy partition binds only refinements of that partition.
+- **(b) Potentials plus a merge search** give valid schedules of 106,887 fragments on block 0 (2.088r, 7.9 B) and 0.831r on block 210.
+- **(c) Discovering the schedule** still needs a byte-level pass over the run labels.
+- **Against the bar set before the data:** block 0 stays above Cells' 1.81r steps. Block 210 goes below 1r, but only if the run transitions can be listed in o(n).
+
 **The status after round 6:** nothing changes in production. In-place Φ copy replay is still an open candidate, but only on blocks with high r/n, and only if the overlap labelling can be built in o(n). That is round 7's question.
