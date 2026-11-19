@@ -1,0 +1,47 @@
+named_quote mean_ms {'setup_ns': 6.549, 'discover_ns': 9.426, 'merge_ns': 2.203, 'publication_ns': 0.0, 'second_index_ns': 0.863, 'second_discover_ns': 9.458, 'second_merge_ns': 1.642, 'second_emit_ns': 5.696, 'total_ns': 35.874}
+full_word_marker mean_ms {'setup_ns': 3.424, 'discover_ns': 9.055, 'merge_ns': 2.535, 'publication_ns': 1.24, 'second_index_ns': 0.849, 'second_discover_ns': 4.377, 'second_merge_ns': 1.366, 'second_emit_ns': 3.476, 'total_ns': 26.355}
+sparse4 mean_ms {'setup_ns': 4.15, 'discover_ns': 9.038, 'merge_ns': 2.31, 'publication_ns': 0.88, 'second_index_ns': 1.06, 'second_discover_ns': 4.152, 'second_merge_ns': 1.082, 'second_emit_ns': 4.15, 'total_ns': 26.857}
+sparse8 mean_ms {'setup_ns': 2.98, 'discover_ns': 12.928, 'merge_ns': 2.22, 'publication_ns': 1.22, 'second_index_ns': 0.976, 'second_discover_ns': 4.198, 'second_merge_ns': 1.018, 'second_emit_ns': 8.968, 'total_ns': 34.526}
+sparse12 mean_ms {'setup_ns': 3.842, 'discover_ns': 12.395, 'merge_ns': 2.318, 'publication_ns': 1.101, 'second_index_ns': 1.024, 'second_discover_ns': 4.09, 'second_merge_ns': 0.976, 'second_emit_ns': 3.644, 'total_ns': 29.412}
+lift4 mean_ms {'setup_ns': 20.764, 'discover_ns': 8.391, 'merge_ns': 4.414, 'publication_ns': 2.516, 'second_index_ns': 1.201, 'second_discover_ns': 6.934, 'second_merge_ns': 1.099, 'second_emit_ns': 3.546, 'total_ns': 46.376}
+lift8 mean_ms {'setup_ns': 31.822, 'discover_ns': 6.567, 'merge_ns': 4.919, 'publication_ns': 3.574, 'second_index_ns': 1.393, 'second_discover_ns': 10.364, 'second_merge_ns': 1.261, 'second_emit_ns': 3.839, 'total_ns': 60.214}
+lift12 mean_ms {'setup_ns': 43.69, 'discover_ns': 4.929, 'merge_ns': 5.437, 'publication_ns': 4.403, 'second_index_ns': 1.21, 'second_discover_ns': 7.086, 'second_merge_ns': 1.308, 'second_emit_ns': 3.895, 'total_ns': 67.588}
+full_word_marker/named_quote total_ns 0.93631 [0.76523,1.14565]
+full_word_marker/named_quote second_discover_ns 0.88327 [0.66993,1.16454]
+full_word_marker/named_quote second_emit_ns 0.95973 [0.76994,1.19631]
+sparse4/named_quote total_ns 0.93176 [0.78900,1.10034]
+sparse4/named_quote second_discover_ns 0.83730 [0.64354,1.08940]
+sparse4/named_quote second_emit_ns 0.99808 [0.87823,1.13428]
+sparse8/named_quote total_ns 0.94777 [0.74974,1.19809]
+sparse8/named_quote second_discover_ns 0.82980 [0.62174,1.10749]
+sparse8/named_quote second_emit_ns 1.13828 [0.81126,1.59714]
+sparse12/named_quote total_ns 0.96651 [0.78457,1.19064]
+sparse12/named_quote second_discover_ns 0.80271 [0.62901,1.02437]
+sparse12/named_quote second_emit_ns 0.99706 [0.78910,1.25983]
+lift4/named_quote total_ns 1.65302 [1.36586,2.00056]
+lift4/named_quote second_discover_ns 1.40703 [1.06733,1.85483]
+lift4/named_quote second_emit_ns 0.95908 [0.74230,1.23917]
+lift8/named_quote total_ns 2.08550 [1.70889,2.54510]
+lift8/named_quote second_discover_ns 1.59419 [1.15585,2.19876]
+lift8/named_quote second_emit_ns 1.03178 [0.83831,1.26990]
+lift12/named_quote total_ns 2.41391 [2.00904,2.90037]
+lift12/named_quote second_discover_ns 1.40395 [1.07152,1.83952]
+lift12/named_quote second_emit_ns 1.08347 [0.85907,1.36648]
+sparse4/lift4 total_ns 0.56367 [0.51982,0.61122]
+sparse4/lift4 second_discover_ns 0.59508 [0.55423,0.63895]
+sparse4/lift4 second_emit_ns 1.04066 [0.84187,1.28639]
+sparse8/lift8 total_ns 0.45446 [0.38721,0.53338]
+sparse8/lift8 second_discover_ns 0.52051 [0.42203,0.64199]
+sparse8/lift8 second_emit_ns 1.10322 [0.85091,1.43034]
+sparse12/lift12 total_ns 0.40039 [0.35660,0.44956]
+sparse12/lift12 second_discover_ns 0.57175 [0.50830,0.64312]
+sparse12/lift12 second_emit_ns 0.92025 [0.80351,1.05395]
+sparse4/full_word_marker total_ns 0.99513 [0.91095,1.08709]
+sparse4/full_word_marker second_discover_ns 0.94796 [0.86684,1.03667]
+sparse4/full_word_marker second_emit_ns 1.03996 [0.86742,1.24681]
+sparse8/full_word_marker total_ns 1.01223 [0.85742,1.19500]
+sparse8/full_word_marker second_discover_ns 0.93947 [0.84397,1.04577]
+sparse8/full_word_marker second_emit_ns 1.18605 [0.91520,1.53705]
+sparse12/full_word_marker total_ns 1.03225 [0.91355,1.16638]
+sparse12/full_word_marker second_discover_ns 0.90879 [0.81883,1.00865]
+sparse12/full_word_marker second_emit_ns 1.03890 [0.91788,1.17588]
