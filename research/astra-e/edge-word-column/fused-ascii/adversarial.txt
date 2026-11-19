@@ -1,0 +1,1 @@
+17064 adversarial marked comparisons each for frozen, legacy and directly fused pair kernels, including periodic columns and 16-bit endpoint guard transitions
