@@ -37,17 +37,13 @@ finish() {
 trap finish EXIT
 git worktree add -q --detach "$tree" "$frozen"
 cd "$tree"
-python3 "$recipe/refresh.py" "$out"
 release=530ed404a014a414ef0b62adfd947fa14d4533e6
 git cat-file -e "$release^{commit}" || git fetch origin tag v0.5.6
 git diff "$release" HEAD -- src Cargo.toml > "$out/src-against-v0.5.6.diff"
-git rev-parse HEAD origin/master "$release" > "$out/commits.txt"
 git ls-tree -r HEAD -- "$recipe" "$candidate" > "$out/source-blobs.txt"
-git ls-files -s -- "$score" .just Justfile > "$out/scorer-blobs.txt"
-sha256sum "$candidate" "$score/moonshot.py" "$recipe/assess.py" > "$out/sources.sha256"
 export RUSTUP_TOOLCHAIN=1.99.1
 export PYTHONDONTWRITEBYTECODE=1
-unset RUSTFLAGS CARGO_ENCODED_RUSTFLAGS
+unset RUSTFLAGS CARGO_ENCODED_RUSTFLAGS PYTHONOPTIMIZE
 rustc -Vv > "$out/toolchain.txt"
 cargo -Vv >> "$out/toolchain.txt"
 python3 -V >> "$out/toolchain.txt"
@@ -66,7 +62,12 @@ fi
 export CARGO_TARGET_DIR=$scratch/target
 export MOONSHOT_CANDIDATE=$tree/$candidate
 bash research/astra-e/prepare.sh "$candidate"
-cargo build --release --locked --manifest-path "$score/Cargo.toml"
+python3 "$recipe/refresh.py" "$out"
+git rev-parse HEAD origin/master "$release" > "$out/commits.txt"
+selected=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["selected_build"])' "$out/scorer-refresh.json")
+export CARGO_TARGET_DIR="$CARGO_TARGET_DIR/$selected"
+git ls-files -s -- "$score" .just Justfile > "$out/scorer-blobs.txt"
+sha256sum "$candidate" "$score/moonshot.py" "$recipe/assess.py" > "$out/sources.sha256"
 bin=$CARGO_TARGET_DIR/release/moonshot
 "$bin" info | tee "$out/scorer-info.json"
 if [[ $mode == measure ]]; then
@@ -84,8 +85,10 @@ python3 "$recipe/assess.py" --plan > "$out/roster.json"
 # Full, untimed differential gate for the candidate. Capture the scorer report and raw cases.
 python3 "$score/moonshot.py" score "$candidate" --corpus "$base_corpus" --target-dir "$CARGO_TARGET_DIR" \
     --no-build --no-timing --no-proxy --out "$out/candidate-gate" | tee "$out/scorer-report.txt"
+python3 "$recipe/test_protocol.py" --gate "$out/candidate-gate/check.jsonl" candidate
 for arm in lazy opend open; do
     "$bin" check --quick --arm "$arm" --wikidata "$base_corpus" > "$out/gate-$arm.jsonl"
+    python3 "$recipe/test_protocol.py" --gate "$out/gate-$arm.jsonl" "$arm"
 done
 if [[ $mode == dry ]]; then
     # The pinned gate tests 1, 2 and available_parallelism() workers. Restrict only
@@ -111,6 +114,8 @@ for w in (7, 8, 9, 10):
     with (Path(out) / f"gate-candidate-w{w}.jsonl").open("w") as f:
         subprocess.run([*prefix, "check", "--quick", "--arm", "candidate", "--wikidata", corpus],
                        stdout=f, check=True)
+    subprocess.run([sys.executable, "research/astra-e/workstation/test_protocol.py",
+                    "--gate", str(Path(out) / f"gate-candidate-w{w}.jsonl"), "candidate"], check=True)
     exercised.append(w)
 (Path(out) / "dry-coverage.json").write_text(json.dumps({
     "target_machine": is_target, "target_worker_counts_tested": exercised,
