@@ -15,8 +15,12 @@ Run: python3 docs/team/acquisition/check_manifest.py <manifest.toml> [--registry
 
 import argparse
 import sys
-import tomllib
 from pathlib import Path
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:  # pragma: no cover - the repository targets 3.10+, the checker needs 3.11's tomllib
+    sys.exit("check_manifest.py needs Python 3.11 or later (tomllib)")
 
 HERE = Path(__file__).resolve().parent
 BLOCKING = {"assumed", "open"}
