@@ -30,7 +30,9 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 **Delimiter mechanism in independent CI.** At W1/W2/W4 the dynamic rank scheduler ran in 0.9561/0.9586/0.9784 of the static F2 predecessor. The candidate's full worker took 1.0252/1.0153/1.0196 of Lazy, so the independently verified scheduling improvement leaves a measurable pipeline gap on this runner. [Twenty complete rotations and artifact](ci/evidence/delimiter-refill-44433942216.md)
 
-**Guarded POPCNT, strongest independent delimiter result.** At source `3651470cb0ef5458e75cf97d3de363a1c73f2f76` this decoder takes 0.9184/0.9215/0.9317 of its exact counted predecessor at W1/W2/W4 on the independent Xeon worker. Direct candidate/opend is 0.8873/0.9135/1.0093 on that runner. The W4 full-worker regresses against opend with interval [1.0055,1.0130]. Its own local W4 estimate versus Lazy was 0.7870 [0.6588,0.9401]. No i9 outcome applies to this algorithm yet. [Raw independent evidence](ci/evidence/guarded-popcnt-44436826833.md) · [Local score and frozen recipe](results/v1-rank-popcnt-confirm/)
+**Compact delimiter decoder.** Source `6758831810b6a913c88ff079dede881b578ca03a` stores eight bytes per run and issues eight independent payload reads before consuming their answers. Against the guarded POPCNT decoder, 20 full-worker pairs per count on AMD measured 0.9134 [0.9066,0.9203], 0.9151 [0.9047,0.9256] and 0.9225 [0.9198,0.9251] at W1/W2/W4. Median peak ratios were 0.9945/0.9963/0.9867. Against Lazy the ratios were 0.8468/0.8631/0.8904, with W4 median peak 0.9140. Against opend the ratios were 0.8817/0.9112/1.0069. All five arms passed 338 checks. This is the delimiter speed reference. The W4 regression versus opend and the higher RSS leave the combined writer as the primary i9 reference. [300 original samples and verified comparisons](ci/evidence/compact-preload-44440381983.md) · [Native construction and phase data](formulations/f2-pages/payload/slots/)
+
+**Guarded POPCNT.** At source `3651470cb0ef5458e75cf97d3de363a1c73f2f76` this decoder takes 0.9184/0.9215/0.9317 of its exact counted predecessor at W1/W2/W4 on the independent Xeon worker. Direct candidate/opend is 0.8873/0.9135/1.0093 on that runner. The W4 full-worker regresses against opend with interval [1.0055,1.0130]. Its own local W4 estimate versus Lazy was 0.7870 [0.6588,0.9401]. No i9 outcome applies to this algorithm yet. [Raw independent evidence](ci/evidence/guarded-popcnt-44436826833.md) · [Local score and frozen recipe](results/v1-rank-popcnt-confirm/)
 
 **Combined word actions.** This derivative passed all 338 checks and reduces the cost of finishing some blocks, but the independent worker exceeded the frozen combined predecessor's wall by factors 1.0046/1.0136/1.0142 at W1/W2/W4, with W2 and W4 intervals above one. [Independent AMD result](ci/evidence/combined-word-actions-44436152031.md)
 
@@ -1681,4 +1683,30 @@ git checkout 75297a1d57b2bdf262c3a19f3064848dedf2c493 -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/final-slot/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/final-slot/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/astra-e-refresh-75297a1-build
+```
+
+## v1p2-guarded-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-guarded-confirm/score/check.jsonl) · [manifest](results/v1p2-guarded-confirm/manifest.txt) · [score](results/v1p2-guarded-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`a651e93f063737426cc19223d9b3ed8a2650fd8f`](https://github.com/lmmx/mibz2/tree/a651e93f063737426cc19223d9b3ed8a2650fd8f). [Candidate entry](https://github.com/lmmx/mibz2/blob/a651e93f063737426cc19223d9b3ed8a2650fd8f/research/astra-e/formulations/f2-pages/instructions/candidate.rs). Fetched master `be74d5763d212864607d46521d74ebc0827f9f36`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 1.129 [0.755, 1.689] | 1.236 [0.902, 1.695] | 0.913 | 80,140 / 80,200 / 77,480 | 0.999 |
+| 4 | 9 | 1.807 [0.599, 5.458] | 0.721 [0.246, 2.117] | 2.507 | 129,852 / 135,316 / 120,820 | 0.960 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1p2-guarded-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 POPCNT result](ci/evidence/guarded-popcnt-44436826833.md)
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout be74d5763d212864607d46521d74ebc0827f9f36 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-pages/instructions/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-pages/instructions/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/astra-e-refresh-75297a1-build
 ```
