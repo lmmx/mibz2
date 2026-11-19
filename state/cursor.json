@@ -1724,8 +1724,9 @@
       "sha": "3f09500ee3289b0dd06948003f45c89aedd8ea36",
       "evidence_digest": "sha256:f991f6a4792210a7a06813cacdfd9f4c98671374a5e660bae346793ab23e9852",
       "commit": "092171b8e5def8f3b16b40b90aed464716e65280",
-      "status": "complete",
-      "disposition": "PROCEED: B5 sufficient to freeze #631 registration; adoption separate."
+      "status": "finished",
+      "disposition": "PROCEED: B5 sufficient to freeze #631 registration; adoption separate.",
+      "comment": 7007260113
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1838,7 +1839,8 @@
     6903644101,
     6904474217,
     6988584322,
-    6988977627
+    6988977627,
+    7007260113
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -2118,7 +2120,10 @@
     "c6c4a951df5c0d826149ef97b7309b3396705781",
     "a8348a5f9c925c07b161c22db5bd937c454c1140",
     "2289d9a0f359fad72050f4afcce3a2310020a6a0",
-    "289b06a81def4c39238bb6b2c254e3c613a24a98"
+    "289b06a81def4c39238bb6b2c254e3c613a24a98",
+    "684915adbc331ba4bdcc7ee5951b965ed2c9e0eb",
+    "092171b8e5def8f3b16b40b90aed464716e65280",
+    "44a8fe4c3fcd7a2d41a174d6ea51b74c57705fb7"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2233,7 +2238,8 @@
     6903560983,
     6904418769,
     6988393925,
-    6988881933
+    6988881933,
+    7007091766
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2312,10 +2318,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 7007091766,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D115",
-    "work_commit": "092171b8e5def8f3b16b40b90aed464716e65280"
+    "incoming_comment": 7007091766,
+    "review_comment_id": 7007260113
   },
   "duplicate_events": [
     {
@@ -4150,11 +4157,13 @@
     {
       "comment_id": 7007091766,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D115",
-      "progress": "Independent source/CI/mutation review committed; publish REVIEW once.",
+      "progress": "Exact REVIEW body and PR145 destination verified; coordinator-only FROM verifier limitation independently checked.",
       "receipt_commit": "684915adbc331ba4bdcc7ee5951b965ed2c9e0eb",
-      "work_commit": "092171b8e5def8f3b16b40b90aed464716e65280"
+      "work_commit": "092171b8e5def8f3b16b40b90aed464716e65280",
+      "review_comment_id": 7007260113,
+      "complete_cursor_commit": "44a8fe4c3fcd7a2d41a174d6ea51b74c57705fb7"
     }
   ],
   "migrated_from": {
