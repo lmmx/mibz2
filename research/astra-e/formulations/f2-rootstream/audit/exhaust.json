@@ -1,0 +1,148 @@
+{
+  "cases_by_nodes": {
+    "1": 7,
+    "2": 247,
+    "3": 5803,
+    "4": 20532,
+    "5": 29105
+  },
+  "totals": {
+    "rows": 298776,
+    "root_runs": 252638,
+    "nodes": 245563,
+    "selectors": 467709,
+    "materialized_runs": 545731,
+    "visits": 592480,
+    "nonleaf_bottlenecks": 35860,
+    "simultaneous_cuts": 148047,
+    "charged_boundaries": 196944
+  },
+  "witnesses": {
+    "partial_child": {
+      "parents": [
+        -1,
+        0
+      ],
+      "root": [
+        1,
+        0,
+        1
+      ],
+      "counts": {
+        "rows": 3,
+        "root_runs": 3,
+        "nodes": 2,
+        "selectors": 4,
+        "materialized_runs": 4,
+        "visits": 5,
+        "nonleaf_bottlenecks": 1,
+        "simultaneous_cuts": 1,
+        "charged_boundaries": 2
+      }
+    },
+    "reentry": {
+      "parents": [
+        -1,
+        0
+      ],
+      "root": [
+        1,
+        0,
+        1
+      ],
+      "counts": {
+        "rows": 3,
+        "root_runs": 3,
+        "nodes": 2,
+        "selectors": 4,
+        "materialized_runs": 4,
+        "visits": 5,
+        "nonleaf_bottlenecks": 1,
+        "simultaneous_cuts": 1,
+        "charged_boundaries": 2
+      }
+    },
+    "uncoalesced": {
+      "selector_tapes": [
+        [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            1,
+            2
+          ]
+        ]
+      ],
+      "descent_output": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "maximal_runs": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    "shared_label": {
+      "selector_tapes": [
+        [
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        [
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            2,
+            1
+          ]
+        ]
+      ],
+      "terminal_label": {
+        "1": "a",
+        "2": "a"
+      },
+      "descent_output": [
+        [
+          "a",
+          1
+        ],
+        [
+          "a",
+          1
+        ]
+      ],
+      "maximal_runs": [
+        [
+          "a",
+          2
+        ]
+      ]
+    }
+  }
+}
