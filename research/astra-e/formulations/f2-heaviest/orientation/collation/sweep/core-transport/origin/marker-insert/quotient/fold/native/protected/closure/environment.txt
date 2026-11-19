@@ -1,0 +1,16 @@
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+35baf2958ed461a6f1a4d87f1fe430791fbfdac4231d3e74e83da9e32a3b2b7b  /tmp/astra-query-closure-inclusive/fold
+26ba7a41c8fe582a45c97561f336d79ee0ac85b89561d14a07dbe9757e6f1bd9  target/release/deps/libmibz2.rlib
+879fb79ed0e18980f2c74c8f7fd73df2789b6d976de03e87ddd0e4c136ec2cbb  /tmp/astra-clipped/ten.bin
+92e5ba16cde1123e9c784fe5927de689df6f544a651f8db08184515a233ca19a  research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/marker-insert/quotient/fold/native/protected/closure/server.py
+f83e46076c78a360cfb17185150133f83495b0ca168fa683c7e74f4d3f2ff648  research/astra-e/formulations/f2-heaviest/orientation/collation/sweep/core-transport/origin/marker-insert/quotient/fold/native/protected/closure/solve.py
+CPU(s):                                  5
+Model name:                              INTEL(R) XEON(R) PLATINUM 8573C
+400000 100000
