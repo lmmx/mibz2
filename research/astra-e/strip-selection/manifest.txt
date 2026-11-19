@@ -1,0 +1,13 @@
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+source badb2aec3624bd65606c429b2e6f79e9d9d0050f
+d3309d4e1324bd4ca0b43228791a1bc8860ab7761e26c9a4c240ab880ebda34b  /workspace/work/queue-spans/strip-v2/main.rs
+f54fa03d3c5f3cabfdba1c3d7d0c2785737d45a2ca7fe4ed6e9205fadc5b77b1  /workspace/work/queue-spans/strip-v2/stock.rs
+d4c275acb61fa6595fe3d8da41fde0d1768ec62137ad89120a688f10ecb79b21  /workspace/work/queue-spans/strip-v2/changed.rs
+d0dcdb06e5241b7993da031c721e7b25abea76059fd6466314749052571e98ac  /workspace/work/queue-spans/strip-v2/strip
+034e66aed30759128cec8a3b4ea94faa403648dac2e7dffac17808f7d8cb0684  /workspace/work/f2-word-build/release/deps/libmibz2.rlib

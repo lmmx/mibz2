@@ -1,0 +1,162 @@
+{
+  "split": "train",
+  "blocks": 93,
+  "streams": [
+    0,
+    3,
+    6,
+    9
+  ],
+  "rows": 83699093,
+  "reference": {
+    "n": 83699093,
+    "q": 0,
+    "retained": 8965921,
+    "strips": 312640,
+    "nodes": 738431,
+    "steps": 1074411,
+    "rules": 438456,
+    "bands": 324525,
+    "dictionary_bytes": 4835113,
+    "words": 138655,
+    "word_visits": 1629769,
+    "edge_bytes": 35863684,
+    "same_line": 2738,
+    "same_4k": 254023,
+    "edge_cap": 66506760,
+    "selector_cap": 0
+  },
+  "neutral": {
+    "n": 83699093,
+    "q": 7997,
+    "retained": 8973918,
+    "strips": 312640,
+    "nodes": 738865,
+    "steps": 1078996,
+    "rules": 437572,
+    "bands": 328765,
+    "dictionary_bytes": 4857619,
+    "words": 141571,
+    "word_visits": 1662663,
+    "edge_bytes": 35895672,
+    "same_line": 2601,
+    "same_4k": 255366,
+    "edge_cap": 66564480,
+    "selector_cap": 1172480
+  },
+  "policies": {
+    "2": {
+      "steps_vs_neutral": 0.9960972978583794,
+      "bytes_vs_neutral": 0.9901039995108715,
+      "stream_ratio_steps": {
+        "0": 0.9971150735504006,
+        "3": 0.995079673341064,
+        "6": 0.9952565978705152,
+        "9": 0.9969626312707114
+      },
+      "geometry_vs_champion": {
+        "nodes": 0.9942188234242604,
+        "steps": 1.0003480977019037,
+        "rules": 0.996193460689328,
+        "bands": 1.003682304907172,
+        "dictionary_bytes": 0.9947126364988781,
+        "words": 1.0129097400021636,
+        "word_visits": 1.014153539550697,
+        "retained": 1.0008919329090675,
+        "same_line": 0.9616508400292184,
+        "same_4k": 1.0037280088810856
+      },
+      "geometry_vs_neutral": {
+        "nodes": 0.9936348318028327,
+        "steps": 0.9960972978583794,
+        "rules": 0.9982060095252896,
+        "bands": 0.9907380651833376,
+        "dictionary_bytes": 0.9901039995108715,
+        "words": 0.992046393682322,
+        "word_visits": 0.9940896020420253,
+        "retained": 1.0,
+        "same_line": 1.0123029603998461,
+        "same_4k": 0.9984492845562839
+      },
+      "max_select_bytes": 17408,
+      "blocks_moved_edge_capacity_up": 93,
+      "qualifies": false
+    },
+    "3": {
+      "steps_vs_neutral": 1.002158488075952,
+      "bytes_vs_neutral": 1.001048456044,
+      "stream_ratio_steps": {
+        "0": 1.0031094787721935,
+        "3": 1.0032672942785341,
+        "6": 1.0020378773469554,
+        "9": 1.0002182540404279
+      },
+      "geometry_vs_champion": {
+        "nodes": 1.0063472416515558,
+        "steps": 1.0064351537726253,
+        "rules": 0.9971559289871732,
+        "bands": 1.019862876511825,
+        "dictionary_bytes": 1.0057080361927426,
+        "words": 1.0236125635570301,
+        "word_visits": 1.0248391029648987,
+        "retained": 1.0008919329090675,
+        "same_line": 0.9448502556610665,
+        "same_4k": 1.0027517193325013
+      },
+      "geometry_vs_neutral": {
+        "nodes": 1.0057561259499368,
+        "steps": 1.002158488075952,
+        "rules": 0.9991704222390829,
+        "bands": 1.006709960001825,
+        "dictionary_bytes": 1.001048456044,
+        "words": 1.0025287664846614,
+        "word_visits": 1.0045637630716506,
+        "retained": 1.0,
+        "same_line": 0.9946174548250672,
+        "same_4k": 0.9974781294299163
+      },
+      "max_select_bytes": 17408,
+      "blocks_moved_edge_capacity_up": 93,
+      "qualifies": false
+    },
+    "4": {
+      "steps_vs_neutral": 1.0015023225294626,
+      "bytes_vs_neutral": 0.9998408685407398,
+      "stream_ratio_steps": {
+        "0": 1.0010808959257074,
+        "3": 1.0030452451528085,
+        "6": 1.0012382530927215,
+        "9": 1.0005601853704316
+      },
+      "geometry_vs_champion": {
+        "nodes": 0.9989409978725162,
+        "steps": 1.0057761880695562,
+        "rules": 1.001667214042002,
+        "bands": 1.0115923272475156,
+        "dictionary_bytes": 1.004494827732051,
+        "words": 1.022516317478634,
+        "word_visits": 1.0167115707808898,
+        "retained": 1.0008919329090675,
+        "same_line": 0.9492330168005844,
+        "same_4k": 1.0017439365726726
+      },
+      "geometry_vs_neutral": {
+        "nodes": 0.9983542325052615,
+        "steps": 1.0015023225294626,
+        "rules": 1.0036908211677165,
+        "bands": 0.9985460739433942,
+        "dictionary_bytes": 0.9998408685407398,
+        "words": 1.0014551002677101,
+        "word_visits": 0.9965970253743542,
+        "retained": 1.0,
+        "same_line": 0.9992310649750096,
+        "same_4k": 0.996475646718827
+      },
+      "max_select_bytes": 17408,
+      "blocks_moved_edge_capacity_up": 93,
+      "qualifies": false
+    }
+  },
+  "winner": 2,
+  "qualifies": false
+}
