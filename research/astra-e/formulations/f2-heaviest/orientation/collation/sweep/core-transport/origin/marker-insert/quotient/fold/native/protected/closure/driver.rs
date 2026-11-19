@@ -2,6 +2,7 @@ fn main(){
     let args=std::env::args().collect::<Vec<_>>();let mode=args[1].as_str();
     let mut input=BufReader::new(std::fs::File::open(&args[2]).unwrap());let mut inputs=Vec::new();
     while let Some(x)=Input::read(&mut input){inputs.push(x);}
+    if mode=="fresh"{fresh(&inputs,&args[3]);return;}
     let mut named=Engine::default();let mut folded=Engine::default();let mut policy=HashMap::<u32,Vec<u32>>::new();
     if mode=="apply"{
         for l in std::fs::read_to_string(&args[3]).unwrap().lines().skip(1){

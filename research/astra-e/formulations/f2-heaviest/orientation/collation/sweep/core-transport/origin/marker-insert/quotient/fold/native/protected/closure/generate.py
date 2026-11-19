@@ -19,6 +19,6 @@ def make(out):
         }else if !self.skip_choose{self.choose();}''')
     p.write_text(s+ (HERE/'census.rs').read_text())
     p=out/'second.rs';p.write_text(p.read_text()+(HERE/'second.rs').read_text())
-    p=out/'main.rs';s=p.read_text();i=s.index('fn main(){let args=');p.write_text(s[:i]+(HERE/'driver.rs').read_text())
+    p=out/'main.rs';s=p.read_text();i=s.index('fn main(){let args=');p.write_text(s[:i]+(HERE/'fresh.rs').read_text()+(HERE/'driver.rs').read_text())
 
 if __name__=='__main__':make(Path(sys.argv[1]))

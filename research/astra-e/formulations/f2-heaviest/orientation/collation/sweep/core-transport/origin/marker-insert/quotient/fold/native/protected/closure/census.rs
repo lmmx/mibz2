@@ -11,7 +11,7 @@ impl<const M:u8,const S:u8> Dispatch<M,S>{
         let t=crate::now();
         let root=&self.merged[self.nodes[0].out as usize..];
         let f=&mut self.fold_scratch;
-        f.skip_choose=true;f.recognize(root,&self.nodes,self.words.len(),m);f.skip_choose=false;
+        f.forced=None;f.skip_choose=true;f.recognize(root,&self.nodes,self.words.len(),m);f.skip_choose=false;
         let t1=crate::now();
         let d=self.second.support_index(root,&self.nodes,self.words.len(),m);
         let t2=crate::now();
