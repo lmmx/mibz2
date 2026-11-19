@@ -1,7 +1,5 @@
 """Freeze J token objects and independent directly walked H oracles from the original byte BWT."""
 from array import array
-from bisect import bisect_left
-from collections import Counter
 import csv
 from hashlib import sha256
 from itertools import groupby
@@ -13,6 +11,7 @@ HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parents[1]))
 from holes import fixed
 from origin import Column, RunIndex, heavy_set, paths, read_input
+from sources import read as read_pack
 
 ONE,TWO,FOUR,TEN=(Struct('<'+fmt) for fmt in ('I','II','IIII','IIIIIIIIII'))
 CASES=[('frequent',0,8),('quote',1,12)]
@@ -40,7 +39,15 @@ def marked(lf,section,mark):
     for skip in range(len(lf)):
         if x in lookup: return lookup[x],skip
         x=lf[x]
-    raise ValueError('marked cycle disjoint from requested section')
+    return 0xffffffff,0
+
+def cycle(succ,words,at):
+    if at==0xffffffff:return 0,0
+    x=at
+    tokens=byte_count=0
+    while True:
+        tokens+=1;byte_count+=len(words[x]);x=succ[x]
+        if x==at:return tokens,byte_count
 
 def output(succ,words,at,skip,n):
     assert 0<=skip<len(words[at])
@@ -87,7 +94,7 @@ def encode_j(succ,words):
         cursor[t]+=1
     return types,runs
 
-def case(ordinal,name,policy,h,last,psi,lf,u,idx,mark,plain,dest):
+def case(ordinal,name,policy,h,last,psi,lf,u,idx,mark,plain,dest,period):
     core=b',' if name=='quote' else FIXED[h:]
     j,parts,_,_=fixed(idx,u,core,h)
     jrows=range(*j)
@@ -99,7 +106,10 @@ def case(ordinal,name,policy,h,last,psi,lf,u,idx,mark,plain,dest):
     hs,hw=direct(last,psi,hrows)
     jm,jskip=marked(lf,jrows,mark)
     hm,hskip=marked(lf,hrows,mark)
-    assert output(js,jw,jm,jskip,len(last))==output(hs,hw,hm,hskip,len(last))==plain
+    jt,jbytes=cycle(js,jw,jm)
+    ht,hbytes=cycle(hs,hw,hm)
+    if jm!=0xffffffff:assert jbytes==period and output(js,jw,jm,jskip,len(last))==plain
+    if hm!=0xffffffff:assert hbytes==period and output(hs,hw,hm,hskip,len(last))==plain
     types,runs=encode_j(js,jw)
     stem=f'{ordinal:04}-{name}-h{h}'
     jpath=dest/(stem+'.jh');hpath=dest/(stem+'.oracle')
@@ -121,28 +131,34 @@ def case(ordinal,name,policy,h,last,psi,lf,u,idx,mark,plain,dest):
         j_lo=j[0],j_hi=j[1],j_mass=len(jrows),j_mark=jm,j_skip=jskip,types=len(types),runs=len(runs),
         dict_bytes=sum(map(len,types)),holes=len(holes),h_mass=len(hrows),h_mark=hm,h_skip=hskip,
         j_sha256=sha256(jpath.read_bytes()).hexdigest(),h_sha256=sha256(hpath.read_bytes()).hexdigest(),
-        h_map_words_sha256=topology.hexdigest(),marked_sha256=sha256(plain).hexdigest())
+        h_map_words_sha256=topology.hexdigest(),marked_sha256=sha256(plain).hexdigest(),
+        original_cycle_bytes=period,j_cycle_tokens=jt,j_cycle_bytes=jbytes,h_cycle_tokens=ht,h_cycle_bytes=hbytes)
 
 def main():
     dest=Path(sys.argv[2]);dest.mkdir(parents=True,exist_ok=True)
     cases=CASES if len(sys.argv)<4 else [('frequent',0,h) for h in (4,8,12)]+[('quote',1,h) for h in (4,8,12)]
     writer=None
-    for tape in paths(sys.argv[1]):
-        ordinal=int(tape.name.split('.')[0])
-        runs,mark=read_input(tape)
+    src=Path(sys.argv[1])
+    if src.is_dir() or src.name.endswith('.irec.xz'):
+        inputs=((int(t.name.split('.')[0]),*read_input(t),sha256(t.read_bytes()).hexdigest()) for t in paths(src))
+    else:
+        inputs=read_pack(src)
+    for ordinal,runs,mark,archived_digest in inputs:
         last=b''.join(bytes([a])*q for a,q in runs)
         idx=RunIndex(runs);col=Column(runs)
         psi=array('I',sorted(range(len(last)),key=last.__getitem__))
         lf=array('I',[0])*len(last)
         for i,y in enumerate(psi):lf[y]=i
-        x=mark;plain=bytearray()
-        for _ in last:
+        x=mark;plain=bytearray();period=0
+        for step in range(1,len(last)+1):
             x=psi[x];plain.append(last[x])
+            if x==mark and not period:period=step
+        assert period>0
         quote=col.interval(b'"')
         frequent=heavy_set(col,quote,1)[0][0]
         for name,policy,h in cases:
-            row=case(ordinal,name,policy,h,last,psi,lf,frequent if policy==0 else quote,idx,mark,plain,dest)
-            row['input_tape_sha256']=sha256(tape.read_bytes()).hexdigest()
+            row=case(ordinal,name,policy,h,last,psi,lf,frequent if policy==0 else quote,idx,mark,plain,dest,period)
+            row['input_tape_sha256']=archived_digest
             if writer is None:
                 writer=csv.DictWriter(sys.stdout,fieldnames=row,lineterminator='\n');writer.writeheader()
             writer.writerow(row);sys.stdout.flush()
