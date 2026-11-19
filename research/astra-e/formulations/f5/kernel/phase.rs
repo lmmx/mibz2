@@ -90,11 +90,12 @@ fn main() {
                         .observed(r.records(), n, p, &mut book, &mut out)
                         .unwrap();
                 } else {
-                    let t0 = cpu();
-                    old.run::<true, true, false>(r.records(), n, p, 16, &mut raw);
+                    let [construct, walk] =
+                        old.observed::<true, true, false>(r.records(), n, p, 16, &mut raw);
                     let t1 = cpu();
                     mibz2::rle::unrle(&raw, &mut out, k).unwrap();
-                    phases[2] = t1 - t0;
+                    phases[0] = construct;
+                    phases[2] = walk;
                     phases[3] = cpu() - t1;
                 }
                 let before_crc = cpu();

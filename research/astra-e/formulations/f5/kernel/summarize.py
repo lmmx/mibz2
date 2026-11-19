@@ -1,12 +1,13 @@
 """20 rotated same-process repetitions. Each repetition includes all nine fixed blocks."""
 import csv
 import itertools
+import sys
 import math
 from pathlib import Path
 from statistics import mean, median, stdev
 
 here = Path(__file__).resolve().parent
-rows = list(csv.DictReader((here / "phase-raw.csv").open()))
+rows = list(csv.DictReader((here / (sys.argv[1] if len(sys.argv) > 1 else "phase-raw.csv")).open()))
 assert len(rows) == 9 * 20 * 2
 for field in ("wall_ns", "cpu_ns"):
     totals = {(r, a): sum(int(x[field]) for x in rows if int(x["round"]) == r and x["arm"] == a)

@@ -21,3 +21,7 @@ rustc --edition=2021 -O -C codegen-units=1 "$scratch/src/main.rs" --extern mibz2
 "$scratch/probe" corpora/wikidata.bz2 "$scratch/raw.csv" > "$scratch/geometry.csv"
 bash research/astra-e/score.sh phrase-action-repeat "$d/candidate.rs" --workers 1,4 --with-opend
 ```
+
+A second 20-round run clocked construction and marked traversal separately on both arms. The nine-input sums of per-block medians were 14.55 ms for opend construction and 14.75 ms for F5. F5 booked another 0.560 ms for its dictionary. F5's 11.05 ms marked walk compares with opend's 9.62 ms walk and 0.985 ms RLE1 scan. The full thread CPU ratio was 1.053 [0.994,1.115]. These stage medians identify the cost of handling dictionary and literal boundaries on this implementation. [Second run](phase2-raw.csv) · [Complete accounting](phase2-summary.txt)
+
+The candidate passed the official 338-case scorer gate. Eight standalone crafted and real blocks also forced the action route on scalar and detected kernels, checking append, libbzip2 bytes, CRC rollback and retry, including an unfinished periodic run. [Official gate](../../../results/v1-f5-action-gate/score/summary.txt) · [Forced-route checks](check_block.rs) · [Receipt](block-check.txt)
