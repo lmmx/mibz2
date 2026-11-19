@@ -74,6 +74,57 @@ Every experiment names the integration decision it will settle, and when. An ins
 
 Complete causal explanations are welcome, but they are never a precondition for merging a measured gain.
 
+### 4a. Decision quality: the cost of evidence must match the decision (Louis, 19 November 2026)
+
+**The rule:** any experiment costing more than **30 minutes of workstation time** must state three
+things in its registration, before its data:
+1. **The decision it changes.** Say what will be done on each outcome: pass, fail and
+   inconclusive.
+2. **The causal relevance of each condition it tests.** Name the mechanism by which the change
+   could affect that measurement, and give the evidence for it (static path, routing census,
+   deterministic counts).
+3. **Why cheaper evidence won't do.** Cover the static, deterministic, CI and already-recorded
+   evidence.
+
+**Who is accountable:** the **Coordinator**.
+- The Researcher rules on statistical validity, and the Guardian on correctness and safety.
+- The Coordinator decides whether the remaining uncertainty is worth the cost. A registration
+  that satisfies every specialist can still fail this test.
+- When a review round raises an experiment's cost by more than half, the Coordinator re-asks
+  the decision question before accepting the increase.
+
+**Why this rule exists:** the open port (#630), 19 November 2026.
+- *The first attempt:* its single registered attempt failed four guard point bounds, all on
+  corpora that route no block to the new kernel. Its verdict, NOT ADOPTED, stands.
+- *The successor (#635):* it then grew, through correct review rounds, from 65 minutes to about
+  7 hours of i9 time, to measure layout-scale noise on code paths the change barely touches.
+  No one asked what decision those hours would change. Louis stopped it.
+
+**Causal-equivalence evidence:** for a corpus whose execution path the change leaves
+demonstrably near-unchanged, the evidence is:
+- **What it consists of:**
+  - a static path analysis, quoting `file:line`;
+  - a routing census showing the new route is not taken;
+  - byte-identical output;
+  - deterministic instruction, cache and branch counts (cachegrind) against the baseline.
+- **What it settles:** the question of *mechanism*, so these corpora don't need per-cell
+  powered wall-time guards. Any trigger is attributed in writing first.
+- **What it does not replace:**
+  - **a short pooled paired wall-time check on the same corpora.** A machine-level
+    difference (code layout, an unused inline field, a new monomorph) is real deployed cost,
+    so it is bounded in pooled form. A single cell clearly beyond the guard bound is still
+    flagged.
+  - **the usual guards where the new code executes:** correctness, memory, primary, held-out
+    and sustained.
+- **Its limits, stated in each use:**
+  - Simulated counts aren't native timing.
+  - Zero routing is not "identical": the scratch, layout and fallback checks still differ.
+  - The pooled wall check has less per-cell power than a powered per-cell design. It is
+    proportionate when, and only when, the causal analysis finds no mechanism specific to
+    that cell.
+- **When it applies:** from 0.5.7 on, prospectively. **It never converts an earlier failed
+  registration:** the open port's first NOT ADOPTED stands permanently.
+
 ## 5. History
 
 - **Earlier verdicts stand as recorded.** #324's registered no-harm rule failed (`random` 1t +5.3%, `records` 1t +2.1% wall, run 3 of 42747668401), and that verdict is not relabelled.

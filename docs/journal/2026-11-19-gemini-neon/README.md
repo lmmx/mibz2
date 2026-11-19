@@ -162,3 +162,213 @@ Every case was compared against direct first-return computation, with return wor
 **Outcome of the audition:**
 - **Kept:** a correct multi-front construction, and a sharper run bound.
 - **Not supported:** the performance case. Cells already overlaps about 12 dependent loads, and real Wikidata exposes only about 4 independent fronts.
+
+## Round 4: total work, not depth
+
+**The prompt:** Louis asked whether an induced representation can cut *total* paid work below Cells', rather than only overlapping it. The prompt included corrections of round 1's premises: Cells prefetches; the admitted regime is r/n below 0.15; scalar-cap is a run-record kernel.
+
+**Neon's claims** ([response-4.md](response-4.md)):
+- **Lemma 1:** the r run boundaries cut every boundary-hitting cycle into r disjoint *persistence arcs*.
+- **Theorem 1, an exact work identity:** for *any* monotone component-suffix induction schedule, the number of elementary steps equals r′ plus the prefix and suffix records of the elimination order on those arcs. Stopped schedules and refined partitions are included.
+- **Corollary 1:** at least 2r − |D̄ ∩ C̄| steps for any unaccelerated monotone schedule, and at least r with Zorich acceleration.
+- **An analytical model:** Cells pays about r(2 ln(n/r) + 2γ − 1), roughly 3.8–4.8r.
+- **Max-Cut** over pinned alphabet boundaries as the one available escape.
+
+**What the Coordinator ran** (`verify_boundary_records.py.txt`, verbatim; `round4_adversarial.py`):
+
+| Check | Result |
+|---|---|
+| Neon's Part 1: all binary BWTs n ≤ 8 and ternary n ≤ 5; dIETs with r ∈ {4, 5}; single and Max-Cut schedules; full and stopped induction | **PASS**: 6,360 runs, 0 mismatches |
+| Adversarial: 400 random and repetitive BWTs, n = 20–400, under single, Max-Cut and three random schedules, each at stops 0, n/4 and n/2 | **PASS**: 6,000 runs, 0 mismatches in the identity, Corollary 1 never violated |
+| A prefix-doubling BWT builder against Neon's rotation sort, on every small string | Identical. Used for Part 2, where the rotation sort would materialise about 400 MB of rotations at n = 20,000. |
+| Neon's Part 2, its synthetic "admitted-regime" blocks, n = 20,000 | r/n is **0.23**, outside the admitted 0.10–0.15. Cells takes **1.92r** steps (full), not the 3.8–4.8r its model predicts. The floor is **1.28r**: \|D̄∩C̄\| ≈ 0.72r, not ≈ r²/n. Max-Cut against Cells: **0.96** (full) and **0.945** (stopped at 0.15n). |
+
+**Assessment:**
+- **Theorem 1 and Corollary 1:** strongly supported over a bounded domain. It is an exact accounting tool for comparing schedules without implementing them. The proof is routed to MONODROMY.
+- **The Zorich bound (≥ r):** untested.
+- **The harmonic cost model:** contradicted by the data, at 1.92r against the predicted 3.8–4.8r, and its floor estimate is off for structured text.
+- **Max-Cut:** fails Neon's own registered criterion (a ratio of 0.80 or less to support it; ≥ 0.80 refutes it).
+- **On these blocks:** Cells sits about 1.5× above the floor of *any* monotone schedule, and induction is only part of the decoder's cost. So little total-work headroom remains inside monotone interval induction, as Neon itself anticipated if Max-Cut failed.
+- **One overreach:** it says that if Max-Cut fails, *no* monotone schedule can do much better. That does not follow: Max-Cut is one heuristic. The corollary's floor, though, does bound every monotone schedule, and the floor is the stronger statement.
+- **Not yet measured:** the same three figures (steps, floor, overlap) on a real admitted Wikidata block.
+
+## MONODROMY's second verdict, on round 2 (REVIEW 7006279867; record 79)
+
+- **Theorem 3′ is verified.** 29,395 admissible batches are exact, with no shared nodes, sentinels included. All 242,216 runs output the right mark rotation. Neon's Defects 1 and 3 are real. Record 78 missed Defect 1, because its model read the fronts off the sentinels.
+- **Batch rate on admitted Wikidata blocks** (0, 2 and 85; 85 is the highest admitted) at K = 16:
+  - 67–91% of rounds batch two or more fronts;
+  - the mean width is 4.0–5.3;
+  - the dependent chain is 3.8–4.9× shorter.
+
+  Small columns batch only 4.4%. This replaces record 78's frozen-column figure of 3.84.
+- **Not latency-bound on the cloud CPU.** Eager IPC is about 2.9 and flat in the prefetch distance from 4 to 32; prefetching is worth 8–12%. Lazy IPC is about 2.6.
+  - On the i9, prefetching was worth about 25%, so the i9 may differ.
+  - Only a timed interleaved kernel on the workstation would decide it.
+- **Theorem 2′:** the counts are exact. Right-end Rauzy–Veech reaches I(P_k) itself only at k = 4; it reaches a section of the same shape in k − 3 steps.
+
+**The regime figure, settled by record 80.** LazyCells admits up to r/n 0.15: 228 of 233 Wikidata blocks, spanning about 0.057–0.143. Record 79's "0.053–0.088" referred to Cells' own narrower line, and record 80 corrects it. The prompts' "0.10–0.15" was too narrow. Neon's round-4 synthetic blocks, at r/n ≈ 0.23, are outside the admitted regime either way.
+
+## MONODROMY's verdict on round 4 (REVIEW 7006472980; record 80)
+
+| Claim | Verdict |
+|---|---|
+| Theorem 1, the exact work identity | **VERIFIED WITH CORRECTION.** The proof needs one surjectivity line. 0 failures in 165,340 runs. It gives the **shipped** Cells step count exactly on 7 Wikidata blocks (S = Cells' steps + 1 closure). |
+| Corollary 1, S ≥ 2r − \|D̄∩C̄\| | **VERIFIED.** |
+| The Zorich bound, S ≥ r | **VERIFIED** once an accelerated step is defined (a winner-run). **The shipped Cells takes 1.013–1.019r accelerated steps.** |
+| Headroom on the frozen block | floor 62,138 (1.214r) against shipped 92,571 (1.809r) unaccelerated: a ratio of 1.49. Across r/n 0.057–0.143 the ratio is 1.39–1.50. |
+| §4's \|D̄∩C̄\| ≈ r²/n | **REFUTED:** it is about 0.79r on Wikidata. |
+
+**Outcome:**
+- **Neon's identity is verified.** Applied to the shipped decoder, it shows that Cells' induction schedule is within about 2% of optimal in accelerated steps, among monotone component-suffix schedules.
+- **Any monotone schedule** can save at most about 1.4–1.5× in unaccelerated steps, and Cells' accelerated steps already take most of that.
+- **So the audition closed its own line:** induction *scheduling* is exhausted. Further total-work reductions must come from outside monotone interval induction: construction, emission, or a different reconstruction principle.
+
+## Round 5: outside monotone induction (real admitted blocks)
+
+**The setup:** Neon could not fetch the binary blocks, and stopped as instructed. It was then given a text packet: the corrected regime, record 80, the project's cost findings, and per-block statistics computed by the Coordinator. Its verifiers are run on the six authenticated blocks of `data/admitted-bwt` at 41c03a5b.
+
+**Neon's claims** ([response-5.md](response-5.md)):
+- **Theorem 1, weight-only Rauzy–Veech:** accelerated RV with integer weights only recovers the text-order (LF-orbit) position of every run head, every run tail and the primary mark. It therefore gives every boundary gap's separation depth, in "≈ 1.015r accelerated steps" and O(r) memory, without walking n rows.
+- **Theorem 2:** from those positions alone, the Navarro–Ochoa–Prezza Theorem 7 copy scheme is extracted exactly: r literals and k = r − |D̄∩C̄| copies. Each byte's copy depth equals its offset within its run.
+- **The proposed decoder, RV-Copy:** replay the copies by multi-pass interval peeling. It registered its own criteria:
+  - positive: no more than 3 fragments per copy, and a mean fragment of at least 15 B;
+  - sharp negative: at least 3r fragments, a mean below 5 B, or more than 50 passes.
+
+**What the Coordinator ran:** `verify_rv_copy.py.txt`, verbatim, on all six blocks. Output: [round5_output.txt](round5_output.txt).
+
+| Block (r/n) | Positions and bytes against an independent LF walk | Steps | Copies | Fragments per copy | Fragments / r | Mean fragment | Passes |
+|---|---|---|---|---|---|---|---|
+| 0 (0.057) | **PASS** | 1.809r | 10,954 | 40.6 | 8.69 | 1.9 B | 14,931 |
+| 2 (0.061) | **PASS** | 1.869r | 13,223 | 35.6 | 8.64 | 1.8 B | 14,361 |
+| 85 (0.088) | **PASS** | 1.771r | 17,119 | 25.5 | 5.49 | 1.9 B | 10,195 |
+| 207 (0.097) | **PASS** | 1.764r | 20,803 | 22.6 | 5.41 | 1.7 B | 11,559 |
+| 143 (0.120) | **PASS** | 1.790r | 26,964 | 16.4 | 4.09 | 1.8 B | 12,720 |
+| 210 (0.143) | **PASS** | 1.684r | 26,748 | 16.4 | 3.41 | 1.8 B | 10,866 |
+
+**Theorems 1 and 2: verified on every real block.** Every run head, every run tail, the primary mark and all ~900,000 reconstructed bytes match an independent LF walk.
+
+**The step-count claim is wrong.** The "accelerated" and unaccelerated counts are identical on every block, so Neon's acceleration condition never fires on Wikidata. The figure is 1.68–1.87r, not 1.015r. On block 0 it is exactly 92,571, MONODROMY's figure for the shipped Cells (record 80). So weight-only RV does the same induction work as Cells, not less, and its saving is only the SLP and word state per step.
+
+**RV-Copy is refuted by Neon's own registered criterion.** All six blocks meet the sharp-negative condition: 3.4–8.7r fragments, a mean of 1.7–1.9 B, and 10,000–15,000 passes. The copy description is compact, at 11–27k copies, but its copies depend on each other in both directions across long runs. Replay shatters into byte-scale pieces, which is the obstruction Neon itself named in its Theorem 2.3.
+
+**What survives:** a verified construction that recovers the text positions of all run boundaries, and so every boundary gap's separation depth, with integer-only state in Cells' step count.
+
+**Two questions are routed:**
+- **Novelty, to the Researcher.** It is close to the r-index's sampling of suffix-array values at run boundaries, and to toehold and φ.
+- **Proof and scope, to MONODROMY.** Does it answer the project's open question for *every* gap within a run, or only for boundary gaps?
+
+### Round 5 reviews
+
+**MONODROMY (REVIEW 7007723857; record 81):**
+- **Theorem 1 (position recovery): VERIFIED WITH CORRECTION.** 0 failures in 70,706 runs: 60,159 with several cycles, 27,877 with λ > 1 bands, 10,485 with quotient steps. The correction: on a λ > 1 band, tails resolve on the right endpoint's cycle (phase-aligned), not on the heads' cycle.
+- **Scope: boundary gaps only, in O(r).** Every gap's separation depth *is* determined, by one tail-successor search per row of run offset; this is exact on all 848,747 interior gaps of block 0. But one gap then costs a mean of 1,643.5 searches against a walked depth of 262.2. So the project's open question is answered for boundary gaps cheaply, and for interior gaps only at a cost above walking.
+- **The "≈ 1.015r accelerated steps": REFUTED.** Neon's quotient fires zero times on blocks 0, 85 and 210, so on block 0 accelerated = raw = 92,571. 1.015r is MONODROMY's winner-run lower-bound count. Each loser still costs O(1), so weight-only RV does 1.68–1.87r steps, as Cells does.
+
+**Researcher (REVIEW 7007681052):**
+- **The targets are known.** The recovered positions are the r-index's run-boundary suffix-array samples, up to origin and direction. The classical construction takes a full LF lap; toehold and φ consume the samples.
+- **Sublinear routes already exist:**
+  - Kempa (SODA 2019, Thm. 5.1): O(n/log n + r log⁵ n) time;
+  - Agol–Hass–Thurston weighted interval pairing: polynomial in r and log n.
+
+  Neither has Neon's O(r) words of working state.
+- **No worst-case guarantee.** On `2·1·0^N` (r = 3), the pinned schedule takes n steps: 4,098 at n = 4,098.
+- **What is distinctive:** the weight-only O(r)-state implementation, and its measured 1.68–1.87r on real admitted blocks without a separate unit LF lap.
+
+**Round 5 overall:**
+- **Kept:** a correct, verified construction that recovers the run-boundary positions in Cells' step count with integer-only state. It is practically neat, and not theoretically new.
+- **Refuted:** the RV-Copy decoder (by Neon's own criterion), the step-count claim, and the claim to have answered the open question for every gap.
+
+## Round 6: the run-collision obstruction
+
+**The prompt:** Neon was told that RV-Copy failed, and asked to change objective. Either use the recovered run-boundary positions for a dependency-efficient reconstruction, or prove a structural obstruction ([response-6.md](response-6.md)).
+
+**Its Theorem 1** concerns replay of the NOP-7 / Φ copy scheme exposed by the boundary samples:
+1. The copy graph has fewer than 2k edges and is built in O(k).
+2. A replay order exists if and only if the fragment graph is a DAG.
+3. Any non-self-overlapping schedule has critical-path depth ≥ λ_max − 1.
+4. **An "omniscient" fragment floor F_self_ns:** every disjoint copy must split wherever a BWT run repeats.
+5. Alternating-sweep schedules need at least max_a alt(R_a) passes.
+6. An exact same-depth transition identity: θ(LF(x)) = θ(x) if and only if c_a = d_b.
+
+**What the Coordinator ran** (`verify_phi_obstruction.py.txt`, verbatim, on all six blocks; [round6_output.txt](round6_output.txt)):
+
+| Block (r/n) | Edges / k | Largest SCC (copy bytes) | Depth floor | Sweep floor | F_self_ns floor | Level-by-level |
+|---|---|---|---|---|---|---|
+| 0 (0.057) | 1.09 | 99.3% | 26,406 | 16,102 | 0.81r, ≤ 20.4 B | 9.65r, 1.7 B |
+| 2 (0.061) | 1.22 | 99.4% | 26,318 | 15,593 | 0.85r, ≤ 18.3 B | 9.48r, 1.6 B |
+| 85 (0.088) | 1.07 | 99.2% | 25,629 | 10,638 | 0.55r, ≤ 18.9 B | 6.14r, 1.7 B |
+| 207 (0.097) | 1.12 | 99.0% | 25,779 | 12,615 | 0.67r, ≤ 13.9 B | 6.14r, 1.5 B |
+| 143 (0.120) | 1.22 | 98.8% | 25,133 | 13,642 | 0.55r, ≤ 13.3 B | 4.60r, 1.6 B |
+| 210 (0.143) | 1.06 | 98.6% | 27,233 | 11,623 | 0.40r, ≤ 14.9 B | 3.88r, 1.5 B |
+
+**Verified:**
+- the edge bound, on every block;
+- the same-depth identity (part 6), on every row of every block;
+- the giant cyclic component: 98.6–99.4% of copy bytes lie in one SCC.
+
+**Neon's registered criteria:**
+- **Obstruction confirmed:** blocks 0, 2, 207, 143 and 210. The SCC covers at least 70% of copy bytes, there are at least 3k fragments or a mean of at most 15 B, and the sweep floor is at least 5,000.
+- **Neither confirmed nor refuted:** block 85, at 2.54k fragments and 18.9 B.
+- **"Falsified" (≥ 60% acyclic) was met on no block.**
+
+**The Coordinator's reading: the claimed obstruction is not established.**
+- **The floor is low.** F_self_ns, the floor Neon says binds *any* scheduler, is only **0.40–0.85r fragments of 13–20 B**. That is fewer operations than Cells' ≈ 1.8r induction steps, so it does not exclude a competitive copy replay.
+- **The depth floor is about parallelism, not work.** Its 25–27k bounds parallel depth, not total work.
+- **The schedules actually tried sit far above the floor:** level-by-level takes 3.9–9.7r fragments of about 1.6 B, and round 5's peeling took 3.4–8.7r.
+
+**What is open:**
+- whether a schedule can approach the floor;
+- whether the floor is valid as stated, once temporary buffers, arbitrary order, self-overlap or a secondary grammar are allowed. (ChatGPT's review raises the same point.)
+
+The giant SCC is a property of the macro graph. It does not by itself force expensive byte-level replay.
+
+**Attainability, measured by the Coordinator** ([round6_attainability.py](round6_attainability.py)). The method:
+1. Take Neon's own minimal partition, F_self_ns: every copy split greedily wherever a BWT run repeats.
+2. Add an edge from the fragment holding each byte's Φ-source to the fragment holding the byte.
+3. Ask whether any valid order exists, using Kahn's algorithm.
+
+| Block | Minimal fragments | Orderable | Deadlocked in cycles |
+|---|---|---|---|
+| 0 | 41,684 (0.81r) | 3,125 | 92.5% |
+| 2 | 46,310 (0.85r) | 2,860 | 93.8% |
+| 85 | 43,479 (0.55r) | 4,346 | 90.0% |
+| 207 | 58,605 (0.67r) | 4,988 | 91.5% |
+| 143 | 59,690 (0.55r) | 5,668 | 90.5% |
+| 210 | 51,741 (0.40r) | 7,580 | 85.3% |
+
+**What this shows:**
+- **The floor is not attained.** Each fragment is duplicate-free and none depends on itself, yet 85–94% of them lie on dependency cycles, so no order of this partition exists.
+- **The floor is valid but loose.** Every direct Φ-copy schedule must cut those cycles further, so the true minimum lies strictly between F_self_ns (0.40–0.85r) and the 3.4–8.7r that round 5 achieved.
+- **The real obstruction is a cycle-breaking problem**, akin to finding a minimum feedback set over the fragment graph. Its size, not F_self_ns, decides whether direct Φ-copy replay can compete with Cells' ≈ 1.8r.
+- **Neon's own follow-up** concedes that F_self_ns binds only direct Φ-copy execution, that SCC size is a diagnostic, and that its closing claim was overbroad. It tightened the proof of part 4 for temporary buffers and byte loops.
+
+**MONODROMY's verdict on round 6** (REVIEW 7008576600 on #145; record 82, `docs/journal/monodromy/2026-11-19-neon-round6-verification.md` at cd818e4c):
+
+1. **F_self_ns: verified with a correction. It is a class bound, not a universal one.**
+   - **What it binds:** in-place, write-once, Φ-sourced fragment schedules, in any order.
+   - **What escapes it:** temporary buffers, LZ77-style copies from any final equal stretch, and secondary structures such as an SLP or an LZ parse.
+   - **Counterexample:** `aaaaaabaaaaaaaab` (n = 16, r = 4) has F_self_ns = 12, yet LZ77 writes it in 4 operations in all. Over all 131,068 single-cycle binary texts of length ≤ 16, LZ77 needs fewer operations than r + F_self_ns in 128,936.
+2. **Attainability: the floor is not reached, but some in-class schedule comes close to Cells.** Every in-class schedule is a time τ that strictly increases along runs. MONODROMY built τ = θ + φ(run), with φ chosen on a maximum-weight forest of the run overlaps:
+
+   | Block | Floor | Potential τ | Cells steps | Potential ÷ Cells |
+   |---|--:|--:|--:|--:|
+   | 0 | 0.81r | 110,204 = 2.15r (7.7 B) | 92,571 | 1.19 |
+   | 2 | 0.85r | 114,432 = 2.10r (7.4 B) | 101,907 | 1.12 |
+   | 85 | 0.55r | 107,456 = 1.35r (7.6 B) | 140,544 | 0.76 |
+   | 210 | 0.40r | 111,991 = 0.87r (6.9 B) | 216,769 | 0.52 |
+
+   - **The fragment count is nearly constant,** at about 0.12n, while Cells' steps grow with r. From r/n ≈ 0.088 upwards the schedule needs fewer operations than Cells takes steps.
+   - **The units differ:** a memcpy fragment and a Cells step are not the same cost, and the comparison is unmeasured.
+   - **What blocks it:** building τ needs each copy's run-label sequence, an O(n) arc walk. The open question is whether the overlap transitions can be listed from the positions in o(n), about O(#overlaps).
+3. **Part 3: verified.** It bounds dependency depth, not work. The potential schedule's depth lies within 0.3–6% of the λ_max − 1 floor.
+4. **Part 5: verified with a correction.**
+   - The sweep floor is 0.42–0.61λ, not ≈ λ/2.
+   - It exceeds round 5's peeling passes on every block measured. Peeling runs ready fragments in any order, so it is outside the class this floor binds.
+
+**MONODROMY's addendum** (record 82 at d44742a2) answers the cycle-breaking follow-ups:
+- **(a) The true minimum F\* on block 0** lies between 0.814r and 2.088r. No lower bound valid beyond F_self_ns is known yet: a cycle-packing bound on the greedy partition binds only refinements of that partition.
+- **(b) Potentials plus a merge search** give valid schedules of 106,887 fragments on block 0 (2.088r, 7.9 B) and 0.831r on block 210.
+- **(c) Discovering the schedule** still needs a byte-level pass over the run labels.
+- **Against the bar set before the data:** block 0 stays above Cells' 1.81r steps. Block 210 goes below 1r, but only if the run transitions can be listed in o(n).
+
+**The status after round 6:** nothing changes in production. In-place Φ copy replay is still an open candidate, but only on blocks with high r/n, and only if the overlap labelling can be built in o(n). That is round 7's question.

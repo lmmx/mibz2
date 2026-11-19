@@ -1,5 +1,7 @@
 # The open kernel's port for 0.5.7: the C6 adoption registration
 
+> **The record (Coordinator, merged docs-only):** this registration and its one confirmatory attempt are recorded here from the recipe branch `bench/open-port` at a6383b96 (#631). That PR is closed unmerged: it carries feature-gated research code (`src/open_gate.rs`, the `ab` harness) that is not adopted. The verdict was **NOT ADOPTED** (LOG 7011074912 on #145). The recipe and scorer stay on `bench/open-port`.
+
 *19 November 2026. The Pathfinder's C6 adoption registration, frozen before any data, for the
 Researcher's review through the Coordinator.*
 
