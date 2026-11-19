@@ -18,6 +18,8 @@ The combined writer is the best implementation measured on the target i9 so far.
 
 The workstation built source `80d8409359214b4e5abfd4430213921e82e9cd30` through ready commit `8c9640d8ab186f81a0500f48e606e0c21c2a6669`. The scorer reported v1 at `9a9c169d70639c1c3e56cb85b3679fa7529e516c`, upstream path `604dac3f46569edd9ac9b6706b23a68d9d7d8f8d`. The i9 dry run passed before timing. The measured run gated all four arms and recorded all 256 samples with the prescribed 4W slots, four corpus copies (838,800,784 output bytes/sample), two-second settle, 16 rotations and unpinned 20-CPU affinity. The candidate passed all 338 oracle cases. Reassessment of the raw samples reproduced the frozen decision. [Untimed dry run](evidence/combined-dry-8bced3f.tar.gz) · [Cross-checking program and proxy comparison](../results/combined-v1-proxy/heldout.py) · [Preregistration](combined-request.md)
 
+The target samples also contain process CPU time to hundredths of a second. Combined/Lazy process CPU ratios were 0.904/0.904/0.902/0.902 at W7/W8/W9/W10. The corresponding ratios of CPU seconds per wall second were 1.006/0.991/0.999/1.017. Thus total occupied CPU fell by about a tenth across the grid even where the wall ratios varied; this measurement includes the scanner, workers and output. Per-stage CPU, instructions, IPC and traffic are outside these target receipts. [Process-CPU table and intervals](combined-i9-cpu.csv) · [Raw-data replay](cpu.py)
+
 The dry SHA-256 is `635fa5924bddbf7e7457c504ad936834722d32891f5fdbd1f06cb835d9ab8584`. The measured SHA-256 is `70b3c3a88d330529ff2dc976ce27451a7065b8b8f5fc49e65f20c191a7d32bfa`. To replay the historical decision locally:
 
 ```sh
