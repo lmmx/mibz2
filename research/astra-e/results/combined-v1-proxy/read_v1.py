@@ -33,6 +33,10 @@ def main():
     official = json.loads((save / "proxy.json").read_text())
     if proxy != official:
         raise ValueError("official per-block rebuild differs from the published interpretation")
+    interim = json.loads((HERE / "checkpoint/partial-prediction.json").read_text())
+    for w, prediction in interim["model"].items():
+        if prediction != official["predicted_over_lazy"]["candidate"][w]:
+            raise ValueError(f"final model differs from the previous complete W{w} reading")
     csvout = csv.writer(sys.stdout, lineterminator="\n")
     csvout.writerow(("W", "candidate_over_fresh_lazy", "lo95", "hi95", "deposited_opend_over_lazy",
                      "ratio_of_estimates", "candidate_over_opend_instructions", "candidate_over_opend_dram_bytes",
