@@ -1,0 +1,5 @@
+m=2 L=32 forward=98 backward=101 minimum=69
+m=4 L=64 forward=326 backward=333 minimum=139
+m=8 L=128 forward=1166 backward=1181 minimum=279
+m=16 L=256 forward=4382 backward=4413 minimum=559
+m=32 L=512 forward=16958 backward=17021 minimum=1119
