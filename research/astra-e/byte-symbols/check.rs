@@ -99,6 +99,12 @@ fn check(path: &Path, oracle: bool, k: Kernels) {
 fn main() {
     println!("case,kernels,wide_blocks,narrow_blocks,odd_narrow,eob_max,output_bytes,outcome");
     let dir = std::env::args_os().nth(1).unwrap();
+    if Path::new(&dir).is_file() {
+        for k in [Kernels::scalar(), Kernels::detect()] {
+            check(Path::new(&dir), false, k);
+        }
+        return;
+    }
     let mut files: Vec<_> = std::fs::read_dir(dir)
         .unwrap()
         .map(|x| x.unwrap().path())

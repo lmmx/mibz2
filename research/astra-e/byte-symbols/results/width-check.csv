@@ -1,0 +1,405 @@
+case,kernels,wide_blocks,narrow_blocks,odd_narrow,eob_max,output_bytes,outcome
+a128.bz2,scalar,0,1,0,129,50065,ok
+a128.bz2,detected,0,1,0,129,50065,ok
+a17.bz2,scalar,0,1,1,18,13657,ok
+a17.bz2,detected,0,1,1,18,13657,ok
+a2.bz2,scalar,0,1,0,11,8737,ok
+a2.bz2,detected,0,1,0,11,8737,ok
+a253.bz2,scalar,0,1,1,254,91065,ok
+a253.bz2,detected,0,1,1,254,91065,ok
+a254.bz2,scalar,0,1,1,255,91393,ok
+a254.bz2,detected,0,1,1,255,91393,ok
+a255.bz2,scalar,1,0,0,256,91721,ok
+a255.bz2,detected,1,0,0,256,91721,ok
+a256.bz2,scalar,1,0,0,257,92049,ok
+a256.bz2,detected,1,0,0,257,92049,ok
+alternate.bz2,scalar,5,4,2,257,800000,ok
+alternate.bz2,detected,5,4,2,257,800000,ok
+concat-both.bz2,scalar,3,4,4,257,563327,ok
+concat-both.bz2,detected,3,4,4,257,563327,ok
+concat-short.bz2,scalar,1,2,1,256,114115,ok
+concat-short.bz2,detected,1,2,1,256,114115,ok
+mut-000.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-000.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-001.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798554187  computed: 2798423115 }
+mut-001.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798554187  computed: 2798423115 }
+mut-002.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 1558290953 }
+mut-002.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 1558290953 }
+mut-003.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 70410919 }
+mut-003.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 70410919 }
+mut-004.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-004.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-005.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4152221557  computed: 4150124405 }
+mut-005.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4152221557  computed: 4150124405 }
+mut-006.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 147598708 }
+mut-006.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 147598708 }
+mut-007.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 2615581236 }
+mut-007.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 2615581236 }
+mut-008.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-008.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-009.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036145642  computed: 2036276714 }
+mut-009.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036145642  computed: 2036276714 }
+mut-010.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 3926020923 }
+mut-010.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 3926020923 }
+mut-011.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 1707057878 }
+mut-011.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 1707057878 }
+mut-012.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-012.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-013.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2881567699  computed: 2883664851 }
+mut-013.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2881567699  computed: 2883664851 }
+mut-014.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 3517287063 }
+mut-014.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 3517287063 }
+mut-015.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 902999846 }
+mut-015.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 902999846 }
+mut-016.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-016.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-017.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304182712  computed: 304313784 }
+mut-017.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304182712  computed: 304313784 }
+mut-018.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 2879777575 }
+mut-018.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 2879777575 }
+mut-019.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 1258076651 }
+mut-019.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 1258076651 }
+mut-020.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-020.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-021.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1582121213  computed: 1584218365 }
+mut-021.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1582121213  computed: 1584218365 }
+mut-022.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 3412028418 }
+mut-022.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 3412028418 }
+mut-023.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 2504182525 }
+mut-023.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 2504182525 }
+mut-024.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-024.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-025.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856630126  computed: 2856761198 }
+mut-025.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856630126  computed: 2856761198 }
+mut-026.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 2697895348 }
+mut-026.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 2697895348 }
+mut-027.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 1980537831 }
+mut-027.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 1980537831 }
+mut-028.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-028.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-029.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2800520267  computed: 2798423115 }
+mut-029.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2800520267  computed: 2798423115 }
+mut-030.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 3320978697 }
+mut-030.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 3320978697 }
+mut-031.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 2653333210 }
+mut-031.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 2653333210 }
+mut-032.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-032.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-033.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150255477  computed: 4150124405 }
+mut-033.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150255477  computed: 4150124405 }
+mut-034.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 3453485704 }
+mut-034.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 3453485704 }
+mut-035.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 872672856 }
+mut-035.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 872672856 }
+mut-036.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-036.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-037.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2038373866  computed: 2036276714 }
+mut-037.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2038373866  computed: 2036276714 }
+mut-038.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 4106950372 }
+mut-038.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 4106950372 }
+mut-039.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 3945078515 }
+mut-039.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 3945078515 }
+mut-040.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-040.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-041.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883795923  computed: 2883664851 }
+mut-041.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883795923  computed: 2883664851 }
+mut-042.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 3529370761 }
+mut-042.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 3529370761 }
+mut-043.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 2558541204 }
+mut-043.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 2558541204 }
+mut-044.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-044.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-045.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 302216632  computed: 304313784 }
+mut-045.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 302216632  computed: 304313784 }
+mut-046.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 3807602508 }
+mut-046.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 3807602508 }
+mut-047.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 2044457646 }
+mut-047.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 2044457646 }
+mut-048.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-048.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-049.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584349437  computed: 1584218365 }
+mut-049.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584349437  computed: 1584218365 }
+mut-050.bz2,scalar,0,0,0,0,0,scan_BadHuffmanCode
+mut-050.bz2,detected,0,0,0,0,0,scan_BadHuffmanCode
+mut-051.bz2,scalar,0,0,0,0,0,scan_BadCodeLength
+mut-051.bz2,detected,0,0,0,0,0,scan_BadCodeLength
+mut-052.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-052.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-053.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2858858350  computed: 2856761198 }
+mut-053.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2858858350  computed: 2856761198 }
+mut-054.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 1809709208 }
+mut-054.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 1809709208 }
+mut-055.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 2564900962 }
+mut-055.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 2564900962 }
+mut-056.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-056.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-057.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798554187  computed: 2798423115 }
+mut-057.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798554187  computed: 2798423115 }
+mut-058.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 743365629 }
+mut-058.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 743365629 }
+mut-059.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 1559080596 }
+mut-059.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 1559080596 }
+mut-060.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-060.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-061.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4152221557  computed: 4150124405 }
+mut-061.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4152221557  computed: 4150124405 }
+mut-062.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 1164305748 }
+mut-062.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 1164305748 }
+mut-063.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 3800302772 }
+mut-063.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 3800302772 }
+mut-064.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-064.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-065.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036145642  computed: 2036276714 }
+mut-065.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036145642  computed: 2036276714 }
+mut-066.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 2201049710 }
+mut-066.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 2201049710 }
+mut-067.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 1569789532 }
+mut-067.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 1569789532 }
+mut-068.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-068.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-069.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2881567699  computed: 2883664851 }
+mut-069.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2881567699  computed: 2883664851 }
+mut-070.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 1860610729 }
+mut-070.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 1860610729 }
+mut-071.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 1489377611 }
+mut-071.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 1489377611 }
+mut-072.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-072.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-073.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304182712  computed: 304313784 }
+mut-073.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304182712  computed: 304313784 }
+mut-074.bz2,scalar,0,0,0,0,0,scan_BadOrigPtr
+mut-074.bz2,detected,0,0,0,0,0,scan_BadOrigPtr
+mut-075.bz2,scalar,1,0,0,256,0,block_RunUnfinished
+mut-075.bz2,detected,1,0,0,256,0,block_RunUnfinished
+mut-076.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-076.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-077.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1582121213  computed: 1584218365 }
+mut-077.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1582121213  computed: 1584218365 }
+mut-078.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 656496400 }
+mut-078.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 656496400 }
+mut-079.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 3651913523 }
+mut-079.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 3651913523 }
+mut-080.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-080.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-081.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856630126  computed: 2856761198 }
+mut-081.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856630126  computed: 2856761198 }
+mut-082.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 732627639 }
+mut-082.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 732627639 }
+mut-083.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 2265644094 }
+mut-083.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 2265644094 }
+mut-084.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-084.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-085.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2800520267  computed: 2798423115 }
+mut-085.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2800520267  computed: 2798423115 }
+mut-086.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 1483133252 }
+mut-086.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 1483133252 }
+mut-087.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 3077523874 }
+mut-087.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 3077523874 }
+mut-088.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-088.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-089.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150255477  computed: 4150124405 }
+mut-089.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150255477  computed: 4150124405 }
+mut-090.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 687553421 }
+mut-090.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 687553421 }
+mut-091.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 429552261 }
+mut-091.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 429552261 }
+mut-092.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-092.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-093.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2038373866  computed: 2036276714 }
+mut-093.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2038373866  computed: 2036276714 }
+mut-094.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 906371561 }
+mut-094.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 906371561 }
+mut-095.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 383631138 }
+mut-095.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 383631138 }
+mut-096.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-096.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-097.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883795923  computed: 2883664851 }
+mut-097.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883795923  computed: 2883664851 }
+mut-098.bz2,scalar,0,1,0,11,0,block_RunUnfinished
+mut-098.bz2,detected,0,1,0,11,0,block_RunUnfinished
+mut-099.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 433506987 }
+mut-099.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 433506987 }
+mut-100.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-100.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-101.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 302216632  computed: 304313784 }
+mut-101.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 302216632  computed: 304313784 }
+mut-102.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 1133116141 }
+mut-102.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 1133116141 }
+mut-103.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 2143352087 }
+mut-103.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 2143352087 }
+mut-104.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-104.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-105.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584349437  computed: 1584218365 }
+mut-105.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584349437  computed: 1584218365 }
+mut-106.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 1767473648 }
+mut-106.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 1767473648 }
+mut-107.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 2229049985 }
+mut-107.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 2229049985 }
+mut-108.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-108.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-109.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2858858350  computed: 2856761198 }
+mut-109.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2858858350  computed: 2856761198 }
+mut-110.bz2,scalar,0,0,0,0,0,scan_BadHuffmanCode
+mut-110.bz2,detected,0,0,0,0,0,scan_BadHuffmanCode
+mut-111.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 3554942490 }
+mut-111.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 3554942490 }
+mut-112.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-112.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-113.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798554187  computed: 2798423115 }
+mut-113.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798554187  computed: 2798423115 }
+mut-114.bz2,scalar,0,1,0,129,0,block_RunUnfinished
+mut-114.bz2,detected,0,1,0,129,0,block_RunUnfinished
+mut-115.bz2,scalar,0,0,0,0,0,scan_BadHuffmanCode
+mut-115.bz2,detected,0,0,0,0,0,scan_BadHuffmanCode
+mut-116.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-116.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-117.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4152221557  computed: 4150124405 }
+mut-117.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4152221557  computed: 4150124405 }
+mut-118.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 86468295 }
+mut-118.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 86468295 }
+mut-119.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 2329574896 }
+mut-119.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 2329574896 }
+mut-120.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-120.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-121.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036145642  computed: 2036276714 }
+mut-121.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036145642  computed: 2036276714 }
+mut-122.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 1673530691 }
+mut-122.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 1673530691 }
+mut-123.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 3694735781 }
+mut-123.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 3694735781 }
+mut-124.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-124.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-125.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2881567699  computed: 2883664851 }
+mut-125.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2881567699  computed: 2883664851 }
+mut-126.bz2,scalar,0,0,0,0,0,scan_BadHuffmanCode
+mut-126.bz2,detected,0,0,0,0,0,scan_BadHuffmanCode
+mut-127.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 3955522857 }
+mut-127.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 3955522857 }
+mut-128.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-128.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-129.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304182712  computed: 304313784 }
+mut-129.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304182712  computed: 304313784 }
+mut-130.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 1105572079 }
+mut-130.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 1105572079 }
+mut-131.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 3174081189 }
+mut-131.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 3174081189 }
+mut-132.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-132.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-133.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1582121213  computed: 1584218365 }
+mut-133.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1582121213  computed: 1584218365 }
+mut-134.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 1471732603 }
+mut-134.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 1471732603 }
+mut-135.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 3715669226 }
+mut-135.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 3715669226 }
+mut-136.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-136.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-137.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856630126  computed: 2856761198 }
+mut-137.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856630126  computed: 2856761198 }
+mut-138.bz2,scalar,1,0,0,256,0,block_RunUnfinished
+mut-138.bz2,detected,1,0,0,256,0,block_RunUnfinished
+mut-139.bz2,scalar,1,0,0,257,0,block_RunUnfinished
+mut-139.bz2,detected,1,0,0,257,0,block_RunUnfinished
+mut-140.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-140.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-141.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2800520267  computed: 2798423115 }
+mut-141.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2800520267  computed: 2798423115 }
+mut-142.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 3368611477 }
+mut-142.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 3368611477 }
+mut-143.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 812148739 }
+mut-143.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 812148739 }
+mut-144.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-144.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-145.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150255477  computed: 4150124405 }
+mut-145.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150255477  computed: 4150124405 }
+mut-146.bz2,scalar,1,0,0,257,0,block_RunUnfinished
+mut-146.bz2,detected,1,0,0,257,0,block_RunUnfinished
+mut-147.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 2421395294 }
+mut-147.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 2421395294 }
+mut-148.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-148.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-149.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2038373866  computed: 2036276714 }
+mut-149.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2038373866  computed: 2036276714 }
+mut-150.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 815968040 }
+mut-150.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 815968040 }
+mut-151.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 281262875 }
+mut-151.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 281262875 }
+mut-152.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-152.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-153.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883795923  computed: 2883664851 }
+mut-153.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883795923  computed: 2883664851 }
+mut-154.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 2063206991 }
+mut-154.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584218365  computed: 2063206991 }
+mut-155.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 289903387 }
+mut-155.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 289903387 }
+mut-156.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-156.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-157.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 302216632  computed: 304313784 }
+mut-157.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 302216632  computed: 304313784 }
+mut-158.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 1066100740 }
+mut-158.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 1066100740 }
+mut-159.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 3404341662 }
+mut-159.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 3404341662 }
+mut-160.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-160.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-161.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1584349437  computed: 1584218365 }
+mut-161.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1584349437  computed: 1584218365 }
+mut-162.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 1401259655 }
+mut-162.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 1401259655 }
+mut-163.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 347155450 }
+mut-163.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 347155450 }
+mut-164.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-164.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-165.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2858858350  computed: 2856761198 }
+mut-165.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2858858350  computed: 2856761198 }
+mut-166.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 2444846803 }
+mut-166.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 2444846803 }
+mut-167.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 2077243983 }
+mut-167.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 2077243983 }
+mut-168.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-168.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-169.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798554187  computed: 2798423115 }
+mut-169.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798554187  computed: 2798423115 }
+mut-170.bz2,scalar,0,1,0,129,0,block_RunUnfinished
+mut-170.bz2,detected,0,1,0,129,0,block_RunUnfinished
+mut-171.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 2806831054 }
+mut-171.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 2806831054 }
+mut-172.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-172.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-173.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4152221557  computed: 4150124405 }
+mut-173.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4152221557  computed: 4150124405 }
+mut-174.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 1255646703 }
+mut-174.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2883664851  computed: 1255646703 }
+mut-175.bz2,scalar,0,1,0,11,8737,scan_BadBlockMagic
+mut-175.bz2,detected,0,1,0,11,8737,scan_BadBlockMagic
+mut-176.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-176.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-177.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036145642  computed: 2036276714 }
+mut-177.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036145642  computed: 2036276714 }
+mut-178.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 3644814830 }
+mut-178.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304313784  computed: 3644814830 }
+mut-179.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 889691274 }
+mut-179.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 889691274 }
+mut-180.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-180.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-181.bz2,scalar,1,0,0,257,0,block_BlockCrc { stored: 2881567699  computed: 2883664851 }
+mut-181.bz2,detected,1,0,0,257,0,block_BlockCrc { stored: 2881567699  computed: 2883664851 }
+mut-182.bz2,scalar,0,1,0,11,0,block_RunUnfinished
+mut-182.bz2,detected,0,1,0,11,0,block_RunUnfinished
+mut-183.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 1236480453 }
+mut-183.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 1236480453 }
+mut-184.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-184.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-185.bz2,scalar,0,1,1,254,0,block_BlockCrc { stored: 304182712  computed: 304313784 }
+mut-185.bz2,detected,0,1,1,254,0,block_BlockCrc { stored: 304182712  computed: 304313784 }
+mut-186.bz2,scalar,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 438331076 }
+mut-186.bz2,detected,0,1,1,255,0,block_BlockCrc { stored: 2856761198  computed: 438331076 }
+mut-187.bz2,scalar,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 505245732 }
+mut-187.bz2,detected,1,0,0,256,0,block_BlockCrc { stored: 4150124405  computed: 505245732 }
+mut-188.bz2,scalar,0,0,0,0,0,scan_Truncated
+mut-188.bz2,detected,0,0,0,0,0,scan_Truncated
+mut-189.bz2,scalar,0,1,0,11,0,block_BlockCrc { stored: 1582121213  computed: 1584218365 }
+mut-189.bz2,detected,0,1,0,11,0,block_BlockCrc { stored: 1582121213  computed: 1584218365 }
+mut-190.bz2,scalar,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 481813654 }
+mut-190.bz2,detected,0,1,1,18,0,block_BlockCrc { stored: 2798423115  computed: 481813654 }
+mut-191.bz2,scalar,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 2036736517 }
+mut-191.bz2,detected,0,1,0,129,0,block_BlockCrc { stored: 2036276714  computed: 2036736517 }
