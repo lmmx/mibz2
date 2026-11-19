@@ -1,0 +1,23 @@
+blocks=1 rows=899931 queue_rows=89874 pieces=47736 singletons=35116 width1_to_4=44086
+descriptor_bytes_written=190944 descriptor_bytes_read=190944 max_block_live_descriptor_bytes=190944
+active_bytes_min_median_max=87 87 87
+active_nibbles_min_median_max=7 7 7
+per_block_hottest_4_piece_fraction=0.245182
+per_block_hottest_8_piece_fraction=0.467509
+per_block_hottest_16_piece_fraction=0.777757
+per_block_hottest_32_piece_fraction=0.947231
+layout mode line_references unique_lines fa16 fa32 fa64 fa128 fa256 fa512 set64w4 set64w8
+0 direct 50369 5658 15295 7857 6494 6029 5846 5758 5962 5780
+0 grouped 50369 5658 6431 5866 5734 5696 5680 5661 5700 5663
+0 staged 145841 8646 13390 11995 11789 11703 11666 11650 11703 11653
+1 direct 50369 5658 15295 7857 6494 6029 5846 5758 6327 5985
+1 grouped 50369 5658 6431 5866 5734 5696 5680 5661 5860 5697
+1 staged 145841 8646 13390 11995 11789 11703 11666 11650 11866 11683
+2 direct 50358 5692 15279 7900 6522 6073 5882 5794 5943 5811
+2 grouped 50358 5692 6487 5901 5773 5730 5714 5695 5718 5698
+2 staged 145830 8680 13452 12019 11826 11740 11699 11683 11713 11686
+blocks with fewer complete staged misses than direct
+layout fa16 fa32 fa64 fa128 fa256 fa512 set64w4 set64w8
+0 1 0 0 0 0 0 0 0
+1 1 0 0 0 0 0 0 0
+2 1 0 0 0 0 0 0 0
