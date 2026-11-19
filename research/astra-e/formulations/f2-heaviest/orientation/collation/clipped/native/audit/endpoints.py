@@ -2,6 +2,7 @@
 from collections import Counter, defaultdict
 from itertools import groupby, product
 import json
+from preflight import detect
 
 
 def runs(values):
@@ -106,6 +107,10 @@ def audit(last,lo,hi,totals,witness):
     expected={e:(parent_by_row[x],last[x]) for e,(x,y) in global_cuts.items()
               if x in parent_by_row and y in parent_by_row and parent_by_row[x]==parent_by_row[y]}
     assert expected==by_boundary
+    for edge in (lo,hi):
+        reason, probes, predicted = detect(n,lo,hi,edge,lambda x:(psi[x],f[x]))
+        assert predicted == by_boundary.get(edge)
+        totals["independent_endpoint_predictions"]+=1
     assert piece_mixed==len(set(by_boundary)&set(run_cuts))
     root_runs=len(runs(incoming))
     assert root_runs<=len(tagged)

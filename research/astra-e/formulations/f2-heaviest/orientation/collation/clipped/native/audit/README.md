@@ -32,3 +32,17 @@ cmp /tmp/astra-clipped-endpoints.json "$d/exhaustive.json"
 ```
 
 [Independent audit program](endpoints.py) · [Counts and first witnesses](exhaustive.json)
+
+## Detecting and naming the two exceptions without building the trie
+
+For a visited pre-step row x, its live parent's backward spelling is the reverse of the raw forward bytes from x to its nearest U row, including x when checking whether a root is already reached. Compare these two forward strings for x− and x+ at each eligible endpoint. A byte disagreement, only one rank entering U, or a complete cycle missing U rules out a mixed extension. When both arrive together without a byte disagreement, the common parent and extension byte identify the unique mixed branch. At each step the rank separation of equal-symbol paths cannot shrink. If it exceeds m−1, both ranks cannot finish in U, so the comparison can terminate early.
+
+This predictor recovered the independently observed branches on every synthetic case and the published total on each of 40 systematic block/section combinations. For the 20 endpoints of each real section family, quote used 40 forward rank probes (bucket boundaries alone suffice), frequent 80, fifth 594 and half 438. Each arbitrary family had 16 mixed endpoints. The longest observed probe used 164 forward rank accesses, recovering a depth-81 parent. This count assumes a Ψ/select facility. The accompanying adapter builds an indexed table of r forward strips in O(r) time and space, then uses binary search per probe. An implementation having only an LF lookup table must price the additional select work before using this test for dispatch.
+
+```sh
+d=research/astra-e/formulations/f2-heaviest/orientation/collation/clipped/native/audit
+python3 -B "$d/preflight.py" research/astra-e/dense/target/wikidata > /tmp/astra-clipped-preflight.csv
+cmp /tmp/astra-clipped-preflight.csv "$d/wikidata.csv"
+```
+
+[Direct endpoint predictor](preflight.py) · [All 80 real endpoint traces](wikidata.csv)

@@ -1,5 +1,6 @@
 {
   "exhaustive": {
+    "independent_endpoint_predictions": 226896,
     "max_F_symbols_touched": 3,
     "mixed_branches_0": 84766,
     "mixed_branches_1": 26992,
@@ -289,6 +290,7 @@
     }
   },
   "wide": {
+    "independent_endpoint_predictions": 24,
     "max_F_symbols_touched": 256,
     "mixed_branches_0": 8,
     "mixed_branches_1": 4,
