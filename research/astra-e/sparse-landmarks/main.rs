@@ -41,9 +41,46 @@ const ARMS: [&str; 9] = [
     "paid8s256",
 ];
 
+// Counts outside the native timed region, independent of the plan's byte totals.
+fn cycle_work(t: &Table, shift: u32) -> (usize, usize, usize) {
+    let mask = (1 << t.bits) - 1;
+    let stride = 1u32 << shift;
+    let low = t.mark % stride;
+    let (mut discovered, mut marked, mut words) = (0, 0, 0);
+    for start in (low as usize..t.edges.len()).step_by(stride as usize) {
+        let mut row = start as u32;
+        loop {
+            discovered += 1;
+            row = t.edges[row as usize] & mask;
+            if row % stride == low {
+                break;
+            }
+        }
+    }
+    let mut row = t.mark;
+    loop {
+        let e = t.edges[row as usize];
+        marked += 1;
+        let code = if t.extra.is_empty() {
+            e >> t.bits
+        } else {
+            t.extra[row as usize]
+        };
+        words += usize::from(code >= 256);
+        row = e & mask;
+        if row == t.mark {
+            break;
+        }
+    }
+    (discovered, marked, words)
+}
 fn main() {
     let args: Vec<_> = std::env::args().collect();
     let data = std::fs::read(&args[1]).unwrap();
+    if args[3] == "census" {
+        println!("block,shift,retained,discovery_hops,primary_hops,primary_word_edges");
+    }
+
     let mut scanner = Scanner::new(SliceSource(&data));
     let k = Kernels::detect();
     let mut original = original::Kernel::default();
@@ -72,6 +109,14 @@ fn main() {
         assert!(out == gold);
         let oracles = std::array::from_fn(|i| t.oracle(i as u32 + 6));
         for (i, oracle) in oracles.iter().enumerate() {
+            if args[3] == "census" {
+                let (discovery, primary, words) = cycle_work(&t, i as u32 + 6);
+                println!(
+                    "{index},{},{},{discovery},{primary},{words}",
+                    i + 6,
+                    t.edges.len()
+                );
+            }
             let mut z = Plan::default();
             match i {
                 0 => paid::<8, 6>(&mut z, &t, &mut out),
