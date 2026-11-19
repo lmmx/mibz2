@@ -1,0 +1,17 @@
+548ef34524e8d007febcf879a9b2c6cdf8cc6b88
+604dac3f46569edd9ac9b6706b23a68d9d7d8f8d
+scorer path revision 604dac3
+9f790b4bdc12e168f6d3624890ba0935dfe5e32a243a17f3dff65c510a046463  research/astra-e/final-slot/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh v1-final-slot-gate research/astra-e/final-slot/candidate.rs --no-proxy --no-timing --target-dir /workspace/work/f2-word-build
