@@ -4,9 +4,11 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 ## Preserved frontier
 
-**Target-machine speed leader.** On the i9-10900K, the combined writer's W7/W8/W9/W10 wall ratios versus 0.5.6 LazyCells were **0.8982/0.9117/0.9031/0.8871**. Median peak RSS ratios were **0.8489/0.8288/0.8229/0.8191**, with every memory criterion met. Direct opend ratios were 0.9583/0.9656/0.9616/0.9591; all upper limits were below parity. All four wall limits exceed the 0.80 objective. It takes a further 9.8–12.3% reduction of the measured candidate times at the point estimates. [Target evidence, raw samples and exact reproduction](workstation/combined-i9.md)
+**Current i9 speed and memory reference.** Source `badb2aec3624bd65606c429b2e6f79e9d9d0050f` admits five more real dense blocks in the combined writer. The direct four-arm i9 run measured W7/W8/W9/W10 wall ratios of **0.8670/0.8836/0.8970/0.8759** and median peak ratios of **0.6897/0.6811/0.6815/0.6788** versus 0.5.6 LazyCells. Against the previous measured combined writer, wall was **0.9789/0.9734/0.9763/0.9585** with each upper 95% limit below one. Its peak was 0.8094/0.8159/0.8113/0.8231 of the predecessor, satisfying all preregistered memory tests. It had the lowest median time and RSS in this four-arm comparison. Every stretch-target wall interval remains above 0.80. At the point estimates another 7.7–10.8% reduction in candidate wall is required. [Full target results, independent archive and reproduction](workstation/edge-i9.md) · [Frozen scorer recipe](workstation/edge-request.md)
 
-**Independent CI for the i9 winner.** Narrow links, inline short words and one-edge lookahead come from source `80d8409359214b4e5abfd4430213921e82e9cd30`. Independent AMD EPYC 7763 CI built head `5c7704b3d149b05b8e9dc2ace06da0179459a8b3` with v0 and 16 complete paired rounds per W. The full libbzip2/CRC gate passed for the candidate and all three references. Eager Cells was faster throughout this grid. [Candidate](https://github.com/lmmx/mibz2/tree/80d8409359214b4e5abfd4430213921e82e9cd30/research/astra-e/narrow-short) · [Raw CI archive](ci/evidence/combined-ahead-44427324957.zip) · [Scorer and candidate manifest](results/combined-ahead-pilot/assessment.json)
+**First measured i9 improvement.** On the i9-10900K, the combined writer's W7/W8/W9/W10 wall ratios versus 0.5.6 LazyCells were **0.8982/0.9117/0.9031/0.8871**. Median peak RSS ratios were **0.8489/0.8288/0.8229/0.8191**, with every memory criterion met. Direct opend ratios were 0.9583/0.9656/0.9616/0.9591; all upper limits were below parity. All four wall limits exceed the 0.80 objective. It takes a further 9.8–12.3% reduction of the measured candidate times at the point estimates. [Target evidence, raw samples and exact reproduction](workstation/combined-i9.md)
+
+**Independent CI for the combined predecessor.** Narrow links, inline short words and one-edge lookahead come from source `80d8409359214b4e5abfd4430213921e82e9cd30`. Independent AMD EPYC 7763 CI built head `5c7704b3d149b05b8e9dc2ace06da0179459a8b3` with v0 and 16 complete paired rounds per W. The full libbzip2/CRC gate passed for the candidate and all three references. Eager Cells was faster throughout this grid. [Candidate](https://github.com/lmmx/mibz2/tree/80d8409359214b4e5abfd4430213921e82e9cd30/research/astra-e/narrow-short) · [Raw CI archive](ci/evidence/combined-ahead-44427324957.zip) · [Scorer and candidate manifest](results/combined-ahead-pilot/assessment.json)
 
 | Workers | Combined / LazyCells wall [95%] | Combined / opend wall [95%] | Combined / LazyCells median peak RSS |
 |---:|---|---|---:|
@@ -16,9 +18,9 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 **Scorer v1 replication.** A second 16-round AMD run gave combined/Lazy wall 0.8894, 0.8938 and 0.8332 at W1/2/4. W4's interval was [0.8024,0.8651] and its median peak ratio was 0.8710. Direct ratios to opend were 0.9581 [0.9493,0.9670], 0.9632 [0.9533,0.9733], and 0.9639 [0.9594,0.9684]. The W4 contrast against eager included parity. [Independent v1 receipt and raw ZIP](ci/evidence/combined-ahead-44429350230.md) · [Coordinator priority request](workstation/combined-request.md)
 
-**Target memory frontier.** The historical ungated Open arm used the least peak memory on the target in the four-arm combined sweep, with median peak ratios 0.6925/0.6839/0.6710/0.6797 versus Lazy at W7–10. It used less memory than combined in every matched pair; only the W7 wall interval separated the two. [Complete i9 comparison](workstation/combined-i9.md)
+**Ungated Open in the earlier target sweep.** The historical ungated Open arm used the least peak memory on the target in the four-arm combined sweep, with median peak ratios 0.6925/0.6839/0.6710/0.6797 versus Lazy at W7–10. It used less memory than combined in every matched pair; only the W7 wall interval separated the two. [Complete i9 comparison](workstation/combined-i9.md)
 
-**Independently measured experimental memory leader.** Widening admission on five dense blocks reduced peak RSS versus the frozen combined predecessor to 0.9383, 0.8904 and 0.8334 at W1/2/4. On that same five-arm Xeon CI, edge/predecessor wall was 1.0071 [0.9986,1.0156], 1.0096 [1.0031,1.0161] and 1.0027 [0.9995,1.0058]. W4 edge/Lazy wall was 0.9074 [0.9029,0.9119], with peak RSS at 0.7129. This establishes the space tradeoff and a W2 timing regression. [20-round five-arm CI and original observations](ci/evidence/edge-budget-44431030145.md)
+**Earlier matched CI on dense-block admission.** Widening admission on five dense blocks reduced peak RSS versus the frozen combined predecessor to 0.9383, 0.8904 and 0.8334 at W1/2/4. On that same five-arm Xeon CI, edge/predecessor wall was 1.0071 [0.9986,1.0156], 1.0096 [1.0031,1.0161] and 1.0027 [0.9995,1.0058]. W4 edge/Lazy wall was 0.9074 [0.9029,0.9119], with peak RSS at 0.7129. This establishes the space tradeoff and a W2 timing regression. [20-round five-arm CI and original observations](ci/evidence/edge-budget-44431030145.md)
 
 **Local v1 speed and memory.** For the nine-round W1/W4 comparison, the combined candidate recorded 0.648 [0.501,0.838] at W1 and 0.888 [0.644,1.226] at W4. Its bounded-admission derivative, source `badb2aec3624bd65606c429b2e6f79e9d9d0050f`, has the leading W4 wall and memory observations among those first three confirmations. W4 took 0.743 [0.621,0.888] versus LazyCells and 0.954 [0.851,1.070] versus opend; median peak RSS was 0.732 of LazyCells. W1 took 0.970 [0.668,1.408] versus LazyCells. These arms ran in separate, host-load-sensitive epochs against their own controls. The independent five-arm CI includes a directly paired combined predecessor. [Bounded admission score and reproduction](results/v1-edge-confirm/manifest.txt) · [Comparisons against opend](results/v1-edge-confirm/vs-opend.json) · [Combined v1 score](results/v1-combined-confirm/score/summary.txt)
 
@@ -32,7 +34,7 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 **Delimiter mechanism in independent CI.** At W1/W2/W4 the dynamic rank scheduler ran in 0.9561/0.9586/0.9784 of the static F2 predecessor. The candidate's full worker took 1.0252/1.0153/1.0196 of Lazy, so the independently verified scheduling improvement leaves a measurable pipeline gap on this runner. [Twenty complete rotations and artifact](ci/evidence/delimiter-refill-44433942216.md)
 
-**Compact delimiter decoder.** Source `6758831810b6a913c88ff079dede881b578ca03a` stores eight bytes per run and issues eight independent payload reads before consuming their answers. Against the guarded POPCNT decoder, 20 full-worker pairs per count on AMD measured 0.9134 [0.9066,0.9203], 0.9151 [0.9047,0.9256] and 0.9225 [0.9198,0.9251] at W1/W2/W4. Median peak ratios were 0.9945/0.9963/0.9867. Against Lazy the ratios were 0.8468/0.8631/0.8904, with W4 median peak 0.9140. Against opend the ratios were 0.8817/0.9112/1.0069. All five arms passed 338 checks. This is the delimiter speed reference. The W4 regression versus opend and the higher RSS leave the combined writer as the primary i9 reference. [300 original samples and verified comparisons](ci/evidence/compact-preload-44440381983.md) · [Native construction and phase data](formulations/f2-pages/payload/slots/)
+**Compact delimiter decoder.** Source `6758831810b6a913c88ff079dede881b578ca03a` stores eight bytes per run and issues eight independent payload reads before consuming their answers. Against the guarded POPCNT decoder, 20 full-worker pairs per count on AMD measured 0.9134 [0.9066,0.9203], 0.9151 [0.9047,0.9256] and 0.9225 [0.9198,0.9251] at W1/W2/W4. Median peak ratios were 0.9945/0.9963/0.9867. Against Lazy the ratios were 0.8468/0.8631/0.8904, with W4 median peak 0.9140. Against opend the ratios were 0.8817/0.9112/1.0069. All five arms passed 338 checks. This is the delimiter speed reference. The W4 regression versus opend and the higher RSS leave the dense-block writer as the primary i9 reference. [300 original samples and verified comparisons](ci/evidence/compact-preload-44440381983.md) · [Native construction and phase data](formulations/f2-pages/payload/slots/)
 
 **Guarded POPCNT.** At source `3651470cb0ef5458e75cf97d3de363a1c73f2f76` this decoder takes 0.9184/0.9215/0.9317 of its exact counted predecessor at W1/W2/W4 on the independent Xeon worker. Direct candidate/opend is 0.8873/0.9135/1.0093 on that runner. The W4 full-worker regresses against opend with interval [1.0055,1.0130]. Its own local W4 estimate versus Lazy was 0.7870 [0.6588,0.9401]. No i9 outcome applies to this algorithm yet. [Raw independent evidence](ci/evidence/guarded-popcnt-44436826833.md) · [Local score and frozen recipe](results/v1-rank-popcnt-confirm/)
 
@@ -52,7 +54,7 @@ These are the lowest recorded point estimates within each group of experiments w
 | `604dac3` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-final-slot-confirm · 0.718 [0.551, 0.934] | v1-edge-confirm · 0.732 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1-delimiter-f2c · 1.165 [0.833, 1.628] | v1-delimiter-f2c · 1.002 |
 | `604dac3` local score, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1-delimiter-f2c · 1.144 [0.826, 1.586] | v1-delimiter-f2c · 0.941 |
-| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1p2-final-slot-confirm · 0.819 [0.565, 1.188] | v1p2-edge-confirm · 0.898 |
+| `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W1** | v1p2-front-confirm · 0.808 [0.570, 1.145] | v1p2-edge-confirm · 0.898 |
 | `75297a1` confirmation, grid 1,4, 9r ×2, settle 2s, full, 3 arms, **W4** | v1p2-final-slot-confirm · 0.767 [0.517, 1.139] | v1p2-edge-confirm · 0.750 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W1** | hierarchy-f4 · 1.940 [1.080, 3.487] | hierarchy-f4 · 0.878 |
 | `9c31461` local score, grid 1,4, 5r ×1, settle 2s, full, 3 arms, **W4** | hierarchy-f4 · 2.159 [1.407, 3.313] | hierarchy-f4 · 0.819 |
@@ -1037,7 +1039,7 @@ This score has no completed instruction, cache-transfer, dependency or overlap m
 
 The W4 point estimate against LazyCells is below 0.80 on this host, and its upper confidence limit is above 0.80. Direct paired wall comparisons to opend were W1 0.986 [0.821,1.184] W4 0.954 [0.851,1.070]. Shared-host load varied. Separate-epoch leader rankings and three-round pilot differences do not establish a production gain.
 
-Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/edge-budget-44431030145.md) · [Target request](workstation/edge-request.md)
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/edge-budget-44431030145.md) · [Independent W7–10 i9 result](workstation/edge-i9.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1676,7 +1678,7 @@ The build tree, including sibling modules, is [`a651e93f063737426cc19223d9b3ed8a
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/edge-budget-44431030145.md) · [Target request](workstation/edge-request.md)
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 CI](ci/evidence/edge-budget-44431030145.md) · [Independent W7–10 i9 result](workstation/edge-i9.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1711,6 +1713,32 @@ git checkout 75297a1d57b2bdf262c3a19f3064848dedf2c493 -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/final-slot/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/final-slot/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/astra-e-refresh-75297a1-build
+```
+
+## v1p2-front-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-front-confirm/score/check.jsonl) · [manifest](results/v1p2-front-confirm/manifest.txt) · [score](results/v1p2-front-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`e69c58476bc4f68605d38771e46b48c66865e96b`](https://github.com/lmmx/mibz2/tree/e69c58476bc4f68605d38771e46b48c66865e96b). [Candidate entry](https://github.com/lmmx/mibz2/blob/e69c58476bc4f68605d38771e46b48c66865e96b/research/astra-e/front-fusion/precount/worker/candidate.rs). Fetched master `be74d5763d212864607d46521d74ebc0827f9f36`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 0.808 [0.570, 1.145] | 0.926 [0.618, 1.386] | 0.872 | 76,724 / 80,404 / 77,560 | 0.954 |
+| 4 | 9 | 0.942 [0.653, 1.360] | 0.783 [0.651, 0.942] | 1.204 | 113,264 / 136,064 / 115,724 | 0.832 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1p2-front-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+No independent benchmark is attached to this individual scorer receipt.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout be74d5763d212864607d46521d74ebc0827f9f36 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/front-fusion/precount/worker/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/front-fusion/precount/worker/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/astra-e-front-confirm-build
 ```
 
 ## v1p2-front-fusion-gate
