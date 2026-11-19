@@ -93,3 +93,77 @@ fn corpus() {
     assert_eq!(blocks, 233);
     println!("{blocks} large blocks; verified (blocks, inverse bytes) for quote and compound: {totals:?}");
 }
+
+#[test]
+fn every_band_and_arrow() {
+    let mut candidate = Candidate::default();
+    let (mut patterns, mut arrows, mut bands) = (0, 0, 0);
+    for n in 1..=9 {
+        for seed in 0..1u32 << n {
+            let col: Vec<_> = (0..n).map(|i| ((seed >> i) & 1) as u8).collect();
+            let caps: Vec<_> = col.iter().map(|&b| u16::from(b) << 8 | 1).collect();
+            let mut psi: Vec<_> = (0..n).collect();
+            psi.sort_by_key(|&i| col[i]);
+            let mut lf = vec![0; n];
+            for (y, &s) in psi.iter().enumerate() {
+                lf[s] = y;
+            }
+            for width in 1..=4 {
+                for word in 0..1u32 << width {
+                    let pat: Vec<_> = (0..width).map(|i| ((word >> i) & 1) as u8).collect();
+                    let rows: Vec<_> = (0..n)
+                        .filter(|&r| {
+                            let mut x = r;
+                            pat.iter().all(|&b| {
+                                x = psi[x];
+                                col[x] == b
+                            })
+                        })
+                        .collect();
+                    let section = candidate.prepare(&caps, n as u32, &pat);
+                    if rows.is_empty() {
+                        assert!(section.is_none());
+                        continue;
+                    }
+                    let (s, m) = section.unwrap();
+                    assert_eq!(rows, (s as usize..(s + m) as usize).collect::<Vec<_>>());
+                    assert!(candidate.bands(s, m));
+                    let bits = u32::BITS - (m - 1).leading_zeros();
+                    let mask = (1u32 << bits) - 1;
+                    let mut prior = Vec::new();
+                    let mut count = 0;
+                    for (k, &start) in rows.iter().enumerate() {
+                        let mut x = start;
+                        let mut spelling = Vec::new();
+                        loop {
+                            spelling.push(col[x]);
+                            x = lf[x];
+                            if rows.contains(&x) {
+                                break;
+                            }
+                        }
+                        spelling.reverse();
+                        if spelling != prior {
+                            count += 1;
+                            prior = spelling.clone();
+                        }
+                        let link = candidate.links[x - s as usize];
+                        assert_eq!((link & mask) as usize, k);
+                        let code = (link >> bits) as usize;
+                        assert_eq!(code, count - 1);
+                        assert_eq!(
+                            candidate.dictionary[candidate.offsets[code] as usize
+                                ..candidate.offsets[code + 1] as usize],
+                            spelling
+                        );
+                    }
+                    assert_eq!(candidate.offsets.len(), count + 1);
+                    patterns += 1;
+                    arrows += m;
+                    bands += count;
+                }
+            }
+        }
+    }
+    println!("verified all {arrows} induced arrows and all {bands} maximal bands of {patterns} nonempty word sections");
+}

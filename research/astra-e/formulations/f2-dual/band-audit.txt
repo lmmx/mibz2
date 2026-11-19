@@ -1,0 +1,7 @@
+
+running 1 test
+verified all 32776 induced arrows and all 25656 maximal bands of 17392 nonempty word sections
+test candidate::checks::every_band_and_arrow ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.33s
+
