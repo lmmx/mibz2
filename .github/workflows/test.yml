@@ -138,6 +138,8 @@ jobs:
           bench/moonshot/target/release/moonshot check --quick --arm opend | tail -1
       - name: The proxy's tool on two blocks
         run: |
+          # (the image's package index goes stale: refresh it first)
+          sudo apt-get update -qq > /dev/null
           sudo apt-get install -y -qq valgrind > /dev/null
           bash bench/moonshot/chaingrind/build.sh target/chaingrind
           git ls-files 'src/*.rs' | xargs cat | bzip2 -9 > moonshot.bz2

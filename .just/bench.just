@@ -1848,16 +1848,28 @@ moonshot-score candidate *args:
     bash bench/moonshot/corpus.sh corpora/wikidata.bz2 > /dev/null
     python3 bench/moonshot/moonshot.py score "{{candidate}}" {{args}}
 
+# The register's best production-eligible candidate per scorer version, and each worker count's
+# leader (bench/moonshot/README.md, "The register"); faster ineligible ones listed apart.
+#   just moonshot-best register.jsonl
+moonshot-best register:
+    python3 bench/moonshot/moonshot.py best "{{register}}"
+
 # The scorer's i9 calibration run (bench/moonshot/README.md, "Calibration"; its rule posted on
 # #145 before any data): the reference arms in the shipped workers, kernel-only (lazy, 0.5.6's
 # LazyCells; opend; open; cells, eager), paired and alternating at WORKERS workers, unpinned,
 # SETTLE s apart, on COPIES copies of the Wikidata sample, each run's stall counters by perf
-# stat. Decides nothing in production: the scorer's proxy is fitted on lazy and opend at 7
-# workers only and checked against every other cell. Its builds and corpora are deleted at the
-# end; only the bundle stays. DRY: untimed, no counters, two rounds, not evidence.
+# stat, the mean L3-miss latency among them. Decides nothing in production: the scorer, frozen
+# at the commit its #145 LOG names (kappa fitted on the open-return bundle's opend 7/28 alone),
+# predicts every cell of this run, so every cell is held out. Its builds and corpora are
+# deleted at the end; only the bundle stays. About 20 minutes.
+# DRY (untimed, no counters, two rounds, not evidence) is the 5th positional argument: `just`
+# has no keyword arguments, so `DRY=1` alone would be taken as ROUNDS (and is refused):
+#   just bench-moonshot-calibrate 10 2 4 1,2,4,7,8,10 1
 bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
+    [[ "{{ROUNDS}}" =~ ^[0-9]+$ ]] \
+      || { echo "bench-moonshot-calibrate: ROUNDS is {{ROUNDS}}: DRY is the 5th positional argument (just bench-moonshot-calibrate 10 2 4 1,2,4,7,8,10 1)"; exit 1; }
     W=$PWD/target/moonshot-calibrate
     mkdir -p "$W"
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
@@ -1887,6 +1899,10 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
       command -v perf >/dev/null && [ "$paranoid" != unknown ] && [ "$paranoid" -le 0 ] \
         || { echo "bench-moonshot-calibrate: the counters need perf and kernel.perf_event_paranoid 0 or less ($paranoid)"; exit 1; }
       perf --version | tee "$O/perf_version.txt"
+      # (every counter checked before anything is built: a name perf refuses stops the run here)
+      events=$(python3 -c 'import sys; sys.path.insert(0, "bench/moonshot"); import moonshot; print(",".join(moonshot.PERF_EVENTS))')
+      perf stat -x, -e "$events" -- true 2> "$O/perf-preflight.txt" \
+        || { cat "$O/perf-preflight.txt"; echo "bench-moonshot-calibrate: perf refuses the counters ($events)"; exit 1; }
     fi
     export RUSTUP_TOOLCHAIN=1.99.1
     rustc -V | grep -q '^rustc 1\.99\.1 ' \
@@ -1910,7 +1926,8 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     done
     python3 bench/moonshot/moonshot.py sweep --target-dir "$B" --corpus "$W/wikidata-x{{COPIES}}.bz2" \
       --out "$O" --arms lazy,opend,open,cells --workers "{{WORKERS}}" --rounds "$rounds" \
-      --settle {{SETTLE}} "${perf[@]}" | tee "$O/sweep.txt"
+      --settle {{SETTLE}} "${perf[@]}" | tee "$O/sweep.txt" \
+      || echo "bench-moonshot-calibrate: the sweep stopped early; runs.jsonl holds what it timed"
     date -u +%FT%TZ > "$O/finished.txt"
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
