@@ -42,6 +42,9 @@
 
 #define MS_BEGIN (VG_USERREQ_TOOL_BASE('M', 'S'))
 #define MS_END (VG_USERREQ_TOOL_BASE('M', 'S') + 1)
+/* the warm-up: from here to MS_BEGIN, data accesses only update the caches' contents (nothing
+ * is counted or timed), so the region starts from a worker's state after other work */
+#define MS_WARM (VG_USERREQ_TOOL_BASE('M', 'S') + 2)
 
 /* ---- options ---- */
 static Long clo_llc_kb = 2048;
@@ -55,9 +58,12 @@ static Long clo_width = 4;
 static Long clo_mshr = 12;
 static Long clo_sb = 56;
 static Bool clo_prefetch = True;
+static Bool clo_no_rfo = True;
 
 /* ---- the clock ---- */
 static Bool active = False;
+static Bool warming = False;
+static ULong llc_dirty_begin = 0;
 static ULong n_instr = 0;
 static ULong dispatch_t = 0;   /* the current instruction's dispatch cycle */
 static ULong complete_t = 0;   /* its results' latest ready cycle */
@@ -107,6 +113,10 @@ static Gran *gran(Addr a, Bool create)
 
 /* ---- statistics ---- */
 static ULong s_loads, s_stores, s_out_bytes, s_cycles;
+/* stores that write whole lines without a read for ownership on Intel cores: rep movs/stos
+ * (fast strings) and non-temporal stores; and the lines they missed that no read fetched */
+static ULong s_rep_stores, s_nt_stores, s_norfo_lines;
+static Bool no_rfo = False;
 static ULong s_l1_miss, s_l2_miss, s_llc_miss;            /* demand line lookups */
 static ULong s_l2_xfer, s_l3_xfer, s_dram_read, s_dram_write, s_dram_drain, s_prefetched;
 static ULong s_past_l2_loads, s_dram_loads;               /* demand loads by where served */
@@ -311,6 +321,11 @@ static UInt access_line(Addr line, Bool write, ULong now, ULong *ready)
       if (hit) {
          *ready = later(now + clo_l3_lat, hit_when);
          level = 3;
+      } else if (write && no_rfo && clo_no_rfo) {
+         /* a fast-string or non-temporal store: the line is written whole, never read */
+         s_norfo_lines++;
+         *ready = now + clo_l2_lat;
+         level = 2;
       } else {
          s_llc_miss++;
          s_dram_read++;
@@ -456,10 +471,20 @@ static void record_interval(ULong s, ULong e, Bool dep)
    iv_n++;
 }
 
+static void warm_touch(UWord addr, UWord size, Bool write)
+{
+   ULong r;
+   for (Addr l = addr >> 6; l <= (addr + (size ? size : 1) - 1) >> 6; l++)
+      access_line(l, write, 0, &r);
+}
+
 static VG_REGPARM(0) void h_load(UWord dst, UWord addr, UWord atmp, UWord size)
 {
-   if (!active)
+   if (!active) {
+      if (warming)
+         warm_touch(addr, size, False);
       return;
+   }
    s_loads++;
    ULong a_ready = 0;
    UInt a_chain = 0;
@@ -528,8 +553,11 @@ static VG_REGPARM(0) void h_load(UWord dst, UWord addr, UWord atmp, UWord size)
 
 static VG_REGPARM(0) void h_store(UWord addr, UWord atmp, UWord size, UWord dtmp)
 {
-   if (!active)
+   if (!active) {
+      if (warming)
+         warm_touch(addr, size, True);
       return;
+   }
    s_stores++;
    ULong ready = 0;
    UInt chain = 0;
@@ -566,6 +594,24 @@ static VG_REGPARM(0) void h_store(UWord addr, UWord atmp, UWord size, UWord dtmp
       m->ready = ready;
       m->chain = chain;
    }
+}
+
+static VG_REGPARM(0) void h_store_rep(UWord addr, UWord atmp, UWord size, UWord dtmp)
+{
+   if (active)
+      s_rep_stores++;
+   no_rfo = True;
+   h_store(addr, atmp, size, dtmp);
+   no_rfo = False;
+}
+
+static VG_REGPARM(0) void h_store_nt(UWord addr, UWord atmp, UWord size, UWord dtmp)
+{
+   if (active)
+      s_nt_stores++;
+   no_rfo = True;
+   h_store(addr, atmp, size, dtmp);
+   no_rfo = False;
 }
 
 static VG_REGPARM(0) void h_now(UWord dst)
@@ -645,9 +691,46 @@ static void load(IRSB *sb, UWord dst, IRExpr *addr, IRType ty, IRExpr *guard)
    call(sb, "h_load", h_load, mkIRExprVec_4(hw(dst), addr, hw(tmp_of(addr)), hw(sizeofIRType(ty))), guard);
 }
 
+/* the kind of store the current guest instruction makes: 0 ordinary, 1 a rep movs or rep stos
+ * (fast strings), 2 non-temporal (movnti, movntps/pd, movntq/dq, and their VEX forms) */
+static UInt cur_store_kind = 0;
+
+static UInt store_kind(Addr pc)
+{
+   const UChar *p = (const UChar *)pc;
+   Bool rep = False;
+   Int i = 0;
+   for (; i < 8; i++) {
+      UChar b = p[i];
+      if (b == 0xF3 || b == 0xF2)
+         rep = True;
+      else if (b != 0x66 && b != 0x67 && b != 0x2E && b != 0x3E && b != 0x26 && b != 0x64
+               && b != 0x65 && b != 0x36 && b != 0xF0)
+         break;
+   }
+   if (p[i] >= 0x40 && p[i] <= 0x4F)
+      i++;
+   UChar op = p[i];
+   if (rep && (op == 0xA4 || op == 0xA5 || op == 0xAA || op == 0xAB))
+      return 1;
+   if (op == 0x0F && (p[i + 1] == 0xC3 || p[i + 1] == 0x2B || p[i + 1] == 0xE7))
+      return 2;
+   if (op == 0xC5 && (p[i + 2] == 0x2B || p[i + 2] == 0xE7))
+      return 2;
+   if (op == 0xC4 && (p[i + 1] & 0x1F) == 1 && (p[i + 3] == 0x2B || p[i + 3] == 0xE7))
+      return 2;
+   return 0;
+}
+
 static void store(IRSB *sb, IRExpr *addr, IRExpr *data, IRType ty, IRExpr *guard)
 {
-   call(sb, "h_store", h_store, mkIRExprVec_4(addr, hw(tmp_of(addr)), hw(sizeofIRType(ty)), hw(tmp_of(data))), guard);
+   IRExpr **args = mkIRExprVec_4(addr, hw(tmp_of(addr)), hw(sizeofIRType(ty)), hw(tmp_of(data)));
+   if (cur_store_kind == 1)
+      call(sb, "h_store_rep", h_store_rep, args, guard);
+   else if (cur_store_kind == 2)
+      call(sb, "h_store_nt", h_store_nt, args, guard);
+   else
+      call(sb, "h_store", h_store, args, guard);
 }
 
 static void wrtmp(IRSB *sb, IRSB *in, IRTemp dst, IRExpr *e)
@@ -739,6 +822,7 @@ static IRSB *cg_instrument(VgCallbackClosure *closure, IRSB *sbIn, const VexGues
          continue;
       switch (st->tag) {
       case Ist_IMark:
+         cur_store_kind = store_kind((Addr)st->Ist.IMark.addr);
          call(sb, "h_imark", h_imark, mkIRExprVec_0(), NULL);
          break;
       case Ist_WrTmp:
@@ -805,6 +889,14 @@ static IRSB *cg_instrument(VgCallbackClosure *closure, IRSB *sbIn, const VexGues
 
 /* ---- client requests ---- */
 
+static ULong count_dirty(Cache *c)
+{
+   ULong n = 0;
+   for (SizeT i = 0; i < (SizeT)c->sets * c->ways; i++)
+      n += c->tag[i] && c->dirty[i];
+   return n;
+}
+
 static void drain_cache(Cache *c, ULong *count)
 {
    for (SizeT i = 0; i < (SizeT)c->sets * c->ways; i++)
@@ -816,7 +908,20 @@ static void drain_cache(Cache *c, ULong *count)
 
 static Bool cg_client_request(ThreadId tid, UWord *args, UWord *ret)
 {
+   if (args[0] == MS_WARM) {
+      warming = True;
+      *ret = 1;
+      return True;
+   }
    if (args[0] == MS_BEGIN) {
+      if (warming) {
+         /* the warm-up's traffic is not the region's */
+         warming = False;
+         s_l1_miss = s_l2_miss = s_llc_miss = 0;
+         s_norfo_lines = 0;
+         s_l2_xfer = s_l3_xfer = s_dram_read = s_dram_write = s_prefetched = 0;
+         llc_dirty_begin = count_dirty(&LLC);
+      }
       active = True;
       region_start = last_retire > dispatch_t ? last_retire : dispatch_t;
       dispatch_t = region_start;
@@ -850,6 +955,7 @@ static Bool cg_option(const HChar *arg)
    else if VG_INT_CLO(arg, "--mshr", clo_mshr) {}
    else if VG_INT_CLO(arg, "--sb", clo_sb) {}
    else if VG_BOOL_CLO(arg, "--prefetch", clo_prefetch) {}
+   else if VG_BOOL_CLO(arg, "--no-rfo", clo_no_rfo) {}
    else return False;
    return True;
 }
@@ -857,7 +963,7 @@ static Bool cg_option(const HChar *arg)
 static void cg_usage(void)
 {
    VG_(printf)("    --llc-kb=N --llc-ways=N --l1-lat=N --l2-lat=N --l3-lat=N --dram-lat=N\n"
-               "    --rob=N --width=N --mshr=N --sb=N --prefetch=yes|no\n");
+               "    --rob=N --width=N --mshr=N --sb=N --prefetch=yes|no --no-rfo=yes|no\n");
 }
 
 static void cg_debug_usage(void) {}
@@ -907,7 +1013,9 @@ static void cg_fini(Int exitcode)
    drain_cache(&L1, &l1d);
    drain_cache(&L2, &l2d);
    drain_cache(&LLC, &llcd);
-   s_dram_drain = llcd;
+   /* the dirty lines the region leaves, net of those it found: in a steady state of blocks the
+    * lines dirty at the start are as many as at the end, so only the difference is the region's */
+   s_dram_drain = llcd > llc_dirty_begin ? llcd - llc_dirty_begin : 0;
    /* overlap: the DRAM loads' latency over the time at least one is outstanding (memory-level
     * parallelism), and for each dependent one, the others outstanding beside it */
    ULong busy = 0, lat_sum = 0, dep_n = 0, dep_others = 0;
@@ -952,15 +1060,17 @@ static void cg_fini(Int exitcode)
              "\"dep_dram_loads\":%llu,\"dep_any_loads\":%llu,\"max_chain_past_l2\":%llu,\"max_chain_dram\":%llu,"
              "\"chain_sum_dram\":%llu,\"dram_latency_sum\":%llu,\"dram_busy_cycles\":%llu,"
              "\"dep_overlap_sum\":%llu,\"dep_overlap_n\":%llu,\"store_buffer_stall_cycles\":%llu,"
+             "\"rep_stores\":%llu,\"nt_stores\":%llu,\"norfo_lines\":%llu,"
              "\"config\":{\"llc_kb\":%lld,\"llc_ways\":%lld,\"l1_lat\":%lld,\"l2_lat\":%lld,"
              "\"l3_lat\":%lld,\"dram_lat\":%lld,\"rob\":%lld,\"width\":%lld,\"mshr\":%lld,\"sb\":%lld,"
-             "\"prefetch\":%s}}\n",
+             "\"prefetch\":%s,\"no_rfo\":%s}}\n",
              s_out_bytes, n_instr, s_cycles, s_loads, s_stores, s_l1_miss, s_l2_miss, s_llc_miss,
              s_l2_xfer, s_l3_xfer, s_dram_read, s_dram_write, s_dram_drain, s_prefetched,
              s_past_l2_loads, s_dram_loads, s_dep_past_l2, s_dep_dram, s_dep_any, s_max_chain_past_l2,
              s_max_chain_dram, s_chain_sum_dram, lat_sum, busy, dep_others, dep_n, s_sb_stall,
+             s_rep_stores, s_nt_stores, s_norfo_lines,
              clo_llc_kb, clo_llc_ways, clo_l1_lat, clo_l2_lat, clo_l3_lat, clo_dram_lat, clo_rob,
-             clo_width, clo_mshr, clo_sb, clo_prefetch ? "true" : "false");
+             clo_width, clo_mshr, clo_sb, clo_prefetch ? "true" : "false", clo_no_rfo ? "true" : "false");
 }
 
 static void cg_pre_clo_init(void)
