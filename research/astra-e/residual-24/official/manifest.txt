@@ -1,0 +1,15 @@
+candidate aed11af2d257006b87f6bf67a7655e217e26d6d7
+refreshed origin/master be74d5763d212864607d46521d74ebc0827f9f36
+scorer path 75297a1d57b2bdf262c3a19f3064848dedf2c493
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+e84c2ea431e75240eff64fe4dde0d0327cd8e29d06eac3e5779c82aab4fea6f6  research/astra-e/residual-24/p16.rs
+4634e8af97995cf8a04ad1cc7b88abc113d5bfe35f0a0be459e9ba0a1a048a1d  research/astra-e/residual-24/constructor.rs
+a892c8fcb6910661d3c70091ad28adc385e2b903f52f034054019a5757652323  research/astra-e/residual-24/adapter.inc.rs
+252301a541ee67617a447dc1755ab39d337ab9975e43816345a2fa6296d58224  research/astra-e/residual-24/narrow.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  /workspace/work/astra-e/corpora/wikidata.bz2

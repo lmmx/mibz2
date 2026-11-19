@@ -32,3 +32,5 @@ python3 "$d/report.py" /tmp/astra-e-residual-24/{first,repeat}.csv
 ```
 
 The compiled standalone scorer entries are p8.rs, p16.rs and p32.rs. No change to the shipping decoder is needed. The separate census and native checks preserve the exact historical geometry and price both passes before the marked walk. No worker or target timing was requested for these candidates.
+
+The P16 lower-table-space candidate at aed11af2d257006b87f6bf67a7655e217e26d6d7 passed the refreshed authoritative v1 gate on all 338 cases, including periodic and multiple-cycle marks, full Wikidata and malformed stream/CRC cases. Master was fetched at be74d5763d212864607d46521d74ebc0827f9f36, with scorer path revision 75297a1d57b2bdf262c3a19f3064848dedf2c493. The scorer printed v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04. [Full gate receipt](official/score/summary.txt) · [Immutable candidate and scorer manifest](official/manifest.txt) · [Refresh and reproduce](gate.sh)
