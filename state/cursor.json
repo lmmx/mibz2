@@ -179,7 +179,7 @@
     "6952107464": 6952212536,
     "6990632934": 6990784273
   },
-  "last_rebuilt_from": 6997161408,
+  "last_rebuilt_from": 6997219042,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -786,9 +786,9 @@
     "6997166415": {
       "comment_id": 6997166415,
       "status": "complete",
-      "progress": "Record committed; REVIEW pending.",
-      "work_commit": "2957069243f7026e7b29049e05df12f52f06f1fb"
+      "progress": "Record revised through new verification; REVIEW pending.",
+      "work_commit": "a039c3c0031a9223bf27e034055de8ad4d324b09"
     }
   },
-  "last_record_commit": "2957069243f7026e7b29049e05df12f52f06f1fb"
+  "last_record_commit": "a039c3c0031a9223bf27e034055de8ad4d324b09"
 }
