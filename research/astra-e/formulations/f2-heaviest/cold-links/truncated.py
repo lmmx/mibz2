@@ -1,11 +1,11 @@
 """Construct the incomplete first-level destination table without reading a singleton tail."""
-def construct(last,q,m,lf):
+def construct(last,q,m,lf,threshold=1):
     if not m:return {},[]
     nodes=[(q,q+m,b"")]
     children=[]
     for a,b,suffix in nodes:
         by_byte={}
-        if a+1<b:
+        if b-a>threshold:
             for x in range(a,b):
                 c=last[x]
                 if c==34:continue
@@ -19,8 +19,8 @@ def construct(last,q,m,lf):
     outputs=[None]*len(nodes)
     for i in reversed(range(len(nodes))):
         a,b,suffix=nodes[i]
-        if a+1==b:
-            outputs[i]=[(False,a,suffix)];continue
+        if b-a<=threshold:
+            outputs[i]=[(False,x,suffix) for x in range(a,b)];continue
         seen={};out=[]
         terminal=b'"'+suffix[::-1]
         for x in range(a,b):

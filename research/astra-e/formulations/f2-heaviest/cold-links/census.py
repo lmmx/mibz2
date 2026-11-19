@@ -26,15 +26,17 @@ def make_index(last):
         lf.append(starts[ch]);starts[ch]+=1
     return q,m,lf
 
-def prune(last,q,m,lf):
+def prune(last,q,m,lf,threshold=1):
     if not m:return {},0,0
     # The state carries the original row interval, and its already-known reverse suffix.
     stack=[(q,q+m,b"")]; seeds={};queries=hot_sites=0
     while stack:
         a,b,suffix=stack.pop()
-        if b-a==1:
-            assert a not in seeds
-            seeds[a]=suffix;continue
+        if b-a<=threshold:
+            for x in range(a,b):
+                assert x not in seeds
+                seeds[x]=suffix
+            continue
         queries+=1
         bins={}
         for row in range(a,b):
