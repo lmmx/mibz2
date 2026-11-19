@@ -821,6 +821,25 @@ bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-word/candidate.rs --no-proxy --no-timing --target-dir /workspace/work/f2-word-build
 ```
 
+## v1-delimiter-bottom-leaf-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-delimiter-bottom-leaf-gate/score/check.jsonl) · [manifest](results/v1-delimiter-bottom-leaf-gate/manifest.txt) · [score](results/v1-delimiter-bottom-leaf-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`d1a52c3fee7bf46879336270fe417bcf66b5587d`](https://github.com/lmmx/mibz2/tree/d1a52c3fee7bf46879336270fe417bcf66b5587d). [Candidate entry](https://github.com/lmmx/mibz2/blob/d1a52c3fee7bf46879336270fe417bcf66b5587d/research/astra-e/formulations/f2-rootstream/bottom/candidate.rs). Fetched master `c76927421dae1cc46a08122dc410728bfcc3e4a7`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout c76927421dae1cc46a08122dc410728bfcc3e4a7 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-rootstream/bottom/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-rootstream/bottom/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2d-dual-build
+```
+
 ## v1-delimiter-f2c
 
 Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-delimiter-f2c/score/check.jsonl) · [manifest](results/v1-delimiter-f2c/manifest.txt) · [score](results/v1-delimiter-f2c/score/summary.txt)
