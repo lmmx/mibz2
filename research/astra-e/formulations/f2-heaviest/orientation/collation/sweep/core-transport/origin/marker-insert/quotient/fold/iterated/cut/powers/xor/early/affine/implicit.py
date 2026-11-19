@@ -26,15 +26,18 @@ class Implicit:
             i+=w
         assert i==s;self.n=i
     def at(self,v):
-        index=bisect_right(self.istart,v)-1;e=self.image[index];off=v-self.istart[index]
+        index=bisect_right(self.istart,v)-1
+        z,w,_=self.at_owner(v,index);return z,w
+    def at_owner(self,v,index):
+        e=self.image[index];off=v-self.istart[index]
         x,y,_,word=self.old[e];f=self.f[e]
-        if f<0:return self.source[e]+off,word
+        if f<0:return self.source[e]+off,word,e
         end=self.end[e];p=self.mass
         if self.color[e]:
             middle=x+off
             j=bisect_right(self.lo,middle,f,end)
             if j>f and middle<self.hi[j-1]:
-                a=self.zero[j-1];return self.source[a]+middle-self.old[a][1],self.words[j-1]
-            return self.source[e]+off-(p[j]-p[f]),word
+                a=self.zero[j-1];return self.source[a]+middle-self.old[a][1],self.words[j-1],a
+            return self.source[e]+off-(p[j]-p[f]),word,e
         j=bisect_right(self.closed,y+off-p[f],f,end)
-        return self.source[e]+off+p[j]-p[f],word
+        return self.source[e]+off+p[j]-p[f],word,e
