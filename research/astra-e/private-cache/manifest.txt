@@ -1,0 +1,37 @@
+0e4af5a3e1b1b1913b6f4d97c87e1320d6bd344d
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+23c4f0f5e6eabfd9c2477057b5d7680a373fa093aa30e3e1a084b3b4370199d1  /workspace/work/astra-portfolio/libmibz2.rlib
+cfce9b7f98e46b19326f7178b35a72d51af03c97811a738915a6dd56a6615b8c  /workspace/work/astra-private-cache/replay
+68f8d1c280f9d1d6b3061b43daa5cbffb9345d025681a91f4edf384474448e47  /workspace/work/astra-private-cache/panel
+f529c69b24f0411113667ac77ef81fd9d1830dfeccbbbab088d2129a419e90e1  research/astra-e/private-cache/main.rs
+7ddde5ddb62f497e4a73da1f814ef308cf3de70d08556a10d68769bc3cb7987e  research/astra-e/private-cache/build.py
+026d62eeb1e6be571e4b3c1cf793348e1760149bebdf59dd667e595025fc7e0d  research/astra-e/private-cache/observe.inc.rs
+5201823b6617562b98f97c2505a2c27e2eb0175ecc6114a873f8de4f7a99a98e  research/astra-e/private-cache/geometry.rs
+8787848e05980deb242b537f28a020aa7a0ee2bdfb84affd7dd1ba85582d60d1  research/astra-e/private-cache/panel.rs
+400000 100000
+2048K
+CPU CORE SOCKET NODE L1d:L1i:L2:L3
+  0    0      0    0 0:0:0:0
+  1    1      0    0 0:0:0:0
+  2    2      0    0 1:1:1:0
+  3    3      0    0 1:1:1:0
+  4    4      0    0 2:2:2:0
+PSR  NI %CPU COMMAND
+  0  15 96.4 python3
+  2   0  8.0 codex-linux-san
+  0   0  1.1 containerd
+  4   0  1.0 codex
+  0   0  1.0 codex
+  3   0  0.5 bash
+  3   0  0.2 dockerd
+  4   0  0.0 tail
+  0   0  0.0 bash
+  4   0  0.0 codex
+  0   0  0.0 bash
