@@ -88,11 +88,10 @@
     6912421307,
     6952107464,
     6990632934,
-    6997166415
-  ],
-  "in_progress": [
+    6997166415,
     7009759290
   ],
+  "in_progress": [],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -179,7 +178,8 @@
     "6912421307": 6912767421,
     "6952107464": 6952212536,
     "6990632934": 6990784273,
-    "6997166415": 6997279145
+    "6997166415": 6997279145,
+    "7009759290": 7009851110
   },
   "last_rebuilt_from": 7009741436,
   "migrated_from": {
@@ -794,9 +794,10 @@
     },
     "7009759290": {
       "comment_id": 7009759290,
-      "status": "complete",
-      "progress": "Record committed; REVIEW pending.",
-      "work_commit": "5632721b7abf261495f04be7773cc70622a07c46"
+      "status": "finished",
+      "progress": "Record committed; REVIEW 7009851110 published and read back.",
+      "work_commit": "5632721b7abf261495f04be7773cc70622a07c46",
+      "review_id": 7009851110
     }
   },
   "last_record_commit": "5632721b7abf261495f04be7773cc70622a07c46"
