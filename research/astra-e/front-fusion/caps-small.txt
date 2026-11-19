@@ -1,0 +1,1 @@
+5632 cap-count checks covering every literal bit offset and all valid RUNA/B lengths including opening runs
