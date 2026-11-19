@@ -1,0 +1,14 @@
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf  /workspace/work/astra-budget-local/oracle
+15ebcb01b1523855dc832f8b1f20c2f660ec109817259c8ef71f29c76542a827  /workspace/work/astra-portfolio/portfolio
+23c4f0f5e6eabfd9c2477057b5d7680a373fa093aa30e3e1a084b3b4370199d1  /workspace/work/astra-portfolio/libmibz2.rlib
+400000 100000
+Model name:                              INTEL(R) XEON(R) PLATINUM 8573C
+CPU 3; 24 paired rounds; phase scope 00efe9b; no worker timing

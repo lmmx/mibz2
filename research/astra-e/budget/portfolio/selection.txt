@@ -1,0 +1,3 @@
+train n=135 heldout n=93; quote_count/rows <= 2243/15000: popcnt, otherwise writer
+within-block winner agrees between A/B on 143 of 228
+peak observed retained vectors in bytes: writer 3957624 popcnt 7197968 both 11155592
