@@ -23,3 +23,11 @@ The tree performs one predecessor query for each source ribbon in the target cla
 Each tree sample reports actual fresh-process VmHWM. The public BTreeMap interface exposes live entries, with no node-capacity counter. The per-tree byte estimate consequently charges the (key, destination, width) payload as a lower bound. Flat vector capacities are directly observable. Neither native process peak represents a complete production worker measurement.
 
 The cadence of the numerical comparisons, accuracy checks and timing units are fixed in the [registered plan](PLAN.md).
+
+## A broken source adjacency never heals
+
+Within any original source class, for surviving x<y, the image distance satisfies P(y)−P(x)≥y−x. Initially each source bucket is contiguous, and the j-th occurrence in the incoming column lies at least one position after the previous occurrence. Restricting a class retains this inequality between any two surviving members. Composing the two maps on an eligible class retains it too, since the intermediate points belong to one target class. The physical coordinates are important to the assertion.
+
+Now take physically adjacent survivors in two distinct old k ribbons. If their old target gap exceeded one, it still exceeds one after composition. If the source coordinates had a gap, it remains a gap. Within one k ribbon, newly produced pieces are split only at a boundary between consecutive maximal j ribbons whose sources touch, so there is an image gap there too. These cases show that spelling the intersections in order already gives maximal affine ribbons. **No two generated pieces coalesce.** The exact count specializes to I=G and ΔR=L+T−B. A new split inside a source ribbon consumes an original physical adjacency, which can break only once. Thus Σ(I−B)≤m−R₀ over the entire contraction history.
+
+This additional invariant was discovered after the six-arm source freeze. Both measured sparse variants still execute their coalescence guards. Each production receipt explicitly counts actual coalescences. A separate independent state explorer enumerates stable token columns and every legal next class at every reachable state. It compares the raw sequence of pairwise target intersections directly to the pointwise maximal ribbons of the composed map. [All-schedules checker](strict_gaps.py)
