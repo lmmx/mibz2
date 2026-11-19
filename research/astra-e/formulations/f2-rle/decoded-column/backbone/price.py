@@ -10,6 +10,7 @@ src=src.replace('    formula=', '''    if i==3:
         extras+="+self.reader.bytes()"
     formula=''')
 src=src.replace('(d/"stage.rs")','(d.parents[1]/"combined/stage.rs")')
+src=src.replace('sources[d/"stage.rs"]=', 'sources[d.parents[1]/"combined/stage.rs"]=')
 exec(compile(src,__file__,"exec"),{"__name__":"__main__","__file__":str(d/"prepare_stage.py")})
 scratch=Path(sys.argv[1]).resolve()
 s=(scratch/"main.rs").read_text().replace('["opend", "ahead", "bundle", "combo"]','["opend", "ahead", "combo", "update"]')
