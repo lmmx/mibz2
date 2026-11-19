@@ -1,0 +1,4 @@
+0000000000022ea0 t <main::batched::kernel::Kernel>::run::<true, true, false>
+0000000000023320 t <main::batched::kernel::Kernel>::construct::<true, true>
+0000000000027c00 t <main::control::kernel::Kernel>::run::<true, true, false>
+0000000000028080 t <main::control::kernel::Kernel>::construct::<true, true>
