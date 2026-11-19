@@ -26,3 +26,5 @@ nice -n 12 taskset -c 3 bash "$d/native-replay.sh" "$t" price
 nice -n 17 taskset -c 1 bash "$d/native-replay.sh" "$t" memory
 python3 "$d/summary.py" "$t"
 ```
+
+An endpoint certificate for replacing the second-queue load by arithmetic could cover only 1.42% of eligible gathers on complete original ASCII bands. Even free discovery of each actual claim's suffix boundary left only 6.54% removable after checking its endpoints. Full arithmetic subdivision increased directory size 34.85×. [Proof and all alternatives](AFFINE.md)
