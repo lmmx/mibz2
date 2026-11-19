@@ -225,7 +225,21 @@ per-cell flag catches a single cell whose regression is clearly above 2%.
 - *The flag's false-alarm rate is modelled, not exact.* It rests on the first attempt's
   heavy-tailed residuals: 0.035 for B1 under the own-cell model.
 
-## 6. Reproduce
+## 6. The preflight
+
+`just bench-open-port-3 9743bbe0d51ba451b8b8ab9e6fd731c238940052 1` (DRY) ran in the container
+at e4d60735, the recipe as frozen, and is archived as
+`open-port-3-registration/preflight/run-20261119T160851Z.tar.gz`:
+- both builds made, and the 18 inputs built and verified ("the builds and all 18 inputs are the
+  registered ones");
+- every corpus decoded once by each build, with the same output size and digest for all 16;
+- the scorer's 35 checks pass;
+- no timing was kept.
+
+The timed loop's path handling was checked separately: `ab run` records `text` for the
+`gen/text.bz2` symlink, and both arms succeed.
+
+## 7. Reproduce
 
 - **The scorer's checks:** `python3 bench/test_open_port3.py` (35 checks; in CI).
 - **The plan:** `python3 bench/open_port3.py plan`.
