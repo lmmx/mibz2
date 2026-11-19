@@ -1,0 +1,33 @@
+95ae0bcad7858aedcb3019afc675662bd911caad
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+e56800466e516e405629879c5c41a2d609cec5251629bddc868b1d0e4790bb38  /workspace/work/astra-edge-displacements/libmibz2.rlib
+670b97cbe1f6ba513df848ba68e428e9004a80bf74807254e507fb263ebf0697  /workspace/work/astra-edge-displacements/edges.bin
+9435dfa12dc46735365d4c9ca22a40442fbfffc0a10259ff9d0ea81f770c8e61  /workspace/work/astra-edge-displacements/dump
+af35184bcaf46b148233cc134047c574e4bfde1bfddb14c465b69089920f0d62  /workspace/work/astra-edge-displacements/price
+dacc27e484d41dd2d88415eaff0cc21f662c8b925454a0c7c597f1c2eca93e5f  research/astra-e/edge-displacements/edges.select.xz
+a841ab98f06feeec058c068a724ddbe6879f8758f644ab433eb8ea24b0a0f145  research/astra-e/edge-displacements/price.py
+c34f517f7482e0b0efac3a7eb8536282ff130aa56a5dd3b989f9785ca75cd974  research/astra-e/edge-displacements/price.rs
+a740b8dd8a8b53c00ea59c4ba9734ed0cfd52030aefcd3819de58a2a31eb91e6  research/astra-e/edge-displacements/bucket/native.inc.rs
+2fd7ed90a8be1c67def944365be2223e99a2559c93c4d0d3f0075268f6718f17  research/astra-e/edge-displacements/bucket/native.py
+f5f521b2f26ae9f87cade4c52adf3b8bb87367599e4132fb357c3de93fc46fdc  research/astra-e/edge-displacements/local/native.inc.rs
+f24c0c349e6c423d8f7eeb5f05bb85f137adc7c045fee4b6a5ca7d2e5d1d0efc  research/astra-e/edge-displacements/local/native.py
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf  /workspace/work/astra-budget-local/oracle
+400000 100000
+2048K
+Model name:                              INTEL(R) XEON(R) PLATINUM 8573C
+PSR  NI %CPU COMMAND
+  2   0  3.8 codex-linux-san
+  4   0  2.0 codex
+  0   0  1.1 containerd
+  0   0  0.9 codex
+  3   0  0.2 dockerd
+  3   0  0.0 tail
+  4   0  0.0 bash
+  0   0  0.0 git
