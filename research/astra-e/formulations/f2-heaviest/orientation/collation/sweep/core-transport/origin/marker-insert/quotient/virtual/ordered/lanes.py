@@ -13,7 +13,7 @@ def lis(seq):
     return len(tails)
 
 writer=csv.writer(sys.stdout,lineterminator='\n')
-writer.writerow(('q','input_rows','input_runs','c_queries','lis','lds','lanes_at_least','proved_uniform_bound'))
+writer.writerow(('q','input_rows','input_runs','c_queries','lis','lds','lanes_at_least','optimal_cursors'))
 for q in [*range(3,65),96,128]:
     a=q*q;k=q+1;m=a+1
     raw=[(2,1),(0,m),(2,k-1),(1,a)]
@@ -34,6 +34,18 @@ for q in [*range(3,65),96,128]:
     for j,v in enumerate(ordinals):inv[v]=j
     assert inv==[((q-1)*v-1)%a for v in range(a)]
     rising=lis(ordinals);falling=lis(-x for x in ordinals)
-    assert rising<=q+2 and falling<=q
+    assert rising<=q+1 and falling<=q
+    wraps=sum(j>k for j,k in zip(inv,inv[1:]))
+    assert wraps+1==q
+    # Use the q disjoint increasing runs of inverse order as forward lanes.
+    lane=0; last=[-1]*q
+    assign=[]
+    for i,j in enumerate(inv):
+        if i and j<inv[i-1]:lane+=1
+        assign.append(lane)
+    for x in ordinals:
+        lane=assign[x]
+        assert last[lane]<x
+        last[lane]=x
     width=max(rising,falling)
-    writer.writerow((q,len(lf),len(raw),a,rising,falling,(a+width-1)//width,(a+q+1)//(q+2)))
+    writer.writerow((q,len(lf),len(raw),a,rising,falling,(a+width-1)//width,q))
