@@ -1,0 +1,6 @@
+cursor visits 7739733 6254289 fraction removed 0.19192445010699977
+merge_ns leaf / stream 0.94895 0.87229 1.03234
+merge_ns leaf / refill 1.60019 1.50379 1.70277
+total_ns leaf / stream 0.98854 0.95028 1.02834
+total_ns leaf / refill 0.99623 0.94005 1.05577
+total_ns leaf / lazy 1.06193 1.01535 1.11065
