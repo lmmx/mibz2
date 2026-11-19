@@ -25,3 +25,16 @@ PAGE_DEPS=/path/to/release/deps bash "$d/small.sh" /tmp/astra-e-strip-marks
 ```
 
 The corpus SHA-256 is 82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915. The shared host can inflate variability. These measurements exclude the entropy scanner, RLE1, CRC and delivery, and have no process-RSS or target-machine interpretation.
+
+## Bound for all identity choices at the same swap budget
+
+Represent the marked split's pieces in original row order and stable byte/image order. In either sequence put a virtual omitted piece at both ends. Twice the number of retained gaps equals the number of unequal retained/omitted adjacencies. Each positive gap contributes exactly one initial terminal node. An eligible length-16 or length-17 piece has four incident adjacencies counting both orders and multiplicities. Its individual gain in gap nodes when flipped is one half times (number of initially unequal incidences minus number initially equal). For a simultaneous flip set sum these individual gains. Each adjacency with both ends flipped has zero actual change. Correct the sum by +1 for an initially equal pair and −1 for an initially unequal pair. This identity is exact even when the same pair is adjacent in both permutations.
+
+An upper bound for any q-for-q policy takes the largest q individual gains in each width class, allows every eligible equal adjacency to contribute its possible +1, discards all negative pair interactions, and caps the result at 4q (two gap nodes per flip). It uses the complete measured run geometry and does not need to know an optimal selection. Per-block crossing counts independently reproduced every unmodified endpoint's terminal-node count. Exhaustive tests checked all 23,596 feasible simultaneous exchanges across 7,692 finite marked-class budget problems against the bound.
+
+On the held-out 140 blocks, the actual policy removed 6,985 of 1,064,543 initial endpoint nodes. No whole-run identity choice at these same q values could remove more than 11,619 initial nodes (1.0915%). The training bound was 6,727 of 738,431 (0.9110%), of which adjacency realized 4,269. This result bounds the initial node count only. It does not bound downstream elimination steps, dictionary spellings, or machine time. Those use the separate paid and structural observations above. [Per-block relaxation](gaps.csv) · [Validated totals](gap-summary.txt) · [Bound implementation](gap_bound.rs)
+
+```sh
+PAGE_DEPS=/path/to/release/deps bash research/astra-e/strip-selection/bound.sh /tmp/astra-e-gap-bound
+python3 research/astra-e/strip-selection/bound_summary.py
+```
