@@ -40,3 +40,5 @@ d=$(dirname "$(rg --files | rg '/jumps/smooth/prefix/count.cpp$')")
 g++ -std=c++20 -O3 -Wall -Wextra -Werror "$d/count.cpp" -o /tmp/astra-prefix-lf
 python3 "$d/panel.py" /tmp/astra-prefix-lf /tmp/astra-cut-caps | diff - "$d/data.csv"
 ```
+
+The independent finite checker passed 796,883 clipped backward paths and 892,854 marked horizons, including heterogeneous cycle lengths. The k=1 last column (0,1,1,0) gives a two-byte forward sparse return from row 2 to row 3 with output (1,0). Its forward next pattern is (1,1). Among 2,570 eligible small sparse returns, 907 differed from that incorrect choice. The k=1 last column (0,1,0) has rows 0 and 1 with the same destination prefix (0) and different length-two words (0,0) and (0,1), establishing the d>k limitation. [Finite checker](finite.py) · [Witnesses and counts](small.json)
