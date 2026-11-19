@@ -54,9 +54,7 @@ def recovered(d,i):
 def lib_block(corpus,i):
     with tempfile.TemporaryDirectory() as td:
         d=Path(td)
-        with corpus.open('rb') as f:
-            prefix=f.read(1024*1024)
-        (d/'sample.bz2').write_bytes(prefix)
+        (d/'sample.bz2').symlink_to(corpus.resolve())
         subprocess.run(['bzip2recover','sample.bz2'],cwd=d,stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL,check=True)
         return recovered(d,i)
