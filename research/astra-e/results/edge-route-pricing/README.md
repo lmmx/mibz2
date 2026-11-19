@@ -29,11 +29,13 @@ python3 "$edge_study/read.py" /tmp/astra-edge-model "$edge_study/runs.jsonl" | c
 python3 "$edge_study/bootstrap.py" | cmp - "$edge_study/bootstrap.json"
 ```
 
-Fresh simulations take the two frozen worker executables, the scorer's chaingrind runtime directory, the verified compressed Wikidata corpus, a directory for extracted symbol tapes, and a new output directory. The original command used one CPU at nice 19. The runner validates the warm/measure tape SHA-256 on reuse or extraction. The model instruments the worker from saved entropy-decoded symbols, preallocates its buffers, and warms with stream ordinal 1. It does not time the full process or measure peak RSS.
+Fresh simulations take the [two archived Linux x86-64 worker executables](workers.tar.gz), the scorer's chaingrind runtime directory, the verified compressed Wikidata corpus, a directory for extracted symbol tapes, and a new output directory. The original command used one CPU at nice 19. The runner validates the warm/measure tape SHA-256 on reuse or extraction. The model instruments the worker from saved entropy-decoded symbols, preallocates its buffers, and warms with stream ordinal 1. It does not time the full process or measure peak RSS.
 
 ```sh
+mkdir -p /tmp/astra-edge-binaries
+tar -xzf "$edge_study/workers.tar.gz" -C /tmp/astra-edge-binaries
 nice -n 19 taskset -c 4 python3 "$edge_study/run.py" /tmp/astra-edge-model \
-  "$EDGE_BINARY" "$COMBINED_BINARY" "$CHAINGRIND_RUNTIME_DIR" "$WIKIDATA_BZ2" \
+  /tmp/astra-edge-binaries/edge /tmp/astra-edge-binaries/combined "$CHAINGRIND_RUNTIME_DIR" "$WIKIDATA_BZ2" \
   /tmp/astra-edge-tapes /tmp/astra-edge-fresh
 ```
 
