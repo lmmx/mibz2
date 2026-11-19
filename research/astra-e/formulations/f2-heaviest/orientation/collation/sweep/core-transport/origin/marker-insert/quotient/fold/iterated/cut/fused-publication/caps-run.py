@@ -26,7 +26,7 @@ else:
     subprocess.run([exe,corpus,out,'24'],env=env,check=True)
     rows=list(csv.DictReader((out/'times.csv').open()));stamps=list(csv.DictReader((out/'stamps.csv').open()))
     assert len(rows)==1440 and len(stamps)==750
-    donors=['stream','streamgaps','dense'];labels=['compact_stream','joint','original']
+    donors=['stream','streamgaps','dense'];labels=sys.argv[6:] or ['compact_stream','joint','original'];assert len(labels)==3
     i=30;seen={}
     for q in rows:
         if q['arm'] in donors:

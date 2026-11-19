@@ -8,7 +8,8 @@ env=dict(os.environ,LD_LIBRARY_PATH=str(stage))
 ldd=sp.check_output(['ldd',exe],env=env,text=True)
 assert f'libgrammar.so => {stage}/libgrammar.so' in ldd
 inputs=json.loads((here.parent/'powers/xor/capped/receipt.json').read_text())['inputs']
-labels=['compact_stream','joint','original','scalar','lazy','opend']
+treatments=sys.argv[4:] or ['compact_stream','joint','original'];assert len(treatments)==3
+labels=treatments+['scalar','lazy','opend']
 donors=['stream','streamgaps','dense','scalar','lazy','opend']
 (stage/'rss-manifest.json').write_text(json.dumps({'binary_sha256':hashlib.sha256(exe.read_bytes()).hexdigest(),'bridge_sha256':hashlib.sha256((stage/'libgrammar.so').read_bytes()).hexdigest(),'original_rss_source_sha256':hashlib.sha256((here.parent/'powers/xor/capped/rss.rs').read_bytes()).hexdigest()},indent=2)+'\n')
 with tempfile.TemporaryDirectory(dir=stage) as tmp,(stage/'fresh.csv').open('w') as f:

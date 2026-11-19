@@ -16,12 +16,13 @@ def ratio(a,p,b,k):
     mu=statistics.mean(cl);half=3.1824463053*statistics.stdev(cl)/2
     return [round(math.exp(v),6) for v in (mu,mu-half,mu+half)]
 arms=sorted({q['arm'] for q in rows});summary={}
+research=[a for a in arms if a not in ('scalar','lazy','opend')]
 results={}
 for a in arms:
     summary[a]={p:round(statistics.median(totals[r,a][p] for r in range(1,25))/1e6,6) for p in totals[1,a]}
     for p in totals[1,a]:
-        if a in ('joint','original','compact_stream'):
-            for b in (['scalar','lazy','opend','compact_stream','joint'] if p=='thread_ns' else ['scalar','opend']):
+        if a in research:
+            for b in (['scalar','lazy','opend',*research] if p=='thread_ns' else ['scalar','opend']):
                 if a!=b:results[f'{a}.{p}/{b}.thread_ns']=ratio(a,p,b,'thread_ns')
 s={'rows':len(rows),'median_ms':summary,'ratios':results}
 if (root/'fresh.csv').exists():
