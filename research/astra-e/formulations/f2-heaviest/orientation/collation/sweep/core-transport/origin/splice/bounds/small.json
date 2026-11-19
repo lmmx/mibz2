@@ -1,0 +1,211 @@
+{
+  "exhaustive": {
+    "instances": 27268,
+    "mark_offsets": 262534,
+    "nonempty_splices": 21824,
+    "cases_with_removed_cycles": 16298,
+    "only_hole_cycles_deleted": 4998,
+    "empty_result": 446,
+    "sharply_increases_both": 12
+  },
+  "primitive_witness": {
+    "column": [
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "holes": [
+      3
+    ],
+    "result": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 1,
+      "k": 1,
+      "u": 1,
+      "surviving_old_labels": 2,
+      "KH": 4,
+      "RH": 5,
+      "Kmin": 4,
+      "Rmin": 5,
+      "removed_cycles": 0,
+      "mark_offsets": 9
+    }
+  },
+  "sharp_family": {
+    "1": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 1,
+      "k": 1,
+      "u": 1,
+      "surviving_old_labels": 2,
+      "KH": 4,
+      "RH": 5,
+      "Kmin": 4,
+      "Rmin": 5,
+      "removed_cycles": 0,
+      "mark_offsets": 6
+    },
+    "2": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 2,
+      "k": 2,
+      "u": 2,
+      "surviving_old_labels": 2,
+      "KH": 6,
+      "RH": 8,
+      "Kmin": 6,
+      "Rmin": 8,
+      "removed_cycles": 0,
+      "mark_offsets": 10
+    },
+    "3": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 3,
+      "k": 3,
+      "u": 3,
+      "surviving_old_labels": 2,
+      "KH": 8,
+      "RH": 11,
+      "Kmin": 8,
+      "Rmin": 11,
+      "removed_cycles": 0,
+      "mark_offsets": 14
+    },
+    "7": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 7,
+      "k": 7,
+      "u": 7,
+      "surviving_old_labels": 2,
+      "KH": 16,
+      "RH": 23,
+      "Kmin": 16,
+      "Rmin": 23,
+      "removed_cycles": 0,
+      "mark_offsets": 30
+    },
+    "31": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 31,
+      "k": 31,
+      "u": 31,
+      "surviving_old_labels": 2,
+      "KH": 64,
+      "RH": 95,
+      "Kmin": 64,
+      "Rmin": 95,
+      "removed_cycles": 0,
+      "mark_offsets": 0
+    },
+    "127": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 127,
+      "k": 127,
+      "u": 127,
+      "surviving_old_labels": 2,
+      "KH": 256,
+      "RH": 383,
+      "Kmin": 256,
+      "Rmin": 383,
+      "removed_cycles": 0,
+      "mark_offsets": 0
+    }
+  },
+  "primitive_family": {
+    "1": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 1,
+      "k": 1,
+      "u": 1,
+      "surviving_old_labels": 2,
+      "KH": 4,
+      "RH": 5,
+      "Kmin": 4,
+      "Rmin": 5,
+      "removed_cycles": 0,
+      "mark_offsets": 7
+    },
+    "2": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 2,
+      "k": 2,
+      "u": 2,
+      "surviving_old_labels": 2,
+      "KH": 6,
+      "RH": 8,
+      "Kmin": 6,
+      "Rmin": 8,
+      "removed_cycles": 0,
+      "mark_offsets": 11
+    },
+    "3": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 3,
+      "k": 3,
+      "u": 3,
+      "surviving_old_labels": 2,
+      "KH": 8,
+      "RH": 11,
+      "Kmin": 8,
+      "Rmin": 11,
+      "removed_cycles": 0,
+      "mark_offsets": 15
+    },
+    "7": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 7,
+      "k": 7,
+      "u": 7,
+      "surviving_old_labels": 2,
+      "KH": 16,
+      "RH": 23,
+      "Kmin": 16,
+      "Rmin": 23,
+      "removed_cycles": 0,
+      "mark_offsets": 31
+    },
+    "31": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 31,
+      "k": 31,
+      "u": 31,
+      "surviving_old_labels": 2,
+      "KH": 64,
+      "RH": 95,
+      "Kmin": 64,
+      "Rmin": 95,
+      "removed_cycles": 0,
+      "mark_offsets": 0
+    },
+    "127": {
+      "KJ": 2,
+      "RJ": 2,
+      "q": 127,
+      "k": 127,
+      "u": 127,
+      "surviving_old_labels": 2,
+      "KH": 256,
+      "RH": 383,
+      "Kmin": 256,
+      "Rmin": 383,
+      "removed_cycles": 0,
+      "mark_offsets": 0
+    }
+  }
+}
