@@ -20,7 +20,7 @@ struct Oracle{
     std::string marked(int p)const{std::string s;for(size_t k=0;k<f.size();k++){s.push_back(byte[p]);p=f[p];}return s;}
     std::pair<int,int> mark(int p,Range u)const{int x=p,k=0;while(x<u.lo || x>=u.hi){x=b[x];++k;if(x==p)return {-1,0};}return {x-u.lo,k};}
     int shortest(Range u)const{int ans=f.size();for(int x=u.lo;x<u.hi;x++){int y=x,n=0;do{++n;y=f[y];}while(y<u.lo || y>=u.hi);ans=std::min(ans,n);}return ans;}
-    void check(const Plan& plan,Object& obj)const{
+    template<bool Local> void check(const PlanT<Local>& plan,ObjectT<Local>& obj)const{
         auto [a,b]=plan.u;int h=plan.h;std::map<std::string,std::pair<int,int>> base;
         std::map<std::string,int> core_ids;std::vector<int> expected(b-a,-1),core_dest(b-a,-1);
         std::vector<std::pair<int,int>> origin(f.size(),{-1,-1});
@@ -53,14 +53,14 @@ struct Oracle{
     }
 };
 struct Receipt{Stats s;double setup=0,build=0,emit=0,total=0,wall=0;std::string out;};
-Receipt run(const std::vector<InputRun>& raw,Range u,int h,int p,const Oracle* check=nullptr,bool all_marks=false){
+template<bool Local=false> Receipt run(const std::vector<InputRun>& raw,Range u,int h,int p,const Oracle* check=nullptr,bool all_marks=false){
     auto wall=Clock::now();double t=cpu();Receipt r;
     {
-        Counts counts(raw);Plan plan(raw,counts,u,h,r.s);
+        Counts counts(raw);PlanT<Local> plan(raw,counts,u,h,r.s);
         if(check)assert(plan.ok==(check->shortest(u)>=h));
         if(!plan.ok){r.setup=r.total=cpu()-t;r.wall=std::chrono::duration<double>(Clock::now()-wall).count();return r;}
         Index ix(raw,counts,plan,r.s);double begin=cpu();r.setup=begin-t;
-        Object o(plan,ix,r.s);double built=cpu();r.build=built-begin;
+        ObjectT<Local> o(plan,ix,r.s);double built=cpu();r.build=built-begin;
         r.out=o.expand(p,counts.n);r.emit=cpu()-built;
         if(check){
             check->check(plan,o);
@@ -70,7 +70,7 @@ Receipt run(const std::vector<InputRun>& raw,Range u,int h,int p,const Oracle* c
     }
     r.total=cpu()-t;r.wall=std::chrono::duration<double>(Clock::now()-wall).count();return r;
 }
-void small(){
+template<bool Local=false> void small(){
     N cases=0,valid=0,rejected=0,marks=0,zeros=0,mixed=0,permuted=0;std::string witness;
     for(int alphabet:{2,3})for(int n=1;n<=(alphabet==2?8:5);n++){
         int limit=1;for(int j=0;j<n;j++)limit*=alphabet;
@@ -83,7 +83,7 @@ void small(){
             if(alphabet==3 && !third)continue;
             Oracle oracle(raw);
             for(int a=0;a<n;a++)for(int b=a+1;b<=n;b++)for(int h=0;h<=std::min(6,n+1);h++){
-                auto r=run(raw,{a,b},h,0,&oracle,true);++cases;
+                auto r=run<Local>(raw,{a,b},h,0,&oracle,true);++cases;
                 if(!r.s.accepted){++rejected;continue;}
                 ++valid;marks+=n;zeros+=r.s.root_zeros>0;mixed+=r.s.split_core_types>0;
                 if(r.s.prefix_types>1){++permuted;if(r.s.split_core_types && witness.empty()){
@@ -107,6 +107,8 @@ void print(const Receipt& r,int idx,int h,int round,int pos){
       <<','<<v.source_scatter<<','<<v.merged_inputs<<','<<v.branch_aliases<<','<<v.mark_steps<<','<<v.output_words
       <<','<<r.setup<<','<<r.build<<','<<r.emit<<','<<r.total<<','<<r.wall<<'\n';
 }
+
+#ifndef CORE_STAGE_LIBRARY
 int main(int argc,char**argv){
     if(argc==1){small();return 0;}assert(argc==4);bool check=std::string(argv[1])=="check";int rounds=std::stoi(argv[3]);
     std::cout<<"ordinal,h,round,position,accepted,first_hit,mass,prefix_types,final_tags,components,forward_seeks,forward_pieces,all_formed_tags,prefix_nodes,sort_comparisons,mask_input_slots,lf_table_records,lf_seeks,lf_pieces,page_increments,gapped_states,global_holes,live_states,selector_entries,terminal_pieces,cores_with_multiple_prefixes,extra_prefix_lookups,zero_rows,zero_fragments,full_words,core_words,full_token_runs,core_token_runs,logical_full_bytes,core_bytes,prefix_bytes,source_scatter,merge_entries,branch_aliases,mark_steps,output_words,setup_cpu_s,build_cpu_s,emit_cpu_s,cpu_s,wall_s\n";
@@ -124,3 +126,5 @@ int main(int argc,char**argv){
         std::cerr<<"checked "<<idx<<'\n';
     }
 }
+
+#endif

@@ -16,14 +16,15 @@ struct Stats{
     N forward_key_comparisons=0,forward_seeks=0,forward_scans=0,formed_bands=0,formed_prefix_nodes=0,sort_comparisons=0,formation_slots=0;
     N lf_pieces=0,lookup=0,scans=0,page_increments=0,gapped=0,holes=0,states=0,selector_entries=0;
     N terminal_pieces=0,split_core_types=0,extra_word_lookups=0,root_zeros=0,root_zero_pieces=0;
+    N posted_holes=0,link_reads=0,link_writes=0,gap_capacity_bytes=0;
     N full_bytes=0,core_bytes=0,prefix_bytes=0,source_scatter=0,merged_inputs=0,branch_aliases=0,mark_steps=0,output_words=0;
 };
-struct Plan{
+template<bool Local> struct PlanT{
     Range u;int h;bool ok=true;
     std::vector<Band> target;
     std::vector<Range> forbidden_input;
     std::vector<std::string> prefixes;
-    Plan(const std::vector<InputRun>& raw,const Counts& counts,Range source,int depth,Stats& s):u(source),h(depth){
+    PlanT(const std::vector<InputRun>& raw,const Counts& counts,Range source,int depth,Stats& s):u(source),h(depth){
         std::vector<Band> current={{u.lo,u.hi,u.lo,0}};
         std::vector<Prefix> trie={{-1,-1}};s.mass=u.hi-u.lo;
         if(h>0){
@@ -57,7 +58,7 @@ struct Plan{
                 if(overlap && !s.first_hit)s.first_hit=j;
                 s.formed_prefix_nodes=trie.size()-1;
                 if(overlap && j<h){ok=false;return;}
-                for(auto v:next)forbidden_input.push_back({v.lo,v.hi});
+                if constexpr(!Local)for(auto v:next)forbidden_input.push_back({v.lo,v.hi});
                 current.swap(next);
             }
         }
@@ -76,12 +77,13 @@ struct Plan{
         s.accepted=1;s.prefix_types=prefixes.size();s.tag_bands=target.size();
     }
 };
+using Plan=PlanT<false>;
 struct LFRecord{int end,delta,byte,tag;};
 class Index{
     std::vector<LFRecord> pieces;
     std::vector<int> page;
 public:
-    Index(const std::vector<InputRun>& raw,const Counts& co,const Plan& p,Stats& s){
+    template<bool Local> Index(const std::vector<InputRun>& raw,const Counts& co,const PlanT<Local>& p,Stats& s){
         auto f=co.f;std::array<int,256> cursors{};
         for(int c=0,k=0;c<256;c++){while(k<int(p.target.size()) && p.target[k].hi<=f[c])++k;cursors[c]=k;}
         pieces.reserve(raw.size()+2*p.target.size());int top=0;
@@ -104,22 +106,45 @@ public:
     int find(int row,N& increments) const{int i=page[row/64],old=i;while(pieces[i].end<=row)++i;increments+=i-old;return i;}
     const LFRecord& operator[](int i)const{return pieces[i];}
 };
-struct Node{int parent=-1,byte=-1,begin=0,end=0;Hull hull;};
+struct LinkedHull {Range extent{0,0};int tail=-1;};
+static_assert(sizeof(Hull)==sizeof(LinkedHull));
+template<bool Local> using Live=std::conditional_t<Local,LinkedHull,Hull>;
+template<bool Local> struct Node{int parent=-1,byte=-1,begin=0,end=0;Live<Local> hull;};
+struct Hole{int lo,hi,next;};
 struct Word{int prefix,core,base=-1,width=0;};
 struct Initial{int lo,hi,id;};
-class Object{
-    const Plan& plan;const Index& lf;Stats& st;
-    std::vector<Node> nodes;
+template<bool Local> class ObjectT{
+    const PlanT<Local>& plan;const Index& lf;Stats& st;
+    std::vector<Node<Local>> nodes;
+    std::vector<Hole> observed;
     std::vector<Range> forbidden;
     std::vector<Item> selector;
     std::vector<Initial> zero;
     void add(int id,int lo,int hi){
         auto& h=nodes[id].hull;
         if(h.extent.lo==h.extent.hi){h.extent={lo,hi};return;}
-        assert(h.extent.hi<=lo);h.holes|=h.extent.hi<lo;h.extent.hi=hi;
+        assert(h.extent.hi<=lo);
+        if(h.extent.hi<lo){
+            if constexpr(Local){
+                int id=observed.size(),head=id;
+                if(h.tail>=0){head=observed[h.tail].next;observed[h.tail].next=id;++st.link_reads;++st.link_writes;}
+                observed.push_back({h.extent.hi,lo,head});h.tail=id;++st.link_writes;++st.posted_holes;
+            }else h.holes=true;
+        }
+        h.extent.hi=hi;
     }
-    template<class F> void ranges(Hull h,F use){
+    template<class F> void ranges(Live<Local> h,F use){
         auto [x,end]=h.extent;if(x==end)return;
+        if constexpr(Local){
+            if(h.tail>=0){
+                ++st.gapped;int i=observed[h.tail].next;++st.link_reads;
+                for(;;){auto gap=observed[i];assert(x<gap.lo && gap.hi<end);use(x,gap.lo);x=gap.hi;++st.holes;
+                    if(i==h.tail)break;
+                    i=gap.next;++st.link_reads;
+                }
+            }
+            use(x,end);
+        }else{
         if(!h.holes){use(x,end);return;}
         ++st.gapped;
         if(forbidden.empty()){
@@ -135,6 +160,7 @@ class Object{
             assert(x<gap->lo && gap->hi<end);use(x,gap->lo);++st.holes;x=gap->hi;++gap;
         }
         use(x,end);
+        }
     }
     static void append(std::vector<Item>& s,int id,int w){
         if(w==0)return;
@@ -195,7 +221,7 @@ class Object{
                         }
                         hit(word,t.origin+y-t.lo,w);id=~word;
                     }else{
-                        if(stamp[c]!=i){stamp[c]=i;child[c]=nodes.size();Node n;n.parent=i;n.byte=c;nodes.push_back(n);}
+                        if(stamp[c]!=i){stamp[c]=i;child[c]=nodes.size();Node<Local> n;n.parent=i;n.byte=c;nodes.push_back(n);}
                         id=child[c];add(id,y,y+w);
                     }
                     if(int(selector.size())>begin && selector.back().id==id)selector.back().width+=w;
@@ -241,8 +267,9 @@ class Object{
     }
 public:
     std::vector<Word> words;std::vector<std::string> cores;std::vector<Item> incoming;
-    Object(const Plan& p,const Index& index,Stats& counts):plan(p),lf(index),st(counts){
+    ObjectT(const PlanT<Local>& p,const Index& index,Stats& counts):plan(p),lf(index),st(counts){
         begin();build();merge();
+        if constexpr(Local){assert(forbidden.empty() && p.forbidden_input.empty() && st.posted_holes==st.holes);st.gap_capacity_bytes=observed.capacity()*sizeof(Hole);}
         st.states=nodes.size();st.full_types=words.size();st.core_types=cores.size();st.root_runs=incoming.size();st.selector_entries=selector.size();
     }
     std::string text(const Word& w) const{return plan.prefixes[w.prefix]+cores[w.core];}
@@ -272,4 +299,5 @@ public:
         return out;
     }
 };
+using Object=ObjectT<false>;
 }
