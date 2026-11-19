@@ -9,7 +9,7 @@ from grammar import Node, output
 from normalize import normalize
 
 
-def solve(raw,literals,mark,skip,horizon,detail=None,check=True):
+def solve(raw,literals,mark,skip,horizon,detail=None,check=True,normalizer=normalize):
     words=[Node(literal=s) for s in literals]
     raw,words,anchor=seed(raw,words,mark)
     stats=Counter(rounds=0,normalized_rounds=0,old_rows=0,old_runs=0,old_ids=0,
@@ -35,13 +35,16 @@ def solve(raw,literals,mark,skip,horizon,detail=None,check=True):
         self_mass=sum(targets.get(k,0) for k,targets in enumerate(edges))
         stats.update(old_rows=old_m,old_ids=len(words),old_runs=len(raw),scanned_fragments=len(slices))
         if self_mass:
-            raw,words,anchor,c=normalize(raw,words,anchor,bounds,slices,check)
-            stats.update(normalized_rounds=1,normal_written_rows=c['macro_rows'],
+            raw,words,anchor,c=normalizer(raw,words,anchor,bounds,slices,check)
+            stats.update(normalized_rounds=1,normal_written_rows=c.get('destination_scatter_rows',c['macro_rows']),
                          normal_pieces=c['affine_pieces'],lookups=c['point_lookups'],
                          normal_types=c['macro_types'],normal_runs=c['macro_runs'],
                          powers=c['power_nodes'],omitted_fixed=c['omitted_fixed_rows'])
             stats['max_power']=max(stats['max_power'],c['largest_power'])
-            stats['max_norm_scatter']=max(stats['max_norm_scatter'],c['macro_rows'])
+            stats['max_norm_scatter']=max(stats['max_norm_scatter'],c.get('destination_scatter_rows',c['macro_rows']))
+            for name in ('seam_splits','terminal_fragments','intersections','continued_pieces'):
+                if name in c:
+                    stats[name]+=c[name]
             freq,bounds=geometry(raw,len(words))
             source=bounds[anchor]
             slices,edges=overlay(raw,bounds)

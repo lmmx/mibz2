@@ -41,13 +41,13 @@ def run(args):
     # marked byte reference accepted by the Python full-grammar experiment.
     data=json.loads(args.accepted.read_text())
     assert digest(temp/'direct.bin')==data['original_inverse_sha256']
-    for arm in ('sparse','dense','direct'):
+    for arm in ('sparse','dense','interval','direct'):
         with (temp/(arm+'-rss.csv')).open('w') as f:
             subprocess.run([binary,raw,arm,'1'],stdout=f,check=True)
     with (temp/'phase.csv').open('w') as f:
         subprocess.run([binary,raw,'panel','24'],stdout=f,check=True)
     print(json.dumps(dict(compiler=subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
-        flags=compile_args[1:-3],cpp_sha256=digest(here/'native.cpp'),binary_sha256=digest(binary),
+        flags=compile_args[1:-3],cpp_sha256=digest(here/'native.cpp'),interval_header_sha256=digest(here/'interval.hpp'),binary_sha256=digest(binary),
         input_sha256=digest(raw),source_sha256=digest(args.tape),root_rows=meta['n'],root_runs=len(runs),
         original_mark=mark,normalized_rle_sha256=digest(temp/'native.rle'),
         normalized_words_sha256=digest(temp/'native.words'),direct_sha256=digest(temp/'direct.bin'),

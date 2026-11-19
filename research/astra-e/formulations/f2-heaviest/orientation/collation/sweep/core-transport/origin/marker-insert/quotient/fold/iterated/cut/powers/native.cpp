@@ -145,10 +145,21 @@ Root load(const char* path) {
 uint64_t cpu() {
     timespec t; clock_gettime(CLOCK_THREAD_CPUTIME_ID,&t); return uint64_t(t.tv_sec)*1000000000+t.tv_nsec;
 }
+#include "interval.hpp"
+long resident_peak() {
+    std::ifstream status("/proc/self/status");
+    std::string key,value;
+    while(status>>key) {
+        if(key=="VmHWM:") {long kib;status>>kib;return kib;}
+        std::getline(status,value);
+    }
+    return -1;
+}
 int main(int argc,char** argv) {
     assert(argc>=3); Root in=load(argv[1]);std::string mode=argv[2];
     if(mode=="check") {
         auto a=normalize(in,true),b=normalize(in,false);assert(a.words==b.words&&a.r==b.r&&a.mark==b.mark);
+        auto c=interval(in);assert(c.words==b.words&&c.r==b.r&&c.mark==b.mark);
         std::filesystem::path p=argv[3];
         std::ofstream r(p/"native.rle"), w(p/"native.words"), raw(p/"direct.bin",std::ios::binary);
         for(auto [k,n]:a.r) r<<k<<' '<<n<<'\n';
@@ -158,19 +169,19 @@ int main(int argc,char** argv) {
     int repetitions=std::stoi(argv[3]);
     std::cout<<"round,arm,thread_ns,result_size,lookups,maxrss_kib\n";
     for(int i=0;i<repetitions;++i) {
-        for(int j=0;j<(mode=="panel"?3:1);++j) {
-            const char* arms[]={"sparse","dense","direct"};
-            int slot=i%6<3?(i+j)%3:(i+2-j)%3;
+        for(int j=0;j<(mode=="panel"?4:1);++j) {
+            const char* arms[]={"sparse","dense","interval","direct"};
+            int slot=i%8<4?(i+j)%4:(i+3-j)%4;
             std::string arm=mode=="panel"?arms[slot]:mode;
             U size=0,lookups=0;uint64_t start=cpu();
             if(arm=="direct") {
                 auto result=direct(in);size=result.size();asm volatile("" : : "g"(result.data()) : "memory");
             } else {
-                auto result=normalize(in,arm=="sparse");size=result.r.size();lookups=result.queries;
+                auto result=arm=="interval"?interval(in):normalize(in,arm=="sparse");size=result.r.size();lookups=result.queries;
                 asm volatile("" : : "g"(result.r.data()) : "memory");
             }
-            uint64_t ns=cpu()-start; rusage usage;getrusage(RUSAGE_SELF,&usage);
-            std::cout<<i<<','<<arm<<','<<ns<<','<<size<<','<<lookups<<','<<usage.ru_maxrss<<'\n';
+            uint64_t ns=cpu()-start;
+            std::cout<<i<<','<<arm<<','<<ns<<','<<size<<','<<lookups<<','<<resident_peak()<<'\n';
         }
     }
 }

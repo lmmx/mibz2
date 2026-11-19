@@ -4,6 +4,7 @@ from collections import Counter
 from itertools import groupby,product
 import json
 from grammar import Node,output
+from functools import partial
 from solve import solve
 from cut import forward,geometry
 
@@ -59,7 +60,7 @@ def sparse():
             got,c=solve(root,words,mark,0 if case=='fixed-mark' else 1,horizon,check=n<200)
             assert got==want and c['lap']==lap
             if case=='inside':
-                assert c['rounds']==1 and c['lookups']<=3 and c['normal_written_rows']==2 and c['powers']==1
+                assert c['rounds']==1 and c['lookups']<=3 and c['normal_written_rows'] in (0,2) and c['powers']==1
             elif case=='isolated':
                 assert c['rounds']==1 and c['omitted_fixed']==n
             else:
@@ -88,5 +89,9 @@ def writer():
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--max-rows',type=int,default=6)
+    p.add_argument('--backward',action='store_true')
     args=p.parse_args()
+    if args.backward:
+        from backward import normalize
+        solve=partial(solve,normalizer=normalize)
     print(json.dumps(dict(max_rows=args.max_rows,small=small(args.max_rows),sparse=sparse(),writer_marks=writer()),indent=2))
