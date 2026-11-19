@@ -12,6 +12,9 @@ exe=out/'chains'
 subprocess.run(['g++','-std=c++20','-O2','-Wall','-Wextra',HERE/'chains.cpp','-o',exe],check=True)
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 manifest={'cpp':sha(HERE/'chains.cpp'),'exe':sha(exe),'donor_receipt':sha(DONOR),'inputs':[]}
+detail=out/'affine.csv'
+header='block,n,runs,paths,edges,affine_bursts,single_edge_bursts,longest_burst,edge_lookups_elided\n'
+with detail.open('x') as fd:fd.write(header)
 saved=HERE.parents[2]/'blocks.csv'
 manifest['adaptive_receipt']=sha(saved)
 reference={int(v['block']):int(v['safe_endpoints']) for v in csv.DictReader(saved.open()) if v['penalty']=='1' and v['round']=='0'}
@@ -24,7 +27,7 @@ with (out/'blocks.csv').open('x') as f,(out/'path-hist.csv').open('x') as g,(out
         i=q['block'];path=caps/f'block-{i}.caps';digest=sha(path)
         assert digest==q['caps_le_sha256']
         manifest['inputs'].append(dict(block=i,mark=q['mark'],caps_sha256=digest))
-        r=subprocess.run([exe,path,str(q['mark']),str(i)],text=True,capture_output=True,check=True)
+        r=subprocess.run([exe,path,str(q['mark']),str(i),detail],text=True,capture_output=True,check=True)
         row=r.stdout.strip().split(',')
         assert int(row[-1])==reference[i]
         assert int(row[1])==q['rows'] and int(row[2])==q['maximal_runs'] and row[1]==row[4]
@@ -34,3 +37,22 @@ with (out/'blocks.csv').open('x') as f,(out/'path-hist.csv').open('x') as g,(out
             assert label in ('path','width')
             (g if label=='path' else h).write(values+'\n')
 (out/'inputs.json').write_text(json.dumps(manifest,indent=2)+'\n')
+two=out/'alternating.csv'
+with two.open('x') as fd:fd.write(header)
+for g in range(1,65):
+    path=out/'two-run.caps'
+    path.write_bytes(bytes((g,1,g+1,0)))
+    subprocess.run([exe,path,'0',str(g),two],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True)
+path.unlink()
+for row in csv.DictReader(two.open()):
+    g,n,r,paths,edges,bursts,single,longest,elided=map(int,row.values())
+    assert (n,r,paths,edges,bursts,single,longest,elided)==(2*g+1,2,1,2*g-1,2*g-1,2*g-1,1,0)
+positive=out/'translating.csv'
+with positive.open('x') as fd:fd.write(header)
+for n in range(3,128):
+    path=out/'one-shift.caps';path.write_bytes(bytes((1,1,n-1,0)))
+    subprocess.run([exe,path,'0',str(n),positive],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True)
+path.unlink()
+for row in csv.DictReader(positive.open()):
+    j,n,r,paths,edges,bursts,single,longest,elided=map(int,row.values())
+    assert (j,r,paths,edges,bursts,single,longest,elided)==(n,2,1,n-2,1,int(n==3),n-2,n-3)

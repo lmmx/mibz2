@@ -23,3 +23,9 @@ python3 -B "$d/panel.py" /workspace/work/astra-powers-original/capped "$w"
 for f in blocks.csv path-hist.csv width-hist.csv; do cmp "$w/$f" "$d/$f"; done
 python3 -B "$d/boxes.py" "$w" | cmp - "$d/boxes.csv"
 ```
+
+## Single-translation acceleration
+
+For each deterministic edge z→Ψ(z), its affine image atom is the image under LF of the unique physical L run containing both Ψ(z−1) and Ψ(z). Consecutive edges in the same atom may be advanced by one clipped division using its constant physical displacement. The census walked each path in the required support direction, compared original run IDs, and checked that each observed endpoint was the stated origin plus the streak length times the displacement. **All 8,309,431 original edges on the ten real blocks belonged to singleton bursts.** This sufficient same-atom jump condition elides zero edge lookups. It leaves open summaries combining different atoms. [Real bursts](affine.csv)
+
+For L=1^g 0^(g+1), n=2g+1 and Ψ advances g modulo n. Between its one start and stop the deterministic path alternates image runs, realizing 2g−1 singleton bursts. For L=1 0^(n−1), Ψ advances one modulo n. Every deterministic edge is in the image of the long zero run, producing one burst of n−2 edges. The same native estimator confirmed g=1 through 64 in the first family and n=3 through 127 in the second. [Alternating negative control](alternating.csv) · [Translating positive control](translating.csv)

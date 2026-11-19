@@ -13,7 +13,7 @@
 using U=uint32_t;
 using Q=uint64_t;
 int main(int argc,char** argv) {
-    assert(argc==4);
+    assert(argc==4 || argc==5);
     std::ifstream f(argv[1],std::ios::binary);assert(f);
     U z,p=std::stoul(argv[2]),id=std::stoul(argv[3]),R=0;
     std::vector<unsigned char> last;
@@ -28,6 +28,8 @@ int main(int argc,char** argv) {
     std::vector<U> lf(n),psi(n),succ(n),pred(n),support_lo(n);
     auto cursor=c;
     for(U x=0;x<n;++x){z=cursor[last[x]]++;lf[x]=z;psi[z]=x;}
+    std::vector<U> run_id(n);
+    for(U i=1;i<n;++i)run_id[i]=run_id[i-1]+(last[i]!=last[i-1]);
     U lap=0;
     for(U x=p;;){x=lf[x];++lap;if(x==p)break;assert(lap<n);}
     assert(lap==n);
@@ -78,14 +80,26 @@ int main(int argc,char** argv) {
     Q vertices=0,paths=0,lower_exp=0,upper_exp=0,all_terminal_rows=0,fully_forced=0;
     U longest=0;double upper_log=0,lower_log=0,fonly_log=0;
     std::map<std::array<U,3>,U> hist;
+    Q bursts=0,one_edge=0,burst_edges=0,arithmetic_saved=0;U max_streak=0;
     for(U x=1;x<n;++x)if(!pred[x]){
-        U a=x,len=0,limit=0,terminal;
+        U a=x,len=0,limit=0,terminal,streak=0,old_run=n,origin=x,delta=0;
+        auto close_burst=[&](){
+            if(!streak)return;
+            // Unsigned arithmetic is defined even for negative physical translations.
+            assert(origin+streak*delta==a);
+            ++bursts;burst_edges+=streak;one_edge+=streak==1;arithmetic_saved+=streak-1;
+            max_streak=std::max(max_streak,streak);
+        };
         for(;;){
             ++len;assert(len<n);
             if(!limit && forced[a])limit=len;
             if(!succ[a]){terminal=a;break;}
-            a=succ[a];
+            U target=succ[a],run=run_id[target];
+            assert(target && run_id[target-1]==run);
+            if(run!=old_run){close_burst();old_run=run;streak=0;origin=a;delta=target-a;}
+            assert(target-a==delta);++streak;a=target;
         }
+        close_burst();
         assert(limit&&limit<=len);U upper=len+!fixed[terminal];
         upper_log+=std::log2(upper);lower_log+=std::log2(limit);
         upper_exp+=std::bit_width(upper-1u);lower_exp+=std::bit_width(limit)-1u;
@@ -94,7 +108,11 @@ int main(int argc,char** argv) {
         ++paths;vertices+=len;all_terminal_rows+=len-limit+1;
         ++hist[{fixed[terminal],len,limit}];
     }
-    assert(paths==R-1 && vertices==n-1);
+    assert(paths==R-1 && vertices==n-1 && burst_edges==arcs && bursts+arithmetic_saved==arcs);
+    if(argc==5){
+        std::ofstream detail(argv[4],std::ios::app);assert(detail);
+        detail<<id<<','<<n<<','<<R<<','<<paths<<','<<arcs<<','<<bursts<<','<<one_edge<<','<<max_streak<<','<<arithmetic_saved<<'\n';
+    }
     std::cout.precision(16);
     std::cout<<id<<','<<n<<','<<R<<','<<sigma<<','<<lap<<','<<arcs<<','<<paths<<','<<grounded<<','<<flexible<<','<<longest<<','<<support_width<<','<<widest<<','<<already<<','<<extra<<','<<all_terminal_rows<<','<<fully_forced<<','<<fonly_log<<','<<lower_log<<','<<upper_log<<','<<lower_exp<<','<<upper_exp<<','<<f_stab<<','<<self_stab<<','<<optional<<','<<f_safe_endpoints<<'\n';
     for(auto [k,v]:hist)std::cerr<<"path,"<<id<<','<<k[0]<<','<<k[1]<<','<<k[2]<<','<<v<<'\n';
