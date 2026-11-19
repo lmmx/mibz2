@@ -118,6 +118,10 @@ A proposal's manifest is a TOML file, checked by
 - **requires** every edge to have a cost vector and a status;
 - **reports** any edge marked `assumed` or `open` on the path to the output. Such a manifest
   fails the availability gate;
+- **requires** that no edge before the final one already yields the text, or an object that
+  determines it. The registry's `[determines]` table lists such objects (record 84: run labels
+  determine the text, so they are an emission in disguise). A path that has the output before
+  its last step pays for it twice, so it fails the cost gate;
 - **reports** the critical path: the summed D along the longest dependency chain. It also lists
   every edge whose Q or D is n-scale, so that each dependent O(n) is visible, and is never
   dropped as "preprocessing".
@@ -125,6 +129,11 @@ A proposal's manifest is a TOML file, checked by
 The example is [`acquisition/example-copy-replay.toml`](acquisition/example-copy-replay.toml).
 It is round 6's potential schedule written as a manifest, and it fails on the text-order
 run-label edge. That is the result we reached by hand, now caught mechanically.
+
+MONODROMY's record 84 adds two more examples:
+- `example-copy-replay-via-labels.toml`, the same replay with its open edge replaced by an arc
+  walk. It **fails** on cost, since the labels already determine the text.
+- `example-arc-walk.toml`, the arc-synchronous walk. It **passes**, with its n-scale Q reported.
 
 ## 6. Who does what
 

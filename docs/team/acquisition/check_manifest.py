@@ -5,7 +5,9 @@ also declare new edges inline, as ``[[edge]]`` tables with the registry's fields
 
 The check fails (exit 1) unless every used edge's inputs are in the entry state I0 or are
 produced by another used edge, the graph is acyclic and reaches the target, and no edge on the
-path to the target has status "assumed" or "open". It then reports the dependent edges (D or Q
+path to the target has status "assumed" or "open", and unless no edge before the final one
+already yields the text or an object that determines it (the registry's [determines] table). It
+then reports the dependent edges (D or Q
 of n-scale) on that path, the cost class that must never pass as "preprocessing".
 
 Run: python3 docs/team/acquisition/check_manifest.py <manifest.toml> [--registry PATH]
@@ -81,6 +83,19 @@ def check(manifest, registry):
             lines.append(
                 f"FAIL availability: {e['id']} ({'+'.join(e['inputs'])}"
                 f" -> {e['output']}) is {e['status'].upper()}: {e['evidence']}"
+            )
+    # Record 84's gap: a path that already holds the output (the text, or an object that
+    # determines it) before its final edge passes availability but pays twice. Fail it.
+    determines = set(registry.get("determines", {}).get("text", []))
+    determines |= set(manifest.get("determines", {}).get("text", []))
+    determines.add("text")
+    final = producer[target]
+    for e in path:
+        if e is not final and e["output"] in determines:
+            ok = False
+            lines.append(
+                f"FAIL cost: {e['id']} already yields {e['output']!r}, which determines the text, "
+                f"before the final edge {final['id']}: everything after it is paid twice"
             )
     dep = [e for e in path if e["dependent"] or n_scale(e["cost"]["D"]) or n_scale(e["cost"]["Q"])]
     lines.append(f"path to {target!r}: {' <- '.join(e['id'] for e in path)}")

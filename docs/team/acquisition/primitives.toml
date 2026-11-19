@@ -10,6 +10,11 @@
 #   - evidence: where the claim is established.
 # The entry state I0 is the [entry] list. Nothing else is free.
 
+# Objects that determine the text: a path that obtains one before its final edge already holds
+# the output (record 84: text[j] = symbol(label[j]), so run labels are an emission in disguise).
+[determines]
+text = ["run_label_sequences"]
+
 [entry]
 notes = "records: production caps a record at 127 rows, so R >= r. C exists only where the route already counts symbols; otherwise use the edge counts_from_records."
 objects = ["C", "alphabet", "n", "p", "records"]
@@ -62,7 +67,7 @@ status = "proved"
 [[edge]]
 cost = { B = "K", D = "1", M = "K", Q = "0", W = "r + K" }
 dependent = false
-evidence = "a two-pointer merge of two sorted partitions. K, the event count, is at most 2r. Its measured value on the six blocks is open (falsifier: count K)."
+evidence = "A two-pointer merge of two sorted partitions. Measured (record 84): K = 2r - |D-bar n C-bar| = 1.208-1.249r on the six blocks."
 id = "partition_overlaps"
 inputs = ["codomain_partition", "domain_partition"]
 output = "overlap_events"
@@ -98,7 +103,7 @@ status = "verified"
 [[edge]]
 cost = { B = "n", D = "n", M = "n", Q = "n", W = "n" }
 dependent = true
-evidence = "the text-order run-label sequence of each copy. The only known construction is an O(n) arc walk (MONODROMY record 82). Whether o(n) is possible, e.g. O(#overlaps) from positions, is OPEN: Neon round 7's question."
+evidence = "Closed for all per-byte labels: they determine the text (labels_determine_text), so no construction is cheaper than an inversion (MONODROMY record 84). Open only: the potential schedule's ~0.12n fragment boundaries in o(n)."
 id = "copy_run_labels"
 inputs = ["boundary_positions", "lf_affine", "runs"]
 output = "run_label_sequences"
@@ -121,3 +126,32 @@ id = "copy_replay"
 inputs = ["copy_schedule"]
 output = "text"
 status = "verified"
+
+# MONODROMY record 84 (f3594684), docs/journal/monodromy/2026-11-19-acquisition-tower.md
+
+[[edge]]
+cost = { B = "K_k", D = "k", M = "K_k", Q = "0", W = "sum_{j<=k} K_j" }
+dependent = false
+evidence = "Cut_{k+1} = Cut_k u LF(Cut_k), each level a sigma-stream merge. Proved: K_k = r + sum_c min(k, l(c)) (l = persistence-arc length). Measured: K1 = 1.208-1.249r, K2 = 1.342-1.424r, K3 = 1.458-1.577r; it reaches n only at k = max l + 1 (848-17,545)."
+id = "refinement_tower"
+inputs = ["domain_partition", "lf_affine"]
+output = "cut_tower_k"
+status = "proved"
+
+[[edge]]
+cost = { B = "n", D = "lmax + r", M = "n", Q = "n", W = "n" }
+dependent = false
+evidence = "arcs advanced one row per round from their free ends, chained d -> LF(d); exact on 23,093 small cases and the six blocks. Rounds narrower than 64 hold 0.5-12.4% of visits. Shipped Segmented's multi-start walk with free, unbalanced starts; one per-visit timing on block 0 decides it (record 84)."
+id = "arc_synchronous_walk"
+inputs = ["codomain_partition", "lf_affine", "p", "runs"]
+output = "text"
+status = "verified"
+
+[[edge]]
+cost = { B = "n", D = "1", M = "n", Q = "0", W = "n" }
+dependent = false
+evidence = "text[j] = symbol(run label of j): the labels are a text emission in disguise (record 84)"
+id = "labels_determine_text"
+inputs = ["run_label_sequences", "runs"]
+output = "text"
+status = "proved"

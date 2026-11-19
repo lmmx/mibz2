@@ -1,0 +1,49 @@
+# MONODROMY record 84: round 6's copy replay with its open edge replaced by the reduction proved
+# in record 84. Expected: PASS on availability, but its path contains a full text emission
+# before the replay: the labels already determine every byte (labels_determine_text).
+
+name = "in-place copy replay with labels from the arc walk (record 84's reduction)"
+target = "text_replayed"
+uses = [
+  "boundary_text_positions",
+  "counts_from_records",
+  "lf_image_partition",
+  "lf_shifts",
+  "maximal_runs",
+]
+
+[[edge]]
+cost = { W = "n", D = "lmax + r", B = "n", Q = "n", M = "n" }
+dependent = false
+evidence = "the arc-synchronous walk records each visited row's run id in text order (record 84)"
+id = "arc_walk_labels"
+inputs = ["codomain_partition", "lf_affine", "p", "runs"]
+output = "run_label_sequences"
+status = "verified"
+
+[[edge]]
+cost = { W = "n", D = "1", B = "n", Q = "0", M = "n" }
+dependent = false
+evidence = "a run id fixes its byte: text[j] = symbol(label[j]). So run_label_sequences is a text emission in disguise (record 84)"
+id = "labels_determine_text"
+inputs = ["run_label_sequences", "runs"]
+output = "text"
+status = "proved"
+
+[[edge]]
+cost = { W = "n", D = "lambda", B = "F", Q = "F", M = "F" }
+dependent = false
+evidence = "record 82"
+id = "potential_schedule_from_labels"
+inputs = ["boundary_positions", "run_label_sequences"]
+output = "copy_schedule"
+status = "verified"
+
+[[edge]]
+cost = { W = "n", D = "lambda", B = "n", Q = "F", M = "n" }
+dependent = false
+evidence = "record 82; listed with the text as an input to show the replay comes after the text exists"
+id = "copy_replay_again"
+inputs = ["copy_schedule", "text"]
+output = "text_replayed"
+status = "verified"
