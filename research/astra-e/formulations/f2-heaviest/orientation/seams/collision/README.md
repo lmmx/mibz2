@@ -29,3 +29,18 @@ python3 -B real.py /tmp/astra-collision ../../../../../dense/target/wikidata /tm
 ```
 
 The initial frozen-screen.csv uses dense, unlabelled occupancy and ideal adjacency coalescence. It omits anchor identity, spelling identity and paid ordering. Native paid work is retained separately in the marked experiment.
+
+## Ten-tape labelled comparison
+
+Each of the three orders appears first and last twice in six round permutations, per section per tape. paid/laps.csv preserves every binary execution and paid/summary.csv sums per-tape median thread CPU or deterministic integer costs (max for peak packet slots). The instrumented release build uses GCC 14.2, assertions enabled, on shared Xeon Platinum 8573C. The clock excludes independent checking and destruction, and covers each method's actual maps, transfers, tries, assembly, final band sort and marked emission. The section-selection Python CPU is shared among arms and recorded separately in paid/inputs.csv. Peak packet slots count simultaneous vector capacities only. Each slot takes 16 bytes. A map uses one 16-byte piece per initial run per direction. Dictionaries, map bucket storage, outputs and process memory are additional.
+
+| Section, method | Affine pieces | Front + final sort comparisons | Join steps | Seek comparisons | Constructor seconds | Output seconds |
+|---|---:|---:|---:|---:|---:|---:|
+| Quote backward | 1,585,376 | 1,336,744 | 0 | 19,244,563 | .317 | .057 |
+| Quote forward | 988,959 | 1,404,961 | 0 | 12,344,975 | .225 | .055 |
+| Quote collision | 1,091,492 | 15,545,400 | 2,049,813 | 8,417,083 | .287 | .062 |
+| Compound backward | 2,119,342 | 1,023,132 | 0 | 25,426,088 | .443 | .015 |
+| Compound forward | 1,874,223 | 1,041,941 | 0 | 17,118,774 | .381 | .014 |
+| Compound collision | 1,364,367 | 18,685,021 | 2,604,366 | 9,770,406 | .338 | .017 |
+
+All 360 runs matched every dense-oracle return and the external marked output. Quote midpoint used 10.4% more affine pieces than forward and lost constructor CPU. Compound midpoint used 27.2% fewer pieces and won the matched packet constructors. Dynamic ordering, simultaneous survivor splitting, a second directional index and additional packet working set are measurable costs. The high cost of repeated comparison sorting motivates one fixed-clock radix-order variant and an end-to-end check against indexed backward Direct.
