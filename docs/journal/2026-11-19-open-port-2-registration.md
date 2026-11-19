@@ -53,15 +53,15 @@ Nothing in this list is dropped, loosened or re-weighted (PERFORMANCE-POLICY §2
 |---|---|---|
 | cells | the 39 guard cells (G), and the sustained cell (S) | the same 40, in one family |
 | estimand | the geometric mean of the paired ratios | the same |
-| rounds | 12 (S: 8) | each cell's own, 72 to 600 (S: 96), locked |
-| a cell fails when | its geometric mean exceeds 1.02, or its 95% t-interval lies wholly above 1 | its mean log ratio exceeds its locked critical value c (x1.0144 to x1.0177) |
-| P(any fails), no effect | about 0.96 (G); 0.148 (S); never stated in advance | 0.011 to 0.033 under the planning models; 0.147 under a stress model |
+| rounds | 12 (S: 8) | each cell's own, 72 to 576 (S: 84), locked |
+| a cell fails when | its geometric mean exceeds 1.02, or its 95% t-interval lies wholly above 1 | its mean log ratio exceeds its locked critical value c (x1.0147 to x1.0171) |
+| P(any fails), no effect | about 0.96 (G); 0.148 (S); never stated in advance | 0.011 to 0.033 under the planning models; 0.143 under a stress model |
 
 - **S changes.** This is the Coordinator's decision of 19 November, reversing "S exactly as
   registered", and for the Researcher's prospective review.
   - *S as registered:* 8 rounds, the 1.02 point cap and SLOWER. Under its own noise it has a
     false-fail rate of **0.148** and power **0.55** at a true +2% slowdown.
-  - *S in G2:* 96 rounds back to back, its own c, power 0.94 at +2%.
+  - *S in G2:* 84 rounds back to back, its own c, power 0.87 at +2%.
   - *Why:* G2 is stricter against a real regression on S, and keeps the whole family's false-fail
     rate within its budget.
   - *What doesn't change:* S's cell, back to back, and its lack of a memory condition.
@@ -75,9 +75,9 @@ Nothing in this list is dropped, loosened or re-weighted (PERFORMANCE-POLICY §2
   - *A studentised test can't fail it.* The three spikes inflate the cell's own variance: a paired
     t-test gives t = 1.69, p = 0.048, far from 0.048/40. A bootstrap-t is the same in kind.
   - *So each cell's critical value c is fixed before the data,* calibrated by simulation. Every c
-    is at most 0.0175, so the counterexample's mean of 0.0240 fails in every cell.
+    is at most 0.0170, so the counterexample's mean of 0.0240 fails in every cell.
 - **The calibration** (`2026-11-19-open-port-2-registration/plan.py`, output `plan.txt` and
-  `plan.json`; 100,000 draws a cell and size; seed fixed):
+  `plan.json`; 50,000 draws a cell, a size and a power; seed fixed):
   - *each cell's c* is the largest of the (1 − 0.048/40) quantiles of its mean under no effect, in
     three noise models:
     - the cell's own residuals, centred on its mean (12 rounds; S's 8);
@@ -87,9 +87,17 @@ Nothing in this list is dropped, loosened or re-weighted (PERFORMANCE-POLICY §2
     The last carries the first attempt's spike rate: |residual| > 0.1 in 5.8% of rounds, and
     > 0.15 in 2.1%.
   - *each model* resamples rounds independently with replacement.
-  - *each cell's rounds* are the smallest on the grid giving power 0.80 at a true +2% slowdown,
-    under the cell's own residuals (decision 2).
-  - *the guards' extension* is one `ab run` a batch: 18 batches (`open_port2.py schedule`), each a
+  - *each cell's rounds* are the smallest on the grid giving, at a true +2% slowdown, power at
+    least **max(0.80, G − 0.005)** under the cell's own residuals. G is the first registration's
+    rule's power in that cell under the same residuals: 12 rounds, or S's 8.
+    - *Why:* parity, the Coordinator's decision of 19 November. G2 is at least as strict as G at
+      catching a real 2% slowdown, cell by cell, and never below 0.80.
+    - *Why 0.005:* where G's power is about 1 (1.000 in four cells), exact parity would chase
+      Monte Carlo error. With 50,000 draws, a power near 0.8 has a standard error of about 0.002,
+      and one near 1 much less. So the target is G less 0.005.
+  - *the grid:* 12, 24, 36, 48, 60, 72, 84, 96, 120, 144, 168, 192, 216, 240, 288, 336, 384, 432,
+    480, 576, 672, 768, 864 and 1,000 rounds.
+  - *the guards' extension* is one `ab run` a batch: 19 batches (`open_port2.py schedule`), each a
     count and a round count with its corpora, into `guards-t{threads}-r{rounds}.jsonl`.
   - *S's rounds* are one back-to-back run, `sustained.jsonl` (`open_port2.py schedule
     --sustained`).
@@ -104,7 +112,7 @@ Nothing in this list is dropped, loosened or re-weighted (PERFORMANCE-POLICY §2
 | each cell's own residuals | 0.012 |
 | each corpus's pooled residuals | 0.011 |
 | all the guards' residuals (the observed spike rate) | **0.033** |
-| stress: 2% of every cell's rounds a spike of ±0.2 to 0.4 | 0.147 |
+| stress: 2% of every cell's rounds a spike of ±0.2 to 0.4 | 0.143 |
 
 - **The budget:** each cell's c holds its size to at most 0.048/40 = 0.0012 under each of the three
   models, so the family's is at most 0.048 under any one of them.
@@ -120,56 +128,60 @@ Nothing in this list is dropped, loosened or re-weighted (PERFORMANCE-POLICY §2
   - *The family* multiplies the cells' pass rates, assuming independence across cells.
   - *The stress row* is a spike rate about the first attempt's 95% upper bound for spikes above
     0.15 (3.9%), at larger magnitudes. It shows how size degrades if the i9's next run is spikier:
-    0.033 at the observed rate, 0.147 under this stress.
+    0.033 at the observed rate, 0.143 under this stress.
 
 **The power,** per cell, beside the first registration's rule under the same noise. G2 has each
 cell's own rounds; G has 12, and S's registered rule 8.
 
-| cell | threads | rounds | c | G2 +1% | G2 +2% | G2 +3% | G +1% | G +2% | G +3% |
-|---|--:|--:|---|--:|--:|--:|--:|--:|--:|
-| ho-code-l1 | 8 | 288 | 0.0156 (x1.0157) | 0.11 | **0.82** | 1.00 | 0.31 | 0.49 | 0.65 |
-| ho-code-l1 | 10 | 336 | 0.0150 (x1.0151) | 0.14 | **0.85** | 1.00 | 0.31 | 0.46 | 0.62 |
-| ho-code-l1 | 20 | 336 | 0.0148 (x1.0149) | 0.17 | **0.84** | 1.00 | 0.38 | 0.53 | 0.67 |
-| ho-code-l9 | 8 | 168 | 0.0165 (x1.0166) | 0.00 | **0.94** | 1.00 | 0.21 | 0.59 | 0.91 |
-| ho-code-l9 | 10 | 600 | 0.0146 (x1.0147) | 0.18 | **0.86** | 1.00 | 0.43 | 0.54 | 0.65 |
-| ho-code-l9 | 20 | 192 | 0.0157 (x1.0158) | 0.07 | **0.86** | 1.00 | 0.26 | 0.49 | 0.73 |
-| ho-prose-l1 | 8 | 144 | 0.0150 (x1.0151) | 0.10 | **0.89** | 1.00 | 0.24 | 0.51 | 0.77 |
-| ho-prose-l1 | 10 | 240 | 0.0145 (x1.0146) | 0.17 | **0.88** | 1.00 | 0.31 | 0.48 | 0.66 |
-| ho-prose-l1 | 20 | 144 | 0.0148 (x1.0149) | 0.13 | **0.88** | 1.00 | 0.26 | 0.51 | 0.75 |
-| ho-prose-l9 | 8 | 96 | 0.0151 (x1.0152) | 0.12 | **0.86** | 1.00 | 0.31 | 0.55 | 0.79 |
-| ho-prose-l9 | 10 | 72 | 0.0175 (x1.0177) | 0.00 | **0.93** | 1.00 | 0.66 | 1.00 | 1.00 |
-| ho-prose-l9 | 20 | 72 | 0.0174 (x1.0176) | 0.00 | **0.89** | 1.00 | 0.47 | 0.92 | 1.00 |
-| ho-structured-l1 | 8 | 96 | 0.0151 (x1.0152) | 0.09 | **0.91** | 1.00 | 0.19 | 0.54 | 0.87 |
-| ho-structured-l1 | 10 | 96 | 0.0157 (x1.0158) | 0.12 | **0.80** | 1.00 | 0.23 | 0.48 | 0.79 |
-| ho-structured-l1 | 20 | 96 | 0.0146 (x1.0147) | 0.09 | **0.93** | 1.00 | 0.35 | 0.54 | 0.83 |
-| ho-structured-l9 | 8 | 96 | 0.0151 (x1.0152) | 0.11 | **0.87** | 1.00 | 0.21 | 0.50 | 0.79 |
-| ho-structured-l9 | 10 | 96 | 0.0151 (x1.0152) | 0.11 | **0.87** | 1.00 | 0.22 | 0.54 | 0.80 |
-| ho-structured-l9 | 20 | 72 | 0.0175 (x1.0177) | 0.00 | **0.91** | 1.00 | 0.51 | 1.00 | 1.00 |
-| ho-wikidata-l1 | 8 | 72 | 0.0172 (x1.0173) | 0.00 | **0.97** | 1.00 | 0.74 | 0.99 | 1.00 |
-| ho-wikidata-l1 | 10 | 72 | 0.0172 (x1.0173) | 0.00 | **0.89** | 1.00 | 0.42 | 1.00 | 1.00 |
-| ho-wikidata-l1 | 20 | 96 | 0.0151 (x1.0152) | 0.04 | **0.94** | 1.00 | 0.32 | 0.61 | 0.88 |
-| onebyte | 8 | 96 | 0.0151 (x1.0152) | 0.07 | **0.91** | 1.00 | 0.33 | 0.55 | 0.84 |
-| onebyte | 10 | 96 | 0.0147 (x1.0148) | 0.08 | **0.92** | 1.00 | 0.35 | 0.55 | 0.83 |
-| onebyte | 20 | 72 | 0.0175 (x1.0177) | 0.00 | **0.80** | 1.00 | 0.28 | 0.79 | 0.99 |
-| pattern | 8 | 96 | 0.0148 (x1.0149) | 0.11 | **0.91** | 1.00 | 0.19 | 0.62 | 0.98 |
-| pattern | 10 | 96 | 0.0149 (x1.0150) | 0.05 | **0.96** | 1.00 | 0.17 | 0.60 | 0.94 |
-| pattern | 20 | 96 | 0.0148 (x1.0149) | 0.08 | **0.93** | 1.00 | 0.16 | 0.54 | 0.95 |
-| random | 8 | 72 | 0.0172 (x1.0173) | 0.00 | **0.94** | 1.00 | 0.53 | 1.00 | 1.00 |
-| random | 10 | 96 | 0.0150 (x1.0151) | 0.11 | **0.89** | 1.00 | 0.19 | 0.48 | 0.83 |
-| random | 20 | 72 | 0.0170 (x1.0171) | 0.00 | **0.99** | 1.00 | 0.80 | 1.00 | 1.00 |
-| records | 8 | 72 | 0.0172 (x1.0173) | 0.00 | **0.91** | 1.00 | 0.45 | 0.98 | 1.00 |
-| records | 10 | 72 | 0.0169 (x1.0170) | 0.01 | **0.81** | 1.00 | 0.35 | 0.59 | 0.87 |
-| records | 20 | 72 | 0.0173 (x1.0175) | 0.00 | **0.94** | 1.00 | 0.59 | 0.97 | 1.00 |
-| runs | 8 | 240 | 0.0143 (x1.0144) | 0.18 | **0.89** | 1.00 | 0.30 | 0.50 | 0.69 |
-| runs | 10 | 168 | 0.0162 (x1.0163) | 0.04 | **0.84** | 1.00 | 0.35 | 0.54 | 0.75 |
-| runs | 20 | 288 | 0.0153 (x1.0154) | 0.15 | **0.81** | 1.00 | 0.37 | 0.52 | 0.66 |
-| text | 8 | 96 | 0.0148 (x1.0149) | 0.15 | **0.86** | 1.00 | 0.26 | 0.52 | 0.78 |
-| text | 10 | 96 | 0.0149 (x1.0150) | 0.14 | **0.86** | 1.00 | 0.22 | 0.54 | 0.86 |
-| text | 20 | 72 | 0.0172 (x1.0173) | 0.00 | **0.84** | 1.00 | 0.26 | 0.88 | 1.00 |
-| wikidata-x16 (S) | 10 | 96 | 0.0149 (x1.0150) | 0.05 | **0.94** | 1.00 | 0.31 | 0.55 | 0.82 |
+| cell | threads | rounds | c | target at +2% | G2 +1% | G2 +2% | G2 +3% | G +1% | G +2% | G +3% |
+|---|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| ho-code-l1 | 8 | 288 | 0.0158 (x1.0159) | 0.800 | 0.10 | **0.811** | 1.00 | 0.31 | 0.485 | 0.65 |
+| ho-code-l1 | 10 | 336 | 0.0149 (x1.0150) | 0.800 | 0.15 | **0.857** | 1.00 | 0.31 | 0.460 | 0.62 |
+| ho-code-l1 | 20 | 336 | 0.0149 (x1.0150) | 0.800 | 0.17 | **0.836** | 1.00 | 0.39 | 0.528 | 0.67 |
+| ho-code-l9 | 8 | 168 | 0.0167 (x1.0168) | 0.800 | 0.00 | **0.922** | 1.00 | 0.21 | 0.594 | 0.91 |
+| ho-code-l9 | 10 | 576 | 0.0146 (x1.0147) | 0.800 | 0.18 | **0.849** | 1.00 | 0.43 | 0.544 | 0.65 |
+| ho-code-l9 | 20 | 192 | 0.0158 (x1.0159) | 0.800 | 0.07 | **0.854** | 1.00 | 0.26 | 0.490 | 0.73 |
+| ho-prose-l1 | 8 | 144 | 0.0150 (x1.0151) | 0.800 | 0.10 | **0.894** | 1.00 | 0.24 | 0.506 | 0.77 |
+| ho-prose-l1 | 10 | 216 | 0.0152 (x1.0153) | 0.800 | 0.15 | **0.827** | 1.00 | 0.31 | 0.481 | 0.67 |
+| ho-prose-l1 | 20 | 144 | 0.0149 (x1.0150) | 0.800 | 0.13 | **0.874** | 1.00 | 0.26 | 0.506 | 0.75 |
+| ho-prose-l9 | 8 | 96 | 0.0152 (x1.0153) | 0.800 | 0.12 | **0.857** | 1.00 | 0.31 | 0.554 | 0.79 |
+| ho-prose-l9 | 10 | 84 | 0.0159 (x1.0160) | 0.995 | 0.00 | **0.997** | 1.00 | 0.66 | 1.000 | 1.00 |
+| ho-prose-l9 | 20 | 84 | 0.0163 (x1.0164) | 0.916 | 0.00 | **0.970** | 1.00 | 0.47 | 0.921 | 1.00 |
+| ho-structured-l1 | 8 | 84 | 0.0157 (x1.0158) | 0.800 | 0.08 | **0.855** | 1.00 | 0.19 | 0.546 | 0.87 |
+| ho-structured-l1 | 10 | 96 | 0.0155 (x1.0156) | 0.800 | 0.13 | **0.813** | 1.00 | 0.23 | 0.473 | 0.79 |
+| ho-structured-l1 | 20 | 84 | 0.0159 (x1.0160) | 0.800 | 0.05 | **0.855** | 1.00 | 0.35 | 0.542 | 0.83 |
+| ho-structured-l9 | 8 | 84 | 0.0161 (x1.0162) | 0.800 | 0.09 | **0.801** | 1.00 | 0.21 | 0.505 | 0.79 |
+| ho-structured-l9 | 10 | 84 | 0.0161 (x1.0162) | 0.800 | 0.09 | **0.806** | 1.00 | 0.22 | 0.538 | 0.80 |
+| ho-structured-l9 | 20 | 96 | 0.0148 (x1.0149) | 0.994 | 0.00 | **0.999** | 1.00 | 0.51 | 0.999 | 1.00 |
+| ho-wikidata-l1 | 8 | 84 | 0.0160 (x1.0161) | 0.983 | 0.00 | **0.999** | 1.00 | 0.74 | 0.988 | 1.00 |
+| ho-wikidata-l1 | 10 | 96 | 0.0149 (x1.0150) | 0.995 | 0.01 | **0.998** | 1.00 | 0.43 | 1.000 | 1.00 |
+| ho-wikidata-l1 | 20 | 72 | 0.0170 (x1.0171) | 0.800 | 0.01 | **0.801** | 1.00 | 0.32 | 0.611 | 0.88 |
+| onebyte | 8 | 84 | 0.0159 (x1.0160) | 0.800 | 0.05 | **0.848** | 1.00 | 0.33 | 0.551 | 0.84 |
+| onebyte | 10 | 84 | 0.0157 (x1.0158) | 0.800 | 0.06 | **0.862** | 1.00 | 0.35 | 0.546 | 0.83 |
+| onebyte | 20 | 72 | 0.0169 (x1.0170) | 0.800 | 0.01 | **0.862** | 1.00 | 0.28 | 0.793 | 0.99 |
+| pattern | 8 | 84 | 0.0162 (x1.0163) | 0.800 | 0.08 | **0.807** | 1.00 | 0.19 | 0.620 | 0.98 |
+| pattern | 10 | 84 | 0.0163 (x1.0164) | 0.800 | 0.02 | **0.873** | 1.00 | 0.17 | 0.595 | 0.95 |
+| pattern | 20 | 84 | 0.0160 (x1.0161) | 0.800 | 0.05 | **0.852** | 1.00 | 0.16 | 0.538 | 0.95 |
+| random | 8 | 96 | 0.0153 (x1.0154) | 0.995 | 0.00 | **0.999** | 1.00 | 0.53 | 1.000 | 1.00 |
+| random | 10 | 84 | 0.0162 (x1.0163) | 0.800 | 0.07 | **0.806** | 1.00 | 0.19 | 0.484 | 0.84 |
+| random | 20 | 84 | 0.0161 (x1.0162) | 0.995 | 0.00 | **0.999** | 1.00 | 0.80 | 1.000 | 1.00 |
+| records | 8 | 84 | 0.0160 (x1.0161) | 0.972 | 0.00 | **0.984** | 1.00 | 0.45 | 0.977 | 1.00 |
+| records | 10 | 84 | 0.0161 (x1.0162) | 0.800 | 0.02 | **0.879** | 1.00 | 0.35 | 0.593 | 0.88 |
+| records | 20 | 84 | 0.0164 (x1.0165) | 0.960 | 0.00 | **0.985** | 1.00 | 0.59 | 0.965 | 1.00 |
+| runs | 8 | 216 | 0.0152 (x1.0153) | 0.800 | 0.15 | **0.831** | 1.00 | 0.31 | 0.492 | 0.69 |
+| runs | 10 | 168 | 0.0165 (x1.0166) | 0.800 | 0.03 | **0.821** | 1.00 | 0.35 | 0.538 | 0.75 |
+| runs | 20 | 288 | 0.0153 (x1.0154) | 0.800 | 0.16 | **0.813** | 1.00 | 0.37 | 0.519 | 0.66 |
+| text | 8 | 96 | 0.0149 (x1.0150) | 0.800 | 0.15 | **0.860** | 1.00 | 0.26 | 0.525 | 0.78 |
+| text | 10 | 96 | 0.0153 (x1.0154) | 0.800 | 0.13 | **0.838** | 1.00 | 0.22 | 0.535 | 0.86 |
+| text | 20 | 84 | 0.0160 (x1.0161) | 0.869 | 0.01 | **0.948** | 1.00 | 0.26 | 0.874 | 1.00 |
+| wikidata-x16 (S) | 10 | 84 | 0.0162 (x1.0163) | 0.800 | 0.02 | **0.865** | 1.00 | 0.31 | 0.548 | 0.82 |
 
-- **At +2%,** every cell reaches 0.80 (the lowest is 0.80, ho-prose-l1 at 8 and 20 threads). The
-  first registration's rules range from 0.46 to 1.00.
+- **At +2%, every cell meets its target:** G2 is 0.801 to 0.999, against the first registration's
+  0.46 to 1.00.
+  - *The tightest:* ho-structured-l9 at 8 threads, 0.801 against 0.800, and pattern at 8 threads,
+    0.807. These are within the Monte Carlo error stated above.
+  - *Where G's power is about 1* (ho-wikidata-l1, random, records, ho-prose-l9, ho-structured-l9 20t,
+    text 20t), G2 reaches 0.948 to 0.999 with 84 or 96 rounds.
 - **At +3%,** G2 is 0.997 to 1.00, against 0.62 to 1.00.
 - **At +1%, G2 is weaker than the first registration's rules on every cell.**
   - *How much:* G2 is 0.00 to 0.18 per cell, against their 0.16 to 0.80.
@@ -177,8 +189,8 @@ cell's own rounds; G has 12, and S's registered rule 8.
     G2 doesn't.
   - *What still holds for smaller losses:* the policy's protections stand, unchanged
     (PERFORMANCE-POLICY §2).
-- **No claim is made that G2 dominates G at every slowdown above 2%;** the table states the points
-  computed.
+- **Parity is claimed at +2%, cell by cell, within the 0.005 tolerance.** At +3% G2 is the more
+  powerful everywhere. No claim is made at other effects beyond the table.
 - **The power is model-based.**
   - *It assumes* the next run's noise is like the first attempt's, cell by cell, from only 12
     rounds a cell (S's 8).
@@ -186,11 +198,11 @@ cell's own rounds; G has 12, and S's registered rule 8.
     lower at the same c.
   - *Nothing is adjusted after the data:* no rounds are added, and no cell is re-tested.
 
-**The time,** the full schedule (the Coordinator's decision: no cell below 0.80 at +2%), about
-**6.9 hours** on the i9:
+**The time,** the parity schedule (the Coordinator's decision: no cell below max(0.80, G − 0.005)
+at +2%), about **6.75 hours** on the i9:
 - the decision run, about 38 minutes;
-- S, 96 rounds back to back, about 4 minutes;
-- the guards' extension, 4,980 pairs (9,960 decodes, each after its 2 s settle), about 5.8 hours;
+- S, 84 rounds back to back, about 3 minutes;
+- the guards' extension, 4,932 pairs (9,864 decodes, each after its 2 s settle), about 5.75 hours;
 - the context and the census, about 15 minutes.
 
 The Coordinator's 2.5 hours isn't reachable with every cell at 0.80. A capped schedule would leave
@@ -221,7 +233,7 @@ cells weaker than G at +2%; this successor exists to fix that, so none is used.
   2. the inputs, verified against the manifest;
   3. `timing-started.txt`;
   4. the decision run;
-  5. S, its 96 rounds back to back;
+  5. S, its 84 rounds back to back;
   6. the guards' extension, batch by batch;
   7. the verdict;
   8. the context and the census, as before.
@@ -268,7 +280,7 @@ cells weaker than G at +2%; this successor exists to fix that, so none is used.
 - **the Researcher's counterexample:**
   - as a cell's extension, G2 fails it;
   - directly, its mean exceeds every cell's c;
-- G2 failing S truly 2% slower; S with a round past its 96, or at the first registration's 8, giving VOID;
+- G2 failing S truly 2% slower; S with a round past its 84, or at the first registration's 8, giving VOID;
 - P1, P2, H and the memory guard, as registered;
 - **the cross-file joins:**
   - text's output digest different in the extension: VOID;

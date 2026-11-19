@@ -3,7 +3,7 @@
 The noise is open-port/run-20261119T125538Z's; the Researcher's correction is REVIEW 7012181194,
 and the Coordinator's decisions QUEUED 7012199074.
 
-    python3 plan.py RUN_DIR OUT.json 100000   (numpy and scipy; planning only, not run by the recipe;
+    python3 plan.py RUN_DIR OUT.json 50000   (numpy and scipy; planning only, not run by the recipe;
     bench/open-port-2-schedule.json is OUT.json's rounds and c)
 
 G2, the scorer's own rule: a guard cell fails if the mean of its n rounds' paired log ratios (the
@@ -12,7 +12,8 @@ value c fixed here, before the data. c is the largest of the (1 - 0.048/40) quan
 under no effect in three noise models, each resampled n times with replacement: the cell's own 12
 residuals (centred on its mean), its corpus's pooled 36, and all 468 guard residuals (which carry
 the first attempt's spike rate). The rounds n are the smallest on the grid giving power 0.80 at a
-true +2% slowdown under the cell's own residuals.
+true +2% slowdown, and at least the first registration's rule's power there less 0.005, both under
+the cell's own residuals (parity: the Coordinator's decision of 19 November).
 
 The output also gives each cell's power at +1%, +2% and +3%, the first registration's rule G at the
 same effects (12 rounds), the sizes under each model and under a stress model (2% of rounds a
@@ -29,7 +30,33 @@ from scipy import stats
 
 RUN, OUT = sys.argv[1], sys.argv[2]
 R = int(sys.argv[3]) if len(sys.argv) > 3 else 200_000
-GRID = [12, 24, 36, 48, 60, 72, 96, 120, 144, 168, 192, 240, 288, 336, 384, 480, 600]
+GRID = [
+    12,
+    24,
+    36,
+    48,
+    60,
+    72,
+    84,
+    96,
+    120,
+    144,
+    168,
+    192,
+    216,
+    240,
+    288,
+    336,
+    384,
+    432,
+    480,
+    576,
+    672,
+    768,
+    864,
+    1000,
+]
+TOL = 0.005
 L1, L2, L3 = math.log(1.01), math.log(1.02), math.log(1.03)
 
 
@@ -89,10 +116,15 @@ def g_rule(res, n, d, reps=100_000):
 
 plan, nulls = [], {"own": [], "pooled": [], "spiky": [], "all": []}
 for k in CELLS:
+    # parity (the Coordinator's decision, 19 November): power at +2% at least max(0.80, G - TOL),
+    # G's own power in this cell under the same residuals; TOL absorbs Monte Carlo error where G is
+    # about 1
+    g = [g_rule(own[k], 8 if k == S else 12, d) for d in (L1, L2, L3)]
+    target = max(0.80, g[1] - TOL)
     for n in GRID:
         mo, mp, ma = means(own[k], n), means(pooled[k[0]], n), means(allres, n)
         c = float(max(np.quantile(mo, 1 - A), np.quantile(mp, 1 - A), np.quantile(ma, 1 - A)))
-        if (mo + L2 > c).mean() >= 0.80 or n == GRID[-1]:
+        if (mo + L2 > c).mean() >= target or n == GRID[-1]:
             break
     ms = means(own[k], n, spike=0.02)
     row = {
@@ -103,7 +135,8 @@ for k in CELLS:
         "sd": float(own[k].std(ddof=1)),
         "g2": [float((mo + d > c).mean()) for d in (L1, L2, L3)],
         "g2_pooled_2": float((mp + L2 > c).mean()),
-        "g": [g_rule(own[k], 8 if k == S else 12, d) for d in (L1, L2, L3)],
+        "g": g,
+        "target": target,
         "size": {
             "own": float((mo > c).mean()),
             "pooled": float((mp > c).mean()),

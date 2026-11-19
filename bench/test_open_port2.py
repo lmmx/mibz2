@@ -237,11 +237,16 @@ def main():
         )
     )
     # the Researcher's counterexample (REVIEW 7012181194): 57 rounds at -0.001 and 3 at +0.5
-    cell = next((c, t) for (c, t), (n, _) in sorted(plan.items()) if n - op.ROUNDS == 60)
+    # in a guard cell of no effect (the fixture gives the Wikidata guards a gain), its extension in
+    # the counterexample's proportions: 3 rounds in 60 at +0.5, the rest at -0.001
+    cell = ("text", 8)
+    extra = plan[cell][0] - op.ROUNDS
+    spikes = round(extra * 3 / 60)
     res.append(
         expect(
-            f"Researcher 11: the counterexample as {cell[0]} at {cell[1]} threads' extension: G2 fails it",
-            build2(vectors={cell: COUNTER}),
+            f"Researcher 11: the counterexample's proportions as {cell[0]} at {cell[1]} threads' "
+            f"extension ({spikes} of {extra} at +0.5): G2 fails it",
+            build2(vectors={cell: [-0.001] * (extra - spikes) + [0.5] * spikes}),
             0,
             [f"G2: {cell[0]} at {cell[1]} threads", "NOT ADOPTED"],
         )
