@@ -135,7 +135,17 @@ whatever happens.
   decode internally and prints the timing fields, and the recipe drops them, keeping only the
   output's size and digest.
 - **The preflight bundles are archived beside this note,** in
-  `2026-11-19-open-port-registration/preflight/`, each with its `.sha256`.
+  `2026-11-19-open-port-registration/preflight/`, each with its `.sha256`. Both ran in the cloud
+  container, so `DRY-RUN.txt` marks them and the scorer would void them; they check the recipe,
+  not the machine.
+
+  | bundle | at | SHA-256 | outputs | scorer checks |
+  |---|---|---|---|---|
+  | `run-20261119T111634Z` | 4e86ffc8 | 98ba331d4e49b8f09fbf8e05b8b5b9cde97193471860c3c9c702286da9215957 | 16 of 16 the same | 39 of 39 |
+  | `run-20261119T114444Z` | 5308788c | 60e11db7e2b9fbca3a56e0833d1e18eea1ab3e4caf397cce38741394f0038332 | 16 of 16 the same | 63 of 63 |
+
+  The second is the preflight for the second correction. Its `inputs.sha256` passes every identity
+  check of the scorer, the frozen judged copies included, and no file holds a timing field.
   - *Not on the evidence branch:* the one-attempt guard refuses any `open-port/run-*` bundle
     archived there, so a preflight there would block the attempt.
   - *The earlier timed preflight's bundle is not archived,* since its timing records stay
