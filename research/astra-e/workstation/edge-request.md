@@ -6,7 +6,7 @@ Independent Xeon CI measured edge/combined median peak RSS of 0.9383, 0.8904 and
 
 ## Frozen comparison
 
-The local registration is `bench/astra-e-edge-budget` at `e00b278656838aad9487ffa8fb7333eaa0c4705e`. The protocol implementation is `9b0d9637f1d2fcdae2be5d13ac97943c301f4533`. The entry points for a checkout of that registration are:
+The local registration is `bench/astra-e-edge-budget` at `e00b278656838aad9487ffa8fb7333eaa0c4705e`. The protocol implementation is `9b0d9637f1d2fcdae2be5d13ac97943c301f4533`. A checkout of that registration exposes these two commands.
 
 ```sh
 just bench-astra-e-edge-budget-dry
@@ -30,3 +30,10 @@ A Git bundle preserves the registered commit and its parent requirement. From a 
 ```sh
 git fetch research/astra-e/workstation/rehearsals/edge-registration-e00b278.bundle refs/heads/bench/astra-e-edge-budget:refs/heads/bench/astra-e-edge-budget
 ```
+
+
+## Untimed cloud receipt
+
+The frozen registration passed its cloud dry run on four logical CPUs. Both independently built candidates passed their 338-case differential gates, including Wikidata and the mutation suite. Each control passed 98 cases. The replay verified both corpus hashes, both candidate source hashes, two distinct executable hashes, the projected Git blobs and the exact 256-row scheduled order. The cloud affinity mask did not cover W7–10. Those sixteen arm/worker gates remain for the target dry run. The archive contains no timed decoder samples. SHA-256 `d023bb4f60734ddb67e7cd52387d7c841384acfd9451fb59417041c5fb69d836`. [Full rehearsal archive](rehearsals/edge-matched-e00b278.tar.gz)
+
+The fresh projection and scorer path revision were both `75297a1d57b2bdf262c3a19f3064848dedf2c493`. The executable interface rehearsals printed v1 at `9c31461df7bef24cecf79348545b27ee26846835+dirty` from the edge checkout and v1 at `9a9c169d70639c1c3e56cb85b3679fa7529e516c+dirty` from the combined checkout. The scorer obtains that string from each checkout's HEAD and working status. All 31 tracked blobs under `bench/moonshot`, `.just` and `Justfile` matched each other and the fresh upstream tree. The distinct release binary SHA-256 values were `8e2de672bca926d043288b39ff53496e06f9844fa3028341f697d60aca252536` for edge and `037f804a5076f967306a55dd150ba3cd47a040d0c609b3f799b0bf77773afb86` for combined.
