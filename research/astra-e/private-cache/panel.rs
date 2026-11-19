@@ -64,7 +64,8 @@ fn main(){
             let i=(if round%2==0 {off}else{blocks.len()-1-off}+round*5)%blocks.len();
             let b=&blocks[i];
             for pos in 0..8 {
-                let arm=(round+i+if (round+i)/8%2==0{pos}else{8-pos})%8;
+                let lap=round.saturating_sub(1);
+                let arm=(lap+i+if (lap/8+i)%2==0{pos}else{8-pos})%8;
                 let work=&mut workers[arm];
                 let t0=cpu();
                 assert!(b.r.records().len()*20<3*b.n || (b.n>=65536 && fits(b.r.records(),b.p)));
