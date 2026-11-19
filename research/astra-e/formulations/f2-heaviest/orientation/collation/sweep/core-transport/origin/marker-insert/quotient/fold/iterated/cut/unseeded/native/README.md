@@ -35,3 +35,5 @@ python3 -B "$d/report.py" "$d" | diff - "$d/summary.json"
 ```
 
 The follow-up supplied the next source bases during publication, then computed a removed mark from the base of its selected alias and a rank within one old bucket. On ten complete original byte columns this reduced 1,017,929 global prefix visits to 1,705 local slice visits. A further variant observed only a single old output slice per cut and ran more slowly in the paired stage measurement. [Source-base publication](published/README.md) · [Bucket identity, receipts and exact continuation](published/bucket/README.md) · [Independent all-color weighted check](all_colors.json)
+
+A second build in different scratch directories reproduced all five measured and audited executables byte for byte using g++ 14.2.0. The build maps assertion-source paths to the recorded originals. [All five SHA-256 values](binary-replay.json) · [Single reproducible build and verification recipe](published/bucket/README.md)

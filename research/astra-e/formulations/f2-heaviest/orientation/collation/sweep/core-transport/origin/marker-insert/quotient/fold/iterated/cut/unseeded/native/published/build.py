@@ -8,6 +8,7 @@ here=Path(__file__).resolve().parent
 parent=here.parent
 prepared,build=map(lambda x:Path(x).resolve(),sys.argv[1:])
 build.mkdir(exist_ok=True,parents=True)
+repo=Path(subprocess.check_output(['git','-C',here,'rev-parse','--show-toplevel'],text=True).strip())
 root=Path(subprocess.check_output(['git','-C',here,'rev-parse','--show-toplevel'],text=True).strip())
 frozen='d33bcaffe0000292345cf84c823a2b523cdd7409'
 def old(name):
@@ -130,5 +131,6 @@ s=rep(s,'        auto want=direct(in);\n        for(U a=0;a<3;++a)', '        au
 s=rep(s,'            std::cout<<names[a]<<', '            if(a)compare(reference,r);else reference=r;\n            std::cout<<r.histogram<<\',\'<<r.emissions<<\',\'<<r.scanned<<\',\'<<names[a]<<')
 (build/'run.cpp').write_text(s)
 for name,options in [('run',[]),('audit',['-DAUDIT_MARK'])]:
-    subprocess.run(['g++','-std=c++20','-O3','-g0','-Wall','-Wextra',*options,
+    subprocess.run(['g++',f'-fmacro-prefix-map={repo}=/workspace/work/astra-e',
+                    f'-fmacro-prefix-map={build}=/tmp/astra-unseeded-published','-std=c++20','-O3','-g0','-Wall','-Wextra',*options,
                     '-I',str(here),str(build/'run.cpp'),'-o',str(build/name)],check=True)

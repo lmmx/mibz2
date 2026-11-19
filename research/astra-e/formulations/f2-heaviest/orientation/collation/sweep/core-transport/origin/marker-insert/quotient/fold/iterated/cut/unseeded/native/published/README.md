@@ -25,4 +25,6 @@ python3 -B "$d/report.py" "$tmp/gates"
 python3 -B "$d/report.py" "$d" | diff - "$d/summary.json"
 ```
 
+The output source-base vector is reserved from the count of refined aliases. Its largest reservation on the ten trajectories was 38,685 u32 entries (154,740 bytes), at depth 3 on tape 0024. The eager counter reuses the retired rem cell for each live alias.
+
 The implementation is frozen at cdc1de3. Gate binaries are compiled with and without the additional snapshot and independent marked-LF checks. The header injected at build time contains the exact observer operations in source order. [Publication observer](events.hpp) · [Specialization](build.py)

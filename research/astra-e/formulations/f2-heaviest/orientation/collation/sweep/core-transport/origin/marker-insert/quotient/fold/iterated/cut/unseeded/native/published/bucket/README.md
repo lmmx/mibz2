@@ -21,7 +21,7 @@ Every real possible fixed mark occurred at the first raw run. The ten checks had
 | Bucket rank with single watched slice / bucket rank | 1.0475 [1.0218, 1.0738] | 1.0517 [1.0188, 1.0856] |
 | Bucket rank / dense stable byte inverse | 0.9074 [0.8628, 0.9542] | 0.9009 [0.8494, 0.9556] |
 
-Removing over a million global-rank prefix visits left a close comparison with the delayed route. Removing the observed mark check across almost all emitted pieces then increased the measured stage time in this implementation. The four matched arms charge all mark bookkeeping, the cut and grammar, rotation and output. The bucket route had the lowest point estimate among these four arms. Maximum fresh RSS was 10,272 KiB for bucket, 10,292 KiB each for delayed and single watched slice, and 8,096 KiB for dense. This local inverse comparison has a different endpoint and machine from a whole-worker comparison with mibz2 0.5.6. No CI or i9 result is attached. [1,600 validated samples](pairs.csv) · [40 fresh RSS processes](rss.csv) · [Per-tape paired results](summary.json)
+Removing over a million global-rank prefix visits left a close comparison with the delayed route. Removing the observed mark check across almost all emitted pieces then increased the measured stage time in this implementation. The four matched arms charge all mark bookkeeping, the cut and grammar, rotation and output. The bucket route had the lowest point estimate among these four arms. Both bucket-local routes reuse the original per-bucket offsets and the supplied compact source-base vector. The extra local descriptors are fixed-size. Maximum fresh RSS was 10,272 KiB for bucket, 10,292 KiB each for delayed and single watched slice, and 8,096 KiB for dense. This local inverse comparison has a different endpoint and machine from a whole-worker comparison with mibz2 0.5.6. No CI or i9 result is attached. [1,600 validated samples](pairs.csv) · [40 fresh RSS processes](rss.csv) · [Per-tape paired results](summary.json)
 
 **Reproduction.** The algorithm, native object equivalence checks and resource counts are frozen at b6f2ecf. The first commands build the pinned emitters and recover the ten native source tapes. Gates compare all complete old RLEs, all source-word IDs, the complete grammar DAG, the true ordinal and byte offset, and the materialized result at every step against the earlier checked algorithm. The ordinary and full audit builds separately check all 66,712 small cases per new arm and ten libbzip2-oracled full native output hashes per arm.
 
@@ -32,6 +32,7 @@ python3 -B "$d/../../build.py" "$tmp/base"
 python3 -B "$d/../../check.py" "$tmp/base/run" research/astra-e/dense/target/wikidata corpora/wikidata.bz2 "$tmp/inputs" "$tmp/ordinary"
 python3 -B "$d/../build.py" "$tmp/base" "$tmp/published"
 python3 -B "$d/build.py" "$tmp/published" "$tmp/bucket"
+python3 -B "$d/../../replay.py" "$tmp/base" "$tmp/published" "$tmp/bucket" | diff - "$d/../../binary-replay.json"
 python3 -B "$d/finite.py" | diff - "$d/finite.json"
 python3 -B "$d/witness.py" | diff - "$d/witness.json"
 taskset -c 3 nice -n 15 python3 -B "$d/panel.py" gate "$tmp/bucket" "$tmp/inputs" "$tmp/gates" > "$tmp/check.json"

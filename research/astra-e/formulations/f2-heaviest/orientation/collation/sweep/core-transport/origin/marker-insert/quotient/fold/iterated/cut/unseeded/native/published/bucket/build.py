@@ -4,6 +4,7 @@ import shutil,subprocess,sys
 here=Path(__file__).resolve().parent
 donor,build=map(lambda x:Path(x).resolve(),sys.argv[1:])
 build.mkdir(parents=True,exist_ok=True)
+repo=Path(subprocess.check_output(['git','-C',here,'rev-parse','--show-toplevel'],text=True).strip())
 def rep(s,a,b):
     assert s.count(a)==1,a
     return s.replace(a,b)
@@ -63,4 +64,5 @@ s=rep(s,"std::cout<<r.histogram<<','", "std::cout<<r.local<<','<<r.possible_fixe
 from selective import install
 install(build)
 for name,flags in [('run',[]),('audit',['-DAUDIT_MARK'])]:
-    subprocess.run(['g++','-std=c++20','-O3','-g0','-Wall','-Wextra',*flags,str(build/'run.cpp'),'-o',str(build/name)],check=True)
+    subprocess.run(['g++',f'-fmacro-prefix-map={repo}=/workspace/work/astra-e',
+                    f'-fmacro-prefix-map={build}=/tmp/astra-unseeded-bucket','-std=c++20','-O3','-g0','-Wall','-Wextra',*flags,str(build/'run.cpp'),'-o',str(build/name)],check=True)

@@ -7,6 +7,7 @@ here = Path(__file__).resolve().parent
 powers = here.parent.parent / 'powers'
 build = Path(sys.argv[1]).resolve()
 build.mkdir(parents=True,exist_ok=True)
+repo=Path(subprocess.check_output(['git','-C',here,'rev-parse','--show-toplevel'],text=True).strip())
 
 def donor(name):
     root = Path(subprocess.check_output(['git','-C',here,'rev-parse','--show-toplevel'],text=True).strip())
@@ -43,5 +44,6 @@ compact = replace(compact,'        }\n        for(U j=0;j<K;++j)if(deleted[j])re
 compact = replace(compact,'out.mark=id[first[in.mark]];',
 '''out.mark=observer.finish(in,grammar,parts,color,first,id,into,local,before);''')
 (build/'observed-compact.hpp').write_text(compact)
-subprocess.run(['g++','-std=c++20','-O3','-g0','-Wall','-Wextra','-I',str(build),
+subprocess.run(['g++',f'-fmacro-prefix-map={repo}=/workspace/work/astra-e',
+                f'-fmacro-prefix-map={build}=/tmp/astra-unseeded-cpp','-std=c++20','-O3','-g0','-Wall','-Wextra','-I',str(build),
                 str(here/'run.cpp'),'-o',str(build/'run')],check=True)
