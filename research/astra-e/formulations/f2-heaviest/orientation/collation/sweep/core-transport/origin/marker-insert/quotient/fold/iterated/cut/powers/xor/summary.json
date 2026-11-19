@@ -1,0 +1,423 @@
+{
+  "four": {
+    "rounds": 24,
+    "profiles": {
+      "graph": {
+        "vmhwm_kib": 6252,
+        "median_ms": {
+          "thread": 31.596674,
+          "choice": 14.960066,
+          "publish": 11.654243,
+          "normalize": 0.0,
+          "emit": 2.122363
+        }
+      },
+      "greedy": {
+        "vmhwm_kib": 5092,
+        "median_ms": {
+          "thread": 21.079203,
+          "choice": 2.952815,
+          "publish": 15.259794,
+          "normalize": 0.0,
+          "emit": 2.416746
+        }
+      },
+      "exact": {
+        "vmhwm_kib": 4564,
+        "median_ms": {
+          "thread": 22.10558,
+          "choice": 4.33826,
+          "publish": 14.771289,
+          "normalize": 0.0,
+          "emit": 2.538734
+        }
+      },
+      "direct": {
+        "vmhwm_kib": 7520,
+        "median_ms": {
+          "thread": 17.989738,
+          "choice": 0.0,
+          "publish": 0.0,
+          "normalize": 0.0,
+          "emit": 0.0
+        }
+      }
+    },
+    "paired_time_ratios": {
+      "graph/greedy": [
+        1.4799,
+        1.432219,
+        1.529168
+      ],
+      "graph/exact": [
+        1.397628,
+        1.313018,
+        1.48769
+      ],
+      "graph/direct": [
+        1.721254,
+        1.651129,
+        1.794357
+      ],
+      "greedy/graph": [
+        0.675721,
+        0.653951,
+        0.698217
+      ],
+      "greedy/exact": [
+        0.944407,
+        0.886222,
+        1.006413
+      ],
+      "greedy/direct": [
+        1.163088,
+        1.121181,
+        1.206562
+      ],
+      "exact/graph": [
+        0.715498,
+        0.672183,
+        0.761604
+      ],
+      "exact/greedy": [
+        1.058865,
+        0.993628,
+        1.128386
+      ],
+      "exact/direct": [
+        1.231554,
+        1.142704,
+        1.327312
+      ],
+      "direct/graph": [
+        0.580972,
+        0.557303,
+        0.605646
+      ],
+      "direct/greedy": [
+        0.85978,
+        0.828801,
+        0.891917
+      ],
+      "direct/exact": [
+        0.811982,
+        0.753402,
+        0.875117
+      ]
+    }
+  },
+  "five": {
+    "rounds": 30,
+    "profiles": {
+      "graph": {
+        "vmhwm_kib": 6252,
+        "median_ms": {
+          "thread": 33.673839,
+          "choice": 15.64238,
+          "publish": 12.366551,
+          "normalize": 0.0,
+          "emit": 2.372429
+        }
+      },
+      "graphcompact": {
+        "vmhwm_kib": 6080,
+        "median_ms": {
+          "thread": 31.181148,
+          "choice": 15.474225,
+          "publish": 10.246072,
+          "normalize": 0.0,
+          "emit": 2.406976
+        }
+      },
+      "greedy": {
+        "vmhwm_kib": 5092,
+        "median_ms": {
+          "thread": 22.62369,
+          "choice": 3.09163,
+          "publish": 16.119093,
+          "normalize": 0.0,
+          "emit": 2.80458
+        }
+      },
+      "gaps": {
+        "vmhwm_kib": 5088,
+        "median_ms": {
+          "thread": 23.182837,
+          "choice": 3.040742,
+          "publish": 16.771625,
+          "normalize": 0.0,
+          "emit": 2.699511
+        }
+      },
+      "direct": {
+        "vmhwm_kib": 7520,
+        "median_ms": {
+          "thread": 19.897475,
+          "choice": 0.0,
+          "publish": 0.0,
+          "normalize": 0.0,
+          "emit": 0.0
+        }
+      }
+    },
+    "paired_time_ratios": {
+      "graph/graphcompact": [
+        1.101515,
+        0.964595,
+        1.257871
+      ],
+      "graph/greedy": [
+        1.457207,
+        1.294484,
+        1.640386
+      ],
+      "graph/gaps": [
+        1.54581,
+        1.382109,
+        1.7289
+      ],
+      "graph/direct": [
+        1.72361,
+        1.543086,
+        1.925254
+      ],
+      "graphcompact/graph": [
+        0.90784,
+        0.794994,
+        1.036704
+      ],
+      "graphcompact/greedy": [
+        1.322912,
+        1.230948,
+        1.421746
+      ],
+      "graphcompact/gaps": [
+        1.403348,
+        1.275169,
+        1.544412
+      ],
+      "graphcompact/direct": [
+        1.564763,
+        1.495746,
+        1.636964
+      ],
+      "greedy/graph": [
+        0.686244,
+        0.609612,
+        0.772509
+      ],
+      "greedy/graphcompact": [
+        0.755908,
+        0.70336,
+        0.812382
+      ],
+      "greedy/gaps": [
+        1.060803,
+        0.925215,
+        1.21626
+      ],
+      "greedy/direct": [
+        1.182817,
+        1.119599,
+        1.249605
+      ],
+      "gaps/graph": [
+        0.64691,
+        0.578402,
+        0.723532
+      ],
+      "gaps/graphcompact": [
+        0.712581,
+        0.647496,
+        0.78421
+      ],
+      "gaps/greedy": [
+        0.942682,
+        0.822192,
+        1.08083
+      ],
+      "gaps/direct": [
+        1.115021,
+        1.010822,
+        1.229961
+      ],
+      "direct/graph": [
+        0.580178,
+        0.519412,
+        0.648052
+      ],
+      "direct/graphcompact": [
+        0.639075,
+        0.610887,
+        0.668563
+      ],
+      "direct/greedy": [
+        0.845439,
+        0.800253,
+        0.893177
+      ],
+      "direct/gaps": [
+        0.896844,
+        0.813034,
+        0.989294
+      ]
+    }
+  },
+  "stream-panel": {
+    "rounds": 30,
+    "profiles": {
+      "graph": {
+        "vmhwm_kib": 6252,
+        "median_ms": {
+          "thread": 23.06143,
+          "choice": 10.470966,
+          "publish": 8.524613,
+          "normalize": 0.0,
+          "emit": 1.918305
+        }
+      },
+      "graphcompact": {
+        "vmhwm_kib": 6080,
+        "median_ms": {
+          "thread": 27.522848,
+          "choice": 14.114138,
+          "publish": 8.066455,
+          "normalize": 0.0,
+          "emit": 2.060674
+        }
+      },
+      "stream": {
+        "vmhwm_kib": 4868,
+        "median_ms": {
+          "thread": 17.486433,
+          "choice": 4.369536,
+          "publish": 8.867897,
+          "normalize": 0.0,
+          "emit": 2.057655
+        }
+      },
+      "streamgaps": {
+        "vmhwm_kib": 4672,
+        "median_ms": {
+          "thread": 13.62952,
+          "choice": 4.061274,
+          "publish": 7.704416,
+          "normalize": 0.0,
+          "emit": 1.6755
+        }
+      },
+      "direct": {
+        "vmhwm_kib": 7520,
+        "median_ms": {
+          "thread": 16.722109,
+          "choice": 0.0,
+          "publish": 0.0,
+          "normalize": 0.0,
+          "emit": 0.0
+        }
+      }
+    },
+    "paired_time_ratios": {
+      "graph/graphcompact": [
+        0.967359,
+        0.908863,
+        1.029619
+      ],
+      "graph/stream": [
+        1.615876,
+        1.517871,
+        1.720209
+      ],
+      "graph/streamgaps": [
+        1.790722,
+        1.719619,
+        1.864764
+      ],
+      "graph/direct": [
+        1.501725,
+        1.355558,
+        1.663653
+      ],
+      "graphcompact/graph": [
+        1.033743,
+        0.971233,
+        1.100275
+      ],
+      "graphcompact/stream": [
+        1.6704,
+        1.60329,
+        1.74032
+      ],
+      "graphcompact/streamgaps": [
+        1.851146,
+        1.73172,
+        1.978807
+      ],
+      "graphcompact/direct": [
+        1.552397,
+        1.378405,
+        1.748352
+      ],
+      "stream/graph": [
+        0.618859,
+        0.581325,
+        0.658818
+      ],
+      "stream/graphcompact": [
+        0.598659,
+        0.574607,
+        0.623718
+      ],
+      "stream/streamgaps": [
+        1.108205,
+        1.039181,
+        1.181813
+      ],
+      "stream/direct": [
+        0.929357,
+        0.84217,
+        1.025569
+      ],
+      "streamgaps/graph": [
+        0.558434,
+        0.536261,
+        0.581524
+      ],
+      "streamgaps/graphcompact": [
+        0.540206,
+        0.505355,
+        0.577461
+      ],
+      "streamgaps/stream": [
+        0.90236,
+        0.846157,
+        0.962296
+      ],
+      "streamgaps/direct": [
+        0.838614,
+        0.767656,
+        0.916131
+      ],
+      "direct/graph": [
+        0.665901,
+        0.601087,
+        0.737704
+      ],
+      "direct/graphcompact": [
+        0.644165,
+        0.571967,
+        0.725476
+      ],
+      "direct/stream": [
+        1.076013,
+        0.975069,
+        1.187408
+      ],
+      "direct/streamgaps": [
+        1.192443,
+        1.091546,
+        1.302666
+      ]
+    }
+  }
+}
