@@ -4,7 +4,8 @@ from collections import Counter,defaultdict
 from math import exp,log,sqrt
 from pathlib import Path
 from statistics import mean,stdev
-d=Path(__file__).resolve().parent
+import sys
+d=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve().parent
 with (d/"panel.csv").open() as f: rows=list(csv.DictReader(f))
 paid=[r for r in rows if r['round']!='0']
 panel=Counter(int(r['stream'])for r in paid if r['arm']=='0')
