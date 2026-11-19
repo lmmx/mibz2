@@ -866,6 +866,25 @@ bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-scheduler/candidate.rs --no-proxy --no-timing --target-dir /workspace/work/f2d-dual-build
 ```
 
+## v1-delimiter-root-leaf-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-delimiter-root-leaf-gate/score/check.jsonl) · [manifest](results/v1-delimiter-root-leaf-gate/manifest.txt) · [score](results/v1-delimiter-root-leaf-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`2b6be099be0922dfd122e5d0ea427b50bc5207c1`](https://github.com/lmmx/mibz2/tree/2b6be099be0922dfd122e5d0ea427b50bc5207c1). [Candidate entry](https://github.com/lmmx/mibz2/blob/2b6be099be0922dfd122e5d0ea427b50bc5207c1/research/astra-e/formulations/f2-rootstream/leaf/candidate.rs). Fetched master `c76927421dae1cc46a08122dc410728bfcc3e4a7`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout c76927421dae1cc46a08122dc410728bfcc3e4a7 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-rootstream/leaf/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-rootstream/leaf/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2d-dual-build
+```
+
 ## v1-direct-refill-gate
 
 Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-direct-refill-gate/score/check.jsonl) · [manifest](results/v1-direct-refill-gate/manifest.txt) · [score](results/v1-direct-refill-gate/score/summary.txt)
@@ -1152,6 +1171,25 @@ bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-frontier/candidate.rs --target-dir /workspace/work/f2word-frontier --no-timing --no-proxy
 ```
 
+## v1-heaviest-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-heaviest-gate/score/check.jsonl) · [manifest](results/v1-heaviest-gate/manifest.txt) · [score](results/v1-heaviest-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`2b19f2e2f3430b9efe23467de968959c6059a272`](https://github.com/lmmx/mibz2/tree/2b19f2e2f3430b9efe23467de968959c6059a272). [Candidate entry](https://github.com/lmmx/mibz2/blob/2b19f2e2f3430b9efe23467de968959c6059a272/research/astra-e/formulations/f2-heaviest/candidate.rs). Fetched master `c76927421dae1cc46a08122dc410728bfcc3e4a7`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout c76927421dae1cc46a08122dc410728bfcc3e4a7 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-heaviest/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-heaviest/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2count-check
+```
+
 ## v1-lookahead-confirm
 
 Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-lookahead-confirm/score/check.jsonl) · [manifest](results/v1-lookahead-confirm/manifest.txt) · [score](results/v1-lookahead-confirm/score/summary.txt)
@@ -1176,6 +1214,32 @@ git checkout 566f090be41095c3495f149e60c2041c439d528b -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/lookahead/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/lookahead/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy
+```
+
+## v1-rank-popcnt-confirm
+
+Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-rank-popcnt-confirm/score/check.jsonl) · [manifest](results/v1-rank-popcnt-confirm/manifest.txt) · [score](results/v1-rank-popcnt-confirm/score/summary.txt)
+
+The build tree, including sibling modules, is [`3651470cb0ef5458e75cf97d3de363a1c73f2f76`](https://github.com/lmmx/mibz2/tree/3651470cb0ef5458e75cf97d3de363a1c73f2f76). [Candidate entry](https://github.com/lmmx/mibz2/blob/3651470cb0ef5458e75cf97d3de363a1c73f2f76/research/astra-e/formulations/f2-pages/instructions/candidate.rs). Fetched master `f8061b3c6e13047a787bc2169277389ed7b1b897`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+| W | Pairs | Candidate / lazy [95% CI] | opend / lazy [95% CI] | Candidate / opend¹ | Median peak KiB, candidate / lazy / opend | Candidate / lazy peak |
+|---:|---:|---|---|---:|---|---:|
+| 1 | 9 | 0.744 [0.634, 0.872] | 0.714 [0.522, 0.975] | 1.042 | 79,912 / 80,128 / 77,340 | 0.997 |
+| 4 | 9 | 0.787 [0.659, 0.940] | 0.698 [0.589, 0.827] | 1.128 | 128,704 / 142,464 / 117,368 | 0.903 |
+
+¹ Ratio of paired geometric means sharing the same lazy observations. [Individual runs and process peaks](results/v1-rank-popcnt-confirm/score/runs.jsonl)
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout f8061b3c6e13047a787bc2169277389ed7b1b897 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-pages/instructions/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-pages/instructions/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/popcnt-whole-target
 ```
 
 ## v1-refill-confirm
@@ -1342,6 +1406,25 @@ git checkout 6fb777541e3ce4613c34e14d8f5def7fbada8b4a -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/formulations/f2-rle/saturated/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-rle/saturated/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2-rle-build
+```
+
+## v1-rle-slices-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1-rle-slices-gate/score/check.jsonl) · [manifest](results/v1-rle-slices-gate/manifest.txt) · [score](results/v1-rle-slices-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`41685b52ceb5fece5a3a152023abf042a7ca4f92`](https://github.com/lmmx/mibz2/tree/41685b52ceb5fece5a3a152023abf042a7ca4f92). [Candidate entry](https://github.com/lmmx/mibz2/blob/41685b52ceb5fece5a3a152023abf042a7ca4f92/research/astra-e/formulations/f2-rle/slices/candidate.rs). Fetched master `f8061b3c6e13047a787bc2169277389ed7b1b897`, scorer path `604dac3` (v1 at 6a8a366cd786d58a528000b58da12fd2cfb47be8). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+Independent candidate CI and target evidence have not been recorded for this run in this register.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout f8061b3c6e13047a787bc2169277389ed7b1b897 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/formulations/f2-rle/slices/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-rle/slices/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2-slices-score
 ```
 
 ## v1-rootstream-gate
