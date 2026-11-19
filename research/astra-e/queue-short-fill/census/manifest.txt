@@ -1,0 +1,20 @@
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+326f9419eb2cfebfc9eae03ff3a4e195e62265aab581746589a7772687b78084  research/astra-e/queue-short-fill/census/main.rs
+30d2a8a2ac24e55689c762d5563b5f06482d9bcbaa247c98f599f93f0908c8dc  research/astra-e/queue-short-fill/census/build.py
+499de55eb46f29d5a89e7179829872a3e45ebc8ce006ec1623cf9cccf8fdc4ee  research/astra-e/queue-short-fill/census/property.rs
+b68eb104c1304c6457b2acca28a26d074b64deff7ebdede99e3cda62b45c5f3b  research/astra-e/queue-short-fill/census/report.py
+7c121f7223a6eefb020929de7bfc7e9cf7f895254efea9103d0bf0a8d63d3a6e  /workspace/work/astra-queue-census/observe
+d6ecc24c9e263a254694d6ab19c02714d0652076441cc2a66eef26c3c5b145f4  /workspace/work/astra-queue-census/libmibz2.rlib
+c6dac1ce883bd2f93afbb32c48c7aff026e63194e531f687fce728158f52f3d9  /workspace/work/astra-queue-census/property
+daa9f74bb1f063bcd253e9cb1acda737fe6dd5aed4c64972245a37a5428bf23e  /workspace/work/astra-queue-census/replay/blocks.csv
+99072165389b7127bf25d1b172c43815d0c4937aa2bea7fb45fd1e4d05907d7d  /workspace/work/astra-queue-census/replay/capacities.csv
+192c9d86c8fe7e2681b4fd3faea0ac1fd61535988b5cd74aed0929ca21b87bce  /workspace/work/astra-queue-census/replay/growth.csv
+223f839e3d8af3af4c1ba0c3e9d7725558357d3b072ba937c58f2f8344a73546  /workspace/work/astra-queue-census/replay/marks.csv
+71810d89383feb7c52f9ecbb8e0156f213c504857295341b7ce06a86357eb6b4  /workspace/work/astra-queue-census/replay/widths.csv

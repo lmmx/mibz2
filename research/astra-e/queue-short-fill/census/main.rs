@@ -16,9 +16,10 @@ fn file(dir:&std::path::Path,name:&str,header:&str)->Writer{
 }
 
 #[derive(Default)]
-struct PieceList { ends:Vec<u32>, ranks:Vec<u32>, freq:[u32;17], forced:u32 }
+struct PieceList { ends:Vec<u32>, ranks:Vec<u32>, freq:[u32;17], forced:u32, forced_at:Option<usize> }
 impl PieceList {
     fn add(&mut self,rank:u32,width:u32,forced:bool) {
+        if forced {assert!(self.forced_at.is_none());self.forced_at=Some(self.ends.len());}
         self.ranks.push(rank);
         self.ends.push(self.ends.last().copied().unwrap_or(0)+width);
         self.freq[width as usize]+=1;
@@ -35,11 +36,11 @@ impl Growth {
     }
 }
 fn growth_cap(old:usize,need:usize)->usize {4.max(2*old).max(need)}
-fn model(p:&PieceList,mut cap:usize,cut:usize,stats:&mut [Growth;17])->usize {
+fn model(p:&PieceList,limit:usize,mut cap:usize,cut:usize,stats:&mut [Growth;17])->usize {
     let mut scanned=0;
-    while scanned<p.ends.len(){
-        let i=scanned+p.ends[scanned..].partition_point(|&n|n as usize<=cap);
-        if i==p.ends.len(){break;}
+    while scanned<limit{
+        let i=scanned+p.ends[scanned..limit].partition_point(|&n|n as usize<=cap);
+        if i==limit{break;}
         let width=p.width(i) as usize;
         let len=p.ends[i] as usize-width;
         let end=len+width;
@@ -100,6 +101,7 @@ fn main(){
     let mut freq=file(dir,"widths.csv",&format!("block,stream,label,rows,forced_singleton,{histhead}"));
     let mut caps=file(dir,"capacities.csv","block,label,slots,range,upto8,allpush");
     let mut history=file(dir,"blocks.csv","block,stream,slots,cut,slot,label_capacity_rows,all_slot_capacity_rows");
+    let mut marks=file(dir,"marks.csv","block,stream,label,marked_width,marked_row,retained_source_rank,queue_len_before,slots,cut,capacity_before,capacity_after");
     let mut growth=file(dir,"growth.csv","slots,cut,width,growing_appends,first_allocations,reallocations,existing_u32_at_reallocation");
     let mut scan=Scanner::new(SliceSource(&input));let kernels=Kernels::detect();
     let mut worker=stock::Kernel::default();let mut refseg=Segmented::default();
@@ -116,7 +118,8 @@ fn main(){
         let stockc=worker.run::<true,true,false>(r.records(),n,p,16,&mut out);
         assert_eq!(out,want);
         let mut list:Vec<PieceList>=(0..256).map(|_|PieceList::default()).collect();
-        let long_mark=marked_width(r.records(),p)>16;
+        let marked=marked_width(r.records(),p);
+        let long_mark=marked>16;
         let mut m=0;
         stock::kept(r.records(),p,|a,x,w|{
             list[a as usize].add(m,w,x==p && long_mark);
@@ -138,7 +141,14 @@ fn main(){
                 for t in group.iter_mut(){
                     let old=t.caps[slot][a];
                     let mut g=[Growth::default();17];
-                    let new=model(pp,old,t.cut,&mut g);
+                    let new=model(pp,pp.ends.len(),old,t.cut,&mut g);
+                    if let Some(i)=pp.forced_at {
+                        let mut scratch=[Growth::default();17];
+                        let before=model(pp,i,old,t.cut,&mut scratch);
+                        let len=pp.ends[i] as usize-1;
+                        let after=if before==len {growth_cap(before,len+1)} else {before};
+                        writeln!(marks,"{index},{stream},{a},{marked},{p},{},{len},{w},{},{before},{after}",pp.ranks[i],t.cut).unwrap();
+                    }
                     for j in 1..=16 {
                         t.g[j].batches+=g[j].batches;t.g[j].first+=g[j].first;
                         t.g[j].realloc+=g[j].realloc;t.g[j].exposed+=g[j].exposed;

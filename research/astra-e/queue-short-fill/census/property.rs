@@ -30,6 +30,10 @@ fn main(){
                 let mut simulated=cap;
                 while simulated<end {simulated=grow(simulated,simulated+1);}
                 assert_eq!(pushes.0,simulated);assert_eq!(b,p);
+                let mut reserved=Vec::with_capacity(cap);reserved.resize(len,42u32);
+                reserved.reserve(width);assert_eq!(reserved.capacity(),bulk.0);
+                for i in 0..width {reserved.push(i as u32);}
+                assert_eq!(reserved.capacity(),bulk.0);assert_eq!(b,reserved);
                 if (cap==0 || cap>=4) && width<=4 {
                     assert_eq!((bulk.0,bulk.1),(pushes.0,pushes.1));
                     assert!(pushes.2>=bulk.2 && pushes.2-bulk.2<=width.saturating_sub(1));
@@ -38,7 +42,7 @@ fn main(){
             }
         }
     }
-    println!("{checked} (initial capacity, initialized length, append width) states checked against actual range extend and push");
+    println!("{checked} (initial capacity, initialized length, append width) states checked against actual range extend, repeated push, and one reserve followed by pushes");
     for (c,l,widths) in [(0,0,&[5][..]),(0,0,&[8]),(0,0,&[5,6,1]),(2,2,&[4]),(4,3,&[2])] {
         let mut b=Vec::with_capacity(c);let mut p=Vec::with_capacity(c);
         b.resize(l,42);p.resize(l,42);
