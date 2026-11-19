@@ -1,0 +1,6 @@
+wall_ns laps/compiled 1.03868 0.91283 1.18189
+wall_ns laps/opend 1.0376 0.87074 1.23644
+wall_ns compiled/opend 0.99896 0.87476 1.14079
+cpu_ns laps/compiled 0.94256 0.88585 1.00291
+cpu_ns laps/opend 1.03032 0.97172 1.09244
+cpu_ns compiled/opend 1.0931 1.02391 1.16696
