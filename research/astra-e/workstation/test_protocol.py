@@ -148,7 +148,7 @@ def check_gate(path, arm):
 def interface(tmp, target=None):
     calls = {}
 
-    def synthetic(scorer, arm, workers, corpus, perf=None):
+    def synthetic(arm, workers):
         key = (arm, workers)
         rnd = calls.get(key, 0)
         calls[key] = rnd + 1
@@ -172,11 +172,42 @@ def interface(tmp, target=None):
     assert required <= set(info["arms"]) and info["cpus"] > 0
     assert Path(info["candidate"]).resolve() == Path(os.environ["MOONSHOT_CANDIDATE"]).resolve()
     common = ["--target-dir", str(target), "--corpus", str(corpus)]
-    gate = {"verdict": "PASS", "cases": 1, "failed": [], "exit": 0}
+    # Rehearse the scorer's real command construction and JSON handling while
+    # intercepting decoder calls. The only real executable invoked here is Git
+    # for the scorer's revision reporting; binary info was obtained above.
+    real_run = subprocess.run
+    expected_bin = target / "release/moonshot"
+    gates = []
+
+    def fixture_run(command, *args, **kwargs):
+        if command[0] == "git":
+            return real_run(command, *args, **kwargs)
+        assert Path(command[0]).resolve() == expected_bin.resolve(), command
+        operation = command[1]
+        if operation == "info":
+            records = [info]
+        elif operation == "check":
+            arm = command[command.index("--arm") + 1]
+            assert command[command.index("--wikidata") + 1] == str(corpus)
+            assert arm == "candidate" and "--quick" not in command
+            gates.append(arm)
+            records = [
+                {"case": "wikidata fixture", "bytes": 209700196, "pass": True, "failure": None},
+                {"arm": arm, "verdict": "PASS", "failures": 0},
+            ]
+        elif operation == "run":
+            arm = command[command.index("--arm") + 1]
+            workers = int(command[command.index("--workers") + 1])
+            assert command[command.index("--file") + 1] == str(corpus)
+            assert "--repeat" not in command or command[command.index("--repeat") + 1] == "1"
+            records = [synthetic(arm, workers)]
+        else:
+            raise ValueError(f"unexpected scorer subprocess {command}")
+        return subprocess.CompletedProcess(command, 0, "\n".join(map(json.dumps, records)) + "\n", "")
+
     score_out, sweep_out = tmp / "gate", tmp / "rotor"
     with (
-        patch.object(moonshot.Scorer, "gate", return_value=gate),
-        patch.object(moonshot.Scorer, "run_once", synthetic),
+        patch.object(subprocess, "run", fixture_run),
         patch.object(moonshot.time, "sleep", lambda _: None),
         redirect_stdout(io.StringIO()),
         redirect_stderr(io.StringIO()),
@@ -216,7 +247,8 @@ def interface(tmp, target=None):
             == 0
         )
     summary = json.loads((score_out / "summary.json").read_text())
-    assert summary["gate"]["verdict"] == "PASS" and not calls.get(("candidate", 1))
+    assert gates == ["candidate"] and summary["gate"]["verdict"] == "PASS"
+    assert check_gate(score_out / "check.jsonl", "candidate") == 1
     assert "timing" not in summary and "proxy" not in summary
     rows = [json.loads(line) for line in (sweep_out / "runs.jsonl").read_text().splitlines()]
     assert [(r["round"], r["workers"], r["arm"]) for r in rows] == expected_roster()
@@ -292,7 +324,6 @@ if __name__ == "__main__":
             with (
                 patch.dict(os.environ, MOONSHOT_CANDIDATE=str(candidate)),
                 patch("subprocess.check_output", return_value=json.dumps(info)),
-                patch.object(moonshot.Scorer, "info", return_value=info),
             ):
                 assert interface(tmp)["rows"] == 256
             print(
