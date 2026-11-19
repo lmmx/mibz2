@@ -5,8 +5,8 @@ here=Path(__file__).resolve().parent
 repo=Path(subprocess.check_output(['git','-C',here,'rev-parse','--show-toplevel'],text=True).strip())
 out=Path(sys.argv[1]).resolve();out.mkdir(parents=True,exist_ok=True)
 rev='6a80e8a9';ref='3a1d3819';here0=here.parent.relative_to(repo)
-files=subprocess.check_output(['git','-C',repo,'ls-tree','-r','--name-only',rev,'research/astra-e'],text=True).splitlines()
-py=[f for f in files if f.endswith('.py')]
+files=subprocess.check_output(['git','-C',repo,'ls-tree','-r','--name-only',rev],text=True).splitlines()
+py=['Cargo.toml']+[f for f in files if f.endswith('.py')]
 archive=subprocess.check_output(['git','-C',repo,'archive',rev,'--',*py])
 with tarfile.open(fileobj=io.BytesIO(archive)) as t:t.extractall(out/'source',filter='data')
 sys.path.insert(0,str(out/'source'/here0));sys.dont_write_bytecode=True
