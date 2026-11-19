@@ -68,6 +68,7 @@ def receipts():
     receipt = dict(head=head, base=base, scorer=inputs.scorer_revision(),
                    inputs=["research/astra-e/ci/candidate"], generated={})
     selections = {
+        "research/astra-e/formulations/f2-pages/payload/slots/preload.rs": inputs.GUARDED_POPCNT,
         "research/astra-e/formulations/f2-pages/instructions/candidate.rs": inputs.COUNTED,
         "research/astra-e/edge-budget/candidate.rs": inputs.COMBINED,
         "research/astra-e/final-slot/candidate.rs": inputs.COMBINED,
@@ -85,7 +86,7 @@ def receipts():
         assert inputs.predecessor() is None
         assert inputs.reusable(receipt,base)
         assert not inputs.reusable(dict(receipt, predecessor=inputs.STATIC_FRONTIER),base)
-    print("Completed-input check rejected absent, changed, and extraneous predecessors. Edge-budget, final-slot and word actions matched combined-ahead; refill matched its static eight-path frontier; guarded POPCNT matched counted.")
+    print("Completed-input check rejected absent, changed, and extraneous predecessors. Edge-budget, final-slot and word actions matched combined-ahead; refill matched its static eight-path frontier; guarded POPCNT matched counted; compact preload matched guarded POPCNT.")
 
 
 if __name__ == "__main__":

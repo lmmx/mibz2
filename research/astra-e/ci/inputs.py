@@ -35,7 +35,12 @@ COUNTED = {
     "commit": "252646aec0dd1a80a6969b2e1598c73486006efd",
     "path": "research/astra-e/formulations/f2-front-counts/candidate.rs",
 }
+GUARDED_POPCNT = {
+    "commit": "3651470cb0ef5458e75cf97d3de363a1c73f2f76",
+    "path": "research/astra-e/formulations/f2-pages/instructions/candidate.rs",
+}
 PREDECESSORS = {
+    "research/astra-e/formulations/f2-pages/payload/slots/preload.rs": GUARDED_POPCNT,
     "research/astra-e/formulations/f2-pages/instructions/candidate.rs": COUNTED,
     "research/astra-e/edge-budget/candidate.rs": COMBINED,
     "research/astra-e/final-slot/candidate.rs": COMBINED,
