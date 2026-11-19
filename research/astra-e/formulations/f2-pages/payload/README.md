@@ -15,3 +15,16 @@ d=research/astra-e/formulations/f2-pages/payload
 bash "$d/run.sh" /tmp/astra-e-payload
 python3 "$d/report.py" /tmp/astra-e-payload/{first,repeat}.csv
 ```
+
+## Measurements
+
+Both payloads matched the independent original-row LF oracle including every row of the dense and capped adversaries. Every forced marked output agreed on all 11,264 accepted small marks per arm. Both whole inverse implementations also agreed with Segmented for every one of the 205,197,794 admitted real inverse bytes. The 228 blocks contained 14,427,155 proper runs. The start-based arrays used one extra sentinel per block. Under retained worker reuse the original twelve-byte run vector peaked at 1,572,864 B; both compact vectors peaked at 1,048,576 B. Other buffers and allocator or process overhead are additional.
+
+Two new three-arm, 60-lap processes priced ready-run inversion on the nine systematic blocks; all six arm orders occurred per block and the block order changed on every pass. The direct control was the guarded original population-count kernel from 3651470. Each phase and the complete inverse were timed. The observations and both clocks are in first.csv, repeat.csv and summary.csv.
+
+| Variant relative to twelve-byte control | CPU4 setup+mark | CPU2 setup+mark | CPU4 discovery | CPU2 discovery | CPU4 complete CPU | CPU2 complete CPU |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Start8 | 1.0293 | 1.0438 | 0.9211 [0.8736,0.9712] | 0.9293 [0.8977,0.9619] | 0.9750 [0.9371,1.0144] | 0.9686 [0.9433,0.9945] |
+| End8 | 1.2537 | 1.2521 | 0.8774 [0.8372,0.9196] | 0.8933 [0.8564,0.9318] | 0.9746 [0.9349,1.0159] | 0.9751 [0.9450,1.0062] |
+
+The endpoint lookup accelerated discovery beyond the start-based lookup. Its current construction buffers a pending run until the next distinct byte, adding about 25% to setup+mark on both pins. The compact start record has the stronger measured complete ratio on CPU2 and a smaller timed setup penalty on both. Separate direct full end8/start8 estimates included parity. Both variants are preserved at 112c5c17f952db8385af5d6962c5e0787cc2d0c2. The next constructor can avoid the pending-record state by reading each complete original run before emission.
