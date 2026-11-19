@@ -224,9 +224,10 @@
     7008210706,
     7008546954,
     7011926888,
-    7012815426
+    7012815426,
+    7013154415
   ],
-  "last_processed_comment_id": 7012815426,
+  "last_processed_comment_id": 7013154415,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -2745,13 +2746,16 @@
     },
     {
       "trigger_comment_id": 7013154415,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/open-port-2-parity-7013154415/report.md",
       "source_commit": "2eff6f7388927f9ccfde54283aded98b9cb71761",
       "report_commit": "93f4dc3f9f82dab04a8de00456b292610762fc34",
-      "disposition": "HOLD at 2eff6f73 for three small schedule changes. All ten parity fixes pass, but three cells miss the 0.80 floor at the locked cutoff and pass at the next grid point. S remains admissible."
+      "disposition": "HOLD at 2eff6f73 for three small schedule changes. All ten parity fixes pass, but three cells miss the 0.80 floor at the locked cutoff and pass at the next grid point. S remains admissible.",
+      "review_comment_id": 7013288271,
+      "review_pr": 145,
+      "publication_verification": "Verified exact body, lmmx author, #145 destination, single publication, and role-aware header and route. The pinned helper's coordinator-only sender check is inapplicable to the Researcher REVIEW."
     }
   ],
   "active_delegations": [],
