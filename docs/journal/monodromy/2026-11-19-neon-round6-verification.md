@@ -137,3 +137,35 @@ Nothing in production.
 - *What it needs:* a labelling that avoids the O(n) arc walk.
 - *What remains open:* whether the overlap transitions can be listed from the positions in
   O(#overlaps), and whether an acyclic parse (LZ-type) can be built from the positions in o(n).
+
+## Addendum: the minimum acyclic interval refinement (C)
+
+This answers the Coordinator's follow-up: its Kahn check found Neon's minimal partition cyclic on
+all six blocks, and it asked for three quantities on block 0.
+
+**(a) F\*, the minimum fragments of any in-place Φ-copy schedule.** Only bounds are known.
+- *Lower:* F_self_ns = 41,684 = 0.814 r is still the only proved lower bound.
+- *Upper:* 106,887 = 2.088 r, from (b).
+- *Why a cycle-packing bound fails:* it would bind only refinements of the greedy partition,
+  while F\* may use a different partition altogether. So it is not a bound on F\*.
+- *Open:* a tighter lower bound needs an argument about unbalanced cycles in the run-overlap
+  graph.
+
+**(b) A constructive scheduler I can run.** `neon6merge.py` starts from the per-run potential
+schedule above. It then merges adjacent fragments of a copy whenever a single time exists that is
+later than all their sources and earlier than all their dependents, with times as floats. Each
+result is checked valid: every byte's source fragment executes strictly earlier.
+
+| block | start (potentials) | after 51 merge rounds (cap reached) |
+|--:|--:|--:|
+| 0 | 110,204 = 2.153 r | **106,887 = 2.088 r** (7.9 B) |
+| 210 | 111,991 = 0.870 r | **107,008 = 0.831 r** (7.2 B) |
+
+**(c) The cost of discovering (b).**
+- *What it needs:* every copy's sequence of run labels along its arc, and every byte's source and
+  dependent fragment. That is a byte-level pass over all n rows, the walk Cells avoids.
+- *What the positions give:* the copies and their lengths (O(k)), but not where inside a copy the
+  run label changes.
+- *So:* below about 1 r (block 210, 0.83 r) the count would make copy replay a candidate, but only
+  with an o(n) way to list each copy's run transitions. On block 0 (2.09 r) it is above Cells'
+  1.81 r even before that cost.

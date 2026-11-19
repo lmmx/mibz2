@@ -1,0 +1,63 @@
+"""Round 6, item 2 refinement: start from the potential schedule's fragments, then merge adjacent
+fragments of a copy whenever one time v exists with every source fragment earlier and every
+dependent fragment later (times as floats; no byte may depend on another inside the merge)."""
+import sys
+exec(open('neon6.py').read().split('# parts 3 and 5')[0].replace("print(f'n={n}","_=(f'n={n}").replace("print(f'Neon","_=(f'Neon").replace("print(f'BFS","_=(f'BFS").replace("print(f'potential","_=(f'potential").replace("print(f'copy","_=(f'copy"))
+INF=float('inf')
+# fragments from tau: frag id per text position (literals: -1)
+fid=[-1]*n; ftau=[]; fpos=[]; fcopy=[]
+for ci,(s,e) in enumerate(copies):
+    cur=None
+    for j in range(s,e):
+        tv=tau[rowat[j]]
+        if cur is None or tv!=ftau[cur]:
+            cur=len(ftau); ftau.append(float(tv)); fpos.append([]); fcopy.append(ci)
+        fid[j]=cur; fpos[cur].append(j)
+src=[-1]*n; dep=[-1]*n
+for j in range(n):
+    x=rowat[j]
+    if not isH[x]: src[j]=t[x-1]
+    if x+1<n and not isH[x+1]: dep[j]=t[x+1]
+def bounds(ps,own):
+    lo=-INF; hi=INF
+    for j in ps:
+        s_=src[j]
+        if s_>=0 and fid[s_]>=0:
+            if fid[s_] in own: return None
+            lo=max(lo,ftau[fid[s_]])
+        d_=dep[j]
+        if d_>=0:
+            if fid[d_] in own: return None
+            hi=min(hi,ftau[fid[d_]])
+    return lo,hi
+alive=set(range(len(ftau))); F0=len(alive)
+# neighbours within a copy: next fragment id in text order
+nxt={}
+for s,e in copies:
+    prev=None
+    for j in range(s,e):
+        if fid[j]!=prev:
+            if prev is not None: nxt[prev]=fid[j]
+            prev=fid[j]
+rounds=0
+while True:
+    rounds+=1; merged=0
+    for f in sorted(alive):
+        if f not in alive or f not in nxt: continue
+        g=nxt[f]
+        b=bounds(fpos[f]+fpos[g],{f,g})
+        if b is None: continue
+        lo,hi=b
+        if lo<hi:
+            v=(lo+hi)/2 if lo>-INF and hi<INF else (lo+1 if lo>-INF else (hi-1 if hi<INF else 0.0))
+            ftau[f]=v; fpos[f]+=fpos[g]
+            for j in fpos[g]: fid[j]=f
+            alive.discard(g)
+            if g in nxt: nxt[f]=nxt[g]; del nxt[g]
+            else: del nxt[f]
+            merged+=1
+    if merged==0 or rounds>50: break
+# validity: every byte's source fragment strictly earlier
+ok=all(ftau[fid[src[j]]]<ftau[fid[j]] for j in range(n) if src[j]>=0 and fid[src[j]]>=0 and fid[j]>=0)
+F=len(alive)
+print(f'start {F0} ({F0/r:.3f}r) -> merged {F} ({F/r:.3f}r, mean {(n-r)/F:.2f} B) in {rounds} rounds; valid={ok}')
