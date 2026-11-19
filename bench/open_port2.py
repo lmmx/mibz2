@@ -10,27 +10,27 @@ the first attempt.
 
     open_port2.py judge BUNDLE --port PORT_COMMIT
     open_port2.py verify BUNDLE --port PORT_COMMIT   (before any timing: the builds and inputs)
-    open_port2.py schedule   (the extension's batches, one line each: THREADS ROUNDS CORPUS...)
+    open_port2.py schedule [--sustained]   (the extension's batches, THREADS ROUNDS CORPUS...; or S's rounds)
     open_port2.py guard TARGET --this RUN_DIR [--remote origin]   (the successor's one attempt)
 
 **What is the same as the first registration** (`open_port.py`'s own code, imported):
 - the builds, the machine, and the 18 inputs, checked against `bench/open-port-inputs.sha256`;
 - the decision run, `runs.jsonl`: the 15 corpora at 8, 10 and 20 threads, 12 paired rounds each;
 - P1, P2 and H, and every guard's peak RSS at most 1.10, all from those 12 rounds;
-- S, exactly as registered: `sustained.jsonl`, 8 rounds, failing on SLOWER or a geometric mean
-  above 1.02.
+- S's cell: 10 threads back to back on wikidata-x16 (`sustained.jsonl`), with no memory
+  condition, as registered.
 
-**What is new: the guards' wall-time rule, G2** (replacing G's point bound 1.02 and its per-cell
-SLOWER test):
-- *the cells:* the 13 guard corpora at the three counts, 39 cells;
+**What is new: the wall-time rule G2** (replacing G's point bound 1.02 and its per-cell SLOWER
+test, and S's same rule: the Coordinator's decision of 19 November moved S into G2's family):
+- *the cells:* the 13 guard corpora at the three counts, and S: 40 cells;
 - *the rounds:* each cell's own count, locked in `bench/open-port-2-schedule.json`. That is the
   decision run's 12, and the rest in the extension, one `ab run` a batch
-  (`guards-t{threads}-r{rounds}.jsonl`);
+  (`guards-t{threads}-r{rounds}.jsonl`); S's, in `sustained.jsonl` (one back-to-back run);
 - *the estimand:* G's. The mean of the cell's paired log ratios, the port's wall over v0.5.6's,
   over all its rounds; its exponential is the geometric mean;
 - *the rule:* a cell fails if that mean exceeds its critical value c, locked in the schedule. c
   was set before any data by simulation from the first attempt's noise. It is the largest of the
-  (1 - 0.05/39) quantiles of the mean, with no effect, under three models: the cell's own
+  (1 - 0.048/40) quantiles of the mean, with no effect, under three models: the cell's own
   residuals, its corpus's, and all the guards'. The rounds give power 0.80 at a true +2% slowdown.
   The calibration is model-based, not exact; the registration states its assumptions.
 
@@ -38,7 +38,7 @@ SLOWER test):
 a corpus's output size and digest differ between any two files, or a build's arm differs between
 any two files.
 
-**ADOPTS** only where P1, P2, H, S, every guard's memory and G2 hold. Otherwise **NOT ADOPTED**,
+**ADOPTS** only where P1, P2, H, every guard's memory and G2 (the 40 cells, S among them) hold. Otherwise **NOT ADOPTED**,
 every failing condition named. One attempt (`guard`), archived as `open-port-2/run-*.tar.gz`.
 Standard library only.
 """
@@ -61,16 +61,18 @@ SCHEDULE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "open-port-2
 PREFIX = "open-port-2"
 
 
+S = (op.SUSTAINED, 10)
+
+
 def schedule(path=SCHEDULE):
-    """{(corpus, threads): (rounds, c)}, the locked plan: every guard cell once"""
+    """{(corpus, threads): (rounds, c)}, the locked plan: every guard cell and S once"""
     cells = {}
     for e in json.load(open(path))["cells"]:
         k = (e["corpus"], e["threads"])
-        assert (
-            k not in cells and e["rounds"] >= op.ROUNDS and 0 < e["c"] < math.log(op.GUARD_MAX)
-        ), e
+        least = op.SUSTAINED_ROUNDS if k == S else op.ROUNDS
+        assert k not in cells and e["rounds"] >= least and 0 < e["c"] < math.log(op.GUARD_MAX), e
         cells[k] = (e["rounds"], e["c"])
-    assert sorted(cells) == sorted((c, t) for c in GUARDS for t in op.COUNTS), sorted(cells)
+    assert sorted(cells) == sorted([(c, t) for c in GUARDS for t in op.COUNTS] + [S]), sorted(cells)
     return cells
 
 
@@ -81,7 +83,7 @@ def batches(plan=PLAN):
     """[(threads, extra rounds, [corpora])]: the extension, one `ab run` each, in a fixed order"""
     groups = {}
     for (c, t), (n, _) in plan.items():
-        if n > op.ROUNDS:
+        if (c, t) != S and n > op.ROUNDS:
             groups.setdefault((t, n - op.ROUNDS), []).append(c)
     return [(t, x, [c for c in GUARDS if c in cs]) for (t, x), cs in sorted(groups.items())]
 
@@ -135,7 +137,7 @@ def judge(a):
     op.identities(a.bundle, a.port, errors)
     rows = op.load(os.path.join(a.bundle, "runs.jsonl"), corpora, counts, op.ROUNDS, errors)
     srows = op.load(
-        os.path.join(a.bundle, "sustained.jsonl"), [op.SUSTAINED], [10], op.SUSTAINED_ROUNDS, errors
+        os.path.join(a.bundle, "sustained.jsonl"), [op.SUSTAINED], [10], PLAN[S][0], errors
     )
     files = [("runs.jsonl", rows), ("sustained.jsonl", srows)]
     ext = {}
@@ -152,11 +154,11 @@ def judge(a):
     if stray:
         errors.append(f"files outside the schedule: {stray}")
     joins(files, errors)
-    want = sum(2 * (n - op.ROUNDS) for n, _ in PLAN.values())
+    want = sum(2 * (n - op.ROUNDS) for k, (n, _) in PLAN.items() if k != S)
     got = sum(len(b) for n, b in files if n.startswith("guards-"))
     print(
         f"records {len(rows)} of {len(corpora) * len(counts) * 2 * op.ROUNDS} (decision), "
-        f"{len(srows)} of {2 * op.SUSTAINED_ROUNDS} (sustained), {got} of {want} (the guards' "
+        f"{len(srows)} of {2 * PLAN[S][0]} (sustained), {got} of {want} (the guards' "
         f"extension, {len(batches())} batches)" + (f"; the machine: {model}" if model else "")
     )
     if errors:
@@ -233,15 +235,15 @@ def judge(a):
                 fails.append(
                     f"G2: {c} at {t} threads, mean log ratio {m:+.5f} (x{g:.4f}) above c {crit:.4f}"
                 )
-    g, lo, hi, p, mem = op.cell(srows, op.SUSTAINED, 10, op.SUSTAINED_ROUNDS)
+    n, crit = PLAN[S]
+    m, g, lo, hi = summary(ratios(srows, op.SUSTAINED, 10, n))
     print(
-        f"\nS, sustained (as registered): 10 threads back to back on {op.SUSTAINED}, "
-        f"{op.SUSTAINED_ROUNDS} rounds: {g:.4f} [{lo:.4f}, {hi:.4f}] {op.label(lo, hi)}; memory {mem:.3f}"
+        f"\nS (G2's 40th cell): 10 threads back to back on {op.SUSTAINED}, {n} rounds: "
+        f"{g:.4f} [{lo:.4f}, {hi:.4f}]; mean log ratio {m:+.5f} against c {crit:.4f} "
+        f"(x{math.exp(crit):.4f})" + (" FAILS" if m > crit else "")
     )
-    if lo > 1:
-        fails.append(f"S: sustained SLOWER, {g:.4f} [{lo:.4f}, {hi:.4f}]")
-    elif g > op.GUARD_MAX:
-        fails.append(f"S: sustained {g:.4f}, above the bound {op.GUARD_MAX}")
+    if m > crit:
+        fails.append(f"G2: sustained, mean log ratio {m:+.5f} (x{g:.4f}) above c {crit:.4f}")
     if fails:
         print(f"\nVERDICT: NOT ADOPTED. {len(fails)} conditions fail:")
         for f in fails:
@@ -250,8 +252,7 @@ def judge(a):
         print(
             "\nVERDICT: ADOPTS. A wall gain on Wikidata at every count (Holm), peak RSS not above "
             "v0.5.6's, the gain replicated on held-out Wikidata, every guard's memory within 1.10, "
-            "every guard cell's mean within its critical value (G2), and the sustained cell within "
-            "its bound."
+            "and every guard cell's and the sustained cell's mean within its critical value (G2)."
         )
     return 0
 
@@ -262,6 +263,9 @@ def verify(a):
 
 
 def print_schedule(a):
+    if a.sustained:
+        print(PLAN[S][0])
+        return 0
     for t, extra, cs in batches():
         print(t, extra, *cs)
     return 0
@@ -318,7 +322,8 @@ def main(argv):
         j = sub.add_parser(name)
         j.add_argument("bundle")
         j.add_argument("--port", required=True)
-    sub.add_parser("schedule")
+    sc = sub.add_parser("schedule")
+    sc.add_argument("--sustained", action="store_true", help="S's rounds, not the guards' batches")
     g = sub.add_parser("guard")
     g.add_argument("target")
     g.add_argument("--this")

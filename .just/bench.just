@@ -2376,11 +2376,11 @@ bench-open-port PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUND
 # The open port's successor confirmatory run (docs/journal/2026-11-19-open-port-2-registration.md;
 # #145 QUEUED 7011091171): a new experiment, not a retry of bench-open-port, whose one attempt
 # (open-port/run-20261119T125538Z) was NOT ADOPTED and stands. The same builds, machine, 18 inputs
-# and decision run as bench-open-port, and its sustained cell as registered; then the guards'
-# extension for G2, each guard cell's rounds as bench/open-port-2-schedule.json locks them.
+# and decision run as bench-open-port; its sustained cell, and then the guards' extension, each
+# cell's rounds as bench/open-port-2-schedule.json locks them (G2's 40 cells).
 # `bench/open_port2.py judge` gives the verdict. Its own one attempt, archived as open-port-2/run-*.
 # DRY (any value): the untimed preflight, as bench-open-port's.
-bench-open-port-2 PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="8" CROUNDS="8" DRY="":
+bench-open-port-2 PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROUNDS="12" SETTLE="2" CROUNDS="8" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/open-port-2
@@ -2388,7 +2388,7 @@ bench-open-port-2 PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROU
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-open-port-2 (docs/journal/2026-11-19-open-port-2-registration.md): the port at {{PORT}} against v0.5.6, at $(git rev-parse HEAD), unpinned at 8, 10 and 20 threads, {{ROUNDS}} rounds, settle {{SETTLE}} s; sustained {{SROUNDS}} rounds; the guards' extension as bench/open-port-2-schedule.json locks it; context {{CROUNDS}} rounds"
+    echo "bench-open-port-2 (docs/journal/2026-11-19-open-port-2-registration.md): the port at {{PORT}} against v0.5.6, at $(git rev-parse HEAD), unpinned at 8, 10 and 20 threads, {{ROUNDS}} rounds, settle {{SETTLE}} s; the sustained cell and the guards' extension as bench/open-port-2-schedule.json locks it; context {{CROUNDS}} rounds"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-open-port-2: the checkout has local changes"; exit 1; }
@@ -2496,8 +2496,8 @@ bench-open-port-2 PORT="9743bbe0d51ba451b8b8ab9e6fd731c238940052" COPIES="4" ROU
     done
     # sustained: 10 threads, back to back (no settle), Wikidata x16
     echo "sustained at 10 threads: the port against v0.5.6, back to back"
-    "$HAB" run "$O/sustained.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads 10 --rounds {{SROUNDS}} \
-      --settle 0 --unpinned "$C/wikidata-x16.bz2"
+    "$HAB" run "$O/sustained.jsonl" --arms "mibz2@$AB,mibz2@$OLDAB" --threads 10 \
+      --rounds "$(python3 bench/open_port2.py schedule --sustained)" --settle 0 --unpinned "$C/wikidata-x16.bz2"
     # the guards' extension (G2): each batch of bench/open-port-2-schedule.json, one `ab run`, the
     # rounds each guard cell needs beyond the decision run's 12
     python3 bench/open_port2.py schedule > "$O/schedule.txt"

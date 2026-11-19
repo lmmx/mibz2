@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Checks of bench/open_port2.py, the open port's successor verdict, on made-up bundles: the
-decision run, the sustained cell as registered, and every batch of the locked schedule; G2 (each
+decision run, the sustained cell at its locked rounds, and every batch of the locked schedule; G2 (each
 guard cell's mean log ratio against its locked critical value) catching a real slowdown, passing
 symmetric spikes, and failing the Researcher's counterexample (REVIEW 7012181194); each VOID,
 across files too; and the successor's own one attempt"""
@@ -40,15 +40,31 @@ def write(path, rows):
     path.write_text("".join(json.dumps(r) + "\n" for r in rows))
 
 
-def build2(gstep=None, vectors=None, spikes=None, drop=(), stray=False, bedit=None, **kw):
+def build2(
+    gstep=None,
+    vectors=None,
+    spikes=None,
+    drop=(),
+    stray=False,
+    bedit=None,
+    sustained=0.97,
+    sus_n=None,
+    **kw,
+):
     """The first registration's decision and sustained bundle (test_open_port.build), and every
     batch of the locked schedule. `gstep` maps (corpus, t) to the port's true wall ratio on that
     guard (decision rounds too); `vectors` maps (corpus, t) to the extension's exact log ratios;
-    `spikes` maps (corpus, t) to pairs of symmetric spikes; `bedit` edits extension records."""
+    `spikes` maps (corpus, t) to pairs of symmetric spikes; `bedit` edits extension records;
+    `sustained` is S's true wall ratio, over `sus_n` rounds (S's locked rounds by default)."""
     gstep, vectors, spikes = gstep or {}, vectors or {}, spikes or {}
     step = dict(kw.pop("step", {}) or {})
     step.update(gstep)
     d = t1.build(step=step, **kw)
+    srows = []
+    for i, x in enumerate(noise(99, sus_n or o2.PLAN[o2.S][0], scale=0.005)):
+        srows.append(t1.rec(op.SUSTAINED, 10, t1.REF, i, 1.6, 120000))
+        srows.append(t1.rec(op.SUSTAINED, 10, t1.PORT, i, 1.6 * sustained * math.exp(x), 84000))
+    write(d / "sustained.jsonl", srows)
     seed = 0
     for t, extra, cs in o2.batches():
         rows = []
@@ -178,7 +194,7 @@ def guard_checks():
 def main():
     res = []
     plan = o2.PLAN
-    ext = sum(2 * (n - op.ROUNDS) for n, _ in plan.values())
+    ext = sum(2 * (n - op.ROUNDS) for k, (n, _) in plan.items() if k != o2.S)
     res.append(
         expect(
             "the port as hoped, guards with no effect: ADOPTS",
@@ -187,7 +203,7 @@ def main():
             [
                 "VERDICT: ADOPTS",
                 "1080 of 1080 (decision)",
-                "16 of 16 (sustained)",
+                f"{2 * o2.PLAN[o2.S][0]} of {2 * o2.PLAN[o2.S][0]} (sustained)",
                 f"{ext} of {ext}",
             ],
             absent=["VOID", "FAILS"],
@@ -239,10 +255,10 @@ def main():
     # S, exactly as registered
     res.append(
         expect(
-            "the sustained cell 3% slower: S fails, as registered",
-            build2(sustained=1.03),
+            "the sustained cell truly 2% slower: G2 fails it (S, its 40th cell)",
+            build2(sustained=1.02),
             0,
-            ["S: sustained", "NOT ADOPTED"],
+            ["G2: sustained", "NOT ADOPTED"],
         )
     )
     # the decision conditions, as registered
@@ -321,31 +337,33 @@ def main():
         ("an input off the manifest", build2(digests={"text.bz2": "5a" * 32}), "not the frozen"),
     ]:
         res.append(expect(f"{name}: VOID", d, 1, ["VOID", phrase], absent=["VERDICT"]))
-    d = build2()
-    lines = (d / "sustained.jsonl").read_text().splitlines()
-    (d / "sustained.jsonl").write_text(
-        "\n".join(lines + [lines[0].replace('"round": 0', '"round": 8')]) + "\n"
-    )
-    res.append(
-        expect(
-            "the sustained cell with a ninth round: VOID (8, as registered)",
-            d,
-            1,
-            ["VOID", "not a record of the roster"],
-        )
-    )
+    nS = o2.PLAN[o2.S][0]
+    for name, d, phrase in [
+        (
+            f"the sustained cell with a round past its {nS}",
+            build2(sus_n=nS + 1),
+            "not a record of the roster",
+        ),
+        (
+            "the sustained cell at the first registration's 8 rounds",
+            build2(sus_n=8),
+            "records missing",
+        ),
+    ]:
+        res.append(expect(f"{name}: VOID", d, 1, ["VOID", phrase], absent=["VERDICT"]))
     d = build2()
     (d / "DRY-RUN.txt").write_text("dry\n")
     res.append(expect("a dry run: VOID", d, 1, ["VOID", "a dry run"], absent=["VERDICT"]))
     # the locked schedule
     ok = (
-        len(plan) == 39
+        len(plan) == 40
+        and o2.S in plan
         and all(op.ROUNDS <= n and 0 < c < math.log(op.GUARD_MAX) for n, c in plan.values())
         and sorted(c for t, x, cs in o2.batches() for c in cs)
-        == sorted(c for (c, t), (n, _) in plan.items() if n > op.ROUNDS)
+        == sorted(c for (c, t), (n, _) in plan.items() if (c, t) != o2.S and n > op.ROUNDS)
     )
     print(
-        f"{'ok  ' if ok else 'FAIL'} the schedule: 39 guard cells once, rounds at least 12, every c below ln 1.02, every extension in one batch"
+        f"{'ok  ' if ok else 'FAIL'} the schedule: 39 guard cells and S once, rounds at least 12, every c below ln 1.02, every extension in one batch"
     )
     res.append(ok)
     res.extend(guard_checks())

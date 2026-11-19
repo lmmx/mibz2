@@ -8,7 +8,7 @@ and the Coordinator's decisions QUEUED 7012199074.
 
 G2, the scorer's own rule: a guard cell fails if the mean of its n rounds' paired log ratios (the
 port's wall over v0.5.6's; its exponential is the geometric mean, G's estimand) exceeds a critical
-value c fixed here, before the data. c is the largest of the (1 - 0.05/39) quantiles of that mean
+value c fixed here, before the data. c is the largest of the (1 - 0.048/40) quantiles of that mean
 under no effect in three noise models, each resampled n times with replacement: the cell's own 12
 residuals (centred on its mean), its corpus's pooled 36, and all 468 guard residuals (which carry
 the first attempt's spike rate). The rounds n are the smallest on the grid giving power 0.80 at a
@@ -48,10 +48,16 @@ def cells_of(path):
 cells = cells_of(f"{RUN}/runs.jsonl")
 sus = cells_of(f"{RUN}/sustained.jsonl")[("wikidata-x16", 10)]
 G = sorted(k for k in cells if k[0] not in ("wikidata-x4", "ho-wikidata-l9"))
-A = 0.05 / len(G)
 own = {k: cells[k] - cells[k].mean() for k in G}
 pooled = {c: np.concatenate([own[k] for k in G if k[0] == c]) for c in {k[0] for k in G}}
 allres = np.concatenate([own[k] for k in G])
+# S joins G2's family (the Coordinator's decision, 19 November): its own residuals; its "corpus" is
+# itself; and the all-guard pool, as for every guard
+S = ("wikidata-x16", 10)
+own[S] = sus - sus.mean()
+pooled[S[0]] = own[S]
+CELLS = G + [S]
+A = 0.048 / len(CELLS)
 rng = np.random.default_rng(20261119)
 
 
@@ -82,7 +88,7 @@ def g_rule(res, n, d, reps=100_000):
 
 
 plan, nulls = [], {"own": [], "pooled": [], "spiky": [], "all": []}
-for k in G:
+for k in CELLS:
     for n in GRID:
         mo, mp, ma = means(own[k], n), means(pooled[k[0]], n), means(allres, n)
         c = float(max(np.quantile(mo, 1 - A), np.quantile(mp, 1 - A), np.quantile(ma, 1 - A)))
@@ -97,7 +103,7 @@ for k in G:
         "sd": float(own[k].std(ddof=1)),
         "g2": [float((mo + d > c).mean()) for d in (L1, L2, L3)],
         "g2_pooled_2": float((mp + L2 > c).mean()),
-        "g": [g_rule(own[k], 12, d) for d in (L1, L2, L3)],
+        "g": [g_rule(own[k], 8 if k == S else 12, d) for d in (L1, L2, L3)],
         "size": {
             "own": float((mo > c).mean()),
             "pooled": float((mp > c).mean()),
@@ -118,11 +124,13 @@ sres = sus - sus.mean()
 s = {"null": g_rule(sres, 8, 0.0, 400_000), "+2%": g_rule(sres, 8, L2, 400_000)}
 fam = {m: 1 - float(np.prod([1 - v for v in nulls[m]])) for m in nulls}
 print(
-    f"G2 family (39 cells) P(any fails), no effect: own {fam['own']:.4f}, pooled {fam['pooled']:.4f}, all-guard {fam['all']:.4f}, spiky (2% spikes) {fam['spiky']:.4f}"
+    f"G2 family ({len(CELLS)} cells) P(any fails), no effect: own {fam['own']:.4f}, pooled {fam['pooled']:.4f}, all-guard {fam['all']:.4f}, spiky (2% spikes) {fam['spiky']:.4f}"
 )
 print(f"S as registered (8 rounds): P(fails), no effect {s['null']:.3f}; at +2% {s['+2%']:.3f}")
-ext = sum(r["rounds"] - 12 for r in plan)
-print(f"extension pairs {ext}; at 2.1 s a decode, {ext * 2 * 2.1 / 3600:.2f} h")
+ext = sum(r["rounds"] - 12 for r in plan if (r["corpus"], r["threads"]) != S)
+sn = next(r["rounds"] for r in plan if (r["corpus"], r["threads"]) == S)
+print(f"guard extension pairs {ext}: at 2.1 s a decode, {ext * 2 * 2.1 / 3600:.2f} h")
+print(f"S: {sn} rounds back to back, about {sn * 2 * 1.2 / 60:.0f} min")
 json.dump(
     {"alpha": A, "cells": plan, "family": fam, "S": s, "extension_pairs": ext},
     open(OUT, "w"),

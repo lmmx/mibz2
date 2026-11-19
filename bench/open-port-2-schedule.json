@@ -1,165 +1,165 @@
 {
- "rule": "G2: a guard cell fails if the mean of its rounds' paired log ratios (the port over v0.5.6) exceeds c",
- "alpha_per_cell": 0.001282051282051282,
+ "rule": "G2: a cell fails if the mean of its rounds' paired log ratios (the port over v0.5.6) exceeds c",
+ "alpha_per_cell": 0.0012000000000000001,
  "source": "docs/journal/2026-11-19-open-port-2-registration/plan.py on open-port/run-20261119T125538Z (planning noise only)",
  "cells": [
   {
    "corpus": "ho-code-l1",
    "threads": 8,
    "rounds": 288,
-   "c": 0.0155
+   "c": 0.0156
   },
   {
    "corpus": "ho-code-l1",
    "threads": 10,
    "rounds": 336,
-   "c": 0.0148
+   "c": 0.015
   },
   {
    "corpus": "ho-code-l1",
    "threads": 20,
    "rounds": 336,
-   "c": 0.0147
+   "c": 0.0148
   },
   {
    "corpus": "ho-code-l9",
    "threads": 8,
    "rounds": 168,
-   "c": 0.0164
+   "c": 0.0165
   },
   {
    "corpus": "ho-code-l9",
    "threads": 10,
    "rounds": 600,
-   "c": 0.0145
+   "c": 0.0146
   },
   {
    "corpus": "ho-code-l9",
    "threads": 20,
    "rounds": 192,
-   "c": 0.0156
+   "c": 0.0157
   },
   {
    "corpus": "ho-prose-l1",
    "threads": 8,
-   "rounds": 120,
-   "c": 0.0162
+   "rounds": 144,
+   "c": 0.015
   },
   {
    "corpus": "ho-prose-l1",
    "threads": 10,
    "rounds": 240,
-   "c": 0.0144
+   "c": 0.0145
   },
   {
    "corpus": "ho-prose-l1",
    "threads": 20,
-   "rounds": 120,
-   "c": 0.0159
+   "rounds": 144,
+   "c": 0.0148
   },
   {
    "corpus": "ho-prose-l9",
    "threads": 8,
    "rounds": 96,
-   "c": 0.0149
+   "c": 0.0151
   },
   {
    "corpus": "ho-prose-l9",
-   "threads": 10,
-   "rounds": 72,
-   "c": 0.0173
-  },
-  {
-   "corpus": "ho-prose-l9",
-   "threads": 20,
-   "rounds": 72,
-   "c": 0.0171
-  },
-  {
-   "corpus": "ho-structured-l1",
-   "threads": 8,
-   "rounds": 96,
-   "c": 0.0149
-  },
-  {
-   "corpus": "ho-structured-l1",
-   "threads": 10,
-   "rounds": 96,
-   "c": 0.0155
-  },
-  {
-   "corpus": "ho-structured-l1",
-   "threads": 20,
-   "rounds": 96,
-   "c": 0.015
-  },
-  {
-   "corpus": "ho-structured-l9",
-   "threads": 8,
-   "rounds": 96,
-   "c": 0.0149
-  },
-  {
-   "corpus": "ho-structured-l9",
-   "threads": 10,
-   "rounds": 96,
-   "c": 0.0147
-  },
-  {
-   "corpus": "ho-structured-l9",
-   "threads": 20,
-   "rounds": 72,
-   "c": 0.0171
-  },
-  {
-   "corpus": "ho-wikidata-l1",
-   "threads": 8,
-   "rounds": 72,
-   "c": 0.0174
-  },
-  {
-   "corpus": "ho-wikidata-l1",
    "threads": 10,
    "rounds": 72,
    "c": 0.0175
   },
   {
+   "corpus": "ho-prose-l9",
+   "threads": 20,
+   "rounds": 72,
+   "c": 0.0174
+  },
+  {
+   "corpus": "ho-structured-l1",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0151
+  },
+  {
+   "corpus": "ho-structured-l1",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0157
+  },
+  {
+   "corpus": "ho-structured-l1",
+   "threads": 20,
+   "rounds": 96,
+   "c": 0.0146
+  },
+  {
+   "corpus": "ho-structured-l9",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0151
+  },
+  {
+   "corpus": "ho-structured-l9",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0151
+  },
+  {
+   "corpus": "ho-structured-l9",
+   "threads": 20,
+   "rounds": 72,
+   "c": 0.0175
+  },
+  {
+   "corpus": "ho-wikidata-l1",
+   "threads": 8,
+   "rounds": 72,
+   "c": 0.0172
+  },
+  {
+   "corpus": "ho-wikidata-l1",
+   "threads": 10,
+   "rounds": 72,
+   "c": 0.0172
+  },
+  {
    "corpus": "ho-wikidata-l1",
    "threads": 20,
    "rounds": 96,
-   "c": 0.0146
+   "c": 0.0151
   },
   {
    "corpus": "onebyte",
    "threads": 8,
    "rounds": 96,
-   "c": 0.0148
+   "c": 0.0151
   },
   {
    "corpus": "onebyte",
-   "threads": 10,
-   "rounds": 96,
-   "c": 0.0146
-  },
-  {
-   "corpus": "onebyte",
-   "threads": 20,
-   "rounds": 72,
-   "c": 0.0171
-  },
-  {
-   "corpus": "pattern",
-   "threads": 8,
-   "rounds": 96,
-   "c": 0.0146
-  },
-  {
-   "corpus": "pattern",
    "threads": 10,
    "rounds": 96,
    "c": 0.0147
   },
   {
+   "corpus": "onebyte",
+   "threads": 20,
+   "rounds": 72,
+   "c": 0.0175
+  },
+  {
+   "corpus": "pattern",
+   "threads": 8,
+   "rounds": 96,
+   "c": 0.0148
+  },
+  {
+   "corpus": "pattern",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0149
+  },
+  {
    "corpus": "pattern",
    "threads": 20,
    "rounds": 96,
@@ -169,37 +169,37 @@
    "corpus": "random",
    "threads": 8,
    "rounds": 72,
-   "c": 0.0173
+   "c": 0.0172
   },
   {
    "corpus": "random",
    "threads": 10,
    "rounds": 96,
-   "c": 0.0149
+   "c": 0.015
   },
   {
    "corpus": "random",
    "threads": 20,
    "rounds": 72,
-   "c": 0.0173
+   "c": 0.017
   },
   {
    "corpus": "records",
    "threads": 8,
    "rounds": 72,
-   "c": 0.0173
+   "c": 0.0172
   },
   {
    "corpus": "records",
    "threads": 10,
    "rounds": 72,
-   "c": 0.017
+   "c": 0.0169
   },
   {
    "corpus": "records",
    "threads": 20,
    "rounds": 72,
-   "c": 0.0171
+   "c": 0.0173
   },
   {
    "corpus": "runs",
@@ -211,19 +211,19 @@
    "corpus": "runs",
    "threads": 10,
    "rounds": 168,
-   "c": 0.0161
+   "c": 0.0162
   },
   {
    "corpus": "runs",
    "threads": 20,
    "rounds": 288,
-   "c": 0.0151
+   "c": 0.0153
   },
   {
    "corpus": "text",
    "threads": 8,
    "rounds": 96,
-   "c": 0.0147
+   "c": 0.0148
   },
   {
    "corpus": "text",
@@ -235,7 +235,13 @@
    "corpus": "text",
    "threads": 20,
    "rounds": 72,
-   "c": 0.0173
+   "c": 0.0172
+  },
+  {
+   "corpus": "wikidata-x16",
+   "threads": 10,
+   "rounds": 96,
+   "c": 0.0149
   }
  ]
 }
