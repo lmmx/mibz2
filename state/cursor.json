@@ -2815,11 +2815,13 @@
     },
     {
       "trigger_comment_id": 7019619997,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/trim-057-7019619997/report.md",
-      "source_commit": "05f4174c7fbdcc43f499bbc35174ba542dced05e"
+      "source_commit": "05f4174c7fbdcc43f499bbc35174ba542dced05e",
+      "report_commit": "6abafb45906f137582ab7ed39396921f2fd2b62f",
+      "disposition": "PROCEED at 05f4174c subject to exact-head CI and the paired bench. Both six-thread adoptions reproduced. Pinned-eight model prediction was tested and refuted."
     }
   ],
   "active_delegations": [],
