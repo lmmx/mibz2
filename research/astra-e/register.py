@@ -149,6 +149,7 @@ def describe(e):
         "narrow-short/ahead.rs": "[Independent W1/2/4 CI](ci/evidence/combined-ahead-44429350230.md) · [Independent W7–10 i9 result](workstation/combined-i9.md)",
         "edge-budget/candidate.rs": "[Independent W1/2/4 CI](ci/evidence/edge-budget-44431030145.md) · [Independent W7–10 i9 result](workstation/edge-i9.md)",
         "formulations/f2-pages/instructions/candidate.rs": "[Independent W1/2/4 POPCNT result](ci/evidence/guarded-popcnt-44436826833.md)",
+        "front-fusion/precount/worker/candidate.rs": "[Independent W1/2/4 fused-front result](ci/evidence/front-fusion-44445335323.md)",
         "formulations/f2-pages/payload/slots/preload.rs": "[Independent W1/2/4 compact-preload result](ci/evidence/compact-preload-44440381983.md)",
         "formulations/f2-scheduler/candidate.rs": "[Independent W1/2/4 scheduler result](ci/evidence/delimiter-refill-44433942216.md)",
         "formulations/f2-rle/combined/candidate.rs": "[Independent W1/2/4 word-action result](ci/evidence/combined-word-actions-44436152031.md)",

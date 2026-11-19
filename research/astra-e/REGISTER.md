@@ -24,6 +24,8 @@ The reference is 0.5.6 LazyCells in the same shipped worker loop and 4W slots. T
 
 **Local v1 speed and memory.** For the nine-round W1/W4 comparison, the combined candidate recorded 0.648 [0.501,0.838] at W1 and 0.888 [0.644,1.226] at W4. Its bounded-admission derivative, source `badb2aec3624bd65606c429b2e6f79e9d9d0050f`, has the leading W4 wall and memory observations among those first three confirmations. W4 took 0.743 [0.621,0.888] versus LazyCells and 0.954 [0.851,1.070] versus opend; median peak RSS was 0.732 of LazyCells. W1 took 0.970 [0.668,1.408] versus LazyCells. These arms ran in separate, host-load-sensitive epochs against their own controls. The independent five-arm CI includes a directly paired combined predecessor. [Bounded admission score and reproduction](results/v1-edge-confirm/manifest.txt) · [Comparisons against opend](results/v1-edge-confirm/vs-opend.json) · [Combined v1 score](results/v1-combined-confirm/score/summary.txt)
 
+**Later local and independent comparisons.** A seventh nine-round confirmation on `75297a1` gave the precounted front the lowest local W1 point (0.808 [0.570,1.145]); final-slot retains W4 at 0.767 [0.517,1.139]. The direct 300-sample AMD CI for the precounted front against the actual `80d8409` precursor returned 1.0110/1.0212/1.0122 at W1/W2/W4, with the W2 interval [1.0084,1.0342]. The combined front/edge variant reduced retained front capacity by 745,884 bytes per sequential worker, while its weighted W1 native stage ratio to edge was 1.038 [0.977,1.104]. A separate cap certificate accelerated the five dense gate checks 13.4×; those checks together occupied a median 0.205% of whole-corpus serial worker CPU. These results preserve space and phase gains without promoting a new target speed leader. [Local score](results/v1p2-front-confirm/) · [Independent complete-worker CI](ci/evidence/front-fusion-44445335323.md) · [Five dense routes and memory](front-fusion/edge/) · [Gate certificate](front-fusion/edge/certificate/)
+
 **Previously preserved leaders.** The v0 settled short-word result at W4 was 0.766 [0.610,0.962] versus LazyCells; it regressed against opend at W3 and its W4 advantage did not repeat on the v1 grid. Single lookahead remains a simpler independent milestone with an i9 request. A conjugate-rank constructor has a distinct space advantage (W4 peak RSS about 0.849 of Lazy on two CI hosts) and divergent CPU results across those hosts. The register retains build references, input hashes, and separate instructions, traffic and dependency quantities below. [Short words](results/short-words-confirm/assessment.json) · [v1 repeat](results/v1-short-confirm/assessment.json) · [Lookahead](results/lookahead-pilot/assessment.json) · [Conjugate constructor](results/conjugate-pilot/assessment.json)
 
 **Local final-slot milestone.** Final-slot repair at source `e53d5e2` reached 0.718 [0.551,0.934] of Lazy wall at W4 with median peak RSS 0.859. Opend in that same epoch took 0.657 [0.483,0.896]. The lower candidate/Lazy point than the edge-budget result was measured in a separate epoch; it does not establish a direct victory. [Nine-pair run](results/v1-final-slot-confirm/score/summary.txt)
@@ -1611,6 +1613,25 @@ bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-heaviest/union/native/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/f2count-check
 ```
 
+## v1p2-cap-edge-certificate-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-cap-edge-certificate-gate/score/check.jsonl) · [manifest](results/v1p2-cap-edge-certificate-gate/manifest.txt) · [score](results/v1p2-cap-edge-certificate-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`7db9c3f0e066b68afaefaaf6affbedf642b63764`](https://github.com/lmmx/mibz2/tree/7db9c3f0e066b68afaefaaf6affbedf642b63764). [Candidate entry](https://github.com/lmmx/mibz2/blob/7db9c3f0e066b68afaefaaf6affbedf642b63764/research/astra-e/front-fusion/edge/certificate/candidate.rs). Fetched master `be74d5763d212864607d46521d74ebc0827f9f36`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+No independent benchmark is attached to this individual scorer receipt.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout be74d5763d212864607d46521d74ebc0827f9f36 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/front-fusion/edge/certificate/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/front-fusion/edge/certificate/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/astra-cap-edge-cert-build
+```
+
 ## v1p2-combined-confirm
 
 Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-combined-confirm/score/check.jsonl) · [manifest](results/v1p2-combined-confirm/manifest.txt) · [score](results/v1p2-combined-confirm/score/summary.txt)
@@ -1663,6 +1684,25 @@ bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/formulations/f2-pages/payload/construction/eager.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/astra-e-refresh-75297a1-build
 ```
 
+## v1p2-dose-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-dose-gate/score/check.jsonl) · [manifest](results/v1p2-dose-gate/manifest.txt) · [score](results/v1p2-dose-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`77a3f8c6123bcb0b0c479789b46316da1778272a`](https://github.com/lmmx/mibz2/tree/77a3f8c6123bcb0b0c479789b46316da1778272a). [Candidate entry](https://github.com/lmmx/mibz2/blob/77a3f8c6123bcb0b0c479789b46316da1778272a/research/astra-e/worker-dose/candidate.rs). Fetched master `be74d5763d212864607d46521d74ebc0827f9f36`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+No independent benchmark is attached to this individual scorer receipt.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout be74d5763d212864607d46521d74ebc0827f9f36 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/worker-dose/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/worker-dose/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/astra-dose-build
+```
+
 ## v1p2-edge-confirm
 
 Confirmation. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-edge-confirm/score/check.jsonl) · [manifest](results/v1p2-edge-confirm/manifest.txt) · [score](results/v1p2-edge-confirm/score/summary.txt)
@@ -1687,6 +1727,25 @@ git checkout be74d5763d212864607d46521d74ebc0827f9f36 -- bench/moonshot .just Ju
 bash research/astra-e/prepare.sh research/astra-e/edge-budget/candidate.rs
 bash bench/moonshot/corpus.sh
 python3 bench/moonshot/moonshot.py score research/astra-e/edge-budget/candidate.rs --workers 1,4 --with-opend --rounds 9 --repeat 2 --settle 2 --no-proxy --target-dir /workspace/work/astra-e-refresh-75297a1-build
+```
+
+## v1p2-edge-front-fusion-gate
+
+Local score. **PASS** on 338 scorer cases (full). [Per-case results](results/v1p2-edge-front-fusion-gate/score/check.jsonl) · [manifest](results/v1p2-edge-front-fusion-gate/manifest.txt) · [score](results/v1p2-edge-front-fusion-gate/score/summary.txt)
+
+The build tree, including sibling modules, is [`74e1324aea9cd209b8786ec14437f886d77290d8`](https://github.com/lmmx/mibz2/tree/74e1324aea9cd209b8786ec14437f886d77290d8). [Candidate entry](https://github.com/lmmx/mibz2/blob/74e1324aea9cd209b8786ec14437f886d77290d8/research/astra-e/front-fusion/edge/worker/candidate.rs). Fetched master `be74d5763d212864607d46521d74ebc0827f9f36`, scorer path `75297a1` (v1 at 81585172f5fb9e7a59f330124779ba084fd6bf04). Corpus SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+
+This score has no completed instruction, cache-transfer, dependency or overlap model.
+
+No independent benchmark is attached to this individual scorer receipt.
+
+Reproduce in a fresh checkout of the build tree above.
+
+```sh
+git checkout be74d5763d212864607d46521d74ebc0827f9f36 -- bench/moonshot .just Justfile
+bash research/astra-e/prepare.sh research/astra-e/front-fusion/edge/worker/candidate.rs
+bash bench/moonshot/corpus.sh
+python3 bench/moonshot/moonshot.py score research/astra-e/front-fusion/edge/worker/candidate.rs --no-timing --no-proxy --target-dir /workspace/work/astra-edge-front-worker-target
 ```
 
 ## v1p2-final-slot-confirm
@@ -1730,7 +1789,7 @@ The build tree, including sibling modules, is [`e69c58476bc4f68605d38771e46b48c6
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-No independent benchmark is attached to this individual scorer receipt.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 fused-front result](ci/evidence/front-fusion-44445335323.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
@@ -1749,7 +1808,7 @@ The build tree, including sibling modules, is [`d268dbdc4cc36029fd80cee6fef68de0
 
 This score has no completed instruction, cache-transfer, dependency or overlap model.
 
-No independent benchmark is attached to this individual scorer receipt.
+Independent evidence for the frozen development implementation. The linked manifest identifies the separately compiled source and controls. [Independent W1/2/4 fused-front result](ci/evidence/front-fusion-44445335323.md)
 
 Reproduce in a fresh checkout of the build tree above.
 
