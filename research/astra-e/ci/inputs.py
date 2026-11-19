@@ -48,6 +48,7 @@ GUARDED_POPCNT = {
     "path": "research/astra-e/formulations/f2-pages/instructions/candidate.rs",
 }
 PREDECESSORS = {
+    "research/astra-e/front-fusion/cap-batch/worker/candidate.rs": MEASURED_EDGE,
     "research/astra-e/worker-dose/candidate.rs": MEASURED_EDGE,
     "research/astra-e/front-fusion/precount/worker/candidate.rs": MEASURED_COMBINED,
     "research/astra-e/formulations/f2-pages/payload/slots/preload.rs": GUARDED_POPCNT,
