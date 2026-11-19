@@ -1,0 +1,191 @@
+{
+  "data": "6eaf1e8bace868fe8f8bba5f73e1f6ea9e83afca",
+  "upstream_path_revision": "75297a1d57b2bdf262c3a19f3064848dedf2c493",
+  "evaluator_sha256": "b758f995e3481803e9cef2849e6c02a836f763008ae28cfda883b479fdf3ea63",
+  "forecasts": 148,
+  "results": 44,
+  "runs": 14,
+  "output_rows": 185,
+  "joins": {
+    "no independent result": 90,
+    "sha256": 48,
+    "directory": 11,
+    "path only": 17,
+    "no forecast": 19
+  },
+  "joined_receipt_sha_matches": 76,
+  "accuracy": {
+    "v0": {
+      "proxy_i9": {
+        "n": 0,
+        "male": null,
+        "right": 0,
+        "pairs": 0,
+        "distinct_measurement_cells": 0,
+        "distinct_prediction_measurement_tuples": 0,
+        "i9_measurement_rows": 0,
+        "rank_pairs_same_entry": 0,
+        "rank_pairs_same_run": 0,
+        "strict_cross_entry_pairs": 0,
+        "strict_cross_entry_right": 0
+      },
+      "proxy_other": {
+        "n": 9,
+        "male": 0.028514563807740742,
+        "right": 3,
+        "pairs": 3,
+        "distinct_measurement_cells": 9,
+        "distinct_prediction_measurement_tuples": 9,
+        "i9_measurement_rows": 3,
+        "rank_pairs_same_entry": 3,
+        "rank_pairs_same_run": 0,
+        "strict_cross_entry_pairs": 0,
+        "strict_cross_entry_right": 0
+      },
+      "local_other": {
+        "n": 10,
+        "male": 0.14607512040551862,
+        "right": 5,
+        "pairs": 6,
+        "distinct_measurement_cells": 10,
+        "distinct_prediction_measurement_tuples": 10,
+        "i9_measurement_rows": 0,
+        "rank_pairs_same_entry": 2,
+        "rank_pairs_same_run": 0,
+        "strict_cross_entry_pairs": 4,
+        "strict_cross_entry_right": 3
+      }
+    },
+    "v1": {
+      "proxy_i9": {
+        "n": 3,
+        "male": 0.014911019040007426,
+        "right": 0,
+        "pairs": 0,
+        "distinct_measurement_cells": 3,
+        "distinct_prediction_measurement_tuples": 3,
+        "i9_measurement_rows": 3,
+        "rank_pairs_same_entry": 0,
+        "rank_pairs_same_run": 0,
+        "strict_cross_entry_pairs": 0,
+        "strict_cross_entry_right": 0
+      },
+      "proxy_other": {
+        "n": 6,
+        "male": 0.03578565100473885,
+        "right": 3,
+        "pairs": 3,
+        "distinct_measurement_cells": 6,
+        "distinct_prediction_measurement_tuples": 6,
+        "i9_measurement_rows": 0,
+        "rank_pairs_same_entry": 3,
+        "rank_pairs_same_run": 0,
+        "strict_cross_entry_pairs": 0,
+        "strict_cross_entry_right": 0
+      },
+      "local_other": {
+        "n": 48,
+        "male": 0.16552201170935268,
+        "right": 100,
+        "pairs": 152,
+        "distinct_measurement_cells": 16,
+        "distinct_prediction_measurement_tuples": 24,
+        "i9_measurement_rows": 0,
+        "rank_pairs_same_entry": 88,
+        "rank_pairs_same_run": 56,
+        "strict_cross_entry_pairs": 64,
+        "strict_cross_entry_right": 44
+      }
+    }
+  },
+  "combined_proxy": {
+    "v0": {
+      "forecast_study": "combined-full-proxy",
+      "forecast_build": "b981d78984a195408501ff7fb495f77a1075be02",
+      "target_build": "8c9640d8ab186f81a0500f48e606e0c21c2a6669",
+      "run": "run-20261119T013135Z",
+      "entry_sha256": "7b7741a017f12aaf5c9624028e32715ad4fd806210bef0c6b210c7c1d16631d6",
+      "unchanged_candidate_and_generator_paths": [
+        "src",
+        "Cargo.toml",
+        "docs/journal/2026-11-18-open-return",
+        "research/astra-e/narrow-short",
+        "research/astra-e/narrow-endpoint",
+        "research/astra-e/short-words",
+        "research/astra-e/lookahead"
+      ],
+      "cells": [
+        {
+          "w": 7,
+          "proxy": 0.8935179110226058,
+          "i9_ratio": 0.8982344228865374,
+          "signed_log_error": -0.005264703908761486
+        },
+        {
+          "w": 8,
+          "proxy": 0.8795239608451186,
+          "i9_ratio": 0.9117254603518228,
+          "signed_log_error": -0.03595810692064587
+        },
+        {
+          "w": 10,
+          "proxy": 0.8276814507704193,
+          "i9_ratio": 0.8870884681755544,
+          "signed_log_error": -0.06931635690885207
+        }
+      ],
+      "accuracy": {
+        "n": 3,
+        "male": 0.03684638924608648,
+        "pairs": 0,
+        "right": 0
+      }
+    },
+    "v1": {
+      "forecast_study": "combined-v1-proxy",
+      "forecast_build": "6a8a366cd786d58a528000b58da12fd2cfb47be8",
+      "target_build": "8c9640d8ab186f81a0500f48e606e0c21c2a6669",
+      "run": "run-20261119T013135Z",
+      "entry_sha256": "7b7741a017f12aaf5c9624028e32715ad4fd806210bef0c6b210c7c1d16631d6",
+      "unchanged_candidate_and_generator_paths": [
+        "src",
+        "Cargo.toml",
+        "docs/journal/2026-11-18-open-return",
+        "research/astra-e/narrow-short",
+        "research/astra-e/narrow-endpoint",
+        "research/astra-e/short-words",
+        "research/astra-e/lookahead"
+      ],
+      "cells": [
+        {
+          "w": 7,
+          "proxy": 0.9101506974061911,
+          "i9_ratio": 0.8982344228865374,
+          "signed_log_error": 0.013179103126149155
+        },
+        {
+          "w": 8,
+          "proxy": 0.911774828445719,
+          "i9_ratio": 0.9117254603518228,
+          "signed_log_error": 5.414651613885183e-05
+        },
+        {
+          "w": 10,
+          "proxy": 0.9154763431826098,
+          "i9_ratio": 0.8870884681755544,
+          "signed_log_error": 0.031499807477734273
+        }
+      ],
+      "accuracy": {
+        "n": 3,
+        "male": 0.014911019040007426,
+        "pairs": 0,
+        "right": 0
+      }
+    }
+  },
+  "edge_conditional_male": {
+    "edge/lazy": 0.01625446805475596,
+    "edge/combined": 0.018127289337421568
+  }
+}

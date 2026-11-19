@@ -1,0 +1,30 @@
+[
+  [
+    "compact_preload_ci_run",
+    44440381983,
+    "5cefe941ff0c9bf6e436ef1bf171592fbc927d9c",
+    "6bfd17944f3e76a54525d0f27d661321a189d7d8c9da9392d5bbec3cd5f9a77a",
+    "308cbaabcbda6cfcd588e171adbc871597ace97661c61745e8ba216a7630b558"
+  ],
+  [
+    "precounted_front_ci_run",
+    44445335323,
+    "0d37dfb03ad3fee4ca03dba8a4d9ba3370625af5",
+    "00c796e97ad5450405cec8ab066702c5acc6606fd0319bed3d43fbbe64bc1b4f",
+    "799ea11a50501ad419e102449f9fd9872af5974846baaf6ee656da13aa6f1460"
+  ],
+  [
+    "existing dose",
+    44448175373,
+    "c783b7820a2d89af8d2ddfb77e63f9c017e5247b",
+    "076c5c673a4f9b379d4ab2f666c81fd39413e95b812d630cece2cec164bc2594",
+    "ddd85da86ecedcb1e628558e10fd1958af55d44cf493387eaf12643d1d44ee32"
+  ],
+  [
+    "existing edge",
+    "run-20261119T022117Z",
+    "badb2aec3624bd65606c429b2e6f79e9d9d0050f",
+    "c5b7cb186c5a82b7cba4f071b972e8a82bfff66627c24fe80c8624c4cc680602",
+    "3a10607c7d4ff026f4f3a7241a6d72dff10f590c07fd9b19eab9a7c6fbed2559"
+  ]
+]
