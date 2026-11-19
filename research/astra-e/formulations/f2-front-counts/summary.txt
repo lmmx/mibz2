@@ -1,0 +1,9 @@
+counted prep_mark_ns sum of block medians 3487737.0
+counted total_ns sum of block medians 29385151.5
+refill prep_mark_ns sum of block medians 5393831.5
+refill total_ns sum of block medians 31243472.5
+lazy prep_mark_ns sum of block medians 0.0
+lazy total_ns sum of block medians 30946399.5
+counted / refill prep_mark_ns {'n': 30, 'geomean': 0.6851953850329098, 'lo': 0.6004544666335487, 'hi': 0.7818956170025864}
+counted / refill total_ns {'n': 30, 'geomean': 0.9404831315198582, 'lo': 0.8750371519211263, 'hi': 1.0108239618529093}
+counted / lazy total_ns {'n': 30, 'geomean': 0.9682453085438115, 'lo': 0.9030052949812338, 'hi': 1.0381987599935212}

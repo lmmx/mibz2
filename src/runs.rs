@@ -123,6 +123,13 @@ impl Runs {
         &self.runs
     }
 
+    /// The per-byte row counts already produced by the run front for this block.
+    #[cfg(feature = "moonshot")]
+    #[doc(hidden)]
+    pub fn byte_counts(&self) -> &[u32; 256] {
+        &self.counts
+    }
+
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs)
     #[cfg(any(test, feature = "trace"))]
     pub fn buffers(&self) -> Vec<crate::trace::Buffer> {
