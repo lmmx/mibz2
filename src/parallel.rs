@@ -259,16 +259,17 @@ impl StreamDecoder {
         dec
     }
 
-    /// `threads` workers of a block each, inverting with Cells: with lazy letters
-    /// (`bwt::LazyCells`) if `lazy`, else with a slot for every letter (`bwt::Cells`).
+    /// `threads` workers of a block each: if `lazy`, the open kernel on `LazyCells`' admitted
+    /// blocks and `LazyCells` elsewhere (`bwt::OpenCells`, from 0.5.7; `LazyCells` alone
+    /// before), else Cells with a slot for every letter (`bwt::Cells`).
     /// `planned(Plan::Workers(threads), ..)` chooses between the two (`Plan::lazy`); this is
     /// for a caller that must have one of them, whatever the thread count (the bench arms
     /// that compare them). The output is the same either way.
     #[doc(hidden)]
     pub fn workers(threads: usize, slots: usize, k: Kernels, lazy: bool) -> StreamDecoder {
-        use super::bwt::{Cells, LazyCells};
+        use super::bwt::{Cells, OpenCells};
         if lazy {
-            Self::workers_with::<LazyCells>(threads, slots, k)
+            Self::workers_with::<OpenCells>(threads, slots, k)
         } else {
             Self::workers_with::<Cells>(threads, slots, k)
         }
@@ -335,12 +336,14 @@ impl StreamDecoder {
         }
     }
 
-    /// Whether this decoder's workers invert with lazy letters (`workers`, a plan of
+    /// Whether this decoder's workers take the lazy kernels' route (`workers`, a plan of
     /// `LAZY_FROM_THREADS` workers or more, or `new`'s trimmed workers on the measured i9):
-    /// read from the kernel its workers were launched with
+    /// `OpenCells`, or `LazyCells` itself (a bench arm's), read from the kernel its workers were
+    /// launched with
     #[doc(hidden)]
     pub fn is_lazy(&self) -> bool {
-        self.kernel == std::any::type_name::<super::bwt::LazyCells>()
+        self.kernel == std::any::type_name::<super::bwt::OpenCells>()
+            || self.kernel == std::any::type_name::<super::bwt::LazyCells>()
     }
 
     /// Research, opt-in (`memory-lever`): production's workers, `threads` of them, each
@@ -3162,9 +3165,10 @@ mod lazy_as_tests {
     /// this machine and on the i9's (ten cores: 12 and 20 threads asked are ten lazy workers)
     #[test]
     fn new_lazy_as_differs_from_new_in_the_kernel_alone() {
-        use crate::bwt::{LazyCells, W12LazyCells};
+        use crate::bwt::{OpenCells, W12LazyCells};
+        // (the shipped lazy route's kernel: `OpenCells` from 0.5.7)
         let (lazy, stop) = (
-            std::any::type_name::<LazyCells>(),
+            std::any::type_name::<OpenCells>(),
             std::any::type_name::<W12LazyCells>(),
         );
         let k = Kernels::detect();
@@ -4508,7 +4512,7 @@ mod plan_tests {
         for t in [10, 12, 16, 20] {
             let (same, w12) = with_machine(i9.clone(), || {
                 (
-                    StreamDecoder::new_lazy_as::<crate::bwt::LazyCells>(t, 4 * t, both),
+                    StreamDecoder::new_lazy_as::<crate::bwt::OpenCells>(t, 4 * t, both),
                     StreamDecoder::new_lazy_as::<crate::bwt::W12LazyCells>(t, 4 * t, both),
                 )
             });
@@ -4751,7 +4755,7 @@ mod plan_tests {
             clmul: true,
         };
         let (lazy_k, eager_k) = (
-            std::any::type_name::<crate::bwt::LazyCells>(),
+            std::any::type_name::<crate::bwt::OpenCells>(),
             std::any::type_name::<crate::bwt::Cells>(),
         );
         assert_eq!(LAZY_FROM_THREADS, 8);
@@ -4837,7 +4841,7 @@ mod plan_tests {
             // lazy cell, and is `new`'s eager decoder at an eager one
             let (same, w12) = with_machine(i9.clone(), || {
                 (
-                    StreamDecoder::new_lazy_as::<crate::bwt::LazyCells>(t, 4 * t, both),
+                    StreamDecoder::new_lazy_as::<crate::bwt::OpenCells>(t, 4 * t, both),
                     StreamDecoder::new_lazy_as::<crate::bwt::W12LazyCells>(t, 4 * t, both),
                 )
             });

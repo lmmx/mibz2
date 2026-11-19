@@ -102,6 +102,8 @@ pub mod dose;
 #[doc(hidden)]
 pub mod itrace;
 pub mod mtf;
+// the open kernel, the workers' kernel wherever `LazyCells` ran (`bwt::OpenCells`)
+mod open;
 pub mod parallel;
 #[cfg(feature = "phase-counters")]
 #[doc(hidden)]

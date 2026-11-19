@@ -1161,6 +1161,31 @@ fn decode(
             h,
             last,
         ),
+        // the open kernel's port (#145 CHECKPOINT 7004759994): `-lazy` above is the shipped lazy
+        // route, `OpenCells` (the open kernel on `LazyCells`' admitted blocks); these are its
+        // kernel-only neighbours, the plan and window `-lazy`'s: `LazyCells` alone, as 0.5.6
+        // shipped it (`-lazycells`), and the open kernel on every run-route block, ungated
+        // (`-open`, `ForcedOpenCells`)
+        "mibz2-workers-lazycells" => drain(
+            mibz2::BzReader::parallel_workers_with::<mibz2::bwt::LazyCells>(
+                open()?,
+                threads,
+                mibz2::parallel::SLOTS_PER_THREAD * threads,
+                mibz2::Kernels::detect(),
+            ),
+            h,
+            last,
+        ),
+        "mibz2-workers-open" => drain(
+            mibz2::BzReader::parallel_workers_with::<mibz2::bwt::ForcedOpenCells>(
+                open()?,
+                threads,
+                mibz2::parallel::SLOTS_PER_THREAD * threads,
+                mibz2::Kernels::detect(),
+            ),
+            h,
+            last,
+        ),
         // the 12-byte rules arms (#145, the Coordinator's ruling on LOG 6925645704): lazy
         // letters with each rule stored in 12 bytes (`bwt::W12LazyCells`). `mibz2-w12` is
         // production's decoder, plan and window, with that kernel wherever the plan runs lazy
