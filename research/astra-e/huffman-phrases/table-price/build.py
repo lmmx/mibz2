@@ -9,7 +9,9 @@ old,new=map(lambda s:Path(s).resolve(),sys.argv[1:])
 new.mkdir(exist_ok=True,parents=True)
 for name in ("bits","errors","stream"):
     shutil.copyfile(old/(name+".rs"),new/(name+".rs"))
-for name in ("stock","twin","triple","quad"):
+driver_source=(old/"main.rs").read_text()
+arms=("stock","twin","scatter","interval") if "pub mod interval" in driver_source else ("stock","twin","triple","quad")
+for name in arms:
     source=(old/(name+".rs")).read_text()
     needle="        tables.push(Huff::new(&lens[..alpha]));"
     assert source.count(needle)==1
