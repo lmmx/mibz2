@@ -1,0 +1,11 @@
+
+running 5 tests
+test joint::checks::corpus ... ignored
+test joint::checks::native_second_level ... ignored
+exact section outputs for 11264 covered small marks
+test joint::checks::arbitrary_marks ... ok
+test joint::stream_checks::separated_runs_and_trailing_pages ... ok
+test joint::count_checks::page_boundaries_and_counted_path ... ok
+
+test result: ok. 3 passed; 0 failed; 2 ignored; 0 measured; 10 filtered out; finished in 0.13s
+

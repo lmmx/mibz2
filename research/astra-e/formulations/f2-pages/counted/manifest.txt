@@ -1,0 +1,19 @@
+43d82bafb0edfa2f9caeb99ec6880690b1b92dba
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+8f6d954c921a9943f2d9e0c362451eecbc1808c3de9e2a8028af9cd2df687d5b  /workspace/work/queue-spans/counted-matched/baseline.rs
+b60de692c826a2ff926700237fec82f15d6d17bc7f75c22dbc4bd4ee38c423c6  /workspace/work/queue-spans/counted-matched/counted.rs
+e62bb7e3fa1b14919ccf3500aa92d5486aefcc941dd60c49687f22dbc7e506d3  /workspace/work/queue-spans/counted-matched/joint.rs
+544b00e3311454b417d30cbccee8d890754f060ce88fdbc12eb974203222f617  /workspace/work/queue-spans/counted-matched/layout.rs
+3ef189827f98f265edbbd815898235f6faf4a895d7f376026d7be8706021aae5  /workspace/work/queue-spans/counted-matched/price.rs
+535d3897ea976861d31bab5552dd464aae2cbd39669b820b09a29318f5c1d16a  /workspace/work/queue-spans/counted-matched/sequential.rs
+ed494a9589498f9e98c070e1ab2f08b653a382935338a53a42c466b6b6ea9742  /workspace/work/queue-spans/counted-matched/price
+f38c0ae713c308e909b41e3c86379fd31a3e8b328364fd75fc0261f678a559bb  /workspace/work/page-counted-lib/release/deps/libmibz2.rlib
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+pinned CPUs 3 0
+400000 100000
