@@ -11,7 +11,8 @@ Researcher's review through the Coordinator.*
   - *the gate's cost reported at each W,* with ungated open as context;
   - *Louis's rule:* adaptive dispatch is fair, changing the measurement is not
     (PERFORMANCE-POLICY §2, #626).
-- **The change:** the port PR (`perf/open-kernel`). Its B5 evidence is
+- **The change:** the port, #630 (`perf/open-kernel`), at
+  3f09500ee3289b0dd06948003f45c89aedd8ea36. Its B5 evidence is
   `docs/journal/2026-11-19-open-port-b5.md`, for the Guardian.
 - **The recipe:** `just bench-open-port`, on `bench/open-port`, with the port's head pinned in the
   recipe as `PORT`.

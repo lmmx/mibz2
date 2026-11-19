@@ -2222,7 +2222,7 @@ bench-opend-sweep COPIES="4" ROUNDS="12" SETTLE="2" REPS="5" DRY="":
 # then, reported and not judged, the gate's cost and the eager/open crossover (kernel-only arms)
 # and the per-block coverage census. `bench/open_port.py judge` gives the verdict. DRY (any
 # value): the untimed dry run (PROTOCOL §9), marked not evidence.
-bench-open-port PORT="227570e1b" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="8" CROUNDS="8" DRY="":
+bench-open-port PORT="3f09500ee3289b0dd06948003f45c89aedd8ea36" COPIES="4" ROUNDS="12" SETTLE="2" SROUNDS="8" CROUNDS="8" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/open-port
