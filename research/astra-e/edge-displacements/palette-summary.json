@@ -1,0 +1,218 @@
+{
+  "rows": 26567581,
+  "magnitude": {
+    "16": {
+      "plain_centered": 0.0002513966175543043,
+      "optimal_one_base": 0.0018914781891509055,
+      "optimal_per_terminal": 0.02124344704171599,
+      "optimal_per_label": 0.1402232668454083,
+      "equal_adjacent_delta": 0.4597479537184812,
+      "increasing_adjacent_next": 0.9920224577465295
+    },
+    "256": {
+      "plain_centered": 0.0075942179304920535,
+      "optimal_one_base": 0.010074232953312535,
+      "optimal_per_terminal": 0.05661463872077778,
+      "optimal_per_label": 0.19952787572191838,
+      "equal_adjacent_delta": 0.4597479537184812,
+      "increasing_adjacent_next": 0.9920224577465295
+    },
+    "4096": {
+      "plain_centered": 0.08338350412858438,
+      "optimal_one_base": 0.08587917733270485,
+      "optimal_per_terminal": 0.1586227590686559,
+      "optimal_per_label": 0.2964175774979288,
+      "equal_adjacent_delta": 0.4597479537184812,
+      "increasing_adjacent_next": 0.9920224577465295
+    },
+    "65536": {
+      "plain_centered": 0.6224348012715196,
+      "optimal_one_base": 0.6251496513739809,
+      "optimal_per_terminal": 0.7584297945680489,
+      "optimal_per_label": 0.827693910107962,
+      "equal_adjacent_delta": 0.4597479537184812,
+      "increasing_adjacent_next": 0.9920224577465295
+    }
+  },
+  "zero_order_bits_per_row": {
+    "H_label": 6.552293783203782,
+    "H_delta": 15.010225877154175,
+    "H_delta_given_terminal": 10.136809220151765,
+    "H_delta_given_label": 8.802050856549952,
+    "H_joint": 15.354344639753734
+  },
+  "palette": {
+    "palette.csv": {
+      "fixed": {
+        "('index15-fixed8', 0)": {
+          "bytes_per_row": 4.693153433878681,
+          "escape_fraction": 0.5277075470288394
+        },
+        "('index15-fixed8', 1)": {
+          "bytes_per_row": 4.636297523662392,
+          "escape_fraction": 0.5089463734014775
+        },
+        "('index15-fixed8', 2)": {
+          "bytes_per_row": 4.609709179017841,
+          "escape_fraction": 0.5175947708600193
+        },
+        "('index15-fixed8', 3)": {
+          "bytes_per_row": 4.7899693238914,
+          "escape_fraction": 0.6256127721978151
+        },
+        "('index15-fixed8', 4)": {
+          "bytes_per_row": 5.080768550211628,
+          "escape_fraction": 0.7342348556310038
+        },
+        "('index15-fixed8', 5)": {
+          "bytes_per_row": 5.325062526392599,
+          "escape_fraction": 0.8132694881028122
+        },
+        "('index15-fixed8', 6)": {
+          "bytes_per_row": 5.482038503994775,
+          "escape_fraction": 0.8614940517166392
+        },
+        "('index15-fixed8', 7)": {
+          "bytes_per_row": 5.594205885737208,
+          "escape_fraction": 0.8940261817588888
+        },
+        "('index15-fixed8', 8)": {
+          "bytes_per_row": 5.6706854116677015,
+          "escape_fraction": 0.915391205544833
+        },
+        "('index15-fixed8', 9)": {
+          "bytes_per_row": 5.726710384359043,
+          "escape_fraction": 0.9305200198693288
+        },
+        "('index15-fixed8', 10)": {
+          "bytes_per_row": 5.772011610691993,
+          "escape_fraction": 0.9424066120283966
+        },
+        "('index15-fixed8', 11)": {
+          "bytes_per_row": 5.8102907449496435,
+          "escape_fraction": 0.9522570383807243
+        },
+        "('index15-fixed8', 12)": {
+          "bytes_per_row": 5.842765210728067,
+          "escape_fraction": 0.9605159762192877
+        }
+      },
+      "oracle_per_block": 4.580751631095056,
+      "under_4": 0,
+      "under_3": 0,
+      "minimum_block_bytes_per_row": 4.160289019213946
+    },
+    "palette-packed.csv": {
+      "fixed": {
+        "('index15', 0)": {
+          "bytes_per_row": 4.161627586644038,
+          "escape_fraction": 0.4074904297835772
+        },
+        "('bitmap16', 0)": {
+          "bytes_per_row": 4.3479320906182615,
+          "escape_fraction": 0.4069363710606547
+        },
+        "('index15', 1)": {
+          "bytes_per_row": 4.13264323914172,
+          "escape_fraction": 0.4072122335864902
+        },
+        "('bitmap16', 1)": {
+          "bytes_per_row": 4.255796340660447,
+          "escape_fraction": 0.3753302944667789
+        },
+        "('index15', 2)": {
+          "bytes_per_row": 4.322330964192788,
+          "escape_fraction": 0.5087031822731621
+        },
+        "('bitmap16', 2)": {
+          "bytes_per_row": 4.2002275630589025,
+          "escape_fraction": 0.369899954384255
+        },
+        "('index15', 3)": {
+          "bytes_per_row": 4.646126043616842,
+          "escape_fraction": 0.6256127721978151
+        },
+        "('bitmap16', 3)": {
+          "bytes_per_row": 4.395621980036497,
+          "escape_fraction": 0.48025862798724506
+        },
+        "('index15', 4)": {
+          "bytes_per_row": 5.008769823643334,
+          "escape_fraction": 0.7342348556310038
+        },
+        "('bitmap16', 4)": {
+          "bytes_per_row": 4.719330525424953,
+          "escape_fraction": 0.5971080317775261
+        },
+        "('index15', 5)": {
+          "bytes_per_row": 5.282472273256643,
+          "escape_fraction": 0.8132694881028122
+        },
+        "('bitmap16', 5)": {
+          "bytes_per_row": 5.065247566197314,
+          "escape_fraction": 0.704803723003611
+        },
+        "('index15', 6)": {
+          "bytes_per_row": 5.460184500801936,
+          "escape_fraction": 0.8614940517166392
+        },
+        "('bitmap16', 6)": {
+          "bytes_per_row": 5.352012590081122,
+          "escape_fraction": 0.7840877195405935
+        },
+        "('index15', 7)": {
+          "bytes_per_row": 5.582980174220603,
+          "escape_fraction": 0.8940261817588888
+        },
+        "('bitmap16', 7)": {
+          "bytes_per_row": 5.5398690230774115,
+          "escape_fraction": 0.8347179594559249
+        },
+        "('index15', 8)": {
+          "bytes_per_row": 5.6650725559094,
+          "escape_fraction": 0.915391205544833
+        },
+        "('bitmap16', 8)": {
+          "bytes_per_row": 5.670131691703509,
+          "escape_fraction": 0.8689674833399398
+        },
+        "('index15', 9)": {
+          "bytes_per_row": 5.723903956479892,
+          "escape_fraction": 0.9305200198693288
+        },
+        "('bitmap16', 9)": {
+          "bytes_per_row": 5.760664284791303,
+          "escape_fraction": 0.8924425599756335
+        },
+        "('index15', 10)": {
+          "bytes_per_row": 5.770608396752418,
+          "escape_fraction": 0.9424066120283966
+        },
+        "('bitmap16', 10)": {
+          "bytes_per_row": 5.829685246842759,
+          "escape_fraction": 0.9101187646703702
+        },
+        "('index15', 11)": {
+          "bytes_per_row": 5.8095885357421135,
+          "escape_fraction": 0.9522570383807243
+        },
+        "('bitmap16', 11)": {
+          "bytes_per_row": 5.887645548158863,
+          "escape_fraction": 0.924819613799239
+        },
+        "('index15', 12)": {
+          "bytes_per_row": 5.842413805005431,
+          "escape_fraction": 0.9605159762192877
+        },
+        "('bitmap16', 12)": {
+          "bytes_per_row": 5.93641780935946,
+          "escape_fraction": 0.9371179107348915
+        }
+      },
+      "oracle_per_block": 4.0975472701108915,
+      "under_4": 116,
+      "under_3": 0,
+      "minimum_block_bytes_per_row": 3.659981207270842
+    }
+  }
+}
