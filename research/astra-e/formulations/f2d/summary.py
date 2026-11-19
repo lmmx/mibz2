@@ -16,7 +16,10 @@ pairs = [("learn", "f2c"), ("learn", "lazy")] if "learn" in arms else []
 if "owned" in arms:
     pairs.extend([("owned", "f2c"), ("owned", "lazy")])
 if "combined" in arms:
-    pairs.extend([("combined", "batched"), ("combined", "owned"), ("combined", "lazy"), ("batched", "lazy")])
+    pairs.extend([("combined", "batched"), ("combined", "lazy"), ("batched", "lazy")])
+    if "owned" in arms: pairs.append(("combined", "owned"))
+if "outowned" in arms:
+    pairs.extend([("outowned","combined"), ("outowned","batched"), ("outowned","lazy")])
 if "splice" in arms:
     pairs.extend([("splice", "f2c"), ("splice", "lazy")])
 if "eight" in arms:
@@ -36,8 +39,8 @@ for selected in (["1"], blocks):
             paired[arm][int(r["round"])] += int(r["total_ns"])
     for arm, ref in pairs:
         samples = [log(paired[arm][i] / paired[ref][i]) for i in sorted(paired[arm])]
-        assert len(samples) in (20, 21, 25) and set(paired[arm]) == set(paired[ref])
-        critical = {20: 2.093024, 21: 2.085963, 25: 2.063899}[len(samples)]
+        assert len(samples) in (20, 21, 24, 25) and set(paired[arm]) == set(paired[ref])
+        critical = {20: 2.093024, 21: 2.085963, 24: 2.068658, 25: 2.063899}[len(samples)]
         delta = critical * stdev(samples) / sqrt(len(samples))
         center = mean(samples)
         print(f"{arm}/{ref} {exp(center):.4f} [{exp(center-delta):.4f},{exp(center+delta):.4f}]")
