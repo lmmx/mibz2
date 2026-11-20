@@ -1,0 +1,302 @@
+{
+  "block-0.L": {
+    "world1_ribbon_and_folding": {
+      "V_runs": 51184,
+      "E_ov": 62138,
+      "faces_F_rib": 60,
+      "max_face_darts": 122709,
+      "euler_chi": -10894,
+      "ribbon_genus_g": 5448,
+      "origami_cycles": 848753,
+      "origami_genus_g": 25590,
+      "genus_diff_g_rib_minus_g_orig": -20142,
+      "in_switches": 4695,
+      "out_switches": 3789,
+      "in_adj_same_byte_foldable": 10940,
+      "in_adj_diff_byte_rigid": 14,
+      "in_adj_same_byte_pct": 99.87
+    },
+    "world2_schur_optimality": {
+      "alpha": 89,
+      "same_shift_adjacent_runs": 0,
+      "H_open": 3448,
+      "m_open": 89874,
+      "universal_lower_bound_m_at_H_open": 89874,
+      "open_gap_from_universal_knapsack_pct": 0.0,
+      "best_alphabet_subset_m_at_H_open": 444433,
+      "best_alphabet_subset_runs_used": 3448,
+      "count_quote": 135716,
+      "count_newline": 22,
+      "count_close_brace": 12343
+    },
+    "world3_tropical_lcp": {
+      "reducible_verified": 848747,
+      "n_irred": 51183,
+      "sum_irreducible_lcp": 925038,
+      "sum_irred_over_n": 1.028,
+      "kkp_2n_log2_r_bound": 28155970,
+      "ratio_to_kkp_bound": 0.0329,
+      "mean_irred_lcp": 18.07,
+      "max_irred_lcp": 1903,
+      "median_irred_lcp": 3
+    },
+    "world4_rle1_crc_semigroup": {
+      "bwt_len_n": 899931,
+      "unrle_len_U": 900000,
+      "expansion_ratio": 1.00008,
+      "rle1_triggers": 34,
+      "clean_32B_windows_pct": 99.88,
+      "transducer_crc_monoid_verified": true
+    }
+  },
+  "block-2.L": {
+    "world1_ribbon_and_folding": {
+      "V_runs": 54532,
+      "E_ov": 67755,
+      "faces_F_rib": 75,
+      "max_face_darts": 71774,
+      "euler_chi": -13148,
+      "ribbon_genus_g": 6575,
+      "origami_cycles": 845476,
+      "origami_genus_g": 27263,
+      "genus_diff_g_rib_minus_g_orig": -20688,
+      "in_switches": 5370,
+      "out_switches": 4074,
+      "in_adj_same_byte_foldable": 13219,
+      "in_adj_diff_byte_rigid": 4,
+      "in_adj_same_byte_pct": 99.97
+    },
+    "world2_schur_optimality": {
+      "alpha": 86,
+      "same_shift_adjacent_runs": 0,
+      "H_open": 3827,
+      "m_open": 112070,
+      "universal_lower_bound_m_at_H_open": 112070,
+      "open_gap_from_universal_knapsack_pct": 0.0,
+      "best_alphabet_subset_m_at_H_open": 519609,
+      "best_alphabet_subset_runs_used": 3827,
+      "count_quote": 135062,
+      "count_newline": 31,
+      "count_close_brace": 12343
+    },
+    "world3_tropical_lcp": {
+      "reducible_verified": 845468,
+      "n_irred": 54531,
+      "sum_irreducible_lcp": 867626,
+      "sum_irred_over_n": 0.964,
+      "kkp_2n_log2_r_bound": 28322667,
+      "ratio_to_kkp_bound": 0.0306,
+      "mean_irred_lcp": 15.91,
+      "max_irred_lcp": 1013,
+      "median_irred_lcp": 3
+    },
+    "world4_rle1_crc_semigroup": {
+      "bwt_len_n": 900000,
+      "unrle_len_U": 899938,
+      "expansion_ratio": 0.99993,
+      "rle1_triggers": 62,
+      "clean_32B_windows_pct": 99.78,
+      "transducer_crc_monoid_verified": true
+    }
+  },
+  "block-85.L": {
+    "world1_ribbon_and_folding": {
+      "V_runs": 79375,
+      "E_ov": 96494,
+      "faces_F_rib": 295,
+      "max_face_darts": 112104,
+      "euler_chi": -16824,
+      "ribbon_genus_g": 8413,
+      "origami_cycles": 820565,
+      "origami_genus_g": 39686,
+      "genus_diff_g_rib_minus_g_orig": -31273,
+      "in_switches": 7229,
+      "out_switches": 5526,
+      "in_adj_same_byte_foldable": 17112,
+      "in_adj_diff_byte_rigid": 7,
+      "in_adj_same_byte_pct": 99.96
+    },
+    "world2_schur_optimality": {
+      "alpha": 94,
+      "same_shift_adjacent_runs": 0,
+      "H_open": 1565,
+      "m_open": 156404,
+      "universal_lower_bound_m_at_H_open": 156404,
+      "open_gap_from_universal_knapsack_pct": 0.0,
+      "best_alphabet_subset_m_at_H_open": 744844,
+      "best_alphabet_subset_runs_used": 1565,
+      "count_quote": 138920,
+      "count_newline": 175,
+      "count_close_brace": 13424
+    },
+    "world3_tropical_lcp": {
+      "reducible_verified": 820560,
+      "n_irred": 79374,
+      "sum_irreducible_lcp": 1002765,
+      "sum_irred_over_n": 1.114,
+      "kkp_2n_log2_r_bound": 29295398,
+      "ratio_to_kkp_bound": 0.0342,
+      "mean_irred_lcp": 12.63,
+      "max_irred_lcp": 751,
+      "median_irred_lcp": 3
+    },
+    "world4_rle1_crc_semigroup": {
+      "bwt_len_n": 899935,
+      "unrle_len_U": 900000,
+      "expansion_ratio": 1.00007,
+      "rle1_triggers": 23,
+      "clean_32B_windows_pct": 99.93,
+      "transducer_crc_monoid_verified": false
+    }
+  },
+  "block-143.L": {
+    "world1_ribbon_and_folding": {
+      "V_runs": 108335,
+      "E_ov": 135299,
+      "faces_F_rib": 294,
+      "max_face_darts": 216908,
+      "euler_chi": -26670,
+      "ribbon_genus_g": 13336,
+      "origami_cycles": 791537,
+      "origami_genus_g": 54167,
+      "genus_diff_g_rib_minus_g_orig": -40831,
+      "in_switches": 11001,
+      "out_switches": 7746,
+      "in_adj_same_byte_foldable": 26959,
+      "in_adj_diff_byte_rigid": 5,
+      "in_adj_same_byte_pct": 99.98
+    },
+    "world2_schur_optimality": {
+      "alpha": 96,
+      "same_shift_adjacent_runs": 0,
+      "H_open": 5047,
+      "m_open": 196841,
+      "universal_lower_bound_m_at_H_open": 196841,
+      "open_gap_from_universal_knapsack_pct": 0.0,
+      "best_alphabet_subset_m_at_H_open": 634872,
+      "best_alphabet_subset_runs_used": 5046,
+      "count_quote": 128934,
+      "count_newline": 184,
+      "count_close_brace": 12389
+    },
+    "world3_tropical_lcp": {
+      "reducible_verified": 791534,
+      "n_irred": 108334,
+      "sum_irreducible_lcp": 1004865,
+      "sum_irred_over_n": 1.117,
+      "kkp_2n_log2_r_bound": 30100869,
+      "ratio_to_kkp_bound": 0.0334,
+      "mean_irred_lcp": 9.28,
+      "max_irred_lcp": 9481,
+      "median_irred_lcp": 3
+    },
+    "world4_rle1_crc_semigroup": {
+      "bwt_len_n": 899869,
+      "unrle_len_U": 900000,
+      "expansion_ratio": 1.00015,
+      "rle1_triggers": 83,
+      "clean_32B_windows_pct": 99.71,
+      "transducer_crc_monoid_verified": false
+    }
+  },
+  "block-210.L": {
+    "world1_ribbon_and_folding": {
+      "V_runs": 128732,
+      "E_ov": 155480,
+      "faces_F_rib": 484,
+      "max_face_darts": 188365,
+      "euler_chi": -26264,
+      "ribbon_genus_g": 13133,
+      "origami_cycles": 771233,
+      "origami_genus_g": 64364,
+      "genus_diff_g_rib_minus_g_orig": -51231,
+      "in_switches": 12014,
+      "out_switches": 9041,
+      "in_adj_same_byte_foldable": 26744,
+      "in_adj_diff_byte_rigid": 4,
+      "in_adj_same_byte_pct": 99.99
+    },
+    "world2_schur_optimality": {
+      "alpha": 96,
+      "same_shift_adjacent_runs": 0,
+      "H_open": 2809,
+      "m_open": 204281,
+      "universal_lower_bound_m_at_H_open": 204281,
+      "open_gap_from_universal_knapsack_pct": 0.0,
+      "best_alphabet_subset_m_at_H_open": 675519,
+      "best_alphabet_subset_runs_used": 2809,
+      "count_quote": 136448,
+      "count_newline": 240,
+      "count_close_brace": 12602
+    },
+    "world3_tropical_lcp": {
+      "reducible_verified": 771227,
+      "n_irred": 128731,
+      "sum_irreducible_lcp": 1253449,
+      "sum_irred_over_n": 1.393,
+      "kkp_2n_log2_r_bound": 30551828,
+      "ratio_to_kkp_bound": 0.041,
+      "mean_irred_lcp": 9.74,
+      "max_irred_lcp": 960,
+      "median_irred_lcp": 3
+    },
+    "world4_rle1_crc_semigroup": {
+      "bwt_len_n": 899959,
+      "unrle_len_U": 900000,
+      "expansion_ratio": 1.00005,
+      "rle1_triggers": 24,
+      "clean_32B_windows_pct": 99.92,
+      "transducer_crc_monoid_verified": false
+    }
+  },
+  "block-207.L": {
+    "world1_ribbon_and_folding": {
+      "V_runs": 87111,
+      "E_ov": 107914,
+      "faces_F_rib": 257,
+      "max_face_darts": 136530,
+      "euler_chi": -20546,
+      "ribbon_genus_g": 10274,
+      "origami_cycles": 812888,
+      "origami_genus_g": 43556,
+      "genus_diff_g_rib_minus_g_orig": -33282,
+      "in_switches": 8605,
+      "out_switches": 6233,
+      "in_adj_same_byte_foldable": 20800,
+      "in_adj_diff_byte_rigid": 3,
+      "in_adj_same_byte_pct": 99.99
+    },
+    "world2_schur_optimality": {
+      "alpha": 94,
+      "same_shift_adjacent_runs": 0,
+      "H_open": 3474,
+      "m_open": 135921,
+      "universal_lower_bound_m_at_H_open": 135921,
+      "open_gap_from_universal_knapsack_pct": 0.0,
+      "best_alphabet_subset_m_at_H_open": 665886,
+      "best_alphabet_subset_runs_used": 3474,
+      "count_quote": 129704,
+      "count_newline": 121,
+      "count_close_brace": 12235
+    },
+    "world3_tropical_lcp": {
+      "reducible_verified": 812887,
+      "n_irred": 87110,
+      "sum_irreducible_lcp": 915268,
+      "sum_irred_over_n": 1.017,
+      "kkp_2n_log2_r_bound": 29538955,
+      "ratio_to_kkp_bound": 0.031,
+      "mean_irred_lcp": 10.51,
+      "max_irred_lcp": 4342,
+      "median_irred_lcp": 3
+    },
+    "world4_rle1_crc_semigroup": {
+      "bwt_len_n": 899998,
+      "unrle_len_U": 900000,
+      "expansion_ratio": 1.0,
+      "rle1_triggers": 24,
+      "clean_32B_windows_pct": 99.93,
+      "transducer_crc_monoid_verified": false
+    }
+  }
+}
