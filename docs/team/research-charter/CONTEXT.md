@@ -1,7 +1,8 @@
 # Research context for exact inverse-BWT reconstruction in mibz2
 
 *20 November 2026. The Coordinator. A source-grounded record of what the kernel research has
-established, for a fresh researcher. It goes with [MASTER-PROMPT.md](MASTER-PROMPT.md) and
+established, for a fresh researcher. The method is [METHOD.md](METHOD.md), the living record of
+questions and obstructions is [FRONTIER.md](FRONTIER.md), and the feasibility leads are
 [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).*
 
 **How to read the claims.** Each is tagged:
@@ -146,6 +147,12 @@ Each row is correct mathematics that failed as engineering, unless marked otherw
    be worth it?" Ask that first.
 6. **Noise:** 2-lap medians on a shared VM produced a false "a third of blocks prefer LIMIT=8".
    Paired, interleaved, many-round designs with honest out-of-sample selection are the standard.
+7. **Ambition is set separately from scoring** ([METHOD.md](METHOD.md) §1–3).
+   - The gates decide what earns engineering investment; they don't decide what gets explored.
+   - After the incremental attempts on Open, the programme deliberately favours foundational and
+     architectural change.
+   - It does this through a recurring explore → triage → deepen → confront → learn cycle, with
+     two tracks.
 
 ## 6. Tools and where things are
 

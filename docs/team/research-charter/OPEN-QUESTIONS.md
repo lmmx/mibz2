@@ -10,6 +10,10 @@ Each question is ranked by three things:
 None of these is a prediction. A fresh researcher may find a better question; these are where the
 record points.
 
+**These are the feasibility track's leads** ([METHOD.md](METHOD.md) §3): concrete enough to cost
+now. The foundational questions, which challenge whether a current primitive is needed at all, are
+in [FRONTIER.md](FRONTIER.md). Each cycle should draw on both.
+
 ## 1. A second open cut: recursive first returns
 
 **The observation:**
