@@ -616,13 +616,20 @@ def main():
         n = b["n"]
         p = b["primary_index"]
         ref_out, lf = dense_lf_invert(L, p)
-        # Check monodromy primitivity
+        # Check monodromy primitivity (both shift-gcd and direct check over every divisor 1 < k < n)
         runs = maximal_runs(L)
         d0 = (lf[runs[0][1]] - runs[0][1]) % n
         g = n
         for _, st, _ in runs[1:]:
             g = math.gcd(g, (lf[st] - st - d0) % n)
         assert g == 1, f"Expected primitive monodromy on {fn}, got gcd={g}"
+        for div_d in range(2, int(math.isqrt(n)) + 1):
+            if n % div_d == 0:
+                for k_div in (div_d, n // div_d):
+                    if 1 < k_div < n:
+                        assert any(
+                            (lf[x] - lf[0]) % k_div != 0 for x in range(k_div, n, k_div)
+                        ), f"Imprimitive mod {k_div} on {fn}"
 
         recs = to_capped_records(L)
         m, mark, next_j, codes, sp, offs, wcnt = build_open(recs, n, p, limit=16)
