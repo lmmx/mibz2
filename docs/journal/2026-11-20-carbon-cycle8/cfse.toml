@@ -1,0 +1,31 @@
+# Acquisition manifest for Conjugate F-Space Bandless Schur Elimination (CFSE).
+name = "Conjugate F-Space Bandless Schur Elimination (CFSE)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "cfse_sequential_alpha_scan"
+inputs = ["records", "n", "p"]
+output = "cfse_alpha_and_strips"
+status = "verified"
+dependent = false
+cost = { W = "R + m", D = "R", B = "R + m", Q = "1", M = "H" }
+evidence = "Single sequential scan of R capped records emitting H thick strips and one monotonic sequential stream alpha_raw[0..m] = (c << 20) | rank_c aliased directly inside dead out[0..n) whenever 4*(m+16) <= n (100% of admitted blocks, 0 B queue scratch; safe heap fallback when 4*(m+16) > n), eliminating Open's 256-bucket queues[256] scatter and Backward Open (#659)'s second record pass (Theorem 8.3; verified on 10,454 small instances, 8 adversarial controls, and 6 authenticated blocks)."
+
+[[edge]]
+id = "cfse_bandless_fspace_edges"
+inputs = ["C", "cfse_alpha_and_strips", "n", "p"]
+output = "cfse_fspace_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "H + m", D = "H", B = "H + m", Q = "H", M = "m + H" }
+evidence = "Eliminates thick complement via M_64 graded inline-monoid RV, bounds max non-literal codes a priori from surviving non-zero nodes to eliminate bands[], constructs <=16B words right-aligned directly in XMM inline16_ra[code] without spelling[] or offsets[] (storing long-word (o0, ln) metadata in inline16_ra[code] so offsets[] is 0 B), and wires edges_F[kc] = pack(code) | alpha(dst) sequentially in kc = 0..m-1 (Theorem 8.3)."
+
+[[edge]]
+id = "cfse_right_to_left_emit"
+inputs = ["cfse_fspace_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Traverses conjugate F-space return map g_F = alpha o beta starting at k_mark = alpha(mark_L), emitting right-aligned <=16B words right-to-left via _mm_storeu_si128(P - 16, inline16_ra[cd]) strictly inside [out + off, out + end) in either 1-lane or 8-lane zero-arena BVSMC-2P mode, gaining F-space 1-extra-symbol suffix context locality (verified byte-exact across all 10,454 small cases, 8 adversarial controls, and 6 authenticated blocks)."
