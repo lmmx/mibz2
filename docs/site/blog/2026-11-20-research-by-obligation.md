@@ -16,7 +16,7 @@ description: "We now track the work any decoder must pay for rather than the alg
 We now track the work any decoder must pay for rather than the algorithms that pay it, and a claimed Riemann proof has sharpened how we hunt.
 {: .post-dek }
 
-20 November 2026 · 10 min read · [Meta](#5-where-this-leaves-us)
+20 November 2026 · 11 min read · [Meta](#5-where-this-leaves-us)
 {: .post-meta }
 
 </div>
@@ -45,6 +45,8 @@ Profiling Open splits its time into a handful of jobs, and each job is an obliga
 
 Reading across a row says what was learned about that obligation. Three candidates attacked the walk over retained rows: a software-pipelined walk (the processor already issues the next load early), a compact rank structure in place of the stored edges (two to three times slower, because one load became four dependent ones), and several walks at once (no gain in our test harness). Three attacked the build: fusing passes, compressing queues, and building the map backwards. The backward build was the most instructive. It removed the queues it targeted, but its second pass over the run records cost about as much as the queues had.
 
+The register also keeps an object apart from the route to it. One cycle found that the structure of where runs overlap is small: about 1.3 transitions per run on our blocks. The only known way to obtain it costs about 1.8 steps per run, which loses. Those are two findings, and rejecting the route must not erase the object: a cheaper way to the same small structure would still be worth having.
+
 When a failure exposes a real obstruction, the register records three things: the concrete **witness**, the exact **scope** (which algorithms and cost model it binds), and the **escape condition**, the assumption a different formulation would have to drop. An obstruction without a stated scope does not count. That rule matters, because the temptation after six losses is to conclude that the walk is a law of nature. It isn't. It is a law of the representations tried so far.
 
 ## 2. Generate from structure, judge against obligations
@@ -61,13 +63,15 @@ The register is for judging, not for generating. Early in the week it was used f
 
 **Triage, Deepen, Confront and Learn** judge. Every candidate must say which paid work disappears, what replaces it, and how the information it needs is obtained: we call this *acquisition first*, because several elegant ideas died on the cost of getting their inputs rather than using them. Every cost model is treated as a diagnostic. This is not caution for its own sake. A cache model ranked two of Open's variants the wrong way round, predicting a win for the one that runs 10–16% slower natively. None of the six candidates that passed a model passed native timing.
 
+The cycle asks two separate questions of every candidate. Has the primitive changed, or only how the same operations run? We call the first *reorientation* and the second *traction*: Rauzy–Veech induction was reorientation, replacing single steps with operations on whole intervals, while the backward build was traction on Open's existing return map. And has the complete cost fallen? A new representation is not automatically a cheaper computation. The compact rank structure did change the primitive, removing the stored edges entirely, and lost because each step became several dependent lookups.
+
 Two smaller rules hold the process together. A research session pushes its work at every handoff and at least every half hour. One session was cut off mid-cycle by a usage limit, and its earlier cycles survived only because they were already published. And new mathematical leads go into an inbox that the researcher reads at a cycle boundary, so a good idea from outside never derails an experiment halfway through.
 
 ## 3. What the register has taught us
 
 Five research cycles by one model, and a sixth line now running with another, have mapped the walls fairly precisely. Representations that are expensive to build lose on construction. Representations that are compact lose on consumption, because recovering each next step takes several dependent operations instead of one load. Neither is a lower bound for the problem; both are evidence about the families tried.
 
-Today's measurement added the most useful single fact. Tracing every expensive row back to the byte it spells showed that the repetitive JSON skeleton is already nearly free, while unique random statement IDs, about 5% of the text, hold about 62% of the rows that stand alone. The obligation "follow retained rows one by one" is, in large part, the obligation to spell random strings. That turned a vague idea, a zoo of methods each suited to a different kind of text, into specific questions, written up in [the previous post](2026-11-20-where-the-decoding-work-goes.md).
+Today's measurement added the most useful single fact. Tracing every expensive row back to the byte it spells showed that the repetitive JSON skeleton is already nearly free, while unique random statement IDs, about 5% of the text, hold about 62% of the rows that stand alone. The obligation "follow retained rows one by one" is, in large part, the obligation to spell random strings. That turned a vague idea into specific questions, written up in [the previous post](2026-11-20-where-the-decoding-work-goes.md). The idea is a zoo: rather than one universal decoder, a repertoire of exact methods, each very good on one kind of structure, with the decoder recognising which applies. Recognition has to be cheap, read from what the compressed block already gives us, or it costs more than it saves.
 
 ## 4. Adapting the method: toy, missing effect, native surrogate
 
@@ -89,7 +93,11 @@ The correction, which came out of the discussion, is that the toy's real power i
 
 ## 5. Where this leaves us
 
+Three pieces now fit together. The obligation register tells us what our present algorithms pay for. Importing mathematical structure tells us what other operations might exist. Toy-to-hard transfer tells us which missing effects those operations should try to reproduce.
+
 The method in one chain: model the obligations, because they decompose and algorithms don't; generate ideas from mathematical structure; judge them against the obligations, with acquisition counted and models treated as diagnostics; and when a phenomenon makes the problem easy somewhere, find what makes it easy, break it on purpose, and look for a different mechanism that recreates the effect where it is missing.
+
+The method has not yet been shown to produce breakthroughs. Five research cycles under it found real structure and no faster decoder. What it has shown is narrower: failed approaches are cheaper to reject, their hidden costs are easier to see, and the mathematics they leave behind is harder to lose.
 
 A new research line is running now, independently, with the geometric leads (square-tiled surfaces, train tracks, interval pairings) as starting points and the toy-transfer lead waiting at its next cycle boundary. Its results come back for independent verification before anything reaches the decoder.
 
