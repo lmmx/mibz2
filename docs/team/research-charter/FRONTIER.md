@@ -15,6 +15,13 @@ These are the expensive classes of work that current decoders pay. Candidates co
 obligation stays open until it is removed or bounded with a proof. Update a row only when a cycle
 has learned something concrete (METHOD.md §3a).
 
+When a failure exposes a significant obstruction, record three things under its row:
+- the concrete **witness**;
+- its exact **scope**: which algorithms, representations and cost model it binds;
+- the **escape condition**: which assumption a different formulation would have to drop.
+
+An obstruction with no stated scope is not established. Not every failure yields one.
+
 | Obligation | Evidence | Open question | Status |
 |---|---|---|---|
 | Dependent traversal of retained rows | Open: about one dependent load per retained row (≈ one per ten output bytes); emission 36–48% of time (#653) | Can output-order relations be resolved collectively, without a producer as expensive as the walk? | open |

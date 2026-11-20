@@ -66,10 +66,14 @@ Report briefly:
    limitations;
 2. the constraints from earlier research that matter most, in your own words.
 
-**Mode:** default to reorientation (METHOD.md §3a). Challenge the computational object or
-primitive, not only its implementation, and name the obligation each candidate would remove. Use
-traction when measured evidence warrants it. Prior art informs; it does not disqualify. Explore
-mathematically before predicting a performance gain.
+**Mode:** default to reorientation (METHOD.md §3a). Generate freely from mathematical structure:
+representation import, obstruction inversion, primitive ablation, small-instance exact discovery,
+or anything else (METHOD.md §2). Evaluate ruthlessly against computational reality: what work each
+candidate removes, and what it costs instead.
+- Report the construction, prior art, displaced and replacement costs, and evidence. The auditors
+  classify whether it reoriented.
+- Calibrate any cost model on known reference variants before trusting its verdict.
+- Prior art informs; it does not disqualify.
 
 Then run one full cycle as METHOD.md describes:
 - **Explore:** several genuinely distinct approaches. At least one must question whether a current

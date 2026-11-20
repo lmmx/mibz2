@@ -46,16 +46,20 @@ adds the cost discipline learned since.
 | **Learn** | Record what won or lost, and why, in [FRONTIER.md](FRONTIER.md) | The specific structural reason |
 
 **Two rules for every Explore phase:**
-1. At least one candidate must question whether a current core operation is necessary at all:
-   - LF traversal;
-   - interval induction;
-   - first-return mapping;
-   - grammar or SLP construction;
-   - retained-row emission;
-   - reading output in orbit order.
+1. Generate from mathematical structure, through any of these (tools, not quotas; unexpected
+   ideas are welcome):
+   - **Representation import:** what richer structure is this an instance of, and what operations,
+     invariants or theorems does that make available? Cells (LF as an interval exchange) and Open
+     (elimination as a stochastic complement) both came from here.
+   - **Obstruction inversion:** take a failure's narrowest witness, and ask which assumption a
+     different primitive could escape.
+   - **Primitive ablation:** forbid a dominant operation in a bounded experiment, then check that
+     the alternative doesn't pay the equivalent cost somewhere else.
+   - **Small-instance exact discovery:** find optimal exact constructions on tiny cases, then look
+     for the law behind them. Optimality holds only for the primitives and costs searched.
 
-   Ask which expensive computation would disappear under a different formulation, then work backward
-   to what that formulation needs.
+   Computational obligations (§3a) judge a candidate's economics. They do not limit what may be
+   imagined.
 2. Check FRONTIER.md and CONTEXT.md §4 first. A previously refuted approach comes back only with a
    new mechanism that addresses its recorded failure.
 
@@ -90,9 +94,9 @@ variations of one primitive, the next Explore phase must widen.
 
 ## 3a. Two modes: reorientation and traction
 
-The unit of research is a **computational obligation**, an expensive class of work the decoder
-pays, and its possible replacements. It is not just a succession of candidate algorithms. Each
-cycle declares one of two modes.
+A **computational obligation** is an expensive class of work the decoder pays. Obligations are
+how candidates are *judged*: what work disappears, and what replaces it. Ideas are generated from
+mathematical structure (§2). Each cycle declares one of two modes.
 
 | | Reorientation (the default) | Traction |
 |---|---|---|
@@ -119,10 +123,11 @@ this cycle teach about the underlying obligation?* Killing a candidate does not 
 obligation. Record any positive finding inside a negative result.
 
 **The orientation check, at every cycle boundary.** Keep the steering apart from its effect.
-1. Record what was steered: the inherited assumption or obligation targeted, and the
-   intervention (FRONTIER.md's steering log).
-2. Record what the cycle actually investigated.
-3. Classify each serious outcome on two independent axes:
+1. The researcher records what it investigated, and the four fields above, for each serious
+   candidate. It does not classify its own result.
+2. **The Coordinator or MONODROMY** classifies each serious outcome, using the anonymised mechanism
+   (is the old primitive hidden in a helper?), whether the old obstruction dissolves, and the
+   measured cost proxies. It is classified on two independent axes:
    - **conceptual turn:** a different primitive or formulation, or the same one;
    - **economic turn:** an obligation removed without a comparable replacement cost, or not.
 
@@ -131,8 +136,9 @@ obligation. Record any positive finding inside a negative result.
 | **Different primitive** | mathematics worth keeping (e.g. Half-Bipolar) | a candidate bouleversement |
 | **Same primitive** | a negative engineering result | successful traction (e.g. Backward Open, if it wins natively) |
 
-New vocabulary is not evidence of a turn. A new object built with the old traversal has not removed
-the obligation. One cycle does not establish that a steering change worked.
+A claim of reorientation is not evidence of one. A new object built with the old traversal has not
+removed the obligation. One cycle does not establish that a steering change worked. The outcome
+goes in FRONTIER.md's steering log.
 
 ## 4. The gates (for promotion, not for imagining)
 
@@ -165,6 +171,13 @@ Claims meet executable checks, not reviews of prose:
    - paths that hold a text-determining object (such as run labels) before the final edge.
 3. **MONODROMY** independently audits theorems. **The Coordinator** reruns programs, measures
    native cost and decides what reaches engineering.
+
+**Cost models are calibrated before they are trusted.** A model used to predict or gate native
+performance (G3–G5) is first run, unchanged, on reference variants with known native results, at
+least shipped `qi16` and `i16`. Its predictions go in CONTEXT.md's fidelity ledger. A model that
+mis-ranks the references is diagnostic only: it can explain traffic, but its verdict is not a
+prediction of competitiveness. Never tune a model on the references and then call that
+validation.
 
 The registry, `docs/team/acquisition/primitives.toml`, is a record of costed primitives, not a
 whitelist. A new construction that exposes a cheaper primitive is welcome. Add it with its
