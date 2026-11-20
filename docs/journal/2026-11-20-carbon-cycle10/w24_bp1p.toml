@@ -1,0 +1,22 @@
+# Acquisition manifest for Co-Equilibrated U24Q + R4-DGIM + Bipolar Dead-Out 1-Pass Splicing (W24-BP1P).
+name = "Co-Equilibrated U24Q + R4-DGIM + Bipolar Dead-Out 1-Pass Splicing (W24-BP1P)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "w24_r4_dgim_elimination"
+inputs = ["C", "n", "p", "records"]
+output = "w24_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Re-equilibrates Meyer's thin/thick width threshold from LIMIT=16 (#657) to LIMIT=24 via branchless 3-YMM AVX2 U24Q queue fills (96B unconditional iota store) paired with 1-pass multi-lane emission (Theorem 10.1), cutting thick strips H by 12-44% and shrinking inline16 phrase dictionaries below 48 KiB L1D across 6/6 Wikidata blocks."
+
+[[edge]]
+id = "bipolar_dead_out_1p_emit"
+inputs = ["w24_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Drops retained-edge random reads from 2.0m (BVSMC-2P) to the Theorem 8.1 floor of 1.0m while replacing BVSMC-1P's 1.23 MiB external chunk pool with bipolar physical 2 KiB page allocation directly inside dead out[0..n) plus a recycled L2 overflow stack (~100-180 KiB) and Zero-Stage Kahn Topological Page Unshuffling (Theorem 10.2; verified across 10,000 random straddling extent permutations, 10,454 small runs, 8 adversarial controls, and 6/6 Wikidata blocks)."
