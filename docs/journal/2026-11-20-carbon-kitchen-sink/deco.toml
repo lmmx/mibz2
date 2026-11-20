@@ -1,0 +1,57 @@
+# Gate G2 Acquisition Manifest for Decoupled Exact-Chain Open (DECO)
+# Derives exact `text` from I0 = {C, alphabet, n, p, records} with all edges proved/verified.
+
+name = "Decoupled Exact-Chain Open (DECO: void-deleted exact thin-chain coalescence + Open)"
+target = "text"
+uses = [
+  "counts_from_records",
+  "lf_image_partition",
+  "lf_shifts",
+  "maximal_runs",
+  "run_endpoints",
+]
+
+[[edge]]
+cost = { B = "r", D = "1", M = "r", Q = "0", W = "r" }
+dependent = false
+evidence = "Two-pointer linear scan over sorted domain_partition (starts[0..r]) and sorted codomain_partition (img_starts[cod_order[0..r]]). Detects all exact thin-to-thin whole-run matches img_starts[u] == starts[v] with widths[u] == widths[v] in [min_w, 16] (v != p_run) in <= 2r comparisons with zero random memory reads."
+id = "exact_thin_matches"
+inputs = ["codomain_partition", "domain_partition", "p", "runs"]
+output = "thin_exact_dag"
+status = "proved"
+
+[[edge]]
+cost = { B = "r", D = "l_chain", M = "r", Q = "K", W = "r + K" }
+dependent = true
+evidence = "Trace maximal exact-match thin chains u_1 -> ... -> u_L from unabsorbed chain heads (!has_pred[u]) in 16-lane lockstep batches (D = max chain len <= 41, K = chain_hops: 5,682-10,958 at min_w=2; 31,299-82,660 at min_w=1 on the six blocks). Scanning tails z = 0..r-1 populates per-symbol entrance queues in exact sorted E' order with zero sorting (proved, verified on 28,080 small configs + 6 blocks)."
+id = "deco_tail_queues"
+inputs = ["p", "runs", "thin_exact_dag"]
+output = "deco_queues_and_voids"
+status = "verified"
+
+[[edge]]
+cost = { B = "H", D = "S_H", M = "H", Q = "S_H", W = "r + S_H" }
+dependent = true
+evidence = "Decoupled Void-Deletion Theorem: I_absorbed is disjoint from C_thick U f(C_thick), so omitting absorbed thin runs from domain and codomain terminal gaps preserves rigid translations on all H undivided thick strips (<= 3H + 2 nodes; S_H = 6,945-20,544 RV steps on the six blocks, strictly <= Open's RV steps). Verified on 28,080 small configs + 6 blocks."
+id = "deco_void_endpoint_rv"
+inputs = ["codomain_partition", "deco_queues_and_voids", "runs"]
+output = "deco_bands"
+status = "verified"
+
+[[edge]]
+cost = { B = "m_prime", D = "1", M = "m_prime", Q = "m_prime", W = "m_prime" }
+dependent = false
+evidence = "Wire inverse first-return table edges[0..m_prime] across the 2,242-6,529 bands. Measured on the six blocks: m_prime = 0.677-0.839 m_open (min_w=2) and 0.420-0.519 m_open (min_w=1)."
+id = "deco_wire_edges"
+inputs = ["deco_bands", "deco_queues_and_voids"]
+output = "deco_return_table"
+status = "verified"
+
+[[edge]]
+cost = { B = "n", D = "m_prime", M = "n + m_prime", Q = "m_prime", W = "n + m_prime" }
+dependent = true
+evidence = "Walk m_prime retained chain-head rows from mark, appending pre-spelled thick+chain slices to out[0..n) and repeating period if < n. Exact on 28,080 small configs and all 6 authenticated blocks."
+id = "deco_emit"
+inputs = ["deco_return_table", "n", "p"]
+output = "text"
+status = "verified"

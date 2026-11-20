@@ -1,0 +1,40 @@
+# Gate G2 Acquisition Manifest for Train-Track Series-Reduced RV (TTSR-RV)
+# Derives exact `text` from I0 = {C, alphabet, n, p, records} with zero row-level walk (m = 0).
+
+name = "Train-Track Series-Reduced Accelerated RV (TTSR-RV)"
+target = "text"
+uses = [
+  "counts_from_records",
+  "lf_image_partition",
+  "lf_shifts",
+  "maximal_runs",
+  "partition_overlaps",
+  "run_endpoints",
+]
+
+[[edge]]
+cost = { B = "r", D = "l_chain", M = "r", Q = "r", W = "r" }
+dependent = true
+evidence = "Identify all (in_deg == 1, out_deg == 1) pass-through runs from overlap_events (87.8-89.3% of r, including 100% of width-1 runs except pinned p_run). Trace all E_core = 0.317-0.371r chains in 16-lane lockstep batches (D = max_chain <= 41) to build the exact E_core-piece core IET with 62k-155k total leaf bytes (= E). Verified on 5,227 small cases + 6 blocks."
+id = "train_track_series_reduction"
+inputs = ["codomain_partition", "domain_partition", "overlap_events", "p", "runs"]
+output = "core_iet"
+status = "verified"
+
+[[edge]]
+cost = { B = "r", D = "S_core", M = "r", Q = "S_core", W = "S_core" }
+dependent = true
+evidence = "Place p_run's width-1 piece at index 0 of [0, N_core) and run accelerated right-end Rauzy-Veech induction keeping y on equal-width merges so index 0 stays invariant until closure (zero mark-offset branches, zero cyclic rotation). Measured on the six blocks: S_core = 0.407-0.497r winner-run turns (0.868-1.083r unaccelerated steps), 2.0-2.5x below the raw r-piece monotone floor."
+id = "core_rv_induction"
+inputs = ["core_iet"]
+output = "core_slp"
+status = "verified"
+
+[[edge]]
+cost = { B = "n", D = "r", M = "n + r", Q = "r", W = "n + r" }
+dependent = false
+evidence = "Expand root SLP rule with first-occurrence memoized copies into out[0..n) and repeat period if < n. Verified byte-exact on 5,227 small cases and all 6 authenticated blocks."
+id = "core_slp_writer"
+inputs = ["core_slp", "n"]
+output = "text"
+status = "verified"
