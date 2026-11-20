@@ -1,0 +1,22 @@
+# Acquisition manifest for Rule-R4 Direct-Arena Graded Inline-Monoid Open Elimination (R4-DGIM).
+name = "Rule-R4 Direct-Arena Graded Inline-Monoid Open Elimination (R4-DGIM)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "r4_dgim_thick_elimination"
+inputs = ["C", "n", "p", "records"]
+output = "r4_dgim_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Unifies MONODROMY's Rule R4 asymmetric one-sided overwrite exchange (16B aligned R4Top + 8B R4Bot slots, prev-only, sequential initial array layout, FAR=8 lookahead prefetch, zero next[] pointers, zero ep_cut, zero bottom[] array via dead tops[ts].other reuse under Terminal Prefix Absorbency Theorem 9.2) with M_64 graded inline-monoid elimination and zero-offsets[] dual-purpose inline16 dictionary (direct XMM load for <=16B words, {o0, ln} metadata for >16B words in long_spell; verified across 20,908 small runs, 8 adversarial controls, and 6 authenticated blocks)."
+
+[[edge]]
+id = "r4_dgim_emit"
+inputs = ["r4_dgim_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Composes directly with 1-lane SIMD emit and zero-arena 8-lane BVSMC-2P / 1-pass BVSMC-1P without offsets[] lookups."
