@@ -97,6 +97,7 @@ Do not rediscover these; build on them.
 ## Connections not yet explored
 
 These are pointers, not results:
+- **The origami lift** ([journal](../../journal/2026-11-20-origami-lift.md)): a BWT block is a branched cover of the torus whose monodromy is (LF, +1). Its cone points are the run boundaries: exactly r squares, in only 1–8 cycles on the six blocks, and block 207 sits in the minimal stratum. It is a candidate change of basis, with four open questions. It is not yet a cheaper decoder.
 - Kempa (SODA 2019) and Agol–Hass–Thurston: sublinear routes to run-boundary samples. Could an
   o(n) sample construction feed a reconstruction?
 - LCP-chain structure (Kärkkäinen–Kempa–Piątkowski): reducible and irreducible LCPs at run heads
