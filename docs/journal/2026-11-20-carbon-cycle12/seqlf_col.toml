@@ -1,0 +1,22 @@
+# Acquisition manifest for Write-Streamed One-Pass LF Column Inversion + AVX2 vpshufb Reversed Assembly (SeqLF-Col, Cycle 12).
+name = "Write-Streamed One-Pass LF Column Inversion + AVX2 Reversed Assembly (SeqLF-Col)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "seqlf_write_streamed_table"
+inputs = ["C", "n", "records"]
+output = "packed_lf_table"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "1", B = "n", Q = "0", M = "n" }
+evidence = "Replaces Segmented::invert_in_place's forward Psi scatter (build_one_pass: n random L3 RFO writes + n random ll[s] reads across 4.4 MiB) on high-entropy column-route blocks (random, records) with 100% sequential streaming writes tt[i] = ll[i] | (ftab[ll[i]]++ << 8) using L1D-pinned ftab[256], cutting build time by ~3.0x (1.70-1.89 ms -> 0.56-0.57 ms, Theorem 12.3)."
+
+[[edge]]
+id = "room_walk_back_avx2_reverse"
+inputs = ["packed_lf_table", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "n", B = "n", Q = "n", M = "n" }
+evidence = "Walks packed_lf_table backward across 32 prefetched lanes in L1D tiles and joins reversed segments directly into out (supporting true in-place overwrite out == ll) via 32-byte AVX2 vpshufb + vperm2i128 reversal, cutting total column-route decode time to 0.69-0.75x."

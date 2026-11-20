@@ -1,0 +1,22 @@
+# Acquisition manifest for Ostrowski/AHT Self-Overlap Contraction + Tight Radix-Slab FlatQ-BP4K (AHT-FlatQ-BP4K, Cycle 12).
+name = "Ostrowski/AHT Self-Overlap Contraction + Tight Radix-Slab FlatQ-BP4K (AHT-FlatQ-BP4K)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "aht_ostrowski_flatq_r4_elimination"
+inputs = ["C", "n", "p", "records"]
+output = "aht_flatq_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Collapses additive O(n) Rauzy-Veech spirals in R4-DGIM whenever top-driven (ra < rb, na == ts) or bottom-driven (ra > rb, nb == bs) self-overlap occurs into a single Euclidean quotient step q = floor(W / d) with binary-squared EpRule nodes (r.left == r.right expanded via O(log q) sequential memcpy doublings, Theorem 12.1), slashing RV steps from 128,579 to 12 on pattern and 164,963 to 270 on runs0 (11.9-20.1x faster than Open-qi16, abolishing the r/n < 1/64 sparse refusal gate) with zero overhead on 6/6 Wikidata blocks."
+
+[[edge]]
+id = "bipolar_4k_aht_emit"
+inputs = ["aht_flatq_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Emits the AHT-contracted return-map words across 8 lanes into 4 KiB bipolar dead-out pages with Zero-Stage Kahn Topological Unshuffling (<= 204 KiB recycled overflow) across the full r/n < 0.15 domain (the Meyer 32-bit packing / L2 horizon proved in Theorem 12.2)."
