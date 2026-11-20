@@ -105,6 +105,7 @@ RESOLVED = {
     6654371320: "a deliberate tripwire test; its check run did not reopen the finished suite (#188)",
     6654531225: "a deliberate tripwire test; an in-progress check run did not reopen it either",
     6757065549: "a LOG sent to the Researcher's inbox by mistake; its content is on #145 as LOG 6757065138, and nothing was re-sent (LOG on #145)",
+    7039973861: "a second CHECKPOINT to MONODROMY while 7039964966 was in flight; its content folded into 7039964966, the comment rewritten as a withdrawal, and nothing was re-sent (LOG on #145)",
 }
 
 

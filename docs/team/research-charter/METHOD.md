@@ -46,16 +46,20 @@ adds the cost discipline learned since.
 | **Learn** | Record what won or lost, and why, in [FRONTIER.md](FRONTIER.md) | The specific structural reason |
 
 **Two rules for every Explore phase:**
-1. At least one candidate must question whether a current core operation is necessary at all:
-   - LF traversal;
-   - interval induction;
-   - first-return mapping;
-   - grammar or SLP construction;
-   - retained-row emission;
-   - reading output in orbit order.
+1. Generate from mathematical structure, through any of these (tools, not quotas; unexpected
+   ideas are welcome):
+   - **Representation import:** what richer structure is this an instance of, and what operations,
+     invariants or theorems does that make available? Cells (LF as an interval exchange) and Open
+     (elimination as a stochastic complement) both came from here.
+   - **Obstruction inversion:** take a failure's narrowest witness, and ask which assumption a
+     different primitive could escape.
+   - **Primitive ablation:** forbid a dominant operation in a bounded experiment, then check that
+     the alternative doesn't pay the equivalent cost somewhere else.
+   - **Small-instance exact discovery:** find optimal exact constructions on tiny cases, then look
+     for the law behind them. Optimality holds only for the primitives and costs searched.
 
-   Ask which expensive computation would disappear under a different formulation, then work backward
-   to what that formulation needs.
+   Computational obligations (§3a) judge a candidate's economics. They do not limit what may be
+   imagined.
 2. Check FRONTIER.md and CONTEXT.md §4 first. A previously refuted approach comes back only with a
    new mechanism that addresses its recorded failure.
 
@@ -88,6 +92,54 @@ unaffordable?"), and a foundational result becomes a feasibility candidate.
 Review the portfolio in FRONTIER.md at every cycle. If every live candidate is incremental, or all are
 variations of one primitive, the next Explore phase must widen.
 
+## 3a. Two modes: reorientation and traction
+
+A **computational obligation** is an expensive class of work the decoder pays. Obligations are
+how candidates are *judged*: what work disappears, and what replaces it. Ideas are generated from
+mathematical structure (§2). Each cycle declares one of two modes.
+
+| | Reorientation (the default) | Traction |
+|---|---|---|
+| **What varies** | the factorisation: intermediate objects, primitives, even where inversion starts in the bzip2 pipeline | the implementation or architecture of a known mechanism |
+| **Aim** | make an obligation unnecessary | make a known mechanism cheaper end to end |
+| **First evidence** | a correct construction, and a cheap falsifier aimed at hidden acquisition | a measured bottleneck, a causal hypothesis, a discriminating experiment |
+| **Failure signal** | hidden acquisition cost, incorrectness, or the displaced work reappearing | regression, or no end-to-end gain |
+| **What a negative result is worth** | an obstruction or a new opportunity, recorded on the obligation | the next dominant cost, which feeds reorientation |
+
+Move into traction when measured evidence or a surviving idea justifies it. A successful traction
+step should report the newly dominant residual cost.
+
+**Every serious candidate states four things in its write-up.** This is not a gate: it is there to
+sharpen the reasoning.
+- **Mode:** reorientation or traction.
+- **Displaced obligation:** what existing work disappears. For traction, an implementation cost
+  (queue fill, scattered writes) is enough.
+- **Replacement principle:** what is done instead, and the mathematical fact that permits it.
+- **New paid obligations:** what must now be acquired, built and consumed.
+- **Nearest prior art:** what is genuinely different. Ancestry is context, not disqualification.
+
+**At every cycle boundary,** first read what is new since the last one: published audits, and FRONTIER.md's pending mathematical leads. Audits correct the current work; leads open new directions. Then choose the next cycle. Then answer one question in FRONTIER.md's obligation register: *what did
+this cycle teach about the underlying obligation?* Killing a candidate does not close its
+obligation. Record any positive finding inside a negative result.
+
+**The orientation check, at every cycle boundary.** Keep the steering apart from its effect.
+1. The researcher records what it investigated, and the four fields above, for each serious
+   candidate. It does not classify its own result.
+2. **The Coordinator or MONODROMY** classifies each serious outcome, using the anonymised mechanism
+   (is the old primitive hidden in a helper?), whether the old obstruction dissolves, and the
+   measured cost proxies. It is classified on two independent axes:
+   - **conceptual turn:** a different primitive or formulation, or the same one;
+   - **economic turn:** an obligation removed without a comparable replacement cost, or not.
+
+| | No cost gain | Cost gain |
+|---|---|---|
+| **Different primitive** | mathematics worth keeping (e.g. Half-Bipolar) | a candidate bouleversement |
+| **Same primitive** | a negative engineering result | successful traction (e.g. Backward Open, if it wins natively) |
+
+A claim of reorientation is not evidence of one. A new object built with the old traversal has not
+removed the obligation. One cycle does not establish that a steering change worked. The outcome
+goes in FRONTIER.md's steering log.
+
 ## 4. The gates (for promotion, not for imagining)
 
 The gates regulate investment. They don't regulate creativity. An idea can be explored, discussed and
@@ -119,6 +171,10 @@ Claims meet executable checks, not reviews of prose:
    - paths that hold a text-determining object (such as run labels) before the final edge.
 3. **MONODROMY** independently audits theorems. **The Coordinator** reruns programs, measures
    native cost and decides what reaches engineering.
+
+**A cost model is diagnostic until it has been shown to predict native results.** It can explain
+traffic, but it doesn't predict competitiveness. The auditors check models against known native
+variants (CONTEXT.md §5a lists the record so far).
 
 The registry, `docs/team/acquisition/primitives.toml`, is a record of costed primitives, not a
 whitelist. A new construction that exposes a cheaper primitive is welcome. Add it with its

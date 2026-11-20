@@ -66,6 +66,15 @@ Report briefly:
    limitations;
 2. the constraints from earlier research that matter most, in your own words.
 
+**Mode:** default to reorientation (METHOD.md §3a). Generate freely from mathematical structure:
+representation import, obstruction inversion, primitive ablation, small-instance exact discovery,
+or anything else (METHOD.md §2). Evaluate ruthlessly against computational reality: what work each
+candidate removes, and what it costs instead.
+- Report the construction, prior art, displaced and replacement costs, and evidence. The auditors
+  classify whether it reoriented.
+- Treat a cost or cache model as diagnostic, not as proof of native speed.
+- Prior art informs; it does not disqualify.
+
 Then run one full cycle as METHOD.md describes:
 - **Explore:** several genuinely distinct approaches. At least one must question whether a current
   core operation is necessary at all.
@@ -73,7 +82,8 @@ Then run one full cycle as METHOD.md describes:
 - **Deepen:** the strongest survivor, through the gates as far as it goes.
 - **Confront:** its cheapest decisive experiment or theorem, with its rule fixed first and run on
   the six blocks where possible.
-- **Learn:** record what it taught, in FRONTIER.md.
+- **Learn:** record what it taught, in FRONTIER.md, including the obligation register: what was
+  learned about the obligation itself, positive findings from failed candidates included.
 
 Commit the write-up as `docs/journal/YYYY-MM-DD-neon-<topic>.md`, with its programs, and the
 FRONTIER.md update. Push the branch and report the verified remote SHA (METHOD.md §8). Then continue

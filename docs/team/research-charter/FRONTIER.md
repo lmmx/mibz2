@@ -9,6 +9,55 @@
 
 *Evidence lives in [CONTEXT.md](CONTEXT.md) and the journals. This file points to it.*
 
+## Pending mathematical leads
+
+This is an inbox for directions Louis introduces between cycles. A lead is an invitation, not an
+assignment: Neon reads it at the next cycle boundary and decides how it should shape the next
+cycle. Following one needs no approval. Neon updates the status.
+
+| Mathematical doorway | Why it might expose a new representation or primitive | References | Status |
+|---|---|---|---|
+| **The origami lift:** a BWT block as a branched torus cover with monodromy (LF, +1) | Surface operations, and directions with a transport law, unavailable in the one-dimensional exchange. MONODROMY verified the construction (record 86); the cone points alone cannot decode | [journal](../../journal/2026-11-20-origami-lift.md) | pending |
+| **Illegal turns and folding** (Bestvina–Handel, Stallings) | If a graph self-map of the run dynamics can be built cheaply, its illegal-turn structure might isolate the few branching decisions that carry the ordering, resolved collectively by folds. A self-map must be constructed first; without one, "illegal turn" is undefined | Bestvina–Handel, *Train tracks and automorphisms of free groups* (Ann. Math. 1992); Feighn–Handel on relative train-track maps; Rafiqi–Zeytin, arXiv:2610.13347 (survey) | pending |
+| **Ribbon graphs and rotation systems** | Restoring the cyclic order at each vertex encodes a surface embedding. Faces are cycles of σ∘α. Could ordered paths be assembled collectively from the embedding? Caution: plain face traversal may just be LF in disguise | Standard combinatorial-map literature; the origami journal | pending |
+| **Splitting integer-weighted train tracks, and contraction** | Dunfield–Thurston count the components of weighted multicurves by splitting bands, which they identify with Rauzy induction, without tracing the curves. Is there an exact analogue that yields the marked ordered itinerary? Also: parallel list and tree contraction carrying ordered values | Dunfield–Thurston, *A random tunnel number one 3-manifold does not fiber over the circle* (2006), §7.3; Shun, Gu, Blelloch, Fineman and Gibbons on list and tree contraction; Cong–Bader on how building the adjacency an Euler tour needs can cost as much as the tour (an acquisition warning) | pending |
+
+*These references come from Louis's literature search and have not yet been checked against their
+sources here.*
+
+## Obligation register
+
+These are the expensive classes of work that current decoders pay. Candidates come and go; an
+obligation stays open until it is removed or bounded with a proof. Update a row only when a cycle
+has learned something concrete (METHOD.md §3a).
+
+When a failure exposes a significant obstruction, record three things under its row:
+- the concrete **witness**;
+- its exact **scope**: which algorithms, representations and cost model it binds;
+- the **escape condition**: which assumption a different formulation would have to drop.
+
+An obstruction with no stated scope is not established. Not every failure yields one.
+
+| Obligation | Evidence | Open question | Status |
+|---|---|---|---|
+| Dependent traversal of retained rows | Open: about one dependent load per retained row (≈ one per ten output bytes); emission 36–48% of time (#653) | Can output-order relations be resolved collectively, without a producer as expensive as the walk? | open |
+| Building the retained map | Open's run pass and queue fill 28–36%; queued wiring 23–28% (#653). Compression (Q) and fusion (F) lost (#654) | Can the map be produced in the direction its consumer needs, so no inversion scatter is required? Candidate: Queue-Free Backward Open (Neon cycle 2; audit pending) | candidate under audit |
+| Acquiring the Φ-overlap coordinates | The overlap structure is small: 1.25–1.37r transitions on the six blocks (Neon cycle 1). The known route via run-boundary positions costs Cells' 1.68–1.87r steps (record 81) | Can those coordinates come out of a cheaper computation, or out of an earlier representation? | open; positive measurement |
+| Full-block metadata | Grammar and interval-exchange machines carry 40–100 B per run across all r runs, mostly width-1 runs (Neon cycle 1; Astra D) | Can a primitive avoid per-run global state? | open |
+| Starting from the decoded column | Every kernel begins from run records after Huffman, MTF and RLE2 decoding | Does an earlier representation carry ordering information more cheaply? | unexplored |
+| Writing every output byte | Unavoidable; sets the floor | (bounds the others) | floor |
+
+## Steering log
+
+Each entry records a change of direction, written before the cycle it governs, and its observed
+effect afterwards. Louis owns the decision at the bottom of each entry: hold heading, correct, or
+reorient.
+
+| Applied | Target | Intervention | Intended response | Observed response | Decision |
+|---|---|---|---|---|---|
+| f5961bfb, for Neon cycle 3 | The search kept returning to classical permutation inversion: induced sorting, pair recompression, the direction duality (audit, branch `audit/neon-cycles-1-2`) | Make computational obligations the unit of research; reorientation by default; the obligation register; the bzip2 pipeline before the decoded column made admissible | Investigations that replace ordering operations collectively, rather than reorganise them | pending cycle 3 | pending |
+| 6d9acc87, for Neon cycle 3 onward | The obligation register was being used to generate ideas as well as judge them; agents self-classified; cost models were uncalibrated (0 of 6 promoted candidates passed natively) | Generation from mathematical structure, with obligations kept for evaluation; classification by the auditors; cost models treated as diagnostic; witness, scope and escape condition recorded for obstructions. Methodology frozen until evidence arrives | Mechanisms from structure, not from rephrased cost lists | pending | pending |
+
 ## Foundational questions (track 1)
 
 Each questions whether a current core operation is necessary. None is settled.
@@ -64,6 +113,13 @@ Do not rediscover these; build on them.
 ## Connections not yet explored
 
 These are pointers, not results:
+- **The run network** ([journal](../../journal/2026-11-20-run-network.md)): LF as a graph on runs, built in O(r).
+  - Its cycle rank, 0.21–0.25r, is fixed by record 63's identity E = 2r − 1 − C, and equals the copy count k plus one.
+  - 88–89% of runs are pass-throughs, leaving a series-reduced core of about 0.11r runs.
+  - With order-preserving switches it is a measured train track.
+  - Census (bd781368): the core has no small separators, though it bisects 4–8× better than random. As a retained set for first returns it is worse than Open's.
+  - Open question: is there an operation on the core that is not a first-return walk?
+- **The origami lift** ([journal](../../journal/2026-11-20-origami-lift.md)): a BWT block is a branched cover of the torus with monodromy (LF, +1). MONODROMY verified it (record 86). The few cone points are generic, not special to Wikidata. The cone structure ignores run lengths, so it cannot decode alone. Still open: directions and transport (§6.2).
 - Kempa (SODA 2019) and Agol–Hass–Thurston: sublinear routes to run-boundary samples. Could an
   o(n) sample construction feed a reconstruction?
 - LCP-chain structure (Kärkkäinen–Kempa–Piątkowski): reducible and irreducible LCPs at run heads
