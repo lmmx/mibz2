@@ -215,10 +215,10 @@ These are in [CONTEXT.md](CONTEXT.md) §4–5, with evidence. In brief:
 
 Committing and publishing are different acts.
 - **While a cycle is active:** commit as often as is useful. Also push a work-in-progress commit,
-  labelled `wip(neon): …`, at least every 30 minutes of work and before any run likely to take more
+  labelled `wip(<model>): …`, at least every 30 minutes of work and before any run likely to take more
   than a few minutes. A session can stop without warning (a quota or a crash), and unpushed work is
   then at risk. A WIP push is not a handoff and needs no write-up.
-- **At a handoff, push the `research/neon-<topic>` branch to origin.** A handoff is any of:
+- **At a handoff, push the `research/<model>-<topic>` (for example `research/neon-…` or `research/carbon-…`) branch to origin.** A handoff is any of:
   - a research cycle finished;
   - an independent audit requested;
   - work handed back to the Coordinator.
@@ -226,7 +226,7 @@ Committing and publishing are different acts.
   Pushing is authorised at these points without asking.
 - **The handoff contains:** the cycle's write-up, negative results and failed proof attempts,
   reproducible verifiers and their outputs, cost manifests, and the updated FRONTIER.md.
-- **Verify, then report:** run `git ls-remote origin research/neon-<topic>` and report the branch
+- **Verify, then report:** run `git ls-remote origin research/<model>-<topic>` and report the branch
   and the exact pushed SHA. That is what lets another agent retrieve it. A handoff is not "remotely
   available" until that check shows the commit.
 - **If a push fails** (permissions, connectivity), say so plainly, with the error. Don't describe

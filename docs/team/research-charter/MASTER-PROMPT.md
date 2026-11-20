@@ -25,7 +25,7 @@ information actually costs to obtain and to use. Many elegant ones here have not
 ## 1. Environment
 
 1. Start from the latest `master`. Report its commit SHA.
-2. Create and switch to `research/neon-<topic>` before writing anything. If it exists, report its
+2. Create and switch to `research/<model>-<topic>` (for example `research/neon-…` or `research/carbon-…`) before writing anything. If it exists, report its
    state; don't overwrite it.
 3. Fetch the six authenticated blocks from branch `data/admitted-bwt` without disturbing your
    checkout, for example with `git worktree add`, or with `git show origin/data/admitted-bwt:<path>`
@@ -39,7 +39,7 @@ information actually costs to obtain and to use. Many elegant ones here have not
      or touch releases.
    - **Freely:** commit write-ups and programs on your research branch as often as you like.
      Local commits are not published.
-   - **Pushing at handoffs:** push your `research/neon-*` branch (and only that) when you finish
+   - **Pushing at handoffs:** push your `research/<model>-*` branch (and only that) when you finish
      a research cycle, ask for an audit, or hand back to the Coordinator. Follow METHOD.md §8.
 
 ## 2. Read the charter: it governs the method
