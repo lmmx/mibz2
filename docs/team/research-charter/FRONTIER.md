@@ -24,6 +24,16 @@ has learned something concrete (METHOD.md §3a).
 | Starting from the decoded column | Every kernel begins from run records after Huffman, MTF and RLE2 decoding | Does an earlier representation carry ordering information more cheaply? | unexplored |
 | Writing every output byte | Unavoidable; sets the floor | (bounds the others) | floor |
 
+## Steering log
+
+Each entry records a change of direction, written before the cycle it governs, and its observed
+effect afterwards. Louis owns the decision at the bottom of each entry: hold heading, correct, or
+reorient.
+
+| Applied | Target | Intervention | Intended response | Observed response | Decision |
+|---|---|---|---|---|---|
+| f5961bfb, for Neon cycle 3 | The search kept returning to classical permutation inversion: induced sorting, pair recompression, the direction duality (audit, branch `audit/neon-cycles-1-2`) | Make computational obligations the unit of research; reorientation by default; the obligation register; the bzip2 pipeline before the decoded column made admissible | Investigations that replace ordering operations collectively, rather than reorganise them | pending cycle 3 | pending |
+
 ## Foundational questions (track 1)
 
 Each questions whether a current core operation is necessary. None is settled.

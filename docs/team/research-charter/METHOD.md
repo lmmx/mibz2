@@ -118,6 +118,22 @@ sharpen the reasoning.
 this cycle teach about the underlying obligation?* Killing a candidate does not close its
 obligation. Record any positive finding inside a negative result.
 
+**The orientation check, at every cycle boundary.** Keep the steering apart from its effect.
+1. Record what was steered: the inherited assumption or obligation targeted, and the
+   intervention (FRONTIER.md's steering log).
+2. Record what the cycle actually investigated.
+3. Classify each serious outcome on two independent axes:
+   - **conceptual turn:** a different primitive or formulation, or the same one;
+   - **economic turn:** an obligation removed without a comparable replacement cost, or not.
+
+| | No cost gain | Cost gain |
+|---|---|---|
+| **Different primitive** | mathematics worth keeping (e.g. Half-Bipolar) | a candidate bouleversement |
+| **Same primitive** | a negative engineering result | successful traction (e.g. Backward Open, if it wins natively) |
+
+New vocabulary is not evidence of a turn. A new object built with the old traversal has not removed
+the obligation. One cycle does not establish that a steering change worked.
+
 ## 4. The gates (for promotion, not for imagining)
 
 The gates regulate investment. They don't regulate creativity. An idea can be explored, discussed and
