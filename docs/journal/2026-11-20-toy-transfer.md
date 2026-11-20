@@ -159,3 +159,27 @@ Louis, relaying ChatGPT, corrected step 2 above.
   their BWTs have more runs.
 - **The first damage step:** measure how runs grow with r while the arithmetic coordinate
   survives. That is "damage the toy" with the coordinate kept and the width destroyed.
+
+## The damaged toy, measured
+
+`toy.py` codes a rotation by the golden-ratio slope, with the circle cut into p pieces, on 5,000
+letters. It counts the runs of the BWT's last column.
+
+| Pieces p | Runs | Mean width (rows) |
+|---:|---:|---:|
+| 2 | 10 | 500 |
+| 8 | 46 | 109 |
+| 64 | 101 | 50 |
+| 256 | 276 | 18 |
+| 1,024 | 1,036 | 4.8 |
+
+**Measured.** The 2-piece row is a Sturmian prefix, and its finite length adds runs to the ideal
+two. The 3/8 Christoffel word `aabaabab` has the BWT `bbbaaaaa`.
+
+**What it shows.**
+- **A few pieces barely damage the toy.** The "first damage step" proposed above is too weak.
+- **About a thousand pieces destroy the width.** Runs average about 5 rows, close to a random
+  string's.
+- **The coordinate survives.** Letter k is still one binary search on (x + kα) mod 1.
+- **So the two separate:** a block can be almost all narrow runs and still have a global
+  coordinate.
