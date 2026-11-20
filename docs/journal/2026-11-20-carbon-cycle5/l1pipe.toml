@@ -1,0 +1,22 @@
+# Acquisition manifest for L1-Windowed Forward Pipeline Fusion (L1-Pipe Open).
+name = "L1-Windowed Forward Pipeline Fusion (L1-Pipe Open)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "open_return_table"
+inputs = ["C", "p", "records"]
+output = "open_return_edges"
+status = "measured"
+dependent = true
+cost = { W = "R + m + U", D = "H", B = "R + m + U", Q = "H", M = "m + U" }
+evidence = "Shipped src/open.rs construct<true, true>."
+
+[[edge]]
+id = "l1_fused_emit_unrle_crc"
+inputs = ["n", "open_return_edges", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Streams Open::emit into a 4 KiB L1 window feeding stateful AVX2 unrle1 + PCLMULQDQ CRC-32/BZIP2 directly into out, eliminating the 900 KB intermediate s.ll buffer and 2.7 MB/block of L2/L3 post-BWT buffer traffic (Theorem 5.3; verified on 6 authenticated blocks + RLE1 boundary cases)."
