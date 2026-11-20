@@ -189,11 +189,11 @@
     "title": "What decoding pays for: how long run boundaries persist"
   },
   "assets/social/blog-2026-11-19-open-returns.png": {
-    "description": "Open rebuilds each block from a few retained rows and the words their returns spell, and the decoder chooses it wherever an inexpensive run count predicts a gain.",
+    "description": "mibz2 0.5.7 decodes Wikidata up to 11% faster on ten cores by keeping a tenth of each block's rows and letting the rest travel together in convoys.",
     "foot": "lmmx.github.io/mibz2 · 19 November 2026",
     "kind": "result",
     "section": " · Research blog",
-    "title": "Open Returns: picking the decoder block by block"
+    "title": "Open Returns: decoding a block from a tenth of its rows"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
