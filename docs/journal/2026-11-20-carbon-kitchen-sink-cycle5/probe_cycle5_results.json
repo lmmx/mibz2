@@ -1,0 +1,1295 @@
+{
+  "small_bwt_galois": {
+    "small_primitive_bwts_checked": 1500,
+    "imprimitive_count": 282,
+    "strictly_primitive_pct": 81.2,
+    "imprimitive_witnesses": [
+      [
+        "0001",
+        "1000",
+        4,
+        2
+      ],
+      [
+        "0010",
+        "1000",
+        4,
+        2
+      ],
+      [
+        "0100",
+        "1000",
+        4,
+        2
+      ],
+      [
+        "0111",
+        "1110",
+        4,
+        2
+      ],
+      [
+        "1000",
+        "1000",
+        4,
+        2
+      ]
+    ]
+  },
+  "blocks": {
+    "block-0.L": {
+      "pillar1_origami_galois_and_slopes": {
+        "n_proper_divisors_checked": 2,
+        "intermediate_cover_moduli": [],
+        "veech_slopes": {
+          "1,1": {
+            "word": "ru+",
+            "cylinders": 27,
+            "fixed_points": 0,
+            "max_waist": 356388
+          },
+          "2,1": {
+            "word": "rru+",
+            "cylinders": 29,
+            "fixed_points": 1,
+            "max_waist": 773878
+          },
+          "3,1": {
+            "word": "rrru+",
+            "cylinders": 23,
+            "fixed_points": 4,
+            "max_waist": 698859
+          },
+          "3,2": {
+            "word": "rru+ru+",
+            "cylinders": 19,
+            "fixed_points": 4,
+            "max_waist": 330892
+          },
+          "5,3": {
+            "word": "rru+rru+ru+",
+            "cylinders": 19,
+            "fixed_points": 5,
+            "max_waist": 420802
+          },
+          "1,-1": {
+            "word": "ru-",
+            "cylinders": 23,
+            "fixed_points": 0,
+            "max_waist": 426467
+          },
+          "2,-1": {
+            "word": "rru-",
+            "cylinders": 47,
+            "fixed_points": 0,
+            "max_waist": 600172
+          }
+        }
+      },
+      "pillar2_durand_and_s_adic_limit": {
+        "durand_cylinders": {
+          "newline": {
+            "cylinder_size": 22,
+            "affine_return_pieces": 22,
+            "distinct_return_words": 22,
+            "compression_ratio_pieces_over_size": 1.0
+          },
+          "close_brace": {
+            "cylinder_size": 12343,
+            "affine_return_pieces": 3480,
+            "distinct_return_words": 2047,
+            "compression_ratio_pieces_over_size": 0.2819
+          },
+          "quote": {
+            "cylinder_size": 135716,
+            "affine_return_pieces": 6133,
+            "distinct_return_words": 2716,
+            "compression_ratio_pieces_over_size": 0.0452
+          }
+        },
+        "open_forest_s_adic_tower": [
+          {
+            "level": 0,
+            "rows": 899931,
+            "sites": 51184
+          },
+          {
+            "level": 1,
+            "rows": 89874,
+            "sites": 47736
+          },
+          {
+            "level": 2,
+            "input_arcs": 54575,
+            "rows": 7543,
+            "sites": 6840
+          },
+          {
+            "level": 3,
+            "input_arcs": 7130,
+            "rows": 291,
+            "sites": 291
+          },
+          {
+            "level": 4,
+            "input_arcs": 291,
+            "rows": 1,
+            "sites": 1
+          }
+        ]
+      },
+      "pillar3_guid_sha1_riffle_shuffle": {
+        "n_guids": 761,
+        "guid_bytes": 27396,
+        "guid_position_profile": {
+          "j=35": {
+            "mean_w": 1.11,
+            "thin_pct": 100.0,
+            "w1_pct": 89.1
+          },
+          "j=34": {
+            "mean_w": 1.13,
+            "thin_pct": 100.0,
+            "w1_pct": 88.0
+          },
+          "j=33": {
+            "mean_w": 3.0,
+            "thin_pct": 99.9,
+            "w1_pct": 87.4
+          },
+          "j=32": {
+            "mean_w": 1.12,
+            "thin_pct": 99.9,
+            "w1_pct": 91.5
+          },
+          "j=31": {
+            "mean_w": 1.12,
+            "thin_pct": 99.9,
+            "w1_pct": 90.8
+          },
+          "j=23": {
+            "mean_w": 1.47,
+            "thin_pct": 99.9,
+            "w1_pct": 74.4
+          },
+          "j=18": {
+            "mean_w": 1.63,
+            "thin_pct": 100.0,
+            "w1_pct": 56.1
+          },
+          "j=14": {
+            "mean_w": 1.48,
+            "thin_pct": 99.6,
+            "w1_pct": 76.0
+          },
+          "j=13": {
+            "mean_w": 2.48,
+            "thin_pct": 100.0,
+            "w1_pct": 34.7
+          },
+          "j=8": {
+            "mean_w": 1.39,
+            "thin_pct": 99.9,
+            "w1_pct": 73.6
+          },
+          "j=4": {
+            "mean_w": 1.13,
+            "thin_pct": 100.0,
+            "w1_pct": 90.1
+          },
+          "j=0": {
+            "mean_w": 1.15,
+            "thin_pct": 99.9,
+            "w1_pct": 90.9
+          }
+        },
+        "bayer_diaconis_guid_shuffle": {
+          "steps=1": {
+            "rising_sequences": 17,
+            "theoretical_16_pow_s_cap": 16,
+            "fraction_of_max_N_G": 0.022
+          },
+          "steps=2": {
+            "rising_sequences": 222,
+            "theoretical_16_pow_s_cap": 256,
+            "fraction_of_max_N_G": 0.292
+          },
+          "steps=3": {
+            "rising_sequences": 369,
+            "theoretical_16_pow_s_cap": 761,
+            "fraction_of_max_N_G": 0.485
+          },
+          "steps=4": {
+            "rising_sequences": 368,
+            "theoretical_16_pow_s_cap": 761,
+            "fraction_of_max_N_G": 0.484
+          },
+          "steps=8": {
+            "rising_sequences": 384,
+            "theoretical_16_pow_s_cap": 761,
+            "fraction_of_max_N_G": 0.505
+          }
+        },
+        "n_sha1_occurrences": 841,
+        "n_sha1_distinct": 137,
+        "sha1_mean_multiplicity": 6.14,
+        "sha1_width_classes_bytes": {
+          "w_eq_1": 1690,
+          "w_2_to_4": 4337,
+          "w_5_to_16": 14277,
+          "w_ge_17_already_thick": 13336,
+          "thin_2_to_16_share_of_sha1_pct": 55.3
+        }
+      }
+    },
+    "block-2.L": {
+      "pillar1_origami_galois_and_slopes": {
+        "n_proper_divisors_checked": 106,
+        "intermediate_cover_moduli": [],
+        "veech_slopes": {
+          "1,1": {
+            "word": "ru+",
+            "cylinders": 44,
+            "fixed_points": 0,
+            "max_waist": 588130
+          },
+          "2,1": {
+            "word": "rru+",
+            "cylinders": 65,
+            "fixed_points": 0,
+            "max_waist": 581370
+          },
+          "3,1": {
+            "word": "rrru+",
+            "cylinders": 28,
+            "fixed_points": 3,
+            "max_waist": 780591
+          },
+          "3,2": {
+            "word": "rru+ru+",
+            "cylinders": 19,
+            "fixed_points": 2,
+            "max_waist": 735830
+          },
+          "5,3": {
+            "word": "rru+rru+ru+",
+            "cylinders": 20,
+            "fixed_points": 1,
+            "max_waist": 549647
+          },
+          "1,-1": {
+            "word": "ru-",
+            "cylinders": 22,
+            "fixed_points": 0,
+            "max_waist": 716713
+          },
+          "2,-1": {
+            "word": "rru-",
+            "cylinders": 71,
+            "fixed_points": 0,
+            "max_waist": 243011
+          }
+        }
+      },
+      "pillar2_durand_and_s_adic_limit": {
+        "durand_cylinders": {
+          "newline": {
+            "cylinder_size": 31,
+            "affine_return_pieces": 31,
+            "distinct_return_words": 31,
+            "compression_ratio_pieces_over_size": 1.0
+          },
+          "close_brace": {
+            "cylinder_size": 12343,
+            "affine_return_pieces": 3869,
+            "distinct_return_words": 2349,
+            "compression_ratio_pieces_over_size": 0.3135
+          },
+          "quote": {
+            "cylinder_size": 135062,
+            "affine_return_pieces": 7242,
+            "distinct_return_words": 2728,
+            "compression_ratio_pieces_over_size": 0.0536
+          }
+        },
+        "open_forest_s_adic_tower": [
+          {
+            "level": 0,
+            "rows": 900000,
+            "sites": 54532
+          },
+          {
+            "level": 1,
+            "rows": 112070,
+            "sites": 50705
+          },
+          {
+            "level": 2,
+            "input_arcs": 58552,
+            "rows": 9844,
+            "sites": 7848
+          },
+          {
+            "level": 3,
+            "input_arcs": 8305,
+            "rows": 462,
+            "sites": 458
+          },
+          {
+            "level": 4,
+            "input_arcs": 460,
+            "rows": 3,
+            "sites": 3
+          },
+          {
+            "level": 5,
+            "input_arcs": 3,
+            "rows": 1,
+            "sites": 1
+          }
+        ]
+      },
+      "pillar3_guid_sha1_riffle_shuffle": {
+        "n_guids": 691,
+        "guid_bytes": 24876,
+        "guid_position_profile": {
+          "j=35": {
+            "mean_w": 1.14,
+            "thin_pct": 100.0,
+            "w1_pct": 87.3
+          },
+          "j=34": {
+            "mean_w": 1.14,
+            "thin_pct": 100.0,
+            "w1_pct": 88.0
+          },
+          "j=33": {
+            "mean_w": 1.21,
+            "thin_pct": 99.9,
+            "w1_pct": 87.6
+          },
+          "j=32": {
+            "mean_w": 1.29,
+            "thin_pct": 99.4,
+            "w1_pct": 89.3
+          },
+          "j=31": {
+            "mean_w": 1.24,
+            "thin_pct": 99.9,
+            "w1_pct": 91.3
+          },
+          "j=23": {
+            "mean_w": 1.49,
+            "thin_pct": 99.6,
+            "w1_pct": 75.4
+          },
+          "j=18": {
+            "mean_w": 1.63,
+            "thin_pct": 100.0,
+            "w1_pct": 57.2
+          },
+          "j=14": {
+            "mean_w": 1.34,
+            "thin_pct": 100.0,
+            "w1_pct": 73.7
+          },
+          "j=13": {
+            "mean_w": 2.51,
+            "thin_pct": 100.0,
+            "w1_pct": 32.3
+          },
+          "j=8": {
+            "mean_w": 1.39,
+            "thin_pct": 100.0,
+            "w1_pct": 72.4
+          },
+          "j=4": {
+            "mean_w": 1.15,
+            "thin_pct": 99.9,
+            "w1_pct": 88.7
+          },
+          "j=0": {
+            "mean_w": 1.11,
+            "thin_pct": 100.0,
+            "w1_pct": 91.6
+          }
+        },
+        "bayer_diaconis_guid_shuffle": {
+          "steps=1": {
+            "rising_sequences": 16,
+            "theoretical_16_pow_s_cap": 16,
+            "fraction_of_max_N_G": 0.023
+          },
+          "steps=2": {
+            "rising_sequences": 206,
+            "theoretical_16_pow_s_cap": 256,
+            "fraction_of_max_N_G": 0.298
+          },
+          "steps=3": {
+            "rising_sequences": 341,
+            "theoretical_16_pow_s_cap": 691,
+            "fraction_of_max_N_G": 0.493
+          },
+          "steps=4": {
+            "rising_sequences": 336,
+            "theoretical_16_pow_s_cap": 691,
+            "fraction_of_max_N_G": 0.486
+          },
+          "steps=8": {
+            "rising_sequences": 339,
+            "theoretical_16_pow_s_cap": 691,
+            "fraction_of_max_N_G": 0.491
+          }
+        },
+        "n_sha1_occurrences": 836,
+        "n_sha1_distinct": 162,
+        "sha1_mean_multiplicity": 5.16,
+        "sha1_width_classes_bytes": {
+          "w_eq_1": 2493,
+          "w_2_to_4": 3269,
+          "w_5_to_16": 18457,
+          "w_ge_17_already_thick": 9221,
+          "thin_2_to_16_share_of_sha1_pct": 65.0
+        }
+      }
+    },
+    "block-85.L": {
+      "pillar1_origami_galois_and_slopes": {
+        "n_proper_divisors_checked": 6,
+        "intermediate_cover_moduli": [],
+        "veech_slopes": {
+          "1,1": {
+            "word": "ru+",
+            "cylinders": 23,
+            "fixed_points": 0,
+            "max_waist": 253294
+          },
+          "2,1": {
+            "word": "rru+",
+            "cylinders": 19,
+            "fixed_points": 2,
+            "max_waist": 657520
+          },
+          "3,1": {
+            "word": "rrru+",
+            "cylinders": 27,
+            "fixed_points": 0,
+            "max_waist": 633226
+          },
+          "3,2": {
+            "word": "rru+ru+",
+            "cylinders": 21,
+            "fixed_points": 3,
+            "max_waist": 528291
+          },
+          "5,3": {
+            "word": "rru+rru+ru+",
+            "cylinders": 17,
+            "fixed_points": 3,
+            "max_waist": 365594
+          },
+          "1,-1": {
+            "word": "ru-",
+            "cylinders": 15,
+            "fixed_points": 0,
+            "max_waist": 610155
+          },
+          "2,-1": {
+            "word": "rru-",
+            "cylinders": 27,
+            "fixed_points": 1,
+            "max_waist": 461276
+          }
+        }
+      },
+      "pillar2_durand_and_s_adic_limit": {
+        "durand_cylinders": {
+          "newline": {
+            "cylinder_size": 175,
+            "affine_return_pieces": 175,
+            "distinct_return_words": 175,
+            "compression_ratio_pieces_over_size": 1.0
+          },
+          "close_brace": {
+            "cylinder_size": 13424,
+            "affine_return_pieces": 4702,
+            "distinct_return_words": 2932,
+            "compression_ratio_pieces_over_size": 0.3503
+          },
+          "quote": {
+            "cylinder_size": 138920,
+            "affine_return_pieces": 9826,
+            "distinct_return_words": 3694,
+            "compression_ratio_pieces_over_size": 0.0707
+          }
+        },
+        "open_forest_s_adic_tower": [
+          {
+            "level": 0,
+            "rows": 899935,
+            "sites": 79375
+          },
+          {
+            "level": 1,
+            "rows": 156404,
+            "sites": 77810
+          },
+          {
+            "level": 2,
+            "input_arcs": 89738,
+            "rows": 13744,
+            "sites": 11929
+          },
+          {
+            "level": 3,
+            "input_arcs": 12616,
+            "rows": 688,
+            "sites": 688
+          },
+          {
+            "level": 4,
+            "input_arcs": 688,
+            "rows": 1,
+            "sites": 1
+          }
+        ]
+      },
+      "pillar3_guid_sha1_riffle_shuffle": {
+        "n_guids": 1167,
+        "guid_bytes": 42012,
+        "guid_position_profile": {
+          "j=35": {
+            "mean_w": 1.17,
+            "thin_pct": 100.0,
+            "w1_pct": 85.0
+          },
+          "j=34": {
+            "mean_w": 1.16,
+            "thin_pct": 100.0,
+            "w1_pct": 86.5
+          },
+          "j=33": {
+            "mean_w": 1.19,
+            "thin_pct": 99.9,
+            "w1_pct": 87.7
+          },
+          "j=32": {
+            "mean_w": 1.18,
+            "thin_pct": 99.9,
+            "w1_pct": 91.9
+          },
+          "j=31": {
+            "mean_w": 1.52,
+            "thin_pct": 99.8,
+            "w1_pct": 89.4
+          },
+          "j=23": {
+            "mean_w": 1.38,
+            "thin_pct": 100.0,
+            "w1_pct": 74.3
+          },
+          "j=18": {
+            "mean_w": 1.67,
+            "thin_pct": 100.0,
+            "w1_pct": 58.9
+          },
+          "j=14": {
+            "mean_w": 1.39,
+            "thin_pct": 100.0,
+            "w1_pct": 73.6
+          },
+          "j=13": {
+            "mean_w": 2.63,
+            "thin_pct": 100.0,
+            "w1_pct": 34.7
+          },
+          "j=8": {
+            "mean_w": 1.5,
+            "thin_pct": 100.0,
+            "w1_pct": 70.6
+          },
+          "j=4": {
+            "mean_w": 1.2,
+            "thin_pct": 99.9,
+            "w1_pct": 90.4
+          },
+          "j=0": {
+            "mean_w": 1.17,
+            "thin_pct": 100.0,
+            "w1_pct": 91.3
+          }
+        },
+        "bayer_diaconis_guid_shuffle": {
+          "steps=1": {
+            "rising_sequences": 22,
+            "theoretical_16_pow_s_cap": 16,
+            "fraction_of_max_N_G": 0.019
+          },
+          "steps=2": {
+            "rising_sequences": 281,
+            "theoretical_16_pow_s_cap": 256,
+            "fraction_of_max_N_G": 0.241
+          },
+          "steps=3": {
+            "rising_sequences": 561,
+            "theoretical_16_pow_s_cap": 1167,
+            "fraction_of_max_N_G": 0.481
+          },
+          "steps=4": {
+            "rising_sequences": 582,
+            "theoretical_16_pow_s_cap": 1167,
+            "fraction_of_max_N_G": 0.499
+          },
+          "steps=8": {
+            "rising_sequences": 581,
+            "theoretical_16_pow_s_cap": 1167,
+            "fraction_of_max_N_G": 0.498
+          }
+        },
+        "n_sha1_occurrences": 1298,
+        "n_sha1_distinct": 195,
+        "sha1_mean_multiplicity": 6.66,
+        "sha1_width_classes_bytes": {
+          "w_eq_1": 805,
+          "w_2_to_4": 10662,
+          "w_5_to_16": 27524,
+          "w_ge_17_already_thick": 12929,
+          "thin_2_to_16_share_of_sha1_pct": 73.5
+        }
+      }
+    },
+    "block-143.L": {
+      "pillar1_origami_galois_and_slopes": {
+        "n_proper_divisors_checked": 2,
+        "intermediate_cover_moduli": [],
+        "veech_slopes": {
+          "1,1": {
+            "word": "ru+",
+            "cylinders": 53,
+            "fixed_points": 0,
+            "max_waist": 282482
+          },
+          "2,1": {
+            "word": "rru+",
+            "cylinders": 43,
+            "fixed_points": 1,
+            "max_waist": 817876
+          },
+          "3,1": {
+            "word": "rrru+",
+            "cylinders": 131,
+            "fixed_points": 6,
+            "max_waist": 653754
+          },
+          "3,2": {
+            "word": "rru+ru+",
+            "cylinders": 37,
+            "fixed_points": 6,
+            "max_waist": 695309
+          },
+          "5,3": {
+            "word": "rru+rru+ru+",
+            "cylinders": 25,
+            "fixed_points": 1,
+            "max_waist": 666448
+          },
+          "1,-1": {
+            "word": "ru-",
+            "cylinders": 53,
+            "fixed_points": 0,
+            "max_waist": 368552
+          },
+          "2,-1": {
+            "word": "rru-",
+            "cylinders": 53,
+            "fixed_points": 2,
+            "max_waist": 616479
+          }
+        }
+      },
+      "pillar2_durand_and_s_adic_limit": {
+        "durand_cylinders": {
+          "newline": {
+            "cylinder_size": 184,
+            "affine_return_pieces": 184,
+            "distinct_return_words": 184,
+            "compression_ratio_pieces_over_size": 1.0
+          },
+          "close_brace": {
+            "cylinder_size": 12389,
+            "affine_return_pieces": 5766,
+            "distinct_return_words": 4176,
+            "compression_ratio_pieces_over_size": 0.4654
+          },
+          "quote": {
+            "cylinder_size": 128934,
+            "affine_return_pieces": 14489,
+            "distinct_return_words": 5654,
+            "compression_ratio_pieces_over_size": 0.1124
+          }
+        },
+        "open_forest_s_adic_tower": [
+          {
+            "level": 0,
+            "rows": 899869,
+            "sites": 108335
+          },
+          {
+            "level": 1,
+            "rows": 196841,
+            "sites": 103288
+          },
+          {
+            "level": 2,
+            "input_arcs": 119600,
+            "rows": 19208,
+            "sites": 16313
+          },
+          {
+            "level": 3,
+            "input_arcs": 17141,
+            "rows": 835,
+            "sites": 829
+          },
+          {
+            "level": 4,
+            "input_arcs": 832,
+            "rows": 4,
+            "sites": 4
+          },
+          {
+            "level": 5,
+            "input_arcs": 4,
+            "rows": 1,
+            "sites": 1
+          }
+        ]
+      },
+      "pillar3_guid_sha1_riffle_shuffle": {
+        "n_guids": 1245,
+        "guid_bytes": 44820,
+        "guid_position_profile": {
+          "j=35": {
+            "mean_w": 1.11,
+            "thin_pct": 100.0,
+            "w1_pct": 89.0
+          },
+          "j=34": {
+            "mean_w": 1.1,
+            "thin_pct": 100.0,
+            "w1_pct": 91.4
+          },
+          "j=33": {
+            "mean_w": 1.16,
+            "thin_pct": 99.9,
+            "w1_pct": 87.7
+          },
+          "j=32": {
+            "mean_w": 1.19,
+            "thin_pct": 99.8,
+            "w1_pct": 91.4
+          },
+          "j=31": {
+            "mean_w": 1.17,
+            "thin_pct": 99.8,
+            "w1_pct": 90.8
+          },
+          "j=23": {
+            "mean_w": 1.32,
+            "thin_pct": 100.0,
+            "w1_pct": 76.4
+          },
+          "j=18": {
+            "mean_w": 1.37,
+            "thin_pct": 100.0,
+            "w1_pct": 72.2
+          },
+          "j=14": {
+            "mean_w": 1.23,
+            "thin_pct": 100.0,
+            "w1_pct": 82.1
+          },
+          "j=13": {
+            "mean_w": 1.94,
+            "thin_pct": 100.0,
+            "w1_pct": 54.6
+          },
+          "j=8": {
+            "mean_w": 1.77,
+            "thin_pct": 100.0,
+            "w1_pct": 54.1
+          },
+          "j=4": {
+            "mean_w": 1.33,
+            "thin_pct": 99.7,
+            "w1_pct": 90.9
+          },
+          "j=0": {
+            "mean_w": 1.21,
+            "thin_pct": 99.8,
+            "w1_pct": 89.8
+          }
+        },
+        "bayer_diaconis_guid_shuffle": {
+          "steps=1": {
+            "rising_sequences": 22,
+            "theoretical_16_pow_s_cap": 16,
+            "fraction_of_max_N_G": 0.018
+          },
+          "steps=2": {
+            "rising_sequences": 332,
+            "theoretical_16_pow_s_cap": 256,
+            "fraction_of_max_N_G": 0.267
+          },
+          "steps=3": {
+            "rising_sequences": 594,
+            "theoretical_16_pow_s_cap": 1245,
+            "fraction_of_max_N_G": 0.477
+          },
+          "steps=4": {
+            "rising_sequences": 649,
+            "theoretical_16_pow_s_cap": 1245,
+            "fraction_of_max_N_G": 0.521
+          },
+          "steps=8": {
+            "rising_sequences": 611,
+            "theoretical_16_pow_s_cap": 1245,
+            "fraction_of_max_N_G": 0.491
+          }
+        },
+        "n_sha1_occurrences": 523,
+        "n_sha1_distinct": 235,
+        "sha1_mean_multiplicity": 2.23,
+        "sha1_width_classes_bytes": {
+          "w_eq_1": 5995,
+          "w_2_to_4": 5331,
+          "w_5_to_16": 6853,
+          "w_ge_17_already_thick": 2741,
+          "thin_2_to_16_share_of_sha1_pct": 58.2
+        }
+      }
+    },
+    "block-210.L": {
+      "pillar1_origami_galois_and_slopes": {
+        "n_proper_divisors_checked": 2,
+        "intermediate_cover_moduli": [],
+        "veech_slopes": {
+          "1,1": {
+            "word": "ru+",
+            "cylinders": 25,
+            "fixed_points": 2,
+            "max_waist": 728218
+          },
+          "2,1": {
+            "word": "rru+",
+            "cylinders": 47,
+            "fixed_points": 3,
+            "max_waist": 277472
+          },
+          "3,1": {
+            "word": "rrru+",
+            "cylinders": 87,
+            "fixed_points": 4,
+            "max_waist": 401246
+          },
+          "3,2": {
+            "word": "rru+ru+",
+            "cylinders": 49,
+            "fixed_points": 7,
+            "max_waist": 668369
+          },
+          "5,3": {
+            "word": "rru+rru+ru+",
+            "cylinders": 15,
+            "fixed_points": 4,
+            "max_waist": 403909
+          },
+          "1,-1": {
+            "word": "ru-",
+            "cylinders": 71,
+            "fixed_points": 0,
+            "max_waist": 319347
+          },
+          "2,-1": {
+            "word": "rru-",
+            "cylinders": 39,
+            "fixed_points": 0,
+            "max_waist": 290332
+          }
+        }
+      },
+      "pillar2_durand_and_s_adic_limit": {
+        "durand_cylinders": {
+          "newline": {
+            "cylinder_size": 240,
+            "affine_return_pieces": 240,
+            "distinct_return_words": 240,
+            "compression_ratio_pieces_over_size": 1.0
+          },
+          "close_brace": {
+            "cylinder_size": 12602,
+            "affine_return_pieces": 7196,
+            "distinct_return_words": 4469,
+            "compression_ratio_pieces_over_size": 0.571
+          },
+          "quote": {
+            "cylinder_size": 136448,
+            "affine_return_pieces": 13557,
+            "distinct_return_words": 5635,
+            "compression_ratio_pieces_over_size": 0.0994
+          }
+        },
+        "open_forest_s_adic_tower": [
+          {
+            "level": 0,
+            "rows": 899959,
+            "sites": 128732
+          },
+          {
+            "level": 1,
+            "rows": 204281,
+            "sites": 125923
+          },
+          {
+            "level": 2,
+            "input_arcs": 144171,
+            "rows": 20432,
+            "sites": 18249
+          },
+          {
+            "level": 3,
+            "input_arcs": 18882,
+            "rows": 640,
+            "sites": 634
+          },
+          {
+            "level": 4,
+            "input_arcs": 635,
+            "rows": 2,
+            "sites": 2
+          },
+          {
+            "level": 5,
+            "input_arcs": 2,
+            "rows": 1,
+            "sites": 1
+          }
+        ]
+      },
+      "pillar3_guid_sha1_riffle_shuffle": {
+        "n_guids": 2128,
+        "guid_bytes": 76608,
+        "guid_position_profile": {
+          "j=35": {
+            "mean_w": 1.13,
+            "thin_pct": 100.0,
+            "w1_pct": 88.2
+          },
+          "j=34": {
+            "mean_w": 1.16,
+            "thin_pct": 100.0,
+            "w1_pct": 86.1
+          },
+          "j=33": {
+            "mean_w": 1.14,
+            "thin_pct": 100.0,
+            "w1_pct": 89.2
+          },
+          "j=32": {
+            "mean_w": 1.18,
+            "thin_pct": 99.9,
+            "w1_pct": 90.8
+          },
+          "j=31": {
+            "mean_w": 1.14,
+            "thin_pct": 99.9,
+            "w1_pct": 90.1
+          },
+          "j=23": {
+            "mean_w": 1.56,
+            "thin_pct": 100.0,
+            "w1_pct": 71.9
+          },
+          "j=18": {
+            "mean_w": 1.68,
+            "thin_pct": 100.0,
+            "w1_pct": 56.2
+          },
+          "j=14": {
+            "mean_w": 1.51,
+            "thin_pct": 100.0,
+            "w1_pct": 63.1
+          },
+          "j=13": {
+            "mean_w": 2.96,
+            "thin_pct": 100.0,
+            "w1_pct": 30.8
+          },
+          "j=8": {
+            "mean_w": 1.55,
+            "thin_pct": 100.0,
+            "w1_pct": 66.3
+          },
+          "j=4": {
+            "mean_w": 1.13,
+            "thin_pct": 100.0,
+            "w1_pct": 89.8
+          },
+          "j=0": {
+            "mean_w": 1.37,
+            "thin_pct": 100.0,
+            "w1_pct": 91.7
+          }
+        },
+        "bayer_diaconis_guid_shuffle": {
+          "steps=1": {
+            "rising_sequences": 22,
+            "theoretical_16_pow_s_cap": 16,
+            "fraction_of_max_N_G": 0.01
+          },
+          "steps=2": {
+            "rising_sequences": 322,
+            "theoretical_16_pow_s_cap": 256,
+            "fraction_of_max_N_G": 0.151
+          },
+          "steps=3": {
+            "rising_sequences": 1000,
+            "theoretical_16_pow_s_cap": 2128,
+            "fraction_of_max_N_G": 0.47
+          },
+          "steps=4": {
+            "rising_sequences": 1052,
+            "theoretical_16_pow_s_cap": 2128,
+            "fraction_of_max_N_G": 0.494
+          },
+          "steps=8": {
+            "rising_sequences": 1062,
+            "theoretical_16_pow_s_cap": 2128,
+            "fraction_of_max_N_G": 0.499
+          }
+        },
+        "n_sha1_occurrences": 339,
+        "n_sha1_distinct": 180,
+        "sha1_mean_multiplicity": 1.88,
+        "sha1_width_classes_bytes": {
+          "w_eq_1": 4734,
+          "w_2_to_4": 4556,
+          "w_5_to_16": 3212,
+          "w_ge_17_already_thick": 1058,
+          "thin_2_to_16_share_of_sha1_pct": 57.3
+        }
+      }
+    },
+    "block-207.L": {
+      "pillar1_origami_galois_and_slopes": {
+        "n_proper_divisors_checked": 10,
+        "intermediate_cover_moduli": [],
+        "veech_slopes": {
+          "1,1": {
+            "word": "ru+",
+            "cylinders": 14,
+            "fixed_points": 0,
+            "max_waist": 880309
+          },
+          "2,1": {
+            "word": "rru+",
+            "cylinders": 25,
+            "fixed_points": 0,
+            "max_waist": 566415
+          },
+          "3,1": {
+            "word": "rrru+",
+            "cylinders": 62,
+            "fixed_points": 4,
+            "max_waist": 473217
+          },
+          "3,2": {
+            "word": "rru+ru+",
+            "cylinders": 45,
+            "fixed_points": 7,
+            "max_waist": 405053
+          },
+          "5,3": {
+            "word": "rru+rru+ru+",
+            "cylinders": 14,
+            "fixed_points": 3,
+            "max_waist": 582003
+          },
+          "1,-1": {
+            "word": "ru-",
+            "cylinders": 28,
+            "fixed_points": 2,
+            "max_waist": 540333
+          },
+          "2,-1": {
+            "word": "rru-",
+            "cylinders": 29,
+            "fixed_points": 1,
+            "max_waist": 276546
+          }
+        }
+      },
+      "pillar2_durand_and_s_adic_limit": {
+        "durand_cylinders": {
+          "newline": {
+            "cylinder_size": 121,
+            "affine_return_pieces": 121,
+            "distinct_return_words": 121,
+            "compression_ratio_pieces_over_size": 1.0
+          },
+          "close_brace": {
+            "cylinder_size": 12235,
+            "affine_return_pieces": 5156,
+            "distinct_return_words": 3634,
+            "compression_ratio_pieces_over_size": 0.4214
+          },
+          "quote": {
+            "cylinder_size": 129704,
+            "affine_return_pieces": 11446,
+            "distinct_return_words": 4260,
+            "compression_ratio_pieces_over_size": 0.0882
+          }
+        },
+        "open_forest_s_adic_tower": [
+          {
+            "level": 0,
+            "rows": 899998,
+            "sites": 87111
+          },
+          {
+            "level": 1,
+            "rows": 135921,
+            "sites": 83637
+          },
+          {
+            "level": 2,
+            "input_arcs": 97187,
+            "rows": 15272,
+            "sites": 13551
+          },
+          {
+            "level": 3,
+            "input_arcs": 14171,
+            "rows": 623,
+            "sites": 621
+          },
+          {
+            "level": 4,
+            "input_arcs": 623,
+            "rows": 3,
+            "sites": 3
+          },
+          {
+            "level": 5,
+            "input_arcs": 3,
+            "rows": 1,
+            "sites": 1
+          }
+        ]
+      },
+      "pillar3_guid_sha1_riffle_shuffle": {
+        "n_guids": 1150,
+        "guid_bytes": 41400,
+        "guid_position_profile": {
+          "j=35": {
+            "mean_w": 1.12,
+            "thin_pct": 100.0,
+            "w1_pct": 88.3
+          },
+          "j=34": {
+            "mean_w": 1.15,
+            "thin_pct": 100.0,
+            "w1_pct": 86.7
+          },
+          "j=33": {
+            "mean_w": 1.45,
+            "thin_pct": 99.9,
+            "w1_pct": 90.0
+          },
+          "j=32": {
+            "mean_w": 1.32,
+            "thin_pct": 99.7,
+            "w1_pct": 89.7
+          },
+          "j=31": {
+            "mean_w": 1.38,
+            "thin_pct": 99.8,
+            "w1_pct": 91.7
+          },
+          "j=23": {
+            "mean_w": 1.43,
+            "thin_pct": 100.0,
+            "w1_pct": 73.5
+          },
+          "j=18": {
+            "mean_w": 1.63,
+            "thin_pct": 100.0,
+            "w1_pct": 62.5
+          },
+          "j=14": {
+            "mean_w": 1.41,
+            "thin_pct": 99.8,
+            "w1_pct": 75.8
+          },
+          "j=13": {
+            "mean_w": 2.85,
+            "thin_pct": 100.0,
+            "w1_pct": 36.3
+          },
+          "j=8": {
+            "mean_w": 1.58,
+            "thin_pct": 100.0,
+            "w1_pct": 68.9
+          },
+          "j=4": {
+            "mean_w": 1.17,
+            "thin_pct": 100.0,
+            "w1_pct": 88.6
+          },
+          "j=0": {
+            "mean_w": 1.11,
+            "thin_pct": 99.9,
+            "w1_pct": 92.0
+          }
+        },
+        "bayer_diaconis_guid_shuffle": {
+          "steps=1": {
+            "rising_sequences": 22,
+            "theoretical_16_pow_s_cap": 16,
+            "fraction_of_max_N_G": 0.019
+          },
+          "steps=2": {
+            "rising_sequences": 279,
+            "theoretical_16_pow_s_cap": 256,
+            "fraction_of_max_N_G": 0.243
+          },
+          "steps=3": {
+            "rising_sequences": 549,
+            "theoretical_16_pow_s_cap": 1150,
+            "fraction_of_max_N_G": 0.477
+          },
+          "steps=4": {
+            "rising_sequences": 566,
+            "theoretical_16_pow_s_cap": 1150,
+            "fraction_of_max_N_G": 0.492
+          },
+          "steps=8": {
+            "rising_sequences": 579,
+            "theoretical_16_pow_s_cap": 1150,
+            "fraction_of_max_N_G": 0.503
+          }
+        },
+        "n_sha1_occurrences": 391,
+        "n_sha1_distinct": 175,
+        "sha1_mean_multiplicity": 2.23,
+        "sha1_width_classes_bytes": {
+          "w_eq_1": 5116,
+          "w_2_to_4": 2507,
+          "w_5_to_16": 2759,
+          "w_ge_17_already_thick": 5258,
+          "thin_2_to_16_share_of_sha1_pct": 33.7
+        }
+      }
+    }
+  }
+}
