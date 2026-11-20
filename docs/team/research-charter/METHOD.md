@@ -88,6 +88,36 @@ unaffordable?"), and a foundational result becomes a feasibility candidate.
 Review the portfolio in FRONTIER.md at every cycle. If every live candidate is incremental, or all are
 variations of one primitive, the next Explore phase must widen.
 
+## 3a. Two modes: reorientation and traction
+
+The unit of research is a **computational obligation**, an expensive class of work the decoder
+pays, and its possible replacements. It is not just a succession of candidate algorithms. Each
+cycle declares one of two modes.
+
+| | Reorientation (the default) | Traction |
+|---|---|---|
+| **What varies** | the factorisation: intermediate objects, primitives, even where inversion starts in the bzip2 pipeline | the implementation or architecture of a known mechanism |
+| **Aim** | make an obligation unnecessary | make a known mechanism cheaper end to end |
+| **First evidence** | a correct construction, and a cheap falsifier aimed at hidden acquisition | a measured bottleneck, a causal hypothesis, a discriminating experiment |
+| **Failure signal** | hidden acquisition cost, incorrectness, or the displaced work reappearing | regression, or no end-to-end gain |
+| **What a negative result is worth** | an obstruction or a new opportunity, recorded on the obligation | the next dominant cost, which feeds reorientation |
+
+Move into traction when measured evidence or a surviving idea justifies it. A successful traction
+step should report the newly dominant residual cost.
+
+**Every serious candidate states four things in its write-up.** This is not a gate: it is there to
+sharpen the reasoning.
+- **Mode:** reorientation or traction.
+- **Displaced obligation:** what existing work disappears. For traction, an implementation cost
+  (queue fill, scattered writes) is enough.
+- **Replacement principle:** what is done instead, and the mathematical fact that permits it.
+- **New paid obligations:** what must now be acquired, built and consumed.
+- **Nearest prior art:** what is genuinely different. Ancestry is context, not disqualification.
+
+**At every cycle boundary,** answer one question in FRONTIER.md's obligation register: *what did
+this cycle teach about the underlying obligation?* Killing a candidate does not close its
+obligation. Record any positive finding inside a negative result.
+
 ## 4. The gates (for promotion, not for imagining)
 
 The gates regulate investment. They don't regulate creativity. An idea can be explored, discussed and

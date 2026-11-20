@@ -9,6 +9,21 @@
 
 *Evidence lives in [CONTEXT.md](CONTEXT.md) and the journals. This file points to it.*
 
+## Obligation register
+
+These are the expensive classes of work that current decoders pay. Candidates come and go; an
+obligation stays open until it is removed or bounded with a proof. Update a row only when a cycle
+has learned something concrete (METHOD.md §3a).
+
+| Obligation | Evidence | Open question | Status |
+|---|---|---|---|
+| Dependent traversal of retained rows | Open: about one dependent load per retained row (≈ one per ten output bytes); emission 36–48% of time (#653) | Can output-order relations be resolved collectively, without a producer as expensive as the walk? | open |
+| Building the retained map | Open's run pass and queue fill 28–36%; queued wiring 23–28% (#653). Compression (Q) and fusion (F) lost (#654) | Can the map be produced in the direction its consumer needs, so no inversion scatter is required? Candidate: Queue-Free Backward Open (Neon cycle 2; audit pending) | candidate under audit |
+| Acquiring the Φ-overlap coordinates | The overlap structure is small: 1.25–1.37r transitions on the six blocks (Neon cycle 1). The known route via run-boundary positions costs Cells' 1.68–1.87r steps (record 81) | Can those coordinates come out of a cheaper computation, or out of an earlier representation? | open; positive measurement |
+| Full-block metadata | Grammar and interval-exchange machines carry 40–100 B per run across all r runs, mostly width-1 runs (Neon cycle 1; Astra D) | Can a primitive avoid per-run global state? | open |
+| Starting from the decoded column | Every kernel begins from run records after Huffman, MTF and RLE2 decoding | Does an earlier representation carry ordering information more cheaply? | unexplored |
+| Writing every output byte | Unavoidable; sets the floor | (bounds the others) | floor |
+
 ## Foundational questions (track 1)
 
 Each questions whether a current core operation is necessary. None is settled.

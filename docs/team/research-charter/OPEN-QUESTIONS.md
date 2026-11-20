@@ -10,11 +10,18 @@ Each question is ranked by three things:
 None of these is a prediction. A fresh researcher may find a better question; these are where the
 record points.
 
+**Each section leads with the obligation, not with a preferred algorithm.** The methods named are
+ones already investigated, not limits on the solution (METHOD.md §3a).
+
 **These are the feasibility track's leads** ([METHOD.md](METHOD.md) §3): concrete enough to cost
 now. The foundational questions, which challenge whether a current primitive is needed at all, are
 in [FRONTIER.md](FRONTIER.md). Each cycle should draw on both.
 
-## 1. A second open cut: recursive first returns
+## 1. Obligation: dependent traversal of retained rows
+
+*Investigated possibility:* a second open cut, i.e. recursive first returns. Neon cycle 1 showed
+that a cut of g **by width** does not widen (its No-Widening Lemma). A cut by section **structure**,
+as in Astra investigation 3, is untested from Open's bands.
 
 **The observation:**
 - Open walks m ≈ 0.11n retained rows, one dependent edge load each. Emission is 36–48% of Open's
@@ -46,7 +53,11 @@ Then:
 **Impact ceiling:** most of emission's dependent-load share. It cannot touch the n output byte
 writes.
 
-## 2. Overlap transitions in o(n): the in-place copy schedule's missing edge
+## 2. Obligation: acquiring the Φ-overlap coordinates
+
+*Investigated possibility:* listing the overlap transitions in o(n) for the in-place copy
+schedule. Neon cycle 1 measured the structure as small (1.25–1.37r transitions). Acquiring it is
+the open part.
 
 **What is established:**
 - Record 82 built valid in-place Φ-copy schedules of 0.87–2.15r fragments of about 7 B. That is
@@ -68,7 +79,7 @@ refute "the transitions determine the text".
 
 **Impact ceiling:** high-r/n admitted blocks only, where Open's gain is also smallest.
 
-## 3. Memory traffic, not operations
+## 3. Obligation: memory traffic per output byte
 
 **The observation:**
 - Astra D modelled an exact reconstruction table of 260 KB that needs 3.44 DRAM bytes per output
@@ -84,7 +95,9 @@ whose acquisition is affordable? Astra D's table was not built at an accounted c
 bandwidth-bound: compare per-thread throughput at 1, 4, 10 and 20 threads. If scaling is near
 linear, this question is dead for now.
 
-## 4. Output-sourced decoding: the self-sourcing cursor
+## 4. Obligation: discovering sources for bytes already written
+
+*Investigated possibility:* output-sourced decoding, the self-sourcing cursor.
 
 **The observation (Astra C):** the marked output can supply its own byte sources. A cursor
 emits a phrase, learns which other rows spell those bytes, and copies from completed output at
@@ -95,7 +108,9 @@ has, such as its bands, rather than fresh LF probes?
 
 **What could kill it:** the demand-read rise is structural.
 
-## 5. Parallelism within a block
+## 5. Obligation: one serial chain per block
+
+*Investigated possibility:* parallelism within a block.
 
 **The observation:**
 - Theorem 3′ batches 4–5 fronts on real blocks.
