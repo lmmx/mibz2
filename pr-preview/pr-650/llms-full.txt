@@ -1110,10 +1110,12 @@ mibz2 0.5.7 ships a second way to undo the Burrows–Wheeler transform, Open, an
 
 **The takeaways:**
 
-- **On a ten-core i9, 0.5.7 is 7–11% faster than 0.5.6 from 8 to 20 threads on Wikidata, with about 23% less peak memory.** Below 8 threads nothing changes: Open runs only on the parallel workers' route.
+- **On a ten-core i9, 0.5.7 is 7–11% faster than 0.5.6 from 8 to 20 threads on Wikidata, with about 23% less peak memory, and Open alone is the source.** The release's only other decoder change moves 6 threads, which this comparison doesn't run. The acceptance run, which put Open alone against 0.5.6, saw the same gain. Below 8 threads nothing changes: Open runs only on the parallel workers' route.
 - **The rule is a prediction, not a guarantee.** It picks Open when a block's run records make up between 1/64 and 15% of its rows. Inside that band Open measured faster; outside it, up to 5× slower.
 - **The band's edges were not tuned for Open.** They are LazyCells' existing admission lines, reused, so the release adds no new constant.
 - **One machine, one workload.** The figures are from one i9-10900K and the Wikidata sample, and the first registered test of Open failed on its guard rule before a second, prospective one passed.
+
+Measured on the i9-10900K: 0.5.7 against 0.5.6 on the Wikidata sample, the median of 10 paired rounds at each thread count (release-scaling/run-20261119T203443Z). The two releases are level up to 4 threads. From 8 threads up, the shaded gap is Open: 2,557 MB/s against 2,356 at 10 threads. The release's attribution ledger credits this step to Open's merge alone.
 
 [Cutting the loop open](<https://lmmx.github.io/mibz2/pr-preview/pr-650/blog/2026-11-18-cutting-the-loop-open/index.md>) introduced the open-return idea. This post is about what shipped.
 

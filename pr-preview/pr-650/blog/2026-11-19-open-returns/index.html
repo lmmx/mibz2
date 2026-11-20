@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=268c11750233">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=72ec5aee7592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=268c11750233">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=72ec5aee7592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=268c11750233">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=72ec5aee7592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=268c11750233">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=72ec5aee7592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=268c11750233">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=72ec5aee7592">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=268c11750233">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=72ec5aee7592">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2706,11 +2706,16 @@
 <p>mibz2 0.5.7 ships a second way to undo the Burrows–Wheeler transform, Open, and a rule for when to use it. On the blocks the rule admits, Open keeps only some of the block's rows and decodes along their <em>returns</em>: where the LF walk next lands among the kept rows, and the bytes it spells on the way. The rule itself is two integer comparisons on a count the decoder already has.</p>
 <p><strong>The takeaways:</strong></p>
 <ul>
-<li><strong>On a ten-core i9, 0.5.7 is 7–11% faster than 0.5.6 from 8 to 20 threads on Wikidata, with about 23% less peak memory.</strong> Below 8 threads nothing changes: Open runs only on the parallel workers' route.</li>
+<li><strong>On a ten-core i9, 0.5.7 is 7–11% faster than 0.5.6 from 8 to 20 threads on Wikidata, with about 23% less peak memory, and Open alone is the source.</strong> The release's only other decoder change moves 6 threads, which this comparison doesn't run. The acceptance run, which put Open alone against 0.5.6, saw the same gain. Below 8 threads nothing changes: Open runs only on the parallel workers' route.</li>
 <li><strong>The rule is a prediction, not a guarantee.</strong> It picks Open when a block's run records make up between 1/64 and 15% of its rows. Inside that band Open measured faster; outside it, up to 5× slower.</li>
 <li><strong>The band's edges were not tuned for Open.</strong> They are LazyCells' existing admission lines, reused, so the release adds no new constant.</li>
 <li><strong>One machine, one workload.</strong> The figures are from one i9-10900K and the Wikidata sample, and the first registered test of Open failed on its guard rule before a second, prospective one passed.</li>
 </ul>
+<figure class="bf-fig" id="throughput">
+<svg viewBox="0 0 720 380" role="img" aria-label="Throughput on the i9-10900K by thread count, median of 10 rounds: 0.5.6 and 0.5.7 are level at 1, 2 and 4 threads; from 8 threads 0.5.7 is ahead, 8 threads 2,383 against 2,162 MB/s, 10 threads 2,557 against 2,356 MB/s, 12 threads 2,410 against 2,231 MB/s, 16 threads 2,383 against 2,207 MB/s, 20 threads 2,383 against 2,231 MB/s."><line x1="90" y1="300.0" x2="640" y2="300.0" style="stroke:var(--bf-frame);stroke-width:1"/><text x="80.0" y="305.0" class="bf-tm" text-anchor="end" style="font-size:15px">0</text><line x1="90" y1="253.6" x2="640" y2="253.6" style="stroke:var(--bf-frame);stroke-width:1"/><text x="80.0" y="258.6" class="bf-tm" text-anchor="end" style="font-size:15px">500</text><line x1="90" y1="207.1" x2="640" y2="207.1" style="stroke:var(--bf-frame);stroke-width:1"/><text x="80.0" y="212.1" class="bf-tm" text-anchor="end" style="font-size:15px">1,000</text><line x1="90" y1="160.7" x2="640" y2="160.7" style="stroke:var(--bf-frame);stroke-width:1"/><text x="80.0" y="165.7" class="bf-tm" text-anchor="end" style="font-size:15px">1,500</text><line x1="90" y1="114.3" x2="640" y2="114.3" style="stroke:var(--bf-frame);stroke-width:1"/><text x="80.0" y="119.3" class="bf-tm" text-anchor="end" style="font-size:15px">2,000</text><line x1="90" y1="67.9" x2="640" y2="67.9" style="stroke:var(--bf-frame);stroke-width:1"/><text x="80.0" y="72.9" class="bf-tm" text-anchor="end" style="font-size:15px">2,500</text><text x="20.0" y="26.0" class="bf-tm" text-anchor="start" style="font-size:15px">output MB/s, Wikidata (higher is faster)</text><polygon points="325.7,78.7 404.3,62.5 482.9,76.2 561.4,78.7 640.0,78.7 640.0,92.8 561.4,95.0 482.9,92.8 404.3,81.2 325.7,99.3" style="fill:var(--bf-green-tint);opacity:0.9"/><path d="M 90.0 250.2 L 168.6 218.9 L 247.1 162.9 L 325.7 99.3 L 404.3 81.2 L 482.9 92.8 L 561.4 95.0 L 640.0 92.8" style="fill:none;stroke:var(--bf-steel);stroke-width:2.5"/><circle cx="90.0" cy="250.2" r="5" style="fill:var(--bf-steel)"/><circle cx="168.6" cy="218.9" r="5" style="fill:var(--bf-steel)"/><circle cx="247.1" cy="162.9" r="5" style="fill:var(--bf-steel)"/><circle cx="325.7" cy="99.3" r="5" style="fill:var(--bf-steel)"/><circle cx="404.3" cy="81.2" r="5" style="fill:var(--bf-steel)"/><circle cx="482.9" cy="92.8" r="5" style="fill:var(--bf-steel)"/><circle cx="561.4" cy="95.0" r="5" style="fill:var(--bf-steel)"/><circle cx="640.0" cy="92.8" r="5" style="fill:var(--bf-steel)"/><path d="M 90.0 251.0 L 168.6 219.2 L 247.1 162.9 L 325.7 78.7 L 404.3 62.5 L 482.9 76.2 L 561.4 78.7 L 640.0 78.7" style="fill:none;stroke:var(--bf-green);stroke-width:2.5"/><circle cx="90.0" cy="251.0" r="5" style="fill:var(--bf-green)"/><circle cx="168.6" cy="219.2" r="5" style="fill:var(--bf-green)"/><circle cx="247.1" cy="162.9" r="5" style="fill:var(--bf-green)"/><circle cx="325.7" cy="78.7" r="5" style="fill:var(--bf-green)"/><circle cx="404.3" cy="62.5" r="5" style="fill:var(--bf-green)"/><circle cx="482.9" cy="76.2" r="5" style="fill:var(--bf-green)"/><circle cx="561.4" cy="78.7" r="5" style="fill:var(--bf-green)"/><circle cx="640.0" cy="78.7" r="5" style="fill:var(--bf-green)"/><text x="650.0" y="74.7" class="bf-t-green" text-anchor="start" style="font-size:15px;font-weight:700">0.5.7 · 2,383</text><text x="650.0" y="108.8" class="bf-tm" text-anchor="start" style="font-size:15px;font-weight:600">0.5.6 · 2,231</text><text x="404.3" y="48.5" class="bf-t-green" text-anchor="middle" style="font-size:15px;font-weight:700">+9% at 10 threads</text><text x="90.0" y="322.0" class="bf-tm" text-anchor="middle" style="font-size:15px">1</text><text x="168.6" y="322.0" class="bf-tm" text-anchor="middle" style="font-size:15px">2</text><text x="247.1" y="322.0" class="bf-tm" text-anchor="middle" style="font-size:15px">4</text><text x="325.7" y="322.0" class="bf-tm" text-anchor="middle" style="font-size:15px">8</text><text x="404.3" y="322.0" class="bf-tm" text-anchor="middle" style="font-size:15px">10</text><text x="482.9" y="322.0" class="bf-tm" text-anchor="middle" style="font-size:15px">12</text><text x="561.4" y="322.0" class="bf-tm" text-anchor="middle" style="font-size:15px">16</text><text x="640.0" y="322.0" class="bf-tm" text-anchor="middle" style="font-size:15px">20</text><text x="365.0" y="346.0" class="bf-tm" text-anchor="middle" style="font-size:15px">threads</text><text x="365.0" y="372.0" class="bf-tm" text-anchor="middle" style="font-size:15px">peak memory from 8 threads: 96–107 MB on 0.5.7, against 125–134 MB on 0.5.6</text></svg>
+<figcaption>Measured on the i9-10900K: 0.5.7 against 0.5.6 on the Wikidata sample, the median of 10 paired rounds at each thread count (release-scaling/run-20261119T203443Z). The two releases are level up to 4 threads. From 8 threads up, the shaded gap is Open: 2,557 MB/s against 2,356 at 10 threads. The release's attribution ledger credits this step to Open's merge alone.</figcaption>
+</figure>
+
 <p><a href="../2026-11-18-cutting-the-loop-open/">Cutting the loop open</a> introduced the open-return idea. This post is about what shipped.</p>
 <h2 id="1-what-open-does">1. What Open does<a class="headerlink" href="#1-what-open-does" title="Permanent link">&para;</a></h2>
 <p>A BWT block's last column falls into runs of one repeated byte. Open sorts them by length:</p>
@@ -2955,19 +2960,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=268c11750233"></script>
+        <script src="../../assets/javascripts/bench.js?v=72ec5aee7592"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=268c11750233"></script>
+        <script src="../../assets/javascripts/couriers.js?v=72ec5aee7592"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=268c11750233"></script>
+        <script src="../../assets/javascripts/blog.js?v=72ec5aee7592"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=268c11750233"></script>
+        <script src="../../assets/javascripts/frontier.js?v=72ec5aee7592"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=268c11750233"></script>
+        <script src="../../assets/javascripts/observatory.js?v=72ec5aee7592"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=268c11750233"></script>
+        <script src="../../assets/javascripts/katex.js?v=72ec5aee7592"></script>
       
     
   </body>
