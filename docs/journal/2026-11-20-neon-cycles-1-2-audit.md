@@ -2,7 +2,7 @@
 
 *20 November 2026. The Coordinator.*
 
-**Status: provisional.** This audit is based on two things only:
+**Status: provisional, partly confirmed against the artifacts.** Neon pushed at 5cdd0cb7 (contains b69ffcd). This audit is based on two things only:
 - Neon's handoff report as Louis relayed it;
 - production source on master.
 
@@ -138,3 +138,42 @@ Once the branch is on origin:
 3. **Send to MONODROMY:** the Backward Open identity, primary-mark transport, short cycles, and the Half-Bipolar equivalence question.
 4. **Finalise:** update this audit and merge it to master, so Neon reads it at its next cycle boundary.
 5. **Native experiment:** register the three-arm experiment (§1) before any data.
+
+## Artifact checks (5cdd0cb7)
+
+- **Commits:** both are present and authored as Louis, with no attribution lines.
+- **Manifests:** `check_manifest.py` passes `half_bipolar.toml` and `backward_open.toml`.
+- **G5 falsifier:** `g5_backward_open.c` reproduces Neon's table exactly, including its
+  pre-registered verdict, **G5: FAIL**.
+
+### Calibrating the cost model on a known pair
+
+[`calib_i16.c`](2026-11-20-neon-cycles-1-2-audit/calib_i16.c) includes Neon's model unchanged and
+adds an `i16` arm: Open with QUEUE=false, a second run pass, and scattered writes `edges[dest] = j`.
+All three arms produce byte-identical output on all six blocks.
+
+The model's ratios to `qi16`:
+
+| Block | i16: L1 misses | i16: L2 misses | i16: DRAM | i16: work | i16: memory | Backward Open: L2 misses | Backward Open: DRAM | Backward Open: work |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 0.94 | 0.86 | 0.83 | 0.88 | 0.84 | 0.86 | 0.84 | 0.73 |
+| 2 | 0.93 | 0.87 | 0.81 | 0.86 | 0.82 | 0.85 | 0.82 | 0.73 |
+| 85 | 0.90 | 0.83 | 0.75 | 0.86 | 0.76 | 0.82 | 0.75 | 0.72 |
+| 143 | 0.94 | 0.89 | 0.74 | 0.88 | 0.77 | 0.88 | 0.74 | 0.73 |
+| 207 | 0.94 | 0.87 | 0.79 | 0.90 | 0.80 | 0.87 | 0.79 | 0.74 |
+| 210 | 0.93 | 0.87 | 0.72 | 0.90 | 0.75 | 0.86 | 0.72 | 0.73 |
+
+**The model ranks the known pair wrongly.**
+- **The model's view:** `i16` is better than `qi16` on every metric.
+- **Native:** `i16` is **1.10–1.16× slower** (PR #653).
+
+**It cannot tell Backward Open from `i16` on cache traffic.**
+- Its L2 and DRAM ratios for Backward Open are within about 0.01 of those for `i16`.
+- The only difference it shows is work: 0.73 against 0.87, from sequential rather than scattered
+  edge writes.
+
+**Verdict on the model: diagnostic only (METHOD.md §5).** It cannot predict native competitiveness
+for this family. Neon's G5 figures for Backward Open are no evidence either way.
+
+**What the native question reduces to:** whether sequential edge writes, plus backward emission,
+recover more than `i16`'s native loss. Only the native three-arm experiment (§1) can answer that.
