@@ -166,7 +166,7 @@ is a record, not a gate.
 | `i16` against `qi16` (#653; calibration) | `i16` better on L2 misses, DRAM traffic and work (Neon's C cache model) | 1.10–1.16× slower | no |
 | LIMIT=8 (#657) | wins on 30% of blocks (2-lap medians) | wins on 0 of 228 | no |
 | Backward Open (Neon cycle 2) | work 0.72–0.74×, L2 misses 0.82–0.88× (C cache model) | 1.10–1.15× slower than `qi16` on all six blocks (#659): the second pass over the records costs about as much as the queues it replaces | no |
-| U16Q (Carbon cycle 2: fixed 16-wide queue fill, 16-byte emit) | whole kernel 0.83–0.86× Open in Carbon's C harness; 0.77–0.92× in the Coordinator's rerun | kernel 0.86–0.91× natively (`calib.rs`, matching C), but no change in CI's end-to-end wall (#664): `wikidata` −0.1% (−0.4%, +0.1%) at 1 thread, +0.0% (−1.0%, +1.1%) at 4; the C baseline matches native Open within a few percent | kernel yes; end-to-end not shown |
+| U16Q (Carbon cycle 2: fixed 16-wide queue fill, 16-byte emit) | whole kernel 0.83–0.86× Open in Carbon's C harness; 0.77–0.92× in the Coordinator's rerun | kernel 0.86–0.91× natively (`calib.rs`, matching C), but no change in CI's end-to-end wall (#664): `wikidata` −0.1% (−0.4%, +0.1%) at 1 thread, +0.0% (−1.0%, +1.1%) at 4; the C baseline matches native Open within a few percent | kernel yes (11.2% on the whole corpus); CI's bench never runs Open below 8 workers, so its null is expected (stage attribution) |
 
 ## 6. Tools and where things are
 
