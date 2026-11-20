@@ -1,0 +1,22 @@
+# Acquisition manifest for Branchless Vectorized Spliced Monoid Contraction (BVSMC-1P and BVSMC-2P).
+name = "Branchless Vectorized Spliced Monoid Contraction (BVSMC)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "open_uniform16_table"
+inputs = ["C", "p", "records"]
+output = "open_u16_retained_table"
+status = "verified"
+dependent = true
+cost = { W = "R + m + U", D = "H", B = "R + m + U", Q = "H", M = "m + U" }
+evidence = "Open::construct<true, true> with uniform-16 padded queue fill (store_seq16, zero per-run loop mispredicts) and unified 16-byte word prefix table inline16[0..256+words] + w_len[0..256+words] (~50-126 KiB L2-resident)."
+
+[[edge]]
+id = "bvsmc_parallel_emit"
+inputs = ["n", "open_u16_retained_table", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m / K", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Escapes Cycle 1's ROB branch-flush obstruction via unconditional 16B SIMD prefix stores on <=16B words (92.5-94.4% of steps) with len>16 and S sentinels unified into a single <7% cold trap across K=8 concurrent cursors (1-pass <=159 chunks of 8064B, or 2-pass 0-byte-arena exact-offset in-place into out[0..n)); verified on 10,454 small instances and all 6 authenticated blocks."
