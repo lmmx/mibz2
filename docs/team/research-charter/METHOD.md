@@ -214,8 +214,10 @@ These are in [CONTEXT.md](CONTEXT.md) §4–5, with evidence. In brief:
 ## 8. Handoff: publishing a research branch
 
 Committing and publishing are different acts.
-- **While a cycle is active:** commit locally as often as is useful. No push is needed for each
-  experiment.
+- **While a cycle is active:** commit as often as is useful. Also push a work-in-progress commit,
+  labelled `wip(neon): …`, at least every 30 minutes of work and before any run likely to take more
+  than a few minutes. A session can stop without warning (a quota or a crash), and unpushed work is
+  then at risk. A WIP push is not a handoff and needs no write-up.
 - **At a handoff, push the `research/neon-<topic>` branch to origin.** A handoff is any of:
   - a research cycle finished;
   - an independent audit requested;
