@@ -2,6 +2,10 @@
 //! Its prefix contains terminal coordinates only. All narrow-run wiring is absent.
 use super::{Band, Counts, Kernel};
 
+// Research only: the timed clone of the induced construction (examples/open_phases.rs)
+#[cfg(feature = "open-phases")]
+pub(crate) mod phases;
+
 #[derive(Default, Clone, Copy)]
 struct Node {
     prev: [u32; 2],

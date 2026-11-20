@@ -135,11 +135,14 @@ impl Runs {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "open-phases"))]
 impl Runs {
     /// A column's records, as `front` leaves them: its runs cut at CAP, each byte's rows
-    /// and records counted (the tests', where no symbols are at hand)
-    pub(crate) fn of_column(ll: &[u8]) -> Runs {
+    /// and records counted (the tests', where no symbols are at hand). Public only under the
+    /// research feature `open-phases`, for a harness that holds exact columns rather than
+    /// symbols (examples/open_phases.rs)
+    #[doc(hidden)]
+    pub fn of_column(ll: &[u8]) -> Runs {
         let mut r = Runs::default();
         let mut i = 0;
         while i < ll.len() {
@@ -162,6 +165,7 @@ impl Runs {
     }
 
     /// The records, to break them
+    #[cfg(test)]
     pub(crate) fn records_mut(&mut self) -> &mut Vec<u16> {
         &mut self.runs
     }

@@ -92,6 +92,11 @@ owned-writer = []
 # Changes that visibility and nothing else; never on a production path. Retain while the
 # scorer is in use
 moonshot = []
+# Research only: the open kernel's construction timed stage by stage (src/open/endpoint/phases.rs,
+# a timed clone; examples/open_phases.rs; docs/journal/2026-11-20-open-phase-split.md). Adds the
+# clone and makes `Runs::of_column` public; production's kernel is untouched. Remove once the
+# phase split's questions are closed
+open-phases = ["moonshot"]
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -129,6 +134,10 @@ overflow-checks = true
 unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
 
 # The occupancy instrument (#39) needs the decoder's timeline
+[[example]]
+name = "open_phases"
+required-features = ["open-phases"]
+
 [[example]]
 name = "occupancy"
 required-features = ["trace"]

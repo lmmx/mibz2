@@ -104,6 +104,10 @@ pub mod itrace;
 pub mod mtf;
 // the open kernel, the workers' kernel wherever `LazyCells` ran (`bwt::OpenCells`)
 mod open;
+// Research only: the open kernel's construction, timed stage by stage (`open-phases`)
+#[cfg(feature = "open-phases")]
+#[doc(hidden)]
+pub use open::{PhasedOpen, Phases};
 pub mod parallel;
 #[cfg(feature = "phase-counters")]
 #[doc(hidden)]

@@ -517,6 +517,10 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 
 mod endpoint;
 
+// Research only: the construction's stage split (`open-phases`, examples/open_phases.rs)
+#[cfg(feature = "open-phases")]
+pub use endpoint::phases::{PhasedOpen, Phases};
+
 #[cfg(test)]
 mod checks;
 
