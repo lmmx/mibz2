@@ -202,6 +202,13 @@
     "section": " · Research blog",
     "title": "Train tracks: carrying a tangle of paths on a few weighted branches"
   },
+  "assets/social/blog-2026-11-20-where-the-decoding-work-goes.png": {
+    "description": "Tracing each costly row back to the text it spells shows that JSON keys cost almost nothing, while random statement IDs claim two thirds of the hardest rows.",
+    "foot": "lmmx.github.io/mibz2 · 20 November 2026",
+    "kind": "question",
+    "section": " · Research blog",
+    "title": "Where the decoding work goes: random IDs in repetitive JSON"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
