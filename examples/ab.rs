@@ -1239,6 +1239,95 @@ mod open_census {
     }
 }
 
+/// (research only, `open-return`) `ab limit-sweep ROUNDS FILE..`: the open kernel's thin-run
+/// limit, block by block. Every run-route block LazyCells admits with at least 65,536 rows is
+/// decoded by `Open<L, true, true>` for L in 8, 12, 16 and 24, one kernel an arm, ROUNDS
+/// rounds over all the blocks, the arms rotated within each round (the order shifted by
+/// round and block). One CSV line a timing, to stdout; the kernel's counts at each limit, one
+/// CSV line a block and limit, to the file named by `LIMIT_SWEEP_FEATURES`. Every output is
+/// checked byte for byte against LazyCells'.
+#[cfg(feature = "open-return")]
+mod limit_sweep {
+    use mibz2::open_gate::{SweepCollect, SWEPT};
+    use mibz2::open_return::Kernel;
+    use std::io::Write;
+
+    const LIMITS: [u32; 4] = [8, 12, 16, 24];
+
+    pub fn run(args: &[String]) {
+        let rounds: usize = args[0].parse().expect("ROUNDS");
+        let k = mibz2::Kernels::detect();
+        let mut feats = std::fs::File::create(
+            std::env::var("LIMIT_SWEEP_FEATURES").unwrap_or("features.csv".into()),
+        )
+        .unwrap();
+        writeln!(
+            feats,
+            "file,block,n,records,limit,runs,retained,thick,bands,words,table_bytes"
+        )
+        .unwrap();
+        println!("file,block,round,slot,limit,ns");
+        for f in &args[1..] {
+            let data = std::fs::read(f).expect("a readable file");
+            SWEPT.lock().unwrap().clear();
+            let got = mibz2::decode_with::<SweepCollect>(&data, k).expect("a valid stream");
+            assert!(
+                got == mibz2::decode(&data).unwrap(),
+                "{f}: the collector changed the output"
+            );
+            drop(got);
+            let blocks = std::mem::take(&mut *SWEPT.lock().unwrap());
+            eprintln!(
+                "{f}: {} blocks admitted with at least 65,536 rows",
+                blocks.len()
+            );
+            let mut kernels: Vec<Kernel> = LIMITS.iter().map(|_| Kernel::default()).collect();
+            let mut out = Vec::new();
+            // the counts at each limit (an untimed warm-up decode, checked)
+            for (b, recs, n, p, want) in &blocks {
+                for (a, &l) in LIMITS.iter().enumerate() {
+                    let c = kernels[a].run::<true, true, false>(recs, *n, *p, l, &mut out);
+                    assert!(
+                        out == *want,
+                        "{f} block {b} limit {l}: not LazyCells' bytes"
+                    );
+                    writeln!(
+                        feats,
+                        "{f},{b},{n},{},{l},{},{},{},{},{},{}",
+                        recs.len(),
+                        c.runs,
+                        c.retained,
+                        c.thick,
+                        c.bands,
+                        c.words,
+                        c.table_bytes
+                    )
+                    .unwrap();
+                }
+            }
+            let stdout = std::io::stdout();
+            let mut o = stdout.lock();
+            for round in 0..rounds {
+                for (i, (b, recs, n, p, want)) in blocks.iter().enumerate() {
+                    for slot in 0..LIMITS.len() {
+                        let a = (slot + round + i) % LIMITS.len();
+                        let t = std::time::Instant::now();
+                        kernels[a].run::<true, true, false>(recs, *n, *p, LIMITS[a], &mut out);
+                        let ns = t.elapsed().as_nanos();
+                        assert!(
+                            out == *want,
+                            "{f} block {b} limit {}: not LazyCells' bytes",
+                            LIMITS[a]
+                        );
+                        writeln!(o, "{f},{b},{round},{slot},{},{ns}", LIMITS[a]).unwrap();
+                    }
+                }
+                eprintln!("round {round} done");
+            }
+        }
+    }
+}
+
 /// `N-S`, N and S at least 1
 fn counts(ns: &str) -> Option<(usize, usize)> {
     let (n, s) = ns.split_once('-')?;
@@ -3098,6 +3187,8 @@ fn main() {
         Some("census-open") => open_census::run(&args[1..]),
         #[cfg(feature = "open-return")]
         Some("census-timed") => open_census::timed(&args[1..]),
+        #[cfg(feature = "open-return")]
+        Some("limit-sweep") => limit_sweep::run(&args[1..]),
         Some("env") => match args.get(1).map(String::as_str) {
             None => println!("{}", env_line()),
             Some("--facts") if args.len() == 2 => println!("{}", facts::live()),
