@@ -1,0 +1,22 @@
+# Acquisition manifest for Conjugate Bipolar Dead-Out Backward Segmentation (ConjBP-Seg32, Cycle 13).
+name = "Conjugate Bipolar Dead-Out 32-Lane Backward Segmentation (ConjBP-Seg32)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "dense_lf_table_runs_or_seqlf"
+inputs = ["C", "n", "records"]
+output = "packed_lf_table"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "1", B = "n", Q = "0", M = "n" }
+evidence = "Builds the 32-bit packed LF table tt[0..n) in 1 sequential pass via seg_fill_avx2 on medium-density runs (0.20 <= r/n < 0.50, text0) or seqlf_col_build on high-entropy columns (r/n >= 0.50, random, records), rendering out[0..n) (including ll[0..n) in invert_in_place) 100% dead."
+
+[[edge]]
+id = "conjugate_bipolar_512b_walk_and_kahn"
+inputs = ["packed_lf_table", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "n / 32", B = "n", Q = "n", M = "n" }
+evidence = "Applies spatial inversion x -> n - x to bipolar dead-out paging across S=448 equispaced O(1)-sentinel cuts (tt[s_i] = SEG_START | (i << 8), zero qsort/bsearch) and 32 prefetched lanes staged in prime-padded L1D tiles tile[32][272] (Theorem 13.3): segment first_seg writes downward in place from out + n while segments != first_seg allocate 512 B extents upward from out + 0 with <= 225 KiB strict Pigeonhole overflow (205-209 KiB measured), eliminating all 2.00 MiB of SegScratch::bufs while beating both Shipped Segmented and Cycle 12 SeqLF-Col on text0 (2.23 ms), records (2.40 ms = 0.70x), and random (2.39 ms = 0.70x)."

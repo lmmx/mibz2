@@ -1,0 +1,22 @@
+# Acquisition manifest for Dual-Pole edges-Aliased Zero-Hole ChunkQ + U8Gate/Pf8L AHT-R4-BP4K (Cycle 13).
+name = "Dual-Pole edges-Aliased Zero-Hole ChunkQ + U8Gate/Pf8L AHT-BP4K (BipolarZQ / U8Pf-AHT-BP4K)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "bipolar_zq_u8gate_aht_elimination"
+inputs = ["C", "n", "p", "records"]
+output = "bipolar_zq_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Hosts 1024-entry (+24 SIMD pad) zero-hole thin-row radix chunks downward from the dead upper pole of edges[] during RunQ and AHT-R4-DGIM with lazy extra[] allocation (0 B on wide==0) and U8Gate width<=8 32B stores (Theorem 13.2): eliminates the Runs.per[256] requirement, allocates 0 B of separate queue scratch on 9/9 sparse/spiral/Wikidata/runs blocks (with exact overlap evacuation on extremal m), cuts per-worker allocated scratch by 63% (11.5 -> 4.2 MiB) into a 1.22-2.15 MiB L2-resident working set, and speeds up RunsMeta U8Pf-AHT-FlatQ-BP4K by an additional 4-11% over Cycle 12."
+
+[[edge]]
+id = "pf8l_bipolar_4k_emit"
+inputs = ["bipolar_zq_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Emits AHT-contracted return-map words across 8 software-prefetched lanes (_mm_prefetch on edges + next_j) into 4 KiB bipolar dead-out pages with Zero-Stage Kahn Topological Unshuffling (<= 216 KiB recycled overflow), achieving 0.844-1.501 ms on 6/6 Wikidata blocks and 1.167 ms on runs."
