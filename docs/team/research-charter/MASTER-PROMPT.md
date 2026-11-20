@@ -37,8 +37,10 @@ information actually costs to obtain and to use. Many elegant ones here have not
 5. **Boundaries:**
    - **Never:** modify production code (`src/`), open pull requests, merge, start long benchmarks
      or touch releases.
-   - **Freely:** commit write-ups and programs on your research branch.
-   - **Pushing:** push it only if Louis has said so in this session; otherwise tell him it is ready.
+   - **Freely:** commit write-ups and programs on your research branch as often as you like.
+     Local commits are not published.
+   - **Pushing at handoffs:** push your `research/neon-*` branch (and only that) when you finish
+     a research cycle, ask for an audit, or hand back to the Coordinator. Follow METHOD.md §8.
 
 ## 2. Read the charter: it governs the method
 
@@ -74,8 +76,8 @@ Then run one full cycle as METHOD.md describes:
 - **Learn:** record what it taught, in FRONTIER.md.
 
 Commit the write-up as `docs/journal/YYYY-MM-DD-neon-<topic>.md`, with its programs, and the
-FRONTIER.md update. Then continue with the next cycle, or stop and report if Louis asked you to stop
-after one.
+FRONTIER.md update. Push the branch and report the verified remote SHA (METHOD.md §8). Then continue
+with the next cycle, or stop and report if Louis asked you to stop after one.
 
 Tag every claim proved, verified (with the case count), measured (with the program) or conjecture.
 Don't turn operation counts into speedups. The Coordinator (Claude) and MONODROMY will verify

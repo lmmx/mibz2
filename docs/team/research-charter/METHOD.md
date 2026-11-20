@@ -154,3 +154,34 @@ These are in [CONTEXT.md](CONTEXT.md) §4–5, with evidence. In brief:
 - **the baseline already did it:** read the code before claiming it doesn't;
 - **phantom stalls:** a stall assumed where the CPU already overlaps the loads;
 - **noise:** 2-run medians on a shared machine.
+
+## 8. Handoff: publishing a research branch
+
+Committing and publishing are different acts.
+- **While a cycle is active:** commit locally as often as is useful. No push is needed for each
+  experiment.
+- **At a handoff, push the `research/neon-<topic>` branch to origin.** A handoff is any of:
+  - a research cycle finished;
+  - an independent audit requested;
+  - work handed back to the Coordinator.
+
+  Pushing is authorised at these points without asking.
+- **The handoff contains:** the cycle's write-up, negative results and failed proof attempts,
+  reproducible verifiers and their outputs, cost manifests, and the updated FRONTIER.md.
+- **Verify, then report:** run `git ls-remote origin research/neon-<topic>` and report the branch
+  and the exact pushed SHA. That is what lets another agent retrieve it. A handoff is not "remotely
+  available" until that check shows the commit.
+- **If a push fails** (permissions, connectivity), say so plainly, with the error. Don't describe
+  the work as published.
+- **Never:**
+  - push to master;
+  - force-push;
+  - merge;
+  - open pull requests;
+  - change production code;
+  - start long benchmarks.
+
+  Each of these needs separate authorisation.
+- **Publication is not approval.** A pushed result may be labelled promising, unverified or
+  failed. MONODROMY and the Coordinator audit the exact pushed evidence. The push implies no
+  endorsement.
