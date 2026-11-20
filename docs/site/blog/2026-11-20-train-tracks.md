@@ -149,6 +149,7 @@ These leads now sit in the project's list of open mathematical directions, for t
 
 **Sources:**
 
+- W. P. Thurston, [The Geometry and Topology of 3-Manifolds](https://library.slmath.org/books/gt3m/), lecture notes, Princeton (1980): §8.9, p. 204.
 - N. M. Dunfield and D. P. Thurston, [A random tunnel number one 3–manifold does not fiber over the circle](https://arxiv.org/abs/math/0510129), *Geometry & Topology* 10 (2006), 2431–2499: §7.1–7.3, Figures 16, 17 and 18 (pp. 2471–2472).
 - H. Masur, L. Mosher and S. Schleimer, [On train track splitting sequences](https://arxiv.org/abs/1004.4564), *Duke Mathematical Journal* 161 (2012); arXiv 2010: §2, Figure 1 (p. 4).
 - A. Rafiqi and A. Zeytin, [Thurston's legacy at the interface of surface dynamics, train tracks, and arithmetic](https://arxiv.org/abs/2610.13347), arXiv 2026: §4.2, Figure 1 (p. 19).
