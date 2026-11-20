@@ -1,0 +1,22 @@
+# Acquisition manifest for Sentinel-Spliced Monoid Contraction (SSMC) on Open's retained return map.
+name = "Sentinel-Spliced Monoid Contraction (SSMC-Open)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "open_first_return_table"
+inputs = ["C", "p", "records"]
+output = "open_retained_table"
+status = "measured"
+dependent = true
+cost = { W = "R + m + U", D = "H", B = "R + m + U", Q = "H", M = "m + U" }
+evidence = "Shipped Open::construct<true, true> (src/open.rs, src/open/endpoint.rs): 1 sequential pass over R records filling queues (m <= 0.23n), endpoint induction on H thick strips (<= 3H + 2 nodes, <= 21k steps on 6 blocks), spelling dictionary U (32-58 KiB), and band wiring into edges[0..m]."
+
+[[edge]]
+id = "ssmc_parallel_monoid_emit"
+inputs = ["n", "open_retained_table", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m / K", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Embeds S = 64 sentinel word codes directly into edges[v_q] in O(S) work (zero extra graph), evaluates K = 8 concurrent disjoint cycle segments directly into expanded byte chunks (total steps <= m, total arena bytes <= n proved for all columns), and stitches the marked cycle via <= S contiguous memcpys; verified on 10,454 small (L, p, limit) instances and all 6 authenticated blocks."
