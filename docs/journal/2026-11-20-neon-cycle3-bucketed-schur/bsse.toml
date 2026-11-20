@@ -1,0 +1,53 @@
+# Acquisition manifest for Bucketed Sequential Schur Elimination + L2-Slabbed Emission (BSSE).
+# Checked via: python3 docs/team/acquisition/check_manifest.py docs/journal/2026-11-20-neon-cycle3-bucketed-schur/bsse.toml
+
+name = "Bucketed Sequential Schur Elimination + L2-Slabbed Emission (BSSE on Open's g = P o LF_{L[S]})"
+target = "text"
+uses = [
+  "counts_from_records",
+]
+
+[[edge]]
+id = "thick_strip_classification"
+inputs = ["records", "p"]
+output = "thick_strips_and_counts"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "1", B = "R + H", Q = "0", M = "H" }
+evidence = "One sequential pass over capped run records collecting ONLY H = 1,565-5,047 thick strips (>16 rows) and per-symbol counts all[256], thin[256], thick[256]. Zero queues[0..256] allocation."
+
+[[edge]]
+id = "open_endpoint_bands"
+inputs = ["thick_strips_and_counts", "n"]
+output = "open_bands_and_spelling"
+status = "proved"
+dependent = true
+cost = { W = "K + U", D = "K", B = "H + B + U", Q = "K", M = "H + B + U" }
+evidence = "Open endpoint elimination on <= 3H + 2 arrows (proof.md; src/open/endpoint.rs). K ~ 9k-18k steps, B = 2,446-6,788 bands, spelling U = 31-58 KiB."
+
+[[edge]]
+id = "queue_free_bucket_scan"
+inputs = ["records", "p", "open_bands_and_spelling"]
+output = "initial_bucket_queues"
+status = "verified"
+dependent = false
+cost = { W = "R + m", D = "1", B = "R + 8m", Q = "0", M = "8m" }
+evidence = "Second sequential scan of records with L1-resident cur_band[256], evaluating g(z) = P(LF_v(z)) and routing each initial edge (z -> g(z)) sequentially into fwd_q[jz] (jz <= jd) or in_q[jd] (jd < jz) across s = ceil(m/bsize) <= 13 streams plus orig_code[0..m] (u16). Zero random reads/writes."
+
+[[edge]]
+id = "forward_bucket_schur"
+inputs = ["initial_bucket_queues", "p"]
+output = "contracted_bucket_trace"
+status = "verified"
+dependent = true
+cost = { W = "m + R_rt", D = "s + max_chain", B = "18*R_rt + 8*m", Q = "0 outside L2 (m + R_rt inside L2 bucket)", M = "12m" }
+evidence = "Bucket-by-bucket Schur elimination (k = 0..close_k) with Exact Chain-Head Decomposition Lemma (proved; verified on 97,976 exhaustive small cases + 6 Wikidata blocks in verify_bsse.py). Working set per bucket is 8*bsize <= 128 KiB (L2-resident). Total routed edges R_rt <= m - |B_{s-1}|; measured R_rt = 0.488-0.635m at bsize=16384 (0.335-0.389m at s=4)."
+
+[[edge]]
+id = "reverse_position_and_slabbed_emit"
+inputs = ["contracted_bucket_trace", "open_bands_and_spelling", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m + R_rt", D = "s + max_chain", B = "n + 10m + 14*R_rt", Q = "0 outside L2 (m + R_rt inside L2 buckets and 112.5 KiB output slabs)", M = "n + 12m" }
+evidence = "Reverse pass (j = close_k..0) answers req_u[k][j] in L2-resident pos[0..bsize], propagates along topological self_chain[j], and emits (off:17b, code:15b) (4 B/row) into C=8 L2-resident output slabs (112.5 KiB each), then spells each slab sequentially into out[0..n] with zero L2/DRAM pointer chasing. Verified byte-exact on 97,976 small cases and all 6 Wikidata blocks (5,399,692/5,399,692 bytes)."
