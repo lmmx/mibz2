@@ -70,3 +70,66 @@ segments of the retained cycle would act as width for the one-row runs.
 - **Scope:** this kills lanes as a surrogate for width in Open's emit. It says nothing about
   surrogates aimed at the construction phases.
 - **Measured** (C harness, this VM, not the native Rust decoder on the i9).
+
+## Additions from Louis's discussion with ChatGPT (relayed)
+
+- **Transfer the effect, not the algorithm.** Rather than generalise the toy's algorithm, ask
+  what different mechanism in the hard setting produces the same effect.
+- **Damage the toy deliberately.** Find the theorem that makes the toy easy. Relax its assumptions
+  one at a time until it fails, and record which assumption carried the effect.
+- **Amplification by composition.** Look for an exact operation whose accumulated benefit grows
+  faster than its complete cost when it is repeated.
+- **Discovery complexity is not execution complexity.** A long proof can justify a cheap
+  operation, and a short theorem can justify an expensive one.
+
+**The Coordinator's reading of amplification.**
+- **Cells already amplifies.** Rauzy induction composes return words, so word lengths grow
+  geometrically while the interval count stays r: about n/r bytes per step.
+- **The cost that remains is r itself.** The working-backwards measurement says r's hardest part
+  is unique random strings.
+- **What any new amplification must do:** act on those runs *collectively*. Under induction they
+  never merge, because they share no continuation.
+- **What they do share:** format, not content. In a version-4 UUID the dashes sit at offsets 8,
+  13, 18 and 23, the version nibble is always 4, and the variant nibble is one of 8, 9, A and B.
+  Every GUID also uses the same 16-symbol alphabet.
+- **The question:** can a shared format, rather than shared content, be the native surrogate for
+  width? This is a conjecture, unexamined.
+
+## The lead as relayed, for Carbon at its next handoff
+
+```text
+A mathematical lead for a future foundational cycle, inspired by Levent Alpöge's November 2026
+account of his claimed RH/GRH proof with Claude (https://alpo.ge/remark.pdf).
+
+The interesting methodology is not the specific number theory. It is the reported transfer of a
+powerful operation from a tractable toy setting into a much harder setting by discovering a
+completely different mechanism with the same mathematical effect.
+
+I want you to investigate that pattern for exact inverse-BWT reconstruction.
+
+Find a tractable family of BWTs in which an unusually powerful collective reconstruction operation
+is available. Establish exactly what makes it work. Then relax the assumptions until that
+capability disappears.
+
+Rather than merely generalising the original algorithm, ask whether mathematics from another
+setting could restore the missing capability through a different primitive.
+
+Pay particular attention to effects that can be amplified by composition: an exact operation that
+resolves progressively more ordering relationships without comparable growth in construction or
+consumption costs.
+
+You are free to choose the toy family, the mathematical effect and the replacement theory. The
+examples in our research history are starting points, not restrictions.
+
+The desired result is a new exact computational principle, or a precise obstruction explaining why
+the proposed transfer cannot work.
+
+Keep the existing verification and complete-cost standards. No charter changes or production
+integration. Treat Alpöge's claimed RH proof as unverified pending independent scrutiny; we're
+studying the reported discovery process, not assuming its final theorem is established.
+
+Read docs/journal/2026-11-20-toy-transfer.md and docs/journal/2026-11-20-working-backwards.md first:
+they name a candidate toy (perfectly clustering BWTs), the measured missing ingredient (run width,
+absent in unique random strings), and one surrogate already refuted (independent lanes for Open's
+emit).
+```
