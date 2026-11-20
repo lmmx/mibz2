@@ -156,15 +156,15 @@ Each row is correct mathematics that failed as engineering, unless marked otherw
 
 ## 5a. The fidelity ledger
 
-Cheap predictions set against native outcomes, for every candidate that reached a native test.
-Add a row whenever a model's prediction can be compared with a native result.
+Cheap predictions set against native outcomes, for the candidates that reached a native test. This
+is a record, not a gate.
 
 | Candidate | Cheap prediction | Native outcome | Agreed? |
 |---|---|---|---|
 | NSPC (#652) | dependent steps 0.25–0.34× (Python op counts) | 1.82–2.38× Open's time | no |
 | Q, packed queues (#654) | 8–15% faster (Neon's estimate) | 1.046–1.093× Open | no |
 | LIMIT=8 (#657) | wins on 30% of blocks (2-lap medians) | wins on 0 of 228 | no |
-| Backward Open (Neon cycle 2) | work 0.72–0.74×, L2 misses 0.82–0.88× (C cache model) | not yet run; calibrate the model on `qi16` and `i16` first | pending |
+| Backward Open (Neon cycle 2) | work 0.72–0.74×, L2 misses 0.82–0.88× (C cache model) | not yet run (the Coordinator's audit checks the model on `qi16` and `i16`) | pending |
 
 ## 6. Tools and where things are
 

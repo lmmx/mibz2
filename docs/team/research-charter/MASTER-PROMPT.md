@@ -72,7 +72,7 @@ or anything else (METHOD.md §2). Evaluate ruthlessly against computational real
 candidate removes, and what it costs instead.
 - Report the construction, prior art, displaced and replacement costs, and evidence. The auditors
   classify whether it reoriented.
-- Calibrate any cost model on known reference variants before trusting its verdict.
+- Treat a cost or cache model as diagnostic, not as proof of native speed.
 - Prior art informs; it does not disqualify.
 
 Then run one full cycle as METHOD.md describes:

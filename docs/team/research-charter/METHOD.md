@@ -172,12 +172,9 @@ Claims meet executable checks, not reviews of prose:
 3. **MONODROMY** independently audits theorems. **The Coordinator** reruns programs, measures
    native cost and decides what reaches engineering.
 
-**Cost models are calibrated before they are trusted.** A model used to predict or gate native
-performance (G3–G5) is first run, unchanged, on reference variants with known native results, at
-least shipped `qi16` and `i16`. Its predictions go in CONTEXT.md's fidelity ledger. A model that
-mis-ranks the references is diagnostic only: it can explain traffic, but its verdict is not a
-prediction of competitiveness. Never tune a model on the references and then call that
-validation.
+**A cost model is diagnostic until it has been shown to predict native results.** It can explain
+traffic, but it doesn't predict competitiveness. The auditors check models against known native
+variants (CONTEXT.md §5a lists the record so far).
 
 The registry, `docs/team/acquisition/primitives.toml`, is a record of costed primitives, not a
 whitelist. A new construction that exposes a cheaper primitive is welcome. Add it with its
