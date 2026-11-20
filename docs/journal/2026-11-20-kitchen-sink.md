@@ -26,16 +26,25 @@ As relayed, the argument's dependency stack runs as follows:
   - Grothendieck–Messing;
   - prismatic Dieudonné theory.
 
-## The lesson we take
+## The lesson we take (corrected)
 
-Not "use many fields". Three narrower points:
-1. **The cost of importing heavy machinery has collapsed.** A theorem that once took a specialist
-   a year to bring in can now be proved inside the project. Timidity about distant fields is no
-   longer an economy.
-2. **Every import has a named job.** Each framework sits in the stack because one step needs
-   exactly it. A kitchen sink with no bridge is a reading list.
-3. **A non-standard route through standard results** can be where the novelty is: here, Galois
-   representations derived via theta lifts rather than as in the literature.
+Louis: "no no, seriously: kitchen sink approach." Alex Kontorovich on the claimed proof: "RH is
+proved by using *everything*!" Igor Carron: "Throwing the whole kitchen sink at solving things, has
+never been easier."
+
+The first draft of this note said every import needs a named job before it comes in. That
+reverses the order of events. In the relayed stack, the jobs were found by bringing the machinery
+in. The non-standard route (Galois representations via theta lifts) is the kind of thing nobody
+would have proposed in advance. So:
+1. **Everything comes in first.** The cost of importing heavy machinery has collapsed, so breadth is
+   no longer a luxury. Each cycle should try to build bridges from many frameworks, including ones
+   that look irrelevant.
+2. **A named job is the output of the attempt, not its entry ticket.** Each attempt is recorded:
+   - the bridge found, or why none exists;
+   - what it would buy;
+   - its acquisition cost.
+3. **The filter comes after, and stays unforgiving.** The register and native timing judge what
+   survives. Breadth on the way in, rigour on the way out.
 
 ## The kitchen for inverse BWT
 
@@ -55,10 +64,48 @@ Each entry gives a framework, its bridge to our problem, and what it would buy i
 | **Gessel–Reutenauer, Foata's transformation** | The BWT as a bijection between words and multisets of necklaces; the cycle structure of the standard permutation | Enumerative control of the cycle structure; studied | yes (8 files) |
 | **Kontsevich–Zorich cocycle and Lyapunov exponents** (Avila–Forni; Zorich) | The growth rates of word lengths under Rauzy induction | How deep a hierarchy must be, so the cost of reading coordinates | yes (22 files) |
 
+## More of the kitchen (not yet bridged; each is an attempt to make)
+
+**Algebra and representation theory.**
+- **Representation theory of the symmetric group:** LF is a permutation. Fourier analysis on S_n
+  (Diaconis), characters and cycle types.
+- **RSK:** the correspondence from permutations to tableau pairs, applied to LF or to the
+  standard permutation. What do its shapes say about runs?
+- **Coxeter groups:** LF as a product of interval transpositions. Reduced words, and the
+  Bruhat order.
+- **Cluster algebras and snake graphs** (Çanakçı–Schiffler): continued fractions as cluster
+  expansions. A bridge from the Sturmian toy to an algebra with mutation.
+- **Christoffel words and Markoff numbers** (Reutenauer's book): Cohn matrices encode Christoffel
+  words. A matrix coordinate for the toy that might generalise.
+
+**Geometry and topology.**
+- **Braids and knot theory:** a permutation with its run structure as a braid closure. Our
+  origami's monodromy as a braid.
+- **Tropical geometry:** Rauzy induction and continued fractions are piecewise linear;
+  tropicalisation may turn the induction into linear algebra.
+
+**Analysis and probability.**
+- **Additive combinatorics and discrepancy:** the three-distance theorem and Fourier methods
+  (as in the claimed proof's toy setting). Bounds on how runs distribute.
+- **Free probability and random matrices:** the spectral statistics of LF's permutation matrix
+  restricted to thin rows.
+- **Optimal transport:** LF as a transport map between two orders of the same multiset.
+
+**Computation and learning.**
+- **Learned indexes** (Kraska et al.; PGM-index, Ferragina–Vinciguerra): LF is piecewise linear
+  with r pieces. Learned piecewise-linear models predict positions with bounded error, and a
+  learned global coordinate with exact correction is a practitioner's version of the toy's kα.
+- **SAT/SMT and program synthesis:** search for the smallest exact construction on tiny blocks
+  (the charter's small-instance generator), at scale.
+- **Category theory and operads:** emission as composition. Operads describe which compositions
+  can be done in parallel.
+- **Compressed sensing:** recover a sparse object from few measurements. Is a block's
+  irregular part sparse in some basis?
+
 ## Priority
 
-Two rows are untouched by anyone here and speak directly to the corrected toy-transfer question
-(cheap global coordinates):
+Everything above should be attempted. If an order is needed, two rows are untouched by anyone here
+and speak directly to the corrected toy-transfer question (cheap global coordinates):
 1. **Rauzy fractals.** The natural toy above Sturmian: substitutive words with a torus coordinate.
 2. **Veech groups.** Our block is already an origami, so its affine images are computable,
    alternative coordinates on the same object.
