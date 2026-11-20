@@ -103,7 +103,7 @@ These are pointers, not results:
   - With order-preserving switches it is a measured train track.
   - Census (bd781368): the core has no small separators, though it bisects 4–8× better than random. As a retained set for first returns it is worse than Open's.
   - Open question: is there an operation on the core that is not a first-return walk?
-- **The origami lift** ([journal](../../journal/2026-11-20-origami-lift.md)): a BWT block is a branched cover of the torus whose monodromy is (LF, +1). Its cone points are the run boundaries: exactly r squares, in only 1–8 cycles on the six blocks, and block 207 sits in the minimal stratum. It is a candidate change of basis, with four open questions. It is not yet a cheaper decoder.
+- **The origami lift** ([journal](../../journal/2026-11-20-origami-lift.md)): a BWT block is a branched cover of the torus with monodromy (LF, +1). MONODROMY verified it (record 86). The few cone points are generic, not special to Wikidata. The cone structure ignores run lengths, so it cannot decode alone. Still open: directions and transport (§6.2).
 - Kempa (SODA 2019) and Agol–Hass–Thurston: sublinear routes to run-boundary samples. Could an
   o(n) sample construction feed a reconstruction?
 - LCP-chain structure (Kärkkäinen–Kempa–Piątkowski): reducible and irreducible LCPs at run heads

@@ -123,6 +123,37 @@ identifiers in the JSON.
 None of it is a cheaper section or decomposition for reconstruction. Any leverage would have to
 come from an operation on the core that is not a first-return walk.
 
+## Train tracks: a reference and a scope note
+
+**The reference:** Rafiqi and Zeytin, *Thurston's Legacy at the Interface of Surface Dynamics, Train
+Tracks, and Arithmetic*, arXiv:2610.13347 (9 October 2026; math.GT; 36 pp.). It is a survey covering:
+- Perron–Frobenius theory;
+- multivariable Euclidean algorithms (Perron's continued fractions);
+- Lind's characterisation of entropies;
+- train tracks and incidence matrices for surface homeomorphisms;
+- Bestvina–Handel train-track maps for free-group automorphisms;
+- fibred 3-manifolds.
+
+It does not treat interval exchanges or Rauzy induction.
+
+**How the dictionary maps onto mibz2 (known, before anyone claims novelty):**
+- **Splitting** a measured train track carried by an interval exchange is Rauzy–Veech induction,
+  that is, Cells.
+- **Ordered edge-path substitutions** are the S-adic expansion, that is, Cells' grammar.
+- **The incidence (transition) matrix** gives counts only: the Kontsevich–Zorich cocycle, which
+  cannot recover order.
+- **The run network above** is a directed weighted graph whose switches preserve order. Calling it a
+  train track properly needs a surface embedding, which the origami supplies, and carrying maps.
+
+**The parts not yet used in mibz2:**
+- **Bestvina–Handel's moves on graph maps:** Stallings folds, valence reduction, tightening and
+  invariant subgraphs. These are cheap, union-find-like operations that simplify a graph map while
+  preserving the dynamics up to conjugacy.
+- **The open question:** can (LF, run network) be presented as a graph self-map whose BH
+  simplification yields an exact, ordered, cheaply built representation of the marked itinerary,
+  rather than of its counts?
+- **Status:** speculative, and untested.
+
 ## Routing
 
 - **Neon:** one lead for the foundational track, via FRONTIER.md.

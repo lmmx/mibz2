@@ -5,6 +5,30 @@ recorded for the foundational track. No bets yet: nothing here is yet a cheaper 
 
 **Status, by claim:**
 
+**MONODROMY's verdict (record 86 at 32d32f74; REVIEW 7040376454 on #145).** Its null rule was frozen
+first, at bee415be.
+1. **Support of k, corrected:** supp k = C̄ \ X, the codomain starts minus runs that share a
+   translation mod n. The smallest counterexamples are `ba` and `bca`. X is empty on the six
+   blocks, which is why the count came out as exactly r.
+2. **Cone-point counts:** verified.
+3. **Not exceptional.** All 233 Wikidata blocks match run-shuffled columns (median 5 cone points).
+   Random permutations of the support give about 10. The few cone points are a general property of
+   (LF, +1), not a feature of Wikidata.
+4. **The φ form:** proved, as conjugation by SA.
+5. **The genus formula:** proved, by Riemann–Hurwitz.
+6. **Saddle connections:** the horizontal ones are the arcs, the vertical ones are the runs (Open's
+   strips), and those of slope 1 are all short.
+7. **The investigation.**
+   - *Proved:* the cone structure is the commutator of (LF_w, +1) for the run-symbol word w alone.
+     So it is O(r) from the entry state.
+   - *Obstruction:* the cone structure ignores run lengths, so it cannot determine the text. The
+     counterexample is `cbaa` against `cbbaa`.
+
+**What this leaves:**
+- *Closed:* the singular locus alone as a decoding object, and "near-minimal strata are special to
+  Wikidata".
+- *Still open:* directions and transport (§6.2), which also depend on the lengths.
+
 | Claim | Status |
 |---|---|
 | The construction (§1) | proved, elementary |
