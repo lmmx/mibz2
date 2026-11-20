@@ -439,6 +439,13 @@ pub fn decode_block<I: bwt::InverseBwt>(
     // a block of few symbols, for a kernel that can: its table from its run records, with no
     // last column (src/runs.rs). Its output goes to `ll`, as an in-place kernel's would
     if s.inverse.reads_runs() && runs::takes_runs(b) {
+        // a kernel that inverts the block from its symbols, with no records (the open
+        // kernel's fused front); else the records' path
+        if let Some(_n) = s.inverse.invert_symbols(b, &mut s.runs, k, &mut s.ll) {
+            #[cfg(any(test, feature = "trace"))]
+            s.record_allocation(trace::OutputRoute::Runs, _n, b.max_len, k);
+            return finish(&s.ll, b.crc, k, out);
+        }
         let n = runs::front(b, &mut s.runs, k)?;
         if b.orig_ptr as usize >= n {
             return Err(ErrorKind::BadOrigPtr);

@@ -98,6 +98,24 @@ pub trait InverseBwt: Default + Send {
         false
     }
 
+    /// (the open kernel's fused front, `OpenCells`) A block of few symbols inverted straight
+    /// from its symbols, with no run records written: its rows, its bytes in `out` (cleared),
+    /// exactly what `invert_runs` gives after `runs::front`. None, `out` untouched, leaves the
+    /// block to the records' path (`runs::front`, then `invert_runs`), which then also gives
+    /// any error the block has. `r` lends its scratch; its records are not written. Called only
+    /// when `reads_runs` is true and `runs::takes_runs` admits the block.
+    #[doc(hidden)]
+    fn invert_symbols(
+        &mut self,
+        b: &crate::block::Symbols,
+        r: &mut crate::runs::Runs,
+        k: crate::Kernels,
+        out: &mut Vec<u8>,
+    ) -> Option<usize> {
+        let _ = (b, r, k, out);
+        None
+    }
+
     /// `invert` for the block of `n` rows whose run records `runs::front` left in `r`: the
     /// LF table `runs::fill` builds from them, walked backward, its bytes into `out`
     /// (cleared): exactly what `invert` gives for the block's column. `orig_ptr` is below
