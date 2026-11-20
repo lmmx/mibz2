@@ -1,0 +1,22 @@
+# Acquisition manifest for Hierarchical Pinch-Point Forward Tropical Tarjan Elimination (HP-FTTE).
+name = "Hierarchical Pinch-Point Forward Tropical Tarjan Elimination (HP-FTTE)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "hp_ftte_retained_table"
+inputs = ["C", "p", "records"]
+output = "hp_ftte_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + m + H + U", D = "H", B = "R + m + H + U", Q = "H", M = "m + H + U" }
+evidence = "Replaces Open's backward LF endpoint.rs (doubly-linked EpNode + EpRule SLP tree + DFS stack + bands[] + scattered Wire) with forward Psi = LF^-1 tracing from monotone domain gaps (dst = 0..m-1 sequential writes into edges[0..m]), two-sided tropical (min,+) balls, and monotonic-stack pinch-point Tarjan jump certificates (5,424-17,291 steps across 6 blocks; verified byte-exact on 10,454 small instances, 7 adversarial controls incl. 50k periodic shear, and 6 authenticated Wikidata blocks)."
+
+[[edge]]
+id = "hp_ftte_emit"
+inputs = ["hp_ftte_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Standard 1-lane Open::emit (or composable with 8-lane BVSMC-1P / BVSMC-2P consumer contraction) over sequentially wired edges[0..m] and forward-spelled dictionary."
