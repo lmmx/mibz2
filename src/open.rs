@@ -110,6 +110,25 @@ fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, 
     }
 }
 
+/// Append the `w` rows from `m` to a queue. A thin run has at most `LIMIT` = 16 rows, so the
+/// queue takes a fixed block of 16 (an iota from `m`) and keeps the first `w`: no loop whose
+/// trip count is the run's width, whose exit mispredicts on blocks of 48k-126k short runs
+/// (Carbon cycle 2's `U16Q`, `docs/journal/2026-11-20-carbon-cycle2-bvsmc.md` §2.4). The rows
+/// past `w` are written into the queue's spare capacity and dropped at once. A wider run
+/// (a limit above 16, in the tests) takes the plain extend.
+#[inline]
+fn push_rows(queue: &mut Vec<u32>, m: u32, w: u32) {
+    const BLOCK: usize = 16;
+    if w as usize <= BLOCK {
+        let len = queue.len();
+        let iota: [u32; BLOCK] = std::array::from_fn(|i| m.wrapping_add(i as u32));
+        queue.extend_from_slice(&iota);
+        queue.truncate(len + w as usize);
+    } else {
+        queue.extend(m..m + w);
+    }
+}
+
 fn starts(counts: [u32; 256]) -> [u32; 256] {
     let mut total = 0;
     counts.map(|w| {
@@ -201,7 +220,7 @@ impl Kernel {
                     mark = m + (p - x);
                 }
                 if QUEUE {
-                    self.queues[a].extend(m..m + w);
+                    push_rows(&mut self.queues[a], m, w);
                 }
                 thin[a] += w;
                 m += w;
