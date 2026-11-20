@@ -68,6 +68,8 @@ struct Band {
 pub struct Kernel {
     endpoint: endpoint::Endpoint,
     queues: Vec<Vec<u32>>,
+    /// the thin rows' queues as one slab, a range a byte (`construct_slab`)
+    slab: Vec<u32>,
     strips: Vec<Strip>,
     image_order: Vec<u32>,
     tiles: Vec<Tile>,
@@ -132,14 +134,15 @@ fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, 
 }
 
 /// The first pass over a block's runs: the queues and the thick strips it writes, and its
-/// counts
-struct Pass<'a> {
-    queues: &'a mut [Vec<u32>; 256],
+/// counts. `base` is each byte's first slot in `queues` (all 0 for a `Vec` a byte).
+struct Pass<'a, Q: Queues> {
+    queues: Q,
     strips: &'a mut Vec<Strip>,
+    base: [u32; 256],
     f: First,
 }
 
-impl Pass<'_> {
+impl<Q: Queues> Pass<'_, Q> {
     /// The first pass on one maximal run of `width` rows of byte `c` from row `pos`: its thin
     /// rows queued (their ranks, as retained rows), its thick strips listed. (`split`'s cases
     /// written out, so that the common two inline into the front's walk with no call.)
@@ -169,7 +172,9 @@ impl Pass<'_> {
         });
     }
 
-    /// One piece of a run: retained (`keep`) or a thick strip
+    /// One piece of a run: retained (`keep`) or a thick strip. A retained piece moves its
+    /// byte's cursor alone; a byte's rows so far, which a thick strip needs, are its retained
+    /// rows (the cursor less `base`) and its thick rows (Carbon cycle 11's lazy `all_c`).
     #[inline(always)]
     fn piece<const QUEUE: bool>(&mut self, c: u8, x: u32, w: u32, keep: bool, p: u32) {
         let a = usize::from(c);
@@ -179,29 +184,102 @@ impl Pass<'_> {
                 f.mark = f.m + (p - x);
             }
             if QUEUE {
-                push_rows(&mut self.queues[a], f.thin[a], f.m, w);
+                self.queues.push(a, f.cur[a], f.m, w);
             }
-            f.thin[a] += w;
+            f.cur[a] += w;
             f.m += w;
         } else {
             self.strips.push(Strip {
                 from: x,
-                to: f.all[a],
+                to: f.cur[a] - self.base[a] + f.thick_rows[a],
                 width: w,
                 byte: c,
             });
             f.thick[a] += 1;
+            f.thick_rows[a] += w;
         }
-        f.all[a] += w;
     }
+}
+
+/// Where the first pass queues a byte's thin rows
+trait Queues {
+    /// The `w` rows from rank `m`, at slot `at` (the byte's cursor) of byte `a`'s queue
+    fn push(&mut self, a: usize, at: u32, m: u32, w: u32);
+}
+
+/// A `Vec` a byte, each grown as it fills (the fused path's, which has no counts before its
+/// pass, and the reference the slab is tested against)
+impl Queues for &mut [Vec<u32>; 256] {
+    #[inline(always)]
+    fn push(&mut self, a: usize, at: u32, m: u32, w: u32) {
+        push_rows(&mut self[a], at, m, w);
+    }
+}
+
+/// The rows a fixed store writes for a run of at most this many (`push_rows`, `Slab`)
+const BLOCK: usize = 16;
+
+/// One slab for every byte's queue, partitioned before the pass (Carbon cycle 11's `FlatQ`):
+/// byte `a`'s slots from `base[a]`, the cursor absolute. No capacity to read or grow: a store
+/// is one bounds check against the slab's end. A store past that end is not made, and marks
+/// the slab `over`; the partition's check after the pass (`construct_slab`) then sends the
+/// block to the `Vec` queues.
+struct Slab<'a> {
+    rows: &'a mut [u32],
+    over: bool,
+}
+
+impl Queues for Slab<'_> {
+    #[inline(always)]
+    fn push(&mut self, _: usize, at: u32, m: u32, w: u32) {
+        let at = at as usize;
+        let take = BLOCK.max(w as usize);
+        match self.rows.get_mut(at..at + take) {
+            Some(rows) if w as usize <= BLOCK => {
+                let iota: [u32; BLOCK] = std::array::from_fn(|i| m.wrapping_add(i as u32));
+                rows.copy_from_slice(&iota);
+            }
+            Some(rows) => {
+                for (i, q) in rows.iter_mut().enumerate() {
+                    *q = m + i as u32;
+                }
+            }
+            None => self.over = true,
+        }
+    }
+}
+
+/// The counts `runs::front` leaves beside a block's records: each byte's rows and records
+#[derive(Clone, Copy)]
+pub(crate) struct Meta<'a> {
+    pub(crate) counts: &'a [u32; 256],
+    pub(crate) per: &'a [u32; 256],
+}
+
+/// Each byte's slots in the slab, from its rows and records: at most `limit` retained rows a
+/// record (1 at a limit of 0: the marked row) and no more than its rows (the bound
+/// `construct_slab` checks), and `BLOCK` - 1 slots for the last store's spare rows. A byte
+/// with no rows has none.
+fn room(meta: Meta, limit: u32) -> [u32; 256] {
+    std::array::from_fn(|a| {
+        let rows = meta.counts[a];
+        if rows == 0 {
+            0
+        } else {
+            rows.min(limit.max(1).saturating_mul(meta.per[a]))
+                .saturating_add(BLOCK as u32 - 1)
+        }
+    })
 }
 
 /// The construction's first pass as it goes, run by run: each byte's rows, retained rows and
 /// thick strips, the retained rows so far, the marked row's rank, and the maximal runs
 #[derive(Clone, Copy)]
 struct First {
-    all: [u32; 256],
-    thin: [u32; 256],
+    /// each byte's queue cursor: its first slot (`Pass::base`) plus its retained rows
+    cur: [u32; 256],
+    /// each byte's rows in thick strips, and its strips
+    thick_rows: [u32; 256],
     thick: [u32; 256],
     m: u32,
     mark: u32,
@@ -214,8 +292,8 @@ struct First {
 impl Default for First {
     fn default() -> Self {
         First {
-            all: [0; 256],
-            thin: [0; 256],
+            cur: [0; 256],
+            thick_rows: [0; 256],
             thick: [0; 256],
             m: 0,
             mark: 0,
@@ -231,14 +309,13 @@ impl Default for First {
 /// runs (Carbon cycle 2's `U16Q`, `docs/journal/2026-11-20-carbon-cycle2-bvsmc.md` §2.4).
 ///
 /// The queue's buffer is kept at its full length, its rows past `len` stale or zero, and its
-/// length is the caller's (`First::thin`, its byte's retained rows), so a run is one bounds
+/// length is the caller's (`First::cur`, its byte's retained rows), so a run is one bounds
 /// check and two 32-byte stores with no length written back to the heap (Carbon Kitchen Sink
 /// cycle 3's `Vec16` queue: a cursor per byte, `q_cur[c] += w`). The rows past `w` land in the
 /// spare rows and are overwritten by the next run. A wider run (a limit above 16, in the tests)
 /// is written row by row.
 #[inline(always)]
 fn push_rows(queue: &mut Vec<u32>, len: u32, m: u32, w: u32) {
-    const BLOCK: usize = 16;
     let at = len as usize;
     let need = at + BLOCK.max(w as usize);
     if queue.len() < need {
@@ -319,51 +396,127 @@ impl Kernel {
         }
     }
 
-    /// The first pass's state, emptied for a block. (The queues keep their buffers and stale
-    /// rows: a queue's length is its byte's `First::thin`.)
-    fn begin(&mut self) -> Pass<'_> {
+    /// The first pass's state, emptied for a block, with a `Vec` a byte for the queues. (They
+    /// keep their buffers and stale rows: a queue's length is its byte's `First::cur`.)
+    fn begin(&mut self) -> Pass<'_, &mut [Vec<u32>; 256]> {
         self.strips.clear();
         self.queues.resize_with(256, Vec::new);
         Pass {
             queues: (&mut self.queues[..]).try_into().expect("256 queues"),
             strips: &mut self.strips,
+            base: [0; 256],
             f: First::default(),
         }
     }
 
+    /// The construction from a block's records, with its counts (`meta`) where `runs::front`
+    /// gives them: the queues then go in the slab (`construct_slab`), else a `Vec` a byte
     fn construct<const INDUCE: bool, const QUEUE: bool>(
         &mut self,
         records: &[u16],
+        meta: Option<Meta>,
         n: u32,
         p: u32,
         limit: u32,
     ) -> (Counts, u32, u32) {
+        if let (true, Some(meta)) = (QUEUE, meta) {
+            if let Some(done) = self.construct_slab::<INDUCE>(records, meta, n, p, limit) {
+                return done;
+            }
+        }
         let mut pass = self.begin();
         maximal(records, |c, pos, width| {
             pass.take::<QUEUE>(c, pos, width, p, limit)
         });
         let f = pass.f;
-        self.finish::<INDUCE, QUEUE>(&f, records, n, p, limit)
+        self.finish::<INDUCE, QUEUE>(&f, None, records, n, p, limit)
     }
 
-    /// The construction after its first pass `f` (`records` read again only without `QUEUE`)
+    /// The construction with its queues in one slab, partitioned before the pass by `room`
+    /// from the block's counts (Carbon cycle 11's `FlatQ`). None, if the counts are not the
+    /// records' or the partition did not hold, leaves the block to the `Vec` queues.
+    ///
+    /// **Why it holds.** A byte's retained rows are rows of that byte, so at most its
+    /// `counts`. They are its thin maximal runs' rows, at most `limit` each, and the marked
+    /// row when it falls in a thick run. Every maximal run of the byte holds a record of it at
+    /// least, so it has at most `per` maximal runs, and with the marked row's thick run among
+    /// them at most `per - 1` thin ones: `limit * (per - 1) + 1 <= max(limit, 1) * per`
+    /// retained rows.
+    /// A store writes `BLOCK` slots from the cursor for a run of at most `BLOCK` rows (else
+    /// the run's rows), so a byte's stores end at most `BLOCK - 1` past its last retained
+    /// row: within `room`. **Checked, not trusted:** after the pass, each byte's retained
+    /// rows plus `BLOCK - 1` are within its room (no store reached the next byte's), and no
+    /// store fell past the slab's end; otherwise the block is built again with the `Vec`s.
+    fn construct_slab<const INDUCE: bool>(
+        &mut self,
+        records: &[u16],
+        meta: Meta,
+        n: u32,
+        p: u32,
+        limit: u32,
+    ) -> Option<(Counts, u32, u32)> {
+        if meta.counts.iter().map(|&w| u64::from(w)).sum::<u64>() != u64::from(n) {
+            return None;
+        }
+        let room = room(meta, limit);
+        let base = starts(room);
+        let total = (base[255] + room[255]) as usize;
+        if self.slab.len() < total {
+            // (a new zeroed buffer, not `resize`: its pages are touched only where stores land)
+            self.slab = vec![0; total];
+        }
+        self.strips.clear();
+        let mut pass = Pass {
+            queues: Slab {
+                rows: &mut self.slab[..total],
+                over: false,
+            },
+            strips: &mut self.strips,
+            base,
+            f: First {
+                cur: base,
+                ..First::default()
+            },
+        };
+        maximal(records, |c, pos, width| {
+            pass.take::<true>(c, pos, width, p, limit)
+        });
+        let (f, over) = (pass.f, pass.queues.over);
+        let fits = (0..256).all(|a| {
+            let thin = f.cur[a] - base[a];
+            thin == 0 || thin + (BLOCK as u32 - 1) <= room[a]
+        });
+        if over || !fits {
+            return None;
+        }
+        Some(self.finish::<INDUCE, true>(&f, Some(&base), records, n, p, limit))
+    }
+
+    /// The construction after its first pass `f`, its queues in the slab from `base` where
+    /// given, else a `Vec` a byte (`records` read again only without `QUEUE`)
+    #[allow(clippy::too_many_arguments)]
     fn finish<const INDUCE: bool, const QUEUE: bool>(
         &mut self,
         f: &First,
+        base: Option<&[u32; 256]>,
         records: &[u16],
         n: u32,
         p: u32,
         limit: u32,
     ) -> (Counts, u32, u32) {
         let First {
-            all,
-            thin,
+            cur,
+            thick_rows,
             thick,
             m,
             mark,
             runs,
             cut: _,
         } = *f;
+        let slab = base;
+        let base = base.copied().unwrap_or([0; 256]);
+        let thin: [u32; 256] = std::array::from_fn(|a| cur[a] - base[a]);
+        let all: [u32; 256] = std::array::from_fn(|a| thin[a] + thick_rows[a]);
         let mut stats = Counts {
             n: n as usize,
             runs,
@@ -452,6 +605,10 @@ impl Kernel {
             let mut k = 0;
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
+                let queue: &[u32] = match slab {
+                    Some(base) => &self.slab[base[a] as usize..],
+                    None => &self.queues[a],
+                };
                 let mut from = 0;
                 for b in &self.bands[cursors[a]..end] {
                     let span = (b.end - k) as usize;
@@ -460,7 +617,7 @@ impl Kernel {
                     if wide {
                         self.extra[dst..dst + span].fill(b.code);
                     }
-                    let src = &self.queues[a][from..from + span];
+                    let src = &queue[from..from + span];
                     for (target, &j) in self.edges[dst..dst + span].iter_mut().zip(src) {
                         *target = pack | j;
                     }
@@ -501,16 +658,20 @@ impl Kernel {
         (stats, mark, bits)
     }
 
-    pub fn run<const INDUCE: bool, const QUEUE: bool>(
+    /// The block of `records` (with their counts, `meta`, where known) in `n` rows from the
+    /// marked row `p`, its bytes into `out`
+    pub(crate) fn run<const INDUCE: bool, const QUEUE: bool>(
         &mut self,
         records: &[u16],
+        meta: Option<Meta>,
         n: usize,
         p: u32,
         limit: u32,
         out: &mut Vec<u8>,
     ) -> Counts {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
-        let (stats, mark, bits) = self.construct::<INDUCE, QUEUE>(records, n as u32, p, limit);
+        let (stats, mark, bits) =
+            self.construct::<INDUCE, QUEUE>(records, meta, n as u32, p, limit);
         self.walk(n, mark, bits, out);
         stats
     }
@@ -548,7 +709,7 @@ impl Kernel {
         if n == 0 || p >= n || !admit(records, n as usize) {
             return None;
         }
-        let (_, mark, bits) = self.finish::<true, true>(&first, &[], n, p, LIMIT);
+        let (_, mark, bits) = self.finish::<true, true>(&first, None, &[], n, p, LIMIT);
         self.walk(n as usize, mark, bits, out);
         Some(n as usize)
     }
@@ -579,7 +740,7 @@ impl Kernel {
 /// The open kernel's fused first pass: the front's runs (`runs::front_runs`), each taken as
 /// the maximal run it is, in safe code
 struct Fused<'a> {
-    pass: Pass<'a>,
+    pass: Pass<'a, &'a mut [Vec<u32>; 256]>,
     /// the rows so far: the next run's first row
     pos: u32,
     /// the last run's byte (256 before the first)
@@ -659,7 +820,8 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
     }
     fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
         if Self::admits(r.records().len(), n, p) {
-            self.open.run::<true, true>(r.records(), n, p, LIMIT, out);
+            self.open
+                .run::<true, true>(r.records(), Some(r.meta()), n, p, LIMIT, out);
             #[cfg(test)]
             {
                 self.opened += 1;
@@ -865,6 +1027,17 @@ fn repeat(n: usize, out: &mut Vec<u8>) {
     }
 }
 
+/// A block's counts from its records, as `runs::front` gives them beside the records
+#[cfg(test)]
+fn meta_of(records: &[u16]) -> ([u32; 256], [u32; 256]) {
+    let (mut counts, mut per) = ([0u32; 256], [0u32; 256]);
+    for &r in records {
+        counts[usize::from(r >> 8)] += u32::from(r & 255);
+        per[usize::from(r >> 8)] += 1;
+    }
+    (counts, per)
+}
+
 #[cfg(test)]
 fn records_of(l: &[u8]) -> Vec<u16> {
     let mut recs = Vec::<u16>::new();
@@ -890,3 +1063,6 @@ mod b5;
 
 #[cfg(test)]
 mod fused;
+
+#[cfg(test)]
+mod slab;

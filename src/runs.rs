@@ -123,6 +123,15 @@ impl Runs {
         &self.runs
     }
 
+    /// Each byte's rows and records, as the front counted them beside the records (the open
+    /// kernel's slab is partitioned by them, `open::construct_slab`)
+    pub(crate) fn meta(&self) -> crate::open::Meta<'_> {
+        crate::open::Meta {
+            counts: &self.counts,
+            per: &self.per,
+        }
+    }
+
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs)
     #[cfg(any(test, feature = "trace"))]
     pub fn buffers(&self) -> Vec<crate::trace::Buffer> {

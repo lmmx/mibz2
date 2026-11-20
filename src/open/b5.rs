@@ -21,7 +21,7 @@ fn shipped(k: &mut Kernel, l: &[u8], p: u32, out: &mut Vec<u8>) {
     let r = Runs::of_column(l);
     out.clear();
     out.extend(plain(l, p).iter().map(|b| !b));
-    k.run::<true, true>(r.records(), l.len(), p, LIMIT, out);
+    k.run::<true, true>(r.records(), Some(r.meta()), l.len(), p, LIMIT, out);
 }
 
 /// A deterministic generator (an LCG): no dependency, the same columns on every machine
@@ -178,6 +178,7 @@ fn scratch(k: &Kernel) -> usize {
     use std::mem::size_of;
     let e = &k.endpoint;
     k.queues.iter().map(|q| 4 * q.capacity()).sum::<usize>()
+        + 4 * k.slab.capacity()
         + size_of::<Strip>() * k.strips.capacity()
         + 4 * (k.image_order.capacity() + k.directory.capacity())
         + size_of::<Tile>() * k.tiles.capacity()
@@ -356,7 +357,7 @@ fn scratch_search() {
         let r = Runs::of_column(&l);
         let p = g.below(n as u32);
         let mut out = Vec::new();
-        let s = k.run::<true, true>(r.records(), n, p, LIMIT, &mut out);
+        let s = k.run::<true, true>(r.records(), Some(r.meta()), n, p, LIMIT, &mut out);
         let per = scratch(&k) as f64 / n as f64;
         let rules = s.rules as f64 / n as f64;
         let what = format!(

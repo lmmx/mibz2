@@ -8,11 +8,17 @@ fn audit<const INDUCE: bool, const QUEUE: bool>(
     l: &[u8],
     p: usize,
     threshold: usize,
+    slab: bool,
 ) {
     let n = l.len();
     let records = records_of(l);
+    let (counts, per) = meta_of(&records);
+    let meta = slab.then_some(Meta {
+        counts: &counts,
+        per: &per,
+    });
     let (s, mark, bits) =
-        k.construct::<INDUCE, QUEUE>(&records, n as u32, p as u32, threshold as u32);
+        k.construct::<INDUCE, QUEUE>(&records, meta, n as u32, p as u32, threshold as u32);
     let mut counts = [0usize; 256];
     let mut keep = vec![false; n];
     let mut i = 0;
@@ -100,17 +106,19 @@ fn all_port_arrows() {
                     .collect();
                 for p in 0..n {
                     for t in [0, 1, 2, 4, 16] {
-                        audit::<false, false>(&mut k, &l, p, t);
-                        audit::<true, false>(&mut k, &l, p, t);
-                        audit::<false, true>(&mut k, &l, p, t);
-                        audit::<true, true>(&mut k, &l, p, t);
+                        audit::<false, false>(&mut k, &l, p, t, false);
+                        audit::<true, false>(&mut k, &l, p, t, false);
+                        audit::<false, true>(&mut k, &l, p, t, false);
+                        audit::<true, true>(&mut k, &l, p, t, false);
+                        audit::<false, true>(&mut k, &l, p, t, true);
+                        audit::<true, true>(&mut k, &l, p, t, true);
                         cases += 1;
                     }
                 }
             }
         }
     }
-    println!("{cases} column/mark/threshold triples, four complete arrow audits each");
+    println!("{cases} column/mark/threshold triples, six complete arrow audits each");
 }
 
 #[test]
@@ -130,8 +138,10 @@ fn capped_runs_and_shifted_marks() {
     }
     for p in [0, 1, 2, 127, 128, 129, 255, 256, 757, l.len() - 1] {
         for t in [0, 1, 16, 126, 127, 128, 259, 260, 800] {
-            audit::<false, true>(&mut k, &l, p, t);
-            audit::<true, false>(&mut k, &l, p, t);
+            audit::<false, true>(&mut k, &l, p, t, false);
+            audit::<true, false>(&mut k, &l, p, t, false);
+            audit::<false, true>(&mut k, &l, p, t, true);
+            audit::<true, true>(&mut k, &l, p, t, true);
         }
     }
 }
@@ -156,10 +166,17 @@ fn residual_segments_on_short_cycles() {
                 counts[c as usize] += 1;
             }
             let recs = records_of(&l);
+            let (rows, per) = meta_of(&recs);
+            let meta = Meta {
+                counts: &rows,
+                per: &per,
+            };
             for p in [0, (n / 2) as u32, (n - 1) as u32] {
                 plain.invert(&l, &counts, p, &mut reference);
                 for limit in [0, 1, 4, 16, 1025] {
-                    kernel.run::<true, true>(&recs, n, p, limit, &mut actual);
+                    kernel.run::<true, true>(&recs, None, n, p, limit, &mut actual);
+                    assert_eq!(actual, reference);
+                    kernel.run::<true, true>(&recs, Some(meta), n, p, limit, &mut actual);
                     assert_eq!(actual, reference);
                 }
             }
