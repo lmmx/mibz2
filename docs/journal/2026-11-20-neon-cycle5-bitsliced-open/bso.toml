@@ -1,0 +1,44 @@
+# Acquisition manifest for Bit-Sliced Implicit Backward Open (BSO-512).
+# Checked via: python3 docs/team/acquisition/check_manifest.py docs/journal/2026-11-20-neon-cycle5-bitsliced-open/bso.toml
+
+name = "Bit-Sliced Implicit Backward Open (BSO-512)"
+target = "text"
+uses = [
+  "counts_from_records",
+]
+
+[[edge]]
+id = "thin_stream_and_thick_strips"
+inputs = ["records", "p"]
+output = "thin_column_v_and_thick_strips"
+status = "proved"
+dependent = false
+cost = { W = "R + m", D = "1", B = "2R + m + 16H", Q = "0", M = "m + 16H" }
+evidence = "One sequential scan of capped run records collects H = 1,565-5,047 thick strips (>16 rows) and writes the thin column v = L[S] sequentially to a single L2-resident byte array (88-200 KiB, 1.00 B/row). Eliminates Open's 256 scattered qdata[c] queues (360-817 KiB)."
+
+[[edge]]
+id = "bitslice_6plane_sb512"
+inputs = ["thin_column_v_and_thick_strips"]
+output = "bitsliced_rank_structure"
+status = "proved"
+dependent = false
+cost = { W = "m", D = "1", B = "2m + 5*m_esc", Q = "0", M = "m + 5*m_esc" }
+evidence = "One L2-resident sequential pass maps v[0..m) to top-63 heavy symbols (99.1-99.6% coverage on all 6 Wikidata blocks) + escape code 63 (m_esc = 374-1,270 rows = 1.5-5.0 KiB), AVX2-transposes into 6 bit-planes + 64 u16 superblock checkpoints per 512 rows (SB512 = 512 B/512 rows = 1.00 B/row total = 88-200 KiB) + 32-bit mega-block bases every 32,768 rows (<= 7 KiB, unconditional exactness for counts >= 65,536). Frees raw v immediately; runs in 0.11-0.26 ms (0.70-0.77x Open's p1+wir)."
+
+[[edge]]
+id = "open_endpoint_pbands"
+inputs = ["thin_column_v_and_thick_strips", "n"]
+output = "compact_pbands_and_spelling"
+status = "proved"
+dependent = true
+cost = { W = "K + U", D = "K", B = "16H + 8B + 2*(m/16) + U", Q = "K", M = "16H + 8B + 2*(m/16) + U" }
+evidence = "Identical Open endpoint elimination on H = 1,565-5,047 thick strips (proof.md; src/open/endpoint.rs), emitting pure P-bands (no 256-symbol split: B = 2,372-6,712 Band8 entries = 19-54 KiB), direct band_hint[y>>4] (11-25 KiB), and excursion spelling U = 31-58 KiB."
+
+[[edge]]
+id = "l2_implicit_backward_emit"
+inputs = ["bitsliced_rank_structure", "compact_pbands_and_spelling", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "m + n", D = "m", B = "n + 260*m_L1 (L2-resident)", Q = "m (4 chained L2/L1 loads/step)", M = "n + m + 8B + U" }
+evidence = "Single descending emit walk evaluating g(z) = P(LF_v(z)) directly inside the 106-243 KiB hot L2-resident working set (SB512 + Band8 + band_hint + esc). Zero explicit edges[0..m] allocation or scatter pass. Verified byte-exact on 33,498 small cases, 6 adversarial cases, and all 6 Wikidata blocks (5,399,692/5,399,692 B); cuts L2m to 0.419-0.690x, LLC to 0.598-0.751x, DRAM B/B to 0.593-0.745x, and Peak RAM to 0.360-0.494x Shipped Open across all 6 blocks (g5_bso.c)."
