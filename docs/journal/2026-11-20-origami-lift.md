@@ -64,6 +64,11 @@ exploiting the flat part of this surface.
 [`origami.py`](2026-11-20-origami-lift/origami.py) is standard-library Python. Run it with
 `BLOCKS=<dir with manifest.json>/`.
 
+**Inputs.** The six authenticated columns on branch `data/admitted-bwt` (`admitted-bwt/`). Their
+SHA-256 digests are in that branch's `manifest.json`, and their provenance is the bench's pinned
+Wikidata corpus (`82f65ace…`). The script prints the commutator's moved squares, its non-trivial
+cycles with their lengths, the genus, and whether LF is a single cycle.
+
 | Block | r | Squares moved by k | Cone points | Genus | LF one cycle |
 |---|---|---|---|---|---|
 | 0 | 51,184 | 51,184 | 6 | 25,590 | yes |
@@ -77,13 +82,23 @@ exploiting the flat part of this surface.
 - **k moves exactly r squares on every block,** confirming §2.
 - **The r boundary squares fall into only 1–8 cycles.** Real Wikidata blocks are surfaces of genus
   about r/2 with a handful of enormous cone points.
+- **The genus is not an independent finding.** Let R be the number of squares k moves and c the
+  number of its non-trivial cycles. Riemann–Hurwitz gives 2g − 2 = Σ (cycle length − 1) = R − c,
+  so g = 1 + (R − c)/2. For block 207: 1 + (87,111 − 1)/2 = 43,556. A high genus follows from
+  R ≈ r. What is informative is how small c is.
 - **Block 207 lies in the minimal stratum:** one cone point, of angle 2π × 87,111. One cycle of
   the puncture monodromy visits every run boundary.
 - **The largest cycles.** Block 0's largest cone point has angle 2π × 39,737, and block 210's
   2π × 118,964.
 
 **An open question about this:** a generic exchange with r pieces need not be near-minimal.
-Whether the BWT forces it, and whether non-Wikidata text differs, is not yet known.
+Whether the BWT forces it, and whether non-Wikidata text differs, is not yet known. It needs a
+proper null model before anyone calls it a special Wikidata property: for example, BWTs of shuffled
+or randomly generated text with matched r/n.
+
+**Scope:** "k moves exactly r squares" is measured on six blocks. It is not yet a theorem for every
+BWT column. Cyclic wraparound at row 0, and distinct runs that happen to share a translation, may
+give exceptions. A proof needs stated hypotheses.
 
 ## 4. The singular locus is φ's breakpoint structure (argued; to verify)
 
@@ -97,6 +112,17 @@ predecessor function, φ(SA[i]) = SA[i − 1].
 **The link to earlier work:** Neon's cycle 1 measured the Φ-overlap structure as small (1.25–1.37r
 transitions), and found it expensive to acquire. In this language that structure is the surface's
 singular locus, whose cyclic structure is very simple (§3).
+
+## 4a. A constraint the lift exposes immediately
+
+For a primitive block, **both** gluing generators are single n-cycles: LF by assumption, and u by
+definition. So the horizontal and vertical directions each already form one cylinder, the minimum
+possible. A search for directions with *fewer* cylinders therefore cannot be the goal. Any
+advantage must come from something richer:
+- cylinder widths and heights;
+- the complexity of the symbolic itinerary;
+- the structure of the transformed generators;
+- the cost of transporting their words back.
 
 ## 5. What it is not yet
 
@@ -141,6 +167,28 @@ These are recorded so the lift isn't oversold.
    - *What to compute:* the saddle connections on the six blocks: their number, their lengths, and
      how they relate to D̄∩C̄ and to Open's thick strips.
    - *How it is decided:* this one is a matter of exact computation.
+
+## A lead for Neon (not an assignment)
+
+The object is the pair (LF, u) ∈ Sₙ × Sₙ, not LF alone. It has operations that don't exist for
+LF by itself:
+- Nielsen moves, and the SL(2, ℤ) / Out(F₂) action on the pair;
+- the monodromy representation, and its subgroups and covers;
+- the cylinder decomposition in every direction;
+- the singular locus.
+
+**The question:** is there a presentation or direction of this pair in which the marked symbolic
+orbit has a cheaper exact description, with an affordable law for transporting it back?
+
+**What would answer it:**
+- a new primitive, or a sharply scoped obstruction, is the result wanted;
+- computing the invariants listed in §5 is not.
+
+**What not to do:**
+- don't force the answer back into Open's formulation;
+- don't assume it involves the singular locus. It might come from the group action, from a
+  decomposition of the cover, or from a relation between the generators that is simple in another
+  presentation.
 
 ## Routing
 
