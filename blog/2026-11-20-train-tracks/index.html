@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=78f273a008b9">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=177cae7a7249">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=78f273a008b9">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=177cae7a7249">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=78f273a008b9">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=177cae7a7249">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=78f273a008b9">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=177cae7a7249">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=78f273a008b9">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=177cae7a7249">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=78f273a008b9">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=177cae7a7249">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2802,6 +2802,13 @@
 <p><strong>Why it matters to mibz2.</strong> Undoing bzip2's Burrows–Wheeler transform (BWT) means following one long path through the rows of a block until it has visited every row; each step reads one byte. Most of the cost is that walk. mibz2's kernels save work by treating whole groups of rows that move together as one thing (<a href="../2026-11-10-rauzy-veech-reconstruction/">A new way back from the BWT</a>, <a href="../2026-11-19-open-returns/">Open Returns</a>). That is the train-track idea in other clothes. The central operation of train tracks, <em>splitting</em>, is the same operation as the Rauzy–Veech induction behind our Cells kernels. Dunfield and Thurston say so in as many words, and we show their figure in <a href="#3-interval-exchanges-are-train-tracks-and-splitting-is-rauzy-induction">section 3</a>.</p>
 <p><strong>What this post does.</strong> It explains train tracks from the beginning using figures from the papers that define them (<a href="#1-from-curves-to-branches">sections 1–3</a>). It then lays a small compressed block over the picture: its runs become branches, and the places where groups of rows merge or part become switches (<a href="#4-a-compressed-block-as-a-weighted-track">section 4</a>). It shows the next layer of the theory, maps that write words (<a href="#5-maps-that-write-words">section 5</a>), and ends with what the theory gives us already and what is still open (<a href="#6-what-is-known-and-what-is-open">section 6</a>). No new decoder comes out of it yet; this is a map of the territory.</p>
 <h2 id="1-from-curves-to-branches">1. From curves to branches<a class="headerlink" href="#1-from-curves-to-branches" title="Permanent link">&para;</a></h2>
+<p>The name comes from Thurston's own drawings. In his lecture notes he asks us to picture a curve on a surface as "many parallel strands in thin, branching corridors". Then: "Imagine squeezing the nearly parallel strands of γ in each corridor to a single strand. One obtains a train track τ (with switches) which approximates γ. Each leaf of γ may be imagined as the path of a train running around along τ."</p>
+<figure class="bf-fig">
+<p class="bf-title">Thurston's corridors, and the track they squeeze down to</p>
+<p><img class="bf-src" src="../../assets/images/train-tracks/thurston-corridors.png" alt="Hand-drawn corridors full of parallel strands, branching and rejoining around a loop.">
+<img class="bf-src" src="../../assets/images/train-tracks/thurston-train.png" alt="The same corridors squeezed to single lines, with a small steam train running along one of them."></p>
+<figcaption>Top: the strands of a curve running side by side in branching corridors. Bottom: each corridor squeezed to one line, a train track, with a train running on it. Reproduced from Thurston, <em>The Geometry and Topology of 3-Manifolds</em>, §8.9 (p. 204 of the notes), for commentary.</figcaption>
+</figure>
 <p>The figure below, from Dunfield and Thurston's 2006 paper, shows two train tracks: one on a sphere with four holes (drawn as a disc with three holes plus the outside), and one on a torus. Each thick line is a branch. Where two branches meet a third, they arrive from the same side and merge smoothly; that junction is a switch.</p>
 <figure class="bf-fig">
 <p class="bf-title">Two train tracks</p>
@@ -2828,7 +2835,8 @@
 <p><img class="bf-src" src="../../assets/images/train-tracks/dt-fig17-iet-track.png" alt="Left: a train track whose branches all meet at a single switch, around five punctures. Right: the same track thickened into bands attached to a shaded horizontal bar."></p>
 <figcaption>"At left is an interval exchange τ on a 5–punctured S². At right is a regular neighborhood of τ." Reproduced from Dunfield and Thurston (2006), Figure 17, for commentary. The shaded bar is the interval; the bands are the pieces that get exchanged.</figcaption>
 </figure>
-<p>Then they split it. In the next figure, <span class="arithmatex">\(t\)</span> and <span class="arithmatex">\(b\)</span> are the rightmost bands on the top and the bottom of the bar. Band <span class="arithmatex">\(t\)</span> is wider than band <span class="arithmatex">\(b\)</span>, so <span class="arithmatex">\(b\)</span> is cut out of <span class="arithmatex">\(t\)</span>'s end and glued on: the new track <span class="arithmatex">\((\tau', w')\)</span> has a band <span class="arithmatex">\(t'\)</span> of weight <span class="arithmatex">\(w_t - w_b\)</span> and a band <span class="arithmatex">\(b'\)</span> of weight <span class="arithmatex">\(w_b\)</span>, and nothing else changes.</p>
+<p><strong>How to read these band pictures.</strong> Don't read the black lines as paths. Read the gap between each pair of neighbouring black lines as a band: a strip carrying a whole interval of points side by side. The shaded horizontal bar is the interval itself. A band leaves the bar from one stretch of its edge and comes back to another stretch, and every point carried along the band arrives in the same order it left. The loops that leave and return on the same side of the bar, and look like a pair of rabbit ears, are bands that reverse direction; Dunfield and Thurston allow them. The interval exchanges in mibz2 never have them: every band of LF goes from the top edge to the bottom edge. One band per run of the BWT's last column, with the run's width as the band's weight.</p>
+<p>Then they split it. In the next figure, <span class="arithmatex">\(t\)</span> and <span class="arithmatex">\(b\)</span> are the rightmost bands on the top and the bottom of the bar. Band <span class="arithmatex">\(t\)</span> is wider than band <span class="arithmatex">\(b\)</span>, so <span class="arithmatex">\(b\)</span> is cut out of <span class="arithmatex">\(t\)</span>'s end and glued on: the new track <span class="arithmatex">\((\tau', w')\)</span> has a band <span class="arithmatex">\(t'\)</span> of weight <span class="arithmatex">\(w_t - w_b\)</span> and a band <span class="arithmatex">\(b'\)</span> of weight <span class="arithmatex">\(w_b\)</span>, and nothing else changes. If <span class="arithmatex">\(t\)</span> carries 7 points and <span class="arithmatex">\(b\)</span> carries 3, after the split <span class="arithmatex">\(t'\)</span> carries 4 and <span class="arithmatex">\(b'\)</span> carries 3. No point was dropped; the same points are carried by differently drawn bands.</p>
 <figure class="bf-fig">
 <p class="bf-title">Splitting an interval exchange</p>
 <p><img class="bf-src" src="../../assets/images/train-tracks/dt-fig18-split.png" alt="Three stages: an interval exchange with bands t and b; the band t sliced along the dashed path; the result with bands t-prime and b-prime."></p>
@@ -2943,6 +2951,7 @@
 <hr />
 <p><strong>Sources:</strong></p>
 <ul>
+<li>W. P. Thurston, <a href="https://library.slmath.org/books/gt3m/">The Geometry and Topology of 3-Manifolds</a>, lecture notes, Princeton (1980): §8.9, p. 204.</li>
 <li>N. M. Dunfield and D. P. Thurston, <a href="https://arxiv.org/abs/math/0510129">A random tunnel number one 3–manifold does not fiber over the circle</a>, <em>Geometry &amp; Topology</em> 10 (2006), 2431–2499: §7.1–7.3, Figures 16, 17 and 18 (pp. 2471–2472).</li>
 <li>H. Masur, L. Mosher and S. Schleimer, <a href="https://arxiv.org/abs/1004.4564">On train track splitting sequences</a>, <em>Duke Mathematical Journal</em> 161 (2012); arXiv 2010: §2, Figure 1 (p. 4).</li>
 <li>A. Rafiqi and A. Zeytin, <a href="https://arxiv.org/abs/2610.13347">Thurston's legacy at the interface of surface dynamics, train tracks, and arithmetic</a>, arXiv 2026: §4.2, Figure 1 (p. 19).</li>
@@ -3111,19 +3120,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=78f273a008b9"></script>
+        <script src="../../assets/javascripts/bench.js?v=177cae7a7249"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=78f273a008b9"></script>
+        <script src="../../assets/javascripts/couriers.js?v=177cae7a7249"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=78f273a008b9"></script>
+        <script src="../../assets/javascripts/blog.js?v=177cae7a7249"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=78f273a008b9"></script>
+        <script src="../../assets/javascripts/frontier.js?v=177cae7a7249"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=78f273a008b9"></script>
+        <script src="../../assets/javascripts/observatory.js?v=177cae7a7249"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=78f273a008b9"></script>
+        <script src="../../assets/javascripts/katex.js?v=177cae7a7249"></script>
       
     
   </body>

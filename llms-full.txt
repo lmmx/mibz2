@@ -1114,6 +1114,12 @@ Thurston's train tracks squeeze a tangle of curves onto a few weighted branches 
 
 ## 1\. From curves to branches
 
+The name comes from Thurston's own drawings. In his lecture notes he asks us to picture a curve on a surface as "many parallel strands in thin, branching corridors". Then: "Imagine squeezing the nearly parallel strands of γ in each corridor to a single strand. One obtains a train track τ (with switches) which approximates γ. Each leaf of γ may be imagined as the path of a train running around along τ."
+
+Thurston's corridors, and the track they squeeze down to
+
+Top: the strands of a curve running side by side in branching corridors. Bottom: each corridor squeezed to one line, a train track, with a train running on it. Reproduced from Thurston, *The Geometry and Topology of 3-Manifolds*, §8.9 (p. 204 of the notes), for commentary.
+
 The figure below, from Dunfield and Thurston's 2006 paper, shows two train tracks: one on a sphere with four holes (drawn as a disc with three holes plus the outside), and one on a torus. Each thick line is a branch. Where two branches meet a third, they arrive from the same side and merge smoothly; that junction is a switch.
 
 Two train tracks
@@ -1148,7 +1154,9 @@ An interval exchange drawn as a train track
 
 "At left is an interval exchange τ on a 5–punctured S². At right is a regular neighborhood of τ." Reproduced from Dunfield and Thurston (2006), Figure 17, for commentary. The shaded bar is the interval; the bands are the pieces that get exchanged.
 
-Then they split it. In the next figure, \\(t\\) and \\(b\\) are the rightmost bands on the top and the bottom of the bar. Band \\(t\\) is wider than band \\(b\\), so \\(b\\) is cut out of \\(t\\)'s end and glued on: the new track \\((\\tau', w')\\) has a band \\(t'\\) of weight \\(w\_t - w\_b\\) and a band \\(b'\\) of weight \\(w\_b\\), and nothing else changes.
+**How to read these band pictures.** Don't read the black lines as paths. Read the gap between each pair of neighbouring black lines as a band: a strip carrying a whole interval of points side by side. The shaded horizontal bar is the interval itself. A band leaves the bar from one stretch of its edge and comes back to another stretch, and every point carried along the band arrives in the same order it left. The loops that leave and return on the same side of the bar, and look like a pair of rabbit ears, are bands that reverse direction; Dunfield and Thurston allow them. The interval exchanges in mibz2 never have them: every band of LF goes from the top edge to the bottom edge. One band per run of the BWT's last column, with the run's width as the band's weight.
+
+Then they split it. In the next figure, \\(t\\) and \\(b\\) are the rightmost bands on the top and the bottom of the bar. Band \\(t\\) is wider than band \\(b\\), so \\(b\\) is cut out of \\(t\\)'s end and glued on: the new track \\((\\tau', w')\\) has a band \\(t'\\) of weight \\(w\_t - w\_b\\) and a band \\(b'\\) of weight \\(w\_b\\), and nothing else changes. If \\(t\\) carries 7 points and \\(b\\) carries 3, after the split \\(t'\\) carries 4 and \\(b'\\) carries 3. No point was dropped; the same points are carried by differently drawn bands.
 
 Splitting an interval exchange
 
@@ -1209,6 +1217,7 @@ These leads now sit in the project's list of open mathematical directions, for t
 
 **Sources:**
 
+- W. P. Thurston, [The Geometry and Topology of 3-Manifolds](<https://library.slmath.org/books/gt3m/>), lecture notes, Princeton (1980): §8.9, p. 204.
 - N. M. Dunfield and D. P. Thurston, [A random tunnel number one 3–manifold does not fiber over the circle](<https://arxiv.org/abs/math/0510129>), *Geometry &amp; Topology* 10 (2006), 2431–2499: §7.1–7.3, Figures 16, 17 and 18 (pp. 2471–2472).
 - H. Masur, L. Mosher and S. Schleimer, [On train track splitting sequences](<https://arxiv.org/abs/1004.4564>), *Duke Mathematical Journal* 161 (2012); arXiv 2010: §2, Figure 1 (p. 4).
 - A. Rafiqi and A. Zeytin, [Thurston's legacy at the interface of surface dynamics, train tracks, and arithmetic](<https://arxiv.org/abs/2610.13347>), arXiv 2026: §4.2, Figure 1 (p. 19).
