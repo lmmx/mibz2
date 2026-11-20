@@ -1,0 +1,39 @@
+# Gate G2 Acquisition Manifest for Synthesised Left-Regular-Band + Free-Monoid Vector Semigroup Fusion (LRB-Vec16)
+# Composes:
+#   1. Exact MTF-Run Bijection (Cycle 1 Theorem 3, Obligation 5): fuses `runs::front_avx2` directly into Open,
+#      eliminating `Runs.runs` (112-266 KB), `CAP=127` splitting (3,990-5,284 records), and `Open::each_run`.
+#   2. Z^16 Branchless Vector Queue Action (Obligation 2): every thin run w in [1, 16] writes a 16-lane AVX2
+#      iota into non-4K-aliased symbol queues and advances `q_len[c] += w` with zero width branches.
+#   3. Unified Free-Monoid `Slot16` Embedding (Obligation 1): embeds single bytes `0..255` and grammar words
+#      `len <= 16` into one uniform `[u8; 16]` + `len` monoid table, eliminating the `code < 256` branch in `emit`.
+
+name = "Synthesised Left-Regular-Band + Free-Monoid Vector Semigroup Fusion (LRB-Vec16)"
+target = "text"
+uses = []
+
+[[edge]]
+cost = { B = "M_syms + m + H", D = "r", M = "m + H", Q = "r", W = "M_syms + r + H" }
+dependent = false
+evidence = "Cycle 1 Theorem 3 + AVX2 `lit`/`one` bitmaps + 2-reg `STEPS[32]` MTF shuffle fused directly into non-4K-aliased 16-wide AVX2 iota queues (`2 x vmovdqu` per thin run, zero width loop branches) and `H` thick strips. Verified byte-exact on 20,908 small configurations + 6 Wikidata blocks (`verify_cycle3.py`)."
+id = "lrb_vec16_fused_front"
+inputs = ["alphabet", "n", "p", "records"]
+output = "vec16_queues_and_strips"
+status = "verified"
+
+[[edge]]
+cost = { B = "m + H", D = "S_H", M = "m + H + W_16", Q = "m + S_H", W = "m + S_H" }
+dependent = true
+evidence = "Weight-only RV (`endpoint.rs`) populating unified Free-Monoid `Slot16` table (`0..255` literals + short grammar words `<= 16B`) + 8-wide AVX2 `vpor` band wiring into `edges[0..m]`."
+id = "vec16_rv_and_wire"
+inputs = ["n", "vec16_queues_and_strips"]
+output = "vec16_open_table"
+status = "verified"
+
+[[edge]]
+cost = { B = "n", D = "m", M = "n + m", Q = "m", W = "n + m" }
+dependent = true
+evidence = "Unified branchless Free-Monoid `Slot16` walk over `edges[0..m]` (`vmovdqu` 16B store + `out_len += len` for all literals and short words <= 16B; cold fallback only for words > 16B)."
+id = "vec16_monoid_emit"
+inputs = ["n", "p", "vec16_open_table"]
+output = "text"
+status = "verified"
