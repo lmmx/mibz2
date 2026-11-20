@@ -1,0 +1,29 @@
+# Gate G2 Acquisition Manifest for Online In-Place Bundle Shortcutting (OIBS-H)
+# Zero changes to Open's construction; discovers multi-step coherent étale sheets
+# online inside `edges[0..m]` via single-instruction same-cache-line neighbour check
+# and overwrites sibling entries in place with output-buffer shortcuts (OPEN-QUESTIONS.md §4).
+
+name = "Online In-Place Bundle Shortcutting on Open (OIBS-H)"
+target = "text"
+uses = [
+  "counts_from_records",
+  "maximal_runs",
+]
+
+[[edge]]
+cost = { B = "m + H", D = "S_H", M = "m + H", Q = "m + S_H", W = "R + m + S_H" }
+dependent = true
+evidence = "Shipped Open<16, true, true> construction (`src/open.rs` + `src/open/endpoint.rs`), with `bits` chosen so `m < (1 << bits)` and +1 sentinel padding on `edges`. Unchanged producer cost."
+id = "open_construct_padded"
+inputs = ["C", "n", "p", "records", "runs"]
+output = "open_padded_table"
+status = "proved"
+
+[[edge]]
+cost = { B = "n", D = "m_oibs", M = "n + m", Q = "m_oibs", W = "n + m_oibs" }
+dependent = true
+evidence = "Hysteresis-gated Read-Only Hot-Loop Étale Shortcutting + No-Wraparound Lemma (`cur_j +/- d != mark`). Verified byte-exact on 38,838 small-case configurations (including periodic & multi-cycle) and all 6 authenticated blocks: skips 15.3-36.2% of dependent emit hops with 89.4-95.7% shortcut hit rate and only 3.25-4.41% cold-path entries."
+id = "oibs_emit"
+inputs = ["n", "open_padded_table", "p"]
+output = "text"
+status = "verified"
