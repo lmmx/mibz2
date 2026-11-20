@@ -40,6 +40,7 @@ reorient.
 | Applied | Target | Intervention | Intended response | Observed response | Decision |
 |---|---|---|---|---|---|
 | f5961bfb, for Neon cycle 3 | The search kept returning to classical permutation inversion: induced sorting, pair recompression, the direction duality (audit, branch `audit/neon-cycles-1-2`) | Make computational obligations the unit of research; reorientation by default; the obligation register; the bzip2 pipeline before the decoded column made admissible | Investigations that replace ordering operations collectively, rather than reorganise them | pending cycle 3 | pending |
+| 6d9acc87, for Neon cycle 3 onward | The obligation register was being used to generate ideas as well as judge them; agents self-classified; cost models were uncalibrated (0 of 6 promoted candidates passed natively) | Four generators, with obligations kept for selection; classification by the auditors; cost models calibrated on `qi16` and `i16`; witness, scope and escape condition recorded for obstructions. Methodology frozen until evidence arrives | Mechanisms from structure, not from rephrased cost lists; a calibrated verdict on Backward Open | pending | pending |
 
 ## Foundational questions (track 1)
 
