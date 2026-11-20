@@ -55,6 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Where the decoding work goes" = "blog/2026-11-20-where-the-decoding-work-goes.md" },
     { "Train tracks" = "blog/2026-11-20-train-tracks.md" },
     { "Open Returns" = "blog/2026-11-19-open-returns.md" },
     { "What decoding pays for" = "blog/2026-11-18-what-decoding-pays-for.md" },
@@ -267,6 +268,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-20-where-the-decoding-work-goes.md" = "Tracing each costly row back to the text it spells shows that JSON keys cost almost nothing, while random statement IDs claim two thirds of the hardest rows." },
   { "blog/2026-11-20-train-tracks.md" = "Thurston's train tracks squeeze a tangle of curves onto a few weighted branches that can be edited directly, and a compressed block's runs form something very like one." },
   { "blog/2026-11-19-open-returns.md" = "mibz2 0.5.7 decodes Wikidata up to 11% faster on ten cores by keeping a tenth of each block's rows and letting the rest travel together in convoys." },
   { "blog/2026-11-18-what-decoding-pays-for.md" = "Three ways of undoing bzip2's block sort spend about two operations per run, and how long run boundaries persist explains much of why Cells and the forest vary." },
