@@ -1,0 +1,31 @@
+# Acquisition manifest for Gauss-Seidel Inline-Payload Iterated Monoid Lifting (GS-IMD).
+name = "Gauss-Seidel Inline-Payload Iterated Monoid Lifting (GS-IMD)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "open_inline_edges"
+inputs = ["C", "p", "records"]
+output = "inline_monoid_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + m + U", D = "H", B = "R + m + U", Q = "H", M = "m + U" }
+evidence = "Open thick-strip elimination + direct band wiring of <=5B (u64) or <=13B (u128) words inline inside each retained edge entry."
+
+[[edge]]
+id = "gauss_seidel_monoid_lift"
+inputs = ["inline_monoid_edges"]
+output = "lifted_monoid_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "m", M = "m" }
+evidence = "In-place data-independent array sweep (D = 1 per pass, hardware OoO MLP) composing edge[j] with edge[next(j)] whenever next(j) != mark, next(j) != j, and combined payload <= max_inline (Theorem 5.1; 10,454 small cases + 6 authenticated blocks)."
+
+[[edge]]
+id = "imd_single_lane_emit"
+inputs = ["lifted_monoid_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + 0.35m", D = "0.35m", B = "n + 0.35m", Q = "0.35m", M = "n + m" }
+evidence = "Zero-arena 1-lane pointer walk over lifted inline monoid operator; cuts dependent pointer-chase steps to ~0.30-0.48m with direct register-to-out stores."
