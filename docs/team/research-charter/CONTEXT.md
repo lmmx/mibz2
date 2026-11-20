@@ -163,8 +163,9 @@ is a record, not a gate.
 |---|---|---|---|
 | NSPC (#652) | dependent steps 0.25–0.34× (Python op counts) | 1.82–2.38× Open's time | no |
 | Q, packed queues (#654) | 8–15% faster (Neon's estimate) | 1.046–1.093× Open | no |
+| `i16` against `qi16` (#653; calibration) | `i16` better on L2 misses, DRAM traffic and work (Neon's C cache model) | 1.10–1.16× slower | no |
 | LIMIT=8 (#657) | wins on 30% of blocks (2-lap medians) | wins on 0 of 228 | no |
-| Backward Open (Neon cycle 2) | work 0.72–0.74×, L2 misses 0.82–0.88× (C cache model) | not yet run (the Coordinator's audit checks the model on `qi16` and `i16`) | pending |
+| Backward Open (Neon cycle 2) | work 0.72–0.74×, L2 misses 0.82–0.88× (C cache model) | native three-arm test running. The same model predicts `i16` beats `qi16` on every metric (L2 0.83–0.89, DRAM 0.72–0.83), but natively `i16` is 1.10–1.16× slower | no: the model mis-ranks the reference pair (audit branch, de8ebdbf) |
 
 ## 6. Tools and where things are
 
