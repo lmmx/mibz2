@@ -31,10 +31,9 @@ and τ ∈ {1, 2, 4}: 15,681 cases.
 ## Claim 1 (proved, verified)
 
 **(a) c(E) ≤ 2m.**
-- *Why:* E = U \ LF(U). LF maps each strip U_j onto one interval, so U \ LF(U) inside the
-  union of the strips has at most two pieces per strip. The ends of LF(U_j) cut each strip's
-  complement into at most two intervals, and charging each interval of E to the strip
-  containing its left end gives at most 2m.
+- *Why:* E = U \ ∪_j LF(U_j), and each LF(U_j) is one interval. U has at most m maximal
+  intervals. Removing one interval from a union of intervals raises the count by at most one.
+  So E has at most m + m = 2m maximal intervals.
 - *Counted:* 0 failures.
 
 **(b), the charging.** Take a split pair (y − 1, y) inside one interval of E, and follow it under
