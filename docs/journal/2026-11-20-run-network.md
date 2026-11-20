@@ -41,7 +41,8 @@ reading below.
    (in-degree = out-degree = 1). Contracting those series vertices, an exact order-preserving
    operation (composing translations), leaves a core of 11–12% of the runs with 0.32–0.37r arcs.
    - Chains between core vertices average 2.4–2.8 runs.
-   - The longest chain is 41 on every block. Unexplained.
+   - The longest chain is 41 runs on five blocks and 37 on block 2 (an earlier version said 41 on
+     all six). The census explains it (below).
 3. **It is not scale-free.** Core degrees are tiny: mostly (2,2), (2,1) or (1,2), then (3,1). There
    are no heavy-tailed hubs.
 4. **The core runs are the wide ones.** They hold 51–56% of the rows, while Open's retained thin
@@ -75,11 +76,52 @@ That is consistent with the origami lift
      pass through a branching vertex is one, with bundles splitting at out-degree 2.
    - *Why it decides:* if that count is near Open's retained rows, the graph adds no leverage. If
      it is far smaller, there is a collective primitive to find.
-3. **The constant 41.** The longest series chain is 41 runs on all six blocks. An artefact, or a
-   structural bound (record width, the 127 cap, JSON nesting)?
+3. **The longest chain:** answered by the census below.
 4. **Hubs versus chains.** Open keeps the chains and eliminates the wide strips. Is there an exact
    elimination that removes the chains instead and keeps the small core, in a way whose
    acquisition and consumption are cheaper?
+
+## The census results (branch `research/run-network-census` at bd781368)
+
+*Its write-up: `docs/journal/2026-11-20-run-network-census.md`, with `census.py` and `baseline.py`.*
+
+**Q1, separators of the core:** "promising" under its rule on 6 of 6 blocks, but the rule was close
+to vacuous.
+- **The figures:** METIS recursive bisection down to pieces of at most 64 vertices cuts about half
+  the core arcs. That is 0.008–0.022n ports.
+- **Why the rule was vacuous:** the whole core has only 0.019–0.045n arcs, so even cutting every arc
+  passes 0.05n.
+- **No small separators:** the cut stays at about 0.15 arcs per vertex at every depth, so separators
+  grow in proportion to piece size.
+- **But not random:** the core bisects 4–8× better than a degree-preserving random rewiring of it.
+
+**Q2, where the ordering information lives:** "leverage" under its rule on 6 of 6 blocks, but the
+rule was mis-specified, and I wrote it.
+- **The measurement:** the first-return pieces to the rows of branching runs. Their count equals the
+  series-reduced core's arc count exactly on every block, 0.32–0.37r, because adjacent rows stay
+  adjacent through pass-through runs.
+- **The error:** the rule compared that *piece* count with Open's retained *rows* m, which is not
+  like with like.
+- **Like with like:**
+  - The section holds every row of the branching runs, 0.51–0.56n. A walk over it would make far
+    more dependent steps than Open's m (0.10–0.23n).
+  - Its exchange, about 0.33r pieces, is larger than Open's endpoint exchange, which has at most
+    3H + 2 arrows over a few thousand thick strips.
+- **Verdict:** as a retained set for first returns, the core is worse than Open's thin set on both
+  counts.
+
+**The longest chain is structural.** On block 0 it is the opening quote plus the 40 hex digits of a
+SHA-1 that occurs twice, giving 41 runs of width 2. Blocks 85, 143, 207 and 210 show the same kind
+of hash chain. Block 2's 37 is a GUID (36 characters) plus `$`. These chains are repeated
+identifiers in the JSON.
+
+**What survives:**
+- the network is highly structured: nearly a permutation of runs, with a core that bisects far
+  better than random;
+- a series reduction that is exact and preserves order.
+
+None of it is a cheaper section or decomposition for reconstruction. Any leverage would have to
+come from an operation on the core that is not a first-return walk.
 
 ## Routing
 
