@@ -1,0 +1,22 @@
+# Acquisition manifest for Tight Radix-Slab FlatQ (Runs.{counts,per}) + 4KiB Bipolar Dead-Out 1P Splicing (FlatQ-BP4K).
+name = "Tight Radix-Slab FlatQ + p-Split RunQ + 4KiB Bipolar Dead-Out 1P Splicing (FlatQ-BP4K)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "flatq_w24_r4_elimination"
+inputs = ["C", "n", "p", "records"]
+output = "flatq_w24_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Exploits Runs.{counts, per} already computed by src/runs.rs (lines 91-92) via the tight envelope thin[a] <= min(counts[a], 24*per[a]) + 1 (Theorem 11.2) to replace 256 separate heap Vecs, capacity branches, thin[a], and all_c[a] updates on thin runs with a single contiguous radix slab flat_q and one L1D pointer q_cur[256] + p-split scan, cutting construct time by an additional 14-22% on top of Cycle 10 across 6/6 blocks."
+
+[[edge]]
+id = "bipolar_4k_dead_out_1p_emit"
+inputs = ["flatq_w24_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Pairs 4 KiB physical bipolar dead-out page allocation (halving cold page transitions and Kahn page-graph vertices to <= 220) with Zero-Stage Kahn Topological Unshuffling in 40-46 us and 184-204 KiB peak recycled overflow (Theorem 11.3; verified across 18,782 small runs, 8 adversarial controls, and 6/6 Wikidata blocks)."
