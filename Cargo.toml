@@ -149,6 +149,12 @@ required-features = ["grammar-replay"]
 name = "writer_owned"
 required-features = ["owned-writer"]
 
+# Research only: NSPC, the non-splitting affine contraction walk, timed against the shipped
+# kernels on exact BWT columns (docs/journal/2026-11-20-nspc-prototype.md)
+[[example]]
+name = "nspc"
+required-features = ["moonshot"]
+
 [[example]]
 name = "lever_counts"
 required-features = ["memory-lever"]
