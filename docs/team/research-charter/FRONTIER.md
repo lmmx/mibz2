@@ -98,7 +98,7 @@ Do not rediscover these; build on them.
 
 These are pointers, not results:
 - **The run network** ([journal](../../journal/2026-11-20-run-network.md)): LF as a graph on runs, built in O(r).
-  - Its cycle rank (0.21–0.25r) is the copy count k and Astra's chord count: one invariant.
+  - Its cycle rank, 0.21–0.25r, is fixed by record 63's identity E = 2r − 1 − C, and equals the copy count k plus one.
   - 88–89% of runs are pass-throughs, leaving a series-reduced core of about 0.11r runs.
   - With order-preserving switches it is a measured train track.
   - Open question: do small separators in the core give an Euler-tour composition cheaper than walking?

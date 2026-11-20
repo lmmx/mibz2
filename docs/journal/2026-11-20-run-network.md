@@ -27,13 +27,16 @@ reading below.
 | 210 | 128,732 | 1.208r | 0.208r | 0.89r | 0.109r | 0.317r | 0.508n | 0.227n |
 
 **Observations (measured):**
-1. **Three earlier objects are one invariant.** The cycle rank (arcs − vertices + 1) is 0.21–0.25r.
-   On block 0 it is 10,955. That equals:
-   - the NOP-7 copy count k = r − |D̄∩C̄| from Neon round 5 (10,954, plus one);
-   - the chord count of Astra's spanning forest;
-   - the "excess" over a permutation of runs.
-
-   These are the same number seen three ways.
+1. **The cycle rank is a known identity.** Arcs are the atoms of the common refinement of the
+   domain partition and the image partition. So E = 2r − 1 − C, where C is the number of interior
+   boundaries the two partitions share. This is MONODROMY's record 63, verified on all 233 blocks:
+   "E₀ = 2r − 1 − C, the atoms of P ∨ TP; q₁ = r − C, the forest's chord count".
+   - It follows that E − V = r − 1 − C. That is the copy count k = r − |D̄∩C̄| from Neon round 5,
+     the chord count of Astra's forest, and the cycle rank minus one. On block 0: 10,954 against
+     10,955.
+   - The off-by-one is a convention. D̄ counts row 0, and the graph is connected (c = 1), so
+     β₁ = E − V + 1.
+   - This is a re-identification, not a new finding.
 2. **The network is nearly a permutation of runs.** 88–89% of runs are pure pass-throughs
    (in-degree = out-degree = 1). Contracting those series vertices, an exact order-preserving
    operation (composing translations), leaves a core of 11–12% of the runs with 0.32–0.37r arcs.
