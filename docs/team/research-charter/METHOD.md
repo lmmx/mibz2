@@ -31,6 +31,22 @@ Open all lost (CONTEXT.md §4).
 breakthrough. A modest-looking identity that removes a whole dependent computation may be one. The
 measure is paid work removed.
 
+**Mathematical maximalism** (Louis, 20 November 2026, after the claimed RH/GRH proof: "RH is proved
+by using *everything*!"). Importing distant theory is now cheap, so the search uses everything.
+- **No limit on mathematical distance or complexity.** A theory far from compression is not
+  deprioritised for that reason.
+- **Chains of worlds.** A representation's job may be to enable a move into another world, where a
+  different theorem applies. A lift is not exhausted when its first operation fails. An
+  obstruction may say which further world the construction needs, not that the lift is dead.
+- **Auxiliary theorems count.** They need not improve a benchmark; each must contribute a precise
+  capability to some route to exact reconstruction.
+- **The asymmetry:** unlimited ambition in the mathematics that *discovers* a decoder, strict
+  economy in the decoder that *executes*. A hundred-page argument for a handful of machine
+  operations is a good trade. The cost of recognising when a specialised construction applies is
+  part of the execution.
+- **What does not relax:** the obligation register and native timing remain the final economic
+  test, and every claim keeps its tag (proved, verified, measured, conjecture).
+
 ## 2. The cycle
 
 Research runs in repeated cycles, not one shot. This keeps what made the Astra investigations
