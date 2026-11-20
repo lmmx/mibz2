@@ -85,7 +85,7 @@ Then run one full cycle as METHOD.md describes:
 - **Learn:** record what it taught, in FRONTIER.md, including the obligation register: what was
   learned about the obligation itself, positive findings from failed candidates included.
 
-Commit the write-up as `docs/journal/YYYY-MM-DD-neon-<topic>.md`, with its programs, and the
+Commit the write-up as `docs/journal/YYYY-MM-DD-<model>-<topic>.md`, with its programs, and the
 FRONTIER.md update. Push the branch and report the verified remote SHA (METHOD.md §8). Then continue
 with the next cycle, or stop and report if Louis asked you to stop after one.
 
