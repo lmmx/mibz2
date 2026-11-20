@@ -167,6 +167,7 @@ is a record, not a gate.
 | LIMIT=8 (#657) | wins on 30% of blocks (2-lap medians) | wins on 0 of 228 | no |
 | Backward Open (Neon cycle 2) | work 0.72–0.74×, L2 misses 0.82–0.88× (C cache model) | 1.10–1.15× slower than `qi16` on all six blocks (#659): the second pass over the records costs about as much as the queues it replaces | no |
 | U16Q (Carbon cycle 2: fixed 16-wide queue fill, 16-byte emit) | whole kernel 0.83–0.86× Open in Carbon's C harness; 0.77–0.92× in the Coordinator's rerun | kernel 0.86–0.91× natively (`calib.rs`, matching C), but no change in CI's end-to-end wall (#664): `wikidata` −0.1% (−0.4%, +0.1%) at 1 thread, +0.0% (−1.0%, +1.1%) at 4; the C baseline matches native Open within a few percent | kernel yes (11.2% on the whole corpus); CI's bench never runs Open below 8 workers, so its null is expected (stage attribution) |
+| LRB-Vec16 (Kitchen Sink cycle 3: MTF/RLE2 run fusion + 16-wide queues + 16-byte slots) | 0.77–0.81× of front+Open in C; fusion's marginal 0.92–0.96× | #666, native, whole corpus, one thread: the Vec16 queue alone takes front+Open to 384–398 ms (master 470–477; front+Cells 403–419), but the fusion adds 20–36 ms in decode order (break-even hot). Fused route 408–433 ms | queue yes; fusion no |
 
 ## 6. Tools and where things are
 
