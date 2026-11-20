@@ -1,0 +1,53 @@
+# Acquisition manifest for Unsplit-Piece Functional In-Forest Contraction (UFC-Full and UFC-1+Open).
+# Checked via: python3 docs/team/acquisition/check_manifest.py docs/journal/2026-11-20-neon-cycle4-unsplit-forest/ufc.toml
+
+name = "Unsplit-Piece Functional In-Forest Contraction (Flat-R1 + UFC-1+Open / UFC-Full)"
+target = "text"
+uses = [
+  "counts_from_records",
+]
+
+[[edge]]
+id = "r1_maximal_runs_and_forder"
+inputs = ["records", "p"]
+output = "l_runs_and_f_order_map"
+status = "proved"
+dependent = false
+cost = { W = "R + r", D = "1", B = "2R + 7r", Q = "0", M = "7r" }
+evidence = "Pass 1 coalesces capped run records into r = 51,184-128,732 maximal runs (2 B/run compact l_cw + tiny big_lw). Pass 2 counts per-symbol run offsets and computes f_of_l[0..r] (4r sequential) and f_w8[0..r] (1r across 256 streams) with zero random reads."
+
+[[edge]]
+id = "r1_unsplit_forest_merge"
+inputs = ["l_runs_and_f_order_map"]
+output = "unsplit_in_forest_and_splitter_arcs"
+status = "proved"
+dependent = false
+cost = { W = "r + A", D = "1", B = "11r + 20A", Q = "0", M = "4r + 20A" }
+evidence = "Pass 3 performs a single linear 2-pointer merge between F-ordered runs (fi = 0..r-1) and L-ordered runs (v = 0..r-1). By the Pigeonhole Unsplit-Piece Theorem (proved), |U| >= |D cap I| + 1; on all 6 Wikidata blocks 92.5-93.0% of runs (47.4k-119.7k) are unsplit and populate the 4 B/run functional in-forest forest[0..r] (200-515 KiB), leaving only |K| = 3,789-9,041 splitters and A = 14,743-35,789 splitter arcs."
+
+[[edge]]
+id = "r1_parallel_forest_trace"
+inputs = ["unsplit_in_forest_and_splitter_arcs", "p"]
+output = "reduced_iet_T_K_and_flat_literals"
+status = "verified"
+dependent = true
+cost = { W = "A + H_U", D = "max_depth(U)", B = "4*H_U + 36A + L_lit", Q = "H_U (8-way MLP in 200-515 KiB forest)", M = "4r + 16A + L_lit" }
+evidence = "Pass 4 traces all A splitter arcs through forest[0..r] in 8-way lockstep MLP (H_U = 66,429-153,375 hops; average depth 4.2-4.8; 100% of |U| nodes visited; zero SLP rules in Round 1), producing reduced IET T_K (A pieces, flat literal buffer L_lit = 79-184 KiB, 68.2-74.9% <= 5 B). Verified byte-exact on 10,454 small cases, 7 adversarial cases, and all 6 Wikidata blocks (verify_ufc.py)."
+
+[[edge]]
+id = "ufc1_open_endpoint_and_wiring"
+inputs = ["reduced_iet_T_K_and_flat_literals", "n"]
+output = "reduced_open_edges"
+status = "verified"
+dependent = true
+cost = { W = "K_ep + A + m1", D = "K_ep", B = "16A + 8*m1 + U_ep", Q = "K_ep", M = "8*m1 + L_lit + U_ep" }
+evidence = "Open endpoint elimination on only H_1 = 592-2,046 thick strips (w > 16) of T_K (2.0-2.7x fewer than Shipped Open) followed by 2-pass radix sort of thin pieces and band-aligned wiring into edges[0..m1] on m1 = 26,124-70,082 thin rows (2.8-3.7x smaller than Open's m), with inline <= 5 B words in 8 B edges (g5_ufc1_compact.c) or 4 B edges + literal table (g5_ufc.c)."
+
+[[edge]]
+id = "ufc1_open_direct_rotated_emit"
+inputs = ["reduced_open_edges", "reduced_iet_T_K_and_flat_literals", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "m1 + n", D = "m1", B = "8*m1 + n + L_lit + U_ep", Q = "m1", M = "n + 8*m1 + L_lit + U_ep" }
+evidence = "Single rotated walk of length m1 = 26,124-70,082 (33-51% fewer emit L2 misses and 22-32% faster VM emit time than Shipped Open in g5_ufc1_compact.c), writing rotated output directly to out[0..n) with zero scratch rotation copy. Alternative UFC-Full replaces edges with 10-14 iterated L2-resident UFC rounds (0.78-1.00r SLP rules, zero RV, zero orbit walk) + direct-rotated first-occurrence SLP copy expansion (verify_ufc.py, g5_ufc.c)."
