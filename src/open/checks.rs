@@ -166,3 +166,87 @@ fn residual_segments_on_short_cycles() {
         }
     }
 }
+
+/// The 16-byte emit against the walk as shipped before it (`emit_reference`), on arbitrary
+/// walks over arbitrary dictionaries: literals and words of 0 to 40 bytes (across the
+/// 16-byte line and the `LONG` path), narrow and wide (`extra`) codes, several cycles, marks
+/// on and off a cycle, `n` above and below the cycle's length (the clamp and `repeat`), and
+/// an output buffer left longer or shorter than `n` by an earlier block. Either both panic
+/// (an empty walk, `repeat`'s assert) or both give the same bytes.
+#[test]
+fn emit_matches_reference() {
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+    let mut seed = 0x7531_6e65u64;
+    let mut next = |below: usize| {
+        seed = seed
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
+        ((seed >> 33) as usize) % below.max(1)
+    };
+    let (mut inline16, mut lens) = (Vec::new(), Vec::new());
+    let mut out = Vec::new();
+    let (mut cases, mut panics) = (0usize, 0usize);
+    for _ in 0..200_000 {
+        let words = next(12);
+        let empty = next(50) == 0;
+        let mut spelling = Vec::new();
+        let mut offsets = vec![0u32];
+        for _ in 0..words {
+            let len = match next(4) {
+                0 => 2 + next(15),
+                1 => 15 + next(4),
+                2 => 17 + next(24),
+                _ => usize::from(!empty) * (1 + next(40)),
+            };
+            spelling.extend((0..len).map(|_| next(256) as u8));
+            offsets.push(spelling.len() as u32);
+        }
+        let m = 1 + next(40);
+        let bits = (usize::BITS - (m - 1).leading_zeros()).max(1);
+        let wide = next(4) == 0;
+        let codes = 256 + words;
+        let mut edges = vec![0u32; m];
+        let mut extra = Vec::new();
+        // a permutation of the rows (cycles), or with some chance an arbitrary map
+        let mut perm: Vec<u32> = (0..m as u32).collect();
+        for i in (1..m).rev() {
+            perm.swap(i, next(i + 1));
+        }
+        let arbitrary = next(5) == 0;
+        for (r, e) in edges.iter_mut().enumerate() {
+            let to = if arbitrary { next(m) as u32 } else { perm[r] };
+            let code = if next(3) == 0 { next(256) } else { next(codes) } as u32;
+            if wide {
+                extra.push(code);
+                *e = to;
+            } else {
+                *e = (code << bits) | to;
+            }
+        }
+        let mark = next(m) as u32;
+        let span = if next(2) == 0 { 64 } else { 700 };
+        let n = 1 + next(span);
+        let dirty = next(3);
+        let reference = catch_unwind(AssertUnwindSafe(|| {
+            let mut r = vec![0xEE; dirty];
+            emit_reference(&edges, &extra, &spelling, &offsets, n, mark, bits, &mut r);
+            r
+        }))
+        .ok();
+        // an earlier block's bytes, longer or shorter than this one
+        out.clear();
+        out.resize(next(2 * n + 40), 0xA5);
+        let got = catch_unwind(AssertUnwindSafe(|| {
+            inline_words(&spelling, &offsets, &mut inline16, &mut lens);
+            emit(
+                &edges, &extra, &spelling, &offsets, &inline16, &lens, n, mark, bits, &mut out,
+            );
+        }))
+        .ok()
+        .map(|()| out.clone());
+        panics += usize::from(reference.is_none());
+        assert_eq!(got, reference, "case {cases}");
+        cases += 1;
+    }
+    println!("{cases} walks, {panics} empty (both panic)");
+}
