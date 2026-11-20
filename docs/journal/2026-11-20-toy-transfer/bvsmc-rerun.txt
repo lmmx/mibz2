@@ -1,0 +1,18 @@
+[PASS] C adversarial & exact-canary self-tests (6/6 incl. n=1, n=5 < 16, multi-cycle)
+
+Block       |    OpEm   U16Em   1P_Em   2P_Em |  1P/Op 1P/U16  2P/Op |   OpTot  U16Tot   1PTot   2PTot |  1P/Op 1P/U16  2P/Op
+----------------------------------------------------------------------------------------------------------------------------
+block-0.L   |   0.529   0.508   0.406   0.468 | 0.767x 0.799x 0.884x |   1.424   1.204   1.112   1.198 | 0.781x 0.923x 0.841x
+block-2.L   |   0.693   0.664   0.459   0.541 | 0.662x 0.691x 0.781x |   1.736   1.489   1.275   1.373 | 0.735x 0.856x 0.791x
+block-85.L  |   0.963   0.986   0.593   0.728 | 0.616x 0.602x 0.756x |   1.894   1.624   1.243   1.390 | 0.656x 0.765x 0.734x
+block-143.L |   1.620   1.577   0.995   0.988 | 0.614x 0.631x 0.610x |   3.352   2.971   2.383   2.364 | 0.711x 0.802x 0.705x
+block-207.L |   1.140   1.020   0.698   0.903 | 0.612x 0.684x 0.792x |   2.422   2.088   2.229   2.302 | 0.921x 1.068x 0.951x
+block-210.L |   1.501   1.478   0.920   0.957 | 0.613x 0.623x 0.638x |   2.860   2.526   1.946   1.999 | 0.680x 0.770x 0.699x
+
+Gate G5 Summary (Cycle 2 — BVSMC-1P & BVSMC-2P):
+  (1) Byte-exactness + 32B trailing canary (6/6 blocks + 6 adversarial): PASS
+  (2) BVSMC-1P vs Open-qi16 (emit <=0.62x 6/6; tot <=0.75x >=5/6 & <=0.80x 6/6): emit 4/6, tot75 4/6, tot80 5/6
+  (3) Strict Isolation vs 1-lane Open+U16Q (emit <=0.65x 6/6; tot <=0.88x >=5/6): emit 3/6, tot88 4/6
+  (4) Zero-Arena BVSMC-2P (0 B pool) emit <=0.78x Open-qi16 (6/6):               3/6
+  (5) Memory bound (1P pool <= 1.25 MiB, 2P pool == 0 B):                        1294336 B / 0 B (PASS)
+  OVERALL PRE-REGISTERED G5 VERDICT:                                             FAIL

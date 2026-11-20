@@ -183,3 +183,26 @@ two. The 3/8 Christoffel word `aabaabab` has the BWT `bbbaaaaa`.
 - **The coordinate survives.** Letter k is still one binary search on (x + kα) mod 1.
 - **So the two separate:** a block can be almost all narrow runs and still have a global
   coordinate.
+
+## Correction: lanes do pay, once the append is branchless (Carbon cycle 2)
+
+The lanes negative above was too broad.
+- **Carbon's finding:** cycle 2 (`research/carbon-word-transport`, 8b54b024) found that lanes and
+  branchless emission interact.
+- **The mechanism:** each code's word is stored as one pre-aligned 16-byte vector, so 92–94% of
+  steps are a single unconditional 16-byte store.
+- **The interaction:** with that change, 8 lanes cut Open's emit to 0.55–0.78×, though either
+  change alone barely moves it.
+- **Why my test missed it:** it used branchy, variable-length appends, so it measured the
+  appends, not the lanes.
+
+**The Coordinator's rerun of `g5_bvsmc.c`.** Run on the six blocks on this machine (output in
+`bvsmc-rerun.txt`), it was byte-exact with canaries passing.
+- **Emit:** BVSMC-1P is 0.61–0.77× Open.
+- **Whole kernel:** 0.66–0.78× on five blocks. Block 207 came out at 0.92×, a noisy round on a
+  shared machine.
+- **The strengthened single-lane arm** (U16Q, a fixed 16-wide queue store plus the 16-byte emit):
+  0.77–0.92× whole kernel, with no extra memory.
+- **The verdict:** Carbon's pre-registered G5 gate fails on its strict all-blocks emit criterion,
+  here as in Carbon's own run.
+- **Scope:** measured in a C harness, not the native Rust decoder on the i9.
