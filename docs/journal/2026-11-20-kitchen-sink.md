@@ -46,6 +46,12 @@ would have proposed in advance. So:
 3. **The filter comes after, and stays unforgiving.** The register and native timing judge what
    survives. Breadth on the way in, rigour on the way out.
 
+## Status of this list
+
+These are suggestions, not a canon. A researcher's own candidates have equal standing, and may
+replace, extend, combine or ignore these (Louis, 20 November 2026: "if Carbon is the expert then
+surely Carbon should be seeding this"). The number of fields used is never a measure of success.
+
 ## The kitchen for inverse BWT
 
 Each entry gives a framework, its bridge to our problem, and what it would buy if the bridge holds.
