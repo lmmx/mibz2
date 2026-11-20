@@ -1,0 +1,44 @@
+# Acquisition manifest for Queue-Free Backward Open (g = P o LF_{L[S]}).
+# Checked via: python3 docs/team/acquisition/check_manifest.py docs/journal/2026-11-20-neon-cycle2-backward-open/backward_open.toml
+
+name = "Queue-Free Backward Open (direct g = P o LF_{L[S]}, zero queues, sequential edges)"
+target = "text"
+uses = [
+  "counts_from_records",
+]
+
+[[edge]]
+id = "thick_strip_classification"
+inputs = ["records", "p"]
+output = "thick_strips_and_counts"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "1", B = "R + H", Q = "0", M = "H" }
+evidence = "One sequential pass over capped run records collecting ONLY H = 1,565-5,047 thick strips (>16 rows) and per-symbol counts all[256], thin[256], thick[256]. Zero queue allocations and zero m-row writes (unlike shipped Forward Open's queues[0..256])."
+
+[[edge]]
+id = "open_endpoint_bands"
+inputs = ["thick_strips_and_counts", "n"]
+output = "open_bands_and_spelling"
+status = "proved"
+dependent = true
+cost = { W = "K + U", D = "K", B = "H + B + U", Q = "K", M = "H + B + U" }
+evidence = "Identical endpoint induction on <= 3H + 2 arrows (proof.md; src/open/endpoint.rs). K ~ 9k-18k steps, B = 2,446-6,788 bands, spelling U = 31-58 KiB."
+
+[[edge]]
+id = "sequential_backward_wiring"
+inputs = ["records", "p", "open_bands_and_spelling"]
+output = "backward_edges"
+status = "verified"
+dependent = false
+cost = { W = "R + m", D = "1", B = "R + m", Q = "0", M = "m" }
+evidence = "Second sequential scan of records (112-266 KiB) with a 5 KiB L1-resident active-band cache cur_band[256], evaluating g(j) = P(LF_v(j)) directly and writing edges[0..m] 100% sequentially (j = 0..m-1). Zero queues[0..256], zero scattered writes to edges. Measured band-split rate: 0.23-0.53% of thin runs (verify_backward_open.py)."
+
+[[edge]]
+id = "backward_open_emit"
+inputs = ["backward_edges", "open_bands_and_spelling", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Backward orbit walk from mark over edges[0..m], writing out[n..0] right-to-left (with exact short-cycle period extraction & forward repeat for periodic columns). Verified exact on 20,908 exhaustive small cases (binary n<=8, ternary n<=5, all primary marks, LIMIT in {1,2,4,16}) and all six authenticated Wikidata blocks (5,399,692 / 5,399,692 bytes exact; verify_backward_open.py)."

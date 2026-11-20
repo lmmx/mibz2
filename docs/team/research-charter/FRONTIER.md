@@ -63,6 +63,8 @@ Do not rediscover these; build on them.
 | **Metadata-density obstruction:** 63–75% of Wikidata runs have width 1; any full-block IET/grammar machine (`Cells`, `Forest`, `Bipolar`/`Half-Bipolar`) holds 40–100 B/run across `r` runs (4–9 MB > 2 MiB LLC), paying 3.4–11× Open's DRAM B/B and 6.3–9.1× Open's L2 misses | Putting all `35k–97k` width-1 runs into a multi-field IET/grammar contraction | Neon Cycle 1 (`g5_falsifier.c`, 2026-11-20) |
 | **No-widening of Open's `g`:** every piece of Open's `g = P ∘ LF_{L[S]}` with constant literal byte sits inside thin runs (mean width 1.6–2.2, all ≤ 16) | Width-based second Open cuts replicating Astra 3's forest cascade | Neon Cycle 1 (2026-11-20) |
 | **Heavy-tailed thin excursions:** 80–86% of Open's `m` rows are thin→thin, with 58–78% of thin rows in excursions of length 8–102 (`p99 = 41–43`) | Inline-`u64` sorted-wavefront switch contraction on Open's thin rows | Neon Cycle 1 (`verify_monotone_and_triage.py`) |
+| **Incompressible residual & permutation-entropy barrier:** arbitrary incompressible BWTs of length `m` embed into Wikidata-regime thin residuals; explicit bijection tables on `m = 204k` have entropy `log2(m!) ≈ 410 KiB > 256 KiB` L2, and `B`-slab message passing needs `K ≥ 32k` walkers just to break even on L2m | L2-resident bit-packed explicit `edges`, online SIMD rank on `v = L[S]`, and slab-bucketed multi-walker message passing | Neon Cycle 2 (`2026-11-20-neon-cycle2-backward-open.md`) |
+| **L1-capped Monotone Recompression before Open:** 1 round (`|Σ_R| ≤ 27`) deletes 20% of `n` but cuts Open's `m` by only 14–17% while inflating `Σ` to `394–507` (breaking the 1-byte literal fast path on 83% of steps) | Prefixing Open with 1–6 rounds of monotone alphabet-cut BWT recompression | Neon Cycle 2 (`2026-11-20-neon-cycle2-backward-open.md`) |
 
 ## Connections not yet explored
 
@@ -75,10 +77,10 @@ These are pointers, not results:
   complements, with other retained sets, with cheaper structure?
 - Derived sequences and return substitutions for the finite marked BWT (Durand), applied to the
   repeated-cut limit.
-- **L2-resident compact representations of Open's residual `g = P ∘ LF_{L[S]}`:** the entire thin
-  sub-column `v = L[S]` is only 88–199 KiB (fits inside 256 KiB L2!), yet Open expands it to two
-  360–817 KiB `u32` arrays (`queues` + `edges`). Can `g` be inverted directly inside L2 without
-  `queues` or `edges`, or via a different low-metadata algebraic/combinatorial representation?
+- **Native evaluation of Queue-Free Backward Open (`g = P ∘ LF_{L[S]}`):** eliminates Open's
+  `queues[0..256]` and scattered edge writes (`-48% to -52%` `(run+wir)` L2m, `-16% to -28%`
+  modelled DRAM B/B, `-16% to -25%` peak memory, `0.23%–0.53%` band splits); verify recycled
+  output-buffer zero-init avoidance and descending-store behaviour natively on the i9.
 
 ## Cycle log
 
@@ -89,3 +91,4 @@ why, and what was promoted.
 |---|---|---|---|---|
 | 2026-11-19–20 | Neon rounds 1–7 and follow-ups; the Coordinator | parallel induction; boundary samples; copy replay; NSPC; DOE; Open micro-optimisations; LIMIT | see CONTEXT.md §4 | none to production; Open shipped (0.5.7) from the Astra line |
 | 2026-11-20 | Neon Cycle 1 (`research/neon-bipolar-contraction`) | displacement-rank resolvent; Φ overlap transitions; second width cut on Open; thin-switch wavefront; Monotone Alphabet-Cut BWT Recompression; Bipolar & Quotient-Accelerated Zero-Sort Half-Bipolar Contraction | resolvent (Θ(rn)/Ω(n log n)); Φ overlaps (already pays Cells RV); second width cut (no-widening); thin wavefront (heavy tail len 8–102); Monotone Recomp (|Σ_R| blowup to 14k); Half-Bipolar failed G5 (6.3–9.1× L2m, 3.4–11× DRAM B/B vs Open due to Metadata-Density Obstruction) | Track 1 proved & verified results: Monotone BWT Recompression + Bipolar/Half-Bipolar (5,227 small + 6 blocks byte-exact; D collapsed 1000–2000× to 88–100); G5 diagnosis redirects Cycle 2 to L2-resident / low-metadata inversion |
+| 2026-11-20 | Neon Cycle 2 (`research/neon-bipolar-contraction`) | Open phase L2/DRAM profile; Incompressible Residual Embedding; L1-capped Monotone Recomp + Open; 18-bit packed `edges`; direct SIMD rank on L2-resident `v = L[S]`; slab-bucketed multi-walker message passing; **Queue-Free Backward Open (`g = P ∘ LF_{L[S]}`)** | L1-capped Monotone + Open (only -15% `m`, breaks 1B literal fast path); 18-bit `edges` (`log2(m!) ≈ 410 KiB > L2`); online SIMD rank (2–3 dep loads + scans/step); slab-bucketed walkers (`K ≥ 32k` I/O bound) | **Queue-Free Backward Open** verified exact (`20,908` small cases + 6 blocks), G2 PASS, G5 cuts `(run+wir)` L2m `0.48–0.52×`, DRAM B/B `0.72–0.84×`, work `0.72–0.74×`, peak memory `0.75–0.84×` (borderline on strict 6/6 cutoff on block 0; recommended for Coordinator native i9 A/B test) |
