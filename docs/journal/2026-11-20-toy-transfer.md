@@ -65,9 +65,12 @@ segments of the retained cycle would act as width for the one-row runs.
 **Verdict: no.**
 - **Lanes buy at most 5–14% over one lane,** and the segmenting and joining cost about 1.6–1.8×
   the serial emit.
-- **Open's emission is not latency-bound** in this harness. About ten bytes are appended per
-  retained step (n/m ≈ 10), and the appends dominate, not the edge load.
-- **Scope:** this kills lanes as a surrogate for width in Open's emit. It says nothing about
+- **What it shows, and what it doesn't:** in this harness, the overhead of segmenting and joining
+  outweighs any latency benefit. The small gain from one lane to eight suggests that the
+  dependent load is not the main cost: about ten bytes are appended per retained step (n/m ≈ 10).
+  It does not establish the hardware bottleneck; that would need counters.
+- **Scope:** lanes are traction, not transfer: they follow the same edges concurrently. This
+  kills them as a cheap speed-up of Open's emit. It says nothing about
   surrogates aimed at the construction phases.
 - **Measured** (C harness, this VM, not the native Rust decoder on the i9).
 
@@ -128,8 +131,31 @@ Keep the existing verification and complete-cost standards. No charter changes o
 integration. Treat Alpöge's claimed RH proof as unverified pending independent scrutiny; we're
 studying the reported discovery process, not assuming its final theorem is established.
 
-Read docs/journal/2026-11-20-toy-transfer.md and docs/journal/2026-11-20-working-backwards.md first:
+Read docs/journal/2026-11-20-toy-transfer.md (including its correction: the effect to transfer is cheap
+global coordinate evaluation, not run width) and docs/journal/2026-11-20-working-backwards.md first:
 they name a candidate toy (perfectly clustering BWTs), the measured missing ingredient (run width,
 absent in unique random strings), and one surrogate already refuted (independent lanes for Open's
 emit).
 ```
+
+## Correction: the effect to transfer is global coordinates, not width
+
+Louis, relaying ChatGPT, corrected step 2 above.
+- **What the toy really has:** run width is what today's algorithms exploit. The toy's stronger
+  capability is *cheap global coordinate evaluation*: the symbol at any output position follows
+  from a compact arithmetic coordinate (kα mod 1), so the orbit never has to be followed.
+- **The two can separate.** A block could have mostly singleton runs and still have an LF given by
+  a simple arithmetic map. A block with wide runs need have no closed form.
+- **So the surrogate to seek** is for global coordinates, or for cheap composition of long orbit
+  segments, not for width.
+- **The acquisition condition holds:** the coordinates must be derived cheaply from the compressed
+  input, and evaluating them must cost less than following LF.
+
+**A family that separates the two (the Coordinator's suggestion, unexamined).**
+- **The toy can't tell them apart:** in the two-letter case, wide runs and global coordinates
+  coincide.
+- **The separating family:** codings of a *rotation* by an r-piece partition. The orbit
+  coordinate stays x + kα, but these words are not perfectly clustering (Ferenczi–Zamboni), so
+  their BWTs have more runs.
+- **The first damage step:** measure how runs grow with r while the arithmetic coordinate
+  survives. That is "damage the toy" with the coordinate kept and the width destroyed.
