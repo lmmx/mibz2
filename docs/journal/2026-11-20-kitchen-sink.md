@@ -1,4 +1,4 @@
-# The kitchen sink: heavy frameworks, each with a named bridge
+# The kitchen sink: use everything
 
 *20 November 2026. Louis's direction, after a relayed overview of the claimed RH/GRH Lean
 development. The overview was posted by Chris Birkbeck, summarising another model's reading of the
@@ -112,3 +112,47 @@ and speak directly to the corrected toy-transfer question (cheap global coordina
 
 The decisive test in each case is acquisition: can the coordinate be read off the compressed
 block for less than the walk it replaces?
+
+## Composition of worlds (Louis's discussion with ChatGPT, relayed)
+
+As relayed, the claimed proof's theories each discharge a different obligation: a representation,
+a lifting mechanism, a bound, a structural property. The result is their composition. For us, the
+question is whether some obligation disappears only by passing through several worlds, for
+example:
+1. the interval exchange exposes piecewise translations;
+2. symbolic dynamics groups the orbit segments that share a representation;
+3. an algebraic composition law resolves them collectively;
+4. a compact executable form writes the output.
+
+This chain is hypothetical. METHOD.md §1 now carries the rule ("Mathematical maximalism").
+
+## The message for Carbon (relayed from ChatGPT, for its next cycle boundary)
+
+```text
+We are explicitly expanding the mathematical ambition of this programme. Do not restrict yourself to
+compression algorithms, interval exchanges, graph algorithms, or the mathematical doorways we have
+already identified.
+
+Explore the possibility that exact inverse-BWT reconstruction requires a genuinely
+interdisciplinary construction involving many mathematical theories, potentially far removed from
+algorithms and data compression.
+
+Levent Alpöge's claimed RH/GRH argument is a useful provocation: its reported architecture draws on
+automorphic forms, theta lifts, Galois cohomology, arithmetic geometry, representation theory and
+numerous deep structural theorems. The lesson is not to imitate those exact subjects. It is to
+recognise that combining a very large mathematical toolkit may enable a result inaccessible to any
+one toolkit.
+
+You are authorised to investigate elaborate chains of mathematical reductions, to develop auxiliary
+theorems that do not immediately improve a benchmark, and to search outside the fields represented
+in our current research literature.
+
+Do not impose an artificial limit on mathematical distance or complexity. The final executable
+decoder must remain economical, but the mathematics required to discover it need not be.
+
+Treat our current computational obligations as the final economic test, not a boundary on what
+mathematics you're allowed to invent.
+
+The charter now says this (METHOD.md §1, "Mathematical maximalism"); the kitchen-sink journal lists
+about 25 frameworks with the bridge each might attempt, as a starting supply, not a menu.
+```
