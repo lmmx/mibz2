@@ -118,7 +118,7 @@ sharpen the reasoning.
 - **New paid obligations:** what must now be acquired, built and consumed.
 - **Nearest prior art:** what is genuinely different. Ancestry is context, not disqualification.
 
-**At every cycle boundary,** answer one question in FRONTIER.md's obligation register: *what did
+**At every cycle boundary,** first read what is new since the last one: published audits, and FRONTIER.md's pending mathematical leads. Audits correct the current work; leads open new directions. Then choose the next cycle. Then answer one question in FRONTIER.md's obligation register: *what did
 this cycle teach about the underlying obligation?* Killing a candidate does not close its
 obligation. Record any positive finding inside a negative result.
 

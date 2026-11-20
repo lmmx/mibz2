@@ -9,6 +9,22 @@
 
 *Evidence lives in [CONTEXT.md](CONTEXT.md) and the journals. This file points to it.*
 
+## Pending mathematical leads
+
+This is an inbox for directions Louis introduces between cycles. A lead is an invitation, not an
+assignment: Neon reads it at the next cycle boundary and decides how it should shape the next
+cycle. Following one needs no approval. Neon updates the status.
+
+| Mathematical doorway | Why it might expose a new representation or primitive | References | Status |
+|---|---|---|---|
+| **The origami lift:** a BWT block as a branched torus cover with monodromy (LF, +1) | Surface operations, and directions with a transport law, unavailable in the one-dimensional exchange. MONODROMY verified the construction (record 86); the cone points alone cannot decode | [journal](../../journal/2026-11-20-origami-lift.md) | pending |
+| **Illegal turns and folding** (Bestvina–Handel, Stallings) | If a graph self-map of the run dynamics can be built cheaply, its illegal-turn structure might isolate the few branching decisions that carry the ordering, resolved collectively by folds. A self-map must be constructed first; without one, "illegal turn" is undefined | Bestvina–Handel, *Train tracks and automorphisms of free groups* (Ann. Math. 1992); Feighn–Handel on relative train-track maps; Rafiqi–Zeytin, arXiv:2610.13347 (survey) | pending |
+| **Ribbon graphs and rotation systems** | Restoring the cyclic order at each vertex encodes a surface embedding. Faces are cycles of σ∘α. Could ordered paths be assembled collectively from the embedding? Caution: plain face traversal may just be LF in disguise | Standard combinatorial-map literature; the origami journal | pending |
+| **Splitting integer-weighted train tracks, and contraction** | Dunfield–Thurston count the components of weighted multicurves by splitting bands, which they identify with Rauzy induction, without tracing the curves. Is there an exact analogue that yields the marked ordered itinerary? Also: parallel list and tree contraction carrying ordered values | Dunfield–Thurston, *A random tunnel number one 3-manifold does not fiber over the circle* (2006), §7.3; Shun, Gu, Blelloch, Fineman and Gibbons on list and tree contraction; Cong–Bader on how building the adjacency an Euler tour needs can cost as much as the tour (an acquisition warning) | pending |
+
+*These references come from Louis's literature search and have not yet been checked against their
+sources here.*
+
 ## Obligation register
 
 These are the expensive classes of work that current decoders pay. Candidates come and go; an
