@@ -60,6 +60,9 @@ Do not rediscover these; build on them.
 | The CPU already issues the next edge load early | Software-pipelining Open's walk | #656 |
 | LIMIT=16 is best; per-block choice gains ≤ 1% even with hindsight | Thin/thick threshold tuning | #657 |
 | Histogram non-identifiability: same run histogram, Θ(n)-different spelling cost | Predicting construction cost from run statistics alone | Neon (unverified by MONODROMY) |
+| **Metadata-density obstruction:** 63–75% of Wikidata runs have width 1; any full-block IET/grammar machine (`Cells`, `Forest`, `Bipolar`/`Half-Bipolar`) holds 40–100 B/run across `r` runs (4–9 MB > 2 MiB LLC), paying 3.4–11× Open's DRAM B/B and 6.3–9.1× Open's L2 misses | Putting all `35k–97k` width-1 runs into a multi-field IET/grammar contraction | Neon Cycle 1 (`g5_falsifier.c`, 2026-11-20) |
+| **No-widening of Open's `g`:** every piece of Open's `g = P ∘ LF_{L[S]}` with constant literal byte sits inside thin runs (mean width 1.6–2.2, all ≤ 16) | Width-based second Open cuts replicating Astra 3's forest cascade | Neon Cycle 1 (2026-11-20) |
+| **Heavy-tailed thin excursions:** 80–86% of Open's `m` rows are thin→thin, with 58–78% of thin rows in excursions of length 8–102 (`p99 = 41–43`) | Inline-`u64` sorted-wavefront switch contraction on Open's thin rows | Neon Cycle 1 (`verify_monotone_and_triage.py`) |
 
 ## Connections not yet explored
 
@@ -72,6 +75,10 @@ These are pointers, not results:
   complements, with other retained sets, with cheaper structure?
 - Derived sequences and return substitutions for the finite marked BWT (Durand), applied to the
   repeated-cut limit.
+- **L2-resident compact representations of Open's residual `g = P ∘ LF_{L[S]}`:** the entire thin
+  sub-column `v = L[S]` is only 88–199 KiB (fits inside 256 KiB L2!), yet Open expands it to two
+  360–817 KiB `u32` arrays (`queues` + `edges`). Can `g` be inverted directly inside L2 without
+  `queues` or `edges`, or via a different low-metadata algebraic/combinatorial representation?
 
 ## Cycle log
 
@@ -81,3 +88,4 @@ why, and what was promoted.
 | Date | Session | Explored | Killed (why) | Promoted |
 |---|---|---|---|---|
 | 2026-11-19–20 | Neon rounds 1–7 and follow-ups; the Coordinator | parallel induction; boundary samples; copy replay; NSPC; DOE; Open micro-optimisations; LIMIT | see CONTEXT.md §4 | none to production; Open shipped (0.5.7) from the Astra line |
+| 2026-11-20 | Neon Cycle 1 (`research/neon-bipolar-contraction`) | displacement-rank resolvent; Φ overlap transitions; second width cut on Open; thin-switch wavefront; Monotone Alphabet-Cut BWT Recompression; Bipolar & Quotient-Accelerated Zero-Sort Half-Bipolar Contraction | resolvent (Θ(rn)/Ω(n log n)); Φ overlaps (already pays Cells RV); second width cut (no-widening); thin wavefront (heavy tail len 8–102); Monotone Recomp (|Σ_R| blowup to 14k); Half-Bipolar failed G5 (6.3–9.1× L2m, 3.4–11× DRAM B/B vs Open due to Metadata-Density Obstruction) | Track 1 proved & verified results: Monotone BWT Recompression + Bipolar/Half-Bipolar (5,227 small + 6 blocks byte-exact; D collapsed 1000–2000× to 88–100); G5 diagnosis redirects Cycle 2 to L2-resident / low-metadata inversion |

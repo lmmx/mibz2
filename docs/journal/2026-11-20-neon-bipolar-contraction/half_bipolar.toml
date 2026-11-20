@@ -1,0 +1,30 @@
+# Acquisition manifest for Quotient-Accelerated Zero-Sort Half-Bipolar Contraction (Cycle 1).
+# Checked via: python3 docs/team/acquisition/check_manifest.py docs/journal/2026-11-20-neon-bipolar-contraction/half_bipolar.toml
+
+name = "Quotient-Accelerated Zero-Sort Half-Bipolar Contraction"
+target = "text"
+uses = [
+  "counts_from_records",
+  "maximal_runs",
+  "lf_shifts",
+  "run_endpoints",
+  "lf_image_partition",
+]
+
+[[edge]]
+id = "half_bipolar_contraction"
+inputs = ["codomain_partition", "domain_partition", "lf_affine", "p", "runs"]
+output = "bipolar_slp"
+status = "verified"
+dependent = false
+cost = { W = "5.2r", D = "100", B = "4.8r", Q = "3.8r", M = "3r" }
+evidence = "Quotient-accelerated zero-sort Half-Bipolar contraction over <= floor(log2 n) rounds (16-17 rounds on the six Wikidata blocks). Verified exact on 5,227 exhaustive small cases (binary n<=8, ternary n<=5, all primary marks), 7 adversarial self-overlap cases (Sturmian n=100,000 in 1 round / 2 hops), and all six authenticated Wikidata blocks (5,399,692 / 5,399,692 bytes exact; verify_bipolar.py). Measured on the six blocks: total overlaps 3.16-3.61r, hops 1.77-2.14r, new pieces 1.67-1.95r (zero radix sort via parent bucketing; 90.7-92.5% single-child parents, 92.8-95.3% single-fragment payloads), critical-path serial depth D = 88-100 across the entire block, live big rules (>16B) 0.46-0.69r, small-word arena (9..16B, <=8B inline u64) 105-242 KB. All terms are O(r), zero n-scale dependent work."
+
+[[edge]]
+id = "one_scan_bipolar_emit"
+inputs = ["bipolar_slp", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "log n", B = "n", Q = "0.22r", M = "n" }
+evidence = "One-scan first-occurrence SLP expansion into the output buffer (same emission primitive as Cells, plus one cyclic rotation for the primary shift). Verified byte-exact on all 5,227 small cases and all six authenticated blocks (verify_bipolar.py). Measured on the six blocks: 6,927-11,475 output-to-output copies (0.07-0.22r), zero row-level pointer chasing."
