@@ -1,0 +1,41 @@
+# Gate G2 Acquisition Manifest for Left-Regular-Band Pre-Column Stream Fusion (LRB-Open)
+# Pipeline Obligation 5 ("Starting from the decoded column", FRONTIER.md):
+# By Cycle 1 Theorem 3 (Exact MTF-Run Bijection), every literal symbol s >= 2 in the canonical
+# bzip2 MTF+RLE2 stream before `eob` marks a guaranteed maximal run boundary (`list[s-1] != list[0]`).
+# Fusing `runs::front_avx2` directly into `Open`'s `(queues, strips)` eliminates:
+#   1. Materialising `Runs.runs: Vec<u16>` (`112-266 KB`),
+#   2. `CAP=127` run splitting (`3,990-5,284` extra records),
+#   3. `Open::each_run` pass (`407-914 us` reduced to `317-700 us` net delta over `runs::front`).
+# Note: `primitives.toml` fixes entry state `I0` at `records`; this manifest anchors at `I0`
+# while accounting for the fused `M_syms + m` work measured in `g5_cycle2_bench.c` Group B.
+
+name = "Left-Regular-Band Direct Pre-Column Fusion into Open (LRB-Open-AVX2)"
+target = "text"
+uses = []
+
+[[edge]]
+cost = { B = "M_syms + m + H", D = "r", M = "m + H", Q = "r", W = "M_syms + m + H" }
+dependent = false
+evidence = "Cycle 1 Theorem 3 + AVX2 `lit`/`one` bitmaps (`_bzhi_u64` + 2-reg `STEPS[32]` shuffle) fused directly into Open's `(queues, strips)` without `Runs.runs` or `CAP=127` splitting. Verified byte-exact on 38,838 small cases + 6 blocks; measured 0.925-0.944x vs `TwoStage-AVX2` across all 6/6 blocks (`g5_cycle2_bench.c`, saving 109-224 us/block; misses strict <=0.900x pre-registered gate because 256-queue `q_push_range` remains 317-700 us)."
+id = "lrb_fused_front_and_pass1"
+inputs = ["alphabet", "n", "p", "records"]
+output = "open_queues_and_strips"
+status = "measured"
+
+[[edge]]
+cost = { B = "m + H", D = "S_H", M = "m + H", Q = "m + S_H", W = "m + S_H" }
+dependent = true
+evidence = "Shipped `endpoint.rs` weight-only Rauzy-Veech elimination on `H` thick strips + queued band wiring into `edges[0..m]`."
+id = "open_rv_and_wire"
+inputs = ["n", "open_queues_and_strips"]
+output = "open_table"
+status = "proved"
+
+[[edge]]
+cost = { B = "n", D = "m", M = "n + m", Q = "m", W = "n + m" }
+dependent = true
+evidence = "Branchless 16-byte short-word `emit_fast16` walk over `edges[0..m]` from `mark`."
+id = "open_emit_fast16"
+inputs = ["n", "open_table", "p"]
+output = "text"
+status = "measured"
