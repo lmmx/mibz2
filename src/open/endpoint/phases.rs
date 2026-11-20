@@ -47,6 +47,8 @@ pub struct Phases {
     pub extra: usize,
     /// every buffer's capacity, in bytes, after the block (the kernel keeps them all live)
     pub live_bytes: usize,
+    /// the rank queues' capacity, in bytes, after the block (part of `live_bytes`)
+    pub queue_bytes: usize,
 }
 
 /// The open kernel, run either as production runs it or as the timed clone
@@ -140,6 +142,7 @@ impl PhasedOpen {
         ph.edges = k.edges.len();
         ph.extra = k.extra.len();
         ph.live_bytes = self.live_bytes();
+        ph.queue_bytes = k.queues.iter().map(|q| 4 * q.capacity()).sum();
         ph
     }
 

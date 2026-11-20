@@ -5,6 +5,9 @@ use super::{Band, Counts, Kernel};
 // Research only: the timed clone of the induced construction (examples/open_phases.rs)
 #[cfg(feature = "open-phases")]
 pub(crate) mod phases;
+// Research only: fused wiring (F) and queue compaction (Q) (examples/open_fused.rs)
+#[cfg(feature = "open-phases")]
+pub(crate) mod fused;
 
 #[derive(Default, Clone, Copy)]
 struct Node {

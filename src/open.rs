@@ -519,6 +519,8 @@ mod endpoint;
 
 // Research only: the construction's stage split (`open-phases`, examples/open_phases.rs)
 #[cfg(feature = "open-phases")]
+pub use endpoint::fused::{ResearchOpen, Spill, State};
+#[cfg(feature = "open-phases")]
 pub use endpoint::phases::{PhasedOpen, Phases};
 
 #[cfg(test)]
