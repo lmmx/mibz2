@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=9948e336ac49">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1af2fb335099">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=9948e336ac49">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1af2fb335099">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=9948e336ac49">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1af2fb335099">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=9948e336ac49">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1af2fb335099">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=9948e336ac49">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=1af2fb335099">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=9948e336ac49">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=1af2fb335099">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2999,7 +2999,7 @@
 
 <p>The first version of our transfer went wrong in an instructive way. We named the missing ingredient as run width, since the toy has two enormous runs and the random IDs have none, and tested an obvious surrogate the same evening: walking many independent stretches of the path at once, as mibz2's plain decoder already does. It gave no gain on Open's walk, and more to the point, it was the wrong test. Running walks side by side still follows the same edges; it is a speed-up of the old operation, not a new one.</p>
 <p>The correction, which came out of the discussion, is that the toy's real power is not width but <strong>cheap global coordinates</strong>: a compact number (<span class="arithmatex">\(k\alpha\)</span> modulo 1) from which any position's letter follows. In the toy the two coincide, which is why they were easy to confuse.</p>
-<p>They come apart if the toy is damaged on purpose. Keep the rotation by <span class="arithmatex">\(\alpha\)</span>, but cut the circle into <span class="arithmatex">\(p\)</span> pieces instead of two, and write down which piece each point of the orbit lands in. The coordinate survives untouched: letter <span class="arithmatex">\(k\)</span> is the piece holding <span class="arithmatex">\(x + k\alpha\)</span> modulo 1, found by one binary search over the cut points, for any <span class="arithmatex">\(k\)</span>, in any order. What changes is the column. We measured it on texts of 5,000 letters with the golden-ratio slope:</p>
+<p>They come apart if the toy is damaged on purpose. Keep the rotation by <span class="arithmatex">\(\alpha\)</span> and the two letters, but cut the circle into <span class="arithmatex">\(p\)</span> pieces and give each piece the letter <span class="arithmatex">\(a\)</span> or <span class="arithmatex">\(b\)</span> at random. The coordinate survives untouched: letter <span class="arithmatex">\(k\)</span> is the letter of the piece holding <span class="arithmatex">\(x + k\alpha\)</span> modulo 1, found by one binary search over the cut points, for any <span class="arithmatex">\(k\)</span>, in any order. What changes is the column. We measured it on texts of 5,000 letters with the golden-ratio slope:</p>
 <table>
 <thead>
 <tr>
@@ -3011,33 +3011,35 @@
 <tbody>
 <tr>
 <td style="text-align: right;">2</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">500</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">192</td>
 </tr>
 <tr>
 <td style="text-align: right;">8</td>
-<td style="text-align: right;">46</td>
-<td style="text-align: right;">109</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">114</td>
 </tr>
 <tr>
 <td style="text-align: right;">64</td>
-<td style="text-align: right;">101</td>
-<td style="text-align: right;">50</td>
+<td style="text-align: right;">218</td>
+<td style="text-align: right;">23</td>
 </tr>
 <tr>
 <td style="text-align: right;">256</td>
-<td style="text-align: right;">276</td>
-<td style="text-align: right;">18</td>
+<td style="text-align: right;">802</td>
+<td style="text-align: right;">6.2</td>
 </tr>
 <tr>
 <td style="text-align: right;">1,024</td>
-<td style="text-align: right;">1,036</td>
-<td style="text-align: right;">4.8</td>
+<td style="text-align: right;">2,018</td>
+<td style="text-align: right;">2.5</td>
 </tr>
 </tbody>
 </table>
-<p><em>Measured (<a href="https://github.com/lmmx/mibz2/blob/94b4d7d08/docs/journal/2026-11-20-toy-transfer/toy.py"><code>toy.py</code></a>, any machine; the 2-piece row is a Sturmian prefix, whose finite length adds a few runs to the ideal two).</em></p>
-<p>With a few pieces the column stays wide, so a small cut barely damages the toy; that was our first proposal, and the measurement corrected it. With a thousand pieces the runs are nearly five rows wide on average, close to the narrow runs of a random string, and the coordinate still answers any position in one search. So a block can be almost all narrow runs and still have a global coordinate that makes the walk unnecessary. Width-based methods, ours included, would find almost nothing to exploit in it.</p>
+<p><em>Measured (<a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-11-20-toy-transfer/toy2.py"><code>toy2.py</code></a>, two letters throughout).</em></p>
+<p><em>Correction, 20 November 2026:</em> the first version of this table gave each piece its own letter, so at 1,024 pieces it had a 1,024-letter alphabet and its run count mostly counted letters. The research line caught it. With two letters the effect is stronger, not weaker.</p>
+<p>With a few pieces the column stays wide, so a small cut barely damages the toy. With a thousand pieces the runs average two and a half rows, narrower than the random strings in our real blocks, and the coordinate still answers any position in one search. So a block can be almost all narrow runs and still have a global coordinate that makes the walk unnecessary. Width-based methods, ours included, would find almost nothing to exploit in it.</p>
+<p>There is a limit, which the research line also proved. Every text coded from a rotation has zero entropy: a handful of numbers describe it completely. Real blocks are not like that. A block with about 760 random statement IDs holds about 90,000 random bits, and no global coordinate can be smaller than the information it determines. So on real data the coordinate we are looking for cannot be a single number like <span class="arithmatex">\(k\alpha\)</span>. At best it describes the structured part, and the random strings must be paid for some other way.</p>
 <p>That is the precise form of the question for the research line: what object, native to real blocks and cheap to read off the compressed input, gives coordinates the way <span class="arithmatex">\(k\alpha\)</span> does, or lets long stretches of the path be composed without walking them? Part of the answer may already exist in outline. For a rotation, the digits of a position in the Ostrowski numeration, built from the continued fraction of <span class="arithmatex">\(\alpha\)</span>, say where it sits at every scale. For a general interval exchange, the induction that our earlier kernel performs builds a comparable hierarchy, and a position's path down that hierarchy is its coordinate. Our kernels pay to build the whole hierarchy and then write the text from it. Whether a position's coordinate can be read off without paying for the whole build is open, and it is exactly the kind of question the register exists to price.</p>
 <h2 id="7-where-this-leaves-us">7. Where this leaves us<a class="headerlink" href="#7-where-this-leaves-us" title="Permanent link">&para;</a></h2>
 <p>Three pieces now fit together. The obligation register tells us what our present algorithms pay for. Importing mathematical structure tells us what other operations might exist. Toy-to-hard transfer tells us which missing effects those operations should try to reproduce.</p>
@@ -3213,19 +3215,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=9948e336ac49"></script>
+        <script src="../../assets/javascripts/bench.js?v=1af2fb335099"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=9948e336ac49"></script>
+        <script src="../../assets/javascripts/couriers.js?v=1af2fb335099"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=9948e336ac49"></script>
+        <script src="../../assets/javascripts/blog.js?v=1af2fb335099"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=9948e336ac49"></script>
+        <script src="../../assets/javascripts/frontier.js?v=1af2fb335099"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=9948e336ac49"></script>
+        <script src="../../assets/javascripts/observatory.js?v=1af2fb335099"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=9948e336ac49"></script>
+        <script src="../../assets/javascripts/katex.js?v=1af2fb335099"></script>
       
     
   </body>
