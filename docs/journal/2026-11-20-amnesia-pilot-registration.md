@@ -1,6 +1,8 @@
 # The context-light generation pilot: registration
 
-*20 November 2026. The Coordinator. Written before either session's results are seen.*
+*20 November 2026. The Coordinator.*
+
+**CANCELLED (Louis, 20 November 2026), before either session ran:** the effort goes to Neon's main research instead. This registration is kept as the record of what was proposed.
 
 ## The question
 
