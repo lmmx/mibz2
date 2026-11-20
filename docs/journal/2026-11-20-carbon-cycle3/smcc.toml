@@ -1,0 +1,22 @@
+# Acquisition manifest for In-Place Self-Modifying Convoy-Copy Open (SMCC-Open).
+name = "In-Place Self-Modifying Convoy-Copy Open (SMCC-Open)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "open_lockstep_table"
+inputs = ["C", "p", "records"]
+output = "open_lockstep_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + m + U", D = "H", B = "R + m + U", Q = "H", M = "m + U" }
+evidence = "Open::construct<true, true> with 2^bits > m so packed edges[z] == edges[z-1] + 1 iff code(z) == code(z-1) and next(z) == next(z-1) + 1 (Theorem 2.1)."
+
+[[edge]]
+id = "smcc_inplace_emit"
+inputs = ["n", "open_lockstep_edges", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "0.70m", B = "n + m", Q = "0.75m", M = "n + m" }
+evidence = "Thick-excursion-gated same-cache-line lockstep discovery + in-place rewriting of sibling edges[start+off] to ((COPY_BASE+id)<<bits)|(exit+off) with <= 32 KiB L1 copy_dict; skips 17.5-30.6% of dependent pointer steps by copying completed slices from out[0..pos); verified on 10,454 small instances and all 6 authenticated blocks."
