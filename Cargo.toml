@@ -97,6 +97,10 @@ moonshot = []
 # clone and makes `Runs::of_column` public; production's kernel is untouched. Remove once the
 # phase split's questions are closed
 open-phases = ["moonshot"]
+# Research only: Open's `emit` as the one-step pipelined walk (src/open/pipelined.rs;
+# docs/journal/2026-11-20-open-emit-pipeline.md). Production's walk otherwise. Remove with the
+# experiment's PR
+open-emit-pipelined = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source

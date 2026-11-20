@@ -445,10 +445,19 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
     }
 }
 
+// Research only (`open-emit-pipelined`): `emit` is the one-step pipelined walk
+// (src/open/pipelined.rs, docs/journal/2026-11-20-open-emit-pipeline.md); without the feature it
+// is the shipped walk below, unchanged
+#[cfg(not(feature = "open-emit-pipelined"))]
+use self::emit_shipped as emit;
+#[cfg(feature = "open-emit-pipelined")]
+use self::pipelined::emit_pipelined as emit;
+
 /// The walk over the retained rows from the marked one, each row's word appended; a cycle
 /// shorter than the block is repeated to `n` bytes (the journal's code, unchanged)
 #[allow(clippy::too_many_arguments)]
-fn emit(
+#[cfg_attr(all(feature = "open-emit-pipelined", not(test)), allow(dead_code))]
+fn emit_shipped(
     edges: &[u32],
     extra: &[u32],
     spelling: &[u8],
@@ -516,6 +525,10 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 }
 
 mod endpoint;
+
+// Research only: the one-step pipelined `emit` and its equivalence checks
+#[cfg(any(test, feature = "open-emit-pipelined"))]
+mod pipelined;
 
 // Research only: the construction's stage split (`open-phases`, examples/open_phases.rs)
 #[cfg(feature = "open-phases")]
