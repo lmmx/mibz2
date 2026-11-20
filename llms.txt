@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [Open Returns](<https://lmmx.github.io/mibz2/blog/2026-11-19-open-returns/index.md>): Open rebuilds each block from a few retained rows and the words their returns spell, and the decoder chooses it wherever an inexpensive run count predicts a gain.
+- [Open Returns](<https://lmmx.github.io/mibz2/blog/2026-11-19-open-returns/index.md>): mibz2 0.5.7 decodes Wikidata up to 11% faster on ten cores by keeping a tenth of each block's rows and letting the rest travel together in convoys.
 - [What decoding pays for](<https://lmmx.github.io/mibz2/blog/2026-11-18-what-decoding-pays-for/index.md>): Three ways of undoing bzip2's block sort spend about two operations per run, and how long run boundaries persist explains much of why Cells and the forest vary.
 - [Cutting the loop open](<https://lmmx.github.io/mibz2/blog/2026-11-18-cutting-the-loop-open/index.md>): Snip the decoder's one long loop open and most of each Wikidata block falls into bundled paths, where one traced letter spells about sixteen.
 - [Technical notes](<https://lmmx.github.io/mibz2/blog/2026-11-18-cutting-the-loop-open-notes/index.md>): Technical notes to the post on cutting the loop open: the bundle bound and its tight cases, one strip's heights, the two constructors of the open paths, the narrow–wide switch cut, and what the two verifications checked.
