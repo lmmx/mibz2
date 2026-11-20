@@ -77,6 +77,8 @@ pub struct Kernel {
     offsets: Vec<u32>,
     edges: Vec<u32>,
     extra: Vec<u32>,
+    inline16: Vec<[u8; INLINE]>,
+    lens: Vec<u8>,
 }
 
 // Production records cap a run at 127. Selection is on maximal runs.
@@ -107,6 +109,25 @@ fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, 
             visit(c, pos, width, width <= limit);
         }
         pos = end;
+    }
+}
+
+/// Append the `w` rows from `m` to a queue. A thin run has at most `LIMIT` = 16 rows, so the
+/// queue takes a fixed block of 16 (an iota from `m`) and keeps the first `w`: no loop whose
+/// trip count is the run's width, whose exit mispredicts on blocks of 48k-126k short runs
+/// (Carbon cycle 2's `U16Q`, `docs/journal/2026-11-20-carbon-cycle2-bvsmc.md` §2.4). The rows
+/// past `w` are written into the queue's spare capacity and dropped at once. A wider run
+/// (a limit above 16, in the tests) takes the plain extend.
+#[inline]
+fn push_rows(queue: &mut Vec<u32>, m: u32, w: u32) {
+    const BLOCK: usize = 16;
+    if w as usize <= BLOCK {
+        let len = queue.len();
+        let iota: [u32; BLOCK] = std::array::from_fn(|i| m.wrapping_add(i as u32));
+        queue.extend_from_slice(&iota);
+        queue.truncate(len + w as usize);
+    } else {
+        queue.extend(m..m + w);
     }
 }
 
@@ -201,7 +222,7 @@ impl Kernel {
                     mark = m + (p - x);
                 }
                 if QUEUE {
-                    self.queues[a].extend(m..m + w);
+                    push_rows(&mut self.queues[a], m, w);
                 }
                 thin[a] += w;
                 m += w;
@@ -358,11 +379,19 @@ impl Kernel {
     ) -> Counts {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
         let (stats, mark, bits) = self.construct::<INDUCE, QUEUE>(records, n as u32, p, limit);
+        inline_words(
+            &self.spelling,
+            &self.offsets,
+            &mut self.inline16,
+            &mut self.lens,
+        );
         emit(
             &self.edges,
             &self.extra,
             &self.spelling,
             &self.offsets,
+            &self.inline16,
+            &self.lens,
             n,
             mark,
             bits,
@@ -445,10 +474,105 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
     }
 }
 
+/// The bytes of a code's word kept inline, and the longest word kept whole there
+const INLINE: usize = 16;
+/// `lens` of a word longer than `INLINE`: its bytes are read from `spelling` (the cold path)
+const LONG: u8 = u8::MAX;
+
+/// Every code's word as 16 bytes, its first `INLINE` padded with zeros, and its length (`LONG`
+/// past 16), indexed by code: the literals 0..256, then the block's words from 256. The
+/// literals are written once, when the table is first made; the words, once a block.
+fn inline_words(
+    spelling: &[u8],
+    offsets: &[u32],
+    inline16: &mut Vec<[u8; INLINE]>,
+    lens: &mut Vec<u8>,
+) {
+    if inline16.len() < 256 {
+        inline16.clear();
+        inline16.extend((0..=255u8).map(|c| {
+            let mut v = [0; INLINE];
+            v[0] = c;
+            v
+        }));
+        lens.clear();
+        lens.resize(256, 1);
+    }
+    inline16.truncate(256);
+    lens.truncate(256);
+    for w in offsets.windows(2) {
+        let word = &spelling[w[0] as usize..w[1] as usize];
+        let mut v = [0; INLINE];
+        let head = word.len().min(INLINE);
+        v[..head].copy_from_slice(&word[..head]);
+        inline16.push(v);
+        lens.push(if word.len() <= INLINE {
+            word.len() as u8
+        } else {
+            LONG
+        });
+    }
+}
+
 /// The walk over the retained rows from the marked one, each row's word appended; a cycle
-/// shorter than the block is repeated to `n` bytes (the journal's code, unchanged)
+/// shorter than the block is repeated to `n` bytes (the journal's code, with Carbon cycle 2's
+/// `U16` emit). A word of at most 16 bytes is one unconditional 16-byte copy from `inline16`
+/// at the cursor, which then advances by the word's length; a longer one is a slice copy from
+/// `spelling`. `out` is sized `n + 16` for the copies' overrun and truncated at the end. Its
+/// bytes from an earlier block are not cleared: every byte kept is written first.
 #[allow(clippy::too_many_arguments)]
 fn emit(
+    edges: &[u32],
+    extra: &[u32],
+    spelling: &[u8],
+    offsets: &[u32],
+    inline16: &[[u8; INLINE]],
+    lens: &[u8],
+    n: usize,
+    mark: u32,
+    bits: u32,
+    out: &mut Vec<u8>,
+) {
+    out.resize(n + INLINE, 0);
+    let mut at = 0;
+    let mask = (1 << bits) - 1;
+    let mut j = mark;
+    // (the port's one change to the walk) the cycle through the marked row visits each retained
+    // row once at most, so a valid construction returns to it within `edges.len()` steps; the
+    // bound and the clamp to `n` make every walk end, whatever the construction: a wrong one
+    // gives a wrong block, which the block's CRC rejects, never a walk that grows without end
+    for _ in 0..edges.len() {
+        let edge = edges[j as usize];
+        let code = if extra.is_empty() {
+            edge >> bits
+        } else {
+            extra[j as usize]
+        } as usize;
+        j = edge & mask;
+        let len = lens[code];
+        if len != LONG {
+            // `at < n` here, so the copy ends within `n + 16`
+            out[at..at + INLINE].copy_from_slice(&inline16[code]);
+            at += usize::from(len);
+        } else {
+            let w = code - 256;
+            let word = &spelling[offsets[w] as usize..offsets[w + 1] as usize];
+            let take = word.len().min(n - at);
+            out[at..at + take].copy_from_slice(&word[..take]);
+            at += take;
+        }
+        if j == mark || at >= n {
+            break;
+        }
+    }
+    out.truncate(at.min(n));
+    repeat(n, out);
+}
+
+/// The walk as shipped before the 16-byte emit, kept as the equivalence tests' reference
+#[cfg(test)]
+#[allow(clippy::too_many_arguments)]
+fn emit_reference(
     edges: &[u32],
     extra: &[u32],
     spelling: &[u8],
@@ -462,10 +586,6 @@ fn emit(
     out.reserve(n);
     let mask = (1 << bits) - 1;
     let mut j = mark;
-    // (the port's one change to the walk) the cycle through the marked row visits each retained
-    // row once at most, so a valid construction returns to it within `edges.len()` steps; the
-    // bound and the clamp to `n` make every walk end, whatever the construction: a wrong one
-    // gives a wrong block, which the block's CRC rejects, never a walk that grows without end
     for _ in 0..edges.len() {
         let edge = edges[j as usize];
         let code = if extra.is_empty() {
@@ -483,6 +603,7 @@ fn emit(
     repeat(n, out);
 }
 
+#[cfg(test)]
 #[inline]
 fn append_code(code: u32, spelling: &[u8], offsets: &[u32], out: &mut Vec<u8>) {
     if code < 256 {

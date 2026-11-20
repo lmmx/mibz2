@@ -184,6 +184,8 @@ fn scratch(k: &Kernel) -> usize {
         + size_of::<Band>() * k.bands.capacity()
         + k.spelling.capacity()
         + 4 * (k.offsets.capacity() + k.edges.capacity() + k.extra.capacity())
+        + 16 * k.inline16.capacity()
+        + k.lens.capacity()
         + e.scratch()
 }
 
