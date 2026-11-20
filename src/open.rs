@@ -88,17 +88,24 @@ fn maximal(records: &[u16], mut visit: impl FnMut(u8, u32, u32)) {
     let mut pos = 0;
     let mut i = 0;
     while i < records.len() {
-        let rec = records[i];
-        let c = (rec >> 8) as u8;
-        let mut width = u32::from(rec & 255);
-        i += 1;
-        while i < records.len() && (records[i] >> 8) as u8 == c {
-            width += u32::from(records[i] & 255);
-            i += 1;
-        }
+        let (c, width) = run_at(records, &mut i);
         visit(c, pos, width);
         pos += width;
     }
+}
+
+/// The maximal run whose first record is `records[*i]`: its byte and rows, `*i` moved past it
+#[inline(always)]
+fn run_at(records: &[u16], i: &mut usize) -> (u8, u32) {
+    let rec = records[*i];
+    let c = (rec >> 8) as u8;
+    let mut width = u32::from(rec & 255);
+    *i += 1;
+    while *i < records.len() && (records[*i] >> 8) as u8 == c {
+        width += u32::from(records[*i] & 255);
+        *i += 1;
+    }
+    (c, width)
 }
 
 // A maximal run of `width` rows from `pos`, classified: thin (kept) or thick. A primary inside
@@ -148,18 +155,56 @@ impl<Q: Queues> Pass<'_, Q> {
     /// written out, so that the common two inline into the front's walk with no call.)
     #[inline(always)]
     fn take<const QUEUE: bool>(&mut self, c: u8, pos: u32, width: u32, p: u32, limit: u32) {
+        self.take_as::<QUEUE, true>(c, pos, width, p, limit);
+    }
+
+    /// `take`, with the marked row looked for only if `MARK`: else the run is known not to
+    /// hold it (`scan`)
+    #[inline(always)]
+    fn take_as<const QUEUE: bool, const MARK: bool>(
+        &mut self,
+        c: u8,
+        pos: u32,
+        width: u32,
+        p: u32,
+        limit: u32,
+    ) {
         self.f.runs += 1;
         if width <= limit {
-            self.piece::<QUEUE>(c, pos, width, true, p);
+            self.piece::<QUEUE, MARK>(c, pos, width, true, p);
             return;
         }
         // (the records `runs::front` cuts a run into past its first, 127 rows a record: none
         // for a thin run while the limit is below 128, as `LIMIT` is)
         self.f.cut += (width as usize - 1) / 127;
-        if p.wrapping_sub(pos) >= width {
-            self.piece::<QUEUE>(c, pos, width, false, p);
+        if !MARK || p.wrapping_sub(pos) >= width {
+            self.piece::<QUEUE, false>(c, pos, width, false, p);
         } else {
             self.take_marked::<QUEUE>(c, pos, width, p, limit);
+        }
+    }
+
+    /// The first pass over the maximal runs of `records`, split at the run holding the
+    /// marked row `p` (Carbon cycle 11's primary-split scan): the runs before it, each tested
+    /// only for whether it ends past `p`, then that run with the marked row looked for, then
+    /// the rest with no test of `p` at all
+    #[inline(always)]
+    fn scan<const QUEUE: bool>(&mut self, records: &[u16], p: u32, limit: u32) {
+        let (mut pos, mut i) = (0u32, 0usize);
+        while i < records.len() {
+            let (c, width) = run_at(records, &mut i);
+            if pos + width > p {
+                self.take_as::<QUEUE, true>(c, pos, width, p, limit);
+                pos += width;
+                break;
+            }
+            self.take_as::<QUEUE, false>(c, pos, width, p, limit);
+            pos += width;
+        }
+        while i < records.len() {
+            let (c, width) = run_at(records, &mut i);
+            self.take_as::<QUEUE, false>(c, pos, width, p, limit);
+            pos += width;
         }
     }
 
@@ -168,7 +213,7 @@ impl<Q: Queues> Pass<'_, Q> {
     #[inline(never)]
     fn take_marked<const QUEUE: bool>(&mut self, c: u8, pos: u32, width: u32, p: u32, limit: u32) {
         split(c, pos, width, p, limit, |c, x, w, keep| {
-            self.piece::<QUEUE>(c, x, w, keep, p)
+            self.piece::<QUEUE, true>(c, x, w, keep, p)
         });
     }
 
@@ -176,11 +221,18 @@ impl<Q: Queues> Pass<'_, Q> {
     /// byte's cursor alone; a byte's rows so far, which a thick strip needs, are its retained
     /// rows (the cursor less `base`) and its thick rows (Carbon cycle 11's lazy `all_c`).
     #[inline(always)]
-    fn piece<const QUEUE: bool>(&mut self, c: u8, x: u32, w: u32, keep: bool, p: u32) {
+    fn piece<const QUEUE: bool, const MARK: bool>(
+        &mut self,
+        c: u8,
+        x: u32,
+        w: u32,
+        keep: bool,
+        p: u32,
+    ) {
         let a = usize::from(c);
         let f = &mut self.f;
         if keep {
-            if p.wrapping_sub(x) < w {
+            if MARK && p.wrapping_sub(x) < w {
                 f.mark = f.m + (p - x);
             }
             if QUEUE {
@@ -425,9 +477,7 @@ impl Kernel {
             }
         }
         let mut pass = self.begin();
-        maximal(records, |c, pos, width| {
-            pass.take::<QUEUE>(c, pos, width, p, limit)
-        });
+        pass.scan::<QUEUE>(records, p, limit);
         let f = pass.f;
         self.finish::<INDUCE, QUEUE>(&f, None, records, n, p, limit)
     }
@@ -478,9 +528,7 @@ impl Kernel {
                 ..First::default()
             },
         };
-        maximal(records, |c, pos, width| {
-            pass.take::<true>(c, pos, width, p, limit)
-        });
+        pass.scan::<true>(records, p, limit);
         let (f, over) = (pass.f, pass.queues.over);
         let fits = (0..256).all(|a| {
             let thin = f.cur[a] - base[a];
