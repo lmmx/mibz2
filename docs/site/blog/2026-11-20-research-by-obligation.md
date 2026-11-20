@@ -16,7 +16,7 @@ description: "We now track the work any decoder must pay for rather than the alg
 We now track the work any decoder must pay for rather than the algorithms that pay it, and a claimed Riemann proof has sharpened how we hunt.
 {: .post-dek }
 
-20 November 2026 · 11 min read · [Meta](#5-where-this-leaves-us)
+20 November 2026 · 15 min read · [Meta](#7-where-this-leaves-us)
 {: .post-meta }
 
 </div>
@@ -29,7 +29,7 @@ We now track the work any decoder must pay for rather than the algorithms that p
 
 **Why obligations, not algorithms.** An algorithm is a bundle. It pays for several obligations at once, so when it loses, it is hard to say what lost. An obligation is the part that decomposes: "follow the retained rows one at a time", "build the map that says where each retained row goes next". Candidates come and go; an obligation stays open until something removes it or a proof bounds it. Six candidate improvements to the current kernel lost this week, and every one of them left the register knowing more than before.
 
-**What happened today.** Two things sharpened the method after it was written. A measurement traced the expensive work back to the text it produces, and [found it sitting in random identifiers](2026-11-20-where-the-decoding-work-goes.md). And a mathematician announced a claimed proof of the Riemann Hypothesis, found with an AI system, whose account of *how* it was found gave us a better way to look for new ideas. [Section 1](#1-the-obligation-register) explains the register and [section 2](#2-generate-from-structure-judge-against-obligations) the cycle that uses it. [Section 3](#3-what-the-register-has-taught-us) says what the register taught us this week, and [section 4](#4-adapting-the-method-toy-missing-effect-native-surrogate) the adaptation we made today.
+**What happened today.** Two things sharpened the method after it was written. A measurement traced the expensive work back to the text it produces, and [found it sitting in random identifiers](2026-11-20-where-the-decoding-work-goes.md). And a mathematician announced a claimed proof of the Riemann Hypothesis, found with an AI system, whose account of *how* it was found gave us a better way to look for new ideas. [Section 1](#1-the-obligation-register) explains the register and [section 2](#2-generate-from-structure-judge-against-obligations) the cycle that uses it. [Section 3](#3-five-research-cycles-read-through-the-register) reads this week's five research cycles through the register, [section 4](#4-where-ideas-come-from-the-leads) describes where new ideas come from, and [section 5](#5-working-backwards-from-the-text) what working backwards from the text showed. [Section 6](#6-adapting-the-method-toy-missing-effect-native-surrogate) is the adaptation we made today, with a worked toy and a measurement of how to break it.
 
 ## 1. The obligation register
 
@@ -67,31 +67,85 @@ The cycle asks two separate questions of every candidate. Has the primitive chan
 
 Two smaller rules hold the process together. A research session pushes its work at every handoff and at least every half hour. One session was cut off mid-cycle by a usage limit, and its earlier cycles survived only because they were already published. And new mathematical leads go into an inbox that the researcher reads at a cycle boundary, so a good idea from outside never derails an experiment halfway through.
 
-## 3. What the register has taught us
+## 3. Five research cycles, read through the register
 
-Five research cycles by one model, and a sixth line now running with another, have mapped the walls fairly precisely. Representations that are expensive to build lose on construction. Representations that are compact lose on consumption, because recovering each next step takes several dependent operations instead of one load. Neither is a lower bound for the problem; both are evidence about the families tried.
+The register earns its place when a cycle fails, because a failure read against it says which obligation resisted and why. A research model worked through five cycles this week under the charter, after a run of earlier candidates that prompted it. The table lists them all, with the obligation each attacked and what the attempt left behind.
 
-Today's measurement added the most useful single fact. Tracing every expensive row back to the byte it spells showed that the repetitive JSON skeleton is already nearly free, while unique random statement IDs, about 5% of the text, hold about 62% of the rows that stand alone. The obligation "follow retained rows one by one" is, in large part, the obligation to spell random strings. That turned a vague idea into specific questions, written up in [the previous post](2026-11-20-where-the-decoding-work-goes.md). The idea is a zoo: rather than one universal decoder, a repertoire of exact methods, each very good on one kind of structure, with the decoder recognising which applies. Recognition has to be cheap, read from what the compressed block already gives us, or it costs more than it saves.
+| Attempt | Obligation it attacked | Outcome | What it left in the register |
+|---|---|---|---|
+| Precomputed jumps per run record (#652) | following retained rows | lost | building the jumps costs about one whole Open |
+| Fused passes; compressed queues (#654) | building the map | lost | the expansion to one entry per retained row is needed, and cheapest done in one sequential fill |
+| Pipelined emit (#656) | following retained rows | not adopted | the processor already issues the next load early |
+| Tuning the thin/thick limit (#657) | both | not adopted | 16 rows is best; choosing per block gains at most 1%, even with hindsight |
+| Cycle 1: contracting the exchange from both ends | metadata; overlaps | lost on cost | the overlap structure is small (1.25–1.37 transitions per run); grammar machines pay 40–100 bytes per run |
+| Cycle 2: building Open's map backwards (#659) | building the map | 1.10–1.15× slower natively | the second pass over run records costs about what the queues did |
+| Cycle 3: bucketed streaming exchange | building the map | lost (reported) | a claimed limit on keeping the exchange in the last-level cache; not yet audited |
+| Cycle 4: contracting an unsplit forest | both | lost (reported) | claimed structure theorems about the run graph; not yet audited |
+| Cycle 5: implicit rank in place of stored edges | following retained rows | 1.7–2.8× slower | one dependent load became four; memory fell to 0.36–0.49× |
 
-## 4. Adapting the method: toy, missing effect, native surrogate
+*Measured where a PR is cited or a ratio is given; cycles 3 and 4 are as the research model reported them, and are still to be checked.*
+
+Two patterns run through the table. Representations that are expensive to build lose on construction; representations that are compact lose on consumption, because recovering each next step takes several dependent operations instead of one load. The fifth cycle shows both sides at once: it cut peak memory to under half and modelled memory traffic by a quarter or more, and still ran two to three times slower, because a smaller description is not a cheaper computation. Neither pattern is a lower bound for the problem. Both are evidence about the families tried, recorded with their scope so the next idea can aim at the assumption that bound them.
+
+The table also shows what the cost models were worth. Every candidate that reached native timing had first passed a model, and every one lost. The register now records each model's track record beside the candidate it scored, in a *fidelity ledger*, so a model that has mis-ranked before is read with that history in view.
+
+## 4. Where ideas come from: the leads
+
+If the register judges, something else has to generate. The charter keeps an inbox of mathematical leads: directions from outside the cycle, which the researcher reads at a cycle boundary and is free to follow or set aside. Three came out of this week, each from asking what richer object a block's runs might be.
+
+**A square-tiled surface.** Pair the row map with the plain step to the next row, and the block becomes a surface glued from unit squares, a branched cover of a torus. Its singular points sit exactly where runs begin and end, and on our six blocks there are only one to eight of them. That is a striking amount of structure, but it forgets the runs' lengths, so it cannot decode a block by itself. The open question is whether directions on the surface, and how things move along them, recover what it forgets ([journal](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/journal/2026-11-20-origami-lift.md)).
+
+**A train track.** Draw the runs as a graph, with an arc wherever LF carries one run's rows into another. The arcs number exactly $2r - 1 - C$, and 88–89% of runs simply pass their rows on to one other run, leaving a branching core of about a tenth of the runs. With the order of strands kept at each junction, this is a measured train track, the object Thurston used to carry tangles of curves on a few weighted branches, and whose basic move is the same as the induction behind our earlier kernel ([the train-tracks post](2026-11-20-train-tracks.md)). A census found no small separators in the core, and as a set of retained rows it does worse than Open's.
+
+**Interval pairings.** Agol, Hass and Thurston gave an algorithm that works on huge implicit families of strands through intervals paired by translation, without walking the strands. A block's runs have exactly that shape. Their algorithm counts components, not order; the lead asks whether a version that carries words could recover the text more cheaply.
+
+None of these is a decoder yet, and the charter does not ask them to be. They are where a change of primitive might come from. The register is what will say whether one does.
+
+## 5. Working backwards from the text
+
+The register describes costs in the decoder's terms: rows, runs, passes. Today we asked the same question in the text's terms, prompted by a contrast with the Hutter Prize, which rewards the smallest self-extracting description of Wikipedia and lets decompression take tens of hours. mibz2 sits at the other end: its description is fixed by bzip2, and the goal is the least computation to recover the text. One Hutter winner, STARLIT, won by reordering Wikipedia's articles so similar ones sat together. bzip2 has already done a reordering of its own, sorting every byte by what follows it, and we asked what that exposes.
+
+Tracing every expensive row back to the byte it spells answered it. The repetitive JSON skeleton is already nearly free: keys are about a third of the text and about 1% of the rows that stand alone. Unique random statement IDs, about 5% of the text, hold about 62% of them. Hashes that are reused form small runs, one row per copy. So the obligation "follow retained rows one by one" is, in large part, the obligation to spell random strings ([the post](2026-11-20-where-the-decoding-work-goes.md)).
+
+That reshaped an idea we had been circling: a zoo. Rather than one universal decoder, a repertoire of exact methods, each very good on one kind of structure, with the decoder recognising which applies. Repeated random strings might be copied once one copy is decoded; unique ones might be a true floor for any method that relies on repetition. Recognition has to be cheap, read from what the compressed block already gives us, and the first number to know is how much a perfect choice of method could save. An earlier attempt to tune Open per block found under 1% to gain, which is why that number comes first.
+
+## 6. Adapting the method: toy, missing effect, native surrogate
 
 Today Levent Alpöge [announced](https://alpo.ge/remark.pdf) that he believes he has proved the Riemann Hypothesis, and its generalisation, working with Claude, with the argument formalised in Lean. The claim is new and has not yet been independently checked, and nothing here depends on it being right. What interested us is his account of how the argument was found, because it describes a way of searching that our method lacked.
 
 As he tells it, he started from a *toy* setting where the theorem was already known (the Riemann Hypothesis over function fields) and re-proved it in a new way chosen so the proof might travel. He then named the ingredient that the hard setting lacks: Stepanov's classical argument uses *multiplicity*, a polynomial vanishing to high order, which over the integers would be "something like differentiating whole numbers". The decisive step was to find a different mechanism, native to the hard setting, with the same effect: chains of theta lifts, each standing in for one order of multiplicity. The human held the analogy; the AI system supplied the technical mastery to build it.
 
-We have a toy setting of our own. When a block's last column has exactly one run per letter, the text is the coding of an especially simple interval exchange. With two letters these are the Sturmian words, and their text needs no walk at all: letter $k$ is $\lfloor (k+1)\alpha \rfloor - \lfloor k\alpha \rfloor$ for a fixed slope $\alpha$. Every output position is computed, not reached.
+We have a toy setting of our own. When a block's last column has exactly one run per letter, its text is the coding of an especially simple interval exchange; Ferenczi and Zamboni proved that these "perfectly clustering" words are exactly the codings of symmetric interval exchanges, the structure our earlier kernels rest on. With two letters they are the Christoffel and Sturmian words, and their text needs no walk at all.
+
+Take the slope $3/8$. Letter $k$ of the word is $b$ when $\lfloor 3(k+1)/8 \rfloor - \lfloor 3k/8 \rfloor = 1$ and $a$ otherwise, which for $k = 0, \dots, 7$ gives `aabaabab`. Sort its eight rotations and read the last column: `bbbaaaaa`, two runs, the smallest a column can have. A decoder that knew the slope would not need the column at all. It could write any letter of the text directly from its position, in any order, with no step depending on the one before. For an irrational slope $\alpha$ the same holds with $\lfloor (k+1)\alpha \rfloor - \lfloor k\alpha \rfloor$: every output position is computed, not reached.
 
 <figure class="bf-fig">
 <p class="bf-title">Toy, damaged toy, real block</p>
 <svg viewBox="0 0 720 200" role="img" aria-label="Three panels: in the two-letter toy every position is computed from kα; in a rotation cut into many pieces the coordinate survives but runs multiply; in a real block there is no known coordinate."><rect class="bf-card-hi" x="10" y="14" width="224" height="150" rx="8"/><text class="bf-ts" x="24" y="40">The toy</text><text class="bf-tm" x="24" y="60">two-letter Sturmian words</text><text class="bf-t" x="24" y="96">letter k = ⌊(k+1)α⌋ − ⌊kα⌋</text><text class="bf-t" x="24" y="124">every position computed:</text><text class="bf-t" x="24" y="144">no walk at all</text><line class="bf-arrow" x1="236" y1="90" x2="254" y2="90"/><rect class="bf-slot" x="246" y="14" width="224" height="150" rx="8"/><text class="bf-ts" x="260" y="40">Damaged on purpose</text><text class="bf-tm" x="260" y="60">a rotation cut in many pieces</text><text class="bf-t" x="260" y="96">position still x + kα</text><text class="bf-t" x="260" y="124">but the runs multiply:</text><text class="bf-t" x="260" y="144">width lost, coordinate kept</text><line class="bf-arrow" x1="472" y1="90" x2="490" y2="90"/><rect class="bf-card" x="482" y="14" width="224" height="150" rx="8"/><text class="bf-ts" x="496" y="40">A real block</text><text class="bf-tm" x="496" y="60">Wikidata JSON</text><text class="bf-t" x="496" y="96">no known coordinate</text><text class="bf-t" x="496" y="124">random IDs: one-row runs,</text><text class="bf-t" x="496" y="144">walked step by step</text><text class="bf-tm" x="360" y="190" text-anchor="middle">The question: what object, native to real blocks, gives cheap global coordinates the way kα does?</text></svg>
-<figcaption>Conceptual. The middle panel is a suggested experiment, not yet run.</figcaption>
+<figcaption>Conceptual. The middle panel's measurements are in the table below.</figcaption>
 </figure>
 
 The first version of our transfer went wrong in an instructive way. We named the missing ingredient as run width, since the toy has two enormous runs and the random IDs have none, and tested an obvious surrogate the same evening: walking many independent stretches of the path at once, as mibz2's plain decoder already does. It gave no gain on Open's walk, and more to the point, it was the wrong test. Running walks side by side still follows the same edges; it is a speed-up of the old operation, not a new one.
 
-The correction, which came out of the discussion, is that the toy's real power is not width but **cheap global coordinates**: a compact number ($k\alpha$ modulo 1) from which any position's letter follows. In the toy the two coincide, which is why they were easy to confuse. They come apart if the toy is damaged on purpose: code a rotation by a circle cut into many pieces, and the coordinate $x + k\alpha$ survives while the runs multiply. So the question for the research line is now precise: what object, native to real blocks and cheap to read off the compressed input, gives coordinates the way $k\alpha$ does, or lets long stretches of the path be composed without walking them? Mathematics that might answer it already exists in outline (the numeration systems that generalise continued fractions to interval exchanges), and so does the discipline to test it: the register asks what it would remove and what it would cost to acquire.
+The correction, which came out of the discussion, is that the toy's real power is not width but **cheap global coordinates**: a compact number ($k\alpha$ modulo 1) from which any position's letter follows. In the toy the two coincide, which is why they were easy to confuse.
 
-## 5. Where this leaves us
+They come apart if the toy is damaged on purpose. Keep the rotation by $\alpha$, but cut the circle into $p$ pieces instead of two, and write down which piece each point of the orbit lands in. The coordinate survives untouched: letter $k$ is the piece holding $x + k\alpha$ modulo 1, found by one binary search over the cut points, for any $k$, in any order. What changes is the column. We measured it on texts of 5,000 letters with the golden-ratio slope:
+
+| Pieces $p$ | Runs in the last column | Mean run width (rows) |
+|---:|---:|---:|
+| 2 | 10 | 500 |
+| 8 | 46 | 109 |
+| 64 | 101 | 50 |
+| 256 | 276 | 18 |
+| 1,024 | 1,036 | 4.8 |
+
+*Measured ([`toy.py`](https://github.com/lmmx/mibz2/blob/94b4d7d08/docs/journal/2026-11-20-toy-transfer/toy.py), any machine; the 2-piece row is a Sturmian prefix, whose finite length adds a few runs to the ideal two).*
+
+With a few pieces the column stays wide, so a small cut barely damages the toy; that was our first proposal, and the measurement corrected it. With a thousand pieces the runs are nearly five rows wide on average, close to the narrow runs of a random string, and the coordinate still answers any position in one search. So a block can be almost all narrow runs and still have a global coordinate that makes the walk unnecessary. Width-based methods, ours included, would find almost nothing to exploit in it.
+
+That is the precise form of the question for the research line: what object, native to real blocks and cheap to read off the compressed input, gives coordinates the way $k\alpha$ does, or lets long stretches of the path be composed without walking them? Part of the answer may already exist in outline. For a rotation, the digits of a position in the Ostrowski numeration, built from the continued fraction of $\alpha$, say where it sits at every scale. For a general interval exchange, the induction that our earlier kernel performs builds a comparable hierarchy, and a position's path down that hierarchy is its coordinate. Our kernels pay to build the whole hierarchy and then write the text from it. Whether a position's coordinate can be read off without paying for the whole build is open, and it is exactly the kind of question the register exists to price.
+
+## 7. Where this leaves us
 
 Three pieces now fit together. The obligation register tells us what our present algorithms pay for. Importing mathematical structure tells us what other operations might exist. Toy-to-hard transfer tells us which missing effects those operations should try to reproduce.
 
