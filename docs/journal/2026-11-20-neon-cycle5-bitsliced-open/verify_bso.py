@@ -322,9 +322,9 @@ def bso_reconstruct(L: bytes, p: int, LIMIT: int = 16, SB: int = 512, MEGA_SBS: 
             break
     cyc = b"".join(reversed(cyc_parts))
     if len(cyc) >= n:
-        return cyc[-n:]
+        return cyc[:n]
     reps = (n + len(cyc) - 1) // len(cyc)
-    return (cyc * reps)[-n:]
+    return (cyc * reps)[:n]
 
 
 def bso_par_reconstruct(L: bytes, p: int, LIMIT: int = 16, GRID: int = 4) -> bytes:
