@@ -107,7 +107,7 @@ mod open;
 // Research only: the open kernel's construction, timed stage by stage (`open-phases`)
 #[cfg(feature = "open-phases")]
 #[doc(hidden)]
-pub use open::{PhasedOpen, Phases};
+pub use open::{PhasedOpen, Phases, ResearchOpen, Spill, State};
 pub mod parallel;
 #[cfg(feature = "phase-counters")]
 #[doc(hidden)]

@@ -13,6 +13,36 @@ fn audit<const INDUCE: bool, const QUEUE: bool>(
     let records = records_of(l);
     let (s, mark, bits) =
         k.construct::<INDUCE, QUEUE>(&records, n as u32, p as u32, threshold as u32);
+    arrows(
+        l,
+        p,
+        threshold,
+        &s,
+        mark,
+        bits,
+        &k.edges,
+        &k.extra,
+        &k.spelling,
+        &k.offsets,
+    );
+}
+
+/// The audit of one construction's arrows, whichever construction made them (the research
+/// arms, `endpoint/fused.rs`, are audited by it too)
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn arrows(
+    l: &[u8],
+    p: usize,
+    threshold: usize,
+    s: &Counts,
+    mark: u32,
+    bits: u32,
+    edges: &[u32],
+    extra: &[u32],
+    spelling: &[u8],
+    offsets: &[u32],
+) {
+    let n = l.len();
     let mut counts = [0usize; 256];
     let mut keep = vec![false; n];
     let mut i = 0;
@@ -65,21 +95,18 @@ fn audit<const INDUCE: bool, const QUEUE: bool>(
             y = lf[y];
         }
         w.reverse();
-        let edge = k.edges[rank[y]];
+        let edge = edges[rank[y]];
         assert_eq!(rank[x], (edge & mask) as usize);
-        let c = if k.extra.is_empty() {
+        let c = if extra.is_empty() {
             edge >> bits
         } else {
-            k.extra[rank[y]]
+            extra[rank[y]]
         };
         if c < 256 {
             assert_eq!(w, [c as u8]);
         } else {
             let id = (c - 256) as usize;
-            assert_eq!(
-                w,
-                k.spelling[k.offsets[id] as usize..k.offsets[id + 1] as usize]
-            );
+            assert_eq!(w, spelling[offsets[id] as usize..offsets[id + 1] as usize]);
         }
     }
 }

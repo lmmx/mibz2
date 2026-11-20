@@ -139,6 +139,10 @@ name = "open_phases"
 required-features = ["open-phases"]
 
 [[example]]
+name = "open_fused"
+required-features = ["open-phases"]
+
+[[example]]
 name = "occupancy"
 required-features = ["trace"]
 
