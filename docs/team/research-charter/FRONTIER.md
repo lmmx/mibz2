@@ -75,7 +75,7 @@ Each questions whether a current core operation is necessary. None is settled.
      110,273 → 17,657 → 3,916 rows on block 0.
    - What is the limit object of repeated cutting? Can it be computed directly from the band
      structure, without materialising the intermediate levels?
-   - See OPEN-QUESTIONS.md §1 for the feasibility version.
+   - Examined in Carbon cycle 3 (`triage_cycle3.py`): `queues[a]` shatters `2.4k–6.7k` bands into `47.5k–125.8k` affine pieces of $g^{-1}$ (`max_w = 24..33`, only `10..45` pieces have `w > 16`), and cutting all $w \ge 2$ pieces lands within `0.15–0.50%` of single-level `Open<LIMIT=1>` while paying both constructions.
 3. **Can geometry replace rows?**
    - Rauzy–Veech propagates information through interval endpoints; emission still touches
      every retained row.
@@ -93,7 +93,7 @@ Each questions whether a current core operation is necessary. None is settled.
    - Not yet examined by anyone.
 5. **Copies from completed output.**
    - Astra C: the marked output can supply its own sources.
-   - What is the cheapest possible discovery of "which rows spell bytes already written"?
+   - Closed in Carbon cycle 3 (`g5_smcc.c`): even an uncharged omniscient oracle (`SMCC-Oracle`) skipping `36.2–53.0%` of `Open::emit` pointer steps runs at `0.931–1.021×` `Open` total (`1.035–1.062×` slower `emit` on 3/6 blocks) because random read misses across `880 KiB` `out[0..pos)` + 3-way dispatch cancel the skipped `edges[]` loads.
 
 ## Known structural obstructions
 
@@ -111,6 +111,7 @@ Do not rediscover these; build on them.
 | Computing LF from a compact rank structure instead of storing the edges costs about four chained dependent loads per step against Open's one | Implicit-rank (FM-index-style) successors as a replacement for Open's explicit edges, single-threaded. This is the known medium-space inverse BWT trade (Lauther–Lukovszki 2005; Kärkkäinen–Puglisi, ESA 2010) | Neon cycle 5, `research/neon-bipolar-contraction` 4598c5bf: BSO-512 2.48–2.80× Open in its C harness; the Coordinator reproduced 1.71–2.44× on another machine. Its memory and DRAM savings (0.36–0.75×) don't pay for it |
 | Histogram non-identifiability: same run histogram, Θ(n)-different spelling cost | Predicting construction cost from run statistics alone | Neon (unverified by MONODROMY) |
 | ROB branch-flush on multi-cursor symbolic walks: per-step literal-vs-phrase branching (`14–23%` phrases) across 8 interleaved lanes flushes in-flight L2/L3 loads (`0.075–0.202 ms` walk-only vs `0.655–1.668 ms` branched `SSMC`) | Branching multi-lane return-map walkers (`SSMC-Open`, `segments.rs`) | Carbon cycle 1, `g5_ssmc.c` (unverified by MONODROMY) |
+| Output-copy source-footprint & 3-way dispatch ceiling: even an uncharged omniscient oracle (`SMCC-Oracle`) skipping `36.2–53.0%` of `Open::emit` steps via `out[src_pos..]` runs at `0.805–1.062×` `emit` (`0.931–1.021×` Open total; slower on 3/6 blocks) | Output-sourced copy decoders over `Open`'s retained walk (`Astra C`, `OPEN-QUESTIONS.md` §4, `SMCC`, `working-backwards.md` Q2) | Carbon cycle 3, `g5_smcc.c` (unverified by MONODROMY) |
 
 ## Connections not yet explored
 
@@ -140,4 +141,5 @@ why, and what was promoted.
 | 2026-11-19–20 | Neon rounds 1–7 and follow-ups; the Coordinator | parallel induction; boundary samples; copy replay; NSPC; DOE; Open micro-optimisations; LIMIT | see CONTEXT.md §4 | none to production; Open shipped (0.5.7) from the Astra line |
 | 2026-11-20 | Neon cycles 3–5 (branch `research/neon-bipolar-contraction`, 4598c5bf; not yet audited beyond BSO's timing) | bucketed Schur; unsplit forest; output-sourced anchors; bit-sliced implicit Open (BSO) | anchors (width-1 runs collapse interval certificates); BSO (serial rank latency, above) | none; Neon paused |
 | 2026-11-20 | Carbon cycle 1 (branch `research/carbon-word-transport`, 3337daac) | Out(F₂) origami transport & covers; ribbon-graph faces; BH graph self-maps; AHT spiral transmission on Open; k-gram Ψ buckets; sentinel-spliced monoid contraction (`SSMC-Open`) | Out(F₂) (piece rigidity + primitive monodromy); ribbon faces (`aaabaa$` vs `aabaaa$`); BH cellular maps (\|V\|=n on primitive blocks); AHT on Open (2/79,349 steps); k-gram Ψ (scattered codomain); branched `SSMC-Open` (G5 FAIL: ROB branch-flush kills 8-lane MLP) | none; exposed ROB branch-flush obstruction & 92.5–94.4% ≤16B word concentration for Cycle 2 |
-| 2026-11-20 | Carbon cycle 2 (branch `research/carbon-word-transport`) | non-width Meyer complements; Wheeler Myhill–Nerode & Durand hierarchy; KKP irreducible bridges; `thin_pieces` backward radix granularity vs `U16Q`; `BVSMC-1P` (`1.23 MiB` pool) & zero-arena `BVSMC-2P` (`0 B` pool) | byte-class Meyer (`3.2–4.9×` more rows than width cut); Wheeler MN (== Record 84 tower); KKP bridges (`85–94%` cyclic Φ-copies); queue-free `thin_pieces` (`U16Q` matches `0.72–0.76×` construct via L1 radix coalescing) | `BVSMC-1P` (`0.627–0.781×` Open VM total, `5/6 <= 0.75×`, `4/6 emit <= 0.62×`) & `BVSMC-2P` (`0 B` pool, `0.699–0.818×` VM total) + `U16Q` recorded for Coordinator native audit |
+| 2026-11-20 | Carbon cycle 2 (branch `research/carbon-word-transport`, 8b54b024) | non-width Meyer complements; Wheeler Myhill–Nerode & Durand hierarchy; KKP irreducible bridges; `thin_pieces` backward radix granularity vs `U16Q`; `BVSMC-1P` (`1.23 MiB` pool) & zero-arena `BVSMC-2P` (`0 B` pool) | byte-class Meyer (`3.2–4.9×` more rows than width cut); Wheeler MN (== Record 84 tower); KKP bridges (`85–94%` cyclic Φ-copies); queue-free `thin_pieces` (`U16Q` matches `0.72–0.76×` construct via L1 radix coalescing) | `BVSMC-1P` (`0.627–0.781×` Open VM total; Coordinator rerun `0.66–0.78×` on 5/6) & `BVSMC-2P` (`0 B` pool) + `U16Q` handed to Coordinator for native Rust validation |
+| 2026-11-20 | Carbon cycle 3 (branch `research/carbon-word-transport`) | recursive band cut on $g^{-1}$; UUID-v4 shared-format surrogate conjecture; `LIMIT -> 1` deduplicated dictionary scaling; `SMCC-Paid` (same-cache-line lockstep self-modifying Open) & `SMCC-Oracle` | recursive band cut (`47.5k–125.8k` scattered pieces, matches `Open<1>`); UUID-v4 format (`+3.2` isolated singletons/UUID); `SMCC-Paid` (`1.13–1.25×` Open) & `SMCC-Oracle` (`0.931–1.021×` Open even with free `36–53%` step skipping: random `out[]` L2/L3 reads + 3-way dispatch) | none; closed `OPEN-QUESTIONS.md` §1 & §4 and `working-backwards.md` Q2 with exact oracle ceiling |
