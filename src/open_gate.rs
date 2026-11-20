@@ -277,3 +277,63 @@ impl InverseBwt for Timed {
         took
     }
 }
+
+/// One block kept for the thin-run limit sweep: (block index, its capped run records, rows,
+/// primary, LazyCells' output)
+pub type SweptBlock = (usize, Vec<u16>, usize, u32, Vec<u8>);
+/// Every block LazyCells admits with at least [`SWEEP_MIN_ROWS`] rows, in decode order
+pub static SWEPT: std::sync::Mutex<Vec<SweptBlock>> = std::sync::Mutex::new(Vec::new());
+/// The sweep's row floor
+pub const SWEEP_MIN_ROWS: usize = 65_536;
+
+/// The thin-run limit sweep's collector (research only): LazyCells as shipped, keeping each
+/// run-route block it admits with at least [`SWEEP_MIN_ROWS`] rows, with its output, for
+/// `ab limit-sweep` to time the open kernel on afterwards at several limits
+#[derive(Default)]
+pub struct SweepCollect {
+    lazy: LazyCells,
+    block: usize,
+}
+
+impl InverseBwt for SweepCollect {
+    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], p: u32, out: &mut Vec<u8>) {
+        self.block += 1;
+        self.lazy.invert(ll, counts, p, out)
+    }
+    fn wants_checkpoints(&self) -> bool {
+        self.lazy.wants_checkpoints()
+    }
+    fn invert_checkpointed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        checkpoints: &[[u32; 256]],
+        p: u32,
+        out: &mut Vec<u8>,
+    ) {
+        self.block += 1;
+        self.lazy
+            .invert_checkpointed(ll, counts, checkpoints, p, out)
+    }
+    fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], p: u32) -> bool {
+        // (a refusal goes on to `invert`, which counts the block)
+        let took = self.lazy.invert_in_place(ll, counts, p);
+        self.block += took as usize;
+        took
+    }
+    fn reads_runs(&self) -> bool {
+        true
+    }
+    fn invert_runs(&mut self, r: &Runs, n: usize, p: u32, out: &mut Vec<u8>, k: Kernels) -> bool {
+        let before = self.lazy.counts().admitted;
+        let took = self.lazy.invert_runs(r, n, p, out, k);
+        if took && self.lazy.counts().admitted > before && n >= SWEEP_MIN_ROWS {
+            SWEPT
+                .lock()
+                .unwrap()
+                .push((self.block, r.records().to_vec(), n, p, out.clone()));
+        }
+        self.block += 1;
+        took
+    }
+}
