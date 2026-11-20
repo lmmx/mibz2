@@ -1,0 +1,75 @@
+=== RUN 1: invariants_and_toys.py ===
+=== 1. Exhaustive Small-Case Verification ===
+PASS: 5227 (L, p) pairs verified across 151 primitive columns.
+
+=== 2. Authenticated Six-Block Invariant & Entropy Census ===
+block-0.L   : {"n": 899931, "R": 56386, "r": 51184, "r1": 35116, "r_thin": 47736, "m16": 89874, "H16": 3448, "K1": 62138, "K1_over_r": 1.214, "beta1": 10955, "H0_thin_KiB": 56.38, "H_rle0_KiB": 44.99, "H0_full_KiB": 560.47, "ptr_m16_bits_KiB": 186.51}
+block-2.L   : {"n": 900000, "R": 59478, "r": 54532, "r1": 34262, "r_thin": 50705, "m16": 112070, "H16": 3827, "K1": 67755, "K1_over_r": 1.2425, "beta1": 13224, "H0_thin_KiB": 71.72, "H_rle0_KiB": 51.47, "H0_full_KiB": 561.18, "ptr_m16_bits_KiB": 232.57}
+block-85.L  : {"n": 899935, "R": 84659, "r": 79375, "r1": 55504, "r_thin": 77810, "m16": 156404, "H16": 1565, "K1": 96494, "K1_over_r": 1.2157, "beta1": 17120, "H0_thin_KiB": 99.73, "H_rle0_KiB": 68.51, "H0_full_KiB": 559.01, "ptr_m16_bits_KiB": 343.66}
+block-143.L : {"n": 899869, "R": 112325, "r": 108335, "r1": 72578, "r_thin": 103288, "m16": 196841, "H16": 5047, "K1": 135299, "K1_over_r": 1.2489, "beta1": 26965, "H0_thin_KiB": 126.93, "H_rle0_KiB": 97.02, "H0_full_KiB": 558.12, "ptr_m16_bits_KiB": 432.51}
+block-210.L : {"n": 899959, "R": 133233, "r": 128732, "r1": 97054, "r_thin": 125923, "m16": 204281, "H16": 2809, "K1": 155480, "K1_over_r": 1.2078, "beta1": 26749, "H0_thin_KiB": 132.24, "H_rle0_KiB": 104.69, "H0_full_KiB": 562.6, "ptr_m16_bits_KiB": 448.86}
+block-207.L : {"n": 899998, "R": 91416, "r": 87111, "r1": 62407, "r_thin": 83637, "m16": 135921, "H16": 3474, "K1": 107914, "K1_over_r": 1.2388, "beta1": 20804, "H0_thin_KiB": 89.17, "H_rle0_KiB": 75.55, "H0_full_KiB": 559.08, "ptr_m16_bits_KiB": 298.65}
+
+=== 3. Toy-Family Separation Census ===
+Sturmian (p=2, n=32768)             : {"n": 32768, "R": 269, "r": 14, "r1": 4, "r_thin": 9, "m16": 39, "H16": 5, "K1": 26, "K1_over_r": 1.8571, "beta1": 13, "H0_thin_KiB": 0.0, "H_rle0_KiB": 0.01, "H0_full_KiB": 3.84, "ptr_m16_bits_KiB": 0.03}
+Tribonacci Rauzy-fractal (n=32768)  : {"n": 32768, "R": 278, "r": 28, "r1": 6, "r_thin": 13, "m16": 42, "H16": 15, "K1": 53, "K1_over_r": 1.8929, "beta1": 26, "H0_thin_KiB": 0.01, "H_rle0_KiB": 0.02, "H0_full_KiB": 5.69, "ptr_m16_bits_KiB": 0.03}
+CodedRotation(p=256, n=4096)        : {"n": 4096, "R": 788, "r": 788, "r1": 176, "r_thin": 753, "m16": 3257, "H16": 35, "K1": 1265, "K1_over_r": 1.6053, "beta1": 478, "H0_thin_KiB": 0.4, "H_rle0_KiB": 0.44, "H0_full_KiB": 0.49, "ptr_m16_bits_KiB": 4.77}
+CodedRotation(p=256, n=32768)       : {"n": 32768, "R": 1102, "r": 1060, "r1": 87, "r_thin": 497, "m16": 2866, "H16": 564, "K1": 1803, "K1_over_r": 1.7009, "beta1": 744, "H0_thin_KiB": 0.35, "H_rle0_KiB": 0.88, "H0_full_KiB": 3.96, "ptr_m16_bits_KiB": 4.2}
+Random De Bruijn B(2,15) (n=32768)  : {"n": 32768, "R": 24732, "r": 24732, "r1": 16696, "r_thin": 24732, "m16": 32768, "H16": 0, "K1": 30794, "K1_over_r": 1.2451, "beta1": 6063, "H0_thin_KiB": 4.0, "H_rle0_KiB": 5.77, "H0_full_KiB": 4.0, "ptr_m16_bits_KiB": 60.0}
+Uniform Random Sigma=16 (n=32768)   : {"n": 32768, "R": 30683, "r": 30683, "r1": 28711, "r_thin": 30683, "m16": 32768, "H16": 0, "K1": 32641, "K1_over_r": 1.0638, "beta1": 1959, "H0_thin_KiB": 16.0, "H_rle0_KiB": 16.35, "H0_full_KiB": 16.0, "ptr_m16_bits_KiB": 60.0}
+
+=== RUN 2: verify_theorems.py ===
+Theorem 1 (All-Subsets Section-Complement Conservation & Threshold Optimality): {"subset_triples": 357357, "weighted_optimality_checks": 2144142}
+Theorem 2 (Singleton Width-1 Irreducibility across Refinement Tower): {"lp_pairs": 5227, "singleton_tower_levels_checked": 12451}
+Lemma 3 (Pre-EOB Single-Record Causal Barrier Witness): {"witness_count": 1, "minimal_witness": {"n": 5, "p": 3, "R": 4, "shared_prefix_records": [[2, 1], [0, 2], [2, 1]], "tail1": [0, 1], "tail2": [1, 1], "T1": [2, 0, 0, 0, 2], "T2": [2, 0, 0, 1, 2], "T1_n_minus_2": 0, "T2_n_minus_2": 1}}
+Theorem 4 (Unimodular Orbit-Time System |det|=1): {"unimodular_systems_verified": 5227}
+Theorem 5 (De Bruijn Exact BEST Counts & Coded-Rotation Decay): {"debruijn_exact_counts": {"k=1 (N=2)": {"marked_words": 2, "necklaces": 1}, "k=2 (N=4)": {"marked_words": 4, "necklaces": 1}, "k=3 (N=8)": {"marked_words": 16, "necklaces": 2}, "k=4 (N=16)": {"marked_words": 256, "necklaces": 16}}, "coded_rotation_p64_decay": {"n=1024": {"r": 178, "r_over_n": 0.17383, "m16": 820, "m16_over_n": 0.80078}, "n=4096": {"r": 224, "r_over_n": 0.05469, "m16": 969, "m16_over_n": 0.23657}, "n=16384": {"r": 286, "r_over_n": 0.01746, "m16": 442, "m16_over_n": 0.02698}, "n=65536": {"r": 342, "r_over_n": 0.00522, "m16": 574, "m16_over_n": 0.00876}}}
+Theorem 7 (ROB-Squash Renewal Exact Identity & Wald Bound): {"isolated_batch_vectors": 8190, "streaming_rob_vectors": 3072}
+ALL FINITE VERIFICATIONS PASSED.
+
+=== RUN 3: calibrate_and_retrodict.py ===
+=== 1. Stage-by-Stage Calibration Check on Open (qi16) (Xeon Profile vs PR #653 & calib.rs) ===
+block-0.L    | Model tot=1.456 ms vs #653=1.566 ms (-7.0%), calib.rs=1.426 ms | a:0.45/0.47 bc:0.23/0.29 d:0.10/0.15 e:0.07/0.07 f:0.59/0.56
+block-2.L    | Model tot=1.760 ms vs #653=1.914 ms (-8.0%), calib.rs=1.812 ms | a:0.49/0.52 bc:0.28/0.36 d:0.12/0.17 e:0.10/0.10 f:0.77/0.73
+block-85.L   | Model tot=2.146 ms vs #653=1.874 ms (+14.5%), calib.rs=1.887 ms | a:0.72/0.67 bc:0.13/0.16 d:0.06/0.08 e:0.11/0.07 f:1.12/0.90
+block-143.L  | Model tot=3.172 ms vs #653=3.646 ms (-13.0%), calib.rs=3.415 ms | a:0.95/1.04 bc:0.44/0.56 d:0.17/0.28 e:0.17/0.17 f:1.44/1.60
+block-207.L  | Model tot=2.225 ms vs #653=2.267 ms (-1.9%), calib.rs=2.172 ms | a:0.75/0.72 bc:0.28/0.36 d:0.12/0.17 e:0.11/0.10 f:0.96/0.94
+block-210.L  | Model tot=3.099 ms vs #653=3.145 ms (-1.5%), calib.rs=3.056 ms | a:1.11/1.03 bc:0.23/0.32 d:0.10/0.14 e:0.15/0.12 f:1.50/1.50
+Mean |total error| vs #653 = 7.65%, Mean |stage error| (30 stages) = 16.57%
+
+=== 2. Out-of-Sample Fidelity-Ledger Retrodiction (13 Variants, Zero Re-Tuning) ===
+Open_i16 (#653)            | HBMC pred=1.241x [1.18..1.31] | Measured=1.184x [1.15..1.24] | SignOK=True
+Backward_Open (#659)       | HBMC pred=1.181x [1.13..1.24] | Measured=1.125x [1.12..1.12] | SignOK=True
+Q_packed (#654)            | HBMC pred=1.030x [1.02..1.04] | Measured=1.070x [1.07..1.07] | SignOK=True
+F_fused (#654)             | HBMC pred=1.014x [1.01..1.01] | Measured=1.033x [1.03..1.03] | SignOK=True
+U16Q (#664 native)         | HBMC pred=0.842x [0.82..0.86] | Measured=0.882x [0.86..0.91] | SignOK=True
+SSMC_8L_branched (Cyc1)    | HBMC pred=1.024x [1.00..1.07] | Measured=1.045x [1.01..1.08] | SignOK=True
+BVSMC_1P_8L (Cyc2)         | HBMC pred=0.621x [0.56..0.69] | Measured=0.692x [0.63..0.78] | SignOK=True
+BSO_512 (Neon Cyc5)        | HBMC pred=1.743x [1.65..1.86] | Measured=2.600x [2.60..2.60] | SignOK=True
+NSPC (#652)                | HBMC pred=2.202x [2.05..2.29] | Measured=2.100x [2.10..2.10] | SignOK=True
+SMCC_Oracle (Cyc3)         | HBMC pred=0.930x [0.90..0.97] | Measured=0.986x [0.93..1.02] | SignOK=True
+GS64_1P (Cyc4)             | HBMC pred=1.092x [1.08..1.11] | Measured=1.064x [1.04..1.08] | SignOK=True
+HP_FTTE_Reg (Cyc6)         | HBMC pred=1.049x [1.04..1.06] | Measured=1.052x [1.04..1.08] | SignOK=True
+Prose Open/Seg (i9)        | HBMC pred=5.97x (13.50 vs 2.26 ms) | Measured=5.10x | SignOK=True
+Fidelity Ledger Score: 13 / 13 correct (vs 0 / 5 for prior operation/LRU-only models).
+
+=== 3. Lower-Bound Audit (*) on the 6 Authenticated Blocks ===
+block-0.L    | T_uncond=0.083 | T_sem*(MLP8)=0.290 | T_sem*(1L)=0.457 || BVSMC(C)=1.158 (3.99x) | U16Q(nat)=1.292 (2.83x 1L) | Open(nat)=1.426 (4.92x MLP8)
+block-2.L    | T_uncond=0.085 | T_sem*(MLP8)=0.327 | T_sem*(1L)=0.521 || BVSMC(C)=1.340 (4.09x) | U16Q(nat)=1.550 (2.98x 1L) | Open(nat)=1.812 (5.53x MLP8)
+block-85.L   | T_uncond=0.096 | T_sem*(MLP8)=0.419 | T_sem*(1L)=0.722 || BVSMC(C)=1.196 (2.85x) | U16Q(nat)=1.659 (2.30x 1L) | Open(nat)=1.887 (4.50x MLP8)
+block-143.L  | T_uncond=0.108 | T_sem*(MLP8)=0.557 | T_sem*(1L)=1.006 || BVSMC(C)=2.245 (4.03x) | U16Q(nat)=3.034 (3.02x 1L) | Open(nat)=3.415 (6.14x MLP8)
+block-207.L  | T_uncond=0.099 | T_sem*(MLP8)=0.423 | T_sem*(1L)=0.757 || BVSMC(C)=1.538 (3.64x) | U16Q(nat)=1.935 (2.56x 1L) | Open(nat)=2.172 (5.13x MLP8)
+block-210.L  | T_uncond=0.118 | T_sem*(MLP8)=0.585 | T_sem*(1L)=1.134 || BVSMC(C)=1.904 (3.26x) | U16Q(nat)=2.656 (2.34x 1L) | Open(nat)=3.056 (5.22x MLP8)
+
+=== 4. Whole-Corpus Audit Across All 228 Admitted Blocks (attrib-master.tsv + blocks.csv) ===
+Admitted blocks audited: 228 / 228 | Bound violations: 0
+228-Block Totals: T_uncond=20.2 ms | T_sem*(MLP8)=84.4 ms | T_sem*(1L)=146.1 ms || min(Cells,Open)=332.9 ms | Cells=356.4 ms | Open=426.1 ms
+Per-block ratio min(Cells,Open) / T_sem*(MLP8): min=3.17x, median=3.60x, p90=5.08x
+Per-block ratio Open / T_sem*(MLP8):            min=3.83x, median=5.08x, p90=5.41x
+
+=== 5. Toy-Family Lower-Bound Separation (n = 32,768) ===
+Sturmian (p=2, n=32768)              | r=   14 m16=   39 || T_uncond=  2.20 us | T_sem*(MLP8)=  2.30 us | T_sem*(1L)=  2.30 us
+Tribonacci Rauzy-fractal (n=32768)   | r=   28 m16=   42 || T_uncond=  2.30 us | T_sem*(MLP8)=  2.30 us | T_sem*(1L)=  2.30 us
+CodedRotation(p=256, n=32768)        | r= 1060 m16= 2866 || T_uncond=  2.60 us | T_sem*(MLP8)= 10.00 us | T_sem*(1L)= 13.00 us
+Random De Bruijn B(2,15) (n=32768)   | r=24732 m16=32768 || T_uncond= 13.00 us | T_sem*(MLP8)= 83.40 us | T_sem*(1L)=124.00 us
+Uniform Random Sigma=16 (n=32768)    | r=30683 m16=32768 || T_uncond= 15.60 us | T_sem*(MLP8)= 87.80 us | T_sem*(1L)=129.80 us

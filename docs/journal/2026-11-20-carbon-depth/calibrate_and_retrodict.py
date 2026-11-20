@@ -388,8 +388,11 @@ def lower_bounds_ms(
         if m_rows <= 1:
             return 0.0
         V_ptr = m_rows * max(2.0, math.ceil(math.log2(max(2, m_rows))) / 8.0)
-        c_route = 8.0 * M.tau_op_ns + 8.0 * M.beta_seq_ns_per_b
-        c_walk = M.lat_ns(V_ptr) / mu + 6.0 * M.tau_op_ns
+        # Producer routing floor: 4B write to symbol bucket + 4B read from bucket + 4B write to map = 12B
+        # plus >= 10 ALU/address ops per retained element
+        c_route = 10.0 * M.tau_op_ns + 12.0 * M.beta_seq_ns_per_b
+        # Consumer order floor: min of (A) explicit walk at MLP mu, (B) Chiang list ranking, (C) succinct rank
+        c_walk = M.lat_ns(V_ptr) / mu + 8.0 * M.tau_op_ns
         c_chiang = 4.0 * (16.0 * M.beta_seq_ns_per_b + 12.0 * M.tau_op_ns)
         c_succinct = (3.0 * M.tau_l1_ns) / mu + 20.0 * M.tau_op_ns
         return c_route + min(c_walk, c_chiang, c_succinct)
@@ -397,16 +400,37 @@ def lower_bounds_ms(
     def strip_elim_cost_ns(h_strips: int, mu_eff: int) -> float:
         if h_strips <= 0:
             return 0.0
-        V_exch = h_strips * 32.0
+        # Mandatory obligations for eliminating h_strips intervals in mathfrak{A}_sem:
+        #  (1) Domain-to-codomain symbol-bucket linking (12B + 10 ops)
+        #  (2) >= 1 accelerated RV/exchange split (record 80 floor) across active domain+codomain
+        #      descriptors + SLP rules (minimum 48 B/strip footprint; front concurrency <= min(mu_eff, 5) by Thm 3')
+        #  (3) Rule evaluation: topological offset propagation across rule DAG + ~0.21*h_strips
+        #      chord copy reads from out[0..n) (or equivalent phrase-flattening buffer reads)
+        V_exch = h_strips * 48.0
+        V_rules = h_strips * 16.0
         mu_rv = min(mu_eff, 5)
-        c_link = 8.0 * M.tau_op_ns + 8.0 * M.beta_seq_ns_per_b
-        c_split = M.lat_ns(V_exch) / mu_rv + 2.0 * M.tau_l1_ns + 24.0 * M.tau_op_ns + 0.25 * M.tau_br_ns
-        c_rule_expand = M.lat_ns(V_exch) / max(1, mu_eff) + 12.0 * M.tau_op_ns
-        return c_link + c_split + c_rule_expand
+        c_link = 10.0 * M.tau_op_ns + 12.0 * M.beta_seq_ns_per_b
+        c_split = 1.5 * (M.lat_ns(V_exch) / mu_rv) + 2.0 * M.tau_l1_ns + 28.0 * M.tau_op_ns + 0.28 * M.tau_br_ns
+        c_dag_and_copy = (
+            M.lat_ns(V_rules) / max(1, mu_eff)
+            + 0.21 * (M.lat_ns(float(n)) / max(1, mu_eff))
+            + 16.0 * M.tau_op_ns
+            + 12.0 * M.beta_seq_ns_per_b
+        )
+        return c_link + c_split + c_dag_and_copy
+
+    def geom_grid(limit_val: int) -> list[int]:
+        pts = {0, 1}
+        v = 16
+        while v < limit_val:
+            pts.add(v)
+            v = max(v + 1, int(v * 1.38))
+        pts.add(max(2, limit_val) + 1)
+        return sorted(pts)
 
     def tier_b_for_mu(mu: int) -> float:
-        m_grid = [1, 512, 2048, 8192, 16384, 32768, 65536, 98304, 131072, 196608, max(2, n) + 1]
-        h_grid = [0, 1, 512, 2048, 8192, 16384, 32768, 65536, 98304, max(2, r) + 1]
+        m_grid = [x for x in geom_grid(n) if x >= 1]
+        h_grid = geom_grid(r)
         r_mid = max(0, r - r1 - H16)
         best_core_ns = float("inf")
         for i_m in range(len(m_grid) - 1):
@@ -414,6 +438,16 @@ def lower_bounds_ms(
             if M_lo > n:
                 continue
             a_lo = retained_cost_per_row_ns(M_lo, mu)
+            # Single-Mark Multi-Lane Surcharge Theorem: if mu > 1 and M_lo > mu, K >= 2 lanes
+            # do not know segment output offsets in I_0 before walking, forcing either arena
+            # copy of (1 - 1/mu)*n bytes OR a second walk pass of M_lo * lat(V)/mu:
+            surcharge_ns = 0.0
+            if mu > 1 and M_lo > mu:
+                V_lo = M_lo * max(2.0, math.ceil(math.log2(max(2, M_lo))) / 8.0)
+                surcharge_ns = min(
+                    ((mu - 1.0) / mu) * M_lo * M.beta_seq_ns_per_b,  # conservative >= 1B/step staged
+                    M_lo * (M.lat_ns(V_lo) / mu),
+                )
             for i_h in range(len(h_grid) - 1):
                 H_lo, H_hi = h_grid[i_h], h_grid[i_h + 1] - 1
                 if H_lo > r:
@@ -432,7 +466,7 @@ def lower_bounds_ms(
                             + r_mid * min(2.0 * a_lo, g_lo)
                             + H16 * min(17.0 * a_lo, g_lo)
                         )
-                box_lb = max(a_lo * M_lo + g_lo * H_lo, thm1_lb)
+                box_lb = surcharge_ns + max(a_lo * M_lo + g_lo * H_lo, thm1_lb)
                 if box_lb < best_core_ns:
                     best_core_ns = box_lb
         return (t_in_sem_ns + t_out_sem_ns + best_core_ns) * 1e-6
