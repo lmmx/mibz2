@@ -195,6 +195,13 @@
     "section": " · Research blog",
     "title": "Open Returns: decoding a block from a tenth of its rows"
   },
+  "assets/social/blog-2026-11-20-train-tracks.png": {
+    "description": "Thurston's train tracks squeeze a tangle of curves onto a few weighted branches that can be edited directly, and a compressed block's runs form something very like one.",
+    "foot": "lmmx.github.io/mibz2 · 20 November 2026",
+    "kind": "question",
+    "section": " · Research blog",
+    "title": "Train tracks: carrying a tangle of paths on a few weighted branches"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
