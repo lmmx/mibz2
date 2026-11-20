@@ -143,6 +143,93 @@ impl PhasedOpen {
         ph
     }
 
+    /// Research only: Queue-Free Backward Open (Neon cycle 2,
+    /// docs/journal/2026-11-20-open-backward-native.md) at the shipped limit. The run pass is
+    /// the unqueued one (`stage_runs::<false>`); the image ordering, the elimination, the bands
+    /// and the spelling are shipped Open's, unchanged; the wiring stores g = P ∘ LF_v directly,
+    /// `edges[j] = code | g(j)`, written sequentially in j; the walk follows g from the marked
+    /// row and writes the words right to left from `n`. `ZERO` zero-fills the whole output every
+    /// block (`clear` then `resize`, the cost of a fresh buffer's initialisation); otherwise the
+    /// worker's buffer is reused and only resized to `n`, a no-op from block to block at equal n.
+    pub fn run_backward<const ZERO: bool>(
+        &mut self,
+        records: &[u16],
+        n: usize,
+        p: u32,
+        out: &mut Vec<u8>,
+    ) -> Phases {
+        self.run_backward_at::<ZERO>(records, n, p, LIMIT, out)
+    }
+
+    fn run_backward_at<const ZERO: bool>(
+        &mut self,
+        records: &[u16],
+        n: usize,
+        p: u32,
+        limit: u32,
+        out: &mut Vec<u8>,
+    ) -> Phases {
+        assert!(n > 0 && n <= 900_000 && (p as usize) < n);
+        let n32 = n as u32;
+        let mut ph = Phases::default();
+        let mut stats = Counts {
+            n,
+            ..Counts::default()
+        };
+        let t0 = Instant::now();
+        let (thin, all, thick, m, mark) =
+            stage_runs::<false>(&mut self.k, records, p, limit, &mut stats);
+        let t1 = Instant::now();
+        stage_image(&mut self.k, &all, &thick);
+        let t2 = Instant::now();
+        self.k.bands.clear();
+        self.k.spelling.clear();
+        self.k.offsets.clear();
+        self.k.offsets.push(0);
+        stage_nodes(&mut self.k, n32, &mut stats);
+        let t3 = Instant::now();
+        stage_elim(&mut self.k, n32, &mut stats);
+        let t4 = Instant::now();
+        let cursors = stage_bands(&mut self.k, &mut self.pending, &thin, &mut stats);
+        let t5 = Instant::now();
+        stage_spell(&mut self.k, &self.pending);
+        let t6 = Instant::now();
+        let bits = stage_wire_backward(
+            &mut self.k,
+            records,
+            p,
+            limit,
+            m,
+            &thin,
+            cursors,
+            &mut stats,
+        );
+        let t7 = Instant::now();
+        stage_emit_backward::<ZERO>(&self.k, n, mark, bits, out);
+        let t8 = Instant::now();
+        let ns = |a: Instant, b: Instant| (b - a).as_nanos() as u64;
+        ph.runs_ns = ns(t0, t1);
+        ph.image_ns = ns(t1, t2);
+        ph.nodes_ns = ns(t2, t3);
+        ph.elim_ns = ns(t3, t4);
+        ph.bands_ns = ns(t4, t5);
+        ph.spell_ns = ns(t5, t6);
+        ph.wire_ns = ns(t6, t7);
+        ph.emit_ns = ns(t7, t8);
+        let k = &self.k;
+        ph.counts = stats;
+        ph.strips = k.strips.len();
+        ph.nodes = k.endpoint.nodes.len();
+        ph.rules = k.endpoint.rules.len();
+        ph.bands = k.bands.len();
+        ph.spelling = k.spelling.len();
+        ph.offsets = k.offsets.len();
+        ph.edges = k.edges.len();
+        ph.extra = k.extra.len();
+        ph.live_bytes = self.live_bytes();
+        ph
+    }
+
     fn live_bytes(&self) -> usize {
         use std::mem::size_of;
         let k = &self.k;
@@ -429,4 +516,258 @@ fn stage_emit(k: &Kernel, n: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
         bits,
         out,
     );
+}
+
+/// Backward Open's wiring: a second scan of the records, as `stage_wire::<false>`, but storing
+/// each arrow at its source, `edges[j] = code | g(j)`, so `edges` is written in increasing j
+/// (shipped Open stores it at its target, `edges[g(j)] = code | j`). Each byte's current band is
+/// held in a small table (`Active`, the reference's `ActiveBand[256]`, g5_backward_open.c): a
+/// thin run inside it (the reference's fast path) costs one table read and write
+#[inline(never)]
+#[allow(clippy::too_many_arguments)]
+fn stage_wire_backward(
+    k: &mut Kernel,
+    records: &[u16],
+    p: u32,
+    limit: u32,
+    m: u32,
+    thin: &[u32; 256],
+    cursors: [usize; 256],
+    stats: &mut Counts,
+) -> u32 {
+    #[derive(Clone, Copy, Default)]
+    struct Active {
+        rank: u32,
+        end: u32,
+        delta: u32,
+        code: u32,
+        pack: u32,
+        band: u32,
+    }
+    stats.bands = k.bands.len();
+    let bits = (u32::BITS - (m - 1).leading_zeros()).max(1);
+    let wide = (255 + stats.words as u32) > (u32::MAX >> bits);
+    k.edges.resize(m as usize, 0);
+    k.extra.clear();
+    if wide {
+        k.extra.resize(m as usize, 0);
+    }
+    stats.table_bytes = 4 * (k.edges.len() + k.extra.len());
+    let shift = if wide { 32 } else { bits };
+    let pack = |code: u32| code.checked_shl(shift).unwrap_or(0);
+    let bands = &k.bands;
+    let mut active = [Active::default(); 256];
+    let mut rank = 0;
+    for a in 0..256 {
+        active[a].rank = rank;
+        active[a].band = cursors[a] as u32;
+        if thin[a] > 0 {
+            let b = bands[cursors[a]];
+            active[a].end = b.end;
+            active[a].delta = b.delta;
+            active[a].code = b.code;
+            active[a].pack = pack(b.code);
+        } else {
+            active[a].end = rank;
+        }
+        rank += thin[a];
+    }
+    let (edges, extra) = (&mut k.edges, &mut k.extra);
+    let mut j = 0usize;
+    each_run(records, p, limit, |c, _, w, keep| {
+        if !keep {
+            return;
+        }
+        let cb = &mut active[usize::from(c)];
+        let mut left = w;
+        while left > 0 {
+            let span = left.min(cb.end - cb.rank);
+            assert!(span > 0);
+            let mut value = cb.pack | cb.rank.wrapping_add(cb.delta);
+            let to = j + span as usize;
+            for e in &mut edges[j..to] {
+                *e = value;
+                value = value.wrapping_add(1);
+            }
+            if wide {
+                extra[j..to].fill(cb.code);
+            }
+            j = to;
+            cb.rank += span;
+            left -= span;
+            if cb.rank == cb.end {
+                let next = cb.band as usize + 1;
+                let a = usize::from(c);
+                let last = cursors.get(a + 1).copied().unwrap_or(bands.len());
+                if next < last {
+                    let b = bands[next];
+                    cb.band = next as u32;
+                    cb.end = b.end;
+                    cb.delta = b.delta;
+                    cb.code = b.code;
+                    cb.pack = pack(b.code);
+                }
+            }
+        }
+    });
+    assert_eq!(j, m as usize);
+    bits
+}
+
+/// Backward Open's walk: from the marked row along g, each arrow's word written right to left
+/// from `n`. On a cycle shorter than the block the walk returns to the mark with `w > 0`, the
+/// cycle's text in `out[w..n]`, in forward order from the mark's successor; it is moved to the
+/// front and repeated to `n` bytes, which is what shipped Open's `emit` and `repeat` give. The
+/// walk is bounded by `edges.len()` steps and clamped at the buffer's start, as `emit` is
+#[inline(never)]
+fn stage_emit_backward<const ZERO: bool>(
+    k: &Kernel,
+    n: usize,
+    mark: u32,
+    bits: u32,
+    out: &mut Vec<u8>,
+) {
+    if ZERO {
+        out.clear();
+    }
+    out.resize(n, 0);
+    let (edges, extra, spelling, offsets) = (&k.edges, &k.extra, &k.spelling, &k.offsets);
+    let mask = (1 << bits) - 1;
+    let mut j = mark;
+    let mut w = n;
+    for _ in 0..edges.len() {
+        let edge = edges[j as usize];
+        let code = if extra.is_empty() {
+            edge >> bits
+        } else {
+            extra[j as usize]
+        };
+        j = edge & mask;
+        if code < 256 {
+            w -= 1;
+            out[w] = code as u8;
+        } else {
+            let id = (code - 256) as usize;
+            let word = &spelling[offsets[id] as usize..offsets[id + 1] as usize];
+            let take = word.len().min(w);
+            out[w - take..w].copy_from_slice(&word[word.len() - take..]);
+            w -= take;
+        }
+        if j == mark || w == 0 {
+            break;
+        }
+    }
+    if w > 0 {
+        let cycle = n - w;
+        out.copy_within(w..n, 0);
+        let mut have = cycle;
+        while have < n {
+            let take = have.min(n - have);
+            out.copy_within(..take, have);
+            have += take;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::super::records_of;
+    use super::*;
+
+    // Every binary column to length 8 and ternary to 5, at every mark and five limits (the
+    // arrow audit's enumeration, checks.rs): Backward Open's arrows are shipped Open's arrows
+    // reversed (edges[j] = code | g(j) wherever the shipped table has edges[g(j)] = code | j,
+    // the shipped table being the one checks.rs audits arrow by arrow), and its output, both
+    // buffer variants, equals shipped Open's, short cycles included
+    #[test]
+    fn backward_arrows_and_output_match_shipped() {
+        let mut shipped = Kernel::default();
+        let mut bwd = PhasedOpen::default();
+        let (mut want, mut got, mut got_z) = (Vec::new(), Vec::new(), Vec::new());
+        let mut cases = 0;
+        for (base, len) in [(2usize, 8usize), (3, 5)] {
+            for n in 1..=len {
+                for mut z in 0..base.pow(n as u32) {
+                    let l: Vec<_> = (0..n)
+                        .map(|_| {
+                            let c = z % base;
+                            z /= base;
+                            c as u8
+                        })
+                        .collect();
+                    let recs = records_of(&l);
+                    for p in 0..n as u32 {
+                        for t in [0, 1, 2, 4, 16] {
+                            let (_, _, bits) =
+                                shipped.construct::<true, true>(&recs, n as u32, p, t);
+                            let mask = (1u32 << bits) - 1;
+                            let fwd = shipped.edges.clone();
+                            let fwd_extra = shipped.extra.clone();
+                            shipped.run::<true, true>(&recs, n, p, t, &mut want);
+                            bwd.run_backward_at::<false>(&recs, n, p, t, &mut got);
+                            bwd.run_backward_at::<true>(&recs, n, p, t, &mut got_z);
+                            assert_eq!(got, want, "{l:?} p={p} t={t}");
+                            assert_eq!(got_z, want, "{l:?} p={p} t={t}");
+                            let b = &bwd.k;
+                            assert_eq!(b.edges.len(), fwd.len());
+                            assert_eq!(b.extra.len(), fwd_extra.len());
+                            for (i, &e) in fwd.iter().enumerate() {
+                                let j = (e & mask) as usize;
+                                let code_f = if fwd_extra.is_empty() {
+                                    e >> bits
+                                } else {
+                                    fwd_extra[i]
+                                };
+                                let be = b.edges[j];
+                                assert_eq!((be & mask) as usize, i, "{l:?} p={p} t={t}");
+                                let code_b = if b.extra.is_empty() {
+                                    be >> bits
+                                } else {
+                                    b.extra[j]
+                                };
+                                assert_eq!(code_b, code_f, "{l:?} p={p} t={t}");
+                            }
+                            cases += 1;
+                        }
+                    }
+                }
+            }
+        }
+        println!("{cases} column/mark/limit triples: arrows reversed and output equal");
+    }
+
+    // Random columns with short and multiple cycles, every limit up to above n, against the
+    // plain inverse (as checks.rs's residual-segment test does for shipped Open)
+    #[test]
+    fn backward_short_cycles_match_plain() {
+        use crate::bwt::{InverseBwt, Plain};
+        let mut bwd = PhasedOpen::default();
+        let mut plain = Plain::default();
+        let (mut actual, mut reference) = (Vec::new(), Vec::new());
+        let mut seed = 12383217u32;
+        for n in [1, 2, 3, 31, 127, 128, 129, 385, 1025, 4099] {
+            for alphabet in [1, 2, 11, 256] {
+                let l: Vec<_> = (0..n)
+                    .map(|_| {
+                        seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
+                        ((seed >> 8) % alphabet) as u8
+                    })
+                    .collect();
+                let mut counts = [0; 256];
+                for &c in &l {
+                    counts[c as usize] += 1;
+                }
+                let recs = records_of(&l);
+                for p in [0, (n / 2) as u32, (n - 1) as u32] {
+                    plain.invert(&l, &counts, p, &mut reference);
+                    for limit in [0, 1, 4, 16, 1025] {
+                        bwd.run_backward_at::<false>(&recs, n, p, limit, &mut actual);
+                        assert_eq!(actual, reference);
+                        bwd.run_backward_at::<true>(&recs, n, p, limit, &mut actual);
+                        assert_eq!(actual, reference);
+                    }
+                }
+            }
+        }
+    }
 }

@@ -17,13 +17,26 @@
 //! round by round, after two warm-up rounds; each arm keeps its buffers from round to round, as
 //! a worker does from block to block.
 //!
-//! `PHASES_ONLY=qi16|i16` runs that arm's clone once per block after one warm-up, unchecked
-//! and untimed (for callgrind: its stage functions are `#[inline(never)]`).
+//! **Backward Open** (docs/journal/2026-11-20-open-backward-native.md): two more arms, `bwd`
+//! (`PhasedOpen::run_backward::<false>`, the worker's output buffer reused) and `bwdz`
+//! (`::<true>`, the whole output zero-filled every block), rotated with the four above. The
+//! per-round wall and stage times of all six arms go to `OUT-rounds.csv`.
+//!
+//! `PHASES_ONLY=qi16|i16|bwd|none` runs that arm's clone once per block after one warm-up,
+//! unchecked and untimed (for callgrind: its stage functions are `#[inline(never)]`; `none`
+//! loads the blocks only, the baseline to subtract).
+//!
+//! `PHASES_MT=W` (with ROUNDS) instead runs W worker threads, each with its own kernel and its
+//! own replica of the block, the arms `qi16` (production), `i16` (production) and `bwd` in
+//! turn, rotated round by round, the workers released together by a barrier; each worker times
+//! a batch of 20 decodes, and each round's figure (the slowest worker's, per decode) goes to
+//! `OUT-mt.csv`.
 
 use std::time::Instant;
 
 use mibz2::runs::Runs;
 use mibz2::{PhasedOpen, Phases};
+use std::sync::Barrier;
 
 fn primary(manifest: &str, file: &str) -> u32 {
     let at = manifest
@@ -98,6 +111,20 @@ fn main() {
     };
     let manifest = std::fs::read_to_string(dir.join("manifest.json")).unwrap();
     let only = std::env::var("PHASES_ONLY").ok();
+    if let Ok(w) = std::env::var("PHASES_MT") {
+        multi(
+            &dir,
+            &manifest,
+            &ids,
+            rounds,
+            w.parse().unwrap(),
+            &out_prefix,
+        );
+        return;
+    }
+    let mut rounds_csv = String::from(
+        "block,round,arm,wall_ms,a_runs_ms,b_image_ms,c1_nodes_ms,c2_elim_ms,c3_bands_ms,d_spell_ms,e_wire_ms,f_emit_ms\n",
+    );
 
     let mut stages_csv = String::from(
         "block,arm,stage,median_ms,p10_ms,p90_ms,share_median_pct,share_p10_pct,share_p90_pct\n",
@@ -121,7 +148,9 @@ a_bytes_written,b_bytes_written,c1_bytes_written,c2_bytes_written,c3_bytes_writt
                 match arm.as_str() {
                     "qi16" => k.run_phased::<true>(recs, n, p, &mut out),
                     "i16" => k.run_phased::<false>(recs, n, p, &mut out),
-                    _ => panic!("PHASES_ONLY is qi16 or i16"),
+                    "bwd" => k.run_backward::<false>(recs, n, p, &mut out),
+                    "none" => Phases::default(),
+                    _ => panic!("PHASES_ONLY is qi16, i16, bwd or none"),
                 };
             }
             eprintln!("block {id}: {arm} clone run twice (one warm-up)");
@@ -129,14 +158,23 @@ a_bytes_written,b_bytes_written,c1_bytes_written,c2_bytes_written,c3_bytes_writt
         }
 
         let truth = dense(&ll, p);
-        // arms: 0 qi16 prod, 1 qi16 phased, 2 i16 prod, 3 i16 phased
-        let mut ks: Vec<PhasedOpen> = (0..4).map(|_| PhasedOpen::default()).collect();
-        let mut outs: Vec<Vec<u8>> = vec![Vec::new(); 4];
-        let mut prod_ms = vec![Vec::new(); 4];
-        let mut phased: Vec<Vec<Phases>> = vec![Vec::new(); 4];
+        // arms: 0 qi16 prod, 1 qi16 phased, 2 i16 prod, 3 i16 phased, 4 bwd, 5 bwdz
+        const ARMS: usize = 6;
+        const NAMES: [&str; ARMS] = [
+            "qi16_prod",
+            "qi16_phased",
+            "i16_prod",
+            "i16_phased",
+            "bwd",
+            "bwdz",
+        ];
+        let mut ks: Vec<PhasedOpen> = (0..ARMS).map(|_| PhasedOpen::default()).collect();
+        let mut outs: Vec<Vec<u8>> = vec![Vec::new(); ARMS];
+        let mut prod_ms = vec![Vec::new(); ARMS];
+        let mut phased: Vec<Vec<Phases>> = vec![Vec::new(); ARMS];
         for round in 0..rounds + 2 {
-            for j in 0..4 {
-                let i = (j + round) % 4;
+            for j in 0..ARMS {
+                let i = (j + round) % ARMS;
                 let out = &mut outs[i];
                 let k = &mut ks[i];
                 let t = Instant::now();
@@ -150,7 +188,9 @@ a_bytes_written,b_bytes_written,c1_bytes_written,c2_bytes_written,c3_bytes_writt
                         k.run_production::<false>(recs, n, p, out);
                         None
                     }
-                    _ => Some(k.run_phased::<false>(recs, n, p, out)),
+                    3 => Some(k.run_phased::<false>(recs, n, p, out)),
+                    4 => Some(k.run_backward::<false>(recs, n, p, out)),
+                    _ => Some(k.run_backward::<true>(recs, n, p, out)),
                 };
                 let dt = t.elapsed().as_secs_f64() * 1e3;
                 // the check, outside the timed span, every round
@@ -159,6 +199,12 @@ a_bytes_written,b_bytes_written,c1_bytes_written,c2_bytes_written,c3_bytes_writt
                     "block {id} arm {i} round {round}: output differs"
                 );
                 if round >= 2 {
+                    let st = ph.map(|x| stage_ns(&x)).unwrap_or_default();
+                    rounds_csv += &format!("{id},{},{},{dt:.5}", round - 2, NAMES[i]);
+                    for v in st {
+                        rounds_csv += &format!(",{:.5}", v as f64 / 1e6);
+                    }
+                    rounds_csv += "\n";
                     prod_ms[i].push(dt);
                     if let Some(ph) = ph {
                         phased[i].push(ph);
@@ -167,10 +213,10 @@ a_bytes_written,b_bytes_written,c1_bytes_written,c2_bytes_written,c3_bytes_writt
             }
         }
         eprintln!(
-            "block {id}: n={n} p={p} records={}: 4 arms byte-exact on every round",
+            "block {id}: n={n} p={p} records={}: 6 arms byte-exact on every round",
             recs.len()
         );
-        for (i, label) in [(1usize, "qi16"), (3, "i16")] {
+        for (i, label) in [(1usize, "qi16"), (3, "i16"), (4, "bwd"), (5, "bwdz")] {
             let ph = &phased[i];
             let totals: Vec<f64> = ph
                 .iter()
@@ -195,7 +241,8 @@ a_bytes_written,b_bytes_written,c1_bytes_written,c2_bytes_written,c3_bytes_writt
                 quantile(&totals, 0.1),
                 quantile(&totals, 0.9)
             );
-            let prod = &prod_ms[i - 1];
+            // the backward arms have no production twin: their wall is the clone's own
+            let prod = &prod_ms[if i <= 3 { i - 1 } else { i }];
             let wrapped = &prod_ms[i];
             let ratio: Vec<f64> = totals
                 .iter()
@@ -265,7 +312,80 @@ a_bytes_written,b_bytes_written,c1_bytes_written,c2_bytes_written,c3_bytes_writt
     if only.is_none() {
         std::fs::write(format!("{out_prefix}-stages.csv"), &stages_csv).unwrap();
         std::fs::write(format!("{out_prefix}-counters.csv"), &counters_csv).unwrap();
+        std::fs::write(format!("{out_prefix}-rounds.csv"), &rounds_csv).unwrap();
         print!("{stages_csv}");
         print!("{counters_csv}");
     }
+}
+
+/// `PHASES_MT`: W workers, each its own kernel and block replica, the three arms in turn; in each
+/// round each worker times its own batch of `BATCH` decodes of an arm, after a barrier, and the
+/// round's figure is the slowest worker's batch (per decode)
+fn multi(
+    dir: &std::path::Path,
+    manifest: &str,
+    ids: &[String],
+    rounds: usize,
+    w: usize,
+    out: &str,
+) {
+    const BATCH: usize = 20;
+    let mut csv = String::from("block,round,arm,workers,wall_ms_per_decode\n");
+    for id in ids {
+        let file = format!("block-{id}.L");
+        let ll = std::fs::read(dir.join(&file)).unwrap();
+        let p = primary(manifest, &file);
+        let n = ll.len();
+        let truth = dense(&ll, p);
+        let replicas: Vec<Vec<u16>> = (0..w)
+            .map(|_| Runs::of_column(&ll).records().to_vec())
+            .collect();
+        let barrier = Barrier::new(w);
+        let per_worker: Vec<Vec<(usize, usize, f64)>> = std::thread::scope(|s| {
+            let hs: Vec<_> = replicas
+                .iter()
+                .map(|recs| {
+                    let (barrier, truth) = (&barrier, &truth);
+                    s.spawn(move || {
+                        let mut ks: Vec<PhasedOpen> =
+                            (0..3).map(|_| PhasedOpen::default()).collect();
+                        let mut outs = vec![Vec::new(); 3];
+                        let mut times = Vec::new();
+                        for round in 0..rounds + 1 {
+                            for j in 0..3 {
+                                let i = (j + round) % 3;
+                                barrier.wait();
+                                let t = Instant::now();
+                                for _ in 0..BATCH {
+                                    match i {
+                                        0 => ks[0].run_production::<true>(recs, n, p, &mut outs[0]),
+                                        1 => {
+                                            ks[1].run_production::<false>(recs, n, p, &mut outs[1])
+                                        }
+                                        _ => {
+                                            ks[2].run_backward::<false>(recs, n, p, &mut outs[2]);
+                                        }
+                                    }
+                                }
+                                let ms = t.elapsed().as_secs_f64() * 1e3 / BATCH as f64;
+                                assert!(outs[i] == *truth, "block {id} mt arm {i}: output differs");
+                                if round >= 1 {
+                                    times.push((round - 1, i, ms));
+                                }
+                            }
+                        }
+                        times
+                    })
+                })
+                .collect();
+            hs.into_iter().map(|h| h.join().unwrap()).collect()
+        });
+        for (k, &(round, i, _)) in per_worker[0].iter().enumerate() {
+            let ms = per_worker.iter().map(|t| t[k].2).fold(0.0, f64::max);
+            let arm = ["qi16_prod", "i16_prod", "bwd"][i];
+            csv += &format!("{id},{round},{arm},{w},{ms:.5}\n");
+        }
+        eprintln!("block {id}: {w} workers, 3 arms byte-exact on every round");
+    }
+    std::fs::write(format!("{out}-mt.csv"), &csv).unwrap();
 }
