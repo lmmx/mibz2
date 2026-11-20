@@ -880,3 +880,14 @@
 .md-typeset .bf-l3fill .bf-l3-controls label { font-weight: 600; min-width: 5.5rem; }
 .md-typeset .bf-l3fill .bf-l3-controls input[type="range"] { flex: 1 1 10rem; min-width: 8rem; accent-color: var(--bf-green); }
 .md-typeset .bf-l3fill .bf-l3-text { min-height: 3.2em; margin: 0.5rem 0 0; padding: 0.5rem 0.7rem; border-left: 3px solid var(--bf-green); background: var(--bf-surface); color: var(--bf-ink); font-size: 0.72rem; line-height: 1.55; }
+
+/* Figures reproduced from papers: keep their white page background in both themes. */
+.md-typeset .bf-fig img.bf-src {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  background: #fff;
+  padding: 8px;
+  border-radius: 4px;
+}
