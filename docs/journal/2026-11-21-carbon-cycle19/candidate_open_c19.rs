@@ -849,7 +849,7 @@ impl<const LIMIT: u32, const USE_AHT: bool> UnifiedEdgesMuxKernel<LIMIT, USE_AHT
         }
 
         let mut sa_final: u32;
-        let mut r4_steps = 0usize;
+        let r4_steps: usize;
         {
             let (t_buf, rest1) = self.edges.split_at_mut(4 * slots);
             let (b_buf, rest2) = rest1.split_at_mut(2 * slots);
@@ -946,6 +946,7 @@ impl<const LIMIT: u32, const USE_AHT: bool> UnifiedEdgesMuxKernel<LIMIT, USE_AHT
                 (sa, sb, r4_steps) =
                     run_r4_aht_mux(&mut self.dag, t_buf, b_buf, sa, sb, remaining);
             } else {
+                r4_steps = max_w as usize;
                 while remaining > 0 {
                     let (mut na, mut ra, mut aw, mut bs) = mtop_get(t_buf, sa);
                     let (mut nb, mut ts) = mbot_get(b_buf, sb);
@@ -953,12 +954,10 @@ impl<const LIMIT: u32, const USE_AHT: bool> UnifiedEdgesMuxKernel<LIMIT, USE_AHT
                     let (mut fa, mut fb) = (sa, sb);
                     if bs == sb {
                         remaining -= ra;
-                        r4_steps += 1;
                         (sa, sb) = (na, nb);
                         continue;
                     }
                     loop {
-                        r4_steps += 1;
                         let wd = self.dag.join(aw, bw);
                         if ra == rb {
                             remaining -= ra;
