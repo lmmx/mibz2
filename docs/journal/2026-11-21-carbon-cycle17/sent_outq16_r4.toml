@@ -1,0 +1,22 @@
+# Acquisition manifest for Sentinel-Masked Out-Aliased SWAR64 Epoch Queues + Shared-L3 LIMIT Co-Design (Cycle 17).
+name = "Sentinel-Masked Out-Aliased SWAR64 Epoch Queues + Shared-L3 LIMIT Co-Design (SentOutQ16)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "sent_outq16_compact_r4_construct"
+inputs = ["C", "n", "p", "records"]
+output = "sent_outq16_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Combines 5-field Out-aliased 1 KiB (512 x u16) 64K-epoch SWAR queues inside dead `out[0..n)` under the exact strict epoch-cut guard `(m & 0xFFFF) <= 0xFFFF - CAP_U16` (Theorem 17.2, guaranteeing both zero 16-bit SWAR carry and zero missed `ep_cuts` at exact `64K` boundaries), power-of-two cursor-managed `inline16`/`lens` code tables (`n_codes` cursor eliminating `Vec::push` growth checks and per-block tail zeroing), and shared-L3 `LIMIT in {14, 16}` thin/thick balancing to hold per-worker retained heap at 1,722.5-1,789.9 KiB (0.385-0.400x Master-0.5.8)."
+
+[[edge]]
+id = "sentinel_masked_budgeted_post_alias_emit"
+inputs = ["sent_outq16_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Replaces per-step `j == mark`, `at >= n`, and `code` bounds branches with a single temporarily patched `LONG` stop-sentinel at `edges[mark]`, power-of-two `code_mask` indexing, and chunked `budget = (n - at) >> 4` 16-byte safe-advance windows (`#[forbid(unsafe_code)]`, Theorem 17.3), cutting dynamic instructions to 73.41M (0.909x Master-0.5.8), holding W=10 DRAM traffic at 0.358 B/outB (0.104x Master-0.5.8), and reaching 0.889x wall at W=8 and 0.880x wall / 0.876x CPU at W=10 without multi-lane page-copy L3 thrashing (Theorem 17.1)."
