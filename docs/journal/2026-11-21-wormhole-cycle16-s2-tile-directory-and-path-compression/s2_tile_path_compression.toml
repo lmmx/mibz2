@@ -1,0 +1,48 @@
+name = "Wormhole Cycle 16 Candidate: Dieted Tile Directory (INDUCE=false in Dead edges) + Tarjan Full-Tile Containment Path Compression vs GradedRV"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_master_outq16_scan"
+inputs = ["records", "C", "p", "n"]
+output = "strips_and_outq16"
+status = "shipped"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Identical to origin/master S1 OutQ16."
+
+[[edge]]
+id = "s2_tarjan_compressed_tiles_in_edges"
+inputs = ["strips_and_outq16", "C", "n"]
+output = "compressed_tile_directory"
+status = "verified"
+dependent = true
+cost = { W = "H + n / 64", D = "H", B = "H + n / 64", Q = "H", M = "H + n / 64" }
+evidence = "Aliases Tile array + u16 PAGE=64 directory inside dead edges (0 B scratch) and applies Tarjan (1975) containment path compression wherever a thick tile maps wholly inside a single target tile."
+
+[[edge]]
+id = "s3_tile_directory_trace"
+inputs = ["compressed_tile_directory", "strips_and_outq16"]
+output = "bands_and_inline16"
+status = "verified"
+dependent = true
+cost = { W = "traced_compressed + dict", D = "traced_compressed", B = "B_bands + dict", Q = "traced_compressed", M = "B_bands + dict" }
+evidence = "Traces uncovered image gaps through L1d/L2-resident PAGE=64 directory and compressed tiles into bands + spelling."
+
+[[edge]]
+id = "s4_master_outq16_wire"
+inputs = ["bands_and_inline16", "strips_and_outq16", "n"]
+output = "critical_edges"
+status = "shipped"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Identical to origin/master OutQ16 Reader::wire."
+
+[[edge]]
+id = "s5_master_emit"
+inputs = ["critical_edges", "bands_and_inline16", "p", "n"]
+output = "text"
+status = "shipped"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Identical to origin/master emit()."

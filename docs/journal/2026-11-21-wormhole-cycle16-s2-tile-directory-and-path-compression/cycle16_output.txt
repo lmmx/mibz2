@@ -1,0 +1,23 @@
+Gate G1 + Tarjan Tile Containment + SPIRALS Fallback Verification: PASS (5229 cases byte-exact vs OpenCells)
+
+=== CYCLE 16A: COMBINED S2+S3a TIMING & TARJAN FULL-TILE CONTAINMENT CENSUS ===
+Block         |   H_16 | Contained(%) |  Steps(Raw->Cmp) | M0:RV(us) |   B1:GrRV |  B2:TileD |  B3:Tarjn
+------------------------------------------------------------------------------------------------------------
+block-0.L     |   3448 |  3000(87.0%) |   53913->   7007 |   446.8us |   389.7us |   646.1us |   739.3us
+block-2.L     |   3827 |  3313(86.6%) |   51718->   8779 |   531.8us |   445.3us |   680.7us |   770.8us
+block-85.L    |   1565 |  1317(84.2%) |   32838->   5983 |   260.4us |   222.4us |   368.7us |   367.5us
+block-143.L   |   5047 |  4354(86.3%) |   61282->  15617 |   814.0us |   688.9us |   875.7us |  1015.8us
+block-210.L   |   2809 |  2384(84.9%) |   40694->   8833 |   435.1us |   382.9us |   524.1us |   567.4us
+block-207.L   |   3474 |  2978(85.7%) |   58292->  10844 |   528.1us |   453.9us |   733.3us |   741.1us
+dense-703.syn |    126 |     0( 0.0%) |       0->      0 |    12.3us |    10.9us |    10.7us |    10.6us
+
+=== CYCLE 16B: NATIVE SAFE-RUST END-TO-END A/B + A/A + M0 CONFRONTATION (`21` ROUNDS) ===
+Block         | A1:Master |   A2/A1 |  M0:Clone |   B1:GrRV |   B1/M0 |  B2:TileD |   B2/M0 |  B3:Tarjn |   B3/M0
+------------------------------------------------------------------------------------------------------------------
+block-0.L     |  1330.6us |  0.990x |  1291.1us |  1202.8us |  0.932x |  1495.8us |  1.159x |  1554.0us |  1.204x
+block-2.L     |  1632.3us |  0.990x |  1561.1us |  1470.6us |  0.942x |  1727.2us |  1.106x |  1774.0us |  1.136x
+block-85.L    |  1667.4us |  0.993x |  1521.8us |  1480.2us |  0.973x |  1631.0us |  1.072x |  1614.4us |  1.061x
+block-143.L   |  2934.2us |  0.996x |  2744.0us |  2625.9us |  0.957x |  2882.9us |  1.051x |  2961.5us |  1.079x
+block-210.L   |  2593.2us |  0.986x |  2404.6us |  2338.6us |  0.973x |  2504.3us |  1.041x |  2516.6us |  1.047x
+block-207.L   |  1964.6us |  0.992x |  1853.6us |  1775.2us |  0.958x |  2061.0us |  1.112x |  2059.3us |  1.111x
+dense-703.syn |  1549.7us |  0.992x |  1380.2us |  1374.7us |  0.996x |  1368.0us |  0.991x |  1376.3us |  0.997x
