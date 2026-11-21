@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.8](https://github.com/lmmx/mibz2/compare/v0.5.7...v0.5.8) - 2026-11-21
+
+### <!-- 3 -->Performance
+
+- *(open)* fixed-width queue fill, Vec16 queues and the 16-byte emit ([#668](https://github.com/lmmx/mibz2/pull/668))
+
+### <!-- 4 -->Documentation
+
+- *(blog)* research by obligation, modelling the work rather than the algorithms ([#663](https://github.com/lmmx/mibz2/pull/663))
+- *(blog)* where the decoding work goes, random IDs in repetitive JSON ([#662](https://github.com/lmmx/mibz2/pull/662))
+- *(blog)* train tracks, carrying a tangle of paths on a few weighted branches ([#660](https://github.com/lmmx/mibz2/pull/660))
+- *(blog)* rewrite Open Returns ([#651](https://github.com/lmmx/mibz2/pull/651))
+- *(blog)* Open Returns, picking the decoder block by block ([#650](https://github.com/lmmx/mibz2/pull/650))
+- *(changelog)* 0.5.7's crossover: the team threshold stays ([#649](https://github.com/lmmx/mibz2/pull/649))
+- *(changelog)* 0.5.7's notes: the open kernel, its evidence and caveats ([#643](https://github.com/lmmx/mibz2/pull/643))
+
+### <!-- 9 -->Other
+
+- *(release-scaling)* 0.5.7 against 0.5.6 on the i9; its figures and attribution row ([#648](https://github.com/lmmx/mibz2/pull/648))
+
 ## [0.5.7](https://github.com/lmmx/mibz2/compare/v0.5.6...v0.5.7) - 2026-11-19
 
 A kernel release. On LazyCells' admitted blocks (r/n from 1/64 to 0.15: Wikidata and other
