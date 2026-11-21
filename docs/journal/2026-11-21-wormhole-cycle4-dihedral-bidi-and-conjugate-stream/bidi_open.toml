@@ -1,0 +1,30 @@
+name = "Wormhole Chain 4A: Birkhoff Dihedral Zero-Copy Meet-in-the-Middle Orbit Walk (Bidi-Open)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "open_endpoint_bands"
+inputs = ["records", "C", "p", "n"]
+output = "bands_and_thin_queues"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + m", Q = "H", M = "m + H" }
+evidence = "Pass 1 + Endpoint thick-strip elimination at LIMIT = 16."
+
+[[edge]]
+id = "dual_arrow_wiring"
+inputs = ["bands_and_thin_queues", "n"]
+output = "reversible_edge_pair"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "m", M = "m" }
+evidence = "Simultaneous wiring of Psi-return edges_fwd[dst]=(code,src) and LF-return edges_bwd[src]=(code,dst) in one pass."
+
+[[edge]]
+id = "dihedral_meet_in_middle_emit"
+inputs = ["reversible_edge_pair", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m / 2", B = "n", Q = "m", M = "n + m" }
+evidence = "Theorem 4.1 (Birkhoff 1915 reversible involution + Pohl 1971 bidirectional search): forward ray from (mark, 0) and backward ray from (mark, n) meet at j_f == j_b with at_f == at_b (zero staging pages, zero extra out copies, MLP = 2); verified on 26,495 cases + 6 blocks."

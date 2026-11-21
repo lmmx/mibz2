@@ -1,0 +1,14 @@
+Block        | C0:Open058 | C1:CSW-1L (  /058) |  C2:BidiQ (  /058) | C3:CSWBidi (  /058)
+---------------------------------------------------------------------------------------
+block-0.L    |  1225.0us |  1213.0us (0.990x) |  1239.7us (1.012x) |  1358.3us (1.109x)
+block-2.L    |  1491.1us |  1478.0us (0.991x) |  1516.0us (1.017x) |  1634.7us (1.096x)
+block-85.L   |  1565.0us |  1522.7us (0.973x) |  1629.9us (1.042x) |  1576.2us (1.007x)
+block-143.L  |  2746.8us |  2693.0us (0.980x) |  2792.1us (1.017x) |  2976.8us (1.084x)
+block-210.L  |  2432.1us |  2404.7us (0.989x) |  2515.2us (1.034x) |  2547.7us (1.048x)
+block-207.L  |  1813.9us |  1786.8us (0.985x) |  1784.5us (0.984x) |  1962.0us (1.082x)
+
+Persistent Worker Scratch After All 6 Blocks (excluding 900 KiB out):
+  C0: Open058   : 4656.5 KiB (1.000x)
+  C1: CSW-Open  : 2668.6 KiB (0.573x — 0 B queues + aliased Endpoint!)
+  C2: Bidi-Q    : 6129.6 KiB (1.316x)
+  C3: CSW-Bidi  : 3922.6 KiB (0.842x — 0 B queues + MLP=2 zero-copy emit!)

@@ -1,0 +1,39 @@
+name = "Wormhole Chain 4B: Conjugate Skyscraper u16-Stream Vec16 Open (CSW-Open)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "quotient_thin_run_stream"
+inputs = ["records", "p", "n"]
+output = "thin_u16_stream_and_strips"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "1", B = "R + r", Q = "0", M = "r + H" }
+evidence = "Emits 2-byte (byte, width) tokens to one sequential stream (93-246 KiB vs 3.1-8.1 MiB 256-way Vec16 queues; 0 heap Vecs)."
+
+[[edge]]
+id = "aliased_endpoint_elimination"
+inputs = ["thin_u16_stream_and_strips", "C", "n"]
+output = "bands_and_dictionary"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Chaitin (1982) disjoint-lifetime interval coloring overlays Endpoint index lists inside dead edges[0..m)."
+
+[[edge]]
+id = "conjugate_sequential_vec16_wiring"
+inputs = ["bands_and_dictionary", "thin_u16_stream_and_strips"]
+output = "forward_lf_return_edges"
+status = "verified"
+dependent = false
+cost = { W = "r", D = "1", B = "m", Q = "0", M = "m" }
+evidence = "Theorem 4.2 (Kakutani 1943 conjugate induced map g = P o pi_Q^-1): 99.47-99.77% of thin runs stamp 16 sequential edges[j..j+16] with zero scatter writes and zero queues."
+
+[[edge]]
+id = "downward_right_aligned_u16_emit"
+inputs = ["forward_lf_return_edges", "bands_and_dictionary", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Walks g from (mark, n) downward via 16B right-aligned vector stores into out[at-16..at] with zero front-padding shift (verified on 26,495 cases + 6 blocks)."
