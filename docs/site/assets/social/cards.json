@@ -223,6 +223,13 @@
     "section": " · Research blog",
     "title": "Fast alone, slow in a crowd: which speed-ups survive many cores"
   },
+  "assets/social/blog-2026-11-21-seventeen-million-checked-lines.png": {
+    "description": "A proof of the Riemann Hypothesis that three independent checkers accepted shows that routes once far too long to travel can now be built and verified.",
+    "foot": "lmmx.github.io/mibz2 · 21 November 2026",
+    "kind": "meta",
+    "section": " · Research blog",
+    "title": "Seventeen million checked lines: what a formal Riemann proof teaches about hard problems"
+  },
   "assets/social/blog-2026-11-21-sixteen-at-a-stroke.png": {
     "description": "Writing sixteen at a stroke and keeping only what it needs spares the processor a guess per run, so mibz2 0.5.8 decodes Wikidata 5% faster on ten cores.",
     "foot": "lmmx.github.io/mibz2 · 21 November 2026",
