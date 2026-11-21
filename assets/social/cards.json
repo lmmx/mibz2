@@ -216,6 +216,13 @@
     "section": " · Research blog",
     "title": "Where the decoding work goes: random IDs in repetitive JSON"
   },
+  "assets/social/blog-2026-11-21-sixteen-at-a-stroke.png": {
+    "description": "Writing sixteen at a stroke and keeping only what it needs spares the processor a guess per run, so mibz2 0.5.8 decodes Wikidata 5% faster on ten cores.",
+    "foot": "lmmx.github.io/mibz2 · 21 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Sixteen at a stroke: fixed-width writes that stop the processor guessing"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
