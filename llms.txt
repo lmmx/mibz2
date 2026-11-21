@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Fast alone, slow in a crowd](<https://lmmx.github.io/mibz2/blog/2026-11-21-fast-alone-slow-in-a-crowd/index.md>): Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor.
 - [Sixteen at a stroke](<https://lmmx.github.io/mibz2/blog/2026-11-21-sixteen-at-a-stroke/index.md>): Writing sixteen at a stroke and keeping only what it needs spares the processor a guess per run, so mibz2 0.5.8 decodes Wikidata 5% faster on ten cores.
 - [Research by obligation](<https://lmmx.github.io/mibz2/blog/2026-11-20-research-by-obligation/index.md>): We now track the work any decoder must pay for rather than the algorithms that pay it, and a claimed Riemann proof has sharpened how we hunt.
 - [Where the decoding work goes](<https://lmmx.github.io/mibz2/blog/2026-11-20-where-the-decoding-work-goes/index.md>): Tracing each costly row back to the text it spells shows that JSON keys cost almost nothing, while random statement IDs claim two thirds of the hardest rows.
