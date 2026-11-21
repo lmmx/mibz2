@@ -1,0 +1,446 @@
+{
+  "small_verifications": {
+    "coset_covering_checks": 8048,
+    "odometer_conjugacy_checks_pow2": 332
+  },
+  "blocks": {
+    "block-0.L": {
+      "n": 899931,
+      "r": 51184,
+      "m": 89874,
+      "edges_affine_runs": 47544,
+      "mean_edges_affine_width": 1.89,
+      "hensel_2adic_spectrum": {
+        "k=2 (2^k=4)": {
+          "mean_runs_per_coset": 21495.0,
+          "mean_distinct_shifts_mod_2k": 4.0,
+          "cond_hensel_entropy_bits": 1.9925,
+          "max_possible_bits": 2,
+          "entropy_saturation_pct": 99.62
+        },
+        "k=4 (2^k=16)": {
+          "mean_runs_per_coset": 9065.12,
+          "mean_distinct_shifts_mod_2k": 16.0,
+          "cond_hensel_entropy_bits": 3.9685,
+          "max_possible_bits": 4,
+          "entropy_saturation_pct": 99.21
+        },
+        "k=6 (2^k=64)": {
+          "mean_runs_per_coset": 3552.77,
+          "mean_distinct_shifts_mod_2k": 64.0,
+          "cond_hensel_entropy_bits": 5.8784,
+          "max_possible_bits": 6,
+          "entropy_saturation_pct": 97.97
+        },
+        "k=8 (2^k=256)": {
+          "mean_runs_per_coset": 1415.07,
+          "mean_distinct_shifts_mod_2k": 254.74,
+          "cond_hensel_entropy_bits": 7.5426,
+          "max_possible_bits": 8,
+          "entropy_saturation_pct": 94.28
+        },
+        "k=10 (2^k=1024)": {
+          "mean_runs_per_coset": 585.62,
+          "mean_distinct_shifts_mod_2k": 446.08,
+          "cond_hensel_entropy_bits": 8.336,
+          "max_possible_bits": 10,
+          "entropy_saturation_pct": 83.36
+        },
+        "k=12 (2^k=4096)": {
+          "mean_runs_per_coset": 198.61,
+          "mean_distinct_shifts_mod_2k": 195.15,
+          "cond_hensel_entropy_bits": 7.509,
+          "max_possible_bits": 12,
+          "entropy_saturation_pct": 62.58
+        },
+        "k=16 (2^k=65536)": {
+          "mean_runs_per_coset": 13.73,
+          "mean_distinct_shifts_mod_2k": 13.73,
+          "cond_hensel_entropy_bits": 3.7802,
+          "max_possible_bits": 16,
+          "entropy_saturation_pct": 23.63
+        }
+      },
+      "van_der_put_dyadic_lf": {
+        "dyadic_blocks_ratio_to_r": 1.602,
+        "pct_rows_in_aligned_ge16": 84.26,
+        "pct_rows_in_aligned_ge64": 74.93
+      },
+      "van_der_put_dyadic_open16_edges": {
+        "pct_m_in_aligned_ge16": 0.25,
+        "full_64B_cache_lines": 5617,
+        "pct_cl_1piece_pure_affine": 0.25,
+        "pct_cl_2piece": 4.82,
+        "pct_cl_3_to_4_piece": 17.45,
+        "pct_cl_ge5_piece": 77.48,
+        "mean_target_cache_lines_per_16_entries": 7.14,
+        "affine_cl_1target_pct": 0.0
+      }
+    },
+    "block-2.L": {
+      "n": 900000,
+      "r": 54532,
+      "m": 112070,
+      "edges_affine_runs": 50527,
+      "mean_edges_affine_width": 2.218,
+      "hensel_2adic_spectrum": {
+        "k=2 (2^k=4)": {
+          "mean_runs_per_coset": 25208.0,
+          "mean_distinct_shifts_mod_2k": 4.0,
+          "cond_hensel_entropy_bits": 1.9894,
+          "max_possible_bits": 2,
+          "entropy_saturation_pct": 99.47
+        },
+        "k=4 (2^k=16)": {
+          "mean_runs_per_coset": 10831.38,
+          "mean_distinct_shifts_mod_2k": 16.0,
+          "cond_hensel_entropy_bits": 3.9705,
+          "max_possible_bits": 4,
+          "entropy_saturation_pct": 99.26
+        },
+        "k=6 (2^k=64)": {
+          "mean_runs_per_coset": 4165.62,
+          "mean_distinct_shifts_mod_2k": 64.0,
+          "cond_hensel_entropy_bits": 5.8707,
+          "max_possible_bits": 6,
+          "entropy_saturation_pct": 97.85
+        },
+        "k=8 (2^k=256)": {
+          "mean_runs_per_coset": 1536.14,
+          "mean_distinct_shifts_mod_2k": 255.21,
+          "cond_hensel_entropy_bits": 7.5617,
+          "max_possible_bits": 8,
+          "entropy_saturation_pct": 94.52
+        },
+        "k=10 (2^k=1024)": {
+          "mean_runs_per_coset": 607.52,
+          "mean_distinct_shifts_mod_2k": 457.63,
+          "cond_hensel_entropy_bits": 8.3991,
+          "max_possible_bits": 10,
+          "entropy_saturation_pct": 83.99
+        },
+        "k=12 (2^k=4096)": {
+          "mean_runs_per_coset": 198.35,
+          "mean_distinct_shifts_mod_2k": 193.7,
+          "cond_hensel_entropy_bits": 7.4955,
+          "max_possible_bits": 12,
+          "entropy_saturation_pct": 62.46
+        },
+        "k=16 (2^k=65536)": {
+          "mean_runs_per_coset": 13.73,
+          "mean_distinct_shifts_mod_2k": 13.73,
+          "cond_hensel_entropy_bits": 3.7802,
+          "max_possible_bits": 16,
+          "entropy_saturation_pct": 23.63
+        }
+      },
+      "van_der_put_dyadic_lf": {
+        "dyadic_blocks_ratio_to_r": 1.711,
+        "pct_rows_in_aligned_ge16": 81.13,
+        "pct_rows_in_aligned_ge64": 70.55
+      },
+      "van_der_put_dyadic_open16_edges": {
+        "pct_m_in_aligned_ge16": 0.19,
+        "full_64B_cache_lines": 7004,
+        "pct_cl_1piece_pure_affine": 0.19,
+        "pct_cl_2piece": 6.21,
+        "pct_cl_3_to_4_piece": 24.5,
+        "pct_cl_ge5_piece": 69.1,
+        "mean_target_cache_lines_per_16_entries": 6.48,
+        "affine_cl_1target_pct": 7.69
+      }
+    },
+    "block-85.L": {
+      "n": 899935,
+      "r": 79375,
+      "m": 156404,
+      "edges_affine_runs": 77733,
+      "mean_edges_affine_width": 2.012,
+      "hensel_2adic_spectrum": {
+        "k=2 (2^k=4)": {
+          "mean_runs_per_coset": 33061.75,
+          "mean_distinct_shifts_mod_2k": 4.0,
+          "cond_hensel_entropy_bits": 1.9834,
+          "max_possible_bits": 2,
+          "entropy_saturation_pct": 99.17
+        },
+        "k=4 (2^k=16)": {
+          "mean_runs_per_coset": 11340.25,
+          "mean_distinct_shifts_mod_2k": 16.0,
+          "cond_hensel_entropy_bits": 3.9562,
+          "max_possible_bits": 4,
+          "entropy_saturation_pct": 98.91
+        },
+        "k=6 (2^k=64)": {
+          "mean_runs_per_coset": 3656.38,
+          "mean_distinct_shifts_mod_2k": 64.0,
+          "cond_hensel_entropy_bits": 5.853,
+          "max_possible_bits": 6,
+          "entropy_saturation_pct": 97.55
+        },
+        "k=8 (2^k=256)": {
+          "mean_runs_per_coset": 1356.64,
+          "mean_distinct_shifts_mod_2k": 254.42,
+          "cond_hensel_entropy_bits": 7.5085,
+          "max_possible_bits": 8,
+          "entropy_saturation_pct": 93.86
+        },
+        "k=10 (2^k=1024)": {
+          "mean_runs_per_coset": 565.87,
+          "mean_distinct_shifts_mod_2k": 435.02,
+          "cond_hensel_entropy_bits": 8.2786,
+          "max_possible_bits": 10,
+          "entropy_saturation_pct": 82.79
+        },
+        "k=12 (2^k=4096)": {
+          "mean_runs_per_coset": 195.51,
+          "mean_distinct_shifts_mod_2k": 190.51,
+          "cond_hensel_entropy_bits": 7.4615,
+          "max_possible_bits": 12,
+          "entropy_saturation_pct": 62.18
+        },
+        "k=16 (2^k=65536)": {
+          "mean_runs_per_coset": 13.73,
+          "mean_distinct_shifts_mod_2k": 13.73,
+          "cond_hensel_entropy_bits": 3.7802,
+          "max_possible_bits": 16,
+          "entropy_saturation_pct": 23.63
+        }
+      },
+      "van_der_put_dyadic_lf": {
+        "dyadic_blocks_ratio_to_r": 1.462,
+        "pct_rows_in_aligned_ge16": 80.05,
+        "pct_rows_in_aligned_ge64": 74.17
+      },
+      "van_der_put_dyadic_open16_edges": {
+        "pct_m_in_aligned_ge16": 0.13,
+        "full_64B_cache_lines": 9775,
+        "pct_cl_1piece_pure_affine": 0.13,
+        "pct_cl_2piece": 4.01,
+        "pct_cl_3_to_4_piece": 19.94,
+        "pct_cl_ge5_piece": 75.92,
+        "mean_target_cache_lines_per_16_entries": 6.79,
+        "affine_cl_1target_pct": 0.0
+      }
+    },
+    "block-143.L": {
+      "n": 899869,
+      "r": 108335,
+      "m": 196841,
+      "edges_affine_runs": 103102,
+      "mean_edges_affine_width": 1.909,
+      "hensel_2adic_spectrum": {
+        "k=2 (2^k=4)": {
+          "mean_runs_per_coset": 45337.5,
+          "mean_distinct_shifts_mod_2k": 4.0,
+          "cond_hensel_entropy_bits": 1.9957,
+          "max_possible_bits": 2,
+          "entropy_saturation_pct": 99.78
+        },
+        "k=4 (2^k=16)": {
+          "mean_runs_per_coset": 17349.56,
+          "mean_distinct_shifts_mod_2k": 16.0,
+          "cond_hensel_entropy_bits": 3.961,
+          "max_possible_bits": 4,
+          "entropy_saturation_pct": 99.02
+        },
+        "k=6 (2^k=64)": {
+          "mean_runs_per_coset": 5947.19,
+          "mean_distinct_shifts_mod_2k": 64.0,
+          "cond_hensel_entropy_bits": 5.8737,
+          "max_possible_bits": 6,
+          "entropy_saturation_pct": 97.89
+        },
+        "k=8 (2^k=256)": {
+          "mean_runs_per_coset": 2022.43,
+          "mean_distinct_shifts_mod_2k": 255.89,
+          "cond_hensel_entropy_bits": 7.6436,
+          "max_possible_bits": 8,
+          "entropy_saturation_pct": 95.55
+        },
+        "k=10 (2^k=1024)": {
+          "mean_runs_per_coset": 667.35,
+          "mean_distinct_shifts_mod_2k": 494.83,
+          "cond_hensel_entropy_bits": 8.549,
+          "max_possible_bits": 10,
+          "entropy_saturation_pct": 85.49
+        },
+        "k=12 (2^k=4096)": {
+          "mean_runs_per_coset": 201.9,
+          "mean_distinct_shifts_mod_2k": 197.79,
+          "cond_hensel_entropy_bits": 7.5296,
+          "max_possible_bits": 12,
+          "entropy_saturation_pct": 62.75
+        },
+        "k=16 (2^k=65536)": {
+          "mean_runs_per_coset": 13.73,
+          "mean_distinct_shifts_mod_2k": 13.73,
+          "cond_hensel_entropy_bits": 3.78,
+          "max_possible_bits": 16,
+          "entropy_saturation_pct": 23.62
+        }
+      },
+      "van_der_put_dyadic_lf": {
+        "dyadic_blocks_ratio_to_r": 1.512,
+        "pct_rows_in_aligned_ge16": 69.78,
+        "pct_rows_in_aligned_ge64": 57.9
+      },
+      "van_der_put_dyadic_open16_edges": {
+        "pct_m_in_aligned_ge16": 0.27,
+        "full_64B_cache_lines": 12302,
+        "pct_cl_1piece_pure_affine": 0.27,
+        "pct_cl_2piece": 3.5,
+        "pct_cl_3_to_4_piece": 14.85,
+        "pct_cl_ge5_piece": 81.39,
+        "mean_target_cache_lines_per_16_entries": 7.15,
+        "affine_cl_1target_pct": 18.18
+      }
+    },
+    "block-210.L": {
+      "n": 899959,
+      "r": 128732,
+      "m": 204281,
+      "edges_affine_runs": 125843,
+      "mean_edges_affine_width": 1.623,
+      "hensel_2adic_spectrum": {
+        "k=2 (2^k=4)": {
+          "mean_runs_per_coset": 46692.0,
+          "mean_distinct_shifts_mod_2k": 4.0,
+          "cond_hensel_entropy_bits": 1.9983,
+          "max_possible_bits": 2,
+          "entropy_saturation_pct": 99.91
+        },
+        "k=4 (2^k=16)": {
+          "mean_runs_per_coset": 15576.56,
+          "mean_distinct_shifts_mod_2k": 16.0,
+          "cond_hensel_entropy_bits": 3.9575,
+          "max_possible_bits": 4,
+          "entropy_saturation_pct": 98.94
+        },
+        "k=6 (2^k=64)": {
+          "mean_runs_per_coset": 5015.5,
+          "mean_distinct_shifts_mod_2k": 64.0,
+          "cond_hensel_entropy_bits": 5.8588,
+          "max_possible_bits": 6,
+          "entropy_saturation_pct": 97.65
+        },
+        "k=8 (2^k=256)": {
+          "mean_runs_per_coset": 1772.42,
+          "mean_distinct_shifts_mod_2k": 255.76,
+          "cond_hensel_entropy_bits": 7.5667,
+          "max_possible_bits": 8,
+          "entropy_saturation_pct": 94.58
+        },
+        "k=10 (2^k=1024)": {
+          "mean_runs_per_coset": 603.31,
+          "mean_distinct_shifts_mod_2k": 448.65,
+          "cond_hensel_entropy_bits": 8.363,
+          "max_possible_bits": 10,
+          "entropy_saturation_pct": 83.63
+        },
+        "k=12 (2^k=4096)": {
+          "mean_runs_per_coset": 201.19,
+          "mean_distinct_shifts_mod_2k": 195.76,
+          "cond_hensel_entropy_bits": 7.5138,
+          "max_possible_bits": 12,
+          "entropy_saturation_pct": 62.62
+        },
+        "k=16 (2^k=65536)": {
+          "mean_runs_per_coset": 13.73,
+          "mean_distinct_shifts_mod_2k": 13.73,
+          "cond_hensel_entropy_bits": 3.78,
+          "max_possible_bits": 16,
+          "entropy_saturation_pct": 23.62
+        }
+      },
+      "van_der_put_dyadic_lf": {
+        "dyadic_blocks_ratio_to_r": 1.326,
+        "pct_rows_in_aligned_ge16": 72.63,
+        "pct_rows_in_aligned_ge64": 64.47
+      },
+      "van_der_put_dyadic_open16_edges": {
+        "pct_m_in_aligned_ge16": 0.1,
+        "full_64B_cache_lines": 12767,
+        "pct_cl_1piece_pure_affine": 0.1,
+        "pct_cl_2piece": 4.97,
+        "pct_cl_3_to_4_piece": 9.9,
+        "pct_cl_ge5_piece": 85.03,
+        "mean_target_cache_lines_per_16_entries": 7.85,
+        "affine_cl_1target_pct": 0.0
+      }
+    },
+    "block-207.L": {
+      "n": 899998,
+      "r": 87111,
+      "m": 135921,
+      "edges_affine_runs": 83449,
+      "mean_edges_affine_width": 1.629,
+      "hensel_2adic_spectrum": {
+        "k=2 (2^k=4)": {
+          "mean_runs_per_coset": 33162.75,
+          "mean_distinct_shifts_mod_2k": 4.0,
+          "cond_hensel_entropy_bits": 1.9961,
+          "max_possible_bits": 2,
+          "entropy_saturation_pct": 99.8
+        },
+        "k=4 (2^k=16)": {
+          "mean_runs_per_coset": 11969.06,
+          "mean_distinct_shifts_mod_2k": 16.0,
+          "cond_hensel_entropy_bits": 3.9633,
+          "max_possible_bits": 4,
+          "entropy_saturation_pct": 99.08
+        },
+        "k=6 (2^k=64)": {
+          "mean_runs_per_coset": 5127.0,
+          "mean_distinct_shifts_mod_2k": 64.0,
+          "cond_hensel_entropy_bits": 5.8841,
+          "max_possible_bits": 6,
+          "entropy_saturation_pct": 98.07
+        },
+        "k=8 (2^k=256)": {
+          "mean_runs_per_coset": 2008.63,
+          "mean_distinct_shifts_mod_2k": 255.98,
+          "cond_hensel_entropy_bits": 7.6173,
+          "max_possible_bits": 8,
+          "entropy_saturation_pct": 95.22
+        },
+        "k=10 (2^k=1024)": {
+          "mean_runs_per_coset": 661.35,
+          "mean_distinct_shifts_mod_2k": 488.11,
+          "cond_hensel_entropy_bits": 8.4845,
+          "max_possible_bits": 10,
+          "entropy_saturation_pct": 84.84
+        },
+        "k=12 (2^k=4096)": {
+          "mean_runs_per_coset": 198.32,
+          "mean_distinct_shifts_mod_2k": 193.75,
+          "cond_hensel_entropy_bits": 7.4807,
+          "max_possible_bits": 12,
+          "entropy_saturation_pct": 62.34
+        },
+        "k=16 (2^k=65536)": {
+          "mean_runs_per_coset": 13.73,
+          "mean_distinct_shifts_mod_2k": 13.73,
+          "cond_hensel_entropy_bits": 3.7801,
+          "max_possible_bits": 16,
+          "entropy_saturation_pct": 23.63
+        }
+      },
+      "van_der_put_dyadic_lf": {
+        "dyadic_blocks_ratio_to_r": 1.443,
+        "pct_rows_in_aligned_ge16": 79.09,
+        "pct_rows_in_aligned_ge64": 63.83
+      },
+      "van_der_put_dyadic_open16_edges": {
+        "pct_m_in_aligned_ge16": 0.07,
+        "full_64B_cache_lines": 8495,
+        "pct_cl_1piece_pure_affine": 0.07,
+        "pct_cl_2piece": 3.58,
+        "pct_cl_3_to_4_piece": 8.83,
+        "pct_cl_ge5_piece": 87.52,
+        "mean_target_cache_lines_per_16_entries": 7.84,
+        "affine_cl_1target_pct": 33.33
+      }
+    }
+  }
+}
