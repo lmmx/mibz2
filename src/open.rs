@@ -2,8 +2,10 @@
 //! one marked row retained (Astra's open-return decoder, #565,
 //! `docs/journal/2026-11-18-open-return/`, ported for production by the B5 study, #145
 //! CHECKPOINT 7004759994). [`OpenCells`] is the workers' kernel wherever production ran
-//! `LazyCells`: the open kernel on the blocks `LazyCells` admits by its record count, `LazyCells`
-//! as shipped on every other block (`docs/journal/2026-11-19-open-admission.md`).
+//! `LazyCells`: the open kernel on the blocks `LazyCells` admits by its record count
+//! (`docs/journal/2026-11-19-open-admission.md`) and on the dense band above them within a
+//! first-pass cap (`DENSE`, `docs/journal/2026-11-21-open-dense-admission.md`), `LazyCells` as
+//! shipped on every other block.
 //!
 //! **The construction** (`Kernel::construct`, induced and queued, the instance that ships):
 //! each byte's maximal runs are split into thin ones (at most `LIMIT` rows, retained) and thick
