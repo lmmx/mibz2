@@ -1837,13 +1837,18 @@ bench-memory-lever ROUNDS="10" THREADS="4,6,8,9,10,12":
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
-# 0.5.7's worker-count recalibration (RELEASING §3.4 and §5c; #145 QUEUED 7018306990): the
-# reviewed design below, `bench-recalibrate` of 2026-11-18, re-pinned to master at 17405826
-# (the open kernel's port, #630, merged), whose lazy workers are `OpenCells`. Unchanged but for
-# the pin, this recipe's own evidence path (target/recalibrate-057) and an untimed DRY
-# preflight (the 6th positional argument; not evidence). About 14 minutes.
-#   just bench-recalibrate-057            (the run)
-#   just bench-recalibrate-057 4 12 24 0.25 5 1   (DRY)
+# 0.5.8's worker-count recalibration (RELEASING §3.4 and §5c): the reviewed design below,
+# `bench-recalibrate` of 2026-11-18 as re-run for 0.5.7 (`bench-recalibrate-057`), re-pinned to
+# master at 70b18ca4 (#668: the open kernel's fixed-width queue fill, Vec16 queues and 16-byte
+# emit, about 18% less kernel time natively). The registration is
+# docs/journal/2026-11-21-recalibration-058-registration.md, frozen before the data. Unchanged but
+# for the pin, this recipe's own evidence path (target/recalibrate-058) and, at the two 6-thread
+# cells, the reference: 0.5.7's recalibration (#642) made the shipped trim there lazy (pinned lazy
+# 5/20, unpinned lazy 6/24), so each 6-thread cell's arms are the design's own for a lazy shipped
+# trim (its neighbours in its kernel and the untrimmed plan, here eager 6/24). The untimed DRY
+# preflight (the 6th positional argument) is kept; it is not evidence. About 14 minutes.
+#   just bench-recalibrate-058            (the run)
+#   just bench-recalibrate-058 4 12 24 0.25 5 1   (DRY)
 #
 # The worker-count recalibration on 0.5.5's kernel (the C6 adoption registration,
 # docs/journal/2026-11-18-recalibration-registration.md, frozen before the data; #314
@@ -1864,30 +1869,30 @@ bench-memory-lever ROUNDS="10" THREADS="4,6,8,9,10,12":
 # gain family), text and random (the guards, generated afresh). Each placement is one Holm
 # family at α 0.025 (two families, 0.05 together). Then the memory controller's bytes at three
 # cells (decides nothing), if `kernel.perf_event_paranoid` is 0 or less.
-bench-recalibrate-057 COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="5" DRY="":
+bench-recalibrate-058 COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="5" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
-    W=$PWD/target/recalibrate-057
+    W=$PWD/target/recalibrate-058
     mkdir -p "$W"
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-recalibrate-057 (the registration, docs/journal/2026-11-18-recalibration-registration.md, re-pinned for 0.5.7): the worker trims on master 17405826's kernel (OpenCells) at $(git rev-parse HEAD), pinned at 4, 6, 8 and 10 threads and unpinned at 4, 6, 8, 10, 12, 16 and 20, the shipped trim against its neighbours, the untrimmed plan and the other kernel, on {{COPIES}} copies of the Wikidata sample, text and random, {{ROUNDS}} paired rounds ({{ROUNDS_P8}} pinned at 8), settle {{SETTLE}} s; then the memory controller, {{REPS}} reps"
+    echo "bench-recalibrate-058 (the registration, docs/journal/2026-11-21-recalibration-058-registration.md): the worker trims on master 70b18ca4's kernel (OpenCells with #668's Vec16 queues) at $(git rev-parse HEAD), pinned at 4, 6, 8 and 10 threads and unpinned at 4, 6, 8, 10, 12, 16 and 20, the shipped trim against its neighbours, the untrimmed plan and the other kernel, on {{COPIES}} copies of the Wikidata sample, text and random, {{ROUNDS}} paired rounds ({{ROUNDS_P8}} pinned at 8), settle {{SETTLE}} s; then the memory controller, {{REPS}} reps"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
-      || { echo "bench-recalibrate-057: the checkout has local changes"; exit 1; }
+      || { echo "bench-recalibrate-058: the checkout has local changes"; exit 1; }
     dry="{{DRY}}"
-    [ -z "$dry" ] || echo "bench-recalibrate-057: DRY RUN: the untimed preflight; no timing kept; not evidence" | tee "$O/DRY-RUN.txt"
-    # 0.5.7's decoder: this commit's src is master's at the open kernel's merge (17405826), byte
-    # for byte (the pin; 2026-11-18's was v0.5.5, 7214f8ca)
-    PIN=1740582674ac8e6dcd90329a62a6c46a4b92fd29
+    [ -z "$dry" ] || echo "bench-recalibrate-058: DRY RUN: the untimed preflight; no timing kept; not evidence" | tee "$O/DRY-RUN.txt"
+    # 0.5.8's decoder: this commit's src is master's at #668's merge (70b18ca4), byte for byte
+    # (the pin; 0.5.7's was 17405826, 2026-11-18's v0.5.5, 7214f8ca)
+    PIN=70b18ca4411fa10c9f29b80821c835358dde2f9e
     git cat-file -e $PIN^{commit} 2>/dev/null || git fetch -q origin master 2>/dev/null || true
     git diff --quiet $PIN HEAD -- src Cargo.toml Cargo.lock \
-      || { echo "bench-recalibrate-057: src, Cargo.toml or Cargo.lock differs from master's 17405826"; exit 1; }
+      || { echo "bench-recalibrate-058: src, Cargo.toml or Cargo.lock differs from master's 70b18ca4"; exit 1; }
     echo "src, Cargo.toml and Cargo.lock: master's $PIN" | tee "$O/pin.txt"
     export RUSTUP_TOOLCHAIN=1.99.1
     rustc -V | grep -q '^rustc 1\.99\.1 ' \
-      || { echo "bench-recalibrate-057: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+      || { echo "bench-recalibrate-058: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
     cargo build -q --release --example ab --example windows
     AB=$PWD/target/release/examples/ab
     git rev-parse HEAD > "$O/commit.txt"
@@ -1944,7 +1949,7 @@ bench-recalibrate-057 COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="
     [ "$hold_cpu" = off ] || { hold=(--hold-cpu "$hold_cpu" --hold-max-threads 9); hold_max=9; }
     for spec in "10:mibz2-occ-7-28,mibz2-occ-6-24,mibz2-occ-8-32,mibz2-occ-10-40" \
                 "8:mibz2-occ-6-24,mibz2-occ-5-20,mibz2-occ-7-28,mibz2-occ-8-32" \
-                "6:mibz2-oce-5-20,mibz2-oce-4-16,mibz2-oce-6-24,mibz2-occ-5-20" \
+                "6:mibz2-occ-5-20,mibz2-occ-4-16,mibz2-occ-6-24,mibz2-oce-6-24" \
                 "4:mibz2-oce-3-12,mibz2-oce-2-8,mibz2-oce-4-16,mibz2-occ-3-12"; do
       t=${spec%%:*}; r={{ROUNDS}}; [ "$t" = 8 ] && r={{ROUNDS_P8}}
       echo "pinned at $t threads, $r rounds: ${spec#*:}"
@@ -1957,7 +1962,7 @@ bench-recalibrate-057 COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="
                 "16:mibz2-occ-7-28,mibz2-occ-8-32,mibz2-occ-10-64" \
                 "20:mibz2-occ-7-28,mibz2-occ-8-32,mibz2-occ-10-80" \
                 "8:mibz2-occ-8-32,mibz2-occ-7-28" \
-                "6:mibz2-oce-6-24,mibz2-oce-5-20,mibz2-occ-6-24" \
+                "6:mibz2-occ-6-24,mibz2-occ-5-20,mibz2-oce-6-24" \
                 "4:mibz2-oce-4-16,mibz2-oce-3-12,mibz2-occ-4-16"; do
       echo "unpinned at ${spec%%:*} threads: ${spec#*:}"
       "$AB" run "$O/unpinned.jsonl" --arms "${spec#*:}" --threads "${spec%%:*}" --rounds {{ROUNDS}} \
@@ -1970,35 +1975,37 @@ bench-recalibrate-057 COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="
     # each placement one Holm family at α 0.025: pinned, 12 cells
     python3 bench/two_arm.py "$O/pinned.jsonl" "${common[@]}" --judged 10,8,6,4 \
       --hold-max-threads "$hold_max" --rounds-at 8={{ROUNDS_P8}} \
-      --ref-at mibz2-occ-7-28=10 --ref-at mibz2-occ-6-24=8 --ref-at mibz2-oce-5-20=6 --ref-at mibz2-oce-3-12=4 \
-      --cand mibz2-occ-6-24 --judge-at mibz2-occ-6-24=10 \
+      --ref-at mibz2-occ-7-28=10 --ref-at mibz2-occ-6-24=8 --ref-at mibz2-occ-5-20=6 --ref-at mibz2-oce-3-12=4 \
+      --cand mibz2-occ-6-24 --judge-at mibz2-occ-6-24=10,6 \
       --cand mibz2-occ-8-32 --judge-at mibz2-occ-8-32=10,8 \
       --cand mibz2-occ-10-40 --judge-at mibz2-occ-10-40=10 \
       --cand mibz2-occ-7-28 --judge-at mibz2-occ-7-28=8 \
-      --cand mibz2-occ-5-20 --judge-at mibz2-occ-5-20=8,6 \
-      --cand mibz2-oce-4-16 --judge-at mibz2-oce-4-16=6,4 \
+      --cand mibz2-occ-5-20 --judge-at mibz2-occ-5-20=8 \
+      --cand mibz2-occ-4-16 --judge-at mibz2-occ-4-16=6 \
       --cand mibz2-oce-6-24 --judge-at mibz2-oce-6-24=6 \
+      --cand mibz2-oce-4-16 --judge-at mibz2-oce-4-16=4 \
       --cand mibz2-oce-2-8 --judge-at mibz2-oce-2-8=4 \
       --cand mibz2-occ-3-12 --judge-at mibz2-occ-3-12=4 \
       | tee "$O/pinned-verdict.txt" \
-      || echo "bench-recalibrate-057: the pinned family is VOID (pinned-verdict.txt says why); the bundle is kept"
+      || echo "bench-recalibrate-058: the pinned family is VOID (pinned-verdict.txt says why); the bundle is kept"
     # unpinned, 14 cells
     python3 bench/two_arm.py "$O/unpinned.jsonl" "${common[@]}" --judged 10,12,16,20,8,6,4 \
       --hold-max-threads 0 --unpinned \
-      --ref-at mibz2-occ-7-28=10,12,16,20 --ref-at mibz2-occ-8-32=8 --ref-at mibz2-oce-6-24=6 \
+      --ref-at mibz2-occ-7-28=10,12,16,20 --ref-at mibz2-occ-8-32=8 --ref-at mibz2-occ-6-24=6 \
       --ref-at mibz2-oce-4-16=4 \
-      --cand mibz2-occ-6-24 --judge-at mibz2-occ-6-24=10,6 \
+      --cand mibz2-occ-6-24 --judge-at mibz2-occ-6-24=10 \
       --cand mibz2-occ-8-32 --judge-at mibz2-occ-8-32=10,12,16,20 \
       --cand mibz2-occ-10-40 --judge-at mibz2-occ-10-40=10 \
       --cand mibz2-occ-10-48 --judge-at mibz2-occ-10-48=12 \
       --cand mibz2-occ-10-64 --judge-at mibz2-occ-10-64=16 \
       --cand mibz2-occ-10-80 --judge-at mibz2-occ-10-80=20 \
       --cand mibz2-occ-7-28 --judge-at mibz2-occ-7-28=8 \
-      --cand mibz2-oce-5-20 --judge-at mibz2-oce-5-20=6 \
+      --cand mibz2-occ-5-20 --judge-at mibz2-occ-5-20=6 \
+      --cand mibz2-oce-6-24 --judge-at mibz2-oce-6-24=6 \
       --cand mibz2-oce-3-12 --judge-at mibz2-oce-3-12=4 \
       --cand mibz2-occ-4-16 --judge-at mibz2-occ-4-16=4 \
       | tee "$O/unpinned-verdict.txt" \
-      || echo "bench-recalibrate-057: the unpinned family is VOID (unpinned-verdict.txt says why); the bundle is kept"
+      || echo "bench-recalibrate-058: the unpinned family is VOID (unpinned-verdict.txt says why); the bundle is kept"
     # the DRAM diagnostic (decides nothing): the memory controller system-wide, so only where
     # `kernel.perf_event_paranoid` is 0 or less; skipped, and said so, otherwise. Unpinned at 10
     # threads the four lazy counts (MONODROMY's traffic model), unpinned at 6 and pinned at 4
@@ -2009,7 +2016,7 @@ bench-recalibrate-057 COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="
       perf --version | tee "$O/perf_version.txt"
       : > "$O/dram.txt"
       for spec in "u:10:mibz2-occ-7-28:mibz2-occ-6-24,mibz2-occ-8-32,mibz2-occ-10-40" \
-                  "u:6:mibz2-oce-6-24:mibz2-occ-6-24" \
+                  "u:6:mibz2-occ-6-24:mibz2-oce-6-24" \
                   "p:4:mibz2-oce-3-12:mibz2-occ-3-12"; do
         IFS=: read -r place t ref cands <<< "$spec"
         IFS=, read -ra cs <<< "$cands"
@@ -2021,14 +2028,14 @@ bench-recalibrate-057 COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="
             echo "== $([ "$place" = u ] && echo unpinned || echo pinned) at $t threads: $c against $ref" | tee -a "$O/dram.txt"
             python3 bench/counters.py report "$f" --ref "$ref" --cand "$c" --events imc \
               --threads "$t" --reps {{REPS}} | tee -a "$O/dram.txt" \
-              || echo "bench-recalibrate-057: the DRAM diagnostic for $c at $t is VOID (dram.txt says why); the verdicts stand" | tee -a "$O/dram.txt"
+              || echo "bench-recalibrate-058: the DRAM diagnostic for $c at $t is VOID (dram.txt says why); the verdicts stand" | tee -a "$O/dram.txt"
           done
         else
-          echo "bench-recalibrate-057: the DRAM diagnostic at $place$t failed to count; the verdicts stand" | tee -a "$O/dram.txt"
+          echo "bench-recalibrate-058: the DRAM diagnostic at $place$t failed to count; the verdicts stand" | tee -a "$O/dram.txt"
         fi
       done
     else
-      echo "bench-recalibrate-057: the DRAM diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 0); the verdicts stand" | tee "$O/dram.txt"
+      echo "bench-recalibrate-058: the DRAM diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 0); the verdicts stand" | tee "$O/dram.txt"
     fi
     date -u +%FT%TZ > "$O/finished.txt"
     bash bench/bundle.sh "$O"
