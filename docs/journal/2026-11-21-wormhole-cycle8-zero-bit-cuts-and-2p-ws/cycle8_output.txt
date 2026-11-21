@@ -1,0 +1,13 @@
+PASS Gate G1: 14409 small, multi-cycle, and multi-epoch cases verified byte-exact.
+
+=== CYCLE 8 CONFRONTATION (21 PAIRED ROUNDS VS `origin/master` `OpenCells` + BMCP TRACE) ===
+Block       |   Master | Diet_mu1 (  /Mst) |   2P-WS8 (  /Mst) [4a/4b us] | Diet_DpL2 ->  WS8_Crit (Ratio) | L3_Miss | 1P_Aux
+----------------------------------------------------------------------------------------------------------------------------
+block-0.L   | 1288.6us | 1467.1us (1.139x) | 1597.5us (1.240x) [ 177/ 487] |     25533 ->      8932 (0.35x) |     809 |   6.9%
+block-2.L   | 1551.9us | 1743.2us (1.123x) | 1842.6us (1.187x) [ 213/ 555] |     37778 ->     12781 (0.34x) |     746 |   6.0%
+block-85.L  | 1593.2us | 1697.9us (1.066x) | 1815.0us (1.139x) [ 320/ 703] |     47553 ->     22458 (0.47x) |     479 |  10.4%
+block-143.L | 2797.8us | 3066.2us (1.096x) | 3057.6us (1.093x) [ 427/ 893] |     94739 ->     40685 (0.43x) |     831 |  10.3%
+block-210.L | 2462.7us | 2636.6us (1.071x) | 2810.3us (1.141x) [ 549/ 955] |     89106 ->     52920 (0.59x) |     563 |   6.3%
+block-207.L | 1859.0us | 2064.3us (1.110x) | 2143.1us (1.153x) [ 315/ 620] |     51240 ->     21042 (0.41x) |     815 |  13.0%
+
+Persistent Scratch Heap of `Diet_mu1` & `2P-WS8` (`0 B` staging!): 1051.1 KiB (w/ out = 1930.0 KiB <= 2048 KiB -> 10w = 18.8 MiB <= 20 MiB L3!)

@@ -1,0 +1,48 @@
+name = "Wormhole Cycle 8 Candidate: Zero-Bit Xor-Mask Cuts + Two-Pass 8-Lane Work-Stealing Zero-Copy MLP (2P-WS8)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "outq16_swar_runs_pass"
+inputs = ["records", "C", "p", "n"]
+output = "out_aliased_q16_and_triples"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "1", B = "R + m", Q = "0", M = "H" }
+evidence = "SWAR64 4xU16 pack into dead out[0..n+16) + thick strips into shared [u32;3] triples; 0 overflow chunks on 6/6 blocks."
+
+[[edge]]
+id = "chaitin_node16_endpoint_in_edges"
+inputs = ["out_aliased_q16_and_triples", "C", "n"]
+output = "bands_inline16_and_word_len"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "16B Node16 + Rule + bottom hosted inside dead edges[0..m); builds word_len[code] (u16) alongside inline16[code]."
+
+[[edge]]
+id = "span_chunked_band_wire"
+inputs = ["bands_inline16_and_word_len", "out_aliased_q16_and_triples"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Hoists 512-entry chunk and 64K-epoch boundaries outside the inner band loop; wires edges[0..m) before Phase 4 writes out."
+
+[[edge]]
+id = "zero_bit_xor_cut_scout_8lane"
+inputs = ["critical_edges", "bands_inline16_and_word_len", "p", "n"]
+output = "cut_cycle_prefix_offsets"
+status = "verified"
+dependent = true
+cost = { W = "m", D = "m/8", B = "m", Q = "m", M = "1" }
+evidence = "8-lane work-stealing walk over S in [17,32] zero-bit cuts ((j ^ mark) & cm) == 0 inside L3-resident edges[0..m); 0 B heap staging (512 B stack), exact multi-cycle filtering via induced bijection on S_cut."
+
+[[edge]]
+id = "zero_copy_8lane_inplace_emit"
+inputs = ["critical_edges", "bands_inline16_and_word_len", "cut_cycle_prefix_offsets", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m/8", B = "n", Q = "m", M = "n + m" }
+evidence = "8-lane work-stealing in-place 16B copy directly into disjoint slices of out[0..n); 0 B staging heap, <= 1.85 MiB/worker total WS (10 workers <= 18.5 MiB <= 20 MiB L3)."
