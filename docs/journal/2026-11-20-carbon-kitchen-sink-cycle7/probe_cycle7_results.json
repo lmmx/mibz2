@@ -1,0 +1,1229 @@
+{
+  "small_verifications": {
+    "theorem_7_1_spectrum_classes": 1170,
+    "iet_stream_merge_and_symmetry_verified": 230,
+    "fourier_cauchy_dft_verified": 230,
+    "tribonacci_n1705_dyadic_r": {
+      "2^0": 17,
+      "2^1": 30,
+      "2^2": 54,
+      "2^3": 99,
+      "2^4": 171,
+      "2^5": 299,
+      "2^6": 508,
+      "2^7": 785,
+      "2^8": 1271,
+      "2^9": 1705,
+      "2^10": 1705,
+      "2^11": 1463
+    }
+  },
+  "blocks": {
+    "block-0.L": {
+      "n": 899931,
+      "r": 51184,
+      "debruijn_condensation": {
+        "k_star_unique_eulerian": 4744,
+        "L_max_plus_1_zero_branching": 4822,
+        "V_br_at_k_star": 1,
+        "log2_Z_at_k_star_minus_1": 1.0,
+        "curve": {
+          "1": {
+            "V_k": 89,
+            "V_k_br": 86,
+            "H_loc_bits": 2634155.238,
+            "log2_Z_k_bits": 2634132.6965,
+            "unique_condensation": false
+          },
+          "2": {
+            "V_k": 1628,
+            "V_k_br": 1153,
+            "H_loc_bits": 1305405.604,
+            "log2_Z_k_bits": 1305381.9453,
+            "unique_condensation": false
+          },
+          "4": {
+            "V_k": 37490,
+            "V_k_br": 6975,
+            "H_loc_bits": 348301.678,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "8": {
+            "V_k": 61507,
+            "V_k_br": 2108,
+            "H_loc_bits": 123643.189,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "16": {
+            "V_k": 86255,
+            "V_k_br": 1338,
+            "H_loc_bits": 66337.492,
+            "log2_Z_k_bits": 66313.4809,
+            "unique_condensation": false
+          },
+          "32": {
+            "V_k": 125069,
+            "V_k_br": 1163,
+            "H_loc_bits": 45562.876,
+            "log2_Z_k_bits": 45545.6948,
+            "unique_condensation": false
+          },
+          "64": {
+            "V_k": 194751,
+            "V_k_br": 1067,
+            "H_loc_bits": 20626.457,
+            "log2_Z_k_bits": 20598.0921,
+            "unique_condensation": false
+          },
+          "128": {
+            "V_k": 297041,
+            "V_k_br": 706,
+            "H_loc_bits": 10456.173,
+            "log2_Z_k_bits": 10444.1409,
+            "unique_condensation": false
+          },
+          "256": {
+            "V_k": 433976,
+            "V_k_br": 584,
+            "H_loc_bits": 6753.949,
+            "log2_Z_k_bits": 6737.4861,
+            "unique_condensation": false
+          },
+          "512": {
+            "V_k": 647645,
+            "V_k_br": 389,
+            "H_loc_bits": 2315.442,
+            "log2_Z_k_bits": 2182.2799,
+            "unique_condensation": false
+          },
+          "1024": {
+            "V_k": 875049,
+            "V_k_br": 47,
+            "H_loc_bits": 325.387,
+            "log2_Z_k_bits": 308.13,
+            "unique_condensation": false
+          },
+          "2048": {
+            "V_k": 886959,
+            "V_k_br": 5,
+            "H_loc_bits": 5.585,
+            "log2_Z_k_bits": 2.0,
+            "unique_condensation": false
+          },
+          "4096": {
+            "V_k": 897199,
+            "V_k_br": 5,
+            "H_loc_bits": 5.585,
+            "log2_Z_k_bits": 2.0,
+            "unique_condensation": false
+          },
+          "8192": {
+            "V_k": 899931,
+            "V_k_br": 0,
+            "H_loc_bits": 0.0,
+            "log2_Z_k_bits": 0.0,
+            "unique_condensation": true
+          }
+        }
+      },
+      "dyadic_lf_squaring": {
+        "sum_rj_j0_to_19": 11580054,
+        "sum_rj_over_n": 12.87,
+        "curve": {
+          "2^0": {
+            "r_pieces": 51184,
+            "frac_n": 0.0569
+          },
+          "2^1": {
+            "r_pieces": 62136,
+            "frac_n": 0.069
+          },
+          "2^2": {
+            "r_pieces": 76187,
+            "frac_n": 0.0847
+          },
+          "2^3": {
+            "r_pieces": 99013,
+            "frac_n": 0.11
+          },
+          "2^4": {
+            "r_pieces": 131417,
+            "frac_n": 0.146
+          },
+          "2^5": {
+            "r_pieces": 193024,
+            "frac_n": 0.2145
+          },
+          "2^6": {
+            "r_pieces": 289617,
+            "frac_n": 0.3218
+          },
+          "2^7": {
+            "r_pieces": 419489,
+            "frac_n": 0.4661
+          },
+          "2^8": {
+            "r_pieces": 585885,
+            "frac_n": 0.651
+          },
+          "2^9": {
+            "r_pieces": 770300,
+            "frac_n": 0.856
+          },
+          "2^10": {
+            "r_pieces": 850365,
+            "frac_n": 0.9449
+          },
+          "2^11": {
+            "r_pieces": 870865,
+            "frac_n": 0.9677
+          },
+          "2^12": {
+            "r_pieces": 893322,
+            "frac_n": 0.9927
+          },
+          "2^13": {
+            "r_pieces": 895308,
+            "frac_n": 0.9949
+          },
+          "2^14": {
+            "r_pieces": 897078,
+            "frac_n": 0.9968
+          },
+          "2^15": {
+            "r_pieces": 897584,
+            "frac_n": 0.9974
+          },
+          "2^16": {
+            "r_pieces": 899034,
+            "frac_n": 0.999
+          },
+          "2^17": {
+            "r_pieces": 899619,
+            "frac_n": 0.9997
+          },
+          "2^18": {
+            "r_pieces": 898839,
+            "frac_n": 0.9988
+          },
+          "2^19": {
+            "r_pieces": 899788,
+            "frac_n": 0.9998
+          }
+        }
+      },
+      "fourier_cauchy_structure": {
+        "r": 51184,
+        "active_cauchy_generators": 51184,
+        "perfect_cluster_cancellations": 0
+      }
+    },
+    "block-2.L": {
+      "n": 900000,
+      "r": 54532,
+      "debruijn_condensation": {
+        "k_star_unique_eulerian": 10526,
+        "L_max_plus_1_zero_branching": 10528,
+        "V_br_at_k_star": 1,
+        "log2_Z_at_k_star_minus_1": 1.0,
+        "curve": {
+          "1": {
+            "V_k": 86,
+            "V_k_br": 84,
+            "H_loc_bits": 2693003.504,
+            "log2_Z_k_bits": 2692981.2503,
+            "unique_condensation": false
+          },
+          "2": {
+            "V_k": 1783,
+            "V_k_br": 1247,
+            "H_loc_bits": 1397734.222,
+            "log2_Z_k_bits": 1397710.5594,
+            "unique_condensation": false
+          },
+          "4": {
+            "V_k": 39470,
+            "V_k_br": 6942,
+            "H_loc_bits": 397799.629,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "8": {
+            "V_k": 65526,
+            "V_k_br": 2332,
+            "H_loc_bits": 141445.045,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "16": {
+            "V_k": 95182,
+            "V_k_br": 1755,
+            "H_loc_bits": 74612.377,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "32": {
+            "V_k": 142557,
+            "V_k_br": 1416,
+            "H_loc_bits": 45911.554,
+            "log2_Z_k_bits": 45893.6442,
+            "unique_condensation": false
+          },
+          "64": {
+            "V_k": 214563,
+            "V_k_br": 1137,
+            "H_loc_bits": 20037.615,
+            "log2_Z_k_bits": 19993.4687,
+            "unique_condensation": false
+          },
+          "128": {
+            "V_k": 320205,
+            "V_k_br": 812,
+            "H_loc_bits": 10789.739,
+            "log2_Z_k_bits": 10770.1021,
+            "unique_condensation": false
+          },
+          "256": {
+            "V_k": 467256,
+            "V_k_br": 646,
+            "H_loc_bits": 6481.452,
+            "log2_Z_k_bits": 6465.711,
+            "unique_condensation": false
+          },
+          "512": {
+            "V_k": 672219,
+            "V_k_br": 388,
+            "H_loc_bits": 1799.844,
+            "log2_Z_k_bits": 1664.2345,
+            "unique_condensation": false
+          },
+          "1024": {
+            "V_k": 845651,
+            "V_k_br": 21,
+            "H_loc_bits": 43.742,
+            "log2_Z_k_bits": 31.698,
+            "unique_condensation": false
+          },
+          "2048": {
+            "V_k": 860411,
+            "V_k_br": 8,
+            "H_loc_bits": 13.492,
+            "log2_Z_k_bits": 10.2288,
+            "unique_condensation": false
+          },
+          "4096": {
+            "V_k": 880891,
+            "V_k_br": 8,
+            "H_loc_bits": 13.492,
+            "log2_Z_k_bits": 10.2288,
+            "unique_condensation": false
+          },
+          "8192": {
+            "V_k": 895330,
+            "V_k_br": 1,
+            "H_loc_bits": 2.585,
+            "log2_Z_k_bits": 1.0,
+            "unique_condensation": false
+          }
+        }
+      },
+      "dyadic_lf_squaring": {
+        "sum_rj_j0_to_19": 11716104,
+        "sum_rj_over_n": 13.02,
+        "curve": {
+          "2^0": {
+            "r_pieces": 54532,
+            "frac_n": 0.0606
+          },
+          "2^1": {
+            "r_pieces": 67755,
+            "frac_n": 0.0753
+          },
+          "2^2": {
+            "r_pieces": 85160,
+            "frac_n": 0.0946
+          },
+          "2^3": {
+            "r_pieces": 112795,
+            "frac_n": 0.1253
+          },
+          "2^4": {
+            "r_pieces": 154557,
+            "frac_n": 0.1717
+          },
+          "2^5": {
+            "r_pieces": 222186,
+            "frac_n": 0.2469
+          },
+          "2^6": {
+            "r_pieces": 321134,
+            "frac_n": 0.3568
+          },
+          "2^7": {
+            "r_pieces": 451619,
+            "frac_n": 0.5018
+          },
+          "2^8": {
+            "r_pieces": 616690,
+            "frac_n": 0.6852
+          },
+          "2^9": {
+            "r_pieces": 773226,
+            "frac_n": 0.8591
+          },
+          "2^10": {
+            "r_pieces": 832389,
+            "frac_n": 0.9249
+          },
+          "2^11": {
+            "r_pieces": 855739,
+            "frac_n": 0.9508
+          },
+          "2^12": {
+            "r_pieces": 877901,
+            "frac_n": 0.9754
+          },
+          "2^13": {
+            "r_pieces": 891612,
+            "frac_n": 0.9907
+          },
+          "2^14": {
+            "r_pieces": 899270,
+            "frac_n": 0.9992
+          },
+          "2^15": {
+            "r_pieces": 899902,
+            "frac_n": 0.9999
+          },
+          "2^16": {
+            "r_pieces": 900000,
+            "frac_n": 1.0
+          },
+          "2^17": {
+            "r_pieces": 900000,
+            "frac_n": 1.0
+          },
+          "2^18": {
+            "r_pieces": 899643,
+            "frac_n": 0.9996
+          },
+          "2^19": {
+            "r_pieces": 899994,
+            "frac_n": 1.0
+          }
+        }
+      },
+      "fourier_cauchy_structure": {
+        "r": 54532,
+        "active_cauchy_generators": 54532,
+        "perfect_cluster_cancellations": 0
+      }
+    },
+    "block-85.L": {
+      "n": 899935,
+      "r": 79375,
+      "debruijn_condensation": {
+        "k_star_unique_eulerian": 925,
+        "L_max_plus_1_zero_branching": 926,
+        "V_br_at_k_star": 2,
+        "log2_Z_at_k_star_minus_1": 2.0,
+        "curve": {
+          "1": {
+            "V_k": 94,
+            "V_k_br": 87,
+            "H_loc_bits": 2594601.477,
+            "log2_Z_k_bits": 2594578.2602,
+            "unique_condensation": false
+          },
+          "2": {
+            "V_k": 1999,
+            "V_k_br": 1363,
+            "H_loc_bits": 1345155.853,
+            "log2_Z_k_bits": 1345127.9827,
+            "unique_condensation": false
+          },
+          "4": {
+            "V_k": 54213,
+            "V_k_br": 11009,
+            "H_loc_bits": 321816.296,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "8": {
+            "V_k": 90037,
+            "V_k_br": 2601,
+            "H_loc_bits": 118624.847,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "16": {
+            "V_k": 127227,
+            "V_k_br": 2445,
+            "H_loc_bits": 77790.587,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "32": {
+            "V_k": 195712,
+            "V_k_br": 1848,
+            "H_loc_bits": 55166.833,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "64": {
+            "V_k": 295427,
+            "V_k_br": 1282,
+            "H_loc_bits": 22999.937,
+            "log2_Z_k_bits": 22952.2658,
+            "unique_condensation": false
+          },
+          "128": {
+            "V_k": 460921,
+            "V_k_br": 1216,
+            "H_loc_bits": 15442.106,
+            "log2_Z_k_bits": 15423.7975,
+            "unique_condensation": false
+          },
+          "256": {
+            "V_k": 679366,
+            "V_k_br": 723,
+            "H_loc_bits": 10192.673,
+            "log2_Z_k_bits": 10170.0359,
+            "unique_condensation": false
+          },
+          "512": {
+            "V_k": 894022,
+            "V_k_br": 28,
+            "H_loc_bits": 52.845,
+            "log2_Z_k_bits": 32.698,
+            "unique_condensation": false
+          },
+          "1024": {
+            "V_k": 899935,
+            "V_k_br": 0,
+            "H_loc_bits": 0.0,
+            "log2_Z_k_bits": 0.0,
+            "unique_condensation": true
+          },
+          "2048": {
+            "V_k": 899935,
+            "V_k_br": 0,
+            "H_loc_bits": 0.0,
+            "log2_Z_k_bits": 0.0,
+            "unique_condensation": true
+          },
+          "4096": {
+            "V_k": 899935,
+            "V_k_br": 0,
+            "H_loc_bits": 0.0,
+            "log2_Z_k_bits": 0.0,
+            "unique_condensation": true
+          },
+          "8192": {
+            "V_k": 899935,
+            "V_k_br": 0,
+            "H_loc_bits": 0.0,
+            "log2_Z_k_bits": 0.0,
+            "unique_condensation": true
+          }
+        }
+      },
+      "dyadic_lf_squaring": {
+        "sum_rj_j0_to_19": 12472588,
+        "sum_rj_over_n": 13.86,
+        "curve": {
+          "2^0": {
+            "r_pieces": 79375,
+            "frac_n": 0.0882
+          },
+          "2^1": {
+            "r_pieces": 96492,
+            "frac_n": 0.1072
+          },
+          "2^2": {
+            "r_pieces": 117406,
+            "frac_n": 0.1305
+          },
+          "2^3": {
+            "r_pieces": 150795,
+            "frac_n": 0.1676
+          },
+          "2^4": {
+            "r_pieces": 205406,
+            "frac_n": 0.2282
+          },
+          "2^5": {
+            "r_pieces": 285907,
+            "frac_n": 0.3177
+          },
+          "2^6": {
+            "r_pieces": 395748,
+            "frac_n": 0.4398
+          },
+          "2^7": {
+            "r_pieces": 542576,
+            "frac_n": 0.6029
+          },
+          "2^8": {
+            "r_pieces": 736207,
+            "frac_n": 0.8181
+          },
+          "2^9": {
+            "r_pieces": 885542,
+            "frac_n": 0.984
+          },
+          "2^10": {
+            "r_pieces": 883478,
+            "frac_n": 0.9817
+          },
+          "2^11": {
+            "r_pieces": 898917,
+            "frac_n": 0.9989
+          },
+          "2^12": {
+            "r_pieces": 899485,
+            "frac_n": 0.9995
+          },
+          "2^13": {
+            "r_pieces": 898744,
+            "frac_n": 0.9987
+          },
+          "2^14": {
+            "r_pieces": 899446,
+            "frac_n": 0.9995
+          },
+          "2^15": {
+            "r_pieces": 899763,
+            "frac_n": 0.9998
+          },
+          "2^16": {
+            "r_pieces": 899358,
+            "frac_n": 0.9994
+          },
+          "2^17": {
+            "r_pieces": 899645,
+            "frac_n": 0.9997
+          },
+          "2^18": {
+            "r_pieces": 899284,
+            "frac_n": 0.9993
+          },
+          "2^19": {
+            "r_pieces": 899014,
+            "frac_n": 0.999
+          }
+        }
+      },
+      "fourier_cauchy_structure": {
+        "r": 79375,
+        "active_cauchy_generators": 79375,
+        "perfect_cluster_cancellations": 0
+      }
+    },
+    "block-143.L": {
+      "n": 899869,
+      "r": 108335,
+      "debruijn_condensation": {
+        "k_star_unique_eulerian": 9482,
+        "L_max_plus_1_zero_branching": 17638,
+        "V_br_at_k_star": 3,
+        "log2_Z_at_k_star_minus_1": 1.0,
+        "curve": {
+          "1": {
+            "V_k": 96,
+            "V_k_br": 94,
+            "H_loc_bits": 2807960.957,
+            "log2_Z_k_bits": 2807938.8658,
+            "unique_condensation": false
+          },
+          "2": {
+            "V_k": 2354,
+            "V_k_br": 1616,
+            "H_loc_bits": 1658711.786,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "4": {
+            "V_k": 68616,
+            "V_k_br": 15387,
+            "H_loc_bits": 551614.309,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "8": {
+            "V_k": 128378,
+            "V_k_br": 5064,
+            "H_loc_bits": 211156.772,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "16": {
+            "V_k": 197101,
+            "V_k_br": 4309,
+            "H_loc_bits": 109913.71,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "32": {
+            "V_k": 296866,
+            "V_k_br": 2663,
+            "H_loc_bits": 55633.517,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "64": {
+            "V_k": 424048,
+            "V_k_br": 1792,
+            "H_loc_bits": 18061.316,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "128": {
+            "V_k": 559842,
+            "V_k_br": 870,
+            "H_loc_bits": 4810.566,
+            "log2_Z_k_bits": 4769.0688,
+            "unique_condensation": false
+          },
+          "256": {
+            "V_k": 664031,
+            "V_k_br": 380,
+            "H_loc_bits": 1471.943,
+            "log2_Z_k_bits": 1416.0495,
+            "unique_condensation": false
+          },
+          "512": {
+            "V_k": 732704,
+            "V_k_br": 145,
+            "H_loc_bits": 442.722,
+            "log2_Z_k_bits": 391.0081,
+            "unique_condensation": false
+          },
+          "1024": {
+            "V_k": 775537,
+            "V_k_br": 56,
+            "H_loc_bits": 148.342,
+            "log2_Z_k_bits": 130.9251,
+            "unique_condensation": false
+          },
+          "2048": {
+            "V_k": 813683,
+            "V_k_br": 25,
+            "H_loc_bits": 50.22,
+            "log2_Z_k_bits": 43.9056,
+            "unique_condensation": false
+          },
+          "4096": {
+            "V_k": 851380,
+            "V_k_br": 17,
+            "H_loc_bits": 31.113,
+            "log2_Z_k_bits": 26.113,
+            "unique_condensation": false
+          },
+          "8192": {
+            "V_k": 885914,
+            "V_k_br": 4,
+            "H_loc_bits": 4.585,
+            "log2_Z_k_bits": 1.0,
+            "unique_condensation": false
+          }
+        }
+      },
+      "dyadic_lf_squaring": {
+        "sum_rj_j0_to_19": 12514353,
+        "sum_rj_over_n": 13.91,
+        "curve": {
+          "2^0": {
+            "r_pieces": 108335,
+            "frac_n": 0.1204
+          },
+          "2^1": {
+            "r_pieces": 135299,
+            "frac_n": 0.1504
+          },
+          "2^2": {
+            "r_pieces": 170773,
+            "frac_n": 0.1898
+          },
+          "2^3": {
+            "r_pieces": 222975,
+            "frac_n": 0.2478
+          },
+          "2^4": {
+            "r_pieces": 296102,
+            "frac_n": 0.3291
+          },
+          "2^5": {
+            "r_pieces": 395417,
+            "frac_n": 0.4394
+          },
+          "2^6": {
+            "r_pieces": 513450,
+            "frac_n": 0.5706
+          },
+          "2^7": {
+            "r_pieces": 597880,
+            "frac_n": 0.6644
+          },
+          "2^8": {
+            "r_pieces": 653364,
+            "frac_n": 0.7261
+          },
+          "2^9": {
+            "r_pieces": 709689,
+            "frac_n": 0.7887
+          },
+          "2^10": {
+            "r_pieces": 763231,
+            "frac_n": 0.8482
+          },
+          "2^11": {
+            "r_pieces": 806922,
+            "frac_n": 0.8967
+          },
+          "2^12": {
+            "r_pieces": 857251,
+            "frac_n": 0.9526
+          },
+          "2^13": {
+            "r_pieces": 885942,
+            "frac_n": 0.9845
+          },
+          "2^14": {
+            "r_pieces": 898517,
+            "frac_n": 0.9985
+          },
+          "2^15": {
+            "r_pieces": 899774,
+            "frac_n": 0.9999
+          },
+          "2^16": {
+            "r_pieces": 899854,
+            "frac_n": 1.0
+          },
+          "2^17": {
+            "r_pieces": 899841,
+            "frac_n": 1.0
+          },
+          "2^18": {
+            "r_pieces": 899868,
+            "frac_n": 1.0
+          },
+          "2^19": {
+            "r_pieces": 899869,
+            "frac_n": 1.0
+          }
+        }
+      },
+      "fourier_cauchy_structure": {
+        "r": 108335,
+        "active_cauchy_generators": 108335,
+        "perfect_cluster_cancellations": 0
+      }
+    },
+    "block-210.L": {
+      "n": 899959,
+      "r": 128732,
+      "debruijn_condensation": {
+        "k_star_unique_eulerian": 4345,
+        "L_max_plus_1_zero_branching": 6939,
+        "V_br_at_k_star": 2,
+        "log2_Z_at_k_star_minus_1": 1.0,
+        "curve": {
+          "1": {
+            "V_k": 96,
+            "V_k_br": 91,
+            "H_loc_bits": 2737502.513,
+            "log2_Z_k_bits": 2737478.8854,
+            "unique_condensation": false
+          },
+          "2": {
+            "V_k": 2219,
+            "V_k_br": 1553,
+            "H_loc_bits": 1585758.02,
+            "log2_Z_k_bits": 1585732.9957,
+            "unique_condensation": false
+          },
+          "4": {
+            "V_k": 78358,
+            "V_k_br": 21388,
+            "H_loc_bits": 436217.284,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "8": {
+            "V_k": 149518,
+            "V_k_br": 4356,
+            "H_loc_bits": 164333.875,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "16": {
+            "V_k": 211063,
+            "V_k_br": 3703,
+            "H_loc_bits": 99546.378,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "32": {
+            "V_k": 312474,
+            "V_k_br": 2481,
+            "H_loc_bits": 60929.838,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "64": {
+            "V_k": 459478,
+            "V_k_br": 2005,
+            "H_loc_bits": 26747.545,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "128": {
+            "V_k": 637054,
+            "V_k_br": 883,
+            "H_loc_bits": 6970.669,
+            "log2_Z_k_bits": 6940.8846,
+            "unique_condensation": false
+          },
+          "256": {
+            "V_k": 776627,
+            "V_k_br": 309,
+            "H_loc_bits": 1954.867,
+            "log2_Z_k_bits": 1915.9567,
+            "unique_condensation": false
+          },
+          "512": {
+            "V_k": 835828,
+            "V_k_br": 130,
+            "H_loc_bits": 458.834,
+            "log2_Z_k_bits": 426.93,
+            "unique_condensation": false
+          },
+          "1024": {
+            "V_k": 860133,
+            "V_k_br": 14,
+            "H_loc_bits": 44.835,
+            "log2_Z_k_bits": 38.3432,
+            "unique_condensation": false
+          },
+          "2048": {
+            "V_k": 874512,
+            "V_k_br": 8,
+            "H_loc_bits": 13.755,
+            "log2_Z_k_bits": 9.1699,
+            "unique_condensation": false
+          },
+          "4096": {
+            "V_k": 894992,
+            "V_k_br": 8,
+            "H_loc_bits": 13.755,
+            "log2_Z_k_bits": 9.1699,
+            "unique_condensation": false
+          },
+          "8192": {
+            "V_k": 899959,
+            "V_k_br": 0,
+            "H_loc_bits": 0.0,
+            "log2_Z_k_bits": 0.0,
+            "unique_condensation": true
+          }
+        }
+      },
+      "dyadic_lf_squaring": {
+        "sum_rj_j0_to_19": 13106546,
+        "sum_rj_over_n": 14.56,
+        "curve": {
+          "2^0": {
+            "r_pieces": 128732,
+            "frac_n": 0.143
+          },
+          "2^1": {
+            "r_pieces": 155477,
+            "frac_n": 0.1728
+          },
+          "2^2": {
+            "r_pieces": 187480,
+            "frac_n": 0.2083
+          },
+          "2^3": {
+            "r_pieces": 235425,
+            "frac_n": 0.2616
+          },
+          "2^4": {
+            "r_pieces": 309480,
+            "frac_n": 0.3439
+          },
+          "2^5": {
+            "r_pieces": 426648,
+            "frac_n": 0.4741
+          },
+          "2^6": {
+            "r_pieces": 572566,
+            "frac_n": 0.6362
+          },
+          "2^7": {
+            "r_pieces": 693361,
+            "frac_n": 0.7704
+          },
+          "2^8": {
+            "r_pieces": 716830,
+            "frac_n": 0.7965
+          },
+          "2^9": {
+            "r_pieces": 797042,
+            "frac_n": 0.8856
+          },
+          "2^10": {
+            "r_pieces": 830943,
+            "frac_n": 0.9233
+          },
+          "2^11": {
+            "r_pieces": 864507,
+            "frac_n": 0.9606
+          },
+          "2^12": {
+            "r_pieces": 892936,
+            "frac_n": 0.9922
+          },
+          "2^13": {
+            "r_pieces": 899100,
+            "frac_n": 0.999
+          },
+          "2^14": {
+            "r_pieces": 899383,
+            "frac_n": 0.9994
+          },
+          "2^15": {
+            "r_pieces": 899690,
+            "frac_n": 0.9997
+          },
+          "2^16": {
+            "r_pieces": 898363,
+            "frac_n": 0.9982
+          },
+          "2^17": {
+            "r_pieces": 898950,
+            "frac_n": 0.9989
+          },
+          "2^18": {
+            "r_pieces": 899746,
+            "frac_n": 0.9998
+          },
+          "2^19": {
+            "r_pieces": 899887,
+            "frac_n": 0.9999
+          }
+        }
+      },
+      "fourier_cauchy_structure": {
+        "r": 128732,
+        "active_cauchy_generators": 128732,
+        "perfect_cluster_cancellations": 0
+      }
+    },
+    "block-207.L": {
+      "n": 899998,
+      "r": 87111,
+      "debruijn_condensation": {
+        "k_star_unique_eulerian": 4360,
+        "L_max_plus_1_zero_branching": 4363,
+        "V_br_at_k_star": 2,
+        "log2_Z_at_k_star_minus_1": 2.0,
+        "curve": {
+          "1": {
+            "V_k": 94,
+            "V_k_br": 85,
+            "H_loc_bits": 2783496.741,
+            "log2_Z_k_bits": 2783474.0584,
+            "unique_condensation": false
+          },
+          "2": {
+            "V_k": 2249,
+            "V_k_br": 1584,
+            "H_loc_bits": 1518299.053,
+            "log2_Z_k_bits": 1518273.8083,
+            "unique_condensation": false
+          },
+          "4": {
+            "V_k": 58848,
+            "V_k_br": 12234,
+            "H_loc_bits": 513082.424,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "8": {
+            "V_k": 104746,
+            "V_k_br": 3494,
+            "H_loc_bits": 185924.414,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "16": {
+            "V_k": 156090,
+            "V_k_br": 3057,
+            "H_loc_bits": 94292.656,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "32": {
+            "V_k": 233582,
+            "V_k_br": 1823,
+            "H_loc_bits": 41861.045,
+            "log2_Z_k_bits": null,
+            "unique_condensation": false
+          },
+          "64": {
+            "V_k": 335190,
+            "V_k_br": 1492,
+            "H_loc_bits": 18384.725,
+            "log2_Z_k_bits": 18358.178,
+            "unique_condensation": false
+          },
+          "128": {
+            "V_k": 464004,
+            "V_k_br": 705,
+            "H_loc_bits": 6510.929,
+            "log2_Z_k_bits": 6490.0056,
+            "unique_condensation": false
+          },
+          "256": {
+            "V_k": 576202,
+            "V_k_br": 350,
+            "H_loc_bits": 2949.802,
+            "log2_Z_k_bits": 2930.3922,
+            "unique_condensation": false
+          },
+          "512": {
+            "V_k": 663952,
+            "V_k_br": 178,
+            "H_loc_bits": 1340.951,
+            "log2_Z_k_bits": 1319.2958,
+            "unique_condensation": false
+          },
+          "1024": {
+            "V_k": 723897,
+            "V_k_br": 54,
+            "H_loc_bits": 394.827,
+            "log2_Z_k_bits": 388.5049,
+            "unique_condensation": false
+          },
+          "2048": {
+            "V_k": 800614,
+            "V_k_br": 55,
+            "H_loc_bits": 163.673,
+            "log2_Z_k_bits": 156.1319,
+            "unique_condensation": false
+          },
+          "4096": {
+            "V_k": 893352,
+            "V_k_br": 22,
+            "H_loc_bits": 47.716,
+            "log2_Z_k_bits": 36.0199,
+            "unique_condensation": false
+          },
+          "8192": {
+            "V_k": 899998,
+            "V_k_br": 0,
+            "H_loc_bits": 0.0,
+            "log2_Z_k_bits": 0.0,
+            "unique_condensation": true
+          }
+        }
+      },
+      "dyadic_lf_squaring": {
+        "sum_rj_j0_to_19": 12014671,
+        "sum_rj_over_n": 13.35,
+        "curve": {
+          "2^0": {
+            "r_pieces": 87111,
+            "frac_n": 0.0968
+          },
+          "2^1": {
+            "r_pieces": 107914,
+            "frac_n": 0.1199
+          },
+          "2^2": {
+            "r_pieces": 134064,
+            "frac_n": 0.149
+          },
+          "2^3": {
+            "r_pieces": 173205,
+            "frac_n": 0.1925
+          },
+          "2^4": {
+            "r_pieces": 233759,
+            "frac_n": 0.2597
+          },
+          "2^5": {
+            "r_pieces": 315452,
+            "frac_n": 0.3505
+          },
+          "2^6": {
+            "r_pieces": 418225,
+            "frac_n": 0.4647
+          },
+          "2^7": {
+            "r_pieces": 512210,
+            "frac_n": 0.5691
+          },
+          "2^8": {
+            "r_pieces": 583710,
+            "frac_n": 0.6486
+          },
+          "2^9": {
+            "r_pieces": 671618,
+            "frac_n": 0.7462
+          },
+          "2^10": {
+            "r_pieces": 756733,
+            "frac_n": 0.8408
+          },
+          "2^11": {
+            "r_pieces": 824650,
+            "frac_n": 0.9163
+          },
+          "2^12": {
+            "r_pieces": 897850,
+            "frac_n": 0.9976
+          },
+          "2^13": {
+            "r_pieces": 898538,
+            "frac_n": 0.9984
+          },
+          "2^14": {
+            "r_pieces": 899744,
+            "frac_n": 0.9997
+          },
+          "2^15": {
+            "r_pieces": 899998,
+            "frac_n": 1.0
+          },
+          "2^16": {
+            "r_pieces": 899998,
+            "frac_n": 1.0
+          },
+          "2^17": {
+            "r_pieces": 899998,
+            "frac_n": 1.0
+          },
+          "2^18": {
+            "r_pieces": 899896,
+            "frac_n": 0.9999
+          },
+          "2^19": {
+            "r_pieces": 899998,
+            "frac_n": 1.0
+          }
+        }
+      },
+      "fourier_cauchy_structure": {
+        "r": 87111,
+        "active_cauchy_generators": 87111,
+        "perfect_cluster_cancellations": 0
+      }
+    }
+  }
+}
