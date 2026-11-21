@@ -1,0 +1,48 @@
+name = "Wormhole Cycle 9 Candidate: Relay-MLP (1-Emitter + 7-Scout Overlapped Cut Walk + k=8 Renyi De-Straggling + Post-Slop Boundary Restoration)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "outq16_swar_runs_pass"
+inputs = ["records", "C", "p", "n"]
+output = "out_aliased_q16_and_triples"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "1", B = "R + m", Q = "0", M = "H" }
+evidence = "SWAR64 4xU16 pack into dead out[0..n+32) + thick strips into shared [u32;3] triples; 0 overflow chunks on 6/6 blocks."
+
+[[edge]]
+id = "chaitin_node16_endpoint_pow2_dict"
+inputs = ["out_aliased_q16_and_triples", "C", "n"]
+output = "bands_and_pow2_inline16"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "16B Node16 + Rule + bottom inside dead edges[0..m); pads inline16/lens/word_len to next power-of-two (<= 4096 entries, +9 KiB) for zero-bounds-check safe-Rust indexing."
+
+[[edge]]
+id = "span_chunked_band_wire"
+inputs = ["bands_and_pow2_inline16", "out_aliased_q16_and_triples"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Hoists 512-entry chunk and 64K-epoch checks outside inner band loop; wires edges[0..m) before Phase 4 writes out."
+
+[[edge]]
+id = "relay_mlp_frontier_emit_and_7scout"
+inputs = ["critical_edges", "bands_and_pow2_inline16", "p", "n"]
+output = "partial_text_and_cut_tasks"
+status = "verified"
+dependent = true
+cost = { W = "m", D = "m/8", B = "m", Q = "m", M = "1" }
+evidence = "Lane 0 emits mark frontier directly into out[0..] while Lanes 1..7 scout S in [129,256] zero-bit cuts (k=8 Renyi de-straggling: 1 + 7*H_S/S <= 1.21x); idle scouts immediately drain ready emit tasks with 0 B heap staging."
+
+[[edge]]
+id = "sloppy_8lane_emit_and_boundary_restore"
+inputs = ["critical_edges", "bands_and_pow2_inline16", "partial_text_and_cut_tasks", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "7m/64", B = "n", Q = "7m/8", M = "n + m" }
+evidence = "Unconditional 16B sloppy stores across 8/12 work-stealing lanes (zero inner-loop boundary branches) followed by O(S) idempotent 16B exact restoration along edges (< 0.5 us); <= 1.90 MiB/worker WS (10w <= 19.0 MiB <= 20 MiB L3)."

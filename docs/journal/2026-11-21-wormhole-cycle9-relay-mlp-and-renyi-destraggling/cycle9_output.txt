@@ -1,0 +1,27 @@
+PASS Gate G1: 14459 small, periodic, tight-cut slop-overlap, multi-cycle, and multi-epoch cases verified byte-exact.
+
+=== THEOREM 9.1: RENYI-GRAHAM CUT-STRAGGLER SWEEP (`Relay8`, `k = 5..9`) ===
+Block       |   k | S_cut | MaxSegEdg | Rounds(4a+4b) | Meas/(m/4) |  RenyiBnd
+----------------------------------------------------------------------------
+block-143.L |   5 |    24 |     35844 |         69181 |    1.500x |    2.101x
+block-143.L |   6 |    48 |     21327 |         53046 |    1.150x |    1.650x
+block-143.L |   7 |    96 |      8300 |         53025 |    1.149x |    1.375x
+block-143.L |   8 |   192 |      7712 |         48875 |    1.059x |    1.213x
+block-143.L |   9 |   384 |      3027 |         46770 |    1.014x |    1.119x
+block-210.L |   5 |    25 |     50888 |         85993 |    1.796x |    2.068x
+block-210.L |   6 |    50 |     29940 |         62243 |    1.300x |    1.630x
+block-210.L |   7 |   100 |      9065 |         51684 |    1.079x |    1.363x
+block-210.L |   8 |   200 |      4328 |         51418 |    1.074x |    1.206x
+block-210.L |   9 |   399 |      2719 |         49120 |    1.026x |    1.115x
+
+=== CYCLE 9 CONFRONTATION (21 PAIRED ROUNDS: Master vs Diet_mu1 vs Relay4/8/12) ===
+Block       |   Master | Diet_mu1 |   Relay8 ( /Diet) |  Relay12 ( /Diet) [ DietEm ->  Rel8Em emit] | Diet_DpL2 ->  Rel8_Dp (Ratio) | L3Miss
+------------------------------------------------------------------------------------------------------------------------------------------
+block-0.L   | 1282.9us | 1473.6us | 1437.6us (0.976x) | 1461.7us (0.992x) [550.1us -> 508.4us] |     25533 ->     6507 (0.25x) |    809
+block-2.L   | 1549.0us | 1786.0us | 1640.2us (0.918x) | 1739.9us (0.974x) [698.2us -> 602.5us] |     37778 ->     9421 (0.25x) |    746
+block-85.L  | 1613.6us | 1781.4us | 1570.9us (0.882x) | 1615.5us (0.907x) [957.7us -> 750.9us] |     47553 ->    14127 (0.30x) |    479
+block-143.L | 2835.6us | 3166.5us | 2754.9us (0.870x) | 2779.5us (0.878x) [1389.5us -> 986.5us] |     94739 ->    27757 (0.29x) |    831
+block-210.L | 2541.0us | 2817.1us | 2368.0us (0.841x) | 2434.6us (0.864x) [1461.6us -> 1037.1us] |     89106 ->    28264 (0.32x) |    563
+block-207.L | 1886.6us | 2131.5us | 1935.0us (0.908x) | 1970.8us (0.925x) [888.4us -> 701.9us] |     51240 ->    14784 (0.29x) |    815
+
+Persistent Scratch Heap of `Relay-MLP` (`0 B` staging!): 1051.1 KiB (w/ out = 1930.1 KiB <= 2048 KiB -> 10w = 18.85 MiB <= 20 MiB L3!)
