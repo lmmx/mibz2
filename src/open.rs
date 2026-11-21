@@ -80,6 +80,11 @@ pub struct Kernel {
     inline16: Vec<[u8; INLINE]>,
     lens: Vec<u8>,
     lanes: lanes::Lanes,
+    r4: r4::R4,
+    /// whether the block's words are in `inline16`/`lens` already (the R4 construction)
+    inlined: bool,
+    /// (tests) the doubly linked elimination (`endpoint.rs`) in place of the R4 tapes
+    endpoint_lists: bool,
 }
 
 // Production records cap a run at 127. Selection is on maximal runs.
@@ -219,8 +224,9 @@ impl Default for First {
     }
 }
 
-/// Append the `w` rows from `m` to a queue of `len` rows. A thin run has at most `LIMIT` = 16
-/// rows, so the queue takes a fixed block of 16 (an iota from `m`) and keeps the first `w`: no
+/// Append the `w` rows from `m` to a queue of `len` rows. A thin run has at most `LIMIT` rows,
+/// so the queue takes a fixed block of `LIMIT` (an iota from `m`; 24, three 32-byte stores,
+/// with Carbon cycle 10's `U24Q`) and keeps the first `w`: no
 /// loop whose trip count is the run's width, whose exit mispredicts on blocks of 48k-126k short
 /// runs (Carbon cycle 2's `U16Q`, `docs/journal/2026-11-20-carbon-cycle2-bvsmc.md` §2.4).
 ///
@@ -228,11 +234,11 @@ impl Default for First {
 /// length is the caller's (`First::thin`, its byte's retained rows), so a run is one bounds
 /// check and two 32-byte stores with no length written back to the heap (Carbon Kitchen Sink
 /// cycle 3's `Vec16` queue: a cursor per byte, `q_cur[c] += w`). The rows past `w` land in the
-/// spare rows and are overwritten by the next run. A wider run (a limit above 16, in the tests)
-/// is written row by row.
+/// spare rows and are overwritten by the next run. A wider run (a limit above `LIMIT`, in the
+/// tests) is written row by row.
 #[inline(always)]
 fn push_rows(queue: &mut Vec<u32>, len: u32, m: u32, w: u32) {
-    const BLOCK: usize = 16;
+    const BLOCK: usize = LIMIT as usize;
     let at = len as usize;
     let need = at + BLOCK.max(w as usize);
     if queue.len() < need {
@@ -413,7 +419,10 @@ impl Kernel {
         self.spelling.clear();
         self.offsets.clear();
         self.offsets.push(0);
-        let mut cursors = if INDUCE {
+        self.inlined = INDUCE && !self.endpoint_lists;
+        let mut cursors = if INDUCE && !self.endpoint_lists {
+            self.induced_r4(n, &thin, &mut stats)
+        } else if INDUCE {
             self.induced(n, &thin, &mut stats)
         } else {
             let mut cursors = [0usize; 256];
@@ -508,6 +517,20 @@ impl Kernel {
         stats
     }
 
+    /// (test only) the word of `code` as the construction left it
+    #[cfg(test)]
+    pub(crate) fn word_of(&self, code: u32) -> Vec<u8> {
+        let c = code as usize;
+        if c < 256 {
+            vec![code as u8]
+        } else if self.inlined && self.lens[c] != LONG {
+            self.inline16[c][..usize::from(self.lens[c])].to_vec()
+        } else {
+            let id = c - 256;
+            self.spelling[self.offsets[id] as usize..self.offsets[id + 1] as usize].to_vec()
+        }
+    }
+
     /// (test only) `run` with the walk `how`, the lanes from `from` retained rows
     #[cfg(test)]
     #[allow(clippy::too_many_arguments)]
@@ -542,12 +565,14 @@ impl Kernel {
         bits: u32,
         out: &mut Vec<u8>,
     ) {
-        inline_words(
-            &self.spelling,
-            &self.offsets,
-            &mut self.inline16,
-            &mut self.lens,
-        );
+        if !self.inlined {
+            inline_words(
+                &self.spelling,
+                &self.offsets,
+                &mut self.inline16,
+                &mut self.lens,
+            );
+        }
         if how != Walk::Serial
             && self.edges.len() >= from
             && emit_lanes(
@@ -650,9 +675,11 @@ fn emit_lanes(
     done
 }
 
-/// Rows a thin run may have, as retained ranks (the arm `Open<16, true, true>` measured on the
-/// i9: bench-open-return, the moonshot runs)
-pub(crate) const LIMIT: u32 = 16;
+/// Rows a thin run may have, as retained ranks. 16 is the arm `Open<16, true, true>` measured on
+/// the i9 (bench-open-return, the moonshot runs) under the serial walk; with the walk in lanes,
+/// 24 (Carbon cycle 10's co-equilibration, `docs/journal/2026-11-20-carbon-cycle10-w24-bp1p.md`:
+/// fewer thick strips and words, for more retained rows walked eight at a time)
+pub(crate) const LIMIT: u32 = 24;
 
 /// The workers' kernel wherever production ran `LazyCells` (from 0.5.7): the open kernel on
 /// every run-route block that `LazyCells`' record-count gates admit (its density line and the
@@ -887,6 +914,7 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 
 mod endpoint;
 mod lanes;
+mod r4;
 
 #[cfg(test)]
 mod checks;

@@ -398,11 +398,17 @@ fn lanes_timing() {
     let dir = std::env::var("MIBZ2_ADMITTED_BWT").expect("MIBZ2_ADMITTED_BWT");
     let limit: u32 = std::env::var("MIBZ2_LIMIT").map_or(LIMIT, |s| s.parse().unwrap());
     let manifest = std::fs::read_to_string(format!("{dir}/manifest.json")).unwrap();
-    let mut k = Kernel::default();
+    let mut k = Kernel {
+        endpoint_lists: std::env::var("MIBZ2_LISTS").is_ok(),
+        ..Kernel::default()
+    };
     let walks = [Walk::Serial, Walk::TwoPass, Walk::Pages, Walk::Pool];
     let flush = std::env::var("MIBZ2_FLUSH").is_ok();
     let mut junk = vec![0u8; if flush { 32 << 20 } else { 0 }];
-    eprintln!("limit {limit}; block, construct, then {walks:?} (ms, best of 31)");
+    eprintln!(
+        "limit {limit}, lists {}; block, construct, then {walks:?} (ms, best of 31)",
+        k.endpoint_lists
+    );
     let mut sums = [0f64; 5];
     for part in manifest.split("\"file\": \"").skip(1) {
         let file = &part[..part.find('"').unwrap()];
