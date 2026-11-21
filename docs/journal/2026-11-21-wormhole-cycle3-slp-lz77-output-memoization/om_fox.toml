@@ -1,0 +1,30 @@
+name = "Wormhole Chain 3: AHT/Zorich Periodic Pairing + Rytter-Gasieniec Output-Memoized SLP (OM-Fox)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "filtered_run_split_om"
+inputs = ["records", "p", "n"]
+output = "morse_strips_and_queues"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "1", B = "R + m_Lambda", Q = "0", M = "m_Lambda + H_Lambda" }
+evidence = "Filtered run classification at threshold Lambda in {1, 2, 4, 8, 16}: retains m_Lambda rows, lists H_Lambda strips."
+
+[[edge]]
+id = "aht_zorich_slp_and_compact_inline16"
+inputs = ["morse_strips_and_queues", "C", "n"]
+output = "om_fox_table_and_slp"
+status = "verified"
+dependent = true
+cost = { W = "H_Lambda + m_Lambda", D = "H_Lambda", B = "m_Lambda + H_Lambda", Q = "H_Lambda + m_Lambda", M = "m_Lambda + H_Lambda" }
+evidence = "Theorem 3.1 + 3.2: Zorich (1996) / Agol-Hass-Thurston (2006) O(log q) periodic quotienting + short-only inline16 (13-48 KiB L1d!) + 8B long SLP handles, with 0 B self.spelling buffer."
+
+[[edge]]
+id = "rytter_gasieniec_output_memoized_emit"
+inputs = ["om_fox_table_and_slp", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m_Lambda", B = "n", Q = "m_Lambda", M = "n + m_Lambda + H_Lambda" }
+evidence = "Rytter (TCS 2003) + Gasieniec et al. (DCC 2005): <=16B words emit via 16B unconditional inline16 store; >16B words memoize first_out directly inside out[0..at) with 0 B spelling (verified on 26,495 small/random cases + 30 block decodes)."
