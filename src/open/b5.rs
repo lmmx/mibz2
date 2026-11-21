@@ -187,6 +187,7 @@ fn scratch(k: &Kernel) -> usize {
         + 16 * k.inline16.capacity()
         + k.lens.capacity()
         + e.scratch()
+        + k.r4.scratch()
 }
 
 /// Worst-case scratch: on every shape the B5 study names (Wikidata-like runs, text-like dense
@@ -374,4 +375,50 @@ fn scratch_search() {
         "worst scratch {:.2} bytes a row ({}); most rules {:.4} a row ({})",
         worst.0, worst.1, most_rules.0, most_rules.1
     );
+}
+
+/// (ignored; `MIBZ2_ADMITTED_BWT`) the six admitted Wikidata columns at their primary index,
+/// by the R4 tapes as shipped and by the doubly linked lists (`endpoint.rs`): exactly the plain
+/// inverse, and the same construction counts from both
+#[test]
+#[ignore]
+fn admitted_blocks() {
+    let dir = std::env::var("MIBZ2_ADMITTED_BWT").expect("MIBZ2_ADMITTED_BWT");
+    let manifest = std::fs::read_to_string(format!("{dir}/manifest.json")).unwrap();
+    let mut k = Kernel::default();
+    let mut blocks = 0;
+    for part in manifest.split("\"file\": \"").skip(1) {
+        let file = &part[..part.find('"').unwrap()];
+        let at = part.find("\"primary_index\": ").unwrap() + 17;
+        let p: u32 = part[at..]
+            .split(|c: char| !c.is_ascii_digit())
+            .next()
+            .unwrap()
+            .parse()
+            .unwrap();
+        let l = std::fs::read(format!("{dir}/{file}")).unwrap();
+        let want = plain(&l, p);
+        let mut counts = Vec::new();
+        for lists in [false, true] {
+            k.endpoint_lists = lists;
+            let mut out = Vec::new();
+            shipped(&mut k, &l, p, &mut out);
+            assert_eq!(out, want, "{file} lists {lists}");
+            out.clear();
+            let r = Runs::of_column(&l);
+            let s = k.run::<true, true>(r.records(), l.len(), p, LIMIT, &mut out);
+            counts.push((s.retained, s.thick, s.words, s.bands));
+            eprintln!(
+                "{file} lists {lists}: n {}, retained {}, thick {}, words {}, bands {}",
+                l.len(),
+                s.retained,
+                s.thick,
+                s.words,
+                s.bands
+            );
+        }
+        assert_eq!(counts[0], counts[1], "{file}");
+        blocks += 1;
+    }
+    assert_eq!(blocks, 6);
 }

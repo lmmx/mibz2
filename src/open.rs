@@ -79,6 +79,11 @@ pub struct Kernel {
     extra: Vec<u32>,
     inline16: Vec<[u8; INLINE]>,
     lens: Vec<u8>,
+    r4: r4::R4,
+    /// whether the block's words are in `inline16`/`lens` already (the R4 construction)
+    inlined: bool,
+    /// (tests) the doubly linked elimination (`endpoint.rs`) in place of the R4 tapes
+    endpoint_lists: bool,
 }
 
 // Production records cap a run at 127. Selection is on maximal runs.
@@ -412,7 +417,10 @@ impl Kernel {
         self.spelling.clear();
         self.offsets.clear();
         self.offsets.push(0);
-        let mut cursors = if INDUCE {
+        self.inlined = INDUCE && !self.endpoint_lists;
+        let mut cursors = if INDUCE && !self.endpoint_lists {
+            self.induced_r4(n, &thin, &mut stats)
+        } else if INDUCE {
             self.induced(n, &thin, &mut stats)
         } else {
             let mut cursors = [0usize; 256];
@@ -507,14 +515,31 @@ impl Kernel {
         stats
     }
 
-    /// The words inlined and the walk from the marked row: the block's bytes into `out`
+    /// (test only) the word of `code` as the construction left it
+    #[cfg(test)]
+    pub(crate) fn word_of(&self, code: u32) -> Vec<u8> {
+        let c = code as usize;
+        if c < 256 {
+            vec![code as u8]
+        } else if self.inlined && self.lens[c] != LONG {
+            self.inline16[c][..usize::from(self.lens[c])].to_vec()
+        } else {
+            let id = c - 256;
+            self.spelling[self.offsets[id] as usize..self.offsets[id + 1] as usize].to_vec()
+        }
+    }
+
+    /// The words inlined (unless the R4 construction left them inline) and the walk from the
+    /// marked row: the block's bytes into `out`
     fn walk(&mut self, n: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
-        inline_words(
-            &self.spelling,
-            &self.offsets,
-            &mut self.inline16,
-            &mut self.lens,
-        );
+        if !self.inlined {
+            inline_words(
+                &self.spelling,
+                &self.offsets,
+                &mut self.inline16,
+                &mut self.lens,
+            );
+        }
         emit(
             &self.edges,
             &self.extra,
@@ -766,6 +791,7 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 }
 
 mod endpoint;
+mod r4;
 
 #[cfg(test)]
 mod checks;
