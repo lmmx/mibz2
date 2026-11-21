@@ -6,6 +6,8 @@ A machine-checked Riemann proof shows how far a search can range once checking i
 
 21 November 2026 · 16 min read · [Meta](<#6-what-comes-next>)
 
+Shipped in mibz2 [0.5.10](<https://lmmx.github.io/mibz2/benchmarks/history/#release-0-5-10>) ([changelog](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0510---2026-11-21>))
+
 mibz2 is a Rust decoder for bzip2, and for months we have searched for faster ways to undo the reordering at its core. This post describes how we are rebuilding that search, and why. A proof of the Riemann Hypothesis, built at a scale no person could write and accepted by three independent checkers, has shown what a search can attempt once checking is cheap. Our checks of correctness are already cheap. Our checks of speed are not, so that is where we start.
 
 On 20 November 2026, Levent Alpöge [announced](<https://alpo.ge/remark.pdf>) a proof of the Riemann Hypothesis, found working with Claude and written out in full in Lean, a language whose proofs a small program called a kernel can check line by line. By the end of that day, members of the Lean community had reported that three independent kernels, nanoda, con-leche in its verified mode and pestka, each accepted the development. It is about 17 million lines of Lean v4.33.1 in 175,190 files. It proves the Riemann Hypothesis, and its generalisation to Dirichlet L-functions, a family of functions that carry the same question for primes in arithmetic progressions. It does not cover the wider Selberg class.

@@ -6,6 +6,8 @@ Each block decoded at once slows the others, and more threads per block barely h
 
 7 November 2026 · 15 min read · [Research in progress](<#8-where-do-things-stand>)
 
+Shipped in mibz2 [0.2.5](<https://lmmx.github.io/mibz2/benchmarks/history/#release-0-2-5>) ([changelog](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#025---2026-11-06>))
+
 On a ten-core desktop processor, mibz2, our bzip2 decoder written in Rust, got faster as we gave it more threads, from one to eight. Past eight it stopped. Twelve, sixteen or twenty threads decoded no faster than eight. A decoder that can't use the cores it is given leaves time on the table for anyone decompressing large files, and the reason it stops says where the next gain has to come from.
 
 The reason is not the number of threads. It is how many pieces of the file the decoder works on at the same time. A bzip2 file is a series of blocks that can be decoded independently, and mibz2 decodes several at once, each with a small group of threads. We measured two things. Every extra block in progress slows down every other block. And extra threads on the same block barely speed it up. Together they mean that fewer blocks, each with more threads, beat more blocks with fewer threads. Our latest release, 0.2.5, decodes three blocks at once with three threads each, where 0.2.4 decoded four with two each. In two runs at ten threads, it was 8.8% and 8.9% faster, used 11–12% less processor time and 18–19% less peak memory.

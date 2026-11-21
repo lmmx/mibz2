@@ -6,6 +6,8 @@ Writing sixteen at a stroke and keeping only what it needs spares the processor 
 
 21 November 2026 · 11 min read · [Research result](<#5-what-did-it-buy-on-ten-cores>)
 
+Shipped in mibz2 [0.5.8](<https://lmmx.github.io/mibz2/benchmarks/history/#release-0-5-8>) ([changelog](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#058---2026-11-21>))
+
 **What changed.** mibz2 0.5.8 changes how its decoder writes short, variable-length things into memory. It used to write a run of row numbers one at a time, stopping when the run ended. Now it always writes sixteen consecutive numbers in one fixed copy, then moves its write position on by the run's true length. Whatever was written past that point is spare, and the next write covers it. The same trick applies to the decoded text. Each word of up to 16 bytes is copied as a whole 16-byte block, and the output position moves on by the word's real length. Nothing about what is decoded changes. The bytes are identical; only the shape of the writes is new.
 
 **Why that helps.** A loop that runs a different number of times on every call makes the processor guess, each time, where it will stop. A modern processor works ahead of the instruction it is finishing, so it must decide early whether the loop goes round again. When run lengths vary at random between 1 and 16, it often decides wrongly. It then discards the work it did past the real end and starts again. A fixed-width write has no such decision to make. That is our explanation of the gain, reasoned from how processors work and supported by a controlled test in a C harness. It has not been measured separately with the processor's own counters ([section 2](<#2-why-would-writing-more-be-faster>)).

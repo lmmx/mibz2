@@ -6,6 +6,8 @@ Each new text fragment takes over the slot its finished neighbour just vacated, 
 
 15 November 2026 · 13 min read · [Research result](<#7-what-the-benchmarks-tell-us>)
 
+Shipped in mibz2 [0.3.2](<https://lmmx.github.io/mibz2/benchmarks/history/#release-0-3-2>) ([changelog](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#032---2026-11-15>))
+
 One of mibz2's ways of rebuilding a block of bzip2 text works on fragments of it: pieces of the output, each standing for a stretch of the block. It keeps the bookkeeping for every fragment in a small record called a slot, 20 bytes holding the fragment's length, where its text is kept, the slot before it, and its partner slot in a second arrangement of the same fragments. When one fragment is finished, its slot is free just as the next fragment needs one, and mibz2 now hands it over instead of taking fresh memory.
 
 ## The idea in a nutshell
