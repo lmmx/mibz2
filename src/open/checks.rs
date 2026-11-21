@@ -11,8 +11,9 @@ fn audit<const INDUCE: bool, const QUEUE: bool>(
 ) {
     let n = l.len();
     let records = records_of(l);
+    let mut out = Vec::new();
     let (s, mark, bits) =
-        k.construct::<INDUCE, QUEUE>(&records, n as u32, p as u32, threshold as u32);
+        k.construct::<INDUCE, QUEUE>(&records, n as u32, p as u32, threshold as u32, &mut out);
     let mut counts = [0usize; 256];
     let mut keep = vec![false; n];
     let mut i = 0;
