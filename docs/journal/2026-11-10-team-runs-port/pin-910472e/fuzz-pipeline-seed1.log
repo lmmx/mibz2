@@ -1,0 +1,22 @@
+578 cases in 30 s (seed 1, mode pipeline), 0 failures
+       69  pipeline: both decode, same bytes
+       47  pipeline: both fail (BadBlockMagic), as the plain decoder
+       58  pipeline: both fail (BadCodeLength), as the plain decoder
+       18  pipeline: both fail (BadGroups), as the plain decoder
+       45  pipeline: both fail (BadHuffmanCode), as the plain decoder
+       13  pipeline: both fail (BadOrigPtr), as the plain decoder
+       22  pipeline: both fail (BadSelector), as the plain decoder
+      111  pipeline: both fail (BlockCrc), as the plain decoder
+       13  pipeline: both fail (BlockTooLong), as the plain decoder
+        1  pipeline: both fail (NotBz2), as the plain decoder
+        1  pipeline: both fail (Randomised), as the plain decoder
+        5  pipeline: both fail (RunUnfinished), as the plain decoder
+       29  pipeline: both fail (SelectorOverrun), as the plain decoder
+       16  pipeline: both fail (StreamCrc), as the plain decoder
+      130  pipeline: both fail (Truncated), as the plain decoder
+pipeline cases: candidate, cases, cases reaching the pipeline (a job taken overlapped) of those countable, cases with an overlapped job's error, overlapped jobs in all
+      115  mibz2 default 3x3 StreamDecoder::new w1048576 r65536: 29 of 115 reached, 0 with an overlapped error, 39 overlapped jobs
+      116  mibz2 default 3x3 StreamDecoder::new w997 r509: 27 of 116 reached, 0 with an overlapped error, 39 overlapped jobs
+      116  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)
+      116  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)
+      115  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 56 of 115 reached, 4 with an overlapped error, 158 overlapped jobs

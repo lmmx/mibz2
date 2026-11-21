@@ -1,0 +1,19 @@
+invarms on master 47149bff, this container (one thread, indicative), best of 5 a block, ns a row
+
+wikidata, run 1:
+233 blocks, 209697662 rows, 233 admitted by takes_runs, literals/rows 0.0722
+column:  mtf 0.572  build 0.560  walk 1.837  | build + walk 2.397  | with its front 2.968
+records: front 0.202  fill 0.375  walk back 1.894  | fill + walk 2.270  | with its front 2.472
+records / column: inversion 0.947, with fronts 0.833
+
+wikidata, run 2:
+233 blocks, 209697662 rows, 233 admitted by takes_runs, literals/rows 0.0722
+column:  mtf 0.562  build 0.546  walk 1.826  | build + walk 2.373  | with its front 2.935
+records: front 0.199  fill 0.370  walk back 1.893  | fill + walk 2.263  | with its front 2.462
+records / column: inversion 0.954, with fronts 0.839
+
+text (the crate's corpus):
+25 blocks, 21865973 rows, 25 admitted by takes_runs, literals/rows 0.3012
+column:  mtf 2.969  build 1.327  walk 1.915  | build + walk 3.242  | with its front 6.211
+records: front 0.913  fill 0.947  walk back 1.938  | fill + walk 2.885  | with its front 3.798
+records / column: inversion 0.890, with fronts 0.611

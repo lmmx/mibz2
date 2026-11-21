@@ -1,0 +1,7 @@
+callgrind totals, ab child mibz2 1, first N bytes of CI's random, bzip2 -9 (local builds)
+200000 master summary: 32923892
+200000 head summary: 36310524
+440000 master summary: 65166258
+440000 head summary: 72573850
+460000 master summary: 67781158
+460000 head summary: 67784508

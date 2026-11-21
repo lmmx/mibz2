@@ -1,0 +1,28 @@
+import json
+c=json.load(open('sn-cells.json'))
+XP=[(3.6,0),(7.2,0.0153572),(14.4,0.489932),(18,1.092901),(21.6,1.963254),(28.8,5.247926),(36,8.627249)]
+def X(L):
+    if L<=3.6: return 0.0
+    for (a,xa),(b,xb) in zip(XP,XP[1:]):
+        if L<=b: return xa+(L-a)*(xb-xa)/(b-a)
+    return None
+D=209.700196
+f=0.78
+for lvl,s in (('wikidata-l9',3.6),('wikidata-l2',0.8)):
+    print(lvl,'s =',s,'MB; f =',f)
+    base=None
+    for W in (2,4,6,8,10):
+        cpu,wall,wsum,sc,mn=c[f'{lvl}@{W}']
+        wk=cpu-sc-mn                    # workers' CPU: exact total less the sampled scanner and main
+        busy=wk/wall                    # workers running at once, mean
+        # literal law: every requested worker a live table
+        xl=X(s*W); lit=None if xl is None else 1+f*xl
+        # occupancy form: tables live = workers running x the share of their time in inversion
+        x=0.0
+        for _ in range(60):
+            phi=f*(1+x)/(1+f*x); L=s*busy*phi; x=X(L)
+        occ=1+f*x
+        if base is None: base=(wk,lit,occ)
+        print(f'  W={W:2}: wall {wall:.4f} {D/wall:5.0f} MB/s  scan {sc:.2f}s ({sc/wall:.2f} of wall)  workers CPU {wk:.3f} (x{wk/base[0]:.2f} of W2)  running {busy:.2f}'
+              f'  | literal: L {s*W:4.1f} -> x{lit/base[1]:.2f}, obs/pred {wk/base[0]/(lit/base[1]):.2f}'
+              f'  | occupancy: L {L:4.1f}, X {x:.2f} -> x{occ/base[2]:.2f}, obs/pred {wk/base[0]/(occ/base[2]):.2f}')

@@ -1,0 +1,27 @@
+"""Diff one function's disassembly between two builds, addresses masked.
+Usage: python3 -I fndiff.py BASE_AB HEAD_AB SUBSTRING"""
+import subprocess, sys, re, difflib
+def get(path, want):
+    out = subprocess.run(["nm", "-C", "-S", "--defined-only", path], capture_output=True, text=True).stdout
+    for l in out.splitlines():
+        p = l.split(None, 3)
+        if len(p) == 4 and want == p[3] and p[2] in "tT":
+            addr, size = int(p[0], 16), int(p[1], 16)
+            d = subprocess.run(["objdump", "-d", "-C", "--no-show-raw-insn", f"--start-address={addr:#x}",
+                                f"--stop-address={addr+size:#x}", path], capture_output=True, text=True).stdout
+            ins = []
+            for x in d.splitlines():
+                m = re.match(r"\s*([0-9a-f]+):\s+(.*)", x)
+                if m:
+                    t = m.group(2)
+                    t = re.sub(r"\b[0-9a-f]{4,}\b <([^>+]*)(\+0x[0-9a-f]+)?>", lambda k: "<" + k.group(1) + (">" if not k.group(2) else "+off>"), t)
+                    t = re.sub(r"0x[0-9a-f]+\(%rip\)\s*#\s*[0-9a-f]+ <([^>+]*)(\+0x[0-9a-f]+)?>", r"RIP<\1>", t)
+                    t = re.sub(r"0x[0-9a-f]+\(%rip\)", "RIP", t)
+                    t = re.sub(r"#.*", "", t).strip()
+                    ins.append(t)
+            return ins
+    return []
+a, b = get(sys.argv[1], sys.argv[3]), get(sys.argv[2], sys.argv[3])
+print(len(a), len(b))
+for l in difflib.unified_diff(a, b, "base", "head", n=3, lineterm=""):
+    print(l)

@@ -1,0 +1,25 @@
+561 cases in 30 s (seed 1, mode service), 0 failures
+       69  service: both decode, same bytes
+       46  service: both fail (BadBlockMagic), as the plain decoder
+       58  service: both fail (BadCodeLength), as the plain decoder
+       17  service: both fail (BadGroups), as the plain decoder
+       44  service: both fail (BadHuffmanCode), as the plain decoder
+       12  service: both fail (BadOrigPtr), as the plain decoder
+       20  service: both fail (BadSelector), as the plain decoder
+      107  service: both fail (BlockCrc), as the plain decoder
+       12  service: both fail (BlockTooLong), as the plain decoder
+        1  service: both fail (NotBz2), as the plain decoder
+        1  service: both fail (Randomised), as the plain decoder
+        5  service: both fail (RunUnfinished), as the plain decoder
+       29  service: both fail (SelectorOverrun), as the plain decoder
+       15  service: both fail (StreamCrc), as the plain decoder
+      125  service: both fail (Truncated), as the plain decoder
+service cases (counted after the completion fence): candidate, cases, with a block on a team's pool, with a block finished, with front sets reused, with back sets reused, with an error
+       70  mibz2 default svc2 StreamDecoder::new w1048576 r65536: pooled 55, finished 61, fronts reused 14, backs reused 27, errors 62
+       71  mibz2 default svc2 StreamDecoder::new w997 r509: pooled 51, finished 56, fronts reused 10, backs reused 17, errors 65
+       70  mibz2 default svc2 BzReader::parallel r4093: pooled 48, finished 56, fronts reused 6, backs reused 15, errors 62
+       70  mibz2 default svc2 decode_parallel: pooled 45, finished 56, fronts reused 4, backs reused 12, errors 59
+       70  mibz2 service 1x3+1 s1: pooled 48, finished 55, fronts reused 26, backs reused 35, errors 63
+       70  mibz2 service 3x3+1 s12: pooled 43, finished 56, fronts reused 2, backs reused 4, errors 58
+       70  mibz2 service 1x4+2 s2: pooled 48, finished 61, fronts reused 18, backs reused 39, errors 59
+       70  mibz2 service 2x2+1 s3 scalar: pooled 48, finished 59, fronts reused 16, backs reused 23, errors 64

@@ -1,0 +1,13 @@
+#!/bin/bash
+# sample.sh BIN: run "BIN child mibz2-coop2 4 records12.bz2", attach gdb a few times, print
+# the innermost mibz2/libc frames of the team callers (threads named mibz2-0, mibz2-1)
+BIN=$1
+cd "$(dirname "$0")"
+"$BIN" child mibz2-coop2 4 records12.bz2 > /dev/null &
+PID=$!
+sleep 0.25
+for i in $(seq 14); do
+  gdb -p $PID -batch -ex "thread apply all bt 3" 2>/dev/null | awk '/^Thread/{name=$0} /^#0|^#1/{print name " || " $0}' | grep 'mibz2-[01]"' | grep "^Thread.*#0\|#1" | sed 's/Thread [0-9]* (Thread [^ ]* (LWP [0-9]*) //; s/ (.*//' | cut -c1-110
+  kill -0 $PID 2>/dev/null || break
+done
+wait $PID

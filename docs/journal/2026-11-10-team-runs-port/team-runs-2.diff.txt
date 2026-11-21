@@ -1,0 +1,2497 @@
+diff --git a/.github/workflows/test.yml b/.github/workflows/test.yml
+index e7b9b1afa..efb6ae037 100644
+--- a/.github/workflows/test.yml
++++ b/.github/workflows/test.yml
+@@ -62,6 +62,9 @@ jobs:
+         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+       - name: Service candidates
+         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/service service
++      # (the plain teams, forced by their plan: no default selects them on these runners)
++      - name: Plain-team candidates
++        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/teams teams
+       - name: The failing inputs
+         if: failure()
+         uses: actions/upload-artifact@v7
+diff --git a/examples/fuzz.rs b/examples/fuzz.rs
+index 6b852aacb..b7924e116 100644
+--- a/examples/fuzz.rs
++++ b/examples/fuzz.rs
+@@ -24,8 +24,19 @@
+ //! more blocks prepared (finished) than the decoder has front (back) sets, so those sets
+ //! were reused.
+ //!
++//! The team cases (MODE teams): the plain teams, `bwt::Cooperative`, forced by their plan
++//! (`StreamDecoder::planned`: no default selects them below 6 physical cores, so no other
++//! mode runs them on a small machine). The pipeline cases' inputs and edits, held to the
++//! plain parallel decoder and libbzip2 the same way. Each case's blocks are also read here,
++//! apart from the decoder, and counted by the route the decoder takes them by, which is a
++//! function of the block alone: by its run records on the team's pool (a block
++//! `runs::takes_runs` admits, of `bwt::MIN_COOP` rows or more: `Cooperative::invert_runs`'s
++//! fill by shares and walk backward), by its records on one core (an admitted block below
++//! that), or by its column either way.
++//!
+ //! Usage: fuzz SECONDS [SEED] [OUT_DIR for the inputs of any failure, or -] [MODE]
+-//! MODE: mixed (the default: every 8th case a pipeline case), classic, pipeline or service
++//! MODE: mixed (the default: every 8th case a pipeline case), classic, pipeline, service or
++//! teams
+ 
+ #[path = "../tests/common/mod.rs"]
+ mod common;
+@@ -43,10 +54,11 @@ fn main() {
+     let every = match mode {
+         "mixed" => 8,
+         "classic" => 0,
+-        "pipeline" | "service" => 1,
+-        m => panic!("MODE is mixed, classic, pipeline or service, not {m}"),
++        "pipeline" | "service" | "teams" => 1,
++        m => panic!("MODE is mixed, classic, pipeline, service or teams, not {m}"),
+     };
+     let service = mode == "service";
++    let teams = mode == "teams";
+     let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1);
+ 
+     let mut corpus: Vec<Vec<u8>> = Vec::new();
+@@ -88,10 +100,28 @@ fn main() {
+     let mut pipe_stats = vec![PipeStats::default(); pipes.len()];
+     let svcs = service_candidates();
+     let mut svc_stats = vec![SvcStats::default(); svcs.len()];
++    let team_cands = team_candidates();
++    let mut team_stats = vec![TeamStats::default(); team_cands.len()];
+     let deadline = Instant::now() + Duration::from_secs(secs);
+     let (mut cases, mut bad) = (0u64, 0u64);
+     let mut outcomes: BTreeMap<String, u64> = BTreeMap::new();
+     while Instant::now() < deadline {
++        if teams {
++            cases += 1;
++            let i = cases as usize % team_cands.len();
++            let outcome = team_case(
++                &team_cands[i],
++                &mut team_stats[i],
++                &pipe_corpus,
++                &corpus,
++                &mut rng,
++                &out_dir,
++                cases,
++                &mut bad,
++            );
++            *outcomes.entry(format!("teams: {outcome}")).or_default() += 1;
++            continue;
++        }
+         if service {
+             cases += 1;
+             let i = cases as usize % svcs.len();
+@@ -178,7 +208,33 @@ fn main() {
+     for (o, n) in &outcomes {
+         println!("{n:>9}  {o}");
+     }
+-    if service {
++    if teams {
++        println!(
++            "team cases: candidate, cases; cases with a block by records on the team's pool, \
++             by records on one core, by the column on the pool, by the column on one core; \
++             cases with an error; then the blocks by each route, and the blocks whose front \
++             stage fails, admitted to the records and not"
++        );
++        for (c, st) in team_cands.iter().zip(&team_stats) {
++            println!(
++                "{:>9}  {}: records pooled {}, records alone {}, column pooled {}, column \
++                 alone {}, errors {}; blocks {} / {} / {} / {}; front errors {} / {}",
++                st.cases,
++                c.name,
++                st.with[0],
++                st.with[1],
++                st.with[2],
++                st.with[3],
++                st.errors,
++                st.blocks[0],
++                st.blocks[1],
++                st.blocks[2],
++                st.blocks[3],
++                st.front_errors[0],
++                st.front_errors[1]
++            );
++        }
++    } else if service {
+         println!(
+             "service cases (counted after the completion fence): candidate, cases, with a \
+              block on a team's pool, with a block finished, with front sets reused, with \
+@@ -239,6 +295,160 @@ struct SvcStats {
+     errors: u64,
+ }
+ 
++/// A plain-team decoder forced by its plan: `teams` teams of `k`, on kernels `kernels`
++struct TeamCand {
++    name: String,
++    teams: usize,
++    k: usize,
++    kernels: mibz2::Kernels,
++}
++
++/// The plain teams to fuzz: each team size `StreamDecoder::planned` runs (2, 3, 4), one
++/// team and two, and one on the portable kernels (the scalar front and fill)
++fn team_candidates() -> Vec<TeamCand> {
++    let detect = mibz2::Kernels::detect();
++    let mut v: Vec<TeamCand> = [(1, 2), (2, 2), (1, 3), (1, 4)]
++        .into_iter()
++        .map(|(teams, k)| TeamCand {
++            name: format!("{teams} plain team(s) of {k}"),
++            teams,
++            k,
++            kernels: detect,
++        })
++        .collect();
++    v.push(TeamCand {
++        name: "1 plain team of 3, scalar kernels".into(),
++        teams: 1,
++        k: 3,
++        kernels: mibz2::Kernels::scalar(),
++    });
++    v
++}
++
++/// A team candidate's counts over the run: the cases, those with a block by each route (by
++/// records on the pool, by records alone, by the column on the pool, by the column alone),
++/// those with an error, the blocks by each route, and the blocks whose front stage fails
++/// (its move-to-front's error, or a primary index past the block): admitted ones, where
++/// the records' front is the one to fail, and the others
++#[derive(Clone, Default)]
++struct TeamStats {
++    cases: u64,
++    with: [u64; 4],
++    errors: u64,
++    blocks: [u64; 4],
++    front_errors: [u64; 2],
++}
++
++/// The blocks of `data` that scan and whose move-to-front stage succeeds, counted by the
++/// route a plain team takes each by (`TeamStats`'s order), up to the input's first error:
++/// read here, with the decoder's own selector and bound, not reported by the decoder
++fn team_routes(data: &[u8]) -> ([u64; 4], [u64; 2]) {
++    use mibz2::stream::{Event, Scanner, SliceSource};
++    let (mut by, mut front_errors) = ([0u64; 4], [0u64; 2]);
++    let mut sc = Scanner::new(SliceSource(data));
++    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
++    let mut syms = Vec::new();
++    while let Ok(Event::Block { symbols: b, .. }) = sc.next(std::mem::take(&mut syms)) {
++        let records = mibz2::runs::takes_runs(&b);
++        let n = match mibz2::mtf::mtf(&b, &mut ll, &mut counts, mibz2::Kernels::scalar()) {
++            Ok(n) if (b.orig_ptr as usize) < n => n,
++            _ => {
++                front_errors[!records as usize] += 1;
++                break;
++            }
++        };
++        let pooled = n >= mibz2::bwt::MIN_COOP;
++        by[match (records, pooled) {
++            (true, true) => 0,
++            (true, false) => 1,
++            (false, true) => 2,
++            (false, false) => 3,
++        }] += 1;
++        syms = b.syms;
++    }
++    (by, front_errors)
++}
++
++/// One team case: as `service_case`, for a plain-team candidate
++#[allow(clippy::too_many_arguments)]
++fn team_case(
++    p: &TeamCand,
++    st: &mut TeamStats,
++    pipe_corpus: &[(Vec<u8>, Vec<u64>)],
++    corpus: &[Vec<u8>],
++    rng: &mut Rng,
++    out_dir: &Option<String>,
++    case: u64,
++    bad: &mut u64,
++) -> String {
++    use mibz2::parallel::Plan;
++    let (base, starts) = &pipe_corpus[rng.below(pipe_corpus.len() as u64) as usize];
++    let t = edited(base, starts, corpus, rng);
++    st.cases += 1;
++    let want = oracle(&t);
++    let (plain_out, plain_res) = plain_parallel(&t);
++    let run = || {
++        let plan = Plan::Teams {
++            teams: p.teams,
++            k: p.k,
++        };
++        let dec = mibz2::StreamDecoder::planned(plan, 2 * p.teams, p.kernels);
++        drive(&dec, &t, 1 << 20, 1 << 16)
++    };
++    let (out, res) = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(run)) {
++        Ok(r) => r,
++        Err(_) => {
++            *bad += 1;
++            report(out_dir, &t, case, &format!("{}: panic", p.name));
++            return "PANIC".into();
++        }
++    };
++    let (by, front_errors) = team_routes(&t);
++    for (i, &n) in by.iter().enumerate() {
++        st.with[i] += (n > 0) as u64;
++        st.blocks[i] += n;
++    }
++    st.front_errors[0] += front_errors[0];
++    st.front_errors[1] += front_errors[1];
++    st.errors += res.is_err() as u64;
++    if res != plain_res || out != plain_out {
++        *bad += 1;
++        report(
++            out_dir,
++            &t,
++            case,
++            &format!(
++                "{}: not the plain decoder's: {:?} after {} bytes, the plain {:?} after {}",
++                p.name,
++                res,
++                out.len(),
++                plain_res,
++                plain_out.len()
++            ),
++        );
++        return "NOT THE PLAIN DECODER'S BYTES OR ERROR".into();
++    }
++    match (&want, &res) {
++        (Ok(a), Ok(())) if *a == out => "both decode, same bytes".into(),
++        (Ok(_), Ok(())) => {
++            *bad += 1;
++            report(out_dir, &t, case, &format!("{}: different bytes", p.name));
++            "DIFFERENT BYTES".into()
++        }
++        (Err(_), Ok(())) => {
++            *bad += 1;
++            let why = format!("{}: libbzip2 fails, this decodes", p.name);
++            report(out_dir, &t, case, &why);
++            "LIBBZIP2 FAILS, THIS DECODES".into()
++        }
++        (Err(_), Err(e)) => format!("both fail ({}), as the plain decoder", kind_name(e)),
++        (Ok(_), Err(e)) => format!(
++            "libbzip2 decodes, this refuses ({}), as the plain decoder",
++            kind_name(e)
++        ),
++    }
++}
++
+ /// One service case: as `pipeline_case`, for a service candidate
+ #[allow(clippy::too_many_arguments)]
+ fn service_case(
+diff --git a/src/bwt.rs b/src/bwt.rs
+index 86e6e5381..1c48e30e3 100644
+--- a/src/bwt.rs
++++ b/src/bwt.rs
+@@ -197,11 +197,17 @@ impl InverseBwt for Segmented {
+ /// couldn't be spawned. If the cooperative build refuses the checkpoints, a bug in their
+ /// maker, the block is built on one core instead, so its output is still right (and a
+ /// debug build stops at the assertion).
++///
++/// A block of few symbols comes as its run records (`invert_runs`), and the team then fills
++/// their LF table by shares and walks it backward (`coop::build_runs`,
++/// `coop::walk_room_back`), with the same fallbacks to the one-core kernel.
+ pub struct Cooperative<const K: usize> {
+     /// None until the first cooperative block; an Err if its threads couldn't be spawned
+     pool: Option<std::io::Result<crate::coop::Pool>>,
+     tt: TVector,
+     seg: SegScratch,
++    /// a block's records' cuts, for the team's fill (`invert_runs`)
++    cuts: Vec<crate::runs::Cut>,
+ }
+ 
+ /// The rows below which `Cooperative` runs the one-core kernel: 16 checkpoints, 4 ×
+@@ -223,6 +229,7 @@ impl<const K: usize> Default for Cooperative<K> {
+             pool: None,
+             tt: TVector::new(),
+             seg: SegScratch::default(),
++            cuts: Vec::new(),
+         }
+     }
+ }
+@@ -278,6 +285,58 @@ impl<const K: usize> InverseBwt for Cooperative<K> {
+         self.seg.assemble(out);
+     }
+ 
++    fn reads_runs(&self) -> bool {
++        true
++    }
++
++    // The team's fill and walk of the records' LF table (`coop::build_runs`, then
++    // `coop::walk_room_back`), where `invert_checkpointed` runs the team's build and walk
++    // of the column's; the one-core kernel's (`Segmented::invert_runs`) where it runs that.
++    // The cuts are the tiling's check (`runs::cuts`): refused, the records are not the
++    // block's, and the caller takes the column's path.
++    fn invert_runs(
++        &mut self,
++        r: &crate::runs::Runs,
++        n: usize,
++        orig_ptr: u32,
++        out: &mut Vec<u8>,
++        k: crate::Kernels,
++    ) -> bool {
++        let pool = if K < 2 || n < MIN_COOP {
++            None
++        } else {
++            self.pool
++                .get_or_insert_with(|| crate::coop::Pool::new(K))
++                .as_ref()
++                .ok()
++        };
++        let Some(pool) = pool else {
++            if !crate::runs::fill(r, n, &mut self.tt, k) {
++                return false;
++            }
++            walk_back_room(&mut self.tt, orig_ptr, out, &mut self.seg);
++            return true;
++        };
++        if !crate::runs::cuts(r, n, &mut self.cuts) {
++            return false;
++        }
++        if let Err(e) = crate::coop::build_runs(r, &self.cuts, n, k, pool, &mut self.tt) {
++            debug_assert!(false, "the team's fill failed its check: {}", e.0);
++            if !crate::runs::fill(r, n, &mut self.tt, k) {
++                return false;
++            }
++        }
++        crate::coop::walk_room_back::<FLAGGED_LANES>(
++            &mut self.tt,
++            orig_ptr,
++            &mut self.seg,
++            pool,
++            FLAGGED_SEGMENTS * K,
++        );
++        self.seg.assemble_reversed(out);
++        true
++    }
++
+     #[cfg(any(test, feature = "trace"))]
+     fn buffers(&self) -> Vec<crate::trace::Buffer> {
+         use crate::trace::Buffer;
+@@ -293,6 +352,9 @@ impl<const K: usize> InverseBwt for Cooperative<K> {
+             v.push(Buffer::of("seg.starts", &s.starts));
+             v.push(Buffer::of("seg.next", &s.next));
+         }
++        if self.cuts.capacity() > 0 {
++            v.push(Buffer::of("cuts", &self.cuts));
++        }
+         v
+     }
+ }
+@@ -684,7 +746,7 @@ impl SegScratch {
+     /// written into `out` (which they replace) from its end, each segment reversed, so that
+     /// `out` holds the block first to last. The join stops where it comes back to its first
+     /// segment: the primary index's cycle is then complete (`repeat_cycle`).
+-    fn assemble_reversed(&self, out: &mut Vec<u8>) {
++    pub(crate) fn assemble_reversed(&self, out: &mut Vec<u8>) {
+         let n = self.n;
+         out.clear();
+         out.reserve(n);
+@@ -747,6 +809,24 @@ pub fn walk_back_room(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mu
+     s.assemble_reversed(out);
+ }
+ 
++/// `walk_back_room` in its two parts, as `walk_segments_room_parts`: the room walk of the LF
++/// table, which leaves each segment's bytes in `s` and returns true, for
++/// `SegScratch::assemble_reversed` to join into the output; or, for a block too short to
++/// segment, `walk_back`'s output written to `out`, returning false
++pub(crate) fn walk_back_room_parts(
++    tt: &mut TVector,
++    orig_ptr: u32,
++    out: &mut Vec<u8>,
++    s: &mut SegScratch,
++) -> bool {
++    if tt.len() < MIN_SEGMENTED {
++        walk_back(tt, orig_ptr, out);
++        return false;
++    }
++    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
++    true
++}
++
+ /// `walk_back_room` with `L` lanes and `segments` segments, on a block of any length (the
+ /// tests walk small ones)
+ #[cfg(test)]
+diff --git a/src/coop.rs b/src/coop.rs
+index 322ac5fbb..b5712e1fe 100644
+--- a/src/coop.rs
++++ b/src/coop.rs
+@@ -704,6 +704,140 @@ impl<'a> FusedBuild<'a> {
+     }
+ }
+ 
++/// The LF table of a block's run records (`runs::fill`'s table, word for word) built by
++/// shares on threads of the caller's choosing, as `FusedBuild` builds the column's:
++/// `new` makes the checks and reserves the table, `share(j)` fills share j's rows (on any
++/// thread, each j once), and `finish` makes the end check and sets the table's length.
++///
++/// The records are cut into pieces (`runs::cuts`), each cut holding the fill's state there;
++/// share j of `shares` takes the pieces from `pieces * j / shares` to `pieces * (j + 1) /
++/// shares`, so the shares' rows are disjoint and tile the block.
++///
++/// It is sound whatever the records and the cuts hold, and the table is right only if they
++/// are the block's. Before the run, `runs::cuts_tile`: the cuts start at the block's start
++/// and end at its end, and nothing falls from one to the next. So the shares' rows tile
++/// [0, n), and each share writes only its own (`runs::fill_share`). After the run, every
++/// share must have filled its rows exactly and each byte's values between its cuts exactly
++/// (so with values below n). That proves every slot written, and the table right: the first
++/// share starts from the buckets' starts, so, share by share, each starts from the state
++/// the records before it leave. Only then is the table's length set, so a refused or failed
++/// build leaves it empty, never stale or uninitialised.
++///
++/// It holds the table for its life, and each share claims its index before it writes, as
++/// `FusedBuild`'s.
++pub(crate) struct RunsBuild<'a> {
++    r: &'a crate::runs::Runs,
++    cuts: &'a [crate::runs::Cut],
++    n: usize,
++    shares: usize,
++    k: crate::Kernels,
++    tt: &'a mut TVector,
++    slots: Slots,
++    claimed: AtomicU64,
++    passed: AtomicU64,
++}
++
++impl<'a> RunsBuild<'a> {
++    /// The checks before the fill, the table cleared and reserved, the block of `n` rows cut
++    /// into `shares` shares (1 to `MAX_SHARES`). A refusal gives the table back, empty.
++    pub(crate) fn new(
++        r: &'a crate::runs::Runs,
++        cuts: &'a [crate::runs::Cut],
++        n: usize,
++        shares: usize,
++        k: crate::Kernels,
++        tt: &'a mut TVector,
++    ) -> Result<RunsBuild<'a>, (BuildError, &'a mut TVector)> {
++        tt.0.clear();
++        if shares == 0 || shares > MAX_SHARES {
++            return Err((BuildError("no shares, or more than MAX_SHARES"), tt));
++        }
++        if !crate::runs::cuts_tile(r, n, cuts) {
++            return Err((BuildError("the cuts don't tile the block"), tt));
++        }
++        tt.0.reserve(n);
++        let slots = Slots(tt.0.as_mut_ptr());
++        Ok(RunsBuild {
++            r,
++            cuts,
++            n,
++            shares,
++            k,
++            tt,
++            slots,
++            claimed: AtomicU64::new(0),
++            passed: AtomicU64::new(0),
++        })
++    }
++
++    /// Share j's fill (j below the shares), on any thread; a j already claimed, or out of
++    /// range, writes nothing
++    pub(crate) fn share(&self, j: usize) {
++        if j >= self.shares {
++            return;
++        }
++        let bit = 1u64 << j;
++        if self.claimed.fetch_or(bit, Ordering::Relaxed) & bit != 0 {
++            return;
++        }
++        let pieces = self.cuts.len() - 1;
++        let (from, to) = (
++            &self.cuts[pieces * j / self.shares],
++            &self.cuts[pieces * (j + 1) / self.shares],
++        );
++        // SAFETY: the table has n slots reserved, held (`self.tt`) and not moved until
++        // `finish`, and `to`'s row is at most n (`cuts_tile`). Share j's rows are its own:
++        // the shares' cuts rise with j and the cuts' rows with the cuts (`cuts_tile`), so
++        // two shares' rows are disjoint, and share j is filled only by the one caller that
++        // claimed it.
++        let ok = unsafe { crate::runs::fill_share(self.r, from, to, self.slots.0, self.k) };
++        // the end check (the share's writes released with it)
++        if ok {
++            self.passed.fetch_or(bit, Ordering::Release);
++        }
++    }
++
++    /// The end check over every share, the table's length set only if all passed, and the
++    /// table given back. The shares' writes must happen before this call, as
++    /// `FusedBuild::finish`'s.
++    pub(crate) fn finish(self) -> (Result<(), BuildError>, &'a mut TVector) {
++        let all = if self.shares == MAX_SHARES {
++            u64::MAX
++        } else {
++            (1u64 << self.shares) - 1
++        };
++        let tt = self.tt;
++        if self.passed.load(Ordering::Acquire) != all {
++            return (
++                Err(BuildError(
++                    "a share's records didn't fill its rows: the cuts are not the block's",
++                )),
++                tt,
++            );
++        }
++        // SAFETY: every slot below n was written (the end check, by every share, whose rows
++        // tile [0, n)), and every share's writes are visible here
++        unsafe { tt.0.set_len(self.n) };
++        (Ok(()), tt)
++    }
++}
++
++/// `build_fused` for a block's run records: its LF table built by the pool's threads
++/// (`RunsBuild`)
++pub(crate) fn build_runs(
++    r: &crate::runs::Runs,
++    cuts: &[crate::runs::Cut],
++    n: usize,
++    k: crate::Kernels,
++    pool: &Pool,
++    tt: &mut TVector,
++) -> Result<(), BuildError> {
++    let b =
++        RunsBuild::new(r, cuts, n, pool.threads().min(MAX_SHARES), k, tt).map_err(|(e, _)| e)?;
++    pool.run(&|j| b.share(j));
++    b.finish().0
++}
++
+ /// The shared walk's handoffs, counted in the tests (each asserts it reached them)
+ #[cfg(test)]
+ pub(crate) mod handoffs {
+@@ -896,6 +1030,20 @@ pub(crate) fn walk_room<const L: usize>(
+     w.finish();
+ }
+ 
++/// `walk_room` on an LF table, walked backward (`RoomWalk::new_back`): its segments left in
++/// `s` for `SegScratch::assemble_reversed`
++pub(crate) fn walk_room_back<const L: usize>(
++    tt: &mut TVector,
++    orig_ptr: u32,
++    s: &mut SegScratch,
++    pool: &Pool,
++    segments: usize,
++) {
++    let w = RoomWalk::new_back(tt, orig_ptr, s, segments);
++    pool.run(&|_| w.share::<L>());
++    w.finish();
++}
++
+ /// `walk_room` cut into its parts, for a caller that runs the walk on threads of its own
+ /// choosing (the pipelined team, `invert_pipelined`): `new` picks and flags the starts and
+ /// sizes the buffers, `share` is one thread's lanes (on any number of threads, each
+@@ -929,8 +1077,38 @@ impl<'a> RoomWalk<'a> {
+         s: &'a mut SegScratch,
+         segments: usize,
+     ) -> RoomWalk<'a> {
+-        let n = tt.0.len();
+         let r0 = tt.0[orig_ptr as usize] >> 8;
++        Self::from_row(tt, r0, s, segments)
++    }
++
++    /// `new` on an LF table (`runs::fill`'s, `RunsBuild`'s), walked backward: the walk's
++    /// first row is the primary index itself, whose byte is the block's last. The shares
++    /// are `new`'s; the segments, joined as `assemble` joins them, are the block's bytes
++    /// last to first (`SegScratch::assemble_reversed`).
++    pub(crate) fn new_back(
++        tt: &'a mut TVector,
++        orig_ptr: u32,
++        s: &'a mut SegScratch,
++        segments: usize,
++    ) -> RoomWalk<'a> {
++        let n = tt.0.len();
++        // (a start is flagged in bit 31, bit 23 of the link: as `bwt::room_segments`)
++        assert!(
++            n <= 1 << 23,
++            "the room walk takes at most 2^23 rows, not {n}"
++        );
++        assert!((orig_ptr as usize) < n, "the primary index past the block");
++        Self::from_row(tt, orig_ptr, s, segments)
++    }
++
++    /// `new`'s walk from the row `r0` (below the table's length)
++    fn from_row(
++        tt: &'a mut TVector,
++        r0: u32,
++        s: &'a mut SegScratch,
++        segments: usize,
++    ) -> RoomWalk<'a> {
++        let n = tt.0.len();
+         random_rows(n, segments.max(1) - 1, &mut s.starts);
+         s.starts.push(r0);
+         s.starts.sort_unstable();
+@@ -1202,16 +1380,145 @@ fn wait_until<const SPIN: u32>(f: impl Fn() -> bool, tally: &mut Tally) {
+ // (one a run, on the leader's stack: the build's variant is large for its 256 starts)
+ #[allow(clippy::large_enum_variant)]
+ enum Stage<'a> {
+-    Build(Result<FusedBuild<'a>, &'a mut TVector>, &'a mut SegScratch),
++    Build(Building<'a>, &'a mut SegScratch),
+     Walk(RoomWalk<'a>),
+     Over,
+ }
+ 
++/// What a team inverts a block from: its last column, with the move-to-front stage's counts
++/// and checkpoints (`FusedBuild`, then the walk); or its run records and their cuts, for a
++/// block of `n` rows (`RunsBuild`, then the walk backward)
++#[derive(Clone, Copy)]
++pub(crate) enum Source<'a> {
++    Column {
++        ll: &'a [u8],
++        counts: &'a [u32; 256],
++        checkpoints: &'a [[u32; 256]],
++        stride: usize,
++    },
++    Runs {
++        runs: &'a crate::runs::Runs,
++        cuts: &'a [crate::runs::Cut],
++        n: usize,
++        k: crate::Kernels,
++    },
++}
++
++impl<'a> Source<'a> {
++    /// Whether the table is the records' LF table, walked backward
++    fn back(&self) -> bool {
++        matches!(self, Source::Runs { .. })
++    }
++
++    /// The table built on this thread alone, when the team's build refused its inputs or
++    /// failed its end check (a bug in their maker, never an input error): `bwt::build`, or
++    /// `runs::fill`. Records that don't tile the block, which `runs::cuts` would have
++    /// refused before any team saw them, panic here (the caller's catch makes it the
++    /// block's `Internal` error).
++    fn build_alone(&self, tt: &mut TVector) {
++        match *self {
++            Source::Column { ll, counts, .. } => crate::bwt::build(ll, counts, tt),
++            Source::Runs { runs, n, k, .. } => {
++                assert!(
++                    crate::runs::fill(runs, n, tt, k),
++                    "the run records don't tile the block"
++                );
++            }
++        }
++    }
++
++    /// The team's build in `shares` shares, or, if it refuses its inputs, the table built
++    /// on this thread (`build_alone`; a debug build stops at the assertion)
++    fn building(&self, shares: usize, tt: &'a mut TVector) -> Building<'a> {
++        let refused = match *self {
++            Source::Column {
++                ll,
++                counts,
++                checkpoints,
++                stride,
++            } => match FusedBuild::new(ll, counts, checkpoints, stride, shares, tt) {
++                Ok(b) => return Building::Fused(b),
++                Err(r) => r,
++            },
++            Source::Runs { runs, cuts, n, k } => {
++                match RunsBuild::new(runs, cuts, n, shares, k, tt) {
++                    Ok(b) => return Building::Runs(b),
++                    Err(r) => r,
++                }
++            }
++        };
++        let (e, tt) = refused;
++        debug_assert!(false, "the cooperative build refused its inputs: {}", e.0);
++        let _ = e;
++        self.build_alone(tt);
++        Building::Built(tt)
++    }
++
++    /// The team's walk of the table built from this source
++    fn walk(
++        &self,
++        tt: &'a mut TVector,
++        orig_ptr: u32,
++        seg: &'a mut SegScratch,
++        segments: usize,
++    ) -> RoomWalk<'a> {
++        if self.back() {
++            RoomWalk::new_back(tt, orig_ptr, seg, segments)
++        } else {
++            RoomWalk::new(tt, orig_ptr, seg, segments)
++        }
++    }
++
++    /// The walk's segments joined into `out`, the block's bytes first to last
++    fn assemble(&self, s: &SegScratch, out: &mut Vec<u8>) {
++        if self.back() {
++            s.assemble_reversed(out)
++        } else {
++            s.assemble(out)
++        }
++    }
++}
++
++/// A team's build under way (`Source::building`): the column's, the records', or the table
++/// already built on one thread
++// (one a run, on the leader's stack: the fused build's variant is large for its 256 starts)
++#[allow(clippy::large_enum_variant)]
++enum Building<'a> {
++    Fused(FusedBuild<'a>),
++    Runs(RunsBuild<'a>),
++    Built(&'a mut TVector),
++}
++
++impl<'a> Building<'a> {
++    /// Share j of the build (nothing for a table already built)
++    fn share(&self, j: usize) {
++        match self {
++            Building::Fused(b) => b.share(j),
++            Building::Runs(b) => b.share(j),
++            Building::Built(_) => {}
++        }
++    }
++
++    /// The build's end check; a build that fails it is built again on this thread
++    /// (`Source::build_alone`; a debug build stops at the assertion)
++    fn finish(self, src: &Source<'a>) -> &'a mut TVector {
++        let (r, tt) = match self {
++            Building::Fused(b) => b.finish(),
++            Building::Runs(b) => b.finish(),
++            Building::Built(tt) => return tt,
++        };
++        if let Err(e) = r {
++            debug_assert!(false, "the cooperative build failed its check: {}", e.0);
++            src.build_alone(tt);
++        }
++        tt
++    }
++}
++
+ /// A pipelined run's shared state (`invert_pipelined`)
+ struct Relay<'a> {
+     stage: std::cell::UnsafeCell<Stage<'a>>,
+-    ll: &'a [u8],
+-    counts: &'a [u32; 256],
++    src: Source<'a>,
+     orig_ptr: u32,
+     segments: usize,
+     out: std::cell::UnsafeCell<&'a mut Vec<u8>>,
+@@ -1367,22 +1674,8 @@ impl Relay<'_> {
+         }
+         tmark!(WalkSetupStart, self.place);
+         let r = catch_unwind(AssertUnwindSafe(|| {
+-            let tt = match build {
+-                Ok(b) => match b.finish() {
+-                    (Ok(()), tt) => tt,
+-                    (Err(e), tt) => {
+-                        debug_assert!(
+-                            false,
+-                            "the cooperative build refused its checkpoints: {}",
+-                            e.0
+-                        );
+-                        crate::bwt::build(self.ll, self.counts, tt);
+-                        tt
+-                    }
+-                },
+-                Err(tt) => tt,
+-            };
+-            RoomWalk::new(tt, self.orig_ptr, seg, self.segments)
++            let tt = build.finish(&self.src);
++            self.src.walk(tt, self.orig_ptr, seg, self.segments)
+         }));
+         tmark!(WalkSetupEnd, self.place);
+         match r {
+@@ -1427,7 +1720,7 @@ impl Relay<'_> {
+                     self.stats.summary(self.place, s);
+                     if !self.failed.load(Ordering::Relaxed) {
+                         // SAFETY: only the thread ending the walk touches `out`
+-                        s.assemble(unsafe { &mut *self.out.get() });
++                        self.src.assemble(s, unsafe { &mut *self.out.get() });
+                     }
+                 }));
+                 tmark!(AssembleEnd, self.place);
+@@ -1478,7 +1771,7 @@ impl Relay<'_> {
+ /// ends it). The first is returned as an Err; then `out` holds nothing to trust, and the
+ /// table and scratch are to be reset. A panic in `lead` is resumed (`Pool::run`) once the
+ /// helpers have ended.
+-// (the tests' name for the registered waits; the decoder calls `invert_pipelined_with`)
++// (the tests' name for the registered waits; the decoder calls `invert_pipelined_from`)
+ #[cfg(test)]
+ #[allow(clippy::too_many_arguments)]
+ pub(crate) fn invert_pipelined<const L: usize>(
+@@ -1513,6 +1806,8 @@ pub(crate) fn invert_pipelined<const L: usize>(
+ /// loop (`PARK` false: at `BARRIER_SPINS`, `invert_pipelined` itself; at `SHORT_SPINS`, the
+ /// spin-budget control) or a park (`PARK` true, lever A: research, `parallel::Levers`). The
+ /// same output, errors and panics whatever the wait.
++// (the tests' entry for a column; the decoder calls `invert_pipelined_from`)
++#[cfg(test)]
+ #[allow(clippy::too_many_arguments)]
+ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN: u32>(
+     pool: &Pool,
+@@ -1526,29 +1821,42 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
+     out: &mut Vec<u8>,
+     lead: &(dyn Fn() + Sync),
+     place: u64,
++) -> Result<(), Box<dyn Any + Send>> {
++    let src = Source::Column {
++        ll,
++        counts,
++        checkpoints,
++        stride,
++    };
++    invert_pipelined_from::<L, PARK, SPIN>(pool, src, orig_ptr, tt, seg, out, lead, place)
++}
++
++/// `invert_pipelined_with` for a block's column or its run records (`Source`): the
++/// records' LF table is filled by the helpers' shares (`RunsBuild`) and walked backward,
++/// its segments joined in reverse, where the column's is built (`FusedBuild`) and walked.
++/// The run, its waits, its panics and its output are the same either way.
++#[allow(clippy::too_many_arguments)]
++pub(crate) fn invert_pipelined_from<const L: usize, const PARK: bool, const SPIN: u32>(
++    pool: &Pool,
++    src: Source,
++    orig_ptr: u32,
++    tt: &mut TVector,
++    seg: &mut SegScratch,
++    out: &mut Vec<u8>,
++    lead: &(dyn Fn() + Sync),
++    place: u64,
+ ) -> Result<(), Box<dyn Any + Send>> {
+     // (a pool of one thread runs the helpers' part itself, after `lead`)
+     let helpers = pool.threads().saturating_sub(1).max(1);
+     let shares = helpers.min(MAX_SHARES);
+     tmark!(BuildSetupStart, place);
+-    let build = match FusedBuild::new(ll, counts, checkpoints, stride, shares, tt) {
+-        Ok(b) => Ok(b),
+-        Err((e, tt)) => {
+-            debug_assert!(
+-                false,
+-                "the cooperative build refused its checkpoints: {}",
+-                e.0
+-            );
+-            // (built on this thread, before the run: a bug's path, as `bwt::Cooperative`)
+-            crate::bwt::build(ll, counts, tt);
+-            Err(tt)
+-        }
+-    };
++    // (a build that refuses its inputs is built on this thread, before the run: a bug's
++    // path, as `bwt::Cooperative`)
++    let build = src.building(shares, tt);
+     tmark!(BuildSetupEnd, place);
+     let relay = Relay {
+         stage: std::cell::UnsafeCell::new(Stage::Build(build, seg)),
+-        ll,
+-        counts,
++        src,
+         orig_ptr,
+         segments: crate::bwt::FLAGGED_SEGMENTS * helpers,
+         out: std::cell::UnsafeCell::new(out),
+@@ -1572,7 +1880,9 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
+     let helper = |h: usize| {
+         tmark!(HelperStart, place);
+         // SAFETY: the stage is shared read-only until the last helper counts in below
+-        if let Stage::Build(Ok(b), _) = unsafe { &*relay.stage.get() } {
++        if let Stage::Build(b @ (Building::Fused(_) | Building::Runs(_)), _) =
++            unsafe { &*relay.stage.get() }
++        {
+             tmark!(BuildStart, place);
+             let r = catch_unwind(AssertUnwindSafe(|| b.share(h)));
+             #[cfg(feature = "walk-stats")]
+@@ -1634,6 +1944,8 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
+ /// resumed here once the pool's threads have ended (`Pool::run`); then the table and `seg`
+ /// are not to be trusted, and the caller resets them. `panic_on` is the tests' fault hook:
+ /// the pool thread of that index panics in its walk share.
++// (the tests' entry for a column; the decoder calls `invert_team_from`)
++#[cfg(test)]
+ #[allow(clippy::too_many_arguments)]
+ pub(crate) fn invert_team<const L: usize>(
+     pool: &Pool,
+@@ -1646,38 +1958,42 @@ pub(crate) fn invert_team<const L: usize>(
+     seg: &mut SegScratch,
+     place: u64,
+     panic_on: Option<usize>,
++) {
++    let src = Source::Column {
++        ll,
++        counts,
++        checkpoints,
++        stride,
++    };
++    invert_team_from::<L>(pool, src, orig_ptr, tt, seg, place, panic_on)
++}
++
++/// `invert_team` for a block's column or its run records (`Source`): the records' LF table
++/// is filled by the pool's shares (`RunsBuild`) and walked backward, its segments left in
++/// `seg` for `SegScratch::assemble_reversed`, where the column's are left for `assemble`.
++pub(crate) fn invert_team_from<const L: usize>(
++    pool: &Pool,
++    src: Source,
++    orig_ptr: u32,
++    tt: &mut TVector,
++    seg: &mut SegScratch,
++    place: u64,
++    panic_on: Option<usize>,
+ ) {
+     let _ = place;
+     let shares = pool.threads().min(MAX_SHARES);
+-    let tt = match FusedBuild::new(ll, counts, checkpoints, stride, shares, tt) {
+-        Ok(b) => {
+-            pool.run(&|j| {
+-                tmark!(BuildStart, place);
+-                b.share(j);
+-                tmark!(BuildEnd, place);
+-            });
+-            match b.finish() {
+-                (Ok(()), tt) => tt,
+-                (Err(e), tt) => {
+-                    debug_assert!(false, "the cooperative build failed its check: {}", e.0);
+-                    crate::bwt::build(ll, counts, tt);
+-                    tt
+-                }
+-            }
+-        }
+-        Err((e, tt)) => {
+-            debug_assert!(
+-                false,
+-                "the cooperative build refused its checkpoints: {}",
+-                e.0
+-            );
+-            crate::bwt::build(ll, counts, tt);
+-            tt
+-        }
+-    };
++    let b = src.building(shares, tt);
++    if !matches!(b, Building::Built(_)) {
++        pool.run(&|j| {
++            tmark!(BuildStart, place);
++            b.share(j);
++            tmark!(BuildEnd, place);
++        });
++    }
++    let tt = b.finish(&src);
+     tmark!(WalkSetupStart, place);
+     let segments = crate::bwt::FLAGGED_SEGMENTS * pool.threads();
+-    let w = RoomWalk::new(tt, orig_ptr, seg, segments);
++    let w = src.walk(tt, orig_ptr, seg, segments);
+     tmark!(WalkSetupEnd, place);
+     pool.run(&|j| {
+         tmark!(WalkStart, place);
+@@ -2191,6 +2507,281 @@ mod tests {
+         }
+     }
+ 
++    /// A column's records and their cuts, and its LF table by `runs::fill`
++    fn records_of(ll: &[u8]) -> (crate::runs::Runs, Vec<crate::runs::Cut>, TVector) {
++        let r = crate::runs::Runs::of_column(ll);
++        let mut cuts = Vec::new();
++        assert!(crate::runs::cuts(&r, ll.len(), &mut cuts));
++        let mut lf = TVector::new();
++        assert!(crate::runs::fill(
++            &r,
++            ll.len(),
++            &mut lf,
++            crate::Kernels::scalar()
++        ));
++        (r, cuts, lf)
++    }
++
++    /// The kernels to fill with: the scalar ones, and this CPU's where it has more
++    fn fill_kernels() -> Vec<crate::Kernels> {
++        let mut v = vec![crate::Kernels::scalar()];
++        if crate::Kernels::detect() != crate::Kernels::scalar() {
++            v.push(crate::Kernels::detect());
++        }
++        v
++    }
++
++    /// The team's fill of a column's records (`build_runs`) is `runs::fill`'s table, and
++    /// its walk backward (`walk_room_back`, joined by `assemble_reversed`) `bwt::walk`'s
++    /// output on the column's T-vector, the table left as it was (the flags taken off)
++    fn runs_match(p: &Pool, ll: &[u8], orig_ptrs: &[u32], segments: usize, what: &str) {
++        let (r, cuts, lf) = records_of(ll);
++        let mut fwd = TVector::new();
++        crate::bwt::build(ll, &counts_of(ll), &mut fwd);
++        let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
++        for k in fill_kernels() {
++            tt.0 = vec![5; 3];
++            build_runs(&r, &cuts, ll.len(), k, p, &mut tt).unwrap();
++            assert!(
++                tt.0 == lf.0,
++                "{what}: k {}, {k:?}: the team's fill differs from runs::fill's",
++                p.threads()
++            );
++            for &op in orig_ptrs {
++                let mut want = Vec::new();
++                crate::bwt::walk(&fwd, op, &mut want);
++                walk_room_back::<8>(&mut tt, op, &mut seg, p, segments);
++                assert!(tt.0 == lf.0, "{what}: the flags were not all taken off");
++                let mut out = vec![1, 2, 3];
++                seg.assemble_reversed(&mut out);
++                assert!(
++                    out == want,
++                    "{what}: k {}, segments {segments}, from {op}: not walk's output",
++                    p.threads()
++                );
++            }
++        }
++    }
++
++    #[test]
++    fn build_runs_and_walk_back_are_fill_and_walk() {
++        for k in 1..=4 {
++            let p = Pool::new(k).unwrap();
++            for (name, ll) in columns(30_000) {
++                if ll.is_empty() {
++                    continue;
++                }
++                let n = ll.len() as u32;
++                for segments in [1, 7, 64, 512 * k] {
++                    runs_match(&p, &ll, &[0, n / 3, n - 1], segments, &name);
++                }
++            }
++        }
++        // (the empty block's table: filled, empty)
++        let p = Pool::new(2).unwrap();
++        let (r, cuts, _) = records_of(&[]);
++        let mut tt = TVector(vec![1]);
++        build_runs(&r, &cuts, 0, crate::Kernels::scalar(), &p, &mut tt).unwrap();
++        assert!(tt.0.is_empty());
++    }
++
++    /// The same under Miri at k = 2 and 3, small blocks: the shares' writes through the
++    /// shared table (its race detector) and the walk's shares on the LF table
++    #[test]
++    fn miri_build_runs_and_walk_back() {
++        let mut r = xorshift(29);
++        let cases: Vec<Vec<u8>> = vec![
++            (0..1100).map(|_| (r() % 4) as u8).collect(),
++            b"ab".repeat(300),
++            (0..900).map(|i| ((i / 37) % 3) as u8).collect(),
++        ];
++        for k in [2, 3] {
++            let p = Pool::new(k).unwrap();
++            for (c, ll) in cases.iter().enumerate() {
++                let n = ll.len() as u32;
++                runs_match(&p, ll, &[n / 2], 24, &format!("case {c}"));
++            }
++        }
++    }
++
++    /// Cuts that are not the block's are refused before any share runs (`cuts_tile`), or
++    /// caught by a share's end check: an error either way, the table left empty. A share
++    /// run twice, or out of range, writes nothing the second time.
++    #[test]
++    fn miri_build_runs_refuses_wrong_cuts() {
++        let mut x = xorshift(31);
++        let ll: Vec<u8> = (0..1200)
++            .flat_map(|_| {
++                let c = (x() % 4) as u8;
++                std::iter::repeat(c).take(1 + (x() % 6) as usize)
++            })
++            .collect();
++        let n = ll.len();
++        let (r, cuts, lf) = records_of(&ll);
++        let p = Pool::new(3).unwrap();
++        let k = crate::Kernels::scalar();
++        let mut tt = TVector(vec![8; 4]);
++        // another block's length; no cuts; no shares, and too many
++        for (n, cuts, shares) in [
++            (n + 1, &cuts[..], 3),
++            (n, &cuts[..1], 3),
++            (n, &cuts[..], 0),
++            (n, &cuts[..], MAX_SHARES + 1),
++        ] {
++            assert!(RunsBuild::new(&r, cuts, n, shares, k, &mut tt).is_err());
++            assert!(tt.0.is_empty());
++        }
++        // records that are not the cuts': two of different bytes, in different pieces, have
++        // changed places. The cuts still tile (the counts are the same), so the build
++        // starts; the two pieces' shares then fail their end checks, and no table comes out
++        let mut bad = crate::runs::Runs::of_column(&ll);
++        let recs = bad.records_mut();
++        let (i, lo) = (cuts[2].rec_for_tests(), cuts[7].rec_for_tests());
++        let j = (lo..recs.len())
++            .find(|&j| recs[j] >> 8 != recs[i] >> 8)
++            .unwrap();
++        assert!(
++            j < cuts[8].rec_for_tests(),
++            "the pieces are too short for the test"
++        );
++        recs.swap(i, j);
++        for shares in [1, 3, 12] {
++            let b = RunsBuild::new(&bad, &cuts, n, shares, k, &mut tt)
++                .ok()
++                .unwrap();
++            (0..shares).for_each(|j| b.share(j));
++            let (res, tt) = b.finish();
++            // (one share holds both pieces, and its rows and values are then whole: the
++            // swapped records' own table, which is theirs, not a wrong one)
++            assert_eq!(res.is_err(), shares > 1, "{shares} shares");
++            assert!(res.is_ok() || tt.0.is_empty());
++        }
++        assert!(build_runs(&bad, &cuts, n, k, &p, &mut tt).is_err() && tt.0.is_empty());
++        // a share run twice, and one out of range
++        tt.0.clear();
++        let b = RunsBuild::new(&r, &cuts, n, 2, k, &mut tt).ok().unwrap();
++        b.share(0);
++        b.share(0);
++        b.share(2);
++        let (res, tt) = b.finish();
++        assert!(res.is_err() && tt.0.is_empty(), "a share never ran");
++        let b = RunsBuild::new(&r, &cuts, n, 2, k, tt).ok().unwrap();
++        b.share(1);
++        b.share(0);
++        // (a slot marked after its share ran: a second run of the share would fill it again)
++        let mark = u32::MAX;
++        // SAFETY: slot 0 is share 0's, which has ended, and no thread is in the build
++        unsafe { *b.slots.0 = mark };
++        b.share(1);
++        b.share(0);
++        let (res, tt) = b.finish();
++        assert!(res.is_ok() && tt.0[0] == mark && tt.0[1..] == lf.0[1..]);
++        // every share the masks hold, most of them of no pieces
++        let b = RunsBuild::new(&r, &cuts, n, MAX_SHARES, k, tt)
++            .ok()
++            .unwrap();
++        (0..MAX_SHARES).rev().for_each(|j| b.share(j));
++        let (res, tt) = b.finish();
++        assert!(res.is_ok() && tt.0 == lf.0);
++    }
++
++    /// A block's records through the teams' entries: the pipelined run
++    /// (`invert_pipelined_from`, each wait) and the service team's (`invert_team_from`),
++    /// against `bwt::walk` on the column's T-vector
++    #[test]
++    fn runs_through_the_pipelined_and_team_runs() {
++        let mut x = xorshift(37);
++        let n = crate::bwt::MIN_COOP + 4321;
++        let ll: Vec<u8> = (0..n)
++            .flat_map(|_| {
++                let c = (x() % 7) as u8;
++                std::iter::repeat(c).take(1 + (x() % 40) as usize)
++            })
++            .take(n)
++            .collect();
++        let (r, cuts, lf) = records_of(&ll);
++        let mut fwd = TVector::new();
++        crate::bwt::build(&ll, &counts_of(&ll), &mut fwd);
++        for kern in fill_kernels() {
++            let src = Source::Runs {
++                runs: &r,
++                cuts: &cuts,
++                n,
++                k: kern,
++            };
++            for k in [1, 2, 3, 4] {
++                let p = Pool::new(k).unwrap();
++                let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
++                for op in [0, n as u32 / 2, n as u32 - 1] {
++                    let mut want = Vec::new();
++                    crate::bwt::walk(&fwd, op, &mut want);
++                    let led = AtomicUsize::new(0);
++                    let lead = || {
++                        led.fetch_add(1, Ordering::Relaxed);
++                    };
++                    let mut out = vec![9; 5];
++                    invert_pipelined_from::<8, false, BARRIER_SPINS>(
++                        &p, src, op, &mut tt, &mut seg, &mut out, &lead, 0,
++                    )
++                    .unwrap();
++                    assert!(out == want, "pipelined, k {k}, from {op}");
++                    assert_eq!(led.load(Ordering::Relaxed), 1);
++                    let mut out = vec![9; 5];
++                    invert_pipelined_from::<8, true, SHORT_SPINS>(
++                        &p, src, op, &mut tt, &mut seg, &mut out, &lead, 0,
++                    )
++                    .unwrap();
++                    assert!(out == want, "pipelined and parked, k {k}, from {op}");
++                    invert_team_from::<8>(&p, src, op, &mut tt, &mut seg, 0, None);
++                    let mut out = vec![9; 5];
++                    seg.assemble_reversed(&mut out);
++                    assert!(out == want, "team, k {k}, from {op}");
++                    assert!(tt.0 == lf.0, "k {k}: the table");
++                }
++            }
++        }
++    }
++
++    /// `bwt::Cooperative` on a block's records past `MIN_COOP` really runs the team (its
++    /// pool spawned), and gives `walk`'s output; below it, the one-core kernel
++    #[test]
++    fn cooperative_kernel_engages_on_records() {
++        use crate::bwt::InverseBwt;
++        let mut x = xorshift(41);
++        let big: Vec<u8> = (0..crate::bwt::MIN_COOP + 12_345)
++            .map(|i| {
++                if x() % 5 == 0 {
++                    (x() % 9) as u8
++                } else {
++                    (i / 50 % 3) as u8
++                }
++            })
++            .collect();
++        let small = &big[..crate::bwt::MIN_COOP - 1];
++        for ll in [&big[..], small] {
++            let mut tt = TVector::new();
++            crate::bwt::build(ll, &counts_of(ll), &mut tt);
++            let mut want = Vec::new();
++            crate::bwt::walk(&tt, 17, &mut want);
++            let r = crate::runs::Runs::of_column(ll);
++            for kern in fill_kernels() {
++                let mut c = crate::bwt::Cooperative::<3>::default();
++                assert!(c.reads_runs());
++                let mut out = vec![4; 9];
++                assert!(c.invert_runs(&r, ll.len(), 17, &mut out, kern));
++                assert!(out == want);
++                assert_eq!(c.engaged(), ll.len() >= crate::bwt::MIN_COOP);
++            }
++        }
++        // records that don't tile the block: refused, for the caller's column path
++        let mut bad = crate::runs::Runs::of_column(&big);
++        bad.records_mut().pop();
++        let mut c = crate::bwt::Cooperative::<3>::default();
++        let mut out = Vec::new();
++        assert!(!c.invert_runs(&bad, big.len(), 17, &mut out, crate::Kernels::scalar()));
++        assert!(!c.invert_runs(&bad, small.len(), 17, &mut out, crate::Kernels::scalar()));
++    }
++
+     /// The build and the walk cut into their parts (`FusedBuild`, `RoomWalk`), their shares
+     /// run on `s` threads of the test's own, against `bwt::build` and `bwt::walk`; then the
+     /// pipelined run (`invert_pipelined`) on a pool of s helpers and a leader, the leader's
+@@ -2459,9 +3050,13 @@ mod tests {
+             let mut seg = SegScratch::default();
+             let mut out = Vec::new();
+             let relay = Relay {
+-                stage: std::cell::UnsafeCell::new(Stage::Build(Err(&mut tt), &mut seg)),
+-                ll: &[],
+-                counts: &[0; 256],
++                stage: std::cell::UnsafeCell::new(Stage::Build(Building::Built(&mut tt), &mut seg)),
++                src: Source::Column {
++                    ll: &[],
++                    counts: &[0; 256],
++                    checkpoints: &[],
++                    stride: 1,
++                },
+                 orig_ptr: 0,
+                 segments: 1,
+                 out: std::cell::UnsafeCell::new(&mut out),
+diff --git a/src/lib.rs b/src/lib.rs
+index f77f1a735..275bc3990 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -338,7 +338,7 @@ pub fn decode_block<I: bwt::InverseBwt>(
+     let cooperative = s.inverse.wants_checkpoints();
+     // a block of few symbols, for a kernel that can: its table from its run records, with no
+     // last column (src/runs.rs). Its output goes to `ll`, as an in-place kernel's would
+-    if !cooperative && s.inverse.reads_runs() && runs::takes_runs(b) {
++    if s.inverse.reads_runs() && runs::takes_runs(b) {
+         let n = runs::front(b, &mut s.runs, k)?;
+         if b.orig_ptr as usize >= n {
+             return Err(ErrorKind::BadOrigPtr);
+diff --git a/src/mtf.rs b/src/mtf.rs
+index fbd8af4a8..778d9b84e 100644
+--- a/src/mtf.rs
++++ b/src/mtf.rs
+@@ -340,7 +340,8 @@ pub fn mtf_checkpoints_scalar(
+ /// so that it lies in one page wherever the frame falls (its 320 bytes fill one 512-byte
+ /// slot, and a page is a whole number of slots).
+ ///
+-/// Aligned to 64 alone, the list straddled a page boundary at about one stack depth in 13.
++/// Aligned to 64 alone, the list straddled a page boundary at 4 of the 64 places a frame
++/// can put it in a page (the four starts whose 320 bytes run past the page's end).
+ /// The kernel's shifts are unaligned loads and stores along the list (`ptr::copy`), and
+ /// across a page boundary they cost up to twice the block's move-to-front on a block of a
+ /// symbol a row (docs/journal/2026-11-10-team-runs-port.md, section 6). On a worker thread
+diff --git a/src/parallel.rs b/src/parallel.rs
+index f042135de..483233086 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -664,8 +664,14 @@ fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
+ //   whole by the leader, on a one-core kernel's buffers of its own, rather than draining
+ //   the pipeline: on the Wikidata sample, 198 of its 431 blocks are below it); then it
+ //   joins block i's walk if it is still going.
+-// So a team keeps two front sets (`ll`, `counts`, `checkpoints`) and two assembled
+-// buffers, one table, pool and segment scratch, and the one-core kernel's small set.
++// So a team keeps two front sets (`ll`, `counts`, `checkpoints`; or, for a block of few
++// symbols, its run records and their cuts: `front_stage`) and two assembled buffers, one
++// table, pool and segment scratch, and the one-core kernel's small set.
++//
++// A block of few symbols (`runs::takes_runs`) goes through the same run by its records:
++// the leader's front is `runs::front` and `runs::cuts`, the helpers' build is the fill of
++// the LF table by shares (`coop::RunsBuild`), and their walk is the same walk from the
++// primary index, its segments joined in reverse (`coop::Source`).
+ //
+ // The worker never waits for a job while it holds a block not yet published: a job is
+ // waited for (`recv`) only with the pipeline empty, so a block the reader needs can never
+@@ -694,11 +700,19 @@ pub struct Levers {
+     pub small: bool,
+ }
+ 
+-/// A block's move-to-front stage's buffers (`Scratch`'s first three)
++/// A block's move-to-front stage's buffers (`Scratch`'s first three), and, for a block of
++/// few symbols (`runs::takes_runs`), its run records and their cuts in their place
++/// (`front_stage`)
+ struct Front {
+     ll: Vec<u8>,
+     counts: [u32; 256],
+     checkpoints: Vec<[u32; 256]>,
++    runs: super::runs::Runs,
++    cuts: Vec<super::runs::Cut>,
++    /// whether the block staged here is in `runs` and `cuts` (else in the first three), and
++    /// its rows
++    by_runs: bool,
++    rows: usize,
+ }
+ 
+ impl Default for Front {
+@@ -707,6 +721,55 @@ impl Default for Front {
+             ll: Vec::new(),
+             counts: [0; 256],
+             checkpoints: Vec::new(),
++            runs: super::runs::Runs::default(),
++            cuts: Vec::new(),
++            by_runs: false,
++            rows: 0,
++        }
++    }
++}
++
++impl Front {
++    /// The block staged here, as a team inverts it
++    fn source(&self, k: Kernels) -> super::coop::Source<'_> {
++        if self.by_runs {
++            super::coop::Source::Runs {
++                runs: &self.runs,
++                cuts: &self.cuts,
++                n: self.rows,
++                k,
++            }
++        } else {
++            super::coop::Source::Column {
++                ll: &self.ll,
++                counts: &self.counts,
++                checkpoints: &self.checkpoints,
++                stride: super::mtf::CHECKPOINT,
++            }
++        }
++    }
++
++    /// The block staged here inverted on this thread alone, on a one-core kernel's table:
++    /// `bwt::walk_segments_room_parts`'s parts, or, for a block in its records,
++    /// `bwt::walk_back_room_parts`'s (the same, joined by `assemble_reversed`). Records that
++    /// don't tile the block, which `front_stage` refuses, panic here.
++    fn invert_alone(
++        &self,
++        orig_ptr: u32,
++        k: Kernels,
++        tt: &mut super::bwt::TVector,
++        seg: &mut super::bwt::SegScratch,
++        direct: &mut Vec<u8>,
++    ) -> bool {
++        if self.by_runs {
++            assert!(
++                super::runs::fill(&self.runs, self.rows, tt, k),
++                "the run records don't tile the block"
++            );
++            super::bwt::walk_back_room_parts(tt, orig_ptr, direct, seg)
++        } else {
++            super::bwt::build(&self.ll, &self.counts, tt);
++            super::bwt::walk_segments_room_parts(tt, orig_ptr, direct, seg)
+         }
+     }
+ }
+@@ -742,7 +805,11 @@ impl Team {
+         use crate::trace::Buffer;
+         let [f0, f1] = &self.fronts;
+         let s = &self.seg;
+-        vec![
++        // (the records' buffers, `runs.runs`, `runs.lit` and `runs.one`, once for each front)
++        let records = [f0, f1].into_iter().flat_map(|f| f.runs.buffers());
++        let mut v: Vec<Buffer> = records.filter(|b| b.cap > 0).collect();
++        v.extend([Buffer::of("cuts", &f0.cuts), Buffer::of("cuts.b", &f1.cuts)]);
++        v.extend([
+             Buffer::of("ll", &f0.ll),
+             Buffer::of("ll.b", &f1.ll),
+             Buffer::of("checkpoints", &f0.checkpoints),
+@@ -757,7 +824,8 @@ impl Team {
+                 len: s.bufs.iter().map(Vec::len).sum(),
+                 cap: s.bufs.iter().map(Vec::capacity).sum(),
+             },
+-        ]
++        ]);
++        v
+     }
+ }
+ 
+@@ -778,12 +846,30 @@ struct Inverted {
+ }
+ 
+ /// The move-to-front stage of a block into `f`, and its primary index checked
+-/// (`decode_block`'s first steps): its length
++/// (`decode_block`'s first steps): its length. A block of few symbols (`runs::takes_runs`)
++/// is staged as its run records and their cuts (`runs::front`, `runs::cuts`), with no last
++/// column, as `decode_block` stages it for a kernel that reads runs. The cuts are the
++/// tiling's whole check, made here, so that no later stage refuses the records; records
++/// that fail it are a bug in `runs::front` (a debug build stops here), and the block is
++/// then staged by its column, which still gives the right bytes.
+ fn front_stage(b: &super::block::Symbols, f: &mut Front, k: Kernels) -> Result<usize, ErrorKind> {
++    f.by_runs = false;
++    if super::runs::takes_runs(b) {
++        let n = super::runs::front(b, &mut f.runs, k)?;
++        if b.orig_ptr as usize >= n {
++            return Err(ErrorKind::BadOrigPtr);
++        }
++        if super::runs::cuts(&f.runs, n, &mut f.cuts) {
++            (f.by_runs, f.rows) = (true, n);
++            return Ok(n);
++        }
++        debug_assert!(false, "the run records don't tile the block");
++    }
+     let n = super::mtf::mtf_checkpoints(b, &mut f.ll, &mut f.counts, &mut f.checkpoints, k)?;
+     if b.orig_ptr as usize >= n {
+         return Err(ErrorKind::BadOrigPtr);
+     }
++    f.rows = n;
+     Ok(n)
+ }
+ 
+@@ -927,15 +1013,21 @@ fn solo(shared: &Shared, f: &Front, sc: &mut Solo, s: Staged, k: Kernels) -> boo
+     };
+     let r = catch_unwind(AssertUnwindSafe(|| {
+         mark!(RunStart, s.place);
+-        super::bwt::build(&f.ll, &f.counts, &mut sc.tt);
+-        super::bwt::walk_segments_room(&mut sc.tt, s.symbols.orig_ptr, &mut sc.buf, &mut sc.seg);
++        let orig_ptr = s.symbols.orig_ptr;
++        if f.invert_alone(orig_ptr, k, &mut sc.tt, &mut sc.seg, &mut sc.buf) {
++            if f.by_runs {
++                sc.seg.assemble_reversed(&mut sc.buf);
++            } else {
++                sc.seg.assemble(&mut sc.buf);
++            }
++        }
+         // (the `walk-stats` feature's record of a block the leader walked alone)
+         #[cfg(feature = "walk-stats")]
+         super::coop::walk_stats::push(format!(
+             "{{\"kind\":\"solo\",\"team\":{},\"block\":{},\"rows\":{}}}",
+             super::coop::walk_stats::team(),
+             s.place,
+-            f.ll.len()
++            f.rows
+         ));
+         mark!(RunEnd, s.place);
+         mark!(RleStart, s.place);
+@@ -1154,12 +1246,9 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
+         // its `decode_block`, which a pipelined team never runs)
+         mark!(RunStart, s.place);
+         let r = catch_unwind(AssertUnwindSafe(|| {
+-            super::coop::invert_pipelined_with::<FLAGGED_LANES, PARK, SPIN>(
++            super::coop::invert_pipelined_from::<FLAGGED_LANES, PARK, SPIN>(
+                 pool,
+-                &hf.ll,
+-                &hf.counts,
+-                &hf.checkpoints,
+-                super::mtf::CHECKPOINT,
++                hf.source(k),
+                 s.symbols.orig_ptr,
+                 tt,
+                 seg,
+@@ -1251,6 +1340,11 @@ fn lock_lead(m: &Mutex<Lead>) -> std::sync::MutexGuard<'_, Lead> {
+ //    a front set are free;
+ // 4. ends, once the jobs are closed and no block is left in flight; else waits.
+ //
++// **Blocks of few symbols** (`runs::takes_runs`) are prepared as their run records and
++// cuts (`front_stage`), filled and walked backward by the team (`coop::invert_team_from`
++// on `coop::Source::Runs`), and their segments joined in reverse by the finisher
++// (`Back::reversed`). Nothing else about a block's way through the hub differs.
++//
+ // **Small blocks** (below `MIN_COOP`) are prepared and finished by the service, as every
+ // block, and inverted whole by a team's first thread on the one-core kernel (its helpers
+ // idle meanwhile), exactly as a `Cooperative` team inverts them today. Not by the service:
+@@ -1276,6 +1370,9 @@ struct Back {
+     seg: super::bwt::SegScratch,
+     direct: Vec<u8>,
+     segmented: bool,
++    /// the segments are an LF table's, walked backward (a block staged as its run
++    /// records): joined by `assemble_reversed`
++    reversed: bool,
+ }
+ 
+ /// A block prepared (move-to-front done), in its front set
+@@ -1717,7 +1814,7 @@ impl StreamDecoder {
+             let (s, h) = (shared.clone(), hub.clone());
+             handles.push(spawn(
+                 format!("mibz2-{i}"),
+-                Box::new(move || team_worker(&s, &h, team_k)),
++                Box::new(move || team_worker(&s, &h, team_k, kernels)),
+             ));
+         }
+         let sh = shared.clone();
+@@ -1917,7 +2014,11 @@ fn finish(shared: &Shared, hub: &Hub, o: &Outer, w: Walked, asm: &mut Vec<u8>, k
+     let r = catch_unwind(AssertUnwindSafe(|| {
+         let inverted: &[u8] = if back.segmented {
+             mark!(AssembleStart, place);
+-            back.seg.assemble(asm);
++            if back.reversed {
++                back.seg.assemble_reversed(asm);
++            } else {
++                back.seg.assemble(asm);
++            }
+             mark!(AssembleEnd, place);
+             asm
+         } else {
+@@ -2001,7 +2102,7 @@ fn take_prepared(hub: &Hub, o: &Outer) -> Option<(Prepared, Back)> {
+ /// A team: its first thread takes prepared blocks and inverts each on the team's pool
+ /// (`coop::invert_team`), or alone for a block below `MIN_COOP` (or with no pool), into a
+ /// back set, then queues it for finishing
+-fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
++fn team_worker(shared: &Shared, hub: &Hub, team_k: usize, k: Kernels) {
+     use super::bwt::FLAGGED_LANES;
+     // (made first, so dropped last: after the pool, whose drop joins its helpers)
+     let o = Outer::new(shared, hub, "team");
+@@ -2038,12 +2139,9 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
+         mark!(RunStart, place);
+         let r = catch_unwind(AssertUnwindSafe(|| match team {
+             Some(pool) => {
+-                super::coop::invert_team::<FLAGGED_LANES>(
++                super::coop::invert_team_from::<FLAGGED_LANES>(
+                     pool,
+-                    &front.ll,
+-                    &front.counts,
+-                    &front.checkpoints,
+-                    super::mtf::CHECKPOINT,
++                    front.source(k),
+                     symbols.orig_ptr,
+                     &mut tt,
+                     &mut back.seg,
+@@ -2051,19 +2149,21 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
+                     thread_fault,
+                 );
+                 back.segmented = true;
++                back.reversed = front.by_runs;
+             }
+             None => {
+                 // (the one-core kernel, as `bwt::Cooperative` inverts a small block)
+                 if thread_fault == Some(0) {
+                     panic!("an injected panic in block {place}'s one-core inversion");
+                 }
+-                super::bwt::build(&front.ll, &front.counts, &mut tt);
+-                back.segmented = super::bwt::walk_segments_room_parts(
+-                    &mut tt,
++                back.segmented = front.invert_alone(
+                     symbols.orig_ptr,
+-                    &mut back.direct,
++                    k,
++                    &mut tt,
+                     &mut back.seg,
++                    &mut back.direct,
+                 );
++                back.reversed = front.by_runs;
+             }
+         }));
+         mark!(RunEnd, place);
+@@ -2842,7 +2942,7 @@ mod service_tests {
+                 st.live = 1;
+                 st.closed = true;
+             }
+-            team_worker(&sh, &h, 2);
++            team_worker(&sh, &h, 2, Kernels::detect());
+             home(&h, what);
+             let r = published(&sh, 4);
+             if cancelled {
+@@ -3277,6 +3377,191 @@ fn parse_cpu_max(s: &str) -> Quota {
+     }
+ }
+ 
++#[cfg(test)]
++mod front_tests {
++    //! The teams' front stage: which path it stages a block by, and that the block staged
++    //! inverts to the column's bytes, alone and as a team's source.
++
++    use super::super::block::Symbols;
++    use super::super::bwt::{self, SegScratch, TVector};
++    use super::super::coop::{invert_team_from, Pool, Source};
++    use super::super::runs;
++    use super::*;
++
++    /// A column as a block's symbols: its bytes in use, move-to-front indices, and RUNA and
++    /// RUNB for the zeros (as bzip2 codes them), under a bound of `max_len` rows
++    fn symbols_of(ll: &[u8], max_len: usize) -> Symbols {
++        let mut used = [false; 256];
++        ll.iter().for_each(|&c| used[c as usize] = true);
++        let mut seq_to_unseq = [0u8; 256];
++        let mut list: Vec<u8> = (0..=255u8).filter(|&c| used[c as usize]).collect();
++        seq_to_unseq[..list.len()].copy_from_slice(&list);
++        let eob = list.len() as u16 + 1;
++        let (mut syms, mut zeros) = (Vec::new(), 0u32);
++        let flush = |zeros: &mut u32, syms: &mut Vec<u16>| {
++            // (bijective base 2: RUNA 1, RUNB 2, weights doubling)
++            while *zeros > 0 {
++                syms.push(((*zeros - 1) & 1) as u16);
++                *zeros = (*zeros - 1) >> 1;
++            }
++        };
++        for &c in ll {
++            let i = list.iter().position(|&x| x == c).unwrap();
++            if i == 0 {
++                zeros += 1;
++                continue;
++            }
++            flush(&mut zeros, &mut syms);
++            syms.push(i as u16 + 1);
++            list.remove(i);
++            list.insert(0, c);
++        }
++        flush(&mut zeros, &mut syms);
++        syms.push(eob);
++        Symbols {
++            crc: 0,
++            orig_ptr: 0,
++            seq_to_unseq,
++            syms,
++            eob,
++            max_len,
++        }
++    }
++
++    /// A record `runs::front` never writes (its length is over a record's cap)
++    const UNTOUCHED: u16 = 0xffff;
++
++    /// `front_stage` stages a block by its records exactly where `runs::takes_runs` admits
++    /// it (one front set reused across both kinds, as a team reuses it), with the block's
++    /// rows; and the block staged gives `bwt::walk`'s bytes, inverted alone
++    /// (`Front::invert_alone`) and as a team's source (`Front::source`), which is the
++    /// records' only when the block was staged by them
++    #[test]
++    fn front_stage_takes_the_records_where_selected() {
++        let mut x = 0x2545_f491_4f6c_dd1du64;
++        let mut rnd = move || {
++            x ^= x << 13;
++            x ^= x >> 7;
++            x ^= x << 17;
++            x
++        };
++        let mut column = |n: usize, runny: bool| -> Vec<u8> {
++            let mut v = Vec::with_capacity(n + 64);
++            while v.len() < n {
++                let (c, len) = if runny {
++                    ((rnd() % 6) as u8, 1 + (rnd() % 60) as usize)
++                } else {
++                    (rnd() as u8, 1)
++                };
++                v.extend(std::iter::repeat(c).take(len));
++            }
++            v.truncate(n);
++            v
++        };
++        // (no two in a row of the same length: the front set's rows are the block's own)
++        let cases = [
++            (bwt::MIN_SEGMENTED + 4321, true),
++            (bwt::MIN_SEGMENTED + 5000, false),
++            (1000, true),
++            (1200, false),
++            (bwt::MIN_SEGMENTED + 99, true),
++        ];
++        let pool = Pool::new(2).unwrap();
++        let mut f = Front::default();
++        let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
++        let (mut by_records, mut by_column) = (0, 0);
++        for kern in [Kernels::scalar(), Kernels::detect()] {
++            for (i, &(n, runny)) in cases.iter().enumerate() {
++                let ll = column(n, runny);
++                // (the bound is the length, so a block of a symbol a row keeps the column)
++                let mut b = symbols_of(&ll, n);
++                b.orig_ptr = (n / 3) as u32;
++                let want_path = runs::takes_runs(&b);
++                assert_eq!(want_path, runny, "case {i}: the selector");
++                let mut want_tt = TVector::new();
++                let mut counts = [0u32; 256];
++                ll.iter().for_each(|&c| counts[c as usize] += 1);
++                bwt::build(&ll, &counts, &mut want_tt);
++                let mut want = Vec::new();
++                bwt::walk(&want_tt, b.orig_ptr, &mut want);
++
++                *f.runs.records_mut() = vec![UNTOUCHED];
++                f.ll = vec![0xee; 3];
++                assert_eq!(front_stage(&b, &mut f, kern), Ok(n), "case {i}");
++                assert_eq!((f.by_runs, f.rows), (want_path, n), "case {i}: staged");
++                let took_records = *f.runs.records_mut() != [UNTOUCHED];
++                assert_eq!(took_records, want_path, "case {i}: the records written");
++                assert_eq!(f.ll == ll, !want_path, "case {i}: the column written");
++                assert_eq!(
++                    matches!(f.source(kern), Source::Runs { .. }),
++                    want_path,
++                    "case {i}: the team's source"
++                );
++
++                let join = |seg: &SegScratch, out: &mut Vec<u8>| {
++                    if want_path {
++                        seg.assemble_reversed(out)
++                    } else {
++                        seg.assemble(out)
++                    }
++                };
++                let mut out = vec![7; 2];
++                let segmented = f.invert_alone(b.orig_ptr, kern, &mut tt, &mut seg, &mut out);
++                assert_eq!(segmented, n >= bwt::MIN_SEGMENTED, "case {i}");
++                if segmented {
++                    join(&seg, &mut out);
++                }
++                assert!(out == want, "case {i}, {kern:?}: inverted alone");
++
++                invert_team_from::<8>(
++                    &pool,
++                    f.source(kern),
++                    b.orig_ptr,
++                    &mut tt,
++                    &mut seg,
++                    0,
++                    None,
++                );
++                let mut out = vec![7; 2];
++                join(&seg, &mut out);
++                assert!(out == want, "case {i}, {kern:?}: inverted by a team");
++                if want_path {
++                    by_records += 1;
++                } else {
++                    by_column += 1;
++                }
++            }
++        }
++        assert!(by_records >= 3 && by_column >= 2);
++    }
++
++    /// A bad primary index is refused on either path, with the same error
++    #[test]
++    fn front_stage_checks_the_primary_index_on_both_paths() {
++        for runny in [true, false] {
++            let ll: Vec<u8> = (0..4000u32)
++                .map(|i| {
++                    if runny {
++                        (i / 90 % 3) as u8
++                    } else {
++                        (i.wrapping_mul(2_654_435_761) >> 13) as u8
++                    }
++                })
++                .collect();
++            let mut b = symbols_of(&ll, ll.len());
++            assert_eq!(runs::takes_runs(&b), runny);
++            let mut f = Front::default();
++            b.orig_ptr = ll.len() as u32;
++            assert_eq!(
++                front_stage(&b, &mut f, Kernels::detect()),
++                Err(ErrorKind::BadOrigPtr)
++            );
++            b.orig_ptr -= 1;
++            assert_eq!(front_stage(&b, &mut f, Kernels::detect()), Ok(ll.len()));
++        }
++    }
++}
++
+ #[cfg(test)]
+ mod unwind_tests;
+ 
+diff --git a/src/runs.rs b/src/runs.rs
+index fde481f91..5a2b872f7 100644
+--- a/src/runs.rs
++++ b/src/runs.rs
+@@ -120,6 +120,46 @@ impl Runs {
+     }
+ }
+ 
++#[cfg(test)]
++impl Runs {
++    /// A column's records, as `front` leaves them: its runs cut at CAP, each byte's rows
++    /// and records counted (the tests', where no symbols are at hand)
++    pub(crate) fn of_column(ll: &[u8]) -> Runs {
++        let mut r = Runs::default();
++        let mut i = 0;
++        while i < ll.len() {
++            let c = ll[i];
++            let mut j = i;
++            while j < ll.len() && ll[j] == c {
++                j += 1;
++            }
++            r.counts[c as usize] += (j - i) as u32;
++            let mut left = j - i;
++            while left > 0 {
++                let len = left.min(CAP as usize);
++                r.runs.push((c as u16) << 8 | len as u16);
++                r.per[c as usize] += 1;
++                left -= len;
++            }
++            i = j;
++        }
++        r
++    }
++
++    /// The records, to break them
++    pub(crate) fn records_mut(&mut self) -> &mut Vec<u16> {
++        &mut self.runs
++    }
++}
++
++#[cfg(test)]
++impl Cut {
++    /// The records before the cut
++    pub(crate) fn rec_for_tests(&self) -> usize {
++        self.rec
++    }
++}
++
+ /// Whether this CPU has what the AVX2 front needs beyond `Kernels::avx2` (AVX2 and BMI1)
+ #[cfg(target_arch = "x86_64")]
+ fn front_fast(k: Kernels) -> bool {
+@@ -724,5 +764,256 @@ unsafe fn fill_avx2(
+     true
+ }
+ 
++// ---- The fill on a team's threads (`coop::RunsBuild`) ----
++//
++// The records are cut into pieces at `cuts`, each cut holding where the fill stands there (the
++// row, and every byte's next LF value), so that a thread can fill any run of whole pieces with
++// no other thread's state: `fill_share`. The cuts are made by one pass over the records, which
++// is also the tiling's whole check, so a block whose cuts are made fills without a refusal.
++
++/// The pieces a block's records are cut into (`cuts`): a team of 1, 2, 3, 4, 6 or 12 threads
++/// takes whole pieces, equal shares of them
++pub(crate) const PIECES: usize = 12;
++
++/// The fill's state at a cut in a block's records
++#[derive(Clone)]
++pub(crate) struct Cut {
++    /// the records before the cut, and their rows
++    rec: usize,
++    row: u32,
++    /// each byte's next LF value: its bucket's start plus its rows before the cut
++    next: [u32; 256],
++}
++
++/// The block's records (as `front` left them in `r`, for a block of `n` rows) cut into
++/// `PIECES` pieces of about equal work in the fill, into `out`: `PIECES + 1` cuts, the first
++/// at the block's start and the last at its end. Returns false, `out` left empty, unless the
++/// records tile the block (`fill`'s checks: the counts sum to n, every record is at least a
++/// row, and the records' rows are n in all and each byte's are its count).
++///
++/// A piece's work is taken as a store for each 8 rows and one more for each record.
++pub(crate) fn cuts(r: &Runs, n: usize, out: &mut Vec<Cut>) -> bool {
++    out.clear();
++    let runs = &r.runs;
++    // (below 2^24 records of at most 255 rows: the sums below fit 32 bits)
++    if n >= 1 << 24 || runs.len() >= 1 << 24 {
++        return false;
++    }
++    let (mut next, mut lim) = ([0u32; 256], [0u32; 256]);
++    let mut cum = 0u64;
++    for c in 0..256 {
++        next[c] = cum as u32;
++        cum += r.counts[c] as u64;
++        lim[c] = cum as u32;
++    }
++    if cum != n as u64 {
++        return false;
++    }
++    let total = n as u64 + 8 * runs.len() as u64;
++    // the work at which the next cut falls: cut j at j / PIECES of it
++    let at = |j: usize| (total * j as u64).div_ceil(PIECES as u64);
++    out.push(Cut {
++        rec: 0,
++        row: 0,
++        next,
++    });
++    let (mut q, mut work) = (0u32, 0u64);
++    let mut due = at(1);
++    let mut empty = false;
++    for (i, &x) in runs.iter().enumerate() {
++        if work >= due {
++            while out.len() < PIECES && work >= at(out.len()) {
++                out.push(Cut {
++                    rec: i,
++                    row: q,
++                    next,
++                });
++            }
++            due = if out.len() < PIECES {
++                at(out.len())
++            } else {
++                u64::MAX
++            };
++        }
++        let (c, len) = ((x >> 8) as usize, (x & 0xff) as u32);
++        empty |= len == 0;
++        next[c] += len;
++        q += len;
++        work += len as u64 + 8;
++    }
++    // (each byte's rows are its count, so the rows in all are the counts' sum, n)
++    if empty || next != lim {
++        out.clear();
++        return false;
++    }
++    // (a block of fewer records than pieces: the pieces left are empty, at the end)
++    let end = Cut {
++        rec: runs.len(),
++        row: q,
++        next,
++    };
++    out.resize(PIECES + 1, end);
++    true
++}
++
++/// Whether `cuts` can be filled by shares for a block of `n` rows with `r`'s records: what
++/// `fill_share`'s callers need of them for the shares to write disjoint rows that tile the
++/// block, whatever made them. The first cut is the block's start (no record, row 0, each
++/// byte's bucket's start by `r`'s counts, which sum to n), the last its end (every record,
++/// row n), and from each cut to the next nothing falls: not the records, the row, or any
++/// byte's value, which stays at or below n.
++pub(crate) fn cuts_tile(r: &Runs, n: usize, cuts: &[Cut]) -> bool {
++    let (Some(first), Some(last)) = (cuts.first(), cuts.last()) else {
++        return false;
++    };
++    if n >= 1 << 24 {
++        return false;
++    }
++    let mut cum = 0u64;
++    for c in 0..256 {
++        if first.next[c] as u64 != cum {
++            return false;
++        }
++        cum += r.counts[c] as u64;
++    }
++    if cum != n as u64 || first.rec != 0 || first.row != 0 {
++        return false;
++    }
++    if last.rec != r.runs.len() || last.row as usize != n {
++        return false;
++    }
++    if last.next.iter().any(|&v| v as usize > n) {
++        return false;
++    }
++    cuts.windows(2).all(|w| {
++        let (a, b) = (&w[0], &w[1]);
++        a.rec <= b.rec && a.row <= b.row && a.next.iter().zip(&b.next).all(|(x, y)| x <= y)
++    })
++}
++
++/// The rows from cut `from` to cut `to` of the block's LF table, written through `out` (the
++/// table's first slot): `fill`'s entries for the records between the cuts, `from`'s state
++/// carried through them. Returns whether they filled the rows between the cuts exactly, and
++/// each byte's values between the cuts exactly (the share's end check).
++///
++/// It writes only slots `from.row .. to.row`, whatever the records and the cuts hold: a
++/// record is refused if it is empty or would pass `to.row` or its byte's value at `to`, and
++/// no store runs past `to.row` (a record whose 8-slot stores would is written a slot at a
++/// time). A share that passes has `fill`'s entry in each of its rows, each byte's values
++/// below `to`'s for it; one that fails may leave anything in its rows, the values of an
++/// 8-slot store's slots past its record's end among them, and the caller must not read
++/// them.
++///
++/// # Safety
++///
++/// `out` must be valid for writes of `to.row` slots, and no other thread may read or write
++/// slots `from.row .. to.row` during the call.
++pub(crate) unsafe fn fill_share(r: &Runs, from: &Cut, to: &Cut, out: *mut u32, k: Kernels) -> bool {
++    let Some(runs) = r.runs.get(from.rec..to.rec) else {
++        return false;
++    };
++    if from.row > to.row || from.next.iter().zip(&to.next).any(|(a, b)| a > b) {
++        return false;
++    }
++    #[cfg(target_arch = "x86_64")]
++    {
++        if k.avx2 {
++            // SAFETY: `k.avx2` is set only when AVX2 was detected; the rest as this
++            // function's contract, with the cuts' order checked above
++            return unsafe { fill_share_avx2(runs, from.row, to.row, from.next, &to.next, out) };
++        }
++    }
++    let _ = k;
++    // SAFETY: as this function's contract, with the cuts' order checked above
++    unsafe { fill_share_scalar(runs, from.row, to.row, from.next, &to.next, out) }
++}
++
++/// `fill_share` in scalar code: each entry stored alone
++///
++/// # Safety
++///
++/// As `fill_share`, for rows `row .. row_end`; `row <= row_end`, and `next[c] <= lim[c]`
++/// for every byte.
++unsafe fn fill_share_scalar(
++    runs: &[u16],
++    row: u32,
++    row_end: u32,
++    mut next: [u32; 256],
++    lim: &[u32; 256],
++    out: *mut u32,
++) -> bool {
++    let mut q = row;
++    for &x in runs {
++        let (c, len) = ((x >> 8) as usize, (x & 0xff) as u32);
++        // (q <= row_end and next[c] <= lim[c]: neither subtraction wraps)
++        if len == 0 || len > row_end - q || len > lim[c] - next[c] {
++            return false;
++        }
++        let e = c as u32 | next[c] << 8;
++        for j in 0..len {
++            // SAFETY: q + j < q + len <= row_end, a slot of this share's rows
++            unsafe { *out.add((q + j) as usize) = e + (j << 8) };
++        }
++        next[c] += len;
++        q += len;
++    }
++    q == row_end && next == *lim
++}
++
++/// `fill_share` with `fill_avx2`'s stores, 8 entries each, for every record whose stores end
++/// inside the share's rows: a record's last store runs up to 7 slots past its end, so a
++/// record ending within 7 rows of the share's end (at most 7 records) is stored a slot at a
++/// time. The slots a store wrote past its record's end are the share's own next records',
++/// which write them again.
++///
++/// # Safety
++///
++/// AVX2 must be available. Otherwise as `fill_share_scalar`.
++#[cfg(target_arch = "x86_64")]
++#[target_feature(enable = "avx2")]
++unsafe fn fill_share_avx2(
++    runs: &[u16],
++    row: u32,
++    row_end: u32,
++    mut next: [u32; 256],
++    lim: &[u32; 256],
++    out: *mut u32,
++) -> bool {
++    use std::arch::x86_64::*;
++    let lanes = _mm256_setr_epi32(0, 256, 512, 768, 1024, 1280, 1536, 1792);
++    let step = _mm256_set1_epi32(2048);
++    let mut q = row;
++    for &x in runs {
++        let (c, len) = ((x >> 8) as usize, (x & 0xff) as u32);
++        // (q <= row_end and next[c] <= lim[c]: neither subtraction wraps)
++        if len == 0 || len > row_end - q || len > lim[c] - next[c] {
++            return false;
++        }
++        let e = c as u32 | next[c] << 8;
++        let end = q + len;
++        if row_end - end >= 7 {
++            let mut v = _mm256_add_epi32(_mm256_set1_epi32(e as i32), lanes);
++            let mut w = q;
++            loop {
++                // SAFETY: w < end, so w + 8 <= end + 7 <= row_end: inside this share's rows
++                unsafe { _mm256_storeu_si256(out.add(w as usize) as *mut __m256i, v) };
++                w += 8;
++                if w >= end {
++                    break;
++                }
++                v = _mm256_add_epi32(v, step);
++            }
++        } else {
++            for j in 0..len {
++                // SAFETY: q + j < end <= row_end, a slot of this share's rows
++                unsafe { *out.add((q + j) as usize) = e + (j << 8) };
++            }
++        }
++        next[c] += len;
++        q = end;
++    }
++    q == row_end && next == *lim
++}
++
+ #[cfg(test)]
+ mod tests;
+diff --git a/src/runs/tests.rs b/src/runs/tests.rs
+index 9b17693a8..7f0fc92e1 100644
+--- a/src/runs/tests.rs
++++ b/src/runs/tests.rs
+@@ -3,10 +3,12 @@
+ //! (both kernels) against the column's LF table, word for word; the backward walks (plain,
+ //! and the room walk at several lane and segment counts) against `bwt::walk` on the
+ //! column's T-vector; every broken tiling refused; and `decode_block` by records against
+-//! the column's kernels.
++//! the column's kernels. For a team's fill: the cuts and the shares between them (both
++//! kernels, any number of shares) against `fill`'s table, each share writing its own rows
++//! alone; the cuts refused exactly where `fill` refuses; and cuts that don't tile refused.
+ 
+ use super::*;
+-use crate::bwt::{self, Plain, Segmented};
++use crate::bwt::{self, Cooperative, Plain, Segmented};
+ use crate::{decode_block, mtf, Scratch};
+ 
+ /// The kernels to check: the scalar ones, and this CPU's where it has more
+@@ -230,6 +232,11 @@ fn check_block(b: &Symbols, r: &mut Runs, seen: &mut Seen, what: &str) {
+         seen.tables += 1;
+     }
+     if let Ok(n) = want {
++        // the fill by shares, from the records the last front left (every front's are the
++        // same, above): one block in four
++        if seen.ok % 4 == 1 {
++            check_shares(r, n, &lf_of(&ll), what);
++        }
+         // the walks, once a block (they don't depend on the front's kernel)
+         if n > 0 && (cfg!(miri) || n < 1 << 16) {
+             let mut tt = bwt::TVector::new();
+@@ -251,6 +258,54 @@ fn check_block(b: &Symbols, r: &mut Runs, seen: &mut Seen, what: &str) {
+     }
+ }
+ 
++/// A slot no share wrote (no entry: a link is below 2^24)
++const GUARD: u32 = u32::MAX;
++
++/// The fill by shares against `fill`'s table `want`: the cuts made and tiling; the table
++/// filled by 1 to 13 shares of whole pieces, by each kernel; and each piece filled alone
++/// into a guarded table, writing its own rows and no other slot
++fn check_shares(r: &Runs, n: usize, want: &[u32], what: &str) {
++    let mut cv = vec![];
++    assert!(cuts(r, n, &mut cv), "{what}: the cuts refused");
++    assert_eq!(cv.len(), PIECES + 1, "{what}: the cuts");
++    assert!(cuts_tile(r, n, &cv), "{what}: the cuts don't tile");
++    for k in kernels() {
++        let counts: &[usize] = if cfg!(miri) {
++            &[1, 3, 13]
++        } else {
++            &[1, 2, 3, 4, 5, 12, 13]
++        };
++        for &shares in counts {
++            let mut t = vec![GUARD; n + 9];
++            for j in 0..shares {
++                let (from, to) = (&cv[PIECES * j / shares], &cv[PIECES * (j + 1) / shares]);
++                // SAFETY: the table holds n slots and more, and nothing else touches it
++                let ok = unsafe { fill_share(r, from, to, t.as_mut_ptr(), k) };
++                assert!(ok, "{what}, {k:?}: share {j} of {shares} failed its check");
++            }
++            assert!(
++                t[..n] == *want,
++                "{what}, {k:?}: the table by {shares} shares"
++            );
++            assert!(
++                t[n..] == [GUARD; 9],
++                "{what}, {k:?}: a store past the block"
++            );
++        }
++        for (j, w) in cv.windows(2).enumerate() {
++            let mut t = vec![GUARD; n + 9];
++            // SAFETY: as above
++            assert!(unsafe { fill_share(r, &w[0], &w[1], t.as_mut_ptr(), k) });
++            let (lo, hi) = (w[0].row as usize, w[1].row as usize);
++            assert!(t[lo..hi] == want[lo..hi], "{what}, {k:?}: piece {j}'s rows");
++            assert!(
++                t[..lo].iter().chain(&t[hi..]).all(|&x| x == GUARD),
++                "{what}, {k:?}: piece {j} wrote outside its rows {lo}..{hi}"
++            );
++        }
++    }
++}
++
+ /// The equivalence on made-up blocks: `front`'s result (length or error) is
+ /// `mtf_scalar`'s, its records the column's runs cut at 127, its counts the column's, and
+ /// the table `bwt::build`'s, by each kernel, on every block and at lengths around its own
+@@ -358,6 +413,14 @@ fn table_of(ll: &[u8], r: &mut Runs, brk: impl Fn(&mut Runs) -> usize) -> Option
+         let mut tt = bwt::TVector(vec![3; 4]);
+         let ok = fill(r, n, &mut tt, k);
+         assert!(ok || tt.0.is_empty(), "{k:?}: a refused table kept");
++        // the cuts are refused exactly where the fill is, and then left empty
++        let mut cv = vec![];
++        assert_eq!(
++            cuts(r, n, &mut cv),
++            ok,
++            "{k:?}: the cuts and the fill disagree"
++        );
++        assert_eq!(cv.len(), if ok { PIECES + 1 } else { 0 });
+         got.push(ok.then_some(tt.0));
+     }
+     assert!(got.windows(2).all(|w| w[0] == w[1]), "the kernels disagree");
+@@ -498,12 +561,14 @@ fn miri_runs_avx2_kernels_selected() {
+ /// `front` didn't run
+ const UNTOUCHED: u16 = 0xffff;
+ 
+-/// `decode_block` takes the records' path exactly where it should: with `Segmented` (which
+-/// reads runs) on a block `takes_runs` accepts, and never with `Plain` or on any other block
++/// `decode_block` takes the records' path exactly where it should: with `Segmented` and
++/// `Cooperative` (which read runs) on a block `takes_runs` accepts, and never with `Plain`
++/// or on any other block
+ #[test]
+ fn runs_path_taken_exactly_where_selected() {
+     let mut rng = Rng(0x5eed_0f9a_7e57_0001);
+     let (mut sr, mut sp) = (Scratch::<Segmented>::default(), Scratch::<Plain>::default());
++    let mut sc = Scratch::<Cooperative<2>>::default();
+     let (mut by_runs, mut by_column) = (0, 0);
+     for i in 0..400 {
+         let mut b = synthetic(&mut rng, 3000);
+@@ -516,11 +581,15 @@ fn runs_path_taken_exactly_where_selected() {
+         for k in kernels() {
+             sr.runs.runs = vec![UNTOUCHED];
+             sp.runs.runs = vec![UNTOUCHED];
++            sc.runs.runs = vec![UNTOUCHED];
+             let mut out = Vec::new();
+             let _ = decode_block(&b, k, &mut sr, &mut out);
+             let _ = decode_block(&b, k, &mut sp, &mut out);
++            let _ = decode_block(&b, k, &mut sc, &mut out);
+             let took = sr.runs.runs != [UNTOUCHED];
+             assert_eq!(took, want, "case {i}, {k:?}: Segmented by records");
++            let took = sc.runs.runs != [UNTOUCHED];
++            assert_eq!(took, want, "case {i}, {k:?}: Cooperative by records");
+             assert_eq!(
+                 sp.runs.runs,
+                 [UNTOUCHED],
+@@ -636,3 +705,274 @@ fn runs_walk_back_room_segments_from_its_bound() {
+         assert_eq!(seg.n, if segmented { n } else { 0 }, "{n} rows: segmented");
+     }
+ }
++
++/// Cuts that don't tile the block are refused (`cuts_tile`), each broken one way; and a
++/// share between cuts out of order, or past the records, writes nothing and fails
++#[test]
++fn miri_runs_cuts_that_dont_tile_refused() {
++    let mut rng = Rng(0x7e57_c0de_0bad_cafe);
++    let ll: Vec<u8> = (0..700)
++        .flat_map(|_| {
++            let c = b"abcd"[rng.below(4) as usize];
++            std::iter::repeat(c).take(1 + rng.below(9) as usize)
++        })
++        .collect();
++    let n = ll.len();
++    let r = Runs::of_column(&ll);
++    let mut cv = vec![];
++    assert!(cuts(&r, n, &mut cv) && cuts_tile(&r, n, &cv));
++    // (the pieces are not empty: the breaks below move real cuts)
++    assert!(cv.windows(2).all(|w| w[0].row < w[1].row));
++    type Break = fn(&mut Vec<Cut>);
++    let breaks: [Break; 12] = [
++        |c| c.clear(),
++        |c| c.truncate(1),
++        |c| c[0].rec = 1,
++        |c| c[0].row = 1,
++        |c| c[0].next[b'b' as usize] += 1,
++        |c| c[PIECES].rec -= 1,
++        |c| c[PIECES].row -= 1,
++        |c| c[PIECES].row += 1,
++        |c| c[5].rec = c[6].rec + 1,
++        |c| c[5].row = c[6].row + 1,
++        |c| c[5].next[b'c' as usize] = c[6].next[b'c' as usize] + 1,
++        |c| {
++            for x in &mut c[1..] {
++                x.next[b'd' as usize] += 1;
++            }
++        },
++    ];
++    for (i, brk) in breaks.iter().enumerate() {
++        let mut bad = cv.clone();
++        brk(&mut bad);
++        assert!(!cuts_tile(&r, n, &bad), "break {i} accepted");
++    }
++    // another block's length, either way; and counts that are not these records'
++    assert!(!cuts_tile(&r, n + 1, &cv) && !cuts_tile(&r, n - 1, &cv));
++    let mut other = Runs::of_column(&ll);
++    other.counts[b'a' as usize] -= 1;
++    other.counts[b'b' as usize] += 1;
++    assert!(!cuts_tile(&other, n, &cv));
++    // (a count more for the last byte: every bucket's start is the same, the sum is not)
++    let mut more = Runs::of_column(&ll);
++    more.counts[255] += 1;
++    assert!(!cuts_tile(&more, n, &cv));
++    for k in kernels() {
++        let mut t = vec![GUARD; n + 9];
++        // cuts out of order: by the row, by a byte's value, by the records
++        let mut late = cv[4].clone();
++        late.next[b'a' as usize] = cv[3].next[b'a' as usize] - 1;
++        let mut short = cv[4].clone();
++        short.rec = r.runs.len() + 1;
++        for (from, to) in [(&cv[4], &cv[3]), (&cv[3], &late), (&cv[3], &short)] {
++            // SAFETY: the table holds n slots and more, and nothing else touches it
++            assert!(!unsafe { fill_share(&r, from, to, t.as_mut_ptr(), k) });
++            assert!(
++                t.iter().all(|&x| x == GUARD),
++                "{k:?}: a refused share wrote"
++            );
++        }
++        // rows out of order alone (the records and the values in order)
++        let mut far = cv[3].clone();
++        far.row = cv[4].row + 1;
++        // SAFETY: as above
++        assert!(!unsafe { fill_share(&r, &far, &cv[4], t.as_mut_ptr(), k) });
++        assert!(
++            t.iter().all(|&x| x == GUARD),
++            "{k:?}: a refused share wrote"
++        );
++        // a share whose records are not its cuts': a piece's first record gone, and the
++        // record before the piece added; a cut a row late (the rows end short of it), a cut
++        // with a byte's value one more (the values end short of it), and a cut a row early
++        // (below). Each fails, having written only inside its own rows
++        let (mut late_start, mut early_start) = (cv[3].clone(), cv[3].clone());
++        late_start.rec += 1;
++        early_start.rec -= 1;
++        let (mut row_more, mut value_more) = (cv[4].clone(), cv[4].clone());
++        row_more.row += 1;
++        value_more.next[b'a' as usize] += 1;
++        // and a cut a row early, its values as they were: the share's last record would
++        // pass it by a row, with every byte's values still inside the cut's
++        let mut row_less = cv[4].clone();
++        row_less.row -= 1;
++        for (i, (from, to)) in [
++            (&late_start, &cv[4]),
++            (&early_start, &cv[4]),
++            (&cv[3], &row_more),
++            (&cv[3], &value_more),
++            (&cv[3], &row_less),
++        ]
++        .into_iter()
++        .enumerate()
++        {
++            let mut t = vec![GUARD; n + 9];
++            // SAFETY: as above
++            assert!(
++                !unsafe { fill_share(&r, from, to, t.as_mut_ptr(), k) },
++                "{k:?}: wrong share {i} passed"
++            );
++            let (lo, hi) = (from.row as usize, to.row as usize);
++            assert!(
++                t[..lo].iter().chain(&t[hi..]).all(|&x| x == GUARD),
++                "{k:?}: wrong share {i} wrote outside its rows"
++            );
++        }
++        // a record of another byte (the same rows): refused at the record, where its byte's
++        // values would pass the cut's, not only by the end check, so the rows after it are
++        // never written
++        let col = [b"b".repeat(5), b"a".repeat(20), b"c".repeat(20)].concat();
++        let mut whole = vec![];
++        assert!(cuts(&Runs::of_column(&col), 45, &mut whole));
++        let mut other = Runs::of_column(&col);
++        other.runs[1] = (b'b' as u16) << 8 | 20;
++        let mut t = vec![GUARD; 45 + 9];
++        // SAFETY: as above
++        assert!(!unsafe { fill_share(&other, &whole[0], &whole[PIECES], t.as_mut_ptr(), k) });
++        assert!(
++            t[8..] == [GUARD; 46],
++            "{k:?}: filled on past a record over its bound"
++        );
++        // an empty record, 7 rows before the share's end (where an 8-slot store from it
++        // would pass the end): refused, nothing written past the share's rows
++        let mut gap = Runs::of_column(&[b"a".repeat(20), b"b".repeat(7)].concat());
++        gap.runs.insert(1, (b'c' as u16) << 8);
++        let mut ends = vec![];
++        assert!(cuts(
++            &Runs::of_column(&[b"a".repeat(20), b"b".repeat(7)].concat()),
++            27,
++            &mut ends
++        ));
++        let mut end = ends[PIECES].clone();
++        end.rec = 3;
++        let mut t = vec![GUARD; 27 + 9];
++        // SAFETY: as above
++        assert!(!unsafe { fill_share(&gap, &ends[0], &end, t.as_mut_ptr(), k) });
++        assert!(
++            t[27..] == [GUARD; 9],
++            "{k:?}: an empty record's store past the block"
++        );
++    }
++}
++
++/// Every length of a record against every distance from its end to the share's: the 8-slot
++/// stores never pass the share's rows (the slots after them stay as they were), and the
++/// table is `fill`'s
++#[test]
++fn miri_runs_fill_share_stores_end_inside_its_rows() {
++    // (under Miri, the lengths either side of a store's 8 slots and the distances either
++    // side of its 7-slot margin)
++    let (lens, afters): (Vec<usize>, Vec<usize>) = if cfg!(miri) {
++        (vec![1, 8, 9, 17], vec![1, 6, 7, 8])
++    } else {
++        ((1..=19).collect(), (1..=9).collect())
++    };
++    for &len in &lens {
++        for &after in &afters {
++            let ll = [b"a".repeat(len), b"b".repeat(after)].concat();
++            let r = Runs::of_column(&ll);
++            let mut tt = bwt::TVector::new();
++            assert!(fill(&r, ll.len(), &mut tt, Kernels::scalar()));
++            check_shares(&r, ll.len(), &tt.0, &format!("{len} then {after}"));
++        }
++    }
++}
++
++/// The pieces are of about equal work: each within a record's of a twelfth of the block's
++/// (a store for each 8 rows, and one for each record)
++#[test]
++fn runs_cuts_balance_the_work() {
++    let mut rng = Rng(0xba1a_9ce0_0f00_d5ed);
++    let ll: Vec<u8> = (0..40_000)
++        .flat_map(|_| {
++            let c = b"abcdefg"[rng.below(7) as usize];
++            std::iter::repeat(c).take(1 + rng.below(40) as usize)
++        })
++        .collect();
++    let (n, r) = (ll.len(), Runs::of_column(&ll));
++    let mut cv = vec![];
++    assert!(cuts(&r, n, &mut cv));
++    let work = |a: &Cut, b: &Cut| (b.row - a.row) as u64 + 8 * (b.rec - a.rec) as u64;
++    let total = work(&cv[0], &cv[PIECES]);
++    assert_eq!(total, n as u64 + 8 * r.runs.len() as u64);
++    for (j, w) in cv.windows(2).enumerate() {
++        let got = work(&w[0], &w[1]);
++        assert!(
++            got.abs_diff(total / PIECES as u64) <= CAP as u64 + 8,
++            "piece {j}: {got} of {total}"
++        );
++    }
++}
++
++/// The cuts' bounds: a block of 2^24 rows, or records, is refused (the sums are 32-bit)
++#[test]
++fn runs_cuts_bounds() {
++    let mut cv = vec![];
++    // 2^24 rows of one byte (the last, so that no bucket starts after its own), in records
++    // of 127 rows and one of the rest
++    let n = 1usize << 24;
++    let z = 0xffusize;
++    let mut r = Runs {
++        runs: vec![(z as u16) << 8 | 127; n / 127],
++        ..Runs::default()
++    };
++    r.runs.push((z as u16) << 8 | (n % 127) as u16);
++    r.counts[z] = n as u32;
++    assert!(!cuts(&r, n, &mut cv), "2^24 rows");
++    // a row fewer: made, and tiling. The same cuts with the row back, whole in every other
++    // way, don't tile 2^24 rows
++    *r.runs.last_mut().unwrap() -= 1;
++    r.counts[z] -= 1;
++    assert!(cuts(&r, n - 1, &mut cv) && cuts_tile(&r, n - 1, &cv));
++    r.runs.push((z as u16) << 8 | 1);
++    r.counts[z] += 1;
++    let mut big = cv.clone();
++    big[PIECES].rec += 1;
++    big[PIECES].row += 1;
++    big[PIECES].next[z] += 1;
++    assert!(!cuts_tile(&r, n, &big), "2^24 rows' cuts");
++    // (whole: one row fewer, with its record and count gone, they tile)
++    r.runs.pop();
++    r.counts[z] -= 1;
++    assert!(cuts_tile(&r, n - 1, &cv));
++    // 2^24 records, of a row each, in a block of 2^24 - 1 rows: refused for their number
++    // (and for their rows; one fewer is made)
++    let mut r = Runs {
++        runs: vec![(b'a' as u16) << 8 | 1; n],
++        ..Runs::default()
++    };
++    r.counts[b'a' as usize] = n as u32 - 1;
++    assert!(!cuts(&r, n - 1, &mut cv), "2^24 records");
++    r.runs.pop();
++    assert!(cuts(&r, n - 1, &mut cv));
++    // records whose rows wrap 32 bits back to the block's 254: refused for their number,
++    // where their sums alone would pass
++    let wrap = (1usize << 32).div_ceil(255);
++    assert_eq!((wrap * 255) as u32, 254);
++    let mut r = Runs {
++        runs: vec![(b'a' as u16) << 8 | 255; wrap],
++        ..Runs::default()
++    };
++    r.counts[b'a' as usize] = 254;
++    assert!(!cuts(&r, 254, &mut cv), "rows that wrap to the block's");
++}
++
++/// A block of fewer records than pieces, and the empty block: the cuts made, the pieces left
++/// over empty at the end, the table `fill`'s
++#[test]
++fn miri_runs_cuts_of_short_blocks() {
++    for ll in [&b""[..], b"a", b"aab", b"abcabcabca"] {
++        let r = Runs::of_column(ll);
++        let mut tt = bwt::TVector::new();
++        assert!(fill(&r, ll.len(), &mut tt, Kernels::scalar()));
++        check_shares(&r, ll.len(), &tt.0, &format!("{ll:?}"));
++    }
++}
++
++/// `Runs::of_column` is `front`'s records for the column (the tests' other maker of them)
++#[test]
++fn miri_runs_of_column_is_the_scan() {
++    let ll = [b"ab".repeat(40), vec![b'q'; 300], b"xyzzy".to_vec()].concat();
++    let r = Runs::of_column(&ll);
++    let (runs, per) = runs_of_column(&ll);
++    assert!(r.runs == runs && r.per == per && r.counts == crate::run_fed::counts_of(&ll));
++}

@@ -1,0 +1,58 @@
+mutant	verdict	killed by (L: the port's unit tests; I: tests/service.rs and tests/pipelined.rs)	note
+cuts: rows bound	KILLED	L: runs::tests::runs_cuts_bounds	
+cuts: records bound	KILLED	L: runs::tests::runs_cuts_bounds	survived the first pass (a gap in the tests); killed after the test named was added or corrected
+cuts: counts sum	KILLED	L: runs::tests::miri_runs_broken_tilings_refused	
+cuts: empty record	KILLED	L: runs::tests::miri_runs_broken_tilings_refused	
+cuts: each byte's rows	KILLED	L: coop::tests::cooperative_kernel_engages_on_records, runs::tests::miri_runs_broken_tilings_refused	
+cuts: a record's work	KILLED	L: coop::tests::miri_build_runs_refuses_wrong_cuts, runs::tests::miri_runs_cuts_that_dont_tile_refused, runs::tests::runs_cuts_balance_the_work	
+cuts: where a cut falls	KILLED	L: runs::tests::runs_cuts_balance_the_work	
+cuts: the cut's record	KILLED	L: coop::tests::build_runs_and_walk_back_are_fill_and_walk, coop::tests::cooperative_kernel_engages_on_records, coop::tests::miri_build_runs_and_walk_back, coop::tests::miri_build_runs_refuses_wrong_cuts, coop::tests::runs_through_the_pipelined_and_team_runs, parallel::front_tests::front_stage_takes_the_records_where_selected, runs::tests::miri_runs_cuts_of_short_blocks, runs::tests::miri_runs_fill_s	
+tile: rows bound	KILLED	L: runs::tests::runs_cuts_bounds	survived the first pass (a gap in the tests); killed after the test named was added or corrected
+tile: first values	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+tile: counts sum	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+tile: first rec	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+tile: first row	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+tile: last rec	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+tile: last row	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+tile: last values	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+tile: recs rise	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+tile: rows rise	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+tile: values rise	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+share: rows in order	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+share: values in order	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+scalar: empty record	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+scalar: rows bound	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	survived the first pass (a gap in the tests); killed after the test named was added or corrected
+scalar: values bound	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+avx2: empty record	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+avx2: rows bound	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	survived the first pass (a gap in the tests); killed after the test named was added or corrected
+avx2: values bound	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+scalar: end rows	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+scalar: end values	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+avx2: end rows	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+avx2: end values	KILLED	L: runs::tests::miri_runs_cuts_that_dont_tile_refused	
+avx2: store margin 6	KILLED	L: coop::tests::build_runs_and_walk_back_are_fill_and_walk, coop::tests::miri_build_runs_and_walk_back, runs::tests::miri_runs_cuts_of_short_blocks, runs::tests::miri_runs_fill_share_stores_end_inside_its_rows	
+avx2: store always	KILLED	L: nonzero exit	
+avx2: store never	SURVIVED		equivalent: the scalar stores write the same entries (speed only)
+build: no shares	KILLED	L: coop::tests::miri_build_runs_refuses_wrong_cuts	
+build: too many shares	KILLED	L: coop::tests::miri_build_runs_refuses_wrong_cuts	
+build: cuts tile	KILLED	L: coop::tests::miri_build_runs_refuses_wrong_cuts	
+build: share in range	KILLED	L: coop::tests::miri_build_runs_refuses_wrong_cuts	
+build: share claimed	KILLED	L: coop::tests::miri_build_runs_refuses_wrong_cuts	
+build: passed only if ok	KILLED	L: coop::tests::miri_build_runs_refuses_wrong_cuts	
+build: all passed	KILLED	L: coop::tests::miri_build_runs_refuses_wrong_cuts	
+build: every share's mask	KILLED	L: coop::tests::miri_build_runs_refuses_wrong_cuts	
+source: backward	KILLED	L: coop::tests::runs_through_the_pipelined_and_team_runs, parallel::front_tests::front_stage_takes_the_records_where_selected	
+walk: first row	KILLED	L: coop::tests::build_runs_and_walk_back_are_fill_and_walk, coop::tests::cooperative_kernel_engages_on_records, coop::tests::miri_build_runs_and_walk_back, coop::tests::runs_through_the_pipelined_and_team_runs, parallel::front_tests::front_stage_takes_the_records_where_selected	
+front: staged by records	KILLED	L: parallel::front_tests::front_stage_takes_the_records_where_selected	
+front: flag reset	KILLED	L: parallel::front_tests::front_stage_takes_the_records_where_selected	
+front: selector never	KILLED	L: parallel::front_tests::front_stage_takes_the_records_where_selected	
+front: selector always	KILLED	L: parallel::front_tests::front_stage_takes_the_records_where_selected	
+front: primary index	KILLED	L: parallel::front_tests::front_stage_checks_the_primary_index_on_both_paths	
+front: column's rows	KILLED	L: parallel::front_tests::front_stage_takes_the_records_where_selected	survived the first pass (a gap in the tests); killed after the test named was added or corrected
+alone: by records	KILLED	L: parallel::front_tests::front_stage_takes_the_records_where_selected	
+solo: join reversed	KILLED	I: every_level_and_shape, small_blocks_among_large_and_streams, the_corpora	
+team: reversed (pool)	KILLED	I: every_level_and_shape, small_blocks_among_large_and_streams, the_corpora	
+team: reversed (alone)	KILLED	I: every_level_and_shape, small_blocks_among_large_and_streams, the_corpora	
+finish: join reversed	KILLED	I: every_level_and_shape, small_blocks_among_large_and_streams, the_corpora	
+kernel: team on records	KILLED	L: coop::tests::cooperative_kernel_engages_on_records	
+decode_block: kernel reads runs	KILLED	L: runs::tests::runs_path_taken_exactly_where_selected	

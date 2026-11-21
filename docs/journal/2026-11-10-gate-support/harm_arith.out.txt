@@ -1,0 +1,13 @@
+excess candidates a byte, head - master: random, records, records/random
+  D<-H 4K (counts -> STEPS)    +0.0476 +0.0142 0.30
+  S<-H 4K (counts -> frame)    +0.8335 +0.9144 1.10
+  H<-S 4K (frame -> counts)    +0.1633 +0.1638 1.00
+  read_item S<-S 1K            -0.0199 -0.0200 1.00
+mtf_avx2 simulated conditional mispredicts a byte: 0.590 0.273 ratio 0.46
+instructions a byte (decode_block): 93.9 106.0 ratio 1.13
+
+share of launches meeting: 0.344; SD of the arms' exposure difference: 0.672 candidates a byte
+run 1 (Xeon 8370C): round SD 3.43%
+run 2 (EPYC 7763): round SD 1.68%; records/random harm 0.44 (0.04-1.32); a frame pair costs at most 2.50% of the decode a candidate/byte (central), 4.03% (conservative); counts->STEPS needs 71% (46% at the interval's low end): 29x central, 11x conservative; at a frame pair's price it explains 0.12% (central), 0.19% (conservative) of 3.4%; per simulated mispredict: 5.8% of the decode a mispredict/byte
+run 3 (EPYC 9V45): round SD 1.12%; records/random harm 0.40 (0.16-0.73); a frame pair costs at most 1.67% of the decode a candidate/byte (central), 2.68% (conservative); counts->STEPS needs 111% (95% at the interval's low end): 67x central, 35x conservative; at a frame pair's price it explains 0.08% (central), 0.13% (conservative) of 5.3%; per simulated mispredict: 9.0% of the decode a mispredict/byte
+P(at most one discordant round of ten): 0.0229

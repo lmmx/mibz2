@@ -1,0 +1,17 @@
+master 27ed84df (local build), 200,000-byte block of random, agg3 on mtf_avx2, mod 4 KiB classes; columns: padding, S<-H, H<-S, D<-H
+0   mod 4K (load<-store): S<-H=10359 D<-H=27295 H<-S=10865 H<-H=3084
+256   mod 4K (load<-store): S<-H=10204 D<-H=27295 H<-S=10865 H<-H=3084
+512   mod 4K (load<-store): S<-H=10504 D<-S=13260 D<-H=27295 H<-S=10864 H<-H=3084
+768   mod 4K (load<-store): S<-H=10488 D<-S=16291 D<-H=27295 H<-S=10865 H<-H=3084
+1024   mod 4K (load<-store): S<-H=10453 D<-S=16846 D<-H=27295 H<-S=10864 H<-H=3084
+1280   mod 4K (load<-store): S<-H=10720 D<-S=16496 D<-H=27295 H<-S=10963 H<-H=3084
+1536   mod 4K (load<-store): S<-H=10895 D<-S=16367 D<-H=27295 H<-S=10976 H<-H=3084
+1792   mod 4K (load<-store): S<-H=10823 D<-S=17163 D<-H=27295 H<-S=10976 H<-H=3084
+2048   mod 4K (load<-store): S<-H=10467 D<-S=17304 D<-H=27295 H<-S=10976 H<-H=3084
+2304   mod 4K (load<-store): S<-H=10700 D<-S=17559 D<-H=27295 H<-S=10976 H<-H=3084
+2560   mod 4K (load<-store): S<-H=10510 D<-H=27295 H<-S=10976 H<-H=3084
+2816   mod 4K (load<-store): S<-H=169911 D<-H=27295 H<-S=42065 H<-H=3084
+3072   mod 4K (load<-store): S<-H=220354 D<-H=27295 H<-S=54742 H<-H=3084
+3328   mod 4K (load<-store): S<-H=222894 D<-S=1 D<-H=27295 H<-S=55080 H<-H=3084
+3584   mod 4K (load<-store): S<-H=221631 D<-S=105032 D<-H=27295 H<-S=54681 H<-H=3084
+3840   mod 4K (load<-store): S<-H=59467 D<-S=105032 D<-H=27295 H<-S=23366 H<-H=3084

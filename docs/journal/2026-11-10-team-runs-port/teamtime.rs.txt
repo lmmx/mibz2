@@ -1,0 +1,43 @@
+//! (scratch, not for the repository) teamtime MODE FILE [ROUNDS]: one decoder's wall time,
+//! in process, the file read once into memory; prints best and median ms and a checksum.
+use mibz2::parallel::{Levers, Plan};
+use mibz2::{BzReader, Kernels};
+use std::io::Read;
+
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let (mode, file) = (a[1].as_str(), &a[2]);
+    let rounds: usize = a.get(3).map_or(7, |s| s.parse().unwrap());
+    let data = std::fs::read(file).unwrap();
+    let k = Kernels::detect();
+    let mut times = Vec::new();
+    let mut sum = 0u64;
+    for _ in 0..rounds {
+        let src = std::io::Cursor::new(data.clone());
+        let t = std::time::Instant::now();
+        let mut r: BzReader<_> = match mode {
+            "w1" => BzReader::parallel_planned(src, Plan::Workers(1), 4, k),
+            "w4" => BzReader::parallel_planned(src, Plan::Workers(4), 16, k),
+            "team2x2" => BzReader::parallel_planned(src, Plan::Teams { teams: 2, k: 2 }, 8, k),
+            "team1x4" => BzReader::parallel_planned(src, Plan::Teams { teams: 1, k: 4 }, 4, k),
+            "pipe1x3" => BzReader::parallel_pipelined_levers(src, 1, 3, 4, k, Levers { park: true, small: true, spin2k: false }),
+            "pipe1x4" => BzReader::parallel_pipelined_levers(src, 1, 4, 4, k, Levers { park: true, small: true, spin2k: false }),
+            "svc1x3" => BzReader::parallel_service(src, 1, 3, 1, 4, k),
+            "svc1x2" => BzReader::parallel_service(src, 1, 2, 1, 4, k),
+            "svc1x2s2" => BzReader::parallel_service(src, 1, 2, 2, 4, k),
+            _ => panic!("mode"),
+        };
+        let mut buf = vec![0u8; 1 << 20];
+        let mut h = 0u64;
+        loop {
+            let n = r.read(&mut buf).unwrap();
+            if n == 0 { break; }
+            for c in buf[..n].chunks(4096) { h = h.wrapping_mul(0x100000001b3).wrapping_add(c[0] as u64 + c.len() as u64 + c[c.len()-1] as u64 * 7); }
+        }
+        times.push(t.elapsed().as_secs_f64() * 1e3);
+        sum = h;
+        drop(r);
+    }
+    times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    println!("{mode:10} best {:8.1} ms  median {:8.1} ms  sum {sum:016x}", times[0], times[times.len() / 2]);
+}

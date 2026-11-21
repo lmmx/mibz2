@@ -1,0 +1,16 @@
+15dfda952176b1995cf9bc8d7bfdcc3e4a9f7216
+== exit 0 : cargo fmt --all --check
+== exit 0 : cargo clippy --all-targets -- -D warnings
+== exit 0 : cargo clippy --all-targets --features trace,wait-stats,walk-stats -- -D warnings
+== exit 0 : cargo build --profile fuzz --example fuzz
+== exit 0 : fuzz 120 1 teams
+== exit 0 : fuzz 120 2 teams
+== exit 0 : fuzz 30 1 classic
+== exit 0 : fuzz 30 1 pipeline
+== exit 0 : fuzz 30 1 service
+== exit 0 : cargo test
+== exit 0 : cargo test --release
+== exit 0 : cargo test --features walk-stats --lib coop::
+== exit 0 : cargo +nightly miri test --lib -- miri_runs miri_build_runs
+== exit 0 : cargo +nightly miri test --lib -- miri_runs miri_build_runs
+DONE

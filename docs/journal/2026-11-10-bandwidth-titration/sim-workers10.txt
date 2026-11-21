@@ -1,0 +1,20 @@
+Command: target/release/examples/ab child mibz2-workers 10 corpora/wikidata.bz2
+D1  misses:      253,985,199  (  220,330,539 rd +    33,654,660 wr)
+LL misses:        16,034,489  (    4,230,283 rd +    11,804,206 wr)
+
+4,195,159 (100.0%) 11,804,206 (100.0%) 1,046,336,612 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+DLmr               DLmw               Dw                    file:function
+--------------------------------------------------------------------------------
+  112,114 ( 2.67%) 4,444,008 (37.65%) 161,875,170 (15.47%)  src/bwt.rs:mibz2::bwt::build
+3,026,796 (72.15%) 2,729,745 (23.13%) 238,971,795 (22.84%)  memmove-vec-unaligned-erms.S:__memcpy_avx_unaligned_erms
+   14,883 ( 0.35%) 2,700,261 (22.88%)   6,570,953 ( 0.63%)  core/src/ptr/mod.rs:mibz2::rle::unrle_avx2
+        8 ( 0.00%)   744,584 ( 6.31%)  93,509,765 ( 8.94%)  memset-vec-unaligned-erms.S:__memset_avx2_unaligned_erms
+        0            728,210 ( 6.17%)  27,028,563 ( 2.58%)  core/src/mem/maybe_uninit.rs:mibz2::block::read_item
+       56 ( 0.00%)   236,469 ( 2.00%)   8,321,691 ( 0.80%)  core/src/ptr/mod.rs:mibz2::mtf::mtf_avx2
+  458,084 (10.92%)   175,181 ( 1.48%) 434,735,091 (41.55%)  src/bwt.rs:mibz2::bwt::room_segments::<32, 1>
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: src/bwt.rs
+--------------------------------------------------------------------------------

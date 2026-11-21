@@ -1,0 +1,100 @@
+"""#316 section 2.11: is there a smaller defensible programme than k = 12 x R480?
+
+Inputs (data, read only): plan.json (the draft's per-cell tau) and menu.json (the pilot's
+mean-free LRVs). Usage: python3 -I nicalc.py plan.json menu.json
+
+A. the fixed design on a finer grid of k and R: the Bonferroni lower bound the draft uses,
+   the product of the cells' powers (independent cells), the weakest cell, runner-minutes;
+B. Stein's two-stage procedure: k0 dispatches fix every cell's variance s0^2, the total k is a
+   registered function of the variances alone, and the bound uses s0 and t(k0 - 1). Size is
+   exact under the draft's own model (normal iid dispatch means); simulated here as a check.
+"""
+import json, math, sys
+import numpy as np
+from scipy import stats
+
+plan = json.load(open(sys.argv[1]))
+menu = json.load(open(sys.argv[2]))["cells"]
+CELLS = sorted(plan["cells"])
+LRV = np.array([max(b["lrv"] for b in menu[c]["batches"]) for c in CELLS])
+TAU = {n: np.array([plan["cells"][c][n]["tau"] for c in CELLS]) for n in ("strict", "all")}
+TAU["x2"] = 2 * TAU["strict"]
+DELTA = math.log(1.02 / 1.005)
+PER_ROUND = 963.04 / 2880
+SETUP = 135.0
+
+
+def minutes(k, R):
+    return k * (SETUP + PER_ROUND * R)
+
+
+def sigma(name, R):
+    return np.sqrt(TAU[name] ** 2 + LRV / R)
+
+
+def fixed(name, R, k):
+    sd = sigma(name, R)
+    tq = stats.t.ppf(0.95, k - 1)
+    p = stats.nct.sf(tq, k - 1, DELTA * math.sqrt(k) / sd)
+    return max(0.0, 1 - (1 - p).sum()), float(p.prod()), float(p.min()), CELLS[int(p.argmin())]
+
+
+print("A. fixed design: Bonferroni lower bound / product / weakest cell (runner-minutes)")
+for name in ("strict", "all", "x2"):
+    print(" tau:", name)
+    for R in (120, 240, 480):
+        row = []
+        for k in (8, 9, 10, 11, 12, 14, 16):
+            lo, pr, mn, _ = fixed(name, R, k)
+            row.append(f"k{k} {lo:.3f}/{pr:.3f}/{mn:.3f} ({minutes(k, R):.0f})")
+        print(f"  R{R}: " + " | ".join(row))
+
+# the cells that carry the misses at k = 8, R480
+sd = sigma("strict", 480)
+p8 = stats.nct.sf(stats.t.ppf(0.95, 7), 7, DELTA * math.sqrt(8) / sd)
+order = np.argsort(p8)[:8]
+print(" misses at k8 R480 (strict):", [(CELLS[i], round(float(sd[i]), 4), round(float(1 - p8[i]), 3)) for i in order],
+      "sum of all", round(float((1 - p8).sum()), 3))
+print(" sigma_D R480 strict: median", round(float(np.median(sd)), 4), "max", round(float(sd.max()), 4),
+      "; tau share of variance at the weakest:", round(float(TAU['strict'][order[0]] ** 2 / sd[order[0]] ** 2), 3))
+
+
+def stein(name, R, k0, beta, kmax, true_log, n=400_000, seed=1):
+    """All 42 cells, independent, normal. true_log: array of true log ratios.
+    Rule: k = clamp(k0, kmax, max_c ceil(s0_c^2 (t_a + t_b)^2 / DELTA^2))."""
+    rng = np.random.default_rng(seed)
+    sd = sigma(name, R)
+    ta = stats.t.ppf(0.95, k0 - 1)
+    tb = stats.t.ppf(1 - beta, k0 - 1)
+    mult = ((ta + tb) / DELTA) ** 2
+    s0sq = sd ** 2 * rng.chisquare(k0 - 1, size=(n, len(sd))) / (k0 - 1)
+    need = np.ceil((s0sq * mult).max(axis=1))
+    k = np.clip(need, k0, kmax)
+    mean = true_log + sd * rng.standard_normal((n, len(sd))) / np.sqrt(k)[:, None]
+    upper = mean + ta * np.sqrt(s0sq) / np.sqrt(k)[:, None]
+    ok = upper <= math.log(1.02)
+    return {"Ek": float(k.mean()), "k_q": [float(np.quantile(k, q)) for q in (0.5, 0.9)],
+            "capped": float((need > kmax).mean()), "all": float(ok.all(axis=1).mean()),
+            "weakest": float(ok.mean(axis=0).min()), "per_cell": ok.mean(axis=0)}
+
+
+print("\nB. Stein two-stage (k0 first, k from variances only, s0 and t(k0-1) in the bound)")
+at = np.full(len(CELLS), math.log(1.005))
+for R in (240, 480):
+    for k0 in (6, 8):
+        for beta in (0.05, 0.02, 0.01):
+            for kmax in (12, 16, 24):
+                out = []
+                for name in ("strict", "all", "x2"):
+                    r = stein(name, R, k0, beta, kmax, at)
+                    out.append(f"{name}: all {r['all']:.3f} E[k] {r['Ek']:.1f} (med {r['k_q'][0]:.0f}, p90 {r['k_q'][1]:.0f}, "
+                               f"capped {r['capped']:.2f}) min {r['Ek'] * (SETUP + PER_ROUND * R):.0f}")
+                print(f"  R{R} k0={k0} beta={beta} kmax={kmax} | " + " | ".join(out))
+
+print("\nsize check: one cell at exactly 1.02, the rest at 1.000; that cell's pass rate (nominal 0.05)")
+for name in ("strict", "x2"):
+    sd = sigma(name, 480)
+    for j in (int(np.argmax(sd)), int(np.argmin(sd))):
+        tl = np.zeros(len(CELLS)); tl[j] = math.log(1.02)
+        r = stein(name, 480, 6, 0.02, 16, tl, n=1_000_000, seed=7)
+        print(f"  {name} cell {CELLS[j]}: {r['per_cell'][j]:.4f}")

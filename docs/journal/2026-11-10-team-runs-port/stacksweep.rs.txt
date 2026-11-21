@@ -1,0 +1,61 @@
+//! scratch: `mtf::mtf_checkpoints`'s time on a file's first block as the stack it is called
+//! on deepens in small steps through more than 4 KiB (its list is in its own frame).
+//! stacksweep FILE.bz2 [REPS]
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+use std::hint::black_box;
+
+#[inline(never)]
+fn deeper(k: usize, f: &mut dyn FnMut(usize)) {
+    let pad = [0u8; 40];
+    black_box(&pad);
+    if k == 0 {
+        f(pad.as_ptr() as usize)
+    } else {
+        deeper(k - 1, f)
+    }
+    black_box(&pad);
+}
+
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let reps: usize = a.get(2).map_or(7, |s| s.parse().unwrap());
+    let which = a.get(3).map_or("checkpoints", |s| s.as_str());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let Event::Block { symbols: b, .. } = sc.next(Vec::new()).unwrap() else { panic!("no block") };
+    let (mut ll, mut cps, mut counts) = (Vec::new(), Vec::new(), Box::new([0u32; 256]));
+    // (three passes over the depths, the least time a depth: a slow spell of the machine's
+    // lasts several depths of one pass and would read as a band)
+    let mut rows = vec![(0usize, f64::MAX); 80];
+    for _pass in 0..3 {
+        for depth in 0..80 {
+            let mut best = f64::MAX;
+            let mut at = 0;
+            deeper(depth, &mut |sp| {
+                at = sp;
+                for _ in 0..reps {
+                    let t = std::time::Instant::now();
+                    let n = if which == "mtf" {
+                        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap()
+                    } else {
+                        mtf::mtf_checkpoints(&b, &mut ll, &mut counts, &mut cps, k).unwrap()
+                    };
+                    best = best.min(t.elapsed().as_secs_f64() * 1e9 / n as f64);
+                }
+            });
+            rows[depth] = (at & 4095, rows[depth].1.min(best));
+        }
+    }
+    rows.sort_by_key(|r| r.0);
+    let lo = rows.iter().map(|r| r.1).fold(f64::MAX, f64::min);
+    let hi = rows.iter().map(|r| r.1).fold(0.0, f64::max);
+    let slow = rows.iter().filter(|r| r.1 > 1.2 * lo).count();
+    println!("{which}: {} depths, ns a row min {lo:.2} max {hi:.2}; {slow} depths over 1.2 x min", rows.len());
+    if std::env::var("ROWS").is_ok() {
+        for (r, t) in rows {
+            println!("{r:#05x} {t:6.2} {}", "#".repeat((t * 3.0) as usize));
+        }
+    }
+}

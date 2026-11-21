@@ -1,0 +1,20 @@
+Command: target/release/examples/ab child mibz2-team2 8 corpora/wikidata.bz2
+D1  misses:      251,737,960  (  219,372,074 rd +    32,365,886 wr)
+LL misses:        34,006,992  (    8,790,609 rd +    25,216,383 wr)
+
+8,717,940 (100.0%) 25,216,383 (100.0%) 1,177,956,038 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+DLmr               DLmw                Dw                    file:function
+--------------------------------------------------------------------------------
+  210,773 ( 2.42%) 10,438,385 (41.40%) 258,358,853 (21.93%)  src/coop.rs:<mibz2::coop::FusedBuild>::share
+4,230,803 (48.53%)  4,579,083 (18.16%) 225,380,942 (19.13%)  memmove-vec-unaligned-erms.S:__memcpy_avx_unaligned_erms
+        0           3,198,185 (12.68%)   6,570,953 ( 0.56%)  core/src/ptr/mod.rs:mibz2::rle::unrle_avx2
+3,223,467 (36.98%)  3,030,358 (12.02%) 428,218,695 (36.35%)  src/coop.rs:mibz2::coop::traverse::<32>
+        4 ( 0.00%)  2,742,389 (10.88%)  95,987,161 ( 8.15%)  memset-vec-unaligned-erms.S:__memset_avx2_unaligned_erms
+        0             769,564 ( 3.05%)  27,028,563 ( 2.29%)  core/src/mem/maybe_uninit.rs:mibz2::block::read_item
+  514,259 ( 5.90%)    213,698 ( 0.85%)  80,194,315 ( 6.81%)  src/mtf.rs:mibz2::mtf::mtf_checkpoints_avx2
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: src/mtf.rs
+--------------------------------------------------------------------------------

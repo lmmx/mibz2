@@ -1,0 +1,14 @@
+symbol                                                        base mod64/4K    head mod64/4K     size b/h  code
+<mibz2::bwt::SegScratch>::assemble_reversed                               -          present
+mibz2::block::read_item                                      32/0x0420        0/0x0180   8963/8963   identical
+mibz2::bwt::build                                            16/0x0e50       16/0x0d10   4142/4142   identical
+mibz2::bwt::room_segments::<32, 1, false>                     0/0x0a80       32/0x07e0   6492/6492   identical
+mibz2::bwt::room_segments::<32, 1, true>                     48/0x02b0       16/0x0010   6496/6496   identical
+mibz2::decode_block::<mibz2::bwt::Segmented>                 48/0x0130       48/0x0430   2492/2492   identical
+mibz2::mtf::STEPS                                             0/0x0bc0        0/0x0d80   2048/2048   
+mibz2::mtf::mtf_avx2                                         32/0x0820        0/0x0ec0   1210/1210   identical
+mibz2::mtf::mtf_checkpoints_avx2                             16/0x0bd0       32/0x03a0   2410/2410   identical
+mibz2::rle::unrle_avx2                                       32/0x0da0       48/0x0d30    865/865    identical
+mibz2::runs::STEPS                                            0/0x08c0        0/0x0a40   2048/2048   
+mibz2::runs::fill_avx2                                       32/0x0ce0       16/0x07d0    338/341    DIFFERS (95 vs 97 instructions)
+mibz2::runs::front_avx2                                       0/0x0e40        0/0x04c0   4299/4299   identical

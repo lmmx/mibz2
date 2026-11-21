@@ -1,0 +1,59 @@
+A. fixed design: Bonferroni lower bound / product / weakest cell (runner-minutes)
+ tau: strict
+  R120: k8 0.214/0.411/0.658 (1401) | k9 0.420/0.525/0.713 (1576) | k10 0.566/0.622/0.760 (1751) | k11 0.671/0.701/0.800 (1926) | k12 0.748/0.764/0.834 (2102) | k14 0.849/0.853/0.886 (2452) | k16 0.906/0.908/0.923 (2802)
+  R240: k8 0.581/0.646/0.887 (1722) | k9 0.735/0.762/0.923 (1937) | k10 0.833/0.844/0.948 (2153) | k11 0.895/0.899/0.965 (2368) | k12 0.934/0.936/0.977 (2583) | k14 0.974/0.974/0.990 (3014) | k16 0.990/0.990/0.996 (3444)
+  R480: k8 0.741/0.765/0.913 (2364) | k9 0.848/0.856/0.944 (2660) | k10 0.910/0.913/0.964 (2955) | k11 0.947/0.948/0.977 (3251) | k12 0.969/0.969/0.986 (3546) | k14 0.989/0.989/0.995 (4137) | k16 0.996/0.996/0.998 (4728)
+ tau: all
+  R120: k8 0.049/0.342/0.658 (1401) | k9 0.310/0.465/0.713 (1576) | k10 0.487/0.571/0.760 (1751) | k11 0.612/0.657/0.800 (1926) | k12 0.702/0.727/0.834 (2102) | k14 0.819/0.827/0.886 (2452) | k16 0.887/0.890/0.923 (2802)
+  R240: k8 0.445/0.552/0.775 (1722) | k9 0.637/0.681/0.825 (1937) | k10 0.757/0.775/0.865 (2153) | k11 0.834/0.841/0.897 (2368) | k12 0.884/0.887/0.921 (2583) | k14 0.942/0.942/0.955 (3014) | k16 0.970/0.970/0.975 (3444)
+  R480: k8 0.610/0.658/0.784 (2364) | k9 0.749/0.766/0.834 (2660) | k10 0.832/0.837/0.873 (2955) | k11 0.883/0.885/0.903 (3251) | k12 0.917/0.918/0.927 (3546) | k14 0.956/0.956/0.959 (4137) | k16 0.977/0.977/0.977 (4728)
+ tau: x2
+  R120: k8 0.000/0.011/0.448 (1401) | k9 0.000/0.024/0.492 (1576) | k10 0.000/0.043/0.535 (1751) | k11 0.000/0.070/0.574 (1926) | k12 0.000/0.103/0.610 (2102) | k14 0.000/0.189/0.676 (2452) | k16 0.000/0.289/0.731 (2802)
+  R240: k8 0.000/0.018/0.465 (1722) | k9 0.000/0.036/0.511 (1937) | k10 0.000/0.062/0.554 (2153) | k11 0.000/0.095/0.594 (2368) | k12 0.000/0.136/0.631 (2583) | k14 0.000/0.232/0.697 (3014) | k16 0.023/0.338/0.752 (3444)
+  R480: k8 0.000/0.022/0.474 (2364) | k9 0.000/0.042/0.521 (2660) | k10 0.000/0.069/0.565 (2955) | k11 0.000/0.105/0.605 (3251) | k12 0.000/0.147/0.642 (3546) | k14 0.000/0.246/0.708 (4137) | k16 0.059/0.353/0.763 (4728)
+ misses at k8 R480 (strict): [('pattern/4/cpu', 0.0125, 0.087), ('text/4/wall', 0.0118, 0.062), ('random/2/wall', 0.0114, 0.048), ('pattern/4/wall', 0.011, 0.039), ('onebyte/2/cpu', 0.0095, 0.011), ('pattern/2/wall', 0.0092, 0.008), ('onebyte/2/wall', 0.0087, 0.004), ('wikidata/2/wall', 0.0073, 0.0)] sum of all 0.259
+ sigma_D R480 strict: median 0.0034 max 0.0125 ; tau share of variance at the weakest: 0.89
+
+B. Stein two-stage (k0 first, k from variances only, s0 and t(k0-1) in the bound)
+  R240 k0=6 beta=0.05 kmax=12 | strict: all 0.853 E[k] 11.9 (med 12, p90 12, capped 0.92) min 2565 | all: all 0.790 E[k] 12.0 (med 12, p90 12, capped 0.97) min 2578 | x2: all 0.071 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583
+  R240 k0=6 beta=0.05 kmax=16 | strict: all 0.952 E[k] 15.3 (med 16, p90 16, capped 0.72) min 3300 | all: all 0.916 E[k] 15.7 (med 16, p90 16, capped 0.82) min 3372 | x2: all 0.190 E[k] 16.0 (med 16, p90 16, capped 1.00) min 3444
+  R240 k0=6 beta=0.05 kmax=24 | strict: all 0.986 E[k] 19.4 (med 20, p90 24, capped 0.27) min 4168 | all: all 0.977 E[k] 20.6 (med 22, p90 24, capped 0.39) min 4439 | x2: all 0.490 E[k] 24.0 (med 24, p90 24, capped 1.00) min 5165
+  R240 k0=6 beta=0.02 kmax=12 | strict: all 0.855 E[k] 12.0 (med 12, p90 12, capped 0.99) min 2582 | all: all 0.790 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583 | x2: all 0.071 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583
+  R240 k0=6 beta=0.02 kmax=16 | strict: all 0.958 E[k] 15.9 (med 16, p90 16, capped 0.94) min 3425 | all: all 0.920 E[k] 16.0 (med 16, p90 16, capped 0.98) min 3440 | x2: all 0.190 E[k] 16.0 (med 16, p90 16, capped 1.00) min 3444
+  R240 k0=6 beta=0.02 kmax=24 | strict: all 0.996 E[k] 22.5 (med 24, p90 24, capped 0.64) min 4852 | all: all 0.986 E[k] 23.2 (med 24, p90 24, capped 0.75) min 4993 | x2: all 0.490 E[k] 24.0 (med 24, p90 24, capped 1.00) min 5166
+  R240 k0=6 beta=0.01 kmax=12 | strict: all 0.855 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583 | all: all 0.790 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583 | x2: all 0.071 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583
+  R240 k0=6 beta=0.01 kmax=16 | strict: all 0.958 E[k] 16.0 (med 16, p90 16, capped 0.99) min 3441 | all: all 0.920 E[k] 16.0 (med 16, p90 16, capped 1.00) min 3444 | x2: all 0.190 E[k] 16.0 (med 16, p90 16, capped 1.00) min 3444
+  R240 k0=6 beta=0.01 kmax=24 | strict: all 0.997 E[k] 23.6 (med 24, p90 24, capped 0.86) min 5075 | all: all 0.987 E[k] 23.8 (med 24, p90 24, capped 0.93) min 5132 | x2: all 0.490 E[k] 24.0 (med 24, p90 24, capped 1.00) min 5166
+  R240 k0=8 beta=0.05 kmax=12 | strict: all 0.900 E[k] 11.8 (med 12, p90 12, capped 0.84) min 2544 | all: all 0.847 E[k] 11.9 (med 12, p90 12, capped 0.91) min 2568 | x2: all 0.102 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583
+  R240 k0=8 beta=0.05 kmax=16 | strict: all 0.965 E[k] 14.7 (med 16, p90 16, capped 0.51) min 3163 | all: all 0.939 E[k] 15.2 (med 16, p90 16, capped 0.64) min 3274 | x2: all 0.252 E[k] 16.0 (med 16, p90 16, capped 1.00) min 3444
+  R240 k0=8 beta=0.05 kmax=24 | strict: all 0.980 E[k] 17.0 (med 17, p90 24, capped 0.10) min 3655 | all: all 0.974 E[k] 18.6 (med 18, p90 24, capped 0.21) min 4000 | x2: all 0.577 E[k] 24.0 (med 24, p90 24, capped 1.00) min 5165
+  R240 k0=8 beta=0.02 kmax=12 | strict: all 0.904 E[k] 12.0 (med 12, p90 12, capped 0.98) min 2580 | all: all 0.849 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583 | x2: all 0.102 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583
+  R240 k0=8 beta=0.02 kmax=16 | strict: all 0.976 E[k] 15.8 (med 16, p90 16, capped 0.85) min 3392 | all: all 0.947 E[k] 15.9 (med 16, p90 16, capped 0.92) min 3424 | x2: all 0.252 E[k] 16.0 (med 16, p90 16, capped 1.00) min 3444
+  R240 k0=8 beta=0.02 kmax=24 | strict: all 0.996 E[k] 20.9 (med 22, p90 24, capped 0.38) min 4501 | all: all 0.990 E[k] 22.0 (med 24, p90 24, capped 0.52) min 4726 | x2: all 0.577 E[k] 24.0 (med 24, p90 24, capped 1.00) min 5166
+  R240 k0=8 beta=0.01 kmax=12 | strict: all 0.904 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583 | all: all 0.849 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583 | x2: all 0.102 E[k] 12.0 (med 12, p90 12, capped 1.00) min 2583
+  R240 k0=8 beta=0.01 kmax=16 | strict: all 0.977 E[k] 16.0 (med 16, p90 16, capped 0.96) min 3434 | all: all 0.947 E[k] 16.0 (med 16, p90 16, capped 0.99) min 3442 | x2: all 0.252 E[k] 16.0 (med 16, p90 16, capped 1.00) min 3444
+  R240 k0=8 beta=0.01 kmax=24 | strict: all 0.998 E[k] 22.7 (med 24, p90 24, capped 0.64) min 4892 | all: all 0.992 E[k] 23.3 (med 24, p90 24, capped 0.76) min 5017 | x2: all 0.577 E[k] 24.0 (med 24, p90 24, capped 1.00) min 5166
+  R480 k0=6 beta=0.05 kmax=12 | strict: all 0.917 E[k] 11.8 (med 12, p90 12, capped 0.83) min 3479 | all: all 0.848 E[k] 11.9 (med 12, p90 12, capped 0.93) min 3527 | x2: all 0.079 E[k] 12.0 (med 12, p90 12, capped 1.00) min 3546
+  R480 k0=6 beta=0.05 kmax=16 | strict: all 0.973 E[k] 14.7 (med 16, p90 16, capped 0.55) min 4339 | all: all 0.935 E[k] 15.3 (med 16, p90 16, capped 0.70) min 4531 | x2: all 0.203 E[k] 16.0 (med 16, p90 16, capped 1.00) min 4728
+  R480 k0=6 beta=0.05 kmax=24 | strict: all 0.988 E[k] 17.4 (med 17, p90 24, capped 0.15) min 5147 | all: all 0.978 E[k] 19.3 (med 20, p90 24, capped 0.29) min 5708 | x2: all 0.506 E[k] 24.0 (med 24, p90 24, capped 1.00) min 7091
+  R480 k0=6 beta=0.02 kmax=12 | strict: all 0.920 E[k] 12.0 (med 12, p90 12, capped 0.98) min 3540 | all: all 0.849 E[k] 12.0 (med 12, p90 12, capped 1.00) min 3546 | x2: all 0.079 E[k] 12.0 (med 12, p90 12, capped 1.00) min 3546
+  R480 k0=6 beta=0.02 kmax=16 | strict: all 0.981 E[k] 15.8 (med 16, p90 16, capped 0.87) min 4656 | all: all 0.940 E[k] 15.9 (med 16, p90 16, capped 0.95) min 4709 | x2: all 0.203 E[k] 16.0 (med 16, p90 16, capped 1.00) min 4728
+  R480 k0=6 beta=0.02 kmax=24 | strict: all 0.998 E[k] 21.3 (med 24, p90 24, capped 0.47) min 6304 | all: all 0.988 E[k] 22.5 (med 24, p90 24, capped 0.63) min 6654 | x2: all 0.506 E[k] 24.0 (med 24, p90 24, capped 1.00) min 7092
+  R480 k0=6 beta=0.01 kmax=12 | strict: all 0.921 E[k] 12.0 (med 12, p90 12, capped 1.00) min 3545 | all: all 0.849 E[k] 12.0 (med 12, p90 12, capped 1.00) min 3546 | x2: all 0.079 E[k] 12.0 (med 12, p90 12, capped 1.00) min 3546
+  R480 k0=6 beta=0.01 kmax=16 | strict: all 0.981 E[k] 16.0 (med 16, p90 16, capped 0.97) min 4715 | all: all 0.941 E[k] 16.0 (med 16, p90 16, capped 0.99) min 4727 | x2: all 0.203 E[k] 16.0 (med 16, p90 16, capped 1.00) min 4728
+  R480 k0=6 beta=0.01 kmax=24 | strict: all 0.999 E[k] 23.0 (med 24, p90 24, capped 0.73) min 6803 | all: all 0.989 E[k] 23.6 (med 24, p90 24, capped 0.86) min 6978 | x2: all 0.506 E[k] 24.0 (med 24, p90 24, capped 1.00) min 7092
+  R480 k0=8 beta=0.05 kmax=12 | strict: all 0.944 E[k] 11.5 (med 12, p90 12, capped 0.68) min 3407 | all: all 0.886 E[k] 11.8 (med 12, p90 12, capped 0.82) min 3489 | x2: all 0.111 E[k] 12.0 (med 12, p90 12, capped 1.00) min 3546
+  R480 k0=8 beta=0.05 kmax=16 | strict: all 0.976 E[k] 13.7 (med 14, p90 16, capped 0.32) min 4037 | all: all 0.949 E[k] 14.6 (med 16, p90 16, capped 0.51) min 4320 | x2: all 0.266 E[k] 16.0 (med 16, p90 16, capped 1.00) min 4728
+  R480 k0=8 beta=0.05 kmax=24 | strict: all 0.981 E[k] 14.9 (med 14, p90 21, capped 0.04) min 4407 | all: all 0.973 E[k] 17.2 (med 17, p90 24, capped 0.16) min 5090 | x2: all 0.593 E[k] 24.0 (med 24, p90 24, capped 0.99) min 7090
+  R480 k0=8 beta=0.02 kmax=12 | strict: all 0.951 E[k] 11.9 (med 12, p90 12, capped 0.93) min 3529 | all: all 0.890 E[k] 12.0 (med 12, p90 12, capped 0.98) min 3543 | x2: all 0.111 E[k] 12.0 (med 12, p90 12, capped 1.00) min 3546
+  R480 k0=8 beta=0.02 kmax=16 | strict: all 0.989 E[k] 15.4 (med 16, p90 16, capped 0.70) min 4541 | all: all 0.959 E[k] 15.7 (med 16, p90 16, capped 0.84) min 4654 | x2: all 0.266 E[k] 16.0 (med 16, p90 16, capped 1.00) min 4728
+  R480 k0=8 beta=0.02 kmax=24 | strict: all 0.997 E[k] 19.0 (med 19, p90 24, capped 0.21) min 5627 | all: all 0.991 E[k] 20.8 (med 22, p90 24, capped 0.40) min 6155 | x2: all 0.593 E[k] 24.0 (med 24, p90 24, capped 1.00) min 7092
+  R480 k0=8 beta=0.01 kmax=12 | strict: all 0.951 E[k] 12.0 (med 12, p90 12, capped 0.99) min 3544 | all: all 0.890 E[k] 12.0 (med 12, p90 12, capped 1.00) min 3546 | x2: all 0.111 E[k] 12.0 (med 12, p90 12, capped 1.00) min 3546
+  R480 k0=8 beta=0.01 kmax=16 | strict: all 0.991 E[k] 15.8 (med 16, p90 16, capped 0.89) min 4679 | all: all 0.960 E[k] 16.0 (med 16, p90 16, capped 0.96) min 4716 | x2: all 0.266 E[k] 16.0 (med 16, p90 16, capped 1.00) min 4728
+  R480 k0=8 beta=0.01 kmax=24 | strict: all 0.999 E[k] 21.5 (med 24, p90 24, capped 0.45) min 6340 | all: all 0.994 E[k] 22.6 (med 24, p90 24, capped 0.63) min 6688 | x2: all 0.593 E[k] 24.0 (med 24, p90 24, capped 1.00) min 7092
+
+size check: one cell at exactly 1.02, the rest at 1.000; that cell's pass rate (nominal 0.05)
+  strict cell pattern/4/cpu: 0.0502
+  strict cell runs/2/cpu: 0.0502
+  x2 cell pattern/4/cpu: 0.0502
+  x2 cell runs/2/cpu: 0.0502
