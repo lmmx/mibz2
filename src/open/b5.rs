@@ -279,7 +279,7 @@ fn scratch(k: &Kernel) -> usize {
     let e = &k.endpoint;
     k.spill.scratch()
         + size_of::<Strip>() * k.strips.capacity()
-        + 4 * (k.image_order.capacity() + k.directory.capacity())
+        + 4 * k.directory.capacity()
         + size_of::<Tile>() * k.tiles.capacity()
         + size_of::<Band>() * k.bands.capacity()
         + k.spelling.capacity()

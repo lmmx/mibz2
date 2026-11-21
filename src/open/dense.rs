@@ -7,7 +7,7 @@ use super::*;
 /// `long` (more short runs with a larger `long`), long ones (17 to 400 rows), over 40 bytes.
 /// Near `long` 40 it lies in the dense band within the cap (r/n about 0.155, 0.22 n retained);
 /// from about 60 it is past the cap, and from about 100 past the band.
-fn dense_column(g: &mut Lcg, n: usize, long: u32) -> Vec<u8> {
+pub(super) fn dense_column(g: &mut Lcg, n: usize, long: u32) -> Vec<u8> {
     let mut l = Vec::with_capacity(n);
     let mut c = 0u8;
     while l.len() < n {

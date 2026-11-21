@@ -71,7 +71,6 @@ pub struct Kernel {
     endpoint: endpoint::Endpoint,
     spill: outq::Spill,
     strips: Vec<Strip>,
-    image_order: Vec<u32>,
     tiles: Vec<Tile>,
     directory: Vec<u32>,
     bands: Vec<Band>,
@@ -366,13 +365,29 @@ impl Kernel {
         stats.thick = self.strips.len();
         let first = starts(all);
         let mut write = starts(thick);
-        self.image_order.resize(self.strips.len(), 0);
+        // (EdgesMux, the Mechanisms line's cycle 19, Theorem 19.1) the strips in image order
+        // are kept in `edges`' first `ns` words, dead until the wiring below writes them, and
+        // the elimination's arena follows them there (`induced`): `edges` is sized for both
+        // now, once, so that neither is moved
+        let ns = self.strips.len();
+        let need = if INDUCE {
+            self.arena_words(ns, m as usize)
+        } else {
+            ns
+        };
+        if self.edges.len() < need {
+            // (cold: the first blocks) exact, not doubled; nothing in it is kept
+            self.edges.clear();
+            self.edges.reserve_exact(need);
+            self.edges.resize(need, 0);
+        }
+        let image_order = &mut self.edges[..ns];
         self.tiles.clear();
         let (mut last_x, mut retained_x) = (0, 0u32);
         for (i, s) in self.strips.iter_mut().enumerate() {
             let a = usize::from(s.byte);
             s.to += first[a];
-            self.image_order[write[a] as usize] = i as u32;
+            image_order[write[a] as usize] = i as u32;
             write[a] += 1;
             if !INDUCE {
                 if s.from > last_x {
@@ -421,7 +436,7 @@ impl Kernel {
                 cursors[a] = self.bands.len();
                 let mut x = first[a];
                 while si < write[a] as usize {
-                    let s = self.strips[self.image_order[si] as usize];
+                    let s = self.strips[self.edges[si] as usize];
                     self.trace(x, s.to, a as u8, &mut k, &mut stats);
                     x = s.to + s.width;
                     si += 1;
@@ -432,6 +447,11 @@ impl Kernel {
             cursors
         };
         stats.bands = self.bands.len();
+        // the image order and the arena are dead from here: `edges` is written over them
+        #[cfg(test)]
+        if self.endpoint.clobber == endpoint::Clobber::AllBeforeWire {
+            self.edges.fill(0xA5A5_A5A5);
+        }
         let bits = (u32::BITS - (m - 1).leading_zeros()).max(1);
         let wide = (255 + stats.words as u32) > (u32::MAX >> bits);
         // (the memory diet) `edges` keeps its length: its rows from `m` are stale, and its
@@ -864,3 +884,6 @@ mod dense;
 
 #[cfg(test)]
 mod spirals;
+
+#[cfg(test)]
+mod mux;
