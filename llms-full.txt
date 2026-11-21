@@ -102,6 +102,25 @@ Each table gives an arm's median wall time. It also gives the geometric mean of 
 
 ### 2026-11-21: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.11** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-21-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.11>)
+
+**`wikidata`**
+
+| threads | 0.5.11 wall (median) | lbzip2 2.5 wall (median) | 0.5.10 wall (median) | lbzip2 2.5 against 0.5.11 | 0.5.10 against 0.5.11 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.387 s | 2.513 s | 0.386 s | \+544.9% (+523.5, +567.1) **slower** | \+0.2% (−4.1, +4.8) |
+| 2 | 0.239 s | 1.331 s | 0.238 s | \+457.1% (+447.8, +466.6) **slower** | −0.4% (−2.5, +1.8) |
+| 4 | 0.143 s | 0.714 s | 0.142 s | \+400.3% (+387.7, +413.3) **slower** | −0.0% (−2.0, +2.0) |
+| 8 | 0.075 s | 0.514 s | 0.077 s | \+582.9% (+577.2, +588.6) **slower** | \+2.5% (+1.3, +3.6) **slower** |
+| 10 | 0.069 s | 0.505 s | 0.072 s | \+634.4% (+629.8, +639.0) **slower** | \+4.1% (+3.6, +4.6) **slower** |
+| 12 | 0.075 s | 0.508 s | 0.077 s | \+581.9% (+571.2, +592.6) **slower** | \+3.6% (+1.5, +5.8) **slower** |
+| 16 | 0.075 s | 0.501 s | 0.078 s | \+563.1% (+546.0, +580.6) **slower** | \+5.6% (+2.1, +9.2) **slower** |
+| 20 | 0.074 s | 0.492 s | 0.078 s | \+558.7% (+552.6, +564.8) **slower** | \+4.6% (+3.8, +5.5) **slower** |
+
+Every arm's output was the same bytes as the reference's.
+
+### 2026-11-21: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.10** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-21-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.10>)
 
 **`wikidata`**
@@ -534,6 +553,9 @@ Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lm
 ### 0.5.11
 
 21 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0511---2026-11-21>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.10...v0.5.11>)
+
+- Dense-block admission (\#703): peak memory about 28% lower from 8 to 20 threads on the i9, and faster too.
+- Release scaling against 0.5.10: +2.1% at 8 threads, +4.2% at 10, +3.6% to +4.8% at 12 to 20.
 
 **Changes:** why each release happened: changelog notes and linked posts on the History page ([\#702](<https://github.com/lmmx/mibz2/pull/702>)); admit dense blocks (width certificate) with producer buffers in edges ([\#703](<https://github.com/lmmx/mibz2/pull/703>)).
 
