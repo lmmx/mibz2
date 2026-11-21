@@ -72,15 +72,7 @@ fn audit<const INDUCE: bool, const QUEUE: bool>(
         } else {
             k.extra[rank[y]]
         };
-        if c < 256 {
-            assert_eq!(w, [c as u8]);
-        } else {
-            let id = (c - 256) as usize;
-            assert_eq!(
-                w,
-                k.spelling[k.offsets[id] as usize..k.offsets[id + 1] as usize]
-            );
-        }
+        assert_eq!(w, k.word_of(c));
     }
 }
 
@@ -100,10 +92,14 @@ fn all_port_arrows() {
                     .collect();
                 for p in 0..n {
                     for t in [0, 1, 2, 4, 16] {
-                        audit::<false, false>(&mut k, &l, p, t);
-                        audit::<true, false>(&mut k, &l, p, t);
-                        audit::<false, true>(&mut k, &l, p, t);
-                        audit::<true, true>(&mut k, &l, p, t);
+                        // the R4 tapes, then the doubly linked lists (`endpoint.rs`)
+                        for lists in [false, true] {
+                            k.endpoint_lists = lists;
+                            audit::<false, false>(&mut k, &l, p, t);
+                            audit::<true, false>(&mut k, &l, p, t);
+                            audit::<false, true>(&mut k, &l, p, t);
+                            audit::<true, true>(&mut k, &l, p, t);
+                        }
                         cases += 1;
                     }
                 }
@@ -130,8 +126,11 @@ fn capped_runs_and_shifted_marks() {
     }
     for p in [0, 1, 2, 127, 128, 129, 255, 256, 757, l.len() - 1] {
         for t in [0, 1, 16, 126, 127, 128, 259, 260, 800] {
-            audit::<false, true>(&mut k, &l, p, t);
-            audit::<true, false>(&mut k, &l, p, t);
+            for lists in [false, true] {
+                k.endpoint_lists = lists;
+                audit::<false, true>(&mut k, &l, p, t);
+                audit::<true, false>(&mut k, &l, p, t);
+            }
         }
     }
 }
