@@ -1,0 +1,83 @@
+{
+  "small_cases": 26495,
+  "blocks": [
+    {
+      "file": "block-0.L",
+      "n": 899931,
+      "r": 51184,
+      "m": 89874,
+      "H": 3448,
+      "nnodes": 7787,
+      "q_arena_kib": 1570.2,
+      "endpt_transient_kib": 334.0,
+      "edges_kib": 351.1,
+      "w1_peak_scratch_kib": 2036.0,
+      "w2_peak_scratch_kib": 559.0
+    },
+    {
+      "file": "block-2.L",
+      "n": 900000,
+      "r": 54532,
+      "m": 112070,
+      "H": 3827,
+      "nnodes": 9257,
+      "q_arena_kib": 1836.9,
+      "endpt_transient_kib": 386.1,
+      "edges_kib": 437.8,
+      "w1_peak_scratch_kib": 2408.9,
+      "w2_peak_scratch_kib": 671.0
+    },
+    {
+      "file": "block-85.L",
+      "n": 899935,
+      "r": 79375,
+      "m": 156404,
+      "H": 1565,
+      "nnodes": 4131,
+      "q_arena_kib": 2084.1,
+      "endpt_transient_kib": 174.7,
+      "edges_kib": 611.0,
+      "w1_peak_scratch_kib": 2779.1,
+      "w2_peak_scratch_kib": 847.0
+    },
+    {
+      "file": "block-143.L",
+      "n": 899869,
+      "r": 108335,
+      "m": 196841,
+      "H": 5047,
+      "nnodes": 12836,
+      "q_arena_kib": 2698.7,
+      "endpt_transient_kib": 546.4,
+      "edges_kib": 769.0,
+      "w1_peak_scratch_kib": 3668.6,
+      "w2_peak_scratch_kib": 1171.6
+    },
+    {
+      "file": "block-210.L",
+      "n": 899959,
+      "r": 128732,
+      "m": 204281,
+      "H": 2809,
+      "nnodes": 7182,
+      "q_arena_kib": 2486.2,
+      "endpt_transient_kib": 300.7,
+      "edges_kib": 798.0,
+      "w1_peak_scratch_kib": 3412.7,
+      "w2_peak_scratch_kib": 1172.5
+    },
+    {
+      "file": "block-207.L",
+      "n": 899998,
+      "r": 87111,
+      "m": 135921,
+      "H": 3474,
+      "nnodes": 8975,
+      "q_arena_kib": 2432.8,
+      "endpt_transient_kib": 369.7,
+      "edges_kib": 531.0,
+      "w1_peak_scratch_kib": 3114.0,
+      "w2_peak_scratch_kib": 844.6
+    }
+  ]
+}

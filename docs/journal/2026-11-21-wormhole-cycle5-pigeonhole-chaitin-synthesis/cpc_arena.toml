@@ -1,0 +1,39 @@
+name = "Wormhole Cycle 5 Candidate W1: Chaitin-Node16 Overlay Open (Chaitin-Open)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "compact_sentinel_queues_runs"
+inputs = ["records", "C", "p", "n"]
+output = "single_arena_queues_and_strips"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "1", B = "R + m", Q = "0", M = "m + H" }
+evidence = "Sentinel-merged record scan into compact 1.25x-grown thin queues (avoiding CAP=127 per[a] inflation of Theorem 5.1) while writing strips directly at offset 0 of dead edges[]."
+
+[[edge]]
+id = "chaitin_node16_endpoint"
+inputs = ["single_arena_queues_and_strips", "C", "n"]
+output = "bands_and_fused_inline16"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Theorems 5.2 & 5.3: Direct O(1)-stitched 16-byte u16-indexed Node16 elimination (0 B ord/term arrays) + Chaitin (1982) interval-graph overlay hosting 100% of Endpoint inside dead edges[0..m) on 6/6 blocks."
+
+[[edge]]
+id = "simd_band_span_wire"
+inputs = ["bands_and_fused_inline16", "single_arena_queues_and_strips"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Auto-vectorized contiguous band-span wiring over 3.2k-6.8k bands."
+
+[[edge]]
+id = "u16_critical_walk"
+inputs = ["critical_edges", "bands_and_fused_inline16", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "16B unconditional inline16 emit + L2-hot long spelling (verified on 26,495 small/multi-cycle cases + 6 blocks)."

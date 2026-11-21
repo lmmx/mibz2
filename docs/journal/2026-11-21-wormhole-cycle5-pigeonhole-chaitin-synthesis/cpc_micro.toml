@@ -1,0 +1,39 @@
+name = "Wormhole Cycle 5 Candidate W2: Chaitin-Kakutani Micro-Footprint Open (CPC-Micro)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "quotient_u16_stream_runs"
+inputs = ["records", "p", "n"]
+output = "thin_u16_stream_and_strips"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "1", B = "R + r", Q = "0", M = "r + H" }
+evidence = "2-byte (byte, width) quotient stream (93-246 KiB; 0 B queues, 32x less Pass-1 store traffic than Vec16)."
+
+[[edge]]
+id = "chaitin_node16_full_overlay"
+inputs = ["thin_u16_stream_and_strips", "C", "n"]
+output = "bands_and_right_inline16"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Theorems 5.2 & 5.3: Direct O(1)-stitched 16B Node16 + Chaitin 4-phase overlay hosting 100% of Endpoint (strips, img_ord, nodes16, rules, bottom) inside dead edges[0..m); total scratch 559-1,173 KiB (0.25x Open 0.5.8!)."
+
+[[edge]]
+id = "kakutani_sequential_vec16_wire"
+inputs = ["bands_and_right_inline16", "thin_u16_stream_and_strips"]
+output = "forward_lf_edges"
+status = "verified"
+dependent = false
+cost = { W = "r", D = "1", B = "m", Q = "0", M = "m" }
+evidence = "Theorem 4.2: Kakutani conjugate first-return g = P o pi_Q^-1 wired sequentially in j with 99.47-99.77% branchless 16-wide AVX2 iota stores."
+
+[[edge]]
+id = "downward_u16_walk"
+inputs = ["forward_lf_edges", "bands_and_right_inline16", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Right-aligned 16B downward vector emit from (mark, n) with zero front-padding shift (verified on 26,495 cases + 6 blocks)."
