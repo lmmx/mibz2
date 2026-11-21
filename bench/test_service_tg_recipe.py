@@ -114,7 +114,7 @@ for i, a in enumerate(sys.argv):
 print(json.dumps({"reason": "build-finished", "success": True}))
 """
 
-FAKE_RUSTC = "#!/bin/sh\necho \"${FAKE_RUSTC_SAYS:-rustc 0.0.0 (stand-in)}\"\n"
+FAKE_RUSTC = '#!/bin/sh\necho "${FAKE_RUSTC_SAYS:-rustc 0.0.0 (stand-in)}"\n'
 FAKE_LSCPU = "#!/bin/sh\n[ \"$FAKE_DIAG\" = fail ] && exit 5\necho 'CPU(s): 20'\n"
 
 FAKE_GH = r"""#!/usr/bin/env python3
@@ -132,17 +132,22 @@ json.dump(comments, open(store, "w"))
 print("https://github.com/lmmx/mibz2/pull/145#issuecomment-1")
 """
 
-STUB_WIKIDATA = r"""import os, sys
+STUB_WIKIDATA = (
+    r"""import os, sys
 cmd = sys.argv[1]
 if cmd == "fetch":
     os.makedirs(sys.argv[3], exist_ok=True)
 elif cmd == "build":
     open(sys.argv[5], "wb").write(%r)
-""" % CORPUS_BYTES
+"""
+    % CORPUS_BYTES
+)
 
 
 def git(cwd, *args):
-    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
+    return subprocess.run(
+        ["git", *args], cwd=cwd, check=True, capture_output=True, text=True
+    ).stdout.strip()
 
 
 def recipe_body(dry="", corpus=""):
@@ -160,16 +165,29 @@ class EndToEnd(unittest.TestCase):
         self.remote.parent.mkdir()
         git(self.tmp, "init", "-q", "--bare", str(self.remote))
         w = self.work = self.tmp / "work"
-        for rel in (".just/service-tg.just", ".just/submit.just", "bench/bundle.sh", "bench/submit.sh",
-                    "bench/service_tg.py", "bench/service_guarded.py", "bench/svc_target_check.py",
-                    "docs/journal/2026-11-10-service-guarded-target-gated-registration.md"):
+        for rel in (
+            ".just/service-tg.just",
+            ".just/submit.just",
+            "bench/bundle.sh",
+            "bench/submit.sh",
+            "bench/service_tg.py",
+            "bench/service_guarded.py",
+            "bench/svc_target_check.py",
+            "docs/journal/2026-11-10-service-guarded-target-gated-registration.md",
+        ):
             (w / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(ROOT / rel, w / rel)
         (w / "Justfile").write_text('import ".just/service-tg.just"\nimport ".just/submit.just"\n')
         (w / "bench" / "wikidata.py").write_text(STUB_WIKIDATA)
-        (w / "bench" / "wikidata.json").write_text(json.dumps({
-            "windows_dir": "wd", "corpus_sha256": hashlib.sha256(CORPUS_BYTES).hexdigest(),
-            "decoded_bytes": DECODED}))
+        (w / "bench" / "wikidata.json").write_text(
+            json.dumps(
+                {
+                    "windows_dir": "wd",
+                    "corpus_sha256": hashlib.sha256(CORPUS_BYTES).hexdigest(),
+                    "decoded_bytes": DECODED,
+                }
+            )
+        )
         (w / "bench" / "service-tg.frozen").write_text("# not frozen\n")
         (w / ".gitignore").write_text("target/\nwd/\n")
         (w / "src").mkdir()
@@ -184,8 +202,10 @@ class EndToEnd(unittest.TestCase):
         (w / "src" / "lib.rs").write_text("// the candidate\n")
         git(w, "commit", "-q", "-am", "candidate")
         self.cand = git(w, "rev-parse", "HEAD")
-        self.freeze = (f"candidate {self.cand}\nbase {self.base}\nbase_fetched 2026-11-10T00:00:00Z\n"
-                       f"rustc {RUSTC}\nni_rustc rustc 1.99.1 (x)\ncorpus_text {'7' * 64}\n")
+        self.freeze = (
+            f"candidate {self.cand}\nbase {self.base}\nbase_fetched 2026-11-10T00:00:00Z\n"
+            f"rustc {RUSTC}\nni_rustc rustc 1.99.1 (x)\ncorpus_text {'7' * 64}\n"
+        )
         (w / "bench" / "service-tg.frozen").write_text(self.freeze)
         git(w, "commit", "-q", "-am", "freeze (test fixture)")
         bin_ = self.tmp / "bin"
@@ -194,17 +214,35 @@ class EndToEnd(unittest.TestCase):
         bx = self.tmp / "base-target" / "release" / "examples"
         ex.mkdir(parents=True)
         bx.mkdir(parents=True)
-        for name, body, where in (("ab", FAKE_AB, ex), ("ab", FAKE_AB, bx), ("windows", "#!/bin/sh\n", ex),
-                                  ("svc_target", FAKE_PREFLIGHT, ex), ("cargo", FAKE_CARGO, bin_),
-                                  ("rustc", FAKE_RUSTC, bin_), ("lscpu", FAKE_LSCPU, bin_), ("gh", FAKE_GH, bin_)):
+        for name, body, where in (
+            ("ab", FAKE_AB, ex),
+            ("ab", FAKE_AB, bx),
+            ("windows", "#!/bin/sh\n", ex),
+            ("svc_target", FAKE_PREFLIGHT, ex),
+            ("cargo", FAKE_CARGO, bin_),
+            ("rustc", FAKE_RUSTC, bin_),
+            ("lscpu", FAKE_LSCPU, bin_),
+            ("gh", FAKE_GH, bin_),
+        ):
             p = where / name
             p.write_text(body)
             p.chmod(0o755)
-        self.env = {**os.environ, "PATH": f"{bin_}:{os.environ['PATH']}", "FAKE_AB": str(ex / "ab"),
-                    "FAKE_AB_BASE": str(bx / "ab"), "FAKE_WINDOWS": str(ex / "windows"),
-                    "FAKE_SVC_TARGET": str(ex / "svc_target"), "FAKE_OUT": str(DECODED),
-                    "FAKE_COMMENTS": str(self.tmp / "comments.json"), "GH": str(bin_ / "gh")}
-        for k in [k for k in self.env if k.startswith(("CARGO_", "RUST")) and k not in ("CARGO_HOME", "RUSTUP_HOME")]:
+        self.env = {
+            **os.environ,
+            "PATH": f"{bin_}:{os.environ['PATH']}",
+            "FAKE_AB": str(ex / "ab"),
+            "FAKE_AB_BASE": str(bx / "ab"),
+            "FAKE_WINDOWS": str(ex / "windows"),
+            "FAKE_SVC_TARGET": str(ex / "svc_target"),
+            "FAKE_OUT": str(DECODED),
+            "FAKE_COMMENTS": str(self.tmp / "comments.json"),
+            "GH": str(bin_ / "gh"),
+        }
+        for k in [
+            k
+            for k in self.env
+            if k.startswith(("CARGO_", "RUST")) and k not in ("CARGO_HOME", "RUSTUP_HOME")
+        ]:
             del self.env[k]
 
     def tearDown(self):
@@ -228,7 +266,7 @@ class EndToEnd(unittest.TestCase):
     def names(self, tarball):
         with tarfile.open(tarball) as t:
             stamp = tarball.name[: -len(".tar.gz")]
-            got = {n[len(stamp) + 1:] for n in t.getnames() if n.startswith(stamp + "/")}
+            got = {n[len(stamp) + 1 :] for n in t.getnames() if n.startswith(stamp + "/")}
             outcome = t.extractfile(f"{stamp}/outcome.txt").read().decode()
             return got, outcome
 
@@ -237,7 +275,9 @@ class EndToEnd(unittest.TestCase):
         before = set(self.bundles())
         script = self.tmp / "recipe.sh"
         script.write_text(recipe_body(dry, corpus))
-        r = subprocess.run(["bash", str(script)], cwd=self.work, env=env, capture_output=True, text=True)
+        r = subprocess.run(
+            ["bash", str(script)], cwd=self.work, env=env, capture_output=True, text=True
+        )
         [new] = set(self.bundles()) - before
         return r, *self.names(new)
 
@@ -246,18 +286,43 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertTrue(outcome.startswith("VALID: WORKSTATION CONDITIONS MET"), outcome)
         self.assertNotIn("bin/ab-base-twin", got)
-        for n in ("commits.txt", "arms.txt", "corpus.sha256", "inputs.txt", "preflight.json", "preflight.exit",
-                  "preflight-check.json", "runs.jsonl", "service-tg.json", "service-tg.md",
-                  "bin/ab-base", "bin/ab-head", "bin/svc_target", "bin/ab-base.sha256",
-                  "diagnostics/env.json", "diagnostics/sample-before.jsonl", "diagnostics/sample-after.jsonl",
-                  "diagnostics/lscpu.txt", "diagnostics/discovery.json", "diagnostics/exits.txt",
-                  "console.log", "outcome.txt"):
+        for n in (
+            "commits.txt",
+            "arms.txt",
+            "corpus.sha256",
+            "inputs.txt",
+            "preflight.json",
+            "preflight.exit",
+            "preflight-check.json",
+            "runs.jsonl",
+            "service-tg.json",
+            "service-tg.md",
+            "bin/ab-base",
+            "bin/ab-head",
+            "bin/svc_target",
+            "bin/ab-base.sha256",
+            "diagnostics/env.json",
+            "diagnostics/sample-before.jsonl",
+            "diagnostics/sample-after.jsonl",
+            "diagnostics/lscpu.txt",
+            "diagnostics/discovery.json",
+            "diagnostics/exits.txt",
+            "console.log",
+            "outcome.txt",
+        ):
             self.assertIn(n, got)
         [b] = self.bundles()
         # (every diagnostic ran and exited 0: `env` with --facts, which the stand-in insists on)
-        self.assertEqual(self.member(b, "diagnostics/exits.txt").splitlines(), [
-            "env.json: exit 0", "lscpu.txt: exit 0", "discovery.json: exit 0",
-            "sample-before.jsonl: exit 0", "sample-after.jsonl: exit 0"])
+        self.assertEqual(
+            self.member(b, "diagnostics/exits.txt").splitlines(),
+            [
+                "env.json: exit 0",
+                "lscpu.txt: exit 0",
+                "discovery.json: exit 0",
+                "sample-before.jsonl: exit 0",
+                "sample-after.jsonl: exit 0",
+            ],
+        )
         # (the preflight's successful control: exit 0, checked TARGET, the checker's exit 0)
         self.assertEqual(self.member(b, "preflight.exit").strip(), "0")
         self.assertEqual(self.member(b, "preflight-check.exit").strip(), "0")
@@ -277,8 +342,16 @@ class EndToEnd(unittest.TestCase):
         self.assertTrue(outcome.startswith("VALID: WORKSTATION CONDITIONS MET"), outcome)
         [b] = self.bundles()
         exits = self.member(b, "diagnostics/exits.txt").splitlines()
-        self.assertEqual(exits, ["env.json: exit 3", "lscpu.txt: exit 5", "discovery.json: exit 0",
-                                 "sample-before.jsonl: exit 3", "sample-after.jsonl: exit 3"])
+        self.assertEqual(
+            exits,
+            [
+                "env.json: exit 3",
+                "lscpu.txt: exit 5",
+                "discovery.json: exit 0",
+                "sample-before.jsonl: exit 3",
+                "sample-after.jsonl: exit 3",
+            ],
+        )
         self.assertIn("a sample failing", self.member(b, "diagnostics/sample-before.jsonl.stderr"))
         self.assertEqual(len(self.member(b, "runs.jsonl").splitlines()), 768)
 
@@ -293,7 +366,9 @@ class EndToEnd(unittest.TestCase):
         envs = re.findall(r'^.*"\$AB" env\b.*$', rest, re.M)
         self.assertEqual(envs, ['diag env.json "$AB" env --facts'])
         for pat in (r'"\$AB" sample', r"\blscpu\b(?! and)", r"service_guarded\.py discovery"):
-            calls = [c for c in re.findall(rf"^.*{pat}.*$", rest, re.M) if not c.lstrip().startswith("#")]
+            calls = [
+                c for c in re.findall(rf"^.*{pat}.*$", rest, re.M) if not c.lstrip().startswith("#")
+            ]
             self.assertTrue(calls, pat)
             for c in calls:
                 self.assertRegex(c, r"^diag \S+ ", c)
@@ -326,7 +401,9 @@ class EndToEnd(unittest.TestCase):
                 self.assertEqual(json.loads(self.member(b, "preflight.json")), rec)
                 self.assertEqual(self.member(b, "preflight.exit").strip(), str(status))
                 self.assertIn(f"exiting {status}", self.member(b, "preflight.stderr"))
-                self.assertNotEqual(json.loads(self.member(b, "preflight-check.json"))["verdict"], "TARGET")
+                self.assertNotEqual(
+                    json.loads(self.member(b, "preflight-check.json"))["verdict"], "TARGET"
+                )
 
     def test_not_shown_at_a_fallback_budget_is_valid_and_not_met(self):
         r, _, outcome = self.run_recipe(self.env_for("harm"))
@@ -344,7 +421,9 @@ class EndToEnd(unittest.TestCase):
     def test_a_dry_check_runs_through_and_is_never_valid(self):
         corpus = self.tmp / "c.bz2"
         corpus.write_bytes(b"another corpus")
-        r, got, outcome = self.run_recipe(self.env_for("valid", target=False), dry="1", corpus=str(corpus))
+        r, got, outcome = self.run_recipe(
+            self.env_for("valid", target=False), dry="1", corpus=str(corpus)
+        )
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         self.assertTrue(outcome.startswith("INVALID (identity)"), outcome)
         self.assertIn("DRY-RUN.txt", got)
@@ -365,14 +444,18 @@ class EndToEnd(unittest.TestCase):
         git(self.work, "reset", "-q", "--hard", "HEAD~1")
         # (a freeze naming the base without the time master was fetched, or without the toolchain)
         for drop in ("base_fetched", "rustc"):
-            frozen.write_text("".join(l + "\n" for l in self.freeze.splitlines() if not l.startswith(drop)))
+            frozen.write_text(
+                "".join(l + "\n" for l in self.freeze.splitlines() if not l.startswith(drop))
+            )
             git(self.work, "commit", "-q", "-am", f"a freeze without {drop}")
             r, _, outcome = self.run_recipe(self.env_for())
             self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
             self.assertIn("base fetch time and toolchain", outcome)
             git(self.work, "reset", "-q", "--hard", "HEAD~1")
         # (another toolchain than the frozen one: refused before anything is built)
-        r, got, outcome = self.run_recipe(dict(self.env_for(), FAKE_RUSTC_SAYS="rustc 0.0.1 (another)"))
+        r, got, outcome = self.run_recipe(
+            dict(self.env_for(), FAKE_RUSTC_SAYS="rustc 0.0.1 (another)")
+        )
         self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
         self.assertIn("not the frozen rustc 0.0.0 (stand-in)", outcome)
         self.assertNotIn("runs.jsonl", got)
@@ -391,7 +474,9 @@ class EndToEnd(unittest.TestCase):
     def test_submit_keeps_each_exit(self):
         for env, code in ((self.env_for("valid"), 0), (self.env_for("valid", target=False), 4)):
             time.sleep(1.1)
-            r = subprocess.run([JUST, "submit", RECIPE], cwd=self.work, env=env, capture_output=True, text=True)
+            r = subprocess.run(
+                [JUST, "submit", RECIPE], cwd=self.work, env=env, capture_output=True, text=True
+            )
             self.assertEqual(r.returncode, code, r.stdout + r.stderr)
             self.assertIn("archived", r.stdout + r.stderr)
 

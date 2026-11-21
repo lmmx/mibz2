@@ -74,7 +74,9 @@ print("https://github.com/lmmx/mibz2/pull/145#issuecomment-1")
 
 
 def git(cwd, *args):
-    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
+    return subprocess.run(
+        ["git", *args], cwd=cwd, check=True, capture_output=True, text=True
+    ).stdout.strip()
 
 
 def recipe_body() -> str:
@@ -90,8 +92,14 @@ def recipe_body() -> str:
 def modes():
     t, tx = record(True)
     n, nx = record(False)
-    failed = edit(t, lambda r: (r["at"][1]["built"].__setitem__("window", 12),
-                                r.__setitem__("ok", False), r["why"].append("window")))
+    failed = edit(
+        t,
+        lambda r: (
+            r["at"][1]["built"].__setitem__("window", 12),
+            r.__setitem__("ok", False),
+            r["why"].append("window"),
+        ),
+    )
     lying = edit(t, lambda r: r["machine"].__setitem__("quota", {"kind": "unknown"}))
     return {
         "target": (t, tx, 0, "TARGET"),
@@ -109,8 +117,14 @@ class EndToEnd(unittest.TestCase):
         self.remote.parent.mkdir()
         git(self.tmp, "init", "-q", "--bare", str(self.remote))
         self.work = self.tmp / "work"
-        for rel in ("Justfile", ".just", "bench/bundle.sh", "bench/submit.sh", "bench/svc_target_check.py",
-                    "docs/journal/2026-11-09-svc-target-registration.md"):
+        for rel in (
+            "Justfile",
+            ".just",
+            "bench/bundle.sh",
+            "bench/submit.sh",
+            "bench/svc_target_check.py",
+            "docs/journal/2026-11-09-svc-target-registration.md",
+        ):
             src, dst = ROOT / rel, self.work / rel
             dst.parent.mkdir(parents=True, exist_ok=True)
             (shutil.copytree if src.is_dir() else shutil.copy)(src, dst)
@@ -129,16 +143,27 @@ class EndToEnd(unittest.TestCase):
         bin_.mkdir()
         elsewhere = self.tmp / "other-target" / "release" / "examples"
         elsewhere.mkdir(parents=True)
-        for name, body, where in (("svc_target", FAKE_PREFLIGHT, elsewhere), ("cargo", FAKE_CARGO, bin_),
-                                  ("rustc", FAKE_RUSTC, bin_), ("lscpu", FAKE_LSCPU, bin_),
-                                  ("gh", FAKE_GH, bin_), ("timeout", FAKE_TIMEOUT, bin_)):
+        for name, body, where in (
+            ("svc_target", FAKE_PREFLIGHT, elsewhere),
+            ("cargo", FAKE_CARGO, bin_),
+            ("rustc", FAKE_RUSTC, bin_),
+            ("lscpu", FAKE_LSCPU, bin_),
+            ("gh", FAKE_GH, bin_),
+            ("timeout", FAKE_TIMEOUT, bin_),
+        ):
             p = where / name
             p.write_text(body)
             p.chmod(0o755)
         self.exe = elsewhere / "svc_target"
-        self.env = {**os.environ, "PATH": f"{bin_}:{os.environ['PATH']}", "FAKE_EXE": str(self.exe),
-                    "REAL_TIMEOUT": shutil.which("timeout"), "FAKE_TIMEOUT_ARGS": str(self.tmp / "timeout-args"),
-                    "FAKE_COMMENTS": str(self.tmp / "comments.json"), "GH": str(bin_ / "gh")}
+        self.env = {
+            **os.environ,
+            "PATH": f"{bin_}:{os.environ['PATH']}",
+            "FAKE_EXE": str(self.exe),
+            "REAL_TIMEOUT": shutil.which("timeout"),
+            "FAKE_TIMEOUT_ARGS": str(self.tmp / "timeout-args"),
+            "FAKE_COMMENTS": str(self.tmp / "comments.json"),
+            "GH": str(bin_ / "gh"),
+        }
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
@@ -158,9 +183,18 @@ class EndToEnd(unittest.TestCase):
             names = set(t.getnames())
             return {
                 n: t.extractfile(f"{stamp}/{n}").read().decode()
-                for n in ("outcome.txt", "inputs.txt", "build.txt", "commit.txt", "frozen.txt",
-                          "preflight.json", "preflight.exit", "preflight-check.json", "raw/reads.txt",
-                          "stages.txt")
+                for n in (
+                    "outcome.txt",
+                    "inputs.txt",
+                    "build.txt",
+                    "commit.txt",
+                    "frozen.txt",
+                    "preflight.json",
+                    "preflight.exit",
+                    "preflight-check.json",
+                    "raw/reads.txt",
+                    "stages.txt",
+                )
                 if f"{stamp}/{n}" in names
             }
 
@@ -168,7 +202,9 @@ class EndToEnd(unittest.TestCase):
         time.sleep(1.1)  # (an attempt's directory is named to the second)
         script = self.tmp / "recipe.sh"
         script.write_text(recipe_body())
-        return subprocess.run(["bash", str(script)], cwd=self.work, env=env, capture_output=True, text=True)
+        return subprocess.run(
+            ["bash", str(script)], cwd=self.work, env=env, capture_output=True, text=True
+        )
 
     def test_every_outcome_is_bundled_with_its_identity_and_exit(self):
         for mode, (rec, _, code, word) in modes().items():
@@ -180,7 +216,9 @@ class EndToEnd(unittest.TestCase):
                 got = self.contents(new)
                 self.assertTrue(got["outcome.txt"].startswith(word), got["outcome.txt"])
                 self.assertIn(f"executable {self.exe}", got["build.txt"])
-                digest = subprocess.run(["sha256sum", str(self.exe)], capture_output=True, text=True).stdout.split()[0]
+                digest = subprocess.run(
+                    ["sha256sum", str(self.exe)], capture_output=True, text=True
+                ).stdout.split()[0]
                 self.assertEqual(got["inputs.txt"].split()[0], digest)
                 self.assertEqual(got["commit.txt"].strip(), git(self.work, "rev-parse", "HEAD"))
                 self.assertIn("frozen", got["frozen.txt"])
@@ -193,7 +231,9 @@ class EndToEnd(unittest.TestCase):
                 self.assertEqual(len(stages), 5)
                 want = 3 if mode == "crash" else 5
                 self.assertEqual(sum(l.startswith("reached:") for l in stages), want, stages)
-                self.assertIn("--kill-after=10 120", Path(self.env["FAKE_TIMEOUT_ARGS"]).read_text())
+                self.assertIn(
+                    "--kill-after=10 120", Path(self.env["FAKE_TIMEOUT_ARGS"]).read_text()
+                )
                 if rec is not None:
                     self.assertEqual(json.loads(got["preflight.json"]), rec)
                     self.assertEqual(json.loads(got["preflight-check.json"])["verdict"], word)
@@ -207,7 +247,13 @@ class EndToEnd(unittest.TestCase):
         self.assertIn("REFUSED", got["outcome.txt"])
         # an early refusal reaches no stage, and its bundle has no later stage's files
         self.assertTrue(all(l.startswith("not reached:") for l in got["stages.txt"].splitlines()))
-        for n in ("frozen.txt", "build.txt", "inputs.txt", "preflight.json", "preflight-check.json"):
+        for n in (
+            "frozen.txt",
+            "build.txt",
+            "inputs.txt",
+            "preflight.json",
+            "preflight-check.json",
+        ):
             self.assertNotIn(n, got)
 
     def test_the_timeouts_are_incomplete_and_bundled(self):
@@ -241,8 +287,13 @@ class EndToEnd(unittest.TestCase):
         for mode in ("not", "invalid", "target"):
             with self.subTest(mode=mode):
                 time.sleep(1.1)
-                r = subprocess.run([JUST, "submit", RECIPE], cwd=self.work, env=self.mode_env(mode),
-                                   capture_output=True, text=True)
+                r = subprocess.run(
+                    [JUST, "submit", RECIPE],
+                    cwd=self.work,
+                    env=self.mode_env(mode),
+                    capture_output=True,
+                    text=True,
+                )
                 self.assertEqual(r.returncode, modes()[mode][2], r.stdout + r.stderr)
                 self.assertIn("archived", r.stdout + r.stderr)
         tree = git(self.remote, "ls-tree", "-r", "--name-only", "evidence").split()

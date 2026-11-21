@@ -36,8 +36,11 @@ BASE = f"mibz2@{W}/bin/ab-base"
 TWIN = f"mibz2@{W}/bin/ab-base-twin"
 CAND, BASESHA = "c" * 40, "b" * 40
 FETCHED = "2026-11-10T00:00:00Z"
-REG = {"corpus_sha256": "a" * 64, "decoded_bytes": 209700196,
-       "frozen": {"candidate": CAND, "base": BASESHA, "base_fetched": FETCHED}}
+REG = {
+    "corpus_sha256": "a" * 64,
+    "decoded_bytes": 209700196,
+    "frozen": {"candidate": CAND, "base": BASESHA, "base_fetched": FETCHED},
+}
 HASH = "0123456789abcdef"
 
 
@@ -75,16 +78,27 @@ def rows(case=None, speed=1.05, cpu=1.13, twin=1.0, seed=3, harm=1.0):
                     wall /= twin
                 if b == "head" and t in sg.NO_HARM:
                     wall *= harm
-                out.append({
-                    "round": rnd, "corpus": "wikidata", "threads": t, "arm": arm,
-                    "wall": wall, "cpu": c,
-                    "rss_kb": 70000 * (0.88 if b == "head" and t == 10 else 1.0),
-                    "out": 209700196,
-                    "hash": "fedcba9876543210" if case == "wrong bytes" and (b, t, rnd) == ("head", 10, 1) else HASH,
-                    "thread_cpu": names(plan, True), "observed_threads": names(plan, False),
-                    "err": "boom" if case == "failed run" and (b, t, rnd) == ("twin", 9, 0) else "",
-                    "termination": "success",
-                })
+                out.append(
+                    {
+                        "round": rnd,
+                        "corpus": "wikidata",
+                        "threads": t,
+                        "arm": arm,
+                        "wall": wall,
+                        "cpu": c,
+                        "rss_kb": 70000 * (0.88 if b == "head" and t == 10 else 1.0),
+                        "out": 209700196,
+                        "hash": "fedcba9876543210"
+                        if case == "wrong bytes" and (b, t, rnd) == ("head", 10, 1)
+                        else HASH,
+                        "thread_cpu": names(plan, True),
+                        "observed_threads": names(plan, False),
+                        "err": "boom"
+                        if case == "failed run" and (b, t, rnd) == ("twin", 9, 0)
+                        else "",
+                        "termination": "success",
+                    }
+                )
     return out
 
 
@@ -122,8 +136,12 @@ class Judge(unittest.TestCase):
         self.assertEqual(v["p1"]["reading"], "THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT")
         self.assertLess(v["cells"][10]["rss"]["ratio"], 1)
         md = sg.markdown(v)
-        for words in ("not a simultaneous", "does not identify the service threads",
-                      "no memory condition was registered", "not binary identity"):
+        for words in (
+            "not a simultaneous",
+            "does not identify the service threads",
+            "no memory condition was registered",
+            "not binary identity",
+        ):
             self.assertIn(words, md)
 
     def test_readings_and_their_qualifications(self):
@@ -152,13 +170,50 @@ class Judge(unittest.TestCase):
         cases = {
             "every output size 1": ("structural", None, [dict(r, out=1) for r in rows()]),
             "non-hex digests": ("structural", None, [dict(r, hash="not-a-digest") for r in rows()]),
-            "preflight only ok": ("preflight", files(**{"preflight.json": json.dumps({"ok": True})}), None),
-            "ok beside unknown quota, no observations": ("preflight", files(**{"preflight.json": json.dumps(
-                edit(rec, lambda r: (r["machine"].__setitem__("quota", {"kind": "unknown"}),
-                                     r["machine"].__setitem__("target", None), r.__setitem__("at", []))))}), None),
-            "exit 17 with an empty err": ("structural", None, [dict(r, exit=17) if i == 0 else r for i, r in enumerate(rows())]),
-            "round zero as false": ("structural", None, [dict(r, round=False) if r["round"] == 0 and i == 0 else r for i, r in enumerate(rows())]),
-            "an unregistered base path": ("structural", None, [dict(r, arm="mibz2@/unregistered/bin/ab-base") if r["arm"] == BASE else r for r in rows()]),
+            "preflight only ok": (
+                "preflight",
+                files(**{"preflight.json": json.dumps({"ok": True})}),
+                None,
+            ),
+            "ok beside unknown quota, no observations": (
+                "preflight",
+                files(
+                    **{
+                        "preflight.json": json.dumps(
+                            edit(
+                                rec,
+                                lambda r: (
+                                    r["machine"].__setitem__("quota", {"kind": "unknown"}),
+                                    r["machine"].__setitem__("target", None),
+                                    r.__setitem__("at", []),
+                                ),
+                            )
+                        )
+                    }
+                ),
+                None,
+            ),
+            "exit 17 with an empty err": (
+                "structural",
+                None,
+                [dict(r, exit=17) if i == 0 else r for i, r in enumerate(rows())],
+            ),
+            "round zero as false": (
+                "structural",
+                None,
+                [
+                    dict(r, round=False) if r["round"] == 0 and i == 0 else r
+                    for i, r in enumerate(rows())
+                ],
+            ),
+            "an unregistered base path": (
+                "structural",
+                None,
+                [
+                    dict(r, arm="mibz2@/unregistered/bin/ab-base") if r["arm"] == BASE else r
+                    for r in rows()
+                ],
+            ),
         }
         for what, (kind, f, r) in cases.items():
             with self.subTest(what):
@@ -176,14 +231,22 @@ class Judge(unittest.TestCase):
         for what, bad in (("err", failed), ("broken", crashed)):
             with self.subTest(what):
                 self.assertRefused(judge(r=[bad] + r[1:]), "structural", what)
-        self.assertRefused(judge(r=[{k: v for k, v in r[0].items() if k != "err"}] + r[1:]), "structural", "no err")
+        self.assertRefused(
+            judge(r=[{k: v for k, v in r[0].items() if k != "err"}] + r[1:]), "structural", "no err"
+        )
 
     def test_every_row_must_terminate_successfully(self):
         # (the Researcher's termination witness, REVIEW 6746023579: a valid-looking record
         # written before a nonzero exit or a signal; ab's records carry `termination`, no `exit`)
-        for what, val in (("missing", None), ("exit 17", "exit 17"), ("signal 9", "signal 9"),
-                          ("signal 15", "signal 15"), ("unknown", "unknown"), ("exit 0 spelled out", "exit 0"),
-                          ("not a string", 0)):
+        for what, val in (
+            ("missing", None),
+            ("exit 17", "exit 17"),
+            ("signal 9", "signal 9"),
+            ("signal 15", "signal 15"),
+            ("unknown", "unknown"),
+            ("exit 0 spelled out", "exit 0"),
+            ("not a string", 0),
+        ):
             with self.subTest(what):
                 r = rows()
                 r[5] = {k: v for k, v in r[5].items() if k != "termination"}
@@ -197,16 +260,44 @@ class Judge(unittest.TestCase):
     def test_identity(self):
         cases = {
             "not frozen": sg.judge(files(), rows(), (), dict(REG, frozen={})),
-            "another candidate": judge(files(**{"commits.txt": f"candidate {'d' * 40}\nbase {BASESHA}\nbase_fetched {FETCHED}\n"})),
-            "another base": judge(files(**{"commits.txt": f"candidate {CAND}\nbase {'d' * 40}\nbase_fetched {FETCHED}\n"})),
+            "another candidate": judge(
+                files(
+                    **{
+                        "commits.txt": f"candidate {'d' * 40}\nbase {BASESHA}\nbase_fetched {FETCHED}\n"
+                    }
+                )
+            ),
+            "another base": judge(
+                files(
+                    **{
+                        "commits.txt": f"candidate {CAND}\nbase {'d' * 40}\nbase_fetched {FETCHED}\n"
+                    }
+                )
+            ),
             # (base currency: the time master was fetched at the freeze, beside its SHA)
-            "no fetch time frozen": sg.judge(files(), rows(), (), dict(REG, frozen={"candidate": CAND, "base": BASESHA})),
-            "no fetch time recorded": judge(files(**{"commits.txt": f"candidate {CAND}\nbase {BASESHA}\n"})),
-            "another fetch time": judge(files(**{"commits.txt": f"candidate {CAND}\nbase {BASESHA}\nbase_fetched 2026-11-11T00:00:00Z\n"})),
+            "no fetch time frozen": sg.judge(
+                files(), rows(), (), dict(REG, frozen={"candidate": CAND, "base": BASESHA})
+            ),
+            "no fetch time recorded": judge(
+                files(**{"commits.txt": f"candidate {CAND}\nbase {BASESHA}\n"})
+            ),
+            "another fetch time": judge(
+                files(
+                    **{
+                        "commits.txt": f"candidate {CAND}\nbase {BASESHA}\nbase_fetched 2026-11-11T00:00:00Z\n"
+                    }
+                )
+            ),
             "a dry run": judge(files(**{"DRY-RUN.txt": "DRY RUN"})),
             "arms missing": judge(files(**{"arms.txt": None})),
             "a fourth arm": judge(files(**{"arms.txt": f"mibz2\n{BASE}\n{TWIN}\nmibz2@/x\n"})),
-            "twin not the base's bytes": judge(files(**{"inputs.txt": f"{'2' * 64}  {W}/bin/ab-base\n{'3' * 64}  {W}/bin/ab-base-twin\n"})),
+            "twin not the base's bytes": judge(
+                files(
+                    **{
+                        "inputs.txt": f"{'2' * 64}  {W}/bin/ab-base\n{'3' * 64}  {W}/bin/ab-base-twin\n"
+                    }
+                )
+            ),
             "no digests": judge(files(**{"inputs.txt": None})),
         }
         for what, v in cases.items():
@@ -214,27 +305,43 @@ class Judge(unittest.TestCase):
                 self.assertRefused(v, "identity", what)
 
     def test_workload(self):
-        for what, f in (("another corpus", files(**{"corpus.sha256": f"{'e' * 64}  x\n"})),
-                        ("no corpus digest", files(**{"corpus.sha256": None}))):
+        for what, f in (
+            ("another corpus", files(**{"corpus.sha256": f"{'e' * 64}  x\n"})),
+            ("no corpus digest", files(**{"corpus.sha256": None})),
+        ):
             with self.subTest(what):
                 self.assertRefused(judge(f), "workload", what)
-        self.assertRefused(judge(r=[dict(r, corpus="other") for r in rows()]), "structural", "rows' corpus")
+        self.assertRefused(
+            judge(r=[dict(r, corpus="other") for r in rows()]), "structural", "rows' corpus"
+        )
 
     def test_preflight(self):
         n, nx = record(False)
         t, _ = record(True)
-        for what, f in (("not target", files(**{"preflight.json": json.dumps(n), "preflight.exit": str(nx)})),
-                        ("exit disagrees", files(**{"preflight.exit": "3"})),
-                        ("no exit", files(**{"preflight.exit": None})),
-                        # (a complete TARGET record, then a failed completion: REVIEW 6746559255)
-                        ("TARGET then exit 17", files(**{"preflight.exit": "17\n"})),
-                        ("TARGET then a timeout's TERM", files(**{"preflight.exit": "124\n"})),
-                        ("TARGET then a timeout's KILL", files(**{"preflight.exit": "137\n"})),
-                        ("a malformed exit", files(**{"preflight.exit": "zero\n"})),
-                        ("an empty exit", files(**{"preflight.exit": ""})),
-                        ("no record", files(**{"preflight.json": None})),
-                        ("ok, unknown quota", files(**{"preflight.json": json.dumps(
-                            edit(t, lambda r: r["machine"].__setitem__("quota", {"kind": "unknown"})))}))):
+        for what, f in (
+            ("not target", files(**{"preflight.json": json.dumps(n), "preflight.exit": str(nx)})),
+            ("exit disagrees", files(**{"preflight.exit": "3"})),
+            ("no exit", files(**{"preflight.exit": None})),
+            # (a complete TARGET record, then a failed completion: REVIEW 6746559255)
+            ("TARGET then exit 17", files(**{"preflight.exit": "17\n"})),
+            ("TARGET then a timeout's TERM", files(**{"preflight.exit": "124\n"})),
+            ("TARGET then a timeout's KILL", files(**{"preflight.exit": "137\n"})),
+            ("a malformed exit", files(**{"preflight.exit": "zero\n"})),
+            ("an empty exit", files(**{"preflight.exit": ""})),
+            ("no record", files(**{"preflight.json": None})),
+            (
+                "ok, unknown quota",
+                files(
+                    **{
+                        "preflight.json": json.dumps(
+                            edit(
+                                t, lambda r: r["machine"].__setitem__("quota", {"kind": "unknown"})
+                            )
+                        )
+                    }
+                ),
+            ),
+        ):
             with self.subTest(what):
                 self.assertRefused(judge(f), "preflight", what)
 
@@ -289,8 +396,12 @@ class Producer(unittest.TestCase):
         self.ab = ab_exe()
         if not self.ab:
             if os.environ.get("SG_REQUIRE_AB") == "1":
-                self.fail("SG_REQUIRE_AB=1 and no ab executable (SG_AB, or target/debug/examples/ab)")
-            self.skipTest("no ab executable: build it with `cargo build --example ab`, or set SG_AB")
+                self.fail(
+                    "SG_REQUIRE_AB=1 and no ab executable (SG_AB, or target/debug/examples/ab)"
+                )
+            self.skipTest(
+                "no ab executable: build it with `cargo build --example ab`, or set SG_AB"
+            )
         self.tmp = Path(tempfile.mkdtemp())
 
     def tearDown(self):
@@ -298,11 +409,22 @@ class Producer(unittest.TestCase):
 
     def test_the_producer_records_each_ending_and_the_judge_refuses_all_but_success(self):
         clean = rows()
-        at = next(i for i, r in enumerate(clean) if (r["arm"], r["threads"], r["round"]) == ("mibz2", 10, 0))
+        at = next(
+            i
+            for i, r in enumerate(clean)
+            if (r["arm"], r["threads"], r["round"]) == ("mibz2", 10, 0)
+        )
         theirs = ("round", "corpus", "threads", "arm", "observed_threads")
-        child = json.dumps({k: v for k, v in clean[at].items() if k not in theirs + ("termination",)})
+        child = json.dumps(
+            {k: v for k, v in clean[at].items() if k not in theirs + ("termination",)}
+        )
         arms = []
-        for name, tail in (("ok", "exit 0"), ("seventeen", "exit 17"), ("killed", "kill -KILL $$"), ("empty", None)):
+        for name, tail in (
+            ("ok", "exit 0"),
+            ("seventeen", "exit 17"),
+            ("killed", "kill -KILL $$"),
+            ("empty", None),
+        ):
             p = self.tmp / name
             body = "exit 0\n" if tail is None else f"printf '%s\\n' '{child}'\n{tail}\n"
             p.write_text("#!/bin/sh\n" + body)
@@ -311,11 +433,33 @@ class Producer(unittest.TestCase):
         corpus = self.tmp / "wikidata.bz2"
         corpus.write_bytes(b"BZh9")
         out = self.tmp / "runs.jsonl"
-        r = subprocess.run([self.ab, "run", str(out), "--arms", ",".join(arms), "--threads", "10", "--rounds", "1",
-                            "--max-busy", "64", "--settle", "0.2", str(corpus)],
-                           capture_output=True, text=True, timeout=300)
+        r = subprocess.run(
+            [
+                self.ab,
+                "run",
+                str(out),
+                "--arms",
+                ",".join(arms),
+                "--threads",
+                "10",
+                "--rounds",
+                "1",
+                "--max-busy",
+                "64",
+                "--settle",
+                "0.2",
+                str(corpus),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        recs = {json.loads(l)["arm"].split("@")[0]: json.loads(l) for l in out.read_text().splitlines() if l.strip()}
+        recs = {
+            json.loads(l)["arm"].split("@")[0]: json.loads(l)
+            for l in out.read_text().splitlines()
+            if l.strip()
+        }
         self.assertEqual(set(recs), {"ok", "seventeen", "killed", "empty"})
         want = {"ok": "success", "seventeen": "exit 17", "killed": "signal 9", "empty": "success"}
         for name, term in want.items():
@@ -325,7 +469,7 @@ class Producer(unittest.TestCase):
                 self.assertNotIn("exit", rec)
                 self.assertEqual((rec["round"], rec["threads"], rec["corpus"]), (0, 10, "wikidata"))
                 got = dict(rec, arm="mibz2", observed_threads=clean[at]["observed_threads"])
-                v = judge(r=clean[:at] + [got] + clean[at + 1:])
+                v = judge(r=clean[:at] + [got] + clean[at + 1 :])
                 if name == "ok":
                     self.assertTrue(v["valid"], v["problems"])
                     continue
@@ -334,7 +478,9 @@ class Producer(unittest.TestCase):
                 if name == "empty":
                     self.assertTrue(any("broken" in p for p in v["problems"]), v["problems"])
                 else:
-                    self.assertTrue(any(f"termination '{term}'" in p for p in v["problems"]), v["problems"])
+                    self.assertTrue(
+                        any(f"termination '{term}'" in p for p in v["problems"]), v["problems"]
+                    )
 
 
 class Discovery(unittest.TestCase):
@@ -357,9 +503,12 @@ class Discovery(unittest.TestCase):
         return str(root)
 
     def test_v2_every_level_with_absence_and_errors(self):
-        root = self.tree("0::/a/b\n", "30 1 0:26 / /sys/fs/cgroup rw - cgroup2 cgroup2 rw\n"
-                         "31 1 0:27 / /proc rw - proc proc rw\n",
-                         {"/sys/fs/cgroup/a/cpu.max": "800000 100000\n", "/sys/fs/cgroup/a/b/cpu.max": None})
+        root = self.tree(
+            "0::/a/b\n",
+            "30 1 0:26 / /sys/fs/cgroup rw - cgroup2 cgroup2 rw\n"
+            "31 1 0:27 / /proc rw - proc proc rw\n",
+            {"/sys/fs/cgroup/a/cpu.max": "800000 100000\n", "/sys/fs/cgroup/a/b/cpu.max": None},
+        )
         d = sg.discovery(root)
         keys = set()
 
@@ -371,18 +520,26 @@ class Discovery(unittest.TestCase):
             elif isinstance(x, list):
                 for v in x:
                     walk(v)
+
         walk(d)
         self.assertFalse(keys & {"verdict", "quota", "kind", "target", "cpus"}, keys)
         [h] = d["hierarchies"]
         self.assertEqual(h["membership"], "0::/a/b")
         self.assertEqual(h["top_cgroup_type"]["state"], "absent")
-        self.assertEqual([lv["dir"] for lv in h["levels"]], ["/sys/fs/cgroup", "/sys/fs/cgroup/a", "/sys/fs/cgroup/a/b"])
+        self.assertEqual(
+            [lv["dir"] for lv in h["levels"]],
+            ["/sys/fs/cgroup", "/sys/fs/cgroup/a", "/sys/fs/cgroup/a/b"],
+        )
         states = [lv["files"][0]["state"] for lv in h["levels"]]
         self.assertEqual(states, ["absent", "read", "error"])
         self.assertEqual(h["levels"][1]["files"][0]["value"], "800000 100000\n")
 
     def test_v1_cpu_and_a_path_outside_the_mount(self):
-        root = self.tree("4:cpu,cpuacct:/x\n", "40 1 0:30 /y /sys/fs/cgroup/cpu rw - cgroup cgroup rw,cpu,cpuacct\n", {})
+        root = self.tree(
+            "4:cpu,cpuacct:/x\n",
+            "40 1 0:30 /y /sys/fs/cgroup/cpu rw - cgroup cgroup rw,cpu,cpuacct\n",
+            {},
+        )
         [h] = sg.discovery(root)["hierarchies"]
         self.assertEqual(h["levels"], [])
         self.assertIn("not under the mount's root", h["notes"][0])

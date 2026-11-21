@@ -87,6 +87,10 @@ induction-trace = []
 grammar-replay = []
 # research only: the one-scan writer's prototype beside the shipped writer, compared block by block
 owned-writer = []
+# research only: Astra's open-return decoder (docs/journal/2026-11-18-open-return/, #565), compiled
+# from the journal where it lives, for the open-return comparison's `ab` arms (#145 QUEUED
+# 6978711740). Retained while that comparison is open; never on a production path.
+open-return = []
 # Research only: the moonshot scorer's candidate interface (bench/moonshot/): a block's run
 # records readable by a kernel built outside the crate (`Runs::records`, public with it).
 # Changes that visibility and nothing else; never on a production path. Retain while the

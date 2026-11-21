@@ -41,9 +41,19 @@ BASE = f"mibz2@{W}/bin/ab-base"
 CAND, BASESHA, HEAD = "c" * 40, "b" * 40, "f" * 40
 RUSTC = "rustc 1.98.0 (88d9e12ae 2026-08-18)"
 FETCHED = "2026-11-10T00:00:00Z"
-REG = {"corpus_sha256": "a" * 64, "decoded_bytes": 209700196, "bench": "3.5.0",
-       "frozen": {"candidate": CAND, "base": BASESHA, "base_fetched": FETCHED, "rustc": RUSTC,
-                  "ni_rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)", "corpus_text": "7" * 64}}
+REG = {
+    "corpus_sha256": "a" * 64,
+    "decoded_bytes": 209700196,
+    "bench": "3.5.0",
+    "frozen": {
+        "candidate": CAND,
+        "base": BASESHA,
+        "base_fetched": FETCHED,
+        "rustc": RUSTC,
+        "ni_rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+        "corpus_text": "7" * 64,
+    },
+}
 HASH = "0123456789abcdef"
 
 
@@ -84,12 +94,23 @@ def rows(speed=1.068, cpu=0.85, wall={}, cpus={}, rss={}, seed=3, sd=0.01, case=
                     w *= wall.get(t, 1.0)
                     c *= cpus.get(t, 1.0)
                     r *= rss.get(t, 1.0)
-                out.append({
-                    "round": rnd, "corpus": "wikidata", "threads": t, "arm": arm,
-                    "wall": w, "cpu": c, "rss_kb": r, "out": 209700196, "hash": HASH,
-                    "thread_cpu": names(plan, True), "observed_threads": names(plan, False),
-                    "termination": "success", "err": "",
-                })
+                out.append(
+                    {
+                        "round": rnd,
+                        "corpus": "wikidata",
+                        "threads": t,
+                        "arm": arm,
+                        "wall": w,
+                        "cpu": c,
+                        "rss_kb": r,
+                        "out": 209700196,
+                        "hash": HASH,
+                        "thread_cpu": names(plan, True),
+                        "observed_threads": names(plan, False),
+                        "termination": "success",
+                        "err": "",
+                    }
+                )
     return out
 
 
@@ -109,9 +130,17 @@ def files(**over):
 
 class TStats(unittest.TestCase):
     def test_quantiles(self):
-        for q, df, want in ((0.9875, 127, 2.268287), (0.975, 127, 1.978820), (0.95, 9, 1.833113),
-                            (0.975, 9, 2.262157), (0.975, 19, 2.093024), (0.9875, 19, 2.433440),
-                            (0.95, 159, 1.654494), (0.95, 1, 6.313752), (0.975, 2, 4.302653)):
+        for q, df, want in (
+            (0.9875, 127, 2.268287),
+            (0.975, 127, 1.978820),
+            (0.95, 9, 1.833113),
+            (0.975, 9, 2.262157),
+            (0.975, 19, 2.093024),
+            (0.9875, 19, 2.433440),
+            (0.95, 159, 1.654494),
+            (0.95, 1, 6.313752),
+            (0.975, 2, 4.302653),
+        ):
             self.assertAlmostEqual(tg.t_ppf(q, df), want, places=5, msg=(q, df))
         try:
             from scipy import stats
@@ -145,12 +174,18 @@ class Workstation(unittest.TestCase):
         r = rows()
         v = tg.judge(files(), r, reg=REG)
         by = {(x["arm"], x["threads"], x["round"]): x for x in r}
-        logs = [math.log(by[(BASE, 10, i)]["wall"] / by[("mibz2", 10, i)]["wall"]) for i in range(tg.ROUNDS)]
+        logs = [
+            math.log(by[(BASE, 10, i)]["wall"] / by[("mibz2", 10, i)]["wall"])
+            for i in range(tg.ROUNDS)
+        ]
         m = sum(logs) / len(logs)
         sd = math.sqrt(sum((x - m) ** 2 for x in logs) / (len(logs) - 1))
         lo = math.exp(m - 2.268287 * sd / math.sqrt(tg.ROUNDS))
         self.assertAlmostEqual(v["cells"][10]["speed_k"]["lo"], lo, places=5)
-        logs = [math.log(by[("mibz2", 11, i)]["wall"] / by[(BASE, 11, i)]["wall"]) for i in range(tg.ROUNDS)]
+        logs = [
+            math.log(by[("mibz2", 11, i)]["wall"] / by[(BASE, 11, i)]["wall"])
+            for i in range(tg.ROUNDS)
+        ]
         m = sum(logs) / len(logs)
         sd = math.sqrt(sum((x - m) ** 2 for x in logs) / (len(logs) - 1))
         up = math.exp(m + 1.978820 * sd / math.sqrt(tg.ROUNDS))
@@ -161,9 +196,18 @@ class Workstation(unittest.TestCase):
             "a gain of 1.015 at 10": (rows(speed=1.015), "condition 3: wall speed"),
             "a CPU cost at 10": (rows(cpu=1.05), "condition 3: CPU"),
             "NOT SHOWN at 9": (rows(wall={9: 1.03}), "condition 4: NOT SHOWN at 9"),
-            "NOT SHOWN at 11 (noise, no effect)": (rows(sd=0.12, speed=1.5, cpu=0.5), "condition 4: NOT SHOWN"),
-            "a CPU regression at 11": (rows(cpus={11: 1.05}), "condition 7: CPU regression demonstrated at 11"),
-            "an RSS regression at 10": (rows(rss={10: 1.2}), "condition 7: peak RSS regression demonstrated at 10"),
+            "NOT SHOWN at 11 (noise, no effect)": (
+                rows(sd=0.12, speed=1.5, cpu=0.5),
+                "condition 4: NOT SHOWN",
+            ),
+            "a CPU regression at 11": (
+                rows(cpus={11: 1.05}),
+                "condition 7: CPU regression demonstrated at 11",
+            ),
+            "an RSS regression at 10": (
+                rows(rss={10: 1.2}),
+                "condition 7: peak RSS regression demonstrated at 10",
+            ),
         }
         for what, (r, reason) in cases.items():
             with self.subTest(what):
@@ -180,7 +224,11 @@ class Workstation(unittest.TestCase):
         cases = {
             "identity": [
                 files(**{"DRY-RUN.txt": "dry"}),
-                files(**{"commits.txt": f"candidate {'0' * 40}\nbase {BASESHA}\nbase_fetched {FETCHED}\n"}),
+                files(
+                    **{
+                        "commits.txt": f"candidate {'0' * 40}\nbase {BASESHA}\nbase_fetched {FETCHED}\n"
+                    }
+                ),
                 files(**{"commits.txt": f"candidate {CAND}\nbase {BASESHA}\n"}),
                 files(**{"inputs.txt": f"{'e' * 64}  {W}/bin/ab-base\nrustc 1.99.0 (other)\n"}),
                 files(**{"arms.txt": f"mibz2\n{BASE}\n{BASE}-twin\n"}),
@@ -189,8 +237,13 @@ class Workstation(unittest.TestCase):
             "workload": [files(**{"corpus.sha256": "9" * 64})],
             "preflight": [
                 files(**{"preflight.exit": "17\n"}),
-                files(**{"preflight.json": json.dumps(edit(rec, lambda r: r.__setitem__(
-                    "schema", "mibz2.svc_target/1")))}),
+                files(
+                    **{
+                        "preflight.json": json.dumps(
+                            edit(rec, lambda r: r.__setitem__("schema", "mibz2.svc_target/1"))
+                        )
+                    }
+                ),
                 files(**{"preflight.json": json.dumps(record(False)[0]), "preflight.exit": "3\n"}),
             ],
         }
@@ -211,6 +264,7 @@ class Workstation(unittest.TestCase):
             r = rows()
             f(r)
             return r
+
         cases = {
             "a child exited 17": mutate(lambda r: r[4].__setitem__("termination", "exit 17")),
             "no termination": mutate(lambda r: r[4].pop("termination")),
@@ -250,59 +304,136 @@ def shard_rows(sid, effect={}, sd=0.003, seed=5):
     out = []
     for rnd in range(R):
         for t in threads:
-            for arm in (tg.CI_ARMS if tg.ORDER_CYCLE[rnd % 4] else tg.CI_ARMS[::-1]):  # (ab's schedule)
-                w, c, r = 0.05 * rng.gauss(1, sd), 0.08 * rng.gauss(1, sd), 30000 * rng.gauss(1, 0.001)
+            for arm in (
+                tg.CI_ARMS if tg.ORDER_CYCLE[rnd % 4] else tg.CI_ARMS[::-1]
+            ):  # (ab's schedule)
+                w, c, r = (
+                    0.05 * rng.gauss(1, sd),
+                    0.08 * rng.gauss(1, sd),
+                    30000 * rng.gauss(1, 0.001),
+                )
                 if arm == "mibz2":
                     w *= effect.get((t, "wall"), 1.0)
                     c *= effect.get((t, "cpu"), 1.0)
                     r *= effect.get((t, "rss"), 1.0)
-                out.append({"round": rnd, "corpus": corpus, "threads": t, "arm": arm, "wall": w, "cpu": c,
-                            "rss_kb": r, "out": 1000, "hash": "0123456789abcdef", "termination": "success",
-                            "err": "", "cpus": {1: "1", 2: "0,2", 4: "all"}[t],
-                            # (bench 3.6.0's child record, `ab-child/2`, as `ab run` writes it)
-                            "schema": "ab-child/2", "err_kind": None, "err_block": None, "sha256": None})
+                out.append(
+                    {
+                        "round": rnd,
+                        "corpus": corpus,
+                        "threads": t,
+                        "arm": arm,
+                        "wall": w,
+                        "cpu": c,
+                        "rss_kb": r,
+                        "out": 1000,
+                        "hash": "0123456789abcdef",
+                        "termination": "success",
+                        "err": "",
+                        "cpus": {1: "1", 2: "0,2", 4: "all"}[t],
+                        # (bench 3.6.0's child record, `ab-child/2`, as `ab run` writes it)
+                        "schema": "ab-child/2",
+                        "err_kind": None,
+                        "err_block": None,
+                        "sha256": None,
+                    }
+                )
     return out
 
 
 HISTORY = {"artifacts": [], "jobs": []}
 T0 = 1794268800.0  # (2026-11-10T00:00:00Z, the fixtures' measurement start)
-WINDOW = {"start": 0.0, "length": 1800.0, "seed": 5}  # (each job's start and duration, seconds from T0, as GitHub records it)
+WINDOW = {
+    "start": 0.0,
+    "length": 1800.0,
+    "seed": 5,
+}  # (each job's start and duration, seconds from T0, as GitHub records it)
 
 
 def iso(t):
     import datetime
+
     return datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured=True, over=None, drop=(),
-                job=None, step=None, steps=True, listed=True, downloaded=True, artifact=True, run=RUN):
+def write_shard(
+    root,
+    sid,
+    attempt=1,
+    rows=None,
+    label="qualification",
+    measured=True,
+    over=None,
+    drop=(),
+    job=None,
+    step=None,
+    steps=True,
+    listed=True,
+    downloaded=True,
+    artifact=True,
+    run=RUN,
+):
     """One shard attempt: its artifact's files (unless `artifact` is False or it wasn't
     `downloaded`), GitHub's record of the artifact (unless not `listed`) and of the job: its
     conclusion `job` and its measurement step's `step` (success and success when `measured`,
     failure and skipped otherwise), or no steps at all (`steps` False)"""
     corpus, threads = tg.SHARDS[sid]
     name = f"tg-ni-{sid}-a{attempt}"
-    HISTORY["jobs"].append({
-        "name": f"shard ({sid}, {corpus}, {','.join(map(str, threads))})", "run_attempt": attempt,
-        "run_id": run, "head_sha": HEAD,
-        "started_at": iso(T0 + WINDOW["start"]), "completed_at": iso(T0 + WINDOW["start"] + WINDOW["length"]),
-        "status": "completed", "conclusion": job or ("success" if measured else "failure"),
-        **({"steps": [{"name": "Build the head and the base", "conclusion": "success"},
-                      {"name": tg.MEASURE_STEP, "conclusion": step or ("success" if measured else "skipped"),
-                       "started_at": "2026-11-10T00:00:00Z" if (step or measured) not in (False, "skipped") else None}]}
-           if steps else {})})
+    HISTORY["jobs"].append(
+        {
+            "name": f"shard ({sid}, {corpus}, {','.join(map(str, threads))})",
+            "run_attempt": attempt,
+            "run_id": run,
+            "head_sha": HEAD,
+            "started_at": iso(T0 + WINDOW["start"]),
+            "completed_at": iso(T0 + WINDOW["start"] + WINDOW["length"]),
+            "status": "completed",
+            "conclusion": job or ("success" if measured else "failure"),
+            **(
+                {
+                    "steps": [
+                        {"name": "Build the head and the base", "conclusion": "success"},
+                        {
+                            "name": tg.MEASURE_STEP,
+                            "conclusion": step or ("success" if measured else "skipped"),
+                            "started_at": "2026-11-10T00:00:00Z"
+                            if (step or measured) not in (False, "skipped")
+                            else None,
+                        },
+                    ]
+                }
+                if steps
+                else {}
+            ),
+        }
+    )
     if artifact and listed:
-        HISTORY["artifacts"].append({"name": name, "id": len(HISTORY["artifacts"]) + 1,
-                                     "digest": f"sha256:{len(HISTORY['artifacts']):064x}"})
+        HISTORY["artifacts"].append(
+            {
+                "name": name,
+                "id": len(HISTORY["artifacts"]) + 1,
+                "digest": f"sha256:{len(HISTORY['artifacts']):064x}",
+            }
+        )
     if not (artifact and downloaded):
         return
     d = Path(root) / name / sid
     d.mkdir(parents=True)
-    info = {"schema": "mibz2.tg_ni_shard/1", "label": label, "shard": sid, "corpus": corpus,
-            "threads": list(threads), "rounds": R, "head": HEAD, "base": BASESHA, "github_sha": HEAD,
-            "workflow_sha": HEAD, "repository": "lmmx/mibz2",
-            "workflow_ref": "lmmx/mibz2/.github/workflows/target-gated-ni.yml@refs/heads/x",
-            "run_id": run, "run_attempt": attempt}
+    info = {
+        "schema": "mibz2.tg_ni_shard/1",
+        "label": label,
+        "shard": sid,
+        "corpus": corpus,
+        "threads": list(threads),
+        "rounds": R,
+        "head": HEAD,
+        "base": BASESHA,
+        "github_sha": HEAD,
+        "workflow_sha": HEAD,
+        "repository": "lmmx/mibz2",
+        "workflow_ref": "lmmx/mibz2/.github/workflows/target-gated-ni.yml@refs/heads/x",
+        "run_id": run,
+        "run_attempt": attempt,
+    }
     info.update(over or {})
     rec, ex = record(False)
     digest = REG["frozen"]["corpus_text"] if corpus == "text" else tg.CORPUS_SHA256[corpus]
@@ -311,19 +442,26 @@ def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured
         "rustc.txt": REG["frozen"]["ni_rustc"] + "\n",
         "binaries.sha256": "x\n",
         "lscpu.txt": "Architecture: x86_64\nModel name:                           AMD EPYC 7763 64-Core Processor\n",
-        "env.json": json.dumps({"facts": "ab env --facts/1", "cpus": 4, "cores": 2, "core_cpus": ["0,1", "2,3"]}),
+        "env.json": json.dumps(
+            {"facts": "ab env --facts/1", "cpus": 4, "cores": 2, "core_cpus": ["0,1", "2,3"]}
+        ),
         "preflight.json": json.dumps(rec),
         "preflight.exit": f"{ex}\n",
         "preflight-check.json": json.dumps({"verdict": "NOT TARGET"}),
         "corpus.sha256": f"{digest}  corpora/{corpus}.bz2\n",
-        "runs.jsonl": "".join(json.dumps(r) + "\n" for r in (shard_rows(sid, seed=WINDOW["seed"]) if rows is None else rows)),
+        "runs.jsonl": "".join(
+            json.dumps(r) + "\n"
+            for r in (shard_rows(sid, seed=WINDOW["seed"]) if rows is None else rows)
+        ),
     }
     if measured:
         files["measurement-started.txt"] = "2026-11-10T00:00:00Z\n"
         files["measurement-ended.txt"] = "2026-11-10T00:30:00Z\n"
         n = files["runs.jsonl"].count("\n")
         step = min(1.0, 1700.0 / max(n, 1))  # (inside the 30-minute markers at any R)
-        files["row-times.txt"] = f"# start {T0 + 0.5:.3f}\n" + "".join(f"{i} {T0 + 1 + i * step:.3f}\n" for i in range(n))
+        files["row-times.txt"] = f"# start {T0 + 0.5:.3f}\n" + "".join(
+            f"{i} {T0 + 1 + i * step:.3f}\n" for i in range(n)
+        )
         files["stamp.exit"] = "0\n"
     else:
         del files["runs.jsonl"]
@@ -363,11 +501,16 @@ class CI(unittest.TestCase):
         v = self.ni(build(self.root, runs=[{"rows": rows}]))
         self.assertTrue(v["valid"], v["problems"])
         self.assertEqual(v["schema"], "mibz2.tg_ni_dispatch/1")
-        self.assertEqual(sorted(v["cells"]), sorted(f"{c}/{t}" for c in tg.CI_CORPORA for t in tg.CI_THREADS))
+        self.assertEqual(
+            sorted(v["cells"]), sorted(f"{c}/{t}" for c in tg.CI_CORPORA for t in tg.CI_THREADS)
+        )
         self.assertEqual(v["cells"]["wikidata/2"]["shard"], "wikidata-2")
         self.assertNotIn("passes", v)  # (one dispatch is never a verdict)
         by = {(x["threads"], x["arm"], x["round"]): x for x in rows}
-        logs = [math.log(by[(2, "mibz2", i)]["wall"] / by[(2, "mibz2@base/ab", i)]["wall"]) for i in range(R)]
+        logs = [
+            math.log(by[(2, "mibz2", i)]["wall"] / by[(2, "mibz2@base/ab", i)]["wall"])
+            for i in range(R)
+        ]
         self.assertAlmostEqual(v["cells"]["runs/2"]["wall"]["d"], sum(logs) / R, places=12)
         self.assertEqual((v["started"], v["completed"]), (T0, T0 + 1800))
         self.assertEqual(v["shards"]["runs"]["model"], "AMD EPYC 7763 64-Core Processor")
@@ -381,7 +524,10 @@ class CI(unittest.TestCase):
         self.assertTrue(self.ni(build(self.root, runs=[{"rows": rows}]))["valid"])
         shutil.rmtree(self.root)
         self.root = tempfile.mkdtemp()
-        old = [{k: v for k, v in r.items() if k not in ("schema", "err_kind", "err_block", "sha256")} for r in rows]
+        old = [
+            {k: v for k, v in r.items() if k not in ("schema", "err_kind", "err_block", "sha256")}
+            for r in rows
+        ]
         v = self.ni(build(self.root, runs=[{"rows": old}]))
         self.assertTrue(v["valid"], v["problems"])
 
@@ -397,7 +543,10 @@ class CI(unittest.TestCase):
         v = self.ni(build(self.root, runs=[{"rows": rows}]))
         self.assertTrue(v["valid"], v["problems"])
         by = {(x["threads"], x["arm"], x["round"]): x for x in rows}
-        logs = [math.log(by[(4, tg.CI_ARMS[0], i)]["wall"] / by[(4, tg.CI_ARMS[1], i)]["wall"]) for i in range(R)]
+        logs = [
+            math.log(by[(4, tg.CI_ARMS[0], i)]["wall"] / by[(4, tg.CI_ARMS[1], i)]["wall"])
+            for i in range(R)
+        ]
         self.assertAlmostEqual(v["cells"]["runs/4"]["wall"]["d"], sum(logs) / R, places=12)
 
     def test_partial_cycles_are_refused(self):
@@ -423,17 +572,50 @@ class CI(unittest.TestCase):
             "another run": dict(text=[{"over": {"run_id": 1}}]),
             "another rounds": dict(text=[{"over": {"rounds": R + 4}}]),
             "another workflow": dict(text=[{"over": {"workflow_ref": "x/bench.yml@y"}}]),
-            "a failed child": dict(records=[{"rows": [dict(r, termination="signal 9") if i == 3 else r
-                                                      for i, r in enumerate(rows)]}]),
-            "a decoder error's kind (ab-child/2)": dict(records=[{"rows": [dict(r, err_kind="BlockCrc", err_block=41)
-                                                                            if i == 3 else r for i, r in enumerate(rows)]}]),
-            "another child schema": dict(records=[{"rows": [dict(r, schema="ab-child/3") if i == 3 else r
-                                                            for i, r in enumerate(rows)]}]),
+            "a failed child": dict(
+                records=[
+                    {
+                        "rows": [
+                            dict(r, termination="signal 9") if i == 3 else r
+                            for i, r in enumerate(rows)
+                        ]
+                    }
+                ]
+            ),
+            "a decoder error's kind (ab-child/2)": dict(
+                records=[
+                    {
+                        "rows": [
+                            dict(r, err_kind="BlockCrc", err_block=41) if i == 3 else r
+                            for i, r in enumerate(rows)
+                        ]
+                    }
+                ]
+            ),
+            "another child schema": dict(
+                records=[
+                    {
+                        "rows": [
+                            dict(r, schema="ab-child/3") if i == 3 else r
+                            for i, r in enumerate(rows)
+                        ]
+                    }
+                ]
+            ),
             "a round missing": dict(records=[{"rows": rows[1:]}]),
-            "two digests": dict(records=[{"rows": [dict(r, hash="fedcba9876543210") if i == 3 else r
-                                                   for i, r in enumerate(rows)]}]),
-            "2 threads on one core": dict(records=[{"rows": [dict(r, cpus="0,1") if r["threads"] == 2 else r
-                                                             for r in rows]}]),
+            "two digests": dict(
+                records=[
+                    {
+                        "rows": [
+                            dict(r, hash="fedcba9876543210") if i == 3 else r
+                            for i, r in enumerate(rows)
+                        ]
+                    }
+                ]
+            ),
+            "2 threads on one core": dict(
+                records=[{"rows": [dict(r, cpus="0,1") if r["threads"] == 2 else r for r in rows]}]
+            ),
         }
         for what, per in cases.items():
             with self.subTest(what):
@@ -452,10 +634,14 @@ class CI(unittest.TestCase):
             path = Path(self.root) / "tg-ni-random-a1" / "random" / name
             path.write_text(f(path.read_text()))
             return remanifest(self.root)
+
         rec, _ = record(True)
         cases = {
             "the target's lscpu model": ("lscpu.txt", lambda t: f"Model name: {tg.TARGET_NAME}\n"),
-            "an 8-CPU runner": ("env.json", lambda t: json.dumps({"cpus": 8, "cores": 4, "core_cpus": ["0,1"] * 4})),
+            "an 8-CPU runner": (
+                "env.json",
+                lambda t: json.dumps({"cpus": 8, "cores": 4, "core_cpus": ["0,1"] * 4}),
+            ),
             "the predicate TARGET": ("preflight.json", lambda t: json.dumps(rec)),
             "another toolchain": ("rustc.txt", lambda t: "rustc 1.99.0 (x)\n"),
             "another corpus": ("corpus.sha256", lambda t: "9" * 64 + "  x\n"),
@@ -500,27 +686,41 @@ class CI(unittest.TestCase):
         # judge at eb46b5a8, and the other unknown histories, each refused)
         good = {"attempt": 2}
         cases = {
-            "a cancelled job with a complete-looking artifact": [{"job": "cancelled", "step": "cancelled"}],
+            "a cancelled job with a complete-looking artifact": [
+                {"job": "cancelled", "step": "cancelled"}
+            ],
             "a cancelled job whose step says success": [{"job": "cancelled"}],
-            "attempt 1 with rows but no start marker, then attempt 2":
-                [{"attempt": 1, "drop": ("measurement-started.txt", "measurement-ended.txt")}, good],
-            "an earlier measurement cancelled, with no artifact, then a good attempt 2":
-                [{"attempt": 1, "job": "cancelled", "step": "cancelled", "artifact": False}, good],
-            "an earlier measurement started per the API, artifact clean, then attempt 2":
-                [{"attempt": 1, "measured": False, "step": "failure"}, good],
+            "attempt 1 with rows but no start marker, then attempt 2": [
+                {"attempt": 1, "drop": ("measurement-started.txt", "measurement-ended.txt")},
+                good,
+            ],
+            "an earlier measurement cancelled, with no artifact, then a good attempt 2": [
+                {"attempt": 1, "job": "cancelled", "step": "cancelled", "artifact": False},
+                good,
+            ],
+            "an earlier measurement started per the API, artifact clean, then attempt 2": [
+                {"attempt": 1, "measured": False, "step": "failure"},
+                good,
+            ],
             "a wrong workflow sha": [{"over": {"workflow_sha": "0" * 40}}],
             "an inconsistent shard attempt": [{"over": {"run_attempt": 99}}],
             "another repository": [{"over": {"repository": "fork/mibz2"}}],
-            "a workflow ref of another file": [{"over": {"workflow_ref": "lmmx/mibz2/.github/workflows/x/target-gated-ni.yml@r"}}],
+            "a workflow ref of another file": [
+                {"over": {"workflow_ref": "lmmx/mibz2/.github/workflows/x/target-gated-ni.yml@r"}}
+            ],
             "the measured artifact listed but not downloaded": [{"downloaded": False}],
             "the measured artifact not listed by GitHub": [{"listed": False}],
             "the job's steps unknown": [{"steps": False}],
             "the measured job timed out": [{"job": "failure", "step": "cancelled"}],
             "the measured step failed in a job marked success": [{"step": "failure"}],
-            "a setup failure whose step didn't record as skipped":
-                [{"attempt": 1, "measured": False, "job": "cancelled", "step": "skipped"}, good],
-            "a setup failure whose artifact wasn't downloaded":
-                [{"attempt": 1, "measured": False, "downloaded": False}, good],
+            "a setup failure whose step didn't record as skipped": [
+                {"attempt": 1, "measured": False, "job": "cancelled", "step": "skipped"},
+                good,
+            ],
+            "a setup failure whose artifact wasn't downloaded": [
+                {"attempt": 1, "measured": False, "downloaded": False},
+                good,
+            ],
         }
         for what, attempts in cases.items():
             with self.subTest(what):
@@ -535,7 +735,9 @@ class CI(unittest.TestCase):
         self.fresh()
         man = build(self.root)
         man["artifacts"] = [a for a in man["artifacts"] if a["shard"] != "text"]
-        HISTORY["artifacts"] = [a for a in HISTORY["artifacts"] if not a["name"].startswith("tg-ni-text-")]
+        HISTORY["artifacts"] = [
+            a for a in HISTORY["artifacts"] if not a["name"].startswith("tg-ni-text-")
+        ]
         v = self.ni(remanifest(self.root))
         self.assertFalse(v["valid"])
         self.assertTrue(any("not listed by GitHub" in x for x in v["problems"]), v["problems"])
@@ -559,14 +761,33 @@ class CI(unittest.TestCase):
             "no row-times.txt": ("row-times.txt", None),
             "the stamper failed": ("stamp.exit", "1\n"),
             "no stamper exit": ("stamp.exit", None),
-            "times backwards": ("row-times.txt", lambda t: "\n".join(
-                [t.splitlines()[0]] + [f"{i} {T0 + 1000 - i:.3f}" for i in range(len(t.splitlines()) - 1)]) + "\n"),
-            "a row missing its time": ("row-times.txt", lambda t: "\n".join(t.splitlines()[:-1]) + "\n"),
+            "times backwards": (
+                "row-times.txt",
+                lambda t: (
+                    "\n".join(
+                        [t.splitlines()[0]]
+                        + [f"{i} {T0 + 1000 - i:.3f}" for i in range(len(t.splitlines()) - 1)]
+                    )
+                    + "\n"
+                ),
+            ),
+            "a row missing its time": (
+                "row-times.txt",
+                lambda t: "\n".join(t.splitlines()[:-1]) + "\n",
+            ),
             "a row timed twice": ("row-times.txt", lambda t: t + t.splitlines()[-1] + "\n"),
             "no start time": ("row-times.txt", lambda t: "\n".join(t.splitlines()[1:]) + "\n"),
             "a time not finite": ("row-times.txt", lambda t: t.replace(f"0 {T0 + 1:.3f}", "0 nan")),
-            "times outside the measurement": ("row-times.txt", lambda t: "\n".join(
-                [f"# start {T0 + 9000:.3f}"] + [f"{i} {T0 + 9001 + i:.3f}" for i in range(len(t.splitlines()) - 1)]) + "\n"),
+            "times outside the measurement": (
+                "row-times.txt",
+                lambda t: (
+                    "\n".join(
+                        [f"# start {T0 + 9000:.3f}"]
+                        + [f"{i} {T0 + 9001 + i:.3f}" for i in range(len(t.splitlines()) - 1)]
+                    )
+                    + "\n"
+                ),
+            ),
             "a malformed line": ("row-times.txt", lambda t: t + "garbage\n"),
         }
         for what, (name, change) in cases.items():
@@ -598,6 +819,7 @@ class CI(unittest.TestCase):
         except ImportError:
             self.skipTest("scipy is not installed")
         import service_tg_power as pw
+
         # (size under the model at the boundary; power falls as the true ratio nears it)
         self.assertAlmostEqual(pw.power(600, 20, 0.05, 1.02), 0.05, places=6)
         self.assertGreater(pw.power(600, 20, 0.05, 1.0), pw.power(600, 20, 0.05, 1.005))
@@ -619,14 +841,16 @@ class CI(unittest.TestCase):
         # twice the LRV, reproduced; conditional on iid normal batch means, not a guarantee)
         sigma = 0.20139894418068915
         self.assertAlmostEqual(pw.power(2880, 24, sigma, 1.005), 0.9854840380109718, places=6)
-        self.assertAlmostEqual(pw.power(2880, 24, sigma * math.sqrt(2), 1.005), 0.8561073746929773, places=6)
+        self.assertAlmostEqual(
+            pw.power(2880, 24, sigma * math.sqrt(2), 1.005), 0.8561073746929773, places=6
+        )
 
 
 def ab_arm_order(rnd, n=2):
     """examples/ab.rs `arm_order`, restated: rotated a step each round, reversed every other
     cycle of n rounds"""
     order = list(range(n))
-    order = order[rnd % n:] + order[:rnd % n]
+    order = order[rnd % n :] + order[: rnd % n]
     return order[::-1] if (rnd // n) % 2 else order
 
 
@@ -647,11 +871,13 @@ class Design(unittest.TestCase):
             self.assertTrue(tg.rounds_problems(r_), r_)
         # (the gate restates the programme apart from the judge, and agrees)
         import tg_ni_gate as gate
+
         self.assertEqual(gate.K, tg.NI_DISPATCHES)
         self.assertEqual(gate.MARGIN, tg.MARGIN)
         self.assertAlmostEqual(gate.T95, tg.t_ppf(0.95, tg.NI_DISPATCHES - 1), places=8)
         try:
             from scipy import stats
+
             self.assertAlmostEqual(gate.T95, stats.t.ppf(0.95, 11), places=9)
         except ImportError:
             pass
@@ -662,8 +888,12 @@ class Design(unittest.TestCase):
         st = tg.dispatch_stats(ds)
         m = sum(ds) / 12
         sd = math.sqrt(sum((x - m) ** 2 for x in ds) / 11)
-        self.assertAlmostEqual(st["upper"], math.exp(m + tg.t_ppf(0.95, 11) * sd / math.sqrt(12)), places=12)
-        self.assertAlmostEqual(st["lo95"], math.exp(m - tg.t_ppf(0.975, 11) * sd / math.sqrt(12)), places=12)
+        self.assertAlmostEqual(
+            st["upper"], math.exp(m + tg.t_ppf(0.95, 11) * sd / math.sqrt(12)), places=12
+        )
+        self.assertAlmostEqual(
+            st["lo95"], math.exp(m - tg.t_ppf(0.975, 11) * sd / math.sqrt(12)), places=12
+        )
         self.assertEqual(st["d"], ds)
 
 
@@ -688,7 +918,7 @@ def shuffled_rounds(rows, seed=64):
 def shuffled_cycles(rows, seed=64):
     # (whole four-round cycles moved: every round keeps ab's arm order for its own label)
     g = by_round(rows)
-    cycles = [g[i:i + 4] for i in range(0, len(g), 4)]
+    cycles = [g[i : i + 4] for i in range(0, len(g), 4)]
     random.Random(seed).shuffle(cycles)
     return flat(flat(cycles))
 
@@ -706,7 +936,7 @@ def threads_421(rows):
 def head_first_always(rows):
     out = []
     for i in range(0, len(rows), 2):
-        out += sorted(rows[i:i + 2], key=lambda r: tg.CI_ARMS.index(r["arm"]))
+        out += sorted(rows[i : i + 2], key=lambda r: tg.CI_ARMS.index(r["arm"]))
     return out
 
 
@@ -740,15 +970,35 @@ class Chronology(unittest.TestCase):
         v = tg.ni_judge(self.root, man, HEAD, reg=REG, check_git=False, rounds=rounds)
         code = 0 if v["valid"] else 2
         import tg_ni_gate as gate
+
         return v, gate.gate("qualification", v, code)
 
     def test_the_traversal(self):
         want = list(tg.traversal("runs", (1, 2, 4), 4))
-        self.assertEqual(want[:6], [(0, "runs", 1, "mibz2"), (0, "runs", 1, "mibz2@base/ab"), (0, "runs", 2, "mibz2"),
-                                    (0, "runs", 2, "mibz2@base/ab"), (0, "runs", 4, "mibz2"),
-                                    (0, "runs", 4, "mibz2@base/ab")])
-        self.assertEqual([w[3] for w in want if w[2] == 1], ["mibz2", "mibz2@base/ab", "mibz2@base/ab", "mibz2",
-                                                              "mibz2@base/ab", "mibz2", "mibz2", "mibz2@base/ab"])
+        self.assertEqual(
+            want[:6],
+            [
+                (0, "runs", 1, "mibz2"),
+                (0, "runs", 1, "mibz2@base/ab"),
+                (0, "runs", 2, "mibz2"),
+                (0, "runs", 2, "mibz2@base/ab"),
+                (0, "runs", 4, "mibz2"),
+                (0, "runs", 4, "mibz2@base/ab"),
+            ],
+        )
+        self.assertEqual(
+            [w[3] for w in want if w[2] == 1],
+            [
+                "mibz2",
+                "mibz2@base/ab",
+                "mibz2@base/ab",
+                "mibz2",
+                "mibz2@base/ab",
+                "mibz2",
+                "mibz2",
+                "mibz2@base/ab",
+            ],
+        )
         # (the fixtures emit it)
         rows = shard_rows("runs")
         self.assertEqual(tg.sequence_problems("runs", rows, "runs", (1, 2, 4), R), [])
@@ -766,7 +1016,9 @@ class Chronology(unittest.TestCase):
                 self.assertNotEqual(rows, shard_rows("runs"))
                 v, (status, line) = self.judged(rows)
                 self.assertFalse(v["valid"], name)
-                self.assertTrue(any("not in the registered order" in p for p in v["problems"]), v["problems"])
+                self.assertTrue(
+                    any("not in the registered order" in p for p in v["problems"]), v["problems"]
+                )
                 self.assertEqual(v["cells"], {})
                 self.assertEqual(status, 1, line)
                 self.assertIn("INVALID", line)
@@ -778,6 +1030,7 @@ class Chronology(unittest.TestCase):
         global R
         saved = R
         import tg_ni_gate as gate
+
         try:
             R = tg.NI_ROUNDS
             v = tg.ni_judge(self.root, build(self.root), HEAD, reg=REG, check_git=False)
@@ -789,10 +1042,16 @@ class Chronology(unittest.TestCase):
             build(self.root, runs=[{"rows": shuffled_rounds(shard_rows("runs"))}])
             for p in Path(self.root).glob("*/*/row-times.txt"):
                 n = len(p.read_text().splitlines()) - 1
-                p.write_text(f"# start {T0 + .5:.3f}\n" + "".join(f"{i} {T0 + 1 + i * .01:.3f}\n" for i in range(n)))
+                p.write_text(
+                    f"# start {T0 + 0.5:.3f}\n"
+                    + "".join(f"{i} {T0 + 1 + i * 0.01:.3f}\n" for i in range(n))
+                )
             v = tg.ni_judge(self.root, remanifest(self.root), HEAD, reg=REG, check_git=False)
             self.assertFalse(v["valid"])
-            self.assertTrue(any("runs: rows not in the registered order" in p for p in v["problems"]), v["problems"])
+            self.assertTrue(
+                any("runs: rows not in the registered order" in p for p in v["problems"]),
+                v["problems"],
+            )
             self.assertEqual(gate.gate("qualification", v, 2)[0], 1)
         finally:
             R = saved
@@ -812,8 +1071,15 @@ class Replicated(unittest.TestCase):
     def dispatch(self, j, label="qualification", start=None, length=1800.0, run=None, **per):
         root = tempfile.mkdtemp()
         self.roots.append(root)
-        man = build(root, label=label, run=RUN + j if run is None else run,
-                    start=3600.0 * j if start is None else start, length=length, seed=1000 + j, **per)
+        man = build(
+            root,
+            label=label,
+            run=RUN + j if run is None else run,
+            start=3600.0 * j if start is None else start,
+            length=length,
+            seed=1000 + j,
+            **per,
+        )
         return root, man
 
     def programme(self, k=K, per=lambda j: {}, **kw):
@@ -826,6 +1092,7 @@ class Replicated(unittest.TestCase):
     def judge(self, ds):
         v = tg.replicated(ds, HEAD, rounds=R)
         import tg_ni_gate as gate
+
         code = 0 if v["valid"] and v["passes"] else 1 if v["valid"] else 2
         return v, code, gate.gate("replicated", v, code)
 
@@ -842,8 +1109,11 @@ class Replicated(unittest.TestCase):
         self.assertEqual(v["cells"]["runs/2"]["wall"]["d"], ds_)
         m = sum(ds_) / K
         sd = math.sqrt(sum((x - m) ** 2 for x in ds_) / (K - 1))
-        self.assertAlmostEqual(v["cells"]["runs/2"]["wall"]["upper"], math.exp(m + tg.t_ppf(0.95, K - 1) * sd / math.sqrt(K)),
-                               places=12)
+        self.assertAlmostEqual(
+            v["cells"]["runs/2"]["wall"]["upper"],
+            math.exp(m + tg.t_ppf(0.95, K - 1) * sd / math.sqrt(K)),
+            places=12,
+        )
         self.assertEqual((status, code), (0, 0), line)
         md = tg.ni_markdown(v)
         self.assertIn("met** at every cell", md)
@@ -851,7 +1121,11 @@ class Replicated(unittest.TestCase):
         self.assertIn("does not repair a cell's size", md)
 
     def test_one_cell_over_the_margin_is_not_shown(self):
-        ds = self.programme(per=lambda j: {"onebyte": [{"rows": shard_rows("onebyte", {(4, "cpu"): 1.025}, seed=j)}]})
+        ds = self.programme(
+            per=lambda j: {
+                "onebyte": [{"rows": shard_rows("onebyte", {(4, "cpu"): 1.025}, seed=j)}]
+            }
+        )
         v, code, (status, line) = self.judge(ds)
         self.assertTrue(v["valid"], v["problems"])
         self.assertFalse(v["passes"])
@@ -862,16 +1136,29 @@ class Replicated(unittest.TestCase):
     def test_the_spread_between_dispatches_is_the_uncertainty(self):
         # (each dispatch tight, the dispatches apart: +-5% alternately at runs/2 wall. Within a
         # dispatch the estimate is precise; across them it is not, and the bound says so)
-        ds = self.programme(per=lambda j: {"runs": [{"rows": shard_rows("runs", {(2, "wall"): 1.05 if j % 2 else 1 / 1.05},
-                                                                         sd=0.001, seed=j)}]})
+        ds = self.programme(
+            per=lambda j: {
+                "runs": [
+                    {
+                        "rows": shard_rows(
+                            "runs", {(2, "wall"): 1.05 if j % 2 else 1 / 1.05}, sd=0.001, seed=j
+                        )
+                    }
+                ]
+            }
+        )
         v, code, _ = self.judge(ds)
         self.assertTrue(v["valid"], v["problems"])
         self.assertIn("runs/2", " ".join(v["failing"]))
         self.assertGreater(v["cells"]["runs/2"]["wall"]["upper"], 1.02)
 
     def test_flags_and_rss(self):
-        ds = self.programme(per=lambda j: {"runs": [{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=j)}],
-                                           "text": [{"rows": shard_rows("text", {(4, "rss"): 1.15}, seed=j)}]})
+        ds = self.programme(
+            per=lambda j: {
+                "runs": [{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=j)}],
+                "text": [{"rows": shard_rows("text", {(4, "rss"): 1.15}, seed=j)}],
+            }
+        )
         v, code, _ = self.judge(ds)
         self.assertTrue(v["valid"], v["problems"])
         self.assertEqual(v["flags"], ["runs/2"])
@@ -886,16 +1173,23 @@ class Replicated(unittest.TestCase):
             "13 dispatches": good + [good[0]],
             "a run twice": good[:11] + [good[10]],
             "a run id missing": good[:11] + [dict(good[11], run=None)],
-            "one dispatch INVALID": good[:11] + [self.programme(k=1, label="smoke", start=3600.0 * 11, run=RUN + 11)[0]],
+            "one dispatch INVALID": good[:11]
+            + [self.programme(k=1, label="smoke", start=3600.0 * 11, run=RUN + 11)[0]],
             "another head": good[:11] + [dict(good[11], head="0" * 40)],
             "another R": good[:11] + [dict(good[11], rounds=R + 4)],
-            "too close: 30 minutes apart": good[:11] + [dict(good[11], started=good[10]["started"] + 1800)],
-            "before the previous completed (an overrun not waited for)":
-                good[:10] + [dict(good[10], completed=good[10]["started"] + 4 * 3600)] + [good[11]],
+            "too close: 30 minutes apart": good[:11]
+            + [dict(good[11], started=good[10]["started"] + 1800)],
+            "before the previous completed (an overrun not waited for)": good[:10]
+            + [dict(good[10], completed=good[10]["started"] + 4 * 3600)]
+            + [good[11]],
             "times unknown": good[:11] + [dict(good[11], started=None)],
             "a verdict unreadable": good[:11] + [None],
-            "a cell's estimate missing": good[:11] + [dict(good[11], cells={k_: c for k_, c in good[11]["cells"].items()
-                                                                          if k_ != "text/2"})],
+            "a cell's estimate missing": good[:11]
+            + [
+                dict(
+                    good[11], cells={k_: c for k_, c in good[11]["cells"].items() if k_ != "text/2"}
+                )
+            ],
         }
         v, code, (status, _) = self.judge(good)
         self.assertEqual((v["valid"], status), (True, 0), v["problems"])
@@ -907,12 +1201,17 @@ class Replicated(unittest.TestCase):
                 self.assertEqual((code, status), (2, 1), line)
                 self.assertIn("INVALID", line)
         # (an overrun waited for is admitted: the next dispatch starts after the previous completes)
-        late = good[:10] + [dict(good[10], completed=good[10]["started"] + 5000)] + [dict(good[11], started=good[10]["started"] + 5400)]
+        late = (
+            good[:10]
+            + [dict(good[10], completed=good[10]["started"] + 5000)]
+            + [dict(good[11], started=good[10]["started"] + 5400)]
+        )
         self.assertTrue(tg.replicated(late, HEAD, rounds=R)["valid"])
 
     def test_the_gate_recomputes_the_bound(self):
         import copy
         import tg_ni_gate as gate
+
         v, code, _ = self.judge(self.programme())
         self.assertEqual(gate.gate("replicated", v, 0)[0], 0)
         # (a judge claiming a pass the dispatch estimates don't support)
@@ -922,10 +1221,14 @@ class Replicated(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertIn("disagrees", line)
         # (11 estimates, 11 run ids, a run id twice, a non-finite estimate: INVALID)
-        for change in (lambda x: x["cells"]["text/1"]["wall"].__setitem__("d", x["cells"]["text/1"]["wall"]["d"][:11]),
-                       lambda x: x.__setitem__("runs", x["runs"][:11]),
-                       lambda x: x.__setitem__("runs", x["runs"][:11] + [x["runs"][0]]),
-                       lambda x: x["cells"]["text/1"]["cpu"]["d"].__setitem__(3, float("nan"))):
+        for change in (
+            lambda x: x["cells"]["text/1"]["wall"].__setitem__(
+                "d", x["cells"]["text/1"]["wall"]["d"][:11]
+            ),
+            lambda x: x.__setitem__("runs", x["runs"][:11]),
+            lambda x: x.__setitem__("runs", x["runs"][:11] + [x["runs"][0]]),
+            lambda x: x["cells"]["text/1"]["cpu"]["d"].__setitem__(3, float("nan")),
+        ):
             w = copy.deepcopy(v)
             change(w)
             status, line = gate.gate("replicated", w, 0)
@@ -945,7 +1248,9 @@ class Replicated(unittest.TestCase):
         out = Path(self.roots[0]) / "verdict"
         real = tg.ni_judge
         try:
-            tg.ni_judge = lambda root, m, head: real(root, m, head, reg=REG, check_git=False, rounds=R)
+            tg.ni_judge = lambda root, m, head: real(
+                root, m, head, reg=REG, check_git=False, rounds=R
+            )
             real_rep = tg.replicated
             tg.replicated = lambda ds, head: real_rep(ds, head, rounds=R)
             code = tg.main(["replicated", *pairs, "--head", HEAD, "--out", str(out)])
@@ -956,18 +1261,31 @@ class Replicated(unittest.TestCase):
         self.assertEqual(code11, 2)
         v = json.loads(Path(str(out) + ".json").read_text())
         import tg_ni_gate as gate
+
         self.assertEqual(gate.gate("replicated", v, code)[0], 0)
 
     def flagged_programme(self, base=0, first=0.0, extra=lambda j: {}):
         """A programme whose runs/2 wall is 0.8% slower in every dispatch (flagged), dispatches
         hourly from `first` seconds, run ids from RUN + base"""
-        return self.programme(per=lambda j: dict({
-            "run": RUN + base + j, "start": first + 3600.0 * j,
-            "runs": [{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=base + j)}]}, **extra(j)))
+        return self.programme(
+            per=lambda j: dict(
+                {
+                    "run": RUN + base + j,
+                    "start": first + 3600.0 * j,
+                    "runs": [
+                        {"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=base + j)}
+                    ],
+                },
+                **extra(j),
+            )
+        )
 
     def test_harm_confirmation(self):
-        primary = self.flagged_programme(extra=lambda j: {
-            "text": [{"rows": shard_rows("text", {(1, "wall"): 1.008}, sd=0.001, seed=j)}]})
+        primary = self.flagged_programme(
+            extra=lambda j: {
+                "text": [{"rows": shard_rows("text", {(1, "wall"): 1.008}, sd=0.001, seed=j)}]
+            }
+        )
         confirmation = self.flagged_programme(base=100, first=3600.0 * K)
         c = tg.confirm(primary, confirmation, HEAD, rounds=R)
         self.assertTrue(c["valid"], c["problems"])
@@ -992,20 +1310,51 @@ class Replicated(unittest.TestCase):
             "twelve copies of one run each": ([primary[0]] * K, [confirmation[0]] * K),
             "single-run programmes": (primary[:1], confirmation[:1]),
             # (and the rest)
-            "a run id shared between the programmes": (primary, confirmation[:11] + [dict(confirmation[11], run=primary[3]["run"])]),
-            "another base in one dispatch": (primary, confirmation[:11] + [dict(confirmation[11], settings=dict(
-                confirmation[11]["settings"], base="0" * 40))]),
-            "another toolchain in one dispatch": (primary[:11] + [dict(primary[11], settings=dict(
-                primary[11]["settings"], ni_rustc="rustc 0.0.0"))], confirmation),
-            "settings missing": (primary, confirmation[:11] + [{k: v for k, v in confirmation[11].items() if k != "settings"}]),
+            "a run id shared between the programmes": (
+                primary,
+                confirmation[:11] + [dict(confirmation[11], run=primary[3]["run"])],
+            ),
+            "another base in one dispatch": (
+                primary,
+                confirmation[:11]
+                + [
+                    dict(
+                        confirmation[11], settings=dict(confirmation[11]["settings"], base="0" * 40)
+                    )
+                ],
+            ),
+            "another toolchain in one dispatch": (
+                primary[:11]
+                + [
+                    dict(
+                        primary[11], settings=dict(primary[11]["settings"], ni_rustc="rustc 0.0.0")
+                    )
+                ],
+                confirmation,
+            ),
+            "settings missing": (
+                primary,
+                confirmation[:11]
+                + [{k: v for k, v in confirmation[11].items() if k != "settings"}],
+            ),
             "another R": (primary, confirmation[:11] + [dict(confirmation[11], rounds=R + 4)]),
             "another head": (primary, [dict(d, head="0" * 40) for d in confirmation]),
-            "spacing broken across the boundary": (primary, self.flagged_programme(base=300, first=3600.0 * (K - 1) + 1800)),
+            "spacing broken across the boundary": (
+                primary,
+                self.flagged_programme(base=300, first=3600.0 * (K - 1) + 1800),
+            ),
             "started before the primary's last completed": (
-                primary[:11] + [dict(primary[11], completed=primary[11]["started"] + 7200)], confirmation),
-            "boundary times unknown": (primary, [dict(confirmation[0], started=None)] + confirmation[1:]),
-            "an INVALID confirmation dispatch": (primary, confirmation[:11] + [dict(confirmation[11], valid=False,
-                                                                                     problems=["x"])]),
+                primary[:11] + [dict(primary[11], completed=primary[11]["started"] + 7200)],
+                confirmation,
+            ),
+            "boundary times unknown": (
+                primary,
+                [dict(confirmation[0], started=None)] + confirmation[1:],
+            ),
+            "an INVALID confirmation dispatch": (
+                primary,
+                confirmation[:11] + [dict(confirmation[11], valid=False, problems=["x"])],
+            ),
             "a missing confirmation": (primary, None),
             "a malformed dispatch": (primary, confirmation[:11] + [None]),
         }
@@ -1024,25 +1373,58 @@ class Replicated(unittest.TestCase):
         def args(base, first, flag):
             out = []
             for j in range(K):
-                root, man = self.dispatch(j, run=RUN + base + j, start=first + 3600.0 * j,
-                                          runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008 if flag else 1.0},
-                                                                    sd=0.001, seed=base + j)}])
+                root, man = self.dispatch(
+                    j,
+                    run=RUN + base + j,
+                    start=first + 3600.0 * j,
+                    runs=[
+                        {
+                            "rows": shard_rows(
+                                "runs",
+                                {(2, "wall"): 1.008 if flag else 1.0},
+                                sd=0.001,
+                                seed=base + j,
+                            )
+                        }
+                    ],
+                )
                 mpath = Path(root) / "manifest.json"
                 mpath.write_text(json.dumps(man))
                 out.append((root, str(mpath)))
             return out
+
         prim, conf = args(0, 0.0, True), args(100, 3600.0 * K, False)
         out = Path(self.roots[0]) / "confirm"
         real, real_rep = tg.ni_judge, tg.replicated
         try:
-            tg.ni_judge = lambda root, m, head: real(root, m, head, reg=REG, check_git=False, rounds=R)
+            tg.ni_judge = lambda root, m, head: real(
+                root, m, head, reg=REG, check_git=False, rounds=R
+            )
             tg.replicated = lambda ds, head, **kw: real_rep(ds, head, **dict(kw, rounds=R))
             flat = lambda flag, pairs: [x for pr in pairs for x in (flag, *pr)]  # noqa: E731
-            code = tg.main(["confirm", *flat("--primary", prim), *flat("--confirmation", conf), "--head", HEAD,
-                            "--out", str(out)])
+            code = tg.main(
+                [
+                    "confirm",
+                    *flat("--primary", prim),
+                    *flat("--confirmation", conf),
+                    "--head",
+                    HEAD,
+                    "--out",
+                    str(out),
+                ]
+            )
             v = json.loads(Path(str(out) + ".json").read_text())
-            code_short = tg.main(["confirm", *flat("--primary", prim), *flat("--confirmation", conf[:1]), "--head",
-                                  HEAD, "--out", str(out) + "-short"])
+            code_short = tg.main(
+                [
+                    "confirm",
+                    *flat("--primary", prim),
+                    *flat("--confirmation", conf[:1]),
+                    "--head",
+                    HEAD,
+                    "--out",
+                    str(out) + "-short",
+                ]
+            )
         finally:
             tg.ni_judge, tg.replicated = real, real_rep
         self.assertTrue(v["valid"], v["problems"])
@@ -1051,6 +1433,7 @@ class Replicated(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(code_short, 2)
         self.assertFalse(json.loads(Path(str(out) + "-short.json").read_text())["d094_c7"]["met"])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -185,7 +185,14 @@ def test_cli_writes_both_reports(tmp_path):
     runs.write_text("".join(json.dumps(r) + "\n" for r in grid()))
     out = tmp_path / "pipelined-default"
     r = subprocess.run(
-        [sys.executable, str(HERE / "pipelined_default.py"), "report", str(runs), "--out", str(out)],
+        [
+            sys.executable,
+            str(HERE / "pipelined_default.py"),
+            "report",
+            str(runs),
+            "--out",
+            str(out),
+        ],
         capture_output=True,
         text=True,
     )
@@ -269,7 +276,14 @@ def test_broken_input_is_an_invalid_report_not_a_crash(tmp_path):
         runs.write_text(text)
         out = tmp_path / name.replace(" ", "-")
         r = subprocess.run(
-            [sys.executable, str(HERE / "pipelined_default.py"), "report", str(runs), "--out", str(out)],
+            [
+                sys.executable,
+                str(HERE / "pipelined_default.py"),
+                "report",
+                str(runs),
+                "--out",
+                str(out),
+            ],
             capture_output=True,
             text=True,
         )

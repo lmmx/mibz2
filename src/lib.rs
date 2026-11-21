@@ -80,7 +80,17 @@
 pub mod bits;
 pub mod block;
 pub mod bwt;
+// (research only: Astra's open-return decoder, compiled from its journal, with `open-return`)
+#[cfg(feature = "open-return")]
+#[doc(hidden)]
+#[path = "../docs/journal/2026-11-18-open-return/open_return.rs"]
+#[allow(clippy::too_many_arguments)]
+pub mod open_return;
+// (research only: the open-return comparison's wrappers, with `open-return`)
 mod cells;
+#[cfg(feature = "open-return")]
+#[doc(hidden)]
+pub mod open_gate;
 // (research only: the grammar replay harness, with `grammar-replay`)
 #[cfg(feature = "grammar-replay")]
 #[doc(hidden)]

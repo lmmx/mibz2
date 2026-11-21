@@ -1,0 +1,21 @@
+# The open port's registered inputs (docs/journal/2026-11-19-open-port-registration.md): each
+# input's exact compressed SHA-256, by its name. bench/open_port.py verifies the bundle's
+# inputs.sha256 against this before any timing, and again when it judges. Held-out sources: v0.5.6.
+0b820d14299af637bf7f644d172f5efe91ad59e169cf2a50bd0962f5c89ce08e  wikidata-x4.bz2
+51df857dc2e6e0288ef41aac5f8fd87578fa62a80f88cbfa14c656cc31648f43  text.bz2
+f24831b171e595ef5e93d9f3f56fd267ec3122cfa482f55cf6c73547c0af20e1  random.bz2
+943bc96221bfd7cc3f1c43c704a40aa403923292e192a81903bf553a7deb97e8  records.bz2
+0936ddcccabbeaddf9f12f01ae1352b98ea413e500cda33186d5f86ab97e87d0  runs.bz2
+22a1c845a5e768d8f8025a0bbaea0334f82a9ce77da98660bbd2c27bbcc5eb25  pattern.bz2
+254c685321443246b04ba86cc36bba49a631f4ecc2ff430d7fc85d0e688ea0ea  onebyte.bz2
+7f5c9a0044e5a30589bf343b9b31e698849b2acc69461a55c97b550193128b45  ho-wikidata-l9.bz2
+472765876103452e2dd4f112d75d2259e5685bb0e53c843e832093ece488b8d4  ho-wikidata-l1.bz2
+27b793682cb359141b5c6a99b0d221da7ab008bb1a018b1af2eaa27038dfb896  ho-prose-l1.bz2
+9f4cef4eded60ff855c537295246ad4038b0ab870cb52c8da3652203cd01318e  ho-prose-l9.bz2
+cb59b3a73d16fca6f6c9304c4fdc677fa5b939137d539613453cc6e1f91c547b  ho-code-l1.bz2
+87e13742686467e7d6d5c8dc3f2d77825d9818c02b367d9223f4d7e4fc2efc0a  ho-code-l9.bz2
+76b1653c7b1bc9ade26b822893db0d3ef2b22056c72d7e07fbeefea73f7e8fc9  ho-structured-l1.bz2
+f076da12abb4e9ce687a115a03924198143b7d896c3dd3cdc041884101cab61d  ho-structured-l9.bz2
+1aeac0d469a85ae21de32e97cddcae6a6f1b29ed950526bc664491c372dbf422  wikidata-x16.bz2
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  wikidata.bz2
+7f5c9a0044e5a30589bf343b9b31e698849b2acc69461a55c97b550193128b45  wikidata-heldout.bz2

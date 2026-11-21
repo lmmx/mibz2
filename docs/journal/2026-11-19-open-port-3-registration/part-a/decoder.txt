@@ -1,0 +1,129 @@
+The decoder's own functions (the mibz2 crate, its worker monomorph included): the port's mean over v0.5.6's, per cell
+cell                    Ir      I1mr      D1mr      D1mw       Bcm      CEst
+ho-code-l1 t10    0.999963    0.9199    0.9999    1.0010    0.9960    1.0006 (same-binary range 0.0048)
+ho-code-l1 t20    1.000058    1.0085    0.9999    0.9989    0.9958    1.0000 (same-binary range 0.0072)
+ho-code-l1 t8     1.000073    0.9856    1.0000    1.0012    0.9967    1.0007 (same-binary range 0.0023)
+ho-code-l1 w7     1.000690    1.0905    1.0010    0.9984    0.9976    0.9985 (same-binary range 0.0048)
+ho-code-l9 t10    1.000076    1.0580    0.9998    0.9829    1.0004    1.0035 (same-binary range 0.0274)
+ho-code-l9 t20    0.999970    0.9661    0.9997    0.9823    1.0003    0.9917 (same-binary range 0.0257)
+ho-code-l9 t8     1.000021    0.9561    0.9997    0.9829    1.0003    0.9993 (same-binary range 0.0207)
+ho-code-l9 w7     0.999970    0.9884    0.9997    0.9829    1.0002    0.9981 (same-binary range 0.0112)
+ho-prose-l9 t10   1.000021    1.0002    1.0001    1.0049    0.9917    1.0015 (same-binary range 0.0070)
+ho-prose-l9 t20   1.000000    1.0142    1.0001    1.0044    0.9931    0.9994 (same-binary range 0.0122)
+ho-prose-l9 t8    1.000031    0.9815    1.0001    1.0057    0.9899    1.0005 (same-binary range 0.0040)
+ho-prose-l9 w7    1.000044    1.0123    1.0001    1.0053    0.9963    0.9985 (same-binary range 0.0066)
+onebyte t10       1.000017    1.0100    1.0000    1.0044    1.0013    0.9874 (same-binary range 0.1307)
+onebyte t20       1.000035    1.1024    1.0001    1.0053    1.0011    0.9861 (same-binary range 0.2869)
+onebyte t8        1.000014    1.0806    1.0001    1.0045    1.0014    0.9739 (same-binary range 0.1279)
+onebyte w7        1.000012    1.0745    1.0000    1.0043    1.0010    1.0001 (same-binary range 0.0002)
+pattern t10       1.000014    1.0094    1.0000    1.0037    1.0007    1.0002 (same-binary range 0.0002)
+pattern t20       0.999987    0.9913    0.9993    1.0037    1.0007    0.9965 (same-binary range 0.0128)
+pattern t8        1.000009    1.0388    0.9998    1.0037    1.0008    1.0002 (same-binary range 0.0001)
+pattern w7        1.000002    1.0036    0.9999    1.0037    1.0007    1.0002 (same-binary range 0.0002)
+random t10        0.999999    0.9790    1.0003    1.0198    0.9946    0.9996 (same-binary range 0.0014)
+random t20        1.000001    1.0082    1.0002    1.0198    0.9936    0.9993 (same-binary range 0.0023)
+random t8         1.000002    0.9969    1.0002    1.0199    0.9966    0.9989 (same-binary range 0.0012)
+random w7         1.000001    0.9717    1.0002    1.0198    0.9956    1.0000 (same-binary range 0.0011)
+records t10       1.000000    0.9860    1.0006    1.0229    0.9952    1.0002 (same-binary range 0.0011)
+records t20       0.999999    0.9752    1.0005    1.0228    0.9945    0.9999 (same-binary range 0.0012)
+records t8        1.000002    0.9918    1.0006    1.0231    0.9923    0.9998 (same-binary range 0.0013)
+records w7        0.999998    0.9942    1.0006    1.0231    0.9921    1.0001 (same-binary range 0.0014)
+runs t10          1.000017    1.0243    0.9998    0.9779    1.0008    1.0390 (same-binary range 0.0980)
+runs t20          1.000034    1.0037    0.9998    0.9790    1.0003    1.0815 (same-binary range 0.4078)
+runs t8           1.000014    1.0161    0.9998    0.9779    1.0007    0.9998 (same-binary range 0.0001)
+runs w7           1.000012    0.9706    0.9998    0.9777    1.0006    0.9998 (same-binary range 0.0001)
+text t10          1.000002    0.9468    0.9998    0.9834    1.0002    0.9992 (same-binary range 0.0023)
+text t20          0.999999    1.0401    0.9998    0.9829    1.0003    0.9984 (same-binary range 0.0042)
+text t8           1.000009    0.9854    0.9998    0.9837    1.0003    0.9993 (same-binary range 0.0021)
+text w7           1.000001    1.0281    0.9998    0.9838    1.0003    0.9985 (same-binary range 0.0024)
+decoder Ir: x0.999963 to x1.000690 over 36 cells
+decoder CEst, cells whose same-binary range is under 1% (25 of 36): x0.9984 to x1.0015
+
+Decoder events beyond their same-binary range and 0.5%:
+  ho-code-l1 t10   DLmr           226 ->          228  +0.0097  (range 2)  <alloc::collections::btree::map::BTreeMap<u64, core::result:
+  ho-code-l1 t20   DLmr           235 ->          243  +0.0323  (range 4)  <alloc::collections::btree::map::BTreeMap<u64, core::result:
+  ho-code-l1 w7    Bi          527470 ->       541275  +0.0262  (range 8381)  mibz2::bwt::room_segments::<32, 1, false>
+  ho-code-l9 t10   ILmr           904 ->          920  +0.0179  (range 7)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  ho-code-l9 t10   D1mw       1304856 ->      1282496  -0.0171  (range 430)  mibz2::bwt::room_segments::<32, 1, true>
+  ho-code-l9 t10   DLmr           170 ->          179  +0.0553  (range 1)  <alloc::collections::btree::map::BTreeMap<u64, core::result:
+  ho-code-l9 t10   Bim            149 ->          166  +0.1139  (range 9)  
+  ho-code-l9 t20   ILmr           834 ->          853  +0.0225  (range 6)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  ho-code-l9 t20   D1mw       1305673 ->      1282571  -0.0177  (range 741)  mibz2::bwt::room_segments::<32, 1, true>
+  ho-code-l9 t20   DLmr           180 ->          190  +0.0590  (range 1)  <alloc::collections::btree::map::BTreeMap<u64, core::result:
+  ho-code-l9 t20   Bim            135 ->          147  +0.0857  (range 9)  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::
+  ho-code-l9 t8    ILmr           905 ->          920  +0.0170  (range 3)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  ho-code-l9 t8    D1mw       1305135 ->      1282862  -0.0171  (range 664)  mibz2::bwt::room_segments::<32, 1, true>
+  ho-code-l9 t8    DLmr           168 ->          176  +0.0464  (range 1)  <alloc::collections::btree::map::BTreeMap<u64, core::result:
+  ho-code-l9 t8    Bim            145 ->          160  +0.1062  (range 10)  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::
+  ho-code-l9 w7    ILmr           730 ->          750  +0.0274  (range 2)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  ho-code-l9 w7    D1mw       1304995 ->      1282705  -0.0171  (range 997)  mibz2::bwt::room_segments::<32, 1, true>
+  ho-code-l9 w7    DLmr           166 ->          173  +0.0422  (range 0)  <alloc::collections::btree::map::BTreeMap<u64, core::result:
+  ho-code-l9 w7    Bim            111 ->          128  +0.1562  (range 12)  
+  ho-prose-l9 t10  ILmr          1071 ->         1088  +0.0163  (range 2)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  ho-prose-l9 t10  Bcm        7623704 ->      7560226  -0.0083  (range 39708)  mibz2::bwt::build
+  ho-prose-l9 t20  ILmr           999 ->         1020  +0.0206  (range 4)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  ho-prose-l9 t8   ILmr          1069 ->         1087  +0.0172  (range 3)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  ho-prose-l9 t8   D1mw       3622287 ->      3642955  +0.0057  (range 2034)  mibz2::bwt::room_segments::<32, 1, false>
+  ho-prose-l9 w7   ILmr           895 ->          918  +0.0257  (range 0)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  ho-prose-l9 w7   D1mw       3622196 ->      3641318  +0.0053  (range 1344)  mibz2::bwt::room_segments::<32, 1, false>
+  ho-prose-l9 w7   Bim            184 ->          201  +0.0886  (range 10)  
+  onebyte t10      ILmr           832 ->          843  +0.0130  (range 4)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  onebyte t10      Bim            131 ->          126  -0.0337  (range 3)  
+  onebyte t20      I1mr          1355 ->         1494  +0.1024  (range 113)  
+  onebyte t20      ILmr           763 ->          777  +0.0183  (range 0)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  onebyte t20      D1mw        139462 ->       140194  +0.0053  (range 88)  mibz2::bwt::room_segments::<32, 1, true>
+  onebyte t20      Bim            116 ->          112  -0.0277  (range 3)  
+  onebyte t8       ILmr           832 ->          843  +0.0132  (range 4)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  onebyte w7       ILmr           657 ->          674  +0.0259  (range 0)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  onebyte w7       Bim             93 ->           91  -0.0251  (range 2)  
+  pattern t10      DLmr           149 ->          159  +0.0616  (range 2)  <alloc::collections::btree::map::BTreeMap<u64, core::result:
+  pattern t10      Bim            223 ->          291  +0.3047  (range 55)  
+  pattern t20      ILmr           833 ->          851  +0.0211  (range 6)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  pattern t8       ILmr           898 ->          915  +0.0185  (range 15)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  pattern t8       DLmr           150 ->          157  +0.0412  (range 5)  <alloc::collections::btree::map::BTreeMap<u64, core::result:
+  pattern t8       Bim            220 ->          326  +0.4805  (range 26)  
+  pattern w7       ILmr           723 ->          746  +0.0327  (range 4)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  pattern w7       DLmr           154 ->          161  +0.0456  (range 1)  <alloc::collections::btree::map::BTreeMap<u64, core::result:
+  pattern w7       Bim            187 ->          291  +0.5589  (range 14)  
+  random t10       ILmr           835 ->          849  +0.0165  (range 4)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  random t10       D1mw       5173198 ->      5275837  +0.0198  (range 1037)  mibz2::bwt::room_segments::<32, 1, false>
+  random t20       ILmr           764 ->          781  +0.0222  (range 5)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  random t20       D1mw       5172745 ->      5274930  +0.0198  (range 1331)  mibz2::bwt::room_segments::<32, 1, false>
+  random t8        ILmr           834 ->          848  +0.0168  (range 6)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  random t8        D1mw       5173879 ->      5276855  +0.0199  (range 1188)  mibz2::bwt::room_segments::<32, 1, false>
+  random w7        ILmr           658 ->          677  +0.0284  (range 5)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  random w7        D1mw       5173836 ->      5276442  +0.0198  (range 778)  mibz2::bwt::room_segments::<32, 1, false>
+  random w7        Bim            206 ->          194  -0.0582  (range 7)  
+  records t10      ILmr           833 ->          846  +0.0146  (range 7)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  records t10      D1mw       5839682 ->      5973215  +0.0229  (range 2617)  mibz2::bwt::room_segments::<32, 1, false>
+  records t20      ILmr           763 ->          778  +0.0191  (range 5)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  records t20      D1mw       5837985 ->      5970865  +0.0228  (range 1688)  mibz2::bwt::room_segments::<32, 1, false>
+  records t8       ILmr           831 ->          843  +0.0152  (range 7)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  records t8       D1mw       5840036 ->      5974841  +0.0231  (range 1848)  mibz2::bwt::room_segments::<32, 1, false>
+  records t8       Bcm       18754334 ->     18610314  -0.0077  (range 114901)  mibz2::bwt::build
+  records w7       ILmr           657 ->          672  +0.0234  (range 4)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  records w7       D1mw       5840341 ->      5975406  +0.0231  (range 1486)  mibz2::bwt::room_segments::<32, 1, false>
+  records w7       Bim            226 ->          209  -0.0739  (range 8)  
+  runs t10         ILmr           902 ->          911  +0.0104  (range 4)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  runs t10         D1mw        128444 ->       125607  -0.0221  (range 97)  mibz2::bwt::room_segments::<32, 1, true>
+  runs t10         Bim            134 ->          127  -0.0464  (range 3)  
+  runs t20         ILmr           832 ->          846  +0.0168  (range 0)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  runs t20         D1mw        128640 ->       125937  -0.0210  (range 40)  mibz2::bwt::room_segments::<32, 1, true>
+  runs t8          ILmr           901 ->          912  +0.0124  (range 4)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  runs t8          D1mw        128406 ->       125562  -0.0221  (range 137)  mibz2::bwt::room_segments::<32, 1, true>
+  runs t8          Bim            128 ->          123  -0.0360  (range 2)  
+  runs w7          ILmr           726 ->          743  +0.0234  (range 0)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  runs w7          D1mw        128365 ->       125508  -0.0223  (range 72)  mibz2::bwt::room_segments::<32, 1, true>
+  runs w7          Bim             95 ->           90  -0.0493  (range 1)  
+  text t10         ILmr           910 ->          924  +0.0152  (range 2)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  text t10         D1mw       5790582 ->      5694568  -0.0166  (range 1717)  mibz2::bwt::room_segments::<32, 1, true>
+  text t10         Bim            209 ->          262  +0.2536  (range 14)  
+  text t20         ILmr           840 ->          857  +0.0205  (range 1)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  text t20         D1mw       5793615 ->      5694462  -0.0171  (range 1420)  mibz2::bwt::room_segments::<32, 1, true>
+  text t20         Bim            201 ->          259  +0.2898  (range 22)  
+  text t8          ILmr           909 ->          924  +0.0161  (range 2)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  text t8          D1mw       5789580 ->      5695141  -0.0163  (range 1627)  mibz2::bwt::room_segments::<32, 1, true>
+  text t8          Bim            199 ->          252  +0.2696  (range 34)  
+  text w7          ILmr           734 ->          754  +0.0272  (range 0)  <mibz2::Scratch<KERNEL> as core::default::Default>::default
+  text w7          D1mw       5788712 ->      5694960  -0.0162  (range 1580)  mibz2::bwt::room_segments::<32, 1, true>
+  text w7          Bim            165 ->          222  +0.3455  (range 8)  

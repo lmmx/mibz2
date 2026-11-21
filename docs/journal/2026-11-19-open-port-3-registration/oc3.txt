@@ -1,0 +1,18 @@
+[own residuals]
+  B2 at 48 rounds, no effect: some cell fails 0.1461 (the point bound alone 0.0401)
+  B2, one cell alone at +3%: that cell fails ho-wikidata-l1 8t 1.000, ho-structured-l1 8t 1.000, ho-structured-l9 8t 0.986, ho-prose-l1 8t 0.939, ho-wikidata-l1 10t 1.000, ho-structured-l1 10t 0.994, ho-structured-l9 10t 0.970, ho-prose-l1 10t 0.824, ho-wikidata-l1 20t 0.998, ho-structured-l1 20t 0.983, ho-structured-l9 20t 1.000, ho-prose-l1 20t 0.910 (min 0.824, median 0.990)
+  B2, one cell alone at +5%: that cell fails ho-wikidata-l1 8t 1.000, ho-structured-l1 8t 1.000, ho-structured-l9 8t 1.000, ho-prose-l1 8t 1.000, ho-wikidata-l1 10t 1.000, ho-structured-l1 10t 1.000, ho-structured-l9 10t 1.000, ho-prose-l1 10t 0.998, ho-wikidata-l1 20t 1.000, ho-structured-l1 20t 1.000, ho-structured-l9 20t 1.000, ho-prose-l1 20t 1.000 (min 0.998, median 1.000)
+  B4 at 16 rounds (sd 0.0325): no effect fails 0.0928; +2% 0.645; +3% 0.904
+  overall false NOT ADOPTED under no effect: 1 - (1-0.015)(1-0.035)(1-0.1461)(1-0.0928) = 0.264
+[part residuals]
+  B2 at 48 rounds, no effect: some cell fails 0.0339 (the point bound alone 0.0062)
+  B2, one cell alone at +3%: that cell fails ho-wikidata-l1 8t 0.987, ho-structured-l1 8t 0.988, ho-structured-l9 8t 0.988, ho-prose-l1 8t 0.988, ho-wikidata-l1 10t 0.988, ho-structured-l1 10t 0.988, ho-structured-l9 10t 0.988, ho-prose-l1 10t 0.987, ho-wikidata-l1 20t 0.987, ho-structured-l1 20t 0.987, ho-structured-l9 20t 0.987, ho-prose-l1 20t 0.987 (min 0.987, median 0.987)
+  B2, one cell alone at +5%: that cell fails ho-wikidata-l1 8t 1.000, ho-structured-l1 8t 1.000, ho-structured-l9 8t 1.000, ho-prose-l1 8t 1.000, ho-wikidata-l1 10t 1.000, ho-structured-l1 10t 1.000, ho-structured-l9 10t 1.000, ho-prose-l1 10t 1.000, ho-wikidata-l1 20t 1.000, ho-structured-l1 20t 1.000, ho-structured-l9 20t 1.000, ho-prose-l1 20t 1.000 (min 1.000, median 1.000)
+  B4 at 16 rounds (sd 0.0406): no effect fails 0.0364; +2% 0.568; +3% 0.864
+  overall false NOT ADOPTED under no effect: 1 - (1-0.017)(1-0.0)(1-0.0339)(1-0.0364) = 0.085
+[normal residuals]
+  B2 at 48 rounds, no effect: some cell fails 0.0816 (the point bound alone 0.0469)
+  B2, one cell alone at +3%: that cell fails ho-wikidata-l1 8t 1.000, ho-structured-l1 8t 0.996, ho-structured-l9 8t 0.975, ho-prose-l1 8t 0.937, ho-wikidata-l1 10t 1.000, ho-structured-l1 10t 0.930, ho-structured-l9 10t 0.976, ho-prose-l1 10t 0.818, ho-wikidata-l1 20t 1.000, ho-structured-l1 20t 0.998, ho-structured-l9 20t 1.000, ho-prose-l1 20t 0.903 (min 0.818, median 0.986)
+  B2, one cell alone at +5%: that cell fails ho-wikidata-l1 8t 1.000, ho-structured-l1 8t 1.000, ho-structured-l9 8t 1.000, ho-prose-l1 8t 1.000, ho-wikidata-l1 10t 1.000, ho-structured-l1 10t 1.000, ho-structured-l9 10t 1.000, ho-prose-l1 10t 0.996, ho-wikidata-l1 20t 1.000, ho-structured-l1 20t 1.000, ho-structured-l9 20t 1.000, ho-prose-l1 20t 1.000 (min 0.996, median 1.000)
+  B4 at 16 rounds (sd 0.0325): no effect fails 0.0249; +2% 0.644; +3% 0.936
+  overall false NOT ADOPTED under no effect: 1 - (1-0.017)(1-0.0)(1-0.0816)(1-0.0249) = 0.120

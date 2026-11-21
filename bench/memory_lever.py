@@ -7,6 +7,7 @@ rule's other cases are `ab summary`'s; this adds nothing to them.
 
     memory_lever.py RUNS.jsonl [HIGH [LOW]]     (thread counts; default 10 and 4)
 """
+
 import json
 import math
 import sys
@@ -47,7 +48,9 @@ def main(argv):
         print(f"\n{arm} over {REF}, wall, round by round")
         print(f"  round  at {high} threads  at {low} threads  {high} below {low}")
         for i, at_high, at_low in rows:
-            print(f"  {i:5d}  {at_high:13.4f}  {at_low:12.4f}  {'yes' if at_high < at_low else 'no'}")
+            print(
+                f"  {i:5d}  {at_high:13.4f}  {at_low:12.4f}  {'yes' if at_high < at_low else 'no'}"
+            )
         if not rows:
             print("  no round has all four readings")
             status = 1
@@ -62,7 +65,9 @@ def main(argv):
             f"  geometric means: {geo([h for _, h, _ in rows]):.4f} at {high}, "
             f"{geo([l for _, _, l in rows]):.4f} at {low}"
         )
-        print(f"  the ratio at {high} threads is below the ratio at {low} in {below} of {n} rounds (sign test p = {p:.4f})")
+        print(
+            f"  the ratio at {high} threads is below the ratio at {low} in {below} of {n} rounds (sign test p = {p:.4f})"
+        )
         met = n == 10 and below >= 9
         print(f"  case 3's count (at least 9 of 10 rounds): {'met' if met else 'not met'}")
     return status
