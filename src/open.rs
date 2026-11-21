@@ -77,12 +77,12 @@ pub struct Kernel {
     offsets: Vec<u32>,
     edges: Vec<u32>,
     extra: Vec<u32>,
+    inline16: Vec<[u8; INLINE]>,
+    lens: Vec<u8>,
 }
 
 // Production records cap a run at 127. Selection is on maximal runs.
-// A primary inside a thick strip is a retained singleton. The two fragments
-// keep the classification of their parent even if they are short.
-fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, u32, bool)) {
+fn maximal(records: &[u16], mut visit: impl FnMut(u8, u32, u32)) {
     let mut pos = 0;
     let mut i = 0;
     while i < records.len() {
@@ -94,20 +94,164 @@ fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, 
             width += u32::from(records[i] & 255);
             i += 1;
         }
-        let end = pos + width;
-        if width > limit && (pos..end).contains(&p) {
-            if pos < p {
-                visit(c, pos, p - pos, false);
-            }
-            visit(c, p, 1, true);
-            if p + 1 < end {
-                visit(c, p + 1, end - p - 1, false);
-            }
-        } else {
-            visit(c, pos, width, width <= limit);
-        }
-        pos = end;
+        visit(c, pos, width);
+        pos += width;
     }
+}
+
+// A maximal run of `width` rows from `pos`, classified: thin (kept) or thick. A primary inside
+// a thick strip is a retained singleton. The two fragments keep the classification of their
+// parent even if they are short.
+#[inline(always)]
+fn split(
+    c: u8,
+    pos: u32,
+    width: u32,
+    p: u32,
+    limit: u32,
+    mut visit: impl FnMut(u8, u32, u32, bool),
+) {
+    let end = pos + width;
+    if width > limit && (pos..end).contains(&p) {
+        if pos < p {
+            visit(c, pos, p - pos, false);
+        }
+        visit(c, p, 1, true);
+        if p + 1 < end {
+            visit(c, p + 1, end - p - 1, false);
+        }
+    } else {
+        visit(c, pos, width, width <= limit);
+    }
+}
+
+fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, u32, bool)) {
+    maximal(records, |c, pos, width| {
+        split(c, pos, width, p, limit, &mut visit)
+    });
+}
+
+/// The first pass over a block's runs: the queues and the thick strips it writes, and its
+/// counts
+struct Pass<'a> {
+    queues: &'a mut [Vec<u32>; 256],
+    strips: &'a mut Vec<Strip>,
+    f: First,
+}
+
+impl Pass<'_> {
+    /// The first pass on one maximal run of `width` rows of byte `c` from row `pos`: its thin
+    /// rows queued (their ranks, as retained rows), its thick strips listed. (`split`'s cases
+    /// written out, so that the common two inline into the walk over the records with no call.)
+    #[inline(always)]
+    fn take<const QUEUE: bool>(&mut self, c: u8, pos: u32, width: u32, p: u32, limit: u32) {
+        self.f.runs += 1;
+        if width <= limit {
+            self.piece::<QUEUE>(c, pos, width, true, p);
+            return;
+        }
+        if p.wrapping_sub(pos) >= width {
+            self.piece::<QUEUE>(c, pos, width, false, p);
+        } else {
+            self.take_marked::<QUEUE>(c, pos, width, p, limit);
+        }
+    }
+
+    /// `take` on the thick run holding the marked row
+    #[cold]
+    #[inline(never)]
+    fn take_marked<const QUEUE: bool>(&mut self, c: u8, pos: u32, width: u32, p: u32, limit: u32) {
+        split(c, pos, width, p, limit, |c, x, w, keep| {
+            self.piece::<QUEUE>(c, x, w, keep, p)
+        });
+    }
+
+    /// One piece of a run: retained (`keep`) or a thick strip
+    #[inline(always)]
+    fn piece<const QUEUE: bool>(&mut self, c: u8, x: u32, w: u32, keep: bool, p: u32) {
+        let a = usize::from(c);
+        let f = &mut self.f;
+        if keep {
+            if p.wrapping_sub(x) < w {
+                f.mark = f.m + (p - x);
+            }
+            if QUEUE {
+                push_rows(&mut self.queues[a], f.thin[a], f.m, w);
+            }
+            f.thin[a] += w;
+            f.m += w;
+        } else {
+            self.strips.push(Strip {
+                from: x,
+                to: f.all[a],
+                width: w,
+                byte: c,
+            });
+            f.thick[a] += 1;
+        }
+        f.all[a] += w;
+    }
+}
+
+/// The construction's first pass as it goes, run by run: each byte's rows, retained rows and
+/// thick strips, the retained rows so far, the marked row's rank, and the maximal runs
+#[derive(Clone, Copy)]
+struct First {
+    all: [u32; 256],
+    thin: [u32; 256],
+    thick: [u32; 256],
+    m: u32,
+    mark: u32,
+    runs: usize,
+}
+
+impl Default for First {
+    fn default() -> Self {
+        First {
+            all: [0; 256],
+            thin: [0; 256],
+            thick: [0; 256],
+            m: 0,
+            mark: 0,
+            runs: 0,
+        }
+    }
+}
+
+/// Append the `w` rows from `m` to a queue of `len` rows. A thin run has at most `LIMIT` = 16
+/// rows, so the queue takes a fixed block of 16 (an iota from `m`) and keeps the first `w`: no
+/// loop whose trip count is the run's width, whose exit mispredicts on blocks of 48k-126k short
+/// runs (Carbon cycle 2's `U16Q`, `docs/journal/2026-11-20-carbon-cycle2-bvsmc.md` §2.4).
+///
+/// The queue's buffer is kept at its full length, its rows past `len` stale or zero, and its
+/// length is the caller's (`First::thin`, its byte's retained rows), so a run is one bounds
+/// check and two 32-byte stores with no length written back to the heap (Carbon Kitchen Sink
+/// cycle 3's `Vec16` queue: a cursor per byte, `q_cur[c] += w`). The rows past `w` land in the
+/// spare rows and are overwritten by the next run. A wider run (a limit above 16, in the tests)
+/// is written row by row.
+#[inline(always)]
+fn push_rows(queue: &mut Vec<u32>, len: u32, m: u32, w: u32) {
+    const BLOCK: usize = 16;
+    let at = len as usize;
+    let need = at + BLOCK.max(w as usize);
+    if queue.len() < need {
+        grow(queue, need);
+    }
+    if w as usize <= BLOCK {
+        let iota: [u32; BLOCK] = std::array::from_fn(|i| m.wrapping_add(i as u32));
+        queue[at..at + BLOCK].copy_from_slice(&iota);
+    } else {
+        for (i, q) in queue[at..at + w as usize].iter_mut().enumerate() {
+            *q = m + i as u32;
+        }
+    }
+}
+
+/// A queue's buffer to `need` rows at least: doubled, from 1024 rows
+#[cold]
+#[inline(never)]
+fn grow(queue: &mut Vec<u32>, need: usize) {
+    queue.resize(need.max(2 * queue.len()).max(1024), 0);
 }
 
 fn starts(counts: [u32; 256]) -> [u32; 256] {
@@ -168,6 +312,18 @@ impl Kernel {
         }
     }
 
+    /// The first pass's state, emptied for a block. (The queues keep their buffers and stale
+    /// rows: a queue's length is its byte's `First::thin`.)
+    fn begin(&mut self) -> Pass<'_> {
+        self.strips.clear();
+        self.queues.resize_with(256, Vec::new);
+        Pass {
+            queues: (&mut self.queues[..]).try_into().expect("256 queues"),
+            strips: &mut self.strips,
+            f: First::default(),
+        }
+    }
+
     fn construct<const INDUCE: bool, const QUEUE: bool>(
         &mut self,
         records: &[u16],
@@ -175,47 +331,36 @@ impl Kernel {
         p: u32,
         limit: u32,
     ) -> (Counts, u32, u32) {
+        let mut pass = self.begin();
+        maximal(records, |c, pos, width| {
+            pass.take::<QUEUE>(c, pos, width, p, limit)
+        });
+        let f = pass.f;
+        self.finish::<INDUCE, QUEUE>(&f, records, n, p, limit)
+    }
+
+    /// The construction after its first pass `f` (`records` read again only without `QUEUE`)
+    fn finish<const INDUCE: bool, const QUEUE: bool>(
+        &mut self,
+        f: &First,
+        records: &[u16],
+        n: u32,
+        p: u32,
+        limit: u32,
+    ) -> (Counts, u32, u32) {
+        let First {
+            all,
+            thin,
+            thick,
+            m,
+            mark,
+            runs,
+        } = *f;
         let mut stats = Counts {
             n: n as usize,
+            runs,
             ..Counts::default()
         };
-        let mut all = [0; 256];
-        let mut thin = [0; 256];
-        let mut thick = [0; 256];
-        let mut m = 0;
-        let mut mark = 0;
-        self.strips.clear();
-        if QUEUE {
-            self.queues.resize_with(256, Vec::new);
-            for q in &mut self.queues {
-                q.clear();
-            }
-        }
-        let mut last = None;
-        each_run(records, p, limit, |c, x, w, keep| {
-            stats.runs += usize::from(last != Some(c));
-            last = Some(c);
-            let a = usize::from(c);
-            if keep {
-                if (x..x + w).contains(&p) {
-                    mark = m + (p - x);
-                }
-                if QUEUE {
-                    self.queues[a].extend(m..m + w);
-                }
-                thin[a] += w;
-                m += w;
-            } else {
-                self.strips.push(Strip {
-                    from: x,
-                    to: all[a],
-                    width: w,
-                    byte: c,
-                });
-                thick[a] += 1;
-            }
-            all[a] += w;
-        });
         assert!(m > 0 && all.iter().sum::<u32>() == n);
         stats.retained = m as usize;
         stats.thick = self.strips.len();
@@ -358,17 +503,30 @@ impl Kernel {
     ) -> Counts {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
         let (stats, mark, bits) = self.construct::<INDUCE, QUEUE>(records, n as u32, p, limit);
+        self.walk(n, mark, bits, out);
+        stats
+    }
+
+    /// The words inlined and the walk from the marked row: the block's bytes into `out`
+    fn walk(&mut self, n: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
+        inline_words(
+            &self.spelling,
+            &self.offsets,
+            &mut self.inline16,
+            &mut self.lens,
+        );
         emit(
             &self.edges,
             &self.extra,
             &self.spelling,
             &self.offsets,
+            &self.inline16,
+            &self.lens,
             n,
             mark,
             bits,
             out,
         );
-        stats
     }
 }
 
@@ -445,10 +603,105 @@ impl<const FORCED: bool> InverseBwt for OpenCellsOf<FORCED> {
     }
 }
 
+/// The bytes of a code's word kept inline, and the longest word kept whole there
+const INLINE: usize = 16;
+/// `lens` of a word longer than `INLINE`: its bytes are read from `spelling` (the cold path)
+const LONG: u8 = u8::MAX;
+
+/// Every code's word as 16 bytes, its first `INLINE` padded with zeros, and its length (`LONG`
+/// past 16), indexed by code: the literals 0..256, then the block's words from 256. The
+/// literals are written once, when the table is first made; the words, once a block.
+fn inline_words(
+    spelling: &[u8],
+    offsets: &[u32],
+    inline16: &mut Vec<[u8; INLINE]>,
+    lens: &mut Vec<u8>,
+) {
+    if inline16.len() < 256 {
+        inline16.clear();
+        inline16.extend((0..=255u8).map(|c| {
+            let mut v = [0; INLINE];
+            v[0] = c;
+            v
+        }));
+        lens.clear();
+        lens.resize(256, 1);
+    }
+    inline16.truncate(256);
+    lens.truncate(256);
+    for w in offsets.windows(2) {
+        let word = &spelling[w[0] as usize..w[1] as usize];
+        let mut v = [0; INLINE];
+        let head = word.len().min(INLINE);
+        v[..head].copy_from_slice(&word[..head]);
+        inline16.push(v);
+        lens.push(if word.len() <= INLINE {
+            word.len() as u8
+        } else {
+            LONG
+        });
+    }
+}
+
 /// The walk over the retained rows from the marked one, each row's word appended; a cycle
-/// shorter than the block is repeated to `n` bytes (the journal's code, unchanged)
+/// shorter than the block is repeated to `n` bytes (the journal's code, with Carbon cycle 2's
+/// `U16` emit). A word of at most 16 bytes is one unconditional 16-byte copy from `inline16`
+/// at the cursor, which then advances by the word's length; a longer one is a slice copy from
+/// `spelling`. `out` is sized `n + 16` for the copies' overrun and truncated at the end. Its
+/// bytes from an earlier block are not cleared: every byte kept is written first.
 #[allow(clippy::too_many_arguments)]
 fn emit(
+    edges: &[u32],
+    extra: &[u32],
+    spelling: &[u8],
+    offsets: &[u32],
+    inline16: &[[u8; INLINE]],
+    lens: &[u8],
+    n: usize,
+    mark: u32,
+    bits: u32,
+    out: &mut Vec<u8>,
+) {
+    out.resize(n + INLINE, 0);
+    let mut at = 0;
+    let mask = (1 << bits) - 1;
+    let mut j = mark;
+    // (the port's one change to the walk) the cycle through the marked row visits each retained
+    // row once at most, so a valid construction returns to it within `edges.len()` steps; the
+    // bound and the clamp to `n` make every walk end, whatever the construction: a wrong one
+    // gives a wrong block, which the block's CRC rejects, never a walk that grows without end
+    for _ in 0..edges.len() {
+        let edge = edges[j as usize];
+        let code = if extra.is_empty() {
+            edge >> bits
+        } else {
+            extra[j as usize]
+        } as usize;
+        j = edge & mask;
+        let len = lens[code];
+        if len != LONG {
+            // `at < n` here, so the copy ends within `n + 16`
+            out[at..at + INLINE].copy_from_slice(&inline16[code]);
+            at += usize::from(len);
+        } else {
+            let w = code - 256;
+            let word = &spelling[offsets[w] as usize..offsets[w + 1] as usize];
+            let take = word.len().min(n - at);
+            out[at..at + take].copy_from_slice(&word[..take]);
+            at += take;
+        }
+        if j == mark || at >= n {
+            break;
+        }
+    }
+    out.truncate(at.min(n));
+    repeat(n, out);
+}
+
+/// The walk as shipped before the 16-byte emit, kept as the equivalence tests' reference
+#[cfg(test)]
+#[allow(clippy::too_many_arguments)]
+fn emit_reference(
     edges: &[u32],
     extra: &[u32],
     spelling: &[u8],
@@ -462,10 +715,6 @@ fn emit(
     out.reserve(n);
     let mask = (1 << bits) - 1;
     let mut j = mark;
-    // (the port's one change to the walk) the cycle through the marked row visits each retained
-    // row once at most, so a valid construction returns to it within `edges.len()` steps; the
-    // bound and the clamp to `n` make every walk end, whatever the construction: a wrong one
-    // gives a wrong block, which the block's CRC rejects, never a walk that grows without end
     for _ in 0..edges.len() {
         let edge = edges[j as usize];
         let code = if extra.is_empty() {
@@ -483,6 +732,7 @@ fn emit(
     repeat(n, out);
 }
 
+#[cfg(test)]
 #[inline]
 fn append_code(code: u32, spelling: &[u8], offsets: &[u32], out: &mut Vec<u8>) {
     if code < 256 {
