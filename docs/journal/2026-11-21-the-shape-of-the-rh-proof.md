@@ -33,54 +33,98 @@ help. Paraphrased:
 
 We have not checked any of this ourselves. What follows uses only the proof's reported *shape*.
 
-## The general principle
+## Meta-strategy: how a proof of this kind is engineered
 
-What follows is the proof's logic, read from the overview. The deformation-theoretic reading
-(the R = T numerical criterion and Euler systems) is our inference, not something the overview
-says.
+This reads Birkbeck's overview as strategy. Where it names the classical patterns behind its steps
+(Wiles's numerical criterion, Deligne's Weil II, Bloch–Kato), that is our inference.
 
-1. **Turn an analytic fact into a count.** "L(s) ≠ 0" can't be counted. In the Bloch–Kato
-   picture, an L-function vanishes exactly where a cohomology group (a Selmer or
-   Tate–Shafarevich group) is bigger than it should be. A zero becomes an excess, and an excess
-   is the size of something finite. The first move changes what kind of statement is being
-   proved: from "this doesn't happen" to "this finite object has this size".
-2. **Squeeze the count between two independent theories until they meet.** One theory, Galois
-   theory and automorphy lifting, bounds the obstruction from above. Another, arithmetic
-   geometry's covolume bound, forces from below what must be present. When the room the
-   obstruction could take is no larger than what geometry forces to exist, the inequality
-   becomes an equality, and there is no excess, so no zero. The theorem is forced by
-   bookkeeping, not explained by one mechanism. That is why a reader can follow every step and
-   still not see "how they combine".
-3. **Move to a setting where the structure exists.** The objects in question don't carry the
-   geometry needed to bound anything in their own setting. So they are moved, by base change and
-   theta lifts, to unitary groups, which have Shimura varieties. There the objects are realised
-   as Frobenius acting on the cohomology of an actual space, which makes them countable (trace
-   formulas) and boundable (vanishing theorems). Then the conclusion is moved back.
-4. **Pay for the move in full.** The Galois representations are built, not cited, along a route
-   of the development's own. With no axioms, every piece of the move must be paid for:
-   resolution of singularities, compactifications, prismatic theory. The insight is the choice of
-   setting and squeeze. The rest is foundations.
-5. **Separate finding, length and understanding.** Human proofs are limited to what can be
-   communicated, so routes known in principle but 25,000 pages long stayed shut. A machine
-   checker lifts that limit. Three independent kernels give the trust, and understanding can come
-   later. The search becomes one over compositions of heavy existing theorems, judged by whether
-   they check.
+### I. Choosing the statement
 
-**In one line:** turn "this never happens" into "this obstruction has size zero". Move the
-problem to a setting rich enough that the obstruction is both bounded above, by one theory, and
-forced from below, by an independent theory. Close the gap by counting, without needing one
-explanation. Pay for the move in full, and let independent checking stand in for understanding.
+1. **Strengthen the target until your operations preserve it.** RH alone is not attacked. The
+   development proves nonvanishing for every Dirichlet L-function across cyclotomic families. The
+   stronger statement is easier, because the family is closed under the operations the tools need:
+   twisting by characters, base change up a tower, lifts between groups. A single object gives an
+   induction nothing to hold. This is the inventor's paradox, used on purpose: choose the statement
+   by what your operations preserve, not by what you were asked.
+2. **Prove a growth rate, not a value.** The bounds work in towers, where a hypothetical zero would
+   make the obstruction grow at the rate of a volume. One side's growth exponent is then compared
+   with the other's. Exponents survive the error terms and constants that would swamp an exact
+   comparison at a single level.
+3. **Use inequalities only, in both directions.** Hilbert–Samuel, bigness, Kawamata–Viehweg and
+   Nadel vanishing are all robust inequalities. Nothing needs an exact formula. A chain of
+   inequalities is long but local: each link can be checked alone. That is why 17 million lines
+   are checkable while no one holds the whole argument.
 
-**The test this puts to our programme:** is there a statement about the inverse BWT that we can
-prove by bounds that meet, instead of by building a faster mechanism? Mechanisms and Kitchen Sink
-look for faster mechanisms, and Depth bounds the cost from below in a fixed model, but the upper
-and lower bounds have never been aimed at each other. In this logic, progress is the closing of
-the gap between what any decoder must pay (a lower bound on an obstruction) and what one decoder
-does pay (an upper bound). Where the gap closes, the design is forced. Where it can't close in the
-problem's own setting, the principle says to move to a richer setting where both bounds exist,
-not to search harder in the original one.
+### II. Choosing the invariant
 
-The six moves below are the same principle applied, one consequence at a time.
+4. **Choose an invariant with two faces.** The quantity carrying the proof (the size of a Selmer- or
+   Tate–Shafarevich-like group) has two faces:
+   - an algebraic face, bounded above by Galois deformation theory and automorphy lifting;
+   - a geometric or analytic face, tied to L-values and covolumes.
+
+   Every load-bearing tool is an identity equating counts of two different kinds of thing: trace
+   formulas, Lefschetz, Eichler–Shimura, arithmetic Riemann–Roch. The art is finding an invariant
+   that two unrelated theories can each grip. One theory gripping it gives one bound. Two give a
+   squeeze.
+5. **Amplify before measuring.** One zero is invisible to coarse tools. Pushed through a family or
+   up a tower, it produces many obstructions, enough to violate a bound. This descends from
+   Deligne's tensor-power and Rankin-squaring arguments: bound |α|^{2k} for every k, and you
+   control |α|. Find a construction under which a defect multiplies.
+6. **Look for positivity.** Theta integrals and Petersson norms are manifestly nonnegative
+   quantities, and so are volumes and Hodge-index forms. A zero is ruled out by showing it would
+   force such a quantity negative, or below a volume. Much of the change of setting is aimed at
+   reaching a place where positivity exists.
+
+### III. Choosing the route
+
+7. **Move to where the tools work, then move back.** The original objects have no geometry. Unitary
+   groups have Shimura varieties: they are proper and are moduli spaces of abelian varieties, so
+   they carry Frobenius, cohomology, positivity and p-adic Hodge theory. The route is planned
+   backwards, from where the bounds exist to a chain of functors (base change, theta lifts) that
+   reaches it. The functors are the cost, and the destination is the point.
+8. **Make each hard step local, where classifications are complete.** Local Langlands, Clozel's
+   purity and Bernstein–Zelevinsky classify everything at one place. The global step is then a
+   product or a count over places. Difficulty is pushed to where it has already been solved
+   completely.
+9. **Re-optimise the route when the cost function changes.** The literature's route is optimal for
+   human cost: short, with large black boxes cited (Harris–Taylor, Scholze's torsion classes). With
+   no axioms, a black box costs its full formalisation. So the cheapest route changes: more pieces,
+   each simpler to build. "Not the route in the literature" is what to expect when the cost of a
+   proof is measured differently, not an oddity.
+
+### IV. Running the search
+
+10. **Make checking cheap and certain, then search wildly.** A kernel check is certain and costs
+    little next to discovery. So the search can afford high variance: unintuitive routes, long
+    compositions, steps no one has understood. Accepting a step doesn't depend on judgement.
+    Whether a generate-and-check strategy pays off depends entirely on what the check costs.
+11. **Use a toy to find the missing ingredient, then drop the toy.** The remark's toy proof found
+    the ingredient, but the artefact doesn't contain it. The toy exists to say which capability has
+    to transfer, not to be scaled up.
+12. **Decouple trust from understanding.** Three independent kernels accepted the development before
+    anyone could say how the three bounds combine. Understanding becomes a later, separate project,
+    not something acceptance has to wait for.
+
+## What this demands of our programme
+
+The demand is the same strategy run on our problem, with each lever put as a question.
+
+| Lever | The question for mibz2 | Where it stands |
+|---|---|---|
+| 1. Strengthen until closed | What family of inputs is closed under the operations our tools use? Splitting a block into segments, rotation (primary-index changes), concatenating blocks, run refinement. A decoder statement for the whole family may admit induction (parallel splitting) where one block does not | Never posed. Our statements are per-block and per-kernel |
+| 2. Growth rates | Measure how N_dep, the number of dependent accesses, scales with block size, r and the run profile, as exponents across block sizes from 100k to 900k, against cache capacity. A design whose exponent is below the volume's wins whatever the constants | Only single-size measurements exist |
+| 4. Two-faced invariant | String attractors γ, LZ77's z and the BWT's r are compressibility measures on two different sides (text and BWT), tied by r = O(z log² n) (Kempa–Prezza). Text-side theory could give lower bounds on decoding, and BWT-side constructions give upper bounds. This is the natural invariant for a squeeze | Depth worked in a fixed cost model without text-side measures |
+| 5. Amplify | Which construction multiplies a cost defect? Powers of LF (LF^k, pointer jumping) and block concatenation are candidates, so that a small structural advantage invisible at k = 1 becomes decisive | Unexplored |
+| 6. Positivity | Is there a nonnegative quantity whose vanishing is "no dependent miss"? A cut or flow quantity on the run-overlap graph, whose feedback set is 0.3% of runs | Kitchen Sink's FVS is a count, not yet a bound |
+| 7. Move and return | Plan backwards from settings where both bounds exist (IET and Teichmüller, discrete Morse, compressed indexes), then ask which transfer reaches them in O(r) | Wormhole's charge, now stated this way |
+| 9. Re-optimise the route | LF walking was optimal under the cost model of its time, a single core with cheap random access. Under 6–10 workers sharing 20 MB of L3, the optimal route may be a different one, not a tuned LF | Our kernels are tuned LF descendants |
+| 10. Cheap checking | Our correctness check is cheap and certain (parity, Miri, fuzz). Our performance check is the opposite: the i9 is scarce, noisy and human-gated, and C proxies were unfaithful. Wild search pays only once the performance check is cheap: a CI crowd harness, and cost models validated against the evidence branch | The binding constraint. It is investment priority one, ahead of new kernels |
+| 12. Trust without understanding | Adopt on registered measurement and keep mechanisms as hypotheses | Already our policy |
+
+**The single strategic conclusion:** levers 10 and 4 decide the rest. Until performance checking
+is as cheap as correctness checking, a broad search over compositions can't be afforded. Until we
+hold a two-faced invariant (γ, z and r is the candidate), there is nothing to squeeze, only
+mechanisms to race.
 
 ## The shape, as six moves
 
@@ -158,6 +202,14 @@ distinct from the addresses, depends on local shape alone. That is a measurable 
 - **Kill rule** (registered here, before the data): drop the lead if fewer than 50% of retained rows
   fall in configurations that determine their output, using a catalogue that fits in 256 KiB per
   worker (an L2 share).
+
+**Result (#687, the same day): dropped.** The best determining share within a 256 KiB catalogue
+was 10.5% (block 0, k = 2, m = 4). Configurations of at least two rows that determine their output
+cover at most 3.3% of retained rows, and a catalogue pooled over the six blocks covers 2.8%. The
+reason: the bytes a row emits next are its own sorted prefix, fixed by its position in the global
+order, not by the shape of the runs around it. Local classification fails here because the
+invariant is global. This is lever 8's precondition failing: complete local classification must
+exist before difficulty can be pushed to the local step.
 
 ### D. Build the object we keep importing, by another construction
 
