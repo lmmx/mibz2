@@ -1,0 +1,82 @@
+{
+  "origin_master_sha": "90e6719663af0615fb417b038906ad2636193aa3",
+  "blocks": [
+    {
+      "block": "block-0.L", "n": 899931, "records": 56386, "runs": 51184, "m": 89874, "h_strips": 3448, "open_nodes": 7786, "rv_steps": 11215, "slp_rules": 7334, "n_bands": 3204, "n_words": 1326, "n_long_words": 485, "spelling_bytes": 52035, "traced_height_sum": 50709,
+      "master_a1_us": 1361.9, "master_a2_us": 1363.0, "aa_ratio": 1.0008, "pre_emit_us": 799.7, "s1_first_pass_us": 227.3, "s2a_nodes_us": 54.3, "s2b_eliminate_us": 209.7, "s3a_bands_spell_us": 201.2, "s3b_inline_us": 13.4, "s4_wire_us": 93.9, "s5_emit_us": 542.3,
+      "heap_bytes": {"strips": 65536, "bands": 49152, "spelling": 65536, "offsets": 8192, "inline16_lens": 26894, "edges": 359496, "spill": 5120},
+      "bmcp": {
+        "s1": {"q_rand": 102441, "d_serial": 51184, "d_past_l2": 0, "miss_32k": 5641, "miss_256k": 4388, "miss_2048k": 862, "floor_lines": 5434},
+        "s2": {"q_rand": 142325, "d_serial": 11215, "d_past_l2": 37, "miss_32k": 21000, "miss_256k": 4324, "miss_2048k": 3996, "floor_lines": 862},
+        "s3": {"q_rand": 30104, "d_serial": 6362, "d_past_l2": 286, "miss_32k": 10585, "miss_256k": 2341, "miss_2048k": 1610, "floor_lines": 997},
+        "s4": {"q_rand": 9771, "d_serial": 1, "d_past_l2": 0, "miss_32k": 8650, "miss_256k": 6924, "miss_2048k": 1622, "floor_lines": 5618}
+      }
+    },
+    {
+      "block": "block-2.L", "n": 900000, "records": 59478, "runs": 54532, "m": 112070, "h_strips": 3827, "open_nodes": 9256, "rv_steps": 13671, "slp_rules": 8353, "n_bands": 4244, "n_words": 1922, "n_long_words": 540, "spelling_bytes": 49396, "traced_height_sum": 47474,
+      "master_a1_us": 1668.7, "master_a2_us": 1665.4, "aa_ratio": 0.9980, "pre_emit_us": 944.5, "s1_first_pass_us": 248.1, "s2a_nodes_us": 60.3, "s2b_eliminate_us": 252.6, "s3a_bands_spell_us": 242.1, "s3b_inline_us": 19.7, "s4_wire_us": 121.6, "s5_emit_us": 693.1,
+      "heap_bytes": {"strips": 65536, "bands": 98304, "spelling": 65536, "offsets": 8192, "inline16_lens": 37026, "edges": 448280, "spill": 6144},
+      "bmcp": {
+        "s1": {"q_rand": 109161, "d_serial": 54532, "d_past_l2": 0, "miss_32k": 6570, "miss_256k": 5450, "miss_2048k": 957, "floor_lines": 6319},
+        "s2": {"q_rand": 167869, "d_serial": 13671, "d_past_l2": 388, "miss_32k": 25953, "miss_256k": 5422, "miss_2048k": 4642, "floor_lines": 957},
+        "s3": {"q_rand": 37545, "d_serial": 8435, "d_past_l2": 1897, "miss_32k": 13378, "miss_256k": 4369, "miss_2048k": 1974, "floor_lines": 1341},
+        "s4": {"q_rand": 12930, "d_serial": 1, "d_past_l2": 0, "miss_32k": 11156, "miss_256k": 9637, "miss_2048k": 2363, "floor_lines": 7005}
+      }
+    },
+    {
+      "block": "block-85.L", "n": 899935, "records": 84659, "runs": 79375, "m": 156404, "h_strips": 1565, "open_nodes": 4130, "rv_steps": 7130, "slp_rules": 4058, "n_bands": 2446, "n_words": 1220, "n_long_words": 370, "spelling_bytes": 31612, "traced_height_sum": 30392,
+      "master_a1_us": 1704.8, "master_a2_us": 1685.4, "aa_ratio": 0.9886, "pre_emit_us": 696.8, "s1_first_pass_us": 329.2, "s2a_nodes_us": 22.2, "s2b_eliminate_us": 118.8, "s3a_bands_spell_us": 121.4, "s3b_inline_us": 12.2, "s4_wire_us": 93.1, "s5_emit_us": 949.6,
+      "heap_bytes": {"strips": 65536, "bands": 98304, "spelling": 65536, "offsets": 8192, "inline16_lens": 37026, "edges": 625616, "spill": 6144},
+      "bmcp": {
+        "s1": {"q_rand": 158883, "d_serial": 79375, "d_past_l2": 0, "miss_32k": 8231, "miss_256k": 7281, "miss_2048k": 392, "floor_lines": 7926},
+        "s2": {"q_rand": 79381, "d_serial": 7130, "d_past_l2": 0, "miss_32k": 7662, "miss_256k": 2332, "miss_2048k": 2145, "floor_lines": 392},
+        "s3": {"q_rand": 20991, "d_serial": 4818, "d_past_l2": 0, "miss_32k": 6221, "miss_256k": 1533, "miss_2048k": 1204, "floor_lines": 828},
+        "s4": {"q_rand": 7659, "d_serial": 1, "d_past_l2": 0, "miss_32k": 12685, "miss_256k": 10493, "miss_2048k": 7631, "floor_lines": 9776}
+      }
+    },
+    {
+      "block": "block-143.L", "n": 899869, "records": 112325, "runs": 108335, "m": 196841, "h_strips": 5047, "open_nodes": 12835, "rv_steps": 21295, "slp_rules": 12619, "n_bands": 6788, "n_words": 3635, "n_long_words": 885, "spelling_bytes": 58129, "traced_height_sum": 54494,
+      "master_a1_us": 3003.9, "master_a2_us": 3028.3, "aa_ratio": 1.0081, "pre_emit_us": 1547.2, "s1_first_pass_us": 477.8, "s2a_nodes_us": 76.0, "s2b_eliminate_us": 375.6, "s3a_bands_spell_us": 381.7, "s3b_inline_us": 35.7, "s4_wire_us": 200.4, "s5_emit_us": 1424.1,
+      "heap_bytes": {"strips": 131072, "bands": 98304, "spelling": 65536, "offsets": 16384, "inline16_lens": 66147, "edges": 787364, "spill": 6144},
+      "bmcp": {
+        "s1": {"q_rand": 216854, "d_serial": 108335, "d_past_l2": 0, "miss_32k": 11374, "miss_256k": 10820, "miss_2048k": 1262, "floor_lines": 10925},
+        "s2": {"q_rand": 245070, "d_serial": 21295, "d_past_l2": 3223, "miss_32k": 37416, "miss_256k": 10985, "miss_2048k": 6679, "floor_lines": 1262},
+        "s3": {"q_rand": 61554, "d_serial": 13500, "d_past_l2": 7224, "miss_32k": 21403, "miss_256k": 11138, "miss_2048k": 3075, "floor_lines": 2246},
+        "s4": {"q_rand": 20735, "d_serial": 1, "d_past_l2": 0, "miss_32k": 19356, "miss_256k": 17750, "miss_2048k": 5624, "floor_lines": 12303}
+      }
+    },
+    {
+      "block": "block-210.L", "n": 899959, "records": 133233, "runs": 128732, "m": 204281, "h_strips": 2809, "open_nodes": 7181, "rv_steps": 12140, "slp_rules": 6758, "n_bands": 4219, "n_words": 2228, "n_long_words": 568, "spelling_bytes": 38703, "traced_height_sum": 36475,
+      "master_a1_us": 2632.9, "master_a2_us": 2641.7, "aa_ratio": 1.0033, "pre_emit_us": 1147.5, "s1_first_pass_us": 528.7, "s2a_nodes_us": 41.5, "s2b_eliminate_us": 206.7, "s3a_bands_spell_us": 205.9, "s3b_inline_us": 21.5, "s4_wire_us": 143.3, "s5_emit_us": 1430.9,
+      "heap_bytes": {"strips": 131072, "bands": 98304, "spelling": 65536, "offsets": 16384, "inline16_lens": 66147, "edges": 817124, "spill": 6144},
+      "bmcp": {
+        "s1": {"q_rand": 257595, "d_serial": 128732, "d_past_l2": 0, "miss_32k": 11655, "miss_256k": 11375, "miss_2048k": 703, "floor_lines": 11251},
+        "s2": {"q_rand": 136009, "d_serial": 12140, "d_past_l2": 6, "miss_32k": 17230, "miss_256k": 4027, "miss_2048k": 3661, "floor_lines": 703},
+        "s3": {"q_rand": 35480, "d_serial": 8364, "d_past_l2": 462, "miss_32k": 11248, "miss_256k": 2903, "miss_2048k": 1937, "floor_lines": 1413},
+        "s4": {"q_rand": 13066, "d_serial": 1, "d_past_l2": 0, "miss_32k": 17538, "miss_256k": 15058, "miss_2048k": 9107, "floor_lines": 12768}
+      }
+    },
+    {
+      "block": "block-207.L", "n": 899998, "records": 91416, "runs": 87111, "m": 135921, "h_strips": 3474, "open_nodes": 8974, "rv_steps": 13898, "slp_rules": 8098, "n_bands": 4596, "n_words": 2259, "n_long_words": 505, "spelling_bytes": 55955, "traced_height_sum": 53696,
+      "master_a1_us": 1992.7, "master_a2_us": 1997.2, "aa_ratio": 1.0023, "pre_emit_us": 1063.0, "s1_first_pass_us": 367.3, "s2a_nodes_us": 50.5, "s2b_eliminate_us": 247.3, "s3a_bands_spell_us": 239.9, "s3b_inline_us": 21.9, "s4_wire_us": 136.2, "s5_emit_us": 895.5,
+      "heap_bytes": {"strips": 131072, "bands": 98304, "spelling": 65536, "offsets": 16384, "inline16_lens": 66147, "edges": 817124, "spill": 6144},
+      "bmcp": {
+        "s1": {"q_rand": 174309, "d_serial": 87111, "d_past_l2": 0, "miss_32k": 8319, "miss_256k": 7443, "miss_2048k": 869, "floor_lines": 7974},
+        "s2": {"q_rand": 162961, "d_serial": 13898, "d_past_l2": 185, "miss_32k": 22926, "miss_256k": 5073, "miss_2048k": 4486, "floor_lines": 869},
+        "s3": {"q_rand": 39072, "d_serial": 9119, "d_past_l2": 1749, "miss_32k": 13351, "miss_256k": 4303, "miss_2048k": 2072, "floor_lines": 1491},
+        "s4": {"q_rand": 14038, "d_serial": 1, "d_past_l2": 0, "miss_32k": 12859, "miss_256k": 11070, "miss_2048k": 4010, "floor_lines": 8496}
+      }
+    },
+    {
+      "block": "dense-703.syn", "n": 899980, "records": 131283, "runs": 125289, "m": 133777, "h_strips": 56, "open_nodes": 74, "rv_steps": 90, "slp_rules": 79, "n_bands": 23, "n_words": 4, "n_long_words": 4, "spelling_bytes": 253, "traced_height_sum": 249,
+      "master_a1_us": 1447.8, "master_a2_us": 1462.9, "aa_ratio": 1.0104, "pre_emit_us": 489.8, "s1_first_pass_us": 458.5, "s2a_nodes_us": 1.2, "s2b_eliminate_us": 1.6, "s3a_bands_spell_us": 1.2, "s3b_inline_us": 0.1, "s4_wire_us": 27.2, "s5_emit_us": 915.2,
+      "heap_bytes": {"strips": 131072, "bands": 98304, "spelling": 65536, "offsets": 16384, "inline16_lens": 66147, "edges": 817124, "spill": 6144},
+      "bmcp": {
+        "s1": {"q_rand": 250593, "d_serial": 125289, "d_past_l2": 0, "miss_32k": 8316, "miss_256k": 8314, "miss_2048k": 14, "floor_lines": 8298},
+        "s2": {"q_rand": 1408, "d_serial": 90, "d_past_l2": 0, "miss_32k": 49, "miss_256k": 46, "miss_2048k": 42, "floor_lines": 14},
+        "s3": {"q_rand": 213, "d_serial": 34, "d_past_l2": 0, "miss_32k": 13, "miss_256k": 13, "miss_2048k": 10, "floor_lines": 70},
+        "s4": {"q_rand": 352, "d_serial": 1, "d_past_l2": 0, "miss_32k": 8630, "miss_256k": 8587, "miss_2048k": 8320, "floor_lines": 8362}
+      }
+    }
+  ]
+}

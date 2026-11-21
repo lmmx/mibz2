@@ -1,0 +1,57 @@
+name = "Wormhole Cycle 11 Baseline Decomposition: Master 0.5.11-pre (#692 + #703) Pre-Emit Stages S1-S4"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_maximal_and_outq16_push"
+inputs = ["records", "C", "p", "n"]
+output = "strips_and_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Sequential scan of CAP=127 records coalescing maximal runs; pushes 16xU16 rank blocks into 256 active 1KiB chunks in dead out[0..n+16) and Strip(16B) into Vec<Strip>."
+
+[[edge]]
+id = "s2a_image_order_and_node_lists"
+inputs = ["strips_and_outq16", "C", "n"]
+output = "elim_arena_lists"
+status = "verified"
+dependent = false
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Scatters image_order into edges[..ns], then builds <= 3*ns+3 Narrow(16B) doubly-linked nodes in edges[ns..] with random gathers strips[image_order[k]]."
+
+[[edge]]
+id = "s2b_rv_morse_elimination"
+inputs = ["elim_arena_lists", "n"]
+output = "eliminated_arena_and_slp_rules"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Serially dependent Rauzy-Veech-Morse tail peeling (with width-certified spiral squaring past 32768) splicing Narrow links and appending 16B SLP rules in edges."
+
+[[edge]]
+id = "s3_bottom_bands_spelling_and_inline16"
+inputs = ["eliminated_arena_and_slp_rules", "strips_and_outq16"]
+output = "bands_and_inline16_dict"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict", D = "H", B = "B_bands + dict", Q = "H", M = "B_bands + dict" }
+evidence = "Walks side-1 and side-0 linked lists in edges, DAG-expands SLP words into spelling/offsets, pushes Vec<Band>(12B), and re-scans spelling in inline_words."
+
+[[edge]]
+id = "s4_outq16_band_wire"
+inputs = ["bands_and_inline16_dict", "strips_and_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Reads u16 ranks sequentially per symbol from out chunks and scatters short (~2.8-3.6 word) band spans to edges[dst..dst+span]."
+
+[[edge]]
+id = "s5_master_serial_emit"
+inputs = ["critical_edges", "bands_and_inline16_dict", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Master's single-lane 16B emit walk (held fixed as reference; Mechanisms owns emit beyond DietRelay8Cells)."
