@@ -79,6 +79,7 @@ pub struct Kernel {
     extra: Vec<u32>,
     inline16: Vec<[u8; INLINE]>,
     lens: Vec<u8>,
+    lanes: lanes::Lanes,
 }
 
 // Production records cap a run at 127. Selection is on maximal runs.
@@ -507,14 +508,65 @@ impl Kernel {
         stats
     }
 
+    /// (test only) `run` with the walk `how`, the lanes from `from` retained rows
+    #[cfg(test)]
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn run_walk(
+        &mut self,
+        how: Walk,
+        from: usize,
+        records: &[u16],
+        n: usize,
+        p: u32,
+        limit: u32,
+        out: &mut Vec<u8>,
+    ) -> Counts {
+        assert!(n > 0 && n <= 900_000 && (p as usize) < n);
+        let (stats, mark, bits) = self.construct::<true, true>(records, n as u32, p, limit);
+        self.walk_with(how, from, n, mark, bits, out);
+        stats
+    }
+
     /// The words inlined and the walk from the marked row: the block's bytes into `out`
     fn walk(&mut self, n: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
+        self.walk_with(WALK, LANES_FROM, n, mark, bits, out);
+    }
+
+    /// `walk` by `how`, the lanes from `from` retained rows
+    fn walk_with(
+        &mut self,
+        how: Walk,
+        from: usize,
+        n: usize,
+        mark: u32,
+        bits: u32,
+        out: &mut Vec<u8>,
+    ) {
         inline_words(
             &self.spelling,
             &self.offsets,
             &mut self.inline16,
             &mut self.lens,
         );
+        if how != Walk::Serial
+            && self.edges.len() >= from
+            && emit_lanes(
+                &mut self.lanes,
+                how,
+                &mut self.edges,
+                &mut self.extra,
+                &self.spelling,
+                &self.offsets,
+                &mut self.inline16,
+                &mut self.lens,
+                n,
+                mark,
+                bits,
+                out,
+            )
+        {
+            return;
+        }
         emit(
             &self.edges,
             &self.extra,
@@ -528,6 +580,74 @@ impl Kernel {
             out,
         );
     }
+}
+
+/// How the retained cycle is walked
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) enum Walk {
+    /// one chain (the 16-byte emit)
+    Serial,
+    /// eight lanes, two passes (Carbon cycle 2's `BVSMC-2P`)
+    TwoPass,
+    /// eight lanes, one pass into 4 KiB pages of dead `out` (Carbon cycle 11's `BP4K`)
+    Pages,
+    /// eight lanes, one pass into 4 KiB pages of an overflow pool only (`BVSMC-1P`)
+    Pool,
+}
+
+/// The walk the kernel runs
+const WALK: Walk = Walk::Pages;
+/// Retained rows from which the lanes walk (below, the serial walk)
+const LANES_FROM: usize = 4096;
+
+/// The walk by lanes `how` (not `Serial`), the tables cut and restored around it: `false`
+/// when it was not taken or was abandoned (the tables are then as they were, and the caller
+/// walks serially)
+#[allow(clippy::too_many_arguments)]
+fn emit_lanes(
+    lanes: &mut lanes::Lanes,
+    how: Walk,
+    edges: &mut Vec<u32>,
+    extra: &mut Vec<u32>,
+    spelling: &[u8],
+    offsets: &[u32],
+    inline16: &mut Vec<[u8; INLINE]>,
+    lens: &mut Vec<u8>,
+    n: usize,
+    mark: u32,
+    bits: u32,
+    out: &mut Vec<u8>,
+) -> bool {
+    let segs = if how == Walk::TwoPass {
+        lanes::S2
+    } else {
+        lanes::S1
+    };
+    let Some(cuts) = lanes.cut(edges, extra, inline16, lens, mark, bits, segs) else {
+        return false;
+    };
+    let t = lanes::Tables {
+        edges,
+        extra,
+        spelling,
+        offsets,
+        inline16,
+        lens,
+        bits,
+    };
+    let wide = !extra.is_empty();
+    let done = match (how, wide) {
+        (Walk::TwoPass, false) => lanes.two_pass::<false>(&t, cuts, n, out),
+        (Walk::TwoPass, true) => lanes.two_pass::<true>(&t, cuts, n, out),
+        (Walk::Pages, false) => lanes.one_pass::<false, true>(&t, cuts, n, out),
+        (Walk::Pages, true) => lanes.one_pass::<true, true>(&t, cuts, n, out),
+        (Walk::Pool, false) => lanes.one_pass::<false, false>(&t, cuts, n, out),
+        (Walk::Pool, true) => lanes.one_pass::<true, false>(&t, cuts, n, out),
+        (Walk::Serial, _) => false,
+    };
+    lanes.restore(cuts, edges, extra, inline16, lens);
+    done
 }
 
 /// Rows a thin run may have, as retained ranks (the arm `Open<16, true, true>` measured on the
@@ -766,9 +886,13 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 }
 
 mod endpoint;
+mod lanes;
 
 #[cfg(test)]
 mod checks;
 
 #[cfg(test)]
 mod b5;
+
+#[cfg(test)]
+mod lanes_checks;
