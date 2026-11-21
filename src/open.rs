@@ -636,6 +636,22 @@ fn emit(
     out: &mut Vec<u8>,
 ) {
     out.resize(n + INLINE, 0);
+    // (Wormhole Relay8) a block of narrow codes and at least `relay::RELAY_MIN` retained rows
+    // is walked in eight lanes (`relay.rs`), the same bytes; the serial walk below takes the
+    // rest, and any walk the relay leaves to it
+    if extra.is_empty() && edges.len() >= relay::RELAY_MIN {
+        let words = relay::Words {
+            spelling,
+            offsets,
+            inline16,
+            lens,
+        };
+        if let Some(period) = relay::relay(edges, words, n, mark, bits, out) {
+            out.truncate(period);
+            repeat(n, out);
+            return;
+        }
+    }
     let mut at = 0;
     let mask = (1 << bits) - 1;
     let mut j = mark;
@@ -740,6 +756,7 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 
 mod endpoint;
 mod outq;
+mod relay;
 
 #[cfg(test)]
 mod checks;

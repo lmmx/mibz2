@@ -1,0 +1,70 @@
++ python3 drive.py t1 six 12 m0.bin c4.bin
+== m0.bin / master kernel, in-process pairs (t1 six, 12 rounds; us, medians over rounds)
+block-0.L    master    1364.0  cand    1359.5  ratio 0.999 [0.992, 1.006]
+block-2.L    master    1660.8  cand    1653.6  ratio 0.995 [0.991, 1.000]
+block-85.L   master    1659.7  cand    1644.0  ratio 0.994 [0.987, 1.001]
+block-143.L  master    2993.6  cand    2992.4  ratio 0.997 [0.990, 1.004]
+block-210.L  master    2619.1  cand    2615.1  ratio 1.001 [0.995, 1.007]
+block-207.L  master    1991.5  cand    1997.2  ratio 1.002 [0.995, 1.008]
+== c4.bin / master kernel, in-process pairs (t1 six, 12 rounds; us, medians over rounds)
+block-0.L    master    1351.8  cand    1466.3  ratio 1.084 [1.076, 1.092]
+block-2.L    master    1660.5  cand    1761.2  ratio 1.064 [1.055, 1.074]
+block-85.L   master    1645.7  cand    1649.1  ratio 1.004 [0.998, 1.011]
+block-143.L  master    2989.3  cand    2862.6  ratio 0.958 [0.955, 0.962]
+block-210.L  master    2599.9  cand    2471.8  ratio 0.953 [0.948, 0.958]
+block-207.L  master    1984.1  cand    1986.4  ratio 1.001 [0.995, 1.007]
++ python3 drive.py emit six 12 c4.bin
+== c4.bin / master kernel, in-process pairs (emit six, 12 rounds; us, medians over rounds)
+block-0.L    master     538.3  cand     609.2  ratio 1.129 [1.122, 1.137]
+block-2.L    master     697.0  cand     763.4  ratio 1.095 [1.089, 1.101]
+block-85.L   master    1012.8  cand     929.9  ratio 0.930 [0.898, 0.963]
+block-143.L  master    1543.5  cand    1270.5  ratio 0.820 [0.816, 0.825]
+block-210.L  master    1581.6  cand    1285.0  ratio 0.809 [0.804, 0.814]
+block-207.L  master     935.7  cand     862.8  ratio 0.924 [0.915, 0.933]
++ python3 drive.py t4six six 12 m0.bin c4.bin
+== m0.bin / master kernel, in-process pairs (t4six six, 12 rounds; us, medians over rounds)
+block-0.L    master    1407.0  cand    1404.2  ratio 0.997 [0.994, 0.999]
+block-2.L    master    1703.0  cand    1704.3  ratio 0.998 [0.995, 1.001]
+block-85.L   master    1712.9  cand    1709.3  ratio 1.002 [0.996, 1.009]
+block-143.L  master    3090.9  cand    3067.9  ratio 0.998 [0.992, 1.004]
+block-210.L  master    2688.0  cand    2680.4  ratio 0.997 [0.993, 1.001]
+block-207.L  master    2028.8  cand    2029.3  ratio 0.998 [0.994, 1.003]
+pass         master   12720.4  cand   12706.0  ratio 0.995 [0.991, 1.000]
+== c4.bin / master kernel, in-process pairs (t4six six, 12 rounds; us, medians over rounds)
+block-0.L    master    1404.0  cand    1529.0  ratio 1.091 [1.084, 1.098]
+block-2.L    master    1698.5  cand    1825.4  ratio 1.075 [1.070, 1.081]
+block-85.L   master    1697.0  cand    1729.7  ratio 1.020 [1.012, 1.028]
+block-143.L  master    3066.4  cand    2975.4  ratio 0.966 [0.960, 0.971]
+block-210.L  master    2655.6  cand    2571.8  ratio 0.965 [0.957, 0.972]
+block-207.L  master    2025.2  cand    2057.1  ratio 1.012 [1.009, 1.016]
+pass         master   12634.9  cand   12808.3  ratio 1.011 [1.005, 1.017]
++ ADMIT_REPS=5
++ python3 drive.py t4 all 6 m0.bin c4.bin
+== m0.bin / master kernel, in-process pairs (t4 all, 6 rounds; us, medians over rounds)
+pass         master  403029.6  cand  406474.5  ratio 1.003 [0.984, 1.022]
+refused      master   16133.1  cand   15738.9  ratio 0.979 [0.950, 1.009]
+== c4.bin / master kernel, in-process pairs (t4 all, 6 rounds; us, medians over rounds)
+pass         master  401268.8  cand  417428.0  ratio 1.040 [1.018, 1.063]
+refused      master   15770.4  cand   15728.4  ratio 0.985 [0.962, 1.009]
++ for t in 8 10
++ python3 e2e.py 10 8
+T=8 wall s   base      0.246 cand      0.246  ratio 1.009 [0.966, 1.053]
+T=8 cpu s    base      0.732 cand      0.743  ratio 1.008 [0.974, 1.044]
+T=8 rss KiB  base  81628.000 cand  80554.000  ratio 0.984 [0.948, 1.022]
++ for t in 8 10
++ python3 e2e.py 10 10
+T=10 wall s   base      0.227 cand      0.231  ratio 1.020 [0.977, 1.066]
+T=10 cpu s    base      0.730 cand      0.751  ratio 1.018 [0.971, 1.068]
+T=10 rss KiB  base  91586.000 cand  94110.000  ratio 1.017 [0.974, 1.062]
++ for t in 8 10
++ CAND=base2
++ python3 e2e.py 10 8
+T=8 wall s   base      0.244 cand      0.239  ratio 0.996 [0.963, 1.031]
+T=8 cpu s    base      0.769 cand      0.750  ratio 0.987 [0.946, 1.030]
+T=8 rss KiB  base  81950.000 cand  82192.000  ratio 1.011 [0.960, 1.065]
++ for t in 8 10
++ CAND=base2
++ python3 e2e.py 10 10
+T=10 wall s   base      0.235 cand      0.232  ratio 0.996 [0.936, 1.059]
+T=10 cpu s    base      0.760 cand      0.744  ratio 0.995 [0.951, 1.041]
+T=10 rss KiB  base  92708.000 cand  94894.000  ratio 1.024 [0.981, 1.068]
