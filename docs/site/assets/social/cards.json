@@ -221,7 +221,7 @@
     "foot": "lmmx.github.io/mibz2 · 21 November 2026",
     "kind": "meta",
     "section": " · Research blog",
-    "title": "Besieging hard problems: takeaways from the Riemann proof"
+    "title": "Besieging hard problems: cheap checks first, after the Riemann proof"
   },
   "assets/social/blog-2026-11-21-fast-alone-slow-in-a-crowd.png": {
     "description": "Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor.",

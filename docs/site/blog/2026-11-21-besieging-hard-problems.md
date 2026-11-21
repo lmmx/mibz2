@@ -1,5 +1,5 @@
 ---
-title: "Besieging hard problems: takeaways from the Riemann proof"
+title: "Besieging hard problems: cheap checks first, after the Riemann proof"
 image: assets/social/blog-2026-11-21-besieging-hard-problems.png
 description: "A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check."
 ---
@@ -11,7 +11,7 @@ description: "A machine-checked Riemann proof shows how far a search can range o
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Besieging hard problems: takeaways from the Riemann proof
+# Besieging hard problems: cheap checks first, after the Riemann proof
 
 A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check.
 {: .post-dek }
