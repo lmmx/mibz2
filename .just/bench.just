@@ -1940,3 +1940,118 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# The Open kernel's eight-emitter relay against its base on this machine (#705; registration
+# docs/journal/2026-11-21-open-relay8-registration.md, frozen before the data): whether #705's
+# Relay8 (zero-bit cuts on the walk, seven scouts and eight emitters a worker, in
+# src/open/relay.rs) speeds production's decoder where it runs `OpenCells` on the i9, whose
+# 256 KiB L2 sends the serial walk's chain to L3. Two builds pinned by SHA: #705's merge-base
+# BASE (c68b85c7, v0.5.10's source; `mibz2@build-base`) and #705's HEAD (perf/open-relay8
+# a3dc038b, `mibz2`, whose harness drives the run); their src differs in src/open.rs and
+# src/open/** alone (checked). Master's src has moved since BASE by #703 (src/open/** only):
+# the run measures Relay8 against its own base. Both by rustc 1.99.1. The whole Wikidata
+# corpus (corpora/wikidata.bz2, checked by its SHA-256), 4 copies end to end; unpinned on every
+# CPU at 6, 8 and 10 threads, interleaved, 16 paired rounds, no spinner. Judged at 10 threads,
+# 6 and 8 supporting, peak RSS reported (bench/open_relay8.py). Then a diagnostic that decides
+# nothing: the workers' lazy route alone (`mibz2-workers-lazy`, the plan and window fixed) at 6
+# and 8 threads, 16 rounds. A copy of bench-open-diet (#693), itself the shape of
+# bench-open-r4 (#680), bench-open-lanes (#676) and bench-open-vec16 (#669). About 20 minutes
+# with the builds.
+bench-open-relay8:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    BASE=c68b85c710e693d7eb3011b306dc3cc844731e59
+    HEAD=a3dc038b433ca1ba442f8ce5ebd7e02acae9e145
+    COPIES=4 ROUNDS=16 SETTLE=2
+    W=$PWD/target/open-relay8
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-open-relay8 (docs/journal/2026-11-21-open-relay8-registration.md) at $(git rev-parse HEAD): mibz2 at $HEAD (perf/open-relay8, #705) against mibz2 at $BASE (v0.5.10's src; #705's merge-base), unpinned at 6, 8 and 10 threads, $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2; then mibz2-workers-lazy at 6 and 8"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-open-relay8: the checkout has local changes"; exit 1; }
+    git cat-file -e "$BASE^{commit}" 2>/dev/null || git fetch -q origin master
+    git cat-file -e "$HEAD^{commit}" 2>/dev/null || git fetch -q origin perf/open-relay8
+    git merge-base --is-ancestor "$BASE" "$HEAD" \
+      || { echo "bench-open-relay8: $BASE is not an ancestor of $HEAD"; exit 1; }
+    # the contrast, checked: the decoder's source differs in the open kernel's files alone
+    changed=$(git diff --name-only "$BASE" "$HEAD" -- src Cargo.toml Cargo.lock examples build.rs)
+    [ -n "$changed" ] || { echo "bench-open-relay8: the builds' source does not differ"; exit 1; }
+    beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/open\.rs$|^src/open/' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-open-relay8: the builds differ beyond the open kernel: $(echo $beyond)"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$BASE" "$HEAD" -- src > "$O/src-head-against-base.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-open-relay8: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    for b in base head; do
+      sha=$BASE; [ "$b" = head ] && sha=$HEAD
+      [ -d "$W/build-$b" ] || git worktree add -q --detach "$W/build-$b" "$sha"
+      git -C "$W/build-$b" checkout -q --detach "$sha"
+      # (each build from a clean source: a detached checkout keeps local changes)
+      [ -z "$(git -C "$W/build-$b" status --porcelain)" ] \
+        || { echo "bench-open-relay8: build-$b has local changes"; git -C "$W/build-$b" status --short; exit 1; }
+      [ "$(git -C "$W/build-$b" rev-parse HEAD)" = "$sha" ] \
+        || { echo "bench-open-relay8: build-$b is not at $sha"; exit 1; }
+      (cd "$W/build-$b" && cargo build -q --release --example ab --example windows)
+    done
+    AB=$W/build-head/target/release/examples/ab
+    BAB=$W/build-base/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'base %s\nhead %s\n' "$BASE" "$HEAD" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    for b in base head; do
+      (cd "$W/build-$b" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+        || { echo "bench-open-relay8: build-$b's toolchain differs"; exit 1; }
+    done
+    sha256sum "$AB" "$BAB" | tee "$O/binaries.sha256"
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-head/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-open-relay8: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the machine
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    uname -a > "$O/uname.txt"
+    # the judged run: unpinned (no --spread), every online CPU, no spinner; the counts and the
+    # arms interleaved within each round, the arms' order rotated
+    "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2" --threads 6,8,10 --rounds $ROUNDS \
+      --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
+    "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
+    date -u +%FT%TZ > "$O/timed.txt"
+    python3 bench/open_relay8.py "$O/main.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+      --arm mibz2 --judged 10 --supporting 6,8 --rounds $ROUNDS --corpus wikidata-x$COPIES \
+      | tee "$O/verdict.txt" \
+      || echo "bench-open-relay8: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # the diagnostic (decides nothing): the workers' lazy route, plan and window fixed
+    "$AB" run "$O/lazy.jsonl" --arms "mibz2-workers-lazy@$BAB,mibz2-workers-lazy" --threads 6,8 \
+      --rounds $ROUNDS --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
+    "$AB" summary "$O/lazy.jsonl" --ref "mibz2-workers-lazy@$BAB" | tee "$O/lazy-summary.txt"
+    python3 bench/open_relay8.py "$O/lazy.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+      --arm mibz2-workers-lazy --judged "" --supporting 6,8 --rounds $ROUNDS --corpus wikidata-x$COPIES \
+      --diagnostic | tee "$O/lazy.txt" \
+      || echo "bench-open-relay8: the diagnostic is VOID (lazy.txt says why); the verdict stands"
+    date -u +%FT%TZ > "$O/finished.txt"
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"
