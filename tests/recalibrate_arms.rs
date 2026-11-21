@@ -1,5 +1,5 @@
-//! `just bench-recalibrate-058`'s arms (docs/journal/2026-11-21-recalibration-058-registration.md,
-//! the design of docs/journal/2026-11-18-recalibration-registration.md on master 70b18ca4): at
+//! `just bench-recalibrate-diet`'s arms (docs/journal/2026-11-21-recalibration-diet-registration.md,
+//! the design of docs/journal/2026-11-18-recalibration-registration.md on master 23e40f77): at
 //! each cell, the arm the run names as the shipped trim is the decoder the default builds on
 //! the measured i9 there (`StreamDecoder::new` under `with_machine`), in its worker count,
 //! its window and its kernel, pinned one CPU a core (`Machine::pinned_i9`) or unpinned
@@ -38,7 +38,8 @@ const CELLS: [(bool, usize, &str, &str); 11] = [
     // lazy at 6 from 0.5.7 (#642), pinned and unpinned; the plan there is still eager
     (true, 6, "mibz2-occ-5-20", "mibz2-oce-6-24"),
     (true, 4, "mibz2-oce-3-12", "mibz2-oce-4-16"),
-    (false, 4, "mibz2-oce-4-16", "mibz2-oce-4-16"),
+    // lazy unpinned at 4 from 0.5.8 (#678), the plan's four workers; the plan there is eager
+    (false, 4, "mibz2-occ-4-16", "mibz2-oce-4-16"),
     (false, 6, "mibz2-occ-6-24", "mibz2-oce-6-24"),
     (false, 8, "mibz2-occ-8-32", "mibz2-occ-8-32"),
     (false, 10, "mibz2-occ-7-28", "mibz2-occ-10-40"),
@@ -91,6 +92,7 @@ fn the_neighbours_differ_in_one_worker() {
         ("mibz2-occ-5-20", "mibz2-occ-4-16", "mibz2-occ-6-24"),
         ("mibz2-oce-3-12", "mibz2-oce-2-8", "mibz2-oce-4-16"),
         ("mibz2-oce-4-16", "mibz2-oce-3-12", "mibz2-oce-5-20"),
+        ("mibz2-occ-4-16", "mibz2-occ-3-12", "mibz2-occ-5-20"),
         ("mibz2-occ-8-32", "mibz2-occ-7-28", "mibz2-occ-9-36"),
     ] {
         let (s, f, m) = (arm(shipped), arm(fewer), arm(more));
@@ -104,8 +106,8 @@ fn the_neighbours_differ_in_one_worker() {
 }
 
 /// The other kernel at a cell's shipped count (`mibz2-occ-N-S` beside `mibz2-oce-N-S`) differs
-/// from the shipped arm in its kernel alone: the lazy kernel at the eager cells (pinned 4,
-/// unpinned 4), and the plan's eager kernel at unpinned 6, where the shipped trim is lazy
+/// from the shipped arm in its kernel alone: the lazy kernel at the eager cell (pinned 4), and
+/// the plan's eager kernel at unpinned 6 and unpinned 4, where the shipped trim is lazy
 #[test]
 fn the_kernel_arms_differ_in_the_kernel() {
     for (eager, lazy) in [
