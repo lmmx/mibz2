@@ -1,0 +1,30 @@
+name = "Wormhole Chain 2A: Width-Filtered Fox-Morse Quasideterminant Collapse (M_Lambda)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "filtered_run_split"
+inputs = ["records", "p", "n"]
+output = "morse_filtration_strips_and_queues"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "1", B = "R + m_Lambda", Q = "0", M = "m_Lambda + H_Lambda" }
+evidence = "Mischaikow-Nanda (DCG 2013) width filtration at threshold Lambda in {1,2,4,8,16}: retains m_Lambda rows, matches H_Lambda thick strips."
+
+[[edge]]
+id = "quasideterminant_slp_and_flat_spell"
+inputs = ["morse_filtration_strips_and_queues", "C", "n"]
+output = "reduced_fox_morse_table"
+status = "verified"
+dependent = true
+cost = { W = "H_Lambda + m_Lambda", D = "H_Lambda", B = "m_Lambda + D_flat", Q = "H_Lambda + m_Lambda", M = "m_Lambda + D_flat" }
+evidence = "Skoldberg (2006) + Gel'fand-Retakh (2005) quasideterminant over Z<Sigma*>: verified on 26,135 small cases + 30 block decodes; exposes Theorem 2.1 D_flat single-use splitting cliff (644-821 KiB at Lambda=1)."
+
+[[edge]]
+id = "critical_fox_walk"
+inputs = ["reduced_fox_morse_table", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m_Lambda", B = "n", Q = "m_Lambda", M = "n + m_Lambda + D_flat" }
+evidence = "Walks m_Lambda critical vertices (shrunk 2.06-2.70x at Lambda=1, edges 137-379 KiB, offset by D_flat blowup)."

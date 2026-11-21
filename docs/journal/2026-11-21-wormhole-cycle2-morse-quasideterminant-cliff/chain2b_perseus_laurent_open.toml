@@ -1,0 +1,21 @@
+name = "Wormhole Chain 2B (Refuted Partial Chain): Perseus Z[t, t^-1] Laurent Augmentation"
+target = "text"
+uses = []
+
+[[edge]]
+id = "perseus_laurent_morse_reduction"
+inputs = ["records", "C", "p", "n"]
+output = "critical_sa_offsets"
+status = "verified"
+dependent = true
+cost = { W = "R + H_Lambda + m_Lambda", D = "H_Lambda + m_Lambda", B = "m_Lambda", Q = "H_Lambda + m_Lambda", M = "m_Lambda + H_Lambda" }
+evidence = "Milnor-Fox augmentation a -> t + Perseus 6 unimodular Z[t, t^-1] reduction: 0 SLP rules, 0 B dictionary; verified exact critical SA offsets on 5,227 small cases + 6 blocks (Theorem 2.2(1))."
+
+[[edge]]
+id = "fill_unlabelled_thick_gaps_without_words"
+inputs = ["critical_sa_offsets", "C", "p", "n"]
+output = "text"
+status = "open"
+dependent = false
+cost = { W = "n", D = "1", B = "n", Q = "0", M = "n" }
+evidence = "REFUTED by Theorem 2.2(2) primitive twin witness: critical (x, g(x), L[x], F[x], ell(x)) + (n, C, p) at Lambda=1 cannot distinguish interior bytes of eliminated w >= 2 runs without Fox words or all r boundary coordinates."
