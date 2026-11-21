@@ -1,7 +1,7 @@
 ---
-title: "Seventeen million checked lines: what a formal Riemann proof teaches about hard problems"
-image: assets/social/blog-2026-11-21-seventeen-million-checked-lines.png
-description: "A proof of the Riemann Hypothesis that three independent checkers accepted shows that routes once far too long to travel can now be built and verified."
+title: "Cheap checks first: rebuilding our search for a faster decoder after the Riemann proof"
+image: assets/social/blog-2026-11-21-cheap-checks-first.png
+description: "A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check."
 ---
 
 <div class="post-hero" markdown>
@@ -11,9 +11,9 @@ description: "A proof of the Riemann Hypothesis that three independent checkers 
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Seventeen million checked lines: what a formal Riemann proof teaches about hard problems
+# Cheap checks first: rebuilding our search for a faster decoder after the Riemann proof
 
-A proof of the Riemann Hypothesis that three independent checkers accepted shows that routes once far too long to travel can now be built and verified.
+A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check.
 {: .post-dek }
 
 21 November 2026 · 16 min read · [Meta](#6-what-comes-next)
@@ -24,6 +24,8 @@ A proof of the Riemann Hypothesis that three independent checkers accepted shows
 <div class="post-hero-art"><img src="../assets/images/hero.svg" alt=""></div>
 
 </div>
+
+mibz2 is a Rust decoder for bzip2, and for months we have searched for faster ways to undo the reordering at its core. This post describes how we are rebuilding that search, and why. A proof of the Riemann Hypothesis, built at a scale no person could write and accepted by three independent checkers, has shown what a search can attempt once checking is cheap. Our checks of correctness are already cheap. Our checks of speed are not, so that is where we start.
 
 On 20 November 2026, Levent Alpöge [announced](https://alpo.ge/remark.pdf) a proof of the Riemann Hypothesis, found working with Claude and written out in full in Lean, a language whose proofs a small program called a kernel can check line by line. By the end of that day, members of the Lean community had reported that three independent kernels, nanoda, con-leche in its verified mode and pestka, each accepted the development. It is about 17 million lines of Lean v4.33.1 in 175,190 files. It proves the Riemann Hypothesis, and its generalisation to Dirichlet L-functions, a family of functions that carry the same question for primes in arithmetic progressions. It does not cover the wider Selberg class.
 
