@@ -209,9 +209,10 @@ fn the_existing_plan_otherwise() {
     let cases = [
         (i9.clone(), 4, false, 4, false),
         (i9.clone(), 5, false, 5, false),
-        // unpinned at 4 and 8: master's (`bench-unpinned`, LOG 6949008682); at 6, from 0.5.7,
-        // the plan's six workers on the lazy kernel (`UNPINNED_AT_SIX`), the same threads and
-        // window (`the_six_thread_cells_from_0_5_7`)
+        // unpinned at 8: master's (`bench-unpinned`, LOG 6949008682); at 6, from 0.5.7, the
+        // plan's six workers on the lazy kernel (`UNPINNED_AT_SIX`), and at 4, from 0.5.8, the
+        // plan's four (`UNPINNED_AT_FOUR`), the same threads and window
+        // (`the_six_thread_cells_from_0_5_7`, `the_four_thread_cells_from_0_5_8`)
         (i9.clone(), 6, false, 6, false),
         (i9.clone(), 7, false, 7, false),
         (i9.clone(), 8, false, 8, false),

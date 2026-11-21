@@ -161,7 +161,8 @@ impl StreamDecoder {
     ///   28, k, true)`); at 8, lazy 6/24; at 6, lazy 5/20 (from 0.5.7; eager before); at 4,
     ///   eager 3/12 (`workers(3, 12, k, false)`, which is `planned(Workers(3), 12)`);
     /// - unpinned: from 10 threads asked, lazy 7/28; at exactly 6, lazy 6/24 (from 0.5.7: the
-    ///   plan's six workers, with the lazy kernel in place of the plan's eager one).
+    ///   plan's six workers, with the lazy kernel in place of the plan's eager one); at
+    ///   exactly 4, lazy 4/16 (from 0.5.8: the plan's four workers, the lazy kernel likewise).
     ///
     /// A forced plan is never replaced by them either.
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
@@ -182,8 +183,8 @@ impl StreamDecoder {
             let plan = Plan::for_threads(threads);
             // on the measured i9 alone, at a measured cell (`trimmed`): fewer workers, the
             // window scaled to them, with the kernel the measured arm held, chosen explicitly
-            // (`workers(n, 4n, k, lazy)`): lazy at 7, 6 and 5 workers, where `Plan::lazy` would
-            // give a slot for every letter, and eager at 3, which is what
+            // (`workers(n, 4n, k, lazy)`): lazy at 7, 6, 5 and 4 workers, where `Plan::lazy`
+            // would give a slot for every letter, and eager at 3, which is what
             // `planned(Workers(n), ..)` builds below `LAZY_FROM_THREADS`. (The machine is read
             // only at a cell's thread count and plan.)
             let cell = if forced {
@@ -295,8 +296,9 @@ impl StreamDecoder {
     /// (`Plan::for_threads`), the same window, the same threads, so that a bench arm built
     /// this way differs from production in the kernel alone (the 12-byte rules arm,
     /// `bwt::W12LazyCells`). That includes `new`'s trimmed lazy workers on the measured i9
-    /// (`trimmed`: 7 from 10 threads, 6 at 8, 5 pinned at 6, 6 unpinned at 6). Where
-    /// production's decoder is not lazy workers (the eager cell at 4 included), this is `new`.
+    /// (`trimmed`: 7 from 10 threads, 6 at 8, 5 pinned at 6, 6 unpinned at 6, 4 unpinned at
+    /// 4). Where production's decoder is not lazy workers (the eager cell pinned at 4
+    /// included), this is `new`.
     #[doc(hidden)]
     pub fn new_lazy_as<I: super::bwt::InverseBwt + 'static>(
         threads: usize,
@@ -2953,6 +2955,13 @@ pub const UNPINNED_AT_SIX: usize = 6;
 /// threads asked (`trimmed`), in place of the plan's four eager workers
 pub const TRIMMED_AT_FOUR: usize = 3;
 
+/// The lazy workers the default decoder runs on the measured i9 unpinned (the whole machine)
+/// at exactly 4 threads asked (`trimmed`): the plan's own four, inverting with `OpenCells` in
+/// place of the plan's `Cells`, from 0.5.8 (`bench-recalibrate-058`,
+/// recalibrate-058/run-20261121T020723Z: lazy 4/16 took 0.9452 [0.9225, 0.9685] of eager
+/// 4/16's wall on Wikidata, at 0.927 of its peak memory)
+pub const UNPINNED_AT_FOUR: usize = 4;
+
 /// The measured cells pinned one CPU a core on exactly the threads asked
 /// (`pinned_one_a_core`), by thread count and the plan there, without the machine: the
 /// workers in place of the plan's, and whether they invert with lazy letters, as the measured
@@ -2971,12 +2980,16 @@ fn trim_cell(threads: usize, plan: Plan) -> Option<(usize, bool)> {
 
 /// The measured cells on the whole machine (unpinned, `whole_machine`), as `trim_cell`: from
 /// 10 threads asked (`unpinned_trims`), lazy 7/28; at exactly 6, the plan's six workers with
-/// the lazy kernel (`UNPINNED_AT_SIX`, from 0.5.7). At 8 and 4, none: unpinned, those pinned
-/// trims did not hold (`unpinned_trims`), and 0.5.7's recalibration kept master's plan there
+/// the lazy kernel (`UNPINNED_AT_SIX`, from 0.5.7); at exactly 4, the plan's four workers
+/// with the lazy kernel (`UNPINNED_AT_FOUR`, from 0.5.8). At 8, none: unpinned, the pinned
+/// trim did not hold (`unpinned_trims`), and 0.5.7's and 0.5.8's recalibrations kept master's
+/// plan there. (The pinned trim at 4, eager 3/12, did not hold unpinned either: 0.5.8's
+/// unpinned cell at 4 keeps the plan's four workers, on the other kernel)
 fn unpinned_cell(threads: usize, plan: Plan) -> Option<(usize, bool)> {
     match threads {
         t if unpinned_trims(t) => trim_cell(t, plan),
         6 if plan == Plan::Workers(6) => Some((UNPINNED_AT_SIX, true)),
+        4 if plan == Plan::Workers(4) => Some((UNPINNED_AT_FOUR, true)),
         _ => None,
     }
 }
@@ -3023,7 +3036,9 @@ pub fn trimmed(threads: usize, plan: Plan, k: Kernels, m: &Machine) -> Option<(u
 /// 1.000, eager 5/20 at 6 1.009 and eager 3/12 at 4 1.214, so no worker count trims there.
 /// From 0.5.7, at exactly 6 the plan's six workers invert with the lazy kernel
 /// (`UNPINNED_AT_SIX`): lazy 6/24 over eager 6/24, 0.8531 [0.8024, 0.9071]
-/// (`bench-recalibrate-057`).
+/// (`bench-recalibrate-057`). From 0.5.8, at exactly 4 the plan's four workers do likewise
+/// (`UNPINNED_AT_FOUR`): lazy 4/16 over eager 4/16, 0.9452 [0.9225, 0.9685]
+/// (`bench-recalibrate-058`, recalibrate-058/run-20261121T020723Z).
 ///
 /// Admitted by the Researcher's REVIEWs 6946555118, 6947387421 and 6948628221. The measured
 /// arms were `ab`'s `mibz2-occ-N-S` (`StreamDecoder::workers(n, s, k, true)`: lazy, which
@@ -4606,19 +4621,20 @@ mod plan_tests {
         };
         // the i9 itself, unpinned, below 10 threads (the cell at exactly 8 trims pinned alone,
         // `pinned_or_unpinned_on_the_i9`; at exactly 6, from 0.5.7, the plan's six workers
-        // take the lazy kernel, `UNPINNED_AT_SIX`, so 6 is not master's plan there)
-        for t in (1..=9).filter(|&t| t != 6) {
+        // take the lazy kernel, `UNPINNED_AT_SIX`, and at exactly 4, from 0.5.8, the plan's
+        // four, `UNPINNED_AT_FOUR`, so 6 and 4 are not master's plan there)
+        for t in (1..=9).filter(|&t| t != 6 && t != 4) {
             same("the i9", &i9, t, both);
         }
-        // the plan's workers there, by name: workers as asked, lazy from 8, and at 6 lazy
-        // (0.5.7's unpinned cell)
+        // the plan's workers there, by name: workers as asked, lazy from 8, at 6 lazy (0.5.7's
+        // unpinned cell) and at 4 lazy (0.5.8's)
         for (t, lazy) in [
             (9, true),
             (8, true),
             (7, false),
             (6, true),
             (5, false),
-            (4, false),
+            (4, true),
         ] {
             let dec = with_machine(i9.clone(), || StreamDecoder::new(t, 4 * t, both));
             assert_eq!(dec.is_lazy(), lazy, "{t}");
@@ -4707,15 +4723,20 @@ mod plan_tests {
         for cores in [7, 8, 10] {
             assert_eq!(pin(6, w(6), cores), None, "{cores}");
         }
-        // unpinned (the whole i9): no trim at 8 or 4; at 6, from 0.5.7, the plan's six
-        // workers on the lazy kernel (`UNPINNED_AT_SIX`)
+        // unpinned (the whole i9): no trim at 8; at 6, from 0.5.7, the plan's six workers on
+        // the lazy kernel (`UNPINNED_AT_SIX`); at 4, from 0.5.8, the plan's four likewise
+        // (`UNPINNED_AT_FOUR`)
         assert_eq!(cell(8, w(8)), None);
         assert_eq!(cell(6, w(6)), on.then_some(UNPINNED_AT_SIX));
         assert_eq!(
             trimmed(6, w(6), both, &i9),
             on.then_some((UNPINNED_AT_SIX, true))
         );
-        assert_eq!(cell(4, w(4)), None);
+        assert_eq!(cell(4, w(4)), on.then_some(UNPINNED_AT_FOUR));
+        assert_eq!(
+            trimmed(4, w(4), both, &i9),
+            on.then_some((UNPINNED_AT_FOUR, true))
+        );
         for t in [10, 11, 12, 16, 20, 64] {
             assert_eq!(cell(t, w(10)), on.then_some(7), "{t}");
             assert_eq!(
@@ -4724,7 +4745,7 @@ mod plan_tests {
                 "{t}"
             );
         }
-        for t in [0, 1, 2, 3, 4, 5, 7, 9] {
+        for t in [0, 1, 2, 3, 5, 7, 9] {
             assert_eq!(cell(t, w(t)), None, "{t}");
         }
         // another plan at the cells' counts
@@ -5031,6 +5052,113 @@ mod plan_tests {
         }
     }
 
+    /// 0.5.8's four-thread cells (RELEASING §5c, `bench-recalibrate-058`,
+    /// recalibrate-058/run-20261121T020723Z): on the measured i9 at exactly 4 threads asked,
+    /// - unpinned (the whole machine): the default decoder is lazy (`OpenCells`), the plan's 4
+    ///   workers and 16 blocks, the very decoder the adopted arm measured (`mibz2-occ-4-16`,
+    ///   0.9452 [0.9225, 0.9685] of eager 4/16's wall on Wikidata, at 0.927 of its memory);
+    /// - pinned one CPU a core on CPUs 0-3: unchanged, eager 3/12 (`TRIMMED_AT_FOUR`,
+    ///   `mibz2-oce-3-12`), as the pinned family adopted nothing.
+    ///
+    /// Through `StreamDecoder::new`, `BzReader::parallel` and `decode_parallel`, the output
+    /// the same. Every other cell at 4 is as before: another mask, a quota, other kernels or
+    /// another machine keep the plan's four eager workers (`Cells`); and the plan itself, and
+    /// `LAZY_FROM_THREADS`, are unchanged
+    #[test]
+    fn the_four_thread_cells_from_0_5_8() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let open = std::any::type_name::<crate::bwt::OpenCells>();
+        let cells = std::any::type_name::<crate::bwt::Cells>();
+        assert_eq!(LAZY_FROM_THREADS, 8);
+        assert!(!Plan::Workers(4).lazy() && !Plan::Workers(3).lazy());
+        assert_eq!((TRIMMED_AT_FOUR, UNPINNED_AT_FOUR), (3, 4));
+        for (what, m, n, lazy, kernel) in [
+            (
+                "pinned 0-3",
+                Machine::pinned_i9(4),
+                TRIMMED_AT_FOUR,
+                false,
+                cells,
+            ),
+            (
+                "unpinned",
+                Machine::service_target(),
+                UNPINNED_AT_FOUR,
+                true,
+                open,
+            ),
+        ] {
+            assert_eq!(
+                with_machine(m.clone(), || Plan::for_threads(4)),
+                Plan::Workers(4)
+            );
+            assert_eq!(
+                trimmed(4, Plan::Workers(4), both, &m),
+                Some((n, lazy)),
+                "{what}"
+            );
+            let arm = StreamDecoder::workers(n, 4 * n, both, lazy);
+            assert_eq!(arm.kernel, kernel, "{what}");
+            let (dec, b) =
+                observe_builds(|| with_machine(m.clone(), || StreamDecoder::new(4, 16, both)));
+            assert_eq!(dec.kernel, kernel, "{what}");
+            assert_eq!(dec.is_lazy(), lazy, "{what}");
+            assert_eq!(
+                shape(&dec),
+                shape(&arm),
+                "{what}: the measured arm's decoder"
+            );
+            assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{what}");
+            dec.close();
+            arm.close();
+            let (out, b) = observe_builds(|| {
+                with_machine(m.clone(), || {
+                    let mut r = crate::BzReader::parallel(service_tests::Z, 4);
+                    let mut out = Vec::new();
+                    std::io::Read::read_to_end(&mut r, &mut out).unwrap();
+                    out
+                })
+            });
+            assert_eq!(out, service_tests::want(), "{what}");
+            assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{what}");
+            let (out, b) = observe_builds(|| {
+                with_machine(m.clone(), || {
+                    crate::decode_parallel(service_tests::Z, 4).unwrap()
+                })
+            });
+            assert_eq!(out, service_tests::want(), "{what}");
+            assert_eq!((b[0].threads, b[0].window), (n, 4 * n as u64), "{what}");
+        }
+        // everywhere else at 4: the plan's four eager workers, as before
+        let mut quota = Machine::service_target();
+        quota.quota = Quota::Cpus(20.0);
+        for (what, m, k) in [
+            ("a quota", quota, both),
+            ("pinned to 8 cores", Machine::pinned_i9(8), both),
+            (
+                "unpinned, scalar kernels",
+                Machine::service_target(),
+                Kernels::scalar(),
+            ),
+            ("another machine", Machine::default(), both),
+        ] {
+            assert_eq!(trimmed(4, Plan::Workers(4), k, &m), None, "{what}");
+            let dec = with_machine(m.clone(), || StreamDecoder::new(4, 16, k));
+            assert_eq!(
+                (dec.kernel, dec.threads(), dec.window()),
+                (cells, 4, 16),
+                "{what}"
+            );
+            dec.close();
+        }
+    }
+
     /// Pinned or not (#145, the release-scaling run's finding, `bench-unpinned`'s LOG
     /// 6949008682, and the Researcher's REVIEWs 6947387421 and 6948628221;
     /// `Machine::pinned_i9`). The cells read the machine, not the affinity, and admit two
@@ -5039,9 +5167,10 @@ mod plan_tests {
     ///   sweep measured them: eager 3/12 at 4 (pinned 0-3), eager 5/20 at 6 (0-5), lazy 6/24
     ///   at 8 (0-7), lazy 7/28 at 10 (0-9), where before this the 10-thread trim declined
     ///   pinned;
-    /// - the whole machine (unpinned), from 10 threads alone (`unpinned_trims`): lazy 7/28 at
-    ///   10 and more, measured unpinned at 0.873; master's plan at 8, 6 and 4, where the
-    ///   pinned gains did not hold unpinned.
+    /// - the whole machine (unpinned), from 10 threads (`unpinned_trims`): lazy 7/28 at 10
+    ///   and more, measured unpinned at 0.873; master's plan at 8, where the pinned gain did
+    ///   not hold unpinned; at 6 (from 0.5.7) and 4 (from 0.5.8), the plan's workers on the
+    ///   lazy kernel (`UNPINNED_AT_SIX`, `UNPINNED_AT_FOUR`).
     ///
     /// Through every entry point. Any other mask (two CPUs of a core, {0,10,1,11} at 4;
     /// fewer or more cores than threads, 0-7 at 4 or 6; most CPUs but not all) and any quota
@@ -5066,9 +5195,10 @@ mod plan_tests {
             m
         };
         // (threads, pinned workers, lazy, unpinned cell): unpinned, 10's is the pinned cell's
-        // own, and 6's (from 0.5.7) the plan's six workers on the lazy kernel
+        // own, 6's (from 0.5.7) the plan's six workers on the lazy kernel, and 4's (from
+        // 0.5.8) the plan's four on the lazy kernel
         for (t, n, lazy, unpinned) in [
-            (4, 3, false, None),
+            (4, 3, false, Some((UNPINNED_AT_FOUR, true))),
             (6, 5, true, Some((UNPINNED_AT_SIX, true))),
             (8, 6, true, None),
             (10, 7, true, Some((7, true))),
@@ -5984,7 +6114,8 @@ mod plan_tests {
             assert_eq!(at("0-3", 4), Some((TRIMMED_AT_FOUR, false)));
             assert_eq!(at("0-7", 8), Some((TRIMMED_AT_EIGHT, true)));
             assert_eq!(at("0-19", 10), Some((TRIMMED_WORKERS, true)));
-            assert_eq!(at("0-19", 4), None);
+            // (unpinned at 4: the plan's four workers, lazy, from 0.5.8)
+            assert_eq!(at("0-19", 4), Some((UNPINNED_AT_FOUR, true)));
             assert!(service_target_read(10, both, &i9_pinned("0-19"), &c));
         }
     }
