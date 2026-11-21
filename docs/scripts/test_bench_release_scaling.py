@@ -83,6 +83,16 @@ class Lineage(unittest.TestCase):
         self.assertAlmostEqual(c2["d"], 0.0, places=5)
         self.assertAlmostEqual(p2["anchor_mbps"], 1e8 / 0.5 / 1e6, places=0)
 
+    def test_newest_first_orders_versions_numerically(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            walls = {v: {1: 1.0} for v in ("0.5.8", "0.5.9", "0.5.10")} | {ANCHOR: {1: 2.0}}
+            for new, old in (("0.5.9", "0.5.8"), ("0.5.10", "0.5.9")):
+                write_run(root, f"2026-11-21-cpu-{new}", new, old, walls, date="2026-11-21")
+            write_run(root, "2026-11-19-cpu-0.5.8", "0.5.8", "0.5.9", walls, date="2026-11-19")
+            names = [d.name for d in brs.newest_first(list(root.iterdir()))]
+            self.assertEqual(names, ["2026-11-21-cpu-0.5.10", "2026-11-21-cpu-0.5.9", "2026-11-19-cpu-0.5.8"])
+
     def test_recorded_runs(self):
         """The recorded i9 runs reproduce the coordinator's figures for 0.2.1 over 0.3.0.
 
