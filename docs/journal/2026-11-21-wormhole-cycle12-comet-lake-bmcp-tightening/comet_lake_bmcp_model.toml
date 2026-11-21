@@ -1,0 +1,48 @@
+name = "Wormhole Cycle 12 Diagnostic Model: Tightened Comet Lake BMCP_CML (15-GPR Clique Spill + 10-LFB Little's Law + 32-Page 4KiB Streamer)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_outq16_dtlb64_lfb10_scan"
+inputs = ["records", "C", "p", "n"]
+output = "strips_and_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R + 16*r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "4KiB streamer hides 94%+ of sequential records misses, while 256 active 1KiB chunks span up to 64 4KiB pages (64-entry L1 DTLB boundary) + 10-LFB RFO contention."
+
+[[edge]]
+id = "s2_rv_morse_lfb10_elim"
+inputs = ["strips_and_outq16", "C", "n"]
+output = "eliminated_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Pointer-dependent doubly-linked list splices + random rule[2] loads defeat 4KiB streamer (>32 pages on large-H blocks) and serialize on 1 LFB."
+
+[[edge]]
+id = "s3_bands_slp_and_inline16"
+inputs = ["eliminated_arena", "strips_and_outq16"]
+output = "bands_and_inline16"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict", D = "H", B = "B_bands + dict", Q = "H", M = "B_bands + dict" }
+evidence = "Side-1/0 list walks defeat streamer (up to 7,224 dep_past_l2), while sequential bands.push and inline_words benefit from 4KiB streamer."
+
+[[edge]]
+id = "s4_streamer_assisted_wire"
+inputs = ["bands_and_inline16", "strips_and_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Mean band span of 28-64 u32s (1.8-4.0 cache lines) triggers 4KiB streamer on multi-line spans while 10 LFBs overlap independent RFO misses."
+
+[[edge]]
+id = "s5_gpr15_lfb10_bounded_mlp_emit"
+inputs = ["critical_edges", "bands_and_inline16", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m / min(mu, 7.5)", B = "n", Q = "m", M = "n + m" }
+evidence = "15-GPR Chaitin spill cliff above mu=8 and 10-LFB sharing (~2.5 LFBs held by out RFOs + inline16) cap effective Comet Lake pointer-chase MLP at mu_eff <= 7.5."

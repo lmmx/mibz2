@@ -1,0 +1,9 @@
+=== X86-64 REGISTER / STACK-SPILL CENSUS ACROSS emit_unrolled_mu<MU> ===
+MU= 1 | stack_frame=  0 B | total_insns=  76 | rsp_mem_insns= 11 | regime=SCALARIZED_GPRS
+MU= 2 | stack_frame=  0 B | total_insns= 102 | rsp_mem_insns= 15 | regime=SCALARIZED_GPRS
+MU= 4 | stack_frame= 56 B | total_insns= 211 | rsp_mem_insns= 50 | regime=SCALARIZED_GPRS
+MU= 6 | stack_frame=104 B | total_insns= 298 | rsp_mem_insns= 79 | regime=SCALARIZED_GPRS
+MU= 8 | stack_frame=136 B | total_insns= 367 | rsp_mem_insns=104 | regime=SCALARIZED_GPRS
+MU=10 | stack_frame=168 B | total_insns= 429 | rsp_mem_insns=111 | regime=SCALARIZED_GPRS
+MU=12 | stack_frame=232 B | total_insns= 183 | rsp_mem_insns= 55 | regime=STACK_INDEXED_SROA_COLLAPSE
+MU=16 | stack_frame=296 B | total_insns= 205 | rsp_mem_insns= 64 | regime=STACK_INDEXED_SROA_COLLAPSE
