@@ -1,0 +1,48 @@
+name = "Wormhole Cycle 13 Candidate: Lamport-Fisher-Dietz SWAR64 OutQ16 + AVX2-Wire8 vs Aggarwal-Vitter L1d Write-Combining"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_swar_outq16_scan"
+inputs = ["records", "C", "p", "n"]
+output = "strips_and_swar_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R + 2*r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Lamport (1975) / Fisher-Dietz (1998) 4xu16 SWAR u64 store cuts OutQ16 store amplification from 8-10x (32B scalar loop) to 2.0-2.4x (single 8B u64 store on 91-96% of thin runs)."
+
+[[edge]]
+id = "s2_master_rv_elim"
+inputs = ["strips_and_swar_outq16", "C", "n"]
+output = "eliminated_arena"
+status = "shipped"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Identical to origin/master src/open/endpoint.rs Elim::eliminate (held fixed in Cycle 13 A/B)."
+
+[[edge]]
+id = "s3_master_bands_slp_inline16"
+inputs = ["eliminated_arena", "strips_and_swar_outq16"]
+output = "bands_and_inline16"
+status = "shipped"
+dependent = true
+cost = { W = "B_bands + dict", D = "H", B = "B_bands + dict", Q = "H", M = "B_bands + dict" }
+evidence = "Identical to origin/master induced() + inline_words() (held fixed in Cycle 13 A/B)."
+
+[[edge]]
+id = "s4_avx2_wire8_unpack"
+inputs = ["bands_and_inline16", "strips_and_swar_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m / 8", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Safe-Rust 8-lane chunks_exact_mut(8) x chunks_exact(16) auto-vectorizes to AVX2 vpmovzxwd + vpor + vmovdqu on multi-line band spans."
+
+[[edge]]
+id = "s5_master_emit"
+inputs = ["critical_edges", "bands_and_inline16", "p", "n"]
+output = "text"
+status = "shipped"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Identical to origin/master emit() (held strictly fixed so A/B isolates pre-emit S1+S4)."
