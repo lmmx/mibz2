@@ -19,4 +19,4 @@ output = "text"
 status = "verified"
 dependent = true
 cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
-evidence = "Eliminates address-escaped lane spills and 16B->8B partial stack store-forwarding stalls via 2-register System V ABI value-returned cold handling (ValColdRet in rax:rdx), bits == 17/18 compile-time specialization, unconditional 32 B YMM stores for |w| <= 32 (95.1-100% of steps in 1 branch) plus inline 64 B stores for 33 <= |w| <= 64 inside 4 KiB bipolar dead-out pages (BP4K_SAFE64 = 4032, <= 256 KiB overflow; Theorem 14.3), achieving 0.38-0.52x Open-qi16 across 6/6 Wikidata blocks."
+evidence = "Eliminates address-escaped lane spills and 16B->8B partial stack store-forwarding stalls via 2-register System V ABI value-returned cold handling (FoxColdRet in rax:rdx), bits == 17/18 compile-time specialization, unconditional 32 B YMM stores for |w| <= 32 (95.1-100% of steps in 1 branch) plus inline 64 B stores for 33 <= |w| <= 64 inside 4 KiB bipolar dead-out pages (BP4K_SAFE64 = 4032, <= 256 KiB overflow; Theorem 14.3), achieving 0.428-0.546x Open-qi16 across 6/6 Wikidata blocks in g5_fox64_c14.c."
