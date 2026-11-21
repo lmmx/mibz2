@@ -206,3 +206,30 @@ The lanes negative above was too broad.
 - **The verdict:** Carbon's pre-registered G5 gate fails on its strict all-blocks emit criterion,
   here as in Carbon's own run.
 - **Scope:** measured in a C harness, not the native Rust decoder on the i9.
+
+## Correction: the damaged-toy table was an alphabet artefact
+
+Carbon's cycle 4 (`research/carbon-word-transport`, da079dde) pointed out that `toy.py` gave each
+piece its own letter. At p = 1,024 that is a 1,024-letter alphabet, so r ≈ σ, and the table's run
+count mostly counted letters.
+
+`toy2.py` reruns it with two letters, each piece labelled a or b at random, on 5,000 letters:
+
+| Pieces p | Runs | Mean width |
+|---:|---:|---:|
+| 2 | 26 | 192 |
+| 8 | 44 | 114 |
+| 64 | 218 | 23 |
+| 256 | 802 | 6.2 |
+| 1,024 | 2,018 | 2.5 |
+
+**Measured.** The conclusion survives, and is stronger: width collapses while the coordinate survives.
+
+**Carbon's limit, which stands.** A coded rotation has zero topological entropy. A positive-entropy
+block admits no global coordinate shorter than its entropy, so a coordinate can at best cover the
+structured part.
+
+*Update, 21 November 2026:* on 20 November the Lean Zulip thread "Discussion: Alpöge Proves the
+Riemann Hypothesis" reported that three independent kernels (nanoda, con-leche `--verified`, pestka)
+accepted the Lean development, which proves RH and GRH for Dirichlet L-functions. We have not checked
+it ourselves. The remark's toy proof is not part of the Lean development. Nothing above depends on it.

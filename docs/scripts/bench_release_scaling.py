@@ -148,6 +148,19 @@ def _version(v: str) -> tuple[int, ...] | None:
     return tuple(int(x) for x in parts) if len(parts) == 3 and all(x.isdigit() for x in parts) else None
 
 
+def newest_first(dirs: list[Path]) -> list[Path]:
+    """Runs newest first: by the recorded date, then by the release measured, as a version.
+
+    Not by directory name: on one date, "…-0.5.9" sorts after "…-0.5.10" as text, which put
+    0.5.9's run at the top once 0.5.10's was recorded the same day.
+    """
+    def key(d: Path) -> tuple:
+        meta = json.loads((d / "meta.json").read_text())
+        ref = meta.get("arms", {}).get(meta.get("ref"), "")
+        return (meta.get("date", ""), _version(ref) or (), d.name)
+    return sorted(dirs, key=key, reverse=True)
+
+
 def _mean_var(logs: list[float]) -> tuple[float, float] | None:
     """A paired log ratio's mean over the rounds, and that mean's variance (var/rounds)."""
     if len(logs) < 2:
@@ -260,7 +273,7 @@ def lineage(dirs: list[Path]) -> list[dict]:
 
 
 def main() -> None:
-    dirs = sorted((p for p in RUNS.glob("*/") if (p / "meta.json").exists()), reverse=True) if RUNS.exists() else []
+    dirs = newest_first([p for p in RUNS.glob("*/") if (p / "meta.json").exists()]) if RUNS.exists() else []
     OUT.parent.mkdir(parents=True, exist_ok=True)
     ASSET.write_text(json.dumps({"runs": [run_data(d) for d in dirs], "lineage": lineage(dirs)}, separators=(",", ":"), allow_nan=False))
     if not dirs:

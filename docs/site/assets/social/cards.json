@@ -216,6 +216,27 @@
     "section": " · Research blog",
     "title": "Where the decoding work goes: random IDs in repetitive JSON"
   },
+  "assets/social/blog-2026-11-21-besieging-hard-problems.png": {
+    "description": "A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check.",
+    "foot": "lmmx.github.io/mibz2 · 21 November 2026",
+    "kind": "meta",
+    "section": " · Research blog",
+    "title": "Besieging hard problems: cheap checks first, after the Riemann proof"
+  },
+  "assets/social/blog-2026-11-21-fast-alone-slow-in-a-crowd.png": {
+    "description": "Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor.",
+    "foot": "lmmx.github.io/mibz2 · 21 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Fast alone, slow in a crowd: which speed-ups survive many cores"
+  },
+  "assets/social/blog-2026-11-21-sixteen-at-a-stroke.png": {
+    "description": "Writing sixteen at a stroke and keeping only what it needs spares the processor a guess per run, so mibz2 0.5.8 decodes Wikidata 5% faster on ten cores.",
+    "foot": "lmmx.github.io/mibz2 · 21 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Sixteen at a stroke: fixed-width writes that stop the processor guessing"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",

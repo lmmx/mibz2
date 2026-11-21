@@ -55,6 +55,9 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Besieging hard problems" = "blog/2026-11-21-besieging-hard-problems.md" },
+    { "Fast alone, slow in a crowd" = "blog/2026-11-21-fast-alone-slow-in-a-crowd.md" },
+    { "Sixteen at a stroke" = "blog/2026-11-21-sixteen-at-a-stroke.md" },
     { "Research by obligation" = "blog/2026-11-20-research-by-obligation.md" },
     { "Where the decoding work goes" = "blog/2026-11-20-where-the-decoding-work-goes.md" },
     { "Train tracks" = "blog/2026-11-20-train-tracks.md" },
@@ -269,6 +272,9 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-21-besieging-hard-problems.md" = "A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check." },
+  { "blog/2026-11-21-fast-alone-slow-in-a-crowd.md" = "Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor." },
+  { "blog/2026-11-21-sixteen-at-a-stroke.md" = "Writing sixteen at a stroke and keeping only what it needs spares the processor a guess per run, so mibz2 0.5.8 decodes Wikidata 5% faster on ten cores." },
   { "blog/2026-11-20-research-by-obligation.md" = "We now track the work any decoder must pay for rather than the algorithms that pay it, and a claimed Riemann proof has sharpened how we hunt." },
   { "blog/2026-11-20-where-the-decoding-work-goes.md" = "Tracing each costly row back to the text it spells shows that JSON keys cost almost nothing, while random statement IDs claim two thirds of the hardest rows." },
   { "blog/2026-11-20-train-tracks.md" = "Thurston's train tracks squeeze a tangle of curves onto a few weighted branches that can be edited directly, and a compressed block's runs form something very like one." },

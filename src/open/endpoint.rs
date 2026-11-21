@@ -1,82 +1,257 @@
 //! Eliminate the open complement with an auxiliary interval exchange.
 //! Its prefix contains terminal coordinates only. All narrow-run wiring is absent.
+//!
+//! **Where its state lives** (the Wormhole line's memory diet, W1,
+//! `docs/journal/2026-11-21-wormhole-cycle5-pigeonhole-chaitin-synthesis.md` on
+//! `research/carbon-wormhole`): the elimination's nodes and rules are dead before the kernel's
+//! `edges` is first written, so they are kept in `edges`' own buffer, as `u32` words, and
+//! `edges` is then written over them. A node is four words when every node id fits in 16 bits
+//! (`Narrow`: a side's `prev` and `next` links in one word, then its width and
+//! word), six otherwise (`Wide`). The two lists are linked as the nodes are made, with no
+//! staging lists. After the elimination a node's side-1 links, read once more by the walk
+//! along the bottom, give way to its bottom coordinate.
 use super::{Band, Counts, Kernel};
 
-#[derive(Default, Clone, Copy)]
-struct Node {
-    prev: [u32; 2],
-    next: [u32; 2],
-    width: u32,
-    word: u32,
+/// A node's links in the arena
+trait Links {
+    /// `u32` words a node takes
+    const STRIDE: usize;
+    /// The word that holds a node's bottom coordinate once the elimination is done (one of
+    /// its side-1 links, read before it is written)
+    const BOTTOM: usize;
+    fn prev(a: &[u32], id: u32, side: usize) -> u32;
+    fn next(a: &[u32], id: u32, side: usize) -> u32;
+    fn set_prev(a: &mut [u32], id: u32, side: usize, to: u32);
+    fn set_next(a: &mut [u32], id: u32, side: usize, to: u32);
 }
 
-#[derive(Clone, Copy)]
-struct Rule {
-    left: u32,
-    right: u32,
-    len: u32,
-    first: u32,
+/// Every node id below 2^16: four words a node, a word per side (`prev` in its low half,
+/// `next` in its high half), then the width and the word
+struct Narrow;
+/// Any node id: six words a node, `prev` and `next` per side, then the width and the word
+struct Wide;
+
+impl Links for Narrow {
+    const STRIDE: usize = 4;
+    const BOTTOM: usize = 1;
+    #[inline(always)]
+    fn prev(a: &[u32], id: u32, side: usize) -> u32 {
+        a[id as usize * 4 + side] & 0xFFFF
+    }
+    #[inline(always)]
+    fn next(a: &[u32], id: u32, side: usize) -> u32 {
+        a[id as usize * 4 + side] >> 16
+    }
+    #[inline(always)]
+    fn set_prev(a: &mut [u32], id: u32, side: usize, to: u32) {
+        let w = &mut a[id as usize * 4 + side];
+        *w = (*w & 0xFFFF_0000) | to;
+    }
+    #[inline(always)]
+    fn set_next(a: &mut [u32], id: u32, side: usize, to: u32) {
+        let w = &mut a[id as usize * 4 + side];
+        *w = (*w & 0xFFFF) | (to << 16);
+    }
 }
 
+impl Links for Wide {
+    const STRIDE: usize = 6;
+    const BOTTOM: usize = 2;
+    #[inline(always)]
+    fn prev(a: &[u32], id: u32, side: usize) -> u32 {
+        a[id as usize * 6 + 2 * side]
+    }
+    #[inline(always)]
+    fn next(a: &[u32], id: u32, side: usize) -> u32 {
+        a[id as usize * 6 + 2 * side + 1]
+    }
+    #[inline(always)]
+    fn set_prev(a: &mut [u32], id: u32, side: usize, to: u32) {
+        a[id as usize * 6 + 2 * side] = to;
+    }
+    #[inline(always)]
+    fn set_next(a: &mut [u32], id: u32, side: usize, to: u32) {
+        a[id as usize * 6 + 2 * side + 1] = to;
+    }
+}
+
+/// The node count up to which `Narrow` links serve: ids 0..=65535
+const NARROW_NODES: usize = 1 << 16;
+
+/// A rule's words in the arena: left, right, len, first
+const RULE: usize = 4;
+
+/// The width certificate's line (the Mechanisms line's cycle 19, Theorem 19.2a,
+/// `docs/journal/2026-11-21-carbon-cycle19-unified-synthesis.md` on
+/// `research/carbon-word-transport`): no step of the elimination widens a node, so a run of
+/// steps that peels one node against the same partner (a spiral) takes fewer steps than the
+/// widest node is wide. A block whose nodes are all at most this wide runs the plain loop;
+/// a wider one runs the loop that contracts each spiral into one step (`eliminate::<true>`).
+pub(super) const CERTIFIED_WIDTH: u32 = 32_768;
+/// The rules one contracted spiral may make: a power by squaring (two a bit of the count,
+/// which is below 2^20) and the join after it
+const SPIRAL_RULES: usize = 2 * 20 + 1;
+
+/// The elimination's scratch kept outside `edges`: the stack of `append`
 #[derive(Default)]
 pub(super) struct Endpoint {
-    nodes: Vec<Node>,
-    rules: Vec<Rule>,
-    order: [Vec<u32>; 2],
-    terminals: [Vec<u32>; 2],
-    bottom: Vec<u32>,
     stack: Vec<u32>,
+    /// (test only) make every elimination take `Wide` links
+    #[cfg(test)]
+    pub(super) force_wide: bool,
+    /// (test only) start every elimination with no room for a rule, so that the arena grows
+    #[cfg(test)]
+    pub(super) tight: bool,
+    /// (test only) make every elimination contract its spirals (`Some(true)`) or run the
+    /// plain loop (`Some(false)`), whatever its widths
+    #[cfg(test)]
+    pub(super) spirals: Option<bool>,
+    /// (test only) poison a region of `edges` at a point of the construction (`Clobber`)
+    #[cfg(test)]
+    pub(super) clobber: Clobber,
+}
+
+/// (test only) where the lifetime tests poison `edges` (`mux.rs`): after each region's last
+/// read, which the output must not see, or (the controls) before it, which it must
+#[cfg(test)]
+#[derive(Default, Clone, Copy, PartialEq, Debug)]
+pub(super) enum Clobber {
+    #[default]
+    None,
+    /// the image order, once the node lists are made (dead)
+    OrderAfterNodes,
+    /// the image order, once written and before the node lists are made (live: a control)
+    OrderBeforeNodes,
+    /// all of `edges`, once the bands are made and before the wiring (dead)
+    AllBeforeWire,
+    /// the arena, once the elimination is done and before the bands are read off it (live:
+    /// a control)
+    ArenaBeforeBands,
 }
 
 impl Endpoint {
-    /// (test only) the scratch it keeps, in bytes
+    /// (test only) the scratch it keeps, in bytes (its nodes and rules are in `edges`)
     #[cfg(test)]
     pub(super) fn scratch(&self) -> usize {
-        use std::mem::size_of;
-        size_of::<Node>() * self.nodes.capacity()
-            + size_of::<Rule>() * self.rules.capacity()
-            + 4 * (self
-                .order
-                .iter()
-                .chain(&self.terminals)
-                .map(Vec::capacity)
-                .sum::<usize>()
-                + self.bottom.capacity()
-                + self.stack.capacity())
+        4 * self.stack.capacity()
+    }
+}
+
+/// The elimination over an arena: `STRIDE` words per node from 0, then `RULE` words per rule
+/// from `base` to `top`. The arena is `edges`' buffer, whose length only grows, so neither the
+/// nodes nor the edges after them are filled first. (A slice, not the `Vec`: its pointer and
+/// length stay in registers across the stores.)
+struct Elim<'a, L: Links> {
+    a: &'a mut [u32],
+    base: usize,
+    top: usize,
+    nodes: u32,
+    _links: std::marker::PhantomData<L>,
+}
+
+/// The arena to `need` words at least: doubled
+#[cold]
+#[inline(never)]
+fn grow(a: &mut Vec<u32>, need: usize) {
+    a.resize(need.max(2 * a.len()), 0);
+}
+
+impl<L: Links> Elim<'_, L> {
+    #[inline(always)]
+    fn width(&self, id: u32) -> u32 {
+        self.a[id as usize * L::STRIDE + L::STRIDE - 2]
+    }
+    #[inline(always)]
+    fn set_width(&mut self, id: u32, w: u32) {
+        self.a[id as usize * L::STRIDE + L::STRIDE - 2] = w;
+    }
+    #[inline(always)]
+    fn word(&self, id: u32) -> u32 {
+        self.a[id as usize * L::STRIDE + L::STRIDE - 1]
+    }
+    #[inline(always)]
+    fn set_word(&mut self, id: u32, w: u32) {
+        self.a[id as usize * L::STRIDE + L::STRIDE - 1] = w;
+    }
+    /// A node's bottom coordinate, once the elimination is done (in a side-1 link's word)
+    #[inline(always)]
+    fn bottom(&self, id: u32) -> u32 {
+        self.a[id as usize * L::STRIDE + L::BOTTOM]
+    }
+    #[inline(always)]
+    fn set_bottom(&mut self, id: u32, x: u32) {
+        self.a[id as usize * L::STRIDE + L::BOTTOM] = x;
     }
 
+    /// A new node, its links unset
     fn node(&mut self, width: u32, word: u32) -> u32 {
-        let id = self.nodes.len() as u32;
-        self.nodes.push(Node {
-            width,
-            word,
-            ..Node::default()
-        });
+        let id = self.nodes;
+        self.nodes += 1;
+        self.set_width(id, width);
+        self.set_word(id, word);
         id
     }
 
+    /// Append `id` to a list on `side` whose last node is `*tail` (0: the list is empty, and
+    /// `*head` is set)
+    #[inline(always)]
+    fn append_to(&mut self, list: &mut (u32, u32), id: u32, side: usize) {
+        let (head, tail) = list;
+        if *tail == 0 {
+            *head = id;
+        } else {
+            L::set_next(self.a, *tail, side, id);
+        }
+        L::set_prev(self.a, id, side, *tail);
+        *tail = id;
+    }
+
+    /// The circular list on `side` through the sentinel: `first`'s nodes, then `second`'s
+    fn close(&mut self, side: usize, first: (u32, u32), second: (u32, u32)) {
+        let mut prev = 0;
+        for (head, tail) in [first, second] {
+            if tail == 0 {
+                continue;
+            }
+            L::set_next(self.a, prev, side, head);
+            L::set_prev(self.a, head, side, prev);
+            prev = tail;
+        }
+        L::set_next(self.a, prev, side, 0);
+        L::set_prev(self.a, 0, side, prev);
+    }
+
+    #[inline(always)]
     fn cut(&mut self, id: u32, side: usize) {
-        let h = self.nodes[id as usize];
-        self.nodes[h.prev[side] as usize].next[side] = h.next[side];
-        self.nodes[h.next[side] as usize].prev[side] = h.prev[side];
+        let (p, n) = (L::prev(self.a, id, side), L::next(self.a, id, side));
+        L::set_next(self.a, p, side, n);
+        L::set_prev(self.a, n, side, p);
     }
 
+    #[inline(always)]
     fn insert(&mut self, at: u32, id: u32, side: usize) {
-        let next = self.nodes[at as usize].next[side];
-        self.nodes[id as usize].prev[side] = at;
-        self.nodes[id as usize].next[side] = next;
-        self.nodes[at as usize].next[side] = id;
-        self.nodes[next as usize].prev[side] = id;
+        let next = L::next(self.a, at, side);
+        L::set_prev(self.a, id, side, at);
+        L::set_next(self.a, id, side, next);
+        L::set_next(self.a, at, side, id);
+        L::set_prev(self.a, next, side, id);
     }
 
+    #[inline(always)]
+    fn rule(&self, w: u32) -> usize {
+        self.base + (w - 257) as usize * RULE
+    }
+
+    #[inline(always)]
     fn len(&self, w: u32) -> u32 {
         if w <= 256 {
             u32::from(w != 0)
         } else {
-            self.rules[(w - 257) as usize].len
+            self.a[self.rule(w) + 2]
         }
     }
 
+    #[inline(always)]
     fn join(&mut self, left: u32, right: u32) -> u32 {
         if left == 0 {
             return right;
@@ -84,88 +259,124 @@ impl Endpoint {
         if right == 0 {
             return left;
         }
-        let id = self.rules.len() as u32 + 257;
-        self.rules.push(Rule {
-            left,
-            right,
-            len: self.len(left) + self.len(right),
-            first: u32::MAX,
-        });
+        let id = ((self.top - self.base) / RULE) as u32 + 257;
+        let len = self.len(left) + self.len(right);
+        self.a[self.top..self.top + RULE].copy_from_slice(&[left, right, len, u32::MAX]);
+        self.top += RULE;
         id
     }
 
-    fn gaps(&mut self, side: usize, start: u32, end: u32) {
-        if start < end {
-            let id = self.node(end - start, 0);
-            self.order[side].push(id);
-            self.terminals[1 - side].push(id);
-        }
-    }
-
-    fn lists(&mut self) {
-        for side in 0..2 {
-            let mut prev = 0;
-            for &id in self.terminals[side].iter().chain(&self.order[side]) {
-                self.nodes[prev as usize].next[side] = id;
-                self.nodes[id as usize].prev[side] = prev;
-                prev = id;
+    /// `word` repeated `q` times (`q > 0`), by squaring: at most `SPIRAL_RULES - 1` rules
+    fn power(&mut self, word: u32, q: u32) -> u32 {
+        let (mut acc, mut base, mut e) = (0, word, q);
+        loop {
+            if e & 1 == 1 {
+                acc = self.join(acc, base);
             }
-            self.nodes[prev as usize].next[side] = 0;
-            self.nodes[0].prev[side] = prev;
+            e >>= 1;
+            if e == 0 {
+                break acc;
+            }
+            base = self.join(base, base);
         }
     }
 
-    fn eliminate(&mut self, mut remaining: u32) -> usize {
-        let mut steps = 0;
-        while remaining > 0 {
-            let [x, y] = self.nodes[0].prev;
-            let a = self.nodes[x as usize];
-            let b = self.nodes[y as usize];
-            let w = a.width.min(b.width);
-            assert!(w > 0 && w <= remaining);
-            remaining -= w;
-            steps += 1;
+    /// The elimination's steps until `remaining` is 0 (true), or until the arena has no room
+    /// for a rule (false: it is grown, and the elimination resumed). With `SPIRALS` (the
+    /// blocks the width certificate leaves out), a spiral's steps are taken as one:
+    /// - the side-0 node `x` wider than the side-1 node `y` that follows it on side 1: each
+    ///   step leaves both lists as they were, prepends `x`'s word to `y`'s and takes `y`'s
+    ///   width off `x`'s, while `x` stays the wider. Its `q = (aw - 1) / bw` steps give `y`
+    ///   the word `x^q y` and `x` the width `aw - q bw`.
+    /// - `x` narrower than `y`, which `x` follows on side 0: each step appends `y`'s word to
+    ///   `x`'s and takes `x`'s width off `y`'s, for `q = (bw - 1) / aw` steps: `x y^q`, and
+    ///   `y` the width `bw - q aw`.
+    ///
+    /// The lists, the widths and the words' spellings are exactly the plain loop's (its rules
+    /// are fewer); the steps are counted as the plain loop's.
+    fn eliminate<const SPIRALS: bool>(&mut self, remaining: &mut u32, steps: &mut usize) -> bool {
+        let (mut left, mut taken) = (*remaining, *steps);
+        let room = if SPIRALS { SPIRAL_RULES * RULE } else { RULE };
+        let done = loop {
+            if left == 0 {
+                break true;
+            }
+            if self.top + room > self.a.len() {
+                break false;
+            }
+            let (x, y) = (L::prev(self.a, 0, 0), L::prev(self.a, 0, 1));
+            let (aw, bw) = (self.width(x), self.width(y));
+            if SPIRALS && x != y {
+                if aw > bw && L::prev(self.a, y, 1) == x && (aw - 1) / bw >= 2 {
+                    let q = (aw - 1) / bw;
+                    assert!(q * bw < aw && q * bw <= left);
+                    let head = self.power(self.word(x), q);
+                    let word = self.join(head, self.word(y));
+                    self.set_word(y, word);
+                    self.set_width(x, aw - q * bw);
+                    left -= q * bw;
+                    taken += q as usize;
+                    continue;
+                }
+                if aw < bw && L::prev(self.a, x, 0) == y && (bw - 1) / aw >= 2 {
+                    let q = (bw - 1) / aw;
+                    assert!(q * aw < bw && q * aw <= left);
+                    let tail = self.power(self.word(y), q);
+                    let word = self.join(self.word(x), tail);
+                    self.set_word(x, word);
+                    self.set_width(y, bw - q * aw);
+                    left -= q * aw;
+                    taken += q as usize;
+                    continue;
+                }
+            }
+            let w = aw.min(bw);
+            assert!(w > 0 && w <= left);
+            left -= w;
+            taken += 1;
             if x == y {
                 self.cut(x, 0);
                 self.cut(x, 1);
                 continue;
             }
-            let word = self.join(a.word, b.word);
-            if a.width <= b.width {
+            let word = self.join(self.word(x), self.word(y));
+            if aw <= bw {
                 self.cut(x, 0);
                 self.insert(y, x, 0);
-                self.nodes[x as usize].word = word;
-                if a.width == b.width {
+                self.set_word(x, word);
+                if aw == bw {
                     self.cut(y, 0);
                     self.cut(y, 1);
                 } else {
-                    self.nodes[y as usize].width -= w;
+                    self.set_width(y, bw - w);
                 }
             } else {
                 self.cut(y, 1);
                 self.insert(x, y, 1);
-                self.nodes[y as usize].word = word;
-                self.nodes[x as usize].width -= w;
+                self.set_word(y, word);
+                self.set_width(x, aw - w);
             }
-        }
-        steps
+        };
+        (*remaining, *steps) = (left, taken);
+        done
     }
 
-    fn append(&mut self, word: u32, dest: &mut Vec<u8>) {
-        self.stack.clear();
-        self.stack.push(word);
-        while let Some(id) = self.stack.pop() {
+    fn append(&mut self, word: u32, stack: &mut Vec<u32>, dest: &mut Vec<u8>) {
+        stack.clear();
+        stack.push(word);
+        while let Some(id) = stack.pop() {
             if id <= 256 {
                 dest.push((id - 1) as u8);
             } else {
-                let rule = &mut self.rules[(id - 257) as usize];
-                if rule.first == u32::MAX {
-                    rule.first = dest.len() as u32;
-                    self.stack.push(rule.right);
-                    self.stack.push(rule.left);
+                let r = self.rule(id);
+                let rule = &mut self.a[r..r + RULE];
+                if rule[3] == u32::MAX {
+                    rule[3] = dest.len() as u32;
+                    stack.push(rule[1]);
+                    stack.push(rule[0]);
                 } else {
-                    let start = rule.first as usize;
-                    dest.extend_from_within(start..start + rule.len as usize);
+                    let start = rule[3] as usize;
+                    dest.extend_from_within(start..start + rule[2] as usize);
                 }
             }
         }
@@ -173,90 +384,221 @@ impl Endpoint {
 }
 
 impl Kernel {
+    /// The most nodes `ns` strips make: a node per strip, at most one gap before each strip
+    /// and one after the last, on each side, and the sentinel
+    fn nodes_most(ns: usize) -> usize {
+        3 * ns + 3
+    }
+
+    /// Whether the elimination of `ns` strips takes `Wide` links
+    fn wide(&self, ns: usize) -> bool {
+        #[cfg(test)]
+        let wide = Self::nodes_most(ns) > NARROW_NODES || self.endpoint.force_wide;
+        #[cfg(not(test))]
+        let wide = Self::nodes_most(ns) > NARROW_NODES;
+        wide
+    }
+
+    /// The words `edges` is sized to for the induced construction of `ns` strips and `m`
+    /// retained rows: the strips' image order (`ns` words), then the arena, sized for the
+    /// nodes and as many rules (the blocks make about one a node; more grow it); and at least
+    /// the `m` edges written over them all
+    pub(super) fn arena_words(&self, ns: usize, m: usize) -> usize {
+        let stride = if self.wide(ns) {
+            Wide::STRIDE
+        } else {
+            Narrow::STRIDE
+        };
+        (ns + (stride + RULE) * Self::nodes_most(ns)).max(m)
+    }
+
     pub(super) fn induced(
         &mut self,
         n: u32,
         thin: &[u32; 256],
         stats: &mut Counts,
     ) -> [usize; 256] {
-        let e = &mut self.endpoint;
-        e.nodes.clear();
-        e.nodes.push(Node::default());
-        e.rules.clear();
-        for order in e.order.iter_mut().chain(&mut e.terminals) {
-            order.clear();
+        let most = Self::nodes_most(self.strips.len());
+        if self.wide(self.strips.len()) {
+            self.induced_with::<Wide>(n, thin, stats, most)
+        } else {
+            self.induced_with::<Narrow>(n, thin, stats, most)
         }
-        for s in &self.strips {
+    }
+
+    fn induced_with<L: Links>(
+        &mut self,
+        n: u32,
+        thin: &[u32; 256],
+        stats: &mut Counts,
+        most: usize,
+    ) -> [usize; 256] {
+        let Kernel {
+            endpoint,
+            strips,
+            bands,
+            spelling,
+            offsets,
+            edges,
+            ..
+        } = self;
+        // `edges` is written only once the elimination is done: its buffer holds the strips'
+        // image order (its first `ns` words, `finish`), then the arena, sized by `finish`
+        // (`arena_words`)
+        let ns = strips.len();
+        let nodes_words = L::STRIDE * most;
+        assert!(edges.len() >= ns + nodes_words);
+        #[cfg(test)]
+        if endpoint.tight {
+            edges.truncate(ns + nodes_words);
+        }
+        let (image_order, arena) = edges.split_at_mut(ns);
+        #[cfg(test)]
+        if endpoint.clobber == Clobber::OrderBeforeNodes {
+            image_order.fill(0xA5A5_A5A5);
+        }
+        let mut e = Elim::<L> {
+            a: arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        e.node(0, 0);
+        // the widest node, for the width certificate (`CERTIFIED_WIDTH`)
+        let mut widest = 0;
+        for s in strips.iter() {
             e.node(s.width, u32::from(s.byte) + 1);
+            widest = widest.max(s.width);
         }
+        // the lists, as the nodes are made: on side 0 the image gaps (its terminals) then the
+        // domain order, on side 1 the domain gaps then the image order
+        let (mut terminals, mut order) = ([(0, 0); 2], [(0, 0); 2]);
         let mut x = 0;
-        for (i, s) in self.strips.iter().enumerate() {
-            e.gaps(0, x, s.from);
-            e.order[0].push(i as u32 + 1);
+        for (i, s) in strips.iter().enumerate() {
+            if x < s.from {
+                widest = widest.max(s.from - x);
+                let id = e.node(s.from - x, 0);
+                e.append_to(&mut order[0], id, 0);
+                e.append_to(&mut terminals[1], id, 1);
+            }
+            e.append_to(&mut order[0], i as u32 + 1, 0);
             x = s.from + s.width;
         }
-        e.gaps(0, x, n);
+        if x < n {
+            widest = widest.max(n - x);
+            let id = e.node(n - x, 0);
+            e.append_to(&mut order[0], id, 0);
+            e.append_to(&mut terminals[1], id, 1);
+        }
         x = 0;
-        for &i in &self.image_order {
-            let s = self.strips[i as usize];
-            e.gaps(1, x, s.to);
-            e.order[1].push(i + 1);
+        for &i in image_order.iter() {
+            let s = strips[i as usize];
+            if x < s.to {
+                widest = widest.max(s.to - x);
+                let id = e.node(s.to - x, 0);
+                e.append_to(&mut order[1], id, 1);
+                e.append_to(&mut terminals[0], id, 0);
+            }
+            e.append_to(&mut order[1], i + 1, 1);
             x = s.to + s.width;
         }
-        e.gaps(1, x, n);
-        stats.open_nodes = e.nodes.len() - 1;
-        e.lists();
-        stats.steps = e.eliminate(n);
-        stats.rules = e.rules.len();
+        if x < n {
+            widest = widest.max(n - x);
+            let id = e.node(n - x, 0);
+            e.append_to(&mut order[1], id, 1);
+            e.append_to(&mut terminals[0], id, 0);
+        }
+        // the image order is dead from here: the arena may be grown over it, and `edges` is
+        // written over both
+        #[cfg(test)]
+        if endpoint.clobber == Clobber::OrderAfterNodes {
+            image_order.fill(0xA5A5_A5A5);
+        }
+        stats.open_nodes = e.nodes as usize - 1;
+        for side in 0..2 {
+            e.close(side, terminals[side], order[side]);
+        }
+        // the rules follow the nodes made
+        e.base = L::STRIDE * e.nodes as usize;
+        e.top = e.base;
+        let (mut remaining, mut steps) = (n, 0);
+        #[cfg(test)]
+        let spirals = endpoint.spirals.unwrap_or(widest > CERTIFIED_WIDTH);
+        #[cfg(not(test))]
+        let spirals = widest > CERTIFIED_WIDTH;
+        stats.spirals = spirals;
+        while !if spirals {
+            e.eliminate::<true>(&mut remaining, &mut steps)
+        } else {
+            e.eliminate::<false>(&mut remaining, &mut steps)
+        } {
+            let (base, top, nodes) = (e.base, e.top, e.nodes);
+            grow(edges, ns + top + RULE);
+            e = Elim {
+                a: &mut edges[ns..],
+                base,
+                top,
+                nodes,
+                _links: std::marker::PhantomData,
+            };
+        }
+        stats.steps = steps;
+        stats.rules = (e.top - e.base) / RULE;
+        #[cfg(test)]
+        if endpoint.clobber == Clobber::ArenaBeforeBands {
+            e.a[..e.top].fill(0xA5A5_A5A5);
+        }
 
-        e.bottom.resize(e.nodes.len(), 0);
-        let mut id = e.nodes[0].next[1];
+        let mut id = L::next(e.a, 0, 1);
         x = 0;
         while id != 0 {
-            e.bottom[id as usize] = x;
-            let node = e.nodes[id as usize];
-            x += node.width;
-            id = node.next[1];
+            let next = L::next(e.a, id, 1);
+            let w = e.width(id);
+            e.set_bottom(id, x);
+            x += w;
+            id = next;
         }
         assert_eq!(x as usize, stats.retained);
         let mut cursors = [0; 256];
-        id = e.nodes[0].next[0];
+        id = L::next(e.a, 0, 0);
         let mut in_node = 0;
         let mut k = 0;
         for a in 0..256 {
-            cursors[a] = self.bands.len();
+            cursors[a] = bands.len();
             let end = k + thin[a];
             while k < end {
-                let node = e.nodes[id as usize];
-                let width = (end - k).min(node.width - in_node);
+                let node_width = e.width(id);
+                let node_word = e.word(id);
+                let width = (end - k).min(node_width - in_node);
                 // (the port's) every band takes a row at least, so the loop always ends; a wrong
                 // construction panics here rather than looping (the mutation check's finding)
                 assert!(width > 0);
-                let dst = e.bottom[id as usize] + in_node;
-                let code = if node.word == 0 {
+                let dst = e.bottom(id) + in_node;
+                let code = if node_word == 0 {
                     a as u32
                 } else {
-                    let height = e.len(node.word) as usize;
+                    let height = e.len(node_word) as usize;
                     stats.words += 1;
                     stats.copies += width as usize;
                     stats.traced += height;
                     stats.thick_area += width as usize * height;
                     stats.unit_work += usize::from(width == 1) * height;
                     stats.longest = stats.longest.max(height);
-                    e.append(node.word, &mut self.spelling);
-                    self.spelling.push(a as u8);
-                    self.offsets.push(self.spelling.len() as u32);
-                    254 + self.offsets.len() as u32
+                    e.append(node_word, &mut endpoint.stack, spelling);
+                    spelling.push(a as u8);
+                    offsets.push(spelling.len() as u32);
+                    254 + offsets.len() as u32
                 };
-                self.bands.push(Band {
+                bands.push(Band {
                     end: k + width,
                     delta: dst.wrapping_sub(k),
                     code,
                 });
                 in_node += width;
                 k += width;
-                if in_node == node.width {
-                    id = node.next[0];
+                if in_node == node_width {
+                    id = L::next(e.a, id, 0);
                     in_node = 0;
                 }
             }

@@ -46,7 +46,13 @@ brief names:
 - **The primary records** every number is checked against: the journals, the registrations,
   the evidence bundles. Any figure that can't be traced is flagged in the PR, never printed as
   established.
-- **The skills to follow,** in order: `write-blog-post`, then `publish-page`.
+- **The material's centre and our part in it** (write-blog-post §1a). The brief states the
+  material's central idea in one sentence, in its own terms, and lists our records that
+  respond to it: launch briefs, handoffs, journals. A brief that condenses the material
+  hands the agent a summary; it links the full material and says to read all of it.
+- **The skills to follow,** in order: `write-blog-post`, then `publish-page`. One check pass:
+  build, `check_render.py`, one `look_pages.py` run and a look at the figure screenshots,
+  then the PR. Polish lands in flight (§4).
 - **Takeaways first** (§3 below). Before drafting, the agent writes in its plan:
   - the simplest correct explanation of the result, in two or three sentences;
   - the key takeaways, as a short list.

@@ -53,6 +53,14 @@ A performance change is **accepted** on its CI paired bench when all of these ho
    WideLazyCells: 16.2% less wall time for 13.9% more peak RSS at 8 threads, and 12.2% for 15.9%
    at 10, +25 MB on Wikidata only. LOG 6975512468.)
 
+**A memory gain is a gain** (Louis, 21 November 2026: "a major memory gain and no perf regression is also well worth shipping! Don't hold it"). A change that cuts memory without speeding the decoder up is **accepted** when all of these hold:
+
+1. **A primary memory gain:** peak RSS on a primary corpus falls by at least 10%, beyond noise (its 95% interval lies wholly below 0.90 of the base), at one or more thread counts where the new code runs. The measurement is a paired run that executes that code: CI's bench, a paired native end-to-end run reported in the PR (head against base, interleaved rounds, with an A/A control), or a workstation run (C5).
+2. **No primary loss:** no primary corpus is slower in wall time beyond noise at any thread count, in that run or on CI's paired bench.
+3. **Bounded secondary losses**, as in rule 3 above.
+
+Such a change merges and releases like a speed gain (RELEASING §1). It is never held for want of a speed gain, and it needs no workstation run unless its memory gain appears only on the target machine. Where its code runs only at thread counts CI can't reach, as with the Open kernel at 6–20 threads, the paired native run in the PR is the evidence, and CI's bench shows there is no loss elsewhere. A change with no memory gain and no speed gain is not a gain under either rule.
+
 A change built for a specific machine, gated on its hardware, is judged on that machine (C5) for its gain. On every other machine it must show that it stays inactive. A deterministic check that the route is not taken, plus a neutral CI bench, settles that. Statistical non-inferiority is not required where the code path is not taken.
 
 **Adaptive dispatch is fair; changing the measurement is not** (Louis, 19 November 2026: "it is ok to detect properties of the input and switch approach accordingly but not to artificially modify the benchmark etc").

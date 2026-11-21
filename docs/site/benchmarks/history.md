@@ -7,7 +7,7 @@ hide:
 
 # History
 
-<div id="bench-hero" data-ws="../../assets/release-scaling.json">
+<div id="bench-hero" data-ws="../../assets/release-scaling.json" data-notes="../../assets/release-notes.json">
 Loading the chart…
 </div>
 
@@ -55,6 +55,11 @@ figures are measured on GitHub's runners ([methodology](index.md)).
   another machine on another scale, so beside CI's chain they get a panel of their own. In
   **All** every thread count sits at its own level on the i9. The release-scaling runs
   record throughput only, so CPU time and peak RSS have no releases and no **All**.
+- **What changed in a release.** Under the chart, a panel gives the notes of the release in
+  focus: the newest, until a release's diamond, a release or a release-scaling run is pointed
+  at, tapped or chosen. It quotes the release's CHANGELOG section (the first sentence of each
+  summary, and its changes with their pull requests) and links the blog posts that explain it.
+  Every release's notes are [at the foot of the page](#what-changed-release-by-release).
 - **`text`** is generated from mibz2's own sources, so its content changes from merge to
   merge, and its chain multiplies ratios measured on different files.
 
@@ -135,3 +140,13 @@ both releases in `target/release-scaling/`, runs the rounds, and records the run
 (`docs/RELEASING.md`) asks for one such run, made with `just submit bench-release-scaling`,
 and commits its record.
 
+## What changed, release by release
+
+Each release's notes, newest first, from [`CHANGELOG.md`](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md)
+([`docs/scripts/release_notes.py`](https://github.com/lmmx/mibz2/blob/master/docs/scripts/release_notes.py)):
+its opening sentence, the first sentence of each summary written for it, its changes with
+their pull requests, and the blog posts that explain it. A post names the releases it
+explains in its front matter (`releases: ["0.5.8"]`), and its header links back here. The
+figures behind each summary are in the CHANGELOG.
+
+--8<-- "docs/generated/release-notes.md"

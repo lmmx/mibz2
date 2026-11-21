@@ -21,7 +21,7 @@ mess of overloaded fragments nor childishly plain (Louis, 9 November 2026):
 It prints the post's summary (sentences, mean words, share flagged, Flesch reading ease, where
 higher is easier and 60+ is plain English), the dek's verdict, and the worst sentences.
 --all lists every flagged sentence. --changed BASE checks the posts changed since BASE (CI's
-site workflow runs it on every pull request). The exit status is 1 if a dek fails. The body's
+site workflow runs it on every pull request); there a dek fails only if it is new or edited. The exit status is 1 if a dek fails. The body's
 share of flagged sentences is reported against a target of 15%; it isn't yet a gate, since
 the existing posts are over it.
 """
@@ -131,8 +131,10 @@ def changed_posts(base):
 def main():
     argv = sys.argv[1:]
     show_all = "--all" in argv
+    base = None
     if "--changed" in argv:
-        files = changed_posts(argv[argv.index("--changed") + 1])
+        base = argv[argv.index("--changed") + 1]
+        files = changed_posts(base)
     else:
         files = [a for a in argv if not a.startswith("--")]
     if not files:
@@ -140,11 +142,18 @@ def main():
         return 0
     status = 0
     for path in files:
-        status |= check(path, show_all)
+        status |= check(path, show_all, base)
     return status
 
 
-def check(path, show_all):
+def dek_at(base, path):
+    """The post's dek at BASE, or None if the post is new there."""
+    import subprocess
+    out = subprocess.run(["git", "show", f"{base}:{path}"], capture_output=True, text=True)
+    return prose_blocks(out.stdout)[0] if out.returncode == 0 else None
+
+
+def check(path, show_all, base=None):
     dek, blocks = prose_blocks(open(path, encoding="utf-8").read())
     sents = [s for b in blocks for s in sentences(b)]
     scored = [(len(words(s)), load(s), s) for s in sents]
@@ -160,8 +169,12 @@ def check(path, show_all):
         print("  dek: none found")
     else:
         dek_ok, why = dek_check(dek)
-        ok = dek_ok
-        print(f"  dek: {'PASS' if dek_ok else 'FAIL'} ({why})")
+        # With --changed, a dek is gated only if it is new or edited: a post touched for other
+        # reasons (front matter, a fix) keeps a dek written before the rule, reported not gated.
+        unchanged = base is not None and dek_at(base, path) == dek
+        ok = dek_ok or unchanged
+        verdict = "PASS" if dek_ok else ("unchanged since " + base + ", reported, not gated" if unchanged else "FAIL")
+        print(f"  dek: {verdict} ({why})")
     worst = sorted(flagged, key=lambda x: (x[1], x[0]), reverse=True)
     for n, l, s in worst if show_all else worst[:8]:
         print(f"  [{n} words, load {l}] {s[:200]}{'…' if len(s) > 200 else ''}")

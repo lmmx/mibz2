@@ -111,7 +111,7 @@ That reshaped an idea we had been circling: a zoo. Rather than one universal dec
 
 ## 6. Adapting the method: toy, missing effect, native surrogate
 
-Today Levent Alpöge [announced](https://alpo.ge/remark.pdf) that he believes he has proved the Riemann Hypothesis, and its generalisation, working with Claude, with the argument formalised in Lean. The claim is new and has not yet been independently checked, and nothing here depends on it being right. What interested us is his account of how the argument was found, because it describes a way of searching that our method lacked.
+Today Levent Alpöge [announced](https://alpo.ge/remark.pdf) that he believes he has proved the Riemann Hypothesis, and its generalisation, working with Claude, with the argument formalised in Lean. Nothing here depends on it being right. (*Update, 21 November:* the same day, members of the Lean community reported that three independent proof checkers, nanoda, con-leche in its verified mode and pestka, each accepted the Lean development, about 17 million lines, as proving the Riemann Hypothesis and the Generalised Riemann Hypothesis for Dirichlet L-functions. We have not checked it ourselves, and mathematicians are still digesting the argument.) What interested us is his account of how the argument was found, because it describes a way of searching that our method lacked.
 
 As he tells it, he started from a *toy* setting where the theorem was already known (the Riemann Hypothesis over function fields) and re-proved it in a new way chosen so the proof might travel. He then named the ingredient that the hard setting lacks: Stepanov's classical argument uses *multiplicity*, a polynomial vanishing to high order, which over the integers would be "something like differentiating whole numbers". The decisive step was to find a different mechanism, native to the hard setting, with the same effect: chains of theta lifts, each standing in for one order of multiplicity. The human held the analogy; the AI system supplied the technical mastery to build it.
 
@@ -129,19 +129,23 @@ The first version of our transfer went wrong in an instructive way. We named the
 
 The correction, which came out of the discussion, is that the toy's real power is not width but **cheap global coordinates**: a compact number ($k\alpha$ modulo 1) from which any position's letter follows. In the toy the two coincide, which is why they were easy to confuse.
 
-They come apart if the toy is damaged on purpose. Keep the rotation by $\alpha$, but cut the circle into $p$ pieces instead of two, and write down which piece each point of the orbit lands in. The coordinate survives untouched: letter $k$ is the piece holding $x + k\alpha$ modulo 1, found by one binary search over the cut points, for any $k$, in any order. What changes is the column. We measured it on texts of 5,000 letters with the golden-ratio slope:
+They come apart if the toy is damaged on purpose. Keep the rotation by $\alpha$ and the two letters, but cut the circle into $p$ pieces and give each piece the letter $a$ or $b$ at random. The coordinate survives untouched: letter $k$ is the letter of the piece holding $x + k\alpha$ modulo 1, found by one binary search over the cut points, for any $k$, in any order. What changes is the column. We measured it on texts of 5,000 letters with the golden-ratio slope:
 
 | Pieces $p$ | Runs in the last column | Mean run width (rows) |
 |---:|---:|---:|
-| 2 | 10 | 500 |
-| 8 | 46 | 109 |
-| 64 | 101 | 50 |
-| 256 | 276 | 18 |
-| 1,024 | 1,036 | 4.8 |
+| 2 | 26 | 192 |
+| 8 | 44 | 114 |
+| 64 | 218 | 23 |
+| 256 | 802 | 6.2 |
+| 1,024 | 2,018 | 2.5 |
 
-*Measured ([`toy.py`](https://github.com/lmmx/mibz2/blob/94b4d7d08/docs/journal/2026-11-20-toy-transfer/toy.py), any machine; the 2-piece row is a Sturmian prefix, whose finite length adds a few runs to the ideal two).*
+*Measured ([`toy2.py`](https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-11-20-toy-transfer/toy2.py), two letters throughout).*
 
-With a few pieces the column stays wide, so a small cut barely damages the toy; that was our first proposal, and the measurement corrected it. With a thousand pieces the runs are nearly five rows wide on average, close to the narrow runs of a random string, and the coordinate still answers any position in one search. So a block can be almost all narrow runs and still have a global coordinate that makes the walk unnecessary. Width-based methods, ours included, would find almost nothing to exploit in it.
+*Correction, 20 November 2026:* the first version of this table gave each piece its own letter, so at 1,024 pieces it had a 1,024-letter alphabet and its run count mostly counted letters. The research line caught it. With two letters the effect is stronger, not weaker.
+
+With a few pieces the column stays wide, so a small cut barely damages the toy. With a thousand pieces the runs average two and a half rows, narrower than the random strings in our real blocks, and the coordinate still answers any position in one search. So a block can be almost all narrow runs and still have a global coordinate that makes the walk unnecessary. Width-based methods, ours included, would find almost nothing to exploit in it.
+
+There is a limit, which the research line also proved. Every text coded from a rotation has zero entropy: a handful of numbers describe it completely. Real blocks are not like that. A block with about 760 random statement IDs holds about 90,000 random bits, and no global coordinate can be smaller than the information it determines. So on real data the coordinate we are looking for cannot be a single number like $k\alpha$. At best it describes the structured part, and the random strings must be paid for some other way.
 
 That is the precise form of the question for the research line: what object, native to real blocks and cheap to read off the compressed input, gives coordinates the way $k\alpha$ does, or lets long stretches of the path be composed without walking them? Part of the answer may already exist in outline. For a rotation, the digits of a position in the Ostrowski numeration, built from the continued fraction of $\alpha$, say where it sits at every scale. For a general interval exchange, the induction that our earlier kernel performs builds a comparable hierarchy, and a position's path down that hierarchy is its coordinate. Our kernels pay to build the whole hierarchy and then write the text from it. Whether a position's coordinate can be read off without paying for the whole build is open, and it is exactly the kind of question the register exists to price.
 
@@ -162,5 +166,5 @@ A new research line is running now, independently, with the geometric leads (squ
 - [The research charter: method](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/team/research-charter/METHOD.md) and [frontier and obligation register](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/team/research-charter/FRONTIER.md).
 - [Toy, missing ingredient, native surrogate](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/journal/2026-11-20-toy-transfer.md), with the correction and the lanes experiment.
 - [Working backwards from the text](https://github.com/lmmx/mibz2/blob/932ff82c5/docs/journal/2026-11-20-working-backwards.md).
-- Levent Alpöge, [Remark](https://alpo.ge/remark.pdf) (20 November 2026), announcing a claimed proof, not yet independently verified.
+- Levent Alpöge, [Remark](https://alpo.ge/remark.pdf) (20 November 2026), announcing the proof. On 20 November its Lean formalisation was reported accepted by three independent kernels (nanoda, con-leche `--verified`, pestka) in the Lean Zulip thread "Discussion: Alpöge Proves the Riemann Hypothesis".
 - S. Ferenczi and L. Q. Zamboni, *Clustering words and interval exchanges* (2013); S. Mantaci, A. Restivo and M. Sciortino, *Burrows–Wheeler transform and Sturmian words* (2003).
