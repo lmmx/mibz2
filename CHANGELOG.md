@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.10](https://github.com/lmmx/mibz2/compare/v0.5.9...v0.5.10) - 2026-11-21
+
+### <!-- 3 -->Performance
+
+- *(open)* memory diet, Endpoint in edges and queues in out ([#692](https://github.com/lmmx/mibz2/pull/692))
+
+### <!-- 4 -->Documentation
+
+- *(skills)* blog lessons from #689, the material's centre, our experiment, real figures ([#691](https://github.com/lmmx/mibz2/pull/691))
+- *(blog)* besieging hard problems, cheap checks first, after the Riemann proof ([#689](https://github.com/lmmx/mibz2/pull/689))
+- *(changelog)* 0.5.9's release scaling and crossover, the team threshold stays ([#688](https://github.com/lmmx/mibz2/pull/688))
+- *(blog)* fast alone, slow in a crowd, which speed-ups survive many cores ([#682](https://github.com/lmmx/mibz2/pull/682))
+
 ## [0.5.9](https://github.com/lmmx/mibz2/compare/v0.5.8...v0.5.9) - 2026-11-21
 
 ### <!-- 3 -->Performance
