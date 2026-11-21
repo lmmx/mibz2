@@ -26,6 +26,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - *(release-scaling)* 0.5.10 against 0.5.9 on the i9 (release-scaling/run-20261121T130559Z); its attribution row ([#699](https://github.com/lmmx/mibz2/pull/699))
 
+- **Dense-block admission (#703): peak memory about 28% lower from 8 to 20 threads on the i9, and faster too.**
+  - **Admission:** the five densest full Wikidata blocks (r/n 0.15–0.21), which fell back to
+    Segmented at about 5.6 MiB per worker, now take the Open kernel under a cap. All 233 full
+    run-route blocks are admitted, where 228 were before.
+  - **Accepted as a memory gain** (PERFORMANCE-POLICY §2, #704), on a native paired run: peak
+    RSS 0.741 at 8 threads and 0.783 at 10, with wall within noise.
+  - **Byte-identical output** on all 431 blocks.
+
+**Release scaling** (§5; release-scaling/run-20261121T230111Z, evidence 4127c26f) against 0.5.10
+on the i9:
+- 8 threads: +2.1% (+1.2, +3.0)
+- 10 threads: +4.2% (+3.3, +5.1)
+- 12 to 20 threads: +3.6% to +4.8%
+- Median peak RSS: 87.0 → 63.4 MiB at 8 threads, 93.9 → 66.5 MiB at 10.
+
+The memory gain also gave wall time on the i9's shared L3, which the native run's 2 MiB-L2 box
+couldn't show. The step has its row in `docs/journal/release-attribution.md` (§5b).
+
+
 ## [0.5.10](https://github.com/lmmx/mibz2/compare/v0.5.9...v0.5.10) - 2026-11-21
 
 ### <!-- 3 -->Performance
