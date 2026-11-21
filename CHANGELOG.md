@@ -44,6 +44,9 @@ on the i9:
 The memory gain also gave wall time on the i9's shared L3, which the native run's 2 MiB-L2 box
 couldn't show. The step has its row in `docs/journal/release-attribution.md` (§5b).
 
+**The crossover** (§5a; `bench-crossover`, crossover/run-20261121T231207Z, evidence b91a7024, 10 rounds on Wikidata): the team threshold stays. No forced arm beats the shipped decoder at any count.
+- **Teams:** `mibz2-team2` and `mibz2-team3` take 1.08–8.21× the shipped wall time.
+- **One worker per thread:** `mibz2-workers-w` is never faster. Its interval spans 1 at 5, 7 and 9 threads; elsewhere it takes 1.037–1.383×.
 
 ## [0.5.10](https://github.com/lmmx/mibz2/compare/v0.5.9...v0.5.10) - 2026-11-21
 
