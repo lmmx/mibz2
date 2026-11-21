@@ -1,0 +1,394 @@
+{
+  "small_verifications": {
+    "yao_cut_gadget": {
+      "K=3": {
+        "distinct_primitive_bwts": 6,
+        "cut_bits_log2_Kfact": 2.585
+      },
+      "K=4": {
+        "distinct_primitive_bwts": 24,
+        "cut_bits_log2_Kfact": 4.585
+      }
+    },
+    "offset_indistinguishability_witness": {
+      "n": 7,
+      "c0": 5,
+      "p": 0,
+      "q": 6,
+      "L1": "01000001000000",
+      "L1_bits": "1001000",
+      "L2_bits": "1100000",
+      "tau1_q": 3,
+      "tau2_q": 2
+    },
+    "spod_small_verified": 3016
+  },
+  "blocks": {
+    "block-0.L": {
+      "n": 899931,
+      "tile_transport_32KiB": {
+        "num_tiles": 28,
+        "H_out_given_in_bits": 4.7923,
+        "max_possible_bits": 4.8074,
+        "normalised_all_to_all_scatter": 0.99686
+      },
+      "open16_locality": {
+        "m": 89874,
+        "edges_footprint_KiB": 1404.3,
+        "cache_line_64B_jump_rate": 1.0,
+        "l1_page_32KiB_jump_rate": 0.94638
+      },
+      "spod_prefix_128": {
+        "m": 89874,
+        "K_seeds": 129,
+        "max_seg_hops": 19591,
+        "max_seg_frac_m": 0.218,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 29158,
+            "ideal_m_over_P": 22468.5,
+            "parallel_speedup_vs_1thread": 3.08
+          },
+          "P=8": {
+            "makespan_hops": 22939,
+            "ideal_m_over_P": 11234.2,
+            "parallel_speedup_vs_1thread": 3.92
+          },
+          "P=16": {
+            "makespan_hops": 20211,
+            "ideal_m_over_P": 5617.1,
+            "parallel_speedup_vs_1thread": 4.45
+          }
+        }
+      },
+      "spod_coset_512": {
+        "m": 89874,
+        "K_seeds": 177,
+        "max_seg_hops": 2747,
+        "max_seg_frac_m": 0.0306,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 23099,
+            "ideal_m_over_P": 22468.5,
+            "parallel_speedup_vs_1thread": 3.89
+          },
+          "P=8": {
+            "makespan_hops": 12622,
+            "ideal_m_over_P": 11234.2,
+            "parallel_speedup_vs_1thread": 7.12
+          },
+          "P=16": {
+            "makespan_hops": 7399,
+            "ideal_m_over_P": 5617.1,
+            "parallel_speedup_vs_1thread": 12.15
+          }
+        }
+      }
+    },
+    "block-2.L": {
+      "n": 900000,
+      "tile_transport_32KiB": {
+        "num_tiles": 28,
+        "H_out_given_in_bits": 4.7901,
+        "max_possible_bits": 4.8074,
+        "normalised_all_to_all_scatter": 0.9964
+      },
+      "open16_locality": {
+        "m": 112070,
+        "edges_footprint_KiB": 1751.1,
+        "cache_line_64B_jump_rate": 0.99997,
+        "l1_page_32KiB_jump_rate": 0.95618
+      },
+      "spod_prefix_128": {
+        "m": 112070,
+        "K_seeds": 129,
+        "max_seg_hops": 10309,
+        "max_seg_frac_m": 0.092,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 31143,
+            "ideal_m_over_P": 28017.5,
+            "parallel_speedup_vs_1thread": 3.6
+          },
+          "P=8": {
+            "makespan_hops": 17512,
+            "ideal_m_over_P": 14008.8,
+            "parallel_speedup_vs_1thread": 6.4
+          },
+          "P=16": {
+            "makespan_hops": 12155,
+            "ideal_m_over_P": 7004.4,
+            "parallel_speedup_vs_1thread": 9.22
+          }
+        }
+      },
+      "spod_coset_512": {
+        "m": 112070,
+        "K_seeds": 220,
+        "max_seg_hops": 2526,
+        "max_seg_frac_m": 0.0225,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 28073,
+            "ideal_m_over_P": 28017.5,
+            "parallel_speedup_vs_1thread": 3.99
+          },
+          "P=8": {
+            "makespan_hops": 14666,
+            "ideal_m_over_P": 14008.8,
+            "parallel_speedup_vs_1thread": 7.64
+          },
+          "P=16": {
+            "makespan_hops": 7877,
+            "ideal_m_over_P": 7004.4,
+            "parallel_speedup_vs_1thread": 14.23
+          }
+        }
+      }
+    },
+    "block-85.L": {
+      "n": 899935,
+      "tile_transport_32KiB": {
+        "num_tiles": 28,
+        "H_out_given_in_bits": 4.7964,
+        "max_possible_bits": 4.8074,
+        "normalised_all_to_all_scatter": 0.99771
+      },
+      "open16_locality": {
+        "m": 156404,
+        "edges_footprint_KiB": 2443.8,
+        "cache_line_64B_jump_rate": 0.99998,
+        "l1_page_32KiB_jump_rate": 0.96911
+      },
+      "spod_prefix_128": {
+        "m": 156404,
+        "K_seeds": 129,
+        "max_seg_hops": 14132,
+        "max_seg_frac_m": 0.0904,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 40089,
+            "ideal_m_over_P": 39101.0,
+            "parallel_speedup_vs_1thread": 3.9
+          },
+          "P=8": {
+            "makespan_hops": 21458,
+            "ideal_m_over_P": 19550.5,
+            "parallel_speedup_vs_1thread": 7.29
+          },
+          "P=16": {
+            "makespan_hops": 16950,
+            "ideal_m_over_P": 9775.2,
+            "parallel_speedup_vs_1thread": 9.23
+          }
+        }
+      },
+      "spod_coset_512": {
+        "m": 156404,
+        "K_seeds": 307,
+        "max_seg_hops": 2579,
+        "max_seg_frac_m": 0.0165,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 39353,
+            "ideal_m_over_P": 39101.0,
+            "parallel_speedup_vs_1thread": 3.97
+          },
+          "P=8": {
+            "makespan_hops": 19906,
+            "ideal_m_over_P": 19550.5,
+            "parallel_speedup_vs_1thread": 7.86
+          },
+          "P=16": {
+            "makespan_hops": 10235,
+            "ideal_m_over_P": 9775.2,
+            "parallel_speedup_vs_1thread": 15.28
+          }
+        }
+      }
+    },
+    "block-143.L": {
+      "n": 899869,
+      "tile_transport_32KiB": {
+        "num_tiles": 28,
+        "H_out_given_in_bits": 4.7859,
+        "max_possible_bits": 4.8074,
+        "normalised_all_to_all_scatter": 0.99554
+      },
+      "open16_locality": {
+        "m": 196841,
+        "edges_footprint_KiB": 3075.6,
+        "cache_line_64B_jump_rate": 0.99998,
+        "l1_page_32KiB_jump_rate": 0.96469
+      },
+      "spod_prefix_128": {
+        "m": 196841,
+        "K_seeds": 129,
+        "max_seg_hops": 12577,
+        "max_seg_frac_m": 0.0639,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 50090,
+            "ideal_m_over_P": 49210.2,
+            "parallel_speedup_vs_1thread": 3.93
+          },
+          "P=8": {
+            "makespan_hops": 27608,
+            "ideal_m_over_P": 24605.1,
+            "parallel_speedup_vs_1thread": 7.13
+          },
+          "P=16": {
+            "makespan_hops": 17568,
+            "ideal_m_over_P": 12302.6,
+            "parallel_speedup_vs_1thread": 11.2
+          }
+        }
+      },
+      "spod_coset_512": {
+        "m": 196841,
+        "K_seeds": 386,
+        "max_seg_hops": 3516,
+        "max_seg_frac_m": 0.0179,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 49462,
+            "ideal_m_over_P": 49210.2,
+            "parallel_speedup_vs_1thread": 3.98
+          },
+          "P=8": {
+            "makespan_hops": 25360,
+            "ideal_m_over_P": 24605.1,
+            "parallel_speedup_vs_1thread": 7.76
+          },
+          "P=16": {
+            "makespan_hops": 13319,
+            "ideal_m_over_P": 12302.6,
+            "parallel_speedup_vs_1thread": 14.78
+          }
+        }
+      }
+    },
+    "block-210.L": {
+      "n": 899959,
+      "tile_transport_32KiB": {
+        "num_tiles": 28,
+        "H_out_given_in_bits": 4.7782,
+        "max_possible_bits": 4.8074,
+        "normalised_all_to_all_scatter": 0.99395
+      },
+      "open16_locality": {
+        "m": 204281,
+        "edges_footprint_KiB": 3191.9,
+        "cache_line_64B_jump_rate": 0.99997,
+        "l1_page_32KiB_jump_rate": 0.97225
+      },
+      "spod_prefix_128": {
+        "m": 204281,
+        "K_seeds": 129,
+        "max_seg_hops": 18365,
+        "max_seg_frac_m": 0.0899,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 54326,
+            "ideal_m_over_P": 51070.2,
+            "parallel_speedup_vs_1thread": 3.76
+          },
+          "P=8": {
+            "makespan_hops": 29903,
+            "ideal_m_over_P": 25535.1,
+            "parallel_speedup_vs_1thread": 6.83
+          },
+          "P=16": {
+            "makespan_hops": 19956,
+            "ideal_m_over_P": 12767.6,
+            "parallel_speedup_vs_1thread": 10.24
+          }
+        }
+      },
+      "spod_coset_512": {
+        "m": 204281,
+        "K_seeds": 400,
+        "max_seg_hops": 3248,
+        "max_seg_frac_m": 0.0159,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 51702,
+            "ideal_m_over_P": 51070.2,
+            "parallel_speedup_vs_1thread": 3.95
+          },
+          "P=8": {
+            "makespan_hops": 26304,
+            "ideal_m_over_P": 25535.1,
+            "parallel_speedup_vs_1thread": 7.77
+          },
+          "P=16": {
+            "makespan_hops": 13518,
+            "ideal_m_over_P": 12767.6,
+            "parallel_speedup_vs_1thread": 15.11
+          }
+        }
+      }
+    },
+    "block-207.L": {
+      "n": 899998,
+      "tile_transport_32KiB": {
+        "num_tiles": 28,
+        "H_out_given_in_bits": 4.7878,
+        "max_possible_bits": 4.8074,
+        "normalised_all_to_all_scatter": 0.99593
+      },
+      "open16_locality": {
+        "m": 135921,
+        "edges_footprint_KiB": 2123.8,
+        "cache_line_64B_jump_rate": 0.99996,
+        "l1_page_32KiB_jump_rate": 0.96216
+      },
+      "spod_prefix_128": {
+        "m": 135921,
+        "K_seeds": 129,
+        "max_seg_hops": 10932,
+        "max_seg_frac_m": 0.0804,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 34971,
+            "ideal_m_over_P": 33980.2,
+            "parallel_speedup_vs_1thread": 3.89
+          },
+          "P=8": {
+            "makespan_hops": 18773,
+            "ideal_m_over_P": 16990.1,
+            "parallel_speedup_vs_1thread": 7.24
+          },
+          "P=16": {
+            "makespan_hops": 11251,
+            "ideal_m_over_P": 8495.1,
+            "parallel_speedup_vs_1thread": 12.08
+          }
+        }
+      },
+      "spod_coset_512": {
+        "m": 135921,
+        "K_seeds": 267,
+        "max_seg_hops": 2569,
+        "max_seg_frac_m": 0.0189,
+        "work_stealing": {
+          "P=4": {
+            "makespan_hops": 34075,
+            "ideal_m_over_P": 33980.2,
+            "parallel_speedup_vs_1thread": 3.99
+          },
+          "P=8": {
+            "makespan_hops": 17336,
+            "ideal_m_over_P": 16990.1,
+            "parallel_speedup_vs_1thread": 7.84
+          },
+          "P=16": {
+            "makespan_hops": 8905,
+            "ideal_m_over_P": 8495.1,
+            "parallel_speedup_vs_1thread": 15.26
+          }
+        }
+      }
+    }
+  }
+}
