@@ -26,6 +26,7 @@ target/
 /docs/site/assets/bench-history.json
 /docs/site/assets/alternatives.json
 /docs/site/assets/release-scaling.json
+/docs/site/assets/release-notes.json
 /docs/generated/
 
 # just bench-occupancy's and bench-imc's corpus, its windows and their result files

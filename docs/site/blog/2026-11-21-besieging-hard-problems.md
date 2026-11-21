@@ -2,6 +2,7 @@
 title: "Besieging hard problems: routes through distant mathematics, from the Riemann proof to the inverse BWT"
 image: assets/social/blog-2026-11-21-besieging-hard-problems.png
 description: "The Riemann proof reached its goal through mathematics built for other problems, and four AI research lines that tried this on a decoder found its bottleneck."
+releases: ["0.5.10"]
 ---
 
 <div class="post-hero" markdown>
@@ -19,6 +20,9 @@ The Riemann proof reached its goal through mathematics built for other problems,
 21 November 2026 · 17 min read · [Meta](#7-what-we-are-searching-for-next)
 {: .post-meta }
 
+Shipped in mibz2 [0.5.10](../benchmarks/history.md#release-0-5-10) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0510---2026-11-21))
+{: .post-shipped }
+
 </div>
 
 <div class="post-hero-art"><img src="../assets/images/hero.svg" alt=""></div>
@@ -32,7 +36,7 @@ On 20 November 2026, a proof of the Riemann Hypothesis was accepted by three ind
 - **The achievement is a new mode of invention, not only a large proof.** A number theorist described it as a wormhole through "the infrastructure built for a hundred other mineral reserves". The infrastructure the proof needs, from resolution of singularities to prismatic Dieudonné theory, is proved inside it, with no axioms. Three independent kernels accepted it before anyone could say how its main ingredients combine.
 - **The route can be described as twelve levers.** We read them in the proof's reported shape. The target is strengthened into a statement about a family. A forbidden event is excluded by bounds that independent theories place on one quantity. The work moves to where those bounds exist, and every foundation is built rather than assumed. This is our interpretation, not the authors'.
 - **We ran the experiment.** Since 20 November, four Gemini research lines have attacked the inverse BWT. One of them, Kitchen Sink, was told not to require a field of mathematics to justify its relevance in advance. Their chains ran through graph theory, discrete Morse theory, interval-exchange dynamics, ergodic theory, queueing theory and compiler register allocation.
-- **The chains broke informatively, and three of them converged.** Most produced exact mathematics and poor algorithms; each break named the next link to look for. This morning Mechanisms, Wormhole and Kitchen Sink independently identified the same bottleneck. Each worker holds about 4.5 MiB of scratch, which overflows the processor's shared cache once 7 to 10 workers run. Their candidate fixes act on different buffers. Whether they compose, and hold up natively on our i9, is still to be measured.
+- **The chains broke informatively, and three of them converged.** Most produced exact mathematics and poor algorithms; each break named the next link to look for. This morning Mechanisms, Wormhole and Kitchen Sink independently identified the same bottleneck. Each worker holds about 4.5 MiB of scratch, which overflows the processor's shared cache once 7 to 10 workers run. Their candidate fixes act on different buffers, and two of them combined: ported natively and judged on our i9, they made mibz2 0.5.10 9% faster at ten threads.
 - **The pace is set by checking.** Exact correctness checks are cheap, so the search can be broad. Checks of speed on the real machine are not, and they decide how fast any of this can be adopted. The open question is the floor: the cost that remains once memory fits, and whether a different route from runs to text order can avoid it.
 
 [Section 1](#1-the-problem-and-what-was-achieved) shows what was achieved, with the overview that started this. [Section 2](#2-the-wormhole-hypothesis) states the wormhole hypothesis, and [section 3](#3-the-twelve-levers) the levers that make such a route work. [Section 4](#4-we-tried-it-on-a-decoder) describes the experiment, [section 5](#5-what-happened-when-we-used-everything) what it found, [section 6](#6-the-constraint-that-sets-the-pace) the constraint that governs it, and [section 7](#7-what-we-are-searching-for-next) what comes next.
@@ -169,7 +173,7 @@ The lines' theorems are exploratory proofs: written out, then checked by exhaust
 <line x1="442" y1="411" x2="458" y2="411" style="stroke:var(--bf-muted);stroke-width:1.2" marker-end="url(#bs-d)"/>
 <rect x="462" y="382" width="246" height="58" rx="6" class="bf-card-hi"/><text x="474" y="400" class="bf-t-strong" style="font-size:11.5px">CPC-Micro</text><text x="474" y="416" class="bf-t" style="font-size:11px">0.32× the shipped kernel's scratch;</text><text x="474" y="431" class="bf-t" style="font-size:11px">0.93–0.97× its time, 4 workers (C)</text>
 </svg>
-<figcaption>Each cycle's construction is exact: checked on 26,495 small cases and the six authenticated blocks. The citations are those the line gives. The final figures come from its own C harness and are not yet natively validated; the native port is under way (section 5).</figcaption>
+<figcaption>Each cycle's construction is exact: checked on 26,495 small cases and the six authenticated blocks. The citations are those the line gives. The final figures come from its own C harness. Natively, W1 alone was time-neutral; combined with Mechanisms' OutQ16 it shipped in 0.5.10 (section 5).</figcaption>
 </figure>
 
 Kitchen Sink's feedback-set result shows the same arc within one idea. It found that breaking only 0.3% of runs makes the run-overlap graph acyclic, which suggested an exact schedule with no walk at all. In cycle 11 it built that schedule and proved it exact. Then it measured the cost. Even with every cut run filled for free, 64 to 76% of the remaining fragments still deadlock in copy cycles, because rank inversions braid them together inside a graph with no cycles. Resolving them took 8 to 30 times the shipped kernel's interval splits and 3 to 5 times its memory. A striking simplification, followed by a precise account of why it does not become a fast algorithm: that is what the search mostly yields, and the record of it is what keeps the search from repeating itself.
@@ -219,10 +223,10 @@ What decides the outcome on the i9 is whether a worker's buffers fit its share o
 <text x="449" y="228" class="bf-tm" text-anchor="middle">7 workers: 2,926 KiB each</text><text x="374" y="246" class="bf-tm" text-anchor="middle">10 workers: 2,048 KiB each</text>
 <text x="200" y="22" class="bf-tm">KiB per worker: scratch (coloured) + output buffer (grey)</text>
 </svg>
-<figcaption>Scratch figures are each line's own harness measurements, not yet natively validated: Mechanisms' count of the shipped kernel (Wormhole measured 4,663 KiB). A worker does not touch every byte in each block, so the working set is smaller than these totals; Mechanisms measures 1,846 KiB on average for SwarOutQ16, inside even the ten-worker share.</figcaption>
+<figcaption>Scratch figures are each line's own harness measurements: Mechanisms' count of the shipped kernel (Wormhole measured 4,663 KiB). Measured natively, the shipped kernel held 4,236 KiB, and W1 with OutQ16 held 1,200 KiB. A worker does not touch every byte in each block, so the working set is smaller than these totals; Mechanisms measures 1,846 KiB on average for SwarOutQ16, inside even the ten-worker share.</figcaption>
 </figure>
 
-**Three things are established, and one is not.** The lines independently identified the same bottleneck. They proposed reductions that act on different parts of it, each exact on its checks. Their own harnesses show gains that widen under contention: Wormhole's C harness ran 0.93 to 0.97 of the shipped kernel's time with four workers against 0.95 to 0.98 on one thread. That is the reverse of the eight-lane failure. **Not yet established:** that the reductions compose, and that the gains survive natively on the i9. The combined candidate, Endpoint state in edges, queues in the output buffer and shared metadata, is being ported to native Rust now, one commit and one native timing per step. It then goes to the i9 at 6, 8 and 10 workers, under an adoption rule fixed before the run.
+**Three things are established, and one is not.** The lines independently identified the same bottleneck. They proposed reductions that act on different parts of it, each exact on its checks. Their own harnesses show gains that widen under contention: Wormhole's C harness ran 0.93 to 0.97 of the shipped kernel's time with four workers against 0.95 to 0.98 on one thread. That is the reverse of the eight-lane failure. **The fourth, that the reductions compose natively, was then tested.** We ported Wormhole's W1 and Mechanisms' OutQ16 to native Rust (#692). Kept scratch per worker fell from 4,236 to 1,200 KiB. Some C claims did not transfer: W1 alone was time-neutral, and the SWAR iota gained nothing over what the compiler already does. On the i9, under a rule registered before the run, the combination ran at 0.952, 0.917 and 0.931 of the shipped decoder's time at 6, 8 and 10 workers, with about 10% less peak memory. It shipped as mibz2 0.5.10, whose release scaling against 0.5.9 is +6.5% at 8 threads, +9.0% at 10 and +5 to 7% at 12 to 20, with nothing changed below 8. A recalibration run found that no worker-count trim needed to move, as MONODROMY's frozen prediction said. The first production gain of the experiment came from two lines' ideas combined, at exactly the counts where the cache is shared.
 
 ## 6. The constraint that sets the pace
 

@@ -2,6 +2,7 @@
 title: "Open Returns: decoding a block from a tenth of its rows"
 image: assets/social/blog-2026-11-19-open-returns.png
 description: "mibz2 0.5.7 decodes Wikidata up to 11% faster on ten cores by keeping a tenth of each block's rows and letting the rest travel together in convoys."
+releases: ["0.5.7"]
 ---
 
 <div class="post-hero" markdown>
@@ -18,6 +19,9 @@ mibz2 0.5.7 decodes Wikidata up to 11% faster on ten cores by keeping a tenth of
 
 19 November 2026 · 10 min read · [Research result](#5-what-did-it-buy)
 {: .post-meta }
+
+Shipped in mibz2 [0.5.7](../benchmarks/history.md#release-0-5-7) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#057---2026-11-19))
+{: .post-shipped }
 
 </div>
 
