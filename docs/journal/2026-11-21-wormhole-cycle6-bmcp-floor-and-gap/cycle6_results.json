@@ -1,0 +1,29 @@
+{
+  "origin_master_sha": "d425d772c0a0e6b82e9626b36bbfa4b28a6c9613",
+  "g1_small_and_stress_cases": 16209,
+  "thm_6_2_splice_permutations": 5040,
+  "master_retained_heap_bytes": 4345392,
+  "diet_retained_heap_bytes": 1795264,
+  "blocks": [
+    {"block": "block-0.L", "n": 899931, "r": 51184, "r_rec": 56386, "r1": 35116, "r_thin": 47736, "m": 89874, "H": 3448, "rv_unit_steps": 11215, "rv_zorich_steps": 7250, "n_bands": 3204, "n_words": 1326, "rlbwt_kib": 56.1, "edges_kib": 351.1, "compulsory_l2_lines": 5618, "belady_opt_l2_misses": 7437, "lru_edges_only_l2_misses": 14594, "diet_dep_past_l2": 25533, "diet_total_l2_misses": 43292, "diet_l3_2048k_misses": 809, "lb_dep_l2_mu4": 1860, "lb_dep_l2_mu8": 930, "master_us": 1217.9, "diet_us": 2168.5},
+    {"block": "block-2.L", "n": 900000, "r": 54532, "r_rec": 59478, "r1": 34262, "r_thin": 50705, "m": 112070, "H": 3827, "rv_unit_steps": 13671, "rv_zorich_steps": 8573, "n_bands": 4244, "n_words": 1922, "rlbwt_kib": 61.0, "edges_kib": 437.8, "compulsory_l2_lines": 7005, "belady_opt_l2_misses": 11947, "lru_edges_only_l2_misses": 26082, "diet_dep_past_l2": 37778, "diet_total_l2_misses": 56810, "diet_l3_2048k_misses": 746, "lb_dep_l2_mu4": 2987, "lb_dep_l2_mu8": 1494, "master_us": 1547.1, "diet_us": 2631.3},
+    {"block": "block-85.L", "n": 899935, "r": 79375, "r_rec": 84659, "r1": 55504, "r_thin": 77810, "m": 156404, "H": 1565, "rv_unit_steps": 7130, "rv_zorich_steps": 3563, "n_bands": 2446, "n_words": 1220, "rlbwt_kib": 84.7, "edges_kib": 611.0, "compulsory_l2_lines": 9776, "belady_opt_l2_misses": 19025, "lru_edges_only_l2_misses": 39068, "diet_dep_past_l2": 47553, "diet_total_l2_misses": 64130, "diet_l3_2048k_misses": 479, "lb_dep_l2_mu4": 4757, "lb_dep_l2_mu8": 2379, "master_us": 1549.5, "diet_us": 2915.0},
+    {"block": "block-143.L", "n": 899869, "r": 108335, "r_rec": 112325, "r1": 72578, "r_thin": 103288, "m": 196841, "H": 5047, "rv_unit_steps": 21295, "rv_zorich_steps": 11807, "n_bands": 6788, "n_words": 3635, "rlbwt_kib": 117.9, "edges_kib": 768.9, "compulsory_l2_lines": 12303, "belady_opt_l2_misses": 41149, "lru_edges_only_l2_misses": 82282, "diet_dep_past_l2": 94739, "diet_total_l2_misses": 121703, "diet_l3_2048k_misses": 831, "lb_dep_l2_mu4": 10288, "lb_dep_l2_mu8": 5144, "master_us": 2634.6, "diet_us": 4570.3},
+    {"block": "block-210.L", "n": 899959, "r": 128732, "r_rec": 133233, "r1": 97054, "r_thin": 125923, "m": 204281, "H": 2809, "rv_unit_steps": 12140, "rv_zorich_steps": 6237, "n_bands": 4219, "n_words": 2228, "rlbwt_kib": 133.0, "edges_kib": 798.0, "compulsory_l2_lines": 12768, "belady_opt_l2_misses": 38714, "lru_edges_only_l2_misses": 78731, "diet_dep_past_l2": 89106, "diet_total_l2_misses": 108138, "diet_l3_2048k_misses": 563, "lb_dep_l2_mu4": 9679, "lb_dep_l2_mu8": 4840, "master_us": 2405.8, "diet_us": 4198.6},
+    {"block": "block-207.L", "n": 899998, "r": 87111, "r_rec": 91416, "r1": 62407, "r_thin": 83637, "m": 135921, "H": 3474, "rv_unit_steps": 13898, "rv_zorich_steps": 8306, "n_bands": 4596, "n_words": 2259, "rlbwt_kib": 92.7, "edges_kib": 530.9, "compulsory_l2_lines": 8496, "belady_opt_l2_misses": 19279, "lru_edges_only_l2_misses": 40094, "diet_dep_past_l2": 51240, "diet_total_l2_misses": 70757, "diet_l3_2048k_misses": 815, "lb_dep_l2_mu4": 4820, "lb_dep_l2_mu8": 2410, "master_us": 1849.7, "diet_us": 3242.0}
+  ],
+  "scaling": [
+    {"source": "block-0_text", "n": 100000, "r": 7422, "m": 12108, "edges_kib": 47.3, "opt_l2": 757, "dep_past_l2": 0},
+    {"source": "block-0_text", "n": 200000, "r": 12925, "m": 28168, "edges_kib": 110.0, "opt_l2": 1761, "dep_past_l2": 65},
+    {"source": "block-0_text", "n": 300000, "r": 17773, "m": 34506, "edges_kib": 134.8, "opt_l2": 2157, "dep_past_l2": 303},
+    {"source": "block-0_text", "n": 450000, "r": 26353, "m": 53420, "edges_kib": 208.7, "opt_l2": 3339, "dep_past_l2": 5876},
+    {"source": "block-0_text", "n": 650000, "r": 36983, "m": 80324, "edges_kib": 313.8, "opt_l2": 6000, "dep_past_l2": 19575},
+    {"source": "block-0_text", "n": 899931, "r": 51184, "m": 89874, "edges_kib": 351.1, "opt_l2": 7437, "dep_past_l2": 25533},
+    {"source": "block-143_text", "n": 100000, "r": 14319, "m": 31952, "edges_kib": 124.8, "opt_l2": 1997, "dep_past_l2": 0},
+    {"source": "block-143_text", "n": 200000, "r": 22871, "m": 33943, "edges_kib": 132.6, "opt_l2": 2122, "dep_past_l2": 118},
+    {"source": "block-143_text", "n": 300000, "r": 38859, "m": 62026, "edges_kib": 242.3, "opt_l2": 3877, "dep_past_l2": 8076},
+    {"source": "block-143_text", "n": 450000, "r": 53226, "m": 98500, "edges_kib": 384.8, "opt_l2": 10041, "dep_past_l2": 32035},
+    {"source": "block-143_text", "n": 650000, "r": 80031, "m": 146768, "edges_kib": 573.3, "opt_l2": 24820, "dep_past_l2": 62959},
+    {"source": "block-143_text", "n": 899869, "r": 108335, "m": 196841, "edges_kib": 768.9, "opt_l2": 41149, "dep_past_l2": 94739}
+  ]
+}

@@ -1,0 +1,39 @@
+name = "Wormhole Cycle 6 Upper-Bound Reference: Combined Dieted Open (OutQ16 + Chaitin-Node16 + Metadata Coloring)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "outq16_epoch_runs_pass"
+inputs = ["records", "C", "p", "n"]
+output = "out_aliased_q16_and_triples"
+status = "verified"
+dependent = false
+cost = { W = "R", D = "1", B = "R + m", Q = "0", M = "H" }
+evidence = "Pass 1 aliases 512xU16 rank chunks into dead out[0..n+16) (0 ovf chunks on 6/6 blocks) and writes thick strips into shared [u32;3] triples."
+
+[[edge]]
+id = "chaitin_node16_endpoint_in_edges"
+inputs = ["out_aliased_q16_and_triples", "C", "n"]
+output = "bands_and_fused_inline16"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Direct-linked 16B u16 Node16 + Rule + bottom + img_ord hosted 100% inside dead edges[0..m); bands reuse [u32;3] triples."
+
+[[edge]]
+id = "outq16_band_wire"
+inputs = ["bands_and_fused_inline16", "out_aliased_q16_and_triples"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Wires edges[0..m) sequentially per band from out-aliased u16 chunks before Phase 4 overwrites out[0..n)."
+
+[[edge]]
+id = "serial_mu1_critical_walk"
+inputs = ["critical_edges", "bands_and_fused_inline16", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Single-cursor (mu = 1) 16B emit walk; verified byte-exact on 7,227 small/stress cases + 6 authenticated blocks against origin/master OpenCells."
