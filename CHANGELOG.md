@@ -13,6 +13,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - *(open)* memory diet, Endpoint in edges and queues in out ([#692](https://github.com/lmmx/mibz2/pull/692))
 
+- **The Open kernel's memory diet (#692): 5–8% faster from 6 to 10 threads on the i9, at about
+  0.89 of the peak memory.** Two research lines' results, combined and ported natively:
+  - Wormhole's W1 (cycle 5) keeps the endpoint elimination's state inside `edges`' buffer, which
+    is dead until `edges` fills.
+  - Mechanisms' OutQ16 (cycle 16) stores the thin-run queues as 16-bit ranks in 1 KiB chunks of
+    the output buffer, which is dead until emit.
+
+  Measured natively, per-worker scratch falls from 4,236 to 1,200 KiB (0.283×), so 7–10 workers
+  fit the i9's 20 MiB L3. The adoption run (`bench-open-diet`, open-diet/run-20261121T121714Z,
+  evidence c56a1371, sha256 a0675fb1…96d2) used R4's rule, registered before the data. Wall,
+  head/base, unpinned:
+
+  | threads | wall | label |
+  |---|---|---|
+  | 6 | 0.952 [0.950, 0.955] | faster |
+  | 8 | 0.917 [0.894, 0.940] | faster |
+  | 10 | 0.931 [0.916, 0.946] | faster, the judged count |
+
+  CPU was 0.950 / 0.870 / 0.922, and median peak RSS 0.898 / 0.887 / 0.890.
+  - On CI's 4 CPUs the gain doesn't show: its 1–4 thread arms don't run Open. The paired bench
+    of v0.5.9 against master (run 44903833563, AMD EPYC 9V74) is within noise everywhere except
+    wikidata at 1 thread, at +0.8%.
+  - The output is byte-identical, and new tests cover the overflow chunks and the 2^16 epochs.
+
+- **The worker-count recalibration (RELEASING §5c): no trim moves.** `bench-recalibrate-diet`
+  (recalibrate-diet/run-20261121T124719Z, evidence 9326d856, sha256 643e6a32…3caa) measured
+  every cell at master 23e40f77:
+  - pinned at 4, 6, 8 and 10 threads;
+  - unpinned at 4, 6, 8, 10, 12, 16 and 20.
+
+  Holm rejected no alternative, so every reference stays. Wider arms are held back on memory, as
+  in 0.5.8's run. MONODROMY's record 88, frozen before the data, predicted that no trim would move.
+
 ### <!-- 4 -->Documentation
 
 - *(skills)* blog lessons from #689, the material's centre, our experiment, real figures ([#691](https://github.com/lmmx/mibz2/pull/691))
