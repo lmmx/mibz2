@@ -162,3 +162,26 @@ mathematics you're allowed to invent.
 The charter now says this (METHOD.md §1, "Mathematical maximalism"); the kitchen-sink journal lists
 about 25 frameworks with the bridge each might attempt, as a starting supply, not a menu.
 ```
+
+## The wormhole reading (relayed, 21 November 2026)
+
+A number theorist's reading of the claimed proof, as relayed: it is not new theory-building. It is
+a very long chain through deep existing results built for other problems (theta functions on
+unitary groups, Gan–Gross–Prasad period formulas, relative trace formulas), which reaches a goal
+that seemed to need new theory: "a wormhole" rather than a mine shaft.
+
+What that adds to "use everything":
+- **Each link is an existing theorem, used for something other than its purpose.** The search is
+  for a chain of correspondences between mature bodies of results, not for new objects.
+- **Length is not a defect.** A 25,000-page tour can end in a short consequence. Our analogue is
+  the asymmetry already in METHOD.md §1: discovery may be enormous while execution stays cheap.
+- **The infrastructure to search, for us**, is mature results built for other problems:
+  - compressed indexes and run-length BWT theory;
+  - interval-exchange and Teichmüller dynamics;
+  - combinatorics on words and S-adic systems;
+  - discrete Morse theory and persistence;
+  - graph algorithms (feedback sets, list ranking);
+  - external-memory and cache-oblivious algorithms.
+
+  The question for a session: is there a chain of existing results from a block's run structure to
+  its text order whose last link is cheaper than the walk?
