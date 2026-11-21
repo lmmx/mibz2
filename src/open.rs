@@ -434,12 +434,16 @@ impl Kernel {
         stats.bands = self.bands.len();
         let bits = (u32::BITS - (m - 1).leading_zeros()).max(1);
         let wide = (255 + stats.words as u32) > (u32::MAX >> bits);
-        self.edges.resize(m as usize, 0);
+        // (the memory diet) `edges` keeps its length: its rows from `m` are stale, and its
+        // first `m` are all written below (the bands partition the retained ranks)
+        if self.edges.len() < m as usize {
+            self.edges.resize(m as usize, 0);
+        }
         self.extra.clear();
         if wide {
             self.extra.resize(m as usize, 0);
         }
-        stats.table_bytes = 4 * (self.edges.len() + self.extra.len());
+        stats.table_bytes = 4 * (m as usize + self.extra.len());
         if QUEUE {
             let mut k = 0;
             for a in 0..256 {
@@ -503,12 +507,12 @@ impl Kernel {
     ) -> Counts {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
         let (stats, mark, bits) = self.construct::<INDUCE, QUEUE>(records, n as u32, p, limit);
-        self.walk(n, mark, bits, out);
+        self.walk(n, stats.retained, mark, bits, out);
         stats
     }
 
     /// The words inlined and the walk from the marked row: the block's bytes into `out`
-    fn walk(&mut self, n: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
+    fn walk(&mut self, n: usize, m: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
         inline_words(
             &self.spelling,
             &self.offsets,
@@ -516,7 +520,7 @@ impl Kernel {
             &mut self.lens,
         );
         emit(
-            &self.edges,
+            &self.edges[..m],
             &self.extra,
             &self.spelling,
             &self.offsets,
@@ -629,6 +633,10 @@ fn inline_words(
     }
     inline16.truncate(256);
     lens.truncate(256);
+    // (the memory diet) the table to its exact size, not doubled: 256 literals and the words
+    let words = offsets.len().saturating_sub(1);
+    inline16.reserve_exact(words);
+    lens.reserve_exact(words);
     for w in offsets.windows(2) {
         let word = &spelling[w[0] as usize..w[1] as usize];
         let mut v = [0; INLINE];

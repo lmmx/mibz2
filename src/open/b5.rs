@@ -105,6 +105,40 @@ fn arbitrary_columns_through_one_kernel() {
     }
 }
 
+/// Full-size blocks with more thick strips than `Narrow` node links serve (21,844), so the
+/// elimination takes `Wide` links of itself: runs of exactly 17, and thin runs between thick
+/// ones; and one kernel taking `Narrow` then `Wide` then `Narrow` again
+#[test]
+fn wide_links_on_full_blocks() {
+    let n = 900_000usize;
+    let mut g = Lcg(0x7769_6465);
+    let seventeen: Vec<u8> = (0..n).map(|i| (i / 17 % 3) as u8).collect();
+    let mut mixed = Vec::with_capacity(n);
+    let mut c = 0u8;
+    while mixed.len() < n {
+        let w = if g.below(2) == 0 {
+            1 + g.below(8)
+        } else {
+            17 + g.below(8)
+        };
+        c = (c + 1 + g.below(2) as u8) % 3;
+        mixed.extend(std::iter::repeat(c).take(w as usize));
+    }
+    mixed.truncate(n);
+    let narrow = runs_column(&mut g, n, 60, 12);
+    let mut k = Kernel::default();
+    let mut out = Vec::new();
+    for l in [&narrow, &seventeen, &mixed, &narrow] {
+        for p in [0, n as u32 / 3, n as u32 - 1] {
+            shipped(&mut k, l, p, &mut out);
+            assert!(out == plain(l, p), "row {p}");
+        }
+    }
+    let r = Runs::of_column(&seventeen);
+    let s = k.run::<true, true>(r.records(), n, 5, LIMIT, &mut out);
+    assert!(3 * s.thick + 3 > 1 << 16, "{} thick strips", s.thick);
+}
+
 /// `OpenCells` admits a block exactly where `LazyCells`' census passes its two record-count
 /// gates (neither the density line nor the sparse gate refuses it), on columns across both
 /// lines; and its output is the plain inverse's whichever route the block took
