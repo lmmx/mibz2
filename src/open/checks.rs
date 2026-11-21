@@ -11,8 +11,9 @@ fn audit<const INDUCE: bool, const QUEUE: bool>(
 ) {
     let n = l.len();
     let records = records_of(l);
+    let mut out = Vec::new();
     let (s, mark, bits) =
-        k.construct::<INDUCE, QUEUE>(&records, n as u32, p as u32, threshold as u32);
+        k.construct::<INDUCE, QUEUE>(&records, n as u32, p as u32, threshold as u32, &mut out);
     let mut counts = [0usize; 256];
     let mut keep = vec![false; n];
     let mut i = 0;
@@ -87,6 +88,10 @@ fn audit<const INDUCE: bool, const QUEUE: bool>(
 #[test]
 fn all_port_arrows() {
     let mut k = Kernel::default();
+    // the elimination with `Wide` links, which real blocks take only past 21,844 thick strips
+    let mut wide = Kernel::default();
+    wide.endpoint.force_wide = true;
+    wide.endpoint.tight = true;
     let mut cases = 0;
     for (base, len) in [(2usize, 8usize), (3, 5)] {
         for n in 1..=len {
@@ -104,13 +109,15 @@ fn all_port_arrows() {
                         audit::<true, false>(&mut k, &l, p, t);
                         audit::<false, true>(&mut k, &l, p, t);
                         audit::<true, true>(&mut k, &l, p, t);
+                        audit::<true, false>(&mut wide, &l, p, t);
+                        audit::<true, true>(&mut wide, &l, p, t);
                         cases += 1;
                     }
                 }
             }
         }
     }
-    println!("{cases} column/mark/threshold triples, four complete arrow audits each");
+    println!("{cases} column/mark/threshold triples, six complete arrow audits each");
 }
 
 #[test]
@@ -132,6 +139,9 @@ fn capped_runs_and_shifted_marks() {
         for t in [0, 1, 16, 126, 127, 128, 259, 260, 800] {
             audit::<false, true>(&mut k, &l, p, t);
             audit::<true, false>(&mut k, &l, p, t);
+            k.endpoint.force_wide = true;
+            audit::<true, true>(&mut k, &l, p, t);
+            k.endpoint.force_wide = false;
         }
     }
 }

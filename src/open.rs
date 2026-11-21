@@ -67,7 +67,7 @@ struct Band {
 #[derive(Default)]
 pub struct Kernel {
     endpoint: endpoint::Endpoint,
-    queues: Vec<Vec<u32>>,
+    spill: outq::Spill,
     strips: Vec<Strip>,
     image_order: Vec<u32>,
     tiles: Vec<Tile>,
@@ -134,7 +134,7 @@ fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, 
 /// The first pass over a block's runs: the queues and the thick strips it writes, and its
 /// counts
 struct Pass<'a> {
-    queues: &'a mut [Vec<u32>; 256],
+    queues: outq::Queues<'a>,
     strips: &'a mut Vec<Strip>,
     f: First,
 }
@@ -176,7 +176,7 @@ impl Pass<'_> {
                 f.mark = f.m + (p - x);
             }
             if QUEUE {
-                push_rows(&mut self.queues[a], f.thin[a], f.m, w);
+                self.queues.push(a, f.m, w, &f.thin);
             }
             f.thin[a] += w;
             f.m += w;
@@ -216,42 +216,6 @@ impl Default for First {
             runs: 0,
         }
     }
-}
-
-/// Append the `w` rows from `m` to a queue of `len` rows. A thin run has at most `LIMIT` = 16
-/// rows, so the queue takes a fixed block of 16 (an iota from `m`) and keeps the first `w`: no
-/// loop whose trip count is the run's width, whose exit mispredicts on blocks of 48k-126k short
-/// runs (Carbon cycle 2's `U16Q`, `docs/journal/2026-11-20-carbon-cycle2-bvsmc.md` §2.4).
-///
-/// The queue's buffer is kept at its full length, its rows past `len` stale or zero, and its
-/// length is the caller's (`First::thin`, its byte's retained rows), so a run is one bounds
-/// check and two 32-byte stores with no length written back to the heap (Carbon Kitchen Sink
-/// cycle 3's `Vec16` queue: a cursor per byte, `q_cur[c] += w`). The rows past `w` land in the
-/// spare rows and are overwritten by the next run. A wider run (a limit above 16, in the tests)
-/// is written row by row.
-#[inline(always)]
-fn push_rows(queue: &mut Vec<u32>, len: u32, m: u32, w: u32) {
-    const BLOCK: usize = 16;
-    let at = len as usize;
-    let need = at + BLOCK.max(w as usize);
-    if queue.len() < need {
-        grow(queue, need);
-    }
-    if w as usize <= BLOCK {
-        let iota: [u32; BLOCK] = std::array::from_fn(|i| m.wrapping_add(i as u32));
-        queue[at..at + BLOCK].copy_from_slice(&iota);
-    } else {
-        for (i, q) in queue[at..at + w as usize].iter_mut().enumerate() {
-            *q = m + i as u32;
-        }
-    }
-}
-
-/// A queue's buffer to `need` rows at least: doubled, from 1024 rows
-#[cold]
-#[inline(never)]
-fn grow(queue: &mut Vec<u32>, need: usize) {
-    queue.resize(need.max(2 * queue.len()).max(1024), 0);
 }
 
 fn starts(counts: [u32; 256]) -> [u32; 256] {
@@ -312,13 +276,11 @@ impl Kernel {
         }
     }
 
-    /// The first pass's state, emptied for a block. (The queues keep their buffers and stale
-    /// rows: a queue's length is its byte's `First::thin`.)
-    fn begin(&mut self) -> Pass<'_> {
+    /// The first pass's state, emptied for a block, its queues in `out` (`outq.rs`)
+    fn begin<'a>(&'a mut self, out: &'a mut [u8]) -> Pass<'a> {
         self.strips.clear();
-        self.queues.resize_with(256, Vec::new);
         Pass {
-            queues: (&mut self.queues[..]).try_into().expect("256 queues"),
+            queues: outq::Queues::new(out, &mut self.spill),
             strips: &mut self.strips,
             f: First::default(),
         }
@@ -330,16 +292,21 @@ impl Kernel {
         n: u32,
         p: u32,
         limit: u32,
+        out: &mut Vec<u8>,
     ) -> (Counts, u32, u32) {
-        let mut pass = self.begin();
+        // the walk's buffer, `n` bytes and its copies' 16: the queues' until the walk
+        out.resize(n as usize + INLINE, 0);
+        let mut pass = self.begin(&mut out[..]);
         maximal(records, |c, pos, width| {
             pass.take::<QUEUE>(c, pos, width, p, limit)
         });
-        let f = pass.f;
-        self.finish::<INDUCE, QUEUE>(&f, records, n, p, limit)
+        let (f, heads) = (pass.f, pass.queues.heads());
+        self.finish::<INDUCE, QUEUE>(&f, records, n, p, limit, &out[..], &heads)
     }
 
-    /// The construction after its first pass `f` (`records` read again only without `QUEUE`)
+    /// The construction after its first pass `f` (`records` read again only without `QUEUE`;
+    /// with it, the queues in `out` from `heads`)
+    #[allow(clippy::too_many_arguments)]
     fn finish<const INDUCE: bool, const QUEUE: bool>(
         &mut self,
         f: &First,
@@ -347,6 +314,8 @@ impl Kernel {
         n: u32,
         p: u32,
         limit: u32,
+        out: &[u8],
+        heads: &outq::Heads,
     ) -> (Counts, u32, u32) {
         let First {
             all,
@@ -434,17 +403,21 @@ impl Kernel {
         stats.bands = self.bands.len();
         let bits = (u32::BITS - (m - 1).leading_zeros()).max(1);
         let wide = (255 + stats.words as u32) > (u32::MAX >> bits);
-        self.edges.resize(m as usize, 0);
+        // (the memory diet) `edges` keeps its length: its rows from `m` are stale, and its
+        // first `m` are all written below (the bands partition the retained ranks)
+        if self.edges.len() < m as usize {
+            self.edges.resize(m as usize, 0);
+        }
         self.extra.clear();
         if wide {
             self.extra.resize(m as usize, 0);
         }
-        stats.table_bytes = 4 * (self.edges.len() + self.extra.len());
+        stats.table_bytes = 4 * (m as usize + self.extra.len());
         if QUEUE {
             let mut k = 0;
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
-                let mut from = 0;
+                let mut queue = outq::Reader::new(out, &self.spill, heads, a);
                 for b in &self.bands[cursors[a]..end] {
                     let span = (b.end - k) as usize;
                     let dst = k.wrapping_add(b.delta) as usize;
@@ -452,11 +425,7 @@ impl Kernel {
                     if wide {
                         self.extra[dst..dst + span].fill(b.code);
                     }
-                    let src = &self.queues[a][from..from + span];
-                    for (target, &j) in self.edges[dst..dst + span].iter_mut().zip(src) {
-                        *target = pack | j;
-                    }
-                    from += span;
+                    queue.wire(&mut self.edges[dst..dst + span], pack);
                     k = b.end;
                 }
             }
@@ -502,13 +471,13 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Counts {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
-        let (stats, mark, bits) = self.construct::<INDUCE, QUEUE>(records, n as u32, p, limit);
-        self.walk(n, mark, bits, out);
+        let (stats, mark, bits) = self.construct::<INDUCE, QUEUE>(records, n as u32, p, limit, out);
+        self.walk(n, stats.retained, mark, bits, out);
         stats
     }
 
     /// The words inlined and the walk from the marked row: the block's bytes into `out`
-    fn walk(&mut self, n: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
+    fn walk(&mut self, n: usize, m: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
         inline_words(
             &self.spelling,
             &self.offsets,
@@ -516,7 +485,7 @@ impl Kernel {
             &mut self.lens,
         );
         emit(
-            &self.edges,
+            &self.edges[..m],
             &self.extra,
             &self.spelling,
             &self.offsets,
@@ -629,6 +598,10 @@ fn inline_words(
     }
     inline16.truncate(256);
     lens.truncate(256);
+    // (the memory diet) the table to its exact size, not doubled: 256 literals and the words
+    let words = offsets.len().saturating_sub(1);
+    inline16.reserve_exact(words);
+    lens.reserve_exact(words);
     for w in offsets.windows(2) {
         let word = &spelling[w[0] as usize..w[1] as usize];
         let mut v = [0; INLINE];
@@ -766,6 +739,7 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 }
 
 mod endpoint;
+mod outq;
 
 #[cfg(test)]
 mod checks;
