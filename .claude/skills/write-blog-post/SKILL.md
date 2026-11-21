@@ -26,7 +26,9 @@ The rules come from three sources, cited by tag:
 
 1. **Plan** (steps 1–4 of the protocol below). Write down the target claim, the reader,
    the argument path and the goal questions. Do this before drafting, in a scratch file
-   that isn't committed.
+   that isn't committed. When the post relays or responds to material (a thread, a review,
+   a set of relayed messages), read **all** of it first, then decide what to drop (step 1a).
+   Sampling "the most relevant" parts before reading the rest is how the centre gets missed.
 2. **Draft** to the plan, following the house rules.
 3. **Simulated-reader pass.** Give a fresh reader the draft and the reader profile, and
    nothing else: a subagent where one is available, or failing that, a separate pass in
@@ -35,8 +37,10 @@ The rules come from three sources, cited by tag:
 4. **Revise** for what the pass found. Restructure; don't append. Then run the pass again
    on the revision, with the held-out goals as well. A converging revision has fewer stuck
    points, and few new ones.
-5. **Publish** with `publish-page`: the build, `check_render.py`, `look_pages.py`, and a
-   look at every screenshot.
+5. **Publish** with `publish-page`, in one pass: the build, `check_render.py`, one
+   `look_pages.py` run and a look at the figure screenshots, then the PR. Speed goes on
+   publishing, never on reading the material: cosmetic iteration before the PR exists is
+   the waste, reading all of the sources is not.
 
 ## The protocol: from claim to transfer
 
@@ -51,6 +55,31 @@ sentence becomes the dek and the description, and the opening states it in full.
 - The conclusion comes **straight after the question it answers**, not in the last
   paragraph [E: e98f35dd: "The post's conclusion arrived only in its last paragraph. It now
   comes straight after the question it answers"].
+
+### 1a. Relayed material: its centre, and our part in it
+
+The #689 post on the Riemann proof failed here, and #690 rewrote it (Louis and an
+independent review, 21 November 2026). These rules come from that pair.
+
+- **State the material's central idea in one sentence before drafting,** in the material's
+  own terms. Then check that the title, the takeaways and the conclusion carry *that* idea,
+  not a condition that enables it. #689 made "cheap checks first" its title and conclusion;
+  the material centred a mode of invention (the wormhole: a long route through distant
+  mathematics whose relevance can't be seen in advance), and cheap checking is only what
+  makes that affordable. Louis called this dilution, not a matter of taste.
+- **When we acted on the material, our experiment is the story.** Before drafting, list our
+  own records that respond to it: launch briefs, handoffs, journals, results. Search the
+  journal and the research charter's launches for work started because of it. A post that
+  extracts advice from someone else's work, while we have run the experiment, has buried
+  its lead. #690's centre is the four research lines given the "use everything" mandate,
+  and what they found.
+- **Show the primary sources, credited.** Where an idea enters the story (an overview, a
+  launch brief, a handoff), show it: a screenshot or an exact excerpt in a figure, with
+  author, venue and date in the caption. The reader should see where each idea came from,
+  not take the post's paraphrase on trust.
+- **Keep the instructive failures.** The arcs where a striking simplification met its
+  precise cost (a 0.3% feedback set that still deadlocks 64–76% of fragments) are often the
+  most informative part. Read every failure in the material before cutting any.
 
 ### 2. The reader
 
@@ -70,6 +99,10 @@ motivation the sources never state is the one most likely to be missing, so supp
 
 - **Each section answers the question the last one raised** [E: 2464928e: "Five sections
   instead of twelve, each answering the question the last one raised"].
+- **Structure by argument, not by source.** The order a source essay or a set of notes
+  presents its points in is not the post's argument. A list of moves is not an argument
+  either: say how each move forces the next, and show what each looked like in our own work
+  (#690's levers table gives every lever a column for our research lines).
 - **The opening lays out the route**, with links to the numbered sections where it helps
   [E: e98f35dd, e9cd1d08, fabb12a6, 55a8b5c5].
 - **Mark the key step, the payoff and the reconnection** [X: aha-moments]:
@@ -646,6 +679,12 @@ technique, and point to the section where it is worked by hand.
   </figure>
   ```
 
+  - **A figure shows a real structure, never a grouping of the prose's labels.** A grid of
+    the post's own headings, a funnel of its stages or a number line with two labels
+    classifies the prose and adds nothing (#689). Draw the structure the argument rests
+    on: the proof's dependencies, a chain of results with the cost each one broke on,
+    which buffer each change lands in, measured footprints against the cache share. The
+    test: if the figure could be rebuilt from the post's headings alone, it isn't one.
   - **Keep the `<svg>` on one line,** so Markdown leaves it alone.
   - **Colour comes from the `bf-*` classes** in `assets/stylesheets/blog.css`, never from
     hex values. Each class has a light and a dark value. The text classes are `bf-ts`,
@@ -808,6 +847,11 @@ calibration protocol.
 Before `publish-page`:
 
 - [ ] The target claim is one sentence, and the dek and the description state it.
+- [ ] For relayed material: all of it was read; its central idea is written in one
+      sentence, and the title, takeaways and close carry it. Our own response to it (the
+      experiment, its records) is at the centre, with primary sources shown and credited,
+      and its instructive failures kept.
+- [ ] Every figure shows a structure or mechanism, not a grouping of the prose's labels.
 - [ ] The opening says what the thing is and why it matters to the decoder, then what was
       found, then how, with the route through the sections. It doesn't start in medias
       res.
