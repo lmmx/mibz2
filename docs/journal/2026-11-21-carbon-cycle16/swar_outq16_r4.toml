@@ -1,0 +1,22 @@
+# Acquisition manifest for Out-Aliased 1KB Chunk SWAR64 Epoch Queues + Transient-Colored R4 (Cycle 16).
+name = "Out-Aliased 1KB SWAR64 Epoch Queues + Transient-Colored R4 (SwarOutQ16-CompactR4)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "swar_outq16_compact_r4_construct"
+inputs = ["C", "n", "p", "records"]
+output = "swar_outq16_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Aliases 1 KiB (512 x u16) 64K-epoch thin queues directly inside the dead output buffer `out[0..n)` during Phases 1-3b with exact `ovf_chunks` spillover (Theorem 16.1: 0 B heap queue on full blocks, reusing `out`'s already-dirty L2/L3 cache lines and eliminating cyclic L3 self-eviction at W=10 2048 KiB LLC), fills 16-wide u16 iotas via carry-free 64-bit SWAR arithmetic whenever `(m & 0xFFFF) <= 0xFFF0` (Theorem 16.2a, 99.977% of ranks), and colors disjoint-lifetime `[u32; 3]` metadata (`strips` + `bands_rev`) and `[u32; 2*ns]` scratch (`image_order` + `strip_top`, Theorem 16.2b) to cut per-worker retained heap to 0.385x Master-0.5.8."
+
+[[edge]]
+id = "hoisted_inline16_post_alias_emit"
+inputs = ["swar_outq16_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Overwrites `out[0..n)` in Phase 4 after all `OutQ16` chunks have been consumed in Phase 3b, walking the retained first-return cycle in 100% safe Rust (`#[forbid(unsafe_code)]`) with 1.0n output writes and 0.104x Master-0.5.8 DRAM bytes/output-byte at W=10 (LLC=2048 KiB)."
