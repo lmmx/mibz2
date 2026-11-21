@@ -1,0 +1,48 @@
+name = "Wormhole Cycle 17 Candidate: Stage S3 Prefix-15 Tree-Unfold Bound (Thm 17.1) + Direct inline16 Fusion (Zero Short-Word Spelling, Zero S3b)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_master_outq16_scan"
+inputs = ["records", "C", "p", "n"]
+output = "strips_and_outq16"
+status = "shipped"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Identical to origin/master S1 OutQ16."
+
+[[edge]]
+id = "s2_graded_rv_elim"
+inputs = ["strips_and_outq16", "C", "n"]
+output = "graded_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Cycle 15 promoted (len10 << 22) | id22 Graded Semiring Handle + pop_tail (0 random rule loads in S2b)."
+
+[[edge]]
+id = "s3_fused_prefix15_direct_inline16"
+inputs = ["graded_arena", "strips_and_outq16"]
+output = "bands_and_inline16"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict_long", D = "H", B = "B_bands + dict_long", Q = "H", M = "B_bands + dict_long" }
+evidence = "Theorem 17.1: short words (|node_word| <= 15, 64-78% of words) have <= 14 binary rule nodes and expand directly into inline16[code] without touching spelling; eliminates S3b inline_words() completely."
+
+[[edge]]
+id = "s4_master_outq16_wire"
+inputs = ["bands_and_inline16", "strips_and_outq16", "n"]
+output = "critical_edges"
+status = "shipped"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Identical to origin/master OutQ16 Reader::wire."
+
+[[edge]]
+id = "s5_master_emit"
+inputs = ["critical_edges", "bands_and_inline16", "p", "n"]
+output = "text"
+status = "shipped"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Identical to origin/master emit() (100% unmodified in Cycle 17 A/B)."
