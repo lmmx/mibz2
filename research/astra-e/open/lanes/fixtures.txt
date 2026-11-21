@@ -1,0 +1,18 @@
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling cc v1.11.2
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+   Compiling mibz2 v0.5.6 (/workspace/work/astra-e)
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling bzip2 v0.4.4
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.49s
+     Running unittests src/main.rs (/tmp/astra-conjugate/debug/deps/moonshot-39f6e65ea26fa99a)
+
+running 1 test
+matched the marked single-chain writer on 856 residual fixtures
+test candidate::writer::tests::fragment_assembly ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.07s
+

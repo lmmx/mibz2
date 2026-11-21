@@ -1,0 +1,10 @@
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.66s
+     Running unittests src/main.rs (bench/moonshot/target/debug/deps/moonshot-5662b5ce9a543761)
+
+running 1 test
+checked 55302 (column, mark, width) triples
+test candidate::verify::exhaustive_conjugacy ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.97s
+
