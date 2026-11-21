@@ -12,8 +12,8 @@ decides nothing beyond the 1.10 gate.
                   [--arm mibz2] [--judged 10] [--supporting 6,8] [--rounds 16]
                   [--corpus wikidata-x4] [--out-bytes N] [--diagnostic]
 
-**Arms.** The reference is ARM at the base (`ARM@build-base`, master at db634667, v0.5.9's
-source), the candidate ARM at the head (`ARM`, this harness's own build: #692's head 79ab1af8).
+**Arms.** The reference is ARM at the base (`ARM@build-base`, master's src at d425d772, v0.5.9's
+source and #692's merge-base), the candidate ARM at the head (`ARM`, this harness's own build: #692's head 79ab1af8).
 
 **A count's step:** the rounds' paired wall ratios, head over base: their geometric mean and its
 95% interval (Student's t on the logs). FASTER if the interval lies below 1, SLOWER if above,

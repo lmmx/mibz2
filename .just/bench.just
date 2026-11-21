@@ -1946,10 +1946,9 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # W1 (the endpoint elimination's nodes and rules in `edges`) and OutQ16 (the thin queues as u16
 # chunks in `out`), which cut a worker's Open scratch to 0.283x, speed production's decoder
 # where it runs `OpenCells` on the i9, by letting 7-10 workers' scratch fit its 20 MiB L3. Two
-# builds pinned by SHA: master BASE (db634667, v0.5.9's source; `mibz2@build-base`) and #692's
-# HEAD (perf/open-wormhole-diet 79ab1af8, `mibz2`, whose harness drives the run); their src
-# differs in src/open.rs and src/open/** alone, and HEAD's branch point builds what BASE builds
-# (checked). Both by rustc 1.99.1. The whole Wikidata corpus (corpora/wikidata.bz2, checked by
+# builds pinned by SHA: master's src BASE (d425d772, v0.5.9's source and #692's merge-base;
+# `mibz2@build-base`) and #692's HEAD (perf/open-wormhole-diet 79ab1af8, `mibz2`, whose harness
+# drives the run); their src differs in src/open.rs and src/open/** alone (checked). Both by rustc 1.99.1. The whole Wikidata corpus (corpora/wikidata.bz2, checked by
 # its SHA-256), 4 copies end to end; unpinned on every CPU at 6, 8 and 10 threads, interleaved,
 # 16 paired rounds, no spinner. Judged at 10 threads, 6 and 8 supporting, peak RSS reported
 # (bench/open_diet.py). Then a diagnostic that decides nothing: the workers' lazy route alone
@@ -1959,7 +1958,7 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 bench-open-diet:
     #!/usr/bin/env bash
     set -euo pipefail
-    BASE=db634667fbd7bfa6062a68b04f4dc68680c7a8ac
+    BASE=d425d772c0a0e6b82e9626b36bbfa4b28a6c9613
     HEAD=79ab1af89e1cccedf23135f8006ea45999650632
     COPIES=4 ROUNDS=16 SETTLE=2
     W=$PWD/target/open-diet
@@ -1967,17 +1966,14 @@ bench-open-diet:
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-open-diet (docs/journal/2026-11-21-open-diet-registration.md) at $(git rev-parse HEAD): mibz2 at $HEAD (perf/open-wormhole-diet, #692) against mibz2 at $BASE (master, v0.5.9's source), unpinned at 6, 8 and 10 threads, $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2; then mibz2-workers-lazy at 6 and 8"
+    echo "bench-open-diet (docs/journal/2026-11-21-open-diet-registration.md) at $(git rev-parse HEAD): mibz2 at $HEAD (perf/open-wormhole-diet, #692) against mibz2 at $BASE (master's src, v0.5.9's; #692's merge-base), unpinned at 6, 8 and 10 threads, $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2; then mibz2-workers-lazy at 6 and 8"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-open-diet: the checkout has local changes"; exit 1; }
     git cat-file -e "$BASE^{commit}" 2>/dev/null || git fetch -q origin master
     git cat-file -e "$HEAD^{commit}" 2>/dev/null || git fetch -q origin perf/open-wormhole-diet
-    # #692 branched at d425d772 and master has moved on by docs alone, so BASE is not HEAD's
-    # ancestor: instead the branch point must build what BASE builds
-    MB=$(git merge-base "$BASE" "$HEAD")
-    git diff --quiet "$MB" "$BASE" -- src Cargo.toml Cargo.lock examples build.rs \
-      || { echo "bench-open-diet: $BASE's source differs from $HEAD's branch point $MB"; exit 1; }
+    git merge-base --is-ancestor "$BASE" "$HEAD" \
+      || { echo "bench-open-diet: $BASE is not an ancestor of $HEAD"; exit 1; }
     # the contrast, checked: the decoder's source differs in the open kernel's files alone
     changed=$(git diff --name-only "$BASE" "$HEAD" -- src Cargo.toml Cargo.lock examples build.rs)
     [ -n "$changed" ] || { echo "bench-open-diet: the builds' source does not differ"; exit 1; }
@@ -2003,7 +1999,7 @@ bench-open-diet:
     AB=$W/build-head/target/release/examples/ab
     BAB=$W/build-base/target/release/examples/ab
     git rev-parse HEAD > "$O/commit.txt"
-    printf 'base %s\nhead %s\nmerge-base %s\n' "$BASE" "$HEAD" "$MB" > "$O/builds.txt"
+    printf 'base %s\nhead %s\n' "$BASE" "$HEAD" > "$O/builds.txt"
     { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
     for b in base head; do
       (cd "$W/build-$b" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \

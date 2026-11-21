@@ -4,8 +4,8 @@
 `just bench-open-diet` (`.just/bench.just`); the verdict is `bench/open_diet.py`'s, tested by
 `bench/test_open_diet.py`. The recipe, the rule and the verdict script are bench-open-r4's
 (#680, `docs/journal/2026-11-21-open-r4-registration.md`), themselves bench-open-lanes's (#676)
-and bench-open-vec16's (#669). Three things differ: the builds, the ancestry check (below), and
-one added report, each count's median peak RSS in MiB.*
+and bench-open-vec16's (#669). Two things differ: the builds, and one added report, each count's
+median peak RSS in MiB.*
 
 **The decision it settles:** whether #692 (`perf/open-wormhole-diet`, "perf(open): memory diet,
 Endpoint in edges and queues in out") merges, that is, whether the Open kernel's memory diet
@@ -56,16 +56,15 @@ The C ledger's ten-worker contention proxy (0.852–0.886× cycles) was not meas
   `79ab1af89e1cccedf23135f8006ea45999650632`. It is master's src at its branch point plus two
   commits (736b1c480 W1, 218e8ab1e OutQ16) and a third that adds the native harness under
   `docs/journal/2026-11-21-open-memory-diet/`, which is not compiled.
-- **Base:** master's head when the recipe was written,
-  `db634667fbd7bfa6062a68b04f4dc68680c7a8ac`. It carries v0.5.9 (22afc64d). Its Open kernel is
-  0.5.8's, identical to bench-open-r4's base bb98c995 in `src/open.rs` and `src/open/**`.
-- **The ancestry check, changed:** #692 branched from master at
-  `d425d772c0a0e6b82e9626b36bbfa4b28a6c9613`, and master has since moved by docs alone (#689,
-  #691). So BASE is not an ancestor of HEAD, and bench-open-r4's `merge-base --is-ancestor`
-  check would refuse the run. In its place the recipe requires the merge-base of BASE and HEAD
-  to have the same `src`, `examples`, `Cargo.toml`, `Cargo.lock` and `build.rs` as BASE, or
-  the run stops. The base build is then exactly HEAD's branch point as built, and the
-  contrast check below bounds what HEAD adds. The merge-base goes in `builds.txt`.
+- **Base:** master's src, `d425d772c0a0e6b82e9626b36bbfa4b28a6c9613`, #692's merge-base with
+  master. It carries v0.5.9 (22afc64d). Its Open kernel is 0.5.8's, identical to
+  bench-open-r4's base bb98c995 in `src/open.rs` and `src/open/**`.
+- **Why this base and not master's head:** master's head when the recipe was written,
+  `db634667fbd7bfa6062a68b04f4dc68680c7a8ac`, is not an ancestor of HEAD: master has moved
+  since #692 branched, by docs alone (#689, #691). bench-open-r4's ancestry check
+  (`git merge-base --is-ancestor BASE HEAD`) is kept unchanged, so the base is the merge-base,
+  which HEAD's history contains. Its `src`, `examples`, `Cargo.toml`, `Cargo.lock` and
+  `build.rs` are identical to db634667's, so the base build is master's code as it stands.
 - **The contrast, checked by the recipe:** the two builds' `src`, `examples`, `Cargo.toml`,
   `Cargo.lock` and `build.rs` may differ only in `src/open.rs` and files under `src/open/`,
   or the run stops.
