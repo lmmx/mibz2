@@ -228,3 +228,8 @@ count mostly counted letters.
 **Carbon's limit, which stands.** A coded rotation has zero topological entropy. A positive-entropy
 block admits no global coordinate shorter than its entropy, so a coordinate can at best cover the
 structured part.
+
+*Update, 21 November 2026:* on 20 November the Lean Zulip thread "Discussion: Alpöge Proves the
+Riemann Hypothesis" reported that three independent kernels (nanoda, con-leche `--verified`, pestka)
+accepted the Lean development, which proves RH and GRH for Dirichlet L-functions. We have not checked
+it ourselves. The remark's toy proof is not part of the Lean development. Nothing above depends on it.
