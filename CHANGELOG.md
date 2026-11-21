@@ -46,6 +46,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Holm rejected no alternative, so every reference stays. Wider arms are held back on memory, as
   in 0.5.8's run. MONODROMY's record 88, frozen before the data, predicted that no trim would move.
 
+**Release scaling** (§5; release-scaling/run-20261121T130559Z, evidence 479eeb0e): against 0.5.9 the
+release is faster at 8 threads and above.
+- 8 threads: +6.5% (+5.9, +7.2)
+- 10 threads: +9.0% (+7.2, +10.8)
+- 12 to 20 threads: +5.2% to +7.4%
+
+The step has its row in `docs/journal/release-attribution.md` (§5b).
+
 ### <!-- 4 -->Documentation
 
 - *(skills)* blog lessons from #689, the material's centre, our experiment, real figures ([#691](https://github.com/lmmx/mibz2/pull/691))
