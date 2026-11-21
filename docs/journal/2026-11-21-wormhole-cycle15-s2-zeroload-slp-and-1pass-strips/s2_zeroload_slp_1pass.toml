@@ -1,0 +1,48 @@
+name = "Wormhole Cycle 15 Candidate: Stage S2 Write-Only 8B SLP Rules + Tarjan Post-Order Memo + Knuth 1-Pass Strip Bucketing"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_master_outq16_scan"
+inputs = ["records", "C", "p", "n"]
+output = "strips_and_outq16"
+status = "shipped"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Identical to origin/master S1 OutQ16 (proved optimal in Cycles 13-14)."
+
+[[edge]]
+id = "s2_knuth_1pass_zeroload_rv"
+inputs = ["strips_and_outq16", "C", "n"]
+output = "compact_eliminated_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H / 2", Q = "H", M = "H" }
+evidence = "Knuth (1973) 1-pass payload scatter eliminates 2 strip scans + ns random gathers; 8B write-only [left, right] SLP rules eliminate 2 random rule[2] loads per RV join and halve rule arena footprint."
+
+[[edge]]
+id = "s3_tarjan_postorder_bands_slp"
+inputs = ["compact_eliminated_arena", "strips_and_outq16"]
+output = "bands_and_inline16"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict", D = "H", B = "B_bands + dict", Q = "H", M = "B_bands + dict" }
+evidence = "Tarjan (1972) post-order DFS interval memoization recovers shared-DAG rule lengths [start, len] strictly on reachable rules in S3."
+
+[[edge]]
+id = "s4_master_outq16_wire"
+inputs = ["bands_and_inline16", "strips_and_outq16", "n"]
+output = "critical_edges"
+status = "shipped"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Identical to origin/master OutQ16 Reader::wire (held fixed in Cycle 15 A/B)."
+
+[[edge]]
+id = "s5_master_emit"
+inputs = ["critical_edges", "bands_and_inline16", "p", "n"]
+output = "text"
+status = "shipped"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Identical to origin/master emit() (held strictly fixed so A/B isolates Stage S2+S3)."
