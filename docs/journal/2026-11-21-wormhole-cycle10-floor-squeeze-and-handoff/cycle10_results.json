@@ -1,0 +1,15 @@
+{
+  "g1_and_edge_cases": 14461,
+  "multiblock_stream_bytes": 16199814,
+  "multiblock_stream_crc32": 1047095473,
+  "retained_scratch_bytes": 1076340,
+  "total_ws_bytes_per_worker": 1976372,
+  "blocks": [
+    {"block": "block-0.L", "w1_master_us": 1280.4, "w1_diet_mu1_us": 1465.0, "w1_relay8_us": 1441.5, "w2_master_us": 1273.8, "w2_diet_mu1_us": 1452.4, "w2_relay8_us": 1437.6},
+    {"block": "block-2.L", "w1_master_us": 1551.1, "w1_diet_mu1_us": 1768.0, "w1_relay8_us": 1682.2, "w2_master_us": 1571.7, "w2_diet_mu1_us": 1759.6, "w2_relay8_us": 1698.3},
+    {"block": "block-85.L", "w1_master_us": 1607.8, "w1_diet_mu1_us": 1713.7, "w1_relay8_us": 1540.4, "w2_master_us": 1618.4, "w2_diet_mu1_us": 1754.4, "w2_relay8_us": 1572.8},
+    {"block": "block-143.L", "w1_master_us": 2850.2, "w1_diet_mu1_us": 3111.2, "w1_relay8_us": 2770.6, "w2_master_us": 2805.4, "w2_diet_mu1_us": 3100.5, "w2_relay8_us": 2748.1},
+    {"block": "block-210.L", "w1_master_us": 2504.0, "w1_diet_mu1_us": 2695.1, "w1_relay8_us": 2330.5, "w2_master_us": 2507.1, "w2_diet_mu1_us": 2710.9, "w2_relay8_us": 2351.9},
+    {"block": "block-207.L", "w1_master_us": 1877.1, "w1_diet_mu1_us": 2102.9, "w1_relay8_us": 1905.5, "w2_master_us": 1886.9, "w2_diet_mu1_us": 2088.3, "w2_relay8_us": 1910.2}
+  ]
+}

@@ -1,0 +1,18 @@
+PASS Gate G1 + Edge Paths (`wide` + `LazyCells` fallback): 14461 cases verified byte-exact.
+PASS Multi-Worker `BzReader::parallel_workers_with::<DietRelay8Cells>` at W = 1, 2, 4, 8: 18 blocks (15.45 MiB unrled, CRC32 = 0x3e6968b1) byte-exact!
+
+=== CYCLE 10 CONFRONTATION (21 PAIRED ROUNDS: 1-Worker & 2-Worker Barrier Sync) ===
+Block       |   1w_Mst | 1w_Diet1 |  1w_Rel8 (/Diet1) |   2w_Mst | 2w_Diet1 |  2w_Rel8 (/Diet1,   /Mst)
+------------------------------------------------------------------------------------------------------------
+block-0.L   | 1280.4us | 1465.0us | 1441.5us (0.984x) | 1273.8us | 1452.4us | 1437.6us (0.990x, 1.129x)
+block-2.L   | 1551.1us | 1768.0us | 1682.2us (0.951x) | 1571.7us | 1759.6us | 1698.3us (0.965x, 1.081x)
+block-85.L  | 1607.8us | 1713.7us | 1540.4us (0.899x) | 1618.4us | 1754.4us | 1572.8us (0.897x, 0.972x)
+block-143.L | 2850.2us | 3111.2us | 2770.6us (0.891x) | 2805.4us | 3100.5us | 2748.1us (0.886x, 0.980x)
+block-210.L | 2504.0us | 2695.1us | 2330.5us (0.865x) | 2507.1us | 2710.9us | 2351.9us (0.868x, 0.938x)
+block-207.L | 1877.1us | 2102.9us | 1905.5us (0.906x) | 1886.9us | 2088.3us | 1910.2us (0.915x, 1.012x)
+
+=== FINAL MEMORY & 7-10 WORKER i9-10900K L3 CONTENTION LEDGER ===
+  `DietRelay8Cells` retained scratch :   1051.1 KiB (`extra` wide cap = 0 B)
+  `DietRelay8Cells` total WS (+out)  :   1930.1 KiB (1.885 MiB/worker vs Master ~4.73 MiB/worker)
+  7 workers on 20 MiB i9 L3          :    13.19 MiB <= 20.00 MiB (FITS w/ 6.80 MiB headroom!)
+  10 workers on 20 MiB i9 L3         :    18.85 MiB <= 20.00 MiB (FITS w/ 1.15 MiB headroom!)
