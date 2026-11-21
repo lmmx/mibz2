@@ -1,0 +1,22 @@
+# Acquisition manifest for Linked-List Ostrowski/AHT Contraction + Structural-(m,ns) Whole-Corpus SentOutQ16 (Cycle 18).
+name = "Ostrowski/AHT Self-Overlap Contraction + Structural-(m,ns) Whole-Corpus SentOutQ16 (AhtSentOutQ16)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "aht_structural_gate_sent_outq16_construct"
+inputs = ["C", "n", "p", "records"]
+output = "aht_sent_outq16_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Eliminates `Open`'s `64r >= n` sparse gate via exact linked-list Ostrowski/Rauzy quotient contraction (`nb == bs` for `ra > rb` and `na == ts` for `ra < rb` with squaring-DAG `join_pow`, Theorem 18.1, collapsing O(n) periodic spirals to O(log n) steps), handles tiny stream-tail blocks (`n <= 2048`) via zero-heap `MicroLF` inside `edges`, and replaces the noisy `r/n < 0.15` gate with `r/n < 0.28` + zero-hot-cost `m <= 256,000 && ns <= 16,384` Pass-1 structural admission (Theorem 18.2), admitting 383/383 run blocks (100% of full 900 KB blocks) on wikidata.bz2 so `Segmented` never allocates its 5.6 MiB fallback buffers (cutting 10-worker max per-worker heap by 80.7%, from 9,170.5 KiB to 1,770.5 KiB)."
+
+[[edge]]
+id = "aht_sentinel_masked_post_alias_emit"
+inputs = ["aht_sent_outq16_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Decodes squaring-DAG long words in linear O(|word|) time via `Rule.first` memoization and emits all `m <= 256,000` thin-return cycles (`wide == false`) through Cycle 17's single-branch sentinel-masked loop (`#[forbid(unsafe_code)]`), cutting mixed high-density window DRAM traffic at W=10 (LLC=2048 KiB) from 29.170 to 2.539 B/outB (0.087x Master-0.5.8) and accelerating whole-corpus 431-block BzReader parallel decode to 0.894-0.900x at W=8, 10."
