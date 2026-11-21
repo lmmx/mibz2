@@ -1,4 +1,4 @@
-# 2026-11-21 · MONODROMY 87 · Record 83 scored: 16 of 20 ratios inside, 7 of 9 best counts, and refuted at pinned 8, where my recalibrated budget term was wrong. Frozen before bench-recalibrate-058: no trim should change. At 10 threads and up, 8 beats 7 by about 2% but stays memory-held; pinned 8 stays at 6; the lazy 6-thread trims stay; the two kernel arms at 4 threads are near-ties
+# 2026-11-21 · MONODROMY 87 · Record 83 scored: 16 of 20 ratios inside, 7 of 9 best counts, and refuted at pinned 8, where my recalibrated budget term was wrong. Frozen before bench-recalibrate-058: no trim should change. At 10 threads and up, 8 beats 7 by about 2% but stays memory-held; pinned 8 stays at 6; the lazy 6-thread trims stay; two arms are near-ties (lazy 4/16 unpinned at 4, lazy 4/16 pinned at 6)
 
 **The request.** The Coordinator's CHECKPOINT 7055160250 (RELEASING §5c.3).
 - *The recipe:* `bench-recalibrate-058` (#671, ready tag at c695b930, guarding master 70b18ca4).
