@@ -284,6 +284,12 @@ fn slab_admitted_blocks() {
         blocks += 1;
     }
     assert_eq!(blocks, 6);
+    // the queues' buffers kept after the six: the `Vec`s' (grown by doubling) and the slab's
+    eprintln!(
+        "kept: Vec queues {} KiB, slab {} KiB",
+        v.queues.iter().map(|q| 4 * q.capacity()).sum::<usize>() / 1024,
+        4 * s.slab.capacity() / 1024
+    );
 }
 
 /// (ignored; timing, `MIBZ2_ADMITTED_BWT`) best of 41 per admitted block, interleaved, hot:
