@@ -25,7 +25,11 @@ From each `## [X.Y.Z](…) - date` section of CHANGELOG.md (parse()):
   (not Documentation) whose pull request the hand-written notes cite.
 
 A sentence of fewer than four words ("Caveats.") takes the next one with it, and a bold label
-with nothing after it ("**Caveats:**" over a list) is left out.
+with nothing after it ("**Caveats:**" over a list) is left out. A why loses its parentheticals
+of process bookkeeping (run ids, evidence, § references, sha256, RELEASING, LOGs), which stay
+in the CHANGELOG. Summaries of measurements are not reasons: release scaling becomes one line
+of figures when its own list gives them ("Release scaling against 0.5.9: +6.5% at 8 threads,
+…"), else it is left out, and so are the crossover and the team threshold.
 
 A post is tagged with the releases it explains through its front matter's `releases` key,
 `releases: ["0.5.8"]`; every version it names must be a section of CHANGELOG.md. Candidate
@@ -62,6 +66,12 @@ LABELS = re.compile(
     r"memory|known issue|sustained)\b",
     re.I,
 )
+# summaries of measurements, not reasons: release scaling (kept as a line of figures when it
+# can be read off), the crossover and the team threshold (left out)
+FIGURES = re.compile(r"^(the )?(release scaling|crossover|team threshold)\b", re.I)
+SCALING = re.compile(r"^(the )?release scaling\b", re.I)
+# a parenthetical of process bookkeeping: run ids, evidence, § references, hashes, LOGs
+BOOKKEEPING = re.compile(r"run-\d|evidence|§|sha-?256|RELEASING|\bLOG\b|#145", re.I)
 ABBREV = ("e.g.", "i.e.", "vs.", "cf.", "etc.", "approx.", "no.", "fig.")
 
 
@@ -111,6 +121,34 @@ def first_sentence(text: str, limit: int = 320) -> str | None:
     if len(s) > limit:
         s = s[:limit].rsplit(" ", 1)[0].rstrip(",;:") + "…"
     return s
+
+
+def bookkeeping_off(text: str) -> str:
+    """A sentence without its parentheticals of process bookkeeping ("(RELEASING §5c)",
+    "(§5; release-scaling/run-…, evidence 479eeb0e)"); they stay in the CHANGELOG."""
+    prev = None
+    while prev != text:
+        prev = text
+        text = re.sub(r"\s*\(([^()]*)\)", lambda m: "" if BOOKKEEPING.search(m.group(1)) else m.group(0), text)
+    return text.strip()
+
+
+SCALE_ITEM = re.compile(
+    r"(?:^|\s)- (\d+(?: to \d+)?) threads?: ([+\u2212-][\d.]+%(?: to [+\u2212-][\d.]+%)?)"
+)
+
+
+def scaling_line(whole: str) -> str | None:
+    """A release-scaling summary as one line of figures, from the list under it
+    ("- 8 threads: +6.5% (+5.9, +7.2)"): "Release scaling against 0.5.9: +6.5% at 8
+    threads, +9.0% at 10, …". None when it has no such list."""
+    items = SCALE_ITEM.findall(whole)
+    if not items:
+        return None
+    against = re.search(r"against (\d+\.\d+\.\d+)", whole)
+    parts = [f"{fig} at {t} threads" if k == 0 else f"{fig} at {t}" for k, (t, fig) in enumerate(items)]
+    head = f"Release scaling against {against.group(1)}" if against else "Release scaling"
+    return f"{head}: {', '.join(parts)}."
 
 
 def blocks(lines: list[str]):
@@ -266,7 +304,13 @@ def parse(text: str) -> list[dict]:
             if is_bold:
                 if measurement(section) or LABELS.match(strip_md(first)):
                     continue
-                s = first_sentence(first)
+                if FIGURES.match(strip_md(first)):
+                    # release scaling as one line of figures, when its own list gives them;
+                    # the crossover and the team threshold are left to the CHANGELOG
+                    s = scaling_line(whole) if SCALING.match(strip_md(first)) else None
+                else:
+                    s = first_sentence(first)
+                    s = s and bookkeeping_off(s)
                 if s and not s.endswith(":") and s not in why:
                     why.append(s)
             elif kind == "para" and section is None and lede is None:

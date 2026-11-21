@@ -28,9 +28,16 @@ SYNTHETIC = """# Changelog
   - the lanes;
   - the turn.
 
-**Release scaling** (§5; run-1): against 1.1.0 the release is faster at 8 threads.
+- **The worker-count recalibration (RELEASING §5c): no trim moves.** `bench-recal`
+  (recal/run-20261202T010203Z, evidence 1234abcd, sha256 aa…bb) measured every cell.
+
+**Release scaling** (§5; release-scaling/run-20261202T020304Z, evidence 479eeb0e): against 1.1.0 the release is faster at 8 threads.
 - 8 threads: +4.0% (+3.1, +4.9)
 - 10 threads: +2.0% (+1.0, +3.0)
+- 12 to 20 threads: +1.2% to +2.5%
+
+**The crossover** (§5a; `bench-crossover`, crossover/run-20261202T030405Z): the team threshold stays.
+- **Teams:** slower at every count.
 
 ### <!-- 4 -->Documentation
 
@@ -101,7 +108,10 @@ class Synthetic(unittest.TestCase):
         self.assertIsNone(r["lede"])
         self.assertEqual(r["why"], [
             "The walk in lanes (#900): 4% faster at 8 threads, at the same peak memory.",
-            "Release scaling (§5; run-1): against 1.1.0 the release is faster at 8 threads.",
+            # the bookkeeping parenthetical goes; the claim stays
+            "The worker-count recalibration: no trim moves.",
+            # release scaling as a line of figures; the crossover left to the CHANGELOG
+            "Release scaling against 1.1.0: +4.0% at 8 threads, +2.0% at 10, +1.2% to +2.5% at 12 to 20.",
         ])
         # the list straight under the release-scaling summary is its own, not a change
         self.assertEqual([c["prs"][0]["n"] for c in r["changes"]], [900])
@@ -133,6 +143,27 @@ class Synthetic(unittest.TestCase):
         r = self.notes["1.0.0"]
         self.assertTrue(r["lede"].startswith("The first release under the new plan"))
         self.assertEqual(r["changes"], [])
+
+    def test_bookkeeping_and_measurements(self):
+        off = rn.bookkeeping_off
+        self.assertEqual(off("The worker-count recalibration (RELEASING §5c): no trim moves."),
+                         "The worker-count recalibration: no trim moves.")
+        self.assertEqual(off("Seen (§5; release-scaling/run-20261121T130559Z, evidence 479eeb0e): faster."), "Seen: faster.")
+        self.assertEqual(off("Gate (#145 LOGs 6877415527, 6877775115): passed."), "Gate: passed.")
+        self.assertEqual(off("A census (sha256 86b3e01a, 10 rounds) and a rule (#559)."), "A census and a rule (#559).")
+        # parentheticals that carry content stay, and code is left alone
+        self.assertEqual(off("Cells (study 5, #579; #581) and `Kernels { avx2: true, .. }`."),
+                         "Cells (study 5, #579; #581) and `Kernels { avx2: true, .. }`.")
+        # a release-scaling summary with no list of figures, the crossover and the team
+        # threshold give no why
+        text = (
+            "## [2.0.0](https://x/compare/v1...v2) - 2026-12-03\n\n"
+            "**Release scaling** (§5; run-9, #685): no step from 1.9.0 reaches 3% at any count.\n\n"
+            "- **Team threshold (RELEASING §5a), unchanged** (crossover/run-1). No arm beat it.\n"
+            "- **The team threshold** (§5a) stays at 10.\n"
+        )
+        self.assertEqual(rn.parse(text)[0]["why"], [])
+        self.assertIsNone(rn.scaling_line("against 1.0.0 the release is faster."))
 
     def test_sentences(self):
         self.assertEqual(rn.sentences("It is 0.95 of the wall. Next: more."), ["It is 0.95 of the wall.", "Next: more."])
@@ -216,6 +247,7 @@ class RealChangelog(unittest.TestCase):
             self.assertRegex(r["date"], r"^\d{4}-\d{2}-\d{2}$")
             for w in r["why"]:
                 self.assertFalse(w.endswith(":"), w)
+                self.assertNotRegex(w, r"§|evidence|RELEASING|run-\d{8}", w)
                 self.assertNotIn("**", w)
             for c in r["changes"]:
                 self.assertTrue(c["title"], c)
@@ -226,7 +258,11 @@ class RealChangelog(unittest.TestCase):
         prs = lambda v: [p["n"] for c in self.by[v]["changes"] for p in c["prs"]]  # noqa: E731
         if "0.5.10" in self.by:
             self.assertIn(692, prs("0.5.10"))
-            self.assertTrue(self.by["0.5.10"]["why"][0].startswith("The Open kernel's memory diet (#692)"))
+            why = self.by["0.5.10"]["why"]
+            self.assertTrue(why[0].startswith("The Open kernel's memory diet (#692)"))
+            self.assertIn("The worker-count recalibration: no trim moves.", why)
+            self.assertIn("Release scaling against 0.5.9: +6.5% at 8 threads, +9.0% at 10, +5.2% to +7.4% at 12 to 20.", why)
+            self.assertFalse(any("crossover" in w.lower() for w in why))
         if "0.5.8" in self.by:
             self.assertEqual(prs("0.5.8"), [668])
         if "0.3.0" in self.by:
