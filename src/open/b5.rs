@@ -5,7 +5,7 @@ use super::*;
 use crate::bwt::{InverseBwt, Plain};
 
 /// The plain inverse of column `l` at row `p`: the oracle
-fn plain(l: &[u8], p: u32) -> Vec<u8> {
+pub(super) fn plain(l: &[u8], p: u32) -> Vec<u8> {
     let mut counts = [0u32; 256];
     for &c in l {
         counts[c as usize] += 1;
@@ -25,22 +25,22 @@ fn shipped(k: &mut Kernel, l: &[u8], p: u32, out: &mut Vec<u8>) {
 }
 
 /// A deterministic generator (an LCG): no dependency, the same columns on every machine
-struct Lcg(u64);
+pub(super) struct Lcg(pub(super) u64);
 impl Lcg {
-    fn next(&mut self) -> u32 {
+    pub(super) fn next(&mut self) -> u32 {
         self.0 = self
             .0
             .wrapping_mul(6364136223846793005)
             .wrapping_add(1442695040888963407);
         (self.0 >> 33) as u32
     }
-    fn below(&mut self, n: u32) -> u32 {
+    pub(super) fn below(&mut self, n: u32) -> u32 {
         self.next() % n.max(1)
     }
 }
 
 /// A column of `n` rows: runs of geometric-ish length around `mean` over `alphabet` bytes
-fn runs_column(g: &mut Lcg, n: usize, alphabet: u32, mean: u32) -> Vec<u8> {
+pub(super) fn runs_column(g: &mut Lcg, n: usize, alphabet: u32, mean: u32) -> Vec<u8> {
     let mut l = Vec::with_capacity(n);
     while l.len() < n {
         let c = g.below(alphabet) as u8;
@@ -201,9 +201,10 @@ fn queues_fit_in_out_on_full_blocks() {
     assert_eq!(k.spill.overflow(), 0);
 }
 
-/// `OpenCells` admits a block exactly where `LazyCells`' census passes its two record-count
-/// gates (neither the density line nor the sparse gate refuses it), on columns across both
-/// lines; and its output is the plain inverse's whichever route the block took
+/// `OpenCells` admits a block outright exactly where `LazyCells`' census passes its two
+/// record-count gates (neither the density line nor the sparse gate refuses it), on columns
+/// across both lines, and opens no other but in the dense band; and its output is the plain
+/// inverse's whichever route the block took
 #[test]
 fn open_cells_admits_on_lazy_cells_count_gates() {
     let mut g = Lcg(0x6761_7465);
@@ -232,7 +233,10 @@ fn open_cells_admits_on_lazy_cells_count_gates() {
         let was = cells.opened;
         let mut out = Vec::new();
         assert!(cells.invert_runs(&r, n, p, &mut out, Kernels::detect()));
-        assert_eq!(cells.opened > was, admits);
+        // (the dense band, `dense.rs`: above the density line, the open kernel within its cap)
+        let dense = OpenCells::cap(r.records().len(), n, p) == Some(Cap::dense(n));
+        assert!(admits || dense || cells.opened == was);
+        assert!(!admits || cells.opened > was);
         assert_eq!(out, want);
         assert_eq!(out, plain(&l, p));
         if admits {

@@ -35,6 +35,9 @@ pub(super) struct Spill {
     next: Vec<u32>,
     ovf: Vec<[u8; BYTES]>,
     cuts: Vec<[u32; 256]>,
+    /// (test only) the chunks the last block's first pass took
+    #[cfg(test)]
+    pub(super) taken: u32,
 }
 
 impl Spill {
@@ -63,6 +66,10 @@ pub(super) struct Queues<'a> {
     tails: [u32; 256],
     /// ranks in each byte's last chunk (`CHUNK` before its first)
     fill: [u32; 256],
+    /// the retained ranks the block may have (`Cap::m`)
+    limit: u32,
+    /// (sticky) a push went past `limit`: the block is refused, and no chunk is taken after
+    over: bool,
 }
 
 /// Where the queues are, once written: each byte's first chunk
@@ -72,8 +79,8 @@ pub(super) struct Heads {
 }
 
 impl<'a> Queues<'a> {
-    /// Empty queues in `out`, whose bytes are free until the walk
-    pub(super) fn new(out: &'a mut [u8], spill: &'a mut Spill) -> Self {
+    /// Empty queues in `out`, whose bytes are free until the walk, for at most `limit` ranks
+    pub(super) fn new(out: &'a mut [u8], spill: &'a mut Spill, limit: u32) -> Self {
         spill.ovf.clear();
         spill.cuts.clear();
         Queues {
@@ -84,7 +91,20 @@ impl<'a> Queues<'a> {
             heads: [NONE; 256],
             tails: [NONE; 256],
             fill: [CHUNK as u32; 256],
+            limit,
+            over: false,
         }
+    }
+
+    /// Whether a push went past the queues' limit (the block is refused)
+    pub(super) fn over(&self) -> bool {
+        self.over
+    }
+
+    /// (test only) the chunks taken
+    #[cfg(test)]
+    pub(super) fn chunks(&self) -> u32 {
+        self.chunks
     }
 
     pub(super) fn heads(&self) -> Heads {
@@ -116,10 +136,17 @@ impl<'a> Queues<'a> {
     }
 
     /// `push` across a chunk's end or an epoch's, into an overflow chunk, or of more than 16
-    /// ranks (a limit above 16, in the tests): rank by rank
+    /// ranks (a limit above 16, in the tests): rank by rank. Past the queues' `limit` it sets
+    /// `over` and writes nothing: every chunk is taken here, so the queues take none once the
+    /// block is refused, and `push` itself pays nothing for the limit (only a chunk's end
+    /// brings it here, and its fast case writes within a chunk already taken).
     #[cold]
     #[inline(never)]
     fn push_slow(&mut self, a: usize, mut m: u32, w: u32, thin: &[u32; 256]) {
+        if self.over || m + w > self.limit {
+            self.over = true;
+            return;
+        }
         let mut left = w;
         while left > 0 {
             if self.fill[a] as usize == CHUNK {
