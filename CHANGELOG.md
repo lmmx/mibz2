@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.11](https://github.com/lmmx/mibz2/compare/v0.5.10...v0.5.11) - 2026-11-21
+
+### <!-- 1 -->Features
+
+- *(site)* why each release happened: changelog notes and linked posts on the History page ([#702](https://github.com/lmmx/mibz2/pull/702))
+
+### <!-- 3 -->Performance
+
+- *(open)* admit dense blocks (width certificate) with producer buffers in edges ([#703](https://github.com/lmmx/mibz2/pull/703))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.5.10's crossover, the team threshold stays ([#700](https://github.com/lmmx/mibz2/pull/700))
+- *(changelog)* 0.5.10, the memory diet's i9 result and the recalibration ([#698](https://github.com/lmmx/mibz2/pull/698))
+
+### <!-- 9 -->Other
+
+- *(release-scaling)* 0.5.10 against 0.5.9 on the i9 (release-scaling/run-20261121T130559Z); its attribution row ([#699](https://github.com/lmmx/mibz2/pull/699))
+
 ## [0.5.10](https://github.com/lmmx/mibz2/compare/v0.5.9...v0.5.10) - 2026-11-21
 
 ### <!-- 3 -->Performance
