@@ -1,0 +1,21 @@
+== m0.bin / master kernel, in-process pairs (t1, 12 rounds; times in us, medians over rounds)
+block-0.L    master    1189.2  cand    1201.2  ratio 1.017 [1.011, 1.022]
+block-2.L    master    1463.8  cand    1471.9  ratio 1.010 [1.002, 1.018]
+block-85.L   master    1481.7  cand    1511.0  ratio 1.006 [0.999, 1.014]
+block-143.L  master    2761.8  cand    2792.4  ratio 1.010 [1.000, 1.021]
+block-210.L  master    2424.9  cand    2442.4  ratio 1.018 [0.998, 1.038]
+block-207.L  master    1766.3  cand    1777.8  ratio 1.013 [0.997, 1.030]
+== w1.bin / master kernel, in-process pairs (t1, 12 rounds; times in us, medians over rounds)
+block-0.L    master    1195.3  cand    1215.0  ratio 1.027 [1.018, 1.036]
+block-2.L    master    1456.2  cand    1477.6  ratio 1.018 [1.006, 1.030]
+block-85.L   master    1492.8  cand    1480.7  ratio 0.999 [0.991, 1.007]
+block-143.L  master    2753.1  cand    2743.1  ratio 0.996 [0.988, 1.004]
+block-210.L  master    2448.0  cand    2409.4  ratio 0.989 [0.975, 1.004]
+block-207.L  master    1772.4  cand    1773.2  ratio 1.003 [0.990, 1.017]
+== oq.bin / master kernel, in-process pairs (t1, 12 rounds; times in us, medians over rounds)
+block-0.L    master    1179.1  cand    1222.8  ratio 1.041 [1.032, 1.050]
+block-2.L    master    1456.6  cand    1500.7  ratio 1.019 [1.002, 1.036]
+block-85.L   master    1500.0  cand    1508.3  ratio 1.000 [0.972, 1.028]
+block-143.L  master    2738.5  cand    2743.2  ratio 1.010 [0.996, 1.023]
+block-210.L  master    2469.7  cand    2460.1  ratio 1.000 [0.984, 1.016]
+block-207.L  master    1818.7  cand    1849.6  ratio 1.020 [1.008, 1.032]
