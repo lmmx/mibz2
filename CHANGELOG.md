@@ -31,6 +31,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   family adopted nothing, and unpinned at 6, 8, 10, 12, 16 and 20. So are the plan,
   `LAZY_FROM_THREADS` and every other machine. The output is byte-identical.
 
+**Release scaling** (§5; release-scaling/run-20261121T094127Z, evidence 221dadcb, #685): no
+step from 0.5.8 reaches 3% at any count, so the release adds no attribution row. The run pins
+its threads, so #678's unpinned 4-thread cell isn't on its route.
+
+**The crossover** (§5a; `bench-crossover`, crossover/run-20261121T095223Z, evidence 9f0bfba2,
+10 rounds on Wikidata): the team threshold stays. No forced arm beats the shipped decoder at any
+count.
+- **Teams:** `mibz2-team2` and `mibz2-team3` take 1.07–7.34× the shipped wall time.
+- **One worker per thread:** `mibz2-workers-w` is never faster. Its interval spans 1 at 5, 7 and 9
+  threads; elsewhere it takes 1.064–1.621× the shipped wall time.
+
 ## [0.5.8](https://github.com/lmmx/mibz2/compare/v0.5.7...v0.5.8) - 2026-11-21
 
 ### <!-- 3 -->Performance
