@@ -2,6 +2,7 @@
 title: "Reduce, reuse, recycle: hand-me-down slots for every fragment of text"
 image: assets/social/blog-2026-11-15-slot-recycling.png
 description: "Each new text fragment takes over the slot its finished neighbour just vacated, so mibz2 touches 30% fewer slots and needs up to 15% less memory."
+releases: ["0.3.2"]
 ---
 
 <div class="post-hero" markdown>
@@ -18,6 +19,9 @@ Each new text fragment takes over the slot its finished neighbour just vacated, 
 
 15 November 2026 · 13 min read · [Research result](#7-what-the-benchmarks-tell-us)
 {: .post-meta }
+
+Shipped in mibz2 [0.3.2](../benchmarks/history.md#release-0-3-2) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#032---2026-11-15))
+{: .post-shipped }
 
 </div>
 

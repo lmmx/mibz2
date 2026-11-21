@@ -2,6 +2,7 @@
 title: "Fast alone, slow in a crowd: which speed-ups survive many cores"
 image: assets/social/blog-2026-11-21-fast-alone-slow-in-a-crowd.png
 description: "Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor."
+releases: ["0.5.9"]
 ---
 
 <div class="post-hero" markdown>
@@ -18,6 +19,9 @@ Walking each block in eight lanes made our newest decoding loop 13% faster on on
 
 21 November 2026 · 12 min read · [Research result](#6-what-comes-next)
 {: .post-meta }
+
+Shipped in mibz2 [0.5.9](../benchmarks/history.md#release-0-5-9) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#059---2026-11-21))
+{: .post-shipped }
 
 </div>
 

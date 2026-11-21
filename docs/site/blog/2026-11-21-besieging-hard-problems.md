@@ -2,6 +2,7 @@
 title: "Besieging hard problems: cheap checks first, after the Riemann proof"
 image: assets/social/blog-2026-11-21-besieging-hard-problems.png
 description: "A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check."
+releases: ["0.5.10"]
 ---
 
 <div class="post-hero" markdown>
@@ -18,6 +19,9 @@ A machine-checked Riemann proof shows how far a search can range once checking i
 
 21 November 2026 · 16 min read · [Meta](#6-what-comes-next)
 {: .post-meta }
+
+Shipped in mibz2 [0.5.10](../benchmarks/history.md#release-0-5-10) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0510---2026-11-21))
+{: .post-shipped }
 
 </div>
 

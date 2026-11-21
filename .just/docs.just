@@ -1,10 +1,12 @@
 # The docs toolchain, pinned as in .github/workflows/site.yml (change both together).
 docs_with := "--with zensical==0.0.71 --with mkdocstrings-python==2.0.9 --with ruff==0.17.1"
 
-# The benchmark pages' data, from the bench-results branch (git fetch origin bench-results)
+# The benchmark pages' data, from the bench-results branch (git fetch origin bench-results),
+# and each release's notes and posts, from CHANGELOG.md and the posts' front matter
 docs-bench:
    python3 docs/scripts/bench_history.py
    python3 docs/scripts/bench_release_scaling.py
+   python3 docs/scripts/release_notes.py
 
 # Build the site, serve it and rebuild on change
 docs-serve: docs-bench

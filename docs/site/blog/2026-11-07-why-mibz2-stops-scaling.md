@@ -2,6 +2,7 @@
 title: "Why mibz2 stops scaling at eight threads, and why three teams help"
 image: assets/social/blog-2026-11-07-why-mibz2-stops-scaling.png
 description: "Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open."
+releases: ["0.2.5"]
 ---
 
 <div class="post-hero" markdown>
@@ -19,6 +20,9 @@ teams of three beat four of two by 9%. Why blocks interfere is open.
 
 7 November 2026 · 15 min read · [Research in progress](#8-where-do-things-stand)
 {: .post-meta }
+
+Shipped in mibz2 [0.2.5](../benchmarks/history.md#release-0-2-5) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#025---2026-11-06))
+{: .post-shipped }
 
 </div>
 

@@ -2,6 +2,7 @@
 title: "Pipelined teams: how mibz2 0.2.6 decodes 7% faster on ten cores"
 image: assets/social/blog-2026-11-07-pipelined-teams.png
 description: "While a team's helpers invert one block, its leader finishes the last and prepares the next: 7% faster than 0.2.5 on ten cores, for 5% more processor time."
+releases: ["0.2.6"]
 ---
 
 <div class="post-hero" markdown>
@@ -19,6 +20,9 @@ While a team's helpers invert one block, its leader finishes the last and prepar
 
 7 November 2026 · 13 min read · [Research result](#7-where-do-things-stand)
 {: .post-meta }
+
+Shipped in mibz2 [0.2.6](../benchmarks/history.md#release-0-2-6) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#026---2026-11-07))
+{: .post-shipped }
 
 </div>
 
