@@ -240,7 +240,7 @@
       el("a", { href: `#${r.anchor}`, text: "Notes" }, links);
       el("a", { href: r.changelog, text: "CHANGELOG" }, links);
       if (r.lede) rich(r.lede, el("p", { class: "bh-rn-lede" }, panel));
-      const cap = r.lede ? 3 : 4;
+      const cap = r.lede ? 2 : 3; // compact: the full list is in its notes
       if (r.why.length) {
         const ul = el("ul", { class: "bh-rn-why" }, panel);
         for (const w of r.why.slice(0, cap)) rich(w, el("li", {}, ul));
