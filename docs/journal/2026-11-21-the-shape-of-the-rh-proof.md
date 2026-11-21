@@ -1,6 +1,6 @@
 # What the shape of the Riemann proof shows us
 
-*21 November 2026. Coordinator. Non-canon: a reading of method, not a result about mibz2.*
+*21 November 2026. Coordinator. Non-canon: the proof's meta-structure as a general principle, then its consequences for mibz2.*
 
 ## The source
 
@@ -33,6 +33,55 @@ help. Paraphrased:
 
 We have not checked any of this ourselves. What follows uses only the proof's reported *shape*.
 
+## The general principle
+
+What follows is the proof's logic, read from the overview. The deformation-theoretic reading
+(the R = T numerical criterion and Euler systems) is our inference, not something the overview
+says.
+
+1. **Turn an analytic fact into a count.** "L(s) ≠ 0" can't be counted. In the Bloch–Kato
+   picture, an L-function vanishes exactly where a cohomology group (a Selmer or
+   Tate–Shafarevich group) is bigger than it should be. A zero becomes an excess, and an excess
+   is the size of something finite. The first move changes what kind of statement is being
+   proved: from "this doesn't happen" to "this finite object has this size".
+2. **Squeeze the count between two independent theories until they meet.** One theory, Galois
+   theory and automorphy lifting, bounds the obstruction from above. Another, arithmetic
+   geometry's covolume bound, forces from below what must be present. When the room the
+   obstruction could take is no larger than what geometry forces to exist, the inequality
+   becomes an equality, and there is no excess, so no zero. The theorem is forced by
+   bookkeeping, not explained by one mechanism. That is why a reader can follow every step and
+   still not see "how they combine".
+3. **Move to a setting where the structure exists.** The objects in question don't carry the
+   geometry needed to bound anything in their own setting. So they are moved, by base change and
+   theta lifts, to unitary groups, which have Shimura varieties. There the objects are realised
+   as Frobenius acting on the cohomology of an actual space, which makes them countable (trace
+   formulas) and boundable (vanishing theorems). Then the conclusion is moved back.
+4. **Pay for the move in full.** The Galois representations are built, not cited, along a route
+   of the development's own. With no axioms, every piece of the move must be paid for:
+   resolution of singularities, compactifications, prismatic theory. The insight is the choice of
+   setting and squeeze. The rest is foundations.
+5. **Separate finding, length and understanding.** Human proofs are limited to what can be
+   communicated, so routes known in principle but 25,000 pages long stayed shut. A machine
+   checker lifts that limit. Three independent kernels give the trust, and understanding can come
+   later. The search becomes one over compositions of heavy existing theorems, judged by whether
+   they check.
+
+**In one line:** turn "this never happens" into "this obstruction has size zero". Move the
+problem to a setting rich enough that the obstruction is both bounded above, by one theory, and
+forced from below, by an independent theory. Close the gap by counting, without needing one
+explanation. Pay for the move in full, and let independent checking stand in for understanding.
+
+**The test this puts to our programme:** is there a statement about the inverse BWT that we can
+prove by bounds that meet, instead of by building a faster mechanism? Mechanisms and Kitchen Sink
+look for faster mechanisms, and Depth bounds the cost from below in a fixed model, but the upper
+and lower bounds have never been aimed at each other. In this logic, progress is the closing of
+the gap between what any decoder must pay (a lower bound on an obstruction) and what one decoder
+does pay (an upper bound). Where the gap closes, the design is forced. Where it can't close in the
+problem's own setting, the principle says to move to a richer setting where both bounds exist,
+not to search harder in the original one.
+
+The six moves below are the same principle applied, one consequence at a time.
+
 ## The shape, as six moves
 
 | | Move in the proof | What it is, abstractly |
@@ -49,7 +98,7 @@ Two smaller points also bear on us:
   L-functions.
 - **The toy that guided the discovery is not in the artefact.**
 
-## What each move means for mibz2
+## Consequences for mibz2, move by move
 
 ### A. Our target as an exclusion statement over a family
 
