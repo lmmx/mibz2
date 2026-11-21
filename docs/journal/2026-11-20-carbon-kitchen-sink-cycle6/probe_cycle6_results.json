@@ -1,0 +1,329 @@
+{
+  "small_verifications": {
+    "theorem_6_1": {
+      "primitive_bwts_verified": 1508,
+      "sturmian_r2_constant_delta_verified": 210
+    },
+    "theorem_6_2_checks": 6152
+  },
+  "blocks": {
+    "block-0.L": {
+      "displacement_commutator": {
+        "n": 899931,
+        "r": 51184,
+        "distinct_alpha_values": 46684,
+        "accidental_alpha_collisions": 4500,
+        "runs_of_first_D_hit_v": 899931,
+        "runs_of_Delta_tau": 887651,
+        "runs_Delta_tau_frac_n": 0.9864
+      },
+      "algebraic_morse_matchings": {
+        "rising_apparent": {
+          "critical_cells": 439674,
+          "critical_frac_n": 0.4886,
+          "coherent_bundles": 30525,
+          "bundles_over_crit": 0.0694,
+          "mean_word_len": 2.05,
+          "max_word_len": 8
+        },
+        "width_apparent": {
+          "critical_cells": 479108,
+          "critical_frac_n": 0.5324,
+          "coherent_bundles": 32829,
+          "bundles_over_crit": 0.0685,
+          "mean_word_len": 1.88,
+          "max_word_len": 10
+        },
+        "open_domain_thick16": {
+          "critical_cells": 89874,
+          "critical_frac_n": 0.0999,
+          "coherent_bundles": 47544,
+          "bundles_over_crit": 0.529,
+          "mean_word_len": 10.01,
+          "max_word_len": 895
+        },
+        "coreduce_codomain_thick16": {
+          "critical_cells": 89874,
+          "critical_frac_n": 0.0999,
+          "coherent_bundles": 46226,
+          "bundles_over_crit": 0.5143,
+          "mean_word_len": 10.01,
+          "max_word_len": 895
+        },
+        "bithick_dom_or_cod_gt16": {
+          "critical_cells": 74596,
+          "critical_frac_n": 0.0829,
+          "coherent_bundles": 43890,
+          "bundles_over_crit": 0.5884,
+          "mean_word_len": 12.06,
+          "max_word_len": 1042
+        }
+      }
+    },
+    "block-2.L": {
+      "displacement_commutator": {
+        "n": 900000,
+        "r": 54532,
+        "distinct_alpha_values": 50549,
+        "accidental_alpha_collisions": 3983,
+        "runs_of_first_D_hit_v": 900000,
+        "runs_of_Delta_tau": 894023,
+        "runs_Delta_tau_frac_n": 0.9934
+      },
+      "algebraic_morse_matchings": {
+        "rising_apparent": {
+          "critical_cells": 444364,
+          "critical_frac_n": 0.4937,
+          "coherent_bundles": 33534,
+          "bundles_over_crit": 0.0755,
+          "mean_word_len": 2.03,
+          "max_word_len": 9
+        },
+        "width_apparent": {
+          "critical_cells": 470271,
+          "critical_frac_n": 0.5225,
+          "coherent_bundles": 36357,
+          "bundles_over_crit": 0.0773,
+          "mean_word_len": 1.91,
+          "max_word_len": 11
+        },
+        "open_domain_thick16": {
+          "critical_cells": 112070,
+          "critical_frac_n": 0.1245,
+          "coherent_bundles": 50527,
+          "bundles_over_crit": 0.4509,
+          "mean_word_len": 8.03,
+          "max_word_len": 521
+        },
+        "coreduce_codomain_thick16": {
+          "critical_cells": 112070,
+          "critical_frac_n": 0.1245,
+          "coherent_bundles": 48960,
+          "bundles_over_crit": 0.4369,
+          "mean_word_len": 8.03,
+          "max_word_len": 521
+        },
+        "bithick_dom_or_cod_gt16": {
+          "critical_cells": 89746,
+          "critical_frac_n": 0.0997,
+          "coherent_bundles": 45576,
+          "bundles_over_crit": 0.5078,
+          "mean_word_len": 10.03,
+          "max_word_len": 946
+        }
+      }
+    },
+    "block-85.L": {
+      "displacement_commutator": {
+        "n": 899935,
+        "r": 79375,
+        "distinct_alpha_values": 72201,
+        "accidental_alpha_collisions": 7174,
+        "runs_of_first_D_hit_v": 899935,
+        "runs_of_Delta_tau": 899575,
+        "runs_Delta_tau_frac_n": 0.9996
+      },
+      "algebraic_morse_matchings": {
+        "rising_apparent": {
+          "critical_cells": 443087,
+          "critical_frac_n": 0.4924,
+          "coherent_bundles": 47755,
+          "bundles_over_crit": 0.1078,
+          "mean_word_len": 2.03,
+          "max_word_len": 8
+        },
+        "width_apparent": {
+          "critical_cells": 497733,
+          "critical_frac_n": 0.5531,
+          "coherent_bundles": 51400,
+          "bundles_over_crit": 0.1033,
+          "mean_word_len": 1.81,
+          "max_word_len": 12
+        },
+        "open_domain_thick16": {
+          "critical_cells": 156404,
+          "critical_frac_n": 0.1738,
+          "coherent_bundles": 77733,
+          "bundles_over_crit": 0.497,
+          "mean_word_len": 5.75,
+          "max_word_len": 341
+        },
+        "coreduce_codomain_thick16": {
+          "critical_cells": 156404,
+          "critical_frac_n": 0.1738,
+          "coherent_bundles": 76247,
+          "bundles_over_crit": 0.4875,
+          "mean_word_len": 5.75,
+          "max_word_len": 341
+        },
+        "bithick_dom_or_cod_gt16": {
+          "critical_cells": 134618,
+          "critical_frac_n": 0.1496,
+          "coherent_bundles": 73354,
+          "bundles_over_crit": 0.5449,
+          "mean_word_len": 6.69,
+          "max_word_len": 359
+        }
+      }
+    },
+    "block-143.L": {
+      "displacement_commutator": {
+        "n": 899869,
+        "r": 108335,
+        "distinct_alpha_values": 97737,
+        "accidental_alpha_collisions": 10598,
+        "runs_of_first_D_hit_v": 899869,
+        "runs_of_Delta_tau": 897583,
+        "runs_Delta_tau_frac_n": 0.9975
+      },
+      "algebraic_morse_matchings": {
+        "rising_apparent": {
+          "critical_cells": 454919,
+          "critical_frac_n": 0.5055,
+          "coherent_bundles": 67251,
+          "bundles_over_crit": 0.1478,
+          "mean_word_len": 1.98,
+          "max_word_len": 9
+        },
+        "width_apparent": {
+          "critical_cells": 496392,
+          "critical_frac_n": 0.5516,
+          "coherent_bundles": 73253,
+          "bundles_over_crit": 0.1476,
+          "mean_word_len": 1.81,
+          "max_word_len": 9
+        },
+        "open_domain_thick16": {
+          "critical_cells": 196841,
+          "critical_frac_n": 0.2187,
+          "coherent_bundles": 103102,
+          "bundles_over_crit": 0.5238,
+          "mean_word_len": 4.57,
+          "max_word_len": 1451
+        },
+        "coreduce_codomain_thick16": {
+          "critical_cells": 196841,
+          "critical_frac_n": 0.2187,
+          "coherent_bundles": 100054,
+          "bundles_over_crit": 0.5083,
+          "mean_word_len": 4.57,
+          "max_word_len": 1451
+        },
+        "bithick_dom_or_cod_gt16": {
+          "critical_cells": 152219,
+          "critical_frac_n": 0.1692,
+          "coherent_bundles": 93757,
+          "bundles_over_crit": 0.6159,
+          "mean_word_len": 5.91,
+          "max_word_len": 1608
+        }
+      }
+    },
+    "block-210.L": {
+      "displacement_commutator": {
+        "n": 899959,
+        "r": 128732,
+        "distinct_alpha_values": 113351,
+        "accidental_alpha_collisions": 15381,
+        "runs_of_first_D_hit_v": 899959,
+        "runs_of_Delta_tau": 897031,
+        "runs_Delta_tau_frac_n": 0.9967
+      },
+      "algebraic_morse_matchings": {
+        "rising_apparent": {
+          "critical_cells": 447352,
+          "critical_frac_n": 0.4971,
+          "coherent_bundles": 76834,
+          "bundles_over_crit": 0.1718,
+          "mean_word_len": 2.01,
+          "max_word_len": 9
+        },
+        "width_apparent": {
+          "critical_cells": 479769,
+          "critical_frac_n": 0.5331,
+          "coherent_bundles": 81658,
+          "bundles_over_crit": 0.1702,
+          "mean_word_len": 1.88,
+          "max_word_len": 11
+        },
+        "open_domain_thick16": {
+          "critical_cells": 204281,
+          "critical_frac_n": 0.227,
+          "coherent_bundles": 125843,
+          "bundles_over_crit": 0.616,
+          "mean_word_len": 4.41,
+          "max_word_len": 557
+        },
+        "coreduce_codomain_thick16": {
+          "critical_cells": 204281,
+          "critical_frac_n": 0.227,
+          "coherent_bundles": 123389,
+          "bundles_over_crit": 0.604,
+          "mean_word_len": 4.41,
+          "max_word_len": 557
+        },
+        "bithick_dom_or_cod_gt16": {
+          "critical_cells": 168710,
+          "critical_frac_n": 0.1875,
+          "coherent_bundles": 118487,
+          "bundles_over_crit": 0.7023,
+          "mean_word_len": 5.33,
+          "max_word_len": 558
+        }
+      }
+    },
+    "block-207.L": {
+      "displacement_commutator": {
+        "n": 899998,
+        "r": 87111,
+        "distinct_alpha_values": 78098,
+        "accidental_alpha_collisions": 9013,
+        "runs_of_first_D_hit_v": 899997,
+        "runs_of_Delta_tau": 897073,
+        "runs_Delta_tau_frac_n": 0.9967
+      },
+      "algebraic_morse_matchings": {
+        "rising_apparent": {
+          "critical_cells": 457697,
+          "critical_frac_n": 0.5086,
+          "coherent_bundles": 53910,
+          "bundles_over_crit": 0.1178,
+          "mean_word_len": 1.97,
+          "max_word_len": 9
+        },
+        "width_apparent": {
+          "critical_cells": 486578,
+          "critical_frac_n": 0.5406,
+          "coherent_bundles": 57657,
+          "bundles_over_crit": 0.1185,
+          "mean_word_len": 1.85,
+          "max_word_len": 10
+        },
+        "open_domain_thick16": {
+          "critical_cells": 135921,
+          "critical_frac_n": 0.151,
+          "coherent_bundles": 83449,
+          "bundles_over_crit": 0.614,
+          "mean_word_len": 6.62,
+          "max_word_len": 1626
+        },
+        "coreduce_codomain_thick16": {
+          "critical_cells": 135921,
+          "critical_frac_n": 0.151,
+          "coherent_bundles": 81403,
+          "bundles_over_crit": 0.5989,
+          "mean_word_len": 6.62,
+          "max_word_len": 1626
+        },
+        "bithick_dom_or_cod_gt16": {
+          "critical_cells": 109958,
+          "critical_frac_n": 0.1222,
+          "coherent_bundles": 77437,
+          "bundles_over_crit": 0.7042,
+          "mean_word_len": 8.18,
+          "max_word_len": 1650
+        }
+      }
+    }
+  }
+}
