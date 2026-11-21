@@ -1,0 +1,22 @@
+# Acquisition manifest for Contiguous 16-Bit Epoch Queue + Zero-Clear Fast-Arena R4 Elimination (Cycle 15).
+name = "Contiguous 16-Bit Epoch Queue + Zero-Clear Fast-Arena R4 Elimination (EpochQ16-ZeroClearR4)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "epochq16_zeroclear_r4_construct"
+inputs = ["C", "n", "p", "records"]
+output = "epochq16_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Stores thin retained ranks as 16-bit residues `m as u16` in contiguous `[Vec<u16>; 256]` queues with 32-byte `[u16; 16]` fixed-width stores and exact 64K-epoch boundary snapshots `ep_cuts[e][a]` (Theorem 15.1, halving active queue footprint and queue R/W bandwidth), eliminates thick strips (width > 16) on zero-clear reused `prev`-only R4 tapes (`PAD = 1`, Theorem 15.2, eliminating ~376 KiB/block of `rep stos` tape zeroing), and copies <=16 B words directly from `arena` into `inline16` without `offsets` or band reversal."
+
+[[edge]]
+id = "hoisted_inline16_serial_emit"
+inputs = ["epochq16_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Walks the single retained first-return cycle in 100% safe Rust with loop-hoisted narrow/wide dispatch, unconditional 16-byte `inline16` copies, and inline `(o0, o1)` cold metadata for >16 B words (1.0n output writes, zero page-unshuffle RFO amplification), cutting per-worker memory and 8-10 worker DRAM bytes/output-byte well below mibz2 0.5.8."
