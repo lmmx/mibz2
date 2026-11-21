@@ -216,6 +216,13 @@
     "section": " · Research blog",
     "title": "Where the decoding work goes: random IDs in repetitive JSON"
   },
+  "assets/social/blog-2026-11-21-besieging-hard-problems.png": {
+    "description": "A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check.",
+    "foot": "lmmx.github.io/mibz2 · 21 November 2026",
+    "kind": "meta",
+    "section": " · Research blog",
+    "title": "Besieging hard problems: cheap checks first, after the Riemann proof"
+  },
   "assets/social/blog-2026-11-21-fast-alone-slow-in-a-crowd.png": {
     "description": "Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor.",
     "foot": "lmmx.github.io/mibz2 · 21 November 2026",
