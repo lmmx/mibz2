@@ -1,0 +1,30 @@
+name = "Wormhole Cycle 7 Move-D Route D1: Phi/Toehold Zero-Staging Multi-Anchor Open"
+target = "text"
+uses = ["maximal_runs", "lf_shifts", "boundary_text_positions"]
+
+[[edge]]
+id = "select_k_toehold_anchors"
+inputs = ["boundary_positions", "runs", "C", "p", "n"]
+output = "exact_offset_anchors"
+status = "verified"
+dependent = false
+cost = { W = "r", D = "1", B = "r", Q = "0", M = "r" }
+evidence = "Selects K evenly spaced retained-row anchors with exact text positions tau(s_q) from boundary_positions (paid by boundary_text_positions: D = S ~ 1.7-1.8r, M = 3.6-9.2 MiB)."
+
+[[edge]]
+id = "dieted_open_table_build"
+inputs = ["records", "C", "p", "n"]
+output = "dieted_return_table"
+status = "verified"
+dependent = true
+cost = { W = "R + m + H", D = "H", B = "R + m + H", Q = "H + B_bands", M = "m + H" }
+evidence = "Combined Dieted Open (OutQ16 + Chaitin Node16) builds edges[0..m) and inline16."
+
+[[edge]]
+id = "k_lane_exact_anchor_emit"
+inputs = ["dieted_return_table", "exact_offset_anchors", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m / K", B = "n", Q = "m", M = "n + m" }
+evidence = "Zero-staging K-lane emit from exact tau(s_q) anchors; killed on total cost because boundary_text_positions preprocessing already pays D = S >= 1.7r serial pointer steps across 3.6-9.2 MiB (> 2048 KiB L3)."

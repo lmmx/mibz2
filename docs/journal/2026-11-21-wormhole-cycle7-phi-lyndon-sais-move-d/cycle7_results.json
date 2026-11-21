@@ -1,0 +1,12 @@
+{
+  "rv_small_cases": 14204,
+  "lms_small_cases": 2012,
+  "blocks": [
+    {"block": "block-0.L", "n": 899931, "m16": 89874, "diet_emit_dep_l2": 25533, "rv_phi_steps": 92571, "rv_phi_nodes": 51186, "rv_phi_scratch_kib": 2199.3, "rv_phi_dep_l2": 93934, "rv_phi_l3_2048k": 19195, "rv_phi_us": 2911.6, "lf_cycles": 1, "lyndon_factors": 16, "lyndon_max_share_pct": 34.59, "sais_lms_count": 307346, "lms_over_m16": 3.420},
+    {"block": "block-2.L", "n": 900000, "m16": 112070, "diet_emit_dep_l2": 37778, "rv_phi_steps": 101907, "rv_phi_nodes": 54534, "rv_phi_scratch_kib": 2343.2, "rv_phi_dep_l2": 98571, "rv_phi_l3_2048k": 20450, "rv_phi_us": 2564.9, "lf_cycles": 1, "lyndon_factors": 19, "lyndon_max_share_pct": 47.66, "sais_lms_count": 309493, "lms_over_m16": 2.762},
+    {"block": "block-85.L", "n": 899935, "m16": 156404, "diet_emit_dep_l2": 47553, "rv_phi_steps": 140544, "rv_phi_nodes": 79377, "rv_phi_scratch_kib": 3410.7, "rv_phi_dep_l2": 177387, "rv_phi_l3_2048k": 29767, "rv_phi_us": 3605.1, "lf_cycles": 1, "lyndon_factors": 17, "lyndon_max_share_pct": 86.06, "sais_lms_count": 304973, "lms_over_m16": 1.950},
+    {"block": "block-143.L", "n": 899869, "m16": 196841, "diet_emit_dep_l2": 94739, "rv_phi_steps": 193866, "rv_phi_nodes": 108337, "rv_phi_scratch_kib": 4655.0, "rv_phi_dep_l2": 272278, "rv_phi_l3_2048k": 50361, "rv_phi_us": 5387.5, "lf_cycles": 1, "lyndon_factors": 12, "lyndon_max_share_pct": 93.79, "sais_lms_count": 313734, "lms_over_m16": 1.594},
+    {"block": "block-210.L", "n": 899959, "m16": 204281, "diet_emit_dep_l2": 89106, "rv_phi_steps": 216769, "rv_phi_nodes": 128734, "rv_phi_scratch_kib": 5531.5, "rv_phi_dep_l2": 335586, "rv_phi_l3_2048k": 74242, "rv_phi_us": 6161.2, "lf_cycles": 1, "lyndon_factors": 16, "lyndon_max_share_pct": 75.87, "sais_lms_count": 309085, "lms_over_m16": 1.513},
+    {"block": "block-207.L", "n": 899998, "m16": 135921, "diet_emit_dep_l2": 51240, "rv_phi_steps": 153650, "rv_phi_nodes": 87113, "rv_phi_scratch_kib": 3743.1, "rv_phi_dep_l2": 194073, "rv_phi_l3_2048k": 32668, "rv_phi_us": 4080.1, "lf_cycles": 1, "lyndon_factors": 9, "lyndon_max_share_pct": 76.02, "sais_lms_count": 316819, "lms_over_m16": 2.331}
+  ]
+}

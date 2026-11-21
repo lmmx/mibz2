@@ -1,0 +1,12 @@
+=== 1. GATE G1: SMALL-CASE VERIFICATION OF THEOREMS 7.1, 7.2, 7.3 ===
+PASS Gate G1: 14204 weight-only RV cycle checks + 2012 primitive BWT-vs-Text SA-IS LMS checks exact.
+
+=== 2. MOVE D EVALUATION ON THE 6 AUTHENTICATED BLOCKS (SAFE RUST) ===
+Block       | RV_Step   RV_Mem  RV_L2m  RV_L3m | LFcyc  Lyn#c LynMax% |   n_LMS LMS/m16
+--------------------------------------------------------------------------------------------------
+block-0.L   |   92571  2199.3K   93934   19195 |     1     16   34.6% |  307346  3.42x
+block-2.L   |  101907  2343.2K   98571   20450 |     1     19   47.7% |  309493  2.76x
+block-85.L  |  140544  3410.7K  177387   29767 |     1     17   86.1% |  304973  1.95x
+block-143.L |  193866  4655.0K  272278   50361 |     1     12   93.8% |  313734  1.59x
+block-210.L |  216769  5531.5K  335586   74242 |     1     16   75.9% |  309085  1.51x
+block-207.L |  153650  3743.1K  194073   32668 |     1      9   76.0% |  316819  2.33x
