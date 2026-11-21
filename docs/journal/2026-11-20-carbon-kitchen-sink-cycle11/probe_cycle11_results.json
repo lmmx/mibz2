@@ -1,0 +1,351 @@
+{
+  "small_verifications": {
+    "fvs_topo_small_verified": 3016,
+    "minimal_diamond_braid_witness": {
+      "word": "000110010010011",
+      "n": 15,
+      "r": 4,
+      "L": "111100000110000",
+      "p": 0,
+      "fvs_runs": [
+        1
+      ],
+      "phi_stats": {
+        "remainder_bytes": 7,
+        "fragments": 4,
+        "mean_frag_bytes": 1.75,
+        "edges": 4,
+        "self_deps": 0,
+        "orderable": 0,
+        "deadlocked": 4,
+        "deadlocked_pct": 100.0
+      }
+    }
+  },
+  "blocks": {
+    "block-0.L": {
+      "n": 899931,
+      "r": 51184,
+      "oracle_fvs_cut_phi_attainability": {
+        "remainder_bytes": 756218,
+        "fragments": 99548,
+        "mean_frag_bytes": 7.6,
+        "edges": 98473,
+        "self_deps": 0,
+        "orderable": 27240,
+        "deadlocked": 72308,
+        "deadlocked_pct": 72.64
+      },
+      "fvs_topo_levy_low_wt": {
+        "fvs_mode": "levy_low_wt",
+        "fvs_runs": 315,
+        "fvs_rows_W": 95295,
+        "dag_runs": 50869,
+        "dag_propagated_subpieces": 85105,
+        "dag_stored_pieces": 77703,
+        "fvs_return_bands": 7001,
+        "fvs_topo_working_set_KiB": 6953.7,
+        "fvs_open_working_set_KiB": 4503.3
+      },
+      "fvs_topo_dfs_backedge": {
+        "fvs_mode": "dfs_backedge",
+        "fvs_runs": 449,
+        "fvs_rows_W": 123494,
+        "dag_runs": 50735,
+        "dag_propagated_subpieces": 83810,
+        "dag_stored_pieces": 76026,
+        "fvs_return_bands": 7289,
+        "fvs_topo_working_set_KiB": 7098.7,
+        "fvs_open_working_set_KiB": 4703.4
+      },
+      "native_058_open16": {
+        "m": 89874,
+        "H_thick": 3448,
+        "bands": 3204,
+        "words_allocated_058": 1326,
+        "unique_words_exact": 739,
+        "duplicate_word_ratio": 1.79,
+        "bits": 17,
+        "wide_extra_triggered": false,
+        "spelling_bytes": 52035,
+        "queues_KiB": 720.0,
+        "bands_KiB": 37.5,
+        "edges_plus_extra_KiB": 351.1,
+        "inline16_plus_lens_KiB": 26.3,
+        "spelling_offsets_KiB": 56.0,
+        "emit_hot_tables_KiB": 377.3,
+        "total_kernel_working_set_KiB": 1258.2
+      }
+    },
+    "block-2.L": {
+      "n": 900000,
+      "r": 54532,
+      "oracle_fvs_cut_phi_attainability": {
+        "remainder_bytes": 761490,
+        "fragments": 91640,
+        "mean_frag_bytes": 8.31,
+        "edges": 91384,
+        "self_deps": 0,
+        "orderable": 22161,
+        "deadlocked": 69479,
+        "deadlocked_pct": 75.82
+      },
+      "fvs_topo_levy_low_wt": {
+        "fvs_mode": "levy_low_wt",
+        "fvs_runs": 396,
+        "fvs_rows_W": 81043,
+        "dag_runs": 54136,
+        "dag_propagated_subpieces": 100586,
+        "dag_stored_pieces": 91222,
+        "fvs_return_bands": 9068,
+        "fvs_topo_working_set_KiB": 7181.7,
+        "fvs_open_working_set_KiB": 4703.3
+      },
+      "fvs_topo_dfs_backedge": {
+        "fvs_mode": "dfs_backedge",
+        "fvs_runs": 684,
+        "fvs_rows_W": 122445,
+        "dag_runs": 53848,
+        "dag_propagated_subpieces": 105408,
+        "dag_stored_pieces": 95342,
+        "fvs_return_bands": 9711,
+        "fvs_topo_working_set_KiB": 7471.4,
+        "fvs_open_working_set_KiB": 5073.9
+      },
+      "native_058_open16": {
+        "m": 112070,
+        "H_thick": 3827,
+        "bands": 4244,
+        "words_allocated_058": 1922,
+        "unique_words_exact": 1025,
+        "duplicate_word_ratio": 1.88,
+        "bits": 17,
+        "wide_extra_triggered": false,
+        "spelling_bytes": 49396,
+        "queues_KiB": 800.0,
+        "bands_KiB": 49.7,
+        "edges_plus_extra_KiB": 437.8,
+        "inline16_plus_lens_KiB": 36.2,
+        "spelling_offsets_KiB": 55.8,
+        "emit_hot_tables_KiB": 473.9,
+        "total_kernel_working_set_KiB": 1454.2
+      }
+    },
+    "block-85.L": {
+      "n": 899935,
+      "r": 79375,
+      "oracle_fvs_cut_phi_attainability": {
+        "remainder_bytes": 726482,
+        "fragments": 105496,
+        "mean_frag_bytes": 6.89,
+        "edges": 103870,
+        "self_deps": 0,
+        "orderable": 37785,
+        "deadlocked": 67711,
+        "deadlocked_pct": 64.18
+      },
+      "fvs_topo_levy_low_wt": {
+        "fvs_mode": "levy_low_wt",
+        "fvs_runs": 586,
+        "fvs_rows_W": 82572,
+        "dag_runs": 78789,
+        "dag_propagated_subpieces": 142717,
+        "dag_stored_pieces": 130756,
+        "fvs_return_bands": 11547,
+        "fvs_topo_working_set_KiB": 8587.2,
+        "fvs_open_working_set_KiB": 6112.0
+      },
+      "fvs_topo_dfs_backedge": {
+        "fvs_mode": "dfs_backedge",
+        "fvs_runs": 1060,
+        "fvs_rows_W": 117650,
+        "dag_runs": 78315,
+        "dag_propagated_subpieces": 146670,
+        "dag_stored_pieces": 133972,
+        "fvs_return_bands": 12181,
+        "fvs_topo_working_set_KiB": 8828.6,
+        "fvs_open_working_set_KiB": 6421.8
+      },
+      "native_058_open16": {
+        "m": 156404,
+        "H_thick": 1565,
+        "bands": 2446,
+        "words_allocated_058": 1220,
+        "unique_words_exact": 555,
+        "duplicate_word_ratio": 2.2,
+        "bits": 18,
+        "wide_extra_triggered": false,
+        "spelling_bytes": 31612,
+        "queues_KiB": 1036.0,
+        "bands_KiB": 28.7,
+        "edges_plus_extra_KiB": 611.0,
+        "inline16_plus_lens_KiB": 24.5,
+        "spelling_offsets_KiB": 35.6,
+        "emit_hot_tables_KiB": 635.5,
+        "total_kernel_working_set_KiB": 1766.3
+      }
+    },
+    "block-143.L": {
+      "n": 899869,
+      "r": 108335,
+      "oracle_fvs_cut_phi_attainability": {
+        "remainder_bytes": 688810,
+        "fragments": 114813,
+        "mean_frag_bytes": 6.0,
+        "edges": 112895,
+        "self_deps": 0,
+        "orderable": 39600,
+        "deadlocked": 75213,
+        "deadlocked_pct": 65.51
+      },
+      "fvs_topo_levy_low_wt": {
+        "fvs_mode": "levy_low_wt",
+        "fvs_runs": 914,
+        "fvs_rows_W": 86992,
+        "dag_runs": 107421,
+        "dag_propagated_subpieces": 204193,
+        "dag_stored_pieces": 184246,
+        "fvs_return_bands": 19500,
+        "fvs_topo_working_set_KiB": 10410.4,
+        "fvs_open_working_set_KiB": 7943.9
+      },
+      "fvs_topo_dfs_backedge": {
+        "fvs_mode": "dfs_backedge",
+        "fvs_runs": 842,
+        "fvs_rows_W": 122982,
+        "dag_runs": 107493,
+        "dag_propagated_subpieces": 178793,
+        "dag_stored_pieces": 158573,
+        "fvs_return_bands": 19577,
+        "fvs_topo_working_set_KiB": 10320.7,
+        "fvs_open_working_set_KiB": 7924.5
+      },
+      "native_058_open16": {
+        "m": 196841,
+        "H_thick": 5047,
+        "bands": 6788,
+        "words_allocated_058": 3635,
+        "unique_words_exact": 1455,
+        "duplicate_word_ratio": 2.5,
+        "bits": 18,
+        "wide_extra_triggered": false,
+        "spelling_bytes": 58129,
+        "queues_KiB": 1352.0,
+        "bands_KiB": 79.5,
+        "edges_plus_extra_KiB": 768.9,
+        "inline16_plus_lens_KiB": 64.6,
+        "spelling_offsets_KiB": 71.0,
+        "emit_hot_tables_KiB": 833.5,
+        "total_kernel_working_set_KiB": 2434.6
+      }
+    },
+    "block-210.L": {
+      "n": 899959,
+      "r": 128732,
+      "oracle_fvs_cut_phi_attainability": {
+        "remainder_bytes": 676062,
+        "fragments": 108188,
+        "mean_frag_bytes": 6.25,
+        "edges": 104212,
+        "self_deps": 0,
+        "orderable": 39312,
+        "deadlocked": 68876,
+        "deadlocked_pct": 63.66
+      },
+      "fvs_topo_levy_low_wt": {
+        "fvs_mode": "levy_low_wt",
+        "fvs_runs": 839,
+        "fvs_rows_W": 79932,
+        "dag_runs": 127893,
+        "dag_propagated_subpieces": 223486,
+        "dag_stored_pieces": 205235,
+        "fvs_return_bands": 17357,
+        "fvs_topo_working_set_KiB": 11329.3,
+        "fvs_open_working_set_KiB": 8848.8
+      },
+      "fvs_topo_dfs_backedge": {
+        "fvs_mode": "dfs_backedge",
+        "fvs_runs": 1253,
+        "fvs_rows_W": 109586,
+        "dag_runs": 127479,
+        "dag_propagated_subpieces": 207037,
+        "dag_stored_pieces": 187861,
+        "fvs_return_bands": 18241,
+        "fvs_topo_working_set_KiB": 11297.8,
+        "fvs_open_working_set_KiB": 8875.3
+      },
+      "native_058_open16": {
+        "m": 204281,
+        "H_thick": 2809,
+        "bands": 4219,
+        "words_allocated_058": 2228,
+        "unique_words_exact": 962,
+        "duplicate_word_ratio": 2.32,
+        "bits": 18,
+        "wide_extra_triggered": false,
+        "spelling_bytes": 38703,
+        "queues_KiB": 1368.0,
+        "bands_KiB": 49.4,
+        "edges_plus_extra_KiB": 798.0,
+        "inline16_plus_lens_KiB": 41.2,
+        "spelling_offsets_KiB": 46.5,
+        "emit_hot_tables_KiB": 839.2,
+        "total_kernel_working_set_KiB": 2358.0
+      }
+    },
+    "block-207.L": {
+      "n": 899998,
+      "r": 87111,
+      "oracle_fvs_cut_phi_attainability": {
+        "remainder_bytes": 709579,
+        "fragments": 114572,
+        "mean_frag_bytes": 6.19,
+        "edges": 112415,
+        "self_deps": 0,
+        "orderable": 40680,
+        "deadlocked": 73892,
+        "deadlocked_pct": 64.49
+      },
+      "fvs_topo_levy_low_wt": {
+        "fvs_mode": "levy_low_wt",
+        "fvs_runs": 419,
+        "fvs_rows_W": 82372,
+        "dag_runs": 86692,
+        "dag_propagated_subpieces": 165781,
+        "dag_stored_pieces": 151606,
+        "fvs_return_bands": 13647,
+        "fvs_topo_working_set_KiB": 9160.8,
+        "fvs_open_working_set_KiB": 6685.0
+      },
+      "fvs_topo_dfs_backedge": {
+        "fvs_mode": "dfs_backedge",
+        "fvs_runs": 1003,
+        "fvs_rows_W": 123808,
+        "dag_runs": 86108,
+        "dag_propagated_subpieces": 149025,
+        "dag_stored_pieces": 133220,
+        "fvs_return_bands": 15257,
+        "fvs_topo_working_set_KiB": 9185.9,
+        "fvs_open_working_set_KiB": 6791.0
+      },
+      "native_058_open16": {
+        "m": 135921,
+        "H_thick": 3474,
+        "bands": 4596,
+        "words_allocated_058": 2259,
+        "unique_words_exact": 949,
+        "duplicate_word_ratio": 2.38,
+        "bits": 18,
+        "wide_extra_triggered": false,
+        "spelling_bytes": 55955,
+        "queues_KiB": 944.0,
+        "bands_KiB": 53.9,
+        "edges_plus_extra_KiB": 530.9,
+        "inline16_plus_lens_KiB": 41.8,
+        "spelling_offsets_KiB": 63.5,
+        "emit_hot_tables_KiB": 572.7,
+        "total_kernel_working_set_KiB": 1701.9
+      }
+    }
+  }
+}
