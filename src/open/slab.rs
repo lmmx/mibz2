@@ -285,3 +285,44 @@ fn slab_admitted_blocks() {
     }
     assert_eq!(blocks, 6);
 }
+
+/// (ignored; timing, `MIBZ2_ADMITTED_BWT`) best of 41 per admitted block, interleaved, hot:
+/// the kernel with its queues in the slab against the `Vec` queues, in the same build and
+/// process (both with the lazy rows and the primary split)
+#[test]
+#[ignore]
+fn slab_against_vec_timing() {
+    use std::time::Instant;
+    let dir = std::env::var("MIBZ2_ADMITTED_BWT").expect("MIBZ2_ADMITTED_BWT");
+    let manifest = std::fs::read_to_string(format!("{dir}/manifest.json")).unwrap();
+    let (mut v, mut s) = (Kernel::default(), Kernel::default());
+    for part in manifest.split("\"file\": \"").skip(1) {
+        let file = &part[..part.find('"').unwrap()];
+        let at = part.find("\"primary_index\": ").unwrap() + 17;
+        let p: u32 = part[at..]
+            .split(|c: char| !c.is_ascii_digit())
+            .next()
+            .unwrap()
+            .parse()
+            .unwrap();
+        let l = std::fs::read(format!("{dir}/{file}")).unwrap();
+        let r = Runs::of_column(&l);
+        let (mut a, mut b) = (Vec::new(), Vec::new());
+        let (mut tv, mut ts) = (f64::INFINITY, f64::INFINITY);
+        for i in 0..82 {
+            let t = Instant::now();
+            if i % 2 == 0 {
+                v.run::<true, true>(r.records(), None, l.len(), p, LIMIT, &mut a);
+                tv = tv.min(t.elapsed().as_secs_f64() * 1e6);
+            } else {
+                s.run::<true, true>(r.records(), Some(r.meta()), l.len(), p, LIMIT, &mut b);
+                ts = ts.min(t.elapsed().as_secs_f64() * 1e6);
+            }
+        }
+        assert_eq!(a, b);
+        eprintln!(
+            "{file}: vec {tv:.0} us, slab {ts:.0} us, slab/vec {:.3}",
+            ts / tv
+        );
+    }
+}
