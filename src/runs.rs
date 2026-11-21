@@ -123,6 +123,15 @@ impl Runs {
         &self.runs
     }
 
+    /// Each byte's rows and records, as the front counted them beside the records (the open
+    /// kernel's slab is partitioned by them, `open::construct_slab`)
+    pub(crate) fn meta(&self) -> crate::open::Meta<'_> {
+        crate::open::Meta {
+            counts: &self.counts,
+            per: &self.per,
+        }
+    }
+
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs)
     #[cfg(any(test, feature = "trace"))]
     pub fn buffers(&self) -> Vec<crate::trace::Buffer> {
@@ -397,6 +406,44 @@ unsafe fn second(
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
 unsafe fn front_avx2(b: &Symbols, f: &mut Runs) -> Option<usize> {
+    let end = bitmaps(b, f)?;
+    // a record for each literal and one for the block's first run, and `slack` more for the
+    // runs over 127 rows: a block within `max_len` needs at most max_len / 127 of those
+    let slack = b.max_len / CAP as usize + 1;
+    f.runs.clear();
+    f.runs.reserve(b.syms.len() + slack + 2);
+    let out0 = f.runs.as_mut_ptr();
+    let sink = Records {
+        out: out0,
+        slack,
+        cnt: [0; 256],
+        big: 0,
+        max_len: b.max_len as u64,
+    };
+    let Records { out, cnt, .. } = literals(b, f.lit.as_ptr(), f.one.as_ptr(), end, sink)?;
+    // (every `mtf` check on the length is this one: the rows only grow, a literal adds one)
+    let n: u64 = cnt.iter().map(|&x| x & 0xffff_ffff).sum();
+    if n > b.max_len as u64 {
+        return None;
+    }
+    // SAFETY: the records up to `out` were written, inside the capacity (see above)
+    f.runs.set_len(out.offset_from(out0) as usize);
+    for (c, &x) in cnt.iter().enumerate() {
+        f.counts[c] = x as u32;
+        f.per[c] = (x >> 32) as u32;
+    }
+    Some(n as usize)
+}
+
+/// The AVX2 front's first half: the symbols' bitmaps (`lit`, `one`) into `f`, and the place of
+/// the end-of-block symbol; None as `front_avx2` returns it
+///
+/// # Safety
+///
+/// As `front_avx2`.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
+unsafe fn bitmaps(b: &Symbols, f: &mut Runs) -> Option<usize> {
     use std::arch::x86_64::*;
     let m = b.syms.len();
     let sp = b.syms.as_ptr();
@@ -478,7 +525,169 @@ unsafe fn front_avx2(b: &Symbols, f: &mut Runs) -> Option<usize> {
     if end == usize::MAX {
         return None;
     }
+    Some(end)
+}
 
+/// Where the AVX2 front's literal walk puts each run of L: the run of `total` rows of byte `c`
+/// that a literal opens, after `span` - 1 run symbols (`run`), and the count that opens the
+/// block (`first`, of the list's first byte, possibly 0 rows). False refuses the block (the
+/// front returns None). Monomorphised: the records (`Records`, the shipped front) or a
+/// caller's runs (`Visit`, the open kernel's fused construction).
+#[cfg(target_arch = "x86_64")]
+trait Sink {
+    /// # Safety
+    ///
+    /// Called by `literals` alone, under its invariants: at most once a literal after the
+    /// one `first`, with the run lengths `front_avx2` documents.
+    unsafe fn first(&mut self, c: u64, total: u64) -> bool;
+    /// # Safety
+    ///
+    /// As `first`.
+    unsafe fn run(&mut self, c: u64, total: u64, span: usize) -> bool;
+}
+
+/// The shipped front's sink: the records, cut at CAP, with each byte's rows and records
+/// counted (low and high halves of `cnt`)
+#[cfg(target_arch = "x86_64")]
+struct Records {
+    out: *mut u16,
+    slack: usize,
+    cnt: [u64; 256],
+    big: u64,
+    max_len: u64,
+}
+
+#[cfg(target_arch = "x86_64")]
+impl Records {
+    /// A run of `total` rows of byte c, any length: its records
+    ///
+    /// # Safety
+    ///
+    /// `out` has room for one record, and `slack` more past it
+    #[inline(always)]
+    unsafe fn long(&mut self, c: u64, total: u64) -> bool {
+        let recs = total.div_ceil(CAP as u64);
+        let more = recs.saturating_sub(1) as usize;
+        self.big += total;
+        if more > self.slack || self.big > self.max_len {
+            return false;
+        }
+        self.slack -= more;
+        self.cnt[c as usize] += total | recs << 32;
+        let mut left = total;
+        while left > 0 {
+            let len = left.min(CAP as u64);
+            // SAFETY: within the m + slack + 2 reserved: this run's first record is its
+            // literal's (or the block's first), the rest taken from `slack` above
+            *self.out = (c << 8 | len) as u16;
+            self.out = self.out.add(1);
+            left -= len;
+        }
+        true
+    }
+}
+
+#[cfg(target_arch = "x86_64")]
+impl Sink for Records {
+    #[inline(always)]
+    unsafe fn first(&mut self, c: u64, total: u64) -> bool {
+        self.long(c, total)
+    }
+    #[inline(always)]
+    unsafe fn run(&mut self, c: u64, total: u64, span: usize) -> bool {
+        if total > CAP as u64 {
+            // (22 run symbols or more: `mtf`'s RunTooLong, unless the length fails first)
+            if span > 22 {
+                return false;
+            }
+            self.long(c, total)
+        } else {
+            // SAFETY: the literal's own record, within the m reserved for them. (The
+            // record's two bytes apart: low the length, high the byte)
+            *(self.out as *mut u8) = total as u8;
+            *(self.out as *mut u8).add(1) = c as u8;
+            self.out = self.out.add(1);
+            self.cnt[c as usize] += total | 1 << 32;
+            true
+        }
+    }
+}
+
+/// A caller's runs from the front, in safe code: each run of L as `(byte, rows)`, in L order,
+/// every one at least a row. False refuses the block: the front returns
+/// None, and the caller takes the records' path. The runs are those of the records before
+/// their cut at CAP: maximal wherever the block's bytes in use are distinct, as a decoded
+/// block's are (`front`); a visitor that needs them maximal checks that a run's byte differs
+/// from the one before.
+pub(crate) trait RunVisitor {
+    fn run(&mut self, c: u8, rows: u32) -> bool;
+}
+
+#[cfg(target_arch = "x86_64")]
+struct Visit<'a, V: RunVisitor>(&'a mut V);
+
+#[cfg(target_arch = "x86_64")]
+impl<V: RunVisitor> Sink for Visit<'_, V> {
+    #[inline(always)]
+    unsafe fn first(&mut self, c: u64, total: u64) -> bool {
+        // (q <= 21 run symbols: below 2^23 rows.) A block whose first symbol is a literal opens
+        // with no rows of the list's first byte: no run, as `Records` writes no record
+        total == 0 || self.0.run(c as u8, total as u32)
+    }
+    #[inline(always)]
+    unsafe fn run(&mut self, c: u64, total: u64, span: usize) -> bool {
+        // (at most 21 run symbols: below 2^23 rows, so the cast is exact)
+        span <= 22 && self.0.run(c as u8, total as u32)
+    }
+}
+
+/// The front's runs to `v` (the AVX2 front where this CPU has it, else none): Some once
+/// every run is given, or None where `front` would take the block to its scalar loop or refuse it, or
+/// where `v` refused a run. The bitmaps are `r`'s scratch; its records are left as they were.
+pub(crate) fn front_runs<V: RunVisitor>(
+    b: &Symbols,
+    r: &mut Runs,
+    k: Kernels,
+    v: &mut V,
+) -> Option<()> {
+    #[cfg(target_arch = "x86_64")]
+    if front_fast(k) {
+        // SAFETY: `front_fast` holds only when AVX2, BMI1, BMI2, LZCNT and POPCNT were
+        // detected (`Kernels::avx2` is set only when AVX2 and BMI1 were)
+        return unsafe { front_runs_avx2(b, r, v) };
+    }
+    let _ = (b, r, k, v);
+    None
+}
+
+/// # Safety
+///
+/// As `front_avx2`.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
+unsafe fn front_runs_avx2<V: RunVisitor>(b: &Symbols, r: &mut Runs, v: &mut V) -> Option<()> {
+    let end = bitmaps(b, r)?;
+    // (the rows are the visitor's to count and to bound: `Records` bounds them by `max_len`)
+    literals(b, r.lit.as_ptr(), r.one.as_ptr(), end, Visit(v)).map(|_| ())
+}
+
+/// The AVX2 front's second half: the literals' walk, each run to `s`; `s` back, or None as
+/// `front_avx2` returns it
+///
+/// # Safety
+///
+/// As `front_avx2`; `litp` and `onep` are `bitmaps`' words for `b`, `end` its result.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1,bmi2,lzcnt,popcnt")]
+unsafe fn literals<S: Sink>(
+    b: &Symbols,
+    litp: *const u64,
+    onep: *const u64,
+    end: usize,
+    mut sink: S,
+) -> Option<S> {
+    use std::arch::x86_64::*;
+    let sp = b.syms.as_ptr();
     // ---- the literals ----
     // the list as bytes, as `mtf_avx2` holds it: the front is the byte with no lookup
     let s2u = &b.seq_to_unseq;
@@ -494,63 +703,6 @@ unsafe fn front_avx2(b: &Symbols, f: &mut Runs) -> Option<usize> {
         25, 26, 27, 28, 29, 30, 31,
     );
     let steps = STEPS.as_ptr();
-    // a record for each literal and one for the block's first run, and `slack` more for the
-    // runs over 127 rows: a block within `max_len` needs at most max_len / 127 of those
-    let mut slack = b.max_len / CAP as usize + 1;
-    f.runs.clear();
-    f.runs.reserve(m + slack + 2);
-    let out0 = f.runs.as_mut_ptr();
-    let mut out = out0;
-    // each byte's rows (low half) and records (high half). The low halves cannot carry: the
-    // runs of at most 127 rows are fewer than 2^24 (m), and `big`, the rows of the longer
-    // ones, is refused past `max_len`, itself below 2^31
-    let mut cnt = [0u64; 256];
-    let mut big = 0u64;
-    let litp = f.lit.as_ptr();
-    let onep = f.one.as_ptr();
-    // a run of `total` rows of byte c, any length: its records
-    macro_rules! long {
-        ($c:expr, $total:expr) => {{
-            let (c, total): (u64, u64) = ($c, $total);
-            let recs = total.div_ceil(CAP as u64);
-            let more = recs.saturating_sub(1) as usize;
-            big += total;
-            if more > slack || big > b.max_len as u64 {
-                return None;
-            }
-            slack -= more;
-            cnt[c as usize] += total | recs << 32;
-            let mut left = total;
-            while left > 0 {
-                let len = left.min(CAP as u64);
-                // SAFETY: within the m + slack + 2 reserved: this run's first record is its
-                // literal's (or the block's first), the rest taken from `slack` above
-                *out = (c << 8 | len) as u16;
-                out = out.add(1);
-                left -= len;
-            }
-        }};
-    }
-    // a run of `total` rows of byte c after `span` - 1 run symbols: one record, nearly always
-    macro_rules! emit {
-        ($c:expr, $total:expr, $span:expr) => {{
-            let (c, total): (u64, u64) = ($c, $total);
-            if total > CAP as u64 {
-                // (22 run symbols or more: `mtf`'s RunTooLong, unless the length fails first)
-                if $span > 22 {
-                    return None;
-                }
-                long!(c, total);
-            } else {
-                // SAFETY: the literal's own record, within the m reserved for them. (The
-                // record's two bytes apart: low the length, high the byte)
-                *(out as *mut u8) = total as u8;
-                *(out as *mut u8).add(1) = c as u8;
-                out = out.add(1);
-                cnt[c as usize] += total | 1 << 32;
-            }
-        }};
-    }
     // the literals' bits are walked a word at a time: `w`, word `wi`'s bits not yet taken.
     // The next literal's bit in its word, or None when there is none before `end`
     let last = end / 64;
@@ -591,7 +743,9 @@ unsafe fn front_avx2(b: &Symbols, f: &mut Runs) -> Option<usize> {
     if q > 21 {
         return None;
     }
-    long!(*s2u.as_ptr() as u64, _bzhi_u64(*onep, q as u32 + 1) - 1);
+    if !sink.first(*s2u.as_ptr() as u64, _bzhi_u64(*onep, q as u32 + 1) - 1) {
+        return None;
+    }
     if let Some(mut tz) = first {
         // word `wi` of `one`, a bit down, so that the bits after a literal's start at its own
         // place; and the word's symbols
@@ -623,7 +777,9 @@ unsafe fn front_avx2(b: &Symbols, f: &mut Runs) -> Option<usize> {
                 // `after`'s bits from this literal's place to below the next one's
                 let t2 = w.trailing_zeros() as usize;
                 w &= w - 1;
-                emit!(c, _bzhi_u64(after, t2 as u32) >> tz, t2 - tz);
+                if !sink.run(c, _bzhi_u64(after, t2 as u32) >> tz, t2 - tz) {
+                    return None;
+                }
                 tz = t2;
             } else {
                 // in a later word, or there is none and the count runs to `end`
@@ -633,7 +789,9 @@ unsafe fn front_avx2(b: &Symbols, f: &mut Runs) -> Option<usize> {
                 if q2 - q > 22 {
                     return None;
                 }
-                emit!(c, count!(q, q2), q2 - q);
+                if !sink.run(c, count!(q, q2), q2 - q) {
+                    return None;
+                }
                 match next {
                     Some(t) => (tz, after, spw) = (t, *onep.add(wi) >> 1, sp.add(wi * 64)),
                     None => break,
@@ -641,18 +799,7 @@ unsafe fn front_avx2(b: &Symbols, f: &mut Runs) -> Option<usize> {
             }
         }
     }
-    // (every `mtf` check on the length is this one: the rows only grow, a literal adds one)
-    let n: u64 = cnt.iter().map(|&x| x & 0xffff_ffff).sum();
-    if n > b.max_len as u64 {
-        return None;
-    }
-    // SAFETY: the records up to `out` were written, inside the capacity (see above)
-    f.runs.set_len(out.offset_from(out0) as usize);
-    for (c, &x) in cnt.iter().enumerate() {
-        f.counts[c] = x as u32;
-        f.per[c] = (x >> 32) as u32;
-    }
-    Some(n as usize)
+    Some(sink)
 }
 
 /// The block's LF table from its records (as `front` left them in `r`, for a block of `n`

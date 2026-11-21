@@ -427,6 +427,10 @@ impl<I: bwt::InverseBwt> Default for Scratch<I> {
     }
 }
 
+/// Whether the decoder takes a kernel's fused front (`InverseBwt::invert_symbols`, the open
+/// kernel's LRB route, #666) before the records' path: off on research/open-flatq
+const FUSED_ROUTE: bool = false;
+
 /// Phases 2-5 of a block whose symbols are read: its bytes appended to `out`, its CRC
 /// checked. Returns the CRC.
 pub fn decode_block<I: bwt::InverseBwt>(
@@ -439,6 +443,16 @@ pub fn decode_block<I: bwt::InverseBwt>(
     // a block of few symbols, for a kernel that can: its table from its run records, with no
     // last column (src/runs.rs). Its output goes to `ll`, as an in-place kernel's would
     if s.inverse.reads_runs() && runs::takes_runs(b) {
+        // a kernel that inverts the block from its symbols, with no records (the open
+        // kernel's fused front, off: it lost natively, #666, and the slab queues need the
+        // front's counts); else the records' path
+        if FUSED_ROUTE {
+            if let Some(_n) = s.inverse.invert_symbols(b, &mut s.runs, k, &mut s.ll) {
+                #[cfg(any(test, feature = "trace"))]
+                s.record_allocation(trace::OutputRoute::Runs, _n, b.max_len, k);
+                return finish(&s.ll, b.crc, k, out);
+            }
+        }
         let n = runs::front(b, &mut s.runs, k)?;
         if b.orig_ptr as usize >= n {
             return Err(ErrorKind::BadOrigPtr);
