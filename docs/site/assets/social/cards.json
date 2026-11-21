@@ -216,6 +216,13 @@
     "section": " · Research blog",
     "title": "Where the decoding work goes: random IDs in repetitive JSON"
   },
+  "assets/social/blog-2026-11-21-fast-alone-slow-in-a-crowd.png": {
+    "description": "Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor.",
+    "foot": "lmmx.github.io/mibz2 · 21 November 2026",
+    "kind": "result",
+    "section": " · Research blog",
+    "title": "Fast alone, slow in a crowd: which speed-ups survive many cores"
+  },
   "assets/social/blog-2026-11-21-sixteen-at-a-stroke.png": {
     "description": "Writing sixteen at a stroke and keeping only what it needs spares the processor a guess per run, so mibz2 0.5.8 decodes Wikidata 5% faster on ten cores.",
     "foot": "lmmx.github.io/mibz2 · 21 November 2026",
