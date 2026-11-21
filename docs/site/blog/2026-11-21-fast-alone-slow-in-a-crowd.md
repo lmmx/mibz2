@@ -151,14 +151,15 @@ Each candidate passes three tests in turn. The C harness times the idea on Open'
 | run fusion in the front end (move-to-front and run-length decoding) | 0.92–0.96 | adds 20–36 ms | not tested | lost natively |
 | one flat array for all the queues | 0.44–0.57 | 0.990 (0.949, 1.033) | not tested | overlapped the counter queues |
 | eight lanes, R4 and the 24-row cut-off | 0.43–0.57 | 0.872 (0.820, 0.928) | 0.950, 1.049, 1.012 at 6, 8, 10 threads | lost on the i9 |
+| R4 alone, 16-row cut-off | (part of the row above) | about 0.95 | 0.956, 0.982, 0.985 at 6, 8, 10 threads | not adopted: 10 threads just inconclusive |
 
 The C harness overstated every gain, partly because it measured against older versions of Open. The native test caught two of the five. Run fusion cost more in decode order than it saved, and the flat array removed a cost the counter queues had already removed. The i9 caught the third failure, the one neither earlier test could see, because both run one thread. The two changes that survived, 0.5.8's, reduce what a core computes and guesses. The one that failed on the i9 worked by keeping more memory requests in flight and by widening its tables.
 
 ## 6. What comes next
 
-The next candidate keeps the half of #675 that the account above doesn't implicate. It is R4 alone, with the serial walk and the 16-row cut-off ([#679](https://github.com/lmmx/mibz2/pull/679)). It keeps R4's smaller tables and drops both parts that widen the working set, the lanes and the wider cut-off. Natively it is indicative only so far: Open at about 0.95 of 0.5.8's time on one thread, faster in five of six rounds on a shared container. Its i9 test ([#680](https://github.com/lmmx/mibz2/pull/680)) uses the same rule as the eight lanes, registered before its data.
+The next candidate keeps the half of #675 that the account above doesn't implicate. It is R4 alone, with the serial walk and the 16-row cut-off ([#679](https://github.com/lmmx/mibz2/pull/679)). It keeps R4's smaller tables and drops both parts that widen the working set, the lanes and the wider cut-off. Natively it is indicative only so far: Open at about 0.95 of 0.5.8's time on one thread, faster in five of six rounds on a shared container. Its i9 test ([#680](https://github.com/lmmx/mibz2/pull/680)) used the same rule as the eight lanes, registered before its data, and came back as this post was being finished. R4 alone was faster at 6 threads, 0.956 (0.946, 0.966), and at 8, 0.982 (0.967, 0.997), with less CPU at every count. But at 10 threads, the count the rule judges, it read 0.985 (0.970, 1.001): an interval that misses excluding 1 by a thousandth. Under the rule that is not adopted, and the rule isn't relaxed after the data. It is the closest call so far, and the first candidate whose gain shrank with more workers without reversing, which fits the account above.
 
-mibz2 0.5.9 waits on that test, together with the 4-thread change of section 3.
+mibz2 0.5.9 has gone out with the 4-thread change of section 3 alone.
 
 The chain, in short, runs as follows. 0.5.8's fixed-width writes cut work each core does alone, and their gain held from 8 threads to 20, though it shrank as workers were added. The eight lanes won more on one thread by overlapping waits for memory, and lost it as the workers sharing that memory grew from 6 to 8. In between, the recalibration moved the one choice where Open's gain was larger than assumed, at 4 workers. Each result says that a kernel's gain depends on how many workers run it.
 
