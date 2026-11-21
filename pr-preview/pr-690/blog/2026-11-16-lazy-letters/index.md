@@ -6,6 +6,8 @@ Holding fewer letters at once leaves the cache less crowded, so eight to ten thr
 
 16 November 2026 · 11 min read · [Research result](<#5-what-comes-next>)
 
+Shipped in mibz2 [0.5.0](<https://lmmx.github.io/mibz2/pr-preview/pr-690/benchmarks/history/#release-0-5-0>) ([changelog](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#050---2026-11-16>))
+
 [The width of an induction](<https://lmmx.github.io/mibz2/pr-preview/pr-690/blog/2026-11-15-induction-width/index.md>) counted how much of a block's rebuild must be held in memory at once, and found it was about a third of what mibz2's Cells kernel actually lays out. This post is about a kernel that keeps only that third, called *lazy letters*, and about what happened when ten threads ran it at once on a 10-core machine.
 
 On a 10-core Intel i9, with each thread decoding a block of its own, lazy letters cut the wall time against mibz2 0.4.0 by 4.2% at 8 threads, 10.8% at 9 and 5.1% at 10. At 10 threads mibz2 0.4.0 runs teams of threads that share a block, so there lazy letters make one block per thread beat the teams. At 4 and 6 threads the extra instructions outweigh the saving, and lazy letters are 3% to 9% slower.

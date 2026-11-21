@@ -6,6 +6,8 @@ The Huffman decoder wrote its bit buffer to memory and read it back at every loo
 
 5 November 2026 · 16 min read · [Research result](<#9-what-the-benchmark-measured>)
 
+Shipped in mibz2 [0.2.2](<https://lmmx.github.io/mibz2/pr-preview/pr-690/benchmarks/history/#release-0-2-2>) ([changelog](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#022---2026-11-05>))
+
 A decoder reads a compressed file one byte at a time, but the codes inside a bzip2 file aren't whole bytes. They are Huffman codes: each is a run of bits of its own length, one bit for a very common symbol and a dozen or more for a rare one, packed end to end with nothing between them. So a decoder keeps a bit buffer, a small holding area for bits it has read from the file but not yet decoded. In mibz2, our bzip2 decoder written in Rust, the buffer is a single 64-bit integer. The decoder reads each code off its top end, shifts the rest up behind it, and tops it up with more bytes from the file when it runs low.
 
 This post is about where that integer was kept. It held the same bits and the decoder did the same work, but the compiled code wrote the buffer to memory after every code and read it back before the next. Even from the processor's nearest cache, a read of a value just written waits several cycles for the write, and every code waited that long. Rearranged so the compiler could keep the buffer in a register, the thread that reads the codes, which mibz2 calls the scanner, ran 12.9% faster on an Intel Xeon 8370C CI runner and 5.0% faster on an AMD EPYC 9V74.

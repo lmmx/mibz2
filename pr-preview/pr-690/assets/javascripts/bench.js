@@ -191,11 +191,89 @@
     const a = Math.abs(v).toFixed(Math.abs(v) < 10 ? 1 : 0);
     return `${+a === 0 ? "" : v >= 0 ? "+" : "−"}${a}%`; // no sign on a change that rounds to zero
   };
+  // What changed in a release (assets/release-notes.json, docs/scripts/release_notes.py): a
+  // panel under the hero with the notes of the release in focus, the newest until a release or
+  // a release-scaling run is pointed at, tapped or chosen. It keeps the last one shown. Its
+  // lede, its "why" sentences (the first of each bold summary in CHANGELOG.md), its changes
+  // with their pull requests, and the posts tagged with it (front matter `releases`); links
+  // to its entry on this page and to its CHANGELOG section.
+  const GH = "https://github.com/lmmx/mibz2";
+  let rnShow = () => {};
+  // plain text with its code spans and its #N references (to GitHub, which redirects an
+  // issue number to its pull request)
+  const rich = (text, parent) => {
+    for (const part of text.split(/(`[^`]+`|#\d+\b)/)) {
+      if (!part) continue;
+      if (part.startsWith("`")) el("code", { text: part.slice(1, -1) }, parent);
+      else if (/^#\d+$/.test(part)) el("a", { href: `${GH}/issues/${part.slice(1)}`, text: part }, parent);
+      else parent.append(part);
+    }
+    return parent;
+  };
+  const longDate = (d) => {
+    const [y, m, day] = d.split("-").map(Number);
+    return `${day} ${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][m - 1]} ${y}`;
+  };
+  function notesPanel(host, data) {
+    rnShow = () => {};
+    const N = data.notes && data.notes.releases;
+    if (!N || !N.length) return;
+    const by = new Map(N.map((r) => [r.version, r]));
+    const panel = el("aside", { class: "bh-rn", "aria-live": "polite", "aria-label": "What changed in the release in focus" }, host);
+    let cur = null;
+    const more = (n, what, r) => {
+      const li = el("li", { class: "bh-rn-more" });
+      li.append(`and ${n} more ${what} in `);
+      el("a", { href: `#${r.anchor}`, text: "its notes" }, li);
+      return li;
+    };
+    rnShow = (v) => {
+      const r = by.get(v);
+      if (!r || r.version === cur) return;
+      cur = r.version;
+      panel.textContent = "";
+      const head = el("p", { class: "bh-rn-head" }, panel);
+      el("span", { class: "bh-rn-kicker", text: "What changed in " }, head);
+      el("strong", { text: r.version }, head);
+      el("span", { class: "bh-rn-date", text: longDate(r.date) }, head);
+      const links = el("span", { class: "bh-rn-links" }, head);
+      el("a", { href: `#${r.anchor}`, text: "Notes" }, links);
+      el("a", { href: r.changelog, text: "CHANGELOG" }, links);
+      if (r.lede) rich(r.lede, el("p", { class: "bh-rn-lede" }, panel));
+      const cap = r.lede ? 2 : 3; // compact: the full list is in its notes
+      if (r.why.length) {
+        const ul = el("ul", { class: "bh-rn-why" }, panel);
+        for (const w of r.why.slice(0, cap)) rich(w, el("li", {}, ul));
+        if (r.why.length > cap) ul.append(more(r.why.length - cap, r.why.length - cap === 1 ? "note" : "notes", r));
+      }
+      if (r.changes.length) {
+        const ul = el("ul", { class: "bh-rn-prs", "aria-label": "Its changes" }, panel);
+        for (const c of r.changes.slice(0, 4)) {
+          const li = el("li", {}, ul);
+          for (const pr of c.prs) el("a", { class: "bh-rn-pr", href: pr.url, text: `#${pr.n}` }, li);
+          if (c.scope) el("span", { class: "bh-rn-scope", text: c.scope }, li);
+          rich(c.title, el("span", { class: "bh-rn-title" }, li));
+        }
+        if (r.changes.length > 4) ul.append(more(r.changes.length - 4, "changes", r));
+      }
+      if (r.posts.length) {
+        const read = el("p", { class: "bh-rn-read" }, panel);
+        el("span", { class: "bh-rn-kicker", text: "Read" }, read);
+        for (const post of r.posts) el("a", { class: "bh-rn-post", href: `${data.notesRoot || "../../"}${post.path}`, text: post.title }, read);
+      }
+      if (!r.lede && !r.why.length && !r.changes.length && !r.posts.length) {
+        el("p", { class: "bh-rn-lede", text: "Its CHANGELOG section lists no change to the decoder." }, panel);
+      }
+    };
+    rnShow(N[0].version);
+  }
+
   function trajectory(data, root) {
     const host = document.getElementById("bench-hero") || el("div", {}, root);
     host.textContent = "";
     host.classList.add("bh-root");
     const box = el("section", { class: "bh-hero" }, host);
+    notesPanel(host, data);
     const ch = data.chain || {};
     const start = ch.start;
     const head = el("div", { class: "bh-hero-head" }, box);
@@ -661,6 +739,7 @@
     }
     const tip = o.tip;
     const card = (p, px, py) => {
+      rnShow(p.version);
       const rows = releaseRows(rs, p, o.tag, o.data);
       if (o.readout) {
         o.readout.textContent = "";
@@ -786,6 +865,7 @@
     const col = all.map((_, j) => (n < 2 ? full(1) : full(j / (n - 1))));
     const groups = all.map((rs, j) => svg("g", { class: "bh-rel bh-ovl", "data-t": rs.T, style: `--rc:${col[j]};--rf:${col[j]}` }, s));
     const card = (rs, j, p) => {
+      rnShow(p.version);
       const rows = releaseRows(rs, p, tag, data);
       readout.textContent = "";
       el("strong", { text: `${tw(rs.T)}, ${p.version} ` }, readout);
@@ -971,6 +1051,7 @@
     if (runOpts.length > 1) seg("Run", runOpts, state.wsRun, (v) => (state.wsRun = v));
     if (state.wsRun === "all") { releaseLineage(ws, lin, box, seg); return; }
     const run = ws.find((r) => r.id === state.wsRun);
+    rnShow(run.ref);
     const corpora = Object.keys(run.corpora).sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
     if (!corpora.includes(state.wsCorpus)) state.wsCorpus = corpora[0];
     if (corpora.length > 1) seg("Corpus", corpora.map((c) => [c, c]), state.wsCorpus, (v) => (state.wsCorpus = v));
@@ -1140,6 +1221,8 @@
       });
       if (key !== null && R.includes(key)) raise.setAttribute("href", `#bh-rel-${R.indexOf(key)}`);
       else raise.removeAttribute("href");
+      // the release in focus, else the newest, in the notes under the chart
+      rnShow(key !== null && R.includes(key) ? key : R[R.length - 1]);
       for (const b of legend.querySelectorAll(".bh-ws-item")) {
         b.classList.toggle("is-focus", b.dataset.key === key);
         b.setAttribute("aria-pressed", String(b.dataset.key === linFocus.pinned));
@@ -1579,7 +1662,11 @@
           const hero = document.getElementById("bench-hero");
           const src = hero && hero.dataset.ws;
           const ws = src ? fetch(src).then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null);
-          return ws.then((w) => { d.scaling = w; return d; });
+          // each release's notes and posts (none is no error: the panel is left out)
+          const nsrc = hero && hero.dataset.notes;
+          const notes = nsrc ? fetch(nsrc).then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null);
+          if (nsrc) d.notesRoot = new URL("../", new URL(nsrc, location.href)).href;
+          return Promise.all([ws, notes]).then(([w, n]) => { d.scaling = w; d.notes = n; return d; });
         })
         .then((d) => { render(root, d); drawn.hero = [d, root]; })
         .catch((e) => { root.textContent = `The benchmark history could not be loaded (${e.message}).`; });

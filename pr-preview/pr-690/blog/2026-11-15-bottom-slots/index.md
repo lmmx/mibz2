@@ -6,6 +6,8 @@ mibz2 tracks each run of equal bytes in two orders, and a run's entry in the sec
 
 15 November 2026 · 12 min read · [Research result](<#6-how-much-faster-is-the-decoder>)
 
+Shipped in mibz2 [0.3.3](<https://lmmx.github.io/mibz2/pr-preview/pr-690/benchmarks/history/#release-0-3-3>) ([changelog](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#033---2026-11-15>))
+
 [The last post](<https://lmmx.github.io/mibz2/pr-preview/pr-690/blog/2026-11-15-slot-recycling/index.md>) followed Cells, one of mibz2's ways of undoing the Burrows–Wheeler transform (BWT) that bzip2 applies to each block of text. Cells does not decode one position at a time. It works on *intervals*: at the start, each interval is a run of equal bytes in the BWT's output, which the decoding moves as a whole to a new place. In the block `aab`, for example, the BWT's output is `baa`, and its intervals are one `b` and two `a`s. As the decoding goes on, intervals shrink and join.
 
 Cells tracks every interval in two orders at once: where it lies, and where it is moved to. The code calls an interval a *letter*, and keeps a small record for it, a *slot*, in each of the two orders. Until now, both slots held the same two pieces of information: the interval's length, and a reference to the text it stands for. This post shows why the second copy was never needed, and what mibz2 0.3.3 gained by removing it.

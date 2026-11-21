@@ -6,6 +6,8 @@ While a team's helpers invert one block, its leader finishes the last and prepar
 
 7 November 2026 · 13 min read · [Research result](<#7-where-do-things-stand>)
 
+Shipped in mibz2 [0.2.6](<https://lmmx.github.io/mibz2/pr-preview/pr-690/benchmarks/history/#release-0-2-6>) ([changelog](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#026---2026-11-07>))
+
 mibz2, our bzip2 decoder written in Rust, decodes a file with small groups of threads that we call teams. A bzip2 file is a series of blocks that can be decoded independently, and each team decodes one block at a time. One thread in the team, the leader, does some of each block's work alone, and the team's other threads, its helpers, wait for it. That waiting is time the decoder could spend decoding. Our new release, 0.2.6, removes much of it.
 
 In 0.2.6, a team works on three blocks at once. While its helpers do the expensive middle part of one block, the leader finishes the block before it and prepares the block after it. On the ten-core machine we test on, with ten threads, this is 7.2% faster than 0.2.5 (95% interval 5.4% to 8.9%), and 6.5–7.0% faster at 11 to 20 threads. It is not cheaper: it uses about 5% more processor time in total, and 7–8 MB more memory at its peak.
