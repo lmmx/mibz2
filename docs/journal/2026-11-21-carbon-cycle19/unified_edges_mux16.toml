@@ -1,0 +1,22 @@
+# Acquisition manifest for Temporal Arena Multiplexing (`EdgesMux`) + Width-Certified Ostrowski/AHT Whole-Corpus SentOutQ16 (Cycle 19).
+name = "Temporal Arena Multiplexing (`EdgesMux`) + Width-Certified Ostrowski/AHT Whole-Corpus SentOutQ16 (AhtEdgesMux16)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "edges_mux_width_certified_aht_outq16_construct"
+inputs = ["C", "n", "p", "records"]
+output = "edges_mux_sent_outq16_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Multiplexes R4's transient `tops` (`4*slots`), `bots` (`2*slots`), and `u32_scratch` (`2*ns`) slices directly inside dead `self.edges[0..max(m, 20*ns+38)]` before `wire` overwrites `self.edges[0..m]` (`#[forbid(unsafe_code)]`, Rust 1.80, Theorem 19.1), saving 432.1 KiB/worker of heap (1,290.4 KiB = 0.288x Master-0.5.8 on 228 blocks; 1,446.3 KiB = 0.146x 10-worker max peak across all 431 blocks) and pre-warming `edges`'s L2/L3 cache lines; combines sticky `m = u32::MAX` zero-hot-cost Pass-1 early abort (Theorem 19.2b, 11.1 KiB abort peak) with exact strip-width monotonicity dispatch (`max_w > 32,768 || nr*64 < n`, Theorem 19.2a) so normal blocks run a 100% call-free leaf R4 loop (0.917x 0.5.8 instructions) while periodic spirals collapse in O(log q)."
+
+[[edge]]
+id = "edges_mux_sentinel_masked_post_alias_emit"
+inputs = ["edges_mux_sent_outq16_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Emits all `m <= 256,000` retained return cycles (`wide == false`) over the pre-warmed `edges` + `out` lines via Cycle 17's single-branch sentinel-masked loop (`#[forbid(unsafe_code)]`), cutting `sample9` DRAM traffic to 0.218 B/outB (0.182x) at W=8 (2560 KiB) and 0.247 B/outB (0.071x, -92.9%) at W=10 (2048 KiB) (`cycles/B` 0.919x / 0.840x; 0.893x / 0.816x on `AhtEdgesMux14`), and cutting mixed high-density window DRAM traffic to 0.393 B/outB (0.017x) at W=8 and 1.688 B/outB (0.058x) at W=10."
