@@ -1,0 +1,36 @@
+name = "Wormhole Chain 1A: Directed FVS + Metric-DAG Pushforward + Open Walk"
+target = "text"
+uses = [
+    "maximal_runs",
+    "lf_shifts",
+    "run_endpoints",
+    "lf_image_partition",
+    "partition_overlaps",
+]
+
+[[edge]]
+id = "levy_low_directed_fvs"
+inputs = ["overlap_events", "runs", "p"]
+output = "fvs_cutset"
+status = "verified"
+dependent = true
+cost = { W = "r log r", D = "r", B = "r", Q = "r", M = "r" }
+evidence = "Levy-Low (J. Algorithms 1988) exact contraction + heap greedy on G_ov: |F_card| = 0.0029-0.0040r (171-508 runs), verified acyclic on 4,370 small cases + 6 blocks."
+
+[[edge]]
+id = "kahn_metric_dag_pushforward"
+inputs = ["fvs_cutset", "overlap_events", "runs"]
+output = "fvs_return_map"
+status = "verified"
+dependent = false
+cost = { W = "r", D = "r", B = "r", Q = "r", M = "r" }
+evidence = "Theorem 1.1: Kahn topological pushforward of exact metric sub-intervals through D = G_ov \\ F creates zero phantom paths, <= |E_ov| - r splits, and 1.73-1.95r total arrivals across 6 blocks."
+
+[[edge]]
+id = "fvs_return_walk"
+inputs = ["fvs_return_map", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "K", M = "n", B = "n", Q = "K" }
+evidence = "Walks U_F of size K = |U_F| = 79,931-147,000 rows (0.089-0.163n) with Hub-Spoke Cycle-Packing lower bound (Theorem 1.3)."

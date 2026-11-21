@@ -1,0 +1,34 @@
+name = "Wormhole Chain 1B: sigma-Seed Phi Bidirectional Macro Scheme + Acyclic Copy-DAG Replay"
+target = "text"
+uses = [
+    "maximal_runs",
+    "lf_shifts",
+    "boundary_text_positions",
+]
+
+[[edge]]
+id = "phi_bms_phrases"
+inputs = ["boundary_positions", "C", "runs", "n"]
+output = "phi_macro_graph"
+status = "verified"
+dependent = false
+cost = { W = "r", D = "1", B = "r", Q = "r", M = "r" }
+evidence = "Karkkainen-Manzini-Puglisi (CPM 2009) + Gagie-Navarro-Prezza (JACM 2020) + Kempa-Prezza (STOC 2018) + Theorem 1.2: radix-sort boundary SA samples into r unit-slope Phi phrases + <= 96 alphabet bucket-head byte seeds (zero run labels)."
+
+[[edge]]
+id = "phi_fvs_and_seed_eval"
+inputs = ["phi_macro_graph", "C", "n"]
+output = "seeded_acyclic_copy_dag"
+status = "verified"
+dependent = true
+cost = { W = "r log r + K", D = "r", B = "r + K", Q = "r + K", M = "n + r" }
+evidence = "Weight-guarded Levy-Low FVS on G_Phi (K = 65k-165k FVS bytes resolved along acyclic byte-level Phi_p paths to the <= 96 bucket seeds; Theorem 1.2)."
+
+[[edge]]
+id = "unsplit_topological_memcpy_replay"
+inputs = ["seeded_acyclic_copy_dag", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "r", B = "n", Q = "r", M = "n" }
+evidence = "Theorem 1.2: Kahn topological order on G_Phi \\ F_Phi executes one unsplit memcpy per non-FVS phrase directly inside out[0..n) with zero fragment shattering (verified on 4,370 small cases + 6 blocks)."
