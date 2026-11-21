@@ -1,0 +1,34 @@
+"""Record 88: predictions for bench-recalibrate-diet (#695). Start from 0.5.8's measured ratios
+(recalibrate-058/run-20261121T020723Z); move each by the diet's effect, fitted on the diet's
+adoption run (open-diet/run-20261121T121714Z, unpinned, default decoder: W = 6, 7, 8 at 6, 10,
+8 threads; wall 0.952, 0.931, 0.917). The diet is modelled as a uniform factor a times a change of
+contention beta -> beta' in c = 1 + beta W CPU(W); g(W) = a (1 + beta' W C)/(1 + beta W C)."""
+def C_unp(W,nu=0.21): return min(W*(0.941-0.0103*(W-7)), 10-nu*W)
+def C_pin(W,N,nu=0.205): return min(0.93*W, N-0.125*N-nu*W)
+pts=[(6,0.952),(7,0.931),(8,0.917)]; B=0.0124
+best=None
+for a1000 in range(900,1100):
+    a=a1000/1000
+    for bp10000 in range(0,200):
+        bp=bp10000/10000; e=0
+        for W,m in pts:
+            Cw=C_unp(W); e+=((a*(1+bp*W*Cw)/(1+B*W*Cw))-m)**2
+        if best is None or e<best[0]: best=(e,a,bp)
+e,a,bp=best; print('diet fit: a %.3f, beta %.4f -> %.4f (x%.2f); residual rms %.4f'%(a,B,bp,bp/B,(e/3)**0.5))
+def g_unp(W): Cw=C_unp(W); return a*(1+bp*W*Cw)/(1+B*W*Cw)
+Bp=0.0060; Bpp=Bp*bp/B   # pinned beta scaled by the same proportion
+def g_pin(W,N): Cw=C_pin(W,N); return a*(1+Bpp*W*Cw)/(1+Bp*W*Cw)
+for W in (3,4,5,6,7,8,10): print('  g_unp(%d) = %.3f'%(W,g_unp(W)))
+meas058={('p',10,6,7):1.0572,('p',10,8,7):1.0236,('p',10,10,7):1.1636,('p',8,8,6):1.0788,('p',8,7,6):1.0807,('p',8,5,6):1.1201,
+ ('p',6,6,5):1.0740,('p',6,4,5):1.1273,('u',10,6,7):1.0291,('u',10,8,7):1.0362,('u',10,10,7):1.0882,('u',12,8,7):1.0339,('u',12,10,7):1.0783,
+ ('u',16,8,7):1.0372,('u',16,10,7):1.1404,('u',20,8,7):0.9733,('u',20,10,7):1.0689,('u',8,7,8):0.9774,('u',6,5,6):1.1391}
+print('--- lazy count arms: 058 measured x g(W)/g(ref)')
+for (pl,N,W,ref),m in meas058.items():
+    d=g_pin(W,N)/g_pin(ref,N) if pl=='p' else g_unp(W)/g_unp(ref)
+    print('  %s%d %d/%d: 058 %.3f -> %.3f (x%.3f)'%(pl,N,W,ref,m,m*d,d))
+print('--- kernel arms (eager unchanged, lazy moves by g)')
+print('  pinned 6 eager6/lazy5: 1.2106 -> %.3f'%(1.2106/g_pin(5,6)))
+print('  pinned 4 lazy3/eager3: 1.0329 -> %.3f'%(1.0329*g_pin(3,4)))
+print('  unpinned 4 eager4/lazy4: %.3f -> %.3f'%(1/0.9452,(1/0.9452)/g_unp(4)))
+print('  unpinned 4 lazy3/lazy4 (from eager3/eager4 1.1845): -> %.3f'%(1.1845*g_unp(3)/g_unp(4)))
+print('  unpinned 6 eager6/lazy6: 1.2634 -> %.3f'%(1.2634/g_unp(6)))
