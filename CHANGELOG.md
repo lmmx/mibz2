@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.9](https://github.com/lmmx/mibz2/compare/v0.5.8...v0.5.9) - 2026-11-21
+
+### <!-- 3 -->Performance
+
+- *(parallel)* the lazy kernel at 4 threads on the measured i9, unpinned ([#678](https://github.com/lmmx/mibz2/pull/678))
+
+### <!-- 4 -->Documentation
+
+- *(blog)* sixteen at a stroke, the fixed-width writes in mibz2 0.5.8's Open kernel ([#674](https://github.com/lmmx/mibz2/pull/674))
+
 - **0.5.8's worker-count recalibration (RELEASING §5c): one change, unpinned at 4 threads on the
   measured i9.** #668 changes the open kernel's per-block work, so every trim was measured again
   on master at 70b18ca4 (`just bench-recalibrate-058`, registered in
