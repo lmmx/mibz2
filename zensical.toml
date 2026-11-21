@@ -272,7 +272,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-21-besieging-hard-problems.md" = "A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check." },
+  { "blog/2026-11-21-besieging-hard-problems.md" = "The Riemann proof reached its goal through mathematics built for other problems, and four AI research lines that tried this on a decoder found its bottleneck." },
   { "blog/2026-11-21-fast-alone-slow-in-a-crowd.md" = "Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor." },
   { "blog/2026-11-21-sixteen-at-a-stroke.md" = "Writing sixteen at a stroke and keeping only what it needs spares the processor a guess per run, so mibz2 0.5.8 decodes Wikidata 5% faster on ten cores." },
   { "blog/2026-11-20-research-by-obligation.md" = "We now track the work any decoder must pay for rather than the algorithms that pay it, and a claimed Riemann proof has sharpened how we hunt." },
