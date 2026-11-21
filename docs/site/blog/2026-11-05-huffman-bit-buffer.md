@@ -2,6 +2,7 @@
 title: "Huffman decoding in mibz2: keeping the bit buffer in a register"
 image: assets/social/blog-2026-11-05-huffman-bit-buffer.png
 description: "The Huffman decoder wrote its bit buffer to memory and read it back at every lookup. Kept in a register, the stage ran 13% faster on Intel and 5% on AMD."
+releases: ["0.2.2"]
 ---
 
 <div class="post-hero" markdown>
@@ -19,6 +20,9 @@ a register, the stage ran 13% faster on Intel and 5% on AMD.
 
 5 November 2026 · 16 min read · [Research result](#9-what-the-benchmark-measured)
 {: .post-meta }
+
+Shipped in mibz2 [0.2.2](../benchmarks/history.md#release-0-2-2) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#022---2026-11-05))
+{: .post-shipped }
 
 </div>
 

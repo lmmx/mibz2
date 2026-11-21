@@ -2,6 +2,7 @@
 title: "Lazy letters: just-in-time memory for induction"
 image: assets/social/blog-2026-11-16-lazy-letters.png
 description: "Holding fewer letters at once leaves the cache less crowded, so eight to ten threads decode up to 11% faster despite extra instructions."
+releases: ["0.5.0"]
 ---
 
 <div class="post-hero" markdown>
@@ -18,6 +19,9 @@ Holding fewer letters at once leaves the cache less crowded, so eight to ten thr
 
 16 November 2026 · 11 min read · [Research result](#5-what-comes-next)
 {: .post-meta }
+
+Shipped in mibz2 [0.5.0](../benchmarks/history.md#release-0-5-0) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#050---2026-11-16))
+{: .post-shipped }
 
 </div>
 
