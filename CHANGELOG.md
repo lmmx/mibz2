@@ -54,6 +54,10 @@ release is faster at 8 threads and above.
 
 The step has its row in `docs/journal/release-attribution.md` (§5b).
 
+**The crossover** (§5a; `bench-crossover`, crossover/run-20261121T131655Z, evidence 2e7e6526, 10 rounds on Wikidata): the team threshold stays. No forced arm beats the shipped decoder at any count.
+- **Teams:** `mibz2-team2` and `mibz2-team3` take 1.09–7.90× the shipped decoder's wall time.
+- **One worker per thread:** `mibz2-workers-w` is never faster. Its interval spans 1 at 5, 7 and 9 threads; at the other counts it takes 1.041–1.409×.
+
 ### <!-- 4 -->Documentation
 
 - *(skills)* blog lessons from #689, the material's centre, our experiment, real figures ([#691](https://github.com/lmmx/mibz2/pull/691))
