@@ -1,0 +1,38 @@
+# Dependency depth of the adjacent-rank-gap contraction (investigation 1) on the frozen block.
+from collections import Counter
+def lf_of(L):
+    cnt=Counter(L); base={}; t=0
+    for a in sorted(cnt): base[a]=t; t+=cnt[a]
+    seen=dict(base); f=[0]*len(L)
+    for i,a in enumerate(L): f[i]=seen[a]; seen[a]+=1
+    return f
+L=open('/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/bisp-out/reference-column','rb').read()
+p=264045; n=len(L); f=lf_of(L)
+g=[(f[(x+p)%n]-p)%n for x in range(n)]; lab=[L[(x+p)%n] for x in range(n)]
+start=[x==0 or g[x]!=g[x-1]+1 or lab[x]!=lab[x-1] for x in range(n)]
+S=list(range(n)); gmap={x:g[x] for x in S}; lmap={x:1 for x in S}; bmap={x:start[x] for x in S}
+total_work=0; depth_steps=0; depth_atoms=0; lev=0
+while True:
+    comp={x:i for i,x in enumerate(S)}
+    atom={}; aid=-1; prev=None
+    for x in S:
+        same= prev is not None and x==prev+1 and comp[gmap[x]]==comp[gmap[prev]]+1 and lmap[x]==lmap[prev] and not bmap[x]
+        if not same: aid+=1
+        atom[x]=aid; prev=x
+    k=aid+1; total_work+=k
+    if gmap[0]==0: print("level %d: rows %d atoms %d (mark fixed)"%(lev,len(S),k)); break
+    pre={y:x for x,y in gmap.items()}
+    keep=set(x for x in S if pre[x]!=x and x<pre[x] and x<gmap[x]); keep.add(0)
+    ng={}; nl={}; nb={}; max_steps=0; max_switch=0
+    for x in keep:
+        y=x; l=0; bt=False; steps=0; switches=0; last=None
+        while True:
+            l+=lmap[y]; bt=bt or bmap[y]; steps+=1
+            if atom[y]!=last: switches+=1; last=atom[y]
+            y=gmap[y]
+            if y in keep: break
+        ng[x]=y; nl[x]=l; nb[x]=bt; max_steps=max(max_steps,steps); max_switch=max(max_switch,switches)
+    print("level %d: rows %d atoms %d | longest excursion %d steps, %d atom passages (division compresses repeats)"%(lev,len(S),k,max_steps,max_switch))
+    depth_steps+=max_steps; depth_atoms+=max_switch
+    S=sorted(keep); gmap,lmap,bmap=ng,nl,nb; lev+=1
+print("total atom visits (work) %d; critical path: %d atom passages (%d steps without division); parallelism work/depth = %.1f"%(total_work,depth_atoms,depth_steps,total_work/depth_atoms))

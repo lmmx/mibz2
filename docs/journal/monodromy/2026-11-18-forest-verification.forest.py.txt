@@ -1,0 +1,75 @@
+# MONODROMY's independent check of forest sections and boundary parentheses (from proof.md's statements).
+import random, sys
+from collections import Counter, defaultdict
+sys.setrecursionlimit(100000)
+def lf_of(L):
+    cnt=Counter(L); base={}; t=0
+    for a in sorted(cnt): base[a]=t; t+=cnt[a]
+    seen=dict(base); f=[0]*len(L)
+    for i,a in enumerate(L): f[i]=seen[a]; seen[a]+=1
+    return f
+
+def network(sites, g):
+    """sites: list of lists of rows (each site's rows in offset order); g: dict row->row (a permutation).
+    arcs: maximal pieces (src site, x, tgt site, y, width)."""
+    where={}
+    for s,rows in enumerate(sites):
+        for k,r in enumerate(rows): where[r]=(s,k)
+    arcs=[]
+    for s,rows in enumerate(sites):
+        k=0
+        while k<len(rows):
+            t,y=where[g[rows[k]]]; b=1
+            while k+b<len(rows) and where[g[rows[k+b]]]==(t,y+b): b+=1
+            arcs.append((s,k,t,y,b)); k+=b
+    return arcs, where
+
+def forest(nsites, arcs, forced):
+    par=list(range(nsites))
+    def find(x):
+        while par[x]!=x: par[x]=par[par[x]]; x=par[x]
+        return x
+    order=sorted(range(len(arcs)), key=lambda i:(-arcs[i][4], i))
+    tree=set()
+    for i in order:
+        if i==forced: continue
+        s,_,t,_,_=arcs[i]; a,b=find(s),find(t)
+        if a!=b: par[a]=b; tree.add(i)
+    comps=len({find(x) for x in range(nsites)})
+    return tree, comps
+
+def level(sites, g, prow):
+    arcs, where = network(sites, g)
+    ps,pk=where[prow]
+    forced=[i for i,(s,x,t,y,b) in enumerate(arcs) if s==ps and x<=pk<x+b][0]
+    tree, c = forest(len(sites), arcs, forced)
+    chords=[i for i in range(len(arcs)) if i not in tree]
+    V,E,q=len(sites),len(arcs),len(chords)
+    assert q==E-V+c
+    # retained rows = chord source rows; new sites = chords, rows in offset order
+    newsites=[[sites[arcs[i][0]][arcs[i][1]+k] for k in range(arcs[i][4])] for i in chords]
+    retained=set(r for rows in newsites for r in rows)
+    ng={}
+    for rows in newsites:
+        for r in rows:
+            y=g[r]
+            while y not in retained: y=g[y]
+            ng[r]=y
+    return dict(V=V,E=E,c=c,q=q,mass=len(retained)), newsites, ng, arcs, tree, chords
+
+def run_levels(L,p,maxlev=40):
+    n=len(L); f=lf_of(L)
+    sites=[]; s=0
+    for i in range(1,n+1):
+        if i==n or L[i]!=L[i-1]: sites.append(list(range(s,i))); s=i
+    g={i:f[i] for i in range(n)}; out=[]
+    for _ in range(maxlev):
+        info,sites,g,arcs,tree,chords=level(sites,g,p)
+        nb=len(network(sites,g)[0])
+        info['B']=nb; out.append(info)
+        if info['mass']==1 or len(sites)==0: break
+    return out
+
+if __name__=="__main__" and sys.argv[1]=="frozen":
+    L=open('/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/bisp-out/reference-column','rb').read()
+    for info in run_levels(L,264045): print(info, "bound 2q-c =",2*info['q']-info['c'], "E-V",info['E']-info['V'])

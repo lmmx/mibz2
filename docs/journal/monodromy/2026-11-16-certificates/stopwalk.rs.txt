@@ -1,0 +1,1219 @@
+//! Stop the right-end induction at domain size m and walk what is left: the curve of
+//! steps, walk points, letters, and word bytes (allocated, and reachable from the live
+//! letters) along the induction. Not built by the crate.
+//!   stopwalk FILE.bz2 [EVERY] [MIN_ROWS]
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+
+const NIL: u32 = u32::MAX;
+struct W { len: u64, a: u32, b: u32 } // a == NIL: a byte leaf
+fn cost(len: u64) -> u64 { if len > 16 { 16 } else if len > 1 { len } else { 0 } }
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&args[1]).unwrap();
+    let every: usize = args.get(2).map_or(1, |s| s.parse().unwrap());
+    let min: usize = args.get(3).map_or(65536, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+    let mut syms = Vec::new();
+    let mut i = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        if ll.len() >= min {
+            if i % every == 0 { run(i, &ll); }
+            i += 1;
+        }
+        syms = b.syms;
+    }
+}
+
+fn run(blk: usize, ll: &[u8]) {
+    let n = ll.len();
+    let (mut lam, mut byte) = (Vec::<u64>::new(), Vec::<u8>::new());
+    let mut x = 0;
+    while x < n {
+        let mut y = x + 1;
+        while y < n && ll[y] == ll[x] { y += 1; }
+        lam.push((y - x) as u64); byte.push(ll[x]); x = y;
+    }
+    let r = lam.len();
+    // bottom order: images sorted by (byte, position)
+    let mut bord: Vec<usize> = (0..r).collect();
+    bord.sort_by_key(|&j| (byte[j], j));
+    // doubly linked orders
+    let (mut tp, mut tn, mut bp, mut bn) = (vec![NIL; r], vec![NIL; r], vec![NIL; r], vec![NIL; r]);
+    for j in 1..r { tp[j] = (j - 1) as u32; tn[j - 1] = j as u32; }
+    for q in 1..r { bp[bord[q]] = bord[q - 1] as u32; bn[bord[q - 1]] = bord[q] as u32; }
+    let (mut ttail, mut btail) = (r - 1, bord[r - 1]);
+    let mut words: Vec<W> = (0..r).map(|_| W { len: 1, a: NIL, b: NIL }).collect();
+    let mut word: Vec<u32> = (0..r as u32).collect();
+    let mut touched = vec![false; r];
+    let mut alive = vec![true; r];
+    let mut m: u64 = n as u64;
+    let (mut steps, mut alloc, mut live) = (0u64, 0u64, r as u64);
+    let (mut live_touched, mut peak_touched) = (0u64, 0u64);
+    let mut eq_steps = 0u64;
+    let mut untouched_live = r as u64;
+    let beta: f64 = std::env::var("BETA").map_or(0.0, |v| v.parse().unwrap());
+    let stop_at: u64 = if beta > 0.0 { (beta * r as f64).ceil() as u64 } else { u64::MAX };
+    let mut beta_stop = (0u64, 0u64, 0u64);
+    let mut bstop_live = (0u64, 0u64);
+    let mut wstop = 0usize;
+    let b1: f64 = std::env::var("BETA1").map_or(0.0, |v| v.parse().unwrap());
+    let b2: f64 = std::env::var("BETA2").map_or(0.0, |v| v.parse().unwrap());
+    let (s1, s2) = (if b1 > 0.0 { (b1 * r as f64).ceil() as u64 } else { u64::MAX }, if b2 > 0.0 { (b2 * r as f64).ceil() as u64 } else { u64::MAX });
+    let mut lv1: Option<(Level, KArena, u64)> = None;
+    let mut two = String::new();
+    let betas: Vec<u64> = std::env::var("BETAS").map_or(Vec::new(), |v| v.split(',').map(|x| (x.parse::<f64>().unwrap() * r as f64).ceil() as u64).collect());
+    let mut tower: Vec<Level> = Vec::new();
+    let mut tower_arena: Option<KArena> = None;
+    let mut tower_alloc = 0u64;
+    let mut tower_out = String::new();
+    let thr_list: [u64; 3] = [(n / 16) as u64, (n / 32) as u64, (n / 64) as u64];
+    let mut fresh_after = [(0u64, 0u64); 3]; // (m, steps after crossing) at the first top-fresh step at or below each threshold
+    let mut crossed = [u64::MAX; 3];
+    let mut exhaust = (0u64, 0u64, 0u64, 0u64);
+    // checkpoints: m <= n * 2^(-k/2)
+    let mut kth = 1u32;
+    let thr = |k: u32| (n as f64 * 2f64.powf(-(k as f64) / 2.0)) as u64;
+    let mut rows: Vec<String> = Vec::new();
+    let mut mark = vec![0u32; 0];
+    let mut epoch = 0u32;
+    let reach = |words: &Vec<W>, word: &Vec<u32>, alive: &Vec<bool>, mark: &mut Vec<u32>, epoch: u32| -> (u64, u64) {
+        // reachable stored bytes: a short word is its bytes; a long one is 16 B and its factors
+        if mark.len() < words.len() { mark.resize(words.len(), 0); }
+        let (mut g, mut long_occ) = (0u64, 0u64);
+        let mut st: Vec<u32> = Vec::new();
+        for j in 0..word.len() { if alive[j] { st.push(word[j]); } }
+        while let Some(w) = st.pop() {
+            let wd = &words[w as usize];
+            if wd.len > 16 { long_occ += 1; }
+            if mark[w as usize] == epoch { continue; }
+            mark[w as usize] = epoch;
+            g += cost(wd.len);
+            if wd.len > 16 { st.push(wd.a); st.push(wd.b); }
+        }
+        (g, long_occ)
+    };
+    let kstop: u32 = std::env::var("KSTOP").map_or(0, |v| v.parse().unwrap());
+    let lanes: usize = std::env::var("LANES").map_or(8, |v| v.parse().unwrap());
+    let kseg: usize = std::env::var("KSEG").map_or(256, |v| v.parse().unwrap());
+    let mut hyb = String::new();
+    let mut keys: Vec<u64> = Vec::new();
+    let mut stepw: Vec<(u32, u32, u32)> = Vec::new(); // (new word id, A's word len at the step, B's word len)
+    let mut wins: Vec<(u8, u32)> = Vec::new();
+    loop {
+        if live == 1 { break; }
+        let (a, bb) = (ttail, btail);
+        assert!(a != bb, "one-letter loop before the end");
+        let (la, lb) = (lam[a], lam[bb]);
+        let mk = |words: &mut Vec<W>, wb: u32, wa: u32| -> u32 {
+            let len = words[wb as usize].len + words[wa as usize].len;
+            words.push(W { len, a: wb, b: wa }); (words.len() - 1) as u32
+        };
+        let ty: u64 = if la > lb { 1 } else if la < lb { 2 } else { 0 };
+        let (wla, wlb) = (words[word[a] as usize].len as u32, words[word[bb] as usize].len as u32);
+        keys.push(ty << 60 | (a as u64) << 30 | bb as u64);
+        wins.push((ty as u8, if ty == 1 { a as u32 } else if ty == 2 { bb as u32 } else { u32::MAX }));
+        let a_fresh = !touched[a];
+        for t in 0..3 { if crossed[t] != u64::MAX && fresh_after[t].0 == 0 && a_fresh { fresh_after[t] = (m, steps - crossed[t]); } }
+        for &z in &[a, bb] { if !touched[z] { touched[z] = true; live_touched += 1; untouched_live -= 1; } }
+        if la > lb {
+            // top wins: B's word = wB wA; B moves in the bottom order to just after A
+            let nw = mk(&mut words, word[a], word[bb]); word[bb] = nw; alloc += cost(words[nw as usize].len);
+            lam[a] -= lb; m -= lb;
+            // unlink bb from bottom tail
+            btail = bp[bb] as usize; bn[btail] = NIL;
+            // insert after a in bottom
+            let nx = bn[a]; bn[a] = bb as u32; bp[bb] = a as u32; bn[bb] = nx;
+            if nx == NIL { btail = bb; } else { bp[nx as usize] = bb as u32; }
+        } else if la < lb {
+            let nw = mk(&mut words, word[a], word[bb]); word[a] = nw; alloc += cost(words[nw as usize].len);
+            lam[bb] -= la; m -= la;
+            ttail = tp[a] as usize; tn[ttail] = NIL;
+            let nx = tn[bb]; tn[bb] = a as u32; tp[a] = bb as u32; tn[a] = nx;
+            if nx == NIL { ttail = a; } else { tp[nx as usize] = a as u32; }
+        } else {
+            // equal: B's word = wB wA, B takes A's bottom place; A deleted
+            let nw = mk(&mut words, word[a], word[bb]); word[bb] = nw; alloc += cost(words[nw as usize].len);
+            m -= la; eq_steps += 1;
+            ttail = tp[a] as usize; tn[ttail] = NIL;
+            btail = bp[bb] as usize; bn[btail] = NIL;
+            // bb takes a's bottom place
+            let (p, q) = (bp[a], bn[a]);
+            bp[bb] = p; bn[bb] = q;
+            if p != NIL { bn[p as usize] = bb as u32; }
+            if q != NIL { bp[q as usize] = bb as u32; } else { btail = bb; }
+            if btail == a { btail = bb; }
+            alive[a] = false; live -= 1; live_touched -= 1;
+        }
+        steps += 1;
+        stepw.push(((words.len() - 1) as u32, wla, wlb));
+        peak_touched = peak_touched.max(live_touched);
+        for t in 0..3 { if crossed[t] == u64::MAX && m <= thr_list[t] { crossed[t] = steps; } }
+        if let Some(pos) = betas.iter().position(|&b| b == steps) {
+            if live > 1 && tower.len() == pos {
+                let (lv, ka) = level(&lam, &byte, &words, &word, &alive, &tp, &tn, &bp, &bn, m, pos == 0);
+                if pos == 0 { tower_arena = ka; tower_alloc = alloc; }
+                tower.push(lv);
+                if pos == betas.len() - 1 {
+                    let text = reference(ll);
+                    let mut out = vec![0u8; n + 32];
+                    let mut firsts: Vec<Vec<u32>> = tower.iter().map(|l| vec![u32::MAX; l.back.len()]).collect();
+                    let mut cnt = vec![0u64; tower.len() * 2];
+                    emit_n(&tower, tower_arena.as_ref().unwrap(), &mut firsts, &mut out, &mut cnt);
+                    assert!(out[..n] == text[..], "tower bytes");
+                    let lv: Vec<String> = tower.iter().map(|l| format!("[{},{}]", l.m, l.back.len())).collect();
+                    tower_out = format!("{{\"alloc_bottom\":{tower_alloc},\"levels\":[{}],\"cnt\":{:?}}}", lv.join(","), cnt);
+                }
+            }
+        }
+        if steps == s1 && live > 1 {
+            let (lv, ka) = level(&lam, &byte, &words, &word, &alive, &tp, &tn, &bp, &bn, m, true);
+            lv1 = Some((lv, ka.unwrap(), alloc));
+        }
+        if steps == s2 && live > 1 {
+            if let Some((l1, ka, al1)) = lv1.take() {
+                let (l2, _) = level(&lam, &byte, &words, &word, &alive, &tp, &tn, &bp, &bn, m, false);
+                let text = reference(ll);
+                let mut out = vec![0u8; n + 32];
+                let mut f1 = vec![u32::MAX; l1.back.len()];
+                let mut f2 = vec![u32::MAX; l2.back.len()];
+                let mut cnt = [0u64; 4];
+                emit2(&l1, &ka, &l2, &mut f1, &mut f2, &mut out, &mut cnt);
+                assert!(out[..n] == text[..], "two-level bytes");
+                // also the single stop at s2, for comparison: level 1's emitter on a level built with words now
+                let (l2w, ka2) = level(&lam, &byte, &words, &word, &alive, &tp, &tn, &bp, &bn, m, true);
+                let mut out2 = vec![0u8; n + 32];
+                let mut f = vec![u32::MAX; l2w.back.len()];
+                emit1(&l2w, &ka2.unwrap(), &mut f, &mut out2);
+                assert!(out2[..n] == text[..], "one-level bytes");
+                two = format!("{},{},{},{},{},{},{},{},{},{}", l1.m, l2.m, l1.back.len(), l2.back.len(), al1, alloc, cnt[0], cnt[1], cnt[2], cnt[3]);
+            }
+        }
+        if steps == stop_at && live > 1 {
+            beta_stop = (m, steps, alloc); bstop_live = (live, untouched_live); wstop = words.len();
+            hyb = hybrid(ll, &lam, &byte, &words, &word, &alive, &tp, &tn, &bp, &bn, m, kseg, lanes);
+        }
+        if untouched_live == 0 && exhaust.0 == 0 {
+            let mut al = 0u64; let _ = &mut al;
+            exhaust = (m, steps, live, alloc);
+            if kstop == 99 { hyb = hybrid(ll, &lam, &byte, &words, &word, &alive, &tp, &tn, &bp, &bn, m, kseg, lanes); }
+        }
+        while kth < 60 && m <= thr(kth) {
+            epoch += 1;
+            let (g, occ) = reach(&words, &word, &alive, &mut mark, epoch);
+            // untouched live letters
+            let untouched = (0..r).filter(|&j| alive[j] && !touched[j]).count() as u64;
+            if kth == kstop { hyb = hybrid(ll, &lam, &byte, &words, &word, &alive, &tp, &tn, &bp, &bn, m, kseg, lanes); }
+            rows.push(format!("[{},{},{},{},{},{},{},{}]", kth, m, steps, live, untouched, alloc, g, occ));
+            kth += 1;
+        }
+    }
+    // loop census: maximal runs where the step repeats with period p (same type, same two
+    // letters, letters keeping their identities): a power of one substitution
+    let mut loops = Vec::new();
+    for &p in &[1usize, 2, 3, 4, 5, 6, 8, 12, 16, 24, 32, 64] {
+        let (mut covered, mut saved, mut runs, mut longest) = (0usize, 0usize, 0usize, 0usize);
+        let mut i = 0;
+        while i + p < keys.len() {
+            if keys[i] == keys[i + p] {
+                let mut j = i;
+                while j + p < keys.len() && keys[j] == keys[j + p] { j += 1; }
+                let len = j - i; // steps i..j repeat the p before them... run of len matches
+                if len >= p { runs += 1; covered += len + p; saved += len; longest = longest.max(len + p); }
+                i = j + 1;
+            } else { i += 1; }
+        }
+        loops.push(format!("[{p},{runs},{covered},{saved},{longest}]"));
+    }
+    // Zorich streaks: consecutive non-equal steps with the same type and the same winner
+    let (mut zs, mut zsteps) = (0usize, 0usize);
+    let mut hist = [0usize; 8]; // streak lengths 2,3-4,5-8,9-16,17-64,65-256,257-1024,more (steps)
+    let mut bytype = [0usize; 3]; // steps in streaks by type
+    let mut ends_eq = 0usize; // streaks followed at once by an equal step with the same top (top wins) letter
+    let mut i = 0;
+    while i < wins.len() {
+        let mut j = i + 1;
+        while j < wins.len() && wins[i].0 != 0 && wins[j] == wins[i] { j += 1; }
+        if j - i >= 2 {
+            zs += 1; zsteps += j - i; bytype[wins[i].0 as usize] += j - i;
+            let l = j - i;
+            let b = if l <= 2 {0} else if l <= 4 {1} else if l <= 8 {2} else if l <= 16 {3} else if l <= 64 {4} else if l <= 256 {5} else if l <= 1024 {6} else {7};
+            hist[b] += l;
+            if j < wins.len() && wins[j].0 == 0 && wins[i].0 == 1 && (keys[j] >> 30 & ((1 << 30) - 1)) == wins[i].1 as u64 { ends_eq += 1; }
+        }
+        i = j;
+    }
+    let zh = format!("\"zhist\":{:?},\"ztype\":{:?},\"zends_eq\":{ends_eq},", hist, bytype);
+    // streak word census: bytes of words made in streak steps; uses of each word
+    let mut uses = vec![0u32; words.len()];
+    for w in words.iter() { if w.a != NIL { uses[w.a as usize] += 1; uses[w.b as usize] += 1; } }
+    let (mut all_b, mut st_b, mut st_long_b, mut st_short_b, mut st_short_wa, mut st_first_b, mut st_once_long) = (0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+    let mut i = 0;
+    while i < wins.len() {
+        let mut j = i + 1;
+        while j < wins.len() && wins[i].0 != 0 && wins[j] == wins[i] { j += 1; }
+        for q in i..j {
+            let (w, wa, wbb) = stepw[q];
+            let len = words[w as usize].len;
+            let c = cost(len);
+            all_b += c;
+            if j - i >= 2 {
+                st_b += c;
+                if q == i { st_first_b += c; }
+                if len > 16 { st_long_b += c; if uses[w as usize] <= 1 { st_once_long += c; } }
+                else { st_short_b += c; st_short_wa += (if wins[i].0 == 1 { wa } else { wbb }) as u64; }
+            }
+        }
+        i = j;
+    }
+    let zw = format!("\"zwords\":[{all_b},{st_b},{st_first_b},{st_long_b},{st_short_b},{st_short_wa},{st_once_long}],");
+    let loopstr = format!("\"loops\":[{}],\"zorich\":[{zs},{zsteps}],{zh}{zw}", loops.join(","));
+    // compact tail grammar census: after the stop, every join as two u16 IDs; the words made
+    // before the stop that the tail refers to are frozen terminals (a byte word is one of 256)
+    let tailc = if wstop > 0 {
+        let t = (words.len() - wstop) as u64;
+        let mut frozen = std::collections::HashSet::new();
+        let mut bytesref = std::collections::HashSet::new();
+        for w in &words[wstop..] {
+            for c in [w.a, w.b] {
+                if (c as usize) < wstop { if (c as usize) < r { bytesref.insert(byte[c as usize]); } else { frozen.insert(c); } }
+            }
+        }
+        let fz = frozen.len() as u64;
+        format!("[{t},{fz},{},{}]", bytesref.len(), fz + t + 256)
+    } else { "[]".to_string() };
+    let last = (0..r).find(|&j| alive[j]).unwrap();
+    assert_eq!(words[word[last] as usize].len as usize, n, "final word not the block");
+    println!("{{\"block\":{blk},\"n\":{n},\"r\":{r},\"S\":{steps},\"eq\":{eq_steps},\"alloc\":{alloc},\"peak_touched\":{peak_touched},{loopstr}\"tower\":[{tower_out}],\"two\":[{two}],\"tailc\":{tailc},\"bstop_live\":[{},{}],\"beta_stop\":[{},{},{}],\"fresh_after\":[[{},{}],[{},{}],[{},{}]],\"exhaust\":[{},{},{},{}],\"hybrid\":[{hyb}],\"curve\":[{}]}}", bstop_live.0, bstop_live.1, beta_stop.0, beta_stop.1, beta_stop.2, fresh_after[0].0, fresh_after[0].1, fresh_after[1].0, fresh_after[1].1, fresh_after[2].0, fresh_after[2].1, exhaust.0, exhaust.1, exhaust.2, exhaust.3, rows.join(","));
+}
+
+/// The induction stopped at domain [0, m): its letters' tables in top order, K starts, pass 1
+/// (segment lengths), the starts ranked, pass 2 (each point's word at its place), checked
+/// against the block's own text (rotation(0) at 0). Returns [K, points, ns a point pass 1,
+/// ns a point pass 2, long words emitted, bytes ok].
+#[allow(clippy::too_many_arguments)]
+fn hybrid(ll: &[u8], lam: &[u64], byte: &[u8], words: &[W], word: &[u32], alive: &[bool],
+          tp: &[u32], tn: &[u32], bp: &[u32], bn: &[u32], m: u64, kseg: usize, lanes: usize) -> String {
+    let n = ll.len();
+    let r = lam.len();
+    let _ = (tn, bn);
+    // heads, then top starts and image starts
+    let th = (0..r).find(|&j| alive[j] && tp[j] == NIL).unwrap();
+    let bh = (0..r).find(|&j| alive[j] && bp[j] == NIL).unwrap();
+    let mut bs = vec![0u64; r];
+    let (mut y, mut j) = (0u64, bh as u32);
+    while j != NIL { bs[j as usize] = y; y += lam[j as usize]; j = bn[j as usize]; }
+    assert_eq!(y, m);
+    // top order tables: start, delta = image start - start, word length, word id
+    let (mut ts, mut dl, mut wl, mut wi) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let (mut x, mut j) = (0u64, th as u32);
+    let mut bits = vec![0u64; (m as usize + 64) / 64 + 1];
+    while j != NIL {
+        let a = j as usize;
+        bits[(x / 64) as usize] |= 1 << (x % 64);
+        ts.push(x as u32); dl.push(bs[a] as i64 - x as i64); wl.push(words[word[a] as usize].len as u32); wi.push(word[a]);
+        x += lam[a]; j = tn[a];
+    }
+    assert_eq!(x, m);
+    // rank directory: ones before each 64-bit word
+    let mut dir = vec![0u32; bits.len() + 1];
+    for i in 0..bits.len() { dir[i + 1] = dir[i] + bits[i].count_ones(); }
+    let letter = |x: u64| -> usize {
+        let (w, b) = ((x / 64) as usize, x % 64);
+        (dir[w] + (bits[w] & ((2u64 << b) - 1)).count_ones()) as usize - 1
+    };
+    let next = |x: u64, i: usize| -> u64 { (x as i64 + dl[i]) as u64 };
+    // starts: 0 and K-1 evenly spaced points
+    let k = kseg.min(m as usize).max(1);
+    let mut st = vec![0u64; (m as usize + 64) / 64 + 1];
+    let mut starts: Vec<u64> = (0..k).map(|i| (i as u64 * m) / k as u64).collect();
+    starts.dedup();
+    let k = starts.len();
+    let mut sid = std::collections::HashMap::new();
+    for (i, &s0) in starts.iter().enumerate() { st[(s0 / 64) as usize] |= 1 << (s0 % 64); sid.insert(s0, i); }
+    let is_start = |x: u64| st[(x / 64) as usize] >> (x % 64) & 1 != 0;
+    // optimized kernels on flat tables (counted by callgrind; see pass1/pass2)
+    let tb = Tables::new(&bits, &dir, &dl, &wl, &st);
+    let mut arena = Arena::new(words, byte, &wi);
+    let mut res1 = (vec![0u64; starts.len()], vec![0u32; starts.len()]);
+    let iters: usize = std::env::var("ITERS").map_or(1, |v| v.parse().unwrap());
+    let to0 = std::time::Instant::now();
+    for _ in 0..iters { pass1(&tb, &starts, &mut res1.0, &mut res1.1); }
+    let tpass1 = to0.elapsed().as_nanos() as f64 / iters as f64;
+    // pass 1: lanes interleaved, each segment walked from its start to the next start
+    let t0 = std::time::Instant::now();
+    let mut seg_len = vec![0u64; k];
+    let mut seg_next = vec![0u64; k];
+    let mut seg_pts = vec![0u64; k];
+    let mut q = 0usize; // next segment to start
+    let mut cur: Vec<(usize, u64, u64, u64)> = Vec::new(); // (segment, x, bytes, points)
+    while q < k && cur.len() < lanes { cur.push((q, starts[q], 0, 0)); q += 1; }
+    while !cur.is_empty() {
+        let mut l = 0;
+        while l < cur.len() {
+            let (sg, x0, b0, p0) = cur[l];
+            let i = letter(x0);
+            let x1 = next(x0, i);
+            let (b1, p1) = (b0 + wl[i] as u64, p0 + 1);
+            if is_start(x1) {
+                seg_len[sg] = b1; seg_next[sg] = x1; seg_pts[sg] = p1;
+                if q < k { cur[l] = (q, starts[q], 0, 0); q += 1; l += 1; } else { cur.swap_remove(l); }
+            } else { cur[l] = (sg, x1, b1, p1); l += 1; }
+        }
+    }
+    let t1 = t0.elapsed().as_nanos() as f64;
+    let pts: u64 = seg_pts.iter().sum();
+    assert_eq!(pts, m, "segments do not cover the domain once");
+    // rank the starts: from start 0 (place 0), places decrease along the walk
+    let mut place = vec![u64::MAX; k];
+    let (mut s0, mut p) = (0usize, 0u64);
+    for _ in 0..k {
+        place[s0] = p;
+        p = (p + n as u64 * 4 - seg_len[s0]) % n as u64;
+        s0 = sid[&seg_next[s0]];
+    }
+    assert_eq!(s0, 0); assert_eq!(seg_len.iter().sum::<u64>(), n as u64);
+    // pass 2: every point's word at its place (a point x's word ends where x's place is)
+    let mut out = vec![0u8; n];
+    let mut longs = 0u64;
+    let t0 = std::time::Instant::now();
+    let mut stack: Vec<u32> = Vec::new();
+    for sg in 0..k {
+        let (mut x, mut pl) = (starts[sg], place[sg]);
+        loop {
+            let i = letter(x);
+            let len = wl[i] as u64;
+            let mut at = ((pl + n as u64 * 4 - len) % n as u64) as usize;
+            if len > 16 { longs += 1; }
+            stack.push(wi[i]);
+            while let Some(w) = stack.pop() {
+                let wd = &words[w as usize];
+                if wd.a == NIL { out[at] = byte[w as usize]; at += 1; if at == n { at = 0; } }
+                else { stack.push(wd.b); stack.push(wd.a); }
+            }
+            pl = (pl + n as u64 * 4 - len) % n as u64;
+            x = next(x, i);
+            if is_start(x) { break; }
+        }
+    }
+    let t2 = t0.elapsed().as_nanos() as f64;
+    assert_eq!(res1.0, seg_len, "pass1 lengths");
+    for i in 0..k { assert_eq!(starts[res1.1[i] as usize], seg_next[i], "pass1 successors"); }
+    let mut out2 = vec![0u8; n + 16];
+    let to0 = std::time::Instant::now();
+    // segments in chain order from start 0: each lies just below the one before
+    let mut order = Vec::with_capacity(k);
+    let mut s0 = 0usize;
+    for _ in 0..k { order.push(s0); s0 = res1.1[s0] as usize; }
+    for _ in 0..iters { pass2(&tb, &mut arena, &starts, &place, &order, n, &mut out2); }
+    let tpass2 = to0.elapsed().as_nanos() as f64 / iters as f64;
+    assert!(out2[16..] == out[..], "pass2 bytes");
+    // the single-lane emitter: inverse walk from point 0 (place 0) upward
+    let inv = Inverse::new(m, &ts, &dl, &wl, &wi, &bs_of_top(&ts, &dl));
+    let karena = KArena::new(words, byte, &wi);
+    let mut out4 = vec![0u8; n + 32];
+    let mut first = vec![u32::MAX; ts.len()];
+    for _ in 0..iters { first.fill(u32::MAX); pass2s(&inv, &karena, m, &mut first, &mut out4); }
+    assert!(out4[..n] == out[..], "pass2s bytes");
+    // two chains from the one anchored point: up by T^-1, down by T, meeting once
+    let mut out5 = vec![0u8; n + 48];
+    let mut cnt2 = [0u64; 3];
+    for _ in 0..iters { first.fill(u32::MAX); cnt2 = [0; 3]; emit_two(&tb, &inv, &karena, n, &mut first, &mut out5, &mut cnt2); }
+    assert!(out5[16..16 + n] == out[..n], "emit_two bytes");
+    // runs: the walk's letter sequence, parsed into copies of earlier stretches (same letters
+    // => same translations => equal bytes and a computable resume point)
+    let runs_str = run_census(&inv, m, n);
+    // k chains, staged: seeds y with y mod 2^b = 0, each segment written into chunks
+    let sb: u32 = std::env::var("SEEDBITS").map_or(8, |v| v.parse().unwrap());
+    let kl: usize = std::env::var("KLANES").map_or(8, |v| v.parse().unwrap());
+    let mut st = Staged::new(n, m, sb, kl);
+    for _ in 0..iters { first.fill(u32::MAX); st.reset(); emit_k(&inv, &karena, &mut first, &mut st); }
+    let got = st.assemble(n);
+    let staged_bytes = st.top;
+    assert!(got[..] == out[..n], "emit_k bytes");
+    let mut out3 = vec![0u8; n + 16];
+    for _ in 0..iters { pass2l(&tb, &arena, &starts, &place, &res1.0, n, &mut out3); }
+    if out3[16..] != out[..] {
+        let bad: Vec<usize> = (0..n).filter(|&j| out3[16 + j] != out[j]).collect();
+        let mut sp: Vec<(u64, u64)> = (0..k).map(|i| (place[i], res1.0[i])).collect(); sp.sort();
+        let near: Vec<&(u64, u64)> = sp.iter().filter(|(p0, _)| (*p0 as i64 - bad[0] as i64).abs() < 40).collect();
+        panic!("pass2l bytes: {} bad, first {:?}, segments (top, len) near {:?}", bad.len(), &bad[..bad.len().min(20)], near);
+    }
+    let _ = (t1, t2);
+    let (t1, t2) = (tpass1, tpass2);
+    // the reference: rotation(0) at place 0, LF going back one place
+    let mut c = [0usize; 257];
+    for &b in ll { c[b as usize + 1] += 1; }
+    for i in 0..256 { c[i + 1] += c[i]; }
+    let mut lf = vec![0u32; n];
+    for (i, &b) in ll.iter().enumerate() { lf[i] = c[b as usize] as u32; c[b as usize] += 1; }
+    let mut text = vec![0u8; n];
+    let mut xx = 0usize;
+    for i in 1..=n { text[n - i] = ll[xx]; xx = lf[xx] as usize; }
+    let ok = text == out;
+    assert!(ok, "hybrid output differs from the block");
+    format!("{k},{m},{:.2},{:.2},{longs},{},{staged_bytes},{n},{runs_str}", t1 / m as f64, t2 / m as f64, ok as u8)
+}
+
+/// Flat tables of the stopped exchange, in top order
+struct Tables { bits: Vec<u64>, dir: Vec<u32>, dl: Vec<i32>, wl: Vec<u32>, st: Vec<u64> }
+impl Tables {
+    fn new(bits: &[u64], dir: &[u32], dl: &[i64], wl: &[u32], st: &[u64]) -> Tables {
+        Tables { bits: bits.to_vec(), dir: dir.to_vec(), dl: dl.iter().map(|&d| d as i32).collect(), wl: wl.to_vec(), st: st.to_vec() }
+    }
+    #[inline(always)]
+    fn letter(&self, x: u32) -> usize {
+        let (w, b) = ((x >> 6) as usize, x & 63);
+        unsafe { (*self.dir.get_unchecked(w) + (*self.bits.get_unchecked(w) & ((2u64 << b) - 1)).count_ones()) as usize - 1 }
+    }
+    #[inline(always)]
+    fn is_start(&self, x: u32) -> bool { unsafe { *self.st.get_unchecked((x >> 6) as usize) >> (x & 63) & 1 != 0 } }
+}
+
+/// Pass 1: eight lanes, each walking a segment from its start to the next start, summing
+/// bytes. Writes each segment's bytes and the index of the start it reaches.
+#[inline(never)]
+fn pass1(t: &Tables, starts: &[u64], len: &mut [u64], nxt: &mut [u32]) {
+    const L: usize = 8;
+    let k = starts.len();
+    let mut idx = std::collections::HashMap::with_capacity(k);
+    for (i, &s) in starts.iter().enumerate() { idx.insert(s as u32, i as u32); }
+    let (mut seg, mut x, mut b) = ([usize::MAX; L], [0u32; L], [0u64; L]);
+    let mut q = 0usize;
+    let mut live = 0usize;
+    for l in 0..L { if q < k { seg[l] = q; x[l] = starts[q] as u32; q += 1; live += 1; } }
+    while live > 0 {
+        for l in 0..L {
+            if seg[l] == usize::MAX { continue; }
+            let i = t.letter(x[l]);
+            let (d, w) = unsafe { (*t.dl.get_unchecked(i), *t.wl.get_unchecked(i)) };
+            let y = (x[l] as i32 + d) as u32;
+            b[l] += w as u64;
+            x[l] = y;
+            if t.is_start(y) {
+                len[seg[l]] = b[l]; nxt[seg[l]] = idx[&y];
+                b[l] = 0;
+                if q < k { seg[l] = q; x[l] = starts[q] as u32; q += 1; } else { seg[l] = usize::MAX; live -= 1; }
+            }
+        }
+    }
+}
+
+/// The words a stopped exchange's letters carry: a short word (at most 16 bytes) right-
+/// aligned in a 16-byte slot; a long one a rule of two words.
+struct Arena { slot: Vec<[u8; 16]>, kind: Vec<u32>, rule: Vec<(u32, u32, u32)>, top: Vec<u32> }
+const SHORT: u32 = 1 << 31;
+impl Arena {
+    fn new(words: &[W], byte: &[u8], wi: &[u32]) -> Arena {
+        let mut a = Arena { slot: Vec::new(), kind: vec![u32::MAX; words.len()], rule: Vec::new(), top: Vec::new() };
+        for &w in wi { let z = a.put(words, byte, w); a.top.push(z); }
+        a
+    }
+    fn bytes(words: &[W], byte: &[u8], w: u32, out: &mut Vec<u8>) {
+        let mut st = vec![w];
+        while let Some(v) = st.pop() { let d = &words[v as usize]; if d.a == NIL { out.push(byte[v as usize]); } else { st.push(d.b); st.push(d.a); } }
+    }
+    fn put(&mut self, words: &[W], byte: &[u8], w: u32) -> u32 {
+        if self.kind[w as usize] != u32::MAX { return self.kind[w as usize]; }
+        let d = &words[w as usize];
+        let z = if d.len <= 16 {
+            let mut v = Vec::new(); Arena::bytes(words, byte, w, &mut v);
+            let mut s = [0u8; 16]; s[16 - v.len()..].copy_from_slice(&v);
+            self.slot.push(s); SHORT | (self.slot.len() - 1) as u32
+        } else {
+            let (a, b) = (d.a, d.b);
+            let za = self.put(words, byte, a); let zb = self.put(words, byte, b);
+            self.rule.push((za, zb, words[b as usize].len as u32)); (self.rule.len() - 1) as u32
+        };
+        self.kind[w as usize] = z; z
+    }
+}
+
+/// Pass 2: every segment from its start, each point's word written right to left ending at
+/// its place (`out` has 16 bytes of slack before place 0).
+#[inline(never)]
+fn pass2(t: &Tables, a: &mut Arena, starts: &[u64], place: &[u64], order: &[usize], n: usize, out: &mut [u8]) {
+    let mut stack: Vec<(u32, u32)> = Vec::with_capacity(64);
+    let o = out.as_mut_ptr();
+    for &sg in order {
+        let (mut x, mut pl) = (starts[sg] as u32, place[sg] as usize);
+        loop {
+            let i = t.letter(x);
+            let len = unsafe { *t.wl.get_unchecked(i) } as usize;
+            let z = unsafe { *a.top.get_unchecked(i) };
+            if len <= pl {
+                // right to left: (word, end)
+                stack.push((z, pl as u32));
+                while let Some((w, e)) = stack.pop() {
+                    if w & SHORT != 0 {
+                        unsafe { std::ptr::copy_nonoverlapping(a.slot.as_ptr().add((w & !SHORT) as usize) as *const u8, o.add(e as usize), 16); }
+                    } else {
+                        let (fa, fb, lb) = unsafe { *a.rule.get_unchecked(w as usize) };
+                        stack.push((fa, e - lb)); stack.push((fb, e));
+                    }
+                }
+            } else {
+                // the one word across place 0: slowly, byte by byte
+                let mut tmp = vec![0u8; len + 16];
+                stack.push((z, (len) as u32));
+                while let Some((w, e)) = stack.pop() {
+                    if w & SHORT != 0 { tmp[e as usize..e as usize + 16].copy_from_slice(&a.slot[(w & !SHORT) as usize]); }
+                    else { let (fa, fb, lb) = a.rule[w as usize]; stack.push((fa, e - lb)); stack.push((fb, e)); }
+                }
+                // tmp[16 .. 16+len] is the word; its last pl bytes go to [0,pl), the rest to the end
+                for j in 0..len { let p = (pl + n - len + j) % n; out[16 + p] = tmp[16 + j]; }
+            }
+            pl = if len <= pl { pl - len } else { pl + n - len };
+            x = (x as i32 + unsafe { *t.dl.get_unchecked(i) }) as u32;
+            if t.is_start(x) { break; }
+        }
+    }
+}
+
+/// The general path: a word (short or long) ending at place `e`; `exact` writes no byte
+/// below the word (a segment's last word: the place below is another segment's).
+#[inline(never)]
+fn emit_slow(a: &Arena, z: u32, len: usize, e: usize, n: usize, exact: bool, out: &mut [u8]) {
+    let mut tmp = [0u8; 0];
+    let _ = &mut tmp;
+    if len <= e && !exact {
+        let o = out.as_mut_ptr();
+        let mut stack: [(u32, u32); 4096] = [(0, 0); 4096];
+        let mut sp = 1;
+        stack[0] = (z, e as u32);
+        while sp > 0 {
+            sp -= 1;
+            let (w, e) = stack[sp];
+            if w & SHORT != 0 {
+                unsafe { std::ptr::copy_nonoverlapping(a.slot.as_ptr().add((w & !SHORT) as usize) as *const u8, o.add(e as usize), 16); }
+            } else {
+                let (fa, fb, lb) = unsafe { *a.rule.get_unchecked(w as usize) };
+                stack[sp] = (fa, e - lb); stack[sp + 1] = (fb, e); sp += 2;
+            }
+        }
+    } else {
+        let mut v = vec![0u8; len + 16];
+        let mut stack = vec![(z, len as u32)];
+        while let Some((w, e)) = stack.pop() {
+            if w & SHORT != 0 { v[e as usize..e as usize + 16].copy_from_slice(&a.slot[(w & !SHORT) as usize]); }
+            else { let (fa, fb, lb) = a.rule[w as usize]; stack.push((fa, e - lb)); stack.push((fb, e)); }
+        }
+        for j in 0..len { let p = (e + n - len + j) % n; out[16 + p] = v[16 + j]; }
+    }
+}
+
+/// Pass 2, lean: eight lanes; a short word not last in its segment is one 16-byte store.
+/// A store reaches up to 15 bytes below its word, so a segment's lowest words can reach into
+/// the segment below it, written by another lane: each segment's top 16 bytes are kept when
+/// written and put back at the end.
+#[inline(never)]
+fn pass2l(t: &Tables, a: &Arena, starts: &[u64], place: &[u64], seg_len: &[u64], n: usize, out: &mut [u8]) {
+    const L: usize = 8;
+    let k = starts.len();
+    let o = out.as_mut_ptr();
+    let mut keep = vec![[0u8; 16]; k];
+    let (mut x, mut pl, mut sg, mut done, mut on) = ([0u32; L], [0usize; L], [0usize; L], [0usize; L], [false; L]);
+    let mut q = 0usize;
+    let mut live = 0;
+    let snap = |out: &[u8], top: usize| -> [u8; 16] { let mut v = [0u8; 16]; for j in 0..16 { v[j] = out[16 + (top + n - 16 + j) % n]; } v };
+    for l in 0..L { if q < k { x[l] = starts[q] as u32; pl[l] = place[q] as usize; sg[l] = q; done[l] = 0; on[l] = true; q += 1; live += 1; } }
+    while live > 0 {
+        for l in 0..L {
+            if !on[l] { continue; }
+            let i = t.letter(x[l]);
+            let (d, len, z) = unsafe { (*t.dl.get_unchecked(i), *t.wl.get_unchecked(i) as usize, *a.top.get_unchecked(i)) };
+            let y = (x[l] as i32 + d) as u32;
+            let last = t.is_start(y);
+            let e = pl[l];
+            if z & SHORT != 0 && len <= e {
+                unsafe { std::ptr::copy_nonoverlapping(a.slot.as_ptr().add((z & !SHORT) as usize) as *const u8, o.add(e), 16); }
+            } else {
+                emit_slow(a, z, len, e, n, false, out);
+            }
+            let before = done[l];
+            done[l] += len;
+            if before < 16 {
+                // this word's bytes within its segment's top 16, kept now: another lane's
+                // store may reach them before this lane writes again
+                let top = place[sg[l]] as usize;
+                let v = snap(out, top);
+                for j in 16 - done[l].min(16)..16 - before { keep[sg[l]][j] = v[j]; }
+            }
+            pl[l] = if len <= e { e - len } else { e + n - len };
+            x[l] = y;
+            if last {
+                if q < k { x[l] = starts[q] as u32; pl[l] = place[q] as usize; sg[l] = q; done[l] = 0; q += 1; } else { on[l] = false; live -= 1; }
+            }
+        }
+    }
+    for s0 in 0..k {
+        let top = place[s0] as usize;
+        let w = (seg_len[s0] as usize).min(16);
+        for j in 16 - w..16 { out[16 + (top + n - 16 + j) % n] = keep[s0][j]; }
+    }
+}
+
+fn bs_of_top(ts: &[u32], dl: &[i64]) -> Vec<u32> { ts.iter().zip(dl).map(|(&t, &d)| (t as i64 + d) as u32).collect() }
+
+/// The stopped exchange read the other way: letters in bottom order, a bitmap of image
+/// starts with its rank directory; for each, the offset back to its top interval, its word's
+/// length and handle, and its top-order index (for the first-place table).
+struct Inverse { bits: Vec<u64>, dir: Vec<u32>, back: Vec<i32>, wl: Vec<u32>, wh: Vec<u32>, ti: Vec<u32> }
+impl Inverse {
+    fn new(m: u64, ts: &[u32], dl: &[i64], wl: &[u32], wi: &[u32], bs: &[u32]) -> Inverse {
+        let _ = (ts, wi);
+        let mut idx: Vec<usize> = (0..bs.len()).collect();
+        idx.sort_by_key(|&i| bs[i]);
+        let mut bits = vec![0u64; (m as usize + 64) / 64 + 1];
+        for &i in &idx { bits[(bs[i] / 64) as usize] |= 1 << (bs[i] % 64); }
+        let mut dir = vec![0u32; bits.len() + 1];
+        for i in 0..bits.len() { dir[i + 1] = dir[i] + bits[i].count_ones(); }
+        Inverse { bits, dir, back: idx.iter().map(|&i| -(dl[i] as i32)).collect(), wl: idx.iter().map(|&i| wl[i]).collect(),
+                  wh: idx.iter().map(|&i| i as u32).collect(), ti: idx.iter().map(|&i| i as u32).collect() }
+    }
+}
+
+/// Words as the kernel lays them out: a short word's bytes at an arena offset with 16 bytes
+/// readable after it; a long word a rule (left handle, right handle, left length).
+struct KArena { bytes: Vec<u8>, rule: Vec<(u32, u32, u32)>, kind: Vec<u32>, top: Vec<u32> }
+impl KArena {
+    fn new(words: &[W], byte: &[u8], wi: &[u32]) -> KArena {
+        let mut a = KArena { bytes: vec![0u8; 16], rule: Vec::new(), kind: vec![u32::MAX; words.len()], top: Vec::new() };
+        for &w in wi { let z = a.put(words, byte, w); a.top.push(z); }
+        a.bytes.extend_from_slice(&[0u8; 16]);
+        a
+    }
+    fn put(&mut self, words: &[W], byte: &[u8], w: u32) -> u32 {
+        if self.kind[w as usize] != u32::MAX { return self.kind[w as usize]; }
+        let d = &words[w as usize];
+        let z = if d.len <= 16 {
+            let mut v = Vec::new(); Arena::bytes(words, byte, w, &mut v);
+            let off = self.bytes.len() as u32; self.bytes.extend_from_slice(&v); SHORT | off
+        } else {
+            let (l, rr) = (d.a, d.b);
+            let za = self.put(words, byte, l); let zb = self.put(words, byte, rr);
+            self.rule.push((za, zb, words[l as usize].len as u32)); (self.rule.len() - 1) as u32
+        };
+        self.kind[w as usize] = z; z
+    }
+}
+
+/// One lane, the inverse walk from point 0 at place 0: each point's word written at its place,
+/// upward. A letter's word is expanded from its rules once, where it first lies, and copied
+/// from there at every later point (16 bytes a step; occurrences are disjoint and earlier).
+#[inline(never)]
+fn pass2s(t: &Inverse, a: &KArena, m: u64, first: &mut [u32], out: &mut [u8]) {
+    let o = out.as_mut_ptr();
+    let ab = a.bytes.as_ptr();
+    let (mut sw, mut sl): ([u32; 4096], [u32; 4096]) = ([0; 4096], [0; 4096]);
+    let (mut y, mut pl) = (0u32, 0usize);
+    for _ in 0..m {
+        let (w, b) = ((y >> 6) as usize, y & 63);
+        let i = unsafe { (*t.dir.get_unchecked(w) + (*t.bits.get_unchecked(w) & (u64::MAX >> (63 - b))).count_ones()) as usize - 1 };
+        let (back, len, h) = unsafe { (*t.back.get_unchecked(i), *t.wl.get_unchecked(i) as usize, *t.wh.get_unchecked(i) as usize) };
+        let f = unsafe { first.get_unchecked_mut(h) };
+        if *f != u32::MAX {
+            let mut src = *f as usize;
+            let mut d = pl;
+            let end = pl + len;
+            while d < end { unsafe { std::ptr::copy_nonoverlapping(o.add(src), o.add(d), 16); } src += 16; d += 16; }
+        } else {
+            *f = pl as u32;
+            let mut sp = 1;
+            sw[0] = unsafe { *a.top.get_unchecked(h) };
+            sl[0] = len as u32;
+            let mut d = pl;
+            while sp > 0 {
+                sp -= 1;
+                let (z, zl) = (sw[sp], sl[sp]);
+                if z & SHORT != 0 {
+                    unsafe { std::ptr::copy_nonoverlapping(ab.add((z & !SHORT) as usize), o.add(d), 16); }
+                    d += zl as usize;
+                } else {
+                    let (l, rr, ll) = unsafe { *a.rule.get_unchecked(z as usize) };
+                    sw[sp] = rr; sl[sp] = zl - ll;
+                    sw[sp + 1] = l; sl[sp + 1] = ll;
+                    sp += 2;
+                }
+            }
+        }
+        pl += len;
+        y = (y as i32 + back) as u32;
+    }
+}
+
+/// A stopped exchange in bottom order (for the upward walk): rank bitmap of image starts,
+/// each letter's offset back to its top interval, word length, and (with words) its handle.
+struct Level { m: u64, bits: Vec<u64>, dir: Vec<u32>, back: Vec<i32>, wl: Vec<u32> }
+impl Level {
+    #[inline(always)]
+    fn rank(&self, y: u32) -> usize {
+        let (w, b) = ((y >> 6) as usize, y & 63);
+        unsafe { (*self.dir.get_unchecked(w) + (*self.bits.get_unchecked(w) & (u64::MAX >> (63 - b))).count_ones()) as usize - 1 }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn level(lam: &[u64], byte: &[u8], words: &[W], word: &[u32], alive: &[bool], tp: &[u32], tn: &[u32], bp: &[u32], bn: &[u32], m: u64, with_words: bool) -> (Level, Option<KArena>) {
+    let r = lam.len();
+    let th = (0..r).find(|&j| alive[j] && tp[j] == NIL).unwrap();
+    let bh = (0..r).find(|&j| alive[j] && bp[j] == NIL).unwrap();
+    let mut ts = vec![0u64; r];
+    let (mut x, mut j) = (0u64, th as u32);
+    while j != NIL { ts[j as usize] = x; x += lam[j as usize]; j = tn[j as usize]; }
+    assert_eq!(x, m);
+    let mut bits = vec![0u64; (m as usize + 64) / 64 + 1];
+    let (mut back, mut wl, mut wi) = (Vec::new(), Vec::new(), Vec::new());
+    let (mut y, mut j) = (0u64, bh as u32);
+    while j != NIL {
+        let a = j as usize;
+        bits[(y / 64) as usize] |= 1 << (y % 64);
+        back.push(ts[a] as i32 - y as i32); wl.push(words[word[a] as usize].len as u32); wi.push(word[a]);
+        y += lam[a]; j = bn[a];
+    }
+    let mut dir = vec![0u32; bits.len() + 1];
+    for i in 0..bits.len() { dir[i + 1] = dir[i] + bits[i].count_ones(); }
+    let ka = if with_words { Some(KArena::new(words, byte, &wi)) } else { None };
+    (Level { m, bits, dir, back, wl }, ka)
+}
+
+fn reference(ll: &[u8]) -> Vec<u8> {
+    let n = ll.len();
+    let mut c = [0usize; 257];
+    for &b in ll { c[b as usize + 1] += 1; }
+    for i in 0..256 { c[i + 1] += c[i]; }
+    let mut lf = vec![0u32; n];
+    for (i, &b) in ll.iter().enumerate() { lf[i] = c[b as usize] as u32; c[b as usize] += 1; }
+    let mut text = vec![0u8; n];
+    let mut xx = 0usize;
+    for i in 1..=n { text[n - i] = ll[xx]; xx = lf[xx] as usize; }
+    text
+}
+
+/// A level-1 letter's word at `pl`: copied from its first place, or expanded from its rules.
+#[inline(always)]
+fn put1(a: &KArena, h: usize, len: usize, pl: usize, first: &mut [u32], o: *mut u8, sw: &mut [u32], sl: &mut [u32]) -> bool {
+    let f = unsafe { first.get_unchecked_mut(h) };
+    if *f != u32::MAX {
+        let (mut src, mut d) = (*f as usize, pl);
+        while d < pl + len { unsafe { std::ptr::copy_nonoverlapping(o.add(src), o.add(d), 16); } src += 16; d += 16; }
+        false
+    } else {
+        *f = pl as u32;
+        let ab = a.bytes.as_ptr();
+        let mut sp = 1;
+        sw[0] = unsafe { *a.top.get_unchecked(h) }; sl[0] = len as u32;
+        let mut d = pl;
+        while sp > 0 {
+            sp -= 1;
+            let (z, zl) = (sw[sp], sl[sp]);
+            if z & SHORT != 0 { unsafe { std::ptr::copy_nonoverlapping(ab.add((z & !SHORT) as usize), o.add(d), 16); } d += zl as usize; }
+            else { let (l, rr, ll) = unsafe { *a.rule.get_unchecked(z as usize) }; sw[sp] = rr; sl[sp] = zl - ll; sw[sp + 1] = l; sl[sp + 1] = ll; sp += 2; }
+        }
+        true
+    }
+}
+
+/// One level: the single-lane emitter of record 21 on a Level.
+#[inline(never)]
+fn emit1(t: &Level, a: &KArena, first: &mut [u32], out: &mut [u8]) {
+    let o = out.as_mut_ptr();
+    let (mut sw, mut sl) = (vec![0u32; 4096], vec![0u32; 4096]);
+    let (mut y, mut pl) = (0u32, 0usize);
+    for _ in 0..t.m {
+        let i = t.rank(y);
+        let len = unsafe { *t.wl.get_unchecked(i) } as usize;
+        put1(a, i, len, pl, first, o, &mut sw, &mut sl);
+        pl += len;
+        y = (y as i32 + unsafe { *t.back.get_unchecked(i) }) as u32;
+    }
+}
+
+/// Two levels: walk level 2 upward; a level-2 letter's later occurrences are copied from its
+/// first place; its first occurrence is written by walking level 1 upward from the same point
+/// until it lands in [0, m2), each level-1 word copied or expanded as in emit1.
+/// cnt: [level-2 points, level-2 first occurrences, level-1 points walked, level-1 expansions]
+#[inline(never)]
+fn emit2(l1: &Level, a: &KArena, l2: &Level, f1: &mut [u32], f2: &mut [u32], out: &mut [u8], cnt: &mut [u64; 4]) {
+    let o = out.as_mut_ptr();
+    let (mut sw, mut sl) = (vec![0u32; 4096], vec![0u32; 4096]);
+    let (mut y, mut pl) = (0u32, 0usize);
+    let m2 = l2.m as u32;
+    for _ in 0..l2.m {
+        let i = l2.rank(y);
+        let len = unsafe { *l2.wl.get_unchecked(i) } as usize;
+        let x = (y as i32 + unsafe { *l2.back.get_unchecked(i) }) as u32;
+        cnt[0] += 1;
+        let f = unsafe { f2.get_unchecked_mut(i) };
+        if *f != u32::MAX {
+            let (mut src, mut d) = (*f as usize, pl);
+            while d < pl + len { unsafe { std::ptr::copy_nonoverlapping(o.add(src), o.add(d), 16); } src += 16; d += 16; }
+        } else {
+            *f = pl as u32;
+            cnt[1] += 1;
+            let (mut y1, mut p1) = (y, pl);
+            loop {
+                let j = l1.rank(y1);
+                let l = unsafe { *l1.wl.get_unchecked(j) } as usize;
+                if put1(a, j, l, p1, f1, o, &mut sw, &mut sl) { cnt[3] += 1; }
+                cnt[2] += 1;
+                p1 += l;
+                y1 = (y1 as i32 + unsafe { *l1.back.get_unchecked(j) }) as u32;
+                if y1 < m2 { break; }
+            }
+            debug_assert_eq!(y1, x);
+            debug_assert_eq!(p1, pl + len);
+        }
+        pl += len;
+        y = x;
+    }
+}
+
+/// A tower of stopped exchanges, bottom (with words) to top. The top is walked upward from 0;
+/// a level-j letter's word is copied from its first place, or (first time) written by walking
+/// level j-1 upward from the same point until it lands in [0, m_j); level 0 copies or expands
+/// its words from the arena. cnt[2j] = level-j points walked, cnt[2j+1] = level-j first places.
+#[inline(never)]
+fn emit_n(t: &[Level], a: &KArena, firsts: &mut [Vec<u32>], out: &mut [u8], cnt: &mut [u64]) {
+    let o = out.as_mut_ptr();
+    let (mut sw, mut sl) = (vec![0u32; 4096], vec![0u32; 4096]);
+    let top = t.len() - 1;
+    // an explicit stack of (level, y, place, end-of-walk bound) frames
+    let mut fr: Vec<(usize, u32, usize)> = Vec::with_capacity(64);
+    let (mut y, mut pl) = (0u32, 0usize);
+    for _ in 0..t[top].m {
+        // write the top letter's word at pl, recursing down through first occurrences
+        fr.clear();
+        fr.push((top, y, pl));
+        let mut next_top = 0u32;
+        let mut first_frame = true;
+        while let Some((j, yj, pj)) = fr.pop() {
+            // write one level-j point's word at pj; then, for frames below the top, continue
+            // that level's walk until it lands in [0, m_{j+1})
+            let lj = &t[j];
+            let i = lj.rank(yj);
+            let len = unsafe { *lj.wl.get_unchecked(i) } as usize;
+            let xj = (yj as i32 + unsafe { *lj.back.get_unchecked(i) }) as u32;
+            cnt[2 * j] += 1;
+            if first_frame { next_top = xj; first_frame = false; }
+            let continue_walk = j < top && xj >= t[j + 1].m as u32;
+            if continue_walk { fr.push((j, xj, pj + len)); }
+            if j == 0 {
+                put1(a, i, len, pj, &mut firsts[0], o, &mut sw, &mut sl);
+            } else {
+                let f = unsafe { firsts[j].get_unchecked_mut(i) };
+                if *f != u32::MAX {
+                    let (mut src, mut d) = (*f as usize, pj);
+                    while d < pj + len { unsafe { std::ptr::copy_nonoverlapping(o.add(src), o.add(d), 16); } src += 16; d += 16; }
+                } else {
+                    *f = pj as u32;
+                    cnt[2 * j + 1] += 1;
+                    // its first occurrence: level j-1's walk from the same point
+                    fr.push((j - 1, yj, pj));
+                }
+            }
+        }
+        pl += unsafe { *t[top].wl.get_unchecked(t[top].rank(y)) } as usize;
+        y = next_top;
+    }
+    let _ = pl;
+}
+
+/// Write a word exactly (no byte outside [start, start+len)), for the meeting of the chains.
+fn exact(a: &KArena, h: usize, len: usize, start: usize, first: &[u32], out: &mut [u8]) {
+    let f = first[h];
+    if f != u32::MAX { out.copy_within(16 + f as usize..16 + f as usize + len, 16 + start); return; }
+    let mut v = Vec::with_capacity(len);
+    let mut st = vec![(a.top[h], len as u32)];
+    while let Some((z, zl)) = st.pop() {
+        if z & SHORT != 0 { let off = (z & !SHORT) as usize; v.extend_from_slice(&a.bytes[off..off + zl as usize]); }
+        else { let (l, rr, ll) = a.rule[z as usize]; st.push((rr, zl - ll)); st.push((l, ll)); }
+    }
+    out[16 + start..16 + start + len].copy_from_slice(&v);
+}
+
+/// Two dependent chains from point 0 (place 0 = place n): `up` walks T^-1 and writes each word
+/// at [pu, pu + len), left-aligned 16-byte stores reaching above; `down` walks T and writes
+/// each word at [pd - len, pd), right-aligned 16-byte stores reaching below. Both reach only
+/// into the gap [pu, pd) unless it is short, where a word is written exactly. A letter's word
+/// is expanded once, wherever it first lies, and copied from there by either chain.
+/// cnt: [up points, down points, exact words]. `out` index = place + 16.
+#[inline(never)]
+fn emit_two(tp: &Tables, bt: &Inverse, a: &KArena, n: usize, first: &mut [u32], out: &mut [u8], cnt: &mut [u64; 3]) {
+    let o = unsafe { out.as_mut_ptr().add(16) };
+    let ab = a.bytes.as_ptr();
+    let (mut sw, mut sl) = (vec![0u32; 4096], vec![0u32; 4096]);
+    let (mut yu, mut pu) = (0u32, 0usize);
+    let (mut xd, mut pd) = (0u32, n);
+    while pu < pd {
+        if pu <= n - pd {
+            // up: the word of T^-1(yu) at [pu, pu + len)
+            let (w, b) = ((yu >> 6) as usize, yu & 63);
+            let i = unsafe { (*bt.dir.get_unchecked(w) + (*bt.bits.get_unchecked(w) & (u64::MAX >> (63 - b))).count_ones()) as usize - 1 };
+            let (back, len, h) = unsafe { (*bt.back.get_unchecked(i), *bt.wl.get_unchecked(i) as usize, *bt.wh.get_unchecked(i) as usize) };
+            cnt[0] += 1;
+            if pd - pu < len + 16 { exact(a, h, len, pu, first, out); cnt[2] += 1; if first[h] == u32::MAX { first[h] = pu as u32; } }
+            else {
+                let f = unsafe { first.get_unchecked_mut(h) };
+                if *f != u32::MAX {
+                    let (mut s0, mut d) = (*f as usize, pu);
+                    while d < pu + len { unsafe { std::ptr::copy_nonoverlapping(o.add(s0), o.add(d), 16); } s0 += 16; d += 16; }
+                } else {
+                    *f = pu as u32;
+                    let mut sp = 1; sw[0] = unsafe { *a.top.get_unchecked(h) }; sl[0] = len as u32;
+                    let mut d = pu;
+                    while sp > 0 {
+                        sp -= 1; let (z, zl) = (sw[sp], sl[sp]);
+                        if z & SHORT != 0 { unsafe { std::ptr::copy_nonoverlapping(ab.add((z & !SHORT) as usize), o.add(d), 16); } d += zl as usize; }
+                        else { let (l, rr, ll) = unsafe { *a.rule.get_unchecked(z as usize) }; sw[sp] = rr; sl[sp] = zl - ll; sw[sp + 1] = l; sl[sp + 1] = ll; sp += 2; }
+                    }
+                }
+            }
+            pu += len;
+            yu = (yu as i32 + back) as u32;
+        } else {
+            // down: the word of xd at [pd - len, pd)
+            let (w, b) = ((xd >> 6) as usize, xd & 63);
+            let i = unsafe { (*tp.dir.get_unchecked(w) + (*tp.bits.get_unchecked(w) & (u64::MAX >> (63 - b))).count_ones()) as usize - 1 };
+            let (d0, len) = unsafe { (*tp.dl.get_unchecked(i), *tp.wl.get_unchecked(i) as usize) };
+            let h = i;
+            cnt[1] += 1;
+            let start = pd - len;
+            if pd - pu < len + 16 { exact(a, h, len, start, first, out); cnt[2] += 1; if first[h] == u32::MAX { first[h] = start as u32; } }
+            else {
+                let f = unsafe { first.get_unchecked_mut(h) };
+                if *f != u32::MAX {
+                    // from the end down: 16 bytes ending at pd - 16k, from 16 ending at f + len - 16k
+                    let (mut se, mut de) = (*f as usize + len, pd);
+                    while de > start { unsafe { std::ptr::copy_nonoverlapping(o.add(se - 16), o.add(de - 16), 16); } se -= 16; de -= 16; }
+                } else {
+                    *f = start as u32;
+                    let mut sp = 1; sw[0] = unsafe { *a.top.get_unchecked(h) }; sl[0] = len as u32;
+                    let mut e = pd;
+                    while sp > 0 {
+                        sp -= 1; let (z, zl) = (sw[sp], sl[sp]);
+                        if z & SHORT != 0 { let off = (z & !SHORT) as usize; unsafe { std::ptr::copy_nonoverlapping(ab.add(off + zl as usize - 16), o.add(e - 16), 16); } e -= zl as usize; }
+                        else { let (l, rr, ll) = unsafe { *a.rule.get_unchecked(z as usize) }; sw[sp] = l; sl[sp] = ll; sw[sp + 1] = rr; sl[sp + 1] = zl - ll; sp += 2; }
+                    }
+                }
+            }
+            pd = start;
+            xd = (xd as i32 + d0) as u32;
+        }
+    }
+}
+
+/// Staging: segments of the walk between seeds (y mod 2^b = 0) written into chunks of one
+/// buffer, each segment a list of (offset, length) runs, read in cycle order afterwards.
+struct Staged { buf: Vec<u8>, top: usize, chunk: usize, runs: Vec<Vec<(u32, u32)>>, next: Vec<u32>, b: u32, k: usize, m: u64 }
+impl Staged {
+    fn new(n: usize, m: u64, b: u32, k: usize) -> Staged {
+        let chunk: usize = std::env::var("CHUNK").map_or(1024, |v| v.parse().unwrap());
+        let segs = (m as usize >> b) + 1;
+        Staged { buf: vec![0u8; 2 * n + (k + segs + 4) * (chunk + 64)], top: 0, chunk, runs: vec![Vec::new(); segs], next: vec![u32::MAX; segs], b, k, m }
+    }
+    fn reset(&mut self) { self.top = 0; for r in self.runs.iter_mut() { r.clear(); } self.next.fill(u32::MAX); }
+    fn assemble(&self, n: usize) -> Vec<u8> {
+        let mut out = Vec::with_capacity(n);
+        let mut sg = 0usize;
+        loop {
+            for &(o, l) in &self.runs[sg] { out.extend_from_slice(&self.buf[o as usize..(o + l) as usize]); }
+            let nx = self.next[sg] as usize;
+            if nx == 0 { break; }
+            sg = nx;
+        }
+        out
+    }
+}
+
+/// k chains interleaved in one thread over the staged segments, lean: lane state in fixed
+/// arrays. Each chain takes the next seed, walks T^-1 upward writing words left to right into
+/// its current chunk (a new chunk when fewer than |w| + 16 bytes remain), and ends its segment
+/// on landing at a seed. A letter's word is expanded once, wherever it first lies.
+#[inline(never)]
+fn emit_k(t: &Inverse, a: &KArena, first: &mut [u32], s: &mut Staged) {
+    const L: usize = 8;
+    let mask = (1u32 << s.b) - 1;
+    let segs = s.runs.len();
+    let nseeds = (((s.m - 1) >> s.b) + 1) as usize;
+    let _ = segs;
+    let o = s.buf.as_mut_ptr();
+    let ab = a.bytes.as_ptr();
+    let (mut sw, mut sl) = ([0u32; 4096], [0u32; 4096]);
+    let ck = s.chunk;
+    let (mut sg, mut y, mut d, mut e, mut rs) = ([0usize; L], [0u32; L], [0usize; L], [0usize; L], [0usize; L]);
+    let mut top = s.top;
+    let mut q = 0usize;
+    let mut live = 0usize;
+    let mut on = [false; L];
+    for l in 0..L { if q < nseeds { sg[l] = q; y[l] = (q as u32) << s.b; d[l] = top; rs[l] = top; e[l] = top + ck; top += ck; on[l] = true; q += 1; live += 1; } }
+    while live > 0 {
+        for l in 0..L {
+            if !on[l] { continue; }
+            let yl = y[l];
+            let (w, b) = ((yl >> 6) as usize, yl & 63);
+            let i = unsafe { (*t.dir.get_unchecked(w) + (*t.bits.get_unchecked(w) & (u64::MAX >> (63 - b))).count_ones()) as usize - 1 };
+            let (back, len, h) = unsafe { (*t.back.get_unchecked(i), *t.wl.get_unchecked(i) as usize, *t.wh.get_unchecked(i) as usize) };
+            let mut dl = d[l];
+            if dl + len + 16 > e[l] {
+                if dl > rs[l] { s.runs[sg[l]].push((rs[l] as u32, (dl - rs[l]) as u32)); }
+                let need = if len + 16 > ck { len + 16 } else { ck };
+                dl = top; rs[l] = top; e[l] = top + need; top += need;
+            }
+            let f = unsafe { first.get_unchecked_mut(h) };
+            if *f != u32::MAX {
+                let (mut src, mut dd) = (*f as usize, dl);
+                while dd < dl + len { unsafe { std::ptr::copy_nonoverlapping(o.add(src), o.add(dd), 16); } src += 16; dd += 16; }
+            } else {
+                *f = dl as u32;
+                let mut sp = 1; sw[0] = unsafe { *a.top.get_unchecked(h) }; sl[0] = len as u32;
+                let mut dd = dl;
+                while sp > 0 {
+                    sp -= 1; let (z, zl) = unsafe { (*sw.get_unchecked(sp), *sl.get_unchecked(sp)) };
+                    if z & SHORT != 0 { unsafe { std::ptr::copy_nonoverlapping(ab.add((z & !SHORT) as usize), o.add(dd), 16); } dd += zl as usize; }
+                    else { let (lz, rr, ll) = unsafe { *a.rule.get_unchecked(z as usize) }; sw[sp] = rr; sl[sp] = zl - ll; sw[sp + 1] = lz; sl[sp + 1] = ll; sp += 2; }
+                }
+            }
+            dl += len;
+            let x = (yl as i32 + back) as u32;
+            if x & mask == 0 {
+                if dl > rs[l] { s.runs[sg[l]].push((rs[l] as u32, (dl - rs[l]) as u32)); }
+                s.next[sg[l]] = x >> s.b;
+                if q < nseeds { sg[l] = q; y[l] = (q as u32) << s.b; d[l] = top; rs[l] = top; e[l] = top + ck; top += ck; q += 1; }
+                else { on[l] = false; live -= 1; }
+            } else { y[l] = x; d[l] = dl; }
+        }
+    }
+    s.top = top;
+}
+
+/// The walk from point 0 upward as letters a_k (bottom index) and points p_k; then three
+/// parses into runs, each run a copy of an earlier stretch with the same letters:
+/// - last: from the letter's most recent occurrence;
+/// - first: from its first occurrence;
+/// - best: the longest match among the letter's last 8 occurrences.
+/// A run's length L = the longest agreement a_{k+j} = a_{k0+j}, with k0 + L <= k (the source
+/// written). A position with no earlier occurrence is a literal (its word expanded).
+/// Returns, for each parse: [calls, literal calls, points covered by runs, mean bytes a call x10].
+fn run_census(t: &Inverse, m: u64, n: usize) -> String {
+    let mm = m as usize;
+    let (mut a, mut p) = (Vec::with_capacity(mm), Vec::with_capacity(mm));
+    let mut y = 0u32;
+    for _ in 0..mm {
+        let (w, b) = ((y >> 6) as usize, y & 63);
+        let i = (t.dir[w] + (t.bits[w] & (u64::MAX >> (63 - b))).count_ones()) as usize - 1;
+        a.push(i as u32); p.push(y);
+        y = (y as i32 + t.back[i]) as u32;
+    }
+    let nl = t.back.len();
+    let mut res = Vec::new();
+    // bottom intervals of the letters, from the rank bitmap
+    let mut bstart = Vec::with_capacity(nl);
+    for w in 0..t.bits.len() { let mut x = t.bits[w]; while x != 0 { bstart.push((w as u32) * 64 + x.trailing_zeros()); x &= x - 1; } }
+    bstart.truncate(nl);
+    let bend: Vec<u32> = (0..nl).map(|i| if i + 1 < nl { bstart[i + 1] } else { m as u32 }).collect();
+    // certificate widths: for every start k0, J_k = the starts sharing k0's k-step itinerary,
+    // as an interval of offsets [lo, hi) about p_{k0}; its width hi - lo, and the bytes covered
+    {
+        let ks = [1usize, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64];
+        let mut wsum = vec![0f64; ks.len()];
+        let mut alive2 = vec![0u64; ks.len()];
+        let bthr = [64u64, 128, 256];
+        let mut reach = [0u64; 3]; // starts whose J still has width >= 2 once 64/128/256 bytes are covered
+        let wlen = |i: usize| t.wl[i] as u64;
+        for k0 in 0..mm {
+            let (mut lo, mut hi) = (i64::MIN, i64::MAX);
+            let mut bytes = 0u64;
+            let mut ki = 0;
+            let mut rflag = [false; 3];
+            for j in 0..64.min(mm - k0) {
+                let li = a[k0 + j] as usize;
+                let pj = p[k0 + j] as i64;
+                lo = lo.max(bstart[li] as i64 - pj);
+                hi = hi.min(bend[li] as i64 - pj);
+                bytes += wlen(li);
+                let w = hi - lo;
+                if ki < ks.len() && j + 1 == ks[ki] { wsum[ki] += w as f64; if w >= 2 { alive2[ki] += 1; } ki += 1; }
+                for (q, &bt) in bthr.iter().enumerate() { if !rflag[q] && bytes >= bt { rflag[q] = true; if w >= 2 { reach[q] += 1; } } }
+            }
+        }
+        let ws: Vec<String> = wsum.iter().map(|x| format!("{:.3}", x / mm as f64)).collect();
+        let al: Vec<String> = alive2.iter().map(|&x| format!("{:.4}", x as f64 / mm as f64)).collect();
+        res.push(format!("[[{}],[{}],[{:.4},{:.4},{:.4}]]", ws.join(","), al.join(","), reach[0] as f64 / mm as f64, reach[1] as f64 / mm as f64, reach[2] as f64 / mm as f64));
+    }
+    // the tracked parse: a source is a letter's first visit, usable only over its walked
+    // continuation; a run's length is how long the source's points, shifted by delta, stay in
+    // their letters' bottom intervals (equivalently, the running room minimum)
+    {
+        let mut first = vec![u32::MAX; nl];
+        let mut walked = vec![false; mm];
+        let (mut calls, mut lit, mut cov, mut runs, mut maxl) = (0u64, 0u64, 0u64, 0u64, 0usize);
+        let mut hist = [0u64; 6];
+        let mut k = 0usize;
+        while k < mm {
+            let al = a[k] as usize;
+            calls += 1;
+            let mut l = 0usize;
+            if first[al] == u32::MAX { first[al] = k as u32; lit += 1; }
+            else {
+                let k0 = first[al] as usize;
+                let delta = p[k] as i64 - p[k0] as i64;
+                while k + l < mm && k0 + l < k && walked[k0 + l] {
+                    let q = p[k0 + l] as i64 + delta;
+                    let li = a[k0 + l] as usize;
+                    if q < bstart[li] as i64 || q >= bend[li] as i64 { break; }
+                    l += 1;
+                }
+            }
+            if l >= 2 {
+                // the lemma, on the real walk: equal letters, translated points, and the resume point
+                let k0 = first[al] as usize;
+                let delta = p[k] as i64 - p[k0] as i64;
+                for j in 0..l { assert!(a[k + j] == a[k0 + j] && p[k + j] as i64 == p[k0 + j] as i64 + delta, "run lemma"); }
+                if k + l < mm { assert!(p[k + l] as i64 == p[k0 + l] as i64 + delta, "resume point"); }
+                runs += 1; cov += l as u64; maxl = maxl.max(l);
+                let b = if l <= 2 {0} else if l <= 4 {1} else if l <= 8 {2} else if l <= 16 {3} else if l <= 64 {4} else {5};
+                hist[b] += l as u64;
+                // letters first seen inside the run: their first visit is unwalked, so unusable as a source
+                for j in 0..l { let aj = a[k + j] as usize; if first[aj] == u32::MAX { first[aj] = (k + j) as u32; } }
+                k += l;
+            } else {
+                walked[k] = true;
+                if std::env::var("SRCLAST").is_ok() { first[al] = k as u32; }
+                k += 1;
+            }
+        }
+        res.push(format!("[{calls},{lit},{cov},{runs},{maxl},{:?}]", hist).replace(" ", ""));
+    }
+    for pol in 0..3 {
+        let mut occ: Vec<Vec<u32>> = vec![Vec::new(); nl];
+        let (mut calls, mut lit, mut cov) = (0u64, 0u64, 0u64);
+        let mut k = 0usize;
+        while k < mm {
+            let al = a[k] as usize;
+            let cands: Vec<u32> = match pol {
+                0 => occ[al].last().copied().into_iter().collect(),
+                1 => occ[al].first().copied().into_iter().collect(),
+                _ => occ[al].iter().rev().take(8).copied().collect(),
+            };
+            let mut best = (0usize, 0usize);
+            for &k0 in &cands {
+                let k0 = k0 as usize;
+                let mut l = 0;
+                while k + l < mm && k0 + l < k && a[k0 + l] == a[k + l] { l += 1; }
+                if l > best.0 { best = (l, k0); }
+            }
+            calls += 1;
+            let l = if best.0 == 0 { lit += 1; 1 } else { cov += best.0 as u64; best.0 };
+            for j in 0..l { occ[a[k + j] as usize].push((k + j) as u32); }
+            k += l;
+        }
+        res.push(format!("[{calls},{lit},{cov},{}]", (n as u64 * 10) / calls));
+    }
+    let _ = p;
+    format!("[{}]", res.join(","))
+}

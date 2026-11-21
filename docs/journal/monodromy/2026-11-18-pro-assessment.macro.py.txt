@@ -1,0 +1,34 @@
+# MONODROMY: the BWT-induced macro scheme on the frozen block (text coordinates via the LF walk).
+from collections import Counter
+B='/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/bisp-out/'
+L=open(B+'reference-column','rb').read(); T=open(B+'reference-raw','rb').read(); n=len(L); p=264045
+cnt=Counter(L); base={}; t=0
+for a in range(256): base[a]=t; t+=cnt.get(a,0)
+seen=dict(base); lf=[0]*n
+for i,a in enumerate(L): lf[i]=seen[a]; seen[a]+=1
+rho=[0]*n; x=p
+for k in range(n): rho[n-1-k]=x; x=lf[x]       # L[rho[q]] == T[q]
+assert all(L[rho[q]]==T[q] for q in range(0,n,997))
+pos_of_row=[0]*n
+for q in range(n): pos_of_row[rho[q]]=q
+head=[i==0 or L[i]!=L[i-1] for i in range(n)]
+r=sum(head)
+# phrase decomposition: literal at head rows; otherwise copy from position of row rho-1; extend while consecutive
+phrases=0; lits=0; fwd=bwd=0; fwd_bytes=bwd_bytes=0; q=0
+src=lambda q: pos_of_row[rho[q]-1]
+while q<n:
+    if head[rho[q]]: lits+=1; q+=1; continue
+    s=src(q); l=1
+    while q+l<n and not head[rho[q+l]] and src(q+l)==s+l: l+=1
+    phrases+=1
+    if s+l<=q: fwd+=1; fwd_bytes+=l
+    else: bwd+=1; bwd_bytes+=l
+    q+=l
+print("n",n,"r",r,"literals",lits,"copy phrases",phrases,"total",lits+phrases,"(2r =",2*r,")")
+print("sources wholly earlier:",fwd,"phrases",fwd_bytes,"bytes; overlapping or later:",bwd,"phrases",bwd_bytes,"bytes")
+# well-foundedness: rank strictly decreases along copy pointers (trivial by construction): longest chain to a head
+depth=[0]*n
+order=sorted(range(n),key=lambda q: rho[q])
+for q in order:
+    depth[q]=0 if head[rho[q]] else depth[src(q)]+1
+print("max dependency chain (bytes) %d, mean %.2f"%(max(depth),sum(depth)/n))

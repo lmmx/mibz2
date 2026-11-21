@@ -1,0 +1,36 @@
+"""Record 87: predictions for bench-recalibrate-058. The records 45-56/83 form, refitted on
+0.5.7's own run (recalibrate-057/run-20261119T185157Z), then moved by #668's faster lazy workers.
+wall ∝ c(W)/CPU(W), c = 1 + beta W CPU(W);
+  pinned:   CPU = min(0.93 W, N - 0.125 N - nu W)
+  unpinned: CPU = min(W u(W), 10 - nu W), u = 0.941 - 0.0103 (W - 7)."""
+import math, itertools
+def cpu(W,N,nu,pin): return min(0.93*W, N-0.125*N-nu*W) if pin else min(W*(0.941-0.0103*(W-7)), 10-nu*W)
+def wall(W,N,nu,b,pin): C=cpu(W,N,nu,pin); return (1+b*W*C)/C
+def ratio(W,ref,N,nu,b,pin): return wall(W,N,nu,b,pin)/wall(ref,N,nu,b,pin)
+# 0.5.7 measured (Wikidata x4), lazy count arms only
+pinned=[(10,7,6,1.1159),(10,7,8,0.9730),(10,7,10,1.0974),(8,6,8,1.0470),(8,6,7,1.0426),(8,6,5,1.1443)]
+unpinned=[(10,7,6,1.0840),(10,7,8,0.9808),(10,7,10,1.0825),(12,7,8,0.9556),(12,7,10,1.0095),(16,7,8,1.0376),(16,7,10,1.0896),(20,7,8,0.9635),(20,7,10,1.0210),(8,8,7,1.0026)]
+def fit(data,pin):
+    best=None
+    for b in [x/10000 for x in range(40,400,4)]:
+        for nu in [x/1000 for x in range(0,400,5)]:
+            e=sum(math.log(ratio(W,ref,N,nu,b,pin)/m)**2 for N,ref,W,m in data)
+            if best is None or e<best[0]: best=(e,b,nu)
+    return best
+fp=fit(pinned,True); fu=fit(unpinned,False)
+print('pinned fit: rms log err %.3f beta %.4f nu %.3f W'%(math.sqrt(fp[0]/len(pinned)),fp[1],fp[2]))
+print('unpinned fit: rms log err %.3f beta %.4f nu %.3f W'%(math.sqrt(fu[0]/len(unpinned)),fu[1],fu[2]))
+for N,ref,W,m in pinned: print('  pinned',N,W,'/',ref,'meas %.3f fit %.3f'%(m,ratio(W,ref,N,fp[2],fp[1],True)))
+for N,ref,W,m in unpinned: print('  unpinned',N,W,'/',ref,'meas %.3f fit %.3f'%(m,ratio(W,ref,N,fu[2],fu[1],False)))
+# #668: the lazy workers are faster: wall 0.947 (10), 0.974 (8), 0.922 (6) at the shipped trims.
+# A uniform per-worker gain moves the front end's share: nu / g with g the per-worker speed-up.
+g={10:1/0.947,8:1/0.974,6:1/0.922,12:1/0.947,16:1/0.947,20:1/0.947,4:1/0.922}
+print('--- predictions, lazy count arms, as 057 measured x (model with nu*g / model with nu)')
+for pin,data,f in ((True,pinned,fp),(False,unpinned,fu)):
+    for N,ref,W,m in data:
+        adj=ratio(W,ref,N,f[2]*g[N],f[1],pin)/ratio(W,ref,N,f[2],f[1],pin)
+        print(' ','pinned' if pin else 'unpinned',N,W,'/',ref,'057 %.3f -> 058 %.3f (adj %.3f)'%(m,m*adj,adj))
+# the new 6-thread lazy count arms, from 057's eager count ratios at 6 and the same adjustment
+for pin,N,ref,W,m,f in ((True,6,5,4,1.0269,fp),(True,6,5,6,1.0649,fp),(False,6,6,5,1.1135,fu)):
+    adj=ratio(W,ref,N,f[2]*g[6],f[1],pin)/ratio(W,ref,N,f[2],f[1],pin)
+    print('  6-thread lazy count arm','pinned' if pin else 'unpinned',W,'/',ref,'from eager 057 %.3f -> %.3f (adj %.3f)'%(m,m*adj,adj))

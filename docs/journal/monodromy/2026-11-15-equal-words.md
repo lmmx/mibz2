@@ -105,6 +105,13 @@ Most duplicates are short words, so the arena gains more than the rules.
 **Against the coordinator's estimate** of about 15.6 B a letter of words once lazy letters land,
 the full check saves about 6 B a letter, and the step-before check alone about 3.2.
 
+**Note, 16 November (against the shipped lazy kernel).** The counts in §§1–2 and the bytes above
+still hold: lazy letters runs the same right-end order, so its words and their duplicates are the
+same. The pricing below does not. It assumes #433's eager slot layout, while lazy letters keeps
+untouched letters in streams and touched ones in a pool. And the ring of eight was built on lazy
+and lost (+38% induction instructions; `docs/journal/2026-11-16-lazy-ring.md`). Read the price as
+superseded.
+
 **The price in a Cells-style kernel (Conj, not built).**
 - **The step-before check is free.**
   - *What it costs:* keep the last cell's (A word, B word) in registers, and compare the new

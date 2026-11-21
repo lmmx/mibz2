@@ -1,0 +1,141 @@
+"""Theorem 3 (multi-boundary parallel right-end Rauzy-Veech) checked against direct first returns."""
+import itertools, sys
+from collections import Counter
+def lf_of(L):
+    n=len(L); cnt=Counter(L); C={}; acc=0
+    for c in sorted(cnt): C[c]=acc; acc+=cnt[c]
+    seen=Counter(); lf=[0]*n
+    for x,c in enumerate(L): lf[x]=C[c]+seen[c]; seen[c]+=1
+    return lf,C
+ST=Counter()
+class Run:
+    def __init__(s,L,p,pins):
+        s.L=L; s.n=len(L); s.lf,_=lf_of(L); s.pins=pins
+        s.I={}; k=0; x=0
+        while x<s.n:
+            y=x+1
+            while y<s.n and L[y]==L[x] and y not in pins: y+=1
+            s.I[k]={'dom':list(range(x,y)),'cod':[s.lf[z] for z in range(x,y)],'w':(L[x],)}; k+=1; x=y
+        s.nid=k; s.mark=[p,0]; s.out=None
+        s.bounds=sorted(set([0,s.n])|set(pins))
+    def comp(s,x):
+        for j in range(1,len(s.bounds)):
+            if x<s.bounds[j]: return j
+    def fronts(s):
+        F={}
+        for j in range(1,len(s.bounds)):
+            rows=[x for I in s.I.values() for x in I['dom'] if s.bounds[j-1]<=x<s.bounds[j]]
+            if not rows: continue
+            last=max(rows)
+            A=[k for k,I in s.I.items() if I['dom'] and I['dom'][-1]==last]
+            B=[k for k,I in s.I.items() if I['cod'] and I['cod'][-1]==last]
+            if len(A)!=1 or len(B)!=1: ST['front_not_boundary']+=1; return None
+            F[j]=(A[0],B[0])
+        return F
+    def invariant(s):
+        for I in s.I.values():
+            if len({s.comp(x) for x in I['dom']})!=1 or len({s.comp(x) for x in I['cod']})!=1: ST['interval_crosses_pin']+=1
+    def neighbors(s):
+        X=sorted(x for I in s.I.values() for x in I['dom'])
+        pos={x:i for i,x in enumerate(X)}
+        dom=sorted(s.I,key=lambda k:pos[s.I[k]['dom'][0]]); cod=sorted(s.I,key=lambda k:pos[s.I[k]['cod'][0]])
+        dn={a:b for a,b in zip(dom,dom[1:])}; dp={b:a for a,b in zip(dom,dom[1:])}
+        cn={a:b for a,b in zip(cod,cod[1:])}; cp={b:a for a,b in zip(cod,cod[1:])}
+        return dn,dp,cn,cp
+    def step(s,A,B,lA=None,lB=None):
+        I=s.I; a,b=I[A],I[B]; lA=len(a['dom']) if lA is None else lA; lB=len(b['cod']) if lB is None else lB
+        m,d=s.mark
+        if A==B:   # closure: fixed points of T_X; each word is its full LF cycle
+            for x,y in zip(a['dom'],a['cod']):
+                if x!=y: ST['closure_not_identity']+=1
+                cyc=[];z=x
+                while True:
+                    cyc.append(s.L[z]); z=s.lf[z]
+                    if z==x: break
+                if tuple(cyc)!=a['w']: ST['closure_word_bad']+=1
+            if m in a['dom']:
+                w=a['w']; k=len(w); s.out=w[(k-d)%k:]+w[:(k-d)%k]
+            del I[A]; return
+        if lA>lB:
+            Y=b['cod'][:]
+            if Y!=a['dom'][-lB:]: ST['Y_mismatch']+=1
+            if m in Y: i=a['dom'].index(m); s.mark=[a['cod'][i],d+len(a['w'])]
+            b['cod']=a['cod'][-lB:]; a['cod']=a['cod'][:-lB]; a['dom']=a['dom'][:-lB]; b['w']=b['w']+a['w']
+        elif lA<lB:
+            Y=a['dom'][:]
+            if Y!=b['cod'][-lA:]: ST['Y_mismatch']+=1
+            if m in Y: i=a['dom'].index(m); s.mark=[a['cod'][i],d+len(a['w'])]
+            a['dom']=b['dom'][-lA:]; b['dom']=b['dom'][:-lA]; b['cod']=b['cod'][:-lA]; a['w']=b['w']+a['w']
+        else:
+            Y=a['dom'][:]
+            if Y!=b['cod']: ST['Y_mismatch']+=1
+            if m in Y: i=a['dom'].index(m); s.mark=[a['cod'][i],d+len(a['w'])]
+            b['cod']=a['cod']; b['w']=b['w']+a['w']; del I[A]
+    def direct_ok(s):
+        X=set(x for I in s.I.values() for x in I['dom'])
+        if X!=set(y for I in s.I.values() for y in I['cod']): return False
+        for I in s.I.values():
+            for x,y in zip(I['dom'],I['cod']):
+                w=[s.L[x]]; z=s.lf[x]
+                while z not in X: w.append(s.L[z]); z=s.lf[z]
+                if z!=y or tuple(w)!=I['w']: return False
+        # the mark: p = LF^{-d}(m)
+        m,d=s.mark
+        if s.out is None and m not in X: return False
+        return True
+    def snapshot(s): return ({k:(tuple(v['dom']),tuple(v['cod']),v['w']) for k,v in s.I.items()},tuple(s.mark))
+    def restore(s,snap): s.I={k:{'dom':list(a),'cod':list(b),'w':w} for k,(a,b,w) in snap[0].items()}; s.mark=list(snap[1])
+def touched(A,B,nb):
+    dn,dp,cn,cp=nb; return {A,B,cn.get(A),cp.get(B),dn.get(B),dp.get(A)}-{None}
+def check(L,p,pins):
+    R=Run(L,p,pins); truth=[]; x=p
+    # forward departures from p along LF: the cycle of p in departure order
+    z=p
+    while True:
+        truth.append(L[z]); z=R.lf[z]
+        if z==p: break
+    guard=0
+    while R.I and guard<1000:
+        guard+=1; R.invariant(); F=R.fronts()
+        if F is None: return
+        nb=R.neighbors(); active=[j for j,(A,B) in F.items() if A!=B]
+        snap=R.snapshot(); r0=len(R.I)
+        for k in range(2,len(active)+1):
+            for S in itertools.combinations(active,k):
+                T=[touched(*F[j],nb) for j in S]
+                cond=all(not(T[i]&T[i2]) for i in range(k) for i2 in range(i+1,k))
+                weak=all(F[j][0]!=F[j2][1] for j in S for j2 in S if j!=j2)
+                pre={j:(len(R.I[F[j][0]]['dom']),len(R.I[F[j][1]]['cod'])) for j in S}
+                ok=True
+                try:
+                    for j in S: R.step(*F[j],*pre[j])
+                    ok=R.direct_ok()
+                except Exception: ok=False
+                ST['batches']+=1; ST['batches_cond']+=cond; ST['batches_weak']+=weak
+                if cond and not ok: ST['COND_BUT_WRONG']+=1; print('counterexample',L,p,pins,S)
+                if weak and not ok: ST['weak_but_wrong']+=1
+                if not weak and ok: ST['notweak_but_ok']+=1
+                if not weak and not ok: ST['notweak_wrong']+=1
+                if len(R.I)>r0: ST['dr_positive']+=1
+                R.restore(snap)
+        # advance: maximal greedy batch under the paper's condition, else one front (closures first)
+        clos=[j for j,(A,B) in F.items() if A==B]
+        if clos: R.step(*F[clos[0]]); continue
+        S=[]; used=set()
+        for j in active:
+            t=touched(*F[j],nb)
+            if not (t&used): S.append(j); used|=t
+        pre={j:(len(R.I[F[j][0]]['dom']),len(R.I[F[j][1]]['cod'])) for j in S}
+        for j in S: R.step(*F[j],*pre[j])
+        if not R.direct_ok(): ST['advance_wrong']+=1
+    ST['runs']+=1
+    if R.out is None: ST['no_mark_output']+=1
+    elif list(R.out)!=truth: ST['mark_output_wrong']+=1
+for alph,maxn in ((2,8),(3,7),(4,6)):
+    for n in range(1,maxn+1):
+        for L in itertools.product(range(alph),repeat=n):
+            _,C=lf_of(L); bnds=sorted(v for v in C.values() if 0<v<n)
+            for kk in range(len(bnds)+1):
+                for pins in itertools.combinations(bnds,kk):
+                    for p in range(n): check(L,p,set(pins))
+print(dict(ST))

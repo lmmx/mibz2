@@ -1,0 +1,80 @@
+# Greedy longest nonoverlapping previous-match parse of T after a seed D (MONODROMY, independent).
+import numpy as np, sys
+B='/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/bisp-out/'
+L=open(B+'reference-column','rb').read(); T=open(B+'reference-raw','rb').read()
+which=sys.argv[1]
+if which=="heads": D=bytes(L[i] for i in range(len(L)) if i==0 or L[i]!=L[i-1])
+elif which=="textheads":
+    from collections import Counter
+    n=len(L); p=264045; cnt=Counter(L); base={}; t=0
+    for a in range(256): base[a]=t; t+=cnt.get(a,0)
+    seen=dict(base); lf=[0]*n
+    for i,a in enumerate(L): lf[i]=seen[a]; seen[a]+=1
+    rho=[0]*n; x=p
+    for k in range(n): rho[n-1-k]=x; x=lf[x]
+    D=bytes(T[q] for q in range(n) if rho[q]==0 or L[rho[q]]!=L[rho[q]-1])
+else: D=bytes(range(256))
+S=np.frombuffer(D+T,dtype=np.uint8).astype(np.int64); N=len(S); d=len(D)
+# suffix array by prefix doubling
+rank=S.copy(); k=1
+sa=np.argsort(rank,kind='stable')
+while True:
+    r2=np.full(N,-1,dtype=np.int64); r2[:N-k]=rank[k:]
+    sa=np.lexsort((r2,rank))
+    a=rank[sa]; b=r2[sa]
+    diff=np.empty(N,dtype=np.int64); diff[0]=0; diff[1:]=((a[1:]!=a[:-1])|(b[1:]!=b[:-1])).astype(np.int64)
+    nr=np.cumsum(diff); rank=np.empty(N,dtype=np.int64); rank[sa]=nr
+    if nr[-1]==N-1: break
+    k*=2
+SAl=sa.tolist(); Sb=D+T
+rk=[0]*N
+for i,s in enumerate(SAl): rk[s]=i
+lcp=[0]*N; h=0
+for i in range(N):
+    r=rk[i]
+    if r==0: h=0; continue
+    j=SAl[r-1]
+    while i+h<N and j+h<N and Sb[i+h]==Sb[j+h]: h+=1
+    lcp[r]=h
+    if h: h-=1
+LCP=np.array(lcp,dtype=np.int32); SAa=np.array(SAl,dtype=np.int32)
+def sparse(arr):
+    t=[arr]; j=1
+    while 2*j<=len(arr):
+        prev=t[-1]; t.append(np.minimum(prev[:-j],prev[j:])); j*=2
+    return t
+SL=sparse(LCP); SS=sparse(SAa)
+def rmq(t,lo,hi):   # min over [lo,hi]
+    k=(hi-lo+1).bit_length()-1
+    return min(int(t[k][lo]),int(t[k][hi-(1<<k)+1]))
+def interval(r,l):
+    # largest range [lo,hi] around rank r with all LCP in (lo,hi] >= l
+    lo=r; step=1
+    # binary search left
+    a,b=0,r
+    while a<b:
+        m=(a+b)//2
+        if rmq(SL,m+1,r)>=l: b=m
+        else: a=m+1
+    lo=a
+    a,b=r,N-1
+    while a<b:
+        m=(a+b+1)//2
+        if rmq(SL,r+1,m)>=l: a=m
+        else: b=m-1
+    return lo,a
+def ok(i,l):
+    lo,hi=interval(rk[i],l)
+    return rmq(SS,lo,hi)+l<=i
+i=d; copies=single=0; longest=0; seedonly=0; seedbytes=0; cross=0
+while i<N:
+    a,b=1,N-i
+    if not ok(i,1): raise SystemExit("byte missing from seed at %d"%(i-d))
+    while a<b:
+        m=(a+b+1)//2
+        if ok(i,m): a=m
+        else: b=m-1
+    l=a; copies+=1; single+= l==1; longest=max(longest,l)
+    lo,hi=interval(rk[i],l); s=rmq(SS,lo,hi)
+    i+=l
+print(which,"copies",copies,"singletons",single,"longest",longest)

@@ -1,0 +1,16 @@
+# MONODROMY record 84: the arc-synchronous LF walk, as a manifest (ACQUISITION-FIRST.md §5).
+# Expected: PASS on availability (every edge proved or verified), with its n-scale W and Q
+# reported: it visits every row once, in max(l)+1 rounds of independent, row-sorted batches.
+
+name = "arc-synchronous LF walk from the free arc boundaries (record 84)"
+target = "text"
+uses = ["counts_from_records", "maximal_runs", "lf_shifts", "lf_image_partition"]
+
+[[edge]]
+id = "arc_synchronous_walk"
+inputs = ["runs", "lf_affine", "codomain_partition", "p"]
+output = "text"
+status = "verified"
+cost = { W = "n", D = "lmax + r", B = "n", Q = "n", M = "n" }
+dependent = false
+evidence = "Every arc c, LF c, ..., d (c a codomain start, d its first run head) is advanced one point a round; the frontier stays row-sorted by a bucket-by-symbol concatenation; arcs chain d -> LF(d), r dependent hops. Exact text against the LF walk on 23,093 small single-cycle cases and all six authenticated blocks (record 84). D: lmax + 1 = 848-17,545 rounds plus the r-hop chain; Q: one run lookup and one scattered byte write per row."

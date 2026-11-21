@@ -1,0 +1,53 @@
+"""Theorem 2(2): Fibonacci words F_1=a, F_2=ab, F_q=F_{q-1}F_{q-2} (f_1=1, f_2=2). For every prefix P of
+F_q: |I(P)| (cyclic occurrences), the first-return pieces on I(P) under LF and their return times."""
+from collections import Counter
+f={1:1,2:2}
+for q in range(3,30): f[q]=f[q-1]+f[q-2]
+F={1:'a',2:'ab'}
+for q in range(3,30): F[q]=F[q-1]+F[q-2]
+inv={v:k for k,v in f.items()}
+def study(q):
+    s=F[q]; n=len(s)
+    rots=sorted(range(n),key=lambda i:s[i:]+s[:i])
+    L=''.join(s[i-1] for i in rots)
+    runs=1+sum(L[i]!=L[i-1] for i in range(1,n))
+    row={i:k for k,i in enumerate(rots)}
+    LF=[row[(rots[k]-1)%n] for k in range(n)]
+    out=[]
+    for l in range(1,n):
+        P=s[:l]; X={row[i] for i in range(n) if (s[i:]+s[:i]).startswith(P)}
+        Xs=sorted(X); idx={x:j for j,x in enumerate(Xs)}; ret=[]
+        for x in Xs:
+            w=[L[x]]; z=LF[x]
+            while z not in X: w.append(L[z]); z=LF[z]
+            ret.append((idx[z],''.join(w)))
+        pcs=[[ret[0]]]
+        for j in range(1,len(Xs)):
+            if ret[j][0]==ret[j-1][0]+1 and ret[j][1]==ret[j-1][1]: pcs[-1].append(ret[j])
+            else: pcs.append([ret[j]])
+        taus=sorted({len(p[0][1]) for p in pcs},reverse=True)
+        out.append((l,len(X),len(pcs),taus,sum(len(p[0][1]) for p in pcs)))
+    return n,runs,out
+for q in (8,10,12):
+    n,runs,out=study(q)
+    print(f'q={q} n={n} runs={runs} cycle=1')
+    prev=None
+    for l,size,r,taus,W in out:
+        key=(size,r,tuple(taus),W)
+        if key!=prev: print(f'  |P|>={l}: |I(P)|={size} (f_{inv.get(size,"?")}), pieces={r}, tau={taus} (f_{[inv.get(t,"?") for t in taus]}), W={W} (f_{inv.get(W,"?")})')
+        prev=key
+# the corrected statement, asserted for every prefix length
+bad=0; cases=0
+for q in range(3,17):
+    n,runs,out=study(q); assert runs==2
+    for l,size,r,taus,W in out:
+        d=next(d for d in range(2,q+1) if f[d]-1<=l<=f[d+1]-2) if l<f[q]-1 else q
+        cases+=1
+        if d<=q-1: bad+=not(size==f[q-d+1] and r==2 and taus==[f[d],f[d-1]] and W==f[d+1])
+        # the paper's indexing: |P_d| = f_d - 2 gives (f_d, f_{d-1})?
+    for d in range(3,q):
+        l=f[d]-2
+        if l>=1:
+            size,r,taus,W=[o for o in out if o[0]==l][0][1:]
+            if taus==[f[d],f[d-1]]: print('paper indexing holds at',q,d)
+print('corrected statement: prefix lengths checked',cases,'failures',bad)

@@ -1,0 +1,154 @@
+"""Theorem 3' (response-2): per-component sentinels, per-case footprints F_j, the backward mark in
+domain coordinates. Every subset of >= 2 active fronts at every state is executed simultaneously
+against the pre-state (each front's reads from the pre-state, writes merged), with write-write
+conflicts and stale reads counted on every node and field, sentinels included. Full runs advance by
+greedy 3'-admissible batches in the pointer model alone, and the closure output is checked."""
+import itertools
+from collections import Counter
+exec(open('neon3.py').read().split('def touched')[0])   # lf_of, Run (coordinate model), ST
+ST.clear(); EX={}
+class Ptr:
+    def __init__(s,R):
+        s.K=len(R.bounds)-1; s.f={}
+        s.len={k:len(I['dom']) for k,I in R.I.items()}; s.w={k:I['w'] for k,I in R.I.items()}
+        for lst,key in (('d','dom'),('c','cod')):
+            seq=[]
+            for j in range(1,s.K+1):
+                seq+=[('L',lst,j)]+sorted((k for k,I in R.I.items() if R.comp(I[key][0])==j),key=lambda k:R.I[k][key][0])+[('R',lst,j)]
+            for a,b in zip(seq,seq[1:]):
+                if not(isinstance(a,tuple) and a[0]=='R'): s.f[(a,lst+'n')]=b; s.f[(b,lst+'p')]=a
+        m,d=R.mark; s.mark=None
+        for k,I in R.I.items():
+            if m in I['dom']: s.mark=(k,I['dom'].index(m),0)
+        s.out=None
+    def AB(s,j): return s.f[(('R','d',j),'dp')],s.f[(('R','c',j),'cp')]
+    def active(s):
+        F={}
+        for j in range(1,s.K+1):
+            A,B=s.AB(j)
+            if not isinstance(A,tuple): F[j]=(A,B)
+        return F
+class View:
+    def __init__(v,P): v.P=P; v.W={}; v.reads=set(); v.L={}; v.wd={}; v.mark=None; v.dead=set(); v.out=None
+    def g(v,node,fld):
+        k=(node,fld)
+        if k in v.W: return v.W[k]
+        v.reads.add(k); return v.P.f[k]
+    def s(v,node,fld,val): v.W[(node,fld)]=val
+    def unlink(v,lst,X):
+        p,n=v.g(X,lst+'p'),v.g(X,lst+'n'); v.s(p,lst+'n',n); v.s(n,lst+'p',p)
+    def ins_after(v,lst,A,X):
+        n=v.g(A,lst+'n'); v.s(A,lst+'n',X); v.s(X,lst+'p',A); v.s(X,lst+'n',n); v.s(n,lst+'p',X)
+def ptr_front(P,j):
+    v=View(P); A,B=P.AB(j); v.reads|={(('R','d',j),'dp'),(('R','c',j),'cp'),(A,'len'),(B,'len')}
+    lA,lB=P.len[A],P.len[B]; wA,wB=P.w[A],P.w[B]; mk=P.mark
+    if A==B:
+        v.unlink('d',A); v.unlink('c',A); v.dead.add(A)
+        if mk and mk[0]==A:
+            dl=mk[2]; v.out=wA[dl:]+wA[:dl]
+        return v
+    if lA>lB:      # Case 1
+        v.unlink('c',B); v.ins_after('c',A,B); v.L[A]=lA-lB; v.wd[B]=wB+wA
+        if mk and mk[0]==A and mk[1]>=lA-lB: v.mark=(B,mk[1]-(lA-lB),mk[2]+len(wB))
+    elif lA<lB:    # Case 2
+        v.unlink('d',A); v.ins_after('d',B,A); v.L[B]=lB-lA; v.wd[A]=wB+wA
+        if mk and mk[0]==A: v.mark=(A,mk[1],mk[2]+len(wB))
+        elif mk and mk[0]==B and mk[1]>=lB-lA: v.mark=(A,mk[1]-(lB-lA),mk[2])
+    else:          # Case 3a
+        v.unlink('d',A); v.unlink('c',B); pa=v.g(A,'cp'); v.ins_after('c',pa,B); v.unlink('c',A)
+        v.wd[B]=wB+wA; v.dead.add(A)
+        if mk and mk[0]==A: v.mark=(B,mk[1],mk[2]+len(wB))
+    return v
+def footprint(P,j):
+    A,B=P.AB(j); lA,lB=P.len[A],P.len[B]; f=P.f
+    if lA>lB: F={A,B,f[(A,'cn')],f[(B,'cp')]}
+    elif lA<lB: F={A,B,f[(B,'dn')],f[(A,'dp')]}
+    else: F={A,B,f[(A,'dp')],f[(A,'cp')],f[(A,'cn')],f[(B,'cp')]}
+    return {x for x in F if not isinstance(x,tuple)}
+def apply(P,views):
+    keys=Counter(k for v in views for k in v.W); ww=any(c>1 for c in keys.values())
+    lenw=Counter(k for v in views for k in v.L); ww=ww or any(c>1 for c in lenw.values())
+    stale=any(v.reads & (set(v2.W)|{(k,'len') for k in v2.L}) for v in views for v2 in views if v is not v2)
+    for v in views:
+        P.f.update(v.W); P.len.update(v.L); P.w.update(v.wd)
+        if v.mark: P.mark=v.mark
+        if v.out is not None: P.out=v.out; P.mark=None
+        for k in v.dead: P.len.pop(k,None); P.w.pop(k,None)
+    nodes=[{k[0] for k in v.reads|set(v.W)}|set(v.L) for v in views]
+    nshare=any(nodes[i]&nodes[j] for i in range(len(nodes)) for j in range(i+1,len(nodes)))
+    wnodes=[{k[0] for k in v.W}|set(v.L) for v in views]
+    wshare=any(wnodes[i]&wnodes[j] for i in range(len(wnodes)) for j in range(i+1,len(wnodes)))
+    sshare=any({x for x in nodes[i]&nodes[j] if isinstance(x,tuple)} for i in range(len(nodes)) for j in range(i+1,len(nodes)))
+    ST['node_share_any']+=nshare; ST['node_share_written']+=wshare; ST['node_share_sentinel']+=sshare
+    return ww,stale
+def matches(P,R):
+    for lst,key in (('d','dom'),('c','cod')):
+        for j in range(1,P.K+1):
+            seq=[]; x=P.f[(('L',lst,j),lst+'n')]; g=0
+            while not(isinstance(x,tuple)) and g<100: seq.append(x); x=P.f[(x,lst+'n')]; g+=1
+            if x!=('R',lst,j): return False
+            want=sorted((k for k,I in R.I.items() if R.comp(I[key][0])==j),key=lambda k:R.I[k][key][0])
+            if seq!=want: return False
+    return all(P.len.get(k)==len(I['dom']) and P.w.get(k)==I['w'] for k,I in R.I.items()) and set(P.len)==set(R.I)
+def check(L,p,pins):
+    R=Run(L,p,pins); P=Ptr(R); truth=[]; z=p
+    while True:
+        truth.append(L[z]); z=R.lf[z]
+        if z==p: break
+    while R.I:
+        F=R.fronts(); FP=P.active()
+        if F!=FP: ST['FRONTS_DIFFER']+=1; return
+        act=[j for j,(A,B) in F.items() if A!=B]
+        ST['states']+=1; ST['states_2plus_active']+=(len(act)>=2)
+        anyadm=False
+        if len(act)>=2:
+            snap=R.snapshot(); out0=R.out
+            fps={j:footprint(P,j) for j in act}
+            for k in range(2,len(act)+1):
+                for S in itertools.combinations(act,k):
+                    adm=all(not(fps[a]&fps[b]) for a,b in itertools.combinations(S,2))
+                    weak=all(F[a][0]!=F[b][1] and F[b][0]!=F[a][1] for a,b in itertools.combinations(S,2))
+                    ST['subsets']+=1; ST['subsets_adm']+=adm; ST['subsets_weak']+=weak
+                    if not adm: continue
+                    anyadm=True
+                    import copy
+                    Q=copy.deepcopy(P); views=[ptr_front(Q,j) for j in S]; ww,stale=apply(Q,views)
+                    pre={j:(len(R.I[F[j][0]]['dom']),len(R.I[F[j][1]]['cod'])) for j in S}
+                    for j in S: R.step(*F[j],*pre[j])
+                    ok=R.direct_ok(); mt=matches(Q,R)
+                    # mark: domain-coordinate mark must sit in X' with delta < |word|
+                    mk_ok=True
+                    if Q.mark:
+                        I,t,dl=Q.mark; mk_ok=(I in Q.len and t<Q.len[I] and dl<len(Q.w[I]))
+                    R.restore(snap); R.out=out0
+                    ST['adm_exact']+=(ok and mt); ST['adm_ww']+=ww; ST['adm_stale']+=stale; ST['adm_mark_bad']+=(not mk_ok)
+                    if not(ok and mt) and 'adm_fail' not in EX: EX['adm_fail']=(L,p,sorted(pins),S)
+            ST['states_2plus_with_adm_pair']+=anyadm
+        # advance both models by the greedy 3' batch (closures alone, first)
+        clo=[j for j,(A,B) in F.items() if A==B]
+        if clo: S=[clo[0]]
+        else:
+            S=[]; used=set()
+            for j in act:
+                fp=footprint(P,j)
+                if not(fp&used): S.append(j); used|=fp
+        ST['rounds']+=1; ST['round_width_sum']+=len(S); ST['rounds_width2plus']+=(len(S)>=2); ST['rounds_2plus_active']+=(len(act)>=2 and not clo)
+        pre={j:(len(R.I[F[j][0]]['dom']),len(R.I[F[j][1]]['cod'])) for j in S}
+        views=[ptr_front(P,j) for j in S]; ww,stale=apply(P,views)
+        for j in S: R.step(*F[j],*pre[j])
+        if ww or stale: ST['ROUND_CONFLICT']+=1
+        if not matches(P,R): ST['ROUND_MISMATCH']+=1; return
+        if P.mark:
+            I,t,dl=P.mark
+            if not(I in P.len and t<P.len[I] and dl<len(P.w[I])): ST['MARK_INVARIANT_BROKEN']+=1
+    ST['runs']+=1
+    if P.out is None or list(P.out)!=truth: ST['MARK_OUTPUT_WRONG']+=1; EX.setdefault('mark',(L,p,sorted(pins)))
+for alph,maxn in ((2,8),(3,7),(4,6)):
+    for n in range(1,maxn+1):
+        for L in itertools.product(range(alph),repeat=n):
+            _,C=lf_of(L); bnds=sorted(v for v in C.values() if 0<v<n)
+            for kk in range(len(bnds)+1):
+                for pins in itertools.combinations(bnds,kk):
+                    for p in range(n): check(L,p,set(pins))
+for k in sorted(ST): print(k,ST[k])
+print(EX)

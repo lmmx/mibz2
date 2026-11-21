@@ -1,0 +1,178 @@
+"""Theorem 3, second pass: (a) exact removed set X' = X minus the pre-state Y_j; (b) serial orders with
+fresh fronts; (c) the paper's pointer-level representation (no coordinates), executed simultaneously
+against the pre-state, with write-write conflicts and stale reads counted; (d) the mark kept in
+codomain coordinates (interval, offset), with and without the non-cut relabel."""
+import itertools, sys
+from collections import Counter
+exec(open('neon3.py').read().split('def touched')[0])   # lf_of, Run, ST
+ST.clear(); EX={}
+def touched(A,B,nb):
+    dn,dp,cn,cp=nb; return {A,B,cn.get(A),cp.get(B),dn.get(B),dp.get(A)}-{None}
+def Yset(R,A,B):
+    a,b=R.I[A],R.I[B]; lA,lB=len(a['dom']),len(b['cod'])
+    return set(a['dom'][-lB:]) if lA>lB else set(a['dom'])
+def canon(R):
+    return (frozenset(x for I in R.I.values() for x in I['dom']),
+            frozenset((tuple(I['dom']),tuple(I['cod']),I['w']) for I in R.I.values()), tuple(R.mark), R.out)
+# ---------- pointer model ----------
+class Ptr:
+    """Global dom and cod lists with sentinel S_j after each component; reads go to the pre-state
+    snapshot unless this front wrote the field itself."""
+    def __init__(s,R):
+        s.K=len(R.bounds)-1
+        s.len={k:len(I['dom']) for k,I in R.I.items()}; s.w={k:I['w'] for k,I in R.I.items()}
+        s.f={}
+        for lst,key in (('d','dom'),('c','cod')):
+            seq=['H']
+            for j in range(1,s.K+1):
+                seq+=sorted((k for k,I in R.I.items() if R.comp(I[key][0])==j),key=lambda k:R.I[k][key][0])
+                seq.append(('S',j))
+            for a,b in zip(seq,seq[1:]): s.f[(a,lst+'n')]=b; s.f[(b,lst+'p')]=a
+        # mark in codomain coordinates
+        m,d=R.mark; s.mark=None
+        for k,I in R.I.items():
+            if m in I['cod']: s.mark=(k,I['cod'].index(m),d)
+    def front(s,j): return s.f[(('S',j),'dp')],s.f[(('S',j),'cp')]
+class View:
+    def __init__(v,P): v.P=P; v.W={}; v.reads=set(); v.L={}; v.wd={}; v.mark=None; v.dead=set()
+    def g(v,node,fld):
+        k=(node,fld)
+        if k in v.W: return v.W[k]
+        v.reads.add(k); return v.P.f[k]
+    def s(v,node,fld,val): v.W[(node,fld)]=val
+    def gl(v,k):
+        if k in v.L: return v.L[k]
+        v.reads.add((k,'len')); return v.P.len[k]
+    def unlink(v,lst,X):
+        p,n=v.g(X,lst+'p'),v.g(X,lst+'n'); v.s(p,lst+'n',n); v.s(n,lst+'p',p)
+    def ins_after(v,lst,A,X):
+        n=v.g(A,lst+'n'); v.s(A,lst+'n',X); v.s(X,lst+'p',A); v.s(X,lst+'n',n); v.s(n,lst+'p',X)
+def ptr_front(P,j,relabel=True):
+    v=View(P); A,B=P.front(j); lA,lB=v.gl(A),v.gl(B); wA,wB=P.w[A],P.w[B]
+    mk=P.mark
+    if A==B: v.unlink('d',A); v.unlink('c',A); v.dead.add(A); return v
+    if lA>lB:
+        v.unlink('c',B); v.ins_after('c',A,B); v.L[A]=lA-lB; v.wd[B]=wB+wA
+        if mk:
+            I,t,d=mk
+            if I==B: v.mark=(B,t,d+len(wA))                 # p in Y = cod(B) = tail of dom(A)
+            elif I==A and t>=lA-lB and relabel: v.mark=(B,t-(lA-lB),d)   # not cut: A's cod tail is now B's
+    elif lA<lB:
+        v.unlink('d',A); v.ins_after('d',B,A); v.L[B]=lB-lA; v.wd[A]=wB+wA
+        if mk:
+            I,t,d=mk
+            if I==B and t>=lB-lA: v.mark=(A,t-(lB-lA),d+len(wA))
+    else:
+        v.unlink('d',A); v.unlink('c',B); pa=v.g(A,'cp')
+        v.ins_after('c',pa,B); v.unlink('c',A); v.wd[B]=wB+wA; v.dead.add(A)
+        if mk:
+            I,t,d=mk
+            if I==B: v.mark=(B,t,d+len(wA))
+            elif I==A: v.mark=(B,t,d)
+    return v
+def ptr_apply(P,views):
+    keys=Counter(k for v in views for k in v.W); ww=sum(1 for c in keys.values() if c>1)
+    stale=0
+    for i,v in enumerate(views):
+        for i2,v2 in enumerate(views):
+            if i!=i2 and v.reads & set(v2.W): stale+=1
+    for v in views:
+        P.f.update(v.W); P.len.update(v.L); P.w.update(v.wd)
+        if v.mark: P.mark=v.mark
+        for k in v.dead: P.len.pop(k,None); P.w.pop(k,None)
+    return ww,stale
+def ptr_matches(P,R):
+    for lst,key in (('d','dom'),('c','cod')):
+        seq=[]; x=P.f[('H',lst+'n')]; guard=0
+        while guard<200:
+            guard+=1
+            if isinstance(x,tuple):
+                if x[1]==P.K: break
+            else: seq.append(x)
+            x=P.f.get((x,lst+'n'))
+            if x is None: return False
+        want=sorted(R.I,key=lambda k:R.I[k][key][0])
+        if seq!=want: return False
+    for k,I in R.I.items():
+        if P.len.get(k)!=len(I['dom']) or P.w.get(k)!=I['w']: return False
+    if R.out is None:
+        m,d=R.mark
+        if P.mark is None: return 'mark'
+        I,t,dd=P.mark
+        if I not in R.I or t>=len(R.I[I]['cod']) or R.I[I]['cod'][t]!=m or dd!=d: return 'mark'
+    return True
+def check(L,p,pins,perms):
+    R=Run(L,p,pins); truth=[]; z=p
+    while True:
+        truth.append(L[z]); z=R.lf[z]
+        if z==p: break
+    guard=0
+    while R.I and guard<1000:
+        guard+=1; F=R.fronts()
+        if F is None: ST['front_not_boundary']+=1; return
+        nb=R.neighbors(); active=[j for j,(A,B) in F.items() if A!=B]
+        snap=R.snapshot(); out0=R.out; X=set(x for I in R.I.values() for x in I['dom'])
+        for k in range(2,len(active)+1):
+            for S in itertools.combinations(active,k):
+                T=[touched(*F[j],nb) for j in S]
+                cond=all(not(T[i]&T[i2]) for i in range(k) for i2 in range(i+1,k))
+                weak=all(F[j][0]!=F[j2][1] for j in S for j2 in S if j!=j2)
+                Ys=[Yset(R,*F[j]) for j in S]; target=X-set().union(*Ys)
+                pre={j:(len(R.I[F[j][0]]['dom']),len(R.I[F[j][1]]['cod'])) for j in S}
+                try:
+                    for j in S: R.step(*F[j],*pre[j])
+                    ok=R.direct_ok() and set(x for I in R.I.values() for x in I['dom'])==target
+                except Exception: ok=False
+                sim=canon(R) if ok else None
+                R.restore(snap); R.out=out0
+                tag='cond' if cond else ('weak' if weak else 'not')
+                ST['B_'+tag]+=1; ST['B_'+tag+'_simul_exact']+=ok
+                if not ok:
+                    key=(len(L),tag); EX.setdefault(('simulfail',tag),(len(L),L,p,sorted(pins),S,[F[j] for j in S]))
+                    if EX[('simulfail',tag)][0]>len(L): EX[('simulfail',tag)]=(len(L),L,p,sorted(pins),S,[F[j] for j in S])
+                # serial orders with fresh fronts
+                if perms:
+                    ST['B_'+tag+'_perm_tested']+=1
+                    outs=set()
+                    for order in itertools.permutations(S):
+                        for j in order:
+                            Fj=R.fronts()[j]; R.step(*Fj)
+                        outs.add(canon(R) if R.direct_ok() else 'bad'); R.restore(snap); R.out=out0
+                    ST['B_'+tag+'_orders_agree']+=(len(outs)==1)
+                    ST['B_'+tag+'_orders_eq_simul']+=(outs=={sim})
+                # pointer model, simultaneous against the pre-state
+                if ok:
+                    for relabel in (True,False):
+                        P=Ptr(R); views=[ptr_front(P,j,relabel) for j in S]; ww,stale=ptr_apply(P,views)
+                        for j in S: R.step(*F[j],*pre[j])
+                        res=ptr_matches(P,R); R.restore(snap); R.out=out0
+                        sfx='' if relabel else '_literal'
+                        ST['P_'+tag+sfx+'_exact']+=(res is True); ST['P_'+tag+sfx+'_markwrong']+=(res=='mark')
+                        if res is not True:
+                            kk=('ptr',tag,relabel,res)
+                            if kk not in EX or EX[kk][0]>len(L): EX[kk]=(len(L),L,p,sorted(pins),S,[F[j] for j in S],{j:pre[j] for j in S})
+                        if relabel:
+                            ST['P_'+tag+'_wwconflict']+=(ww>0); ST['P_'+tag+'_stale_read']+=(stale>0)
+                            if res is not True and res!='mark': ST['P_'+tag+'_listwrong']+=1
+                            if cond and res is not True and ST['shown']<3:
+                                ST['shown']+=1; print('POINTER FAIL',L,p,sorted(pins),S,res)
+        clos=[j for j,(A,B) in F.items() if A==B]
+        if clos: R.step(*F[clos[0]]); continue
+        S=[]; used=set()
+        for j in active:
+            t=touched(*F[j],nb)
+            if not (t&used): S.append(j); used|=t
+        pre={j:(len(R.I[F[j][0]]['dom']),len(R.I[F[j][1]]['cod'])) for j in S}
+        for j in S: R.step(*F[j],*pre[j])
+    ST['runs']+=1
+    if R.out is None or list(R.out)!=truth: ST['mark_output_wrong']+=1
+for alph,maxn in ((2,8),(3,7),(4,6)):
+    for n in range(1,maxn+1):
+        for L in itertools.product(range(alph),repeat=n):
+            _,C=lf_of(L); bnds=sorted(v for v in C.values() if 0<v<n)
+            for kk in range(len(bnds)+1):
+                for pins in itertools.combinations(bnds,kk):
+                    for p in range(n): check(L,p,set(pins),perms=(n<=6))
+for k in sorted(ST): print(k,ST[k])
+
+for k in sorted(EX,key=str): print(k,EX[k])
