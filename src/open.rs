@@ -39,6 +39,8 @@ pub struct Counts {
     pub unit_work: usize,
     pub longest: usize,
     pub table_bytes: usize,
+    /// the elimination contracted its spirals (the width certificate failed)
+    pub spirals: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -859,3 +861,6 @@ mod b5;
 
 #[cfg(test)]
 mod dense;
+
+#[cfg(test)]
+mod spirals;
