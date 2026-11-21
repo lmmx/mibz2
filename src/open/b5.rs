@@ -187,6 +187,7 @@ fn scratch(k: &Kernel) -> usize {
         + 16 * k.inline16.capacity()
         + k.lens.capacity()
         + e.scratch()
+        + k.r4.scratch()
 }
 
 /// Worst-case scratch: on every shape the B5 study names (Wikidata-like runs, text-like dense

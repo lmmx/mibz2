@@ -1,0 +1,47 @@
+build	Open ms (min-max)	front+Open	front+Cells
+base	325.7-356.5	360.0-393.6	371.4-403.0
+premaster	372.2-418.3	403.4-454.6	356.3-388.6
+2p	323.2-366.2	353.2-443.0	345.9-429.1
+pages	286.0-346.5	315.3-384.6	338.3-399.5
+w24r4	290.3-342.5	320.0-379.2	344.8-398.9
+both	270.4-329.1	300.1-367.7	345.8-408.2
+r4l16	279.1-317.1	309.8-380.7	354.0-418.0
+both2p	323.3-373.9	371.2-412.8	366.2-409.9
+premaster/base	Open	1.128 [1.074, 1.184]
+premaster/base	front+Open	1.107 [1.054, 1.164]
+2p/base	Open	1.016 [0.959, 1.077]
+2p/base	front+Open	1.022 [0.942, 1.109]
+pages/base	Open	0.917 [0.856, 0.981]
+pages/base	front+Open	0.917 [0.854, 0.985]
+w24r4/base	Open	0.925 [0.885, 0.968]
+w24r4/base	front+Open	0.926 [0.884, 0.969]
+both/base	Open	0.872 [0.820, 0.928]
+both/base	front+Open	0.879 [0.825, 0.936]
+r4l16/base	Open	0.882 [0.852, 0.913]
+r4l16/base	front+Open	0.903 [0.853, 0.956]
+both2p/base	Open	1.034 [0.988, 1.081]
+both2p/base	front+Open	1.041 [1.001, 1.083]
+base	(front+Open)/(front+Cells)	0.973 [0.965, 0.981]
+premaster	(front+Open)/(front+Cells)	1.139 [1.126, 1.153]
+2p	(front+Open)/(front+Cells)	1.032 [1.022, 1.043]
+pages	(front+Open)/(front+Cells)	0.944 [0.933, 0.955]
+w24r4	(front+Open)/(front+Cells)	0.943 [0.935, 0.951]
+both	(front+Open)/(front+Cells)	0.893 [0.883, 0.902]
+r4l16	(front+Open)/(front+Cells)	0.897 [0.887, 0.907]
+both2p	(front+Open)/(front+Cells)	1.008 [0.996, 1.019]
+base	Open/Cells	0.970 [0.961, 0.979]
+premaster	Open/Cells	1.153 [1.137, 1.168]
+2p	Open/Cells	1.036 [1.025, 1.048]
+pages	Open/Cells	0.939 [0.927, 0.951]
+w24r4	Open/Cells	0.938 [0.929, 0.946]
+both	Open/Cells	0.882 [0.872, 0.892]
+r4l16	Open/Cells	0.885 [0.876, 0.895]
+both2p	Open/Cells	1.008 [0.996, 1.021]
+base	min-per-block: Open 303.6, front+Open 333.8, Cells 316.6
+premaster	min-per-block: Open 351.6, front+Open 380.1, Cells 307.0
+2p	min-per-block: Open 315.2, front+Open 344.0, Cells 306.9
+pages	min-per-block: Open 282.6, front+Open 311.3, Cells 303.9
+w24r4	min-per-block: Open 281.5, front+Open 309.9, Cells 304.2
+both	min-per-block: Open 266.6, front+Open 295.4, Cells 306.6
+r4l16	min-per-block: Open 270.3, front+Open 299.9, Cells 309.5
+both2p	min-per-block: Open 311.0, front+Open 341.6, Cells 313.8
