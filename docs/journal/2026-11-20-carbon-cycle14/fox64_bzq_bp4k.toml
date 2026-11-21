@@ -1,0 +1,22 @@
+# Acquisition manifest for Direct-Pointer BipolarZQ + L1D-Budgeted Variable-Slot Fox64 + Value-Returned YMM BP4K (Cycle 14).
+name = "Direct-Pointer BipolarZQ + L1D-Budgeted Variable-Slot Fox64 + Value-Returned YMM BP4K (Fox64-BZQ-BP4K)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "directptr_bzq_fox64_elimination"
+inputs = ["C", "n", "p", "records"]
+output = "bzq_fox64_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Streams thin indices via direct per-symbol pointers cur_ptr[256]/cur_lim[256] into 1024-entry (+24 pad) zero-hole chunks hosted downward in the dead upper pole of edges[] (0 B queue allocation, 0 B lazy extra[], zero Runs.per[256] dependency, -63% worker scratch) while materializing L1D-budgeted variable-slot 16B/32B/64B Fox gradient-path words (Theorems 14.1-14.2)."
+
+[[edge]]
+id = "bzq_fox64_valret_ymm_bp4k_emit"
+inputs = ["bzq_fox64_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Decodes the reduced Fox return graph across 8 non-escaped prefetched lanes using 32 B / 64 B inline L1D stores and System V 2-register cold return into 4 KiB bipolar dead-out pages (BP4K_SAFE64 = 4032; Theorem 14.3), reaching <= 0.56x Open-qi16 across 6/6 Wikidata blocks while outperforming Cycle 13's RunsMeta speed kernel with 63% less scratch."

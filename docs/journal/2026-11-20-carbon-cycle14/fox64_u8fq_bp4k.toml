@@ -1,0 +1,22 @@
+# Acquisition manifest for L1D-Budgeted Variable-Slot Fox64 Dictionary + U8-AHT-FlatQ + Value-Returned 32B/64B BP4K (Cycle 14).
+name = "L1D-Budgeted Variable-Slot Fox64 Morse Dictionary + U8-FlatQ + Value-Returned YMM BP4K (Fox64-U8FQ-BP4K)"
+target = "text"
+uses = ["counts_from_records"]
+
+[[edge]]
+id = "u8fq_fox64_varslot_elimination"
+inputs = ["C", "n", "p", "records"]
+output = "fox64_return_edges"
+status = "verified"
+dependent = true
+cost = { W = "R + H + m", D = "H", B = "R + H + m", Q = "H", M = "m + H" }
+evidence = "Collapses thick LF strips (width >= 24) in the Fox free-monoid ring Z<Sigma*> via prefetched AHT-R4-DGIM (Theorem 14.1) and packs gradient-path words into an L1D-budgeted variable-slot inline16[] table (1 slot = 16 B for |w| <= 16, 2 slots = 32 B for 17 <= |w| <= 32 up to 47.2 KiB, 4 slots = 64 B for 33 <= |w| <= 64 up to 44.8 KiB < 48 KiB L1D; Theorem 14.2) with exact power-of-two bit-width bits = 32 - clz(m), preserving wide == 0 (0 B extra[]) across all r/n < 0.20 blocks."
+
+[[edge]]
+id = "fox64_valret_ymm_bp4k_emit"
+inputs = ["fox64_return_edges", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n + m", D = "m", B = "n + m", Q = "m", M = "n + m" }
+evidence = "Eliminates address-escaped lane spills and 16B->8B partial stack store-forwarding stalls via 2-register System V ABI value-returned cold handling (ValColdRet in rax:rdx), bits == 17/18 compile-time specialization, unconditional 32 B YMM stores for |w| <= 32 (95.1-100% of steps in 1 branch) plus inline 64 B stores for 33 <= |w| <= 64 inside 4 KiB bipolar dead-out pages (BP4K_SAFE64 = 4032, <= 256 KiB overflow; Theorem 14.3), achieving 0.38-0.52x Open-qi16 across 6/6 Wikidata blocks."
