@@ -152,3 +152,7 @@ required-features = ["owned-writer"]
 [[example]]
 name = "lever_counts"
 required-features = ["memory-lever"]
+
+[[example]]
+name = "astra_e"
+required-features = ["moonshot"]

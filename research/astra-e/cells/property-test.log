@@ -1,0 +1,15 @@
+   Compiling mibz2-moonshot v0.0.0 (/workspace/work/astra-e/bench/moonshot)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.69s
+     Running unittests src/main.rs (/workspace/work/cells-build/debug/deps/moonshot-5662b5ce9a543761)
+
+running 4 tests
+test candidate::checks::corpus_geometry ... ignored
+62286 marked columns, 7237 reconstructed by packed, 55049 declined
+test candidate::checks::all_small_marked_columns ... ok
+639 successful cap-boundary rotations with all 256 byte values
+test candidate::checks::long_caps_with_enough_position_space ... ok
+large cap-boundary controls: 0 passed among 3060
+test candidate::checks::run_caps_and_all_byte_values ... ok
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 6 filtered out; finished in 3.06s
+

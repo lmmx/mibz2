@@ -1,0 +1,17 @@
+29f98ee83b5096eb9c9b49ff5d10c31b4c2db348
+9c31461df7bef24cecf79348545b27ee26846835
+scorer path revision 9c31461
+0889129d7120386a246bb89b674786224a18b72ffdb6c5d09095c0b0dcd735a8  research/astra-e/cells/narrow/candidate.rs
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+Python 3.12.14
+400000 100000
+0-4
+INTEL(R) XEON(R) PLATINUM 8573C
+invocation: bash research/astra-e/score.sh narrow-pilot research/astra-e/cells/narrow/candidate.rs --workers 1\,4 --rounds 3 --settle 0 --quick --with-opend --no-proxy

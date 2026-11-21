@@ -1,0 +1,14 @@
+{
+  "candidate_commit": "0f25dee737432feafb03b8b14dc10afbf5c141ad",
+  "fetched_master": "9c31461df7bef24cecf79348545b27ee26846835",
+  "fetched_path_revision": "9c31461df7bef24cecf79348545b27ee26846835",
+  "fresh_path_checkout_status": 0,
+  "fresh_path_checkout_stderr": "",
+  "last_working_path_revision": "9c31461df7bef24cecf79348545b27ee26846835",
+  "selected_projection": "9c31461df7bef24cecf79348545b27ee26846835",
+  "selected_path_revision": "9c31461df7bef24cecf79348545b27ee26846835",
+  "selected_scorer_tree": "502dbf0cccc356563f216714dd7e22d16724e70c",
+  "reason": "registered upstream scorer is current",
+  "incompatibility_evidence": null,
+  "proceed": true
+}

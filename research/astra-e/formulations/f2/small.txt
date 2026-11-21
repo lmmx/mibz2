@@ -1,0 +1,1 @@
+columns_and_masks=12824, marks=80896, own=57236, fallback=23660

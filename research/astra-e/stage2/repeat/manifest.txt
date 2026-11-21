@@ -1,0 +1,16 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.01s
+210125c338a045e3b4047194267d967108660b8a
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-unknown-linux-gnu
+release: 1.99.1
+LLVM version: 23.1.1
+82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915  corpora/wikidata.bz2
+c8eb7cc5a73a955428c226cb981d9beb2dc511108c31af89b8eebcfe03199b79  research/astra-e/stage2/experiment.rs
+1e5a0b46b1dbe6176bf6f548922263040a7d88c343bbb4697de2a08f7e7e3ed3  research/astra-e/stage2/target/experiment
+same 11 frozen ordinals as stage 1; 21 recorded passes, seven arms; one warm pass
+wall and Linux thread CPU; no worker pool, MTF front, CRC or finish in either clock
+400000 100000
+pid 42931's current affinity list: 0-4
