@@ -1,0 +1,48 @@
+name = "Wormhole Cycle 14 Candidate: Kakutani Conjugate Thin-Run Streams (1-Stream u16 & 16-Stream 4+4+24 u32 in Dead out) vs OutQ16"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_kakutani_radix16_runlog"
+inputs = ["records", "C", "p", "n"]
+output = "strips_and_runlog"
+status = "verified"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + r_thin", Q = "r_thin", M = "H" }
+evidence = "Kakutani (1943) / McIlroy-Bostic-McIlroy (1993) 16-bucket (4b sym_lo | 4b (w-1) | 24b m) u32 run-token log in dead out: 16 streams <= 32-page streamer & 64-DTLB, 0 epoch cuts."
+
+[[edge]]
+id = "s2_master_rv_elim"
+inputs = ["strips_and_runlog", "C", "n"]
+output = "eliminated_arena"
+status = "shipped"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Identical to origin/master src/open/endpoint.rs Elim::eliminate (held fixed in Cycle 14 A/B)."
+
+[[edge]]
+id = "s3_master_bands_slp_inline16"
+inputs = ["eliminated_arena", "strips_and_runlog"]
+output = "bands_and_inline16"
+status = "shipped"
+dependent = true
+cost = { W = "B_bands + dict", D = "H", B = "B_bands + dict", Q = "H", M = "B_bands + dict" }
+evidence = "Identical to origin/master induced() + inline_words() (held fixed in Cycle 14 A/B)."
+
+[[edge]]
+id = "s4_kakutani_band_cursor_wire"
+inputs = ["bands_and_inline16", "strips_and_runlog", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m + r_thin", Q = "r_thin", M = "m" }
+evidence = "Replays r_thin run tokens across 16 active symbol cursors per nibble pass into edges[dest..dest+span]."
+
+[[edge]]
+id = "s5_master_emit"
+inputs = ["critical_edges", "bands_and_inline16", "p", "n"]
+output = "text"
+status = "shipped"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Identical to origin/master emit() (held strictly fixed so A/B isolates pre-emit S1+S4)."
