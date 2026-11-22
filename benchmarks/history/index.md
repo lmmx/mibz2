@@ -516,6 +516,10 @@ Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lm
 
 22 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0513---2026-11-22>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.12...v0.5.13>)
 
+- A faster block reader: 2% faster on one thread, and 11–14% faster at 8–10 threads (\#745).
+- The worker counts are unchanged. The recalibration ran on master at \#739 and \#745.
+- Features reviewed: none was removed in this release.
+
 **Changes:** portable CRC sliced by 16, its lookups XORed as a balanced tree ([\#763](<https://github.com/lmmx/mibz2/pull/763>)); the default path's block reader from Carbon's cycle 37: an L1-resident Huffman decoder and leaner block headers ([\#745](<https://github.com/lmmx/mibz2/pull/745>)); Wormhole's plateau stack: owned run-route output, in-place RLE1, tiled CRC, a 12 MiB ready cap and a ready ring ([\#739](<https://github.com/lmmx/mibz2/pull/739>)).
 
 ### 0.5.12
