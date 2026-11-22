@@ -203,6 +203,12 @@ jobs:
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py
+      # bench-block-reader-on-wormhole's verdict (bench/block_reader_on_wormhole.py, a wrapper
+      # around bench/parscan_c37.py's BLOCK-READER decision) on synthetic runs: the verdict where
+      # the registration puts it, the composition report deciding nothing, and no verdict from
+      # incomplete or malformed records
+      - name: The block-reader-on-wormhole verdict (synthetic runs)
+        run: python3 bench/test_block_reader_on_wormhole.py
       # bench-cells-imc's statistic, rule and validity (bench/cells_imc.py) on synthetic
       # readings, and its collection driven end to end with stand-ins for ab and perf
       - name: The working-set premise test's verdict
