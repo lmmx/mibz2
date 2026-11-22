@@ -1310,20 +1310,6 @@ fn decode(
             last();
             Ok(())
         }
-        "mibz2-parscan" if threads == 1 => drain(mibz2::BzReader::new(open()?), h, last),
-        "mibz2-parscan" => {
-            let data = std::fs::read(path).map_err(|e| e.to_string())?;
-            mibz2::par_scan::decode_parallel_slice_with(
-                &data,
-                threads,
-                mibz2::parallel::SLOTS_PER_THREAD * threads,
-                mibz2::Kernels::detect(),
-                |chunk| h.update(chunk),
-            )
-            .map_err(|e| e.to_string())?;
-            last();
-            Ok(())
-        }
         #[cfg(mibz2_alternatives)]
         "fbz" => {
             let opts = fbz::DecodeOptions {
