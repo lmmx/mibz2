@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 50: Round 5 Final Handoff — Breaking the i9-10900K 8-20T Wall-Time Plateau (Cycles 31-50)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c50_round5_final_handoff"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "39-43 ms (10T i9 Regime 2) / 36-38 ms (+R4 Open)", B = "3.66 B/B (10W P2 vs 10.82 B/B v0.5.12)", Q = "0", M = "50.8 MiB RSS (10W, -57%) / 18.5-26.0 MiB L3" }
+evidence = "20-cycle Round 5 synthesis (Cycles 31-50, 14 promoted + 14 honestly killed, zero Mechanisms scan duplication): breaks v0.5.12's 68-73 ms 8-20T i9 plateau via WormholeScaleDecoder (exact_out_cap + 1 MiB feeder pool + O(1) ring/split-CV/VecDeque + BufRead ZC + W0 full-pool sep + Emit-to-Out/InPlaceRLE/L2-Tiled CLMUL + W1 immed syms + 12 MiB ready cap + ParScan-coupled TLS/atomic steal + L1_AtomicFast). Native safe-Rust 4W = 0.8935-0.9082x (Regime 2) / 0.9221-0.9413x (Regime 1), 10W = 0.8524x (sys -67..-77%, minflt -68..-71%, vcsw -70..-72%, RSS -49..-57%), bzcat = 0.9043x, decode_parallel_chunks = 0.8586x; models 10T i9 critical path at 39-43 ms (36-38 ms with R4 WormholeNeonCells) and delivers ordered 6-PR Coordinator Port Spec."
