@@ -1,0 +1,48 @@
+name = "Wormhole/Neon Cycle 28: S3+S4 Audit — Ground-Truth Dedup Collision Census, 2-Way Set-Associative str_ht, and #703 Dense Analysis"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_all_pos_mux"
+inputs = ["records", "C", "p", "n"]
+output = "mux_strips_and_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Pass-1 All+Pos + MuxStrips in edges[0..3*ns] (Cycle 27 confirmed AVX2 floor)."
+
+[[edge]]
+id = "s2_graded_operad"
+inputs = ["mux_strips_and_outq16", "C", "n"]
+output = "graded_operad_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Cycle 23 G2 GradedOperad ((len10<<22)|id22 + Operad-MN16)."
+
+[[edge]]
+id = "s3_2way_dedup_audit"
+inputs = ["graded_operad_arena", "mux_strips_and_outq16"]
+output = "band64_and_l1d_dict"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict_long", D = "H / 2", B = "B_bands + dict_long", Q = "H", M = "B_bands + dict_long" }
+evidence = "Measures exact HashSet ground-truth unique count vs direct-mapped 4K str_ht, D1 2-way 4K str_ht, D2 2-way 8K str_ht, and D3 S3 literal-1 fast-path (all 0 B scratch in dead edges)."
+
+[[edge]]
+id = "s4_hoisted_wire_len4"
+inputs = ["band64_and_l1d_dict", "mux_strips_and_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Cycle 25 E2h hoisted S4 wire; tests whether 2-way dedup unlocks GPR Len4 on additional blocks (U <= 1024)."
+
+[[edge]]
+id = "s5_emit_zerospill_len4"
+inputs = ["critical_edges", "band64_and_l1d_dict", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Cycle 24/25 E2h ZeroSpill + GPR Len4 emit (mu=1 floor)."
