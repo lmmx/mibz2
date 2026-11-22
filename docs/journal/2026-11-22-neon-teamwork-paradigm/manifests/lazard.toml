@@ -1,0 +1,24 @@
+name = "Lazard-BWT (Two-Sided Batched Quotient Contraction)"
+target = "text"
+
+uses = [
+  "maximal_runs",
+]
+
+[[edge]]
+id = "lazard_contraction_slp"
+inputs = ["runs", "C", "n", "p"]
+output = "lazard_slp"
+status = "verified"
+dependent = true
+cost = { W = "sum_steps (|F_x| + |U_x|) [measured 2.8-3.2r on Wikidata; worst-case Omega(n) on middle-delimiter BWT]", D = "D_rounds [measured 450-883 on Wikidata; worst-case Omega(n)]", B = "O(r)", Q = "sum_steps (nonseq_fx + ux_splices) [measured 1.0-1.3r dependent list/symbol hops]", M = "O(r) [measured 1.5-3.9 MiB]" }
+evidence = "Verified exact on valid BWTs + all 6 Wikidata blocks; worst-case Theta(n) steps & symbols on middle-delimiter BWT."
+
+[[edge]]
+id = "lazard_slp_emit"
+inputs = ["lazard_slp", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "h [measured 267-768]", B = "n", Q = "O(r) first-occurrence memcpys", M = "n + O(r)" }
+evidence = "First-occurrence-memcpy DFS emission into T[n]."

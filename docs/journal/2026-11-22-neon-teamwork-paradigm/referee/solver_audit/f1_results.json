@@ -1,0 +1,110 @@
+[
+  {
+    "n": 5,
+    "sig": 3,
+    "valid_bwt": true,
+    "vars": 433,
+    "clauses": 1908,
+    "status": "UNSAT",
+    "sec": 0.0024,
+    "proof": null
+  },
+  {
+    "n": 6,
+    "sig": 3,
+    "valid_bwt": true,
+    "vars": 603,
+    "clauses": 2947,
+    "status": "UNSAT",
+    "sec": 0.0041,
+    "proof": null
+  },
+  {
+    "n": 7,
+    "sig": 3,
+    "valid_bwt": true,
+    "vars": 800,
+    "clauses": 4294,
+    "status": "UNSAT",
+    "sec": 0.0059,
+    "proof": null
+  },
+  {
+    "n": 8,
+    "sig": 3,
+    "valid_bwt": true,
+    "vars": 1024,
+    "clauses": 5988,
+    "status": "UNSAT",
+    "sec": 0.0129,
+    "proof": {
+      "cnf": "/tmp/teamwork-referee/solver_audit/f1_n8_s3_validbwt.cnf",
+      "drat": "/tmp/teamwork-referee/solver_audit/f1_n8_s3_validbwt.drat",
+      "drat_lines": 1767
+    }
+  },
+  {
+    "n": 6,
+    "sig": 4,
+    "valid_bwt": true,
+    "vars": 703,
+    "clauses": 3683,
+    "status": "UNSAT",
+    "sec": 0.0041,
+    "proof": null
+  },
+  {
+    "n": 7,
+    "sig": 4,
+    "valid_bwt": true,
+    "vars": 931,
+    "clauses": 5329,
+    "status": "UNSAT",
+    "sec": 0.006,
+    "proof": null
+  },
+  {
+    "n": 7,
+    "sig": 3,
+    "valid_bwt": false,
+    "vars": 367,
+    "clauses": 1614,
+    "status": "UNSAT",
+    "sec": 0.0037,
+    "proof": null
+  },
+  {
+    "n": 8,
+    "sig": 3,
+    "valid_bwt": false,
+    "vars": 457,
+    "clauses": 2185,
+    "status": "UNSAT",
+    "sec": 0.0073,
+    "proof": null
+  },
+  {
+    "n": 9,
+    "sig": 3,
+    "valid_bwt": false,
+    "vars": 556,
+    "clauses": 2876,
+    "status": "UNSAT",
+    "sec": 0.0121,
+    "proof": {
+      "cnf": "/tmp/teamwork-referee/solver_audit/f1_n9_s3_arbcol.cnf",
+      "drat": "/tmp/teamwork-referee/solver_audit/f1_n9_s3_arbcol.drat",
+      "drat_lines": 1188
+    }
+  },
+  {
+    "n": 10,
+    "sig": 3,
+    "valid_bwt": false,
+    "vars": 664,
+    "clauses": 3699,
+    "status": "UNSAT",
+    "sec": 0.0255,
+    "proof": null
+  }
+]

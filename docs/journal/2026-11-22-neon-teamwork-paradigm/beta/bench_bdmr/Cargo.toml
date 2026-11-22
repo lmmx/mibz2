@@ -1,0 +1,13 @@
+[package]
+name = "bench_bdmr"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+mibz2 = { path = "../../../../..", features = ["moonshot"] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1

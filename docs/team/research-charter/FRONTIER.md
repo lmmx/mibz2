@@ -46,11 +46,11 @@ An obstruction with no stated scope is not established. Not every failure yields
 
 | Obligation | Evidence | Open question | Status |
 |---|---|---|---|
-| Dependent traversal of retained rows | Open: about one dependent load per retained row (≈ one per ten output bytes); emission 36–48% of time (#653) | Can output-order relations be resolved collectively, without a producer as expensive as the walk? | open |
-| Building the retained map | Open's run pass and queue fill 28–36%; queued wiring 23–28% (#653). Compression (Q) and fusion (F) lost (#654) | Can the map be produced in the direction its consumer needs, so no inversion scatter is required? Queue-Free Backward Open failed natively (#659, 1.10–1.15× `qi16`). It does recover a quarter to two fifths of `i16`'s loss. The second pass over the run records is the cost | open |
+| Dependent traversal of retained rows | Open: about one dependent load per retained row (≈ one per ten output bytes); emission 36–48% of time (#653). Teamwork (`research/neon-teamwork-paradigm`): `BSAC(256, K=8)` overlaps 8 zero-bitmap anchor chains at `1.000m` exact random loads (`0.93×` 1T / `0.75–0.77×` 4W emit on 2 MiB-L2 Xeon; i9 port candidate). Non-walk `BDMR` (`12.35×`), `Lazard` (`2.8–4.4×`), `MF-BSE` (`3.27×`), `LazyTunnel` (`1.28×`), and `ZeroRV-Tunnel` (`1.14–2.09×`) all lost natively at `n <= 900k` | Can `BSAC(256, K=8)` hold its 4W win under 6–10T shared-L3 contention on the 256 KiB-L2 i9 (vs Relay8 #705)? | open; i9 port candidate (`BSAC`) |
+| Building the retained map | Open's run pass and queue fill 28–36%; queued wiring 23–28% (#653). Compression (Q) and fusion (F) lost (#654). Teamwork (`Eta`): feeding uncapped maximal runs (`u16` + `0.77%` overflow) from `runs::front_avx2` directly to Open removes `1.18M` split records and `maximal()`, cutting Open Pass 1 by `-19.1%` (`-13.9 ms` across 431 blocks, `0` scanner impact). `Zeta` (`XB-SLP`): `91.16%` exact RV tree reuse across consecutive blocks gives `-4.5%` kernel 1T (`0.9554×`), flat at 4W (`0.9946×` vs AA) | Can uncapped maximal runs ship cleanly alongside `runs::front_avx2` without regressing `LazyCells`? | open; positive measurement (`Eta`, `Zeta`) |
 | Acquiring the Φ-overlap coordinates | The overlap structure is small: 1.25–1.37r transitions on the six blocks (Neon cycle 1). The known route via run-boundary positions costs Cells' 1.68–1.87r steps (record 81) | Can those coordinates come out of a cheaper computation, or out of an earlier representation? | open; positive measurement |
 | Full-block metadata | Grammar and interval-exchange machines carry 40–100 B per run across all r runs, mostly width-1 runs (Neon cycle 1; Astra D) | Can a primitive avoid per-run global state? | open |
-| Starting from the decoded column | Every kernel begins from run records after Huffman, MTF and RLE2 decoding | Does an earlier representation carry ordering information more cheaply? | unexplored |
+| Starting from the decoded column | Teamwork (`Eta`): proved EOB Causal Barrier (Thm H1: no Stage 3+ can start before EOB) and RLE2–MTF semidirect-product commutation (Thm H2). Full Huffman+MTF+Pass1 fusion (`HuffMonoidBL-v2`) regressed `mibz2-scan` by `+45%` (`1.185×` e2e 1T, `1.186×` 4W) because `block::read_item`'s 5-cycle shift chain beats serial monoid ALU state and `front_avx2`'s `pshufb` beats GPR MTF | Can a bit-accumulator Huffman LUT emit `(lit_mask, one_mask)` directly at `<= 74.5 ms` scanner time without serial RLE2 arithmetic? | partially closed (Thm H1 + `#666`/Eta fusion kill) |
 | Writing every output byte | Unavoidable; sets the floor | (bounds the others) | floor |
 
 ## Steering log
@@ -116,6 +116,37 @@ Do not rediscover these; build on them.
 | LIMIT=16 is best; per-block choice gains ≤ 1% even with hindsight | Thin/thick threshold tuning | #657 |
 | Computing LF from a compact rank structure instead of storing the edges costs about four chained dependent loads per step against Open's one | Implicit-rank (FM-index-style) successors as a replacement for Open's explicit edges, single-threaded. This is the known medium-space inverse BWT trade (Lauther–Lukovszki 2005; Kärkkäinen–Puglisi, ESA 2010) | Neon cycle 5, `research/neon-bipolar-contraction` 4598c5bf: BSO-512 2.48–2.80× Open in its C harness; the Coordinator reproduced 1.71–2.44× on another machine. Its memory and DRAM savings (0.36–0.75×) don't pay for it |
 | Histogram non-identifiability: same run histogram, Θ(n)-different spelling cost | Predicting construction cost from run statistics alone | Neon (unverified by MONODROMY) |
+| Model-independent `L`-completeness under uniform `TC⁰` (`Phi_BWT`, `Phi_BWT_bin`) and unconditional read-only streaming lower bound `S = Ω(r / (L p⁴))` (`Hairpin-Closed Phi_BWT^{(2)}`, breaking `A_sem`) | `O(1)`-depth global coordinate formulas (`TC⁰`, and `NC¹` unless `NC¹ = L`); sublinear-space read-only multi-pass streaming without writeable intermediate streams | Teamwork (`Gamma` + `Referee`, `research/neon-teamwork-paradigm`, [journal](../../journal/2026-11-22-neon-teamwork-paradigm.md)): proved, verified on 2,830 + 432 cases + DRAT-certified `N=3, t=4, p=2` separation |
+| 3-byte global sensitivity (`d_H(L_1, L_2) = 3` flips global order while keeping `Θ(n)`-radius `LF`/`FL` neighborhoods identical on `M-3` tokens) | Local `k`-context, 2-gram, and UUID format-landmark global placement without global connectivity | Teamwork (`Epsilon` Thm E1, `research/neon-teamwork-paradigm`): proved & verified; Wikidata UUID 2-grams have `71–160×` avg multiplicity |
+| Density-ratio obstruction (`Q_round / |D| ≈ β / (α w̄)`) and `60×–140×` thin-tunnel leverage collapse (`1.59–3.64` vs `223.3 rows/strip`, even `TunRec = 0 ms` loses `2.3–3.5×`) | Symbol-level BWT recompression (`Lazard`, `1Cut`, `BDMR`, `Open × BDMR` post-Open `w̄ = 1.62–2.22 < 3`) and BWT tunneling (`LazyTunnel`, `ZeroRV-Tunnel`) beating `OpenCells` on L2/L3-resident `n <= 900k` | Teamwork (`Alpha`, `Beta`, `Delta`, `research/neon-teamwork-paradigm`): safe-Rust A/B + A/A vs `OpenCells` 0.5.11 (`1.14×–12.35×` slower) + CP-SAT/Dijkstra global schedule optimum (`BDMR` within `4–30%`) |
+| Cross-block width-1 indistinguishability (`n=82, d_H=3` valid BWT) & coordinate independence (`0 / 21,862` exact `LF` shift matches); EOB causal barrier | Cross-block reuse replacing `Open`'s `emit` or `elim` coordinate tracking; starting Stage 3+ before EOB or slowing `mibz2-scan` via Huffman-monoid fusion | Teamwork (`Zeta` Thms Z2–Z3, `Eta` Thm H1, `research/neon-teamwork-paradigm`): proved & measured on 431-block `corpora/wikidata.bz2` |
+
+## Foundational
+
+Formulations worth developing even when their first implementation loses. This list is distinct
+from the rejected kernels below: an entry here is kept for its mathematics, and a lost benchmark
+does not remove it. An entry leaves only when its audit fails or an obstruction with a stated
+scope covers it.
+
+| Formulation | Known against it | Source | Status |
+|---|---|---|---|
+| **Direct BWT-space contraction algebra:** `Lazard-BWT` ↔ `1Cut-BWT` ↔ `BDMR`, classified by the cut number `κ(Σ_L, Σ_R)` (zero bucket splits iff `κ = 1`); compiles the block into a balanced SLP with no `LF` orbit chasing | Density ratio: contraction rounds pay only for mean width `w̄` above about 3–4, and post-Open `w̄` is 1.6–2.2; this is a model of materialised contraction costs. `Symmetric-Middle-Run` (`K=64, n=4224, r=130`) forces Θ(n) `Lazard` work. Forward polarity is unique within its theorem's contraction class (Dual-Polarity Obstruction) | Teamwork (`Alpha`, `Beta`), [journal](../../journal/2026-11-22-neon-teamwork-paradigm.md) §3 | under MONODROMY audit (#346, comment 7073621502); conjectural until then |
+| **Gamma's G1:** `L`-completeness of `Phi_BWT` (and `Phi_BWT_bin`) under uniform `TC⁰` reductions | Rules out `O(1)`-depth global coordinate formulas (and `NC¹` unless `NC¹ = L`); says nothing about constant factors at `n <= 900k` | Teamwork (`Gamma` + `Referee`), [journal](../../journal/2026-11-22-neon-teamwork-paradigm.md) | under audit |
+| **Gamma's G2:** read-only `p`-pass streaming lower bound `S = Ω(r / (L p⁴))` (`Hairpin-Closed Phi_BWT^{(2)}`) | Covers read-only multi-pass streaming only: not read-write streams, not RAM | Teamwork (`Gamma` + `Referee`; DRAT-certified `N=3, t=4, p=2` separation), [journal](../../journal/2026-11-22-neon-teamwork-paradigm.md) | under audit |
+
+## Engineering status
+
+Kernels from the research tracks, and where each stands on the way to production.
+
+| Kernel | Status |
+|---|---|
+| `BSAC(256, K=8)` (8 overlapped zero-bitmap anchor chains; `0.93×` 1T / `0.75–0.77×` 4W emit on the 2 MiB-L2 Xeon) | porting to `src/open` behind feature `open-bsac`; i9 registration to come |
+| `Eta` uncapped maximal runs (`-19.1%` Open Pass 1, no scanner change) | port after Kitchen Sink's Neon stack (cycles 36–45) lands, since it overlaps the S1/maximal code |
+| `Zeta` `XB-SLP` (cross-block RV tree reuse; `0.955×` 1T kernel) | reserve: flat at 4W from per-worker state; a shared-table variant is open |
+
+**Rejected as production kernels:** `Lazard-MAX`, `BDMR` Greedy, Hybrid and Standalone `MF-BSE`,
+`LazyTunnel`, `ZeroRV-Tunnel`, `HuffMonoid` fusion. Their theorems stand; the kernels lose
+1.1–15× natively.
 
 ## Connections not yet explored
 
@@ -145,3 +176,4 @@ why, and what was promoted.
 |---|---|---|---|---|
 | 2026-11-19–20 | Neon rounds 1–7 and follow-ups; the Coordinator | parallel induction; boundary samples; copy replay; NSPC; DOE; Open micro-optimisations; LIMIT | see CONTEXT.md §4 | none to production; Open shipped (0.5.7) from the Astra line |
 | 2026-11-20 | Neon cycles 3–5 (branch `research/neon-bipolar-contraction`, 4598c5bf; not yet audited beyond BSO's timing) | bucketed Schur; unsplit forest; output-sourced anchors; bit-sliced implicit Open (BSO) | anchors (width-1 runs collapse interval certificates); BSO (serial rank latency, above) | none; Neon paused |
+| 2026-11-22 | Neon Teamwork (`research/neon-teamwork-paradigm`, [journal](../../journal/2026-11-22-neon-teamwork-paradigm.md); 7 investigators + Adversarial Referee + SAT/CP-SAT audit) | `Lazard-BWT`, `1Cut-BWT`, `BDMR` + `Open × BDMR` hybrid + CP-SAT/Dijkstra global schedules; `Phi_BWT` `TC⁰`/read-only streaming bounds + `MF-BSE`; `LazyTunnel`/`ZeroRV-Tunnel`; `Thm E1` + `BSAC(256,K=8)`; cross-block `XB-Cert`/`XB-SLP`; whole-pipeline `HuffMonoidBL-v2` + uncapped maximal runs | All full non-walk replacements at `n <= 900k` (`Lazard` `2.8–4.4×`, `BDMR` `12.35×`, `MF-BSE` `3.27×`, `LazyTunnel` `1.28×`, `ZeroRV-Tunnel` `1.14–2.09×`, `Open × BDMR` `w̄ < 3`); `XB-Cert` (`1.24` rank/saved); `HuffMonoidBL` (`+45%` scanner) | **Mathematics:** `Phi_BWT` `L`-completeness & `Ω(r/(Lp⁴))` read-only streaming LB (for post-handoff audit), unified `(κ,e)` BWT-space recompression + `MF-BSE` (`O(m/B)` tall-cache). **Engineering candidates:** `BSAC(256,K=8)` (`0.93×` 1T / `0.75–0.77×` 4W emit, `1.000m` exact loads, i9 port candidate), uncapped maximal runs (`-19.1%` Pass 1, `0` scanner Δ), `XB-SLP` (`0.955×` 1T kernel, flat 4W) |

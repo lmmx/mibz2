@@ -1,0 +1,24 @@
+name = "BDMR (BWT-Direct Monotone Recompression, Variant B-Parallel)"
+target = "text"
+
+uses = [
+  "maximal_runs",
+]
+
+[[edge]]
+id = "bdmr_contraction_slp"
+inputs = ["runs", "C", "n", "p"]
+output = "bdmr_slp"
+status = "verified"
+dependent = false
+cost = { W = "sum_t (r_t + sigma_t) [measured 4.06-4.34r on Wikidata]", D = "O(log n) [measured 25-26 greedy / 42-44 parallel rounds]", B = "sum_t r_t [4.1-4.3r]", Q = "sum_t r_t independent bucket-stream reads [0 dependent chases]", M = "O(r + |rules|) [measured 1.5-3.4 MiB]" }
+evidence = "Verified exact on all 5,227 binary/ternary small cases + adversarial mixed-sign/fixed-point columns + all 6 authenticated Wikidata blocks. Note: worst-case self-run DFS stack is O(r_B^2) without queue coalescing."
+
+[[edge]]
+id = "bdmr_slp_emit"
+inputs = ["bdmr_slp", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "O(log n) [height 25-41]", B = "n", Q = "O(leaves_L) [~0.35r-0.65r leaf copies at L<=32]", M = "n + O(|rules|)" }
+evidence = "Top-down truncated SLP expansion (small-rule table + memcpy) or first-occurrence memcpy; balanced height 25-41 on all 6 Wikidata blocks."
