@@ -1,0 +1,33 @@
+{
+  "component": "romanesque_coiled_dragon_roundel",
+  "source_ref": "docs/art/bestiary/refs/louis/1-coiled-dragon-roundel.jpg",
+  "source_style": "Romanesque manuscript illumination",
+  "date_range": "12th-13th century",
+  "medium": "ink and opaque mineral pigment on gilded parchment",
+  "outline_character": "heavy, subtly irregular variable-width iron-gall contours",
+  "anatomy": "inward-spiralling ribbon body, blunt upturned hound-dragon muzzle, tall pointed pale ears, sideways almond eye, diagonal pinion & sage leaf wing, two awkward gripping feet",
+  "assemblies": [
+    "roundel-outer-tail-coil (static ground truth)",
+    "roundel-inner-coil (subtle breath tighten)",
+    "roundel-head (skull, jaw, ears, eye/lid)",
+    "roundel-wing (pinion fan + sage leaf covert)",
+    "roundel-feet-assembly (right & bottom gripping feet)"
+  ],
+  "palette": [
+    "madder-wine",
+    "deep-wine",
+    "parchment-ivory",
+    "sage-green",
+    "crimson",
+    "iron-gall ink"
+  ],
+  "compatible_with": [
+    "Romanesque serpentine coils",
+    "Romanesque folded wings",
+    "Romanesque illuminated initials"
+  ],
+  "stages": {
+    "stage_a_master": "traced/romanesque-roundel-master.svg",
+    "stage_c_animated": "traced/romanesque-roundel-animated.svg"
+  }
+}
