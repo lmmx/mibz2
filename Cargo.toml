@@ -92,6 +92,8 @@ owned-writer = []
 # Changes that visibility and nothing else; never on a production path. Retain while the
 # scorer is in use
 moonshot = []
+# Opt-in EOF worker experiment and its correctness/measurement harness.
+spod = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source

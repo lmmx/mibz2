@@ -857,7 +857,7 @@ fn repeat(n: usize, out: &mut Vec<u8>) {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, all(feature = "spod", feature = "moonshot")))]
 fn records_of(l: &[u8]) -> Vec<u16> {
     let mut recs = Vec::<u16>::new();
     for &b in l {
@@ -871,6 +871,9 @@ fn records_of(l: &[u8]) -> Vec<u16> {
     }
     recs
 }
+
+#[cfg(any(test, feature = "spod"))]
+pub(crate) mod spod;
 
 mod endpoint;
 mod outq;

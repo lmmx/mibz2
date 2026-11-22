@@ -145,6 +145,8 @@ fn team(
         slots: n.max(1),
         overlapped: AtomicU64::new(0),
         overlap_errors: AtomicU64::new(0),
+        #[cfg(feature = "spod")]
+        spod_blocks: AtomicU64::new(0),
         faults: Mutex::new(Faults {
             at: Some(fault),
             min_coop,

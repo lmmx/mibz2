@@ -435,6 +435,16 @@ pub fn decode_block<I: bwt::InverseBwt>(
     s: &mut Scratch<I>,
     out: &mut Vec<u8>,
 ) -> Result<u32, ErrorKind> {
+    decode_block_runs(b, k, s, out, I::invert_runs)
+}
+
+fn decode_block_runs<I: bwt::InverseBwt>(
+    b: &block::Symbols,
+    k: Kernels,
+    s: &mut Scratch<I>,
+    out: &mut Vec<u8>,
+    invert_runs: impl FnOnce(&mut I, &runs::Runs, usize, u32, &mut Vec<u8>, Kernels) -> bool,
+) -> Result<u32, ErrorKind> {
     let cooperative = s.inverse.wants_checkpoints();
     // a block of few symbols, for a kernel that can: its table from its run records, with no
     // last column (src/runs.rs). Its output goes to `ll`, as an in-place kernel's would
@@ -450,7 +460,7 @@ pub fn decode_block<I: bwt::InverseBwt>(
             n as u64,
             trace::UNREAD,
         );
-        let done = s.inverse.invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k);
+        let done = invert_runs(&mut s.inverse, &s.runs, n, b.orig_ptr, &mut s.ll, k);
         #[cfg(feature = "trace")]
         trace::mark(trace::Kind::InvertEnd, trace::NONE);
         if done {

@@ -1,6 +1,7 @@
 //! The parallel decoder as a command, for timing it against lbzip2 alone:
 //! `cargo run --release --example bzcat -- THREADS [SLOTS] < in.bz2 > out` (BUNZIP_SIMD=off: the scalar kernels).
 //! Exits 1 with the error on a bad stream, after writing every block before it.
+//! BZ2_INVERSE=spod selects the idle seed-pool experiment (requires the spod feature).
 //! BZ2_INVERSE=plain: the plain walk in place of the segmented one (bwt::InverseBwt).
 
 use std::io::{Read, Write};
@@ -17,6 +18,10 @@ fn main() {
         _ => mibz2::Kernels::detect(),
     };
     let dec = match std::env::var("BZ2_INVERSE").as_deref() {
+        #[cfg(feature = "spod")]
+        Ok("spod") => mibz2::StreamDecoder::spod_workers(threads, slots, k),
+        #[cfg(not(feature = "spod"))]
+        Ok("spod") => panic!("BZ2_INVERSE=spod requires --features spod"),
         Ok("plain") => mibz2::StreamDecoder::with_inverse::<mibz2::bwt::Plain>(threads, slots, k),
         _ => mibz2::StreamDecoder::new(threads, slots, k),
     };

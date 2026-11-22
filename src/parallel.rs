@@ -95,6 +95,8 @@ struct Shared {
     /// leader while its helpers inverted another block, and those of them that failed
     overlapped: AtomicU64,
     overlap_errors: AtomicU64,
+    #[cfg(feature = "spod")]
+    spod_blocks: AtomicU64,
     /// testing only: the pipelined team's injected faults, and what they left
     #[cfg(test)]
     faults: Mutex<Faults>,
@@ -371,10 +373,60 @@ impl StreamDecoder {
         k: Kernels,
     ) -> StreamDecoder {
         let mut dec = Self::launch(threads, slots, move |shared, jobs| {
-            worker::<I>(shared, jobs, k)
+            worker(shared, jobs, k, decode_block::<I>)
         });
         dec.kernel = std::any::type_name::<I>();
         dec
+    }
+
+    /// Experimental workers. Once EOF is known, one admitted Open block can borrow
+    /// the idle worker budget for its seed walks. Before EOF, and with a full window
+    /// of unfinished or unread blocks, these use the ordinary workers' kernel.
+    #[cfg(feature = "spod")]
+    #[doc(hidden)]
+    pub fn spod_workers(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
+        fn launch<I: super::bwt::InverseBwt>(
+            threads: usize,
+            slots: usize,
+            k: Kernels,
+        ) -> StreamDecoder {
+            // Only one block borrows idle lanes at once. Keep its construction scratch
+            // here too, so there is at most one extra Open table for the whole decoder.
+            let spare = Arc::new(Mutex::new(crate::open::Kernel::default()));
+            StreamDecoder::launch(threads, slots, move |shared, jobs| {
+                worker(shared, jobs, k, |b, k, scratch: &mut Scratch<I>, out| {
+                    super::decode_block_runs(b, k, scratch, out, |base, runs, n, p, out, k| {
+                        if let Some(cap) = crate::open::OpenCells::cap(runs.records().len(), n, p) {
+                            let lanes = {
+                                let st = shared.lock();
+                                tail_lanes(threads, st.end, st.issued - st.taken)
+                            };
+                            if lanes > 1 {
+                                if let Ok(mut kernel) = spare.try_lock() {
+                                    if kernel.spod(runs.records(), n, p, cap, lanes, out) {
+                                        shared.spod_blocks.fetch_add(1, Ordering::Relaxed);
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                        base.invert_runs(runs, n, p, out, k)
+                    })
+                });
+            })
+        }
+        if Plan::Workers(threads).lazy() {
+            launch::<crate::bwt::OpenCells>(threads, slots, k)
+        } else {
+            launch::<crate::bwt::Cells>(threads, slots, k)
+        }
+    }
+
+    /// Number of blocks completed by the seed-pool route (experiment census).
+    #[cfg(feature = "spod")]
+    #[doc(hidden)]
+    pub fn spod_blocks(&self) -> u64 {
+        self.shared.spod_blocks.load(Ordering::Relaxed)
     }
 
     /// Research, opt-in, not the default: `teams` pipelined teams of `k` threads (at least
@@ -463,6 +515,8 @@ impl StreamDecoder {
             slots,
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
+            #[cfg(feature = "spod")]
+            spod_blocks: AtomicU64::new(0),
             #[cfg(test)]
             faults: Mutex::default(),
         });
@@ -728,7 +782,27 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
     // fails, and the workers end once the jobs queued are done)
 }
 
-fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels) {
+#[cfg(any(test, feature = "spod"))]
+fn tail_lanes(threads: usize, end: Option<u64>, outstanding: u64) -> usize {
+    // No further issue after end, so this budget can only grow during a walk.
+    if end.is_some() && outstanding > 0 && outstanding < threads as u64 {
+        threads - outstanding as usize + 1
+    } else {
+        1
+    }
+}
+
+fn worker<I: super::bwt::InverseBwt>(
+    shared: &Shared,
+    jobs: &Mutex<Receiver<Job>>,
+    k: Kernels,
+    mut decode: impl FnMut(
+        &super::block::Symbols,
+        Kernels,
+        &mut Scratch<I>,
+        &mut Vec<u8>,
+    ) -> Result<u32, ErrorKind>,
+) {
     let mut scratch = Scratch::<I>::default();
     loop {
         mark!(JobLock);
@@ -761,7 +835,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
         #[cfg(feature = "phase-counters")]
         crate::phase::whole_begin();
         let res = catch_unwind(AssertUnwindSafe(|| {
-            decode_block(&symbols, k, &mut scratch, &mut out)
+            decode(&symbols, k, &mut scratch, &mut out)
         }));
         #[cfg(feature = "phase-counters")]
         crate::phase::whole_end();
@@ -1899,6 +1973,8 @@ impl StreamDecoder {
             slots,
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
+            #[cfg(feature = "spod")]
+            spod_blocks: AtomicU64::new(0),
             #[cfg(test)]
             faults: Mutex::default(),
         });
@@ -3355,6 +3431,8 @@ mod service_tests {
             slots: 4,
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
+            #[cfg(feature = "spod")]
+            spod_blocks: AtomicU64::new(0),
             faults: Mutex::default(),
         }
     }
@@ -3625,6 +3703,8 @@ mod service_tests {
             slots: 4,
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
+            #[cfg(feature = "spod")]
+            spod_blocks: AtomicU64::new(0),
             faults: Mutex::default(),
         };
         let h = hub(1, 2);
@@ -6350,6 +6430,18 @@ mod plan_tests {
         for t in [1, 2, 4, 6, 8, 64] {
             let p = Plan::for_threads(t);
             assert!(p.threads() <= t.max(1), "{t}: {p:?}");
+        }
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn spod_tail_budget() {
+    for threads in [1, 2, 4, 8, 10] {
+        for outstanding in 1..=12 {
+            assert_eq!(tail_lanes(threads, None, outstanding), 1);
+            let lanes = tail_lanes(threads, Some(431), outstanding);
+            assert_eq!(lanes, 1 + threads.saturating_sub(outstanding as usize));
         }
     }
 }
