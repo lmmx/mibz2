@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 49: Final 7-Step Cumulative Ablation & Before/After Timeline Verification"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c49_final_cumulative_ablation"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "39-43 ms (10T i9 Regime 2)", B = "3.66 B/B (10W P2)", Q = "0", M = "30.9 MiB (4W) / 50.8 MiB (10W)" }
+evidence = "15-rd rotated fresh-process 4W cumulative ablation (S0->S7, 211 MB authenticated Wikidata, exact AbHash, A/A=0.9881 [0.9496, 1.0282]) + 5-rd cold-start 7W/10W/16W scaling: S4_FullPoolW0 (Regime 1) reaches 4W 0.9413x [0.9006, 0.9838] (sys -40.3%, minflt -38.3%, RSS -24.4%); S6_ParScan_P1W0 reaches 4W 0.8989x [0.8681, 0.9309] & 10W 0.8500x; S7_ParScan_P2 (full WormholeScaleDecoder) reaches 4W 0.9082x [0.8902, 0.9267] (sys -78.0%, minflt -78.6%, vcsw -75.7%, RSS -56.4%), 7W 0.8548x, 10W 0.8524x (sys -67.4%, minflt -70.6%, vcsw -71.5%, RSS -57.1%, pkReady=12.04 MiB, dbl=0, aWait=43), and 16W 0.8612x (RSS -53.9%)."

@@ -1,0 +1,40 @@
+=== PART 1: 15-ROUND ROTATED FRESH-PROCESS 4W CUMULATIVE ABLATION (211 MB, 431 BLKS) ===
+Arm                 med_ms      vs MasterA [95% CI]    user    sys  minflt   vcsw  rss_MB
+S0_MasterA          352.73 1.0000 [1.0000, 1.0000]   649.3  34.14   15785    585   70.84
+S0_MasterB          350.24 0.9881 [0.9496, 1.0282]   653.2  33.77   15914    613   70.47
+S1_AllocFeed        350.55 0.9846 [0.9476, 1.0231]   652.8  27.35   12179    863   63.04
+S2_RingSplit        348.22 0.9668 [0.9244, 1.0111]   653.9  24.59   12253    315   63.00
+S3_BufReadZC        339.45 0.9421 [0.9008, 0.9853]   632.6  22.35   11859    316   61.29
+S4_FullPoolW0       336.36 0.9413 [0.9006, 0.9838]   629.1  20.37    9734    316   53.52
+S5_P2_InPlace12M    336.70 0.9497 [0.9130, 0.9878]   638.2  19.36    8514    324   48.97
+S6_ParScan_P1W0     320.90 0.8989 [0.8681, 0.9309]   624.6  11.86    4228    149   34.19
+S7_ParScan_P2       321.46 0.9082 [0.8902, 0.9267]   626.7   7.52    3374    142   30.88
+
+=== PART 2: 5-ROUND COLD-START SCALING AT 7W (211 MB, 431 BLKS) ===
+Arm                 med_ms  vs Mast    user    sys  minflt   vcsw  rss_MB
+S0_MasterA          394.31  1.0000x   721.4  60.95   22703    513   97.75
+S4_FullPoolW0       413.52  1.0177x   706.7  42.44   13587    463   68.13
+S5_P2_InPlace12M    407.58  0.9664x   721.9  27.92   11095    408   59.28
+S6_ParScan_P1W0     350.52  0.8497x   673.0  17.80    7341    132   46.32
+S7_ParScan_P2       350.23  0.8548x   671.5  17.46    5867    126   40.59
+  [S7_ParScan_P2 7W Timeline] pkBlks=25 pkMB=7.74 wR=62 wW=296 aWait=44 pkFree=12 dbl=0
+
+=== PART 2: 5-ROUND COLD-START SCALING AT 10W (211 MB, 431 BLKS) ===
+Arm                 med_ms  vs Mast    user    sys  minflt   vcsw  rss_MB
+S0_MasterA          405.87  1.0000x   724.7  64.81   29036    473  118.29
+S4_FullPoolW0       387.55  0.9351x   707.3  40.26   17255    584   82.24
+S5_P2_InPlace12M    390.40  0.9421x   725.6  30.73   14192    514   70.03
+S6_ParScan_P1W0     353.09  0.8500x   663.9  27.68   10657    172   59.25
+S7_ParScan_P2       352.67  0.8524x   674.3  21.16    8531    135   50.78
+  [S7_ParScan_P2 10W Timeline] pkBlks=37 pkMB=12.04 wR=48 wW=320 aWait=43 pkFree=17 dbl=0
+
+=== PART 2: 5-ROUND COLD-START SCALING AT 16W (211 MB, 431 BLKS) ===
+Arm                 med_ms  vs Mast    user    sys  minflt   vcsw  rss_MB
+S0_MasterA          431.53  1.0000x   749.1  85.43   37338    466  152.48
+S4_FullPoolW0       406.01  0.9530x   736.6  53.80   24142    660  106.28
+S5_P2_InPlace12M    400.94  0.9287x   729.1  39.18   19162    657   86.77
+S6_ParScan_P1W0     374.29  0.8637x   700.8  37.73   16827    235   83.33
+S7_ParScan_P2       371.44  0.8612x   690.7  33.27   13440    255   70.23
+  [S7_ParScan_P2 16W Timeline] pkBlks=60 pkMB=20.64 wR=20 wW=445 aWait=135 pkFree=28 dbl=0
+
+  [S7_ParScan_P2 4W Timeline] pkBlks=16 pkMB=6.02 wR=111 wW=207 aWait=44 pkFree=7 dbl=0
