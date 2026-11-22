@@ -251,6 +251,49 @@ Say in the README what each motion costs.
 
 Push after each step, so the owner can follow along.
 
+## 8. Fitting the creatures to the page, which is shipping as a blog post
+
+The page these creatures live on is going out as a blog post. Its source is on the branch
+the page's private copy, at `the page's source (a local copy the owner gives you) `:
+- `chat.md` is the record; each message's `- key: value` lines say which creature goes where;
+- `build_html.py` renders it to `index.html`;
+- `vine.js` draws the frames and the crawlers;
+- `bestiary-heads.js` is generated from `bestiary/*.svg` by `make_heads.py`.
+
+Iterate on the page's creatures as follows:
+
+1. **Work on your branch, `art/bestiary-serpents`, not the page's.** Your deliverable for the page is
+   `crawler/` (section 2, with `drape()` from section 5) and the creature SVGs. Then add a short
+   `crawler/INTEGRATION.md` for the page's maintainer. It names each place on the page (below) and
+   the call that replaces today's drawing there. The coordinator does the swap on the page's branch.
+2. **To see the page with your creatures in it:** take the local copy of the page the owner gives you, point its `vine.js` at your `crawler/`, run `python3 build.py && python3
+   build_html.py`, and open `index.html`. Commit screenshots of the result to your branch, at desktop
+   width (760px) and phone width (390px), in light and dark.
+3. **The places on the page:**
+   - **the frame round the headline bubble:** a heraldic border of two serpents
+     in Claude orange (#F2683A) with the `claude-ruffed` heads (section 3). It keeps its illuminated
+     gold caption, "Of Man's Labours & their Eternal Return": the first line sits just behind the
+     frame's bottom edge, the second below it. Don't cover more of that line than the rope does now;
+   - **the burrowers:** they crawl along a phrase and go into a letter's hole. There are four:
+     four phrases on the page, one of which crawls upward behind the text, which
+     goes behind the text;
+   - **the moonwalker:** walks round its bubble's border (section 6);
+   - **the hanging dragons:** two winged dracones in 3Blue1Brown's blue and brown, hanging
+     beneath one bubble;
+   - **the knotted pair:** under that same line;
+   - **"yuck", the last framed bubble:** deliberately **the odd one out**. Every other creature on
+     the page is to become sophisticated, heraldic and manuscript-grade. This one should stay
+     **cute**, in the owner's words "the odd one out that looks cute like wend". Keep it small, round
+     and endearing, with big soft eyes and a little curl, as a deliberate counterpoint at the very
+     end of the conversation. It still frames the bubble, which reads "yuck" in red blackletter.
+4. **The page's other rules:**
+   - **colour:** neon and saturated, never dull, oxidised or pastel, and no pink;
+   - **fleurons:** ❧ ☙ are green, and hyperlinks are blue;
+   - **contact:** creatures touch the bubble they belong to; none float free;
+   - **vanishing:** a creature vanishes into its hole cleanly, with no fade and no drawn hole
+     (section 2);
+   - **phones:** nothing may cause horizontal scrolling at 390px.
+
 ## Order and method
 
 1. Rework one creature (the *Draco bipes*, against its engraving), and commit it and a contact sheet
