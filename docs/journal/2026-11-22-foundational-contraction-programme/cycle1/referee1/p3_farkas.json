@@ -1,0 +1,1260 @@
+{
+  "CORE_10": {
+    "all_bdmr": {
+      "status": "INFEASIBLE",
+      "M": null,
+      "weights": null,
+      "with_const": "FEASIBLE",
+      "farkas": {
+        "exact_z3_verified": true,
+        "num_y": 2,
+        "num_u": 1,
+        "y": [
+          [
+            "1/2",
+            [
+              "pair",
+              "rle_12",
+              [
+                false,
+                false,
+                false,
+                true
+              ],
+              2,
+              11,
+              12
+            ]
+          ],
+          [
+            "1/2",
+            [
+              "pair",
+              "rle_18",
+              [
+                false,
+                false,
+                false,
+                true
+              ],
+              1,
+              9,
+              10
+            ]
+          ]
+        ],
+        "u": [
+          [
+            "1/19",
+            19,
+            19
+          ]
+        ]
+      }
+    },
+    "pair_all": {
+      "status": "INFEASIBLE",
+      "M": null,
+      "weights": null,
+      "with_const": "FEASIBLE",
+      "farkas": {
+        "exact_z3_verified": true,
+        "num_y": 2,
+        "num_u": 1,
+        "y": [
+          [
+            "1/2",
+            [
+              "pair",
+              "rle_12",
+              [
+                false,
+                false,
+                false,
+                true
+              ],
+              2,
+              11,
+              12
+            ]
+          ],
+          [
+            "1/2",
+            [
+              "pair",
+              "rle_18",
+              [
+                false,
+                false,
+                false,
+                true
+              ],
+              1,
+              9,
+              10
+            ]
+          ]
+        ],
+        "u": [
+          [
+            "1/19",
+            19,
+            19
+          ]
+        ]
+      }
+    },
+    "self_only": {
+      "status": "FEASIBLE",
+      "M": 1.6666666666653214,
+      "weights": {
+        "r": 1.0,
+        "E_RG_inv": 0.1,
+        "e_2": -0.1,
+        "e_2_self": 1.0
+      }
+    },
+    "thresh_and_self": {
+      "status": "INFEASIBLE",
+      "M": null,
+      "weights": null,
+      "with_const": "FEASIBLE",
+      "farkas": {
+        "exact_z3_verified": true,
+        "num_y": 2,
+        "num_u": 1,
+        "y": [
+          [
+            "1/2",
+            [
+              "pair",
+              "rle_12",
+              [
+                false,
+                false,
+                false,
+                true
+              ],
+              2,
+              11,
+              12
+            ]
+          ],
+          [
+            "1/2",
+            [
+              "pair",
+              "rle_18",
+              [
+                false,
+                false,
+                false,
+                true
+              ],
+              1,
+              9,
+              10
+            ]
+          ]
+        ],
+        "u": [
+          [
+            "1/19",
+            19,
+            19
+          ]
+        ]
+      }
+    },
+    "maxcut_and_self": {
+      "status": "INFEASIBLE",
+      "M": null,
+      "weights": null,
+      "with_const": "FEASIBLE",
+      "farkas": {
+        "exact_z3_verified": true,
+        "num_y": 1,
+        "num_u": 1,
+        "y": [
+          [
+            "1",
+            [
+              "pair",
+              "rle_10",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              5,
+              6
+            ]
+          ]
+        ],
+        "u": [
+          [
+            "1/19",
+            19,
+            19
+          ]
+        ]
+      }
+    },
+    "maxcut_pair_only": {
+      "status": "INFEASIBLE",
+      "M": null,
+      "weights": null,
+      "with_const": "FEASIBLE",
+      "farkas": {
+        "exact_z3_verified": true,
+        "num_y": 1,
+        "num_u": 1,
+        "y": [
+          [
+            "1",
+            [
+              "pair",
+              "rle_10",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              5,
+              6
+            ]
+          ]
+        ],
+        "u": [
+          [
+            "1/19",
+            19,
+            19
+          ]
+        ]
+      }
+    }
+  },
+  "RICH_24": {
+    "all_bdmr": {
+      "status": "INFEASIBLE",
+      "M": null,
+      "weights": null,
+      "with_const": "FEASIBLE",
+      "farkas": {
+        "exact_z3_verified": true,
+        "num_y": 17,
+        "num_u": 1,
+        "y": [
+          [
+            "362/10469",
+            [
+              "pair",
+              "lyn",
+              [
+                true,
+                false
+              ],
+              3,
+              2,
+              2
+            ]
+          ],
+          [
+            "4/10469",
+            [
+              "pair",
+              "selfC_3",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              7,
+              6
+            ]
+          ],
+          [
+            "21/10469",
+            [
+              "pair",
+              "r_14_4_3",
+              [
+                false,
+                true,
+                false,
+                true
+              ],
+              3,
+              11,
+              11
+            ]
+          ],
+          [
+            "188/10469",
+            [
+              "pair",
+              "r_14_5_3",
+              [
+                false,
+                false,
+                true,
+                false,
+                false
+              ],
+              1,
+              11,
+              10
+            ]
+          ],
+          [
+            "108/10469",
+            [
+              "pair",
+              "r_20_2_3",
+              [
+                false,
+                true
+              ],
+              6,
+              10,
+              10
+            ]
+          ],
+          [
+            "4/10469",
+            [
+              "self",
+              "r_45_4_3",
+              "n=45",
+              6,
+              30,
+              28
+            ]
+          ],
+          [
+            "37/10469",
+            [
+              "pair",
+              "rle_1",
+              [
+                false,
+                true,
+                false,
+                false
+              ],
+              2,
+              18,
+              19
+            ]
+          ],
+          [
+            "387/10469",
+            [
+              "pair",
+              "rle_3",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              10,
+              10
+            ]
+          ],
+          [
+            "48/10469",
+            [
+              "pair",
+              "rle_9",
+              [
+                false,
+                true,
+                false
+              ],
+              3,
+              16,
+              16
+            ]
+          ],
+          [
+            "348/361",
+            [
+              "pair",
+              "rle_10",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              5,
+              6
+            ]
+          ],
+          [
+            "61/10469",
+            [
+              "pair",
+              "rle_16",
+              [
+                false,
+                false,
+                true
+              ],
+              2,
+              14,
+              14
+            ]
+          ],
+          [
+            "30/10469",
+            [
+              "pair",
+              "rle_23",
+              [
+                true,
+                true,
+                false
+              ],
+              3,
+              20,
+              20
+            ]
+          ],
+          [
+            "3274/10469",
+            [
+              "pair",
+              "Fib_6_min$",
+              [
+                false,
+                true,
+                true
+              ],
+              1,
+              5,
+              5
+            ]
+          ],
+          [
+            "621/10469",
+            [
+              "pair",
+              "Fib_8_min$",
+              [
+                true,
+                false,
+                false
+              ],
+              1,
+              7,
+              8
+            ]
+          ],
+          [
+            "66/10469",
+            [
+              "pair",
+              "Fib_8_max$",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              4,
+              5
+            ]
+          ],
+          [
+            "147/10469",
+            [
+              "varB_thresh",
+              "GammaFib_10",
+              "rnd1",
+              21,
+              5,
+              4
+            ]
+          ],
+          [
+            "186/10469",
+            [
+              "varB_thresh",
+              "GammaFib_14",
+              "rnd5",
+              21,
+              5,
+              5
+            ]
+          ]
+        ],
+        "u": [
+          [
+            "1/19",
+            19,
+            19
+          ]
+        ]
+      }
+    },
+    "pair_all": {
+      "status": "INFEASIBLE",
+      "M": null,
+      "weights": null,
+      "with_const": "FEASIBLE",
+      "farkas": {
+        "exact_z3_verified": true,
+        "num_y": 18,
+        "num_u": 1,
+        "y": [
+          [
+            "74/2337",
+            [
+              "pair",
+              "lyn",
+              [
+                true,
+                false
+              ],
+              3,
+              2,
+              2
+            ]
+          ],
+          [
+            "4/2337",
+            [
+              "pair",
+              "selfC_3",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              7,
+              6
+            ]
+          ],
+          [
+            "5/2337",
+            [
+              "pair",
+              "r_14_4_3",
+              [
+                false,
+                true,
+                false,
+                true
+              ],
+              3,
+              11,
+              11
+            ]
+          ],
+          [
+            "52/2337",
+            [
+              "pair",
+              "r_14_5_3",
+              [
+                false,
+                false,
+                true,
+                false,
+                false
+              ],
+              1,
+              11,
+              10
+            ]
+          ],
+          [
+            "8/779",
+            [
+              "pair",
+              "r_20_2_3",
+              [
+                false,
+                true
+              ],
+              6,
+              10,
+              10
+            ]
+          ],
+          [
+            "4/2337",
+            [
+              "pair",
+              "r_20_3_1",
+              [
+                false,
+                true,
+                false
+              ],
+              2,
+              12,
+              12
+            ]
+          ],
+          [
+            "13/2337",
+            [
+              "pair",
+              "rle_1",
+              [
+                false,
+                true,
+                false,
+                false
+              ],
+              2,
+              18,
+              19
+            ]
+          ],
+          [
+            "83/2337",
+            [
+              "pair",
+              "rle_3",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              10,
+              10
+            ]
+          ],
+          [
+            "8/2337",
+            [
+              "pair",
+              "rle_9",
+              [
+                false,
+                true,
+                false
+              ],
+              3,
+              16,
+              16
+            ]
+          ],
+          [
+            "752/779",
+            [
+              "pair",
+              "rle_10",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              5,
+              6
+            ]
+          ],
+          [
+            "3/779",
+            [
+              "pair",
+              "rle_16",
+              [
+                false,
+                false,
+                true
+              ],
+              2,
+              14,
+              14
+            ]
+          ],
+          [
+            "4/2337",
+            [
+              "pair",
+              "rle_19",
+              [
+                false,
+                true,
+                false,
+                false
+              ],
+              1,
+              12,
+              13
+            ]
+          ],
+          [
+            "10/2337",
+            [
+              "pair",
+              "rle_23",
+              [
+                true,
+                true,
+                false
+              ],
+              3,
+              20,
+              20
+            ]
+          ],
+          [
+            "242/779",
+            [
+              "pair",
+              "Fib_6_min$",
+              [
+                false,
+                true,
+                true
+              ],
+              1,
+              5,
+              5
+            ]
+          ],
+          [
+            "43/779",
+            [
+              "pair",
+              "Fib_8_min$",
+              [
+                true,
+                false,
+                false
+              ],
+              1,
+              7,
+              8
+            ]
+          ],
+          [
+            "6/779",
+            [
+              "pair",
+              "Fib_8_max$",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              4,
+              5
+            ]
+          ],
+          [
+            "9/779",
+            [
+              "varB_thresh",
+              "GammaFib_10",
+              "rnd1",
+              21,
+              5,
+              4
+            ]
+          ],
+          [
+            "46/2337",
+            [
+              "varB_thresh",
+              "GammaFib_14",
+              "rnd5",
+              21,
+              5,
+              5
+            ]
+          ]
+        ],
+        "u": [
+          [
+            "1/19",
+            19,
+            19
+          ]
+        ]
+      }
+    },
+    "self_only": {
+      "status": "FEASIBLE",
+      "M": 1.6666666666723131,
+      "weights": {
+        "r": 1.0,
+        "e_2": -0.1,
+        "e_2_self": 1.0,
+        "r_L2L": 0.1
+      }
+    },
+    "thresh_and_self": {
+      "status": "INFEASIBLE",
+      "M": null,
+      "weights": null,
+      "with_const": "FEASIBLE",
+      "farkas": {
+        "exact_z3_verified": true,
+        "num_y": 18,
+        "num_u": 1,
+        "y": [
+          [
+            "77/2432",
+            [
+              "pair",
+              "lyn",
+              [
+                true,
+                false
+              ],
+              3,
+              2,
+              2
+            ]
+          ],
+          [
+            "1/128",
+            [
+              "pair",
+              "selfA_3",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              5,
+              5
+            ]
+          ],
+          [
+            "3/2432",
+            [
+              "pair",
+              "selfC_3",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              7,
+              6
+            ]
+          ],
+          [
+            "9/608",
+            [
+              "pair",
+              "r_14_5_3",
+              [
+                false,
+                false,
+                true,
+                false,
+                false
+              ],
+              1,
+              11,
+              10
+            ]
+          ],
+          [
+            "21/2432",
+            [
+              "pair",
+              "r_20_2_3",
+              [
+                false,
+                true
+              ],
+              6,
+              10,
+              10
+            ]
+          ],
+          [
+            "1/4864",
+            [
+              "pair",
+              "r_30_4_4",
+              [
+                false,
+                false,
+                false,
+                true
+              ],
+              4,
+              21,
+              22
+            ]
+          ],
+          [
+            "3/4864",
+            [
+              "pair",
+              "r_45_4_3",
+              [
+                true,
+                true,
+                true,
+                false
+              ],
+              11,
+              30,
+              28
+            ]
+          ],
+          [
+            "3/1216",
+            [
+              "pair",
+              "rle_1",
+              [
+                false,
+                true,
+                false,
+                false
+              ],
+              2,
+              18,
+              19
+            ]
+          ],
+          [
+            "47/1216",
+            [
+              "pair",
+              "rle_3",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              10,
+              10
+            ]
+          ],
+          [
+            "1/128",
+            [
+              "pair",
+              "rle_9",
+              [
+                false,
+                true,
+                false
+              ],
+              3,
+              16,
+              16
+            ]
+          ],
+          [
+            "4685/4864",
+            [
+              "pair",
+              "rle_10",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              5,
+              6
+            ]
+          ],
+          [
+            "37/4864",
+            [
+              "pair",
+              "rle_16",
+              [
+                false,
+                false,
+                true
+              ],
+              2,
+              14,
+              14
+            ]
+          ],
+          [
+            "3/4864",
+            [
+              "pair",
+              "rle_17",
+              [
+                true,
+                false,
+                false,
+                false
+              ],
+              3,
+              13,
+              13
+            ]
+          ],
+          [
+            "383/1216",
+            [
+              "pair",
+              "Fib_6_min$",
+              [
+                false,
+                true,
+                true
+              ],
+              1,
+              5,
+              5
+            ]
+          ],
+          [
+            "9/152",
+            [
+              "pair",
+              "Fib_8_min$",
+              [
+                true,
+                false,
+                false
+              ],
+              1,
+              7,
+              8
+            ]
+          ],
+          [
+            "45/4864",
+            [
+              "pair",
+              "Fib_8_max$",
+              [
+                false,
+                false,
+                true
+              ],
+              1,
+              4,
+              5
+            ]
+          ],
+          [
+            "83/4864",
+            [
+              "varB_thresh",
+              "GammaFib_10",
+              "rnd1",
+              21,
+              5,
+              4
+            ]
+          ],
+          [
+            "17/1216",
+            [
+              "varB_thresh",
+              "GammaFib_14",
+              "rnd5",
+              21,
+              5,
+              5
+            ]
+          ]
+        ],
+        "u": [
+          [
+            "1/19",
+            19,
+            19
+          ]
+        ]
+      }
+    },
+    "maxcut_and_self": {
+      "status": "FEASIBLE",
+      "M": 5.365288035453943,
+      "weights": {
+        "r_circ": 0.26657,
+        "sigma": -0.60847,
+        "r_F": -0.89739,
+        "r_1": 0.09995,
+        "r_F1": -0.34062,
+        "ref_L2": 0.44658,
+        "r_L2": -0.12033,
+        "r_L2L": -0.6127,
+        "r_LFF2": -2.35194,
+        "e_3": 1.5804,
+        "r_des": 2.33333,
+        "rg_self": 2.45367,
+        "frg_E_uniq": 2.53796,
+        "max_sym_runs": 2.66667,
+        "s_multi": -0.14023
+      }
+    },
+    "maxcut_pair_only": {
+      "status": "FEASIBLE",
+      "M": 3.8514113076144554,
+      "weights": {
+        "r": -0.68801,
+        "sigma": -1.89302,
+        "r_F": 1.4147,
+        "E_RG_inv": 0.73112,
+        "e_2_self": -0.76459,
+        "r_1": 1.00811,
+        "r_F1": -1.00811,
+        "ref_L2": 0.30633,
+        "r_L2": -0.45826,
+        "r_L2LF": 0.58084,
+        "r_FF2": 0.87114,
+        "r_LFF2": -2.05871,
+        "e_3": 1.19385,
+        "r_des": 2.33333,
+        "rg_self": 0.78691,
+        "max_sym_runs": 2.66667,
+        "s_multi": -1.12842
+      }
+    }
+  },
+  "GLOBAL_26": {
+    "all_bdmr": {
+      "status": "FEASIBLE",
+      "M": 6.755392156866776,
+      "weights": {
+        "r_circ": -0.3011,
+        "sigma": -2.57206,
+        "r_F": -0.92353,
+        "E_RG_inv": 2.03456,
+        "e_2": -0.52096,
+        "e_2_self": 0.52096,
+        "r_1": 0.54118,
+        "r_F1": -0.56985,
+        "ref_DCF": -0.80365,
+        "ref_L2": 0.92791,
+        "r_LFF2": -0.02868,
+        "e_3": 1.07647,
+        "r_des": 0.3011,
+        "rg_self": 0.67978,
+        "max_sym_runs": 0.34412,
+        "s_multi": -0.52684,
+        "r_rev": 0.87096,
+        "delta": 1.13971
+      }
+    },
+    "pair_all": {
+      "status": "FEASIBLE",
+      "M": 6.162557294135581,
+      "weights": {
+        "r": 0.31816,
+        "r_circ": -0.80631,
+        "sigma": -2.3459,
+        "r_F": -0.22523,
+        "E_RG_inv": 2.17425,
+        "e_2_self": 0.08677,
+        "r_1": 0.35396,
+        "r_F1": -0.62304,
+        "ref_L2": 0.7174,
+        "r_L2": -0.09199,
+        "r_FF2": 0.0972,
+        "r_LFF2": -0.36107,
+        "e_3": 0.8651,
+        "r_des": 0.26387,
+        "rg_self": 0.26908,
+        "frg_E_uniq": -1.13466,
+        "max_sym_runs": 0.30156,
+        "s_multi": -0.58535,
+        "r_rev": 0.88691,
+        "delta": 1.06211
+      }
+    },
+    "self_only": {
+      "status": "FEASIBLE",
+      "M": 1.6666666666670267,
+      "weights": {
+        "r": 1.0,
+        "E_RG_inv": 0.1,
+        "e_2": -0.1,
+        "e_2_self": 0.3,
+        "rg_self": 0.7
+      }
+    },
+    "thresh_and_self": {
+      "status": "FEASIBLE",
+      "M": 6.755392156870926,
+      "weights": {
+        "r_circ": -0.3011,
+        "sigma": -2.57206,
+        "r_F": -0.92353,
+        "E_RG_inv": 2.03456,
+        "e_2_self": 0.52096,
+        "r_1": 0.54118,
+        "r_F1": -0.56985,
+        "ref_L2": 0.92791,
+        "r_FF2": -0.52096,
+        "r_LFF2": -0.02868,
+        "e_3": 1.07647,
+        "r_des": 0.3011,
+        "rg_self": 0.67978,
+        "frg_E_uniq": -0.80365,
+        "max_sym_runs": 0.34412,
+        "s_multi": -0.52684,
+        "r_rev": 0.87096,
+        "delta": 1.13971
+      }
+    },
+    "maxcut_and_self": {
+      "status": "FEASIBLE",
+      "M": 4.778072688168777,
+      "weights": {
+        "sigma": -0.00464,
+        "r_F": -0.74399,
+        "r_1": -0.22366,
+        "ref_L2": 1.33207,
+        "r_LFF2": -0.37048,
+        "r_des": 1.18524,
+        "rg_E_uniq": -0.03457,
+        "rg_self": 1.67728,
+        "max_sym_runs": 1.35456,
+        "s_multi": 0.36865,
+        "r_rev": 0.49204,
+        "delta": 0.04526
+      }
+    },
+    "maxcut_pair_only": {
+      "status": "FEASIBLE",
+      "M": 3.153199054363256,
+      "weights": {
+        "sigma": -0.54964,
+        "r_F": -0.0889,
+        "E_RG_inv": 0.40941,
+        "e_2_self": -0.04994,
+        "r_1": 0.02236,
+        "r_F1": -0.02236,
+        "ref_L2": 0.138,
+        "r_L2": -0.23107,
+        "r_LFF2": -2.38199,
+        "e_3": 0.59542,
+        "r_des": 1.88433,
+        "rg_self": 0.02758,
+        "frg_E_uniq": 1.62621,
+        "max_sym_runs": 1.16817,
+        "s_multi": 0.20923,
+        "r_rev": 0.3895,
+        "delta": 0.48256
+      }
+    }
+  }
+}
