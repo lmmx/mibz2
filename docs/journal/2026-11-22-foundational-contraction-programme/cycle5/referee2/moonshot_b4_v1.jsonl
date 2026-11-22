@@ -1,0 +1,1 @@
+{"time": "2026-11-22T04:58:42Z", "candidate": "/tmp/fcp-c/b4_grid_flat16_candidate.rs", "candidate_commit": null, "candidate_sha256": "c420d6e866ceceb0c757042a82c7754f4fa8111323b2ab02bd2795142df57a4e", "scorer_version": "v1", "scorer_commit": "ee7fbf0e50c60cd9dcf0faa0cdd634cdbbb02849", "gate": "FAIL", "cpus": 2, "walls": {}, "proxy_advisory": {}}
