@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 64: Post-#739 + MechBR + PR4_Own_ZS52 Residual 1T Stage Profile & 10T i9 Floor Roadmap"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c64_post_pr4_residual_profile"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "99.16% Amdahl parallelizable (S0 AnchorScan = 0.8% / 0.4% w/ C38b)", B = "~4.0 B/B DRAM (20.1 ms DDR4 floor)", Q = "0", M = "3 x 2 MiB + 0 B s.ll + #739 12 MiB ReadyRing" }
+evidence = "Exact 5-stage 1T CPU attribution across all 4 corpora (509-blk wikidata-l9, 379-blk wikidata-l1, 73-blk hetero-l9, 12-blk random-l9) after PR4_Own_ZS52: Amdahl parallelizable share rises from ~84% (#739 serial read_item) to 99.16% (wikidata-l9) and 99.17% (wikidata-l1). Residual wikidata-l9 1T budget: S3 OpenCells 343.17 ms (62.2%, #1 remaining bottleneck), S1 read_item 89.37 ms (16.2%, Mech #745 target), S4 ZeroShift52+CRC 67.54 ms (12.2% SWAR / ~9.7% w/ AVX2 find_runs; 0/973 blocks exceeded n+n/32+64), S2 runs::front 47.31 ms (8.6%, Eta/KS target), S0 AnchorScan 4.66 ms (0.8%, C38b ~2.2 ms = 0.4%). Anchored i9-10900K 10T wall progression: v0.5.12 69.5 ms -> #739 66.9 ms -> +MechBR 7W 62.4 ms -> +Grid 9W ~53.2 ms -> +PR4_Own_ZS52 10W ~49.5-51.0 ms -> +R4 WormholeNeonCells ~44.5-46.0 ms -> +BSAC/Eta ~39-41 ms."
