@@ -1,23 +1,37 @@
 #!/usr/bin/env bash
-# Submit one workstation bundle as evidence (RULES C5): archive it on the orphan `evidence`
-# branch and post its identity and digest on #145. Run by Louis, through `just submit
+# Submit one workstation bundle as evidence: archive it on the orphan `evidence` branch and
+# post its identity and digest on the repository's channel. Run by Louis, through `just submit
 # <recipe>` (which runs the recipe and then this) or `just submit-bundle <tarball>` (a retry).
 #   bash bench/submit.sh target/three-team-policy/20261106T100854Z.tar.gz
 #
 # Idempotent by run and digest: a bundle already on the branch isn't committed again, a comment
-# already on #145 for it isn't posted again, and a different bundle under the same run is
+# already on the channel for it isn't posted again, and a different bundle under the same run is
 # refused. A failure keeps the bundle and changes nothing published; run it again to retry.
 #
 # The run's identity is read from the bundle (its directory, outcome.txt, commits.txt,
-# inputs.txt), never typed in.
+# inputs.txt), never typed in. Where it goes is what bench/workstation-queue.txt declares (the
+# checkout's copy, else origin's default branch's): the repository on its "# repo: owner/name"
+# line, which origin must be, and the channel's issue number on its "# channel: N" line.
+# Nothing here names a repository: the file is the same in every repository that uses it.
 set -euo pipefail
-repo=${EVIDENCE_REPO:-lmmx/mibz2}      # (both overridable only so the tests can use a scratch
-remote=${EVIDENCE_REMOTE:-origin}      #  repository; a real run uses neither)
-gh=${GH:-gh}
-channel=145
-branch=evidence
-
 die() { echo "submit: $*" >&2; exit 1; }
+remote=${EVIDENCE_REMOTE:-origin}      # (overridable only so the tests can use a scratch
+gh=${GH:-gh}                           #  repository; a real run overrides nothing)
+branch=evidence
+queue_meta() {  # a "# <key>: <value>" line of the queue file
+  local top def
+  top=$(git rev-parse --show-toplevel) || return 0
+  def=$(git symbolic-ref --quiet --short "refs/remotes/$remote/HEAD" 2>/dev/null || echo "$remote/master")
+  { cat "$top/bench/workstation-queue.txt" 2>/dev/null || true
+    git show "$def:bench/workstation-queue.txt" 2>/dev/null || true; } \
+    | sed -n "s/^#[[:space:]]*$1:[[:space:]]*\([^[:space:]]*\)[[:space:]]*\$/\1/p" | head -1
+}
+repo=${EVIDENCE_REPO:-$(queue_meta repo)}
+channel=${EVIDENCE_CHANNEL:-$(queue_meta channel)}
+[[ $repo =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] \
+  || die "bench/workstation-queue.txt declares no '# repo: owner/name' line (the bundle is kept)"
+[[ $channel =~ ^[0-9]+$ ]] \
+  || die "bench/workstation-queue.txt declares no '# channel: N' line (the bundle is kept)"
 tarball=$(realpath "${1:?usage: bench/submit.sh BUNDLE.tar.gz}")
 [ -f "$tarball" ] || die "no bundle at $tarball"
 case "$tarball" in *.tar.gz) ;; *) die "$tarball is not a .tar.gz bundle" ;; esac
@@ -73,7 +87,7 @@ for attempt in 1 2 3; do
 done
 [ -n "${commit:-}" ] || die "couldn't push to $branch (the bundle is kept; run the same command again)"
 
-# 2. the notice on #145, once: the marker names the run and its digest
+# 2. the notice on the channel, once: the marker names the run and its digest
 marker="<!-- evidence: $run sha256:$digest -->"
 posted=$("$gh" api --paginate "repos/$repo/issues/$channel/comments?per_page=100" \
   --jq ".[] | select(.body | contains(\"$marker\")) | .html_url" | head -1)

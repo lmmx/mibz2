@@ -1,6 +1,7 @@
 """bench/submit.sh against a scratch repository and a stand-in for gh: it archives a bundle
 once, posts once, refuses a different bundle under the same run, and keeps the bundle when a
-push fails, so the same command retries it.
+push fails, so the same command retries it. The repository and channel are the ones the
+checkout's bench/workstation-queue.txt declares.
 
     python3 bench/test_submit.py
 """
@@ -34,7 +35,7 @@ if "--paginate" in args:
     sys.exit(0)
 body = open(args[args.index("-F") + 1].split("=@", 1)[1]).read()
 url = f"https://github.com/lmmx/mibz2/pull/145#issuecomment-{len(comments) + 1}"
-comments.append({"body": body, "html_url": url})
+comments.append({"body": body, "html_url": url, "path": args[1]})
 json.dump(comments, open(store, "w"))
 print(url)
 """
@@ -58,10 +59,15 @@ class Submit(unittest.TestCase):
         git(self.work, "config", "user.name", "Test")
         git(self.work, "config", "user.email", "test@example.com")
         git(self.work, "remote", "add", "origin", str(self.remote))
+        (self.work / "bench").mkdir()
+        self.queue = self.work / "bench" / "workstation-queue.txt"
+        self.queue.write_text("# the queue\n# repo: lmmx/mibz2\n# channel: 145\n")
         gh = self.tmp / "gh"
         gh.write_text(FAKE_GH)
         gh.chmod(0o755)
         self.env = {**os.environ, "GH": str(gh), "FAKE_COMMENTS": str(self.tmp / "comments.json")}
+        for k in ("EVIDENCE_REPO", "EVIDENCE_CHANNEL", "EVIDENCE_REMOTE"):
+            self.env.pop(k, None)
 
     def bundle(self, outcome, stamp="20261106T120000Z"):
         run = self.work / "target" / "three-team-policy" / stamp
@@ -155,6 +161,23 @@ class Submit(unittest.TestCase):
         r = self.submit(self.bundle("VALID PASS"))
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("not lmmx/mibz2", r.stderr)
+
+    def test_the_channel_is_the_one_the_queue_file_declares(self):
+        self.queue.write_text("# repo: lmmx/mibz2\n# channel: 7\n")
+        r = self.submit(self.bundle("VALID PASS"))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(
+            [c["path"] for c in self.comments()], ["repos/lmmx/mibz2/issues/7/comments"]
+        )
+
+    def test_a_queue_file_declaring_no_channel_is_refused_and_the_bundle_kept(self):
+        self.queue.write_text("# repo: lmmx/mibz2\n")
+        tarball = self.bundle("VALID PASS")
+        r = self.submit(tarball)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("no '# channel: N' line", r.stderr)
+        self.assertTrue(tarball.exists())
+        self.assertFalse(Path(self.env["FAKE_COMMENTS"]).exists())
 
 
 if __name__ == "__main__":
