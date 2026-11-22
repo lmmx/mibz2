@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.12](https://github.com/lmmx/mibz2/compare/v0.5.11...v0.5.12) - 2026-11-22
+
+### <!-- 3 -->Performance
+
+- *(open)* construction stack, GradedHandle/Prefix15 ([#714](https://github.com/lmmx/mibz2/pull/714)) + Kitchen Sink, Wormhole L4/L5, Mechanisms splice ([#719](https://github.com/lmmx/mibz2/pull/719))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.5.11's crossover, the team threshold stays ([#713](https://github.com/lmmx/mibz2/pull/713))
+- *(blog)* a memory gain is a gain, the change our speed-only rule nearly shelved ([#706](https://github.com/lmmx/mibz2/pull/706))
+
+### <!-- 9 -->Other
+
+- *(release-scaling)* 0.5.11 against 0.5.10 on the i9; attribution row; CHANGELOG ([#712](https://github.com/lmmx/mibz2/pull/712))
+
 ## [0.5.11](https://github.com/lmmx/mibz2/compare/v0.5.10...v0.5.11) - 2026-11-21
 
 ### <!-- 1 -->Features
