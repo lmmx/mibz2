@@ -1,0 +1,10 @@
+[package]
+name = "bench_q4_stream"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mibz2 = { path = "/tmp/moonshot-scorer" }
+
+[profile.release]
+opt-level = 3
