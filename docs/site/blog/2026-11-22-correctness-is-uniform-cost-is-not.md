@@ -65,7 +65,7 @@ Heterogeneity is measurable, and it shows at three scales.
 
 The change speeds up the serial stage that reads the compressed stream. The barely compressible `records` and `random` gain 6–7%, while `runs` and `onebyte`, compressed hundreds or hundreds of thousands of times, show nothing. That fits the serial stage's share of the work growing with the compressed bytes, though the bench does not measure that share per corpus.
 
-**Between families of data.** A hindsight oracle chose, per block, the fastest of thirteen settings of one Open construction plus two walks. On the 431 Wikidata blocks it would save 3.17% over a fixed setting; on six non-Wikidata blocks, 12.8–13.1% (single-threaded, on a research host). The same family of kernels has a different headroom on different data.
+**Between families of data.** A hindsight oracle chose, per block, the fastest of thirteen kernel configurations over a research build: eleven settings of one Open construction, and two walks. On the 431 Wikidata blocks it would save 3.17% over that build's fixed setting; on six non-Wikidata blocks, 12.8–13.1% (single-threaded, on a research host). The same family of kernels has a different headroom on different data.
 
 ## 3. Exact routes, each betting on a structure
 
@@ -121,7 +121,7 @@ Open is the one global change of representation so far. It is a classical idea, 
 
 Local constructions can lead to a global one. In mathematics a different proof of a solved case has opened new routes before: the Riemann Hypothesis for curves over finite fields was proved first by Weil, then by Stepanov's elementary method, completed by Bombieri, and it was that method's descendants that travelled ([Two centuries of tools](2026-11-22-two-centuries-of-tools.md)). Inverse BWT has the same structure. The LF walk, cycle decomposition and first-return induction are different constructive proofs that the BWT is invertible, and each gives a different decoder. The proof programme names seven points, L0 to L6, where one step of the proof can be replaced; Open replaced the classical route at L3, L4 and L5.
 
-What we cannot yet say is how complete the family is. The oracle's 3.17% bounds only the alternatives it chose between: one construction's two parameters and two walks. It says that family is nearly saturated on Wikidata, and nothing about a construction outside it. The 10-thread plateau points the same way: every construction gain of the last twelve research cycles left the decoder's DRAM traffic at 10 workers at 4.91 bytes per output byte.
+What we cannot yet say is how complete the family is. The oracle's 3.17% bounds only the alternatives it chose between: eleven settings of one construction's two parameters, and two walks, over a research build rather than master. It says that family is nearly saturated on Wikidata, and nothing about a construction outside it. The 10-thread plateau points the same way: every construction gain of the last twelve research cycles left the decoder's DRAM traffic at 10 workers at 4.91 bytes per output byte.
 
 ## 7. What is proved, measured and open
 
