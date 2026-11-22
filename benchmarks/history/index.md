@@ -493,6 +493,12 @@ With no releases named, it compares the newest release tag with the one before i
 
 Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md>) ([`docs/scripts/release_notes.py`](<https://github.com/lmmx/mibz2/blob/master/docs/scripts/release_notes.py>)): its opening sentence, the first sentence of each summary written for it, its changes with their pull requests, and the blog posts that explain it. A post names the releases it explains in its front matter (`releases: ["0.5.8"]`), and its header links back here. The figures behind each summary are in the CHANGELOG.
 
+### 0.5.12
+
+22 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0512---2026-11-22>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.11...v0.5.12>)
+
+**Changes:** construction stack, GradedHandle/Prefix15 ([\#714](<https://github.com/lmmx/mibz2/pull/714>), [\#719](<https://github.com/lmmx/mibz2/pull/719>)).
+
 ### 0.5.11
 
 21 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0511---2026-11-21>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.10...v0.5.11>)
