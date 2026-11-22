@@ -262,3 +262,20 @@ fn emit_matches_reference() {
     }
     println!("{cases} walks, {panics} empty (both panic)");
 }
+
+#[test]
+fn thin_and_thick_sum_to_each_symbols_prefix() {
+    let mut kernel = Kernel::default();
+    let mut out = [0; 1024];
+    let mut pass = kernel.begin(&mut out, u32::MAX);
+    // The marked run contributes two thick fragments and one thin singleton.
+    for (byte, start, width) in [(7, 0, 2), (9, 2, 6), (7, 8, 10), (9, 18, 1)] {
+        pass.take::<true>(byte, start, width, 12, 3);
+    }
+    assert_eq!((pass.f.thin[7], pass.f.thick_rows[7]), (3, 9));
+    assert_eq!((pass.f.thin[9], pass.f.thick_rows[9]), (1, 6));
+    assert_eq!(
+        pass.strips.iter().map(|s| s.to).collect::<Vec<_>>(),
+        [0, 2, 7]
+    );
+}

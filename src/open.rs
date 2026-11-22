@@ -186,13 +186,13 @@ impl Pass<'_> {
         } else {
             self.strips.push(Strip {
                 from: x,
-                to: f.all[a],
+                to: f.thin[a] + f.thick_rows[a],
                 width: w,
                 byte: c,
             });
             f.thick[a] += 1;
+            f.thick_rows[a] += w;
         }
-        f.all[a] += w;
     }
 }
 
@@ -200,7 +200,7 @@ impl Pass<'_> {
 /// thick strips, the retained rows so far, the marked row's rank, and the maximal runs
 #[derive(Clone, Copy)]
 struct First {
-    all: [u32; 256],
+    thick_rows: [u32; 256],
     thin: [u32; 256],
     thick: [u32; 256],
     m: u32,
@@ -211,7 +211,7 @@ struct First {
 impl Default for First {
     fn default() -> Self {
         First {
-            all: [0; 256],
+            thick_rows: [0; 256],
             thin: [0; 256],
             thick: [0; 256],
             m: 0,
@@ -350,7 +350,7 @@ impl Kernel {
         heads: &outq::Heads,
     ) -> (Counts, u32, u32) {
         let First {
-            all,
+            thick_rows,
             thin,
             thick,
             m,
@@ -362,6 +362,7 @@ impl Kernel {
             runs,
             ..Counts::default()
         };
+        let all = std::array::from_fn(|a| thin[a] + thick_rows[a]);
         assert!(m > 0 && all.iter().sum::<u32>() == n);
         stats.retained = m as usize;
         stats.thick = self.strips.len();
