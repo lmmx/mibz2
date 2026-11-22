@@ -25,26 +25,22 @@ A claimed Riemann proof drew on fifty classical tools because each step of an ol
 
 </div>
 
-mibz2 is a bzip2 decoder in Rust. Much of its research is done by AI research teams, looking for faster ways to undo the Burrows–Wheeler transform at bzip2's core. [Besieging hard problems](2026-11-21-besieging-hard-problems.md) described what we took from the claimed proof of the Riemann Hypothesis announced on 20 November. Its route ran through mathematics built for other problems, and our [research journal](https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md) set out twelve "levers" read from its shape. This post is about the next step: how those levers become a procedure our teams can follow, and how we got the procedure wrong first.
+mibz2 is a bzip2 decoder in Rust. Much of its research is done by AI research teams, looking for faster ways to undo the Burrows–Wheeler transform at bzip2's core. [Besieging hard problems](2026-11-21-besieging-hard-problems.md) described what we took from the claimed proof of the Riemann Hypothesis announced on 20 November. Its route ran through mathematics built for other problems, and our [research journal](https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md) set out twelve "levers" read from its shape. This post is about the next step: how those levers become a procedure our teams can follow.
 
 **Where things stand.** The proof is still an unverified mathematical claim. The Lean and Mathlib communities have [certified the formal artifact](https://leanprover-community.github.io/blog/posts/riemann-hypothesis/): Lean's kernel and several independent checkers accepted it. Human understanding of the argument is still in progress ([Tao](https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/)). What we use is its architecture, as others have now mapped it. Our own method change has no results yet; this post is about the method and why we changed it.
 
 **The takeaways:**
 
-- **Breadth by quota is the wrong shape.** The proof's breadth came from transplanting a solved case, Stepanov's proof for curves over finite fields, step by step. Distant mathematics entered only where a step needed a substitute.
+- **Breadth by quota has the wrong shape.** The proof's breadth came from transplanting a solved case, Stepanov's proof for curves over finite fields, step by step. Distant mathematics entered only where a step needed a substitute.
 - **One new mechanism, about fifty old ones.** A map of the proof lists 50 established techniques and exactly one new mechanism. Twenty-one of the fifty predate 1950.
 - **The code is not where the argument is.** Most of the formal proof's lines build infrastructure. The branches that carry the argument hold a small share of the code.
 - **Our version** starts from easy cases of our problem, finds on real data exactly which steps of their cheap solution fail, and searches all of mathematics for a substitute for each failing step. The final judge is still native timing.
 
-## 1. How did we first try to widen the search?
+## 1. What did breadth by quota look like?
 
-Our breadth-oriented team, Kitchen Sink, had just finished a ten-cycle construction round. For its next round we first proposed an "algorithm zoo": specialist kernels for different kinds of block, with a selector, a lead from our [working-backwards journal](https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-20-working-backwards.md). Louis, who maintains mibz2, pushed for more ambition: "zoo seems a bit rowdy... we want an expansive Program (as for the langlands program) stretching across modern mathematics in esoteric areas".
+Our breadth-oriented team, Kitchen Sink, runs the Reconstruction Programme, modelled on the Langlands programme. It proposes *correspondences* between the structure of a bzip2 block and objects in distant fields, each with a precise dictionary and testable conjectures. Its goal is *functoriality*: a cheap construction on the far side that transfers to exact reconstruction on ours. Block-specific kernels with a selector, a lead from our [working-backwards journal](https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-20-working-backwards.md), are its specialisations.
 
-So it became the Reconstruction Programme, modelled on the Langlands programme. It proposes *correspondences* between the structure of a bzip2 block and objects in distant fields, each with a precise dictionary and testable conjectures. Its goal is *functoriality*: a cheap construction on the far side that transfers to exact reconstruction on ours. The zoo survives inside it as the Programme's specialisations.
-
-Louis then asked whether the team should "use a mathematical ontology to sort of identify new realms? rather than just wing it?". We adopted the Mathematics Subject Classification, MSC2020, as an atlas of 63 top-level areas. With it came a quota: each investigator opens at least two untouched, far-apart areas a cycle, and the team keeps a coverage table. Louis asked the obvious question: "are we forcing breadth or what". We were. Our first fix counted an area only if it produced a testable conjecture, and made the quota the team's rather than each investigator's.
-
-Then he asked: "you think that is sufficiently sophisticated? like how RH was done? go read about how RH was done again". Re-reading changed the method.
+To keep the search wide, we first gave the team an atlas, the Mathematics Subject Classification (MSC2020, 63 top-level areas), and a quota. Each investigator was to open at least two untouched, far-apart areas a cycle, and the team kept a coverage table. That forces breadth for its own sake, and it invites box-ticking. Counting an area only when it produced a testable conjecture helped, but the procedure still had the wrong shape. A closer reading of how the proof was built showed why.
 
 ## 2. How was the proof's breadth actually built?
 
