@@ -285,6 +285,7 @@ fn scratch(k: &Kernel) -> usize {
         + 4 * (k.offsets.capacity() + k.edges.capacity() + k.extra.capacity())
         + 16 * k.inline16.capacity()
         + k.lens.capacity()
+        + size_of::<u16>() * k.word_len.capacity()
         + e.scratch()
 }
 

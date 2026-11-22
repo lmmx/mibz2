@@ -384,3 +384,70 @@ fn full_nonzero_tail_links_to_its_overflow_chunk() {
     outq::Reader::new(&out, &spill, &heads, 2).wire(&mut decoded, 0);
     assert!(decoded.into_iter().eq(1..=514));
 }
+
+#[test]
+fn burst_threshold_switches_the_link_representation() {
+    let mut kernel = Kernel::default();
+    let mut actual = Vec::new();
+    for m in [burst::MIN_ROWS - 1, burst::MIN_ROWS, burst::MIN_ROWS + 1] {
+        let column: Vec<u8> = (0..m).map(|i| (i % 251) as u8).collect();
+        let mark = (m / 3) as u32;
+        let counts = kernel.run::<true, true>(&records_of(&column), m, mark, LIMIT, &mut actual);
+        assert_eq!(counts.retained, m);
+        assert_eq!(kernel.predecessor.is_some(), m < burst::MIN_ROWS);
+        assert_eq!(kernel.word_len.is_empty(), m < burst::MIN_ROWS);
+        assert_eq!(actual, b5::plain(&column, mark));
+    }
+}
+
+#[test]
+fn burst_repairs_cut_starts_and_repeats_only_the_marked_cycle() {
+    let m = burst::MIN_ROWS;
+    let bits = usize::BITS - (m - 1).leading_zeros();
+    let mark = 311;
+    let mut kernel = Kernel::default();
+    kernel.spelling = (180..203).collect();
+    inline_words(
+        &kernel.spelling,
+        &[0, 23],
+        &mut kernel.inline16,
+        &mut kernel.lens,
+    );
+    // Two disjoint cycles. Long words force the mixed-lane path. Unequal
+    // distances between cuts let later lanes overrun earlier finished tasks.
+    let mut rows: Vec<usize> = (1..m).step_by(2).collect();
+    let mut seed = 51u32;
+    for i in (1..rows.len()).rev() {
+        seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
+        rows.swap(i, seed as usize % (i + 1));
+    }
+    let start = rows.iter().position(|&row| row == mark).unwrap();
+    rows.rotate_left(start);
+    kernel.edges = (0..m as u32).collect();
+    let mut period = Vec::new();
+    for (i, &row) in rows.iter().enumerate() {
+        let code = if i % 37 == 0 {
+            period.extend_from_slice(&kernel.spelling);
+            256
+        } else {
+            let byte = (row % 251) as u8;
+            period.push(byte);
+            u32::from(byte)
+        };
+        kernel.edges[row] = (code << bits) | rows[(i + 1) % rows.len()] as u32;
+    }
+    let mut actual = vec![0xa5; 3 * m];
+    for n in [period.len() - 7, period.len(), 2 * period.len() + 31] {
+        assert!(kernel.emit_burst(m, n, mark as u32, bits, &mut actual));
+        assert!(actual
+            .iter()
+            .copied()
+            .eq(period.iter().copied().cycle().take(n)));
+    }
+    // An isolated marked row supplies too few tasks. A dictionary length
+    // outside the scout's range also goes through the ordinary forward walk.
+    assert!(!kernel.emit_burst(m, m, 0, bits, &mut actual));
+    kernel.spelling.resize(70_000, 99);
+    kernel.inline16[256] = long_slot(0, 70_000);
+    assert!(!kernel.emit_burst(m, m, mark as u32, bits, &mut actual));
+}

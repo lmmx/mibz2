@@ -11,9 +11,9 @@
 //! each byte's maximal runs are split into thin ones (at most `LIMIT` rows, retained) and thick
 //! strips (whole LF strips, eliminated). The thick strips and the gaps between them form an
 //! interval exchange whose elimination (`endpoint.rs`) gives, for every retained row, the word
-//! spelled until the walk next returns to a retained row. Large queued permutations whose
-//! codes fit alongside the links store the XOR of each row's neighbors. The emitter reads
-//! those cycles from both ends. A short marked cycle is repeated to `n` bytes.
+//! spelled until the walk next returns to a retained row. Packed queued permutations with 65,536
+//! to 139,999 retained rows use XOR links for two-ended emission. Larger packed permutations use
+//! forward links for the six-lane scout and emit walks. A short marked cycle is repeated to `n` bytes.
 //!
 //! **Safety:** no `unsafe`. Every index is bounds-checked. The `assert!`s are invariants of the
 //! construction for every column, BWT or not: `checks.rs` audits every arrow of every binary
@@ -113,6 +113,7 @@ pub struct Kernel {
     extra: Vec<u32>,
     inline16: Vec<[u8; INLINE]>,
     lens: Vec<u8>,
+    word_len: Vec<u16>,
 }
 
 // Production records cap a run at 127. Selection is on maximal runs.
@@ -519,7 +520,7 @@ impl Kernel {
         }
         stats.table_bytes = 4 * (m as usize + self.extra.len());
         self.predecessor = None;
-        if QUEUE && !wide && m >= 65_536 {
+        if QUEUE && !wide && (65_536..burst::MIN_ROWS).contains(&(m as usize)) {
             let edges = &mut self.edges[..m as usize];
             edges.fill(0);
             let mut predecessor = mark;
@@ -639,6 +640,9 @@ impl Kernel {
                 bits,
                 out,
             );
+            return;
+        }
+        if m >= burst::MIN_ROWS && self.extra.is_empty() && self.emit_burst(m, n, mark, bits, out) {
             return;
         }
         emit(
@@ -1049,6 +1053,7 @@ fn records_of(l: &[u8]) -> Vec<u16> {
     recs
 }
 
+mod burst;
 mod endpoint;
 mod outq;
 
