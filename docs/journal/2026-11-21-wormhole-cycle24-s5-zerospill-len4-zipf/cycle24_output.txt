@@ -1,0 +1,48 @@
+=== CYCLE 24A: EDGE BIT BUDGET & LEN-PACK ELIGIBILITY ===
+block-0.L     | m= 89874 bits=17 U= 995 code_bits=10 free_bits= 5 -> E2a=Len4 E2b=Len4
+block-2.L     | m=112070 bits=17 U=1281 code_bits=11 free_bits= 4 -> E2a=Len4 E2b=Len4
+block-85.L    | m=156404 bits=18 U= 811 code_bits=10 free_bits= 4 -> E2a=Len4 E2b=Len4
+block-143.L   | m=196841 bits=18 U=1712 code_bits=11 free_bits= 3 -> E2a=E1 E2b=Len3
+block-210.L   | m=204281 bits=18 U=1219 code_bits=11 free_bits= 3 -> E2a=E1 E2b=Len3
+block-207.L   | m=135921 bits=18 U=1205 code_bits=11 free_bits= 3 -> E2a=E1 E2b=Len3
+dense-703.syn | m=224153 bits=18 U=4370 code_bits=13 free_bits= 1 -> E2a=E1 E2b=E1
+PASS Auth (6/6 SHA-256) + Gate G1/Boundary/Spiral/Multi-Epoch: 5237 cases byte-exact!
+
+=== CYCLE 24B: PER-BLOCK S5 EMIT TIMING (us, 15 RDS MEDIAN) ===
+Block         | M0:0.5.11 |   G2:C23 | E1:ZSpil | E2a:Len4 | E2b:L4/3 |  E3:Zipf |   E1-G2
+--------------------------------------------------------------------------------------
+block-0.L     |   548.5u |   505.8u |   491.7u |   487.6u |   481.7u |   490.3u |  -14.1u
+block-2.L     |   698.2u |   639.4u |   630.5u |   610.6u |   605.9u |   623.2u |   -8.9u
+block-85.L    |   943.0u |   861.4u |   853.7u |   841.7u |   836.2u |   838.1u |   -7.6u
+block-143.L   |  1415.3u |  1291.9u |  1244.1u |  1243.5u |  1307.4u |  1254.4u |  -47.8u
+block-210.L   |  1415.9u |  1315.3u |  1287.0u |  1286.0u |  1296.6u |  1275.9u |  -28.3u
+block-207.L   |   890.6u |   818.9u |   807.9u |   789.4u |   817.7u |   798.7u |  -11.0u
+dense-703.syn |  1556.3u |  1462.2u |  1438.1u |  1445.8u |  1443.6u |  1449.9u |  -24.1u
+--------------------------------------------------------------------------------------
+6-BLK S5 SUM  |  5911.6u |  5432.6u |  5314.8u |  5258.7u |  5345.5u |  5280.6u | -117.8u
+
+=== CYCLE 24C: 5-STAGE ATTRIBUTION (6-BLK SUM us, 15 RDS MEDIAN) ===
+Arm                  |       S1 |       S2 |       S3 |       S4 | Pre(S1-4) |  S5 Emit |       Sum
+--------------------------------------------------------------------------------------------------
+M0: Clone (0.5.11)   |  2311.9u |  1968.5u |  1555.7u |   768.6u |   6604.6u |  5911.6u |  12516.3u
+G2: C23 Champ        |  1924.8u |  1739.7u |   801.9u |   746.6u |   5212.9u |  5432.6u |  10645.6u
+E1: ZeroSpill        |  1932.3u |  1718.1u |   802.3u |   745.6u |   5198.3u |  5314.8u |  10513.1u
+E2a: +Len4           |  1955.6u |  1722.4u |   795.9u |   795.6u |   5269.5u |  5258.7u |  10528.2u
+E2b: +Len4/Len3      |  1950.6u |  1714.1u |   803.1u |   786.9u |   5254.8u |  5345.5u |  10600.4u
+E3: +ZipfRemap       |  1936.0u |  1717.6u |   989.9u |   760.0u |   5403.5u |  5280.6u |  10684.1u
+Persistent Scratch (incl. dense-703, excl. 879 KiB out): M0=1275.5 KiB | G2=1129.7 KiB | E1=1129.7 KiB | E2a=1129.7 KiB | E2b=1129.7 KiB | E3=1129.7 KiB
+
+=== CYCLE 24D: HEADLINE 1T `InverseBwt::invert_runs` CONFRONTATION (25 RDS, p50 / p10 vs A1:Master) ===
+Block         |    A1_p50 |  A2/A1 |  M0/A1 |  G2/A1 |  E1/A1 | E2a/A1 | E2b/A1 |  E3/A1
+------------------------------------------------------------------------------------------
+block-0.L     |  1363.6us | 0.992x | 0.998x | 0.869x | 0.863x | 0.858x | 0.851x | 0.867x
+block-2.L     |  1670.4us | 0.989x | 0.991x | 0.861x | 0.854x | 0.852x | 0.843x | 0.871x
+block-85.L    |  1689.9us | 0.992x | 0.966x | 0.869x | 0.861x | 0.855x | 0.854x | 0.877x
+block-143.L   |  2972.2us | 1.005x | 0.985x | 0.862x | 0.853x | 0.854x | 0.871x | 0.862x
+block-210.L   |  2638.8us | 0.997x | 0.958x | 0.870x | 0.863x | 0.865x | 0.870x | 0.874x
+block-207.L   |  2002.7us | 0.996x | 0.985x | 0.863x | 0.856x | 0.849x | 0.857x | 0.859x
+dense-703.syn |  3128.5us | 0.989x | 0.950x | 0.832x | 0.827x | 0.827x | 0.825x | 0.855x
+------------------------------------------------------------------------------------------
+6-BLK p50/A1  | 12337.6us | 0.996x | 0.979x | 0.865x | 0.858x | 0.856x | 0.860x | 0.868x
+6-BLK p10/A1  | 12004.4us | 0.996x | 0.970x | 0.861x | 0.855x | 0.853x | 0.858x | 0.867x
+6-BLK p50/M0: G2=0.884x | E1=0.877x | E2a=0.874x | E2b=0.879x | E3=0.887x
