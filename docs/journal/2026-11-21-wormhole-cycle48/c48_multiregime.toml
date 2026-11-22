@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 48: Multi-Regime Stress Verification & i9-10900K trimmed_here Recalibration"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c48_multiregime_and_trim_recalibration"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "39-43 ms (10T i9 Regime 2)", B = "3.66 B/B (10W P2)", Q = "0", M = "13.7-58.7 MiB (level-adaptive)" }
+evidence = "12-rd rotated fresh-process 4W A/B across 4 regimes (wikidata-l9 211 MB, wikidata-l1 36 MB 100 KB blocks, hetero-l9 54 MB, random-l9 11 MB LazyCells fallback): level-adaptive exact_out_cap(max_len) = max_len + (max_len/16).max(4096) wins 4/4 regimes with zero level-1 RSS bloat (wikidata-l1 RSS 15.92->13.72 MiB -13.8%, wall 0.8724x [0.8211, 0.9269], sys -65.1%, minflt -56.7%; random-l9 0.8604x [0.8357, 0.8859]; hetero-l9 0.9094x; wikidata-l9 0.9361x). Derived full T=1..20 i9-10900K trimmed_here recalibration table moving 10-20T from 7W/28 -> 10W / 12 MiB cap post-ParScan+P2."
