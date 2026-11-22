@@ -200,6 +200,12 @@ jobs:
       # commit, state in the XDG state directory, HOLD, notices
       - name: The workstation queue
         run: python3 bench/test_workstation_queue.py
+      # bench-parscan-c37's two verdicts (bench/parscan_c37.py: PARSCAN and BLOCK-READER) on
+      # synthetic runs: each verdict where the registration puts it, the memory gate at 10
+      # threads alone, the reported counts and the transfer deciding nothing, each decision's
+      # roster its own, and no verdict from incomplete or malformed records or machine
+      - name: The parscan-c37 verdict (synthetic runs)
+        run: python3 bench/test_parscan_c37.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py

@@ -96,6 +96,7 @@ pub mod crc;
 #[cfg(feature = "dose")]
 #[doc(hidden)]
 pub mod dose;
+mod huff;
 // (research only: the phase attribution's per-thread counters, with `phase-counters`)
 // (research only: the lazy kernel's induction, recorded, with `induction-trace`)
 #[cfg(feature = "induction-trace")]
@@ -104,6 +105,7 @@ pub mod itrace;
 pub mod mtf;
 // the open kernel, the workers' kernel wherever `LazyCells` ran (`bwt::OpenCells`)
 mod open;
+pub mod par_scan;
 pub mod parallel;
 #[cfg(feature = "phase-counters")]
 #[doc(hidden)]
@@ -565,6 +567,15 @@ pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
         res
     })?;
     Ok(out)
+}
+
+/// Whole-slice parallel decode using Cycle 37's Disjoint 4-Byte Anchor parallel front end +
+/// lock-free `AtomicUsize` work stealing + `OpenCells`.
+pub fn decode_parscan(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
+    if threads <= 1 {
+        return decode(data);
+    }
+    par_scan::decode_parallel_slice(data, threads, Kernels::detect())
 }
 
 /// `decode` with the kernels `k` and the inverse-BWT kernel `I`: `bwt::Cells` is

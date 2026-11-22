@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 //! An MSB-first bit reader over a byte slice. Past the slice's end it reads zeros, and
 //! says it has (`overran`): the caller then either has more input to give it (and starts
 //! the item again) or the stream is truncated. So the decoder's loops never index past
@@ -16,11 +17,11 @@ pub struct Bits<'a> {
 #[derive(Clone, Copy)]
 pub(crate) struct Reg {
     /// the next byte to load
-    pos: usize,
+    pub(crate) pos: usize,
     /// bits, MSB first: the top `live` are valid (the bits below them are the input's
     /// next bits or zeros, never anything else)
-    buf: u64,
-    live: u32,
+    pub(crate) buf: u64,
+    pub(crate) live: u32,
 }
 
 impl Reg {
@@ -37,6 +38,21 @@ impl Reg {
             self.live += take * 8;
         } else {
             *self = self.refill_slow(data);
+        }
+    }
+
+    /// Branch-lean refill inside a pre-validated 264-byte group window (`pos <= 256` holds
+    /// across an entire 50-symbol group of `<= 20`-bit codes plus 20-bit lookahead).
+    #[inline(always)]
+    pub(crate) fn refill_win(&mut self, win: &[u8; 264]) {
+        if let Some(w) = win.get(self.pos..self.pos + 8) {
+            let v = u64::from_be_bytes(w.try_into().unwrap());
+            self.buf |= v >> self.live;
+            let take = (63 - self.live) >> 3;
+            self.pos += take as usize;
+            self.live += take * 8;
+        } else {
+            *self = self.refill_slow(win);
         }
     }
 
@@ -79,17 +95,38 @@ impl Reg {
         self.live -= n;
     }
 
+    /// Consume `e & 63` bits (`1..=10`) directly from a root LUT entry `e` whose bits
+    /// `4..5` are guaranteed zero (`x86_64` `shlq %cl` masks shift count by `63` in hardware).
+    #[inline(always)]
+    pub(crate) fn skip_short_shl(&mut self, e: u32) {
+        debug_assert!((e & 63) <= 10 && (e & 63) <= self.live);
+        self.buf = self.buf.wrapping_shl(e);
+        self.live -= e & 63;
+    }
+
     /// Consume `n` bits (at most those peeked)
     #[inline(always)]
-    fn skip(&mut self, n: u32) {
+    pub(crate) fn skip(&mut self, n: u32) {
         debug_assert!(n <= self.live);
         self.buf = if n >= 64 { 0 } else { self.buf << n };
         self.live -= n;
     }
 
+    #[inline(always)]
+    pub(crate) fn bits(&mut self, data: &[u8], n: u32) -> u32 {
+        let v = self.peek(data, n);
+        self.skip(n);
+        v
+    }
+
+    #[inline(always)]
+    pub(crate) fn bit(&mut self, data: &[u8]) -> bool {
+        self.bits(data, 1) == 1
+    }
+
     /// Bits consumed from the slice's start
     #[inline(always)]
-    fn bit_pos(&self) -> u64 {
+    pub(crate) fn bit_pos(&self) -> u64 {
         self.pos as u64 * 8 - self.live as u64
     }
 

@@ -1940,3 +1940,129 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# Carbon's cycle 37 parallel front end against master's parallel path on this machine (#741;
+# registration docs/journal/2026-11-22-parscan-c37-registration.md, frozen before the data):
+# whether `mibz2-parscan` (`par_scan::decode_parallel_slice_with`: every worker scans a disjoint
+# share of the input for magics, then claims candidate blocks from one atomic cursor and decodes
+# each whole, a joiner on the calling thread keeping the chain's) beats production's parallel
+# decoder on the i9, where master's serial scanner sits beside its workers. Two builds pinned by
+# SHA: #741's merge-base with master BASE (96a24d3e, master's head when the recipe was written,
+# v0.5.12's src; `mibz2@build-base`) and #741's HEAD (perf/parscan-c37, `mibz2-parscan`, whose
+# harness drives the run); their build inputs differ in the handoff's nine files alone (checked).
+# Both by rustc 1.99.1. The whole Wikidata corpus (corpora/wikidata.bz2, checked by its SHA-256),
+# 4 copies end to end; at 1, 2, 4, 6, 8, 10, 12, 16 and 20 threads (unpinned on every CPU above
+# one thread; one thread on ab's one-CPU pin, both arms alike), interleaved, 16 paired rounds, no
+# spinner. Judged at 10 threads, 6 and 8 supporting, the rest reported, peak RSS gated at 10, the
+# handoff's transfer reported (bench/parscan_c37.py; Decision 1, PARSCAN). Then Decision 2,
+# BLOCK-READER, judged on its own: the head's default decoder (`mibz2`, on #741's new block reader)
+# against the base's at 1, 6, 8 and 10 threads, 16 rounds; judged at 1 thread, 6, 8 and 10
+# supporting, peak RSS gated at 10. verdict.txt holds both decisions' verdicts. bench-open-r5's
+# recipe (#735) with the builds, the arms, the counts and the second decision changed. About 30
+# minutes with the builds.
+bench-parscan-c37:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    BASE=96a24d3e4f764b3918089b0d5bcd5fe4b9bc1fea
+    HEAD=d57ec321f8d8d7212898219d67a303d995ef2746
+    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=1,2,4,6,8,10,12,16,20 BR_THREADS=1,6,8,10
+    W=$PWD/target/parscan-c37
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-parscan-c37 (docs/journal/2026-11-22-parscan-c37-registration.md) at $(git rev-parse HEAD): mibz2-parscan at $HEAD (perf/parscan-c37, #741) against mibz2 at $BASE (v0.5.12's src; #741's merge-base with master), at $THREADS threads (unpinned above 1), $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2; Decision 1 (PARSCAN); then Decision 2 (BLOCK-READER), the head's mibz2 against the base's at $BR_THREADS"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-parscan-c37: the checkout has local changes"; exit 1; }
+    git cat-file -e "$BASE^{commit}" 2>/dev/null || git fetch -q origin master
+    git cat-file -e "$HEAD^{commit}" 2>/dev/null || git fetch -q origin perf/parscan-c37
+    git merge-base --is-ancestor "$BASE" "$HEAD" \
+      || { echo "bench-parscan-c37: $BASE is not an ancestor of $HEAD"; exit 1; }
+    # the contrast, checked: the decoder's source differs in the handoff's files alone
+    changed=$(git diff --name-only "$BASE" "$HEAD" -- src Cargo.toml Cargo.lock examples build.rs rust-toolchain.toml)
+    [ -n "$changed" ] || { echo "bench-parscan-c37: the builds' source does not differ"; exit 1; }
+    beyond=$(printf '%s\n' "$changed" \
+      | grep -Ev '^src/(lib|bits|block|huff|par_scan|runs|stream)\.rs$|^examples/(ab|par_scan)\.rs$' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-parscan-c37: the builds differ beyond the handoff: $(echo $beyond)"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$BASE" "$HEAD" -- src examples > "$O/src-head-against-base.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-parscan-c37: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    for b in base head; do
+      sha=$BASE; [ "$b" = head ] && sha=$HEAD
+      [ -d "$W/build-$b" ] || git worktree add -q --detach "$W/build-$b" "$sha"
+      git -C "$W/build-$b" checkout -q --detach "$sha"
+      # (each build from a clean source: a detached checkout keeps local changes)
+      [ -z "$(git -C "$W/build-$b" status --porcelain)" ] \
+        || { echo "bench-parscan-c37: build-$b has local changes"; git -C "$W/build-$b" status --short; exit 1; }
+      [ "$(git -C "$W/build-$b" rev-parse HEAD)" = "$sha" ] \
+        || { echo "bench-parscan-c37: build-$b is not at $sha"; exit 1; }
+      (cd "$W/build-$b" && cargo build -q --release --example ab --example windows)
+    done
+    AB=$W/build-head/target/release/examples/ab
+    BAB=$W/build-base/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'base %s\nhead %s\n' "$BASE" "$HEAD" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    for b in base head; do
+      (cd "$W/build-$b" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+        || { echo "bench-parscan-c37: build-$b's toolchain differs"; exit 1; }
+    done
+    sha256sum "$AB" "$BAB" | tee "$O/binaries.sha256"
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-head/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-parscan-c37: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the machine
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    uname -a > "$O/uname.txt"
+    # the judged run: above one thread unpinned (no --spread), every online CPU, no spinner; one
+    # thread on ab's one-CPU pin; the counts and the arms interleaved within each round, the arms'
+    # order rotated
+    "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2-parscan" --threads $THREADS --rounds $ROUNDS \
+      --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
+    "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
+    date -u +%FT%TZ > "$O/timed.txt"
+    # Decision 1, PARSCAN
+    python3 bench/parscan_c37.py "$O/main.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+      --decision parscan --ref-arm mibz2 --arm mibz2-parscan --judged 10 --supporting 6,8 \
+      --reported 1,2,4,12,16,20 --rss-at 10 --rounds $ROUNDS --corpus wikidata-x$COPIES \
+      | tee "$O/verdict.txt" \
+      || echo "bench-parscan-c37: Decision 1 (PARSCAN) VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # Decision 2, BLOCK-READER, judged on its own records: the head's default decoder, on its new
+    # block reader, against the base's
+    "$AB" run "$O/block-reader.jsonl" --arms "mibz2@$BAB,mibz2" --threads $BR_THREADS --rounds $ROUNDS \
+      --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
+    "$AB" summary "$O/block-reader.jsonl" --ref "mibz2@$BAB" | tee "$O/block-reader-summary.txt"
+    date -u +%FT%TZ > "$O/timed-block-reader.txt"
+    echo | tee -a "$O/verdict.txt"
+    python3 bench/parscan_c37.py "$O/block-reader.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+      --decision block-reader --ref-arm mibz2 --arm mibz2 --judged 1 --supporting 6,8,10 \
+      --reported "" --rss-at 10 --rounds $ROUNDS --corpus wikidata-x$COPIES \
+      | tee -a "$O/verdict.txt" \
+      || echo "bench-parscan-c37: Decision 2 (BLOCK-READER) VOID, no verdict (verdict.txt says why); Decision 1 stands"
+    date -u +%FT%TZ > "$O/finished.txt"
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"
