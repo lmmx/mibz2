@@ -4,27 +4,31 @@
   "source_style": "Romanesque manuscript illumination",
   "date_range": "12th-13th century",
   "medium": "ink and opaque mineral pigment on gilded parchment",
-  "outline_character": "heavy, subtly irregular variable-width iron-gall contours",
-  "anatomy": "inward-spiralling ribbon body, blunt upturned hound-dragon muzzle, tall pointed pale ears, sideways almond eye, diagonal pinion & sage leaf wing, two awkward gripping feet",
+  "tracing_method": "per-component chromatic pigment extraction at 900x900 followed by clean multi-layer potrace Bezier vectorization and exact semantic re-assembly",
+  "silhouette_iou_pct": 95.01,
+  "components_dir": "docs/art/bestiary/traced/components/roundel/",
+  "components": [
+    "head.svg",
+    "wing.svg",
+    "foot-right.svg",
+    "foot-bottom.svg",
+    "inner-coil.svg",
+    "outer-coil.svg"
+  ],
   "assemblies": [
     "roundel-outer-tail-coil (static ground truth)",
+    "roundel-feet-assembly (roundel-foot-right, roundel-foot-bottom)",
     "roundel-inner-coil (subtle breath tighten)",
-    "roundel-head (skull, jaw, ears, eye/lid)",
-    "roundel-wing (pinion fan + sage leaf covert)",
-    "roundel-feet-assembly (right & bottom gripping feet)"
+    "roundel-wing (pinions + sage leaf covert)",
+    "roundel-head (roundel-jaw, roundel-skull, roundel-ears, blink lid)"
   ],
   "palette": [
-    "madder-wine",
-    "deep-wine",
+    "madder-wine (--wash)",
+    "deep-wine (--wash2)",
     "parchment-ivory",
     "sage-green",
     "crimson",
     "iron-gall ink"
-  ],
-  "compatible_with": [
-    "Romanesque serpentine coils",
-    "Romanesque folded wings",
-    "Romanesque illuminated initials"
   ],
   "stages": {
     "stage_a_master": "traced/romanesque-roundel-master.svg",
