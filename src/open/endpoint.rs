@@ -78,7 +78,9 @@ impl Links for Wide {
 /// The node count up to which `Narrow` links serve: ids 0..=65535
 const NARROW_NODES: usize = 1 << 16;
 
-/// A rule's words in the arena: left, right, len, first
+/// Four arena words hold either 15 payload bytes plus a length byte, or
+/// two child ids, their combined length and a tagged spelling offset. An
+/// unexpanded long rule has the sentinel u32::MAX in the offset field.
 const RULE: usize = 4;
 
 // Only live node handles carry a length. Rule children remain plain ids. Each
@@ -604,7 +606,7 @@ impl Kernel {
     }
 
     /// The words `edges` is sized to for the induced construction of `ns` strips and `m`
-    /// retained rows: the strips' image order (`ns` words), then the arena, sized for the
+    /// retained rows: packed strips and image order (`4 * ns` words), then the arena for the
     /// nodes and as many rules (the blocks make about one a node; more grow it); and at least
     /// the `m` edges written over them all
     pub(super) fn arena_words(&self, ns: usize, m: usize) -> usize {

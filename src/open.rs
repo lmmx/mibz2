@@ -11,8 +11,9 @@
 //! each byte's maximal runs are split into thin ones (at most `LIMIT` rows, retained) and thick
 //! strips (whole LF strips, eliminated). The thick strips and the gaps between them form an
 //! interval exchange whose elimination (`endpoint.rs`) gives, for every retained row, the word
-//! spelled until the walk next returns to a retained row. `emit` walks the retained rows from the
-//! marked one, appending each word; a cycle shorter than the block is repeated to `n` bytes.
+//! spelled until the walk next returns to a retained row. Large queued permutations whose
+//! codes fit alongside the links store the XOR of each row's neighbors. The emitter reads
+//! those cycles from both ends. A short marked cycle is repeated to `n` bytes.
 //!
 //! **Safety:** no `unsafe`. Every index is bounds-checked. The `assert!`s are invariants of the
 //! construction for every column, BWT or not: `checks.rs` audits every arrow of every binary
@@ -101,6 +102,7 @@ impl Band {
 #[derive(Default)]
 pub struct Kernel {
     endpoint: endpoint::Endpoint,
+    predecessor: Option<u32>,
     spill: outq::Spill,
     tiles: Vec<Tile>,
     directory: Vec<u32>,
@@ -516,7 +518,29 @@ impl Kernel {
             self.extra.resize(m as usize, 0);
         }
         stats.table_bytes = 4 * (m as usize + self.extra.len());
-        if QUEUE {
+        self.predecessor = None;
+        if QUEUE && !wide && m >= 65_536 {
+            let edges = &mut self.edges[..m as usize];
+            edges.fill(0);
+            let mut predecessor = mark;
+            let mut k = 0;
+            for a in 0..256 {
+                let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
+                let mut queue = outq::Reader::new(out, &self.spill, heads, a);
+                for &band in &self.bands[cursors[a]..end] {
+                    queue.wire_xor(
+                        edges,
+                        band.dst() as usize,
+                        (band.end() - k) as usize,
+                        band.code() << bits,
+                        mark,
+                        &mut predecessor,
+                    );
+                    k = band.end();
+                }
+            }
+            self.predecessor = Some(predecessor);
+        } else if QUEUE {
             let mut k = 0;
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
@@ -603,6 +627,20 @@ impl Kernel {
 
     /// The walk from the marked row using the constructed dictionary: the block's bytes into `out`
     fn walk(&mut self, n: usize, m: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
+        if let Some(before) = self.predecessor {
+            emit_bidirectional(
+                &self.edges[..m],
+                &self.spelling,
+                &self.inline16,
+                &self.lens,
+                n,
+                mark,
+                before,
+                bits,
+                out,
+            );
+            return;
+        }
         emit(
             &self.edges[..m],
             &self.extra,
@@ -869,6 +907,79 @@ fn emit(
     }
     out.truncate(at.min(n));
     repeat(n, out);
+}
+
+/// Consume the marked cycle from both ends. Each packed edge holds the XOR
+/// of its neighbors, so either neighbor determines the other. For a short
+/// cycle, move the suffix beside the prefix before repeating the period.
+#[allow(clippy::too_many_arguments)]
+fn emit_bidirectional(
+    edges: &[u32],
+    spelling: &[u8],
+    inline: &[[u8; INLINE]],
+    lens: &[u8],
+    n: usize,
+    mark: u32,
+    before: u32,
+    bits: u32,
+    out: &mut Vec<u8>,
+) {
+    out.resize(n + INLINE, 0);
+    let mask = (1 << bits) - 1;
+    let (mut prev, mut front) = (before, mark);
+    let (mut back, mut next) = (before, mark);
+    let (mut lo, mut hi) = (0, n);
+    for pair in 0..=edges.len() / 2 {
+        if lo == hi || (pair != 0 && front == next) {
+            break;
+        }
+        let ef = edges[front as usize];
+        let cf = (ef >> bits) as usize;
+        let single = front == back;
+        let lf = lens[cf];
+        if lf != LONG && hi - lo >= INLINE {
+            out[lo..lo + INLINE].copy_from_slice(&inline[cf]);
+            lo += usize::from(lf);
+        } else {
+            let word = if lf == LONG {
+                long_word(&inline[cf], spelling)
+            } else {
+                &inline[cf][..usize::from(lf)]
+            };
+            let take = word.len().min(hi - lo);
+            out[lo..lo + take].copy_from_slice(&word[..take]);
+            lo += take;
+        }
+        if single {
+            break;
+        }
+        let eb = edges[back as usize];
+        let cb = (eb >> bits) as usize;
+        let lb = lens[cb];
+        if lb != LONG && hi - lo >= INLINE {
+            let shifted = u128::from_le_bytes(inline[cb]) << (8 * (INLINE - usize::from(lb)));
+            out[hi - INLINE..hi].copy_from_slice(&shifted.to_le_bytes());
+            hi -= usize::from(lb);
+        } else {
+            let word = if lb == LONG {
+                long_word(&inline[cb], spelling)
+            } else {
+                &inline[cb][..usize::from(lb)]
+            };
+            let take = word.len().min(hi - lo);
+            out[hi - take..hi].copy_from_slice(&word[word.len() - take..]);
+            hi -= take;
+        }
+        (prev, front) = (front, (ef & mask) ^ prev);
+        (next, back) = (back, (eb & mask) ^ next);
+    }
+    if lo < hi {
+        out.copy_within(hi..n, lo);
+        out.truncate(lo + (n - hi));
+        repeat(n, out);
+    } else {
+        out.truncate(n);
+    }
 }
 
 /// The walk as shipped before the 16-byte emit, kept as the equivalence tests' reference

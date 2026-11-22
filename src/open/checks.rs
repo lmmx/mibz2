@@ -335,3 +335,52 @@ fn full_block_reserves_spelling_once() {
         }
     }
 }
+
+#[test]
+fn two_ended_emission_meets_on_odd_even_and_singleton_cycles() {
+    let mut inline = vec![];
+    let mut lens = vec![];
+    begin_inline(0, &mut inline, &mut lens);
+    for cycle in 1..=7usize {
+        let n = 73;
+        let bits = 4;
+        let edges: Vec<_> = (0..cycle)
+            .map(|i| {
+                ((65 + i as u32) << bits) | (((i + 1) % cycle) ^ ((i + cycle - 1) % cycle)) as u32
+            })
+            .collect();
+        let mut out = vec![];
+        emit_bidirectional(
+            &edges,
+            &[],
+            &inline,
+            &lens,
+            n,
+            0,
+            (cycle - 1) as u32,
+            bits,
+            &mut out,
+        );
+        assert!(out.into_iter().eq((0..n).map(|i| 65 + (i % cycle) as u8)));
+    }
+}
+
+/// A full nonzero tail still belongs to its original symbol. Its next ranks
+/// spill into a new chunk, even when the two in-output chunks are adjacent.
+#[test]
+fn full_nonzero_tail_links_to_its_overflow_chunk() {
+    let mut out = [0; 2048];
+    let mut spill = outq::Spill::default();
+    let mut queues = outq::Queues::new(&mut out, &mut spill, u32::MAX);
+    let thin = [0; 256];
+    queues.push(1, 0, 1, &thin);
+    queues.push(2, 1, 496, &thin);
+    queues.push(2, 497, 16, &thin);
+    assert_eq!(queues.chunks(), 2);
+    queues.push(2, 513, 2, &thin);
+    assert_eq!(queues.chunks(), 3);
+    let heads = queues.heads();
+    let mut decoded = [0; 514];
+    outq::Reader::new(&out, &spill, &heads, 2).wire(&mut decoded, 0);
+    assert!(decoded.into_iter().eq(1..=514));
+}

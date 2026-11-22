@@ -1,0 +1,90 @@
+{
+  "p": [
+    "PR714",
+    "master"
+  ],
+  "a": [
+    "A/A",
+    "master"
+  ],
+  "l": [
+    "bottom",
+    "master"
+  ],
+  "lv": [
+    "bottom",
+    "PR714"
+  ],
+  "t": [
+    "thick-count",
+    "master"
+  ],
+  "tv": [
+    "thick-count",
+    "bottom"
+  ],
+  "g": [
+    "strip-prefix",
+    "master"
+  ],
+  "gv": [
+    "strip-prefix",
+    "thick-count"
+  ],
+  "b": [
+    "band64",
+    "master"
+  ],
+  "bv": [
+    "band64",
+    "strip-prefix"
+  ],
+  "e": [
+    "short-rules",
+    "master"
+  ],
+  "ev": [
+    "short-rules",
+    "band64"
+  ],
+  "o": [
+    "long-slots",
+    "master"
+  ],
+  "ov": [
+    "long-slots",
+    "short-rules"
+  ],
+  "i": [
+    "intern",
+    "master"
+  ],
+  "iv": [
+    "intern",
+    "long-slots"
+  ],
+  "k": [
+    "spelling48",
+    "master"
+  ],
+  "kv": [
+    "spelling48",
+    "intern"
+  ],
+  "x": [
+    "two-ended",
+    "master"
+  ],
+  "xv": [
+    "two-ended",
+    "spelling48"
+  ],
+  "q": [
+    "cursor",
+    "master"
+  ],
+  "qv": [
+    "cursor",
+    "two-ended"
+  ]
+}
