@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 66: Unified decode_parallel(&[u8]) via Zero-Copy PR4 SliceWindow + D2_AdaptCap + DP_Chunks"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c66_decode_parallel_slicewin"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "0 feeder thread, 0 scanner thread, 0.35 ms lazy-stride startup", B = "0 B input copy (-15..-48 MiB peak RSS vs #739 decode_parallel)", Q = "0", M = "0 window buffers + #739 12 MiB ReadyRing" }
+evidence = "Same-binary #![forbid(unsafe_code)] generic SliceWindow<I: InverseBwt> A/B vs mibz2::decode_parallel (3296195e3) matching exact Cells (<8W) / OpenCells (>=8W) kernel policy (plus 4W OpenCells comparison) across 4 regimes (100% fast hits, fb=0, exact CRC32 parity). Eliminates input copying, 2 MiB window buffers, feeder thread, and dedicated scanner thread. DP_Chunks wins wikidata-l1 4W 0.9464x [0.9258, 0.9675] (vcsw -69.5%), random-l9 4W 0.9172x [0.8988, 0.9359] (minflt -27.9%, RSS -14.4 MiB), wikidata-l9 10W 0.9792x (vcsw -74.1%, RSS -33.6 MiB); drop-in DP_SliceWin wins random-l9 4W 0.9354x [0.9166, 0.9546] and cuts peak RSS -14..-25 MiB (-46 MiB with OpenCells 4W at 0.9202x [0.8963, 0.9447]) & sys -19%..-25% across all regimes."

@@ -1,0 +1,32 @@
+
+=== 8-ROUND CYCLE 66 UNIFIED decode_parallel(&[u8]) SLICEWINDOW A/B: wikidata-l9 4W (210 MB, 15.3x) ===
+Arm           med_ms      vs M739_DP [95% CI]    sys  minflt  vcsw   rssMB  Hits
+M739_DP_A     378.77 1.0000 [1.0000, 1.0000] 136.45   70409   331  272.63  -
+M739_DP_B     382.61 1.0009 [0.9603, 1.0432] 137.70   70433   332  274.56  -
+DP_SliceWin   354.13 0.9202 [0.8963, 0.9447] 102.15   55304   139  226.61  fh=509 fb=0
+DP_Adapt      353.26 0.9377 [0.8657, 1.0158] 104.27   55310   166  228.10  fh=509 fb=0
+DP_Chunks     350.59 0.9185 [0.9079, 0.9292] 124.71   53365   166  224.10  fh=509 fb=0
+
+=== 5-ROUND CYCLE 66 UNIFIED decode_parallel(&[u8]) SLICEWINDOW A/B: wikidata-l9 10W (210 MB, 15.3x) ===
+Arm           med_ms      vs M739_DP [95% CI]    sys  minflt  vcsw   rssMB  Hits
+M739_DP_A     366.26 1.0000 [1.0000, 1.0000] 140.18   66624   542  261.49  -
+M739_DP_B     364.66 1.0023 [0.9836, 1.0213] 142.47   66569   542  261.05  -
+DP_SliceWin   375.74 1.0260 [0.9953, 1.0578] 120.55   60935   417  240.55  fh=509 fb=0
+DP_Adapt      377.44 1.0560 [0.9697, 1.1499] 121.85   60849   404  240.61  fh=509 fb=0
+DP_Chunks     363.18 0.9892 [0.9680, 1.0109] 134.79   55789   181  232.55  fh=509 fb=0
+
+=== 8-ROUND CYCLE 66 UNIFIED decode_parallel(&[u8]) SLICEWINDOW A/B: wikidata-l1 4W (38 MB, 9.6x) ===
+Arm           med_ms      vs M739_DP [95% CI]    sys  minflt  vcsw   rssMB  Hits
+M739_DP_A      87.81 1.0000 [1.0000, 1.0000]  26.59   13472   329   56.35  -
+M739_DP_B      88.47 1.0077 [0.9886, 1.0272]  29.92   13443   348   55.94  -
+DP_SliceWin    96.04 1.0874 [1.0774, 1.0976]  20.18   11150   120   49.19  fh=379 fb=0
+DP_Adapt       95.34 1.0801 [1.0632, 1.0974]  19.64   11184   128   49.04  fh=379 fb=0
+DP_Chunks      94.36 1.0705 [1.0589, 1.0822]  19.56   11051   102   49.48  fh=379 fb=0
+
+=== 8-ROUND CYCLE 66 UNIFIED decode_parallel(&[u8]) SLICEWINDOW A/B: random-l9 4W (11 MB, 1.0x) ===
+Arm           med_ms      vs M739_DP [95% CI]    sys  minflt  vcsw   rssMB  Hits
+M739_DP_A     113.91 1.0000 [1.0000, 1.0000]  34.10   16040    42   69.52  -
+M739_DP_B     114.83 1.0171 [0.9940, 1.0408]  29.74   16242    39   70.42  -
+DP_SliceWin   108.00 0.9572 [0.9445, 0.9700]  27.68   12808    19   59.07  fh=12 fb=0
+DP_Adapt      106.47 0.9417 [0.9280, 0.9555]  26.16   12820    17   58.71  fh=12 fb=0
+DP_Chunks     105.29 0.9280 [0.9100, 0.9464]  21.25   11740    20   55.98  fh=12 fb=0
