@@ -27,13 +27,13 @@ That is "zero row reordering".
 | claim | verdict |
 |---|---|
 | Cut number: zero bucket splits for all BWTs iff κ = 1 | **Holds** (proved; verified). κ ≥ 2 splits in 43,772 cases |
-| BWT–Lazard commutation (min, max and both) | **Holds, in a more general form:** every κ = 1 contraction is a valid relabelling (598,000 cases, 0 invalid) |
+| BWT–Lazard commutation (min, max and both) | **Holds, in a more general form:** every κ = 1 contraction is a valid relabelling (599,000 cases, 0 invalid) |
 | r_{t+1} ≤ r_t for Lazard | **Holds** (proved below): it follows from full absorption, and holds for every κ = 1 block absorption, not only one extreme letter |
 | The (κ, e(Σ_R)) classification as a unification | **Holds with correction.** The monotone class is κ = 1 with *full absorption* (every Σ_R occurrence absorbed: block mode, or e(Σ_R) = 0 counting self-loops). 1Cut is κ = 1 with partial absorption (not monotone); BDMR is κ ≥ 1 with bucket splits (not monotone) |
 | Dual-polarity uniqueness | **Holds** under the zero-reordering hypothesis |
 | The Referee's F3/F4 witnesses (r grows under threshold or BDMR cuts) | **Hold.** My smallest κ = 1 partial-absorption witness is T = 00112, Σ_R = {1, 2}, r 3 → 4: the Referee's |
 | Symmetric-Middle-Run: Θ(n) work and symbols for all Lazard modes | **Fails on the committed code.** It reproduces n = 4,224 and r = 129, but Lazard-both ends with 320 symbols (2.48 r), flat in K. Θ(n) is pair contraction's behaviour on runs |
-| A potential monotone where r is not | **r + n** (bounded): Δr ≤ \|D\| on all 730,596 valid contractions, with Δr ≤ 2. r, r ± σ, the bigram count, text runs and z all fail |
+| A potential monotone where r is not | **r + n** (bounded): Δr ≤ \|D\| on all 730,596 valid contractions, with Δr ≤ 2. r − σ, r + σ, the bigram count, text runs and z all fail (on 3,366 r-increase cases) |
 | G1: L-complete under DLOGTIME-uniform TC⁰ reductions | **Holds with correction:** it is asymptotic, for unbounded n, and so beyond bzip2's 900,000-row cap. Φ_BWT verified on 1,224 cases |
 | "Φ_BWT always yields a valid single-cycle bzip2 BWT" | **Holds with correction:** single-cycle always (T is primitive); a bzip2 block only while n ≤ 900,000 and b + 2 ≤ 256 |
 | G2: S = Ω(r / (L p⁴)) for p-pass read-only streaming | **Holds with correction**, for that model only. The split argument is checked; the constants are not re-derived. It does not cover RAM, read-write streams or external memory, and at bzip2 scale it is vacuous (about 35 bits at p = 1) |
@@ -59,7 +59,7 @@ those comparisons is then the same whatever c is.
 **The κ ≥ 2 case.** Choose c < b < c′ with c, c′ ∈ Σ_L and b ∈ Σ_R. Any text containing the bigrams
 c c, c b and c c′ splits c's bucket. □
 
-**Verified:** 0 invalid in 598,000 κ = 1 cases (pair and block). κ ≥ 2 splits in 43,772 cases;
+**Verified:** 0 invalid in 599,000 κ = 1 cases (pair and block). κ ≥ 2 splits in 43,772 cases;
 the smallest is T = 00102, Σ_L = {0, 2}.
 
 ### 1.2 Full absorption makes r monotone (proved, verified)
@@ -143,8 +143,9 @@ Lazard. No artefact on the branch records the 4,211-symbol figure.
 So **r + n is non-increasing**, and falls by at least |D| − Δr ≥ 0. A general proof is open; the
 charging argument of §1.2 gives Δr ≤ 2|D|.
 
-**No compressibility measure tried is monotone in this class.** Each of the following rose in some
-of the 14,840 cases where r rose:
+**No compressibility measure tried is monotone in this class.** On the smaller domain `potential.py`
+covers (2 letters to length 10, 3 to 8, 4 to 6), r rose in 3,366 valid contractions. Each of the
+following rose in some of those:
 - r − σ: 698;
 - r + σ: 3,366;
 - the distinct-bigram count: 606;
