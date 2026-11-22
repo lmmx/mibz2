@@ -55,6 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Structured invention" = "blog/2026-11-22-structured-invention.md" },
     { "A memory gain is a gain" = "blog/2026-11-21-a-memory-gain-is-a-gain.md" },
     { "Besieging hard problems" = "blog/2026-11-21-besieging-hard-problems.md" },
     { "Fast alone, slow in a crowd" = "blog/2026-11-21-fast-alone-slow-in-a-crowd.md" },
@@ -273,6 +274,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-22-structured-invention.md" = "A claimed Riemann proof drew on fifty classical tools because each step of an older proof needed one, and our research teams now invent the same way." },
   { "blog/2026-11-21-a-memory-gain-is-a-gain.md" = "Sending five dense blocks to our leanest decoding kernel cut peak memory by a quarter at eight threads without slowing anything, so memory now counts as a gain." },
   { "blog/2026-11-21-besieging-hard-problems.md" = "A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check." },
   { "blog/2026-11-21-fast-alone-slow-in-a-crowd.md" = "Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor." },
