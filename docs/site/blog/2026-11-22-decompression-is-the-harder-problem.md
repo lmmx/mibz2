@@ -30,10 +30,6 @@ who organises [Tropik](https://tropik.space), a research collective, journal and
 metaphysics, mathematics, poetics and software. It is published with his agreement, lightly
 edited, and set as an illuminated manuscript.
 
-<p class="post-cta"><a class="md-button md-button--primary" href="conversations/2026-11-22-thomas-murphy.html">Read the conversation</a></p>
-
-[![The headline message, "managing Claudes all day is knackering", in blackletter inside a frame of two orange serpents, with the gilded caption "Of Man's Labours & their Eternal Return" beneath it](../assets/images/conversation-thomas-murphy/knackering.jpg)](conversations/2026-11-22-thomas-murphy.html)
-
 ## What it covers
 
 - **Managing agents is its own kind of labour.** Thomas finds managing Claudes all day
@@ -52,7 +48,7 @@ edited, and set as an illuminated manuscript.
 
 ## How to read it
 
-The page keeps the DM's layout: my messages on the right in blue, Thomas's on the left. Around
+The conversation below keeps the DM's layout: my messages on the right in blue, Thomas's on the left. Around
 them:
 
 - **Fleurons (❧ ☙)** mark terms with a link. Each carries a numbered footnote, and the notes at
@@ -65,3 +61,50 @@ them:
 
 The edits are light: a few words were changed for tone, and some messages after the end of the
 conversation were cut.
+
+## The conversation
+
+<div class="convo-embed">
+<iframe id="convo" src="conversations/2026-11-22-thomas-murphy.html" title="The conversation between Louis Maddox and Thomas Murphy, set as an illuminated manuscript" scrolling="no" loading="eager"></iframe>
+</div>
+
+<script>
+(function () {
+  var f = document.getElementById("convo");
+  if (!f) return;
+  function theme(doc) {
+    var dark = document.body.getAttribute("data-md-color-scheme") === "slate";
+    doc.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  }
+  function fit() {
+    try { f.style.height = f.contentDocument.documentElement.scrollHeight + "px"; } catch (e) {}
+  }
+  f.addEventListener("load", function () {
+    var doc;
+    try { doc = f.contentDocument; } catch (e) { return; }
+    if (!doc) return;
+    doc.documentElement.style.overflow = "hidden";
+    theme(doc);
+    new MutationObserver(function () { theme(doc); })
+      .observe(document.body, { attributes: true, attributeFilter: ["data-md-color-scheme"] });
+    doc.addEventListener("click", function (ev) {
+      var a = ev.target.closest && ev.target.closest("a[href]");
+      if (!a) return;
+      var h = a.getAttribute("href");
+      if (h.charAt(0) === "#") {
+        var el = doc.getElementById(h.slice(1));
+        if (el) {
+          ev.preventDefault();
+          var y = f.getBoundingClientRect().top + el.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      } else {
+        a.setAttribute("target", "_top");
+      }
+    });
+    fit();
+    if (window.ResizeObserver) new ResizeObserver(fit).observe(doc.body);
+    setTimeout(fit, 1500);
+  });
+})();
+</script>
