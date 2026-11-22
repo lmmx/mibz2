@@ -134,6 +134,116 @@ that petal burst:
 Make one variant head, `claude-ruffed`, for any creature. Optionally, add a small kaomoji face
 (`^ω^`) in negative space somewhere a sharp eye would find it.
 
+## 4. The owner's further direction: basilisks, heraldry, gold
+
+The owner's words: the animations are "simplistic"; the creatures are "often not well proportioned
+for snakes"; the heads "look a bit like dogs and a bit crude"; it should be "quite proper and
+illuminated manuscript medieval vibe", "less simply slithering around in a silly way and more
+crestlike coat of arms like astride", with "gold patterning and medieval colouring and texture".
+
+New references in `refs/`:
+- `basilisk-aldrovandi.jpg`: Aldrovandi's basilisk woodcut: a crowned cockerel head with a hooked
+  beak, a scaled humped body, six legs, a tail ending in a spiral curl.
+- `basilisk-gheeraerts-weasel.jpg`: Marcus Gheeraerts's basilisk and the weasel: a cockerel's comb,
+  wattles and beak, feathered breast, wing, a long scaled serpent tail, a bird's clawed feet.
+- `visconti-biscione-milan.jpg`: the Visconti biscione in relief: a heavy serpent in tight,
+  regular S-coils filling a shield, crowned head, a man in its jaws. Coiling as *composition*.
+- `ouroboros-engraving.jpg`: the winged ouroboros (Lambsprinck): a closed ring of scaled body,
+  small horned head biting the tail, membranous wings, clawed forelegs.
+- `marlborough-arms-wyvern-supporters.png`: wyverns as heraldic supporters: rampant, astride a
+  scroll, wings displayed, tails knotted, flanking a central device.
+- `aberdeen-bestiary-initial-gold.jpg`: a bestiary initial: a two-tone serpent wound round a
+  column on burnished gold, in lapis, vermilion and verdigris, framed by bands of white-dot and
+  zigzag ornament.
+- Read also: bestiary.ca, beast source 264 (https://bestiary.ca/beasts/beastsource264.htm), and
+  https://en.wikipedia.org/wiki/Ouroboros (the alchemical and gnostic images on that page).
+
+What follows from them:
+
+1. **Heads are basilisk and wyvern heads, never dog heads.** No muzzle with a round nose and jowls.
+   Build heads from: a hooked or straight beak, a cockerel's comb or a small crown, a wattle, a
+   brow ridge over a small round eye, a long split tongue, and (for the drakes) swept-back horns
+   and a finned crest down the neck. Give at least three distinct head types: basilisk (cockerel,
+   crowned), wyvern (horned, finned, open jaw with a barbed tongue), serpent (biscione: a narrow
+   wedge, crowned).
+2. **Snake proportions.** A serpent's body is long: at least 12 to 20 head-lengths, tapering
+   continuously from the neck to a fine point, with the widest point a third of the way back. No
+   stubby or uniform bodies.
+3. **Keep the diversity of the engraving.** Different species, not one creature recoloured:
+   - a legless serpent (biscione);
+   - a two-legged wyvern, wings displayed;
+   - a basilisk: cockerel forequarters, serpent tail;
+   - a six-legged crawling basilisk (Aldrovandi);
+   - a winged ouroboros, which bites its own tail;
+   - an amphisbaena (a head at each end) if it suits.
+4. **Heraldic poses, not cartoon slithering.** Besides crawlers, give poses that sit still and
+   *hold* a place on the page, as charges and supporters do:
+   - **rampant / segreant:** rearing on its hind legs, wings displayed, as a supporter beside a
+     bubble or caption;
+   - **nowed:** the body tied in a knot;
+   - **ondoyant (the biscione):** the body in regular vertical S-coils;
+   - **ouroboros:** a closed ring, which can circle an avatar or a letter's counter;
+   - **astride:** standing on a scroll, a rule or the top of a bubble.
+
+   These "rest" poses breathe: a slow sway of the neck, the tongue flicking, the wings shifting,
+   the tail curling. They don't run around.
+5. **Illumination, gold and texture.** The page wants illuminated-manuscript colour:
+   - **gold:** burnished gold leaf as ground or pattern. A gradient with a bright specular band,
+     and a fine punched or stippled diaper over it;
+   - **pigments:** ultramarine/lapis #1d3f9e, vermilion #d8342a, verdigris #3f9a7a, lead white,
+     ochre. Flat, saturated, with a black outline (here the manuscript's outline is right; the
+     engraving's hatching is the other register), and white highlight strokes along the body's
+     curve;
+   - **ornament:** white-dot rows, zigzag lines and scale patterns painted in white or gold over
+     the colour, as in the Aberdeen initial;
+   - **texture:** a subtle vellum grain or pigment mottle (an feTurbulence-based filter, cheap)
+     so the colour isn't flat digital fill.
+
+   Offer two registers, selectable per creature: `engraved` (ink line, hatching and wash, section
+   1) and `illuminated` (pigment, gold, white ornament, this section). Both keep modulated line
+   and good proportion.
+
+## 5. Arbitrary paths: drape it like vinery
+
+The rig in section 2 must take **any** path, not just a run to a hole:
+- a path round a bubble's rounded rectangle (a closed loop, or an open arc over its top or down
+  one side), so a serpent can *drape* a bubble the way the page's fleurons and vines do;
+- the body must follow sharp-ish corners without kinking: sample the path, smooth it, and build the
+  body as a ribbon of offset curves from a width profile (or as a stroke with dashes, where that
+  is enough);
+- markings, scales and ornament follow the path's tangent and the body's width at each point;
+- an API for the page, e.g. `drape(bubbleEl, {creature, register, side: 'top'|'loop'|'left',
+  fleurons: true})`, which reads the bubble's box and builds the path. It can combine with fleurons
+  (❧ ☙) set at the ends or knots;
+- a still pose along a path (the vine), and a crawling one (section 2), share the same rig.
+
+## 6. Motion that isn't simplistic
+
+Replace the rigid "slide along the path" with motion from the animals:
+- **lateral undulation:** a travelling sine wave down the body, amplitude growing towards the tail,
+  phase locked to the forward speed so the body doesn't skate (each point of the body passes
+  through the same points on the ground);
+- **concertina** or **rectilinear** creep for the heavy serpents: segments bunch and stretch;
+- **legged gait:** the legs step in a diagonal sequence, timed to the body's progress, with a
+  claw that plants and lifts, not a pendulum swing;
+- **the head leads:** it pauses, rears, looks about and tastes the air, then moves; the body
+  catches up;
+- **the wings beat or settle** with the gait, slowly;
+- ease every move, and give the creatures moments of stillness.
+
+Keep it cheap: SMIL or CSS transforms on a modest number of points (this page runs on phones).
+Say in the README what each motion costs.
+
+## 7. Deliverables, revised
+
+1. A plate, `plate.html` + `plate.png`: every species in both registers and at least two heraldic
+   poses, beside the references, on one sheet.
+2. `crawler/` as in section 2, with `drape()` from section 5 and the motion from section 6, plus
+   its proof sheets.
+3. A README for the page integrator: the API, each creature's options, what each motion costs.
+
+Push after each step, so the owner can follow along.
+
 ## Order and method
 
 1. Rework one creature (the *Draco bipes*, against its engraving), and commit it and a contact sheet
