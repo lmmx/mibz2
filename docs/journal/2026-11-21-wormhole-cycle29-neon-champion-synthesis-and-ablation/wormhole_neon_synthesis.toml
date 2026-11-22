@@ -1,0 +1,48 @@
+name = "Wormhole/Neon Cycle 29: Unified Round 4 Champion Synthesis (WormholeNeonCells) & Complete 8-Step Cumulative Ablation"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_all_pos_mux_or_pt64"
+inputs = ["records", "C", "p", "n"]
+output = "mux_strips_and_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Pass-1 All+Pos + MuxStrips (with 35-round head-to-head final verdict on Cycle 27 held CleanPt64)."
+
+[[edge]]
+id = "s2_graded_operad"
+inputs = ["mux_strips_and_outq16", "C", "n"]
+output = "graded_operad_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Cycle 23 G2 GradedOperad ((len10<<22)|id22 + Operad-MN16 RULE4 u128), eliminating 71.5% of random S2 rule loads."
+
+[[edge]]
+id = "s3_bidi_1w4k_dedup_band64"
+inputs = ["graded_operad_arena", "mux_strips_and_outq16"]
+output = "band64_and_l1d_dict"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict_long", D = "H / 2", B = "B_bands + dict_long", Q = "H", M = "B_bands + dict_long" }
+evidence = "L4 BidiBottom + GradedOperad O(1) length dispatch + 1-way 4K str_ht (99.983% exact dedup, Theorem 28.1) + 8B Band64."
+
+[[edge]]
+id = "s4_hoisted_wire_len4"
+inputs = ["band64_and_l1d_dict", "mux_strips_and_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Cycle 25 E2h hoisted S4 wire packing GPR Len4 on bits+code_bits<=28 blocks at 0 extra instructions per edge."
+
+[[edge]]
+id = "s5_emit_zerospill_len4"
+inputs = ["critical_edges", "band64_and_l1d_dict", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Cycle 22 F4 + Cycle 24/25 E1+E2h Loop-Inversion Early-j ZeroSpill + GPR Len4 emit (mu=1 floor, 0 B extra scratch)."
