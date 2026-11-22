@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 200" width="260" height="200" role="img" aria-label="Yuck wendling: charming wind-up marginalia wyrm with brass key and spring tail">
+<defs>
+<path id="yuck-wendling-spine" class="spine" d="M172,128 C154,146 138,118 114,124 C98,128 92,140 82,146 C68,154.5 50,166 34,154 C18,142 20,112 40,104 C60,96 74,116 64,132 C56,144 40,136 46,124" data-widths="30,36,44,50,52,48,42,34,26,21,17,13.5,10.5,8.0,6.0,4.4,3.2,2.4,1.8"/>
+<path id="yuck-wendling-body-shape" d="M162,124Q158.5,122.5 158,121.5Q157.5,120 158,119Q158.5,118 159,117Q159,116 158.5,115Q158,114 156.5,113Q155,111.5 152.5,110.5Q150.5,109 147.5,107.5Q144.5,106 141,105Q137.5,104 133,103Q129,102.5 124,102.5Q119,102.5 114.5,103.5Q110,104.5 106,106.5Q102,108 98.5,110.5Q95,112.5 92,115.5Q89,118 86.5,121Q84.5,123.5 83,126.5Q81,129 80,131.5Q79,134 78,136Q77.5,138 76.5,140L76,141.5L88.5,162.5Q95.5,160.5 98.5,159.5Q101.5,158 104,157Q106.5,156 109,155.5Q111,155 112.5,155Q114.5,154.5 115.5,155Q117,155 118,155.5Q119,155.5 120,156Q120.5,156.5 121,157Q121,157.5 121,157.5Q121.5,158 122,158Q122.5,158.5 123.5,158.5Q124.5,159 126.5,159.5Q128.5,160 130.5,160.5Q133,161 136.5,161.5Q139.5,162.5 144,163Q148,163.5 153,163Q158.5,163 164,161Q169.5,159 174,155.5Q178,152 180.5,148.5L182.5,144.5Z"/>
+<clipPath id="yuck-wendling-body-clip"><use href="#yuck-wendling-body-shape"/></clipPath>
+<path id="yuck-wendling-tail-shape" d="M2.5,-15.5Q-5,-11 -8.5,-8.5Q-12,-6.5 -15,-4Q-18,-2 -21.5,0Q-24.5,1.5 -27.5,2.5Q-30.5,3.5 -33.5,4Q-36,4 -39,3.5Q-41.5,2.5 -44,1Q-46.5,-1 -48,-3.5Q-50,-6 -51,-9Q-52,-12.5 -52.5,-15.5Q-52.5,-19 -52,-22.5Q-51,-26 -49.5,-29Q-48,-32 -45.5,-34.5Q-43,-37 -39.5,-38.5Q-36,-40 -32.5,-40Q-29,-40 -26,-38.5Q-23,-37.5 -20.5,-34.5Q-18.5,-31.5 -17.5,-28Q-16.5,-24.5 -17.5,-20.5Q-18.5,-17 -21,-14Q-23,-11 -26.5,-10Q-30.5,-9.5 -33,-12Q-36,-14 -35.5,-18L-35.5,-21.5L-36.5,-22.5Q-37.5,-13.5 -34,-10.5Q-31,-7.5 -26.5,-8Q-21.5,-8.5 -18.5,-12Q-15.5,-15.5 -14,-19.5Q-12.5,-24 -13.5,-28.5Q-14,-33.5 -16.5,-37.5Q-19,-41.5 -23.5,-44Q-27.5,-46.5 -32.5,-47Q-37.5,-47 -42,-46Q-47,-44.5 -51,-41.5Q-55,-38.5 -58,-34.5Q-61,-30.5 -62.5,-25.5Q-64,-21 -64.5,-16Q-65,-11 -64,-6Q-63,-0.5 -60.5,4Q-58,9 -54,12.5Q-50,16.5 -45,19Q-40,21.5 -34,22Q-28.5,22.5 -23,21.5Q-18,21 -13,19Q-8.5,17.5 -4,15.5Q0,14 4,12Q7.5,10 11.5,8L15,5.5Z"/>
+<clipPath id="yuck-wendling-tail-clip"><use href="#yuck-wendling-tail-shape"/></clipPath>
+<clipPath id="yuck-wendling-eye-near-clip"><ellipse cx="0" cy="0" rx="6.6" ry="7.2"/></clipPath>
+<clipPath id="yuck-wendling-eye-far-clip"><ellipse cx="0" cy="0" rx="5.0" ry="6.2"/></clipPath>
+<symbol id="yuck-wendling-head-symbol" overflow="visible">
+<path d="M1.2,-7.6 C-2.2,-11.2 -6.2,-12.2 -9.4,-10.2 C-6.4,-8.2 -3.4,-6.8 -.8,-5.4 Z" fill="var(--wash, #c8361c)" stroke="#1c100a" stroke-width=".62" stroke-linejoin="round"/>
+<path d="M-1.8,-4.0 C.6,-9.6 7.4,-11.2 13.4,-8.8 C17.8,-7.0 20.6,-2.6 20.4,1.8 C20.2,6.4 16.4,9.2 10.6,9.4 C5.0,9.6 .4,7.6 -1.6,4.0 C-2.8,1.6 -2.8,-1.4 -1.8,-4.0 Z" fill="var(--wash, #c8361c)" stroke="#1c100a" stroke-width=".72" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2.0,-7.4 C6.4,-9.4 11.4,-8.8 15.2,-6.0 C12.4,-4.4 7.6,-4.6 2.0,-7.4 Z" fill="#f4e5c8" fill-opacity=".42"/>
+<path d="M1.4,4.2 C5.6,8.2 12.2,8.4 16.4,5.6 C14.6,8.2 10.2,9.2 5.4,8.2 C2.8,7.4 1.6,5.8 1.4,4.2 Z" fill="#ece0c8" fill-opacity=".82"/>
+<path d="M.4,-5.4 C-3.2,-7.8 -7.4,-8.2 -10.8,-5.8 C-7.2,-4.6 -3.8,-3.8 -.8,-3.0 Z" fill="var(--wash, #c8361c)" stroke="#1c100a" stroke-width=".62" stroke-linejoin="round"/>
+<ellipse cx="16.2" cy="-2.0" rx="2.0" ry="2.5" fill="#1c100a"/><circle cx="15.7" cy="-2.8" r=".72" fill="#f6efe2"/>
+<ellipse cx="9.6" cy="-1.4" rx="2.6" ry="2.9" fill="#1c100a"/><circle cx="8.9" cy="-2.4" r=".95" fill="#f6efe2"/><circle cx="10.4" cy="-.3" r=".42" fill="#f6efe2"/>
+<path d="M12.2,3.4 Q14.0,5.0 15.8,3.5 Q17.2,4.8 18.6,3.2" fill="none" stroke="#1c100a" stroke-width=".58" stroke-linecap="round"/>
+<path d="M14.8,4.1 C14.7,6.2 17.0,6.3 17.2,4.0 Z" fill="#a82214" stroke="#1c100a" stroke-width=".42" stroke-linejoin="round"/>
+</symbol></defs>
+<g id="yuck-wendling-root" transform="translate(0,-6)">
+<g transform="translate(136,184)"><g id="yuck-wendling-shadow"><animateTransform attributeName="transform" type="scale" values="1.05 1;.76 .82;.68 .75;1.06 1;.94 .96;1.05 1" keyTimes="0;.22;.45;.72;.86;1" calcMode="spline" keySplines=".28 0 .45 1;.35 0 .65 1;.45 0 .72 1;.3 0 .5 1;.4 0 .6 1" dur="2.3s" repeatCount="indefinite"/><ellipse cx="0" cy="0" rx="64" ry="8.5" fill="#1c100a" fill-opacity=".14"/></g></g>
+<g transform="translate(136,178)">
+<g id="yuck-wendling-hop"><animateTransform attributeName="transform" type="translate" values="0 0;2 -16;3 -24;0 0;1 -4;0 0" keyTimes="0;.22;.45;.72;.86;1" calcMode="spline" keySplines=".22 .68 .38 1;.32 0 .62 1;.58 0 .82 .48;.28 .6 .45 1;.45 0 .65 1" dur="2.3s" repeatCount="indefinite"/>
+<g id="yuck-wendling-squash"><animateTransform attributeName="transform" type="scale" values="1.06 .92;.94 1.08;1.01 .99;1.07 .91;.98 1.03;1.06 .92" keyTimes="0;.22;.45;.72;.86;1" calcMode="spline" keySplines=".28 0 .45 1;.35 0 .65 1;.45 0 .72 1;.3 0 .5 1;.4 0 .6 1" dur="2.3s" repeatCount="indefinite"/>
+<g id="yuck-wendling-tilt"><animateTransform attributeName="transform" type="rotate" values="2;-4;-3;3;-1;2" keyTimes="0;.22;.45;.72;.86;1" calcMode="spline" keySplines=".35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1" dur="2.3s" repeatCount="indefinite"/>
+<g transform="translate(-136,-178)">
+<g transform="translate(118,106) rotate(-14)">
+<path d="M-8,2 C-8,-2 8,-2 8,2 L7,8 C3,10 -3,10 -7,8 Z" fill="var(--wash2, #c28a22)" stroke="#1c100a" stroke-width="1.55" stroke-linejoin="round"/>
+<path d="M-5,2 C-2,1 2,1 5,2" fill="none" stroke="#e8c468" stroke-width="1.15" stroke-linecap="round"/>
+<rect x="-3.4" y="-22" width="6.8" height="23" rx="2.4" fill="var(--wash2, #c28a22)" stroke="#1c100a" stroke-width="1.5"/>
+<path d="M-1.2,-20 L-1.2,-1" fill="none" stroke="#e8c468" stroke-width="1.35" stroke-linecap="round"/>
+<g transform="translate(0,-22)"><g id="yuck-wendling-key-bow"><animateTransform attributeName="transform" type="scale" values="1 1;.30 1;-1 1;-.30 1;1 1" keyTimes="0;.25;.50;.75;1" calcMode="spline" keySplines=".4 0 .6 1;.4 0 .6 1;.4 0 .6 1;.4 0 .6 1" dur="1.9s" repeatCount="indefinite"/>
+<path fill-rule="evenodd" d="M0,-2 C-4,-18 -26,-24 -28,-10 C-30,4 -14,10 -3,4 L0,3 L3,4 C14,10 30,4 28,-10 C26,-24 4,-18 0,-2 Z M-6,-4 C-9,-12 -20,-14 -21,-7 C-22,0 -13,3 -6,0 Z M6,-4 C9,-12 20,-14 21,-7 C22,0 13,3 6,0 Z" fill="var(--wash2, #c28a22)" stroke="#1c100a" stroke-width="1.65" stroke-linejoin="round"/>
+<path d="M-24,-12 C-22,-18 -12,-18 -6,-11 M6,-11 C12,-18 22,-18 24,-12" fill="none" stroke="#e8c468" stroke-opacity=".90" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M-23,-3 C-19,4 -11,5 -5,2 M5,2 C11,5 19,4 23,-3" fill="none" stroke="#1c100a" stroke-opacity=".35" stroke-width=".9" stroke-linecap="round"/>
+<circle cx="0" cy="-2" r="3.4" fill="#e8c468" stroke="#1c100a" stroke-width="1.35"/>
+</g></g></g>
+<g transform="translate(82,152)"><g id="yuck-wendling-tail"><animateTransform attributeName="transform" type="rotate" values="0;-9;7;-3;0" keyTimes="0;.26;.56;.82;1" calcMode="spline" keySplines=".35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1" dur="2.3s" repeatCount="indefinite"/>
+<use href="#yuck-wendling-tail-shape" fill="var(--wash, #c8361c)"/>
+<g clip-path="url(#yuck-wendling-tail-clip)">
+<path d="M2.5,-16Q-7.5,-10 -12,-7Q-16.5,-3.5 -20.5,-1.5Q-24.5,1 -28.5,2.5Q-32.5,3.5 -36,3.5Q-39.5,3 -43,1Q-46,-1 -48.5,-4.5Q-51,-8 -51.5,-12.5Q-52.5,-17 -52,-21.5Q-51,-26 -48.5,-30Q-46.5,-34 -42.5,-36.5Q-38.5,-39 -34,-39.5Q-29.5,-40 -25,-38Q-21,-35.5 -19,-31Q-17,-27 -18,-22Q-18.5,-17 -22,-13.5Q-25.5,-10 -30,-11Q-34.5,-12 -35,-17L-35.5,-21.5L-35.5,-22Q-35,-11.5 -30,-10.5Q-25,-9 -21.5,-13Q-17.5,-16.5 -17,-21.5Q-16,-27 -18,-31.5Q-20,-36.5 -24.5,-39Q-29,-41.5 -34,-41.5Q-39,-41 -43.5,-38.5Q-48,-36 -51,-31.5Q-53.5,-27 -54.5,-22Q-55.5,-17 -55,-12Q-54.5,-7 -52,-2.5Q-49.5,1.5 -45.5,4.5Q-41.5,7 -37,8Q-32.5,8.5 -27.5,7.5Q-23,6.5 -18,4Q-13.5,1.5 -8.5,-1.5Q-4,-4 1,-7L5.5,-10Z" fill="#f4e5c8" fill-opacity=".38"/>
+<path d="M10,-2.5Q0.5,3.5 -4.5,6Q-9.5,9 -15,11.5Q-20.5,13.5 -26.5,14.5Q-32.5,15.5 -38.5,14Q-44,13 -49,9Q-53.5,5 -56.5,0Q-59,-5.5 -59.5,-11.5Q-60,-17.5 -58.5,-23Q-57,-28.5 -53.5,-33.5Q-50.5,-38.5 -45,-41Q-40,-43.5 -34,-44Q-28,-44 -23.5,-41Q-18.5,-37.5 -16.5,-32.5Q-14.5,-27 -15.5,-21.5Q-16.5,-16 -20.5,-12Q-25,-8 -30,-9.5Q-35.5,-11 -36,-16.5L-36,-22L-36.5,-22.5Q-36,-10.5 -30.5,-9Q-24.5,-7.5 -20,-11.5Q-15.5,-15 -14,-21Q-12.5,-27 -14.5,-33Q-17,-39 -22,-43Q-27.5,-46.5 -34,-46.5Q-41,-46.5 -46.5,-44Q-52.5,-41 -57,-35.5Q-61,-30.5 -63,-24Q-65,-17.5 -64.5,-11Q-64.5,-4 -61.5,2.5Q-58.5,9 -52.5,14Q-47,19 -39.5,21Q-32,23 -25,22Q-17.5,21 -11.5,19Q-5.5,17 0,14.5Q5.5,12 10.5,9L15,6Z" fill="#ece0c8" fill-opacity=".84"/>
+<path d="M1.5,3Q-8,8 -13,10.5Q-18,12.5 -23.5,14Q-29,15.5 -35,15Q-40.5,14.5 -45.5,11.5Q-50.5,8.5 -54,4Q-57.5,-1 -59,-6.5Q-60,-12 -59.5,-17.5Q-59.5,-23 -57,-28Q-54.5,-33.5 -50.5,-37Q-46.5,-41 -41,-43Q-36,-44.5 -30.5,-43.5Q-25,-43 -21,-39Q-17,-35.5 -15.5,-30Q-14,-24.5 -16,-19.5Q-17.5,-14.5 -21.5,-11Q-26,-8 -31,-10Q-36,-11.5 -36,-17L-36,-22" fill="none" stroke="#1c100a" stroke-opacity=".78" stroke-width="1.1" stroke-linecap="round"/>
+<path d="M-3.5,6Q0.5,9 1,13.5 M-16.5,12Q-13,15.5 -13,19.5 M-30.5,15.5Q-28.5,19.5 -30,23 M-45.5,12.5Q-45.5,16.5 -48.5,18 M-56,2Q-57.5,5 -61,5 M-60,-12Q-62.5,-10 -65,-11.5 M-58,-26Q-61,-25 -62,-27.5 M-50.5,-38Q-53,-38.5 -52.5,-41 M-37.5,-44.5Q-39.5,-45.5 -38,-47" fill="none" stroke="#1c100a" stroke-opacity=".68" stroke-width=".82" stroke-linecap="round"/>
+<path d="M-8.5,-2.5h.1 M-20,4h.1 M-31,8h.1 M-42,6.5h.1 M-51,-1h.1 M-55,-12.5h.1 M-54,-25h.1 M-48,-35.5h.1 M-37,-41.5h.1 M-24.5,-40h.1 M-16.5,-30.5h.1 M-17.5,-17.5h.1" fill="none" stroke="#f6efe2" stroke-width="1.95" stroke-linecap="round"/>
+</g>
+<path d="M6.5,11Q-2,14.5 -6.5,16.5Q-10.5,18.5 -15.5,20Q-21,21.5 -26.5,22Q-32,22.5 -38,21.5Q-44,20 -48.5,17Q-53.5,14 -57,9.5Q-60.5,5 -62.5,-0.5Q-64.5,-5.5 -64.5,-11Q-65,-16 -63.5,-21Q-62.5,-26 -60,-31Q-57.5,-35.5 -54,-39Q-50,-42.5 -45.5,-44.5Q-41,-46.5 -35.5,-47Q-30.5,-47 -26,-45Q-21,-43 -18,-39.5Q-14.5,-35.5 -13.5,-30.5Q-12.5,-26 -13.5,-21Q-15,-16.5 -18,-13Q-21,-9 -25.5,-8Q-30,-7 -34,-10Q-37.5,-13 -37,-17.5L-36.5,-22.5" fill="none" stroke="#1c100a" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M-6,-10.5Q-13,-5.5 -16.5,-3Q-20,-1 -23,0.5Q-26.5,2.5 -29.5,3Q-32.5,4 -35.5,4Q-38,4 -41,2.5Q-43.5,1.5 -46,-0.5Q-48,-3 -49.5,-6Q-51.5,-9 -52,-12.5Q-52.5,-16 -52.5,-19.5Q-52,-23 -51,-26.5Q-49.5,-30 -47,-32.5Q-45,-35.5 -41.5,-37.5Q-38.5,-39 -35,-39.5Q-31.5,-40.5 -28,-39.5Q-24.5,-38.5 -21.5,-35.5Q-19,-33 -18,-29.5Q-17,-25.5 -17.5,-21.5Q-18,-18 -20,-14.5Q-22.5,-11.5 -26,-10.5Q-29.5,-9.5 -32.5,-11.5Q-36,-14 -35.5,-17.5L-35.5,-21.5" fill="none" stroke="#1c100a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</g></g>
+<path d="M108,164 C104,172 106,178 114,178 C120,178 122,172 119,164 Z M156,164 C153,172 156,178 164,178 C170,178 172,172 168,164 Z" fill="var(--wash, #c8361c)"/>
+<path d="M108,164 C104,172 106,178 114,178 C120,178 122,172 119,164 Z M156,164 C153,172 156,178 164,178 C170,178 172,172 168,164 Z" fill="#1c100a" fill-opacity=".24" stroke="#1c100a" stroke-width="1.65" stroke-linejoin="round"/>
+<use href="#yuck-wendling-body-shape" fill="var(--wash, #c8361c)"/>
+<g clip-path="url(#yuck-wendling-body-clip)">
+<path d="M167.5,129.5Q163,130.5 161.5,130.5Q159.5,130.5 158.5,129.5Q157,129 155,128Q153,127 150.5,125.5Q148,124.5 145,123Q142,121.5 138.5,120Q135,118.5 131,118Q127,117 122.5,117Q118,117 113.5,118Q109.5,119 105.5,121Q102,123 99,125Q95.5,127.5 93,130.5Q90.5,133 88.5,135.5Q86.5,138.5 84.5,140.5Q82.5,143 81,145L79,147.5L83.5,154.5Q89.5,151 92,149Q94.5,147 97,145Q99.5,143 102,141.5Q104,140 106.5,139Q109,137.5 111.5,137Q114.5,136 117,135.5Q119.5,135.5 122,135.5Q124.5,135.5 127,136.5Q129.5,137 132,138Q135,139 137.5,140Q140.5,141 143.5,142Q147,143.5 150.5,144Q154,145 158,145Q162,144.5 165.5,143Q169,141.5 171.5,139L174.5,136.5Z" fill="#1c100a" fill-opacity=".15"/>
+<path d="M161.5,123.5Q157.5,121.5 158,120Q158,118 158.5,117Q159.5,115.5 158.5,114.5Q158,113 156,111.5Q154,110 151,108.5Q148,106.5 144,105Q139.5,103.5 134.5,102.5Q129,101.5 123,101.5Q117,102 111,103.5Q105.5,105 100.5,108Q96,110.5 92.5,114Q88.5,117.5 86,121Q83,124.5 81.5,128Q79.5,131 78.5,134Q77.5,137 76.5,139L75.5,141.5L79,147Q82.5,143 84.5,140.5Q86,138 88,135.5Q90,132.5 93,130Q95.5,127.5 98.5,125Q102,122.5 105.5,120.5Q109.5,119 113.5,117.5Q118,116.5 122.5,116.5Q127,116.5 131,117.5Q135,118 138.5,119.5Q142,121 145,122.5Q148,124 150.5,125Q153,126.5 155,127.5Q157,128.5 158.5,129Q159.5,130 161,130Q162.5,130.5 165,130L167,129Z" fill="#f4e5c8" fill-opacity=".38"/>
+<path d="M175,137Q169.5,142 165.5,144Q162,145.5 158,145.5Q153.5,146 150,145Q146.5,144.5 143,143Q140,142 137,141Q134.5,140 131.5,139Q129,138 126.5,137.5Q124,137 121.5,136.5Q119.5,136.5 117,137Q114.5,137 112,138Q109.5,138.5 107,139.5Q104.5,140.5 102.5,142Q100,144 97.5,145.5Q95,147.5 92.5,149.5Q89.5,151.5 86.5,153L83.5,155L89,163.5Q97.5,160.5 101,159Q105,157.5 107.5,157Q110.5,156 113,156Q115,155.5 116.5,156Q118,156.5 119.5,157Q120.5,157.5 120.5,158Q121,158.5 121,159Q121,159.5 122,159.5Q122.5,160 124,160.5Q126,160.5 128.5,161.5Q131,162 135,163Q139,163.5 144.5,164Q150,164.5 157.5,163.5Q164.5,162.5 170.5,158.5Q176.5,155 180,150L183,145Z" fill="#ece0c8" fill-opacity=".86"/>
+<path d="M175,137Q169.5,142 165.5,144Q162,145.5 158,145.5Q153.5,146 150,145Q146.5,144.5 143,143Q140,142 137,141Q134.5,140 131.5,139Q129,138 126.5,137.5Q124,137 121.5,136.5Q119.5,136.5 117,137Q114.5,137 112,138Q109.5,138.5 107,139.5Q104.5,140.5 102.5,142Q100,144 97.5,145.5Q95,147.5 92.5,149.5Q89.5,151.5 86.5,153L83.5,155" fill="none" stroke="#1c100a" stroke-opacity=".80" stroke-width="1.2" stroke-linecap="round"/>
+<path d="M167.5,143.5Q173.5,149.5 173.5,157 M157,146Q159,156 155.5,163.5 M147,144.5Q146,155.5 140.5,163 M139,141.5Q136.5,153.5 130,161 M131.5,139Q130,151 124,159.5 M125,137Q125.5,149.5 121.5,158.5 M118.5,136.5Q122.5,148 121,157.5 M112,137.5Q118.5,147 119,156 M106,140Q113.5,147 115.5,155 M99.5,144Q107,148.5 110,155.5 M93,149Q99.5,152.5 101.5,158.5" fill="none" stroke="#1c100a" stroke-opacity=".70" stroke-width=".86" stroke-linecap="round"/>
+<path d="M162.5,132.5Q160.5,132.5 159,132 M158,132Q156,131.5 154,130.5 M153,130Q150.5,128.5 148,127.5 M146.5,126.5Q144,125 141,124 M139.5,123Q136,122 132.5,121 M130.5,120.5Q126.5,119.5 122.5,119.5 M120.5,119.5Q116.5,120 112.5,121 M111,121.5Q107,123 103.5,124.5 M102,125.5Q99,127.5 96,130 M95,131Q92.5,133.5 90,136.5 M89,137.5Q87,140 85.5,142.5 M167,137Q164,138.5 161.5,139 M160,139Q157,139 154,138.5 M152.5,138Q149.5,137 147,136 M145.5,135.5Q142.5,134 140,133 M138.5,132.5Q135.5,131 132.5,130 M131,129.5Q128,129 125,128.5 M123.5,128Q120,128 117,128.5 M115.5,128.5Q112.5,129.5 109.5,130.5 M108,131Q105,132.5 102.5,134 M101,135Q98.5,137 96,139 M95,140Q92.5,142 90.5,144.5" fill="none" stroke="#1c100a" stroke-opacity=".44" stroke-width=".72" stroke-linecap="round"/>
+<path d="M160,125.5Q159,124.5 159,123.5 M158.5,123Q158.5,122.5 158,121.5 M157.5,121Q156,119.5 154.5,118.5 M153.5,117.5Q151,116 148,114.5 M146.5,113.5Q143,112 139,110.5 M137,110Q132.5,109 127.5,108.5 M125,108Q119.5,108.5 114.5,109 M112,110Q107,111.5 103,113.5 M101,114.5Q97,117.5 93.5,120 M92,121.5Q89,125 86.5,128 M85.5,129.5Q83.5,132.5 82,135.5" fill="none" stroke="#f6efe2" stroke-opacity=".56" stroke-width=".72" stroke-linecap="round"/>
+<path d="M160,128.5h.1 M157,126h.1 M151,122.5h.1 M142,118h.1 M130,114h.1 M116,114h.1 M103,119h.1 M93,127h.1 M86,135.5h.1" fill="none" stroke="#f6efe2" stroke-width="2.15" stroke-linecap="round"/>
+</g>
+<path d="M182.5,144.5Q178,152 174,155.5Q169.5,159 164,161Q158.5,163 153,163Q148,163.5 144,163Q139.5,162.5 136.5,161.5Q133,161 130.5,160.5Q128.5,160 126.5,159.5Q124.5,159 123.5,158.5Q122.5,158.5 122,158Q121.5,158 121,157.5Q121,157.5 121,157Q120.5,156.5 120,156Q119,155.5 118,155.5Q117,155 115.5,155Q114.5,154.5 112.5,155Q111,155 109,155.5Q106.5,156 104,157Q101.5,158 98.5,159.5Q95.5,160.5 92,161.5L88.5,162.5" fill="none" stroke="#1c100a" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M162,124Q158.5,122.5 158,121.5Q157.5,120 158,119Q158.5,118 159,117Q159,116 158.5,115Q158,114 156.5,113Q155,111.5 152.5,110.5Q150.5,109 147.5,107.5Q144.5,106 141,105Q137.5,104 133,103Q129,102.5 124,102.5Q119,102.5 114.5,103.5Q110,104.5 106,106.5Q102,108 98.5,110.5Q95,112.5 92,115.5Q89,118 86.5,121Q84.5,123.5 83,126.5Q81,129 80,131.5Q79,134 78,136Q77.5,138 76.5,140L76,141.5" fill="none" stroke="#1c100a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="yuck-wendling-paws">
+<path d="M94,160 C89,170 93,178 103,178 C110,178 112,171 108,162" fill="var(--wash, #c8361c)" stroke="#1c100a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M97,174 L98,177.5 M103,174.5 L103.5,177.8" fill="none" stroke="#1c100a" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M142,162 C138,171 142,178 152,178 C159,178 161,171 157,162" fill="var(--wash, #c8361c)" stroke="#1c100a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M145,174 L146,177.5 M151,174.5 L151.5,177.8" fill="none" stroke="#1c100a" stroke-width="1.0" stroke-linecap="round"/>
+</g>
+<g transform="translate(178,126)"><g id="yuck-wendling-head"><animateTransform attributeName="transform" type="rotate" values="0;-5;4;0" keyTimes="0;.34;.72;1" calcMode="spline" keySplines=".4 0 .6 1;.4 0 .6 1;.4 0 .6 1" dur="3.7s" repeatCount="indefinite"/>
+<path d="M-2,-24 C-12,-35 -24,-39 -34,-33 C-25,-27 -16,-22 -7,-17 Z" fill="var(--wash, #c8361c)"/>
+<path d="M-2,-24 C-12,-35 -24,-39 -34,-33 C-25,-27 -16,-22 -7,-17 Z" fill="#1c100a" fill-opacity=".22" stroke="#1c100a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M-16,-10 C-12,-28 6,-36 24,-31 C40,-27 52,-14 52,2 C52,17 40,28 21,29 C3,30 -12,22 -17,11 C-20,4 -19,-3 -16,-10 Z" fill="var(--wash, #c8361c)"/>
+<path d="M-8,-19 C4,-32 22,-33 38,-23 C45,-18 48,-12 48,-6 C38,-14 22,-18 6,-15 C-1,-14 -5,-16 -8,-19 Z" fill="#f4e5c8" fill-opacity=".40"/>
+<path d="M-10,16 C2,27 24,29 39,20 C45,16 49,10 50,4 C44,14 29,20 14,19 C3,19 -5,17 -10,16 Z" fill="#ece0c8" fill-opacity=".86"/>
+<path d="M-15,6 C-8,16 4,21 18,21 C6,24 -9,20 -16,11 Z" fill="#1c100a" fill-opacity=".14"/>
+<path d="M-16,-10 C-12,-28 6,-36 24,-31 C40,-27 52,-14 52,2" fill="none" stroke="#1c100a" stroke-width="1.65" stroke-linecap="round"/>
+<path d="M52,2 C52,17 40,28 21,29 C3,30 -12,22 -17,11" fill="none" stroke="#1c100a" stroke-width="2.0" stroke-linecap="round"/>
+<path d="M-10,-8 L-1,-9 M-11,-3 L-2,-4 M-10,2 L-1,1 M-8,7 L0,6 M4,-24 L11,-23 M14,-25 L21,-23 M25,-23 L31,-20" fill="none" stroke="#1c100a" stroke-opacity=".42" stroke-width=".72" stroke-linecap="round"/>
+<path d="M-2,-21 C7,-27 18,-28 28,-24" fill="none" stroke="#f6efe2" stroke-opacity=".68" stroke-width="1.15" stroke-linecap="round"/>
+<path d="M-5,-16 C-17,-23 -30,-24 -40,-16 C-29,-12 -18,-10 -8,-8 Z" fill="var(--wash, #c8361c)" stroke="#1c100a" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M-8,-15 C-18,-19.5 -28,-20 -36,-15.5" fill="none" stroke="#f4e5c8" stroke-opacity=".75" stroke-width="1.15" stroke-linecap="round"/>
+<path d="M36,-3.5 C38,-5.0 40.5,-4.0 39.5,-2.0" fill="none" stroke="#1c100a" stroke-width="1.25" stroke-linecap="round"/>
+<g transform="translate(38,-8)"><g id="yuck-wendling-eye-far">
+<ellipse cx="0" cy="0" rx="5.0" ry="6.2" fill="#5e2a10" stroke="#1c100a" stroke-width="1.35"/>
+<g clip-path="url(#yuck-wendling-eye-far-clip)">
+<ellipse cx=".3" cy=".2" rx="4.2" ry="5.4" fill="#1c100a"/>
+<circle cx="-1.2" cy="-2.2" r="1.75" fill="#f6efe2"/>
+<circle cx="1.6" cy="2.0" r=".82" fill="#f6efe2"/>
+</g>
+<g transform="translate(0,-7.5)"><g id="yuck-wendling-lid-far" transform="scale(1 .04)"><animateTransform attributeName="transform" type="scale" values="1 .04;1 .04;1 1.05;1 1.05;1 .04;1 .04" keyTimes="0;.42;.45;.48;.51;1" calcMode="spline" keySplines="0 0 1 1;.3 0 .6 1;0 0 1 1;.3 0 .7 1;0 0 1 1" dur="4.3s" repeatCount="indefinite"/><path d="M-6.2,0 L6.2,0 L6.2,11.5 C2.5,14.5 -2.5,14.5 -6.2,11.5 Z" fill="var(--wash, #c8361c)"/><path d="M-5.4,10.5 C-2.2,13.6 2.2,13.6 5.4,10.5" fill="none" stroke="#1c100a" stroke-width="1.9" stroke-linecap="round"/></g></g>
+</g></g>
+<g transform="translate(18,-6)"><g id="yuck-wendling-eye-near">
+<ellipse cx="0" cy="0" rx="6.6" ry="7.2" fill="#5e2a10" stroke="#1c100a" stroke-width="1.45"/>
+<g clip-path="url(#yuck-wendling-eye-near-clip)">
+<ellipse cx=".4" cy=".2" rx="5.5" ry="6.2" fill="#1c100a"/>
+<circle cx="-1.8" cy="-2.6" r="2.25" fill="#f6efe2"/>
+<circle cx="2.2" cy="2.3" r="1.05" fill="#f6efe2"/>
+</g>
+<g transform="translate(0,-8.5)"><g id="yuck-wendling-lid-near" transform="scale(1 .04)"><animateTransform attributeName="transform" type="scale" values="1 .04;1 .04;1 1.05;1 1.05;1 .04;1 .04" keyTimes="0;.42;.45;.48;.51;1" calcMode="spline" keySplines="0 0 1 1;.3 0 .6 1;0 0 1 1;.3 0 .7 1;0 0 1 1" dur="4.3s" repeatCount="indefinite"/><path d="M-7.8,0 L7.8,0 L7.8,13.2 C3.2,16.8 -3.2,16.8 -7.8,13.2 Z" fill="var(--wash, #c8361c)"/><path d="M-6.8,12.2 C-2.8,15.8 2.8,15.8 6.8,12.2" fill="none" stroke="#1c100a" stroke-width="2.0" stroke-linecap="round"/></g></g>
+<path d="M-6.5,-9.5 C-2,-12 3.5,-11.5 6.8,-9.0" fill="none" stroke="#1c100a" stroke-opacity=".78" stroke-width="1.25" stroke-linecap="round"/>
+</g></g>
+<g id="yuck-wendling-mouth" transform="translate(32,7)">
+<g transform="translate(1.5,1.8)"><g id="yuck-wendling-blep"><animateTransform attributeName="transform" type="scale" values="1 1;1 1;1.12 1.24;1 1;1.08 1.18;1 1" keyTimes="0;.36;.48;.62;.74;1" calcMode="spline" keySplines=".4 0 .6 1;.25 0 .4 1;.4 0 .6 1;.25 0 .4 1;.4 0 .6 1" dur="4.7s" repeatCount="indefinite"/><g><animateTransform attributeName="transform" type="rotate" values="0;0;-7;6;-4;0" keyTimes="0;.36;.48;.62;.74;1" calcMode="spline" keySplines=".4 0 .6 1;.3 0 .7 1;.3 0 .7 1;.3 0 .7 1;.3 0 .7 1" dur="4.7s" repeatCount="indefinite"/>
+<path d="M-4.2,-.5 C-4.8,6.5 3.6,8.2 5.4,1.2 C5.6,.2 5.2,-.8 4.4,-1.0 Z" fill="#a82214" stroke="#1c100a" stroke-width="1.4" stroke-linejoin="round"/>
+<path d="M.4,.2 L.4,3.8" fill="none" stroke="#1c100a" stroke-opacity=".55" stroke-width=".85" stroke-linecap="round"/>
+<path d="M-2.2,2.2 C-2.0,3.6 -.8,4.2 -.2,4.0" fill="none" stroke="#f4e5c8" stroke-opacity=".65" stroke-width=".95" stroke-linecap="round"/>
+</g></g></g>
+<path d="M-9.5,-1.2 C-6.5,3.2 -1.2,3.4 1.8,.2 C4.2,3.2 8.8,2.6 11.4,-1.6" fill="none" stroke="#1c100a" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g></g>
+</g></g></g></g></g>
+</g></svg>
