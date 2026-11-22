@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 58: Charge 4 — Formal PR 4 BlockSpan Streaming Interface Spec & Reference Implementation"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c58_pr4_blockspan_interface_spec"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "0 barrier stalls", B = "<= 8 MiB ping-pong input RAM", Q = "0", M = "MAX_LIVE_WINS=2 x 4 MiB + #739 12 MiB ReadyRing" }
+evidence = "Formal written PR 4 BlockSpan streaming interface specification agreed with Mechanisms (research/carbon-word-transport C38b/C38a) and compile-verified in #![forbid(unsafe_code)] Rust: clean trait boundary (SpanCand, SpanFinder, WindowBuf, SpecOutcome, ChainValidator) allowing Mechanisms' Handoff 1 to drop straight into StreamDecoder without rework, keeping #739's Ready ring / READY_BYTES=12 MiB / POOLED_FROM=64 KiB / spare() / read_block() / cancel(). Verified 100% byte-exact on 431-blk Wikidata at 4 MiB (430/431 fast_hits) AND adversarial 256 KiB (65 seams, 430/431 fast_hits!), 379-blk wikidata-l1 (377/379 fast_hits, 2 FP dropped cleanly), plus Empty/NotBz2/Truncated-prefix/BlockCrc edge-case parity."

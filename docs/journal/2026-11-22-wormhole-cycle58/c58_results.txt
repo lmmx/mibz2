@@ -1,0 +1,4 @@
+PASS [4 MiB normal window]: bytes=209833456 windows=4 cands=431 fast_hits=430 fp_dropped=1 straddle_fb=1
+PASS [256 KiB stress straddle window]: bytes=209833456 windows=65 cands=431 fast_hits=430 fp_dropped=1 straddle_fb=1
+PASS [wikidata-l1 512 KiB win]: bytes=37799566 windows=8 fast_hits=377 fp=2 fb=2
+PASS [EDGE CASES]: Empty=Empty, NotBz2=NotBz2, Truncated(prefix=2691144 B)=Truncated, Corrupt=BlockCrc { stored: 3716913550, computed: 3794799119 }
