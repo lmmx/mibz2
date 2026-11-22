@@ -96,6 +96,7 @@ pub mod crc;
 #[cfg(feature = "dose")]
 #[doc(hidden)]
 pub mod dose;
+mod huff;
 // (research only: the phase attribution's per-thread counters, with `phase-counters`)
 // (research only: the lazy kernel's induction, recorded, with `induction-trace`)
 #[cfg(feature = "induction-trace")]

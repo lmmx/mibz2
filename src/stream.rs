@@ -1,10 +1,11 @@
+#![forbid(unsafe_code)]
 //! The sequential part of the decode: a .bz2's streams read in order, each block's header
 //! and symbols (block.rs), each stream's header and end, its combined CRC checked. The
 //! input comes from a `Source`: a slice, or chunks arriving on a channel (parallel.rs),
 //! held only from the block being read on.
 
 use super::bits::Bits;
-use super::block::{self, Item, Symbols};
+use super::block::{self, Item, ScanScratch, Symbols};
 use super::{Error, ErrorKind};
 
 /// The input, by absolute byte offset
@@ -60,6 +61,7 @@ pub struct Scanner<S> {
     blocks: u64,
     streams: u64,
     lookahead: usize,
+    scratch: ScanScratch,
 }
 
 impl<S: Source> Scanner<S> {
@@ -71,6 +73,7 @@ impl<S: Source> Scanner<S> {
             blocks: 0,
             streams: 0,
             lookahead: LOOKAHEAD,
+            scratch: ScanScratch::default(),
         }
     }
 
@@ -122,7 +125,8 @@ impl<S: Source> Scanner<S> {
                     let base = at / 8;
                     let (data, eof) = self.src.view(base, self.lookahead).map_err(err)?;
                     let mut br = Bits::at(data, at % 8);
-                    let item = block::read_item(&mut br, level, syms);
+                    let item =
+                        block::read_item_with_scratch(&mut br, level, syms, &mut self.scratch);
                     let used = br.bit_pos() - at % 8;
                     if br.overran() {
                         // an item past the input held: more input, or the input's end
