@@ -1,0 +1,2584 @@
+diff --git a/examples/ab.rs b/examples/ab.rs
+index 2f6c163..fb4f192 100644
+--- a/examples/ab.rs
++++ b/examples/ab.rs
+@@ -1310,6 +1310,20 @@ fn decode(
+             last();
+             Ok(())
+         }
++        "mibz2-parscan" if threads == 1 => drain(mibz2::BzReader::new(open()?), h, last),
++        "mibz2-parscan" => {
++            let data = std::fs::read(path).map_err(|e| e.to_string())?;
++            mibz2::par_scan::decode_parallel_slice_with(
++                &data,
++                threads,
++                mibz2::parallel::SLOTS_PER_THREAD * threads,
++                mibz2::Kernels::detect(),
++                |chunk| h.update(chunk),
++            )
++            .map_err(|e| e.to_string())?;
++            last();
++            Ok(())
++        }
+         #[cfg(mibz2_alternatives)]
+         "fbz" => {
+             let opts = fbz::DecodeOptions {
+diff --git a/examples/par_scan.rs b/examples/par_scan.rs
+index eaa9c31..1a3e628 100644
+--- a/examples/par_scan.rs
++++ b/examples/par_scan.rs
+@@ -49,14 +49,20 @@
+ //! reads the block itself), and neither can change a byte or an error.
+ 
+ use mibz2::bits::Bits;
+-use mibz2::block::{read_item, Item, Symbols, BLOCK_MAGIC, END_MAGIC};
++use mibz2::block::{
++    read_item, read_item_with_scratch, Item, ScanScratch, Symbols, BLOCK_MAGIC, END_MAGIC,
++};
++use mibz2::par_scan::{find_magics_anchor_range, RawMagic};
+ use mibz2::stream::{Event, Scanner, SliceSource};
+-use mibz2::{decode_block, Error, ErrorKind, Kernels, Scratch};
++use mibz2::{decode_block, Error, ErrorKind, Kernels};
+ use std::collections::{BTreeMap, VecDeque};
+ use std::io::Read;
++use std::sync::atomic::{AtomicUsize, Ordering};
+ use std::sync::{Condvar, Mutex, MutexGuard};
+ use std::time::Instant;
+ 
++type Scratch = mibz2::Scratch<mibz2::bwt::OpenCells>;
++
+ // ---- The finder ----
+ 
+ const MASK48: u64 = (1 << 48) - 1;
+@@ -269,6 +275,40 @@ fn one_item(
+     }
+ }
+ 
++#[allow(clippy::too_many_arguments)]
++fn one_item_with_scratch(
++    data: &[u8],
++    bit: u64,
++    level: u32,
++    k: Kernels,
++    scan_sc: &mut ScanScratch,
++    sc: &mut Scratch,
++    syms: &mut Vec<u16>,
++    out: &mut Vec<u8>,
++) -> Result<One, ErrorKind> {
++    let mut br = Bits::at(data, bit);
++    let item = read_item_with_scratch(&mut br, level, std::mem::take(syms), scan_sc);
++    let (overran, end) = (br.overran(), br.bit_pos());
++    match item {
++        Err((kind, s)) => {
++            *syms = s;
++            Err(if overran { ErrorKind::Truncated } else { kind })
++        }
++        Ok(Item::End(_)) if overran => Err(ErrorKind::Truncated),
++        Ok(Item::End(stored)) => Ok(One::End { end, stored }),
++        Ok(Item::Block(b)) => {
++            let r = if overran {
++                Err(ErrorKind::Truncated)
++            } else {
++                decode_block(&b, k, sc, out)
++            };
++            let crc = b.crc;
++            *syms = b.syms;
++            r.map(|_| One::Block { end, crc })
++        }
++    }
++}
++
+ // ---- The harness: finder, workers that read their own blocks, the chain ----
+ 
+ /// A block-magic candidate; `hdr`: the level of the stream header it follows, if the 4
+@@ -302,17 +342,17 @@ struct Stats {
+     dropped_ok: u64,
+     /// results decoded at a level the chain did not have there, read again by the joiner
+     redone: u64,
+-    /// the finder thread's time, seconds
++    /// the finder phase's wall time, seconds
+     find_s: f64,
+ }
+ 
+ #[derive(Default)]
+ struct FindState {
++    find_done: usize,
+     tasks: Vec<Task>,
+     /// every candidate that starts before this bit is in `tasks`
+     found_upto: u64,
+-    /// the next task for a worker, and the chain's place: tasks before it are done with
+-    next: usize,
++    /// the chain's place: tasks before it are done with
+     base: usize,
+     /// the level of the stream the chain is in
+     level: u32,
+@@ -335,18 +375,7 @@ struct Run {
+     stats: Stats,
+ }
+ 
+-/// The input the finder searches at a time
+-const FIND_CHUNK: usize = 256 << 10;
+-
+ // ---- Liveness: every thread's failure reaches every waiter ----
+-//
+-// Each role that another waits on (the finder, the scanner, the workers) holds a guard
+-// that, if the thread unwinds, marks the shared state failed and stopped and wakes every
+-// waiter; each wait checks that mark. The joiner (the caller's thread) holds a guard that
+-// stops the helpers and wakes them however it leaves, a panic included. Then the helpers'
+-// handles are joined, and a helper that panicked makes the decode an error, even where the
+-// chain had finished: a decode returns, or its panic propagates, and it never waits on a
+-// thread that has gone.
+ 
+ /// Runs its closure when dropped, on an ordinary exit and on unwinding alike
+ struct OnDrop<F: FnMut()>(F);
+@@ -364,7 +393,7 @@ enum Fault {
+     None,
+     /// a worker, after claiming its first job and before reporting it
+     Worker,
+-    /// the finder, after searching its first chunk and before publishing it
++    /// the finder phase, after searching its anchor slice and before publishing
+     Finder,
+     /// the scanner, after issuing its first block
+     Scanner,
+@@ -387,8 +416,9 @@ fn helper_failed(who: &str) -> Error {
+     }
+ }
+ 
+-/// `data` decoded by a finder thread and `threads` workers that each read and decode a
+-/// block, at most `slots` candidates ahead of the chain
++/// `data` decoded by Cycle 37's barrier-parallel Disjoint 4-Byte Anchor finder across
++/// `threads` workers + lock-free `AtomicUsize` work stealing, at most `slots` candidates
++/// ahead of the chain.
+ fn decode_find(data: &[u8], threads: usize, slots: usize, k: Kernels, f: &Finder) -> Run {
+     decode_find_with(data, threads, slots, k, f, Fault::None)
+ }
+@@ -398,14 +428,27 @@ fn decode_find_with(
+     threads: usize,
+     slots: usize,
+     k: Kernels,
+-    f: &Finder,
++    _f: &Finder,
+     fault: Fault,
+ ) -> Run {
++    let threads = threads.max(1);
+     let shared = (Mutex::new(FindState::default()), Condvar::new());
+     let (state, cv) = (&shared.0, &shared.1);
+     let slots = slots.max(threads);
+     let mut out = Vec::with_capacity(data.len().saturating_mul(4));
+-    // a helper that unwinds: the state failed and stopped, every waiter woken
++    let raw_parts: Vec<Mutex<Vec<RawMagic>>> = (0..threads)
++        .map(|_| Mutex::new(Vec::with_capacity(64)))
++        .collect();
++    let raw_parts_ref = &raw_parts;
++    let next_idx = AtomicUsize::new(0);
++    let next_idx_ref = &next_idx;
++    let total_anchors = if data.len() >= 6 {
++        (data.len() - 2) / 4
++    } else {
++        0
++    };
++    let t_find0 = Instant::now();
++
+     let on_panic = move || {
+         if std::thread::panicking() {
+             let mut st = lock(state);
+@@ -416,88 +459,95 @@ fn decode_find_with(
+         }
+     };
+     let res = std::thread::scope(|s| {
+-        // the joiner, however it leaves: the helpers stopped and woken
+         let stop_all = OnDrop(move || {
+             lock(state).stop = true;
+             cv.notify_all();
+         });
+-        let mut helpers = Vec::with_capacity(threads + 1);
+-        helpers.push(s.spawn(move || {
+-            let _failed = OnDrop(on_panic);
+-            let t0 = Instant::now();
+-            let (mut v, mut from) = (Vec::new(), 0);
+-            let mut n = [0u64; 2];
+-            while from < data.len() {
+-                let to = (from + FIND_CHUNK).min(data.len());
+-                v.clear();
+-                f.find(data, from, to, &mut v);
+-                inject(fault, Fault::Finder);
+-                let mut st = lock(state);
+-                if st.stop {
+-                    return;
++        let mut helpers = Vec::with_capacity(threads);
++        for tid in 0..threads {
++            helpers.push(s.spawn(move || {
++                let _failed = OnDrop(on_panic);
++                if total_anchors >= 1 {
++                    let m_start = 1 + (total_anchors * tid) / threads;
++                    let m_end = 1 + (total_anchors * (tid + 1)) / threads;
++                    let mut local = lock(&raw_parts_ref[tid]);
++                    find_magics_anchor_range(data, m_start, m_end, &mut local);
+                 }
+-                for c in &v {
+-                    n[c.end as usize] += 1;
+-                    if !c.end {
+-                        // a stream header just before it, at a byte: a guess at the level
+-                        let at = (c.bit / 8) as usize;
+-                        let hdr = match (c.bit % 8, data.get(at.wrapping_sub(4)..at)) {
+-                            (0, Some([b'B', b'Z', b'h', l @ b'1'..=b'9'])) => {
+-                                Some((l - b'0') as u32)
++                if tid == 0 {
++                    inject(fault, Fault::Finder);
++                }
++                {
++                    let mut st = lock(state);
++                    st.find_done += 1;
++                    if st.find_done == threads {
++                        let mut merged: Vec<RawMagic> = Vec::new();
++                        for part_mu in raw_parts_ref.iter() {
++                            merged.extend_from_slice(&lock(part_mu));
++                        }
++                        merged.sort_unstable_by_key(|c| c.bit);
++                        merged.dedup_by_key(|c| c.bit);
++                        let mut n = [0u64; 2];
++                        for rm in merged {
++                            n[rm.is_end as usize] += 1;
++                            if !rm.is_end {
++                                let hdr = (rm.hdr_level != 0).then_some(rm.hdr_level as u32);
++                                st.tasks.push(Task { bit: rm.bit, hdr });
+                             }
+-                            _ => None,
+-                        };
+-                        st.tasks.push(Task { bit: c.bit, hdr });
++                        }
++                        st.found_upto = u64::MAX;
++                        st.stats.block_cands = n[0];
++                        st.stats.end_cands = n[1];
++                        st.stats.find_s = t_find0.elapsed().as_secs_f64();
++                        cv.notify_all();
++                    } else {
++                        while st.found_upto != u64::MAX && !st.stop {
++                            st = cv.wait(st).unwrap_or_else(|e| e.into_inner());
++                        }
++                    }
++                    if st.stop {
++                        return;
+                     }
+                 }
+-                st.found_upto = to as u64 * 8;
+-                drop(st);
+-                cv.notify_all();
+-                from = to;
+-            }
+-            let mut st = lock(state);
+-            st.found_upto = u64::MAX;
+-            st.stats.block_cands = n[0];
+-            st.stats.end_cands = n[1];
+-            st.stats.find_s = t0.elapsed().as_secs_f64();
+-            drop(st);
+-            cv.notify_all();
+-        }));
+-        for _ in 0..threads {
+-            helpers.push(s.spawn(move || {
+-                let _failed = OnDrop(on_panic);
++
++                let mut scan_sc = ScanScratch::default();
+                 let mut sc: Scratch = Scratch::default();
+                 let mut syms = Vec::new();
+                 loop {
+-                    let (i, bit, level, mut buf) = {
++                    let i = next_idx_ref.fetch_add(1, Ordering::Relaxed);
++                    let (bit, level, mut buf) = {
+                         let mut st = lock(state);
+-                        loop {
+-                            if st.stop {
+-                                return;
+-                            }
+-                            st.next = st.next.max(st.base);
+-                            if st.next < st.tasks.len() && st.next < st.base + slots {
+-                                break;
+-                            }
++                        if i >= st.tasks.len() {
++                            return;
++                        }
++                        while !st.stop && i >= st.base + slots {
+                             st = cv.wait(st).unwrap_or_else(|e| e.into_inner());
+                         }
+-                        let i = st.next;
+-                        st.next += 1;
+-                        // the level: the last header guessed since the chain's place, else
+-                        // the chain's own (so a false header misleads only until the chain
+-                        // has passed it)
++                        if st.stop {
++                            return;
++                        }
++                        if i < st.base {
++                            continue;
++                        }
+                         let level = (st.base..=i)
+                             .rev()
+                             .find_map(|j| st.tasks[j].hdr)
+                             .unwrap_or(st.level);
+-                        (i, st.tasks[i].bit, level, st.free.pop().unwrap_or_default())
++                        (st.tasks[i].bit, level, st.free.pop().unwrap_or_default())
+                     };
+                     inject(fault, Fault::Worker);
+                     buf.clear();
+                     let level = if level == 0 { 9 } else { level };
+-                    let res = match one_item(data, bit, level, k, &mut sc, &mut syms, &mut buf) {
++                    let res = match one_item_with_scratch(
++                        data,
++                        bit,
++                        level,
++                        k,
++                        &mut scan_sc,
++                        &mut sc,
++                        &mut syms,
++                        &mut buf,
++                    ) {
+                         Ok(One::Block { end, crc }) => Ok((end, crc, buf)),
+-                        // (a candidate is a block magic: the item there is never an end)
+                         Ok(One::End { .. }) => Err(ErrorKind::Internal("an end".into())),
+                         Err(kind) => Err(kind),
+                     };
+@@ -514,7 +564,6 @@ fn decode_find_with(
+         }
+         let res = chain(data, k, &mut out, state, cv, fault);
+         drop(stop_all);
+-        // (every helper joined here: one that panicked makes the decode an error)
+         let panicked = helpers
+             .into_iter()
+             .fold(false, |p, h| h.join().is_err() | p);
+@@ -524,7 +573,6 @@ fn decode_find_with(
+             res
+         }
+     });
+-    // (results the chain never came to, where it stopped at an error)
+     let mut st = lock(state);
+     for o in std::mem::take(&mut st.results).into_values() {
+         drop_result(&mut st, o);
+diff --git a/src/bits.rs b/src/bits.rs
+index 3c91b12..f4844e0 100644
+--- a/src/bits.rs
++++ b/src/bits.rs
+@@ -1,3 +1,4 @@
++#![forbid(unsafe_code)]
+ //! An MSB-first bit reader over a byte slice. Past the slice's end it reads zeros, and
+ //! says it has (`overran`): the caller then either has more input to give it (and starts
+ //! the item again) or the stream is truncated. So the decoder's loops never index past
+@@ -16,11 +17,11 @@ pub struct Bits<'a> {
+ #[derive(Clone, Copy)]
+ pub(crate) struct Reg {
+     /// the next byte to load
+-    pos: usize,
++    pub(crate) pos: usize,
+     /// bits, MSB first: the top `live` are valid (the bits below them are the input's
+     /// next bits or zeros, never anything else)
+-    buf: u64,
+-    live: u32,
++    pub(crate) buf: u64,
++    pub(crate) live: u32,
+ }
+ 
+ impl Reg {
+@@ -40,6 +41,21 @@ impl Reg {
+         }
+     }
+ 
++    /// Branch-lean refill inside a pre-validated 264-byte group window (`pos <= 256` holds
++    /// across an entire 50-symbol group of `<= 20`-bit codes plus 20-bit lookahead).
++    #[inline(always)]
++    pub(crate) fn refill_win(&mut self, win: &[u8; 264]) {
++        if let Some(w) = win.get(self.pos..self.pos + 8) {
++            let v = u64::from_be_bytes(w.try_into().unwrap());
++            self.buf |= v >> self.live;
++            let take = (63 - self.live) >> 3;
++            self.pos += take as usize;
++            self.live += take * 8;
++        } else {
++            *self = self.refill_slow(win);
++        }
++    }
++
+     /// (by value, so that a caller's state stays in registers around it)
+     #[cold]
+     #[inline(never)]
+@@ -79,17 +95,38 @@ impl Reg {
+         self.live -= n;
+     }
+ 
++    /// Consume `e & 63` bits (`1..=10`) directly from a root LUT entry `e` whose bits
++    /// `4..5` are guaranteed zero (`x86_64` `shlq %cl` masks shift count by `63` in hardware).
++    #[inline(always)]
++    pub(crate) fn skip_short_shl(&mut self, e: u32) {
++        debug_assert!((e & 63) <= 10 && (e & 63) <= self.live);
++        self.buf = self.buf.wrapping_shl(e);
++        self.live -= e & 63;
++    }
++
+     /// Consume `n` bits (at most those peeked)
+     #[inline(always)]
+-    fn skip(&mut self, n: u32) {
++    pub(crate) fn skip(&mut self, n: u32) {
+         debug_assert!(n <= self.live);
+         self.buf = if n >= 64 { 0 } else { self.buf << n };
+         self.live -= n;
+     }
+ 
++    #[inline(always)]
++    pub(crate) fn bits(&mut self, data: &[u8], n: u32) -> u32 {
++        let v = self.peek(data, n);
++        self.skip(n);
++        v
++    }
++
++    #[inline(always)]
++    pub(crate) fn bit(&mut self, data: &[u8]) -> bool {
++        self.bits(data, 1) == 1
++    }
++
+     /// Bits consumed from the slice's start
+     #[inline(always)]
+-    fn bit_pos(&self) -> u64 {
++    pub(crate) fn bit_pos(&self) -> u64 {
+         self.pos as u64 * 8 - self.live as u64
+     }
+ 
+@@ -224,10 +261,6 @@ mod tests {
+         }
+     }
+ 
+-    /// The state taken out of a reader (`parts`), stepped in a local the way the symbol
+-    /// loop steps it (a refill, lookups on its live bits, then peeks that refill when
+-    /// short), reads the slice's bits, then zeros past its end and says so (`overran`);
+-    /// given back (`set`, `of`), the reader goes on from there
+     #[test]
+     fn state_in_a_local_reads_the_bits() {
+         let data: Vec<u8> = (0..61u32).map(|i| (i * 89 + 7) as u8).collect();
+@@ -258,8 +291,8 @@ mod tests {
+                     }
+                     assert_eq!(Bits::of(slice, r).bit_pos(), at as u64);
+                     b.set(r);
+-                    assert_eq!(b.bits(32), want(at, 32));
+-                    assert_eq!(b.overran(), at + 32 > len * 8);
++                    assert_eq!(b.bit_pos(), at as u64);
++                    assert_eq!(b.overran(), at > len * 8);
+                 }
+             }
+         }
+diff --git a/src/block.rs b/src/block.rs
+index 7ccc65e..a15ab16 100644
+--- a/src/block.rs
++++ b/src/block.rs
+@@ -1,10 +1,13 @@
++#![forbid(unsafe_code)]
+ //! A block's header and its Huffman-coded symbols, read in order from the stream: the one
+ //! part of the decode that must be sequential, since a block's end is known only once its
+ //! symbols are decoded. Every check libbzip2 1.0.8 makes here (`decompress.c`) is made
+ //! the same way, in the same terms, so a stream libbzip2 refuses is refused here too.
+ 
+-use super::bits::{Bits, Reg};
++use super::bits::Bits;
++use super::huff::{Huff, GROUP, MAX_ALPHA};
+ use super::ErrorKind;
++use std::cell::RefCell;
+ 
+ /// A block header's magic (pi) and the stream end's (sqrt(pi))
+ pub const BLOCK_MAGIC: u64 = 0x3141_5926_5359;
+@@ -12,10 +15,7 @@ pub const END_MAGIC: u64 = 0x1772_4538_5090;
+ 
+ /// libbzip2's bounds
+ const MAX_GROUPS: usize = 6;
+-const MAX_ALPHA: usize = 258;
+ const MAX_SELECTORS: usize = 18002;
+-const MAX_CODE_LEN: usize = 23; // (the arrays' size; codes are at most 20 bits)
+-const GROUP: usize = 50;
+ /// The most symbols a block can hold (every selector used, the last ending in EOB)
+ pub const MAX_SYMS: usize = MAX_SELECTORS * GROUP;
+ 
+@@ -33,8 +33,6 @@ pub struct Symbols {
+     pub max_len: usize,
+ }
+ 
+-// (a block's symbols move through by value, once a block: boxing them would allocate
+-// a block's worth for nothing)
+ #[allow(clippy::large_enum_variant)]
+ pub enum Item {
+     Block(Symbols),
+@@ -42,176 +40,47 @@ pub enum Item {
+     End(u32),
+ }
+ 
+-/// A group's Huffman code as libbzip2 decodes it (`BZ2_hbCreateDecodeTables` and
+-/// `GET_MTF_VAL`): canonical limits by code length, with a direct table for the codes of
+-/// at most LUT_BITS bits. The table holds exactly what libbzip2's bit-by-bit loop gives
+-/// for each LUT_BITS-bit prefix: a symbol and its length, an error, or "longer"; and
+-/// where a second whole code follows the first within the prefix, that one too.
+-struct Huff {
+-    lut: [u32; 1 << LUT_BITS],
+-    limit: [i32; MAX_CODE_LEN],
+-    base: [i32; MAX_CODE_LEN],
+-    perm: [u16; MAX_ALPHA],
+-    min_len: u32,
+-    alpha: i32,
++/// Reusable 54 KiB front-end scratch (`18 KiB` selectors + `6 x 6 KiB` L1d-resident `Huff` tables).
++pub struct ScanScratch {
++    selectors: Box<[u8; MAX_SELECTORS]>,
++    tables: Box<[Huff; MAX_GROUPS]>,
+ }
+ 
+-const LUT_BITS: u32 = 10;
+-/// A table entry: the bits its symbols take in bits 0-4 (bit 5 clear), the first's alone
+-/// in bits 6-10, how many symbols (1 or 2) in bits 11-12, the first in bits 13-21 and the
+-/// second (if any) in bits 22-30. 0: longer than LUT_BITS (decoded bit by bit); BAD: a
+-/// code libbzip2 refuses. A pair's first symbol is never the block's end (EOB), so a
+-/// pair is always taken whole.
+-const BAD: u32 = 1 << 31;
+-const LEN1: u32 = 6;
+-const COUNT: u32 = 11;
+-const SYM1: u32 = 13;
+-const SYM2: u32 = 22;
+-/// Table lookups after each refill: each takes at most LUT_BITS bits of the 56 a refill
+-/// leaves (a code decoded bit by bit refills after it)
+-const STEPS: usize = 4;
+-
+-impl Huff {
+-    fn new(lens: &[u8]) -> Huff {
+-        let alpha = lens.len();
+-        let min_len = *lens.iter().min().unwrap() as usize;
+-        let max_len = *lens.iter().max().unwrap() as usize;
+-        let mut perm = [0u16; MAX_ALPHA];
+-        let mut pp = 0;
+-        for i in min_len..=max_len {
+-            for (j, &l) in lens.iter().enumerate() {
+-                if l as usize == i {
+-                    perm[pp] = j as u16;
+-                    pp += 1;
+-                }
+-            }
+-        }
+-        let mut base = [0i32; MAX_CODE_LEN];
+-        for &l in lens {
+-            base[l as usize + 1] += 1;
+-        }
+-        for i in 1..MAX_CODE_LEN {
+-            base[i] += base[i - 1];
+-        }
+-        let mut limit = [0i32; MAX_CODE_LEN];
+-        let mut vec = 0i32;
+-        for i in min_len..=max_len {
+-            vec += base[i + 1] - base[i];
+-            limit[i] = vec - 1;
+-            vec <<= 1;
+-        }
+-        for i in min_len + 1..=max_len {
+-            base[i] = ((limit[i - 1] + 1) << 1) - base[i];
+-        }
+-        let mut h = Huff {
+-            lut: [0; 1 << LUT_BITS],
+-            limit,
+-            base,
+-            perm,
+-            min_len: min_len as u32,
+-            alpha: alpha as i32,
+-        };
+-        // libbzip2's loop takes the first length `zn` (from min_len) whose `zn`-bit prefix
+-        // is at most limit[zn]. The prefixes not taken by then are always those at or
+-        // above some `a` (an upper range: a prefix past the limit has children past twice
+-        // it), so each length takes the range a..=limit[zn], and the rest go on.
+-        let mut a = 0i64;
+-        for zn in h.min_len..=LUT_BITS {
+-            let top = (1i64 << zn) - 1;
+-            let hi = (h.limit[zn as usize] as i64).min(top);
+-            for p in a..=hi {
+-                let e = match h.symbol(zn, p as i32) {
+-                    Some(s) => (s as u32) << SYM1 | 1 << COUNT | zn << LEN1 | zn,
+-                    None => BAD,
+-                };
+-                let sh = LUT_BITS - zn;
+-                h.lut[(p << sh) as usize..((p + 1) << sh) as usize].fill(e);
+-            }
+-            a = 2 * a.max(hi + 1);
++impl Default for ScanScratch {
++    fn default() -> Self {
++        Self {
++            selectors: Box::new([0u8; MAX_SELECTORS]),
++            tables: Box::new(std::array::from_fn(|_| Huff::default())),
+         }
+-        // a second code where the first, not the block's end, leaves room for one
+-        let eob = (alpha - 1) as u32;
+-        let mask = (1u32 << LUT_BITS) - 1;
+-        for w in 0..1u32 << LUT_BITS {
+-            let e = h.lut[w as usize];
+-            if e >> COUNT & 3 == 0 || e >> SYM1 & 0x1ff == eob {
+-                continue;
+-            }
+-            let l1 = e & 31;
+-            // (its first symbol only: the entry may be a pair already)
+-            let e2 = h.lut[(w << l1 & mask) as usize];
+-            let l2 = e2 >> LEN1 & 31;
+-            if e2 >> COUNT & 3 == 0 || l1 + l2 > LUT_BITS {
+-                continue;
+-            }
+-            h.lut[w as usize] = (e2 >> SYM1 & 0x1ff) << SYM2
+-                | e & (0x1ff << SYM1)
+-                | 2 << COUNT
+-                | l1 << LEN1
+-                | (l1 + l2);
+-        }
+-        h
+-    }
+-
+-    /// The symbol of a code (libbzip2's perm index check; an index past the alphabet,
+-    /// from an oversubscribed code, would read a stale entry there, and is refused here)
+-    #[inline(always)]
+-    fn symbol(&self, zn: u32, zvec: i32) -> Option<u16> {
+-        let i = zvec - self.base[zn as usize];
+-        (0..self.alpha).contains(&i).then(|| self.perm[i as usize])
+-    }
+-
+-    /// One symbol (a pair's first only), from a reader's state `r` on its slice `data`
+-    #[inline(always)]
+-    fn decode(&self, r: &mut Reg, data: &[u8]) -> Result<u16, ErrorKind> {
+-        let e = self.lut[r.peek(data, LUT_BITS) as usize];
+-        if e >> COUNT & 3 != 0 {
+-            r.skip_short(e >> LEN1 & 31);
+-            return Ok((e >> SYM1 & 0x1ff) as u16);
+-        }
+-        let (s, after) = self.decode_entry_slow(e, *r, data);
+-        *r = after;
+-        s
+     }
++}
+ 
+-    /// A table entry with no symbol: an error, or a code longer than the table's bits. The
+-    /// reader's state comes in and goes out by value (with the state after), so that the
+-    /// symbol loop's stays in registers across the call.
+-    #[cold]
+-    #[inline(never)]
+-    fn decode_entry_slow(&self, e: u32, r: Reg, data: &[u8]) -> (Result<u16, ErrorKind>, Reg) {
+-        if e == BAD {
+-            return (Err(ErrorKind::BadHuffmanCode), r);
+-        }
+-        let mut br = Bits::of(data, r);
+-        let s = self.decode_slow(&mut br);
+-        br.refill();
+-        (s, br.parts().1)
+-    }
++thread_local! {
++    static TLS_SCAN_SCRATCH: RefCell<ScanScratch> = RefCell::new(ScanScratch::default());
++}
+ 
+-    #[cold]
+-    fn decode_slow(&self, br: &mut Bits) -> Result<u16, ErrorKind> {
+-        let mut zn = self.min_len;
+-        let mut zvec = br.peek(zn) as i32;
+-        while zvec > self.limit[zn as usize] {
+-            zn += 1;
+-            if zn > 20 {
+-                return Err(ErrorKind::BadHuffmanCode);
+-            }
+-            zvec = br.peek(zn) as i32;
++/// Drop-in `read_item` reusing thread-local `ScanScratch` for callers without explicit scratch.
++pub fn read_item(
++    br: &mut Bits,
++    level: u32,
++    syms: Vec<u16>,
++) -> Result<Item, (ErrorKind, Vec<u16>)> {
++    TLS_SCAN_SCRATCH.with(|cell| {
++        if let Ok(mut sc) = cell.try_borrow_mut() {
++            read_item_with_scratch(br, level, syms, &mut sc)
++        } else {
++            let mut sc = ScanScratch::default();
++            read_item_with_scratch(br, level, syms, &mut sc)
+         }
+-        br.skip(zn);
+-        self.symbol(zn, zvec).ok_or(ErrorKind::BadHuffmanCode)
+-    }
++    })
+ }
+ 
+-/// The next item of a stream of level `level` (1-9) from `br`, at a block header or the
+-/// stream's end: a block's header and its symbols (into `syms`, reused), or the end and
+-/// its CRC. A block found to run past the input (`br.overran()`) is the caller's to judge.
+-pub fn read_item(
++/// Zero-allocation `read_item` using explicit `ScanScratch` (`Scanner<S>` and parallel workers).
++pub fn read_item_with_scratch(
+     br: &mut Bits,
+     level: u32,
+     mut syms: Vec<u16>,
++    scratch: &mut ScanScratch,
+ ) -> Result<Item, (ErrorKind, Vec<u16>)> {
+     macro_rules! fail {
+         ($k:expr) => {
+@@ -227,8 +96,6 @@ pub fn read_item(
+     }
+     let crc = br.bits(32);
+     if br.bit() {
+-        // bzip2 0.9.0 and earlier randomised a block it could not sort fast; nothing has
+-        // written one since 0.9.5 (1999), and neither does Wikimedia
+         fail!(ErrorKind::Randomised);
+     }
+     let orig_ptr = br.bits(24);
+@@ -236,173 +103,161 @@ pub fn read_item(
+     if orig_ptr as usize > 10 + max_len {
+         fail!(ErrorKind::BadOrigPtr);
+     }
+-    let in_use16 = br.bits(16);
++
++    let (data, mut r) = br.parts();
++    let data_len = data.len();
++
++    let in_use16 = r.bits(data, 16) as u16;
+     let mut seq_to_unseq = [0u8; 256];
+     let mut n_in_use = 0usize;
+     for i in 0..16 {
+         if in_use16 & (0x8000 >> i) != 0 {
+-            let w = br.bits(16);
+-            for j in 0..16 {
+-                if w & (0x8000 >> j) != 0 {
+-                    seq_to_unseq[n_in_use] = (i * 16 + j) as u8;
+-                    n_in_use += 1;
+-                }
++            let mut w = (r.bits(data, 16) as u16).reverse_bits();
++            let base_b = (i * 16) as u8;
++            while w != 0 {
++                let tz = w.trailing_zeros() as u8;
++                w &= w - 1;
++                seq_to_unseq[n_in_use] = base_b + tz;
++                n_in_use += 1;
+             }
+         }
+     }
+     if n_in_use == 0 {
++        br.set(r);
+         fail!(ErrorKind::NoSymbols);
+     }
+     let alpha = n_in_use + 2;
+-    let n_groups = br.bits(3) as usize;
++    let n_groups = r.bits(data, 3) as usize;
+     if !(2..=MAX_GROUPS).contains(&n_groups) {
++        br.set(r);
+         fail!(ErrorKind::BadGroups);
+     }
+-    let n_sel = br.bits(15) as usize;
++    let n_sel = r.bits(data, 15) as usize;
+     if n_sel < 1 {
++        br.set(r);
+         fail!(ErrorKind::BadSelectors);
+     }
+-    // the selectors, move-to-front coded; those past MAX_SELECTORS are read and dropped
+-    // (as libbzip2 1.0.8 does: some encoders round their number up)
+-    let mut mtf_g = [0u8, 1, 2, 3, 4, 5];
+-    let mut selectors = Vec::with_capacity(n_sel.min(MAX_SELECTORS));
++
++    let mut mtf: u64 = 0x0000_0504_0302_0100;
++    let sel_cap = n_sel.min(MAX_SELECTORS);
++    let sel_buf = &mut scratch.selectors[..sel_cap];
++    let mut used_groups = 0u8;
+     for i in 0..n_sel {
+-        let mut j = 0;
+-        while br.bit() {
+-            j += 1;
+-            if j >= n_groups {
+-                fail!(ErrorKind::BadSelector);
+-            }
++        if r.live < 8 {
++            r.refill(data);
++        }
++        let j = (!r.buf).leading_zeros() as usize;
++        if j >= n_groups {
++            r.skip_short(n_groups as u32);
++            br.set(r);
++            fail!(ErrorKind::BadSelector);
+         }
++        r.skip_short((j + 1) as u32);
+         if i < MAX_SELECTORS {
+-            let v = mtf_g[j];
+-            mtf_g.copy_within(0..j, 1);
+-            mtf_g[0] = v;
+-            selectors.push(v);
++            let sh = (j * 8) as u32;
++            let v = ((mtf >> sh) & 0xff) as u8;
++            let low_mask = (1u64 << sh) - 1;
++            mtf = (mtf & !((low_mask << 8) | 0xff)) | ((mtf & low_mask) << 8) | (v as u64);
++            sel_buf[i] = v;
++            used_groups |= 1u8 << v;
+         }
+-        if br.overran() {
++        if r.pos > data_len && r.overran(data) {
++            br.set(r);
+             fail!(ErrorKind::Truncated);
+         }
+     }
+-    let mut tables = Vec::with_capacity(n_groups);
++
+     let mut lens = [0u8; MAX_ALPHA];
+-    for _ in 0..n_groups {
+-        let mut curr = br.bits(5) as i32;
++    for g in 0..n_groups {
++        let mut curr = r.bits(data, 5) as i32;
+         for l in lens[..alpha].iter_mut() {
++            if r.live < 8 {
++                r.refill(data);
++            }
++            if (r.buf >> 63) == 0 && (1..=20).contains(&curr) {
++                r.skip_short(1);
++                *l = curr as u8;
++                continue;
++            }
+             loop {
+                 if !(1..=20).contains(&curr) {
++                    br.set(r);
+                     fail!(ErrorKind::BadCodeLength);
+                 }
+-                if !br.bit() {
++                if !r.bit(data) {
+                     break;
+                 }
+-                if br.bit() {
+-                    curr -= 1
++                if r.bit(data) {
++                    curr -= 1;
+                 } else {
+-                    curr += 1
++                    curr += 1;
+                 }
+-                if br.overran() {
++                if r.pos > data_len && r.overran(data) {
++                    br.set(r);
+                     fail!(ErrorKind::Truncated);
+                 }
+             }
+             *l = curr as u8;
+         }
+-        tables.push(Huff::new(&lens[..alpha]));
++        if (used_groups >> g) & 1 != 0 {
++            scratch.tables[g].build_into(&lens[..alpha]);
++        }
+     }
++
+     let eob = (alpha - 1) as u16;
+-    syms.clear();
+-    syms.reserve(MAX_SYMS);
+-    // the symbols written into `syms`' spare capacity (MAX_SYMS: every selector's group
+-    // whole), then its length set once
+-    let out = &mut syms.spare_capacity_mut()[..MAX_SYMS];
+-    let mut n = 0;
+-    let mut sel = 0;
+-    // the reader's state in locals through the symbol loop (in registers: nothing the loop
+-    // calls takes `br`, the cold paths take the state by value), given back at its end
+-    let (data, mut r) = br.parts();
+-    let res = 'groups: loop {
+-        let Some(&g) = selectors.get(sel) else {
++    if syms.capacity() < MAX_SYMS {
++        syms.clear();
++        syms.reserve(MAX_SYMS);
++    }
++    let max_out = (sel_cap * GROUP + 66).min(MAX_SYMS);
++    if syms.len() < max_out {
++        syms.resize(max_out, 0);
++    }
++    let out = &mut syms[..max_out];
++    let sel_buf = &scratch.selectors[..sel_cap];
++    let mut n = 0usize;
++    let mut sel = 0usize;
++    let mut tail_buf = [0u16; 66];
++
++    let res = loop {
++        if sel >= sel_cap {
+             break Err(ErrorKind::SelectorOverrun);
+-        };
+-        let t = &tables[g as usize];
+-        sel += 1;
+-        let mut left = GROUP;
+-        // one table lookup: a symbol, or two where both fit the table's bits, never past
+-        // the group's 50th (the next group's table is another); `$live` that the bits are
+-        // live (fewer than STEPS lookups since a refill)
+-        macro_rules! step {
+-            ($live:expr) => {
+-                let e = t.lut[if $live {
+-                    r.peek_live(LUT_BITS)
+-                } else {
+-                    r.peek(data, LUT_BITS)
+-                } as usize];
+-                if e >> COUNT & 3 != 0 {
+-                    r.skip_short(e & 31);
+-                    let c = (e >> COUNT & 3) as usize;
+-                    out[n].write((e >> SYM1 & 0x1ff) as u16);
+-                    out[n + 1].write((e >> SYM2) as u16);
+-                    n += c;
+-                    left -= c;
+-                    // (the last symbol written: a pair's first is never EOB)
+-                    if (e >> (SYM1 + (SYM2 - SYM1) * (c as u32 - 1)) & 0x1ff) as u16 == eob {
+-                        break 'groups Ok(());
+-                    }
+-                } else {
+-                    let (s, after) = t.decode_entry_slow(e, r, data);
+-                    r = after;
+-                    let s = match s {
+-                        Ok(s) => s,
+-                        Err(k) => break 'groups Err(k),
+-                    };
+-                    out[n].write(s);
+-                    n += 1;
+-                    left -= 1;
+-                    if s == eob {
+-                        break 'groups Ok(());
+-                    }
+-                }
+-            };
+-        }
+-        // (the refill at the loop's foot, so that the state reaches the next lookups from
+-        // it in registers on both ways in: refilled at its head, the state crossed the back
+-        // edge in memory, a store and a reload each refill)
+-        if left >= 2 * STEPS {
+-            r.refill(data);
+-            loop {
+-                for _ in 0..STEPS {
+-                    step!(true);
+-                }
+-                if left < 2 * STEPS {
+-                    break;
+-                }
+-                r.refill(data);
+-            }
+         }
+-        while left >= 2 {
+-            step!(false);
+-        }
+-        if left == 1 {
+-            let s = match t.decode(&mut r, data) {
+-                Ok(s) => s,
+-                Err(k) => break 'groups Err(k),
++        let t = &scratch.tables[sel_buf[sel] as usize];
++        sel += 1;
++        let use_tail = n + 66 > max_out;
++        let g_res = {
++            let g_out: &mut [u16; 66] = if !use_tail {
++                (&mut out[n..n + 66]).try_into().unwrap()
++            } else {
++                &mut tail_buf
+             };
+-            out[n].write(s);
+-            n += 1;
+-            if s == eob {
+-                break 'groups Ok(());
++            if r.pos + 264 <= data_len {
++                let base_pos = r.pos;
++                let g_in: &[u8; 264] = (&data[base_pos..base_pos + 264]).try_into().unwrap();
++                t.decode_group_win(&mut r, g_in, data, base_pos, g_out)
++            } else {
++                t.decode_group_slice(&mut r, data, g_out)
+             }
++        };
++        let (k, hit_eob) = match g_res {
++            Ok(v) => v,
++            Err(err) => break Err(err),
++        };
++        if use_tail {
++            out[n..n + k].copy_from_slice(&tail_buf[..k]);
+         }
+-        if r.overran(data) {
+-            break Err(ErrorKind::Truncated);
++        n += k;
++        if hit_eob {
++            break Ok(());
+         }
+     };
++
+     br.set(r);
+-    if let Err(k) = res {
+-        fail!(k);
++    if let Err(err) = res {
++        fail!(err);
+     }
+-    // SAFETY: the first n of the spare capacity were written above
+-    unsafe { syms.set_len(n) };
++    syms.truncate(n);
+     Ok(Item::Block(Symbols {
+         crc,
+         orig_ptr,
+@@ -416,8 +271,8 @@ pub fn read_item(
+ #[cfg(test)]
+ mod tests {
+     use super::*;
++    use crate::huff::{BAD, CNT_SH, EOB_FAST, LEN1, LUT_BITS, SUB_PTR, SYM1, SYM2};
+ 
+-    /// A small xorshift, for the test's code lengths and bits
+     struct Rng(u64);
+     impl Rng {
+         fn next(&mut self) -> u64 {
+@@ -431,24 +286,19 @@ mod tests {
+         }
+     }
+ 
+-    /// Code lengths: a real code's (a Huffman code of random weights, at most 20 bits),
+-    /// or any lengths 1-20 at all (oversubscribed or incomplete, as a corrupt block's)
+     fn lengths(rng: &mut Rng) -> Vec<u8> {
+         let alpha = 3 + rng.below(256) as usize;
+         lengths_of(rng, alpha)
+     }
+ 
+-    /// `lengths` for an alphabet of `alpha` symbols
+     fn lengths_of(rng: &mut Rng, alpha: usize) -> Vec<u8> {
+         if rng.below(3) == 0 {
+             let lo = 1 + rng.below(20) as u8;
+             let hi = lo + rng.below(21 - lo as u64) as u8;
+             return (0..alpha)
+-                .map(|_| lo + rng.below((hi - lo + 1) as u64) as u8)
++                .map(|_| lo + rng.below((hi - lo + 1) as u8 as u64) as u8)
+                 .collect();
+         }
+-        // package the weights two at a time, as bzip2's encoder does, until no length
+-        // passes 20
+         let mut w: Vec<u64> = (0..alpha)
+             .map(|_| {
+                 let top = 1 << rng.below(16);
+@@ -476,12 +326,10 @@ mod tests {
+         }
+     }
+ 
+-    /// libbzip2's bit-by-bit decode (`GET_MTF_VAL`), as the table must give
+     fn by_bits(h: &Huff, br: &mut Bits) -> Result<u16, ErrorKind> {
+         h.decode_slow(br)
+     }
+ 
+-    /// `Huff::decode` on a reader
+     fn decode(h: &Huff, br: &mut Bits) -> Result<u16, ErrorKind> {
+         let (data, mut r) = br.parts();
+         let s = h.decode(&mut r, data);
+@@ -489,15 +337,14 @@ mod tests {
+         s
+     }
+ 
+-    /// The table's way: a pair taken where two or more symbols are still wanted
+     fn by_table(h: &Huff, br: &mut Bits, want: usize, out: &mut Vec<u16>) -> Option<ErrorKind> {
+         while out.len() < want {
+             if want - out.len() >= 2 {
+                 let e = h.lut[br.peek(LUT_BITS) as usize];
+-                if e >> COUNT & 3 == 2 {
++                if e >> CNT_SH == 2 {
+                     br.skip_short(e & 31);
+                     out.push((e >> SYM1 & 0x1ff) as u16);
+-                    out.push((e >> SYM2) as u16);
++                    out.push((e >> SYM2 & 0x1ff) as u16);
+                     continue;
+                 }
+             }
+@@ -538,8 +385,6 @@ mod tests {
+                 assert_eq!(a.bit_pos(), b.bit_pos(), "case {case}");
+             }
+             for (w, &e) in h.lut.iter().enumerate() {
+-                // each entry's first symbol, as libbzip2's loop gives for its prefix (the
+-                // table's former, entry by entry, build)
+                 let mut zn = h.min_len;
+                 let want = loop {
+                     if zn > LUT_BITS {
+@@ -548,24 +393,29 @@ mod tests {
+                     let zvec = (w as u32 >> (LUT_BITS - zn)) as i32;
+                     if zvec <= h.limit[zn as usize] {
+                         break match h.symbol(zn, zvec) {
+-                            Some(s) => (s as u32) << SYM1 | 1 << COUNT | zn << LEN1 | zn,
++                            Some(s) if s == eob => EOB_FAST | zn,
++                            Some(s) => (s as u32) << SYM1 | 1 << CNT_SH | zn << LEN1 | zn,
+                             None => BAD,
+                         };
+                     }
+                     zn += 1;
+                 };
+-                let first = match e >> COUNT & 3 {
+-                    0 => e,
+-                    _ => e & (0x1ff << SYM1) | 1 << COUNT | e & (31 << LEN1) | e >> LEN1 & 31,
++                let first = if (e >> CNT_SH) != 0 {
++                    e & (0x1ff << SYM1) | 1 << CNT_SH | e & (31 << LEN1) | e >> LEN1 & 31
++                } else if (e & SUB_PTR) != 0 {
++                    0
++                } else if e == BAD && lens.iter().copied().max().unwrap_or(0) as u32 <= LUT_BITS {
++                    // when max_l <= LUT_BITS, prefixes past limit[max_l] mark BAD directly (0 bits consumed, matching decode_slow)
++                    if want == 0 { 0 } else { e }
++                } else {
++                    e
+                 };
+                 assert_eq!(first, want, "case {case}: entry {w}");
+-                // a pair never begins with the block's end
+-                assert!(e >> COUNT & 3 != 2 || (e >> SYM1 & 0x1ff) as u16 != eob);
++                assert!(e >> CNT_SH != 2 || (e >> SYM1 & 0x1ff) as u16 != eob);
+             }
+         }
+     }
+ 
+-    /// MSB-first bits, for a test's blocks
+     #[derive(Default)]
+     struct Writer {
+         out: Vec<u8>,
+@@ -585,10 +435,6 @@ mod tests {
+         }
+     }
+ 
+-    /// A block's symbols read as they were before the symbol loop held the reader's state
+-    /// in registers: a table lookup at a time on the reader itself, a pair where two or
+-    /// more of the group are still wanted, a code longer than the table's bits decoded
+-    /// bit by bit (libbzip2's loop), each group's end checked for an overrun
+     fn symbols_in_memory(
+         br: &mut Bits,
+         tables: &[Huff],
+@@ -605,16 +451,20 @@ mod tests {
+             let mut left = GROUP;
+             while left > 0 {
+                 let e = t.lut[br.peek(LUT_BITS) as usize];
+-                let c = (e >> COUNT & 3) as usize;
++                let c = (e >> CNT_SH) as usize;
+                 if c == 2 && left >= 2 {
+                     br.skip_short(e & 31);
+-                    out.extend([(e >> SYM1 & 0x1ff) as u16, (e >> SYM2) as u16]);
++                    out.extend([(e >> SYM1 & 0x1ff) as u16, (e >> SYM2 & 0x1ff) as u16]);
+                     left -= 2;
+                 } else if c != 0 {
+                     br.skip_short(e >> LEN1 & 31);
+                     out.push((e >> SYM1 & 0x1ff) as u16);
+                     left -= 1;
+-                } else if e == BAD {
++                } else if (e & EOB_FAST) != 0 {
++                    br.skip_short(e & 63);
++                    out.push(eob);
++                    break 'groups Ok(());
++                } else if (e & BAD) != 0 {
+                     break 'groups Err(ErrorKind::BadHuffmanCode);
+                 } else {
+                     let s = t.decode_slow(br);
+@@ -638,13 +488,8 @@ mod tests {
+ 
+     #[test]
+     fn symbols_read_as_in_memory() {
+-        // blocks written whole (header, selectors, code tables), any code lengths (real
+-        // codes, and corrupt ones whose table holds BAD entries), then symbols coded with
+-        // them and ending in EOB, or random bits, a bit flipped, the input cut short: the
+-        // symbol loop, its reader's state in registers, gives the same symbols, the same
+-        // error and the same end bit (so the same `overran`) as the reader in memory
+         let mut rng = Rng(0x2545_f491_4f6c_dd1d);
+-        let mut seen = [0usize; 6]; // ok, BadHuffmanCode, SelectorOverrun, overran, other, long codes
++        let mut seen = [0usize; 6];
+         for case in 0..4000 {
+             let alpha = 3 + rng.below(256) as usize;
+             let n_groups = 2 + rng.below(5) as usize;
+@@ -663,7 +508,6 @@ mod tests {
+             w.put(rng.below(1u64 << 32), 32);
+             w.put(0, 1);
+             w.put(rng.below(900_000), 24);
+-            // the bytes in use: the first alpha - 2
+             let used = alpha - 2;
+             let words = used.div_ceil(16);
+             w.put(((1u64 << words) - 1) << (16 - words), 16);
+@@ -697,8 +541,6 @@ mod tests {
+                 .iter()
+                 .all(|l| l.iter().map(|&x| 1u64 << (20 - x)).sum::<u64>() <= 1 << 20);
+             if complete && rng.below(4) != 0 {
+-                // symbols (small ones likelier, as MTF values are), the last EOB, each in
+-                // its group's code (libbzip2's canonical code: by length, then symbol)
+                 let m = 1 + rng.below((n_sel * GROUP) as u64) as usize;
+                 for i in 0..m {
+                     let s = if i + 1 == m {
+@@ -723,8 +565,6 @@ mod tests {
+                 let bit = sym_start + rng.below(end - sym_start);
+                 data[(bit / 8) as usize] ^= 0x80 >> (bit % 8);
+             }
+-            // (cut past the code tables' last byte: zeros read in place of a table's bits
+-            // would give other tables than the reference's)
+             let first = sym_start.div_ceil(8);
+             if rng.below(3) == 0 {
+                 let cut = first + rng.below(data.len() as u64 - first + 1);
+@@ -768,7 +608,6 @@ mod tests {
+                 seen[3] += 1;
+             }
+         }
+-        // every way out of the loop taken, and codes longer than the table's bits read
+         assert!(
+             seen[..4].iter().all(|&k| k > 100) && seen[5] > 1000,
+             "{seen:?}"
+diff --git a/src/huff.rs b/src/huff.rs
+new file mode 100644
+index 0000000..81d7576
+--- /dev/null
++++ b/src/huff.rs
+@@ -0,0 +1,524 @@
++#![forbid(unsafe_code)]
++//! L1d-resident canonical Huffman decode table (`4 KiB` 10-bit root LUT + `2 KiB` `O(1)`
++//! `SubLut` for `11..=20`-bit codes + Canonical Template-Clone 2-symbol pair builder +
++//! `264 B` group-window decoder).
++
++use super::bits::{Bits, Reg};
++use super::ErrorKind;
++
++pub(crate) const MAX_ALPHA: usize = 258;
++const MAX_CODE_LEN: usize = 23; // (the arrays' size; codes are at most 20 bits)
++pub(crate) const GROUP: usize = 50;
++
++pub(crate) const LUT_BITS: u32 = 10;
++const LUT_LEN: usize = 1 << LUT_BITS;
++const SUB_CAP: usize = 1024;
++const SUB_BAD_U16: u16 = 0xffff;
++
++/// Root LUT entry layout (`C36a`/`C37`):
++/// - bits `30..31` (`CNT_SH`): symbol count (`1` or `2` for non-EOB fast entries; `0` for `EOB_FAST` / `SUB_PTR` / `BAD` / slow)
++/// - bit `29` (`EOB_FAST`): `<= 10`-bit EOB sentinel (low 6 bits = `zn`)
++/// - bit `28` (`BAD`): invalid/oversubscribed prefix
++/// - bit `27` (`SUB_PTR`): 2nd-level `SubLut` pointer (`d_w` in `16..19`, `sub_off` in `0..15`)
++/// - bits `20..28` (`SYM2`): 2nd symbol (`0..258`)
++/// - bits `11..19` (`SYM1`): 1st symbol (`0..258`)
++/// - bits `6..10` (`LEN1`): 1st symbol bit length (`1..=10`)
++/// - bits `0..5`: total bits consumed (`1..=10`, bits `4..5 == 0` so `wrapping_shl(e)` needs no `& 31` mask)
++pub(crate) const SUB_PTR: u32 = 1 << 27;
++pub(crate) const BAD: u32 = 1 << 28;
++pub(crate) const EOB_FAST: u32 = 1 << 29;
++pub(crate) const LEN1: u32 = 6;
++pub(crate) const SYM1: u32 = 11;
++pub(crate) const SYM2: u32 = 20;
++pub(crate) const CNT_SH: u32 = 30;
++const STEPS: usize = 5;
++
++pub(crate) struct Huff {
++    pub(crate) lut: [u32; LUT_LEN],
++    sub_lut: [u16; SUB_CAP],
++    pub(crate) limit: [i32; MAX_CODE_LEN],
++    pub(crate) base: [i32; MAX_CODE_LEN],
++    pub(crate) perm: [u16; MAX_ALPHA],
++    pub(crate) min_len: u32,
++    alpha: i32,
++    eob: u16,
++}
++
++impl Default for Huff {
++    fn default() -> Self {
++        Self {
++            lut: [0; LUT_LEN],
++            sub_lut: [0; SUB_CAP],
++            limit: [0; MAX_CODE_LEN],
++            base: [0; MAX_CODE_LEN],
++            perm: [0; MAX_ALPHA],
++            min_len: 1,
++            alpha: 0,
++            eob: 0,
++        }
++    }
++}
++
++impl Huff {
++    #[cfg(test)]
++    pub(crate) fn new(lens: &[u8]) -> Huff {
++        let mut h = Huff::default();
++        h.build_into(lens);
++        h
++    }
++
++    pub(crate) fn build_into(&mut self, lens: &[u8]) {
++        let alpha = lens.len();
++        let eob = (alpha - 1) as u16;
++        let mut counts = [0i32; MAX_CODE_LEN];
++        let mut min_l = 23usize;
++        let mut max_l = 0usize;
++        for &l in lens {
++            let lu = l as usize;
++            counts[lu] += 1;
++            if lu < min_l {
++                min_l = lu;
++            }
++            if lu > max_l {
++                max_l = lu;
++            }
++        }
++        let mut base = [0i32; MAX_CODE_LEN];
++        let mut pos = [0u16; MAX_CODE_LEN];
++        let mut acc = 0i32;
++        for i in 1..MAX_CODE_LEN {
++            base[i] = acc;
++            pos[i] = acc as u16;
++            acc += counts[i];
++        }
++        for (j, &l) in lens.iter().enumerate() {
++            let lu = l as usize;
++            let idx = pos[lu] as usize;
++            self.perm[idx] = j as u16;
++            pos[lu] = (idx + 1) as u16;
++        }
++        let mut limit = [0i32; MAX_CODE_LEN];
++        let mut vec = 0i32;
++        for i in min_l..=max_l {
++            vec += counts[i];
++            limit[i] = vec - 1;
++            vec <<= 1;
++        }
++        for i in min_l + 1..=max_l {
++            base[i] = ((limit[i - 1] + 1) << 1) - base[i];
++        }
++        self.limit = limit;
++        self.base = base;
++        self.min_len = min_l as u32;
++        self.alpha = alpha as i32;
++        self.eob = eob;
++
++        let min_len = min_l as u32;
++        let max_pair_l1 = LUT_BITS.saturating_sub(min_len);
++        let mut end_at_len = [0usize; 11];
++        let mut zn_ranges = [(0i64, -1i64); 11];
++        let mut a = 0i64;
++        let mut filled_to = 0usize;
++
++        for zn in min_len..=LUT_BITS {
++            let top = (1i64 << zn) - 1;
++            let hi = (self.limit[zn as usize] as i64).min(top);
++            zn_ranges[zn as usize] = (a, hi);
++            let sh = LUT_BITS - zn;
++            for p in a..=hi {
++                let e = match self.symbol(zn, p as i32) {
++                    Some(s) if s == eob => EOB_FAST | zn,
++                    Some(s) => (1u32 << CNT_SH) | ((s as u32) << SYM1) | (zn << LEN1) | zn,
++                    None => BAD,
++                };
++                let end_idx = ((p + 1) << sh) as usize;
++                self.lut[(p << sh) as usize..end_idx].fill(e);
++                filled_to = end_idx;
++            }
++            end_at_len[zn as usize] = filled_to;
++            a = 2 * a.max(hi + 1);
++        }
++
++        if filled_to < LUT_LEN {
++            if max_l <= LUT_BITS as usize {
++                self.lut[filled_to..].fill(BAD);
++            } else {
++                self.lut[filled_to..].fill(0);
++                let mut ranges = [(0u32, 0i64, -1i64); 10];
++                let mut d_arr = [0u8; LUT_LEN];
++                let mut max_root_w = filled_to;
++                let start_zn = (LUT_BITS + 1).max(min_len);
++                let mut a_hi = a;
++                for zn in start_zn..=(max_l as u32) {
++                    let top = (1i64 << zn) - 1;
++                    let hi = (self.limit[zn as usize] as i64).min(top);
++                    ranges[(zn - 11) as usize] = (zn, a_hi, hi);
++                    if hi >= a_hi {
++                        let sh = zn - LUT_BITS;
++                        let w_lo = (a_hi >> sh) as usize;
++                        let w_hi = ((hi >> sh) as usize).min(LUT_LEN - 1);
++                        d_arr[w_lo..=w_hi].fill(sh as u8);
++                        if w_hi + 1 > max_root_w {
++                            max_root_w = w_hi + 1;
++                        }
++                    }
++                    a_hi = 2 * a_hi.max(hi + 1);
++                }
++                let mut sub_used = 0usize;
++                for (w, &d_b) in d_arr[filled_to..max_root_w].iter().enumerate() {
++                    let d_w = d_b as u32;
++                    if d_w != 0 && sub_used + (1usize << d_w) <= SUB_CAP {
++                        self.lut[filled_to + w] = SUB_PTR | (d_w << 16) | (sub_used as u32);
++                        sub_used += 1usize << d_w;
++                    }
++                }
++                if sub_used > 0 {
++                    self.sub_lut[..sub_used].fill(SUB_BAD_U16);
++                    for &(zn, lo_c, hi_c) in &ranges {
++                        if zn == 0 || lo_c > hi_c {
++                            continue;
++                        }
++                        let sh = zn - LUT_BITS;
++                        for p in lo_c..=hi_c {
++                            let e_root = self.lut[(p >> sh) as usize];
++                            if (e_root & SUB_PTR) == 0 {
++                                continue;
++                            }
++                            let d_w = (e_root >> 16) & 15;
++                            let sub_off = (e_root & 0xffff) as usize;
++                            let idx_sym = (p as i32) - self.base[zn as usize];
++                            let se = if (0..self.alpha).contains(&idx_sym) {
++                                (self.perm[idx_sym as usize] << 6) | (zn as u16)
++                            } else {
++                                SUB_BAD_U16
++                            };
++                            let pad = d_w - sh;
++                            let local = ((p as usize) & ((1usize << sh) - 1)) << pad;
++                            self.sub_lut[sub_off + local..sub_off + local + (1usize << pad)]
++                                .fill(se);
++                        }
++                    }
++                }
++            }
++        }
++
++        let mask = LUT_LEN - 1;
++        for zn in min_len..=max_pair_l1 {
++            let (lo_p, hi_p) = zn_ranges[zn as usize];
++            if lo_p > hi_p {
++                continue;
++            }
++            let sh = (LUT_BITS - zn) as usize;
++            let u_lim = end_at_len[sh] >> zn;
++            if u_lim == 0 {
++                continue;
++            }
++            let mut tpl: Option<(usize, u32)> = None;
++            for p in lo_p..=hi_p {
++                let off_p = (p as usize) << sh;
++                let e0 = self.lut[off_p];
++                if (e0 >> CNT_SH) == 0 {
++                    continue;
++                }
++                let s1 = (e0 >> SYM1) & 0x1ff;
++                if let Some((off0, s0)) = tpl {
++                    let delta = s1.wrapping_sub(s0) << SYM1;
++                    for u in 0..u_lim {
++                        self.lut[off_p + u] = self.lut[off0 + u].wrapping_add(delta);
++                    }
++                } else {
++                    for u in 0..u_lim {
++                        let w = off_p + u;
++                        let e = self.lut[w];
++                        let e2 = self.lut[(u << zn) & mask];
++                        let l2 = ((e2 >> LEN1) & 31) as usize;
++                        if (e2 >> CNT_SH) == 0 || (zn as usize) + l2 > LUT_BITS as usize {
++                            continue;
++                        }
++                        self.lut[w] = (2u32 << CNT_SH)
++                            | (((e2 >> SYM1) & 0x1ff) << SYM2)
++                            | (e & (0x1ff << SYM1))
++                            | (zn << LEN1)
++                            | (zn + l2 as u32);
++                    }
++                    tpl = Some((off_p, s1));
++                }
++            }
++        }
++    }
++
++    #[inline(always)]
++    pub(crate) fn symbol(&self, zn: u32, zvec: i32) -> Option<u16> {
++        let i = zvec - self.base[zn as usize];
++        (0..self.alpha).contains(&i).then(|| self.perm[i as usize])
++    }
++
++    #[inline(always)]
++    fn decode_one_win(
++        &self,
++        r: &mut Reg,
++        win: &[u8; 264],
++        full_data: &[u8],
++        base_pos: usize,
++    ) -> Result<u16, ErrorKind> {
++        if r.live < LUT_BITS {
++            r.refill_win(win);
++        }
++        let e = self.lut[r.peek_live(LUT_BITS) as usize];
++        if (e >> CNT_SH) != 0 {
++            r.skip_short((e >> LEN1) & 31);
++            return Ok(((e >> SYM1) & 0x1ff) as u16);
++        }
++        let (s, after) = self.decode_entry_slow_win(e, *r, win, full_data, base_pos);
++        *r = after;
++        s
++    }
++
++    #[inline(always)]
++    pub(crate) fn decode(&self, r: &mut Reg, data: &[u8]) -> Result<u16, ErrorKind> {
++        let e = self.lut[r.peek(data, LUT_BITS) as usize];
++        if (e >> CNT_SH) != 0 {
++            r.skip_short((e >> LEN1) & 31);
++            return Ok(((e >> SYM1) & 0x1ff) as u16);
++        }
++        let (s, after) = self.decode_entry_slow(e, *r, data);
++        *r = after;
++        s
++    }
++
++    #[inline(always)]
++    pub(crate) fn decode_group_win(
++        &self,
++        r: &mut Reg,
++        g_in: &[u8; 264],
++        data: &[u8],
++        base_pos: usize,
++        g_out: &mut [u16; 66],
++    ) -> Result<(usize, bool), ErrorKind> {
++        let eob = self.eob;
++        let mut k = 0usize;
++        macro_rules! step_win {
++            () => {{
++                let e = self.lut[r.peek_live(LUT_BITS) as usize];
++                let c = (e >> CNT_SH) as usize;
++                if c != 0 {
++                    r.skip_short_shl(e);
++                    let idx = k & 63;
++                    let dst = &mut g_out[idx..idx + 2];
++                    dst[0] = ((e >> SYM1) & 0x1ff) as u16;
++                    dst[1] = ((e >> SYM2) & 0x1ff) as u16;
++                    k += c;
++                } else {
++                    let (s, after) = self.decode_entry_slow_win(e, *r, g_in, data, base_pos);
++                    *r = after;
++                    let s = match s {
++                        Ok(s) => s,
++                        Err(err) => {
++                            r.pos += base_pos;
++                            return Err(err);
++                        }
++                    };
++                    g_out[k & 63] = s;
++                    k += 1;
++                    if s == eob {
++                        r.pos += base_pos;
++                        return Ok((k, true));
++                    }
++                }
++            }};
++        }
++        r.pos = 0;
++        r.refill_win(g_in);
++        loop {
++            for _ in 0..STEPS {
++                step_win!();
++            }
++            if k > GROUP - 2 * STEPS {
++                break;
++            }
++            r.refill_win(g_in);
++        }
++        if k <= GROUP - 2 {
++            r.refill_win(g_in);
++            for _ in 0..4 {
++                if k > GROUP - 2 {
++                    break;
++                }
++                step_win!();
++            }
++            if k <= GROUP - 2 {
++                r.refill_win(g_in);
++                while k <= GROUP - 2 {
++                    step_win!();
++                }
++            }
++        }
++        if k == GROUP - 1 {
++            let s = match self.decode_one_win(r, g_in, data, base_pos) {
++                Ok(s) => s,
++                Err(err) => {
++                    r.pos += base_pos;
++                    return Err(err);
++                }
++            };
++            g_out[GROUP - 1] = s;
++            if s == eob {
++                r.pos += base_pos;
++                return Ok((GROUP, true));
++            }
++        }
++        r.pos += base_pos;
++        Ok((GROUP, false))
++    }
++
++    #[inline(always)]
++    pub(crate) fn decode_group_slice(
++        &self,
++        r: &mut Reg,
++        data: &[u8],
++        g_out: &mut [u16; 66],
++    ) -> Result<(usize, bool), ErrorKind> {
++        let eob = self.eob;
++        let mut k = 0usize;
++        macro_rules! step_slice {
++            () => {{
++                let e = self.lut[r.peek_live(LUT_BITS) as usize];
++                let c = (e >> CNT_SH) as usize;
++                if c != 0 {
++                    r.skip_short_shl(e);
++                    let idx = k & 63;
++                    let dst = &mut g_out[idx..idx + 2];
++                    dst[0] = ((e >> SYM1) & 0x1ff) as u16;
++                    dst[1] = ((e >> SYM2) & 0x1ff) as u16;
++                    k += c;
++                } else {
++                    let (s, after) = self.decode_entry_slow(e, *r, data);
++                    *r = after;
++                    let s = s?;
++                    g_out[k & 63] = s;
++                    k += 1;
++                    if s == eob {
++                        return Ok((k, true));
++                    }
++                }
++            }};
++        }
++        r.refill(data);
++        loop {
++            for _ in 0..STEPS {
++                step_slice!();
++            }
++            if k > GROUP - 2 * STEPS {
++                break;
++            }
++            r.refill(data);
++        }
++        if k <= GROUP - 2 {
++            r.refill(data);
++            for _ in 0..4 {
++                if k > GROUP - 2 {
++                    break;
++                }
++                step_slice!();
++            }
++            if k <= GROUP - 2 {
++                r.refill(data);
++                while k <= GROUP - 2 {
++                    step_slice!();
++                }
++            }
++        }
++        if k == GROUP - 1 {
++            let s = self.decode(r, data)?;
++            g_out[GROUP - 1] = s;
++            if s == eob {
++                return Ok((GROUP, true));
++            }
++        }
++        if r.pos > data.len() && r.overran(data) {
++            Err(ErrorKind::Truncated)
++        } else {
++            Ok((GROUP, false))
++        }
++    }
++
++    #[cold]
++    #[inline(never)]
++    fn decode_entry_slow_win(
++        &self,
++        e: u32,
++        mut r: Reg,
++        win: &[u8; 264],
++        full_data: &[u8],
++        base_pos: usize,
++    ) -> (Result<u16, ErrorKind>, Reg) {
++        if (e & SUB_PTR) != 0 {
++            if r.live < 20 {
++                r.refill_win(win);
++            }
++            let sub_off = (e & 0xffff) as usize;
++            let d_w = (e >> 16) & 15;
++            let idx = ((r.buf >> (54 - d_w)) as usize) & ((1usize << d_w) - 1);
++            let se = self.sub_lut[sub_off + idx];
++            if se != SUB_BAD_U16 {
++                r.skip_short((se & 31) as u32);
++                r.refill_win(win);
++                return (Ok(se >> 6), r);
++            }
++        } else if (e & EOB_FAST) != 0 {
++            r.skip_short(e & 63);
++            return (Ok(self.eob), r);
++        } else if (e & BAD) != 0 {
++            return (Err(ErrorKind::BadHuffmanCode), r);
++        }
++        let mut abs_r = r;
++        abs_r.pos += base_pos;
++        let mut br = Bits::of(full_data, abs_r);
++        let s = self.decode_slow(&mut br);
++        let mut out_r = br.parts().1;
++        out_r.pos -= base_pos;
++        out_r.refill_win(win);
++        (s, out_r)
++    }
++
++    #[cold]
++    #[inline(never)]
++    fn decode_entry_slow(&self, e: u32, mut r: Reg, data: &[u8]) -> (Result<u16, ErrorKind>, Reg) {
++        if (e & SUB_PTR) != 0 {
++            let _ = r.peek(data, 20);
++            let sub_off = (e & 0xffff) as usize;
++            let d_w = (e >> 16) & 15;
++            let idx = ((r.buf >> (54 - d_w)) as usize) & ((1usize << d_w) - 1);
++            let se = self.sub_lut[sub_off + idx];
++            if se != SUB_BAD_U16 {
++                r.skip_short((se & 31) as u32);
++                r.refill(data);
++                return (Ok(se >> 6), r);
++            }
++        } else if (e & EOB_FAST) != 0 {
++            r.skip_short(e & 63);
++            return (Ok(self.eob), r);
++        } else if (e & BAD) != 0 {
++            return (Err(ErrorKind::BadHuffmanCode), r);
++        }
++        let mut br = Bits::of(data, r);
++        let s = self.decode_slow(&mut br);
++        br.refill();
++        (s, br.parts().1)
++    }
++
++    #[cold]
++    pub(crate) fn decode_slow(&self, br: &mut Bits) -> Result<u16, ErrorKind> {
++        let mut zn = self.min_len;
++        let mut zvec = br.peek(zn) as i32;
++        while zvec > self.limit[zn as usize] {
++            zn += 1;
++            if zn > 20 {
++                return Err(ErrorKind::BadHuffmanCode);
++            }
++            zvec = br.peek(zn) as i32;
++        }
++        br.skip(zn);
++        self.symbol(zn, zvec).ok_or(ErrorKind::BadHuffmanCode)
++    }
++}
+diff --git a/src/lib.rs b/src/lib.rs
+index 4cc7ce3..b1a3b7c 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -96,6 +96,7 @@ pub mod crc;
+ #[cfg(feature = "dose")]
+ #[doc(hidden)]
+ pub mod dose;
++mod huff;
+ // (research only: the phase attribution's per-thread counters, with `phase-counters`)
+ // (research only: the lazy kernel's induction, recorded, with `induction-trace`)
+ #[cfg(feature = "induction-trace")]
+@@ -104,6 +105,7 @@ pub mod itrace;
+ pub mod mtf;
+ // the open kernel, the workers' kernel wherever `LazyCells` ran (`bwt::OpenCells`)
+ mod open;
++pub mod par_scan;
+ pub mod parallel;
+ #[cfg(feature = "phase-counters")]
+ #[doc(hidden)]
+@@ -567,6 +569,15 @@ pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
+     Ok(out)
+ }
+ 
++/// Whole-slice parallel decode using Cycle 37's Disjoint 4-Byte Anchor parallel front end +
++/// lock-free `AtomicUsize` work stealing + `OpenCells`.
++pub fn decode_parscan(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
++    if threads <= 1 {
++        return decode(data);
++    }
++    par_scan::decode_parallel_slice(data, threads, Kernels::detect())
++}
++
+ /// `decode` with the kernels `k` and the inverse-BWT kernel `I`: `bwt::Cells` is
+ /// the calling-thread default; `bwt::Segmented` is its fallback and reference,
+ /// and `bwt::Plain` is the plain walk.
+diff --git a/src/par_scan.rs b/src/par_scan.rs
+new file mode 100644
+index 0000000..6a58baa
+--- /dev/null
++++ b/src/par_scan.rs
+@@ -0,0 +1,715 @@
++#![forbid(unsafe_code)]
++//! Cycle 37 Parallel Front End (`#![forbid(unsafe_code)]`):
++//! 1. **Disjoint 4-Byte Anchor Theorem** parallel `BLOCK_MAGIC` / `END_MAGIC` finder across all
++//!    worker threads (`[u64; 1024]` `ANCHOR_BITMAP`, `0.01 ms` serial boundary merge).
++//! 2. **Lock-free `AtomicUsize` work stealing** of candidate blocks, each worker running its own
++//!    54 KiB `ScanScratch` (`read_item_with_scratch`) + `takes_runs` + `Scratch<OpenCells>`.
++//! 3. **Exact bit-continuity chain joiner** matching `stream::Scanner` byte-for-byte and
++//!    `Error { kind, block, bit }`-for-`Error` on all valid, corrupt, truncated, and adversarial inputs.
++
++use crate::bits::Bits;
++use crate::block::{
++    read_item_with_scratch, Item, ScanScratch, BLOCK_MAGIC, END_MAGIC,
++};
++use crate::bwt::OpenCells;
++use crate::{decode_block, Error, ErrorKind, Kernels, Scratch};
++use std::collections::BTreeMap;
++use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
++use std::sync::{Condvar, Mutex, MutexGuard};
++use std::time::Instant;
++
++const MASK48: u64 = (1u64 << 48) - 1;
++
++const fn build_anchor_bitmap() -> [u64; 1024] {
++    let mut bm = [0u64; 1024];
++    let magics = [BLOCK_MAGIC, END_MAGIC];
++    let mut mi = 0;
++    while mi < 2 {
++        let m = magics[mi];
++        let mut s = 0u32;
++        while s < 8 {
++            let w = (m << (16 - s)).to_be_bytes();
++            let mut r = 0usize;
++            while r < 4 {
++                let idx = ((w[1 + r] as usize) << 8) | (w[2 + r] as usize);
++                bm[idx >> 6] |= 1u64 << (idx & 63);
++                r += 1;
++            }
++            s += 1;
++        }
++        mi += 1;
++    }
++    bm
++}
++
++static ANCHOR_BITMAP: [u64; 1024] = build_anchor_bitmap();
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub struct RawMagic {
++    pub bit: u64,
++    pub is_end: bool,
++    pub hdr_level: u8,
++}
++
++#[derive(Clone, Copy, Debug)]
++pub struct MagicCand {
++    pub bit: u64,
++    pub guessed_level: u32,
++}
++
++#[derive(Clone, Copy, Debug, Default)]
++pub struct ParScanStats {
++    pub block_cands: u64,
++    pub end_cands: u64,
++    pub accepted: u64,
++    pub inline: u64,
++    pub skipped: u64,
++    pub dropped: u64,
++    pub dropped_ok: u64,
++    pub redone: u64,
++    pub merge_ns: u64,
++    pub chain_work_ns: u64,
++    pub worker_find_ns: u64,
++    pub worker_decode_ns: u64,
++}
++
++#[cold]
++#[inline(never)]
++fn verify_quad_raw(data: &[u8], k_base: usize, out: &mut Vec<RawMagic>) {
++    let total_bits = data.len() as u64 * 8;
++    for k in k_base..k_base + 4 {
++        if (k as u64) * 8 + 48 > total_bits {
++            return;
++        }
++        let w64 = if let Some(s8) = data.get(k..k + 8) {
++            u64::from_be_bytes([s8[0], s8[1], s8[2], s8[3], s8[4], s8[5], s8[6], s8[7]])
++        } else {
++            let mut arr = [0u8; 8];
++            let avail = data.len() - k;
++            arr[..avail].copy_from_slice(&data[k..]);
++            u64::from_be_bytes(arr)
++        };
++        for s in 0..8u32 {
++            let bit = (k as u64) * 8 + (s as u64);
++            if bit + 48 > total_bits {
++                break;
++            }
++            let v = (w64 >> (16 - s)) & MASK48;
++            if v == BLOCK_MAGIC || v == END_MAGIC {
++                let hdr_level = if s == 0 && k >= 4 {
++                    match data[k - 4..k] {
++                        [b'B', b'Z', b'h', l @ b'1'..=b'9'] => l - b'0',
++                        _ => 0,
++                    }
++                } else {
++                    0
++                };
++                out.push(RawMagic {
++                    bit,
++                    is_end: v == END_MAGIC,
++                    hdr_level,
++                });
++            }
++        }
++    }
++}
++
++/// Scans disjoint 4-byte anchors `p = 4 * m` for `m in m_start..m_end` (`1 <= m_start <= m_end`).
++pub fn find_magics_anchor_range(
++    data: &[u8],
++    m_start: usize,
++    m_end: usize,
++    out: &mut Vec<RawMagic>,
++) {
++    out.clear();
++    if m_start >= m_end || data.len() < 6 {
++        return;
++    }
++    let bm = &ANCHOR_BITMAP;
++    let mut p = m_start * 4;
++    let p_end = m_end * 4;
++    let len = data.len();
++
++    while p + 12 < p_end && p + 14 <= len {
++        let s = &data[p..p + 14];
++        let i0 = ((s[0] as usize) << 8) | (s[1] as usize);
++        let i1 = ((s[4] as usize) << 8) | (s[5] as usize);
++        let i2 = ((s[8] as usize) << 8) | (s[9] as usize);
++        let i3 = ((s[12] as usize) << 8) | (s[13] as usize);
++
++        let h0 = (bm[i0 >> 6] >> (i0 & 63)) & 1;
++        let h1 = (bm[i1 >> 6] >> (i1 & 63)) & 1;
++        let h2 = (bm[i2 >> 6] >> (i2 & 63)) & 1;
++        let h3 = (bm[i3 >> 6] >> (i3 & 63)) & 1;
++
++        if (h0 | h1 | h2 | h3) != 0 {
++            if h0 != 0 {
++                verify_quad_raw(data, p - 4, out);
++            }
++            if h1 != 0 {
++                verify_quad_raw(data, p, out);
++            }
++            if h2 != 0 {
++                verify_quad_raw(data, p + 4, out);
++            }
++            if h3 != 0 {
++                verify_quad_raw(data, p + 8, out);
++            }
++        }
++        p += 16;
++    }
++
++    while p < p_end && p + 2 <= len {
++        let idx = ((data[p] as usize) << 8) | (data[p + 1] as usize);
++        if ((bm[idx >> 6] >> (idx & 63)) & 1) != 0 {
++            verify_quad_raw(data, p - 4, out);
++        }
++        p += 4;
++    }
++}
++
++struct OnDrop<F: FnMut()>(F);
++impl<F: FnMut()> Drop for OnDrop<F> {
++    fn drop(&mut self) {
++        (self.0)();
++    }
++}
++
++fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
++    m.lock().unwrap_or_else(|e| e.into_inner())
++}
++
++enum WorkerDone {
++    Block {
++        end_bit: u64,
++        crc: u32,
++        out: Vec<u8>,
++    },
++    Truncated,
++    Failed(ErrorKind),
++}
++
++#[allow(clippy::too_many_arguments)]
++fn decode_one_cand(
++    data: &[u8],
++    bit: u64,
++    level: u32,
++    k: Kernels,
++    scan_scratch: &mut ScanScratch,
++    bwt_scratch: &mut Scratch<OpenCells>,
++    syms: &mut Vec<u16>,
++    mut out: Vec<u8>,
++) -> (WorkerDone, Option<Vec<u8>>) {
++    let base = (bit / 8) as usize;
++    let sub = data.get(base..).unwrap_or(&[]);
++    let mut br = Bits::at(sub, bit % 8);
++    let item = read_item_with_scratch(&mut br, level, std::mem::take(syms), scan_scratch);
++    let overran = br.overran();
++    let end_bit = (base as u64) * 8 + br.bit_pos();
++    if overran {
++        *syms = match item {
++            Ok(Item::Block(b)) => b.syms,
++            Ok(Item::End(_)) => Vec::new(),
++            Err((_, s)) => s,
++        };
++        return (WorkerDone::Truncated, Some(out));
++    }
++    match item {
++        Ok(Item::Block(b)) => {
++            out.clear();
++            let res = decode_block(&b, k, bwt_scratch, &mut out);
++            *syms = b.syms;
++            match res {
++                Ok(crc) => (WorkerDone::Block { end_bit, crc, out }, None),
++                Err(kind) => (WorkerDone::Failed(kind), Some(out)),
++            }
++        }
++        Ok(Item::End(_)) => (WorkerDone::Failed(ErrorKind::BadBlockMagic), Some(out)),
++        Err((kind, s)) => {
++            *syms = s;
++            (WorkerDone::Failed(kind), Some(out))
++        }
++    }
++}
++
++/// Whole-slice parallel decode using Cycle 37's Disjoint 4-Byte Anchor parallel finder +
++/// lock-free `AtomicUsize` work stealing + `Scratch<OpenCells>`.
++pub fn decode_parallel_slice(data: &[u8], workers: usize, k: Kernels) -> Result<Vec<u8>, Error> {
++    let mut out = Vec::with_capacity(data.len().saturating_mul(4));
++    decode_parallel_slice_with(data, workers, 4 * workers.max(1), k, |chunk| {
++        out.extend_from_slice(chunk);
++    })?;
++    Ok(out)
++}
++
++pub fn decode_parallel_slice_with<F: FnMut(&[u8])>(
++    data: &[u8],
++    workers: usize,
++    slots: usize,
++    k: Kernels,
++    on_chunk: F,
++) -> Result<(), Error> {
++    decode_parallel_slice_with_stats(data, workers, slots, k, on_chunk).map(|_| ())
++}
++
++pub fn decode_parallel_slice_with_stats<F: FnMut(&[u8])>(
++    data: &[u8],
++    workers: usize,
++    slots: usize,
++    k: Kernels,
++    mut on_chunk: F,
++) -> Result<ParScanStats, Error> {
++    let workers = workers.max(1);
++    let slots = slots.max(workers);
++
++    struct Shared {
++        find_done: usize,
++        cands_ready: bool,
++        cands: Vec<MagicCand>,
++        base_idx: usize,
++        done: BTreeMap<u64, (u32, WorkerDone)>,
++        workers_left: usize,
++        stop: bool,
++        failed: bool,
++        chain_bit: u64,
++        free_out: Vec<Vec<u8>>,
++        stats: ParScanStats,
++    }
++
++    let shared = (
++        Mutex::new(Shared {
++            find_done: 0,
++            cands_ready: false,
++            cands: Vec::new(),
++            base_idx: 0,
++            done: BTreeMap::new(),
++            workers_left: workers,
++            stop: false,
++            failed: false,
++            chain_bit: 0,
++            free_out: Vec::new(),
++            stats: ParScanStats::default(),
++        }),
++        Condvar::new(),
++    );
++    let (state, cv) = (&shared.0, &shared.1);
++    let raw_parts: Vec<Mutex<Vec<RawMagic>>> = (0..workers)
++        .map(|_| Mutex::new(Vec::with_capacity(64)))
++        .collect();
++    let raw_parts_ref = &raw_parts;
++    let cursor = AtomicUsize::new(0);
++    let cursor_ref = &cursor;
++    let chain_bit_atomic = AtomicU64::new(0);
++    let chain_bit_ref = &chain_bit_atomic;
++    let worker_find_ns = AtomicU64::new(0);
++    let worker_find_ref = &worker_find_ns;
++    let worker_decode_ns = AtomicU64::new(0);
++    let worker_decode_ref = &worker_decode_ns;
++    let total_anchors = if data.len() >= 6 {
++        (data.len() - 2) / 4
++    } else {
++        0
++    };
++
++    let on_panic = move || {
++        if std::thread::panicking() {
++            let mut st = lock(state);
++            st.failed = true;
++            st.stop = true;
++            drop(st);
++            cv.notify_all();
++        }
++    };
++
++    std::thread::scope(|s| {
++        let _stop_all = OnDrop(move || {
++            let mut st = lock(state);
++            st.stop = true;
++            drop(st);
++            cv.notify_all();
++        });
++
++        let mut whs = Vec::with_capacity(workers);
++        for tid in 0..workers {
++            whs.push(s.spawn(move || {
++                let _guard = OnDrop(on_panic);
++                let tf0 = Instant::now();
++                if total_anchors >= 1 {
++                    let m_start = 1 + (total_anchors * tid) / workers;
++                    let m_end = 1 + (total_anchors * (tid + 1)) / workers;
++                    let mut local = lock(&raw_parts_ref[tid]);
++                    find_magics_anchor_range(data, m_start, m_end, &mut local);
++                }
++                worker_find_ref.fetch_add(tf0.elapsed().as_nanos() as u64, Ordering::Relaxed);
++
++                // Panic-safe Condvar phase-1 merge handshake
++                {
++                    let mut st = lock(state);
++                    st.find_done += 1;
++                    if st.find_done == workers {
++                        let tm0 = Instant::now();
++                        let mut merged: Vec<RawMagic> = Vec::new();
++                        for part_mu in raw_parts_ref.iter() {
++                            let part = lock(part_mu);
++                            merged.extend_from_slice(&part);
++                        }
++                        merged.sort_unstable_by_key(|c| c.bit);
++                        merged.dedup_by_key(|c| c.bit);
++
++                        let mut cur_lvl = match data.get(0..4) {
++                            Some([b'B', b'Z', b'h', l @ b'1'..=b'9']) => (l - b'0') as u32,
++                            _ => 0u32,
++                        };
++                        let mut block_cands = 0u64;
++                        let mut end_cands = 0u64;
++                        st.cands.clear();
++                        for &rm in &merged {
++                            if rm.is_end {
++                                end_cands += 1;
++                            } else {
++                                block_cands += 1;
++                                if rm.hdr_level != 0 {
++                                    cur_lvl = rm.hdr_level as u32;
++                                }
++                                let guessed_level = if cur_lvl == 0 { 9 } else { cur_lvl };
++                                st.cands.push(MagicCand {
++                                    bit: rm.bit,
++                                    guessed_level,
++                                });
++                            }
++                        }
++                        st.stats.block_cands = block_cands;
++                        st.stats.end_cands = end_cands;
++                        st.stats.merge_ns = tm0.elapsed().as_nanos() as u64;
++                        st.cands_ready = true;
++                        cv.notify_all();
++                    } else {
++                        while !st.cands_ready && !st.stop {
++                            st = cv.wait(st).unwrap_or_else(|e| e.into_inner());
++                        }
++                    }
++                    if st.stop {
++                        st.workers_left -= 1;
++                        cv.notify_all();
++                        return;
++                    }
++                }
++
++                let mut scan_scratch = ScanScratch::default();
++                let mut bwt_scratch = Scratch::<OpenCells>::default();
++                let mut syms = Vec::new();
++                let mut local_out: Option<Vec<u8>> = None;
++
++                loop {
++                    let idx = cursor_ref.fetch_add(1, Ordering::Relaxed);
++                    let (cand, out_buf) = {
++                        let mut st = lock(state);
++                        if idx >= st.cands.len() {
++                            st.workers_left -= 1;
++                            if let Some(b) = local_out.take() {
++                                st.free_out.push(b);
++                            }
++                            cv.notify_all();
++                            return;
++                        }
++                        while !st.stop && idx >= st.base_idx + slots {
++                            st = cv.wait(st).unwrap_or_else(|e| e.into_inner());
++                        }
++                        if st.stop {
++                            st.workers_left -= 1;
++                            if let Some(b) = local_out.take() {
++                                st.free_out.push(b);
++                            }
++                            cv.notify_all();
++                            return;
++                        }
++                        if idx < st.base_idx || st.cands[idx].bit < st.chain_bit {
++                            continue;
++                        }
++                        let c = st.cands[idx];
++                        let buf = local_out
++                            .take()
++                            .or_else(|| st.free_out.pop())
++                            .unwrap_or_default();
++                        (c, buf)
++                    };
++
++                    if cand.bit < chain_bit_ref.load(Ordering::Relaxed) {
++                        local_out = Some(out_buf);
++                        continue;
++                    }
++
++                    let td0 = Instant::now();
++                    let (res, ret_buf) = decode_one_cand(
++                        data,
++                        cand.bit,
++                        cand.guessed_level,
++                        k,
++                        &mut scan_scratch,
++                        &mut bwt_scratch,
++                        &mut syms,
++                        out_buf,
++                    );
++                    worker_decode_ref
++                        .fetch_add(td0.elapsed().as_nanos() as u64, Ordering::Relaxed);
++                    local_out = ret_buf;
++
++                    let mut st = lock(state);
++                    if idx < st.base_idx || cand.bit < st.chain_bit || st.stop {
++                        st.stats.dropped += 1;
++                        if let WorkerDone::Block { out: b, .. } = res {
++                            st.stats.dropped_ok += 1;
++                            st.free_out.push(b);
++                        }
++                    } else {
++                        st.done.insert(cand.bit, (cand.guessed_level, res));
++                        cv.notify_all();
++                    }
++                }
++            }));
++        }
++
++        let mut bit = 0u64;
++        let mut first = true;
++        let mut in_stream = false;
++        let mut level = 0u32;
++        let mut combined = 0u32;
++        let mut blocks = 0u64;
++        let mut chain_work_ns = 0u64;
++
++        let mut fallback_scan: Option<ScanScratch> = None;
++        let mut fallback_bwt: Option<Scratch<OpenCells>> = None;
++        let mut fallback_syms = Vec::new();
++        let mut fallback_out = Vec::new();
++
++        let join_res = loop {
++            let tc0 = Instant::now();
++            if !in_stream {
++                let at = bit;
++                let base = (at / 8) as usize;
++                let rem = data.get(base..).unwrap_or(&[]);
++                if rem.is_empty() {
++                    chain_work_ns += tc0.elapsed().as_nanos() as u64;
++                    if first {
++                        break Err(Error {
++                            kind: ErrorKind::Empty,
++                            block: None,
++                            bit: Some(at),
++                        });
++                    }
++                    break Ok(());
++                }
++                match rem {
++                    [b'B', b'Z', b'h', l @ b'1'..=b'9', ..] => {
++                        in_stream = true;
++                        level = (l - b'0') as u32;
++                        combined = 0;
++                        bit += 32;
++                        chain_bit_ref.store(bit, Ordering::Relaxed);
++                        chain_work_ns += tc0.elapsed().as_nanos() as u64;
++                    }
++                    _ => {
++                        chain_work_ns += tc0.elapsed().as_nanos() as u64;
++                        break Err(Error {
++                            kind: if first {
++                                ErrorKind::NotBz2
++                            } else {
++                                ErrorKind::TrailingData
++                            },
++                            block: None,
++                            bit: Some(at),
++                        });
++                    }
++                }
++            } else {
++                let at = bit;
++                let idx = blocks;
++                let err_at = |kind| Error {
++                    kind,
++                    block: Some(idx),
++                    bit: Some(at),
++                };
++                let base = (at / 8) as usize;
++                let sub = data.get(base..).unwrap_or(&[]);
++                let mut r_peek = Bits::at(sub, at % 8);
++                let magic = (r_peek.bits(24) as u64) << 24 | r_peek.bits(24) as u64;
++                if magic == END_MAGIC {
++                    let stored = r_peek.bits(32);
++                    if r_peek.overran() {
++                        chain_work_ns += tc0.elapsed().as_nanos() as u64;
++                        break Err(err_at(ErrorKind::Truncated));
++                    }
++                    if stored != combined {
++                        chain_work_ns += tc0.elapsed().as_nanos() as u64;
++                        break Err(err_at(ErrorKind::StreamCrc {
++                            stored,
++                            computed: combined,
++                        }));
++                    }
++                    bit = ((base as u64) * 8 + r_peek.bit_pos()).div_ceil(8) * 8;
++                    chain_bit_ref.store(bit, Ordering::Relaxed);
++                    in_stream = false;
++                    first = false;
++                    chain_work_ns += tc0.elapsed().as_nanos() as u64;
++                    continue;
++                }
++                if magic != BLOCK_MAGIC {
++                    chain_work_ns += tc0.elapsed().as_nanos() as u64;
++                    if r_peek.overran() {
++                        break Err(err_at(ErrorKind::Truncated));
++                    }
++                    break Err(err_at(ErrorKind::BadBlockMagic));
++                }
++                chain_work_ns += tc0.elapsed().as_nanos() as u64;
++
++                let taken_worker = {
++                    let mut st = lock(state);
++                    st.chain_bit = at;
++                    chain_bit_ref.store(at, Ordering::Relaxed);
++                    loop {
++                        if st.failed {
++                            break Err(Error::new(ErrorKind::Internal(
++                                "a parallel front-end worker panicked".into(),
++                            )));
++                        }
++                        if st.cands_ready {
++                            let before = st.base_idx;
++                            while st.base_idx < st.cands.len() && st.cands[st.base_idx].bit < at {
++                                let k_bit = st.cands[st.base_idx].bit;
++                                if let Some((_, w_res)) = st.done.remove(&k_bit) {
++                                    st.stats.dropped += 1;
++                                    if let WorkerDone::Block { out: buf, .. } = w_res {
++                                        st.stats.dropped_ok += 1;
++                                        st.free_out.push(buf);
++                                    }
++                                }
++                                st.base_idx += 1;
++                                st.stats.skipped += 1;
++                            }
++                            if st.base_idx != before {
++                                cv.notify_all();
++                            }
++                            if st.base_idx >= st.cands.len() || st.cands[st.base_idx].bit != at {
++                                break Ok(None);
++                            }
++                            if let Some((w_lvl, w_res)) = st.done.remove(&at) {
++                                st.base_idx += 1;
++                                cv.notify_all();
++                                break Ok(Some((w_lvl, w_res)));
++                            }
++                        }
++                        if st.workers_left == 0 {
++                            break Ok(None);
++                        }
++                        st = cv.wait(st).unwrap_or_else(|e| e.into_inner());
++                    }
++                };
++
++                let tc1 = Instant::now();
++                let taken_worker = match taken_worker {
++                    Ok(v) => v,
++                    Err(e) => break Err(e),
++                };
++
++                match taken_worker {
++                    Some((w_lvl, w_res)) if w_lvl == level => match w_res {
++                        WorkerDone::Block { end_bit, crc, out } => {
++                            on_chunk(&out);
++                            {
++                                let mut st = lock(state);
++                                st.stats.accepted += 1;
++                                st.chain_bit = end_bit;
++                                chain_bit_ref.store(end_bit, Ordering::Relaxed);
++                                st.free_out.push(out);
++                                cv.notify_all();
++                            }
++                            combined = combined.rotate_left(1) ^ crc;
++                            blocks += 1;
++                            bit = end_bit;
++                            chain_work_ns += tc1.elapsed().as_nanos() as u64;
++                        }
++                        WorkerDone::Truncated => {
++                            chain_work_ns += tc1.elapsed().as_nanos() as u64;
++                            break Err(err_at(ErrorKind::Truncated));
++                        }
++                        WorkerDone::Failed(kind) => {
++                            chain_work_ns += tc1.elapsed().as_nanos() as u64;
++                            break Err(err_at(kind));
++                        }
++                    },
++                    other => {
++                        {
++                            let mut st = lock(state);
++                            if let Some((_, w_res)) = other {
++                                st.stats.redone += 1;
++                                if let WorkerDone::Block { out, .. } = w_res {
++                                    st.free_out.push(out);
++                                }
++                            } else {
++                                st.stats.inline += 1;
++                            }
++                        }
++                        let sc = fallback_scan.get_or_insert_with(ScanScratch::default);
++                        let bw = fallback_bwt.get_or_insert_with(Scratch::default);
++                        let (w_res, _) = decode_one_cand(
++                            data,
++                            at,
++                            level,
++                            k,
++                            sc,
++                            bw,
++                            &mut fallback_syms,
++                            std::mem::take(&mut fallback_out),
++                        );
++                        match w_res {
++                            WorkerDone::Block { end_bit, crc, out } => {
++                                on_chunk(&out);
++                                fallback_out = out;
++                                lock(state).chain_bit = end_bit;
++                                chain_bit_ref.store(end_bit, Ordering::Relaxed);
++                                cv.notify_all();
++                                combined = combined.rotate_left(1) ^ crc;
++                                blocks += 1;
++                                bit = end_bit;
++                                chain_work_ns += tc1.elapsed().as_nanos() as u64;
++                            }
++                            WorkerDone::Truncated => {
++                                chain_work_ns += tc1.elapsed().as_nanos() as u64;
++                                break Err(err_at(ErrorKind::Truncated));
++                            }
++                            WorkerDone::Failed(kind) => {
++                                chain_work_ns += tc1.elapsed().as_nanos() as u64;
++                                break Err(err_at(kind));
++                            }
++                        }
++                    }
++                }
++            }
++        };
++
++        {
++            let mut st = lock(state);
++            st.stop = true;
++            for (_, (_, w_res)) in std::mem::take(&mut st.done) {
++                st.stats.dropped += 1;
++                if let WorkerDone::Block { out, .. } = w_res {
++                    st.stats.dropped_ok += 1;
++                    st.free_out.push(out);
++                }
++            }
++            st.stats.chain_work_ns = chain_work_ns;
++            st.stats.worker_find_ns = worker_find_ref.load(Ordering::Relaxed);
++            st.stats.worker_decode_ns = worker_decode_ref.load(Ordering::Relaxed);
++            cv.notify_all();
++        }
++        let panicked = whs.into_iter().fold(false, |p, h| h.join().is_err() | p);
++        if panicked {
++            Err(Error::new(ErrorKind::Internal(
++                "a parallel front-end worker panicked".into(),
++            )))
++        } else {
++            join_res?;
++            Ok(lock(state).stats)
++        }
++    })
++}
+diff --git a/src/runs.rs b/src/runs.rs
+index 4f7beb1..6856127 100644
+--- a/src/runs.rs
++++ b/src/runs.rs
+@@ -64,23 +64,45 @@ const RUN_SHARE: usize = 32;
+ /// Every block this admits, `2 * syms <= max_len` admits too.
+ pub fn takes_runs(b: &Symbols) -> bool {
+     let syms = &b.syms;
+-    if b.max_len >= 1 << 24 || 2 * syms.len() > b.max_len {
++    let len = syms.len();
++    if b.max_len >= (1 << 24) || 2 * len > b.max_len {
+         return false;
+     }
+-    let (mut runs, mut seen) = (0usize, 0usize);
+-    let mut window = |w: &[u16]| {
+-        runs += w.iter().filter(|&&s| s <= 1).count();
+-        seen += w.len();
+-    };
+-    if syms.len() <= WINDOW * WINDOWS {
+-        window(syms);
++    if len <= WINDOW * WINDOWS {
++        let need = len.div_ceil(RUN_SHARE);
++        let mut runs = 0usize;
++        let full = len / WINDOW;
++        for i in 0..full {
++            let w = &syms[i * WINDOW..(i + 1) * WINDOW];
++            runs += w.iter().map(|&s| usize::from(s <= 1)).sum::<usize>();
++            if runs >= need {
++                return true;
++            }
++            if runs + (len - (i + 1) * WINDOW) < need {
++                return false;
++            }
++        }
++        runs += syms[full * WINDOW..]
++            .iter()
++            .map(|&s| usize::from(s <= 1))
++            .sum::<usize>();
++        RUN_SHARE * runs >= len
+     } else {
+-        let step = syms.len() / WINDOWS;
++        const NEED: usize = (WINDOW * WINDOWS) / RUN_SHARE;
++        let step = len / WINDOWS;
++        let mut runs = 0usize;
+         for i in 0..WINDOWS {
+-            window(&syms[i * step..i * step + WINDOW]);
++            let w = &syms[i * step..i * step + WINDOW];
++            runs += w.iter().map(|&s| usize::from(s <= 1)).sum::<usize>();
++            if runs >= NEED {
++                return true;
++            }
++            if runs + (WINDOWS - 1 - i) * WINDOW < NEED {
++                return false;
++            }
+         }
++        runs >= NEED
+     }
+-    RUN_SHARE * runs >= seen
+ }
+ 
+ /// A block's run records and the path's scratch, kept from block to block
+diff --git a/src/stream.rs b/src/stream.rs
+index e9868f0..dd877b9 100644
+--- a/src/stream.rs
++++ b/src/stream.rs
+@@ -1,10 +1,11 @@
++#![forbid(unsafe_code)]
+ //! The sequential part of the decode: a .bz2's streams read in order, each block's header
+ //! and symbols (block.rs), each stream's header and end, its combined CRC checked. The
+ //! input comes from a `Source`: a slice, or chunks arriving on a channel (parallel.rs),
+ //! held only from the block being read on.
+ 
+ use super::bits::Bits;
+-use super::block::{self, Item, Symbols};
++use super::block::{self, Item, ScanScratch, Symbols};
+ use super::{Error, ErrorKind};
+ 
+ /// The input, by absolute byte offset
+@@ -60,6 +61,7 @@ pub struct Scanner<S> {
+     blocks: u64,
+     streams: u64,
+     lookahead: usize,
++    scratch: ScanScratch,
+ }
+ 
+ impl<S: Source> Scanner<S> {
+@@ -71,6 +73,7 @@ impl<S: Source> Scanner<S> {
+             blocks: 0,
+             streams: 0,
+             lookahead: LOOKAHEAD,
++            scratch: ScanScratch::default(),
+         }
+     }
+ 
+@@ -122,7 +125,7 @@ impl<S: Source> Scanner<S> {
+                     let base = at / 8;
+                     let (data, eof) = self.src.view(base, self.lookahead).map_err(err)?;
+                     let mut br = Bits::at(data, at % 8);
+-                    let item = block::read_item(&mut br, level, syms);
++                    let item = block::read_item_with_scratch(&mut br, level, syms, &mut self.scratch);
+                     let used = br.bit_pos() - at % 8;
+                     if br.overran() {
+                         // an item past the input held: more input, or the input's end
