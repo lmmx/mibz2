@@ -1,5 +1,11 @@
 # The moonshot scorer
 
+> **Baseline repointed (22 November 2026):** the `lazy` arm is now the shipped kernel, `bwt::OpenCells`
+> (0.5.12), not 0.5.6's LazyCells; the arm keeps its name. The correctness gate and the paired
+> wall and peak-RSS figures are against the shipped kernel. The contention proxy's calibration
+> (calibration.json) predates the change, so its ratios are a ranking only until it is refitted.
+> The 1.25×-over-0.5.6 objective below is historical.
+
 One command that checks a candidate inverse-BWT kernel against mibz2 0.5.6's, for a research
 agent working in its own container:
 
