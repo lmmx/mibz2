@@ -1,0 +1,48 @@
+name = "Wormhole Cycle 18 Candidate: Chaitin StripBandMux (-98 KiB Scratch) + Pohl Bidirectional Side-1 Bottom Walk (2x MLP)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_outq16_and_mux_strips"
+inputs = ["records", "C", "p", "n"]
+output = "mux_strips_and_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Writes thick Strip words into shared sb_buf: Vec<u32>, which dies after S2a and is reused for Band words in S3-S4 (-49..98 KiB persistent scratch)."
+
+[[edge]]
+id = "s2_graded_rv_elim"
+inputs = ["mux_strips_and_outq16", "C", "n"]
+output = "graded_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Cycle 15 promoted (len10 << 22) | id22 Graded Semiring Handle + pop_tail."
+
+[[edge]]
+id = "s3_bidi_bottom_and_lazy15_mux_bands"
+inputs = ["graded_arena", "mux_strips_and_outq16"]
+output = "mux_bands_and_inline16"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict_long", D = "H / 2", B = "B_bands + dict_long", Q = "H", M = "B_bands + dict_long" }
+evidence = "Pohl (1971) 2-way meet-in-the-middle walk on circular doubly-linked side-1 list halves serial pointer-chase depth on bottom coordinates; Lazy15 writes Band words into dead sb_buf."
+
+[[edge]]
+id = "s4_mux_band_wire"
+inputs = ["mux_bands_and_inline16", "mux_strips_and_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "OutQ16 Reader::wire streaming Band triples from L2-warm sb_buf into edges[0..m)."
+
+[[edge]]
+id = "s5_master_emit"
+inputs = ["critical_edges", "mux_bands_and_inline16", "p", "n"]
+output = "text"
+status = "shipped"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Identical to origin/master emit() (held strictly fixed)."
