@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 57: Forensics of Whole-Input ParScan (1.28x RSS / 1.11x 6T) vs Ping-Pong 2-Window Streaming"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c57_parscan_window_forensics"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n (-21 ms user @10W)", D = "0 barrier stalls", B = "bounded <= 8 MiB input", Q = "0", M = "43.6 MiB (4W, 0.77x) / 69.5 MiB (10W, 0.95x vs #739)" }
+evidence = "Same-binary safe-Rust A/B vs 3296195e3 (#739) across 4W/6W/10W/16W (210 MB, exact AbHash): reproduced #741 whole-input ParScan RSS blowup (P0_WholeIn: 10W RSS 96.9 vs 73.4 MiB = 1.32x matching i9 1.28x; 16W RSS 147.1 MiB = 1.72x, KILLED); proved P1_Win1_Bar (C38b single-window 4 MiB barrier) fixes RSS (0.70-0.90x) but pays inter-window drain overhead (238-379 vcsw); PROMOTED P2_Win2_NoBar (Ping-Pong 2-Window Arc<Vec<u8>> <= 8 MiB input RAM, 0 epoch barrier, #739 12 MiB cap): beats BOTH M739 and P1_Win1_Bar at all 4W/6W/10W/16W (4W 0.9655x, 6W 0.9381x, 10W 0.9345x, 16W 0.9565x) with -45% vcsw vs P1 and LESS RSS than #739 (0.77x 4W, 0.95x 10W)."
