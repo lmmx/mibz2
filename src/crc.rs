@@ -40,16 +40,24 @@ static TABLES: [[u32; 256]; 8] = tables();
 
 /// The CRC of `data`, by the kernels given
 pub fn crc32(data: &[u8], k: Kernels) -> u32 {
+    !update_with(!0, data, k)
+}
+
+/// The CRC register after `data`, from `s` (no initial or final xor), by the kernels given:
+/// `update`'s register, so a CRC taken in pieces, each from the register the one before
+/// left, is the CRC of the whole (`!update_with(update_with(!0, a, k), b, k)` is the CRC of
+/// `a` then `b`)
+pub fn update_with(s: u32, data: &[u8], k: Kernels) -> u32 {
     #[cfg(target_arch = "x86_64")]
     {
         if k.clmul && data.len() >= 128 {
             // SAFETY: `k.clmul` is set only when PCLMULQDQ, SSE4.1 and SSSE3 were detected
             // (a `Kernels` invariant)
-            return !unsafe { clmul_update(!0, data) };
+            return unsafe { clmul_update(s, data) };
         }
     }
     let _ = k;
-    !update(!0, data)
+    update(s, data)
 }
 
 /// The CRC register after `data`, from `s` (no initial or final xor): a byte at a time
@@ -167,5 +175,55 @@ mod tests {
         }
         // the check value of CRC-32/BZIP2
         assert_eq!(crc32(b"123456789", Kernels::scalar()), 0xFC89_1918);
+    }
+
+    /// A CRC taken in pieces (`update_with` from the register the piece before left) is the
+    /// whole's, at every split, by each kernel: pieces around 64 KiB multiples (the in-place
+    /// RLE1's tiles, `rle::unrle_in_place`), and below the folding kernel's 128 bytes
+    #[test]
+    fn pieces_make_the_whole() {
+        let mut x = 0x2545_f491_4f6c_dd1du64;
+        let data: Vec<u8> = (0..(3 << 16) + 300)
+            .map(|_| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                x as u8
+            })
+            .collect();
+        let want = !update_bytewise(!0, &data);
+        for k in [Kernels::scalar(), Kernels::detect()] {
+            assert_eq!(crc32(&data, k), want, "{k:?}");
+            for tile in [
+                1usize,
+                7,
+                127,
+                128,
+                129,
+                4096,
+                (1 << 16) - 1,
+                1 << 16,
+                (1 << 16) + 1,
+            ] {
+                let mut s = !0u32;
+                for c in data.chunks(tile) {
+                    s = update_with(s, c, k);
+                }
+                assert_eq!(!s, want, "tile {tile} {k:?}");
+            }
+            for cut in [
+                0,
+                1,
+                127,
+                128,
+                (1 << 16) - 1,
+                1 << 16,
+                (2 << 16) + 5,
+                data.len(),
+            ] {
+                let s = update_with(update_with(!0, &data[..cut], k), &data[cut..], k);
+                assert_eq!(!s, want, "cut {cut} {k:?}");
+            }
+        }
     }
 }
