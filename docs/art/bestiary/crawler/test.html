@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bestiary Crawler — Burrow, Drape &amp; Moonwalk Harness</title>
+  <style>
+    :root {
+      --bg: #f4ecda;
+      --card: #f8f2e4;
+      --rule: #c8b896;
+      --ink: #1c100a;
+      --muted: #5a4636;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.5 Georgia, "Iowan Old Style", serif;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+    .sub {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-style: italic;
+      font-size: 13.5px;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+    }
+    .controls select {
+      font: inherit;
+      padding: 4px 8px;
+      background: var(--card);
+      border: 1px solid var(--rule);
+      color: var(--ink);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stage {
+      background: var(--card);
+      border: 1px solid var(--rule);
+      padding: 12px;
+    }
+    .stage h2 {
+      margin: 0 0 8px;
+      font: 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--muted);
+    }
+    .stage svg.burrow-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #faf5e8;
+      border: 1px solid rgba(28, 16, 10, 0.12);
+    }
+    .demo-row {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 22px;
+    }
+    .bubble {
+      position: relative;
+      background: #fffaf0;
+      border: 1.5px solid #ccb997;
+      border-radius: 16px;
+      padding: 14px 20px;
+      min-width: 220px;
+      max-width: 310px;
+      box-shadow: 0 1px 4px rgba(28,16,10,0.06);
+    }
+    .bubble.yuck {
+      min-width: 120px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: #c22118;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="page-title">Bestiary Crawler Harness</h1>
+  <p class="sub">Burrow contract tests (16px o, 48px o, i dot), rounded-rect drape, and border moonwalker.</p>
+
+  <div class="controls" id="controls">
+    <label>Creature:
+      <select id="sel-creature">
+        <option value="draco-bipes">draco-bipes</option>
+        <option value="draco-alatus">draco-alatus</option>
+        <option value="aspis">aspis</option>
+        <option value="spotted-serpent">spotted-serpent</option>
+        <option value="basilisk-6">basilisk-6</option>
+        <option value="knotted-pair">knotted-pair</option>
+        <option value="ouroboros">ouroboros</option>
+        <option value="amphisbaena">amphisbaena</option>
+        <option value="cute">cute</option>
+      </select>
+    </label>
+    <label>Register:
+      <select id="sel-register">
+        <option value="engraved">engraved</option>
+        <option value="illuminated">illuminated</option>
+      </select>
+    </label>
+    <label>Head variant:
+      <select id="sel-head">
+        <option value="">species default</option>
+        <option value="claude-ruffed">claude-ruffed</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="grid" id="burrow-grid">
+    <div class="stage" id="stage-o16">
+      <h2>1. Letter &ldquo;o&rdquo; at 16px</h2>
+      <svg id="svg-o16" class="burrow-svg" viewBox="0 0 260 64" width="260" height="64"></svg>
+    </div>
+    <div class="stage" id="stage-o48">
+      <h2>2. Letter &ldquo;o&rdquo; at 48px</h2>
+      <svg id="svg-o48" class="burrow-svg" viewBox="0 0 260 88" width="260" height="88"></svg>
+    </div>
+    <div class="stage" id="stage-idot">
+      <h2>3. Dot of an &ldquo;i&rdquo;</h2>
+      <svg id="svg-idot" class="burrow-svg" viewBox="0 0 260 68" width="260" height="68"></svg>
+    </div>
+  </div>
+
+  <div class="demo-row" id="demo-row">
+    <div class="bubble" id="bubble-claude">Of Man&rsquo;s Labours &amp; their Eternal Return</div>
+    <div class="bubble" id="bubble-moon">Moonwalking round the bubble border on any box size.</div>
+    <div class="bubble yuck" id="bubble-yuck">yuck</div>
+  </div>
+
+  <script src="./crawler.js"></script>
+  <script>
+    (function () {
+      const SVG_NS = 'http://www.w3.org/2000/svg';
+      const params = new URLSearchParams(window.location.search);
+      const selCreature = document.getElementById('sel-creature');
+      const selRegister = document.getElementById('sel-register');
+      const selHead = document.getElementById('sel-head');
+
+      if (params.get('creature')) selCreature.value = params.get('creature');
+      if (params.get('register')) selRegister.value = params.get('register');
+      if (params.get('head')) selHead.value = params.get('head');
+      const hideCrawlers = params.get('baseline') === '1';
+
+      function makeSvgEl(tag, attrs, parent) {
+        const n = document.createElementNS(SVG_NS, tag);
+        for (const k in attrs) n.setAttribute(k, String(attrs[k]));
+        if (parent) parent.appendChild(n);
+        return n;
+      }
+
+      // Compute deterministic counter/dot hole coordinates directly from SVG text geometry
+      function setupBurrowStage(svgId, cfg, creature, register, headVariant) {
+        const svg = document.getElementById(svgId);
+        svg.innerHTML = '';
+        BestiaryCrawler.ensureSharedDefs(svg);
+
+        // Background parchment fill (ensures clean pixel diffing in proof harness)
+        makeSvgEl('rect', { x: 0, y: 0, width: cfg.w, height: cfg.h, fill: '#faf5e8' }, svg);
+
+        // Render phrase text
+        const textEl = makeSvgEl('text', {
+          x: cfg.tx,
+          y: cfg.ty,
+          'font-family': 'Georgia, "Times New Roman", serif',
+          'font-size': cfg.fontSize,
+          fill: '#1c100a'
+        }, svg);
+        textEl.textContent = cfg.phrase;
+
+        // Measure the exact target character box via getExtentOfChar so the hole matches the actual glyph!
+        const chBox = textEl.getExtentOfChar(cfg.charIndex);
+        let hole;
+        if (cfg.kind === 'idot') {
+          hole = {
+            x: chBox.x + chBox.width * 0.50,
+            y: chBox.y + chBox.height * 0.14,
+            r: Math.max(1.8, chBox.width * 0.28)
+          };
+        } else {
+          // Counter of 'o': centered horizontally, lower-mid vertical inside x-height
+          hole = {
+            x: chBox.x + chBox.width * 0.50,
+            y: chBox.y + chBox.height * 0.63,
+            r: Math.max(2.2, chBox.width * 0.27)
+          };
+        }
+
+        // Smooth approaching crawl route ending at exact hole centre
+        const x0 = 14;
+        const y0 = cfg.ty + (cfg.kind === 'idot' ? -cfg.fontSize * 0.36 : 4);
+        const cx1 = x0 + (hole.x - x0) * 0.38;
+        const cy1 = y0 - (cfg.kind === 'idot' ? 10 : 9);
+        const cx2 = x0 + (hole.x - x0) * 0.74;
+        const cy2 = hole.y + (cfg.kind === 'idot' ? -4 : 6);
+        const pathD = `M${x0.toFixed(1)},${y0.toFixed(1)} C${cx1.toFixed(1)},${cy1.toFixed(1)} ${cx2.toFixed(1)},${cy2.toFixed(1)} ${hole.x.toFixed(1)},${hole.y.toFixed(1)}`;
+
+        // Note: NO drawn hole! The letter counter / i dot itself is the hole.
+        const crawlerLayer = makeSvgEl('g', { class: 'crawler-layer' }, svg);
+        let meta = null;
+        if (!hideCrawlers) {
+          const crawler = BestiaryCrawler.makeCrawler({
+            path: pathD,
+            hole,
+            creature,
+            register,
+            headVariant: headVariant || undefined,
+            scale: cfg.scale,
+            dur: 10
+          });
+          crawlerLayer.appendChild(crawler);
+          meta = crawler._crawlerMeta;
+        }
+        return { svg, hole, meta };
+      }
+
+      function renderAll() {
+        const creature = selCreature.value;
+        const register = selRegister.value;
+        const headVariant = selHead.value || '';
+
+        document.getElementById('page-title').textContent =
+          `Bestiary Crawler — ${creature} (${register}${headVariant ? ', ' + headVariant : ''})`;
+
+        window.__BURROW_STAGES = {
+          o16: setupBurrowStage('svg-o16', {
+            w: 260, h: 64, tx: 22, ty: 40, fontSize: 16,
+            phrase: 'serpents burrow into o', charIndex: 21, kind: 'o', scale: 0.72
+          }, creature, register, headVariant),
+          o48: setupBurrowStage('svg-o48', {
+            w: 260, h: 88, tx: 18, ty: 60, fontSize: 48,
+            phrase: 'into o', charIndex: 5, kind: 'o', scale: 1.15
+          }, creature, register, headVariant),
+          idot: setupBurrowStage('svg-idot', {
+            w: 260, h: 68, tx: 22, ty: 44, fontSize: 24,
+            phrase: 'into the dot i', charIndex: 13, kind: 'idot', scale: 0.80
+          }, creature, register, headVariant)
+        };
+
+        // Rebuild drape & moonwalker demos
+        document.querySelectorAll('.bestiary-drape, .bestiary-moonwalker').forEach((n) => n.remove());
+        BestiaryCrawler.drape(document.getElementById('bubble-claude'), {
+          creature: 'aspis',
+          register: 'illuminated',
+          side: 'frame',
+          wash: '#F2683A',
+          wash2: '#d8342a',
+          headVariant: 'claude-ruffed',
+          fleurons: true,
+          scale: 0.85
+        });
+        BestiaryCrawler.makeMoonwalker(document.getElementById('bubble-moon'), {
+          creature: creature === 'cute' ? 'draco-bipes' : creature,
+          register,
+          scale: 0.82,
+          dur: 14
+        });
+        BestiaryCrawler.drape(document.getElementById('bubble-yuck'), {
+          creature: 'cute',
+          register: 'illuminated',
+          side: 'loop',
+          wash: '#d8342a',
+          scale: 0.78
+        });
+      }
+
+      selCreature.addEventListener('change', renderAll);
+      selRegister.addEventListener('change', renderAll);
+      selHead.addEventListener('change', renderAll);
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
