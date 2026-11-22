@@ -1,0 +1,39 @@
+name = "Wormhole/Neon Cycle 31: v0.5.12 8-20T Plateau Anatomy, Occupancy Timeline & 10T Critical-Path Model"
+target = "text"
+uses = []
+
+[[edge]]
+id = "stream_scan_mechanisms_coord"
+inputs = ["records", "C", "p", "n"]
+output = "block_symbols"
+status = "measured"
+dependent = false
+cost = { W = "n", D = "n / W_par", B = "n / 15", Q = "0", M = "slots * syms" }
+evidence = "Mechanisms (origin/research/carbon-word-transport C38b) owns scan/finder: 95.0 ms serial on Xeon 8481C (~54-62 ms on i9-10900K) cut by -96.3% serial CPU to ~2.2 ms on i9 via StreamParScan."
+
+[[edge]]
+id = "worker_open_rle_crc"
+inputs = ["block_symbols", "C", "p", "n"]
+output = "decoded_block_out"
+status = "measured"
+dependent = true
+cost = { W = "n", D = "n / W_workers", B = "7.0 * n", Q = "r_thin", M = "W * 2.5 MiB + slots * 1.8 MiB" }
+evidence = "examples/occupancy.rs + diag_c31_deep.rs on v0.5.12 (6a36b0e10): unrle reserve(n+64) doubles 100% of first-use out buffers 900 KiB -> 1.80 MiB (3.20-3.51x reserved/used); 7.0 B/B post-BWT memory traffic."
+
+[[edge]]
+id = "alloc_minflt_tlb"
+inputs = ["decoded_block_out"]
+output = "resident_pages"
+status = "measured"
+dependent = false
+cost = { W = "minflt", D = "mmap_lock", B = "n", Q = "0", M = "slots * (1.8 + 0.5) MiB" }
+evidence = "Fresh-process cold-start scaling on v0.5.12: minflt jumps 8,474 (1W) -> 22,359 (7W) -> 26,729 (10W) -> 37,899 (20W); sys_ms climbs 31.3 -> 53.5 -> 64.4 -> 86.4 ms."
+
+[[edge]]
+id = "handoff_and_reader_assembly"
+inputs = ["decoded_block_out", "resident_pages"]
+output = "text"
+status = "measured"
+dependent = false
+cost = { W = "n", D = "T_reader + T_tail", B = "2.0 * n", Q = "0", M = "ready_queue" }
+evidence = "StreamDecoder::read returns <=1 block/call (431 lock/notify_all round-trips, 10.86 ms serial memcpy on 211 MB); Global Mutex<State> + Condvar::notify_all + BTreeMap + Mutex<Receiver>."

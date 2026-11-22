@@ -1,0 +1,29 @@
+warning: variable does not need to be mutable
+   --> /tmp/wormhole_r5/diag_c31_deep.rs:104:9
+    |
+104 |     let mut inv_blocks: Vec<u8> = Vec::new();
+    |         ----^^^^^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: 1 warning emitted
+
+=== FRESH-PROCESS COLD-START SCALING (/tmp/wormhole_r5/wikidata_431b_210m.bz2) ===
+W=1 slots=4 lazy=true wall_ms=514.90 user_ms=641.72 sys_ms=31.34 minflt=8474 nvcsw=949 nivcsw=333 rss_MiB=40.98 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=2 slots=8 lazy=true wall_ms=353.24 user_ms=635.83 sys_ms=29.82 minflt=10634 nvcsw=820 nivcsw=591 rss_MiB=43.92 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=4 slots=16 lazy=true wall_ms=382.58 user_ms=672.00 sys_ms=33.62 minflt=15521 nvcsw=759 nivcsw=616 rss_MiB=58.96 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=4 slots=8 lazy=true wall_ms=380.62 user_ms=667.55 sys_ms=34.84 minflt=12845 nvcsw=875 nivcsw=624 rss_MiB=54.71 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=7 slots=28 lazy=true wall_ms=381.01 user_ms=679.65 sys_ms=53.48 minflt=22359 nvcsw=385 nivcsw=449 rss_MiB=76.92 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=7 slots=14 lazy=true wall_ms=394.24 user_ms=682.23 sys_ms=53.95 minflt=17738 nvcsw=805 nivcsw=595 rss_MiB=62.97 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=8 slots=32 lazy=true wall_ms=413.28 user_ms=686.33 sys_ms=57.95 minflt=23133 nvcsw=315 nivcsw=817 rss_MiB=80.11 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=10 slots=40 lazy=true wall_ms=422.83 user_ms=695.55 sys_ms=64.44 minflt=26729 nvcsw=317 nivcsw=850 rss_MiB=92.19 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=10 slots=20 lazy=true wall_ms=408.90 user_ms=718.12 sys_ms=47.02 minflt=22225 nvcsw=624 nivcsw=493 rss_MiB=80.23 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=12 slots=48 lazy=true wall_ms=398.68 user_ms=693.72 sys_ms=75.59 minflt=29899 nvcsw=388 nivcsw=454 rss_MiB=105.21 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=16 slots=64 lazy=true wall_ms=415.51 user_ms=727.41 sys_ms=81.73 minflt=37347 nvcsw=279 nivcsw=501 rss_MiB=138.92 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+W=20 slots=80 lazy=true wall_ms=450.98 user_ms=724.47 sys_ms=86.39 minflt=37899 nvcsw=398 nivcsw=1023 rss_MiB=135.70 reads=431 bytes=211000232 hash=c768dc0d1a2cc005
+
+=== READER SERIAL COST ON 210.6 MB (234 blocks) ===
+  memcpy(r.cur -> 4MiB buf):       10.86 ms (19.4 GB/s)
+  memcpy + 8B-hash (ab::drain):    45.01 ms (4.7 GB/s)
