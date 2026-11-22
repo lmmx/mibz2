@@ -275,10 +275,7 @@ pub fn front_scalar(b: &Symbols, r: &mut Runs) -> Result<usize, ErrorKind> {
         if n >= b.max_len {
             return Err(ErrorKind::BlockTooLong);
         }
-        let nn = ((s - 1) as usize).min(255);
-        let v = list[nn];
-        list.copy_within(0..nn, 1);
-        list[0] = v;
+        let v = super::mtf::mtf_move_fast15(&mut list, ((s - 1) as usize).min(255));
         let c = b.seq_to_unseq[v as usize];
         close(open, runs, per);
         open = (c, 1);

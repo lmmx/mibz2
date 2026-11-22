@@ -29,6 +29,26 @@ pub fn mtf(
 /// A run's weight (N in libbzip2) refused at this, so its length cannot overflow
 const MAX_RUN_WEIGHT: u32 = 2 * 1024 * 1024;
 
+/// The move-to-front of the list's byte at index `nn`, returned: the bytes before it a
+/// byte on, it to the front. For `nn < 15` (nearly every symbol) the list's first 16 bytes
+/// move in one 128-bit register, the bytes up to `nn` shifted a byte on and the rest kept
+/// by a mask, with no call to `memmove`; for larger `nn`, `copy_within`
+#[inline(always)]
+pub(crate) fn mtf_move_fast15(list: &mut [u8; 256], nn: usize) -> u8 {
+    let c = list[nn];
+    if nn < 15 {
+        let w = u128::from_le_bytes(list[..16].try_into().unwrap());
+        // the bytes after nn, kept ((nn + 1) * 8 <= 120: the shift is below 128)
+        let hi_mask = !0u128 << ((nn + 1) * 8);
+        let w_new = (w & hi_mask) | ((w << 8) & !hi_mask) | (c as u128);
+        list[..16].copy_from_slice(&w_new.to_le_bytes());
+    } else {
+        list.copy_within(0..nn, 1);
+        list[0] = c;
+    }
+    c
+}
+
 pub fn mtf_scalar(
     b: &Symbols,
     ll: &mut Vec<u8>,
@@ -63,10 +83,7 @@ pub fn mtf_scalar(
         if ll.len() >= b.max_len {
             return Err(ErrorKind::BlockTooLong);
         }
-        let nn = (s - 1) as usize;
-        let v = list[nn];
-        list.copy_within(0..nn, 1);
-        list[0] = v;
+        let v = mtf_move_fast15(&mut list, (s - 1) as usize);
         let c = b.seq_to_unseq[v as usize];
         counts[c as usize] += 1;
         ll.push(c);
@@ -512,4 +529,64 @@ unsafe fn mtf_checkpoints_avx2(
     // SAFETY: the first n bytes were written above, n <= max <= capacity
     ll.set_len(n);
     result.map(|()| n)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The move as master made it: the reference
+    fn move_ref(list: &mut [u8; 256], nn: usize) -> u8 {
+        let c = list[nn];
+        list.copy_within(0..nn, 1);
+        list[0] = c;
+        c
+    }
+
+    /// `mtf_move_fast15` against the reference at every index 0-255 (both sides of the register
+    /// move's 15), from the identity list and from shuffled ones, and along long random
+    /// sequences of moves weighted to the small indices, the whole list compared each time
+    #[test]
+    fn mtf_move_against_copy_within() {
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut next = || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        let mut lists: Vec<[u8; 256]> = vec![std::array::from_fn(|i| i as u8)];
+        for _ in 0..8 {
+            let mut l: [u8; 256] = std::array::from_fn(|i| i as u8);
+            for i in (1..256).rev() {
+                l.swap(i, next() as usize % (i + 1));
+            }
+            lists.push(l);
+        }
+        for l in &lists {
+            for nn in 0..256 {
+                let (mut got, mut want) = (*l, *l);
+                assert_eq!(
+                    mtf_move_fast15(&mut got, nn),
+                    move_ref(&mut want, nn),
+                    "nn {nn}"
+                );
+                assert_eq!(got, want, "nn {nn}");
+            }
+        }
+        let (mut got, mut want) = (lists[1], lists[1]);
+        for step in 0..200_000 {
+            let nn = match next() % 4 {
+                0 => next() as usize % 256,
+                1 => 13 + next() as usize % 4,
+                _ => next() as usize % 16,
+            };
+            assert_eq!(
+                mtf_move_fast15(&mut got, nn),
+                move_ref(&mut want, nn),
+                "step {step}"
+            );
+            assert_eq!(got, want, "step {step} nn {nn}");
+        }
+    }
 }
