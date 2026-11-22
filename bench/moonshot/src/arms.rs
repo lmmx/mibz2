@@ -1,6 +1,7 @@
 //! The reference arms beside the candidate, each an `InverseBwt` the shipped workers run:
 //!
-//! - `lazy`: LazyCells, 0.5.6's kernel on its own admission (the baseline);
+//! - `lazy`: the baseline, the shipped kernel (`bwt::OpenCells`, 0.5.12's; the arm keeps its
+//!   old name, which calibration.json and moonshot.py use; until 0.5.12 it was 0.5.6's LazyCells);
 //! - `cells`: eager Cells (the i9's `oce` arms: `parallel_workers(.., false)`);
 //! - `open`: Astra's open decoder at width 16 on every run-route block (the i9's `open` arms);
 //! - `opend`: that decoder under LazyCells' density line, LazyCells over it (the i9's `opend`).
@@ -69,7 +70,7 @@ pub const ARMS: [&str; 5] = ["lazy", "cells", "open", "opend", "candidate"];
 macro_rules! by_arm {
     ($arm:expr, $f:ident ( $($a:expr),* ), $else:expr) => {
         match $arm {
-            "lazy" => $f::<mibz2::bwt::LazyCells>($($a),*),
+            "lazy" => $f::<mibz2::bwt::OpenCells>($($a),*),
             "cells" => $f::<mibz2::bwt::Cells>($($a),*),
             "open" => $f::<$crate::arms::Open>($($a),*),
             "opend" => $f::<$crate::arms::OpenGated>($($a),*),
