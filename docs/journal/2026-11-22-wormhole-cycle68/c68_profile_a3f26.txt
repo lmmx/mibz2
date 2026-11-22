@@ -1,0 +1,35 @@
+=== CYCLE 64: POST-#739 + PR4 + ZEROSHIFT52 RESIDUAL 1T STAGE PROFILE ===
+
+=== wikidata-l9 (509 blks: 509 runs / 0 col, 211.00 MB out, 5 rd avg) ===
+  S0 AnchorScan (serial):    4.56 ms (  0.8%)
+  S1 read_item  (par):      72.75 ms ( 13.5%)
+  S2 runs::front (par):     46.99 ms (  8.7%)
+  S3 OpenCells   (par):    346.28 ms ( 64.3%)
+  S4 ZeroShift52+CRC(par):  67.97 ms ( 12.6%)  [grew >n/32: 0, >n/16: 0]
+  TOTAL 1T CPU:            538.55 ms (100.0%)  |  Parallelizable share: 99.15%
+
+=== wikidata-l1 (379 blks: 379 runs / 0 col, 37.80 MB out, 10 rd avg) ===
+  S0 AnchorScan (serial):    1.30 ms (  0.9%)
+  S1 read_item  (par):      25.00 ms ( 16.9%)
+  S2 runs::front (par):     12.87 ms (  8.7%)
+  S3 OpenCells   (par):     96.94 ms ( 65.5%)
+  S4 ZeroShift52+CRC(par):  11.90 ms (  8.0%)  [grew >n/32: 0, >n/16: 0]
+  TOTAL 1T CPU:            148.02 ms (100.0%)  |  Parallelizable share: 99.12%
+
+=== hetero-l9 (73 blks: 53 runs / 20 col, 53.80 MB out, 5 rd avg) ===
+  S0 AnchorScan (serial):    6.84 ms (  1.7%)
+  S1 read_item  (par):      73.44 ms ( 18.5%)
+  S2 runs::front (par):      8.90 ms (  2.2%)
+  S3 OpenCells   (par):     67.73 ms ( 17.0%)
+  S4 ZeroShift52+CRC(par):  11.67 ms (  2.9%)  [grew >n/32: 0, >n/16: 0]
+  S3+4 ColRoute  (par):    229.19 ms ( 57.6%)
+  TOTAL 1T CPU:            397.77 ms (100.0%)  |  Parallelizable share: 98.28%
+
+=== random-l9 (12 blks: 0 runs / 12 col, 10.68 MB out, 10 rd avg) ===
+  S0 AnchorScan (serial):    3.53 ms (  2.0%)
+  S1 read_item  (par):      36.19 ms ( 20.6%)
+  S2 runs::front (par):      0.00 ms (  0.0%)
+  S3 OpenCells   (par):      0.00 ms (  0.0%)
+  S4 ZeroShift52+CRC(par):   0.00 ms (  0.0%)  [grew >n/32: 0, >n/16: 0]
+  S3+4 ColRoute  (par):    135.70 ms ( 77.4%)
+  TOTAL 1T CPU:            175.42 ms (100.0%)  |  Parallelizable share: 97.99%

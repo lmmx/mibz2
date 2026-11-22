@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 68: Complete Six-Cost (W,D,B,Q,M,S) & 10W DRAM B/B Trajectory on Live origin/master a3f26aa01 (#739 + #745)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c68_six_cost_trajectory_a3f26"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "538.5 ms 1T (-18.6% S1 via #745)", D = "99.15% parallelizable (S0=0.8%)", B = "10.82 -> 4.6 -> ~3.8 B/B DRAM at 10W", Q = "0 hot notify_all, 0 barrier stalls", M = "110 -> 72 -> 55 MiB peak RSS at 10W" }
+evidence = "Live verification on newly merged origin/master a3f26aa01 (#739 + Mechanisms #745 L1-resident Huffman block reader): PR4_Own_ZS52 compiled with ZERO rework against a3f26aa01; #745 cuts S1 read_item -18.6% on wikidata-l9 (89.37 -> 72.75 ms, 13.5% share), -27.4% on wikidata-l1 (34.42 -> 25.00 ms), -15.1% on hetero-l9, and -12.6% on random-l9, raising S3 OpenCells to 64.3% (65.5% on l1) of remaining 1T CPU. Complete 6-cost separation & 10W DRAM B/B ledger tracks the full arc from v0.5.12 (10.82 B/B, 54.4 ms DDR4 floor, ~69.5 ms wall) through #739 (4.6 B/B, 66.9 ms), #745 (62.4 ms at 7W / ~53.2 ms at 9W), PR4_Own_ZS52 (~3.8 B/B, 19.1 ms DDR4 floor, 54.9 MiB RSS, ~48.5-50.0 ms at 10W), and R4 OpenCells (~43.5-45.0 ms)."
