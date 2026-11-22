@@ -1,0 +1,63 @@
+Checker:  /home/antigravity/lmmx/mibz2/docs/team/acquisition/check_manifest.py (sha256=a3c97e5c71975248)
+Registry: /home/antigravity/lmmx/mibz2/docs/team/acquisition/primitives.toml (sha256=f13dc931d8f7ba9f)
+Programme manifests found: 11 in journal, 0 in /tmp/fcp-*/
+================================================================================================
+[PASS] (rc=0) cycle12/beta/dt_widest_manifest.toml | sha256=6ee47cb02e7a
+  PASS: Cycle 12 BandCoalOpen (wire_xor-preserving Open with register-held adjacent band coalescing)
+  dependent/n-scale: open_s4_wire_xor_emit: D = m/2, Q = m (measured)
+  dependent/n-scale: open_s2_rv_elim: D = S_thick, Q = S_thick (verified)
+[PASS] (rc=0) cycle15/cycle15_manifest.toml | sha256=89e412e76849
+  PASS: Cycle 15 LeanNoMarkXor (0.5.12 OpenCells + hoisted-mark NoMarkXor + LazyCells single-kernel, NO BandCoal)
+  dependent/n-scale: open_s4_nomark_xor_emit: D = m/2, Q = m (measured)
+  dependent/n-scale: open_s2_rv_elim: D = S_thick, Q = S_thick (verified)
+[PASS] (rc=0) cycle3/gamma/iet_schur_manifest.toml | sha256=97e298a31bc7
+  PASS: Unified Compositional IET-Schur + Sub-Interval 1-Piece Schur + Core-RV (Inline15/Inline3)
+  dependent/n-scale: core_walk_two_level_emit: D = m_core [10.7k-29.1k = 0.107-0.150x Open m_16], Q = m_core dependent loads in L1d/L2 (41.8-113.6 KiB) + 379k slab16 reads (verified)
+  dependent/n-scale: core_rv_thick_elimination: D = O(log(max_thick_chain)), Q = 0 outside L2 (F_q <= 14.5k pieces) (verified)
+  dependent/n-scale: compositional_bucket_iet_schur: D = O(|Sigma| * local_bucket_ops), Q = 0 outside L2 (local Shift-Bin-Grid <= 152 KiB, 1.45-1.85 probes/lookup) (verified)
+[PASS] (rc=0) cycle4/beta/b4_grid_flat16_manifest.toml | sha256=d480fc091a49
+  PASS: B4-Grid-Flat16 (Theorem B4 Zero-Tombstone Causal Bucket-Schur + AHT-Spiral + Flat<=16 Memo-SLP)
+  dependent/n-scale: b4_causal_schur_aht: D = O(S_b4) [~1.4r local bucket-confined steps], Q = 0 misses outside L2 on block-0/2/85 (maxSB <= 16.2k pcs; local L1/L2 Shift-Bin-Grid + RV steps) (verified)
+[PASS] (rc=0) cycle6/alpha/m1_k1_peeling_manifest.toml | sha256=70ba41b6366e
+  PASS: Static M1 (kappa=1 R1 Chain Peeling) + Open Core
+  dependent/n-scale: m1_core_emit: D = m_core_thin, Q = m_core_thin (verified)
+  dependent/n-scale: open_core_induction: D = log(n), Q = 0 (verified)
+  dependent/n-scale: m1_chain_peeling: D = 8, Q = 0.62*r (verified)
+[PASS] (rc=0) cycle6/beta/selthinsq_manifest.toml | sha256=554fbca5bc09
+  PASS: SelThinSq-256 (256-Cursor Zero-Sort Selective Thin-Only Strip-Space Squaring + K=8 Anchor Parallel Emitter)
+  dependent/n-scale: selthinsq_k8_parallel_emit: D = O(0.565 m_16 / K) [K=8 lockstep anchor lanes = 0.071 m_16 serial rounds!], Q = 0.565 m_16 [73% single u64 load with 0 dict lookup!] (verified)
+  dependent/n-scale: selthinsq_thick_endpoint: D = O(S_thick) [spiral-certified RV on ns = 1.6k-5.0k thick strips only], Q = O(S_thick) [L1/L2-local within 3*ns+3 nodes] (verified)
+  dependent/n-scale: selthinsq_256cursor_wire: D = 1, Q = 0 [256 L1-resident cursors = 3 KiB; 0 binary search] (proved)
+[PASS] (rc=0) cycle6/gamma/tube_open_manifest.toml | sha256=bd62dc5b461d
+  PASS: Tube-Open (V6): Zero-RV Post-S3a Inclusion-Forest Thin-Tube Contraction on Open
+  dependent/n-scale: tube_open_emit_walk: D = m_tube [620.9k across 6 blocks = 0.693x Open m_16], Q = m_tube dependent edge loads (0.693x Open m_16) (verified)
+  dependent/n-scale: tube_v6_zero_sort_merge_and_patch: D = O(r_2), Q = O(r_2) L2-resident (succ <= 130 KiB, 0 sorting, 0 hashing, 0 binary search) (verified)
+  dependent/n-scale: open_endpoint_rv_thick: D = O(S_rv), Q = 0 outside L2 (Narrow 16B arena inside dead edges buffer) (verified)
+[PASS] (rc=0) cycle7/gamma/bijective_r1_manifest.toml | sha256=2e50f90da674
+  PASS: Bijective R1-Open: Zero-Scatter 256-Cursor Exact-Match R1 Contraction with Native S4 wire_xor
+  dependent/n-scale: open_emit_bidirectional: D = m_new / 2 [two-ended XOR parallel chains: 0.48x-0.77x Open serial depth!], Q = m_new dependent edge loads (0.48x-0.77x Open m_16) (verified)
+  dependent/n-scale: open_endpoint_rv_thick: D = O(S_rv), Q = 0 outside L2 (Narrow 16B arena inside dead edges buffer) (verified)
+  dependent/n-scale: s4_bijective_l_order_wire_xor: D = 1, Q = O(m_new) XOR writes into edges (verified)
+  dependent/n-scale: r1_256cursor_zero_scatter: D = O(r), Q = O(r_1) L2-resident path trace (verified)
+[PASS] (rc=0) cycle8/alpha/morse_ap4_manifest.toml | sha256=8e9520b64c89
+  PASS: MorseAp4Open (Discrete Morse AP4 Apparent-Pair Reduction + Open Core)
+  dependent/n-scale: morse_ap4_emit_bi: D = 0.5 * m_crit, Q = m_crit (verified)
+  dependent/n-scale: morse_ap4_chain_compress: D = 14, Q = 0.89*r (verified)
+  dependent/n-scale: open_thick_endpoint: D = log(n), Q = 0 (verified)
+[PASS] (rc=0) cycle8/beta/phi2_xor_manifest.toml | sha256=5cccdc16d777
+  PASS: Phi2XorOpen (Zero-Sort Zero-Bigram-Hash Bijective Full Phi^2 + Theorem B6 Universal wire_xor)
+  dependent/n-scale: phi2_universal_bidirectional_emit: D = O(0.297 m_16) [2-ended XOR on even-parity half-cycle = 0.594x Open!], Q = 0.594 m_16 [248k-266k serial pairs on 4B u32 edges] (verified)
+  dependent/n-scale: phi2_thick_endpoint: D = O(S_thick) [spiral-certified RV on ns_2 = 1.8k-6.2k thick strips], Q = O(S_thick) [L1/L2-local within 3*ns_2+3 nodes] (verified)
+  dependent/n-scale: phi2_direct_wire_xor: D = 1, Q = O(m_2) [2-sided XOR write into 411-946 KiB u32 edges] (verified)
+[PASS] (rc=0) cycle9/gamma/thick_morse_manifest.toml | sha256=b89c8fab9125
+  PASS: Thick-Morse Open: L1d Zero-Sort Exact R1-Thick Pre-Reduction Inside Open endpoint.rs
+  dependent/n-scale: open_s5_emit_bidirectional: D = m_W / 2 [0.80x Open two-ended XOR rounds at W=8], Q = m_W dependent edge loads (verified)
+  dependent/n-scale: open_endpoint_rv_reduced: D = O(S_rv_res), Q = 0 outside L2 (Narrow 16B arena inside edges) (verified)
+  dependent/n-scale: thick_morse_r1_l1d_collapse: D = O(n_s), Q = 0 outside L1d (verified)
+================================================================================================
+PROGRAMME SUMMARY: 11/11 PASS, 0/11 FAIL
+
+Reference example manifests (sanity-checking checker sensitivity):
+  [PASS] (rc=0) example-arc-walk.toml: PASS: arc-synchronous LF walk from the free arc boundaries (record 84)
+  [FAIL] (rc=1) example-copy-replay-via-labels.toml: FAIL: in-place copy replay with labels from the arc walk (record 84's reduction)
+  [FAIL] (rc=1) example-copy-replay.toml: FAIL: in-place Φ copy replay with a potential schedule (Neon round 6)

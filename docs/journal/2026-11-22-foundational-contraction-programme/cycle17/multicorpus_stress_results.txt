@@ -1,0 +1,129 @@
+================================================================================
+Cycle 17 Multi-Corpus Stress-Test Harness (#![forbid(unsafe_code)])
+Kernels: Open0512 vs LeanNoMarkXor vs LeanOpen vs LeanBandCoalUni
+Mode: FULL BENCHMARK | rounds_small=21, rounds_431=9
+================================================================================
+
+--------------------------------------------------------------------------------
+CORPUS [1a_wikidata_6auth]: Wikidata JSON (6 auth blocks) (6 block(s))
+  [measured] STRUCT: n=5399692 | r_0=537497 (rho=10.05, r_true=509269, rho_true=10.60) | ns_thick=20170 | m_16=895391 (avg_edges=582.9 KiB, max_edges=798.0 KiB)
+  [measured] OPEN:   admitted=6/6 (blk0=OPEN_STD) | bands_open=25497 | bands_bc=19867 (delta=-22.1%)
+  [verified] EXACT:  6/6 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (21 interleaved rounds; baseline Open0512: cpu=10.209 ms, wall=10.199 ms):
+    Open0512         | CPU:   10.209 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:   10.199 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:    9.791 ms | ratio(med_paired)=0.9625x IQR=[0.9344, 0.9778] | WALL:    9.782 ms | wall_ratio=0.9625x IQR=[0.9311, 0.9818]
+    LeanOpen         | CPU:   10.450 ms | ratio(med_paired)=1.0230x IQR=[1.0107, 1.0480] | WALL:   10.441 ms | wall_ratio=1.0229x IQR=[1.0077, 1.0477]
+    LeanBandCoalUni  | CPU:   10.442 ms | ratio(med_paired)=1.0183x IQR=[1.0016, 1.0334] | WALL:   10.433 ms | wall_ratio=1.0130x IQR=[0.9997, 1.0338]
+
+--------------------------------------------------------------------------------
+CORPUS [1b_wikidata_431]: Wikidata JSON (all 431 blocks) (431 block(s))
+  [measured] STRUCT: n=209706557 | r_0=16327418 (rho=12.84, r_true=15148086, rho_true=13.84) | ns_thick=755019 | m_16=26576374 (avg_edges=240.9 KiB, max_edges=904.7 KiB)
+  [measured] OPEN:   admitted=233/431 (blk0=FB_HIGH_ENT) | bands_open=827858 | bands_bc=598260 (delta=-27.7%)
+  [verified] EXACT:  431/431 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (9 interleaved rounds; baseline Open0512: cpu=306.066 ms, wall=306.258 ms):
+    Open0512         | CPU:  306.066 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:  306.258 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:  295.070 ms | ratio(med_paired)=0.9639x IQR=[0.9559, 0.9662] | WALL:  295.115 ms | wall_ratio=0.9643x IQR=[0.9554, 0.9656]
+    LeanOpen         | CPU:  306.670 ms | ratio(med_paired)=1.0003x IQR=[0.9974, 1.0081] | WALL:  306.667 ms | wall_ratio=0.9998x IQR=[0.9973, 1.0074]
+    LeanBandCoalUni  | CPU:  309.537 ms | ratio(med_paired)=1.0044x IQR=[0.9995, 1.0124] | WALL:  309.596 ms | wall_ratio=1.0045x IQR=[0.9994, 1.0119]
+
+--------------------------------------------------------------------------------
+CORPUS [2a_hient_b64_r1]: High-Entropy Base64 (rho~1.03, fallback) (1 block(s))
+  [measured] STRUCT: n=890002 | r_0=876196 (rho=1.02, r_true=876196, rho_true=1.02) | ns_thick=0 | m_16=890002 (avg_edges=3476.6 KiB, max_edges=3476.6 KiB)
+  [measured] OPEN:   admitted=0/1 (blk0=FB_HIGH_ENT) | bands_open=0 | bands_bc=0 (delta=+0.0%)
+  [verified] EXACT:  1/1 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (21 interleaved rounds; baseline Open0512: cpu=3.439 ms, wall=3.448 ms):
+    Open0512         | CPU:    3.439 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:    3.448 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:    3.435 ms | ratio(med_paired)=0.9892x IQR=[0.9665, 1.0176] | WALL:    3.448 ms | wall_ratio=0.9966x IQR=[0.9675, 1.0175]
+    LeanOpen         | CPU:    3.423 ms | ratio(med_paired)=0.9944x IQR=[0.9544, 1.0204] | WALL:    3.415 ms | wall_ratio=0.9949x IQR=[0.9629, 1.0513]
+    LeanBandCoalUni  | CPU:    3.399 ms | ratio(med_paired)=0.9908x IQR=[0.9620, 1.0108] | WALL:    3.409 ms | wall_ratio=0.9909x IQR=[0.9620, 1.0150]
+
+--------------------------------------------------------------------------------
+CORPUS [2b_hient_dense_open]: High-Entropy Dense-Open (m16~220k, L3) (1 block(s))
+  [measured] STRUCT: n=878001 | r_0=224565 (rho=3.91, r_true=224565, rho_true=3.91) | ns_thick=11390 | m_16=216609 (avg_edges=846.1 KiB, max_edges=846.1 KiB)
+  [measured] OPEN:   admitted=1/1 (blk0=OPEN_DENSE) | bands_open=11225 | bands_bc=1125 (delta=-90.0%)
+  [verified] EXACT:  1/1 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (21 interleaved rounds; baseline Open0512: cpu=2.821 ms, wall=2.815 ms):
+    Open0512         | CPU:    2.821 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:    2.815 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:    2.740 ms | ratio(med_paired)=0.9632x IQR=[0.9456, 0.9985] | WALL:    2.734 ms | wall_ratio=0.9633x IQR=[0.9450, 0.9982]
+    LeanOpen         | CPU:    3.287 ms | ratio(med_paired)=1.1626x IQR=[1.1298, 1.2043] | WALL:    3.278 ms | wall_ratio=1.1702x IQR=[1.1269, 1.2046]
+    LeanBandCoalUni  | CPU:    3.083 ms | ratio(med_paired)=1.0961x IQR=[1.0683, 1.1145] | WALL:    3.075 ms | wall_ratio=1.0958x IQR=[1.0634, 1.1149]
+
+--------------------------------------------------------------------------------
+CORPUS [3_english_prose]: Structured English Prose (Zipfian) (1 block(s))
+  [measured] STRUCT: n=888000 | r_0=86688 (rho=10.24, r_true=81913, rho_true=10.84) | ns_thick=2882 | m_16=122014 (avg_edges=476.6 KiB, max_edges=476.6 KiB)
+  [measured] OPEN:   admitted=1/1 (blk0=OPEN_STD) | bands_open=1896 | bands_bc=1639 (delta=-13.6%)
+  [verified] EXACT:  1/1 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (21 interleaved rounds; baseline Open0512: cpu=1.422 ms, wall=1.415 ms):
+    Open0512         | CPU:    1.422 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:    1.415 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:    1.375 ms | ratio(med_paired)=0.9616x IQR=[0.9296, 0.9758] | WALL:    1.368 ms | wall_ratio=0.9660x IQR=[0.9297, 0.9759]
+    LeanOpen         | CPU:    1.481 ms | ratio(med_paired)=1.0410x IQR=[0.9937, 1.0798] | WALL:    1.473 ms | wall_ratio=1.0408x IQR=[1.0080, 1.0919]
+    LeanBandCoalUni  | CPU:    1.465 ms | ratio(med_paired)=1.0516x IQR=[1.0240, 1.0585] | WALL:    1.457 ms | wall_ratio=1.0576x IQR=[1.0355, 1.0597]
+
+--------------------------------------------------------------------------------
+CORPUS [4a_dna_4let_open]: 4-Letter Genomic DNA (Open, high m16) (1 block(s))
+  [measured] STRUCT: n=887114 | r_0=86101 (rho=10.30, r_true=85872, rho_true=10.33) | ns_thick=13469 | m_16=556911 (avg_edges=2175.4 KiB, max_edges=2175.4 KiB)
+  [measured] OPEN:   admitted=1/1 (blk0=OPEN_STD) | bands_open=28476 | bands_bc=27798 (delta=-2.4%)
+  [verified] EXACT:  1/1 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (21 interleaved rounds; baseline Open0512: cpu=7.885 ms, wall=7.875 ms):
+    Open0512         | CPU:    7.885 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:    7.875 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:    7.327 ms | ratio(med_paired)=0.9272x IQR=[0.9172, 0.9457] | WALL:    7.319 ms | wall_ratio=0.9253x IQR=[0.9171, 0.9476]
+    LeanOpen         | CPU:   11.314 ms | ratio(med_paired)=1.4469x IQR=[1.4183, 1.4758] | WALL:   11.303 ms | wall_ratio=1.4418x IQR=[1.4186, 1.4762]
+    LeanBandCoalUni  | CPU:   11.107 ms | ratio(med_paired)=1.4074x IQR=[1.3753, 1.4360] | WALL:   11.111 ms | wall_ratio=1.4086x IQR=[1.3740, 1.4517]
+
+--------------------------------------------------------------------------------
+CORPUS [4b_dna_4let_iid]: 4-Letter IID Random DNA (fallback) (1 block(s))
+  [measured] STRUCT: n=891818 | r_0=646056 (rho=1.38, r_true=645813, rho_true=1.38) | ns_thick=10 | m_16=860293 (avg_edges=3360.5 KiB, max_edges=3360.5 KiB)
+  [measured] OPEN:   admitted=0/1 (blk0=FB_HIGH_ENT) | bands_open=0 | bands_bc=0 (delta=+0.0%)
+  [verified] EXACT:  1/1 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (21 interleaved rounds; baseline Open0512: cpu=3.085 ms, wall=3.080 ms):
+    Open0512         | CPU:    3.085 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:    3.080 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:    3.075 ms | ratio(med_paired)=1.0029x IQR=[0.9826, 1.0311] | WALL:    3.089 ms | wall_ratio=1.0024x IQR=[0.9836, 1.0310]
+    LeanOpen         | CPU:    3.128 ms | ratio(med_paired)=1.0320x IQR=[0.9891, 1.0477] | WALL:    3.131 ms | wall_ratio=1.0317x IQR=[0.9969, 1.0479]
+    LeanBandCoalUni  | CPU:    3.012 ms | ratio(med_paired)=0.9874x IQR=[0.9693, 1.0144] | WALL:    3.003 ms | wall_ratio=0.9874x IQR=[0.9692, 1.0147]
+
+--------------------------------------------------------------------------------
+CORPUS [5a_archive_rho55]: Multi-Version Archive (rho~50, thick) (1 block(s))
+  [measured] STRUCT: n=888044 | r_0=17167 (rho=51.73, r_true=13591, rho_true=65.34) | ns_thick=9865 | m_16=3789 (avg_edges=14.8 KiB, max_edges=14.8 KiB)
+  [measured] OPEN:   admitted=1/1 (blk0=OPEN_STD) | bands_open=2616 | bands_bc=550 (delta=-79.0%)
+  [verified] EXACT:  1/1 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (21 interleaved rounds; baseline Open0512: cpu=0.823 ms, wall=0.814 ms):
+    Open0512         | CPU:    0.823 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:    0.814 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:    0.818 ms | ratio(med_paired)=0.9821x IQR=[0.9648, 0.9978] | WALL:    0.810 ms | wall_ratio=0.9826x IQR=[0.9641, 0.9984]
+    LeanOpen         | CPU:    0.821 ms | ratio(med_paired)=0.9932x IQR=[0.9667, 1.0086] | WALL:    0.812 ms | wall_ratio=0.9925x IQR=[0.9679, 1.0113]
+    LeanBandCoalUni  | CPU:    0.818 ms | ratio(med_paired)=0.9979x IQR=[0.9803, 1.0072] | WALL:    0.810 ms | wall_ratio=0.9977x IQR=[0.9787, 1.0099]
+
+--------------------------------------------------------------------------------
+CORPUS [5b_archive_rho85]: Multi-Version Archive (rho~85, fallback) (1 block(s))
+  [measured] STRUCT: n=732228 | r_0=7603 (rho=96.31, r_true=5743, rho_true=127.50) | ns_thick=5426 | m_16=317 (avg_edges=1.2 KiB, max_edges=1.2 KiB)
+  [measured] OPEN:   admitted=0/1 (blk0=FB_ULTRA_REP) | bands_open=0 | bands_bc=0 (delta=+0.0%)
+  [verified] EXACT:  1/1 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (21 interleaved rounds; baseline Open0512: cpu=1.412 ms, wall=1.404 ms):
+    Open0512         | CPU:    1.412 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:    1.404 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:    1.436 ms | ratio(med_paired)=1.0135x IQR=[0.9937, 1.0267] | WALL:    1.427 ms | wall_ratio=1.0136x IQR=[0.9944, 1.0268]
+    LeanOpen         | CPU:    1.436 ms | ratio(med_paired)=1.0202x IQR=[1.0090, 1.0604] | WALL:    1.428 ms | wall_ratio=1.0204x IQR=[1.0091, 1.0604]
+    LeanBandCoalUni  | CPU:    1.442 ms | ratio(med_paired)=1.0285x IQR=[0.9994, 1.0414] | WALL:    1.433 ms | wall_ratio=1.0291x IQR=[1.0000, 1.0421]
+
+--------------------------------------------------------------------------------
+CORPUS [6a_adv_giant_cycle]: Adversarial Giant Thin Cycle (m16~886k!) (1 block(s))
+  [measured] STRUCT: n=886528 | r_0=109160 (rho=8.12, r_true=109160, rho_true=8.12) | ns_thick=29 | m_16=885832 (avg_edges=3460.3 KiB, max_edges=3460.3 KiB)
+  [measured] OPEN:   admitted=1/1 (blk0=OPEN_STD) | bands_open=151 | bands_bc=151 (delta=+0.0%)
+  [verified] EXACT:  1/1 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (21 interleaved rounds; baseline Open0512: cpu=13.438 ms, wall=13.428 ms):
+    Open0512         | CPU:   13.438 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:   13.428 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:   12.964 ms | ratio(med_paired)=0.9678x IQR=[0.9530, 0.9916] | WALL:   12.962 ms | wall_ratio=0.9660x IQR=[0.9504, 0.9925]
+    LeanOpen         | CPU:   24.657 ms | ratio(med_paired)=1.8629x IQR=[1.7575, 1.9452] | WALL:   24.647 ms | wall_ratio=1.8634x IQR=[1.7580, 1.9457]
+    LeanBandCoalUni  | CPU:   26.118 ms | ratio(med_paired)=1.9497x IQR=[1.9081, 1.9723] | WALL:   26.109 ms | wall_ratio=1.9438x IQR=[1.9088, 1.9766]
+
+--------------------------------------------------------------------------------
+CORPUS [6b_adv_fib_altrun]: Adversarial Fib/AltRun Chain (m16~800k!) (1 block(s))
+  [measured] STRUCT: n=885160 | r_0=68346 (rho=12.95, r_true=68346, rho_true=12.95) | ns_thick=15430 | m_16=528758 (avg_edges=2065.5 KiB, max_edges=2065.5 KiB)
+  [measured] OPEN:   admitted=1/1 (blk0=OPEN_STD) | bands_open=28102 | bands_bc=27430 (delta=-2.4%)
+  [verified] EXACT:  1/1 blocks 100% byte-exact across ALL 4 kernels vs LazyCells oracle
+  [measured] TIMING (21 interleaved rounds; baseline Open0512: cpu=7.821 ms, wall=7.832 ms):
+    Open0512         | CPU:    7.821 ms | ratio(med_paired)=1.0000x IQR=[1.0000, 1.0000] | WALL:    7.832 ms | wall_ratio=1.0000x IQR=[1.0000, 1.0000]
+    LeanNoMarkXor    | CPU:    6.894 ms | ratio(med_paired)=0.8814x IQR=[0.8327, 0.9175] | WALL:    6.894 ms | wall_ratio=0.8812x IQR=[0.8124, 0.9174]
+    LeanOpen         | CPU:   12.498 ms | ratio(med_paired)=1.5012x IQR=[1.4652, 1.6220] | WALL:   12.488 ms | wall_ratio=1.5015x IQR=[1.4592, 1.6227]
+    LeanBandCoalUni  | CPU:   11.801 ms | ratio(med_paired)=1.4587x IQR=[1.4352, 1.5104] | WALL:   11.930 ms | wall_ratio=1.4619x IQR=[1.4183, 1.5278]
+
+================================================================================
+DONE.
