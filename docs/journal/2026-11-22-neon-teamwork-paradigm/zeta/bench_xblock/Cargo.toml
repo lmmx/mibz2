@@ -1,0 +1,7 @@
+[package]
+name = "bench_xblock"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mibz2 = { path = "../../../../..", features = ["moonshot"] }
