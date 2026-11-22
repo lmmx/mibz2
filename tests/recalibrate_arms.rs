@@ -8,7 +8,9 @@
 //! plan builds there (`Plan::for_threads`, `StreamDecoder::planned`). The neighbours are the
 //! shipped arm but for one worker more or fewer, 4 blocks a worker; the sweep's lazy 7, 8, 9
 //! and 10 workers at 4 blocks a worker differ from each other in one worker at a time, and its
-//! ten workers at the trim's window (10/40) differ from the plan's (10/4T) in the window alone.
+//! ten workers at the trim's window (10/40) differ from the plan's (10/4T) in the window alone;
+//! and nine workers at 3 blocks a worker (9/27, Wormhole's cycle-70 arm, added before any data by
+//! REVIEW 7084586885) differ from nine at 4 a worker (9/36) in the window alone.
 use mibz2::parallel::{with_machine, Machine, Plan};
 use mibz2::{Kernels, StreamDecoder};
 
@@ -130,8 +132,9 @@ fn the_kernel_arms_differ_in_the_kernel() {
 
 /// Ten lazy workers at the trim's window, 4 blocks a worker (`mibz2-occ-10-40`), beside the
 /// plan's at 12, 16 and 20 threads, 4 blocks a thread asked (`mibz2-occ-10-48`, `-64`, `-80`):
-/// the same workers and kernel, the window alone differing. Every one of them keeps the same
-/// ready cap (`READY_BYTES`, 12 MiB); no arm changes it
+/// the same workers and kernel, the window alone differing. Likewise nine lazy workers at 3
+/// blocks a worker (`mibz2-occ-9-27`) beside nine at 4 (`mibz2-occ-9-36`). Every one of them
+/// keeps the same ready cap (`READY_BYTES`, 12 MiB); no arm changes it
 #[test]
 fn the_window_arms_differ_in_the_window() {
     assert_eq!(mibz2::parallel::READY_BYTES, 12 << 20);
@@ -147,4 +150,9 @@ fn the_window_arms_differ_in_the_window() {
         p.close();
     }
     trim.close();
+    let (nine27, nine36) = (arm("mibz2-occ-9-27"), arm("mibz2-occ-9-36"));
+    assert_eq!(shape(&nine27), (9, 27, true), "mibz2-occ-9-27");
+    assert_eq!(shape(&nine36), (9, 36, true), "mibz2-occ-9-36");
+    nine27.close();
+    nine36.close();
 }

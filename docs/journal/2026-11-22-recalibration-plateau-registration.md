@@ -2,11 +2,18 @@
 
 *22 November 2026. Frozen before any data. RELEASING §3.4 and §5c.*
 
+*Revised before any data, 22 November 2026: the one correction of the Researcher's REVIEW
+7084586885 on #145, accepted in full by the Coordinator's decision LOG 7084590503 (C6). The
+five cells with no held spinner (pinned 10, unpinned 10, 12, 16 and 20) settle 2 s, gain the arm
+lazy 9/27 and run 12 rounds; the text that follows from it, and five interpretations, are
+stated below. No data from this run existed (C2).*
+
 This is the construction stack's recalibration (`bench-recalibrate-stack`,
 `docs/journal/2026-11-22-recalibration-stack-registration.md`) run again on the decoder with
 #739 (Wormhole's plateau stack) and #745 (the block reader), and widened at the cells where
-Wormhole's handoff predicts the trims move. The design, the rule, the settle, the corpora and
-the diagnostics are the registered ones (`docs/journal/2026-11-18-recalibration-registration.md`,
+Wormhole's handoff predicts the trims move. The design, the rule, the corpora and the
+diagnostics are the registered ones, and so is the settle except at the five cells of
+§ "Method" that settle 2 s (`docs/journal/2026-11-18-recalibration-registration.md`,
 Researcher REVIEW 6978182129, its targeted correction applied at cee99296). Every cell and arm of
 the stack run is kept. This document says what differs and gives in full the table each count
 is judged against.
@@ -16,8 +23,10 @@ is judged against.
   `bench/bundle.sh`. The stack run's bundle is `recalibrate-stack/run-20261122T030603Z` on the
   `evidence` branch (9f203342, sha256 88d062e0…30b2); the diet run's is
   `recalibrate-diet/run-20261121T124719Z` (9326d856).
-- **The untimed DRY preflight** (`just bench-recalibrate-plateau 4 12 24 24 0.25 5 1`) is kept.
-  It is not evidence.
+- **The untimed DRY preflight** (`just bench-recalibrate-plateau 4 12 24 0.25 2 5 1`) is kept.
+  It is not evidence. The recipe's positional arguments are `COPIES ROUNDS ROUNDS_P8 SETTLE
+  SETTLE_HI REPS DRY`; `ROUNDS_HI` is gone, and `SETTLE_HI` (2) is the settle at the five
+  cells with no held spinner.
 
 ## Why §5c applies
 
@@ -58,7 +67,8 @@ not: `trim_cell`, `unpinned_cell` and the constants are 0.5.12's, and
 - **The branch:** 7b901b67, with `bench/recalibrate-stack` (4792f7fc) merged in as a merge
   commit, then master 4a79f063 merged in. The merges were clean, and add nothing to `src`. The harness (`examples/ab.rs`,
   `bench/two_arm.py`, `bench/counters.py`, their tests) is the stack run's, unchanged. What is
-  new: this recipe, this registration, and three more checks in `tests/recalibrate_arms.rs`.
+  new: this recipe, this registration, and three more checks in `tests/recalibrate_arms.rs`
+(the window check covering 9/27 beside 9/36 too).
 - **The build:** one, by rustc 1.99.1.
 
 ## What the arms can vary
@@ -68,13 +78,17 @@ not: `trim_cell`, `unpinned_cell` and the constants are 0.5.12's, and
 The **ready cap** is not an arm's to set. `READY_BYTES` (12 MiB) is a constant, and every arm
 and the default build with it (`with_inverse` → `with_inverse_capped(.., READY_BYTES)`, which
 is private). So Wormhole's "10 workers with a 12 MiB cap" is the arm `mibz2-occ-10-S`, and S is
-the one free knob. Two windows are natural for ten workers:
-- **4 blocks a worker** (10/40): the trims' convention (`window(Plan::Workers(n), threads, slots,
-  true)` scales the window to the workers);
+the one free knob. Three **window conventions** are named here:
+- **4 blocks a worker** (7/28, 8/32, 9/36, 10/40): the trims' convention (`window(Plan::Workers(n),
+  threads, slots, true)` scales the window to the workers);
 - **4 blocks a thread asked** (10/48, 10/64, 10/80 at 12, 16 and 20): the plan's, the untrimmed
-  decoder.
+  decoder;
+- **3 blocks a worker** (9/27): Wormhole's cycle-70 arm. Only nine workers are run at it. No
+  shipped code builds it: a choice of 9/27 means nine lazy workers with the window scaled 3 a
+  worker, a code change in its own PR (§ "The rule").
 
-At 10 threads the two coincide (10/40). Under the cap, a wider window lets the scanner run ahead
+At 10 threads the first two coincide: **10/40 at 10 threads counts as both the 4-a-worker
+convention and the plan's.** Under the cap, a wider window lets the scanner run ahead
 only until 12 MiB of decoded blocks wait, so the two may now differ little. The run reports
 them as a pair at 12, 16 and 20.
 
@@ -85,86 +99,118 @@ i9 at the pin. Added since the stack run: **bold**.
 
 | placement | threads | shipped (reference) | −1 | +1 | the sweep | untrimmed | other kernel |
 |---|---|---|---|---|---|---|---|
-| pinned | 10 | lazy 7/28 | lazy 6/24 | lazy 8/32 | **lazy 9/36** | lazy 10/40 | — |
+| pinned | 10 | lazy 7/28 | lazy 6/24 | lazy 8/32 | **lazy 9/36, lazy 9/27** | lazy 10/40 | — |
 | pinned | 8 | lazy 6/24 | lazy 5/20 | lazy 7/28 | — | lazy 8/32 | — |
 | pinned | 6 | lazy 5/20 | lazy 4/16 | lazy 6/24 | — | eager 6/24 | (= untrimmed's kernel) |
 | pinned | 4 | eager 3/12 | eager 2/8 | eager 4/16 (= untrimmed) | — | eager 4/16 | lazy 3/12 |
 | unpinned | 4 | lazy 4/16 | lazy 3/12 | not run (above the threads) | — | eager 4/16 | (= untrimmed) |
 | unpinned | 6 | lazy 6/24 | lazy 5/20 | not run | — | eager 6/24 | (= untrimmed) |
 | unpinned | 8 | lazy 8/32 (untrimmed) | lazy 7/28 | not run | — | — | — |
-| unpinned | 10 | lazy 7/28 | lazy 6/24 | lazy 8/32 | **lazy 9/36** | lazy 10/40 | — |
-| unpinned | 12 | lazy 7/28 | (at 10) | lazy 8/32 | **lazy 9/36, lazy 10/40** | lazy 10/48 | — |
-| unpinned | 16 | lazy 7/28 | (at 10) | lazy 8/32 | **lazy 9/36, lazy 10/40** | lazy 10/64 | — |
-| unpinned | 20 | lazy 7/28 | (at 10) | lazy 8/32 | **lazy 9/36, lazy 10/40** | lazy 10/80 | — |
+| unpinned | 10 | lazy 7/28 | lazy 6/24 | lazy 8/32 | **lazy 9/36, lazy 9/27** | lazy 10/40 | — |
+| unpinned | 12 | lazy 7/28 | (at 10) | lazy 8/32 | **lazy 9/36, lazy 9/27, lazy 10/40** | lazy 10/48 | — |
+| unpinned | 16 | lazy 7/28 | (at 10) | lazy 8/32 | **lazy 9/36, lazy 9/27, lazy 10/40** | lazy 10/64 | — |
+| unpinned | 20 | lazy 7/28 | (at 10) | lazy 8/32 | **lazy 9/36, lazy 9/27, lazy 10/40** | lazy 10/80 | — |
 
-So at unpinned 10, 12, 16 and 20 the sweep is 7, 8, 9 and 10 workers, 4 blocks a worker, with the
-plan's window for ten beside it from 12. Pinned at 10 it is 6 to 10.
+So at unpinned 10, 12, 16 and 20 the sweep is 7, 8, 9 and 10 workers, 4 blocks a worker, with
+nine at 3 blocks a worker beside it, and the plan's window for ten from 12. Pinned at 10 it is 6
+to 10, with 9/27. Each of these five cells has **6 arms**.
 
 **The judged cells, as the recipe calls `two_arm.py`:**
 - *Pinned* (`--ref-at mibz2-occ-7-28=10 mibz2-occ-6-24=8 mibz2-occ-5-20=6 mibz2-oce-3-12=4`),
-  **13 cells**: at 10, lazy 6/24, 8/32, **9/36**, 10/40; at 8, lazy 5/20, 7/28, 8/32; at 6, lazy
+  **14 cells**: at 10, lazy 6/24, 8/32, **9/36**, **9/27**, 10/40; at 8, lazy 5/20, 7/28, 8/32; at 6, lazy
   4/16, lazy 6/24, eager 6/24; at 4, eager 2/8, eager 4/16, lazy 3/12.
 - *Unpinned* (`--ref-at mibz2-occ-7-28=10,12,16,20 mibz2-occ-8-32=8 mibz2-occ-6-24=6
-  mibz2-occ-4-16=4`), **21 cells**: at 10, lazy 6/24, 8/32, **9/36**, 10/40; at 12, 16 and 20,
-  lazy 8/32, **9/36**, **10/40** and lazy 10/4T; at 8, lazy 7/28; at 6, lazy 5/20 and eager
+  mibz2-occ-4-16=4`), **25 cells**: at 10, lazy 6/24, 8/32, **9/36**, **9/27**, 10/40; at 12, 16
+  and 20, lazy 8/32, **9/36**, **9/27**, **10/40** and lazy 10/4T; at 8, lazy 7/28; at 6, lazy 5/20 and eager
   6/24; at 4, lazy 3/12 and eager 4/16.
 
 A reference at one count is a candidate at another, never at its own, as before.
 
 **Reported, judging nothing** (`--pair`): at every count where both run, 9/36 over 8/32 and
 10/40 over 9/36, so each step of the sweep has its own ratio. At 12, 16 and 20, 10/4T over 10/40:
-the window, for ten workers under the cap.
+the window, for ten workers under the cap. At pinned 10 and unpinned 10, 12, 16 and 20, 9/27 over
+9/36: the window, for nine workers.
 
 **Checked deterministically:** `tests/recalibrate_arms.rs` holds this table. Under
 `parallel::with_machine` with the measured i9's facts, each shipped arm is the default decoder's
 worker count, window and kernel, and each untrimmed arm is the plan's. It adds three checks. 9/36
 sits one worker from 8/32 and from 10/40. The ten-worker arms 10/40 and 10/4T differ in the window
-alone. `READY_BYTES` is 12 MiB. It passes at 7b901b67, whose `src` is 4a79f063's (4/4).
+alone, and so do the nine-worker arms 9/27 and 9/36. `READY_BYTES` is 12 MiB. It passes at 7b901b67, whose `src` is 4a79f063's (4/4).
 
 **Checked against the scorer:** both `two_arm.py` calls, with exactly the recipe's arguments,
-were run on records synthesised from the stack run's bundle. The synthesis copied 8/32's records
-as 9/36, copied 10/4T's as 10/40, and repeated the unpinned 10–20 rounds to 24. Both calls
-parsed without a VOID, giving 13 and 21 verdicts and the pairs above. That checks the
-arguments, and nothing else.
+were run on records synthesised from the stack run's bundle. As first registered, the synthesis
+copied 8/32's records as 9/36, copied 10/4T's as 10/40, and repeated the unpinned 10–20 rounds
+to 24; both calls gave 13 and 21 verdicts. **After the revision** (the bundle's sha256
+88d062e0…30b2 checked), 8/32's records at 10 threads and up were copied as both 9/36 and 9/27
+(with a ninth worker thread named, for `--check-workers`) and 10/4T's as 10/40, at the stack
+run's 12 rounds. Both calls parsed without a VOID, giving **14 and 25 verdicts** and the pairs
+above, 9/27 over 9/36 included. That checks the arguments, and nothing else.
 
 ## Method
 
 As registered: one `ab run` a cell with its own arms, the shipped trim first, rotated and
-reversed round by round. Settle 0.25 s (`--max-busy` 1.5). Wikidata ×4 is the gain family. Text
-and random are the guards, generated afresh by `ab gen`, and every input's SHA-256 is recorded.
-The spinner is held at 4, 6 and 8 threads pinned.
+reversed round by round. Wikidata ×4 is the gain family. Text and random are the guards,
+generated afresh by `ab gen`, and every input's SHA-256 is recorded. The spinner is held at 4, 6
+and 8 threads pinned (`--max-busy` 1.5).
 
-**Rounds:** 12 paired rounds, 24 pinned at 8 as before. New: **24 (`ROUNDS_HI`) unpinned at 10,
-12, 16 and 20** (`--rounds-at`), the cells of this run's question. There the stack run's 95%
-intervals on Wikidata spanned about ±20% (lazy 8/32 over 7/28: [0.757, 1.157] at 10, [0.792,
-1.209] at 12, [0.754, 1.128] at 16, [0.751, 1.140] at 20). Twice the rounds narrow them by about
-1/√2, to about ±14% at the same spread. Holm's family is unchanged by the rounds.
+**Settle (revised, REVIEW 7084586885 item 1):** **2 s (`SETTLE_HI`) at the five cells with no
+held spinner: pinned 10, and unpinned 10, 12, 16 and 20**, the default and the setting of
+`bench-wormhole-plateau` and `bench-release-scaling`. Every other cell keeps 0.25 s and its
+spinner where it has one. The reason, from the stack bundle: at the cells without a spinner the
+stack run's ±20% intervals on Wikidata (lazy 8/32 over 7/28: [0.757, 1.157] at 10, [0.792, 1.209]
+at 12, [0.754, 1.128] at 16, [0.751, 1.140] at 20) were not sampling noise. Every such cell had
+two wall modes, about 0.25 s and about 0.39 s, set by the run's position in the round (position 0
+never slow; positions 1–3 mostly slow), with paired log SD 0.317–0.334. That is the known slow
+mode after a 0.25 s idle gap (#318: slow after a 0.25 s gap 26/30, with no gap 0/30).
+`bench-wormhole-plateau` (evidence a811364d) ran the same cells at settle 2 s: all 144 runs in
+0.234–0.286 s, paired log SD 0.010–0.059.
 
-**Time:** the stack run took 12 min 31 s in all (started 03:06:03, finished 03:18:34), for 492
-arm-rounds (37 arms a round over 12 rounds, and 4 more for 12 more rounds pinned at 8), each of
-three runs. That is 1.53 s an arm-round, build, data and scoring included. This run has
-**828 arm-rounds**:
-- pinned: 5×12 at 10, 4×24 at 8, 4×12 at 6 and 4×12 at 4, so 252;
-- unpinned: 5×24 at each of 10, 12, 16 and 20, then 2×12 at 8, 3×12 at 6 and 3×12 at 4, so 576.
+**Rounds (revised, item 3):** 12 paired rounds at every cell, 24 pinned at 8 as before.
+`ROUNDS_HI` and its `--rounds-at` are dropped. Each of the five cells has 6 arms, and 12 = 2 × 6,
+so every arm takes every position equally often: the 2026-11-18 design's balance invariant
+(rounds a multiple of 2 × arms). As first registered, 5 arms over 12 or 24 rounds broke it, with
+an expected bias of about +1–3% against the arms that drew position 0 least.
 
-At the stack run's rate, that is **about 21 minutes**, and about 22 with the DRAM diagnostic's
-two added arms and its cell at 20. The plateau stack makes each decode a few percent faster. The
-settle and process start take most of a run's time, so the estimate stays.
+**Caveat on unpinned 4, 6 and 8:** these cells have no spinner either, stay at 0.25 s, and
+unpinned 6 and 8 showed the same position effect in the stack run. They stay noisy, and their
+verdicts are read with that caveat. They are predicted not to move, and a noisy NOT ADOPTED
+keeps the shipped trim.
 
-**Dropped to fit about 25 minutes**, each with what it would add at 1.53 s an arm-round:
+**The guards tighten:** at 2 s the text and random intervals at the five cells narrow from the
+stack run's [0.54, 1.75], so a real guard loss there will now show as SLOWER. That is the
+intended effect of the settle, not a relaxation.
+
+**Time (revised): about 50 minutes.** The stack run took 12 min 31 s in all (started 03:06:03,
+finished 03:18:34), for 492 arm-rounds (37 arms a round over 12 rounds, and 4 more for 12 more
+rounds pinned at 8), each of three runs. That is 1.53 s an arm-round at settle 0.25 s, build,
+data and scoring included. This run has **648 arm-rounds**:
+- pinned: 6×12 at 10, 4×24 at 8, 4×12 at 6 and 4×12 at 4, so 264;
+- unpinned: 6×12 at each of 10, 12, 16 and 20, then 2×12 at 8, 3×12 at 6 and 3×12 at 4, so 384.
+
+At 1.53 s that is about 16.5 minutes. The 360 arm-rounds at the five cells settle 2 s, 1.75 s
+more for each of their three runs, about 5.25 s more an arm-round: about 31.5 minutes more. With
+the DRAM diagnostic, **about 50 minutes** in all.
+
+**Dropped when the run was sized** (at about 25 minutes, before the revision), each with what it
+would add at 1.53 s an arm-round at settle 0.25 s:
 - *11 and 12 workers at unpinned 12, 16 and 20*, the other counts in Wormhole's PR 5 list
   (W ∈ {7, 8, 9, 10, 11, 12, 16, 20}). These are SMT workers, beyond a worker a core. They would
   add 144 arm-rounds, about 3.7 min, to about 25.5 min, and six more cells to the unpinned family.
-- *Other windows:* ten workers at 2 a worker (10/20, a memory lever under the cap), and 7–9
+- *Other windows:* ten workers at 2 a worker (10/20, a memory lever under the cap), the other
+  counts at 3 a worker (7/21, 8/24, 10/30; 9/27 alone was added by the revision), and 7–9
   workers at the plan's 4T window. Four cells at 24 rounds come to 96 arm-rounds, about 2.5 min.
   Both questions are outside the hypothesis, and they would dilute Holm.
 - *Unpinned 14 and 18 threads:* as in every recalibration, 12, 16 and 20 stand for 10–20.
-- *24 rounds pinned at 10:* not this run's question. Pinned 10 stays at 12 rounds.
+- *More rounds at the five cells:* the revision runs 12 everywhere but pinned 8. With the noise
+  a two-mode state locked to position, more rounds at 0.25 s bought almost no power; the fix is
+  the settle.
 
-**Power:** the families grow from 12 to 13 cells pinned and from 14 to 21 unpinned. Holm's first
-threshold unpinned goes from 0.025/14 to 0.025/21. The doubled rounds at the cells that grew
-more than pay for it, for a gain of the same size. An INCONCLUSIVE at a gain of a few percent
-remains likely, and it is no evidence of no difference.
+**Power (revised):** the families grow from 12 to **14 cells pinned** and from 14 to **25
+unpinned**. Holm's first threshold unpinned goes from 0.025/14 to 0.025/25. As first registered
+(SD 0.33, 24 rounds, 0.025/21), the Researcher's simulation gave about 3% power for MONODROMY's
+predicted 8% gain and about 20% for Wormhole's 15%, so "7/28 stays" was close to certain
+whatever the truth. With the revision (SD 0.04, 12 rounds, 25 cells) it gives 0.86 for a 6% gain
+and 0.99 for 8%; at SD 0.06, 0.40 and 0.75. An INCONCLUSIVE is no evidence of no difference.
 
 ## The rule
 
@@ -191,11 +237,25 @@ CHANGELOG section, changed or not (§5c.4). Frozen here for the counts this run 
 since `unpinned_cell` covers every count from 10:
 - *Between measured counts* (unpinned 11, 13–15 and 17–19): such a count takes a new choice only
   where the measured counts on both sides chose the same arm shape. That means the same workers,
-  and the same window convention: 4 a worker, or the plan's 4 a thread asked. Otherwise it keeps
-  lazy 7/28.
+  and the same window convention: 4 blocks a worker, 3 blocks a worker, or the plan's 4 blocks a
+  thread asked. Otherwise it keeps lazy 7/28. **At 10 threads, 10/40 counts as both the
+  4-a-worker convention and the plan's**, so a 10/40 choice at 10 matches either a 10/40 or a
+  10/4T choice at 12.
 - *Above 20 threads unpinned:* such a count follows 20's choice.
 - *A choice of 10/4T at a count* is the plan's own decoder there, an end to the trim at that
   count. A choice of 10/40 is a trim to ten workers at 4 blocks a worker.
+- *A choice of 9/27* means nine lazy workers with `window` scaled 3 blocks a worker. No shipped
+  convention builds it, so it is a window change: a code change in its own PR, as above.
+- *Discordant choices across unpinned 10–20* (decision LOG 7084590503 item 5). Unpinned, every
+  occupancy arm is the same decoder on the same 20 CPUs at 10, 12, 16 and 20 threads (`ab`
+  ignores T for occupancy arms), so those cells are replicates, and Holm may choose differently
+  among byte-identical decoders. The unpinned trim at 10 threads and up takes **the arm chosen
+  at the most of those four counts**. A tie (including no choice at two or more of them) keeps
+  the shipped trim, lazy 7/28. The between-counts and above-20 bullets then read that one
+  choice.
+- *Split trims:* `unpinned_cell` delegates every count from 10 to `trim_cell`, so pinned 10 and
+  unpinned 10–20 share `TRIMMED_WORKERS`. **A choice that differs between the two placements
+  splits it**, each placement getting its own constant, as 2026-11-18 said.
 
 **Memory, said before the data:** in the stack run, the ten-worker arms read 1.23–1.32 of 7/28's
 peak memory on all three corpora. Under rule 4 as amended, two corpora above the gate never
@@ -205,8 +265,29 @@ Coordinator's to weigh, not adopted by this rule.
 
 ## The hypothesis, said before the data (deciding nothing)
 
-**Wormhole's prediction, quoted as a hypothesis.** It is a prediction and not evidence: modelled
-on a 2-vCPU Xeon and a Comet Lake roofline, not measured on the i9. From the final handoff
+**Wormhole's current prediction, quoted as a hypothesis (revised, REVIEW 7084586885).** It is a
+prediction and not evidence: modelled, not measured on the i9. Wormhole's final handoff is cycle
+70 (`origin/research/carbon-wormhole` f3b29c8a1,
+`docs/journal/2026-11-22-wormhole-cycle70-r6-final-handoff.md`). Its baseline, a3f26aa01 (#739 +
+#745), has `src`, `Cargo.toml` and `Cargo.lock` identical to this run's pin 4a79f063. Its
+Executive Summary, charge 2:
+
+> Predicts **`9W / 27`** (`53.2 ms`, `-14.7%` vs `7W/28 = 62.4 ms`) wins on `a3f26aa01`
+> (`9W + 1` dedicated scan core = `10/10` phys cores), while **`10W / 30`** (`~48.5–50.0 ms`)
+> wins once PR 4 lands.
+
+And its Action 1, the cycle-56 grid:
+
+> **Predicted i9 outcome on `a3f26aa01` (`#739 + #745`):** **`9W / 27` (`53.2 ms`)** or **`9W /
+> 18..36` (`52.9–53.9 ms`)** beats current `7W/28` (`62.4 ms`) by **`~-9 ms` (`-14.7%`)** with
+> `0%` SMT clash (`9` workers + `1` dedicated serial `#745` scanner = `10/10` physical cores),
+> and resolves `#739`'s inconclusive `20T` cell by clamping `12/16/20T` to the `10T` winner.
+
+**How this run scores it:** 9/36 scores the wall claim, since it is inside the predicted 9-worker
+band (9W/18–36). 9/27 is the arm the claim names. 10W/30 is predicted to win only after PR 4,
+which this pin does not have; no 10/30 arm is run.
+
+**The earlier quotes, kept for the record** (superseded by cycle 70). The Round 5 handoff
 (`origin/research/carbon-wormhole` 8ec6f94c2,
 `docs/journal/2026-11-21-wormhole-cycle50-round5-final-handoff.md`), wall W0:
 
@@ -233,13 +314,15 @@ The parallel scan entry point was rejected on the i9 (`bench-parscan-c37`, #742,
 #741 open as not adopted). The block reader that #745 keeps speeds the serial scanner, and does
 not remove it. This pin is therefore Regime 1 with a faster scanner. Read literally, Wormhole's
 own model predicts 8 workers here, and 10 only once the scan is parallel. The brief's
-hypothesis, 10 workers with the 12 MiB cap, is Regime 2's. The run judges both: 8/32 and 10/40
-(and 10/4T) at every unpinned count from 10, with 9/36 between them.
+hypothesis, 10 workers with the 12 MiB cap, is Regime 2's. Cycle 70 has since moved Wormhole's
+prediction for this build to nine workers, with one core for the serial scanner. The run judges
+all three: 8/32, 9/36 and 9/27, and 10/40 (and 10/4T) at every unpinned count from 10.
 
 **What this run can say about it:**
 - *If ten workers win:* 10/40 or 10/4T ADOPTS at 12–20 (and at 10), and the memory gate holds
   under the cap. Regime 2's prediction would then hold without the parallel scan.
-- *If eight or nine win:* the knee has moved by one or two workers, Regime 1's prediction.
+- *If nine win* (9/36 or 9/27): Wormhole's cycle-70 prediction, and record 91's best count.
+- *If eight win:* the knee has moved by one worker, Regime 1's prediction.
 - *If nothing moves:* the trim stays at 7/28, as in the diet and stack runs. The pairs say whether
   the sweep's direction moved, even where no cell is adopted.
 
@@ -264,7 +347,8 @@ this run's pin. So **B's column is scored, and A's is not.** The run's `pin.txt`
 build; a `pin.txt` naming any other build voids this choice.
 
 **Every predicted cell is measured:**
-- at unpinned 10, 12, 16 and 20: 6/24 (at 10 only), 8/32, 9/36 and 10/S;
+- at unpinned 10, 12, 16 and 20: 6/24 (at 10 only), 8/32, 9/36 and 10/S (9/27, added by the
+  revision, is not one of record 91's arms and is not scored against it);
 - at pinned 10: 6/24, 8/32 and 10/40;
 - every cell below 10 threads, as the stack run measured them.
 
@@ -353,9 +437,18 @@ So the model predicts the direction right, toward more workers, but the optimum 
 **A miss confined to an N arm** (9/36, or 10/S's extrapolated gain) scores the extrapolation of
 g₇₄₅ above W = 8, not the model.
 
+**Read before the data (decision LOG 7084590503 item 5):** refutation 1's **"pooled"** is the
+geometric mean of the Wikidata ×4 steps (candidate over 7/28) at unpinned 10, 12, 16 and 20.
+10/S's pooled step is set against 8/32's and against 9/36's, each pooled the same way, and
+refutation 1's 2% margin is read on those pooled steps.
+
 ## Reported, and deciding nothing
 
-**The memory controller**, as registered, where `kernel.perf_event_paranoid` ≤ 0:
+**The memory controller**, as registered, where `kernel.perf_event_paranoid` ≤ 0. It is
+**diagnostic only**, and decides nothing. Its known VOID on the multi-candidate cells (u10 and
+u20: `counters.py report` refuses the extra arms in the same file, as CHANGELOG 0.5.12 records
+for the stack run) is unchanged, so only u6 and p4 are expected to report; that decides nothing
+either. 9/27 is not added to it.
 - unpinned at 10: lazy 7/28 against 6/24, 8/32, **9/36** and 10/40;
 - **unpinned at 20: lazy 7/28 against 8/32, 10/40 and 10/80** (ten workers on twenty CPUs, the
   clamp);
