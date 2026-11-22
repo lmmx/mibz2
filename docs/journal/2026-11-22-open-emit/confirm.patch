@@ -1,0 +1,21 @@
+--- a/src/open/trial.rs
++++ b/src/open/trial.rs
+@@ -178,7 +178,9 @@
+     set: &str,
+ ) {
+     let barrier = Barrier::new(workers);
+-    let reps = if set == "wiki" { 1 } else { 8 };
++    let reps = if std::env::var("MODE").as_deref() == Ok("confirm") {
++        12
++    } else if set == "wiki" { 1 } else { 8 };
+     let rows = std::thread::scope(|s| {
+         (0..workers)
+             .map(|w| {
+@@ -354,6 +356,7 @@
+         ("wiki", all.iter().collect()),
+     ];
+     for (name, bs) in sets {
++        if mode == "confirm" && name != "wiki" { continue; }
+         if mode == "one" {
+             stages::<S>(tag, &bs, reverse, name);
+             pairs::<K>(tag, &bs, reverse, name);

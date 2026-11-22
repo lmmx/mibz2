@@ -82,6 +82,7 @@ pub struct Kernel {
     extra: Vec<u32>,
     inline16: Vec<[u8; INLINE]>,
     lens: Vec<u8>,
+    relay_lengths: Vec<u16>,
 }
 
 // Production records cap a run at 127. Selection is on maximal runs.
@@ -553,6 +554,31 @@ impl Kernel {
             &mut self.inline16,
             &mut self.lens,
         );
+        if m >= relay::MIN_ROWS && self.extra.is_empty() {
+            self.relay_lengths.resize(256, 1);
+            self.relay_lengths
+                .reserve_exact(self.offsets.len().saturating_sub(1));
+            self.relay_lengths.extend(
+                self.offsets
+                    .windows(2)
+                    .map(|w| u16::try_from(w[1] - w[0]).unwrap_or(u16::MAX)),
+            );
+            if !self.relay_lengths.contains(&u16::MAX) {
+                relay::emit(
+                    &self.edges[..m],
+                    &self.spelling,
+                    &self.offsets,
+                    &self.inline16,
+                    &self.lens,
+                    &self.relay_lengths,
+                    n,
+                    mark,
+                    bits,
+                    out,
+                );
+                return;
+            }
+        }
         emit(
             &self.edges[..m],
             &self.extra,
@@ -874,6 +900,7 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 
 mod endpoint;
 mod outq;
+mod relay;
 
 #[cfg(test)]
 mod checks;
