@@ -1,0 +1,25 @@
+name = "MF-BSE (Standalone Multi-Frontal Bucket-Order Schur Elimination from I0)"
+target = "text"
+
+uses = [
+  "maximal_runs",
+  "lf_shifts",
+]
+
+[[edge]]
+id = "mfbse_rank_elim"
+inputs = ["lf_affine", "runs", "p", "n"]
+output = "orbit_positions"
+status = "verified"
+dependent = false
+cost = { W = "O(n)", D = "O(K * S) = O(n) [or O(K log S) intra-bucket]", B = "O(n) [~72B/vertex workspace]", Q = "O(n/B) I/Os under tall-cache n <= c Z^2/B (0 random misses outside Z)", M = "O(n) [~72n bytes]" }
+evidence = "Verified exact on all binary/ternary small cases + multi-cycle arbitrary columns; note C bench assumes single cycle and omits text scatter."
+
+[[edge]]
+id = "mfbse_scatter_emit"
+inputs = ["orbit_positions", "runs", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "O(n)", D = "1", B = "O(n)", Q = "n scattered writes (or O(n/B) I/Os via bucket-permute)", M = "n" }
+evidence = "Either direct scatter T[n-1-pos[u]] = L[u] (Q=n) or 2-pass K-bucket external permute (O(n/B) I/Os under n <= c Z^2/B)."

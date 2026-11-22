@@ -1,0 +1,66 @@
+[
+  {
+    "label": "N=2, t=2, pred=full",
+    "nA": 2,
+    "nB": 2,
+    "K_min": 2,
+    "S_min": 1,
+    "drat_lines": 2
+  },
+  {
+    "label": "N=3, t=2, pred=full",
+    "nA": 6,
+    "nB": 6,
+    "K_min": 6,
+    "S_min": 3,
+    "drat_lines": 52
+  },
+  {
+    "label": "N=3, t=2, pred=bit0",
+    "nA": 6,
+    "nB": 6,
+    "K_min": 3,
+    "S_min": 2,
+    "drat_lines": 12
+  },
+  {
+    "label": "N=4, t=2, pred=full",
+    "nA": 24,
+    "nB": 24,
+    "K_min": 24,
+    "S_min": 5,
+    "drat_lines": 0
+  },
+  {
+    "label": "N=4, t=2, pred=bit0",
+    "nA": 24,
+    "nB": 24,
+    "K_min": 4,
+    "S_min": 2,
+    "drat_lines": 44
+  },
+  {
+    "label": "N=2, t=4, pred=full",
+    "nA": 4,
+    "nB": 4,
+    "K_min": 2,
+    "S_min": 1,
+    "drat_lines": 5
+  },
+  {
+    "label": "N=3, t=4, pred=full",
+    "nA": 36,
+    "nB": 36,
+    "K_min": 36,
+    "S_min": 6,
+    "drat_lines": 0
+  },
+  {
+    "label": "N=3, t=4, pred=bit0",
+    "nA": 36,
+    "nB": 36,
+    "K_min": 18,
+    "S_min": 5,
+    "drat_lines": 0
+  }
+]

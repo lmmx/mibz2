@@ -1,0 +1,27 @@
+# Formal acquisition manifest for BWT-Direct Monotone Recompression (BDMR)
+# Verified against docs/team/acquisition/primitives.toml via check_manifest.py.
+
+name = "BWT-Direct Monotone Recompression (BDMR): run-level factor contraction + memoized SLP emission"
+target = "text"
+uses = [
+  "counts_from_records",
+  "maximal_runs",
+]
+
+[[edge]]
+id = "bdmr_contraction"
+inputs = ["C", "n", "p", "runs"]
+output = "slp_and_residual"
+status = "verified"
+dependent = false
+cost = { W = "O(r log n)", D = "O(log n)", B = "O(r log n)", Q = "O(r log n)", M = "O(r)" }
+evidence = "Repeated exact run-level pair contraction (threshold + bucket-split 2-coloring) and 1-round monotone self-run contraction (with spiral division) directly on (runs, C, p) until n_t <= T_cut (or n_t = 1). Zero LF/FL orbit chasing (Q_dep = 0 in O(1)-depth HashThresh; Q = 117k-550k data-independent irregular scatter/stream accesses, or Q = 0 outside L1D in radix-tiled read-write streaming). Measured on all 6 authenticated Wikidata blocks: T = 25-26 rounds (GreedyThresh) / 42-44 rounds (HashThresh), sum(r_t) = 4.06-6.84 r, max_r = 1.00 r, |G| = 0.72-0.88 r rules. Verified exact on 5,227/5,227 small cases (binary n<=8, ternary n<=5, all p, periodic & multi-cycle) and all 6 Wikidata blocks (/tmp/teamwork-b/bench_bdmr)."
+
+[[edge]]
+id = "bdmr_slp_emit"
+inputs = ["n", "slp_and_residual"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n + |G|", D = "O(log n)", B = "n + |G|", Q = "|G|", M = "n + |G|" }
+evidence = "Optional L1D residual cycle walk (n_t <= T_cut <= 4096) followed by memoized SLP expansion directly into the output buffer via extend_from_within (first_pos[s] table of size |G| = 0.72-0.88 r, zero separate leaf buffer), plus cyclic rotation by p_offset and periodic repeat if d < n. Expansion tree depth <= SLP height (25-41). Verified byte-for-byte identical to OpenCells on all 6 authenticated Wikidata blocks (5,399,692 bytes) and 5,227/5,227 exhaustive small cases."
