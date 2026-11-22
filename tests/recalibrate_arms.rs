@@ -1,7 +1,6 @@
 //! `just bench-recalibrate-plateau`'s arms (docs/journal/2026-11-22-recalibration-plateau-registration.md,
 //! the design of docs/journal/2026-11-18-recalibration-registration.md, as re-run by
-//! `bench-recalibrate-stack`, on #745's head 7b901b67: master 3296195e with #739's plateau stack,
-//! and the block reader): at
+//! `bench-recalibrate-stack`, on master 4a79f063: #739's plateau stack (3296195e) and #745's block reader: at
 //! each cell, the arm the run names as the shipped trim is the decoder the default builds on
 //! the measured i9 there (`StreamDecoder::new` under `with_machine`), in its worker count,
 //! its window and its kernel, pinned one CPU a core (`Machine::pinned_i9`) or unpinned

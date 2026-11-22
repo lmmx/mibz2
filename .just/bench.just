@@ -2059,15 +2059,15 @@ bench-recalibrate-stack COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS
 # DRY preflight (the 7th positional argument) is kept; it is not evidence. About 21 minutes.
 #   just bench-recalibrate-plateau                      (the run)
 #   just bench-recalibrate-plateau 4 12 24 24 0.25 5 1  (DRY)
-# The pin is the one line `PIN=` below: #745's head 7b901b67 (master 3296195e with the block
-# reader) until the coordinator re-pins it to master's merge of #745, whose src is the same.
+# The pin is the one line `PIN=` below: master 4a79f063, #745's merge (its src, Cargo.toml and
+# Cargo.lock are #745's head 7b901b67's: master 3296195e with the block reader).
 bench-recalibrate-plateau COPIES="4" ROUNDS="12" ROUNDS_P8="24" ROUNDS_HI="24" SETTLE="0.25" REPS="5" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
     # the decoder measured: src, Cargo.toml and Cargo.lock byte for byte this commit's (the
     # stack run's pin was 53f7ecf9, the diet's 23e40f77, 0.5.8's 70b18ca4, 0.5.7's 17405826,
     # 2026-11-18's v0.5.5, 7214f8ca)
-    PIN=7b901b6789d98158d8f006e061599214365dc44b
+    PIN=4a79f0631e3c3e95e1b2d38090c75d6584e4817c
     W=$PWD/target/recalibrate-plateau
     mkdir -p "$W"
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)

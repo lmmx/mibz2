@@ -32,8 +32,10 @@ Two changes to what a worker costs, both since the stack run's pin (53f7ecf9):
   `src/stream.rs`, `src/runs.rs`), head 7b901b6789d98158d8f006e061599214365dc44b. That head is
   master 3296195e with the block reader merged in. On the i9 against the old base
   (`bench-parscan-c37`, parscan-c37/run-20261122T082138Z): 1 thread 0.977, 8 threads 0.884,
-  10 threads 0.932. It is being re-qualified on top of #739 (#746,
-  `bench-block-reader-on-wormhole`).
+  10 threads 0.932. **Re-qualified on top of #739** (#746, `bench-block-reader-on-wormhole`,
+  block-reader-on-wormhole/run-20261122T093349Z): ADOPTS, at 1 thread 0.979, 8 threads 0.858
+  and 10 threads 0.895, with RSS 1.05. It was **merged at master
+  4a79f0631e3c3e95e1b2d38090c75d6584e4817c**.
 
 That is §5c.1's first case. The ready cap and the owned output change the memory a worker holds
 (the term the memory gate reads). The run-route, RLE1 and CRC changes cut a worker's DRAM bytes
@@ -41,23 +43,20 @@ per output byte (the contention term). The block reader speeds the scanner, the 
 end that caps the workers at 8 threads pinned. Every arm, lazy and eager, runs all of it.
 `src/parallel.rs`, where the trims live, changed in #739 (the cap and the ring). Its trims did
 not: `trim_cell`, `unpinned_cell` and the constants are 0.5.12's, and
-`tests/recalibrate_arms.rs` passes at 7b901b67 (4/4).
+`tests/recalibrate_arms.rs` passes at 7b901b67, whose `src` is 4a79f063's (4/4).
 
 ## The decoder measured, and the re-pin
 
 - **The pin:** the recipe refuses to run unless `src`, `Cargo.toml` and `Cargo.lock` match the
-  pin byte for byte (`git diff --quiet $PIN HEAD -- src Cargo.toml Cargo.lock`). The pin is now
-  **7b901b6789d98158d8f006e061599214365dc44b**, #745's head.
-- **Re-pinned when #745 merges.** The coordinator re-pins to master's merge commit of #745, whose
-  `src`, `Cargo.toml` and `Cargo.lock` are expected to be 7b901b67's: one line, `PIN=` in the
-  recipe, and this paragraph. The pin check proves the trees match. If they do not, the recipe
-  refuses to run.
-- **If #745 fails to re-qualify,** the base is master 3296195e. Then `PIN=` is set to
-  3296195e3104967d800e105d44c4c43d7fc01f14, and the branch's `src`, `Cargo.toml` and
-  `Cargo.lock` are reset to it in one commit (`git checkout 3296195e -- src Cargo.toml
-  Cargo.lock`). Then §"Why §5c applies" loses the block reader, and nothing else here changes.
+  pin byte for byte (`git diff --quiet $PIN HEAD -- src Cargo.toml Cargo.lock`). The pin is
+  **master 4a79f0631e3c3e95e1b2d38090c75d6584e4817c**, #745's merge, recorded before any data.
+  Its `src`, `Cargo.toml` and `Cargo.lock` are identical to #745's head 7b901b67's (`git diff
+  --quiet 4a79f063 7b901b67 -- src Cargo.toml Cargo.lock` passes). That head was the branch's
+  first pin, before the merge.
+- **The fallback, not taken:** had #745 failed to re-qualify, the base would have been master
+  3296195e, the scenario A of § "Model first".
 - **The branch:** 7b901b67, with `bench/recalibrate-stack` (4792f7fc) merged in as a merge
-  commit. The merge was clean, and it adds nothing to `src`. The harness (`examples/ab.rs`,
+  commit, then master 4a79f063 merged in. The merges were clean, and add nothing to `src`. The harness (`examples/ab.rs`,
   `bench/two_arm.py`, `bench/counters.py`, their tests) is the stack run's, unchanged. What is
   new: this recipe, this registration, and three more checks in `tests/recalibrate_arms.rs`.
 - **The build:** one, by rustc 1.99.1.
@@ -120,7 +119,7 @@ the window, for ten workers under the cap.
 `parallel::with_machine` with the measured i9's facts, each shipped arm is the default decoder's
 worker count, window and kernel, and each untrimmed arm is the plan's. It adds three checks. 9/36
 sits one worker from 8/32 and from 10/40. The ten-worker arms 10/40 and 10/4T differ in the window
-alone. `READY_BYTES` is 12 MiB. It passes at 7b901b67 (4/4).
+alone. `READY_BYTES` is 12 MiB. It passes at 7b901b67, whose `src` is 4a79f063's (4/4).
 
 **Checked against the scorer:** both `two_arm.py` calls, with exactly the recipe's arguments,
 were run on records synthesised from the stack run's bundle. The synthesis copied 8/32's records
@@ -258,15 +257,11 @@ hypothesis, 10 workers with the 12 MiB cap, is Regime 2's. The run judges both: 
 `claude/sharp-meitner-cx0v78` at **ef85fae82e380c5b9e999ada1be376be07069c28**. It was frozen
 before any of this run's data, and reviewed at #145 comment 7077277386. It decides nothing.
 
-**The scenario to score, fixed before any data.** Record 91 predicts two builds. The pin says
-which one this run measured:
-- **Scenario B (#739 + #745)** if #745 re-qualifies and the pin is #745's head 7b901b67, or
-  master's merge of #745 with the same `src`;
-- **Scenario A (#739 only)** if #745 fails to re-qualify and the pin is master 3296195e (§ "The
-  decoder measured, and the re-pin").
-
-The run's `pin.txt` names the build, and that alone chooses the scenario. The other scenario's
-column is not scored.
+**The scenario to score, fixed before any data: scenario B (#739 + #745).** Record 91 predicts
+two builds: A, #739 only (master 3296195e), and B, #739 with #745. #745 re-qualified on the i9
+(block-reader-on-wormhole/run-20261122T093349Z, ADOPTS). It merged at master 4a79f063, which is
+this run's pin. So **B's column is scored, and A's is not.** The run's `pin.txt` names the
+build; a `pin.txt` naming any other build voids this choice.
 
 **Every predicted cell is measured:**
 - at unpinned 10, 12, 16 and 20: 6/24 (at 10 only), 8/32, 9/36 and 10/S;
