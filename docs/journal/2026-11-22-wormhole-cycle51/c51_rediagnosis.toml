@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 51: Post-#739 (3296195e3) Re-Diagnosis, 6-Cost Separation, & 10W DRAM B/B"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c51_post739_rediagnosis"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "66-70 ms (i9 10T trimmed 7W) / ~58-62 ms (+Mech BlockReader)", B = "4.6 B/B (10W 3296195e3 vs 10.8 B/B v0.5.12)", Q = "0", M = "73.3 MiB RSS (10W Xeon) / 0.60-0.68x i9 / 26.9 MiB L3" }
+evidence = "Re-diagnosed origin/master 3296195e3 (#739) via examples/occupancy (--features trace) + 1..20W cold-start OS counters + RLE1 shift census on 431-blk 210 MB authenticated Wikidata: out cap/used dropped 3.20x->1.06x, worker Open buf 1.45->0.58 MB (0 B ll), 10W ready max 13.5->9.0 MB, 10W minflt -40.7% (26.7k->15.8k), sys_ms -41.8% (64.4->37.5 ms), 10W DRAM cut 10.82->4.6 B/B (DDR4 BW floor 54.4->23.1 ms: DRAM no longer caps 10W!). Proved W0 (trimmed_here still hard-caps 10-20T at 7W/28, explaining why Mech BlockReader gained 0.884x at 8T [8W] vs only 0.932x at 10T [7W]!) and W1 (serial scan: 0.0% backpressure, 60% worker idle at 10T) now dominate; plus uncovered src/rle.rs:138 160.15 MB (195/234 blks) double-shift copy and 8 mutex locks/block."
