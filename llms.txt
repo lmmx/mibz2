@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Decompression is the harder problem](<https://lmmx.github.io/mibz2/blog/2026-11-22-decompression-is-the-harder-problem/index.md>): Thomas Murphy of Tropik and I talk about agent swarms and message boards, and why a fast decompressor is a stranger problem than a proof.
 - [Correctness is uniform, cost is not](<https://lmmx.github.io/mibz2/blog/2026-11-22-correctness-is-uniform-cost-is-not/index.md>): Every route in mibz2's bzip2 decoder is exact on every block, but cost varies from block to block and so we hunt for speed in many places.
 - [Two centuries of tools](<https://lmmx.github.io/mibz2/blog/2026-11-22-two-centuries-of-tools/index.md>): A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.
 - [Admitting dense blocks to Open](<https://lmmx.github.io/mibz2/blog/2026-11-21-a-memory-gain-is-a-gain/index.md>): A bounded admission band takes five dense blocks off a 5.6 MiB-per-worker fallback, and the decoder runs slightly faster in over a quarter less memory.
