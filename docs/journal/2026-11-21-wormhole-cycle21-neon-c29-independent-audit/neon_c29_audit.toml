@@ -1,0 +1,48 @@
+name = "Wormhole/Neon Cycle 21 Audit: Piece-by-Piece Decomposition of Neon-C29 vs #714 + L4/L5 against mibz2 0.5.11"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_all_pos_mux_strips"
+inputs = ["records", "C", "p", "n"]
+output = "mux_strips_and_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Pass-1 All+Pos (all = thin + thick_sum; pos = (tail << 10) | fill) + MuxStrips in edges[0..3*ns] or StripBandMux."
+
+[[edge]]
+id = "s2_elim_operad_or_graded"
+inputs = ["mux_strips_and_outq16", "C", "n"]
+output = "rv_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Compares #714 GradedHandle + pop_tail vs Neon-C29 Operad-MN16 (RULE=4 u128) + pop_tail inside dead edges."
+
+[[edge]]
+id = "s3_bidi_bottom_dedup_inline16"
+inputs = ["rv_arena", "mux_strips_and_outq16"]
+output = "band64_and_l1d_dict"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict_long", D = "H / 2", B = "B_bands + dict_long", Q = "H", M = "B_bands + dict_long" }
+evidence = "L4 Pohl BidiBottom (D = H/2) + zero-alloc pair_ht/str_ht L1D word dedup (Dict <= 28.4 KiB, 0 B offsets) + 8B Band64."
+
+[[edge]]
+id = "s4_wire_or_wire_xor"
+inputs = ["band64_and_l1d_dict", "mux_strips_and_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Audits serial OutQ16 Reader::wire (mu=1) vs Neon-C29 Fused-XOR wire_xor (mu=2, rejected at 4W in #718)."
+
+[[edge]]
+id = "s5_emit_mu1_vs_bi"
+inputs = ["critical_edges", "band64_and_l1d_dict", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Separates genuine L1D-dedup walk speedup at mu=1 (zero extra streams) from Fused-XOR mu=2 walk gain."
