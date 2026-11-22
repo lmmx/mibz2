@@ -55,7 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "One theorem, many routes" = "blog/2026-11-22-one-theorem-many-routes.md" },
+    { "Correctness is uniform, cost is not" = "blog/2026-11-22-correctness-is-uniform-cost-is-not.md" },
     { "Two centuries of tools" = "blog/2026-11-22-two-centuries-of-tools.md" },
     { "Admitting dense blocks to Open" = "blog/2026-11-21-a-memory-gain-is-a-gain.md" },
     { "Besieging hard problems" = "blog/2026-11-21-besieging-hard-problems.md" },
@@ -275,7 +275,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-22-one-theorem-many-routes.md" = "A correctness proof says which decoders are admissible but not which is fast, so mibz2's speed comes from exact routes whose conditions match the data." },
+  { "blog/2026-11-22-correctness-is-uniform-cost-is-not.md" = "Every route in mibz2's bzip2 decoder is exact on every block, but what each costs depends on the block, so we search for speed in many places at once." },
   { "blog/2026-11-22-two-centuries-of-tools.md" = "A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward." },
   { "blog/2026-11-21-a-memory-gain-is-a-gain.md" = "A bounded admission band takes five dense blocks off a 5.6 MiB-per-worker fallback, and the decoder runs slightly faster in over a quarter less memory." },
   { "blog/2026-11-21-besieging-hard-problems.md" = "A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check." },
