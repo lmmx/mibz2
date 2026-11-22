@@ -60,6 +60,10 @@ jobs:
           git ls-files 'docs/**/*.md' '*.md' | sort -u | xargs cat | bzip2 -9 > prose.bz2
           cargo run --release --features induction-trace --example induction_trace -- prose.bz2 irec 1 0
           python3 bench/irec.py irec --check
+      # the emit-cost recorder (bench-emit-cost, docs/journal/2026-11-22-emit-cost-registration.md):
+      # one record for a block the open kernel takes, its output the plain inverse's
+      - name: The emit-cost recorder (research feature)
+        run: cargo test --release --features emit-cost --lib emit_cost::
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
@@ -200,6 +204,10 @@ jobs:
       # commit, state in the XDG state directory, HOLD, notices
       - name: The workstation queue
         run: python3 bench/test_workstation_queue.py
+      # bench-emit-cost's report (bench/emit_cost.py) on synthetic records: each class where the
+      # registration puts it, the regression recovered, and no class from incomplete records
+      - name: The emit-cost report (synthetic records)
+        run: python3 bench/test_emit_cost.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py

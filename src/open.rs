@@ -619,9 +619,35 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Option<Counts> {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
-        let (stats, mark, bits) =
-            self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
+        // (research only, `emit-cost`: the two stages' wall times, src/emit_cost.rs)
+        #[cfg(feature = "emit-cost")]
+        let t0 = std::time::Instant::now();
+        let Some((stats, mark, bits)) =
+            self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)
+        else {
+            #[cfg(feature = "emit-cost")]
+            crate::emit_cost::record(crate::emit_cost::Rec {
+                n: n as u32,
+                m: 0,
+                construct_ns: crate::emit_cost::ns(t0.elapsed()),
+                emit_ns: 0,
+                bidi: false,
+                refused: true,
+            });
+            return None;
+        };
+        #[cfg(feature = "emit-cost")]
+        let t1 = std::time::Instant::now();
         self.walk(n, stats.retained, mark, bits, out);
+        #[cfg(feature = "emit-cost")]
+        crate::emit_cost::record(crate::emit_cost::Rec {
+            n: n as u32,
+            m: stats.retained as u32,
+            construct_ns: crate::emit_cost::ns(t1 - t0),
+            emit_ns: crate::emit_cost::ns(t1.elapsed()),
+            bidi: self.predecessor.is_some(),
+            refused: false,
+        });
         Some(stats)
     }
 
