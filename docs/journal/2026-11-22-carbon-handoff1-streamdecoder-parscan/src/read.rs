@@ -1,0 +1,614 @@
+//! `BzReader`: a .bz2 from any `Read`, as a `Read` of its decoded bytes, on the calling
+//! thread or block-parallel; and `scan`, the blocks of a .bz2 in memory without decoding
+//! them past their Huffman symbols (for a caller that splits the work itself).
+
+use crate::parallel::{Plan, SLOTS_PER_THREAD};
+use crate::stream::{Event, Scanner, SliceSource, Source};
+use crate::{decode_block, Error, ErrorKind, Kernels, Scratch, StreamDecoder};
+use std::io::{self, BufRead, Read};
+use std::sync::{Arc, Mutex};
+use std::thread::JoinHandle;
+
+/// The input chunks a parallel `BzReader` reads from its source
+const CHUNK: usize = 4 << 20;
+/// Bytes a sequential reader's window keeps behind it before it drops them
+const COMPACT: usize = 4 << 20;
+
+/// A .bz2 stream (or several, one after another) read from `R`, decoded.
+///
+/// - `BzReader::new(r)` decodes on the calling thread, a block at a time, using
+///   Cells inversion with bounded admission and Segmented fallback.
+/// - `BzReader::parallel(r, threads)` decodes `threads` blocks at once on worker threads
+///   (plus one reading the stream in order and one reading `r`), in order.
+///
+/// Every block's CRC and every stream's combined CRC are checked; a bad stream is an
+/// `io::Error` of kind `InvalidData` wrapping this crate's `Error`, after every byte of
+/// the blocks before the bad one has been read.
+///
+/// It is a `BufRead` too: `fill_buf` lends the decoded block itself (the rest of it), so
+/// a caller that takes the bytes from there saves `read`'s copy of each into its buffer.
+///
+/// A parallel reader reads `r` on a thread of its own. If `r`'s `read` panics, that thread
+/// cancels the decode as it unwinds, and the next read fails with an `io::Error` saying the
+/// input's reader panicked (the bytes of the blocks before may or may not have been read).
+/// Nothing is promised past that: an abort (an out-of-memory one among them) ends the
+/// process, and a `read` that blocks for ever is never interrupted (dropping the reader
+/// leaves that thread to finish it).
+pub struct BzReader<R> {
+    inner: Inner<R>,
+}
+
+enum Inner<R> {
+    Seq(Box<Seq<R>>),
+    Par(Par),
+}
+
+struct Seq<R> {
+    scanner: Scanner<ReadSource<R>>,
+    kernels: Kernels,
+    scratch: Scratch<crate::bwt::Cells>,
+    syms: Vec<u16>,
+    out: Vec<u8>,
+    at: usize,
+    done: bool,
+    failed: Option<Error>,
+}
+
+struct Par {
+    dec: Arc<StreamDecoder>,
+    feeder: Option<JoinHandle<()>>,
+    read_error: Arc<Mutex<Option<io::Error>>>,
+    /// the block `fill_buf` lends (`StreamDecoder::read_block`), and how much of it is read
+    cur: Vec<u8>,
+    at: usize,
+}
+
+impl<R: Read> BzReader<R> {
+    /// Decode on the calling thread, with the fastest kernels this CPU has
+    pub fn new(r: R) -> Self {
+        Self::with_kernels(r, Kernels::detect())
+    }
+
+    /// Decode on the calling thread, with the kernels given (`Kernels::scalar()`: the
+    /// portable ones)
+    pub fn with_kernels(r: R, kernels: Kernels) -> Self {
+        let src = ReadSource {
+            r,
+            buf: Vec::new(),
+            base: 0,
+            released: 0,
+            eof: false,
+        };
+        BzReader {
+            inner: Inner::Seq(Box::new(Seq {
+                scanner: Scanner::new(src),
+                kernels,
+                scratch: Scratch::default(),
+                syms: Vec::new(),
+                out: Vec::new(),
+                at: 0,
+                done: false,
+                failed: None,
+            })),
+        }
+    }
+}
+
+impl<R> BzReader<R> {
+    /// Testing: the parallel decoder this reader runs (None for a sequential reader), so a
+    /// test can see which decoder `parallel`/`parallel_with` built (`is_service`,
+    /// `is_pipelined`, `threads`, `window`)
+    #[doc(hidden)]
+    pub fn parallel_decoder(&self) -> Option<&StreamDecoder> {
+        match &self.inner {
+            Inner::Par(p) => Some(&p.dec),
+            Inner::Seq(_) => None,
+        }
+    }
+}
+
+impl<R: Read + Send + 'static> BzReader<R> {
+    /// Decode on `threads` threads (at least 1), with at most `SLOTS_PER_THREAD` x `threads`
+    /// blocks in flight (`parallel::SLOTS_PER_THREAD`), spent as `StreamDecoder::new` plans them (a block a worker, or teams
+    /// sharing each block on 6 or more physical cores: `Plan::for_threads`; pipelined
+    /// teams at three teams of three, `parallel::PIPELINED_PLAN`)
+    pub fn parallel(r: R, threads: usize) -> Self {
+        Self::parallel_with(
+            r,
+            threads,
+            SLOTS_PER_THREAD * threads.max(1),
+            Kernels::detect(),
+        )
+    }
+
+    /// `parallel`, with the blocks in flight (`slots`, at least `threads`; scaled to the
+    /// teams where it plans teams) and the kernels given
+    pub fn parallel_with(r: R, threads: usize, slots: usize, kernels: Kernels) -> Self {
+        Self::on(r, StreamDecoder::new(threads, slots, kernels))
+    }
+
+    /// Push-streaming parallel front end (`StreamDecoder::parscan`): reads `r` in bounded
+    /// chunks with bounded blocks and ready bytes (`parallel::READY_BYTES`) in flight.
+    pub fn parscan(r: R, threads: usize) -> Self {
+        Self::parscan_with(
+            r,
+            threads,
+            SLOTS_PER_THREAD * threads.max(1),
+            Kernels::detect(),
+        )
+    }
+
+    /// `parscan`, with explicit `slots` and `kernels`
+    pub fn parscan_with(r: R, threads: usize, slots: usize, kernels: Kernels) -> Self {
+        Self::on(r, StreamDecoder::parscan(threads, slots, kernels))
+    }
+
+    /// Decode as `plan` says (production's workers, or cooperative teams: `Plan`), with
+    /// `slots` blocks in flight and the kernels given
+    pub fn parallel_planned(r: R, plan: Plan, slots: usize, kernels: Kernels) -> Self {
+        Self::on(r, StreamDecoder::planned(plan, slots, kernels))
+    }
+
+    /// `threads` workers of a block each, with lazy letters or without, whatever the thread
+    /// count (`StreamDecoder::workers`): for the bench arms that compare the two. `slots`
+    /// blocks in flight and the kernels given.
+    #[doc(hidden)]
+    pub fn parallel_workers(
+        r: R,
+        threads: usize,
+        slots: usize,
+        kernels: Kernels,
+        lazy: bool,
+    ) -> Self {
+        Self::on(r, StreamDecoder::workers(threads, slots, kernels, lazy))
+    }
+
+    /// `parallel`, with the lazy kernel replaced by `I` wherever production would invert
+    /// with lazy letters, and nothing else changed (`StreamDecoder::new_lazy_as`): for the
+    /// bench arms that compare another kernel with production's own decoder
+    #[doc(hidden)]
+    pub fn parallel_lazy_as<I: crate::bwt::InverseBwt + 'static>(r: R, threads: usize) -> Self {
+        Self::on(
+            r,
+            StreamDecoder::new_lazy_as::<I>(
+                threads,
+                SLOTS_PER_THREAD * threads.max(1),
+                Kernels::detect(),
+            ),
+        )
+    }
+
+    /// `threads` workers of a block each, inverting with `I` whatever the thread count
+    /// (`StreamDecoder::workers_with`): for the bench arms that compare another kernel with
+    /// the shipped one. `slots` blocks in flight and the kernels given.
+    #[doc(hidden)]
+    pub fn parallel_workers_with<I: crate::bwt::InverseBwt + 'static>(
+        r: R,
+        threads: usize,
+        slots: usize,
+        kernels: Kernels,
+    ) -> Self {
+        Self::on(r, StreamDecoder::workers_with::<I>(threads, slots, kernels))
+    }
+
+    /// Research, opt-in (`memory-lever`): workers with the experiment's staged Cells kernel,
+    /// or with lazy letters (`StreamDecoder::lever`), with `slots` blocks in flight and the
+    /// kernels given
+    #[cfg(feature = "memory-lever")]
+    #[doc(hidden)]
+    pub fn parallel_lever(
+        r: R,
+        threads: usize,
+        slots: usize,
+        kernels: Kernels,
+        lazy: bool,
+    ) -> Self {
+        Self::on(r, StreamDecoder::lever(threads, slots, kernels, lazy))
+    }
+
+    /// Research, opt-in: `teams` pipelined teams of `k` (`StreamDecoder::pipelined`),
+    /// with `slots` blocks in flight and the kernels given
+    #[doc(hidden)]
+    pub fn parallel_pipelined(
+        r: R,
+        teams: usize,
+        k: usize,
+        slots: usize,
+        kernels: Kernels,
+    ) -> Self {
+        Self::on(r, StreamDecoder::pipelined(teams, k, slots, kernels))
+    }
+
+    /// Research, opt-in: `parallel_pipelined` with its levers
+    /// (`StreamDecoder::pipelined_levers`)
+    #[doc(hidden)]
+    pub fn parallel_pipelined_levers(
+        r: R,
+        teams: usize,
+        k: usize,
+        slots: usize,
+        kernels: Kernels,
+        levers: crate::parallel::Levers,
+    ) -> Self {
+        Self::on(
+            r,
+            StreamDecoder::pipelined_levers(teams, k, slots, kernels, levers),
+        )
+    }
+
+    /// Research, opt-in: the service core (`StreamDecoder::service`): `teams` teams of `k`
+    /// that only build and walk, and `services` service workers doing every block's serial
+    /// stages, with `slots` blocks in flight and the kernels given
+    #[doc(hidden)]
+    pub fn parallel_service(
+        r: R,
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        kernels: Kernels,
+    ) -> Self {
+        Self::on(
+            r,
+            StreamDecoder::service(teams, k, services, slots, kernels),
+        )
+    }
+
+    fn on(mut r: R, dec: StreamDecoder) -> Self {
+        let dec = Arc::new(dec);
+        let read_error = Arc::new(Mutex::new(None));
+        let (d, e) = (dec.clone(), read_error.clone());
+        let feeder = std::thread::Builder::new()
+            .name("mibz2-read".into())
+            .spawn(move || {
+                // (a panic in `r`'s read unwinds this thread: the guard then records it as
+                // the read's error and cancels the decode, so the reader is not left
+                // waiting for input that will never come)
+                let _unwind = CancelOnUnwind(&d, &e);
+                loop {
+                    // (a chunk the scanner is done with, where there is one: its bytes are
+                    // overwritten, so it is not zeroed again unless it grows; else a new one,
+                    // zeroed by the allocator, so that a short input touches only its pages)
+                    let mut buf = d.spare();
+                    if buf.capacity() < CHUNK {
+                        buf = vec![0u8; CHUNK];
+                    }
+                    buf.resize(CHUNK, 0);
+                    let n = match read_full(&mut r, &mut buf) {
+                        Ok(n) => n,
+                        Err(err) => {
+                            *e.lock().unwrap_or_else(|p| p.into_inner()) = Some(err);
+                            d.cancel();
+                            return;
+                        }
+                    };
+                    if n == 0 {
+                        break;
+                    }
+                    buf.truncate(n);
+                    if d.write(buf).is_err() {
+                        return;
+                    }
+                }
+                d.close();
+            })
+            .expect("spawn the bz2 reader thread");
+        BzReader {
+            inner: Inner::Par(Par {
+                dec,
+                feeder: Some(feeder),
+                read_error,
+                cur: Vec::new(),
+                at: 0,
+            }),
+        }
+    }
+}
+
+/// A parallel reader's feeder's guard: if the feeder unwinds (its source's `read`
+/// panicked), the decode is cancelled and the reader's next read fails with an
+/// `io::Error` saying so, instead of waiting for input that will never come
+struct CancelOnUnwind<'a>(&'a StreamDecoder, &'a Mutex<Option<io::Error>>);
+
+impl Drop for CancelOnUnwind<'_> {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            *self.1.lock().unwrap_or_else(|p| p.into_inner()) =
+                Some(io::Error::other("the input's reader panicked"));
+            self.0.cancel();
+        }
+    }
+}
+
+/// Fill `buf` as far as `r` goes (fewer bytes only at its end)
+fn read_full<R: Read>(r: &mut R, buf: &mut [u8]) -> io::Result<usize> {
+    let mut n = 0;
+    while n < buf.len() {
+        match r.read(&mut buf[n..]) {
+            Ok(0) => break,
+            Ok(k) => n += k,
+            Err(e) if e.kind() == io::ErrorKind::Interrupted => {}
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(n)
+}
+
+impl<R: Read> Read for BzReader<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        match &mut self.inner {
+            Inner::Seq(s) => s.read(buf),
+            Inner::Par(p) => {
+                // (the rest of a block `fill_buf` lent first)
+                if p.at < p.cur.len() {
+                    let n = buf.len().min(p.cur.len() - p.at);
+                    buf[..n].copy_from_slice(&p.cur[p.at..p.at + n]);
+                    p.at += n;
+                    return Ok(n);
+                }
+                p.dec.read(buf).map_err(|e| p.error(e))
+            }
+        }
+    }
+}
+
+impl<R: Read> BufRead for BzReader<R> {
+    fn fill_buf(&mut self) -> io::Result<&[u8]> {
+        match &mut self.inner {
+            Inner::Seq(s) => {
+                s.fill()?;
+                Ok(&s.out[s.at..])
+            }
+            Inner::Par(p) => {
+                if p.at >= p.cur.len() {
+                    let spent = std::mem::take(&mut p.cur);
+                    p.at = 0;
+                    match p.dec.read_block(spent) {
+                        Ok(Some(v)) => p.cur = v,
+                        Ok(None) => {}
+                        Err(e) => return Err(p.error(e)),
+                    }
+                }
+                Ok(&p.cur[p.at..])
+            }
+        }
+    }
+
+    fn consume(&mut self, amt: usize) {
+        match &mut self.inner {
+            Inner::Seq(s) => s.at = (s.at + amt).min(s.out.len()),
+            Inner::Par(p) => p.at = (p.at + amt).min(p.cur.len()),
+        }
+    }
+}
+
+impl Par {
+    /// The decoder's error as the reader's: the input's own error, if reading it failed
+    fn error(&self, e: Error) -> io::Error {
+        if let Some(err) = self
+            .read_error
+            .lock()
+            .unwrap_or_else(|x| x.into_inner())
+            .take()
+        {
+            return err;
+        }
+        e.into()
+    }
+}
+
+impl<R: Read> Seq<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if let Some(e) = &self.failed {
+            return Err(e.clone().into());
+        }
+        if buf.is_empty() {
+            return Ok(0);
+        }
+        self.fill()?;
+        let n = buf.len().min(self.out.len() - self.at);
+        buf[..n].copy_from_slice(&self.out[self.at..self.at + n]);
+        self.at += n;
+        Ok(n)
+    }
+
+    /// Decode until a block's bytes are unread (`out[at..]`), or the end, or the error
+    fn fill(&mut self) -> io::Result<()> {
+        loop {
+            if let Some(e) = &self.failed {
+                return Err(e.clone().into());
+            }
+            if self.at < self.out.len() || self.done {
+                return Ok(());
+            }
+            self.out.clear();
+            self.at = 0;
+            match self.scanner.next(std::mem::take(&mut self.syms)) {
+                Ok(Event::Block {
+                    index,
+                    bit,
+                    symbols,
+                    ..
+                }) => {
+                    if let Err(kind) =
+                        decode_block(&symbols, self.kernels, &mut self.scratch, &mut self.out)
+                    {
+                        self.failed = Some(Error {
+                            kind,
+                            block: Some(index),
+                            bit: Some(bit),
+                        });
+                    }
+                    self.syms = symbols.syms;
+                }
+                Ok(Event::Done) => self.done = true,
+                Err(e) => {
+                    if let ErrorKind::Io(kind, msg) = &e.kind {
+                        return Err(io::Error::new(*kind, msg.clone()));
+                    }
+                    self.failed = Some(e);
+                }
+            }
+        }
+    }
+}
+
+impl<R> Drop for BzReader<R> {
+    fn drop(&mut self) {
+        if let Inner::Par(p) = &mut self.inner {
+            p.dec.cancel();
+            if let Some(h) = p.feeder.take() {
+                // (the feeder's next write fails once the decoder is cancelled; a feeder
+                // blocked in its source's read is left to finish that read)
+                if h.is_finished() {
+                    let _ = h.join();
+                }
+            }
+        }
+    }
+}
+
+/// A `Read` as a scanner's input, held from the block being read on
+struct ReadSource<R> {
+    r: R,
+    buf: Vec<u8>,
+    base: u64,
+    released: u64,
+    eof: bool,
+}
+
+impl<R: Read> Source for ReadSource<R> {
+    fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), ErrorKind> {
+        while !self.eof && self.base + (self.buf.len() as u64) < from + want as u64 {
+            let drop_n = (self.released - self.base) as usize;
+            if drop_n >= COMPACT {
+                self.buf.drain(..drop_n);
+                self.base = self.released;
+            }
+            let len = self.buf.len();
+            self.buf.resize(len + CHUNK, 0);
+            match read_full(&mut self.r, &mut self.buf[len..]) {
+                Ok(n) => {
+                    self.buf.truncate(len + n);
+                    self.eof = n < CHUNK;
+                }
+                Err(e) => {
+                    self.buf.truncate(len);
+                    return Err(ErrorKind::Io(e.kind(), e.to_string()));
+                }
+            }
+        }
+        let i = (from - self.base) as usize;
+        Ok((self.buf.get(i..).unwrap_or(&[]), self.eof))
+    }
+
+    fn release(&mut self, upto: u64) {
+        self.released = self.released.max(upto);
+    }
+}
+
+/// A block of a .bz2, as `scan` finds it
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct BlockSpan {
+    /// counted from the input's first block, across its streams
+    pub index: u64,
+    /// its first bit (its header's magic) and its end (the next item's first bit)
+    pub start_bit: u64,
+    pub end_bit: u64,
+    /// the CRC it stores, of its decoded bytes
+    pub crc: u32,
+    /// its stream, counted from 0, and that stream's level (1-9)
+    pub stream: u64,
+    pub level: u32,
+}
+
+/// The blocks of a .bz2 in memory, found by reading each block's header and Huffman
+/// symbols (about a tenth of a decode's work; no block is decoded further, so no block
+/// CRC is checked here, but each stream's combined CRC is checked against its blocks'
+/// stored CRCs). Each span can then be decoded by `decode_blocks`, on any thread.
+pub fn scan(data: &[u8]) -> Scan<'_> {
+    Scan {
+        scanner: Scanner::new(SliceSource(data)),
+        syms: Vec::new(),
+        done: false,
+    }
+}
+
+pub struct Scan<'a> {
+    scanner: Scanner<SliceSource<'a>>,
+    syms: Vec<u16>,
+    done: bool,
+}
+
+impl Iterator for Scan<'_> {
+    type Item = Result<BlockSpan, Error>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+        match self.scanner.next(std::mem::take(&mut self.syms)) {
+            Ok(Event::Block {
+                index,
+                bit,
+                end,
+                stream,
+                level,
+                symbols,
+            }) => {
+                let span = BlockSpan {
+                    index,
+                    start_bit: bit,
+                    end_bit: end,
+                    crc: symbols.crc,
+                    stream,
+                    level,
+                };
+                self.syms = symbols.syms;
+                Some(Ok(span))
+            }
+            Ok(Event::Done) => {
+                self.done = true;
+                None
+            }
+            Err(e) => {
+                self.done = true;
+                Some(Err(e))
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn miri_sequential_default_cells_route() {
+        // libbzip2-generated periodic block: 128 bytes, two-symbol BWT.
+        // Assert actual public reader admission, not just identical output.
+        let encoded: &[u8] = &[
+            66, 90, 104, 57, 49, 65, 89, 38, 83, 89, 35, 29, 169, 162, 0, 0, 31, 129, 0, 48, 0, 32,
+            0, 48, 128, 42, 105, 1, 1, 197, 220, 145, 78, 20, 36, 8, 199, 106, 104, 128,
+        ];
+        let expected = b"ab".repeat(64);
+        assert_eq!(crate::decode(encoded).unwrap(), expected);
+        let mut reader = BzReader::with_kernels(encoded, Kernels::scalar());
+        let mut out = Vec::new();
+        let mut buf = [0; 7];
+        loop {
+            let n = reader.read(&mut buf).unwrap();
+            if n == 0 {
+                break;
+            }
+            out.extend_from_slice(&buf[..n]);
+        }
+        assert_eq!(out, expected);
+        let Inner::Seq(seq) = &reader.inner else {
+            panic!("sequential reader")
+        };
+        let counts = seq.scratch.cells_counts();
+        assert_eq!(counts.admitted, 1, "{counts:?}");
+        assert_eq!(counts.short_cycles, 1, "{counts:?}");
+    }
+}
