@@ -36,6 +36,36 @@ the hand-over.
     coordinator's own brief said exactly that. The post was built in full on a branch with no
     PR, and then a push straight to master was attempted.
 
+## 0. Two transmissions, in files, never a précis
+
+This is Louis's instruction of 22 November 2026: a post built from a précis of a long discussion
+comes out minimal, and loses the argument's force and purpose. So when a post comes out of a
+discussion, the brief goes over in two transmissions. Both are files on a `brief/blog-…` branch,
+under `docs/briefs/<date>-<topic>/`. That branch is never merged. A message to the writer only
+points to the files and says what to read first. A message carries a summary; a file carries the
+material.
+
+1. **Transmission 1, the source material, kept whole** (`01-source-material.md`):
+   - **Louis's words verbatim, in order.** Light bracketed glosses are allowed for speech-to-text
+     errors (for example [Deleuze] for "Louise").
+   - **The coordinator's answers** that Louis responded to, verbatim.
+   - **Relayed commentary** (ChatGPT) Louis forwarded, as verbatim excerpts that keep its
+     distinctions.
+   - **Any rejected outline**, with why it was rejected.
+   - **The evidence inventory:** every figure with its source.
+
+   Send it at once, so the writer starts with the full material and version 1 can go out fast.
+2. **Transmission 2, the editorial analysis** (`02-editorial.md`). The coordinator works through
+   what the latest feedback changes: what the earlier framing got wrong, the sharpened thesis, title
+   options, the architecture section by section, the examples, how to handle any analogy, and the
+   process. It adds to transmission 1 and doesn't replace it. Where they disagree, Louis's words win.
+   It drives a substantial revision of the live post, a restructure on its own branch and PR, not
+   cosmetic polish.
+
+The post never quotes the chat, Louis's included. His words are in the brief so the argument keeps
+its intensity, not for quotation. For an ordinary results post from a journal or a bundle, the
+brief below is enough.
+
 ## 1. Brief the drafting agent
 
 The drafting agent works in its own worktree, on a `docs/blog-…` branch from master. Its
