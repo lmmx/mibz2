@@ -1,0 +1,48 @@
+name = "Wormhole/Neon Cycle 26: S5 Attack #3 — Pure-Leaf Zero-Spill Walk, Safe Power-of-2 Bounds Elision, and Edge-Width / Scatter Lower Bounds"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_all_pos_mux"
+inputs = ["records", "C", "p", "n"]
+output = "mux_strips_and_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Post-stack S* Pass 1 (All+Pos + MuxStrips in edges[0..3*ns])."
+
+[[edge]]
+id = "s2_graded_operad"
+inputs = ["mux_strips_and_outq16", "C", "n"]
+output = "graded_operad_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Cycle 23 G2 GradedOperad ((len10<<22)|id22 + Operad-MN16)."
+
+[[edge]]
+id = "s3_bidi_dedup_band64"
+inputs = ["graded_operad_arena", "mux_strips_and_outq16"]
+output = "band64_and_l1d_dict"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict_long", D = "H / 2", B = "B_bands + dict_long", Q = "H", M = "B_bands + dict_long" }
+evidence = "L4 BidiBottom + GradedOperad O(1) dedup + 8B Band64; optional zero-alloc pow2 dict rounding within existing Vec capacity."
+
+[[edge]]
+id = "s4_hoisted_wire_len4"
+inputs = ["band64_and_l1d_dict", "mux_strips_and_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Cycle 25 E2h hoisted S4 wire with GPR Len4 packing (Theorem 26.1 proves 32-bit edge width is tight; Theorem 26.2 proves S4 scatter barrier)."
+
+[[edge]]
+id = "s5_pure_leaf_bounds_elided"
+inputs = ["critical_edges", "band64_and_l1d_dict", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Ablates L1 Pure-Leaf Zero-Call emit_short_run (zero stack reloads) and L2 L1 + Safe Power-of-2 Dict/Out Chunked Bounds Elision in #![forbid(unsafe_code)]."
