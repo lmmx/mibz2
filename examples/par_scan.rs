@@ -49,13 +49,19 @@
 //! reads the block itself), and neither can change a byte or an error.
 
 use mibz2::bits::Bits;
-use mibz2::block::{read_item, Item, Symbols, BLOCK_MAGIC, END_MAGIC};
+use mibz2::block::{
+    read_item, read_item_with_scratch, Item, ScanScratch, Symbols, BLOCK_MAGIC, END_MAGIC,
+};
+use mibz2::par_scan::{find_magics_anchor_range, RawMagic};
 use mibz2::stream::{Event, Scanner, SliceSource};
-use mibz2::{decode_block, Error, ErrorKind, Kernels, Scratch};
+use mibz2::{decode_block, Error, ErrorKind, Kernels};
 use std::collections::{BTreeMap, VecDeque};
 use std::io::Read;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Condvar, Mutex, MutexGuard};
 use std::time::Instant;
+
+type Scratch = mibz2::Scratch<mibz2::bwt::OpenCells>;
 
 // ---- The finder ----
 
@@ -269,6 +275,40 @@ fn one_item(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+fn one_item_with_scratch(
+    data: &[u8],
+    bit: u64,
+    level: u32,
+    k: Kernels,
+    scan_sc: &mut ScanScratch,
+    sc: &mut Scratch,
+    syms: &mut Vec<u16>,
+    out: &mut Vec<u8>,
+) -> Result<One, ErrorKind> {
+    let mut br = Bits::at(data, bit);
+    let item = read_item_with_scratch(&mut br, level, std::mem::take(syms), scan_sc);
+    let (overran, end) = (br.overran(), br.bit_pos());
+    match item {
+        Err((kind, s)) => {
+            *syms = s;
+            Err(if overran { ErrorKind::Truncated } else { kind })
+        }
+        Ok(Item::End(_)) if overran => Err(ErrorKind::Truncated),
+        Ok(Item::End(stored)) => Ok(One::End { end, stored }),
+        Ok(Item::Block(b)) => {
+            let r = if overran {
+                Err(ErrorKind::Truncated)
+            } else {
+                decode_block(&b, k, sc, out)
+            };
+            let crc = b.crc;
+            *syms = b.syms;
+            r.map(|_| One::Block { end, crc })
+        }
+    }
+}
+
 // ---- The harness: finder, workers that read their own blocks, the chain ----
 
 /// A block-magic candidate; `hdr`: the level of the stream header it follows, if the 4
@@ -302,17 +342,17 @@ struct Stats {
     dropped_ok: u64,
     /// results decoded at a level the chain did not have there, read again by the joiner
     redone: u64,
-    /// the finder thread's time, seconds
+    /// the finder phase's wall time, seconds
     find_s: f64,
 }
 
 #[derive(Default)]
 struct FindState {
+    find_done: usize,
     tasks: Vec<Task>,
     /// every candidate that starts before this bit is in `tasks`
     found_upto: u64,
-    /// the next task for a worker, and the chain's place: tasks before it are done with
-    next: usize,
+    /// the chain's place: tasks before it are done with
     base: usize,
     /// the level of the stream the chain is in
     level: u32,
@@ -335,18 +375,7 @@ struct Run {
     stats: Stats,
 }
 
-/// The input the finder searches at a time
-const FIND_CHUNK: usize = 256 << 10;
-
 // ---- Liveness: every thread's failure reaches every waiter ----
-//
-// Each role that another waits on (the finder, the scanner, the workers) holds a guard
-// that, if the thread unwinds, marks the shared state failed and stopped and wakes every
-// waiter; each wait checks that mark. The joiner (the caller's thread) holds a guard that
-// stops the helpers and wakes them however it leaves, a panic included. Then the helpers'
-// handles are joined, and a helper that panicked makes the decode an error, even where the
-// chain had finished: a decode returns, or its panic propagates, and it never waits on a
-// thread that has gone.
 
 /// Runs its closure when dropped, on an ordinary exit and on unwinding alike
 struct OnDrop<F: FnMut()>(F);
@@ -364,7 +393,7 @@ enum Fault {
     None,
     /// a worker, after claiming its first job and before reporting it
     Worker,
-    /// the finder, after searching its first chunk and before publishing it
+    /// the finder phase, after searching its anchor slice and before publishing
     Finder,
     /// the scanner, after issuing its first block
     Scanner,
@@ -387,8 +416,9 @@ fn helper_failed(who: &str) -> Error {
     }
 }
 
-/// `data` decoded by a finder thread and `threads` workers that each read and decode a
-/// block, at most `slots` candidates ahead of the chain
+/// `data` decoded by Cycle 37's barrier-parallel Disjoint 4-Byte Anchor finder across
+/// `threads` workers + lock-free `AtomicUsize` work stealing, at most `slots` candidates
+/// ahead of the chain.
 fn decode_find(data: &[u8], threads: usize, slots: usize, k: Kernels, f: &Finder) -> Run {
     decode_find_with(data, threads, slots, k, f, Fault::None)
 }
@@ -398,14 +428,27 @@ fn decode_find_with(
     threads: usize,
     slots: usize,
     k: Kernels,
-    f: &Finder,
+    _f: &Finder,
     fault: Fault,
 ) -> Run {
+    let threads = threads.max(1);
     let shared = (Mutex::new(FindState::default()), Condvar::new());
     let (state, cv) = (&shared.0, &shared.1);
     let slots = slots.max(threads);
     let mut out = Vec::with_capacity(data.len().saturating_mul(4));
-    // a helper that unwinds: the state failed and stopped, every waiter woken
+    let raw_parts: Vec<Mutex<Vec<RawMagic>>> = (0..threads)
+        .map(|_| Mutex::new(Vec::with_capacity(64)))
+        .collect();
+    let raw_parts_ref = &raw_parts;
+    let next_idx = AtomicUsize::new(0);
+    let next_idx_ref = &next_idx;
+    let total_anchors = if data.len() >= 6 {
+        (data.len() - 2) / 4
+    } else {
+        0
+    };
+    let t_find0 = Instant::now();
+
     let on_panic = move || {
         if std::thread::panicking() {
             let mut st = lock(state);
@@ -416,88 +459,95 @@ fn decode_find_with(
         }
     };
     let res = std::thread::scope(|s| {
-        // the joiner, however it leaves: the helpers stopped and woken
         let stop_all = OnDrop(move || {
             lock(state).stop = true;
             cv.notify_all();
         });
-        let mut helpers = Vec::with_capacity(threads + 1);
-        helpers.push(s.spawn(move || {
-            let _failed = OnDrop(on_panic);
-            let t0 = Instant::now();
-            let (mut v, mut from) = (Vec::new(), 0);
-            let mut n = [0u64; 2];
-            while from < data.len() {
-                let to = (from + FIND_CHUNK).min(data.len());
-                v.clear();
-                f.find(data, from, to, &mut v);
-                inject(fault, Fault::Finder);
-                let mut st = lock(state);
-                if st.stop {
-                    return;
-                }
-                for c in &v {
-                    n[c.end as usize] += 1;
-                    if !c.end {
-                        // a stream header just before it, at a byte: a guess at the level
-                        let at = (c.bit / 8) as usize;
-                        let hdr = match (c.bit % 8, data.get(at.wrapping_sub(4)..at)) {
-                            (0, Some([b'B', b'Z', b'h', l @ b'1'..=b'9'])) => {
-                                Some((l - b'0') as u32)
-                            }
-                            _ => None,
-                        };
-                        st.tasks.push(Task { bit: c.bit, hdr });
-                    }
-                }
-                st.found_upto = to as u64 * 8;
-                drop(st);
-                cv.notify_all();
-                from = to;
-            }
-            let mut st = lock(state);
-            st.found_upto = u64::MAX;
-            st.stats.block_cands = n[0];
-            st.stats.end_cands = n[1];
-            st.stats.find_s = t0.elapsed().as_secs_f64();
-            drop(st);
-            cv.notify_all();
-        }));
-        for _ in 0..threads {
+        let mut helpers = Vec::with_capacity(threads);
+        for tid in 0..threads {
             helpers.push(s.spawn(move || {
                 let _failed = OnDrop(on_panic);
+                if total_anchors >= 1 {
+                    let m_start = 1 + (total_anchors * tid) / threads;
+                    let m_end = 1 + (total_anchors * (tid + 1)) / threads;
+                    let mut local = lock(&raw_parts_ref[tid]);
+                    find_magics_anchor_range(data, m_start, m_end, &mut local);
+                }
+                if tid == 0 {
+                    inject(fault, Fault::Finder);
+                }
+                {
+                    let mut st = lock(state);
+                    st.find_done += 1;
+                    if st.find_done == threads {
+                        let mut merged: Vec<RawMagic> = Vec::new();
+                        for part_mu in raw_parts_ref.iter() {
+                            merged.extend_from_slice(&lock(part_mu));
+                        }
+                        merged.sort_unstable_by_key(|c| c.bit);
+                        merged.dedup_by_key(|c| c.bit);
+                        let mut n = [0u64; 2];
+                        for rm in merged {
+                            n[rm.is_end as usize] += 1;
+                            if !rm.is_end {
+                                let hdr = (rm.hdr_level != 0).then_some(rm.hdr_level as u32);
+                                st.tasks.push(Task { bit: rm.bit, hdr });
+                            }
+                        }
+                        st.found_upto = u64::MAX;
+                        st.stats.block_cands = n[0];
+                        st.stats.end_cands = n[1];
+                        st.stats.find_s = t_find0.elapsed().as_secs_f64();
+                        cv.notify_all();
+                    } else {
+                        while st.found_upto != u64::MAX && !st.stop {
+                            st = cv.wait(st).unwrap_or_else(|e| e.into_inner());
+                        }
+                    }
+                    if st.stop {
+                        return;
+                    }
+                }
+
+                let mut scan_sc = ScanScratch::default();
                 let mut sc: Scratch = Scratch::default();
                 let mut syms = Vec::new();
                 loop {
-                    let (i, bit, level, mut buf) = {
+                    let i = next_idx_ref.fetch_add(1, Ordering::Relaxed);
+                    let (bit, level, mut buf) = {
                         let mut st = lock(state);
-                        loop {
-                            if st.stop {
-                                return;
-                            }
-                            st.next = st.next.max(st.base);
-                            if st.next < st.tasks.len() && st.next < st.base + slots {
-                                break;
-                            }
+                        if i >= st.tasks.len() {
+                            return;
+                        }
+                        while !st.stop && i >= st.base + slots {
                             st = cv.wait(st).unwrap_or_else(|e| e.into_inner());
                         }
-                        let i = st.next;
-                        st.next += 1;
-                        // the level: the last header guessed since the chain's place, else
-                        // the chain's own (so a false header misleads only until the chain
-                        // has passed it)
+                        if st.stop {
+                            return;
+                        }
+                        if i < st.base {
+                            continue;
+                        }
                         let level = (st.base..=i)
                             .rev()
                             .find_map(|j| st.tasks[j].hdr)
                             .unwrap_or(st.level);
-                        (i, st.tasks[i].bit, level, st.free.pop().unwrap_or_default())
+                        (st.tasks[i].bit, level, st.free.pop().unwrap_or_default())
                     };
                     inject(fault, Fault::Worker);
                     buf.clear();
                     let level = if level == 0 { 9 } else { level };
-                    let res = match one_item(data, bit, level, k, &mut sc, &mut syms, &mut buf) {
+                    let res = match one_item_with_scratch(
+                        data,
+                        bit,
+                        level,
+                        k,
+                        &mut scan_sc,
+                        &mut sc,
+                        &mut syms,
+                        &mut buf,
+                    ) {
                         Ok(One::Block { end, crc }) => Ok((end, crc, buf)),
-                        // (a candidate is a block magic: the item there is never an end)
                         Ok(One::End { .. }) => Err(ErrorKind::Internal("an end".into())),
                         Err(kind) => Err(kind),
                     };
@@ -514,7 +564,6 @@ fn decode_find_with(
         }
         let res = chain(data, k, &mut out, state, cv, fault);
         drop(stop_all);
-        // (every helper joined here: one that panicked makes the decode an error)
         let panicked = helpers
             .into_iter()
             .fold(false, |p, h| h.join().is_err() | p);
@@ -524,7 +573,6 @@ fn decode_find_with(
             res
         }
     });
-    // (results the chain never came to, where it stopped at an error)
     let mut st = lock(state);
     for o in std::mem::take(&mut st.results).into_values() {
         drop_result(&mut st, o);
