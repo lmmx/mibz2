@@ -43,6 +43,25 @@ These runs inform; they don't decide. Nothing merges or releases on a release-sc
 
 Each table gives an arm's median wall time. It also gives the geometric mean of the rounds' paired wall ratios against the reference arm, with its 95% interval: a minus sign is faster. Up to the machine's physical core count, each thread runs on a core of its own (`--spread`); above it, threads share cores.
 
+### 2026-11-22: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.12** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-22-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.12>)
+
+**`wikidata`**
+
+| threads | 0.5.12 wall (median) | lbzip2 2.5 wall (median) | 0.5.11 wall (median) | lbzip2 2.5 against 0.5.12 | 0.5.11 against 0.5.12 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.370 s | 2.510 s | 0.372 s | \+563.3% (+545.6, +581.5) **slower** | −0.5% (−3.4, +2.4) |
+| 2 | 0.237 s | 1.331 s | 0.239 s | \+463.1% (+456.0, +470.2) **slower** | \+1.4% (−0.8, +3.6) |
+| 4 | 0.143 s | 0.713 s | 0.142 s | \+402.1% (+391.0, +413.5) **slower** | −0.2% (−3.1, +2.7) |
+| 8 | 0.072 s | 0.513 s | 0.075 s | \+613.9% (+602.2, +625.8) **slower** | \+4.1% (+2.5, +5.8) **slower** |
+| 10 | 0.068 s | 0.511 s | 0.070 s | \+654.6% (+647.7, +661.6) **slower** | \+2.7% (+2.3, +3.2) **slower** |
+| 12 | 0.073 s | 0.508 s | 0.075 s | \+589.1% (+566.5, +612.6) **slower** | \+0.2% (−3.1, +3.5) |
+| 16 | 0.073 s | 0.501 s | 0.075 s | \+579.8% (+571.4, +588.3) **slower** | \+2.2% (+1.4, +3.0) **slower** |
+| 20 | 0.073 s | 0.492 s | 0.075 s | \+570.3% (+559.3, +581.4) **slower** | \+4.8% (+0.4, +9.3) **slower** |
+
+Every arm's output was the same bytes as the reference's.
+
 ### 2026-11-21: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.11** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-21-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.11>)
@@ -496,6 +515,11 @@ Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lm
 ### 0.5.12
 
 22 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0512---2026-11-22>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.11...v0.5.12>)
+
+- The Open kernel's construction stack (\#719, on \#714): 2–5% faster at 8, 10, 16 and 20 threads on the i9, with about 18% less retained scratch per worker.
+- The paired run on CI: within noise on every corpus.
+- The worker-count recalibration: no trim moves.
+- Release scaling against 0.5.11: +4.3% at 8 threads, +2.7% at 10, +2.3% at 16, +1.9% at 20.
 
 **Changes:** construction stack, GradedHandle/Prefix15 ([\#714](<https://github.com/lmmx/mibz2/pull/714>), [\#719](<https://github.com/lmmx/mibz2/pull/719>)).
 
