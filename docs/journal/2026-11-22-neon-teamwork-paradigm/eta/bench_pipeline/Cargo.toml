@@ -1,0 +1,12 @@
+[package]
+name = "bench_pipeline"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mibz2 = { path = "../../../../..", features = ["moonshot"] }
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
