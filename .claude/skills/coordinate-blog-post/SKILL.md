@@ -133,12 +133,18 @@ that every later section reads as support, not as suspense.
 
 ## 4. Publish first, then revise in flight
 
-Merge the post's PR as soon as all of these hold. Don't wait for the Researcher:
-- every figure is checked against its primary record, and any that can't be traced is
-  flagged in the PR, never printed as established;
-- `publish-page` was run on the final head, and the PR records which commit was looked at and
-  what was found;
-- CI is green on that head.
+**Version 1 merges within minutes of being pushed** (Louis, 22 November 2026: "you are meant to
+get blogs out FAST and have failed"; `write-blog-post`, "Iterate, ship, re-ship"). Merge the
+post's PR as soon as all of these hold. Don't wait for the Researcher, and don't wait for CI's
+`look` job or other CI runs on a docs-only post PR:
+- every figure in version 1 is checked against its primary record, and any that can't be
+  traced is flagged in the PR, never printed as established;
+- the strict build and `check_render.py` pass locally on the pushed head, and the PR says so;
+- pre-commit.ci and `check-commit`, if they have already reported, aren't red.
+
+Screenshots and `look_pages.py` run on the live post; their fixes follow as small PRs, merged
+at once. If a second post PR is open, merge the first immediately so the second's conflict
+(blog index, nav) is resolved once, not after both wait.
 
 Merge with `coord.py head-sha` before and after (`expectedHeadSha`), check the live page once
 deployed, and tell Louis it is out. If the post reports a result, send the Observer a
@@ -146,15 +152,15 @@ CHECKPOINT.
 
 Then the review rounds of §2 run on the published post:
 - **Each round's findings land as a follow-up PR** to the same post, restructured rather than
-  appended. Merge it on green with publish-page rerun. Don't wait for the next round.
+  appended. Merge it at once, on the same terms as version 1. Don't wait for the next round.
 - **A factual error a review finds is fixed at once,** in its own small PR, ahead of any
   structural revision.
 - **The post is finalised** when a round returns PROCEED. Nothing marks it as unfinished
   before then.
-- **Before publication, one fresh-reader pass at least:** a subagent given only the post
-  reports where it would start, every term met before its explanation, where it felt dropped
-  in medias res, and any mannered sentence. Fix what it finds before the merge. The
-  Researcher's review rounds come after, on the live post.
+- **One fresh-reader pass, on the live post:** a subagent given only the post reports where it
+  would start, every term met before its explanation, where it felt dropped in medias res, and
+  any mannered sentence. Its fixes ship as a follow-up PR. The Researcher's review rounds also
+  run on the live post.
 - **Fixes to a published post go as a docs commit straight to master** (Louis, 10 November
   2026: "docs commit not PR"), after the publish-page checks pass on the commit. A new post
   still goes through a PR.
