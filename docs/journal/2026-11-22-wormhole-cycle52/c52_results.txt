@@ -1,0 +1,14 @@
+THEOREM 52.1 STRESS GATE: 5,000/5,000 randomized adversarial hill/valley blocks EXACT (bytes + CRC)!
+
+431-BLOCK WIKIDATA EXACT PARITY OK: copy_within bytes: #739=350.78 MB vs Thm52.1_ZeroShift=187.35 MB (46.6% reduction!)
+
+=== PART 1: 15-ROUND 1T MICRO A/B (IN-PLACE RLE1 EXPAND + TILED CRC, 431 BLKS, 210 MB) ===
+R739_A         med= 33.20 ms   vs R739_A = 1.0000 [1.0000, 1.0000]
+R739_B         med= 33.14 ms   vs R739_A = 1.0025 [0.9921, 1.0130]
+ZeroShift52    med= 29.62 ms   vs R739_A = 0.8944 [0.8850, 0.9039]
+
+=== PART 2: 12-ROUND 4W FEEDER CHUNK & ZERO-FILL A/B ON 3296195e3 (210 MB) ===
+Arm               med_ms       vs 739_8M [95% CI]  sys_ms  minflt  rss_MB
+bzcat_739_8M_z    333.29 1.0000 [1.0000, 1.0000]   20.10    9715   54.23
+bzcat_8M_noz      330.58 0.9985 [0.9744, 1.0233]   23.19    9629   53.71
+bzcat_1M_pool     328.56 0.9962 [0.9786, 1.0140]   17.93    8629   48.88

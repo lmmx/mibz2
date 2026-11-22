@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 52: Theorem 52.1 Skip-Free Zero-Shift In-Place RLE1 & Feeder Chunk Audit on 3296195e3"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c52_rle_zero_shift_theorem"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n (-3.58 ms 1T RLE+CRC)", D = "0", B = "-163.4 MB copy_within (-46.6%)", Q = "0", M = "0 B stage fallback (-5.35 MiB RSS w/ 1M feeder)" }
+evidence = "Proved Theorem 52.1 (Skip-Free Zero-Shift In-Place RLE1): because bzip2 RLE1 has delta = extra - 1 >= -1 (skip-free downwards), every block decomposes at g=0 crossings into disjoint valleys (g<=0, left-to-right) and hills (g>0, right-to-left) with 0 pre-shift copy and 0 s.ll staging fallback. Passed 5,000/5,000 adversarial hill/valley stress tests + 431/431 Wikidata blocks exact: cuts copy_within 350.78->187.35 MB (-46.6%) and RLE1+CRC time 0.8944x [0.8850, 0.9039] (A/A 1.0025). On 3296195e3 4W feeder: killed bzcat_8M_noz (0.9985x); kept 1 MiB chunking strictly as RSS/minflt hygiene (-9.9% RSS, -11.2% minflt, neutral wall 0.9962x)."
