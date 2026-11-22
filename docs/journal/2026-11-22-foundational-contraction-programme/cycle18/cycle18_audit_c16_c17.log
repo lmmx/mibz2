@@ -1,0 +1,82 @@
+==========================================================================================
+PART 1: INDEPENDENT AUDIT OF CYCLE 16 scale_crossover_bench vs SHIPPED OpenCells 0.5.12
+==========================================================================================
+  [CHECK] 4M_wiki_mut(rho~7)      : m16=1176622, bits=21, u32::MAX>>bits=  2047, codes=29208 => wide=True (logged=True), spell=0.62/0.75M
+  [CHECK] 64M_ultra(K512,0.02%)   : m16= 107067, bits=17, u32::MAX>>bits= 32767, codes=15037 => wide=False (logged=False), spell=59.70/96.00M
+  [CHECK] 64M_pan(K1024,0.005%)   : m16=  27985, bits=15, u32::MAX>>bits=131071, codes= 4450 => wide=False (logged=False), spell=58.26/96.00M
+  [VERIFIED] Exact shipped 0.5.12 wide-trigger formula verified on 23/23 grid points (mismatches=0).
+  [VERIFIED] Exact 48 KiB * 2^k Vec-doubling spelling capacity verified on 23/23 grid points (anomalies=0).
+
+==========================================================================================
+PART 2A: ADVERSARIAL JSV AXIOM CHECK ON WPB (EXPLICIT CLOSED CYCLES IN U & U(+)V)
+==========================================================================================
+  [VERIFIED] ALL 6 JSV axioms PASSED on 200 adversarial cycle-rich trials (forced pure-U cycles=200, forced mixed U<->V cycles=200, 0 failures)!
+  [VERIFIED] Exact Scoping Biconditional: Tr_E is lossless <=> (I - P_EE) invertible <=> E contains no closed cycle!
+             (Demonstrated silent 2-byte drop on periodic BWT L=1100 with E={0,2}, and 0-byte loss on all 126 proper subsets of 'banana$'!)
+
+==========================================================================================
+PART 2B: CROSS-CYCLE CONSISTENCY — DURAND THEOREM D2a & TRUE-RELABEL THEOREM B2
+==========================================================================================
+  Durand D2a u='00' (n<=12): ov= 4854, nonov=  902 | viol(aug w*u, ov)=0, viol(aug w*u, nonov)=0, viol(plain w, ov)=0
+  Durand D2a u='010' (n<=12): ov= 2039, nonov= 1269 | viol(aug w*u, ov)=0, viol(aug w*u, nonov)=0, viol(plain w, ov)=1479
+     smallest plain-lex counterexample: T=10100, occ=[1, 4], rw=['010', '01']
+  Durand D2a u='000' (n<=12): ov= 2697, nonov=  239 | viol(aug w*u, ov)=0, viol(aug w*u, nonov)=0, viol(plain w, ov)=0
+  Durand D2a u='0101' (n<=12): ov= 1052, nonov=  208 | viol(aug w*u, ov)=0, viol(aug w*u, nonov)=0, viol(plain w, ov)=365
+     smallest plain-lex counterexample: T=1010100, occ=[1, 6], rw=['01010', '01']
+  [VERIFIED] True-relabeled Theorem B2 (r(L'_bigram) + n' <= r(L) + n): 8908 cases, viol=0!
+
+==========================================================================================
+PART 2C: INDEPENDENT EXACT [bounded-opt] FRONTIER, n=16 WITNESS & m<=4 TERMINAL THEOREM
+==========================================================================================
+  [VERIFIED] Exact m<=4 terminal theorem exhaustively verified over ALL 5 (m=2,3) + 14 (m=4) single-cycle piece states under FULL proper-subinterval C_gap (0 exceptions)!
+  [VERIFIED] Sub-19/24 Witness L=1010101010110010:
+             true T=0000111011010011 (NOTE: reported T=0000110010110111 is its REVERSAL / unreversed LF walk, BWT=1010001111011000, r0=8!)
+             single-cycle=TRUE, r_0=14, exact Q*=11 (NO m<=4 shortcut, 7.56s), Q*/r_0=11/14=0.785714 < 19/24=0.791667, byte-exact decode=PASS!
+             step  1: ('Join', 0, 8, 8, 9, 4) | P: 14 -> 12, m: 16 -> 15
+             step  2: ('Join', 5, 2, 2, 3, 6) | P: 12 -> 10, m: 15 -> 14
+             step  3: ('Join', 7, 3, 4, 5, 3) | P: 10 -> 9, m: 14 -> 13
+             step  4: ('Join', 2, 4, 7, 9, 3) | P: 9 -> 8, m: 13 -> 11
+             step  5: ('Join', 0, 4, 7, 8, -1) | P: 8 -> 6, m: 11 -> 10
+             step  6: ('Join', 3, 2, 3, 5, 4) | P: 6 -> 5, m: 10 -> 8
+             step  7: ('Join', 2, 3, 6, 7, 1) | P: 5 -> 5, m: 8 -> 7
+             step  8: ('Join', 0, 2, 4, 5, 1) | P: 5 -> 4, m: 7 -> 6
+             step  9: ('Join', 0, 2, 4, 5, 1) | P: 4 -> 2, m: 6 -> 5
+             step 10: ('Pow-', 1, 1, 5, -1) | P: 2 -> 2, m: 5 -> 2
+             step 11: ('Join', 0, 1, 1, 2, -1) | P: 2 -> 1, m: 2 -> 1
+  n= 2: valid single-cycle binary BWTs=  1, min Q*/r_0 = 1/2 (0.5000)
+  n= 3: valid single-cycle binary BWTs=  2, min Q*/r_0 = 1 (1.0000)
+  n= 4: valid single-cycle binary BWTs=  3, min Q*/r_0 = 3/4 (0.7500)
+  n= 5: valid single-cycle binary BWTs=  6, min Q*/r_0 = 3/4 (0.7500)
+  n= 6: valid single-cycle binary BWTs=  9, min Q*/r_0 = 3/4 (0.7500)
+  n= 7: valid single-cycle binary BWTs= 18, min Q*/r_0 = 3/4 (0.7500)
+  n= 8: valid single-cycle binary BWTs= 30, min Q*/r_0 = 3/4 (0.7500)
+  n= 9: valid single-cycle binary BWTs= 56, min Q*/r_0 = 3/4 (0.7500)
+  n=10: valid single-cycle binary BWTs= 99, min Q*/r_0 = 3/4 (0.7500)
+  [VERIFIED] ALL 224 single-cycle binary BWTs for n=2..10 solved independently in 4.93s:
+             min Q*/r_0 (r_0 >= 4) = 3/4 (0.7500) [n=2 trivial L=10 has 1/2], all_subintervals diffs (n<=9) = 0
+             sample min (r_0 >= 4) witnesses: [(4, '1010', 4, 3), (5, '10010', 4, 3), (5, '10110', 4, 3), (6, '100010', 4, 3), (6, '101110', 4, 3)]
+
+==========================================================================================
+PART 3: CYCLE 17 MOONSHOT REGISTER LINE 15 & SHA-256 ARTIFACT AUDIT
+==========================================================================================
+  [VERIFIED] Register rows=15, all scorer_version=v1 @ ee7fbf0e50c6...
+  [VERIFIED] Line 15 LeanBandCoalUni (sha256=19d118d78420855d...):
+             1W wall=0.9936 [0.9654, 1.0225], rss=1.0419
+             2W wall=0.9895 [0.8283, 1.1820], rss=0.9893
+             proxy instructions_ratio=0.774071 (0.7741 record!), 1W/2W/4W/7W/8W/10W=0.9749/0.9749/0.9748/0.9594/0.9280/0.9364
+
+  SHA-256 Artifact Digest Table:
+    485bac96412a5674  src/open.rs
+    463dda6142b7d782  src/open/endpoint.rs
+    69aae3bc6ba1b34d  docs/journal/2026-11-22-foundational-contraction-programme/cycle16/scale_crossover_bench/src/open_scaled.rs
+    fd7fe68e127a5552  docs/journal/2026-11-22-foundational-contraction-programme/cycle16/scale_crossover_bench/src/b4_contract.rs
+    2f8b0e9a62ab9a18  docs/journal/2026-11-22-foundational-contraction-programme/cycle16/scale_crossover_bench/src/main.rs
+    a7cccaa41545d121  docs/journal/2026-11-22-foundational-contraction-programme/cycle16/scale_crossover_out_v2.txt
+    6c058fe9e94d133d  docs/journal/2026-11-22-foundational-contraction-programme/cycle17/cycle17_unification_and_exact_opt.py
+    1bd95198afdf8777  docs/journal/2026-11-22-foundational-contraction-programme/cycle17/moonshot_register_v1.jsonl
+    bbfd8fc3a3780230  docs/journal/2026-11-22-foundational-contraction-programme/cycle17/multicorpus_stress/src/main.rs
+    c2584e97fbbada93  docs/journal/2026-11-22-foundational-contraction-programme/cycle17/multicorpus_stress/src/corpora.rs
+    4dd437ec82086545  docs/journal/2026-11-22-foundational-contraction-programme/cycle17/multicorpus_stress_results.txt
+    b193671cb3419699  docs/journal/2026-11-22-foundational-contraction-programme/cycle10/referee2/cycle10_audit_c9.py
+
+ALL INDEPENDENT CYCLE 18 AUDITS COMPLETED in 13.18s.

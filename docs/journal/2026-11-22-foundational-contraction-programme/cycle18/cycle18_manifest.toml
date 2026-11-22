@@ -1,0 +1,39 @@
+name = "Cycle 18 AdaptiveLeanOpen (Size-Gated BandCoal+emit_uni <= 384 KiB / Hoisted-Mark NoMarkXor+emit_bidirectional > 384 KiB, LazyCells single-kernel)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "open_s1_outq_strips_packed_mark"
+inputs = ["records", "p"]
+output = "outq_and_thick_strips"
+status = "verified"
+cost = { W = "R", D = "1", B = "R + m", Q = "0", M = "ns" }
+dependent = false
+evidence = "Single sequential pass over capped run records (<= 127) via cold-split Pass::take: queues thin runs (w <= 16) into OutQ16 inside out[..n+16], packs ns thick strips into edges[..4*ns], records (mark_byte << 32) | mark in First::mark_and_byte, and computes exact thin-row count m BEFORE Stage 3a and Stage 4; zero r_0 materialization."
+
+[[edge]]
+id = "open_s2_rv_elim"
+inputs = ["outq_and_thick_strips", "n"]
+output = "open_excursion_dag"
+status = "verified"
+cost = { W = "S_thick", D = "S_thick", B = "ns", Q = "S_thick", M = "ns" }
+dependent = true
+evidence = "Exact v0.5.12 Rauzy-Veech thick-only elimination in Open's edges dead buffer (S_thick = 79,349 steps on 6 auth blocks, 2.67M on 431 wikidata blocks; spiral acceleration for widest > 32,768)."
+
+[[edge]]
+id = "open_s3a_adaptive_bandcoal_dict"
+inputs = ["open_excursion_dag"]
+output = "bands_dict"
+status = "verified"
+cost = { W = "B_eff", D = "1", B = "B_eff", Q = "0", M = "B_eff" }
+dependent = false
+evidence = "Size-gated Stage 3a dispatched on exact m from Stage 1 (zero per-band runtime branch): runs register-held BandCoal coalescing (-27.7% bands on 431 Wikidata, -79.0% on rho~52 archive) when m <= M_UNI_MAX (384 KiB = 98,304 thin rows; 84/233 Wikidata Open blocks), and skips BandCoal (exact v0.5.12 S3a, zero branch/icache overhead) when m > M_UNI_MAX (149/233 Wikidata Open blocks); Dictionary::code_miss split cold."
+
+[[edge]]
+id = "open_s4_adaptive_uni_or_nomark_xor_emit"
+inputs = ["bands_dict", "outq_and_thick_strips", "n", "p"]
+output = "text"
+status = "measured"
+cost = { W = "n + m", D = "min(m, m/2 + M_UNI_MAX)", B = "n + m", Q = "m", M = "m" }
+dependent = true
+evidence = "Size-gated Stage 4+5 dispatch on exact m (deployment threshold M_UNI_MAX = 98,304 -> edges <= 384 KiB): L2-budget blocks (m <= 98,304 or wide) use 1-write sequential outq::Reader::wire + emit_uni (no edges.fill(0), no 2nd random RMW); past-L2 blocks (!wide && m > 98,304) use hoisted-mark wire_xor::<false> on 255/256 bytes + wire_xor::<true> on mark_byte + 2-ended emit_bidirectional (2x MLP, caps past-L2 chain depth, eliminates +4% to +100% single-chain regression on English/Dense/DNA/Giant-Cycle/Fib-AltRun). Measured 0.9603x-0.9936x (< 1.00x on 7/7 Open-admitted corpora) and 446/446 byte-exact PASS vs LazyCells oracle."
