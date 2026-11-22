@@ -286,6 +286,15 @@ Iterate on the page's creatures as follows:
      **cute**, in the owner's words "the odd one out that looks cute like wend". Keep it small, round
      and endearing, with big soft eyes and a little curl, as a deliberate counterpoint at the very
      end of the conversation. It still frames the bubble, which reads "yuck" in red blackletter.
+   - **the ornaments, too:** improve the page's flourishes as well as its creatures:
+     - the vine scrollwork either side of the heading "Compendium of Links" at the end
+       (`svg.flo` in `build_html.py`: a green volute, leaves and blue buds);
+     - the ❦ on the rule beneath it;
+     - the ❧ ☙ fleurons round the linked terms.
+
+     Make them manuscript-grade: an acanthus or vine rinceau, tapering modulated stems, leaves
+     with a turned-over lobe, a gold or white highlight. Keep them green, with blue accents.
+     Deliver them as SVG symbols the page can drop in.
 4. **The page's other rules:**
    - **colour:** neon and saturated, never dull, oxidised or pastel, and no pink;
    - **fleurons:** ❧ ☙ are green, and hyperlinks are blue;
