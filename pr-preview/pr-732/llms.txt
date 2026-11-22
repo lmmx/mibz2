@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/pr-preview/pr-732/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [Structured invention](<https://lmmx.github.io/mibz2/pr-preview/pr-732/blog/2026-11-22-structured-invention/index.md>): A claimed Riemann proof drew on fifty classical tools because each step of an older proof needed one, and our research teams now invent the same way.
+- [Two centuries of tools](<https://lmmx.github.io/mibz2/pr-preview/pr-732/blog/2026-11-22-two-centuries-of-tools/index.md>): A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.
 - [A memory gain is a gain](<https://lmmx.github.io/mibz2/pr-preview/pr-732/blog/2026-11-21-a-memory-gain-is-a-gain/index.md>): Sending five dense blocks to our leanest decoding kernel cut peak memory by a quarter at eight threads without slowing anything, so memory now counts as a gain.
 - [Besieging hard problems](<https://lmmx.github.io/mibz2/pr-preview/pr-732/blog/2026-11-21-besieging-hard-problems/index.md>): A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check.
 - [Fast alone, slow in a crowd](<https://lmmx.github.io/mibz2/pr-preview/pr-732/blog/2026-11-21-fast-alone-slow-in-a-crowd/index.md>): Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor.
