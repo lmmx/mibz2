@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 61: PR 4 Adversarial Stress & Edge-Case Hardening Suite (Invariants #3-#5)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c61_pr4_adversarial_hardening"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "0 deadlocks / 0 livelocks", B = "<= 8 MiB ping-pong input RAM (peak_lw=2)", Q = "0", M = "MAX_LIVE_WINS=2 + bounded fb_buf on oversized blocks" }
+evidence = "9-category #![forbid(unsafe_code)] adversarial PR 4 hardening suite against mibz2::BzReader (3296195e3) passed 100%: (1) multi-stream concat (BZh1+empty5+BZh9+empty1+BZh1, 770 blks: 770/770 fh=100% at 4 MiB, exact at 512K); (2) oversized blocks > win_cap (904 KiB blocks in 256K & 512K windows, peak_lw=2, 0 livelock); (3) SpamFinder FP storm (200 bogus cands/win, 1,918 dropped, 0 deadlock); (4) early cancel after k in {0,1,5,100,430} blks (10.6-14.2 ms teardown); (5) hostile TrickleReader (1..13B + EINTR, 64K win, 2,399,547 B exact prefix); (6) mid-stream Io(BrokenPipe); (7) 13 error-kind & prefix parity cases; (8) level-flip concat; (9) 40-prefix byte-by-byte truncation sweep (0..=24). Caught & fixed 3 real production spec invariants before porting: Invariant #3 (livelock-free max_carry<=win_cap/2 + window-spanning fallback), Invariant #4 (magic_over before BadBlockMagic on 4..9B truncations), Invariant #5 (br.overran() precedes ErrorKind classification on worker & fallback, preventing NoSymbols on 10B truncation or valid seam aborts)."

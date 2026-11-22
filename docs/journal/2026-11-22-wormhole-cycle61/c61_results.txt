@@ -1,0 +1,19 @@
+=== CYCLE 61: PR 4 ADVERSARIAL HARDENING & EDGE-CASE SUITE ===
+[PASS] 1. Multi-stream concat (BZh1+empty5+BZh9+empty1+BZh1) win=4096K 4W: blocks=770 fh=770 fb=0 fp=0 wins=5 peak_lw=2
+[PASS] 1. Multi-stream concat (BZh1+empty5+BZh9+empty1+BZh1) win=512K 4W: blocks=770 fh=758 fb=12 fp=0 wins=40 peak_lw=2
+[PASS] 2. Oversized block > win_cap (904 KiB blk in 256K win, 4W): blocks=12 fh=0 fb=12 wins=42 peak_lw=2
+[PASS] 2. Oversized block > win_cap (904 KiB blk in 512K win, 4W): blocks=12 fh=0 fb=12 wins=24 peak_lw=2
+[PASS] 2. Oversized block > win_cap (904 KiB blk in 1024K win, 4W): blocks=12 fh=12 fb=0 wins=12 peak_lw=2
+[PASS] 3. False-positive storm (200 bogus cands/win, 512K win, 4W): blocks=379 fh=50 fb=329 dropped_fp=1918
+[PASS] 4. Early cancel after   0 blks (4W, 4M win): seen=1 teardown=10.57ms peak_lw=2
+[PASS] 4. Early cancel after   1 blks (4W, 4M win): seen=1 teardown=12.78ms peak_lw=2
+[PASS] 4. Early cancel after   5 blks (4W, 4M win): seen=5 teardown=13.83ms peak_lw=2
+[PASS] 4. Early cancel after 100 blks (4W, 4M win): seen=100 teardown=85.85ms peak_lw=2
+[PASS] 4. Early cancel after 430 blks (4W, 4M win): seen=430 teardown=322.18ms peak_lw=2
+[PASS] 5. Hostile TrickleReader (1..13B + EINTR, 64K win): prefix=2399547B err=Some(Truncated)
+[PASS] 6. Mid-stream Io(BrokenPipe) error propagation exact: Io(BrokenPipe, "injected EPIPE")
+[PASS] 7. All 13 error-kind & exact-prefix parity cases match BzReader 100%
+[PASS] 8. Level-flip concat (empty BZh1 + hetero BZh9): blocks=60 fh=59 fb=1 fp=1
+[PASS] 9. Exhaustive byte-by-byte truncation sweep (40 prefixes across empty9 & wiki_l1) 100% exact
+
+ALL 9 CYCLE 61 ADVERSARIAL CATEGORIES PASSED 100%!
