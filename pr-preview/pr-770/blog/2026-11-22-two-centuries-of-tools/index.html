@@ -1,0 +1,3335 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.">
+      
+      
+        <meta name="author" content="Louis Maddox">
+      
+      
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-770/blog/2026-11-22-two-centuries-of-tools/">
+      
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
+      
+      
+        <link rel="prev" href="../2026-11-22-correctness-is-uniform-cost-is-not/">
+      
+      
+        <link rel="next" href="../2026-11-21-a-memory-gain-is-a-gain/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="zensical-0.0.71">
+    
+    
+      
+        <title>Two centuries of tools: a claimed Riemann proof's toolkit, and our search - mibz2</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,500,500i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1097f8975bcc">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1097f8975bcc">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1097f8975bcc">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1097f8975bcc">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=1097f8975bcc">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=1097f8975bcc">
+    
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    <meta name="format-detection" content="telephone=no">
+  
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="mibz2">
+  <meta property="og:title" content="Two centuries of tools: a claimed Riemann proof's toolkit, and our search">
+  <meta property="og:description" content="A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-770/blog/2026-11-22-two-centuries-of-tools/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-770/assets/social/blog-2026-11-22-two-centuries-of-tools.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Two centuries of tools: a claimed Riemann proof's toolkit, and our search">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Two centuries of tools: a claimed Riemann proof's toolkit, and our search">
+  <meta name="twitter:description" content="A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-770/assets/social/blog-2026-11-22-two-centuries-of-tools.png">
+  <meta name="twitter:image:alt" content="Two centuries of tools: a claimed Riemann proof's toolkit, and our search">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="mibz2" class="md-header__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            mibz2
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Two centuries of tools: a claimed Riemann proof's toolkit, and our search
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="mibz2" class="md-nav__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    mibz2
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Get started
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Get started
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Installation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quickstart
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Concepts
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Concepts
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/couriers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why 32 couriers beat one
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What is checked, and when
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/prior-work/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Prior work
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../benchmarks/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Benchmarks
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Benchmarks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Alternatives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/frontier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Throughput–memory frontier
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/mibz2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Python)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Rust)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Background
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Background
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Status
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/journals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Journals
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/behind-the-scenes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Behind the scenes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Blog
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Blog
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-decompression-is-the-harder-problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Decompression is the harder problem
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-correctness-is-uniform-cost-is-not/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Correctness is uniform, cost is not
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Two centuries of tools
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Two centuries of tools
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-what-is-in-the-proofs-toolkit" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. What is in the proof's toolkit?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-where-is-the-argument-and-where-is-the-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. Where is the argument, and where is the code?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-why-would-a-search-drift-toward-the-recent" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Why would a search drift toward the recent?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-which-classical-tools-does-inverse-bwt-have" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. Which classical tools does inverse BWT have?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-how-does-a-broad-toolkit-get-used-well" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. How does a broad toolkit get used well?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-what-happens-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. What happens next?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-a-memory-gain-is-a-gain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admitting dense blocks to Open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-besieging-hard-problems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Besieging hard problems
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-fast-alone-slow-in-a-crowd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Fast alone, slow in a crowd
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-sixteen-at-a-stroke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sixteen at a stroke
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-research-by-obligation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Research by obligation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-where-the-decoding-work-goes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where the decoding work goes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-train-tracks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Train tracks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-19-open-returns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Open Returns
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-what-decoding-pays-for/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What decoding pays for
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_14" id="__nav_7_14_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_14_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_14">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Cutting the loop open
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-raising-the-knee/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Raising the knee
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_16" id="__nav_7_16_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache to rightsize workers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_16_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_16">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Modelling the cache to rightsize workers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-mathematical-dictionary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A mathematical dictionary
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-stop-and-walk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Stop and walk
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-lazy-letters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Lazy letters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-free-closure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The free closure of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-induction-width/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The width of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-bottom-slots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Removing duplicated interval lengths and text references
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-slot-recycling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reduce, reuse, recycle
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-12-rauzy-technical-companion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reconstructing text from compact programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-10-rauzy-veech-reconstruction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A new way back from the BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-09-pit-crew-service-threads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 gets a pit crew
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-bwt-runs-from-mtf-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the BWT's runs off the MTF codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_28" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT navigation: the mathematics
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_28">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Inverse-BWT navigation: the mathematics
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  One shift per run
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-pipelined-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pipelined teams in mibz2 0.2.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-why-mibz2-stops-scaling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why mibz2 stops scaling at eight threads
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-05-huffman-bit-buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Huffman decoding: the bit buffer in a register
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-autonomous-agent-team/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  An autonomous agent team
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_33" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a smaller bzip2 decoding table
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_33">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Building a smaller bzip2 decoding table
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  From 49 instructions to 12
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  BWT space–time tradeoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_35" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_35" id="__nav_7_35_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Memory-level parallelism in mibz2
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_35_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_35">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Memory-level parallelism in mibz2
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Instructions, overlap and evidence
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-inverse-bwt-memory-interference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT memory interference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-block-dispatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Block dispatch in mibz2
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-31-room-walk-overlap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  32 lanes, 8.6 chains
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-29-compact-navigation-tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Compact navigation tables for the inverse BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Maintainers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_8">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Maintainers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Releasing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-what-is-in-the-proofs-toolkit" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. What is in the proof's toolkit?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-where-is-the-argument-and-where-is-the-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. Where is the argument, and where is the code?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-why-would-a-search-drift-toward-the-recent" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Why would a search drift toward the recent?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-which-classical-tools-does-inverse-bwt-have" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. Which classical tools does inverse BWT have?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-how-does-a-broad-toolkit-get-used-well" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. How does a broad toolkit get used well?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-what-happens-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. What happens next?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+  <button type="button" title="Copy as Markdown" aria-label="Copy as Markdown" class="md-content__button md-icon" data-md-copy-url="./index.md">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>
+  </button>
+
+
+  
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-22-two-centuries-of-tools.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<div class="post-hero">
+<div class="post-hero-text">
+<p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
+<h1 id="two-centuries-of-tools-a-claimed-riemann-proofs-toolkit-and-our-search">Two centuries of tools: a claimed Riemann proof's toolkit, and our search<a class="headerlink" href="#two-centuries-of-tools-a-claimed-riemann-proofs-toolkit-and-our-search" title="Permanent link">&para;</a></h1>
+<p class="post-dek">A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.</p>
+<p class="post-meta">22 November 2026 · 10 min read · <a href="#6-what-happens-next">Meta</a></p>
+</div>
+<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
+</div>
+<p>The claimed proof of the Riemann Hypothesis announced on 20 November draws on a wide toolkit. An independent map of it lists about fifty established techniques, from Parseval's identity in 1799 to the Gan–Gross–Prasad conjectures in 2012. They come from nine branches of mathematics, and twenty-one of them predate 1950. Exactly one entry is marked as the claimed new mechanism. The argument's weight is not where its code is either. Analytic number theory takes 1.4% of the formal proof's lines but an estimated 11% of the argument.</p>
+<p>mibz2 is a bzip2 decoder in Rust, and AI research teams search mathematics for faster ways to undo the Burrows–Wheeler transform (BWT) at bzip2's core. What we take from the proof is the shape of its toolkit: a search that ranges across two centuries and many fields, aimed at one new mechanism. That shape works against <em>recency bias</em>, the pull toward fashionable modern theory that crowds out classical results. AI research agents feel that pull, and so do we. For inverse BWT, the classical results at risk include nineteenth-century permutation theory, combinatorics on words, continued fractions and the classical theory of interval exchanges.</p>
+<p><strong>Where things stand.</strong> The proof is an unverified mathematical claim. The Lean and Mathlib communities have <a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">certified the formal artifact</a>, which Lean's kernel and several independent checkers accepted. Human understanding of the argument is still in progress (<a href="https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/">Tao</a>). The figures below come from readings of the proof, not verifications of it. Our own change of method has no results yet.</p>
+<p><strong>The takeaways:</strong></p>
+<ul>
+<li><strong>One new mechanism, about fifty old ones.</strong> The proof composes one new idea with established results from two centuries of mathematics. Two fifths of those results predate 1950.</li>
+<li><strong>Where the code is, the argument often isn't.</strong> Most of the formal proof's lines build infrastructure. Some of the branches that carry the argument hold a small share of the code.</li>
+<li><strong>Recency bias is a risk for a search like ours.</strong> Our teams now search classical mathematics as deliberately as modern, and record the era of every tool a chain uses.</li>
+<li><strong>A broad toolkit needs a way to be used.</strong> The proof's route transplants a solved case, Stepanov's proof for curves over finite fields, step by step. Each step that fails over the integers says which tool to fetch. We use the same mechanism to say where each old tool enters our problem.</li>
+</ul>
+<p><a href="../2026-11-21-besieging-hard-problems/">Our earlier post</a> and our <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md">research journal</a> set out the proof's shape as twelve levers. This post is about its toolkit.</p>
+<h2 id="1-what-is-in-the-proofs-toolkit">1. What is in the proof's toolkit?<a class="headerlink" href="#1-what-is-in-the-proofs-toolkit" title="Permanent link">&para;</a></h2>
+<p>Eyal Weiss's <a href="https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html">anatomy of the claim</a> maps which branches of mathematics the proof draws on and when each technique appeared. It is a text scan of the 175,187-file Lean archive, not a build or a verification. Its importance weights are judgement calls, re-estimated by an AI model from the announcement's outline and the Lean findings.</p>
+<p>Its timeline lists 50 established techniques and one entry marked as the claimed new mechanism: multiplicity from iterated theta lifts, in 2026.</p>
+<figure class="bf-fig" id="timeline">
+<p class="bf-title">Fifty established techniques and one new mechanism, by the year each idea appeared</p>
+<svg viewBox="0 0 720 248" role="img" aria-label="Timeline of 50 established techniques from 1799 to 2012, 21 of them before 1950, with RH for curves over finite fields in 1948 and Stepanov's method in 1969 highlighted, and one new mechanism in 2026."><line x1="57.5" y1="30" x2="57.5" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="57.5" y="208" class="bf-tm" text-anchor="middle">1800</text><line x1="126.25" y1="30" x2="126.25" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="126.25" y="208" class="bf-tm" text-anchor="middle">1825</text><line x1="195.0" y1="30" x2="195.0" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="195.0" y="208" class="bf-tm" text-anchor="middle">1850</text><line x1="263.75" y1="30" x2="263.75" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="263.75" y="208" class="bf-tm" text-anchor="middle">1875</text><line x1="332.5" y1="30" x2="332.5" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="332.5" y="208" class="bf-tm" text-anchor="middle">1900</text><line x1="401.25" y1="30" x2="401.25" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="401.25" y="208" class="bf-tm" text-anchor="middle">1925</text><line x1="470.0" y1="30" x2="470.0" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="470.0" y="208" class="bf-tm" text-anchor="middle">1950</text><line x1="538.75" y1="30" x2="538.75" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="538.75" y="208" class="bf-tm" text-anchor="middle">1975</text><line x1="607.5" y1="30" x2="607.5" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="607.5" y="208" class="bf-tm" text-anchor="middle">2000</text><line x1="676.25" y1="30" x2="676.25" y2="190" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="676.25" y="208" class="bf-tm" text-anchor="middle">2025</text><line x1="470.0" y1="24" x2="470.0" y2="190" style="stroke:var(--bf-ink);stroke-width:1.5;stroke-dasharray:5 3"/><text x="464.0" y="22" class="bf-tm" text-anchor="end">21 before 1950</text><text x="476.0" y="22" class="bf-tm" text-anchor="start">29 after</text><circle cx="54.75" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="60.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="115.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="137.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="192.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="214.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="258.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="283.0" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="283.0" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="318.75" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="324.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="382.0" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="382.0" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="401.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="412.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="428.75" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="431.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="459.0" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="464.5" cy="170" r="5.5" style="fill:var(--bf-green)"/><circle cx="464.5" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="467.25" cy="144" r="4.5" style="fill:var(--bf-steel)"/><circle cx="472.75" cy="131" r="4.5" style="fill:var(--bf-steel)"/><circle cx="475.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="478.25" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="494.75" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="503.0" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="505.75" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="505.75" cy="144" r="4.5" style="fill:var(--bf-steel)"/><circle cx="508.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="508.5" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="522.25" cy="170" r="5.5" style="fill:var(--bf-green)"/><circle cx="530.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="533.25" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="533.25" cy="144" r="4.5" style="fill:var(--bf-steel)"/><circle cx="536.0" cy="131" r="4.5" style="fill:var(--bf-steel)"/><circle cx="536.0" cy="118" r="4.5" style="fill:var(--bf-steel)"/><circle cx="549.75" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="549.75" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="552.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="555.25" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="563.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="563.5" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="569.0" cy="144" r="4.5" style="fill:var(--bf-steel)"/><circle cx="577.25" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="577.25" cy="157" r="4.5" style="fill:var(--bf-steel)"/><circle cx="580.0" cy="144" r="4.5" style="fill:var(--bf-steel)"/><circle cx="585.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="596.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="624.0" cy="170" r="4.5" style="fill:var(--bf-steel)"/><circle cx="640.5" cy="170" r="4.5" style="fill:var(--bf-steel)"/><rect x="673.0" y="150" width="12" height="12" transform="rotate(45 679.0 156)" style="fill:var(--bf-amber)"/><text x="460.5" y="108" class="bf-tm" text-anchor="end" style="font-size:11px">RH for curves (1948)</text><line x1="464.5" y1="112" x2="464.5" y2="148" style="stroke:var(--bf-green);stroke-width:1"/><text x="526.25" y="98" class="bf-tm" text-anchor="start" style="font-size:11px">Stepanov (1969)</text><line x1="522.25" y1="102" x2="522.25" y2="140" style="stroke:var(--bf-green);stroke-width:1"/><text x="677.0" y="134" class="bf-t-strong" text-anchor="end" style="font-size:11.5px">new (2026)</text><circle cx="40" cy="232" r="4.5" style="fill:var(--bf-steel)"/><text x="50" y="236" class="bf-tm" text-anchor="start">established technique</text><circle cx="220" cy="232" r="5.5" style="fill:var(--bf-green)"/><text x="230" y="236" class="bf-tm" text-anchor="start">the solved case and its method</text><rect x="445" y="226" width="10" height="10" transform="rotate(45 450 231)" style="fill:var(--bf-amber)"/><text x="462" y="236" class="bf-tm" text-anchor="start">the claimed new mechanism</text></svg>
+<figcaption>Data from Weiss's anatomy (timeline table), redrawn; years mark an idea's first appearance, and the form used is usually later. Highlighted: the solved case, RH for curves over finite fields (1948); the method transplanted from it, Stepanov's (1969); and the claimed new mechanism (2026). The Riemann Hypothesis itself (posed 1859) and Lean 4 (2021) are not counted as techniques.</figcaption>
+</figure>
+
+<p>The oldest are Parseval's identity (1799) and Gauss sums (1801). Theta functions date from 1829 and complex multiplication from 1857. The Siegel mass formula is from 1935. These are not decorations: Weiss's outline assigns each to a step of the argument. The newest established result is from 2012, so the proof's single new idea sits on top of a stack that took two centuries to build.</p>
+<h2 id="2-where-is-the-argument-and-where-is-the-code">2. Where is the argument, and where is the code?<a class="headerlink" href="#2-where-is-the-argument-and-where-is-the-code" title="Permanent link">&para;</a></h2>
+<p>Weiss also compares each branch's share of the Lean code's lines with its estimated importance to the argument.</p>
+<figure class="bf-fig" id="code-vs-argument">
+<p class="bf-title">Share of the formal proof's code against estimated importance to the argument, by branch</p>
+<svg viewBox="0 0 720 344" role="img" aria-label="For nine branches of mathematics, share of the Lean code against estimated importance: automorphic forms 24 and 36 percent; abelian varieties 24 and 6; lattices 23 and 13; Fourier analysis 10 and 6; CM and Arakelov 6 and 10; geometry over finite fields 5.5 and 5; Iwasawa theory 5 and 12; analytic number theory 1.4 and 11; combinatorics under 0.1 and 1.6."><line x1="230.0" y1="26" x2="230.0" y2="296" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="230.0" y="312" class="bf-tm" text-anchor="middle">0%</text><line x1="345.0" y1="26" x2="345.0" y2="296" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="345.0" y="312" class="bf-tm" text-anchor="middle">10%</text><line x1="460.0" y1="26" x2="460.0" y2="296" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="460.0" y="312" class="bf-tm" text-anchor="middle">20%</text><line x1="575.0" y1="26" x2="575.0" y2="296" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="575.0" y="312" class="bf-tm" text-anchor="middle">30%</text><line x1="690.0" y1="26" x2="690.0" y2="296" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="690.0" y="312" class="bf-tm" text-anchor="middle">40%</text><text x="222" y="44" class="bf-t" text-anchor="end" style="font-size:11.5px">Automorphic forms</text><line x1="509.335" y1="40" x2="639.4000000000001" y2="40" style="stroke:var(--bf-frame);stroke-width:2"/><line x1="552.0" y1="40" x2="713.0" y2="40" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.5"/><circle cx="509.335" cy="40" r="5.5" style="fill:var(--bf-blue)"/><circle cx="639.4000000000001" cy="40" r="5.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2.5"/><text x="222" y="74" class="bf-t" text-anchor="end" style="font-size:11.5px">Abelian varieties & schemes</text><line x1="300.15" y1="70" x2="503.125" y2="70" style="stroke:var(--bf-frame);stroke-width:2"/><line x1="264.5" y1="70" x2="368.0" y2="70" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.5"/><circle cx="503.125" cy="70" r="5.5" style="fill:var(--bf-blue)"/><circle cx="300.15" cy="70" r="5.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2.5"/><text x="222" y="104" class="bf-t" text-anchor="end" style="font-size:11.5px">Lattices & quadratic forms</text><line x1="374.9" y1="100" x2="499.905" y2="100" style="stroke:var(--bf-frame);stroke-width:2"/><line x1="322.0" y1="100" x2="437.0" y2="100" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.5"/><circle cx="499.905" cy="100" r="5.5" style="fill:var(--bf-blue)"/><circle cx="374.9" cy="100" r="5.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2.5"/><text x="222" y="134" class="bf-t" text-anchor="end" style="font-size:11.5px">Fourier analysis</text><line x1="301.3" y1="130" x2="343.85" y2="130" style="stroke:var(--bf-frame);stroke-width:2"/><line x1="276.0" y1="130" x2="345.0" y2="130" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.5"/><circle cx="343.85" cy="130" r="5.5" style="fill:var(--bf-blue)"/><circle cx="301.3" cy="130" r="5.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2.5"/><text x="222" y="164" class="bf-t" text-anchor="end" style="font-size:11.5px">CM & Arakelov</text><line x1="302.68" y1="160" x2="343.85" y2="160" style="stroke:var(--bf-frame);stroke-width:2"/><line x1="299.0" y1="160" x2="379.5" y2="160" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.5"/><circle cx="302.68" cy="160" r="5.5" style="fill:var(--bf-blue)"/><circle cx="343.85" cy="160" r="5.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2.5"/><text x="222" y="194" class="bf-t" text-anchor="end" style="font-size:11.5px">Geometry over finite fields</text><line x1="288.65" y1="190" x2="293.135" y2="190" style="stroke:var(--bf-frame);stroke-width:2"/><line x1="264.5" y1="190" x2="322.0" y2="190" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.5"/><circle cx="293.135" cy="190" r="5.5" style="fill:var(--bf-blue)"/><circle cx="288.65" cy="190" r="5.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2.5"/><text x="222" y="224" class="bf-t" text-anchor="end" style="font-size:11.5px">Iwasawa & Galois cohomology</text><line x1="291.295" y1="220" x2="368.0" y2="220" style="stroke:var(--bf-frame);stroke-width:2"/><line x1="322.0" y1="220" x2="414.0" y2="220" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.5"/><circle cx="291.295" cy="220" r="5.5" style="fill:var(--bf-blue)"/><circle cx="368.0" cy="220" r="5.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2.5"/><text x="222" y="254" class="bf-t" text-anchor="end" style="font-size:11.5px">Analytic number theory</text><line x1="246.215" y1="250" x2="355.35" y2="250" style="stroke:var(--bf-frame);stroke-width:2"/><line x1="310.5" y1="250" x2="414.0" y2="250" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.5"/><circle cx="246.215" cy="250" r="5.5" style="fill:var(--bf-blue)"/><circle cx="355.35" cy="250" r="5.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2.5"/><text x="222" y="284" class="bf-t" text-anchor="end" style="font-size:11.5px">Combinatorics</text><line x1="230.46" y1="280" x2="248.4" y2="280" style="stroke:var(--bf-frame);stroke-width:2"/><line x1="235.75" y1="280" x2="264.5" y2="280" style="stroke:var(--bf-amber);stroke-width:2;opacity:0.5"/><circle cx="230.46" cy="280" r="5.5" style="fill:var(--bf-blue)"/><circle cx="248.4" cy="280" r="5.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2.5"/><circle cx="240" cy="330" r="5.5" style="fill:var(--bf-blue)"/><text x="250" y="334" class="bf-tm" text-anchor="start">share of the Lean code (measured)</text><circle cx="480" cy="330" r="5.5" style="fill:var(--bf-surface);stroke:var(--bf-amber);stroke-width:2.5"/><text x="490" y="334" class="bf-tm" text-anchor="start">estimated importance, with range</text></svg>
+<figcaption>Data from Weiss's anatomy, redrawn. Code shares are measured by scanning names in the Lean files as text; treat anything under about 7% as rough. Importance is an AI-assisted judgement with a range of several points either way.</figcaption>
+</figure>
+
+<p>Abelian varieties and schemes take 24% of the code but an estimated 6% of the importance. Analytic number theory takes 1.4% of the code and an estimated 11%; Iwasawa theory takes 5% and an estimated 12%. The code is mostly infrastructure: foundations that Mathlib lacks, built so that a small core can carry the argument.</p>
+<p>For a search, this says how to judge a chain of results: by the step it carries, not by how much scaffolding it needs. A classical theorem that settles one step in a page can matter more than a modern framework that needs thousands of lines to set up.</p>
+<h2 id="3-why-would-a-search-drift-toward-the-recent">3. Why would a search drift toward the recent?<a class="headerlink" href="#3-why-would-a-search-drift-toward-the-recent" title="Permanent link">&para;</a></h2>
+<p>A research agent proposes what it finds salient, and what is salient skews recent. Recent work is more heavily cited and more often summarised, and it is closer to the vocabulary of the problem as stated today. The pull applies to the language models our research teams run on and to the people who direct them. We have not measured it in our own teams; it is a risk we now design against, not a finding.</p>
+<p>Our first attempt at breadth did not address it. We gave the breadth-oriented team a quota over the Mathematics Subject Classification (MSC2020, 63 top-level areas), asking each investigator to open untouched, far-apart areas every cycle. A quota over subject areas says nothing about era. A team can satisfy it entirely with post-2000 frameworks, and the subject a classical result now sits in may not even look relevant.</p>
+<p>The proof's toolkit suggests a different guard. Our team instructions now ask each research chain to:</p>
+<ul>
+<li>mine classical mathematics as hard as modern, from the nineteenth century on;</li>
+<li>not invent where a classical result supplies the step;</li>
+<li>record each tool's field and year, and which tool is new.</li>
+</ul>
+<p>That last record makes the distribution of a chain's tools visible, so a chain built only from recent work can be seen to be one.</p>
+<h2 id="4-which-classical-tools-does-inverse-bwt-have">4. Which classical tools does inverse BWT have?<a class="headerlink" href="#4-which-classical-tools-does-inverse-bwt-have" title="Permanent link">&para;</a></h2>
+<p>The BWT's inverse is a permutation, LF, and much of its classical mathematics is older than computing. Our teams have already drawn on some of it:</p>
+<figure class="bf-fig" id="our-toolkit">
+<p class="bf-title">Tools our research teams have drawn on, by the year each idea appeared</p>
+<svg viewBox="0 0 720 354" role="img" aria-label="Tools our teams have drawn on, by year: Christoffel words 1875, Sturmian sequences 1940, Chen–Fox–Lyndon 1958, interval exchanges 1975, Rauzy induction 1979, Veech 1982, Gessel–Reutenauer 1993, the BWT 1994, discrete Morse theory 1998, recompression 2015, string attractors 2018."><line x1="96.47058823529412" y1="26" x2="96.47058823529412" y2="300" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="96.47058823529412" y="318" class="bf-tm" text-anchor="middle">1875</text><line x1="190.58823529411765" y1="26" x2="190.58823529411765" y2="300" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="190.58823529411765" y="318" class="bf-tm" text-anchor="middle">1900</text><line x1="284.70588235294116" y1="26" x2="284.70588235294116" y2="300" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="284.70588235294116" y="318" class="bf-tm" text-anchor="middle">1925</text><line x1="378.8235294117647" y1="26" x2="378.8235294117647" y2="300" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="378.8235294117647" y="318" class="bf-tm" text-anchor="middle">1950</text><line x1="472.94117647058823" y1="26" x2="472.94117647058823" y2="300" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="472.94117647058823" y="318" class="bf-tm" text-anchor="middle">1975</text><line x1="567.0588235294117" y1="26" x2="567.0588235294117" y2="300" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="567.0588235294117" y="318" class="bf-tm" text-anchor="middle">2000</text><line x1="661.1764705882352" y1="26" x2="661.1764705882352" y2="300" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="661.1764705882352" y="318" class="bf-tm" text-anchor="middle">2025</text><line x1="378.8235294117647" y1="20" x2="378.8235294117647" y2="300" style="stroke:var(--bf-ink);stroke-width:1.5;stroke-dasharray:5 3"/><text x="372.8235294117647" y="18" class="bf-tm" text-anchor="end">before 1950</text><text x="384.8235294117647" y="18" class="bf-tm" text-anchor="start">after</text><circle cx="96.47058823529412" cy="44" r="6" style="fill:var(--bf-green)"/><text x="106.47058823529412" y="48" class="bf-t" text-anchor="start" style="font-size:12px">Christoffel words (1875)</text><circle cx="341.1764705882353" cy="68" r="6" style="fill:var(--bf-green)"/><text x="351.1764705882353" y="72" class="bf-t" text-anchor="start" style="font-size:12px">Sturmian sequences (1940)</text><circle cx="408.94117647058823" cy="92" r="6" style="fill:var(--bf-green)"/><text x="418.94117647058823" y="96" class="bf-t" text-anchor="start" style="font-size:12px">Chen–Fox–Lyndon (1958)</text><circle cx="472.94117647058823" cy="116" r="6" style="fill:var(--bf-blue)"/><text x="482.94117647058823" y="120" class="bf-t" text-anchor="start" style="font-size:12px">interval exchanges (Keane) (1975)</text><circle cx="488.0" cy="140" r="6" style="fill:var(--bf-blue)"/><text x="498.0" y="144" class="bf-t" text-anchor="start" style="font-size:12px">Rauzy induction (1979)</text><circle cx="499.29411764705884" cy="164" r="6" style="fill:var(--bf-blue)"/><text x="509.29411764705884" y="168" class="bf-t" text-anchor="start" style="font-size:12px">Veech (1982)</text><circle cx="540.7058823529412" cy="188" r="6" style="fill:var(--bf-green)"/><text x="530.7058823529412" y="192" class="bf-t" text-anchor="end" style="font-size:12px">Gessel–Reutenauer (1993)</text><circle cx="544.4705882352941" cy="212" r="6" style="fill:var(--bf-amber)"/><text x="534.4705882352941" y="216" class="bf-t" text-anchor="end" style="font-size:12px">the BWT itself (1994)</text><circle cx="559.5294117647059" cy="236" r="6" style="fill:var(--bf-steel)"/><text x="549.5294117647059" y="240" class="bf-t" text-anchor="end" style="font-size:12px">discrete Morse (Forman) (1998)</text><circle cx="623.5294117647059" cy="260" r="6" style="fill:var(--bf-amber)"/><text x="613.5294117647059" y="264" class="bf-t" text-anchor="end" style="font-size:12px">recompression (Jeż) (2015)</text><circle cx="634.8235294117648" cy="284" r="6" style="fill:var(--bf-amber)"/><text x="624.8235294117648" y="288" class="bf-t" text-anchor="end" style="font-size:12px">string attractors (2018)</text><circle cx="40" cy="340" r="6" style="fill:var(--bf-green)"/><text x="52" y="344" class="bf-tm" text-anchor="start">combinatorics on words</text><circle cx="210" cy="340" r="6" style="fill:var(--bf-blue)"/><text x="222" y="344" class="bf-tm" text-anchor="start">interval exchanges</text><circle cx="380" cy="340" r="6" style="fill:var(--bf-amber)"/><text x="392" y="344" class="bf-tm" text-anchor="start">string algorithms</text><circle cx="550" cy="340" r="6" style="fill:var(--bf-steel)"/><text x="562" y="344" class="bf-tm" text-anchor="start">topology</text></svg>
+<figcaption>Each tool appears in our research journals or FRONTIER.md as part of a team's work. Years are first appearances. The list is not complete, and it shows what we have drawn on, not what we should.</figcaption>
+</figure>
+
+<p>Some of these are classical in the sense this post means:</p>
+<ul>
+<li><strong>Combinatorics on words.</strong> Christoffel words (1875) and Sturmian sequences (Morse and Hedlund, 1940) give the two-letter blocks whose inversion is pure arithmetic. The Chen–Fox–Lyndon factorisation (1958) underlies the bijective BWT.</li>
+<li><strong>Continued fractions and the Euclidean algorithm.</strong> On a two-letter Sturmian block, Rauzy induction <em>is</em> the Euclidean algorithm, and the block has a grammar of size O(log n).</li>
+<li><strong>Interval exchanges and rotations.</strong> LF is an interval exchange. Keane's work (1975), Rauzy's induction (1979) and Veech's (1982) gave our <a href="../2026-11-10-rauzy-veech-reconstruction/">Rauzy–Veech reconstruction</a>.</li>
+<li><strong>Nineteenth-century permutation theory.</strong> LF is one permutation of a block's rows, and its cycle structure is the classical object. This is the area our teams have used least.</li>
+</ul>
+<p>The later tools in the figure, recompression (Jeż, 2015) and string attractors (Kempa and Prezza, 2018), are useful, but a search that reaches only for them is the bias in action.</p>
+<h2 id="5-how-does-a-broad-toolkit-get-used-well">5. How does a broad toolkit get used well?<a class="headerlink" href="#5-how-does-a-broad-toolkit-get-used-well" title="Permanent link">&para;</a></h2>
+<p>Breadth alone does not say where a tool enters. In the proof, the mechanism is a transplant. Stepanov's 1969 proof of the Riemann Hypothesis for curves over finite fields works with an auxiliary function that vanishes to high order. An <a href="https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf">illustrated guide</a> to the proof's architecture calls its shape "Stepanov over ℤ", and gives the dictionary row by row:</p>
+<figure class="bf-fig" id="stepanov">
+<p class="bf-title">The solved case, transplanted: each row of Stepanov's proof and its substitute over the integers</p>
+<svg viewBox="0 0 720 298" role="img" aria-label="Stepanov's proof for curves over a finite field, row by row, and its substitute over the integers: vanishing to order m becomes divisibility of an m-fold iterated theta lift, from automorphic forms; counting degrees becomes Bost's slope inequality, from Arakelov geometry; finite extensions become layers of a cyclotomic tower, from Iwasawa theory; upper bounds suffice becomes a localized Landau theorem."><defs><marker id="si-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--bf-muted)"/></marker></defs><text x="110" y="22" class="bf-ts" text-anchor="middle">Stepanov, curves over 𝔽</text><text x="395" y="22" class="bf-ts" text-anchor="middle">the proof, over ℤ</text><text x="625" y="22" class="bf-ts" text-anchor="middle">tools from</text><rect x="10" y="38" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="69" class="bf-t" text-anchor="middle" style="font-size:12.5px">vanishing to order m</text><line x1="212" y1="64" x2="268" y2="64" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="38" width="250" height="52" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:2"/><text x="395" y="61" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">divisibility of an m-fold</text><text x="395" y="78" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">iterated theta lift</text><line x1="522" y1="64" x2="540" y2="64" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="61" class="bf-tm" text-anchor="middle" style="font-size:11.5px">theta lifts on unitary</text><text x="625" y="78" class="bf-tm" text-anchor="middle" style="font-size:11.5px">groups (automorphic forms)</text><rect x="10" y="102" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="133" class="bf-t" text-anchor="middle" style="font-size:12.5px">counting degrees</text><line x1="212" y1="128" x2="268" y2="128" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="102" width="250" height="52" rx="6" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:2"/><text x="395" y="133" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">Bost’s slope inequality</text><line x1="522" y1="128" x2="540" y2="128" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="125" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Arakelov geometry,</text><text x="625" y="142" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Euclidean lattices</text><rect x="10" y="166" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="197" class="bf-t" text-anchor="middle" style="font-size:12.5px">finite extensions of 𝔽</text><line x1="212" y1="192" x2="268" y2="192" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="166" width="250" height="52" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:2"/><text x="395" y="189" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">layers of a cyclotomic</text><text x="395" y="206" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">tower of fields</text><line x1="522" y1="192" x2="540" y2="192" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="189" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Iwasawa theory,</text><text x="625" y="206" class="bf-tm" text-anchor="middle" style="font-size:11.5px">Ferrero–Washington</text><rect x="10" y="230" width="200" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="110" y="261" class="bf-t" text-anchor="middle" style="font-size:12.5px">“upper bounds suffice”</text><line x1="212" y1="256" x2="268" y2="256" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-a)"/><rect x="270" y="230" width="250" height="52" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:2"/><text x="395" y="253" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">a localized theorem</text><text x="395" y="270" class="bf-t-strong" text-anchor="middle" style="font-size:12.5px">of Landau type</text><line x1="522" y1="256" x2="540" y2="256" style="stroke:var(--bf-muted);stroke-width:1;stroke-dasharray:2 2"/><text x="625" y="261" class="bf-tm" text-anchor="middle" style="font-size:11.5px">analytic number theory</text></svg>
+<figcaption>The four rows are the guide's dictionary, quoted. The fields on the right are where each substitute's tools come from, read from the guide's flow diagram. A reading of the proof's architecture, not a verified dependency graph.</figcaption>
+</figure>
+
+<p>Each distant theory in the toolkit entered because one row needed a substitute. Iwasawa theory and the Ferrero–Washington theorem (1979) entered because Stepanov passes to all finite extensions of a field, and the proof needed a tower of fields instead.</p>
+<p>We use the same mechanism. Each research chain starts from a <em>solved case</em>, a kind of block whose inversion is cheap:</p>
+<ul>
+<li>a perfectly clustering block, one run per letter;</li>
+<li>a two-letter Sturmian block;</li>
+<li>a periodic text;</li>
+<li>one of Open's thick strips, which collapses in one jump.</li>
+</ul>
+<p>The chain writes the cheap inversion as explicit steps, runs it on real blocks, and finds which steps fail. A failing step names the ingredient to search for, in mathematics of any era. Our <a href="../2026-11-20-where-the-decoding-work-goes/">cost map</a> of the Wikidata benchmark already says where the first steps fail:</p>
+<figure class="bf-fig" id="our-dictionary">
+<p class="bf-title">Our first dictionary: the cheap case's steps, where they fail on real blocks, and the ingredient each failure asks for</p>
+<svg viewBox="0 0 720 242" role="img" aria-label="Our first dictionary. A run of one letter moves as one block: fails on statement IDs, 3 to 8.5 percent of bytes but 54 to 67 percent of one-row runs; ingredient wanted, place unique random bytes without walking to them. A repeated fragment is copied: sha1 hashes are 6 to 25 percent of thin-run rows and are copies; ingredient, find the copy source cheaply. The fixed skeleton costs nothing: JSON keys are 33 to 38 percent of bytes but 1 to 4 percent of thin-run rows; no ingredient needed."><defs><marker id="si-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--bf-muted)"/></marker></defs><text x="120" y="22" class="bf-ts" text-anchor="middle">the cheap case’s step</text><text x="360" y="22" class="bf-ts" text-anchor="middle">where it fails on real blocks</text><text x="600" y="22" class="bf-ts" text-anchor="middle">ingredient wanted</text><rect x="10" y="36" width="220" height="56" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="120" y="60" class="bf-t" text-anchor="middle" style="font-size:12.5px">a run of one letter</text><text x="120" y="77" class="bf-t" text-anchor="middle" style="font-size:12.5px">moves as one block</text><line x1="232" y1="64" x2="246" y2="64" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-b)"/><rect x="248" y="36" width="226" height="56" rx="6" style="fill:var(--bf-amber-tint);stroke:var(--bf-amber);stroke-width:2"/><text x="361" y="60" class="bf-t" text-anchor="middle" style="font-size:11px">statement IDs (GUIDs): 3–8.5% of bytes,</text><text x="361" y="77" class="bf-t-strong" text-anchor="middle" style="font-size:11.5px">54–67% of one-row runs</text><line x1="476" y1="64" x2="490" y2="64" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-b)"/><rect x="492" y="36" width="218" height="56" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="601" y="60" class="bf-t" text-anchor="middle" style="font-size:12px">place unique random bytes</text><text x="601" y="77" class="bf-t" text-anchor="middle" style="font-size:12px">without walking to them</text><rect x="10" y="104" width="220" height="56" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="120" y="128" class="bf-t" text-anchor="middle" style="font-size:12.5px">a repeated fragment</text><text x="120" y="145" class="bf-t" text-anchor="middle" style="font-size:12.5px">is copied, not decoded</text><line x1="232" y1="132" x2="246" y2="132" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-b)"/><rect x="248" y="104" width="226" height="56" rx="6" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:2"/><text x="361" y="128" class="bf-t" text-anchor="middle" style="font-size:11px">sha1 hashes: 6–25% of thin-run rows,</text><text x="361" y="145" class="bf-t-strong" text-anchor="middle" style="font-size:11.5px">copies of decoded text</text><line x1="476" y1="132" x2="490" y2="132" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-b)"/><rect x="492" y="104" width="218" height="56" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="601" y="128" class="bf-t" text-anchor="middle" style="font-size:12px">find the copy source</text><text x="601" y="145" class="bf-t" text-anchor="middle" style="font-size:12px">cheaply</text><rect x="10" y="172" width="220" height="56" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="120" y="196" class="bf-t" text-anchor="middle" style="font-size:12.5px">the fixed skeleton</text><text x="120" y="213" class="bf-t" text-anchor="middle" style="font-size:12.5px">costs nothing</text><line x1="232" y1="200" x2="246" y2="200" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-b)"/><rect x="248" y="172" width="226" height="56" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:2"/><text x="361" y="196" class="bf-t" text-anchor="middle" style="font-size:11px">JSON keys: 33–38% of bytes,</text><text x="361" y="213" class="bf-t-strong" text-anchor="middle" style="font-size:11.5px">only 1–4% of thin-run rows</text><line x1="476" y1="200" x2="490" y2="200" style="stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#si-b)"/><rect x="492" y="172" width="218" height="56" rx="6" style="fill:var(--bf-steel-tint);stroke:var(--bf-steel);stroke-width:1"/><text x="601" y="196" class="bf-t" text-anchor="middle" style="font-size:12px">none: this step</text><text x="601" y="213" class="bf-t" text-anchor="middle" style="font-size:12px">already holds</text></svg>
+<figcaption>Failure rates measured on six Wikidata blocks (working-backwards journal, cost map); the classes are regex approximations and "thin" is a run-width proxy. The right-hand column is what the search is for: open questions, not results.</figcaption>
+</figure>
+
+<p>The economics are unchanged. Our charter's rule of <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/METHOD.md">mathematical maximalism</a> holds: unlimited ambition in the mathematics that discovers a decoder, strict economy in the decoder that runs. A chain whose substitutes hold but don't yet pay goes to the <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/FRONTIER.md#foundational">Foundational list</a>. Native timing on our test machine, an i9-10900K, is the final word.</p>
+<h2 id="6-what-happens-next">6. What happens next?<a class="headerlink" href="#6-what-happens-next" title="Permanent link">&para;</a></h2>
+<p>The breadth-oriented team, Kitchen Sink, adopts the toolkit rule and the transplant at its next cycle boundary. A separate team is working on contracting a block directly in the space of interval exchanges; <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md">its first round</a> has been audited. Neither has a result from the new method yet.</p>
+<p>The first thing to report will be each chain's own anatomy: its tools by field and year, which one is new, and which steps carry the argument. If our chains turn out to draw only on the last thirty years, that will be a finding too.</p>
+<hr />
+<p><strong>Sources:</strong>
+<a href="https://eyal-weiss.github.io/rh-proof-anatomy/rh_anatomy.html">Weiss's anatomy of the claimed proof</a> (a text scan, with AI-assisted importance estimates);
+<a href="https://nasqret.github.io/riemann-rev/guide/proof-guide.pdf">the architecture guide</a>;
+<a href="https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/zeta-paper.pdf">the proof explained for the zeta function</a>, by Claude Fable 5.2, Codex Astra 6.2 and Gemini Carbon at the behest of Michael O. Rubinstein (working draft, 21 November 2026);
+<a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">the Lean community's statement</a>;
+<a href="https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/">Terence Tao on the claim</a>.</p>
+<p><strong>Research records:</strong>
+<a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-21-the-shape-of-the-rh-proof.md">the twelve levers</a>;
+<a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-20-working-backwards.md">working backwards and the cost map</a>;
+<a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/monodromy/2026-11-10-rauzy-veech.md">the Rauzy–Veech literature</a> and <a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/monodromy/2026-11-10-lyndon-literature.md">the Lyndon literature</a>;
+<a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/team/research-charter/METHOD.md">the research method</a>;
+<a href="https://github.com/lmmx/mibz2/blob/426b4d724/docs/journal/2026-11-22-neon-teamwork-paradigm.md">the interval-exchange team's first round</a>.</p>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../2026-11-22-correctness-is-uniform-cost-is-not/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Correctness is uniform, cost is not">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Correctness is uniform, cost is not
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../2026-11-21-a-memory-gain-is-a-gain/" class="md-footer__link md-footer__link--next" aria-label="Next: Admitting dense blocks to Open">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Admitting dense blocks to Open
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      mibz2 is licensed under MIT OR Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    
+    <a href="https://github.com/lmmx/mibz2" target="_blank" rel="noopener" title="mibz2 on GitHub" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://pypi.org/project/mibz2/" target="_blank" rel="noopener" title="mibz2 on PyPI" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://crates.io/crates/mibz2" target="_blank" rel="noopener" title="mibz2 on crates.io" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="m508.5 249.8-21.8-13.5c-.2-2-.3-3.9-.5-5.9l18.7-17.5c.9-.9 1.6-1.9 2-3.1s.5-2.5.2-3.7-.8-2.4-1.6-3.3-1.8-1.7-3-2.1l-24-9c-.5-1.9-1.1-3.8-1.7-5.6l15-20.8c.7-1 1.2-2.2 1.3-3.4s0-2.5-.5-3.7-1.2-2.2-2.2-2.9-2.1-1.3-3.4-1.5l-25.4-4.2c-.9-1.7-1.8-3.4-2.7-5.2l10.7-23.4c.5-1.1.7-2.4.6-3.6s-.5-2.4-1.2-3.5-1.6-1.9-2.8-2.5-2.4-.8-3.6-.8l-25.8.9c-1.2-1.5-2.4-2.9-3.6-4.4l5.8-25.3c.3-1.2.3-2.5-.1-3.7s-1-2.3-1.9-3.2-2-1.5-3.2-1.9-2.5-.4-3.7-.1l-25.1 6c-1.4-1.2-2.9-2.4-4.4-3.6l.9-25.8c.1-1.3-.2-2.5-.8-3.6s-1.4-2.1-2.5-2.8-2.2-1.1-3.5-1.2-2.5.1-3.7.6l-23.3 10.7-5.1-2.7-4.2-25.4c-.2-1.2-.7-2.4-1.5-3.4s-1.8-1.7-2.9-2.2-2.4-.7-3.7-.5-2.4.6-3.4 1.3l-20.9 15c-1.9-.6-3.8-1.1-5.6-1.7l-9-24c-.4-1.2-1.2-2.2-2.1-3S307.2 5.2 306 5s-2.5-.2-3.7.2-2.3 1.1-3.1 2l-17.6 18.7c-2-.2-3.9-.4-5.9-.5L262.3 3.5c-.7-1.1-1.6-1.9-2.7-2.6S257.3 0 256 0s-2.5.3-3.6.9-2 1.5-2.7 2.6l-13.5 21.8c-2 .2-3.9.3-5.9.6L212.9 7.1c-.9-.9-1.9-1.6-3.1-2s-2.5-.5-3.7-.2-2.4.8-3.3 1.6-1.7 1.8-2.1 3l-9 24c-1.9.6-3.8 1.1-5.7 1.7l-20.8-15c-1-.7-2.2-1.2-3.4-1.3s-2.5 0-3.7.5-2.2 1.2-2.9 2.2-1.3 2.1-1.5 3.4l-4.2 25.4c-1.7.9-3.4 1.8-5.2 2.7l-23.4-10.5c-1.1-.5-2.4-.7-3.7-.6s-2.5.5-3.5 1.2-1.9 1.7-2.5 2.8-.8 2.4-.8 3.6l.9 25.8c-1.5 1.2-3 2.4-4.4 3.6l-25.1-6c-1.2-.3-2.5-.3-3.7.1s-2.3 1-3.2 1.9-1.5 2-1.9 3.2-.4 2.5-.1 3.7l6 25.1c-1.2 1.4-2.4 2.9-3.6 4.4l-25.8-.9c-1.3 0-2.5.2-3.6.8s-2.1 1.4-2.8 2.4-1.1 2.2-1.2 3.5.1 2.5.6 3.6l10.7 23.4c-.9 1.7-1.8 3.4-2.7 5.2l-25.4 4.1c-1.2.2-2.4.7-3.4 1.5s-1.7 1.8-2.2 2.9-.7 2.4-.5 3.7.6 2.4 1.3 3.4l15 20.8c-.6 1.9-1.1 3.8-1.7 5.7l-24 9c-1.2.4-2.2 1.2-3 2.1s-1.4 2.1-1.6 3.3-.2 2.5.2 3.7 1.1 2.3 2 3.1l18.7 17.5c-.2 2-.4 3.9-.6 5.9L3.5 249.8c-1.1.7-1.9 1.6-2.6 2.7s-.9 2.3-.9 3.6.3 2.5.9 3.6 1.5 2 2.6 2.7l21.8 13.5c.2 2 .3 3.9.6 5.9L7.1 299.1c-.9.9-1.6 1.9-2 3.1s-.5 2.5-.2 3.7.8 2.4 1.6 3.3 1.8 1.7 3 2.1l24 9c.6 1.9 1.1 3.8 1.7 5.6l-15 20.8c-.7 1-1.2 2.2-1.3 3.4s0 2.5.5 3.7 1.2 2.2 2.2 2.9 2.1 1.3 3.4 1.5l25.4 4.2 2.7 5.1-10.5 23.6c-.5 1.1-.7 2.4-.6 3.6s.5 2.5 1.2 3.5c.7 1.1 1.6 1.9 2.7 2.5s2.4.8 3.6.8l25.8-.9c1.2 1.5 2.4 2.9 3.6 4.4L73 430.2c-.3 1.2-.3 2.5.1 3.7s1 2.3 1.9 3.2 2 1.5 3.2 1.9 2.5.4 3.7.1l25.2-5.9c1.5 1.2 2.9 2.4 4.4 3.6l-.9 25.8c0 1.3.2 2.5.8 3.6s1.4 2.1 2.5 2.8 2.2 1.1 3.5 1.2 2.5-.1 3.6-.6l23.4-10.7 5.1 2.7 4.2 25.4c.2 1.2.7 2.4 1.5 3.4s1.8 1.8 2.9 2.2 2.4.7 3.7.5 2.4-.6 3.4-1.3l20.8-15c1.9.6 3.8 1.1 5.6 1.7l9 24c.4 1.2 1.2 2.2 2.1 3s2.1 1.4 3.3 1.6 2.5.2 3.7-.2 2.3-1.1 3.1-2l17.5-18.7c2 .2 3.9.4 5.9.6l13.5 21.8c.7 1.1 1.6 1.9 2.7 2.6s2.3.9 3.6.9 2.5-.3 3.6-.9 2-1.5 2.7-2.6l13.5-21.8c2-.2 3.9-.3 5.9-.6l17.5 18.7c.9.9 1.9 1.6 3.1 2s2.5.5 3.7.2 2.4-.8 3.3-1.6 1.7-1.8 2.1-3l9-24c1.9-.6 3.8-1.1 5.6-1.7l20.8 15c1 .7 2.2 1.2 3.4 1.3s2.5 0 3.7-.5 2.2-1.2 2.9-2.2 1.3-2.1 1.5-3.4l4.2-25.4 5.1-2.7 23.4 10.7c1.1.5 2.4.7 3.6.6s2.4-.5 3.5-1.2 1.9-1.6 2.5-2.8.8-2.4.8-3.6l-.9-25.8c1.5-1.2 2.9-2.4 4.4-3.6l25.2 5.9c1.2.3 2.5.3 3.7-.1s2.3-1 3.2-1.9 1.5-2 1.9-3.2.4-2.5.1-3.7l-5.9-25.2c1.2-1.4 2.4-2.9 3.6-4.4l25.8.9c1.3.1 2.5-.2 3.6-.8s2.1-1.4 2.8-2.5c.7-1 1.1-2.2 1.2-3.5s-.1-2.5-.6-3.6l-10.7-23.4 2.7-5.1 25.4-4.2c1.2-.2 2.4-.7 3.4-1.5s1.8-1.8 2.2-2.9.7-2.4.5-3.7-.6-2.4-1.3-3.4l-15-20.8c.6-1.9 1.1-3.8 1.7-5.6l24-9c1.2-.4 2.2-1.2 3-2.1s1.4-2.1 1.6-3.3.2-2.5-.2-3.7-1.1-2.3-2-3.1l-18.7-17.5c.2-1.9.4-3.9.6-5.9l21.8-13.5c1.1-.7 1.9-1.6 2.6-2.7s.9-2.3.9-3.6-.3-2.5-.9-3.6-1.5-2-2.6-2.7m-151 129.1c-3.6-.8-7.4-.1-10.5 1.9s-5.3 5.2-6 8.8l-7.6 35.7c-24.6 11.1-51.3 16.8-78.3 16.7s-53.6-6.1-78.1-17.4l-7.6-35.7c-.4-1.8-1.1-3.5-2.1-5s-2.4-2.8-3.9-3.8-3.2-1.7-5-2-3.6-.3-5.4.1l-31.5 6.8c-5.8-6-11.3-12.5-16.3-19.2h153.2c1.7 0 2.9-.3 2.9-1.9v-54.2c0-1.6-1.2-1.9-2.9-1.9h-44.8v-34.4h48.5c4.4 0 23.7 1.3 29.8 25.9 1.9 7.5 6.2 32.1 9.1 40 2.9 8.8 14.6 26.5 27.1 26.5h79c-5.3 7.1-11.1 13.8-17.3 20.1l-32.1-6.9zm25.8 34.5c0 3-.9 6-2.6 8.5s-4 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .8-8.8 3.1-5.2 5.6-6.9 5.4-2.6 8.5-2.6h.4c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zm-225.6-.7c0 3-.9 6-2.6 8.5s-4.1 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .9-8.8 3.1-5.2 5.6-6.8 5.4-2.6 8.5-2.6h.5c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zM69.6 234.2l32.8-14.6c1.7-.7 3.2-1.8 4.4-3.1s2.2-2.9 2.9-4.6 1-3.5.9-5.3-.5-3.6-1.2-5.3l-6.8-15.2h26.6v119.7H75.6c-6.6-23.2-8.7-47.6-6.1-71.6zm-11.3-36.1c0-2 .4-4 1.2-5.8s1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.5c3 .1 5.9 1 8.3 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4.1-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zm155.2 24.5v-35.3h63.3c3.3 0 23.1 3.8 23.1 18.6 0 12.3-15.2 16.7-27.7 16.7zM399 306.7c-9.8 1.1-20.6-4.1-22-10.1-5.8-32.5-15.4-39.4-30.6-51.4 18.9-12 38.5-29.6 38.5-53.3 0-25.5-17.5-41.6-29.4-49.5-16.8-11-35.3-13.2-40.3-13.2H116.3c27.5-30.7 64.4-51.5 104.9-59.2l23.5 24.6c1.3 1.3 2.8 2.4 4.4 3.1s3.5 1.1 5.3 1.2 3.6-.3 5.3-.9 3.2-1.7 4.6-2.9l26.3-25c26.8 5 52.1 15.8 74.3 31.6s40.6 36.2 54.1 59.9l-18 40.6c-1.5 3.4-1.5 7.2-.2 10.6s3.9 6.2 7.3 7.7l34.6 15.3c1.1 10.8 1.2 21.7.4 32.5h-19.3c-1.9 0-2.7 1.3-2.7 3.1v8.8c0 20.8-11.7 25.3-22 26.5zM240 60.2c0-4 1.6-7.9 4.5-10.7s6.7-4.5 10.7-4.5h.4c3 .1 5.9 1 8.4 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zM436.8 214c-2 0-4-.4-5.8-1.2s-3.5-1.9-4.9-3.3-2.5-3.1-3.3-4.9-1.2-3.8-1.2-5.8.4-4 1.2-5.8 1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.4c4 .1 7.9 1.7 10.7 4.6s4.4 6.8 4.3 10.8-1.7 7.9-4.6 10.7-6.8 4.4-10.8 4.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://lmmx.github.io/mibz2/background/behind-the-scenes/" target="_blank" rel="noopener" title="Behind the scenes" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-telescope" viewBox="0 0 24 24"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44M13.56 11.747l4.332-.924M16 21l-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455zM6.158 8.633l1.114 4.456M8 21l3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.copy","content.action.edit","content.code.copy","content.tabs.link","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.top","search.highlight","search.suggest","toc.follow"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+        <script src="../../assets/javascripts/bench.js?v=1097f8975bcc"></script>
+      
+        <script src="../../assets/javascripts/couriers.js?v=1097f8975bcc"></script>
+      
+        <script src="../../assets/javascripts/blog.js?v=1097f8975bcc"></script>
+      
+        <script src="../../assets/javascripts/frontier.js?v=1097f8975bcc"></script>
+      
+        <script src="../../assets/javascripts/observatory.js?v=1097f8975bcc"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      
+        <script src="../../assets/javascripts/katex.js?v=1097f8975bcc"></script>
+      
+    
+  </body>
+</html>
