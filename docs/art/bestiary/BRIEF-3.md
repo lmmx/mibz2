@@ -87,6 +87,25 @@ The post is a normal page of the site now, and the private source (`chat.md`,
   `docs/site/assets/conversations/conversation-thomas-murphy/`.
 - The writer integrates the art into the page. Work only under `docs/art/bestiary/`.
 
+## Splitting the work (for /teamwork)
+
+Six workstreams, each owning its own files, so that no two touch the same one:
+
+1. **Style lead:** draws one creature first (the moonwalking draco bipes) to set the line, the
+   palette and the cute proportions, and writes them down in `docs/art/bestiary/STYLE-3.md` with
+   the sheet. The others follow it. If it isn't right, nothing else should be drawn.
+2. **Winged dragons and the swarm:** `draco-alatus.svg`, with its flight path.
+3. **Serpents:** `aspis.svg`, `spotted-serpent.svg`, `amphisbaena.svg`, and the burrowers' paths
+   along the text and into the letters.
+4. **Knotted pair:** `knotted-pair.svg`, with its tighten-and-slither cycle.
+5. **Headline frame and "yuck":** the frame serpents' chase round the headline, and the cute
+   wind-up creature round "yuck".
+6. **Rig and proofs:** `crawler/crawler.js` (paths, timing, pauses, running only while on
+   screen), and the animated proof pages for each creature. Others ask this stream for rig
+   changes; they don't edit `crawler.js` themselves.
+
+Streams 2–5 start once stream 1's style sheet is agreed.
+
 ## Deliverables
 
 - The six creatures, and the cute "yuck" variant, as SVGs driven by `crawler.js`.
