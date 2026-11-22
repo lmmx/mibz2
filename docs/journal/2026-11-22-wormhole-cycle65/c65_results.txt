@@ -1,0 +1,34 @@
+[PARITY PASS] Pr4StreamDecoder::write(chunk=     17B) on wikidata-l1 4W: fh=379 fb=0 hash=0072d9bb48b7a18c
+[PARITY PASS] Pr4StreamDecoder::write(chunk=   4096B) on wikidata-l1 4W: fh=379 fb=0 hash=0072d9bb48b7a18c
+[PARITY PASS] Pr4StreamDecoder::write(chunk=  65536B) on wikidata-l1 4W: fh=379 fb=0 hash=0072d9bb48b7a18c
+[PARITY PASS] Pr4StreamDecoder::write(chunk=1048576B) on wikidata-l1 4W: fh=379 fb=0 hash=0072d9bb48b7a18c
+[PARITY PASS] Pr4StreamDecoder::write(chunk=2097152B) on wikidata-l1 4W: fh=379 fb=0 hash=0072d9bb48b7a18c
+[PARITY PASS] Pr4StreamDecoder::write(chunk=4194304B) on wikidata-l1 4W: fh=379 fb=0 hash=0072d9bb48b7a18c
+
+=== 8-ROUND CYCLE 65 DROP-IN PUSH/PULL StreamDecoder A/B: wikidata-l9 4W (210 MB) ===
+Arm            med_ms       vs M739_A [95% CI]    sys  minflt  vcsw   rssMB  Hits
+M739_A         323.35 1.0000 [1.0000, 1.0000]  24.21   10116   301   49.99  -
+M739_B         326.75 1.0044 [0.9924, 1.0166]  24.39   10072   311   49.48  -
+PR4_Push_2M    324.74 1.0199 [0.9915, 1.0491]  14.55    5615   159   37.47  fh=509 fb=0
+PR4_Push_64K   323.72 1.0081 [0.9847, 1.0320]  13.54    4945   161   35.07  fh=509 fb=0
+
+=== 5-ROUND CYCLE 65 DROP-IN PUSH/PULL StreamDecoder A/B: wikidata-l9 10W (210 MB) ===
+Arm            med_ms       vs M739_A [95% CI]    sys  minflt  vcsw   rssMB  Hits
+M739_A         339.50 1.0000 [1.0000, 1.0000]  35.98   15088   529   69.48  -
+M739_B         340.05 0.9987 [0.9786, 1.0193]  34.93   15325   503   69.87  -
+PR4_Push_2M    339.05 0.9973 [0.9860, 1.0088]  23.70   10717   189   57.62  fh=509 fb=0
+PR4_Push_64K   336.53 0.9917 [0.9776, 1.0060]  25.01    9788   173   54.04  fh=509 fb=0
+
+=== 8-ROUND CYCLE 65 DROP-IN PUSH/PULL StreamDecoder A/B: wikidata-l1 4W (38 MB) ===
+Arm            med_ms       vs M739_A [95% CI]    sys  minflt  vcsw   rssMB  Hits
+M739_A          95.70 1.0000 [1.0000, 1.0000]   9.40    3039   270   27.90  -
+M739_B          95.51 1.0031 [0.9684, 1.0390]   8.12    3023   275   27.90  -
+PR4_Push_2M     95.29 1.0075 [0.9841, 1.0315]   8.39    3393   112   27.90  fh=379 fb=0
+PR4_Push_64K    94.22 1.0025 [0.9775, 1.0281]   8.35    2901   112   27.90  fh=379 fb=0
+
+=== 8-ROUND CYCLE 65 DROP-IN PUSH/PULL StreamDecoder A/B: hetero-l9 4W (54 MB) ===
+Arm            med_ms       vs M739_A [95% CI]    sys  minflt  vcsw   rssMB  Hits
+M739_A         239.45 1.0000 [1.0000, 1.0000]  41.06   20072    79   92.10  -
+M739_B         238.53 1.0025 [0.9859, 1.0194]  44.51   20245    81   91.88  -
+PR4_Push_2M    243.96 1.0210 [1.0021, 1.0403]  34.91   14473    82   78.50  fh=73 fb=0
+PR4_Push_64K   237.84 0.9995 [0.9857, 1.0135]  39.29   14182    89   77.37  fh=73 fb=0

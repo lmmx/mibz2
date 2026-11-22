@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 65: Drop-In Push/Pull StreamDecoder PR4 Adapter (Zero Scanner Thread, Arbitrary Chunk Parity)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c65_pr4_push_stream_decoder"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "0 dedicated scanner thread (W worker threads total); 100.0% fast hits", B = "0.702x-0.840x #739 RSS (35.07 MiB 4W, 54.04 MiB 10W)", Q = "0", M = "3 x 2 MiB free_win + 64 KiB L2-hot push chunk + #739 12 MiB ReadyRing" }
+evidence = "Drop-in #![forbid(unsafe_code)] Pr4StreamDecoder implementing the exact StreamDecoder push/pull API (spare/write/close/read_block/cancel) with ZERO dedicated scanner thread (inline 0.35 ms anchor scan in write(), inline ChainValidator in read_block()). Passed 100% exact parity across all 6 push chunk sizes (17 B, 4 KiB, 64 KiB, 1 MiB, 2 MiB, 4 MiB: 379/379 fh=100%, fb=0). Same-binary A/B vs M739_A/M739_B proves PR4_Push_64K (L2-hot 64 KiB feeder chunk) strictly dominates PR4_Push_2M (-2.4..-3.6 MiB RSS, -670..-930 minflt, faster wall on all 4 regimes) and delivers -51.1% minflt / -44.1% sys / 0.702x RSS at 4W (35.07 vs 49.99 MiB), -35.1% minflt / -67.3% vcsw / 0.778x RSS at 10W (54.04 vs 69.48 MiB, 336.5 vs 339.5 ms), and 0.840x RSS on hetero-l9 (77.37 vs 92.10 MiB, 237.8 vs 239.5 ms) — all even while paying safe SWAR find_runs vs #739's AVX2 find_runs."
