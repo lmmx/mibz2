@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=033ebb9fe7ed">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=69ad002b0ea2">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=033ebb9fe7ed">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=69ad002b0ea2">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=033ebb9fe7ed">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=69ad002b0ea2">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=033ebb9fe7ed">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=69ad002b0ea2">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=033ebb9fe7ed">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=69ad002b0ea2">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=033ebb9fe7ed">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=69ad002b0ea2">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1265,6 +1265,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         How to read it
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-conversation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The conversation
       </span>
     </span>
   </a>
@@ -2932,6 +2943,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#the-conversation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The conversation
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2975,9 +2997,6 @@
 who organises <a href="https://tropik.space">Tropik</a>, a research collective, journal and podcast on
 metaphysics, mathematics, poetics and software. It is published with his agreement, lightly
 edited, and set as an illuminated manuscript.</p>
-<p class="post-cta"><a class="md-button md-button--primary" href="../conversations/2026-11-22-thomas-murphy.html">Read the conversation</a></p>
-
-<p><a href="../conversations/2026-11-22-thomas-murphy.html"><img alt="The headline message, &quot;managing Claudes all day is knackering&quot;, in blackletter inside a frame of two orange serpents, with the gilded caption &quot;Of Man's Labours &amp; their Eternal Return&quot; beneath it" src="../../assets/images/conversation-thomas-murphy/knackering.jpg" /></a></p>
 <h2 id="what-it-covers">What it covers<a class="headerlink" href="#what-it-covers" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Managing agents is its own kind of labour.</strong> Thomas finds managing Claudes all day
@@ -2995,7 +3014,7 @@ edited, and set as an illuminated manuscript.</p>
   formalised and then compressed, the smaller proof might be easier to mutate and evolve.</li>
 </ul>
 <h2 id="how-to-read-it">How to read it<a class="headerlink" href="#how-to-read-it" title="Permanent link">&para;</a></h2>
-<p>The page keeps the DM's layout: my messages on the right in blue, Thomas's on the left. Around
+<p>The conversation below keeps the DM's layout: my messages on the right in blue, Thomas's on the left. Around
 them:</p>
 <ul>
 <li><strong>Fleurons (❧ ☙)</strong> mark terms with a link. Each carries a numbered footnote, and the notes at
@@ -3008,6 +3027,51 @@ them:</p>
 </ul>
 <p>The edits are light: a few words were changed for tone, and some messages after the end of the
 conversation were cut.</p>
+<h2 id="the-conversation">The conversation<a class="headerlink" href="#the-conversation" title="Permanent link">&para;</a></h2>
+<div class="convo-embed">
+<iframe id="convo" src="../conversations/2026-11-22-thomas-murphy.html" title="The conversation between Louis Maddox and Thomas Murphy, set as an illuminated manuscript" scrolling="no" loading="eager"></iframe>
+</div>
+
+<script>
+(function () {
+  var f = document.getElementById("convo");
+  if (!f) return;
+  function theme(doc) {
+    var dark = document.body.getAttribute("data-md-color-scheme") === "slate";
+    doc.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  }
+  function fit() {
+    try { f.style.height = f.contentDocument.documentElement.scrollHeight + "px"; } catch (e) {}
+  }
+  f.addEventListener("load", function () {
+    var doc;
+    try { doc = f.contentDocument; } catch (e) { return; }
+    if (!doc) return;
+    doc.documentElement.style.overflow = "hidden";
+    theme(doc);
+    new MutationObserver(function () { theme(doc); })
+      .observe(document.body, { attributes: true, attributeFilter: ["data-md-color-scheme"] });
+    doc.addEventListener("click", function (ev) {
+      var a = ev.target.closest && ev.target.closest("a[href]");
+      if (!a) return;
+      var h = a.getAttribute("href");
+      if (h.charAt(0) === "#") {
+        var el = doc.getElementById(h.slice(1));
+        if (el) {
+          ev.preventDefault();
+          var y = f.getBoundingClientRect().top + el.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      } else {
+        a.setAttribute("target", "_top");
+      }
+    });
+    fit();
+    if (window.ResizeObserver) new ResizeObserver(fit).observe(doc.body);
+    setTimeout(fit, 1500);
+  });
+})();
+</script>
 
 
 
@@ -3168,19 +3232,19 @@ conversation were cut.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=033ebb9fe7ed"></script>
+        <script src="../../assets/javascripts/bench.js?v=69ad002b0ea2"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=033ebb9fe7ed"></script>
+        <script src="../../assets/javascripts/couriers.js?v=69ad002b0ea2"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=033ebb9fe7ed"></script>
+        <script src="../../assets/javascripts/blog.js?v=69ad002b0ea2"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=033ebb9fe7ed"></script>
+        <script src="../../assets/javascripts/frontier.js?v=69ad002b0ea2"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=033ebb9fe7ed"></script>
+        <script src="../../assets/javascripts/observatory.js?v=69ad002b0ea2"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=033ebb9fe7ed"></script>
+        <script src="../../assets/javascripts/katex.js?v=69ad002b0ea2"></script>
       
     
   </body>

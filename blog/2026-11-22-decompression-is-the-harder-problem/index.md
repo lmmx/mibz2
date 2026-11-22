@@ -8,8 +8,6 @@ Thomas Murphy of Tropik and I talk about agent swarms and message boards, and wh
 
 This post is a conversation: a Twitter DM between me and [Thomas Murphy](<https://x.com/thomasmurphy__>), who organises [Tropik](<https://tropik.space>), a research collective, journal and podcast on metaphysics, mathematics, poetics and software. It is published with his agreement, lightly edited, and set as an illuminated manuscript.
 
-[Read the conversation](<https://lmmx.github.io/mibz2/blog/conversations/2026-11-22-thomas-murphy.html>)
-
 ## What it covers
 
 - **Managing agents is its own kind of labour.** Thomas finds managing Claudes all day knackering, and more boring than writing code, but there is no going back.
@@ -20,7 +18,7 @@ This post is a conversation: a Twitter DM between me and [Thomas Murphy](<https:
 
 ## How to read it
 
-The page keeps the DM's layout: my messages on the right in blue, Thomas's on the left. Around them:
+The conversation below keeps the DM's layout: my messages on the right in blue, Thomas's on the left. Around them:
 
 - **Fleurons (❧ ☙)** mark terms with a link. Each carries a numbered footnote, and the notes at the end, the *Compendium of Links*, say in a short paragraph what each one is.
 - **Notes hung beneath a message** explain a term in passing, such as the BEAM or Bondy.
@@ -28,3 +26,5 @@ The page keeps the DM's layout: my messages on the right in blue, Thomas's on th
 - **Serpents and dragons** crawl through the text, after the medieval bestiaries. They are decoration, and they are still being redrawn.
 
 The edits are light: a few words were changed for tone, and some messages after the end of the conversation were cut.
+
+## The conversation
