@@ -1063,10 +1063,10 @@
     const bodyLen = spec.bodyLen * scale;
     const maxWidth = spec.maxWidth * scale;
     const headScale = spec.headScale * scale;
-    const ruffExtra = headType === 'claude-ruffed' ? 11 * headScale : 0;
-    const wingExtra = spec.wings ? 14 * scale : 0;
-    const legExtra = spec.legs ? 9 * scale : 0;
-    const maxHalfExtent = Math.max(maxWidth * 0.72, 11 * headScale + ruffExtra, wingExtra, legExtra);
+    const ruffExtra = headType === 'claude-ruffed' ? 15 * headScale : 0;
+    const wingExtra = spec.wings ? 21 * scale : 0;
+    const legExtra = spec.legs ? 12 * scale : 0;
+    const maxHalfExtent = Math.max(maxWidth * 0.75, 13 * headScale + ruffExtra, wingExtra, legExtra);
 
     const undAmp = motion === 'undulate' ? 2.6 * scale : (motion === 'gait' ? 1.1 * scale : 1.5 * scale);
     const undWave = 22 * scale;
