@@ -34,6 +34,14 @@ Heterogeneity is measurable, and it shows at three scales.
 
 **Within a block.** Most of a Wikidata block is a repeated JSON skeleton of keys and punctuation, which bzip2 already turns into long runs, cheap to invert. A smaller share is repetition at a distance: `sha1` references and repeated strings, copies of text already decoded. Then there are the statement identifiers. They are random 122-bit GUIDs, and the birthday bound means their contexts shatter after about four or five hex digits. In the [classical-tools audit](<https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-11-22-classical-tools-audit.md>) they are 53.6–67.1% of the width-1 rows the Open kernel retains, and 28.7% of its emission time on the six blocks measured. Three structures, three costs, in one block.
 
+**In the decoder's own terms.** The dispatch's gates are written in one structural statistic of a block, r/n: run records per row. So the heterogeneity can be read off the gates themselves:
+
+Where each block's r/n falls among the gates
+
+One dot per run-route block, from the per-block census of the open-admission journal (docs/journal/2026-11-19-open-admission/blocks.jsonl), coloured by today's route: green, Open; blue, Segmented. Larger dots are full blocks of 100,000 rows or more. Whether the runs corpus's two blocks fit the dense band's cap was not measured; Wikidata's five did.
+
+Wikidata's 233 full blocks lie between r/n 0.059 and 0.206, all inside Open's range, five of them in the dense band. Its 150 tiny blocks lie between 0.40 and 1.0 and go to `Segmented`. By count, Open takes barely half the corpus's 431 blocks; by rows, it takes 99.996%. Text sits just past the dense band, at 0.29–0.33, and the periodic `pattern` and `onebyte` sit below the sparse gate, at 0.008.
+
 **Between corpora.** One exact change gains differently on different data. The block reader of \#745 on CI's paired bench, at 4 threads:
 
 One exact change, seven corpora: the block reader's wall time at 4 threads
@@ -42,7 +50,7 @@ CI's paired bench on \#745 (10 rounds, a 4-core Xeon runner, not the i9). Green:
 
 The change speeds up the serial stage that reads the compressed stream. The barely compressible `records` and `random` gain 6–7%, while `runs` and `onebyte`, compressed hundreds or hundreds of thousands of times, show nothing. That fits the serial stage's share of the work growing with the compressed bytes, though the bench does not measure that share per corpus.
 
-**Between families of data.** A hindsight oracle chose, per block, the fastest of thirteen settings of one Open construction plus two walks. On the 431 Wikidata blocks it would save 3.17% over a fixed setting; on six non-Wikidata blocks, 12.8–13.1% (single-threaded, on a research host). The same family of kernels has a different headroom on different data.
+**Between families of data.** A hindsight oracle chose, per block, the fastest of thirteen kernel configurations over a research build: eleven settings of one Open construction, and two walks. On the 431 Wikidata blocks it would save 3.17% over that build's fixed setting; on six non-Wikidata blocks, 12.8–13.1% (single-threaded, on a research host). The same family of kernels has a different headroom on different data.
 
 ## 3\. Exact routes, each betting on a structure
 
@@ -96,7 +104,7 @@ Open is the one global change of representation so far. It is a classical idea, 
 
 Local constructions can lead to a global one. In mathematics a different proof of a solved case has opened new routes before: the Riemann Hypothesis for curves over finite fields was proved first by Weil, then by Stepanov's elementary method, completed by Bombieri, and it was that method's descendants that travelled ([Two centuries of tools](<https://lmmx.github.io/mibz2/blog/2026-11-22-two-centuries-of-tools/index.md>)). Inverse BWT has the same structure. The LF walk, cycle decomposition and first-return induction are different constructive proofs that the BWT is invertible, and each gives a different decoder. The proof programme names seven points, L0 to L6, where one step of the proof can be replaced; Open replaced the classical route at L3, L4 and L5.
 
-What we cannot yet say is how complete the family is. The oracle's 3.17% bounds only the alternatives it chose between: one construction's two parameters and two walks. It says that family is nearly saturated on Wikidata, and nothing about a construction outside it. The 10-thread plateau points the same way: every construction gain of the last twelve research cycles left the decoder's DRAM traffic at 10 workers at 4.91 bytes per output byte.
+What we cannot yet say is how complete the family is. The oracle's 3.17% bounds only the alternatives it chose between: eleven settings of one construction's two parameters, and two walks, over a research build rather than master. It says that family is nearly saturated on Wikidata, and nothing about a construction outside it. The 10-thread plateau points the same way: every construction gain of the last twelve research cycles left the decoder's DRAM traffic at 10 workers at 4.91 bytes per output byte.
 
 ## 7\. What is proved, measured and open
 
