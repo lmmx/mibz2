@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 60: Round 6 Interim Handoff #2 (Cycles 56-60) — Charge 2 i9 WxS Grid & Charge 4 Live-Verified PR 4 BlockSpan Spec"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c60_r6_interim_handoff2"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "0 barrier stalls; 100.0% fast hits (882/882, fb=0)", B = "0.776x-0.992x #739 RSS (<= 8 MiB ping-pong input RAM)", Q = "0", M = "MAX_LIVE_WINS=2 x 4 MiB + #739 12 MiB ReadyRing" }
+evidence = "Round 6 Interim Handoff #2 synthesizing Cycles 56-60 on origin/master 3296195e3 (#739; src/ identical at 10c7673bd) and Mechanisms 300a29976: (1) Charge 2 complete 28-arm i9-10900K workers x slots grid at 10, 12, 16, 20T (grid only, no hardcoded table; anchored to all 4 real i9 points with 0.0-2.6 ms error; predicts 9W/18..36 at 52.9-53.9 ms on +MechBR and 10W/20..30 at 55.5 ms on +PR4); (2) Charge 4 complete, bug-hardened, live-verified PR 4 BlockSpan streaming interface spec (SpanCand, SpanFinder, WindowBuf, SpecOutcome, ChainValidator + published_seq EOF invariant + zero-memset refill + activation gate threads >= phys_cores), beating/matching M739_A across all 5 live multi-regime A/Bs (10W 0.9521x, l1 0.9410x, 4W 0.9782x, hetero 0.9827x, random 0.9887x) at 0.776x-0.992x RSS; killed P0_WholeIn (1.32x-1.72x RSS) and PR4_Live_2M (1.0563x hetero regression)."
