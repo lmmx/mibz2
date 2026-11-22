@@ -5,6 +5,11 @@
 #   reviewed and green, and its ready tag set at the exact commit to run;
 # - an entry is removed once its bundle has been read.
 #
+# Where this repository's runs report (read by bench/submit.sh and bench/await-submit.sh, so
+# that those scripts name no repository; keep these two lines):
+# repo: lmmx/mibz2
+# channel: 145
+#
 # recipe                       branch                    what it measures
 bench-miss-cost              bench/miss-cost           contention counters at 10 threads, W = 10/9/8/7, THP arm and load-latency sampling (#529; MONODROMY record 47 frozen before the data)
 bench-release-scaling        master                    0.5.12 against 0.5.11 on the i9 (RELEASING §5), at the v0.5.12 tag commit 788ebe3e

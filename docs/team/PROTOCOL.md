@@ -250,7 +250,7 @@ with one command whenever suits him. Nothing about a queued run is left to decid
 
   It also posts a LOG on #145 naming the entry, the commit and the review.
 - **Running it:** Louis runs `just workstation-queue` (`bench/run-queue.sh`). It reads the queue
-  from origin's master, then for each entry runs `just submit <recipe>` once, at exactly the
+  from origin's default branch (master), then for each entry runs `just submit <recipe>` once, at exactly the
   tagged commit (`bench/await-submit.sh`), and posts each bundle on #145 as usual. Then it
   suspends the machine.
   - It skips an entry that isn't ready, is on HOLD, or already ran on that machine at that commit.
@@ -263,8 +263,19 @@ with one command whenever suits him. Nothing about a queued run is left to decid
   - **Its files on the workstation** follow the XDG Base Directory spec, never the home
     directory itself: under `${XDG_STATE_HOME:-~/.local/state}/mibz2/workstation/`, `logs/`
     holds the queue's and each waiter's logs, and `ran/` the once-per-commit markers
-    (`ran/<recipe>-<sha>`). wikidata-pq's queue keeps its own, under `wikidata-pq/`, so neither
-    sees the other's markers. Only one of the two queues runs at a time.
+    (`ran/<recipe>-<sha>`). Every repository keeps its own, under its origin's name
+    (`wikidata-pq/`, `upigz/`), so none sees another's markers.
+  - **Several repositories:** with `--repo PATH` (repeatable) or the list in
+    `${XDG_CONFIG_HOME:-~/.config}/workstation/repos`, one runner serves every listed
+    repository's queue, each from its own origin, through its own scripts, to its own evidence
+    branch and channel. They take turns, one run each, so a busy queue can't starve another.
+    One repository's trouble (a dirty checkout, an unreadable origin, a failed recipe) is logged
+    and the others go on. Setup: `docs/journal/2026-11-22-multi-repo-runner.md`.
+  - **One run at a time on the machine:** the runner holds an flock on
+    `${XDG_STATE_HOME:-~/.local/state}/workstation/queue.lock` for the whole run, and
+    `just submit-when-ready` and `just submit` take it too (or inherit the runner's). A second
+    runner, or a stray `just submit`, is refused while it is held. A runner that doesn't take
+    that lock (wikidata-pq's own, until it adopts it) is not kept apart by it.
   - Until 15 November 2026 the logs were `~/workstation-queue-*.log` and `~/await-submit-*.log`,
     and the markers `~/.cache/await-submit/<recipe>-<sha>`. Louis moved them to the places above
     once, and the scripts no longer read the old places.

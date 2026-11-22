@@ -63,6 +63,8 @@ class Queue(unittest.TestCase):
             **os.environ,
             "HOME": str(self.home),
             "XDG_STATE_HOME": str(self.state),
+            # (an empty config directory: no repository list, so one checkout is served)
+            "XDG_CONFIG_HOME": str(self.tmp / "xdg-config"),
             "PATH": f"{self.fake}:{os.environ['PATH']}",
             "FAKE_LOG": str(self.log),
             "GIT_AUTHOR_NAME": "Test",
@@ -73,8 +75,13 @@ class Queue(unittest.TestCase):
         self.env.pop("XDG_CACHE_HOME", None)
         self.env.pop("GH", None)
         self.env.pop("AWAIT_SUBMIT_NOTICES", None)
+        self.env.pop("EVIDENCE_REPO", None)
+        self.env.pop("EVIDENCE_CHANNEL", None)
+        self.env.pop("WORKSTATION_LOCK_FD", None)
         # origin, and the maintainer's (here: the coordinator's) clone that sets it up
-        self.origin = self.tmp / "origin.git"
+        # (named as on GitHub: the state directory is named after the origin repository)
+        self.origin = self.tmp / "lmmx" / f"{REPO}.git"
+        self.origin.parent.mkdir()
         git(self.tmp, "init", "-q", "--bare", "-b", "master", str(self.origin))
         self.dev = self.tmp / "dev"
         git(self.tmp, "clone", "-q", str(self.origin), str(self.dev), env=self.env)
@@ -96,7 +103,8 @@ class Queue(unittest.TestCase):
         return git(self.dev, "rev-parse", "HEAD", env=self.env)
 
     def set_queue(self, *recipes):
-        lines = ["# the queue", "# recipe  branch  what"]
+        lines = ["# the queue", f"# repo: lmmx/{REPO}", f"# channel: {CHANNEL}"]
+        lines += ["# recipe  branch  what"]
         lines += [f"{r}  master  measures {r}" for r in recipes]
         (self.dev / "bench" / "workstation-queue.txt").write_text("\n".join(lines) + "\n")
         return self.commit("queue")
