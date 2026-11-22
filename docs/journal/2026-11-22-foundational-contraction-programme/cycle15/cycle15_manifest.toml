@@ -1,0 +1,39 @@
+name = "Cycle 15 LeanNoMarkXor (0.5.12 OpenCells + hoisted-mark NoMarkXor + LazyCells single-kernel, NO BandCoal)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "open_s1_outq_strips_packed_mark"
+inputs = ["records", "p"]
+output = "outq_and_thick_strips"
+status = "verified"
+cost = { W = "R", D = "1", B = "R + m", Q = "0", M = "ns" }
+dependent = false
+evidence = "Single sequential pass over capped run records (<= 127) via cold-split Pass::take: queues thin runs (w <= 16) into OutQ16 inside out[..n+16], packs ns thick strips into edges[..4*ns], and records (mark_byte << 32) | mark in First::mark_and_byte with zero extra hot-loop register; zero r_0 materialization."
+
+[[edge]]
+id = "open_s2_rv_elim"
+inputs = ["outq_and_thick_strips", "n"]
+output = "open_excursion_dag"
+status = "verified"
+cost = { W = "S_thick", D = "S_thick", B = "ns", Q = "S_thick", M = "ns" }
+dependent = true
+evidence = "Exact v0.5.12 Rauzy-Veech thick-only elimination in Open's edges dead buffer (S_thick = 79,349 steps on 6 blocks, 2.67M on 431 wikidata blocks; spiral acceleration for widest > 32,768)."
+
+[[edge]]
+id = "open_s3a_dict_bands"
+inputs = ["open_excursion_dag"]
+output = "bands_dict"
+status = "verified"
+cost = { W = "B_raw", D = "1", B = "B_raw", Q = "0", M = "B_raw" }
+dependent = false
+evidence = "Exact v0.5.12 terminal side-0 F-order walk and Dictionary coding (no BandCoal S3a branch/icache overhead: S3a = 0.780 ms vs 0.835 ms with BandCoal on 6 blocks)."
+
+[[edge]]
+id = "open_s4_nomark_xor_emit"
+inputs = ["bands_dict", "outq_and_thick_strips", "n", "p"]
+output = "text"
+status = "measured"
+cost = { W = "n + m", D = "m/2", B = "n + m", Q = "m", M = "m" }
+dependent = true
+evidence = "Hoisted-mark wire_xor::<false> on 255/256 non-mark bytes (-10.9% S4 on 6 blocks: 1.552 -> 1.383 ms) + wire_xor::<true> on mark_byte + emit_bidirectional 2-end walk; LazyCells single-kernel fallback removes duplicate OpenCells scratch; 0.9564x (6 blks) / 0.9566x (431 blks, IQR [0.9517, 0.9605]) vs OpenCells 0.5.12, beating Arm X by -1.03%; 338/338 PASS."
