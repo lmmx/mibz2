@@ -66,6 +66,10 @@ brief names:
   over the maintainer's chat messages as material to quote, and don't frame the commission
   around a process or policy story. The title is technical, never a slogan
   (`write-blog-post`, "First: written for serious researchers and programmers").
+- **The brief's numbers are a starting point, not the record** (22 November 2026): the
+  drafting agent re-checks every figure in the brief against the newest evidence before
+  drafting. The memory post's brief said "no loss of speed"; the later i9 release-scaling run
+  had already shown 4% faster at 10 threads.
 - **Visuals:** a figure for each result, comparison, architecture and trade-off, and for
   the key takeaways where it helps. Dense prose where a figure would carry it is a
   failure mode.
