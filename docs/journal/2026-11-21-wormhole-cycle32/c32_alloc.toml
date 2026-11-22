@@ -1,0 +1,21 @@
+name = "Wormhole/Neon Cycle 32: Wall W2 Allocator, Exact-Fit Out Pool & Recycled Zero-Copy Feeder"
+target = "text"
+uses = []
+
+[[edge]]
+id = "a2_recycled_feeder_zero_copy"
+inputs = ["records", "C", "p", "n"]
+output = "stream_chunks"
+status = "verified"
+dependent = false
+cost = { W = "n / 15", D = "n / 15", B = "n / 15", Q = "0", M = "3 MiB" }
+evidence = "Recycled 1 MiB feeder pool + zero-copy ChannelSource swap eliminates per-chunk 4 MiB mmap/munmap TLB shootdowns; cuts minflt -26.1% (4W), -22.9% (10W), -34.0% (16W) and sys_ms -35.3% (16W)."
+
+[[edge]]
+id = "a1_exact_fit_out_pool"
+inputs = ["stream_chunks"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "n", Q = "0", M = "slots * 960 KiB" }
+evidence = "Exact-fit out.reserve_exact(960_000) before decode_block eliminates 100% of 900 KiB -> 1.80 MiB doubling (dbl=0) caused by src/rle.rs:47 reserve(n+64) off-by-5B bug on Wikidata blocks."
