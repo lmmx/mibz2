@@ -532,7 +532,7 @@ Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lm
 
 **Changes:** why each release happened: changelog notes and linked posts on the History page ([\#702](<https://github.com/lmmx/mibz2/pull/702>)); admit dense blocks (width certificate) with producer buffers in edges ([\#703](<https://github.com/lmmx/mibz2/pull/703>)).
 
-**Read:** [A memory gain is a gain: the change our speed-only rule nearly shelved](<https://lmmx.github.io/mibz2/blog/2026-11-21-a-memory-gain-is-a-gain/index.md>)
+**Read:** [Admitting dense blocks to the Open kernel: 29% less peak memory](<https://lmmx.github.io/mibz2/blog/2026-11-21-a-memory-gain-is-a-gain/index.md>)
 
 ### 0.5.10
 

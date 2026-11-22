@@ -217,11 +217,11 @@
     "title": "Where the decoding work goes: random IDs in repetitive JSON"
   },
   "assets/social/blog-2026-11-21-a-memory-gain-is-a-gain.png": {
-    "description": "Sending five dense blocks to our leanest decoding kernel cut peak memory by a quarter at eight threads without slowing anything, so memory now counts as a gain.",
+    "description": "A bounded admission band takes five dense blocks off a 5.6 MiB-per-worker fallback, and the decoder runs slightly faster in over a quarter less memory.",
     "foot": "lmmx.github.io/mibz2 · 21 November 2026",
     "kind": "result",
     "section": " · Research blog",
-    "title": "A memory gain is a gain: the change our speed-only rule nearly shelved"
+    "title": "Admitting dense blocks to the Open kernel: 29% less peak memory"
   },
   "assets/social/blog-2026-11-21-besieging-hard-problems.png": {
     "description": "A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check.",

@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [A memory gain is a gain](<https://lmmx.github.io/mibz2/blog/2026-11-21-a-memory-gain-is-a-gain/index.md>): Sending five dense blocks to our leanest decoding kernel cut peak memory by a quarter at eight threads without slowing anything, so memory now counts as a gain.
+- [Admitting dense blocks to Open](<https://lmmx.github.io/mibz2/blog/2026-11-21-a-memory-gain-is-a-gain/index.md>): A bounded admission band takes five dense blocks off a 5.6 MiB-per-worker fallback, and the decoder runs slightly faster in over a quarter less memory.
 - [Besieging hard problems](<https://lmmx.github.io/mibz2/blog/2026-11-21-besieging-hard-problems/index.md>): A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check.
 - [Fast alone, slow in a crowd](<https://lmmx.github.io/mibz2/blog/2026-11-21-fast-alone-slow-in-a-crowd/index.md>): Walking each block in eight lanes made our newest decoding loop 13% faster on one thread, yet 5% slower once eight workers shared the processor.
 - [Sixteen at a stroke](<https://lmmx.github.io/mibz2/blog/2026-11-21-sixteen-at-a-stroke/index.md>): Writing sixteen at a stroke and keeping only what it needs spares the processor a guess per run, so mibz2 0.5.8 decodes Wikidata 5% faster on ten cores.
