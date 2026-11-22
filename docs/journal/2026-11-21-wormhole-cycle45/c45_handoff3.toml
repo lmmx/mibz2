@@ -1,0 +1,21 @@
+name = "Wormhole/Neon Cycle 45 (Interim Handoff #3): Unified WormholeScaleDecoder Qualification (Regime 1 Streaming + Regime 2 ParScan-Coupled)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "r1_wormhole_scale_streaming"
+inputs = ["records", "C", "p", "n"]
+output = "streaming_decoded"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "max(T_scan, T_par)", B = "4.0 * n", Q = "0", M = "44.9 MiB (4W) / 61.6 MiB (10W)" }
+evidence = "Regime 1 standalone drop-in streaming: R1_Stream_P1W0 hits 4W = 0.9391 [0.9206, 0.9581] (A/A 1.0027 [0.9960, 1.0095]), 10W -5.7%, 16W -7.6%; R1_Stream_P2 cuts 10W sys_ms -64.6%, minflt -55.0%, RSS -38.7% (100.4->61.6 MiB) and 16W RSS -49.6%."
+
+[[edge]]
+id = "r2_wormhole_scale_parscan_coupled"
+inputs = ["streaming_decoded"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers (95.1% parallel)", B = "3.1 * n (off-chip 10W)", Q = "0", M = "31.1 MiB (4W) / 51.5 MiB (10W) / 67.7 MiB (16W)" }
+evidence = "Regime 2 ParScan-coupled: R2_Par_P1W0 hits 4W = 0.8935 [0.8858, 0.9013], 10W -13.1%; R2_Par_P2 cuts 4W sys -73.3% / minflt -76.5% / RSS -48.0% (31.1 MiB), 10W sys -77.1% (78.2->17.9 ms) / minflt -68.2% / vcsw -70.0% / RSS -48.7% (51.5 MiB), 16W RSS -50.3% (67.7 MiB)."
