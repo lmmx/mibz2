@@ -195,6 +195,34 @@ impl<L: Links> Elim<'_, L> {
         self.a[id as usize * L::STRIDE + L::BOTTOM] = x;
     }
 
+    /// Assign exclusive prefix sums from both ends of side 1. Narrow nodes
+    /// reuse both links for the coordinate, so read both links before writing.
+    fn assign_bottom(&mut self, rows: u32) {
+        let mut first = L::next(self.a, 0, 1);
+        let mut last = L::prev(self.a, 0, 1);
+        let (mut lo, mut hi) = (0, rows);
+        while first != last {
+            let next = L::next(self.a, first, 1);
+            let prev = L::prev(self.a, last, 1);
+            let width = self.width(first);
+            hi -= self.width(last);
+            self.set_bottom(first, lo);
+            self.set_bottom(last, hi);
+            lo += width;
+            if next == last {
+                assert_eq!(lo, hi);
+                return;
+            }
+            first = next;
+            last = prev;
+        }
+        if first != 0 {
+            self.set_bottom(first, lo);
+            lo += self.width(first);
+        }
+        assert_eq!(lo, hi);
+    }
+
     /// A new node, its links unset
     fn node(&mut self, width: u32, word: u32) -> u32 {
         let id = self.nodes;
@@ -628,18 +656,9 @@ impl Kernel {
             e.a[..e.top].fill(0xA5A5_A5A5);
         }
 
-        let mut id = L::next(e.a, 0, 1);
-        x = 0;
-        while id != 0 {
-            let next = L::next(e.a, id, 1);
-            let w = e.width(id);
-            e.set_bottom(id, x);
-            x += w;
-            id = next;
-        }
-        assert_eq!(x as usize, stats.retained);
+        e.assign_bottom(stats.retained as u32);
         let mut cursors = [0; 256];
-        id = L::next(e.a, 0, 0);
+        let mut id = L::next(e.a, 0, 0);
         let mut in_node = 0;
         let mut k = 0;
         for a in 0..256 {
@@ -707,6 +726,35 @@ impl Kernel {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bottom_coordinates_at_odd_and_even_meetings() {
+        fn check<L: Links>() {
+            for count in 0..=7u32 {
+                let mut arena = [0; 64];
+                let mut e = Elim::<L> {
+                    a: &mut arena,
+                    base: 0,
+                    top: 0,
+                    nodes: 0,
+                    _links: std::marker::PhantomData,
+                };
+                e.node(0, 0);
+                let mut list = (0, 0);
+                for width in 1..=count {
+                    let id = e.node(width, 0);
+                    e.append_to(&mut list, id, 1);
+                }
+                e.close(1, list, (0, 0));
+                e.assign_bottom(count * (count + 1) / 2);
+                for id in 1..=count {
+                    assert_eq!(e.bottom(id), (id - 1) * id / 2);
+                }
+            }
+        }
+        check::<Narrow>();
+        check::<Wide>();
+    }
 
     #[test]
     fn graded_word_lengths_across_saturation() {
