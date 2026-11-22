@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.13](https://github.com/lmmx/mibz2/compare/v0.5.12...v0.5.13) - 2026-11-22
+
+### <!-- 3 -->Performance
+
+- *(crc)* portable CRC sliced by 16, its lookups XORed as a balanced tree ([#763](https://github.com/lmmx/mibz2/pull/763))
+- *(block)* the default path's block reader from Carbon's cycle 37: an L1-resident Huffman decoder and leaner block headers ([#745](https://github.com/lmmx/mibz2/pull/745))
+- *(parallel)* Wormhole's plateau stack: owned run-route output, in-place RLE1, tiled CRC, a 12 MiB ready cap and a ready ring ([#739](https://github.com/lmmx/mibz2/pull/739))
+
+### <!-- 4 -->Documentation
+
+- *(blog)* correctness is uniform: a dek that passes, and lighter sentences ([#759](https://github.com/lmmx/mibz2/pull/759))
+- *(blog)* correctness is uniform, cost is not ([#755](https://github.com/lmmx/mibz2/pull/755))
+- *(skills)* a post from a discussion is briefed in two transmissions, in files ([#754](https://github.com/lmmx/mibz2/pull/754))
+- *(blog)* correctness and speed in a decoder that adapts to its input, version 1 ([#752](https://github.com/lmmx/mibz2/pull/752))
+- *(skills)* the coordinator merges a post's version 1 within minutes, without waiting for CI ([#737](https://github.com/lmmx/mibz2/pull/737))
+- *(skills)* iterate, ship, re-ship: a post's first version goes live in minutes ([#736](https://github.com/lmmx/mibz2/pull/736))
+- *(blog)* two centuries of tools, a claimed Riemann proof's toolkit and our search ([#732](https://github.com/lmmx/mibz2/pull/732))
+- *(blog)* admitting dense blocks to the Open kernel, 29% less peak memory ([#733](https://github.com/lmmx/mibz2/pull/733))
+- *(skills)* results posts are about the result, titled technically, without process or anecdote ([#731](https://github.com/lmmx/mibz2/pull/731))
+- *(changelog)* 0.5.12, its release scaling and crossover on the i9, and the attribution row ([#730](https://github.com/lmmx/mibz2/pull/730))
+
+### <!-- 9 -->Other
+
+- Decompression is the harder problem, a conversation with Thomas Murphy ([#761](https://github.com/lmmx/mibz2/pull/761))
+- *(runner)* one workstation runner for sibling repos: a machine-wide lock, round-robin across repos, per-repo state ([#760](https://github.com/lmmx/mibz2/pull/760))
+
 ## [0.5.12](https://github.com/lmmx/mibz2/compare/v0.5.11...v0.5.12) - 2026-11-22
 
 ### <!-- 3 -->Performance
