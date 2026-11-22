@@ -1,5 +1,5 @@
-//! `just bench-recalibrate-diet`'s arms (docs/journal/2026-11-21-recalibration-diet-registration.md,
-//! the design of docs/journal/2026-11-18-recalibration-registration.md on master 23e40f77): at
+//! `just bench-recalibrate-stack`'s arms (docs/journal/2026-11-22-recalibration-stack-registration.md,
+//! the design of docs/journal/2026-11-18-recalibration-registration.md on master 53f7ecf9): at
 //! each cell, the arm the run names as the shipped trim is the decoder the default builds on
 //! the measured i9 there (`StreamDecoder::new` under `with_machine`), in its worker count,
 //! its window and its kernel, pinned one CPU a core (`Machine::pinned_i9`) or unpinned

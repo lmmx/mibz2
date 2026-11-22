@@ -1837,20 +1837,21 @@ bench-memory-lever ROUNDS="10" THREADS="4,6,8,9,10,12":
     git rev-parse HEAD > "$O/commit.txt"
     bash bench/bundle.sh "$O"
 
-# The worker-count recalibration after the Open kernel's memory diet (RELEASING §3.4 and §5c), for
-# the release after 0.5.9: the reviewed design below, `bench-recalibrate` of 2026-11-18 as re-run
-# for 0.5.7 and 0.5.8 (`bench-recalibrate-058`), re-pinned to master at 23e40f77 (#692: the Open
-# kernel's elimination in `edges` and its queues in `out`, per-worker scratch 4,236 to 1,200 KiB
-# natively). The registration is docs/journal/2026-11-21-recalibration-diet-registration.md,
-# frozen before the data. Unchanged but for the pin, this recipe's own evidence path
-# (target/recalibrate-diet) and, at the unpinned 4-thread cell, the reference: 0.5.8's
-# recalibration (#678) made the shipped trim there lazy (the plan's four workers, lazy 4/16), so
-# that cell's arms are the design's own for a lazy shipped trim at the plan's count (one worker
-# fewer in its kernel and the untrimmed plan, here eager 4/16), as 0.5.8 did at unpinned 6. The
-# untimed DRY preflight (the 6th positional argument) is kept; it is not evidence. About 13
-# minutes.
-#   just bench-recalibrate-diet            (the run)
-#   just bench-recalibrate-diet 4 12 24 0.25 5 1   (DRY)
+# The worker-count recalibration after the Open kernel's construction stack (RELEASING §3.4 and
+# §5c), for the release after 0.5.11: the reviewed design below, `bench-recalibrate` of 2026-11-18
+# as re-run for 0.5.7, 0.5.8 and after the memory diet (`bench-recalibrate-diet`), re-pinned to
+# master at 53f7ecf9 (#719: the Open kernel's construction stack on #714, adopted on the i9 at
+# 0.952 / 0.987 / 0.975 at 6 / 8 / 10 threads, retained scratch about -19% natively). The
+# registration is docs/journal/2026-11-22-recalibration-stack-registration.md, frozen before the
+# data. Unchanged from `bench-recalibrate-diet` but for the pin and this recipe's own evidence
+# path (target/recalibrate-stack): every cell's arms are the diet run's, the unpinned 4-thread
+# cell's reference included (0.5.8's recalibration, #678, made the shipped trim there lazy, the
+# plan's four workers, lazy 4/16; so that cell's arms are the design's own for a lazy shipped trim
+# at the plan's count: one worker fewer in its kernel and the untrimmed plan, here eager 4/16, as
+# 0.5.8 did at unpinned 6). The untimed DRY preflight (the 6th positional argument) is kept; it is
+# not evidence. About 13 minutes.
+#   just bench-recalibrate-stack            (the run)
+#   just bench-recalibrate-stack 4 12 24 0.25 5 1   (DRY)
 #
 # The worker-count recalibration on 0.5.5's kernel (the C6 adoption registration,
 # docs/journal/2026-11-18-recalibration-registration.md, frozen before the data; #314
@@ -1871,30 +1872,31 @@ bench-memory-lever ROUNDS="10" THREADS="4,6,8,9,10,12":
 # gain family), text and random (the guards, generated afresh). Each placement is one Holm
 # family at α 0.025 (two families, 0.05 together). Then the memory controller's bytes at three
 # cells (decides nothing), if `kernel.perf_event_paranoid` is 0 or less.
-bench-recalibrate-diet COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="5" DRY="":
+bench-recalibrate-stack COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS="5" DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
-    W=$PWD/target/recalibrate-diet
+    W=$PWD/target/recalibrate-stack
     mkdir -p "$W"
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-recalibrate-diet (the registration, docs/journal/2026-11-21-recalibration-diet-registration.md): the worker trims on master 23e40f77's kernel (OpenCells after #692's memory diet) at $(git rev-parse HEAD), pinned at 4, 6, 8 and 10 threads and unpinned at 4, 6, 8, 10, 12, 16 and 20, the shipped trim against its neighbours, the untrimmed plan and the other kernel, on {{COPIES}} copies of the Wikidata sample, text and random, {{ROUNDS}} paired rounds ({{ROUNDS_P8}} pinned at 8), settle {{SETTLE}} s; then the memory controller, {{REPS}} reps"
+    echo "bench-recalibrate-stack (the registration, docs/journal/2026-11-22-recalibration-stack-registration.md): the worker trims on master 53f7ecf9's kernel (OpenCells with #719's construction stack) at $(git rev-parse HEAD), pinned at 4, 6, 8 and 10 threads and unpinned at 4, 6, 8, 10, 12, 16 and 20, the shipped trim against its neighbours, the untrimmed plan and the other kernel, on {{COPIES}} copies of the Wikidata sample, text and random, {{ROUNDS}} paired rounds ({{ROUNDS_P8}} pinned at 8), settle {{SETTLE}} s; then the memory controller, {{REPS}} reps"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
-      || { echo "bench-recalibrate-diet: the checkout has local changes"; exit 1; }
+      || { echo "bench-recalibrate-stack: the checkout has local changes"; exit 1; }
     dry="{{DRY}}"
-    [ -z "$dry" ] || echo "bench-recalibrate-diet: DRY RUN: the untimed preflight; no timing kept; not evidence" | tee "$O/DRY-RUN.txt"
-    # the diet's decoder: this commit's src is master's at #692's merge (23e40f77), byte for
-    # byte (the pin; 0.5.8's was 70b18ca4, 0.5.7's 17405826, 2026-11-18's v0.5.5, 7214f8ca)
-    PIN=23e40f7708c86e4a421b1f0b9a6413ad3a6e70db
+    [ -z "$dry" ] || echo "bench-recalibrate-stack: DRY RUN: the untimed preflight; no timing kept; not evidence" | tee "$O/DRY-RUN.txt"
+    # the construction stack's decoder: this commit's src is master's at #719's merge (53f7ecf9),
+    # byte for byte (the pin; the diet's was 23e40f77, 0.5.8's 70b18ca4, 0.5.7's 17405826,
+    # 2026-11-18's v0.5.5, 7214f8ca)
+    PIN=53f7ecf935d62ac7896eafaf55c5d249789614ca
     git cat-file -e $PIN^{commit} 2>/dev/null || git fetch -q origin master 2>/dev/null || true
     git diff --quiet $PIN HEAD -- src Cargo.toml Cargo.lock \
-      || { echo "bench-recalibrate-diet: src, Cargo.toml or Cargo.lock differs from master's 23e40f77"; exit 1; }
+      || { echo "bench-recalibrate-stack: src, Cargo.toml or Cargo.lock differs from master's 53f7ecf9"; exit 1; }
     echo "src, Cargo.toml and Cargo.lock: master's $PIN" | tee "$O/pin.txt"
     export RUSTUP_TOOLCHAIN=1.99.1
     rustc -V | grep -q '^rustc 1\.99\.1 ' \
-      || { echo "bench-recalibrate-diet: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+      || { echo "bench-recalibrate-stack: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
     cargo build -q --release --example ab --example windows
     AB=$PWD/target/release/examples/ab
     git rev-parse HEAD > "$O/commit.txt"
@@ -1989,7 +1991,7 @@ bench-recalibrate-diet COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS=
       --cand mibz2-oce-2-8 --judge-at mibz2-oce-2-8=4 \
       --cand mibz2-occ-3-12 --judge-at mibz2-occ-3-12=4 \
       | tee "$O/pinned-verdict.txt" \
-      || echo "bench-recalibrate-diet: the pinned family is VOID (pinned-verdict.txt says why); the bundle is kept"
+      || echo "bench-recalibrate-stack: the pinned family is VOID (pinned-verdict.txt says why); the bundle is kept"
     # unpinned, 14 cells
     python3 bench/two_arm.py "$O/unpinned.jsonl" "${common[@]}" --judged 10,12,16,20,8,6,4 \
       --hold-max-threads 0 --unpinned \
@@ -2007,7 +2009,7 @@ bench-recalibrate-diet COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS=
       --cand mibz2-occ-3-12 --judge-at mibz2-occ-3-12=4 \
       --cand mibz2-oce-4-16 --judge-at mibz2-oce-4-16=4 \
       | tee "$O/unpinned-verdict.txt" \
-      || echo "bench-recalibrate-diet: the unpinned family is VOID (unpinned-verdict.txt says why); the bundle is kept"
+      || echo "bench-recalibrate-stack: the unpinned family is VOID (unpinned-verdict.txt says why); the bundle is kept"
     # the DRAM diagnostic (decides nothing): the memory controller system-wide, so only where
     # `kernel.perf_event_paranoid` is 0 or less; skipped, and said so, otherwise. Unpinned at 10
     # threads the four lazy counts (MONODROMY's traffic model), unpinned at 6 and pinned at 4
@@ -2030,14 +2032,14 @@ bench-recalibrate-diet COPIES="4" ROUNDS="12" ROUNDS_P8="24" SETTLE="0.25" REPS=
             echo "== $([ "$place" = u ] && echo unpinned || echo pinned) at $t threads: $c against $ref" | tee -a "$O/dram.txt"
             python3 bench/counters.py report "$f" --ref "$ref" --cand "$c" --events imc \
               --threads "$t" --reps {{REPS}} | tee -a "$O/dram.txt" \
-              || echo "bench-recalibrate-diet: the DRAM diagnostic for $c at $t is VOID (dram.txt says why); the verdicts stand" | tee -a "$O/dram.txt"
+              || echo "bench-recalibrate-stack: the DRAM diagnostic for $c at $t is VOID (dram.txt says why); the verdicts stand" | tee -a "$O/dram.txt"
           done
         else
-          echo "bench-recalibrate-diet: the DRAM diagnostic at $place$t failed to count; the verdicts stand" | tee -a "$O/dram.txt"
+          echo "bench-recalibrate-stack: the DRAM diagnostic at $place$t failed to count; the verdicts stand" | tee -a "$O/dram.txt"
         fi
       done
     else
-      echo "bench-recalibrate-diet: the DRAM diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 0); the verdicts stand" | tee "$O/dram.txt"
+      echo "bench-recalibrate-stack: the DRAM diagnostic skipped (no perf, or kernel.perf_event_paranoid $paranoid above 0); the verdicts stand" | tee "$O/dram.txt"
     fi
     date -u +%FT%TZ > "$O/finished.txt"
     bash bench/bundle.sh "$O"
