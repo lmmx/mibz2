@@ -253,8 +253,8 @@ Push after each step, so the owner can follow along.
 
 ## 8. Fitting the creatures to the page, which is shipping as a blog post
 
-The page these creatures live on is going out as a blog post. Its source is on the branch
-the page's private copy, at `the page's source (a local copy the owner gives you) `:
+The page these creatures live on will go out as a blog post. Its source is private and is not
+in this repository; the owner gives you a local copy. In it:
 - `chat.md` is the record; each message's `- key: value` lines say which creature goes where;
 - `build_html.py` renders it to `index.html`;
 - `vine.js` draws the frames and the crawlers;
@@ -262,7 +262,7 @@ the page's private copy, at `the page's source (a local copy the owner gives you
 
 Iterate on the page's creatures as follows:
 
-1. **Work on your branch, `art/bestiary-serpents`, not the page's.** Your deliverable for the page is
+1. **Work on your branch, `art/bestiary-serpents`, and never commit the page itself to it.** Your deliverable for the page is
    `crawler/` (section 2, with `drape()` from section 5) and the creature SVGs. Then add a short
    `crawler/INTEGRATION.md` for the page's maintainer. It names each place on the page (below) and
    the call that replaces today's drawing there. The coordinator does the swap on the page's branch.
