@@ -1,0 +1,54 @@
+name = "Static M1 (kappa=1 R1 Chain Peeling) + Open Core"
+target = "text"
+
+# Reuses standard sequential registry edges from I_0 (counts/runs/affine/endpoints)
+uses = [
+  "maximal_runs",
+  "lf_shifts",
+  "run_endpoints",
+]
+
+[[edge]]
+id = "j_order_scatter"
+inputs = ["C", "runs"]
+output = "codomain_run_order"
+status = "proved"
+dependent = false
+cost = { W = "r", D = "1", B = "r", Q = "0", M = "r" }
+evidence = "One O(r + 256) counting-scatter pass over runs ordered by L-byte c yields globally sorted target F-intervals (zero sorting; verified in /tmp/fcp-a/bench_m1_packed8.c)."
+
+[[edge]]
+id = "m1_static_r1_links"
+inputs = ["domain_partition", "lf_affine", "codomain_run_order", "p"]
+output = "m1_r1_chain_graph"
+status = "proved"
+dependent = false
+cost = { W = "r", D = "1", B = "r", Q = "0", M = "r" }
+evidence = "Single linear two-pointer merge of domain_partition and codomain_run_order checks exact 1-to-1 match J_u == I_v (Theorem K1: static, Church-Rosser confluent, zero sorting, zero binary search; 25,088 exhaustive + 7,200 stress + 6/6 Wikidata blocks exact)."
+
+[[edge]]
+id = "m1_chain_peeling"
+inputs = ["m1_r1_chain_graph", "lf_affine", "runs"]
+output = "m1_core_strips"
+status = "verified"
+dependent = true
+cost = { W = "0.62*r", D = "8", B = "0.62*r", Q = "0.62*r", M = "r" }
+evidence = "Packs (delta:i32, next_r1:u24, byte:u8) into 8 B/strip and collapses maximal R1 chains (capped <= 8 B inline u64, ZERO SLP) across independent chain heads (K=8 MLP; cuts thin retained rows by -52.7% to 0.473*m_16 on 6 Wikidata blocks; verified in /tmp/fcp-a/audit_m1_width_and_joint.py and /tmp/fcp-a/bench_m1_packed8.c)."
+
+[[edge]]
+id = "open_core_induction"
+inputs = ["m1_core_strips", "n", "p"]
+output = "m1_open_retained_perm"
+status = "verified"
+dependent = false
+cost = { W = "q_core + m_core_thin", D = "log(n)", B = "q_core + m_core_thin", Q = "0", M = "m_core_thin" }
+evidence = "Open-style thick-strip (w > 16) induction on the M1 core (q_core = 0.375*r_0 strips) builds the compact reduced permutation on m_core_thin = 0.473*m_16 rows (verified byte-exact on all 6 Wikidata blocks)."
+
+[[edge]]
+id = "m1_core_emit"
+inputs = ["m1_open_retained_perm", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m_core_thin", B = "n", Q = "m_core_thin", M = "n" }
+evidence = "Dependent traversal of m_core_thin = 0.473*m_16 retained rows emitting inline u64 words (<= 8 B) and Open thick-strip words to reconstruct text[0..n) byte-for-byte exactly."

@@ -1,0 +1,52 @@
+name = "Tube-Open (V6): Zero-RV Post-S3a Inclusion-Forest Thin-Tube Contraction on Open"
+target = "text"
+
+uses = [
+  "maximal_runs",
+  "lf_shifts",
+]
+
+[[edge]]
+id = "open_s1_outq_and_r2_record"
+inputs = ["lf_affine", "runs", "C", "p", "n"]
+output = "open_strips_outq_and_r2"
+status = "verified"
+dependent = false
+cost = { W = "O(r)", D = "1", B = "O(r + m_16) [OutQ16 in out + 12B * r_2 (132k runs/6 blks)]", Q = "0", M = "O(r_2) [~260-390 KiB for R_2; OutQ16 reuses out]" }
+evidence = "One sequential pass over maximal runs splitting thick (w>16) strips, queuing retained thin rows in OutQ16, and recording R_2 (2<=w<=16) runs."
+
+[[edge]]
+id = "open_endpoint_rv_thick"
+inputs = ["open_strips_outq_and_r2", "p", "n"]
+output = "open_bands_and_inline16"
+status = "verified"
+dependent = false
+cost = { W = "O(n_s + S_rv) [identical to v0.5.12 OpenCells; 0 extra nodes/steps/bands]", D = "O(S_rv)", B = "O(n_s)", Q = "0 outside L2 (Narrow 16B arena inside dead edges buffer)", M = "O(m_16) [reuses edges buffer]" }
+evidence = "Exact v0.5.12 Open endpoint.rs thick-strip Rauzy-Veech elimination (0 extra nodes/steps/bands over shipped OpenCells)."
+
+[[edge]]
+id = "open_s4_unidirectional_wire"
+inputs = ["open_bands_and_inline16", "open_strips_outq_and_r2"]
+output = "open_unidirectional_edges"
+status = "verified"
+dependent = false
+cost = { W = "O(m_16)", D = "1", B = "O(m_16) [plain sequential wire from OutQ16]", Q = "0", M = "4 * m_16 bytes [353-808 KiB]" }
+evidence = "Sequential band-by-band OutQ16 wire into edges[0..m_16]."
+
+[[edge]]
+id = "tube_v6_zero_sort_merge_and_patch"
+inputs = ["open_unidirectional_edges", "open_strips_outq_and_r2", "open_bands_and_inline16", "p"]
+output = "tube_patched_edges_and_inline16"
+status = "verified"
+dependent = false
+cost = { W = "O(r_2) [132k 2-pointer merge + 83k L2-resident succ hops + 29.7k inline16 tube packs]", D = "O(r_2)", B = "O(r_2)", Q = "O(r_2) L2-resident (succ <= 130 KiB, 0 sorting, 0 hashing, 0 binary search)", M = "O(r_2) [~400-550 KiB R_2 + succ + extra inline16]" }
+evidence = "Verified 6/6 byte-exact on authenticated Wikidata blocks in /tmp/fcp-c/cycle5_tube_contraction_exact.py and native safe-Rust /tmp/fcp-c/tube_open_candidate.rs (cuts walk by -30.7%, 0/6 wide overflow)."
+
+[[edge]]
+id = "tube_open_emit_walk"
+inputs = ["tube_patched_edges_and_inline16", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "O(n)", D = "m_tube [620.9k across 6 blocks = 0.693x Open m_16]", B = "O(n)", Q = "m_tube dependent edge loads (0.693x Open m_16)", M = "O(n) [output buffer + edges]" }
+evidence = "Verified byte-for-byte exact against OpenCells & libbzip2 via bench/moonshot check."

@@ -1,0 +1,12 @@
+[package]
+name = "bench_selthinsq"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mibz2 = { path = "/tmp/moonshot-scorer", features = ["moonshot"] }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3

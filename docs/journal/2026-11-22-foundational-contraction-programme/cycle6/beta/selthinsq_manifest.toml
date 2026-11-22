@@ -1,0 +1,43 @@
+name = "SelThinSq-256 (256-Cursor Zero-Sort Selective Thin-Only Strip-Space Squaring + K=8 Anchor Parallel Emitter)"
+target = "text"
+
+uses = [
+  "maximal_runs",
+  "lf_shifts",
+]
+
+[[edge]]
+id = "selthinsq_classify_runs"
+inputs = ["lf_affine", "runs", "C", "p"]
+output = "classified_runs"
+status = "proved"
+dependent = false
+cost = { W = "O(r)", D = "1", B = "O(r)", Q = "0", M = "O(r) [12B/run]" }
+evidence = "One sequential scan over maximal runs classifying thin (width <= 16 or p singleton, count m = m_16) vs thick strips (ns strips), plus O(r) counting gather into F-order run list f_order_u."
+
+[[edge]]
+id = "selthinsq_thick_endpoint"
+inputs = ["classified_runs", "C", "n"]
+output = "thick_exit_bands"
+status = "verified"
+dependent = true
+cost = { W = "O(ns + |bands|)", D = "O(S_thick) [spiral-certified RV on ns = 1.6k-5.0k thick strips only]", B = "O(ns + |bands|)", Q = "O(S_thick) [L1/L2-local within 3*ns+3 nodes]", M = "O(ns + |bands|)" }
+evidence = "Identical thick-strip endpoint elimination to v0.5.12 Open (src/open/endpoint.rs, 1.000x Open thick strips); resolves all thick strips into F-order bands[0..|bands|] + inline16/spelling dictionary."
+
+[[edge]]
+id = "selthinsq_256cursor_wire"
+inputs = ["classified_runs", "thick_exit_bands", "C"]
+output = "selthinsq_edges_u64"
+status = "proved"
+dependent = false
+cost = { W = "O(r + m) [0.98r sequential cursor advances + m edge writes]", D = "1", B = "O(r + m) [8B * m edges, 0% stale, 0 sorts]", Q = "0 [256 L1-resident cursors = 3 KiB; 0 binary search]", M = "O(m) [8B * m_16 edges + 3 KiB cursors]" }
+evidence = "Theorem B5: ONE linear two-pointer scan of F-order runs against L-order runs with 256 monotonic L1 cursors over thick_exit_bands; 73% of thin rows wire direct inline u16 2-byte jumps, 17% 1B->thick, 9% 2B->thick; IS_ANCHOR_RUN protects mark + 7 parallel anchors from overshoot. Verified 0.96-1.00r cursor advances and 100% byte-exact parity across 510 binary n<=8 BWTs and all 6 SHA-256 authenticated Wikidata blocks."
+
+[[edge]]
+id = "selthinsq_k8_parallel_emit"
+inputs = ["selthinsq_edges_u64", "thick_exit_bands", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "O(n) [0.565 m_16 edge steps + O(n) stitch]", D = "O(0.565 m_16 / K) [K=8 lockstep anchor lanes = 0.071 m_16 serial rounds!]", B = "O(n)", Q = "0.565 m_16 [73% single u64 load with 0 dict lookup!]", M = "O(n) [output + reusable lane segment buffers]" }
+evidence = "Lockstep K=8 anchor-protected parallel walk over selthinsq_edges_u64 (0.565x Open dependent loads: 506,181 vs 895,391 across 6 Wikidata blocks) + exact chain stitch and period repeat for odd/even n, periodic, and multi-cycle columns (/tmp/fcp-b/selthinsq_candidate.rs)."
