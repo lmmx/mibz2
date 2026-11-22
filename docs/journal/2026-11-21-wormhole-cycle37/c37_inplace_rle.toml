@@ -1,0 +1,21 @@
+name = "Wormhole/Neon Cycle 37: Emit-Direct-to-Out (0 B scratch.ll) + Exact In-Place RLE1 + 64 KiB L2-Tiled GF(2) CLMUL CRC"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c37a_emit_direct_to_out_inplace_rle"
+inputs = ["records", "C", "p", "n"]
+output = "rle_expanded_out"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "n / W_workers", B = "1.5 * n", Q = "r_thin", M = "0 B ll (-0.90 MiB/W)" }
+evidence = "Theorem 37.1 exact in-place RLE1 (verified on 2,000 randomized shrink/expand/oscillating/0-run/RunUnfinished cases) lets OpenCells emit directly into `out`, eliminating scratch.ll (0 B, -9.0 MiB at 10W = 45% of i9 L3): 4W = 0.9558 [0.9352, 0.9769], sys_ms -38.2% (4W) / -37.5% (10W), minflt -31.1% (4W) / -32.6% (10W), rss -3.9 MiB (4W) / -30% (10W)."
+
+[[edge]]
+id = "c37b_l2_tiled_gf2_clmul_crc"
+inputs = ["rle_expanded_out"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "0.0 * n (L2 hit)", Q = "0", M = "64 KiB L2 tile" }
+evidence = "GF(2) affine CRC-32/BZIP2 identity R(s1,B) = (s1 ^ !0)*x^{8|B|} ^ !crc32(B) enables 64 KiB L2-tiled hardware CLMUL CRC in 100% safe Rust: 4W = 0.9576 [0.9381, 0.9775], 10W sys_ms 31.82 ms (-40.0%), minflt 16,907 (-35.5%), 16W rss 86.72 MiB (-35.4%)."

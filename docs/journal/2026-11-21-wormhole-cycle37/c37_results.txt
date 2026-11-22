@@ -1,0 +1,36 @@
+EXACTNESS: PASS (2,000 randomized shrink/expand/oscillating/0-run + RunUnfinished cases, tiled & untiled)
+
+=== PART 1: 1T FULL WORKER KERNEL (front + Open + RLE1 + CLMUL CRC, 60 blks = 54 MB, 15 rotated rds) ===
+  Master_AVX2+CLMUL      med= 128.16 ms  ratio=1.0000 [1.0000, 1.0000]  ll_cap=0 B
+  C37a_InPlace+CLMUL     med= 130.74 ms  ratio=1.0184 [1.0018, 1.0353]  ll_cap=0 B
+  C37b_InPlace+Tile64K   med= 131.14 ms  ratio=1.0242 [1.0024, 1.0465]  ll_cap=0 B
+  C37c_TwoBuf+Tile64K    med= 132.61 ms  ratio=1.0355 [1.0143, 1.0570]  ll_cap=899997 B
+
+=== PART 2: 12-ROUND ROTATED FRESH-PROCESS 4W A/B (wikidata_431b_210m, 211 MB, AbHash) ===
+Arm               med_ms   ratio vs MasterA [95%]  user_ms  sys_ms  minflt  rss_MB
+MasterA           373.58 1.0000 [1.0000, 1.0000]   664.77   39.51   15752   59.50
+MasterB           379.19 1.0142 [0.9839, 1.0455]   668.38   40.99   16166   60.89
+P1c_Std           359.37 0.9568 [0.9272, 0.9874]   642.45   28.29   11921   56.45
+C37a_InPl_Crc     363.59 0.9558 [0.9352, 0.9769]   659.30   24.41   10854   52.54
+C37b_InPl_T64     363.05 0.9576 [0.9381, 0.9775]   658.23   26.39   10961   53.28
+C37c_2Buf_T64     367.57 0.9775 [0.9496, 1.0062]   658.45   34.39   12815   56.38
+
+=== PART 3: COLD-START W=10 & W=16 RSS / MINFLT / WALL (wikidata_431b_210m, 3-rd median) ===
+
+--- W = 10 ---
+Arm              wall_ms  user_ms  sys_ms  minflt  rss_MB
+MasterA           376.87   670.85   52.98   26207   89.75
+MasterB           387.63   677.25   71.53   28234   98.36
+P1c_Std           369.80   663.73   53.48   19240   82.20
+C37a_InPl_Crc     374.12   701.32   33.12   17666   81.11
+C37b_InPl_T64     373.22   694.60   31.82   16907   79.41
+C37c_2Buf_T64     383.17   686.42   58.06   22732   87.98
+
+--- W = 16 ---
+Arm              wall_ms  user_ms  sys_ms  minflt  rss_MB
+MasterA           401.47   708.64   75.09   36072  134.30
+MasterB           389.76   675.61   85.57   33763  118.89
+P1c_Std           369.96   661.49   50.15   21722   95.90
+C37a_InPl_Crc     382.38   677.50   55.14   25213  102.45
+C37b_InPl_T64     396.15   706.24   51.29   22811   86.72
+C37c_2Buf_T64     420.71   692.05   89.56   30240  107.60
