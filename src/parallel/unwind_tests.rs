@@ -130,42 +130,28 @@ fn team(
     min_coop: Option<usize>,
 ) -> Arc<StreamDecoder> {
     let n = jobs.len() as u64;
-    let shared = Arc::new(Shared {
-        state: Mutex::new(State {
-            ready: BTreeMap::new(),
-            issued: n,
-            taken: 0,
-            end: Some(n),
-            cancelled: false,
-            free_out: Vec::new(),
-            free_syms: Vec::new(),
-            terminal: None,
-        }),
-        cv: Condvar::new(),
-        slots: n.max(1),
-        overlapped: AtomicU64::new(0),
-        overlap_errors: AtomicU64::new(0),
-        faults: Mutex::new(Faults {
-            at: Some(fault),
-            min_coop,
-            ..Faults::default()
-        }),
+    let mut shared = Shared::new(n.max(1), None);
+    shared.faults = Mutex::new(Faults {
+        at: Some(fault),
+        min_coop,
+        ..Faults::default()
     });
-    let (tx, rx) = channel::<Job>();
-    for j in jobs {
-        tx.send(j).unwrap();
+    {
+        let mut st = shared.lock();
+        st.issued = n;
+        st.end = Some(n);
     }
-    drop(tx);
+    let shared = Arc::new(shared);
+    let rx = Jobs::default();
+    for j in jobs {
+        rx.push(j);
+    }
+    rx.close();
     let (sh, k) = (shared.clone(), kernels());
     let h = std::thread::Builder::new()
         .name("mibz2-0".into())
         .spawn(move || {
-            pipelined_worker::<true, true, { crate::coop::BARRIER_SPINS }>(
-                &sh,
-                &Mutex::new(rx),
-                k,
-                team_k,
-            )
+            pipelined_worker::<true, true, { crate::coop::BARRIER_SPINS }>(&sh, &rx, k, team_k)
         })
         .unwrap();
     Arc::new(StreamDecoder {
@@ -340,7 +326,7 @@ fn check(
     worker_ends(dec, what);
     // the blocks after the reader's error, decoded on the reset team, are the right bytes
     let st = dec.shared.lock();
-    for (at, r) in &st.ready {
+    for (at, r) in st.ready.iter() {
         if let Ok(v) = r {
             assert!(
                 *v == chunks[*at as usize],

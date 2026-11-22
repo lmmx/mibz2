@@ -64,23 +64,45 @@ const RUN_SHARE: usize = 32;
 /// Every block this admits, `2 * syms <= max_len` admits too.
 pub fn takes_runs(b: &Symbols) -> bool {
     let syms = &b.syms;
-    if b.max_len >= 1 << 24 || 2 * syms.len() > b.max_len {
+    let len = syms.len();
+    if b.max_len >= (1 << 24) || 2 * len > b.max_len {
         return false;
     }
-    let (mut runs, mut seen) = (0usize, 0usize);
-    let mut window = |w: &[u16]| {
-        runs += w.iter().filter(|&&s| s <= 1).count();
-        seen += w.len();
-    };
-    if syms.len() <= WINDOW * WINDOWS {
-        window(syms);
-    } else {
-        let step = syms.len() / WINDOWS;
-        for i in 0..WINDOWS {
-            window(&syms[i * step..i * step + WINDOW]);
+    if len <= WINDOW * WINDOWS {
+        let need = len.div_ceil(RUN_SHARE);
+        let mut runs = 0usize;
+        let full = len / WINDOW;
+        for i in 0..full {
+            let w = &syms[i * WINDOW..(i + 1) * WINDOW];
+            runs += w.iter().map(|&s| usize::from(s <= 1)).sum::<usize>();
+            if runs >= need {
+                return true;
+            }
+            if runs + (len - (i + 1) * WINDOW) < need {
+                return false;
+            }
         }
+        runs += syms[full * WINDOW..]
+            .iter()
+            .map(|&s| usize::from(s <= 1))
+            .sum::<usize>();
+        RUN_SHARE * runs >= len
+    } else {
+        const NEED: usize = (WINDOW * WINDOWS) / RUN_SHARE;
+        let step = len / WINDOWS;
+        let mut runs = 0usize;
+        for i in 0..WINDOWS {
+            let w = &syms[i * step..i * step + WINDOW];
+            runs += w.iter().map(|&s| usize::from(s <= 1)).sum::<usize>();
+            if runs >= NEED {
+                return true;
+            }
+            if runs + (WINDOWS - 1 - i) * WINDOW < NEED {
+                return false;
+            }
+        }
+        runs >= NEED
     }
-    RUN_SHARE * runs >= seen
 }
 
 /// A block's run records and the path's scratch, kept from block to block
