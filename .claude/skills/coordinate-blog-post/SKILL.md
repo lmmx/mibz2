@@ -61,6 +61,11 @@ brief names:
 - **The dek and the sentences:** `write-blog-post`, "The dek, and the sentences". The dek must
   pass `docs/scripts/check_prose.py` and carry a little joy. The PR reports the body's flagged
   share.
+- **For a results post, results only** (Louis, 22 November 2026): the brief gives the
+  drafting agent the findings and their evidence, not the team's deliberations. Don't hand
+  over the maintainer's chat messages as material to quote, and don't frame the commission
+  around a process or policy story. The title is technical, never a slogan
+  (`write-blog-post`, "First: written for serious researchers and programmers").
 - **Visuals:** a figure for each result, comparison, architecture and trade-off, and for
   the key takeaways where it helps. Dense prose where a figure would carry it is a
   failure mode.

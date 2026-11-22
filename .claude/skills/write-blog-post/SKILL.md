@@ -181,6 +181,31 @@ and detail moved to a technical appendix [E: 2464928e, 54220de4, d0640e02].
 
 ## The title and the dek: fantastic news
 
+**First: written for serious researchers and programmers** (Louis, 22 November 2026, on
+"A memory gain is a gain: the change our speed-only rule nearly shelved": "that is sloppy: i
+would be embarassed to share that title with serious researchers and programmers … the point
+of the blog was what we found not the process theatre of our crappy rule"). This rule outranks
+everything below it in this section. The delight is in the result's clarity, never in a slogan.
+- **A results post is about the result.** The title, the dek, the opening and the takeaways
+  state what was found: the mechanism, the measured effect and its scope. Our process (who
+  proposed what, how a decision was reached, an acceptance rule, a merge that was held or
+  nearly held) appears only where it changes what the reader should believe about the result,
+  and then as one neutral sentence, never as the story.
+- **No internal politics or anecdote.** Don't quote the maintainer's chat messages or
+  instructions, and don't narrate the team's deliberations ("we reported it as holding;
+  Louis replied …"). A reader outside the project can't weigh them and doesn't need them.
+- **No slogans, aphorisms or drama in a title.** "A memory gain is a gain", "nearly
+  shelved", "the change X almost missed" are slogans or drama. A title names the technical
+  change and its measured effect, in the vocabulary a systems researcher would use.
+  - **Before:** "A memory gain is a gain: the change our speed-only rule nearly shelved".
+    **After:** "Admitting dense blocks to the Open kernel: a quarter less peak memory, no loss
+    of speed".
+- **The test:** would you put this title and opening, unchanged, in front of a researcher in
+  the field or a senior systems programmer? If any part would embarrass you there, rewrite it.
+- **How the rules below apply after this one:** the headline form, an extended metaphor in
+  figures, approachability and round figures in the dek all still hold. They serve a technical
+  title; they never license a slogan or an anecdote.
+
 **The durable concept for every title and dek** (Louis, 9 November 2026): "imagine waking up
 one morning, bright and early, the birds are chirping and as you glimpse the first rays of the
 morning sun you open this mibz2 blog page and spy a wondrous thing: some fantastic news has
@@ -306,6 +331,10 @@ figure whose axes measure something not yet explained. The maintainer calls it "
 medias res" [E: the maintainer, 2026-11-07]. It applies to every section and every figure:
 each must be followable by someone who has read only what comes before it in the post. The
 key-facts audit below is how to check it.
+
+A results post opens on the result. The opening's first paragraph never tells how a decision
+about the work was made, and never quotes the team or the maintainer (see "First: written for
+serious researchers and programmers" above).
 
 Open in this order:
 
