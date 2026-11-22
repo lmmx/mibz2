@@ -564,7 +564,7 @@ mod tests {
                     _ => 0,
                 };
                 lead += extra as i64 - 1;
-                v.extend([b'a' + (i % 5) as u8 * 40; 4]);
+                v.extend([b'a' + (i % 5) as u8 * 20; 4]);
                 v.push(extra);
             }
             if r.below(2) == 0 {

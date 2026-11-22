@@ -2450,8 +2450,9 @@ mod tests {
         use std::io::{Cursor, Write};
         let mut input = Vec::new();
         let mut expected = Vec::new();
-        // (the last: one byte, which RLE1 grows past twice its inverted rows, so the plain
-        // workers stage its inverted bytes through `ll`: `rle::unrle_in_place`)
+        // (the last: one byte, which RLE1 grows past twice its inverted rows; the in-place
+        // RLE1 grows it in its own buffer, with nothing staged through `ll`:
+        // `rle::unrle_in_place`)
         for (run, n, level) in [
             (true, 600_000, 9),
             (false, 70_000, 1),
@@ -2509,9 +2510,10 @@ mod tests {
             };
             assert_eq!(samples.iter().filter(runs).count(), 3);
             // every decoder here is plain workers' (`worker`, `decode_owned`): each run-route
-            // block is decoded into its own buffer, and the one-byte block is staged
+            // block is decoded into its own buffer, the one-byte block's growth included, and
+            // none is staged
             assert!(samples.iter().filter(runs).all(|s| s.owned.is_some()));
-            assert_eq!(samples.iter().filter(|s| s.staged).count(), 1);
+            assert_eq!(samples.iter().filter(|s| s.staged).count(), 0);
             let column = if matches!(plan, Plan::Workers(_)) {
                 trace::OutputRoute::ColumnInPlace
             } else {
