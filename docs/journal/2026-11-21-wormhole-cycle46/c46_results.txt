@@ -1,0 +1,21 @@
+
+=== 12-ROUND FRESH-PROCESS SLAB/THP STUDY (N=16 x 960 KiB, T=4 threads) ===
+Arm            med_ms      vs Sep_Double [95%]  sys_ms  minflt  rss_MB
+Sep_Double       6.41 1.0000 [1.0000, 1.0000]    7.24    3538   16.15
+Sep_Exact        6.32 1.0344 [0.9410, 1.1370]    8.35    3539   16.12
+Slab_Safe        5.67 0.9353 [0.8803, 0.9939]    7.10    3548   16.18
+Slab_THP         2.83 0.4596 [0.4210, 0.5017]    2.04     177   16.91
+
+=== 12-ROUND FRESH-PROCESS SLAB/THP STUDY (N=16 x 960 KiB, T=10 threads) ===
+Arm            med_ms      vs Sep_Double [95%]  sys_ms  minflt  rss_MB
+Sep_Double       6.41 1.0000 [1.0000, 1.0000]    6.93    3548   16.10
+Sep_Exact        6.45 1.0312 [0.9796, 1.0856]    6.71    3549   16.10
+Slab_Safe        6.07 0.9394 [0.8773, 1.0059]    6.23    3555   16.17
+Slab_THP         3.22 0.4941 [0.4583, 0.5327]    2.24     187   17.02
+
+=== 12-ROUND FRESH-PROCESS SLAB/THP STUDY (N=40 x 960 KiB, T=10 threads) ===
+Arm            med_ms      vs Sep_Double [95%]  sys_ms  minflt  rss_MB
+Sep_Double      14.76 1.0000 [1.0000, 1.0000]   17.03    8836   36.85
+Sep_Exact       15.56 1.0602 [1.0131, 1.1096]   19.59    8837   36.80
+Slab_Safe       14.23 0.9601 [0.9308, 0.9902]   19.27    8861   36.92
+Slab_THP         7.36 0.7510 [0.4511, 1.2503]    6.38     197   39.05

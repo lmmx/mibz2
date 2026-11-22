@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 46: Contiguous Slab Arena vs Separate 960 KiB Vecs & Linux 2 MiB THP Page-Fault Floor"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c46_slab_thp_diagnostic"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "0.4 ms (THP slab)", B = "n", Q = "0", M = "16 MiB (8 hugepages)" }
+evidence = "Fresh-process 12-rd study on stock Linux THP=madvise proves 4 KiB page faults (not VMA count) dominate cold-start slab cost: Slab_Safe (4K) is 0.982x at 10T (killed alone), while 2 MiB-aligned Slab_THP (madvise MADV_HUGEPAGE, impossible on separate 960 KiB Vecs < 2 MiB) cuts minflt -94.7% to -97.8% (8,836->198), sys_ms -72.8%, and slab cold wall 0.436-0.489x."
