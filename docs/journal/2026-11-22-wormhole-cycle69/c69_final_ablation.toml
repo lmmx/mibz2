@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 69: Final 15-Round Multi-Regime Cumulative Ablation Directly Against Live origin/master a3f26aa01 (#739 + #745)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c69_final_ablation_a3f26"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n (-3.0..-6.6 ms user ZeroShift52 vs 739 RLE)", D = "0 barrier stalls; 100.0% fast hits (973/973, fb=0)", B = "0.728x-0.976x a3f26aa01 RSS across all 7 regimes (55.3 vs 67.0 MiB at 10W)", Q = "-42%..-68% vcsw across 4W/6W/10W/16W", M = "W2M_L3 (3 x 2 MiB) + 0 B s.ll + #739 12 MiB ReadyRing" }
+evidence = "Final 7-regime rotated fresh-process A/B (4W 15rd, 6W 10rd, 10W 7rd, 16W 5rd wikidata-l9; 4W 15rd wikidata-l1; 4W 10rd hetero-l9 & random-l9) compiled with zero rework directly against live origin/master a3f26aa01 (#739 + Mechanisms #745). Tight A/A control across all 7 regimes (0.992-1.004x); 100.0% fast hits (fb=0) and exact AbHash everywhere. Even paying a +24 ms external safe-SWAR find_runs handicap vs a3f26aa01's private AVX2 find_runs, PR4_Own_ZS52 matches/beats M745_A on 4W (1.0032x, sys -47.1%, minflt -48.1%, RSS 35.94 vs 49.38 MiB = 0.728x), 10W (1.0017x, vcsw -68.2%, minflt -31.5%, RSS 55.26 vs 67.01 MiB = 0.825x), wikidata-l1 (0.9986x, vcsw -53.2%), hetero-l9 (0.9912x, minflt -31.8%, RSS 0.838x), and wins random-l9 (0.9770x [0.9603, 0.9939], RSS 0.909x), while ZeroShift52 beats PR4_Own_739 across all 4 wikidata-l9 thread counts (-1.57% wall at 4W, -3.0..-6.6 ms user CPU)."
