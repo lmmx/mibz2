@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 47: Parallel calloc + W-Way Scatter Flatten vs Incremental Extend and Zero-Copy Chunks"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c47_decode_parallel_flatten_ab"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "2.1 ms (overlapped) / 0 ms (chunks)", B = "2n (Par_SerialExt) / 0 (R2_Chunks)", Q = "0", M = "235 MiB (Par_SerialExt) / 226 MiB (R2_Chunks)" }
+evidence = "12-rd rotated fresh-process 4W A/B vs v0.5.12 decode_parallel (211 MB, A/A=0.9998 [0.9806, 1.0193]): KILLED F1_CallocScat (1.0751x [1.0418, 1.1096], minflt 105,688, sys 236.52 ms, RSS 420.20 MiB — double-live RSS + 51.5k concurrent mmap_lock demand-zero faults); PROMOTED Par_SerialExt (0.9285x [0.9098, 0.9477], sys -25.3%, minflt -16.7%, RSS 234.84 MiB) for API-identical Vec<u8> and R2_Chunks (0.8586x [0.8486, 0.8687], RSS 225.89 MiB) for zero-copy Vec<Vec<u8>>."

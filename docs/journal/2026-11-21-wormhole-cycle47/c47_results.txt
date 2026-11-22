@@ -1,0 +1,7 @@
+=== 12-ROUND ROTATED FRESH-PROCESS 4W A/B: decode_parallel CONTIGUOUS vs SCATTER vs CHUNKS (211 MB) ===
+Arm               med_ms         vs MasterA [95%]  user_ms  sys_ms  minflt  rss_MB
+MasterA           404.44 1.0000 [1.0000, 1.0000]   612.64  137.02   67682  272.37
+MasterB           402.12 0.9998 [0.9806, 1.0193]   607.94  140.68   67541  270.00
+Par_SerialExt     373.25 0.9285 [0.9098, 0.9477]   599.66  102.37   56353  234.84
+F1_CallocScat     428.70 1.0751 [1.0418, 1.1096]   595.13  236.52  105688  420.20
+R2_Chunks         348.36 0.8586 [0.8486, 0.8687]   571.04  110.87   54177  225.89
