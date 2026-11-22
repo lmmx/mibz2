@@ -78,11 +78,7 @@ fn audit<const INDUCE: bool, const QUEUE: bool>(
         } else if k.lens[c as usize] != LONG {
             assert_eq!(w, k.inline16[c as usize][..usize::from(k.lens[c as usize])]);
         } else {
-            let id = (c - 256) as usize;
-            assert_eq!(
-                w,
-                k.spelling[k.offsets[id] as usize..k.offsets[id + 1] as usize]
-            );
+            assert_eq!(w, long_word(&k.inline16[c as usize], &k.spelling));
         }
     }
 }
@@ -251,7 +247,7 @@ fn emit_matches_reference() {
         let got = catch_unwind(AssertUnwindSafe(|| {
             inline_words(&spelling, &offsets, &mut inline16, &mut lens);
             emit(
-                &edges, &extra, &spelling, &offsets, &inline16, &lens, n, mark, bits, &mut out,
+                &edges, &extra, &spelling, &inline16, &lens, n, mark, bits, &mut out,
             );
         }))
         .ok()
@@ -301,4 +297,11 @@ fn maximum_band_fields_decode_independently() {
         (band.end(), band.dst(), band.code()),
         (900_000, 899_999, 0x00ff_abcd)
     );
+}
+
+#[test]
+fn long_inline_slot_keeps_both_offsets() {
+    let bytes: Vec<_> = (0..80_000).map(|i| (i % 251) as u8).collect();
+    let slot = long_slot(65_535, 65_567);
+    assert_eq!(long_word(&slot, &bytes), &bytes[65_535..65_567]);
 }

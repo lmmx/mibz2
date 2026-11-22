@@ -466,7 +466,9 @@ impl Kernel {
         self.bands.clear();
         self.spelling.clear();
         self.offsets.clear();
-        self.offsets.push(0);
+        if !INDUCE {
+            self.offsets.push(0);
+        }
         let mut cursors = if INDUCE {
             self.induced(ns, n, &thin, &mut stats)
         } else {
@@ -602,7 +604,6 @@ impl Kernel {
             &self.edges[..m],
             &self.extra,
             &self.spelling,
-            &self.offsets,
             &self.inline16,
             &self.lens,
             n,
@@ -756,6 +757,20 @@ const INLINE: usize = 16;
 /// `lens` of a word longer than `INLINE`: its bytes are read from `spelling` (the cold path)
 const LONG: u8 = u8::MAX;
 
+/// Long words use their otherwise unused inline slot for two spelling offsets.
+fn long_slot(start: u32, end: u32) -> [u8; INLINE] {
+    let mut slot = [0; INLINE];
+    slot[..4].copy_from_slice(&start.to_le_bytes());
+    slot[4..8].copy_from_slice(&end.to_le_bytes());
+    slot
+}
+
+fn long_word<'a>(slot: &[u8; INLINE], spelling: &'a [u8]) -> &'a [u8] {
+    let start = u32::from_le_bytes(slot[..4].try_into().unwrap()) as usize;
+    let end = u32::from_le_bytes(slot[4..8].try_into().unwrap()) as usize;
+    &spelling[start..end]
+}
+
 /// Keep the literal entries across blocks and reserve exactly the new word count.
 fn begin_inline(words: usize, inline16: &mut Vec<[u8; INLINE]>, lens: &mut Vec<u8>) {
     if inline16.len() < 256 {
@@ -786,8 +801,11 @@ fn inline_words(
     for w in offsets.windows(2) {
         let word = &spelling[w[0] as usize..w[1] as usize];
         let mut v = [0; INLINE];
-        let head = word.len().min(INLINE);
-        v[..head].copy_from_slice(&word[..head]);
+        if word.len() <= INLINE {
+            v[..word.len()].copy_from_slice(word);
+        } else {
+            v = long_slot(w[0], w[1]);
+        }
         inline16.push(v);
         lens.push(if word.len() <= INLINE {
             word.len() as u8
@@ -808,7 +826,6 @@ fn emit(
     edges: &[u32],
     extra: &[u32],
     spelling: &[u8],
-    offsets: &[u32],
     inline16: &[[u8; INLINE]],
     lens: &[u8],
     n: usize,
@@ -838,8 +855,7 @@ fn emit(
             out[at..at + INLINE].copy_from_slice(&inline16[code]);
             at += usize::from(len);
         } else {
-            let w = code - 256;
-            let word = &spelling[offsets[w] as usize..offsets[w + 1] as usize];
+            let word = long_word(&inline16[code], spelling);
             let take = word.len().min(n - at);
             out[at..at + take].copy_from_slice(&word[..take]);
             at += take;

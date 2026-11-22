@@ -458,15 +458,16 @@ impl<L: Links> Elim<'_, L> {
     ) -> ([u8; INLINE], u8) {
         let id = word & ID_MASK;
         let height = (word >> ID_BITS) as usize;
-        let mut bytes = [0; INLINE];
+
         if height < INLINE {
-            bytes = self.short_payload(id).to_le_bytes();
+            let mut bytes = self.short_payload(id).to_le_bytes();
             bytes[height] = byte;
             (bytes, (height + 1) as u8)
         } else {
+            let start = spelling.len() as u32;
             self.append(id, stack, spelling);
             spelling.push(byte);
-            (bytes, LONG)
+            (super::long_slot(start, spelling.len() as u32), LONG)
         }
     }
 
@@ -554,7 +555,6 @@ impl Kernel {
             endpoint,
             bands,
             spelling,
-            offsets,
             edges,
             inline16,
             lens,
@@ -727,7 +727,6 @@ impl Kernel {
                     );
                     inline16.push(bytes);
                     lens.push(len);
-                    offsets.push(spelling.len() as u32);
                     code
                 };
                 *band = Band::new(band.end(), band.dst(), code);

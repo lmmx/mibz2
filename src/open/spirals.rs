@@ -26,7 +26,7 @@ fn construct(k: &mut Kernel, l: &[u8], p: u32, spirals: Option<bool>) -> Built {
     let mut ends = Vec::new();
     for (i, &len) in k.lens[256..].iter().enumerate() {
         if len == LONG {
-            words.extend_from_slice(&k.spelling[k.offsets[i] as usize..k.offsets[i + 1] as usize]);
+            words.extend_from_slice(long_word(&k.inline16[256 + i], &k.spelling));
         } else {
             words.extend_from_slice(&k.inline16[256 + i][..usize::from(len)]);
         }
