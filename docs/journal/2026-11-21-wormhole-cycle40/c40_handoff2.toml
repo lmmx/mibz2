@@ -1,0 +1,21 @@
+name = "Wormhole/Neon Cycle 40 (Interim Handoff #2): Phase-2 Memory-Hierarchy, DRAM & Consumer Assembly Stack"
+target = "text"
+uses = []
+
+[[edge]]
+id = "p1c_plus_w0_fast_transport"
+inputs = ["records", "C", "p", "n"]
+output = "transport_fast_blocks"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "4.0 * n", Q = "0", M = "49.8 MiB (4W) / 70.6 MiB (10W)" }
+evidence = "P1c + W0 (Full-Block Pool Separation + Exact 960K out + Recycled 1 MiB Feeder + RingSlot/SplitCV/Deque + BufRead ZC): 15-rd 4W 0.9221 [0.9029, 0.9417] on 211 MB Wikidata (A/A 0.9866), 0.9381 [0.9105, 0.9666] on hetero_60b; 7W -7.9%, 10W -6.6%, 16W -6.0%."
+
+[[edge]]
+id = "p2b_emit_to_out_and_cap12m"
+inputs = ["transport_fast_blocks"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "3.66 * n (off-chip 10W)", Q = "0", M = "45.0 MiB (4W) / 62.3 MiB (10W) / 76.1 MiB (16W)" }
+evidence = "P2b (+ C37a Emit-Direct-to-Out 0 B ll + In-Place RLE1 + W1 ImmedSyms + 12 MiB Ready Cap): cuts 10W RSS -33.9% (94.2 -> 62.3 MiB), 16W RSS -43.9% (135.7 -> 76.1 MiB), minflt -48% to -56%, sys_ms -49% to -53%; 4W = 0.9444 [0.9319, 0.9571] even w/ scalar SWAR (production AVX2 run-scan recovers the 1.6% scan delta)."
