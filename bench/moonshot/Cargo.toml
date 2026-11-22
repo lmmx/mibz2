@@ -1,5 +1,5 @@
 # The moonshot scorer's harness (bench/moonshot/README.md): one candidate inverse-BWT kernel
-# checked byte for byte against libbzip2 and timed against 0.5.6's kernel (LazyCells), in
+# checked byte for byte against libbzip2 and timed against the shipped kernel (OpenCells, 0.5.12), in
 # workers built exactly as the shipped workers are (`BzReader::parallel_workers_with`). The
 # candidate is a Rust source file named by MOONSHOT_CANDIDATE at build time (build.rs).
 # Never published, and not part of the crate's package.
