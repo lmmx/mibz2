@@ -200,9 +200,9 @@ pub struct AllocationSample {
     /// (`decode_owned`, the plain workers' run route): its decoded bytes and capacity. Such a
     /// block requests nothing of `ll`; None for every other route (`decode_block`)
     pub owned: Option<Buffer>,
-    /// The owned block's inverted bytes were staged into `ll` for its RLE1 (a block that
-    /// more than doubles: `rle::unrle_in_place` swaps the two buffers), so `ll` now holds the
-    /// buffer the block was inverted into
+    /// The owned block's inverted bytes were staged into `ll` for its RLE1
+    /// (`rle::unrle_in_place` swaps the two buffers, now only for a block too long for its
+    /// 32-bit offsets, which none is), so `ll` now holds the buffer the block was inverted into
     pub staged: bool,
 }
 
