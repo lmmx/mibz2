@@ -925,14 +925,3 @@
   padding: 8px;
   border-radius: 4px;
 }
-
-/* a page embedded inline in a post, at its full height (the Thomas Murphy conversation) */
-.md-typeset .convo-embed { margin: 1.2rem 0 0; }
-.md-typeset .convo-embed iframe {
-  display: block;
-  width: 100%;
-  min-height: 80vh;
-  border: 0;
-  overflow: hidden;
-  background: transparent;
-}
