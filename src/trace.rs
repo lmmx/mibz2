@@ -196,6 +196,30 @@ pub struct AllocationSample {
     pub rows: usize,
     pub block_bound: usize,
     pub buffers: Vec<Buffer>,
+    /// The block's own output buffer, after its RLE1, where the block was decoded into one
+    /// (`decode_owned`, the plain workers' run route): its decoded bytes and capacity. Such a
+    /// block requests nothing of `ll`; None for every other route (`decode_block`)
+    pub owned: Option<Buffer>,
+    /// The owned block's inverted bytes were staged into `ll` for its RLE1 (a block that
+    /// more than doubles: `rle::unrle_in_place` swaps the two buffers), so `ll` now holds the
+    /// buffer the block was inverted into
+    pub staged: bool,
+}
+
+/// The most rows a block has (level 9)
+const MAX_ROWS: usize = 900_000;
+
+/// The largest capacity a block's own output buffer can have, from the code (independent of
+/// any measured capacity). A buffer is fresh (`n + n/16 + 64` for n rows, the plain workers'
+/// `worker`), or from the pool shared by every worker, where an earlier block, of any stream,
+/// grew it: by a kernel's resize to its rows and slack (at most 32 bytes, Cells'), by Vec's
+/// growth rule (`byte_capacity_bound`), or exactly to its decoded bytes (`reserve_exact` in
+/// `rle::unrle_in_place`, or `unrle`'s growth on the column route), at most RLE1's 259 bytes
+/// for every 5 inverted ones
+pub fn owned_capacity_bound() -> usize {
+    let fresh = MAX_ROWS + MAX_ROWS / 16 + 64;
+    let decoded = MAX_ROWS / 5 * 259 + 4;
+    byte_capacity_bound(fresh.max(MAX_ROWS + 32).max(decoded))
 }
 
 /// Independent high-water allocation request bounds reconstructed from route history.
@@ -223,6 +247,8 @@ impl WorkerNeeds {
             self.tt_rows = self.tt_rows.max(s.rows);
         }
         self.ll = self.ll.max(match s.route {
+            // a block decoded into its own buffer writes no `ll` (`decode_owned`)
+            OutputRoute::Runs | OutputRoute::Cells if s.owned.is_some() => 0,
             OutputRoute::Runs => s.rows,
             // Cells writes its output with 32 bytes of slack (src/cells.rs, `out.resize`)
             OutputRoute::Cells => s.rows + 32,
@@ -269,7 +295,16 @@ pub fn validate_worker(
     let mut needs = WorkerNeeds::default();
     let mut previous = [0; 3];
     let mut segment_live = [0; 2];
-    let mut check = |sample: usize, buffers: &[Buffer], needs: WorkerNeeds| {
+    // whether `ll` has taken an owned block's inverted buffer (`AllocationSample::staged`):
+    // then its capacity is that buffer's, bounded as an owned buffer's
+    // (`owned_capacity_bound`), and only the column requests after it bound it below
+    let mut ll_staged = false;
+    let mut check = |errors: &mut Vec<String>,
+                     previous: &mut [usize; 3],
+                     sample: usize,
+                     buffers: &[Buffer],
+                     needs: WorkerNeeds,
+                     ll_staged: bool| {
         let settings = Settings {
             rows: needs.rows,
             worker: Some(needs),
@@ -282,18 +317,15 @@ pub fn validate_worker(
                 continue;
             };
             let e = entries.iter().find(|e| e.name == name).unwrap();
-            if b.len > b.cap
-                || b.cap < previous[i]
-                || b.cap < e.alloc
-                || b.cap > e.alloc_max.unwrap()
-            {
+            let max = if name == "ll" && ll_staged {
+                e.alloc_max.unwrap().max(owned_capacity_bound())
+            } else {
+                e.alloc_max.unwrap()
+            };
+            if b.len > b.cap || b.cap < previous[i] || b.cap < e.alloc || b.cap > max {
                 errors.push(format!(
                     "sample {sample}: {name} len={} cap={} outside {}..={} (previous {})",
-                    b.len,
-                    b.cap,
-                    e.alloc,
-                    e.alloc_max.unwrap(),
-                    previous[i]
+                    b.len, b.cap, e.alloc, max, previous[i]
                 ));
             }
             previous[i] = b.cap;
@@ -345,10 +377,59 @@ pub fn validate_worker(
         }
     };
     for (i, sample) in history.iter().enumerate() {
+        if sample.staged {
+            // (`ll` is now the block's inverted buffer: its earlier requests no longer bound
+            // it below, and its capacity may be smaller than before)
+            ll_staged = true;
+            needs.ll = 0;
+            previous[0] = 0;
+            if let Some(b) = sample.buffers.iter().find(|b| b.name == "ll") {
+                if b.len != sample.rows {
+                    errors.push(format!(
+                        "sample {i}: staged ll len={} for {} rows",
+                        b.len, sample.rows
+                    ));
+                }
+            }
+        }
         needs.observe(sample);
-        check(i, &sample.buffers, needs);
+        if let Some(o) = &sample.owned {
+            // the block's own buffer: its decoded bytes, at least its rows' capacity unless
+            // they were staged away (its buffer is then `ll`'s old one), and within the
+            // owned buffers' bound
+            let rows = if sample.staged { 0 } else { sample.rows };
+            if !matches!(sample.route, OutputRoute::Runs | OutputRoute::Cells)
+                || o.name != "out"
+                || o.len > o.cap
+                || o.cap < rows
+                || o.cap > owned_capacity_bound()
+            {
+                errors.push(format!(
+                    "sample {i}: owned {:?} out len={} cap={} outside {rows}..={}",
+                    sample.route,
+                    o.len,
+                    o.cap,
+                    owned_capacity_bound()
+                ));
+            }
+        }
+        check(
+            &mut errors,
+            &mut previous,
+            i,
+            &sample.buffers,
+            needs,
+            ll_staged,
+        );
     }
-    check(history.len(), final_buffers, needs);
+    check(
+        &mut errors,
+        &mut previous,
+        history.len(),
+        final_buffers,
+        needs,
+        ll_staged,
+    );
     if let Some(last) = history.last() {
         for name in ["ll", "rle", "tt"] {
             if last.buffers.iter().find(|b| b.name == name)

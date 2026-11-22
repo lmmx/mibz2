@@ -1940,3 +1940,113 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# The Wormhole plateau stack against its base on this machine (#739; registration
+# docs/journal/2026-11-22-wormhole-plateau-registration.md, frozen before the data): whether
+# Wormhole's (Gemini Neon) Phase 1 + Phase 2 handoff and output stack (cycles 32-40, the
+# "P2c_Full_T64" arm: each block inverted into its own output buffer with its RLE1 undone in
+# place and its CRC taken in 64 KiB tiles, the output pool kept for full blocks, the symbols
+# handed back early, a 12 MiB ready-byte cap, ring ready slots, split conditions, a job queue,
+# recycled input chunks and whole-block reads) speeds production's decoder, or cuts its peak
+# memory, on the i9's 6-20 thread plateau. Two builds pinned by SHA: #739's merge-base with
+# master BASE (96a24d3e, master's head when the recipe was written, v0.5.12's src;
+# `mibz2@build-base`) and #739's HEAD (perf/wormhole-plateau, `mibz2`, whose harness drives
+# the run, 23efeae7, re-pinned before any data from 8857f9fd: the ledger's fix and the feeder's);
+# their build inputs differ in the stack's files alone (checked). Both by rustc
+# 1.99.1. The whole Wikidata corpus (corpora/wikidata.bz2, checked by its SHA-256), 4 copies
+# end to end; unpinned on every CPU at 6, 8, 10, 12, 16 and 20 threads, interleaved, 12 paired
+# rounds, no spinner. Judged at 10 threads, the other counts supporting, peak RSS reported and
+# the memory route judged after the wall route (bench/wormhole_plateau.py). bench-open-r5's
+# recipe (#735) with the builds, the counts and the rounds changed, and its lazy diagnostic
+# left out. About 15 minutes with the builds.
+bench-wormhole-plateau:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    BASE=96a24d3e4f764b3918089b0d5bcd5fe4b9bc1fea
+    HEAD=23efeae76a9831e19523ca5eba01d1674cbb722b
+    COPIES=4 ROUNDS=12 SETTLE=2 THREADS=6,8,10,12,16,20
+    W=$PWD/target/wormhole-plateau
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-wormhole-plateau (docs/journal/2026-11-22-wormhole-plateau-registration.md) at $(git rev-parse HEAD): mibz2 at $HEAD (perf/wormhole-plateau, #739) against mibz2 at $BASE (v0.5.12's src; #739's merge-base with master), unpinned at $THREADS threads, $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-wormhole-plateau: the checkout has local changes"; exit 1; }
+    git cat-file -e "$BASE^{commit}" 2>/dev/null || git fetch -q origin master
+    git cat-file -e "$HEAD^{commit}" 2>/dev/null || git fetch -q origin perf/wormhole-plateau
+    git merge-base --is-ancestor "$BASE" "$HEAD" \
+      || { echo "bench-wormhole-plateau: $BASE is not an ancestor of $HEAD"; exit 1; }
+    # the contrast, checked: the decoder's source differs in the stack's files alone
+    changed=$(git diff --name-only "$BASE" "$HEAD" -- src Cargo.toml Cargo.lock examples build.rs rust-toolchain.toml)
+    [ -n "$changed" ] || { echo "bench-wormhole-plateau: the builds' source does not differ"; exit 1; }
+    beyond=$(printf '%s\n' "$changed" \
+      | grep -Ev '^src/(lib|crc|rle|read|parallel|trace)\.rs$|^src/parallel/|^examples/(bzcat|occupancy)\.rs$' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-wormhole-plateau: the builds differ beyond the stack: $(echo $beyond)"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$BASE" "$HEAD" -- src examples > "$O/src-head-against-base.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-wormhole-plateau: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    for b in base head; do
+      sha=$BASE; [ "$b" = head ] && sha=$HEAD
+      [ -d "$W/build-$b" ] || git worktree add -q --detach "$W/build-$b" "$sha"
+      git -C "$W/build-$b" checkout -q --detach "$sha"
+      # (each build from a clean source: a detached checkout keeps local changes)
+      [ -z "$(git -C "$W/build-$b" status --porcelain)" ] \
+        || { echo "bench-wormhole-plateau: build-$b has local changes"; git -C "$W/build-$b" status --short; exit 1; }
+      [ "$(git -C "$W/build-$b" rev-parse HEAD)" = "$sha" ] \
+        || { echo "bench-wormhole-plateau: build-$b is not at $sha"; exit 1; }
+      (cd "$W/build-$b" && cargo build -q --release --example ab --example windows)
+    done
+    AB=$W/build-head/target/release/examples/ab
+    BAB=$W/build-base/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'base %s\nhead %s\n' "$BASE" "$HEAD" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    for b in base head; do
+      (cd "$W/build-$b" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+        || { echo "bench-wormhole-plateau: build-$b's toolchain differs"; exit 1; }
+    done
+    sha256sum "$AB" "$BAB" | tee "$O/binaries.sha256"
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-head/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-wormhole-plateau: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the machine
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    uname -a > "$O/uname.txt"
+    # the judged run: unpinned (no --spread), every online CPU, no spinner; the counts and the
+    # arms interleaved within each round, the arms' order rotated
+    "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds $ROUNDS \
+      --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
+    "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
+    date -u +%FT%TZ > "$O/timed.txt"
+    python3 bench/wormhole_plateau.py "$O/main.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+      --arm mibz2 --judged 10 --supporting 6,8,12,16,20 --rounds $ROUNDS --corpus wikidata-x$COPIES \
+      | tee "$O/verdict.txt" \
+      || echo "bench-wormhole-plateau: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/finished.txt"
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"
