@@ -1,11 +1,15 @@
-//! `just bench-recalibrate-stack`'s arms (docs/journal/2026-11-22-recalibration-stack-registration.md,
-//! the design of docs/journal/2026-11-18-recalibration-registration.md on master 53f7ecf9): at
+//! `just bench-recalibrate-plateau`'s arms (docs/journal/2026-11-22-recalibration-plateau-registration.md,
+//! the design of docs/journal/2026-11-18-recalibration-registration.md, as re-run by
+//! `bench-recalibrate-stack`, on #745's head 7b901b67: master 3296195e with #739's plateau stack,
+//! and the block reader): at
 //! each cell, the arm the run names as the shipped trim is the decoder the default builds on
 //! the measured i9 there (`StreamDecoder::new` under `with_machine`), in its worker count,
 //! its window and its kernel, pinned one CPU a core (`Machine::pinned_i9`) or unpinned
 //! (`Machine::service_target`); and the arm it names as the untrimmed plan is the decoder the
 //! plan builds there (`Plan::for_threads`, `StreamDecoder::planned`). The neighbours are the
-//! shipped arm but for one worker more or fewer, 4 blocks a worker.
+//! shipped arm but for one worker more or fewer, 4 blocks a worker; the sweep's lazy 7, 8, 9
+//! and 10 workers at 4 blocks a worker differ from each other in one worker at a time, and its
+//! ten workers at the trim's window (10/40) differ from the plan's (10/4T) in the window alone.
 use mibz2::parallel::{with_machine, Machine, Plan};
 use mibz2::{Kernels, StreamDecoder};
 
@@ -94,6 +98,8 @@ fn the_neighbours_differ_in_one_worker() {
         ("mibz2-oce-4-16", "mibz2-oce-3-12", "mibz2-oce-5-20"),
         ("mibz2-occ-4-16", "mibz2-occ-3-12", "mibz2-occ-5-20"),
         ("mibz2-occ-8-32", "mibz2-occ-7-28", "mibz2-occ-9-36"),
+        // the sweep at 10 to 20 threads: 7, 8, 9 and 10 workers, 4 blocks a worker
+        ("mibz2-occ-9-36", "mibz2-occ-8-32", "mibz2-occ-10-40"),
     ] {
         let (s, f, m) = (arm(shipped), arm(fewer), arm(more));
         let (n, w, lazy) = shape(&s);
@@ -121,4 +127,25 @@ fn the_kernel_arms_differ_in_the_kernel() {
         e.close();
         l.close();
     }
+}
+
+/// Ten lazy workers at the trim's window, 4 blocks a worker (`mibz2-occ-10-40`), beside the
+/// plan's at 12, 16 and 20 threads, 4 blocks a thread asked (`mibz2-occ-10-48`, `-64`, `-80`):
+/// the same workers and kernel, the window alone differing. Every one of them keeps the same
+/// ready cap (`READY_BYTES`, 12 MiB); no arm changes it
+#[test]
+fn the_window_arms_differ_in_the_window() {
+    assert_eq!(mibz2::parallel::READY_BYTES, 12 << 20);
+    let trim = arm("mibz2-occ-10-40");
+    assert_eq!(shape(&trim), (10, 40, true));
+    for (plan, t) in [
+        ("mibz2-occ-10-48", 12),
+        ("mibz2-occ-10-64", 16),
+        ("mibz2-occ-10-80", 20),
+    ] {
+        let p = arm(plan);
+        assert_eq!(shape(&p), (10, 4 * t as u64, true), "{plan}");
+        p.close();
+    }
+    trim.close();
 }
