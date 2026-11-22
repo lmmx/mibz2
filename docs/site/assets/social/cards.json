@@ -245,7 +245,7 @@
     "title": "Sixteen at a stroke: fixed-width writes that stop the processor guessing"
   },
   "assets/social/blog-2026-11-22-correctness-is-uniform-cost-is-not.png": {
-    "description": "Every route in mibz2's bzip2 decoder is exact on every block, but what each costs depends on the block, so we search for speed in many places at once.",
+    "description": "Every route in mibz2's bzip2 decoder is exact on every block, but cost varies from block to block and so we hunt for speed in many places.",
     "foot": "lmmx.github.io/mibz2 · 22 November 2026",
     "kind": "progress",
     "section": " · Research blog",
