@@ -45,6 +45,35 @@ masked-hole vanishing).
 - stubby legs;
 - a pose that tells a joke, as the drolleries do.
 
+## Louis's references: match these (refs/louis/)
+
+These three are the target. Match their drawing, not round 2's.
+
+1. **`1-coiled-dragon-roundel.jpg`**: a dragon coiled in a gilded roundel.
+   - **Body:** one thick, smooth body in a confident spiral, outlined in solid black, filled with
+     flat maroon and shaded in a few soft bands.
+   - **Ornament:** a single row of lead-white dots runs along its spine.
+   - **Head:** a small horned head with a wide open mouth.
+   - **Wing and legs:** a green wing, and stubby clawed feet gripping the border.
+   - **Frame:** zigzag-and-dot borders in blue and vermilion.
+   - **Take from it:** the line, the dots, the coil, the feet.
+2. **`2-winged-dragon-initial-interlace.jpg`**: a winged dragon forming a historiated initial.
+   - **Body:** its blue body loops through interlaced blue, mauve and green tendrils, with small
+     orange beasts and lions climbing through them.
+   - **Head:** green, with flames.
+   - **Wings:** long striped pink.
+   - **Take from it:** the interlace and the busy, playful life inside it. Use it for the knotted
+     pair and the swarm.
+3. **`3-dragon-border-drollery.jpg`**: a later border drollery.
+   - **Dragon:** an orange dragon with an open grin, sitting on a grassy strip, with a grey bat
+     wing and a curled tail.
+   - **Surroundings:** blue and gold acanthus, red hearts and blue flowers on gold.
+   - **Take from it:** the pose, the attitude, the sitting-on-the-margin feel. Use it for the
+     dragons that perch on and walk round bubbles.
+
+The palette stays pushed to neon for the page, and there is still no pink: read the mauve and
+pink in these as violet or vermilion. The bold black outline and the flat fills are the point.
+
 ## The motion: every creature travels, none just sits
 
 Each creature moves along a path through and around the chat, not a fixed pose with idle
