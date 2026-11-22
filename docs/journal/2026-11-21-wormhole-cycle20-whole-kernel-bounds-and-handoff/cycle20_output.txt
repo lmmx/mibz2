@@ -1,0 +1,14 @@
+PASS Authentication: all 6 Wikidata blocks match `manifest.json` (n, primary_index, SHA-256)!
+PASS Gate G1 + Multi-Epoch + SPIRALS (len>1023) + WideLinks + WideExtra + #703 Cap::dense Admit/Refuse + Column Fallback: 14466 cases byte-exact!
+PASS Multi-Worker `BzReader::parallel_workers_with::<WormholePreEmitCells>` at W = 1, 2, 4, 8: 21 blocks (15.49 MiB unrled, CRC32 = 0x26ecd15a) byte-exact!
+
+=== CYCLE 20 CONFRONTATION (25 PAIRED ROUNDS: 1-Worker & 2-Worker Barrier Sync via `InverseBwt::invert_runs`) ===
+Block         | WS(M0->W3 KB) | 1w_A1Mst  A2/A1    1w_W3 ( W3/M0,  W3/A1) | 2w_A1Mst    2w_M0    2w_W3 ( W3/M0,  W3/A1)
+----------------------------------------------------------------------------------------------------------------------------
+block-0.L     | 1445->1388 KB | 1310.1us 0.998x 1215.7us (0.933x, 0.928x) | 1320.0us 1305.5us 1219.6us (0.934x, 0.924x)
+block-2.L     | 1590->1558 KB | 1552.6us 0.993x 1408.0us (0.913x, 0.907x) | 1549.7us 1544.2us 1427.8us (0.925x, 0.921x)
+block-85.L    | 1640->1617 KB | 1546.4us 0.989x 1439.8us (0.961x, 0.931x) | 1543.7us 1492.9us 1434.3us (0.961x, 0.929x)
+block-143.L   | 2022->1897 KB | 2769.9us 0.987x 2547.0us (0.943x, 0.920x) | 2757.2us 2666.4us 2510.5us (0.942x, 0.911x)
+block-210.L   | 1964->1894 KB | 2391.4us 1.000x 2231.2us (0.962x, 0.933x) | 2394.3us 2320.9us 2227.9us (0.960x, 0.930x)
+block-207.L   | 1697->1659 KB | 1866.3us 0.975x 1690.5us (0.942x, 0.906x) | 1839.9us 1861.7us 1696.9us (0.911x, 0.922x)
+dense-703.syn | 2026->2028 KB | 2869.8us 1.049x 2635.3us (0.939x, 0.918x) | 2966.8us 2793.4us 2705.1us (0.968x, 0.912x)

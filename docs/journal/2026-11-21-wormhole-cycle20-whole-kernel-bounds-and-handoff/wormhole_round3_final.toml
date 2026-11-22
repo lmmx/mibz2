@@ -1,0 +1,48 @@
+name = "Wormhole Round 3 Final Candidate: WormholePreEmitCells (Full InverseBwt Drop-In for mibz2 0.5.11)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_outq16_and_packed_strip_mux"
+inputs = ["records", "C", "p", "n"]
+output = "sb_mux_strips_and_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Theorem 19.1 closes CAP=127 u16 boundary; PassMux packs thick Strip as 12B [from, to, (width << 8) | byte] in shared sb_buf: Vec<[u32; 3]> (-23..125 KiB scratch vs master) alongside AVX2-vectorized OutQ16."
+
+[[edge]]
+id = "s2_graded_rv_elim_pop_tail"
+inputs = ["sb_mux_strips_and_outq16", "C", "n"]
+output = "graded_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Theorem 15.1 (len10 << 22) | id22 Graded Semiring Handle + constant-sentinel pop_tail (-19..23% total S2, -28..32% S2b, 0 B extra arena)."
+
+[[edge]]
+id = "s3_bidi_bottom_and_lazy15_direct_inline16"
+inputs = ["graded_arena", "sb_mux_strips_and_outq16"]
+output = "sb_mux_bands_and_inline16"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict_long", D = "H / 2", B = "B_bands + dict_long", Q = "H", M = "B_bands + dict_long" }
+evidence = "Pohl 2-way bidirectional side-1 bottom walk (D = H/2) + Theorem 17.1 Prefix-15 fixed-stack [u32; 16] direct inline16 unfold (0.0 us S3b, skips spelling on 64-78% of words) + Chaitin StripBandMux."
+
+[[edge]]
+id = "s4_outq16_band_wire"
+inputs = ["sb_mux_bands_and_inline16", "sb_mux_strips_and_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "AVX2-vectorized OutQ16 Reader::wire from L2-warm sb_buf into edges[0..m); Theorem 12.3 proves 32-page 4 KiB streamer hides 85.2-86.5% of S4 L2 misses."
+
+[[edge]]
+id = "s5_master_emit"
+inputs = ["critical_edges", "sb_mux_bands_and_inline16", "p", "n"]
+output = "text"
+status = "shipped"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Identical to origin/master emit() (held 100% verbatim untouched per Round 3 non-duplication discipline; orthogonally compatible with DietRelay8Cells and Mechanisms emit)."
