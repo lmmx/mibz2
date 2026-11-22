@@ -1,0 +1,97 @@
+"""Audit of the unified contraction algebra, from first definitions.
+For a cyclic primitive text T and a 2-colouring of its letters (S_L, S_R):
+  pair contraction: every bigram a b (a in S_L, b in S_R) becomes one token [a b];
+  block absorption: every maximal S_R block w that follows an S_L letter y becomes part of token [y w]
+                   (Lazard's y x^k when S_R = {x}).
+A contraction is a valid BWT relabelling when the rotations of T' are in the same order as the
+surviving rows of BWT(T) (each token's row = the row of its first letter), under some order of the
+tokens. We test that, bucket splits, and r(BWT(T')) against r(BWT(T)); classes by kappa (intervals of
+S_L in the sorted alphabet) and whether every S_R occurrence is absorbed."""
+import itertools, sys
+from collections import Counter
+def primitive(T):
+    n=len(T); return all(T!=T[k:]+T[:k] for k in range(1,n) if n%k==0)
+def runs(seq): return 1+sum(seq[i]!=seq[i-1] for i in range(1,len(seq))) if seq else 0
+def bwt_rows(T):
+    n=len(T); return sorted(range(n),key=lambda i:T[i:]+T[:i])
+def contract(T,SL,SR,mode):
+    n=len(T); tok_start=[]; tok_str=[]
+    # find token starts: positions that are not absorbed
+    absorbed=[False]*n
+    if mode=='pair':
+        for i in range(n):
+            if T[i] in SR and T[i-1] in SL: absorbed[i]=True
+    else:
+        for i in range(n):
+            if T[i] in SR:
+                j=i
+                while T[j%n] in SR and (j-i)<n: j-=1
+                # absorbed iff the S_R block containing i is preceded by an S_L letter
+                absorbed[i]=T[j%n] in SL
+    if all(absorbed) or not any(absorbed): return None
+    starts=[i for i in range(n) if not absorbed[i]]
+    toks=[]
+    for k,s in enumerate(starts):
+        e=starts[(k+1)%len(starts)]
+        L=(e-s)%n or n
+        toks.append(tuple(T[(s+d)%n] for d in range(L)))
+    return starts,toks,absorbed
+def check(T,SL,SR,mode):
+    n=len(T); rows=bwt_rows(T); res=contract(T,SL,SR,mode)
+    if res is None: return None
+    starts,toks,absorbed=res
+    m=len(starts); pos={s:k for k,s in enumerate(starts)}
+    kept=[i for i in rows if not absorbed[i]]               # surviving rows, in BWT(T) order
+    seqk=[pos[i] for i in kept]
+    # bucket split: rows with the same first token must be contiguous
+    firsts=[toks[k] for k in seqk]; seen=set(); split=False
+    for j,t in enumerate(firsts):
+        if t in seen and firsts[j-1]!=t: split=True
+        seen.add(t)
+    # validity: is the kept order a sorted order of T' rotations under the induced token order?
+    order={}; 
+    for t in firsts:
+        if t not in order: order[t]=len(order)
+    Tp=[order[t] for t in toks]
+    rot=sorted(range(m),key=lambda k:Tp[k:]+Tp[:k])
+    valid=(not split) and rot==seqk
+    Lp=[toks[(k-1)%m] for k in seqk]                        # previous token of each surviving row
+    r0=runs([T[i-1] for i in rows]); r1=runs(Lp)
+    return dict(split=split,valid=valid,r0=r0,r1=r1,dele=n-m)
+def kappa(SL,alpha):
+    s=sorted(alpha); iv=0; prev=False
+    for c in s:
+        cur=c in SL
+        if cur and not prev: iv+=1
+        prev=cur
+    return iv
+def full_absorption(T,SL,SR,mode):
+    n=len(T)
+    if mode=='block': return True
+    return all(not(T[i] in SR and T[i-1] in SR) for i in range(n))
+T_=Counter(); EX={}
+for alph,maxn in ((2,12),(3,9),(4,7)):
+    for n in range(2,maxn+1):
+        for T in itertools.product(range(alph),repeat=n):
+            T=tuple(T)
+            if len(set(T))<2 or not primitive(T): continue
+            A=sorted(set(T))
+            for k in range(1,len(A)):
+                for SR in itertools.combinations(A,k):
+                    SR=set(SR); SL=set(A)-SR
+                    kap=kappa(SL,A)
+                    for mode in ('pair','block'):
+                        r=check(T,SL,SR,mode)
+                        if r is None: continue
+                        fa=full_absorption(T,SL,SR,mode)
+                        cls=f"{mode} k{'1' if kap==1 else '2+'} {'full' if fa else 'partial'}"
+                        T_[cls+' cases']+=1
+                        if r['split']: T_[cls+' split']+=1
+                        if not r['valid']: T_[cls+' INVALID']+=1
+                        if r['valid'] and r['r1']>r['r0']:
+                            T_[cls+' r_up']+=1
+                            key=cls+' r_up'
+                            if key not in EX or len(T)<len(EX[key][0]): EX[key]=(T,sorted(SL),sorted(SR),r['r0'],r['r1'])
+                        if r['split'] and (cls+' split') not in EX: EX[cls+' split']=(T,sorted(SL),sorted(SR))
+for k in sorted(T_): print(k,T_[k])
+for k,v in sorted(EX.items()): print('example',k,v)

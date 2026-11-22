@@ -1,0 +1,55 @@
+"""Gamma's Phi_BWT(pi, b, K), rebuilt from the write-up's definition and checked by brute force:
+single LF cycle (T primitive), p = 0, LF^(K+L)(x) = pi^-1(x) on [0, M), the sort key of every row
+depending only on (x, pred[x]), and r <= (L+1)M + 2."""
+import itertools, math
+from collections import Counter
+def ids(x,b,L):
+    d=[]
+    for _ in range(L): d.append(x%b); x//=b
+    return d[::-1]
+def build(pi,b,K):
+    M=len(pi); L=max(1,math.ceil(math.log(M,b))) if M>1 else 1
+    while b**L<M: L+=1
+    HASH,DOLLAR=0,1                      # '#' < '$' < digits 0..b-1 (coded 2..b+1)
+    T=[]; u=0
+    for _ in range(M):
+        T+= [HASH]+[DOLLAR]*(K-1)+[2+d for d in ids(u,b,L)]
+        u=pi[u]
+    return T,L
+def lf_of(Lc):
+    n=len(Lc); cnt=Counter(Lc); C={}; a=0
+    for c in sorted(cnt): C[c]=a; a+=cnt[c]
+    seen=Counter(); lf=[0]*n
+    for x,c in enumerate(Lc): lf[x]=C[c]+seen[c]; seen[c]+=1
+    return lf
+tot=Counter()
+for M in range(2,7):
+    for perm in itertools.permutations(range(M)):
+        # single cycle
+        z=0; k=0
+        while True:
+            z=perm[z]; k+=1
+            if z==0: break
+        if k!=M: continue
+        pred=[0]*M
+        for x in range(M): pred[perm[x]]=x
+        for b in (2,3):
+            for K in (1,2,3,5):
+                T,L=build(perm,b,K); n=len(T)
+                rows=sorted(range(n),key=lambda i:T[i:]+T[:i])
+                Lc=[T[i-1] for i in rows]; lf=lf_of(Lc); tot['cases']+=1
+                # single cycle
+                z=0; c=0
+                while True:
+                    z=lf[z]; c+=1
+                    if z==0: break
+                if c!=n: tot['NOT_SINGLE_CYCLE']+=1
+                if rows.index(0)!=0: tot['P_NOT_0']+=1
+                # LF^(K+L)(x) = pi^-1(x) on the '#' rows [0, M)
+                for x in range(M):
+                    w=x
+                    for _ in range(K+L): w=lf[w]
+                    if w!=pred[x]: tot['FIRST_RETURN_FAIL']+=1; break
+                r=1+sum(Lc[i]!=Lc[i-1] for i in range(1,n))
+                if r>(L+1)*M+2: tot['R_BOUND_FAIL']+=1
+print(dict(tot))
