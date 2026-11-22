@@ -1823,12 +1823,6 @@ Replied to Thomas MurphyThe mathematics thing is funny it's li…
 
 hmm idk i think the RH will surely get compressed and then the hillclimb meta is gonna be common knowledge no
 
-**deckard**5h
-
-Compression of the RH proof has begun
-
-chart: proof compression over successive submissions
-
 my hillclimb of BWT inversion mathematics is complexifying, but imagine if you formalised it and then some mathematical superagent swarm found insanely rhizomatic burrows that can snip out all the complexities (big if) in a way like they are compressing the RH proof
 
 i kind of see how that could go
