@@ -1,0 +1,25 @@
+=== 12-ROUND ROTATED FRESH-PROCESS 4W A/B: POST-MECHANISMS PARSCAN-COUPLED INTERFACE (211 MB) ===
+Arm               med_ms   ratio vs MasterA [95%]  user_ms  sys_ms  minflt   vcsw  rss_MB
+MasterA           372.89 1.0000 [1.0000, 1.0000]   655.72   39.12   16121    726   59.15
+MasterB           369.47 0.9793 [0.9548, 1.0044]   650.70   42.68   15928    730   59.90
+Par_Std_0512      334.77 0.8932 [0.8804, 0.9062]   614.53   15.04    5063    296   35.95
+Par_P2_NoCap      339.16 0.9022 [0.8876, 0.9171]   631.75   12.99    3965    284   31.78
+Par_P2_Cap12M     339.61 0.8972 [0.8714, 0.9238]   630.41   11.99    3960    286   31.71
+
+=== COLD-START W=10 & W=16 PARSCAN-COUPLED CHECK (wikidata_431b_210m, 3-rd median) ===
+
+--- W = 10 ---
+Arm              wall_ms  user_ms  sys_ms  minflt   vcsw  rss_MB
+MasterA           390.31   686.97   66.65   27880    407   98.84
+MasterB           375.15   656.27   68.67   27119    306   95.79
+Par_Std_0512      334.74   628.70   27.17   11647    124   61.87
+Par_P2_NoCap      347.71   650.01   24.04    9012     94   51.34
+Par_P2_Cap12M     345.36   644.59   27.37    9405    107   53.06
+
+--- W = 16 ---
+Arm              wall_ms  user_ms  sys_ms  minflt   vcsw  rss_MB
+MasterA           392.89   668.40   86.27   35140    307  129.96
+MasterB           390.97   676.52   83.49   38156    316  138.60
+Par_Std_0512      361.42   655.17   35.17   18187    238   87.36
+Par_P2_NoCap      359.40   658.44   33.92   14835    284   74.15
+Par_P2_Cap12M     361.56   661.23   37.43   13554   1078   69.26

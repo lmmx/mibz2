@@ -1,0 +1,21 @@
+name = "Wormhole/Neon Cycle 42: Post-Mechanisms ParScan-Coupled Interface (TLS syms + Atomic Steal + P2)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c42_parscan_tls_syms_atomic_steal"
+inputs = ["records", "C", "p", "n"]
+output = "worker_local_blocks"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "0.0 * n (syms local)", Q = "0", M = "W * 360 KiB syms (L2-local)" }
+evidence = "Coupling to Mechanisms' BlockSpans via mibz2::bits::Bits::at + block::read_item eliminates the scanner thread, JobQueue mutex, and free_syms pool (1 AtomicUsize::fetch_add(1) + 1 thread-local syms per worker): 4W = 0.8932 [0.8804, 0.9062], 10W -14.2% wall, sys_ms -61.6% (4W) / -59.2% (10W), minflt -68.6% (4W), vcsw -69.5% (10W)."
+
+[[edge]]
+id = "c42_parscan_plus_p2_inplace"
+inputs = ["worker_local_blocks"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "3.1 * n (off-chip 10W)", Q = "0", M = "31.7 MiB (4W) / 51.3 MiB (10W) / 69.3 MiB (16W)" }
+evidence = "Composing ParScan-coupled TLS syms with Wormhole P2 (Emit-Direct-to-Out 0 B ll + InPlace RLE1 + FullPool + BufRead ZC): 4W = 0.8972 [0.8714, 0.9238], sys_ms -69.4% (4W: 39.1->12.0 ms) / -63.9% (10W: 66.7->24.0 ms), minflt -75.4% (4W: 16.1k->4.0k) / -67.7% (10W: 27.9k->9.0k), RSS -46.4% (4W: 59.2->31.7 MiB) / -48.1% (10W: 98.8->51.3 MiB) / -46.7% (16W: 130.0->69.3 MiB)."
