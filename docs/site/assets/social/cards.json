@@ -244,12 +244,12 @@
     "section": " · Research blog",
     "title": "Sixteen at a stroke: fixed-width writes that stop the processor guessing"
   },
-  "assets/social/blog-2026-11-22-structured-invention.png": {
-    "description": "A claimed Riemann proof drew on fifty classical tools because each step of an older proof needed one, and our research teams now invent the same way.",
+  "assets/social/blog-2026-11-22-two-centuries-of-tools.png": {
+    "description": "A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.",
     "foot": "lmmx.github.io/mibz2 · 22 November 2026",
     "kind": "meta",
     "section": " · Research blog",
-    "title": "Structured invention: borrowing a solved case, one step at a time"
+    "title": "Two centuries of tools: a claimed Riemann proof's toolkit, and our search"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
