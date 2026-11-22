@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 54: decode_parallel SliceSource Zero-Copy Feeder & Online Adaptive-Ratio Reserve on 3296195e3"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c54_decode_parallel_adaptcap"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n (-34 ms user D3_Chunks)", D = "0", B = "-125 MB Vec doubling copies (D2)", Q = "0", M = "-4.6 to -8.4 MiB RSS (wikidata) / -6.4 to -9.8 MiB RSS (random)" }
+evidence = "12-rd rotated fresh-process 4W A/B on 3296195e3 decode_parallel (wikidata-l9 13.5x ratio & random-l9 1.0x ratio): D1_SliceSrc alone is neutral wall (0.9948x, killed alone); PROMOTED D2_AdaptCap (SliceSource + online empirical expansion-ratio reserve after block 0: 0.9786x [0.9633, 0.9942] on wikidata with sys -12.9%, grow 2->1, AND -13.1% minflt / -9.3% RSS on random-l9 with 0 over-alloc); PROMOTED additive D3_Chunks (0.9540x [0.9464, 0.9617], -34 ms user, RSS -8.4 MiB on wikidata; -21% minflt / -14.3% RSS on random-l9)."
