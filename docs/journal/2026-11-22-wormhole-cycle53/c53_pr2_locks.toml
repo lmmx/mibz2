@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 53: Charge 3 — Residual Lock, notify_all, & L1_AtomicFast Audit after #739"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c53_pr2_residual_closure"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "0 (killed)", D = "0 (8.6 us total lock savings)", B = "0", Q = "0", M = "0" }
+evidence = "Charge 3 audit on 3296195e3 (#739): 0 hot-path notify_all() calls remain (nA=1 at EOF Jobs::close() only; all steady-state wakes are already directed notify_one()). Same-binary safe-Rust A/B across 4W L9, 4W L1 (3x block rate), 10W L9, and 16W L9 proves #739 already captured 99.9% of PR 2: KILLED L1_AtomicFast in both streaming (0.990-1.006x, all 95% CIs span 1.000) and ParScan (0.996-1.006x), and KILLED Str_TrimLock (0.988-1.009x). Port NOTHING more from PR 2 — Wall W5 is closed on 3296195e3."
