@@ -24,7 +24,9 @@ fn main() {
         s.spawn(|| {
             let mut stdin = std::io::stdin().lock();
             loop {
-                let mut buf = vec![0u8; 8 << 20];
+                // (a chunk the scanner is done with, where there is one)
+                let mut buf = dec.spare();
+                buf.resize(8 << 20, 0);
                 let n = stdin.read(&mut buf).unwrap();
                 if n == 0 {
                     break;
@@ -36,12 +38,16 @@ fn main() {
             }
             dec.close();
         });
+        // each block written whole from the decoder's own buffer, which goes back to it
         let mut out = std::io::stdout().lock();
-        let mut buf = vec![0u8; 16 << 20];
+        let mut spent = Vec::new();
         loop {
-            match dec.read(&mut buf) {
-                Ok(0) => break 0,
-                Ok(n) => out.write_all(&buf[..n]).unwrap(),
+            match dec.read_block(spent) {
+                Ok(None) => break 0,
+                Ok(Some(b)) => {
+                    out.write_all(&b).unwrap();
+                    spent = b;
+                }
                 Err(e) => {
                     eprintln!("bzcat: {e}");
                     dec.cancel();

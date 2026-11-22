@@ -5,7 +5,7 @@
 use crate::parallel::{Plan, SLOTS_PER_THREAD};
 use crate::stream::{Event, Scanner, SliceSource, Source};
 use crate::{decode_block, Error, ErrorKind, Kernels, Scratch, StreamDecoder};
-use std::io::{self, Read};
+use std::io::{self, BufRead, Read};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
@@ -24,6 +24,9 @@ const COMPACT: usize = 4 << 20;
 /// Every block's CRC and every stream's combined CRC are checked; a bad stream is an
 /// `io::Error` of kind `InvalidData` wrapping this crate's `Error`, after every byte of
 /// the blocks before the bad one has been read.
+///
+/// It is a `BufRead` too: `fill_buf` lends the decoded block itself (the rest of it), so
+/// a caller that takes the bytes from there saves `read`'s copy of each into its buffer.
 ///
 /// A parallel reader reads `r` on a thread of its own. If `r`'s `read` panics, that thread
 /// cancels the decode as it unwinds, and the next read fails with an `io::Error` saying the
@@ -55,6 +58,9 @@ struct Par {
     dec: Arc<StreamDecoder>,
     feeder: Option<JoinHandle<()>>,
     read_error: Arc<Mutex<Option<io::Error>>>,
+    /// the block `fill_buf` lends (`StreamDecoder::read_block`), and how much of it is read
+    cur: Vec<u8>,
+    at: usize,
 }
 
 impl<R: Read> BzReader<R> {
@@ -244,7 +250,10 @@ impl<R: Read + Send + 'static> BzReader<R> {
                 // waiting for input that will never come)
                 let _unwind = CancelOnUnwind(&d, &e);
                 loop {
-                    let mut buf = vec![0u8; CHUNK];
+                    // (a chunk the scanner is done with, where there is one: its bytes are
+                    // overwritten, so it is not zeroed again unless it grows)
+                    let mut buf = d.spare();
+                    buf.resize(CHUNK, 0);
                     let n = match read_full(&mut r, &mut buf) {
                         Ok(n) => n,
                         Err(err) => {
@@ -269,6 +278,8 @@ impl<R: Read + Send + 'static> BzReader<R> {
                 dec,
                 feeder: Some(feeder),
                 read_error,
+                cur: Vec::new(),
+                at: 0,
             }),
         }
     }
@@ -307,38 +318,88 @@ impl<R: Read> Read for BzReader<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         match &mut self.inner {
             Inner::Seq(s) => s.read(buf),
-            Inner::Par(p) => match p.dec.read(buf) {
-                Ok(n) => Ok(n),
-                Err(e) => {
-                    if let Some(err) = p
-                        .read_error
-                        .lock()
-                        .unwrap_or_else(|x| x.into_inner())
-                        .take()
-                    {
-                        return Err(err);
-                    }
-                    Err(e.into())
+            Inner::Par(p) => {
+                // (the rest of a block `fill_buf` lent first)
+                if p.at < p.cur.len() {
+                    let n = buf.len().min(p.cur.len() - p.at);
+                    buf[..n].copy_from_slice(&p.cur[p.at..p.at + n]);
+                    p.at += n;
+                    return Ok(n);
                 }
-            },
+                p.dec.read(buf).map_err(|e| p.error(e))
+            }
         }
+    }
+}
+
+impl<R: Read> BufRead for BzReader<R> {
+    fn fill_buf(&mut self) -> io::Result<&[u8]> {
+        match &mut self.inner {
+            Inner::Seq(s) => {
+                s.fill()?;
+                Ok(&s.out[s.at..])
+            }
+            Inner::Par(p) => {
+                if p.at >= p.cur.len() {
+                    let spent = std::mem::take(&mut p.cur);
+                    p.at = 0;
+                    match p.dec.read_block(spent) {
+                        Ok(Some(v)) => p.cur = v,
+                        Ok(None) => {}
+                        Err(e) => return Err(p.error(e)),
+                    }
+                }
+                Ok(&p.cur[p.at..])
+            }
+        }
+    }
+
+    fn consume(&mut self, amt: usize) {
+        match &mut self.inner {
+            Inner::Seq(s) => s.at = (s.at + amt).min(s.out.len()),
+            Inner::Par(p) => p.at = (p.at + amt).min(p.cur.len()),
+        }
+    }
+}
+
+impl Par {
+    /// The decoder's error as the reader's: the input's own error, if reading it failed
+    fn error(&self, e: Error) -> io::Error {
+        if let Some(err) = self
+            .read_error
+            .lock()
+            .unwrap_or_else(|x| x.into_inner())
+            .take()
+        {
+            return err;
+        }
+        e.into()
     }
 }
 
 impl<R: Read> Seq<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if let Some(e) = &self.failed {
+            return Err(e.clone().into());
+        }
+        if buf.is_empty() {
+            return Ok(0);
+        }
+        self.fill()?;
+        let n = buf.len().min(self.out.len() - self.at);
+        buf[..n].copy_from_slice(&self.out[self.at..self.at + n]);
+        self.at += n;
+        Ok(n)
+    }
+
+    /// Decode until a block's bytes are unread (`out[at..]`), or the end, or the error
+    fn fill(&mut self) -> io::Result<()> {
         loop {
             if let Some(e) = &self.failed {
                 return Err(e.clone().into());
             }
-            if self.at < self.out.len() {
-                let n = buf.len().min(self.out.len() - self.at);
-                buf[..n].copy_from_slice(&self.out[self.at..self.at + n]);
-                self.at += n;
-                return Ok(n);
-            }
-            if self.done || buf.is_empty() {
-                return Ok(0);
+            if self.at < self.out.len() || self.done {
+                return Ok(());
             }
             self.out.clear();
             self.at = 0;
