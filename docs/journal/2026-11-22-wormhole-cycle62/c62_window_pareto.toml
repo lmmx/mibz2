@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 62: PR 4 Window-Size x MAX_LIVE_WINS Pareto Sweep & Invariant #6 (owned_end_byte)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c62_pr4_window_pareto"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "0 deadlocks even at L=1 via owned_end_byte; 0 starvation at 2Mx3 or 4Mx2", B = "6 MiB input RAM (W2M_L3: 0.726x-0.904x #739 RSS)", Q = "0", M = "3 x 2 MiB (6 MiB) or 2 x 4 MiB (8 MiB) + #739 12 MiB ReadyRing" }
+evidence = "Same-binary 9-arm Pareto sweep (M739_A, M739_B, W1M_L3, W4M_L1, W2M_L2, W2M_L3, W4M_L2, W4M_L3, W8M_L2) across wikidata-l9 4W/10W, hetero-l9 4W, and random-l9 4W (exact AbHash, 100% fast hits on all W>=2M). Caught & proved Mandatory Invariant #6 (owned_end_byte on WindowBuf + release old cur_win before waiting for next window: makes even L=1 deadlock-free and releases cur_win 1 block earlier for L>=2). Killed 5 dominated configs: W1M_L3 (1.045x hetero fb=3, 1.062x random), W4M_L1 (1.055x hetero, 1.059x random), W2M_L2 (1.042x [1.013, 1.070] random starvation), W4M_L3 & W8M_L2 (+4..10 MiB RSS, 0 wall gain). Promoted W2M_L3 (2 MiB x 3 = 6 MiB) as new Pareto co-champion alongside W4M_L2 (4 MiB x 2 = 8 MiB): beats M739_A on all 4/4 regimes (4W 0.9905x / 40.9 MiB RSS = 0.726x, 10W 0.9576x [0.938, 0.978] / 68.3 MiB, hetero 0.9751x [0.952, 0.999], random 0.9893x #1 fastest) with -2 MiB less input RAM and half the startup read latency of 4 MiB."
