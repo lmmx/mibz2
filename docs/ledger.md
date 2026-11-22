@@ -110,7 +110,8 @@ between run records and a full column. Its buffers retain their capacities:
 
 | Successful inversion | `ll` request | `rle` request |
 |---|---:|---:|
-| run records (Segmented or Cooperative) | actual output rows n | none |
+| run records, plain workers (`decode_owned`: into the block's own buffer) | none | none |
+| run records (Segmented or Cooperative, `decode_block`) | actual output rows n | none |
 | column, in place (Segmented) | this block's stream bound M | none |
 | column, separate output (Cooperative) | this block's stream bound M | n |
 
@@ -128,6 +129,21 @@ must cover lengths, never decrease, and agree with the last recorded snapshot.
 The requests are independent of measured capacities: a bad capacity cannot enlarge
 its own permitted bound. A worker with no block has zero requests.
 
+**The plain workers' own output buffers** (from the plateau stack, #739). A plain worker
+inverts a run-route block into a buffer of the block's own, which becomes its decoded bytes,
+so the block requests nothing of `ll`: a worker that only ever takes run-route blocks keeps
+`ll` at zero capacity, and the check above requires it. Each such sample carries that buffer
+(`owned`, after the RLE1): its length is the block's decoded bytes, its capacity at least the
+block's rows (they were inverted into it) and at most `trace::owned_capacity_bound()`. That
+bound comes from the code, not from any measured capacity: a buffer is fresh (n + n/16 + 64)
+or from the pool every worker shares, grown by a kernel's resize (rows and at most 32 bytes),
+by Vec's growth rule, or exactly to a block's decoded bytes (at most 259 for every 5 inverted
+ones). Because the pool is shared, a worker's own history cannot bound it more tightly; it
+certifies no doubling within that bound. A block that more than doubles has its inverted
+bytes staged through `ll` (`staged`: the two buffers are swapped): `ll` then holds that
+buffer, of exactly the block's rows, within the owned bound, and only the column requests
+after it bound it below.
+
 For example, run blocks of 600,000 then 800,000 rows grow `ll` from 600,000 to
 1,200,000 bytes while `rle` stays zero. A later column can reserve a larger stream
 bound; a later run retains any previously allocated column `rle`. Neither global
@@ -142,7 +158,8 @@ but not certified by these bounds**. RSS, allocator overhead and tracing metadat
 also outside this check. Pipelined/service paths do not export this route history;
 they cannot obtain a passing route-history ledger verdict from this instrument.
 
-The raw JSON carries `worker_ledger=route-history-v2`. Each traced run's raw `line`
+The raw JSON carries `worker_ledger=route-history-v3` (v3 from #739: a history record may
+end with the block's own buffer, `,owned.out:len:capacity`, and `,staged`). Each traced run's raw `line`
 contains `alloc.workerN.name`, `.errors` and `.history`; each history record is
 `Route:cooperative:avx2:rows:block_bound:buffer:len:capacity,...`, separated by `|`.
 All lengths and capacities there are integer bytes. Worker numbers are local to a

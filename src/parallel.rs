@@ -15,7 +15,16 @@
 //! decoded bytes (about 1 MB of JSON; at most ~46 MB for a block of runs only); each
 //! worker keeps ~7 MB of buffers; the input held is the chunks queued (`INPUT_QUEUE`) and
 //! the scanner's window (its lookahead, 2 MB, from the block being read on). Buffers are
-//! reused from block to block, not allocated each time.
+//! reused from block to block, not allocated each time. The plain workers' decoder also
+//! caps the decoded bytes waiting for the reader (`READY_BYTES`): past them, the scanner runs
+//! only as many blocks ahead of the reader as there are workers, and 2 more.
+//!
+//! **The plain workers' handoff** (`worker`): a block's job comes off a queue (`Jobs`) that
+//! wakes one waiting worker; the block is inverted straight into a buffer of its own, which
+//! becomes its decoded bytes, its RLE1 undone in place (`decode_owned`), its symbols' buffer
+//! handed back as soon as its rows are known; the decoded blocks wait in a ring of the
+//! window's slots (`Ready`), and the reader and the scanner each wait on a condition of
+//! their own, woken only by what they wait for.
 //!
 //! **Errors come in order:** a block's error is the reader's once every block before it
 //! is read, so the bytes read before an error are exactly the stream's up to that block.
@@ -23,10 +32,10 @@
 //! error, so a bad input can only ever end the decode with an error.
 
 use super::stream::{Event, Scanner, Source};
-use super::{decode_block, Error, ErrorKind, Kernels, Scratch};
-use std::collections::BTreeMap;
+use super::{Error, ErrorKind, Kernels, Scratch};
+use std::collections::{BTreeMap, VecDeque};
 use std::panic::{catch_unwind, AssertUnwindSafe};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc::{channel, sync_channel, Receiver, SyncSender};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
@@ -59,18 +68,236 @@ macro_rules! mark {
 /// A block to finish: its place in the stream, its first bit, its symbols
 type Job = (u64, u64, super::block::Symbols);
 
+/// The decoded bytes the plain workers' decoder keeps ready and unread before its scanner
+/// waits (`StreamDecoder::with_inverse`; `Shared::cap`): past them, the scanner runs only
+/// `Cap::floor` blocks ahead of the reader, not the window's `slots`
+pub const READY_BYTES: usize = 12 << 20;
+
+/// The blocks of rows from which a worker's block takes a buffer from the pool
+/// (`State::free_out`), and the reader returns one to it: smaller blocks take a buffer of
+/// their own, so a pooled buffer is never shortened by one (which the next full block would
+/// fill back with zeros)
+const POOLED_FROM: usize = 64 << 10;
+
+/// The ready blocks' cap (`READY_BYTES`): the bytes, and the blocks in flight it never
+/// stops the scanner below (the workers, and 2 more queued for them)
+#[derive(Clone, Copy, Debug)]
+struct Cap {
+    bytes: usize,
+    floor: u64,
+}
+
+/// A decoded block (or its error)
+type Res = Result<Vec<u8>, Error>;
+
+/// The decoded blocks (or errors) not yet read, by their place in the stream: a ring of
+/// the window's slots (place p in slot p mod its length) and, for a place whose slot is
+/// held by another, a map. Every place in it is between `taken` and `taken + slots` (the
+/// scanner issues a place only within the window, and the reader takes them in order), so
+/// the map stays empty; it is there so that no order of inserts could lose a block. Its
+/// decoded bytes are counted (`bytes`), for the scanner's cap.
+struct Ready {
+    ring: Vec<Option<(u64, Res)>>,
+    over: BTreeMap<u64, Res>,
+    len: usize,
+    bytes: usize,
+}
+
+impl Ready {
+    fn new(slots: u64) -> Ready {
+        let n = (slots.max(1) as usize).next_power_of_two();
+        Ready {
+            ring: (0..n).map(|_| None).collect(),
+            over: BTreeMap::new(),
+            len: 0,
+            bytes: 0,
+        }
+    }
+
+    fn slot(&self, place: u64) -> usize {
+        (place as usize) & (self.ring.len() - 1)
+    }
+
+    fn size(r: &Res) -> usize {
+        r.as_ref().map_or(0, Vec::len)
+    }
+
+    /// `place`'s block in (replacing any it had, as a map's insert does)
+    fn insert(&mut self, place: u64, res: Res) {
+        let _ = self.remove(&place);
+        self.bytes += Self::size(&res);
+        self.len += 1;
+        let i = self.slot(place);
+        if self.ring[i].is_none() {
+            self.ring[i] = Some((place, res));
+        } else {
+            self.over.insert(place, res);
+        }
+    }
+
+    fn remove(&mut self, place: &u64) -> Option<Res> {
+        let i = self.slot(*place);
+        let res = if self.ring[i].as_ref().is_some_and(|(p, _)| p == place) {
+            self.ring[i].take().map(|(_, r)| r)
+        } else {
+            self.over.remove(place)
+        }?;
+        self.len -= 1;
+        self.bytes -= Self::size(&res);
+        Some(res)
+    }
+
+    #[cfg(test)]
+    fn get(&self, place: &u64) -> Option<&Res> {
+        match &self.ring[self.slot(*place)] {
+            Some((p, r)) if p == place => Some(r),
+            _ => self.over.get(place),
+        }
+    }
+
+    /// Its blocks, by place
+    #[cfg(test)]
+    fn iter(&self) -> impl Iterator<Item = (&u64, &Res)> {
+        let mut v: Vec<(&u64, &Res)> = self
+            .ring
+            .iter()
+            .flatten()
+            .map(|(p, r)| (p, r))
+            .chain(self.over.iter())
+            .collect();
+        v.sort_by_key(|(p, _)| **p);
+        v.into_iter()
+    }
+
+    #[cfg(test)]
+    fn keys(&self) -> impl Iterator<Item = &u64> {
+        self.iter().map(|(p, _)| p)
+    }
+
+    fn clear(&mut self) {
+        self.ring.iter_mut().for_each(|s| *s = None);
+        self.over.clear();
+        self.len = 0;
+        self.bytes = 0;
+    }
+}
+
+/// The jobs between the scanner and the workers: a queue and its condition, a waiting
+/// worker woken one at a time, and only while one waits
+#[derive(Default)]
+struct Jobs {
+    q: Mutex<JobQueue>,
+    cv: Condvar,
+}
+
+#[derive(Default)]
+struct JobQueue {
+    q: VecDeque<Job>,
+    /// the scanner has ended: no job comes after those queued
+    closed: bool,
+    /// workers waiting for a job
+    waiting: usize,
+}
+
+impl Jobs {
+    fn lock(&self) -> std::sync::MutexGuard<'_, JobQueue> {
+        self.q.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    fn push(&self, job: Job) {
+        let mut q = self.lock();
+        q.q.push_back(job);
+        let wake = q.waiting > 0;
+        drop(q);
+        if wake {
+            self.cv.notify_one();
+        }
+    }
+
+    /// The next job, waiting for one; None once the queue is closed and empty
+    fn recv(&self) -> Option<Job> {
+        let mut q = self.lock();
+        loop {
+            if let Some(j) = q.q.pop_front() {
+                return Some(j);
+            }
+            if q.closed {
+                return None;
+            }
+            q.waiting += 1;
+            q = self.cv.wait(q).unwrap_or_else(|e| e.into_inner());
+            q.waiting -= 1;
+        }
+    }
+
+    /// The next job if one is queued, without waiting (None too if the queue's lock is
+    /// held)
+    fn try_recv(&self) -> Option<Job> {
+        use std::sync::TryLockError;
+        let mut q = match self.q.try_lock() {
+            Ok(q) => q,
+            Err(TryLockError::Poisoned(p)) => p.into_inner(),
+            Err(TryLockError::WouldBlock) => return None,
+        };
+        q.q.pop_front()
+    }
+
+    fn close(&self) {
+        self.lock().closed = true;
+        self.cv.notify_all();
+    }
+}
+
+/// Where the scanner sends its jobs: the plain workers' queue (`Jobs`, closed when the
+/// scanner ends, however it ends), or the service core's channel
+trait JobSink {
+    /// Whether the job was taken (false: no one is left to take it)
+    fn send_job(&self, job: Job) -> bool;
+}
+
+impl JobSink for std::sync::mpsc::Sender<Job> {
+    fn send_job(&self, job: Job) -> bool {
+        self.send(job).is_ok()
+    }
+}
+
+/// The scanner's end of `Jobs`: the queue closes when it is dropped
+struct JobsTx(Arc<Jobs>);
+
+impl JobSink for JobsTx {
+    fn send_job(&self, job: Job) -> bool {
+        self.0.push(job);
+        true
+    }
+}
+
+impl Drop for JobsTx {
+    fn drop(&mut self) {
+        self.0.close();
+    }
+}
+
 struct State {
     /// decoded blocks (or errors) by their place in the stream, not yet read
-    ready: BTreeMap<u64, Result<Vec<u8>, Error>>,
+    ready: Ready,
     /// blocks given a place (the scanner's), and taken by the reader
     issued: u64,
     taken: u64,
     /// the number of places once the scanner has ended (its last perhaps an error)
     end: Option<u64>,
     cancelled: bool,
-    /// buffers to reuse: decoded blocks' and symbols'
+    /// buffers to reuse: decoded blocks' and symbols', and the input's chunks the scanner is
+    /// done with (`StreamDecoder::spare`)
     free_out: Vec<Vec<u8>>,
     free_syms: Vec<Vec<u16>>,
+    free_in: Vec<Vec<u8>>,
+    /// the reader waits for a block (on `Shared::cv`), the scanner for room (on
+    /// `Shared::scan_cv`): each is woken only while it waits, and only by what it waits for
+    reader_waiting: bool,
+    scanner_waiting: bool,
+    /// (testing) the scanner's waits with room in the window: the cap's
+    #[cfg(test)]
+    capped_waits: u64,
     /// the decode's terminal failure, if it failed as a whole (the service core's outer
     /// unwind, `Hub::fail`): set with `cancelled`, before either is announced, and the
     /// reader's error in place of `Cancelled`
@@ -78,6 +305,24 @@ struct State {
 }
 
 impl State {
+    fn new(slots: u64) -> State {
+        State {
+            ready: Ready::new(slots),
+            issued: 0,
+            taken: 0,
+            end: None,
+            cancelled: false,
+            free_out: Vec::new(),
+            free_syms: Vec::new(),
+            free_in: Vec::new(),
+            reader_waiting: false,
+            scanner_waiting: false,
+            #[cfg(test)]
+            capped_waits: 0,
+            terminal: None,
+        }
+    }
+
     /// The reader's error once the decode is cancelled: the terminal failure, if the decode
     /// failed as a whole, else `Cancelled`
     fn stopped(&self) -> Error {
@@ -89,8 +334,15 @@ impl State {
 
 struct Shared {
     state: Mutex<State>,
+    /// the reader's condition: a block at its place, the end, or the decode cancelled
     cv: Condvar,
+    /// the scanner's: room in the window (and under the cap), or the decode cancelled
+    scan_cv: Condvar,
+    /// `State::cancelled`, readable without the lock (a worker skipping its job)
+    stopped: AtomicBool,
     slots: u64,
+    /// the ready blocks' cap, if the decoder has one (the plain workers')
+    cap: Option<Cap>,
     /// the pipelined teams' counts (`StreamDecoder::pipeline_counts`): jobs taken by a
     /// leader while its helpers inverted another block, and those of them that failed
     overlapped: AtomicU64,
@@ -101,10 +353,58 @@ struct Shared {
 }
 
 impl Shared {
+    fn new(slots: u64, cap: Option<Cap>) -> Shared {
+        Shared {
+            state: Mutex::new(State::new(slots)),
+            cv: Condvar::new(),
+            scan_cv: Condvar::new(),
+            stopped: AtomicBool::new(false),
+            slots,
+            cap,
+            overlapped: AtomicU64::new(0),
+            overlap_errors: AtomicU64::new(0),
+            #[cfg(test)]
+            faults: Mutex::default(),
+        }
+    }
+
     fn lock(&self) -> std::sync::MutexGuard<'_, State> {
         // (a panic while holding the lock is caught where it happens; the state is
         // consistent at every unlock, so a poisoned lock is still usable)
         self.state.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// The decode cancelled (under the lock held as `st`): the ready blocks dropped
+    fn cancel_locked(&self, st: &mut State) {
+        st.cancelled = true;
+        st.ready.clear();
+        self.stopped.store(true, Ordering::Release);
+    }
+
+    /// Wake everyone waiting on the state (after a cancel)
+    fn wake_all(&self) {
+        self.cv.notify_all();
+        self.scan_cv.notify_all();
+    }
+
+    /// `place`'s block in `ready`, unless the decode is cancelled, under the lock held as
+    /// `st`: whether the reader is to be woken for it (it waits for exactly this place)
+    fn insert_locked(&self, st: &mut State, place: u64, res: Res) -> bool {
+        if st.cancelled {
+            return false;
+        }
+        st.ready.insert(place, res);
+        st.reader_waiting && place == st.taken
+    }
+
+    /// Whether the scanner must wait before it issues another block: the window full, or
+    /// the cap's bytes ready and unread with the cap's floor of blocks in flight
+    fn full(&self, st: &State) -> bool {
+        let ahead = st.issued - st.taken;
+        ahead >= self.slots
+            || self
+                .cap
+                .is_some_and(|c| st.ready.bytes >= c.bytes && ahead >= c.floor)
     }
 }
 
@@ -370,7 +670,23 @@ impl StreamDecoder {
         slots: usize,
         k: Kernels,
     ) -> StreamDecoder {
-        let mut dec = Self::launch(threads, slots, move |shared, jobs| {
+        Self::with_inverse_capped::<I>(threads, slots, k, READY_BYTES)
+    }
+
+    /// `with_inverse`, with `cap` decoded bytes ready (unread) in place of `READY_BYTES`
+    /// before the scanner keeps to the cap's floor (testing: a cap that binds)
+    fn with_inverse_capped<I: super::bwt::InverseBwt + 'static>(
+        threads: usize,
+        slots: usize,
+        k: Kernels,
+        cap: usize,
+    ) -> StreamDecoder {
+        let threads = threads.max(1);
+        let cap = Cap {
+            bytes: cap,
+            floor: threads as u64 + 2,
+        };
+        let mut dec = Self::launch(threads, slots, Some(cap), move |shared, jobs| {
             worker::<I>(shared, jobs, k)
         });
         dec.kernel = std::any::type_name::<I>();
@@ -385,7 +701,7 @@ impl StreamDecoder {
     #[doc(hidden)]
     pub fn pipelined(teams: usize, k: usize, slots: usize, kernels: Kernels) -> StreamDecoder {
         let (teams, team_k) = (teams.max(1), k.max(2));
-        let mut dec = Self::launch(teams, slots, move |shared, jobs| {
+        let mut dec = Self::launch(teams, slots, None, move |shared, jobs| {
             pipelined_worker::<false, false, { super::coop::BARRIER_SPINS }>(
                 shared, jobs, kernels, team_k,
             )
@@ -410,7 +726,7 @@ impl StreamDecoder {
         let (teams, team_k) = (teams.max(1), k.max(2));
         macro_rules! launch {
             ($park:literal, $small:literal, $spin:ident) => {
-                Self::launch(teams, slots, move |shared, jobs| {
+                Self::launch(teams, slots, None, move |shared, jobs| {
                     pipelined_worker::<$park, $small, $spin>(shared, jobs, kernels, team_k)
                 })
             };
@@ -441,34 +757,18 @@ impl StreamDecoder {
         )
     }
 
-    /// The scanner, and `threads` workers each running `work`
-    fn launch<W>(threads: usize, slots: usize, work: W) -> StreamDecoder
+    /// The scanner, and `threads` workers each running `work`, with the ready blocks' `cap`
+    /// if any
+    fn launch<W>(threads: usize, slots: usize, cap: Option<Cap>, work: W) -> StreamDecoder
     where
-        W: Fn(&Shared, &Mutex<Receiver<Job>>) + Clone + Send + 'static,
+        W: Fn(&Shared, &Jobs) + Clone + Send + 'static,
     {
         let threads = threads.max(1);
         let slots = slots.max(threads) as u64;
-        let shared = Arc::new(Shared {
-            state: Mutex::new(State {
-                ready: BTreeMap::new(),
-                issued: 0,
-                taken: 0,
-                end: None,
-                cancelled: false,
-                free_out: Vec::new(),
-                free_syms: Vec::new(),
-                terminal: None,
-            }),
-            cv: Condvar::new(),
-            slots,
-            overlapped: AtomicU64::new(0),
-            overlap_errors: AtomicU64::new(0),
-            #[cfg(test)]
-            faults: Mutex::default(),
-        });
+        let shared = Arc::new(Shared::new(slots, cap));
         let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
-        let (job_tx, job_rx) = channel::<Job>();
-        let job_rx = Arc::new(Mutex::new(job_rx));
+        let job_rx = Arc::new(Jobs::default());
+        let job_tx = JobsTx(job_rx.clone());
         let mut handles = Vec::with_capacity(threads + 1);
         for i in 0..threads {
             let (shared, job_rx, work) = (shared.clone(), job_rx.clone(), work.clone());
@@ -529,10 +829,9 @@ impl StreamDecoder {
     pub fn cancel(&self) {
         self.close();
         let mut st = self.shared.lock();
-        st.cancelled = true;
-        st.ready.clear();
+        self.shared.cancel_locked(&mut st);
         drop(st);
-        self.shared.cv.notify_all();
+        self.shared.wake_all();
     }
 
     /// Decoded bytes into `buf`, in order: how many (0 only at the end), blocking until
@@ -540,12 +839,7 @@ impl StreamDecoder {
     /// after), or after `cancel`.
     pub fn read(&self, buf: &mut [u8]) -> Result<usize, Error> {
         let mut r = self.reader.lock().unwrap_or_else(|e| e.into_inner());
-        if !r.done && r.failed.is_none() {
-            let st = self.shared.lock();
-            if st.cancelled {
-                r.failed = Some(st.stopped());
-            }
-        }
+        self.check_cancelled(&mut r);
         loop {
             if let Some(e) = &r.failed {
                 return Err(e.clone());
@@ -559,36 +853,113 @@ impl StreamDecoder {
             if r.done || buf.is_empty() {
                 return Ok(0);
             }
-            let mut st = self.shared.lock();
-            let spent = std::mem::take(&mut r.cur);
-            if spent.capacity() != 0 && st.free_out.len() < self.shared.slots as usize {
-                st.free_out.push(spent);
+            self.advance(&mut r, Vec::new());
+        }
+    }
+
+    /// The next decoded block, whole, in order: `read`'s bytes without their copy, for a
+    /// caller that takes them a block at a time (`decode_parallel`, `BzReader`'s `BufRead`,
+    /// examples/bzcat.rs). Ok(None) at the end; errors as `read`'s. `spent` is a block this
+    /// returned before, given back for the decoder to reuse its buffer (or an empty Vec).
+    /// After a `read` that took part of a block, the rest of that block comes first.
+    #[doc(hidden)]
+    pub fn read_block(&self, spent: Vec<u8>) -> Result<Option<Vec<u8>>, Error> {
+        let mut r = self.reader.lock().unwrap_or_else(|e| e.into_inner());
+        self.check_cancelled(&mut r);
+        let mut spent = Some(spent);
+        loop {
+            if let Some(e) = &r.failed {
+                return Err(e.clone());
             }
-            r.at = 0;
-            mark!(ReadWait);
-            loop {
-                if st.cancelled {
-                    r.failed = Some(st.stopped());
-                    break;
+            if r.at < r.cur.len() {
+                let v = if r.at == 0 {
+                    std::mem::take(&mut r.cur)
+                } else {
+                    let rest = r.cur[r.at..].to_vec();
+                    r.at = r.cur.len();
+                    rest
+                };
+                if let Some(b) = spent.take() {
+                    self.recycle(b);
                 }
-                let taken = st.taken;
-                if let Some(res) = st.ready.remove(&taken) {
-                    st.taken += 1;
-                    self.shared.cv.notify_all();
-                    mark!(Taken, taken);
-                    match res {
-                        Ok(v) => r.cur = v,
-                        Err(e) => r.failed = Some(e),
-                    }
-                    break;
-                }
-                if st.end == Some(st.taken) {
-                    r.done = true;
-                    break;
-                }
-                st = self.shared.cv.wait(st).unwrap_or_else(|e| e.into_inner());
+                return Ok(Some(v));
+            }
+            if r.done {
+                return Ok(None);
+            }
+            self.advance(&mut r, spent.take().unwrap_or_default());
+        }
+    }
+
+    /// A buffer for the next `write`, reusing an input chunk the scanner is done with where
+    /// there is one (its length and contents are whatever they were: a caller resizes it
+    /// and overwrites it). Saves a writer allocating, and faulting in, every chunk.
+    #[doc(hidden)]
+    pub fn spare(&self) -> Vec<u8> {
+        self.shared.lock().free_in.pop().unwrap_or_default()
+    }
+
+    /// The reader's error, if the decode was cancelled before it ended or failed
+    fn check_cancelled(&self, r: &mut Reader) {
+        if !r.done && r.failed.is_none() {
+            let st = self.shared.lock();
+            if st.cancelled {
+                r.failed = Some(st.stopped());
             }
         }
+    }
+
+    /// A block's buffer the reader is done with, into the pool (a block of few rows takes
+    /// none from it, so a small buffer is not kept)
+    fn recycle(&self, spent: Vec<u8>) {
+        if spent.capacity() >= POOLED_FROM {
+            let mut st = self.shared.lock();
+            if st.free_out.len() < self.shared.slots as usize {
+                st.free_out.push(spent);
+            }
+        }
+    }
+
+    /// The reader's block, read to its end, replaced by the next (waiting for it), or the
+    /// end or the error: `r.cur`'s buffer and `extra` go to the pool
+    fn advance(&self, r: &mut Reader, extra: Vec<u8>) {
+        let mut st = self.shared.lock();
+        for spent in [std::mem::take(&mut r.cur), extra] {
+            if spent.capacity() >= POOLED_FROM && st.free_out.len() < self.shared.slots as usize {
+                st.free_out.push(spent);
+            }
+        }
+        r.at = 0;
+        mark!(ReadWait);
+        loop {
+            if st.cancelled {
+                r.failed = Some(st.stopped());
+                break;
+            }
+            let taken = st.taken;
+            if let Some(res) = st.ready.remove(&taken) {
+                st.taken += 1;
+                st.reader_waiting = false;
+                let wake = st.scanner_waiting;
+                drop(st);
+                if wake {
+                    self.shared.scan_cv.notify_one();
+                }
+                mark!(Taken, taken);
+                match res {
+                    Ok(v) => r.cur = v,
+                    Err(e) => r.failed = Some(e),
+                }
+                return;
+            }
+            if st.end == Some(st.taken) {
+                r.done = true;
+                break;
+            }
+            st.reader_waiting = true;
+            st = self.shared.cv.wait(st).unwrap_or_else(|e| e.into_inner());
+        }
+        st.reader_waiting = false;
     }
 
     /// Cancel and wait for the threads
@@ -623,14 +994,27 @@ impl Source for ChannelSource<'_> {
         while !self.eof && self.base + (self.buf.len() as u64) < from + want as u64 {
             mark!(InputWait);
             match self.rx.recv() {
-                Ok(chunk) => {
+                Ok(mut chunk) => {
                     mark!(InputGot);
                     let drop_n = (self.released - self.base) as usize;
-                    if drop_n >= COMPACT {
-                        self.buf.drain(..drop_n);
+                    if drop_n == self.buf.len() {
+                        // (nothing held: the chunk is the window, the window's buffer spare)
+                        std::mem::swap(&mut self.buf, &mut chunk);
                         self.base = self.released;
+                    } else {
+                        if drop_n >= COMPACT {
+                            self.buf.drain(..drop_n);
+                            self.base = self.released;
+                        }
+                        self.buf.extend_from_slice(&chunk);
                     }
-                    self.buf.extend_from_slice(&chunk);
+                    // (the chunk's buffer, done with, for the writer's next: `spare`)
+                    if chunk.capacity() > 0 {
+                        let mut st = self.shared.lock();
+                        if st.free_in.len() <= INPUT_QUEUE {
+                            st.free_in.push(chunk);
+                        }
+                    }
                     mark!(
                         Window,
                         crate::trace::NONE,
@@ -656,7 +1040,7 @@ impl Source for ChannelSource<'_> {
     }
 }
 
-fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender<Job>) {
+fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
     let src = ChannelSource {
         rx,
         buf: Vec::new(),
@@ -678,16 +1062,22 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
             _ => st.end = Some(at),
         }
         drop(st);
-        shared.cv.notify_all();
+        shared.cv.notify_one();
     };
     loop {
         // a slot first, and a symbols buffer to reuse
         mark!(SlotWait);
         let syms = {
             let mut st = shared.lock();
-            while !st.cancelled && st.issued - st.taken >= shared.slots {
-                st = shared.cv.wait(st).unwrap_or_else(|e| e.into_inner());
+            while !st.cancelled && shared.full(&st) {
+                #[cfg(test)]
+                {
+                    st.capped_waits += u64::from(st.issued - st.taken < shared.slots);
+                }
+                st.scanner_waiting = true;
+                st = shared.scan_cv.wait(st).unwrap_or_else(|e| e.into_inner());
             }
+            st.scanner_waiting = false;
             if st.cancelled {
                 drop(st);
                 return finish(None);
@@ -715,7 +1105,7 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
                     symbols.syms.capacity() * std::mem::size_of::<u16>()
                 );
                 debug_assert_eq!(place, index);
-                if jobs.send((place, bit, symbols)).is_err() {
+                if !jobs.send_job((place, bit, symbols)) {
                     return finish(None);
                 }
                 mark!(Enqueued, place);
@@ -728,16 +1118,14 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
     // fails, and the workers end once the jobs queued are done)
 }
 
-fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels) {
+fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
     let mut scratch = Scratch::<I>::default();
+    let slots = shared.slots as usize;
     loop {
         mark!(JobLock);
-        let job = {
-            let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());
-            mark!(JobRecv);
-            rx.recv()
-        };
-        let Ok((place, bit, symbols)) = job else {
+        mark!(JobRecv);
+        let job = jobs.recv();
+        let Some((place, bit, mut symbols)) = job else {
             // (its buffers' high-water marks, for the footprint ledger)
             #[cfg(feature = "trace")]
             if crate::trace::level() > 0 {
@@ -747,28 +1135,43 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             return;
         };
         mark!(JobGot, place);
-        let mut out = {
-            let mut st = shared.lock();
-            if st.cancelled {
-                continue; // (drain the queue, so the scanner never waits on it)
-            }
-            st.free_out.pop().unwrap_or_default()
-        };
-        out.clear();
+        if shared.stopped.load(Ordering::Acquire) {
+            continue; // (drain the queue, so the scanner never waits on it)
+        }
         mark!(DecodeStart, place);
         // (research only, `phase-counters`: the worker's whole-decode scope, the block's
         // decode_block)
         #[cfg(feature = "phase-counters")]
         crate::phase::whole_begin();
+        // the block's symbols go back to the pool once its rows are known (nothing reads
+        // them after), in the same lock as its output buffer is taken: from the pool for a
+        // block of `POOLED_FROM` rows or more, its own for a smaller one
         let res = catch_unwind(AssertUnwindSafe(|| {
-            decode_block(&symbols, k, &mut scratch, &mut out)
+            super::decode_owned(&mut symbols, k, &mut scratch, |n, syms| {
+                let mut st = shared.lock();
+                if syms.capacity() > 0 && st.free_syms.len() < slots {
+                    st.free_syms.push(syms);
+                }
+                if n >= POOLED_FROM {
+                    st.free_out
+                        .pop()
+                        .unwrap_or_else(|| Vec::with_capacity(n + n / 16 + 64))
+                } else {
+                    Vec::new()
+                }
+            })
         }));
         #[cfg(feature = "phase-counters")]
         crate::phase::whole_end();
-        mark!(DecodeEnd, place, out.len(), out.capacity());
+        mark!(
+            DecodeEnd,
+            place,
+            res.as_ref().map_or(0, |r| r.as_ref().map_or(0, Vec::len)),
+            res.as_ref()
+                .map_or(0, |r| r.as_ref().map_or(0, Vec::capacity))
+        );
         let res = match res {
-            Ok(Ok(_)) => Ok(out),
-            Ok(Err(kind)) => Err(kind),
+            Ok(r) => r,
             Err(p) => {
                 scratch = Scratch::default();
                 Err(ErrorKind::Internal(panic_message(p)))
@@ -780,15 +1183,16 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             bit: Some(bit),
         });
         let mut st = shared.lock();
-        if !st.cancelled {
-            st.ready.insert(place, res);
-        }
-        if st.free_syms.len() < shared.slots as usize {
-            st.free_syms.push(symbols.syms);
+        let wake = shared.insert_locked(&mut st, place, res);
+        // (the symbols, where the block failed before its rows were known)
+        if symbols.syms.capacity() > 0 && st.free_syms.len() < slots {
+            st.free_syms.push(std::mem::take(&mut symbols.syms));
         }
         drop(st);
         mark!(Ready, place);
-        shared.cv.notify_all();
+        if wake {
+            shared.cv.notify_one();
+        }
     }
 }
 
@@ -1053,15 +1457,15 @@ fn publish(shared: &Shared, place: u64, bit: u64, res: Result<Vec<u8>, ErrorKind
         .published
         .push((place, res.as_ref().err().cloned()));
     let mut st = shared.lock();
-    if !st.cancelled {
-        st.ready.insert(place, res);
-    }
+    let wake = shared.insert_locked(&mut st, place, res);
     if st.free_syms.len() < shared.slots as usize {
         st.free_syms.push(syms);
     }
     drop(st);
     mark!(Ready, place);
-    shared.cv.notify_all();
+    if wake {
+        shared.cv.notify_one();
+    }
 }
 
 /// Testing only: where a pipelined team's run panics, outside every stage's own catch, so
@@ -1213,14 +1617,8 @@ struct Lead {
 
 /// The next job if one is queued, without waiting: None if none is (or the jobs' lock is
 /// held, by a worker waiting in `recv`, which will take the next one)
-fn try_job(jobs: &Mutex<Receiver<Job>>) -> Option<Job> {
-    use std::sync::TryLockError;
-    let rx = match jobs.try_lock() {
-        Ok(rx) => rx,
-        Err(TryLockError::Poisoned(p)) => p.into_inner(),
-        Err(TryLockError::WouldBlock) => return None,
-    };
-    rx.try_recv().ok()
+fn try_job(jobs: &Jobs) -> Option<Job> {
+    jobs.try_recv()
 }
 
 /// What a job's move-to-front gave: a block for the team, a block below `MIN_COOP` for the
@@ -1264,7 +1662,7 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> 
 /// registered prototype's
 fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
     shared: &Shared,
-    jobs: &Mutex<Receiver<Job>>,
+    jobs: &Jobs,
     k: Kernels,
     team_k: usize,
 ) {
@@ -1284,12 +1682,9 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
             }
             // nothing in flight: wait for the next job
             mark!(JobLock);
-            let job = {
-                let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());
-                mark!(JobRecv);
-                rx.recv()
-            };
-            let Ok(job) = job else {
+            mark!(JobRecv);
+            let job = jobs.recv();
+            let Some(job) = job else {
                 #[cfg(feature = "trace")]
                 if crate::trace::level() > 0 {
                     crate::trace::buffers(&t.buffers());
@@ -1810,8 +2205,7 @@ impl Hub {
                      decode is stopped"
                 ))));
             }
-            st.cancelled = true;
-            st.ready.clear();
+            shared.cancel_locked(&mut st);
         }
         {
             let mut st = self.lock();
@@ -1827,7 +2221,7 @@ impl Hub {
                 st.tokens.1 += retired as u64;
             }
         }
-        shared.cv.notify_all();
+        shared.wake_all();
         self.cv.notify_all();
     }
 }
@@ -1884,24 +2278,7 @@ impl StreamDecoder {
     ) -> StreamDecoder {
         let (teams, team_k, services) = (teams.max(1), k.clamp(1, 4), services.max(1));
         let slots = slots.max(teams) as u64;
-        let shared = Arc::new(Shared {
-            state: Mutex::new(State {
-                ready: BTreeMap::new(),
-                issued: 0,
-                taken: 0,
-                end: None,
-                cancelled: false,
-                free_out: Vec::new(),
-                free_syms: Vec::new(),
-                terminal: None,
-            }),
-            cv: Condvar::new(),
-            slots,
-            overlapped: AtomicU64::new(0),
-            overlap_errors: AtomicU64::new(0),
-            #[cfg(test)]
-            faults: Mutex::default(),
-        });
+        let shared = Arc::new(Shared::new(slots, None));
         let lookahead = teams;
         let hub = Arc::new(Hub {
             st: Mutex::new(HubState {
@@ -3340,23 +3717,11 @@ mod service_tests {
 
     /// A decoder's shared state, as `service_with_fault` makes it (cancelled or not)
     fn shared(cancelled: bool) -> Shared {
-        Shared {
-            state: Mutex::new(State {
-                ready: BTreeMap::new(),
-                issued: 0,
-                taken: 0,
-                end: None,
-                cancelled,
-                free_out: Vec::new(),
-                free_syms: Vec::new(),
-                terminal: None,
-            }),
-            cv: Condvar::new(),
-            slots: 4,
-            overlapped: AtomicU64::new(0),
-            overlap_errors: AtomicU64::new(0),
-            faults: Mutex::default(),
+        let shared = Shared::new(4, None);
+        if cancelled {
+            shared.cancel_locked(&mut shared.lock());
         }
+        shared
     }
 
     /// Wait (yielding, at most `secs`) until `ok` holds of the hub's state, checked under
@@ -3610,23 +3975,7 @@ mod service_tests {
     /// front set returned, no new job), and prepares the job waiting
     #[test]
     fn miri_a_team_taking_a_prepared_block_wakes_the_service() {
-        let shared = Shared {
-            state: Mutex::new(State {
-                ready: BTreeMap::new(),
-                issued: 0,
-                taken: 0,
-                end: None,
-                cancelled: false,
-                free_out: Vec::new(),
-                free_syms: Vec::new(),
-                terminal: None,
-            }),
-            cv: Condvar::new(),
-            slots: 4,
-            overlapped: AtomicU64::new(0),
-            overlap_errors: AtomicU64::new(0),
-            faults: Mutex::default(),
-        };
+        let shared = Shared::new(4, None);
         let h = hub(1, 2);
         {
             // block 0 prepared (the queue at its lookahead of 1), block 1 waiting as a job
@@ -4192,6 +4541,9 @@ mod front_tests {
 
 #[cfg(test)]
 mod unwind_tests;
+
+#[cfg(test)]
+mod plateau_tests;
 
 #[cfg(test)]
 mod service_unwind_tests;

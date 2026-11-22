@@ -360,6 +360,8 @@ pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     /// a block's run records and their F order, for a kernel that reads runs
     /// (`InverseBwt::reads_runs`) on a block of few symbols (`runs::takes_runs`)
     runs: runs::Runs,
+    /// the runs `decode_owned`'s in-place RLE1 found in a block (`rle::unrle_in_place`)
+    rle_runs: Vec<rle::Run>,
     #[cfg(any(test, feature = "trace"))]
     allocation_history: Vec<trace::AllocationSample>,
 }
@@ -378,6 +380,21 @@ impl<I: bwt::InverseBwt> Scratch<I> {
         block_bound: usize,
         k: Kernels,
     ) {
+        self.record_owned(route, rows, block_bound, k, None, false);
+    }
+
+    /// `record_allocation`, for a block decoded into its own buffer `owned` (after its
+    /// RLE1; `staged`: its inverted bytes went through `ll`), `decode_owned`
+    #[cfg(any(test, feature = "trace"))]
+    fn record_owned(
+        &mut self,
+        route: trace::OutputRoute,
+        rows: usize,
+        block_bound: usize,
+        k: Kernels,
+        owned: Option<&Vec<u8>>,
+        staged: bool,
+    ) {
         if !cfg!(test) && trace::level() == 0 {
             return;
         }
@@ -388,6 +405,8 @@ impl<I: bwt::InverseBwt> Scratch<I> {
             rows,
             block_bound,
             buffers: self.buffers(),
+            owned: owned.map(|o| trace::Buffer::of("out", o)),
+            staged,
         });
     }
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs): tests and the `trace`
@@ -407,6 +426,9 @@ impl<I: bwt::InverseBwt> Scratch<I> {
             v.push(trace::Buffer::of("checkpoints", &self.checkpoints));
         }
         v.extend(self.runs.buffers().into_iter().filter(|b| b.cap > 0));
+        if self.rle_runs.capacity() > 0 {
+            v.push(trace::Buffer::of("rle_runs", &self.rle_runs));
+        }
         v.extend(self.inverse.buffers());
         v
     }
@@ -421,6 +443,7 @@ impl<I: bwt::InverseBwt> Default for Scratch<I> {
             inverse: I::default(),
             rle: Vec::new(),
             runs: runs::Runs::default(),
+            rle_runs: Vec::new(),
             #[cfg(any(test, feature = "trace"))]
             allocation_history: Vec::new(),
         }
@@ -479,6 +502,108 @@ pub fn decode_block<I: bwt::InverseBwt>(
     if b.orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
     }
+    column(s, n, b.orig_ptr, b.crc, b.max_len, k, out)
+}
+
+/// `decode_block` into a buffer of the block's own, for the parallel workers: the block's
+/// bytes are the whole of the buffer returned, the bytes and the errors exactly
+/// `decode_block`'s. `take(n, syms)` gives that buffer once the block's `n` rows are known,
+/// and is handed `b`'s symbols' buffer, which nothing reads after that (`b.syms` is left
+/// empty); where `decode_block` errs before (the move-to-front's errors, `BadOrigPtr`), it
+/// is not called, and `b.syms` is left as it was.
+///
+/// The buffer's contents are overwritten. On the records' route (`runs::takes_runs`, for a
+/// kernel that reads them) the block is inverted straight into it, not into `ll`, and its
+/// RLE1 undone there in place, its CRC taken as the bytes are written
+/// (`rle::unrle_in_place`). On the column's route, it is `decode_block`'s, into the buffer
+/// emptied.
+///
+/// The one departure from `decode_block`: on the records' route, records that don't tile
+/// the block (`invert_runs` refusing them, a bug in `runs::front`, which a debug build stops
+/// at) are the block's `Internal` error, where `decode_block` takes the column's route
+/// instead. The symbols have been handed back by then. `runs::front`'s records tile the
+/// block by construction (its rows are their sum, and each byte's count its records' sum),
+/// so no input reaches it.
+pub(crate) fn decode_owned<I: bwt::InverseBwt>(
+    b: &mut block::Symbols,
+    k: Kernels,
+    s: &mut Scratch<I>,
+    take: impl FnOnce(usize, Vec<u16>) -> Vec<u8>,
+) -> Result<Vec<u8>, ErrorKind> {
+    let (crc, orig_ptr) = (b.crc, b.orig_ptr);
+    if s.inverse.reads_runs() && runs::takes_runs(b) {
+        let n = runs::front(b, &mut s.runs, k)?;
+        if orig_ptr as usize >= n {
+            return Err(ErrorKind::BadOrigPtr);
+        }
+        let mut out = take(n, std::mem::take(&mut b.syms));
+        #[cfg(feature = "trace")]
+        trace::mark_sized(
+            trace::Kind::InvertStart,
+            trace::NONE,
+            n as u64,
+            trace::UNREAD,
+        );
+        let done = s.inverse.invert_runs(&s.runs, n, orig_ptr, &mut out, k);
+        #[cfg(feature = "trace")]
+        trace::mark(trace::Kind::InvertEnd, trace::NONE);
+        if !done {
+            debug_assert!(false, "the run records don't tile the block");
+            return Err(ErrorKind::Internal(
+                "the run records don't tile the block".into(),
+            ));
+        }
+        #[cfg(any(test, feature = "trace"))]
+        let ll_before = s.ll.as_ptr();
+        let computed = rle::unrle_in_place(&mut out, &mut s.rle_runs, &mut s.ll, k);
+        // (the footprint ledger's sample, after the RLE1, so that it sees the buffers the
+        // block leaves: its own, and `ll` if its inverted bytes were staged there)
+        #[cfg(any(test, feature = "trace"))]
+        {
+            let route = if s.inverse.took_cells() {
+                trace::OutputRoute::Cells
+            } else {
+                trace::OutputRoute::Runs
+            };
+            let staged = s.ll.as_ptr() != ll_before;
+            s.record_owned(route, n, b.max_len, k, Some(&out), staged);
+        }
+        let computed = computed?;
+        if computed != crc {
+            return Err(ErrorKind::BlockCrc {
+                stored: crc,
+                computed,
+            });
+        }
+        return Ok(out);
+    }
+    let cooperative = s.inverse.wants_checkpoints();
+    let n = if cooperative {
+        mtf::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?
+    } else {
+        mtf::mtf(b, &mut s.ll, &mut s.counts, k)?
+    };
+    if orig_ptr as usize >= n {
+        return Err(ErrorKind::BadOrigPtr);
+    }
+    let mut out = take(n, std::mem::take(&mut b.syms));
+    out.clear();
+    column(s, n, orig_ptr, crc, b.max_len, k, &mut out)?;
+    Ok(out)
+}
+
+/// `decode_block`'s column route after the move-to-front (`n` rows in `ll`): the inverse,
+/// in place where the kernel can, then RLE1 and the CRC (`finish`), appended to `out`
+fn column<I: bwt::InverseBwt>(
+    s: &mut Scratch<I>,
+    n: usize,
+    orig_ptr: u32,
+    crc: u32,
+    _block_bound: usize,
+    k: Kernels,
+    out: &mut Vec<u8>,
+) -> Result<u32, ErrorKind> {
+    let cooperative = s.inverse.wants_checkpoints();
     #[cfg(feature = "trace")]
     trace::mark_sized(
         trace::Kind::InvertStart,
@@ -487,13 +612,13 @@ pub fn decode_block<I: bwt::InverseBwt>(
         trace::UNREAD,
     );
     // in place where the kernel can (its output over `ll`), else into `rle`
-    let in_place = !cooperative && s.inverse.invert_in_place(&mut s.ll, &s.counts, b.orig_ptr);
+    let in_place = !cooperative && s.inverse.invert_in_place(&mut s.ll, &s.counts, orig_ptr);
     if cooperative {
         let cps = &s.checkpoints;
         s.inverse
-            .invert_checkpointed(&s.ll, &s.counts, cps, b.orig_ptr, &mut s.rle);
+            .invert_checkpointed(&s.ll, &s.counts, cps, orig_ptr, &mut s.rle);
     } else if !in_place {
-        s.inverse.invert(&s.ll, &s.counts, b.orig_ptr, &mut s.rle);
+        s.inverse.invert(&s.ll, &s.counts, orig_ptr, &mut s.rle);
     }
     #[cfg(feature = "trace")]
     trace::mark(trace::Kind::InvertEnd, trace::NONE);
@@ -505,11 +630,13 @@ pub fn decode_block<I: bwt::InverseBwt>(
             trace::OutputRoute::ColumnSeparate
         },
         n,
-        b.max_len,
+        _block_bound,
         k,
     );
+    #[cfg(not(any(test, feature = "trace")))]
+    let _ = n;
     let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
-    finish(inverted, b.crc, k, out)
+    finish(inverted, crc, k, out)
 }
 
 /// RLE1 undone into `out` and the block's CRC checked against `stored` (`decode_block`'s
@@ -547,17 +674,25 @@ pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
     std::thread::scope(|s| {
         s.spawn(|| {
             for c in data.chunks(4 << 20) {
-                if dec.write(c.to_vec()).is_err() {
+                // (a chunk the scanner is done with, where there is one)
+                let mut chunk = dec.spare();
+                chunk.clear();
+                chunk.extend_from_slice(c);
+                if dec.write(chunk).is_err() {
                     return;
                 }
             }
             dec.close();
         });
-        let mut buf = vec![0u8; 4 << 20];
+        // each block appended as it comes, whole, its buffer given back for the next
+        let mut spent = Vec::new();
         let res = loop {
-            match dec.read(&mut buf) {
-                Ok(0) => break Ok(()),
-                Ok(n) => out.extend_from_slice(&buf[..n]),
+            match dec.read_block(spent) {
+                Ok(None) => break Ok(()),
+                Ok(Some(b)) => {
+                    out.extend_from_slice(&b);
+                    spent = b;
+                }
                 Err(e) => break Err(e),
             }
         };

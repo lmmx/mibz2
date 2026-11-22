@@ -1047,9 +1047,18 @@ fn footprint(traces: &[ThreadTrace], roles: &[Option<Role>], kv: &mut Kv) {
                     .map(|b| format!("{}:{}:{}", b.name, b.len, b.cap))
                     .collect::<Vec<_>>()
                     .join(",");
+                let owned = s
+                    .owned
+                    .map(|b| format!(",owned.{}:{}:{}", b.name, b.len, b.cap))
+                    .unwrap_or_default();
                 format!(
-                    "{:?}:{}:{}:{}:{}:{bufs}",
-                    s.route, s.cooperative, s.avx2, s.rows, s.block_bound
+                    "{:?}:{}:{}:{}:{}:{bufs}{owned}{}",
+                    s.route,
+                    s.cooperative,
+                    s.avx2,
+                    s.rows,
+                    s.block_bound,
+                    if s.staged { ",staged" } else { "" }
                 )
             })
             .collect::<Vec<_>>()
@@ -1562,7 +1571,7 @@ fn parent(args: &[String]) {
     let report = J::O(vec![
         ("tool".into(), J::S("examples/occupancy.rs (#39)".into())),
         ("format".into(), J::N(1.0)),
-        ("worker_ledger".into(), J::S("route-history-v2; per-worker integer validation before aggregation".into())),
+        ("worker_ledger".into(), J::S("route-history-v3; per-worker integer validation before aggregation".into())),
         ("meta".into(), J::O(meta.into_iter().map(|(k, v)| (k, J::S(v))).collect())),
         ("machine".into(), m.json()),
         (
@@ -2441,11 +2450,21 @@ mod tests {
         use std::io::{Cursor, Write};
         let mut input = Vec::new();
         let mut expected = Vec::new();
-        for (run, n, level) in [(true, 600_000, 9), (false, 70_000, 1), (true, 800_000, 9)] {
+        // (the last: one byte, which RLE1 grows past twice its inverted rows, so the plain
+        // workers stage its inverted bytes through `ll`: `rle::unrle_in_place`)
+        for (run, n, level) in [
+            (true, 600_000, 9),
+            (false, 70_000, 1),
+            (true, 800_000, 9),
+            (true, 3_000_000, 9),
+        ] {
             let mut x = 71u64;
+            let one = n == 3_000_000;
             let bytes: Vec<u8> = (0..n)
                 .map(|i| {
-                    if run {
+                    if one {
+                        b'z'
+                    } else if run {
                         b'a' + (i % 2) as u8
                     } else {
                         x ^= x << 13;
@@ -2481,14 +2500,18 @@ mod tests {
             let traces = trace::take();
             trace::set_level(0);
             let samples: Vec<_> = traces.iter().flat_map(|t| &t.allocations).collect();
-            assert_eq!(samples.len(), 3);
-            assert_eq!(
-                samples
-                    .iter()
-                    .filter(|s| s.route == trace::OutputRoute::Runs)
-                    .count(),
-                2
-            );
+            assert_eq!(samples.len(), 4);
+            let runs = |s: &&&trace::AllocationSample| {
+                matches!(
+                    s.route,
+                    trace::OutputRoute::Runs | trace::OutputRoute::Cells
+                )
+            };
+            assert_eq!(samples.iter().filter(runs).count(), 3);
+            // every decoder here is plain workers' (`worker`, `decode_owned`): each run-route
+            // block is decoded into its own buffer, and the one-byte block is staged
+            assert!(samples.iter().filter(runs).all(|s| s.owned.is_some()));
+            assert_eq!(samples.iter().filter(|s| s.staged).count(), 1);
             let column = if matches!(plan, Plan::Workers(_)) {
                 trace::OutputRoute::ColumnInPlace
             } else {
@@ -2538,6 +2561,8 @@ mod tests {
                 rows,
                 block_bound: 900_000,
                 buffers,
+                owned: None,
+                staged: false,
             });
             t
         };
