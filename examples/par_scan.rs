@@ -2500,33 +2500,44 @@ mod tests {
         eprintln!("finder_every_bit_offset: {n:?}");
     }
 
-    /// The harness's own chunking: a magic whose first bit is `r` bits before each
-    /// FIND_CHUNK edge, for every r in 0..=48 (straddling the edge, ending at it, starting
-    /// on it), found when the input is searched chunk by chunk as the finder thread does
+    /// The harness's own split of the input: `find` gives each of `threads` workers the
+    /// anchors `1 + total * tid / threads ..` (`find_magics_anchor_range`, 4 bytes an
+    /// anchor). A magic whose first bit is `r` bits before each worker's first anchor byte,
+    /// for every r in 0..=48 (straddling the edge, ending at it, starting on it), is found
+    /// once, by the workers' ranges together, as the bit-by-bit reference finds it; and
+    /// so is every magic of a random input. (It replaces the finder thread's chunk-edge
+    /// test: `find` no longer searches the input in chunks.)
     #[cfg_attr(miri, ignore)]
     #[test]
-    fn finder_find_chunk_edges() {
-        let fs = finders();
+    fn finder_anchor_split_edges() {
         let mut rng = Rng(0xc40e_d6e5);
-        let len = 3 * FIND_CHUNK + 77;
-        for r in 0..=48u64 {
-            let at: Vec<(u64, bool)> = [FIND_CHUNK, 2 * FIND_CHUNK, 3 * FIND_CHUNK]
-                .iter()
-                .map(|&e| (e as u64 * 8 - r, r % 2 == 1))
-                .collect();
-            let d = planted(len, &mut rng, &at);
-            let want = find_naive(&d);
-            for &(bit, _) in &at {
-                assert!(want.iter().any(|c| c.bit == bit), "planted at {bit}");
+        let len = 3 * 4096 + 77;
+        let total = (len - 2) / 4;
+        let split = |d: &[u8], threads: usize| {
+            let mut all = Vec::new();
+            let mut part = Vec::new();
+            for tid in 0..threads {
+                let m_start = 1 + (total * tid) / threads;
+                let m_end = 1 + (total * (tid + 1)) / threads;
+                find_magics_anchor_range(d, m_start, m_end, &mut part);
+                all.extend(part.iter().map(|m| (m.bit, m.is_end)));
             }
-            for f in &fs {
-                let (mut v, mut from) = (Vec::new(), 0);
-                while from < d.len() {
-                    let to = (from + FIND_CHUNK).min(d.len());
-                    f.find(&d, from, to, &mut v);
-                    from = to;
+            all.sort_unstable();
+            all
+        };
+        for threads in [1, 2, 3, 4, 7, 10] {
+            let edges: Vec<u64> = (1..threads)
+                .map(|tid| (4 * (1 + (total * tid) / threads)) as u64)
+                .collect();
+            for r in 0..=48u64 {
+                let at: Vec<(u64, bool)> = edges.iter().map(|&e| (e * 8 - r, r % 2 == 1)).collect();
+                let d = planted(len, &mut rng, &at);
+                let want: Vec<(u64, bool)> =
+                    find_naive(&d).iter().map(|c| (c.bit, c.end)).collect();
+                for &(bit, _) in &at {
+                    assert!(want.iter().any(|c| c.0 == bit), "planted at {bit}");
                 }
-                assert_eq!(v, want, "chunked, r {r}, avx2 {}", f.avx2);
+                assert_eq!(split(&d, threads), want, "threads {threads}, r {r}");
             }
         }
     }
