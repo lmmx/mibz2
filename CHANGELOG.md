@@ -96,8 +96,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **To fix:** `owned-writer` has no retention note.
 - Both go in a separate PR.
 
-**Release scaling and crossover** (§5, §5a): queued on the i9 at the tag commit 4a4a1c22.
-The crossover runs because #745 changes the scanner. Their results follow in their own PR.
+**Release scaling on the i9** (`release-scaling/run-20261122T212737Z`, evidence fb315cff, sha256
+5c336484…7457; recorded by #774): 0.5.12 over 0.5.13 on Wikidata.
+- **Wall:** 1.085 [1.058, 1.112] at 2 threads, 1.080 at 8, 1.115 [1.083, 1.148] at 10 and 1.130
+  [1.115, 1.145] at 16. At 1 thread it is 1.023 [0.981, 1.066], inconclusive.
+- **Peak memory:** from 62–66 MB down to 42–43 MB at 8–16 threads.
+- **Output:** the same bytes on every arm.
+
+**The team threshold stays** (`crossover/run-20261122T213836Z`, evidence a40670c5, sha256
+ad658393…3e66; rule of LOG 6896455773).
+- **No forced arm is faster:** neither one block a thread nor teams of 2 or 3 beats the shipped
+  decoder at any count.
+- **One block a thread:** it spans 1 where it runs the shipped plan (5, 7 and 9 threads), and is
+  slower at 4, 6, 8 and 10 (1.027–1.272).
+- **The teams:** they lose everywhere, 1.14–9.9×.
 
 ## [0.5.12](https://github.com/lmmx/mibz2/compare/v0.5.11...v0.5.12) - 2026-11-22
 
