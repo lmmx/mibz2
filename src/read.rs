@@ -251,8 +251,12 @@ impl<R: Read + Send + 'static> BzReader<R> {
                 let _unwind = CancelOnUnwind(&d, &e);
                 loop {
                     // (a chunk the scanner is done with, where there is one: its bytes are
-                    // overwritten, so it is not zeroed again unless it grows)
+                    // overwritten, so it is not zeroed again unless it grows; else a new one,
+                    // zeroed by the allocator, so that a short input touches only its pages)
                     let mut buf = d.spare();
+                    if buf.capacity() < CHUNK {
+                        buf = vec![0u8; CHUNK];
+                    }
                     buf.resize(CHUNK, 0);
                     let n = match read_full(&mut r, &mut buf) {
                         Ok(n) => n,

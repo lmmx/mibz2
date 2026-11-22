@@ -25,7 +25,11 @@ fn main() {
             let mut stdin = std::io::stdin().lock();
             loop {
                 // (a chunk the scanner is done with, where there is one)
+                // (else a new one, zeroed by the allocator: a short input touches its pages only)
                 let mut buf = dec.spare();
+                if buf.capacity() < 8 << 20 {
+                    buf = vec![0u8; 8 << 20];
+                }
                 buf.resize(8 << 20, 0);
                 let n = stdin.read(&mut buf).unwrap();
                 if n == 0 {

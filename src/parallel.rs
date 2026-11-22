@@ -893,7 +893,9 @@ impl StreamDecoder {
 
     /// A buffer for the next `write`, reusing an input chunk the scanner is done with where
     /// there is one (its length and contents are whatever they were: a caller resizes it
-    /// and overwrites it). Saves a writer allocating, and faulting in, every chunk.
+    /// and overwrites it), else an empty Vec, which a caller replaces with a zeroed one
+    /// (`vec![0; n]`, which a short input faults in only as far as it reaches). At most one
+    /// chunk is kept spare. Saves a writer allocating, and faulting in, every chunk.
     #[doc(hidden)]
     pub fn spare(&self) -> Vec<u8> {
         self.shared.lock().free_in.pop().unwrap_or_default()
@@ -1010,10 +1012,10 @@ impl Source for ChannelSource<'_> {
                         }
                         self.buf.extend_from_slice(&chunk);
                     }
-                    // (the chunk's buffer, done with, for the writer's next: `spare`)
+                    // (the chunk's buffer, done with, for the writer's next: `spare`; one kept)
                     if chunk.capacity() > 0 {
                         let mut st = self.shared.lock();
-                        if st.free_in.len() <= INPUT_QUEUE {
+                        if st.free_in.is_empty() {
                             st.free_in.push(chunk);
                         }
                     }
