@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [One theorem, many routes](<https://lmmx.github.io/mibz2/blog/2026-11-22-one-theorem-many-routes/index.md>): A correctness proof says which decoders are admissible but not which is fast, so mibz2's speed comes from exact routes whose conditions match the data.
+- [Correctness is uniform, cost is not](<https://lmmx.github.io/mibz2/blog/2026-11-22-correctness-is-uniform-cost-is-not/index.md>): Every route in mibz2's bzip2 decoder is exact on every block, but what each costs depends on the block, so we search for speed in many places at once.
 - [Two centuries of tools](<https://lmmx.github.io/mibz2/blog/2026-11-22-two-centuries-of-tools/index.md>): A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.
 - [Admitting dense blocks to Open](<https://lmmx.github.io/mibz2/blog/2026-11-21-a-memory-gain-is-a-gain/index.md>): A bounded admission band takes five dense blocks off a 5.6 MiB-per-worker fallback, and the decoder runs slightly faster in over a quarter less memory.
 - [Besieging hard problems](<https://lmmx.github.io/mibz2/blog/2026-11-21-besieging-hard-problems/index.md>): A machine-checked Riemann proof shows how far a search can range once checking is cheap, so ours now begins by making speed cheap to check.
