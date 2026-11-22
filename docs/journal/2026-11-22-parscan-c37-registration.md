@@ -5,10 +5,22 @@
 `bench/test_parscan_c37.py`. The recipe, its checks and the verdict script follow bench-open-r5's
 (#735, `docs/journal/2026-11-22-open-r5-registration.md` on `bench/open-r5`) and R4's rule. What
 differs: the two arms have different names, the grid is wider (nine counts, six of them reported
-only), the memory gate is at the judged count alone, and the handoff's transfer ratio is
-reported.*
+only), the memory gate is at 10 threads alone, the handoff's transfer ratio is reported, and
+there are two decisions, each judged on its own run.*
 
-**The decision it settles:** whether #741 (`perf/parscan-c37`, "perf(parscan): Carbon's cycle 37
+*Amended before any data (the Coordinator's decision, 22 November 2026; C2 holds): the
+default-path diagnostic is now Decision 2, BLOCK-READER, judged by its own rule (below).
+Decision 1, PARSCAN, is unchanged.*
+
+**The decisions it settles.** Two, each with its own run, rule and verdict line:
+- **Decision 1, PARSCAN:** whether the new entry point, `mibz2-parscan`, beats master's
+  parallel path on the i9.
+- **Decision 2, BLOCK-READER:** whether #741's change to the default decoder (its new block
+  reader and `takes_runs`, on every path) holds on the i9. CI's bench measured it FASTER on
+  CI's runner (Wikidata -2.8% wall at 1 thread, -4.1% at 4; the scanner stage -19.4% c/B); this
+  is the i9 evidence.
+
+**Decision 1, in full:** whether #741 (`perf/parscan-c37`, "perf(parscan): Carbon's cycle 37
 parallel front end, `decode_parscan`, beside the default path") is adopted: merged, as the
 candidate to replace the default parallel path's serial scanner in a later handoff. It is an
 adoption registration (RULES C6): no production default changes on this verdict alone, but the
@@ -99,12 +111,14 @@ real serial stage only if it bounds the wall at 6 to 10 threads.
   on one CPU, ab's pin (`--pin`, default CPU 1), for both arms alike.
 - **Rounds:** 16, bench-open-r5's. Each round runs both arms at each count, interleaved, with the
   arms' order rotated (`arm_order`) and a 2 s settle gate before each run.
-- **The default-path diagnostic** (decides nothing): `ab run --arms mibz2@build-base,mibz2`, the
-  head's default decoder (its new block reader) against the base's, at 1, 6, 8 and 10 threads,
-  16 rounds, reported as steps only, after the judged run.
+- **Decision 2's run** (BLOCK-READER), after Decision 1's: `ab run --arms
+  mibz2@build-base,mibz2`, the head's default decoder (its new block reader) against the
+  base's, at 1, 6, 8 and 10 threads (1 on ab's one-CPU pin, the rest unpinned), 16 paired
+  interleaved rounds, the same corpus, settle and checks. Its records are
+  `block-reader.jsonl`; Decision 1's are `main.jsonl`.
 - **Cost:** about 30 minutes of workstation time with the two builds.
 
-## The rule
+## The rule: Decision 1, PARSCAN
 
 R4's. A count's **step** is the 16 rounds' paired wall ratios, head over base: their geometric
 mean and its 95% interval (Student's t on the logs, 15 degrees of freedom). A step is FASTER if
@@ -137,18 +151,54 @@ the interval lies below 1, SLOWER if it lies above 1, and INCONCLUSIVE otherwise
   it.
 - **Reported beside each step, deciding nothing:** CPU time, and the median peak RSS at the base
   and the head in MiB, with their difference.
-- **The diagnostic decides nothing.** The verdict is the judged run's alone (`verdict.txt`). A
-  VOID diagnostic leaves the verdict as it is.
+- **One run, one verdict.** Decision 1's verdict reads `main.jsonl` alone. A VOID Decision 2
+  leaves it as it is.
+
+## The rule: Decision 2, BLOCK-READER
+
+The same step (R4's: 16 paired wall ratios, head `mibz2` over base `mibz2`, geometric mean and
+Student's t 95% interval on the logs), FASTER, SLOWER or INCONCLUSIVE as above.
+
+- **ADOPTS:** all three hold:
+  - the step at 1 thread is FASTER (its interval's upper end below 1.0). One thread is judged
+    because the change is to the serial block reader, and one thread is where the decoder's
+    whole wall is that reader's and the rest; there it shows undiluted;
+  - none of 6, 8 and 10 threads is SLOWER;
+  - at 10 threads, the median peak RSS over the rounds, head over base, is at most 1.10.
+- **HELD ON MEMORY:** as ADOPTS, but with peak RSS above 1.10 at 10 threads. The Coordinator
+  weighs it under PERFORMANCE-POLICY rule 4.
+- **NOT ADOPTED:** any other outcome: 1 thread not FASTER, or any of 6, 8 and 10 SLOWER.
+- 6, 8 and 10 threads are **supporting**: only a loss there counts against adoption. No count
+  is reported only, and no transfer is reported (the handoff's claim is Decision 1's).
+- **VOID**, with no verdict: Decision 1's conditions, over `block-reader.jsonl` and its four
+  counts (the roster `mibz2@build-base` and `mibz2`, at 1, 6, 8 and 10). A VOID Decision 2
+  leaves Decision 1 as it is, and may be repeated once, with the reason logged.
+- **Reported beside each step, deciding nothing:** CPU time and the median peak RSS, as above.
+- **The verdicts' file:** `verdict.txt` holds both, Decision 1's first, each on its own line
+  (`verdict (Decision 1, PARSCAN): ...`, `verdict (Decision 2, BLOCK-READER): ...`).
+
+**No multiplicity correction across the two.** They are not two tests of one hypothesis, and
+neither verdict can stand in for the other. Decision 1 is about a new entry point
+(`decode_parscan`, the `mibz2-parscan` arm) against master's parallel path. Decision 2 is about
+the default path, `mibz2` against `mibz2`. Each has its own arms, its own run and records, and
+its own consequence. No outcome is read as "either one adopting" and acted on, so the family's
+error rate is not the quantity at risk: each decision's own 95% rule is. Within each decision,
+the rule is R4's as every earlier registration used it: one judged count, the supporting counts
+able only to block.
 
 **Limits:**
 - **The corpus:** Wikidata alone; no l1, records or `text` corpus. The handoff's records-l9 table
   (0.9986x at 10 workers, 1.02x at 16 and 20) is not tested here.
-- **What a result separates:** an ADOPTS shows the new path's whole-decoder gain over master's
-  parallel path, not its cause (the parallel scan, the work stealing, or the block reader). The
-  diagnostic shows the block reader's share on the default path, and decides nothing.
-- **What adopting means:** `decode_parscan` and the `mibz2-parscan` arm are new entry points;
-  `decode_parallel` and `BzReader::parallel` keep master's team and plan. Adopting merges #741,
-  and with it the new block reader on the default path; it does not make `decode_parscan` the
-  default.
+- **What a result separates:**
+  - a Decision 1 ADOPTS shows the new path's whole-decoder gain over master's parallel path,
+    not its cause: the parallel scan, the work stealing, or the block reader (which only the
+    head side carries);
+  - Decision 2 isolates the block reader's effect on the default path. It cannot separate the
+    reader from `takes_runs`' early exits, which ship together.
+- **What each verdict means:** `decode_parscan` and the `mibz2-parscan` arm are new entry
+  points. `decode_parallel` and `BzReader::parallel` keep master's team and plan, but run the new
+  block reader. Neither verdict makes `decode_parscan` the default. How the two verdicts combine
+  into #741's merge is the Coordinator's call; this registration fixes each verdict, not their
+  combination.
 - **The head's branch:** the recipe fetches HEAD from `perf/parscan-c37` if the workstation lacks
   it. A later push to #741 is not what this run measures, and needs its own pin.

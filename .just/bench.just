@@ -1954,22 +1954,24 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # 4 copies end to end; at 1, 2, 4, 6, 8, 10, 12, 16 and 20 threads (unpinned on every CPU above
 # one thread; one thread on ab's one-CPU pin, both arms alike), interleaved, 16 paired rounds, no
 # spinner. Judged at 10 threads, 6 and 8 supporting, the rest reported, peak RSS gated at 10, the
-# handoff's transfer reported (bench/parscan_c37.py). Then one diagnostic that decides nothing:
-# the head's default decoder (`mibz2`, its new block reader) against the base's at 1, 6, 8 and 10
-# threads, 16 rounds. bench-open-r5's recipe (#735) with the builds, the arms, the counts and the
-# diagnostic changed. About 30 minutes with the builds.
+# handoff's transfer reported (bench/parscan_c37.py; Decision 1, PARSCAN). Then Decision 2,
+# BLOCK-READER, judged on its own: the head's default decoder (`mibz2`, on #741's new block reader)
+# against the base's at 1, 6, 8 and 10 threads, 16 rounds; judged at 1 thread, 6, 8 and 10
+# supporting, peak RSS gated at 10. verdict.txt holds both decisions' verdicts. bench-open-r5's
+# recipe (#735) with the builds, the arms, the counts and the second decision changed. About 30
+# minutes with the builds.
 bench-parscan-c37:
     #!/usr/bin/env bash
     set -euo pipefail
     BASE=96a24d3e4f764b3918089b0d5bcd5fe4b9bc1fea
     HEAD=d57ec321f8d8d7212898219d67a303d995ef2746
-    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=1,2,4,6,8,10,12,16,20 DIAG=1,6,8,10
+    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=1,2,4,6,8,10,12,16,20 BR_THREADS=1,6,8,10
     W=$PWD/target/parscan-c37
     mkdir -p "$W"
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-parscan-c37 (docs/journal/2026-11-22-parscan-c37-registration.md) at $(git rev-parse HEAD): mibz2-parscan at $HEAD (perf/parscan-c37, #741) against mibz2 at $BASE (v0.5.12's src; #741's merge-base with master), at $THREADS threads (unpinned above 1), $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2; then the head's mibz2 against the base's at $DIAG"
+    echo "bench-parscan-c37 (docs/journal/2026-11-22-parscan-c37-registration.md) at $(git rev-parse HEAD): mibz2-parscan at $HEAD (perf/parscan-c37, #741) against mibz2 at $BASE (v0.5.12's src; #741's merge-base with master), at $THREADS threads (unpinned above 1), $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2; Decision 1 (PARSCAN); then Decision 2 (BLOCK-READER), the head's mibz2 against the base's at $BR_THREADS"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-parscan-c37: the checkout has local changes"; exit 1; }
@@ -2043,20 +2045,24 @@ bench-parscan-c37:
       --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
     "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
     date -u +%FT%TZ > "$O/timed.txt"
+    # Decision 1, PARSCAN
     python3 bench/parscan_c37.py "$O/main.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
-      --ref-arm mibz2 --arm mibz2-parscan --judged 10 --supporting 6,8 --reported 1,2,4,12,16,20 \
-      --rounds $ROUNDS --corpus wikidata-x$COPIES \
+      --decision parscan --ref-arm mibz2 --arm mibz2-parscan --judged 10 --supporting 6,8 \
+      --reported 1,2,4,12,16,20 --rss-at 10 --rounds $ROUNDS --corpus wikidata-x$COPIES \
       | tee "$O/verdict.txt" \
-      || echo "bench-parscan-c37: VOID, no verdict (verdict.txt says why); the bundle is kept"
-    # the diagnostic (decides nothing): the head's default decoder, its new block reader, against
-    # the base's
-    "$AB" run "$O/default.jsonl" --arms "mibz2@$BAB,mibz2" --threads $DIAG --rounds $ROUNDS \
+      || echo "bench-parscan-c37: Decision 1 (PARSCAN) VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # Decision 2, BLOCK-READER, judged on its own records: the head's default decoder, on its new
+    # block reader, against the base's
+    "$AB" run "$O/block-reader.jsonl" --arms "mibz2@$BAB,mibz2" --threads $BR_THREADS --rounds $ROUNDS \
       --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
-    "$AB" summary "$O/default.jsonl" --ref "mibz2@$BAB" | tee "$O/default-summary.txt"
-    python3 bench/parscan_c37.py "$O/default.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
-      --ref-arm mibz2 --arm mibz2 --judged "" --supporting "" --reported $DIAG \
-      --rounds $ROUNDS --corpus wikidata-x$COPIES --diagnostic | tee "$O/default.txt" \
-      || echo "bench-parscan-c37: the diagnostic is VOID (default.txt says why); the verdict stands"
+    "$AB" summary "$O/block-reader.jsonl" --ref "mibz2@$BAB" | tee "$O/block-reader-summary.txt"
+    date -u +%FT%TZ > "$O/timed-block-reader.txt"
+    echo | tee -a "$O/verdict.txt"
+    python3 bench/parscan_c37.py "$O/block-reader.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+      --decision block-reader --ref-arm mibz2 --arm mibz2 --judged 1 --supporting 6,8,10 \
+      --reported "" --rss-at 10 --rounds $ROUNDS --corpus wikidata-x$COPIES \
+      | tee -a "$O/verdict.txt" \
+      || echo "bench-parscan-c37: Decision 2 (BLOCK-READER) VOID, no verdict (verdict.txt says why); Decision 1 stands"
     date -u +%FT%TZ > "$O/finished.txt"
     rm -f "$W/wikidata-x$COPIES.bz2"
     bash bench/bundle.sh "$O"

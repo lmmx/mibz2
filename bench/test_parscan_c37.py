@@ -94,7 +94,7 @@ class Verdict(unittest.TestCase):
         return rc, buf.getvalue()
 
     def verdict(self, out):
-        return next(line for line in out.splitlines() if line.startswith("verdict:"))
+        return next(line for line in out.splitlines() if line.startswith("verdict"))
 
     def row(self, out, t):
         return next(ln for ln in out.splitlines() if ln.split()[:1] == [str(t)] and "[" in ln)
@@ -102,7 +102,7 @@ class Verdict(unittest.TestCase):
     def test_adopts(self):
         rc, out = self.run_on(records(step={10: 0.95, 8: 0.97, 6: 1.0}))
         self.assertEqual(rc, 0, out)
-        self.assertEqual(self.verdict(out), "verdict: ADOPTS")
+        self.assertEqual(self.verdict(out), "verdict (Decision 1, PARSCAN): ADOPTS")
         self.assertIn("judged", self.row(out, 10))
         self.assertIn("supporting", self.row(out, 6))
         for t in (1, 2, 4, 12, 16, 20):
@@ -122,18 +122,20 @@ class Verdict(unittest.TestCase):
         # SLOWER at every reported count, and far above the memory gate there: still ADOPTS
         slow = {t: 1.10 for t in (1, 2, 4, 12, 16, 20)}
         rc, out = self.run_on(records(step={10: 0.95, **slow}, mem={t: 1.5 for t in slow}))
-        self.assertEqual(self.verdict(out), "verdict: ADOPTS")
+        self.assertEqual(self.verdict(out), "verdict (Decision 1, PARSCAN): ADOPTS")
         self.assertIn("SLOWER", self.row(out, 20))
 
     def test_memory_gate_at_ten_only(self):
         rc, out = self.run_on(records(step={10: 0.95}, mem={6: 1.3, 8: 1.3}))
-        self.assertEqual(self.verdict(out), "verdict: ADOPTS")
+        self.assertEqual(self.verdict(out), "verdict (Decision 1, PARSCAN): ADOPTS")
         rc, out = self.run_on(records(step={10: 0.95}, mem={10: 1.2}))
-        self.assertIn("verdict: HELD ON MEMORY (peak RSS 1.2000 at 10 threads", out)
+        self.assertIn(
+            "verdict (Decision 1, PARSCAN): HELD ON MEMORY (peak RSS 1.2000 at 10 threads", out
+        )
 
     def test_memory_at_the_gate_passes(self):
         rc, out = self.run_on(records(step={10: 0.95}, mem={10: 1.10}))
-        self.assertEqual(self.verdict(out), "verdict: ADOPTS")
+        self.assertEqual(self.verdict(out), "verdict (Decision 1, PARSCAN): ADOPTS")
 
     def test_memory_not_weighed_without_a_gain(self):
         rc, out = self.run_on(records(step={10: 1.0}, mem={10: 1.2}))
@@ -172,16 +174,72 @@ class Verdict(unittest.TestCase):
             "--diagnostic",
         )
         self.assertEqual(rc, 0, out)
-        self.assertNotIn("verdict:", out)
+        self.assertNotIn("verdict (", out)
         self.assertNotIn("transfer", out)
         self.assertIn("FASTER", self.row(out, 10))
         self.assertIn("diagnostic", self.row(out, 1))
+
+    # ---- Decision 2, BLOCK-READER: the head's mibz2 against the base's at 1, 6, 8 and 10 ----
+
+    BR = ("--decision", "block-reader")
+
+    def br(self, step=None, mem=None, noise=0.01):
+        return records(cand="mibz2", threads=(1, 6, 8, 10), step=step, mem=mem, noise=noise)
+
+    def br_verdict(self, out):
+        line = self.verdict(out)
+        self.assertTrue(line.startswith("verdict (Decision 2, BLOCK-READER): "), line)
+        return line.split(": ", 1)[1]
+
+    def test_block_reader_adopts(self):
+        rc, out = self.run_on(self.br(step={1: 0.97}), *self.BR)
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.br_verdict(out), "ADOPTS")
+        self.assertIn("judged", self.row(out, 1))
+        for t in (6, 8, 10):
+            self.assertIn("supporting", self.row(out, t))
+        # no transfer: the handoff's claim is Decision 1's
+        self.assertNotIn("transfer", out)
+
+    def test_block_reader_one_thread_must_be_faster(self):
+        # faster at every parallel count is not enough: 1 thread level
+        rc, out = self.run_on(self.br(step={6: 0.9, 8: 0.9, 10: 0.9}), *self.BR)
+        self.assertEqual(self.br_verdict(out), "NOT ADOPTED (1 threads not FASTER)")
+
+    def test_block_reader_slower_at_any_parallel_count(self):
+        for t in (6, 8, 10):
+            rc, out = self.run_on(self.br(step={1: 0.97, t: 1.05}), *self.BR)
+            self.assertEqual(self.br_verdict(out), f"NOT ADOPTED (SLOWER at {t} threads)")
+
+    def test_block_reader_memory_at_ten(self):
+        rc, out = self.run_on(self.br(step={1: 0.97}, mem={10: 1.2}), *self.BR)
+        self.assertTrue(self.br_verdict(out).startswith("HELD ON MEMORY (peak RSS 1.2000 at 10"))
+        # memory above the gate at 1, 6 or 8 alone does not hold it
+        rc, out = self.run_on(self.br(step={1: 0.97}, mem={1: 1.5, 6: 1.5, 8: 1.5}), *self.BR)
+        self.assertEqual(self.br_verdict(out), "ADOPTS")
+        rc, out = self.run_on(self.br(step={1: 0.97}, mem={10: 1.10}), *self.BR)
+        self.assertEqual(self.br_verdict(out), "ADOPTS")
+
+    def test_block_reader_roster(self):
+        # the parscan arm is not this decision's roster, nor are the other counts
+        self.assertIn("unexpected", self.assert_void(records(threads=(1, 6, 8, 10)), *self.BR))
+        self.assertIn("unexpected", self.assert_void(records(cand="mibz2"), *self.BR))
+        self.assertIn("missing", self.assert_void(self.br()[:-1], *self.BR))
+        # and Decision 1 does not read Decision 2's records (the head's arm is not its roster)
+        self.assertIn("unexpected key ('mibz2', 1, 0)", self.assert_void(self.br()))
+
+    def test_decisions_are_independent(self):
+        # the same machine, two files: each decision's verdict reads its own records alone
+        rc, out1 = self.run_on(records(step={10: 1.05}))
+        rc, out2 = self.run_on(self.br(step={1: 0.97}), *self.BR)
+        self.assertIn("NOT ADOPTED", self.verdict(out1))
+        self.assertEqual(self.br_verdict(out2), "ADOPTS")
 
     def assert_void(self, recs, *extra, **kw):
         rc, out = self.run_on(recs, *extra, **kw)
         self.assertEqual(rc, 1, out)
         self.assertTrue(out.startswith("VOID"), out)
-        self.assertNotIn("verdict:", out)
+        self.assertNotIn("verdict (", out)
         return out
 
     def test_void_roles(self):

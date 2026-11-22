@@ -10,7 +10,18 @@ ratio reported.
     parscan_c37.py RUNS.jsonl --env ENV.json --lscpu LSCPU.txt
                     [--ref-arm mibz2] [--arm mibz2-parscan] [--judged 10] [--supporting 6,8]
                     [--reported 1,2,4,12,16,20] [--rounds 16] [--corpus wikidata-x4]
-                    [--out-bytes N] [--claimed 0.9333] [--diagnostic]
+                    [--out-bytes N] [--claimed 0.9333] [--decision parscan|block-reader]
+                    [--diagnostic]
+
+**Two decisions, one rule each, both frozen in the registration.** `--decision` sets the
+arms and the counts' roles, and the verdict line names the decision:
+- **Decision 1, PARSCAN** (`--decision parscan`, the default): `mibz2-parscan` at the head
+  against `mibz2` at the base; judged 10, supporting 6 and 8, reported 1, 2, 4, 12, 16 and
+  20; memory gated at 10; the transfer reported.
+- **Decision 2, BLOCK-READER** (`--decision block-reader`): `mibz2` at the head (the default
+  decoder, on the PR's block reader) against `mibz2` at the base; judged 1 (it must be
+  FASTER), supporting 6, 8 and 10 (none SLOWER); memory gated at 10; no transfer.
+Explicit `--arm`, `--judged`, `--supporting`, `--reported` and `--rss-at` override them.
 
 **Arms.** The reference is REF_ARM at the base (`REF_ARM@build-base`: master's 96a24d3e, the
 PR's merge-base), the candidate ARM at the head (`ARM`, this harness's own build: the PR's
@@ -21,14 +32,15 @@ head).
 else INCONCLUSIVE.
 
 **The verdict** (not with `--diagnostic`):
-- **ADOPTS:** the judged count (10 threads) FASTER, no supporting count (6, 8) SLOWER, and at
-  the judged count the median over the rounds of each run's peak resident memory, head over
+- **ADOPTS:** the judged count (10 threads; 1 for BLOCK-READER) FASTER, no supporting count
+  (6, 8; 6, 8 and 10 for BLOCK-READER) SLOWER, and at the memory count (10 threads, `--rss-at`)
+  the median over the rounds of each run's peak resident memory, head over
   base, at most 1.10 (PERFORMANCE-POLICY rule 4's trigger).
-- **HELD ON MEMORY:** as ADOPTS, but the memory gate failed at the judged count: the Coordinator
+- **HELD ON MEMORY:** as ADOPTS, but the memory gate failed at the memory count: the Coordinator
   weighs the growth under PERFORMANCE-POLICY rule 4.
 - **NOT ADOPTED:** otherwise (the judged count not FASTER, or a supporting count SLOWER).
 - The **reported** counts (1, 2, 4, 12, 16, 20) are printed with their steps and decide nothing.
-- The **transfer** at the judged count is printed and decides nothing: ln(step) / ln(CLAIMED),
+- The **transfer** at the judged count (PARSCAN only) is printed and decides nothing: ln(step) / ln(CLAIMED),
   the share of the handoff's claimed 10-worker log gain (0.9333x wall, on a 2-vCPU VM) that the
   i9 shows, with the same transform of the step's interval.
 - **VOID** (exit 1, no verdict): the file missing or unreadable; the machine not an i9-10900K
@@ -39,9 +51,8 @@ else INCONCLUSIVE.
   roster; the corpus not the one registered; any run's output size not the registered one, or
   the outputs' hashes not all one.
 
-`--diagnostic`: the same checks and steps for another pair of arms (bench-parscan-c37 runs the
-head's own `mibz2`, the default decoder with the PR's block decoder, against the base's); it
-reports the steps and decides nothing.
+`--diagnostic`: the same checks and steps, reported, deciding nothing (bench-parscan-c37 does
+not use it since BLOCK-READER became a decision).
 """
 
 import argparse
@@ -60,6 +71,12 @@ MODEL = "i9-10900K"
 CLAIMED = 0.9333
 # bench/wikidata.json's decoded bytes (the corpus's 209,700,196), four copies
 WIKIDATA_X4_OUT = 4 * 209_700_196
+# each decision's arm and counts' roles (judged, supporting, reported, memory count) and whether
+# the transfer is reported
+DECISIONS = {
+    "parscan": ("Decision 1, PARSCAN", "mibz2-parscan", "10", "6,8", "1,2,4,12,16,20", 10, True),
+    "block-reader": ("Decision 2, BLOCK-READER", "mibz2", "1", "6,8,10", "", 10, False),
+}
 
 
 def counts(s):
@@ -173,16 +190,24 @@ def main(argv=None):
     ap.add_argument("--env", required=True, help="the machine as `ab env` recorded it")
     ap.add_argument("--lscpu", required=True)
     ap.add_argument("--ref-arm", default="mibz2")
-    ap.add_argument("--arm", default="mibz2-parscan")
-    ap.add_argument("--judged", default="10")
-    ap.add_argument("--supporting", default="6,8")
-    ap.add_argument("--reported", default="1,2,4,12,16,20")
+    ap.add_argument("--decision", choices=sorted(DECISIONS), default="parscan")
+    ap.add_argument("--arm", default=None)
+    ap.add_argument("--judged", default=None)
+    ap.add_argument("--supporting", default=None)
+    ap.add_argument("--reported", default=None)
+    ap.add_argument("--rss-at", type=int, default=None, help="the memory gate's count")
     ap.add_argument("--rounds", type=int, default=16)
     ap.add_argument("--corpus", default="wikidata-x4")
     ap.add_argument("--out-bytes", type=int, default=WIKIDATA_X4_OUT)
     ap.add_argument("--claimed", type=float, default=CLAIMED)
     ap.add_argument("--diagnostic", action="store_true", help="report the steps only: no verdict")
     a = ap.parse_args(argv)
+    name, arm, j, sup, rep_, rss_t, with_transfer = DECISIONS[a.decision]
+    a.arm = arm if a.arm is None else a.arm
+    a.judged = j if a.judged is None else a.judged
+    a.supporting = sup if a.supporting is None else a.supporting
+    a.reported = rep_ if a.reported is None else a.reported
+    rss_t = rss_t if a.rss_at is None else a.rss_at
     judged, supporting, reported = counts(a.judged), counts(a.supporting), counts(a.reported)
     threads = sorted(set(judged + supporting + reported))
     errors = []
@@ -193,6 +218,8 @@ def main(argv=None):
         errors.append("a count in two roles (judged, supporting, reported)")
     if not a.diagnostic and len(judged) != 1:
         errors.append(f"--judged {a.judged!r}: one count")
+    if not a.diagnostic and rss_t not in threads:
+        errors.append(f"--rss-at {rss_t}: not one of the counts")
     if not 0 < a.claimed < 1:
         errors.append(f"--claimed {a.claimed}: a gain, between 0 and 1")
     ta.topology(a.env, 10, 20, errors)
@@ -205,6 +232,7 @@ def main(argv=None):
         if len(errors) > 50:
             print(f"  ... and {len(errors) - 50} more")
         return 1
+    print(f"{name}" + ("" if not a.diagnostic else " (diagnostic)"))
     print(
         f"{a.arm} at the head against {a.ref_arm}@build-base, {a.corpus}, unpinned (1 thread on "
         f"one CPU), {a.rounds} paired rounds"
@@ -245,19 +273,20 @@ def main(argv=None):
     (t_j,) = judged
     g, lo, hi = walls[t_j]
     # (the interval's ends swap: a lower ratio is a larger share of the claimed gain)
-    print(
-        f"transfer at {t_j} threads (reported; decides nothing): ln({g:.4f}) / ln({a.claimed}) = "
-        f"{transfer(g, a.claimed):.3f} [{transfer(hi, a.claimed):.3f}, {transfer(lo, a.claimed):.3f}] "
-        f"of the handoff's claimed gain"
-    )
+    if with_transfer:
+        print(
+            f"transfer at {t_j} threads (reported; decides nothing): ln({g:.4f}) / ln({a.claimed}) = "
+            f"{transfer(g, a.claimed):.3f} [{transfer(hi, a.claimed):.3f}, {transfer(lo, a.claimed):.3f}] "
+            f"of the handoff's claimed gain"
+        )
     gain = steps[t_j] == "FASTER"
     loss = [t for t in supporting if steps[t] == "SLOWER"]
-    rss_ok = rss_at[t_j] <= RSS_GATE
+    rss_ok = rss_at[rss_t] <= RSS_GATE
     if gain and not loss and rss_ok:
         verdict = "ADOPTS"
     elif gain and not loss:
         verdict = (
-            f"HELD ON MEMORY (peak RSS {rss_at[t_j]:.4f} at {t_j} threads, above {RSS_GATE}: "
+            f"HELD ON MEMORY (peak RSS {rss_at[rss_t]:.4f} at {rss_t} threads, above {RSS_GATE}: "
             "the Coordinator weighs it, PERFORMANCE-POLICY rule 4)"
         )
     else:
@@ -267,7 +296,7 @@ def main(argv=None):
         if loss:
             why.append(f"SLOWER at {', '.join(map(str, loss))} threads")
         verdict = f"NOT ADOPTED ({'; '.join(why)})"
-    print(f"verdict: {verdict}")
+    print(f"verdict ({name}): {verdict}")
     return 0
 
 
