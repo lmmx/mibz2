@@ -295,8 +295,27 @@ impl<L: Links> Elim<'_, L> {
         if w <= 256 {
             u32::from(w != 0)
         } else {
-            self.a[self.rule(w) + 2]
+            let r = self.rule(w);
+            let tag = self.a[r + 3];
+            if tag >> 28 == 0 {
+                tag >> 24
+            } else {
+                self.a[r + 2]
+            }
         }
+    }
+
+    /// The low 120 bits are in spelling order. The length byte is metadata.
+    #[inline(always)]
+    fn short_payload(&self, id: u32) -> u128 {
+        if id <= 256 {
+            return u128::from(id - 1);
+        }
+        let r = self.rule(id);
+        u128::from(self.a[r])
+            | (u128::from(self.a[r + 1]) << 32)
+            | (u128::from(self.a[r + 2]) << 64)
+            | (u128::from(self.a[r + 3] & 0x00ff_ffff) << 96)
     }
 
     #[inline(always)]
@@ -315,7 +334,20 @@ impl<L: Links> Elim<'_, L> {
         } else {
             self.len(left) + self.len(right)
         };
-        self.a[self.top..self.top + RULE].copy_from_slice(&[left, right, len, u32::MAX]);
+        let rule = if len < INLINE as u32 {
+            let bytes = self.short_payload(left)
+                | (self.short_payload(right) << (8 * left_len))
+                | (u128::from(len) << 120);
+            [
+                bytes as u32,
+                (bytes >> 32) as u32,
+                (bytes >> 64) as u32,
+                (bytes >> 96) as u32,
+            ]
+        } else {
+            [left, right, len, u32::MAX]
+        };
+        self.a[self.top..self.top + RULE].copy_from_slice(&rule);
         self.top += RULE;
         (len.min(SATURATED) << ID_BITS) | id
     }
@@ -428,34 +460,7 @@ impl<L: Links> Elim<'_, L> {
         let height = (word >> ID_BITS) as usize;
         let mut bytes = [0; INLINE];
         if height < INLINE {
-            match height {
-                1 => bytes[0] = (id - 1) as u8,
-                2 => {
-                    let r = self.rule(id);
-                    bytes[0] = (self.a[r] - 1) as u8;
-                    bytes[1] = (self.a[r + 1] - 1) as u8;
-                }
-                _ => {
-                    // Each pending subtree spells at least one of the remaining
-                    // (at most 15) bytes. Push right first to emit in leaf order.
-                    let mut pending = [0; INLINE];
-                    pending[0] = id;
-                    let (mut depth, mut written) = (1, 0);
-                    while depth > 0 {
-                        depth -= 1;
-                        let child = pending[depth];
-                        if child <= 256 {
-                            bytes[written] = (child - 1) as u8;
-                            written += 1;
-                        } else {
-                            let r = self.rule(child);
-                            pending[depth] = self.a[r + 1];
-                            pending[depth + 1] = self.a[r];
-                            depth += 2;
-                        }
-                    }
-                }
-            }
+            bytes = self.short_payload(id).to_le_bytes();
             bytes[height] = byte;
             (bytes, (height + 1) as u8)
         } else {
@@ -473,13 +478,19 @@ impl<L: Links> Elim<'_, L> {
                 dest.push((id - 1) as u8);
             } else {
                 let r = self.rule(id);
+                let tag = self.a[r + 3];
+                if tag >> 28 == 0 {
+                    let bytes = self.short_payload(id).to_le_bytes();
+                    dest.extend_from_slice(&bytes[..(tag >> 24) as usize]);
+                    continue;
+                }
                 let rule = &mut self.a[r..r + RULE];
-                if rule[3] == u32::MAX {
-                    rule[3] = dest.len() as u32;
+                if tag == u32::MAX {
+                    rule[3] = 0x8000_0000 | dest.len() as u32;
                     stack.push(rule[1]);
                     stack.push(rule[0]);
                 } else {
-                    let start = rule[3] as usize;
+                    let start = (tag & 0x7fff_ffff) as usize;
                     dest.extend_from_within(start..start + rule[2] as usize);
                 }
             }
@@ -729,6 +740,30 @@ impl Kernel {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn short_rules_keep_all_fifteen_high_bytes() {
+        let mut arena = [0; 32 * RULE];
+        let mut e = Elim::<Narrow> {
+            a: &mut arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        let mut word = 0;
+        for b in 241..=255 {
+            word = e.join(literal(b), word);
+        }
+        let short = e.short_payload(word & ID_MASK).to_le_bytes();
+        assert!(short[..15].iter().copied().eq((241..=255).rev()));
+        let long = e.join(word, word);
+        let mut bytes = Vec::new();
+        for _ in 0..2 {
+            e.append(long & ID_MASK, &mut vec![], &mut bytes);
+        }
+        assert_eq!(bytes, short[..15].repeat(4));
+    }
 
     #[test]
     fn bottom_coordinates_at_odd_and_even_meetings() {
