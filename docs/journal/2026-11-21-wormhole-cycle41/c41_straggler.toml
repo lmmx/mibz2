@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 41: Tail-Latency & Straggler Scheduling Bounds (Graham LPT via syms.len() Proxy)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c41_lpt_tail_bound"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W + T_tail", B = "n", Q = "0", M = "slots" }
+evidence = "Lemma 41.1 proves O(1) syms.len() predicts block decode time with Pearson r=0.9791 (Wikidata) and r=0.9890 (hetero_60b). Exact 10W ParScan makespan sim shows LPT cuts tail +2.97%->+0.74% (-2.17% wall) on Wikidata and +45.8%->+5.6% (-27.6% wall) on hetero_60b; streaming-mode mid-window S1/S2 killed (1.0145x hetero_60b)."

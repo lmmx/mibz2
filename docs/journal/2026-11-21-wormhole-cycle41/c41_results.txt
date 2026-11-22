@@ -1,0 +1,26 @@
+
+=== PART 1: SYMS.LEN() CORRELATION & EXACT 10W/16W TAIL SIM (wikidata_431b_210m, 431 blks, max=5.20ms, Pearson r=0.9791) ===
+  W= 4: ideal=112.42ms | FIFO=113.61ms (tail +1.19ms = +1.06%) | LPT=112.79ms (tail +0.37ms = +0.33%) | saved=0.82ms (0.72%)
+  W=10: ideal= 44.97ms | FIFO= 46.31ms (tail +1.34ms = +2.97%) | LPT= 45.30ms (tail +0.33ms = +0.74%) | saved=1.01ms (2.17%)
+  W=16: ideal= 28.11ms | FIFO= 29.51ms (tail +1.40ms = +4.99%) | LPT= 28.48ms (tail +0.38ms = +1.35%) | saved=1.02ms (3.47%)
+
+=== PART 1: SYMS.LEN() CORRELATION & EXACT 10W/16W TAIL SIM (hetero_60b, 64 blks, max=12.79ms, Pearson r=0.9890) ===
+  W= 4: ideal= 42.37ms | FIFO= 49.24ms (tail +6.87ms = +16.20%) | LPT= 42.92ms (tail +0.54ms = +1.28%) | saved=6.32ms (12.84%)
+  W=10: ideal= 16.95ms | FIFO= 24.72ms (tail +7.77ms = +45.82%) | LPT= 17.90ms (tail +0.95ms = +5.59%) | saved=6.82ms (27.59%)
+  W=16: ideal= 10.59ms | FIFO= 18.25ms (tail +7.66ms = +72.29%) | LPT= 12.79ms (tail +2.19ms = +20.69%) | saved=5.47ms (29.95%)
+
+=== PART 2: 12-ROUND ROTATED FRESH-PROCESS 4W A/B (wikidata_431b_210m) ===
+Arm              med_ms         vs MasterA [95%]        vs P1c_Fifo [95%]
+MasterA          327.27 1.0000 [1.0000, 1.0000] 1.0607 [1.0440, 1.0777]
+MasterB          330.24 1.0009 [0.9875, 1.0145] 1.0617 [1.0533, 1.0702]
+P1c_Fifo         311.85 0.9428 [0.9279, 0.9579] 1.0000 [1.0000, 1.0000]
+S1_UrgentLpt     306.20 0.9303 [0.9163, 0.9444] 0.9868 [0.9668, 1.0071]
+S2_HeavyOnly     309.33 0.9353 [0.9155, 0.9556] 0.9921 [0.9637, 1.0214]
+
+=== PART 2: 12-ROUND ROTATED FRESH-PROCESS 4W A/B (hetero_60b) ===
+Arm              med_ms         vs MasterA [95%]        vs P1c_Fifo [95%]
+MasterA          158.63 1.0000 [1.0000, 1.0000] 1.0688 [1.0112, 1.1297]
+MasterB          153.40 0.9679 [0.9307, 1.0065] 1.0345 [0.9975, 1.0728]
+P1c_Fifo         144.98 0.9356 [0.8852, 0.9889] 1.0000 [1.0000, 1.0000]
+S1_UrgentLpt     150.38 0.9492 [0.9187, 0.9808] 1.0145 [0.9780, 1.0525]
+S2_HeavyOnly     147.65 0.9401 [0.8919, 0.9908] 1.0048 [0.9687, 1.0422]
