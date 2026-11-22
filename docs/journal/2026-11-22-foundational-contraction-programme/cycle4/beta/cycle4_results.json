@@ -1,0 +1,62 @@
+{
+  "rarest_first_deg": {
+    "tot_appends": 1086339,
+    "tot_self_ops": 165108,
+    "tot_merge_ops": 577033,
+    "tot_slab_bytes": 2379884,
+    "peak_live_slab_slots": 105380,
+    "slp_nodes": 281680,
+    "emit_leaves": 281686,
+    "total_exp_ops": 563366,
+    "max_deg": 17485,
+    "max_pk_ratio": 1.00027352297593
+  },
+  "rarest_first_rows": {
+    "tot_appends": 1085204,
+    "tot_self_ops": 154945,
+    "tot_merge_ops": 575898,
+    "tot_slab_bytes": 2448793,
+    "peak_live_slab_slots": 97133,
+    "slp_nodes": 257699,
+    "emit_leaves": 257705,
+    "total_exp_ops": 515404,
+    "max_deg": 16228,
+    "max_pk_ratio": 1.00027352297593
+  },
+  "most_freq_first": {
+    "tot_appends": 1318640,
+    "tot_self_ops": 94896,
+    "tot_merge_ops": 809334,
+    "tot_slab_bytes": 2568348,
+    "peak_live_slab_slots": 116191,
+    "slp_nodes": 272024,
+    "emit_leaves": 272030,
+    "total_exp_ops": 544054,
+    "max_deg": 16619,
+    "max_pk_ratio": 1.00027352297593
+  },
+  "fvs_scc_last": {
+    "tot_appends": 1074932,
+    "tot_self_ops": 157174,
+    "tot_merge_ops": 565626,
+    "tot_slab_bytes": 2316607,
+    "peak_live_slab_slots": 100783,
+    "slp_nodes": 254423,
+    "emit_leaves": 254429,
+    "total_exp_ops": 508852,
+    "max_deg": 16559,
+    "max_pk_ratio": 1.00027352297593
+  },
+  "min_fill_static": {
+    "tot_appends": 1068432,
+    "tot_self_ops": 160795,
+    "tot_merge_ops": 559126,
+    "tot_slab_bytes": 2371537,
+    "peak_live_slab_slots": 97690,
+    "slp_nodes": 258415,
+    "emit_leaves": 258421,
+    "total_exp_ops": 516836,
+    "max_deg": 14919,
+    "max_pk_ratio": 1.00027352297593
+  }
+}

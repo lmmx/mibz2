@@ -1,0 +1,43 @@
+name = "B4-Grid-Flat16 (Theorem B4 Zero-Tombstone Causal Bucket-Schur + AHT-Spiral + Flat<=16 Memo-SLP)"
+target = "text"
+
+uses = [
+  "maximal_runs",
+  "lf_shifts",
+]
+
+[[edge]]
+id = "b4_bi_monotone_strips"
+inputs = ["lf_affine", "runs", "C"]
+output = "strip_iet"
+status = "proved"
+dependent = false
+cost = { W = "O(r + |Sigma|)", D = "1", B = "O(r)", Q = "0", M = "O(r) [12-16B/strip]" }
+evidence = "One sequential pass intersecting maximal L-runs with F-buckets C[0..|Sigma|]; yields q0 <= r + |Sigma| - 1 bi-monotone translation strips."
+
+[[edge]]
+id = "b4_static_causal_order"
+inputs = ["strip_iet", "C", "alphabet"]
+output = "causal_rank"
+status = "proved"
+dependent = false
+cost = { W = "O(r + |Sigma| log |Sigma|)", D = "1", B = "O(r)", Q = "0", M = "O(|Sigma|)" }
+evidence = "Counts initial per-bucket degree from strip_iet and sorts |Sigma| <= 256 symbols (e.g. rarest_first_deg) into static permutation rank[0..|Sigma|-1]."
+
+[[edge]]
+id = "b4_causal_schur_aht"
+inputs = ["strip_iet", "causal_rank", "p"]
+output = "b4_slp_flat16"
+status = "verified"
+dependent = true
+cost = { W = "O(r + S_b4) [~2.13r causal writes/reads, 1.37-1.45r local steps]", D = "O(S_b4) [~1.4r local bucket-confined steps]", B = "O(r) [~2.13r * 12-16B = 3.3-8.3 MB/blk, 0% stale]", Q = "0 misses outside L2 on block-0/2/85 (maxSB <= 16.2k pcs; local L1/L2 Shift-Bin-Grid + RV steps)", M = "O(r) [q0 <= r + |Sigma| - 1 live pieces in chunk-64 pool + slab/SLP]" }
+evidence = "Theorem B1 (q_{t+1} <= q_t - 1) + Theorem B4 (0% stale single-copy causal routing to min_rank(src, dst)) + hysteresis-guarded AHT-Spiral + Inline/Flat<=16 word store. Verified 100% byte-exact on 873 exhaustive BWTs, 642 multi-cycle columns, 4 adversarial constant-r families (Low-r Padded-Ring, AltRing, 3-Phase, SymMidRun), Fib_80+$, and all 6 SHA-256 authenticated Wikidata blocks (/tmp/fcp-b/cycle4_theorem_b4_diet.py)."
+
+[[edge]]
+id = "b4_memo_flat16_emit"
+inputs = ["b4_slp_flat16", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "O(n) [~0.58 m_16 tree+leaf ops + sequential byte writes]", D = "O(h) [SLP height ~60-204; ~0.29 m_16 emit leaves]", B = "O(n) [~1.0n output writes + ~0.8n output-backed memcpy reads]", Q = "O(0.29 m_16) [memoized output-buffer memcpy + flat leaf reads; 0 LF walk]", M = "O(n + |G|) [output buffer + ~0.5r * 8B memo table]" }
+evidence = "Output-backed memoized expansion of Flat<=16 SLP + cyclic rotation by p_shift; verified 100% byte-exact across all 6 SHA-256 authenticated Wikidata blocks (0.29-0.32 m_16 emit leaves, 0.52-0.65 m_16 total ops)."
