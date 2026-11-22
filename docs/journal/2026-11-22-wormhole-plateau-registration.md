@@ -66,13 +66,17 @@ a third of the window (28). If the scan were not the bottleneck, that could cost
 ## What is compared
 
 - **Head:** #739's head, `perf/wormhole-plateau` at
-  `e9c6d4231f7aca206c400e315aee4683505e48c4`. *Changed before any data, on 22 November 2026,
-  from the first head `8857f9fd`.* The new head adds two commits, both for CI's occupancy
-  job. The first fixes the footprint ledger's route-history check for the owned output
-  buffers (`src/trace.rs`, `examples/occupancy.rs`, `docs/ledger.md`, and the `trace`/test-only
-  sampling in `src/lib.rs`'s `decode_owned`), and widens Miri's path filters. The second
-  moves the reader's `Taken` trace mark back under the lock (`src/parallel.rs`). Outside the
-  `trace` feature and tests, the decoder behaves exactly as at `8857f9fd`.
+  `23efeae76a9831e19523ca5eba01d1674cbb722b`. *Changed before any data, on 22 November 2026,
+  from the first head `8857f9fd`.* The new head adds three commits after CI's first look:
+  - the footprint ledger's route-history check for the owned output buffers (`src/trace.rs`,
+    `examples/occupancy.rs`, `docs/ledger.md`, and `trace`/test-only sampling in
+    `src/lib.rs`), with Miri's path filters widened;
+  - the reader's `Taken` trace mark back under the lock (`src/parallel.rs`; trace only);
+  - **one change to the decoder:** the input feeder allocates a new chunk zeroed by the
+    allocator (`vec![0; n]`, as master does) instead of resizing an empty spare, and keeps
+    one spare chunk, not three (`src/read.rs`, `src/parallel.rs`, `examples/bzcat.rs`). CI's
+    bench on the second head had shown small inputs (onebyte, runs, pattern) slower at 2 and 4
+    threads and records' peak RSS higher; this undoes the cause.
 - **Base:** `96a24d3e4f764b3918089b0d5bcd5fe4b9bc1fea`, #739's merge-base with master (#738's
   merge). Its build inputs (`src`, `examples`, `Cargo.toml`, `Cargo.lock`, `build.rs`,
   `rust-toolchain.toml`) are v0.5.12's (`6a36b0e1`), the source's baseline. It is an ancestor of

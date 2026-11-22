@@ -1951,7 +1951,7 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # memory, on the i9's 6-20 thread plateau. Two builds pinned by SHA: #739's merge-base with
 # master BASE (96a24d3e, master's head when the recipe was written, v0.5.12's src;
 # `mibz2@build-base`) and #739's HEAD (perf/wormhole-plateau, `mibz2`, whose harness drives
-# the run, e9c6d423, re-pinned before any data from 8857f9fd for the footprint ledger's fix);
+# the run, 23efeae7, re-pinned before any data from 8857f9fd: the ledger's fix and the feeder's);
 # their build inputs differ in the stack's files alone (checked). Both by rustc
 # 1.99.1. The whole Wikidata corpus (corpora/wikidata.bz2, checked by its SHA-256), 4 copies
 # end to end; unpinned on every CPU at 6, 8, 10, 12, 16 and 20 threads, interleaved, 12 paired
@@ -1963,7 +1963,7 @@ bench-wormhole-plateau:
     #!/usr/bin/env bash
     set -euo pipefail
     BASE=96a24d3e4f764b3918089b0d5bcd5fe4b9bc1fea
-    HEAD=e9c6d4231f7aca206c400e315aee4683505e48c4
+    HEAD=23efeae76a9831e19523ca5eba01d1674cbb722b
     COPIES=4 ROUNDS=12 SETTLE=2 THREADS=6,8,10,12,16,20
     W=$PWD/target/wormhole-plateau
     mkdir -p "$W"
