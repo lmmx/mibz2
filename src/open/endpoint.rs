@@ -10,7 +10,7 @@
 //! word), six otherwise (`Wide`). The two lists are linked as the nodes are made, with no
 //! staging lists. After the elimination a node's side-1 links, read once more by the walk
 //! along the bottom, give way to its bottom coordinate.
-use super::{begin_inline, Band, Counts, Kernel, INLINE, LONG};
+use super::{begin_inline, Band, Counts, Kernel, Strip, INLINE, LONG};
 
 /// A node's links in the arena
 trait Links {
@@ -504,7 +504,7 @@ impl Kernel {
     }
 
     /// The words `edges` is sized to for the induced construction of `ns` strips and `m`
-    /// retained rows: the strips' image order (`ns` words), then the arena, sized for the
+    /// retained rows: strip records and their image order (`4 * ns` words), then the arena for the
     /// nodes and as many rules (the blocks make about one a node; more grow it); and at least
     /// the `m` edges written over them all
     pub(super) fn arena_words(&self, ns: usize, m: usize) -> usize {
@@ -513,25 +513,27 @@ impl Kernel {
         } else {
             Narrow::STRIDE
         };
-        (ns + (stride + RULE) * Self::nodes_most(ns)).max(m)
+        (4 * ns + (stride + RULE) * Self::nodes_most(ns)).max(m)
     }
 
     pub(super) fn induced(
         &mut self,
+        ns: usize,
         n: u32,
         thin: &[u32; 256],
         stats: &mut Counts,
     ) -> [usize; 256] {
-        let most = Self::nodes_most(self.strips.len());
-        if self.wide(self.strips.len()) {
-            self.induced_with::<Wide>(n, thin, stats, most)
+        let most = Self::nodes_most(ns);
+        if self.wide(ns) {
+            self.induced_with::<Wide>(ns, n, thin, stats, most)
         } else {
-            self.induced_with::<Narrow>(n, thin, stats, most)
+            self.induced_with::<Narrow>(ns, n, thin, stats, most)
         }
     }
 
     fn induced_with<L: Links>(
         &mut self,
+        ns: usize,
         n: u32,
         thin: &[u32; 256],
         stats: &mut Counts,
@@ -539,26 +541,22 @@ impl Kernel {
     ) -> [usize; 256] {
         let Kernel {
             endpoint,
-            strips,
             bands,
             spelling,
             offsets,
+            edges,
             inline16,
             lens,
-            edges,
             ..
         } = self;
-        // `edges` is written only once the elimination is done: its buffer holds the strips'
-        // image order (its first `ns` words, `finish`), then the arena, sized by `finish`
-        // (`arena_words`)
-        let ns = strips.len();
         let nodes_words = L::STRIDE * most;
-        assert!(edges.len() >= ns + nodes_words);
+        assert!(edges.len() >= 4 * ns + nodes_words);
         #[cfg(test)]
         if endpoint.tight {
-            edges.truncate(ns + nodes_words);
+            edges.truncate(4 * ns + nodes_words);
         }
-        let (image_order, arena) = edges.split_at_mut(ns);
+        let (hdr, arena) = edges.split_at_mut(4 * ns);
+        let (strips_raw, image_order) = hdr.split_at_mut(3 * ns);
         #[cfg(test)]
         if endpoint.clobber == Clobber::OrderBeforeNodes {
             image_order.fill(0xA5A5_A5A5);
@@ -573,7 +571,8 @@ impl Kernel {
         e.node(0, 0);
         // the widest node, for the width certificate (`CERTIFIED_WIDTH`)
         let mut widest = 0;
-        for s in strips.iter() {
+        for i in 0..ns {
+            let s = Strip::unpack(&strips_raw[3 * i..3 * i + 3]);
             e.node(s.width, literal(s.byte));
             widest = widest.max(s.width);
         }
@@ -581,7 +580,8 @@ impl Kernel {
         // domain order, on side 1 the domain gaps then the image order
         let (mut terminals, mut order) = ([(0, 0); 2], [(0, 0); 2]);
         let mut x = 0;
-        for (i, s) in strips.iter().enumerate() {
+        for i in 0..ns {
+            let s = Strip::unpack(&strips_raw[3 * i..3 * i + 3]);
             if x < s.from {
                 widest = widest.max(s.from - x);
                 let id = e.node(s.from - x, 0);
@@ -599,7 +599,8 @@ impl Kernel {
         }
         x = 0;
         for &i in image_order.iter() {
-            let s = strips[i as usize];
+            let idx = i as usize;
+            let s = Strip::unpack(&strips_raw[3 * idx..3 * idx + 3]);
             if x < s.to {
                 widest = widest.max(s.to - x);
                 let id = e.node(s.to - x, 0);
@@ -640,9 +641,9 @@ impl Kernel {
             e.eliminate::<false>(&mut remaining, &mut steps)
         } {
             let (base, top, nodes) = (e.base, e.top, e.nodes);
-            grow(edges, ns + top + RULE);
+            grow(edges, 4 * ns + top + RULE);
             e = Elim {
-                a: &mut edges[ns..],
+                a: &mut edges[4 * ns..],
                 base,
                 top,
                 nodes,

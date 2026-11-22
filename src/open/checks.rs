@@ -267,7 +267,7 @@ fn emit_matches_reference() {
 fn thin_and_thick_sum_to_each_symbols_prefix() {
     let mut kernel = Kernel::default();
     let mut out = [0; 1024];
-    let mut pass = kernel.begin(&mut out, u32::MAX);
+    let mut pass = kernel.begin(&mut out, u32::MAX, usize::MAX);
     // The marked run contributes two thick fragments and one thin singleton.
     for (byte, start, width) in [(7, 0, 2), (9, 2, 6), (7, 8, 10), (9, 18, 1)] {
         pass.take::<true>(byte, start, width, 12, 3);
@@ -275,7 +275,21 @@ fn thin_and_thick_sum_to_each_symbols_prefix() {
     assert_eq!((pass.f.thin[7], pass.f.thick_rows[7]), (3, 9));
     assert_eq!((pass.f.thin[9], pass.f.thick_rows[9]), (1, 6));
     assert_eq!(
-        pass.strips.iter().map(|s| s.to).collect::<Vec<_>>(),
+        pass.edges[..3 * pass.ns]
+            .chunks_exact(3)
+            .map(|s| s[1])
+            .collect::<Vec<_>>(),
         [0, 2, 7]
     );
+}
+
+#[test]
+fn strip_prefix_stops_at_dense_cap() {
+    let mut kernel = Kernel::default();
+    let mut out = [0; 16];
+    let mut pass = kernel.begin(&mut out, u32::MAX, 1);
+    pass.take::<false>(255, 0, 511, 1000, 16);
+    pass.take::<false>(3, 511, 512, 1000, 16);
+    assert!(pass.ns > pass.cap_strips);
+    assert_eq!(&pass.edges[..], &[0, 0, (511 << 8) | 255]);
 }

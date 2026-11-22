@@ -53,6 +53,18 @@ struct Strip {
     byte: u8,
 }
 
+impl Strip {
+    #[inline(always)]
+    fn unpack(w: &[u32]) -> Self {
+        Strip {
+            from: w[0],
+            to: w[1],
+            width: w[2] >> 8,
+            byte: (w[2] & 0xFF) as u8,
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 struct Tile {
     end: u32,
@@ -72,7 +84,6 @@ struct Band {
 pub struct Kernel {
     endpoint: endpoint::Endpoint,
     spill: outq::Spill,
-    strips: Vec<Strip>,
     tiles: Vec<Tile>,
     directory: Vec<u32>,
     bands: Vec<Band>,
@@ -138,7 +149,9 @@ fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, 
 /// counts
 struct Pass<'a> {
     queues: outq::Queues<'a>,
-    strips: &'a mut Vec<Strip>,
+    edges: &'a mut Vec<u32>,
+    ns: usize,
+    cap_strips: usize,
     f: First,
 }
 
@@ -184,12 +197,23 @@ impl Pass<'_> {
             f.thin[a] += w;
             f.m += w;
         } else {
-            self.strips.push(Strip {
-                from: x,
-                to: f.thin[a] + f.thick_rows[a],
-                width: w,
-                byte: c,
-            });
+            if self.ns < self.cap_strips {
+                let at = 3 * self.ns;
+                if self.edges.len() < at + 3 {
+                    let need = (at + 3)
+                        .max(2 * self.edges.len())
+                        .max(1024)
+                        .min(self.cap_strips.saturating_mul(3));
+                    self.edges.reserve_exact(need - self.edges.len());
+                    self.edges.resize(need, 0);
+                }
+                self.edges[at..at + 3].copy_from_slice(&[
+                    x,
+                    f.thin[a] + f.thick_rows[a],
+                    (w << 8) | u32::from(c),
+                ]);
+            }
+            self.ns += 1;
             f.thick[a] += 1;
             f.thick_rows[a] += w;
         }
@@ -281,11 +305,12 @@ impl Kernel {
 
     /// The first pass's state, emptied for a block, its queues in `out` (`outq.rs`) for at
     /// most `limit` retained rows
-    fn begin<'a>(&'a mut self, out: &'a mut [u8], limit: u32) -> Pass<'a> {
-        self.strips.clear();
+    fn begin<'a>(&'a mut self, out: &'a mut [u8], limit: u32, cap_strips: usize) -> Pass<'a> {
         Pass {
             queues: outq::Queues::new(out, &mut self.spill, limit),
-            strips: &mut self.strips,
+            edges: &mut self.edges,
+            ns: 0,
+            cap_strips,
             f: First::default(),
         }
     }
@@ -317,23 +342,20 @@ impl Kernel {
     ) -> Option<(Counts, u32, u32)> {
         // the walk's buffer, `n` bytes and its copies' 16: the queues' until the walk
         out.resize(n as usize + INLINE, 0);
-        let mut pass = self.begin(&mut out[..], cap.m);
+        let mut pass = self.begin(&mut out[..], cap.m, cap.strips);
         maximal(records, |c, pos, width| {
             pass.take::<QUEUE>(c, pos, width, p, limit)
         });
+        let ns = pass.ns;
         let (f, heads, over) = (pass.f, pass.queues.heads(), pass.queues.over());
         #[cfg(test)]
         {
             self.spill.taken = pass.queues.chunks();
         }
-        if over || f.m > cap.m || self.strips.len() > cap.strips {
-            // refused: what the pass kept is let go to the cap's size, so that a refused
-            // block leaves no more scratch than an admitted one may
-            self.strips.clear();
-            self.strips.shrink_to(cap.strips);
+        if over || f.m > cap.m || ns > cap.strips {
             return None;
         }
-        Some(self.finish::<INDUCE, QUEUE>(&f, records, n, p, limit, &out[..], &heads))
+        Some(self.finish::<INDUCE, QUEUE>(&f, ns, records, n, p, limit, &out[..], &heads))
     }
 
     /// The construction after its first pass `f` (`records` read again only without `QUEUE`;
@@ -342,6 +364,7 @@ impl Kernel {
     fn finish<const INDUCE: bool, const QUEUE: bool>(
         &mut self,
         f: &First,
+        ns: usize,
         records: &[u16],
         n: u32,
         p: u32,
@@ -365,47 +388,47 @@ impl Kernel {
         let all = std::array::from_fn(|a| thin[a] + thick_rows[a]);
         assert!(m > 0 && all.iter().sum::<u32>() == n);
         stats.retained = m as usize;
-        stats.thick = self.strips.len();
+        stats.thick = ns;
         let first = starts(all);
         let mut write = starts(thick);
-        // (EdgesMux, the Mechanisms line's cycle 19, Theorem 19.1) the strips in image order
-        // are kept in `edges`' first `ns` words, dead until the wiring below writes them, and
-        // the elimination's arena follows them there (`induced`): `edges` is sized for both
-        // now, once, so that neither is moved
-        let ns = self.strips.len();
         let need = if INDUCE {
             self.arena_words(ns, m as usize)
         } else {
-            ns
+            4 * ns
         };
         if self.edges.len() < need {
-            // (cold: the first blocks) exact, not doubled; nothing in it is kept
-            self.edges.clear();
-            self.edges.reserve_exact(need);
+            let add = need - self.edges.len();
+            self.edges.reserve_exact(add);
             self.edges.resize(need, 0);
         }
-        let image_order = &mut self.edges[..ns];
+        let (strips_raw, rest_edges) = self.edges.split_at_mut(3 * ns);
+        let image_order = &mut rest_edges[..ns];
         self.tiles.clear();
         let (mut last_x, mut retained_x) = (0, 0u32);
-        for (i, s) in self.strips.iter_mut().enumerate() {
-            let a = usize::from(s.byte);
-            s.to += first[a];
+        for i in 0..ns {
+            let sw = &mut strips_raw[3 * i..3 * i + 3];
+            let byte = (sw[2] & 0xFF) as u8;
+            let width = sw[2] >> 8;
+            let from = sw[0];
+            let a = usize::from(byte);
+            sw[1] += first[a];
+            let to = sw[1];
             image_order[write[a] as usize] = i as u32;
             write[a] += 1;
             if !INDUCE {
-                if s.from > last_x {
+                if from > last_x {
                     self.tiles.push(Tile {
-                        end: s.from,
+                        end: from,
                         delta: retained_x.wrapping_sub(last_x),
                         symbol: TERMINAL,
                     });
-                    retained_x += s.from - last_x;
+                    retained_x += from - last_x;
                 }
-                last_x = s.from + s.width;
+                last_x = from + width;
                 self.tiles.push(Tile {
                     end: last_x,
-                    delta: s.to.wrapping_sub(s.from),
-                    symbol: s.byte.into(),
+                    delta: to.wrapping_sub(from),
+                    symbol: byte.into(),
                 });
             }
         }
@@ -431,7 +454,7 @@ impl Kernel {
         self.offsets.clear();
         self.offsets.push(0);
         let mut cursors = if INDUCE {
-            self.induced(n, &thin, &mut stats)
+            self.induced(ns, n, &thin, &mut stats)
         } else {
             let mut cursors = [0usize; 256];
             let (mut k, mut si) = (0, 0);
@@ -439,7 +462,8 @@ impl Kernel {
                 cursors[a] = self.bands.len();
                 let mut x = first[a];
                 while si < write[a] as usize {
-                    let s = self.strips[self.edges[si] as usize];
+                    let i = self.edges[3 * ns + si] as usize;
+                    let s = Strip::unpack(&self.edges[3 * i..3 * i + 3]);
                     self.trace(x, s.to, a as u8, &mut k, &mut stats);
                     x = s.to + s.width;
                     si += 1;
