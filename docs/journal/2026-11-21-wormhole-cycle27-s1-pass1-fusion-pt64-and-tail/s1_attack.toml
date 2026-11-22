@@ -1,0 +1,48 @@
+name = "Wormhole/Neon Cycle 27: S1 Attack — Fused Pass-1 Loop, 64-bit Parallel (pos, thin) State, and Chunk-Tail Fast-Paths"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_fused_pt64_outq16"
+inputs = ["records", "C", "p", "n"]
+output = "mux_strips_and_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Ablates P1 Fused maximal+Pass1, P2 Theorem 27.1 64-bit parallel (thin<<32)|pos single-add/store, P3 w==1 scalar fast-path, and P4 zero-branch chunk-tail fast-path."
+
+[[edge]]
+id = "s2_graded_operad"
+inputs = ["mux_strips_and_outq16", "C", "n"]
+output = "graded_operad_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Cycle 23 G2 GradedOperad ((len10<<22)|id22 + Operad-MN16)."
+
+[[edge]]
+id = "s3_bidi_dedup_band64"
+inputs = ["graded_operad_arena", "mux_strips_and_outq16"]
+output = "band64_and_l1d_dict"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict_long", D = "H / 2", B = "B_bands + dict_long", Q = "H", M = "B_bands + dict_long" }
+evidence = "L4 BidiBottom + GradedOperad O(1) dedup + 8B Band64."
+
+[[edge]]
+id = "s4_hoisted_wire_len4"
+inputs = ["band64_and_l1d_dict", "mux_strips_and_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Cycle 25 E2h hoisted S4 wire with GPR Len4 packing."
+
+[[edge]]
+id = "s5_emit_zerospill_len4"
+inputs = ["critical_edges", "band64_and_l1d_dict", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "Cycle 24/25 E2h ZeroSpill + GPR Len4 emit (mu=1 floor)."
