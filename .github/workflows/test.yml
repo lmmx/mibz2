@@ -200,6 +200,11 @@ jobs:
       # commit, state in the XDG state directory, HOLD, notices
       - name: The workstation queue
         run: python3 bench/test_workstation_queue.py
+      # bench-wormhole-plateau's verdict (bench/wormhole_plateau.py) on synthetic runs: the
+      # wall route, then the memory route, the peak RSS reported, and no verdict from
+      # incomplete or malformed records or machine
+      - name: The wormhole-plateau verdict (synthetic runs)
+        run: python3 bench/test_wormhole_plateau.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py
