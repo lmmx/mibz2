@@ -1,0 +1,12 @@
+[package]
+name = "bench_dt"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mibz2 = { path = "/tmp/moonshot-scorer", features = ["moonshot"] }
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+debug = "line-tables-only"

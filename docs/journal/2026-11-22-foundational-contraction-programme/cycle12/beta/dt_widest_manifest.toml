@@ -1,0 +1,39 @@
+name = "Cycle 12 BandCoalOpen (wire_xor-preserving Open with register-held adjacent band coalescing)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "open_s1_outq_strips"
+inputs = ["records", "p"]
+output = "outq_and_thick_strips"
+status = "verified"
+cost = { W = "R", D = "1", B = "R + m", Q = "0", M = "ns" }
+dependent = false
+evidence = "Single sequential pass over capped run records (<= 127): queues thin runs (w <= 16) into OutQ16 inside out[..n+16] and packs ns thick strips (20,170 on 6 blocks) into edges[..4*ns]; zero r_0 materialization."
+
+[[edge]]
+id = "open_s2_rv_elim"
+inputs = ["outq_and_thick_strips", "n"]
+output = "open_excursion_dag"
+status = "verified"
+cost = { W = "S_thick", D = "S_thick", B = "ns", Q = "S_thick", M = "ns" }
+dependent = true
+evidence = "Rauzy-Veech thick-only elimination in Open's edges dead buffer (S_thick = 79,349 steps on 6 blocks, 2.67M on 431 wikidata blocks, 22.2 ns/step; beats interior DtWidestOpen 4.885 ms vs 1.764 ms S2 despite -40.7% steps)."
+
+[[edge]]
+id = "open_s3a_band_coal_dict"
+inputs = ["open_excursion_dag"]
+output = "coalesced_bands_dict"
+status = "verified"
+cost = { W = "B_raw", D = "1", B = "B_coal", Q = "0", M = "B_coal" }
+dependent = false
+evidence = "Walks terminal side-0 nodes in F-order, coalescing adjacent same-(dst_shift, word/code) bands in registers (-22.1% bands on 6 blocks: 25,497 -> 19,867; -27.7% on 431 blocks: 827,858 -> 598,260) before Dictionary coding and S4 wiring."
+
+[[edge]]
+id = "open_s4_wire_xor_emit"
+inputs = ["coalesced_bands_dict", "outq_and_thick_strips", "n", "p"]
+output = "text"
+status = "measured"
+cost = { W = "n + m", D = "m/2", B = "n + m", Q = "m", M = "m" }
+dependent = true
+evidence = "Exact wire_xor wiring over coalesced bands (-6.1% S4 on 6 blocks, -7.6% S4 on 431 blocks) into edges[..m] followed by emit_bidirectional 2-end walk; 0.9870x OpenCells (6 blks), 0.9887x (431 blks, IQR [0.9867, 0.9909]), PeakM = 1.000x Open."
