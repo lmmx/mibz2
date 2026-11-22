@@ -1,0 +1,12 @@
+[package]
+name = "bench_ablation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mibz2 = { path = "/tmp/moonshot-scorer", features = ["moonshot"] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
