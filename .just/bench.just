@@ -1951,7 +1951,8 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # memory, on the i9's 6-20 thread plateau. Two builds pinned by SHA: #739's merge-base with
 # master BASE (96a24d3e, master's head when the recipe was written, v0.5.12's src;
 # `mibz2@build-base`) and #739's HEAD (perf/wormhole-plateau, `mibz2`, whose harness drives
-# the run); their build inputs differ in the stack's files alone (checked). Both by rustc
+# the run, 7a462fe1, re-pinned before any data from 8857f9fd for the footprint ledger's fix);
+# their build inputs differ in the stack's files alone (checked). Both by rustc
 # 1.99.1. The whole Wikidata corpus (corpora/wikidata.bz2, checked by its SHA-256), 4 copies
 # end to end; unpinned on every CPU at 6, 8, 10, 12, 16 and 20 threads, interleaved, 12 paired
 # rounds, no spinner. Judged at 10 threads, the other counts supporting, peak RSS reported and
@@ -1962,7 +1963,7 @@ bench-wormhole-plateau:
     #!/usr/bin/env bash
     set -euo pipefail
     BASE=96a24d3e4f764b3918089b0d5bcd5fe4b9bc1fea
-    HEAD=8857f9fd87a77a5c9983cafc464ab11d1bd92332
+    HEAD=7a462fe1ca925416bb97daeb2b1979d9795439a8
     COPIES=4 ROUNDS=12 SETTLE=2 THREADS=6,8,10,12,16,20
     W=$PWD/target/wormhole-plateau
     mkdir -p "$W"
@@ -1981,7 +1982,7 @@ bench-wormhole-plateau:
     changed=$(git diff --name-only "$BASE" "$HEAD" -- src Cargo.toml Cargo.lock examples build.rs rust-toolchain.toml)
     [ -n "$changed" ] || { echo "bench-wormhole-plateau: the builds' source does not differ"; exit 1; }
     beyond=$(printf '%s\n' "$changed" \
-      | grep -Ev '^src/(lib|crc|rle|read|parallel)\.rs$|^src/parallel/|^examples/bzcat\.rs$' || true)
+      | grep -Ev '^src/(lib|crc|rle|read|parallel|trace)\.rs$|^src/parallel/|^examples/(bzcat|occupancy)\.rs$' || true)
     [ -z "$beyond" ] \
       || { echo "bench-wormhole-plateau: the builds differ beyond the stack: $(echo $beyond)"; exit 1; }
     printf '%s\n' "$changed" > "$O/src-changed.txt"
