@@ -5,7 +5,7 @@ use super::*;
 use crate::bwt::{InverseBwt, Plain};
 
 /// The plain inverse of column `l` at row `p`: the oracle
-fn plain(l: &[u8], p: u32) -> Vec<u8> {
+pub(super) fn plain(l: &[u8], p: u32) -> Vec<u8> {
     let mut counts = [0u32; 256];
     for &c in l {
         counts[c as usize] += 1;
@@ -25,22 +25,22 @@ fn shipped(k: &mut Kernel, l: &[u8], p: u32, out: &mut Vec<u8>) {
 }
 
 /// A deterministic generator (an LCG): no dependency, the same columns on every machine
-struct Lcg(u64);
+pub(super) struct Lcg(pub(super) u64);
 impl Lcg {
-    fn next(&mut self) -> u32 {
+    pub(super) fn next(&mut self) -> u32 {
         self.0 = self
             .0
             .wrapping_mul(6364136223846793005)
             .wrapping_add(1442695040888963407);
         (self.0 >> 33) as u32
     }
-    fn below(&mut self, n: u32) -> u32 {
+    pub(super) fn below(&mut self, n: u32) -> u32 {
         self.next() % n.max(1)
     }
 }
 
 /// A column of `n` rows: runs of geometric-ish length around `mean` over `alphabet` bytes
-fn runs_column(g: &mut Lcg, n: usize, alphabet: u32, mean: u32) -> Vec<u8> {
+pub(super) fn runs_column(g: &mut Lcg, n: usize, alphabet: u32, mean: u32) -> Vec<u8> {
     let mut l = Vec::with_capacity(n);
     while l.len() < n {
         let c = g.below(alphabet) as u8;
@@ -105,9 +105,106 @@ fn arbitrary_columns_through_one_kernel() {
     }
 }
 
-/// `OpenCells` admits a block exactly where `LazyCells`' census passes its two record-count
-/// gates (neither the density line nor the sparse gate refuses it), on columns across both
-/// lines; and its output is the plain inverse's whichever route the block took
+/// Full-size blocks with more thick strips than `Narrow` node links serve (21,844), so the
+/// elimination takes `Wide` links of itself: runs of exactly 17, and thin runs between thick
+/// ones; and one kernel taking `Narrow` then `Wide` then `Narrow` again
+#[test]
+fn wide_links_on_full_blocks() {
+    let n = 900_000usize;
+    let mut g = Lcg(0x7769_6465);
+    let seventeen: Vec<u8> = (0..n).map(|i| (i / 17 % 3) as u8).collect();
+    let mut mixed = Vec::with_capacity(n);
+    let mut c = 0u8;
+    while mixed.len() < n {
+        let w = if g.below(2) == 0 {
+            1 + g.below(8)
+        } else {
+            17 + g.below(8)
+        };
+        c = (c + 1 + g.below(2) as u8) % 3;
+        mixed.extend(std::iter::repeat(c).take(w as usize));
+    }
+    mixed.truncate(n);
+    let narrow = runs_column(&mut g, n, 60, 12);
+    let mut k = Kernel::default();
+    let mut out = Vec::new();
+    for l in [&narrow, &seventeen, &mixed, &narrow] {
+        for p in [0, n as u32 / 3, n as u32 - 1] {
+            shipped(&mut k, l, p, &mut out);
+            assert!(out == plain(l, p), "row {p}");
+        }
+    }
+    let r = Runs::of_column(&seventeen);
+    let s = k.run::<true, true>(r.records(), n, 5, LIMIT, &mut out);
+    assert!(3 * s.thick + 3 > 1 << 16, "{} thick strips", s.thick);
+}
+
+/// The queues in `out` (`outq.rs`) wherever they can go wrong: blocks under one chunk (every
+/// chunk an overflow chunk), blocks whose queues outgrow `out` (most retained rows), the
+/// retained ranks across every multiple of 2^16 by a few rows each way (an epoch's cut, with
+/// runs of 1 and of 16 rows straddling it), and thin runs longer than 16 (limits 40 and 1025)
+/// across chunk and epoch ends; induced and traced, at three rows, against the plain inverse,
+/// through one kernel reused (its outputs left longer or shorter by the block before)
+#[test]
+fn queues_in_out_overflow_and_epochs() {
+    let mut g = Lcg(0x6f75_7471);
+    let mut k = Kernel::default();
+    let mut out = Vec::new();
+    let mut overflowed = 0;
+    let mut cases: Vec<Vec<u8>> = vec![];
+    for n in [1usize, 2, 17, 511, 512, 513, 1023, 1024, 1025, 3000] {
+        cases.push(runs_column(&mut g, n, 3, 2));
+    }
+    for e in [1usize, 2, 3] {
+        for d in [-17i64, -16, -1, 0, 1, 15, 16, 17] {
+            let n = ((e << 16) as i64 + d) as usize;
+            // every run one row: every row retained, m = n
+            cases.push((0..n).map(|i| (i % 2) as u8).collect());
+            // runs of 16 of three bytes: every row retained, runs straddling the cut
+            cases.push((0..n).map(|i| (i / 16 % 3) as u8).collect());
+        }
+    }
+    cases.push(runs_column(&mut g, 400_000, 40, 3));
+    cases.push((0..900_000).map(|_| g.below(256) as u8).collect());
+    cases.push(runs_column(&mut g, 900_000, 60, 12));
+    for l in &cases {
+        let n = l.len();
+        let r = Runs::of_column(l);
+        for p in [0, n as u32 / 2, n as u32 - 1] {
+            let want = plain(l, p);
+            for limit in [LIMIT, 40, 1025] {
+                out.resize(g.below(2 * n as u32 + 40) as usize, 0xA5);
+                k.run::<true, true>(r.records(), n, p, limit, &mut out);
+                assert!(out == want, "n {n}, row {p}, limit {limit}");
+                overflowed += usize::from(k.spill.overflow() > 0);
+            }
+            if n <= 70_000 {
+                k.run::<false, true>(r.records(), n, p, LIMIT, &mut out);
+                assert!(out == want, "traced: n {n}, row {p}");
+            }
+        }
+    }
+    assert!(overflowed > 0);
+}
+
+/// On a Wikidata-like full block the queues all fit in `out`: no overflow chunk
+#[test]
+fn queues_fit_in_out_on_full_blocks() {
+    let mut g = Lcg(0x6669_7473);
+    let mut k = Kernel::default();
+    let mut out = Vec::new();
+    let l = runs_column(&mut g, 900_000, 60, 12);
+    let r = Runs::of_column(&l);
+    let s = k.run::<true, true>(r.records(), l.len(), 1234, LIMIT, &mut out);
+    assert!(out == plain(&l, 1234));
+    assert!(s.retained > 1 << 16, "{} retained", s.retained);
+    assert_eq!(k.spill.overflow(), 0);
+}
+
+/// `OpenCells` admits a block outright exactly where `LazyCells`' census passes its two
+/// record-count gates (neither the density line nor the sparse gate refuses it), on columns
+/// across both lines, and opens no other but in the dense band; and its output is the plain
+/// inverse's whichever route the block took
 #[test]
 fn open_cells_admits_on_lazy_cells_count_gates() {
     let mut g = Lcg(0x6761_7465);
@@ -136,7 +233,10 @@ fn open_cells_admits_on_lazy_cells_count_gates() {
         let was = cells.opened;
         let mut out = Vec::new();
         assert!(cells.invert_runs(&r, n, p, &mut out, Kernels::detect()));
-        assert_eq!(cells.opened > was, admits);
+        // (the dense band, `dense.rs`: above the density line, the open kernel within its cap)
+        let dense = OpenCells::cap(r.records().len(), n, p) == Some(Cap::dense(n));
+        assert!(admits || dense || cells.opened == was);
+        assert!(!admits || cells.opened > was);
         assert_eq!(out, want);
         assert_eq!(out, plain(&l, p));
         if admits {
@@ -177,9 +277,8 @@ fn open_cells_gate_edges() {
 fn scratch(k: &Kernel) -> usize {
     use std::mem::size_of;
     let e = &k.endpoint;
-    k.queues.iter().map(|q| 4 * q.capacity()).sum::<usize>()
-        + size_of::<Strip>() * k.strips.capacity()
-        + 4 * (k.image_order.capacity() + k.directory.capacity())
+    k.spill.scratch()
+        + 4 * k.directory.capacity()
         + size_of::<Tile>() * k.tiles.capacity()
         + size_of::<Band>() * k.bands.capacity()
         + k.spelling.capacity()

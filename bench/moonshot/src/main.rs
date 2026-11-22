@@ -6,7 +6,7 @@
 //!     moonshot extract --file FILE --blocks I,J,.. --out SYMBOLS
 //!     moonshot proxy --arm ARM --symbols SYMBOLS
 //!
-//! ARM is one of `lazy` (0.5.6's kernel, LazyCells), `cells` (eager), `open`, `opend` and
+//! ARM is one of `lazy` (the baseline: the shipped kernel, OpenCells, 0.5.12), `cells` (eager), `open`, `opend` and
 //! `candidate` (MOONSHOT_CANDIDATE at build time). `check` is the correctness gate (exit 1 on
 //! any failure). `run` is one timed decode by the shipped workers, W of them and 4W blocks in
 //! flight, inverting with ARM: one JSON line with its wall, CPU and peak RSS. `extract` writes

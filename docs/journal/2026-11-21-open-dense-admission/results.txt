@@ -1,0 +1,89 @@
+# The dense admission's native runs (4-vCPU cloud container, this branch's head kernel against
+# 0.5.10's, the bench corpus 82f65ace...; the six of data/admitted-bwt 41c03a5b, every SHA-256
+# checked against manifest.json). m0.bin: master's tree built as the candidate (the A/A control).
+# c3.bin: this branch. Times in microseconds; ratio candidate/master, 95% t-interval over rounds.
+
+## census (ADMIT_MODE=census)
+master: CENSUS blocks=431 run_route=383 column_route=48 master_open=228 cand_open=228 full_run=233 full_master=228 full_cand=228
+branch: CENSUS blocks=431 run_route=383 column_route=48 master_open=228 cand_open=233 full_run=233 full_master=228 full_cand=233
+BLOCK 41 n=900000 r=135769 r/n=0.1509 m=231600 ns=2619 nodes=6975 steps=12653 rules=6916 words=2605
+BLOCK 56 n=899996 r=139376 r/n=0.1549 m=230034 ns=2275 nodes=5997 steps=11392 rules=6471 words=2330
+BLOCK 165 n=899934 r=140594 r/n=0.1562 m=221139 ns=2729 nodes=7231 steps=13328 rules=7662 words=2608
+BLOCK 270 n=900000 r=185251 r/n=0.2058 m=199189 ns=568 nodes=1426 steps=3557 rules=2366 words=706
+BLOCK 278 n=899938 r=136595 r/n=0.1518 m=201418 ns=2181 nodes=5789 steps=10571 rules=6045 words=1990
+SPIRAL_BLOCKS 0 (no block of the corpus fails the width certificate)
+SIX block-0.L, block-2.L, block-85.L, block-143.L, block-210.L, block-207.L: admitted by both
+
+## parity (ADMIT_MODE=parity): every block of the corpus and the six, reused and fresh kernels,
+## both arms against the plain inverse
+PARITY ok blocks=437
+
+## heap (ADMIT_MODE=heap): a worker's kernel heap peak over its round-robin share of the
+## corpus's 431 blocks, out buffer and inputs excluded (KiB)
+W=1  master max 7910.4 sum 7910.4  | branch max 1351.5 sum 1351.5
+W=4  master max 7128.7 sum 22336.9 | branch max 1342.0 sum 5039.6
+W=10 master max 6804.5 sum 39401.2 | branch max 1268.8 sum 11548.0
+(admission alone, before the image order moved into edges: W=4 max 1369.0, W=10 max 1297.2)
+per refused block, a fresh kernel: blk41 5628 -> 1201, blk56 5656 -> 1143, blk165 5610 -> 1158,
+blk270 5635 -> 877, blk278 5610 -> 1015
+
+## t1, the six admitted blocks (drive.py t1 six 12 m0.bin c3.bin), CPU 2
+== m0.bin (A/A)
+block-0.L    master    1359.4  cand    1349.8  ratio 0.993 [0.988, 0.999]
+block-2.L    master    1658.8  cand    1662.7  ratio 1.002 [0.998, 1.007]
+block-85.L   master    1648.0  cand    1663.5  ratio 1.011 [0.997, 1.026]
+block-143.L  master    2987.8  cand    3014.8  ratio 1.019 [1.001, 1.037]
+block-210.L  master    2596.8  cand    2632.1  ratio 1.009 [1.004, 1.013]
+block-207.L  master    1996.2  cand    1991.7  ratio 1.014 [0.992, 1.037]
+== c3.bin
+block-0.L    master    1363.0  cand    1367.8  ratio 1.004 [0.992, 1.017]
+block-2.L    master    1664.5  cand    1671.0  ratio 1.005 [0.999, 1.011]
+block-85.L   master    1647.1  cand    1658.5  ratio 1.009 [0.998, 1.021]
+block-143.L  master    2984.2  cand    3017.2  ratio 1.008 [1.002, 1.013]
+block-210.L  master    2604.9  cand    2615.6  ratio 1.003 [0.999, 1.008]
+block-207.L  master    1988.8  cand    2003.3  ratio 1.008 [1.004, 1.012]
+
+## t1, the cycle's dense picks (drive.py t1 dense 12 m0.bin c3.bin), CPU 2: 41, 56, 165, 270
+## and 278 newly admitted (Segmented on master); 40, 164, 269 admitted by both; 55 a tiny block
+== m0.bin (A/A)
+blk40        master    2857.6  cand    2860.2  ratio 1.004 [0.997, 1.010]
+blk41        master    2041.2  cand    2068.5  ratio 1.010 [1.006, 1.015]
+blk55        master       0.5  cand       0.5  ratio 1.000 [1.000, 1.000]
+blk56        master    2030.9  cand    2052.2  ratio 1.011 [1.005, 1.017]
+blk164       master    2158.3  cand    2162.1  ratio 0.996 [0.985, 1.007]
+blk165       master    2045.0  cand    2084.8  ratio 1.019 [1.007, 1.031]
+blk269       master    2594.1  cand    2610.4  ratio 1.012 [0.995, 1.029]
+blk270       master    2225.7  cand    2256.7  ratio 0.987 [0.947, 1.029]
+blk278       master    2064.6  cand    2100.4  ratio 1.007 [1.000, 1.014]
+== c3.bin
+blk40        master    2800.2  cand    2819.8  ratio 1.008 [1.003, 1.013]
+blk41        master    2077.5  cand    2898.2  ratio 1.403 [1.352, 1.456]
+blk55        master       0.4  cand       0.4  ratio 1.015 [0.982, 1.050]
+blk56        master    2073.9  cand    2864.6  ratio 1.383 [1.356, 1.410]
+blk164       master    2153.5  cand    2163.2  ratio 1.004 [0.987, 1.022]
+blk165       master    2040.5  cand    2905.8  ratio 1.427 [1.413, 1.440]
+blk269       master    2544.9  cand    2560.8  ratio 1.005 [1.000, 1.010]
+blk270       master    2201.4  cand    2458.6  ratio 1.120 [1.111, 1.128]
+blk278       master    2067.8  cand    2523.2  ratio 1.230 [1.217, 1.244]
+
+## t4: four concurrent workers, each over all 431 blocks from a different start, the arms
+## alternated by pass (ADMIT_REPS=5 drive.py t4 all 12 m0.bin c3.bin), CPUs 0-3. pass: a
+## worker's whole pass; refused: its time in the five blocks master refuses
+== m0.bin (A/A)
+pass         master  404599.5  cand  410386.5  ratio 1.007 [1.000, 1.013]
+refused      master   15773.9  cand   15777.4  ratio 1.004 [0.994, 1.015]
+== c3.bin
+pass         master  404041.2  cand  408681.4  ratio 1.003 [0.991, 1.016]
+refused      master   15765.8  cand   14538.5  ratio 0.925 [0.909, 0.942]
+
+## end to end (e2e.py 12 T): examples/bzcat, base (master) and cand (this branch), fresh
+## processes alternated; 4 threads is not OpenCells off the i9 (an A/A of the decoder)
+T=4 wall s   base      0.274 cand      0.255  ratio 0.944 [0.867, 1.029]
+T=4 cpu s    base      0.780 cand      0.714  ratio 0.941 [0.862, 1.027]
+T=4 rss KiB  base  97122.000 cand  96726.000  ratio 1.002 [0.976, 1.028]
+T=8 wall s   base      0.251 cand      0.240  ratio 0.978 [0.928, 1.031]
+T=8 cpu s    base      0.764 cand      0.755  ratio 0.996 [0.945, 1.050]
+T=8 rss KiB  base  82288.000 cand  61518.000  ratio 0.741 [0.714, 0.768]
+T=10 wall s  base      0.251 cand      0.249  ratio 1.002 [0.957, 1.050]
+T=10 cpu s   base      0.810 cand      0.830  ratio 1.010 [0.963, 1.059]
+T=10 rss KiB base  91150.000 cand  71584.000  ratio 0.783 [0.754, 0.812]

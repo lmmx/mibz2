@@ -24,9 +24,26 @@ The rules come from three sources, cited by tag:
 
 ## The workflow
 
+**Iterate, ship, re-ship** (Louis, 22 November 2026, after four posts went out big bang and each
+took three full rewrites before anything was live). A post is live first and right second:
+- **Version 1 within minutes.** Read the sources, write the result, the key numbers and one
+  figure, run the strict build and `check_render.py`, open the PR, and have it merged. No
+  screenshot loop, no prose-share trimming and no second figure before version 1 is live.
+- **Then re-ship in small PRs,** each merged as soon as it builds: the framing, further
+  figures, fact-check corrections, prose trims, the reader's corrections. Each PR is one
+  change, and each one goes out.
+- **Never hold a draft to perfect it.** A correction from Louis or the Coordinator lands on a
+  live post as the next small PR, not as another unpublished rewrite.
+- **Live means deployed.** After a merge, check the page at https://lmmx.github.io/mibz2/ and
+  report it live only once it serves the new version.
+
+The steps below are what each version improves toward, not gates before the first one.
+
 1. **Plan** (steps 1–4 of the protocol below). Write down the target claim, the reader,
    the argument path and the goal questions. Do this before drafting, in a scratch file
-   that isn't committed.
+   that isn't committed. When the post relays or responds to material (a thread, a review,
+   a set of relayed messages), read **all** of it first, then decide what to drop (step 1a).
+   Sampling "the most relevant" parts before reading the rest is how the centre gets missed.
 2. **Draft** to the plan, following the house rules.
 3. **Simulated-reader pass.** Give a fresh reader the draft and the reader profile, and
    nothing else: a subagent where one is available, or failing that, a separate pass in
@@ -35,8 +52,8 @@ The rules come from three sources, cited by tag:
 4. **Revise** for what the pass found. Restructure; don't append. Then run the pass again
    on the revision, with the held-out goals as well. A converging revision has fewer stuck
    points, and few new ones.
-5. **Publish** with `publish-page`: the build, `check_render.py`, `look_pages.py`, and a
-   look at every screenshot.
+5. **Publish** with `publish-page`: version 1 needs only the strict build and
+   `check_render.py`. Screenshots, `look_pages.py` and prose trims come in the follow-ups.
 
 ## The protocol: from claim to transfer
 
@@ -51,6 +68,31 @@ sentence becomes the dek and the description, and the opening states it in full.
 - The conclusion comes **straight after the question it answers**, not in the last
   paragraph [E: e98f35dd: "The post's conclusion arrived only in its last paragraph. It now
   comes straight after the question it answers"].
+
+### 1a. Relayed material: its centre, and our part in it
+
+The #689 post on the Riemann proof failed here, and #690 rewrote it (Louis and an
+independent review, 21 November 2026). These rules come from that pair.
+
+- **State the material's central idea in one sentence before drafting,** in the material's
+  own terms. Then check that the title, the takeaways and the conclusion carry *that* idea,
+  not a condition that enables it. #689 made "cheap checks first" its title and conclusion;
+  the material centred a mode of invention (the wormhole: a long route through distant
+  mathematics whose relevance can't be seen in advance), and cheap checking is only what
+  makes that affordable. Louis called this dilution, not a matter of taste.
+- **When we acted on the material, our experiment is the story.** Before drafting, list our
+  own records that respond to it: launch briefs, handoffs, journals, results. Search the
+  journal and the research charter's launches for work started because of it. A post that
+  extracts advice from someone else's work, while we have run the experiment, has buried
+  its lead. #690's centre is the four research lines given the "use everything" mandate,
+  and what they found.
+- **Show the primary sources, credited.** Where an idea enters the story (an overview, a
+  launch brief, a handoff), show it: a screenshot or an exact excerpt in a figure, with
+  author, venue and date in the caption. The reader should see where each idea came from,
+  not take the post's paraphrase on trust.
+- **Keep the instructive failures.** The arcs where a striking simplification met its
+  precise cost (a 0.3% feedback set that still deadlocks 64–76% of fragments) are often the
+  most informative part. Read every failure in the material before cutting any.
 
 ### 2. The reader
 
@@ -70,6 +112,10 @@ motivation the sources never state is the one most likely to be missing, so supp
 
 - **Each section answers the question the last one raised** [E: 2464928e: "Five sections
   instead of twelve, each answering the question the last one raised"].
+- **Structure by argument, not by source.** The order a source essay or a set of notes
+  presents its points in is not the post's argument. A list of moves is not an argument
+  either: say how each move forces the next, and show what each looked like in our own work
+  (#690's levers table gives every lever a column for our research lines).
 - **The opening lays out the route**, with links to the numbered sections where it helps
   [E: e98f35dd, e9cd1d08, fabb12a6, 55a8b5c5].
 - **Mark the key step, the payoff and the reconnection** [X: aha-moments]:
@@ -147,6 +193,31 @@ shortened posts: 33 minutes to 14 [E: 2464928e], 262 lines out for 159 in [E: 34
 and detail moved to a technical appendix [E: 2464928e, 54220de4, d0640e02].
 
 ## The title and the dek: fantastic news
+
+**First: written for serious researchers and programmers** (Louis, 22 November 2026, on
+"A memory gain is a gain: the change our speed-only rule nearly shelved": "that is sloppy: i
+would be embarassed to share that title with serious researchers and programmers … the point
+of the blog was what we found not the process theatre of our crappy rule"). This rule outranks
+everything below it in this section. The delight is in the result's clarity, never in a slogan.
+- **A results post is about the result.** The title, the dek, the opening and the takeaways
+  state what was found: the mechanism, the measured effect and its scope. Our process (who
+  proposed what, how a decision was reached, an acceptance rule, a merge that was held or
+  nearly held) appears only where it changes what the reader should believe about the result,
+  and then as one neutral sentence, never as the story.
+- **No internal politics or anecdote.** Don't quote the maintainer's chat messages or
+  instructions, and don't narrate the team's deliberations ("we reported it as holding;
+  Louis replied …"). A reader outside the project can't weigh them and doesn't need them.
+- **No slogans, aphorisms or drama in a title.** "A memory gain is a gain", "nearly
+  shelved", "the change X almost missed" are slogans or drama. A title names the technical
+  change and its measured effect, in the vocabulary a systems researcher would use.
+  - **Before:** "A memory gain is a gain: the change our speed-only rule nearly shelved".
+    **After:** "Admitting dense blocks to the Open kernel: a quarter less peak memory, no loss
+    of speed".
+- **The test:** would you put this title and opening, unchanged, in front of a researcher in
+  the field or a senior systems programmer? If any part would embarrass you there, rewrite it.
+- **How the rules below apply after this one:** the headline form, an extended metaphor in
+  figures, approachability and round figures in the dek all still hold. They serve a technical
+  title; they never license a slogan or an anecdote.
 
 **The durable concept for every title and dek** (Louis, 9 November 2026): "imagine waking up
 one morning, bright and early, the birds are chirping and as you glimpse the first rays of the
@@ -273,6 +344,10 @@ figure whose axes measure something not yet explained. The maintainer calls it "
 medias res" [E: the maintainer, 2026-11-07]. It applies to every section and every figure:
 each must be followable by someone who has read only what comes before it in the post. The
 key-facts audit below is how to check it.
+
+A results post opens on the result. The opening's first paragraph never tells how a decision
+about the work was made, and never quotes the team or the maintainer (see "First: written for
+serious researchers and programmers" above).
 
 Open in this order:
 
@@ -646,6 +721,12 @@ technique, and point to the section where it is worked by hand.
   </figure>
   ```
 
+  - **A figure shows a real structure, never a grouping of the prose's labels.** A grid of
+    the post's own headings, a funnel of its stages or a number line with two labels
+    classifies the prose and adds nothing (#689). Draw the structure the argument rests
+    on: the proof's dependencies, a chain of results with the cost each one broke on,
+    which buffer each change lands in, measured footprints against the cache share. The
+    test: if the figure could be rebuilt from the post's headings alone, it isn't one.
   - **Keep the `<svg>` on one line,** so Markdown leaves it alone.
   - **Colour comes from the `bf-*` classes** in `assets/stylesheets/blog.css`, never from
     hex values. Each class has a light and a dark value. The text classes are `bf-ts`,
@@ -808,6 +889,11 @@ calibration protocol.
 Before `publish-page`:
 
 - [ ] The target claim is one sentence, and the dek and the description state it.
+- [ ] For relayed material: all of it was read; its central idea is written in one
+      sentence, and the title, takeaways and close carry it. Our own response to it (the
+      experiment, its records) is at the centre, with primary sources shown and credited,
+      and its instructive failures kept.
+- [ ] Every figure shows a structure or mechanism, not a grouping of the prose's labels.
 - [ ] The opening says what the thing is and why it matters to the decoder, then what was
       found, then how, with the route through the sections. It doesn't start in medias
       res.

@@ -2,6 +2,7 @@
 title: "Removing duplicated interval lengths and text references"
 image: assets/social/blog-2026-11-15-bottom-slots.png
 description: "mibz2 tracks each run of equal bytes in two orders, and a run's entry in the second shrinks from 20 bytes to 8 by pointing to the first."
+releases: ["0.3.3"]
 ---
 
 <div class="post-hero" markdown>
@@ -18,6 +19,9 @@ mibz2 tracks each run of equal bytes in two orders, and a run's entry in the sec
 
 15 November 2026 · 12 min read · [Research result](#6-how-much-faster-is-the-decoder)
 {: .post-meta }
+
+Shipped in mibz2 [0.3.3](../benchmarks/history.md#release-0-3-3) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#033---2026-11-15))
+{: .post-shipped }
 
 </div>
 

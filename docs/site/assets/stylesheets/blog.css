@@ -344,6 +344,40 @@
   font-weight: 600;
   text-decoration: none;
 }
+/* A post that explains a release: "Shipped in mibz2 X.Y.Z", under the date, linked to the
+   release's notes on the History page and its CHANGELOG section (front matter `releases`;
+   docs/scripts/release_notes.py writes the line). The card on the blog index says the same. */
+.md-typeset .post-hero .post-shipped {
+  margin: 0.45rem 0 0;
+  font-size: 0.68rem;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-hero .post-shipped::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.4rem;
+  border-radius: 1px;
+  background: var(--md-primary-fg-color);
+  transform: rotate(45deg) translateY(-0.05rem);
+}
+.md-typeset .post-card-rel {
+  align-self: flex-start;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+.md-typeset .post-card-rel::before {
+  content: "";
+  display: inline-block;
+  width: 0.42rem;
+  height: 0.42rem;
+  margin-right: 0.35rem;
+  border-radius: 1px;
+  background: var(--md-primary-fg-color);
+  transform: rotate(45deg) translateY(-0.05rem);
+}
 /* the illustration's own margin is wide: the negative margins take some of it back */
 .md-typeset .post-hero-art {
   flex: none;

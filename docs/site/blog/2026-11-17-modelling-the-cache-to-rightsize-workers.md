@@ -2,6 +2,7 @@
 title: "Modelling the cache to rightsize workers"
 image: assets/social/blog-2026-11-17-modelling-the-cache-to-rightsize-workers.png
 description: "mibz2 now runs fewer workers than threads on a ten-core desktop and finishes sooner, while a cache model is tested to pick the count on any machine."
+releases: ["0.5.4"]
 ---
 
 <div class="post-hero" markdown>
@@ -18,6 +19,9 @@ mibz2 now runs fewer workers than threads on a ten-core desktop and finishes soo
 
 17 November 2026 · 14 min read · [Research in progress](#5-what-shipped-and-what-the-model-still-needs)
 {: .post-meta }
+
+Shipped in mibz2 [0.5.4](../benchmarks/history.md#release-0-5-4) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#054---2026-11-17))
+{: .post-shipped }
 
 </div>
 

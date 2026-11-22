@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The moonshot scorer (bench/moonshot/README.md): one candidate kernel against mibz2 0.5.6's.
+"""The moonshot scorer (bench/moonshot/README.md): one candidate kernel against the shipped kernel (OpenCells, 0.5.12).
 
     python3 bench/moonshot/moonshot.py score CANDIDATE.rs [options]
 
@@ -7,7 +7,7 @@ Three parts, reported side by side and never combined into one number:
 
 1. the correctness gate (`moonshot check`): byte-exact against libbzip2, CRCs rechecked; any
    failure fails the score outright and nothing is timed;
-2. container timing: the candidate against 0.5.6's kernel (LazyCells), paired, alternating,
+2. container timing: the candidate against the shipped kernel (OpenCells, 0.5.12), paired, alternating,
    at every worker count from 1 to this machine's CPUs, with a 2 s settle (or back to back),
    the geometric mean ratio with a 95% interval, and peak RSS;
 3. the contention proxy (chaingrind, a Valgrind tool): per output byte, modelled transfers,
@@ -939,6 +939,8 @@ def proxy_report(p: dict, ref: dict) -> list[str]:
         "3. CONTENTION PROXY, ADVISORY: the gate and the wall times above are authoritative. The i9's",
         "   opend sweep found opend's gain flat in W and carried by fewer instructions (record 76):",
         "   the instructions ratio (instr) is the predictor the i9 evidence currently supports.",
+        "   NOT YET RECALIBRATED for the new baseline (OpenCells, 0.5.12): calibration.json was fitted",
+        "   with 0.5.6's LazyCells as the baseline, so read its ratios as a ranking only.",
         "   (chaingrind's model of one worker, the i9's LLC shared by W workers,",
         "   DRAM latency from each arm's own bandwidth; three quantities kept apart, per output byte)",
         f"   sample: {len(p['sample']['full'])} full + {len(p['sample']['tiny'])} tiny blocks,"
@@ -997,7 +999,7 @@ def report(s: dict) -> str:
     L.append(f"scorer {sc.get('version', '?')} at {sc.get('commit', '?')}")
     L.append(f"candidate: {s['info']['candidate']} ({s['info']['candidate_type']})")
     L.append(
-        f"machine: {s['info']['cpus']} CPUs; target 1.25x 0.5.6's throughput (a wall ratio of 0.800 or less)"
+        f"machine: {s['info']['cpus']} CPUs; baseline: the shipped kernel, OpenCells (0.5.12); faster is a wall ratio below 1"
     )
     L.append("")
     g = s["gate"]
@@ -1011,7 +1013,7 @@ def report(s: dict) -> str:
     t = s.get("timing")
     if t:
         L.append(
-            "2. CONTAINER WALL TIME (paired rounds, candidate over 0.5.6's LazyCells; < 1 is faster)"
+            "2. CONTAINER WALL TIME (paired rounds, candidate over the shipped OpenCells (0.5.12); < 1 is faster)"
         )
         L.append(
             "   workers  rounds  ratio [95% interval]       verdict       speedup  peak RSS ratio"
@@ -1036,7 +1038,7 @@ def report(s: dict) -> str:
         L.append(f"3. CONTENTION PROXY: skipped: {p['skipped']}")
     L.append("")
     L.append(
-        f"4. PEAK MEMORY: see the peak RSS ratio column above (the candidate's process over 0.5.6's,"
+        f"4. PEAK MEMORY: see the peak RSS ratio column above (the candidate's process over the shipped kernel's,"
     )
     L.append(
         "   the median of the rounds; the target is no extra peak memory, a ratio of 1.0 or less)"
@@ -1310,7 +1312,7 @@ def sweep(a: argparse.Namespace) -> int:
     out.mkdir(parents=True, exist_ok=True)
     arms = a.arms.split(",")
     if arms[0] != "lazy":
-        raise SystemExit("sweep: lazy (0.5.6's kernel) must be the first arm, the reference")
+        raise SystemExit("sweep: lazy (the baseline, the shipped kernel) must be the first arm, the reference")
     summary = s.timing(Path(a.corpus), out, arms=arms, perf=a.perf)
     (out / "sweep.json").write_text(json.dumps(summary, indent=1) + "\n")
     for w, c in summary.items():

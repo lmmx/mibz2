@@ -17,6 +17,9 @@ git log <last tag>..master -- src Cargo.toml
 Worth releasing:
 - **A performance gain** shown under its PR's registered rule: the CI bench, or a registered
   workstation run admitted under RULES C5.
+- **A memory gain** accepted under PERFORMANCE-POLICY.md §2 ("A memory gain is a gain"): peak
+  RSS at least 10% lower on a primary corpus, with no primary wall loss. It releases like a
+  speed gain.
 - **A change that is definitely committed to:** a fix users need, or an API or packaging
   change.
 

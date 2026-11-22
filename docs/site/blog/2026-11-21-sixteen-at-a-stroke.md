@@ -2,6 +2,7 @@
 title: "Sixteen at a stroke: fixed-width writes that stop the processor guessing"
 image: assets/social/blog-2026-11-21-sixteen-at-a-stroke.png
 description: "Writing sixteen at a stroke and keeping only what it needs spares the processor a guess per run, so mibz2 0.5.8 decodes Wikidata 5% faster on ten cores."
+releases: ["0.5.8"]
 ---
 
 <div class="post-hero" markdown>
@@ -18,6 +19,9 @@ Writing sixteen at a stroke and keeping only what it needs spares the processor 
 
 21 November 2026 · 11 min read · [Research result](#5-what-did-it-buy-on-ten-cores)
 {: .post-meta }
+
+Shipped in mibz2 [0.5.8](../benchmarks/history.md#release-0-5-8) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#058---2026-11-21))
+{: .post-shipped }
 
 </div>
 

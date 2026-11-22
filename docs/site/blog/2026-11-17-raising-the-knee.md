@@ -2,6 +2,7 @@
 title: "Raising the knee: scaling throughput to the limit of physical cores"
 image: assets/social/blog-2026-11-17-raising-the-knee.png
 description: "mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are busy, then holds level on the whole machine up to twenty threads."
+releases: ["0.5.4"]
 ---
 
 <div class="post-hero" markdown>
@@ -18,6 +19,9 @@ mibz2 0.5.4 now speeds up until all ten physical cores of its test processor are
 
 17 November 2026 · 13 min read · [Research result](#6-what-comes-next-for-the-knee)
 {: .post-meta }
+
+Shipped in mibz2 [0.5.4](../benchmarks/history.md#release-0-5-4) ([changelog](https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#054---2026-11-17))
+{: .post-shipped }
 
 </div>
 

@@ -7,6 +7,210 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.12](https://github.com/lmmx/mibz2/compare/v0.5.11...v0.5.12) - 2026-11-22
+
+### <!-- 3 -->Performance
+
+- *(open)* construction stack, GradedHandle/Prefix15 ([#714](https://github.com/lmmx/mibz2/pull/714)) + Kitchen Sink, Wormhole L4/L5, Mechanisms splice ([#719](https://github.com/lmmx/mibz2/pull/719))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.5.11's crossover, the team threshold stays ([#713](https://github.com/lmmx/mibz2/pull/713))
+- *(blog)* a memory gain is a gain, the change our speed-only rule nearly shelved ([#706](https://github.com/lmmx/mibz2/pull/706))
+
+### <!-- 9 -->Other
+
+- *(release-scaling)* 0.5.11 against 0.5.10 on the i9; attribution row; CHANGELOG ([#712](https://github.com/lmmx/mibz2/pull/712))
+
+- **The Open kernel's construction stack (#719, on #714): 2–5% faster at 8, 10, 16 and 20
+  threads on the i9, with about 18% less retained scratch per worker.** It builds the Open
+  kernel's structures with less work and in less memory, from several research lines:
+  - Wormhole: GradedHandle, Prefix15 and BidiBottom (#714, then the L4 bottom coordinates);
+  - Kitchen Sink (Carbon, then Neon): strip and band packing, an interned dictionary and
+    pass-one row totals;
+  - Mechanisms: the elimination splice;
+  - Codex: the native port.
+
+  Measured natively (AMD EPYC 9V45, 4-CPU quota, 12 paired rounds), the six-block one-thread
+  kernel sum took 0.872 [0.869, 0.875] of master's time, and the four-worker pass 0.880
+  [0.877, 0.883]. Retained Open scratch fell from 1,377,699 to 1,128,960 bytes per worker after
+  all 431 blocks (−18.1%).
+  - **The adoption run on the i9** (`bench-open-stack`, open-stack/run-20261122T022924Z,
+    evidence 91f58375, sha256 50c832fd…1ba) used R4's rule, registered before the data. Wall,
+    head/base, unpinned, Wikidata ×4, 16 rounds:
+
+    | threads | wall | label |
+    |---|---|---|
+    | 6 | 0.952 [0.944, 0.961] | faster |
+    | 8 | 0.987 [0.960, 1.015] | inconclusive |
+    | 10 | 0.975 [0.967, 0.984] | faster |
+
+    CPU was 0.949–0.962, and median peak RSS 0.97–0.99. The diagnostic pass without two-ended
+    emission (head/nobi 1.001 / 0.991 / 0.989) puts the whole gain in the construction.
+  - **The output is byte-identical** on all 431 blocks. `examples/bzcat` at 1, 4, 8 and 10
+    threads matches `bzip2 -dc` on the whole Wikidata stream.
+
+**The paired run on CI: within noise on every corpus.** It ran v0.5.11 at 839631a1 against
+master at 69961392 (Benchmark run 44980197725, Intel Xeon Platinum 8573C, 4 CPUs, 10 rounds). At
+1–4 threads the Open kernel is not on the route there. Wikidata's wall, master over v0.5.11:
+
+| threads | 1 | 2 | 4 |
+|---|--:|--:|--:|
+| wall | 1.005 [0.997, 1.013] | 1.011 [0.997, 1.026] | 0.998 [0.975, 1.022] |
+
+Wikidata's peak RSS is 28 → 28, 56 → 57 and 86 → 84 MB.
+
+**The worker-count recalibration (RELEASING §5c): no trim moves.** `bench-recalibrate-stack`
+(recalibrate-stack/run-20261122T030603Z, evidence 9f203342, sha256 88d062e0…b2) measured every
+cell at master 53f7ecf9, pinned and unpinned. Every count keeps its shipped trim.
+- **The one near-miss:** pinned at 4 threads, the lazy 3/12 over the eager 3/12, wall 0.982
+  [0.966, 0.998] at 0.620 of the peak memory. Holm does not reject it among 12 cells, so it
+  isn't adopted. A separately registered memory-route confirmation (PERFORMANCE-POLICY §2) will
+  test it.
+- **MONODROMY's record 89,** frozen before the data, predicted that every trim but pinned 4
+  would stay. That held. The pinned-4 move went the predicted way but missed the bar.
+
+**Release scaling** (§5; release-scaling/run-20261122T035641Z, evidence 81341c9c, 10 rounds)
+against 0.5.11 on the i9, the modelled step:
+- 8 threads: +4.3% (+2.5, +6.2)
+- 10 threads: +2.7% (+1.7, +3.8)
+- 16 threads: +2.3% (+0.4, +4.1)
+- 20 threads: +1.9% (+0.0, +3.9)
+- 1, 2, 4 and 12 threads: within noise.
+- CPU: 0.5.11 takes 1.043–1.057× 0.5.12's from 8 to 20 threads.
+- Median peak RSS: unchanged, 62.3 → 61.5 MiB at 8 threads, 66.3 → 65.7 MiB at 10.
+- The run's own paired wall ratios, 0.5.11 over 0.5.12: 1.041 [1.025, 1.058] at 8 threads,
+  1.027 [1.023, 1.032] at 10, 1.022 [1.014, 1.030] at 16 and 1.048 [1.004, 1.093] at 20. At 1,
+  2, 4 and 12 threads they span 1: 0.995 [0.966, 1.024], 1.014 [0.992, 1.036], 0.998 [0.969,
+  1.027] and 1.002 [0.969, 1.035].
+- lbzip2 takes 5.02–7.55× 0.5.12's wall time.
+
+The step has its row in `docs/journal/release-attribution.md` (§5b).
+
+**The crossover** (§5a; `bench-crossover`, crossover/run-20261122T040736Z, evidence ab503838, 10 rounds on Wikidata): the team threshold stays. No forced arm beats the shipped decoder at any count.
+- **Teams:** `mibz2-team2` and `mibz2-team3` take 1.22–3.60× the shipped wall time; from 8 to 20 threads, 1.82–3.60× (at 10 threads, 2.271 and 1.827).
+- **One worker per thread:** `mibz2-workers-w` is never faster. Its interval spans 1 at 4, 5, 7 and 9 threads; elsewhere it takes 1.042–1.239×.
+
+**Caveats:**
+- **All the i9 figures are from one machine.** The trims apply only to that measured machine.
+- **At 8 threads the adoption run was inconclusive,** while the release scaling's paired 8-thread
+  ratio is 1.041 [1.025, 1.058]. The two runs differ in corpus (Wikidata ×4 against Wikidata),
+  placement (unpinned against one CPU a core beside a held spinner) and rounds (16 against 10).
+- **The attribution row uses the ledger's modelled step,** the lineage fit through lbzip2: 8
+  threads +4.3% (+2.5, +6.2) clears the bar; 20 threads' +1.9% does not.
+- **The recalibration's unpinned-10 DRAM diagnostic is void,** from a recipe bug; it decides
+  nothing.
+- **CI's 4 CPUs can't show the gain:** its 1–4 thread arms don't run Open.
+
+## [0.5.11](https://github.com/lmmx/mibz2/compare/v0.5.10...v0.5.11) - 2026-11-21
+
+### <!-- 1 -->Features
+
+- *(site)* why each release happened: changelog notes and linked posts on the History page ([#702](https://github.com/lmmx/mibz2/pull/702))
+
+### <!-- 3 -->Performance
+
+- *(open)* admit dense blocks (width certificate) with producer buffers in edges ([#703](https://github.com/lmmx/mibz2/pull/703))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.5.10's crossover, the team threshold stays ([#700](https://github.com/lmmx/mibz2/pull/700))
+- *(changelog)* 0.5.10, the memory diet's i9 result and the recalibration ([#698](https://github.com/lmmx/mibz2/pull/698))
+
+### <!-- 9 -->Other
+
+- *(release-scaling)* 0.5.10 against 0.5.9 on the i9 (release-scaling/run-20261121T130559Z); its attribution row ([#699](https://github.com/lmmx/mibz2/pull/699))
+
+- **Dense-block admission (#703): peak memory about 28% lower from 8 to 20 threads on the i9, and faster too.**
+  - **Admission:** the five densest full Wikidata blocks (r/n 0.15–0.21), which fell back to
+    Segmented at about 5.6 MiB per worker, now take the Open kernel under a cap. All 233 full
+    run-route blocks are admitted, where 228 were before.
+  - **Accepted as a memory gain** (PERFORMANCE-POLICY §2, #704), on a native paired run: peak
+    RSS 0.741 at 8 threads and 0.783 at 10, with wall within noise.
+  - **Byte-identical output** on all 431 blocks.
+
+**Release scaling** (§5; release-scaling/run-20261121T230111Z, evidence 4127c26f) against 0.5.10
+on the i9:
+- 8 threads: +2.1% (+1.2, +3.0)
+- 10 threads: +4.2% (+3.3, +5.1)
+- 12 to 20 threads: +3.6% to +4.8%
+- Median peak RSS: 87.0 → 63.4 MiB at 8 threads, 93.9 → 66.5 MiB at 10.
+
+The memory gain also gave wall time on the i9's shared L3, which the native run's 2 MiB-L2 box
+couldn't show. The step has its row in `docs/journal/release-attribution.md` (§5b).
+
+**The crossover** (§5a; `bench-crossover`, crossover/run-20261121T231207Z, evidence b91a7024, 10 rounds on Wikidata): the team threshold stays. No forced arm beats the shipped decoder at any count.
+- **Teams:** `mibz2-team2` and `mibz2-team3` take 1.08–8.21× the shipped wall time.
+- **One worker per thread:** `mibz2-workers-w` is never faster. Its interval spans 1 at 5, 7 and 9 threads; elsewhere it takes 1.037–1.383×.
+
+## [0.5.10](https://github.com/lmmx/mibz2/compare/v0.5.9...v0.5.10) - 2026-11-21
+
+### <!-- 3 -->Performance
+
+- *(open)* memory diet, Endpoint in edges and queues in out ([#692](https://github.com/lmmx/mibz2/pull/692))
+
+- **The Open kernel's memory diet (#692): 5–8% faster from 6 to 10 threads on the i9, at about
+  0.89 of the peak memory.** Two research lines' results, combined and ported natively:
+  - Wormhole's W1 (cycle 5) keeps the endpoint elimination's state inside `edges`' buffer, which
+    is dead until `edges` fills.
+  - Mechanisms' OutQ16 (cycle 16) stores the thin-run queues as 16-bit ranks in 1 KiB chunks of
+    the output buffer, which is dead until emit.
+
+  Measured natively, per-worker scratch falls from 4,236 to 1,200 KiB (0.283×), so 7–10 workers
+  fit the i9's 20 MiB L3. The adoption run (`bench-open-diet`, open-diet/run-20261121T121714Z,
+  evidence c56a1371, sha256 a0675fb1…96d2) used R4's rule, registered before the data. Wall,
+  head/base, unpinned:
+
+  | threads | wall | label |
+  |---|---|---|
+  | 6 | 0.952 [0.950, 0.955] | faster |
+  | 8 | 0.917 [0.894, 0.940] | faster |
+  | 10 | 0.931 [0.916, 0.946] | faster, the judged count |
+
+  CPU was 0.950 / 0.870 / 0.922, and median peak RSS 0.898 / 0.887 / 0.890.
+  - On CI's 4 CPUs the gain doesn't show: its 1–4 thread arms don't run Open. The paired bench
+    of v0.5.9 against master (run 44903833563, AMD EPYC 9V74) is within noise everywhere except
+    wikidata at 1 thread, at +0.8%.
+  - The output is byte-identical, and new tests cover the overflow chunks and the 2^16 epochs.
+
+- **The worker-count recalibration (RELEASING §5c): no trim moves.** `bench-recalibrate-diet`
+  (recalibrate-diet/run-20261121T124719Z, evidence 9326d856, sha256 643e6a32…3caa) measured
+  every cell at master 23e40f77:
+  - pinned at 4, 6, 8 and 10 threads;
+  - unpinned at 4, 6, 8, 10, 12, 16 and 20.
+
+  Holm rejected no alternative, so every reference stays. Wider arms are held back on memory, as
+  in 0.5.8's run. MONODROMY's record 88, frozen before the data, predicted that no trim would move.
+
+**Release scaling** (§5; release-scaling/run-20261121T130559Z, evidence 479eeb0e): against 0.5.9 the
+release is faster at 8 threads and above.
+- 8 threads: +6.5% (+5.9, +7.2)
+- 10 threads: +9.0% (+7.2, +10.8)
+- 12 to 20 threads: +5.2% to +7.4%
+
+The step has its row in `docs/journal/release-attribution.md` (§5b).
+
+**The crossover** (§5a; `bench-crossover`, crossover/run-20261121T131655Z, evidence 2e7e6526, 10 rounds on Wikidata): the team threshold stays. No forced arm beats the shipped decoder at any count.
+- **Teams:** `mibz2-team2` and `mibz2-team3` take 1.09–7.90× the shipped decoder's wall time.
+- **One worker per thread:** `mibz2-workers-w` is never faster. Its interval spans 1 at 5, 7 and 9 threads; at the other counts it takes 1.041–1.409×.
+
+### <!-- 4 -->Documentation
+
+- *(skills)* blog lessons from #689, the material's centre, our experiment, real figures ([#691](https://github.com/lmmx/mibz2/pull/691))
+- *(blog)* besieging hard problems, cheap checks first, after the Riemann proof ([#689](https://github.com/lmmx/mibz2/pull/689))
+- *(changelog)* 0.5.9's release scaling and crossover, the team threshold stays ([#688](https://github.com/lmmx/mibz2/pull/688))
+- *(blog)* fast alone, slow in a crowd, which speed-ups survive many cores ([#682](https://github.com/lmmx/mibz2/pull/682))
+
+## [0.5.9](https://github.com/lmmx/mibz2/compare/v0.5.8...v0.5.9) - 2026-11-21
+
+### <!-- 3 -->Performance
+
+- *(parallel)* the lazy kernel at 4 threads on the measured i9, unpinned ([#678](https://github.com/lmmx/mibz2/pull/678))
+
+### <!-- 4 -->Documentation
+
+- *(blog)* sixteen at a stroke, the fixed-width writes in mibz2 0.5.8's Open kernel ([#674](https://github.com/lmmx/mibz2/pull/674))
+
 - **0.5.8's worker-count recalibration (RELEASING §5c): one change, unpinned at 4 threads on the
   measured i9.** #668 changes the open kernel's per-block work, so every trim was measured again
   on master at 70b18ca4 (`just bench-recalibrate-058`, registered in
@@ -20,6 +224,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Every other trim is unchanged: pinned at 4 (eager 3/12), 6, 8 and 10 threads, where the pinned
   family adopted nothing, and unpinned at 6, 8, 10, 12, 16 and 20. So are the plan,
   `LAZY_FROM_THREADS` and every other machine. The output is byte-identical.
+
+**Release scaling** (§5; release-scaling/run-20261121T094127Z, evidence 221dadcb, #685): no
+step from 0.5.8 reaches 3% at any count, so the release adds no attribution row. The run pins
+its threads, so #678's unpinned 4-thread cell isn't on its route.
+
+**The crossover** (§5a; `bench-crossover`, crossover/run-20261121T095223Z, evidence 9f0bfba2,
+10 rounds on Wikidata): the team threshold stays. No forced arm beats the shipped decoder at any
+count.
+- **Teams:** `mibz2-team2` and `mibz2-team3` take 1.07–7.34× the shipped wall time.
+- **One worker per thread:** `mibz2-workers-w` is never faster. Its interval spans 1 at 5, 7 and 9
+  threads; elsewhere it takes 1.064–1.621× the shipped wall time.
 
 ## [0.5.8](https://github.com/lmmx/mibz2/compare/v0.5.7...v0.5.8) - 2026-11-21
 
