@@ -81,6 +81,18 @@ const NARROW_NODES: usize = 1 << 16;
 /// A rule's words in the arena: left, right, len, first
 const RULE: usize = 4;
 
+// Only live node handles carry a length. Rule children remain plain ids. Each
+// ordinary step consumes at least one row and makes at most one rule. A spiral
+// of q steps consumes at least q rows and makes at most 2q rules by squaring,
+// so every id is at most 256 + 2 * 900_000 and fits in the low 22 bits.
+const ID_BITS: u32 = 22;
+const ID_MASK: u32 = (1 << ID_BITS) - 1;
+const SATURATED: u32 = u32::MAX >> ID_BITS;
+
+fn literal(byte: u8) -> u32 {
+    (1 << ID_BITS) | (u32::from(byte) + 1)
+}
+
 /// The width certificate's line (the Mechanisms line's cycle 19, Theorem 19.2a,
 /// `docs/journal/2026-11-21-carbon-cycle19-unified-synthesis.md` on
 /// `research/carbon-word-transport`): no step of the elimination widens a node, so a run of
@@ -228,6 +240,14 @@ impl<L: Links> Elim<'_, L> {
         L::set_prev(self.a, n, side, p);
     }
 
+    /// The successor of a tail is the sentinel on this side.
+    #[inline(always)]
+    fn pop_tail(&mut self, id: u32, side: usize) {
+        let prev = L::prev(self.a, id, side);
+        L::set_next(self.a, prev, side, 0);
+        L::set_prev(self.a, 0, side, prev);
+    }
+
     #[inline(always)]
     fn insert(&mut self, at: u32, id: u32, side: usize) {
         let next = L::next(self.a, at, side);
@@ -260,10 +280,16 @@ impl<L: Links> Elim<'_, L> {
             return left;
         }
         let id = ((self.top - self.base) / RULE) as u32 + 257;
-        let len = self.len(left) + self.len(right);
+        let (left_len, right_len) = (left >> ID_BITS, right >> ID_BITS);
+        let (left, right) = (left & ID_MASK, right & ID_MASK);
+        let len = if left_len < SATURATED && right_len < SATURATED {
+            left_len + right_len
+        } else {
+            self.len(left) + self.len(right)
+        };
         self.a[self.top..self.top + RULE].copy_from_slice(&[left, right, len, u32::MAX]);
         self.top += RULE;
-        id
+        (len.min(SATURATED) << ID_BITS) | id
     }
 
     /// `word` repeated `q` times (`q > 0`), by squaring: at most `SPIRAL_RULES - 1` rules
@@ -335,23 +361,23 @@ impl<L: Links> Elim<'_, L> {
             left -= w;
             taken += 1;
             if x == y {
-                self.cut(x, 0);
-                self.cut(x, 1);
+                self.pop_tail(x, 0);
+                self.pop_tail(x, 1);
                 continue;
             }
             let word = self.join(self.word(x), self.word(y));
             if aw <= bw {
-                self.cut(x, 0);
+                self.pop_tail(x, 0);
                 self.insert(y, x, 0);
                 self.set_word(x, word);
                 if aw == bw {
                     self.cut(y, 0);
-                    self.cut(y, 1);
+                    self.pop_tail(y, 1);
                 } else {
                     self.set_width(y, bw - w);
                 }
             } else {
-                self.cut(y, 1);
+                self.pop_tail(y, 1);
                 self.insert(x, y, 1);
                 self.set_word(y, word);
                 self.set_width(x, aw - w);
@@ -468,7 +494,7 @@ impl Kernel {
         // the widest node, for the width certificate (`CERTIFIED_WIDTH`)
         let mut widest = 0;
         for s in strips.iter() {
-            e.node(s.width, u32::from(s.byte) + 1);
+            e.node(s.width, literal(s.byte));
             widest = widest.max(s.width);
         }
         // the lists, as the nodes are made: on side 0 the image gaps (its terminals) then the
@@ -569,7 +595,7 @@ impl Kernel {
             let end = k + thin[a];
             while k < end {
                 let node_width = e.width(id);
-                let node_word = e.word(id);
+                let node_word = e.word(id) & ID_MASK;
                 let width = (end - k).min(node_width - in_node);
                 // (the port's) every band takes a row at least, so the loop always ends; a wrong
                 // construction panics here rather than looping (the mutation check's finding)
@@ -605,5 +631,61 @@ impl Kernel {
         }
         assert_eq!(id, 0);
         cursors
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn graded_word_lengths_across_saturation() {
+        let mut arena = [0; RULE * 40];
+        let mut e = Elim::<Narrow> {
+            a: &mut arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        let run = e.power(literal(255), SATURATED - 1);
+        let mut handle = e.join(0, run);
+        let mut spelling = Vec::new();
+        for len in SATURATED - 1..=SATURATED + 2 {
+            assert_eq!(handle >> ID_BITS, len.min(SATURATED));
+            assert_eq!(e.len(handle & ID_MASK), len);
+            // Memo offsets refer to this same growing spelling buffer.
+            let start = spelling.len();
+            e.append(handle & ID_MASK, &mut Vec::new(), &mut spelling);
+            assert_eq!(
+                &spelling[start..start + (SATURATED - 1) as usize],
+                &[255; 1022]
+            );
+            assert!(spelling[start + 1022..].iter().all(|&b| b == 0));
+            handle = e.join(handle, literal(0));
+        }
+    }
+
+    #[test]
+    fn popping_a_tail_relinks_only_its_side() {
+        let mut arena = [0; 3 * Narrow::STRIDE];
+        let mut e = Elim::<Narrow> {
+            a: &mut arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        for side in 0..2 {
+            let mut list = (0, 0);
+            e.append_to(&mut list, 1, side);
+            e.append_to(&mut list, 2, side);
+            e.close(side, list, (0, 0));
+        }
+        e.pop_tail(2, 1);
+        assert_eq!(Narrow::next(e.a, 1, 1), 0);
+        assert_eq!(Narrow::prev(e.a, 0, 1), 1);
+        assert_eq!(Narrow::next(e.a, 1, 0), 2);
+        assert_eq!(Narrow::prev(e.a, 0, 0), 2);
     }
 }
