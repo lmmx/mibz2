@@ -230,6 +230,13 @@ Replace the rigid "slide along the path" with motion from the animals:
   catches up;
 - **the wings beat or settle** with the gait, slowly;
 - ease every move, and give the creatures moments of stillness.
+- **the moonwalker:** one creature walks a circuit round the edge of a bubble, feet on its
+  border, along an SVG `animateMotion` path (`MOONWALK` in the page's `build_html.py`). Today it
+  just glides round, body rigid. Make it a real walk: the feet plant and slide back against the
+  direction of travel (the moonwalk illusion: the planted foot slides, the other heel lifts and
+  rolls); the body bobs a little with each step; the head turns at the corners; it pauses
+  briefly at one corner. It must stay attached to the bubble's edge at every frame, on any
+  bubble size.
 
 Keep it cheap: SMIL or CSS transforms on a modest number of points (this page runs on phones).
 Say in the README what each motion costs.
