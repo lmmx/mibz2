@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 70: Final Round 6 Handoff (Cycles 51-70) — Complete Answers to Charges 1-4, Keep/Kill Ledger & Production Action Plan"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c70_round6_final_handoff"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "538.5 ms 1T on a3f26aa01 (~516 ms w/ AVX2+ZS52)", D = "99.15% parallelizable under PR4 W2M_L3 (0 scanner thread, strict FIFO)", B = "10.82 -> 4.6 -> ~3.8 B/B DRAM at 10W (0.728x-0.976x RSS)", Q = "0 hot notify_all, -42%..-68% vcsw", M = "3 x 2 MiB (6 MiB) + 0 B s.ll + #739 12 MiB ReadyRing" }
+evidence = "Final Round 6 Handoff (Cycles 51-70) on research/carbon-wormhole, verified against both baseline 3296195e3 (#739) and newly merged origin/master a3f26aa01 (#739 + Mechanisms #745), strictly docs-only diff vs origin/master. Delivers complete closure on all 4 charges: (1) Charge 1 re-diagnosis & 10W DRAM B/B trajectory (10.82 -> 4.6 -> ~3.8 B/B; W0 & W1 bind, W3/W4/W5 closed); (2) Charge 2 28-arm i9-10900K workers x slots grid at 10/12/16/20T (grid only, no hardcoded table; predicts 9W/27 at 53.2 ms on a3f26aa01 and 10W/30 at 48.5-50.0 ms on +PR4); (3) Charge 3 PR 2 closure (0 hot notify_all remain; L1_AtomicFast & Str_TrimLock killed; port nothing more from PR 2); (4) Charge 4 hardened, zero-rework-verified PR 4 BlockSpan streaming interface spec (W2M_L3 6 MiB default + W4M_L2 co-champion, Mandatory Invariants #1-#6, 9/9 adversarial pass, drop-in Pr4StreamDecoder with 0 scanner thread, zero-copy SliceWindow<I> for decode_parallel, strict FIFO after killing LPT, activation gate W >= phys_cores) + Theorem 52.1 ZeroShift52 (-46.6% copy_within, 0.8944x RLE1+CRC). All 14 honest kills recorded."
