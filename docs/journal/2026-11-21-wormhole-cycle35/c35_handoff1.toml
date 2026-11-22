@@ -1,0 +1,30 @@
+name = "Wormhole/Neon Cycle 35 (Interim Handoff #1): Phase-1 Cumulative Scaling Stack (P1 = C32 + H123 + C33b)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "p1a_alloc_and_feeder_pool"
+inputs = ["records", "C", "p", "n"]
+output = "pooled_blocks"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "n", Q = "0", M = "slots * 960 KiB + 3 MiB" }
+evidence = "C32 (A1 exact-fit 960 KiB out + A2 recycled 1 MiB feeder pool + zero-copy ChannelSource swap): 15-rd 4W 0.9781 [0.9678, 0.9886], minflt -23.6% (4W) / -20.9% (10W), sys_ms -19.7%."
+
+[[edge]]
+id = "p1b_ring_splitcv_deque"
+inputs = ["pooled_blocks"]
+output = "ordered_blocks"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "n", Q = "0", M = "cap * 32 B" }
+evidence = "C34 (H12 O(1) power-of-2 ring ready array + split directed cv_reader/cv_scanner + H123 bounded VecDeque job queue, piggybacked pools): 15-rd 4W 0.9642 [0.9507, 0.9778] (even with Read::read copy!), vcsw -48.1%, wakes -87% to -97%."
+
+[[edge]]
+id = "p1c_bufread_zerocopy"
+inputs = ["ordered_blocks"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "T_reader_zero_copy", B = "1.0 * n", Q = "0", M = "slots * 960 KiB" }
+evidence = "C33b (std::io::BufRead zero-copy output assembly): 15-rd 4W 0.9550 [0.9359, 0.9745] on 211 MB Wikidata (A/A 0.9950 [0.9844, 1.0057]) and 0.9751 [0.9558, 0.9948] on hetero_60b; sys_ms -25.5%, minflt -25.3% (4W) / -27.2% (10W), -2.0 B/B DRAM traffic; exact edge-case/error parity."

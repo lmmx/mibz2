@@ -1,0 +1,35 @@
+EDGE-CASE PARITY: PASS (empty, bad-header, truncated prefix exact, bit-flip error)
+
+=== 15-ROUND ROTATED FRESH-PROCESS 4W CUMULATIVE ABLATION (wikidata_431b_210m) ===
+Arm              med_ms   ratio vs MasterA [95%]  user_ms  sys_ms  minflt   vcsw  rss_MB
+MasterA          364.10 1.0000 [1.0000, 1.0000]   650.99   32.62   15876    729  106.16
+MasterB          361.68 0.9950 [0.9844, 1.0057]   640.61   37.12   15701    700  106.16
+P1a_C32          355.55 0.9781 [0.9678, 0.9886]   640.11   26.21   12136    435  106.16
+P1b_C32_H123     352.42 0.9642 [0.9507, 0.9778]   638.08   27.45   11991    378  106.16
+P1c_Full_ZC      348.13 0.9550 [0.9359, 0.9745]   626.35   24.29   11865    384  106.16
+
+=== 15-ROUND ROTATED FRESH-PROCESS 4W CUMULATIVE ABLATION (hetero_60b) ===
+Arm              med_ms   ratio vs MasterA [95%]  user_ms  sys_ms  minflt   vcsw  rss_MB
+MasterA          152.78 1.0000 [1.0000, 1.0000]   247.98   35.97   20324    112  106.16
+MasterB          152.52 0.9875 [0.9707, 1.0047]   247.78   36.94   20024    107  106.16
+P1a_C32          151.47 0.9908 [0.9723, 1.0098]   247.84   34.44   17654     79  106.16
+P1b_C32_H123     148.92 0.9814 [0.9630, 1.0001]   246.38   32.97   17481     64  106.16
+P1c_Full_ZC      150.93 0.9751 [0.9558, 0.9948]   241.56   33.76   18060     67  106.16
+
+=== COLD-START W=10 & W=16 FINAL PHASE-1 CHECK (wikidata_431b_210m, 5-rd median) ===
+
+--- W = 10 ---
+Arm             wall_ms  user_ms  sys_ms  minflt   vcsw  rss_MB
+MasterA          374.64   670.20   52.12   26994    393  106.16
+MasterB          372.66   683.48   44.99   27669    288  106.16
+P1a_C32          360.78   653.42   50.75   21348    272  106.16
+P1b_C32_H123     365.06   670.59   42.45   20200    434  106.16
+P1c_Full_ZC      383.74   653.85   43.79   19644    410  106.16
+
+--- W = 16 ---
+Arm             wall_ms  user_ms  sys_ms  minflt   vcsw  rss_MB
+MasterA          392.93   674.58   88.07   33146    466  122.29
+MasterB          424.56   705.95   55.51   29659    319  109.39
+P1a_C32          376.47   683.00   53.47   31122    243  127.30
+P1b_C32_H123     390.72   699.59   59.56   28167    471  110.56
+P1c_Full_ZC      382.64   687.33   57.48   29002    555  114.99
