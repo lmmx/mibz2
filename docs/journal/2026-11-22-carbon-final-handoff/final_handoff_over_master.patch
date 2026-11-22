@@ -1,0 +1,4397 @@
+diff --git a/examples/ab.rs b/examples/ab.rs
+index 2f6c163..985d95a 100644
+--- a/examples/ab.rs
++++ b/examples/ab.rs
+@@ -1310,6 +1310,8 @@ fn decode(
+             last();
+             Ok(())
+         }
++        "mibz2-parscan" if threads == 1 => drain(mibz2::BzReader::new(open()?), h, last),
++        "mibz2-parscan" => drain(mibz2::BzReader::parscan(open()?, threads), h, last),
+         #[cfg(mibz2_alternatives)]
+         "fbz" => {
+             let opts = fbz::DecodeOptions {
+diff --git a/src/block.rs b/src/block.rs
+index b6b6d94..e878337 100644
+--- a/src/block.rs
++++ b/src/block.rs
+@@ -78,11 +78,34 @@ pub fn read_item(br: &mut Bits, level: u32, syms: Vec<u16>) -> Result<Item, (Err
+ /// its CRC. A block found to run past the input (`br.overran()`) is the caller's to judge.
+ ///
+ /// Zero-allocation `read_item` using explicit `ScanScratch` (`Scanner<S>` and parallel workers).
++#[inline]
+ pub fn read_item_with_scratch(
++    br: &mut Bits,
++    level: u32,
++    syms: Vec<u16>,
++    scratch: &mut ScanScratch,
++) -> Result<Item, (ErrorKind, Vec<u16>)> {
++    read_item_core(br, level, syms, scratch, false)
++}
++
++/// `read_item_with_scratch` without upfront `MAX_SYMS` (`1.80 MiB`) reservation: grows `syms`
++/// in quantized steps up to `(sel_cap * GROUP + 66).min(MAX_SYMS)` for bounded-memory parallel scanning.
++#[inline]
++pub(crate) fn read_item_tight(
++    br: &mut Bits,
++    level: u32,
++    syms: Vec<u16>,
++    scratch: &mut ScanScratch,
++) -> Result<Item, (ErrorKind, Vec<u16>)> {
++    read_item_core(br, level, syms, scratch, true)
++}
++
++fn read_item_core(
+     br: &mut Bits,
+     level: u32,
+     mut syms: Vec<u16>,
+     scratch: &mut ScanScratch,
++    tight: bool,
+ ) -> Result<Item, (ErrorKind, Vec<u16>)> {
+     macro_rules! fail {
+         ($k:expr) => {
+@@ -213,15 +236,16 @@ pub fn read_item_with_scratch(
+     }
+ 
+     let eob = (alpha - 1) as u16;
+-    if syms.capacity() < MAX_SYMS {
+-        syms.clear();
+-        syms.reserve(MAX_SYMS);
+-    }
+     let max_out = (sel_cap * GROUP + 66).min(MAX_SYMS);
+-    if syms.len() < max_out {
+-        syms.resize(max_out, 0);
++    if !tight {
++        if syms.capacity() < MAX_SYMS {
++            syms.clear();
++            syms.reserve(MAX_SYMS);
++        }
++    } else if syms.capacity() < max_out {
++        let cap_target = max_out.max(65_536).next_power_of_two().min(MAX_SYMS);
++        syms.reserve_exact(cap_target.saturating_sub(syms.len()));
+     }
+-    let out = &mut syms[..max_out];
+     let sel_buf = &scratch.selectors[..sel_cap];
+     let mut n = 0usize;
+     let mut sel = 0usize;
+@@ -231,12 +255,15 @@ pub fn read_item_with_scratch(
+         if sel >= sel_cap {
+             break Err(ErrorKind::SelectorOverrun);
+         }
++        if n + 66 > syms.len() && syms.len() < max_out {
++            syms.resize((n + 8192).min(max_out), 0);
++        }
+         let t = &scratch.tables[sel_buf[sel] as usize];
+         sel += 1;
+         let use_tail = n + 66 > max_out;
+         let g_res = {
+             let g_out: &mut [u16; 66] = if !use_tail {
+-                (&mut out[n..n + 66]).try_into().unwrap()
++                (&mut syms[n..n + 66]).try_into().unwrap()
+             } else {
+                 &mut tail_buf
+             };
+@@ -253,7 +280,7 @@ pub fn read_item_with_scratch(
+             Err(err) => break Err(err),
+         };
+         if use_tail {
+-            out[n..n + k].copy_from_slice(&tail_buf[..k]);
++            syms[n..n + k].copy_from_slice(&tail_buf[..k]);
+         }
+         n += k;
+         if hit_eob {
+diff --git a/src/crc.rs b/src/crc.rs
+index 5265586..35e3b81 100644
+--- a/src/crc.rs
++++ b/src/crc.rs
+@@ -6,8 +6,8 @@ use super::Kernels;
+ 
+ pub const POLY: u32 = 0x04C1_1DB7;
+ 
+-const fn tables() -> [[u32; 256]; 8] {
+-    let mut t = [[0u32; 256]; 8];
++const fn tables() -> [[u32; 256]; 16] {
++    let mut t = [[0u32; 256]; 16];
+     let mut i = 0;
+     while i < 256 {
+         let mut c = (i as u32) << 24;
+@@ -24,7 +24,7 @@ const fn tables() -> [[u32; 256]; 8] {
+         i += 1;
+     }
+     let mut j = 1;
+-    while j < 8 {
++    while j < 16 {
+         let mut i = 0;
+         while i < 256 {
+             let p = t[j - 1][i];
+@@ -36,7 +36,7 @@ const fn tables() -> [[u32; 256]; 8] {
+     t
+ }
+ 
+-static TABLES: [[u32; 256]; 8] = tables();
++static TABLES: [[u32; 256]; 16] = tables();
+ 
+ /// The CRC of `data`, by the kernels given
+ pub fn crc32(data: &[u8], k: Kernels) -> u32 {
+@@ -61,22 +61,35 @@ pub fn update_with(s: u32, data: &[u8], k: Kernels) -> u32 {
+ }
+ 
+ /// The CRC register after `data`, from `s` (no initial or final xor): a byte at a time
+-/// as bzip2 takes it, 8 at a time where it can
++/// as bzip2 takes it, 16 (and 8) at a time where it can
+ pub fn update(mut s: u32, data: &[u8]) -> u32 {
+     let t = &TABLES;
+-    let mut chunks = data.chunks_exact(8);
++    let mut chunks = data.chunks_exact(16);
+     for c in &mut chunks {
+         let hi = s ^ u32::from_be_bytes([c[0], c[1], c[2], c[3]]);
+-        s = t[7][(hi >> 24) as usize]
+-            ^ t[6][((hi >> 16) & 0xff) as usize]
+-            ^ t[5][((hi >> 8) & 0xff) as usize]
+-            ^ t[4][(hi & 0xff) as usize]
+-            ^ t[3][c[4] as usize]
+-            ^ t[2][c[5] as usize]
+-            ^ t[1][c[6] as usize]
+-            ^ t[0][c[7] as usize];
++        let a = (t[15][(hi >> 24) as usize] ^ t[14][((hi >> 16) & 0xff) as usize])
++            ^ (t[13][((hi >> 8) & 0xff) as usize] ^ t[12][(hi & 0xff) as usize]);
++        let b = (t[11][c[4] as usize] ^ t[10][c[5] as usize])
++            ^ (t[9][c[6] as usize] ^ t[8][c[7] as usize]);
++        let d = (t[7][c[8] as usize] ^ t[6][c[9] as usize])
++            ^ (t[5][c[10] as usize] ^ t[4][c[11] as usize]);
++        let e = (t[3][c[12] as usize] ^ t[2][c[13] as usize])
++            ^ (t[1][c[14] as usize] ^ t[0][c[15] as usize]);
++        s = (a ^ b) ^ (d ^ e);
+     }
+-    for &b in chunks.remainder() {
++    let rem = chunks.remainder();
++    let tail = if rem.len() >= 8 {
++        let c = &rem[..8];
++        let hi = s ^ u32::from_be_bytes([c[0], c[1], c[2], c[3]]);
++        s = (t[7][(hi >> 24) as usize] ^ t[6][((hi >> 16) & 0xff) as usize])
++            ^ (t[5][((hi >> 8) & 0xff) as usize] ^ t[4][(hi & 0xff) as usize])
++            ^ (t[3][c[4] as usize] ^ t[2][c[5] as usize])
++            ^ (t[1][c[6] as usize] ^ t[0][c[7] as usize]);
++        &rem[8..]
++    } else {
++        rem
++    };
++    for &b in tail {
+         s = (s << 8) ^ t[0][((s >> 24) as u8 ^ b) as usize];
+     }
+     s
+diff --git a/src/huff.rs b/src/huff.rs
+index 81d7576..34b6883 100644
+--- a/src/huff.rs
++++ b/src/huff.rs
+@@ -119,23 +119,31 @@ impl Huff {
+         let mut zn_ranges = [(0i64, -1i64); 11];
+         let mut a = 0i64;
+         let mut filled_to = 0usize;
++        let alpha_i32 = alpha as i32;
+ 
+         for zn in min_len..=LUT_BITS {
++            let zu = zn as usize;
+             let top = (1i64 << zn) - 1;
+-            let hi = (self.limit[zn as usize] as i64).min(top);
+-            zn_ranges[zn as usize] = (a, hi);
++            let hi = (limit[zu] as i64).min(top);
++            zn_ranges[zu] = (a, hi);
+             let sh = LUT_BITS - zn;
+-            for p in a..=hi {
+-                let e = match self.symbol(zn, p as i32) {
+-                    Some(s) if s == eob => EOB_FAST | zn,
+-                    Some(s) => (1u32 << CNT_SH) | ((s as u32) << SYM1) | (zn << LEN1) | zn,
+-                    None => BAD,
++            let single_base = (1u32 << CNT_SH) | (zn << LEN1) | zn;
++            for (idx_sym, p) in ((a as i32) - base[zu]..).zip(a..=hi) {
++                let e = if (0..alpha_i32).contains(&idx_sym) {
++                    let s = self.perm[idx_sym as usize];
++                    if s == eob {
++                        EOB_FAST | zn
++                    } else {
++                        single_base | ((s as u32) << SYM1)
++                    }
++                } else {
++                    BAD
+                 };
+                 let end_idx = ((p + 1) << sh) as usize;
+                 self.lut[(p << sh) as usize..end_idx].fill(e);
+                 filled_to = end_idx;
+             }
+-            end_at_len[zn as usize] = filled_to;
++            end_at_len[zu] = filled_to;
+             a = 2 * a.max(hi + 1);
+         }
+ 
+@@ -144,28 +152,34 @@ impl Huff {
+                 self.lut[filled_to..].fill(BAD);
+             } else {
+                 self.lut[filled_to..].fill(0);
++                let rem_len = LUT_LEN - filled_to;
+                 let mut ranges = [(0u32, 0i64, -1i64); 10];
+-                let mut d_arr = [0u8; LUT_LEN];
+-                let mut max_root_w = filled_to;
++                let mut d_tail = [0u8; LUT_LEN];
++                let d_slice = &mut d_tail[..rem_len];
++                let mut max_rel_w = 0usize;
+                 let start_zn = (LUT_BITS + 1).max(min_len);
+                 let mut a_hi = a;
+                 for zn in start_zn..=(max_l as u32) {
+                     let top = (1i64 << zn) - 1;
+-                    let hi = (self.limit[zn as usize] as i64).min(top);
++                    let hi = (limit[zn as usize] as i64).min(top);
+                     ranges[(zn - 11) as usize] = (zn, a_hi, hi);
+                     if hi >= a_hi {
+                         let sh = zn - LUT_BITS;
+                         let w_lo = (a_hi >> sh) as usize;
+                         let w_hi = ((hi >> sh) as usize).min(LUT_LEN - 1);
+-                        d_arr[w_lo..=w_hi].fill(sh as u8);
+-                        if w_hi + 1 > max_root_w {
+-                            max_root_w = w_hi + 1;
++                        if w_hi >= filled_to {
++                            let r_lo = w_lo.saturating_sub(filled_to);
++                            let r_hi = w_hi - filled_to;
++                            d_slice[r_lo..=r_hi].fill(sh as u8);
++                            if r_hi + 1 > max_rel_w {
++                                max_rel_w = r_hi + 1;
++                            }
+                         }
+                     }
+                     a_hi = 2 * a_hi.max(hi + 1);
+                 }
+                 let mut sub_used = 0usize;
+-                for (w, &d_b) in d_arr[filled_to..max_root_w].iter().enumerate() {
++                for (w, &d_b) in d_slice[..max_rel_w].iter().enumerate() {
+                     let d_w = d_b as u32;
+                     if d_w != 0 && sub_used + (1usize << d_w) <= SUB_CAP {
+                         self.lut[filled_to + w] = SUB_PTR | (d_w << 16) | (sub_used as u32);
+@@ -179,6 +193,7 @@ impl Huff {
+                             continue;
+                         }
+                         let sh = zn - LUT_BITS;
++                        let base_z = base[zn as usize];
+                         for p in lo_c..=hi_c {
+                             let e_root = self.lut[(p >> sh) as usize];
+                             if (e_root & SUB_PTR) == 0 {
+@@ -186,8 +201,8 @@ impl Huff {
+                             }
+                             let d_w = (e_root >> 16) & 15;
+                             let sub_off = (e_root & 0xffff) as usize;
+-                            let idx_sym = (p as i32) - self.base[zn as usize];
+-                            let se = if (0..self.alpha).contains(&idx_sym) {
++                            let idx_sym = (p as i32) - base_z;
++                            let se = if (0..alpha_i32).contains(&idx_sym) {
+                                 (self.perm[idx_sym as usize] << 6) | (zn as u16)
+                             } else {
+                                 SUB_BAD_U16
+@@ -223,8 +238,9 @@ impl Huff {
+                 let s1 = (e0 >> SYM1) & 0x1ff;
+                 if let Some((off0, s0)) = tpl {
+                     let delta = s1.wrapping_sub(s0) << SYM1;
+-                    for u in 0..u_lim {
+-                        self.lut[off_p + u] = self.lut[off0 + u].wrapping_add(delta);
++                    let (head, tail) = self.lut.split_at_mut(off_p);
++                    for (dst, &src) in tail[..u_lim].iter_mut().zip(&head[off0..off0 + u_lim]) {
++                        *dst = src.wrapping_add(delta);
+                     }
+                 } else {
+                     for u in 0..u_lim {
+diff --git a/src/lib.rs b/src/lib.rs
+index 4c16e3f..afe64a8 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -105,6 +105,7 @@ pub mod itrace;
+ pub mod mtf;
+ // the open kernel, the workers' kernel wherever `LazyCells` ran (`bwt::OpenCells`)
+ mod open;
++pub mod par_scan;
+ pub mod parallel;
+ #[cfg(feature = "phase-counters")]
+ #[doc(hidden)]
+@@ -593,6 +594,59 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
+     Ok(out)
+ }
+ 
++/// `decode_owned` for a block whose `runs::front` was already executed on a parallel
++/// front-end scanner while `syms` was L2-hot on that scanner's core (`ParScanHub`).
++pub(crate) fn decode_prepared_runs<I: bwt::InverseBwt>(
++    p: runs::PreparedRuns,
++    k: Kernels,
++    s: &mut Scratch<I>,
++    take: impl FnOnce(usize, Vec<u16>, runs::CountsPer) -> Vec<u8>,
++) -> Result<Vec<u8>, ErrorKind> {
++    let n = p.rows?;
++    if p.orig_ptr as usize >= n {
++        return Err(ErrorKind::BadOrigPtr);
++    }
++    let prev_records = s.runs.install_prepared(p.records, &p.counts_per);
++    let mut out = take(n, prev_records, p.counts_per);
++    #[cfg(feature = "trace")]
++    trace::mark_sized(
++        trace::Kind::InvertStart,
++        trace::NONE,
++        n as u64,
++        trace::UNREAD,
++    );
++    let done = s.inverse.invert_runs(&s.runs, n, p.orig_ptr, &mut out, k);
++    #[cfg(feature = "trace")]
++    trace::mark(trace::Kind::InvertEnd, trace::NONE);
++    if !done {
++        debug_assert!(false, "the run records don't tile the block");
++        return Err(ErrorKind::Internal(
++            "the run records don't tile the block".into(),
++        ));
++    }
++    #[cfg(any(test, feature = "trace"))]
++    let ll_before = s.ll.as_ptr();
++    let computed = rle::unrle_in_place(&mut out, &mut s.rle_runs, &mut s.ll, k);
++    #[cfg(any(test, feature = "trace"))]
++    {
++        let route = if s.inverse.took_cells() {
++            trace::OutputRoute::Cells
++        } else {
++            trace::OutputRoute::Runs
++        };
++        let staged = s.ll.as_ptr() != ll_before;
++        s.record_owned(route, n, p.max_len, k, Some(&out), staged);
++    }
++    let computed = computed?;
++    if computed != p.crc {
++        return Err(ErrorKind::BlockCrc {
++            stored: p.crc,
++            computed,
++        });
++    }
++    Ok(out)
++}
++
+ /// `decode_block`'s column route after the move-to-front (`n` rows in `ll`): the inverse,
+ /// in place where the kernel can, then RLE1 and the CRC (`finish`), appended to `out`
+ fn column<I: bwt::InverseBwt>(
+@@ -703,6 +757,47 @@ pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
+     Ok(out)
+ }
+ 
++/// A whole .bz2 decoded on `threads` threads (at least 1), in order, using the
++/// push-streaming parallel front end (`StreamDecoder::parscan`).
++pub fn decode_parscan(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
++    if threads <= 1 {
++        return decode(data);
++    }
++    let dec = StreamDecoder::parscan(
++        threads,
++        parallel::SLOTS_PER_THREAD * threads.max(1),
++        Kernels::detect(),
++    );
++    let mut out = Vec::with_capacity(data.len().saturating_mul(4));
++    std::thread::scope(|s| {
++        s.spawn(|| {
++            for c in data.chunks(4 << 20) {
++                let mut chunk = dec.spare();
++                chunk.clear();
++                chunk.extend_from_slice(c);
++                if dec.write(chunk).is_err() {
++                    return;
++                }
++            }
++            dec.close();
++        });
++        let mut spent = Vec::new();
++        let res = loop {
++            match dec.read_block(spent) {
++                Ok(None) => break Ok(()),
++                Ok(Some(b)) => {
++                    out.extend_from_slice(&b);
++                    spent = b;
++                }
++                Err(e) => break Err(e),
++            }
++        };
++        dec.cancel();
++        res
++    })?;
++    Ok(out)
++}
++
+ /// `decode` with the kernels `k` and the inverse-BWT kernel `I`: `bwt::Cells` is
+ /// the calling-thread default; `bwt::Segmented` is its fallback and reference,
+ /// and `bwt::Plain` is the plain walk.
+diff --git a/src/mtf.rs b/src/mtf.rs
+index eb67733..aea8bb4 100644
+--- a/src/mtf.rs
++++ b/src/mtf.rs
+@@ -29,49 +29,122 @@ pub fn mtf(
+ /// A run's weight (N in libbzip2) refused at this, so its length cannot overflow
+ const MAX_RUN_WEIGHT: u32 = 2 * 1024 * 1024;
+ 
++#[inline(always)]
++pub(crate) fn mtf_move_fast15(list: &mut [u8; 256], nn: usize) -> u8 {
++    let c = list[nn];
++    if nn < 15 {
++        let w = u128::from_le_bytes(list[..16].try_into().unwrap());
++        let hi_mask = !0u128 << ((nn + 1) * 8);
++        let w_new = (w & hi_mask) | ((w << 8) & !hi_mask) | (c as u128);
++        list[..16].copy_from_slice(&w_new.to_le_bytes());
++    } else {
++        list.copy_within(0..nn, 1);
++        list[0] = c;
++    }
++    c
++}
++
+ pub fn mtf_scalar(
+     b: &Symbols,
+     ll: &mut Vec<u8>,
+     counts: &mut [u32; 256],
+ ) -> Result<usize, ErrorKind> {
++    let max = b.max_len;
+     ll.clear();
+-    ll.reserve(b.max_len);
++    ll.reserve(max);
+     *counts = [0; 256];
+-    let mut list: [u8; 256] = std::array::from_fn(|i| i as u8);
++    let mut list = b.seq_to_unseq;
+     let (mut run, mut weight) = (0u32, 1u32);
+-    for &s in &b.syms {
+-        if s <= 1 {
+-            if weight >= MAX_RUN_WEIGHT {
+-                return Err(ErrorKind::RunTooLong);
++    let mut n = 0usize;
++    let mut next = CHECKPOINT;
++    let mut syms = b.syms.iter();
++
++    macro_rules! step_byte {
++        ($s:expr) => {{
++            let nn = (($s - 1) as usize).min(255);
++            let c = mtf_move_fast15(&mut list, nn);
++            counts[c as usize] += 1;
++            ll[n] = c;
++            n += 1;
++        }};
++    }
++
++    let mut limit = max.min(next);
++    if limit > 0 {
++        ll.resize(limit, 0);
++    }
++    loop {
++        let mut at = None;
++        for &s in syms.by_ref() {
++            if s <= 1 {
++                if weight >= MAX_RUN_WEIGHT {
++                    return Err(ErrorKind::RunTooLong);
++                }
++                run += (s as u32 + 1) * weight;
++                weight <<= 1;
++                continue;
+             }
+-            run += (s as u32 + 1) * weight;
+-            weight <<= 1;
+-            continue;
++            if run != 0 {
++                let run_u = run as usize;
++                if n + run_u > limit {
++                    at = Some(s);
++                    break;
++                }
++                let c = list[0];
++                counts[c as usize] += run;
++                ll[n..n + run_u].fill(c);
++                n += run_u;
++                (run, weight) = (0, 1);
++            }
++            if s == b.eob {
++                ll.truncate(n);
++                return Ok(n);
++            }
++            if n >= limit {
++                at = Some(s);
++                break;
++            }
++            step_byte!(s);
+         }
++        let Some(s) = at else {
++            break;
++        };
+         if run != 0 {
+-            if ll.len() + run as usize > b.max_len {
++            let run_u = run as usize;
++            if n + run_u > max {
+                 return Err(ErrorKind::BlockTooLong);
+             }
+-            let c = b.seq_to_unseq[list[0] as usize];
++            let c = list[0];
+             counts[c as usize] += run;
+-            ll.resize(ll.len() + run as usize, c);
++            let end_run = n + run_u;
++            while next <= end_run {
++                next += CHECKPOINT;
++            }
++            limit = max.min(next);
++            if ll.len() < limit {
++                ll.resize(limit, 0);
++            }
++            ll[n..end_run].fill(c);
++            n = end_run;
+             (run, weight) = (0, 1);
++            if s == b.eob {
++                break;
++            }
++            if n >= max {
++                return Err(ErrorKind::BlockTooLong);
++            }
++        } else {
++            if n >= max {
++                return Err(ErrorKind::BlockTooLong);
++            }
++            next += CHECKPOINT;
++            limit = max.min(next);
++            ll.resize(limit, 0);
+         }
+-        if s == b.eob {
+-            break;
+-        }
+-        if ll.len() >= b.max_len {
+-            return Err(ErrorKind::BlockTooLong);
+-        }
+-        let nn = (s - 1) as usize;
+-        let v = list[nn];
+-        list.copy_within(0..nn, 1);
+-        list[0] = v;
+-        let c = b.seq_to_unseq[v as usize];
+-        counts[c as usize] += 1;
+-        ll.push(c);
++        step_byte!(s);
+     }
+-    Ok(ll.len())
++    ll.truncate(n);
++    Ok(n)
+ }
+ 
+ /// The list's first level, its bytes 0-31 as two 16-byte sub-lists in registers (`f0`,
+@@ -313,27 +386,128 @@ pub fn mtf_checkpoints(
+     mtf_checkpoints_scalar(b, ll, counts, checkpoints)
+ }
+ 
+-/// The scalar twin: `mtf_scalar`, then the checkpoints counted from its output, a second
+-/// pass over `ll` that the AVX2 kernel doesn't make
++/// The scalar twin: `mtf_scalar`'s outer-tile loop stopping at each `CHECKPOINT` boundary
++/// to snapshot `*counts` in a single pass without rescanning `ll`.
+ pub fn mtf_checkpoints_scalar(
+     b: &Symbols,
+     ll: &mut Vec<u8>,
+     counts: &mut [u32; 256],
+     checkpoints: &mut Vec<[u32; 256]>,
+ ) -> Result<usize, ErrorKind> {
+-    let r = mtf_scalar(b, ll, counts);
++    let max = b.max_len;
++    ll.clear();
++    ll.reserve(max);
++    *counts = [0; 256];
+     checkpoints.clear();
+-    let mut cum = [0u32; 256];
+-    checkpoints.push(cum);
+-    if r.is_ok() {
+-        for chunk in ll.chunks_exact(CHECKPOINT) {
+-            for &c in chunk {
+-                cum[c as usize] += 1;
+-            }
+-            checkpoints.push(cum);
++    checkpoints.push([0; 256]);
++    let mut list = b.seq_to_unseq;
++    let (mut run, mut weight) = (0u32, 1u32);
++    let mut n = 0usize;
++    let mut next = CHECKPOINT;
++    let mut syms = b.syms.iter();
++
++    macro_rules! step_byte {
++        ($s:expr) => {{
++            let nn = (($s - 1) as usize).min(255);
++            let c = mtf_move_fast15(&mut list, nn);
++            counts[c as usize] += 1;
++            ll[n] = c;
++            n += 1;
++        }};
++    }
++
++    let mut limit = max.min(next);
++    if limit > 0 {
++        ll.resize(limit, 0);
++    }
++    let mut result = Ok(());
++    'block: loop {
++        let mut at = None;
++        for &s in syms.by_ref() {
++            if s <= 1 {
++                if weight >= MAX_RUN_WEIGHT {
++                    result = Err(ErrorKind::RunTooLong);
++                    break 'block;
++                }
++                run += (s as u32 + 1) * weight;
++                weight <<= 1;
++                continue;
++            }
++            if run != 0 {
++                let run_u = run as usize;
++                if n + run_u > limit {
++                    at = Some(s);
++                    break;
++                }
++                let c = list[0];
++                counts[c as usize] += run;
++                ll[n..n + run_u].fill(c);
++                n += run_u;
++                (run, weight) = (0, 1);
++            }
++            if s == b.eob {
++                break 'block;
++            }
++            if n >= limit {
++                at = Some(s);
++                break;
++            }
++            step_byte!(s);
++        }
++        let Some(s) = at else {
++            break 'block;
++        };
++        if run != 0 {
++            let run_u = run as usize;
++            if n + run_u > max {
++                result = Err(ErrorKind::BlockTooLong);
++                break 'block;
++            }
++            let c = list[0];
++            let mut left = run_u;
++            while n + left >= next {
++                let part = next - n;
++                if ll.len() < next {
++                    ll.resize(next, 0);
++                }
++                counts[c as usize] += part as u32;
++                ll[n..next].fill(c);
++                (n, left) = (next, left - part);
++                checkpoints.push(*counts);
++                next += CHECKPOINT;
++            }
++            limit = max.min(next);
++            if ll.len() < limit {
++                ll.resize(limit, 0);
++            }
++            counts[c as usize] += left as u32;
++            ll[n..n + left].fill(c);
++            n += left;
++            (run, weight) = (0, 1);
++            if s == b.eob {
++                break 'block;
++            }
++            if n >= max {
++                result = Err(ErrorKind::BlockTooLong);
++                break 'block;
++            }
++        } else {
++            if n >= max {
++                result = Err(ErrorKind::BlockTooLong);
++                break 'block;
++            }
++            checkpoints.push(*counts);
++            next += CHECKPOINT;
++            limit = max.min(next);
++            ll.resize(limit, 0);
+         }
++        step_byte!(s);
+     }
+-    r
++    if result.is_ok() && n == next {
++        checkpoints.push(*counts);
++    }
++    ll.truncate(n);
++    result.map(|()| n)
+ }
+ 
+ /// `mtf_checkpoints_avx2`'s list and its slack, in the kernel's frame: aligned to 512 bytes,
+diff --git a/src/par_scan.rs b/src/par_scan.rs
+new file mode 100644
+index 0000000..b77c858
+--- /dev/null
++++ b/src/par_scan.rs
+@@ -0,0 +1,2120 @@
++#![forbid(unsafe_code)]
++//! Push-streaming parallel front end (`StreamDecoder::parscan`, `BzReader::parscan`,
++//! `decode_parscan`):
++//!
++//! 1. **Zero-copy `SlabRope`**: input arrives in bounded `Vec<u8>` chunks, wrapped in
++//!    `Arc<Vec<u8>>` without copying (coalescing tiny `< 64 KiB` writes in place via
++//!    `Arc::get_mut`), and recycled back to `StreamDecoder::spare` via `Arc::try_unwrap`
++//!    as soon as the verified bit-chain passes each slab's end.
++//! 2. **Fast `S = 1` `SlabScanner` (`workers <= 3`)**: at 1-3 workers, a single `C37`
++//!    scanner has `>= 1.6x-4x` throughput headroom even on `-1` streams, so `mibz2-scan`
++//!    streams directly over `SlabRope` + `read_item_tight` with zero magic-scan or
++//!    coordinator-lock overhead.
++//! 3. **Demand-driven `S`-Scanner Pool (`workers >= 4`: `mibz2-scan` + `1..2` `54 KiB`
++//!    L1d-resident helper scanners)**: scans global 4-byte anchors (`ANCHOR_BITMAP`),
++//!    decodes `Symbols` in parallel under a tight `workers + 4` front-end cap (with
++//!    Zero-Level-Guess `C39a` across multi-stream boundaries), and feeds `#739`'s `Jobs` ->
++//!    `decode_owned` -> `Ready` ring + `12 MiB` `READY_BYTES` cap, keeping BWT workers
++//!    100% dedicated to BWT inversion with zero worker-side scan scratch.
++
++use crate::bits::Bits;
++use crate::block::{self, read_item_tight, Item, ScanScratch, Symbols, BLOCK_MAGIC, END_MAGIC};
++use crate::parallel::{Shared, SLOTS_PER_THREAD};
++use crate::runs::{self, CountsPer, PreparedRuns, Runs};
++use crate::{Error, ErrorKind, Kernels, StreamDecoder};
++use std::collections::VecDeque;
++use std::panic::{catch_unwind, AssertUnwindSafe};
++use std::sync::atomic::{AtomicUsize, Ordering};
++use std::sync::mpsc::Receiver;
++use std::sync::{Arc, Condvar, Mutex, MutexGuard};
++
++const MASK48: u64 = (1u64 << 48) - 1;
++const INIT_NEED_MORE: usize = 256 << 10;
++const MAX_STITCH_RETAIN: usize = 256 << 10;
++const MAX_ITEM: usize = 64 << 20;
++const COALESCE_MIN: usize = 64 << 10;
++const COALESCE_TARGET: usize = 256 << 10;
++/// Proactively stage the next `4 MiB` slab once live bytes in `SlabRope` drop to `<= 4.5 MiB`,
++/// capping normal rope residency at `1-2` slabs (`4-8 MiB`) with zero chunk-seam bubbles.
++const PRESTAGE_ROPE_BYTES: u64 = (4 << 20) + (512 << 10);
++const MAX_ROPE_LIVE: u64 = 8 << 20;
++
++/// Input chunks queued in `StreamDecoder::parscan`'s input channel.
++pub(crate) const PARSCAN_INPUT_QUEUE: usize = 2;
++
++const fn build_anchor_bitmap() -> [u64; 1024] {
++    let mut bm = [0u64; 1024];
++    let magics = [BLOCK_MAGIC, END_MAGIC];
++    let mut mi = 0;
++    while mi < 2 {
++        let m = magics[mi];
++        let mut s = 0u32;
++        while s < 8 {
++            let w = (m << (16 - s)).to_be_bytes();
++            let mut r = 0usize;
++            while r < 4 {
++                let idx = (w[1 + r] as usize) | ((w[2 + r] as usize) << 8);
++                bm[idx >> 6] |= 1u64 << (idx & 63);
++                r += 1;
++            }
++            s += 1;
++        }
++        mi += 1;
++    }
++    bm
++}
++
++static ANCHOR_BITMAP: [u64; 1024] = build_anchor_bitmap();
++
++/// A candidate 48-bit `BLOCK_MAGIC` or `END_MAGIC` found in the compressed stream.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub struct RawMagic {
++    pub bit: u64,
++    pub is_end: bool,
++    pub hdr_level: u8,
++}
++
++#[cold]
++#[inline(never)]
++fn verify_quad_raw(data: &[u8], k_base: usize, out: &mut Vec<RawMagic>) {
++    let total_bits = data.len() as u64 * 8;
++    for k in k_base..k_base + 4 {
++        if (k as u64) * 8 + 48 > total_bits {
++            return;
++        }
++        let w64 = if let Some(s8) = data.get(k..k + 8) {
++            u64::from_be_bytes([s8[0], s8[1], s8[2], s8[3], s8[4], s8[5], s8[6], s8[7]])
++        } else {
++            let mut arr = [0u8; 8];
++            let avail = data.len() - k;
++            arr[..avail].copy_from_slice(&data[k..]);
++            u64::from_be_bytes(arr)
++        };
++        for s in 0..8u32 {
++            let bit = (k as u64) * 8 + (s as u64);
++            if bit + 48 > total_bits {
++                break;
++            }
++            let v = (w64 >> (16 - s)) & MASK48;
++            if v == BLOCK_MAGIC || v == END_MAGIC {
++                let hdr_level = if s == 0 && k >= 4 {
++                    match data[k - 4..k] {
++                        [b'B', b'Z', b'h', l @ b'1'..=b'9'] => l - b'0',
++                        _ => 0,
++                    }
++                } else {
++                    0
++                };
++                out.push(RawMagic {
++                    bit,
++                    is_end: v == END_MAGIC,
++                    hdr_level,
++                });
++            }
++        }
++    }
++}
++
++/// Scans disjoint 4-byte anchors `p = 4 * m` for `m in m_start..m_end` (`1 <= m_start <= m_end`)
++/// on a contiguous slice `data`.
++pub fn find_magics_anchor_range(
++    data: &[u8],
++    m_start: usize,
++    m_end: usize,
++    out: &mut Vec<RawMagic>,
++) {
++    out.clear();
++    if m_start >= m_end || data.len() < 6 {
++        return;
++    }
++    let bm = &ANCHOR_BITMAP;
++    let mut p = m_start * 4;
++    let p_end = m_end * 4;
++    let len = data.len();
++
++    while p + 28 < p_end && p + 32 <= len {
++        let s = &data[p..p + 32];
++        let w0 = u64::from_le_bytes(s[0..8].try_into().unwrap());
++        let w1 = u64::from_le_bytes(s[8..16].try_into().unwrap());
++        let w2 = u64::from_le_bytes(s[16..24].try_into().unwrap());
++        let w3 = u64::from_le_bytes(s[24..32].try_into().unwrap());
++
++        let i0 = (w0 & 0xffff) as usize;
++        let i1 = ((w0 >> 32) & 0xffff) as usize;
++        let i2 = (w1 & 0xffff) as usize;
++        let i3 = ((w1 >> 32) & 0xffff) as usize;
++        let i4 = (w2 & 0xffff) as usize;
++        let i5 = ((w2 >> 32) & 0xffff) as usize;
++        let i6 = (w3 & 0xffff) as usize;
++        let i7 = ((w3 >> 32) & 0xffff) as usize;
++
++        let h0 = (bm[i0 >> 6] >> (i0 & 63)) & 1;
++        let h1 = (bm[i1 >> 6] >> (i1 & 63)) & 1;
++        let h2 = (bm[i2 >> 6] >> (i2 & 63)) & 1;
++        let h3 = (bm[i3 >> 6] >> (i3 & 63)) & 1;
++        let h4 = (bm[i4 >> 6] >> (i4 & 63)) & 1;
++        let h5 = (bm[i5 >> 6] >> (i5 & 63)) & 1;
++        let h6 = (bm[i6 >> 6] >> (i6 & 63)) & 1;
++        let h7 = (bm[i7 >> 6] >> (i7 & 63)) & 1;
++
++        if ((h0 | h1 | h2 | h3) | (h4 | h5 | h6 | h7)) != 0 {
++            if h0 != 0 {
++                verify_quad_raw(data, p - 4, out);
++            }
++            if h1 != 0 {
++                verify_quad_raw(data, p, out);
++            }
++            if h2 != 0 {
++                verify_quad_raw(data, p + 4, out);
++            }
++            if h3 != 0 {
++                verify_quad_raw(data, p + 8, out);
++            }
++            if h4 != 0 {
++                verify_quad_raw(data, p + 12, out);
++            }
++            if h5 != 0 {
++                verify_quad_raw(data, p + 16, out);
++            }
++            if h6 != 0 {
++                verify_quad_raw(data, p + 20, out);
++            }
++            if h7 != 0 {
++                verify_quad_raw(data, p + 24, out);
++            }
++        }
++        p += 32;
++    }
++
++    while p < p_end && p + 2 <= len {
++        let idx = u16::from_le_bytes([data[p], data[p + 1]]) as usize;
++        if ((bm[idx >> 6] >> (idx & 63)) & 1) != 0 {
++            verify_quad_raw(data, p - 4, out);
++        }
++        p += 4;
++    }
++}
++
++#[cold]
++#[inline(never)]
++fn verify_quad_global(win: &[u8], global_k_base: u64, total_bits: u64, out: &mut Vec<(u64, bool)>) {
++    for rel_k in 0..4usize {
++        let k = global_k_base + rel_k as u64;
++        if k * 8 + 48 > total_bits || rel_k >= win.len() {
++            return;
++        }
++        let w64 = if let Some(s8) = win.get(rel_k..rel_k + 8) {
++            u64::from_be_bytes([s8[0], s8[1], s8[2], s8[3], s8[4], s8[5], s8[6], s8[7]])
++        } else {
++            let mut arr = [0u8; 8];
++            let avail = win.len() - rel_k;
++            arr[..avail].copy_from_slice(&win[rel_k..]);
++            u64::from_be_bytes(arr)
++        };
++        for s in 0..8u32 {
++            let bit = k * 8 + (s as u64);
++            if bit + 48 > total_bits {
++                break;
++            }
++            let v = (w64 >> (16 - s)) & MASK48;
++            if v == BLOCK_MAGIC || v == END_MAGIC {
++                out.push((bit, v == END_MAGIC));
++            }
++        }
++    }
++}
++
++fn scan_slab_interior(
++    data: &[u8],
++    slab_base: u64,
++    m_start: u64,
++    m_end: u64,
++    total_bits: u64,
++    out: &mut Vec<(u64, bool)>,
++) {
++    if m_start >= m_end {
++        return;
++    }
++    let bm = &ANCHOR_BITMAP;
++    let mut p = (4 * m_start - slab_base) as usize;
++    let p_end = (4 * m_end - slab_base) as usize;
++    let len = data.len();
++
++    while p + 28 < p_end && p + 32 <= len {
++        let s = &data[p..p + 32];
++        let w0 = u64::from_le_bytes(s[0..8].try_into().unwrap());
++        let w1 = u64::from_le_bytes(s[8..16].try_into().unwrap());
++        let w2 = u64::from_le_bytes(s[16..24].try_into().unwrap());
++        let w3 = u64::from_le_bytes(s[24..32].try_into().unwrap());
++
++        let i0 = (w0 & 0xffff) as usize;
++        let i1 = ((w0 >> 32) & 0xffff) as usize;
++        let i2 = (w1 & 0xffff) as usize;
++        let i3 = ((w1 >> 32) & 0xffff) as usize;
++        let i4 = (w2 & 0xffff) as usize;
++        let i5 = ((w2 >> 32) & 0xffff) as usize;
++        let i6 = (w3 & 0xffff) as usize;
++        let i7 = ((w3 >> 32) & 0xffff) as usize;
++
++        let h0 = (bm[i0 >> 6] >> (i0 & 63)) & 1;
++        let h1 = (bm[i1 >> 6] >> (i1 & 63)) & 1;
++        let h2 = (bm[i2 >> 6] >> (i2 & 63)) & 1;
++        let h3 = (bm[i3 >> 6] >> (i3 & 63)) & 1;
++        let h4 = (bm[i4 >> 6] >> (i4 & 63)) & 1;
++        let h5 = (bm[i5 >> 6] >> (i5 & 63)) & 1;
++        let h6 = (bm[i6 >> 6] >> (i6 & 63)) & 1;
++        let h7 = (bm[i7 >> 6] >> (i7 & 63)) & 1;
++
++        if ((h0 | h1 | h2 | h3) | (h4 | h5 | h6 | h7)) != 0 {
++            for (slot_hit, rel) in [
++                (h0, p - 4),
++                (h1, p),
++                (h2, p + 4),
++                (h3, p + 8),
++                (h4, p + 12),
++                (h5, p + 16),
++                (h6, p + 20),
++                (h7, p + 24),
++            ] {
++                if slot_hit != 0 {
++                    verify_quad_global(
++                        &data[rel..(rel + 12).min(len)],
++                        slab_base + rel as u64,
++                        total_bits,
++                        out,
++                    );
++                }
++            }
++        }
++        p += 32;
++    }
++
++    while p < p_end && p + 2 <= len {
++        let idx = u16::from_le_bytes([data[p], data[p + 1]]) as usize;
++        if ((bm[idx >> 6] >> (idx & 63)) & 1) != 0 {
++            let k0 = p - 4;
++            verify_quad_global(
++                &data[k0..(k0 + 12).min(len)],
++                slab_base + k0 as u64,
++                total_bits,
++                out,
++            );
++        }
++        p += 4;
++    }
++}
++
++struct Slab {
++    base: u64,
++    data: Arc<Vec<u8>>,
++}
++
++impl Slab {
++    #[inline]
++    fn end(&self) -> u64 {
++        self.base + self.data.len() as u64
++    }
++}
++
++/// Zero-copy bounded rope of compressed input chunks.
++pub(crate) struct SlabRope {
++    slabs: VecDeque<Slab>,
++    floor_byte: u64,
++    end_byte: u64,
++    next_anchor_m: u64,
++    pub(crate) eof: bool,
++}
++
++enum RopeView {
++    ZeroCopy {
++        slab: Arc<Vec<u8>>,
++        offset: usize,
++        len: usize,
++        to_eof: bool,
++    },
++    Stitched {
++        len: usize,
++        to_eof: bool,
++    },
++}
++
++impl SlabRope {
++    pub(crate) fn new() -> Self {
++        Self {
++            slabs: VecDeque::with_capacity(4),
++            floor_byte: 0,
++            end_byte: 0,
++            next_anchor_m: 1,
++            eof: false,
++        }
++    }
++
++    #[inline]
++    pub(crate) fn total_bytes(&self) -> u64 {
++        self.end_byte
++    }
++
++    #[inline]
++    pub(crate) fn live_bytes(&self) -> u64 {
++        self.end_byte.saturating_sub(self.floor_byte)
++    }
++
++    fn push_slab_raw(&mut self, v: Vec<u8>) {
++        if v.is_empty() {
++            return;
++        }
++        let base = self.end_byte;
++        self.end_byte += v.len() as u64;
++        self.slabs.push_back(Slab {
++            base,
++            data: Arc::new(v),
++        });
++    }
++
++    pub(crate) fn push_chunk(&mut self, mut chunk: Vec<u8>) {
++        if chunk.is_empty() {
++            return;
++        }
++        if chunk.len() < COALESCE_MIN {
++            if let Some(back) = self.slabs.back_mut() {
++                if back.data.len() + chunk.len() <= COALESCE_TARGET {
++                    if let Some(vec) = Arc::get_mut(&mut back.data) {
++                        vec.extend_from_slice(&chunk);
++                        self.end_byte += chunk.len() as u64;
++                        return;
++                    }
++                }
++            }
++            chunk.reserve(COALESCE_TARGET.saturating_sub(chunk.len()));
++        }
++        self.push_slab_raw(chunk);
++    }
++
++    pub(crate) fn set_eof(&mut self) {
++        self.eof = true;
++    }
++
++    pub(crate) fn copy_at(&self, global_off: u64, dst: &mut [u8]) -> usize {
++        if global_off >= self.end_byte || dst.is_empty() {
++            return 0;
++        }
++        let mut idx = match self.slabs.binary_search_by(|s| {
++            if s.end() <= global_off {
++                std::cmp::Ordering::Less
++            } else if s.base > global_off {
++                std::cmp::Ordering::Greater
++            } else {
++                std::cmp::Ordering::Equal
++            }
++        }) {
++            Ok(i) => i,
++            Err(_) => return 0,
++        };
++        let mut cur = global_off;
++        let mut written = 0usize;
++        while written < dst.len() && idx < self.slabs.len() {
++            let s = &self.slabs[idx];
++            let off = (cur - s.base) as usize;
++            let take = (dst.len() - written).min(s.data.len() - off);
++            dst[written..written + take].copy_from_slice(&s.data[off..off + take]);
++            written += take;
++            cur += take as u64;
++            idx += 1;
++        }
++        written
++    }
++
++    pub(crate) fn scan_new_anchors(&mut self, out: &mut Vec<(u64, bool)>) {
++        let m_limit = if self.eof {
++            if self.end_byte >= 6 {
++                (self.end_byte - 2) / 4 + 1
++            } else {
++                1
++            }
++        } else if self.end_byte >= 8 {
++            (self.end_byte - 8) / 4 + 1
++        } else {
++            1
++        };
++        if self.next_anchor_m >= m_limit {
++            return;
++        }
++        let total_bits = self.end_byte * 8;
++        let mut m = self.next_anchor_m;
++        while m < m_limit {
++            let k_base = 4 * m - 4;
++            let Some(s_idx) = self
++                .slabs
++                .binary_search_by(|s| {
++                    if s.end() <= k_base {
++                        std::cmp::Ordering::Less
++                    } else if s.base > k_base {
++                        std::cmp::Ordering::Greater
++                    } else {
++                        std::cmp::Ordering::Equal
++                    }
++                })
++                .ok()
++            else {
++                m += 1;
++                continue;
++            };
++            let slab_base = self.slabs[s_idx].base;
++            let slab_end = self.slabs[s_idx].end();
++            let m_int_end = if slab_end >= 8 {
++                ((slab_end - 8) / 4 + 1).min(m_limit)
++            } else {
++                m
++            };
++            if m < m_int_end {
++                let slab_arc = Arc::clone(&self.slabs[s_idx].data);
++                scan_slab_interior(&slab_arc, slab_base, m, m_int_end, total_bits, out);
++                m = m_int_end;
++                continue;
++            }
++            let mut win = [0u8; 12];
++            let n = self.copy_at(k_base, &mut win);
++            if n >= 6 {
++                let idx = u16::from_le_bytes([win[4], win[5]]) as usize;
++                if ((ANCHOR_BITMAP[idx >> 6] >> (idx & 63)) & 1) != 0 {
++                    verify_quad_global(&win[..n], k_base, total_bits, out);
++                }
++            }
++            m += 1;
++        }
++        self.next_anchor_m = m_limit;
++    }
++
++    fn view_for_cand(
++        &self,
++        start_byte: u64,
++        min_want: usize,
++        next_cand_byte: Option<u64>,
++        stitch: &mut Vec<u8>,
++    ) -> RopeView {
++        if start_byte >= self.end_byte {
++            return RopeView::Stitched {
++                len: 0,
++                to_eof: self.eof,
++            };
++        }
++        let s_idx = self
++            .slabs
++            .binary_search_by(|s| {
++                if s.end() <= start_byte {
++                    std::cmp::Ordering::Less
++                } else if s.base > start_byte {
++                    std::cmp::Ordering::Greater
++                } else {
++                    std::cmp::Ordering::Equal
++                }
++            })
++            .expect("candidate start_byte >= floor_byte");
++        let slab = &self.slabs[s_idx];
++        let offset = (start_byte - slab.base) as usize;
++        let in_slab = slab.data.len() - offset;
++        let in_rope = (self.end_byte - start_byte) as usize;
++        let last_slab = s_idx + 1 == self.slabs.len();
++        let fits_zero_copy = min_want <= in_slab
++            && match next_cand_byte {
++                Some(nb) => last_slab || nb.saturating_add(16) <= slab.end(),
++                None => true,
++            };
++        if fits_zero_copy {
++            return RopeView::ZeroCopy {
++                slab: Arc::clone(&slab.data),
++                offset,
++                len: in_slab,
++                to_eof: last_slab && self.eof,
++            };
++        }
++        let hint = next_cand_byte
++            .map_or(INIT_NEED_MORE, |nb| {
++                (nb.saturating_sub(start_byte) as usize).saturating_add(64)
++            })
++            .max(min_want)
++            .min(MAX_ITEM);
++        let want = hint.min(in_rope);
++        if stitch.len() < want {
++            stitch.resize(want, 0);
++        }
++        let got = self.copy_at(start_byte, &mut stitch[..want]);
++        RopeView::Stitched {
++            len: got,
++            to_eof: got == in_rope && self.eof,
++        }
++    }
++
++    pub(crate) fn release_before(&mut self, upto_byte: u64, spare_out: &mut Option<Vec<u8>>) {
++        while let Some(front) = self.slabs.front() {
++            if front.end() <= upto_byte {
++                let popped = self.slabs.pop_front().unwrap();
++                self.floor_byte = popped.end();
++                if spare_out.is_none() && popped.data.capacity() >= COALESCE_MIN {
++                    if let Ok(vec) = Arc::try_unwrap(popped.data) {
++                        *spare_out = Some(vec);
++                    }
++                }
++            } else {
++                break;
++            }
++        }
++    }
++}
++
++/// Zero-overhead `S = 1` scanner over `SlabRope` + `read_item_tight` (`workers <= 3`),
++/// running scanner-resident `runs::front` when `hub.prepare_runs` holds (`workers == 2..=3`).
++pub(crate) fn single_slab_scanner(
++    shared: &Shared,
++    hub: &ParScanHub,
++    rx: Receiver<Vec<u8>>,
++    jobs_tx: ParJobsTx,
++) {
++    let jobs = jobs_tx.jobs();
++    let max_ahead = hub.max_front_ahead;
++    let max_syms_pool = max_ahead.min(6);
++    let mut rope = SlabRope::new();
++    let mut scan_scratch = ScanScratch::default();
++    let mut scanner_runs: Option<Box<Runs>> = None;
++    let mut stitch = Vec::new();
++    let mut phase = ChainPhase::Header { first: true };
++    let mut bit = 0u64;
++    let mut blocks = 0u64;
++    let mut min_want = 0usize;
++    let mut have_slot = false;
++    let mut cur_syms: Vec<u16> = Vec::new();
++
++    let finish = |res: Option<Error>| {
++        let mut st = shared.lock();
++        let at = st.issued;
++        match res {
++            Some(e) if e.kind != ErrorKind::Cancelled => {
++                st.ready.insert(at, Err(e));
++                st.issued += 1;
++                st.end = Some(at + 1);
++            }
++            _ => st.end = Some(at),
++        }
++        drop(st);
++        shared.cv.notify_one();
++    };
++
++    let recv_until = |rope: &mut SlabRope, need_end: u64| -> Result<(), ErrorKind> {
++        while !rope.eof && rope.total_bytes() < need_end {
++            match rx.recv() {
++                Ok(chunk) => {
++                    rope.push_chunk(chunk);
++                    while rope.total_bytes() < need_end
++                        || rope.live_bytes() < COALESCE_TARGET as u64
++                    {
++                        match rx.try_recv() {
++                            Ok(more) => rope.push_chunk(more),
++                            Err(std::sync::mpsc::TryRecvError::Empty) => break,
++                            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
++                                rope.set_eof();
++                                break;
++                            }
++                        }
++                    }
++                }
++                Err(_) => rope.set_eof(),
++            }
++            if shared.stopped.load(Ordering::Acquire) {
++                return Err(ErrorKind::Cancelled);
++            }
++        }
++        Ok(())
++    };
++
++    loop {
++        if shared.stopped.load(Ordering::Acquire) {
++            return finish(None);
++        }
++        match phase {
++            ChainPhase::Finished => return finish(None),
++            ChainPhase::Header { first } => {
++                let byte_at = bit / 8;
++                if let Err(k) = recv_until(&mut rope, byte_at + 4) {
++                    return finish(Some(Error {
++                        kind: k,
++                        block: None,
++                        bit: Some(bit),
++                    }));
++                }
++                let avail = rope.total_bytes().saturating_sub(byte_at);
++                if avail == 0 && rope.eof {
++                    if first {
++                        return finish(Some(Error {
++                            kind: ErrorKind::Empty,
++                            block: None,
++                            bit: Some(bit),
++                        }));
++                    }
++                    return finish(None);
++                }
++                if avail < 4 {
++                    return finish(Some(Error {
++                        kind: if first {
++                            ErrorKind::NotBz2
++                        } else {
++                            ErrorKind::TrailingData
++                        },
++                        block: None,
++                        bit: Some(bit),
++                    }));
++                }
++                let mut hdr = [0u8; 4];
++                rope.copy_at(byte_at, &mut hdr);
++                match hdr {
++                    [b'B', b'Z', b'h', l @ b'1'..=b'9'] => {
++                        phase = ChainPhase::Stream {
++                            level: (l - b'0') as u32,
++                            combined: 0,
++                        };
++                        bit += 32;
++                    }
++                    _ => {
++                        return finish(Some(Error {
++                            kind: if first {
++                                ErrorKind::NotBz2
++                            } else {
++                                ErrorKind::TrailingData
++                            },
++                            block: None,
++                            bit: Some(bit),
++                        }));
++                    }
++                }
++            }
++            ChainPhase::Stream { level, combined } => {
++                if !have_slot {
++                    let mut st = shared.lock();
++                    while !st.cancelled
++                        && (shared.full(&st) || (st.issued - st.taken) as usize >= max_ahead)
++                    {
++                        st.record_capped_wait_if_any(shared);
++                        st.scanner_waiting = true;
++                        st = shared.scan_cv.wait(st).unwrap_or_else(|e| e.into_inner());
++                    }
++                    st.scanner_waiting = false;
++                    if st.cancelled {
++                        drop(st);
++                        return finish(None);
++                    }
++                    if cur_syms.capacity() == 0 {
++                        cur_syms = st.free_syms.pop().unwrap_or_default();
++                    }
++                    have_slot = true;
++                }
++
++                let start_byte = bit / 8;
++                let want_bytes = min_want.max(INIT_NEED_MORE);
++                if rope.total_bytes() < start_byte + want_bytes as u64 && !rope.eof {
++                    if let Err(k) = recv_until(&mut rope, start_byte + want_bytes as u64) {
++                        return finish(Some(Error {
++                            kind: k,
++                            block: Some(blocks),
++                            bit: Some(bit),
++                        }));
++                    }
++                }
++
++                let view = rope.view_for_cand(start_byte, min_want, None, &mut stitch);
++                let (slice, to_eof): (&[u8], bool) = match &view {
++                    RopeView::ZeroCopy {
++                        slab,
++                        offset,
++                        len,
++                        to_eof,
++                    } => (&slab[*offset..*offset + *len], *to_eof),
++                    RopeView::Stitched { len, to_eof } => (&stitch[..*len], *to_eof),
++                };
++                let slice_len = slice.len();
++                let bit_mod = bit % 8;
++                let syms = std::mem::take(&mut cur_syms);
++                let r = catch_unwind(AssertUnwindSafe(|| {
++                    let mut br = Bits::at(slice, bit_mod);
++                    let item = read_item_tight(&mut br, level, syms, &mut scan_scratch);
++                    (item, br.overran(), br.bit_pos())
++                }));
++                drop(view);
++                if stitch.capacity() > MAX_STITCH_RETAIN {
++                    stitch = Vec::new();
++                }
++
++                match r {
++                    Err(p) => {
++                        return finish(Some(Error {
++                            kind: ErrorKind::Internal(panic_message(p)),
++                            block: Some(blocks),
++                            bit: Some(bit),
++                        }));
++                    }
++                    Ok((item, overran, bit_pos)) => {
++                        if overran {
++                            cur_syms = match item {
++                                Ok(Item::Block(b)) => b.syms,
++                                Ok(Item::End(_)) => Vec::new(),
++                                Err((_, s)) => s,
++                            };
++                            if to_eof {
++                                return finish(Some(Error {
++                                    kind: ErrorKind::Truncated,
++                                    block: Some(blocks),
++                                    bit: Some(bit),
++                                }));
++                            }
++                            if slice_len >= MAX_ITEM || min_want >= MAX_ITEM {
++                                return finish(Some(Error {
++                                    kind: ErrorKind::BlockTooLarge,
++                                    block: Some(blocks),
++                                    bit: Some(bit),
++                                }));
++                            }
++                            let level_bound = (140 << 10) * (level as usize);
++                            min_want = slice_len
++                                .saturating_mul(2)
++                                .max(min_want.saturating_mul(2))
++                                .max(level_bound)
++                                .clamp(INIT_NEED_MORE * 2, MAX_ITEM);
++                            continue;
++                        }
++                        min_want = 0;
++                        let end_bit = start_byte * 8 + bit_pos;
++                        match item {
++                            Err((kind, s)) => {
++                                if s.capacity() > 0 {
++                                    let mut st = shared.lock();
++                                    if st.free_syms.len() < max_syms_pool {
++                                        st.free_syms.push(s);
++                                    }
++                                }
++                                return finish(Some(Error {
++                                    kind,
++                                    block: Some(blocks),
++                                    bit: Some(bit),
++                                }));
++                            }
++                            Ok(Item::End(stored)) => {
++                                if stored != combined {
++                                    return finish(Some(Error {
++                                        kind: ErrorKind::StreamCrc {
++                                            stored,
++                                            computed: combined,
++                                        },
++                                        block: Some(blocks),
++                                        bit: Some(bit),
++                                    }));
++                                }
++                                bit = end_bit.div_ceil(8) * 8;
++                                phase = ChainPhase::Header { first: false };
++                                let mut spare = None;
++                                rope.release_before(bit / 8, &mut spare);
++                                if let Some(chunk) = spare {
++                                    let mut st = shared.lock();
++                                    if st.free_in.is_empty() {
++                                        st.free_in.push(chunk);
++                                    }
++                                }
++                            }
++                            Ok(Item::Block(symbols)) => {
++                                let at = bit;
++                                let place = blocks;
++                                let crc = symbols.crc;
++                                let payload = if hub.prepare_runs && runs::takes_runs(&symbols) {
++                                    let sr: &mut Runs =
++                                        scanner_runs.get_or_insert_with(Default::default);
++                                    let kernels = hub.kernels;
++                                    let front_res = catch_unwind(AssertUnwindSafe(|| {
++                                        runs::front(&symbols, sr, kernels)
++                                    }));
++                                    cur_syms = symbols.syms;
++                                    match front_res {
++                                        Ok(rows) => {
++                                            let (repl, cp_in) = hub.pop_prepared();
++                                            let (records, counts_per) = scanner_runs
++                                                .as_mut()
++                                                .unwrap()
++                                                .extract_prepared(repl, cp_in);
++                                            ParPayload::Prepared(PreparedRuns {
++                                                crc: symbols.crc,
++                                                orig_ptr: symbols.orig_ptr,
++                                                max_len: symbols.max_len,
++                                                rows,
++                                                records,
++                                                counts_per,
++                                            })
++                                        }
++                                        Err(p) => {
++                                            return finish(Some(Error {
++                                                kind: ErrorKind::Internal(panic_message(p)),
++                                                block: Some(place),
++                                                bit: Some(at),
++                                            }));
++                                        }
++                                    }
++                                } else {
++                                    ParPayload::Symbols(symbols)
++                                };
++
++                                blocks += 1;
++                                bit = end_bit;
++                                phase = ChainPhase::Stream {
++                                    level,
++                                    combined: combined.rotate_left(1) ^ crc,
++                                };
++                                let mut spare = None;
++                                rope.release_before(bit / 8, &mut spare);
++                                {
++                                    let mut st = shared.lock();
++                                    if let Some(chunk) = spare {
++                                        if st.free_in.is_empty() {
++                                            st.free_in.push(chunk);
++                                        }
++                                    }
++                                    st.issued = blocks;
++                                    if !st.cancelled
++                                        && !shared.full(&st)
++                                        && (st.issued - st.taken) < max_ahead as u64
++                                    {
++                                        if cur_syms.capacity() == 0 {
++                                            cur_syms = st.free_syms.pop().unwrap_or_default();
++                                        }
++                                        have_slot = true;
++                                    } else {
++                                        have_slot = false;
++                                    }
++                                }
++                                jobs.push((place, at, payload));
++                            }
++                        }
++                    }
++                }
++            }
++        }
++    }
++}
++
++#[allow(clippy::large_enum_variant)]
++pub(crate) enum ParPayload {
++    Symbols(Symbols),
++    Prepared(PreparedRuns),
++}
++
++pub(crate) type ParJob = (u64, u64, ParPayload);
++
++#[derive(Default)]
++struct ParJobQueue {
++    q: VecDeque<ParJob>,
++    closed: bool,
++    waiting: usize,
++}
++
++#[derive(Default)]
++pub(crate) struct ParJobs {
++    q: Mutex<ParJobQueue>,
++    cv: Condvar,
++    len: AtomicUsize,
++}
++
++pub(crate) struct ParJobsTx(pub(crate) Arc<ParJobs>);
++
++impl ParJobsTx {
++    pub(crate) fn jobs(&self) -> &ParJobs {
++        &self.0
++    }
++}
++
++impl Drop for ParJobsTx {
++    fn drop(&mut self) {
++        let mut q = lock(&self.0.q);
++        q.closed = true;
++        drop(q);
++        self.0.cv.notify_all();
++    }
++}
++
++impl ParJobs {
++    #[inline]
++    pub(crate) fn queued_len(&self) -> usize {
++        self.len.load(Ordering::Acquire)
++    }
++
++    pub(crate) fn is_closed(&self) -> bool {
++        lock(&self.q).closed
++    }
++
++    pub(crate) fn push(&self, job: ParJob) {
++        let mut q = lock(&self.q);
++        q.q.push_back(job);
++        self.len.store(q.q.len(), Ordering::Release);
++        let wake = q.waiting > 0;
++        drop(q);
++        if wake {
++            self.cv.notify_one();
++        }
++    }
++
++    pub(crate) fn push_batch(&self, batch: &mut Vec<ParJob>) {
++        if batch.is_empty() {
++            return;
++        }
++        let n = batch.len();
++        let mut q = lock(&self.q);
++        q.q.extend(batch.drain(..));
++        self.len.store(q.q.len(), Ordering::Release);
++        let wake = q.waiting.min(n);
++        drop(q);
++        if wake == 1 {
++            self.cv.notify_one();
++        } else if wake > 1 {
++            self.cv.notify_all();
++        }
++    }
++
++    pub(crate) fn recv(&self, hub: &ParScanHub) -> Option<ParJob> {
++        let mut q = lock(&self.q);
++        loop {
++            if let Some(j) = q.q.pop_front() {
++                let rem = q.q.len();
++                self.len.store(rem, Ordering::Release);
++                drop(q);
++                if hub.has_helpers && rem <= 1 && hub.claimable.load(Ordering::Acquire) > 0 {
++                    hub.helper_cv.notify_one();
++                }
++                return Some(j);
++            }
++            if q.closed {
++                return None;
++            }
++            q.waiting += 1;
++            q = self.cv.wait(q).unwrap_or_else(|e| e.into_inner());
++            q.waiting -= 1;
++        }
++    }
++}
++
++#[allow(clippy::large_enum_variant)]
++enum CandDone {
++    Block { end_bit: u64, payload: ParPayload },
++    End { end_bit: u64, stored_crc: u32 },
++    Err { kind: ErrorKind },
++}
++
++#[allow(clippy::large_enum_variant)]
++enum CandState {
++    Unclaimed { min_want: usize },
++    Claimed,
++    NeedMore { min_want: usize },
++    Done(CandDone),
++}
++
++struct CandSlot {
++    id: u64,
++    bit: u64,
++    is_end: bool,
++    state: CandState,
++}
++
++#[derive(Clone, Copy)]
++enum ChainPhase {
++    Header { first: bool },
++    Stream { level: u32, combined: u32 },
++    Finished,
++}
++
++struct HubState {
++    rope: SlabRope,
++    cands: VecDeque<CandSlot>,
++    next_cand_id: u64,
++    phase: ChainPhase,
++    chain_bit: u64,
++    blocks_issued: u64,
++    lead_exited: bool,
++    terminal_err: Option<Error>,
++}
++
++/// Shared parallel-front-end coordinator between `mibz2-scan` and `0..2` lightweight
++/// L1d/L2-resident helper scanner threads (`mibz2-scan-1..2`).
++pub(crate) struct ParScanHub {
++    mu: Mutex<HubState>,
++    pub(crate) helper_cv: Condvar,
++    prep_pool: Mutex<(Vec<Vec<u16>>, Vec<CountsPer>)>,
++    pending_publishes: AtomicUsize,
++    claimable: AtomicUsize,
++    max_front_ahead: usize,
++    has_helpers: bool,
++    prepare_runs: bool,
++    kernels: Kernels,
++}
++
++fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
++    m.lock().unwrap_or_else(|e| e.into_inner())
++}
++
++fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
++    p.downcast_ref::<&str>()
++        .map(|s| s.to_string())
++        .or_else(|| p.downcast_ref::<String>().cloned())
++        .unwrap_or_else(|| "a panic".into())
++}
++
++struct ClaimedWork {
++    cand_id: u64,
++    bit: u64,
++    bound_level: u32,
++    level_uncertain: bool,
++    min_want: usize,
++    view: RopeView,
++}
++
++#[derive(Default)]
++struct ScannerLocal {
++    scan_scratch: Option<Box<ScanScratch>>,
++    scanner_runs: Option<Box<Runs>>,
++    stitch_buf: Vec<u8>,
++    local_syms: Vec<u16>,
++}
++
++struct CommitBatch {
++    jobs: Vec<ParJob>,
++    recycled_syms: Vec<Vec<u16>>,
++    recycled_records: Vec<Vec<u16>>,
++    recycled_cps: Vec<CountsPer>,
++    spare_chunk: Option<Vec<u8>>,
++    finished: Option<Option<Error>>,
++    blocks_issued: u64,
++    tracked_publish: bool,
++}
++
++impl ParScanHub {
++    pub(crate) fn new(
++        workers: usize,
++        slots: usize,
++        has_helpers: bool,
++        prepare_runs: bool,
++        kernels: Kernels,
++    ) -> Self {
++        let max_front_ahead = (workers + 4).min(slots).max(2);
++        let cap = if prepare_runs { max_front_ahead } else { 0 };
++        Self {
++            mu: Mutex::new(HubState {
++                rope: SlabRope::new(),
++                cands: VecDeque::with_capacity(32),
++                next_cand_id: 0,
++                phase: ChainPhase::Header { first: true },
++                chain_bit: 0,
++                blocks_issued: 0,
++                lead_exited: false,
++                terminal_err: None,
++            }),
++            helper_cv: Condvar::new(),
++            prep_pool: Mutex::new((Vec::with_capacity(cap), Vec::with_capacity(cap))),
++            pending_publishes: AtomicUsize::new(0),
++            claimable: AtomicUsize::new(0),
++            max_front_ahead,
++            has_helpers,
++            prepare_runs,
++            kernels,
++        }
++    }
++
++    #[inline]
++    fn sync_claimable(&self, st: &HubState) -> usize {
++        let c = if matches!(st.phase, ChainPhase::Finished) {
++            0
++        } else {
++            let n = st.cands.len();
++            let mut cnt = 0usize;
++            for (idx, slot) in st.cands.iter().enumerate() {
++                if idx + 1 >= n && !st.rope.eof {
++                    break;
++                }
++                if matches!(slot.state, CandState::Unclaimed { .. }) {
++                    cnt += 1;
++                }
++            }
++            cnt
++        };
++        self.claimable.store(c, Ordering::Release);
++        c
++    }
++
++    #[inline]
++    fn wake_helpers(&self, jobs: &ParJobs, reserve_lead: usize) {
++        if !self.has_helpers || jobs.queued_len() >= 3 {
++            return;
++        }
++        let avail = self
++            .claimable
++            .load(Ordering::Acquire)
++            .saturating_sub(reserve_lead);
++        if avail == 1 {
++            self.helper_cv.notify_one();
++        } else if avail >= 2 {
++            self.helper_cv.notify_all();
++        }
++    }
++
++    pub(crate) fn recycle_prepared(&self, prev_records: Vec<u16>, cp: CountsPer) {
++        let mut pool = lock(&self.prep_pool);
++        if prev_records.capacity() > 0 && pool.0.len() < self.max_front_ahead {
++            pool.0.push(prev_records);
++        }
++        if pool.1.len() < self.max_front_ahead {
++            pool.1.push(cp);
++        }
++    }
++
++    fn pop_prepared(&self) -> (Vec<u16>, CountsPer) {
++        let mut pool = lock(&self.prep_pool);
++        let recs = pool.0.pop().unwrap_or_default();
++        let cp = pool
++            .1
++            .pop()
++            .unwrap_or_else(|| Box::new(([0u32; 256], [0u32; 256])));
++        (recs, cp)
++    }
++
++    fn advance_chain_locked(&self, st: &mut HubState) -> CommitBatch {
++        let mut batch = CommitBatch {
++            jobs: Vec::new(),
++            recycled_syms: Vec::new(),
++            recycled_records: Vec::new(),
++            recycled_cps: Vec::new(),
++            spare_chunk: None,
++            finished: None,
++            blocks_issued: st.blocks_issued,
++            tracked_publish: false,
++        };
++        loop {
++            match st.phase {
++                ChainPhase::Finished => break,
++                ChainPhase::Header { first } => {
++                    let at = st.chain_bit;
++                    let byte_at = at / 8;
++                    let avail = st.rope.total_bytes().saturating_sub(byte_at);
++                    if avail == 0 && st.rope.eof {
++                        st.phase = ChainPhase::Finished;
++                        if first {
++                            let e = Error {
++                                kind: ErrorKind::Empty,
++                                block: None,
++                                bit: Some(at),
++                            };
++                            st.terminal_err = Some(e.clone());
++                            batch.finished = Some(Some(e));
++                        } else {
++                            batch.finished = Some(None);
++                        }
++                        break;
++                    }
++                    if avail < 4 {
++                        if st.rope.eof {
++                            st.phase = ChainPhase::Finished;
++                            let e = Error {
++                                kind: if first {
++                                    ErrorKind::NotBz2
++                                } else {
++                                    ErrorKind::TrailingData
++                                },
++                                block: None,
++                                bit: Some(at),
++                            };
++                            st.terminal_err = Some(e.clone());
++                            batch.finished = Some(Some(e));
++                        }
++                        break;
++                    }
++                    let mut hdr = [0u8; 4];
++                    let got = st.rope.copy_at(byte_at, &mut hdr);
++                    debug_assert_eq!(got, 4);
++                    match hdr {
++                        [b'B', b'Z', b'h', l @ b'1'..=b'9'] => {
++                            st.phase = ChainPhase::Stream {
++                                level: (l - b'0') as u32,
++                                combined: 0,
++                            };
++                            st.chain_bit += 32;
++                            Self::drop_before_chain(
++                                st,
++                                &mut batch.recycled_syms,
++                                &mut batch.recycled_records,
++                                &mut batch.recycled_cps,
++                            );
++                            st.rope
++                                .release_before(st.chain_bit / 8, &mut batch.spare_chunk);
++                        }
++                        _ => {
++                            st.phase = ChainPhase::Finished;
++                            let e = Error {
++                                kind: if first {
++                                    ErrorKind::NotBz2
++                                } else {
++                                    ErrorKind::TrailingData
++                                },
++                                block: None,
++                                bit: Some(at),
++                            };
++                            st.terminal_err = Some(e.clone());
++                            batch.finished = Some(Some(e));
++                            break;
++                        }
++                    }
++                }
++                ChainPhase::Stream { level, combined } => {
++                    Self::drop_before_chain(
++                        st,
++                        &mut batch.recycled_syms,
++                        &mut batch.recycled_records,
++                        &mut batch.recycled_cps,
++                    );
++                    let at = st.chain_bit;
++                    let index = st.blocks_issued;
++                    let head_matches = st.cands.front().is_some_and(|c| c.bit == at);
++                    if !head_matches {
++                        let byte_at = at / 8;
++                        let avail = st.rope.total_bytes().saturating_sub(byte_at);
++                        if !st.rope.eof && avail < 16 {
++                            break;
++                        }
++                        let mut tmp = [0u8; 16];
++                        let n = st.rope.copy_at(byte_at, &mut tmp);
++                        let mut br = Bits::at(&tmp[..n], at % 8);
++                        let item = block::read_item(&mut br, level, Vec::new());
++                        let kind = if br.overran() {
++                            ErrorKind::Truncated
++                        } else {
++                            match item {
++                                Err((k, _)) => k,
++                                Ok(_) => ErrorKind::BadBlockMagic,
++                            }
++                        };
++                        st.phase = ChainPhase::Finished;
++                        let e = Error {
++                            kind,
++                            block: Some(index),
++                            bit: Some(at),
++                        };
++                        st.terminal_err = Some(e.clone());
++                        batch.finished = Some(Some(e));
++                        break;
++                    }
++
++                    let is_done = matches!(st.cands.front().unwrap().state, CandState::Done(_));
++                    if !is_done {
++                        break;
++                    }
++                    let slot = st.cands.pop_front().unwrap();
++                    let CandState::Done(done) = slot.state else {
++                        unreachable!()
++                    };
++                    match done {
++                        CandDone::End {
++                            end_bit,
++                            stored_crc,
++                        } => {
++                            if stored_crc != combined {
++                                st.phase = ChainPhase::Finished;
++                                let e = Error {
++                                    kind: ErrorKind::StreamCrc {
++                                        stored: stored_crc,
++                                        computed: combined,
++                                    },
++                                    block: Some(index),
++                                    bit: Some(at),
++                                };
++                                st.terminal_err = Some(e.clone());
++                                batch.finished = Some(Some(e));
++                                break;
++                            }
++                            st.chain_bit = end_bit.div_ceil(8) * 8;
++                            st.phase = ChainPhase::Header { first: false };
++                            Self::drop_before_chain(
++                                st,
++                                &mut batch.recycled_syms,
++                                &mut batch.recycled_records,
++                                &mut batch.recycled_cps,
++                            );
++                            st.rope
++                                .release_before(st.chain_bit / 8, &mut batch.spare_chunk);
++                        }
++                        CandDone::Err { kind } => {
++                            st.phase = ChainPhase::Finished;
++                            let e = Error {
++                                kind,
++                                block: Some(index),
++                                bit: Some(at),
++                            };
++                            st.terminal_err = Some(e.clone());
++                            batch.finished = Some(Some(e));
++                            break;
++                        }
++                        CandDone::Block {
++                            end_bit,
++                            mut payload,
++                        } => {
++                            let max_len = 100_000 * (level as usize);
++                            let (crc, orig_ptr) = match &mut payload {
++                                ParPayload::Symbols(symbols) => {
++                                    symbols.max_len = max_len;
++                                    (symbols.crc, symbols.orig_ptr)
++                                }
++                                ParPayload::Prepared(prep) => {
++                                    prep.max_len = max_len;
++                                    (prep.crc, prep.orig_ptr)
++                                }
++                            };
++                            if orig_ptr as usize > 10 + max_len {
++                                match payload {
++                                    ParPayload::Symbols(s) => batch.recycled_syms.push(s.syms),
++                                    ParPayload::Prepared(p) => {
++                                        batch.recycled_records.push(p.records);
++                                        batch.recycled_cps.push(p.counts_per);
++                                    }
++                                }
++                                st.phase = ChainPhase::Finished;
++                                let e = Error {
++                                    kind: ErrorKind::BadOrigPtr,
++                                    block: Some(index),
++                                    bit: Some(at),
++                                };
++                                st.terminal_err = Some(e.clone());
++                                batch.finished = Some(Some(e));
++                                break;
++                            }
++                            st.phase = ChainPhase::Stream {
++                                level,
++                                combined: combined.rotate_left(1) ^ crc,
++                            };
++                            st.blocks_issued += 1;
++                            st.chain_bit = end_bit;
++                            Self::drop_before_chain(
++                                st,
++                                &mut batch.recycled_syms,
++                                &mut batch.recycled_records,
++                                &mut batch.recycled_cps,
++                            );
++                            st.rope
++                                .release_before(st.chain_bit / 8, &mut batch.spare_chunk);
++                            batch.jobs.push((index, at, payload));
++                        }
++                    }
++                }
++            }
++        }
++        self.sync_claimable(st);
++        batch.blocks_issued = st.blocks_issued;
++        if !batch.jobs.is_empty() || batch.finished.is_some() {
++            self.pending_publishes.fetch_add(1, Ordering::AcqRel);
++            batch.tracked_publish = true;
++        }
++        batch
++    }
++
++    fn drop_before_chain(
++        st: &mut HubState,
++        recycled_syms: &mut Vec<Vec<u16>>,
++        recycled_records: &mut Vec<Vec<u16>>,
++        recycled_cps: &mut Vec<CountsPer>,
++    ) {
++        while st.cands.front().is_some_and(|c| c.bit < st.chain_bit) {
++            let dropped = st.cands.pop_front().unwrap();
++            if let CandState::Done(CandDone::Block { payload, .. }) = dropped.state {
++                match payload {
++                    ParPayload::Symbols(s) => {
++                        if s.syms.capacity() > 0 {
++                            recycled_syms.push(s.syms);
++                        }
++                    }
++                    ParPayload::Prepared(p) => {
++                        if p.records.capacity() > 0 {
++                            recycled_records.push(p.records);
++                        }
++                        recycled_cps.push(p.counts_per);
++                    }
++                }
++            }
++        }
++    }
++
++    fn publish_batch(&self, shared: &Shared, jobs: &ParJobs, mut batch: CommitBatch) {
++        if batch.jobs.is_empty()
++            && batch.recycled_syms.is_empty()
++            && batch.recycled_records.is_empty()
++            && batch.recycled_cps.is_empty()
++            && batch.spare_chunk.is_none()
++            && batch.finished.is_none()
++        {
++            return;
++        }
++        if !batch.recycled_records.is_empty() || !batch.recycled_cps.is_empty() {
++            let mut pool = lock(&self.prep_pool);
++            for r in batch.recycled_records {
++                if r.capacity() > 0 && pool.0.len() < self.max_front_ahead {
++                    pool.0.push(r);
++                }
++            }
++            for cp in batch.recycled_cps {
++                if pool.1.len() < self.max_front_ahead {
++                    pool.1.push(cp);
++                }
++            }
++        }
++        let max_pool = self.max_front_ahead;
++        let mut wake_reader = false;
++        {
++            let mut sst = shared.lock();
++            if let Some(chunk) = batch.spare_chunk {
++                if sst.free_in.is_empty() {
++                    sst.free_in.push(chunk);
++                }
++            }
++            for s in batch.recycled_syms {
++                if s.capacity() > 0 && sst.free_syms.len() < max_pool {
++                    sst.free_syms.push(s);
++                }
++            }
++            sst.issued = sst.issued.max(batch.blocks_issued);
++            if let Some(fin) = &batch.finished {
++                let at = batch.blocks_issued;
++                match fin {
++                    Some(e) if e.kind != ErrorKind::Cancelled => {
++                        sst.ready.insert(at, Err(e.clone()));
++                        sst.issued = sst.issued.max(at + 1);
++                        sst.end = Some(at + 1);
++                    }
++                    _ => sst.end = Some(at),
++                }
++                wake_reader = true;
++            }
++        }
++        jobs.push_batch(&mut batch.jobs);
++        if batch.tracked_publish && self.pending_publishes.fetch_sub(1, Ordering::AcqRel) == 1 {
++            shared.scan_cv.notify_one();
++        }
++        if wake_reader {
++            shared.cv.notify_one();
++            shared.scan_cv.notify_one();
++        }
++    }
++
++    fn scan_step(&self, shared: &Shared, jobs: &ParJobs, loc: &mut ScannerLocal) -> bool {
++        if shared.stopped.load(Ordering::Acquire) {
++            return false;
++        }
++        let allow_spec = {
++            let mut sst = shared.lock();
++            if sst.cancelled || shared.full(&sst) {
++                return false;
++            }
++            let ahead = (sst.issued - sst.taken) as usize;
++            if ahead >= self.max_front_ahead {
++                return false;
++            }
++            if loc.local_syms.capacity() == 0 {
++                if let Some(s) = sst.free_syms.pop() {
++                    loc.local_syms = s;
++                }
++            }
++            (self.max_front_ahead - ahead).max(1)
++        };
++
++        let claimed = {
++            let mut st = lock(&self.mu);
++            let batch = self.advance_chain_locked(&mut st);
++            let has_batch = !batch.jobs.is_empty()
++                || !batch.recycled_syms.is_empty()
++                || !batch.recycled_records.is_empty()
++                || !batch.recycled_cps.is_empty()
++                || batch.spare_chunk.is_some()
++                || batch.finished.is_some();
++            if has_batch {
++                drop(st);
++                self.publish_batch(shared, jobs, batch);
++                return true;
++            }
++            if matches!(st.phase, ChainPhase::Finished) {
++                None
++            } else {
++                self.claim_cand_locked(&mut st, allow_spec, &mut loc.stitch_buf)
++            }
++        };
++
++        let Some(work) = claimed else {
++            return false;
++        };
++
++        let outcome = self.run_scan(&work, loc);
++        drop(work.view);
++        if loc.stitch_buf.capacity() > MAX_STITCH_RETAIN {
++            loc.stitch_buf = Vec::new();
++        }
++
++        let (batch, wake_lead) = {
++            let mut st = lock(&self.mu);
++            let mut wake = false;
++            if let Some(pos) = st.cands.iter().position(|c| c.id == work.cand_id) {
++                st.cands[pos].state = outcome;
++                if pos == 0 {
++                    wake = true;
++                }
++            }
++            let batch = self.advance_chain_locked(&mut st);
++            if matches!(st.phase, ChainPhase::Finished)
++                || st
++                    .cands
++                    .front()
++                    .is_some_and(|c| matches!(c.state, CandState::NeedMore { .. }))
++                || !st
++                    .cands
++                    .iter()
++                    .any(|c| matches!(c.state, CandState::Claimed))
++            {
++                wake = true;
++            }
++            (batch, wake)
++        };
++        self.publish_batch(shared, jobs, batch);
++        if wake_lead {
++            shared.scan_cv.notify_one();
++        }
++        true
++    }
++
++    fn claim_cand_locked(
++        &self,
++        st: &mut HubState,
++        allow_spec: usize,
++        stitch_buf: &mut Vec<u8>,
++    ) -> Option<ClaimedWork> {
++        let limit = allow_spec.min(st.cands.len());
++        let mut saw_end = matches!(st.phase, ChainPhase::Header { .. });
++        let stream_level = match st.phase {
++            ChainPhase::Stream { level, .. } => level,
++            _ => 9,
++        };
++        for idx in 0..limit {
++            let has_next_horizon = idx + 1 < st.cands.len() || st.rope.eof;
++            if !has_next_horizon {
++                break;
++            }
++            let min_want = match st.cands[idx].state {
++                CandState::Unclaimed { min_want } => min_want,
++                _ => {
++                    if st.cands[idx].is_end {
++                        saw_end = true;
++                    }
++                    continue;
++                }
++            };
++            let bit = st.cands[idx].bit;
++            let cand_id = st.cands[idx].id;
++            let is_end = st.cands[idx].is_end;
++            let next_cand_byte = st.cands.get(idx + 1).map(|c| c.bit / 8);
++            let level_uncertain = is_end || saw_end;
++            let bound_level = if level_uncertain { 9 } else { stream_level };
++            let view = st
++                .rope
++                .view_for_cand(bit / 8, min_want, next_cand_byte, stitch_buf);
++            st.cands[idx].state = CandState::Claimed;
++            self.sync_claimable(st);
++            return Some(ClaimedWork {
++                cand_id,
++                bit,
++                bound_level,
++                level_uncertain,
++                min_want,
++                view,
++            });
++        }
++        self.sync_claimable(st);
++        None
++    }
++
++    fn run_scan(&self, work: &ClaimedWork, loc: &mut ScannerLocal) -> CandState {
++        let (slice, to_eof): (&[u8], bool) = match &work.view {
++            RopeView::ZeroCopy {
++                slab,
++                offset,
++                len,
++                to_eof,
++            } => (&slab[*offset..*offset + *len], *to_eof),
++            RopeView::Stitched { len, to_eof } => (&loc.stitch_buf[..*len], *to_eof),
++        };
++        let slice_len = slice.len();
++        let bit_mod = work.bit % 8;
++        let taken_syms = std::mem::take(&mut loc.local_syms);
++        let scratch: &mut ScanScratch = loc.scan_scratch.get_or_insert_with(Default::default);
++        let res = catch_unwind(AssertUnwindSafe(|| {
++            let mut br = Bits::at(slice, bit_mod);
++            let item = read_item_tight(&mut br, work.bound_level, taken_syms, scratch);
++            (item, br.overran(), br.bit_pos())
++        }));
++        match res {
++            Ok((item, overran, bit_pos)) => {
++                if overran {
++                    loc.local_syms = match item {
++                        Ok(Item::Block(b)) => b.syms,
++                        Ok(Item::End(_)) => Vec::new(),
++                        Err((_, s)) => s,
++                    };
++                    if to_eof {
++                        return CandState::Done(CandDone::Err {
++                            kind: ErrorKind::Truncated,
++                        });
++                    }
++                    if slice_len >= MAX_ITEM || work.min_want >= MAX_ITEM {
++                        return CandState::Done(CandDone::Err {
++                            kind: ErrorKind::BlockTooLarge,
++                        });
++                    }
++                    let next_want = slice_len
++                        .saturating_mul(2)
++                        .max(work.min_want.saturating_mul(2))
++                        .clamp(INIT_NEED_MORE * 2, MAX_ITEM);
++                    return CandState::NeedMore {
++                        min_want: next_want,
++                    };
++                }
++                let end_bit = (work.bit / 8) * 8 + bit_pos;
++                match item {
++                    Ok(Item::Block(b)) => {
++                        if self.prepare_runs && !work.level_uncertain && runs::takes_runs(&b) {
++                            let scanner_runs: &mut Runs =
++                                loc.scanner_runs.get_or_insert_with(Default::default);
++                            let kernels = self.kernels;
++                            let front_res = catch_unwind(AssertUnwindSafe(|| {
++                                runs::front(&b, scanner_runs, kernels)
++                            }));
++                            // Keep `syms` permanently local to this scanner thread!
++                            loc.local_syms = b.syms;
++                            match front_res {
++                                Ok(rows) => {
++                                    let (repl, cp_in) = self.pop_prepared();
++                                    let (records, counts_per) = loc
++                                        .scanner_runs
++                                        .as_mut()
++                                        .unwrap()
++                                        .extract_prepared(repl, cp_in);
++                                    CandState::Done(CandDone::Block {
++                                        end_bit,
++                                        payload: ParPayload::Prepared(PreparedRuns {
++                                            crc: b.crc,
++                                            orig_ptr: b.orig_ptr,
++                                            max_len: b.max_len,
++                                            rows,
++                                            records,
++                                            counts_per,
++                                        }),
++                                    })
++                                }
++                                Err(p) => {
++                                    loc.scanner_runs = None;
++                                    CandState::Done(CandDone::Err {
++                                        kind: ErrorKind::Internal(panic_message(p)),
++                                    })
++                                }
++                            }
++                        } else {
++                            CandState::Done(CandDone::Block {
++                                end_bit,
++                                payload: ParPayload::Symbols(b),
++                            })
++                        }
++                    }
++                    Ok(Item::End(stored_crc)) => CandState::Done(CandDone::End {
++                        end_bit,
++                        stored_crc,
++                    }),
++                    Err((kind, s)) => {
++                        loc.local_syms = s;
++                        CandState::Done(CandDone::Err { kind })
++                    }
++                }
++            }
++            Err(p) => {
++                loc.scan_scratch = None;
++                CandState::Done(CandDone::Err {
++                    kind: ErrorKind::Internal(panic_message(p)),
++                })
++            }
++        }
++    }
++}
++
++/// Primary coordinator + parallel scanner thread (`mibz2-scan`).
++pub(crate) fn par_scanner_lead(
++    shared: &Shared,
++    hub: &ParScanHub,
++    rx: Receiver<Vec<u8>>,
++    jobs_tx: ParJobsTx,
++) {
++    struct OnLeadExit<'a> {
++        shared: &'a Shared,
++        hub: &'a ParScanHub,
++    }
++    impl Drop for OnLeadExit<'_> {
++        fn drop(&mut self) {
++            {
++                let mut st = lock(&self.hub.mu);
++                st.lead_exited = true;
++                self.hub.claimable.store(0, Ordering::Release);
++            }
++            self.hub.helper_cv.notify_all();
++            self.shared.scan_cv.notify_all();
++        }
++    }
++    let _on_exit = OnLeadExit { shared, hub };
++    let jobs = jobs_tx.jobs();
++    let mut loc = ScannerLocal::default();
++    let mut raw_magics: Vec<(u64, bool)> = Vec::with_capacity(64);
++
++    loop {
++        if shared.stopped.load(Ordering::Acquire) {
++            return;
++        }
++
++        let (need_input_blocking, want_prestage, is_finished, promoted) = {
++            let mut st = lock(&hub.mu);
++            let batch = hub.advance_chain_locked(&mut st);
++            let fin = matches!(st.phase, ChainPhase::Finished);
++
++            let (rope_total, rope_eof) = (st.rope.total_bytes(), st.rope.eof);
++            let mut promoted = false;
++            for c in st.cands.iter_mut() {
++                if let CandState::NeedMore { min_want } = c.state {
++                    let avail = rope_total.saturating_sub(c.bit / 8) as usize;
++                    if rope_eof || avail >= min_want {
++                        c.state = CandState::Unclaimed { min_want };
++                        promoted = true;
++                    }
++                }
++            }
++            if promoted {
++                hub.sync_claimable(&st);
++            }
++
++            let head_needs_bytes = !fin
++                && !st.rope.eof
++                && (match st.phase {
++                    ChainPhase::Header { .. } => {
++                        st.rope.total_bytes().saturating_sub(st.chain_bit / 8) < 4
++                    }
++                    ChainPhase::Stream { .. } => {
++                        if let Some(front) = st.cands.front() {
++                            if front.bit > st.chain_bit {
++                                st.rope.total_bytes().saturating_sub(st.chain_bit / 8) < 16
++                            } else if matches!(front.state, CandState::NeedMore { .. }) {
++                                true
++                            } else {
++                                st.cands.len() < 2
++                            }
++                        } else {
++                            true
++                        }
++                    }
++                    ChainPhase::Finished => false,
++                });
++
++            let want_prestage = !fin && !st.rope.eof && st.rope.live_bytes() <= PRESTAGE_ROPE_BYTES;
++
++            drop(st);
++            hub.publish_batch(shared, jobs, batch);
++            let done_and_drained = fin && hub.pending_publishes.load(Ordering::Acquire) == 0;
++            (head_needs_bytes, want_prestage, done_and_drained, promoted)
++        };
++
++        if is_finished {
++            return;
++        }
++        if promoted {
++            hub.wake_helpers(jobs, 1);
++        }
++
++        if want_prestage && !need_input_blocking {
++            let mut got_any = false;
++            let mut hit_eof = false;
++            {
++                let mut st = lock(&hub.mu);
++                while st.rope.live_bytes() < MAX_ROPE_LIVE {
++                    match rx.try_recv() {
++                        Ok(chunk) => {
++                            st.rope.push_chunk(chunk);
++                            got_any = true;
++                        }
++                        Err(std::sync::mpsc::TryRecvError::Empty) => break,
++                        Err(std::sync::mpsc::TryRecvError::Disconnected) => {
++                            st.rope.set_eof();
++                            hit_eof = true;
++                            break;
++                        }
++                    }
++                }
++                if got_any || hit_eof {
++                    ingest_magics_locked(hub, &mut st, &mut raw_magics);
++                }
++            }
++            if got_any || hit_eof {
++                hub.wake_helpers(jobs, 1);
++            }
++        }
++
++        if need_input_blocking {
++            match rx.recv() {
++                Ok(chunk) => {
++                    let mut st = lock(&hub.mu);
++                    st.rope.push_chunk(chunk);
++                    while st.rope.live_bytes() < MAX_ROPE_LIVE {
++                        match rx.try_recv() {
++                            Ok(more) => st.rope.push_chunk(more),
++                            Err(std::sync::mpsc::TryRecvError::Empty) => break,
++                            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
++                                st.rope.set_eof();
++                                break;
++                            }
++                        }
++                    }
++                    ingest_magics_locked(hub, &mut st, &mut raw_magics);
++                }
++                Err(_) => {
++                    let mut st = lock(&hub.mu);
++                    st.rope.set_eof();
++                    ingest_magics_locked(hub, &mut st, &mut raw_magics);
++                }
++            }
++            hub.wake_helpers(jobs, 1);
++            continue;
++        }
++
++        if hub.scan_step(shared, jobs, &mut loc) {
++            continue;
++        }
++
++        let can_pull_more = {
++            let st = lock(&hub.mu);
++            if matches!(st.phase, ChainPhase::Finished)
++                && hub.pending_publishes.load(Ordering::Acquire) == 0
++            {
++                return;
++            }
++            if matches!(st.phase, ChainPhase::Finished) {
++                false
++            } else {
++                let any_unclaimed_without_horizon = !st.rope.eof
++                    && st.cands.len() == 1
++                    && matches!(st.cands[0].state, CandState::Unclaimed { .. });
++                any_unclaimed_without_horizon
++                    || (!st.rope.eof
++                        && st.rope.live_bytes() < MAX_ROPE_LIVE
++                        && st
++                            .cands
++                            .iter()
++                            .all(|c| !matches!(c.state, CandState::Unclaimed { .. })))
++            }
++        };
++        if can_pull_more && !shared.lock().cancelled {
++            let full_now = {
++                let sst = shared.lock();
++                shared.full(&sst) || (sst.issued - sst.taken) as usize >= hub.max_front_ahead
++            };
++            if !full_now {
++                match rx.recv() {
++                    Ok(chunk) => {
++                        let mut st = lock(&hub.mu);
++                        st.rope.push_chunk(chunk);
++                        ingest_magics_locked(hub, &mut st, &mut raw_magics);
++                    }
++                    Err(_) => {
++                        let mut st = lock(&hub.mu);
++                        st.rope.set_eof();
++                        ingest_magics_locked(hub, &mut st, &mut raw_magics);
++                    }
++                }
++                hub.wake_helpers(jobs, 1);
++                continue;
++            }
++        }
++
++        let mut sst = shared.lock();
++        if sst.cancelled {
++            return;
++        }
++        if shared.full(&sst) {
++            sst.record_capped_wait_if_any(shared);
++        }
++        sst.scanner_waiting = true;
++        sst = shared.scan_cv.wait(sst).unwrap_or_else(|e| e.into_inner());
++        sst.scanner_waiting = false;
++        drop(sst);
++        hub.wake_helpers(jobs, 1);
++    }
++}
++
++/// Demand-driven lightweight L1d/L2-resident helper scanner thread (`mibz2-scan-1..2`).
++pub(crate) fn par_scanner_helper(shared: &Shared, hub: &ParScanHub, jobs: &ParJobs) {
++    let mut loc = ScannerLocal::default();
++    loop {
++        if shared.stopped.load(Ordering::Acquire) {
++            return;
++        }
++        if jobs.queued_len() < 3
++            && hub.claimable.load(Ordering::Acquire) > 0
++            && hub.scan_step(shared, jobs, &mut loc)
++        {
++            continue;
++        }
++        let st = lock(&hub.mu);
++        if st.lead_exited || matches!(st.phase, ChainPhase::Finished) || jobs.is_closed() {
++            return;
++        }
++        if jobs.queued_len() < 3 && hub.sync_claimable(&st) > 0 {
++            drop(st);
++            if hub.scan_step(shared, jobs, &mut loc) {
++                continue;
++            }
++            let st2 = lock(&hub.mu);
++            if st2.lead_exited || matches!(st2.phase, ChainPhase::Finished) || jobs.is_closed() {
++                return;
++            }
++            let _st = hub.helper_cv.wait(st2).unwrap_or_else(|e| e.into_inner());
++            continue;
++        }
++        let _st = hub.helper_cv.wait(st).unwrap_or_else(|e| e.into_inner());
++    }
++}
++
++fn ingest_magics_locked(hub: &ParScanHub, st: &mut HubState, raw_magics: &mut Vec<(u64, bool)>) {
++    raw_magics.clear();
++    st.rope.scan_new_anchors(raw_magics);
++    for &(bit, is_end) in raw_magics.iter() {
++        if bit < st.chain_bit {
++            continue;
++        }
++        let id = st.next_cand_id;
++        st.next_cand_id += 1;
++        st.cands.push_back(CandSlot {
++            id,
++            bit,
++            is_end,
++            state: CandState::Unclaimed { min_want: 0 },
++        });
++    }
++    hub.sync_claimable(st);
++}
++
++/// Whole-slice convenience wrapper delegating through bounded `StreamDecoder::parscan`
++/// (`4 MiB` recycled chunks + `READY_BYTES` output cap).
++pub fn decode_parallel_slice(data: &[u8], threads: usize, k: Kernels) -> Result<Vec<u8>, Error> {
++    if threads <= 1 {
++        return crate::decode_with::<crate::bwt::Cells>(data, k);
++    }
++    let mut out = Vec::with_capacity(data.len().saturating_mul(4));
++    decode_parallel_slice_with(data, threads, SLOTS_PER_THREAD * threads.max(1), k, |b| {
++        out.extend_from_slice(b);
++    })?;
++    Ok(out)
++}
++
++/// Streaming block-callback wrapper over `StreamDecoder::parscan`.
++pub fn decode_parallel_slice_with<F: FnMut(&[u8])>(
++    data: &[u8],
++    threads: usize,
++    slots: usize,
++    k: Kernels,
++    mut on_block: F,
++) -> Result<(), Error> {
++    let dec = StreamDecoder::parscan(threads, slots, k);
++    std::thread::scope(|s| {
++        s.spawn(|| {
++            for c in data.chunks(4 << 20) {
++                let mut chunk = dec.spare();
++                chunk.clear();
++                chunk.extend_from_slice(c);
++                if dec.write(chunk).is_err() {
++                    return;
++                }
++            }
++            dec.close();
++        });
++        struct CancelGuard<'a>(&'a StreamDecoder);
++        impl Drop for CancelGuard<'_> {
++            fn drop(&mut self) {
++                self.0.cancel();
++            }
++        }
++        let _cancel = CancelGuard(&dec);
++        let mut spent = Vec::new();
++        loop {
++            match dec.read_block(spent) {
++                Ok(None) => break Ok(()),
++                Ok(Some(b)) => {
++                    on_block(&b);
++                    spent = b;
++                }
++                Err(e) => break Err(e),
++            }
++        }
++    })
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn slab_rope_seam_invariance_across_chunk_sizes() {
++        let mut x = 0x9e37_79b9_7f4a_7c15u64;
++        let len = 2048usize;
++        let mut base = vec![0u8; len];
++        for b in &mut base {
++            x ^= x << 13;
++            x ^= x >> 7;
++            x ^= x << 17;
++            *b = x as u8;
++        }
++        let plants = [
++            (0u64, false),
++            (51, false),
++            (509, true),
++            (1021, false),
++            (4093, true),
++            ((len as u64 * 8) - 48, true),
++        ];
++        for &(bit, is_end) in &plants {
++            let m = if is_end { END_MAGIC } else { BLOCK_MAGIC };
++            for i in 0..48u64 {
++                let pos = bit + i;
++                let bit_val = ((m >> (47 - i)) & 1) as u8;
++                let byte_idx = (pos / 8) as usize;
++                let mask = 1u8 << (7 - (pos % 8));
++                if bit_val != 0 {
++                    base[byte_idx] |= mask;
++                } else {
++                    base[byte_idx] &= !mask;
++                }
++            }
++        }
++        let mut ref_raw = Vec::new();
++        find_magics_anchor_range(&base, 1, 1 + (len - 2) / 4, &mut ref_raw);
++        let want: Vec<(u64, bool)> = ref_raw.iter().map(|r| (r.bit, r.is_end)).collect();
++        for &(bit, is_end) in &plants {
++            assert!(
++                want.contains(&(bit, is_end)),
++                "missing planted ({bit}, {is_end})"
++            );
++        }
++
++        for chunk_sz in [1usize, 2, 3, 4, 5, 7, 8, 13, 64, 513, len] {
++            let mut rope = SlabRope::new();
++            let mut got = Vec::new();
++            for c in base.chunks(chunk_sz) {
++                rope.push_chunk(c.to_vec());
++                rope.scan_new_anchors(&mut got);
++            }
++            rope.set_eof();
++            rope.scan_new_anchors(&mut got);
++            assert_eq!(got, want, "mismatch at chunk_sz={chunk_sz}");
++        }
++    }
++}
+diff --git a/src/parallel.rs b/src/parallel.rs
+index 3978121..c9518ab 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -96,7 +96,7 @@ type Res = Result<Vec<u8>, Error>;
+ /// scanner issues a place only within the window, and the reader takes them in order), so
+ /// the map stays empty; it is there so that no order of inserts could lose a block. Its
+ /// decoded bytes are counted (`bytes`), for the scanner's cap.
+-struct Ready {
++pub(crate) struct Ready {
+     ring: Vec<Option<(u64, Res)>>,
+     over: BTreeMap<u64, Res>,
+     len: usize,
+@@ -123,7 +123,7 @@ impl Ready {
+     }
+ 
+     /// `place`'s block in (replacing any it had, as a map's insert does)
+-    fn insert(&mut self, place: u64, res: Res) {
++    pub(crate) fn insert(&mut self, place: u64, res: Res) {
+         let _ = self.remove(&place);
+         self.bytes += Self::size(&res);
+         self.len += 1;
+@@ -185,13 +185,13 @@ impl Ready {
+ /// The jobs between the scanner and the workers: a queue and its condition, a waiting
+ /// worker woken one at a time, and only while one waits
+ #[derive(Default)]
+-struct Jobs {
++pub(crate) struct Jobs {
+     q: Mutex<JobQueue>,
+     cv: Condvar,
+ }
+ 
+ #[derive(Default)]
+-struct JobQueue {
++pub(crate) struct JobQueue {
+     q: VecDeque<Job>,
+     /// the scanner has ended: no job comes after those queued
+     closed: bool,
+@@ -277,27 +277,27 @@ impl Drop for JobsTx {
+     }
+ }
+ 
+-struct State {
++pub(crate) struct State {
+     /// decoded blocks (or errors) by their place in the stream, not yet read
+-    ready: Ready,
++    pub(crate) ready: Ready,
+     /// blocks given a place (the scanner's), and taken by the reader
+-    issued: u64,
+-    taken: u64,
++    pub(crate) issued: u64,
++    pub(crate) taken: u64,
+     /// the number of places once the scanner has ended (its last perhaps an error)
+-    end: Option<u64>,
+-    cancelled: bool,
++    pub(crate) end: Option<u64>,
++    pub(crate) cancelled: bool,
+     /// buffers to reuse: decoded blocks' and symbols', and the input's chunks the scanner is
+     /// done with (`StreamDecoder::spare`)
+-    free_out: Vec<Vec<u8>>,
+-    free_syms: Vec<Vec<u16>>,
+-    free_in: Vec<Vec<u8>>,
++    pub(crate) free_out: Vec<Vec<u8>>,
++    pub(crate) free_syms: Vec<Vec<u16>>,
++    pub(crate) free_in: Vec<Vec<u8>>,
+     /// the reader waits for a block (on `Shared::cv`), the scanner for room (on
+     /// `Shared::scan_cv`): each is woken only while it waits, and only by what it waits for
+-    reader_waiting: bool,
+-    scanner_waiting: bool,
++    pub(crate) reader_waiting: bool,
++    pub(crate) scanner_waiting: bool,
+     /// (testing) the scanner's waits with room in the window: the cap's
+     #[cfg(test)]
+-    capped_waits: u64,
++    pub(crate) capped_waits: u64,
+     /// the decode's terminal failure, if it failed as a whole (the service core's outer
+     /// unwind, `Hub::fail`): set with `cancelled`, before either is announced, and the
+     /// reader's error in place of `Cancelled`
+@@ -323,6 +323,13 @@ impl State {
+         }
+     }
+ 
++    pub(crate) fn record_capped_wait_if_any(&mut self, _shared: &Shared) {
++        #[cfg(test)]
++        {
++            self.capped_waits += u64::from(self.issued - self.taken < _shared.slots);
++        }
++    }
++
+     /// The reader's error once the decode is cancelled: the terminal failure, if the decode
+     /// failed as a whole, else `Cancelled`
+     fn stopped(&self) -> Error {
+@@ -332,15 +339,15 @@ impl State {
+     }
+ }
+ 
+-struct Shared {
++pub(crate) struct Shared {
+     state: Mutex<State>,
+     /// the reader's condition: a block at its place, the end, or the decode cancelled
+-    cv: Condvar,
++    pub(crate) cv: Condvar,
+     /// the scanner's: room in the window (and under the cap), or the decode cancelled
+-    scan_cv: Condvar,
++    pub(crate) scan_cv: Condvar,
+     /// `State::cancelled`, readable without the lock (a worker skipping its job)
+-    stopped: AtomicBool,
+-    slots: u64,
++    pub(crate) stopped: AtomicBool,
++    pub(crate) slots: u64,
+     /// the ready blocks' cap, if the decoder has one (the plain workers')
+     cap: Option<Cap>,
+     /// the pipelined teams' counts (`StreamDecoder::pipeline_counts`): jobs taken by a
+@@ -368,7 +375,7 @@ impl Shared {
+         }
+     }
+ 
+-    fn lock(&self) -> std::sync::MutexGuard<'_, State> {
++    pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, State> {
+         // (a panic while holding the lock is caught where it happens; the state is
+         // consistent at every unlock, so a poisoned lock is still usable)
+         self.state.lock().unwrap_or_else(|e| e.into_inner())
+@@ -399,7 +406,7 @@ impl Shared {
+ 
+     /// Whether the scanner must wait before it issues another block: the window full, or
+     /// the cap's bytes ready and unread with the cap's floor of blocks in flight
+-    fn full(&self, st: &State) -> bool {
++    pub(crate) fn full(&self, st: &State) -> bool {
+         let ahead = st.issued - st.taken;
+         ahead >= self.slots
+             || self
+@@ -693,6 +700,181 @@ impl StreamDecoder {
+         dec
+     }
+ 
++    /// Push-streaming parallel front end (`par_scan::ParScanHub`) paired with `#739`'s
++    /// owned-output workers, ready ring, and `READY_BYTES` (`12 MiB`) cap.
++    /// - At `1..=3` workers: zero-overhead `single_slab_scanner` over `SlabRope` + `read_item_tight`.
++    /// - At `>= 4` workers: `mibz2-scan` + `1..2` demand-driven `54 KiB` L1d-resident helper
++    ///   scanners feeding dedicated BWT workers (`8` `OpenCells` workers on the 10-core i9 at
++    ///   `>= 10` threads, matching `trimmed` elsewhere).
++    pub fn parscan(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
++        use super::bwt::{Cells, OpenCells};
++        let threads = threads.max(1);
++        let forced = FORCED.with(|c| c.get()).is_some();
++        let plan = Plan::for_threads(threads);
++        let cell = if forced {
++            None
++        } else {
++            trimmed_here(threads, plan, k)
++        };
++        let (n, w_slots, lazy) = if let Some((c_n, lazy)) = cell {
++            // On the 10-core i9 at >= 10 threads, parallel scanning un-bottlenecks 8 OpenCells
++            // workers while SlabRope + tight syms keep peak RSS below master's 7-worker RSS.
++            let n = if threads >= TEN_CORES.0 && c_n == TRIMMED_WORKERS {
++                8
++            } else {
++                c_n
++            };
++            (n, window(Plan::Workers(n), threads, slots, true), lazy)
++        } else {
++            match plan {
++                Plan::Workers(n) => (n, window(plan, threads, slots, false), plan.lazy()),
++                Plan::Teams { .. } => {
++                    let phys = physical_cores().unwrap_or(threads).clamp(1, threads);
++                    let w = (slots.saturating_mul(phys) / threads.max(1)).max(phys);
++                    (phys, w, phys >= LAZY_FROM_THREADS)
++                }
++            }
++        };
++        let helpers = if n >= 7 {
++            2
++        } else if n >= 6 && threads >= 8 {
++            1
++        } else {
++            0
++        };
++        let mut dec = if lazy {
++            Self::parscan_capped::<OpenCells>(n, w_slots, k, READY_BYTES, helpers)
++        } else {
++            Self::parscan_capped::<Cells>(n, w_slots, k, READY_BYTES, helpers)
++        };
++        dec.threads = n;
++        dec
++    }
++
++    /// `parscan` with explicit inverse-BWT kernel `I` on `threads` workers.
++    pub fn parscan_with<I: super::bwt::InverseBwt + 'static>(
++        threads: usize,
++        slots: usize,
++        k: Kernels,
++    ) -> StreamDecoder {
++        let helpers = if threads <= 6 {
++            0
++        } else if threads < 10 {
++            1
++        } else {
++            2
++        };
++        Self::parscan_capped::<I>(threads, slots, k, READY_BYTES, helpers)
++    }
++
++    pub(crate) fn parscan_capped<I: super::bwt::InverseBwt + 'static>(
++        threads: usize,
++        slots: usize,
++        k: Kernels,
++        cap: usize,
++        helper_scanners: usize,
++    ) -> StreamDecoder {
++        let threads = threads.max(1);
++        let cap = Cap {
++            bytes: cap,
++            floor: threads as u64 + 2,
++        };
++        let prepare_runs =
++            ((2..=3).contains(&threads) || helper_scanners > 0) && I::default().reads_runs();
++        let mut dec = Self::launch_parscan_hub(
++            threads,
++            slots,
++            Some(cap),
++            helper_scanners,
++            prepare_runs,
++            k,
++            move |shared, jobs, ps_hub| parscan_hub_worker::<I>(shared, jobs, ps_hub, k),
++        );
++        dec.kernel = std::any::type_name::<I>();
++        dec
++    }
++
++    fn launch_parscan_hub<W>(
++        threads: usize,
++        slots: usize,
++        cap: Option<Cap>,
++        helper_scanners: usize,
++        prepare_runs: bool,
++        k: Kernels,
++        work: W,
++    ) -> StreamDecoder
++    where
++        W: Fn(&Shared, &super::par_scan::ParJobs, &super::par_scan::ParScanHub)
++            + Clone
++            + Send
++            + 'static,
++    {
++        use super::par_scan::{
++            par_scanner_helper, par_scanner_lead, single_slab_scanner, ParJobs, ParJobsTx,
++            ParScanHub, PARSCAN_INPUT_QUEUE,
++        };
++        let threads = threads.max(1);
++        let slots_u64 = slots.max(threads) as u64;
++        let shared = Arc::new(Shared::new(slots_u64, cap));
++        let (in_tx, in_rx) = sync_channel::<Vec<u8>>(PARSCAN_INPUT_QUEUE);
++        let job_rx = Arc::new(ParJobs::default());
++        let job_tx = ParJobsTx(job_rx.clone());
++        let ps_hub = Arc::new(ParScanHub::new(
++            threads,
++            slots_u64 as usize,
++            helper_scanners > 0,
++            prepare_runs,
++            k,
++        ));
++        let mut handles = Vec::with_capacity(threads + 1 + helper_scanners);
++        for i in 0..threads {
++            let (shared, job_rx, work, ph) =
++                (shared.clone(), job_rx.clone(), work.clone(), ps_hub.clone());
++            handles.push(
++                std::thread::Builder::new()
++                    .name(format!("mibz2-{i}"))
++                    .spawn(move || work(&shared, &job_rx, &ph))
++                    .expect("spawn a bz2 worker"),
++            );
++        }
++        if helper_scanners > 0 {
++            for h in 0..helper_scanners {
++                let (sh, jr, ph) = (shared.clone(), job_rx.clone(), ps_hub.clone());
++                handles.push(
++                    std::thread::Builder::new()
++                        .name(format!("mibz2-scan-{}", h + 1))
++                        .spawn(move || par_scanner_helper(&sh, &ph, &jr))
++                        .expect("spawn a bz2 helper scanner"),
++                );
++            }
++            let (sh, ph) = (shared.clone(), ps_hub);
++            handles.push(
++                std::thread::Builder::new()
++                    .name("mibz2-scan".into())
++                    .spawn(move || par_scanner_lead(&sh, &ph, in_rx, job_tx))
++                    .expect("spawn the bz2 scanner"),
++            );
++        } else {
++            let (sh, ph) = (shared.clone(), ps_hub);
++            handles.push(
++                std::thread::Builder::new()
++                    .name("mibz2-scan".into())
++                    .spawn(move || single_slab_scanner(&sh, &ph, in_rx, job_tx))
++                    .expect("spawn the bz2 scanner"),
++            );
++        }
++        StreamDecoder {
++            input: Mutex::new(Some(in_tx)),
++            shared,
++            handles: Mutex::new(handles),
++            reader: Mutex::default(),
++            threads,
++            pipelined: false,
++            kernel: "",
++            hub: None,
++        }
++    }
++
+     /// Research, opt-in, not the default: `teams` pipelined teams of `k` threads (at least
+     /// 2), each overlapping its leader's serial stages (a block's RLE1 and CRC, the next
+     /// block's move-to-front) with its helpers' build and walk of the block between, on
+@@ -1129,7 +1311,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
+         mark!(JobLock);
+         mark!(JobRecv);
+         let job = jobs.recv();
+-        let Some((place, bit, mut symbols)) = job else {
++        let Some(job) = job else {
+             // (its buffers' high-water marks, for the footprint ledger)
+             #[cfg(feature = "trace")]
+             if crate::trace::level() > 0 {
+@@ -1138,66 +1320,160 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Jobs, k: Kernels) {
+             }
+             return;
+         };
+-        mark!(JobGot, place);
+-        if shared.stopped.load(Ordering::Acquire) {
+-            continue; // (drain the queue, so the scanner never waits on it)
+-        }
+-        mark!(DecodeStart, place);
+-        // (research only, `phase-counters`: the worker's whole-decode scope, the block's
+-        // decode_block)
+-        #[cfg(feature = "phase-counters")]
+-        crate::phase::whole_begin();
+-        // the block's symbols go back to the pool once its rows are known (nothing reads
+-        // them after), in the same lock as its output buffer is taken: from the pool for a
+-        // block of `POOLED_FROM` rows or more, its own for a smaller one
+-        let res = catch_unwind(AssertUnwindSafe(|| {
+-            super::decode_owned(&mut symbols, k, &mut scratch, |n, syms| {
+-                let mut st = shared.lock();
+-                if syms.capacity() > 0 && st.free_syms.len() < slots {
+-                    st.free_syms.push(syms);
++        run_worker_job(shared, job, &mut scratch, slots, k);
++    }
++}
++
++fn parscan_hub_worker<I: super::bwt::InverseBwt>(
++    shared: &Shared,
++    jobs: &super::par_scan::ParJobs,
++    ps_hub: &super::par_scan::ParScanHub,
++    k: Kernels,
++) {
++    use super::par_scan::ParPayload;
++    let mut scratch = Scratch::<I>::default();
++    let slots = shared.slots as usize;
++    loop {
++        mark!(JobLock);
++        mark!(JobRecv);
++        let Some((place, bit, payload)) = jobs.recv(ps_hub) else {
++            #[cfg(feature = "trace")]
++            if crate::trace::level() > 0 {
++                crate::trace::buffers(&scratch.buffers());
++                crate::trace::allocations(std::mem::take(&mut scratch.allocation_history));
++            }
++            return;
++        };
++        match payload {
++            ParPayload::Symbols(symbols) => {
++                run_worker_job(shared, (place, bit, symbols), &mut scratch, slots, k);
++            }
++            ParPayload::Prepared(prep) => {
++                mark!(JobGot, place);
++                if shared.stopped.load(Ordering::Acquire) {
++                    return;
+                 }
+-                if n >= POOLED_FROM {
+-                    st.free_out
+-                        .pop()
+-                        .unwrap_or_else(|| Vec::with_capacity(n + n / 16 + 64))
+-                } else {
+-                    Vec::new()
++                mark!(DecodeStart, place);
++                #[cfg(feature = "phase-counters")]
++                crate::phase::whole_begin();
++                let res = catch_unwind(AssertUnwindSafe(|| {
++                    super::decode_prepared_runs(
++                        prep,
++                        k,
++                        &mut scratch,
++                        |n, prev_records, used_cp| {
++                            ps_hub.recycle_prepared(prev_records, used_cp);
++                            if n >= POOLED_FROM {
++                                shared
++                                    .lock()
++                                    .free_out
++                                    .pop()
++                                    .unwrap_or_else(|| Vec::with_capacity(n + n / 16 + 64))
++                            } else {
++                                Vec::new()
++                            }
++                        },
++                    )
++                }));
++                #[cfg(feature = "phase-counters")]
++                crate::phase::whole_end();
++                mark!(
++                    DecodeEnd,
++                    place,
++                    res.as_ref().map_or(0, |r| r.as_ref().map_or(0, Vec::len)),
++                    res.as_ref()
++                        .map_or(0, |r| r.as_ref().map_or(0, Vec::capacity))
++                );
++                let res = match res {
++                    Ok(r) => r,
++                    Err(p) => {
++                        scratch = Scratch::default();
++                        Err(ErrorKind::Internal(panic_message(p)))
++                    }
++                }
++                .map_err(|kind| Error {
++                    kind,
++                    block: Some(place),
++                    bit: Some(bit),
++                });
++                let mut st = shared.lock();
++                let wake = shared.insert_locked(&mut st, place, res);
++                drop(st);
++                mark!(Ready, place);
++                if wake {
++                    shared.cv.notify_one();
+                 }
+-            })
+-        }));
+-        #[cfg(feature = "phase-counters")]
+-        crate::phase::whole_end();
+-        mark!(
+-            DecodeEnd,
+-            place,
+-            res.as_ref().map_or(0, |r| r.as_ref().map_or(0, Vec::len)),
+-            res.as_ref()
+-                .map_or(0, |r| r.as_ref().map_or(0, Vec::capacity))
+-        );
+-        let res = match res {
+-            Ok(r) => r,
+-            Err(p) => {
+-                scratch = Scratch::default();
+-                Err(ErrorKind::Internal(panic_message(p)))
+             }
+         }
+-        .map_err(|kind| Error {
+-            kind,
+-            block: Some(place),
+-            bit: Some(bit),
+-        });
+-        let mut st = shared.lock();
+-        let wake = shared.insert_locked(&mut st, place, res);
+-        // (the symbols, where the block failed before its rows were known)
+-        if symbols.syms.capacity() > 0 && st.free_syms.len() < slots {
+-            st.free_syms.push(std::mem::take(&mut symbols.syms));
+-        }
+-        drop(st);
+-        mark!(Ready, place);
+-        if wake {
+-            shared.cv.notify_one();
++    }
++}
++
++fn run_worker_job<I: super::bwt::InverseBwt>(
++    shared: &Shared,
++    (place, bit, mut symbols): Job,
++    scratch: &mut Scratch<I>,
++    slots: usize,
++    k: Kernels,
++) {
++    mark!(JobGot, place);
++    if shared.stopped.load(Ordering::Acquire) {
++        return; // (drain the queue, so the scanner never waits on it)
++    }
++    mark!(DecodeStart, place);
++    // (research only, `phase-counters`: the worker's whole-decode scope, the block's
++    // decode_block)
++    #[cfg(feature = "phase-counters")]
++    crate::phase::whole_begin();
++    // the block's symbols go back to the pool once its rows are known (nothing reads
++    // them after), in the same lock as its output buffer is taken: from the pool for a
++    // block of `POOLED_FROM` rows or more, its own for a smaller one
++    let res = catch_unwind(AssertUnwindSafe(|| {
++        super::decode_owned(&mut symbols, k, scratch, |n, syms| {
++            let mut st = shared.lock();
++            if syms.capacity() > 0 && st.free_syms.len() < slots {
++                st.free_syms.push(syms);
++            }
++            if n >= POOLED_FROM {
++                st.free_out
++                    .pop()
++                    .unwrap_or_else(|| Vec::with_capacity(n + n / 16 + 64))
++            } else {
++                Vec::new()
++            }
++        })
++    }));
++    #[cfg(feature = "phase-counters")]
++    crate::phase::whole_end();
++    mark!(
++        DecodeEnd,
++        place,
++        res.as_ref().map_or(0, |r| r.as_ref().map_or(0, Vec::len)),
++        res.as_ref()
++            .map_or(0, |r| r.as_ref().map_or(0, Vec::capacity))
++    );
++    let res = match res {
++        Ok(r) => r,
++        Err(p) => {
++            *scratch = Scratch::default();
++            Err(ErrorKind::Internal(panic_message(p)))
+         }
+     }
++    .map_err(|kind| Error {
++        kind,
++        block: Some(place),
++        bit: Some(bit),
++    });
++    let mut st = shared.lock();
++    let wake = shared.insert_locked(&mut st, place, res);
++    // (the symbols, where the block failed before its rows were known)
++    if symbols.syms.capacity() > 0 && st.free_syms.len() < slots {
++        st.free_syms.push(std::mem::take(&mut symbols.syms));
++    }
++    drop(st);
++    mark!(Ready, place);
++    if wake {
++        shared.cv.notify_one();
++    }
+ }
+ 
+ fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
+diff --git a/src/read.rs b/src/read.rs
+index 21629ed..ee5b77c 100644
+--- a/src/read.rs
++++ b/src/read.rs
+@@ -127,6 +127,22 @@ impl<R: Read + Send + 'static> BzReader<R> {
+         Self::on(r, StreamDecoder::new(threads, slots, kernels))
+     }
+ 
++    /// Push-streaming parallel front end (`StreamDecoder::parscan`): reads `r` in bounded
++    /// chunks with bounded blocks and ready bytes (`parallel::READY_BYTES`) in flight.
++    pub fn parscan(r: R, threads: usize) -> Self {
++        Self::parscan_with(
++            r,
++            threads,
++            SLOTS_PER_THREAD * threads.max(1),
++            Kernels::detect(),
++        )
++    }
++
++    /// `parscan`, with explicit `slots` and `kernels`
++    pub fn parscan_with(r: R, threads: usize, slots: usize, kernels: Kernels) -> Self {
++        Self::on(r, StreamDecoder::parscan(threads, slots, kernels))
++    }
++
+     /// Decode as `plan` says (production's workers, or cooperative teams: `Plan`), with
+     /// `slots` blocks in flight and the kernels given
+     pub fn parallel_planned(r: R, plan: Plan, slots: usize, kernels: Kernels) -> Self {
+diff --git a/src/rle.rs b/src/rle.rs
+index 90b6a76..3815c47 100644
+--- a/src/rle.rs
++++ b/src/rle.rs
+@@ -18,10 +18,76 @@ pub fn unrle(rle: &[u8], out: &mut Vec<u8>, k: Kernels) -> Result<(), ErrorKind>
+     unrle_scalar(rle, out, 0)
+ }
+ 
++#[inline(always)]
++fn swar_run5(w: [u8; 8]) -> u64 {
++    let x = u64::from_le_bytes(w);
++    let d5 = ((x ^ (x >> 8)) | (x ^ (x >> 16)) | (x ^ (x >> 24))) & 0x0000_00ff_ffff_ffff;
++    d5.wrapping_sub(0x0000_0001_0101_0101) & !d5 & 0x0000_0080_8080_8080
++}
++
++#[inline(always)]
++fn swar_run8_at(rle: &[u8], i: usize) -> u64 {
++    let sub = &rle[i..i + 11];
++    let v0 = u64::from_le_bytes(sub[0..8].try_into().unwrap());
++    let v1 = u64::from_le_bytes(sub[1..9].try_into().unwrap());
++    let v2 = u64::from_le_bytes(sub[2..10].try_into().unwrap());
++    let v3 = u64::from_le_bytes(sub[3..11].try_into().unwrap());
++    let d = (v0 ^ v1) | (v0 ^ v2) | (v0 ^ v3);
++    d.wrapping_sub(0x0101_0101_0101_0101) & !d & 0x8080_8080_8080_8080
++}
++
+ /// From `rle[i..]` (i at a run's start or a literal, never inside a run)
+ pub fn unrle_scalar(rle: &[u8], out: &mut Vec<u8>, mut i: usize) -> Result<(), ErrorKind> {
+     let n = rle.len();
+     out.reserve(n - i.min(n));
++    let mut lit_start = i.min(n);
++    while i + 20 <= n {
++        let z0 = swar_run8_at(rle, i);
++        let z1 = swar_run8_at(rle, i + 8);
++        if (z0 | z1) == 0 {
++            i += 16;
++            continue;
++        }
++        let j = if z0 != 0 {
++            i + (z0.trailing_zeros() / 8) as usize
++        } else {
++            i + 8 + (z1.trailing_zeros() / 8) as usize
++        };
++        if j > lit_start {
++            out.extend_from_slice(&rle[lit_start..j]);
++        }
++        let c = rle[j];
++        let extra = rle[j + 4] as usize;
++        let run_len = 4 + extra;
++        if run_len <= 16 {
++            out.extend_from_slice(&[c; 16][..run_len]);
++        } else {
++            out.extend_from_slice(&[c, c, c, c]);
++            out.resize(out.len() + extra, c);
++        }
++        i = j + 5;
++        lit_start = i;
++    }
++    while i + 9 <= n {
++        let z = swar_run5(rle[i..i + 8].try_into().unwrap());
++        if z == 0 {
++            i += 5;
++            continue;
++        }
++        let j = i + (z.trailing_zeros() / 8) as usize;
++        if j > lit_start {
++            out.extend_from_slice(&rle[lit_start..j]);
++        }
++        let c = rle[j];
++        let extra = rle[j + 4];
++        out.extend_from_slice(&[c, c, c, c]);
++        out.resize(out.len() + extra as usize, c);
++        i = j + 5;
++        lit_start = i;
++    }
++    if i > lit_start {
++        out.extend_from_slice(&rle[lit_start..i]);
++    }
+     while i < n {
+         let c = rle[i];
+         if i + 3 < n && rle[i + 1] == c && rle[i + 2] == c && rle[i + 3] == c {
+@@ -95,11 +161,13 @@ const TILE: usize = 64 << 10;
+ /// the growth twice. The two buffers are swapped for it, so nothing is copied, and `buf`
+ /// ends with `stage`'s old allocation.
+ ///
+-/// In place: the bytes from the first run on are moved up by the most the output gets ahead
+-/// of the input at any run (`shift`), then the runs are undone forward from there. After each
+-/// run the output's end is at most the input's next byte (the prefix's growth is at most
+-/// `shift`), so no byte is written before it is read, and the bytes below the output's end
+-/// are final.
++/// In place via zero-shift bipolar decomposition: let `d_r = dst_r - src_r` (`d_0 = 0`,
++/// `d_{r+1} = d_r + extra_r - 1 >= d_r - 1`). Because `d` steps down by at most `1` per run,
++/// `d` never crosses from `> 0` to `< 0` without hitting `d_v == 0` (`dst_v == src_v`) in
++/// between, and `dst` is strictly monotone below `len`. Stretches with `d == 0` stay in place
++/// (`0` copies), stretches with `d < 0` copy forward (`dst < src`), and positive zones
++/// (`d > 0`) copy backward (`dst > src`) in a single pass without an upfront shift or `stage`
++/// swap, streaming `64 KiB` CRC tiles as zones finalize.
+ pub(crate) fn unrle_in_place(
+     buf: &mut Vec<u8>,
+     runs: &mut Vec<Run>,
+@@ -115,27 +183,18 @@ pub(crate) fn unrle_in_place(
+         return Ok(super::crc::crc32(buf, k));
+     }
+     find_runs(buf, runs, k)?;
+-    let Some(&(first, _, _)) = runs.first() else {
++    let m = runs.len();
++    if m == 0 {
+         return Ok(super::crc::crc32(buf, k));
+-    };
+-    // the output's growth over the input after each run, its most, and in all
+-    let (mut grown, mut shift) = (0isize, 0isize);
++    }
++    let mut grown = 0isize;
+     for &(_, _, extra) in runs.iter() {
+         grown += extra as isize - 1;
+-        shift = shift.max(grown);
+-    }
+-    let (shift, len) = (shift as usize, (n as isize + grown) as usize);
+-    if shift > n {
+-        std::mem::swap(buf, stage);
+-        buf.clear();
+-        unrle(stage, buf, k)?;
+-        return Ok(super::crc::crc32(buf, k));
+     }
+-    let first = first as usize;
+-    if shift > 0 {
+-        buf.reserve_exact(shift);
+-        buf.resize(n + shift, 0);
+-        buf.copy_within(first..n, first + shift);
++    let len = (n as isize + grown) as usize;
++    if len > n {
++        buf.reserve_exact(len - n);
++        buf.resize(len, 0);
+     }
+     // the CRC register over buf[..at], whole tiles of the final bytes
+     let (mut s, mut at) = (!0u32, 0usize);
+@@ -145,30 +204,108 @@ pub(crate) fn unrle_in_place(
+             *at += TILE;
+         }
+     };
+-    tiles(&mut s, &mut at, buf, first);
+-    let (mut src, mut dst) = (first + shift, first);
+-    for &(j, c, extra) in runs.iter() {
+-        let from = j as usize + shift;
+-        if from > src {
+-            if dst != src {
+-                buf.copy_within(src..from, dst);
++    tiles(&mut s, &mut at, buf, runs[0].0 as usize);
++
++    let mut r = 0usize;
++    let mut d = 0isize;
++    while r <= m {
++        let src_r = if r == 0 {
++            0
++        } else {
++            runs[r - 1].0 as usize + 5
++        };
++        let end_r = if r < m { runs[r].0 as usize } else { n };
++        if d < 0 && end_r > src_r {
++            let dst_r = (src_r as isize + d) as usize;
++            buf.copy_within(src_r..end_r, dst_r);
++        }
++        if r == m {
++            break;
++        }
++        let (j_r, c_r, extra_r) = runs[r];
++        let d_next = d + (extra_r as isize - 1);
++        if d_next <= 0 {
++            let r_start = (j_r as isize + d) as usize;
++            let run_len = 4 + extra_r as usize;
++            fill_run_fast(buf, r_start, run_len, c_r);
++            tiles(&mut s, &mut at, buf, r_start + run_len);
++            d = d_next;
++            r += 1;
++            continue;
++        }
++
++        // Positive zone `r + 1 ..= v`: `d_q > 0` up to the first `v <= m` with `d_v == 0`
++        // (or `v == m` with `d_m > 0`).
++        let mut v = r + 1;
++        let mut d_v = d_next;
++        while v < m && d_v > 0 {
++            d_v += runs[v].2 as isize - 1;
++            v += 1;
++        }
++        if v == m && d_v > 0 {
++            let src_m = runs[m - 1].0 as usize + 5;
++            if n > src_m {
++                buf.copy_within(src_m..n, (src_m as isize + d_v) as usize);
+             }
+-            dst += from - src;
+         }
+-        let run = 4 + extra as usize;
+-        buf[dst..dst + run].fill(c);
+-        dst += run;
+-        src = from + 5;
+-        tiles(&mut s, &mut at, buf, dst);
+-    }
+-    if n + shift > src && dst != src {
+-        buf.copy_within(src..n + shift, dst);
++        let mut d_after = d_v;
++        let mut q = v;
++        while q > r + 1 {
++            q -= 1;
++            let (j_q, c_q, extra_q) = runs[q];
++            let d_q = d_after - (extra_q as isize - 1);
++            let src_q = runs[q - 1].0 as usize + 5;
++            let end_q = j_q as usize;
++            let r_start = (end_q as isize + d_q) as usize;
++            fill_run_fast(buf, r_start, 4 + extra_q as usize, c_q);
++            if end_q > src_q {
++                buf.copy_within(src_q..end_q, (src_q as isize + d_q) as usize);
++            }
++            d_after = d_q;
++        }
++        let r_start = (j_r as isize + d) as usize;
++        fill_run_fast(buf, r_start, 4 + extra_r as usize, c_r);
++
++        let zone_end = if v < m {
++            runs[v - 1].0 as usize + 5
++        } else {
++            len
++        };
++        tiles(&mut s, &mut at, buf, zone_end);
++        if v == m {
++            break;
++        }
++        r = v;
++        d = 0;
+     }
++
+     buf.truncate(len);
+     s = super::crc::update_with(s, &buf[at..], k);
+     Ok(!s)
+ }
+ 
++#[inline(always)]
++fn fill_run_fast(buf: &mut [u8], r_start: usize, run_len: usize, c: u8) {
++    let slice = &mut buf[r_start..r_start + run_len];
++    if run_len <= 8 {
++        let w4 = [c; 4];
++        slice[..4].copy_from_slice(&w4);
++        slice[run_len - 4..].copy_from_slice(&w4);
++    } else if run_len <= 32 {
++        if run_len <= 16 {
++            let w8 = [c; 8];
++            slice[..8].copy_from_slice(&w8);
++            slice[run_len - 8..].copy_from_slice(&w8);
++        } else {
++            let w16 = [c; 16];
++            slice[..16].copy_from_slice(&w16);
++            slice[run_len - 16..].copy_from_slice(&w16);
++        }
++    } else {
++        slice.fill(c);
++    }
++}
++
+ /// The runs of `rle`, in order, as `unrle` reads them (from the start, a run's 5 bytes taken
+ /// whole), into `runs`; Err where `unrle` errs (a run's 4 bytes at the end, with no count)
+ fn find_runs(rle: &[u8], runs: &mut Vec<Run>, k: Kernels) -> Result<(), ErrorKind> {
+@@ -187,6 +324,31 @@ fn find_runs(rle: &[u8], runs: &mut Vec<Run>, k: Kernels) -> Result<(), ErrorKin
+ /// `find_runs` from `rle[i..]` (i at a run's start or a literal, never inside a run)
+ fn find_runs_scalar(rle: &[u8], runs: &mut Vec<Run>, mut i: usize) -> Result<(), ErrorKind> {
+     let n = rle.len();
++    while i + 20 <= n {
++        let z0 = swar_run8_at(rle, i);
++        let z1 = swar_run8_at(rle, i + 8);
++        if (z0 | z1) == 0 {
++            i += 16;
++            continue;
++        }
++        let j = if z0 != 0 {
++            i + (z0.trailing_zeros() / 8) as usize
++        } else {
++            i + 8 + (z1.trailing_zeros() / 8) as usize
++        };
++        runs.push((j as u32, rle[j], rle[j + 4]));
++        i = j + 5;
++    }
++    while i + 9 <= n {
++        let z = swar_run5(rle[i..i + 8].try_into().unwrap());
++        if z == 0 {
++            i += 5;
++            continue;
++        }
++        let j = i + (z.trailing_zeros() / 8) as usize;
++        runs.push((j as u32, rle[j], rle[j + 4]));
++        i = j + 5;
++    }
+     while i + 3 < n {
+         let c = rle[i];
+         if rle[i + 1] == c && rle[i + 2] == c && rle[i + 3] == c {
+diff --git a/src/runs.rs b/src/runs.rs
+index 6856127..f112234 100644
+--- a/src/runs.rs
++++ b/src/runs.rs
+@@ -62,6 +62,23 @@ const RUN_SHARE: usize = 32;
+ /// not sampled: a few long runs hold most of a block's rows, and a sample misses them.)
+ ///
+ /// Every block this admits, `2 * syms <= max_len` admits too.
++#[inline(always)]
++fn count_run_syms(slice: &[u16]) -> usize {
++    let mut total = 0usize;
++    let mut chunks = slice.chunks_exact(16);
++    for ch in &mut chunks {
++        let mut sub = 0u32;
++        for &s in ch {
++            sub += u32::from(s <= 1);
++        }
++        total += sub as usize;
++    }
++    for &s in chunks.remainder() {
++        total += usize::from(s <= 1);
++    }
++    total
++}
++
+ pub fn takes_runs(b: &Symbols) -> bool {
+     let syms = &b.syms;
+     let len = syms.len();
+@@ -74,7 +91,7 @@ pub fn takes_runs(b: &Symbols) -> bool {
+         let full = len / WINDOW;
+         for i in 0..full {
+             let w = &syms[i * WINDOW..(i + 1) * WINDOW];
+-            runs += w.iter().map(|&s| usize::from(s <= 1)).sum::<usize>();
++            runs += count_run_syms(w);
+             if runs >= need {
+                 return true;
+             }
+@@ -82,10 +99,7 @@ pub fn takes_runs(b: &Symbols) -> bool {
+                 return false;
+             }
+         }
+-        runs += syms[full * WINDOW..]
+-            .iter()
+-            .map(|&s| usize::from(s <= 1))
+-            .sum::<usize>();
++        runs += count_run_syms(&syms[full * WINDOW..]);
+         RUN_SHARE * runs >= len
+     } else {
+         const NEED: usize = (WINDOW * WINDOWS) / RUN_SHARE;
+@@ -93,7 +107,7 @@ pub fn takes_runs(b: &Symbols) -> bool {
+         let mut runs = 0usize;
+         for i in 0..WINDOWS {
+             let w = &syms[i * step..i * step + WINDOW];
+-            runs += w.iter().map(|&s| usize::from(s <= 1)).sum::<usize>();
++            runs += count_run_syms(w);
+             if runs >= NEED {
+                 return true;
+             }
+@@ -129,6 +143,19 @@ impl Default for Runs {
+     }
+ }
+ 
++pub(crate) type CountsPer = Box<([u32; 256], [u32; 256])>;
++
++/// Pre-scanned run records + byte/record counts (`ParScanHub` scanner-resident `runs::front`),
++/// keeping `lit` / `one` bitmap scratch private to the scanner thread.
++pub(crate) struct PreparedRuns {
++    pub(crate) crc: u32,
++    pub(crate) orig_ptr: u32,
++    pub(crate) max_len: usize,
++    pub(crate) rows: Result<usize, ErrorKind>,
++    pub(crate) records: Vec<u16>,
++    pub(crate) counts_per: CountsPer,
++}
++
+ impl Runs {
+     /// Read-only records for the experimental cells kernel; format unchanged.
+     #[cfg(not(feature = "moonshot"))]
+@@ -145,6 +172,23 @@ impl Runs {
+         &self.runs
+     }
+ 
++    pub(crate) fn extract_prepared(
++        &mut self,
++        repl_records: Vec<u16>,
++        mut cp: CountsPer,
++    ) -> (Vec<u16>, CountsPer) {
++        cp.0 = self.counts;
++        cp.1 = self.per;
++        let recs = std::mem::replace(&mut self.runs, repl_records);
++        (recs, cp)
++    }
++
++    pub(crate) fn install_prepared(&mut self, records: Vec<u16>, cp: &CountsPer) -> Vec<u16> {
++        self.counts = cp.0;
++        self.per = cp.1;
++        std::mem::replace(&mut self.runs, records)
++    }
++
+     /// Its buffers' sizes, for the footprint ledger (src/trace.rs)
+     #[cfg(any(test, feature = "trace"))]
+     pub fn buffers(&self) -> Vec<crate::trace::Buffer> {
+@@ -231,20 +275,29 @@ pub fn front(b: &Symbols, r: &mut Runs, k: Kernels) -> Result<usize, ErrorKind>
+ /// The scalar front: `mtf::mtf_scalar`'s loop, checks and errors, a literal opening a record
+ /// and a count extending the open one (or opening the block's first)
+ pub fn front_scalar(b: &Symbols, r: &mut Runs) -> Result<usize, ErrorKind> {
++    #[inline(always)]
+     fn close(open: (u8, u32), runs: &mut Vec<u16>, per: &mut [u32; 256]) {
+         let (c, mut left) = open;
+-        while left > 0 {
+-            let len = left.min(CAP);
+-            runs.push((c as u16) << 8 | len as u16);
++        if left == 0 {
++            return;
++        }
++        if left <= CAP {
++            runs.push((c as u16) << 8 | left as u16);
+             per[c as usize] += 1;
+-            left -= len;
++        } else {
++            while left > 0 {
++                let len = left.min(CAP);
++                runs.push((c as u16) << 8 | len as u16);
++                per[c as usize] += 1;
++                left -= len;
++            }
+         }
+     }
+     let (runs, counts, per) = (&mut r.runs, &mut r.counts, &mut r.per);
+     runs.clear();
+     *counts = [0; 256];
+     *per = [0; 256];
+-    let mut list: [u8; 256] = std::array::from_fn(|i| i as u8);
++    let mut list = b.seq_to_unseq;
+     let (mut run, mut weight) = (0u32, 1u32);
+     let mut n = 0usize;
+     // the open run's byte and length: empty only before the block's first row
+@@ -263,7 +316,7 @@ pub fn front_scalar(b: &Symbols, r: &mut Runs) -> Result<usize, ErrorKind> {
+                 return Err(ErrorKind::BlockTooLong);
+             }
+             // the count repeats the list's front, which is the open run's byte
+-            let c = b.seq_to_unseq[list[0] as usize];
++            let c = list[0];
+             open = (c, open.1 + run);
+             counts[c as usize] += run;
+             n += run as usize;
+@@ -276,10 +329,7 @@ pub fn front_scalar(b: &Symbols, r: &mut Runs) -> Result<usize, ErrorKind> {
+             return Err(ErrorKind::BlockTooLong);
+         }
+         let nn = ((s - 1) as usize).min(255);
+-        let v = list[nn];
+-        list.copy_within(0..nn, 1);
+-        list[0] = v;
+-        let c = b.seq_to_unseq[v as usize];
++        let c = super::mtf::mtf_move_fast15(&mut list, nn);
+         close(open, runs, per);
+         open = (c, 1);
+         counts[c as usize] += 1;
+@@ -719,7 +769,7 @@ pub fn fill(r: &Runs, n: usize, tt: &mut TVector, k: Kernels) -> bool {
+     fill_scalar(&r.runs, n as u32, next, &lim, &mut tt.0)
+ }
+ 
+-/// The fill in safe code: each entry pushed
++/// The fill in safe code: 8 entries written per step inside `0..n`, scalar on the last 7 rows
+ fn fill_scalar(
+     runs: &[u16],
+     n: u32,
+@@ -727,7 +777,8 @@ fn fill_scalar(
+     lim: &[u32; 256],
+     tt: &mut Vec<u32>,
+ ) -> bool {
+-    tt.reserve(n as usize);
++    let n_u = n as usize;
++    tt.reserve(n_u);
+     let mut q = 0u32;
+     for &x in runs {
+         let (c, len) = ((x >> 8) as usize, (x & 0xff) as u32);
+@@ -735,15 +786,43 @@ fn fill_scalar(
+             tt.clear();
+             return false;
+         }
++        let end = q + len;
++        let end_u = end as usize;
+         let e = c as u32 | next[c] << 8;
+-        tt.extend((0..len).map(|j| e + (j << 8)));
++        if end_u + 8 <= n_u {
++            if end_u + 8 > tt.len() {
++                tt.resize((end_u + 4096).min(n_u), 0);
++            }
++            let mut v = e;
++            let mut w = q as usize;
++            loop {
++                let dst = &mut tt[w..w + 8];
++                for (k, slot) in dst.iter_mut().enumerate() {
++                    *slot = v + ((k as u32) << 8);
++                }
++                w += 8;
++                if w >= end_u {
++                    break;
++                }
++                v += 2048;
++            }
++        } else {
++            if end_u > tt.len() {
++                tt.resize(n_u, 0);
++            }
++            let base_w = q as usize;
++            for j in 0..len {
++                tt[base_w + j as usize] = e + (j << 8);
++            }
++        }
+         next[c] += len;
+-        q += len;
++        q = end;
+     }
+     if q != n {
+         tt.clear();
+         return false;
+     }
++    tt.truncate(n_u);
+     true
+ }
+ 
+@@ -847,36 +926,74 @@ pub(crate) fn cuts(r: &Runs, n: usize, out: &mut Vec<Cut>) -> bool {
+         return false;
+     }
+     let total = n as u64 + 8 * runs.len() as u64;
+-    // the work at which the next cut falls: cut j at j / PIECES of it
+-    let at = |j: usize| (total * j as u64).div_ceil(PIECES as u64);
++    let mut targets = [u32::MAX; PIECES + 1];
++    for (j, slot) in targets.iter_mut().enumerate().take(PIECES).skip(1) {
++        *slot = (total * j as u64).div_ceil(PIECES as u64) as u32;
++    }
++    out.reserve(PIECES + 1);
+     out.push(Cut {
+         rec: 0,
+         row: 0,
+         next,
+     });
+-    let (mut q, mut work) = (0u32, 0u64);
+-    let mut due = at(1);
++    let (mut q, mut work) = (0u32, 0u32);
++    let mut due = targets[1];
+     let mut empty = false;
+-    for (i, &x) in runs.iter().enumerate() {
++    let mut i = 0usize;
++    let len_runs = runs.len();
++    // Maximum work across 8 records (at most 255 rows each): 8 * (255 + 8) = 2104.
++    while i + 8 <= len_runs {
++        if work + 2104 < due {
++            let ch = &runs[i..i + 8];
++            let mut sum_l = 0u32;
++            for &x in ch {
++                let c = (x >> 8) as usize;
++                let len = (x & 0xff) as u32;
++                empty |= len == 0;
++                next[c] += len;
++                sum_l += len;
++            }
++            q += sum_l;
++            work += sum_l + 64;
++            i += 8;
++        } else {
++            let x = runs[i];
++            if work >= due {
++                while out.len() < PIECES && work >= targets[out.len()] {
++                    out.push(Cut {
++                        rec: i,
++                        row: q,
++                        next,
++                    });
++                }
++                due = targets[out.len()];
++            }
++            let (c, len) = ((x >> 8) as usize, (x & 0xff) as u32);
++            empty |= len == 0;
++            next[c] += len;
++            q += len;
++            work += len + 8;
++            i += 1;
++        }
++    }
++    while i < len_runs {
++        let x = runs[i];
+         if work >= due {
+-            while out.len() < PIECES && work >= at(out.len()) {
++            while out.len() < PIECES && work >= targets[out.len()] {
+                 out.push(Cut {
+                     rec: i,
+                     row: q,
+                     next,
+                 });
+             }
+-            due = if out.len() < PIECES {
+-                at(out.len())
+-            } else {
+-                u64::MAX
+-            };
++            due = targets[out.len()];
+         }
+         let (c, len) = ((x >> 8) as usize, (x & 0xff) as u32);
+         empty |= len == 0;
+         next[c] += len;
+         q += len;
+-        work += len as u64 + 8;
++        work += len + 8;
++        i += 1;
+     }
+     // (each byte's rows are its count, so the rows in all are the counts' sum, n)
+     if empty || next != lim {
+@@ -885,7 +1002,7 @@ pub(crate) fn cuts(r: &Runs, n: usize, out: &mut Vec<Cut>) -> bool {
+     }
+     // (a block of fewer records than pieces: the pieces left are empty, at the end)
+     let end = Cut {
+-        rec: runs.len(),
++        rec: len_runs,
+         row: q,
+         next,
+     };
+diff --git a/tests/par_scan.rs b/tests/par_scan.rs
+new file mode 100644
+index 0000000..abbc0b7
+--- /dev/null
++++ b/tests/par_scan.rs
+@@ -0,0 +1,376 @@
++//! The push-streaming parallel front end (`StreamDecoder::parscan`, `BzReader::parscan`,
++//! `decode_parscan`, `par_scan::decode_parallel_slice_with`, and the `mibz2-parscan` arm)
++//! against the sequential decoder: the same bytes before the end or the first error, and
++//! the same result (`Error { kind, block, bit }`), across valid streams of every shape,
++//! prime/arbitrary chunk sizes, false magics and false stream headers, mutated files,
++//! slow-reader ready-cap backpressure, and callback/reader panics.
++
++mod common;
++use common::*;
++use mibz2::{Error, Kernels, StreamDecoder};
++use std::io::{BufRead, Read};
++use std::sync::Arc;
++use std::time::Duration;
++
++/// The sequential decoder as a reader: the bytes before its end or first error, and which
++fn sequential(data: &[u8]) -> (Vec<u8>, Result<(), Error>) {
++    let mut out = Vec::new();
++    let res = match mibz2::BzReader::new(data).read_to_end(&mut out) {
++        Ok(_) => Ok(()),
++        Err(e) => Err(e
++            .get_ref()
++            .and_then(|x| x.downcast_ref::<Error>())
++            .cloned()
++            .expect("the decoder's own error")),
++    };
++    (out, res)
++}
++
++/// The front end's chunks up to its end or first error, and that result
++fn front_end(data: &[u8], workers: usize, slots: usize) -> (Vec<u8>, Result<(), Error>) {
++    let mut out = Vec::new();
++    let res =
++        mibz2::par_scan::decode_parallel_slice_with(data, workers, slots, Kernels::detect(), |c| {
++            out.extend_from_slice(c)
++        });
++    (out, res)
++}
++
++/// Push-streaming `StreamDecoder::parscan` fed in `chunk_sz` byte chunks
++fn chunked_parscan(
++    data: &[u8],
++    workers: usize,
++    slots: usize,
++    chunk_sz: usize,
++) -> (Vec<u8>, Result<(), Error>) {
++    let dec = Arc::new(StreamDecoder::parscan(workers, slots, Kernels::detect()));
++    let d_w = dec.clone();
++    let z = data.to_vec();
++    let feeder = std::thread::spawn(move || {
++        for c in z.chunks(chunk_sz.max(1)) {
++            let mut b = d_w.spare();
++            b.clear();
++            b.extend_from_slice(c);
++            if d_w.write(b).is_err() {
++                return;
++            }
++        }
++        d_w.close();
++    });
++    let mut out = Vec::new();
++    let mut buf = [0u8; 4096];
++    let res = loop {
++        match dec.read(&mut buf) {
++            Ok(0) => break Ok(()),
++            Ok(n) => out.extend_from_slice(&buf[..n]),
++            Err(e) => break Err(e),
++        }
++    };
++    dec.cancel();
++    feeder.join().unwrap();
++    (out, res)
++}
++
++/// The front end at `workers` and `slots` against the sequential decoder, and
++/// `decode_parscan` against `decode`
++fn same(name: &str, data: &[u8], workers: usize, slots: usize) {
++    let (want, want_res) = sequential(data);
++    let (got, res) = front_end(data, workers, slots);
++    assert!(
++        got == want,
++        "{name} ({workers} workers, {slots} slots): the bytes differ ({} against {})",
++        got.len(),
++        want.len()
++    );
++    assert_eq!(
++        res, want_res,
++        "{name} ({workers} workers, {slots} slots): the result"
++    );
++    let whole = mibz2::decode(data);
++    assert_eq!(
++        mibz2::decode_parscan(data, workers),
++        whole,
++        "{name}: decode_parscan at {workers}"
++    );
++}
++
++/// The bytes whose in-use bitmap, read as 16-bit words from range 0, is `words`
++fn bytes_for_map(words: &[u16]) -> Vec<u8> {
++    let mut v = Vec::new();
++    for (i, w) in words.iter().enumerate() {
++        for j in 0..16 {
++            if w & (0x8000 >> j) != 0 {
++                v.push((i * 16 + j) as u8);
++            }
++        }
++    }
++    v
++}
++
++/// A valid .bz2 every block of which holds, in its header's in-use bitmap, "BZh9" and the
++/// block magic, back to back, then the end magic
++fn magic_in_map(rng: &mut Rng, n: usize, level: u32) -> Vec<u8> {
++    let set = bytes_for_map(&[
++        0x425a, 0x6839, 0x3141, 0x5926, 0x5359, 0x1772, 0x4538, 0x5090,
++    ]);
++    let mut v: Vec<u8> = Vec::with_capacity(n);
++    for i in 0..n {
++        let mut b = if i % 2000 < set.len() {
++            set[i % 2000]
++        } else {
++            let (x, y) = (rng.below(set.len() as u64), rng.below(set.len() as u64));
++            set[x.min(y) as usize]
++        };
++        if v.ends_with(&[b, b, b]) {
++            b = set[(set.iter().position(|&x| x == b).unwrap() + 1) % set.len()];
++        }
++        v.push(b);
++    }
++    compress(&v, level)
++}
++
++#[test]
++fn valid_streams_of_every_shape() {
++    let mut rng = Rng(0x5eed_0037);
++    for (name, data) in samples(&mut rng) {
++        let data = &data[..data.len().min(400_000)];
++        for level in [1, 9] {
++            let z = compress(data, level);
++            for (workers, slots) in [(1, 1), (2, 2), (3, 12), (4, 16), (8, 1)] {
++                let (got, res) = front_end(&z, workers, slots);
++                assert_eq!(res, Ok(()), "{name} level {level} at {workers}");
++                assert!(got == data, "{name} level {level} at {workers}: differs");
++            }
++            // Also verify BzReader::parscan BufRead + Read
++            let mut r = mibz2::BzReader::parscan(std::io::Cursor::new(z.clone()), 4);
++            let mut got = Vec::new();
++            loop {
++                let b = r.fill_buf().unwrap();
++                let n = b.len();
++                if n == 0 {
++                    break;
++                }
++                got.extend_from_slice(b);
++                r.consume(n);
++            }
++            assert!(got == data, "{name} BzReader::parscan BufRead differs");
++        }
++    }
++}
++
++#[test]
++fn streaming_chunks_and_i9_dispatch() {
++    let mut rng = Rng(0x9988_7766_5544_3322);
++    let text = samples(&mut rng).swap_remove(3).1;
++    let mut multi = compress(&text[..120_000], 1);
++    multi.extend_from_slice(&compress(&text[..120_000], 5));
++    multi.extend_from_slice(&compress(&text[..120_000], 9));
++    let (want, want_res) = sequential(&multi);
++    assert_eq!(want_res, Ok(()));
++
++    for chunk_sz in [7usize, 63, 513, 4096, 65_537] {
++        for t in [6usize, 8] {
++            let (got, res) = chunked_parscan(&multi, t, 4 * t, chunk_sz);
++            assert_eq!(res, Ok(()), "t={t} chunk_sz {chunk_sz}");
++            assert!(got == want, "t={t} chunk_sz {chunk_sz}: bytes differ");
++        }
++    }
++
++    // Verify simulated i9-10900K trimmed dispatch (`8` workers, `32` window at 10..20 threads)
++    if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
++        let k = Kernels::detect();
++        if k.avx2() && k.clmul() {
++            let i9 = mibz2::parallel::Machine::service_target();
++            for (t, want_w, want_win) in
++                [(4, 4, 16), (6, 6, 24), (8, 8, 32), (10, 8, 32), (20, 8, 32)]
++            {
++                let dec = mibz2::parallel::with_machine(i9.clone(), || {
++                    StreamDecoder::parscan(t, 4 * t, k)
++                });
++                assert_eq!(
++                    (dec.threads(), dec.window()),
++                    (want_w, want_win),
++                    "i9 parscan dispatch at {t}"
++                );
++                dec.write(multi.clone()).unwrap();
++                dec.close();
++                let mut got = Vec::new();
++                let mut spent = Vec::new();
++                while let Some(b) = dec.read_block(std::mem::take(&mut spent)).unwrap() {
++                    got.extend_from_slice(&b);
++                    spent = b;
++                }
++                assert!(got == want, "i9 parscan decode at {t}");
++            }
++        }
++    }
++}
++
++#[test]
++fn slow_reader_backpressure_without_deadlock() {
++    let mut rng = Rng(0x1122_3344);
++    let text = samples(&mut rng).swap_remove(3).1;
++    let mut z = Vec::new();
++    let mut want = Vec::new();
++    for i in 0..8 {
++        let part = &text[..90_000 + i * 1000];
++        z.extend_from_slice(&compress(part, 1));
++        want.extend_from_slice(part);
++    }
++    let dec = Arc::new(StreamDecoder::parscan(4, 8, Kernels::detect()));
++    let d_w = dec.clone();
++    let writer = std::thread::spawn(move || {
++        for c in z.chunks(8192) {
++            if d_w.write(c.to_vec()).is_err() {
++                return;
++            }
++        }
++        d_w.close();
++    });
++    let mut got = Vec::new();
++    let mut spent = Vec::new();
++    let mut n_blocks = 0usize;
++    while let Some(b) = dec.read_block(std::mem::take(&mut spent)).unwrap() {
++        if n_blocks % 3 == 1 {
++            std::thread::sleep(Duration::from_millis(2));
++        }
++        got.extend_from_slice(&b);
++        spent = b;
++        n_blocks += 1;
++    }
++    writer.join().unwrap();
++    assert!(got == want);
++}
++
++#[test]
++fn false_magics_and_headers() {
++    let mut rng = Rng(0x2545_f491_4f6c_dd1d);
++    let text = samples(&mut rng).swap_remove(3).1;
++    let a = magic_in_map(&mut rng, 300_000, 1);
++    for (w, s) in [(1, 1), (3, 12), (4, 4)] {
++        same("magics in the in-use bitmap", &a, w, s);
++    }
++    let host = compress(&text[..400_000], 1);
++    let starts = block_starts(&host);
++    let tiny = compress(b"a valid block where no block is", 9);
++    let mut b = host.clone();
++    let mid = ((starts[1] + starts[2]) / 16) as usize;
++    b[mid..mid + tiny.len() - 4].copy_from_slice(&tiny[4..]);
++    same("a valid block spliced into a payload", &b, 3, 12);
++    let mut c = compress(&text[..100_000], 9);
++    c.extend_from_slice(b"junk");
++    c.extend_from_slice(&host);
++    same("a stream, 4 stray bytes, a stream", &c, 3, 12);
++    let mut d = host.clone();
++    d.extend_from_slice(&compress(b"", 9));
++    d.extend_from_slice(&a);
++    d.extend_from_slice(&compress(&text[..30_000], 5));
++    same("several streams", &d, 4, 8);
++    same(
++        "cut inside a block",
++        &host[..(starts[2] / 8 + 1000) as usize],
++        3,
++        12,
++    );
++    same("cut inside the stream CRC", &host[..host.len() - 2], 3, 12);
++    let mut e = host.clone();
++    let at = starts[2] + 80;
++    e[(at / 8) as usize] |= 0x80 >> (at % 8);
++    same("a block marked randomised", &e, 3, 12);
++    same("not a .bz2", b"not a bz2 file at all", 2, 2);
++    same("empty", b"", 2, 2);
++}
++
++#[test]
++fn mutated_files() {
++    let mut rng = Rng(0x0123_4567_89ab_cdef);
++    let text = samples(&mut rng).swap_remove(3).1;
++    let mut base = compress(&text[..120_000], 1);
++    base.extend_from_slice(&compress(b"", 9));
++    base.extend_from_slice(&magic_in_map(&mut rng, 120_000, 1));
++    base.extend_from_slice(&compress(&text[..30_000], 9));
++    let tiny = compress(b"a valid block where no block is", 9);
++    let magics = [
++        mibz2::block::BLOCK_MAGIC.to_be_bytes(),
++        mibz2::block::END_MAGIC.to_be_bytes(),
++    ];
++    let starts = block_starts(&base);
++    same("the file whole", &base, 3, 12);
++    let cases = if cfg!(debug_assertions) { 120 } else { 600 };
++    for case in 0..cases {
++        let mut d = base.clone();
++        for _ in 0..1 + rng.below(2) {
++            if d.is_empty() {
++                break;
++            }
++            let at = rng.below(d.len() as u64) as usize;
++            match rng.below(9) {
++                0 | 1 => d[at] ^= 1 << rng.below(8),
++                2 => d.truncate(at),
++                3 => {
++                    let m = &magics[rng.below(2) as usize][2..];
++                    let n = m.len().min(d.len() - at);
++                    d[at..at + n].copy_from_slice(&m[..n]);
++                }
++                4 => {
++                    let m = magics[rng.below(2) as usize];
++                    d.splice(at..at, m[2..].iter().copied());
++                }
++                5 => {
++                    let n = (tiny.len() - 4).min(d.len() - at);
++                    d[at..at + n].copy_from_slice(&tiny[4..4 + n]);
++                }
++                6 => {
++                    let n = (1 + rng.below(3000) as usize).min(d.len() - at);
++                    d.drain(at..at + n);
++                }
++                7 => {
++                    let i = rng.below(starts.len() as u64 - 1) as usize;
++                    let (a, b) = ((starts[i] / 8) as usize, (starts[i + 1] / 8) as usize);
++                    let (a, b) = (a.min(d.len()), b.min(d.len()));
++                    let part = d[a..b].to_vec();
++                    d.splice(a..a, part);
++                }
++                _ => {
++                    let hs: Vec<usize> = (0..d.len().saturating_sub(4))
++                        .filter(|&i| &d[i..i + 3] == b"BZh")
++                        .collect();
++                    if !hs.is_empty() {
++                        let i = hs[rng.below(hs.len() as u64) as usize];
++                        d[i + 3] = b'0' + rng.below(11) as u8;
++                    }
++                }
++            }
++        }
++        let workers = 1 + rng.below(4) as usize;
++        let slots = 1 + rng.below(12) as usize;
++        same(&format!("case {case}"), &d, workers, slots);
++        if case % 10 == 0 {
++            let chunk_sz = 1 + rng.below(513) as usize;
++            let (want, want_res) = sequential(&d);
++            let (got, res) = chunked_parscan(&d, workers, slots, chunk_sz);
++            assert!(got == want, "chunked case {case}: bytes differ");
++            assert_eq!(res, want_res, "chunked case {case}: result differs");
++        }
++    }
++}
++
++#[test]
++fn a_panic_in_the_callback_reaches_the_caller() {
++    let mut rng = Rng(9);
++    let text = samples(&mut rng).swap_remove(3).1;
++    let z = compress(&text[..400_000], 1);
++    for workers in [1, 4] {
++        let r = std::panic::catch_unwind(|| {
++            mibz2::par_scan::decode_parallel_slice_with(
++                &z,
++                workers,
++                4 * workers,
++                Kernels::detect(),
++                |_| panic!("the callback's panic"),
++            )
++        });
++        let e = r.expect_err("the panic propagates");
++        assert_eq!(e.downcast_ref::<&str>(), Some(&"the callback's panic"));
++    }
++}
