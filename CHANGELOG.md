@@ -87,7 +87,9 @@ against 0.5.11 on the i9, the modelled step:
 
 The step has its row in `docs/journal/release-attribution.md` (§5b).
 
-**The crossover** (§5a; `bench-crossover`): to follow.
+**The crossover** (§5a; `bench-crossover`, crossover/run-20261122T040736Z, evidence ab503838, 10 rounds on Wikidata): the team threshold stays. No forced arm beats the shipped decoder at any count.
+- **Teams:** `mibz2-team2` and `mibz2-team3` take 1.22–3.60× the shipped wall time; from 8 to 20 threads, 1.82–3.60× (at 10 threads, 2.271 and 1.827).
+- **One worker per thread:** `mibz2-workers-w` is never faster. Its interval spans 1 at 4, 5, 7 and 9 threads; elsewhere it takes 1.042–1.239×.
 
 **Caveats:**
 - **All the i9 figures are from one machine.** The trims apply only to that measured machine.
