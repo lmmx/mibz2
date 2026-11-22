@@ -1,0 +1,3344 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Every route in mibz2's bzip2 decoder is exact on every block, but cost varies from block to block and so we hunt for speed in many places.">
+      
+      
+        <meta name="author" content="Louis Maddox">
+      
+      
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-761/blog/2026-11-22-correctness-is-uniform-cost-is-not/">
+      
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
+      
+      
+        <link rel="prev" href="../2026-11-22-decompression-is-the-harder-problem/">
+      
+      
+        <link rel="next" href="../2026-11-22-two-centuries-of-tools/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="zensical-0.0.71">
+    
+    
+      
+        <title>Correctness is uniform, cost is not - mibz2</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,500,500i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=94c866ff19f1">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=94c866ff19f1">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=94c866ff19f1">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=94c866ff19f1">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=94c866ff19f1">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=94c866ff19f1">
+    
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    <meta name="format-detection" content="telephone=no">
+  
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="mibz2">
+  <meta property="og:title" content="Correctness is uniform, cost is not">
+  <meta property="og:description" content="Every route in mibz2's bzip2 decoder is exact on every block, but cost varies from block to block and so we hunt for speed in many places.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-761/blog/2026-11-22-correctness-is-uniform-cost-is-not/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-761/assets/social/blog-2026-11-22-correctness-is-uniform-cost-is-not.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Correctness is uniform, cost is not">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Correctness is uniform, cost is not">
+  <meta name="twitter:description" content="Every route in mibz2's bzip2 decoder is exact on every block, but cost varies from block to block and so we hunt for speed in many places.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-761/assets/social/blog-2026-11-22-correctness-is-uniform-cost-is-not.png">
+  <meta name="twitter:image:alt" content="Correctness is uniform, cost is not">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="mibz2" class="md-header__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            mibz2
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Correctness is uniform, cost is not
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="mibz2" class="md-nav__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    mibz2
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Get started
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Get started
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Installation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quickstart
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Concepts
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Concepts
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/couriers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why 32 couriers beat one
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What is checked, and when
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/prior-work/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Prior work
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../benchmarks/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Benchmarks
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Benchmarks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Alternatives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/frontier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Throughput–memory frontier
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/mibz2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Python)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Rust)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Background
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Background
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Status
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/journals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Journals
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/behind-the-scenes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Behind the scenes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Blog
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Blog
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-decompression-is-the-harder-problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Decompression is the harder problem
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Correctness is uniform, cost is not
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Correctness is uniform, cost is not
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-one-proof-two-fates" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. One proof, two fates
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-heterogeneity-looks-like-in-a-wikidata-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. What heterogeneity looks like in a Wikidata block
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-exact-routes-each-betting-on-a-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Exact routes, each betting on a structure
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-when-the-data-refuses" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. When the data refuses
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-stutter" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. The stutter
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-local-and-global" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. Local and global
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-what-is-proved-measured-and-open" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7. What is proved, measured and open
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-22-two-centuries-of-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Two centuries of tools
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-a-memory-gain-is-a-gain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Admitting dense blocks to Open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-besieging-hard-problems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Besieging hard problems
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-fast-alone-slow-in-a-crowd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Fast alone, slow in a crowd
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-21-sixteen-at-a-stroke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sixteen at a stroke
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-research-by-obligation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Research by obligation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-where-the-decoding-work-goes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where the decoding work goes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-20-train-tracks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Train tracks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-19-open-returns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Open Returns
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-what-decoding-pays-for/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What decoding pays for
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_14" id="__nav_7_14_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_14_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_14">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Cutting the loop open
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cutting the loop open
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-18-cutting-the-loop-open-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-raising-the-knee/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Raising the knee
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_16" id="__nav_7_16_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache to rightsize workers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_16_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_16">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Modelling the cache to rightsize workers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Modelling the cache
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-17-modelling-the-cache-to-rightsize-workers-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical notes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-mathematical-dictionary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A mathematical dictionary
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-stop-and-walk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Stop and walk
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-16-lazy-letters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Lazy letters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-free-closure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The free closure of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-induction-width/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The width of an induction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-bottom-slots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Removing duplicated interval lengths and text references
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-15-slot-recycling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reduce, reuse, recycle
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-12-rauzy-technical-companion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reconstructing text from compact programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-10-rauzy-veech-reconstruction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A new way back from the BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-09-pit-crew-service-threads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 gets a pit crew
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-bwt-runs-from-mtf-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the BWT's runs off the MTF codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_28" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT navigation: the mathematics
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_28">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Inverse-BWT navigation: the mathematics
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  One shift per run
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-pipelined-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pipelined teams in mibz2 0.2.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-why-mibz2-stops-scaling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why mibz2 stops scaling at eight threads
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-05-huffman-bit-buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Huffman decoding: the bit buffer in a register
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-autonomous-agent-team/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  An autonomous agent team
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_33" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a smaller bzip2 decoding table
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_33">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Building a smaller bzip2 decoding table
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  From 49 instructions to 12
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  BWT space–time tradeoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_35" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_35" id="__nav_7_35_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Memory-level parallelism in mibz2
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_35_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_35">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Memory-level parallelism in mibz2
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Instructions, overlap and evidence
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-inverse-bwt-memory-interference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT memory interference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-block-dispatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Block dispatch in mibz2
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-31-room-walk-overlap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  32 lanes, 8.6 chains
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-29-compact-navigation-tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Compact navigation tables for the inverse BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Maintainers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_8">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Maintainers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Releasing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-one-proof-two-fates" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. One proof, two fates
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-heterogeneity-looks-like-in-a-wikidata-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. What heterogeneity looks like in a Wikidata block
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-exact-routes-each-betting-on-a-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Exact routes, each betting on a structure
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-when-the-data-refuses" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. When the data refuses
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-stutter" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. The stutter
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-local-and-global" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. Local and global
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-what-is-proved-measured-and-open" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7. What is proved, measured and open
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+  <button type="button" title="Copy as Markdown" aria-label="Copy as Markdown" class="md-content__button md-icon" data-md-copy-url="./index.md">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>
+  </button>
+
+
+  
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-22-correctness-is-uniform-cost-is-not.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<div class="post-hero">
+<div class="post-hero-text">
+<p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
+<h1 id="correctness-is-uniform-cost-is-not">Correctness is uniform, cost is not<a class="headerlink" href="#correctness-is-uniform-cost-is-not" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Every route in mibz2's bzip2 decoder is exact on every block, but cost varies from block to block and so we hunt for speed in many places.</p>
+<p class="post-meta">22 November 2026 · 12 min read · <a href="#7-what-is-proved-measured-and-open">Research in progress</a></p>
+</div>
+<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
+</div>
+<p>mibz2 is a bzip2 decoder in Rust, and most of its time goes on inverting the Burrows–Wheeler transform (BWT) of each block. Real compressed data offers that inversion no single way in. A block of a Wikidata dump holds a JSON skeleton, copies of text already decoded, and random identifiers that no local structure predicts. The proportions change from block to block. So the decoder is fast through several exact constructions, each cheap on a different structure, and its mathematics is as varied as its data.</p>
+<p><strong>The takeaways:</strong></p>
+<ol>
+<li><strong>Correctness is uniform and cost is not.</strong> A correctness proof needs one route; speed on real data needs many. Every route mibz2 ships returns exactly the reference output on every valid block. What differs between them is cost, and cost depends on the block and the machine.</li>
+<li><strong>Each fast route bets on a structure.</strong> The bet is a cost hypothesis: when the block has this structure, this construction is cheaper. Finding structures worth betting on is the research.</li>
+<li><strong>When the data refuses a hypothesis, there are three responses:</strong> weaken it; certify it more cheaply; or change the representation so it is no longer needed. Refusals are where the next construction comes from.</li>
+<li><strong>Global changes of representation are rare.</strong> We have had one. Below it we pursue local constructions on purpose, and they may yet reveal a general one. We do not know how complete the family is.</li>
+<li><strong>Scope:</strong> one decoder, bzip2's inverse BWT, with Wikidata as the main corpus. One workstation judges it: an i9-10900K with a 20 MiB L3. Nothing here is proved in Lean yet, and the literary analogy in §5 is not evidence.</li>
+</ol>
+<h2 id="1-one-proof-two-fates">1. One proof, two fates<a class="headerlink" href="#1-one-proof-two-fates" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/kim-em/lean-zip">lean-zip</a> is a DEFLATE implementation in Lean whose round trip, <code>inflate (deflateRaw data level) = .ok data</code>, rests on "more than 1,100 theorems". Its README calls the result a ratchet: "the obligation <code>inflate (deflate x) = x</code> either still holds or the build goes red". So agents can optimise it hard without breaking it. It also says where it stands: its decoder trails "the C-grade decoders (miniz_oxide by ~1.45×, libdeflate by ~2.5×)". The theorem guarantees every optimisation is correct. It does not say which will be fast.</p>
+<p>mibz2 has the same gap. Two recent changes are both byte-exact on every block. The i9 judged them very differently, at 10 threads on four copies of the Wikidata benchmark:</p>
+<figure class="bf-fig" id="cpu-wall">
+<p class="bf-title">Two exact changes on the i9 at 10 threads: CPU time against wall time</p>
+<svg viewBox="0 0 720 384" role="img" aria-label="CPU against wall time at 10 threads on the i9 for two correct changes. The construction stack cut CPU to 0.950 and 0.955 but wall was 1.000 and 0.968, both inconclusive. The block reader cut wall to 0.932 alone and 0.895 on top of #739, with CPU 0.964 and 0.977."><line x1="90.0" y1="40" x2="90.0" y2="330" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="90.0" y="348" class="bf-tm" text-anchor="middle">0.85</text><line x1="202.0000000000001" y1="40" x2="202.0000000000001" y2="330" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="202.0000000000001" y="348" class="bf-tm" text-anchor="middle">0.90</text><line x1="313.99999999999994" y1="40" x2="313.99999999999994" y2="330" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="313.99999999999994" y="348" class="bf-tm" text-anchor="middle">0.95</text><line x1="426.00000000000006" y1="40" x2="426.00000000000006" y2="330" style="stroke:var(--bf-frame);stroke-width:2"/><text x="426.00000000000006" y="348" class="bf-tm" text-anchor="middle">1.00</text><line x1="538.0000000000002" y1="40" x2="538.0000000000002" y2="330" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="538.0000000000002" y="348" class="bf-tm" text-anchor="middle">1.05</text><line x1="650.0000000000002" y1="40" x2="650.0000000000002" y2="330" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="650.0000000000002" y="348" class="bf-tm" text-anchor="middle">1.10</text><line x1="90" y1="330.0" x2="650" y2="330.0" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="82" y="334.0" class="bf-tm" text-anchor="end">0.85</text><line x1="90" y1="257.49999999999994" x2="650" y2="257.49999999999994" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="82" y="261.49999999999994" class="bf-tm" text-anchor="end">0.90</text><line x1="90" y1="185.00000000000003" x2="650" y2="185.00000000000003" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="82" y="189.00000000000003" class="bf-tm" text-anchor="end">0.95</text><line x1="90" y1="112.49999999999997" x2="650" y2="112.49999999999997" style="stroke:var(--bf-frame);stroke-width:2"/><text x="82" y="116.49999999999997" class="bf-tm" text-anchor="end">1.00</text><line x1="90" y1="39.999999999999886" x2="650" y2="39.999999999999886" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="82" y="43.999999999999886" class="bf-tm" text-anchor="end">1.05</text><text x="370" y="372" class="bf-tm" text-anchor="middle" style="font-size:12px">CPU time, new ÷ old (10 threads)</text><text x="24" y="185" class="bf-tm" text-anchor="middle" transform="rotate(-90 24 185)" style="font-size:12px">wall time, new ÷ old</text><line x1="291.152" y1="112.35499999999999" x2="337.5200000000001" y2="112.35499999999999" style="stroke:var(--bf-amber);stroke-width:2.5"/><line x1="314.22399999999993" y1="136.86" x2="314.22399999999993" y2="87.41499999999982" style="stroke:var(--bf-amber);stroke-width:2.5"/><circle cx="314.22399999999993" cy="112.35499999999999" r="5.5" style="fill:var(--bf-amber)"/><text x="340.22399999999993" y="102.35499999999999" class="bf-t" text-anchor="start" style="font-size:12px">construction stack, run 1</text><line x1="272.33600000000007" y1="158.3199999999999" x2="378.51200000000006" y2="158.3199999999999" style="stroke:var(--bf-amber);stroke-width:2.5"/><line x1="324.752" y1="208.49" x2="324.752" y2="106.41" style="stroke:var(--bf-amber);stroke-width:2.5"/><circle cx="324.752" cy="158.3199999999999" r="5.5" style="fill:var(--bf-amber)"/><text x="350.752" y="144.3199999999999" class="bf-t" text-anchor="start" style="font-size:12px">construction stack, run 2</text><line x1="315.79200000000003" y1="211.0999999999999" x2="373.3600000000001" y2="211.0999999999999" style="stroke:var(--bf-green);stroke-width:2.5"/><line x1="344.2400000000001" y1="223.71499999999997" x2="344.2400000000001" y2="198.48499999999999" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="344.2400000000001" cy="211.0999999999999" r="5.5" style="fill:var(--bf-green)"/><text x="372.2400000000001" y="215.0999999999999" class="bf-t" text-anchor="start" style="font-size:12px">block reader</text><line x1="350.9600000000001" y1="264.60499999999996" x2="396.4320000000001" y2="264.60499999999996" style="stroke:var(--bf-green);stroke-width:2.5"/><line x1="373.5840000000001" y1="294.4749999999999" x2="373.5840000000001" y2="234.15499999999992" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="373.5840000000001" cy="264.60499999999996" r="5.5" style="fill:var(--bf-green)"/><text x="401.5840000000001" y="268.60499999999996" class="bf-t" text-anchor="start" style="font-size:12px">block reader on #739</text></svg>
+<figcaption>Measured on the i9-10900K, Wikidata ×4, 16 paired rounds each, 95% intervals. The construction stack (runs open-r5/run-20261122T051443Z and, on a later master, run-20261122T103311Z) saved CPU but not wall time. The block reader (parscan-c37/run-20261122T082138Z, decision 2; and block-reader-on-wormhole/run-20261122T093349Z, on top of #739) saved wall time.</figcaption>
+</figure>
+
+<p>The construction stack cut 5% of CPU time in the inverse BWT, and its 10-thread wall time did not move. The block reader shortened the serial stage that feeds the workers and saved less CPU. It cut wall time by 7% alone, and by 10% on top of #739. With ten workers sharing one cache and one memory bus, saving work and saving time come apart. Correctness certifies that a change is admissible. Its cost lives in the data and the machine.</p>
+<h2 id="2-what-heterogeneity-looks-like-in-a-wikidata-block">2. What heterogeneity looks like in a Wikidata block<a class="headerlink" href="#2-what-heterogeneity-looks-like-in-a-wikidata-block" title="Permanent link">&para;</a></h2>
+<p>Heterogeneity is measurable, and it shows at three scales.</p>
+<p><strong>Within a block.</strong> Most of a Wikidata block is a repeated JSON skeleton of keys and punctuation, which bzip2 already turns into long runs, cheap to invert. A smaller share is repetition at a distance: <code>sha1</code> references and repeated strings, copies of text already decoded. Then there are the statement identifiers. They are random 122-bit GUIDs, and the birthday bound means their contexts shatter after about four or five hex digits. The <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-11-22-classical-tools-audit.md">classical-tools audit</a> measured six blocks. There they are 53.6–67.1% of the width-1 rows the Open kernel retains, and 28.7% of its emission time. Three structures, three costs, in one block.</p>
+<p><strong>In the decoder's own terms.</strong> The dispatch's gates are written in one structural statistic of a block, r/n: run records per row. So the heterogeneity can be read off the gates themselves:</p>
+<figure class="bf-fig" id="rn">
+<p class="bf-title">Where each block's r/n falls among the gates</p>
+<svg viewBox="0 0 720 332" role="img" aria-label="Each run-route block of the corpora placed by r/n on a log scale, with the gates at 1/64, 0.15 and 0.28. Wikidata's 233 full blocks lie between 0.059 and 0.206, all admitted to Open; its 150 tiny blocks lie at 0.40 to 1.0 and go to Segmented. Text lies at 0.285 to 0.33, runs at 0.183, pattern and onebyte at 0.008, below the sparse gate."><rect x="150.0" y="50" width="115.8" height="236" style="fill:var(--bf-blue);opacity:0.18"/><text x="207.9" y="42.0" class="bf-tm" text-anchor="middle" style="font-size:10.5px">Segmented</text><rect x="265.8" y="50" width="229.9" height="236" style="fill:var(--bf-green);opacity:0.18"/><text x="380.7" y="42.0" class="bf-tm" text-anchor="middle" style="font-size:10.5px">Open, uncapped</text><rect x="495.7" y="50" width="63.4" height="236" style="fill:var(--bf-green);opacity:0.10"/><text x="527.4" y="42.0" class="bf-tm" text-anchor="middle" style="font-size:10.5px">Open, dense band</text><rect x="559.1" y="50" width="140.9" height="236" style="fill:var(--bf-blue);opacity:0.18"/><text x="629.6" y="42.0" class="bf-tm" text-anchor="middle" style="font-size:10.5px">Segmented</text><text x="195.2" y="26.0" class="bf-tm" text-anchor="middle" style="font-size:11px"></text><line x1="265.8" y1="50" x2="265.8" y2="286" style="stroke:var(--bf-muted);stroke-width:1.2;stroke-dasharray:4 3"/><line x1="495.7" y1="50" x2="495.7" y2="286" style="stroke:var(--bf-muted);stroke-width:1.2;stroke-dasharray:4 3"/><line x1="559.1" y1="50" x2="559.1" y2="286" style="stroke:var(--bf-muted);stroke-width:1.2;stroke-dasharray:4 3"/><text x="220.4" y="302.0" class="bf-tm" text-anchor="middle" style="font-size:11px">0.01</text><text x="332.1" y="302.0" class="bf-tm" text-anchor="middle" style="font-size:11px">0.03</text><text x="454.5" y="302.0" class="bf-tm" text-anchor="middle" style="font-size:11px">0.1</text><text x="566.1" y="302.0" class="bf-tm" text-anchor="middle" style="font-size:11px">0.3</text><text x="688.5" y="302.0" class="bf-tm" text-anchor="middle" style="font-size:11px">1</text><text x="425.0" y="322.0" class="bf-tm" text-anchor="middle" style="font-size:12px">r/n: run records per row of the block (log scale)</text><text x="20.0" y="83.0" class="bf-t" text-anchor="start" style="font-size:13px">wikidata</text><text x="20.0" y="97.0" class="bf-tm" text-anchor="start" style="font-size:10.5px">383 blocks</text><circle cx="680.3" cy="74.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="406.9" cy="69.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="410.0" cy="82.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="412.4" cy="67.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="646.5" cy="79.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="416.0" cy="75.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="677.8" cy="67.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="408.6" cy="79.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="409.6" cy="67.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="668.7" cy="77.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="408.4" cy="67.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="411.5" cy="68.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="416.7" cy="77.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="406.5" cy="87.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="679.4" cy="69.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.4" cy="71.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.4" cy="82.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="405.6" cy="90.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="409.8" cy="81.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="658.1" cy="76.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="406.9" cy="91.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="634.7" cy="67.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.8" cy="88.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="668.4" cy="73.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="410.5" cy="69.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="408.4" cy="69.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="661.0" cy="74.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="408.5" cy="87.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="410.1" cy="70.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="666.2" cy="81.1" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="412.6" cy="82.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="654.7" cy="75.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="415.1" cy="80.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="428.6" cy="67.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="664.0" cy="67.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="682.3" cy="71.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="485.2" cy="83.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="636.6" cy="77.1" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="485.6" cy="74.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="496.3" cy="81.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="614.5" cy="77.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="455.9" cy="73.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="679.1" cy="86.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.5" cy="84.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="636.6" cy="72.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="408.0" cy="80.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="420.0" cy="79.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="682.3" cy="88.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="481.6" cy="85.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="489.8" cy="73.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="481.4" cy="91.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="465.7" cy="69.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.1" cy="76.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="498.9" cy="85.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="426.6" cy="70.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="673.0" cy="78.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.4" cy="67.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="669.6" cy="83.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="413.5" cy="85.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="679.2" cy="80.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="424.4" cy="88.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="667.4" cy="74.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="425.0" cy="84.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="658.0" cy="81.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="425.9" cy="81.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="435.6" cy="77.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="659.2" cy="87.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="418.1" cy="90.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="428.6" cy="78.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="688.5" cy="83.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="424.5" cy="67.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="429.1" cy="84.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="423.8" cy="82.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.0" cy="91.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="428.6" cy="87.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="422.8" cy="73.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.8" cy="76.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="425.4" cy="83.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="679.6" cy="66.6" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="430.2" cy="78.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="676.5" cy="70.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="421.4" cy="69.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.8" cy="67.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="436.2" cy="86.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="660.6" cy="69.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="423.0" cy="72.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="679.6" cy="76.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="429.0" cy="88.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="647.3" cy="68.1" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="421.1" cy="77.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="435.4" cy="80.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="684.2" cy="89.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="429.4" cy="87.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="674.9" cy="88.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="435.1" cy="73.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="411.4" cy="76.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="683.3" cy="75.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.1" cy="89.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="683.3" cy="90.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.8" cy="69.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="665.8" cy="70.6" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="413.7" cy="72.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="409.9" cy="72.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="671.8" cy="78.6" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.6" cy="81.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="647.9" cy="72.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="417.0" cy="66.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="676.2" cy="76.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="410.3" cy="75.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="679.9" cy="80.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.9" cy="90.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="649.4" cy="84.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="408.9" cy="79.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="661.2" cy="82.1" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="414.4" cy="83.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="643.9" cy="67.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.6" cy="89.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="673.6" cy="86.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="401.6" cy="88.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="667.0" cy="86.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="412.6" cy="76.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.2" cy="76.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="413.2" cy="68.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="684.6" cy="82.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="417.8" cy="67.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="411.0" cy="67.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="670.2" cy="71.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="407.0" cy="70.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="644.7" cy="74.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="412.8" cy="67.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="662.9" cy="66.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="413.7" cy="69.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="414.9" cy="68.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="408.8" cy="75.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="409.2" cy="66.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="651.8" cy="88.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.5" cy="82.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="659.2" cy="69.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="433.3" cy="72.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="659.2" cy="75.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="435.5" cy="75.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="670.1" cy="69.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="433.6" cy="88.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="448.3" cy="91.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="479.5" cy="78.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="438.6" cy="78.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="436.8" cy="68.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="659.2" cy="68.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="468.3" cy="74.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="499.8" cy="72.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="439.8" cy="87.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="594.7" cy="70.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="435.6" cy="66.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="651.8" cy="90.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="464.2" cy="79.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="488.6" cy="69.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="678.8" cy="80.1" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="469.0" cy="66.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.9" cy="79.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="677.8" cy="91.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="416.9" cy="88.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="419.1" cy="84.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.5" cy="72.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="418.4" cy="75.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.8" cy="70.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="419.9" cy="86.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="677.8" cy="79.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="418.8" cy="86.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.5" cy="74.6" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="423.3" cy="71.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="422.9" cy="87.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="416.8" cy="91.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="421.4" cy="88.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="678.8" cy="87.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="421.6" cy="87.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.0" cy="85.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="416.0" cy="71.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="419.0" cy="79.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.5" cy="75.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="414.9" cy="66.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="618.0" cy="66.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="415.3" cy="73.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="673.4" cy="72.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="421.6" cy="84.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="675.3" cy="90.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="417.6" cy="77.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="684.2" cy="90.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="422.6" cy="91.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="679.6" cy="90.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="419.5" cy="75.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="613.5" cy="71.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="421.6" cy="71.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="662.9" cy="71.1" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="417.6" cy="71.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="417.7" cy="82.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="431.1" cy="89.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="414.3" cy="87.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="682.8" cy="78.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="414.8" cy="83.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.1" cy="86.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="403.5" cy="68.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="405.4" cy="83.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="674.3" cy="89.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="405.2" cy="86.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="669.5" cy="85.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="405.3" cy="78.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="676.5" cy="70.6" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="405.8" cy="86.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="408.9" cy="74.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="646.9" cy="86.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="406.4" cy="91.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="655.3" cy="76.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="406.9" cy="76.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="404.9" cy="90.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="669.1" cy="84.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="407.9" cy="70.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="675.1" cy="69.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.0" cy="69.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="674.5" cy="89.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.3" cy="87.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="408.5" cy="69.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="406.9" cy="87.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="669.5" cy="91.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="406.7" cy="83.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="407.4" cy="75.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="659.8" cy="80.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.9" cy="69.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="407.2" cy="66.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.8" cy="91.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="407.2" cy="82.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="409.6" cy="79.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="680.0" cy="90.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="410.1" cy="77.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.8" cy="88.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="408.7" cy="87.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.2" cy="71.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="683.5" cy="72.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="477.4" cy="73.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="659.2" cy="72.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="477.0" cy="81.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="491.3" cy="72.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="527.8" cy="76.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="671.0" cy="69.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="474.1" cy="89.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="472.1" cy="75.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="454.8" cy="77.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="478.2" cy="81.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="496.9" cy="89.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="491.2" cy="76.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="468.9" cy="89.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="671.5" cy="79.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="427.3" cy="79.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="673.3" cy="79.6" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="653.4" cy="66.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.9" cy="77.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="677.2" cy="70.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.6" cy="66.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.0" cy="86.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="412.8" cy="70.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="410.1" cy="78.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="667.4" cy="84.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="410.3" cy="80.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="660.0" cy="74.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.2" cy="79.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.8" cy="80.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="410.4" cy="86.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="684.2" cy="68.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="415.8" cy="80.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="668.6" cy="72.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="421.9" cy="73.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="406.4" cy="86.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.0" cy="79.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="410.2" cy="80.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="411.8" cy="85.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="676.5" cy="89.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.0" cy="77.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="679.6" cy="81.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.3" cy="79.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="662.9" cy="79.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="408.0" cy="84.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="680.0" cy="77.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="407.9" cy="79.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="653.4" cy="78.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="415.6" cy="90.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="626.2" cy="84.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.8" cy="88.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="413.1" cy="90.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="413.3" cy="72.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="411.9" cy="80.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="683.8" cy="90.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.3" cy="87.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="408.0" cy="69.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="664.6" cy="69.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="677.8" cy="77.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="410.3" cy="67.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="410.3" cy="72.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="407.7" cy="67.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="410.2" cy="83.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="659.2" cy="86.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="406.0" cy="89.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.8" cy="70.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.6" cy="84.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="408.2" cy="83.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="640.9" cy="69.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="411.9" cy="89.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="646.8" cy="91.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="404.7" cy="71.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="673.4" cy="90.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="410.4" cy="76.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="650.7" cy="78.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="400.9" cy="91.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="407.0" cy="87.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="404.6" cy="70.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="684.6" cy="77.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="404.8" cy="79.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="654.0" cy="74.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="405.7" cy="71.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="657.0" cy="74.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="403.2" cy="84.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="668.4" cy="66.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="405.0" cy="80.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="404.5" cy="77.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="681.7" cy="66.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.0" cy="74.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="660.4" cy="82.2" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="407.4" cy="79.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="407.9" cy="67.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="670.5" cy="91.6" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="412.6" cy="86.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="679.9" cy="91.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.5" cy="68.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="684.2" cy="72.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="454.7" cy="67.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="466.4" cy="86.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="452.9" cy="73.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="663.6" cy="69.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="474.1" cy="77.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="469.6" cy="89.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="441.7" cy="87.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="451.2" cy="72.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="456.1" cy="69.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="461.3" cy="89.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="439.6" cy="80.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="494.3" cy="84.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="487.1" cy="68.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="468.9" cy="67.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="425.9" cy="83.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="675.6" cy="77.1" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="420.8" cy="67.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="662.0" cy="90.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="419.9" cy="82.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="683.5" cy="86.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="419.3" cy="68.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="676.5" cy="88.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="431.1" cy="67.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="662.9" cy="88.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="426.4" cy="77.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="427.8" cy="74.8" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="650.4" cy="80.4" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="434.0" cy="90.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="682.3" cy="73.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="430.4" cy="69.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="676.2" cy="79.7" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="435.6" cy="72.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="613.7" cy="68.8" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="420.8" cy="70.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="656.1" cy="67.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.1" cy="71.2" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="668.1" cy="74.1" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="413.4" cy="73.9" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="416.6" cy="85.7" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="659.7" cy="73.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="417.4" cy="79.0" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="411.4" cy="70.6" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="670.0" cy="75.0" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="420.1" cy="66.5" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="682.3" cy="72.5" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="409.1" cy="66.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="644.1" cy="85.1" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="418.0" cy="80.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="672.8" cy="70.9" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="426.3" cy="78.3" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="611.0" cy="90.3" r="2" style="fill:var(--bf-blue);fill-opacity:0.55"/><text x="20.0" y="129.0" class="bf-t" text-anchor="start" style="font-size:13px">text</text><text x="20.0" y="143.0" class="bf-tm" text-anchor="start" style="font-size:10.5px">48 blocks</text><circle cx="561.7" cy="114.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="569.3" cy="133.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="562.6" cy="123.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="567.4" cy="124.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="565.0" cy="133.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="566.2" cy="122.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="564.2" cy="125.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="565.9" cy="129.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="566.3" cy="137.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="562.4" cy="120.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="570.5" cy="133.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="561.4" cy="130.4" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="569.2" cy="128.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="563.7" cy="122.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="567.4" cy="121.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="565.0" cy="113.4" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="565.9" cy="115.4" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="564.5" cy="113.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="565.7" cy="131.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="566.4" cy="118.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="562.5" cy="116.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="570.6" cy="114.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="561.1" cy="133.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="568.9" cy="134.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="564.1" cy="129.4" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="567.3" cy="119.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="564.8" cy="118.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="565.8" cy="119.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="564.8" cy="123.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="565.4" cy="116.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="566.8" cy="123.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="562.3" cy="118.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="570.6" cy="137.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="560.8" cy="137.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="568.9" cy="126.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="564.1" cy="118.4" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="567.4" cy="137.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="564.7" cy="120.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="565.6" cy="121.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="564.7" cy="112.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="565.5" cy="121.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="567.1" cy="124.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="562.6" cy="125.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="570.5" cy="117.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="560.9" cy="125.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="568.8" cy="112.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="564.3" cy="118.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="575.8" cy="114.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><text x="20.0" y="175.0" class="bf-t" text-anchor="start" style="font-size:13px">runs</text><text x="20.0" y="189.0" class="bf-tm" text-anchor="start" style="font-size:10.5px">2 blocks</text><circle cx="515.6" cy="168.4" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><circle cx="515.9" cy="159.1" r="3.2" style="fill:var(--bf-green);fill-opacity:0.55"/><text x="20.0" y="221.0" class="bf-t" text-anchor="start" style="font-size:13px">pattern</text><text x="20.0" y="235.0" class="bf-tm" text-anchor="start" style="font-size:10.5px">88 blocks</text><circle cx="196.2" cy="204.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="211.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="210.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="219.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="217.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="223.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="221.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="222.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="226.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="214.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="212.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="229.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="207.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="222.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="220.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="205.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="225.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="227.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="220.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="223.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="225.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="207.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="217.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="217.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="225.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="224.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="225.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="219.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="227.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="221.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="222.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="210.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="204.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="207.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="213.4" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="206.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="225.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="218.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="220.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="220.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="221.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="216.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="204.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="224.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="223.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="217.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="217.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="221.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="205.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="223.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="210.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="205.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="210.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="223.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="209.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="223.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="229.4" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="216.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="213.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="216.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="221.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="223.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="220.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="220.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="206.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="207.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="210.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="223.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="211.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="218.8" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="204.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="205.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="211.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="221.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="222.0" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="221.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="211.6" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="217.4" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="216.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="216.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="207.1" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="227.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="209.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="229.4" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="228.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="204.5" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="215.9" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.7" cy="225.3" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><text x="20.0" y="267.0" class="bf-t" text-anchor="start" style="font-size:13px">onebyte</text><text x="20.0" y="281.0" class="bf-tm" text-anchor="start" style="font-size:10.5px">2 blocks</text><circle cx="196.2" cy="275.2" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><circle cx="196.2" cy="261.7" r="3.2" style="fill:var(--bf-blue);fill-opacity:0.55"/><text x="20.0" y="26.0" class="bf-tm" text-anchor="start" style="font-size:11px">Column route, runs not read: random 36 blocks, records 43, and 48 tiny Wikidata blocks (not shown).</text></svg>
+<figcaption>One dot per run-route block, from the per-block census of the open-admission journal (docs/journal/2026-11-19-open-admission/blocks.jsonl), coloured by today's route: green, Open; blue, Segmented. Larger dots are full blocks of 100,000 rows or more. Whether the runs corpus's two blocks fit the dense band's cap was not measured; Wikidata's five did.</figcaption>
+</figure>
+
+<p>Wikidata's 233 full blocks lie between r/n 0.059 and 0.206, all inside Open's range. Five of them are in the dense band. Its 150 tiny blocks lie between 0.40 and 1.0 and go to <code>Segmented</code>. By count, Open takes barely half the corpus's 431 blocks. By rows, it takes 99.996%. Text sits just past the dense band, at 0.29–0.33. The periodic <code>pattern</code> and <code>onebyte</code> sit below the sparse gate, at 0.008.</p>
+<p><strong>Between corpora.</strong> One exact change gains differently on different data. The block reader of #745 on CI's paired bench, at 4 threads:</p>
+<figure class="bf-fig" id="corpora">
+<p class="bf-title">One exact change, seven corpora: the block reader's wall time at 4 threads</p>
+<svg viewBox="0 0 720 334" role="img" aria-label="One exact change, the block reader of #745, on CI's seven corpora at 4 threads. Wall time changed by records -6.6%, random -5.8%, text -2.9%, wikidata -2.2%, runs -2.1%, onebyte +0.4%, pattern +0.8%. Records, random, text and Wikidata are faster (Wikidata's interval reaching −0.0%); runs, onebyte and pattern show no change."><line x1="230.0" y1="30" x2="230.0" y2="282" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="230.0" y="300" class="bf-tm" text-anchor="middle">-10%</text><line x1="345.0" y1="30" x2="345.0" y2="282" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="345.0" y="300" class="bf-tm" text-anchor="middle">-5%</text><line x1="460.0" y1="30" x2="460.0" y2="282" style="stroke:var(--bf-frame);stroke-width:2"/><text x="460.0" y="300" class="bf-tm" text-anchor="middle">0</text><line x1="575.0" y1="30" x2="575.0" y2="282" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="575.0" y="300" class="bf-tm" text-anchor="middle">+5%</text><line x1="690.0" y1="30" x2="690.0" y2="282" style="stroke:var(--bf-frame);stroke-width:1;stroke-dasharray:3 3"/><text x="690.0" y="300" class="bf-tm" text-anchor="middle">+10%</text><text x="460.0" y="322" class="bf-tm" text-anchor="middle" style="font-size:12px">wall time at 4 threads, head against base (95% interval)</text><text x="20" y="20" class="bf-tm" text-anchor="start" style="font-size:11px">corpus</text><text x="200" y="20" class="bf-tm" text-anchor="end" style="font-size:11px">bz2 ratio</text><text x="20" y="52" class="bf-t" text-anchor="start" style="font-size:13px">records</text><text x="200" y="52" class="bf-tm" text-anchor="end" style="font-size:12px">1.0×</text><line x1="243.79999999999998" y1="48" x2="374.9" y2="48" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="308.2" cy="48" r="5.5" style="fill:var(--bf-green)"/><text x="384.9" y="52" class="bf-tm" text-anchor="start" style="font-size:11px">-6.6%</text><text x="20" y="88" class="bf-t" text-anchor="start" style="font-size:13px">random</text><text x="200" y="88" class="bf-tm" text-anchor="end" style="font-size:12px">1.1×</text><line x1="292.1" y1="84" x2="363.4" y2="84" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="326.6" cy="84" r="5.5" style="fill:var(--bf-green)"/><text x="373.4" y="88" class="bf-tm" text-anchor="start" style="font-size:11px">-5.8%</text><text x="20" y="124" class="bf-t" text-anchor="start" style="font-size:13px">text</text><text x="200" y="124" class="bf-tm" text-anchor="end" style="font-size:12px">5.1×</text><line x1="338.1" y1="120" x2="450.8" y2="120" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="393.3" cy="120" r="5.5" style="fill:var(--bf-green)"/><text x="460.8" y="124" class="bf-tm" text-anchor="start" style="font-size:11px">-2.9%</text><text x="20" y="160" class="bf-t" text-anchor="start" style="font-size:13px">wikidata</text><text x="200" y="160" class="bf-tm" text-anchor="end" style="font-size:12px">17.7×</text><line x1="361.1" y1="156" x2="460.0" y2="156" style="stroke:var(--bf-green);stroke-width:2.5"/><circle cx="409.4" cy="156" r="5.5" style="fill:var(--bf-green)"/><text x="470.0" y="160" class="bf-tm" text-anchor="start" style="font-size:11px">-2.2%</text><text x="20" y="196" class="bf-t" text-anchor="start" style="font-size:13px">runs</text><text x="200" y="196" class="bf-tm" text-anchor="end" style="font-size:12px">263×</text><line x1="326.6" y1="192" x2="501.4" y2="192" style="stroke:var(--bf-muted);stroke-width:2.5"/><circle cx="411.7" cy="192" r="5.5" style="fill:var(--bf-muted)"/><text x="511.4" y="196" class="bf-tm" text-anchor="start" style="font-size:11px">-2.1%</text><text x="20" y="232" class="bf-t" text-anchor="start" style="font-size:13px">onebyte</text><text x="200" y="232" class="bf-tm" text-anchor="end" style="font-size:12px">392,157×</text><line x1="407.1" y1="228" x2="531.3" y2="228" style="stroke:var(--bf-muted);stroke-width:2.5"/><circle cx="469.2" cy="228" r="5.5" style="fill:var(--bf-muted)"/><text x="541.3" y="232" class="bf-tm" text-anchor="start" style="font-size:11px">+0.4%</text><text x="20" y="268" class="bf-t" text-anchor="start" style="font-size:13px">pattern</text><text x="200" y="268" class="bf-tm" text-anchor="end" style="font-size:12px">17,563×</text><line x1="342.7" y1="264" x2="623.3000000000001" y2="264" style="stroke:var(--bf-muted);stroke-width:2.5"/><circle cx="478.4" cy="264" r="5.5" style="fill:var(--bf-muted)"/><text x="633.3000000000001" y="268" class="bf-tm" text-anchor="start" style="font-size:11px">+0.8%</text></svg>
+<figcaption>CI's paired bench on #745 (10 rounds, a 4-core Xeon runner, not the i9). Green: faster, the interval excluding no change. Grey: no change shown. The bz2 ratio is each corpus's output over its compressed size. Every run of both builds gave the same output on every corpus.</figcaption>
+</figure>
+
+<p>The change speeds up the serial stage that reads the compressed stream. The barely compressible <code>records</code> and <code>random</code> gain 6–7%. The <code>runs</code> and <code>onebyte</code> corpora, compressed hundreds or hundreds of thousands of times, show nothing. That fits the serial stage's share of the work growing with the compressed bytes, though the bench does not measure that share per corpus.</p>
+<p><strong>Between families of data.</strong> A hindsight oracle chose, per block, the fastest of thirteen kernel configurations over a research build: eleven settings of one Open construction, and two walks. On the 431 Wikidata blocks it would save 3.17% over that build's fixed setting. On six non-Wikidata blocks it would save 12.8–13.1%. Both are single-threaded, on a research host. The same family of kernels has a different headroom on different data.</p>
+<h2 id="3-exact-routes-each-betting-on-a-structure">3. Exact routes, each betting on a structure<a class="headerlink" href="#3-exact-routes-each-betting-on-a-structure" title="Permanent link">&para;</a></h2>
+<p>The <a href="https://github.com/lmmx/mibz2/blob/master/docs/team/research-charter/PROOF-PROGRAMME.md">proof programme</a> (§5.1) reads the shipped dispatch from <code>src/</code> on master. Here it is for <code>OpenCells</code>, the kernel workers hold at 8 threads and above:</p>
+<figure class="bf-fig" id="dispatch">
+<p class="bf-title">The per-block dispatch: exact routes behind cost gates</p>
+<svg viewBox="0 0 400 540" style="max-width:440px;margin:0 auto" role="img" aria-label="The per-block dispatch of OpenCells. A cost gate sends a block to the records route if its runs are worth reading, otherwise to the column route, which goes to Segmented. On the records route a second cost gate admits the block to the Open kernel when the count gates hold or it lies in the dense band below r/n 0.28 under a memory cap; refused blocks go to Segmented, the total path. Every route is exact on every valid block; every gate is a speed or memory choice."><defs><marker id="dp-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--bf-muted)"/></marker></defs><rect x="30" y="8" width="300" height="48" rx="14" style="fill:none;stroke:var(--bf-muted);stroke-width:1.2;stroke-dasharray:4 3"/><text x="180.0" y="28" class="bf-tm" text-anchor="middle" style="font-size:12px">cost gate: are the block's</text><text x="180.0" y="44" class="bf-tm" text-anchor="middle" style="font-size:12px">runs worth reading?</text><path d="M120,56 L120,98" style="fill:none;stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#dp-a)"/><text x="128" y="82" class="bf-tm" text-anchor="start" style="font-size:11.5px">yes: the records' route</text><path d="M330,32 L392,32 L392,446 L350,446" style="fill:none;stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#dp-a)"/><text x="378" y="250" class="bf-tm" text-anchor="middle" transform="rotate(90 378 250)" style="font-size:11.5px">no: the column's route</text><rect x="10" y="100" width="330" height="48" rx="14" style="fill:none;stroke:var(--bf-muted);stroke-width:1.2;stroke-dasharray:4 3"/><text x="175.0" y="120" class="bf-tm" text-anchor="middle" style="font-size:12px">cost gate: the count gates, or the dense</text><text x="175.0" y="136" class="bf-tm" text-anchor="middle" style="font-size:12px">band r/n < 0.28 under a memory cap?</text><path d="M90,148 L90,186" style="fill:none;stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#dp-a)"/><text x="98" y="172" class="bf-tm" text-anchor="start" style="font-size:11.5px">yes</text><path d="M300,148 L300,416" style="fill:none;stroke:var(--bf-muted);stroke-width:1.5" marker-end="url(#dp-a)"/><text x="292" y="300" class="bf-tm" text-anchor="end" style="font-size:11.5px">no, or the cap is hit</text><rect x="10" y="188" width="220" height="98" rx="6" style="fill:var(--bf-green-tint);stroke:var(--bf-green);stroke-width:2"/><text x="120.0" y="210" class="bf-t-strong" text-anchor="middle" style="font-size:14px">Open kernel</text><text x="120.0" y="229" class="bf-tm" text-anchor="middle" style="font-size:12px">thin runs as strips;</text><text x="120.0" y="245" class="bf-tm" text-anchor="middle" style="font-size:12px">first-return maps between them</text><text x="120" y="308" class="bf-tm" text-anchor="middle" style="font-size:11.5px">inside: a width certificate,</text><text x="120" y="324" class="bf-tm" text-anchor="middle" style="font-size:11.5px">short-cycle repetition</text><rect x="120" y="418" width="230" height="62" rx="6" style="fill:var(--bf-blue-tint);stroke:var(--bf-blue);stroke-width:2"/><text x="235.0" y="440" class="bf-t-strong" text-anchor="middle" style="font-size:14px">Segmented</text><text x="235.0" y="459" class="bf-tm" text-anchor="middle" style="font-size:12px">the total path: every block</text><text x="200" y="512" class="bf-tm" text-anchor="middle" style="font-size:12px">Every box is exact on every valid block (= R).</text><text x="200" y="529" class="bf-tm" text-anchor="middle" style="font-size:12px">Every dashed gate chooses for speed or memory.</text></svg>
+<figcaption>The dispatch of OpenCells (src/lib.rs, src/runs.rs, src/open.rs, src/bwt.rs on master). Below 8 workers the kernel is Cells, and the cooperative teams use their own walks; PROOF-PROGRAMME.md §5.1 lists them all. Research candidates are not shown.</figcaption>
+</figure>
+
+<p>A block's records are read when enough of its symbols are runs. On that route, the Open kernel takes the blocks its count gates admit. It also takes a dense band up to r/n 0.28, under a cap on retained rows (<a href="../2026-11-21-a-memory-gain-is-a-gain/">#703</a>). Everything refused goes to <code>Segmented</code>, the walk that accepts every block.</p>
+<p>The figure's point is its two kinds of line. Each box is a theorem of one shape: for route i, Pᵢ(x) ⇒ Fᵢ(x) = R(x). Here R is the reference, the walk of the LF permutation on a valid block. For every shipped route, Pᵢ is only the entry condition, a valid block. Each is tested against R on arbitrary columns, not just on Wikidata. The gates are not part of any correctness argument. Each chooses for speed or for memory. Correctness is uniform across the routes; the structure each bets on is a cost hypothesis.</p>
+<p>The Open kernel is the route where the unit of computation changes. The LF walk visits one row at a time, and on a block of runs most of those visits are predictable. Open treats the thin runs as strips and computes first-return maps between them, reached through Rauzy–Veech induction. The walk then jumps from strip to strip rather than from row to row. Its <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-11-18-open-return/proof.md">proof</a> is in the journal. Inside it, two more bets: a width certificate (below) and repetition of a short marked cycle.</p>
+<h2 id="4-when-the-data-refuses">4. When the data refuses<a class="headerlink" href="#4-when-the-data-refuses" title="Permanent link">&para;</a></h2>
+<p>Three refusals from the research lines show where the work is.</p>
+<ul>
+<li><strong>A solver that never fires.</strong> A pure-arithmetic solver for two-letter Sturmian blocks inverts them in O(log n) steps by the Euclidean algorithm, and it is exact on 5,627 Sturmian BWTs. On Wikidata, <code>gcd(w) = 1</code> on every block and 0.00% of Rauzy–Veech steps have a quotient of 2 or more. The hypothesis is sound, cheap to test, and true of no real block.</li>
+<li><strong>The GUID wall.</strong> No predicate on local structure picks the GUID rows out for a shortcut, because random identifiers have none. The escape would be to store them other than as BWT rows, which bzip2's format does not allow.</li>
+<li><strong>The copy sector.</strong> Three independent mechanisms found the repeated <code>sha1</code> and text rows and cut the hops spent on them by 16–58%, byte-exact. All three lose 1.14–2.64× end to end, because finding a copy costs more than emitting it saves. A saved hop costs 10.1–10.5 ns, against 5.79 ns to emit a row. The structure is real and common; recognising it is the obstruction, on the research host.</li>
+</ul>
+<p>Each refusal has three possible answers, and each has an example:</p>
+<ul>
+<li><strong>Weaken the hypothesis.</strong> Open's correctness never needed the density line r/n &lt; 0.15. A cap checked by the first pass replaced it, which admitted the dense band up to 0.28 (#703).</li>
+<li><strong>Certify it more cheaply.</strong> The fast elimination loop needs a block without long spirals. Rather than detect spirals, one comparison checks that the widest strip is at most 32,768 rows. No elimination step widens a node, so the widest strip bounds every spiral's length.</li>
+<li><strong>Change the representation.</strong> Open itself: the first return to the thin runs needs no assumption on the block, where earlier routes were gated by density and budget.</li>
+</ul>
+<p>The first two add or move a branch of the dispatch. Only the third removes branches, and it is what keeps the decoder from becoming a tree that grows with every regime found.</p>
+<p>We propose to keep a map of these moves. Each entry records the hypothesis moved from, the move and the result. It also records the witness, the status and the measured effect. The obstructions go in it too, each with its scope. A failed implementation is not an impossible construction. The copy sector lost on one machine against one base; only an exact obstruction with a witness rules a construction out, and only within its scope.</p>
+<h2 id="5-the-stutter">5. The stutter<a class="headerlink" href="#5-the-stutter" title="Permanent link">&para;</a></h2>
+<p>The process in §4 has a shape, and an essay of Gilles Deleuze's names it well. In "He Stuttered", Deleuze separates a character who stutters in speech, which a writer can report, from a writer who makes the language itself stutter. In the second case the variation is not laid over a fixed language from outside. It comes from within the language's own system, putting it in continuous variation and disequilibrium. His examples include Melville, Kafka, Beckett, the poet Gherasim Luca and Charles Péguy. Péguy moves from a word to its near-synonym, with a slight shift of meaning each time.</p>
+<p>The mapping to a decoder is close:</p>
+<ul>
+<li><strong>The fixed thing said</strong> is the conclusion, = R. It never moves.</li>
+<li><strong>The reported stutter</strong> is a special case bolted onto a uniform decoder. A branch notices a regime and handles it on the side, while the decoder's objects stay what they were.</li>
+<li><strong>The language stuttering</strong> is a construction whose mathematical objects change with the data's structure. Rows become strips and returns; a hypothesis returns weakened, certified, or replaced by a representation that does not need it, and each return changes the question.</li>
+</ul>
+<p>The difference in what drives the variation matters. For Deleuze it is the writer, working the language. Here it is the data's resistance, worked by us. The program is the language the proof is written in, so a proof that follows the data must vary with it too.</p>
+<p>The analogy has limits, and they should be plain. Deleuze wrote about literature and language. He made no claim about algorithms or proofs, and we claim none for him. The analogy names the shape of the process. It is not evidence that the process works: the evidence is in §§1–4.</p>
+<h2 id="6-local-and-global">6. Local and global<a class="headerlink" href="#6-local-and-global" title="Permanent link">&para;</a></h2>
+<p>Open is the one global change of representation so far. It is a classical idea, the induced map of Poincaré and Kakutani, reached through Rauzy–Veech induction. Everything since has been bound to a regime: the dense band, the width certificate, the block reader.</p>
+<p>Local constructions can lead to a global one. In mathematics a different proof of a solved case has opened new routes before. The Riemann Hypothesis for curves over finite fields was proved first by Weil. Then came Stepanov's elementary method, completed by Bombieri, and it was that method's descendants that travelled (<a href="../2026-11-22-two-centuries-of-tools/">Two centuries of tools</a>). Inverse BWT has the same structure. The LF walk, cycle decomposition and first-return induction are different constructive proofs that the BWT is invertible, and each gives a different decoder. The proof programme names seven points, L0 to L6, where one step of the proof can be replaced. Open replaced the classical route at L3, L4 and L5.</p>
+<p>What we cannot yet say is how complete the family is. The oracle's 3.17% bounds only the alternatives it chose between, over a research build rather than master. Those were eleven settings of one construction's two parameters, and two walks. It says that family is nearly saturated on Wikidata, and nothing about a construction outside it. The 10-thread plateau points the same way. Every construction gain of the last twelve research cycles left DRAM traffic at 10 workers unchanged, at 4.91 bytes per output byte.</p>
+<h2 id="7-what-is-proved-measured-and-open">7. What is proved, measured and open<a class="headerlink" href="#7-what-is-proved-measured-and-open" title="Permanent link">&para;</a></h2>
+<p><strong>Proved:</strong> nothing in Lean yet. The plan is the specification first, the LF walk, then the Open kernel as a conditional route, then the dispatch lemma that joins the routes. <strong>Measured:</strong> the i9 figures in §1, CI's per-corpus bench in §2, and each route's byte-exact parity against the reference. <strong>Open:</strong> whether the local constructions we keep finding are pieces of one representation we have not yet seen, or whether real data needs many routes for good.</p>
+<hr />
+<p><strong>Sources:</strong> <a href="https://github.com/kim-em/lean-zip">lean-zip's README</a>; Gilles Deleuze, "He Stuttered", in <em>Essays Critical and Clinical</em>, trans. Daniel W. Smith and Michael A. Greco (1997), « Bégaya-t-il… » in <em>Critique et clinique</em> (1993).</p>
+<p><strong>Research records:</strong> <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-11-22-classical-tools-audit.md">the classical-tools audit</a>; <a href="https://github.com/lmmx/mibz2/blob/master/docs/team/research-charter/PROOF-PROGRAMME.md">the proof programme</a>, §5 for the routes, the hypothesis map and the oracle's scope; <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-11-18-open-return/proof.md">Open's first-return proof</a>; the i9 evidence bundles named in the first figure, on the <code>evidence</code> branch; CI's bench comment on #745.</p>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../2026-11-22-decompression-is-the-harder-problem/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Decompression is the harder problem">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Decompression is the harder problem
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../2026-11-22-two-centuries-of-tools/" class="md-footer__link md-footer__link--next" aria-label="Next: Two centuries of tools">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Two centuries of tools
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      mibz2 is licensed under MIT OR Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    
+    <a href="https://github.com/lmmx/mibz2" target="_blank" rel="noopener" title="mibz2 on GitHub" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://pypi.org/project/mibz2/" target="_blank" rel="noopener" title="mibz2 on PyPI" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://crates.io/crates/mibz2" target="_blank" rel="noopener" title="mibz2 on crates.io" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="m508.5 249.8-21.8-13.5c-.2-2-.3-3.9-.5-5.9l18.7-17.5c.9-.9 1.6-1.9 2-3.1s.5-2.5.2-3.7-.8-2.4-1.6-3.3-1.8-1.7-3-2.1l-24-9c-.5-1.9-1.1-3.8-1.7-5.6l15-20.8c.7-1 1.2-2.2 1.3-3.4s0-2.5-.5-3.7-1.2-2.2-2.2-2.9-2.1-1.3-3.4-1.5l-25.4-4.2c-.9-1.7-1.8-3.4-2.7-5.2l10.7-23.4c.5-1.1.7-2.4.6-3.6s-.5-2.4-1.2-3.5-1.6-1.9-2.8-2.5-2.4-.8-3.6-.8l-25.8.9c-1.2-1.5-2.4-2.9-3.6-4.4l5.8-25.3c.3-1.2.3-2.5-.1-3.7s-1-2.3-1.9-3.2-2-1.5-3.2-1.9-2.5-.4-3.7-.1l-25.1 6c-1.4-1.2-2.9-2.4-4.4-3.6l.9-25.8c.1-1.3-.2-2.5-.8-3.6s-1.4-2.1-2.5-2.8-2.2-1.1-3.5-1.2-2.5.1-3.7.6l-23.3 10.7-5.1-2.7-4.2-25.4c-.2-1.2-.7-2.4-1.5-3.4s-1.8-1.7-2.9-2.2-2.4-.7-3.7-.5-2.4.6-3.4 1.3l-20.9 15c-1.9-.6-3.8-1.1-5.6-1.7l-9-24c-.4-1.2-1.2-2.2-2.1-3S307.2 5.2 306 5s-2.5-.2-3.7.2-2.3 1.1-3.1 2l-17.6 18.7c-2-.2-3.9-.4-5.9-.5L262.3 3.5c-.7-1.1-1.6-1.9-2.7-2.6S257.3 0 256 0s-2.5.3-3.6.9-2 1.5-2.7 2.6l-13.5 21.8c-2 .2-3.9.3-5.9.6L212.9 7.1c-.9-.9-1.9-1.6-3.1-2s-2.5-.5-3.7-.2-2.4.8-3.3 1.6-1.7 1.8-2.1 3l-9 24c-1.9.6-3.8 1.1-5.7 1.7l-20.8-15c-1-.7-2.2-1.2-3.4-1.3s-2.5 0-3.7.5-2.2 1.2-2.9 2.2-1.3 2.1-1.5 3.4l-4.2 25.4c-1.7.9-3.4 1.8-5.2 2.7l-23.4-10.5c-1.1-.5-2.4-.7-3.7-.6s-2.5.5-3.5 1.2-1.9 1.7-2.5 2.8-.8 2.4-.8 3.6l.9 25.8c-1.5 1.2-3 2.4-4.4 3.6l-25.1-6c-1.2-.3-2.5-.3-3.7.1s-2.3 1-3.2 1.9-1.5 2-1.9 3.2-.4 2.5-.1 3.7l6 25.1c-1.2 1.4-2.4 2.9-3.6 4.4l-25.8-.9c-1.3 0-2.5.2-3.6.8s-2.1 1.4-2.8 2.4-1.1 2.2-1.2 3.5.1 2.5.6 3.6l10.7 23.4c-.9 1.7-1.8 3.4-2.7 5.2l-25.4 4.1c-1.2.2-2.4.7-3.4 1.5s-1.7 1.8-2.2 2.9-.7 2.4-.5 3.7.6 2.4 1.3 3.4l15 20.8c-.6 1.9-1.1 3.8-1.7 5.7l-24 9c-1.2.4-2.2 1.2-3 2.1s-1.4 2.1-1.6 3.3-.2 2.5.2 3.7 1.1 2.3 2 3.1l18.7 17.5c-.2 2-.4 3.9-.6 5.9L3.5 249.8c-1.1.7-1.9 1.6-2.6 2.7s-.9 2.3-.9 3.6.3 2.5.9 3.6 1.5 2 2.6 2.7l21.8 13.5c.2 2 .3 3.9.6 5.9L7.1 299.1c-.9.9-1.6 1.9-2 3.1s-.5 2.5-.2 3.7.8 2.4 1.6 3.3 1.8 1.7 3 2.1l24 9c.6 1.9 1.1 3.8 1.7 5.6l-15 20.8c-.7 1-1.2 2.2-1.3 3.4s0 2.5.5 3.7 1.2 2.2 2.2 2.9 2.1 1.3 3.4 1.5l25.4 4.2 2.7 5.1-10.5 23.6c-.5 1.1-.7 2.4-.6 3.6s.5 2.5 1.2 3.5c.7 1.1 1.6 1.9 2.7 2.5s2.4.8 3.6.8l25.8-.9c1.2 1.5 2.4 2.9 3.6 4.4L73 430.2c-.3 1.2-.3 2.5.1 3.7s1 2.3 1.9 3.2 2 1.5 3.2 1.9 2.5.4 3.7.1l25.2-5.9c1.5 1.2 2.9 2.4 4.4 3.6l-.9 25.8c0 1.3.2 2.5.8 3.6s1.4 2.1 2.5 2.8 2.2 1.1 3.5 1.2 2.5-.1 3.6-.6l23.4-10.7 5.1 2.7 4.2 25.4c.2 1.2.7 2.4 1.5 3.4s1.8 1.8 2.9 2.2 2.4.7 3.7.5 2.4-.6 3.4-1.3l20.8-15c1.9.6 3.8 1.1 5.6 1.7l9 24c.4 1.2 1.2 2.2 2.1 3s2.1 1.4 3.3 1.6 2.5.2 3.7-.2 2.3-1.1 3.1-2l17.5-18.7c2 .2 3.9.4 5.9.6l13.5 21.8c.7 1.1 1.6 1.9 2.7 2.6s2.3.9 3.6.9 2.5-.3 3.6-.9 2-1.5 2.7-2.6l13.5-21.8c2-.2 3.9-.3 5.9-.6l17.5 18.7c.9.9 1.9 1.6 3.1 2s2.5.5 3.7.2 2.4-.8 3.3-1.6 1.7-1.8 2.1-3l9-24c1.9-.6 3.8-1.1 5.6-1.7l20.8 15c1 .7 2.2 1.2 3.4 1.3s2.5 0 3.7-.5 2.2-1.2 2.9-2.2 1.3-2.1 1.5-3.4l4.2-25.4 5.1-2.7 23.4 10.7c1.1.5 2.4.7 3.6.6s2.4-.5 3.5-1.2 1.9-1.6 2.5-2.8.8-2.4.8-3.6l-.9-25.8c1.5-1.2 2.9-2.4 4.4-3.6l25.2 5.9c1.2.3 2.5.3 3.7-.1s2.3-1 3.2-1.9 1.5-2 1.9-3.2.4-2.5.1-3.7l-5.9-25.2c1.2-1.4 2.4-2.9 3.6-4.4l25.8.9c1.3.1 2.5-.2 3.6-.8s2.1-1.4 2.8-2.5c.7-1 1.1-2.2 1.2-3.5s-.1-2.5-.6-3.6l-10.7-23.4 2.7-5.1 25.4-4.2c1.2-.2 2.4-.7 3.4-1.5s1.8-1.8 2.2-2.9.7-2.4.5-3.7-.6-2.4-1.3-3.4l-15-20.8c.6-1.9 1.1-3.8 1.7-5.6l24-9c1.2-.4 2.2-1.2 3-2.1s1.4-2.1 1.6-3.3.2-2.5-.2-3.7-1.1-2.3-2-3.1l-18.7-17.5c.2-1.9.4-3.9.6-5.9l21.8-13.5c1.1-.7 1.9-1.6 2.6-2.7s.9-2.3.9-3.6-.3-2.5-.9-3.6-1.5-2-2.6-2.7m-151 129.1c-3.6-.8-7.4-.1-10.5 1.9s-5.3 5.2-6 8.8l-7.6 35.7c-24.6 11.1-51.3 16.8-78.3 16.7s-53.6-6.1-78.1-17.4l-7.6-35.7c-.4-1.8-1.1-3.5-2.1-5s-2.4-2.8-3.9-3.8-3.2-1.7-5-2-3.6-.3-5.4.1l-31.5 6.8c-5.8-6-11.3-12.5-16.3-19.2h153.2c1.7 0 2.9-.3 2.9-1.9v-54.2c0-1.6-1.2-1.9-2.9-1.9h-44.8v-34.4h48.5c4.4 0 23.7 1.3 29.8 25.9 1.9 7.5 6.2 32.1 9.1 40 2.9 8.8 14.6 26.5 27.1 26.5h79c-5.3 7.1-11.1 13.8-17.3 20.1l-32.1-6.9zm25.8 34.5c0 3-.9 6-2.6 8.5s-4 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .8-8.8 3.1-5.2 5.6-6.9 5.4-2.6 8.5-2.6h.4c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zm-225.6-.7c0 3-.9 6-2.6 8.5s-4.1 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .9-8.8 3.1-5.2 5.6-6.8 5.4-2.6 8.5-2.6h.5c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zM69.6 234.2l32.8-14.6c1.7-.7 3.2-1.8 4.4-3.1s2.2-2.9 2.9-4.6 1-3.5.9-5.3-.5-3.6-1.2-5.3l-6.8-15.2h26.6v119.7H75.6c-6.6-23.2-8.7-47.6-6.1-71.6zm-11.3-36.1c0-2 .4-4 1.2-5.8s1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.5c3 .1 5.9 1 8.3 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4.1-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zm155.2 24.5v-35.3h63.3c3.3 0 23.1 3.8 23.1 18.6 0 12.3-15.2 16.7-27.7 16.7zM399 306.7c-9.8 1.1-20.6-4.1-22-10.1-5.8-32.5-15.4-39.4-30.6-51.4 18.9-12 38.5-29.6 38.5-53.3 0-25.5-17.5-41.6-29.4-49.5-16.8-11-35.3-13.2-40.3-13.2H116.3c27.5-30.7 64.4-51.5 104.9-59.2l23.5 24.6c1.3 1.3 2.8 2.4 4.4 3.1s3.5 1.1 5.3 1.2 3.6-.3 5.3-.9 3.2-1.7 4.6-2.9l26.3-25c26.8 5 52.1 15.8 74.3 31.6s40.6 36.2 54.1 59.9l-18 40.6c-1.5 3.4-1.5 7.2-.2 10.6s3.9 6.2 7.3 7.7l34.6 15.3c1.1 10.8 1.2 21.7.4 32.5h-19.3c-1.9 0-2.7 1.3-2.7 3.1v8.8c0 20.8-11.7 25.3-22 26.5zM240 60.2c0-4 1.6-7.9 4.5-10.7s6.7-4.5 10.7-4.5h.4c3 .1 5.9 1 8.4 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zM436.8 214c-2 0-4-.4-5.8-1.2s-3.5-1.9-4.9-3.3-2.5-3.1-3.3-4.9-1.2-3.8-1.2-5.8.4-4 1.2-5.8 1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.4c4 .1 7.9 1.7 10.7 4.6s4.4 6.8 4.3 10.8-1.7 7.9-4.6 10.7-6.8 4.4-10.8 4.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://lmmx.github.io/mibz2/background/behind-the-scenes/" target="_blank" rel="noopener" title="Behind the scenes" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-telescope" viewBox="0 0 24 24"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44M13.56 11.747l4.332-.924M16 21l-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455zM6.158 8.633l1.114 4.456M8 21l3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.copy","content.action.edit","content.code.copy","content.tabs.link","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.top","search.highlight","search.suggest","toc.follow"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+        <script src="../../assets/javascripts/bench.js?v=94c866ff19f1"></script>
+      
+        <script src="../../assets/javascripts/couriers.js?v=94c866ff19f1"></script>
+      
+        <script src="../../assets/javascripts/blog.js?v=94c866ff19f1"></script>
+      
+        <script src="../../assets/javascripts/frontier.js?v=94c866ff19f1"></script>
+      
+        <script src="../../assets/javascripts/observatory.js?v=94c866ff19f1"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      
+        <script src="../../assets/javascripts/katex.js?v=94c866ff19f1"></script>
+      
+    
+  </body>
+</html>
