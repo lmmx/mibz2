@@ -9,6 +9,13 @@
 
 *Evidence lives in [CONTEXT.md](CONTEXT.md) and the journals. This file points to it.*
 
+**The proof programme** ([PROOF-PROGRAMME.md](PROOF-PROGRAMME.md), proposed) fixes one
+specification of the inverse BWT and treats each construction as a route to it: the LF walk
+(T1), the Open kernel's first return (T2, with its proof obligations) and the intermediate lemmas
+a new construction could replace (T3, the substitution points L0–L6). A candidate on this
+frontier can be submitted there as the lemma it replaces, scored separately on correctness,
+computational content and measured cost.
+
 ## Pending mathematical leads
 
 This is an inbox for directions Louis introduces between cycles. A lead is an invitation, not an
