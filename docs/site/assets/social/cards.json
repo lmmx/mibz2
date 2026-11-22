@@ -244,6 +244,19 @@
     "section": " · Research blog",
     "title": "Sixteen at a stroke: fixed-width writes that stop the processor guessing"
   },
+  "assets/social/blog-2026-11-22-correctness-is-uniform-cost-is-not.png": {
+    "description": "Every route in mibz2's bzip2 decoder is exact on every block, but cost varies from block to block and so we hunt for speed in many places.",
+    "foot": "lmmx.github.io/mibz2 · 22 November 2026",
+    "kind": "progress",
+    "section": " · Research blog",
+    "title": "Correctness is uniform, cost is not"
+  },
+  "assets/social/blog-2026-11-22-decompression-is-the-harder-problem.png": {
+    "description": "Thomas Murphy of Tropik and I talk about agent swarms and message boards, and why a fast decompressor is a stranger problem than a proof.",
+    "foot": "lmmx.github.io/mibz2 · 22 November 2026",
+    "section": " · Research blog",
+    "title": "Decompression is the harder problem: a conversation with Thomas Murphy"
+  },
   "assets/social/blog-2026-11-22-two-centuries-of-tools.png": {
     "description": "A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.",
     "foot": "lmmx.github.io/mibz2 · 22 November 2026",

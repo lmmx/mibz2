@@ -200,6 +200,10 @@ jobs:
       # commit, state in the XDG state directory, HOLD, notices
       - name: The workstation queue
         run: python3 bench/test_workstation_queue.py
+      # bench/run-queue.sh serving two scratch repositories: turns, once per commit per
+      # repository, the machine lock, one repository's failure not stopping the other
+      - name: The workstation queue, several repositories
+        run: python3 bench/test_run_queue_multi.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py

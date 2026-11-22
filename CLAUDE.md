@@ -135,6 +135,15 @@ effect, or because a run was noisy) is fine: say why in a LOG and tag it (Louis,
 Prepared runs wait in the **workstation queue**, `bench/workstation-queue.txt`
 (PROTOCOL.md §9). An entry goes in only once nothing about it remains to be decided. One
 command, `just workstation-queue`, runs every ready entry once, then suspends.
+- **Several repositories, one runner:** the same runner serves every checkout listed in
+  `${XDG_CONFIG_HOME:-~/.config}/workstation/repos` (one absolute path a line) or given with
+  `--repo PATH`; with neither, this checkout alone. The repositories take turns, one run each.
+  Each keeps its own queue, tags, evidence branch and channel (the queue file's `# repo:` and
+  `# channel:` lines), and its state under `${XDG_STATE_HOME:-~/.local/state}/<repo>/workstation/`.
+- **One run at a time on the machine:** the runner, `just submit-when-ready` and `just submit`
+  all hold an flock on `${XDG_STATE_HOME:-~/.local/state}/workstation/queue.lock`, and refuse
+  while anything else holds it. Another repository's runner (wikidata-pq's) is kept apart only
+  once it takes the same lock.
 
 `bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
 shape when it is next used.

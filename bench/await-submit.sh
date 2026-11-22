@@ -2,8 +2,9 @@
 # Wait for the coordinator to mark a frozen recipe ready, run it once with `just submit`,
 # then suspend the machine.
 #
-#   just submit-when-ready <recipe> <branch> [--no-suspend] [--hours N]
+#   just submit-when-ready <recipe> <branch> [--no-suspend] [--hours N] [--args A,B]
 #   (or: bash bench/await-submit.sh <recipe> <branch> ...)
+# --args A,B passes A and B to the recipe: `just submit <recipe> A B`.
 #
 # The signal is a tag on origin. The coordinator pushes it only once the recipe is frozen,
 # reviewed and green:
@@ -14,11 +15,15 @@
 # It polls every 5 minutes, for at most --hours (default 8; 0 looks once and doesn't wait). Whatever the outcome (run passed,
 # run failed, hold, timeout or a refusal), it suspends afterwards, unless --no-suspend.
 # Nothing is written to the home directory itself. The waiter's state goes where the XDG
-# Base Directory spec puts state, under ${XDG_STATE_HOME:-~/.local/state}/mibz2/workstation/:
+# Base Directory spec puts state, under ${XDG_STATE_HOME:-~/.local/state}/<repo>/workstation/,
+# where <repo> is the name of the checkout's origin repository:
 #   logs/await-submit-<recipe>-<stamp>.log   everything this waiter prints;
 #   ran/<recipe>-<sha>                       the once-per-commit markers.
 # (Until 15 November 2026 these were ~/await-submit-*.log and ~/.cache/await-submit/; they have
 # been moved, and markers in the old place are no longer read.)
+# One run at a time on the machine: just before the run, the waiter takes the flock on
+# ${XDG_STATE_HOME:-~/.local/state}/workstation/queue.lock (or keeps the one bench/run-queue.sh
+# holds and passes down), and refuses if anything else holds it.
 #
 # Guarantees:
 # - a run happens at most once per recipe and commit on this machine: a marker directory
@@ -29,11 +34,14 @@
 # - a failed check of origin is logged, and retried at the next poll;
 # - the exit status is 0 only when the run ran and passed: 1 when it failed, 3 on HOLD,
 #   4 on timeout, 5 on a refusal.
-# Notices: when a run starts, and when one fails, a LOG is posted on #145 (the run's
-# success is posted there by `just submit` with its bundle), so the coordinator sees the
-# workstation pick work up without waiting for the bundle. A notice is best effort: one that
-# can't be posted (gh signed out, no network) is logged and the run goes on.
-# AWAIT_SUBMIT_NOTICES=0 turns them off.
+# Notices: when a run starts, and when one fails, a LOG is posted on the repository's channel
+# (the run's success is posted there by `just submit` with its bundle), so the coordinator sees
+# the workstation pick work up without waiting for the bundle. The repository and the channel's
+# issue number are the ones bench/workstation-queue.txt declares on its "# repo: owner/name"
+# and "# channel: N" lines (the checkout's copy, else origin's default branch's). A notice is
+# best effort: one that can't be posted (gh signed out, no network, no channel declared) is
+# logged and the run goes on. AWAIT_SUBMIT_NOTICES=0 turns them off.
+# Nothing here names a repository: the file is the same in every repository that uses it.
 set -uo pipefail
 
 # Run from a copy, so that checking out another branch can't change this script mid-run.
@@ -43,15 +51,18 @@ if [[ "${AWAIT_SUBMIT_COPY:-}" != 1 ]]; then
   AWAIT_SUBMIT_COPY=1 exec bash "$tmp" "$@"
 fi
 
-recipe=${1:?usage: await-submit.sh <recipe> <branch> [--no-suspend] [--hours N]}
-branch=${2:?usage: await-submit.sh <recipe> <branch> [--no-suspend] [--hours N]}
+usage="usage: await-submit.sh <recipe> <branch> [--no-suspend] [--hours N] [--args A,B]"
+recipe=${1:?$usage}
+branch=${2:?$usage}
 shift 2
 suspend=1
 hours=8
+args=()
 while (($#)); do
   case $1 in
     --no-suspend) suspend=0 ;;
     --hours) hours=$2; shift ;;
+    --args) IFS=, read -r -a args <<<"$2"; shift ;;
     *) echo "unknown option $1"; exit 2 ;;
   esac
   shift
@@ -60,19 +71,38 @@ done
 # State, per the XDG Base Directory spec (a relative XDG_STATE_HOME is ignored, as it says)
 state_home=${XDG_STATE_HOME:-}
 [[ $state_home == /* ]] || state_home=$HOME/.local/state
-state=$state_home/mibz2/workstation
+cd "$(git rev-parse --show-toplevel)" || { echo "not in a git checkout"; exit 2; }
+name=$(git remote get-url origin 2>/dev/null) || { echo "the checkout has no origin remote"; exit 2; }
+name=${name%/}; name=${name%.git}; name=${name##*/}
+state=$state_home/$name/workstation
 mkdir -p "$state/logs" "$state/ran" || { echo "could not make $state"; exit 2; }
 log=$state/logs/await-submit-${recipe}-$(date -u +%Y%m%dT%H%M%SZ).log
 exec > >(tee -a "$log") 2>&1
 say() { echo "[$(date -u +%H:%M:%S)] $*"; }
 
-# Post a LOG on #145 (best effort, at most 60 s: a notice never stops or fails the run)
+# A setting bench/workstation-queue.txt declares on a "# <key>: <value>" line: the checkout's
+# copy, else origin's default branch's.
+queue_meta() {
+  local def
+  def=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/master)
+  { cat bench/workstation-queue.txt 2>/dev/null; git show "$def:bench/workstation-queue.txt" 2>/dev/null; } \
+    | sed -n "s/^#[[:space:]]*$1:[[:space:]]*\([^[:space:]]*\)[[:space:]]*\$/\1/p" | head -1
+}
+# Read now, before the ready commit is checked out (an older commit may not declare them)
+repo=${EVIDENCE_REPO:-$(queue_meta repo)}
+channel=${EVIDENCE_CHANNEL:-$(queue_meta channel)}
+
+# Post a LOG on the channel (best effort, at most 60 s: a notice never stops or fails the run)
 notice() {
   [[ ${AWAIT_SUBMIT_NOTICES:-1} == 1 ]] || return 0
-  local gh=${GH:-gh} repo=${EVIDENCE_REPO:-lmmx/mibz2} body url
+  local gh=${GH:-gh} body url
+  if [[ -z $repo || -z $channel ]]; then
+    say "notice not posted: bench/workstation-queue.txt declares no '# repo:' or '# channel:'; the run goes on"
+    return 0
+  fi
   body=$(printf 'FROM: louis via workstation\nTO: coordinator\nRE: %s\nTYPE: LOG\n\n%s\n' \
     "$recipe at ${ready:-?}" "$1")
-  if url=$(timeout 60 "$gh" api "repos/$repo/issues/145/comments" -f "body=$body" --jq .html_url 2>/dev/null); then
+  if url=$(timeout 60 "$gh" api "repos/$repo/issues/$channel/comments" -f "body=$body" --jq .html_url 2>/dev/null); then
     say "notice posted: $url"
   else
     say "notice not posted (gh failed or timed out); the run goes on"
@@ -108,7 +138,6 @@ ready_commit() {  # the peeled commit if the tag is annotated, else the tag's ow
   echo "${peeled:-$plain}"
 }
 
-cd "$(git rev-parse --show-toplevel)" || { say "not in a git checkout"; exit 2; }
 say "waiting for ready/$recipe or hold/$recipe on origin (every 5 min, up to ${hours} h); log $log"
 
 deadline=$(( $(date +%s) + hours * 3600 ))
@@ -142,16 +171,27 @@ head=$(git rev-parse HEAD)
 if refs=$(query) && grep -q "refs/tags/hold/$recipe\$" <<<"$refs"; then
   finish "HOLD: the coordinator put the run on hold before it started; nothing was run" 3
 fi
+# One run at a time on the machine: keep the lock a queue runner passed down (flock on the same
+# open file succeeds), else take it, held on fd 9 until this waiter exits.
+if ! { [[ ${WORKSTATION_LOCK_FD:-} =~ ^[0-9]+$ ]] && flock -n "$WORKSTATION_LOCK_FD" 2>/dev/null; }; then
+  lock=$state_home/workstation/queue.lock
+  if ! { mkdir -p "${lock%/*}" && exec 9>>"$lock"; }; then
+    finish "REFUSED: could not open the machine lock $lock; nothing was run" 5
+  fi
+  flock -n 9 || finish "REFUSED: another workstation run holds the machine lock $lock ($(cat "$lock" 2>/dev/null)); nothing was run" 5
+  echo "pid $$, await-submit.sh $recipe, since $(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$lock"
+  export WORKSTATION_LOCK_FD=9
+fi
 # At most once per recipe and commit on this machine (mkdir is atomic).
 mark=$state/ran/$recipe-$ready
 if ! mkdir "$mark" 2>/dev/null; then
   finish "REFUSED: $recipe at $ready already ran on this machine ($mark); nothing was run" 5
 fi
 
-say "running: just submit $recipe"
+say "running: just submit $recipe${args[*]:+ ${args[*]}}"
 started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 notice "**Started:** \`just submit $recipe\` at \`$ready\` ($branch), $started, on $(lscpu 2>/dev/null | sed -n 's/^Model name: *//p' | head -1). Its bundle is posted here when it ends; a failure is posted too."
-if just submit "$recipe"; then
+if just submit "$recipe" "${args[@]}"; then
   finish "RUN DONE: just submit $recipe exited 0" 0
 else
   rc=$?
