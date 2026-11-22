@@ -253,20 +253,110 @@ hypothesis, 10 workers with the 12 MiB cap, is Regime 2's. The run judges both: 
 
 ## Model first (§5c.3): MONODROMY's prediction
 
-*Left for MONODROMY's frozen prediction, which the coordinator requests. It is to be filled in,
-with its record number, branch and head, before the ready tag is set. It is cited in the queue
-entry, and it decides nothing.*
+**The record:** MONODROMY's record 91,
+`docs/journal/monodromy/2026-11-22-recalibration-plateau-predictions.md`, on its branch
+`claude/sharp-meitner-cx0v78` at **ef85fae82e380c5b9e999ada1be376be07069c28**. It was frozen
+before any of this run's data, and reviewed at #145 comment 7077277386. It decides nothing.
 
-Its inputs differ from its stack-run record's in three places, for MONODROMY to decide:
-- *the working set:* the 12 MiB ready cap with its W+2 floor, and the owned run-route output
-  with in-place RLE1 (no separate `ll` scratch). Peak RSS is 0.63 at 10 threads on the i9;
-- *the traffic:* tiled CRC and in-place RLE1 cut DRAM bytes per output byte;
-- *the front end:* the block reader's faster serial scan.
+**The scenario to score, fixed before any data.** Record 91 predicts two builds. The pin says
+which one this run measured:
+- **Scenario B (#739 + #745)** if #745 re-qualifies and the pin is #745's head 7b901b67, or
+  master's merge of #745 with the same `src`;
+- **Scenario A (#739 only)** if #745 fails to re-qualify and the pin is master 3296195e (§ "The
+  decoder measured, and the re-pin").
 
-**The record:**
+The run's `pin.txt` names the build, and that alone chooses the scenario. The other scenario's
+column is not scored.
 
-> *(MONODROMY's frozen prediction goes here: each judged count's predicted best arm, and the
-> predicted ratio of 8/32, 9/36 and 10/40 over 7/28 at unpinned 10, 12, 16 and 20.)*
+**Every predicted cell is measured:**
+- at unpinned 10, 12, 16 and 20: 6/24 (at 10 only), 8/32, 9/36 and 10/S;
+- at pinned 10: 6/24, 8/32 and 10/40;
+- every cell below 10 threads, as the stack run measured them.
+
+Record 91's `10/S` does not name its window. Its own figure for it ("10/S read 1.25–1.32
+before") is the plan's arms' memory in the stack run, so it is scored on the plan's window: 10/40 at
+10, then 10/48, 10/64 and 10/80 at 12, 16 and 20. The trim's window for ten workers, 10/40 at
+12–20, is reported beside it, and is not scored against record 91.
+
+**Record 91's §3–§5, verbatim** (its headings one level lower here; nothing else changed):
+
+### 3. The predictions (wall, Wikidata ×4, candidate over the shipped reference; quotable verbatim)
+
+| cell | reference | candidate | A: #739 only | B: #739 + #745 |
+|---|---|---|---|---|
+| unpinned 10, 12, 16, 20 | lazy 7/28 | lazy 6/24 (at 10 threads only) | 1.00 [0.95, 1.05] | 1.01 [0.96, 1.06] |
+| | | **lazy 8/32** | **0.99 [0.95, 1.03]** | **0.94 [0.89, 0.99]** |
+| | | **lazy 9/36** (N) | 1.01 [0.95, 1.07] | **0.92 [0.86, 0.98]** |
+| | | **lazy 10/S** (N) | 1.07 [1.01, 1.13] | 0.96 [0.90, 1.02] |
+| pinned 10 | lazy 7/28 | lazy 6/24 | 1.09 [1.04, 1.14] | 1.10 [1.05, 1.15] |
+| | | lazy 8/32 | 0.97 [0.92, 1.02] | **0.92 [0.86, 0.98]** |
+| | | lazy 10/40 (N) | 1.15 [1.08, 1.22] | 1.02 [0.95, 1.09] |
+| pinned 8 | lazy 6/24 | lazy 5/20 | 1.15 [1.13, 1.17] | 1.15 [1.13, 1.17] |
+| | | lazy 7/28 | 1.09 [1.07, 1.11] | 1.08 [1.06, 1.10] |
+| | | lazy 8/32 | 1.10 [1.08, 1.12] | 1.04 [1.01, 1.07] |
+| pinned 6 | lazy 5/20 | lazy 4/16 | 1.12 [1.10, 1.15] | 1.13 [1.10, 1.15] |
+| | | lazy 6/24 | 1.08 [1.06, 1.10] | 1.08 [1.06, 1.10] |
+| | | eager 6/24 | 1.29 [1.25, 1.33] | 1.29 [1.25, 1.33] |
+| pinned 4 | eager 3/12 | eager 2/8 | 1.35 [1.32, 1.38] | 1.35 [1.32, 1.38] |
+| | | eager 4/16 | 1.05 [1.03, 1.07] | 1.05 [1.03, 1.07] |
+| | | **lazy 3/12** | **0.98 [0.96, 1.00]** | **0.98 [0.96, 1.00]** |
+| unpinned 4 | lazy 4/16 | lazy 3/12 | 1.30 [1.26, 1.34] | 1.30 [1.26, 1.34] |
+| | | eager 4/16 | 1.11 [1.07, 1.15] | 1.11 [1.07, 1.15] |
+| unpinned 6 | lazy 6/24 | lazy 5/20 | 1.22 [1.10, 1.34] | 1.21 [1.09, 1.33] |
+| | | eager 6/24 | 1.34 [1.20, 1.48] | 1.34 [1.20, 1.48] |
+| unpinned 8 | lazy 8/32 | lazy 7/28 | 1.01 [0.95, 1.07] | 1.07 [1.01, 1.13] |
+
+**The best count at each thread count:**
+
+| threads, placement | A: #739 only | B: #739 + #745 |
+|---|---|---|
+| 10–20 unpinned | 7 or 8 (a tie) | **9**, with 8 close behind |
+| 10 pinned | 8 (weakly) | **8** |
+| 8 pinned | 6 | 6 |
+| 6 pinned | lazy 5 | lazy 5 |
+| 4 pinned | lazy 3 | lazy 3 |
+| 4 unpinned | lazy 4 | lazy 4 |
+| 6 unpinned | lazy 6 | lazy 6 |
+| 8 unpinned | 8 | 8 |
+
+### 4. Which shipped trims I expect to change
+
+**Under A (#739 only): none.** At 10–20 threads 8/7 is 0.99, a tie.
+
+**Under B (#739 + #745), the contention trims at 10 threads and up (lazy 7/28) are the only
+candidates.**
+- *By wall:* 9/36 and 8/32 lead, 6–8% ahead of 7.
+- *What decides adoption:* memory and Holm, not wall.
+  - **8/32:** read 1.09–1.11 of 7/28's memory in the last three runs, so it sits on the 1.10 gate.
+    #739's fixed 12 MiB ready cap should lower that ratio, but by how much is N. If it passes, and
+    the noise at 10 threads and up is as low as the plateau run's (±0.6–3.5%, against ±20% before),
+    **8/32 should adopt at 10–20 unpinned and at pinned 10.**
+  - **9/36 and 10/S:** expected to be held on memory. 10/S read 1.25–1.32 before.
+
+**Pinned 4's lazy 3/12** stays about 2% faster, as in the stack run. It adopts only if Holm can
+reject at this noise. I expect it not to (p about 0.01), unless the plateau changes tighten the
+4-thread cells.
+
+**Wormhole's hypothesis** is that 10 workers with the 12 MiB cap win from 10 to 20 threads.
+- *Under B:* 10/S ≈ 0.96, faster than 7 but slower than 9 and 8. Its memory fails the gate.
+- *Under A:* 10 loses, at 1.07.
+
+So the model predicts the direction right, toward more workers, but the optimum at 9, not 10.
+
+### 5. How it will be scored
+
+**Score the scenario the build actually is.**
+
+**The model is refuted if any of these holds:**
+1. **Under B,** at 10–20 threads unpinned, 10/S beats both 8/32 and 9/36 by more than 2% on the
+   pooled cells. That refutes the cap model's interior optimum.
+2. **Under A,** any pooled 8/7 at 10 threads and up falls below 0.94. That would mean #739 alone
+   moved the knee.
+3. **At pinned 8,** a neighbour beats 6.
+4. **Under either scenario,** pinned 6's or unpinned 4's or 6's best count differs from the table.
+
+**A miss confined to an N arm** (9/36, or 10/S's extrapolated gain) scores the extrapolation of
+g₇₄₅ above W = 8, not the model.
 
 ## Reported, and deciding nothing
 
