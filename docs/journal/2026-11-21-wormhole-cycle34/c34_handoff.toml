@@ -1,0 +1,21 @@
+name = "Wormhole/Neon Cycle 34: Ring-Indexed Ready Slots, Split Directed Condvars & Bounded Deque Handoff"
+target = "text"
+uses = []
+
+[[edge]]
+id = "h12_ring_slots_split_cv"
+inputs = ["records", "C", "p", "n"]
+output = "ordered_blocks"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "n", Q = "0", M = "cap * 32 B" }
+evidence = "Power-of-2 ring slot array (O(1) place & mask) eliminates BTreeMap heap nodes; split directed cv_reader/cv_scanner notify_one() cuts wakes -87% to -97% (56/12 vs 431/431 broadcasts at 10W), vcsw -37.2% (4W), sys_ms -28.8% (4W) / -38.6% (10W), 4W = 0.9836 [0.9727, 0.9946]."
+
+[[edge]]
+id = "h123_bounded_deque_and_zerocopy"
+inputs = ["ordered_blocks"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "T_reader_zero_copy", B = "1.0 * n", Q = "0", M = "slots * 960 KiB" }
+evidence = "Bounded VecDeque job queue replaces Mutex<mpsc::Receiver> convoy; combined with C32+C33b reaches 4W = 0.9647 [0.9535, 0.9761], 10W -5.94% wall / -40.6% sys_ms / -32.3% minflt / -17.6% RSS."
