@@ -1940,3 +1940,88 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# The open kernel's emit cost per retained row in production's own workers, on this machine
+# (registration docs/journal/2026-11-22-emit-cost-registration.md, frozen before the data).
+# DIAGNOSTIC: it decides no production default, only which research candidates (LazyTunnel,
+# BSAC) are worth porting. One build, this checkout at the ready tag: master PIN (69961392)
+# plus the `emit-cost` research feature (src/emit_cost.rs, two clock reads and a record per
+# open block in `Kernel::try_run`) and its harness (examples/emit_cost.rs); the src it adds to
+# PIN is checked to be those files alone. By rustc 1.99.1. The whole Wikidata corpus
+# (corpora/wikidata.bz2, checked by its SHA-256), 4 copies end to end, read into memory once;
+# each round decodes it with production's lazy workers (`BzReader::parallel_workers`, lazy:
+# `OpenCells`) at 1, 6 and 10 workers, the order rotated, unpinned, ROUNDS rounds, SETTLE s
+# before each decode. Per block: rows n, retained rows m (at LIMIT 16), construct and emit wall
+# times. Reported by bench/emit_cost.py: b = sum(emit)/sum(m) at each count with its 95%
+# interval, the per-block regression of emit on m, construct per block, and the class at 10
+# workers (b > 15 ns: port both; b < 8 ns: shelve both; else port the cheaper). About 7
+# minutes with the build. The workstation conventions are bench-open-stack's (#720).
+bench-emit-cost:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    PIN=69961392739a455561cbdfe544a1529c53c57fbe
+    COPIES=4 ROUNDS=20 SETTLE=2 WORKERS=1,6,10 JUDGED=10
+    W=$PWD/target/emit-cost
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-emit-cost (docs/journal/2026-11-22-emit-cost-registration.md; diagnostic) at $(git rev-parse HEAD): the open kernel's construct and emit per block, master $PIN with the emit-cost feature, production's lazy workers at $WORKERS, unpinned, $ROUNDS rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-emit-cost: the checkout has local changes"; exit 1; }
+    git cat-file -e "$PIN^{commit}" 2>/dev/null || git fetch -q origin master
+    git merge-base --is-ancestor "$PIN" HEAD \
+      || { echo "bench-emit-cost: $PIN is not an ancestor of $(git rev-parse HEAD)"; exit 1; }
+    # the build, checked: master's decoder at PIN, plus the research feature's files alone
+    changed=$(git diff --name-only "$PIN" HEAD -- src Cargo.lock build.rs)
+    beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/open\.rs$|^src/lib\.rs$|^src/emit_cost\.rs$|^$' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-emit-cost: the build differs from $PIN beyond the emit-cost feature: $(echo $beyond)"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$PIN" HEAD -- src Cargo.toml > "$O/src-against-pin.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-emit-cost: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    cargo build -q --release --features emit-cost --example emit_cost --example ab --example windows
+    EC=$PWD/target/release/examples/emit_cost
+    AB=$PWD/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'pin %s\nhead %s\n' "$PIN" "$(git rev-parse HEAD)" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    sha256sum "$EC" | tee "$O/binaries.sha256"
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$PWD/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-emit-cost: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the machine
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    uname -a > "$O/uname.txt"
+    # the run: unpinned, every online CPU; the counts rotated within each round
+    "$EC" "$W/wikidata-x$COPIES.bz2" "$WORKERS" $ROUNDS $SETTLE "$O/blocks.tsv"
+    date -u +%FT%TZ > "$O/timed.txt"
+    python3 bench/emit_cost.py "$O/blocks.tsv" --lscpu "$O/lscpu.txt" --workers "$WORKERS" \
+      --judged $JUDGED --rounds $ROUNDS | tee "$O/report.txt" \
+      || echo "bench-emit-cost: VOID, no class (report.txt says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/finished.txt"
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"
