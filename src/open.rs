@@ -46,22 +46,20 @@ pub struct Counts {
     pub spirals: bool,
 }
 
+/// A thick strip's image and width, from its three packed words (`from`, `to`, and
+/// `width << 8 | byte`), once its image is set: what the image-order walks read
 #[derive(Clone, Copy)]
 struct Strip {
-    from: u32,
     to: u32,
     width: u32,
-    byte: u8,
 }
 
 impl Strip {
     #[inline(always)]
     fn unpack(w: &[u32]) -> Self {
         Strip {
-            from: w[0],
             to: w[1],
             width: w[2] >> 8,
-            byte: (w[2] & 0xFF) as u8,
         }
     }
 }
@@ -74,19 +72,21 @@ struct Tile {
     symbol: u16,
 }
 
-/// Absolute source end and destination start each fit in 20 bits (n <= 900,000).
-/// The high 24 bits hold the dictionary code.
+/// A band's width (its retained ranks; Round 5's `BandW`, where it was the absolute end of
+/// its source ranks) and its destination start each fit in 20 bits (n <= 900,000). The high
+/// 24 bits hold the dictionary code. Each byte's bands are in rank order and partition its
+/// retained ranks, so a band's source start is the sum of the widths before it.
 #[derive(Clone, Copy)]
 struct Band(u64);
 
 impl Band {
     #[inline(always)]
-    fn new(end: u32, dst: u32, code: u32) -> Self {
-        debug_assert!(end <= 900_000 && dst <= 900_000 && code < (1 << 24));
-        Band(u64::from(end) | (u64::from(dst) << 20) | (u64::from(code) << 40))
+    fn new(width: u32, dst: u32, code: u32) -> Self {
+        debug_assert!(width <= 900_000 && dst <= 900_000 && code < (1 << 24));
+        Band(u64::from(width) | (u64::from(dst) << 20) | (u64::from(code) << 40))
     }
     #[inline(always)]
-    fn end(self) -> u32 {
+    fn width(self) -> u32 {
         (self.0 & 0xF_FFFF) as u32
     }
     #[inline(always)]
@@ -115,8 +115,26 @@ pub struct Kernel {
     lens: Vec<u8>,
 }
 
-// Production records cap a run at 127. Selection is on maximal runs.
-fn maximal(records: &[u16], mut visit: impl FnMut(u8, u32, u32)) {
+/// The longest record `runs.rs` writes: a run longer than `CAP` rows continues in the next
+/// record, of the same byte
+const CAP: u32 = 127;
+
+/// Construction counts that only the tests read (`Counts`' words to longest, and its runs
+/// and steps): not counted in production (Round 5's `NoStats`), where they would hold
+/// registers in the hot loops; nothing else depends on them
+const STATS: bool = cfg!(test);
+
+// The runs the construction takes, from the records: `visit(c, pos, width, short)`. A record
+// of at most `limit` rows and shorter than `CAP` is taken alone as a whole thin run (`short`)
+// with no look at the next record (Round 5's `Cap127`): `runs.rs` cuts a run only at `CAP`
+// rows, so on its records it is the run's last. Any other record is merged with the records
+// of the same byte after it, to a maximal run. Both passes take the runs from here, so they
+// split a block alike whatever its records; on records that cut a run short of `CAP` (no
+// decoded block's: `front`) a thin run is followed by more of its byte, which the
+// construction takes as it takes the fragments `split` makes (`checks.rs` tests both).
+#[inline(always)]
+fn runs_of(records: &[u16], limit: u32, mut visit: impl FnMut(u8, u32, u32, bool)) {
+    let short = limit.min(CAP - 1);
     let mut pos = 0;
     let mut i = 0;
     while i < records.len() {
@@ -124,11 +142,15 @@ fn maximal(records: &[u16], mut visit: impl FnMut(u8, u32, u32)) {
         let c = (rec >> 8) as u8;
         let mut width = u32::from(rec & 255);
         i += 1;
-        while i < records.len() && (records[i] >> 8) as u8 == c {
-            width += u32::from(records[i] & 255);
-            i += 1;
+        if width <= short {
+            visit(c, pos, width, true);
+        } else {
+            while i < records.len() && (records[i] >> 8) as u8 == c {
+                width += u32::from(records[i] & 255);
+                i += 1;
+            }
+            visit(c, pos, width, false);
         }
-        visit(c, pos, width);
         pos += width;
     }
 }
@@ -160,8 +182,12 @@ fn split(
 }
 
 fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, u32, bool)) {
-    maximal(records, |c, pos, width| {
-        split(c, pos, width, p, limit, &mut visit)
+    runs_of(records, limit, |c, pos, width, short| {
+        if short {
+            visit(c, pos, width, true);
+        } else {
+            split(c, pos, width, p, limit, &mut visit);
+        }
     });
 }
 
@@ -181,7 +207,9 @@ impl Pass<'_> {
     /// written out, so that the common two inline into the walk over the records with no call.)
     #[inline(always)]
     fn take<const QUEUE: bool>(&mut self, c: u8, pos: u32, width: u32, p: u32, limit: u32) {
-        self.f.runs += 1;
+        if STATS {
+            self.f.runs += 1;
+        }
         if width <= limit {
             self.piece::<QUEUE>(c, pos, width, true, p);
             return;
@@ -210,11 +238,14 @@ impl Pass<'_> {
         if keep {
             if p.wrapping_sub(x) < w {
                 f.mark = f.m + (p - x);
+                f.mark_byte = c;
             }
+            // with `QUEUE` the queues keep each byte's retained rows (`Pt64`)
             if QUEUE {
-                self.queues.push(a, f.m, w, &f.thin);
+                self.queues.push_thin(a, f.m, w);
+            } else {
+                f.thin[a] += w;
             }
-            f.thin[a] += w;
             f.m += w;
         } else {
             if self.ns < self.cap_strips {
@@ -227,9 +258,14 @@ impl Pass<'_> {
                     self.edges.reserve_exact(need - self.edges.len());
                     self.edges.resize(need, 0);
                 }
+                let thin = if QUEUE {
+                    self.queues.thin_of(a)
+                } else {
+                    f.thin[a]
+                };
                 self.edges[at..at + 3].copy_from_slice(&[
                     x,
-                    f.thin[a] + f.thick_rows[a],
+                    thin + f.thick_rows[a],
                     (w << 8) | u32::from(c),
                 ]);
             }
@@ -241,7 +277,8 @@ impl Pass<'_> {
 }
 
 /// The construction's first pass as it goes, run by run: each byte's rows, retained rows and
-/// thick strips, the retained rows so far, the marked row's rank, and the maximal runs
+/// thick strips, the retained rows so far, the marked row's rank and byte, and the runs
+/// (`thin` with `QUEUE` only once the pass is done: the queues keep it until then)
 #[derive(Clone, Copy)]
 struct First {
     thick_rows: [u32; 256],
@@ -249,6 +286,7 @@ struct First {
     thick: [u32; 256],
     m: u32,
     mark: u32,
+    mark_byte: u8,
     runs: usize,
 }
 
@@ -260,6 +298,7 @@ impl Default for First {
             thick: [0; 256],
             m: 0,
             mark: 0,
+            mark_byte: 0,
             runs: 0,
         }
     }
@@ -302,18 +341,20 @@ impl Kernel {
             let code = if height == 0 {
                 u32::from(c)
             } else {
-                stats.words += 1;
-                stats.copies += width as usize;
-                stats.traced += height;
-                stats.thick_area += width as usize * height;
-                stats.unit_work += usize::from(width == 1) * height;
-                stats.longest = stats.longest.max(height);
+                if STATS {
+                    stats.words += 1;
+                    stats.copies += width as usize;
+                    stats.traced += height;
+                    stats.thick_area += width as usize * height;
+                    stats.unit_work += usize::from(width == 1) * height;
+                    stats.longest = stats.longest.max(height);
+                }
                 self.spelling[start..].reverse();
                 self.spelling.push(c);
                 self.offsets.push(self.spelling.len() as u32);
                 254 + self.offsets.len() as u32
             };
-            self.bands.push(Band::new(*k + width, exit, code));
+            self.bands.push(Band::new(width, exit, code));
             *k += width;
             x0 += width;
         }
@@ -359,11 +400,22 @@ impl Kernel {
         // the walk's buffer, `n` bytes and its copies' 16: the queues' until the walk
         out.resize(n as usize + INLINE, 0);
         let mut pass = self.begin(&mut out[..], cap.m, cap.strips);
-        maximal(records, |c, pos, width| {
-            pass.take::<QUEUE>(c, pos, width, p, limit)
+        runs_of(records, limit, |c, pos, width, short| {
+            if short {
+                if STATS {
+                    pass.f.runs += 1;
+                }
+                pass.piece::<QUEUE>(c, pos, width, true, p);
+            } else {
+                pass.take::<QUEUE>(c, pos, width, p, limit);
+            }
         });
         let ns = pass.ns;
-        let (f, heads, over) = (pass.f, pass.queues.heads(), pass.queues.over());
+        let mut f = pass.f;
+        if QUEUE {
+            f.thin = pass.queues.extract_thin();
+        }
+        let (heads, over) = (pass.queues.heads(), pass.queues.over());
         #[cfg(test)]
         {
             self.spill.taken = pass.queues.chunks();
@@ -394,6 +446,7 @@ impl Kernel {
             thick,
             m,
             mark,
+            mark_byte,
             runs,
         } = *f;
         let mut stats = Counts {
@@ -417,21 +470,23 @@ impl Kernel {
             self.edges.reserve_exact(add);
             self.edges.resize(need, 0);
         }
-        let (strips_raw, rest_edges) = self.edges.split_at_mut(3 * ns);
-        let image_order = &mut rest_edges[..ns];
-        self.tiles.clear();
-        let (mut last_x, mut retained_x) = (0, 0u32);
-        for i in 0..ns {
-            let sw = &mut strips_raw[3 * i..3 * i + 3];
-            let byte = (sw[2] & 0xFF) as u8;
-            let width = sw[2] >> 8;
-            let from = sw[0];
-            let a = usize::from(byte);
-            sw[1] += first[a];
-            let to = sw[1];
-            image_order[write[a] as usize] = i as u32;
-            write[a] += 1;
-            if !INDUCE {
+        // the strips' images and image order: with `INDUCE`, in the pass that makes the
+        // elimination's nodes (`induced_with`, Round 5's `S2aFuse`)
+        if !INDUCE {
+            let (strips_raw, rest_edges) = self.edges.split_at_mut(3 * ns);
+            let image_order = &mut rest_edges[..ns];
+            self.tiles.clear();
+            let (mut last_x, mut retained_x) = (0, 0u32);
+            for i in 0..ns {
+                let sw = &mut strips_raw[3 * i..3 * i + 3];
+                let byte = (sw[2] & 0xFF) as u8;
+                let width = sw[2] >> 8;
+                let from = sw[0];
+                let a = usize::from(byte);
+                sw[1] += first[a];
+                let to = sw[1];
+                image_order[write[a] as usize] = i as u32;
+                write[a] += 1;
                 if from > last_x {
                     self.tiles.push(Tile {
                         end: from,
@@ -447,8 +502,6 @@ impl Kernel {
                     symbol: byte.into(),
                 });
             }
-        }
-        if !INDUCE {
             if last_x < n {
                 self.tiles.push(Tile {
                     end: n,
@@ -466,6 +519,11 @@ impl Kernel {
             }
         }
         self.bands.clear();
+        // (Round 5's `S3a-C8`) a large block's bands reserved at once, not grown by doubling
+        // from empty: the capacity is kept between blocks, so this is at most once a kernel
+        if n >= 65_536 && self.bands.capacity() < 8192 {
+            self.bands.reserve_exact(8192);
+        }
         self.spelling.clear();
         if INDUCE && n >= 65_536 {
             self.spelling.reserve_exact(48 * 1024);
@@ -475,7 +533,7 @@ impl Kernel {
             self.offsets.push(0);
         }
         let mut cursors = if INDUCE {
-            self.induced(ns, n, &thin, &mut stats)
+            self.induced(ns, n, &thin, &first, &mut write, &mut stats)
         } else {
             let mut cursors = [0usize; 256];
             let (mut k, mut si) = (0, 0);
@@ -523,31 +581,40 @@ impl Kernel {
             let edges = &mut self.edges[..m as usize];
             edges.fill(0);
             let mut predecessor = mark;
-            let mut k = 0;
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
                 let mut queue = outq::Reader::new(out, &self.spill, heads, a);
-                for &band in &self.bands[cursors[a]..end] {
-                    queue.wire_xor(
-                        edges,
-                        band.dst() as usize,
-                        (band.end() - k) as usize,
-                        band.code() << bits,
-                        mark,
-                        &mut predecessor,
-                    );
-                    k = band.end();
+                let bands = &self.bands[cursors[a]..end];
+                // only the marked row's byte's queue holds the mark (Round 5's `Wire16`)
+                if a != usize::from(mark_byte) {
+                    for &band in bands {
+                        queue.wire_xor_nomark(
+                            edges,
+                            band.dst() as usize,
+                            band.width() as usize,
+                            band.code() << bits,
+                        );
+                    }
+                } else {
+                    for &band in bands {
+                        queue.wire_xor(
+                            edges,
+                            band.dst() as usize,
+                            band.width() as usize,
+                            band.code() << bits,
+                            mark,
+                            &mut predecessor,
+                        );
+                    }
                 }
             }
             self.predecessor = Some(predecessor);
         } else if QUEUE {
-            let mut k = 0;
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
                 let mut queue = outq::Reader::new(out, &self.spill, heads, a);
                 for &b in &self.bands[cursors[a]..end] {
-                    let bend = b.end();
-                    let span = (bend - k) as usize;
+                    let span = b.width() as usize;
                     let dst = b.dst() as usize;
                     let bcode = b.code();
                     let pack = if wide { 0 } else { bcode << bits };
@@ -555,11 +622,12 @@ impl Kernel {
                         self.extra[dst..dst + span].fill(bcode);
                     }
                     queue.wire(&mut self.edges[dst..dst + span], pack);
-                    k = bend;
                 }
             }
         } else {
             let mut stream = starts(thin);
+            // the source start of each byte's next band: its bands start at its first rank
+            let mut bstarts = stream;
             let mut j = 0;
             each_run(records, p, limit, |c, _, w, keep| {
                 if !keep {
@@ -571,8 +639,8 @@ impl Kernel {
                 while z < end {
                     let ci = cursors[a];
                     let b = self.bands[ci];
-                    let bend = b.end();
-                    let bstart = if ci == 0 { 0 } else { self.bands[ci - 1].end() };
+                    let bstart = bstarts[a];
+                    let bend = bstart + b.width();
                     let span = (end.min(bend) - z) as usize;
                     let dest = (b.dst() + (z - bstart)) as usize;
                     let bcode = b.code();
@@ -587,7 +655,10 @@ impl Kernel {
                     }
                     j += span as u32;
                     z += span as u32;
-                    cursors[a] += usize::from(z == bend);
+                    if z == bend {
+                        cursors[a] += 1;
+                        bstarts[a] = bend;
+                    }
                 }
                 stream[a] = end;
             });

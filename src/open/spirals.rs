@@ -5,52 +5,68 @@ use super::b5::{plain, runs_column, Lcg};
 use super::endpoint::CERTIFIED_WIDTH;
 use super::*;
 
-/// A construction's output, counts, bands (end, delta, code), spelling and word offsets
-type Built = (Vec<u8>, Counts, Vec<(u32, u32, u32)>, Vec<u8>, Vec<u32>);
+/// A construction's output, counts, bands (width, destination, the word its code spells)
+/// and the bands' codes
+type Built = (Vec<u8>, Counts, Vec<(u32, u32, Vec<u8>)>, Vec<u32>);
 
 /// The construction of column `l` at row `p` with the spirals contracted (`Some(true)`), the
-/// plain loop (`Some(false)`), or as the certificate decides (`None`): its output, counts,
-/// bands and spelled words
-fn construct(k: &mut Kernel, l: &[u8], p: u32, spirals: Option<bool>) -> Built {
+/// plain loop (`Some(false)`), or as the certificate decides (`None`), and with `links` the
+/// plain loop on any links (`eliminate_links`) rather than `Narrow`'s own: its output,
+/// counts, bands and codes
+fn construct_with(k: &mut Kernel, l: &[u8], p: u32, spirals: Option<bool>, links: bool) -> Built {
     let r = Runs::of_column(l);
     k.endpoint.spirals = spirals;
+    k.endpoint.links_plain = links;
     let mut out = vec![0xC3; l.len() / 2];
     let s = k.run::<true, true>(r.records(), l.len(), p, LIMIT, &mut out);
     k.endpoint.spirals = None;
+    k.endpoint.links_plain = false;
+    let word = |code: u32| -> Vec<u8> {
+        let (slot, len) = (&k.inline16[code as usize], k.lens[code as usize]);
+        if len == LONG {
+            long_word(slot, &k.spelling).to_vec()
+        } else {
+            slot[..usize::from(len)].to_vec()
+        }
+    };
     let bands = k
         .bands
         .iter()
-        .map(|b| (b.end(), b.dst(), b.code()))
+        .map(|b| (b.width(), b.dst(), word(b.code())))
         .collect();
-    let mut words = Vec::new();
-    let mut ends = Vec::new();
-    for (i, &len) in k.lens[256..].iter().enumerate() {
-        if len == LONG {
-            words.extend_from_slice(long_word(&k.inline16[256 + i], &k.spelling));
-        } else {
-            words.extend_from_slice(&k.inline16[256 + i][..usize::from(len)]);
-        }
-        ends.push(words.len() as u32);
-    }
-    (out, s, bands, words, ends)
+    let codes = k.bands.iter().map(|b| b.code()).collect();
+    (out, s, bands, codes)
+}
+
+fn construct(k: &mut Kernel, l: &[u8], p: u32, spirals: Option<bool>) -> Built {
+    construct_with(k, l, p, spirals, false)
 }
 
 /// Both loops on `l` at `p`: the same bands, words and steps, and the plain inverse's output;
-/// the contracted loop's rules, which it returns with the plain loop's
+/// the contracted loop's rules, which it returns with the plain loop's. (A band's code is the
+/// dictionary's, whose caches may share a word's code in one loop and not the other, so the
+/// bands are compared by the words their codes spell.) And `Narrow`'s plain loop is the plain
+/// loop on any links: the same bands, codes, steps and rules.
 fn both(k: &mut Kernel, l: &[u8], p: u32) -> (usize, usize) {
     let want = plain(l, p);
-    let (o1, s1, b1, w1, f1) = construct(k, l, p, Some(false));
-    let (o2, s2, b2, w2, f2) = construct(k, l, p, Some(true));
+    let (o1, s1, b1, c1) = construct(k, l, p, Some(false));
+    let (o2, s2, b2, _) = construct(k, l, p, Some(true));
     assert!(o1 == want && o2 == want, "n {}, row {p}", l.len());
     assert!(!s1.spirals && s2.spirals);
     assert!(b1 == b2, "the bands, n {}, row {p}", l.len());
-    assert!(w1 == w2 && f1 == f2, "the words, n {}, row {p}", l.len());
     assert_eq!(s1.steps, s2.steps);
     assert_eq!(
         (s1.words, s1.traced, s1.longest),
         (s2.words, s2.traced, s2.longest)
     );
     assert!(s2.rules <= s1.rules);
+    let (o3, s3, b3, c3) = construct_with(k, l, p, Some(false), true);
+    assert!(
+        o3 == want && b3 == b1 && c3 == c1,
+        "links, n {}, row {p}",
+        l.len()
+    );
+    assert_eq!((s3.steps, s3.rules), (s1.steps, s1.rules));
     (s2.rules, s1.rules)
 }
 

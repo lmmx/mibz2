@@ -268,8 +268,8 @@ fn thin_and_thick_sum_to_each_symbols_prefix() {
     for (byte, start, width) in [(7, 0, 2), (9, 2, 6), (7, 8, 10), (9, 18, 1)] {
         pass.take::<true>(byte, start, width, 12, 3);
     }
-    assert_eq!((pass.f.thin[7], pass.f.thick_rows[7]), (3, 9));
-    assert_eq!((pass.f.thin[9], pass.f.thick_rows[9]), (1, 6));
+    assert_eq!((pass.queues.thin_of(7), pass.f.thick_rows[7]), (3, 9));
+    assert_eq!((pass.queues.thin_of(9), pass.f.thick_rows[9]), (1, 6));
     assert_eq!(
         pass.edges[..3 * pass.ns]
             .chunks_exact(3)
@@ -294,7 +294,7 @@ fn strip_prefix_stops_at_dense_cap() {
 fn maximum_band_fields_decode_independently() {
     let band = Band::new(900_000, 899_999, 0x00ff_abcd);
     assert_eq!(
-        (band.end(), band.dst(), band.code()),
+        (band.width(), band.dst(), band.code()),
         (900_000, 899_999, 0x00ff_abcd)
     );
 }
@@ -372,15 +372,167 @@ fn full_nonzero_tail_links_to_its_overflow_chunk() {
     let mut out = [0; 2048];
     let mut spill = outq::Spill::default();
     let mut queues = outq::Queues::new(&mut out, &mut spill, u32::MAX);
-    let thin = [0; 256];
-    queues.push(1, 0, 1, &thin);
-    queues.push(2, 1, 496, &thin);
-    queues.push(2, 497, 16, &thin);
+    queues.push_thin(1, 0, 1);
+    queues.push_thin(2, 1, 496);
+    queues.push_thin(2, 497, 16);
     assert_eq!(queues.chunks(), 2);
-    queues.push(2, 513, 2, &thin);
+    queues.push_thin(2, 513, 2);
     assert_eq!(queues.chunks(), 3);
     let heads = queues.heads();
     let mut decoded = [0; 514];
     outq::Reader::new(&out, &spill, &heads, 2).wire(&mut decoded, 0);
     assert!(decoded.into_iter().eq(1..=514));
+}
+
+/// Records that cut a run short of `CAP` (127) rows, which no decoded block's records do
+/// (`runs.rs`'s `front`): the first pass's `Cap127` takes a short record as a whole thin run
+/// without looking at the next, so a run is split. Both passes split it alike (`runs_of`), and
+/// every instance decodes the column exactly, at limits on both sides of `CAP`. The columns'
+/// runs are cut at random lengths from 1 to 127 rows.
+#[test]
+fn records_cut_short_of_cap() {
+    use super::b5::{plain, runs_column, Lcg};
+    let mut g = Lcg(0x6375_7473);
+    let mut k = Kernel::default();
+    let mut out = Vec::new();
+    let mut split = 0;
+    for &(n, alphabet, mean) in &[
+        (1usize, 1u32, 1u32),
+        (40, 2, 8),
+        (300, 3, 30),
+        (3000, 5, 100),
+        (5000, 2, 400),
+        (70_000, 17, 16),
+        (200_000, 30, 12),
+    ] {
+        let l = runs_column(&mut g, n, alphabet, mean);
+        let mut recs = Vec::new();
+        let mut i = 0;
+        while i < n {
+            let mut j = i;
+            while j < n && l[j] == l[i] {
+                j += 1;
+            }
+            let mut left = j - i;
+            while left > 0 {
+                let len = left.min(1 + g.below(127) as usize);
+                split += usize::from(len < left && len < 127);
+                recs.push((u16::from(l[i]) << 8) | len as u16);
+                left -= len;
+            }
+            i = j;
+        }
+        for p in [0, g.below(n as u32), n as u32 - 1] {
+            let want = plain(&l, p);
+            for limit in [0, 1, 16, 40, 126, 127, 128, 1025] {
+                k.run::<true, true>(&recs, n, p, limit, &mut out);
+                assert!(out == want, "n {n}, row {p}, limit {limit}");
+                if n <= 5000 {
+                    for (induce, queue) in [(true, false), (false, true), (false, false)] {
+                        match (induce, queue) {
+                            (true, false) => k.run::<true, false>(&recs, n, p, limit, &mut out),
+                            (false, true) => k.run::<false, true>(&recs, n, p, limit, &mut out),
+                            _ => k.run::<false, false>(&recs, n, p, limit, &mut out),
+                        };
+                        assert!(
+                            out == want,
+                            "{induce} {queue}: n {n}, row {p}, limit {limit}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+    assert!(split > 1000, "{split} runs cut short");
+}
+
+/// The queues' fast push (`Pt64`, `OneBr`, `S1Trim`) and its slow one, read back in order:
+/// pushes of 1 to 16 ranks (and of 17 to 40, which only the slow path takes) on three bytes,
+/// across every chunk's end, across the epochs' ends (the fast push stops at a low half of
+/// 65,520 and up), in `out` and in overflow chunks (`out` of one, of 120 and of 4,000 chunks
+/// and a part)
+#[test]
+fn queue_pushes_read_back_across_chunks_and_epochs() {
+    use super::b5::Lcg;
+    let mut g = Lcg(0x7075_7368);
+    for bytes in [1_040usize, 120 * 1024 + 7, 4_000 * 1024 + 500] {
+        let mut out = vec![0u8; bytes];
+        let mut spill = outq::Spill::default();
+        let mut queues = outq::Queues::new(&mut out, &mut spill, u32::MAX);
+        let mut want: [Vec<u32>; 3] = Default::default();
+        let mut m = 0u32;
+        while m < 3 * 65_536 + 700 {
+            let a = g.below(3) as usize;
+            let w = if g.below(20) == 0 {
+                17 + g.below(24)
+            } else {
+                1 + g.below(16)
+            };
+            queues.push_thin(a, m, w);
+            want[a].extend(m..m + w);
+            m += w;
+            assert_eq!(queues.thin_of(a) as usize, want[a].len());
+        }
+        assert!(!queues.over());
+        let thin = queues.extract_thin();
+        let heads = queues.heads();
+        for a in 0..3 {
+            assert_eq!(thin[a] as usize, want[a].len());
+            let mut got = vec![0u32; want[a].len()];
+            let mut reader = outq::Reader::new(&out, &spill, &heads, a);
+            // read in spans of 1 to 40, as the bands read them
+            let mut at = 0;
+            while at < got.len() {
+                let span = (1 + g.below(40) as usize).min(got.len() - at);
+                reader.wire(&mut got[at..at + span], 0);
+                at += span;
+            }
+            assert!(got == want[a], "{bytes} bytes, byte {a}");
+        }
+        assert!(bytes > 1 << 20 || spill.overflow() > 0);
+    }
+}
+
+/// `wire_xor_nomark` (`Wire16`: 16, 8, 4 and 1 at a time) writes what `wire_xor` writes,
+/// on spans of 1 to 40 ranks read across chunks and epochs, in `out` and in overflow chunks,
+/// with rows that are both a span's and a rank's (the XOR's order)
+#[test]
+fn wire_without_the_mark_matches_wire() {
+    use super::b5::Lcg;
+    let mut g = Lcg(0x6e6f_6d6b);
+    for bytes in [1_040usize, 300 * 1024] {
+        let mut out = vec![0u8; bytes];
+        let mut spill = outq::Spill::default();
+        let mut queues = outq::Queues::new(&mut out, &mut spill, u32::MAX);
+        let mut m = 0u32;
+        let mut count = [0usize; 2];
+        while m < 2 * 65_536 + 300 {
+            let a = g.below(2) as usize;
+            let w = 1 + g.below(16);
+            queues.push_thin(a, m, w);
+            count[a] += w as usize;
+            m += w;
+        }
+        let heads = queues.heads();
+        let rows = m as usize;
+        let (mut plain, mut fast) = (vec![0u32; rows], vec![0u32; rows]);
+        let mut dst = 0;
+        for (a, &queued) in count.iter().enumerate() {
+            let mut r1 = outq::Reader::new(&out, &spill, &heads, a);
+            let mut r2 = outq::Reader::new(&out, &spill, &heads, a);
+            let mut left = queued;
+            while left > 0 {
+                let span = (1 + g.below(40) as usize).min(left);
+                let pack = g.below(64) << 20;
+                let mut before = u32::MAX - 1;
+                r1.wire_xor(&mut plain, dst, span, pack, u32::MAX, &mut before);
+                assert_eq!(before, u32::MAX - 1);
+                r2.wire_xor_nomark(&mut fast, dst, span, pack);
+                dst += span;
+                left -= span;
+            }
+        }
+        assert_eq!(dst, rows);
+        assert!(plain == fast, "{bytes} bytes");
+    }
 }
