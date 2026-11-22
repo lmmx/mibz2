@@ -76,7 +76,8 @@ a third of the window (28). If the scan were not the bottleneck, that could cost
     allocator (`vec![0; n]`, as master does) instead of resizing an empty spare, and keeps
     one spare chunk, not three (`src/read.rs`, `src/parallel.rs`, `examples/bzcat.rs`). CI's
     bench on the second head had shown small inputs (onebyte, runs, pattern) slower at 2 and 4
-    threads and records' peak RSS higher; this undoes the cause.
+    threads and records' peak RSS higher, and this targets that cause; CI's bench on this head
+    is the check.
 - **Base:** `96a24d3e4f764b3918089b0d5bcd5fe4b9bc1fea`, #739's merge-base with master (#738's
   merge). Its build inputs (`src`, `examples`, `Cargo.toml`, `Cargo.lock`, `build.rs`,
   `rust-toolchain.toml`) are v0.5.12's (`6a36b0e1`), the source's baseline. It is an ancestor of
