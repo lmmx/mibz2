@@ -1,0 +1,24 @@
+PASS Authentication: all 6 Wikidata blocks match `manifest.json` (n, primary_index, SHA-256)!
+PASS Exhaustive + Stress + SPIRALS + Boundary + WideLinks + WideExtra + #703 + Column Fallback: 14473 cases byte-exact!
+PASS Multi-Worker `BzReader::parallel_workers_with::<WormholeNeonCells>` at W = 1, 2, 4, 8: 21 blocks (15.49 MiB unrled, CRC32 = 0x26ecd15a) byte-exact!
+
+6-Wikidata Persistent Scratch (excl. 879 KiB out): M0=1172.7 KiB | S*=950.0 KiB | R4:WormholeNeon=950.0 KiB | N4=950.0 KiB
+
+=== CYCLE 30 CONFRONTATION (25 PAIRED ROUNDS: 1-WORKER & 2-WORKER BARRIER SYNC) ===
+Block         |    1w A1 |  A2/A1 |  S*/A1 |  R4/A1 |  N4/A1 |  R4/M0 ||    2w A1 |  A2/A1 |  S*/A1 |  R4/A1 |  N4/A1
+----------------------------------------------------------------------------------------------------------------------
+block-0.L     | 1300.7us | 0.992x | 0.920x | 0.873x | 0.914x | 0.859x || 1305.9us | 0.992x | 0.919x | 0.874x | 0.912x
+block-2.L     | 1587.0us | 0.992x | 0.917x | 0.874x | 0.905x | 0.864x || 1589.4us | 0.994x | 0.916x | 0.868x | 0.880x
+block-85.L    | 1590.8us | 0.992x | 0.944x | 0.884x | 0.925x | 0.884x || 1602.3us | 0.985x | 0.935x | 0.886x | 0.922x
+block-143.L   | 2842.0us | 1.002x | 0.915x | 0.869x | 0.859x | 0.865x || 2845.5us | 0.996x | 0.910x | 0.867x | 0.855x
+block-210.L   | 2490.2us | 0.997x | 0.937x | 0.882x | 0.871x | 0.877x || 2493.6us | 0.989x | 0.935x | 0.895x | 0.878x
+block-207.L   | 1893.0us | 0.993x | 0.921x | 0.874x | 0.888x | 0.866x || 1900.3us | 0.993x | 0.917x | 0.878x | 0.884x
+dense-703.syn | 2916.5us | 1.006x | 0.890x | 0.856x | 0.783x | 0.869x || 2945.0us | 0.991x | 0.889x | 0.854x | 0.787x
+----------------------------------------------------------------------------------------------------------------------
+6-BLK SUM p50 | 11703.6us | 0.996x | 0.925x | 0.876x | 0.888x | 0.869x || 11737.0us | 0.992x | 0.922x | 0.878x | 0.883x
+
+=== CYCLE 30 PAIRED 95% CONFIDENCE INTERVALS (25 ROUNDS, 6-BLK SUM) ===
+  1w A2/A1 (A/A):  0.9929x [0.9880, 1.0091]  |  2w A2/A1 (A/A):  0.9912x [0.9850, 1.0042]
+  1w R4/A1 (Mast): 0.8761x [0.8718, 0.8829]  |  2w R4/A1 (Mast): 0.8784x [0.8691, 0.8869]
+  1w R4/M0 (Cln):  0.8668x [0.8628, 0.8773]  |  2w R4/M0 (Cln):  0.8724x [0.8666, 0.8762]
+  1w R4/S* (N3):   0.9476x [0.9417, 0.9566]  |  2w R4/S* (N3):   0.9496x [0.9434, 0.9561]
