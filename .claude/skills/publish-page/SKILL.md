@@ -5,6 +5,10 @@ description: Use before opening or merging a PR that adds or changes a page of t
 
 # Publishing a page
 
+**For a blog post, version 1 ships on the strict build and `check_render.py` alone**
+(write-blog-post, "Iterate, ship, re-ship"). The steps below then run on the live post, and
+what they find goes out as follow-up PRs. For other pages:
+
 A page is ready when its rendered version at the PR's final head has been looked at. A green
 strict build, the site checks and a read of the Markdown don't show how it renders.
 
