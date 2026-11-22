@@ -1,0 +1,48 @@
+name = "Wormhole/Neon Cycle 22: Post-Stack S* Whole-Kernel BMCP_CML Bounds & S5 Regression Forensics"
+target = "text"
+uses = []
+
+[[edge]]
+id = "s1_post_stack_all_pos_mux"
+inputs = ["records", "C", "p", "n"]
+output = "mux_strips_and_outq16"
+status = "verified"
+dependent = false
+cost = { W = "R + r_thin", D = "R", B = "R + m", Q = "r_thin", M = "H" }
+evidence = "Exact BMCP_CML 6-cost accounting for post-stack S* Pass 1 (All+Pos + MuxStrips in edges[0..3*ns])."
+
+[[edge]]
+id = "s2_post_stack_rv_elim"
+inputs = ["mux_strips_and_outq16", "C", "n"]
+output = "rv_arena"
+status = "verified"
+dependent = true
+cost = { W = "H", D = "H", B = "H", Q = "H", M = "H" }
+evidence = "Compares Operad-MN16 (6*S_RV loads) vs #714 GradedHandle (4*S_RV loads) in post-stack S* BMCP_CML."
+
+[[edge]]
+id = "s3_post_stack_bidi_dedup_band64"
+inputs = ["rv_arena", "mux_strips_and_outq16"]
+output = "band64_and_l1d_dict"
+status = "verified"
+dependent = true
+cost = { W = "B_bands + dict_long", D = "H / 2", B = "B_bands + dict_long", Q = "H", M = "B_bands + dict_long" }
+evidence = "Exact BMCP_CML accounting for L4 BidiBottom + pair_ht/str_ht L1D dedup + 8B Band64 (inline16 <= 26.8 KiB)."
+
+[[edge]]
+id = "s4_post_stack_outq16_wire"
+inputs = ["band64_and_l1d_dict", "mux_strips_and_outq16", "n"]
+output = "critical_edges"
+status = "verified"
+dependent = false
+cost = { W = "m", D = "1", B = "m", Q = "B_bands", M = "m" }
+evidence = "Serial OutQ16 Reader::wire (mu=1) with 85%+ L2 streamer hiding on Band64 spans."
+
+[[edge]]
+id = "s5_post_stack_emit_forensics"
+inputs = ["critical_edges", "band64_and_l1d_dict", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "m", B = "n", Q = "m", M = "n + m" }
+evidence = "2x2 factorial (NoDedup/WordDedup x emit_offsets/emit_no_off) + zero-spill cold-LONG control + exact Comet Lake cache simulation."
