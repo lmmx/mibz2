@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 63: Composed PR4 W2M_L3 + Owned Run-Route (0 B s.ll) + Theorem 52.1 ZeroShift52 A/B"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c63_pr4_owned_zs52_composed"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "0 barrier stalls; 100.0% fast hits (973/973, fb=0)", B = "0.709x-0.931x #739 RSS (54.9 vs 71.9 MiB at 10W = -17.0 MiB); -46.6% RLE1 copy_within", Q = "0", M = "3 x 2 MiB (6 MiB) + 0 B s.ll Owned Run-Route + #739 12 MiB ReadyRing" }
+evidence = "Same-binary #![forbid(unsafe_code)] multi-regime A/B composing PR4 W2M_L3 (Invariants #1-#6) + true #739 Owned Run-Route (0 B s.ll via OpenCells::invert_runs directly into pooled out) + Theorem 52.1 ZeroShift52 in-place RLE1+tiled CLMUL CRC vs M739_A/M739_B across 5 regimes (exact AbHash, 100% fast hits: 509/509, 379/379, 73/73, 12/12). Removing the external-harness s.ll handicap slashes peak RSS to 35.14 vs 49.59 MiB at 4W (0.709x, minflt -49.9% = 4,922 vs 9,829, sys -39.9%) and 54.90 vs 71.91 MiB at 10W (0.763x = -17.0 MiB vs #739, ~40% below #741's 1.28x!). Even paying safe-Rust SWAR find_runs vs #739's private AVX2 find_runs, PR4_Own_ZS52 wins 10W 0.9777x [0.9687, 0.9868] (vcsw -64.6%), wikidata-l1 0.9642x [0.9534, 0.9752], hetero 0.9796x, random 0.9775x, and cuts user CPU -5.2..-8.1 ms (-1.3%) vs PR4_Own_739."

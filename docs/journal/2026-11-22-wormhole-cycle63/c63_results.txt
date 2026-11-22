@@ -1,0 +1,35 @@
+
+=== 10-ROUND CYCLE 63 COMPOSED PR4 + OWNED RUN-ROUTE + ZEROSHIFT52 A/B: wikidata-l9 4W (210 MB, 431 blks) ===
+Arm            med_ms       vs M739_A [95% CI]    user    sys  minflt  vcsw   rssMB  Hits
+M739_A         325.86 1.0000 [1.0000, 1.0000]   601.8  24.98    9829   297   49.59  -
+M739_B         326.14 1.0021 [0.9859, 1.0186]   599.3  26.08    9810   305   49.76  -
+PR4_Own_739    324.22 0.9998 [0.9880, 1.0117]   622.6  16.12    5152   160   35.96  fh=509 fb=0
+PR4_Own_ZS52   319.41 1.0001 [0.9778, 1.0229]   614.5  15.01    4922   159   35.14  fh=509 fb=0
+
+=== 5-ROUND CYCLE 63 COMPOSED PR4 + OWNED RUN-ROUTE + ZEROSHIFT52 A/B: wikidata-l9 10W (210 MB, 431 blks) ===
+Arm            med_ms       vs M739_A [95% CI]    user    sys  minflt  vcsw   rssMB  Hits
+M739_A         338.67 1.0000 [1.0000, 1.0000]   617.6  29.97   15767   522   71.91  -
+M739_B         345.94 1.0125 [0.9996, 1.0256]   616.2  33.28   16071   518   72.66  -
+PR4_Own_739    335.28 0.9858 [0.9631, 1.0090]   632.1  23.61   10009   175   54.64  fh=509 fb=0
+PR4_Own_ZS52   330.91 0.9777 [0.9687, 0.9868]   626.9  23.51   10019   185   54.90  fh=509 fb=0
+
+=== 10-ROUND CYCLE 63 COMPOSED PR4 + OWNED RUN-ROUTE + ZEROSHIFT52 A/B: wikidata-l1 4W (38 MB, 379 blks) ===
+Arm            med_ms       vs M739_A [95% CI]    user    sys  minflt  vcsw   rssMB  Hits
+M739_A          95.44 1.0000 [1.0000, 1.0000]   167.6   9.05    2987   289   18.09  -
+M739_B          95.11 0.9995 [0.9879, 1.0112]   166.7   9.05    3020   303   18.16  -
+PR4_Own_739     90.89 0.9619 [0.9478, 0.9763]   171.4   7.13    2877   106   17.61  fh=379 fb=0
+PR4_Own_ZS52    91.50 0.9642 [0.9534, 0.9752]   171.8   6.39    2865   112   17.59  fh=379 fb=0
+
+=== 10-ROUND CYCLE 63 COMPOSED PR4 + OWNED RUN-ROUTE + ZEROSHIFT52 A/B: hetero-l9 4W (54 MB, 60 blks) ===
+Arm            med_ms       vs M739_A [95% CI]    user    sys  minflt  vcsw   rssMB  Hits
+M739_A         244.58 1.0000 [1.0000, 1.0000]   427.6  42.79   19896    82   91.14  -
+M739_B         242.27 0.9924 [0.9788, 1.0063]   427.3  43.79   20169    85   91.79  -
+PR4_Own_739    237.11 0.9774 [0.9630, 0.9919]   434.0  33.17   14159    87   76.85  fh=73 fb=0
+PR4_Own_ZS52   242.21 0.9796 [0.9576, 1.0021]   432.6  34.48   14194    81   76.80  fh=73 fb=0
+
+=== 10-ROUND CYCLE 63 COMPOSED PR4 + OWNED RUN-ROUTE + ZEROSHIFT52 A/B: random-l9 4W (11 MB, 12 blks LazyCells) ===
+Arm            med_ms       vs M739_A [95% CI]    user    sys  minflt  vcsw   rssMB  Hits
+M739_A         118.44 1.0000 [1.0000, 1.0000]   194.9  32.20   13643    31   62.48  -
+M739_B         117.62 0.9964 [0.9733, 1.0199]   192.6  30.85   14038    31   63.19  -
+PR4_Own_739    119.25 0.9920 [0.9627, 1.0222]   198.9  29.53   12015    35   58.88  fh=12 fb=0
+PR4_Own_ZS52   115.59 0.9775 [0.9487, 1.0072]   195.1  27.45   11791    36   58.17  fh=12 fb=0
