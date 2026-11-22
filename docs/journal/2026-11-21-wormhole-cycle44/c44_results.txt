@@ -1,0 +1,21 @@
+
+=== 12-ROUND ROTATED FRESH-PROCESS W=4 SYNC ABLATION (wikidata_431b_210m) ===
+Arm               med_ms            vs C42A [95%]  sys_ms  minflt   vcsw
+C42A              341.14 1.0000 [1.0000, 1.0000]   10.54    3961    215
+C42B              339.38 0.9822 [0.9597, 1.0053]   11.14    3961    218
+L1_AtomicFast     339.85 0.9941 [0.9825, 1.0058]   12.21    3958    228
+L2_Sharded        341.97 0.9959 [0.9785, 1.0137]   12.89    3960    364
+
+=== 5-ROUND ROTATED FRESH-PROCESS W=10 SYNC ABLATION (wikidata_431b_210m) ===
+Arm               med_ms            vs C42A [95%]  sys_ms  minflt   vcsw
+C42A              335.71 1.0000 [1.0000, 1.0000]   19.15    9198     87
+C42B              334.80 0.9857 [0.9578, 1.0145]   21.91    9224     87
+L1_AtomicFast     337.41 0.9960 [0.9792, 1.0130]   23.12    9219     82
+L2_Sharded        336.66 0.9826 [0.9358, 1.0318]   22.76    9429     97
+
+=== 5-ROUND ROTATED FRESH-PROCESS W=16 SYNC ABLATION (wikidata_431b_210m) ===
+Arm               med_ms            vs C42A [95%]  sys_ms  minflt   vcsw
+C42A              364.86 1.0000 [1.0000, 1.0000]   31.72   13303    262
+C42B              361.43 0.9761 [0.9432, 1.0101]   30.58   13296    258
+L1_AtomicFast     357.27 0.9637 [0.9205, 1.0089]   32.19   13278    217
+L2_Sharded        364.90 0.9833 [0.9473, 1.0206]   31.84   13302    870

@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 44: Atomic Backpressure Fast-Path (L1), Directed notify_one() & Synchronization Floor Closure"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c44_l1_atomic_fast_and_sync_closure"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers + 0.013 ms", B = "n", Q = "0", M = "cap * 32 B" }
+evidence = "Replacing cv_worker.notify_all() with notify_one() + L1 AtomicUsize backpressure fast-path cuts 16W vcsw 1,078 -> 217 (-79.9%) and 10W vcsw to 82 (-79.9% vs v0.5.12), closing synchronization overhead at ~13 us total lock-hold time (0.03% of 40 ms); L2 per-slot sharding killed (870 vcsw at 16W from double-checked wake_mu)."
