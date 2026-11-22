@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" width="360" height="120" role="img" aria-label="Manuscript green acanthus flourishes and fleurons with blue buds and gold highlights">
+<defs>
+  <!-- 1. Left acanthus & vine rinceau for "Compendium of Links" (svg.flo) -->
+  <!-- Uses direct saturated fills (no cross-SVG gradient refs) so <use> works even when sprite is hidden. -->
+  <symbol id="ornament-rinceau-left" viewBox="0 0 140 36" overflow="visible">
+    <!-- Tapering modulated main rinceau stem (sweeping from heading at right toward spiral volute at left) -->
+    <path d="M136,18.2 C118,17.2 104,11.0 86,12.2 C66,13.6 56,25.8 38,24.4 C22,23.2 15,12.8 24,7.4 C31,3.2 40,7.2 38,13.6 C36.6,18.0 30.8,19.4 27.6,16.2 C25.6,14.2 26.8,11.0 29.8,11.2 C28.0,12.4 28.4,15.0 30.8,15.2 C33.8,15.4 35.8,12.2 34.4,9.6 C32.6,6.4 26.8,6.6 23.8,10.2 C19.4,15.4 24.4,21.4 38.2,22.2 C54.8,23.0 64.4,10.6 85.8,9.8 C105.0,9.0 119.0,15.8 136,16.8 Z" fill="#1b5e34" stroke="#1c100a" stroke-width="0.65" stroke-linejoin="round"/>
+    <!-- Inner bright emerald modulated stem core + lead-white specular ridge -->
+    <path d="M135,17.5 C118,16.4 104,10.2 86,11.0 C66,12.0 56,24.4 38,23.3 C22,22.4 18,13.8 24.5,8.8" fill="none" stroke="#3f9a7a" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M134,17.0 C118,16.0 104,9.8 86,10.6" fill="none" stroke="#f6efe2" stroke-width="0.5" opacity="0.88" stroke-linecap="round"/>
+
+    <!-- Outer far-left delicate tendril curl -->
+    <path d="M21,19.2 C13,20.8 6.5,18.6 5.2,13.6 C4.2,9.8 8.2,6.8 11.4,8.6 C13.4,9.8 13.0,12.8 10.6,13.2" fill="none" stroke="#247a43" stroke-width="1.45" stroke-linecap="round"/>
+    <path d="M21,19.2 C13,20.8 6.5,18.6 5.2,13.6 C4.2,9.8 8.2,6.8 11.4,8.6" fill="none" stroke="#3f9a7a" stroke-width="0.6" stroke-linecap="round"/>
+
+    <!-- Acanthus leaf 1 (near heading, sweeping up-left with turned-over gold-lit lobe) -->
+    <path d="M124,15.6 C116,7.0 104,2.8 92,5.6 C97,7.6 99,10.2 95,12.4 C104,13.2 114,14.8 124,15.6 Z" fill="#247a43" stroke="#1c100a" stroke-width="0.9" stroke-linejoin="round"/>
+    <path d="M120,14.4 C113,8.6 105,5.8 97,6.6 C100,8.2 101,10.2 99,11.8 C106,12.6 113,13.8 120,14.4 Z" fill="#3f9a7a" opacity="0.65"/>
+    <!-- Turned-over lobe underside in burnished gold -->
+    <path d="M92,5.6 C96,3.4 102,4.4 104,7.6 C100,8.2 96,7.6 92,5.6 Z" fill="#e5b32e" stroke="#1c100a" stroke-width="0.68" stroke-linejoin="round"/>
+    <path d="M94.5,5.4 C97.2,4.5 100.6,5.0 102.2,6.8" fill="none" stroke="#fff2b2" stroke-width="0.6" stroke-linecap="round"/>
+    <path d="M119,14.0 C112,9.6 105,7.4 98,7.4" fill="none" stroke="#f6efe2" stroke-width="0.65" opacity="0.92" stroke-linecap="round"/>
+
+    <!-- Acanthus leaf 2 (lower center sweeping down-left with serrated turned-over lobe) -->
+    <path d="M96,12.8 C88,21.4 76,29.4 61,29.6 C66,26.0 66,22.2 61,19.8 C72,19.6 84,16.8 96,12.8 Z" fill="#247a43" stroke="#1c100a" stroke-width="0.95" stroke-linejoin="round"/>
+    <path d="M91,15.2 C84,21.2 75,26.4 65,27.6 C68,24.8 68,22.4 65,20.8 C74,20.2 83,18.0 91,15.2 Z" fill="#3f9a7a" opacity="0.62"/>
+    <path d="M61,29.6 C64,32.2 71,31.6 74,27.8 C69,27.4 65,28.2 61,29.6 Z" fill="#e5b32e" stroke="#1c100a" stroke-width="0.68" stroke-linejoin="round"/>
+    <path d="M63.5,29.8 C66.2,31.0 70.0,30.4 72.0,28.4" fill="none" stroke="#fff2b2" stroke-width="0.58" stroke-linecap="round"/>
+    <path d="M91,15.4 C83,21.2 75,25.2 66,26.8" fill="none" stroke="#f6efe2" stroke-width="0.68" opacity="0.92" stroke-linecap="round"/>
+    <path d="M84,17.2 l-5,6.4 M76,20.8 l-5,4.8" fill="none" stroke="#1c100a" stroke-width="0.52" opacity="0.68" stroke-linecap="round"/>
+
+    <!-- Acanthus leaf 3 (upper left cradling the spiral volute) -->
+    <path d="M66,14.8 C58,6.6 46,3.8 36,6.4 C41,8.6 43,11.6 41,14.6 C49,14.2 58,14.4 66,14.8 Z" fill="#247a43" stroke="#1c100a" stroke-width="0.88" stroke-linejoin="round"/>
+    <path d="M61,13.6 C54,8.2 46,6.4 40,7.4 C43,9.2 44,11.2 43,13.4 C49,13.2 55,13.4 61,13.6 Z" fill="#3f9a7a" opacity="0.62"/>
+    <path d="M36,6.4 C40,3.8 46,4.6 48,7.8 C44,8.4 40,7.8 36,6.4 Z" fill="#f6efe2" stroke="#1c100a" stroke-width="0.62" stroke-linejoin="round"/>
+    <path d="M61,13.4 C54,9.6 47,8.0 42,8.4" fill="none" stroke="#f6efe2" stroke-width="0.6" opacity="0.9" stroke-linecap="round"/>
+
+    <!-- Lower right counter-leaf balancing stem -->
+    <path d="M126,18.6 C119,25.2 108,28.6 98,26.2 C102,24.2 104,21.8 102,19.4 C110,19.8 118,19.4 126,18.6 Z" fill="#247a43" stroke="#1c100a" stroke-width="0.82" stroke-linejoin="round"/>
+    <path d="M121,19.8 C115,23.6 109,25.2 103,24.8" fill="none" stroke="#f6efe2" stroke-width="0.55" opacity="0.88" stroke-linecap="round"/>
+
+    <!-- Lapis-blue pointed manuscript buds in golden calyces -->
+    <!-- Bud 1 (upper center-right) -->
+    <path d="M84,10.6 C82,7.8 81,5.6 82.8,3.6" fill="none" stroke="#247a43" stroke-width="1.05" stroke-linecap="round"/>
+    <path d="M82.8,6.0 C80.4,5.4 79.4,2.8 82.8,1.2 C86.2,2.8 85.2,5.4 82.8,6.0 Z" fill="#1d3f9e" stroke="#1c100a" stroke-width="0.68"/>
+    <path d="M82.2,2.4 C81.6,3.4 81.8,4.6 82.6,5.2" fill="none" stroke="#93c5fd" stroke-width="0.62" stroke-linecap="round"/>
+    <path d="M80.8,5.8 L82.8,7.4 L84.8,5.8 Z" fill="#e5b32e" stroke="#1c100a" stroke-width="0.45"/>
+
+    <!-- Bud 2 (lower left beneath volute) -->
+    <path d="M44,24.0 C44,27.0 43,29.4 40.6,31.2" fill="none" stroke="#247a43" stroke-width="1.05" stroke-linecap="round"/>
+    <path d="M41.8,29.2 C43.4,30.8 41.4,34.0 37.8,33.4 C37.2,29.8 40.0,27.8 41.8,29.2 Z" fill="#2563eb" stroke="#1c100a" stroke-width="0.68"/>
+    <circle cx="39.6" cy="31.2" r="0.68" fill="#f6efe2" opacity="0.92"/>
+    <path d="M41.0,28.0 L43.4,28.8 L42.0,30.6 Z" fill="#e5b32e" stroke="#1c100a" stroke-width="0.42"/>
+
+    <!-- Bud 3 (far-left terminal jewel bud) -->
+    <path d="M11.0,13.0 C8.2,11.6 5.6,13.6 6.8,16.4 C9.6,17.2 12.0,15.2 11.0,13.0 Z" fill="#1d3f9e" stroke="#1c100a" stroke-width="0.62"/>
+    <circle cx="8.4" cy="14.2" r="0.58" fill="#f6efe2" opacity="0.9"/>
+    <!-- Golden stipple accent dots -->
+    <circle cx="132" cy="12.4" r="1.25" fill="#e5b32e" stroke="#1c100a" stroke-width="0.42"/>
+    <circle cx="132" cy="22.8" r="1.25" fill="#e5b32e" stroke="#1c100a" stroke-width="0.42"/>
+    <circle cx="54" cy="28.0" r="1.05" fill="#2563eb" stroke="#1c100a" stroke-width="0.42"/>
+  </symbol>
+
+  <!-- 2. Right acanthus & vine rinceau (exact mirror of left) -->
+  <symbol id="ornament-rinceau-right" viewBox="0 0 140 36" overflow="visible">
+    <g transform="translate(140,0) scale(-1,1)">
+      <use href="#ornament-rinceau-left"/>
+    </g>
+  </symbol>
+
+  <!-- 3. Ornate manuscript Aldus leaf centerpiece (❦ replacement on section rule) -->
+  <symbol id="ornament-aldus-leaf" viewBox="0 0 44 36" overflow="visible">
+    <!-- Asymmetric curling stem sweeping down-right -->
+    <path d="M22,22.5 C22,27.8 26.2,32.2 32.0,31.2 C35.6,30.6 36.8,26.8 34.0,25.2 C32.0,24.0 29.8,25.6 30.8,27.4" fill="none" stroke="#1c100a" stroke-width="2.1" stroke-linecap="round"/>
+    <path d="M22,22.5 C22,27.8 26.2,32.2 32.0,31.2 C35.6,30.6 36.8,26.8 34.0,25.2" fill="none" stroke="#3f9a7a" stroke-width="1.05" stroke-linecap="round"/>
+    <!-- Left balancing blue berry tendril -->
+    <path d="M21.4,24.4 C17.8,27.4 13.6,28.0 10.6,25.8" fill="none" stroke="#247a43" stroke-width="1.2" stroke-linecap="round"/>
+    <circle cx="9.8" cy="25.2" r="2.2" fill="#1d3f9e" stroke="#1c100a" stroke-width="0.65"/>
+    <circle cx="9.2" cy="24.5" r="0.62" fill="#f6efe2" opacity="0.92"/>
+    <!-- Right small blue berry -->
+    <circle cx="34.8" cy="20.6" r="1.85" fill="#2563eb" stroke="#1c100a" stroke-width="0.58"/>
+    <circle cx="34.3" cy="20.0" r="0.52" fill="#f6efe2" opacity="0.92"/>
+    <!-- Main pointed ivy/Aldus heart-leaf -->
+    <path d="M22,3.2 C26.6,9.2 33.8,10.2 33.6,16.8 C33.4,22.2 26.8,25.2 22,21.2 C17.2,25.2 10.6,22.2 10.4,16.8 C10.2,10.2 17.4,9.2 22,3.2 Z" fill="#247a43" stroke="#1c100a" stroke-width="1.15" stroke-linejoin="round"/>
+    <path d="M22,5.6 C25.6,10.2 31.2,11.2 31.0,16.6 C30.8,20.4 26.2,22.4 22,19.4 C17.8,22.4 13.2,20.4 13.0,16.6 C12.8,11.2 18.4,10.2 22,5.6 Z" fill="#3f9a7a" opacity="0.58"/>
+    <!-- Turned-over left lobe gold highlight -->
+    <path d="M10.4,16.8 C9.8,13.6 12.2,11.6 15.2,12.2 C14.6,14.8 13.2,16.6 10.4,16.8 Z" fill="#e5b32e" stroke="#1c100a" stroke-width="0.62" stroke-linejoin="round"/>
+    <!-- Central rib & lateral leaf veins in lead white + gold -->
+    <path d="M22,5.6 L22,20.4 M22,10.8 C25.0,12.2 27.6,13.8 29.4,16.0 M22,13.2 C19.0,14.4 16.4,16.0 14.8,18.2" fill="none" stroke="#f6efe2" stroke-width="0.78" opacity="0.94" stroke-linecap="round"/>
+    <circle cx="22" cy="20.8" r="1.45" fill="#e5b32e" stroke="#1c100a" stroke-width="0.48"/>
+  </symbol>
+
+  <!-- 4. Manuscript fleuron pointing right (❧ replacement after linked term) -->
+  <symbol id="ornament-fleuron-right" viewBox="0 0 36 22" overflow="visible">
+    <!-- Modulated curling stem on left -->
+    <path d="M14.0,11.4 C9.6,11.4 7.0,15.8 3.6,14.8 C1.2,14.0 1.0,10.8 3.2,10.0 C4.8,9.4 6.2,10.8 5.2,12.2" fill="none" stroke="#1c100a" stroke-width="1.75" stroke-linecap="round"/>
+    <path d="M14.0,11.4 C9.6,11.4 7.0,15.8 3.6,14.8 C1.2,14.0 1.0,10.8 3.2,10.0" fill="none" stroke="#3f9a7a" stroke-width="0.88" stroke-linecap="round"/>
+    <!-- Small lapis-blue bud tucked under stem -->
+    <circle cx="8.8" cy="16.2" r="1.85" fill="#1d3f9e" stroke="#1c100a" stroke-width="0.58"/>
+    <circle cx="8.3" cy="15.7" r="0.52" fill="#f6efe2" opacity="0.92"/>
+    <!-- Acanthus ivy leaf body pointing right -->
+    <path d="M13.6,11.2 C16.0,5.0 24.4,3.8 32.8,10.8 C24.6,17.8 16.2,17.0 13.6,11.2 Z" fill="#247a43" stroke="#1c100a" stroke-width="1.05" stroke-linejoin="round"/>
+    <path d="M15.8,11.2 C17.8,6.8 24.0,5.8 30.4,10.8 C24.2,15.6 17.8,15.0 15.8,11.2 Z" fill="#3f9a7a" opacity="0.58"/>
+    <!-- Turned-over upper lobe with gold underside -->
+    <path d="M17.0,6.4 C19.6,3.8 23.6,4.2 25.0,6.8 C22.2,7.2 19.4,7.2 17.0,6.4 Z" fill="#e5b32e" stroke="#1c100a" stroke-width="0.58" stroke-linejoin="round"/>
+    <!-- White midrib & tiny blue jewel at tip -->
+    <path d="M16.2,11.2 C20.4,10.6 25.4,10.6 30.2,10.8" fill="none" stroke="#f6efe2" stroke-width="0.72" opacity="0.94" stroke-linecap="round"/>
+    <circle cx="33.8" cy="10.8" r="1.35" fill="#2563eb" stroke="#1c100a" stroke-width="0.48"/>
+  </symbol>
+
+  <!-- 5. Manuscript fleuron pointing left (☙ replacement before linked term) -->
+  <symbol id="ornament-fleuron-left" viewBox="0 0 36 22" overflow="visible">
+    <g transform="translate(36,0) scale(-1,1)">
+      <use href="#ornament-fleuron-right"/>
+    </g>
+  </symbol>
+</defs>
+
+<!-- Default showcase preview when ornaments.svg is opened standalone -->
+<g id="ornament-preview">
+  <use href="#ornament-rinceau-left" x="14" y="12" width="140" height="36"/>
+  <use href="#ornament-rinceau-right" x="206" y="12" width="140" height="36"/>
+  <use href="#ornament-aldus-leaf" x="158" y="12" width="44" height="36"/>
+  <use href="#ornament-fleuron-left" x="108" y="72" width="36" height="22"/>
+  <use href="#ornament-aldus-leaf" x="158" y="66" width="44" height="36"/>
+  <use href="#ornament-fleuron-right" x="216" y="72" width="36" height="22"/>
+</g>
+</svg>
