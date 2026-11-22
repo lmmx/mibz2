@@ -33,6 +33,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Decompression is the harder problem, a conversation with Thomas Murphy ([#761](https://github.com/lmmx/mibz2/pull/761))
 - *(runner)* one workstation runner for sibling repos: a machine-wide lock, round-robin across repos, per-repo state ([#760](https://github.com/lmmx/mibz2/pull/760))
 
+- **37% less peak memory at 10 threads, and 4–6% faster from 6 to 20 threads, on the i9
+  (#739).** The parallel decoder's output path was reworked, from Wormhole's research line:
+  - each run's output is owned and written straight into place;
+  - RLE1 is undone in place;
+  - the CRC is computed in tiles;
+  - finished blocks wait in a ready ring, capped at 12 MiB.
+
+  The adoption run (`bench-wormhole-plateau`, evidence a811364d, sha256 9faac67b…c92f) measured
+  head over base, unpinned, Wikidata ×4, 12 rounds:
+
+  | threads | wall | CPU | peak RSS |
+  |--:|---|--:|---|
+  | 6 | 0.944 [0.935, 0.952] | 0.942 | 0.677 |
+  | 10 | **0.963** [0.943, 0.983] (judged) | 0.937 | **0.633** (87.0 → 54.6 MiB) |
+  | 16 | 0.962 [0.956, 0.968] | 0.926 | 0.637 |
+
+- **A faster block reader: 2% faster on one thread, and 11–14% faster at 8–10 threads (#745).**
+  - **What changed:** the reader that finds and decodes each block's Huffman codes now keeps
+    its decoding tables in L1 cache and reads leaner block headers. The design is from Carbon's
+    research line.
+  - **Why it pays at high thread counts:** that reader is serial, and at 8–10 threads it was
+    the cap on the whole decoder, so a faster one raises the plateau.
+  - **The run:** re-qualified on master with #739 (`bench-block-reader-on-wormhole`, evidence
+    026062a9, sha256 8629d6b9…7108), head over base, Wikidata ×4, 16 rounds: 1 thread
+    **0.979** [0.969, 0.989] (judged), 8 threads **0.858** [0.836, 0.880], 10 threads
+    **0.895** [0.875, 0.916], RSS at most 1.057.
+- **A portable CRC sliced by 16 (#763).**
+  - **What changed:** the CRC used where the hardware instruction (PCLMULQDQ) is unavailable,
+    and for pieces under 128 bytes, now reads 16 bytes a step. It combines its 16 table
+    lookups as a balanced tree of XORs.
+  - **CI's bench:** Wikidata on 1 thread −5.5% [−6.4, −4.5], text on 1 thread −8.6%
+    [−9.9, −7.3], with no loss.
+  - **Caveat:** CI's runners have the hardware CRC, so part of that 1-thread gain may be
+    layout. The kernel's own gain is on machines without it, such as aarch64.
+
+**The worker counts are unchanged.** The recalibration (`bench-recalibrate-plateau`, evidence
+472ce552, sha256 9e87c11d…dc50b; RELEASING §5c) ran on master at #739 and #745.
+- **Its registration:** corrected before the data, with a 2 s settle and a 9/27 arm (#145
+  REVIEW 7084586885, LOG 7084590503).
+- **The verdict:** it kept every shipped trim, pinned and unpinned.
+- **What more workers trade:** they help Wikidata and cost text by about as much. 8/32 over
+  7/28 at pinned 10 is 0.935 [0.919, 0.951] on Wikidata, where Holm rejects, but 1.109 on text.
+  The same holds at 12–20 threads unpinned. The loss guard holds them all.
+- **A refuted prediction:** 9 workers with 27 slots, predicted at −14.7%, came out 1.083
+  [1.024, 1.145] at unpinned 10.
+- **A lead:** a worker count chosen from the input's own behaviour could take the Wikidata gain
+  without the text loss. It would need a registration of its own.
+
+**The paired run on CI** compared v0.5.12 at 788ebe3e with master at cb7121e8 (Benchmark run
+45068896168, AMD EPYC 9V45, 4 CPUs, 10 rounds):
+- **Outputs:** parity ok on all 420 runs.
+- **Wall:** the best of each build −1.3% [−2.4, −0.0], faster.
+- **Stages:** the serial scan fell from 0.30 to 0.25 ns/B, and the pipeline from 2.74 to
+  2.71 ns/B.
+- **CPU:** amplification on the runner's 2 physical cores rose 6.5–6.9%. On the i9, #739
+  lowered CPU (0.93–0.94 at 6–20 threads), so this is the runner's shape, not a cost on a
+  many-core machine.
+
+**Features reviewed (RELEASING §3.3):** none was removed in this release.
+- **To check:** `memory-lever` and `phase-counters`, against their removal conditions.
+- **To fix:** `owned-writer` has no retention note.
+- Both go in a separate PR.
+
+**Release scaling and crossover** (§5, §5a): queued on the i9 at the tag commit 4a4a1c22.
+The crossover runs because #745 changes the scanner. Their results follow in their own PR.
+
 ## [0.5.12](https://github.com/lmmx/mibz2/compare/v0.5.11...v0.5.12) - 2026-11-22
 
 ### <!-- 3 -->Performance
