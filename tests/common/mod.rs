@@ -516,8 +516,27 @@ impl Candidate for Mibz2Open {
     }
 }
 
+/// The push-streaming parallel front end as the default decoder runs it on the measured i9
+/// (`decode_parallel` at `threads` with the i9's facts substituted: from 8 threads,
+/// `parallel::parscan_here`)
+pub struct Mibz2FrontEnd {
+    pub threads: usize,
+}
+
+impl Candidate for Mibz2FrontEnd {
+    fn name(&self) -> String {
+        format!("mibz2 front end on the i9 x{}", self.threads)
+    }
+    fn decode(&self, data: &[u8]) -> Result<Vec<u8>, String> {
+        mibz2::parallel::with_machine(mibz2::parallel::Machine::service_target(), || {
+            mibz2::decode_parallel(data, self.threads)
+        })
+        .map_err(|e| kind_name(&e))
+    }
+}
+
 /// The decoders the harness checks: this crate's, sequential on both kernel sets and
-/// parallel, and the open kernel's two routes (another decoder joins here)
+/// parallel, the push-streaming front end on the i9's dispatch, and the open kernel's two routes (another decoder joins here)
 pub fn candidates() -> Vec<Box<dyn Candidate>> {
     vec![
         Box::new(Mibz2Open { forced: false }),
@@ -534,6 +553,7 @@ pub fn candidates() -> Vec<Box<dyn Candidate>> {
             kernels: Kernels::detect(),
             threads: 3,
         }),
+        Box::new(Mibz2FrontEnd { threads: 10 }),
     ]
 }
 
