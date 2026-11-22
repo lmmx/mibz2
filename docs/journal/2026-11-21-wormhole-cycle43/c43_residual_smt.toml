@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 43: Residual Post-ParScan Stage Profile, Cold Realloc Audit & Comet Lake SMT Budget"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c43_residual_profile_and_smt"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "measured"
+dependent = true
+cost = { W = "555.4 ms (1T)", D = "555.4 / 10 (95.1% parallel)", B = "3.1 * n", Q = "r_thin", M = "22.5 MiB (10W)" }
+evidence = "Exact post-ParScan 1T profile: OpenCells 69.4% (385.7 ms) + Huffman 16.8% (93.3 ms) + runs::front 8.9% (49.3 ms) + unrle_avx2+CLMUL 4.9% (27.1 ms) = 100% parallel; scalar SWAR in-place delta measured at +14.82 ms (recovered by AVX2 scan in prod). M1_PreSyms and M2_SpanLPT killed as neutral vs A/A."

@@ -1,0 +1,24 @@
+=== PART 1: RESIDUAL POST-PARSCAN STAGE PROFILE (431 blks, 211 MB, Xeon 8481C) ===
+  1. Huffman (read_item):    93.34 ms ( 16.8%)
+  2. runs::front (MTF):      49.30 ms (  8.9%)
+  3. OpenCells (invert):    385.67 ms ( 69.4%)
+  4a. unrle_avx2 (2-buf):    18.11 ms (  3.3%)
+  4b. crc32 (CLMUL):          8.98 ms (  1.6%)
+  4c. InPlaceRLE+CLMUL:      41.92 ms (delta vs 4a+4b: +14.82 ms)
+  TOTAL 1T (AVX2 / InPl):  555.41 ms / 570.23 ms
+
+=== PART 2: 12-ROUND ROTATED FRESH-PROCESS 4W & 10W A/B (wikidata_431b_210m) ===
+
+--- W = 4 ---
+Arm            med_ms           vs BaseA [95%]  sys_ms  minflt  rss_MB
+BaseA          341.10 1.0000 [1.0000, 1.0000]   13.88    3961   31.68
+BaseB          337.37 0.9912 [0.9844, 0.9982]   11.46    3962   31.71
+M1_PreSyms     337.40 0.9905 [0.9789, 1.0022]   10.76    4180   32.50
+M2_SpanLPT     340.16 0.9946 [0.9857, 1.0037]   12.89    4397   33.29
+
+--- W = 10 ---
+Arm            med_ms           vs BaseA [95%]  sys_ms  minflt  rss_MB
+BaseA          335.54 1.0000 [1.0000, 1.0000]   23.48    9188   52.05
+BaseB          335.17 0.9908 [0.9630, 1.0194]   19.54    9383   52.86
+M1_PreSyms     337.16 1.0009 [0.9789, 1.0234]   22.16    9413   53.03
+M2_SpanLPT     337.37 0.9979 [0.9732, 1.0233]   21.44    9191   52.10
