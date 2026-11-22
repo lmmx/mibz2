@@ -67,6 +67,21 @@ twitches. Drive all of it with `crawler.js`, one timeline per creature.
   small bubble like a wind-up toy, still framing the red blackletter "yuck".
 - **Timing:** vary speeds and add pauses, so the page feels alive, not mechanical.
 
+## Flair (Louis, after kick-off)
+
+More flair, everywhere. Restraint was round 2's problem. Push every creature further:
+- **Swagger in the poses:** chests out, tails flourished into curls and knots, wings flared wide,
+  crowns tipped at an angle.
+- **Ornament on the bodies:** gilded crests, frilled collars, banded and spotted tails, tongues
+  ending in a curl or a fleur-de-lis, little gold punchwork stars.
+- **Showmanship in the motion:** a twirl at the top of a loop, a bow before diving into the "i",
+  a double-take at the reader, a flourish of the tail before vanishing.
+- **Personality per creature:** each should have a distinct attitude (vain, sly, startled,
+  smug, playful), readable at a glance.
+
+Still within the rules: bold outline and flat neon pigment, no pink, touching their bubbles,
+clean vanishing, light on phones.
+
 ## The page's rules (unchanged)
 
 - Colour neon and saturated; no pink.
