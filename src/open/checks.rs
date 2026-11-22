@@ -405,8 +405,10 @@ fn burst_repairs_cut_starts_and_repeats_only_the_marked_cycle() {
     let m = burst::MIN_ROWS;
     let bits = usize::BITS - (m - 1).leading_zeros();
     let mark = 311;
-    let mut kernel = Kernel::default();
-    kernel.spelling = (180..203).collect();
+    let mut kernel = Kernel {
+        spelling: (180..203).collect(),
+        ..Kernel::default()
+    };
     inline_words(
         &kernel.spelling,
         &[0, 23],

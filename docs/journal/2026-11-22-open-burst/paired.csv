@@ -1,0 +1,61 @@
+dataset,workers,measurement,block,stage,unit,arm,reference,rounds,reference_median,candidate_median,ratio,lower95,upper95
+dense,1,t1,dense-165.L,wall,us,master copy,master,12,1506.85,1488.95,0.98591,0.97586,0.99607
+dense,1,t1,dense-270.L,wall,us,master copy,master,12,1211.9,1196.75,1.00021,0.98398,1.01671
+dense,1,t1,dense-278.L,wall,us,master copy,master,12,1315.3,1298.4,0.98723,0.97784,0.99671
+dense,1,t1,dense-41.L,wall,us,master copy,master,12,1540.75,1515.6,0.98439,0.97546,0.9934
+dense,1,t1,dense-56.L,wall,us,master copy,master,12,1507.1,1483.35,0.98813,0.97866,0.99768
+dense,1,t1,sum of block times,wall,us,master copy,master,12,7068.75,6975.7,0.98873,0.97868,0.99887
+dense,1,t1,dense-165.L,wall,us,LeanRegBurst6_256,master,12,1521.2,1489.35,0.98299,0.97383,0.99223
+dense,1,t1,dense-270.L,wall,us,LeanRegBurst6_256,master,12,1204.9,1164.35,0.96806,0.95767,0.97856
+dense,1,t1,dense-278.L,wall,us,LeanRegBurst6_256,master,12,1325.5,1301.65,0.9823,0.97546,0.98917
+dense,1,t1,dense-41.L,wall,us,LeanRegBurst6_256,master,12,1540.15,1494.85,0.97256,0.96367,0.98153
+dense,1,t1,dense-56.L,wall,us,LeanRegBurst6_256,master,12,1503.65,1470.5,0.9773,0.9673,0.98741
+dense,1,t1,sum of block times,wall,us,LeanRegBurst6_256,master,12,7096.2,6921.45,0.97684,0.96859,0.98515
+dense,4,t4,dense-165.L,wall,us,master copy,master,12,1621.95,1597.1,0.98523,0.98058,0.9899
+dense,4,t4,dense-270.L,wall,us,master copy,master,12,1305.7,1302.05,1.0027,0.9934,1.01208
+dense,4,t4,dense-278.L,wall,us,master copy,master,12,1410.65,1392.95,0.98761,0.98351,0.99173
+dense,4,t4,dense-41.L,wall,us,master copy,master,12,1648.45,1622.2,0.98454,0.98,0.98911
+dense,4,t4,dense-56.L,wall,us,master copy,master,12,1618.15,1585.8,0.98553,0.98097,0.99011
+dense,4,t4,pass,wall,us,master copy,master,12,7645.1,7544.65,0.9881,0.98319,0.99304
+dense,4,t4,sum of block times,wall,us,master copy,master,12,7604.5,7504.95,0.98858,0.98399,0.9932
+dense,4,t4,dense-165.L,wall,us,LeanRegBurst6_256,master,12,1622.3,1609.35,0.98811,0.98207,0.9942
+dense,4,t4,dense-270.L,wall,us,LeanRegBurst6_256,master,12,1310.1,1266.8,0.96713,0.96065,0.97366
+dense,4,t4,dense-278.L,wall,us,LeanRegBurst6_256,master,12,1415.55,1399.95,0.98925,0.98408,0.99444
+dense,4,t4,dense-41.L,wall,us,LeanRegBurst6_256,master,12,1649.45,1617.85,0.97905,0.97241,0.98574
+dense,4,t4,dense-56.L,wall,us,LeanRegBurst6_256,master,12,1612.8,1588.7,0.97931,0.97328,0.98537
+dense,4,t4,pass,wall,us,LeanRegBurst6_256,master,12,7655.4,7520.0,0.98111,0.97388,0.98839
+dense,4,t4,sum of block times,wall,us,LeanRegBurst6_256,master,12,7617.8,7489.0,0.98088,0.97519,0.98661
+wikidata,1,corpus1,stream,wall,ms,master copy,master,12,302.847,302.502,1.00291,0.95582,1.05233
+wikidata,1,corpus1,stream,wall,ms,LeanRegBurst6_256,master,12,310.761,318.124,1.03199,0.97211,1.09556
+wikidata,4,corpus4,stream,wall,ms,master copy,master,12,130.799,140.453,1.05379,0.95247,1.16589
+wikidata,4,corpus4,stream,wall,ms,LeanRegBurst6_256,master,12,133.11,135.651,1.0378,0.93613,1.15051
+admitted,1,t1,block-0.L,wall,us,master copy,master,12,721.3,705.85,0.97644,0.97048,0.98244
+admitted,1,t1,block-143.L,wall,us,master copy,master,12,1552.0,1522.85,0.98436,0.97729,0.99148
+admitted,1,t1,block-2.L,wall,us,master copy,master,12,882.4,860.65,0.97821,0.97498,0.98145
+admitted,1,t1,block-207.L,wall,us,master copy,master,12,1025.15,1009.5,0.98312,0.97958,0.98668
+admitted,1,t1,block-210.L,wall,us,master copy,master,12,1387.85,1368.25,0.98623,0.97967,0.99283
+admitted,1,t1,block-85.L,wall,us,master copy,master,12,924.65,909.75,0.98332,0.97915,0.98751
+admitted,1,t1,sum of block times,wall,us,master copy,master,12,6499.1,6371.55,0.98269,0.97859,0.98681
+admitted,1,t1,block-0.L,wall,us,LeanRegBurst6_256,master,12,727.85,739.35,1.01652,1.0069,1.02622
+admitted,1,t1,block-143.L,wall,us,LeanRegBurst6_256,master,12,1560.75,1555.55,1.00119,0.99246,1.00999
+admitted,1,t1,block-2.L,wall,us,LeanRegBurst6_256,master,12,885.35,907.3,1.02668,1.02418,1.02919
+admitted,1,t1,block-207.L,wall,us,LeanRegBurst6_256,master,12,1033.75,1063.75,1.02903,1.0261,1.03196
+admitted,1,t1,block-210.L,wall,us,LeanRegBurst6_256,master,12,1394.1,1372.3,0.98466,0.97527,0.99414
+admitted,1,t1,block-85.L,wall,us,LeanRegBurst6_256,master,12,936.45,917.2,0.98031,0.97451,0.98614
+admitted,1,t1,sum of block times,wall,us,LeanRegBurst6_256,master,12,6529.15,6556.65,1.00421,0.99889,1.00956
+admitted,4,t4,block-0.L,wall,us,master copy,master,12,779.95,761.6,0.97651,0.97323,0.97981
+admitted,4,t4,block-143.L,wall,us,master copy,master,12,1653.2,1622.4,0.98026,0.97501,0.98553
+admitted,4,t4,block-2.L,wall,us,master copy,master,12,942.4,922.1,0.97853,0.9753,0.98177
+admitted,4,t4,block-207.L,wall,us,master copy,master,12,1100.55,1080.0,0.98069,0.9773,0.98409
+admitted,4,t4,block-210.L,wall,us,master copy,master,12,1479.85,1454.6,0.98279,0.97853,0.98706
+admitted,4,t4,block-85.L,wall,us,master copy,master,12,989.7,977.55,0.98421,0.98023,0.98819
+admitted,4,t4,pass,wall,us,master copy,master,12,6983.0,6837.75,0.98074,0.97652,0.98498
+admitted,4,t4,sum of block times,wall,us,master copy,master,12,6944.1,6817.1,0.98077,0.97732,0.98423
+admitted,4,t4,block-0.L,wall,us,LeanRegBurst6_256,master,12,781.85,796.85,1.02219,1.01871,1.02568
+admitted,4,t4,block-143.L,wall,us,LeanRegBurst6_256,master,12,1653.55,1674.4,1.00882,1.00431,1.01336
+admitted,4,t4,block-2.L,wall,us,LeanRegBurst6_256,master,12,944.55,970.05,1.03009,1.02665,1.03354
+admitted,4,t4,block-207.L,wall,us,LeanRegBurst6_256,master,12,1103.65,1140.85,1.03578,1.03347,1.03809
+admitted,4,t4,block-210.L,wall,us,LeanRegBurst6_256,master,12,1485.35,1483.4,0.99693,0.99241,1.00146
+admitted,4,t4,block-85.L,wall,us,LeanRegBurst6_256,master,12,993.25,993.55,1.0,0.99632,1.00369
+admitted,4,t4,pass,wall,us,LeanRegBurst6_256,master,12,6988.9,7100.8,1.01365,1.00996,1.01734
+admitted,4,t4,sum of block times,wall,us,LeanRegBurst6_256,master,12,6956.85,7065.05,1.01368,1.01157,1.01578
