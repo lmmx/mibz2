@@ -499,6 +499,94 @@ impl<L: Links> Elim<'_, L> {
     }
 }
 
+/// Two direct-mapped tables in the dead edge arena. The first compares both
+/// the rule id and the retained byte. The second compares the word itself.
+struct Dictionary<'a> {
+    pairs: &'a mut [u32],
+    contents: &'a mut [u32],
+    inline16: &'a mut Vec<[u8; INLINE]>,
+    lens: &'a mut Vec<u8>,
+    spelling: &'a mut Vec<u8>,
+    stack: &'a mut Vec<u32>,
+}
+
+impl Dictionary<'_> {
+    fn code<L: Links>(&mut self, e: &mut Elim<L>, handle: u32, byte: u8) -> u32 {
+        if handle == 0 {
+            return u32::from(byte);
+        }
+        let id = handle & ID_MASK;
+        let key = (id << 8) | u32::from(byte);
+        let slot = 2 * (key.wrapping_mul(0x9e37_79b9) >> 22) as usize;
+        if !self.pairs.is_empty() && self.pairs[slot] == key {
+            return self.pairs[slot + 1];
+        }
+
+        let start = self.spelling.len();
+        let memoized = handle >> ID_BITS >= INLINE as u32 && e.a[e.rule(id) + 3] != u32::MAX;
+        let (entry, len) = e.inline_word(handle, byte, self.stack, self.spelling);
+        if self.contents.is_empty() {
+            return self.insert(entry, len);
+        }
+        let bytes = if len == LONG {
+            &self.spelling[start..]
+        } else {
+            &entry[..len as usize]
+        };
+        let index = spelling_hash(&entry, len, bytes) as usize & (self.contents.len() - 1);
+        let old = self.contents[index] as usize;
+        let same = old != 0
+            && self.lens[old] == len
+            && if len == LONG {
+                super::long_word(&self.inline16[old], self.spelling) == bytes
+            } else {
+                self.inline16[old] == entry
+            };
+        let code = if same {
+            // Fresh child memo entries may point into this expansion. Preserve
+            // those bytes until the arena is retired.
+            if len == LONG {
+                if memoized {
+                    self.spelling.truncate(start);
+                } else {
+                    self.spelling.pop();
+                }
+            }
+            old as u32
+        } else {
+            let code = self.insert(entry, len);
+            self.contents[index] = code;
+            code
+        };
+        self.pairs[slot] = key;
+        self.pairs[slot + 1] = code;
+        code
+    }
+
+    fn insert(&mut self, entry: [u8; INLINE], len: u8) -> u32 {
+        let code = self.lens.len() as u32;
+        self.inline16.push(entry);
+        self.lens.push(len);
+        code
+    }
+}
+
+/// A cache collision only evicts a candidate. Sharing requires equal length and bytes.
+fn spelling_hash(entry: &[u8; INLINE], len: u8, bytes: &[u8]) -> u64 {
+    let (low, high, middle) = if len == LONG {
+        let part = |i: usize| u64::from_le_bytes(bytes[i..i + 8].try_into().unwrap());
+        (part(0), part(bytes.len() - 8), part(bytes.len() / 2 - 4))
+    } else {
+        let value = u128::from_le_bytes(*entry);
+        (value as u64, (value >> 64) as u64, 0)
+    };
+    let h = low.wrapping_mul(0xBF58_476D_1CE4_E5B9)
+        ^ high.rotate_left(29).wrapping_mul(0x94D0_49BB_1331_11EB)
+        ^ middle.wrapping_mul(0xD6E8_FEB8_6659_FD93)
+        ^ (bytes.len() as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+    h ^ (h >> 30)
+}
+
 impl Kernel {
     /// The most nodes `ns` strips make: a node per strip, at most one gap before each strip
     /// and one after the last, on each side, and the sentinel
@@ -516,7 +604,7 @@ impl Kernel {
     }
 
     /// The words `edges` is sized to for the induced construction of `ns` strips and `m`
-    /// retained rows: strip records and their image order (`4 * ns` words), then the arena for the
+    /// retained rows: the strips' image order (`ns` words), then the arena, sized for the
     /// nodes and as many rules (the blocks make about one a node; more grow it); and at least
     /// the `m` edges written over them all
     pub(super) fn arena_words(&self, ns: usize, m: usize) -> usize {
@@ -669,6 +757,40 @@ impl Kernel {
         }
 
         e.assign_bottom(stats.retained as u32);
+        // After elimination the strip/order prefix and unused arena tail are
+        // available for two direct-mapped caches. Small blocks need neither.
+        const PAIR_WORDS: usize = 2 * 1024;
+        const CACHE_WORDS: usize = PAIR_WORDS + 4096;
+        let (base, top, nodes) = (e.base, e.top, e.nodes);
+        let (header, arena) = edges.split_at_mut(4 * ns);
+        let (live, tail) = arena.split_at_mut(top);
+        let cache = if header.len() >= CACHE_WORDS {
+            header
+        } else {
+            tail
+        };
+        let (pairs, contents) = if cache.len() >= CACHE_WORDS {
+            cache[..CACHE_WORDS].fill(0);
+            cache[..CACHE_WORDS].split_at_mut(PAIR_WORDS)
+        } else {
+            (&mut [][..], &mut [][..])
+        };
+        let mut e = Elim::<L> {
+            a: live,
+            base,
+            top,
+            nodes,
+            _links: std::marker::PhantomData,
+        };
+        begin_inline(if n >= 65_536 { 1536 } else { 0 }, inline16, lens);
+        let mut dictionary = Dictionary {
+            pairs,
+            contents,
+            inline16,
+            lens,
+            spelling,
+            stack: &mut endpoint.stack,
+        };
         let mut cursors = [0; 256];
         let mut id = L::next(e.a, 0, 0);
         let mut in_node = 0;
@@ -698,7 +820,8 @@ impl Kernel {
                     stats.unit_work += usize::from(width == 1) * height;
                     stats.longest = stats.longest.max(height);
                 }
-                bands.push(Band::new(k + width, dst, node_word & ID_MASK));
+                let code = dictionary.code(&mut e, node_word, a as u8);
+                bands.push(Band::new(k + width, dst, code));
                 in_node += width;
                 k += width;
                 if in_node == node_width {
@@ -708,30 +831,6 @@ impl Kernel {
             }
         }
         assert_eq!(id, 0);
-        // The count is now exact. Use the handles in the bands to build both
-        // dictionary representations before wiring, without growing spare slots.
-        begin_inline(stats.words, inline16, lens);
-        for (byte, &start) in cursors.iter().enumerate() {
-            let end = cursors.get(byte + 1).copied().unwrap_or(bands.len());
-            for band in &mut bands[start..end] {
-                let id = band.code();
-                let code = if id == 0 {
-                    byte as u32
-                } else {
-                    let code = lens.len() as u32;
-                    let (bytes, len) = e.inline_word(
-                        (e.len(id).min(SATURATED) << ID_BITS) | id,
-                        byte as u8,
-                        &mut endpoint.stack,
-                        spelling,
-                    );
-                    inline16.push(bytes);
-                    lens.push(len);
-                    code
-                };
-                *band = Band::new(band.end(), band.dst(), code);
-            }
-        }
         cursors
     }
 }
@@ -739,6 +838,45 @@ impl Kernel {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dictionary_collisions_compare_complete_spellings() {
+        let mut arena = [0; RULE * 64];
+        let mut elim = Elim::<Narrow> {
+            a: &mut arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        let (mut inline, mut lens) = (vec![], vec![]);
+        begin_inline(0, &mut inline, &mut lens);
+        let mut dict = Dictionary {
+            pairs: &mut [0; 2048],
+            contents: &mut [0; 1],
+            inline16: &mut inline,
+            lens: &mut lens,
+            spelling: &mut vec![],
+            stack: &mut vec![],
+        };
+        for byte in 0..=255 {
+            for first in [1, 241] {
+                let handle = literal(first);
+                let code = dict.code(&mut elim, handle, byte);
+                assert_eq!(dict.code(&mut elim, handle, byte), code);
+                assert_eq!(dict.inline16[code as usize][..2], [first, byte]);
+            }
+        }
+        let left = elim.power(literal(7), 16);
+        let right = elim.power(literal(8), 16);
+        let c1 = dict.code(&mut elim, left, 9) as usize;
+        let c2 = dict.code(&mut elim, right, 9) as usize;
+        assert_ne!(c1, c2);
+        assert_eq!(
+            super::super::long_word(&dict.inline16[c1], dict.spelling),
+            [&[7; 16][..], &[9]].concat()
+        );
+    }
 
     #[test]
     fn short_rules_keep_all_fifteen_high_bytes() {

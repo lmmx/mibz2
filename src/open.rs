@@ -74,7 +74,7 @@ struct Tile {
 }
 
 /// Absolute source end and destination start each fit in 20 bits (n <= 900,000).
-/// During construction the high 24 bits hold a word id, then its dictionary code.
+/// The high 24 bits hold the dictionary code.
 #[derive(Clone, Copy)]
 struct Band(u64);
 
@@ -502,7 +502,7 @@ impl Kernel {
             self.edges.fill(0xA5A5_A5A5);
         }
         let bits = (u32::BITS - (m - 1).leading_zeros()).max(1);
-        let wide = (255 + stats.words as u32) > (u32::MAX >> bits);
+        let wide = self.lens.len() - 1 > (u32::MAX >> bits) as usize;
         // (the memory diet) `edges` keeps its length: its rows from `m` are stale, and its
         // first `m` are all written below (the bands partition the retained ranks)
         if self.edges.len() < m as usize {

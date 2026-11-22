@@ -305,3 +305,19 @@ fn long_inline_slot_keeps_both_offsets() {
     let slot = long_slot(65_535, 65_567);
     assert_eq!(long_word(&slot, &bytes), &bytes[65_535..65_567]);
 }
+
+#[test]
+fn dictionary_reuse_matches_each_blocks_plain_inverse() {
+    let mut kernel = Kernel::default();
+    let mut out = Vec::new();
+    let mut g = super::b5::Lcg(43);
+    let large = super::b5::runs_column(&mut g, 120_000, 6, 18);
+    for l in [&large[..], &large[..97], &large[..]] {
+        let r = Runs::of_column(l);
+        let stats = kernel.run::<true, true>(r.records(), l.len(), 53, LIMIT, &mut out);
+        assert!(out == super::b5::plain(l, 53));
+        if l.len() > 100 {
+            assert!(kernel.lens.len() - 256 < stats.words);
+        }
+    }
+}
