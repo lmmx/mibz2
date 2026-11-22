@@ -24,6 +24,21 @@ The rules come from three sources, cited by tag:
 
 ## The workflow
 
+**Iterate, ship, re-ship** (Louis, 22 November 2026, after four posts went out big bang and each
+took three full rewrites before anything was live). A post is live first and right second:
+- **Version 1 within minutes.** Read the sources, write the result, the key numbers and one
+  figure, run the strict build and `check_render.py`, open the PR, and have it merged. No
+  screenshot loop, no prose-share trimming and no second figure before version 1 is live.
+- **Then re-ship in small PRs,** each merged as soon as it builds: the framing, further
+  figures, fact-check corrections, prose trims, the reader's corrections. Each PR is one
+  change, and each one goes out.
+- **Never hold a draft to perfect it.** A correction from Louis or the Coordinator lands on a
+  live post as the next small PR, not as another unpublished rewrite.
+- **Live means deployed.** After a merge, check the page at https://lmmx.github.io/mibz2/ and
+  report it live only once it serves the new version.
+
+The steps below are what each version improves toward, not gates before the first one.
+
 1. **Plan** (steps 1–4 of the protocol below). Write down the target claim, the reader,
    the argument path and the goal questions. Do this before drafting, in a scratch file
    that isn't committed. When the post relays or responds to material (a thread, a review,
@@ -37,10 +52,8 @@ The rules come from three sources, cited by tag:
 4. **Revise** for what the pass found. Restructure; don't append. Then run the pass again
    on the revision, with the held-out goals as well. A converging revision has fewer stuck
    points, and few new ones.
-5. **Publish** with `publish-page`, in one pass: the build, `check_render.py`, one
-   `look_pages.py` run and a look at the figure screenshots, then the PR. Speed goes on
-   publishing, never on reading the material: cosmetic iteration before the PR exists is
-   the waste, reading all of the sources is not.
+5. **Publish** with `publish-page`: version 1 needs only the strict build and
+   `check_render.py`. Screenshots, `look_pages.py` and prose trims come in the follow-ups.
 
 ## The protocol: from claim to transfer
 
