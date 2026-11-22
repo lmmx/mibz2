@@ -7,8 +7,9 @@ repo=$(git rev-parse --show-toplevel)
 study="$repo/docs/journal/2026-11-22-open-construction"
 work=$(mktemp -d)
 git fetch origin refs/heads/data/admitted-bwt:refs/remotes/origin/data/admitted-bwt
-git bundle verify "$study/experimental.bundle"
-git fetch "$study/experimental.bundle" 'refs/heads/*:refs/bench/open-construction/*'
+gunzip -c "$study/experimental.bundle.gz" > "$work/experimental.bundle"
+git bundle verify "$work/experimental.bundle"
+git fetch "$work/experimental.bundle" 'refs/heads/*:refs/bench/open-construction/*'
 git archive origin/data/admitted-bwt | tar -x -C "$work"
 bash bench/moonshot/corpus.sh
 export WIKIDATA="$repo/corpora/wikidata.bz2"
