@@ -168,3 +168,53 @@ FASTER if the interval lies below 1, SLOWER if it lies above 1, and INCONCLUSIVE
   lacks it. A force-push that drops 8be1f140 from every ref on origin would stop the run at the
   fetch, not change what it measures. A later push to #734 is not what this run measures, and
   needs its own pin.
+
+## Re-run on the new master (22 November 2026)
+
+*Written and frozen before any data of the re-run, on `bench/open-r5`. Everything above is the
+first run's registration and stays as it was written.*
+
+**The first run's verdict stands as a record.** At the first pins (base `23c1e283`, head
+`8be1f140`) the i9 gave NOT ADOPTED: 6 threads 0.965 (FASTER), 8 threads 0.999 and 10 threads
+1.000 (both INCONCLUSIVE), CPU 0.950 at 10 threads, peak RSS 0.978. #734 was deferred, not
+abandoned: its construction saved CPU, but the wall did not move while the serial front end set
+the plateau. Nothing here re-reads or changes that verdict.
+
+**Why it is re-run: the plateau moved.** Since the first run, master has taken Wormhole's plateau
+stack (#739, `3296195e`: owned run-route output, in-place RLE1, a tiled CRC, a 12 MiB ready cap
+and a ready ring) and the block reader (#745, `4a79f063`: an L1-resident Huffman decoder and
+leaner block headers). On the i9, the block reader on top of #739 measured 0.858 at 8 threads and
+0.895 at 10. The scanner is then no longer the only cap at 8 to 10 threads, and the workers'
+construction time may now reach the wall.
+
+**What is compared now.**
+- **Base:** `4a79f0631e3c3e95e1b2d38090c75d6584e4817c`, master's head with #739 and #745, and
+  #734's merge-base with master.
+- **Head:** `e8f1afa25888059e75b5bf7f9ab76c87a8fb014c`, #734 with that master merged in (a merge
+  commit; there were no conflicts).
+- **The contrast:** the builds' `src` differs in the same five files as at the first pins, and
+  `git diff 4a79f063 e8f1afa2 -- src` is byte for byte `git diff 23c1e283 8be1f140 -- src`. The
+  recipe now also checks that the changed files are exactly those five.
+- **What interacts:** #739 makes the run route's output the block's own buffer
+  (`decode_owned`), so the Open kernel now builds its queues in, and walks into, that buffer
+  rather than the worker's `ll`. Master's Open kernel already did so at the base, so the two
+  builds treat the buffer alike. The worker plans at 6, 8 and 10 threads, admission and
+  `OpenCells::cap` are as at the first run.
+- **The recipe:** unchanged otherwise: the same machine, corpus, cells, 16 rounds, settle, lazy
+  diagnostic and cost. Its output goes to a new, timestamped run directory.
+
+**The rule: the same, frozen.** ADOPTS needs the 10-thread step FASTER, neither 6 nor 8 threads
+SLOWER, and median peak RSS, head over base, at most 1.10 at each count. HELD ON MEMORY, NOT
+ADOPTED and VOID are as above, as are the reports that decide nothing.
+
+**An independent decision.** The re-run is a new decision, by that rule, on its own 16 rounds.
+Its rounds are not pooled with the first run's, and neither run's figures adjust the other's.
+Its verdict decides #734 at these pins; a VOID may be repeated once, as above.
+
+**The prediction.** Construction's CPU saving (0.950 at 10 threads in the first run) now partly
+converts to wall at 8 and 10 threads, now that the front end gives the workers more of the
+plateau: a 10-thread step below 1 and smaller than the CPU step, so somewhere around 0.95 to
+0.99. 6 threads is expected to stay FASTER, as before. The risk named above, the smaller tables
+and the 16-wide wiring under shared-L3 contention, still holds, and more so if the faster front
+end keeps more workers busy at once. If the workers' construction is still not on the critical
+path at 10 threads, the step stays INCONCLUSIVE and the verdict is NOT ADOPTED again.

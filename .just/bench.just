@@ -1947,9 +1947,11 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # OneBr, S2aFuse, Inline2, FastJoin, S2b-NI, NoStats, the S3a dictionary tables, BandW and
 # Wire16), all in src/open.rs and src/open/**, speeds production's decoder where it runs
 # `OpenCells` on the i9. Two builds pinned by SHA: #734's merge-base with master BASE
-# (23c1e283, master's head when the recipe was written, v0.5.12's src; `mibz2@build-base`) and
-# #734's HEAD (perf/open-r5-stack 8be1f140, `mibz2`, whose harness drives the run); their src
-# differs in src/open.rs and src/open/** alone (checked). Both by rustc 1.99.1. The whole
+# (4a79f063, master's head with Wormhole's plateau stack #739 and the block reader #745;
+# `mibz2@build-base`) and #734's HEAD (perf/open-r5-stack e8f1afa2, master merged in, `mibz2`,
+# whose harness drives the run); their src differs in src/open.rs and src/open/** alone
+# (checked). Re-pinned 22 November 2026 (the registration's "Re-run on the new master"); the
+# first run's pins were 23c1e283 and 8be1f140. Both by rustc 1.99.1. The whole
 # Wikidata corpus (corpora/wikidata.bz2, checked by its SHA-256), 4 copies end to end; unpinned
 # on every CPU at 6, 8 and 10 threads, interleaved, 16 paired rounds, no spinner. Judged at 10
 # threads, 6 and 8 supporting, peak RSS reported (bench/open_r5.py). Then one diagnostic that
@@ -1960,15 +1962,15 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 bench-open-r5:
     #!/usr/bin/env bash
     set -euo pipefail
-    BASE=23c1e283483ca465f92e060b1c0028f1d0404378
-    HEAD=8be1f140f7df62614ce7f23dcac4d6ac92b5e87e
+    BASE=4a79f0631e3c3e95e1b2d38090c75d6584e4817c
+    HEAD=e8f1afa25888059e75b5bf7f9ab76c87a8fb014c
     COPIES=4 ROUNDS=16 SETTLE=2
     W=$PWD/target/open-r5
     mkdir -p "$W"
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-open-r5 (docs/journal/2026-11-22-open-r5-registration.md) at $(git rev-parse HEAD): mibz2 at $HEAD (perf/open-r5-stack, #734) against mibz2 at $BASE (v0.5.12's src; #734's merge-base with master), unpinned at 6, 8 and 10 threads, $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2; then mibz2-workers-lazy at 6 and 8"
+    echo "bench-open-r5 (docs/journal/2026-11-22-open-r5-registration.md) at $(git rev-parse HEAD): mibz2 at $HEAD (perf/open-r5-stack, #734) against mibz2 at $BASE (master with #739 and #745; #734's merge-base with master), unpinned at 6, 8 and 10 threads, $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2; then mibz2-workers-lazy at 6 and 8"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
       || { echo "bench-open-r5: the checkout has local changes"; exit 1; }
@@ -1982,6 +1984,10 @@ bench-open-r5:
     beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/open\.rs$|^src/open/' || true)
     [ -z "$beyond" ] \
       || { echo "bench-open-r5: the builds differ beyond the open kernel: $(echo $beyond)"; exit 1; }
+    # (the re-run's contrast: exactly #734's five files, as at the first run's pins)
+    want_changed='src/open.rs src/open/checks.rs src/open/endpoint.rs src/open/outq.rs src/open/spirals.rs'
+    [ "$(echo $changed)" = "$want_changed" ] \
+      || { echo "bench-open-r5: the builds differ in $(echo $changed), not $want_changed"; exit 1; }
     printf '%s\n' "$changed" > "$O/src-changed.txt"
     git diff "$BASE" "$HEAD" -- src > "$O/src-head-against-base.diff"
     export RUSTUP_TOOLCHAIN=1.99.1

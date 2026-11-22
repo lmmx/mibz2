@@ -14,8 +14,9 @@ recipe does not use it.
                     [--corpus wikidata-x4] [--out-bytes N] [--diagnostic [--nobi]]
 
 **Arms.** The reference is ARM at the base (`ARM@build-base`, #734's merge-base with master
-23c1e283, master's head when the recipe was written, v0.5.12's source), the candidate ARM at the
-head (`ARM`, this harness's own build: #734's head 8be1f140).
+4a79f063 at the re-run, master with #739 and #745; 23c1e283 at the first run), the candidate ARM
+at the head (`ARM`, this harness's own build: #734's head, e8f1afa2 at the re-run, 8be1f140 at
+the first).
 
 **A count's step:** the rounds' paired wall ratios, head over base: their geometric mean and its
 95% interval (Student's t on the logs). FASTER if the interval lies below 1, SLOWER if above,
