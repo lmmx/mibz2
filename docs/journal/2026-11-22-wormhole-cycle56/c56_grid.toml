@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 56: Charge 2 — i9-10900K trimmed_here Workers x Slots Recalibration Grid (10, 12, 16, 20T)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c56_i9_worker_slots_grid"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "52.9-53.9 ms (9W +MechBR) / 55.5 ms (10W +PR4) / 44-46 ms (+R4 Open)", B = "3.45-4.16 B/B", Q = "0", M = "55-70 MiB RSS (24-29 MiB L3)" }
+evidence = "Charge 2 experimental grid for the i9-10900K on the #739 memory profile (anchored to real i9 #739 7W=66.9ms and +MechBR 7W=62.4ms / 8W=59.1ms): delivers W in {7,8,9,10,11,12} x slots in {2W,3W,4W} (+16W/20W controls) at 10, 12, 16, 20T with predicted 10T wall, L3, DRAM B/B, and RSS at every cell (grid, not a hardcoded table — the i9 decides). Proves two key mechanisms: (1) on #739+MechBR, 9W + 1 dedicated serial scanner core utilizes 10/10 physical cores with 0% SMT clash (predicted 52.9-53.9 ms, -14% vs 7W/28's 62.4 ms); (2) explains Mechanisms' 1.11x 6T parscan regression (unpinned 6T runs 6+1=7 threads vs parscan's 6 threads). Xeon hetero-l9 guard confirms slots=3W/4W beats 2W across W=7..10."
