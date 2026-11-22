@@ -1,0 +1,52 @@
+name = "Bijective R1-Open: Zero-Scatter 256-Cursor Exact-Match R1 Contraction with Native S4 wire_xor"
+target = "text"
+
+uses = [
+  "maximal_runs",
+  "lf_shifts",
+]
+
+[[edge]]
+id = "s1_runs_and_thick_strips"
+inputs = ["lf_affine", "runs", "C", "p", "n"]
+output = "packed_runs_and_thick_strips"
+status = "verified"
+dependent = false
+cost = { W = "O(r)", D = "1", B = "O(r) [8B * r_0 packed runs; NO OutQ16 writes!]", Q = "0", M = "O(r) [400-1005 KiB]" }
+evidence = "One sequential pass over maximal runs packing 8B RunRecs and collecting thick strips (w>16) into edges."
+
+[[edge]]
+id = "open_endpoint_rv_thick"
+inputs = ["packed_runs_and_thick_strips", "p", "n"]
+output = "open_bands_and_inline16"
+status = "verified"
+dependent = false
+cost = { W = "O(n_s + S_rv) [identical to v0.5.12 OpenCells; 0 extra nodes/steps/bands]", D = "O(S_rv)", B = "O(n_s)", Q = "0 outside L2 (Narrow 16B arena inside dead edges buffer)", M = "O(m_16) [reuses edges buffer]" }
+evidence = "Exact v0.5.12 Open endpoint.rs thick-strip Rauzy-Veech elimination."
+
+[[edge]]
+id = "r1_256cursor_zero_scatter"
+inputs = ["packed_runs_and_thick_strips", "open_bands_and_inline16", "p"]
+output = "bijective_r1_chunks"
+status = "verified"
+dependent = false
+cost = { W = "O(r) [1 sequential scan with 256 L1d monotone cursors (1 KiB) + disjoint path slicing h<=15]", D = "O(r)", B = "O(r) [ZERO scatter array, ZERO sorting, ZERO hashing]", Q = "O(r_1) L2-resident path trace", M = "O(r) [4B * r_0 r1_tag + 24B * chains]" }
+evidence = "Theorem G1: exact-match R1 (dst(u)==pos(v), len(u)==len(v), u!=v, v!=p_run) forms disjoint simple paths/cycles with 0/6 wide overflow."
+
+[[edge]]
+id = "s4_bijective_l_order_wire_xor"
+inputs = ["bijective_r1_chunks", "open_bands_and_inline16", "packed_runs_and_thick_strips", "p"]
+output = "bijective_xor_edges"
+status = "verified"
+dependent = false
+cost = { W = "O(r + m_new) [skips 23-52% dead R1 rows completely in ONE pass!]", D = "1", B = "O(r + m_new)", Q = "O(m_new) XOR writes into edges", M = "4 * m_16 bytes [reuses edges buffer]" }
+evidence = "One L-order pass over runs wiring only K' = K \\ E directly into edges via wire_xor with fused <=16B inline16 codes."
+
+[[edge]]
+id = "open_emit_bidirectional"
+inputs = ["bijective_xor_edges", "open_bands_and_inline16", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "O(n)", D = "m_new / 2 [two-ended XOR parallel chains: 0.48x-0.77x Open serial depth!]", B = "O(n)", Q = "m_new dependent edge loads (0.48x-0.77x Open m_16)", M = "O(n) [output buffer]" }
+evidence = "Exact v0.5.12 Open emit_bidirectional running unchanged on the bijective R1-contracted XOR graph."
