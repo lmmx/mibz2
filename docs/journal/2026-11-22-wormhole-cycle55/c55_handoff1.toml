@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 55: Round 6 Interim Handoff #1 (Cycles 51-55) — Post-#739 Re-Diagnosis & PR 2 Closure"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c55_r6_interim_handoff1"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n (-3.6 ms RLE ZeroShift52)", D = "66-70 ms (i9 10T 3296195e3, W0+W1 bound)", B = "4.6 B/B (10W 3296195e3 -> ~3.8 B/B w/ ZeroShift52)", Q = "0", M = "0.60-0.68x i9 RSS (26.9 MiB L3)" }
+evidence = "Round 6 Interim Handoff #1 (Cycles 51-55) against origin/master 3296195e3 (#739): Charge 1 CLOSED (10W DRAM dropped 10.82->4.6 B/B / 23.1 ms DDR4 floor, W3/W4/W5 no longer bind; W0 trimmed_here 7W/28 cap and W1 serial scan now account for >80% of 10T gap); Charge 3 CLOSED (0 hot notify_all remain; L1_AtomicFast 0.990-1.006x & Str_TrimLock 0.988-1.009x KILLED — port nothing more from PR 2); PROMOTED Theorem 52.1 ZeroShift52 RLE1 (-46.6% copy_within, 0.8944x RLE+CRC, 5,000/5,000 exact) & D2_AdaptCap/D3_Chunks for decode_parallel (0.9786x / 0.9540x)."
