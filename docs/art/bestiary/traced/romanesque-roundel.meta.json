@@ -1,35 +1,213 @@
 {
-  "component": "romanesque_coiled_dragon_roundel",
+  "specimen": "romanesque-roundel",
   "source_ref": "docs/art/bestiary/refs/louis/1-coiled-dragon-roundel.jpg",
+  "family": "A",
+  "preset": "gilded_romanesque",
   "source_style": "Romanesque manuscript illumination",
   "date_range": "12th-13th century",
   "medium": "ink and opaque mineral pigment on gilded parchment",
-  "tracing_method": "per-component chromatic pigment extraction at 900x900 followed by clean multi-layer potrace Bezier vectorization and exact semantic re-assembly",
-  "silhouette_iou_pct": 95.01,
-  "components_dir": "docs/art/bestiary/traced/components/roundel/",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    300.0,
+    300.0
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 98.71,
+    "silhouette_iou_legacy_pct": 95.6,
+    "ink_iou_pct": 82.18,
+    "boundary_f1_1u_pct": 98.3,
+    "masked_color_rmse": 32.54,
+    "raw_kb": 51.94,
+    "gzip_kb": 19.42,
+    "path_count": 30,
+    "command_count": 3162,
+    "cmd_counts": {
+      "M": 222,
+      "h": 268,
+      "c": 1060,
+      "l": 1098,
+      "v": 251,
+      "s": 41,
+      "z": 222
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.3,
+      "threshold": 186,
+      "filter_speckle": 6,
+      "corner_threshold": 60,
+      "length_threshold": 5.8,
+      "splice_threshold": 56,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.11,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.4
+    },
+    "wash": {
+      "scale_size": 540,
+      "blur_radius": 0.95,
+      "threshold": 155,
+      "filter_speckle": 20,
+      "corner_threshold": 60,
+      "length_threshold": 10.5,
+      "splice_threshold": 65,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.21,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.8
+    },
+    "highlight": {
+      "scale_size": 600,
+      "blur_radius": 0.65,
+      "threshold": 148,
+      "filter_speckle": 4,
+      "corner_threshold": 60,
+      "length_threshold": 6.8,
+      "splice_threshold": 60,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.16,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.4
+    },
+    "accent": {
+      "scale_size": 600,
+      "blur_radius": 0.8,
+      "threshold": 154,
+      "filter_speckle": 10,
+      "corner_threshold": 60,
+      "length_threshold": 8.5,
+      "splice_threshold": 62,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.19,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.55
+    },
+    "ink": {
+      "scale_size": 720,
+      "blur_radius": 0.68,
+      "threshold": 156,
+      "filter_speckle": 5,
+      "corner_threshold": 60,
+      "length_threshold": 6.2,
+      "splice_threshold": 56,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.13,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.4
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/roundel",
   "components": [
-    "head.svg",
-    "wing.svg",
-    "foot-right.svg",
-    "foot-bottom.svg",
-    "inner-coil.svg",
-    "outer-coil.svg"
+    {
+      "id": "outer-coil",
+      "file": "outer-coil.svg",
+      "raw_kb": 14.9,
+      "gzip_kb": 5.99,
+      "bbox": [
+        41,
+        40,
+        227,
+        230
+      ]
+    },
+    {
+      "id": "inner-coil",
+      "file": "inner-coil.svg",
+      "raw_kb": 14.72,
+      "gzip_kb": 5.94,
+      "bbox": [
+        79,
+        72,
+        161,
+        192
+      ]
+    },
+    {
+      "id": "foot-right",
+      "file": "foot-right.svg",
+      "raw_kb": 2.87,
+      "gzip_kb": 1.32,
+      "bbox": [
+        203,
+        210,
+        53,
+        45
+      ]
+    },
+    {
+      "id": "foot-bottom",
+      "file": "foot-bottom.svg",
+      "raw_kb": 2.94,
+      "gzip_kb": 1.37,
+      "bbox": [
+        117,
+        247,
+        56,
+        48
+      ]
+    },
+    {
+      "id": "wing",
+      "file": "wing.svg",
+      "raw_kb": 9.84,
+      "gzip_kb": 3.9,
+      "bbox": [
+        97,
+        151,
+        111,
+        130
+      ]
+    },
+    {
+      "id": "head",
+      "file": "head.svg",
+      "raw_kb": 6.74,
+      "gzip_kb": 2.81,
+      "bbox": [
+        107,
+        96,
+        71,
+        75
+      ]
+    }
   ],
-  "assemblies": [
-    "roundel-outer-tail-coil (static ground truth)",
-    "roundel-feet-assembly (roundel-foot-right, roundel-foot-bottom)",
-    "roundel-inner-coil (subtle breath tighten)",
-    "roundel-wing (pinions + sage leaf covert)",
-    "roundel-head (roundel-jaw, roundel-skull, roundel-ears, blink lid)"
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/romanesque-roundel-master.svg",
+    "sheet": "docs/art/bestiary/traced/romanesque-roundel-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/romanesque-roundel-components.png",
+    "animated": "docs/art/bestiary/traced/romanesque-roundel-animated.svg"
+  },
+  "palette": {
+    "wash": "#865f57",
+    "wash2": "#6d3935",
+    "warm_mid": "#b39e92",
+    "highlight": "#f1e4d7",
+    "ink": "#19100b",
+    "sage": "#acae8e",
+    "crimson": "#7f443d"
+  },
+  "flaws_fixed": [
+    "Replaced measles-like foot blotches with smooth mauve-taupe Romanesque gouache, complete claws, and crisp white ankle bead",
+    "Eliminated duplicated sage wing geometry inside inner-coil.svg via ink-guided watershed and localized shoulder tuck",
+    "Removed hardcoded r=116.5/x=261.5 clipping that shaved the right tail contour and tail tip; smoothed continuous --wash2 dorsal band and crisp spine pearl dots",
+    "Eliminated 43-crumb pepper-speck charcoal fragmentation on wing.svg via multi-scale local-valley ink filtering",
+    "Preserved warm rosy/taupe facial mid-tones on head.svg (eliminating chalk-white dropout) and snapped neck seam to ink contour",
+    "Fixed Pure Black Silhouette Test and silhouette IoU metric to use stroke:none !important while preserving transparent open mouth void"
   ],
-  "palette": [
-    "madder-wine (--wash)",
-    "deep-wine (--wash2)",
-    "parchment-ivory",
-    "sage-green",
-    "crimson",
-    "iron-gall ink"
-  ],
+  "component": "romanesque_coiled_dragon_roundel",
+  "silhouette_iou_pct": 98.71,
   "stages": {
     "stage_a_master": "traced/romanesque-roundel-master.svg",
     "stage_c_animated": "traced/romanesque-roundel-animated.svg"
