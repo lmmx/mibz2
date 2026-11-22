@@ -1,0 +1,12 @@
+[package]
+name = "bench_phi2"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mibz2 = { path = "/home/antigravity/lmmx/mibz2", features = ["moonshot"] }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3

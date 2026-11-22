@@ -1,0 +1,53 @@
+name = "MorseAp4Open (Discrete Morse AP4 Apparent-Pair Reduction + Open Core)"
+target = "text"
+
+uses = [
+  "maximal_runs",
+  "lf_shifts",
+  "run_endpoints",
+]
+
+[[edge]]
+id = "open_thick_endpoint"
+inputs = ["C", "runs", "lf_affine", "domain_partition", "p", "n"]
+output = "open_thin_bands"
+status = "verified"
+dependent = false
+cost = { W = "n_thick * log(n)", D = "log(n)", B = "n_thick", Q = "0", M = "n_thick" }
+evidence = "OpenCells auxiliary interval exchange (endpoint.rs) eliminates all ns thick strips (w > 16) into F-ordered bands and inline16/spelling dictionary over the m_16 thin rows."
+
+[[edge]]
+id = "morse_ap4_apparent_pairs"
+inputs = ["open_thin_bands", "runs", "C", "p"]
+output = "morse_ap4_forest"
+status = "proved"
+dependent = false
+cost = { W = "r_thin", D = "1", B = "r_thin", Q = "0", M = "r_thin" }
+evidence = "Single linear scan over r_thin thin strips using 256 F-band cursors and L1-resident 64-row thin_dir page directory certifies out_deg==1 apparent pairs (Theorem M1: zero sorting, zero binary search)."
+
+[[edge]]
+id = "morse_ap4_chain_compress"
+inputs = ["morse_ap4_forest", "open_thin_bands"]
+output = "morse_ap4_critical_map"
+status = "verified"
+dependent = true
+cost = { W = "0.89*r", D = "14", B = "0.89*r", Q = "0.89*r", M = "r_thin" }
+evidence = "3-color cycle breaker + bottom-up u128 shift-OR chain compression (clean cap <= 14 B, zero silent truncation, zero SLP) collapses -84% to -86.5% of m_16 into 0.135..0.160 * m_16 critical rows (verified byte-exact on 4,704 exhaustive small + 338/338 moonshot check + 6/6 Wikidata blocks)."
+
+[[edge]]
+id = "morse_ap4_wire_xor"
+inputs = ["morse_ap4_critical_map", "open_thin_bands", "p"]
+output = "morse_ap4_xor_edges"
+status = "verified"
+dependent = false
+cost = { W = "m_crit", D = "1", B = "m_crit", Q = "0", M = "m_crit" }
+evidence = "Wires only the m_crit = 0.135..0.160 * m_16 critical rows (edges4 = 78..93 KiB avg, L2-resident) via bijective wire_xor preserving emit_bidirectional."
+
+[[edge]]
+id = "morse_ap4_emit_bi"
+inputs = ["morse_ap4_xor_edges", "morse_ap4_critical_map", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "n", D = "0.5 * m_crit", B = "n", Q = "m_crit", M = "n" }
+evidence = "Bidirectional XOR walk (emit_bidirectional) traverses m_crit / 2 = 60k..71k serial rounds (7.4x fewer than OpenCells) emitting inline16/spelling words to reconstruct text[0..n) byte-for-byte exactly."

@@ -1,0 +1,12 @@
+[package]
+name = "bench-morse-ab"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mibz2 = { path = "/tmp/moonshot-scorer", features = ["moonshot"] }
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+opt-level = 3

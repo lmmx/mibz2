@@ -1,0 +1,43 @@
+name = "Phi2XorOpen (Zero-Sort Zero-Bigram-Hash Bijective Full Phi^2 + Theorem B6 Universal wire_xor)"
+target = "text"
+
+uses = [
+  "maximal_runs",
+  "lf_shifts",
+]
+
+[[edge]]
+id = "phi2_bilinear_merge"
+inputs = ["lf_affine", "runs", "C", "p"]
+output = "phi2_strips_bilinear"
+status = "proved"
+dependent = false
+cost = { W = "O(r) [1.23r strips, 0 sorts, 0 bigram hashing]", D = "1", B = "O(r) [16B * 1.23r strips + 128 KiB LUT]", Q = "0", M = "O(r) [1.23r strips + 128 KiB bigram LUT]" }
+evidence = "Theorem B7: ONE linear L-order x F-order two-pointer merge produces all r_2 = 1.23 r_0 strips of Phi^2 contiguously per L-run v (exact global ilo-order) and monotonically per byte b0 (exact global dlo-order) with ZERO comparison sorts; thin bigrams intern in O(1) via flat [u16; 65536] LUT cleared only on touched entries."
+
+[[edge]]
+id = "phi2_thick_endpoint"
+inputs = ["phi2_strips_bilinear", "C", "n"]
+output = "phi2_thick_bands"
+status = "verified"
+dependent = true
+cost = { W = "O(ns_2 + |bands|)", D = "O(S_thick) [spiral-certified RV on ns_2 = 1.8k-6.2k thick strips]", B = "O(ns_2 + |bands|)", Q = "O(S_thick) [L1/L2-local within 3*ns_2+3 nodes]", M = "O(ns_2 + |bands|)" }
+evidence = "Zero-sort thick-strip gather (v = 0..r0 gives exact ilo-order, counting-place by b0 gives exact dlo-order) into spiral-certified Elim<Narrow/Wide> with 2-byte bigram thick leaves; outputs exact global ilo-order bands[0..|bands|]."
+
+[[edge]]
+id = "phi2_direct_wire_xor"
+inputs = ["phi2_strips_bilinear", "phi2_thick_bands", "p"]
+output = "phi2_xor_edges_u32"
+status = "verified"
+dependent = false
+cost = { W = "O(r + m_2) [1.188 m_16 u32 edges, 0/6 wide, 0 OutQ16]", D = "1", B = "O(m_2) [4B * m_2 edges]", Q = "O(m_2) [2-sided XOR write into 411-946 KiB u32 edges]", M = "O(m_2) [4B * m_2 u32 edges + inline16/lens]" }
+evidence = "One lockstep scan of v = 0..r0 against phi2_thick_bands wires 4B u32 edges directly with wire_xor (6/6 Wikidata blocks fit u32 with 0/6 wide; ~80% thin rows use pre-interned LUT bigram code with zero hashing)."
+
+[[edge]]
+id = "phi2_universal_bidirectional_emit"
+inputs = ["phi2_xor_edges_u32", "phi2_thick_bands", "n", "p"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "O(n) [0.553-0.594 Open serial XOR rounds]", D = "O(0.297 m_16) [2-ended XOR on even-parity half-cycle = 0.594x Open!]", B = "O(n)", Q = "0.594 m_16 [248k-266k serial pairs on 4B u32 edges]", M = "O(n) [output buffer]" }
+evidence = "Theorem B6: Exact bidirectional XOR emit on Phi^2 for even n, odd n (out[n-1]=L[p], back=prev[lfp]), periodic, and multi-cycle columns with O(1) met_on_graph parity guard; verified 0 failures on 510 binary n<=8 BWTs, 642 multi-cycle columns, 338/338 moonshot check cases, and all 6 SHA-256 authenticated Wikidata blocks."
