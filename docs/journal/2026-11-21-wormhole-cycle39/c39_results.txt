@@ -1,0 +1,24 @@
+warning: unused imports: `Cursor` and `self`
+ --> /tmp/wormhole_r5/c39_reader_pipeline_ab.rs:3:15
+  |
+3 | use std::io::{self, Cursor, IoSlice, Read, Write};
+  |               ^^^^  ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Read`
+ --> /tmp/wormhole_r5/c39_reader_pipeline_ab.rs:3:38
+  |
+3 | use std::io::{self, Cursor, IoSlice, Read, Write};
+  |                                      ^^^^
+
+warning: 2 warnings emitted
+
+=== 12-ROUND ROTATED FRESH-PROCESS 4W A/B: decode_parallel & bzcat OUTPUT ASSEMBLY (211 MB) ===
+Arm                  med_ms      ratio vs Base [95%]  user_ms  sys_ms  minflt  rss_MB
+MasterA_dec_par      400.23 1.0000 [1.0000, 1.0000]   591.95  137.63   67527  271.74
+MasterB_dec_par      387.94 0.9811 [0.9512, 1.0119]   584.94  134.01   67397  270.74
+R1_DirectExtend      373.81 0.9559 [0.9028, 1.0122]   567.90  120.20   58832  243.26
+R2_ZeroCopyChunks    351.02 0.8754 [0.8567, 0.8945]   537.59  116.23   56255  233.27
+Master_bzcat_null    321.29 1.0000 [1.0000, 1.0000]   559.90   36.14   15625   65.99
+R3_ZeroCopySink      295.02 0.9043 [0.8866, 0.9225]   534.25   19.12    6935   40.46

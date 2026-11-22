@@ -1,0 +1,21 @@
+name = "Wormhole/Neon Cycle 39: Zero-Copy Consumer Output Assembly (decode_parallel & bzcat Sink)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "r1_r2_decode_parallel_zerocopy"
+inputs = ["records", "C", "p", "n"]
+output = "contiguous_or_chunked_output"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "0.0 * n (chunks)", Q = "0", M = "233 MiB (out)" }
+evidence = "Eliminating decode_parallel's 4 MiB bounce buffer, feeder chunk copy (SliceSource direct), and 4x out reallocation cuts 4W to 0.9559x (R1 contiguous) and 0.8754 [0.8567, 0.8945] (R2 owned chunks: -54.4 ms user, -21.4 ms sys, -16.7% minflt, -38.5 MiB RSS)."
+
+[[edge]]
+id = "r3_bzcat_zerocopy_sink"
+inputs = ["contiguous_or_chunked_output"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "T_writer_zero_copy", B = "1.0 * n", Q = "0", M = "40.5 MiB RSS" }
+evidence = "Writing decoded blocks directly to stdout/Write via BufRead/on_block eliminates bzcat's 16 MiB bounce buffer and 211 MB memcpy: 4W = 0.9043 [0.8866, 0.9225], sys_ms -47.1% (36.1 -> 19.1 ms), minflt -55.6% (15.6k -> 6.9k), RSS -38.7% (66.0 -> 40.5 MiB)."
