@@ -10,8 +10,9 @@ name: Miri
 # core's hub (parallel::service_tests::miri_*, D045/D053/D057's fixtures) and its team run
 # (coop::tests::miri_team_run_and_its_panic), and its outer unwind's guard-and-fail
 # (parallel::service_unwind_tests::miri_outer_*, Guardian D067). And the open kernel's
-# (open::b5::miri_*). Only on changes to the walks, the open kernel, the pool, the parallel
-# decoder or its reader.
+# (open::b5::miri_*). And the in-place RLE1's scalar path (rle::tests::miri_edge_runs, #739's
+# B5 review). Only on changes to the walks, the open kernel, the pool, the parallel decoder,
+# its reader, the RLE1, the CRC, or lib.rs (its block decode).
 on:
   pull_request:
     paths:
@@ -24,11 +25,14 @@ on:
       - "src/cells_owned_test.rs"
       - "src/cells_selective_test.rs"
       - "src/coop.rs"
+      - "src/crc.rs"
+      - "src/lib.rs"
       - "src/open.rs"
       - "src/open/**"
       - "src/parallel.rs"
       - "src/parallel/**"
       - "src/read.rs"
+      - "src/rle.rs"
       - "src/runs.rs"
       - "src/runs/**"
       - ".github/workflows/miri.yml"
@@ -44,11 +48,14 @@ on:
       - "src/cells_owned_test.rs"
       - "src/cells_selective_test.rs"
       - "src/coop.rs"
+      - "src/crc.rs"
+      - "src/lib.rs"
       - "src/open.rs"
       - "src/open/**"
       - "src/parallel.rs"
       - "src/parallel/**"
       - "src/read.rs"
+      - "src/rle.rs"
       - "src/runs.rs"
       - "src/runs/**"
       - ".github/workflows/miri.yml"
@@ -99,6 +106,7 @@ jobs:
           grep -q '^coop::tests::miri_team_run_and_its_panic' miri-list.txt
           grep -q '^parallel::service_unwind_tests::miri_outer_parked' miri-list.txt
           grep -q '^open::b5::miri_open_kernel_small_columns:' miri-list.txt
+          grep -q '^rle::tests::miri_edge_runs:' miri-list.txt
       - name: Miri
         run: cargo miri test --lib -- miri_
       # the memory-lever experiment's staged Cells kernel (`memory-lever`, research): its

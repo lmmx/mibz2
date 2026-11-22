@@ -380,6 +380,21 @@ impl<I: bwt::InverseBwt> Scratch<I> {
         block_bound: usize,
         k: Kernels,
     ) {
+        self.record_owned(route, rows, block_bound, k, None, false);
+    }
+
+    /// `record_allocation`, for a block decoded into its own buffer `owned` (after its
+    /// RLE1; `staged`: its inverted bytes went through `ll`), `decode_owned`
+    #[cfg(any(test, feature = "trace"))]
+    fn record_owned(
+        &mut self,
+        route: trace::OutputRoute,
+        rows: usize,
+        block_bound: usize,
+        k: Kernels,
+        owned: Option<&Vec<u8>>,
+        staged: bool,
+    ) {
         if !cfg!(test) && trace::level() == 0 {
             return;
         }
@@ -390,6 +405,8 @@ impl<I: bwt::InverseBwt> Scratch<I> {
             rows,
             block_bound,
             buffers: self.buffers(),
+            owned: owned.map(|o| trace::Buffer::of("out", o)),
+            staged,
         });
     }
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs): tests and the `trace`
@@ -537,17 +554,21 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
             ));
         }
         #[cfg(any(test, feature = "trace"))]
-        s.record_allocation(
-            if s.inverse.took_cells() {
+        let ll_before = s.ll.as_ptr();
+        let computed = rle::unrle_in_place(&mut out, &mut s.rle_runs, &mut s.ll, k);
+        // (the footprint ledger's sample, after the RLE1, so that it sees the buffers the
+        // block leaves: its own, and `ll` if its inverted bytes were staged there)
+        #[cfg(any(test, feature = "trace"))]
+        {
+            let route = if s.inverse.took_cells() {
                 trace::OutputRoute::Cells
             } else {
                 trace::OutputRoute::Runs
-            },
-            n,
-            b.max_len,
-            k,
-        );
-        let computed = rle::unrle_in_place(&mut out, &mut s.rle_runs, &mut s.ll, k)?;
+            };
+            let staged = s.ll.as_ptr() != ll_before;
+            s.record_owned(route, n, b.max_len, k, Some(&out), staged);
+        }
+        let computed = computed?;
         if computed != crc {
             return Err(ErrorKind::BlockCrc {
                 stored: crc,
