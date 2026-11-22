@@ -66,12 +66,13 @@ a third of the window (28). If the scan were not the bottleneck, that could cost
 ## What is compared
 
 - **Head:** #739's head, `perf/wormhole-plateau` at
-  `7a462fe1ca925416bb97daeb2b1979d9795439a8`. *Changed before any data, on 22 November 2026,
-  from the first head `8857f9fd`.* The new head adds one commit. It fixes the footprint
-  ledger's route-history check for the owned output buffers (`src/trace.rs`,
-  `examples/occupancy.rs`, `docs/ledger.md`, and the `trace`/test-only sampling in
-  `src/lib.rs`'s `decode_owned`), and widens Miri's path filters. Outside the `trace` feature
-  and tests, the decoder behaves exactly as at `8857f9fd`.
+  `e9c6d4231f7aca206c400e315aee4683505e48c4`. *Changed before any data, on 22 November 2026,
+  from the first head `8857f9fd`.* The new head adds two commits, both for CI's occupancy
+  job. The first fixes the footprint ledger's route-history check for the owned output
+  buffers (`src/trace.rs`, `examples/occupancy.rs`, `docs/ledger.md`, and the `trace`/test-only
+  sampling in `src/lib.rs`'s `decode_owned`), and widens Miri's path filters. The second
+  moves the reader's `Taken` trace mark back under the lock (`src/parallel.rs`). Outside the
+  `trace` feature and tests, the decoder behaves exactly as at `8857f9fd`.
 - **Base:** `96a24d3e4f764b3918089b0d5bcd5fe4b9bc1fea`, #739's merge-base with master (#738's
   merge). Its build inputs (`src`, `examples`, `Cargo.toml`, `Cargo.lock`, `build.rs`,
   `rust-toolchain.toml`) are v0.5.12's (`6a36b0e1`), the source's baseline. It is an ancestor of
