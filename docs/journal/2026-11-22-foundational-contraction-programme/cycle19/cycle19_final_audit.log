@@ -1,0 +1,122 @@
+================================================================================================
+PART 1: CYCLE 18 AdaptiveLeanOpen<98304> CODE AUDIT & 12/12 ACQUISITION MANIFESTS
+================================================================================================
+  [VERIFIED] adaptive_lean_open_candidate.rs sha256 = c428884bf11e3342a77fb3a9652ddd38754e245485549edb7784ce8303ffce40
+  [VERIFIED] #![forbid(unsafe_code)] = TRUE, non-comment `unsafe` hits = 0
+  [VERIFIED] Exact m known from Stage 1 (L1372) < endpoint::induced (L1373) < Stage 4 dispatch (L1399)
+  [VERIFIED] `if coalesce` dispatched OUTSIDE 256-bucket loop (L1108 -> for L1110 / else L1145 -> for L1170)
+  [VERIFIED] Shipped v0.5.12 src/open.rs:522 = `if QUEUE && !wide && m >= 65_536 {` (git diff v0.5.12..HEAD empty)
+  [NOTE]     Minor doc comment typo on line 12: `//!       Stage 5 runs 2-ended `emit_bidirectional` (2x MLP, caps `max chain <= 123`, eliminates` (says `<= 123`, proxy max chain is `1203`)
+  [VERIFIED] Line 16 matches candidate SHA-256 & v1 @ ee7fbf0e, gate=PASS:
+             1W wall=0.9660 [0.9332, 1.0000] (note: hi=1.000010 borderline!), RSS=1.0001
+             2W wall=0.9878 [0.9235, 1.0567], RSS=1.0129
+             proxy instr=0.9480, 1W/2W/4W/7W/8W/10W=0.9821/0.9822/0.9823/0.9776/0.9662/0.9804
+
+  Running check_manifest.py across ALL 12 programme manifests:
+    [PASS] (rc=0) cycle12/beta/dt_widest_manifest.toml       | sha256=6ee47cb02e7a | PASS: Cycle 12 BandCoalOpen (wire_xor-preserving Open with register-held adjacent band coalescing)
+    [PASS] (rc=0) cycle15/cycle15_manifest.toml              | sha256=89e412e76849 | PASS: Cycle 15 LeanNoMarkXor (0.5.12 OpenCells + hoisted-mark NoMarkXor + LazyCells single-kernel, NO BandCoal)
+    [PASS] (rc=0) cycle18/cycle18_manifest.toml              | sha256=93046cc1c94f | PASS: Cycle 18 AdaptiveLeanOpen (Size-Gated BandCoal+emit_uni <= 384 KiB / Hoisted-Mark NoMarkXor+emit_bidirectional > 384 KiB, LazyCells single-kernel)
+    [PASS] (rc=0) cycle3/gamma/iet_schur_manifest.toml       | sha256=97e298a31bc7 | PASS: Unified Compositional IET-Schur + Sub-Interval 1-Piece Schur + Core-RV (Inline15/Inline3)
+    [PASS] (rc=0) cycle4/beta/b4_grid_flat16_manifest.toml   | sha256=d480fc091a49 | PASS: B4-Grid-Flat16 (Theorem B4 Zero-Tombstone Causal Bucket-Schur + AHT-Spiral + Flat<=16 Memo-SLP)
+    [PASS] (rc=0) cycle6/alpha/m1_k1_peeling_manifest.toml   | sha256=70ba41b6366e | PASS: Static M1 (kappa=1 R1 Chain Peeling) + Open Core
+    [PASS] (rc=0) cycle6/beta/selthinsq_manifest.toml        | sha256=554fbca5bc09 | PASS: SelThinSq-256 (256-Cursor Zero-Sort Selective Thin-Only Strip-Space Squaring + K=8 Anchor Parallel Emitter)
+    [PASS] (rc=0) cycle6/gamma/tube_open_manifest.toml       | sha256=bd62dc5b461d | PASS: Tube-Open (V6): Zero-RV Post-S3a Inclusion-Forest Thin-Tube Contraction on Open
+    [PASS] (rc=0) cycle7/gamma/bijective_r1_manifest.toml    | sha256=2e50f90da674 | PASS: Bijective R1-Open: Zero-Scatter 256-Cursor Exact-Match R1 Contraction with Native S4 wire_xor
+    [PASS] (rc=0) cycle8/alpha/morse_ap4_manifest.toml       | sha256=8e9520b64c89 | PASS: MorseAp4Open (Discrete Morse AP4 Apparent-Pair Reduction + Open Core)
+    [PASS] (rc=0) cycle8/beta/phi2_xor_manifest.toml         | sha256=5cccdc16d777 | PASS: Phi2XorOpen (Zero-Sort Zero-Bigram-Hash Bijective Full Phi^2 + Theorem B6 Universal wire_xor)
+    [PASS] (rc=0) cycle9/gamma/thick_morse_manifest.toml     | sha256=b89c8fab9125 | PASS: Thick-Morse Open: L1d Zero-Sort Exact R1-Thick Pre-Reduction Inside Open endpoint.rs
+  [VERIFIED] Acquisition Manifests Summary: 12/12 PASS, 0/12 FAIL!
+
+================================================================================================
+PART 2: COMPLETE 16-ROW OFFICIAL bench/moonshot (v1 @ ee7fbf0e) REGISTER & ARCHIVE AUDIT
+================================================================================================
+  Verifying all 16 rows have scorer_version=v1 @ ee7fbf0e50c60cd9dcf0faa0cdd634cdbbb02849...
+    Row  1 | 2026-11-22T05:15:09Z | b4_grid_flat16_candidate.rs        | 9027c41fcf0e | ARCHIVED(HEAD) | cycle6/gamma/b4_grid_flat16_candidate.rs
+    Row  2 | 2026-11-22T05:18:23Z | tube_open_candidate.rs             | 4ae1a3f7a3a8 | MISSING!       | NOT FOUND
+    Row  3 | 2026-11-22T05:20:51Z | selthinsq_candidate.rs             | 4f82f9fea7f2 | MISSING!       | NOT FOUND
+    Row  4 | 2026-11-22T05:34:29Z | selthinsq_candidate.rs             | 938e13815ec4 | ARCHIVED(HEAD) | cycle6/beta/selthinsq_candidate.rs
+    Row  5 | 2026-11-22T06:13:46Z | morse_ap4_candidate.rs             | aeb75d27b935 | ARCHIVED(HEAD) | cycle8/alpha/morse_ap4_candidate.rs
+    Row  6 | 2026-11-22T06:16:54Z | phi2_xor_candidate.rs              | 89596d4b86ab | ARCHIVED(HEAD) | cycle8/beta/phi2_xor_candidate.rs
+    Row  7 | 2026-11-22T06:32:40Z | plain_uni_open_candidate.rs        | 1158c6c84484 | ARCHIVED(HEAD) | cycle10/gamma/plain_uni_open_candidate.rs
+    Row  8 | 2026-11-22T06:42:33Z | plain_uni_open_candidate.rs        | 1158c6c84484 | ARCHIVED(HEAD) | cycle10/gamma/plain_uni_open_candidate.rs
+    Row  9 | 2026-11-22T10:15:25Z | lean_open_candidate.rs             | 776935f59746 | ARCHIVED(HEAD) | cycle12/gamma/lean_open_candidate.rs
+    Row 10 | 2026-11-22T10:16:30Z | dt_widest_open_candidate.rs        | a889ab69a8e0 | ARCHIVED(HEAD) | cycle12/beta/dt_widest_open_candidate.rs
+    Row 11 | 2026-11-22T10:28:40Z | bandcoal_lean_candidate.rs         | 5065f7fa979d | ARCHIVED(HEAD) | cycle13/beta/bandcoal_lean_candidate.rs
+    Row 12 | 2026-11-22T10:34:35Z | bandcoal_uni_candidate.rs          | 756c05d7427b | ARCHIVED(HEAD) | cycle13/beta/bandcoal_uni_candidate.rs
+    Row 13 | 2026-11-22T11:11:30Z | lean_nomark_xor_candidate.rs       | 89e6d028ded6 | ARCHIVED(HEAD) | cycle15/lean_nomark_xor_candidate.rs
+    Row 14 | 2026-11-22T11:35:36Z | lean_bandcoal_uni_candidate.rs     | 19d118d78420 | ARCHIVED(HEAD) | cycle15/lean_bandcoal_uni_candidate.rs
+    Row 15 | 2026-11-22T12:01:12Z | lean_bandcoal_uni_candidate.rs     | 19d118d78420 | ARCHIVED(HEAD) | cycle15/lean_bandcoal_uni_candidate.rs
+    Row 16 | 2026-11-22T12:28:33Z | adaptive_lean_open_candidate.rs    | c428884bf11e | ARCHIVED(HEAD) | cycle18/adaptive_lean_open_candidate.rs
+
+  [AUDIT] All 16/16 rows: scorer_version=v1, scorer_commit=ee7fbf0e..., gate=PASS.
+  [AUDIT] Archived in HEAD: 14/16 | Missing from HEAD: 2/16
+    [ARCHIVE GAP] Row  2: /tmp/fcp-c/tube_open_candidate.rs (sha256=4ae1a3f7a3a80d7e...) | git_hist=0 hits | /tmp=[]
+    [ARCHIVE GAP] Row  3: /tmp/fcp-b/selthinsq_candidate.rs (sha256=4f82f9fea7f28ad9...) | git_hist=0 hits | /tmp=[]
+
+  === CANONICAL 16-ROW v1 @ ee7fbf0e LEADERBOARD TABLE ===
+| # | Time (UTC) | Candidate | SHA-256 (12) | 1. Gate | 2. Wall 1W (95% CI, rds) | 2. Wall 2W (95% CI, rds) | 4. Peak RSS (1W / 2W) | 3. Advisory Proxy (`instr`, `1W/8W/10W`) | Archive |
+|---:|---|---|---|---|---|---|---|---|---|
+| 1 | `2026-11-22T05:15:09Z` | `b4_grid_flat16_candidate.rs` | `9027c41fcf0e` | `PASS` | `3.5602` [3.0522,4.1527] SLOWER (3r) | `3.5393` [3.3579,3.7305] SLOWER (3r) | `1.255` / `1.407` | *(not recorded in v1 row)* | HEAD |
+| 2 | `2026-11-22T05:18:23Z` | `tube_open_candidate.rs` | `4ae1a3f7a3a8` | `PASS` | `1.2340` [0.8323,1.8296] INCONCL (3r) | `1.1174` [0.8911,1.4011] INCONCL (3r) | `1.015` / `1.050` | *(not recorded in v1 row)* | GAP |
+| 3 | `2026-11-22T05:20:51Z` | `selthinsq_candidate.rs` | `4f82f9fea7f2` | `PASS` | `2.1024` [1.9122,2.3116] SLOWER (3r) | `2.0210` [1.2219,3.3428] SLOWER (3r) | `1.184` / `1.337` | *(not recorded in v1 row)* | GAP |
+| 4 | `2026-11-22T05:34:29Z` | `selthinsq_candidate.rs` | `938e13815ec4` | `PASS` | `1.6092` [1.3974,1.8531] SLOWER (3r) | `1.4586` [1.4088,1.5102] SLOWER (3r) | `1.118` / `1.209` | *(not recorded in v1 row)* | HEAD |
+| 5 | `2026-11-22T06:13:46Z` | `morse_ap4_candidate.rs` | `aeb75d27b935` | `PASS` | `3.0164` [2.5542,3.5622] SLOWER (3r) | `2.5537` [2.0627,3.1617] SLOWER (3r) | `1.127` / `1.173` | *(not recorded in v1 row)* | HEAD |
+| 6 | `2026-11-22T06:16:54Z` | `phi2_xor_candidate.rs` | `89596d4b86ab` | `PASS` | `2.0408` [1.6721,2.4909] SLOWER (3r) | `2.1501` [1.4590,3.1687] SLOWER (3r) | `1.238` / `1.458` | *(not recorded in v1 row)* | HEAD |
+| 7 | `2026-11-22T06:32:40Z` | `plain_uni_open_candidate.rs` | `1158c6c84484` | `PASS` | `1.0150` [0.9749,1.0566] INCONCL (3r) | `0.9662` [0.7273,1.2836] INCONCL (3r) | `0.990` / `1.002` | *(not recorded in v1 row)* | HEAD |
+| 8 | `2026-11-22T06:42:33Z` | `plain_uni_open_candidate.rs` | `1158c6c84484` | `PASS` | `1.0056` [0.9595,1.0539] INCONCL (5r) | `1.0030` [0.9794,1.0270] INCONCL (5r) | `1.024` / `1.017` | *(not recorded in v1 row)* | HEAD |
+| 9 | `2026-11-22T10:15:25Z` | `lean_open_candidate.rs` | `776935f59746` | `PASS` | `0.9789` [0.9273,1.0334] INCONCL (5r) | `0.9889` [0.9657,1.0126] INCONCL (5r) | `0.972` / `0.975` | *(not recorded in v1 row)* | HEAD |
+| 10 | `2026-11-22T10:16:30Z` | `dt_widest_open_candidate.rs` | `a889ab69a8e0` | `PASS` | `1.0147` [0.9456,1.0889] INCONCL (5r) | `0.9990` [0.9816,1.0166] INCONCL (5r) | `0.998` / `0.986` | *(not recorded in v1 row)* | HEAD |
+| 11 | `2026-11-22T10:28:40Z` | `bandcoal_lean_candidate.rs` | `5065f7fa979d` | `PASS` | `0.9654` [0.8973,1.0386] INCONCL (5r) | `0.9765` [0.9683,0.9847] FASTER (5r) | `0.968` / `1.007` | *(not recorded in v1 row)* | HEAD |
+| 12 | `2026-11-22T10:34:35Z` | `bandcoal_uni_candidate.rs` | `756c05d7427b` | `PASS` | `0.9961` [0.9391,1.0566] INCONCL (5r) | `1.0076` [0.9969,1.0184] INCONCL (5r) | `1.035` / `1.029` | *(not recorded in v1 row)* | HEAD |
+| 13 | `2026-11-22T11:11:30Z` | `lean_nomark_xor_candidate.rs` | `89e6d028ded6` | `PASS` | `0.9728` [0.9180,1.0309] INCONCL (5r) | `0.9737` [0.9609,0.9868] FASTER (5r) | `1.061` / `0.980` | *(not recorded in v1 row)* | HEAD |
+| 14 | `2026-11-22T11:35:36Z` | `lean_bandcoal_uni_candidate.rs` | `19d118d78420` | `PASS` | `0.9842` [0.9362,1.0346] INCONCL (5r) | `0.9921` [0.9651,1.0199] INCONCL (5r) | `0.990` / `1.004` | *(not recorded in v1 row)* | HEAD |
+| 15 | `2026-11-22T12:01:12Z` | `lean_bandcoal_uni_candidate.rs` | `19d118d78420` | `PASS` | `0.9936` [0.9654,1.0225] INCONCL (5r) | `0.9895` [0.8283,1.1820] INCONCL (5r) | `1.042` / `0.989` | `instr 0.7741`, 1W `0.9749`, 8W `0.9280`, 10W `0.9364` | HEAD |
+| 16 | `2026-11-22T12:28:33Z` | `adaptive_lean_open_candidate.rs` | `c428884bf11e` | `PASS` | `0.9660` [0.9332,1.0000] INCONCL (5r) | `0.9878` [0.9235,1.0567] INCONCL (5r) | `1.000` / `1.013` | `instr 0.9480`, 1W `0.9821`, 8W `0.9662`, 10W `0.9804` | HEAD |
+
+================================================================================================
+PART 3: MASTER THEOREM & ERRATA ARCHIVAL EVIDENCE CHECK (CYCLES 1-18)
+================================================================================================
+  Total archived files under journal dir (excl. __pycache__): 210
+  [OK           ] B1-B4 (Redheffer/Bucket-Schur, B2 r+n DRAT, B3 Fib, B4 0%-stale)
+  [OK           ] B5-B7 (SelThinSq, universal wire_xor Phi^2, Phi2XorOpen)
+  [RENAMED/CHECK] C1-C7 (C1..C7 + 4718-BWT frontier + L=1010101010110010 T=0000111011010011)
+                  note: `cycle12/alpha/cycle12_lp_farkas_and_cgap_ub.py` not exact; cycle files sample: ['cycle12/alpha/cycle12_tight_cgap_constant.py', 'cycle12/alpha/bwt_core.py', 'cycle12/beta/dt_widest_open_candidate.rs']
+                  note: `cycle14/cycle14_binary_cgap_and_hgrand.py` not exact; cycle files sample: ['cycle14/cycle14_const_alpha_and_r_over_z.py', 'cycle14/cycle14_helper.c', 'cycle14/cycle14_pisot_and_guid_randomness.py']
+                  note: `cycle15/cycle15_c7_and_19_24.py` not exact; cycle files sample: ['cycle15/cycle15_cstar_and_gwall.py', 'cycle15/lean_nomark_xor_candidate.rs', 'cycle15/lean_bandcoal_uni_candidate.rs']
+  [RENAMED/CHECK] F1-F3 (entropy, splice, i9 5.8 ns/op break-even)
+                  note: `cycle3/alpha/verify_bwt_entropy_and_lower_bounds.py` not exact; cycle files sample: ['cycle3/alpha/test_gap_closed_quotient.py', 'cycle3/alpha/profile_early_stop_dag.c', 'cycle3/alpha/round_census_6blocks.c']
+  [RENAMED/CHECK] K1-K3, J1 (Run-Overlap Graph M1..M4, K2 acyclic scope)
+                  note: `cycle5/alpha/test_run_overlap_graph.py` not exact; cycle files sample: ['cycle5/alpha/test_k1_peeling.py', 'cycle5/alpha/test_confluence_stress.py', 'cycle5/alpha/bench_m1_k1_native.c']
+  [RENAMED/CHECK] M1-M3 (Discrete Morse AP4_max, m_W(FL)=m_W(LF), Fox-calculus)
+                  note: `cycle8/alpha/test_morse_coreduction.py` not exact; cycle files sample: ['cycle8/alpha/morse_ap4_candidate.rs', 'cycle8/alpha/morse_ap4_manifest.toml', 'cycle8/alpha/Cargo.toml']
+  [OK           ] O1-O3 (Origami SL(2,Z) shear closure)
+  [OK           ] T0-T1, P1 (Train-Track S2_dt_heavy, Parallel Contraction)
+  [OK           ] D0-D2b (Rank-Shift Avalanche, Durand D2a ALL factors u incl. self-overlapping)
+  [OK           ] S1-S3 (Reverse SA-IS, Kempa Phi-acquisition)
+  [OK           ] E1-E2, R1 (Stein rank = 2g_orig-2, GKO ~= PT_n, F_fat)
+  [RENAMED/CHECK] Q1-Q3 (Foundational Q4 closure, Q1b c in 0..254)
+                  note: `cycle11/beta/cycle11_q4_stream_bypass.py` not exact; cycle files sample: ['cycle11/alpha/exact_cgap_optimum.py', 'cycle11/alpha/test_coalescing_dt_heavy.py', 'cycle11/beta/cycle11_smt_and_thick_algebras.py']
+  [RENAMED/CHECK] U1, L0-L1 (Z3 switch classification, BBWT Lyndon, Jez RLSLP)
+                  note: `cycle12/alpha/cycle12_bbwt_and_rlslp.py` not exact; cycle files sample: ['cycle12/alpha/cycle12_tight_cgap_constant.py', 'cycle12/alpha/bwt_core.py', 'cycle12/beta/dt_widest_open_candidate.rs']
+  [RENAMED/CHECK] P_pisot & Bayer-Diaconis GUID Mixing Law (1-(15/16)^8=0.4033)
+                  note: `cycle13/alpha/cycle13_pisot_and_guid_mixing.py` not exact; cycle files sample: ['cycle13/beta/bandcoal_lean_candidate.rs', 'cycle13/beta/bandcoal_uni_candidate.rs', 'cycle13/beta/cycle13_scaling_phase_diagram.py']
+  [RENAMED/CHECK] G_wall (LRU/Online/Belady-OPT bounds)
+                  note: `cycle15/cycle15_g_wall.py` not exact; cycle files sample: ['cycle15/cycle15_cstar_and_gwall.py', 'cycle15/lean_nomark_xor_candidate.rs', 'cycle15/lean_bandcoal_uni_candidate.rs']
+  [RENAMED/CHECK] H_grand v2 (5-model separation, T_K=5, C7 1.5x upgrade)
+                  note: `cycle14/cycle14_binary_cgap_and_hgrand.py` not exact; cycle files sample: ['cycle14/cycle14_const_alpha_and_r_over_z.py', 'cycle14/cycle14_helper.c', 'cycle14/cycle14_pisot_and_guid_randomness.py']
+  [OK           ] U_cat (12-framework WPB + lossless/Meyer biconditional + corrected Row #5)
+  [OK           ] Large-n Deployment Crossover (scale_crossover_bench, 0.5.12 spelling/wide, 900K_ultra fix)
+
+================================================================================================
+PART 4: REPO HYGIENE & CYCLE 20 HANDOFF READINESS CHECK
+================================================================================================
+  [VERIFIED] HEAD = 4c201c5
+  [VERIFIED] git status -s = CLEAN
+  [VERIFIED] git diff --name-only 6996139..HEAD: 313 files total, 0 non-docs files!
+  [VERIFIED] FRONTIER.md Foundational Q6 permanently present = True
+  [VERIFIED] Main journal currently at: `# Foundational Contraction Programme — Interim Research Journal (Cycles 1–6 of 20)` (111 lines -> needs full Cycles 1-20 update in Cycle 20!)
+  [HYGIENE NOTE] Committed .pyc files in 6996139..HEAD: 0 (in cycles 9-11; non-blocking, optional cleanup in Cycle 20)
+
+================================================================================================
+CYCLE 19 FINAL END-TO-END AUDIT COMPLETE.
+================================================================================================
