@@ -200,6 +200,11 @@ jobs:
       # commit, state in the XDG state directory, HOLD, notices
       - name: The workstation queue
         run: python3 bench/test_workstation_queue.py
+      # bench-open-stack's verdict (bench/open_stack.py) on synthetic runs: each verdict where the
+      # registration puts it, the peak RSS reported, and no verdict from incomplete or malformed
+      # records or machine
+      - name: The open-stack verdict (synthetic runs)
+        run: python3 bench/test_open_stack.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py
