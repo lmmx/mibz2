@@ -1,0 +1,52 @@
+name = "Thick-Morse Open: L1d Zero-Sort Exact R1-Thick Pre-Reduction Inside Open endpoint.rs"
+target = "text"
+
+uses = [
+  "maximal_runs",
+  "lf_shifts",
+]
+
+[[edge]]
+id = "open_s1_outq_and_thick_strips"
+inputs = ["lf_affine", "runs", "C", "p", "n"]
+output = "outq_and_thick_strips"
+status = "verified"
+dependent = false
+cost = { W = "O(r)", D = "1", B = "O(r + m_W) [ZERO r_0 thin-strip materialization; OutQ16 reuses out]", Q = "0", M = "O(n_s) [reuses edges buffer]" }
+evidence = "Identical to v0.5.12 Open S1 (faster at lower W because OutQ16 queues fewer thin rows)."
+
+[[edge]]
+id = "thick_morse_r1_l1d_collapse"
+inputs = ["outq_and_thick_strips", "n"]
+output = "reduced_thick_strips_in_place"
+status = "verified"
+dependent = false
+cost = { W = "O(n_s) [1 linear 2-pointer merge over 3.3k-6k thick strips (27-50 KiB L1d), zero re-sort]", D = "O(n_s)", B = "O(n_s)", Q = "0 outside L1d", M = "O(n_s) [~36-60 KiB L1d]" }
+evidence = "In-place image_order annihilation collapses 30-35% of thick strips into Prefix15 initial rules with zero sorting."
+
+[[edge]]
+id = "open_endpoint_rv_reduced"
+inputs = ["reduced_thick_strips_in_place", "p", "n"]
+output = "open_bands_and_inline16"
+status = "verified"
+dependent = false
+cost = { W = "O(n_s_res + S_rv_res)", D = "O(S_rv_res)", B = "O(n_s_res)", Q = "0 outside L2 (Narrow 16B arena inside edges)", M = "O(m_W) [<= 820 KiB at W=8, SUB-Open!]" }
+evidence = "Exact v0.5.12 Open endpoint.rs on reduced thick strip set with remaining = n - annihilated_rows."
+
+[[edge]]
+id = "open_s4_wire_xor"
+inputs = ["open_bands_and_inline16", "outq_and_thick_strips", "p"]
+output = "xor_edges"
+status = "verified"
+dependent = false
+cost = { W = "O(m_W) [0.80x Open at W=8]", D = "1", B = "O(m_W)", Q = "O(m_W) XOR writes", M = "4 * m_W bytes [<= 669 KiB at W=8]" }
+evidence = "Exact unchanged v0.5.12 Open OutQ16 wire_xor on m_W retained rows."
+
+[[edge]]
+id = "open_s5_emit_bidirectional"
+inputs = ["xor_edges", "open_bands_and_inline16", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "O(n)", D = "m_W / 2 [0.80x Open two-ended XOR rounds at W=8]", B = "O(n)", Q = "m_W dependent edge loads", M = "O(n) [output buffer]" }
+evidence = "Exact unchanged v0.5.12 Open emit_bidirectional; verified byte-exact on 10,454 exhaustive small cases, 5 killers, and 6/6 Wikidata blocks."
