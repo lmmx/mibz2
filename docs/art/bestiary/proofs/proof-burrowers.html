@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Proof: Text-Weaving Burrowers — Bestiary Brief 3</title>
+  <style>
+    :root {
+      --bg: #f6eedb;
+      --card: #fffaf0;
+      --ink: #1c100a;
+      --muted: #554230;
+      --vermilion: #ff2a14;
+      --lapis: #1e4cff;
+      --verdigris: #00c482;
+      --gold: #f6be1b;
+      --orpiment: #ffd014;
+      --fleuron: #00a86b;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      max-width: 100%; overflow-x: clip;
+      background: var(--bg); color: var(--ink);
+      font: 15.5px/1.5 Georgia, "Iowan Old Style", serif;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 18px 16px 48px; }
+    .nav {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      gap: 8px; margin-bottom: 12px;
+      font: 600 12.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .nav a { color: var(--lapis); text-decoration: none; }
+    .nav a:hover { text-decoration: underline; }
+    .fleuron { color: var(--fleuron); }
+    h1 { margin: 0 0 4px; font-size: clamp(21px, 4.5vw, 28px); line-height: 1.2; }
+    .sub { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+
+    .controls {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      background: var(--card); border: 2px solid var(--ink); border-radius: 12px;
+      padding: 10px 12px; margin-bottom: 14px;
+      font: 600 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .controls button, .controls select {
+      font: inherit; padding: 6px 10px;
+      border: 2px solid var(--ink); border-radius: 8px;
+      background: var(--gold); color: var(--ink); cursor: pointer;
+    }
+    .controls button.alt { background: var(--card); }
+    .controls button.active { background: var(--verdigris); color: var(--ink); }
+    .scrub-wrap {
+      display: flex; align-items: center; gap: 8px; flex: 1 1 190px; min-width: 170px;
+    }
+    .scrub-wrap input[type="range"] { flex: 1; accent-color: var(--verdigris); }
+    .time-readout { min-width: 86px; text-align: right; }
+
+    .beats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .beat-btn {
+      font: 600 11.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      padding: 5px 9px; border: 1.8px solid var(--ink); border-radius: 999px;
+      background: var(--card); color: var(--ink); cursor: pointer;
+    }
+    .beat-btn:hover { background: var(--orpiment); }
+
+    .stage-shell {
+      display: grid;
+      gap: 16px;
+      margin: 0 auto;
+      transition: max-width 0.2s ease;
+    }
+    .stage-shell.phone-390 {
+      width: 358px;
+      max-width: 100%;
+    }
+    .burrow-card {
+      background: var(--card);
+      border: 2.5px solid var(--ink);
+      border-radius: 16px;
+      padding: 14px 16px 12px;
+      box-shadow: 4px 4px 0 rgba(28, 16, 10, 0.12);
+    }
+    .burrow-card h2 {
+      margin: 0 0 8px;
+      font: 700 12px/1.25 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .burrow-card svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #fffdf7;
+      border: 1.5px solid rgba(28, 16, 10, 0.15);
+      border-radius: 10px;
+    }
+
+    .meta-note {
+      margin-top: 14px;
+      font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--muted);
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <a href="index.html">&larr; All Bestiary Proofs</a>
+      <span><span class="fleuron">❧</span> makeCrawler() &middot; Over/Under Weave &amp; Mask Vanish <span class="fleuron">☙</span></span>
+    </nav>
+
+    <h1>Text-Weaving Burrowers (&ldquo;o&rdquo; &amp; &ldquo;i&rdquo; Dot)</h1>
+    <p class="sub">Burrowers emerge cleanly from a letter, weave OVER and UNDER words along the text line, pause for a double-take, execute a theatrical bow before diving into &ldquo;o&rdquo; or &ldquo;i&rdquo; with a tail flourish, vanish with 0 stray pixels (no drawn hole, no fade), and re-emerge seamlessly.</p>
+
+    <div class="controls">
+      <button id="btn-play" type="button">Pause</button>
+      <div class="scrub-wrap">
+        <input id="scrubber" type="range" min="0" max="1000" value="0" aria-label="Timeline scrubber">
+        <span id="time-out" class="time-readout">t=0.00s</span>
+      </div>
+      <label>Speed
+        <select id="sel-speed">
+          <option value="0.5">0.5&times;</option>
+          <option value="1" selected>1&times;</option>
+          <option value="1.5">1.5&times;</option>
+          <option value="2">2&times;</option>
+        </select>
+      </label>
+      <button id="btn-phone" type="button" class="alt">390px Phone</button>
+    </div>
+
+    <div class="beats">
+      <button class="beat-btn" data-frac="0.08">08% Emerging from first letter</button>
+      <button class="beat-btn" data-frac="0.23">23% Pause &amp; double-take</button>
+      <button class="beat-btn" data-frac="0.44">44% Weaving under middle word</button>
+      <button class="beat-btn" data-frac="0.60">60% Theatrical bow at rim</button>
+      <button class="beat-btn" data-frac="0.77">77% Tail flourish diving in</button>
+      <button class="beat-btn" data-frac="0.94">94% 0-stray-px underground dwell</button>
+    </div>
+
+    <div class="stage-shell" id="stage-shell">
+      <section class="burrow-card">
+        <h2>1. Roundel Aspis (Romanesque Wine-Violet &amp; Ivory Head) &mdash; Emerges from &ldquo;o&rdquo;, weaves under &ldquo;serpents&rdquo;, dives into &ldquo;o&rdquo;</h2>
+        <svg id="svg-aspis" viewBox="0 0 540 96" width="540" height="96"></svg>
+      </section>
+
+      <section class="burrow-card">
+        <h2>2. Woodcut Draco (Monochrome Iron-Gall on Parchment) &mdash; Weaves over/under words &amp; bows into the dot of &ldquo;i&rdquo;</h2>
+        <svg id="svg-basilisk" viewBox="0 0 540 96" width="540" height="96"></svg>
+      </section>
+
+      <section class="burrow-card">
+        <h2>3. Mineral Ultramarine Amphisbaena (Lapis &amp; Cinnabar) &mdash; Concertina weave into 44px display &ldquo;o&rdquo;</h2>
+        <svg id="svg-amphis" viewBox="0 0 540 108" width="540" height="108"></svg>
+      </section>
+    </div>
+
+    <div class="meta-note">
+      <span>Visibility: IntersectionObserver active on all 3 SVGs (pauses off-screen)</span>
+      <span>Burrow contract: 0 stray px &middot; no drawn hole &middot; no fade</span>
+    </div>
+  </div>
+
+  <script src="../crawler/crawler.js"></script>
+  <script>
+    (function () {
+      const SVG_NS = 'http://www.w3.org/2000/svg';
+      const BASE_DUR = 12;
+      const params = new URLSearchParams(window.location.search);
+      const shell = document.getElementById('stage-shell');
+      const btnPlay = document.getElementById('btn-play');
+      const btnPhone = document.getElementById('btn-phone');
+      const scrubber = document.getElementById('scrubber');
+      const timeOut = document.getElementById('time-out');
+      const selSpeed = document.getElementById('sel-speed');
+
+      let svgs = [];
+      let dur = BASE_DUR;
+      let paused = false;
+      let phoneMode = params.get('phone') === '1';
+      if (phoneMode) {
+        shell.classList.add('phone-390');
+        btnPhone.classList.add('active');
+      }
+
+      function mk(tag, attrs, parent) {
+        const n = document.createElementNS(SVG_NS, tag);
+        for (const k in attrs) n.setAttribute(k, String(attrs[k]));
+        if (parent) parent.appendChild(n);
+        return n;
+      }
+
+      function buildWeaveStage(svgId, cfg) {
+        const svg = document.getElementById(svgId);
+        svg.innerHTML = '';
+        BestiaryCrawler.ensureSharedDefs(svg);
+        mk('rect', { x: 0, y: 0, width: cfg.w, height: cfg.h, fill: '#fffdf7' }, svg);
+
+        const bgText = mk('text', {
+          x: cfg.tx, y: cfg.ty,
+          'font-family': 'Georgia, "Times New Roman", serif',
+          'font-size': cfg.fontSize,
+          fill: '#1c100a'
+        }, svg);
+        bgText.textContent = cfg.phrase;
+
+        const exitBox = bgText.getExtentOfChar(cfg.exitChar);
+        const hole = cfg.exitKind === 'idot'
+          ? { x: exitBox.x + exitBox.width * 0.50, y: exitBox.y + exitBox.height * 0.14, r: Math.max(2.0, exitBox.width * 0.30) }
+          : { x: exitBox.x + exitBox.width * 0.50, y: exitBox.y + exitBox.height * 0.62, r: Math.max(2.6, exitBox.width * 0.28) };
+
+        let startHole = null;
+        let x0 = 20, y0 = cfg.ty - cfg.fontSize * 0.15;
+        if (cfg.startChar !== undefined) {
+          const sBox = bgText.getExtentOfChar(cfg.startChar);
+          startHole = {
+            x: sBox.x + sBox.width * 0.50,
+            y: sBox.y + sBox.height * 0.62,
+            r: Math.max(2.4, sBox.width * 0.28)
+          };
+          x0 = startHole.x;
+          y0 = startHole.y;
+        }
+
+        const dx = hole.x - x0;
+        const pathD = [
+          `M${x0.toFixed(1)},${y0.toFixed(1)}`,
+          `C${(x0 + dx * 0.18).toFixed(1)},${(cfg.ty - cfg.fontSize * 0.85).toFixed(1)}`,
+          `${(x0 + dx * 0.36).toFixed(1)},${(cfg.ty + 14).toFixed(1)}`,
+          `${(x0 + dx * 0.52).toFixed(1)},${(cfg.ty - cfg.fontSize * 0.22).toFixed(1)}`,
+          `C${(x0 + dx * 0.68).toFixed(1)},${(cfg.ty - cfg.fontSize * 0.90).toFixed(1)}`,
+          `${(x0 + dx * 0.84).toFixed(1)},${(hole.y + (cfg.exitKind === 'idot' ? -10 : 10)).toFixed(1)}`,
+          `${hole.x.toFixed(1)},${hole.y.toFixed(1)}`
+        ].join(' ');
+
+        const crawlerLayer = mk('g', { class: 'crawler-layer' }, svg);
+        const crawler = BestiaryCrawler.makeCrawler({
+          path: pathD,
+          hole,
+          startHole,
+          creature: cfg.creature,
+          register: cfg.register,
+          woodcut: cfg.woodcut,
+          wash: cfg.wash,
+          headWash: cfg.headWash,
+          wash2: cfg.wash2,
+          scale: cfg.scale,
+          dur
+        });
+        crawlerLayer.appendChild(crawler);
+
+        if (cfg.underRanges && cfg.underRanges.length) {
+          const clipId = `weave-clip-${svgId}`;
+          const cp = mk('clipPath', { id: clipId }, svg.querySelector('defs'));
+          cfg.underRanges.forEach(([i0, i1]) => {
+            const b0 = bgText.getExtentOfChar(i0);
+            const b1 = bgText.getExtentOfChar(i1);
+            mk('rect', {
+              x: (b0.x - 1).toFixed(1),
+              y: (Math.min(b0.y, b1.y) - 4).toFixed(1),
+              width: (b1.x + b1.width - b0.x + 2).toFixed(1),
+              height: (Math.max(b0.height, b1.height) + 8).toFixed(1)
+            }, cp);
+          });
+          const fgText = mk('text', {
+            x: cfg.tx, y: cfg.ty,
+            'font-family': 'Georgia, "Times New Roman", serif',
+            'font-size': cfg.fontSize,
+            fill: '#1c100a',
+            'clip-path': `url(#${clipId})`
+          }, svg);
+          fgText.textContent = cfg.phrase;
+        }
+
+        if (params.get('t') === null) {
+          BestiaryCrawler.observeVisibility(svg);
+        }
+        return svg;
+      }
+
+      function mount(preserveFrac) {
+        const speed = parseFloat(selSpeed.value) || 1;
+        dur = BASE_DUR / speed;
+        svgs = [
+          buildWeaveStage('svg-aspis', {
+            w: 540, h: 96, tx: 22, ty: 58, fontSize: 28,
+            phrase: 'of bold serpents into o',
+            startChar: 0,
+            exitChar: 22,
+            exitKind: 'o',
+            underRanges: [[8, 15]],
+            creature: 'aspis',
+            wash: BestiaryCrawler.PALETTE.wine,
+            headWash: BestiaryCrawler.PALETTE.ivory,
+            scale: 1.06
+          }),
+          buildWeaveStage('svg-basilisk', {
+            w: 540, h: 96, tx: 22, ty: 60, fontSize: 28,
+            phrase: 'bow right into the dot i',
+            startChar: 1,
+            exitChar: 23,
+            exitKind: 'idot',
+            underRanges: [[10, 13], [19, 21]],
+            creature: 'spotted-serpent',
+            register: 'woodcut',
+            woodcut: true,
+            scale: 0.98
+          }),
+          buildWeaveStage('svg-amphis', {
+            w: 540, h: 108, tx: 24, ty: 72, fontSize: 44,
+            phrase: 'two heads into o',
+            startChar: 2,
+            exitChar: 15,
+            exitKind: 'o',
+            underRanges: [[4, 8]],
+            creature: 'amphisbaena',
+            wash: BestiaryCrawler.PALETTE.lapis,
+            headWash: BestiaryCrawler.PALETTE.cinnabar,
+            wash2: BestiaryCrawler.PALETTE.cinnabar,
+            scale: 1.18
+          })
+        ];
+        if (preserveFrac !== undefined) seekTo(preserveFrac * dur, paused);
+      }
+
+      function seekTo(sec, keepPaused) {
+        const t = ((sec % dur) + dur) % dur;
+        svgs.forEach((svg) => {
+          svg.setCurrentTime(t);
+          if (keepPaused) {
+            svg.dataset.bestiaryManualPause = '1';
+            svg.pauseAnimations();
+          }
+        });
+        scrubber.value = Math.round((t / dur) * 1000);
+        timeOut.textContent = `t=${t.toFixed(2)}s`;
+      }
+
+      function setPaused(p) {
+        paused = p;
+        btnPlay.textContent = paused ? 'Play' : 'Pause';
+        svgs.forEach((svg) => {
+          if (paused) {
+            svg.dataset.bestiaryManualPause = '1';
+            svg.pauseAnimations();
+          } else {
+            delete svg.dataset.bestiaryManualPause;
+            svg.unpauseAnimations();
+          }
+        });
+      }
+
+      btnPlay.addEventListener('click', () => setPaused(!paused));
+      scrubber.addEventListener('input', () => {
+        setPaused(true);
+        seekTo((parseFloat(scrubber.value) / 1000) * dur, true);
+      });
+      selSpeed.addEventListener('change', () => mount(parseFloat(scrubber.value) / 1000));
+      btnPhone.addEventListener('click', () => {
+        phoneMode = !phoneMode;
+        shell.classList.toggle('phone-390', phoneMode);
+        btnPhone.classList.toggle('active', phoneMode);
+      });
+      document.querySelectorAll('.beat-btn').forEach((b) => {
+        b.addEventListener('click', () => {
+          setPaused(true);
+          seekTo(parseFloat(b.dataset.frac) * dur, true);
+        });
+      });
+
+      function tickUi() {
+        if (svgs[0] && !paused) {
+          const t = svgs[0].getCurrentTime() % dur;
+          scrubber.value = Math.round((t / dur) * 1000);
+          timeOut.textContent = `t=${t.toFixed(2)}s`;
+        }
+        requestAnimationFrame(tickUi);
+      }
+
+      mount();
+      if (params.get('t') !== null) {
+        setPaused(true);
+        seekTo(parseFloat(params.get('t')) || 0, true);
+      } else {
+        requestAnimationFrame(tickUi);
+      }
+      window.__PROOF = { mount, seekTo, setPaused, getSvgs: () => svgs, getDur: () => dur };
+    })();
+  </script>
+</body>
+</html>

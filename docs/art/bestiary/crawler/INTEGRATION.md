@@ -1,8 +1,8 @@
-# Page Integration Guide
+# Page Integration Guide (Brief 3)
 
-This note maps each creature and ornament slot on the conversation page to the exact drop-in calls from `docs/art/bestiary/crawler/crawler.js`, the standalone creature SVGs in `docs/art/bestiary/*.svg`, and the manuscript ornament symbols in `docs/art/bestiary/ornaments.svg`.
+Drop-in integration calls for `docs/art/bestiary/crawler/crawler.js` across the conversation page. Every creature travels on a single synchronized SMIL timeline and pauses automatically when scrolled off-screen (`autoPause: true` by default via `observeVisibility`).
 
-Include `crawler.js` before `vine.js` (or inline it in `build_html.py`):
+Include once before initializing the rigs:
 
 ```html
 <script src="art/bestiary/crawler/crawler.js"></script>
@@ -10,156 +10,103 @@ Include `crawler.js` before `vine.js` (or inline it in `build_html.py`):
 
 ---
 
-## 1. Headline bubble frame ("Of Man's Labours & their Eternal Return")
+## 1. Headline Frame ("managing Claudes all day is knackering")
 
-Heraldic dual-serpent border in saturated Claude orange (`#F2683A`) with `claude-ruffed` heads. Using `side: 'frame'` wraps the left, top, and right edges tightly against the bubble box while leaving the bottom edge open so the illuminated gold caption stays uncovered.
+Two Claude-ruffed serpents in neon `#ff5a22` / `#F2683A` race around the headline bubble border, meet head-to-head at bottom center to snap & recoil, and stay tightly bound to the frame edge so the burnished-gold caption `"Of Man's Labours & their Eternal Return"` below stays 100% uncovered at desktop and `390px` phone widths.
 
 ```js
-BestiaryCrawler.drape(headlineBubbleEl, {
-  creature: 'aspis',
-  register: 'illuminated',
-  side: 'frame',
-  wash: '#F2683A',
-  wash2: '#d8342a',
-  headVariant: 'claude-ruffed',
-  fleurons: true,
-  scale: 0.9
+BestiaryCrawler.makeHeadlineChase(headlineBubbleEl, {
+  scale: window.innerWidth <= 420 ? 0.72 : 0.86,
+  dur: 11
 });
 ```
 
+Keep at least `20px–24px` vertical gap between the headline bubble's bottom border and the gold caption element below it.
+
 ---
 
-## 2. The four burrowers (crawling along phrases into `o` / `i` holes)
+## 2. Text-Weaving Burrowers (`o` counter and `i` dot)
 
-Replace the old clip/fade burrowers in `vine.js` with `makeCrawler`. Measure the exact glyph box of the target letter (`o` counter or `i` dot) and pass `{ x, y, r }` as `hole` — do not draw a fake hole circle.
+Measure the exact glyph bounding box via `textEl.getExtentOfChar(idx)` and pass `{ x, y, r }` as `hole` (never draw a fake hole circle). Optionally pass `startHole` so the creature emerges cleanly from an earlier letter, and clip a foreground text copy over chosen word spans so the burrower visibly weaves OVER and UNDER words:
 
 ```js
-// Standard horizontal / curved phrase burrower
 const crawler = BestiaryCrawler.makeCrawler({
-  path: phrasePathD,                // ends at (hole.x, hole.y)
-  hole: { x: hx, y: hy, r: hr },    // counter of 'o' or dot of 'i'
-  creature: 'draco-bipes',          // or 'aspis' | 'spotted-serpent' | 'amphisbaena'
-  register: 'engraved',             // or 'illuminated'
-  wash: '#8b6d3f',
+  path: weavePathD,                 // ends at (hole.x, hole.y)
+  hole: { x: hx, y: hy, r: hr },    // exact counter of 'o' or dot of 'i'
+  startHole: startHoleOrNull,       // optional clean masked emergence
+  creature: 'aspis',                // or 'spotted-serpent' | 'amphisbaena' | 'draco-bipes'
+  wash: '#e82914',
   scale: fontSize / 16,
-  dur: 14
+  dur: 12.5
 });
 overlaySvg.appendChild(crawler);
-```
-
-For the **upward burrower behind the text**, place its container `<svg>` at `z-index: 0` behind the text span (`position: relative; z-index: 1`) and pass an upward-curving `path` terminating at the upper letter hole:
-
-```js
-const upward = BestiaryCrawler.makeCrawler({
-  path: upwardPathD,
-  hole: { x: hx, y: hy, r: hr },
-  creature: 'aspis',
-  register: 'engraved',
-  wash: '#1d3f9e',
-  scale: fontSize / 16,
-  motion: 'undulate',
-  dur: 15.3
-});
-behindTextSvg.appendChild(upward);
+BestiaryCrawler.observeVisibility(overlaySvg);
 ```
 
 ---
 
-## 3. The moonwalker (`MOONWALK` bubble)
+## 3. The Moonwalker (`MOONWALK` bubble)
 
-Replaces the rigid border glide with a full-circuit moonwalk (sliding stance foot, lifting/rolling heel, step bob, corner head-turns, and top-right pause). Automatically adapts to any bubble width/height and stays attached at `390px` phone width without horizontal overflow (`overflow: visible` inside a clipped parent wrapper or `pad <= page-gutter`).
+Full clockwise circuit round the bubble perimeter with sliding stance claw, heel roll, poised top-right corner pause & sideways glance, and textured border-drollery colouring (cinnabar head/neck stroked with golden-ochre brushwork transitioning into smoky olive-charcoal finely ribbed body & tail). Stays attached to the bubble edge at every width.
 
 ```js
 BestiaryCrawler.makeMoonwalker(moonwalkBubbleEl, {
   creature: 'draco-bipes',
-  register: 'engraved',
-  wash: '#8b6d3f',
-  scale: 0.82,
-  dur: 16
+  wash: '#3e453b',
+  headWash: '#c84416',
+  wash2: '#e6c068',
+  scale: window.innerWidth <= 420 ? 0.80 : 0.96,
+  dur: 14
 });
 ```
 
 ---
 
-## 4. The hanging dragons (3Blue1Brown blue & brown)
+## 4. Winged Dragons & 3Blue1Brown Swarm
 
-Two winged wyverns (`draco-alatus.svg`, or `drape()` with `side: 'bottom'`) suspended directly beneath their bubble in 3Blue1Brown's blue (`#3b83d6`) and brown (`#7a4a26`). When inlining `draco-alatus.svg`, set `--wash` on the wrapper element (never on the root `<svg>`):
-
-```html
-<div class="hanging-dragons">
-  <span class="draco-slot" style="--wash:#3b83d6"><!-- inline draco-alatus.svg --></span>
-  <span class="draco-slot mirrored" style="--wash:#7a4a26"><!-- inline draco-alatus.svg (flipped X) --></span>
-</div>
-```
-
-Keep the container flush against the bubble's bottom border (`margin-top: -6px`) so both wyverns touch their bubble and never float free.
-
----
-
-## 5. The knotted pair (under the same line)
-
-Inline `docs/art/bestiary/knotted-pair.svg` beneath the line with CSS variables controlling both intertwined bodies:
-
-```html
-<div class="knotted-slot" style="--wash:#d8342a; --wash2:#1d3f9e;">
-  <!-- inline knotted-pair.svg -->
-</div>
-```
-
----
-
-## 6. "yuck" — the deliberate cute odd one out
-
-Keep the final framed bubble small, round, and endearing (`creature: 'cute'`), framing the red blackletter `"yuck"` text without overcrowding it:
+Finely ribbed medieval winged wyverns launching off the bubble corner into a figure-eight swoop with apex banking glance and wingbeat perch back onto the bubble. Use `count: 1` for a solo wyvern or `count: 3` for the staggered swarm mixing mineral ultramarine (`#2b5ea8`), deep chestnut (`#7a411e`), and monochrome woodcut (`#efe4cc` / `#1c100a`):
 
 ```js
-BestiaryCrawler.drape(yuckBubbleEl, {
-  creature: 'cute',
-  register: 'illuminated',
-  side: 'loop',
-  wash: '#d8342a',
-  texture: false,
-  scale: 0.78
+BestiaryCrawler.makeFlightLoop(threeB1bBubbleEl, {
+  count: 3,
+  scale: window.innerWidth <= 420 ? 0.74 : 0.90,
+  dur: 11.5
 });
 ```
 
 ---
 
-## 7. Ornaments: flourishes and fleurons (`docs/art/bestiary/ornaments.svg`)
+## 5. Insular Knotted Pair
 
-Include `docs/art/bestiary/ornaments.svg` once (hidden `<svg style="display:none">`) in `build_html.py`, then reference its green-and-blue manuscript symbols anywhere on the page:
+Twin deep mineral ultramarine (`#244594`) & Romanesque violet-wine (`#5e2250`) serpents modelled in 3-band gouache with tiny lead-white seam dots, attached directly to the bubble's bottom border. The over-under interlace knot visibly cinches tight and loosens as both serpents bite at each other's tails, then slithers smoothly along the bottom edge and back:
 
-- **Heading flourishes either side of "Compendium of Links" (`svg.flo` replacement):**
-  ```html
-  <svg class="flo flo-left" viewBox="0 0 140 36" aria-hidden="true">
-    <use href="#ornament-rinceau-left"/>
-  </svg>
-  <h2>Compendium of Links</h2>
-  <svg class="flo flo-right" viewBox="0 0 140 36" aria-hidden="true">
-    <use href="#ornament-rinceau-right"/>
-  </svg>
-  ```
-- **Rule centerpiece (`❦` replacement):**
-  ```html
-  <svg class="rule-ornament" viewBox="0 0 44 36" width="24" height="20" aria-hidden="true">
-    <use href="#ornament-aldus-leaf"/>
-  </svg>
-  ```
-- **Fleurons flanking linked terms (`❧` and `☙` replacements):**
-  ```html
-  <svg class="fleuron" viewBox="0 0 36 22" width="18" height="11" aria-hidden="true">
-    <use href="#ornament-fleuron-left"/>
-  </svg>
-  <a href="...">Linked Term</a>
-  <svg class="fleuron" viewBox="0 0 36 22" width="18" height="11" aria-hidden="true">
-    <use href="#ornament-fleuron-right"/>
-  </svg>
-  ```
+```js
+BestiaryCrawler.makeKnottedSlider(knottedBubbleEl, {
+  wash: '#244594',
+  wash2: '#5e2250',
+  scale: window.innerWidth <= 420 ? 0.80 : 0.96,
+  dur: 13
+});
+```
 
 ---
 
-## 8. Mobile (`390px`) & palette checklist
+## 6. "yuck" — The Deliberate Cute Odd-One-Out
 
-- **No horizontal scroll at 390px:** give the outer conversation column `overflow-x: clip` (preferred over `hidden` so sticky headers keep working) and keep `drape`/`moonwalker` `scale <= 0.85` on viewports `< 480px`.
-- **Palette:** saturated medieval pigments & neon accents (`#F2683A`, `#3b83d6`, `#7a4a26`, `#d8342a`, `#1d3f9e`, `#2f7d4a`), never pastel, oxidised, or pink. Fleurons stay green (`#2f7d4a` / `#3f9a7a`), links stay blue (`#1d3f9e` / `#2563eb`).
-- **Contact:** keep every `drape()` and `makeMoonwalker()` overlay attached inside its bubble (`attach: true`) so creatures hug the border on every screen width.
+Small, round, endearing wind-up creature with antique brass key and coiled spring-tail bouncing round the red blackletter `"yuck"` bubble without obscuring the letters:
+
+```js
+BestiaryCrawler.makeYuckBounce(yuckBubbleEl, {
+  scale: window.innerWidth <= 420 ? 0.84 : 0.94,
+  dur: 8.5
+});
+```
+
+---
+
+## 7. Mobile (`390px`), Palette & Performance Checklist
+
+- **Zero horizontal scroll at 390px:** set `overflow-x: clip` on `html, body` and the conversation column, and give message containers at least `24px–34px` lateral gutter padding.
+- **On-screen-only execution:** every bubble rig automatically registers with `BestiaryCrawler.observeVisibility(svg)` (`IntersectionObserver`), calling `pauseAnimations()` off-screen and `unpauseAnimations()` on-screen. Call `BestiaryCrawler.observeVisibility(svg)` on any custom inline `<svg>` hosting `makeCrawler()`.
+- **Palette rules:** rich historical mineral tempera & monochrome woodcut (`#1c100a` iron-gall, `#c84416` cinnabar, `#244594` mineral ultramarine, `#5e2250` violet-wine, `#3d705a` verdigris-sage, `#3e453b` smoky olive-charcoal, `#cf941c` ochre-gold, `#efe4cc` parchment ivory), **zero pink**, antique verdigris fleurons (`#2f6e50`), blue links.
+- **Proofs before integration:** verify every cycle visually in `docs/art/bestiary/proofs/index.html` and run `python3 docs/art/bestiary/crawler/render_proof.py draco-bipes` to confirm `PASS (0 stray px after tail entry)`.

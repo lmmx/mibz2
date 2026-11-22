@@ -3,28 +3,33 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Bestiary Crawler — Burrow, Drape &amp; Moonwalk Harness</title>
+  <title>Bestiary Crawler — Brief 3 Burrow &amp; Travelling Rig Harness</title>
   <style>
     :root {
-      --bg: #f4ecda;
-      --card: #f8f2e4;
-      --rule: #c8b896;
+      --bg: #f6eedb;
+      --card: #fffaf0;
+      --rule: #c8b48a;
       --ink: #1c100a;
       --muted: #5a4636;
+      --lapis: #1e4cff;
+      --fleuron: #00a86b;
     }
     * { box-sizing: border-box; }
-    body {
+    html, body {
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      max-width: 100%;
+      overflow-x: clip;
       background: var(--bg);
       color: var(--ink);
       font: 15px/1.5 Georgia, "Iowan Old Style", serif;
     }
+    body { padding: 20px; }
     h1 {
       margin: 0 0 6px;
       font-size: 20px;
-      font-weight: 600;
-      letter-spacing: 0.03em;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
     .sub {
       margin: 0 0 18px;
@@ -32,6 +37,7 @@
       font-style: italic;
       font-size: 13.5px;
     }
+    .sub a { color: var(--lapis); }
     .controls {
       display: flex;
       gap: 12px;
@@ -44,23 +50,25 @@
       font: inherit;
       padding: 4px 8px;
       background: var(--card);
-      border: 1px solid var(--rule);
+      border: 2px solid var(--ink);
+      border-radius: 6px;
       color: var(--ink);
     }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 64px;
     }
     .stage {
       background: var(--card);
-      border: 1px solid var(--rule);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
       padding: 12px;
     }
     .stage h2 {
       margin: 0 0 8px;
-      font: 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+      font: 700 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
       color: var(--muted);
     }
     .stage svg.burrow-svg {
@@ -68,38 +76,54 @@
       width: 100%;
       height: auto;
       background: #faf5e8;
-      border: 1px solid rgba(28, 16, 10, 0.12);
+      border: 1px solid rgba(28, 16, 10, 0.14);
     }
     .demo-row {
       display: flex;
-      gap: 28px;
+      gap: 56px 44px;
       flex-wrap: wrap;
       align-items: center;
-      margin-top: 22px;
+      margin-top: 64px;
+      padding: 48px 24px 72px;
     }
     .bubble {
       position: relative;
-      background: #fffaf0;
-      border: 1.5px solid #ccb997;
-      border-radius: 16px;
-      padding: 14px 20px;
+      background: #fffdf7;
+      border: 2.5px solid var(--ink);
+      border-radius: 18px;
+      padding: 16px 22px;
       min-width: 220px;
-      max-width: 310px;
-      box-shadow: 0 1px 4px rgba(28,16,10,0.06);
+      max-width: 320px;
+      box-shadow: 3px 3px 0 rgba(28,16,10,0.12);
     }
     .bubble.yuck {
-      min-width: 120px;
+      min-width: 132px;
       text-align: center;
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 700;
-      color: #c22118;
+      color: #ff2a14;
       letter-spacing: 0.04em;
+      font-family: "UnifrakturMaguntia", "Old English Text MT", "Blackletter", Georgia, serif;
+    }
+    .headline-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+    .gold-caption {
+      font: 700 13.5px/1.3 Georgia, serif;
+      color: #a86b00;
+      background: #fff5cc;
+      border: 1.5px solid #d49408;
+      border-radius: 999px;
+      padding: 4px 12px;
     }
   </style>
 </head>
 <body>
-  <h1 id="page-title">Bestiary Crawler Harness</h1>
-  <p class="sub">Burrow contract tests (16px o, 48px o, i dot), rounded-rect drape, and border moonwalker.</p>
+  <h1 id="page-title">Bestiary Crawler Harness (Brief 3)</h1>
+  <p class="sub">Burrow contract tests (16px o, 48px o, i dot) plus all travelling bubble rigs. See also <a href="../proofs/index.html">Animated Proofs Gallery &rarr;</a></p>
 
   <div class="controls" id="controls">
     <label>Creature:
@@ -117,8 +141,9 @@
     </label>
     <label>Register:
       <select id="sel-register">
-        <option value="engraved">engraved</option>
+        <option value="drollery">drollery</option>
         <option value="illuminated">illuminated</option>
+        <option value="engraved">engraved (compat)</option>
       </select>
     </label>
     <label>Head variant:
@@ -145,8 +170,13 @@
   </div>
 
   <div class="demo-row" id="demo-row">
-    <div class="bubble" id="bubble-claude">Of Man&rsquo;s Labours &amp; their Eternal Return</div>
+    <div class="headline-wrap">
+      <div class="bubble" id="bubble-claude">managing Claudes all day is knackering</div>
+      <div class="gold-caption">Of Man&rsquo;s Labours &amp; their Eternal Return</div>
+    </div>
     <div class="bubble" id="bubble-moon">Moonwalking round the bubble border on any box size.</div>
+    <div class="bubble" id="bubble-flight">Winged wyvern figure-eight takeoff &amp; landing loop.</div>
+    <div class="bubble" id="bubble-knot">Insular interlace knot tightening &amp; slithering beneath.</div>
     <div class="bubble yuck" id="bubble-yuck">yuck</div>
   </div>
 
@@ -171,16 +201,13 @@
         return n;
       }
 
-      // Compute deterministic counter/dot hole coordinates directly from SVG text geometry
       function setupBurrowStage(svgId, cfg, creature, register, headVariant) {
         const svg = document.getElementById(svgId);
         svg.innerHTML = '';
         BestiaryCrawler.ensureSharedDefs(svg);
 
-        // Background parchment fill (ensures clean pixel diffing in proof harness)
         makeSvgEl('rect', { x: 0, y: 0, width: cfg.w, height: cfg.h, fill: '#faf5e8' }, svg);
 
-        // Render phrase text
         const textEl = makeSvgEl('text', {
           x: cfg.tx,
           y: cfg.ty,
@@ -190,7 +217,6 @@
         }, svg);
         textEl.textContent = cfg.phrase;
 
-        // Measure the exact target character box via getExtentOfChar so the hole matches the actual glyph!
         const chBox = textEl.getExtentOfChar(cfg.charIndex);
         let hole;
         if (cfg.kind === 'idot') {
@@ -200,7 +226,6 @@
             r: Math.max(1.8, chBox.width * 0.28)
           };
         } else {
-          // Counter of 'o': centered horizontally, lower-mid vertical inside x-height
           hole = {
             x: chBox.x + chBox.width * 0.50,
             y: chBox.y + chBox.height * 0.63,
@@ -208,7 +233,6 @@
           };
         }
 
-        // Smooth approaching crawl route ending at exact hole centre
         const x0 = 14;
         const y0 = cfg.ty + (cfg.kind === 'idot' ? -cfg.fontSize * 0.36 : 4);
         const cx1 = x0 + (hole.x - x0) * 0.38;
@@ -217,7 +241,6 @@
         const cy2 = hole.y + (cfg.kind === 'idot' ? -4 : 6);
         const pathD = `M${x0.toFixed(1)},${y0.toFixed(1)} C${cx1.toFixed(1)},${cy1.toFixed(1)} ${cx2.toFixed(1)},${cy2.toFixed(1)} ${hole.x.toFixed(1)},${hole.y.toFixed(1)}`;
 
-        // Note: NO drawn hole! The letter counter / i dot itself is the hole.
         const crawlerLayer = makeSvgEl('g', { class: 'crawler-layer' }, svg);
         let meta = null;
         if (!hideCrawlers) {
@@ -259,31 +282,19 @@
           }, creature, register, headVariant)
         };
 
-        // Rebuild drape & moonwalker demos
-        document.querySelectorAll('.bestiary-drape, .bestiary-moonwalker').forEach((n) => n.remove());
-        BestiaryCrawler.drape(document.getElementById('bubble-claude'), {
-          creature: 'aspis',
-          register: 'illuminated',
-          side: 'frame',
-          wash: '#F2683A',
-          wash2: '#d8342a',
-          headVariant: 'claude-ruffed',
-          fleurons: true,
-          scale: 0.85
-        });
-        BestiaryCrawler.makeMoonwalker(document.getElementById('bubble-moon'), {
-          creature: creature === 'cute' ? 'draco-bipes' : creature,
-          register,
-          scale: 0.82,
-          dur: 14
-        });
-        BestiaryCrawler.drape(document.getElementById('bubble-yuck'), {
-          creature: 'cute',
-          register: 'illuminated',
-          side: 'loop',
-          wash: '#d8342a',
-          scale: 0.78
-        });
+        // Rebuild travelling demos (well below the burrow stages)
+        document.querySelectorAll('.bestiary-rig').forEach((n) => n.remove());
+        if (!hideCrawlers) {
+          BestiaryCrawler.makeHeadlineChase(document.getElementById('bubble-claude'), { scale: 0.82 });
+          BestiaryCrawler.makeMoonwalker(document.getElementById('bubble-moon'), {
+            creature: creature === 'cute' ? 'draco-bipes' : creature,
+            scale: 0.82,
+            dur: 14
+          });
+          BestiaryCrawler.makeFlightLoop(document.getElementById('bubble-flight'), { count: 1, scale: 0.80 });
+          BestiaryCrawler.makeKnottedSlider(document.getElementById('bubble-knot'), { scale: 0.86 });
+          BestiaryCrawler.makeYuckBounce(document.getElementById('bubble-yuck'), { scale: 0.86 });
+        }
       }
 
       selCreature.addEventListener('change', renderAll);

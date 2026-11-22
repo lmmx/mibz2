@@ -1,118 +1,119 @@
 # Bestiary Crawler (`crawler/crawler.js`)
 
-Zero-dependency SMIL SVG rigging library for medieval serpents, wyverns, and basilisks:
-- **`makeCrawler(opts)`**: single-timeline crawling along any SVG path with a width-aware hole-mask burrow contract.
-- **`drape(bubbleEl, opts)`**: smooth border draping around any rounded rectangle with tangent-aligned scales, ornament, and optional manuscript fleurons.
-- **`makeMoonwalker(bubbleEl, opts)`**: border-hugging moonwalk circuit with sliding stance foot, lifting/rolling heel, body bob, corner head-turns, and a corner pause.
-- **`buildHead(type, opts)`**: reusable SVG head builder (`wyvern`, `basilisk`, `serpent`, `claude-ruffed`, `cute`).
+Zero-dependency SMIL SVG motion rig combining rich historical mineral tempera with monochrome woodcut detail (after 12th–14th century illuminated manuscripts and *De Dracone*):
+- **Decisively stroked iron-gall contours (`#1c100a`, ~`1.2–1.8px`)** enclosing layered mineral pigments (`#c84416` cinnabar, `#244594` mineral ultramarine, `#5e2250` Romanesque wine-violet, `#3d705a` verdigris-sage, `#3e453b` smoky olive-charcoal, `#cf941c` ochre-gold, `#efe4cc` parchment ivory — zero neon primaries, zero pink).
+- **Rich texture instead of flat blocks:** longitudinal multi-band gouache modelling (ivory outer edge + mineral core + deep inner shadow + single row of tiny lead-white seam dots), fine parallel brushwork along necks, flanks, and wings, and monochrome woodcut scutes/ocelli (`register: 'woodcut'`).
+- **Six unified single-timeline travelling rigs** (no static sitting poses) plus automatic **`IntersectionObserver` on-screen-only pausing** for mobile performance.
+- **Exact 0-stray-pixel burrow contract** into letter counters (`o`) and the dot of `i`.
 
 Include via `<script src="crawler/crawler.js"></script>` (exposes `window.BestiaryCrawler`) or CommonJS `require('./crawler.js')`.
 
 ---
 
-## API
+## Travelling Motion Engines
 
-### `makeCrawler(opts) -> SVGGElement`
-
-```js
-const g = BestiaryCrawler.makeCrawler({
-  path,        // SVG path `d` string ending at (or pointing into) the hole
-  hole,        // { x, y, r } counter or dot centre & radius; omit for open routes
-  creature,    // species slug (table below)
-  register,    // 'engraved' (default) | 'illuminated'
-  headVariant, // optional override: 'claude-ruffed' | 'wyvern' | 'basilisk' | 'serpent' | 'cute'
-  wash,        // primary colour (translucent wash in engraved, saturated pigment in illuminated)
-  wash2,       // secondary colour (knotted-pair second body, amphisbaena rear head, shadow accent)
-  scale,       // 1 = default size for 16px text
-  storyboard,  // [{ t: 0..1, u: 0..1 }] unified timeline keyframes (u=1 clears tail past hole)
-  looks,       // [{ t: 0..1, deg }] inquisitive head turns
-  flicks,      // [{ t0, t1 }] forked tongue flick intervals
-  shed,        // boolean or { u } optional synced shed-skin exuvia (clears before tail entry)
-  motion,      // 'auto' | 'undulate' | 'concertina' | 'gait'
-  dur          // cycle duration in seconds (default 14)
-});
-```
-
-#### Burrow contract
-1. **One timeline:** every body band, dorsal hatch/dot layer, head `animateMotion`, leg pair, wing, rear head, and shed exuvia reads the same normalized storyboard `u(t)` and shared `dur`.
-2. **Explicit hole mask:** a `<mask maskUnits="userSpaceOnUse">` carries a white full-plane rect and a black disc of radius `R_mask = max(hole.r, maxHalfExtent + 4.1)` shifted forward along the entry tangent by `R_mask - hole.r`. Its near rim coincides with the exact rim of `{x, y, r}` (no premature clipping), while the post-hole path spirals tightly inside `R_mask` for `>= 1.65 × bodyLen`.
-3. **Zero residue:** once the tail crosses `(hole.x, hole.y)`, every pixel of the creature (including wide wings, ruffs, and claws) lies inside the black mask disc. No fade, scale-to-zero, or rectangle clip is used.
-
-Verify any species with:
-
-```bash
-python3 docs/art/bestiary/crawler/render_proof.py draco-bipes engraved
-```
-
----
-
-### `drape(bubbleEl, opts) -> SVGSVGElement`
-
-```js
-BestiaryCrawler.drape(bubbleEl, {
-  creature: 'aspis',
-  register: 'illuminated',     // 'engraved' | 'illuminated'
-  side: 'top',                 // 'top' | 'bottom' | 'left' | 'right' | 'loop' | 'frame'
-  wash: '#F2683A',
-  wash2: '#d8342a',
-  headVariant: 'claude-ruffed',
-  fleurons: true,              // adds green/blue manuscript leaf fleurons at tail ends
-  texture: true,               // lightweight vellum/pigment mottle filter in illuminated register
-  scale: 1,
-  attach: true                 // appends overlay SVG inside bubbleEl (sets position:relative if static)
-});
-```
-
-`bubbleEl` may be a live DOM element or a plain `{ width, height, radius }` object. Sharp rounded-rect corners are sampled and smoothed into cubic splines so offset ribbons never kink.
-
----
-
-### `makeMoonwalker(bubbleEl, opts) -> SVGSVGElement`
+### 1. `makeMoonwalker(bubbleEl, opts) -> SVGSVGElement`
+Full clockwise rounded-rect border circuit around `bubbleEl`, never leaving contact at any width (including `390px`). Features a textured border-drollery dragon (cinnabar head & S-neck stroked with golden-ochre brushwork transitioning into smoky olive-charcoal finely ribbed body & tail), sliding stance claw, lifting heel roll, and a poised top-right corner pause with sideways glance & forked tongue flick.
 
 ```js
 BestiaryCrawler.makeMoonwalker(bubbleEl, {
   creature: 'draco-bipes',
-  register: 'engraved',
-  wash: '#8b6d3f',
-  scale: 0.85,
-  dur: 16,
-  attach: true
+  wash: '#3e453b',     // smoky olive-charcoal body
+  headWash: '#c84416', // cinnabar head & neck
+  wash2: '#e6c068',    // golden-ochre brushwork highlight
+  scale: 0.94,
+  dur: 14,
+  autoPause: true      // default true: pauses SMIL when scrolled off-screen
 });
 ```
 
-Computes the exact perimeter and corner arc fractions of `bubbleEl` so the creature stays tangent to the border on any bubble width or height, pauses briefly at the top-right corner to look around and flick its tongue, and drives both legs with a sliding-stance / lifted-heel moonwalk cycle synchronized with a subtle step bob.
+### 2. `makeFlightLoop(bubbleEl, opts) -> SVGSVGElement`
+Winged wyvern (or staggered multi-dragon swarm via `count: 3`) with tri-colour banded Romanesque feathered wings launching off the bubble's corner, swooping in a figure-eight around the message with steady wingbeats, performing a graceful banking roll & alert glance at the reader at the apex, and landing back touching the bubble.
+
+```js
+BestiaryCrawler.makeFlightLoop(bubbleEl, {
+  count: 3,            // 1 = solo wyvern, 3 = staggered 3b1b swarm
+  scale: 0.86,
+  dur: 11.5,
+  showTrail: false,
+  autoPause: true
+});
+```
+
+### 3. `makeCrawler(opts) -> SVGGElement`
+Single-timeline text-weaving burrower along any SVG path `d` with optional `startHole` (seamless emergence), poised pause & alert look, courtly bow before diving, sinuous tail curl flourish, and the **0-stray-pixel shifted circular hole `<mask>`** (`hole: { x, y, r }`).
+
+```js
+const g = BestiaryCrawler.makeCrawler({
+  path: phrasePathD,                // ends at (hole.x, hole.y)
+  hole: { x: hx, y: hy, r: hr },    // exact letter counter or i-dot
+  startHole: null,                  // optional { x, y, r } for masked emergence
+  creature: 'aspis',                // 'draco-bipes' | 'draco-alatus' | 'aspis' | 'spotted-serpent' | 'amphisbaena' | ...
+  wash: '#e82914',
+  headWash: '#e82914',
+  scale: fontSize / 16,
+  dur: 12.5
+});
+```
+
+#### Burrow Contract Verification
+1. **One timeline:** every body band, dorsal dot/ring layer, head `animateMotion`, legs, wings, rear head, and tail curl share the same normalized storyboard `u(t)` and `dur`.
+2. **Explicit hole mask:** `<mask maskUnits="userSpaceOnUse">` carries a full-plane white rect and a black disc of radius `R_mask = max(hole.r, maxHalfExtent + 5.6)` shifted forward along the entry tangent by `R_mask - hole.r`. The near rim coincides with `{x, y, r}`, while the post-hole path spirals tightly inside `R_mask` for `>= 1.85 × bodyLen`.
+3. **Zero residue:** zero drawn hole, zero fade, zero stray pixels after tail entry. Verify any species with:
+
+```bash
+python3 docs/art/bestiary/crawler/render_proof.py draco-bipes
+```
+
+### 4. `makeKnottedSlider(bubbleEl, opts) -> SVGSVGElement`
+Twin vermilion & lapis serpents in an over-under Insular zoomorphic interlace knot touching `bubbleEl`'s bottom edge. The knot visibly tightens and loosens as both serpents slide through snapping at each other's tails, then glides smoothly along the bottom edge and back.
+
+```js
+BestiaryCrawler.makeKnottedSlider(bubbleEl, {
+  wash: '#e82914',
+  wash2: '#1e4cff',
+  scale: 0.92,
+  dur: 13
+});
+```
+
+### 5. `makeHeadlineChase(bubbleEl, opts) -> SVGSVGElement`
+Two neon Claude-orange (`#ff5a22` / `#F2683A`) Claude-ruffed serpents chasing each other round the headline bubble border, meeting head-to-head at bottom center to snap & recoil with an 8-ray illuminated gold star flash, while hugging the frame tightly so the burnished-gold caption below stays uncovered at desktop and `390px` phone widths.
+
+```js
+BestiaryCrawler.makeHeadlineChase(headlineBubbleEl, {
+  scale: 0.86,
+  dur: 11
+});
+```
+
+### 6. `makeYuckBounce(bubbleEl, opts) -> SVGSVGElement`
+The deliberate cute odd-one-out: small, round, endearing wind-up creature with brass wind-up key and coiled spring-tail hopping merrily round the small red blackletter `"yuck"` bubble without obscuring the lettering.
+
+```js
+BestiaryCrawler.makeYuckBounce(yuckBubbleEl, {
+  scale: 0.90,
+  dur: 8.5
+});
+```
+
+### 7. `observeVisibility(svgEl, opts)` & `drape(bubbleEl, opts)`
+- **`observeVisibility(svgEl)`**: attaches an `IntersectionObserver` calling `svgEl.pauseAnimations()` whenever the SVG leaves the viewport and `svgEl.unpauseAnimations()` on re-entry (respecting `svgEl.dataset.bestiaryManualPause === '1'`). Enabled by default (`autoPause: true`) on all bubble rig builders; pass `autoPause: false` for headless screenshot scripts.
+- **`drape(bubbleEl, opts)`**: compatibility router forwarding cleanly to `makeHeadlineChase`, `makeYuckBounce`, `makeKnottedSlider`, `makeFlightLoop`, or `makeMoonwalker`.
 
 ---
 
-## Creatures & Options
+## Animated Motion Proofs
 
-| Slug | Head archetype | Limbs / Wings | Default motion | Default `engraved` wash | Default `illuminated` pigment |
-|---|---|---|---|---|---|
-| `draco-bipes` | `wyvern` | 2 clawed legs | `gait` | `#8b6d3f` sepia | `#d8342a` vermilion |
-| `draco-alatus` (`wyvern`) | `wyvern` | 2 legs + bat wing | `gait` | `#3b83d6` blue | `#1d3f9e` lapis |
-| `aspis` (`biscione`) | `serpent` (crowned) | legless | `undulate` | `#a3141c` carmine | `#1d3f9e` lapis |
-| `spotted-serpent` (`basilisk`) | `basilisk` (cockerel) | 2 bird claws + wing | `gait` | `#9c4c1e` ochre | `#3f9a7a` verdigris |
-| `basilisk-6` | `basilisk` (cockerel) | 6 legs | `gait` | `#7a5a2c` sepia | `#d8342a` vermilion |
-| `knotted-pair` | `serpent` (twin) | legless (2 bodies) | `undulate` | `#d22f1c` / `#1d3f9e` | `#d8342a` / `#1d3f9e` |
-| `ouroboros` | `wyvern` | 2 forelegs + wing | `concertina` | `#7a5c32` bronze | `#3f9a7a` verdigris |
-| `amphisbaena` | `serpent` (both ends) | legless | `concertina` | `#8c3b28` madder | `#d8342a` / `#3f9a7a` |
-| `cute` | `cute` (wendling) | legless | `undulate` | `#d8342a` red | `#d8342a` red |
-
-**Head variants:** pass `headVariant: 'claude-ruffed'` on any creature to mount an 18-petal uneven Claude-orange (`#F2683A`) sunburst ruff with modulated iron-gall ink outlines and a tiny hidden `^ω^` motif in negative space at the nape.
+Open `docs/art/bestiary/proofs/index.html` to inspect every motion cycle interactively with Play/Pause, timeline scrubbing, speed control, phase jump buttons, and a `390px` phone preview toggle:
+- `proofs/proof-draco-bipes.html`
+- `proofs/proof-draco-alatus.html`
+- `proofs/proof-burrowers.html`
+- `proofs/proof-knotted-pair.html`
+- `proofs/proof-headline-yuck.html`
 
 ---
 
-## Mobile & iPhone Safari Performance Cost
+## Mobile & Phone Performance
 
-All motion runs purely on SMIL `<animate>`, `<animateTransform>`, and `<animateMotion>` — zero `requestAnimationFrame` loops and zero per-frame path `d` morphing.
-
-| Feature / Motion | Animated primitives | Relative GPU/CPU cost on iPhone Safari | Notes |
-|---|---|---|---|
-| `undulate` (spatial zero-skate wave) | ~38 `stroke-dashoffset` + 1 head `animateMotion` | **Low** | Sine track is baked into the spine curve once at build time; zero path-morph cost per frame. |
-| `concertina` (bunch & stretch) | ~38 `stroke-dashoffset` + 1–2 `animateMotion` | **Low** | Segment spacing shifts smoothly in precomputed `stroke-dashoffset` keyframes. |
-| `gait` (2-legged / 6-legged) | Body + 2–3 leg `animateMotion` + 4–6 joint `rotate` | **Low–Moderate** | Transforms only; pauses rest statically. |
-| `wings` | +1 wing `animateMotion` + 1 shoulder `rotate` | **Very low** | Single nested group transform. |
-| `drape()` resting pose | 1 slow breathing `scale` + 1 head `rotate` + tongue | **Minimal** | Static vector body with 3 tiny transforms; safe to place on many bubbles. |
-| `makeMoonwalker()` | 1 `animateMotion` + 1 bob `translate` + 6 leg/head transforms | **Low** | Compact single-actor rig; ~12 SVG paths total. |
-| `illuminated` `texture: true` (`feTurbulence`) | Static filter evaluated on static `drape()` only | **Low** (pass `texture: false` on small phones if many bubbles use it) | Never animated; `makeCrawler()` keeps filters off animated groups for 60 fps scrolling. |
-| Burrow `<mask>` | 1 static `<circle>` mask per crawler | **Low** | Mask geometry never animates; only masked children move. |
+All motion runs purely via native SMIL `<animate>`, `<animateTransform>`, and `<animateMotion>` with zero `requestAnimationFrame` loops, zero SVG filters on animated nodes, and automatic `IntersectionObserver` pausing off-screen. Keep conversation containers at `overflow-x: clip` and `scale <= 0.82` on viewports `<= 420px` for guaranteed zero horizontal scroll at `390px`.

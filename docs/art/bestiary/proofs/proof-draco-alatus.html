@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Proof: Draco Alatus &amp; 3b1b Swarm — Bestiary Brief 3</title>
+  <style>
+    :root {
+      --bg: #f6eedb;
+      --card: #fffaf0;
+      --ink: #1c100a;
+      --muted: #554230;
+      --vermilion: #ff2a14;
+      --lapis: #1e4cff;
+      --blue3b1b: #2c88ff;
+      --gold: #f6be1b;
+      --orpiment: #ffd014;
+      --fleuron: #00a86b;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      max-width: 100%; overflow-x: clip;
+      background: var(--bg); color: var(--ink);
+      font: 15.5px/1.5 Georgia, "Iowan Old Style", serif;
+    }
+    .wrap { max-width: 840px; margin: 0 auto; padding: 18px 16px 48px; }
+    .nav {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      gap: 8px; margin-bottom: 12px;
+      font: 600 12.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .nav a { color: var(--lapis); text-decoration: none; }
+    .nav a:hover { text-decoration: underline; }
+    .fleuron { color: var(--fleuron); }
+    h1 { margin: 0 0 4px; font-size: clamp(21px, 4.5vw, 28px); line-height: 1.2; }
+    .sub { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+
+    .controls {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      background: var(--card); border: 2px solid var(--ink); border-radius: 12px;
+      padding: 10px 12px; margin-bottom: 14px;
+      font: 600 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .controls button, .controls select {
+      font: inherit; padding: 6px 10px;
+      border: 2px solid var(--ink); border-radius: 8px;
+      background: var(--gold); color: var(--ink); cursor: pointer;
+    }
+    .controls button.alt { background: var(--card); }
+    .controls button.active { background: var(--blue3b1b); color: #fffaf0; }
+    .scrub-wrap {
+      display: flex; align-items: center; gap: 8px; flex: 1 1 190px; min-width: 170px;
+    }
+    .scrub-wrap input[type="range"] { flex: 1; accent-color: var(--lapis); }
+    .time-readout { min-width: 86px; text-align: right; }
+
+    .beats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .beat-btn {
+      font: 600 11.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      padding: 5px 9px; border: 1.8px solid var(--ink); border-radius: 999px;
+      background: var(--card); color: var(--ink); cursor: pointer;
+    }
+    .beat-btn:hover { background: var(--orpiment); }
+
+    .stage-shell {
+      background: var(--card); border: 2.5px solid var(--ink); border-radius: 18px;
+      padding: 88px 42px;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 340px;
+      overflow-x: clip;
+      margin: 0 auto;
+      transition: max-width 0.2s ease, padding 0.2s ease;
+    }
+    .stage-shell.phone-390 {
+      width: 358px;
+      max-width: 100%;
+      padding: 82px 34px;
+      box-shadow: 0 0 0 6px var(--ink);
+    }
+    @media (max-width: 440px) {
+      .stage-shell { padding: 80px 30px; }
+      .stage-shell.phone-390 { width: 100%; box-shadow: none; }
+    }
+
+    .bubble {
+      position: relative;
+      background: #fffdf7;
+      border: 2.5px solid var(--ink);
+      border-radius: 20px;
+      padding: 18px 22px;
+      width: 100%;
+      max-width: 390px;
+      box-shadow: 4px 4px 0 rgba(28, 16, 10, 0.14);
+    }
+    .bubble .speaker {
+      font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .bubble p { margin: 0; font-size: 15.5px; }
+    .bubble a { color: var(--lapis); font-weight: 600; }
+
+    .meta-note {
+      margin-top: 14px;
+      font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--muted);
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <a href="index.html">&larr; All Bestiary Proofs</a>
+      <span><span class="fleuron">❧</span> makeFlightLoop() &middot; Draco alatus <span class="fleuron">☙</span></span>
+    </nav>
+
+    <h1>Draco Alatus &mdash; Figure-Eight Flight &amp; Swarm</h1>
+    <p class="sub">Winged dragon takeoff from the bubble corner, figure-eight swoop with beating neon wings, cheeky mid-air 360&deg; twirl &amp; double-take at the reader, and wingbeat landing touching the bubble.</p>
+
+    <div class="controls">
+      <button id="btn-play" type="button">Pause</button>
+      <div class="scrub-wrap">
+        <input id="scrubber" type="range" min="0" max="1000" value="0" aria-label="Timeline scrubber">
+        <span id="time-out" class="time-readout">t=0.00s</span>
+      </div>
+      <label>Speed
+        <select id="sel-speed">
+          <option value="0.5">0.5&times;</option>
+          <option value="1" selected>1&times;</option>
+          <option value="1.5">1.5&times;</option>
+          <option value="2">2&times;</option>
+        </select>
+      </label>
+      <label>Mode
+        <select id="sel-mode">
+          <option value="1">Solo Wyvern</option>
+          <option value="3" selected>3b1b Swarm (3)</option>
+        </select>
+      </label>
+      <button id="btn-trail" type="button" class="alt">Flight Trail</button>
+      <button id="btn-phone" type="button" class="alt">390px Phone</button>
+    </div>
+
+    <div class="beats">
+      <button class="beat-btn" data-frac="0.03">03% Perched on corner</button>
+      <button class="beat-btn" data-frac="0.16">16% Wingbeat takeoff</button>
+      <button class="beat-btn" data-frac="0.33">33% Apex twirl &amp; double-take</button>
+      <button class="beat-btn" data-frac="0.55">55% Left swoop</button>
+      <button class="beat-btn" data-frac="0.72">72% Lower loop</button>
+      <button class="beat-btn" data-frac="0.92">92% Touchdown on bubble</button>
+    </div>
+
+    <div class="stage-shell" id="stage-shell">
+      <div class="bubble" id="flight-bubble">
+        <div class="speaker">Thomas &middot; 3Blue1Brown dragons</div>
+        <p><span class="fleuron">❧</span> The <a href="#wyvern">3Blue1Brown</a> wyverns launch right off the corner, barrel-roll overhead, and swoop back down to perch <span class="fleuron">☙</span></p>
+      </div>
+    </div>
+
+    <div class="meta-note">
+      <span>Visibility: IntersectionObserver active (pauses off-screen)</span>
+      <span id="status-dim"></span>
+    </div>
+  </div>
+
+  <script src="../crawler/crawler.js"></script>
+  <script>
+    (function () {
+      const BASE_DUR = 11.5;
+      const params = new URLSearchParams(window.location.search);
+      const bubble = document.getElementById('flight-bubble');
+      const shell = document.getElementById('stage-shell');
+      const btnPlay = document.getElementById('btn-play');
+      const btnTrail = document.getElementById('btn-trail');
+      const btnPhone = document.getElementById('btn-phone');
+      const scrubber = document.getElementById('scrubber');
+      const timeOut = document.getElementById('time-out');
+      const selSpeed = document.getElementById('sel-speed');
+      const selMode = document.getElementById('sel-mode');
+      const statusDim = document.getElementById('status-dim');
+
+      let currentSvg = null;
+      let dur = BASE_DUR;
+      let paused = false;
+      let showTrail = params.get('trail') === '1';
+      let phoneMode = params.get('phone') === '1';
+      if (params.get('count')) selMode.value = params.get('count');
+      if (showTrail) btnTrail.classList.add('active');
+      if (phoneMode) {
+        shell.classList.add('phone-390');
+        btnPhone.classList.add('active');
+      }
+
+      function mount(preserveFrac) {
+        if (currentSvg && currentSvg.parentNode) currentSvg.parentNode.removeChild(currentSvg);
+        const speed = parseFloat(selSpeed.value) || 1;
+        const count = parseInt(selMode.value, 10) || 1;
+        dur = BASE_DUR / speed;
+        const isNarrow = phoneMode || window.innerWidth <= 420;
+        currentSvg = BestiaryCrawler.makeFlightLoop(bubble, {
+          count,
+          scale: isNarrow ? 0.74 : 0.88,
+          dur,
+          showTrail,
+          autoPause: params.get('t') === null
+        });
+        const r = bubble.getBoundingClientRect();
+        statusDim.textContent = `Bubble ${Math.round(r.width)}x${Math.round(r.height)}px · count=${count} · dur=${dur.toFixed(1)}s`;
+        if (preserveFrac !== undefined) seekTo(preserveFrac * dur, paused);
+      }
+
+      function seekTo(sec, keepPaused) {
+        if (!currentSvg) return;
+        const t = ((sec % dur) + dur) % dur;
+        currentSvg.setCurrentTime(t);
+        if (keepPaused) {
+          currentSvg.dataset.bestiaryManualPause = '1';
+          currentSvg.pauseAnimations();
+        }
+        scrubber.value = Math.round((t / dur) * 1000);
+        timeOut.textContent = `t=${t.toFixed(2)}s`;
+      }
+
+      function setPaused(p) {
+        paused = p;
+        btnPlay.textContent = paused ? 'Play' : 'Pause';
+        if (!currentSvg) return;
+        if (paused) {
+          currentSvg.dataset.bestiaryManualPause = '1';
+          currentSvg.pauseAnimations();
+        } else {
+          delete currentSvg.dataset.bestiaryManualPause;
+          currentSvg.unpauseAnimations();
+        }
+      }
+
+      btnPlay.addEventListener('click', () => setPaused(!paused));
+      scrubber.addEventListener('input', () => {
+        setPaused(true);
+        seekTo((parseFloat(scrubber.value) / 1000) * dur, true);
+      });
+      selSpeed.addEventListener('change', () => mount(parseFloat(scrubber.value) / 1000));
+      selMode.addEventListener('change', () => mount(parseFloat(scrubber.value) / 1000));
+      btnTrail.addEventListener('click', () => {
+        showTrail = !showTrail;
+        btnTrail.classList.toggle('active', showTrail);
+        mount(parseFloat(scrubber.value) / 1000);
+      });
+      btnPhone.addEventListener('click', () => {
+        phoneMode = !phoneMode;
+        shell.classList.toggle('phone-390', phoneMode);
+        btnPhone.classList.toggle('active', phoneMode);
+        mount(parseFloat(scrubber.value) / 1000);
+      });
+      document.querySelectorAll('.beat-btn').forEach((b) => {
+        b.addEventListener('click', () => {
+          setPaused(true);
+          seekTo(parseFloat(b.dataset.frac) * dur, true);
+        });
+      });
+      window.addEventListener('resize', () => mount(parseFloat(scrubber.value) / 1000));
+
+      function tickUi() {
+        if (currentSvg && !paused) {
+          const t = currentSvg.getCurrentTime() % dur;
+          scrubber.value = Math.round((t / dur) * 1000);
+          timeOut.textContent = `t=${t.toFixed(2)}s`;
+        }
+        requestAnimationFrame(tickUi);
+      }
+
+      mount();
+      if (params.get('t') !== null) {
+        setPaused(true);
+        seekTo(parseFloat(params.get('t')) || 0, true);
+      } else {
+        requestAnimationFrame(tickUi);
+      }
+      window.__PROOF = { mount, seekTo, setPaused, getSvg: () => currentSvg, getDur: () => dur };
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bestiary Animated Motion Proofs — Brief 3</title>
+  <style>
+    :root {
+      --bg: #f6eedb;
+      --card: #fffaf0;
+      --rule: #c8b48a;
+      --ink: #1c100a;
+      --muted: #554230;
+      --vermilion: #ff2a14;
+      --lapis: #1e4cff;
+      --verdigris: #00c482;
+      --orpiment: #ffd014;
+      --gold: #f6be1b;
+      --claude: #ff5a22;
+      --blue3b1b: #2c88ff;
+      --chestnut: #8a4518;
+      --fleuron: #00a86b;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      max-width: 100%;
+      overflow-x: clip;
+      background: var(--bg);
+      color: var(--ink);
+      font: 16px/1.55 Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    }
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+    header {
+      border-bottom: 2.5px solid var(--ink);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .kicker {
+      font: 700 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .fleuron {
+      color: var(--fleuron);
+      font-style: normal;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 5vw, 34px);
+      line-height: 1.15;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 68ch;
+    }
+    a {
+      color: var(--lapis);
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 2px;
+    }
+    a:hover { color: var(--vermilion); }
+
+    .swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 16px 0 24px;
+    }
+    .swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card);
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      padding: 4px 10px 4px 6px;
+      font: 600 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .swatch i {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.8px solid var(--ink);
+      display: inline-block;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: var(--card);
+      border: 2.5px solid var(--ink);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+    .badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .pill {
+      padding: 3px 8px;
+      border: 1.8px solid var(--ink);
+      border-radius: 999px;
+      background: var(--orpiment);
+      color: var(--ink);
+    }
+    .card h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+    .card p {
+      margin: 0;
+      font-size: 14.5px;
+      color: var(--muted);
+      flex: 1;
+    }
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 9px 14px;
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      background: var(--gold);
+      color: var(--ink);
+      font: 700 13.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-decoration: none;
+    }
+    .cta:hover {
+      background: var(--orpiment);
+      color: var(--ink);
+    }
+
+    .rules {
+      margin-top: 28px;
+      background: var(--card);
+      border: 2px solid var(--ink);
+      border-radius: 14px;
+      padding: 16px 18px;
+      font-size: 14px;
+    }
+    .rules h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .rules ul {
+      margin: 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="kicker"><span class="fleuron">❧</span> Bestiary Brief 3 &middot; Animated Motion Proofs <span class="fleuron">☙</span></div>
+      <h1>Textured Illuminated Manuscript &amp; Woodcut Motion</h1>
+      <p>Full-cycle interactive SMIL motion proofs driven by <a href="../crawler/crawler.js">crawler/crawler.js</a>. Rich layered mineral gouache, fine parallel brushwork, monochrome woodcut linework, and on-screen-only phone execution.</p>
+      <div class="swatches" aria-label="Historical mineral and monochrome woodcut palette">
+        <span class="swatch"><i style="background:#1c100a"></i>Iron-gall #1c100a</span>
+        <span class="swatch"><i style="background:#c84416"></i>Cinnabar #c84416</span>
+        <span class="swatch"><i style="background:#244594"></i>Ultramarine #244594</span>
+        <span class="swatch"><i style="background:#5e2250"></i>Wine-Violet #5e2250</span>
+        <span class="swatch"><i style="background:#3d705a"></i>Verdigris-Sage #3d705a</span>
+        <span class="swatch"><i style="background:#3e453b"></i>Woodcut Slate #3e453b</span>
+        <span class="swatch"><i style="background:#cf941c"></i>Ochre-Gold #cf941c</span>
+        <span class="swatch"><i style="background:#efe4cc"></i>Parchment #efe4cc</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <article class="card">
+        <div class="badge-row">
+          <span>makeMoonwalker()</span>
+          <span class="pill">Imperious</span>
+        </div>
+        <h2>Draco Bipes Moonwalker</h2>
+        <p>Romanesque verdigris dragon with contrasting vermilion head, O&times;O spine rings &amp; hip spiral whorl gliding round the full bubble perimeter with sliding stance claw, heel roll &amp; poised corner pause.</p>
+        <a class="cta" href="proof-draco-bipes.html"><span class="fleuron">❧</span> Open Moonwalker Proof</a>
+      </article>
+
+      <article class="card">
+        <div class="badge-row">
+          <span>makeFlightLoop()</span>
+          <span class="pill" style="background:#2c88ff;color:#fffaf0;">Regal</span>
+        </div>
+        <h2>Draco Alatus &amp; 3b1b Swarm</h2>
+        <p>Winged wyverns with tri-colour banded Romanesque feathered wings launching from the bubble corner into a figure-eight swoop with apex banking glance and controlled wingbeat landing.</p>
+        <a class="cta" href="proof-draco-alatus.html"><span class="fleuron">❧</span> Open Flight Loop Proof</a>
+      </article>
+
+      <article class="card">
+        <div class="badge-row">
+          <span>makeCrawler()</span>
+          <span class="pill" style="background:#00b878;color:#fffaf0;">Watchful</span>
+        </div>
+        <h2>Text-Weaving Burrowers</h2>
+        <p>Aspis, Basilisk &amp; Amphisbaena weaving over and under words, pausing to look round, bowing before diving into &ldquo;o&rdquo; and &ldquo;i&rdquo; with a calligraphic tail curl, 0-stray-pixel mask vanish, and seamless re-emergence.</p>
+        <a class="cta" href="proof-burrowers.html"><span class="fleuron">❧</span> Open Burrowers Proof</a>
+      </article>
+
+      <article class="card">
+        <div class="badge-row">
+          <span>makeKnottedSlider()</span>
+          <span class="pill" style="background:#ff2a14;color:#fffaf0;">Attitude: Smug</span>
+        </div>
+        <h2>Insular Knotted Pair</h2>
+        <p>Twin vermilion &amp; lapis serpents in an over-under Insular interlace knot that visibly tightens and loosens as they bite each other&rsquo;s tails, then slither along the bubble&rsquo;s bottom edge and back.</p>
+        <a class="cta" href="proof-knotted-pair.html"><span class="fleuron">❧</span> Open Knotted Pair Proof</a>
+      </article>
+
+      <article class="card">
+        <div class="badge-row">
+          <span>makeHeadlineChase() + makeYuckBounce()</span>
+          <span class="pill" style="background:#ff5a22;color:#fffaf0;">Attitude: Frantic / Cute</span>
+        </div>
+        <h2>Headline Chase &amp; Wind-Up &ldquo;yuck&rdquo;</h2>
+        <p>Claude-ruffed serpents chasing round &ldquo;managing Claudes all day is knackering&rdquo; to snap &amp; recoil while keeping the gold caption uncovered, plus the adorable wind-up creature bouncing round red blackletter &ldquo;yuck&rdquo;.</p>
+        <a class="cta" href="proof-headline-yuck.html"><span class="fleuron">❧</span> Open Headline &amp; Yuck Proof</a>
+      </article>
+
+      <article class="card">
+        <div class="badge-row">
+          <span>Burrow Contract</span>
+          <span class="pill" style="background:#fffaf0;">0 Stray Pixels</span>
+        </div>
+        <h2>Automated Burrow Harness</h2>
+        <p>Automated test fixture used by <code>render_proof.py</code> to verify exact 0-stray-pixel masked vanishing into <code>o@16px</code>, <code>o@48px</code>, and <code>i dot</code> across every species.</p>
+        <a class="cta" href="../crawler/test.html"><span class="fleuron">❧</span> Open Test Harness</a>
+      </article>
+    </div>
+
+    <section class="rules">
+      <h3>Brief 3 Verification Checklist</h3>
+      <ul>
+        <li><strong>Line &amp; Colour:</strong> One confident dark iron-gall outline (<code>#1c100a</code>), flat neon medieval fills, zero hatching, zero pink.</li>
+        <li><strong>Contact &amp; Clearance:</strong> Creatures stay in contact with their bubbles; the gold headline caption stays uncovered at every width.</li>
+        <li><strong>Burrow Contract:</strong> Explicit circular hole <code>&lt;mask&gt;</code> — zero drawn hole, zero fade, 0 stray pixels after tail entry.</li>
+        <li><strong>Phone Performance:</strong> <code>observeVisibility()</code> pauses SMIL animations automatically via <code>IntersectionObserver</code> when off-screen, and zero horizontal overflow occurs at <code>390px</code>.</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

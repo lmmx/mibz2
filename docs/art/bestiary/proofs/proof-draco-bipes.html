@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Proof: Draco Bipes Moonwalker — Bestiary Brief 3</title>
+  <style>
+    :root {
+      --bg: #f6eedb;
+      --card: #fffaf0;
+      --ink: #1c100a;
+      --muted: #554230;
+      --vermilion: #ff2a14;
+      --lapis: #1e4cff;
+      --gold: #f6be1b;
+      --orpiment: #ffd014;
+      --fleuron: #00a86b;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      max-width: 100%; overflow-x: clip;
+      background: var(--bg); color: var(--ink);
+      font: 15.5px/1.5 Georgia, "Iowan Old Style", serif;
+    }
+    .wrap { max-width: 820px; margin: 0 auto; padding: 18px 16px 48px; }
+    .nav {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      gap: 8px; margin-bottom: 12px;
+      font: 600 12.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .nav a { color: var(--lapis); text-decoration: none; }
+    .nav a:hover { text-decoration: underline; }
+    .fleuron { color: var(--fleuron); }
+    h1 { margin: 0 0 4px; font-size: clamp(21px, 4.5vw, 28px); line-height: 1.2; }
+    .sub { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+
+    .controls {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      background: var(--card); border: 2px solid var(--ink); border-radius: 12px;
+      padding: 10px 12px; margin-bottom: 14px;
+      font: 600 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .controls button, .controls select {
+      font: inherit; padding: 6px 10px;
+      border: 2px solid var(--ink); border-radius: 8px;
+      background: var(--gold); color: var(--ink); cursor: pointer;
+    }
+    .controls button.alt { background: var(--card); }
+    .controls button.active { background: var(--vermilion); color: #fffaf0; }
+    .scrub-wrap {
+      display: flex; align-items: center; gap: 8px; flex: 1 1 200px; min-width: 180px;
+    }
+    .scrub-wrap input[type="range"] { flex: 1; accent-color: var(--vermilion); }
+    .time-readout { min-width: 92px; text-align: right; }
+
+    .beats {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;
+    }
+    .beat-btn {
+      font: 600 11.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      padding: 5px 9px; border: 1.8px solid var(--ink); border-radius: 999px;
+      background: var(--card); color: var(--ink); cursor: pointer;
+    }
+    .beat-btn:hover { background: var(--orpiment); }
+
+    .stage-shell {
+      background: var(--card); border: 2.5px solid var(--ink); border-radius: 18px;
+      padding: 46px 38px;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 280px;
+      overflow-x: clip;
+      transition: max-width 0.2s ease, padding 0.2s ease;
+      margin: 0 auto;
+    }
+    .stage-shell.phone-390 {
+      width: 358px;
+      max-width: 100%;
+      padding: 44px 36px;
+      box-shadow: 0 0 0 6px var(--ink);
+    }
+    @media (max-width: 440px) {
+      .stage-shell { padding: 44px 34px; }
+      .stage-shell.phone-390 { width: 100%; box-shadow: none; }
+    }
+
+    .bubble {
+      position: relative;
+      background: #fffdf7;
+      border: 2.5px solid var(--ink);
+      border-radius: 20px;
+      padding: 18px 22px;
+      width: 100%;
+      max-width: 390px;
+      box-shadow: 4px 4px 0 rgba(28, 16, 10, 0.14);
+    }
+    .bubble .speaker {
+      font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .bubble p { margin: 0; font-size: 16px; }
+    .bubble a { color: var(--lapis); font-weight: 600; }
+
+    .meta-note {
+      margin-top: 14px;
+      font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--muted);
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <a href="index.html">&larr; All Bestiary Proofs</a>
+      <span><span class="fleuron">❧</span> makeMoonwalker() &middot; Draco bipes <span class="fleuron">☙</span></span>
+    </nav>
+
+    <h1>Draco Bipes &mdash; Full Border Moonwalk</h1>
+    <p class="sub">Textured border-drollery dragon (cinnabar head &amp; neck stroked with golden-ochre brushwork transitioning into smoky olive-charcoal finely ribbed body &amp; tail) gliding round the full bubble perimeter with sliding claw, heel roll, and poised corner pause.</p>
+
+    <div class="controls">
+      <button id="btn-play" type="button">Pause</button>
+      <div class="scrub-wrap">
+        <input id="scrubber" type="range" min="0" max="1000" value="0" aria-label="Timeline scrubber">
+        <span id="time-out" class="time-readout">t=0.00s</span>
+      </div>
+      <label>Speed
+        <select id="sel-speed">
+          <option value="0.5">0.5&times;</option>
+          <option value="1" selected>1&times;</option>
+          <option value="1.5">1.5&times;</option>
+          <option value="2">2&times;</option>
+        </select>
+      </label>
+      <button id="btn-phone" type="button" class="alt">390px Phone</button>
+    </div>
+
+    <div class="beats">
+      <button class="beat-btn" data-frac="0.08">08% Top-edge moonwalk</button>
+      <button class="beat-btn" data-frac="0.29">29% Corner pause &amp; sideways glance</button>
+      <button class="beat-btn" data-frac="0.46">46% Right-edge descent</button>
+      <button class="beat-btn" data-frac="0.64">64% Bottom-edge glide</button>
+      <button class="beat-btn" data-frac="0.75">75% Bottom-left poise check</button>
+      <button class="beat-btn" data-frac="0.90">90% Left-edge climb</button>
+    </div>
+
+    <div class="stage-shell" id="stage-shell">
+      <div class="bubble" id="moon-bubble">
+        <div class="speaker">Louis &middot; marginalia</div>
+        <p><span class="fleuron">❧</span> Watch the <a href="#moonwalk">MOONWALK</a> dragon glide all the way round the border without once lifting off the frame <span class="fleuron">☙</span></p>
+      </div>
+    </div>
+
+    <div class="meta-note">
+      <span id="status-vis">Visibility: IntersectionObserver active (pauses off-screen)</span>
+      <span id="status-dim"></span>
+    </div>
+  </div>
+
+  <script src="../crawler/crawler.js"></script>
+  <script>
+    (function () {
+      const BASE_DUR = 14;
+      const params = new URLSearchParams(window.location.search);
+      const bubble = document.getElementById('moon-bubble');
+      const shell = document.getElementById('stage-shell');
+      const btnPlay = document.getElementById('btn-play');
+      const btnPhone = document.getElementById('btn-phone');
+      const scrubber = document.getElementById('scrubber');
+      const timeOut = document.getElementById('time-out');
+      const selSpeed = document.getElementById('sel-speed');
+      const statusDim = document.getElementById('status-dim');
+
+      let currentSvg = null;
+      let dur = BASE_DUR;
+      let paused = false;
+      let phoneMode = params.get('phone') === '1';
+
+      if (phoneMode) {
+        shell.classList.add('phone-390');
+        btnPhone.classList.add('active');
+      }
+
+      function mount(preserveFrac) {
+        if (currentSvg && currentSvg.parentNode) currentSvg.parentNode.removeChild(currentSvg);
+        const speed = parseFloat(selSpeed.value) || 1;
+        dur = BASE_DUR / speed;
+        const isNarrow = phoneMode || window.innerWidth <= 420;
+        currentSvg = BestiaryCrawler.makeMoonwalker(bubble, {
+          creature: 'draco-bipes',
+          wash: BestiaryCrawler.PALETTE.charcoal,
+          headWash: BestiaryCrawler.PALETTE.cinnabar,
+          wash2: BestiaryCrawler.PALETTE.goldLight,
+          scale: isNarrow ? 0.80 : 0.96,
+          dur,
+          autoPause: params.get('t') === null
+        });
+        const r = bubble.getBoundingClientRect();
+        statusDim.textContent = `Bubble ${Math.round(r.width)}x${Math.round(r.height)}px · dur=${dur.toFixed(1)}s`;
+        if (preserveFrac !== undefined) {
+          seekTo(preserveFrac * dur, paused);
+        }
+      }
+
+      function seekTo(sec, keepPaused) {
+        if (!currentSvg) return;
+        const t = ((sec % dur) + dur) % dur;
+        currentSvg.setCurrentTime(t);
+        if (keepPaused) {
+          currentSvg.dataset.bestiaryManualPause = '1';
+          currentSvg.pauseAnimations();
+        }
+        scrubber.value = Math.round((t / dur) * 1000);
+        timeOut.textContent = `t=${t.toFixed(2)}s`;
+      }
+
+      function setPaused(p) {
+        paused = p;
+        btnPlay.textContent = paused ? 'Play' : 'Pause';
+        if (!currentSvg) return;
+        if (paused) {
+          currentSvg.dataset.bestiaryManualPause = '1';
+          currentSvg.pauseAnimations();
+        } else {
+          delete currentSvg.dataset.bestiaryManualPause;
+          currentSvg.unpauseAnimations();
+        }
+      }
+
+      btnPlay.addEventListener('click', () => setPaused(!paused));
+      scrubber.addEventListener('input', () => {
+        setPaused(true);
+        const frac = parseFloat(scrubber.value) / 1000;
+        seekTo(frac * dur, true);
+      });
+      selSpeed.addEventListener('change', () => {
+        const frac = parseFloat(scrubber.value) / 1000;
+        mount(frac);
+      });
+      btnPhone.addEventListener('click', () => {
+        phoneMode = !phoneMode;
+        shell.classList.toggle('phone-390', phoneMode);
+        btnPhone.classList.toggle('active', phoneMode);
+        const frac = parseFloat(scrubber.value) / 1000;
+        mount(frac);
+      });
+      document.querySelectorAll('.beat-btn').forEach((b) => {
+        b.addEventListener('click', () => {
+          const frac = parseFloat(b.dataset.frac);
+          setPaused(true);
+          seekTo(frac * dur, true);
+        });
+      });
+
+      window.addEventListener('resize', () => {
+        const frac = parseFloat(scrubber.value) / 1000;
+        mount(frac);
+      });
+
+      function tickUi() {
+        if (currentSvg && !paused) {
+          const t = currentSvg.getCurrentTime() % dur;
+          scrubber.value = Math.round((t / dur) * 1000);
+          timeOut.textContent = `t=${t.toFixed(2)}s`;
+        }
+        requestAnimationFrame(tickUi);
+      }
+
+      mount();
+      if (params.get('t') !== null) {
+        const targetT = parseFloat(params.get('t')) || 0;
+        setPaused(true);
+        seekTo(targetT, true);
+      } else {
+        requestAnimationFrame(tickUi);
+      }
+      window.__PROOF = { mount, seekTo, setPaused, getSvg: () => currentSvg, getDur: () => dur };
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Proof: Headline Chase &amp; Wind-Up &ldquo;yuck&rdquo; — Bestiary Brief 3</title>
+  <style>
+    :root {
+      --bg: #f6eedb;
+      --card: #fffaf0;
+      --ink: #1c100a;
+      --muted: #554230;
+      --vermilion: #ff2a14;
+      --lapis: #1e4cff;
+      --claude: #ff5a22;
+      --gold: #f6be1b;
+      --orpiment: #ffd014;
+      --fleuron: #00a86b;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      max-width: 100%; overflow-x: clip;
+      background: var(--bg); color: var(--ink);
+      font: 15.5px/1.5 Georgia, "Iowan Old Style", serif;
+    }
+    .wrap { max-width: 840px; margin: 0 auto; padding: 18px 16px 52px; }
+    .nav {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      gap: 8px; margin-bottom: 12px;
+      font: 600 12.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .nav a { color: var(--lapis); text-decoration: none; }
+    .nav a:hover { text-decoration: underline; }
+    .fleuron { color: var(--fleuron); }
+    h1 { margin: 0 0 4px; font-size: clamp(21px, 4.5vw, 28px); line-height: 1.2; }
+    .sub { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+
+    .controls {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      background: var(--card); border: 2px solid var(--ink); border-radius: 12px;
+      padding: 10px 12px; margin-bottom: 14px;
+      font: 600 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .controls button, .controls select {
+      font: inherit; padding: 6px 10px;
+      border: 2px solid var(--ink); border-radius: 8px;
+      background: var(--gold); color: var(--ink); cursor: pointer;
+    }
+    .controls button.alt { background: var(--card); }
+    .controls button.active { background: var(--claude); color: #fffaf0; }
+    .scrub-wrap {
+      display: flex; align-items: center; gap: 8px; flex: 1 1 190px; min-width: 170px;
+    }
+    .scrub-wrap input[type="range"] { flex: 1; accent-color: var(--claude); }
+    .time-readout { min-width: 86px; text-align: right; }
+
+    .beats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .beat-btn {
+      font: 600 11.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      padding: 5px 9px; border: 1.8px solid var(--ink); border-radius: 999px;
+      background: var(--card); color: var(--ink); cursor: pointer;
+    }
+    .beat-btn:hover { background: var(--orpiment); }
+
+    .stage-shell {
+      display: grid;
+      gap: 22px;
+      margin: 0 auto;
+      transition: max-width 0.2s ease;
+    }
+    .stage-shell.phone-390 {
+      width: 358px;
+      max-width: 100%;
+    }
+    .scene-card {
+      background: var(--card);
+      border: 2.5px solid var(--ink);
+      border-radius: 18px;
+      padding: 40px 28px 34px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: clip;
+      box-shadow: 4px 4px 0 rgba(28, 16, 10, 0.12);
+    }
+    .stage-shell.phone-390 .scene-card {
+      padding: 36px 24px 30px;
+      box-shadow: 0 0 0 5px var(--ink);
+    }
+    @media (max-width: 440px) {
+      .scene-card { padding: 34px 22px 28px; }
+      .stage-shell.phone-390 { width: 100%; }
+      .stage-shell.phone-390 .scene-card { box-shadow: none; }
+    }
+    .scene-label {
+      align-self: flex-start;
+      margin: -22px 0 26px;
+      font: 700 11.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    /* Headline frame + strictly uncovered burnished-gold caption below */
+    .headline-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 420px;
+      gap: 24px; /* guarantees caption sits well clear below bottom snap */
+    }
+    .headline-bubble {
+      position: relative;
+      width: 100%;
+      background: #fffdf7;
+      border: 2.5px solid var(--ink);
+      border-radius: 20px;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: clamp(18px, 4.4vw, 22px);
+      font-weight: 700;
+      line-height: 1.25;
+      box-shadow: 4px 4px 0 rgba(28, 16, 10, 0.12);
+    }
+    .gold-caption {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      font: italic 700 15px/1.35 Georgia, "Palatino Linotype", serif;
+      color: #8c5600;
+      background: linear-gradient(180deg, #fff6cc 0%, #ffe47a 100%);
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      padding: 6px 16px;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+
+    /* Red blackletter "yuck" odd-one-out bubble */
+    .yuck-stage {
+      padding: 26px 28px 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .yuck-bubble {
+      position: relative;
+      background: #fffdf7;
+      border: 2.5px solid var(--ink);
+      border-radius: 22px;
+      padding: 16px 32px;
+      text-align: center;
+      font-family: "UnifrakturMaguntia", "Old English Text MT", "Cloister Black", Georgia, serif;
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--vermilion);
+      text-shadow: 1.5px 1.5px 0 var(--ink);
+      box-shadow: 4px 4px 0 rgba(28, 16, 10, 0.14);
+    }
+
+    .meta-note {
+      margin-top: 14px;
+      font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--muted);
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <a href="index.html">&larr; All Bestiary Proofs</a>
+      <span><span class="fleuron">❧</span> makeHeadlineChase() + makeYuckBounce() <span class="fleuron">☙</span></span>
+    </nav>
+
+    <h1>Headline Chase &amp; Wind-Up &ldquo;yuck&rdquo;</h1>
+    <p class="sub">Top: Claude-ruffed serpents chasing round the headline bubble, snapping &amp; recoiling at bottom center while leaving the gold caption completely uncovered. Bottom: the adorable wind-up creature bouncing round the red blackletter &ldquo;yuck&rdquo;.</p>
+
+    <div class="controls">
+      <button id="btn-play" type="button">Pause</button>
+      <div class="scrub-wrap">
+        <input id="scrubber" type="range" min="0" max="1000" value="0" aria-label="Timeline scrubber">
+        <span id="time-out" class="time-readout">t=0.00s</span>
+      </div>
+      <label>Speed
+        <select id="sel-speed">
+          <option value="0.5">0.5&times;</option>
+          <option value="1" selected>1&times;</option>
+          <option value="1.5">1.5&times;</option>
+          <option value="2">2&times;</option>
+        </select>
+      </label>
+      <button id="btn-phone" type="button" class="alt">390px Phone</button>
+    </div>
+
+    <div class="beats">
+      <button class="beat-btn" data-frac="0.18">18% Racing round sides</button>
+      <button class="beat-btn" data-frac="0.53">53% Bottom SNAP! &amp; spark</button>
+      <button class="beat-btn" data-frac="0.65">65% Dramatic recoil</button>
+      <button class="beat-btn" data-frac="0.82">82% Yuck wind-up rattle pause</button>
+    </div>
+
+    <div class="stage-shell" id="stage-shell">
+      <section class="scene-card">
+        <div class="scene-label"><span class="fleuron">❧</span> 1. Headline Frame Chase (caption stays 100% uncovered)</div>
+        <div class="headline-stack">
+          <div class="headline-bubble" id="headline-bubble">
+            managing Claudes all day is knackering
+          </div>
+          <div class="gold-caption" id="gold-caption">
+            <span class="fleuron">❧</span> Of Man&rsquo;s Labours &amp; their Eternal Return <span class="fleuron">☙</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="scene-card">
+        <div class="scene-label"><span class="fleuron">❧</span> 2. Deliberate Cute Odd-One-Out &mdash; Wind-Up &ldquo;yuck&rdquo;</div>
+        <div class="yuck-stage">
+          <div class="yuck-bubble" id="yuck-bubble">yuck</div>
+        </div>
+      </section>
+    </div>
+
+    <div class="meta-note">
+      <span>Visibility: IntersectionObserver active (pauses off-screen)</span>
+      <span id="status-clearance"></span>
+    </div>
+  </div>
+
+  <script src="../crawler/crawler.js"></script>
+  <script>
+    (function () {
+      const BASE_DUR = 11;
+      const params = new URLSearchParams(window.location.search);
+      const headlineBubble = document.getElementById('headline-bubble');
+      const goldCaption = document.getElementById('gold-caption');
+      const yuckBubble = document.getElementById('yuck-bubble');
+      const shell = document.getElementById('stage-shell');
+      const btnPlay = document.getElementById('btn-play');
+      const btnPhone = document.getElementById('btn-phone');
+      const scrubber = document.getElementById('scrubber');
+      const timeOut = document.getElementById('time-out');
+      const selSpeed = document.getElementById('sel-speed');
+      const statusClearance = document.getElementById('status-clearance');
+
+      let svgHeadline = null;
+      let svgYuck = null;
+      let dur = BASE_DUR;
+      let paused = false;
+      let phoneMode = params.get('phone') === '1';
+      if (phoneMode) {
+        shell.classList.add('phone-390');
+        btnPhone.classList.add('active');
+      }
+
+      function mount(preserveFrac) {
+        if (svgHeadline && svgHeadline.parentNode) svgHeadline.parentNode.removeChild(svgHeadline);
+        if (svgYuck && svgYuck.parentNode) svgYuck.parentNode.removeChild(svgYuck);
+        const speed = parseFloat(selSpeed.value) || 1;
+        dur = BASE_DUR / speed;
+        const isNarrow = phoneMode || window.innerWidth <= 420;
+        const autoP = params.get('t') === null;
+
+        svgHeadline = BestiaryCrawler.makeHeadlineChase(headlineBubble, {
+          scale: isNarrow ? 0.72 : 0.86,
+          dur,
+          autoPause: autoP
+        });
+        svgYuck = BestiaryCrawler.makeYuckBounce(yuckBubble, {
+          scale: isNarrow ? 0.84 : 0.94,
+          dur: dur * 0.82,
+          autoPause: autoP
+        });
+
+        const hRect = headlineBubble.getBoundingClientRect();
+        const cRect = goldCaption.getBoundingClientRect();
+        const gapPx = Math.round(cRect.top - hRect.bottom);
+        statusClearance.textContent = `Headline-to-caption clearance: ${gapPx}px (uncovered)`;
+
+        if (preserveFrac !== undefined) seekTo(preserveFrac * dur, paused);
+      }
+
+      function seekTo(sec, keepPaused) {
+        const t = ((sec % dur) + dur) % dur;
+        [svgHeadline, svgYuck].forEach((svg) => {
+          if (!svg) return;
+          svg.setCurrentTime(t);
+          if (keepPaused) {
+            svg.dataset.bestiaryManualPause = '1';
+            svg.pauseAnimations();
+          }
+        });
+        scrubber.value = Math.round((t / dur) * 1000);
+        timeOut.textContent = `t=${t.toFixed(2)}s`;
+      }
+
+      function setPaused(p) {
+        paused = p;
+        btnPlay.textContent = paused ? 'Play' : 'Pause';
+        [svgHeadline, svgYuck].forEach((svg) => {
+          if (!svg) return;
+          if (paused) {
+            svg.dataset.bestiaryManualPause = '1';
+            svg.pauseAnimations();
+          } else {
+            delete svg.dataset.bestiaryManualPause;
+            svg.unpauseAnimations();
+          }
+        });
+      }
+
+      btnPlay.addEventListener('click', () => setPaused(!paused));
+      scrubber.addEventListener('input', () => {
+        setPaused(true);
+        seekTo((parseFloat(scrubber.value) / 1000) * dur, true);
+      });
+      selSpeed.addEventListener('change', () => mount(parseFloat(scrubber.value) / 1000));
+      btnPhone.addEventListener('click', () => {
+        phoneMode = !phoneMode;
+        shell.classList.toggle('phone-390', phoneMode);
+        btnPhone.classList.toggle('active', phoneMode);
+        mount(parseFloat(scrubber.value) / 1000);
+      });
+      document.querySelectorAll('.beat-btn').forEach((b) => {
+        b.addEventListener('click', () => {
+          setPaused(true);
+          seekTo(parseFloat(b.dataset.frac) * dur, true);
+        });
+      });
+      window.addEventListener('resize', () => mount(parseFloat(scrubber.value) / 1000));
+
+      function tickUi() {
+        if (svgHeadline && !paused) {
+          const t = svgHeadline.getCurrentTime() % dur;
+          scrubber.value = Math.round((t / dur) * 1000);
+          timeOut.textContent = `t=${t.toFixed(2)}s`;
+        }
+        requestAnimationFrame(tickUi);
+      }
+
+      mount();
+      if (params.get('t') !== null) {
+        setPaused(true);
+        seekTo(parseFloat(params.get('t')) || 0, true);
+      } else {
+        requestAnimationFrame(tickUi);
+      }
+      window.__PROOF = { mount, seekTo, setPaused, getSvgs: () => [svgHeadline, svgYuck], getDur: () => dur };
+    })();
+  </script>
+</body>
+</html>
