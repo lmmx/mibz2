@@ -941,11 +941,13 @@ impl StreamDecoder {
                 st.taken += 1;
                 st.reader_waiting = false;
                 let wake = st.scanner_waiting;
+                // (marked under the lock, as before: the scanner can issue into the freed slot
+                // only after it, so the timeline's window never shows `slots` + 1)
+                mark!(Taken, taken);
                 drop(st);
                 if wake {
                     self.shared.scan_cv.notify_one();
                 }
-                mark!(Taken, taken);
                 match res {
                     Ok(v) => r.cur = v,
                     Err(e) => r.failed = Some(e),
