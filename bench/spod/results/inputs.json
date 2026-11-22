@@ -1,0 +1,58 @@
+{
+  "wiki1": {
+    "path": "wiki1.bz2",
+    "prefix": 0,
+    "blocks": 1,
+    "compressed_sha256": "e3bf5372b15885da138764a25bb2b7cd784ee3cbee1e664937647921ae3122b0",
+    "sha256": "d2584c09f1d643d6abff8a25513b63af4e05969c15c30256aed3a05c74281210",
+    "bytes": 900000
+  },
+  "text1": {
+    "path": "text1.bz2",
+    "prefix": 0,
+    "blocks": 1,
+    "compressed_sha256": "a0a3428bf4fdb0403590a8ec7f5f0854a9f27ddb513868b1ad1daaec81de1c9b",
+    "sha256": "d85b616171c600c932c2844d1a1fd5c00ca50968094ece0bee7e33b4c02db35e",
+    "bytes": 800000
+  },
+  "wiki2": {
+    "path": "wiki2.bz2",
+    "prefix": 0,
+    "blocks": 2,
+    "compressed_sha256": "1c660d0d4c97e72a54a59b0e0701558baa91a3b18a0680d736c46d53a6c5e7ea",
+    "sha256": "baf0d171a5798c5ef5a8d589306afef24d77d78e8fbfca2f7673c8d577fb0045",
+    "bytes": 1800000
+  },
+  "text2": {
+    "path": "text2.bz2",
+    "prefix": 0,
+    "blocks": 2,
+    "compressed_sha256": "3aeaeea9c047ca6859cb10b03f7a9f1888a1dae6f51b6337c9bdd9f8a0b7421b",
+    "sha256": "2f020fc8d1d67369ddae1493f9e61aae910c3119ec2aa8f02a6797cd3c33aad6",
+    "bytes": 1600000
+  },
+  "wiki3": {
+    "path": "wiki3.bz2",
+    "prefix": 0,
+    "blocks": 3,
+    "compressed_sha256": "5f4824e56b1702de1ecd8bb4d6548e38243d779844a0838b932d8e11098b43a5",
+    "sha256": "26428592773696c49bc645085f0c35b154f7b25ef44eb7a0635b153a3d81782f",
+    "bytes": 2699938
+  },
+  "text3": {
+    "path": "text3.bz2",
+    "prefix": 0,
+    "blocks": 3,
+    "compressed_sha256": "c062d3f944736b58157d14be9ce127975cfa436d94f0c2ff618512fff46ebd1d",
+    "sha256": "dda30e68db51bcc909be88bb6ec89bccd589733ece03e9cea15ebbf515728526",
+    "bytes": 2400000
+  },
+  "tail": {
+    "path": "tail.bz2",
+    "prefix": 208800189,
+    "blocks": 431,
+    "compressed_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+    "sha256": "3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf",
+    "bytes": 209700196
+  }
+}
