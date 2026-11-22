@@ -1940,3 +1940,124 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# The Open kernel's Round-5 construction stack against its base on this machine (#734;
+# registration docs/journal/2026-11-22-open-r5-registration.md, frozen before the data):
+# whether Carbon Kitchen Sink's Round-5 stack (Neon cycles 36-45: Cap127 and Pt64, S1Trim,
+# OneBr, S2aFuse, Inline2, FastJoin, S2b-NI, NoStats, the S3a dictionary tables, BandW and
+# Wire16), all in src/open.rs and src/open/**, speeds production's decoder where it runs
+# `OpenCells` on the i9. Two builds pinned by SHA: #734's merge-base with master BASE
+# (4a79f063, master's head with Wormhole's plateau stack #739 and the block reader #745;
+# `mibz2@build-base`) and #734's HEAD (perf/open-r5-stack e8f1afa2, master merged in, `mibz2`,
+# whose harness drives the run); their src differs in src/open.rs and src/open/** alone
+# (checked). Re-pinned 22 November 2026 (the registration's "Re-run on the new master"); the
+# first run's pins were 23c1e283 and 8be1f140. Both by rustc 1.99.1. The whole
+# Wikidata corpus (corpora/wikidata.bz2, checked by its SHA-256), 4 copies end to end; unpinned
+# on every CPU at 6, 8 and 10 threads, interleaved, 16 paired rounds, no spinner. Judged at 10
+# threads, 6 and 8 supporting, peak RSS reported (bench/open_r5.py). Then one diagnostic that
+# decides nothing: the workers' lazy route alone (`mibz2-workers-lazy`, the plan and window
+# fixed) at 6 and 8 threads, 16 rounds. #720's recipe (bench-open-stack) line for line with
+# the builds changed and its third-build pass left out; itself bench-open-graded's (#715).
+# About 15 minutes with the builds.
+bench-open-r5:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    BASE=4a79f0631e3c3e95e1b2d38090c75d6584e4817c
+    HEAD=e8f1afa25888059e75b5bf7f9ab76c87a8fb014c
+    COPIES=4 ROUNDS=16 SETTLE=2
+    W=$PWD/target/open-r5
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-open-r5 (docs/journal/2026-11-22-open-r5-registration.md) at $(git rev-parse HEAD): mibz2 at $HEAD (perf/open-r5-stack, #734) against mibz2 at $BASE (master with #739 and #745; #734's merge-base with master), unpinned at 6, 8 and 10 threads, $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2; then mibz2-workers-lazy at 6 and 8"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-open-r5: the checkout has local changes"; exit 1; }
+    git cat-file -e "$BASE^{commit}" 2>/dev/null || git fetch -q origin master
+    git cat-file -e "$HEAD^{commit}" 2>/dev/null || git fetch -q origin perf/open-r5-stack
+    git merge-base --is-ancestor "$BASE" "$HEAD" \
+      || { echo "bench-open-r5: $BASE is not an ancestor of $HEAD"; exit 1; }
+    # the contrast, checked: the decoder's source differs in the open kernel's files alone
+    changed=$(git diff --name-only "$BASE" "$HEAD" -- src Cargo.toml Cargo.lock examples build.rs)
+    [ -n "$changed" ] || { echo "bench-open-r5: the builds' source does not differ"; exit 1; }
+    beyond=$(printf '%s\n' "$changed" | grep -Ev '^src/open\.rs$|^src/open/' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-open-r5: the builds differ beyond the open kernel: $(echo $beyond)"; exit 1; }
+    # (the re-run's contrast: exactly #734's five files, as at the first run's pins)
+    want_changed='src/open.rs src/open/checks.rs src/open/endpoint.rs src/open/outq.rs src/open/spirals.rs'
+    [ "$(echo $changed)" = "$want_changed" ] \
+      || { echo "bench-open-r5: the builds differ in $(echo $changed), not $want_changed"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$BASE" "$HEAD" -- src > "$O/src-head-against-base.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-open-r5: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    for b in base head; do
+      sha=$BASE; [ "$b" = head ] && sha=$HEAD
+      [ -d "$W/build-$b" ] || git worktree add -q --detach "$W/build-$b" "$sha"
+      git -C "$W/build-$b" checkout -q --detach "$sha"
+      # (each build from a clean source: a detached checkout keeps local changes)
+      [ -z "$(git -C "$W/build-$b" status --porcelain)" ] \
+        || { echo "bench-open-r5: build-$b has local changes"; git -C "$W/build-$b" status --short; exit 1; }
+      [ "$(git -C "$W/build-$b" rev-parse HEAD)" = "$sha" ] \
+        || { echo "bench-open-r5: build-$b is not at $sha"; exit 1; }
+      (cd "$W/build-$b" && cargo build -q --release --example ab --example windows)
+    done
+    AB=$W/build-head/target/release/examples/ab
+    BAB=$W/build-base/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'base %s\nhead %s\n' "$BASE" "$HEAD" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    for b in base head; do
+      (cd "$W/build-$b" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+        || { echo "bench-open-r5: build-$b's toolchain differs"; exit 1; }
+    done
+    sha256sum "$AB" "$BAB" | tee "$O/binaries.sha256"
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-head/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-open-r5: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the machine
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    uname -a > "$O/uname.txt"
+    # the judged run: unpinned (no --spread), every online CPU, no spinner; the counts and the
+    # arms interleaved within each round, the arms' order rotated
+    "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2" --threads 6,8,10 --rounds $ROUNDS \
+      --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
+    "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
+    date -u +%FT%TZ > "$O/timed.txt"
+    python3 bench/open_r5.py "$O/main.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+      --arm mibz2 --judged 10 --supporting 6,8 --rounds $ROUNDS --corpus wikidata-x$COPIES \
+      | tee "$O/verdict.txt" \
+      || echo "bench-open-r5: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    # the diagnostic (decides nothing): the workers' lazy route, plan and window fixed
+    "$AB" run "$O/lazy.jsonl" --arms "mibz2-workers-lazy@$BAB,mibz2-workers-lazy" --threads 6,8 \
+      --rounds $ROUNDS --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
+    "$AB" summary "$O/lazy.jsonl" --ref "mibz2-workers-lazy@$BAB" | tee "$O/lazy-summary.txt"
+    python3 bench/open_r5.py "$O/lazy.jsonl" --env "$O/env.json" --lscpu "$O/lscpu.txt" \
+      --arm mibz2-workers-lazy --judged "" --supporting 6,8 --rounds $ROUNDS --corpus wikidata-x$COPIES \
+      --diagnostic | tee "$O/lazy.txt" \
+      || echo "bench-open-r5: the diagnostic is VOID (lazy.txt says why); the verdict stands"
+    date -u +%FT%TZ > "$O/finished.txt"
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"
