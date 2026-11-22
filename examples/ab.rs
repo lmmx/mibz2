@@ -1310,6 +1310,8 @@ fn decode(
             last();
             Ok(())
         }
+        "mibz2-parscan" if threads == 1 => drain(mibz2::BzReader::new(open()?), h, last),
+        "mibz2-parscan" => drain(mibz2::BzReader::parscan(open()?, threads), h, last),
         #[cfg(mibz2_alternatives)]
         "fbz" => {
             let opts = fbz::DecodeOptions {

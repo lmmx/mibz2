@@ -78,11 +78,34 @@ pub fn read_item(br: &mut Bits, level: u32, syms: Vec<u16>) -> Result<Item, (Err
 /// its CRC. A block found to run past the input (`br.overran()`) is the caller's to judge.
 ///
 /// Zero-allocation `read_item` using explicit `ScanScratch` (`Scanner<S>` and parallel workers).
+#[inline]
 pub fn read_item_with_scratch(
+    br: &mut Bits,
+    level: u32,
+    syms: Vec<u16>,
+    scratch: &mut ScanScratch,
+) -> Result<Item, (ErrorKind, Vec<u16>)> {
+    read_item_core(br, level, syms, scratch, false)
+}
+
+/// `read_item_with_scratch` without upfront `MAX_SYMS` (`1.80 MiB`) reservation: grows `syms`
+/// in quantized steps up to `(sel_cap * GROUP + 66).min(MAX_SYMS)` for bounded-memory parallel scanning.
+#[inline]
+pub(crate) fn read_item_tight(
+    br: &mut Bits,
+    level: u32,
+    syms: Vec<u16>,
+    scratch: &mut ScanScratch,
+) -> Result<Item, (ErrorKind, Vec<u16>)> {
+    read_item_core(br, level, syms, scratch, true)
+}
+
+fn read_item_core(
     br: &mut Bits,
     level: u32,
     mut syms: Vec<u16>,
     scratch: &mut ScanScratch,
+    tight: bool,
 ) -> Result<Item, (ErrorKind, Vec<u16>)> {
     macro_rules! fail {
         ($k:expr) => {
@@ -213,15 +236,16 @@ pub fn read_item_with_scratch(
     }
 
     let eob = (alpha - 1) as u16;
-    if syms.capacity() < MAX_SYMS {
-        syms.clear();
-        syms.reserve(MAX_SYMS);
-    }
     let max_out = (sel_cap * GROUP + 66).min(MAX_SYMS);
-    if syms.len() < max_out {
-        syms.resize(max_out, 0);
+    if !tight {
+        if syms.capacity() < MAX_SYMS {
+            syms.clear();
+            syms.reserve(MAX_SYMS);
+        }
+    } else if syms.capacity() < max_out {
+        let cap_target = max_out.max(65_536).next_power_of_two().min(MAX_SYMS);
+        syms.reserve_exact(cap_target.saturating_sub(syms.len()));
     }
-    let out = &mut syms[..max_out];
     let sel_buf = &scratch.selectors[..sel_cap];
     let mut n = 0usize;
     let mut sel = 0usize;
@@ -231,12 +255,15 @@ pub fn read_item_with_scratch(
         if sel >= sel_cap {
             break Err(ErrorKind::SelectorOverrun);
         }
+        if n + 66 > syms.len() && syms.len() < max_out {
+            syms.resize((n + 8192).min(max_out), 0);
+        }
         let t = &scratch.tables[sel_buf[sel] as usize];
         sel += 1;
         let use_tail = n + 66 > max_out;
         let g_res = {
             let g_out: &mut [u16; 66] = if !use_tail {
-                (&mut out[n..n + 66]).try_into().unwrap()
+                (&mut syms[n..n + 66]).try_into().unwrap()
             } else {
                 &mut tail_buf
             };
@@ -253,7 +280,7 @@ pub fn read_item_with_scratch(
             Err(err) => break Err(err),
         };
         if use_tail {
-            out[n..n + k].copy_from_slice(&tail_buf[..k]);
+            syms[n..n + k].copy_from_slice(&tail_buf[..k]);
         }
         n += k;
         if hit_eob {

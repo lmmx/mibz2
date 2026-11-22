@@ -105,6 +105,7 @@ pub mod itrace;
 pub mod mtf;
 // the open kernel, the workers' kernel wherever `LazyCells` ran (`bwt::OpenCells`)
 mod open;
+pub mod par_scan;
 pub mod parallel;
 #[cfg(feature = "phase-counters")]
 #[doc(hidden)]
@@ -593,6 +594,59 @@ pub(crate) fn decode_owned<I: bwt::InverseBwt>(
     Ok(out)
 }
 
+/// `decode_owned` for a block whose `runs::front` was already executed on a parallel
+/// front-end scanner while `syms` was L2-hot on that scanner's core (`ParScanHub`).
+pub(crate) fn decode_prepared_runs<I: bwt::InverseBwt>(
+    p: runs::PreparedRuns,
+    k: Kernels,
+    s: &mut Scratch<I>,
+    take: impl FnOnce(usize, Vec<u16>, runs::CountsPer) -> Vec<u8>,
+) -> Result<Vec<u8>, ErrorKind> {
+    let n = p.rows?;
+    if p.orig_ptr as usize >= n {
+        return Err(ErrorKind::BadOrigPtr);
+    }
+    let prev_records = s.runs.install_prepared(p.records, &p.counts_per);
+    let mut out = take(n, prev_records, p.counts_per);
+    #[cfg(feature = "trace")]
+    trace::mark_sized(
+        trace::Kind::InvertStart,
+        trace::NONE,
+        n as u64,
+        trace::UNREAD,
+    );
+    let done = s.inverse.invert_runs(&s.runs, n, p.orig_ptr, &mut out, k);
+    #[cfg(feature = "trace")]
+    trace::mark(trace::Kind::InvertEnd, trace::NONE);
+    if !done {
+        debug_assert!(false, "the run records don't tile the block");
+        return Err(ErrorKind::Internal(
+            "the run records don't tile the block".into(),
+        ));
+    }
+    #[cfg(any(test, feature = "trace"))]
+    let ll_before = s.ll.as_ptr();
+    let computed = rle::unrle_in_place(&mut out, &mut s.rle_runs, &mut s.ll, k);
+    #[cfg(any(test, feature = "trace"))]
+    {
+        let route = if s.inverse.took_cells() {
+            trace::OutputRoute::Cells
+        } else {
+            trace::OutputRoute::Runs
+        };
+        let staged = s.ll.as_ptr() != ll_before;
+        s.record_owned(route, n, p.max_len, k, Some(&out), staged);
+    }
+    let computed = computed?;
+    if computed != p.crc {
+        return Err(ErrorKind::BlockCrc {
+            stored: p.crc,
+            computed,
+        });
+    }
+    Ok(out)
+}
+
 /// `decode_block`'s column route after the move-to-front (`n` rows in `ll`): the inverse,
 /// in place where the kernel can, then RLE1 and the CRC (`finish`), appended to `out`
 fn column<I: bwt::InverseBwt>(
@@ -686,6 +740,47 @@ pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
             dec.close();
         });
         // each block appended as it comes, whole, its buffer given back for the next
+        let mut spent = Vec::new();
+        let res = loop {
+            match dec.read_block(spent) {
+                Ok(None) => break Ok(()),
+                Ok(Some(b)) => {
+                    out.extend_from_slice(&b);
+                    spent = b;
+                }
+                Err(e) => break Err(e),
+            }
+        };
+        dec.cancel();
+        res
+    })?;
+    Ok(out)
+}
+
+/// A whole .bz2 decoded on `threads` threads (at least 1), in order, using the
+/// push-streaming parallel front end (`StreamDecoder::parscan`).
+pub fn decode_parscan(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
+    if threads <= 1 {
+        return decode(data);
+    }
+    let dec = StreamDecoder::parscan(
+        threads,
+        parallel::SLOTS_PER_THREAD * threads.max(1),
+        Kernels::detect(),
+    );
+    let mut out = Vec::with_capacity(data.len().saturating_mul(4));
+    std::thread::scope(|s| {
+        s.spawn(|| {
+            for c in data.chunks(4 << 20) {
+                let mut chunk = dec.spare();
+                chunk.clear();
+                chunk.extend_from_slice(c);
+                if dec.write(chunk).is_err() {
+                    return;
+                }
+            }
+            dec.close();
+        });
         let mut spent = Vec::new();
         let res = loop {
             match dec.read_block(spent) {

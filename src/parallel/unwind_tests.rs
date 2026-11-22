@@ -163,6 +163,7 @@ fn team(
         pipelined: true,
         kernel: "",
         hub: None,
+        front_helpers: None,
     })
 }
 

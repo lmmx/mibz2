@@ -127,6 +127,22 @@ impl<R: Read + Send + 'static> BzReader<R> {
         Self::on(r, StreamDecoder::new(threads, slots, kernels))
     }
 
+    /// Push-streaming parallel front end (`StreamDecoder::parscan`): reads `r` in bounded
+    /// chunks with bounded blocks and ready bytes (`parallel::READY_BYTES`) in flight.
+    pub fn parscan(r: R, threads: usize) -> Self {
+        Self::parscan_with(
+            r,
+            threads,
+            SLOTS_PER_THREAD * threads.max(1),
+            Kernels::detect(),
+        )
+    }
+
+    /// `parscan`, with explicit `slots` and `kernels`
+    pub fn parscan_with(r: R, threads: usize, slots: usize, kernels: Kernels) -> Self {
+        Self::on(r, StreamDecoder::parscan(threads, slots, kernels))
+    }
+
     /// Decode as `plan` says (production's workers, or cooperative teams: `Plan`), with
     /// `slots` blocks in flight and the kernels given
     pub fn parallel_planned(r: R, plan: Plan, slots: usize, kernels: Kernels) -> Self {

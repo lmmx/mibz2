@@ -129,6 +129,23 @@ impl Default for Runs {
     }
 }
 
+/// A block's byte and record counts, carried with its prepared records (`PreparedRuns`)
+pub(crate) type CountsPer = Box<([u32; 256], [u32; 256])>;
+
+/// A block whose `front` a parallel front end's scanner already ran (`par_scan::ParScanHub`):
+/// its records and counts, moved out of the scanner's `Runs` (`Runs::extract_prepared`) and
+/// into a worker's (`Runs::install_prepared`), so the worker inverts it as `decode_owned`'s
+/// records route would
+pub(crate) struct PreparedRuns {
+    pub(crate) crc: u32,
+    pub(crate) orig_ptr: u32,
+    pub(crate) max_len: usize,
+    /// `front`'s answer: the block's rows, or its error
+    pub(crate) rows: Result<usize, ErrorKind>,
+    pub(crate) records: Vec<u16>,
+    pub(crate) counts_per: CountsPer,
+}
+
 impl Runs {
     /// Read-only records for the experimental cells kernel; format unchanged.
     #[cfg(not(feature = "moonshot"))]
@@ -143,6 +160,26 @@ impl Runs {
     #[doc(hidden)]
     pub fn records(&self) -> &[u16] {
         &self.runs
+    }
+
+    /// The records and counts `front` left here, moved out (the records replaced by
+    /// `repl_records`, the counts copied into `cp`)
+    pub(crate) fn extract_prepared(
+        &mut self,
+        repl_records: Vec<u16>,
+        mut cp: CountsPer,
+    ) -> (Vec<u16>, CountsPer) {
+        cp.0 = self.counts;
+        cp.1 = self.per;
+        let recs = std::mem::replace(&mut self.runs, repl_records);
+        (recs, cp)
+    }
+
+    /// A prepared block's records and counts, moved in: the records this held, returned
+    pub(crate) fn install_prepared(&mut self, records: Vec<u16>, cp: &CountsPer) -> Vec<u16> {
+        self.counts = cp.0;
+        self.per = cp.1;
+        std::mem::replace(&mut self.runs, records)
     }
 
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs)
