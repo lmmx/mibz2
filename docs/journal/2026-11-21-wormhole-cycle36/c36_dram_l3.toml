@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 36: DRAM Bandwidth & Comet Lake L3 Working-Set Roofline Model (4W-20W)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c36_l3_dram_roofline"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "proved"
+dependent = true
+cost = { W = "n", D = "max(T_par, 0.211 * DRAM_BB / 42 GB/s)", B = "DRAM_BB * n", Q = "r_thin", M = "W * (WS_w + WS_dirty)" }
+evidence = "Calibrated Comet Lake (20 MiB L3, 42 GB/s DDR4) roofline proves Theorem 36.1: even with Mechanisms C38b ParScan, v0.5.12 at 10W hits 49.4 MiB L3 demand (60% miss), 10.82 B/B DRAM (54.4 ms BW floor, 36.2 GB/s), capping wall at 63.0 ms. Phase 2 (C37+C38) cuts L3 demand to 26.0 MiB and DRAM to 3.66 B/B (18.4 ms BW floor), unlocking 10W to 43.0 ms (38.9 ms with P3)."
