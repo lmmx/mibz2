@@ -75,12 +75,10 @@ fn audit<const INDUCE: bool, const QUEUE: bool>(
         };
         if c < 256 {
             assert_eq!(w, [c as u8]);
+        } else if k.lens[c as usize] != LONG {
+            assert_eq!(w, k.inline16[c as usize][..usize::from(k.lens[c as usize])]);
         } else {
-            let id = (c - 256) as usize;
-            assert_eq!(
-                w,
-                k.spelling[k.offsets[id] as usize..k.offsets[id + 1] as usize]
-            );
+            assert_eq!(w, long_word(&k.inline16[c as usize], &k.spelling));
         }
     }
 }
@@ -249,7 +247,7 @@ fn emit_matches_reference() {
         let got = catch_unwind(AssertUnwindSafe(|| {
             inline_words(&spelling, &offsets, &mut inline16, &mut lens);
             emit(
-                &edges, &extra, &spelling, &offsets, &inline16, &lens, n, mark, bits, &mut out,
+                &edges, &extra, &spelling, &inline16, &lens, n, mark, bits, &mut out,
             );
         }))
         .ok()
@@ -259,4 +257,130 @@ fn emit_matches_reference() {
         cases += 1;
     }
     println!("{cases} walks, {panics} empty (both panic)");
+}
+
+#[test]
+fn thin_and_thick_sum_to_each_symbols_prefix() {
+    let mut kernel = Kernel::default();
+    let mut out = [0; 1024];
+    let mut pass = kernel.begin(&mut out, u32::MAX, usize::MAX);
+    // The marked run contributes two thick fragments and one thin singleton.
+    for (byte, start, width) in [(7, 0, 2), (9, 2, 6), (7, 8, 10), (9, 18, 1)] {
+        pass.take::<true>(byte, start, width, 12, 3);
+    }
+    assert_eq!((pass.f.thin[7], pass.f.thick_rows[7]), (3, 9));
+    assert_eq!((pass.f.thin[9], pass.f.thick_rows[9]), (1, 6));
+    assert_eq!(
+        pass.edges[..3 * pass.ns]
+            .chunks_exact(3)
+            .map(|s| s[1])
+            .collect::<Vec<_>>(),
+        [0, 2, 7]
+    );
+}
+
+#[test]
+fn strip_prefix_stops_at_dense_cap() {
+    let mut kernel = Kernel::default();
+    let mut out = [0; 16];
+    let mut pass = kernel.begin(&mut out, u32::MAX, 1);
+    pass.take::<false>(255, 0, 511, 1000, 16);
+    pass.take::<false>(3, 511, 512, 1000, 16);
+    assert!(pass.ns > pass.cap_strips);
+    assert_eq!(&pass.edges[..], &[0, 0, (511 << 8) | 255]);
+}
+
+#[test]
+fn maximum_band_fields_decode_independently() {
+    let band = Band::new(900_000, 899_999, 0x00ff_abcd);
+    assert_eq!(
+        (band.end(), band.dst(), band.code()),
+        (900_000, 899_999, 0x00ff_abcd)
+    );
+}
+
+#[test]
+fn long_inline_slot_keeps_both_offsets() {
+    let bytes: Vec<_> = (0..80_000).map(|i| (i % 251) as u8).collect();
+    let slot = long_slot(65_535, 65_567);
+    assert_eq!(long_word(&slot, &bytes), &bytes[65_535..65_567]);
+}
+
+#[test]
+fn dictionary_reuse_matches_each_blocks_plain_inverse() {
+    let mut kernel = Kernel::default();
+    let mut out = Vec::new();
+    let mut g = super::b5::Lcg(43);
+    let large = super::b5::runs_column(&mut g, 120_000, 6, 18);
+    for l in [&large[..], &large[..97], &large[..]] {
+        let r = Runs::of_column(l);
+        let stats = kernel.run::<true, true>(r.records(), l.len(), 53, LIMIT, &mut out);
+        assert!(out == super::b5::plain(l, 53));
+        if l.len() > 100 {
+            assert!(kernel.lens.len() - 256 < stats.words);
+        }
+    }
+}
+
+#[test]
+fn full_block_reserves_spelling_once() {
+    let mut kernel = Kernel::default();
+    let mut out = Vec::new();
+    for n in [65_535, 65_536, 65_537] {
+        let r = Runs::of_column(&(0..n).map(|i| (i % 2) as u8).collect::<Vec<_>>());
+        kernel.run::<true, true>(r.records(), n, 0, LIMIT, &mut out);
+        // Alternating thin rows need no long words.
+        if n >= 65_536 {
+            assert_eq!(kernel.spelling.capacity(), 48 * 1024);
+        }
+    }
+}
+
+#[test]
+fn two_ended_emission_meets_on_odd_even_and_singleton_cycles() {
+    let mut inline = vec![];
+    let mut lens = vec![];
+    begin_inline(0, &mut inline, &mut lens);
+    for cycle in 1..=7usize {
+        let n = 73;
+        let bits = 4;
+        let edges: Vec<_> = (0..cycle)
+            .map(|i| {
+                ((65 + i as u32) << bits) | (((i + 1) % cycle) ^ ((i + cycle - 1) % cycle)) as u32
+            })
+            .collect();
+        let mut out = vec![];
+        emit_bidirectional(
+            &edges,
+            &[],
+            &inline,
+            &lens,
+            n,
+            0,
+            (cycle - 1) as u32,
+            bits,
+            &mut out,
+        );
+        assert!(out.into_iter().eq((0..n).map(|i| 65 + (i % cycle) as u8)));
+    }
+}
+
+/// A full nonzero tail still belongs to its original symbol. Its next ranks
+/// spill into a new chunk, even when the two in-output chunks are adjacent.
+#[test]
+fn full_nonzero_tail_links_to_its_overflow_chunk() {
+    let mut out = [0; 2048];
+    let mut spill = outq::Spill::default();
+    let mut queues = outq::Queues::new(&mut out, &mut spill, u32::MAX);
+    let thin = [0; 256];
+    queues.push(1, 0, 1, &thin);
+    queues.push(2, 1, 496, &thin);
+    queues.push(2, 497, 16, &thin);
+    assert_eq!(queues.chunks(), 2);
+    queues.push(2, 513, 2, &thin);
+    assert_eq!(queues.chunks(), 3);
+    let heads = queues.heads();
+    let mut decoded = [0; 514];
+    outq::Reader::new(&out, &spill, &heads, 2).wire(&mut decoded, 0);
+    assert!(decoded.into_iter().eq(1..=514));
 }

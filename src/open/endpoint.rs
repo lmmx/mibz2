@@ -10,7 +10,7 @@
 //! word), six otherwise (`Wide`). The two lists are linked as the nodes are made, with no
 //! staging lists. After the elimination a node's side-1 links, read once more by the walk
 //! along the bottom, give way to its bottom coordinate.
-use super::{Band, Counts, Kernel};
+use super::{begin_inline, Band, Counts, Kernel, Strip, INLINE, LONG};
 
 /// A node's links in the arena
 trait Links {
@@ -78,8 +78,22 @@ impl Links for Wide {
 /// The node count up to which `Narrow` links serve: ids 0..=65535
 const NARROW_NODES: usize = 1 << 16;
 
-/// A rule's words in the arena: left, right, len, first
+/// Four arena words hold either 15 payload bytes plus a length byte, or
+/// two child ids, their combined length and a tagged spelling offset. An
+/// unexpanded long rule has the sentinel u32::MAX in the offset field.
 const RULE: usize = 4;
+
+// Only live node handles carry a length. Rule children remain plain ids. Each
+// ordinary step consumes at least one row and makes at most one rule. A spiral
+// of q steps consumes at least q rows and makes at most 2q rules by squaring,
+// so every id is at most 256 + 2 * 900_000 and fits in the low 22 bits.
+const ID_BITS: u32 = 22;
+const ID_MASK: u32 = (1 << ID_BITS) - 1;
+const SATURATED: u32 = u32::MAX >> ID_BITS;
+
+fn literal(byte: u8) -> u32 {
+    (1 << ID_BITS) | (u32::from(byte) + 1)
+}
 
 /// The width certificate's line (the Mechanisms line's cycle 19, Theorem 19.2a,
 /// `docs/journal/2026-11-21-carbon-cycle19-unified-synthesis.md` on
@@ -183,6 +197,34 @@ impl<L: Links> Elim<'_, L> {
         self.a[id as usize * L::STRIDE + L::BOTTOM] = x;
     }
 
+    /// Assign exclusive prefix sums from both ends of side 1. Narrow nodes
+    /// reuse both links for the coordinate, so read both links before writing.
+    fn assign_bottom(&mut self, rows: u32) {
+        let mut first = L::next(self.a, 0, 1);
+        let mut last = L::prev(self.a, 0, 1);
+        let (mut lo, mut hi) = (0, rows);
+        while first != last {
+            let next = L::next(self.a, first, 1);
+            let prev = L::prev(self.a, last, 1);
+            let width = self.width(first);
+            hi -= self.width(last);
+            self.set_bottom(first, lo);
+            self.set_bottom(last, hi);
+            lo += width;
+            if next == last {
+                assert_eq!(lo, hi);
+                return;
+            }
+            first = next;
+            last = prev;
+        }
+        if first != 0 {
+            self.set_bottom(first, lo);
+            lo += self.width(first);
+        }
+        assert_eq!(lo, hi);
+    }
+
     /// A new node, its links unset
     fn node(&mut self, width: u32, word: u32) -> u32 {
         let id = self.nodes;
@@ -228,6 +270,14 @@ impl<L: Links> Elim<'_, L> {
         L::set_prev(self.a, n, side, p);
     }
 
+    /// The successor of a tail is the sentinel on this side.
+    #[inline(always)]
+    fn pop_tail(&mut self, id: u32, side: usize) {
+        let prev = L::prev(self.a, id, side);
+        L::set_next(self.a, prev, side, 0);
+        L::set_prev(self.a, 0, side, prev);
+    }
+
     #[inline(always)]
     fn insert(&mut self, at: u32, id: u32, side: usize) {
         let next = L::next(self.a, at, side);
@@ -247,8 +297,27 @@ impl<L: Links> Elim<'_, L> {
         if w <= 256 {
             u32::from(w != 0)
         } else {
-            self.a[self.rule(w) + 2]
+            let r = self.rule(w);
+            let tag = self.a[r + 3];
+            if tag >> 28 == 0 {
+                tag >> 24
+            } else {
+                self.a[r + 2]
+            }
         }
+    }
+
+    /// The low 120 bits are in spelling order. The length byte is metadata.
+    #[inline(always)]
+    fn short_payload(&self, id: u32) -> u128 {
+        if id <= 256 {
+            return u128::from(id - 1);
+        }
+        let r = self.rule(id);
+        u128::from(self.a[r])
+            | (u128::from(self.a[r + 1]) << 32)
+            | (u128::from(self.a[r + 2]) << 64)
+            | (u128::from(self.a[r + 3] & 0x00ff_ffff) << 96)
     }
 
     #[inline(always)]
@@ -260,10 +329,29 @@ impl<L: Links> Elim<'_, L> {
             return left;
         }
         let id = ((self.top - self.base) / RULE) as u32 + 257;
-        let len = self.len(left) + self.len(right);
-        self.a[self.top..self.top + RULE].copy_from_slice(&[left, right, len, u32::MAX]);
+        let (left_len, right_len) = (left >> ID_BITS, right >> ID_BITS);
+        let (left, right) = (left & ID_MASK, right & ID_MASK);
+        let len = if left_len < SATURATED && right_len < SATURATED {
+            left_len + right_len
+        } else {
+            self.len(left) + self.len(right)
+        };
+        let rule = if len < INLINE as u32 {
+            let bytes = self.short_payload(left)
+                | (self.short_payload(right) << (8 * left_len))
+                | (u128::from(len) << 120);
+            [
+                bytes as u32,
+                (bytes >> 32) as u32,
+                (bytes >> 64) as u32,
+                (bytes >> 96) as u32,
+            ]
+        } else {
+            [left, right, len, u32::MAX]
+        };
+        self.a[self.top..self.top + RULE].copy_from_slice(&rule);
         self.top += RULE;
-        id
+        (len.min(SATURATED) << ID_BITS) | id
     }
 
     /// `word` repeated `q` times (`q > 0`), by squaring: at most `SPIRAL_RULES - 1` rules
@@ -335,23 +423,23 @@ impl<L: Links> Elim<'_, L> {
             left -= w;
             taken += 1;
             if x == y {
-                self.cut(x, 0);
-                self.cut(x, 1);
+                self.pop_tail(x, 0);
+                self.pop_tail(x, 1);
                 continue;
             }
             let word = self.join(self.word(x), self.word(y));
             if aw <= bw {
-                self.cut(x, 0);
+                self.pop_tail(x, 0);
                 self.insert(y, x, 0);
                 self.set_word(x, word);
                 if aw == bw {
                     self.cut(y, 0);
-                    self.cut(y, 1);
+                    self.pop_tail(y, 1);
                 } else {
                     self.set_width(y, bw - w);
                 }
             } else {
-                self.cut(y, 1);
+                self.pop_tail(y, 1);
                 self.insert(x, y, 1);
                 self.set_word(y, word);
                 self.set_width(x, aw - w);
@@ -359,6 +447,30 @@ impl<L: Links> Elim<'_, L> {
         };
         (*remaining, *steps) = (left, taken);
         done
+    }
+
+    /// An excursion followed by its retained byte. Only long words occupy
+    /// spelling, so memoized offsets always refer to permanent bytes.
+    fn inline_word(
+        &mut self,
+        word: u32,
+        byte: u8,
+        stack: &mut Vec<u32>,
+        spelling: &mut Vec<u8>,
+    ) -> ([u8; INLINE], u8) {
+        let id = word & ID_MASK;
+        let height = (word >> ID_BITS) as usize;
+
+        if height < INLINE {
+            let mut bytes = self.short_payload(id).to_le_bytes();
+            bytes[height] = byte;
+            (bytes, (height + 1) as u8)
+        } else {
+            let start = spelling.len() as u32;
+            self.append(id, stack, spelling);
+            spelling.push(byte);
+            (super::long_slot(start, spelling.len() as u32), LONG)
+        }
     }
 
     fn append(&mut self, word: u32, stack: &mut Vec<u32>, dest: &mut Vec<u8>) {
@@ -369,18 +481,112 @@ impl<L: Links> Elim<'_, L> {
                 dest.push((id - 1) as u8);
             } else {
                 let r = self.rule(id);
+                let tag = self.a[r + 3];
+                if tag >> 28 == 0 {
+                    let bytes = self.short_payload(id).to_le_bytes();
+                    dest.extend_from_slice(&bytes[..(tag >> 24) as usize]);
+                    continue;
+                }
                 let rule = &mut self.a[r..r + RULE];
-                if rule[3] == u32::MAX {
-                    rule[3] = dest.len() as u32;
+                if tag == u32::MAX {
+                    rule[3] = 0x8000_0000 | dest.len() as u32;
                     stack.push(rule[1]);
                     stack.push(rule[0]);
                 } else {
-                    let start = rule[3] as usize;
+                    let start = (tag & 0x7fff_ffff) as usize;
                     dest.extend_from_within(start..start + rule[2] as usize);
                 }
             }
         }
     }
+}
+
+/// Two direct-mapped tables in the dead edge arena. The first compares both
+/// the rule id and the retained byte. The second compares the word itself.
+struct Dictionary<'a> {
+    pairs: &'a mut [u32],
+    contents: &'a mut [u32],
+    inline16: &'a mut Vec<[u8; INLINE]>,
+    lens: &'a mut Vec<u8>,
+    spelling: &'a mut Vec<u8>,
+    stack: &'a mut Vec<u32>,
+}
+
+impl Dictionary<'_> {
+    fn code<L: Links>(&mut self, e: &mut Elim<L>, handle: u32, byte: u8) -> u32 {
+        if handle == 0 {
+            return u32::from(byte);
+        }
+        let id = handle & ID_MASK;
+        let key = (id << 8) | u32::from(byte);
+        let slot = 2 * (key.wrapping_mul(0x9e37_79b9) >> 22) as usize;
+        if !self.pairs.is_empty() && self.pairs[slot] == key {
+            return self.pairs[slot + 1];
+        }
+
+        let start = self.spelling.len();
+        let memoized = handle >> ID_BITS >= INLINE as u32 && e.a[e.rule(id) + 3] != u32::MAX;
+        let (entry, len) = e.inline_word(handle, byte, self.stack, self.spelling);
+        if self.contents.is_empty() {
+            return self.insert(entry, len);
+        }
+        let bytes = if len == LONG {
+            &self.spelling[start..]
+        } else {
+            &entry[..len as usize]
+        };
+        let index = spelling_hash(&entry, len, bytes) as usize & (self.contents.len() - 1);
+        let old = self.contents[index] as usize;
+        let same = old != 0
+            && self.lens[old] == len
+            && if len == LONG {
+                super::long_word(&self.inline16[old], self.spelling) == bytes
+            } else {
+                self.inline16[old] == entry
+            };
+        let code = if same {
+            // Fresh child memo entries may point into this expansion. Preserve
+            // those bytes until the arena is retired.
+            if len == LONG {
+                if memoized {
+                    self.spelling.truncate(start);
+                } else {
+                    self.spelling.pop();
+                }
+            }
+            old as u32
+        } else {
+            let code = self.insert(entry, len);
+            self.contents[index] = code;
+            code
+        };
+        self.pairs[slot] = key;
+        self.pairs[slot + 1] = code;
+        code
+    }
+
+    fn insert(&mut self, entry: [u8; INLINE], len: u8) -> u32 {
+        let code = self.lens.len() as u32;
+        self.inline16.push(entry);
+        self.lens.push(len);
+        code
+    }
+}
+
+/// A cache collision only evicts a candidate. Sharing requires equal length and bytes.
+fn spelling_hash(entry: &[u8; INLINE], len: u8, bytes: &[u8]) -> u64 {
+    let (low, high, middle) = if len == LONG {
+        let part = |i: usize| u64::from_le_bytes(bytes[i..i + 8].try_into().unwrap());
+        (part(0), part(bytes.len() - 8), part(bytes.len() / 2 - 4))
+    } else {
+        let value = u128::from_le_bytes(*entry);
+        (value as u64, (value >> 64) as u64, 0)
+    };
+    let h = low.wrapping_mul(0xBF58_476D_1CE4_E5B9)
+        ^ high.rotate_left(29).wrapping_mul(0x94D0_49BB_1331_11EB)
+        ^ middle.wrapping_mul(0xD6E8_FEB8_6659_FD93)
+        ^ (bytes.len() as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+    h ^ (h >> 30)
 }
 
 impl Kernel {
@@ -400,7 +606,7 @@ impl Kernel {
     }
 
     /// The words `edges` is sized to for the induced construction of `ns` strips and `m`
-    /// retained rows: the strips' image order (`ns` words), then the arena, sized for the
+    /// retained rows: packed strips and image order (`4 * ns` words), then the arena for the
     /// nodes and as many rules (the blocks make about one a node; more grow it); and at least
     /// the `m` edges written over them all
     pub(super) fn arena_words(&self, ns: usize, m: usize) -> usize {
@@ -409,25 +615,27 @@ impl Kernel {
         } else {
             Narrow::STRIDE
         };
-        (ns + (stride + RULE) * Self::nodes_most(ns)).max(m)
+        (4 * ns + (stride + RULE) * Self::nodes_most(ns)).max(m)
     }
 
     pub(super) fn induced(
         &mut self,
+        ns: usize,
         n: u32,
         thin: &[u32; 256],
         stats: &mut Counts,
     ) -> [usize; 256] {
-        let most = Self::nodes_most(self.strips.len());
-        if self.wide(self.strips.len()) {
-            self.induced_with::<Wide>(n, thin, stats, most)
+        let most = Self::nodes_most(ns);
+        if self.wide(ns) {
+            self.induced_with::<Wide>(ns, n, thin, stats, most)
         } else {
-            self.induced_with::<Narrow>(n, thin, stats, most)
+            self.induced_with::<Narrow>(ns, n, thin, stats, most)
         }
     }
 
     fn induced_with<L: Links>(
         &mut self,
+        ns: usize,
         n: u32,
         thin: &[u32; 256],
         stats: &mut Counts,
@@ -435,24 +643,21 @@ impl Kernel {
     ) -> [usize; 256] {
         let Kernel {
             endpoint,
-            strips,
             bands,
             spelling,
-            offsets,
             edges,
+            inline16,
+            lens,
             ..
         } = self;
-        // `edges` is written only once the elimination is done: its buffer holds the strips'
-        // image order (its first `ns` words, `finish`), then the arena, sized by `finish`
-        // (`arena_words`)
-        let ns = strips.len();
         let nodes_words = L::STRIDE * most;
-        assert!(edges.len() >= ns + nodes_words);
+        assert!(edges.len() >= 4 * ns + nodes_words);
         #[cfg(test)]
         if endpoint.tight {
-            edges.truncate(ns + nodes_words);
+            edges.truncate(4 * ns + nodes_words);
         }
-        let (image_order, arena) = edges.split_at_mut(ns);
+        let (hdr, arena) = edges.split_at_mut(4 * ns);
+        let (strips_raw, image_order) = hdr.split_at_mut(3 * ns);
         #[cfg(test)]
         if endpoint.clobber == Clobber::OrderBeforeNodes {
             image_order.fill(0xA5A5_A5A5);
@@ -467,15 +672,17 @@ impl Kernel {
         e.node(0, 0);
         // the widest node, for the width certificate (`CERTIFIED_WIDTH`)
         let mut widest = 0;
-        for s in strips.iter() {
-            e.node(s.width, u32::from(s.byte) + 1);
+        for i in 0..ns {
+            let s = Strip::unpack(&strips_raw[3 * i..3 * i + 3]);
+            e.node(s.width, literal(s.byte));
             widest = widest.max(s.width);
         }
         // the lists, as the nodes are made: on side 0 the image gaps (its terminals) then the
         // domain order, on side 1 the domain gaps then the image order
         let (mut terminals, mut order) = ([(0, 0); 2], [(0, 0); 2]);
         let mut x = 0;
-        for (i, s) in strips.iter().enumerate() {
+        for i in 0..ns {
+            let s = Strip::unpack(&strips_raw[3 * i..3 * i + 3]);
             if x < s.from {
                 widest = widest.max(s.from - x);
                 let id = e.node(s.from - x, 0);
@@ -493,7 +700,8 @@ impl Kernel {
         }
         x = 0;
         for &i in image_order.iter() {
-            let s = strips[i as usize];
+            let idx = i as usize;
+            let s = Strip::unpack(&strips_raw[3 * idx..3 * idx + 3]);
             if x < s.to {
                 widest = widest.max(s.to - x);
                 let id = e.node(s.to - x, 0);
@@ -534,9 +742,9 @@ impl Kernel {
             e.eliminate::<false>(&mut remaining, &mut steps)
         } {
             let (base, top, nodes) = (e.base, e.top, e.nodes);
-            grow(edges, ns + top + RULE);
+            grow(edges, 4 * ns + top + RULE);
             e = Elim {
-                a: &mut edges[ns..],
+                a: &mut edges[4 * ns..],
                 base,
                 top,
                 nodes,
@@ -550,18 +758,43 @@ impl Kernel {
             e.a[..e.top].fill(0xA5A5_A5A5);
         }
 
-        let mut id = L::next(e.a, 0, 1);
-        x = 0;
-        while id != 0 {
-            let next = L::next(e.a, id, 1);
-            let w = e.width(id);
-            e.set_bottom(id, x);
-            x += w;
-            id = next;
-        }
-        assert_eq!(x as usize, stats.retained);
+        e.assign_bottom(stats.retained as u32);
+        // After elimination the strip/order prefix and unused arena tail are
+        // available for two direct-mapped caches. Small blocks need neither.
+        const PAIR_WORDS: usize = 2 * 1024;
+        const CACHE_WORDS: usize = PAIR_WORDS + 4096;
+        let (base, top, nodes) = (e.base, e.top, e.nodes);
+        let (header, arena) = edges.split_at_mut(4 * ns);
+        let (live, tail) = arena.split_at_mut(top);
+        let cache = if header.len() >= CACHE_WORDS {
+            header
+        } else {
+            tail
+        };
+        let (pairs, contents) = if cache.len() >= CACHE_WORDS {
+            cache[..CACHE_WORDS].fill(0);
+            cache[..CACHE_WORDS].split_at_mut(PAIR_WORDS)
+        } else {
+            (&mut [][..], &mut [][..])
+        };
+        let mut e = Elim::<L> {
+            a: live,
+            base,
+            top,
+            nodes,
+            _links: std::marker::PhantomData,
+        };
+        begin_inline(if n >= 65_536 { 1536 } else { 0 }, inline16, lens);
+        let mut dictionary = Dictionary {
+            pairs,
+            contents,
+            inline16,
+            lens,
+            spelling,
+            stack: &mut endpoint.stack,
+        };
         let mut cursors = [0; 256];
-        id = L::next(e.a, 0, 0);
+        let mut id = L::next(e.a, 0, 0);
         let mut in_node = 0;
         let mut k = 0;
         for a in 0..256 {
@@ -575,26 +808,22 @@ impl Kernel {
                 // construction panics here rather than looping (the mutation check's finding)
                 assert!(width > 0);
                 let dst = e.bottom(id) + in_node;
-                let code = if node_word == 0 {
-                    a as u32
-                } else {
-                    let height = e.len(node_word) as usize;
+                if node_word != 0 {
+                    let grade = node_word >> ID_BITS;
+                    let height = if grade == SATURATED {
+                        e.len(node_word & ID_MASK)
+                    } else {
+                        grade
+                    } as usize;
                     stats.words += 1;
                     stats.copies += width as usize;
                     stats.traced += height;
                     stats.thick_area += width as usize * height;
                     stats.unit_work += usize::from(width == 1) * height;
                     stats.longest = stats.longest.max(height);
-                    e.append(node_word, &mut endpoint.stack, spelling);
-                    spelling.push(a as u8);
-                    offsets.push(spelling.len() as u32);
-                    254 + offsets.len() as u32
-                };
-                bands.push(Band {
-                    end: k + width,
-                    delta: dst.wrapping_sub(k),
-                    code,
-                });
+                }
+                let code = dictionary.code(&mut e, node_word, a as u8);
+                bands.push(Band::new(k + width, dst, code));
                 in_node += width;
                 k += width;
                 if in_node == node_width {
@@ -605,5 +834,180 @@ impl Kernel {
         }
         assert_eq!(id, 0);
         cursors
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dictionary_collisions_compare_complete_spellings() {
+        let mut arena = [0; RULE * 64];
+        let mut elim = Elim::<Narrow> {
+            a: &mut arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        let (mut inline, mut lens) = (vec![], vec![]);
+        begin_inline(0, &mut inline, &mut lens);
+        let mut dict = Dictionary {
+            pairs: &mut [0; 2048],
+            contents: &mut [0; 1],
+            inline16: &mut inline,
+            lens: &mut lens,
+            spelling: &mut vec![],
+            stack: &mut vec![],
+        };
+        for byte in 0..=255 {
+            for first in [1, 241] {
+                let handle = literal(first);
+                let code = dict.code(&mut elim, handle, byte);
+                assert_eq!(dict.code(&mut elim, handle, byte), code);
+                assert_eq!(dict.inline16[code as usize][..2], [first, byte]);
+            }
+        }
+        let left = elim.power(literal(7), 16);
+        let right = elim.power(literal(8), 16);
+        let c1 = dict.code(&mut elim, left, 9) as usize;
+        let c2 = dict.code(&mut elim, right, 9) as usize;
+        assert_ne!(c1, c2);
+        assert_eq!(
+            super::super::long_word(&dict.inline16[c1], dict.spelling),
+            [&[7; 16][..], &[9]].concat()
+        );
+    }
+
+    #[test]
+    fn short_rules_keep_all_fifteen_high_bytes() {
+        let mut arena = [0; 32 * RULE];
+        let mut e = Elim::<Narrow> {
+            a: &mut arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        let mut word = 0;
+        for b in 241..=255 {
+            word = e.join(literal(b), word);
+        }
+        let short = e.short_payload(word & ID_MASK).to_le_bytes();
+        assert!(short[..15].iter().copied().eq((241..=255).rev()));
+        let long = e.join(word, word);
+        let mut bytes = Vec::new();
+        for _ in 0..2 {
+            e.append(long & ID_MASK, &mut vec![], &mut bytes);
+        }
+        assert_eq!(bytes, short[..15].repeat(4));
+    }
+
+    #[test]
+    fn bottom_coordinates_at_odd_and_even_meetings() {
+        fn check<L: Links>() {
+            for count in 0..=7u32 {
+                let mut arena = [0; 64];
+                let mut e = Elim::<L> {
+                    a: &mut arena,
+                    base: 0,
+                    top: 0,
+                    nodes: 0,
+                    _links: std::marker::PhantomData,
+                };
+                e.node(0, 0);
+                let mut list = (0, 0);
+                for width in 1..=count {
+                    let id = e.node(width, 0);
+                    e.append_to(&mut list, id, 1);
+                }
+                e.close(1, list, (0, 0));
+                e.assign_bottom(count * (count + 1) / 2);
+                for id in 1..=count {
+                    assert_eq!(e.bottom(id), (id - 1) * id / 2);
+                }
+            }
+        }
+        check::<Narrow>();
+        check::<Wide>();
+    }
+
+    #[test]
+    fn graded_word_lengths_across_saturation() {
+        let mut arena = [0; RULE * 40];
+        let mut e = Elim::<Narrow> {
+            a: &mut arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        let run = e.power(literal(255), SATURATED - 1);
+        let mut handle = e.join(0, run);
+        let mut spelling = Vec::new();
+        for len in SATURATED - 1..=SATURATED + 2 {
+            assert_eq!(handle >> ID_BITS, len.min(SATURATED));
+            assert_eq!(e.len(handle & ID_MASK), len);
+            // Memo offsets refer to this same growing spelling buffer.
+            let start = spelling.len();
+            e.append(handle & ID_MASK, &mut Vec::new(), &mut spelling);
+            assert_eq!(
+                &spelling[start..start + (SATURATED - 1) as usize],
+                &[255; 1022]
+            );
+            assert!(spelling[start + 1022..].iter().all(|&b| b == 0));
+            handle = e.join(handle, literal(0));
+        }
+    }
+
+    #[test]
+    fn prefix15_crosses_into_memoized_spelling() {
+        let mut arena = [0; RULE * 40];
+        let mut e = Elim::<Narrow> {
+            a: &mut arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        let (mut stack, mut spelling) = (Vec::new(), Vec::new());
+        let mut handle = 0;
+        for n in 1..=17u8 {
+            handle = e.join(handle, literal(n));
+            let start = spelling.len();
+            let (inline, len) = e.inline_word(handle, 255, &mut stack, &mut spelling);
+            let want: Vec<_> = (1..=n).chain([255]).collect();
+            if n < 16 {
+                assert_eq!(&inline[..usize::from(len)], want);
+                assert_eq!(spelling.len(), 0);
+            } else {
+                assert_eq!(len, LONG);
+                assert_eq!(spelling[start..], want);
+            }
+        }
+    }
+
+    #[test]
+    fn popping_a_tail_relinks_only_its_side() {
+        let mut arena = [0; 3 * Narrow::STRIDE];
+        let mut e = Elim::<Narrow> {
+            a: &mut arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        for side in 0..2 {
+            let mut list = (0, 0);
+            e.append_to(&mut list, 1, side);
+            e.append_to(&mut list, 2, side);
+            e.close(side, list, (0, 0));
+        }
+        e.pop_tail(2, 1);
+        assert_eq!(Narrow::next(e.a, 1, 1), 0);
+        assert_eq!(Narrow::prev(e.a, 0, 1), 1);
+        assert_eq!(Narrow::next(e.a, 1, 0), 2);
+        assert_eq!(Narrow::prev(e.a, 0, 0), 2);
     }
 }

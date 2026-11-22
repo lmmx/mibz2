@@ -278,7 +278,6 @@ fn scratch(k: &Kernel) -> usize {
     use std::mem::size_of;
     let e = &k.endpoint;
     k.spill.scratch()
-        + size_of::<Strip>() * k.strips.capacity()
         + 4 * k.directory.capacity()
         + size_of::<Tile>() * k.tiles.capacity()
         + size_of::<Band>() * k.bands.capacity()

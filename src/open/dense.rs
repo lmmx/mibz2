@@ -98,9 +98,10 @@ fn cap_is_exact_and_refusal_leaves_no_state() {
                 if cap.strips == usize::MAX {
                     continue;
                 }
+                let previous = k.edges.capacity();
                 let t = k.try_run::<true, true>(r.records(), n, p, LIMIT, cap, &mut out);
                 assert!(t.is_none(), "n {n}: past the cap {cap:?} ({m}, {ns})");
-                assert!(k.strips.capacity() <= cap.strips.max(ns));
+                assert!(k.edges.capacity() <= previous.max(cap.strips.saturating_mul(3)));
                 // every chunk the pass took, a whole chunk of ranks within the cap, or the
                 // last of a byte's, partly filled (at most one a byte)
                 assert!(

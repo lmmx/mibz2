@@ -11,8 +11,9 @@
 //! each byte's maximal runs are split into thin ones (at most `LIMIT` rows, retained) and thick
 //! strips (whole LF strips, eliminated). The thick strips and the gaps between them form an
 //! interval exchange whose elimination (`endpoint.rs`) gives, for every retained row, the word
-//! spelled until the walk next returns to a retained row. `emit` walks the retained rows from the
-//! marked one, appending each word; a cycle shorter than the block is repeated to `n` bytes.
+//! spelled until the walk next returns to a retained row. Large queued permutations whose
+//! codes fit alongside the links store the XOR of each row's neighbors. The emitter reads
+//! those cycles from both ends. A short marked cycle is repeated to `n` bytes.
 //!
 //! **Safety:** no `unsafe`. Every index is bounds-checked. The `assert!`s are invariants of the
 //! construction for every column, BWT or not: `checks.rs` audits every arrow of every binary
@@ -53,6 +54,18 @@ struct Strip {
     byte: u8,
 }
 
+impl Strip {
+    #[inline(always)]
+    fn unpack(w: &[u32]) -> Self {
+        Strip {
+            from: w[0],
+            to: w[1],
+            width: w[2] >> 8,
+            byte: (w[2] & 0xFF) as u8,
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 struct Tile {
     end: u32,
@@ -61,18 +74,36 @@ struct Tile {
     symbol: u16,
 }
 
+/// Absolute source end and destination start each fit in 20 bits (n <= 900,000).
+/// The high 24 bits hold the dictionary code.
 #[derive(Clone, Copy)]
-struct Band {
-    end: u32,
-    delta: u32,
-    code: u32,
+struct Band(u64);
+
+impl Band {
+    #[inline(always)]
+    fn new(end: u32, dst: u32, code: u32) -> Self {
+        debug_assert!(end <= 900_000 && dst <= 900_000 && code < (1 << 24));
+        Band(u64::from(end) | (u64::from(dst) << 20) | (u64::from(code) << 40))
+    }
+    #[inline(always)]
+    fn end(self) -> u32 {
+        (self.0 & 0xF_FFFF) as u32
+    }
+    #[inline(always)]
+    fn dst(self) -> u32 {
+        ((self.0 >> 20) & 0xF_FFFF) as u32
+    }
+    #[inline(always)]
+    fn code(self) -> u32 {
+        (self.0 >> 40) as u32
+    }
 }
 
 #[derive(Default)]
 pub struct Kernel {
     endpoint: endpoint::Endpoint,
+    predecessor: Option<u32>,
     spill: outq::Spill,
-    strips: Vec<Strip>,
     tiles: Vec<Tile>,
     directory: Vec<u32>,
     bands: Vec<Band>,
@@ -138,7 +169,9 @@ fn each_run(records: &[u16], p: u32, limit: u32, mut visit: impl FnMut(u8, u32, 
 /// counts
 struct Pass<'a> {
     queues: outq::Queues<'a>,
-    strips: &'a mut Vec<Strip>,
+    edges: &'a mut Vec<u32>,
+    ns: usize,
+    cap_strips: usize,
     f: First,
 }
 
@@ -184,15 +217,26 @@ impl Pass<'_> {
             f.thin[a] += w;
             f.m += w;
         } else {
-            self.strips.push(Strip {
-                from: x,
-                to: f.all[a],
-                width: w,
-                byte: c,
-            });
+            if self.ns < self.cap_strips {
+                let at = 3 * self.ns;
+                if self.edges.len() < at + 3 {
+                    let need = (at + 3)
+                        .max(2 * self.edges.len())
+                        .max(1024)
+                        .min(self.cap_strips.saturating_mul(3));
+                    self.edges.reserve_exact(need - self.edges.len());
+                    self.edges.resize(need, 0);
+                }
+                self.edges[at..at + 3].copy_from_slice(&[
+                    x,
+                    f.thin[a] + f.thick_rows[a],
+                    (w << 8) | u32::from(c),
+                ]);
+            }
+            self.ns += 1;
             f.thick[a] += 1;
+            f.thick_rows[a] += w;
         }
-        f.all[a] += w;
     }
 }
 
@@ -200,7 +244,7 @@ impl Pass<'_> {
 /// thick strips, the retained rows so far, the marked row's rank, and the maximal runs
 #[derive(Clone, Copy)]
 struct First {
-    all: [u32; 256],
+    thick_rows: [u32; 256],
     thin: [u32; 256],
     thick: [u32; 256],
     m: u32,
@@ -211,7 +255,7 @@ struct First {
 impl Default for First {
     fn default() -> Self {
         First {
-            all: [0; 256],
+            thick_rows: [0; 256],
             thin: [0; 256],
             thick: [0; 256],
             m: 0,
@@ -269,11 +313,7 @@ impl Kernel {
                 self.offsets.push(self.spelling.len() as u32);
                 254 + self.offsets.len() as u32
             };
-            self.bands.push(Band {
-                end: *k + width,
-                delta: exit.wrapping_sub(*k),
-                code,
-            });
+            self.bands.push(Band::new(*k + width, exit, code));
             *k += width;
             x0 += width;
         }
@@ -281,11 +321,12 @@ impl Kernel {
 
     /// The first pass's state, emptied for a block, its queues in `out` (`outq.rs`) for at
     /// most `limit` retained rows
-    fn begin<'a>(&'a mut self, out: &'a mut [u8], limit: u32) -> Pass<'a> {
-        self.strips.clear();
+    fn begin<'a>(&'a mut self, out: &'a mut [u8], limit: u32, cap_strips: usize) -> Pass<'a> {
         Pass {
             queues: outq::Queues::new(out, &mut self.spill, limit),
-            strips: &mut self.strips,
+            edges: &mut self.edges,
+            ns: 0,
+            cap_strips,
             f: First::default(),
         }
     }
@@ -317,23 +358,20 @@ impl Kernel {
     ) -> Option<(Counts, u32, u32)> {
         // the walk's buffer, `n` bytes and its copies' 16: the queues' until the walk
         out.resize(n as usize + INLINE, 0);
-        let mut pass = self.begin(&mut out[..], cap.m);
+        let mut pass = self.begin(&mut out[..], cap.m, cap.strips);
         maximal(records, |c, pos, width| {
             pass.take::<QUEUE>(c, pos, width, p, limit)
         });
+        let ns = pass.ns;
         let (f, heads, over) = (pass.f, pass.queues.heads(), pass.queues.over());
         #[cfg(test)]
         {
             self.spill.taken = pass.queues.chunks();
         }
-        if over || f.m > cap.m || self.strips.len() > cap.strips {
-            // refused: what the pass kept is let go to the cap's size, so that a refused
-            // block leaves no more scratch than an admitted one may
-            self.strips.clear();
-            self.strips.shrink_to(cap.strips);
+        if over || f.m > cap.m || ns > cap.strips {
             return None;
         }
-        Some(self.finish::<INDUCE, QUEUE>(&f, records, n, p, limit, &out[..], &heads))
+        Some(self.finish::<INDUCE, QUEUE>(&f, ns, records, n, p, limit, &out[..], &heads))
     }
 
     /// The construction after its first pass `f` (`records` read again only without `QUEUE`;
@@ -342,6 +380,7 @@ impl Kernel {
     fn finish<const INDUCE: bool, const QUEUE: bool>(
         &mut self,
         f: &First,
+        ns: usize,
         records: &[u16],
         n: u32,
         p: u32,
@@ -350,7 +389,7 @@ impl Kernel {
         heads: &outq::Heads,
     ) -> (Counts, u32, u32) {
         let First {
-            all,
+            thick_rows,
             thin,
             thick,
             m,
@@ -362,49 +401,50 @@ impl Kernel {
             runs,
             ..Counts::default()
         };
+        let all = std::array::from_fn(|a| thin[a] + thick_rows[a]);
         assert!(m > 0 && all.iter().sum::<u32>() == n);
         stats.retained = m as usize;
-        stats.thick = self.strips.len();
+        stats.thick = ns;
         let first = starts(all);
         let mut write = starts(thick);
-        // (EdgesMux, the Mechanisms line's cycle 19, Theorem 19.1) the strips in image order
-        // are kept in `edges`' first `ns` words, dead until the wiring below writes them, and
-        // the elimination's arena follows them there (`induced`): `edges` is sized for both
-        // now, once, so that neither is moved
-        let ns = self.strips.len();
         let need = if INDUCE {
             self.arena_words(ns, m as usize)
         } else {
-            ns
+            4 * ns
         };
         if self.edges.len() < need {
-            // (cold: the first blocks) exact, not doubled; nothing in it is kept
-            self.edges.clear();
-            self.edges.reserve_exact(need);
+            let add = need - self.edges.len();
+            self.edges.reserve_exact(add);
             self.edges.resize(need, 0);
         }
-        let image_order = &mut self.edges[..ns];
+        let (strips_raw, rest_edges) = self.edges.split_at_mut(3 * ns);
+        let image_order = &mut rest_edges[..ns];
         self.tiles.clear();
         let (mut last_x, mut retained_x) = (0, 0u32);
-        for (i, s) in self.strips.iter_mut().enumerate() {
-            let a = usize::from(s.byte);
-            s.to += first[a];
+        for i in 0..ns {
+            let sw = &mut strips_raw[3 * i..3 * i + 3];
+            let byte = (sw[2] & 0xFF) as u8;
+            let width = sw[2] >> 8;
+            let from = sw[0];
+            let a = usize::from(byte);
+            sw[1] += first[a];
+            let to = sw[1];
             image_order[write[a] as usize] = i as u32;
             write[a] += 1;
             if !INDUCE {
-                if s.from > last_x {
+                if from > last_x {
                     self.tiles.push(Tile {
-                        end: s.from,
+                        end: from,
                         delta: retained_x.wrapping_sub(last_x),
                         symbol: TERMINAL,
                     });
-                    retained_x += s.from - last_x;
+                    retained_x += from - last_x;
                 }
-                last_x = s.from + s.width;
+                last_x = from + width;
                 self.tiles.push(Tile {
                     end: last_x,
-                    delta: s.to.wrapping_sub(s.from),
-                    symbol: s.byte.into(),
+                    delta: to.wrapping_sub(from),
+                    symbol: byte.into(),
                 });
             }
         }
@@ -427,10 +467,15 @@ impl Kernel {
         }
         self.bands.clear();
         self.spelling.clear();
+        if INDUCE && n >= 65_536 {
+            self.spelling.reserve_exact(48 * 1024);
+        }
         self.offsets.clear();
-        self.offsets.push(0);
+        if !INDUCE {
+            self.offsets.push(0);
+        }
         let mut cursors = if INDUCE {
-            self.induced(n, &thin, &mut stats)
+            self.induced(ns, n, &thin, &mut stats)
         } else {
             let mut cursors = [0usize; 256];
             let (mut k, mut si) = (0, 0);
@@ -438,7 +483,8 @@ impl Kernel {
                 cursors[a] = self.bands.len();
                 let mut x = first[a];
                 while si < write[a] as usize {
-                    let s = self.strips[self.edges[si] as usize];
+                    let i = self.edges[3 * ns + si] as usize;
+                    let s = Strip::unpack(&self.edges[3 * i..3 * i + 3]);
                     self.trace(x, s.to, a as u8, &mut k, &mut stats);
                     x = s.to + s.width;
                     si += 1;
@@ -446,6 +492,12 @@ impl Kernel {
                 self.trace(x, first[a] + all[a], a as u8, &mut k, &mut stats);
             }
             assert_eq!(k, m);
+            inline_words(
+                &self.spelling,
+                &self.offsets,
+                &mut self.inline16,
+                &mut self.lens,
+            );
             cursors
         };
         stats.bands = self.bands.len();
@@ -455,7 +507,7 @@ impl Kernel {
             self.edges.fill(0xA5A5_A5A5);
         }
         let bits = (u32::BITS - (m - 1).leading_zeros()).max(1);
-        let wide = (255 + stats.words as u32) > (u32::MAX >> bits);
+        let wide = self.lens.len() - 1 > (u32::MAX >> bits) as usize;
         // (the memory diet) `edges` keeps its length: its rows from `m` are stale, and its
         // first `m` are all written below (the bands partition the retained ranks)
         if self.edges.len() < m as usize {
@@ -466,20 +518,44 @@ impl Kernel {
             self.extra.resize(m as usize, 0);
         }
         stats.table_bytes = 4 * (m as usize + self.extra.len());
-        if QUEUE {
+        self.predecessor = None;
+        if QUEUE && !wide && m >= 65_536 {
+            let edges = &mut self.edges[..m as usize];
+            edges.fill(0);
+            let mut predecessor = mark;
             let mut k = 0;
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
                 let mut queue = outq::Reader::new(out, &self.spill, heads, a);
-                for b in &self.bands[cursors[a]..end] {
-                    let span = (b.end - k) as usize;
-                    let dst = k.wrapping_add(b.delta) as usize;
-                    let pack = if wide { 0 } else { b.code << bits };
+                for &band in &self.bands[cursors[a]..end] {
+                    queue.wire_xor(
+                        edges,
+                        band.dst() as usize,
+                        (band.end() - k) as usize,
+                        band.code() << bits,
+                        mark,
+                        &mut predecessor,
+                    );
+                    k = band.end();
+                }
+            }
+            self.predecessor = Some(predecessor);
+        } else if QUEUE {
+            let mut k = 0;
+            for a in 0..256 {
+                let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
+                let mut queue = outq::Reader::new(out, &self.spill, heads, a);
+                for &b in &self.bands[cursors[a]..end] {
+                    let bend = b.end();
+                    let span = (bend - k) as usize;
+                    let dst = b.dst() as usize;
+                    let bcode = b.code();
+                    let pack = if wide { 0 } else { bcode << bits };
                     if wide {
-                        self.extra[dst..dst + span].fill(b.code);
+                        self.extra[dst..dst + span].fill(bcode);
                     }
                     queue.wire(&mut self.edges[dst..dst + span], pack);
-                    k = b.end;
+                    k = bend;
                 }
             }
         } else {
@@ -493,12 +569,16 @@ impl Kernel {
                 let mut z = stream[a];
                 let end = z + w;
                 while z < end {
-                    let b = self.bands[cursors[a]];
-                    let span = (end.min(b.end) - z) as usize;
-                    let dest = z.wrapping_add(b.delta) as usize;
-                    let pack = if wide { 0 } else { b.code << bits };
+                    let ci = cursors[a];
+                    let b = self.bands[ci];
+                    let bend = b.end();
+                    let bstart = if ci == 0 { 0 } else { self.bands[ci - 1].end() };
+                    let span = (end.min(bend) - z) as usize;
+                    let dest = (b.dst() + (z - bstart)) as usize;
+                    let bcode = b.code();
+                    let pack = if wide { 0 } else { bcode << bits };
                     if wide {
-                        self.extra[dest..dest + span].fill(b.code);
+                        self.extra[dest..dest + span].fill(bcode);
                     }
                     let mut value = pack | j;
                     for e in &mut self.edges[dest..dest + span] {
@@ -507,7 +587,7 @@ impl Kernel {
                     }
                     j += span as u32;
                     z += span as u32;
-                    cursors[a] += usize::from(z == b.end);
+                    cursors[a] += usize::from(z == bend);
                 }
                 stream[a] = end;
             });
@@ -545,19 +625,26 @@ impl Kernel {
         Some(stats)
     }
 
-    /// The words inlined and the walk from the marked row: the block's bytes into `out`
+    /// The walk from the marked row using the constructed dictionary: the block's bytes into `out`
     fn walk(&mut self, n: usize, m: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
-        inline_words(
-            &self.spelling,
-            &self.offsets,
-            &mut self.inline16,
-            &mut self.lens,
-        );
+        if let Some(before) = self.predecessor {
+            emit_bidirectional(
+                &self.edges[..m],
+                &self.spelling,
+                &self.inline16,
+                &self.lens,
+                n,
+                mark,
+                before,
+                bits,
+                out,
+            );
+            return;
+        }
         emit(
             &self.edges[..m],
             &self.extra,
             &self.spelling,
-            &self.offsets,
             &self.inline16,
             &self.lens,
             n,
@@ -711,15 +798,22 @@ const INLINE: usize = 16;
 /// `lens` of a word longer than `INLINE`: its bytes are read from `spelling` (the cold path)
 const LONG: u8 = u8::MAX;
 
-/// Every code's word as 16 bytes, its first `INLINE` padded with zeros, and its length (`LONG`
-/// past 16), indexed by code: the literals 0..256, then the block's words from 256. The
-/// literals are written once, when the table is first made; the words, once a block.
-fn inline_words(
-    spelling: &[u8],
-    offsets: &[u32],
-    inline16: &mut Vec<[u8; INLINE]>,
-    lens: &mut Vec<u8>,
-) {
+/// Long words use their otherwise unused inline slot for two spelling offsets.
+fn long_slot(start: u32, end: u32) -> [u8; INLINE] {
+    let mut slot = [0; INLINE];
+    slot[..4].copy_from_slice(&start.to_le_bytes());
+    slot[4..8].copy_from_slice(&end.to_le_bytes());
+    slot
+}
+
+fn long_word<'a>(slot: &[u8; INLINE], spelling: &'a [u8]) -> &'a [u8] {
+    let start = u32::from_le_bytes(slot[..4].try_into().unwrap()) as usize;
+    let end = u32::from_le_bytes(slot[4..8].try_into().unwrap()) as usize;
+    &spelling[start..end]
+}
+
+/// Keep the literal entries across blocks and reserve exactly the new word count.
+fn begin_inline(words: usize, inline16: &mut Vec<[u8; INLINE]>, lens: &mut Vec<u8>) {
     if inline16.len() < 256 {
         inline16.clear();
         inline16.extend((0..=255u8).map(|c| {
@@ -733,14 +827,26 @@ fn inline_words(
     inline16.truncate(256);
     lens.truncate(256);
     // (the memory diet) the table to its exact size, not doubled: 256 literals and the words
-    let words = offsets.len().saturating_sub(1);
     inline16.reserve_exact(words);
     lens.reserve_exact(words);
+}
+
+/// Build the tracing constructor's dictionary from its contiguous spellings.
+fn inline_words(
+    spelling: &[u8],
+    offsets: &[u32],
+    inline16: &mut Vec<[u8; INLINE]>,
+    lens: &mut Vec<u8>,
+) {
+    begin_inline(offsets.len() - 1, inline16, lens);
     for w in offsets.windows(2) {
         let word = &spelling[w[0] as usize..w[1] as usize];
         let mut v = [0; INLINE];
-        let head = word.len().min(INLINE);
-        v[..head].copy_from_slice(&word[..head]);
+        if word.len() <= INLINE {
+            v[..word.len()].copy_from_slice(word);
+        } else {
+            v = long_slot(w[0], w[1]);
+        }
         inline16.push(v);
         lens.push(if word.len() <= INLINE {
             word.len() as u8
@@ -761,7 +867,6 @@ fn emit(
     edges: &[u32],
     extra: &[u32],
     spelling: &[u8],
-    offsets: &[u32],
     inline16: &[[u8; INLINE]],
     lens: &[u8],
     n: usize,
@@ -791,8 +896,7 @@ fn emit(
             out[at..at + INLINE].copy_from_slice(&inline16[code]);
             at += usize::from(len);
         } else {
-            let w = code - 256;
-            let word = &spelling[offsets[w] as usize..offsets[w + 1] as usize];
+            let word = long_word(&inline16[code], spelling);
             let take = word.len().min(n - at);
             out[at..at + take].copy_from_slice(&word[..take]);
             at += take;
@@ -803,6 +907,79 @@ fn emit(
     }
     out.truncate(at.min(n));
     repeat(n, out);
+}
+
+/// Consume the marked cycle from both ends. Each packed edge holds the XOR
+/// of its neighbors, so either neighbor determines the other. For a short
+/// cycle, move the suffix beside the prefix before repeating the period.
+#[allow(clippy::too_many_arguments)]
+fn emit_bidirectional(
+    edges: &[u32],
+    spelling: &[u8],
+    inline: &[[u8; INLINE]],
+    lens: &[u8],
+    n: usize,
+    mark: u32,
+    before: u32,
+    bits: u32,
+    out: &mut Vec<u8>,
+) {
+    out.resize(n + INLINE, 0);
+    let mask = (1 << bits) - 1;
+    let (mut prev, mut front) = (before, mark);
+    let (mut back, mut next) = (before, mark);
+    let (mut lo, mut hi) = (0, n);
+    for pair in 0..=edges.len() / 2 {
+        if lo == hi || (pair != 0 && front == next) {
+            break;
+        }
+        let ef = edges[front as usize];
+        let cf = (ef >> bits) as usize;
+        let single = front == back;
+        let lf = lens[cf];
+        if lf != LONG && hi - lo >= INLINE {
+            out[lo..lo + INLINE].copy_from_slice(&inline[cf]);
+            lo += usize::from(lf);
+        } else {
+            let word = if lf == LONG {
+                long_word(&inline[cf], spelling)
+            } else {
+                &inline[cf][..usize::from(lf)]
+            };
+            let take = word.len().min(hi - lo);
+            out[lo..lo + take].copy_from_slice(&word[..take]);
+            lo += take;
+        }
+        if single {
+            break;
+        }
+        let eb = edges[back as usize];
+        let cb = (eb >> bits) as usize;
+        let lb = lens[cb];
+        if lb != LONG && hi - lo >= INLINE {
+            let shifted = u128::from_le_bytes(inline[cb]) << (8 * (INLINE - usize::from(lb)));
+            out[hi - INLINE..hi].copy_from_slice(&shifted.to_le_bytes());
+            hi -= usize::from(lb);
+        } else {
+            let word = if lb == LONG {
+                long_word(&inline[cb], spelling)
+            } else {
+                &inline[cb][..usize::from(lb)]
+            };
+            let take = word.len().min(hi - lo);
+            out[hi - take..hi].copy_from_slice(&word[word.len() - take..]);
+            hi -= take;
+        }
+        (prev, front) = (front, (ef & mask) ^ prev);
+        (next, back) = (back, (eb & mask) ^ next);
+    }
+    if lo < hi {
+        out.copy_within(hi..n, lo);
+        out.truncate(lo + (n - hi));
+        repeat(n, out);
+    } else {
+        out.truncate(n);
+    }
 }
 
 /// The walk as shipped before the 16-byte emit, kept as the equivalence tests' reference

@@ -17,8 +17,22 @@ fn construct(k: &mut Kernel, l: &[u8], p: u32, spirals: Option<bool>) -> Built {
     let mut out = vec![0xC3; l.len() / 2];
     let s = k.run::<true, true>(r.records(), l.len(), p, LIMIT, &mut out);
     k.endpoint.spirals = None;
-    let bands = k.bands.iter().map(|b| (b.end, b.delta, b.code)).collect();
-    (out, s, bands, k.spelling.clone(), k.offsets.clone())
+    let bands = k
+        .bands
+        .iter()
+        .map(|b| (b.end(), b.dst(), b.code()))
+        .collect();
+    let mut words = Vec::new();
+    let mut ends = Vec::new();
+    for (i, &len) in k.lens[256..].iter().enumerate() {
+        if len == LONG {
+            words.extend_from_slice(long_word(&k.inline16[256 + i], &k.spelling));
+        } else {
+            words.extend_from_slice(&k.inline16[256 + i][..usize::from(len)]);
+        }
+        ends.push(words.len() as u32);
+    }
+    (out, s, bands, words, ends)
 }
 
 /// Both loops on `l` at `p`: the same bands, words and steps, and the plain inverse's output;
