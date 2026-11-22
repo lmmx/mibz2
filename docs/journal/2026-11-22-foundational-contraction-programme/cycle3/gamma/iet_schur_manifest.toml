@@ -1,0 +1,43 @@
+name = "Unified Compositional IET-Schur + Sub-Interval 1-Piece Schur + Core-RV (Inline15/Inline3)"
+target = "text"
+
+uses = [
+  "maximal_runs",
+  "lf_shifts",
+]
+
+[[edge]]
+id = "bucket_iet_partition"
+inputs = ["lf_affine", "runs", "C", "alphabet", "n"]
+output = "bucket_iet_pieces"
+status = "verified"
+dependent = false
+cost = { W = "O(r + |Sigma|)", D = "1", B = "O(r) [2*r_init 16B appends into by_src & by_dst]", Q = "0", M = "O(r) [2*r_init*16B = 1.6-4.0 MiB]" }
+evidence = "One sequential scan over maximal runs splitting at <= |Sigma|-1 F-bucket boundaries; verified exact in /tmp/fcp-c/cycle3_unified_verifier.py on 9,601 exhaustive binary/ternary cases + 6 authenticated Wikidata blocks."
+
+[[edge]]
+id = "compositional_bucket_iet_schur"
+inputs = ["bucket_iet_pieces", "p", "C", "alphabet", "n"]
+output = "core_bucket_iet_and_slp"
+status = "verified"
+dependent = false
+cost = { W = "O(r * log|Sigma| + n_sub) [measured 1.45-1.68 r0 piece ops + 4.13-4.25 r0 appends + 3.96-4.02 r0 scans]", D = "O(|Sigma| * local_bucket_ops)", B = "O(r) [~34 MB writes + 32 MB scans across 6 blocks]", Q = "0 outside L2 (local Shift-Bin-Grid <= 152 KiB, 1.45-1.85 probes/lookup)", M = "1.69-4.22 MiB (Layout A 16B direct) or 1.21-3.02 MiB (Layout B with 1.00M pool derefs)" }
+evidence = "Theorems C1-C4 (exact Schur confluence, Delta r <= -1 full-bucket monotonicity, Period-Reduction Lemma via Sub-Interval 1-Piece Schur). Verified 100% exact on 9,601 exhaustive binary (n<=8) & ternary (n<=6) cases, 3-phase/AltRing/Low-r Padded-Ring/SymMidRun/Fib_80+$, and 6/6 authenticated Wikidata blocks."
+
+[[edge]]
+id = "core_rv_thick_elimination"
+inputs = ["core_bucket_iet_and_slp", "p", "n"]
+output = "reduced_core_edges_and_words"
+status = "verified"
+dependent = false
+cost = { W = "O(r_core * log(max_thick_chain)) [measured 12.7k-20.6k ops, 6-8 doubling rounds; Sub-Interval 1-Piece fallback]", D = "O(log(max_thick_chain))", B = "O(r_core)", Q = "0 outside L2 (F_q <= 14.5k pieces)", M = "O(m_core + r_core) [edges_core = 41.8-113.6 KiB, flat_q = 105-189 KiB]" }
+evidence = "Verified exact in /tmp/fcp-c/cycle3_unified_verifier.py on 9,601 exhaustive cases + all 4 constant-r killers + 6/6 authenticated Wikidata blocks (m_core = 10.7k-29.1k = 0.107-0.150x Open m_16)."
+
+[[edge]]
+id = "core_walk_two_level_emit"
+inputs = ["reduced_core_edges_and_words", "p", "n"]
+output = "text"
+status = "verified"
+dependent = true
+cost = { W = "O(n) [114k walk + 691k S2-node visits + 805k leaf writes across 6 blocks]", D = "m_core [10.7k-29.1k = 0.107-0.150x Open m_16]", B = "O(n)", Q = "m_core dependent loads in L1d/L2 (41.8-113.6 KiB) + 379k slab16 reads", M = "O(n) [output buffer + 105-189 KiB flat_q + 425-1043 KiB slab16]" }
+evidence = "Verified byte-for-byte exact (incl. periodic tiling and closed-cycle shift alignment) in /tmp/fcp-c/cycle3_unified_verifier.py and instrumented in /tmp/fcp-c/cycle3_gates_and_diet.py."
