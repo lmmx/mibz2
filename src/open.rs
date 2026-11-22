@@ -465,6 +465,9 @@ impl Kernel {
         }
         self.bands.clear();
         self.spelling.clear();
+        if INDUCE && n >= 65_536 {
+            self.spelling.reserve_exact(48 * 1024);
+        }
         self.offsets.clear();
         if !INDUCE {
             self.offsets.push(0);

@@ -321,3 +321,17 @@ fn dictionary_reuse_matches_each_blocks_plain_inverse() {
         }
     }
 }
+
+#[test]
+fn full_block_reserves_spelling_once() {
+    let mut kernel = Kernel::default();
+    let mut out = Vec::new();
+    for n in [65_535, 65_536, 65_537] {
+        let r = Runs::of_column(&(0..n).map(|i| (i % 2) as u8).collect::<Vec<_>>());
+        kernel.run::<true, true>(r.records(), n, 0, LIMIT, &mut out);
+        // Alternating thin rows need no long words.
+        if n >= 65_536 {
+            assert_eq!(kernel.spelling.capacity(), 48 * 1024);
+        }
+    }
+}
