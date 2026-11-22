@@ -17,7 +17,11 @@ fn construct(k: &mut Kernel, l: &[u8], p: u32, spirals: Option<bool>) -> Built {
     let mut out = vec![0xC3; l.len() / 2];
     let s = k.run::<true, true>(r.records(), l.len(), p, LIMIT, &mut out);
     k.endpoint.spirals = None;
-    let bands = k.bands.iter().map(|b| (b.end, b.delta, b.code)).collect();
+    let bands = k
+        .bands
+        .iter()
+        .map(|b| (b.end(), b.dst(), b.code()))
+        .collect();
     let mut words = Vec::new();
     let mut ends = Vec::new();
     for (i, &len) in k.lens[256..].iter().enumerate() {

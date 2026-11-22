@@ -73,11 +73,29 @@ struct Tile {
     symbol: u16,
 }
 
+/// Absolute source end and destination start each fit in 20 bits (n <= 900,000).
+/// During construction the high 24 bits hold a word id, then its dictionary code.
 #[derive(Clone, Copy)]
-struct Band {
-    end: u32,
-    delta: u32,
-    code: u32,
+struct Band(u64);
+
+impl Band {
+    #[inline(always)]
+    fn new(end: u32, dst: u32, code: u32) -> Self {
+        debug_assert!(end <= 900_000 && dst <= 900_000 && code < (1 << 24));
+        Band(u64::from(end) | (u64::from(dst) << 20) | (u64::from(code) << 40))
+    }
+    #[inline(always)]
+    fn end(self) -> u32 {
+        (self.0 & 0xF_FFFF) as u32
+    }
+    #[inline(always)]
+    fn dst(self) -> u32 {
+        ((self.0 >> 20) & 0xF_FFFF) as u32
+    }
+    #[inline(always)]
+    fn code(self) -> u32 {
+        (self.0 >> 40) as u32
+    }
 }
 
 #[derive(Default)]
@@ -293,11 +311,7 @@ impl Kernel {
                 self.offsets.push(self.spelling.len() as u32);
                 254 + self.offsets.len() as u32
             };
-            self.bands.push(Band {
-                end: *k + width,
-                delta: exit.wrapping_sub(*k),
-                code,
-            });
+            self.bands.push(Band::new(*k + width, exit, code));
             *k += width;
             x0 += width;
         }
@@ -502,15 +516,17 @@ impl Kernel {
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
                 let mut queue = outq::Reader::new(out, &self.spill, heads, a);
-                for b in &self.bands[cursors[a]..end] {
-                    let span = (b.end - k) as usize;
-                    let dst = k.wrapping_add(b.delta) as usize;
-                    let pack = if wide { 0 } else { b.code << bits };
+                for &b in &self.bands[cursors[a]..end] {
+                    let bend = b.end();
+                    let span = (bend - k) as usize;
+                    let dst = b.dst() as usize;
+                    let bcode = b.code();
+                    let pack = if wide { 0 } else { bcode << bits };
                     if wide {
-                        self.extra[dst..dst + span].fill(b.code);
+                        self.extra[dst..dst + span].fill(bcode);
                     }
                     queue.wire(&mut self.edges[dst..dst + span], pack);
-                    k = b.end;
+                    k = bend;
                 }
             }
         } else {
@@ -524,12 +540,16 @@ impl Kernel {
                 let mut z = stream[a];
                 let end = z + w;
                 while z < end {
-                    let b = self.bands[cursors[a]];
-                    let span = (end.min(b.end) - z) as usize;
-                    let dest = z.wrapping_add(b.delta) as usize;
-                    let pack = if wide { 0 } else { b.code << bits };
+                    let ci = cursors[a];
+                    let b = self.bands[ci];
+                    let bend = b.end();
+                    let bstart = if ci == 0 { 0 } else { self.bands[ci - 1].end() };
+                    let span = (end.min(bend) - z) as usize;
+                    let dest = (b.dst() + (z - bstart)) as usize;
+                    let bcode = b.code();
+                    let pack = if wide { 0 } else { bcode << bits };
                     if wide {
-                        self.extra[dest..dest + span].fill(b.code);
+                        self.extra[dest..dest + span].fill(bcode);
                     }
                     let mut value = pack | j;
                     for e in &mut self.edges[dest..dest + span] {
@@ -538,7 +558,7 @@ impl Kernel {
                     }
                     j += span as u32;
                     z += span as u32;
-                    cursors[a] += usize::from(z == b.end);
+                    cursors[a] += usize::from(z == bend);
                 }
                 stream[a] = end;
             });

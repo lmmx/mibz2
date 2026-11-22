@@ -293,3 +293,12 @@ fn strip_prefix_stops_at_dense_cap() {
     assert!(pass.ns > pass.cap_strips);
     assert_eq!(&pass.edges[..], &[0, 0, (511 << 8) | 255]);
 }
+
+#[test]
+fn maximum_band_fields_decode_independently() {
+    let band = Band::new(900_000, 899_999, 0x00ff_abcd);
+    assert_eq!(
+        (band.end(), band.dst(), band.code()),
+        (900_000, 899_999, 0x00ff_abcd)
+    );
+}

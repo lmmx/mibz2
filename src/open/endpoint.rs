@@ -687,11 +687,7 @@ impl Kernel {
                     stats.unit_work += usize::from(width == 1) * height;
                     stats.longest = stats.longest.max(height);
                 }
-                bands.push(Band {
-                    end: k + width,
-                    delta: dst.wrapping_sub(k),
-                    code: node_word,
-                });
+                bands.push(Band::new(k + width, dst, node_word & ID_MASK));
                 in_node += width;
                 k += width;
                 if in_node == node_width {
@@ -707,17 +703,23 @@ impl Kernel {
         for (byte, &start) in cursors.iter().enumerate() {
             let end = cursors.get(byte + 1).copied().unwrap_or(bands.len());
             for band in &mut bands[start..end] {
-                band.code = if band.code == 0 {
+                let id = band.code();
+                let code = if id == 0 {
                     byte as u32
                 } else {
                     let code = lens.len() as u32;
-                    let (bytes, len) =
-                        e.inline_word(band.code, byte as u8, &mut endpoint.stack, spelling);
+                    let (bytes, len) = e.inline_word(
+                        (e.len(id).min(SATURATED) << ID_BITS) | id,
+                        byte as u8,
+                        &mut endpoint.stack,
+                        spelling,
+                    );
                     inline16.push(bytes);
                     lens.push(len);
                     offsets.push(spelling.len() as u32);
                     code
                 };
+                *band = Band::new(band.end(), band.dst(), code);
             }
         }
         cursors
