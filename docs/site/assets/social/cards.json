@@ -251,6 +251,12 @@
     "section": " · Research blog",
     "title": "Correctness is uniform, cost is not"
   },
+  "assets/social/blog-2026-11-22-decompression-is-the-harder-problem.png": {
+    "description": "Thomas Murphy of Tropik and I talk about agent swarms and message boards, and why a fast decompressor is a stranger problem than a proof.",
+    "foot": "lmmx.github.io/mibz2 · 22 November 2026",
+    "section": " · Research blog",
+    "title": "Decompression is the harder problem: a conversation with Thomas Murphy"
+  },
   "assets/social/blog-2026-11-22-two-centuries-of-tools.png": {
     "description": "A claimed Riemann proof built one new idea on fifty older tools reaching back two centuries, so our research teams now look back as hard as forward.",
     "foot": "lmmx.github.io/mibz2 · 22 November 2026",
