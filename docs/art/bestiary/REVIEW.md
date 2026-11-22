@@ -36,3 +36,17 @@ Chromium at t = 0.4, 1.6, 2.9 and 4.3 s.
 Fix 1 to 4 in aspis.svg and spotted-serpent.svg first (one commit), then carry on: knotted pair,
 draco bipes, draco alatus, amphisbaena. Render each one at four or five moments and check the
 motion is visible before you commit it.
+
+# Second review (at 939afae26: revised pair, knotted-pair.svg, draco-bipes.svg)
+
+The revisions landed well: the spotted serpent's knot now goes over and under, the heads are larger,
+and the head turns, jaws and tongues read at a glance. Two more, then carry on with draco alatus and
+the amphisbaena:
+
+5. **knotted-pair.svg reads as a chain of three loops,** like links or the letters "OOC", not two
+   creatures. Make it two serpents knotted round each other in one large diagonal knot, as in the
+   blue-ground reference: each body crosses the other several times with over-under breaks, unevenly,
+   and each head bites at or turns toward the other's tail. Asymmetry is the point.
+6. **draco-bipes.svg's legs bunch into one cluster under the belly.** Set the two legs apart (fore
+   and hind, as on the engraving) with a clear stride, the claws splayed on the ground line, and let
+   the walk cycle swing them visibly in alternation.
