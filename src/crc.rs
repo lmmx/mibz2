@@ -1,13 +1,13 @@
 //! CRC-32/BZIP2 (polynomial 0x04C11DB7, MSB first, initial value and final xor all ones),
-//! the block CRC bzip2 stores: sliced by 8 (portable), or by carry-less multiplication
+//! the block CRC bzip2 stores: sliced by 16 (portable), or by carry-less multiplication
 //! (PCLMULQDQ with SSE4.1, dispatched at run time, see `Kernels`).
 
 use super::Kernels;
 
 pub const POLY: u32 = 0x04C1_1DB7;
 
-const fn tables() -> [[u32; 256]; 8] {
-    let mut t = [[0u32; 256]; 8];
+const fn tables() -> [[u32; 256]; 16] {
+    let mut t = [[0u32; 256]; 16];
     let mut i = 0;
     while i < 256 {
         let mut c = (i as u32) << 24;
@@ -24,7 +24,7 @@ const fn tables() -> [[u32; 256]; 8] {
         i += 1;
     }
     let mut j = 1;
-    while j < 8 {
+    while j < 16 {
         let mut i = 0;
         while i < 256 {
             let p = t[j - 1][i];
@@ -36,7 +36,7 @@ const fn tables() -> [[u32; 256]; 8] {
     t
 }
 
-static TABLES: [[u32; 256]; 8] = tables();
+static TABLES: [[u32; 256]; 16] = tables();
 
 /// The CRC of `data`, by the kernels given
 pub fn crc32(data: &[u8], k: Kernels) -> u32 {
@@ -61,22 +61,37 @@ pub fn update_with(s: u32, data: &[u8], k: Kernels) -> u32 {
 }
 
 /// The CRC register after `data`, from `s` (no initial or final xor): a byte at a time
-/// as bzip2 takes it, 8 at a time where it can
+/// as bzip2 takes it, 16 at a time where it can (then 8 once, then bytes, for the rest).
+/// The 16 lookups of a slice are combined as a balanced tree of XORs, 4 deep, not as one
+/// chain of 15
 pub fn update(mut s: u32, data: &[u8]) -> u32 {
     let t = &TABLES;
-    let mut chunks = data.chunks_exact(8);
+    let mut chunks = data.chunks_exact(16);
     for c in &mut chunks {
         let hi = s ^ u32::from_be_bytes([c[0], c[1], c[2], c[3]]);
-        s = t[7][(hi >> 24) as usize]
-            ^ t[6][((hi >> 16) & 0xff) as usize]
-            ^ t[5][((hi >> 8) & 0xff) as usize]
-            ^ t[4][(hi & 0xff) as usize]
-            ^ t[3][c[4] as usize]
-            ^ t[2][c[5] as usize]
-            ^ t[1][c[6] as usize]
-            ^ t[0][c[7] as usize];
+        let a = (t[15][(hi >> 24) as usize] ^ t[14][((hi >> 16) & 0xff) as usize])
+            ^ (t[13][((hi >> 8) & 0xff) as usize] ^ t[12][(hi & 0xff) as usize]);
+        let b = (t[11][c[4] as usize] ^ t[10][c[5] as usize])
+            ^ (t[9][c[6] as usize] ^ t[8][c[7] as usize]);
+        let d = (t[7][c[8] as usize] ^ t[6][c[9] as usize])
+            ^ (t[5][c[10] as usize] ^ t[4][c[11] as usize]);
+        let e = (t[3][c[12] as usize] ^ t[2][c[13] as usize])
+            ^ (t[1][c[14] as usize] ^ t[0][c[15] as usize]);
+        s = (a ^ b) ^ (d ^ e);
     }
-    for &b in chunks.remainder() {
+    let rem = chunks.remainder();
+    let tail = if rem.len() >= 8 {
+        let c = &rem[..8];
+        let hi = s ^ u32::from_be_bytes([c[0], c[1], c[2], c[3]]);
+        s = (t[7][(hi >> 24) as usize] ^ t[6][((hi >> 16) & 0xff) as usize])
+            ^ (t[5][((hi >> 8) & 0xff) as usize] ^ t[4][(hi & 0xff) as usize])
+            ^ (t[3][c[4] as usize] ^ t[2][c[5] as usize])
+            ^ (t[1][c[6] as usize] ^ t[0][c[7] as usize]);
+        &rem[8..]
+    } else {
+        rem
+    };
+    for &b in tail {
         s = (s << 8) ^ t[0][((s >> 24) as u8 ^ b) as usize];
     }
     s
@@ -223,6 +238,39 @@ mod tests {
             ] {
                 let s = update_with(update_with(!0, &data[..cut], k), &data[cut..], k);
                 assert_eq!(!s, want, "cut {cut} {k:?}");
+            }
+        }
+    }
+
+    /// `update` (sliced by 16, its 8-byte tail and its bytes) against `update_bytewise`, from
+    /// registers other than the initial one, at every length up to 300 (every remainder of
+    /// 16 and 8 many times over), from every offset in a 16-byte window, and on bytes of all
+    /// zeros and all ones
+    #[test]
+    fn sliced_by_16_against_bytewise() {
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut next = || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        let random: Vec<u8> = (0..400).map(|_| next() as u8).collect();
+        let zeros = vec![0u8; 400];
+        let ones = vec![0xffu8; 400];
+        let states = [0u32, !0, 0x8000_0000, 1, next() as u32, next() as u32];
+        for data in [&random, &zeros, &ones] {
+            for &s in &states {
+                for off in 0..16 {
+                    for n in 0..=300 {
+                        let d = &data[off..off + n];
+                        assert_eq!(
+                            update(s, d),
+                            update_bytewise(s, d),
+                            "s {s:#x} off {off} n {n}"
+                        );
+                    }
+                }
             }
         }
     }
