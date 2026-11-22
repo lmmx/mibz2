@@ -1,0 +1,21 @@
+name = "Wormhole/Neon Cycle 38: Full-Block Pool Separation, Immediate syms Return & 12 MiB Byte-Budgeted Ready Window"
+target = "text"
+uses = []
+
+[[edge]]
+id = "w0_full_block_pool_separation"
+inputs = ["records", "C", "p", "n"]
+output = "hot_full_out_pool"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "1.0 * n", Q = "0", M = "9..15 * 960 KiB" }
+evidence = "Keeping tiny (<64 KiB) blocks out of free_out prevents len truncation from triggering src/open.rs:360 898 KiB memset(0) on subsequent full blocks: 4W = 0.9417 [0.9238, 0.9600], sys_ms -44.6%, minflt -48.4% (4W) / -58.0% (16W), rss -23.2% (4W) / -45.0% (16W: 130.4 -> 71.7 MiB)."
+
+[[edge]]
+id = "w13b_immed_syms_and_12m_ready_cap"
+inputs = ["hot_full_out_pool"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "1.0 * n", Q = "0", M = "<= 12 MiB ready + 0 dead syms" }
+evidence = "Returning syms immediately after runs::front + 12 MiB ready-byte cap (with in-flight floor W+2) cuts 10W minflt -57.1% (25.4k -> 10.9k), 10W sys_ms -45.5% (54.5 -> 29.7 ms), 10W peak RSS -39.4% (92.6 -> 56.1 MiB), pkRdy 10.3 MiB, while WINNING hetero_60b 0.9627 [0.9399, 0.9861] (zero HOL starvation vs static slots=2W's 1.0857x regression)."
