@@ -446,6 +446,12 @@ impl Kernel {
                 self.trace(x, first[a] + all[a], a as u8, &mut k, &mut stats);
             }
             assert_eq!(k, m);
+            inline_words(
+                &self.spelling,
+                &self.offsets,
+                &mut self.inline16,
+                &mut self.lens,
+            );
             cursors
         };
         stats.bands = self.bands.len();
@@ -545,14 +551,8 @@ impl Kernel {
         Some(stats)
     }
 
-    /// The words inlined and the walk from the marked row: the block's bytes into `out`
+    /// The walk from the marked row using the constructed dictionary: the block's bytes into `out`
     fn walk(&mut self, n: usize, m: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
-        inline_words(
-            &self.spelling,
-            &self.offsets,
-            &mut self.inline16,
-            &mut self.lens,
-        );
         emit(
             &self.edges[..m],
             &self.extra,
@@ -711,15 +711,8 @@ const INLINE: usize = 16;
 /// `lens` of a word longer than `INLINE`: its bytes are read from `spelling` (the cold path)
 const LONG: u8 = u8::MAX;
 
-/// Every code's word as 16 bytes, its first `INLINE` padded with zeros, and its length (`LONG`
-/// past 16), indexed by code: the literals 0..256, then the block's words from 256. The
-/// literals are written once, when the table is first made; the words, once a block.
-fn inline_words(
-    spelling: &[u8],
-    offsets: &[u32],
-    inline16: &mut Vec<[u8; INLINE]>,
-    lens: &mut Vec<u8>,
-) {
+/// Keep the literal entries across blocks and reserve exactly the new word count.
+fn begin_inline(words: usize, inline16: &mut Vec<[u8; INLINE]>, lens: &mut Vec<u8>) {
     if inline16.len() < 256 {
         inline16.clear();
         inline16.extend((0..=255u8).map(|c| {
@@ -733,9 +726,18 @@ fn inline_words(
     inline16.truncate(256);
     lens.truncate(256);
     // (the memory diet) the table to its exact size, not doubled: 256 literals and the words
-    let words = offsets.len().saturating_sub(1);
     inline16.reserve_exact(words);
     lens.reserve_exact(words);
+}
+
+/// Build the tracing constructor's dictionary from its contiguous spellings.
+fn inline_words(
+    spelling: &[u8],
+    offsets: &[u32],
+    inline16: &mut Vec<[u8; INLINE]>,
+    lens: &mut Vec<u8>,
+) {
+    begin_inline(offsets.len() - 1, inline16, lens);
     for w in offsets.windows(2) {
         let word = &spelling[w[0] as usize..w[1] as usize];
         let mut v = [0; INLINE];

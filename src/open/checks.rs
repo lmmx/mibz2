@@ -75,6 +75,8 @@ fn audit<const INDUCE: bool, const QUEUE: bool>(
         };
         if c < 256 {
             assert_eq!(w, [c as u8]);
+        } else if k.lens[c as usize] != LONG {
+            assert_eq!(w, k.inline16[c as usize][..usize::from(k.lens[c as usize])]);
         } else {
             let id = (c - 256) as usize;
             assert_eq!(

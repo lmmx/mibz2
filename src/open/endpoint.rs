@@ -10,7 +10,7 @@
 //! word), six otherwise (`Wide`). The two lists are linked as the nodes are made, with no
 //! staging lists. After the elimination a node's side-1 links, read once more by the walk
 //! along the bottom, give way to its bottom coordinate.
-use super::{Band, Counts, Kernel};
+use super::{begin_inline, Band, Counts, Kernel, INLINE, LONG};
 
 /// A node's links in the arena
 trait Links {
@@ -387,6 +387,56 @@ impl<L: Links> Elim<'_, L> {
         done
     }
 
+    /// An excursion followed by its retained byte. Only long words occupy
+    /// spelling, so memoized offsets always refer to permanent bytes.
+    fn inline_word(
+        &mut self,
+        word: u32,
+        byte: u8,
+        stack: &mut Vec<u32>,
+        spelling: &mut Vec<u8>,
+    ) -> ([u8; INLINE], u8) {
+        let id = word & ID_MASK;
+        let height = (word >> ID_BITS) as usize;
+        let mut bytes = [0; INLINE];
+        if height < INLINE {
+            match height {
+                1 => bytes[0] = (id - 1) as u8,
+                2 => {
+                    let r = self.rule(id);
+                    bytes[0] = (self.a[r] - 1) as u8;
+                    bytes[1] = (self.a[r + 1] - 1) as u8;
+                }
+                _ => {
+                    // Each pending subtree spells at least one of the remaining
+                    // (at most 15) bytes. Push right first to emit in leaf order.
+                    let mut pending = [0; INLINE];
+                    pending[0] = id;
+                    let (mut depth, mut written) = (1, 0);
+                    while depth > 0 {
+                        depth -= 1;
+                        let child = pending[depth];
+                        if child <= 256 {
+                            bytes[written] = (child - 1) as u8;
+                            written += 1;
+                        } else {
+                            let r = self.rule(child);
+                            pending[depth] = self.a[r + 1];
+                            pending[depth + 1] = self.a[r];
+                            depth += 2;
+                        }
+                    }
+                }
+            }
+            bytes[height] = byte;
+            (bytes, (height + 1) as u8)
+        } else {
+            self.append(id, stack, spelling);
+            spelling.push(byte);
+            (bytes, LONG)
+        }
+    }
+
     fn append(&mut self, word: u32, stack: &mut Vec<u32>, dest: &mut Vec<u8>) {
         stack.clear();
         stack.push(word);
@@ -465,6 +515,8 @@ impl Kernel {
             bands,
             spelling,
             offsets,
+            inline16,
+            lens,
             edges,
             ..
         } = self;
@@ -595,31 +647,30 @@ impl Kernel {
             let end = k + thin[a];
             while k < end {
                 let node_width = e.width(id);
-                let node_word = e.word(id) & ID_MASK;
+                let node_word = e.word(id);
                 let width = (end - k).min(node_width - in_node);
                 // (the port's) every band takes a row at least, so the loop always ends; a wrong
                 // construction panics here rather than looping (the mutation check's finding)
                 assert!(width > 0);
                 let dst = e.bottom(id) + in_node;
-                let code = if node_word == 0 {
-                    a as u32
-                } else {
-                    let height = e.len(node_word) as usize;
+                if node_word != 0 {
+                    let grade = node_word >> ID_BITS;
+                    let height = if grade == SATURATED {
+                        e.len(node_word & ID_MASK)
+                    } else {
+                        grade
+                    } as usize;
                     stats.words += 1;
                     stats.copies += width as usize;
                     stats.traced += height;
                     stats.thick_area += width as usize * height;
                     stats.unit_work += usize::from(width == 1) * height;
                     stats.longest = stats.longest.max(height);
-                    e.append(node_word, &mut endpoint.stack, spelling);
-                    spelling.push(a as u8);
-                    offsets.push(spelling.len() as u32);
-                    254 + offsets.len() as u32
-                };
+                }
                 bands.push(Band {
                     end: k + width,
                     delta: dst.wrapping_sub(k),
-                    code,
+                    code: node_word,
                 });
                 in_node += width;
                 k += width;
@@ -630,6 +681,25 @@ impl Kernel {
             }
         }
         assert_eq!(id, 0);
+        // The count is now exact. Use the handles in the bands to build both
+        // dictionary representations before wiring, without growing spare slots.
+        begin_inline(stats.words, inline16, lens);
+        for (byte, &start) in cursors.iter().enumerate() {
+            let end = cursors.get(byte + 1).copied().unwrap_or(bands.len());
+            for band in &mut bands[start..end] {
+                band.code = if band.code == 0 {
+                    byte as u32
+                } else {
+                    let code = lens.len() as u32;
+                    let (bytes, len) =
+                        e.inline_word(band.code, byte as u8, &mut endpoint.stack, spelling);
+                    inline16.push(bytes);
+                    lens.push(len);
+                    offsets.push(spelling.len() as u32);
+                    code
+                };
+            }
+        }
         cursors
     }
 }
@@ -663,6 +733,33 @@ mod tests {
             );
             assert!(spelling[start + 1022..].iter().all(|&b| b == 0));
             handle = e.join(handle, literal(0));
+        }
+    }
+
+    #[test]
+    fn prefix15_crosses_into_memoized_spelling() {
+        let mut arena = [0; RULE * 40];
+        let mut e = Elim::<Narrow> {
+            a: &mut arena,
+            base: 0,
+            top: 0,
+            nodes: 0,
+            _links: std::marker::PhantomData,
+        };
+        let (mut stack, mut spelling) = (Vec::new(), Vec::new());
+        let mut handle = 0;
+        for n in 1..=17u8 {
+            handle = e.join(handle, literal(n));
+            let start = spelling.len();
+            let (inline, len) = e.inline_word(handle, 255, &mut stack, &mut spelling);
+            let want: Vec<_> = (1..=n).chain([255]).collect();
+            if n < 16 {
+                assert_eq!(&inline[..usize::from(len)], want);
+                assert_eq!(spelling.len(), 0);
+            } else {
+                assert_eq!(len, LONG);
+                assert_eq!(spelling[start..], want);
+            }
         }
     }
 
