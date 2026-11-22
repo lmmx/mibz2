@@ -160,7 +160,7 @@ class EndToEnd(unittest.TestCase):
         self.remote.parent.mkdir()
         git(self.tmp, "init", "-q", "--bare", str(self.remote))
         w = self.work = self.tmp / "work"
-        for rel in (".just/service-tg.just", ".just/submit.just", "bench/bundle.sh", "bench/submit.sh",
+        for rel in (".just/service-tg.just", ".just/submit.just", "bench/bundle.sh", "bench/submit.sh", "bench/workstation-queue.txt",
                     "bench/service_tg.py", "bench/service_guarded.py", "bench/svc_target_check.py",
                     "docs/journal/2026-11-10-service-guarded-target-gated-registration.md"):
             (w / rel).parent.mkdir(parents=True, exist_ok=True)

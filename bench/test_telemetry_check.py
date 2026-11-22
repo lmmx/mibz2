@@ -93,7 +93,7 @@ class EndToEnd(unittest.TestCase):
         self.remote.parent.mkdir()
         git(self.tmp, "init", "-q", "--bare", str(self.remote))
         self.work = self.tmp / "work"
-        for rel in ("Justfile", ".just", "bench/bundle.sh", "bench/submit.sh",
+        for rel in ("Justfile", ".just", "bench/bundle.sh", "bench/submit.sh", "bench/workstation-queue.txt",
                     "docs/journal/2026-11-09-telemetry-check-registration.md"):
             src, dst = ROOT / rel, self.work / rel
             dst.parent.mkdir(parents=True, exist_ok=True)

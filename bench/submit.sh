@@ -26,12 +26,6 @@ queue_meta() {  # a "# <key>: <value>" line of the queue file
     git show "$def:bench/workstation-queue.txt" 2>/dev/null || true; } \
     | sed -n "s/^#[[:space:]]*$1:[[:space:]]*\([^[:space:]]*\)[[:space:]]*\$/\1/p" | head -1
 }
-repo=${EVIDENCE_REPO:-$(queue_meta repo)}
-channel=${EVIDENCE_CHANNEL:-$(queue_meta channel)}
-[[ $repo =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] \
-  || die "bench/workstation-queue.txt declares no '# repo: owner/name' line (the bundle is kept)"
-[[ $channel =~ ^[0-9]+$ ]] \
-  || die "bench/workstation-queue.txt declares no '# channel: N' line (the bundle is kept)"
 tarball=$(realpath "${1:?usage: bench/submit.sh BUNDLE.tar.gz}")
 [ -f "$tarball" ] || die "no bundle at $tarball"
 case "$tarball" in *.tar.gz) ;; *) die "$tarball is not a .tar.gz bundle" ;; esac
@@ -51,6 +45,12 @@ commits=$(member commits.txt)
 inputs=$(member inputs.txt | head -4)
 
 # where it is published
+repo=${EVIDENCE_REPO:-$(queue_meta repo)}
+channel=${EVIDENCE_CHANNEL:-$(queue_meta channel)}
+[[ $repo =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] \
+  || die "bench/workstation-queue.txt declares no '# repo: owner/name' line (the bundle is kept)"
+[[ $channel =~ ^[0-9]+$ ]] \
+  || die "bench/workstation-queue.txt declares no '# channel: N' line (the bundle is kept)"
 url=$(git remote get-url "$remote") || die "no git remote $remote"
 case "$url" in *"$repo"|*"$repo.git"|*"$repo/") ;; *) die "remote $remote is $url, not $repo" ;; esac
 "$gh" auth status >/dev/null 2>&1 || die "gh isn't signed in; run: gh auth login (the bundle is kept)"
