@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 59: Charge 4 (Part 3) — Live PR 4 BlockSpan Streaming Multi-Regime A/B vs master 3296195e3"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c59_pr4_live_multiregime_ab"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "0 barrier stalls; 100.0% fast hits (882/882, fb=0)", B = "<= 8 MiB ping-pong input RAM (0.776x-0.992x #739 RSS)", Q = "0", M = "MAX_LIVE_WINS=2 x 4 MiB + #739 12 MiB ReadyRing" }
+evidence = "Same-binary #![forbid(unsafe_code)] live multi-regime A/B (ZERO precomputed .spans; live 5.7 GiB/s safe-Rust Mechanisms C38b-style 4-byte anchor SpanFinder) vs master 3296195e3 (#739) across 5 regimes with A/A control and exact AbHash parity. Caught & fixed 2 real spec bugs (published_seq EOF in-flight worker race that caused fb=1 & +7.6% wall on random-l9; per-window buf.resize(win_cap,0) memset). Fixed PR4_Live_4M hits 882/882 (100.0%, fb=0) and beats/matches M739_A across all 5 regimes: wikidata-l9 4W 0.9782x [0.9535, 1.0034] (minflt -35.6%, RSS 0.776x), 10W 0.9521x [0.9391, 0.9654] (vcsw -72.8%, RSS 0.907x), wikidata-l1 4W 0.9410x [0.9313, 0.9509] (vcsw -63.0%, RSS 0.992x), hetero-l9 4W 0.9827x [0.9566, 1.0095] (RSS 0.910x), random-l9 4W 0.9887x [0.9518, 1.0271] (RSS 0.973x). KILLED PR4_Live_2M (1.0563x [1.0105, 1.1041] regression on hetero-l9: pub=2 incompressible 0.9 MiB blocks/window starves 4W pool at MAX_LIVE_WINS=2)."
