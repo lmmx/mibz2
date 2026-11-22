@@ -1940,3 +1940,125 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# The push-streaming parallel front end in the default decoder on the i9 from 8 threads
+# (perf/parscan-stream); registration docs/journal/2026-11-22-parscan-stream-registration.md,
+# frozen before the data. Two builds pinned by SHA: master BASE (`mibz2@build-base`) and the
+# PR's HEAD (`mibz2`, whose harness drives the run); their build inputs differ in the front
+# end's files alone (src/{block,lib,par_scan,parallel,read,runs}.rs, src/parallel/
+# unwind_tests.rs, examples/ab.rs and four test files; checked). Both by rustc 1.99.1. The whole
+# Wikidata corpus, 4 copies end to end; at 1, 2, 4, 6, 8, 10, 12, 16 and 20 threads (unpinned
+# above one thread; one thread on ab's one-CPU pin), interleaved, 16 paired rounds, settle 2 s,
+# no spinner. First an untimed preflight: one round of every cell, settle 0, checked whole and
+# exact (bench/parscan_stream.py --preflight); a failure stops the recipe before the timed run.
+# DRY=1 runs the preflight alone (not evidence). The rule: bench/parscan_stream.py (judged at
+# 10, 6 and 8 supporting, peak RSS gated at 10), a wrapper around bench/parscan_verdict.py.
+# About 35 minutes with the builds.
+bench-parscan-stream DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    BASE=cb7121e8d391dc7808f06a8acae53001874deab4
+    HEAD=d32da8fd576bbf3d2aca20122506f4ad81c712af
+    COPIES=4 ROUNDS=16 SETTLE=2 THREADS=1,2,4,6,8,10,12,16,20
+    dry="{{DRY}}"
+    W=$PWD/target/parscan-stream
+    mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
+    echo "bench-parscan-stream (docs/journal/2026-11-22-parscan-stream-registration.md) at $(git rev-parse HEAD): mibz2 at $HEAD (perf/parscan-stream) against mibz2 at $BASE (master), at $THREADS threads (unpinned above 1), $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
+    [ -z "$dry" ] || echo "bench-parscan-stream: DRY RUN: the untimed preflight alone; not evidence" | tee "$O/DRY-RUN.txt"
+    date -u +%FT%TZ > "$O/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] \
+      || { echo "bench-parscan-stream: the checkout has local changes"; exit 1; }
+    git cat-file -e "$BASE^{commit}" 2>/dev/null || git fetch -q origin master
+    git cat-file -e "$HEAD^{commit}" 2>/dev/null || git fetch -q origin perf/parscan-stream
+    git merge-base --is-ancestor "$BASE" "$HEAD" \
+      || { echo "bench-parscan-stream: $BASE is not an ancestor of $HEAD"; exit 1; }
+    # the contrast, checked: the decoder's source differs in the front end's files alone
+    changed=$(git diff --name-only "$BASE" "$HEAD" -- src Cargo.toml Cargo.lock examples build.rs rust-toolchain.toml tests)
+    [ -n "$changed" ] || { echo "bench-parscan-stream: the builds' source does not differ"; exit 1; }
+    beyond=$(printf '%s\n' "$changed" \
+      | grep -Ev '^(src/(block|lib|par_scan|parallel|read|runs)\.rs|src/parallel/unwind_tests\.rs|examples/ab\.rs|tests/(par_scan|parscan_stream|service_default)\.rs|tests/common/mod\.rs)$' || true)
+    [ -z "$beyond" ] \
+      || { echo "bench-parscan-stream: the builds differ beyond the front end: $(echo $beyond)"; exit 1; }
+    printf '%s\n' "$changed" > "$O/src-changed.txt"
+    git diff "$BASE" "$HEAD" -- src examples > "$O/src-head-against-base.diff"
+    export RUSTUP_TOOLCHAIN=1.99.1
+    rustc -V | grep -q '^rustc 1\.99\.1 ' \
+      || { echo "bench-parscan-stream: rustc 1.99.1 is not installed (rustup toolchain install 1.99.1)"; exit 1; }
+    for b in base head; do
+      sha=$BASE; [ "$b" = head ] && sha=$HEAD
+      [ -d "$W/build-$b" ] || git worktree add -q --detach "$W/build-$b" "$sha"
+      git -C "$W/build-$b" checkout -q --detach "$sha"
+      # (each build from a clean source: a detached checkout keeps local changes)
+      [ -z "$(git -C "$W/build-$b" status --porcelain)" ] \
+        || { echo "bench-parscan-stream: build-$b has local changes"; git -C "$W/build-$b" status --short; exit 1; }
+      [ "$(git -C "$W/build-$b" rev-parse HEAD)" = "$sha" ] \
+        || { echo "bench-parscan-stream: build-$b is not at $sha"; exit 1; }
+      (cd "$W/build-$b" && cargo build -q --release --example ab --example windows)
+    done
+    AB=$W/build-head/target/release/examples/ab
+    BAB=$W/build-base/target/release/examples/ab
+    git rev-parse HEAD > "$O/commit.txt"
+    printf 'base %s\nhead %s\n' "$BASE" "$HEAD" > "$O/builds.txt"
+    { rustc -vV; cargo -vV; } | tee "$O/toolchain.txt"
+    for b in base head; do
+      (cd "$W/build-$b" && { rustc -vV; cargo -vV; }) | cmp -s - "$O/toolchain.txt" \
+        || { echo "bench-parscan-stream: build-$b's toolchain differs"; exit 1; }
+    done
+    sha256sum "$AB" "$BAB" | tee "$O/binaries.sha256"
+    # the corpus: corpora/wikidata.bz2 from its windows (windows/, else the bench-data branch),
+    # checked by bench/wikidata.json's SHA-256 (as bench/corpus.sh builds it)
+    want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+    corpus=corpora/wikidata.bz2
+    if [ ! -f "$corpus" ] || [ "$(sha256sum "$corpus" | cut -d' ' -f1)" != "$want" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      mkdir -p corpora
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-head/target/release/examples/windows" "$corpus"
+    fi
+    [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] \
+      || { echo "bench-parscan-stream: $corpus is not bench/wikidata.json's $want"; exit 1; }
+    : > "$W/wikidata-x$COPIES.bz2"
+    for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the machine
+    "$AB" env > "$O/env.json"
+    lscpu > "$O/lscpu.txt"
+    lscpu -e > "$O/lscpu-e.txt" || true
+    grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
+    cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
+    uname -a > "$O/uname.txt"
+    # the untimed preflight: one round of every cell, no settling, checked whole and exact
+    # (every record successful, unpinned above one thread, 838,800,784 bytes, one hash); its
+    # records are not timed evidence and no step is taken from them
+    "$AB" run "$O/preflight.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds 1 \
+      --settle 0 "$W/wikidata-x$COPIES.bz2"
+    python3 bench/parscan_stream.py "$O/preflight.jsonl" --env "$O/env.json" \
+      --lscpu "$O/lscpu.txt" --corpus wikidata-x$COPIES --preflight | tee "$O/preflight.txt" \
+      || { echo "bench-parscan-stream: the preflight failed (preflight.txt); no timed run"; rm -f "$W/wikidata-x$COPIES.bz2"; bash bench/bundle.sh "$O"; exit 1; }
+    if [ -n "$dry" ]; then
+      date -u +%FT%TZ > "$O/finished.txt"
+      rm -f "$W/wikidata-x$COPIES.bz2"
+      bash bench/bundle.sh "$O"
+      exit 0
+    fi
+    # the judged run: above one thread unpinned (no --spread), every online CPU, no spinner; one
+    # thread on ab's one-CPU pin; the counts and the arms interleaved within each round, the arms'
+    # order rotated
+    "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds $ROUNDS \
+      --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
+    "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
+    date -u +%FT%TZ > "$O/timed.txt"
+    python3 bench/parscan_stream.py "$O/main.jsonl" --env "$O/env.json" \
+      --lscpu "$O/lscpu.txt" --rounds $ROUNDS --corpus wikidata-x$COPIES \
+      | tee "$O/verdict.txt" \
+      || echo "bench-parscan-stream: VOID, no verdict (verdict.txt says why); the bundle is kept"
+    date -u +%FT%TZ > "$O/finished.txt"
+    rm -f "$W/wikidata-x$COPIES.bz2"
+    bash bench/bundle.sh "$O"
