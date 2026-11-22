@@ -1,0 +1,12 @@
+name = "Wormhole/Neon Cycle 67: Within-Window Graham LPT Straggler Scheduling vs FIFO in PR 4 (Honest Kill)"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c67_pr4_lpt_straggler_kill"
+inputs = ["records", "C", "p", "n"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "0 reordering gain (FIFO saturates under slots=4W)", B = "strictly FIFO avoids out-of-order ready-ring inflation", Q = "0", M = "PR4 W2M_L3/W4M_L2 strict FIFO" }
+evidence = "Same-binary #![forbid(unsafe_code)] A/B testing Graham LPT span-proxy reordering inside PR 4 windows (FIFO_A, FIFO_B A/A, LPT_Batch HOL-safe batch=2W, LPT_Tail EOF-only) across wikidata-l9 4W/10W & hetero-l9 4W/10W (exact AbHash). KILLED BOTH LPT_Batch (1.0053x 4W, 0.9943x 10W, 1.0031x hetero 4W, 1.0006x hetero 10W; all 95% CIs span 1.000; +12% vcsw at 4W) and LPT_Tail (1.0101x, 0.9944x, 1.0082x, 1.0080x; +1.5..2.0 MiB RSS on hetero). Proves slots=4W + READY_BYTES=12 MiB already absorbs block-duration variance under strict FIFO; keep PR 4 candidate dispatch strictly FIFO."
