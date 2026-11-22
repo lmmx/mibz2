@@ -1,0 +1,28 @@
+=== PART 1: RLE1 + CRC32 STAGE MICROBENCH (6 auth Wikidata blocks x 39 = 234 blocks, 210.6 MB) ===
+  blk 0: rle=899981 -> out=900050 bytes | runs4=34 | CRC=3024c894 EXACT
+  blk 1: rle=899981 -> out=899919 bytes | runs4=62 | CRC=263163df EXACT
+  blk 2: rle=899981 -> out=900046 bytes | runs4=23 | CRC=01de2592 EXACT
+  blk 3: rle=899981 -> out=900112 bytes | runs4=83 | CRC=7042a9b9 EXACT
+  blk 4: rle=899981 -> out=899983 bytes | runs4=24 | CRC=31aaf59e EXACT
+  blk 5: rle=899787 -> out=899828 bytes | runs4=24 | CRC=3de8f3d7 EXACT
+  Sep_Span+SB8       med= 383.12 ms  ratio vs Sep_Span+SB8: 1.0000 [1.0000, 1.0000]
+  Sep_Span+SB16      med= 209.97 ms  ratio vs Sep_Span+SB8: 0.5493 [0.5459, 0.5527]
+  Fused_32K+SB8      med= 168.73 ms  ratio vs Sep_Span+SB8: 0.4423 [0.4386, 0.4461]
+  Fused_32K+SB16     med= 211.69 ms  ratio vs Sep_Span+SB8: 0.5527 [0.5512, 0.5543]
+  Fused_16K+SB16     med= 211.99 ms  ratio vs Sep_Span+SB8: 0.5553 [0.5515, 0.5591]
+
+=== PART 2: 12-ROUND ROTATED FRESH-PROCESS 4W A/B (wikidata_431b_210m.bz2, 211 MB, AbHash) ===
+Arm                med_ms   ratio vs MasterA [95%]  user_ms   sys_ms   minflt  rss_MiB  locks
+MasterA            368.54 1.0000 [1.0000, 1.0000]   654.57    37.03    15749    59.23    431
+MasterB            368.94 0.9949 [0.9755, 1.0146]   654.46    36.22    15806    60.06    431
+C32_OneBlkCopy     367.64 0.9954 [0.9814, 1.0096]   658.40    29.78    12007    56.45    432
+C33a_BatchFill     370.10 0.9960 [0.9827, 1.0095]   662.30    32.81    12861    59.98    121
+C33b_ZeroCopy      355.71 0.9625 [0.9416, 0.9839]   636.97    30.89    11742    55.94    432
+
+=== PART 3: COLD-START W=10 OS & WALL CHECK (wikidata_431b_210m.bz2, 3-rd median) ===
+Arm               wall_ms  user_ms   sys_ms   minflt  rss_MiB  locks
+MasterA            373.63   676.68    49.02    26455    97.21    431
+MasterB            379.14   671.88    61.46    26782    94.43    431
+C32_OneBlkCopy     372.59   685.05    39.75    21093    90.33    432
+C33a_BatchFill     380.01   702.17    43.48    21971    93.93     84
+C33b_ZeroCopy      357.84   649.38    48.05    19666    83.43    432

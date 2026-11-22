@@ -1,0 +1,21 @@
+name = "Wormhole/Neon Cycle 33: RLE1+CRC32 Tiled Fusion & Zero-Copy BufRead Output Assembly"
+target = "text"
+uses = []
+
+[[edge]]
+id = "c2_tiled_rle_crc_fusion"
+inputs = ["records", "C", "p", "n"]
+output = "crc_verified_block"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "n / W_workers", B = "2.0 * n", Q = "0", M = "32 KiB L1/L2 tile" }
+evidence = "Wikidata blocks have only 23-83 RLE1 runs/900 KiB (mean literal span 21.6 KiB). 32 KiB L1/L2-tiled unrle+CRC fusion cuts safe-Rust RLE+SB8 time 2.26x (0.4423 [0.4386, 0.4461]) and eliminates 1.0 B/B L3/DRAM re-read on Comet Lake's 256 KiB L2."
+
+[[edge]]
+id = "c33b_zerocopy_bufread_assembly"
+inputs = ["crc_verified_block"]
+output = "text"
+status = "verified"
+dependent = false
+cost = { W = "n", D = "T_reader_zero_copy", B = "1.0 * n", Q = "0", M = "slots * 960 KiB" }
+evidence = "Zero-copy std::io::BufRead (fill_buf/consume) eliminates the entire 211 MB r.cur->caller memcpy (-2.0 B/B DRAM traffic): 4W 0.9625 [0.9416, 0.9839], user_ms -17.6 ms (4W) / -27.3 ms (10W), minflt -25.4%/-25.7%, rss -14.2% (10W)."
