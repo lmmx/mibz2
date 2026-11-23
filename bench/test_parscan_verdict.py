@@ -291,11 +291,17 @@ class Verdict(unittest.TestCase):
 
     def test_guard_memory_at_ten(self):
         rc, out = self.run_on(records(step={10: 0.95}) + self.text(mem={10: 1.2}), *self.GUARD)
-        self.assertIn("HELD ON MEMORY (peak RSS text 1.2000 at 10 threads", self.verdict(out))
+        self.assertIn(
+            "HELD ON MEMORY (peak RSS above 1.10: text at 10 threads 1.2000:", self.verdict(out)
+        )
         rc, out = self.run_on(
             records(step={10: 0.95}, mem={10: 1.3}) + self.text(mem={10: 1.2}), *self.GUARD
         )
-        self.assertIn("HELD ON MEMORY (peak RSS wikidata-x4 1.3000, text 1.2000 at 10", out)
+        self.assertIn(
+            "HELD ON MEMORY (peak RSS above 1.10: wikidata-x4 at 10 threads 1.3000, "
+            "text at 10 threads 1.2000:",
+            out,
+        )
         # text's memory elsewhere, and at the gate exactly, does not hold it
         rc, out = self.run_on(
             records(step={10: 0.95}) + self.text(mem={8: 1.5, 20: 1.5, 10: 1.10}), *self.GUARD
@@ -306,6 +312,36 @@ class Verdict(unittest.TestCase):
             records(step={10: 0.95}) + self.text(step={8: 1.05}, mem={10: 1.2}), *self.GUARD
         )
         self.assertIn("NOT ADOPTED (text SLOWER at 8 threads: the loss guard)", out)
+
+    # ---- the memory gate at a list of counts, and the verdict's name (the correction) ----
+
+    def test_rss_at_a_list(self):
+        at = ("--rss-at", "8,10,12,16,20")
+        rc, out = self.run_on(records(step={10: 0.95}, mem={1: 1.5, 4: 1.5, 20: 1.10}), *at)
+        self.assertEqual(self.verdict(out), "verdict (Decision 1, PARSCAN): ADOPTS")
+        rc, out = self.run_on(records(step={10: 0.95}, mem={20: 1.99}), *at)
+        self.assertEqual(
+            self.verdict(out),
+            "verdict (Decision 1, PARSCAN): HELD ON MEMORY (peak RSS above 1.10: wikidata-x4 at "
+            "20 threads 1.9900: the Coordinator weighs it, PERFORMANCE-POLICY rule 4)",
+        )
+        # every cell over is named, on either corpus
+        rc, out = self.run_on(
+            records(step={10: 0.95}, mem={8: 1.2, 16: 1.3}) + self.text(mem={12: 1.11}),
+            *at,
+            *self.GUARD,
+        )
+        self.assertIn(
+            "peak RSS above 1.10: wikidata-x4 at 8 threads 1.2000, wikidata-x4 at 16 threads "
+            "1.3000, text at 12 threads 1.1100:",
+            self.verdict(out),
+        )
+        # a count not on the grid voids it
+        self.assert_void(records(step={10: 0.95}), "--rss-at", "8,9")
+
+    def test_name(self):
+        rc, out = self.run_on(records(step={10: 0.95}), "--name", "STREAMING FRONT END")
+        self.assertEqual(self.verdict(out), "verdict (STREAMING FRONT END): ADOPTS")
 
     def test_guard_checked_whole(self):
         both = records(step={10: 0.95}) + self.text()

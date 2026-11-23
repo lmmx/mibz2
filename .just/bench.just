@@ -1950,13 +1950,17 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # Wikidata corpus, 4 copies end to end, and the text corpus (`ab gen DIR 16`'s text.bz2, made
 # once by the head's harness, the loss guard); at 1, 2, 4, 6, 8, 10, 12, 16 and 20 threads
 # (unpinned above one thread; one thread on ab's one-CPU pin), interleaved, 16 paired rounds,
-# settle 2 s, no spinner. First an untimed preflight: one round of every cell, settle 0, checked
-# whole and exact (bench/parscan_stream.py --preflight); a failure stops the recipe before the
+# settle 2 s, no spinner. First an untimed preflight: one round of every cell, settle 0.25 s,
+# checked whole and exact, with the machine's topology and the front end's activation by ab's
+# thread census (bench/parscan_stream.py --preflight); a failure stops the recipe before the
 # timed run. DRY=1 runs the preflight alone (not evidence). The rule: bench/parscan_stream.py
-# (judged at 10 on Wikidata, 6 and 8 supporting; text SLOWER at 6, 8 or 10 is NOT ADOPTED; peak
-# RSS gated at 10 on both), a wrapper around bench/parscan_verdict.py. Amended before any data
+# (STREAMING FRONT END, per cell: Wikidata FASTER at 10 and not SLOWER at 6, 8, 12, 16 or 20;
+# text not SLOWER at 6, 8, 10, 12, 16 or 20; peak RSS gated at 8, 10, 12, 16 and 20 on both;
+# 1, 2 and 4 reported), a wrapper around bench/parscan_verdict.py. Amended before any data
 # (23 November 2026): text added, base and head moved to master 6f7b2ac4 and the PR merged with
-# it. About 50 minutes with the builds.
+# it; then corrected before any data by the review (#145 comment 7088432559) and the
+# Coordinator's LOG (#145 comment 7088432851): the loss and memory cells, the preflight's two
+# checks, its settle. About 30-35 minutes with the builds.
 bench-parscan-stream DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -2045,11 +2049,13 @@ bench-parscan-stream DRY="":
     grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
     cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
     uname -a > "$O/uname.txt"
-    # the untimed preflight: one round of every cell, no settling, checked whole and exact
-    # (every record successful, unpinned above one thread, 838,800,784 bytes, one hash); its
+    # the untimed preflight: one round of every cell, settle 0.25 s, checked whole and exact
+    # (every record successful, unpinned above one thread, 838,800,784 bytes, one hash), the
+    # machine's topology (10 cores, 20 CPUs, no quota) and the front end's activation by ab's
+    # thread census (mibz2-scan-1 on the head from 8 threads alone, 8 workers from 10); its
     # records are not timed evidence and no step is taken from them
     "$AB" run "$O/preflight.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds 1 \
-      --settle 0 "$W/wikidata-x$COPIES.bz2" "$TEXT"
+      --settle 0.25 "$W/wikidata-x$COPIES.bz2" "$TEXT"
     python3 bench/parscan_stream.py "$O/preflight.jsonl" --env "$O/env.json" \
       --lscpu "$O/lscpu.txt" --corpus wikidata-x$COPIES --text-out-bytes "$TEXT_OUT" --preflight \
       | tee "$O/preflight.txt" \

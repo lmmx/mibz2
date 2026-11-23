@@ -18,6 +18,7 @@ ratio reported.
                     [--reported 1,2,4,12,16,20] [--rounds 16] [--corpus wikidata-x4]
                     [--out-bytes N] [--claimed 0.9333] [--decision parscan|block-reader]
                     [--diagnostic] [--guard text --guard-out-bytes N --guard-loss 6,8,10]
+                    [--rss-at 10 | --rss-at 8,10,12,16,20] [--name NAME]
 
 **Two decisions, one rule each, both frozen in the registration.** `--decision` sets the
 arms and the counts' roles, and the verdict line names the decision:
@@ -27,7 +28,11 @@ arms and the counts' roles, and the verdict line names the decision:
 - **Decision 2, BLOCK-READER** (`--decision block-reader`): `mibz2` at the head (the default
   decoder, on the PR's block reader) against `mibz2` at the base; judged 1 (it must be
   FASTER), supporting 6, 8 and 10 (none SLOWER); memory gated at 10; no transfer.
-Explicit `--arm`, `--judged`, `--supporting`, `--reported` and `--rss-at` override them.
+Explicit `--arm`, `--judged`, `--supporting`, `--reported` and `--rss-at` override them, and
+`--name` the verdict line's name. `--rss-at` takes a list of counts (bench-parscan-stream's
+correction, 23 November 2026, before any data): the memory gate fails if the median peak-RSS
+ratio is above 1.10 at any of them, and the HELD ON MEMORY line names every cell over. With one
+count and no guard, the verdict line is bench-parscan-c37's exactly.
 
 **Arms.** The reference is REF_ARM at the base (`REF_ARM@build-base`: master's 96a24d3e, the
 PR's merge-base), the candidate ARM at the head (`ARM`, this harness's own build: the PR's
@@ -61,8 +66,9 @@ else INCONCLUSIVE.
 second corpus, checked as the judged corpus is (every record, its own registered output bytes,
 `--guard-out-bytes`, and its own one hash). Its steps are printed at every count. It only
 removes adoption: NOT ADOPTED if the guard is SLOWER at any `--guard-loss` count, and its
-median peak-RSS ratio at the memory count joins the 1.10 gate (HELD ON MEMORY if either
-corpus's is above it). A gain on the guard decides nothing.
+median peak-RSS ratios at the memory counts join the 1.10 gate (HELD ON MEMORY if either
+corpus's is above it at any of them). A loss outranks the memory gate. A gain on the guard
+decides nothing.
 
 `--diagnostic`: the same checks and steps, reported, deciding nothing (bench-parscan-c37 does
 not use it since BLOCK-READER became a decision).
@@ -87,8 +93,8 @@ WIKIDATA_X4_OUT = 4 * 209_700_196
 # each decision's arm and counts' roles (judged, supporting, reported, memory count) and whether
 # the transfer is reported
 DECISIONS = {
-    "parscan": ("Decision 1, PARSCAN", "mibz2-parscan", "10", "6,8", "1,2,4,12,16,20", 10, True),
-    "block-reader": ("Decision 2, BLOCK-READER", "mibz2", "1", "6,8,10", "", 10, False),
+    "parscan": ("Decision 1, PARSCAN", "mibz2-parscan", "10", "6,8", "1,2,4,12,16,20", "10", True),
+    "block-reader": ("Decision 2, BLOCK-READER", "mibz2", "1", "6,8,10", "", "10", False),
 }
 
 
@@ -223,7 +229,10 @@ def main(argv=None):
     ap.add_argument("--judged", default=None)
     ap.add_argument("--supporting", default=None)
     ap.add_argument("--reported", default=None)
-    ap.add_argument("--rss-at", type=int, default=None, help="the memory gate's count")
+    ap.add_argument(
+        "--rss-at", default=None, help="the memory gate's counts (a list: over at any is HELD)"
+    )
+    ap.add_argument("--name", default=None, help="the verdict line's name (the decision's)")
     ap.add_argument("--rounds", type=int, default=16)
     ap.add_argument("--corpus", default="wikidata-x4")
     ap.add_argument("--out-bytes", type=int, default=WIKIDATA_X4_OUT)
@@ -233,12 +242,13 @@ def main(argv=None):
     ap.add_argument("--guard-out-bytes", type=int, default=None)
     ap.add_argument("--guard-loss", default="", help="the counts where the guard may not be SLOWER")
     a = ap.parse_args(argv)
-    name, arm, j, sup, rep_, rss_t, with_transfer = DECISIONS[a.decision]
+    name, arm, j, sup, rep_, rss_s, with_transfer = DECISIONS[a.decision]
+    name = name if a.name is None else a.name
     a.arm = arm if a.arm is None else a.arm
     a.judged = j if a.judged is None else a.judged
     a.supporting = sup if a.supporting is None else a.supporting
     a.reported = rep_ if a.reported is None else a.reported
-    rss_t = rss_t if a.rss_at is None else a.rss_at
+    rss_ts = counts(rss_s if a.rss_at is None else a.rss_at)
     judged, supporting, reported = counts(a.judged), counts(a.supporting), counts(a.reported)
     threads = sorted(set(judged + supporting + reported))
     errors = []
@@ -249,8 +259,8 @@ def main(argv=None):
         errors.append("a count in two roles (judged, supporting, reported)")
     if not a.diagnostic and len(judged) != 1:
         errors.append(f"--judged {a.judged!r}: one count")
-    if not a.diagnostic and rss_t not in threads:
-        errors.append(f"--rss-at {rss_t}: not one of the counts")
+    if not a.diagnostic and (not rss_ts or any(t not in threads for t in rss_ts)):
+        errors.append(f"--rss-at {','.join(map(str, rss_ts))}: not all among the counts")
     if not 0 < a.claimed < 1:
         errors.append(f"--claimed {a.claimed}: a gain, between 0 and 1")
     guard_loss = counts(a.guard_loss)
@@ -318,7 +328,8 @@ def main(argv=None):
     if a.guard is not None:
         print(
             f"{a.guard} (the loss guard: SLOWER at {', '.join(map(str, guard_loss)) or 'no count'} "
-            f"threads is NOT ADOPTED; peak RSS gated at {rss_t}), {a.rounds} paired rounds"
+            f"threads is NOT ADOPTED; peak RSS gated at {', '.join(map(str, rss_ts))}), "
+            f"{a.rounds} paired rounds"
         )
         for t in threads:
             (g, lo, hi, _), (cg, clo, chi, _), rss, base_kb, head_kb = cell(
@@ -331,7 +342,7 @@ def main(argv=None):
                 else "guard"
                 if t in guard_loss
                 else "memory"
-                if t == rss_t
+                if t in rss_ts
                 else "reported"
             )
             print(
@@ -353,21 +364,24 @@ def main(argv=None):
     gain = steps[t_j] == "FASTER"
     loss = [t for t in supporting if steps[t] == "SLOWER"]
     g_loss = [t for t in guard_loss if g_steps[t] == "SLOWER"]
-    over = [(a.corpus, rss_at[rss_t])] if rss_at[rss_t] > RSS_GATE else []
-    if a.guard is not None and g_rss[rss_t] > RSS_GATE:
-        over.append((a.guard, g_rss[rss_t]))
+    # every (corpus, count) over the gate, in the order the counts and corpora are given
+    over = [(a.corpus, t, rss_at[t]) for t in rss_ts if rss_at[t] > RSS_GATE]
+    if a.guard is not None:
+        over += [(a.guard, t, g_rss[t]) for t in rss_ts if g_rss[t] > RSS_GATE]
     if gain and not loss and not g_loss and not over:
         verdict = "ADOPTS"
     elif gain and not loss and not g_loss:
-        if a.guard is None:
+        if a.guard is None and len(rss_ts) == 1:
+            (_, t, x) = over[0]
             verdict = (
-                f"HELD ON MEMORY (peak RSS {rss_at[rss_t]:.4f} at {rss_t} threads, above {RSS_GATE}: "
+                f"HELD ON MEMORY (peak RSS {x:.4f} at {t} threads, above {RSS_GATE}: "
                 "the Coordinator weighs it, PERFORMANCE-POLICY rule 4)"
             )
         else:
+            cells = ", ".join(f"{c} at {t} threads {x:.4f}" for c, t, x in over)
             verdict = (
-                f"HELD ON MEMORY (peak RSS {', '.join(f'{c} {x:.4f}' for c, x in over)} at {rss_t} "
-                f"threads, above {RSS_GATE}: the Coordinator weighs it, PERFORMANCE-POLICY rule 4)"
+                f"HELD ON MEMORY (peak RSS above {RSS_GATE:.2f}: {cells}: the Coordinator weighs it, "
+                "PERFORMANCE-POLICY rule 4)"
             )
     else:
         why = []

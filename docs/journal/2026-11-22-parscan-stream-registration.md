@@ -4,10 +4,11 @@
 recipe is `just bench-parscan-stream` (`.just/bench.just`). The verdict is
 `bench/parscan_stream.py`'s, tested by `bench/test_parscan_stream.py`: a wrapper around
 `bench/parscan_verdict.py`, which is bench-parscan-c37's verdict script copied unchanged in its
-logic (that recipe's Decision 1, PARSCAN). The recipe follows bench-block-reader-on-wormhole's
+logic (that recipe's Decision 1, PARSCAN), with the loss guard, a list of memory counts and a
+verdict name added. The recipe follows bench-block-reader-on-wormhole's
 (its builds, contrast check, corpus and machine records). What differs from that recipe: the
-nine-count grid and the PARSCAN rule (judged at 10, 6 and 8 supporting), the default decoder on
-both sides, and an untimed preflight before the timed run. It is frozen once the Coordinator
+nine-count grid and the rule (judged at 10; 6, 8, 12, 16 and 20 supporting), the default
+decoder on both sides, and an untimed preflight before the timed run. It is frozen once the Coordinator
 accepts its review; until then nothing here is final and no run is queued.*
 
 *Amended 23 November 2026, before any data and before its review. On the i9 from 10 threads the
@@ -21,11 +22,25 @@ gate; base and head moved to master as it now stands (6f7b2ac4, with the 0.5.13 
 moonshot lockfile fix, #773, merged into the PR); and the reason no diagnostic arm separates the
 front end from the worker count (below, "No diagnostic arm"). Rounds and settle are unchanged.*
 
+*Corrected 23 November 2026, before any data, by the acting Researcher's review (#145 comment
+7088432559, ONE CORRECTION) as the Coordinator accepted it in full (#145 LOG 7088432851). The
+loss guard and the memory gate now cover every count where the head's front end runs, per
+cell, not 10 alone: production's default (`threads=None`, 20 threads on the i9) was only
+reported. Wikidata SLOWER at 6, 8, 12, 16 or 20, or text SLOWER at 6, 8, 10, 12, 16 or 20, is
+NOT ADOPTED; peak RSS is gated at 8, 10, 12, 16 and 20 on both corpora. The preflight gains two
+checks (the machine's topology, and the front end's activation by `ab`'s thread census), and its
+settle goes from 0 to 0.25 s. The claims that the code below 8 threads is master's own are
+withdrawn: `read_item_core` changed (below). Unpinned 8 threads is noted as the front end alone.
+The verdict line is renamed STREAMING FRONT END, and the run's cost is re-estimated at about
+30-35 minutes. Base and head pins are unchanged (master's `src`, `Cargo.toml` and `Cargo.lock`
+have not moved since 6f7b2ac4).*
+
 **The decision it settles.** Whether perf/parscan-stream (#770) merges: the push-streaming
 parallel front end in place of the default decoder's serial scanner on the i9-10900K from 8
 threads asked. It is an adoption registration (RULES C6): its verdict decides a production
 default on the machine production runs on, at thread counts CI's 4-CPU runner never reaches
-(CI's bench runs 1, 2 and 4 threads, where the PR leaves the default decoder unchanged).
+(CI's bench runs 1, 2 and 4 threads, where the PR leaves the default decoder's dispatch
+unchanged; its block reader there is the PR's, below).
 
 - **ADOPTS:** the PR merges and ships in the next release; DELIVERED.md gets its line.
 - **HELD ON MEMORY:** the Coordinator weighs the growth under PERFORMANCE-POLICY rule 4, from
@@ -58,7 +73,15 @@ allocator change.
     scanner runs 7, the window 4 blocks a worker, the lead scanner and two helpers;
   - pinned one CPU a core at 8: master's trimmed 6 workers and one helper; at 10, 8 workers and
     two helpers.
-  - Everywhere else, below 8 threads included, the default decoder is master's, unchanged.
+  - Everywhere else, below 8 threads included, the default decoder's dispatch is master's
+    (the serial scanner, master's workers and windows), but not its code: see the block
+    reader, next.
+- **The block reader below 8 threads is changed too.** `read_item_core` (`src/block.rs`, behind
+  `read_item_with_scratch`), the block reader of the serial scanner and of the one-thread
+  decoder, now grows its symbol buffer inside the group loop, zero-filling it in steps of 8,192
+  symbols (`syms.resize((n + 8192).min(max_out), 0)`, a new branch per group), where master's
+  `read_item_with_scratch` zero-fills it to `max_out` once before the loop. So 1, 2, 4 and 6 threads
+  measure that change plus layout, not layout alone.
 - **The front end:** input in 4 MiB recycled slabs (`SlabRope`, at most 8 MiB live, 2 chunks
   queued); a lead scanner that finds every block and end magic by a 4-byte anchor scan and
   shares the candidates' symbol decoding with demand-driven helpers; at most `workers + 4`
@@ -79,17 +102,21 @@ evidence here. Its modelled 10-core critical path is 0.72.
 - **Speculative decoding:** a candidate past an end magic is read at level 9, and read again at
   its stream's level if that read fails (one Wikidata stream: no such candidate here).
 - **Memory:** 8 workers where master runs 7, plus the rope. The handoff measured peak RSS at
-  0.81 of master at 10 threads; the 1.10 gate is at 10.
+  0.81 of master at 10 threads; #741's ancestor was 1.28 at 10 and 1.99 at 20. The 1.10 gate is
+  at 8, 10, 12, 16 and 20, on both corpora; text, at about 100 MB against Wikidata's 58, is the
+  likelier to bind.
 - **The 8th worker on text:** from 10 threads the front end runs 8 lazy workers where master
   runs 7 with 28 in flight. The recalibration measured that change alone, on master's serial
   scanner, as 1.109 SLOWER on text at pinned 10 (0.935 on Wikidata), and 1.06-1.11 SLOWER on
   text unpinned at 12-20 (#145 LOG 7085615681, evidence `472ce552`). The front end may hide
-  that loss or carry it; only text at 10 shows which.
+  that loss or carry it; only text at 10 to 20 shows which.
 
 **How the port avoids #741's two failures** (its Decision 1, NOT ADOPTED: 1.111 at 6 threads,
 peak RSS 1.275 at 10; LOG 7076671871):
-- **The loss below 8:** below 8 threads the default decoder is master's own, byte for byte the
-  same code (`parscan_here` is false). 6 threads can still differ from the base by layout alone.
+- **The loss below 8:** below 8 threads the default decoder keeps master's dispatch
+  (`parscan_here` is false): the serial scanner, not the front end. It is not master's code
+  byte for byte (an earlier draft said so; withdrawn): the block reader's zero-fill changed
+  (above), so 6 threads measures that change plus layout.
 - **The memory:** no whole-input read (input in bounded slabs, at most 8 MiB live plus 2 queued
   chunks), at most `workers + 4` blocks ahead, the ready bytes capped as master's are, and no
   per-thread multiple of in-flight blocks.
@@ -129,13 +156,23 @@ peak RSS 1.275 at 10; LOG 7076671871):
   12, 16 and 20 threads, the corpora, counts and arms interleaved within each round. Above one
   thread unpinned on every CPU (no `--spread`, no spinner); at one thread on ab's one-CPU pin,
   for both arms alike.
-- **The preflight, untimed:** one round of every cell with no settling, before the timed run
-  (`preflight.jsonl`). `bench/parscan_stream.py --preflight` checks it as the verdict checks a
-  run: the machine, every record present on both corpora, successful, unpinned above one
-  thread, and every output of the registered size (838,800,784 bytes on Wikidata, the counted
-  bytes on text) with one hash a corpus. A failure stops the recipe before the timed run and
-  is not a verdict; `just bench-parscan-stream 1` (DRY) runs the preflight alone. No step is
-  taken from it.
+- **The preflight, untimed:** one round of every cell with a 0.25 s settle, before the timed
+  run (`preflight.jsonl`). `bench/parscan_stream.py --preflight` checks it as the verdict checks
+  a run: the machine (lscpu's model, and `ab env`'s topology by `two_arm.topology(env, 10, 20)`:
+  10 cores, 20 CPUs, no CPU quota), every record present on both corpora, successful, unpinned
+  above one thread, and every output of the registered size (838,800,784 bytes on Wikidata, the
+  counted bytes on text) with one hash a corpus. It also checks **the front end's activation**,
+  by the thread names `ab`'s census reads from `/proc` for every arm alike
+  (`observed_threads`), against the head's code (`src/parallel.rs` at 2618c54c: workers
+  `mibz2-{i}`, the lead scanner `mibz2-scan`, helpers `mibz2-scan-1` and `mibz2-scan-2`;
+  master's serial scanner is `mibz2-scan` and has no helper):
+  - every head record at 8 threads or more has `mibz2-scan-1`;
+  - every head record at 10 threads or more has `mibz2-7` and no `mibz2-8` (8 workers);
+  - no base record, and no head record below 8 threads, has `mibz2-scan-1`.
+
+  A failure of any check stops the recipe before the timed run and is not a verdict;
+  `just bench-parscan-stream 1` (DRY) runs the preflight alone. No step is taken from it. The
+  verdict prints the same census for the timed run, and it decides nothing.
 - **Rounds:** 16, each running both arms at each count on each corpus, interleaved, the arms'
   order rotated (`arm_order`; 16 is a multiple of 2 x 2 arms, so each arm takes each position
   equally often; text adds a corpus, not an arm, so the balance holds),
@@ -143,10 +180,10 @@ peak RSS 1.275 at 10; LOG 7076671871):
   wall time is bimodal by the run's position in the round (about 0.25 s against 0.39 s, paired
   log SD about 0.33), and with 2 s every run falls in one mode (paired log SD 0.01-0.06); REVIEW
   7084586885 on #145, and #318's idle-gap effect.
-- **Cost:** about 50 minutes of workstation time with the two builds: Wikidata as before (9
-  counts x 2 arms x 17 rounds, about 6 s a run with its settle, about 31 minutes), text about
-  12 minutes more (the same 306 runs, about 2.3 s each with its settle: text decodes in well
-  under a second at every count), `ab gen` about a minute, and two release builds.
+- **Cost:** about 30-35 minutes of workstation time with the two builds (the review's estimate,
+  replacing an earlier 50): 9 counts x 2 arms x 2 corpora x 17 rounds, each run its 2 s settle
+  (0.25 s in the preflight) and a decode of well under a second to a few seconds, `ab gen`
+  about a minute, and two release builds.
 
 ## The rule
 
@@ -155,30 +192,36 @@ ratios, head over base: their geometric mean and its 95% interval (Student's t o
 degrees of freedom). FASTER if the interval lies below 1, SLOWER if above, INCONCLUSIVE
 otherwise.
 
-The steps are taken per corpus.
+The steps are taken per corpus and per count, each cell on its own; none is pooled. The
+verdict line is named STREAMING FRONT END.
 
 - **ADOPTS:** all four hold:
   - on Wikidata, the step at 10 threads is FASTER;
-  - on Wikidata, neither 6 nor 8 threads is SLOWER;
-  - **THE TEXT LOSS GUARD:** on `text`, none of 6, 8 or 10 threads is SLOWER (its 95% interval
-    wholly above 1);
-  - at 10 threads, the median peak RSS over the rounds, head over base, is at most 1.10 on
-    Wikidata and on text.
-- **HELD ON MEMORY:** as ADOPTS, but with peak RSS above 1.10 at 10 threads on either corpus.
-- **NOT ADOPTED:** any other outcome: 10 not FASTER on Wikidata, or 6 or 8 SLOWER on
-  Wikidata, or text SLOWER at 6, 8 or 10. A loss outranks the memory gate.
-- 6 and 8 are **supporting** on Wikidata: only a loss there counts against adoption.
-- **The text loss guard's reason:** from 10 threads the head runs 8 lazy workers where master
-  runs 7, the change the recalibration measured as 1.109 SLOWER on text at pinned 10 (#145 LOG
-  7085615681, evidence `472ce552`), the result on which our own rule refused it. A rule on
-  Wikidata alone could adopt that loss inside the front end. At 6 the head's default decoder is
-  master's code (a loss there is layout, and still refuses); at 8 the front end runs with
-  master's own 8 workers. Text only removes adoption: a text gain decides nothing, and text at
-  1, 2, 4, 12, 16 and 20 is reported.
-- 1, 2, 4, 12, 16 and 20 are **reported** on both corpora: their steps, CPU and peak RSS are
-  printed and decide nothing. A SLOWER step at 12, 16 or 20 (where the head runs the front end
-  with 8 workers; the recalibration's text loss was 1.06-1.11 there) would be weighed by the
-  Coordinator under PERFORMANCE-POLICY rule 2 at the merge, from this run's figures.
+  - on Wikidata, none of 6, 8, 12, 16 or 20 threads is SLOWER;
+  - **THE TEXT LOSS GUARD:** on `text`, none of 6, 8, 10, 12, 16 or 20 threads is SLOWER (its
+    95% interval wholly above 1);
+  - at each of 8, 10, 12, 16 and 20 threads, the median peak RSS over the rounds, head over
+    base, is at most 1.10, on Wikidata and on text.
+- **HELD ON MEMORY:** as ADOPTS, but with the median peak-RSS ratio above 1.10 at any of 8, 10,
+  12, 16 or 20 threads on either corpus. The verdict line names every cell over.
+- **NOT ADOPTED:** any other outcome: 10 not FASTER on Wikidata, or Wikidata SLOWER at any of
+  6, 8, 12, 16 or 20, or text SLOWER at any of 6, 8, 10, 12, 16 or 20. A loss outranks the
+  memory gate.
+- 6, 8, 12, 16 and 20 are **supporting** on Wikidata: only a loss there counts against
+  adoption.
+- **Why every count where the front end runs:** rule 2.2 is a bar, not a weighing ("no primary
+  corpus is slower beyond noise at any thread count"), and Python's `threads=None` decodes on
+  `available_parallelism()` threads, 20 on the i9: production's default is among 12, 16 and
+  20. From 10 threads the head runs 8 lazy workers with a window of 32 where master runs 7/28,
+  the change the recalibration measured on text as 1.103 at 10, 1.096 at 12, 1.057 at 16 and
+  1.093 at 20 (#145 LOG 7085615681, evidence `472ce552`; the review's table), the result on
+  which our own rule refused it. A rule judged on fewer counts could adopt that loss inside the
+  front end. 6 keeps master's dispatch (a loss there is the block reader's change or layout,
+  and still refuses); at 8 the front end runs with master's own 8 workers. Text only removes
+  adoption: a text gain decides nothing. The review put the false-refusal chance at most 24%
+  (from about 12%), at no extra runs.
+- 1, 2 and 4 are **reported** on both corpora: their steps, CPU and peak RSS are printed and
+  decide nothing here; CI's paired bench gates them under PERFORMANCE-POLICY rule 2.
 - **The transfer**, reported and deciding nothing: at 10 threads, ln(step) / ln(0.9523), the
   share of the handoff's claimed 10-thread log gain that the i9 shows.
 - **VOID,** with no verdict, if any of these holds: the machine is not the i9's profile; any run
@@ -197,14 +240,20 @@ The steps are taken per corpus.
 - **The causal relevance of each condition:**
   - **10 (judged):** the head runs the front end with 8 workers; master's serial scanner is the
     measured bound there (Decision 2's 0.932 at 10 from a faster reader alone).
-  - **8 (supporting):** the head runs the front end with 8 workers and two helpers against
-    master's 8 workers and one scanner: the topology most likely to lose.
-  - **6 (supporting):** the head's default decoder is master's code (`parscan_here` false);
-    included because it is where #741 failed, to show that the activation rule holds there.
-  - **1, 2, 4 (reported):** the same code on both sides; they bound layout effects.
-  - **12, 16, 20 (reported):** the front end, past the cores.
-- **text (the loss guard, at 6, 8 and 10; memory at 10):** the corpus on which the 8th worker
-  lost in the recalibration; without it the rule could not see that loss.
+  - **8 (supporting; memory):** the head runs the front end with 8 workers and two helpers
+    against master's 8 workers and one scanner: the topology most likely to lose. Unpinned,
+    both arms run 8 workers with a window of 32 there, so 8 threads measures **the front end
+    alone**, without the worker-count change: a partial decomposition (the review's finding 6).
+  - **6 (supporting):** the head's default decoder keeps master's dispatch (`parscan_here`
+    false) on the changed block reader; included because it is where #741 failed, to show that
+    the activation rule holds there.
+  - **1, 2, 4 (reported):** master's dispatch on both sides, the head's block reader changed
+    (`read_item_core`'s zero-fill, above): they measure that change plus layout. CI's paired
+    bench gates them.
+  - **12, 16, 20 (supporting; memory):** the front end with 8 workers, past the cores; 20 is
+    production's default (`threads=None`).
+- **text (the loss guard, at 6, 8, 10, 12, 16 and 20; memory at 8 to 20):** the corpus on which
+  the 8th worker lost in the recalibration; without it the rule could not see that loss.
 - **Why cheaper evidence won't do:** CI's runner has 4 CPUs and its bench runs 1, 2 and 4
   threads, where the PR is inactive; the gain claimed is the 10-core i9's serial-scanner bound,
   which only the i9 has. The handoff's figures are from a 2-core host, where 10 workers share
@@ -227,14 +276,16 @@ added (the amendment adds no decoder or harness change):
 
 What is known instead: the recalibration's 8/32 over 7/28 on master's serial scanner (0.935 on
 Wikidata, 1.109 on text at pinned 10) is the worker-count change alone, on the same machine; this
-run's text guard says whether the head carries that loss.
+run's text guard says whether the head carries that loss. And unpinned 8 threads, where both
+arms run 8 workers with a window of 32, is the front end alone: a partial decomposition.
 
 ## Limits
 
 - **Wikidata and text alone:** no records or random corpus on the i9. CI's bench covers every
-  corpus at 1, 2 and 4 threads, where the head's default decoder is the base's.
+  corpus at 1, 2 and 4 threads, where the head's default decoder keeps the base's dispatch on
+  the changed block reader.
 - **What an ADOPTS shows:** the whole decoder's gain at 10 threads on the i9, and no loss on
-  text at 6, 8 or 10, not its cause (the parallel scan, the 8th worker, or the prepared
+  either corpus at 6, 8, 12, 16 or 20 (nor on text at 10), not its cause (the parallel scan, the 8th worker, or the prepared
   records); they ship together, and no arm separates them (above).
 - **What it does not cover:** another 10-core machine (the activation is the measured i9's
   profile alone), and multi-stream input (one stream here; the tests cover its correctness).
