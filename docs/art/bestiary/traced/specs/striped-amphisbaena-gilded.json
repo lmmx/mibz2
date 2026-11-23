@@ -1,0 +1,555 @@
+{
+  "specimen": "striped-amphisbaena-gilded",
+  "title": "Striped Amphisbaena on a Gilded Disc",
+  "aria_label": "Component-extracted striped brown amphisbaena coiled around a gold disc on a blue starred ground, an orange head inside the coil, a pale feathered wing and clawed feet standing on rolling brown earth",
+  "source_ref": "docs/art/bestiary/refs/louis/14-striped-amphisbaena-gilded.jpg",
+  "family": "B",
+  "preset": "painted_field_keyed_fine",
+  "source_style": "English bestiary miniature on gilded vellum",
+  "date_range": "13th century",
+  "medium": "ink, gold leaf and opaque mineral pigments on vellum",
+  "components_subdir": "striped-amphisbaena-gilded",
+  "root_id": "striped-amphisbaena-gilded-root",
+  "context_style": "gilded_roundel",
+  "include_polygons": [
+    [
+      [
+        83.1,
+        67.9
+      ],
+      [
+        116.3,
+        62.3
+      ],
+      [
+        138.5,
+        55.4
+      ],
+      [
+        155.1,
+        49.9
+      ],
+      [
+        177.3,
+        44.3
+      ],
+      [
+        193.9,
+        42.9
+      ],
+      [
+        218.8,
+        41.6
+      ],
+      [
+        234.1,
+        52.6
+      ],
+      [
+        223.0,
+        65.1
+      ],
+      [
+        238.2,
+        83.1
+      ],
+      [
+        250.7,
+        110.8
+      ],
+      [
+        256.2,
+        138.5
+      ],
+      [
+        253.5,
+        166.2
+      ],
+      [
+        246.5,
+        188.4
+      ],
+      [
+        250.7,
+        193.9
+      ],
+      [
+        252.1,
+        216.1
+      ],
+      [
+        216.1,
+        235.5
+      ],
+      [
+        218.8,
+        247.9
+      ],
+      [
+        171.7,
+        246.5
+      ],
+      [
+        166.2,
+        238.2
+      ],
+      [
+        155.1,
+        231.3
+      ],
+      [
+        124.7,
+        225.8
+      ],
+      [
+        97.0,
+        217.5
+      ],
+      [
+        80.3,
+        210.5
+      ],
+      [
+        66.5,
+        199.4
+      ],
+      [
+        52.6,
+        180.1
+      ],
+      [
+        45.7,
+        155.1
+      ],
+      [
+        46.5,
+        133.0
+      ],
+      [
+        52.6,
+        110.8
+      ],
+      [
+        63.7,
+        91.4
+      ],
+      [
+        72.6,
+        77.6
+      ]
+    ]
+  ],
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "title": "Amphisbaena striped coiled body",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          55.4,
+          144.0
+        ],
+        [
+          52.6,
+          116.3
+        ],
+        [
+          69.3,
+          169.0
+        ],
+        [
+          97.0,
+          199.4
+        ],
+        [
+          138.5,
+          213.3
+        ],
+        [
+          116.3,
+          72.0
+        ],
+        [
+          91.4,
+          80.3
+        ],
+        [
+          144.0,
+          69.3
+        ],
+        [
+          235.5,
+          116.3
+        ],
+        [
+          249.3,
+          152.4
+        ],
+        [
+          241.0,
+          180.1
+        ]
+      ]
+    },
+    {
+      "id": "head-top",
+      "file": "head-top.svg",
+      "title": "Amphisbaena upper head",
+      "base_layer": "warm_mid",
+      "fine_detail": true,
+      "seeds": [
+        [
+          171.7,
+          55.4
+        ],
+        [
+          188.4,
+          52.6
+        ],
+        [
+          205.0,
+          60.9
+        ],
+        [
+          155.1,
+          59.6
+        ],
+        [
+          218.8,
+          52.6
+        ]
+      ]
+    },
+    {
+      "id": "head-inner",
+      "file": "head-inner.svg",
+      "title": "Amphisbaena orange inner head",
+      "base_layer": "warm_mid",
+      "fine_detail": true,
+      "seeds": [
+        [
+          130.2,
+          110.8
+        ],
+        [
+          144.0,
+          121.9
+        ],
+        [
+          124.7,
+          102.5
+        ],
+        [
+          149.6,
+          116.3
+        ]
+      ]
+    },
+    {
+      "id": "wing",
+      "file": "wing.svg",
+      "title": "Amphisbaena pale feathered wing",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          110.8,
+          144.0
+        ],
+        [
+          144.0,
+          160.7
+        ],
+        [
+          171.7,
+          171.7
+        ],
+        [
+          155.1,
+          144.0
+        ],
+        [
+          193.9,
+          160.7
+        ],
+        [
+          124.7,
+          182.8
+        ]
+      ]
+    },
+    {
+      "id": "torso",
+      "file": "torso.svg",
+      "title": "Amphisbaena pale belly and haunch",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          191.1,
+          199.4
+        ],
+        [
+          199.4,
+          185.6
+        ],
+        [
+          182.8,
+          210.5
+        ]
+      ]
+    },
+    {
+      "id": "leg-back",
+      "file": "leg-back.svg",
+      "title": "Amphisbaena back leg and claws",
+      "base_layer": "warm_mid",
+      "fine_detail": true,
+      "seeds": [
+        [
+          241.0,
+          199.4
+        ],
+        [
+          243.8,
+          210.5
+        ],
+        [
+          235.5,
+          218.8
+        ]
+      ]
+    },
+    {
+      "id": "leg-front",
+      "file": "leg-front.svg",
+      "title": "Amphisbaena front leg and claws",
+      "base_layer": "warm_mid",
+      "fine_detail": true,
+      "seeds": [
+        [
+          191.1,
+          229.9
+        ],
+        [
+          205.0,
+          238.2
+        ],
+        [
+          182.8,
+          238.2
+        ]
+      ]
+    }
+  ],
+  "tucks": [
+    {
+      "parent": "body",
+      "child": "head-top",
+      "radius_u": 2.5,
+      "joint_point": [
+        213.3,
+        69.3
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "head-inner",
+      "radius_u": 2.5,
+      "joint_point": [
+        160.7,
+        124.7
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "wing",
+      "radius_u": 2.5,
+      "joint_point": [
+        193.9,
+        155.1
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "torso",
+      "radius_u": 2.5,
+      "joint_point": [
+        193.9,
+        193.9
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "torso",
+      "child": "leg-back",
+      "radius_u": 2.5,
+      "joint_point": [
+        232.7,
+        202.2
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "torso",
+      "child": "leg-front",
+      "radius_u": 2.5,
+      "joint_point": [
+        191.1,
+        221.6
+      ],
+      "joint_window_u": 14
+    }
+  ],
+  "assembly_tree": [
+    {
+      "id": "body",
+      "gid": "striped-amphisbaena-gilded-body",
+      "part": "body",
+      "children": [
+        {
+          "id": "head-top",
+          "gid": "striped-amphisbaena-gilded-head-top",
+          "part": "head-top",
+          "pivot": [
+            210.5,
+            72.0
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-5;3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.1s"
+          }
+        },
+        {
+          "id": "head-inner",
+          "gid": "striped-amphisbaena-gilded-head-inner",
+          "part": "head-inner",
+          "pivot": [
+            160.7,
+            124.7
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;4;-3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "7.3s"
+          }
+        },
+        {
+          "id": "wing",
+          "gid": "striped-amphisbaena-gilded-wing",
+          "part": "wing",
+          "pivot": [
+            193.9,
+            155.1
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-3;2;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "5.9s"
+          }
+        },
+        {
+          "id": "torso",
+          "gid": "striped-amphisbaena-gilded-torso",
+          "part": "torso",
+          "pivot": [
+            193.9,
+            193.9
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;3;-2;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.7s"
+          }
+        },
+        {
+          "id": "leg-back",
+          "gid": "striped-amphisbaena-gilded-leg-back",
+          "part": "leg-back",
+          "pivot": [
+            229.9,
+            199.4
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-5;3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "7.1s"
+          }
+        },
+        {
+          "id": "leg-front",
+          "gid": "striped-amphisbaena-gilded-leg-front",
+          "part": "leg-front",
+          "pivot": [
+            191.1,
+            221.6
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;4;-3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.3s"
+          }
+        }
+      ]
+    }
+  ],
+  "zoom_crops": [
+    {
+      "label": "Zoomed Upper Head 50% Overlay",
+      "viewbox": [
+        133.0,
+        38.8,
+        105.3,
+        44.3
+      ]
+    },
+    {
+      "label": "Zoomed Inner Head 50% Overlay",
+      "viewbox": [
+        110.8,
+        91.4,
+        60.9,
+        52.6
+      ]
+    }
+  ],
+  "ground_keys": [
+    [
+      95,
+      110,
+      150,
+      15
+    ],
+    [
+      91,
+      77,
+      48,
+      10
+    ],
+    [
+      140,
+      120,
+      80,
+      9
+    ]
+  ],
+  "min_piece_frac": 0.0006
+}

@@ -1,0 +1,213 @@
+{
+  "specimen": "striped-amphisbaena-gilded",
+  "source_ref": "docs/art/bestiary/refs/louis/14-striped-amphisbaena-gilded.jpg",
+  "family": "B",
+  "preset": "painted_field_keyed_fine",
+  "source_style": "English bestiary miniature on gilded vellum",
+  "date_range": "13th century",
+  "medium": "ink, gold leaf and opaque mineral pigments on vellum",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    288.38,
+    300.0
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 98.87,
+    "silhouette_iou_legacy_pct": 95.9,
+    "ink_iou_pct": 93.1,
+    "boundary_f1_1u_pct": 98.15,
+    "masked_color_rmse": 47.09,
+    "raw_kb": 169.56,
+    "gzip_kb": 56.44,
+    "path_count": 28,
+    "command_count": 14758,
+    "cmd_counts": {
+      "M": 1519,
+      "h": 1781,
+      "c": 3556,
+      "l": 4589,
+      "v": 1571,
+      "s": 223,
+      "z": 1519
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.3,
+      "threshold": 186,
+      "filter_speckle": 6,
+      "corner_threshold": 60,
+      "length_threshold": 5.8,
+      "splice_threshold": 56,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.11,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.4
+    },
+    "wash": {
+      "scale_size": 540,
+      "blur_radius": 0.95,
+      "threshold": 155,
+      "filter_speckle": 20,
+      "corner_threshold": 60,
+      "length_threshold": 10.5,
+      "splice_threshold": 65,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.21,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.8
+    },
+    "highlight": {
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 148,
+      "filter_speckle": 2,
+      "corner_threshold": 60,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.08,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.12
+    },
+    "accent": {
+      "scale_size": 1800,
+      "blur_radius": 0.5,
+      "threshold": 154,
+      "filter_speckle": 3,
+      "corner_threshold": 60,
+      "length_threshold": 8.5,
+      "splice_threshold": 62,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.19,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.55
+    },
+    "ink": {
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 160,
+      "filter_speckle": 2,
+      "corner_threshold": 60,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.08,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.12
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/striped-amphisbaena-gilded",
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "raw_kb": 50.29,
+      "gzip_kb": 17.5,
+      "bbox": [
+        42,
+        56,
+        216,
+        178
+      ]
+    },
+    {
+      "id": "head-top",
+      "file": "head-top.svg",
+      "raw_kb": 15.31,
+      "gzip_kb": 5.68,
+      "bbox": [
+        133,
+        38,
+        104,
+        55
+      ]
+    },
+    {
+      "id": "head-inner",
+      "file": "head-inner.svg",
+      "raw_kb": 19.21,
+      "gzip_kb": 7.03,
+      "bbox": [
+        111,
+        67,
+        79,
+        76
+      ]
+    },
+    {
+      "id": "wing",
+      "file": "wing.svg",
+      "raw_kb": 55.11,
+      "gzip_kb": 18.87,
+      "bbox": [
+        86,
+        116,
+        137,
+        110
+      ]
+    },
+    {
+      "id": "torso",
+      "file": "torso.svg",
+      "raw_kb": 12.95,
+      "gzip_kb": 4.88,
+      "bbox": [
+        132,
+        160,
+        87,
+        73
+      ]
+    },
+    {
+      "id": "leg-back",
+      "file": "leg-back.svg",
+      "raw_kb": 9.41,
+      "gzip_kb": 3.61,
+      "bbox": [
+        203,
+        160,
+        53,
+        77
+      ]
+    },
+    {
+      "id": "leg-front",
+      "file": "leg-front.svg",
+      "raw_kb": 7.25,
+      "gzip_kb": 2.85,
+      "bbox": [
+        155,
+        217,
+        71,
+        34
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/striped-amphisbaena-gilded-master.svg",
+    "sheet": "docs/art/bestiary/traced/striped-amphisbaena-gilded-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/striped-amphisbaena-gilded-components.png"
+  },
+  "palette": {
+    "wash": "#a76b50",
+    "wash2": "#857668",
+    "warm_mid": "#a29381",
+    "highlight": "#d5cec1",
+    "ink": "#19100b",
+    "sage": "#9b9f8c",
+    "crimson": "#ad6549"
+  },
+  "flaws_fixed": []
+}
