@@ -15,13 +15,30 @@ them, in place of one fill to `max_out` before the first group. It is an adoptio
 (RULES C6): CI's 4-CPU runners did not resolve this effect on #770, so a neutral CI bench is
 expected, and the merge would rest on this run, outside PERFORMANCE-POLICY's CI rule.
 
-- **ADOPTS:** the PR merges (CI green, its paired bench showing no primary loss beyond noise)
-  and ships in the next release; DELIVERED.md gets its line.
+- **ADOPTS:** the PR merges, provided CI's condition below is met, and ships in the next
+  release; DELIVERED.md gets its line.
 - **HELD ON MEMORY:** not ADOPTS. The Coordinator weighs the growth under PERFORMANCE-POLICY
   rule 4, from this run's figures alone.
 - **NOT ADOPTED:** the PR closes unmerged. The result gets a journal entry and a line in the
   record; any later attempt at the same mechanism is a new PR with its own registration.
 - **VOID:** repeated once, with the reason logged.
+
+**CI's condition, frozen before any i9 data** (the acting Researcher's correction, #145 REVIEW
+7096174288; accepted in LOG 7096174751). #785's CI paired bench (run 45097921063, head
+`39aaf55b`, 10 rounds an attempt) so far:
+
+| attempt | wikidata, 1 thread | text, 2 threads |
+|---|---|---|
+| 1 | −0.5% (−1.6, +0.6) | +4.6% (+0.0, +9.4), flagged SLOWER |
+| 2 (text 2t's one re-run) | +0.4% (+0.1, +0.7), flagged SLOWER | +1.2% (−1.7, +4.3), not reproduced |
+| 3 (wikidata 1t's one re-run) | read alone, as below | settled by attempt 2 |
+
+Text at 2 threads is settled: its flag did not reproduce (PERFORMANCE-POLICY §2). No other primary
+cell was flagged in either attempt. Attempt 3 is read at wikidata, 1 thread, alone:
+- **SLOWER beyond noise again:** the flag stands, and #785 is **NOT ADOPTED** with no i9 run.
+- **Otherwise:** CI's condition is met and is never revisited. This run alone decides.
+
+The ready tag is set only once attempt 3 has reported and its outcome is logged on #145.
 
 ## Where this comes from: a confirmatory test, not a fishing expedition
 
@@ -94,8 +111,11 @@ L1 and L2 (32 KB and 256 KB a core on the i9) before the groups write them. The 
 touches 16 KB, then the next 8,192 symbols' groups write it while it is in L1. How much master
 fills depends on the buffer handed in:
 - **The serial scanner of the parallel decoder** (2 threads and up) takes its buffer from the
-  pool of symbol buffers (`free_syms`), or a new one when the pool is empty: a new one is filled
-  whole. This is where #770 measured the gain, at 4 and 6 threads.
+  pool of symbol buffers (`free_syms`), or a new one when the pool is empty. A buffer comes back
+  to the pool at its block's length (`decode_owned` hands the symbols back truncated to `n`), so
+  master fills `max_out` less the previous block's `n` when that is positive. A whole fill
+  happens only for a fresh buffer, at most `slots` in a run. #770 measured its gain at 4 and 6
+  threads; which of these fills it came from is not known.
 - **The one-thread decoder** reuses one buffer, whose length is the last block's symbol count,
   so master fills only the difference between blocks. Little changes there but the branch a
   group: consistent with #770's 1.017 at one thread, inconclusive.
@@ -106,7 +126,10 @@ account of it.
 **The risks, named:**
 - **The branch a group** (about 18,000 a block), at every count. One thread, where the fill
   saved is smallest, is where it would show: #770's 1.017 [0.998, 1.035] there was close to
-  SLOWER, and 1 is a supporting count here, so the rule may refuse on it.
+  SLOWER, and 1 is a supporting count here, so the rule may refuse on it. CI measured it on
+  #785: in attempt 2's stage table at one thread, the scanner stage (headers and Huffman) costs
+  +5.8% (+5.4%, +6.2%), about +0.6% of wall at its 11% share. A rework that hoists the check out
+  of the per-group loop is a new head and needs a new registration.
 - **text:** #770's text cells at 1 to 6 threads were all above 1 (1.010 to 1.019), none beyond
   noise. Text is guarded at every count.
 - **Layout:** the split's code is not #770's (above), so its layout differs from both #770's
@@ -185,6 +208,10 @@ count, each cell on its own; none is pooled. The verdict line is named TILED ZER
 - **The false-refusal chance:** with no effect at the eleven loss cells, each refuses with
   probability about 2.5%, so up to about 24% together (fewer, since the cells are correlated).
   A true 0.977 at 6, with #770's interval half-width of about 0.6%, is FASTER with high power.
+- **NOT ADOPTED is a likely outcome,** and it would not be a false refusal: rule 2.2 is a bar.
+  Resampling #770's rounds at face value puts the chance that some loss cell is SLOWER at about
+  0.87 (wikidata at 1 thread alone 0.43, text at any count 0.77); shrunk toward no effect, still
+  plausibly 0.4 to 0.7. The 24% above is the chance under no effect at all.
 - **VOID,** with no verdict, if any of these holds: the machine is not the i9's profile; any run
   is unsuccessful or has a non-finite or non-positive wall, CPU or peak RSS; any run above one
   thread is pinned, any one-thread run is not on a single CPU, or any run is beside a spinner;
