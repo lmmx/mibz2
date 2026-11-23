@@ -1,0 +1,197 @@
+{
+  "specimen": "outline-amphisbaena-roundel",
+  "source_ref": "docs/art/bestiary/traced/derived/9-outline-amphisbaena-roundel-contrast.png",
+  "family": "D",
+  "preset": "monochrome_woodcut",
+  "source_style": "English bestiary pen drawing on vellum",
+  "date_range": "13th century",
+  "medium": "brown ink on vellum",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    293.33,
+    300.0
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 94.99,
+    "silhouette_iou_legacy_pct": 84.13,
+    "ink_iou_pct": 77.95,
+    "boundary_f1_1u_pct": 99.94,
+    "masked_color_rmse": 37.0,
+    "raw_kb": 44.84,
+    "gzip_kb": 16.46,
+    "path_count": 12,
+    "command_count": 3089,
+    "cmd_counts": {
+      "M": 188,
+      "l": 1096,
+      "c": 1026,
+      "v": 273,
+      "h": 286,
+      "s": 32,
+      "z": 188
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.0,
+      "threshold": 165,
+      "filter_speckle": 6,
+      "corner_threshold": 60,
+      "length_threshold": 5.2,
+      "splice_threshold": 55,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.12,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "wash": {
+      "scale_size": 600,
+      "blur_radius": 0.85,
+      "threshold": 152,
+      "filter_speckle": 16,
+      "corner_threshold": 60,
+      "length_threshold": 9.5,
+      "splice_threshold": 65,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.18,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.6
+    },
+    "highlight": {
+      "scale_size": 650,
+      "blur_radius": 0.65,
+      "threshold": 148,
+      "filter_speckle": 4,
+      "corner_threshold": 60,
+      "length_threshold": 6.5,
+      "splice_threshold": 58,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.15,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "accent": {
+      "scale_size": 650,
+      "blur_radius": 0.75,
+      "threshold": 152,
+      "filter_speckle": 8,
+      "corner_threshold": 60,
+      "length_threshold": 7.5,
+      "splice_threshold": 60,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.16,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.45
+    },
+    "ink": {
+      "scale_size": 900,
+      "blur_radius": 0.55,
+      "threshold": 150,
+      "filter_speckle": 3,
+      "corner_threshold": 60,
+      "length_threshold": 4.5,
+      "splice_threshold": 50,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.11,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/outline-amphisbaena-roundel",
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "raw_kb": 4.81,
+      "gzip_kb": 2.08,
+      "bbox": [
+        63,
+        63,
+        116,
+        97
+      ]
+    },
+    {
+      "id": "head-top",
+      "file": "head-top.svg",
+      "raw_kb": 9.81,
+      "gzip_kb": 3.98,
+      "bbox": [
+        62,
+        21,
+        165,
+        148
+      ]
+    },
+    {
+      "id": "head-inner",
+      "file": "head-inner.svg",
+      "raw_kb": 1.66,
+      "gzip_kb": 0.8,
+      "bbox": [
+        80,
+        120,
+        46,
+        33
+      ]
+    },
+    {
+      "id": "wing",
+      "file": "wing.svg",
+      "raw_kb": 14.2,
+      "gzip_kb": 5.61,
+      "bbox": [
+        32,
+        84,
+        183,
+        137
+      ]
+    },
+    {
+      "id": "leg-front",
+      "file": "leg-front.svg",
+      "raw_kb": 7.97,
+      "gzip_kb": 3.23,
+      "bbox": [
+        33,
+        189,
+        181,
+        99
+      ]
+    },
+    {
+      "id": "leg-back",
+      "file": "leg-back.svg",
+      "raw_kb": 6.39,
+      "gzip_kb": 2.69,
+      "bbox": [
+        193,
+        50,
+        61,
+        209
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/outline-amphisbaena-roundel-master.svg",
+    "sheet": "docs/art/bestiary/traced/outline-amphisbaena-roundel-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/outline-amphisbaena-roundel-components.png"
+  },
+  "palette": {
+    "wash": "#ffffff",
+    "wash2": "#e2d4b7",
+    "ink": "#19100b"
+  },
+  "flaws_fixed": []
+}
