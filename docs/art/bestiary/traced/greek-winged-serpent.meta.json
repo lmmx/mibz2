@@ -1,0 +1,164 @@
+{
+  "specimen": "greek-winged-serpent",
+  "source_ref": "docs/art/bestiary/refs/louis/5-greek-winged-serpent.png",
+  "family": "C",
+  "preset": "parchment_pale_subject_fine",
+  "source_style": "Greek manuscript miniature on paper",
+  "date_range": "15th century",
+  "medium": "ink and pigment on paper",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    300.0,
+    202.12
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 98.02,
+    "silhouette_iou_legacy_pct": 93.13,
+    "ink_iou_pct": 96.4,
+    "boundary_f1_1u_pct": 99.76,
+    "masked_color_rmse": 37.09,
+    "raw_kb": 44.56,
+    "gzip_kb": 15.83,
+    "path_count": 12,
+    "command_count": 3657,
+    "cmd_counts": {
+      "M": 428,
+      "c": 956,
+      "l": 1103,
+      "v": 297,
+      "h": 382,
+      "s": 63,
+      "z": 428
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.1,
+      "threshold": 168,
+      "filter_speckle": 8,
+      "corner_threshold": 60,
+      "length_threshold": 6.2,
+      "splice_threshold": 58,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.12,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "wash": {
+      "scale_size": 600,
+      "blur_radius": 0.85,
+      "threshold": 152,
+      "filter_speckle": 16,
+      "corner_threshold": 60,
+      "length_threshold": 9.5,
+      "splice_threshold": 65,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.18,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.6
+    },
+    "highlight": {
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 148,
+      "filter_speckle": 2,
+      "corner_threshold": 60,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.08,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.12
+    },
+    "accent": {
+      "scale_size": 1800,
+      "blur_radius": 0.5,
+      "threshold": 152,
+      "filter_speckle": 3,
+      "corner_threshold": 60,
+      "length_threshold": 7.5,
+      "splice_threshold": 60,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.16,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.45
+    },
+    "ink": {
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 160,
+      "filter_speckle": 2,
+      "corner_threshold": 60,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.08,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.12
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/greek-winged-serpent",
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "raw_kb": 26.07,
+      "gzip_kb": 9.53,
+      "bbox": [
+        6,
+        85,
+        260,
+        53
+      ]
+    },
+    {
+      "id": "head",
+      "file": "head.svg",
+      "raw_kb": 7.17,
+      "gzip_kb": 2.85,
+      "bbox": [
+        231,
+        88,
+        61,
+        49
+      ]
+    },
+    {
+      "id": "wing",
+      "file": "wing.svg",
+      "raw_kb": 11.21,
+      "gzip_kb": 4.35,
+      "bbox": [
+        100,
+        41,
+        104,
+        68
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/greek-winged-serpent-master.svg",
+    "sheet": "docs/art/bestiary/traced/greek-winged-serpent-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/greek-winged-serpent-components.png"
+  },
+  "palette": {
+    "wash": "#a09683",
+    "wash2": "#7e7769",
+    "warm_mid": "#d9c3ad",
+    "highlight": "#d9cebb",
+    "ink": "#19100b",
+    "sage": "#8c8b7b"
+  },
+  "flaws_fixed": []
+}

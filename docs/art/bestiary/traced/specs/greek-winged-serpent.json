@@ -1,0 +1,310 @@
+{
+  "specimen": "greek-winged-serpent",
+  "title": "Greek Winged Serpent",
+  "aria_label": "Component-extracted Byzantine winged serpent with a scaled grey-green body, pale belly, a bat-like eyed wing and a crested head with a red tongue",
+  "source_ref": "docs/art/bestiary/refs/louis/5-greek-winged-serpent.png",
+  "family": "C",
+  "preset": "parchment_pale_subject_fine",
+  "source_style": "Greek manuscript miniature on paper",
+  "date_range": "15th century",
+  "medium": "ink and pigment on paper",
+  "components_subdir": "greek-winged-serpent",
+  "root_id": "greek-winged-serpent-root",
+  "context_style": "parchment",
+  "include_polygons": [
+    [
+      [
+        9.0,
+        118.5
+      ],
+      [
+        12.0,
+        126.0
+      ],
+      [
+        72.0,
+        126.0
+      ],
+      [
+        126.0,
+        127.5
+      ],
+      [
+        168.0,
+        127.5
+      ],
+      [
+        210.0,
+        123.0
+      ],
+      [
+        237.0,
+        126.0
+      ],
+      [
+        249.0,
+        135.0
+      ],
+      [
+        264.0,
+        133.5
+      ],
+      [
+        285.0,
+        120.0
+      ],
+      [
+        288.0,
+        99.0
+      ],
+      [
+        279.0,
+        93.0
+      ],
+      [
+        240.0,
+        90.0
+      ],
+      [
+        237.0,
+        96.0
+      ],
+      [
+        195.0,
+        87.0
+      ],
+      [
+        198.0,
+        69.0
+      ],
+      [
+        195.0,
+        60.0
+      ],
+      [
+        180.0,
+        45.0
+      ],
+      [
+        162.0,
+        42.0
+      ],
+      [
+        156.0,
+        45.0
+      ],
+      [
+        135.0,
+        52.5
+      ],
+      [
+        102.0,
+        51.0
+      ],
+      [
+        105.0,
+        60.0
+      ],
+      [
+        126.0,
+        69.0
+      ],
+      [
+        141.0,
+        93.0
+      ],
+      [
+        132.0,
+        99.0
+      ],
+      [
+        78.0,
+        96.0
+      ],
+      [
+        60.0,
+        102.0
+      ],
+      [
+        39.0,
+        112.5
+      ]
+    ]
+  ],
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "title": "Serpent scaled body and tail",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          30.0,
+          121.5
+        ],
+        [
+          60.0,
+          114.0
+        ],
+        [
+          90.0,
+          103.5
+        ],
+        [
+          126.0,
+          108.0
+        ],
+        [
+          168.0,
+          111.0
+        ],
+        [
+          204.0,
+          111.0
+        ],
+        [
+          222.0,
+          108.0
+        ]
+      ]
+    },
+    {
+      "id": "head",
+      "file": "head.svg",
+      "title": "Serpent crested head",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          258.0,
+          105.0
+        ],
+        [
+          270.0,
+          103.5
+        ],
+        [
+          249.0,
+          99.0
+        ],
+        [
+          279.0,
+          111.0
+        ]
+      ]
+    },
+    {
+      "id": "wing",
+      "file": "wing.svg",
+      "title": "Serpent eyed bat wing",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          135.0,
+          64.5
+        ],
+        [
+          156.0,
+          60.0
+        ],
+        [
+          180.0,
+          66.0
+        ],
+        [
+          168.0,
+          87.0
+        ],
+        [
+          150.0,
+          78.0
+        ]
+      ]
+    }
+  ],
+  "tucks": [
+    {
+      "parent": "body",
+      "child": "head",
+      "radius_u": 2.5,
+      "joint_point": [
+        237.0,
+        105.0
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "wing",
+      "radius_u": 2.5,
+      "joint_point": [
+        162.0,
+        90.0
+      ],
+      "joint_window_u": 14
+    }
+  ],
+  "assembly_tree": [
+    {
+      "id": "body",
+      "gid": "greek-winged-serpent-body",
+      "part": "body",
+      "children": [
+        {
+          "id": "head",
+          "gid": "greek-winged-serpent-head",
+          "part": "head",
+          "pivot": [
+            237.0,
+            103.2
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-5;3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.1s"
+          }
+        },
+        {
+          "id": "wing",
+          "gid": "greek-winged-serpent-wing",
+          "part": "wing",
+          "pivot": [
+            162.0,
+            90.0
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;4;-3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "7.3s"
+          }
+        }
+      ]
+    }
+  ],
+  "zoom_crops": [
+    {
+      "label": "Zoomed Head 50% Overlay",
+      "viewbox": [
+        234.0,
+        84.0,
+        57.0,
+        48.0
+      ]
+    },
+    {
+      "label": "Zoomed Wing 50% Overlay",
+      "viewbox": [
+        99.0,
+        42.0,
+        102.0,
+        60.0
+      ]
+    }
+  ]
+}
