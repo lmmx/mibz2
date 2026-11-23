@@ -11,7 +11,7 @@ Pencil and pen drawings give outlines, to be filled in. Painted ones give the il
 | # | Reference (`refs/louis/`) | Slug | Kind | Status |
 | --- | --- | --- | --- | --- |
 | 4 | `4-amphisbaena-aberdeen.jpg` | `aberdeen-amphisbaena` | gilded, painted | traced (97.6% silhouette); heads lose their orange |
-| 7 | `7-crescent-amphisbaena.jpg` | `crescent-amphisbaena` | painted on parchment | next |
+| 7 | `7-crescent-amphisbaena.jpg` | `crescent-amphisbaena` | painted on parchment | first pass (preset `parchment_pale_subject`): heads kept but blocky, ink broken, belly fur lost |
 | 8 | `8-winged-amphisbaena-linear.jpg` | `winged-amphisbaena-linear` | painted on parchment | waiting |
 | 9 | `9-outline-amphisbaena-roundel.jpg` | `outline-amphisbaena-roundel` | pen outline, roundel | waiting |
 | 10 | `10-green-amphisbaena-roundel.jpg` | `green-amphisbaena-roundel` | painted roundel, gold centre | waiting |

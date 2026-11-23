@@ -1,0 +1,322 @@
+{
+  "specimen": "crescent-amphisbaena",
+  "title": "Crescent Amphisbaena on a Mound",
+  "aria_label": "Component-extracted amphisbaena arched like a crescent, a dog's head at each end",
+  "source_ref": "docs/art/bestiary/refs/louis/7-crescent-amphisbaena.jpg",
+  "family": "C",
+  "preset": "parchment_pale_subject",
+  "source_style": "English bestiary miniature on vellum",
+  "date_range": "13th century",
+  "medium": "ink and pigment on vellum",
+  "components_subdir": "crescent-amphisbaena",
+  "root_id": "crescent-amphisbaena-root",
+  "context_style": "parchment",
+  "include_polygons": [
+    [
+      [
+        20.1,
+        7.5
+      ],
+      [
+        65.3,
+        7.5
+      ],
+      [
+        65.3,
+        37.7
+      ],
+      [
+        59.0,
+        42.7
+      ],
+      [
+        67.8,
+        67.8
+      ],
+      [
+        86.7,
+        86.7
+      ],
+      [
+        125.6,
+        98.0
+      ],
+      [
+        163.3,
+        95.5
+      ],
+      [
+        187.2,
+        80.4
+      ],
+      [
+        212.3,
+        55.3
+      ],
+      [
+        233.7,
+        37.7
+      ],
+      [
+        235.6,
+        5.0
+      ],
+      [
+        283.9,
+        5.0
+      ],
+      [
+        283.9,
+        35.2
+      ],
+      [
+        252.5,
+        35.2
+      ],
+      [
+        250.6,
+        42.7
+      ],
+      [
+        238.7,
+        70.4
+      ],
+      [
+        221.1,
+        89.2
+      ],
+      [
+        207.3,
+        97.4
+      ],
+      [
+        201.0,
+        101.8
+      ],
+      [
+        188.4,
+        114.9
+      ],
+      [
+        175.9,
+        122.5
+      ],
+      [
+        150.8,
+        128.4
+      ],
+      [
+        125.6,
+        127.9
+      ],
+      [
+        100.5,
+        115.3
+      ],
+      [
+        81.7,
+        101.1
+      ],
+      [
+        70.4,
+        97.4
+      ],
+      [
+        54.0,
+        75.4
+      ],
+      [
+        41.5,
+        47.7
+      ],
+      [
+        20.1,
+        32.7
+      ]
+    ]
+  ],
+  "zoom_crops": [
+    {
+      "label": "Zoomed Left Head 50% Overlay",
+      "viewbox": [
+        18,
+        8,
+        50,
+        40
+      ]
+    },
+    {
+      "label": "Zoomed Right Head 50% Overlay",
+      "viewbox": [
+        228,
+        4,
+        56,
+        36
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "title": "Crescent amphisbaena spotted blue body",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          52.8,
+          52.8
+        ],
+        [
+          62.8,
+          70.4
+        ],
+        [
+          81.7,
+          90.5
+        ],
+        [
+          113.1,
+          105.5
+        ],
+        [
+          150.8,
+          108.0
+        ],
+        [
+          182.2,
+          96.7
+        ],
+        [
+          207.3,
+          70.4
+        ],
+        [
+          238.7,
+          47.7
+        ],
+        [
+          246.2,
+          37.7
+        ]
+      ]
+    },
+    {
+      "id": "left-head",
+      "file": "left-head.svg",
+      "title": "Crescent amphisbaena left head, open-mouthed",
+      "base_layer": "warm_mid",
+      "fine_detail": true,
+      "seeds": [
+        [
+          41.5,
+          25.1
+        ],
+        [
+          32.7,
+          17.6
+        ],
+        [
+          49.0,
+          30.2
+        ],
+        [
+          52.8,
+          37.7
+        ]
+      ]
+    },
+    {
+      "id": "right-head",
+      "file": "right-head.svg",
+      "title": "Crescent amphisbaena right head, open-mouthed",
+      "base_layer": "warm_mid",
+      "fine_detail": true,
+      "seeds": [
+        [
+          257.5,
+          18.8
+        ],
+        [
+          270.1,
+          16.3
+        ],
+        [
+          248.7,
+          25.1
+        ],
+        [
+          263.9,
+          26.3
+        ],
+        [
+          246.2,
+          13.8
+        ]
+      ]
+    }
+  ],
+  "tucks": [
+    {
+      "parent": "body",
+      "child": "left-head",
+      "radius_u": 2.5,
+      "joint_point": [
+        52.8,
+        41.5
+      ],
+      "joint_window_u": 12
+    },
+    {
+      "parent": "body",
+      "child": "right-head",
+      "radius_u": 2.5,
+      "joint_point": [
+        246.2,
+        32.7
+      ],
+      "joint_window_u": 12
+    }
+  ],
+  "assembly_tree": [
+    {
+      "id": "body",
+      "gid": "crescent-body",
+      "part": "body",
+      "children": [
+        {
+          "id": "left-head",
+          "gid": "crescent-left-head",
+          "part": "left-head",
+          "pivot": [
+            52.8,
+            40.2
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-6;4;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.1s"
+          }
+        },
+        {
+          "id": "right-head",
+          "gid": "crescent-right-head",
+          "part": "right-head",
+          "pivot": [
+            246.2,
+            32.7
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;5;-4;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "7.1s"
+          }
+        }
+      ]
+    }
+  ]
+}

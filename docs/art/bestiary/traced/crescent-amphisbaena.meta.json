@@ -1,0 +1,165 @@
+{
+  "specimen": "crescent-amphisbaena",
+  "source_ref": "docs/art/bestiary/refs/louis/7-crescent-amphisbaena.jpg",
+  "family": "C",
+  "preset": "parchment_pale_subject",
+  "source_style": "English bestiary miniature on vellum",
+  "date_range": "13th century",
+  "medium": "ink and pigment on vellum",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    300.0,
+    158.0
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 98.07,
+    "silhouette_iou_legacy_pct": 93.66,
+    "ink_iou_pct": 49.8,
+    "boundary_f1_1u_pct": 99.8,
+    "masked_color_rmse": 45.52,
+    "raw_kb": 11.23,
+    "gzip_kb": 4.55,
+    "path_count": 9,
+    "command_count": 781,
+    "cmd_counts": {
+      "M": 75,
+      "l": 238,
+      "c": 226,
+      "v": 75,
+      "h": 88,
+      "z": 75,
+      "s": 4
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.1,
+      "threshold": 168,
+      "filter_speckle": 8,
+      "corner_threshold": 60,
+      "length_threshold": 6.2,
+      "splice_threshold": 58,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.12,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "wash": {
+      "scale_size": 600,
+      "blur_radius": 0.85,
+      "threshold": 152,
+      "filter_speckle": 16,
+      "corner_threshold": 60,
+      "length_threshold": 9.5,
+      "splice_threshold": 65,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.18,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.6
+    },
+    "highlight": {
+      "scale_size": 650,
+      "blur_radius": 0.65,
+      "threshold": 148,
+      "filter_speckle": 4,
+      "corner_threshold": 60,
+      "length_threshold": 6.5,
+      "splice_threshold": 58,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.15,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "accent": {
+      "scale_size": 650,
+      "blur_radius": 0.75,
+      "threshold": 152,
+      "filter_speckle": 8,
+      "corner_threshold": 60,
+      "length_threshold": 7.5,
+      "splice_threshold": 60,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.16,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.45
+    },
+    "ink": {
+      "scale_size": 750,
+      "blur_radius": 0.85,
+      "threshold": 164,
+      "filter_speckle": 5,
+      "corner_threshold": 60,
+      "length_threshold": 5.8,
+      "splice_threshold": 55,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.13,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/crescent-amphisbaena",
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "raw_kb": 7.93,
+      "gzip_kb": 3.28,
+      "bbox": [
+        42,
+        25,
+        218,
+        107
+      ]
+    },
+    {
+      "id": "left-head",
+      "file": "left-head.svg",
+      "raw_kb": 1.54,
+      "gzip_kb": 0.78,
+      "bbox": [
+        21,
+        10,
+        48,
+        42
+      ]
+    },
+    {
+      "id": "right-head",
+      "file": "right-head.svg",
+      "raw_kb": 1.82,
+      "gzip_kb": 0.9,
+      "bbox": [
+        233,
+        5,
+        53,
+        34
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/crescent-amphisbaena-master.svg",
+    "sheet": "docs/art/bestiary/traced/crescent-amphisbaena-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/crescent-amphisbaena-components.png"
+  },
+  "palette": {
+    "wash": "#85614c",
+    "wash2": "#57616e",
+    "warm_mid": "#d9c3ad",
+    "highlight": "#ddc8b4",
+    "ink": "#19100b",
+    "sage": "#6d7868",
+    "crimson": "#92453d"
+  },
+  "flaws_fixed": []
+}
