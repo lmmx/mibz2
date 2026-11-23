@@ -1,0 +1,469 @@
+{
+  "specimen": "aberdeen-amphisbaena",
+  "title": "Aberdeen Bestiary Amphisbaena \u2014 Two-Headed Winged Serpent",
+  "aria_label": "Component-extracted Aberdeen Bestiary amphisbaena, a winged serpent with a second head at the end of its tail",
+  "source_ref": "docs/art/bestiary/refs/louis/4-amphisbaena-aberdeen.jpg",
+  "family": "B",
+  "preset": "gilded_interlace_compact",
+  "source_style": "12th-century English Bestiary gilded miniature (Aberdeen Bestiary, f. 68v)",
+  "date_range": "c. 1200",
+  "medium": "ink, burnished gold leaf, and opaque mineral pigments on vellum",
+  "components_subdir": "aberdeen-amphisbaena",
+  "root_id": "amphisbaena-root",
+  "context_style": "gilded_roundel",
+  "primary_wash_channel": "red",
+  "wash2_percentile": 30,
+  "highlight_l_min": 74.0,
+  "hammered_gold": true,
+  "gold_sample_box": [
+    0.12,
+    0.12,
+    0.9,
+    0.88
+  ],
+  "gold_dist_thresh": 17.5,
+  "vellum_dist_thresh": 16.0,
+  "include_polygons": [
+    [
+      [
+        38.1,
+        32.1
+      ],
+      [
+        267.0,
+        32.1
+      ],
+      [
+        267.0,
+        230.1
+      ],
+      [
+        38.1,
+        230.1
+      ]
+    ],
+    [
+      [
+        48.0,
+        223.7
+      ],
+      [
+        68.6,
+        223.7
+      ],
+      [
+        68.6,
+        234.9
+      ],
+      [
+        48.0,
+        234.9
+      ]
+    ],
+    [
+      [
+        112.3,
+        227.1
+      ],
+      [
+        145.7,
+        227.1
+      ],
+      [
+        144.9,
+        245.1
+      ],
+      [
+        138.0,
+        258.0
+      ],
+      [
+        119.1,
+        258.0
+      ],
+      [
+        112.3,
+        247.7
+      ]
+    ]
+  ],
+  "zoom_crops": [
+    {
+      "label": "Zoomed Twin Heads 50% Overlay",
+      "viewbox": [
+        90,
+        14,
+        120,
+        92
+      ]
+    },
+    {
+      "label": "Zoomed Wing & Legs 50% Overlay",
+      "viewbox": [
+        60,
+        140,
+        170,
+        122
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "title": "Amphisbaena coiled claret body, tail ring and neck",
+      "base_layer": "wash",
+      "exclude_layers": [
+        "green"
+      ],
+      "fine_detail": true,
+      "seeds": [
+        [
+          231.4,
+          77.1
+        ],
+        [
+          252.9,
+          120.0
+        ],
+        [
+          250.3,
+          159.0
+        ],
+        [
+          231.0,
+          188.1
+        ],
+        [
+          201.4,
+          201.4
+        ],
+        [
+          48.9,
+          106.7
+        ],
+        [
+          59.1,
+          77.6
+        ],
+        [
+          85.7,
+          47.1
+        ],
+        [
+          119.1,
+          35.1
+        ],
+        [
+          146.6,
+          40.3
+        ],
+        [
+          55.7,
+          150.0
+        ],
+        [
+          70.7,
+          175.7
+        ],
+        [
+          169.7,
+          85.3
+        ],
+        [
+          167.1,
+          120.0
+        ],
+        [
+          150.0,
+          141.4
+        ],
+        [
+          124.3,
+          149.1
+        ],
+        [
+          95.6,
+          140.6
+        ],
+        [
+          87.0,
+          119.1
+        ]
+      ]
+    },
+    {
+      "id": "wing",
+      "file": "wing.svg",
+      "title": "Amphisbaena sage covert and striped pinion wing",
+      "base_layer": "warm_mid",
+      "prefer_layer": "green",
+      "fine_detail": true,
+      "seeds": [
+        [
+          180.0,
+          171.4
+        ],
+        [
+          162.9,
+          188.6
+        ],
+        [
+          192.9,
+          162.9
+        ],
+        [
+          107.1,
+          205.7
+        ],
+        [
+          85.7,
+          218.6
+        ],
+        [
+          128.6,
+          192.9
+        ]
+      ]
+    },
+    {
+      "id": "leg-front",
+      "file": "leg-front.svg",
+      "title": "Amphisbaena front leg and clawed foot",
+      "base_layer": "wash",
+      "exclude_layers": [
+        "green"
+      ],
+      "seeds": [
+        [
+          123.9,
+          230.1
+        ],
+        [
+          122.1,
+          246.4
+        ],
+        [
+          129.0,
+          252.4
+        ]
+      ]
+    },
+    {
+      "id": "leg-back",
+      "file": "leg-back.svg",
+      "title": "Amphisbaena back leg and clawed foot",
+      "base_layer": "wash",
+      "exclude_layers": [
+        "green"
+      ],
+      "seeds": [
+        [
+          201.4,
+          222.9
+        ],
+        [
+          218.6,
+          233.6
+        ],
+        [
+          227.1,
+          229.3
+        ]
+      ]
+    },
+    {
+      "id": "tail-head",
+      "file": "tail-head.svg",
+      "title": "Amphisbaena second head at the tail's end",
+      "base_layer": "warm_mid",
+      "exclude_layers": [
+        "green"
+      ],
+      "fine_detail": true,
+      "seeds": [
+        [
+          115.7,
+          90.0
+        ],
+        [
+          105.0,
+          92.1
+        ],
+        [
+          128.6,
+          83.6
+        ],
+        [
+          115.3,
+          63.4
+        ],
+        [
+          128.6,
+          60.0
+        ],
+        [
+          96.4,
+          95.1
+        ]
+      ]
+    },
+    {
+      "id": "head",
+      "file": "head.svg",
+      "title": "Amphisbaena collared front head",
+      "base_layer": "warm_mid",
+      "exclude_layers": [
+        "green"
+      ],
+      "fine_detail": true,
+      "seeds": [
+        [
+          167.1,
+          64.3
+        ],
+        [
+          180.0,
+          55.7
+        ],
+        [
+          190.3,
+          69.0
+        ],
+        [
+          175.7,
+          38.6
+        ],
+        [
+          188.6,
+          40.7
+        ],
+        [
+          152.1,
+          66.4
+        ]
+      ]
+    }
+  ],
+  "tucks": [
+    {
+      "parent": "body",
+      "child": "head",
+      "radius_u": 3.0,
+      "joint_point": [
+        201.4,
+        70.7
+      ],
+      "joint_window_u": 16
+    },
+    {
+      "parent": "body",
+      "child": "tail-head",
+      "radius_u": 3.0,
+      "joint_point": [
+        87.9,
+        107.1
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "wing",
+      "radius_u": 2.5,
+      "joint_point": [
+        201.4,
+        158.6
+      ],
+      "joint_window_u": 20
+    }
+  ],
+  "assembly_tree": [
+    {
+      "id": "body",
+      "gid": "amphisbaena-body",
+      "part": "body",
+      "children": [
+        {
+          "id": "leg-back",
+          "gid": "amphisbaena-leg-back",
+          "part": "leg-back",
+          "pivot": [
+            201.4,
+            214.3
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;3;-2;0",
+            "keyTimes": "0;.4;.75;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.7s"
+          }
+        },
+        {
+          "id": "wing",
+          "gid": "amphisbaena-wing",
+          "part": "wing",
+          "pivot": [
+            201.4,
+            158.6
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-3;1.5;0",
+            "keyTimes": "0;.36;.74;1",
+            "keySplines": ".42 0 .58 1;.42 0 .58 1;.42 0 .58 1",
+            "dur": "5.9s"
+          }
+        },
+        {
+          "id": "leg-front",
+          "gid": "amphisbaena-leg-front",
+          "part": "leg-front",
+          "pivot": [
+            128.6,
+            222.9
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-3;2;0",
+            "keyTimes": "0;.42;.78;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "7.3s"
+          }
+        },
+        {
+          "id": "tail-head",
+          "gid": "amphisbaena-tail-head",
+          "part": "tail-head",
+          "pivot": [
+            90.0,
+            107.1
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;5;5;-3;0",
+            "keyTimes": "0;.2;.45;.7;1",
+            "keySplines": ".4 0 .6 1;0 0 1 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.1s"
+          }
+        },
+        {
+          "id": "head",
+          "gid": "amphisbaena-head",
+          "part": "head",
+          "pivot": [
+            201.4,
+            68.6
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-4;-4;3;0",
+            "keyTimes": "0;.18;.42;.7;1",
+            "keySplines": ".4 0 .6 1;0 0 1 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "7.1s"
+          }
+        }
+      ]
+    }
+  ]
+}

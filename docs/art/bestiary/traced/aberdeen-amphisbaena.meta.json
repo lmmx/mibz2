@@ -1,0 +1,202 @@
+{
+  "specimen": "aberdeen-amphisbaena",
+  "source_ref": "docs/art/bestiary/refs/louis/4-amphisbaena-aberdeen.jpg",
+  "family": "B",
+  "preset": "gilded_interlace_compact",
+  "source_style": "12th-century English Bestiary gilded miniature (Aberdeen Bestiary, f. 68v)",
+  "date_range": "c. 1200",
+  "medium": "ink, burnished gold leaf, and opaque mineral pigments on vellum",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    300.0,
+    262.33
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 97.56,
+    "silhouette_iou_legacy_pct": 94.68,
+    "ink_iou_pct": 70.37,
+    "boundary_f1_1u_pct": 97.04,
+    "masked_color_rmse": 40.54,
+    "raw_kb": 51.22,
+    "gzip_kb": 18.92,
+    "path_count": 24,
+    "command_count": 3200,
+    "cmd_counts": {
+      "M": 211,
+      "h": 270,
+      "v": 256,
+      "c": 1102,
+      "l": 1127,
+      "s": 23,
+      "z": 211
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.24,
+      "threshold": 182,
+      "filter_speckle": 8,
+      "corner_threshold": 60,
+      "length_threshold": 6.8,
+      "splice_threshold": 60,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.14,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.45
+    },
+    "wash": {
+      "scale_size": 500,
+      "blur_radius": 0.95,
+      "threshold": 155,
+      "filter_speckle": 22,
+      "corner_threshold": 60,
+      "length_threshold": 11.0,
+      "splice_threshold": 66,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.22,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.8
+    },
+    "highlight": {
+      "scale_size": 540,
+      "blur_radius": 0.7,
+      "threshold": 150,
+      "filter_speckle": 6,
+      "corner_threshold": 60,
+      "length_threshold": 7.8,
+      "splice_threshold": 62,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.18,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.5
+    },
+    "accent": {
+      "scale_size": 520,
+      "blur_radius": 0.9,
+      "threshold": 155,
+      "filter_speckle": 18,
+      "corner_threshold": 60,
+      "length_threshold": 10.5,
+      "splice_threshold": 66,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.22,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.7
+    },
+    "ink": {
+      "scale_size": 660,
+      "blur_radius": 0.74,
+      "threshold": 162,
+      "filter_speckle": 9,
+      "corner_threshold": 60,
+      "length_threshold": 7.6,
+      "splice_threshold": 62,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.17,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.5
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/aberdeen-amphisbaena",
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "raw_kb": 24.67,
+      "gzip_kb": 9.63,
+      "bbox": [
+        35,
+        29,
+        232,
+        199
+      ]
+    },
+    {
+      "id": "wing",
+      "file": "wing.svg",
+      "raw_kb": 13.0,
+      "gzip_kb": 5.12,
+      "bbox": [
+        45,
+        47,
+        223,
+        205
+      ]
+    },
+    {
+      "id": "leg-front",
+      "file": "leg-front.svg",
+      "raw_kb": 2.17,
+      "gzip_kb": 1.03,
+      "bbox": [
+        107,
+        206,
+        45,
+        56
+      ]
+    },
+    {
+      "id": "leg-back",
+      "file": "leg-back.svg",
+      "raw_kb": 1.24,
+      "gzip_kb": 0.66,
+      "bbox": [
+        172,
+        209,
+        69,
+        25
+      ]
+    },
+    {
+      "id": "tail-head",
+      "file": "tail-head.svg",
+      "raw_kb": 5.46,
+      "gzip_kb": 2.24,
+      "bbox": [
+        68,
+        46,
+        79,
+        91
+      ]
+    },
+    {
+      "id": "head",
+      "file": "head.svg",
+      "raw_kb": 4.86,
+      "gzip_kb": 2.03,
+      "bbox": [
+        140,
+        29,
+        81,
+        55
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/aberdeen-amphisbaena-master.svg",
+    "sheet": "docs/art/bestiary/traced/aberdeen-amphisbaena-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/aberdeen-amphisbaena-components.png"
+  },
+  "palette": {
+    "wash": "#98554e",
+    "wash2": "#7d3937",
+    "warm_mid": "#baa099",
+    "highlight": "#edded2",
+    "ink": "#19100b",
+    "mauve": "#b49a92",
+    "blue": "#7076a2",
+    "green": "#b5b78e"
+  },
+  "flaws_fixed": []
+}
