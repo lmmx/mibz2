@@ -211,6 +211,11 @@ jobs:
       # readings, and its collection driven end to end with stand-ins for ab and perf
       - name: The working-set premise test's verdict
         run: python3 bench/test_cells_imc.py
+      # bench-squared-trace-prescreen's verdict (bench/squared_trace_verdict.py; LOG 7096050983's
+      # rule) on the record's own pre-screen output and synthetic lines, and the pinned C
+      # source's SHA-256 and git blob against MONODROMY's original (record 92)
+      - name: The squared-trace pre-screen's verdict and pinned source
+        run: python3 bench/test_squared_trace_verdict.py
       # bench-par-scan's reporter, input anchoring and step supervisor (docs/journal/2026-11-10-parallel-scan.md)
       - name: The scan diagnostic's reporter, inputs and supervisor
         run: pipx run pytest -p no:cacheprovider bench/test_par_scan_knee.py bench/test_par_scan_inputs.py bench/test_bounded.py bench/test_par_scan_finish.py

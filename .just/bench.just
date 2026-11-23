@@ -1940,3 +1940,94 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
     # nothing large left behind: the build and the corpora go; the bundle stays
     rm -rf "$B" "$W/wikidata.bz2" "$W/wikidata-x{{COPIES}}.bz2"
     bash bench/bundle.sh "$O"
+
+# MONODROMY's squared-trace pre-screen on the i9 (record 92,
+# docs/journal/monodromy/2026-11-23-refinement-and-composition.md, "(4) The candidate: the
+# squared retained map"): the two-chain chase on a random m-cycle T against one gather pass
+# N2 = T∘T then the two-chain chase on N2, single-threaded, synthetic. Its C source is
+# MONODROMY's unchanged (bench/squared_trace/squared_trace_prescreen.c, the blob 124421bf of
+# 3979c15e; its SHA-256 checked here and by bench/test_squared_trace_verdict.py), compiled as
+# the record's pre-screen was: gcc -O2 -march=native. At m = 89874, 114000, 156404 and 204281,
+# 11 invocations each (interleaved), each the program's best of 201 repetitions. The rule,
+# posted on #145 before the data (LOG 7096050983): ratio = T² two-ended time / two-chain chase
+# time; DEAD if ratio >= 0.95 at every m, else ALIVE (bench/squared_trace_verdict.py: the ratio
+# at an m is the median of its invocations'). Decides nothing in production. About 15 seconds.
+# MONODROMY's T² pre-screen on the i9, judged by LOG 7096050983's rule (about 15 s)
+bench-squared-trace-prescreen:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    SRC=bench/squared_trace/squared_trace_prescreen.c
+    SRC_SHA256=4f3c62b77d4043d57f8a6bc6201bede82b63ec2109eaef316716d93815b3dfab
+    CFLAGS="-O2 -march=native"
+    MS="89874 114000 156404 204281"
+    INVOCATIONS=11 REPS=201
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/squared-trace-prescreen
+    mkdir -p "$B"
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$W" || { echo "bench-squared-trace-prescreen: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends
+    outcome="INCOMPLETE: stopped before the verdict (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-squared-trace-prescreen: OUTCOME: $outcome"
+      date -u +%FT%TZ > "$W/finished.txt"
+      bash bench/bundle.sh "$W"
+      case "$outcome" in
+        "VERDICT: "*) exit 0 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-squared-trace-prescreen: $*"; exit 1; }
+    echo "bench-squared-trace-prescreen (MONODROMY record 92; rule LOG 7096050983) at $(git rev-parse HEAD): m = $MS, $INVOCATIONS invocations of $REPS repetitions each, gcc $CFLAGS"
+    date -u +%FT%TZ > "$W/started.txt"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout has local changes"
+    [ "$(sha256sum "$SRC" | cut -d' ' -f1)" = "$SRC_SHA256" ] || fail "$SRC is not MONODROMY's source ($SRC_SHA256)"
+    command -v gcc >/dev/null || fail "no gcc"
+    git rev-parse HEAD > "$W/commit.txt"
+    printf 'head %s\n' "$(git rev-parse HEAD)" > "$W/commits.txt"
+    # the machine
+    lscpu > "$W/lscpu.txt"
+    lscpu -e > "$W/lscpu-e.txt" || true
+    uname -a > "$W/uname.txt"
+    cat /sys/devices/system/cpu/online > "$W/cpus-online.txt"
+    grep Cpus_allowed_list /proc/self/status > "$W/cpus-allowed.txt"
+    # the frequency policy, where readable (the governors counted across CPUs)
+    gov=$(cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2>/dev/null | sort | uniq -c || true)
+    { echo "scaling_governor: ${gov:-unreadable}"
+      for f in /sys/devices/system/cpu/intel_pstate/no_turbo /sys/devices/system/cpu/intel_pstate/status \
+               /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference \
+               /sys/kernel/mm/transparent_hugepage/enabled; do
+        if [ -r "$f" ]; then echo "$f: $(cat "$f")"; else echo "$f: unreadable"; fi
+      done
+      echo "loadavg: $(cat /proc/loadavg)"; } | tee "$W/cpufreq.txt"
+    # the build: MONODROMY's source and flags, and what -march=native resolved to here
+    gcc --version | tee "$W/gcc.txt"
+    gcc -v 2>&1 | tail -1 >> "$W/gcc.txt"
+    gcc $CFLAGS -Q --help=target 2>/dev/null | grep -E '^ +-m(arch|tune)=' >> "$W/gcc.txt" || true
+    BIN=$W/squared_trace_prescreen
+    gcc $CFLAGS -o "$BIN" "$SRC"
+    {
+      echo "source $SRC sha256 $SRC_SHA256 (MONODROMY's squared-trace-prescreen.c.txt, blob 124421bf07182a6161752ff797a6eeb9cb3eedf6 at 3979c15ee7b8e051f7b076b4273425424f3ae87d)"
+      echo "cflags $CFLAGS"
+      echo "binary sha256 $(sha256sum "$BIN" | cut -d' ' -f1)"
+      echo "m $MS; invocations $INVOCATIONS; repetitions $REPS"
+    } > "$W/inputs.txt"
+    cat "$W/inputs.txt"
+    # the run: invocations interleaved across m, one line each
+    for i in $(seq $INVOCATIONS); do
+      for m in $MS; do
+        "$BIN" "$m" "$REPS" | tee -a "$W/prescreen.txt"
+      done
+    done
+    # the verdict (its last line), by the rule posted before the data
+    python3 bench/squared_trace_verdict.py "$W/prescreen.txt" --expect "$INVOCATIONS" \
+      --json "$W/verdict.json" | tee "$W/verdict.txt" || true
+    last=$(tail -1 "$W/verdict.txt")
+    case "$last" in
+      "VERDICT: "*) outcome=$last ;;
+      *) outcome="INVALID: the verdict script refused the output: $last"; exit 1 ;;
+    esac
