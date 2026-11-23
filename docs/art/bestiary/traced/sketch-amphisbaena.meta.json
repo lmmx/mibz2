@@ -2,7 +2,7 @@
   "specimen": "sketch-amphisbaena",
   "source_ref": "docs/art/bestiary/traced/derived/11-sketch-amphisbaena-contrast.png",
   "family": "D",
-  "preset": "monochrome_woodcut",
+  "preset": "monochrome_woodcut_fine",
   "source_style": "English bestiary underdrawing in ink on vellum",
   "date_range": "13th century",
   "medium": "brown ink on vellum",
@@ -11,26 +11,26 @@
     0.0,
     0.0,
     300.0,
-    268.0
+    268.12
   ],
   "metrics": {
-    "silhouette_iou_true_pct": 93.19,
-    "silhouette_iou_legacy_pct": 77.51,
-    "ink_iou_pct": 87.91,
-    "boundary_f1_1u_pct": 99.98,
-    "masked_color_rmse": 28.46,
-    "raw_kb": 52.13,
-    "gzip_kb": 18.65,
+    "silhouette_iou_true_pct": 95.1,
+    "silhouette_iou_legacy_pct": 78.98,
+    "ink_iou_pct": 94.1,
+    "boundary_f1_1u_pct": 99.99,
+    "masked_color_rmse": 21.42,
+    "raw_kb": 56.53,
+    "gzip_kb": 18.96,
     "path_count": 10,
-    "command_count": 4056,
+    "command_count": 4213,
     "cmd_counts": {
-      "M": 220,
-      "l": 1264,
-      "c": 1155,
-      "v": 545,
-      "h": 604,
-      "z": 220,
-      "s": 48
+      "M": 124,
+      "c": 1379,
+      "l": 1313,
+      "s": 92,
+      "v": 564,
+      "h": 617,
+      "z": 124
     }
   },
   "vtracer_config": {
@@ -66,24 +66,24 @@
       "min_subpath_u": 0.6
     },
     "highlight": {
-      "scale_size": 650,
-      "blur_radius": 0.65,
+      "scale_size": 2000,
+      "blur_radius": 0.35,
       "threshold": 148,
-      "filter_speckle": 4,
+      "filter_speckle": 2,
       "corner_threshold": 60,
-      "length_threshold": 6.5,
-      "splice_threshold": 58,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
       "max_iterations": 10,
       "path_precision": 2,
-      "line_eps": 0.15,
+      "line_eps": 0.08,
       "smooth_eps": 0.15,
-      "min_subpath_u": 0.35
+      "min_subpath_u": 0.12
     },
     "accent": {
-      "scale_size": 650,
-      "blur_radius": 0.75,
+      "scale_size": 1800,
+      "blur_radius": 0.5,
       "threshold": 152,
-      "filter_speckle": 8,
+      "filter_speckle": 3,
       "corner_threshold": 60,
       "length_threshold": 7.5,
       "splice_threshold": 60,
@@ -94,18 +94,18 @@
       "min_subpath_u": 0.45
     },
     "ink": {
-      "scale_size": 900,
-      "blur_radius": 0.55,
-      "threshold": 150,
-      "filter_speckle": 3,
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 160,
+      "filter_speckle": 2,
       "corner_threshold": 60,
-      "length_threshold": 4.5,
+      "length_threshold": 3.0,
       "splice_threshold": 50,
       "max_iterations": 10,
       "path_precision": 2,
-      "line_eps": 0.11,
+      "line_eps": 0.08,
       "smooth_eps": 0.15,
-      "min_subpath_u": 0.35
+      "min_subpath_u": 0.12
     }
   },
   "components_dir": "docs/art/bestiary/traced/components/sketch-amphisbaena",
@@ -113,60 +113,60 @@
     {
       "id": "body",
       "file": "body.svg",
-      "raw_kb": 15.94,
-      "gzip_kb": 6.08,
+      "raw_kb": 19.93,
+      "gzip_kb": 7.13,
       "bbox": [
-        11,
-        24,
-        232,
-        177
+        40,
+        71,
+        194,
+        121
       ]
     },
     {
       "id": "head-main",
       "file": "head-main.svg",
-      "raw_kb": 10.04,
-      "gzip_kb": 3.98,
+      "raw_kb": 12.36,
+      "gzip_kb": 4.59,
       "bbox": [
-        110,
+        119,
         21,
-        138,
-        108
+        129,
+        91
       ]
     },
     {
       "id": "head-inner",
       "file": "head-inner.svg",
-      "raw_kb": 14.21,
-      "gzip_kb": 5.49,
+      "raw_kb": 10.87,
+      "gzip_kb": 4.11,
       "bbox": [
-        37,
+        67,
         55,
-        105,
-        154
+        74,
+        87
       ]
     },
     {
       "id": "plume",
       "file": "plume.svg",
-      "raw_kb": 2.22,
-      "gzip_kb": 1.02,
+      "raw_kb": 1.09,
+      "gzip_kb": 0.58,
       "bbox": [
-        242,
-        128,
-        29,
-        56
+        220,
+        92,
+        16,
+        30
       ]
     },
     {
       "id": "feet",
       "file": "feet.svg",
-      "raw_kb": 9.71,
-      "gzip_kb": 3.88,
+      "raw_kb": 12.26,
+      "gzip_kb": 4.54,
       "bbox": [
-        90,
+        47,
         155,
-        155,
+        193,
         91
       ]
     }
