@@ -18,6 +18,9 @@ const MAX_GROUPS: usize = 6;
 const MAX_SELECTORS: usize = 18002;
 /// The most symbols a block can hold (every selector used, the last ending in EOB)
 pub const MAX_SYMS: usize = MAX_SELECTORS * GROUP;
+/// The symbols' zero-fill step in `read_item_with_scratch`: 8,192 symbols (16 KiB), filled
+/// just ahead of the groups that write them
+const ZERO_FILL_TILE: usize = 8192;
 
 /// A block's header and symbols (phase 1's output), for a worker to finish
 pub struct Symbols {
@@ -218,10 +221,9 @@ pub fn read_item_with_scratch(
         syms.reserve(MAX_SYMS);
     }
     let max_out = (sel_cap * GROUP + 66).min(MAX_SYMS);
-    if syms.len() < max_out {
-        syms.resize(max_out, 0);
-    }
-    let out = &mut syms[..max_out];
+    // (the symbols' zero-fill in tiles of `ZERO_FILL_TILE`, each just ahead of the groups
+    // that write it, not up to `max_out` before the first group: the fill and the groups'
+    // writes meet in cache, and a block that ends early fills little past its end)
     let sel_buf = &scratch.selectors[..sel_cap];
     let mut n = 0usize;
     let mut sel = 0usize;
@@ -231,12 +233,15 @@ pub fn read_item_with_scratch(
         if sel >= sel_cap {
             break Err(ErrorKind::SelectorOverrun);
         }
+        if n + 66 > syms.len() && syms.len() < max_out {
+            syms.resize((n + ZERO_FILL_TILE).min(max_out), 0);
+        }
         let t = &scratch.tables[sel_buf[sel] as usize];
         sel += 1;
         let use_tail = n + 66 > max_out;
         let g_res = {
             let g_out: &mut [u16; 66] = if !use_tail {
-                (&mut out[n..n + 66]).try_into().unwrap()
+                (&mut syms[n..n + 66]).try_into().unwrap()
             } else {
                 &mut tail_buf
             };
@@ -253,7 +258,7 @@ pub fn read_item_with_scratch(
             Err(err) => break Err(err),
         };
         if use_tail {
-            out[n..n + k].copy_from_slice(&tail_buf[..k]);
+            syms[n..n + k].copy_from_slice(&tail_buf[..k]);
         }
         n += k;
         if hit_eob {
@@ -515,6 +520,122 @@ mod tests {
         (res, out)
     }
 
+    /// A test block (`symbols_read_as_in_memory`), its symbols coded in `selectors.len()`
+    /// groups of at most `max_sel`
+    struct Case {
+        data: Vec<u8>,
+        /// the bit its header starts at, and its symbols
+        start: u64,
+        sym_start: u64,
+        alpha: usize,
+        n_groups: usize,
+        lens: Vec<Vec<u8>>,
+        tables: Vec<Huff>,
+        selectors: Vec<u8>,
+        eob: u16,
+    }
+
+    /// A block written whole (header, selectors, code tables), any code lengths (real codes,
+    /// and corrupt ones whose table holds BAD entries), then symbols coded with them and
+    /// ending in EOB, or random bits, a bit flipped, the input cut short
+    fn block_case(rng: &mut Rng, max_sel: u64) -> Case {
+        let alpha = 3 + rng.below(256) as usize;
+        let n_groups = 2 + rng.below(5) as usize;
+        let lens: Vec<Vec<u8>> = (0..n_groups).map(|_| lengths_of(rng, alpha)).collect();
+        let tables: Vec<Huff> = lens.iter().map(|l| Huff::new(l)).collect();
+        let n_sel = 1 + rng.below(max_sel) as usize;
+        let selectors: Vec<u8> = (0..n_sel)
+            .map(|_| rng.below(n_groups as u64) as u8)
+            .collect();
+        let eob = (alpha - 1) as u16;
+        let mut w = Writer::default();
+        let lead = rng.below(8) as u32;
+        w.put(rng.next(), lead);
+        let start = w.n;
+        w.put(BLOCK_MAGIC, 48);
+        w.put(rng.below(1u64 << 32), 32);
+        w.put(0, 1);
+        w.put(rng.below(900_000), 24);
+        // the bytes in use: the first alpha - 2
+        let used = alpha - 2;
+        let words = used.div_ceil(16);
+        w.put(((1u64 << words) - 1) << (16 - words), 16);
+        for i in 0..words {
+            let k = (used - 16 * i).min(16);
+            w.put(((1u64 << k) - 1) << (16 - k), 16);
+        }
+        w.put(n_groups as u64, 3);
+        w.put(n_sel as u64, 15);
+        let mut mtf: Vec<u8> = (0..n_groups as u8).collect();
+        for &g in &selectors {
+            let j = mtf.iter().position(|&x| x == g).unwrap();
+            w.put((1 << (j + 1)) - 2, j as u32 + 1);
+            mtf.remove(j);
+            mtf.insert(0, g);
+        }
+        for l in &lens {
+            let mut curr = l[0] as i32;
+            w.put(curr as u64, 5);
+            for &x in l {
+                while curr != x as i32 {
+                    let up = (x as i32) > curr;
+                    w.put(if up { 0b10 } else { 0b11 }, 2);
+                    curr += if up { 1 } else { -1 };
+                }
+                w.put(0, 1);
+            }
+        }
+        let sym_start = w.n;
+        let complete = lens
+            .iter()
+            .all(|l| l.iter().map(|&x| 1u64 << (20 - x)).sum::<u64>() <= 1 << 20);
+        if complete && rng.below(4) != 0 {
+            // symbols (small ones likelier, as MTF values are), the last EOB, each in
+            // its group's code (libbzip2's canonical code: by length, then symbol)
+            let m = 1 + rng.below((n_sel * GROUP) as u64) as usize;
+            for i in 0..m {
+                let s = if i + 1 == m {
+                    eob
+                } else {
+                    let k = rng.below(9);
+                    (rng.below(1 << k) % (alpha as u64 - 1)) as u16
+                };
+                let t = &tables[selectors[i / GROUP] as usize];
+                let l = &lens[selectors[i / GROUP] as usize];
+                let at = t.perm[..alpha].iter().position(|&p| p == s).unwrap();
+                let zn = l[s as usize] as u32;
+                w.put((at as i32 + t.base[zn as usize]) as u64, zn);
+            }
+        }
+        for _ in 0..rng.below(200) {
+            w.put(rng.next(), 64);
+        }
+        let mut data = w.out;
+        let end = data.len() as u64 * 8;
+        if rng.below(3) == 0 && end > sym_start {
+            let bit = sym_start + rng.below(end - sym_start);
+            data[(bit / 8) as usize] ^= 0x80 >> (bit % 8);
+        }
+        // (cut past the code tables' last byte: zeros read in place of a table's bits
+        // would give other tables than the reference's)
+        let first = sym_start.div_ceil(8);
+        if rng.below(3) == 0 {
+            let cut = first + rng.below(data.len() as u64 - first + 1);
+            data.truncate(cut as usize);
+        }
+        Case {
+            data,
+            start,
+            sym_start,
+            alpha,
+            n_groups,
+            lens,
+            tables,
+            selectors,
+            eob,
+        }
+    }
+
     #[test]
     fn symbols_read_as_in_memory() {
         // blocks written whole (header, selectors, code tables), any code lengths (real
@@ -525,90 +646,18 @@ mod tests {
         let mut rng = Rng(0x2545_f491_4f6c_dd1d);
         let mut seen = [0usize; 6]; // ok, BadHuffmanCode, SelectorOverrun, overran, other, long codes
         for case in 0..4000 {
-            let alpha = 3 + rng.below(256) as usize;
-            let n_groups = 2 + rng.below(5) as usize;
-            let lens: Vec<Vec<u8>> = (0..n_groups).map(|_| lengths_of(&mut rng, alpha)).collect();
-            let tables: Vec<Huff> = lens.iter().map(|l| Huff::new(l)).collect();
-            let n_sel = 1 + rng.below(40) as usize;
-            let selectors: Vec<u8> = (0..n_sel)
-                .map(|_| rng.below(n_groups as u64) as u8)
-                .collect();
-            let eob = (alpha - 1) as u16;
-            let mut w = Writer::default();
-            let lead = rng.below(8) as u32;
-            w.put(rng.next(), lead);
-            let start = w.n;
-            w.put(BLOCK_MAGIC, 48);
-            w.put(rng.below(1u64 << 32), 32);
-            w.put(0, 1);
-            w.put(rng.below(900_000), 24);
-            // the bytes in use: the first alpha - 2
-            let used = alpha - 2;
-            let words = used.div_ceil(16);
-            w.put(((1u64 << words) - 1) << (16 - words), 16);
-            for i in 0..words {
-                let k = (used - 16 * i).min(16);
-                w.put(((1u64 << k) - 1) << (16 - k), 16);
-            }
-            w.put(n_groups as u64, 3);
-            w.put(n_sel as u64, 15);
-            let mut mtf: Vec<u8> = (0..n_groups as u8).collect();
-            for &g in &selectors {
-                let j = mtf.iter().position(|&x| x == g).unwrap();
-                w.put((1 << (j + 1)) - 2, j as u32 + 1);
-                mtf.remove(j);
-                mtf.insert(0, g);
-            }
-            for l in &lens {
-                let mut curr = l[0] as i32;
-                w.put(curr as u64, 5);
-                for &x in l {
-                    while curr != x as i32 {
-                        let up = (x as i32) > curr;
-                        w.put(if up { 0b10 } else { 0b11 }, 2);
-                        curr += if up { 1 } else { -1 };
-                    }
-                    w.put(0, 1);
-                }
-            }
-            let sym_start = w.n;
-            let complete = lens
-                .iter()
-                .all(|l| l.iter().map(|&x| 1u64 << (20 - x)).sum::<u64>() <= 1 << 20);
-            if complete && rng.below(4) != 0 {
-                // symbols (small ones likelier, as MTF values are), the last EOB, each in
-                // its group's code (libbzip2's canonical code: by length, then symbol)
-                let m = 1 + rng.below((n_sel * GROUP) as u64) as usize;
-                for i in 0..m {
-                    let s = if i + 1 == m {
-                        eob
-                    } else {
-                        let k = rng.below(9);
-                        (rng.below(1 << k) % (alpha as u64 - 1)) as u16
-                    };
-                    let t = &tables[selectors[i / GROUP] as usize];
-                    let l = &lens[selectors[i / GROUP] as usize];
-                    let at = t.perm[..alpha].iter().position(|&p| p == s).unwrap();
-                    let zn = l[s as usize] as u32;
-                    w.put((at as i32 + t.base[zn as usize]) as u64, zn);
-                }
-            }
-            for _ in 0..rng.below(200) {
-                w.put(rng.next(), 64);
-            }
-            let mut data = w.out;
-            let end = data.len() as u64 * 8;
-            if rng.below(3) == 0 && end > sym_start {
-                let bit = sym_start + rng.below(end - sym_start);
-                data[(bit / 8) as usize] ^= 0x80 >> (bit % 8);
-            }
-            // (cut past the code tables' last byte: zeros read in place of a table's bits
-            // would give other tables than the reference's)
-            let first = sym_start.div_ceil(8);
-            if rng.below(3) == 0 {
-                let cut = first + rng.below(data.len() as u64 - first + 1);
-                data.truncate(cut as usize);
-            }
+            let Case {
+                data,
+                start,
+                sym_start,
+                alpha,
+                n_groups,
+                lens,
+                tables,
+                selectors,
+                eob,
+            } = block_case(&mut rng, 40);
+            let n_sel = selectors.len();
             let mut a = Bits::at(&data, start);
             let got = read_item(&mut a, 9, Vec::new());
             let mut b = Bits::at(&data, sym_start);
@@ -652,5 +701,65 @@ mod tests {
             seen[..4].iter().all(|&k| k > 100) && seen[5] > 1000,
             "{seen:?}"
         );
+    }
+
+    /// `read_item`'s symbols filled in tiles (`ZERO_FILL_TILE`) just ahead of the groups:
+    /// blocks of up to 700 selectors (35,000 symbols, so several tiles, and a cut, flipped
+    /// bit or bad code in any of them) read into a buffer in every state a caller hands one
+    /// over in (none; master's state before the tiles, as long as any block's symbols, so
+    /// that nothing is filled; and shorter ones, from a block before, their stale values
+    /// not zero) give the reference's symbols, error, end bit and `overran`, whichever
+    #[test]
+    fn symbols_read_alike_from_any_buffer() {
+        let mut rng = Rng(0x7f4a_7c15_9e37_79b9);
+        let mut seen = [0usize; 3]; // ok, error, more than one tile
+        for case in 0..500 {
+            let c = block_case(&mut rng, 700);
+            let mut b = Bits::at(&c.data, c.sym_start);
+            let (want, syms) = symbols_in_memory(&mut b, &c.tables, &c.selectors, c.eob);
+            let max_out = (c.selectors.len() * GROUP + 66).min(MAX_SYMS);
+            let stale = |len: usize| {
+                let mut v = Vec::with_capacity(MAX_SYMS);
+                v.resize(len, 0xbeef);
+                v
+            };
+            let short = 1 + rng.below(max_out as u64) as usize;
+            let tiles = 1 + rng.below(3 * ZERO_FILL_TILE as u64) as usize;
+            let buffers = [
+                ("none", Vec::new()),
+                ("full", stale(MAX_SYMS)),
+                ("max_out", stale(max_out)),
+                ("short", stale(short)),
+                ("a tile or more", stale(tiles)),
+                ("small capacity", vec![0xbeef; 100]),
+            ];
+            for (what, buf) in buffers {
+                let ctx = format!(
+                    "case {case}, buffer {what}: selectors {}",
+                    c.selectors.len()
+                );
+                let mut a = Bits::at(&c.data, c.start);
+                let got = read_item(&mut a, 9, buf);
+                assert_eq!(a.bit_pos(), b.bit_pos(), "{ctx}");
+                assert_eq!(a.overran(), b.overran(), "{ctx}");
+                match (got, &want) {
+                    (Ok(Item::Block(x)), Ok(())) => {
+                        assert!(x.syms == syms, "{ctx}");
+                        assert_eq!(x.eob, c.eob, "{ctx}");
+                        seen[0] += 1;
+                    }
+                    (Err((k, _)), Err(k2)) => {
+                        assert_eq!(&k, k2, "{ctx}");
+                        seen[1] += 1;
+                    }
+                    (got, want) => panic!(
+                        "{ctx}: {:?} against {want:?}",
+                        got.map(|_| ()).map_err(|e| e.0)
+                    ),
+                }
+            }
+            seen[2] += usize::from(syms.len() > ZERO_FILL_TILE);
+        }
+        assert!(seen[0] > 500 && seen[1] > 500 && seen[2] > 80, "{seen:?}");
     }
 }
