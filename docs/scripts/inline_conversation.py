@@ -147,9 +147,9 @@ def main(src: str, dst: str, name: str) -> None:
     css = "".join(re.findall(r"<style>(.*?)</style>", head, flags=re.S))
     rules = tinycss2.parse_stylesheet(css, skip_comments=True, skip_whitespace=True)
     open(f"{site}/{adir}/convo.css", "w", encoding="utf-8").write(RESET + scope_rules(rules) + LAST + "\n")
-    scripts = re.findall(r"<script>(.*?)</script>", body, flags=re.S)
+    scripts = re.findall(r"<script(?:\s[^>]*)?>(.*?)</script>", body, flags=re.S)
     open(f"{site}/{adir}/convo.js", "w", encoding="utf-8").write("\n".join(scripts) + "\n")
-    body = re.sub(r"<script>.*?</script>", "", body, flags=re.S)
+    body = re.sub(r"<script(?:\s[^>]*)?>.*?</script>", "", body, flags=re.S)
     # embedded images in the markup become files, one per distinct image
     seen = {}
 
