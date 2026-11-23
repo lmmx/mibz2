@@ -1,0 +1,138 @@
+{
+  "specimen": "gothic-initial-interlace",
+  "title": "Gothic Inhabited Initial G — Twin Winged Dragons & Braided Interlace",
+  "aria_label": "Component-extracted Gothic inhabited initial G formed by twin winged dragons and braided interlace scrolls with miniature beasts",
+  "source_ref": "docs/art/bestiary/refs/louis/2-winged-dragon-initial-interlace.jpg",
+  "family": "B",
+  "preset": "gilded_interlace_compact",
+  "source_style": "Late Romanesque / Early Gothic illuminated inhabited initial G (Gregorius)",
+  "date_range": "c. 1170-1220",
+  "medium": "ink, burnished gold leaf, and opaque mineral pigments on vellum",
+  "components_subdir": "gothic-initial-interlace",
+  "root_id": "gothic-interlace-root",
+  "context_style": "parchment",
+  "primary_wash_channel": "blue",
+  "wash2_percentile": 32,
+  "highlight_l_min": 74.0,
+  "hammered_gold": true,
+  "gold_sample_box": [0.13, 0.10, 0.86, 0.95],
+  "gold_dist_thresh": 17.5,
+  "vellum_dist_thresh": 16.0,
+  "frame_rect_u": [31, 16, 265, 270, 12],
+  "protrusion_polygons": [
+    [[190, 8], [274, 8], [274, 62], [190, 58]],
+    [[104, 21], [200, 21], [200, 36], [104, 36]],
+    [[36, 70], [56, 70], [56, 236], [36, 236]],
+    [[240, 72], [260, 72], [260, 238], [240, 238]],
+    [[102, 246], [228, 246], [228, 267], [102, 267]]
+  ],
+  "exclude_polygons": [
+    [[0, 0], [300, 0], [300, 17], [0, 17]],
+    [[0, 17], [196, 17], [196, 24], [0, 24]],
+    [[272, 0], [300, 0], [300, 56], [272, 56]],
+    [[257, 52], [300, 52], [300, 272], [257, 272]],
+    [[0, 0], [41, 0], [41, 272], [0, 272]],
+    [[0, 261], [300, 261], [300, 272], [0, 272]]
+  ],
+  "zoom_crops": [
+    {
+      "label": "Zoomed Green Dragon Head & Upper Arch 50% Overlay",
+      "viewbox": [168, 8, 110, 84]
+    },
+    {
+      "label": "Zoomed Left Wing, Spotted Chest & Foreclaw 50% Overlay",
+      "viewbox": [34, 62, 108, 114]
+    },
+    {
+      "label": "Zoomed Right Wing, Claw & Lower Dragon Head 50% Overlay",
+      "viewbox": [132, 140, 132, 128]
+    }
+  ],
+  "components": [
+    {
+      "id": "green-dragon-head",
+      "file": "green-dragon-head.svg",
+      "title": "Gothic initial G top-right roaring green horned dragon head",
+      "base_layer": "green",
+      "exclude_layers": ["blue", "wash", "wash2"],
+      "fine_detail": true,
+      "seeds": [
+        [214, 14], [208, 26], [222, 32], [240, 30], [258, 28], [244, 48], [258, 46]
+      ]
+    },
+    {
+      "id": "left-dragon-wing",
+      "file": "left-dragon-wing.svg",
+      "title": "Gothic initial G left vertical mauve-feathered dragon wing",
+      "base_layer": "mauve",
+      "exclude_layers": ["green"],
+      "fine_detail": true,
+      "seed_strokes": [
+        [[62, 76], [52, 98], [46, 134], [44, 178], [44, 218]]
+      ],
+      "seeds": [[60, 86], [52, 118], [46, 160], [44, 210]]
+    },
+    {
+      "id": "left-dragon-body",
+      "file": "left-dragon-body.svg",
+      "title": "Gothic initial G arched cobalt-blue dragon body with spotted chest and foreclaw",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seed_strokes": [
+        [[212, 48], [174, 30], [134, 28], [94, 42], [68, 66], [76, 98], [76, 124], [98, 142]],
+        [[62, 124], [54, 164], [56, 206], [76, 238], [114, 254], [148, 248]]
+      ],
+      "seeds": [[154, 28], [86, 48], [76, 108], [96, 142], [56, 184], [108, 252]]
+    },
+    {
+      "id": "right-dragon",
+      "file": "right-dragon.svg",
+      "title": "Gothic initial G right vertical winged dragon flank, mauve wing, and clawed foot",
+      "base_layer": "mauve",
+      "fine_detail": true,
+      "seed_strokes": [
+        [[252, 82], [246, 116], [234, 152], [224, 186], [220, 218]],
+        [[252, 140], [248, 178], [236, 216], [218, 242], [198, 258]]
+      ],
+      "seeds": [[252, 96], [238, 148], [226, 194], [244, 186], [218, 244], [198, 258]]
+    },
+    {
+      "id": "lower-dragon-head",
+      "file": "lower-dragon-head.svg",
+      "title": "Gothic initial G bottom-center biting mauve dragon head",
+      "base_layer": "mauve",
+      "exclude_layers": ["green"],
+      "fine_detail": true,
+      "seeds": [[154, 204], [150, 218], [162, 214], [164, 226]]
+    },
+    {
+      "id": "inner-interlace",
+      "file": "inner-interlace.svg",
+      "title": "Gothic initial G braided polychrome vine interlace scrolls and miniature climbing beasts",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [134, 52], [170, 50], [190, 72], [216, 86], [92, 74], [122, 84],
+        [174, 112], [110, 108], [142, 126], [196, 134], [216, 116],
+        [106, 162], [128, 186], [76, 198], [134, 206], [186, 178], [196, 224], [156, 244]
+      ]
+    }
+  ],
+  "cut_guides": [
+    {"points": [[218, 42], [224, 48], [228, 56]], "weight": 2.4, "width_u": 1.4},
+    {"points": [[68, 72], [60, 106], [52, 146], [48, 196]], "weight": 2.4, "width_u": 1.4},
+    {"points": [[216, 130], [218, 176], [214, 224]], "weight": 2.2, "width_u": 1.4},
+    {"points": [[144, 192], [154, 190], [166, 200]], "weight": 2.2, "width_u": 1.4},
+    {"points": [[144, 230], [158, 232], [170, 236]], "weight": 2.2, "width_u": 1.4}
+  ],
+  "tucks": [
+    {"parent": "left-dragon-body", "child": "green-dragon-head", "radius_u": 3.0, "joint_point": [222, 48], "joint_window_u": 16},
+    {"parent": "left-dragon-body", "child": "left-dragon-wing", "radius_u": 2.5, "joint_point": [64, 82], "joint_window_u": 22}
+  ],
+  "flaws_fixed": [
+    "Stripped outer Latin header rubric, right-margin GREGORIUS capitals, left penwork flourish, and rectangular orange/black border frame while preserving protruding dragon head, wings, and bottom claw",
+    "Separated burnished gold leaf ground across dozens of tight braided interlace apertures without eating golden-ochre miniature beasts or orange foliage tips",
+    "Tuned compact dual-res vtracer preset to keep high-complexity braided interlace well-sized while maintaining high silhouette fidelity",
+    "Segmented twin outer winged dragons, roaring green head, biting lower dragon head, and central inhabited vine interlace into reusable components"
+  ]
+}

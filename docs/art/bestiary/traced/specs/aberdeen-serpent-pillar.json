@@ -1,0 +1,99 @@
+{
+  "specimen": "aberdeen-serpent-pillar",
+  "title": "Aberdeen Bestiary Shedding Serpent & Cleft Pillar",
+  "aria_label": "Component-extracted Aberdeen Bestiary shedding serpent passing through a cleft pillar",
+  "source_ref": "docs/art/bestiary/refs/aberdeen-bestiary-initial-gold.jpg",
+  "family": "A",
+  "preset": "gilded_roundel_polychrome",
+  "source_style": "12th-century English Bestiary gilded roundel (Aberdeen school)",
+  "date_range": "c. 1200",
+  "medium": "ink, burnished gold leaf, and opaque mineral pigments on vellum",
+  "components_subdir": "aberdeen-serpent-pillar",
+  "root_id": "aberdeen-serpent-root",
+  "context_style": "gilded_roundel",
+  "primary_wash_channel": "green",
+  "wash2_percentile": 28,
+  "highlight_l_min": 74.0,
+  "roundel_inset_px": 1.5,
+  "zoom_crops": [
+    {
+      "label": "Zoomed Head & Neck 50% Overlay",
+      "viewbox": [162, 62, 66, 72]
+    },
+    {
+      "label": "Zoomed Shedding Belly & Cleft 50% Overlay",
+      "viewbox": [84, 128, 114, 88]
+    },
+    {
+      "label": "Zoomed Pillar Dome & Tail Tip 50% Overlay",
+      "viewbox": [82, 34, 96, 86]
+    }
+  ],
+  "components": [
+    {
+      "id": "cleft-pillar",
+      "file": "cleft-pillar.svg",
+      "title": "Aberdeen Bestiary architectural cleft pillar prop",
+      "base_layer": "mauve",
+      "fine_detail": true,
+      "seed_strokes": [
+        [[145, 42], [145, 76], [145, 134]],
+        [[152, 134], [152, 204]],
+        [[145, 204], [145, 255]]
+      ],
+      "seeds": [
+        [145, 56], [134, 72], [158, 72], [136, 82], [154, 82],
+        [136, 144], [143, 200], [128, 255], [162, 255]
+      ]
+    },
+    {
+      "id": "shedding-rear",
+      "file": "shedding-rear.svg",
+      "title": "Aberdeen Bestiary serpent shedding sage-green rear torso and wavy tail",
+      "base_layer": "wash",
+      "exclude_layers": ["crimson"],
+      "fine_detail": true,
+      "seed_strokes": [
+        [[121, 44], [104, 58], [102, 84], [76, 110], [57, 138], [62, 166], [88, 184], [116, 186], [136, 170]]
+      ],
+      "seeds": [[74, 162], [106, 160], [128, 158], [136, 184], [116, 198]]
+    },
+    {
+      "id": "fore-body",
+      "file": "fore-body.svg",
+      "title": "Aberdeen Bestiary serpent ultramarine arched neck and banded saddle",
+      "base_layer": "blue",
+      "exclude_layers": ["green", "wash", "wash2"],
+      "fine_detail": true,
+      "seed_strokes": [
+        [[164, 162], [186, 166], [206, 158], [216, 138], [208, 118], [196, 105]],
+        [[162, 186], [188, 180], [210, 166]]
+      ],
+      "seeds": [[166, 152], [174, 166], [194, 164], [142, 154], [142, 188]]
+    },
+    {
+      "id": "head",
+      "file": "head.svg",
+      "title": "Aberdeen Bestiary serpent eared open-jawed head",
+      "base_layer": "warm_mid",
+      "exclude_layers": ["blue", "green", "wash", "wash2"],
+      "fine_detail": true,
+      "seeds": [[180, 91], [186, 78], [198, 79], [211, 74], [204, 92], [190, 98]]
+    }
+  ],
+  "cut_guides": [
+    {"points": [[182, 105], [194, 103], [204, 97]], "weight": 2.4, "width_u": 1.4},
+    {"points": [[148, 134], [148, 166], [148, 202]], "weight": 2.4, "width_u": 1.4},
+    {"points": [[156, 134], [156, 166], [156, 202]], "weight": 2.4, "width_u": 1.4},
+    {"points": [[135, 136], [135, 150]], "weight": 2.0, "width_u": 1.2}
+  ],
+  "tucks": [
+    {"parent": "fore-body", "child": "head", "radius_u": 3.0, "joint_point": [194, 102], "joint_window_u": 15}
+  ],
+  "flaws_fixed": [
+    "Separated ultramarine serpent neck cleanly from identical-hue outer roundel ring and corner spandrels via circular field gating",
+    "Preserved open-jaw mouth void and fine wavy ink striations across the sage-green shedding skin",
+    "Protected specular bright highlights along the underside of the sage-green belly from gold-leaf rejection",
+    "Separated reusable serpent components (head, fore-body, shedding-rear) from optional cleft-pillar prop while preserving 100% union coverage"
+  ]
+}

@@ -1,0 +1,183 @@
+{
+  "specimen": "aberdeen-serpent-pillar",
+  "source_ref": "docs/art/bestiary/refs/aberdeen-bestiary-initial-gold.jpg",
+  "family": "A",
+  "preset": "gilded_roundel_polychrome",
+  "source_style": "12th-century English Bestiary gilded roundel (Aberdeen school)",
+  "date_range": "c. 1200",
+  "medium": "ink, burnished gold leaf, and opaque mineral pigments on vellum",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    293.33,
+    300.0
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 98.56,
+    "silhouette_iou_legacy_pct": 95.67,
+    "ink_iou_pct": 76.85,
+    "boundary_f1_1u_pct": 97.95,
+    "masked_color_rmse": 36.25,
+    "raw_kb": 39.2,
+    "gzip_kb": 14.85,
+    "path_count": 19,
+    "command_count": 2678,
+    "cmd_counts": {
+      "M": 282,
+      "l": 800,
+      "c": 785,
+      "v": 270,
+      "s": 21,
+      "h": 238,
+      "z": 282
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.26,
+      "threshold": 182,
+      "filter_speckle": 6,
+      "corner_threshold": 60,
+      "length_threshold": 5.8,
+      "splice_threshold": 56,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.11,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.4
+    },
+    "wash": {
+      "scale_size": 540,
+      "blur_radius": 0.9,
+      "threshold": 155,
+      "filter_speckle": 16,
+      "corner_threshold": 60,
+      "length_threshold": 9.5,
+      "splice_threshold": 64,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.19,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.65
+    },
+    "highlight": {
+      "scale_size": 620,
+      "blur_radius": 0.65,
+      "threshold": 148,
+      "filter_speckle": 4,
+      "corner_threshold": 60,
+      "length_threshold": 6.5,
+      "splice_threshold": 58,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.15,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "accent": {
+      "scale_size": 620,
+      "blur_radius": 0.8,
+      "threshold": 154,
+      "filter_speckle": 10,
+      "corner_threshold": 60,
+      "length_threshold": 8.0,
+      "splice_threshold": 62,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.17,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.45
+    },
+    "ink": {
+      "scale_size": 750,
+      "blur_radius": 0.65,
+      "threshold": 155,
+      "filter_speckle": 4,
+      "corner_threshold": 60,
+      "length_threshold": 5.8,
+      "splice_threshold": 55,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.13,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/aberdeen-serpent-pillar",
+  "components": [
+    {
+      "id": "cleft-pillar",
+      "file": "cleft-pillar.svg",
+      "raw_kb": 11.89,
+      "gzip_kb": 4.9,
+      "bbox": [
+        111,
+        34,
+        63,
+        224
+      ]
+    },
+    {
+      "id": "shedding-rear",
+      "file": "shedding-rear.svg",
+      "raw_kb": 16.1,
+      "gzip_kb": 6.29,
+      "bbox": [
+        46,
+        36,
+        105,
+        175
+      ]
+    },
+    {
+      "id": "fore-body",
+      "file": "fore-body.svg",
+      "raw_kb": 6.56,
+      "gzip_kb": 2.8,
+      "bbox": [
+        126,
+        91,
+        101,
+        116
+      ]
+    },
+    {
+      "id": "head",
+      "file": "head.svg",
+      "raw_kb": 5.01,
+      "gzip_kb": 2.15,
+      "bbox": [
+        159,
+        66,
+        63,
+        50
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/aberdeen-serpent-pillar-master.svg",
+    "sheet": "docs/art/bestiary/traced/aberdeen-serpent-pillar-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/aberdeen-serpent-pillar-components.png"
+  },
+  "palette": {
+    "wash": "#b6b893",
+    "wash2": "#89947d",
+    "warm_mid": "#bfa99c",
+    "highlight": "#e8e5d3",
+    "ink": "#19100b",
+    "mauve": "#baa496",
+    "blue": "#4f548f",
+    "crimson": "#a56954"
+  },
+  "flaws_fixed": [
+    "Separated ultramarine serpent neck cleanly from identical-hue outer roundel ring and corner spandrels via circular field gating",
+    "Preserved open-jaw mouth void and fine wavy ink striations across the sage-green shedding skin",
+    "Protected specular bright highlights along the underside of the sage-green belly from gold-leaf rejection",
+    "Separated reusable serpent components (head, fore-body, shedding-rear) from optional cleft-pillar prop while preserving 100% union coverage"
+  ]
+}

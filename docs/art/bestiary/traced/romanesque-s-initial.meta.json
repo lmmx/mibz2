@@ -1,0 +1,207 @@
+{
+  "specimen": "romanesque-s-initial",
+  "source_ref": "docs/art/bestiary/refs/romanesque-s-initial-dragon.jpg",
+  "family": "B",
+  "preset": "gilded_initial_polychrome",
+  "source_style": "12th-century Romanesque illuminated inhabited initial S on hammered gold leaf",
+  "date_range": "c. 1150-1200",
+  "medium": "ink, hammered gold leaf, and opaque mineral pigments on vellum",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    277.0,
+    300.0
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 97.86,
+    "silhouette_iou_legacy_pct": 94.59,
+    "ink_iou_pct": 72.33,
+    "boundary_f1_1u_pct": 98.8,
+    "masked_color_rmse": 36.78,
+    "raw_kb": 101.84,
+    "gzip_kb": 36.92,
+    "path_count": 36,
+    "command_count": 6374,
+    "cmd_counts": {
+      "M": 549,
+      "l": 2036,
+      "c": 2197,
+      "v": 483,
+      "h": 497,
+      "s": 63,
+      "z": 549
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.22,
+      "threshold": 180,
+      "filter_speckle": 6,
+      "corner_threshold": 60,
+      "length_threshold": 6.0,
+      "splice_threshold": 58,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.12,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.4
+    },
+    "wash": {
+      "scale_size": 540,
+      "blur_radius": 0.88,
+      "threshold": 154,
+      "filter_speckle": 16,
+      "corner_threshold": 60,
+      "length_threshold": 9.5,
+      "splice_threshold": 64,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.19,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.65
+    },
+    "highlight": {
+      "scale_size": 600,
+      "blur_radius": 0.65,
+      "threshold": 148,
+      "filter_speckle": 4,
+      "corner_threshold": 60,
+      "length_threshold": 6.8,
+      "splice_threshold": 60,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.16,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.4
+    },
+    "accent": {
+      "scale_size": 580,
+      "blur_radius": 0.82,
+      "threshold": 154,
+      "filter_speckle": 12,
+      "corner_threshold": 60,
+      "length_threshold": 8.8,
+      "splice_threshold": 62,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.19,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.55
+    },
+    "ink": {
+      "scale_size": 720,
+      "blur_radius": 0.68,
+      "threshold": 158,
+      "filter_speckle": 6,
+      "corner_threshold": 60,
+      "length_threshold": 6.4,
+      "splice_threshold": 58,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.14,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.4
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/romanesque-s-initial",
+  "components": [
+    {
+      "id": "dragon-head",
+      "file": "dragon-head.svg",
+      "raw_kb": 7.42,
+      "gzip_kb": 3.11,
+      "bbox": [
+        160,
+        3,
+        90,
+        129
+      ]
+    },
+    {
+      "id": "dragon-wing",
+      "file": "dragon-wing.svg",
+      "raw_kb": 5.61,
+      "gzip_kb": 2.37,
+      "bbox": [
+        99,
+        102,
+        158,
+        72
+      ]
+    },
+    {
+      "id": "dragon-body",
+      "file": "dragon-body.svg",
+      "raw_kb": 31.71,
+      "gzip_kb": 12.4,
+      "bbox": [
+        26,
+        16,
+        231,
+        281
+      ]
+    },
+    {
+      "id": "upper-scroll",
+      "file": "upper-scroll.svg",
+      "raw_kb": 19.05,
+      "gzip_kb": 7.39,
+      "bbox": [
+        91,
+        34,
+        145,
+        108
+      ]
+    },
+    {
+      "id": "lower-scroll",
+      "file": "lower-scroll.svg",
+      "raw_kb": 19.7,
+      "gzip_kb": 7.6,
+      "bbox": [
+        59,
+        160,
+        164,
+        126
+      ]
+    },
+    {
+      "id": "tail-foliage",
+      "file": "tail-foliage.svg",
+      "raw_kb": 19.05,
+      "gzip_kb": 7.34,
+      "bbox": [
+        6,
+        166,
+        117,
+        128
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/romanesque-s-initial-master.svg",
+    "sheet": "docs/art/bestiary/traced/romanesque-s-initial-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/romanesque-s-initial-components.png"
+  },
+  "palette": {
+    "wash": "#7ca295",
+    "wash2": "#497161",
+    "warm_mid": "#b1a5a3",
+    "highlight": "#acb6b8",
+    "ink": "#19100b",
+    "mauve": "#806d6b",
+    "blue": "#3b5782",
+    "crimson": "#87403a"
+  },
+  "flaws_fixed": [
+    "Removed faint exterior pale-green wash halo and pink diapered border frame while preserving protruding dragon head, foreleg, wingtip, and acanthus tail terminal",
+    "Separated hammered/stippled dark-and-bright gold leaf background from authentic polychrome vine scrolls and mint-green dragon body",
+    "Preserved dark green O/X jewel rings along the dragon spine and white lead pearl dots across the blue acanthus leaves",
+    "Segmented reusable dragon anatomy (head, wing, serpentine body) cleanly from inhabiting upper/lower floral scrolls and tail foliage"
+  ]
+}

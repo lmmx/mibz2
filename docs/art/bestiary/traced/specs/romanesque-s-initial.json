@@ -1,0 +1,140 @@
+{
+  "specimen": "romanesque-s-initial",
+  "title": "Romanesque Inhabited Initial S — Winged Dragon & Gilded Scrolls",
+  "aria_label": "Component-extracted Romanesque inhabited initial S formed by a winged mint-green dragon and polychrome vine scrolls",
+  "source_ref": "docs/art/bestiary/refs/romanesque-s-initial-dragon.jpg",
+  "family": "B",
+  "preset": "gilded_initial_polychrome",
+  "source_style": "12th-century Romanesque illuminated inhabited initial S on hammered gold leaf",
+  "date_range": "c. 1150-1200",
+  "medium": "ink, hammered gold leaf, and opaque mineral pigments on vellum",
+  "components_subdir": "romanesque-s-initial",
+  "root_id": "romanesque-s-root",
+  "context_style": "parchment",
+  "primary_wash_channel": "green",
+  "wash2_percentile": 34,
+  "highlight_l_min": 72.0,
+  "reject_faint_margin_halo": true,
+  "hammered_gold": true,
+  "gold_sample_box": [0.18, 0.14, 0.87, 0.91],
+  "gold_dist_thresh": 18.5,
+  "vellum_dist_thresh": 16.0,
+  "frame_rect_u": [41, 23, 244, 290, 9],
+  "protrusion_polygons": [
+    [[174, 8], [218, 8], [244, 52], [244, 78], [220, 78], [174, 50]],
+    [[95, 20], [182, 20], [182, 42], [95, 42]],
+    [[30, 100], [72, 100], [72, 154], [30, 154]],
+    [[224, 126], [258, 148], [258, 170], [224, 158]],
+    [[220, 162], [254, 162], [254, 245], [220, 245]],
+    [[6, 186], [108, 186], [108, 296], [6, 296]],
+    [[92, 268], [198, 268], [198, 296], [92, 296]]
+  ],
+  "exclude_polygons": [
+    [[38, 20], [134, 20], [110, 28], [86, 42], [68, 62], [59, 86], [59, 108], [38, 101]],
+    [[206, 20], [248, 20], [248, 62], [230, 56], [218, 38], [208, 35]],
+    [[168, 20], [192, 20], [186, 33], [174, 30]],
+    [[248, 232], [248, 294], [180, 294], [196, 282], [216, 268], [232, 248], [242, 232]],
+    [[40, 286], [116, 286], [116, 296], [40, 296]]
+  ],
+  "zoom_crops": [
+    {
+      "label": "Zoomed Dragon Head & Upper Scroll 50% Overlay",
+      "viewbox": [126, 8, 126, 126]
+    },
+    {
+      "label": "Zoomed Wing, Foreleg & O/X Spine 50% Overlay",
+      "viewbox": [32, 82, 146, 102]
+    },
+    {
+      "label": "Zoomed Tail Acanthus & Lower Scroll 50% Overlay",
+      "viewbox": [8, 180, 148, 114]
+    }
+  ],
+  "components": [
+    {
+      "id": "dragon-head",
+      "file": "dragon-head.svg",
+      "title": "Romanesque S-initial horned crimson dragon head",
+      "base_layer": "crimson",
+      "exclude_layers": ["green", "wash", "wash2", "blue"],
+      "fine_detail": true,
+      "seeds": [
+        [192, 18], [202, 20], [196, 38], [210, 48], [224, 58], [236, 66]
+      ]
+    },
+    {
+      "id": "dragon-wing",
+      "file": "dragon-wing.svg",
+      "title": "Romanesque S-initial folded polychrome striped dragon wing",
+      "base_layer": "crimson",
+      "exclude_layers": ["green", "wash", "wash2"],
+      "fine_detail": true,
+      "seed_strokes": [
+        [[112, 122], [148, 126], [186, 134], [220, 144], [244, 156]],
+        [[118, 138], [160, 142], [204, 148]]
+      ],
+      "seeds": [[108, 130], [134, 126], [170, 132], [218, 144], [246, 158]]
+    },
+    {
+      "id": "dragon-body",
+      "file": "dragon-body.svg",
+      "title": "Romanesque S-initial mint-green serpentine dragon body with O/X jewel spine and clawed limbs",
+      "base_layer": "wash",
+      "exclude_layers": ["crimson"],
+      "fine_detail": true,
+      "seed_strokes": [
+        [[176, 38], [150, 29], [118, 34], [92, 54], [76, 84], [78, 116], [102, 144], [146, 160], [194, 164], [228, 184], [238, 218], [222, 254], [184, 278], [140, 285], [96, 274]],
+        [[46, 114], [54, 132], [78, 146], [98, 150]],
+        [[176, 166], [186, 182], [194, 198]]
+      ],
+      "seeds": [[48, 116], [56, 130], [72, 100], [156, 160], [194, 196], [232, 214], [144, 286]]
+    },
+    {
+      "id": "upper-scroll",
+      "file": "upper-scroll.svg",
+      "title": "Romanesque S-initial upper-loop polychrome floral vine scroll",
+      "base_layer": "blue",
+      "fine_detail": true,
+      "seeds": [
+        [124, 62], [136, 80], [108, 86], [154, 52], [184, 72], [196, 88], [218, 92], [226, 128]
+      ]
+    },
+    {
+      "id": "lower-scroll",
+      "file": "lower-scroll.svg",
+      "title": "Romanesque S-initial lower-loop circular floral vine scroll",
+      "base_layer": "crimson",
+      "fine_detail": true,
+      "seeds": [
+        [72, 178], [80, 184], [144, 192], [126, 212], [148, 224], [166, 212], [130, 248], [162, 250], [208, 218], [132, 274]
+      ]
+    },
+    {
+      "id": "tail-foliage",
+      "file": "tail-foliage.svg",
+      "title": "Romanesque S-initial bottom-left protruding acanthus foliage terminal",
+      "base_layer": "blue",
+      "fine_detail": true,
+      "seeds": [
+        [30, 206], [52, 224], [48, 246], [70, 238], [94, 224], [56, 270], [80, 260]
+      ]
+    }
+  ],
+  "cut_guides": [
+    {"points": [[180, 32], [182, 42], [188, 50]], "weight": 2.4, "width_u": 1.4},
+    {"points": [[102, 114], [150, 116], [200, 126], [236, 140]], "weight": 2.2, "width_u": 1.4},
+    {"points": [[104, 138], [144, 148], [196, 152], [238, 156]], "weight": 2.2, "width_u": 1.4},
+    {"points": [[88, 258], [90, 268], [92, 278]], "weight": 2.4, "width_u": 1.4},
+    {"points": [[82, 200], [84, 232], [86, 256]], "weight": 2.0, "width_u": 1.4}
+  ],
+  "tucks": [
+    {"parent": "dragon-body", "child": "dragon-head", "radius_u": 3.0, "joint_point": [182, 42], "joint_window_u": 16},
+    {"parent": "dragon-body", "child": "dragon-wing", "radius_u": 2.5, "joint_point": [110, 128], "joint_window_u": 24}
+  ],
+  "flaws_fixed": [
+    "Removed faint exterior pale-green wash halo and pink diapered border frame while preserving protruding dragon head, foreleg, wingtip, and acanthus tail terminal",
+    "Separated hammered/stippled dark-and-bright gold leaf background from authentic polychrome vine scrolls and mint-green dragon body",
+    "Preserved dark green O/X jewel rings along the dragon spine and white lead pearl dots across the blue acanthus leaves",
+    "Segmented reusable dragon anatomy (head, wing, serpentine body) cleanly from inhabiting upper/lower floral scrolls and tail foliage"
+  ]
+}
