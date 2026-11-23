@@ -1,0 +1,207 @@
+{
+  "specimen": "gothic-initial-interlace-fine",
+  "source_ref": "docs/art/bestiary/refs/louis/2-winged-dragon-initial-interlace.jpg",
+  "family": "B",
+  "preset": "gilded_interlace_compact_fine_lapis",
+  "source_style": "Late Romanesque / Early Gothic illuminated inhabited initial G (Gregorius)",
+  "date_range": "c. 1170-1220",
+  "medium": "ink, burnished gold leaf, and opaque mineral pigments on vellum",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    300.0,
+    271.69
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 97.12,
+    "silhouette_iou_legacy_pct": 91.06,
+    "ink_iou_pct": 83.87,
+    "boundary_f1_1u_pct": 99.35,
+    "masked_color_rmse": 32.42,
+    "raw_kb": 485.91,
+    "gzip_kb": 160.38,
+    "path_count": 33,
+    "command_count": 42515,
+    "cmd_counts": {
+      "M": 5114,
+      "l": 12362,
+      "c": 10564,
+      "v": 3911,
+      "z": 5114,
+      "h": 4787,
+      "s": 663
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.24,
+      "threshold": 182,
+      "filter_speckle": 8,
+      "corner_threshold": 60,
+      "length_threshold": 6.8,
+      "splice_threshold": 60,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.14,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.45
+    },
+    "wash": {
+      "scale_size": 500,
+      "blur_radius": 0.95,
+      "threshold": 155,
+      "filter_speckle": 22,
+      "corner_threshold": 60,
+      "length_threshold": 11.0,
+      "splice_threshold": 66,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.22,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.8
+    },
+    "highlight": {
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 150,
+      "filter_speckle": 2,
+      "corner_threshold": 60,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.08,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.12
+    },
+    "accent": {
+      "scale_size": 1800,
+      "blur_radius": 0.5,
+      "threshold": 155,
+      "filter_speckle": 3,
+      "corner_threshold": 60,
+      "length_threshold": 10.5,
+      "splice_threshold": 66,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.22,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.7
+    },
+    "ink": {
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 160,
+      "filter_speckle": 2,
+      "corner_threshold": 60,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.08,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.12
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/gothic-initial-interlace-fine",
+  "components": [
+    {
+      "id": "green-dragon-head",
+      "file": "green-dragon-head.svg",
+      "raw_kb": 27.83,
+      "gzip_kb": 9.97,
+      "bbox": [
+        193,
+        14,
+        82,
+        50
+      ]
+    },
+    {
+      "id": "left-dragon-wing",
+      "file": "left-dragon-wing.svg",
+      "raw_kb": 20.98,
+      "gzip_kb": 7.52,
+      "bbox": [
+        38,
+        60,
+        33,
+        176
+      ]
+    },
+    {
+      "id": "left-dragon-body",
+      "file": "left-dragon-body.svg",
+      "raw_kb": 92.04,
+      "gzip_kb": 31.61,
+      "bbox": [
+        40,
+        18,
+        194,
+        246
+      ]
+    },
+    {
+      "id": "right-dragon",
+      "file": "right-dragon.svg",
+      "raw_kb": 94.4,
+      "gzip_kb": 31.98,
+      "bbox": [
+        95,
+        32,
+        165,
+        232
+      ]
+    },
+    {
+      "id": "lower-dragon-head",
+      "file": "lower-dragon-head.svg",
+      "raw_kb": 12.67,
+      "gzip_kb": 4.75,
+      "bbox": [
+        138,
+        186,
+        37,
+        53
+      ]
+    },
+    {
+      "id": "inner-interlace",
+      "file": "inner-interlace.svg",
+      "raw_kb": 238.64,
+      "gzip_kb": 78.51,
+      "bbox": [
+        55,
+        40,
+        185,
+        222
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/gothic-initial-interlace-fine-master.svg",
+    "sheet": "docs/art/bestiary/traced/gothic-initial-interlace-fine-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/gothic-initial-interlace-fine-components.png"
+  },
+  "palette": {
+    "wash": "#3f5d7d",
+    "wash2": "#2f466c",
+    "warm_mid": "#b9a7a2",
+    "highlight": "#dad7cf",
+    "ink": "#19100b",
+    "mauve": "#998f8b",
+    "green": "#97a59a",
+    "crimson": "#9a5d41"
+  },
+  "flaws_fixed": [
+    "Stripped outer Latin header rubric, right-margin GREGORIUS capitals, left penwork flourish, and rectangular orange/black border frame while preserving protruding dragon head, wings, and bottom claw",
+    "Separated burnished gold leaf ground across dozens of tight braided interlace apertures without eating golden-ochre miniature beasts or orange foliage tips",
+    "Tuned compact dual-res vtracer preset to keep high-complexity braided interlace well-sized while maintaining high silhouette fidelity",
+    "Segmented twin outer winged dragons, roaring green head, biting lower dragon head, and central inhabited vine interlace into reusable components"
+  ]
+}

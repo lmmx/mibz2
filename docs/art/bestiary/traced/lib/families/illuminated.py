@@ -23,7 +23,7 @@ if _base is not None:
     )
 
 
-def _fine(base_name: str, name: str) -> None:
+def _fine(base_name: str, name: str, ink_c_max: float = 30.0) -> None:
     """A '-fine' variant keeping the broad fills but tracing the detail layers (ink and highlights)
     at full resolution with almost no smoothing, and taking brown and faded ink as ink."""
     base = _REGISTRY.get(base_name)
@@ -40,7 +40,7 @@ def _fine(base_name: str, name: str) -> None:
             name=name,
             description=base.description + " Detail layers traced at full resolution.",
             work_size=1600,
-            pigments=replace(base.pigments, ink_l_max=40.0, ink_c_max=30.0, ink_valley_delta=9.0,
+            pigments=replace(base.pigments, ink_l_max=40.0, ink_c_max=ink_c_max, ink_valley_delta=9.0,
                              ink_valley_l_max=68.0, min_ink_area=2, min_highlight_area=2),
             trace_ink=replace(base.trace_ink, scale_size=2000, threshold=160, **detail),
             trace_highlight=replace(base.trace_highlight, scale_size=2000, **detail),
@@ -107,3 +107,8 @@ if _gr is not None:
                 description="Fine-detail preset with the ground removed by colour key (spec ground_keys).",
                 ground_hook=_keyed_ground),
     )
+
+# Dark saturated pigment (lapis, deep green) must not count as ink: brown and black ink are far less
+# saturated. These variants keep the full-resolution detail with a strict chroma limit on ink.
+_fine("gilded_interlace_compact", "gilded_interlace_compact_fine_lapis", ink_c_max=16.0)
+_fine("gilded_romanesque", "gilded_romanesque_fine_lapis", ink_c_max=16.0)
