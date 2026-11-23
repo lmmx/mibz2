@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Proof: Headline Frame Traced Heads (Brief 6)</title>
+  <style>
+    :root {
+      --bg: #f6eedb;
+      --surface: #fffaf0;
+      --card: #fffdf7;
+      --ink: #140b06;
+      --muted: #5a4636;
+      --border: #140b06;
+      --gold-bg: #fff3bf;
+      --gold-ink: #8a5600;
+      --gold-border: #ffb800;
+    }
+    html[data-theme="dark"] {
+      --bg: #121110;
+      --surface: #1d1b18;
+      --card: #22201c;
+      --ink: #f7f0e2;
+      --muted: #b8aa95;
+      --border: #d9c9aa;
+      --gold-bg: #302408;
+      --gold-ink: #ffe169;
+      --gold-border: #ffb800;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; max-width: 100%; overflow-x: clip;
+      background: var(--bg); color: var(--ink);
+      font: 15px/1.5 Georgia, "Iowan Old Style", serif;
+    }
+    .toolbar {
+      position: sticky; top: 0; z-index: 40;
+      display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      padding: 10px 16px; background: var(--surface); border-bottom: 2px solid var(--border);
+      font: 600 12.5px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .toolbar-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    button {
+      font: inherit; padding: 5px 10px; border-radius: 6px;
+      border: 2px solid var(--border); background: var(--card); color: var(--ink); cursor: pointer;
+    }
+    button.active { background: #1b5cff; color: #fff; border-color: #140b06; }
+    input[type="range"] { width: 150px; }
+    .shell {
+      max-width: 920px; margin: 0 auto; padding: 24px 28px 80px; overflow-x: clip;
+    }
+    body.phone-390 .shell {
+      max-width: 390px; padding: 18px 22px 72px;
+      border-left: 2px dashed var(--muted); border-right: 2px dashed var(--muted);
+    }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    .sub { margin: 0 0 22px; color: var(--muted); font-style: italic; font-size: 14px; }
+    .compare {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px;
+    }
+    body.phone-390 .compare { grid-template-columns: 1fr; }
+    .panel {
+      background: var(--surface); border: 2px solid var(--border); border-radius: 14px;
+      padding: 20px 18px 24px;
+    }
+    .panel-label {
+      font: 700 11.5px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 24px;
+    }
+    .headline-stack {
+      display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 16px 8px 6px;
+    }
+    .headline-bubble {
+      position: relative; background: var(--card); border: 2.5px solid var(--border);
+      border-radius: 18px; padding: 18px 24px; font-size: 19px; font-weight: 700;
+      text-align: center; max-width: 100%; box-shadow: 3px 3px 0 rgba(20,11,6,0.12);
+    }
+    body.phone-390 .headline-bubble,
+    @media (max-width: 420px) {
+      .headline-bubble { font-size: 16px; padding: 14px 18px; }
+    }
+    .gold-caption {
+      font: 700 13px/1.3 Georgia, serif; color: var(--gold-ink);
+      background: var(--gold-bg); border: 2px solid var(--gold-border);
+      border-radius: 999px; padding: 5px 14px; text-align: center;
+    }
+    .status {
+      margin-top: 18px; font: 600 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <button id="btn-play" type="button">Pause</button>
+      <input id="scrubber" type="range" min="0" max="1000" value="0" aria-label="Scrub timeline">
+      <span id="time-out">t=0.00s</span>
+      <button class="beat" data-frac="0.18" type="button">18% Chase</button>
+      <button class="beat" data-frac="0.53" type="button">53% SNAP!</button>
+      <button class="beat" data-frac="0.65" type="button">65% Recoil</button>
+    </div>
+    <div class="toolbar-group">
+      <button id="btn-theme" type="button">Dark mode</button>
+      <button id="btn-390" type="button">390 px</button>
+    </div>
+  </div>
+
+  <main class="shell">
+    <h1>Headline Frame &mdash; Traced Roundel Heads vs. Current</h1>
+    <p class="sub">Bodies, size, writhing motion, and bottom snap/recoil stay unchanged; only the heads are replaced with potrace-traced Romanesque roundel heads recoloured via <code>--wash</code>.</p>
+
+    <div class="compare">
+      <section class="panel">
+        <div class="panel-label">New (Brief 6) &middot; Traced roundel horned heads + animated jaw &amp; blink</div>
+        <div class="headline-stack">
+          <div class="headline-bubble" id="bubble-new">managing Claudes all day is knackering</div>
+          <div class="gold-caption" id="cap-new">Of Man&rsquo;s Labours &amp; their Eternal Return</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-label">Current (Reference) &middot; Existing frame heads</div>
+        <div class="headline-stack">
+          <div class="headline-bubble" id="bubble-old">managing Claudes all day is knackering</div>
+          <div class="gold-caption" id="cap-old">Of Man&rsquo;s Labours &amp; their Eternal Return</div>
+        </div>
+      </section>
+    </div>
+
+    <div class="status" id="status-out"></div>
+  </main>
+
+  <script src="../crawler/crawler.js"></script>
+  <script src="./headline-heads.js"></script>
+  <script>
+    (function () {
+      const DUR = 11;
+      const bubbleNew = document.getElementById('bubble-new');
+      const bubbleOld = document.getElementById('bubble-old');
+      const capNew = document.getElementById('cap-new');
+      const statusOut = document.getElementById('status-out');
+      const scrubber = document.getElementById('scrubber');
+      const timeOut = document.getElementById('time-out');
+      const btnPlay = document.getElementById('btn-play');
+      const btnTheme = document.getElementById('btn-theme');
+      const btn390 = document.getElementById('btn-390');
+
+      let svgNew = null, svgOld = null, paused = false;
+
+      function mountAll() {
+        if (svgNew && svgNew.parentNode) svgNew.parentNode.removeChild(svgNew);
+        if (svgOld && svgOld.parentNode) svgOld.parentNode.removeChild(svgOld);
+        const narrow = document.body.classList.contains('phone-390') || window.innerWidth <= 420;
+        const sc = narrow ? 0.72 : 0.86;
+        svgNew = BestiarySlots.mountHeadlineHeads(bubbleNew, { scale: sc, dur: DUR, autoPause: true });
+        svgOld = BestiaryCrawler.makeHeadlineChase(bubbleOld, { scale: sc, dur: DUR, autoPause: true });
+        const gap = Math.round(capNew.getBoundingClientRect().top - svgNew.getBoundingClientRect().bottom);
+        statusOut.textContent = `Caption clearance: ${gap}px (uncovered) | viewport width: ${document.documentElement.clientWidth}px | scrollWidth: ${document.documentElement.scrollWidth}px`;
+      }
+
+      function setTime(t) {
+        [svgNew, svgOld].forEach((s) => { if (s && s.setCurrentTime) s.setCurrentTime(t); });
+        timeOut.textContent = `t=${t.toFixed(2)}s`;
+        scrubber.value = String(Math.round((t / DUR) * 1000));
+      }
+
+      function setPaused(p) {
+        paused = p;
+        [svgNew, svgOld].forEach((s) => {
+          if (!s) return;
+          s.dataset.bestiaryManualPause = p ? '1' : '0';
+          if (p) s.pauseAnimations(); else s.unpauseAnimations();
+        });
+        btnPlay.textContent = p ? 'Play' : 'Pause';
+      }
+
+      btnPlay.addEventListener('click', () => setPaused(!paused));
+      scrubber.addEventListener('input', () => {
+        setPaused(true);
+        setTime((parseFloat(scrubber.value) / 1000) * DUR);
+      });
+      document.querySelectorAll('.beat').forEach((b) => {
+        b.addEventListener('click', () => {
+          setPaused(true);
+          setTime(parseFloat(b.dataset.frac) * DUR);
+        });
+      });
+      btnTheme.addEventListener('click', () => {
+        const html = document.documentElement;
+        const dark = html.getAttribute('data-theme') === 'dark';
+        html.setAttribute('data-theme', dark ? 'light' : 'dark');
+        btnTheme.textContent = dark ? 'Dark mode' : 'Light mode';
+        btnTheme.classList.toggle('active', !dark);
+      });
+      btn390.addEventListener('click', () => {
+        const on = document.body.classList.toggle('phone-390');
+        btn390.classList.toggle('active', on);
+        requestAnimationFrame(mountAll);
+      });
+      window.addEventListener('resize', () => setTimeout(mountAll, 120));
+      mountAll();
+    }());
+  </script>
+</body>
+</html>
