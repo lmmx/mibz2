@@ -210,6 +210,7 @@ impl Pass<'_> {
         if keep {
             if p.wrapping_sub(x) < w {
                 f.mark = f.m + (p - x);
+                f.mark_byte = c;
             }
             if QUEUE {
                 self.queues.push(a, f.m, w, &f.thin);
@@ -249,6 +250,8 @@ struct First {
     thick: [u32; 256],
     m: u32,
     mark: u32,
+    /// the marked row's byte: its queue is the only one that holds `mark`
+    mark_byte: u8,
     runs: usize,
 }
 
@@ -260,6 +263,7 @@ impl Default for First {
             thick: [0; 256],
             m: 0,
             mark: 0,
+            mark_byte: 0,
             runs: 0,
         }
     }
@@ -394,6 +398,7 @@ impl Kernel {
             thick,
             m,
             mark,
+            mark_byte,
             runs,
         } = *f;
         let mut stats = Counts {
@@ -527,16 +532,31 @@ impl Kernel {
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
                 let mut queue = outq::Reader::new(out, &self.spill, heads, a);
-                for &band in &self.bands[cursors[a]..end] {
-                    queue.wire_xor(
-                        edges,
-                        band.dst() as usize,
-                        (band.end() - k) as usize,
-                        band.code() << bits,
-                        mark,
-                        &mut predecessor,
-                    );
-                    k = band.end();
+                // only the marked row's byte's queue can hold `mark`: the others skip the search
+                if a == usize::from(mark_byte) {
+                    for &band in &self.bands[cursors[a]..end] {
+                        queue.wire_xor::<true>(
+                            edges,
+                            band.dst() as usize,
+                            (band.end() - k) as usize,
+                            band.code() << bits,
+                            mark,
+                            &mut predecessor,
+                        );
+                        k = band.end();
+                    }
+                } else {
+                    for &band in &self.bands[cursors[a]..end] {
+                        queue.wire_xor::<false>(
+                            edges,
+                            band.dst() as usize,
+                            (band.end() - k) as usize,
+                            band.code() << bits,
+                            mark,
+                            &mut predecessor,
+                        );
+                        k = band.end();
+                    }
                 }
             }
             self.predecessor = Some(predecessor);
