@@ -686,3 +686,23 @@ const BESTIARY_HEADS = {
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(al));
   addEventListener('resize', al); setTimeout(al, 1200); })();
 
+(() => {
+  for (const a of (document.querySelector('.convo') || document).querySelectorAll('a[href^="http"]')) { a.target = '_blank'; a.rel = 'noopener'; }
+  const stop = ev => { ev.preventDefault(); ev.stopPropagation(); };
+  for (const m of document.querySelectorAll('img[data-href]')) {
+    m.addEventListener('click', ev => { stop(ev); window.open(m.dataset.href, '_blank', 'noopener'); });
+  }
+  const close = () => { const o = document.querySelector('.lbx'); if (o) o.remove(); };
+  for (const m of document.querySelectorAll('img[data-zoom]')) {
+    m.addEventListener('click', ev => {
+      stop(ev); close();
+      const o = document.createElement('div'); o.className = 'lbx'; o.setAttribute('role', 'dialog');
+      o.setAttribute('aria-label', m.alt || 'image, full size');
+      const big = document.createElement('img'); big.src = m.currentSrc || m.src; big.alt = m.alt;
+      o.appendChild(big); o.addEventListener('click', close);
+      (m.closest('.convo') || document.body).appendChild(o);
+    });
+  }
+  addEventListener('keydown', ev => { if (ev.key === 'Escape') close(); });
+})();
+

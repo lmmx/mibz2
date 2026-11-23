@@ -7,6 +7,110 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.13](https://github.com/lmmx/mibz2/compare/v0.5.12...v0.5.13) - 2026-11-22
+
+### <!-- 3 -->Performance
+
+- *(crc)* portable CRC sliced by 16, its lookups XORed as a balanced tree ([#763](https://github.com/lmmx/mibz2/pull/763))
+- *(block)* the default path's block reader from Carbon's cycle 37: an L1-resident Huffman decoder and leaner block headers ([#745](https://github.com/lmmx/mibz2/pull/745))
+- *(parallel)* Wormhole's plateau stack: owned run-route output, in-place RLE1, tiled CRC, a 12 MiB ready cap and a ready ring ([#739](https://github.com/lmmx/mibz2/pull/739))
+
+### <!-- 4 -->Documentation
+
+- *(blog)* correctness is uniform: a dek that passes, and lighter sentences ([#759](https://github.com/lmmx/mibz2/pull/759))
+- *(blog)* correctness is uniform, cost is not ([#755](https://github.com/lmmx/mibz2/pull/755))
+- *(skills)* a post from a discussion is briefed in two transmissions, in files ([#754](https://github.com/lmmx/mibz2/pull/754))
+- *(blog)* correctness and speed in a decoder that adapts to its input, version 1 ([#752](https://github.com/lmmx/mibz2/pull/752))
+- *(skills)* the coordinator merges a post's version 1 within minutes, without waiting for CI ([#737](https://github.com/lmmx/mibz2/pull/737))
+- *(skills)* iterate, ship, re-ship: a post's first version goes live in minutes ([#736](https://github.com/lmmx/mibz2/pull/736))
+- *(blog)* two centuries of tools, a claimed Riemann proof's toolkit and our search ([#732](https://github.com/lmmx/mibz2/pull/732))
+- *(blog)* admitting dense blocks to the Open kernel, 29% less peak memory ([#733](https://github.com/lmmx/mibz2/pull/733))
+- *(skills)* results posts are about the result, titled technically, without process or anecdote ([#731](https://github.com/lmmx/mibz2/pull/731))
+- *(changelog)* 0.5.12, its release scaling and crossover on the i9, and the attribution row ([#730](https://github.com/lmmx/mibz2/pull/730))
+
+### <!-- 9 -->Other
+
+- Decompression is the harder problem, a conversation with Thomas Murphy ([#761](https://github.com/lmmx/mibz2/pull/761))
+- *(runner)* one workstation runner for sibling repos: a machine-wide lock, round-robin across repos, per-repo state ([#760](https://github.com/lmmx/mibz2/pull/760))
+
+- **37% less peak memory at 10 threads, and 4–6% faster from 6 to 20 threads, on the i9
+  (#739).** The parallel decoder's output path was reworked, from Wormhole's research line:
+  - each run's output is owned and written straight into place;
+  - RLE1 is undone in place;
+  - the CRC is computed in tiles;
+  - finished blocks wait in a ready ring, capped at 12 MiB.
+
+  The adoption run (`bench-wormhole-plateau`, evidence a811364d, sha256 9faac67b…c92f) measured
+  head over base, unpinned, Wikidata ×4, 12 rounds:
+
+  | threads | wall | CPU | peak RSS |
+  |--:|---|--:|---|
+  | 6 | 0.944 [0.935, 0.952] | 0.942 | 0.677 |
+  | 10 | **0.963** [0.943, 0.983] (judged) | 0.937 | **0.633** (87.0 → 54.6 MiB) |
+  | 16 | 0.962 [0.956, 0.968] | 0.926 | 0.637 |
+
+- **A faster block reader: 2% faster on one thread, and 11–14% faster at 8–10 threads (#745).**
+  - **What changed:** the reader that finds and decodes each block's Huffman codes now keeps
+    its decoding tables in L1 cache and reads leaner block headers. The design is from Carbon's
+    research line.
+  - **Why it pays at high thread counts:** that reader is serial, and at 8–10 threads it was
+    the cap on the whole decoder, so a faster one raises the plateau.
+  - **The run:** re-qualified on master with #739 (`bench-block-reader-on-wormhole`, evidence
+    026062a9, sha256 8629d6b9…7108), head over base, Wikidata ×4, 16 rounds: 1 thread
+    **0.979** [0.969, 0.989] (judged), 8 threads **0.858** [0.836, 0.880], 10 threads
+    **0.895** [0.875, 0.916], RSS at most 1.057.
+- **A portable CRC sliced by 16 (#763).**
+  - **What changed:** the CRC used where the hardware instruction (PCLMULQDQ) is unavailable,
+    and for pieces under 128 bytes, now reads 16 bytes a step. It combines its 16 table
+    lookups as a balanced tree of XORs.
+  - **CI's bench:** Wikidata on 1 thread −5.5% [−6.4, −4.5], text on 1 thread −8.6%
+    [−9.9, −7.3], with no loss.
+  - **Caveat:** CI's runners have the hardware CRC, so part of that 1-thread gain may be
+    layout. The kernel's own gain is on machines without it, such as aarch64.
+
+**The worker counts are unchanged.** The recalibration (`bench-recalibrate-plateau`, evidence
+472ce552, sha256 9e87c11d…dc50b; RELEASING §5c) ran on master at #739 and #745.
+- **Its registration:** corrected before the data, with a 2 s settle and a 9/27 arm (#145
+  REVIEW 7084586885, LOG 7084590503).
+- **The verdict:** it kept every shipped trim, pinned and unpinned.
+- **What more workers trade:** they help Wikidata and cost text by about as much. 8/32 over
+  7/28 at pinned 10 is 0.935 [0.919, 0.951] on Wikidata, where Holm rejects, but 1.109 on text.
+  The same holds at 12–20 threads unpinned. The loss guard holds them all.
+- **A refuted prediction:** 9 workers with 27 slots, predicted at −14.7%, came out 1.083
+  [1.024, 1.145] at unpinned 10.
+- **A lead:** a worker count chosen from the input's own behaviour could take the Wikidata gain
+  without the text loss. It would need a registration of its own.
+
+**The paired run on CI** compared v0.5.12 at 788ebe3e with master at cb7121e8 (Benchmark run
+45068896168, AMD EPYC 9V45, 4 CPUs, 10 rounds):
+- **Outputs:** parity ok on all 420 runs.
+- **Wall:** the best of each build −1.3% [−2.4, −0.0], faster.
+- **Stages:** the serial scan fell from 0.30 to 0.25 ns/B, and the pipeline from 2.74 to
+  2.71 ns/B.
+- **CPU:** amplification on the runner's 2 physical cores rose 6.5–6.9%. On the i9, #739
+  lowered CPU (0.93–0.94 at 6–20 threads), so this is the runner's shape, not a cost on a
+  many-core machine.
+
+**Features reviewed (RELEASING §3.3):** none was removed in this release.
+- **To check:** `memory-lever` and `phase-counters`, against their removal conditions.
+- **To fix:** `owned-writer` has no retention note.
+- Both go in a separate PR.
+
+**Release scaling on the i9** (`release-scaling/run-20261122T212737Z`, evidence fb315cff, sha256
+5c336484…7457; recorded by #774): 0.5.12 over 0.5.13 on Wikidata.
+- **Wall:** 1.085 [1.058, 1.112] at 2 threads, 1.080 at 8, 1.115 [1.083, 1.148] at 10 and 1.130
+  [1.115, 1.145] at 16. At 1 thread it is 1.023 [0.981, 1.066], inconclusive.
+- **Peak memory:** from 62–66 MB down to 42–43 MB at 8–16 threads.
+- **Output:** the same bytes on every arm.
+
+**The team threshold stays** (`crossover/run-20261122T213836Z`, evidence a40670c5, sha256
+ad658393…3e66; rule of LOG 6896455773).
+- **No forced arm is faster:** neither one block a thread nor teams of 2 or 3 beats the shipped
+  decoder at any count.
+- **One block a thread:** it spans 1 where it runs the shipped plan (5, 7 and 9 threads), and is
+  slower at 4, 6, 8 and 10 (1.027–1.272).
+- **The teams:** they lose everywhere, 1.14–9.9×.
+
 ## [0.5.12](https://github.com/lmmx/mibz2/compare/v0.5.11...v0.5.12) - 2026-11-22
 
 ### <!-- 3 -->Performance

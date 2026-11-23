@@ -148,6 +148,21 @@ command, `just workstation-queue`, runs every ready entry once, then suspends.
 `bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
 shape when it is next used.
 
+## Naming: say what it does
+
+**Name an algorithm, kernel, data structure or change by its mechanism,** never by the model,
+team, session or research round that produced it (Louis, 22 November 2026: "do not name
+algorithms by the model that made them … tells you nothing about the algorithm and sounds
+silly"). For example, a "streaming slab scanner" or a "sliced-by-16 CRC", never "Neon Cells" or
+"WormholeNeonCells".
+- **Where it applies:** code identifiers, feature flags, bench arms and recipes, PR titles,
+  registrations, CHANGELOG entries, release notes and blog posts.
+- **Credit still goes in:** a commit or PR body says which team's handoff a change came from.
+  Credit is a source, not a name.
+- **Existing names:** names already in code or merged records stay as they are. When one is
+  next touched, rename it to its mechanism in the same PR, and record the old name beside the
+  new one once, so the history can still be searched.
+
 ## Decisions: decide, record why, carry on
 
 **Decisions: the Coordinator decides.** Within the team's authority it decides, records why in one
