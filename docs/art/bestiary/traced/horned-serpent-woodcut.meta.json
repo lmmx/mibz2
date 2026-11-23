@@ -1,0 +1,161 @@
+{
+  "specimen": "horned-serpent-woodcut",
+  "source_ref": "docs/art/bestiary/refs/louis/6-horned-serpent-woodcut.jpg",
+  "family": "D",
+  "preset": "monochrome_woodcut_fine",
+  "source_style": "Early modern woodcut",
+  "date_range": "17th century",
+  "medium": "woodblock print on paper",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    300.0,
+    188.62
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 98.81,
+    "silhouette_iou_legacy_pct": 94.79,
+    "ink_iou_pct": 82.85,
+    "boundary_f1_1u_pct": 100.0,
+    "masked_color_rmse": 45.45,
+    "raw_kb": 127.57,
+    "gzip_kb": 40.97,
+    "path_count": 6,
+    "command_count": 10056,
+    "cmd_counts": {
+      "M": 1030,
+      "l": 2751,
+      "c": 3033,
+      "v": 1129,
+      "h": 911,
+      "s": 172,
+      "z": 1030
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.0,
+      "threshold": 165,
+      "filter_speckle": 6,
+      "corner_threshold": 60,
+      "length_threshold": 5.2,
+      "splice_threshold": 55,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.12,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "wash": {
+      "scale_size": 600,
+      "blur_radius": 0.85,
+      "threshold": 152,
+      "filter_speckle": 16,
+      "corner_threshold": 60,
+      "length_threshold": 9.5,
+      "splice_threshold": 65,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.18,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.6
+    },
+    "highlight": {
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 148,
+      "filter_speckle": 2,
+      "corner_threshold": 60,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.08,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.12
+    },
+    "accent": {
+      "scale_size": 1800,
+      "blur_radius": 0.5,
+      "threshold": 152,
+      "filter_speckle": 3,
+      "corner_threshold": 60,
+      "length_threshold": 7.5,
+      "splice_threshold": 60,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.16,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.45
+    },
+    "ink": {
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 160,
+      "filter_speckle": 2,
+      "corner_threshold": 60,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.08,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.12
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/horned-serpent-woodcut",
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "raw_kb": 89.94,
+      "gzip_kb": 28.97,
+      "bbox": [
+        78,
+        56,
+        197,
+        121
+      ]
+    },
+    {
+      "id": "head",
+      "file": "head.svg",
+      "raw_kb": 24.77,
+      "gzip_kb": 8.77,
+      "bbox": [
+        17,
+        129,
+        109,
+        47
+      ]
+    },
+    {
+      "id": "tail",
+      "file": "tail.svg",
+      "raw_kb": 12.77,
+      "gzip_kb": 4.72,
+      "bbox": [
+        246,
+        89,
+        37,
+        78
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/horned-serpent-woodcut-master.svg",
+    "sheet": "docs/art/bestiary/traced/horned-serpent-woodcut-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/horned-serpent-woodcut-components.png"
+  },
+  "palette": {
+    "wash": "#c1bab5",
+    "wash2": "#e2d4b7",
+    "ink": "#19100b"
+  },
+  "flaws_fixed": []
+}

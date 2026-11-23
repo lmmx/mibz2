@@ -1,0 +1,210 @@
+{
+  "specimen": "horned-serpent-woodcut",
+  "title": "Horned Serpent Woodcut",
+  "aria_label": "Component-extracted woodcut of a horned serpent with a ringed eye, cross-hatched scales and a banded belly, looping across the page",
+  "source_ref": "docs/art/bestiary/refs/louis/6-horned-serpent-woodcut.jpg",
+  "family": "D",
+  "preset": "monochrome_woodcut_fine",
+  "source_style": "Early modern woodcut",
+  "date_range": "17th century",
+  "medium": "woodblock print on paper",
+  "components_subdir": "horned-serpent-woodcut",
+  "root_id": "horned-serpent-woodcut-root",
+  "context_style": "parchment",
+  "include_polygons": [
+    [
+      [
+        17.8,
+        55.7
+      ],
+      [
+        283.1,
+        55.7
+      ],
+      [
+        283.1,
+        176.1
+      ],
+      [
+        17.8,
+        176.1
+      ]
+    ]
+  ],
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "title": "Serpent scaled body with banded belly",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          104.8,
+          66.9
+        ],
+        [
+          89.2,
+          93.6
+        ],
+        [
+          124.8,
+          142.6
+        ],
+        [
+          156.0,
+          104.8
+        ],
+        [
+          200.6,
+          115.9
+        ],
+        [
+          245.2,
+          156.0
+        ],
+        [
+          178.3,
+          144.9
+        ]
+      ]
+    },
+    {
+      "id": "head",
+      "file": "head.svg",
+      "title": "Serpent horned head",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          42.3,
+          149.3
+        ],
+        [
+          53.5,
+          144.9
+        ],
+        [
+          24.5,
+          159.1
+        ],
+        [
+          33.4,
+          153.8
+        ],
+        [
+          42.3,
+          136.0
+        ]
+      ]
+    },
+    {
+      "id": "tail",
+      "file": "tail.svg",
+      "title": "Serpent curled tail tip",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          258.5,
+          104.8
+        ],
+        [
+          267.5,
+          98.1
+        ],
+        [
+          271.9,
+          136.0
+        ],
+        [
+          254.1,
+          115.9
+        ]
+      ]
+    }
+  ],
+  "tucks": [
+    {
+      "parent": "body",
+      "child": "head",
+      "radius_u": 2.5,
+      "joint_point": [
+        66.9,
+        147.1
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "tail",
+      "radius_u": 2.5,
+      "joint_point": [
+        256.3,
+        142.6
+      ],
+      "joint_window_u": 14
+    }
+  ],
+  "assembly_tree": [
+    {
+      "id": "body",
+      "gid": "horned-serpent-woodcut-body",
+      "part": "body",
+      "children": [
+        {
+          "id": "head",
+          "gid": "horned-serpent-woodcut-head",
+          "part": "head",
+          "pivot": [
+            66.9,
+            147.1
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-5;3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.1s"
+          }
+        },
+        {
+          "id": "tail",
+          "gid": "horned-serpent-woodcut-tail",
+          "part": "tail",
+          "pivot": [
+            256.3,
+            142.6
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;4;-3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "7.3s"
+          }
+        }
+      ]
+    }
+  ],
+  "zoom_crops": [
+    {
+      "label": "Zoomed Head 50% Overlay",
+      "viewbox": [
+        17.8,
+        129.3,
+        53.5,
+        44.6
+      ]
+    },
+    {
+      "label": "Zoomed Tail 50% Overlay",
+      "viewbox": [
+        236.3,
+        86.9,
+        44.6,
+        49.0
+      ]
+    }
+  ]
+}
