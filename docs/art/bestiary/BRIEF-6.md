@@ -25,6 +25,22 @@ cartoons did.
 - **Not the BRIEF-5 versions:** the knotted pair, the swarm and the headline chase from BRIEF-5
   are out.
 
+## Start here: the headline frame's heads
+
+On the live post, the two serpents framing "managing Claudes all day is knackering" have good
+bodies but rough, unmedieval heads.
+
+- **Keep the bodies:** their size, their writhing motion and the frame exactly as they are.
+- **Replace only the heads:** use traced heads, either the roundel's horned hound head
+  (`traced/components/roundel/head.svg`) or the S-initial dragon's horned head. Clean them into
+  bold flat shapes, recolour them to the frame's orange through `--wash`, and give each its jaw
+  and blink.
+- **Keep the snap:** the heads still meet, snap and recoil at the bottom.
+- **The proof:** `ship/proof-headline-heads.html`, showing the frame at its live size beside
+  the current one.
+
+Do this before the knotted pair.
+
 ## The job
 
 1. **Trace the missing specimens and components** with the existing pipeline (the one that made
@@ -72,7 +88,7 @@ cartoons did.
 ## Working
 
 - **One agent:** no /teamwork, /swarm or subagents.
-- **Order:** finish one slot at a time, starting with the knotted pair.
+- **Order:** finish one slot at a time, after the headline heads, starting with the knotted pair.
 - **Each slot ships with:**
   - a proof page in `ship/proof-<slot>.html`, showing the creature in its bubble at desktop width
     and at 390 px, at the same size as the slot on the post today;
