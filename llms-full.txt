@@ -1817,6 +1817,10 @@ Replied to Thomas MurphyThe mathematics thing is funny it's li…
 
 hmm idk i think the RH will surely get compressed and then the hillclimb meta is gonna be common knowledge no
 
+❧
+
+**The chart's scope** is five small pieces of the proof, not the whole of it: Cores 1–5, 771 of the 175,187 Lean files in Levent Alpöge's formalisation, about 0.4%, and its −26.6% is measured on those five. The benchmark has since grown to 25 cores, covering 92% of the files, while the check of the whole proof is still in progress. The details are on [the speedrun's site](<https://riemann.verifytask.cn>).
+
 my hillclimb of BWT inversion mathematics is complexifying, but imagine if you formalised it and then some mathematical superagent swarm found insanely rhizomatic burrows that can snip out all the complexities (big if) in a way like they are compressing the RH proof
 
 i kind of see how that could go
