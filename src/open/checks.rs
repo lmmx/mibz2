@@ -384,3 +384,159 @@ fn full_nonzero_tail_links_to_its_overflow_chunk() {
     outq::Reader::new(&out, &spill, &heads, 2).wire(&mut decoded, 0);
     assert!(decoded.into_iter().eq(1..=514));
 }
+
+/// A column of exactly `m` retained rows (thin runs of 1 to 16 rows over bytes 0 to 3) with
+/// `thick` thick runs of 17 to 200 rows over bytes 10 and 11 between them, which retain no row
+/// and give the construction words to spell. The marked row is a thin one.
+fn column_of_retained(g: &mut super::b5::Lcg, m: usize, thick: usize) -> Vec<u8> {
+    let mut thin = Vec::with_capacity(m);
+    while thin.len() < m {
+        let c = g.below(4) as u8;
+        // a thin run never joins the last one, so each stays at most 16 rows
+        let c = if thin.last() == Some(&c) {
+            (c + 1) % 4
+        } else {
+            c
+        };
+        let w = (1 + g.below(16) as usize).min(m - thin.len());
+        thin.extend(std::iter::repeat_n(c, w));
+    }
+    let mut l = Vec::with_capacity(m + 200 * thick);
+    let every = m / (thick + 1);
+    for (i, &c) in thin.iter().enumerate() {
+        l.push(c);
+        if thick > 0 && i % every == every - 1 && i / every < thick {
+            let t = 10 + (i / every % 2) as u8;
+            l.extend(std::iter::repeat_n(t, 17 + g.below(184) as usize));
+        }
+    }
+    l
+}
+
+/// The open kernel on columns of retained rows on both sides of the one-ended route's line
+/// (`ONE_ENDED_MOST`) and exactly at it, and at master's old line (65,536 rows), with the
+/// marked row in each of the thin bytes: the block's bytes equal the plain inverse's, and the
+/// route is the one the line gives.
+#[test]
+fn both_routes_at_and_around_the_one_ended_line() {
+    let mut g = super::b5::Lcg(29);
+    let mut kernel = Kernel::default();
+    let mut out = Vec::new();
+    let line = ONE_ENDED_MOST as usize;
+    for m in [65_535, 65_536, 65_537, line - 1, line, line + 1] {
+        for thick in [0, 40] {
+            let l = column_of_retained(&mut g, m, thick);
+            let r = Runs::of_column(&l);
+            let mut seen = [false; 4];
+            for p in (0..l.len()).step_by(l.len() / 23) {
+                let c = l[p];
+                if c > 3 || seen[usize::from(c)] {
+                    continue;
+                }
+                seen[usize::from(c)] = true;
+                let stats =
+                    kernel.run::<true, true>(r.records(), l.len(), p as u32, LIMIT, &mut out);
+                assert_eq!(stats.retained, m);
+                assert_eq!(kernel.predecessor.is_some(), m > line, "m {m}");
+                assert!(
+                    out == super::b5::plain(&l, p as u32),
+                    "m {m}, thick {thick}, p {p}"
+                );
+            }
+            assert!(seen.iter().all(|&s| s), "m {m}: a mark in every thin byte");
+        }
+    }
+}
+
+/// Each retained rank's destination row and spelled word, by the bands the construction made
+fn ranks_by_band(k: &Kernel) -> Vec<(u32, Vec<u8>)> {
+    let mut ranks = Vec::new();
+    let mut from = 0;
+    for b in &k.bands {
+        let code = b.code() as usize;
+        let word = if k.lens[code] == LONG {
+            long_word(&k.inline16[code], &k.spelling).to_vec()
+        } else {
+            k.inline16[code][..usize::from(k.lens[code])].to_vec()
+        };
+        for r in from..b.end() {
+            ranks.push((b.dst() + (r - from), word.clone()));
+        }
+        from = b.end();
+    }
+    ranks
+}
+
+/// The bands coalesced and as built, on the same columns: the plain inverse's bytes either
+/// way, every retained rank sent to the same row with the same word, no more bands coalesced
+/// (and fewer on some column), and coalesced bands ending only where built ones do. Small
+/// columns of every shape, columns with long words, and full columns past the line.
+#[test]
+fn coalesced_bands_send_each_rank_where_the_built_ones_do() {
+    let mut g = super::b5::Lcg(17);
+    let mut columns: Vec<Vec<u8>> = Vec::new();
+    for mut z in 0..3usize.pow(7) {
+        columns.push(
+            (0..7)
+                .map(|_| {
+                    let c = z % 3;
+                    z /= 3;
+                    c as u8
+                })
+                .collect(),
+        );
+    }
+    for (n, alphabet, mean) in [(5_000, 4, 6), (40_000, 3, 18), (120_000, 6, 18)] {
+        columns.push(super::b5::runs_column(&mut g, n, alphabet, mean));
+    }
+    columns.push(column_of_retained(&mut g, 70_000, 300));
+    // text: this kernel's own source, and records that repeat their keys, as Wikidata's do
+    let source = include_str!("../open.rs").as_bytes();
+    let mut records = Vec::new();
+    for i in 0..1_500u32 {
+        let v = g.below(1_000_000);
+        records.extend_from_slice(
+            format!("{{\"id\":\"Q{i}\",\"type\":\"item\",\"claims\":{{\"P31\":[{v}]}}}}\n")
+                .as_bytes(),
+        );
+    }
+    for text in [&source[..source.len().min(12_000)], &records[..]] {
+        columns.push(bwt_of(text).0);
+    }
+    let mut fewer = false;
+    for l in &columns {
+        let r = Runs::of_column(l);
+        for p in [0, l.len() / 2, l.len() - 1] {
+            let mut built = Vec::new();
+            for coalesce in [false, true] {
+                let mut k = Kernel::default();
+                k.endpoint.coalesce = Some(coalesce);
+                let mut out = Vec::new();
+                k.run::<true, true>(r.records(), l.len(), p as u32, LIMIT, &mut out);
+                assert!(out == super::b5::plain(l, p as u32), "n {}, p {p}", l.len());
+                let ends: Vec<u32> = k.bands.iter().map(|b| b.end()).collect();
+                built.push((ranks_by_band(&k), ends));
+            }
+            let ((r0, e0), (r1, e1)) = (&built[0], &built[1]);
+            assert!(r0 == r1, "n {}, p {p}", l.len());
+            assert!(e1.len() <= e0.len());
+            assert!(e1.iter().all(|e| e0.binary_search(e).is_ok()));
+            fewer |= e1.len() < e0.len();
+        }
+    }
+    assert!(fewer, "some column coalesces");
+}
+
+/// The BWT column of `text` (its rotations sorted, each one's last byte)
+fn bwt_of(text: &[u8]) -> (Vec<u8>, u32) {
+    let n = text.len();
+    let mut rot: Vec<usize> = (0..n).collect();
+    rot.sort_by(|&a, &b| {
+        text[a..]
+            .iter()
+            .chain(&text[..a])
+            .cmp(text[b..].iter().chain(&text[..b]))
+    });
+    let column = rot.iter().map(|&r| text[(r + n - 1) % n]).collect();
+    (column, rot.iter().position(|&r| r == 0).unwrap() as u32)
+}
