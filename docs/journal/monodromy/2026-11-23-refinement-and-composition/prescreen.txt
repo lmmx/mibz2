@@ -1,0 +1,27 @@
+Pre-screen, 23 November 2026. NOT the i9-10900K: this session's container,
+Intel Xeon @ 2.30GHz (VM), L2 2 MiB/core, gcc -O2 -march=native, best of 15 repetitions.
+Synthetic uniform random m-cycle (Law 3 stand-in for the retained core), 8-byte entries {next, word id}.
+"chase T": two chains, half the cycle each, one word id written per row.
+"gather T^2 + chase T^2": one pass N2[i] = T[T[i].next].next (4-byte array), then two chains on N2;
+the two word ids of each step are read from T at s and T(s), off the critical path.
+
+squared-trace-prescreen.c.txt, two invocations:
+m 32768: chase T 2.26 ns/row | gather T^2 0.40 ns/row + chase T^2 1.00 ns/row = 1.40 ns/row | ratio 0.620
+m 89874: chase T 3.05 ns/row | gather T^2 0.45 ns/row + chase T^2 1.38 ns/row = 1.83 ns/row | ratio 0.600
+m 114000: chase T 3.25 ns/row | gather T^2 0.46 ns/row + chase T^2 1.57 ns/row = 2.03 ns/row | ratio 0.622
+m 156404: chase T 4.46 ns/row | gather T^2 0.61 ns/row + chase T^2 3.11 ns/row = 3.72 ns/row | ratio 0.834
+m 204281: chase T 7.62 ns/row | gather T^2 0.94 ns/row + chase T^2 5.82 ns/row = 6.77 ns/row | ratio 0.888
+m 89874: chase T 3.06 ns/row | gather T^2 0.44 ns/row + chase T^2 1.49 ns/row = 1.93 ns/row | ratio 0.633
+m 114000: chase T 3.29 ns/row | gather T^2 0.46 ns/row + chase T^2 1.68 ns/row = 2.14 ns/row | ratio 0.651
+m 156404: chase T 3.72 ns/row | gather T^2 0.50 ns/row + chase T^2 2.23 ns/row = 2.73 ns/row | ratio 0.733
+m 204281: chase T 5.16 ns/row | gather T^2 0.62 ns/row + chase T^2 3.77 ns/row = 4.39 ns/row | ratio 0.850
+
+Wide layout (16-byte {next2, w1, w2} entries; the first version, superseded): ratio 1.19-1.86 at m >= 89,874
+(table out of L2). Kept only as the reason the falsifier must use the narrow layout.
+
+fourth-power-prescreen.c.txt (T^2 then T^4 = N2[N2[i]]; allocation hoisted out of the timed loop):
+m 89874: chase T 3.02 ns/row | gather T^2,T^4 0.84 ns/row + chase T^4 1.02 ns/row = 1.86 ns/row | ratio 0.617
+m 114000: chase T 3.75 ns/row | gather T^2,T^4 1.18 ns/row + chase T^4 2.76 ns/row = 3.94 ns/row | ratio 1.050
+m 156404: chase T 3.76 ns/row | gather T^2,T^4 1.11 ns/row + chase T^4 2.57 ns/row = 3.67 ns/row | ratio 0.977
+m 204281: chase T 6.89 ns/row | gather T^2,T^4 1.55 ns/row + chase T^4 4.05 ns/row = 5.60 ns/row | ratio 0.813
+(An earlier T^4 run allocated N4 inside the timed loop and read 1.10-1.91; that was a bench bug, discarded.)
