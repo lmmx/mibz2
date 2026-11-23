@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Proof: Traced Coiled &ldquo;yuck&rdquo; Viper (Brief 6)</title>
+  <style>
+    :root {
+      --bg: #f6eedb; --surface: #fffaf0; --card: #fffdf7;
+      --ink: #140b06; --muted: #5a4636; --border: #140b06;
+    }
+    html[data-theme="dark"] {
+      --bg: #121110; --surface: #1d1b18; --card: #22201c;
+      --ink: #f7f0e2; --muted: #b8aa95; --border: #d9c9aa;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; max-width: 100%; overflow-x: clip;
+      background: var(--bg); color: var(--ink);
+      font: 15px/1.55 Georgia, "Iowan Old Style", serif;
+    }
+    .toolbar {
+      position: sticky; top: 0; z-index: 40;
+      display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      padding: 10px 16px; background: var(--surface); border-bottom: 2px solid var(--border);
+      font: 600 12.5px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .toolbar-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    button {
+      font: inherit; padding: 5px 10px; border-radius: 6px;
+      border: 2px solid var(--border); background: var(--card); color: var(--ink); cursor: pointer;
+    }
+    button.active { background: #1b5cff; color: #fff; border-color: #140b06; }
+    input[type="range"] { width: 150px; }
+    .shell { max-width: 720px; margin: 0 auto; padding: 24px 36px 96px; overflow-x: clip; }
+    body.phone-390 .shell {
+      max-width: 390px; padding: 18px 26px 88px;
+      border-left: 2px dashed var(--muted); border-right: 2px dashed var(--muted);
+    }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    .sub { margin: 0 0 38px; color: var(--muted); font-style: italic; font-size: 14px; }
+    .stage { padding: 40px 12px; display: flex; justify-content: center; }
+    .bubble.yuck {
+      position: relative; background: var(--card); border: 2.5px solid var(--border);
+      border-radius: 18px; padding: 14px 28px; min-width: 132px; text-align: center;
+      font-size: 28px; font-weight: 700; color: #ff2e12; letter-spacing: 0.04em;
+      font-family: "UnifrakturMaguntia", "Old English Text MT", "Blackletter", Georgia, serif;
+      box-shadow: 3px 3px 0 rgba(20,11,6,0.12);
+    }
+    .status { margin-top: 32px; font: 600 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <button id="btn-play" type="button">Pause</button>
+      <input id="scrubber" type="range" min="0" max="1000" value="0" aria-label="Scrub timeline">
+      <span id="time-out">t=0.00s</span>
+      <button class="beat" data-frac="0.14" type="button">14% Glide</button>
+      <button class="beat" data-frac="0.36" type="button">36% Peek</button>
+      <button class="beat" data-frac="0.78" type="button">78% Coil</button>
+    </div>
+    <div class="toolbar-group">
+      <button id="btn-theme" type="button">Dark mode</button>
+      <button id="btn-390" type="button">390 px</button>
+    </div>
+  </div>
+
+  <main class="shell">
+    <h1>&ldquo;yuck&rdquo; &mdash; Traced Coiled Viper (No Bounce)</h1>
+    <p class="sub">Small potrace-traced bestiary viper (14 overlapping body segments + cute animated head &amp; jaw) coiled smoothly round the &ldquo;yuck&rdquo; bubble. Zero bounce, zero wind-up.</p>
+
+    <div class="stage">
+      <div class="bubble yuck" id="yuck-bubble">yuck</div>
+    </div>
+
+    <div class="status" id="status-out"></div>
+  </main>
+
+  <script src="./traced-rig.js"></script>
+  <script src="./yuck.js"></script>
+  <script>
+    (function () {
+      const DUR = 11.5;
+      const bubble = document.getElementById('yuck-bubble');
+      const scrubber = document.getElementById('scrubber');
+      const timeOut = document.getElementById('time-out');
+      const btnPlay = document.getElementById('btn-play');
+      const btnTheme = document.getElementById('btn-theme');
+      const btn390 = document.getElementById('btn-390');
+      const statusOut = document.getElementById('status-out');
+      let svg = null, paused = false;
+
+      function mountAll() {
+        if (svg && svg.parentNode) svg.parentNode.removeChild(svg);
+        const narrow = document.body.classList.contains('phone-390') || window.innerWidth <= 420;
+        svg = BestiarySlots.mountYuck(bubble, { scale: narrow ? 0.80 : 0.92, dur: DUR });
+        statusOut.textContent = `Mounted traced coiled yuck viper | viewport: ${document.documentElement.clientWidth}px | scrollWidth: ${document.documentElement.scrollWidth}px`;
+      }
+
+      function setPaused(p) {
+        paused = p;
+        if (svg) {
+          svg.dataset.bestiaryManualPause = p ? '1' : '0';
+          if (p) svg.pauseAnimations(); else svg.unpauseAnimations();
+        }
+        btnPlay.textContent = p ? 'Play' : 'Pause';
+      }
+
+      btnPlay.addEventListener('click', () => setPaused(!paused));
+      scrubber.addEventListener('input', () => {
+        setPaused(true);
+        const t = (parseFloat(scrubber.value) / 1000) * DUR;
+        if (svg && svg.setCurrentTime) svg.setCurrentTime(t);
+        timeOut.textContent = `t=${t.toFixed(2)}s`;
+      });
+      document.querySelectorAll('.beat').forEach((b) => {
+        b.addEventListener('click', () => {
+          setPaused(true);
+          const t = parseFloat(b.dataset.frac) * DUR;
+          if (svg && svg.setCurrentTime) svg.setCurrentTime(t);
+          timeOut.textContent = `t=${t.toFixed(2)}s`;
+          scrubber.value = String(Math.round(parseFloat(b.dataset.frac) * 1000));
+        });
+      });
+      btnTheme.addEventListener('click', () => {
+        const html = document.documentElement;
+        const dark = html.getAttribute('data-theme') === 'dark';
+        html.setAttribute('data-theme', dark ? 'light' : 'dark');
+        btnTheme.textContent = dark ? 'Dark mode' : 'Light mode';
+        btnTheme.classList.toggle('active', !dark);
+      });
+      btn390.addEventListener('click', () => {
+        const on = document.body.classList.toggle('phone-390');
+        btn390.classList.toggle('active', on);
+        requestAnimationFrame(mountAll);
+      });
+      window.addEventListener('resize', () => setTimeout(mountAll, 120));
+      mountAll();
+    }());
+  </script>
+</body>
+</html>

@@ -310,8 +310,9 @@
     </section>
   </main>
 
-  <script src="./crawler.js"></script>
-  <script src="./headline-frame.js"></script>
+  <script src="../crawler/crawler.js"></script>
+  <script src="./traced-rig.js"></script>
+  <script src="./headline-heads.js"></script>
   <script src="./burrowers.js"></script>
   <script src="./knotted-pair.js"></script>
   <script src="./moonwalker.js"></script>
@@ -331,8 +332,8 @@
       function mountAll() {
         clearRigs();
 
-        // Slot 1: Headline frame
-        mounted.push(BestiarySlots.mountHeadlineFrame(document.getElementById('slot-headline')));
+        // Slot 1: Headline frame (existing bodies + potrace-traced roundel horned heads)
+        mounted.push(BestiarySlots.mountHeadlineHeads(document.getElementById('slot-headline')));
 
         // Slot 2: Burrowers (four)
         BestiarySlots.mountBurrower({
