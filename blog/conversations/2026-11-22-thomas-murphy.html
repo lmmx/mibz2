@@ -1206,9 +1206,8 @@ const BESTIARY_HEADS = {
     const tHole = tt[UU.findIndex(u => u >= hU)];
     const tIn = Math.max(.05, tHole - .045);
     const head = el('g', { opacity: 0 }, svg);
-    // the head stays whole to the hole's rim, then pops: it shrinks to its own centre in about a tenth
-    // of a second and is gone
-    const tPop = Math.max(tIn, tHole - .011);
+    // the head dwindles to its neck, a vanishing point, as it follows the body in: it rides behind the
+    // body, inside the group that draws the whole snake down into the hole, so it never parts from it
     anim(head, { attributeName: 'opacity', values: '0;1;1;0;0', keyTimes: `0;.015;${tHole.toFixed(4)};${(tHole + .002).toFixed(4)};1`, ...cyc });
     el('animateMotion', { path: d, rotate: 'auto', keyPoints: UU.map(u => Math.min(1, u / hU).toFixed(4)).join(';'),
       keyTimes: kt, calcMode: 'spline', keySplines: ease, ...cyc }, head);
@@ -1216,12 +1215,11 @@ const BESTIARY_HEADS = {
     const lk = [[0, 0], ...st.look, [1, 0]];
     anim(look, { attributeName: 'transform', type: 'rotate', values: lk.map(x => x[1] * (dir < 0 ? -1 : 1)).join(';'),
       keyTimes: lk.map(x => x[0].toFixed(3)).join(';'), ...cyc }, 'animateTransform');
-    const hk = wmax * 1.05 / 2.9, hcx = 8 * hk, hcy = (dir < 0 ? 7.5 : -7.5) * hk;   // the hound head's centre
-    const dive = el('g', { transform: `translate(${f2(hcx)},${f2(hcy)})` }, look);
-    const pop = el('g', { class: 'hpop' }, dive);
-    anim(pop, { attributeName: 'transform', type: 'scale', values: '1;1;0;0;1', keyTimes: `0;${tPop.toFixed(4)};${tHole.toFixed(4)};.999;1`,
-      calcMode: 'spline', keySplines: '0 0 1 1;.6 0 1 1;0 0 1 1;0 0 1 1', ...cyc }, 'animateTransform');
-    const hs = el('g', { transform: `translate(${f2(-hcx)},${f2(-hcy)}) scale(${f2(hk)})${dir < 0 ? ' scale(1,-1)' : ''}` }, pop);
+    const hk = wmax * 1.05 / 2.9;
+    const dive = el('g', { class: 'hpop' }, look);
+    anim(dive, { attributeName: 'transform', type: 'scale', values: '1;1;0;0;1', keyTimes: `0;${tIn.toFixed(4)};${tHole.toFixed(4)};.999;1`,
+      calcMode: 'spline', keySplines: '0 0 1 1;.45 0 .8 .6;0 0 1 1;0 0 1 1', ...cyc }, 'animateTransform');
+    const hs = el('g', { transform: `scale(${f2(hk)})${dir < 0 ? ' scale(1,-1)' : ''}` }, dive);
     const KIND = { cautious: 'spotted-serpent', darting: 'aspis', lazy: 'amphisbaena-a', shedding: 'knotted-pair-a', draco: 'draco-bipes' };
     const kp = palOf(KIND[st.name] || 'aspis');
     if (kp) { svg.style.setProperty('--ra', kp[0]); svg.style.setProperty('--rb', kp[1]); svg.style.setProperty('--md', kp[2]); }
@@ -1241,7 +1239,13 @@ const BESTIARY_HEADS = {
         keyTimes: `0;${tHole.toFixed(4)};${Math.max(tHole + .01, tGoneAll - .002).toFixed(4)};.999;1`, ...cyc }, 'animateTransform');
       const inner = el('g', { transform: `translate(${f2(-hx)},${f2(-rimY)})` }, mid);
       inner.appendChild(g);
-      svg.appendChild(head);
+      // the head hides past the hole's rim like the body, but in a column wide enough for its ears, so
+      // the rim takes it level rather than cutting it square
+      const hclip = el('clipPath', { id: `hrim${uid}` }, svg.querySelector('defs'));
+      el('path', { 'clip-rule': 'evenodd', d: `M0,0 H${SW} V${SH} H0Z M${f2(hx - 5 * cw)},${f2(rimY - 400)} H${f2(hx + 5 * cw)} V${f2(rimY)} H${f2(hx - 5 * cw)}Z` }, hclip);
+      const hwrap = el('g', { 'clip-path': `url(#hrim${uid})` });
+      inner.insertBefore(hwrap, g);   // behind the body
+      hwrap.appendChild(head);
     }
     b.appendChild(svg);
   }
