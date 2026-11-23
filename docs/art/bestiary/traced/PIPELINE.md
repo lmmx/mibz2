@@ -92,6 +92,59 @@ Every traced asset must pass four automated checks rendered in headless Chromium
 
 ---
 
+## Detail Pass: Trace the Detail at Full Resolution
+
+The broad fills and the detail are separate layers, composited: the fills (base, wash, wash2) carry
+the shape and the colour, and the ink and highlight layers on top carry everything that makes the
+creature legible: pupils and eye highlights, brows, nostrils, ear and feather lines, scale hatching,
+fur strokes. **Trace the detail layers at full resolution, never at the fills' resolution.**
+
+### Why the first traces looked impressionistic
+
+On the first amphisbaena traces (November 2026) the outline matched the source at 96–98%, but the
+ink only at 50–70%: the creatures read as painterly washes with the line work smudged away. The
+detail layers were being treated like fills:
+- **Resolution:** the ink layer was traced at 750 px (`trace_ink.scale_size`) from a 900 px working
+  image, so hairline strokes merged or vanished.
+- **Smoothing:** a blur near 1 px and a speckle filter of 5–8 px, right for a fill, removed short
+  strokes, dots and the small shapes of an eye.
+- **Ink test:** ink was taken as near-black (`ink_l_max` 28, `ink_c_max` 20). Medieval iron-gall and
+  sepia ink is brown and often faded, so most of the line work fell into the fills.
+
+### The fix: the `-fine` presets
+
+`lib/families/illuminated.py` registers a `-fine` variant of each preset
+(`parchment_pale_subject_fine`, `parchment_drollery_fine`, `gilded_romanesque_fine`,
+`gilded_interlace_compact_fine`, `monochrome_woodcut_fine`). Each keeps its base preset's ground
+removal and fills unchanged, and changes only the detail:
+
+| Setting | Base presets | `-fine` |
+| --- | --- | --- |
+| Working image (`work_size`) | 900 px | 1600 px |
+| Ink and highlight trace (`scale_size`) | 750–900 px | 2000 px |
+| Blur (`blur_radius`) | 0.85–1.1 | 0.35 |
+| Speckle filter (`filter_speckle`) | 5–8 | 2 |
+| Shortest stroke kept (`min_subpath_u`) | 0.35 u | 0.12 u |
+| Ink lightness / chroma limits | 28 / 20 | 40 / 30 |
+| Ink valley test (`ink_valley_delta`, `ink_valley_l_max`) | 12–13, 56–58 | 9, 68 |
+
+Measured on the winged amphisbaena (`8-winged-amphisbaena-linear.jpg`): ink IoU **67.9% → 86.2%**,
+silhouette unchanged (98.3%), 24 KB gzipped. The eyes keep their pupils and highlights; the brows,
+nostrils and ear lines come back.
+
+### Using it
+
+- **Use a `-fine` preset for every painted specimen** from now on. Run the base preset only to
+  compare.
+- **Check the result by eye,** on the zoomed head crops of the sheet, not by the metric: the silhouette
+  IoU is measured against the pipeline's own mask and can stay high while a head is lost entirely.
+  Record the ink IoU before and after.
+- **Pen and pencil drawings:** the `-fine` detail can turn grain into speckle. Compare
+  `monochrome_woodcut` with `monochrome_woodcut_fine` and keep whichever reads cleaner; a faint drawing
+  may first need the contrast-raised copy from `derived/contrast_outline.py`.
+- **Size:** the detail roughly doubles a creature's path data. That is the price of legibility; if a
+  page needs it smaller, simplify the fills, not the ink.
+
 ## Running the Extractor
 
 ```bash
