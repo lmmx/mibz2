@@ -1,0 +1,212 @@
+{
+  "specimen": "winged-amphisbaena-linear",
+  "source_ref": "docs/art/bestiary/refs/louis/8-winged-amphisbaena-linear.jpg",
+  "family": "C",
+  "preset": "parchment_pale_subject",
+  "source_style": "English bestiary miniature on vellum",
+  "date_range": "13th century",
+  "medium": "ink and pigment on vellum",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    300.0,
+    109.33
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 98.16,
+    "silhouette_iou_legacy_pct": 94.01,
+    "ink_iou_pct": 67.89,
+    "boundary_f1_1u_pct": 99.59,
+    "masked_color_rmse": 44.26,
+    "raw_kb": 22.18,
+    "gzip_kb": 8.45,
+    "path_count": 26,
+    "command_count": 1283,
+    "cmd_counts": {
+      "M": 120,
+      "c": 436,
+      "l": 394,
+      "s": 15,
+      "h": 90,
+      "v": 108,
+      "z": 120
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.1,
+      "threshold": 168,
+      "filter_speckle": 8,
+      "corner_threshold": 60,
+      "length_threshold": 6.2,
+      "splice_threshold": 58,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.12,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "wash": {
+      "scale_size": 600,
+      "blur_radius": 0.85,
+      "threshold": 152,
+      "filter_speckle": 16,
+      "corner_threshold": 60,
+      "length_threshold": 9.5,
+      "splice_threshold": 65,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.18,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.6
+    },
+    "highlight": {
+      "scale_size": 650,
+      "blur_radius": 0.65,
+      "threshold": 148,
+      "filter_speckle": 4,
+      "corner_threshold": 60,
+      "length_threshold": 6.5,
+      "splice_threshold": 58,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.15,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "accent": {
+      "scale_size": 650,
+      "blur_radius": 0.75,
+      "threshold": 152,
+      "filter_speckle": 8,
+      "corner_threshold": 60,
+      "length_threshold": 7.5,
+      "splice_threshold": 60,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.16,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.45
+    },
+    "ink": {
+      "scale_size": 750,
+      "blur_radius": 0.85,
+      "threshold": 164,
+      "filter_speckle": 5,
+      "corner_threshold": 60,
+      "length_threshold": 5.8,
+      "splice_threshold": 55,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.13,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/winged-amphisbaena-linear",
+  "components": [
+    {
+      "id": "tail",
+      "file": "tail.svg",
+      "raw_kb": 7.56,
+      "gzip_kb": 3.17,
+      "bbox": [
+        28,
+        30,
+        250,
+        69
+      ]
+    },
+    {
+      "id": "torso",
+      "file": "torso.svg",
+      "raw_kb": 2.13,
+      "gzip_kb": 1.03,
+      "bbox": [
+        80,
+        44,
+        72,
+        36
+      ]
+    },
+    {
+      "id": "wing",
+      "file": "wing.svg",
+      "raw_kb": 3.57,
+      "gzip_kb": 1.61,
+      "bbox": [
+        82,
+        34,
+        99,
+        30
+      ]
+    },
+    {
+      "id": "leg-front",
+      "file": "leg-front.svg",
+      "raw_kb": 1.34,
+      "gzip_kb": 0.7,
+      "bbox": [
+        81,
+        65,
+        33,
+        33
+      ]
+    },
+    {
+      "id": "leg-back",
+      "file": "leg-back.svg",
+      "raw_kb": 1.51,
+      "gzip_kb": 0.77,
+      "bbox": [
+        115,
+        63,
+        41,
+        37
+      ]
+    },
+    {
+      "id": "left-head",
+      "file": "left-head.svg",
+      "raw_kb": 3.32,
+      "gzip_kb": 1.5,
+      "bbox": [
+        8,
+        15,
+        71,
+        36
+      ]
+    },
+    {
+      "id": "right-head",
+      "file": "right-head.svg",
+      "raw_kb": 2.8,
+      "gzip_kb": 1.27,
+      "bbox": [
+        239,
+        16,
+        46,
+        32
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/winged-amphisbaena-linear-master.svg",
+    "sheet": "docs/art/bestiary/traced/winged-amphisbaena-linear-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/winged-amphisbaena-linear-components.png"
+  },
+  "palette": {
+    "wash": "#889595",
+    "wash2": "#7e7666",
+    "warm_mid": "#d9c3ad",
+    "highlight": "#d8d0b8",
+    "ink": "#19100b",
+    "sage": "#9e9c88"
+  },
+  "flaws_fixed": []
+}
