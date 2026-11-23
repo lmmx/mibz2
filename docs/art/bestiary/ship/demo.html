@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bestiary Ship Demo — Decompression is the harder problem</title>
+  <style>
+    :root {
+      --bg: #f6eedb;
+      --surface: #fffaf0;
+      --bubble-a: #fffdf7;
+      --bubble-b: #f0f6ff;
+      --ink: #140b06;
+      --muted: #5a4636;
+      --border: #140b06;
+      --link: #1b5cff;
+      --gold-bg: #fff3bf;
+      --gold-ink: #8a5600;
+      --gold-border: #ffb800;
+      --shadow: rgba(20, 11, 6, 0.12);
+    }
+    html[data-theme="dark"] {
+      --bg: #121110;
+      --surface: #1d1b18;
+      --bubble-a: #22201c;
+      --bubble-b: #182233;
+      --ink: #f7f0e2;
+      --muted: #b8aa95;
+      --border: #d9c9aa;
+      --link: #70a4ff;
+      --gold-bg: #302408;
+      --gold-ink: #ffe169;
+      --gold-border: #ffb800;
+      --shadow: rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      max-width: 100%;
+      overflow-x: clip;
+      background: var(--bg);
+      color: var(--ink);
+      font: 16px/1.55 Georgia, "Iowan Old Style", serif;
+      transition: background 180ms ease, color 180ms ease;
+    }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      padding: 10px 16px;
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      font: 600 13px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .toolbar button {
+      font: inherit;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      background: var(--bubble-a);
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .toolbar button.active {
+      background: #1b5cff;
+      color: #ffffff;
+      border-color: #140b06;
+    }
+    .page-shell {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 34px 96px;
+      overflow-x: clip;
+    }
+    body.preview-390 .page-shell {
+      max-width: 390px;
+      padding: 20px 26px 96px;
+      border-left: 2px dashed var(--muted);
+      border-right: 2px dashed var(--muted);
+    }
+    header.post-head {
+      text-align: center;
+      margin-bottom: 42px;
+    }
+    header.post-head h1 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      line-height: 1.2;
+    }
+    header.post-head p {
+      margin: 0;
+      color: var(--muted);
+      font-style: italic;
+      font-size: 14px;
+    }
+    .thread {
+      display: flex;
+      flex-direction: column;
+      gap: 64px;
+    }
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .msg-row.right { align-items: flex-end; }
+    .msg-row.center { align-items: center; }
+    .slot-tag {
+      font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .bubble {
+      position: relative;
+      background: var(--bubble-a);
+      border: 2.5px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 20px;
+      max-width: min(460px, 100%);
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    .msg-row.right .bubble {
+      background: var(--bubble-b);
+    }
+    .bubble a { color: var(--link); }
+    .headline-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      margin: 14px 0 6px;
+    }
+    .headline-bubble {
+      font-size: 19px;
+      font-weight: 700;
+      text-align: center;
+      padding: 18px 24px;
+    }
+    .gold-caption {
+      font: 700 13px/1.3 Georgia, serif;
+      color: var(--gold-ink);
+      background: var(--gold-bg);
+      border: 2px solid var(--gold-border);
+      border-radius: 999px;
+      padding: 5px 14px;
+      text-align: center;
+    }
+    .perched-wrap {
+      position: relative;
+      padding-top: 72px;
+    }
+    .perched-roundel {
+      position: absolute;
+      top: 0;
+      right: 14px;
+      width: 84px;
+      height: 84px;
+      pointer-events: none;
+    }
+    .burrow-svg {
+      display: block;
+      width: 100%;
+      max-width: 340px;
+      height: auto;
+      overflow: visible;
+    }
+    .bubble.knotted-space {
+      margin-bottom: 54px;
+    }
+    .bubble.swarm-space {
+      margin: 34px 0;
+    }
+    .bubble.yuck {
+      min-width: 128px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+      color: #ff2e12;
+      letter-spacing: 0.04em;
+      font-family: "UnifrakturMaguntia", "Old English Text MT", "Blackletter", Georgia, serif;
+      padding: 14px 26px;
+    }
+    @media (max-width: 420px) {
+      .page-shell { padding: 18px 24px 88px; }
+      .headline-bubble { font-size: 16px; padding: 14px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <span>Bestiary Ship Demo (Brief 5)</span>
+    <div class="toolbar-actions">
+      <button id="btn-theme" type="button">Dark mode</button>
+      <button id="btn-390" type="button">390 px preview</button>
+    </div>
+  </div>
+
+  <main class="page-shell">
+    <header class="post-head">
+      <h1>Decompression is the harder problem</h1>
+      <p>All seven bestiary slots live in one conversation mock (desktop &amp; 390 px, light &amp; dark).</p>
+    </header>
+
+    <section class="thread">
+      <!-- SLOT 1: Headline frame -->
+      <div class="msg-row center">
+        <span class="slot-tag">Slot 1 · Headline frame (Romanesque S-initial + Roundel heads)</span>
+        <div class="headline-wrap">
+          <div class="bubble headline-bubble" id="slot-headline">managing Claudes all day is knackering</div>
+          <div class="gold-caption" id="slot-headline-caption">Of Man&rsquo;s Labours &amp; their Eternal Return</div>
+        </div>
+      </div>
+
+      <!-- SLOT 7: Perched roundel (done, no change) -->
+      <div class="msg-row">
+        <span class="slot-tag">Slot 7 · Perched roundel (done, no change)</span>
+        <div class="perched-wrap">
+          <object class="perched-roundel" data="../traced/romanesque-roundel-animated.svg" type="image/svg+xml" aria-label="Romanesque roundel dragon"></object>
+          <div class="bubble" id="slot-perched">
+            (i.e. you might be able to design a compression format whose decoder is trivial while the encoder does all the heavy lifting)
+          </div>
+        </div>
+      </div>
+
+      <!-- SLOT 2: Burrowers (four) -->
+      <div class="msg-row right">
+        <span class="slot-tag">Slot 2 · Burrower 1/4 (Aberdeen head → &ldquo;o&rdquo;)</span>
+        <div class="bubble">
+          <svg class="burrow-svg" id="slot-burrower-1" width="320" height="62"></svg>
+        </div>
+      </div>
+
+      <div class="msg-row">
+        <span class="slot-tag">Slot 2 · Burrower 2/4 (Calendar head → &ldquo;i&rdquo; dot)</span>
+        <div class="bubble">
+          <svg class="burrow-svg" id="slot-burrower-2" width="320" height="62"></svg>
+        </div>
+      </div>
+
+      <!-- SLOT 3: Knotted pair (place 1 of 3) -->
+      <div class="msg-row">
+        <span class="slot-tag">Slot 3 · Knotted pair 1/3 (Gothic interlace heads)</span>
+        <div class="bubble knotted-space" id="slot-knotted-1">
+          this angle got a lot of attention once we measured where the cycles actually go in inverse BWT.
+        </div>
+      </div>
+
+      <!-- SLOT 4: Moonwalker -->
+      <div class="msg-row right">
+        <span class="slot-tag">Slot 4 · Moonwalker (Border-drollery head &amp; wing)</span>
+        <div class="bubble" id="slot-moonwalker">
+          Watch the <a href="#slot-moonwalker">MOONWALK</a> dragon make a full circuit of this bubble without ever leaving the border.
+        </div>
+      </div>
+
+      <!-- SLOT 2: Burrower 3/4 -->
+      <div class="msg-row">
+        <span class="slot-tag">Slot 2 · Burrower 3/4 (Aberdeen head → &ldquo;o&rdquo;)</span>
+        <div class="bubble">
+          <svg class="burrow-svg" id="slot-burrower-3" width="320" height="62"></svg>
+        </div>
+      </div>
+
+      <!-- SLOT 3: Knotted pair (place 2 of 3) -->
+      <div class="msg-row right">
+        <span class="slot-tag">Slot 3 · Knotted pair 2/3 (Gothic interlace heads)</span>
+        <div class="bubble knotted-space" id="slot-knotted-2">
+          Two parallel strands cinching tight and loosening while sliding along the lower edge.
+        </div>
+      </div>
+
+      <!-- SLOT 5: Gold Swarm -->
+      <div class="msg-row">
+        <span class="slot-tag">Slot 5 · Gold Swarm (by &ldquo;agentic development&rdquo;)</span>
+        <div class="bubble swarm-space" id="slot-swarm">
+          agentic development means the bottleneck shifts from typing code to decompressing what twelve branches just did.
+        </div>
+      </div>
+
+      <!-- SLOT 2: Burrower 4/4 -->
+      <div class="msg-row right">
+        <span class="slot-tag">Slot 2 · Burrower 4/4 (Calendar head → &ldquo;i&rdquo; dot)</span>
+        <div class="bubble">
+          <svg class="burrow-svg" id="slot-burrower-4" width="320" height="62"></svg>
+        </div>
+      </div>
+
+      <!-- SLOT 3: Knotted pair (place 3 of 3) -->
+      <div class="msg-row">
+        <span class="slot-tag">Slot 3 · Knotted pair 3/3 (Gothic interlace heads)</span>
+        <div class="bubble knotted-space" id="slot-knotted-3">
+          And the third knot ties the whole thread back together at the bottom of the scroll.
+        </div>
+      </div>
+
+      <!-- SLOT 6: "yuck" -->
+      <div class="msg-row center">
+        <span class="slot-tag">Slot 6 · &ldquo;yuck&rdquo; (Cute wind-up viper)</span>
+        <div class="bubble yuck" id="slot-yuck">yuck</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./crawler.js"></script>
+  <script src="./headline-frame.js"></script>
+  <script src="./burrowers.js"></script>
+  <script src="./knotted-pair.js"></script>
+  <script src="./moonwalker.js"></script>
+  <script src="./swarm.js"></script>
+  <script src="./yuck.js"></script>
+  <script>
+    (function () {
+      const mounted = [];
+
+      function clearRigs() {
+        while (mounted.length) {
+          const n = mounted.pop();
+          if (n && n.parentNode) n.parentNode.removeChild(n);
+        }
+      }
+
+      function mountAll() {
+        clearRigs();
+
+        // Slot 1: Headline frame
+        mounted.push(BestiarySlots.mountHeadlineFrame(document.getElementById('slot-headline')));
+
+        // Slot 2: Burrowers (four)
+        BestiarySlots.mountBurrower({
+          svgEl: document.getElementById('slot-burrower-1'),
+          phrase: 'decompression loops',
+          startCharIndex: 3, // 'o' in decompression
+          charIndex: 15,     // 'o' in loops
+          kind: 'o',
+          presetIndex: 0
+        });
+        BestiarySlots.mountBurrower({
+          svgEl: document.getElementById('slot-burrower-2'),
+          phrase: 'bitstream indexing',
+          startCharIndex: 1, // 'i' in bitstream
+          charIndex: 15,     // 'i' in indexing
+          kind: 'idot',
+          presetIndex: 1
+        });
+        BestiarySlots.mountBurrower({
+          svgEl: document.getElementById('slot-burrower-3'),
+          phrase: 'blocks on the floor',
+          startCharIndex: 2, // 'o' in blocks
+          charIndex: 16,     // 'o' in floor
+          kind: 'o',
+          presetIndex: 2
+        });
+        BestiarySlots.mountBurrower({
+          svgEl: document.getElementById('slot-burrower-4'),
+          phrase: 'writing inline code',
+          startCharIndex: 2, // 'i' in writing
+          charIndex: 11,     // 'i' in inline
+          kind: 'idot',
+          presetIndex: 3
+        });
+
+        // Slot 3: Knotted pair (three places)
+        mounted.push(BestiarySlots.mountKnottedPair(document.getElementById('slot-knotted-1'), 0));
+        mounted.push(BestiarySlots.mountKnottedPair(document.getElementById('slot-knotted-2'), 1));
+        mounted.push(BestiarySlots.mountKnottedPair(document.getElementById('slot-knotted-3'), 2));
+
+        // Slot 4: Moonwalker
+        mounted.push(BestiarySlots.mountMoonwalker(document.getElementById('slot-moonwalker')));
+
+        // Slot 5: Gold Swarm
+        mounted.push(BestiarySlots.mountSwarm(document.getElementById('slot-swarm')));
+
+        // Slot 6: "yuck"
+        mounted.push(BestiarySlots.mountYuck(document.getElementById('slot-yuck')));
+      }
+
+      const btnTheme = document.getElementById('btn-theme');
+      btnTheme.addEventListener('click', function () {
+        const html = document.documentElement;
+        const dark = html.getAttribute('data-theme') === 'dark';
+        html.setAttribute('data-theme', dark ? 'light' : 'dark');
+        btnTheme.textContent = dark ? 'Dark mode' : 'Light mode';
+        btnTheme.classList.toggle('active', !dark);
+      });
+
+      const btn390 = document.getElementById('btn-390');
+      btn390.addEventListener('click', function () {
+        const narrow = document.body.classList.toggle('preview-390');
+        btn390.classList.toggle('active', narrow);
+        requestAnimationFrame(mountAll);
+      });
+
+      let resizeTimer = null;
+      window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(mountAll, 120);
+      });
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', mountAll);
+      } else {
+        mountAll();
+      }
+    }());
+  </script>
+</body>
+</html>
