@@ -166,8 +166,9 @@ def main(src: str, dst: str, name: str) -> None:
     body = re.sub(r'src="data:([\w/+.-]+);base64,([A-Za-z0-9+/=]+)"', img, body)
     # SVG <image>: the site theme rewrites every relative [href], and an SVG image's href
     # cannot be assigned, so the file goes in xlink:href, which that selector does not match
-    body = re.sub(r'(<image\b[^>]*?)\shref="data:([\w/+.-]+);base64,([A-Za-z0-9+/=]+)"',
-                  lambda m: m.group(1) + " xlink:" + img(_Fake(m.group(2), m.group(3))).replace("src=\"../", "href=\"../../", 1), body)
+    # The data stays inline: a relative file link here is not rewritten by the theme's instant
+    # navigation, so it would resolve against the previous page's URL and break.
+    body = re.sub(r'(<image\b[^>]*?)\shref="(data:[^"]+)"', r'\1 xlink:href="\2"', body)
     # the same for every other SVG element with an href (<use href="#...">, <textPath>, ...)
     body = re.sub(r'(<(?:use|textPath|feImage|mpath)\b[^>]*?)\shref=', r'\1 xlink:href=', body)
     # the post's own hero carries the title and byline
