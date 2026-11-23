@@ -1,0 +1,345 @@
+{
+  "specimen": "sketch-amphisbaena",
+  "title": "Sketched Amphisbaena",
+  "aria_label": "Component-extracted ink sketch of a coiled amphisbaena, a horned head at the right and a second head inside the coil, with plumes and clawed feet",
+  "source_ref": "docs/art/bestiary/traced/derived/11-sketch-amphisbaena-contrast.png",
+  "family": "D",
+  "preset": "monochrome_woodcut",
+  "source_style": "English bestiary underdrawing in ink on vellum",
+  "date_range": "13th century",
+  "medium": "brown ink on vellum",
+  "components_subdir": "sketch-amphisbaena",
+  "root_id": "sketch-amphisbaena-root",
+  "context_style": "parchment",
+  "include_polygons": [
+    [
+      [
+        14.0,
+        24.5
+      ],
+      [
+        293.9,
+        24.5
+      ],
+      [
+        293.9,
+        242.6
+      ],
+      [
+        58.3,
+        242.6
+      ],
+      [
+        58.3,
+        225.1
+      ],
+      [
+        14.0,
+        225.1
+      ]
+    ]
+  ],
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "title": "Amphisbaena sketched coiled body",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          14.0,
+          105.0
+        ],
+        [
+          35.0,
+          70.0
+        ],
+        [
+          70.0,
+          46.7
+        ],
+        [
+          23.3,
+          151.6
+        ],
+        [
+          60.7,
+          130.6
+        ],
+        [
+          105.0,
+          137.6
+        ],
+        [
+          203.0,
+          100.3
+        ],
+        [
+          224.0,
+          121.3
+        ],
+        [
+          163.3,
+          158.6
+        ],
+        [
+          116.6,
+          58.3
+        ]
+      ]
+    },
+    {
+      "id": "head-main",
+      "file": "head-main.svg",
+      "title": "Amphisbaena horned head",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          182.0,
+          74.7
+        ],
+        [
+          163.3,
+          67.7
+        ],
+        [
+          198.3,
+          60.7
+        ],
+        [
+          186.6,
+          88.6
+        ],
+        [
+          217.0,
+          72.3
+        ]
+      ]
+    },
+    {
+      "id": "head-inner",
+      "file": "head-inner.svg",
+      "title": "Amphisbaena inner head",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          102.6,
+          98.0
+        ],
+        [
+          116.6,
+          100.3
+        ],
+        [
+          93.3,
+          95.6
+        ],
+        [
+          121.3,
+          88.6
+        ]
+      ]
+    },
+    {
+      "id": "plume",
+      "file": "plume.svg",
+      "title": "Amphisbaena streaming plumes",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          256.6,
+          81.6
+        ],
+        [
+          268.3,
+          109.6
+        ],
+        [
+          256.6,
+          133.0
+        ],
+        [
+          275.3,
+          140.0
+        ],
+        [
+          249.6,
+          151.6
+        ]
+      ]
+    },
+    {
+      "id": "feet",
+      "file": "feet.svg",
+      "title": "Amphisbaena clawed feet",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          116.6,
+          210.0
+        ],
+        [
+          163.3,
+          221.6
+        ],
+        [
+          210.0,
+          224.0
+        ],
+        [
+          233.3,
+          233.3
+        ],
+        [
+          147.0,
+          237.9
+        ],
+        [
+          98.0,
+          210.0
+        ]
+      ]
+    }
+  ],
+  "tucks": [
+    {
+      "parent": "body",
+      "child": "head-main",
+      "radius_u": 2.5,
+      "joint_point": [
+        200.6,
+        93.3
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "head-inner",
+      "radius_u": 2.5,
+      "joint_point": [
+        130.6,
+        109.6
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "plume",
+      "radius_u": 2.5,
+      "joint_point": [
+        233.3,
+        105.0
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "feet",
+      "radius_u": 2.5,
+      "joint_point": [
+        163.3,
+        205.3
+      ],
+      "joint_window_u": 14
+    }
+  ],
+  "assembly_tree": [
+    {
+      "id": "body",
+      "gid": "sketch-amphisbaena-body",
+      "part": "body",
+      "children": [
+        {
+          "id": "head-main",
+          "gid": "sketch-amphisbaena-head-main",
+          "part": "head-main",
+          "pivot": [
+            186.6,
+            98.0
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-5;3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.1s"
+          }
+        },
+        {
+          "id": "head-inner",
+          "gid": "sketch-amphisbaena-head-inner",
+          "part": "head-inner",
+          "pivot": [
+            130.6,
+            109.6
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;4;-3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "7.3s"
+          }
+        },
+        {
+          "id": "plume",
+          "gid": "sketch-amphisbaena-plume",
+          "part": "plume",
+          "pivot": [
+            233.3,
+            105.0
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-3;2;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "5.9s"
+          }
+        },
+        {
+          "id": "feet",
+          "gid": "sketch-amphisbaena-feet",
+          "part": "feet",
+          "pivot": [
+            163.3,
+            205.3
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;3;-2;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.7s"
+          }
+        }
+      ]
+    }
+  ],
+  "zoom_crops": [
+    {
+      "label": "Zoomed Horned Head 50% Overlay",
+      "viewbox": [
+        130.6,
+        42.0,
+        102.6,
+        70.0
+      ]
+    },
+    {
+      "label": "Zoomed Inner Head 50% Overlay",
+      "viewbox": [
+        74.7,
+        77.0,
+        74.7,
+        51.3
+      ]
+    }
+  ],
+  "source_note": "reference passed through derived/contrast_outline.py so the faint sketch line thresholds"
+}

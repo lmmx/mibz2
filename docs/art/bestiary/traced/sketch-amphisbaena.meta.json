@@ -1,0 +1,185 @@
+{
+  "specimen": "sketch-amphisbaena",
+  "source_ref": "docs/art/bestiary/traced/derived/11-sketch-amphisbaena-contrast.png",
+  "family": "D",
+  "preset": "monochrome_woodcut",
+  "source_style": "English bestiary underdrawing in ink on vellum",
+  "date_range": "13th century",
+  "medium": "brown ink on vellum",
+  "tracing_method": "vtracer-dual-res-stacked",
+  "viewbox": [
+    0.0,
+    0.0,
+    300.0,
+    268.0
+  ],
+  "metrics": {
+    "silhouette_iou_true_pct": 93.19,
+    "silhouette_iou_legacy_pct": 77.51,
+    "ink_iou_pct": 87.91,
+    "boundary_f1_1u_pct": 99.98,
+    "masked_color_rmse": 28.46,
+    "raw_kb": 52.13,
+    "gzip_kb": 18.65,
+    "path_count": 10,
+    "command_count": 4056,
+    "cmd_counts": {
+      "M": 220,
+      "l": 1264,
+      "c": 1155,
+      "v": 545,
+      "h": 604,
+      "z": 220,
+      "s": 48
+    }
+  },
+  "vtracer_config": {
+    "colormode": "binary",
+    "hierarchical": "stacked",
+    "mode": "spline",
+    "base": {
+      "scale_size": 1200,
+      "blur_radius": 1.0,
+      "threshold": 165,
+      "filter_speckle": 6,
+      "corner_threshold": 60,
+      "length_threshold": 5.2,
+      "splice_threshold": 55,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.12,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "wash": {
+      "scale_size": 600,
+      "blur_radius": 0.85,
+      "threshold": 152,
+      "filter_speckle": 16,
+      "corner_threshold": 60,
+      "length_threshold": 9.5,
+      "splice_threshold": 65,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.18,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.6
+    },
+    "highlight": {
+      "scale_size": 650,
+      "blur_radius": 0.65,
+      "threshold": 148,
+      "filter_speckle": 4,
+      "corner_threshold": 60,
+      "length_threshold": 6.5,
+      "splice_threshold": 58,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.15,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    },
+    "accent": {
+      "scale_size": 650,
+      "blur_radius": 0.75,
+      "threshold": 152,
+      "filter_speckle": 8,
+      "corner_threshold": 60,
+      "length_threshold": 7.5,
+      "splice_threshold": 60,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.16,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.45
+    },
+    "ink": {
+      "scale_size": 900,
+      "blur_radius": 0.55,
+      "threshold": 150,
+      "filter_speckle": 3,
+      "corner_threshold": 60,
+      "length_threshold": 4.5,
+      "splice_threshold": 50,
+      "max_iterations": 10,
+      "path_precision": 2,
+      "line_eps": 0.11,
+      "smooth_eps": 0.15,
+      "min_subpath_u": 0.35
+    }
+  },
+  "components_dir": "docs/art/bestiary/traced/components/sketch-amphisbaena",
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "raw_kb": 15.94,
+      "gzip_kb": 6.08,
+      "bbox": [
+        11,
+        24,
+        232,
+        177
+      ]
+    },
+    {
+      "id": "head-main",
+      "file": "head-main.svg",
+      "raw_kb": 10.04,
+      "gzip_kb": 3.98,
+      "bbox": [
+        110,
+        21,
+        138,
+        108
+      ]
+    },
+    {
+      "id": "head-inner",
+      "file": "head-inner.svg",
+      "raw_kb": 14.21,
+      "gzip_kb": 5.49,
+      "bbox": [
+        37,
+        55,
+        105,
+        154
+      ]
+    },
+    {
+      "id": "plume",
+      "file": "plume.svg",
+      "raw_kb": 2.22,
+      "gzip_kb": 1.02,
+      "bbox": [
+        242,
+        128,
+        29,
+        56
+      ]
+    },
+    {
+      "id": "feet",
+      "file": "feet.svg",
+      "raw_kb": 9.71,
+      "gzip_kb": 3.88,
+      "bbox": [
+        90,
+        155,
+        155,
+        91
+      ]
+    }
+  ],
+  "assemblies": {
+    "master": "docs/art/bestiary/traced/sketch-amphisbaena-master.svg",
+    "sheet": "docs/art/bestiary/traced/sketch-amphisbaena-sheet.png",
+    "components_sheet": "docs/art/bestiary/traced/sketch-amphisbaena-components.png"
+  },
+  "palette": {
+    "wash": "#ffffff",
+    "wash2": "#e2d4b7",
+    "ink": "#19100b"
+  },
+  "flaws_fixed": []
+}
