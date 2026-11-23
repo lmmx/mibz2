@@ -1,0 +1,617 @@
+{
+  "specimen": "orange-amphisbaena-gilded",
+  "title": "Orange Amphisbaena in a Gilded Roundel",
+  "aria_label": "Component-extracted orange amphisbaena coiled on a purple field in a green roundel, a green head at the top and a blue head inside the coil, with a blue and green wing and clawed orange legs",
+  "source_ref": "docs/art/bestiary/refs/louis/12-orange-amphisbaena-gilded.jpg",
+  "family": "A",
+  "preset": "painted_field_keyed_fine",
+  "source_style": "English bestiary miniature on gilded vellum",
+  "date_range": "13th century",
+  "medium": "ink, gold leaf and opaque mineral pigments on vellum",
+  "components_subdir": "orange-amphisbaena-gilded",
+  "root_id": "orange-amphisbaena-gilded-root",
+  "context_style": "gilded_roundel",
+  "include_polygons": [
+    [
+      [
+        243.5,
+        149.1
+      ],
+      [
+        242.0,
+        166.8
+      ],
+      [
+        237.4,
+        183.9
+      ],
+      [
+        229.9,
+        200.1
+      ],
+      [
+        219.7,
+        214.6
+      ],
+      [
+        207.1,
+        227.1
+      ],
+      [
+        192.6,
+        237.4
+      ],
+      [
+        176.4,
+        244.8
+      ],
+      [
+        159.4,
+        249.5
+      ],
+      [
+        141.7,
+        251.0
+      ],
+      [
+        124.0,
+        249.5
+      ],
+      [
+        107.0,
+        244.8
+      ],
+      [
+        90.8,
+        237.4
+      ],
+      [
+        76.3,
+        227.1
+      ],
+      [
+        63.7,
+        214.6
+      ],
+      [
+        53.5,
+        200.1
+      ],
+      [
+        46.0,
+        183.9
+      ],
+      [
+        41.3,
+        166.8
+      ],
+      [
+        39.8,
+        149.1
+      ],
+      [
+        41.3,
+        131.5
+      ],
+      [
+        46.0,
+        114.4
+      ],
+      [
+        53.5,
+        98.2
+      ],
+      [
+        63.7,
+        83.7
+      ],
+      [
+        76.3,
+        71.2
+      ],
+      [
+        90.8,
+        60.9
+      ],
+      [
+        107.0,
+        53.5
+      ],
+      [
+        124.0,
+        48.8
+      ],
+      [
+        141.7,
+        47.3
+      ],
+      [
+        159.4,
+        48.8
+      ],
+      [
+        176.4,
+        53.5
+      ],
+      [
+        192.6,
+        60.9
+      ],
+      [
+        207.1,
+        71.2
+      ],
+      [
+        219.7,
+        83.7
+      ],
+      [
+        229.9,
+        98.2
+      ],
+      [
+        237.4,
+        114.4
+      ],
+      [
+        242.0,
+        131.5
+      ]
+    ],
+    [
+      [
+        124.6,
+        240.8
+      ],
+      [
+        150.2,
+        240.8
+      ],
+      [
+        150.2,
+        266.3
+      ],
+      [
+        124.6,
+        266.3
+      ]
+    ],
+    [
+      [
+        191.8,
+        213.1
+      ],
+      [
+        222.7,
+        213.1
+      ],
+      [
+        222.7,
+        235.4
+      ],
+      [
+        191.8,
+        235.4
+      ]
+    ]
+  ],
+  "components": [
+    {
+      "id": "body",
+      "file": "body.svg",
+      "title": "Amphisbaena orange and ivory coiled body",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          63.9,
+          112.9
+        ],
+        [
+          70.3,
+          191.8
+        ],
+        [
+          149.1,
+          213.1
+        ],
+        [
+          223.7,
+          138.5
+        ],
+        [
+          187.5,
+          91.6
+        ],
+        [
+          183.2,
+          70.3
+        ],
+        [
+          63.9,
+          76.7
+        ],
+        [
+          106.5,
+          70.3
+        ],
+        [
+          161.9,
+          102.3
+        ],
+        [
+          234.4,
+          161.9
+        ]
+      ]
+    },
+    {
+      "id": "head-top",
+      "file": "head-top.svg",
+      "title": "Amphisbaena green upper head",
+      "base_layer": "warm_mid",
+      "fine_detail": true,
+      "seeds": [
+        [
+          136.4,
+          70.3
+        ],
+        [
+          147.0,
+          89.5
+        ],
+        [
+          142.8,
+          104.4
+        ],
+        [
+          134.2,
+          85.2
+        ],
+        [
+          147.0,
+          66.1
+        ]
+      ]
+    },
+    {
+      "id": "head-inner",
+      "file": "head-inner.svg",
+      "title": "Amphisbaena blue inner head",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          110.8,
+          125.7
+        ],
+        [
+          119.3,
+          134.2
+        ],
+        [
+          127.8,
+          136.4
+        ],
+        [
+          102.3,
+          132.1
+        ]
+      ]
+    },
+    {
+      "id": "neck",
+      "file": "neck.svg",
+      "title": "Amphisbaena green inner coil",
+      "base_layer": "warm_mid",
+      "fine_detail": true,
+      "seeds": [
+        [
+          89.5,
+          132.1
+        ],
+        [
+          100.1,
+          153.4
+        ],
+        [
+          127.8,
+          164.1
+        ],
+        [
+          149.1,
+          157.7
+        ],
+        [
+          98.0,
+          115.1
+        ]
+      ]
+    },
+    {
+      "id": "wing",
+      "file": "wing.svg",
+      "title": "Amphisbaena blue and green wing",
+      "base_layer": "wash",
+      "fine_detail": true,
+      "seeds": [
+        [
+          174.7,
+          172.6
+        ],
+        [
+          187.5,
+          183.2
+        ],
+        [
+          76.7,
+          176.8
+        ],
+        [
+          119.3,
+          181.1
+        ],
+        [
+          149.1,
+          187.5
+        ],
+        [
+          161.9,
+          168.3
+        ]
+      ]
+    },
+    {
+      "id": "leg-front",
+      "file": "leg-front.svg",
+      "title": "Amphisbaena orange front leg and claws",
+      "base_layer": "warm_mid",
+      "fine_detail": true,
+      "seeds": [
+        [
+          132.1,
+          213.1
+        ],
+        [
+          132.1,
+          234.4
+        ],
+        [
+          136.4,
+          257.8
+        ],
+        [
+          142.8,
+          259.9
+        ]
+      ]
+    },
+    {
+      "id": "leg-back",
+      "file": "leg-back.svg",
+      "title": "Amphisbaena orange back leg and claws",
+      "base_layer": "warm_mid",
+      "fine_detail": true,
+      "seeds": [
+        [
+          174.7,
+          223.7
+        ],
+        [
+          191.8,
+          225.9
+        ],
+        [
+          208.8,
+          228.0
+        ],
+        [
+          213.1,
+          223.7
+        ]
+      ]
+    }
+  ],
+  "tucks": [
+    {
+      "parent": "body",
+      "child": "head-top",
+      "radius_u": 2.5,
+      "joint_point": [
+        147.0,
+        110.8
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "neck",
+      "radius_u": 2.5,
+      "joint_point": [
+        149.1,
+        110.8
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "head-inner",
+      "radius_u": 2.5,
+      "joint_point": [
+        127.8,
+        121.4
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "wing",
+      "radius_u": 2.5,
+      "joint_point": [
+        153.4,
+        176.8
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "leg-front",
+      "radius_u": 2.5,
+      "joint_point": [
+        134.2,
+        204.5
+      ],
+      "joint_window_u": 14
+    },
+    {
+      "parent": "body",
+      "child": "leg-back",
+      "radius_u": 2.5,
+      "joint_point": [
+        170.5,
+        217.3
+      ],
+      "joint_window_u": 14
+    }
+  ],
+  "assembly_tree": [
+    {
+      "id": "body",
+      "gid": "orange-amphisbaena-gilded-body",
+      "part": "body",
+      "children": [
+        {
+          "id": "head-top",
+          "gid": "orange-amphisbaena-gilded-head-top",
+          "part": "head-top",
+          "pivot": [
+            149.1,
+            110.8
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-5;3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.1s"
+          }
+        },
+        {
+          "id": "head-inner",
+          "gid": "orange-amphisbaena-gilded-head-inner",
+          "part": "head-inner",
+          "pivot": [
+            127.8,
+            121.4
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;4;-3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "7.3s"
+          }
+        },
+        {
+          "id": "neck",
+          "gid": "orange-amphisbaena-gilded-neck",
+          "part": "neck",
+          "pivot": [
+            149.1,
+            110.8
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-3;2;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "5.9s"
+          }
+        },
+        {
+          "id": "wing",
+          "gid": "orange-amphisbaena-gilded-wing",
+          "part": "wing",
+          "pivot": [
+            153.4,
+            176.8
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;3;-2;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.7s"
+          }
+        },
+        {
+          "id": "leg-front",
+          "gid": "orange-amphisbaena-gilded-leg-front",
+          "part": "leg-front",
+          "pivot": [
+            134.2,
+            204.5
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;-5;3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "7.1s"
+          }
+        },
+        {
+          "id": "leg-back",
+          "gid": "orange-amphisbaena-gilded-leg-back",
+          "part": "leg-back",
+          "pivot": [
+            170.5,
+            217.3
+          ],
+          "anim": {
+            "type": "rotate",
+            "values": "0;4;-3;0",
+            "keyTimes": "0;.3;.6;1",
+            "keySplines": ".4 0 .6 1;.4 0 .6 1;.4 0 .6 1",
+            "dur": "6.3s"
+          }
+        }
+      ]
+    }
+  ],
+  "zoom_crops": [
+    {
+      "label": "Zoomed Upper Head 50% Overlay",
+      "viewbox": [
+        119.3,
+        55.4,
+        51.1,
+        59.7
+      ]
+    },
+    {
+      "label": "Zoomed Inner Head 50% Overlay",
+      "viewbox": [
+        91.6,
+        110.8,
+        51.1,
+        42.6
+      ]
+    }
+  ],
+  "ground_keys": [
+    [
+      85,
+      88,
+      103,
+      12
+    ],
+    [
+      100,
+      88,
+      108,
+      8
+    ]
+  ],
+  "min_piece_frac": 0.0006
+}
