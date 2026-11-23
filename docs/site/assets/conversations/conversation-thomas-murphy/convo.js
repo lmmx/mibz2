@@ -3247,8 +3247,9 @@ const BESTIARY_HEADS = {
       d = 'M' + q.join(' L') + ` L${f2(hx)},${f2(dotY - 30)}`;
       rimY = dotY;
     }
-    // the calendar-head serpent (traced head, winged body) on the same run, where the bestiary rig is loaded
-    if (window.BestiaryCrawler && b.dataset.story !== 'shedding') {
+    // the calendar-head serpent (traced head, winged body) on the same run, where the bestiary rig is loaded;
+    // the headline frame's ruffed burrower, and any coloured to match its bubble, keep their own
+    if (window.BestiaryCrawler && b.dataset.story !== 'shedding' && !b.dataset.ruff && !b.dataset.col) {
       const k = uid % 2, holeY = up ? rimY : hy;
       BestiaryCrawler.ensureSharedDefs(svg);
       svg.appendChild(BestiaryCrawler.makeCrawler({
