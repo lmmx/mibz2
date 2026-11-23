@@ -2,9 +2,9 @@
   "specimen": "greek-winged-serpent",
   "title": "Greek Winged Serpent",
   "aria_label": "Component-extracted Byzantine winged serpent with a scaled grey-green body, pale belly, a bat-like eyed wing and a crested head with a red tongue",
-  "source_ref": "docs/art/bestiary/refs/louis/5-greek-winged-serpent.png",
+  "source_ref": "docs/art/bestiary/traced/derived/5-greek-winged-serpent-x3.png",
   "family": "C",
-  "preset": "parchment_pale_subject_fine",
+  "preset": "parchment_pale_subject_fine_dark",
   "source_style": "Greek manuscript miniature on paper",
   "date_range": "15th century",
   "medium": "ink and pigment on paper",
@@ -50,12 +50,12 @@
         133.5
       ],
       [
-        285.0,
-        120.0
+        291.6,
+        118.8
       ],
       [
-        288.0,
-        99.0
+        291.6,
+        103.2
       ],
       [
         279.0,
@@ -191,6 +191,10 @@
         [
           279.0,
           111.0
+        ],
+        [
+          284.4,
+          111.6
         ]
       ]
     },

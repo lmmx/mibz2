@@ -112,3 +112,22 @@ if _gr is not None:
 # saturated. These variants keep the full-resolution detail with a strict chroma limit on ink.
 _fine("gilded_interlace_compact", "gilded_interlace_compact_fine_lapis", ink_c_max=16.0)
 _fine("gilded_romanesque", "gilded_romanesque_fine_lapis", ink_c_max=16.0)
+
+
+def _fine_dark(base_name: str, name: str, ink_c_max: float, ink_l_max: float, ink_valley_l_max: float) -> None:
+    """A '-fine' variant for dark, near-black pigment that must not all count as ink: only the
+    darkest and least saturated pixels are ink, so scales and spots in a dark body stay as detail."""
+    base = _REGISTRY.get(base_name)
+    if base is None:
+        return
+    register_preset(
+        name,
+        replace(base, name=name,
+                pigments=replace(base.pigments, ink_l_max=ink_l_max, ink_c_max=ink_c_max,
+                                 ink_valley_l_max=ink_valley_l_max)),
+    )
+
+
+# the strict-ink variants below need the fine presets registered first
+_fine("parchment_pale_subject", "parchment_pale_subject_fine_lapis", ink_c_max=16.0)
+_fine_dark("parchment_pale_subject_fine_lapis", "parchment_pale_subject_fine_dark", 16.0, 9.0, 22.0)
