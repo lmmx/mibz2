@@ -14,23 +14,23 @@
     158.0
   ],
   "metrics": {
-    "silhouette_iou_true_pct": 98.07,
-    "silhouette_iou_legacy_pct": 93.66,
-    "ink_iou_pct": 49.8,
-    "boundary_f1_1u_pct": 99.8,
-    "masked_color_rmse": 45.52,
-    "raw_kb": 11.23,
+    "silhouette_iou_true_pct": 98.29,
+    "silhouette_iou_legacy_pct": 94.18,
+    "ink_iou_pct": 49.99,
+    "boundary_f1_1u_pct": 99.76,
+    "masked_color_rmse": 46.25,
+    "raw_kb": 11.17,
     "gzip_kb": 4.55,
     "path_count": 9,
-    "command_count": 781,
+    "command_count": 720,
     "cmd_counts": {
-      "M": 75,
-      "l": 238,
-      "c": 226,
-      "v": 75,
-      "h": 88,
-      "z": 75,
-      "s": 4
+      "M": 73,
+      "l": 222,
+      "c": 229,
+      "h": 68,
+      "s": 5,
+      "v": 50,
+      "z": 73
     }
   },
   "vtracer_config": {
@@ -113,37 +113,37 @@
     {
       "id": "body",
       "file": "body.svg",
-      "raw_kb": 7.93,
-      "gzip_kb": 3.28,
+      "raw_kb": 7.56,
+      "gzip_kb": 3.18,
       "bbox": [
         42,
-        25,
-        218,
-        107
+        29,
+        222,
+        103
       ]
     },
     {
       "id": "left-head",
       "file": "left-head.svg",
-      "raw_kb": 1.54,
-      "gzip_kb": 0.78,
+      "raw_kb": 1.81,
+      "gzip_kb": 0.89,
       "bbox": [
-        21,
-        10,
-        48,
+        22,
+        11,
+        56,
         42
       ]
     },
     {
       "id": "right-head",
       "file": "right-head.svg",
-      "raw_kb": 1.82,
-      "gzip_kb": 0.9,
+      "raw_kb": 1.85,
+      "gzip_kb": 0.91,
       "bbox": [
         233,
         5,
         53,
-        34
+        35
       ]
     }
   ],
@@ -153,13 +153,13 @@
     "components_sheet": "docs/art/bestiary/traced/crescent-amphisbaena-components.png"
   },
   "palette": {
-    "wash": "#85614c",
-    "wash2": "#57616e",
+    "wash": "#846146",
+    "wash2": "#5c6573",
     "warm_mid": "#d9c3ad",
-    "highlight": "#ddc8b4",
+    "highlight": "#d9c4b1",
     "ink": "#19100b",
-    "sage": "#6d7868",
-    "crimson": "#92453d"
+    "sage": "#6e7869",
+    "crimson": "#93453e"
   },
   "flaws_fixed": []
 }
