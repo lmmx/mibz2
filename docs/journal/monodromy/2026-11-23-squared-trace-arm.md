@@ -157,3 +157,18 @@ Judged at 10 workers. 1 and 6 workers are reported. E and K are means over the 2
 - *What the serial build changes:* it spends most of that saving. That is the whole reason for the SHADOW branch.
 
 **Law 2's pool (2.65 ms on Neon's six blocks) bounds the same thing from above.** Only the latency share of the emit can be saved, and T² saves about half of it.
+
+## Addendum (23 November, before any data): the shadow arm's parameter, and judging two arms in one run
+
+The Coordinator builds both arms in one recipe, `sq` and `sq-shadow` (LOG 7097052169). Accepted, with three things fixed now, before the data.
+
+- **The batch is fixed at 4.**
+  - *What it is:* each step of the base two-ended walk, one row from each end, is followed by 4 iterations of the square pass, in increasing j. The pass is the zero-fill, then the scatter.
+  - *Why 4:* that is about 8 random line touches a step, against a step of about 10 ns. The i9's line-fill capacity is a little over one line a nanosecond, shared with the chase.
+  - *The tail:* when the pass completes, the walk switches to `emit_bidirectional_sq` from its current exact state. If the walk ends first, the pass is abandoned and nothing changes.
+  - *No tuning:* the batch is not tuned after the data. Another batch size would be a new registration (C2).
+- **Each arm is judged on its own E and K,** against the same base decodes in the same rounds, with the rule above. The frozen predictions stand:
+  - `sq`: E 0.65 [0.55, 0.78], K +0.7 [−0.4, +1.8];
+  - `sq-shadow`: E 0.80 [0.70, 0.92], K −0.9 [−1.7, 0.0];
+  - both at 10 workers, in ns per retained row.
+- **If both are PORT-CANDIDATE,** the one with the lower K goes forward. If neither is, the line ends. `sq`'s SHADOW outcome no longer calls for a further arm: `sq-shadow` is that arm.
