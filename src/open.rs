@@ -113,6 +113,9 @@ pub struct Kernel {
     extra: Vec<u32>,
     inline16: Vec<[u8; INLINE]>,
     lens: Vec<u8>,
+    /// (research only, `squared-trace`) the block's arm and the T² arms' scratch
+    #[cfg(feature = "squared-trace")]
+    sq: squared::Scratch,
 }
 
 // Production records cap a run at 127. Selection is on maximal runs.
@@ -524,10 +527,27 @@ impl Kernel {
             edges.fill(0);
             let mut predecessor = mark;
             let mut k = 0;
+            // (research only, `squared-trace`: record 93 §2(a)) the T² arms record `succ`
+            #[cfg(feature = "squared-trace")]
+            let mut succ = self.sq.succ_for(m as usize);
             for a in 0..256 {
                 let end = cursors.get(a + 1).copied().unwrap_or(self.bands.len());
                 let mut queue = outq::Reader::new(out, &self.spill, heads, a);
                 for &band in &self.bands[cursors[a]..end] {
+                    #[cfg(feature = "squared-trace")]
+                    if let Some(succ) = succ.as_deref_mut() {
+                        queue.wire_xor_succ(
+                            edges,
+                            succ,
+                            band.dst() as usize,
+                            (band.end() - k) as usize,
+                            band.code() << bits,
+                            mark,
+                            &mut predecessor,
+                        );
+                        k = band.end();
+                        continue;
+                    }
                     queue.wire_xor(
                         edges,
                         band.dst() as usize,
@@ -619,15 +639,101 @@ impl Kernel {
         out: &mut Vec<u8>,
     ) -> Option<Counts> {
         assert!(n > 0 && n <= 900_000 && (p as usize) < n);
-        let (stats, mark, bits) =
-            self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
+        // (research only, `emit-cost`: the stages timed and the arm switched, `recorded`)
+        #[cfg(feature = "emit-cost")]
+        {
+            self.recorded::<INDUCE, QUEUE>(crate::emit_cost::arm(), records, n, p, limit, cap, out)
+        }
+        #[cfg(not(feature = "emit-cost"))]
+        {
+            let (stats, mark, bits) =
+                self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)?;
+            self.walk(n, stats.retained, mark, bits, out);
+            Some(stats)
+        }
+    }
+
+    /// (research only, `emit-cost`) `try_run` under `arm`, its block recorded
+    /// (`src/emit_cost.rs`): four clock reads, construct | square | emit, in every arm
+    #[cfg(feature = "emit-cost")]
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn recorded<const INDUCE: bool, const QUEUE: bool>(
+        &mut self,
+        arm: crate::emit_cost::Arm,
+        records: &[u16],
+        n: usize,
+        p: u32,
+        limit: u32,
+        cap: Cap,
+        out: &mut Vec<u8>,
+    ) -> Option<Counts> {
+        use crate::emit_cost::{ns, record, Rec};
+        #[cfg(feature = "squared-trace")]
+        self.sq.begin(arm);
+        #[cfg(not(feature = "squared-trace"))]
+        let _ = arm;
+        let t0 = std::time::Instant::now();
+        let Some((stats, mark, bits)) =
+            self.construct_capped::<INDUCE, QUEUE>(records, n as u32, p, limit, cap, out)
+        else {
+            record(Rec {
+                n: n as u32,
+                m: 0,
+                construct_ns: ns(t0.elapsed()),
+                square_ns: 0,
+                emit_ns: 0,
+                bidi: false,
+                refused: true,
+                arm,
+                sq_rounds: false,
+                scratch: 0,
+            });
+            return None;
+        };
+        let t1 = std::time::Instant::now();
+        // the serial square pass (`Sq`, two-ended blocks only; record 93 §2(b))
+        #[cfg(feature = "squared-trace")]
+        if arm == crate::emit_cost::Arm::Sq && self.predecessor.is_some() {
+            self.sq.square(stats.retained);
+        }
+        let t2 = std::time::Instant::now();
         self.walk(n, stats.retained, mark, bits, out);
+        let t3 = std::time::Instant::now();
+        #[cfg(feature = "squared-trace")]
+        let (sq_rounds, scratch) = (self.sq.rounds, self.sq.bytes());
+        #[cfg(not(feature = "squared-trace"))]
+        let (sq_rounds, scratch) = (false, 0);
+        record(Rec {
+            n: n as u32,
+            m: stats.retained as u32,
+            construct_ns: ns(t1 - t0),
+            square_ns: ns(t2 - t1),
+            emit_ns: ns(t3 - t2),
+            bidi: self.predecessor.is_some(),
+            refused: false,
+            arm,
+            sq_rounds,
+            scratch,
+        });
         Some(stats)
     }
 
     /// The walk from the marked row using the constructed dictionary: the block's bytes into `out`
     fn walk(&mut self, n: usize, m: usize, mark: u32, bits: u32, out: &mut Vec<u8>) {
         if let Some(before) = self.predecessor {
+            // (research only, `squared-trace`) the T² arms' two-ended emit (`open/squared.rs`)
+            #[cfg(feature = "squared-trace")]
+            if self.sq.arm != crate::emit_cost::Arm::Base {
+                let t = squared::Tables {
+                    edges: &self.edges[..m],
+                    spelling: &self.spelling,
+                    inline: &self.inline16,
+                    lens: &self.lens,
+                    bits,
+                };
+                self.sq.emit(&t, n, mark, before, out);
+                return;
+            }
             emit_bidirectional(
                 &self.edges[..m],
                 &self.spelling,
@@ -1051,6 +1157,9 @@ fn records_of(l: &[u8]) -> Vec<u16> {
 
 mod endpoint;
 mod outq;
+// (research only: the T² two-ended emit arms, MONODROMY record 93, with `squared-trace`)
+#[cfg(feature = "squared-trace")]
+mod squared;
 
 #[cfg(test)]
 mod checks;

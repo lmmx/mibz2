@@ -60,6 +60,13 @@ jobs:
           git ls-files 'docs/**/*.md' '*.md' | sort -u | xargs cat | bzip2 -9 > prose.bz2
           cargo run --release --features induction-trace --example induction_trace -- prose.bz2 irec 1 0
           python3 bench/irec.py irec --check
+      # the T² emit arms (bench-emit-cost-sq, docs/journal/2026-11-23-emit-cost-sq-registration.md):
+      # every arm the plain inverse's bytes on arbitrary columns, real BWTs, periodic blocks and
+      # every cycle length at the hand-back; every arm through the lazy workers on the corpora
+      - name: The T² emit arms and the emit-cost recorder (research feature)
+        run: |
+          cargo test --release --features squared-trace --lib -- emit_cost:: open::squared::
+          cargo test --release --features squared-trace --test emit_cost_sq
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::
@@ -204,6 +211,11 @@ jobs:
       # repository, the machine lock, one repository's failure not stopping the other
       - name: The workstation queue, several repositories
         run: python3 bench/test_run_queue_multi.py
+      # bench-emit-cost-sq's verdict (bench/emit_cost_sq.py) on synthetic records: each class
+      # and decision where the frozen rule puts it, E and K recovered, and no verdict from
+      # incomplete or inconsistent records
+      - name: The T² emit arms' verdict (synthetic records)
+        run: python3 bench/test_emit_cost_sq.py
       # bench-cells-dose's statistic, rule and validity (bench/dose.py) on synthetic grids
       - name: The dose experiment's verdict
         run: python3 bench/test_dose.py

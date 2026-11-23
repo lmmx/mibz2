@@ -322,6 +322,103 @@ impl<'a> Reader<'a> {
         }
     }
 
+    /// (research only, `squared-trace`: MONODROMY record 93 §2(a)) `wire_xor`, also recording
+    /// each arrow's head, `succ[u] = v` (T(u) = v), for the square pass. The stores run over
+    /// `dst_start..dst_start + span` in order, sequential within the band. Otherwise exactly
+    /// `wire_xor` and `wire_xor_slow`
+    #[cfg(feature = "squared-trace")]
+    #[inline(always)]
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn wire_xor_succ(
+        &mut self,
+        edges: &mut [u32],
+        succ: &mut [u32],
+        dst_start: usize,
+        span: usize,
+        pack: u32,
+        mark: u32,
+        predecessor: &mut u32,
+    ) {
+        if self.at + span <= CHUNK && self.read + span as u32 <= self.cut && self.id < self.in_out {
+            let hi = self.epoch << 16;
+            let at = self.id as usize * BYTES + 2 * self.at;
+            let bytes = &self.out[at..at + 2 * span];
+            let mut before = *predecessor;
+            for (i, s) in bytes.chunks_exact(2).enumerate() {
+                let u = dst_start + i;
+                let v = hi | u32::from(u16::from_le_bytes([s[0], s[1]]));
+                if v == mark {
+                    before = u as u32;
+                }
+                edges[u] ^= pack | v;
+                edges[v as usize] ^= u as u32;
+                succ[u] = v;
+            }
+            *predecessor = before;
+            self.at += span;
+            self.read += span as u32;
+        } else {
+            self.wire_xor_succ_slow(edges, succ, dst_start, span, pack, mark, predecessor);
+        }
+    }
+
+    #[cfg(feature = "squared-trace")]
+    #[cold]
+    #[inline(never)]
+    #[allow(clippy::too_many_arguments)]
+    fn wire_xor_succ_slow(
+        &mut self,
+        edges: &mut [u32],
+        succ: &mut [u32],
+        mut dst_start: usize,
+        mut left: usize,
+        pack: u32,
+        mark: u32,
+        predecessor: &mut u32,
+    ) {
+        while left > 0 {
+            while self.read == self.cut {
+                self.epoch += 1;
+                self.cut = self
+                    .spill
+                    .cuts
+                    .get(self.epoch as usize)
+                    .map_or(u32::MAX, |c| c[self.a]);
+            }
+            if self.at == CHUNK {
+                self.id = self.spill.next[self.id as usize];
+                self.at = 0;
+            }
+            let take = left
+                .min(CHUNK - self.at)
+                .min((self.cut - self.read) as usize);
+            let chunk: &[u8] = if self.id < self.in_out {
+                let at = self.id as usize * BYTES;
+                &self.out[at..at + BYTES]
+            } else {
+                &self.spill.ovf[(self.id - self.in_out) as usize][..]
+            };
+            let hi = self.epoch << 16;
+            for (i, s) in chunk[2 * self.at..2 * (self.at + take)]
+                .chunks_exact(2)
+                .enumerate()
+            {
+                let u = dst_start + i;
+                let v = hi | u32::from(u16::from_le_bytes([s[0], s[1]]));
+                if v == mark {
+                    *predecessor = u as u32;
+                }
+                edges[u] ^= pack | v;
+                edges[v as usize] ^= u as u32;
+                succ[u] = v;
+            }
+            self.at += take;
+            self.read += take as u32;
+            dst_start += take;
+            left -= take;
+        }
+    }
+
     /// The next `span` ranks, each with `pack` added, into `dst`
     #[inline(always)]
     pub(super) fn wire(&mut self, dst: &mut [u32], pack: u32) {

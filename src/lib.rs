@@ -105,6 +105,11 @@ pub mod itrace;
 pub mod mtf;
 // the open kernel, the workers' kernel wherever `LazyCells` ran (`bwt::OpenCells`)
 mod open;
+// (research only: the open kernel's construct and emit timed per block, with `emit-cost`; the
+// T² arms' switch, with `squared-trace`)
+#[cfg(feature = "emit-cost")]
+#[doc(hidden)]
+pub mod emit_cost;
 pub mod parallel;
 #[cfg(feature = "phase-counters")]
 #[doc(hidden)]

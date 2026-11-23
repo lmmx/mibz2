@@ -92,6 +92,18 @@ owned-writer = []
 # Changes that visibility and nothing else; never on a production path. Retain while the
 # scorer is in use
 moonshot = []
+# Research only: the open kernel's construction and emit timed block by block in the decoder's
+# own workers (src/emit_cost.rs), with each block's rows and retained rows: bench-emit-cost's
+# recorder (#725, docs/journal/2026-11-22-emit-cost-registration.md), ported onto master. Four
+# clock reads and a record per open block, nothing else; never on a production path. Retain
+# until bench-emit-cost-sq's run is read; then remove
+emit-cost = []
+# Research only: MONODROMY record 93's T² two-ended emit arms (src/open/squared.rs), switched
+# at run time between decodes (`emit_cost::set_arm`: base, sq, sq-shadow), for
+# examples/emit_cost_sq.rs and the bench-emit-cost-sq diagnostic
+# (docs/journal/2026-11-23-emit-cost-sq-registration.md). In `base` the kernel is as shipped;
+# never on a production path. Retain until that run is read; then remove
+squared-trace = ["emit-cost"]
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -127,6 +139,11 @@ overflow-checks = true
 # examples/ab.rs's arms built by bench/alternatives only (its build.rs sets the cfg)
 [lints.rust]
 unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
+
+# bench-emit-cost-sq's harness needs the T² arms and the recorder
+[[example]]
+name = "emit_cost_sq"
+required-features = ["squared-trace"]
 
 # The occupancy instrument (#39) needs the decoder's timeline
 [[example]]
