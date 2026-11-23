@@ -748,17 +748,22 @@ const BESTIARY_HEADS = {
     const tHole = tt[UU.findIndex(u => u >= hU)];
     const tIn = Math.max(.05, tHole - .045);
     const head = el('g', { opacity: 0 }, svg);
-    anim(head, { attributeName: 'opacity', values: '0;1;1;0;0', keyTimes: `0;.015;${tIn.toFixed(4)};${(tHole - .004).toFixed(4)};1`, ...cyc });
+    // the head stays whole to the hole's rim, then pops: it shrinks to its own centre in about a tenth
+    // of a second and is gone
+    const tPop = Math.max(tIn, tHole - .011);
+    anim(head, { attributeName: 'opacity', values: '0;1;1;0;0', keyTimes: `0;.015;${tHole.toFixed(4)};${(tHole + .002).toFixed(4)};1`, ...cyc });
     el('animateMotion', { path: d, rotate: 'auto', keyPoints: UU.map(u => Math.min(1, u / hU).toFixed(4)).join(';'),
       keyTimes: kt, calcMode: 'spline', keySplines: ease, ...cyc }, head);
     const look = el('g', {}, head);
     const lk = [[0, 0], ...st.look, [1, 0]];
     anim(look, { attributeName: 'transform', type: 'rotate', values: lk.map(x => x[1] * (dir < 0 ? -1 : 1)).join(';'),
       keyTimes: lk.map(x => x[0].toFixed(3)).join(';'), ...cyc }, 'animateTransform');
-    const dive = el('g', {}, look);
-    anim(dive, { attributeName: 'transform', type: 'scale', values: '1;1;0;0;1', keyTimes: `0;${tIn.toFixed(4)};${tHole.toFixed(4)};.999;1`,
-      calcMode: 'spline', keySplines: '0 0 1 1;.5 0 .9 .6;0 0 1 1;0 0 1 1', ...cyc }, 'animateTransform');
-    const hs = el('g', { transform: `scale(${f2(wmax * 1.05 / 2.9)})${dir < 0 ? ' scale(1,-1)' : ''}` }, dive);
+    const hk = wmax * 1.05 / 2.9, hcx = 8 * hk, hcy = (dir < 0 ? 7.5 : -7.5) * hk;   // the hound head's centre
+    const dive = el('g', { transform: `translate(${f2(hcx)},${f2(hcy)})` }, look);
+    const pop = el('g', { class: 'hpop' }, dive);
+    anim(pop, { attributeName: 'transform', type: 'scale', values: '1;1;0;0;1', keyTimes: `0;${tPop.toFixed(4)};${tHole.toFixed(4)};.999;1`,
+      calcMode: 'spline', keySplines: '0 0 1 1;.6 0 1 1;0 0 1 1;0 0 1 1', ...cyc }, 'animateTransform');
+    const hs = el('g', { transform: `translate(${f2(-hcx)},${f2(-hcy)}) scale(${f2(hk)})${dir < 0 ? ' scale(1,-1)' : ''}` }, pop);
     const KIND = { cautious: 'spotted-serpent', darting: 'aspis', lazy: 'amphisbaena-a', shedding: 'knotted-pair-a', draco: 'draco-bipes' };
     const kp = palOf(KIND[st.name] || 'aspis');
     if (kp) { svg.style.setProperty('--ra', kp[0]); svg.style.setProperty('--rb', kp[1]); svg.style.setProperty('--md', kp[2]); }
@@ -1300,7 +1305,12 @@ const BESTIARY_HEADS = {
 
     if (opts.swirl) {
       slideG.replaceChildren();
-      const cx = midX, cy = edgeY + 22 * sc, dx = Math.min(w * 0.18, 60);
+      // beside the bubble where there is room, so it does not push the next bubble down; under it otherwise
+      const roomR = (typeof window !== 'undefined' ? window.innerWidth : 1e4) - (rect.right || 0);
+      const side = roomR > 140;
+      if (side) svg.setAttribute('data-side', '1');
+      const cx = side ? padX + w + 62 * sc : midX, cy = side ? padTop + h * 0.5 : edgeY + 22 * sc;
+      const dx = side ? 6 : Math.min(w * 0.18, 60);
       Rig.el('animateTransform', {
         attributeName: 'transform', type: 'translate',
         values: `${Rig.f1(cx)} ${Rig.f1(cy)};${Rig.f1(cx - dx)} ${Rig.f1(cy + 4)};${Rig.f1(cx + dx * .4)} ${Rig.f1(cy - 2)};${Rig.f1(cx + dx)} ${Rig.f1(cy + 5)};${Rig.f1(cx)} ${Rig.f1(cy)}`,
@@ -1686,11 +1696,12 @@ const BESTIARY_HEADS = {
       const m = b.closest('.m'); m.style.position = 'relative'; m.style.zIndex = '6';
       const rig = b.querySelector('svg.bestiary-traced-rig'); if (!rig) return;
       if (b.querySelector('.b6-off.beast-knotted-pair')) {   // tuck the pair just under its bubble
+        if (rig.dataset.side) return;   // swirling beside its bubble: no room needed below
         if (rig.querySelector('animateTransform[type=rotate][values^="0 0 24"]')) { m.style.marginBottom = '96px'; return; }
         rig.style.translate = '0 -14px';
       }
       const under = rig.getBoundingClientRect().bottom - b.getBoundingClientRect().bottom;
-      m.style.marginBottom = Math.max(0, Math.round(under) - 18) + 'px';
+      m.style.marginBottom = Math.max(0, Math.round((under - 18) * 2 / 3)) + 'px';
     });
   };
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(go, 400));
