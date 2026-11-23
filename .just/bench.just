@@ -1953,7 +1953,9 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # (corpora/wikidata.bz2, checked by its SHA-256), 4 copies end to end, read into memory once;
 # each round decodes it with production's lazy workers (`BzReader::parallel_workers`, lazy:
 # `OpenCells`) in each cell of {1, 6, 10} workers x {base, sq, sq-shadow}, the arm switched
-# between decodes in the one process, the nine cells' order rotated by one a round, unpinned,
+# between decodes in the one process, the worker counts rotated by one a round and, within
+# each count, the arms in lexicographic permutation (round mod 6) (record 94 at 1b188ada,
+# #145 REVIEW 7097894105; the table is examples/emit_cost_sq.rs'), unpinned,
 # ROUNDS rounds, SETTLE s before each decode. Per block: rows n, retained rows m (at LIMIT 16),
 # construct, square and emit wall times, the arm, the two-ended emitter and the T² walk, the
 # arm's scratch. Judged by bench/emit_cost_sq.py at 10 workers, E = emit_arm / emit_base and
@@ -2023,7 +2025,7 @@ bench-emit-cost-sq:
     grep Cpus_allowed_list /proc/self/status > "$O/cpus-allowed.txt"
     cat /sys/devices/system/cpu/online > "$O/cpus-online.txt"
     uname -a > "$O/uname.txt"
-    # the run: unpinned, every online CPU; the nine cells rotated within each round
+    # the run: unpinned, every online CPU; the counts rotated, the arms permuted, each round
     "$EC" "$W/wikidata-x$COPIES.bz2" "$WORKERS" "$ARMS" $ROUNDS $SETTLE "$O/blocks.tsv"
     date -u +%FT%TZ > "$O/timed.txt"
     python3 bench/emit_cost_sq.py "$O/blocks.tsv" --lscpu "$O/lscpu.txt" --workers "$WORKERS" \

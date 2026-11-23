@@ -67,6 +67,7 @@ jobs:
         run: |
           cargo test --release --features squared-trace --lib -- emit_cost:: open::squared::
           cargo test --release --features squared-trace --test emit_cost_sq
+          cargo test --release --features squared-trace --example emit_cost_sq
       - name: The dose build (research feature)
         run: |
           MIBZ2_DOSE_MB=1 cargo test --features dose --test dose --lib dose::

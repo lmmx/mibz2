@@ -54,8 +54,31 @@ T² round would ever run.
 - **The workload:** `corpora/wikidata.bz2` (checked by its SHA-256), four copies end to end
   (838,800,784 decoded bytes), read into memory once.
 - **The decodes:** production's lazy workers (`BzReader::parallel_workers`, `OpenCells`), unpinned.
-- **The grid:** {base, sq, sq-shadow} × {1, 6, 10} workers × 20 rounds. The nine cells rotate by
-  one a round, with 2 s of sleep before each decode.
+- **The grid:** {base, sq, sq-shadow} × {1, 6, 10} workers × 20 rounds, with 2 s of sleep
+  before each decode.
+- **The order** (corrected by MONODROMY's record 94,
+  `docs/journal/monodromy/2026-11-23-emit-cost-sq-review.md` at
+  `1b188ada1c392baa312369b5aad3736c0a985109`, #145 REVIEW 7097894105, before any data). The
+  first cut rotated the nine cells cyclically, which fixed each cell's predecessor: `sq` almost
+  always followed base at the same count, and `sq-shadow` followed `sq`. Now:
+  - *the worker counts* run in round r rotated by r mod 3: round 0 runs 1, 6, 10; round 1 runs
+    6, 10, 1; round 2 runs 10, 1, 6;
+  - *within each count, the arms* run in permutation r mod 6 of this fixed lexicographic list:
+
+    | r mod 6 | the arms' order        |
+    |--------:|------------------------|
+    | 0       | base, sq, sq-shadow    |
+    | 1       | base, sq-shadow, sq    |
+    | 2       | sq, base, sq-shadow    |
+    | 3       | sq, sq-shadow, base    |
+    | 4       | sq-shadow, base, sq    |
+    | 5       | sq-shadow, sq, base    |
+
+  - *the balance:* each ordered pair of adjacent arms occurs twice in every six rounds. 20
+    rounds are not a multiple of 6 (20 = 3 × 6 + 2), so the balance is not perfect:
+    permutations 0 and 1 run 4 times (rounds 0, 6, 12, 18 and 1, 7, 13, 19), the other four
+    3 times each.
+  - *What doesn't change:* the pairing stays by round, and E and K are defined as below.
 - **Per block:** n, m, `construct_ns`, `square_ns`, `emit_ns` (four clock reads a block in every
   arm), the arm, the two-ended emitter, whether the T² walk ran, the arm's scratch.
 
@@ -113,4 +136,4 @@ i9-10900K, a decode missing or duplicated, bytes not 838,800,784, a decode with 
 - the peak scratch growth: `succ` and `x2`, a worker's kernel, against 8m bytes.
 
 **Not changed after the data (C2):** the arms, the batch of 4, the zero-fill's iteration, the
-grid, the block set, the lines 0.80 and −0.3, and the judged count.
+grid and its order, the block set, the lines 0.80 and −0.3, and the judged count.
