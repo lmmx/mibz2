@@ -1947,18 +1947,21 @@ bench-moonshot-calibrate ROUNDS="10" SETTLE="2" COPIES="4" WORKERS="1,2,4,7,8,10
 # PR's HEAD (`mibz2`, whose harness drives the run); their build inputs differ in the front
 # end's files alone (src/{block,lib,par_scan,parallel,read,runs}.rs, src/parallel/
 # unwind_tests.rs, examples/ab.rs and four test files; checked). Both by rustc 1.99.1. The whole
-# Wikidata corpus, 4 copies end to end; at 1, 2, 4, 6, 8, 10, 12, 16 and 20 threads (unpinned
-# above one thread; one thread on ab's one-CPU pin), interleaved, 16 paired rounds, settle 2 s,
-# no spinner. First an untimed preflight: one round of every cell, settle 0, checked whole and
-# exact (bench/parscan_stream.py --preflight); a failure stops the recipe before the timed run.
-# DRY=1 runs the preflight alone (not evidence). The rule: bench/parscan_stream.py (judged at
-# 10, 6 and 8 supporting, peak RSS gated at 10), a wrapper around bench/parscan_verdict.py.
-# About 35 minutes with the builds.
+# Wikidata corpus, 4 copies end to end, and the text corpus (`ab gen DIR 16`'s text.bz2, made
+# once by the head's harness, the loss guard); at 1, 2, 4, 6, 8, 10, 12, 16 and 20 threads
+# (unpinned above one thread; one thread on ab's one-CPU pin), interleaved, 16 paired rounds,
+# settle 2 s, no spinner. First an untimed preflight: one round of every cell, settle 0, checked
+# whole and exact (bench/parscan_stream.py --preflight); a failure stops the recipe before the
+# timed run. DRY=1 runs the preflight alone (not evidence). The rule: bench/parscan_stream.py
+# (judged at 10 on Wikidata, 6 and 8 supporting; text SLOWER at 6, 8 or 10 is NOT ADOPTED; peak
+# RSS gated at 10 on both), a wrapper around bench/parscan_verdict.py. Amended before any data
+# (23 November 2026): text added, base and head moved to master 6f7b2ac4 and the PR merged with
+# it. About 50 minutes with the builds.
 bench-parscan-stream DRY="":
     #!/usr/bin/env bash
     set -euo pipefail
-    BASE=cb7121e8d391dc7808f06a8acae53001874deab4
-    HEAD=d32da8fd576bbf3d2aca20122506f4ad81c712af
+    BASE=6f7b2ac4223f26e2252bbd30931609cb3a39a1ec
+    HEAD=2618c54c5d6f8f6926681655acbfb8acfb2c36ae
     COPIES=4 ROUNDS=16 SETTLE=2 THREADS=1,2,4,6,8,10,12,16,20
     dry="{{DRY}}"
     W=$PWD/target/parscan-stream
@@ -1966,7 +1969,7 @@ bench-parscan-stream DRY="":
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    echo "bench-parscan-stream (docs/journal/2026-11-22-parscan-stream-registration.md) at $(git rev-parse HEAD): mibz2 at $HEAD (perf/parscan-stream) against mibz2 at $BASE (master), at $THREADS threads (unpinned above 1), $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2"
+    echo "bench-parscan-stream (docs/journal/2026-11-22-parscan-stream-registration.md) at $(git rev-parse HEAD): mibz2 at $HEAD (perf/parscan-stream) against mibz2 at $BASE (master), at $THREADS threads (unpinned above 1), $ROUNDS paired rounds, settle $SETTLE s, on $COPIES copies of corpora/wikidata.bz2 and on text (the loss guard)"
     [ -z "$dry" ] || echo "bench-parscan-stream: DRY RUN: the untimed preflight alone; not evidence" | tee "$O/DRY-RUN.txt"
     date -u +%FT%TZ > "$O/started.txt"
     [ -z "$(git status --porcelain --untracked-files=no)" ] \
@@ -2026,7 +2029,15 @@ bench-parscan-stream DRY="":
       || { echo "bench-parscan-stream: $corpus is not bench/wikidata.json's $want"; exit 1; }
     : > "$W/wikidata-x$COPIES.bz2"
     for i in $(seq $COPIES); do cat "$corpus" >> "$W/wikidata-x$COPIES.bz2"; done
-    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" | tee "$O/inputs.sha256"
+    # the text loss guard: `ab gen`'s text at scale 16, made afresh by the head's harness alone
+    # (its text is the build's own source tree, so the two builds' would differ), and its
+    # decoded bytes counted by Python's bz2 (libbzip2), independently of either build
+    rm -rf "$W/gen"
+    "$AB" gen "$W/gen" 16 >/dev/null
+    TEXT=$W/gen/text.bz2
+    TEXT_OUT=$(python3 -c 'import bz2, sys; print(len(bz2.open(sys.argv[1]).read()))' "$TEXT")
+    echo "text $TEXT_OUT bytes decoded" | tee "$O/text-out.txt"
+    sha256sum "$corpus" "$W/wikidata-x$COPIES.bz2" "$TEXT" | tee "$O/inputs.sha256"
     # the machine
     "$AB" env > "$O/env.json"
     lscpu > "$O/lscpu.txt"
@@ -2038,13 +2049,14 @@ bench-parscan-stream DRY="":
     # (every record successful, unpinned above one thread, 838,800,784 bytes, one hash); its
     # records are not timed evidence and no step is taken from them
     "$AB" run "$O/preflight.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds 1 \
-      --settle 0 "$W/wikidata-x$COPIES.bz2"
+      --settle 0 "$W/wikidata-x$COPIES.bz2" "$TEXT"
     python3 bench/parscan_stream.py "$O/preflight.jsonl" --env "$O/env.json" \
-      --lscpu "$O/lscpu.txt" --corpus wikidata-x$COPIES --preflight | tee "$O/preflight.txt" \
-      || { echo "bench-parscan-stream: the preflight failed (preflight.txt); no timed run"; rm -f "$W/wikidata-x$COPIES.bz2"; bash bench/bundle.sh "$O"; exit 1; }
+      --lscpu "$O/lscpu.txt" --corpus wikidata-x$COPIES --text-out-bytes "$TEXT_OUT" --preflight \
+      | tee "$O/preflight.txt" \
+      || { echo "bench-parscan-stream: the preflight failed (preflight.txt); no timed run"; rm -rf "$W/wikidata-x$COPIES.bz2" "$W/gen"; bash bench/bundle.sh "$O"; exit 1; }
     if [ -n "$dry" ]; then
       date -u +%FT%TZ > "$O/finished.txt"
-      rm -f "$W/wikidata-x$COPIES.bz2"
+      rm -rf "$W/wikidata-x$COPIES.bz2" "$W/gen"
       bash bench/bundle.sh "$O"
       exit 0
     fi
@@ -2052,13 +2064,13 @@ bench-parscan-stream DRY="":
     # thread on ab's one-CPU pin; the counts and the arms interleaved within each round, the arms'
     # order rotated
     "$AB" run "$O/main.jsonl" --arms "mibz2@$BAB,mibz2" --threads $THREADS --rounds $ROUNDS \
-      --settle $SETTLE "$W/wikidata-x$COPIES.bz2"
+      --settle $SETTLE "$W/wikidata-x$COPIES.bz2" "$TEXT"
     "$AB" summary "$O/main.jsonl" --ref "mibz2@$BAB" | tee "$O/summary.txt"
     date -u +%FT%TZ > "$O/timed.txt"
     python3 bench/parscan_stream.py "$O/main.jsonl" --env "$O/env.json" \
       --lscpu "$O/lscpu.txt" --rounds $ROUNDS --corpus wikidata-x$COPIES \
-      | tee "$O/verdict.txt" \
+      --text-out-bytes "$TEXT_OUT" | tee "$O/verdict.txt" \
       || echo "bench-parscan-stream: VOID, no verdict (verdict.txt says why); the bundle is kept"
     date -u +%FT%TZ > "$O/finished.txt"
-    rm -f "$W/wikidata-x$COPIES.bz2"
+    rm -rf "$W/wikidata-x$COPIES.bz2" "$W/gen"
     bash bench/bundle.sh "$O"

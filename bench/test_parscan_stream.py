@@ -5,6 +5,7 @@ and no verdict from incomplete or malformed records.
     python3 bench/test_parscan_stream.py
 """
 
+import contextlib
 import io
 import json
 import shutil
@@ -20,8 +21,20 @@ import parscan_stream as ps  # noqa: E402
 import test_parscan_verdict as tp  # noqa: E402
 
 
-def records(step=None, mem=None, noise=0.01):
-    return tp.records(cand="mibz2", threads=ps.THREADS, step=step, mem=mem, noise=noise)
+def records(step=None, mem=None, noise=0.01, text=None, text_mem=None):
+    """Both corpora: Wikidata's steps `step`, text's `text` (level by default)"""
+    return tp.records(
+        cand="mibz2", threads=ps.THREADS, step=step, mem=mem, noise=noise
+    ) + tp.records(
+        cand="mibz2",
+        threads=ps.THREADS,
+        step=text,
+        mem=text_mem,
+        noise=noise,
+        corpus="text",
+        out_bytes=tp.TEXT_OUT,
+        digest="7e57",
+    )
 
 
 class Verdict(unittest.TestCase):
@@ -39,7 +52,15 @@ class Verdict(unittest.TestCase):
         buf = io.StringIO()
         with redirect_stdout(buf):
             rc = ps.main(
-                [str(p), "--env", str(self.tmp / "env.json"), "--lscpu", str(self.tmp / "lscpu.txt")]
+                [
+                    str(p),
+                    "--env",
+                    str(self.tmp / "env.json"),
+                    "--lscpu",
+                    str(self.tmp / "lscpu.txt"),
+                    "--text-out-bytes",
+                    str(tp.TEXT_OUT),
+                ]
                 + list(extra)
             )
         return rc, buf.getvalue()
@@ -76,6 +97,56 @@ class Verdict(unittest.TestCase):
         rc, out = self.run_on(records(step={10: 0.9}, mem={20: 1.5, 8: 1.3}))
         self.assertEqual(self.verdict(out), "ADOPTS")
 
+    def test_text_guard(self):
+        # the recalibration's text loss (1.109 at 10) refuses adoption whatever Wikidata gains
+        rc, out = self.run_on(records(step={10: 0.93}, text={10: 1.109}))
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(
+            self.verdict(out), "NOT ADOPTED (text SLOWER at 10 threads: the loss guard)"
+        )
+        for t in (6, 8):
+            rc, out = self.run_on(records(step={10: 0.93}, text={t: 1.05}))
+            self.assertEqual(
+                self.verdict(out), f"NOT ADOPTED (text SLOWER at {t} threads: the loss guard)"
+            )
+        # a text loss at 12, 16 or 20 is reported, deciding nothing
+        rc, out = self.run_on(records(step={10: 0.93}, text={12: 1.08, 16: 1.08, 20: 1.08}))
+        self.assertEqual(self.verdict(out), "ADOPTS")
+
+    def test_text_memory_gate_at_ten(self):
+        rc, out = self.run_on(records(step={10: 0.93}, text_mem={10: 1.11}))
+        self.assertTrue(self.verdict(out).startswith("HELD ON MEMORY (peak RSS text 1.1100"), out)
+        rc, out = self.run_on(records(step={10: 0.93}, text_mem={8: 1.5}))
+        self.assertEqual(self.verdict(out), "ADOPTS")
+
+    def test_text_missing_is_void(self):
+        recs = [
+            r
+            for r in records(step={10: 0.93})
+            if not (r["corpus"] == "text" and r["threads"] == 20)
+        ]
+        rc, out = self.run_on(recs)
+        self.assertEqual(rc, 1, out)
+        self.assertIn("VOID", out)
+
+    def test_text_out_bytes_required(self):
+        p = self.tmp / "runs.jsonl"
+        p.write_text("".join(json.dumps(r) + "\n" for r in records(step={10: 0.93})))
+        with (
+            self.assertRaises(SystemExit),
+            redirect_stdout(io.StringIO()),
+            contextlib.redirect_stderr(io.StringIO()),
+        ):
+            ps.main(
+                [
+                    str(p),
+                    "--env",
+                    str(self.tmp / "env.json"),
+                    "--lscpu",
+                    str(self.tmp / "lscpu.txt"),
+                ]
+            )
+
     def test_missing_record_is_void(self):
         recs = records(step={10: 0.9})
         rc, out = self.run_on(recs[:-1])
@@ -92,6 +163,13 @@ class Verdict(unittest.TestCase):
         self.assertEqual(rc, 1, out)
         self.assertIn("VOID", out)
 
+    def test_preflight_needs_text(self):
+        rc, out = self.run_on([r for r in self.one_round() if r["corpus"] != "text"], "--preflight")
+        self.assertEqual(rc, 1, out)
+        recs = self.one_round()
+        next(r for r in recs if r["corpus"] == "text")["out"] = 7
+        rc, out = self.run_on(recs, "--preflight")
+        self.assertEqual(rc, 1, out)
 
     def one_round(self, step=None):
         return [r for r in records(step=step) if r["round"] == 0]

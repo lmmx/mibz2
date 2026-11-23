@@ -31,7 +31,20 @@ ENV = {
 LSCPU = "Architecture: x86_64\nModel name: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\n"
 
 
-def records(ref="mibz2", cand="mibz2-parscan", threads=THREADS, step=None, mem=None, noise=0.01):
+TEXT_OUT = 48_123_456
+
+
+def records(
+    ref="mibz2",
+    cand="mibz2-parscan",
+    threads=THREADS,
+    step=None,
+    mem=None,
+    noise=0.01,
+    corpus="wikidata-x4",
+    out_bytes=pv.WIKIDATA_X4_OUT,
+    digest="0123456789abcdef",
+):
     """A complete run: `step` maps a thread count to the head's wall over the base's (default
     level); `mem` a count to its peak memory over the base's (default 1). Rounds alternate the
     noise above and below"""
@@ -47,7 +60,7 @@ def records(ref="mibz2", cand="mibz2-parscan", threads=THREADS, step=None, mem=N
                 out.append(
                     {
                         "round": r,
-                        "corpus": "wikidata-x4",
+                        "corpus": corpus,
                         "threads": t,
                         "arm": cand if which == "head" else f"{ref}@{BASE_EXE}",
                         "cpus": "1" if t == 1 else "all",
@@ -55,8 +68,8 @@ def records(ref="mibz2", cand="mibz2-parscan", threads=THREADS, step=None, mem=N
                         "wall": wall,
                         "cpu": wall * t,
                         "rss_kb": rss,
-                        "out": pv.WIKIDATA_X4_OUT,
-                        "hash": "0123456789abcdef",
+                        "out": out_bytes,
+                        "hash": digest,
                         "err": "",
                     }
                 )
@@ -234,6 +247,99 @@ class Verdict(unittest.TestCase):
         rc, out2 = self.run_on(self.br(step={1: 0.97}), *self.BR)
         self.assertIn("NOT ADOPTED", self.verdict(out1))
         self.assertEqual(self.br_verdict(out2), "ADOPTS")
+
+    # ---- the loss guard on a second corpus (bench-parscan-stream's amendment) ----
+
+    GUARD = ("--guard", "text", "--guard-out-bytes", str(TEXT_OUT), "--guard-loss", "6,8,10")
+
+    def text(self, step=None, mem=None, noise=0.01):
+        return records(
+            step=step, mem=mem, noise=noise, corpus="text", out_bytes=TEXT_OUT, digest="7e57"
+        )
+
+    def test_guard_adopts(self):
+        rc, out = self.run_on(records(step={10: 0.95}) + self.text(), *self.GUARD)
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.verdict(out), "verdict (Decision 1, PARSCAN): ADOPTS")
+        self.assertIn("text (the loss guard: SLOWER at 6, 8, 10 threads", out)
+
+    def test_guard_slower_not_adopted(self):
+        for t in (6, 8, 10):
+            rc, out = self.run_on(records(step={10: 0.95}) + self.text(step={t: 1.05}), *self.GUARD)
+            self.assertEqual(rc, 0, out)
+            self.assertEqual(
+                self.verdict(out),
+                f"verdict (Decision 1, PARSCAN): NOT ADOPTED (text SLOWER at {t} threads: the loss guard)",
+            )
+
+    def test_guard_with_no_gain(self):
+        rc, out = self.run_on(records(step={10: 1.0}) + self.text(step={10: 1.1}), *self.GUARD)
+        self.assertIn("NOT ADOPTED (10 threads not FASTER; text SLOWER at 10 threads", out)
+
+    def test_guard_other_counts_decide_nothing(self):
+        # text SLOWER at every count outside 6, 8 and 10, and a text gain at 10: still ADOPTS
+        slow = {t: 1.10 for t in (1, 2, 4, 12, 16, 20)}
+        rc, out = self.run_on(
+            records(step={10: 0.95}) + self.text(step={**slow, 10: 0.8}), *self.GUARD
+        )
+        self.assertEqual(self.verdict(out), "verdict (Decision 1, PARSCAN): ADOPTS")
+        # an inconclusive text step at 10 does not count against adoption
+        rc, out = self.run_on(
+            records(step={10: 0.95}) + self.text(step={10: 1.01}, noise=0.05), *self.GUARD
+        )
+        self.assertEqual(self.verdict(out), "verdict (Decision 1, PARSCAN): ADOPTS")
+
+    def test_guard_memory_at_ten(self):
+        rc, out = self.run_on(records(step={10: 0.95}) + self.text(mem={10: 1.2}), *self.GUARD)
+        self.assertIn("HELD ON MEMORY (peak RSS text 1.2000 at 10 threads", self.verdict(out))
+        rc, out = self.run_on(
+            records(step={10: 0.95}, mem={10: 1.3}) + self.text(mem={10: 1.2}), *self.GUARD
+        )
+        self.assertIn("HELD ON MEMORY (peak RSS wikidata-x4 1.3000, text 1.2000 at 10", out)
+        # text's memory elsewhere, and at the gate exactly, does not hold it
+        rc, out = self.run_on(
+            records(step={10: 0.95}) + self.text(mem={8: 1.5, 20: 1.5, 10: 1.10}), *self.GUARD
+        )
+        self.assertEqual(self.verdict(out), "verdict (Decision 1, PARSCAN): ADOPTS")
+        # a text loss outranks the memory gate
+        rc, out = self.run_on(
+            records(step={10: 0.95}) + self.text(step={8: 1.05}, mem={10: 1.2}), *self.GUARD
+        )
+        self.assertIn("NOT ADOPTED (text SLOWER at 8 threads: the loss guard)", out)
+
+    def test_guard_checked_whole(self):
+        both = records(step={10: 0.95}) + self.text()
+        # a text record missing, duplicated, failed or of the wrong size voids the run
+        self.assertIn("missing", self.assert_void(both[:-1], *self.GUARD))
+        self.assertIn("on text", self.assert_void(both + both[-1:], *self.GUARD))
+        recs = records(step={10: 0.95}) + self.text()
+        recs[-3]["out"] = 1
+        self.assertIn("wrote", self.assert_void(recs, *self.GUARD))
+        recs = records(step={10: 0.95}) + self.text()
+        recs[-3]["termination"] = "signal 9"
+        self.assert_void(recs, *self.GUARD)
+        # each corpus its own one hash; two hashes within text void it
+        recs = records(step={10: 0.95}) + self.text()
+        recs[-3]["hash"] = "ffff"
+        self.assertIn("outputs differ on text", self.assert_void(recs, *self.GUARD))
+        # no text at all, or a third corpus, voids it
+        self.assertIn("missing", self.assert_void(records(step={10: 0.95}), *self.GUARD))
+        recs = both + [dict(both[0], corpus="random")]
+        self.assertIn("corpus 'random'", self.assert_void(recs, *self.GUARD))
+
+    def test_guard_arguments(self):
+        both = records(step={10: 0.95}) + self.text()
+        self.assert_void(both, "--guard", "text", "--guard-loss", "6,8,10")
+        self.assert_void(both, "--guard", "text", "--guard-out-bytes", str(TEXT_OUT))
+        self.assert_void(
+            both, "--guard", "wikidata-x4", "--guard-out-bytes", "1", "--guard-loss", "10"
+        )
+        self.assert_void(
+            both, "--guard", "text", "--guard-out-bytes", str(TEXT_OUT), "--guard-loss", "9"
+        )
+        self.assert_void(records(step={10: 0.95}), "--guard-loss", "6,8,10")
+        # without a guard, text records are not the roster
+        self.assertIn("corpus 'text'", self.assert_void(both))
 
     def assert_void(self, recs, *extra, **kw):
         rc, out = self.run_on(recs, *extra, **kw)

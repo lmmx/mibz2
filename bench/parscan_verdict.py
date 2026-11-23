@@ -3,7 +3,10 @@
 are checked whole. Copied unchanged in its logic from the verdict of bench-parscan-c37 (on its
 bench branch, `bench/parscan_c37.py`), whose registration it was written for, so that
 bench-parscan-stream (`bench/parscan_stream.py`) runs the same statistic, checks and rule
-shape; that registration's text follows. The rule is the registration's, frozen before the data:
+shape; that registration's text follows. One addition, for bench-parscan-stream's amendment
+(23 November 2026, before any data): an optional loss guard on a second corpus (`--guard`),
+off by default, so that without it the checks, steps and verdict are bench-parscan-c37's
+exactly. The rule is the registration's, frozen before the data:
 docs/journal/2026-11-22-parscan-c37-registration.md. Standard library only; the statistics are
 bench/two_arm.py's (`step`, `label`, `topology`). bench/open_r5.py's checks and output with two
 arms of different names (the reference at the base, the candidate at the head), a wider grid
@@ -14,7 +17,7 @@ ratio reported.
                     [--ref-arm mibz2] [--arm mibz2-parscan] [--judged 10] [--supporting 6,8]
                     [--reported 1,2,4,12,16,20] [--rounds 16] [--corpus wikidata-x4]
                     [--out-bytes N] [--claimed 0.9333] [--decision parscan|block-reader]
-                    [--diagnostic]
+                    [--diagnostic] [--guard text --guard-out-bytes N --guard-loss 6,8,10]
 
 **Two decisions, one rule each, both frozen in the registration.** `--decision` sets the
 arms and the counts' roles, and the verdict line names the decision:
@@ -53,6 +56,13 @@ else INCONCLUSIVE.
   a spinner; any key (arm, threads, round) duplicated, unexpected or missing from the full
   roster; the corpus not the one registered; any run's output size not the registered one, or
   the outputs' hashes not all one.
+
+**The loss guard** (`--guard CORPUS`, none by default): the same arms, counts and rounds on a
+second corpus, checked as the judged corpus is (every record, its own registered output bytes,
+`--guard-out-bytes`, and its own one hash). Its steps are printed at every count. It only
+removes adoption: NOT ADOPTED if the guard is SLOWER at any `--guard-loss` count, and its
+median peak-RSS ratio at the memory count joins the 1.10 gate (HELD ON MEMORY if either
+corpus's is above it). A gain on the guard decides nothing.
 
 `--diagnostic`: the same checks and steps, reported, deciding nothing (bench-parscan-c37 does
 not use it since BLOCK-READER became a decision).
@@ -115,10 +125,20 @@ def one_cpu(s):
 
 def load(path, ref, cand, threads, rounds, corpus, out_bytes, errors):
     """{(arm, threads, round): record} once every record is checked; errors appended. The roster
-    is REF at the base (`REF@build-base`) and CAND itself"""
+    is REF at the base (`REF@build-base`) and CAND itself, on CORPUS alone"""
+    return load_all(path, ref, cand, threads, rounds, {corpus: out_bytes}, errors)[corpus]
+
+
+def load_all(path, ref, cand, threads, rounds, corpora, errors):
+    """{corpus: {(arm, threads, round): record}} once every record is checked; errors appended.
+    The roster is REF at the base (`REF@build-base`) and CAND itself, at every count and round,
+    on each corpus of CORPORA ({corpus: its registered output bytes}); each corpus's outputs
+    must have one hash. With one corpus, `load`'s checks and messages exactly"""
     arms = [f"{ref}@build-base", cand]
     want = {(a, t, r) for a in arms for t in threads for r in range(rounds)}
-    got, hashes = {}, set()
+    got = {c: {} for c in corpora}
+    hashes = {c: set() for c in corpora}
+    many = len(corpora) > 1
     try:
         with open(path) as f:
             lines = f.read().splitlines()
@@ -136,15 +156,17 @@ def load(path, ref, cand, threads, rounds, corpus, out_bytes, errors):
             errors.append(f"{where}: not a record")
             continue
         key = (ta.canonical(r.get("arm")), r.get("threads"), r.get("round"))
+        corpus = r.get("corpus")
+        if corpus not in corpora:
+            errors.append(f"{where}: corpus {corpus!r}, not {' or '.join(corpora)}")
+            continue
         if key not in want:
-            errors.append(f"{where}: unexpected key {key}")
+            errors.append(f"{where}: unexpected key {key}" + (f" on {corpus}" if many else ""))
             continue
-        if key in got:
-            errors.append(f"{where}: {key} duplicated")
+        if key in got[corpus]:
+            errors.append(f"{where}: {key} duplicated" + (f" on {corpus}" if many else ""))
             continue
-        got[key] = r
-        if r.get("corpus") != corpus:
-            errors.append(f"{where}: corpus {r.get('corpus')!r}, not {corpus}")
+        got[corpus][key] = r
         if r.get("termination") != "success" or r.get("err"):
             errors.append(
                 f"{where}: {key} not a successful run ({r.get('termination')!r}, err {r.get('err')!r})"
@@ -161,13 +183,16 @@ def load(path, ref, cand, threads, rounds, corpus, out_bytes, errors):
             errors.append(f"{where}: {key} pinned {r.get('cpus')!r}, not unpinned ('all')")
         if r.get("held_spinner") is not None:
             errors.append(f"{where}: {key} ran beside a spinner")
-        if r.get("out") != out_bytes:
-            errors.append(f"{where}: {key} wrote {r.get('out')!r} bytes, not {out_bytes}")
-        hashes.add(r.get("hash"))
-    for key in sorted(want - set(got)):
-        errors.append(f"missing {key}")
-    if len(hashes) > 1 or None in hashes:
-        errors.append(f"the outputs differ: hashes {sorted(map(str, hashes))}")
+        if r.get("out") != corpora[corpus]:
+            errors.append(f"{where}: {key} wrote {r.get('out')!r} bytes, not {corpora[corpus]}")
+        hashes[corpus].add(r.get("hash"))
+    for c in corpora:
+        for key in sorted(want - set(got[c])):
+            errors.append(f"missing {key}" + (f" on {c}" if many else ""))
+        if len(hashes[c]) > 1 or None in hashes[c]:
+            errors.append(
+                f"the outputs differ{f' on {c}' if many else ''}: hashes {sorted(map(str, hashes[c]))}"
+            )
     return got
 
 
@@ -204,6 +229,9 @@ def main(argv=None):
     ap.add_argument("--out-bytes", type=int, default=WIKIDATA_X4_OUT)
     ap.add_argument("--claimed", type=float, default=CLAIMED)
     ap.add_argument("--diagnostic", action="store_true", help="report the steps only: no verdict")
+    ap.add_argument("--guard", default=None, help="the loss guard's corpus (none by default)")
+    ap.add_argument("--guard-out-bytes", type=int, default=None)
+    ap.add_argument("--guard-loss", default="", help="the counts where the guard may not be SLOWER")
     a = ap.parse_args(argv)
     name, arm, j, sup, rep_, rss_t, with_transfer = DECISIONS[a.decision]
     a.arm = arm if a.arm is None else a.arm
@@ -225,9 +253,24 @@ def main(argv=None):
         errors.append(f"--rss-at {rss_t}: not one of the counts")
     if not 0 < a.claimed < 1:
         errors.append(f"--claimed {a.claimed}: a gain, between 0 and 1")
+    guard_loss = counts(a.guard_loss)
+    corpora = {a.corpus: a.out_bytes}
+    if a.guard is not None:
+        if a.guard == a.corpus:
+            errors.append(f"--guard {a.guard}: the judged corpus itself")
+        if a.guard_out_bytes is None or a.guard_out_bytes <= 0:
+            errors.append("--guard: needs --guard-out-bytes, the guard's decoded bytes")
+        if not a.diagnostic and not guard_loss:
+            errors.append("--guard: needs --guard-loss, its counts")
+        if any(t not in threads for t in guard_loss):
+            errors.append(f"--guard-loss {a.guard_loss!r}: not all among the counts")
+        corpora[a.guard] = a.guard_out_bytes
+    elif guard_loss or a.guard_out_bytes is not None:
+        errors.append("--guard-loss and --guard-out-bytes need --guard")
     ta.topology(a.env, 10, 20, errors)
     machine(a.lscpu, errors)
-    got = load(a.runs, a.ref_arm, a.arm, threads, a.rounds, a.corpus, a.out_bytes, errors)
+    got_all = load_all(a.runs, a.ref_arm, a.arm, threads, a.rounds, corpora, errors)
+    got = got_all.get(a.corpus, {})
     if errors:
         print("VOID: no verdict")
         for e in errors[:50]:
@@ -271,6 +314,31 @@ def main(argv=None):
             f"{t:>7}  base {base_kb / 1024:.1f} MiB, head {head_kb / 1024:.1f} MiB, "
             f"head - base {(head_kb - base_kb) / 1024:+.1f} MiB ({rss:.4f})"
         )
+    g_steps, g_rss = {}, {}
+    if a.guard is not None:
+        print(
+            f"{a.guard} (the loss guard: SLOWER at {', '.join(map(str, guard_loss)) or 'no count'} "
+            f"threads is NOT ADOPTED; peak RSS gated at {rss_t}), {a.rounds} paired rounds"
+        )
+        for t in threads:
+            (g, lo, hi, _), (cg, clo, chi, _), rss, base_kb, head_kb = cell(
+                got_all[a.guard], a.ref_arm, a.arm, t, a.rounds
+            )
+            g_steps[t], g_rss[t] = ta.label(lo, hi), rss
+            role = (
+                "diagnostic"
+                if a.diagnostic
+                else "guard"
+                if t in guard_loss
+                else "memory"
+                if t == rss_t
+                else "reported"
+            )
+            print(
+                f"{t:>7}  {role:<10} {g:.4f} [{lo:.4f}, {hi:.4f}]{'':<8} {g_steps[t]:<12} "
+                f"{cg:.4f} [{clo:.4f}, {chi:.4f}]{'':<6} {rss:>17.4f}  "
+                f"(base {base_kb / 1024:.1f} MiB, head {head_kb / 1024:.1f} MiB)"
+            )
     if a.diagnostic:
         return 0
     (t_j,) = judged
@@ -284,20 +352,31 @@ def main(argv=None):
         )
     gain = steps[t_j] == "FASTER"
     loss = [t for t in supporting if steps[t] == "SLOWER"]
-    rss_ok = rss_at[rss_t] <= RSS_GATE
-    if gain and not loss and rss_ok:
+    g_loss = [t for t in guard_loss if g_steps[t] == "SLOWER"]
+    over = [(a.corpus, rss_at[rss_t])] if rss_at[rss_t] > RSS_GATE else []
+    if a.guard is not None and g_rss[rss_t] > RSS_GATE:
+        over.append((a.guard, g_rss[rss_t]))
+    if gain and not loss and not g_loss and not over:
         verdict = "ADOPTS"
-    elif gain and not loss:
-        verdict = (
-            f"HELD ON MEMORY (peak RSS {rss_at[rss_t]:.4f} at {rss_t} threads, above {RSS_GATE}: "
-            "the Coordinator weighs it, PERFORMANCE-POLICY rule 4)"
-        )
+    elif gain and not loss and not g_loss:
+        if a.guard is None:
+            verdict = (
+                f"HELD ON MEMORY (peak RSS {rss_at[rss_t]:.4f} at {rss_t} threads, above {RSS_GATE}: "
+                "the Coordinator weighs it, PERFORMANCE-POLICY rule 4)"
+            )
+        else:
+            verdict = (
+                f"HELD ON MEMORY (peak RSS {', '.join(f'{c} {x:.4f}' for c, x in over)} at {rss_t} "
+                f"threads, above {RSS_GATE}: the Coordinator weighs it, PERFORMANCE-POLICY rule 4)"
+            )
     else:
         why = []
         if not gain:
             why.append(f"{t_j} threads not FASTER")
         if loss:
             why.append(f"SLOWER at {', '.join(map(str, loss))} threads")
+        if g_loss:
+            why.append(f"{a.guard} SLOWER at {', '.join(map(str, g_loss))} threads: the loss guard")
         verdict = f"NOT ADOPTED ({'; '.join(why)})"
     print(f"verdict ({name}): {verdict}")
     return 0

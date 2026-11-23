@@ -10,6 +10,17 @@ nine-count grid and the PARSCAN rule (judged at 10, 6 and 8 supporting), the def
 both sides, and an untimed preflight before the timed run. It is frozen once the Coordinator
 accepts its review; until then nothing here is final and no run is queued.*
 
+*Amended 23 November 2026, before any data and before its review. On the i9 from 10 threads the
+head runs 8 lazy workers where master runs 7 (`tests/service_default.rs` expects 8), and the
+recalibration of 22 November (#145 LOG 7085615681, evidence `472ce552`) measured 8/32 over
+7/28 at pinned 10 as 0.935 on Wikidata but 1.109 SLOWER on `text`, and 1.06-1.11 SLOWER on
+text unpinned at 12-20 threads. Judged on Wikidata alone, this rule could have adopted the
+text loss that rule had just refused. So: the `text` corpus joins the timed cells at every
+count; a named loss guard on text (THE TEXT LOSS GUARD, below) and text's peak RSS in the 1.10
+gate; base and head moved to master as it now stands (6f7b2ac4, with the 0.5.13 bump and the
+moonshot lockfile fix, #773, merged into the PR); and the reason no diagnostic arm separates the
+front end from the worker count (below, "No diagnostic arm"). Rounds and settle are unchanged.*
+
 **The decision it settles.** Whether perf/parscan-stream (#770) merges: the push-streaming
 parallel front end in place of the default decoder's serial scanner on the i9-10900K from 8
 threads asked. It is an adoption registration (RULES C6): its verdict decides a production
@@ -27,7 +38,9 @@ default on the machine production runs on, at thread counts CI's 4-CPU runner ne
 
 ## The hypothesis
 
-**What changed.** The PR's head is master's `cb7121e8` plus the parallel front end of the
+**What changed.** The PR's head is master's `6f7b2ac4` (merged in, as a merge commit, on 23
+November; the PR was cut from `cb7121e8`, whose `src` is the same but for the 0.5.13 version
+in `Cargo.toml` and `Cargo.lock`) plus the parallel front end of the
 final handoff on `research/carbon-word-transport`
 (`docs/journal/2026-11-22-carbon-final-handoff/`), its parscan items alone: `SlabRope`,
 `ParScanHub`, the single-slab scanner, the helper scanners, `read_item_tight`, the prepared
@@ -67,6 +80,11 @@ evidence here. Its modelled 10-core critical path is 0.72.
   its stream's level if that read fails (one Wikidata stream: no such candidate here).
 - **Memory:** 8 workers where master runs 7, plus the rope. The handoff measured peak RSS at
   0.81 of master at 10 threads; the 1.10 gate is at 10.
+- **The 8th worker on text:** from 10 threads the front end runs 8 lazy workers where master
+  runs 7 with 28 in flight. The recalibration measured that change alone, on master's serial
+  scanner, as 1.109 SLOWER on text at pinned 10 (0.935 on Wikidata), and 1.06-1.11 SLOWER on
+  text unpinned at 12-20 (#145 LOG 7085615681, evidence `472ce552`). The front end may hide
+  that loss or carry it; only text at 10 shows which.
 
 **How the port avoids #741's two failures** (its Decision 1, NOT ADOPTED: 1.111 at 6 threads,
 peak RSS 1.275 at 10; LOG 7076671871):
@@ -78,44 +96,57 @@ peak RSS 1.275 at 10; LOG 7076671871):
 
 ## What is compared
 
-- **Head:** perf/parscan-stream at `d32da8fd576bbf3d2aca20122506f4ad81c712af`, arm `mibz2` (`BzReader::new` at one thread,
+- **Head:** perf/parscan-stream at `2618c54c5d6f8f6926681655acbfb8acfb2c36ae` (the merge of
+  master `6f7b2ac4` into the PR's `d32da8fd`), arm `mibz2` (`BzReader::new` at one thread,
   `BzReader::parallel` above).
-- **Base:** `cb7121e8d391dc7808f06a8acae53001874deab4`, master at the PR's cut, arm
-  `mibz2@build-base`. It is an ancestor of HEAD; the recipe checks it.
+- **Base:** `6f7b2ac4223f26e2252bbd30931609cb3a39a1ec`, master as it stood at the amendment and
+  the head's merge base, arm `mibz2@build-base`. It is an ancestor of HEAD; the recipe checks
+  it. Its `src`, `Cargo.toml` and `Cargo.lock` are master's exactly.
 - **The contrast, checked by the recipe:** the builds' `src`, `examples`, `tests`, `Cargo.toml`,
   `Cargo.lock`, `build.rs` and `rust-toolchain.toml` may differ only in
   `src/{block,lib,par_scan,parallel,read,runs}.rs`, `src/parallel/unwind_tests.rs`,
   `examples/ab.rs`, `tests/par_scan.rs`, `tests/parscan_stream.rs`, `tests/service_default.rs`
   and `tests/common/mod.rs`, or the run stops.
 - **Should master move before the run,** the run still measures the PR against this base; the
-  Coordinator weighs the later change at the merge. (Since the cut, master has taken the
-  0.5.13 version bump and a queue entry, #769: no `src` change.)
+  Coordinator weighs the later change at the merge.
 
 ## The run
 
 - **The machine:** the maintainer's i9-10900K (10 cores, 20 CPUs, no CPU quota), under C5. Any
   other machine voids the run, and on any other machine the head's default decoder is the
   base's at every count (the dispatch check is `parallel::front_end_tests`).
-- **The corpus:** `corpora/wikidata.bz2` (431 blocks, 209.7 MB decoded), checked by
-  `bench/wikidata.json`'s SHA-256, four copies end to end (`wikidata-x4`, 838,800,784 bytes
-  out).
-- **The cells:** `ab run --arms mibz2@build-base,mibz2` at 1, 2, 4, 6, 8, 10, 12, 16 and 20
-  threads. Above one thread unpinned on every CPU (no `--spread`, no spinner); at one thread on
-  ab's one-CPU pin, for both arms alike.
+- **The corpora:**
+  - **Wikidata (judged):** `corpora/wikidata.bz2` (431 blocks, 209.7 MB decoded), checked by
+    `bench/wikidata.json`'s SHA-256, four copies end to end (`wikidata-x4`, 838,800,784 bytes
+    out).
+  - **text (the loss guard):** `ab gen DIR 16`'s `text.bz2` (the repository's sources and
+    README repeated to about 48 MB, compressed at level 9), the corpus of bench-cores-less-one,
+    bench-w12 and the recalibration's text guard. Made afresh in each attempt by the head's
+    harness alone (`ab gen` reads the build's own source tree, so the two builds' texts would
+    differ), its SHA-256 recorded, and its decoded bytes counted by Python's `bz2` (libbzip2),
+    independently of either build; the verdict checks every text output against that count.
+- **The cells:** `ab run --arms mibz2@build-base,mibz2` on both corpora at 1, 2, 4, 6, 8, 10,
+  12, 16 and 20 threads, the corpora, counts and arms interleaved within each round. Above one
+  thread unpinned on every CPU (no `--spread`, no spinner); at one thread on ab's one-CPU pin,
+  for both arms alike.
 - **The preflight, untimed:** one round of every cell with no settling, before the timed run
   (`preflight.jsonl`). `bench/parscan_stream.py --preflight` checks it as the verdict checks a
-  run: the machine, every record present, successful, unpinned above one thread, and every
-  output 838,800,784 bytes with one hash. A failure stops the recipe before the timed run and
+  run: the machine, every record present on both corpora, successful, unpinned above one
+  thread, and every output of the registered size (838,800,784 bytes on Wikidata, the counted
+  bytes on text) with one hash a corpus. A failure stops the recipe before the timed run and
   is not a verdict; `just bench-parscan-stream 1` (DRY) runs the preflight alone. No step is
   taken from it.
-- **Rounds:** 16, each running both arms at each count, interleaved, the arms' order rotated
-  (`arm_order`; 16 is a multiple of 2 x 2 arms, so each arm takes each position equally often),
+- **Rounds:** 16, each running both arms at each count on each corpus, interleaved, the arms'
+  order rotated (`arm_order`; 16 is a multiple of 2 x 2 arms, so each arm takes each position
+  equally often; text adds a corpus, not an arm, so the balance holds),
   with a **2 s settle** before each run. The settle matters: at these cells, with a 0.25 s gap,
   wall time is bimodal by the run's position in the round (about 0.25 s against 0.39 s, paired
   log SD about 0.33), and with 2 s every run falls in one mode (paired log SD 0.01-0.06); REVIEW
   7084586885 on #145, and #318's idle-gap effect.
-- **Cost:** about 35 minutes of workstation time with the two builds (9 counts x 2 arms x 17
-  rounds, about 6 s a run with its settle, plus two release builds).
+- **Cost:** about 50 minutes of workstation time with the two builds: Wikidata as before (9
+  counts x 2 arms x 17 rounds, about 6 s a run with its settle, about 31 minutes), text about
+  12 minutes more (the same 306 runs, about 2.3 s each with its settle: text decodes in well
+  under a second at every count), `ab gen` about a minute, and two release builds.
 
 ## The rule
 
@@ -124,23 +155,39 @@ ratios, head over base: their geometric mean and its 95% interval (Student's t o
 degrees of freedom). FASTER if the interval lies below 1, SLOWER if above, INCONCLUSIVE
 otherwise.
 
-- **ADOPTS:** all three hold:
-  - the step at 10 threads is FASTER;
-  - neither 6 nor 8 threads is SLOWER;
-  - at 10 threads, the median peak RSS over the rounds, head over base, is at most 1.10.
-- **HELD ON MEMORY:** as ADOPTS, but with peak RSS above 1.10 at 10 threads.
-- **NOT ADOPTED:** any other outcome: 10 not FASTER, or 6 or 8 SLOWER.
-- 6 and 8 are **supporting**: only a loss there counts against adoption.
-- 1, 2, 4, 12, 16 and 20 are **reported**: their steps, CPU and peak RSS are printed and decide
-  nothing. A SLOWER step at 12, 16 or 20 (where the head runs the front end) would be weighed by
-  the Coordinator under PERFORMANCE-POLICY rule 2 at the merge, from this run's figures.
+The steps are taken per corpus.
+
+- **ADOPTS:** all four hold:
+  - on Wikidata, the step at 10 threads is FASTER;
+  - on Wikidata, neither 6 nor 8 threads is SLOWER;
+  - **THE TEXT LOSS GUARD:** on `text`, none of 6, 8 or 10 threads is SLOWER (its 95% interval
+    wholly above 1);
+  - at 10 threads, the median peak RSS over the rounds, head over base, is at most 1.10 on
+    Wikidata and on text.
+- **HELD ON MEMORY:** as ADOPTS, but with peak RSS above 1.10 at 10 threads on either corpus.
+- **NOT ADOPTED:** any other outcome: 10 not FASTER on Wikidata, or 6 or 8 SLOWER on
+  Wikidata, or text SLOWER at 6, 8 or 10. A loss outranks the memory gate.
+- 6 and 8 are **supporting** on Wikidata: only a loss there counts against adoption.
+- **The text loss guard's reason:** from 10 threads the head runs 8 lazy workers where master
+  runs 7, the change the recalibration measured as 1.109 SLOWER on text at pinned 10 (#145 LOG
+  7085615681, evidence `472ce552`), the result on which our own rule refused it. A rule on
+  Wikidata alone could adopt that loss inside the front end. At 6 the head's default decoder is
+  master's code (a loss there is layout, and still refuses); at 8 the front end runs with
+  master's own 8 workers. Text only removes adoption: a text gain decides nothing, and text at
+  1, 2, 4, 12, 16 and 20 is reported.
+- 1, 2, 4, 12, 16 and 20 are **reported** on both corpora: their steps, CPU and peak RSS are
+  printed and decide nothing. A SLOWER step at 12, 16 or 20 (where the head runs the front end
+  with 8 workers; the recalibration's text loss was 1.06-1.11 there) would be weighed by the
+  Coordinator under PERFORMANCE-POLICY rule 2 at the merge, from this run's figures.
 - **The transfer**, reported and deciding nothing: at 10 threads, ln(step) / ln(0.9523), the
   share of the handoff's claimed 10-thread log gain that the i9 shows.
 - **VOID,** with no verdict, if any of these holds: the machine is not the i9's profile; any run
   is unsuccessful or has a non-finite or non-positive wall, CPU or peak RSS; any run above one
   thread is pinned, any one-thread run is not on a single CPU, or any run is beside a spinner;
-  any record is duplicated, unexpected or missing at any of the nine counts; the corpus is not
-  `wikidata-x4`; any output is not 838,800,784 bytes, or the outputs' hashes are not all one.
+  any record is duplicated, unexpected or missing at any of the nine counts on either corpus;
+  any record's corpus is neither `wikidata-x4` nor `text`; any Wikidata output is not
+  838,800,784 bytes, or any text output not the recipe's count of text's decoded bytes; or a
+  corpus's outputs' hashes are not all one.
 - **One run, one verdict.** The verdict reads `main.jsonl` alone. A verdict is never re-run to
   change it.
 
@@ -156,18 +203,39 @@ otherwise.
     included because it is where #741 failed, to show that the activation rule holds there.
   - **1, 2, 4 (reported):** the same code on both sides; they bound layout effects.
   - **12, 16, 20 (reported):** the front end, past the cores.
+- **text (the loss guard, at 6, 8 and 10; memory at 10):** the corpus on which the 8th worker
+  lost in the recalibration; without it the rule could not see that loss.
 - **Why cheaper evidence won't do:** CI's runner has 4 CPUs and its bench runs 1, 2 and 4
   threads, where the PR is inactive; the gain claimed is the 10-core i9's serial-scanner bound,
   which only the i9 has. The handoff's figures are from a 2-core host, where 10 workers share
   two cores. The static path (`parscan_here`) and the dispatch tests settle where the code runs,
   not what it costs there.
 
+## No diagnostic arm
+
+An arm that held the head's front end at 7 workers at 10 threads would separate the front end
+from the worker-count change. The head has no switch for it without a code change, so none is
+added (the amendment adds no decoder or harness change):
+- `ab`'s arms on the head reach the front end only through `mibz2` (the default) and
+  `mibz2-parscan` (`BzReader::parscan`), and both choose 8 workers from 10 threads
+  (`parscan_workers`, `PARSCAN_TRIMMED_WORKERS`);
+- there is no `mibz2-occ-7-28` arm in the head's or master's `ab` (it lived on the
+  recalibration's branches), no environment variable and no flag;
+- the one forcing hook, `parallel::with_plan` (`#[doc(hidden)]`, for tests), is called by no
+  arm, and under it the front end would take `Plan::Workers(7)`'s eager kernel and the full
+  window, not 7 lazy workers with 28 in flight; it would not be the decomposition wanted.
+
+What is known instead: the recalibration's 8/32 over 7/28 on master's serial scanner (0.935 on
+Wikidata, 1.109 on text at pinned 10) is the worker-count change alone, on the same machine; this
+run's text guard says whether the head carries that loss.
+
 ## Limits
 
-- **Wikidata alone:** no text, records or random corpus on the i9. CI's bench covers every
+- **Wikidata and text alone:** no records or random corpus on the i9. CI's bench covers every
   corpus at 1, 2 and 4 threads, where the head's default decoder is the base's.
-- **What an ADOPTS shows:** the whole decoder's gain at 10 threads on the i9, not its cause (the
-  parallel scan, the 8th worker, or the prepared records); they ship together.
+- **What an ADOPTS shows:** the whole decoder's gain at 10 threads on the i9, and no loss on
+  text at 6, 8 or 10, not its cause (the parallel scan, the 8th worker, or the prepared
+  records); they ship together, and no arm separates them (above).
 - **What it does not cover:** another 10-core machine (the activation is the measured i9's
   profile alone), and multi-stream input (one stream here; the tests cover its correctness).
 
