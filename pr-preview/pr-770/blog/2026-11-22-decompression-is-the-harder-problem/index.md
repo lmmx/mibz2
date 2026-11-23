@@ -200,12 +200,6 @@ idk if you saw
 
 No didn't see that
 
-**Marcus Hutter**4d
-
-Superb animated explanation by 3Blue1Brown of why compression ≈ intelligence (the motivation behind my H-…
-
-Compression is Intelligence · This algorithm changed how I think about compre…
-
 it was funny to me because i literally like looked up from what i was doing like “oh that is literally the opposite of my decompression speedrun”
 
 **Louis Maddox**1d
@@ -225,12 +219,6 @@ and not even out of resentment at all just like i find my own schtick more compe
 Replied to Thomas MurphyThe mathematics thing is funny it's li…
 
 hmm idk i think the RH will surely get compressed and then the hillclimb meta is gonna be common knowledge no
-
-**deckard**5h
-
-Compression of the RH proof has begun
-
-chart: proof compression over successive submissions
 
 my hillclimb of BWT inversion mathematics is complexifying, but imagine if you formalised it and then some mathematical superagent swarm found insanely rhizomatic burrows that can snip out all the complexities (big if) in a way like they are compressing the RH proof
 

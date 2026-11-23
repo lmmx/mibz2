@@ -45,6 +45,25 @@ Each table gives an arm's median wall time. It also gives the geometric mean of 
 
 ### 2026-11-22: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
 
+10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.13** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-22-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.13>)
+
+**`wikidata`**
+
+| threads | 0.5.13 wall (median) | lbzip2 2.5 wall (median) | 0.5.12 wall (median) | lbzip2 2.5 against 0.5.13 | 0.5.12 against 0.5.13 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.380 s | 2.512 s | 0.389 s | \+558.6% (+535.2, +582.9) **slower** | \+2.3% (−1.9, +6.6) |
+| 2 | 0.222 s | 1.335 s | 0.241 s | \+501.5% (+488.6, +514.6) **slower** | \+8.5% (+5.8, +11.2) **slower** |
+| 4 | 0.137 s | 0.714 s | 0.144 s | \+423.4% (+416.8, +430.2) **slower** | \+5.3% (+3.4, +7.1) **slower** |
+| 8 | 0.066 s | 0.514 s | 0.071 s | \+674.5% (+671.8, +677.3) **slower** | \+8.0% (+7.2, +8.8) **slower** |
+| 10 | 0.059 s | 0.505 s | 0.068 s | \+735.6% (+708.4, +763.6) **slower** | \+11.5% (+8.3, +14.8) **slower** |
+| 12 | 0.064 s | 0.509 s | 0.073 s | \+679.6% (+652.8, +707.3) **slower** | \+12.6% (+8.2, +17.1) **slower** |
+| 16 | 0.065 s | 0.501 s | 0.073 s | \+675.1% (+667.9, +682.4) **slower** | \+13.0% (+11.5, +14.5) **slower** |
+| 20 | 0.064 s | 0.490 s | 0.073 s | \+663.1% (+657.8, +668.4) **slower** | \+13.3% (+12.3, +14.3) **slower** |
+
+Every arm's output was the same bytes as the reference's.
+
+### 2026-11-22: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+
 10 cores, 20 threads · 10 paired rounds · the reference arm is **0.5.12** · [the records](<https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-22-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.5.12>)
 
 **`wikidata`**
@@ -515,6 +534,10 @@ Each release's notes, newest first, from [`CHANGELOG.md`](<https://github.com/lm
 ### 0.5.13
 
 22 November 2026 · [the CHANGELOG](<https://github.com/lmmx/mibz2/blob/master/CHANGELOG.md#0513---2026-11-22>) · [its diff](<https://github.com/lmmx/mibz2/compare/v0.5.12...v0.5.13>)
+
+- A faster block reader: 2% faster on one thread, and 11–14% faster at 8–10 threads (\#745).
+- The worker counts are unchanged. The recalibration ran on master at \#739 and \#745.
+- Features reviewed: none was removed in this release.
 
 **Changes:** portable CRC sliced by 16, its lookups XORed as a balanced tree ([\#763](<https://github.com/lmmx/mibz2/pull/763>)); the default path's block reader from Carbon's cycle 37: an L1-resident Huffman decoder and leaner block headers ([\#745](<https://github.com/lmmx/mibz2/pull/745>)); Wormhole's plateau stack: owned run-route output, in-place RLE1, tiled CRC, a 12 MiB ready cap and a ready ring ([\#739](<https://github.com/lmmx/mibz2/pull/739>)).
 
