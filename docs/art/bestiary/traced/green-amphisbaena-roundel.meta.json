@@ -2,7 +2,7 @@
   "specimen": "green-amphisbaena-roundel",
   "source_ref": "docs/art/bestiary/refs/louis/10-green-amphisbaena-roundel.jpg",
   "family": "A",
-  "preset": "gilded_romanesque",
+  "preset": "gilded_romanesque_fine",
   "source_style": "English bestiary historiated initial on gilded vellum",
   "date_range": "13th century",
   "medium": "ink, gold leaf and opaque mineral pigments on vellum",
@@ -11,26 +11,26 @@
     0.0,
     0.0,
     300.0,
-    203.33
+    203.44
   ],
   "metrics": {
-    "silhouette_iou_true_pct": 97.18,
-    "silhouette_iou_legacy_pct": 94.55,
-    "ink_iou_pct": 41.38,
-    "boundary_f1_1u_pct": 92.77,
-    "masked_color_rmse": 36.96,
-    "raw_kb": 18.85,
-    "gzip_kb": 7.14,
-    "path_count": 26,
-    "command_count": 1014,
+    "silhouette_iou_true_pct": 98.05,
+    "silhouette_iou_legacy_pct": 92.85,
+    "ink_iou_pct": 91.09,
+    "boundary_f1_1u_pct": 99.8,
+    "masked_color_rmse": 41.55,
+    "raw_kb": 72.24,
+    "gzip_kb": 24.45,
+    "path_count": 31,
+    "command_count": 5102,
     "cmd_counts": {
-      "M": 82,
-      "h": 65,
-      "c": 369,
-      "l": 341,
-      "v": 66,
-      "z": 82,
-      "s": 9
+      "M": 365,
+      "c": 1571,
+      "s": 142,
+      "l": 1696,
+      "h": 519,
+      "v": 444,
+      "z": 365
     }
   },
   "vtracer_config": {
@@ -66,24 +66,24 @@
       "min_subpath_u": 0.8
     },
     "highlight": {
-      "scale_size": 600,
-      "blur_radius": 0.65,
+      "scale_size": 2000,
+      "blur_radius": 0.35,
       "threshold": 148,
-      "filter_speckle": 4,
+      "filter_speckle": 2,
       "corner_threshold": 60,
-      "length_threshold": 6.8,
-      "splice_threshold": 60,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
       "max_iterations": 10,
       "path_precision": 2,
-      "line_eps": 0.16,
+      "line_eps": 0.08,
       "smooth_eps": 0.15,
-      "min_subpath_u": 0.4
+      "min_subpath_u": 0.12
     },
     "accent": {
-      "scale_size": 600,
-      "blur_radius": 0.8,
+      "scale_size": 1800,
+      "blur_radius": 0.5,
       "threshold": 154,
-      "filter_speckle": 10,
+      "filter_speckle": 3,
       "corner_threshold": 60,
       "length_threshold": 8.5,
       "splice_threshold": 62,
@@ -94,18 +94,18 @@
       "min_subpath_u": 0.55
     },
     "ink": {
-      "scale_size": 720,
-      "blur_radius": 0.68,
-      "threshold": 156,
-      "filter_speckle": 5,
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 160,
+      "filter_speckle": 2,
       "corner_threshold": 60,
-      "length_threshold": 6.2,
-      "splice_threshold": 56,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
       "max_iterations": 10,
       "path_precision": 2,
-      "line_eps": 0.13,
+      "line_eps": 0.08,
       "smooth_eps": 0.15,
-      "min_subpath_u": 0.4
+      "min_subpath_u": 0.12
     }
   },
   "components_dir": "docs/art/bestiary/traced/components/green-amphisbaena-roundel",
@@ -113,85 +113,85 @@
     {
       "id": "body",
       "file": "body.svg",
-      "raw_kb": 9.69,
-      "gzip_kb": 4.01,
+      "raw_kb": 30.36,
+      "gzip_kb": 11.0,
       "bbox": [
-        29,
-        32,
-        143,
-        133
+        26,
+        37,
+        146,
+        131
       ]
     },
     {
       "id": "head-top",
       "file": "head-top.svg",
-      "raw_kb": 1.1,
-      "gzip_kb": 0.59,
+      "raw_kb": 8.13,
+      "gzip_kb": 3.24,
       "bbox": [
-        85,
+        82,
         25,
-        53,
-        41
+        78,
+        39
       ]
     },
     {
       "id": "head-inner",
       "file": "head-inner.svg",
-      "raw_kb": 1.38,
-      "gzip_kb": 0.72,
+      "raw_kb": 2.53,
+      "gzip_kb": 1.15,
       "bbox": [
-        64,
+        72,
         58,
-        43,
-        55
+        35,
+        27
       ]
     },
     {
       "id": "wing",
       "file": "wing.svg",
-      "raw_kb": 1.27,
-      "gzip_kb": 0.64,
+      "raw_kb": 9.41,
+      "gzip_kb": 3.57,
       "bbox": [
-        54,
-        99,
-        73,
-        40
+        35,
+        108,
+        83,
+        53
       ]
     },
     {
       "id": "torso",
       "file": "torso.svg",
-      "raw_kb": 2.67,
-      "gzip_kb": 1.21,
+      "raw_kb": 10.51,
+      "gzip_kb": 3.97,
       "bbox": [
-        56,
+        80,
         103,
-        91,
-        53
+        68,
+        50
       ]
     },
     {
       "id": "leg-front",
       "file": "leg-front.svg",
-      "raw_kb": 1.51,
-      "gzip_kb": 0.76,
+      "raw_kb": 7.46,
+      "gzip_kb": 2.95,
       "bbox": [
-        76,
-        138,
-        49,
-        39
+        52,
+        133,
+        83,
+        53
       ]
     },
     {
       "id": "leg-back",
       "file": "leg-back.svg",
-      "raw_kb": 1.24,
-      "gzip_kb": 0.66,
+      "raw_kb": 3.86,
+      "gzip_kb": 1.66,
       "bbox": [
-        118,
-        149,
+        119,
+        142,
         40,
-        23
+        30
       ]
     }
   ],
@@ -201,12 +201,12 @@
     "components_sheet": "docs/art/bestiary/traced/green-amphisbaena-roundel-components.png"
   },
   "palette": {
-    "wash": "#6c7281",
-    "wash2": "#5f4f47",
-    "warm_mid": "#be5c53",
-    "highlight": "#d5cab4",
+    "wash": "#777785",
+    "wash2": "#bc5c54",
+    "warm_mid": "#c59855",
+    "highlight": "#ddceb9",
     "ink": "#19100b",
-    "sage": "#748f6d",
+    "sage": "#77916f",
     "crimson": "#be5c53"
   },
   "flaws_fixed": []
