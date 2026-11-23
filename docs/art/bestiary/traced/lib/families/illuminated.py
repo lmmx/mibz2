@@ -52,3 +52,6 @@ def _fine(base_name: str, name: str) -> None:
 _fine("parchment_pale_subject", "parchment_pale_subject_fine")
 _fine("parchment_drollery", "parchment_drollery_fine")
 _fine("gilded_romanesque", "gilded_romanesque_fine")
+_fine("monochrome_woodcut", "monochrome_woodcut_fine")
+# registered by batch_gilded.py before the plugins load, so present when run through it
+_fine("gilded_interlace_compact", "gilded_interlace_compact_fine")
