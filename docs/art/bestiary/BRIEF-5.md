@@ -4,6 +4,13 @@ Ship the creatures for the post "Decompression is the harder problem" now. This 
 BRIEF-4's open-ended plan with a finite job: a fixed list of slots, each finished to the same
 standard, all in one handover. No more tracing of new specimens.
 
+**Be economical, and ship as fast as possible.**
+- **One agent, no teams:** work alone, with no `/teamwork`, no `/swarm` and no subagents.
+- **Reuse:** start from the existing knackering-frame code and `crawler.js`, not from scratch.
+- **No polishing:** don't build pipelines, metrics or sheets beyond what a slot needs, and don't
+  optimise past "good and working".
+- **Push early:** push each slot as it works, then the demo.
+
 ## The look
 
 **Bodies:** the bodies that move are drawn with the original procedural approach, the one that
