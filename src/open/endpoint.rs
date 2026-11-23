@@ -120,6 +120,10 @@ pub(super) struct Endpoint {
     /// plain loop (`Some(false)`), whatever its widths
     #[cfg(test)]
     pub(super) spirals: Option<bool>,
+    /// (test only) coalesce the bands (`Some(true)`) or not (`Some(false)`), whatever the
+    /// block's retained rows
+    #[cfg(test)]
+    pub(super) coalesce: Option<bool>,
     /// (test only) poison a region of `edges` at a point of the construction (`Clobber`)
     #[cfg(test)]
     pub(super) clobber: Clobber,
@@ -589,6 +593,25 @@ fn spelling_hash(entry: &[u8; INLINE], len: u8, bytes: &[u8]) -> u64 {
     h ^ (h >> 30)
 }
 
+/// The counts of a band's word: `width` rows of `word` (none for the empty word)
+#[inline(always)]
+fn count_word<L: Links>(stats: &mut Counts, e: &Elim<L>, word: u32, width: u32) {
+    if word != 0 {
+        let grade = word >> ID_BITS;
+        let height = if grade == SATURATED {
+            e.len(word & ID_MASK)
+        } else {
+            grade
+        } as usize;
+        stats.words += 1;
+        stats.copies += width as usize;
+        stats.traced += height;
+        stats.thick_area += width as usize * height;
+        stats.unit_work += usize::from(width == 1) * height;
+        stats.longest = stats.longest.max(height);
+    }
+}
+
 impl Kernel {
     /// The most nodes `ns` strips make: a node per strip, at most one gap before each strip
     /// and one after the last, on each side, and the sentinel
@@ -618,18 +641,23 @@ impl Kernel {
         (4 * ns + (stride + RULE) * Self::nodes_most(ns)).max(m)
     }
 
+    /// The induced construction's bands. With `coalesce`, a byte's consecutive bands whose
+    /// destinations are contiguous and whose words have the same code are one band.
     pub(super) fn induced(
         &mut self,
         ns: usize,
         n: u32,
         thin: &[u32; 256],
         stats: &mut Counts,
+        coalesce: bool,
     ) -> [usize; 256] {
+        #[cfg(test)]
+        let coalesce = self.endpoint.coalesce.unwrap_or(coalesce);
         let most = Self::nodes_most(ns);
         if self.wide(ns) {
-            self.induced_with::<Wide>(ns, n, thin, stats, most)
+            self.induced_with::<Wide>(ns, n, thin, stats, most, coalesce)
         } else {
-            self.induced_with::<Narrow>(ns, n, thin, stats, most)
+            self.induced_with::<Narrow>(ns, n, thin, stats, most, coalesce)
         }
     }
 
@@ -640,6 +668,7 @@ impl Kernel {
         thin: &[u32; 256],
         stats: &mut Counts,
         most: usize,
+        coalesce: bool,
     ) -> [usize; 256] {
         let Kernel {
             endpoint,
@@ -797,38 +826,72 @@ impl Kernel {
         let mut id = L::next(e.a, 0, 0);
         let mut in_node = 0;
         let mut k = 0;
-        for a in 0..256 {
-            cursors[a] = bands.len();
-            let end = k + thin[a];
-            while k < end {
-                let node_width = e.width(id);
-                let node_word = e.word(id);
-                let width = (end - k).min(node_width - in_node);
-                // (the port's) every band takes a row at least, so the loop always ends; a wrong
-                // construction panics here rather than looping (the mutation check's finding)
-                assert!(width > 0);
-                let dst = e.bottom(id) + in_node;
-                if node_word != 0 {
-                    let grade = node_word >> ID_BITS;
-                    let height = if grade == SATURATED {
-                        e.len(node_word & ID_MASK)
-                    } else {
-                        grade
-                    } as usize;
-                    stats.words += 1;
-                    stats.copies += width as usize;
-                    stats.traced += height;
-                    stats.thick_area += width as usize * height;
-                    stats.unit_work += usize::from(width == 1) * height;
-                    stats.longest = stats.longest.max(height);
+        if coalesce {
+            for a in 0..256 {
+                cursors[a] = bands.len();
+                let end = k + thin[a];
+                // the band being built: its destination rows `dst..dst_end`, its end among
+                // the retained ranks, its node's word and its code
+                let mut open: Option<(u32, u32, u32, u32, u32)> = None;
+                while k < end {
+                    let node_width = e.width(id);
+                    let node_word = e.word(id);
+                    let width = (end - k).min(node_width - in_node);
+                    assert!(width > 0);
+                    let dst = e.bottom(id) + in_node;
+                    count_word(stats, &e, node_word, width);
+                    open = Some(match open {
+                        // the same word on contiguous rows: the same code, with no lookup
+                        Some((from, to, _, word, code)) if to == dst && word == node_word => {
+                            (from, dst + width, k + width, word, code)
+                        }
+                        Some((from, to, bend, word, code)) => {
+                            let next = dictionary.code(&mut e, node_word, a as u8);
+                            if to == dst && next == code {
+                                (from, dst + width, k + width, word, code)
+                            } else {
+                                bands.push(Band::new(bend, from, code));
+                                (dst, dst + width, k + width, node_word, next)
+                            }
+                        }
+                        None => {
+                            let code = dictionary.code(&mut e, node_word, a as u8);
+                            (dst, dst + width, k + width, node_word, code)
+                        }
+                    });
+                    in_node += width;
+                    k += width;
+                    if in_node == node_width {
+                        id = L::next(e.a, id, 0);
+                        in_node = 0;
+                    }
                 }
-                let code = dictionary.code(&mut e, node_word, a as u8);
-                bands.push(Band::new(k + width, dst, code));
-                in_node += width;
-                k += width;
-                if in_node == node_width {
-                    id = L::next(e.a, id, 0);
-                    in_node = 0;
+                if let Some((from, _, bend, _, code)) = open {
+                    bands.push(Band::new(bend, from, code));
+                }
+            }
+        } else {
+            for a in 0..256 {
+                cursors[a] = bands.len();
+                let end = k + thin[a];
+                while k < end {
+                    let node_width = e.width(id);
+                    let node_word = e.word(id);
+                    let width = (end - k).min(node_width - in_node);
+                    // (the port's) every band takes a row at least, so the loop always ends; a
+                    // wrong construction panics here rather than looping (the mutation check's
+                    // finding)
+                    assert!(width > 0);
+                    let dst = e.bottom(id) + in_node;
+                    count_word(stats, &e, node_word, width);
+                    let code = dictionary.code(&mut e, node_word, a as u8);
+                    bands.push(Band::new(k + width, dst, code));
+                    in_node += width;
+                    k += width;
+                    if in_node == node_width {
+                        id = L::next(e.a, id, 0);
+                        in_node = 0;
+                    }
                 }
             }
         }

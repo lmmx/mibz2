@@ -480,7 +480,7 @@ impl Kernel {
             self.offsets.push(0);
         }
         let mut cursors = if INDUCE {
-            self.induced(ns, n, &thin, &mut stats)
+            self.induced(ns, n, &thin, &mut stats, m <= ONE_ENDED_MOST)
         } else {
             let mut cursors = [0usize; 256];
             let (mut k, mut si) = (0, 0);
@@ -524,7 +524,7 @@ impl Kernel {
         }
         stats.table_bytes = 4 * (m as usize + self.extra.len());
         self.predecessor = None;
-        if QUEUE && !wide && m >= 65_536 {
+        if QUEUE && !wide && m > ONE_ENDED_MOST {
             let edges = &mut self.edges[..m as usize];
             edges.fill(0);
             let mut predecessor = mark;
@@ -674,6 +674,11 @@ impl Kernel {
         );
     }
 }
+
+/// The most retained rows a block's walk takes from one end (`emit`), with its bands
+/// coalesced; past it the walk takes both ends (`emit_bidirectional`), its bands as built.
+/// 98,304 rows is 384 KiB of `edges`.
+pub(crate) const ONE_ENDED_MOST: u32 = 98_304;
 
 /// Rows a thin run may have, as retained ranks (the arm `Open<16, true, true>` measured on the
 /// i9: bench-open-return, the moonshot runs)
