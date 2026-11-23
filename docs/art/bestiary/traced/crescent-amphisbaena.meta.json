@@ -2,7 +2,7 @@
   "specimen": "crescent-amphisbaena",
   "source_ref": "docs/art/bestiary/refs/louis/7-crescent-amphisbaena.jpg",
   "family": "C",
-  "preset": "parchment_pale_subject",
+  "preset": "parchment_pale_subject_fine",
   "source_style": "English bestiary miniature on vellum",
   "date_range": "13th century",
   "medium": "ink and pigment on vellum",
@@ -11,26 +11,26 @@
     0.0,
     0.0,
     300.0,
-    158.0
+    158.06
   ],
   "metrics": {
     "silhouette_iou_true_pct": 98.29,
-    "silhouette_iou_legacy_pct": 94.18,
-    "ink_iou_pct": 49.99,
-    "boundary_f1_1u_pct": 99.76,
-    "masked_color_rmse": 46.25,
-    "raw_kb": 11.17,
-    "gzip_kb": 4.55,
-    "path_count": 9,
-    "command_count": 720,
+    "silhouette_iou_legacy_pct": 93.94,
+    "ink_iou_pct": 86.93,
+    "boundary_f1_1u_pct": 99.91,
+    "masked_color_rmse": 45.59,
+    "raw_kb": 72.0,
+    "gzip_kb": 24.71,
+    "path_count": 16,
+    "command_count": 6827,
     "cmd_counts": {
-      "M": 73,
-      "l": 222,
-      "c": 229,
-      "h": 68,
-      "s": 5,
-      "v": 50,
-      "z": 73
+      "M": 911,
+      "l": 1946,
+      "c": 1422,
+      "v": 724,
+      "h": 835,
+      "z": 911,
+      "s": 78
     }
   },
   "vtracer_config": {
@@ -66,24 +66,24 @@
       "min_subpath_u": 0.6
     },
     "highlight": {
-      "scale_size": 650,
-      "blur_radius": 0.65,
+      "scale_size": 2000,
+      "blur_radius": 0.35,
       "threshold": 148,
-      "filter_speckle": 4,
+      "filter_speckle": 2,
       "corner_threshold": 60,
-      "length_threshold": 6.5,
-      "splice_threshold": 58,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
       "max_iterations": 10,
       "path_precision": 2,
-      "line_eps": 0.15,
+      "line_eps": 0.08,
       "smooth_eps": 0.15,
-      "min_subpath_u": 0.35
+      "min_subpath_u": 0.12
     },
     "accent": {
-      "scale_size": 650,
-      "blur_radius": 0.75,
+      "scale_size": 1800,
+      "blur_radius": 0.5,
       "threshold": 152,
-      "filter_speckle": 8,
+      "filter_speckle": 3,
       "corner_threshold": 60,
       "length_threshold": 7.5,
       "splice_threshold": 60,
@@ -94,18 +94,18 @@
       "min_subpath_u": 0.45
     },
     "ink": {
-      "scale_size": 750,
-      "blur_radius": 0.85,
-      "threshold": 164,
-      "filter_speckle": 5,
+      "scale_size": 2000,
+      "blur_radius": 0.35,
+      "threshold": 160,
+      "filter_speckle": 2,
       "corner_threshold": 60,
-      "length_threshold": 5.8,
-      "splice_threshold": 55,
+      "length_threshold": 3.0,
+      "splice_threshold": 50,
       "max_iterations": 10,
       "path_precision": 2,
-      "line_eps": 0.13,
+      "line_eps": 0.08,
       "smooth_eps": 0.15,
-      "min_subpath_u": 0.35
+      "min_subpath_u": 0.12
     }
   },
   "components_dir": "docs/art/bestiary/traced/components/crescent-amphisbaena",
@@ -113,37 +113,37 @@
     {
       "id": "body",
       "file": "body.svg",
-      "raw_kb": 7.56,
-      "gzip_kb": 3.18,
+      "raw_kb": 54.65,
+      "gzip_kb": 18.87,
       "bbox": [
-        42,
+        41,
         29,
-        222,
+        223,
         103
       ]
     },
     {
       "id": "left-head",
       "file": "left-head.svg",
-      "raw_kb": 1.81,
-      "gzip_kb": 0.89,
+      "raw_kb": 9.67,
+      "gzip_kb": 3.8,
       "bbox": [
-        22,
+        21,
         11,
-        56,
-        42
+        57,
+        43
       ]
     },
     {
       "id": "right-head",
       "file": "right-head.svg",
-      "raw_kb": 1.85,
-      "gzip_kb": 0.91,
+      "raw_kb": 7.73,
+      "gzip_kb": 3.03,
       "bbox": [
         233,
         5,
         53,
-        35
+        34
       ]
     }
   ],
@@ -153,13 +153,13 @@
     "components_sheet": "docs/art/bestiary/traced/crescent-amphisbaena-components.png"
   },
   "palette": {
-    "wash": "#846146",
-    "wash2": "#5c6573",
+    "wash": "#808289",
+    "wash2": "#927154",
     "warm_mid": "#d9c3ad",
-    "highlight": "#d9c4b1",
+    "highlight": "#ddc8b4",
     "ink": "#19100b",
-    "sage": "#6e7869",
-    "crimson": "#93453e"
+    "sage": "#757f6f",
+    "crimson": "#94453e"
   },
   "flaws_fixed": []
 }
