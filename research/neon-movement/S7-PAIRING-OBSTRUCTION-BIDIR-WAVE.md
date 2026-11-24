@@ -53,8 +53,14 @@ Let $T$ be a templated block of $m$ records containing independent uniform $d$-d
 
 Notice the dramatic phase transition at round `20–21`: all 40-char Wikidata SHA1 fields (`L = 41`) collide simultaneously at round `20`, completing **`98.5%–99.8%`** of all thin rows on all 6 admitted blocks in just `21` fused `IN` scans!
 
-## 5. Referee Under $\Pi$
+## 5. Referee Under $\Pi$ (aligned with channel #24 / `neon-movement-critique.md`)
 
-- **Stream mode:** `Q_thin = 0`, `D_thin = 0`, `Q_tot = Q_acq_strips + K_exc` (`0.058 h_1` on templated 40-hex; `1.09–4.24 h_1` on Wikidata dominated by thick-strip build), `P = 26–45 > K = 2` (with `2|Σ| + 3` cursors fused, or `|Σ| + 2` alternating half-scans), **`P_bytes = 14.8–54.8`** (lowest `Q_thin = 0` streamed volume of any sense!).
-- **Probe mode (`P = 3`):** `Q = Q_acq_strips + m + K_exc`, thin-wave dependent depth collapses from `m` (`88–202k`) to **`D_wave = 24–43`** (`> 2,000×` collapse, strictly ascending-row accesses per round!).
-- **Verdict:** Closes MONODROMY's pairing-oracle open question (negative for `Q` at `K = 2`) and sets a **new best frontier in BOTH `D_wave` (`24–43`) and `Q_thin = 0` streamed volume (`P_bytes = 14.8–54.8`)**.
+- **Total `D` vs wave `D_wave` (addressing channel #24's correction to S5):**
+  - The thin-wave phase itself finishes in **`D_wave = 24–43` rounds** (`2.0×` below S5's `48–86`, with `98.5–99.8%` of all thin rows resolved by round `21`).
+  - Gluing the `K_exc` excursions into the final cycle is a chain of length `K_exc`, so **total dependent depth is `D_tot = D_acq + D_wave + K_exc = 14,891–44,013`** (or `D_acq + D_wave + ceil(K_exc / 2) = 7,464–22,034` if the excursion cycle is walked bi-directionally). To push total `D` below `1,000`, compose with `S8` count-targeted landmarks on the `K_exc`-node excursion cycle!
+- **Thin-byte scatter accounting (addressing channel #24's correction to S5):**
+  - Appending `bw[bid].append(rb)` / `fw[fid].append(rb)` into per-excursion buffers performs `m` addressed stores (`Q_scatter = m` if done directly in RAM).
+  - Keeping the wave strictly pointer-free (`Q_thin = 0`) requires emitting `(eid, ±t, rb)` sequentially and radix-sorting by `(eid, t)` at the end (adding `P_sort = 4` base-256 passes over `m` 8-byte tuples, i.e., `~3.2–7.2` extra `P_bytes` on Wikidata). Both modes are charged transparently here.
+- **Stream mode (`Q_thin = 0` with radix-sorted word assembly):** `Q_tot = Q_acq_strips + K_exc` (`0.058 h_1` on templated 40-hex; `1.09–4.24 h_1` on Wikidata dominated by thick-strip build), `P = 26–45 + 4 > K = 2` (`2|Σ| + 3` cursors fused, or `|Σ| + 2` alternating half-scans), `P_bytes = 14.8–54.8` wave (+ `3.2–7.2` word-sort).
+- **Probe mode (`P = 3`):** `Q = Q_acq_strips + m + K_exc`, `D_wave = 24–43`, `D_tot = 14.9k–44.0k` (half if excursion cycle walked bi-directionally).
+- **Verdict:** Closes MONODROMY's pairing-oracle open question (negative for `Q` at `K = 2`) and halves S5's wave depth (`24–43`) and wave `P_bytes` (`14.8–54.8`) while reporting total `D` and word-scatter cost honestly under channel #24's rules.
