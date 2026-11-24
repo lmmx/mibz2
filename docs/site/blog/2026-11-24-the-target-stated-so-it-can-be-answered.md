@@ -33,7 +33,7 @@ comes from the step that took us from the walk to Rauzy–Veech induction, contr
 composition: rows that move together have their steps composed once and shared. Our proved floor
 says only that width-1 rows have nothing to move together with *in that sense*, so the way forward,
 in Louis's words, is to "find a different sense for something that can occur": to change what
-moving together means. The judging is the other half. The target as first written turned out to
+moving together means, in every sense we can find at once. The judging is the other half. The target as first written turned out to
 be decided by a bookkeeping convention, so we have restated it in real machine cost on a declared
 model, with the old floor to be carried across by a proof, the *bridge*. Those rules are the
 referee. They decide whether a find is real once a candidate exists; they do not produce one.
@@ -82,8 +82,14 @@ known costs ([our synthesis](https://github.com/lmmx/mibz2/blob/cdeef65aba3b5eba
 generalization, work smarter, not harder, rather. Find a different sense for something that can
 occur. It requires a kind of ability to think flexibly, laterally."
 
-Some directions follow, offered as examples rather than a closed list
-([the record of this principle](https://github.com/lmmx/mibz2/blob/33ee1f60fc829236fc4ea6780f1971ebc0ea0ed5/docs/journal/2026-11-24-algorithm-level/ESSENCE.md)):
+No one of these senses leads. Asked which should come first, Louis chose all of them, and named
+the move itself: "I don't want to frame it as one way only, because, we need this kind of, it's not
+ambiguity is the wrong word, but like overloaded term. So the term being like generalization,
+perhaps you might say, is the term, the Hilbert's 24th problem movement. And however you call it,
+we overload it, right, with the multiple ways in which it might occur. The recurrence, the moving
+together, the contracting along the text. Like, we want to look at all possible ones. In fact, we
+might want to look at even more." The senses named so far are pursued side by side, and finding
+further ones is part of the work ([the record of this principle](https://github.com/lmmx/mibz2/blob/b404cdf4f930ab9bff856382ecb3313453c31886/docs/journal/2026-11-24-algorithm-level/ESSENCE.md)):
 
 - **Contract along the text, not along the rows.** A repeated stretch of text is a run in the
   other direction, and copy plans are the start of it.
@@ -218,8 +224,8 @@ its own text calls open. One measurement note compared about forty edges against
 width-1 rows in an example with two runs, which cannot be right, since a block never has more
 width-1 rows than runs.
 
-The order of work follows from the two halves of this post. The search is for a new sense of
-moving together, and a candidate is first an idea of that kind, an object with its own rule of
+The order of work follows from the two halves of this post. The search is for new senses of
+moving together, all of them at once, and a candidate is first an idea of that kind, an object with its own rule of
 composition, before it is a cost. Once one exists, the referee applies: the specification of the
 machine, the bridge for the current family, and the four figures (Q, D, P, S) with building the
 object included. In the Mario manner, the supplied test then measures what the candidate's object
@@ -236,7 +242,7 @@ attempt it revisits, and what that attempt missed.
 
 **Sources:**
 
-- [The essence of the search](https://github.com/lmmx/mibz2/blob/33ee1f60fc829236fc4ea6780f1971ebc0ea0ed5/docs/journal/2026-11-24-algorithm-level/ESSENCE.md), and [Louis's words on it](https://github.com/lmmx/mibz2/blob/33ee1f60fc829236fc4ea6780f1971ebc0ea0ed5/docs/journal/2026-11-24-algorithm-level.md#34-the-essence-restated-change-what-moving-together-means) (journal §34), verbatim.
+- [The essence of the search](https://github.com/lmmx/mibz2/blob/b404cdf4f930ab9bff856382ecb3313453c31886/docs/journal/2026-11-24-algorithm-level/ESSENCE.md), and [Louis's words on it](https://github.com/lmmx/mibz2/blob/b404cdf4f930ab9bff856382ecb3313453c31886/docs/journal/2026-11-24-algorithm-level.md#34-the-essence-restated-change-what-moving-together-means) (journal §34), verbatim.
 - [The charge convention](https://github.com/lmmx/mibz2/blob/8e9b962c5fc94da61e1d47a0868897b7e96ccf0c/docs/journal/monodromy/2026-11-24-charge-convention.md): why the frozen target's answer is set by the charge on a pass and the pass budget.
 - [The problem, stated formally](https://github.com/lmmx/mibz2/blob/303b48c8ff010ba3fd6576d89d6fec2987409f09/docs/journal/monodromy/2026-11-24-council-formulation.md): the machine model, the cost vector (Q, D, P, S) and the conditions for a new basis.
 - [The outside review](https://github.com/lmmx/mibz2/blob/a12492459dc8e9fb26a8ca4fc0dd36a3392b4769/docs/journal/2026-11-24-algorithm-level/council/chatgpt.md), recorded verbatim, including its table of contradictions (§5.2) and its reading of the Mario repository.

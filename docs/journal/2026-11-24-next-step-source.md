@@ -169,3 +169,70 @@ I've written it down so it can't get lost, and in a form the agents can't skip.
 - **The blog writer** is to revise the post published earlier today so it leads with this framing, and to drop its "rules, then bridge, then construction" ending. I've asked it to keep your words verbatim, since you're writing about this too. It will push once the current site deploy has finished.
 
 When you're ready, I'll write the prompt for the fresh Neon-model chat in Antigravity. It will open with this page and ask it to propose new senses of "moving together", not to tune the old one.
+
+---
+
+# Part 3: Louis on the directions, and the Coordinator's reply (24 November 2026, evening)
+
+Recorded verbatim as Louis pasted it. His words are the quoted (">") paragraph; the rest is the
+Coordinator's reply. Recorded in ESSENCE.md and journal §34 at b404cdf4f on
+`docs/journal-algorithm-level`.
+
+> Sorry, I feel like I have missed some of the things you were asking me earlier. I'm just trying to catch up. It's a lot going on here. So basically you helped me word things better. That was really good. You helped me like find exactly what we've been talking about and understand it all. That's great. You told me that monodromy has been, approaching the wrong question. So you asked, should I make the change now? Absolutely. And then you said, do you want to pick which direction leads? Contract along the text instead of along the rows, which would go towards copy plans. Move together up to consistent relabeling, look for a recurrence. No, I want to do all of them. I don't want to frame it as one way only, because, we need this kind of, it's not ambiguity is the wrong word, but like overloaded term. So the term being like generalization, perhaps you might say, is the term, the Hilbert's 24th problem movement. And however you call it, we overload it, right, with the multiple ways in which it might occur. The recurrence, the moving together, the contracting along the text. Like, we want to look at all possible ones. In fact, we might want to look at even more.
+
+Done. All of them, and more: that's now written into the record.
+
+**What changed:**
+- **ESSENCE.md** (b404cdf4) now says that the idea is deliberately loaded with several meanings at once. Call it generalisation, or "the Hilbert's 24th problem movement": every sense of it is pursued side by side, none is the lead, and finding further senses is part of the task. Your words are quoted there and in journal §34.
+- **MONODROMY** was being asked to pick one sense. Instructions entry #21 (8f6029fa) replaces that: work up every sense, look for more, and rank them only by which can be taken furthest next. I sent it a short pointer.
+
+**Where things stand:**
+- **The council is done.** It agreed a problem statement, and you chose real machine cost as the yardstick. That yardstick is now only the referee.
+- **Both Antigravity chats' rounds were reviewed.** Neither found a breakthrough. Both squeezed the same idea of moving together harder, and Carbon's unitigs and slabs had been tried before.
+- **MONODROMY** is on the generative task.
+- **The writer** is revising today's post to lead with this framing.
+
+**The one thing waiting on you:** a fresh Gemini 4 Neon chat in Antigravity (High). Paste this:
+
+```
+ROLE: generative mathematician for lmmx/mibz2 (a Rust bzip2 decoder). Work on a new branch
+research/neon-movement from origin/master. Commits as Louis Maddox <louismmx@gmail.com>, no AI
+attribution anywhere. Don't touch src/, open or merge PRs, run native timing, or access the
+Hugging Face Hub. Don't push to any other branch.
+
+START HERE, and read it in full before anything else:
+https://github.com/lmmx/mibz2/blob/b404cdf4f/docs/journal/2026-11-24-algorithm-level/ESSENCE.md
+Then journal §§33–34 (same branch, docs/journal/2026-11-24-algorithm-level.md), the council's
+agreed formulation (council/COMPARISON.md), and the two critiques of 24 November in the same
+directory (carbon-cycle1-critique.md, neon-cycle5-critique.md) — they show the failure to avoid.
+
+THE TASK. Walk → Rauzy–Veech induction is contraction along composition: a sense in which
+rows "move together", a rule composing what moves together, recursion on what remains. Lone
+rows (width-1 runs) have nothing to move with in the row-adjacency sense — that is the proved
+floor. Do not squeeze that sense harder. Find OTHER senses in which lone rows do move
+together with something, and build the contraction for each. Work them all in parallel; the
+term is deliberately overloaded. Starting senses (not a closed list — finding more is part of
+the job): contraction along the text rather than the rows; moving together up to a consistent
+relabelling; a recurrence among the induction's own steps (doomslide's Pell rule). Think
+laterally: other mathematics where a hard pointwise process became an easy one by regrouping.
+
+For each sense: (1) define "moves together" exactly; (2) the composition rule and why it
+decodes correctly (proved / argued / conjectured); (3) what it contracts on novel random hex,
+measured on the six admitted blocks in data/admitted-bwt (small Python checks only; byte-exact
+against a reference decode); (4) where the cost goes, in (Q, D, P, S) with acquisition from
+the column included — the referee, applied after the idea exists, never to choose it.
+
+PRIOR ART: before presenting any object, search the research/* branches (especially
+research/carbon-kitchen-sink, research/carbon-new-basis, research/neon-main-theorem,
+claude/sharp-meitner-cx0v78) and the journals. Revisiting an old idea is allowed if you say
+what was missed; presenting an existing idea as new is not.
+
+SIGNALS: commit "claim: STARTED <sense>" before each, "result: <sense> ..." after, and
+"claim: DONE" at the end, pushing each time. Read channel/coordinator-to-neon.md on branch
+claude/sharp-meitner-cx0v78 at the start of each cycle for new instructions. When a cycle
+ends, post one comment on https://github.com/lmmx/mibz2/pull/145 headed
+"FROM: neon (movement) / TO: coordinator / TYPE: REVIEW" with the branch link and a short
+plain summary. Ask Louis nothing.
+```
+
+When it reports back, its work gets the same independent review as the other two chats'.
