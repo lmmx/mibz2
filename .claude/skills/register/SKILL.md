@@ -76,7 +76,42 @@ bound stays "every decoder in the current family", not "any decoder". If a fanci
 less precise, keep the plain one. Words like *bouleversement* or *anthyphairesis* belong where they
 name the thing exactly, with a gloss or a link.
 
-## 5. Check
+## 5. Shift register in the apparatus, not the argument
+
+The blog's most enjoyable page, the conversation with Thomas Murphy
+(`docs/site/blog/conversations/2026-11-22-thomas-murphy.html`, embedded in "Decompression is the
+harder problem"), gets its liveliness from register shifts that are
+**licensed by the ornament around them**. The main text stays modern and exact. The old voice
+lives only where the typography has already changed costume (Louis, 24 November 2026, asking that
+we mine it):
+
+- **The fleuron gloss speaks as an editor of an old book.** "Herein the post sets forth the device
+  this chat keeps circling: the comment thread of a GitHub pull request, made a message board for
+  the agents, wherein every missive is headed as a letter is … So the company goes about its
+  labours by summons and not by vigil: no agent polls, and naught passes through Louis's hands."
+  Note the pattern: an antique frame ("Herein … sets forth", "wherein", "keeps watch upon", "is
+  roused only when"), a closing antithesis ("by summons and not by vigil"), then a plain
+  restatement of the fact after the colon. The conceit never replaces the fact; it is paid off by
+  it.
+- **Blackletter falls on the one word a sentence turns on.** *naught*, *impoverished*, *theorems*:
+  a single word, the hinge of its sentence, set in `il-black`. Never a phrase-long run, and never
+  more than one in a paragraph.
+- **A mock-heroic rubric for a skirmish.** "Against the Beclauded Subagent", in blackletter,
+  heads the passage about a sub-agent that deleted work: a title in the manner of a polemical
+  tract, set over an episode that is small and comic. Use it where the content is a conflict or a
+  turn, never over a result.
+- **An epigrammatic gloss.** "A matter of taste: a liking, a greed even, for proofs about programs
+  that run, not a verdict on number theory." One sentence, with a self-correction in the middle ("a
+  liking, a greed even") and a disclaimer at the end that keeps it honest.
+- **The Compendium of Links** with illuminated capitals closes the page as a book's apparatus
+  would.
+
+Words that suit the gloss voice: *herein, wherein, whence, thereby, naught, as may be, sets forth,
+keeps watch upon, is roused, the reader may*. Each gloss should use at most one or two of them, and
+a post should give the old voice to a few glosses, not all of them. In the body, these words are
+mannered prose and are cut.
+
+## 6. Check
 
 - [ ] The opening reads as connected paragraphs, with no glossary block and no deliverables list.
 - [ ] The section 1 grep is clean, or each remaining hit is deliberate.
@@ -85,6 +120,8 @@ name the thing exactly, with a gloss or a link.
 - [ ] Read the opening aloud: it should sound like a lecturer leading the room, not a list being
       read out. Then read it against "Plain statement, not mannered prose": no metaphor has
       crept in where a fact should be.
+- [ ] Any old-voice turns sit in glosses, rubrics or blackletter words, and each is paid off by a
+      plain fact; none are in the body.
 - [ ] check_prose.py, link_audit.py and publish-page's checks still pass.
 
 ## Where it sits

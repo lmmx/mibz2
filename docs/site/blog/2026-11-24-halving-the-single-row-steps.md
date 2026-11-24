@@ -83,11 +83,11 @@ stands (§7).
 
 ## 1. The goal: a new algorithm, not a faster one
 
-The step from the walk to induction is the model. The walk follows the block's cycle one row at a
-time. Induction reframed the same permutation as an interval exchange, and moved whole stretches of
-rows at once. It was not a faster walk. It implemented different mathematics for the same
-specification, and its cost scaled with a different property of the block, one that is small on
-real data.
+The model for what we want is the step from the walk to induction. The walk follows the block's
+cycle one row at a time; induction recast the same permutation as an interval exchange and moved
+whole stretches of rows at once. It was not a faster walk but different mathematics for the same
+specification, and its cost scaled with a different property of the block, one that happens to be
+small on real data.
 
 <figure class="bf-fig">
 <p class="bf-title">The same permutation, read as a loop and as an exchange of runs</p>
@@ -96,29 +96,27 @@ real data.
 </figure>
 
 
-That gives the goal its shape. A constructive proof that the transform can be inverted *is* an
+This gives the goal its shape. A constructive proof that the transform can be inverted *is* an
 inversion algorithm: the walk is a proof by induction along the text, and the induction kernels are
-a proof by induction over the interval exchange. A new proof with a different structure is a new
-algorithm with a different cost. So the search is for a new proof of an old fact, with a cost
-element alongside correctness. Without that cost element, an algorithm can be changed and kept
-correct indefinitely, and whether it helps is discovered only at the end.
+a proof by induction over the interval exchange. A new proof with a different structure is therefore a new algorithm with a different cost, and the
+search becomes one for a new proof of an old fact, judged on its cost as well as its correctness.
+Without that second criterion an algorithm can be altered indefinitely while remaining correct, and
+whether any alteration helps is discovered only at the end.
 
 ## 2. Four reframings of the search
 
 **Use everything.** A [claimed proof of the Riemann hypothesis](https://alpo.ge/remark.pdf), still
 awaiting independent checking,
 built on
-[fifty older tools reaching back two centuries](2026-11-22-two-centuries-of-tools.md), made
-mathematical distance look cheap. Our [method](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/METHOD.md) adopted mathematical maximalism: no limit on
-how far a framework sits from compression, and chains of worlds, where one representation's job is
-to carry the problem into another. It produced fourteen frameworks tried and closed, and a register of
-obstructions. It did not produce the step.
+[fifty older tools reaching back two centuries](2026-11-22-two-centuries-of-tools.md), made mathematical distance look cheap, and our [method](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/METHOD.md) accordingly adopted a mathematical maximalism: no limit on how far a framework might sit from
+compression, and chains of worlds in which one representation's job is to carry the problem into
+another. The approach produced fourteen frameworks, each tried and closed, and a register of
+obstructions; it did not produce the step.
 
 **Count the cost.** A paper analysing the simplex method "by the book"
-([Bach, Black, Huiberts and Kafer](https://arxiv.org/abs/2510.21613)) puts cost theorems beside
-correctness theorems. We did the same. A census of our benchmark's blocks now predicts the time
+([Bach, Black, Huiberts and Kafer](https://arxiv.org/abs/2510.21613)) sets cost theorems beside correctness theorems, and we followed its lead. A census of our benchmark's blocks now predicts the time
 Open spends building its structures from three features of a block (held-out R² 0.96), and a lower
-bound, G1 (§3), says what every decoder in the current family must pay.
+bound, G1 (§3), states what every decoder in the current family must pay.
 
 <aside class="il-gloss" markdown>**[The census](https://github.com/lmmx/mibz2/blob/6793043730e41410487ff0b5dcd0f572049ae304/docs/journal/2026-11-24-wikidata-block-census.md)** timed Open on each of the 232 distinct
 blocks of our Wikidata benchmark, one worker at a time, and asked whether a few features of a
@@ -128,18 +126,18 @@ don't, which is one reason the price of an event (§5) stays an open question.</
 
 **Fix a binary target.** A [Super Mario 64 project](https://github.com/tra38/sm64-wmotr-abc-proof) asked whether a level's challenge
 could be done with <span class="il-black">fewer than one</span> press of the A button. That recasts a minimisation as a
-decision problem, settled either by a route or by a proof that none exists. Its decisive move came from
-working backwards. It set the impossible-looking condition by hand in a modified copy of the game,
-confirmed the payoff, and only then found how the real game could produce it, one supplied
-condition at a time. Payoff first, mechanism second: the supplied-codes test in §7 is the same move.
+decision problem, settled either by a route or by a proof that none exists. Its decisive move was to work backwards: it set the impossible-looking condition by hand in a
+modified copy of the game, confirmed the payoff, and only then sought how the real game could
+produce it, one supplied condition at a time. Payoff first and mechanism second is also the logic
+of the supplied-codes test in §7.
 
 <aside class="il-gloss" markdown>**The A-button challenge** is a long-running game among Super
-Mario 64 players: finish the game pressing the jump button as few times as can be managed. With
-the record at one press, [this project](https://github.com/tra38/sm64-wmotr-abc-proof) sets out to prove, checked by machine in the Rocq
+Mario 64 players: to finish the game pressing the jump button as seldom as may be. The record
+standing at one press, [this project](https://github.com/tra38/sm64-wmotr-abc-proof) sets out to prove, checked by machine in the Rocq
 proof assistant, that the game can never be finished with none.</aside>
 
-What makes "fewer than one" force a leap is that it forbids the obvious mechanism: the tool every
-ordinary route relies on. mibz2 has an exact counterpart.
+"Fewer than one" forces a leap because it forbids the obvious mechanism, the tool on which every
+ordinary route relies, and mibz2 has an exact counterpart:
 
 | | The Mario 64 challenge | mibz2 |
 |---|---|---|
@@ -155,22 +153,20 @@ new algorithm or an increment stops being a judgement and becomes a consequence 
 
 Our [target](https://github.com/lmmx/mibz2/blob/d60c4215e5afa94478fff856b018275af157abd9/docs/team/research-charter/FRONTIER.md) now has the same form: invert every block
 exactly, in two passes and no more memory than Open, with at most h₁/2 events in all, and then
-beat Open's whole decoding time. A candidate either crosses
-that line or it doesn't. Each candidate starts with a supplied-capability test: hand the decoder
-what the new idea would compute, for free, and measure what it buys.
+beat Open's whole decoding time. The criterion is binary, and each candidate begins with a supplied-capability test: the decoder is
+handed, for free, whatever the new idea would compute, and we measure what that buys.
 
 **Keep the method, not the result.** In October the essayist doomslide published
 ["Against Mathematics"](https://doomslide.substack.com/p/against-mathematics), a polemic about what machines are doing to the subject. It tells
 the history of mathematics as a creature with three heads, each paid at a different rate: a proud
-head that discovers, a blind head that checks, and a slow head that understands. Proof assistants
-have already replaced the blind head. The essay reads this year's AI results, such as a batch of
-722 machine-written manuscripts released on 6 October, as the proud head's turn: results arrive
-with machine-checked proofs and nobody to explain them. Those reports are the essay's.
+head that discovers, a blind head that checks, and a slow head that understands. Proof assistants, it argues, have already replaced the blind head, and it reads this year's AI
+results, such as a batch of 722 machine-written manuscripts released on 6 October, as the proud
+head's turn: results that arrive with machine-checked proofs and nobody to explain them. (Those
+reports are the essay's own.)
 
 Three older ideas carry its argument, and each bears on our search:
 
-- **Hearers and Learners.** After Pythagoras died, his followers split. The [Hearers](https://en.wikipedia.org/wiki/Akousmatikoi){ .il-ref } kept his
-  sayings and dropped the reasons; the Learners kept both. A register of closed frameworks is a
+- **Hearers and Learners.** After Pythagoras died his followers divided: the [Hearers](https://en.wikipedia.org/wiki/Akousmatikoi){ .il-ref } kept his sayings and let the reasons go, while the Learners kept both. A register of closed frameworks is a
   list of sayings unless each entry keeps its reason: the counterexample, the scope, what would get
   past it, and what the attempt revealed.
 - **Archimedes' *Method*.** Archimedes sent the librarian at Alexandria not only his results and
@@ -180,15 +176,16 @@ Three older ideas carry its argument, and each bears on our search:
 - **Hilbert's lost 24th problem.** Hilbert planned a [24th problem](https://en.wikipedia.org/wiki/Hilbert%27s_twenty-fourth_problem){ .il-ref } for his 1900 list and left it in a
   notebook: a theory of the simplicity of proofs. Its key sentence is an instruction: "Given two
   routes, it is not right to take either of these two or to look for a third; it is necessary to
-  investigate the area lying between the two routes." Using everything had been a search for a
-  third route. This says to study the map between the routes we already have.
+  investigate the area lying between the two routes." Using everything had been a search for a third route; Hilbert directs us instead to the map
+between the routes we already have.
 
 <aside class="il-gloss" markdown>**The *Method*** came down to us in a single copy, the [Archimedes Palimpsest](https://en.wikipedia.org/wiki/Archimedes_Palimpsest){ .il-ref }, made in the tenth century and scraped from its parchment in the thirteenth, that the leaves might carry a prayer book. Heiberg read it beneath the prayers in 1906, and much of it was recovered only by imaging, between 1999 and 2008: a method nearly lost under a book of results of another kind.</aside>
 
-The essay makes the distinction between a result and a method with its own mathematics. In one
-retelling, the Pythagoreans are handed a wall of right triangles with whole-number sides. Checking
-them one by one, with knotted rope, gives results. Looking at the triangles whose short sides
-differ by one, a brother finds the rule that turns each into the next, and that rule is a method: it
+The essay draws the distinction between a result and a method with mathematics of its own. In one
+retelling the Pythagoreans are confronted with a wall of right triangles with whole-number sides.
+Checking them one by one with knotted rope yields results; but a brother who looks at the
+triangles whose short sides differ by one finds the rule that turns each into the next, and that
+rule is a method: it
 generates triangles that were never on the wall, and, run backwards, it proves that the diagonal of
 a square has no whole-number ratio to its side.
 
@@ -204,9 +201,9 @@ a square has no whole-number ratio to its side.
 <figcaption>Use Next and Back, or Play. The essay's triangles with short sides one apart, as pairs (s, c): s is the sum of the short sides and c the long side. One matrix carries each pair to the next and preserves s² − 2c² = −1; its inverse is the descent that shows √2 is irrational. A result is one triangle; the method is the rule.</figcaption>
 </figure>
 
-The essay's next retelling turns the rule into a proof. Lay the side of a square along its
-diagonal. It fits once, with a sliver left over. The sliver is the side of a smaller square in the
-corner, and the measuring starts again on a copy of the first figure. For whole numbers the process
+The next retelling turns the rule into a proof. Lay the side of a square along its diagonal: it
+fits once, with a sliver left over, and that sliver is the side of a smaller square in the corner,
+on which the measuring begins again as on a copy of the first figure. For whole numbers the process
 must stop, but for a true square it never does, so no unit, however small, measures both the side
 and the diagonal. The Greeks called this alternate subtraction <span class="il-black">anthyphairesis</span>. It is the Euclidean
 algorithm on two lengths ([*Elements* X.2](https://mathcs.clarku.edu/~djoyce/elements/bookX/propX2.html)).
@@ -225,8 +222,8 @@ anthyphairesis on many intervals at once.
 
 The essay ends the story with a name. Plato records it in the [*Theaetetus*](https://en.wikipedia.org/wiki/Theaetetus_(dialogue)){ .il-ref } ([147d](https://www.perseus.tufts.edu/hopper/text?doc=Plat.%20Theaet.%20147d)): [Theodorus](https://en.wikipedia.org/wiki/Theodorus_of_Cyrene){ .il-ref .il-c3 } showed,
 one case at a time, that the sides of squares of three, five and so on up to seventeen square feet
-have no common measure with a foot. Theaetetus stopped taking the cases one at a time and called
-them all <span class="il-rubric">powers</span>. That is the move from checking frameworks to naming an operation. Contraction
+have no common measure with a foot. Theaetetus ceased to take the cases one at a time and named them all together as <span class="il-rubric">powers</span>. It is the move from checking cases to naming an operation, the move our search must make with its
+frameworks. Contraction
 along compose, in §4, is our attempt at it: one name for what turns each of our decoders into the
 next.
 
@@ -242,14 +239,14 @@ The readings and records this post draws on are kept verbatim in our [source rec
 
 ## 3. Three routes back from the BWT
 
-mibz2 decodes bzip2, and the expensive step is undoing the Burrows–Wheeler transform (BWT). The
-transform sorts every rotation of a block of text and keeps the last letter of each, the column L.
-Undoing it means following a map called LF, which takes a row of the sorted table to the row one
-letter earlier in the text. With C[c] the number of letters smaller than c,
+The expensive step in decoding bzip2 is undoing the Burrows–Wheeler transform. The transform sorts
+every rotation of a block of text and keeps the last letter of each, the column L, and undoing it
+means following LF from each row of the sorted table to the row one letter earlier in the text.
+With C[c] the number of letters smaller than c,
 
 $$LF(x) = C[L[x]] + \#\{\,t < x : L[t] = L[x]\,\}.$$
 
-We have three exact routes along LF, at very different costs:
+We have three exact routes along it, at very different costs:
 
 - **the walk** applies LF one row at a time;
 - **Cells**, our [Rauzy–Veech kernel](2026-11-10-rauzy-veech-reconstruction.md), moves whole
@@ -257,19 +254,17 @@ We have three exact routes along LF, at very different costs:
 - **Open** ([Open Returns](2026-11-19-open-returns.md)) does the same for thick stretches and walks
   the thin ones.
 
-A **width-1 row** is a run of one letter whose neighbours differ, so no stretch carries it. We have
-proved a lower bound, G1: every decoder in the current family pays at least one event on each
-width-1 row. Its scope is that family. Rules that move several rows on a shared context need an
+A **width-1 row** is a run of one letter whose neighbours differ, so no stretch carries it, and our lower bound, G1, proves that every decoder in the current
+family pays at least one event on each. Its scope is exactly that family: rules that move several rows on a shared context need an
 argument of their own (§6).
 
 On our Wikidata benchmark most of these rows come from
 [random statement IDs](2026-11-20-where-the-decoding-work-goes.md). On six blocks we measured
 closely, about 65% of the width-1 rows lie in hexadecimal tokens that occur only once, 18% in hex
-tokens that repeat and 17% in everything else. Repetition is not the difficulty. Across 3,645
-repeated 40-character SHA-1 hashes on those blocks, only 3 bytes fall in width-1 runs. Each novel
-hash has about 36 of its 40 bytes in them, close to the $(15/16)^2 \times 40 \approx 35$ that random
-hex predicts. So a block splits into two streams, the random rows and the rest, and the cost adds
-over the two.
+tokens that repeat and 17% in everything else. Repetition is not the difficulty: across 3,645
+repeated 40-character SHA-1 hashes on those blocks, only 3 bytes fall in width-1 runs, whereas each novel hash has about 36 of its 40 bytes in them, close to the $(15/16)^2 \times 40 \approx 35$ that random
+hex predicts. A block therefore splits into two streams, the random rows and the rest, and its
+cost is the sum of the two.
 
 ## 4. Between the routes we have
 
@@ -277,8 +272,7 @@ Put to mibz2, Hilbert's instruction asks: what transformation turns the walk int
 into Open? What does it keep, what does it remove, and what can it never remove? Our
 [record](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a46e94be1fdc5d461/docs/journal/monodromy/2026-11-24-ordered-frontier.md) answers it for these three; the proofs are there.
 
-The answer is **contraction along compose**. Think of a decoder as tiling the block's cycle with
-steps. Two consecutive steps can be replaced by their composite, and wherever a whole stretch of
+The answer is **contraction along compose**. A decoder can be pictured as tiling the block's cycle with steps. Two consecutive steps can be replaced by their composite, and wherever a whole stretch of
 rows stays inside runs of one letter, the composite covers the stretch in one step:
 
 <figure class="bf-fig">
@@ -299,22 +293,23 @@ What the transformation keeps, removes and cannot touch:
 | **On scattered rows** | it carries order (the frontier) but removes nothing: one count per row |
 
 This is the shape Hilbert asked for: not a third route, but the map between the two we had, with
-its invariant. It also says where a fourth decoder would have to come from. An event disappears
-only where LF applied to a set of rows has a description much shorter than the set. Stretches of
-one letter are one such family. The open question is whether a scattered set, such as the rows of
-the random IDs, has another.
+its invariant. It also says where a fourth decoder would have to come from, since an event disappears only where
+LF applied to a set of rows has a description much shorter than the set. Stretches of one letter
+form one such family; the open question is whether a scattered set, such as the rows of the random
+IDs, admits another.
 
-One limit is sharp. The IDs' letters are random, about 4 bits a row, so any description of where
-those rows go needs at least 4 bits per row. That bounds the *size* of the description, not the
-*number of events* needed to apply it. A description applied in few, wide steps isn't ruled out.
+One limit is sharp. Because the IDs' letters are random, about 4 bits a row, any description of where
+those rows go needs at least 4 bits per row. That bounds the *size* of the description, however, not the *number of events* needed to apply
+it, so a description applied in a few wide steps is not ruled out.
 
 ## 5. Two proposals, and what they amount to
 
-Two outside readings of the essay each proposed a way forward. Here is what each turns out to be.
+Two outside readings of the essay each proposed a way forward; this section weighs what each
+amounts to.
 
 ### Moving scattered rows together
 
-The walk follows one random ID letter by letter before it reaches the next. The first proposal is
+The walk follows one random ID letter by letter before it reaches the next; the first proposal is
 to move all the IDs at once: take the sorted set of rows where the IDs begin, apply LF to all of
 them, and group the results by the letter each row emits. Within one letter LF keeps order, and
 smaller letters land below larger ones, so the result is sorted again with no comparison sort.
@@ -344,14 +339,14 @@ What the [frontier](https://github.com/lmmx/mibz2/blob/c47a2a15e13de24b9cc7564a4
 - **Gap counts.** Within one letter c, the gap between consecutive destinations is the number of c's
   between the two source rows: with $b_c = LF(x_0)$ and $g_i$ the count of c in $[x_i, x_{i+1})$,
   $LF(x_i) = b_c + \sum_{j<i} g_j$. One step of the frontier is a matter of counting letters in
-  gaps. Many steps, carrying each ID's identity to its place in the output, is the hard part.
+  gaps. The hard part is many steps: carrying each ID's identity to its place in the output.
 
 <aside class="il-gloss" markdown>
 
 **Backward search** is how a compressed full-text index finds a
 pattern. It reads the pattern from its last letter to its first, and each letter narrows an
 interval of sorted rows by one LF step. Searching for many patterns at once moves all their
-intervals together, which is the frontier's step in another use.
+intervals together, which is the frontier's step put to another use.
 
 </aside>
 
@@ -373,8 +368,8 @@ As a whole decoder, it would still have three jobs to do:
 
 ### The count of events against their price
 
-The second proposal separates two things G1 runs together. G1 floors the *number* of
-width-1 events. Nothing floors the *price* of each one. A decoder that took the same events far more
+The second proposal separates two things G1 runs together: G1 floors the *number* of width-1
+events, but nothing floors the *price* of each, so a decoder that took the same events far more
 cheaply would sit outside the bound.
 
 What our records say about the price:
@@ -383,8 +378,7 @@ What our records say about the price:
   Open's cycle, in a small C program, bought 5–14% while each step's append, the write of its
   letters to the output, was branchy and variable-length. Once each append was a single 16-byte
   store, eight lanes cut the time spent writing the output to 0.55–0.78 of what it was, though
-  either change alone barely moved it ([toy-transfer](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md)). Hiding the wait for memory pays once the work per
-  step is small.
+  either change alone barely moved it ([toy-transfer](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-20-toy-transfer.md)). Hiding the wait for memory, in other words, pays only once the work per step is small.
 - **Lanes in the decoder itself.** mibz2 already has that store
   ([Sixteen at a stroke](2026-11-21-sixteen-at-a-stroke.md)); there, eight lanes were 13% faster on
   one thread and 5% slower once eight decoding threads shared the processor
@@ -393,17 +387,16 @@ What our records say about the price:
   [squared map](https://github.com/lmmx/mibz2/blob/f7c0f03d6613cd11a5350ad480d4691157af4e95/docs/journal/2026-11-23-emit-cost-sq.md) halving the number of steps that wait on memory, took 1.22 times as
   long per step to write the output on ten threads, and the whole decode about 1.3 times as long. It also changed the footprint and the preprocessing, and recorded no miss counts.
 
-So neither the event count nor the count of memory waits sets the time on its own. The work in
+Neither the event count nor the count of memory waits, then, sets the time on its own: the work in
 each step and the waits between steps interact, and only the whole decoder's time decides. The
 price per event is an open question in its own right.
 
 ## 6. What a new route would have to be
 
-**Not a short proof.** Lower bounds on proof size are classically escaped by abbreviation: name a
-composite once and reuse it. G1 already charges
-shared work only once, and [survives it](https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md). Nor is a short statement enough. The formula in
-§3 is already a one-line rule for every row of every block, and applying it row by row is the walk.
-Short to state, short to prove and cheap to execute are three different properties.
+**Not a short proof.** The classical escape from lower bounds on proof size is abbreviation, naming a composite once and
+reusing it; but G1 already charges shared work only once, and [survives it](https://github.com/lmmx/mibz2/blob/c03c7ab277dd23fc12f9361142a68c4e785f9faa/docs/journal/monodromy/2026-11-24-abbreviation-and-crc.md). Nor is a short statement enough: the formula in §3 is already a one-line rule for every row of
+every block, and applying it row by row is simply the walk. To be short to state, short to prove
+and cheap to execute are three distinct properties.
 
 **An interface with its costs exposed.** A candidate would have to take the form
 
@@ -414,24 +407,21 @@ reading it, every access to L counted. If Emit's first act is to enumerate rows 
 the candidate has moved the walk, not removed it. A useful test is to supply z for free and look
 at what consumes it.
 
-**Carrying identities, not only sets.** Compressing the set of rows is not enough. For the set of
-all rows, $LF^h$ of the set is the set itself, a constant description for every h, and nothing is
-decoded. What a decoder needs is the labelled map $x \mapsto LF^h(x)$, carrying each start's
+**Carrying identities, not only sets.** Compressing the set of rows is not enough: for the set of all rows, $LF^h$ of the set is the set itself, a constant description for every h, from which nothing is decoded. What a decoder needs is the labelled map $x \mapsto LF^h(x)$, carrying each start's
 identity to its place in the output.
 
 **Beyond the swap argument.** We also have lower bounds for rules that read only aggregate counts,
 such as how many of each letter lie in an interval. They rest on swaps: two letters exchanged so
 that the column is still the BWT of some text (a valid column), every count is unchanged, and the
-output differs. A cheap order-sensitive summary defeats every such swap. With letters coded as numbers,
+output differs. Every such swap, however, is defeated by a cheap order-sensitive summary. With letters coded as numbers,
 the first moment
 
 $$A(L) = \sum_i i \cdot \mathrm{code}(L[i])$$
 
 changes by $(i-j)(\mathrm{code}(L[j]) - \mathrm{code}(L[i])) \ne 0$ under any swap of unequal letters
 at $i$ and $j$, and a run of code $a$ over $[s, e)$ contributes $a\,(s+e-1)(e-s)/2$, so A takes one
-pass over the runs. Yet it decodes nothing: `bca` and `cab` have the same letters and the same
-moment, A = 2, while their LF maps are [1, 2, 0] and [2, 0, 1]. Separating swaps is not
-decoding. A stronger lower bound has to find two valid columns that every permitted observation,
+pass over the runs. Yet it decodes <span class="il-black">nothing</span>: `bca` and `cab` have the same letters and the same
+moment, A = 2, while their LF maps are [1, 2, 0] and [2, 0, 1]. Separating swaps is not the same as decoding, so a stronger lower bound must find two valid columns that every permitted observation,
 taken together, fails to tell apart.
 
 <figure class="bf-fig">
@@ -459,13 +449,12 @@ interior rows directly.
 declared class of decoders. Suppose every byte is written by a rigid fact, an interval moved by one
 translation, and positions come only from labels on the start rows of those facts. Then every
 decoder of that kind pays $c_1 \ge h_1 - |B|$ events, where $B$ is the set of width-1 rows placed
-by a label read off an uncharged observation. All of the theorem's content is in how large $B$ can
-be.
+by a label read off an uncharged observation. The theorem's whole content therefore lies in how large $B$ can be.
 
 <aside class="il-gloss" markdown>**An uncharged observation** is something a decoder may read
 for free under our counting rules: a summary that folds the whole block into a few numbers, such as
-how many of each letter it holds, or the first moment below. Only reading a single row's own record
-to settle that row costs an event, so the question is how much such free summaries can place.</aside>
+how many of each letter it holds, or the first moment below. Only the reading of a single row's own record, to settle that row, is charged as an event; whence
+the question of how much such free summaries can place.</aside>
 
 A row can be placed from an observation only if every valid column with the same observation puts
 it in the same place; otherwise one fixed rule is wrong on one of them. That turns the question into
@@ -492,12 +481,11 @@ does not cover, and the nearest decoders outside it measured.
 
 ## 7. Where the search stands
 
-The target is precise, and it was fixed before any candidate was tested. On every block, an exact
-decoder must pay at most h₁/2 events in all, in at most two passes over the block and no more scratch memory than Open. It
-must be one fixed program with no stored answers, and it must beat our current decoder on whole
+The target is precise, and it was fixed before any candidate was tested: On every block, an exact
+decoder must pay at most h₁/2 events in all, in at most two passes over the block and no more scratch memory than Open; it must be one fixed program with no stored answers; and it must beat our current decoder on whole
 decoding time.
 
-The target is harder than its headline. Counted strictly, Open pays one event for every retained
+The target is also harder than its headline suggests. Counted strictly, Open pays one event for every retained
 step, m of them, not only for the h₁ width-1 rows. Even if every width-1 event became free, the
 steps on wide runs would remain, so a decoder that cheapens only the random rows needs
 $h_1/m \ge 2/3$. Across the 232 distinct blocks of our benchmark, $h_1/m$ is 0.41 overall and
@@ -516,14 +504,13 @@ work proves one, closes one, or measures what one would need.
 - **The count.** G1 holds for the current family, with shared work counted once. What it doesn't
   cover is a rule applied to a whole scattered set, with a short description that is also cheap to
   apply: the Build, Advance and Emit of §6.
-- **The price.** A separate question. The records show the price per event moving with the work in
+- **The price** is a separate question: the records show the price per event moving with the work in
   each step and with how steps overlap, not with either count alone.
 - **The supplied test has run.** Handed its word codes already in output order, for free, Open
   spent half as long writing the output (0.55 of its time). The whole decoder took 0.988 of its
   time on ten threads, and 0.838 on one ([the result](https://github.com/lmmx/mibz2/pull/145#issuecomment-7132792060)). On ten threads that is far below the
-  10% our method asks of a perfect version before building a native prototype, so this
-  representation stops here: even a free order buys little once ten threads share the machine.
-  On one thread there is 16% to win.
+  10% our method asks of a perfect version before building a native prototype, so this representation stops here; even a free order buys little once ten threads share the
+machine, though on one thread there is 16% to win.
 - **Exactness.** mibz2 must be exact on every block, so checking a guessed decoding against bzip2's
   32-bit block checksum, which would accept a wrong guess about once in four billion, is not a route.
 
@@ -534,9 +521,9 @@ work proves one, closes one, or measures what one would need.
 </figure>
 
 
-Read together, the four reframings say what the search now values. Using everything supplies
-the material. Counting the cost supplies the measure. The binary target supplies the line a candidate has
-to cross. The last says what to keep from each attempt: not the verdict alone, but the method
+Read together, the four reframings say what the search now values: using everything supplies the
+material, counting the cost the measure, and the binary target the line a candidate has to cross.
+The fourth says what to keep from each attempt: not the verdict alone, but the method
 behind it, the transformation with its invariant, which can generate the next route. The three
 decoders are results. Contraction along compose is a method: it explains why each route costs what
 it does, and names the one thing, the width-1 rows, that a new route must find another way to
