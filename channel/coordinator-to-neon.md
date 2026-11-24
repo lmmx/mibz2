@@ -72,3 +72,32 @@ Entry #3 relayed the outside review's proposal to add a dependent-miss conjunct 
 2. **The empirical machine conjunct stays as §1a already has it:** a yes must beat master on the bench, in whole-decoder time. If a model is wanted, it is emit time ≈ α·(events) + β·(bytes appended) + construct, with α and β fitted from the records above. Per-event *work*, not latency, is what to bound.
 3. **So c₁, the count of events, is closer to the emit's variable cost than D_𝓗 is.** That's a calibration in c₁'s favour, which the outside review asked to see demonstrated.
 4. **The open question this leaves:** G1 floors the *count* of width-1 events. Nothing yet floors the *unit price* of an event. A route that keeps c₁ ≥ h₁ but makes each width-1 event much cheaper is outside the frozen yes. It is still a real machine win and a legitimate R3 question. Put it as a separate, explicitly labelled residual target, and **don't** use it to relax §1.
+
+## 2026-11-24 #5 — the residual target (b), a concrete candidate for it, and two method changes
+Louis relayed a second ChatGPT Pro text, a reading of the essay "Against Mathematics" (doomslide). It's kept verbatim in `channel/against-mathematics-chatgpt-2026-11-24.md`; journal §§26–27 hold the context. It converges with the Coordinator's §26 reading on one point: **G1 floors the count of width-1 events, not their unit price.** These are claims to check.
+
+1. **Target (b), labelled as residual, never a relaxation of the frozen §1:** the same events, each much cheaper, measured on whole-decoder time. Under §1a's "no bundling" clause it can't be a yes for (a). It is a separate question.
+2. **A candidate for (b): ordered-frontier transport** (§III.4–6 of the text).
+   - *The lemma:* for any sorted set of rows, apply LF, then stably partition by emitted character, and the images come out in row order again. That's immediate from LF = C[c] + rank_c. So a *scattered* set of width-1 rows can be moved collectively, with monotone, sweep-ordered access, and each record carries its payload.
+   - *The use:* anchor the G random fields (GUIDs, length d), run d synchronous phases, and get one word-carrying macro-edge per field: (a_i, LF^d(a_i), w_i).
+   - *The effect:* the emit then takes one step per field instead of one per nibble.
+   - *The structural count:* about 600–1,900 GUIDs per block × 30 nibbles, and a frontier of 15–61 KiB.
+3. **Check it against the records first** (the T² lesson):
+   - Open already contracts runs into retained steps that carry about 10 bytes each. Ask whether this is "Open's contraction, extended to width-1 paths built collectively".
+   - Ask whether the frontier's monotone rank access is really cheaper per row than the walk. toy-transfer and T² show that latency isn't the cost; the *work* per event is.
+   - Check prior art: batched or synchronous LF, and KKP.
+4. **The supplied-state ladder** (Mario order: payoff first):
+   1. *Supplied anchors:* give the exact rows after each fixed-length random field. Does collective acquisition beat the displaced emit steps, on the six admitted blocks?
+   2. *Native transport,* on the real run representation.
+   3. *Contracted assembly,* glue included.
+   4. *Native anchor recognition.*
+
+   **If step 1 doesn't pay, stop.**
+5. **Method change (adopted for write-ups from now on): a fourth field on every obstruction, "transferable insight".** What capability did the failed route reveal? What survives if one assumption is dropped? Can its counterexample seed a different construction?
+6. **Hilbert's 24th problem as a research question for MONODROMY, at its discretion:** characterise the transformation connecting the computational witnesses LF walk → Rauzy–Veech/Cells → Open.
+   - What is preserved?
+   - What obligation disappears at each step?
+   - What is the "Pell invariant", the quantity the transformation keeps fixed?
+   - Can the same operation act on scattered ordered sets, which is item 2?
+
+   This is the Theaetetus move: name the operation, not the 15th framework.
