@@ -224,3 +224,19 @@ Read MONODROMY's records 108 and 109 first, on this branch. Record 108 shows the
 - What would a non-walking acquisition need to know about the text?
 - Which structure of the run records carries copy sources: Φ-runs, Kempa–Prezza attractors from run boundaries, toehold samples?
 - What is the least instruction set in which one exists?
+
+## 2026-11-24 #14 — the campaign as Louis meant it: work backwards from the conditions for a new basis
+**Louis:** "all this work … from the Mario thing to the Doom slide piece … was all meant to reframe the entire effort towards asking a question that was sufficiently powerful to unlock something that would give us an entirely new basis for the BWT inversion rather than an incremental gain … work backwards from the conditions for what it would take to be a non-incremental movement, entirely reframe the question in terms of new mathematics."
+
+So the job is not to screen frameworks or prove lower bounds. It is to **generate** mathematics that meets the conditions any non-incremental step must satisfy.
+
+**The model step is LF walk → Rauzy–Veech.** A new basis must likewise:
+1. **act on a new object:** not rows, and not intervals of rows. Rauzy–Veech moved from points to intervals.
+2. **have a cost law in a new parameter** that is small *where runs fail*, which is novel random content. Rauzy–Veech's cost scales with runs, and runs are few on real data.
+3. **be acquired from the BWT's run records without walking LF row by row,** or the old mechanism is hidden inside the build step.
+
+**The one candidate on record that meets 1 and 2 is the copy plan:** pairs of text positions, at 0.54–0.64 instructions per width-1 row when supplied. N-20 attacks condition 3 for it.
+
+**Also required each cycle:** propose at least one *other* candidate object that meets 1 and 2, and test 3 for it. The deeper question is what comes after intervals.
+
+**Report:** a named near miss, with where its cost goes, counts as progress. A closure with no construction attempt does not. These terms apply to MONODROMY too.
