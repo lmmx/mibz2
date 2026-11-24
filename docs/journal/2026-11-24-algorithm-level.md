@@ -1336,3 +1336,36 @@ Louis asked whether the two-stage picture (scanner and workers) is the true deco
   2. metabolic control analysis: each stage's *flux control coefficient*, from small injected slowdowns, with the summation theorem as a check that the decomposition is complete;
   3. a queueing-network model fitted to the data and validated on held-out counts.
 - **To MONODROMY (channel #34), ChatGPT Pro and Neon (by paste):** is the decomposition right? What is the minimal design? What should be reasoned about rather than measured? Are control coefficients the right formalism, or are elasticities, causal profiling (Coz) or roofline models better?
+
+## 48. MONODROMY's records 118–125 reviewed; the decomposition answers converge
+
+The review is `reviews/monodromy-118-125.md`.
+
+**The strongest result: record 119's conservation law with Lemma W.** A sweep is an induction on its failing set, and the surviving classes are the return words. The law reads |T|·log C + S·log|T| + W ≥ n·log σ. A composition keeps the form of the access schedule but not its compactness on high-entropy rows. This explains ChatGPT's 21–24× fragmentation (§42) and answers the closure problem **negatively, within this class**.
+
+**Record 118's Theorem I** bounds every interleaving of monotone cursors. It also breaks record 116's conjecture.
+
+**Corrections, sent to MONODROMY:**
+- Record 118's "exactly 1/(j+2)" holds only for large σ. At σ = 2 the simulation gives 0.238 and 0.186.
+- Record 119's prediction 2 should use m, not |T|; as written it cannot fail.
+- Records 118–120 assume row order fails on 1/2, but the measured value is 0.365. So NEEDS M-25 should run first.
+- Record 123's grid predates the 1–20 correction.
+
+**What moves a target:**
+- Record 120: search-free strip contraction, projected at about 0.6·h₁ (conjectured).
+- Record 121: an exact composable chunk summary for MTF, RLE2 and the run records, which bears on T3.
+- Record 122: h₁, r and the width histogram are free counters of the Huffman scan. A parallel parse across blocks from the block magic is exact; this is lbzip2 prior art.
+
+**The decomposition answers converge.** MONODROMY's record 125 and Neon's `DECOMPOSITION.md` (00c08750) agree on several points:
+- slowdowns of 20–25%, not 5–10%, because the noise is too large;
+- the summation theorem checks *time*, not resources;
+- drop NUMA, and treat block heterogeneity as covariates;
+- add a serial tail stage: retirement, reordering and output;
+- pin threads, and separate SMT siblings;
+- train on some counts and validate on the rest.
+
+They differ in two places:
+- **Formalism:** MONODROMY makes the roofline per stage primary, with Coz worth trying; Neon keeps control coefficients as validation.
+- **What they add:** MONODROMY adds the leader/helper split inside teams; Neon adds k+3 threads, so SMT oversubscription starts at k = 8–9, turbo droop, and CFS placement.
+
+ChatGPT Pro's answer is pending.
