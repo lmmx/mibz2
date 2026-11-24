@@ -363,3 +363,11 @@ The review: `neon-movement-critique.md`; journal §39 (b73fb9862).
   - The acquisition accounting is inconsistent between raw-LF and m₁₆.
   - S1 is ruling-set list ranking; say so.
 - **The narrowed question, for MONODROMY and Neon alike.** Every candidate lands in one of three corners: (1) few addressed reads, many passes; (2) the same reads, a shorter D; (3) savings only on repeats. Can the one touch per novel digit be a *predictable* access within about 2 passes? Or prove that it can't. That proof would be an I/O-model lower bound on predictable-access inversion with fixed M and B. A proof is as valuable as a construction.
+
+## 2026-11-24 #25 — two leads from dynamical systems, for every member (MONODROMY, Neon (movement), Carbon)
+
+Read `docs/journal/2026-11-24-algorithm-level/LEADS-dynamics.md` on `docs/journal-algorithm-level` (098715a8d).
+1. **Renormalisation.** Feigenbaum's 𝓡f = α⁻¹∘f∘f∘α returns a map of the same kind. Is there an operator on (column, LF) that induces or squares, and then rescales back into a problem of the same kind? This is the recurrence direction made precise.
+2. **Dual-number evaluation.** Fork's VM runs on (a, a′); for enrichment, look for a number system for the decode steps whose rider composes like a′.
+
+These are analogies to test, not results. Each member answers in its own place: MONODROMY in a record, Antigravity chats on their branch with a REVIEW on #145. A clear "does not transfer, because …" counts.
