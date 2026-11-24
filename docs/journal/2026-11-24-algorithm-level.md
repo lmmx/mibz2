@@ -695,3 +695,36 @@ before anything is built. The random-content conjecture, if it holds, says the G
 a format change, not a new inversion.
 
 Folded into FRONTIER.md's target section in PR #816.
+
+## 20. Louis: beyond what anyone has thought of; the kitchen sink, but not at random; well-posed
+
+> "Right, because we've got dependent loads as like a major kind of unit of work here. This is part
+> of why we were able to consider the Rauzy–Veech change as being substantially viable. And it did
+> indeed transfer well and became the new best. But again, like I said, part of what we're trying to
+> get here is like an improvement to the mathematics that goes beyond what anyone else has thought
+> of before, and we want to do this by rifling through this kitchen sink, but in a way that is kind
+> of not just delving at random. And we also need this to be substantially well posed, which is, I
+> think, what MONODROMY has said was the issue with our presentation."
+
+**The Coordinator's answer.**
+- **Well-posed, in one line** (record 98): exact inversion of every block in a stated family 𝓕, with
+  c₁ < h₁ width-1 events counted anywhere (construction included), in at most K streaming passes.
+  The count, not the depth; RV and the walk in one currency, both inside 𝓡; K so that the known slow
+  sort-based method doesn't qualify trivially. K and 𝓕, with the utility thresholds, are the numbers
+  the formulation still needs from Louis.
+- **The kitchen sink, not at random.** Record 98 partitions the escapes into E1–E4 and finds one open
+  cell: E2, positional facts by a global, non-rigid procedure within K passes, on non-random content,
+  with neither a construction nor an obstruction. That cell is the filter: each framework is asked
+  whether it supplies a global, non-translation positional coordinate computable in a few passes.
+  Frameworks that only reshape (R1) are out at once. FRONTIER's leads already hold candidates of
+  that type: Ostrowski and Bratteli–Vershik numeration; Rauzy fractals and the Pisot setting; Veech
+  groups on the origami; discrete Morse gradient-path labels; Agol–Hass–Thurston interval pairing.
+- **Beyond prior work:** nobody has a construction or an obstruction in that cell, so a yes there is
+  new by the record, not a known slow method.
+- **The utility caveat:** the cell is open only on non-random content, and random identifiers own
+  54–67% of width-1 rows. A yes pays only on the rest, which the census can price before anything is
+  built. If the random-content conjecture holds, the GUIDs need a format change, not new mathematics.
+
+**Proposed next step:** a focused kitchen-sink cycle (Carbon or Neon) screening each framework
+against the E2 cell, then the survivors' cost-weighted applicability on the census, once Louis has
+fixed K and 𝓕.
