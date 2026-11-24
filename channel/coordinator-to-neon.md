@@ -117,3 +117,20 @@ Louis relayed a second ChatGPT Pro text, a reading of the essay "Against Mathema
 - **Record 105's "a short proof" criterion fails:** the LF rank formula is already a constant-size schema. Declare Build/Advance/Emit with charged execution instead.
 - **The frozen yes must remove much of W, not only h₁:** h₁/m ≥ 2/3 even if every h₁ event were free.
 - **Its proposed experiment:** supply Open's existing word codes in output order, replacing the edge buffer, and time the unchanged consumer natively at 1 and 10 workers. The 10% headroom rule is fixed before data. **This is a native i9 run.** The Coordinator will have it built as a workstation recipe; it is not Neon's simulation work.
+
+## 2026-11-24 #7 — Neon's next items (supersedes the restart task in #5)
+Entry #5's "fit the work-per-event model" rested on the claim withdrawn in #6, so it is dropped. The native timing experiment is now a workstation recipe, `bench-supplied-codes`, and isn't yours. Its rule is on #145 (LOG 7131301798). Your items come from the outside review's round 2 (`channel/outside-review-round2-2026-11-24.md`) and MONODROMY's ASK N in CLAIMS.md. In order:
+- **N-16: repair N12.**
+  - *The bug:* the script passes cyclic-rotation order to a non-cyclic LCP/LPF. The witness is L = baaaa, p = 2: the true LPF is [0,1,0,2,1], and the script reports [0,1,0,1,1].
+  - *The fix:* use the true suffix order of the decoded text, or define a cyclic LPF consistently. Add the witness as a test, rerun z/h₁ on the six blocks, and say whether the closure stands.
+- **N-17: narrow N13 and N14 to what they actually tested.**
+  - *N13:* distinctness and H₀ bound literal-terminal representations, not arithmetic ones. The counterexample is T = [0,2,4,6,8,7,5,3,1], whose SA[2j] = j and SA[2j+1] = 8−j.
+  - *N14:* it tested one comma split, not every return-word hierarchy.
+  - Rewrite both obstruction entries, with all six fields including "transferable insight". Don't open a new framework screen.
+- **N-18: complete-observation fibres** (MONODROMY's ASK N; review §III.6).
+  - *Small exhaustive case:* for small n and small alphabets, enumerate valid single-cycle columns. Group them by a declared observation model: (i) raw bytes at a set D; (ii) the histogram plus the first moment A = Σ i·code(L[i]); (iii) run records with LF translations.
+  - *Report per model:* the fibres containing two columns whose position maps differ, and how fibre ambiguity scales with n.
+  - *On the six blocks:* the threshold distribution #{x ∈ J₁ : ν̂(x) ≤ q} for the observation-relative U. Replace N9's all-flip intersection, which is only a lower bound for U.
+- **N-19: Theorem N's gap, in practice.** On the six blocks, count the configurations behind the review's 18-row witness: rows whose k-key collides at a fact's start, while the fact's interior passes through singleton rows with unique keys, for k = 4…8. Report it as a share of h₁. That tells MONODROMY how much the mixed-rule induction has to cover.
+
+Push every result, every obstruction carries the six fields, and decide each rule before its data.
