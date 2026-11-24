@@ -101,3 +101,8 @@ A **basis** is 𝔅 = (Φ, Obj, π, Acq, Run):
 4. **Theorem domain.** 𝓖 with 𝓕 validating, or 𝓕 alone. **Recommend 𝓖**; 𝓕 alone admits a table.
 5. **Scalar or vector verdict.** A yes on Q alone, or on P-cal's priced scalar. **Recommend both, in that order**: Q is the structural claim, the scalar the gate to native work.
 6. **Must objects avoid text positions?** No source decides. **Recommend no constraint**; P-place prices it.
+
+
+## Corrections (after the council comparison)
+
+Three errors confirmed by `council/COMPARISON.md`, and one figure, are corrected in record 112 §5: exactness on non-valid columns (the contract is the marked cycle repeated and cut at n); the constant must sit inside the margin; "R3 ∧ R4 unsatisfiable" is [A], not [P]; 0.55–0.78× is lanes with branchless appends. The text above is left as written.
