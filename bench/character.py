@@ -7,8 +7,10 @@ the block rows and the features, and reports the decoder's character across 1 to
   activity's demand and each wait (start-up, steady and drain apart); the buffers' occupancy;
 - the operational laws, checked in every decode (Little's law per buffer, utilisation, forced
   flow, conservation, admission, each thread's timeline partitioned);
-- k*, the first count whose median starvation gap is positive, with its round-bootstrap
-  interval, and the near-optimal set (within 2% of the best median wall);
+- k_balance (the brief's k*, renamed by the design review), the first count whose median
+  starvation gap is positive, with its round-bootstrap interval, and the near-optimal set
+  (within 2% of the best median wall); the workers' idle time while the scanner is active,
+  which shows the scanner limiting;
 - each count's limit, by the registered rule (SCANNER-, WORKER-, ADMISSION-LIMITED or MIXED);
 - the ledgers' cost (paired on and off at 1, 10 and 20);
 - the counters at the anchors, the memory controller where counted, the public API's sweep;
@@ -98,18 +100,24 @@ def derived(d: dict) -> dict:
         "slot_wait": sc.get("slot_wait", 0),
         "in_wait": sc.get("in_wait", 0),
         "read_wait": rd.get("read_wait", 0),
-        "reader_active": rd.get("A10", 0) - rd.get("read_wait", 0),
+        # (the state totals are exclusive: A10's is its read calls less the waits nested in them)
+        "reader_active": rd.get("A10", 0),
+        # (the reader's time, the design review §1: its copy out and the decoder's work in its
+        # read calls, the sink's (the caller's own, between them), and its wait for the next block)
+        "reader_copy": rd.get("A10", 0),
+        "reader_sink": rd.get("resid", 0),
         "feeder_A0": fd.get("A0", 0),
         "feed_wait": fd.get("feed_wait", 0),
     }
     for a in ACT:
         x[f"scanner_{a}"] = sc.get(a, 0)
         x[f"worker_{a}"] = wk.get(a, 0)
-    sb = [0, 0]
+    sb = [0, 0, 0]
     for t in d["threads"]:
         if t["role"] == "Scanner":
-            sb = t.get("slot_bound", [0, 0])
-    x["slot_window"], x["slot_cap"] = sb[0] / 1e9, sb[1] / 1e9
+            sb = (t.get("slot_bound", []) + [0, 0, 0])[:3]
+    # (the admission waits by what held them: the window alone, the cap alone, both)
+    x["slot_window"], x["slot_cap"], x["slot_both"] = sb[0] / 1e9, sb[1] / 1e9, sb[2] / 1e9
     # the steady phase's shares
     steady = max(d["t2_ns"] - d["t1_ns"], 0) / 1e9
     st = role_totals(d, 1)
@@ -240,6 +248,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("runs")
     ap.add_argument("--lscpu", required=True)
+    ap.add_argument("--lscpu-e", help="lscpu -e: each CPU's core, for the placement")
     ap.add_argument("--features", required=True)
     ap.add_argument("--blocks-dir", required=True)
     ap.add_argument("--tsv-dir", required=True)
@@ -404,12 +413,12 @@ def report(recs: list[dict], a, incomplete: list[str]) -> None:
         )
     print("\n## Where the time goes (seconds a decode; scanner, the mean worker, reader, feeder)\n")
     print(
-        "k   scan busy  A2     A3     maint  issue  in_wait slot(win/cap)   wkr busy starve  A5     A6a    A6b    A6c    A7     A8     A9     pool+pub  rd_wait  A0"
+        "k   scan busy  A2     A3     maint  issue  in_wait slot(win/cap/both)      wkr busy starve  A5     A6a    A6b    A6c    A7     A8     A9     pool+pub  rd_wait  A0"
     )
     for s in summary:
         k = s["k"]
         print(
-            f"{k:<3}{s['scanner_busy']:>9.4f}{s['scanner_A2']:>7.4f}{s['scanner_A3']:>7.4f}{s['scanner_in_maint']:>7.4f}{s['scanner_issue']:>7.4f}{s['in_wait']:>8.4f} {s['slot_window']:>7.4f}/{s['slot_cap']:<7.4f}"
+            f"{k:<3}{s['scanner_busy']:>9.4f}{s['scanner_A2']:>7.4f}{s['scanner_A3']:>7.4f}{s['scanner_in_maint']:>7.4f}{s['scanner_issue']:>7.4f}{s['in_wait']:>8.4f} {s['slot_window']:>7.4f}/{s['slot_cap']:.4f}/{s['slot_both']:<7.4f}"
             f"{s['worker_busy_mean']:>9.4f}{s['starve_mean']:>7.4f}"
             + "".join(
                 f"{s['worker_' + c] / k:>7.4f}"
@@ -452,6 +461,16 @@ def report(recs: list[dict], a, incomplete: list[str]) -> None:
             f"{s['k']:<3}{X:>8.1f}{1e3 * ds:>11.4f}{1e3 * dw:>12.4f}{1 / max(ds, dw):>19.1f}{X * ds:>8.3f}{X * dw:>7.3f}"
         )
     demands(grid, a)
+    placement(grid, a)
+    print(
+        "\n## The reader (s a decode, medians: its copy out and the decoder's work in its reads, the"
+    )
+    print("sink's own time between reads, and its wait for the next block in order)\n")
+    print("k   copy    sink    wait")
+    for s_ in summary:
+        print(
+            f"{s_['k']:<3} {s_['reader_copy']:>7.4f} {s_['reader_sink']:>7.4f} {s_['read_wait']:>7.4f}"
+        )
     # ---- k* ----
     gaps = {k: [x["gap"] for x in per_obs[k]] for k in GRID}
     ks = kstar(gaps)
@@ -465,18 +484,23 @@ def report(recs: list[dict], a, incomplete: list[str]) -> None:
         boot.append(kstar(g))
     found = sorted(b for b in boot if b is not None)
     none = sum(1 for b in boot if b is None)
-    print("\n## k* and the near-optimal set\n")
+    print("\n## k_balance and the near-optimal set\n")
+    print(
+        "(the brief's k*, renamed by the design review §4: the gap's crossing is where the scanner's"
+        "\nbusy time passes the mean worker's; it does not by itself show the scanner limiting,"
+        "\nwhich the workers' idle time while the scanner is active shows, in the gap's table above)"
+    )
     print(
         "the starvation gap Δ_k (the scanner's busy time less the mean worker's), medians over rounds, s:"
     )
     print("  " + "  ".join(f"{k}:{statistics.median(gaps[k]):+.4f}" for k in GRID))
     if ks is None:
-        print("k*: none in 1..20 (the median gap is never positive)")
+        print("k_balance: none in 1..20 (the median gap is never positive)")
     else:
         lo = found[int(0.025 * len(found))] if found else None
         hi = found[min(len(found) - 1, int(0.975 * len(found)))] if found else None
         print(
-            f"k* = {ks}: the first count whose median gap is positive; round-bootstrap 95% interval [{lo}, {hi}] ({BOOT} resamples, {none} with none)"
+            f"k_balance = {ks}: the first count whose median gap is positive; round-bootstrap 95% interval [{lo}, {hi}] ({BOOT} resamples, {none} with none)"
         )
     print(f"the near-optimal set (median wall within 2% of the best, {best:.4f} s): {near}")
     print("each count's limit: " + ", ".join(f"{s['k']}:{s['limit']}" for s in summary))
@@ -603,7 +627,7 @@ def report(recs: list[dict], a, incomplete: list[str]) -> None:
         "\nCLASSIFICATION: "
         + ("INCOMPLETE; " if incomplete else "")
         + ("PERTURBED; " if perturbed else "")
-        + f"k* = {ks}; near-optimal {near}; limits "
+        + f"k_balance = {ks}; near-optimal {near}; limits "
         + ", ".join(f"{s['k']}:{s['limit']}" for s in summary)
     )
 
@@ -674,10 +698,14 @@ def demands(grid: list[dict], a) -> None:
             cells.append(f"{V:>5.2f}/{S:>6.1f}/{C:>5.1f}")
         print(f"{k:<3} " + "".join(cells))
     print(
-        "\nThe closed network (population N = the window 4k; D each station's demand a block, ms; X blocks a second):"
+        "\nThe resources' bound (the design review §4: activities sharing a resource are summed"
+        "\nfirst): X <= min(1/D_scan, k/D_wkr, 1/D_read, 1/D_feed), D each resource's demand a"
+        "\nblock (ms), X blocks a second; the efficiency is the measured X over it. Beside it, a"
+        "\nsurrogate only (W as a population, which it is not: an admission ceiling): N/ΣD and its"
+        "\nknee N*, N = 4k"
     )
     print(
-        "k   N    D_scan  D_wkr/k D_read  D_feed  ΣD      X bound  N*      X measured  efficiency"
+        "k   D_scan  D_wkr/k D_read  D_feed  X bound  binds    X measured  efficiency | N   N/ΣD    N*"
     )
     for k in GRID:
         xs = [x for x in grid if x["k"] == k]
@@ -691,34 +719,101 @@ def demands(grid: list[dict], a) -> None:
                     tot -= m.get(("Reader", "read_wait"), (0, 0.0, 0.0))[1]
                 vals.append(tot / x["blocks"] / 1e6)
             ds[name] = (med(vals), servers(k))
+        per = {name: d / c for name, (d, c) in ds.items()}
+        binds = max(per, key=per.get)
+        bound = 1e3 / per[binds]
         total = sum(d for d, _ in ds.values())
-        dmax = max(d / c for d, c in ds.values())
         n = 4 * k
-        bound = min(n / total, 1 / dmax) * 1e3
-        knee = total / dmax
         xm = med(x["blocks"] / x["wall_s"] for x in xs)
         print(
-            f"{k:<3} {n:<4} {ds['scanner'][0]:>7.4f} {ds['workers'][0] / k:>7.4f} {ds['reader'][0]:>7.4f} {ds['feeder'][0]:>7.4f} {total:>7.4f} {bound:>8.1f} {knee:>6.1f} {xm:>10.1f}  {xm / bound:>9.3f}"
+            f"{k:<3} {ds['scanner'][0]:>7.4f} {ds['workers'][0] / k:>7.4f} {ds['reader'][0]:>7.4f} {ds['feeder'][0]:>7.4f}"
+            f" {bound:>8.1f}  {binds:<8} {xm:>10.1f}  {xm / bound:>9.3f}  | {n:<4}{n / total * 1e3:>7.0f} {total / max(per.values()):>5.1f}"
         )
     print(
-        "\nThe gap, from the timestamps (the queueing-discipline lead; medians, a decode): the workers'"
-        "\nidle time while the scanner waits for admission, in the start-up and in the drain, each a"
-        "\nshare of the workers' time (k x wall); the head-of-line blocking (a block ready while an"
-        "\nearlier one is not), in block-seconds, and the ready bytes it holds on average; the rest of"
-        "\nthe ready blocks' wait (the reader's own pace), in block-seconds"
+        "\nThe gap, from the timestamps (the queueing-discipline lead and the design review §1;"
+        "\nmedians, a decode), each idle time a share of the workers' time (k x wall): the workers'"
+        "\nidle time while the scanner is active (producing: the scanner limiting), while it waits"
+        "\nfor input, while it waits for admission; in the start-up and in the drain; the"
+        "\nhead-of-line blocking (a block ready while an earlier one is not), in block-seconds, and"
+        "\nthe ready bytes it holds on average; the rest of the ready blocks' wait, in block-seconds"
     )
-    print("k   idle@adm  idle@start idle@drain  HOL blk-s  HOL MB   rest blk-s")
+    print("k   idle   @active @input  @adm    @start  @drain  HOL blk-s  HOL MB   rest blk-s")
     for k in GRID:
         xs = [x for x in grid if x["k"] == k and "gap" in x]
         if not xs:
             continue
-        g = lambda f: med(x["gap"][f] for x in xs)  # noqa: E731
+        g = lambda f: med(x["gap"].get(f, float("nan")) for x in xs)  # noqa: E731
         kw = med(k * x["wall_s"] for x in xs) * 1e9
         wall = med(x["wall_s"] for x in xs)
         print(
-            f"{k:<3} {g('idle_admission_ns') / kw:>8.3f} {g('idle_startup_ns') / kw:>10.3f} {g('idle_drain_ns') / kw:>10.3f}"
+            f"{k:<3} {g('idle_ns') / kw:>6.3f} {g('idle_scanner_active_ns') / kw:>7.3f} {g('idle_scanner_input_ns') / kw:>7.3f}"
+            f" {g('idle_admission_ns') / kw:>7.3f} {g('idle_startup_ns') / kw:>7.3f} {g('idle_drain_ns') / kw:>7.3f}"
             f" {g('hol_ns') / 1e9:>10.3f} {g('hol_byte_ns') / 1e9 / wall / 2**20:>8.2f} {g('ready_rest_ns') / 1e9:>11.3f}"
         )
+
+
+def placement(grid: list[dict], a) -> None:
+    """The design review §3: each role's CPUs (and cores, from lscpu -e), its achieved frequency
+    (each CPU's mean `scaling_cur_freq` over the decode, weighted by the role's time on it), the
+    package's temperature and the throttle counts, at each count (medians)"""
+    core = {}
+    if a.lscpu_e and os.path.exists(a.lscpu_e):
+        with open(a.lscpu_e) as f:
+            head = f.readline().split()
+            if "CPU" in head and "CORE" in head:
+                for line in f:
+                    v = line.split()
+                    if len(v) >= len(head) and v[head.index("CPU")].isdigit():
+                        core[int(v[head.index("CPU")])] = v[head.index("CORE")]
+    print(
+        "\n## Placement and frequency (the design review §3; medians a decode: each role's distinct"
+        "\nCPUs and cores, the scanner's share on its most-used CPU, each role's achieved MHz, the"
+        "\npackage's temperature mean/max °C, throttle events)\n"
+    )
+    print("k   scan cpus/cores top%   wkr cpus/cores  MHz scan  wkr   read   temp       throttle")
+    rows = []
+    for k in GRID:
+        xs = [x for x in grid if x["k"] == k]
+        vals: dict[str, list] = {}
+        for x in xs:
+            freq = x.get("freq_khz") or []
+            for role in ("Scanner", "Worker", "Reader"):
+                cpus: dict[int, int] = {}
+                for t in x["threads"]:
+                    if t["role"] == role:
+                        for c, ns in t.get("cpus", {}).items():
+                            cpus[int(c)] = cpus.get(int(c), 0) + ns
+                tot = sum(cpus.values()) or 1
+                vals.setdefault(role + "_cpus", []).append(len(cpus))
+                vals.setdefault(role + "_cores", []).append(len({core.get(c, c) for c in cpus}))
+                if role == "Scanner":
+                    vals.setdefault("top", []).append(max(cpus.values(), default=0) / tot)
+                fw = [
+                    (ns, freq[c]) for c, ns in cpus.items() if c < len(freq) and freq[c] is not None
+                ]
+                if fw:
+                    vals.setdefault(role + "_mhz", []).append(
+                        sum(ns * f for ns, f in fw) / sum(ns for ns, _ in fw) / 1e3
+                    )
+            if x.get("temp_mc"):
+                vals.setdefault("tmean", []).append(x["temp_mc"][0] / 1e3)
+                vals.setdefault("tmax", []).append(x["temp_mc"][1] / 1e3)
+            vals.setdefault("thr", []).append(
+                (x.get("throttle_core") or 0) + (x.get("throttle_pkg") or 0)
+            )
+        m = {c: med(v) for c, v in vals.items()}
+        m["k"] = k
+        rows.append(m)
+        g = lambda c: m.get(c, float("nan"))  # noqa: E731
+        print(
+            f"{k:<3} {g('Scanner_cpus'):>4.0f}/{g('Scanner_cores'):<6.0f} {100 * g('top'):>4.0f}  {g('Worker_cpus'):>6.0f}/{g('Worker_cores'):<6.0f}"
+            f" {g('Scanner_mhz'):>7.0f} {g('Worker_mhz'):>5.0f} {g('Reader_mhz'):>6.0f}  {g('tmean'):>4.0f}/{g('tmax'):<4.0f} {g('thr'):>8.0f}"
+        )
+    write_tsv(
+        os.path.join(a.tsv_dir, "placement.tsv"),
+        sorted({c for r in rows for c in r}, key=lambda c: (c != "k", c)),
+        rows,
+    )
 
 
 def blocks_report(a) -> None:

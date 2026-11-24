@@ -439,6 +439,9 @@ struct Reader {
     at: usize,
     failed: Option<Error>,
     done: bool,
+    /// (research, `character`) the blocks read to their end
+    #[cfg(feature = "character")]
+    consumed: u64,
 }
 
 impl StreamDecoder {
@@ -943,6 +946,12 @@ impl StreamDecoder {
     /// end or the error: `r.cur`'s buffer and `extra` go to the pool
     fn advance(&self, r: &mut Reader, extra: Vec<u8>) {
         let mut st = self.shared.lock();
+        // (the reader's block read to its end: it held it from its `Taken` to here)
+        #[cfg(feature = "character")]
+        if r.consumed < st.taken {
+            ch!(occ Consumed, r.consumed, 0; Consuming -1);
+            r.consumed += 1;
+        }
         for spent in [std::mem::take(&mut r.cur), extra] {
             if spent.capacity() >= POOLED_FROM && st.free_out.len() < self.shared.slots as usize {
                 st.free_out.push(spent);
@@ -957,7 +966,7 @@ impl StreamDecoder {
             }
             let taken = st.taken;
             if let Some(res) = st.ready.remove(&taken) {
-                ch!(occ Taken, taken, 0; Ready -1, ReadyBytes -(Ready::size(&res) as i64), Admitted -1);
+                ch!(occ Taken, taken, 0; Ready -1, ReadyBytes -(Ready::size(&res) as i64), Admitted -1, Consuming 1);
                 st.taken += 1;
                 st.reader_waiting = false;
                 let wake = st.scanner_waiting;
@@ -1101,8 +1110,13 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
             let mut st = shared.lock();
             #[cfg(feature = "character")]
             if !st.cancelled && shared.full(&st) {
-                // (which binds: the window, or the ready bytes' cap)
-                ch!(point Bound, st.issued, u64::from(st.issued - st.taken < shared.slots));
+                // (both predicates, and their operands: the window's, the ready bytes' cap's)
+                let ahead = st.issued - st.taken;
+                let window = ahead >= shared.slots;
+                let cap = shared
+                    .cap
+                    .is_some_and(|c| st.ready.bytes >= c.bytes && ahead >= c.floor);
+                ch!(point Bound, st.issued, crate::character::bound::pack(window, cap, ahead, st.ready.bytes as u64));
             }
             while !st.cancelled && shared.full(&st) {
                 #[cfg(test)]
@@ -1118,6 +1132,8 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                 ch!(end SlotWait);
                 return finish(None);
             }
+            // (admitted: the block it reads next is outside issued − taken until issued)
+            ch!(occ ScanStart, st.issued, 0; Scanning 1);
             st.free_syms.pop().unwrap_or_default()
         };
         ch!(end SlotWait);
@@ -1135,7 +1151,7 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                 let mut st = shared.lock();
                 let place = st.issued;
                 st.issued += 1;
-                ch!(occ Issued, place, std::mem::size_of_val(&symbols.syms[..]); Admitted 1);
+                ch!(occ Issued, place, std::mem::size_of_val(&symbols.syms[..]); Admitted 1, Scanning -1);
                 drop(st);
                 mark!(
                     Issued,
@@ -1151,8 +1167,14 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: impl JobSink) {
                 ch!(end Issue);
                 mark!(Enqueued, place);
             }
-            Ok(Event::Done) => return finish(None),
-            Err(e) => return finish(Some(e)),
+            Ok(Event::Done) => {
+                ch!(occ ScanAbandon, u64::MAX, 0; Scanning -1);
+                return finish(None);
+            }
+            Err(e) => {
+                ch!(occ ScanAbandon, u64::MAX, 0; Scanning -1);
+                return finish(Some(e));
+            }
         }
     }
     // (the input's receiver and the jobs' sender are dropped here: a writer's next write

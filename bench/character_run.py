@@ -41,8 +41,9 @@ GRID = list(range(1, 21))
 COST_COUNTS = [1, 10, 20]
 ANCHORS = [1, 6, 8, 10, 12, 20]
 BLOCK_COLS = (
-    "place\troute\tn\tr\tsyms_bytes\tout_bytes\tworker\tt_issued\tt_enqueued\tt_got\tt_ready"
-    "\tt_taken\ts_in_wait\ts_in_maint\ts_A2\ts_A3\ts_slot_wait\ts_issue\ts_resid\tw_A5\tw_pool"
+    "place\troute\tn\tr\tsyms_bytes\tout_bytes\tworker\tcpu_scan\tcpu_work\tt_issued\tt_enqueued"
+    "\tt_got\tt_ready\tt_taken\tt_scan_start\tt_consumed\tq_issued\tq_enqueued\tq_got\tq_ready"
+    "\tq_taken\tq_scan_start\tq_consumed\ts_in_wait\ts_in_maint\ts_A2\ts_A3\ts_slot_wait\ts_issue\ts_resid\tw_A5\tw_pool"
     "\tw_A6a\tw_A6b\tw_A6c\tw_A7\tw_A8\tw_A9\tw_publish\tw_resid\tr_wait"
     "\tv_in_wait\tv_in_maint\tv_A2\tv_A3\tv_slot_wait\tv_r_wait"
 )

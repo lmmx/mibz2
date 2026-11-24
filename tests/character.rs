@@ -4,8 +4,9 @@
 //! are the original's, and:
 //! - every thread's ledger starts and ends, its times never go back, and its activities nest
 //!   (every end closes the activity on top of its stack, and the stack is empty at the end);
-//! - every block is issued, enqueued, taken by a worker, routed, published ready and taken by
-//!   the reader exactly once (its places 0..N−1);
+//! - every block is admitted to the scanner, issued, enqueued, taken by a worker, routed,
+//!   published ready, taken by the reader and read to its end exactly once (its places 0..N−1),
+//!   its transitions numbered in the buffers' one linear order, each block's in causal order;
 //! - every buffer is empty at the end, its arrivals the blocks, and its live occupancy
 //!   integral exactly its blocks' residence (Little's law, an identity of integers here);
 //! - with the ledgers off, nothing is recorded.
@@ -100,6 +101,8 @@ fn the_ledgers_account_for_every_block_and_change_nothing() {
                 Tag::Route,
                 Tag::Ready,
                 Tag::Taken,
+                Tag::ScanStart,
+                Tag::Consumed,
             ];
             let issued = ledgers
                 .iter()
@@ -108,14 +111,25 @@ fn the_ledgers_account_for_every_block_and_change_nothing() {
                 .count();
             assert!(issued > 0, "{ctx}: no blocks");
             let mut residence = [0u128; OCCS];
-            let mut at = vec![[0u64; 6]; issued];
+            let mut at = vec![[0u64; 8]; issued];
+            let mut seq = vec![[0u64; 8]; issued];
+            // (the scanner's last read, past the last block, gives none: its admission and end)
+            let mut abandon = (0u64, 0u64);
             for (j, t) in points.iter().enumerate() {
                 let mut places: Vec<u32> = ledgers
                     .iter()
                     .flat_map(|l| &l.events)
                     .filter(|e| e.edge == 0 && e.tag == *t as u8)
+                    .filter(|e| {
+                        if *t == Tag::ScanStart && e.place as usize >= issued {
+                            abandon.0 = e.ns;
+                            return false;
+                        }
+                        true
+                    })
                     .map(|e| {
                         at[e.place as usize][j] = e.ns;
+                        seq[e.place as usize][j] = e.seq;
                         e.place
                     })
                     .collect();
@@ -135,18 +149,34 @@ fn the_ledgers_account_for_every_block_and_change_nothing() {
                 }
                 b
             };
+            for e in ledgers.iter().flat_map(|l| &l.events) {
+                if e.edge == 0 && e.tag == Tag::ScanAbandon as u8 {
+                    abandon.1 = e.ns;
+                }
+            }
             for (p, t) in at.iter().enumerate() {
-                // (issued, enqueued, got, route, ready, taken)
+                // (issued, enqueued, got, route, ready, taken, scan start, consumed)
                 residence[0] += u128::from(t[5] - t[0]);
                 residence[1] += u128::from(t[2] - t[1]);
                 residence[2] += u128::from(t[4] - t[2]);
                 residence[3] += u128::from(t[5] - t[4]);
                 residence[4] += u128::from(t[5] - t[4]) * u128::from(bytes[p]);
+                residence[5] += u128::from(t[0] - t[6]);
+                residence[6] += u128::from(t[7] - t[5]);
+                // each block's transitions in causal order
+                let q = seq[p];
+                for w in [6usize, 0, 1, 2, 4, 5, 7].windows(2) {
+                    assert!(q[w[0]] < q[w[1]], "{ctx}: block {p}'s order: {q:?}");
+                }
             }
+            residence[5] += u128::from(abandon.1 - abandon.0);
             for i in 0..OCCS {
                 assert_eq!(occ[i].n, 0, "{ctx}: {} not empty at the end", BUFFERS[i]);
-                if i < 4 {
+                if i < 4 || i == 6 {
                     assert_eq!(occ[i].arrivals, issued as u64, "{ctx}: {}", BUFFERS[i]);
+                }
+                if i == 5 {
+                    assert_eq!(occ[i].arrivals, issued as u64 + 1, "{ctx}: {}", BUFFERS[i]);
                 }
                 assert_eq!(
                     occ[i].integral, residence[i],

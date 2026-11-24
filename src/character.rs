@@ -92,8 +92,16 @@ pub enum Tag {
     Ready = 36,
     /// the reader: taken in order
     Taken = 37,
-    /// the scanner, at a wait for admission: 1 if the ready bytes' cap holds it, 0 the window
+    /// the scanner, at a wait for admission: both admission predicates and their operands
+    /// (`x`: [`bound`]'s packing)
     Bound = 38,
+    /// the scanner: admitted, its next read begun (the block it scans, outside issued − taken)
+    ScanStart = 39,
+    /// the scanner: its last read gave no block (the input's end, an error, a cancel)
+    ScanAbandon = 40,
+    /// the reader: the block it took read to its end (the block it holds, outside issued −
+    /// taken, from its `Taken` to here)
+    Consumed = 41,
     /// the thread's first event and its last
     Start = 48,
     End = 49,
@@ -150,13 +158,33 @@ pub mod route {
     }
 }
 
-/// An event; `cpu` is the thread's CPU time (ns) where read, else `UNREAD`
+/// The scanner's admission predicates at a wait (`Tag::Bound`'s `x`): bit 0 the window's
+/// (`issued − taken ≥ W`), bit 1 the ready bytes' cap's (`ready bytes ≥ cap && issued − taken ≥
+/// floor`), then `issued − taken` (bits 8–31) and the ready bytes in KiB (bits 32–63)
+pub mod bound {
+    pub fn pack(window: bool, cap: bool, ahead: u64, ready_bytes: u64) -> u64 {
+        u64::from(window)
+            | u64::from(cap) << 1
+            | (ahead & 0xFF_FFFF) << 8
+            | (ready_bytes >> 10) << 32
+    }
+    /// (window, cap, ahead, ready KiB)
+    pub fn unpack(x: u64) -> (bool, bool, u64, u64) {
+        (x & 1 == 1, x & 2 == 2, (x >> 8) & 0xFF_FFFF, x >> 32)
+    }
+}
+
+/// An event; `cpu` is the thread's CPU time (ns) where read, else `UNREAD`; `seq` a queue
+/// transition's place in the buffers' one linear order (taken under their lock; 0 for the
+/// rest); `on_cpu` the logical CPU the thread ran on at the event
 #[derive(Clone, Copy, Debug)]
 pub struct Ev {
     pub ns: u64,
     pub cpu: u64,
     pub x: u64,
+    pub seq: u64,
     pub place: u32,
+    pub on_cpu: u16,
     pub tag: u8,
     /// 0 a point, 1 a begin, 2 an end
     pub edge: u8,
@@ -177,9 +205,37 @@ pub struct Ledger {
     /// migrations at its start and end (`UNREAD` where the kernel does not give them)
     pub migrations0: u64,
     pub migrations1: u64,
+    /// the events past its preallocated capacity (each a reallocation's risk while decoding)
+    pub overflows: u64,
 }
 
 static ON: AtomicBool = AtomicBool::new(false);
+/// Each ledger's preallocated events (the harness sets it from the work ahead)
+static CAPACITY: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(1 << 14);
+static SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Each thread's ledger's events preallocated from now on: `worker` for a worker's, `other` for
+/// the scanner's, the feeder's and the reader's
+pub fn set_capacity(worker: usize, other: usize) {
+    CAPACITY.store(worker << 32 | other, Ordering::SeqCst);
+}
+
+/// The logical CPU this thread is on now (`sched_getcpu`, the vDSO's), or `u16::MAX`
+#[inline]
+pub fn this_cpu() -> u16 {
+    #[cfg(target_os = "linux")]
+    {
+        extern "C" {
+            fn sched_getcpu() -> i32;
+        }
+        // SAFETY: no arguments
+        let c = unsafe { sched_getcpu() };
+        if c >= 0 {
+            return c as u16;
+        }
+    }
+    u16::MAX
+}
 static EPOCH: OnceLock<Mutex<Instant>> = OnceLock::new();
 static DONE: Mutex<Vec<Ledger>> = Mutex::new(Vec::new());
 
@@ -201,6 +257,7 @@ pub fn set_on(on: bool) {
         DONE.lock().unwrap_or_else(|e| e.into_inner()).clear();
         BUF.with(|b| b.borrow_mut().take());
         *OCC.lock().unwrap_or_else(|e| e.into_inner()) = [Occ::default(); OCCS];
+        SEQ.store(0, Ordering::SeqCst);
     }
     ON.store(on, Ordering::SeqCst);
 }
@@ -276,10 +333,16 @@ struct Buf {
 
 impl Buf {
     fn new() -> Buf {
+        let name = std::thread::current().name().unwrap_or("?").to_string();
+        let cap = CAPACITY.load(Ordering::Relaxed);
+        let worker = name
+            .strip_prefix("mibz2-")
+            .is_some_and(|d| d.parse::<u32>().is_ok());
+        let cap = if worker { cap >> 32 } else { cap & 0xFFFF_FFFF };
         let mut b = Buf {
             led: Ledger {
-                name: std::thread::current().name().unwrap_or("?").to_string(),
-                events: Vec::with_capacity(1 << 14),
+                name,
+                events: Vec::with_capacity(cap.max(64)),
                 sched0: sched(),
                 migrations0: migrations(),
                 ..Ledger::default()
@@ -294,12 +357,24 @@ impl Buf {
     #[inline]
     fn push(&mut self, tag: u8, edge: u8, place: u32, x: u64, clock: bool) {
         let ns = self.start.elapsed().as_nanos() as u64;
+        self.push_at(ns, 0, tag, edge, place, x, clock);
+    }
+
+    #[inline]
+    #[allow(clippy::too_many_arguments)]
+    fn push_at(&mut self, ns: u64, seq: u64, tag: u8, edge: u8, place: u32, x: u64, clock: bool) {
         let cpu = if clock { thread_cpu_ns() } else { UNREAD };
-        self.led.events.push(Ev {
+        let ev = &mut self.led.events;
+        if ev.len() == ev.capacity() {
+            self.led.overflows += 1;
+        }
+        ev.push(Ev {
             ns,
             cpu,
             x,
+            seq,
             place,
+            on_cpu: this_cpu(),
             tag,
             edge,
         });
@@ -383,10 +458,22 @@ pub enum Buffer {
     Ready = 3,
     /// the same, in decoded bytes
     ReadyBytes = 4,
+    /// the scanner's block in its read: admitted and not yet issued (0 or 1)
+    Scanning = 5,
+    /// the reader's block, taken and not yet read to its end (0 or 1)
+    Consuming = 6,
 }
 
-pub const OCCS: usize = 5;
-pub const BUFFERS: [&str; OCCS] = ["admitted", "queued", "executing", "ready", "ready_bytes"];
+pub const OCCS: usize = 7;
+pub const BUFFERS: [&str; OCCS] = [
+    "admitted",
+    "queued",
+    "executing",
+    "ready",
+    "ready_bytes",
+    "scanning",
+    "consuming",
+];
 
 /// A buffer's live occupancy
 #[derive(Clone, Copy, Debug, Default)]
@@ -424,6 +511,8 @@ pub fn occ_point(changes: &[(Buffer, i64)], t: Tag, place: u64, x: u64) {
     let e = epoch();
     let mut o = OCC.lock().unwrap_or_else(|e| e.into_inner());
     let now = e.elapsed().as_nanos() as u64;
+    // (the transitions' one linear order: each takes the next number under this lock)
+    let seq = SEQ.fetch_add(1, Ordering::Relaxed) + 1;
     occ_at(&mut o, changes, now);
     drop(o);
     with(|b| {
@@ -437,14 +526,7 @@ pub fn occ_point(changes: &[(Buffer, i64)], t: Tag, place: u64, x: u64) {
         } else if place == CURRENT {
             place = b.cur;
         }
-        b.led.events.push(Ev {
-            ns: now,
-            cpu: UNREAD,
-            x,
-            place,
-            tag: t as u8,
-            edge: 0,
-        });
+        b.push_at(now, seq, t as u8, 0, place, x, false);
     });
 }
 

@@ -2042,7 +2042,7 @@ bench-character DRY="":
       || echo "bench-character: the driver failed (console.log says why); the bundle is kept"
     date -u +%FT%TZ > "$O/timed.txt"
     python3 bench/character.py "$O/runs.jsonl" --lscpu "$O/lscpu.txt" --features "$O/features.tsv" \
-      --blocks-dir "$O" --tsv-dir "$O/tsv" --rounds $ROUNDS --reps $REPS --api-rounds $API_ROUNDS \
+      --lscpu-e "$O/lscpu-e.txt" --blocks-dir "$O" --tsv-dir "$O/tsv" --rounds $ROUNDS --reps $REPS --api-rounds $API_ROUNDS \
       --seed $SEED | tee "$O/report.txt" \
       || echo "bench-character: VOID, no report (report.txt says why); the bundle is kept"
     date -u +%FT%TZ > "$O/finished.txt"

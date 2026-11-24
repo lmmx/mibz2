@@ -2,6 +2,19 @@
 
 *Registered before any data. Brief: `docs/journal/2026-11-24-algorithm-level/briefs/character.md` at c57640c4 (§1–§4, §7a's operational laws, §8), with §7b's analysis additions (bbb1a10f; the Coordinator's request of 24 November for visits, service times with their C², classes and occupancy per activity per block) and the queueing-discipline lead's (`leads/queueing-discipline.md`, journal §56, 15a7685a: efficiency against the bound, the gap's parts, the blocks' structure known at dispatch), on `docs/journal-algorithm-level`; assignment by the Coordinator, 24 November. Stage 1 of two: the baseline with the public API's sweep. Stage 2 (the interventions, the fractional factorial, the models) is a recipe of its own, after this one's data. A C1a diagnostic: its rule is posted on #145 before the data, and it decides nothing.*
 
+## Amended before the data: the design review (#145 QUEUED 7147262673)
+
+The Coordinator's QUEUED item A folds in ChatGPT Pro's design review (`external/chatgpt-design-review.md` §§1, 3, 4, on `docs/journal-algorithm-level` at 179ac422), before this recipe's freeze. Each change is below, in the sections it changes:
+- **The linear order.** Every queue transition takes a number under the buffers' one lock, the same lock its occupancy change is taken under. So the transitions have one linear order, whatever their timestamps; the review warned that a timestamp sort can make an impossible history. The identities check each block's transitions in causal order, and that every number is used once.
+- **Both admission predicates** at every wait for admission: the window's (`issued − taken ≥ W`) and the cap's (`ready bytes ≥ 12 MiB && issued − taken ≥ k + 2`), with `issued − taken` and the ready bytes. The waits are split by what held them: the window alone, the cap alone, both. Two new buffers hold the blocks outside issued − taken (review §1): the scanner's in its read (admitted to issued; its last read, which finds the end, too), and the reader's (taken to read to its end). Each has Little's law and conservation.
+- **Placement and frequency.** Every event records the logical CPU its thread ran on, so each thread's time is split by CPU, and the report maps CPUs to cores (`lscpu -e`). Each logical CPU's achieved frequency (`scaling_cur_freq`) and the package's temperature are sampled every 50 ms through every decode; the thermal throttle counts are read before and after. The report gives each role's achieved frequency, weighted by its time on each CPU.
+- **The reader's time,** split into its copy out (with the decoder's work in its read calls), the sink's time between reads, and its wait for the next block. The awaited block's id is in its row: the wait is charged to the block taken next.
+- **The stopwatch's region.** The counters are disabled at the instant the clock stops; the disable reaches every inherited counter of the decoder's threads. Each ledger is preallocated from the input's size, and any event past it is counted as an overflow and reported.
+- **k\* renamed k_balance** (review §4). The busy-time gap's crossing does not by itself show the scanner limiting: a consumer-limited pipeline can have a positive gap. What shows the scanner limiting is now measured directly: the workers' idle time while the scanner is active (neither waiting for input nor for admission), beside their idle time while it waits for input, and while it waits for admission.
+- **The bound** (review §4): the resources' demands are summed before bounding, X ≤ min(1/D_scan, k/D_wkr, 1/D_read, 1/D_feed), and the report names the resource that binds. The window is an admission ceiling, not a population, so N/ΣD and its knee are labelled a surrogate.
+
+The pinned scanner-profile variant (item B) is a recipe of its own.
+
 ## The question
 
 What is the parallel decoder, at each count from 1 to 20 workers? Treat it as a network:
@@ -15,7 +28,7 @@ At each count, stage 1 measures:
 - what each buffer holds;
 - which limit binds, and where the limit moves.
 
-It checks that the account is complete by the operational laws, not by a sum of coefficients. It gives k\*, which the gated parallel scan's registration uses (`briefs/scanner.md` part 2).
+It checks that the account is complete by the operational laws, not by a sum of coefficients. It gives k_balance (the brief's k\*, renamed above) and the workers' idle time while the scanner is active, which the gated parallel scan's registration uses (`briefs/scanner.md` part 2).
 
 ## The contract (brief §1)
 
@@ -146,13 +159,13 @@ The control-coefficient sum is stage 2's, and only as a conditional diagnostic.
 - **the buffers:** each one's time-averaged occupancy and high-water mark;
 - **the laws:** each identity's count of decodes holding and failing; the utilisation and bottleneck table;
 - **visits, service and demand** (brief §7b): at each count, each activity's visits a block V, mean service a visit S, its C², and its demand D = V·S;
-- **the closed network** (brief §7b), its population the window N = 4k, its stations the scanner (one server), the workers (k), the reader and the feeder (one each): each station's demand a block, the asymptotic bound X ≤ min(N/ΣD, 1/max(D/servers)) (no think time: Z = 0), the knee N\* = ΣD/max(D/servers), the measured X, and **the efficiency**, the measured X over the bound;
+- **the resources' bound** (brief §7b, as the design review corrects it): each resource's demand a block (the scanner's, the workers' over k, the reader's, the feeder's), the bound X ≤ min(1/D_scan, k/D_wkr, 1/D_read, 1/D_feed) with the resource that binds, the measured X, and **the efficiency**, the measured X over the bound; beside it, labelled a surrogate (the window is an admission ceiling, not a population), N/ΣD and its knee N\* = ΣD/max(D/servers), N = 4k;
 - **the gap's parts** (the queueing-discipline lead), from every decode's timestamps:
-  - the workers' idle time while the scanner waits for admission;
+  - the workers' idle time while the scanner is active (the scanner limiting), while it waits for input, and while it waits for admission;
   - the workers' idle time in the start-up and in the drain;
   - the head-of-line blocking: for each block, its time ready while an earlier block is not, so the reader cannot take it (a block ready at t_ready waits on the latest earlier t_ready), in block-seconds and byte-weighted (the ready bytes it holds, which count against the cap);
   - the rest of the ready blocks' wait (the reader's own pace);
-- **k\* and the near-optimal set,** and each count's limit with the limit's moves;
+- **k_balance and the near-optimal set,** and each count's limit with the limit's moves;
 - **the ledgers' cost,** the counters, the memory controller and the public API;
 - **each route's blocks:** their count, n, r/n and h₁, and their demand per row at each activity at 1, 10 and 20 workers.
 
@@ -160,6 +173,7 @@ It writes into the bundle's `tsv/`, for the journal's math-targets project (`mat
 - `observations.tsv`: one row a decode;
 - `threads.tsv`: one row a thread a grid decode, its states per phase;
 - `service.tsv`: one row a (grid decode, role, activity): its visits, mean service a visit and C²;
+- `placement.tsv`: each count's roles' CPUs and cores, the scanner's share on its most-used CPU, each role's achieved frequency, the temperature and the throttle events;
 - `per_k.tsv`, `cost.tsv`, `pmu.tsv`, `imc.tsv` where counted, and `api.tsv`.
 
 The rest of §7b is analysis on these same records, for the math-targets scripts and stage 2: the balanced-job bounds, the job classes' demands (the block rows by route), the multiplicative (log) models and the allocation of variation, the fluid approximation's closed-form check on k\*, and the sample-path laws on the fixed trace.
@@ -168,12 +182,12 @@ Beside them in the bundle: the block rows (`blocks-r00.tsv` … `blocks-r03.tsv`
 
 ## THE C1a RULE (it decides nothing)
 
-**k\*** = min{k : the median over rounds of Δ_k > 0}, where:
+**k_balance** (the brief's k\*) = min{k : the median over rounds of Δ_k > 0}, where:
 - Δ_k = the scanner's busy time less the mean worker's busy time, each observation's mean over its decodes;
 - the scanner's busy time is its life less its waits;
 - a worker's busy time is its life less its wait for jobs.
 
-The interval: 2,000 resamples of the 12 rounds with replacement (seed 20261124), k\* recomputed in each; the 2.5% and 97.5% quantiles, and how many resamples have none. Where no count's median is positive: none in 1..20.
+The interval: 2,000 resamples of the 12 rounds with replacement (seed 20261124), k_balance recomputed in each; the 2.5% and 97.5% quantiles, and how many resamples have none. Where no count's median is positive: none in 1..20.
 
 **The near-optimal set:** the counts whose median wall is within 2% of the best median wall.
 
@@ -217,7 +231,7 @@ The report gives the limits' moves across k.
   - every block's points come once each;
   - every buffer is empty at the end, its arrivals are the blocks, and Little's law holds exactly;
   - with the ledgers off, nothing is recorded.
-- **`bench/test_character.py`:** 25 checks of the report's rules on synthetic records: k\* and its absence; each limit; the cost bound; INCOMPLETE; each VOID.
+- **`bench/test_character.py`:** 25 checks of the report's rules on synthetic records: k_balance and its absence; each limit; the cost bound; INCOMPLETE; each VOID.
 - **CI** runs both, then the harness and its driver on the repository's own text (15 blocks, the refused and column routes among them). Every decode's identities must hold in the harness's own check.
 - **A container smoke run** (4 CPUs, 1 copy, 4 rounds of 2; not evidence for the i9) held every identity in all 160 decodes but one. That one was Little's law before its point and its change shared a clock reading, and it is what led to the shared reading.
 

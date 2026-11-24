@@ -239,6 +239,12 @@ struct Proc {
     mean_kb: f64,
     samples: u64,
     use_: [f64; 6],
+    /// each logical CPU's mean achieved frequency over the decode (kHz; NaN where unread)
+    freq_khz: Vec<f64>,
+    /// the package's temperature, mean and maximum (milli-°C)
+    temp_mc: Option<(f64, u64)>,
+    /// the thermal throttle events over the decode: the cores' summed, the package's
+    throttle: (Option<u64>, Option<u64>),
 }
 
 impl Proc {
@@ -258,29 +264,120 @@ impl Proc {
             self.use_[3],
             self.use_[4],
             self.use_[5]
+        ) + &format!(
+            ",\"freq_khz\":[{}],\"temp_mc\":{},\"throttle_core\":{},\"throttle_pkg\":{}",
+            self.freq_khz
+                .iter()
+                .map(|f| if f.is_nan() { "null".into() } else { format!("{f:.0}") })
+                .collect::<Vec<_>>()
+                .join(","),
+            self.temp_mc.map_or("null".into(), |(m, x)| format!("[{m:.0},{x}]")),
+            self.throttle.0.map_or("null".into(), |x| x.to_string()),
+            self.throttle.1.map_or("null".into(), |x| x.to_string())
         )
     }
 }
 
-/// A decode with the process's figures over it: `make` builds the reader (the clock running)
-fn measured<R: Read>(make: impl FnOnce() -> R, after: impl FnOnce(&R)) -> (Proc, R) {
+/// The machine's frequency and heat, read around and during a decode: each logical CPU's
+/// `scaling_cur_freq` (the kernel's estimate of its achieved frequency), the package's
+/// temperature (the `x86_pkg_temp` thermal zone), and the thermal throttle counts
+struct Thermal {
+    freq: Vec<String>,
+    temp: Option<String>,
+    core_throttle: Vec<String>,
+    pkg_throttle: Option<String>,
+}
+
+fn read_u64(p: &str) -> Option<u64> {
+    std::fs::read_to_string(p).ok()?.trim().parse().ok()
+}
+
+impl Thermal {
+    fn new() -> Thermal {
+        let n = std::thread::available_parallelism().map_or(1, |n| n.get());
+        let cpus: Vec<usize> = (0..n.max(64))
+            .filter(|c| std::path::Path::new(&format!("/sys/devices/system/cpu/cpu{c}")).exists())
+            .collect();
+        let temp = (0..64)
+            .map(|z| format!("/sys/class/thermal/thermal_zone{z}"))
+            .find(|z| {
+                std::fs::read_to_string(format!("{z}/type"))
+                    .is_ok_and(|t| t.trim() == "x86_pkg_temp")
+            })
+            .map(|z| format!("{z}/temp"));
+        Thermal {
+            freq: cpus
+                .iter()
+                .map(|c| format!("/sys/devices/system/cpu/cpu{c}/cpufreq/scaling_cur_freq"))
+                .collect(),
+            temp,
+            core_throttle: cpus
+                .iter()
+                .map(|c| {
+                    format!("/sys/devices/system/cpu/cpu{c}/thermal_throttle/core_throttle_count")
+                })
+                .collect(),
+            pkg_throttle: Some(
+                "/sys/devices/system/cpu/cpu0/thermal_throttle/package_throttle_count".into(),
+            )
+            .filter(|p| std::path::Path::new(p).exists()),
+        }
+    }
+    /// (the cores' throttle count summed, the package's)
+    fn throttles(&self) -> (Option<u64>, Option<u64>) {
+        let core: Option<u64> = self.core_throttle.iter().map(|p| read_u64(p)).sum();
+        (core, self.pkg_throttle.as_deref().and_then(read_u64))
+    }
+}
+
+/// The sampler's interval for the frequencies and the temperature (a multiple of `SAMPLE`)
+const THERMAL_EVERY: u64 = 10;
+
+/// A decode with the process's figures over it: `make` builds the reader (the clock running:
+/// counters are enabled there), and `stop` runs the moment the clock stops (counters disabled
+/// there, so they count the stopwatch's region alone)
+fn measured<R: Read>(
+    make: impl FnOnce() -> R,
+    after: impl FnOnce(&R),
+    stop_hook: impl FnOnce(),
+) -> (Proc, R) {
     let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let st = stop.clone();
+    let th = std::sync::Arc::new(Thermal::new());
+    let th2 = th.clone();
     let base_kb = rss_kb().unwrap_or(0);
+    let throttle0 = th.throttles();
     let reset = reset_peak();
     let u0 = usage();
     let sampler = std::thread::Builder::new()
         .name("sampler".into())
         .spawn(move || {
             let (mut sum, mut n) = (0u64, 0u64);
+            let mut freq = vec![(0u64, 0u64); th2.freq.len()];
+            let (mut tsum, mut tmax, mut tn) = (0u64, 0u64, 0u64);
+            let mut i = 0u64;
             while !st.load(std::sync::atomic::Ordering::Relaxed) {
                 if let Some(kb) = rss_kb() {
                     sum += kb;
                     n += 1;
                 }
+                if i % THERMAL_EVERY == 0 {
+                    for (f, p) in freq.iter_mut().zip(&th2.freq) {
+                        if let Some(v) = read_u64(p) {
+                            f.0 += v;
+                            f.1 += 1;
+                        }
+                    }
+                    if let Some(t) = th2.temp.as_deref().and_then(read_u64) {
+                        tsum += t;
+                        tmax = tmax.max(t);
+                        tn += 1;
+                    }
+                }
+                i += 1;
                 std::thread::sleep(SAMPLE);
             }
-            (sum, n)
+            (sum, n, freq, tsum, tmax, tn)
         })
         .expect("the sampler");
     let mut buf = vec![0u8; 4 << 20];
@@ -297,13 +394,16 @@ fn measured<R: Read>(make: impl FnOnce() -> R, after: impl FnOnce(&R)) -> (Proc,
         }
     }
     let wall = s.elapsed().as_secs_f64();
+    stop_hook();
     stop.store(true, std::sync::atomic::Ordering::Relaxed);
-    let (sum, n) = sampler.join().expect("the sampler");
+    let (sum, n, freq, tsum, tmax, tn) = sampler.join().expect("the sampler");
     let u1 = usage();
+    let throttle1 = th.throttles();
     let mut use_ = [0.0; 6];
     for i in 0..6 {
         use_[i] = u1[i] - u0[i];
     }
+    let delta = |a: Option<u64>, b: Option<u64>| a.zip(b).map(|(a, b)| b.saturating_sub(a));
     (
         Proc {
             wall,
@@ -313,6 +413,15 @@ fn measured<R: Read>(make: impl FnOnce() -> R, after: impl FnOnce(&R)) -> (Proc,
             mean_kb: if n > 0 { sum as f64 / n as f64 } else { 0.0 },
             samples: n,
             use_,
+            freq_khz: freq
+                .iter()
+                .map(|&(s, c)| if c > 0 { s as f64 / c as f64 } else { f64::NAN })
+                .collect(),
+            temp_mc: (tn > 0).then(|| (tsum as f64 / tn as f64, tmax)),
+            throttle: (
+                delta(throttle0.0, throttle1.0),
+                delta(throttle0.1, throttle1.1),
+            ),
         },
         r,
     )
@@ -358,10 +467,16 @@ struct Block {
     syms_bytes: u64,
     out_bytes: u64,
     worker: i64,
-    /// Issued, Enqueued, Got, Ready, Taken (ns), `UNREAD` where missing
-    t: [u64; 5],
-    /// counts of each point (each must be 1)
-    seen: [u32; 6],
+    /// Issued, Enqueued, Got, Ready, Taken, ScanStart, Consumed (ns), `UNREAD` where missing
+    t: [u64; 7],
+    /// the same points' places in the buffers' linear order (`seq`)
+    seq: [u64; 7],
+    /// counts of each point: Issued, Enqueued, Got, Ready, Taken, Route, ScanStart, Consumed
+    /// (each must be 1)
+    seen: [u32; 8],
+    /// the logical CPU the scanner issued it on, and the one its worker took it on
+    cpu_scan: u16,
+    cpu_work: u16,
     scan: [u64; NA + 1],
     work: [u64; NA + 1],
     read_wait: u64,
@@ -389,10 +504,19 @@ struct ThreadOut {
     /// per-block attribution left over: activity time on a worker outside any block, or the
     /// scanner's after its last block
     unattributed: [u64; NA + 1],
-    /// the scanner's waits for admission by what held it: the window, the ready bytes' cap
-    slot_bound: [u64; 2],
+    /// the scanner's waits for admission by what held it: the window alone, the ready bytes'
+    /// cap alone, both
+    slot_bound: [u64; 3],
+    /// the scanner's last read, which gave no block: from its admission to its end
+    abandon: (Option<u64>, Option<u64>),
+    /// its time on each logical CPU (ns), each stretch charged to the CPU it began on
+    cpus: std::collections::BTreeMap<u16, u64>,
+    /// its ledger's events past their preallocation
+    overflows: u64,
     /// its waits' intervals: the scanner's for admission, a worker's for a job
     gaps: Vec<(u64, u64)>,
+    /// the scanner's waits for input
+    in_gaps: Vec<(u64, u64)>,
     /// each activity's visits' service times (wall, begin to end, nested activities within):
     /// their count, sum (ns) and sum of squares (ns²), for the means and C²
     moments: [(u64, f64, f64); NA],
@@ -446,11 +570,16 @@ fn walk(
         },
         visits: [0; NA],
         unattributed: [0; NA + 1],
-        slot_bound: [0; 2],
+        slot_bound: [0; 3],
+        abandon: (None, None),
+        cpus: std::collections::BTreeMap::new(),
+        overflows: l.overflows,
         moments: [(0, 0.0, 0.0); NA],
         gaps: Vec::new(),
+        in_gaps: Vec::new(),
     };
     let mut bound = 0usize;
+    let mut last_cpu = ev.first().map_or(u16::MAX, |e| e.on_cpu);
     if ev.is_empty() {
         o.balanced = false;
         return o;
@@ -481,6 +610,7 @@ fn walk(
         }
         let now = e.ns.max(last);
         if now > last {
+            *o.cpus.entry(last_cpu).or_default() += now - last;
             let i = stack.last().map_or(NA, |&t| usize::from(t));
             add(&mut o.states, i, last, now, t1, t2);
             let d = now - last;
@@ -495,6 +625,7 @@ fn walk(
             }
         }
         last = now;
+        last_cpu = e.on_cpu;
         match e.edge {
             1 => {
                 stack.push(e.tag);
@@ -537,6 +668,9 @@ fn walk(
                         {
                             o.gaps.push((w0, e.ns));
                         }
+                        if ro == Role::Scanner && e.tag == ch::Tag::InWait as u8 {
+                            o.in_gaps.push((w0, e.ns));
+                        }
                         if c0 != UNREAD && e.cpu != UNREAD {
                             o.wait_cpu += e.cpu.saturating_sub(c0);
                         }
@@ -562,47 +696,60 @@ fn walk(
             _ => {
                 let p = e.place as usize;
                 let k = e.tag;
-                let b = |blocks: &mut [Block], i: usize| -> Option<usize> {
+                // (a point's block, counted; and its time and linear order, where it has them)
+                let b = |blocks: &mut [Block], i: usize, ti: Option<usize>| -> Option<usize> {
                     if p < blocks.len() {
                         blocks[p].seen[i] += 1;
+                        if let Some(ti) = ti {
+                            blocks[p].t[ti] = e.ns;
+                            blocks[p].seq[ti] = e.seq;
+                        }
                         Some(p)
                     } else {
                         None
                     }
                 };
                 if k == ch::Tag::Issued as u8 {
-                    if let Some(p) = b(blocks, 0) {
-                        blocks[p].t[0] = e.ns;
+                    if let Some(p) = b(blocks, 0, Some(0)) {
                         blocks[p].syms_bytes = e.x;
+                        blocks[p].cpu_scan = e.on_cpu;
                         last_issued = Some(p);
                     }
                 } else if k == ch::Tag::Enqueued as u8 {
-                    if let Some(p) = b(blocks, 1) {
-                        blocks[p].t[1] = e.ns;
-                    }
+                    b(blocks, 1, Some(1));
                 } else if k == ch::Tag::Got as u8 {
-                    if let Some(p) = b(blocks, 2) {
-                        blocks[p].t[2] = e.ns;
+                    if let Some(p) = b(blocks, 2, Some(2)) {
                         blocks[p].worker = idx;
+                        blocks[p].cpu_work = e.on_cpu;
                         cur = Some(p);
                     }
                 } else if k == ch::Tag::Ready as u8 {
-                    if let Some(p) = b(blocks, 3) {
-                        blocks[p].t[3] = e.ns;
+                    if let Some(p) = b(blocks, 3, Some(3)) {
                         blocks[p].out_bytes = e.x;
                     }
+                } else if k == ch::Tag::ScanStart as u8 {
+                    if b(blocks, 6, Some(5)).is_none() {
+                        o.abandon.0 = Some(e.ns);
+                    }
+                } else if k == ch::Tag::ScanAbandon as u8 {
+                    o.abandon.1 = Some(e.ns);
+                } else if k == ch::Tag::Consumed as u8 {
+                    b(blocks, 7, Some(6));
                 } else if k == ch::Tag::Taken as u8 {
-                    if let Some(p) = b(blocks, 4) {
-                        blocks[p].t[4] = e.ns;
+                    if let Some(p) = b(blocks, 4, Some(4)) {
                         blocks[p].read_wait = wait_acc;
                         blocks[p].read_wait_v = wait_v;
                         wait_acc = 0;
                         wait_v = 0;
                     }
                 } else if k == ch::Tag::Bound as u8 {
-                    bound = usize::from(e.x == 1);
+                    bound = match ch::bound::unpack(e.x) {
+                        (true, true, ..) => 2,
+                        (false, true, ..) => 1,
+                        _ => 0,
+                    };
                 } else if k == ch::Tag::Route as u8 {
-                    if let Some(p) = b(blocks, 5) {
+                    if let Some(p) = b(blocks, 5, None) {
                         let (r, n, rr) = route::unpack(e.x);
                         (blocks[p].route, blocks[p].n, blocks[p].r) = (r, n, rr);
                     }
@@ -729,6 +876,7 @@ fn api(file: &str, threads: usize) {
                 info = "\"threads\":0,\"window\":0,\"lazy\":false,\"service\":false".into();
             }
         },
+        || {},
     );
     drop(r);
     println!(
@@ -742,8 +890,14 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     let slots = mibz2::parallel::SLOTS_PER_THREAD * k;
     assert!(!(on && group > 0), "the counters run with the ledgers off");
     let counters = (group > 0).then(|| pmu::Counters::open(group));
+    // the ledgers preallocated for the work ahead (no reallocation while decoding; an overflow
+    // is counted): at most a block per 8 KiB of input, about 16 events a block on the scanner
+    // and the reader, 20 on a worker
+    let blocks = data.len() / 8192 + 64;
+    ch::set_capacity(20 * (2 * blocks / k + 64), 16 * blocks);
     ch::set_on(on);
     let mut window = 0u64;
+    let end = std::cell::Cell::new(0u64);
     let (p, r) = measured(
         || {
             if let Some(c) = &counters {
@@ -754,8 +908,16 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
         |r| {
             window = r.parallel_decoder().map_or(0, |d| d.window());
         },
+        || {
+            // (the stopwatch's region alone: the counters, on every thread of the decoder,
+            // inherited ones included, disabled at its stop)
+            if let Some(c) = &counters {
+                c.disable();
+            }
+            end.set(ch::now_ns());
+        },
     );
-    let end_ns = ch::now_ns();
+    let end_ns = end.get();
     // (the decoder's threads joined: their counts folded into the inherited counters)
     drop(r);
     let mut line = format!(
@@ -764,7 +926,6 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
         p.json()
     );
     if let Some(c) = &counters {
-        c.disable();
         let _ = write!(
             line,
             ",\"pmu_group\":{group},\"pmu_scope\":\"{}\",\"pmu\":{{",
@@ -802,7 +963,9 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     let mut blocks = vec![
         Block {
             worker: -1,
-            t: [UNREAD; 5],
+            t: [UNREAD; 7],
+            cpu_scan: u16::MAX,
+            cpu_work: u16::MAX,
             ..Block::default()
         };
         n_blocks
@@ -862,12 +1025,31 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     let flow_bad = blocks
         .iter()
         .enumerate()
-        .filter(|(_, b)| b.seen != [1; 6])
+        .filter(|(_, b)| b.seen != [1; 8])
         .count();
     checks.push((
-        "flow: every block issued, enqueued, taken by a worker, routed, ready and read once".into(),
+        "flow: every block admitted to the scanner, issued, enqueued, taken by a worker, routed, ready, taken by the reader and read to its end, once each".into(),
         flow_bad == 0 && n_blocks > 0,
         format!("{flow_bad} of {n_blocks} blocks not seen once at each point"),
+    ));
+    // the queue transitions' linear order (taken under the buffers' one lock): every point a
+    // number of its own, 1 to their count, and each block's in its causal order (admitted,
+    // issued, enqueued, taken by a worker, ready, taken by the reader, read to its end)
+    let mut seqs: Vec<u64> = blocks.iter().flat_map(|b| b.seq).collect();
+    let abandoned = threads.iter().any(|t| t.abandon.0.is_some());
+    seqs.sort_unstable();
+    let contiguous = seqs.iter().enumerate().all(|(i, &q)| q == i as u64 + 1);
+    let order = [5usize, 0, 1, 2, 3, 4, 6];
+    let lin_bad = blocks
+        .iter()
+        .filter(|b| order.windows(2).any(|w| b.seq[w[0]] >= b.seq[w[1]]))
+        .count();
+    checks.push((
+        "linear order: every transition numbered once, each block's in causal order".into(),
+        lin_bad == 0 && (contiguous || abandoned && seqs.windows(2).all(|w| w[1] > w[0])),
+        format!(
+            "{lin_bad} blocks out of order; numbers contiguous {contiguous} (an abandoned read takes one)"
+        ),
     ));
     // forced flow: the visits each route makes
     let mut routes = [0u64; 6];
@@ -900,9 +1082,17 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
         ff_bad.is_empty() && routes[0] == 0,
         format!("{ff_bad:?}; unrouted {}", routes[0]),
     ));
-    // conservation: every buffer empty at the end, its arrivals the blocks
+    // conservation: every buffer empty at the end, its arrivals the blocks (the scanner's,
+    // one more where its last read gave no block)
+    let arrivals = |i: usize| -> Option<u64> {
+        match i {
+            0..=3 | 6 => Some(nb),
+            5 => Some(nb + u64::from(abandoned)),
+            _ => None,
+        }
+    };
     let cons_bad: Vec<String> = (0..OCCS)
-        .filter(|&i| occ[i].n != 0 || (i < 4 && occ[i].arrivals != nb))
+        .filter(|&i| occ[i].n != 0 || arrivals(i).is_some_and(|a| occ[i].arrivals != a))
         .map(|i| {
             format!(
                 "{} ends {} after {} arrivals",
@@ -949,12 +1139,21 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
             })
             .sum()
     };
+    let abandon: u128 = threads
+        .iter()
+        .filter_map(|t| match t.abandon {
+            (Some(a), Some(b)) => Some(u128::from(b - a)),
+            _ => None,
+        })
+        .sum();
     let little = [
         res(0, 4, false),
         res(1, 2, false),
         res(2, 3, false),
         res(3, 4, false),
         res(3, 4, true),
+        res(5, 0, false) + abandon,
+        res(4, 6, false),
     ];
     let mut little_bad = Vec::new();
     let mut little_txt = String::new();
@@ -1016,9 +1215,29 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
         }
         s
     };
+    let scan_in: Vec<(u64, u64)> = threads
+        .iter()
+        .filter(|t| t.role == Role::Scanner)
+        .flat_map(|t| t.in_gaps.iter().copied())
+        .collect();
+    // (the scanner active: its life less its waits for input and for admission)
+    let scan_life: Vec<(u64, u64)> = threads
+        .iter()
+        .filter(|t| t.role == Role::Scanner)
+        .filter_map(|t| {
+            let l = ledgers.iter().find(|l| l.name == t.name)?;
+            Some((l.events.first()?.ns, l.events.last()?.ns))
+        })
+        .collect();
     let (mut idle_adm, mut idle_start, mut idle_drain) = (0u64, 0u64, 0u64);
+    let (mut idle_input, mut idle_active, mut idle_all) = (0u64, 0u64, 0u64);
     for t in threads.iter().filter(|t| t.role == Role::Worker) {
-        idle_adm += overlap(&t.gaps, &scan_waits);
+        let a = overlap(&t.gaps, &scan_waits);
+        let i = overlap(&t.gaps, &scan_in);
+        idle_adm += a;
+        idle_input += i;
+        idle_active += overlap(&t.gaps, &scan_life).saturating_sub(a + i);
+        idle_all += t.gaps.iter().map(|g| g.1 - g.0).sum::<u64>();
         idle_start += overlap(&t.gaps, &[(0, t1)]);
         idle_drain += overlap(&t.gaps, &[(t2, end_ns)]);
     }
@@ -1035,7 +1254,7 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     // ---- the line ----
     let _ = write!(
         line,
-        ",\"blocks\":{n_blocks},\"routes\":{{\"open\":{open},\"open_dense\":{dense},\"refused\":{refused},\"skipped\":{skipped},\"column\":{column}}},\"t1_ns\":{t1},\"t2_ns\":{t2},\"end_ns\":{end_ns},\"phases\":[{}],\"gap\":{{\"idle_admission_ns\":{idle_adm},\"idle_startup_ns\":{idle_start},\"idle_drain_ns\":{idle_drain},\"hol_ns\":{hol},\"hol_byte_ns\":{hol_bytes},\"ready_rest_ns\":{ready_rest}}},\"identities_ok\":{all_ok},\"identities\":[",
+        ",\"blocks\":{n_blocks},\"routes\":{{\"open\":{open},\"open_dense\":{dense},\"refused\":{refused},\"skipped\":{skipped},\"column\":{column}}},\"t1_ns\":{t1},\"t2_ns\":{t2},\"end_ns\":{end_ns},\"phases\":[{}],\"gap\":{{\"idle_ns\":{idle_all},\"idle_scanner_active_ns\":{idle_active},\"idle_scanner_input_ns\":{idle_input},\"idle_admission_ns\":{idle_adm},\"idle_startup_ns\":{idle_start},\"idle_drain_ns\":{idle_drain},\"hol_ns\":{hol},\"hol_byte_ns\":{hol_bytes},\"ready_rest_ns\":{ready_rest}}},\"identities_ok\":{all_ok},\"identities\":[",
         PHASES.map(js).join(",")
     );
     for (i, (name, ok, why)) in checks.iter().enumerate() {
@@ -1064,7 +1283,7 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
     for (i, t) in threads.iter().enumerate() {
         let _ = write!(
             line,
-            "{}{{\"name\":{},\"role\":\"{:?}\",\"life_ns\":{},\"cpu_ns\":{},\"wait_wall_ns\":{},\"wait_cpu_ns\":{},\"events\":{},\"sched\":[{}],\"migrations\":{},\"states\":[{}],\"visits\":[{}],\"unattributed\":[{}],\"slot_bound\":[{},{}],\"moments\":[{}]}}",
+            "{}{{\"name\":{},\"role\":\"{:?}\",\"life_ns\":{},\"cpu_ns\":{},\"wait_wall_ns\":{},\"wait_cpu_ns\":{},\"events\":{},\"sched\":[{}],\"migrations\":{},\"states\":[{}],\"visits\":[{}],\"unattributed\":[{}],\"slot_bound\":[{},{},{}],\"moments\":[{}],\"cpus\":{{{}}},\"overflows\":{}}}",
             if i > 0 { "," } else { "" },
             js(&t.name),
             t.role,
@@ -1084,11 +1303,18 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
             t.unattributed.map(|x| x.to_string()).join(","),
             t.slot_bound[0],
             t.slot_bound[1],
+            t.slot_bound[2],
             t.moments
                 .iter()
                 .map(|m| format!("[{},{:.0},{:.6e}]", m.0, m.1, m.2))
                 .collect::<Vec<_>>()
-                .join(",")
+                .join(","),
+            t.cpus
+                .iter()
+                .map(|(c, ns)| format!("\"{c}\":{ns}"))
+                .collect::<Vec<_>>()
+                .join(","),
+            t.overflows
         );
     }
     line += "]}";
@@ -1103,11 +1329,14 @@ fn one(file: &str, k: usize, on: bool, blocks_out: &str, group: u8) {
         for (p, b) in blocks.iter().enumerate() {
             let _ = write!(
                 s,
-                "{p}\t{}\t{}\t{}\t{}\t{}\t{}",
-                b.route, b.n, b.r, b.syms_bytes, b.out_bytes, b.worker
+                "{p}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                b.route, b.n, b.r, b.syms_bytes, b.out_bytes, b.worker, b.cpu_scan, b.cpu_work
             );
             for t in b.t {
                 let _ = write!(s, "\t{}", if t == UNREAD { -1 } else { t as i64 });
+            }
+            for q in b.seq {
+                let _ = write!(s, "\t{q}");
             }
             for i in SCAN_COLS {
                 let _ = write!(s, "\t{}", b.scan[i]);
@@ -1136,7 +1365,7 @@ const WORK_COLS: [usize; 10] = [9, 10, 11, 12, 13, 14, 15, 16, 17, NA];
 
 /// The block rows' header (`BLOCKS.tsv`, before the harness's own leading columns)
 #[allow(dead_code)]
-const BLOCK_COLS: &str = "place\troute\tn\tr\tsyms_bytes\tout_bytes\tworker\tt_issued\tt_enqueued\tt_got\tt_ready\tt_taken\ts_in_wait\ts_in_maint\ts_A2\ts_A3\ts_slot_wait\ts_issue\ts_resid\tw_A5\tw_pool\tw_A6a\tw_A6b\tw_A6c\tw_A7\tw_A8\tw_A9\tw_publish\tw_resid\tr_wait\tv_in_wait\tv_in_maint\tv_A2\tv_A3\tv_slot_wait\tv_r_wait";
+const BLOCK_COLS: &str = "place\troute\tn\tr\tsyms_bytes\tout_bytes\tworker\tcpu_scan\tcpu_work\tt_issued\tt_enqueued\tt_got\tt_ready\tt_taken\tt_scan_start\tt_consumed\tq_issued\tq_enqueued\tq_got\tq_ready\tq_taken\tq_scan_start\tq_consumed\ts_in_wait\ts_in_maint\ts_A2\ts_A3\ts_slot_wait\ts_issue\ts_resid\tw_A5\tw_pool\tw_A6a\tw_A6b\tw_A6c\tw_A7\tw_A8\tw_A9\tw_publish\tw_resid\tr_wait\tv_in_wait\tv_in_maint\tv_A2\tv_A3\tv_slot_wait\tv_r_wait";
 
 fn js(s: &str) -> String {
     let mut o = String::from("\"");
