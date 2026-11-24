@@ -279,3 +279,41 @@ with its key lines quoted:
   pays per width-1 run. Read constructively, a step to a different class must not be a rigid
   jump-walk over those runs: it must represent them differently. That is a constraint the next
   representation has to satisfy, and so it guides the search.
+
+## 8. Louis: "keep adding these exchanges"; "what is the Sturmian toy?"
+
+Louis: "yes keep adding these exchanges to the notes for the duration of the discussion of this
+formulation effort." This record is kept up to date as the discussion continues.
+
+**The question:** "what is 'the Sturmian toy'?"
+
+**The Coordinator's answer.**
+
+- **The toy is the easiest case of the problem, where inversion needs no walk.** Take a two-letter
+  text whose BWT is as compressible as possible: all of one letter, then all of the other,
+  b…b a…a, one run per letter. Such texts are exactly the (conjugates of powers of) Christoffel
+  words, finite pieces of Sturmian words (Mantaci, Restivo and Sciortino, 2003). Sturmian words are
+  the binary sequences with the fewest possible distinct factors for an aperiodic sequence, and
+  the classical example of a "mechanical" sequence: they record when a line of irrational slope α
+  crosses the grid lines.
+- **Why inversion is trivial there.** If the BWT is b^p a^q (length n = p + q), its first column
+  is a^q b^p, and the LF map sends the i-th b to row q + i and the i-th a to row i − p. Both cases
+  are the same formula, **LF(i) = i + q (mod n)**: the permutation is a rotation of a circle by q.
+  So the row reached after k steps is just start + k·q mod n, computed directly, with no step
+  depending on the one before. Equivalently, the text is mechanical: letter k is
+  ⌊(k+1)α + ρ⌋ − ⌊kα + ρ⌋. Every output position can be computed independently and in parallel.
+- **How it sits on the ladder.** In general the LF permutation is an *interval exchange*: cut the
+  rows into pieces at the run boundaries, and LF moves each piece rigidly. Two pieces make a
+  rotation (the Sturmian toy). One run per letter with k letters gives a k-interval exchange
+  (Ferenczi and Zamboni, 2013), which Rauzy–Veech induction handles. A real block has one piece
+  per run, r pieces in all, and Wikidata's blocks have many short runs, most of them a single
+  row (record 96: the width-1 runs are 30–83% of retained rows, a median of 39%). The step the
+  team took from the walk to Rauzy–Veech induction is a step up this ladder. The closed form at
+  the bottom is the "walk-free" extreme.
+- **Why it matters for the formulation.** It is the team's "supplied state": a case where a radically
+  different inversion (arithmetic instead of a walk) is known to work. The solver for it is exact
+  on 5,627 Sturmian BWTs and fires on 0% of Wikidata (PROOF-PROGRAMME §5.4). The SSL-Coq method
+  says not to discard it but to ask, rung by rung, which of its conditions real blocks break, and
+  what representation would restore its effect. The toy-transfer note's candidate is Ostrowski
+  numeration, generalised to Rauzy–Veech and Bratteli–Vershik coordinates, for random access to
+  position k; its guess at what breaks is run width, lost to random identifiers.
